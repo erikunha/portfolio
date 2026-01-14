@@ -65,7 +65,7 @@
 
 /* ========================================
    GLOBAL STYLES
-   Base styles and resets
+   Base styles and resets (outside layers)
    ======================================== */
 
 @import './global.css';

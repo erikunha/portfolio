@@ -7,12 +7,7 @@ const CACHE_NAME = 'erikunha-portfolio-v1';
 const OFFLINE_PAGE = '/offline';
 
 // Assets to cache on install
-const STATIC_ASSETS = [
-  '/',
-  '/offline',
-  '/favicon.ico',
-  '/apple-touch-icon.png',
-];
+const STATIC_ASSETS = ['/', '/offline', '/favicon.ico'];
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {

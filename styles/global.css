@@ -1,10 +1,8 @@
 /**
  * Global Styles
  * Build-time CSS only - Zero runtime styling
- * Imports design tokens and applies foundational styles
+ * Pure styles - no imports. Tokens imported via index.css
  */
-
-@import './tokens.css';
 
 /* ========================================
    RESET & NORMALIZATION

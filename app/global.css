@@ -1,5 +1,17 @@
-/* Matrix Design System - Complete Import */
+/**
+ * App Global Styles
+ * Imports Matrix Design System + app-specific overrides
+ */
+
+/* ========================================
+   DESIGN SYSTEM (Single Source of Truth)
+   ======================================== */
+
 @import '../styles/index.css';
+
+/* ========================================
+   APP-SPECIFIC OVERRIDES
+   ======================================== */
 
 /* Header Controls */
 .header-controls {
