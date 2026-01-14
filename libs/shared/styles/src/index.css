@@ -1,0 +1,71 @@
+/**
+ * Matrix Design System - Main Entry Point
+ *
+ * A comprehensive, production-grade design system inspired by The Matrix
+ *
+ * Architecture:
+ * - Primitives: Base values (never use directly)
+ * - Semantic Tokens: Context-aware tokens (use in components)
+ * - Component Tokens: Component-specific tokens
+ * - Utilities: Helper classes and functions
+ *
+ * Import order matters for CSS cascade
+ *
+ * @packageDocumentation
+ */
+
+/* ========================================
+   LAYER DEFINITIONS
+   CSS Cascade Layers for proper specificity
+   ======================================== */
+
+@layer primitives, tokens, components, utilities, animations, accessibility;
+
+/* ========================================
+   PRIMITIVE TOKENS
+   Base design values - internal use only
+   ======================================== */
+
+@import './primitives.css' layer(primitives);
+
+/* ========================================
+   SEMANTIC TOKENS
+   Context-aware tokens for components
+   ======================================== */
+
+@import './tokens.css' layer(tokens);
+
+/* ========================================
+   COMPONENT TOKENS
+   Component-specific design tokens
+   ======================================== */
+
+@import './component-tokens.css' layer(components);
+
+/* ========================================
+   TYPOGRAPHY SYSTEM
+   Fluid, responsive typography
+   ======================================== */
+
+@import './typography.css' layer(utilities);
+
+/* ========================================
+   ANIMATION SYSTEM
+   Matrix effects and motion design
+   ======================================== */
+
+@import './animations.css' layer(animations);
+
+/* ========================================
+   ACCESSIBILITY
+   WCAG 2.1 AAA compliance utilities
+   ======================================== */
+
+@import './accessibility.css' layer(accessibility);
+
+/* ========================================
+   GLOBAL STYLES
+   Base styles and resets
+   ======================================== */
+
+@import './global.css';

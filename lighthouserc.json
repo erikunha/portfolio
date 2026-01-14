@@ -1,0 +1,101 @@
+{
+  "ci": {
+    "collect": {
+      "url": ["http://localhost:3000/"],
+      "numberOfRuns": 3,
+      "settings": {
+        "preset": "desktop",
+        "throttling": {
+          "rttMs": 40,
+          "throughputKbps": 10240,
+          "cpuSlowdownMultiplier": 1
+        }
+      }
+    },
+    "assert": {
+      "preset": "lighthouse:recommended",
+      "assertions": {
+        "first-contentful-paint": [
+          "error",
+          {
+            "maxNumericValue": 1800,
+            "aggregationMethod": "median"
+          }
+        ],
+        "largest-contentful-paint": [
+          "error",
+          {
+            "maxNumericValue": 2500,
+            "aggregationMethod": "median"
+          }
+        ],
+        "cumulative-layout-shift": [
+          "error",
+          {
+            "maxNumericValue": 0.1,
+            "aggregationMethod": "median"
+          }
+        ],
+        "total-blocking-time": [
+          "error",
+          {
+            "maxNumericValue": 200,
+            "aggregationMethod": "median"
+          }
+        ],
+        "speed-index": [
+          "warn",
+          {
+            "maxNumericValue": 3400,
+            "aggregationMethod": "median"
+          }
+        ],
+        "interactive": [
+          "warn",
+          {
+            "maxNumericValue": 3800,
+            "aggregationMethod": "median"
+          }
+        ],
+        "max-potential-fid": [
+          "warn",
+          {
+            "maxNumericValue": 130,
+            "aggregationMethod": "median"
+          }
+        ],
+        "categories:performance": [
+          "error",
+          {
+            "minScore": 0.9,
+            "aggregationMethod": "median"
+          }
+        ],
+        "categories:accessibility": [
+          "error",
+          {
+            "minScore": 0.95,
+            "aggregationMethod": "median"
+          }
+        ],
+        "categories:best-practices": [
+          "warn",
+          {
+            "minScore": 0.9,
+            "aggregationMethod": "median"
+          }
+        ],
+        "categories:seo": [
+          "warn",
+          {
+            "minScore": 0.9,
+            "aggregationMethod": "median"
+          }
+        ]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

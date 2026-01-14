@@ -1,0 +1,180 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-checks:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.15.0
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set Nx SHAs for affected commands
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Lint affected projects
+        run: pnpm lint
+
+      - name: TypeScript check
+        run: pnpm type-check
+
+      - name: Test affected projects
+        run: pnpm test
+
+      - name: Build affected projects
+        run: pnpm build
+
+  bundle-analysis:
+    name: Bundle Analysis (Warning Only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.15.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all apps
+        run: pnpm build:all
+
+      - name: Analyze bundle sizes
+        run: |
+          echo "📦 Bundle Size Analysis"
+          echo "======================="
+
+          for app in shell checkout; do
+            dist_path="dist/apps/$app/.next"
+            if [ -d "$dist_path" ]; then
+              echo ""
+              echo "🔍 App: $app"
+              echo "---"
+
+              js_size=$(find "$dist_path" -name "*.js" -type f -exec du -ch {} + | grep total | awk '{print $1}')
+              echo "Total JS: $js_size"
+
+              css_size=$(find "$dist_path" -name "*.css" -type f -exec du -ch {} + | grep total | awk '{print $1}')
+              echo "Total CSS: $css_size"
+
+              echo "Largest files:"
+              find "$dist_path" -type f -exec du -h {} + | sort -rh | head -10
+            fi
+          done
+
+          echo ""
+          echo "⚠️  Note: Bundle analysis is in WARNING mode only"
+
+  performance-budget-check:
+    name: Performance Budget (Warning Only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name == 'pull_request'
+    continue-on-error: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.15.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build apps
+        run: pnpm build:all
+
+      - name: Check performance budgets
+        run: |
+          echo "⚡ Performance Budget Check"
+          echo "=========================="
+
+          MAX_JS_KB=300
+          MAX_CSS_KB=50
+
+          for app in shell checkout; do
+            dist_path="dist/apps/$app/.next"
+            if [ -d "$dist_path" ]; then
+              echo ""
+              echo "📊 Checking $app..."
+
+              js_size_kb=$(find "$dist_path" -name "*.js" -type f -exec du -ck {} + | grep total | awk '{print $1}')
+              if [ "$js_size_kb" -gt "$MAX_JS_KB" ]; then
+                echo "⚠️  JS budget exceeded: ${js_size_kb}KB > ${MAX_JS_KB}KB"
+              else
+                echo "✅ JS budget OK: ${js_size_kb}KB / ${MAX_JS_KB}KB"
+              fi
+
+              css_size_kb=$(find "$dist_path" -name "*.css" -type f -exec du -ck {} + | grep total | awk '{print $1}')
+              if [ "$css_size_kb" -gt "$MAX_CSS_KB" ]; then
+                echo "⚠️  CSS budget exceeded: ${css_size_kb}KB > ${MAX_CSS_KB}KB"
+              else
+                echo "✅ CSS budget OK: ${css_size_kb}KB / ${MAX_CSS_KB}KB"
+              fi
+            fi
+          done
+
+          echo ""
+          echo "ℹ️  Currently in WARNING mode - PRs will not be blocked"

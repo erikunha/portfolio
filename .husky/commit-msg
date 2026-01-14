@@ -1,0 +1,5 @@
+#!/bin/sh
+# Commit Message Hook
+# Enforces Conventional Commits specification
+
+pnpm exec commitlint --edit "$1"

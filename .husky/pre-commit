@@ -1,0 +1,12 @@
+#!/bin/sh
+# Enterprise Pre-commit Hook
+# Enforces code quality standards before commit
+
+# Lint affected projects
+pnpm nx affected -t lint --parallel=3
+
+# Run fast tests on affected projects
+pnpm nx affected -t test --parallel=3 --coverage=false
+
+# Format check
+pnpm prettier --check .

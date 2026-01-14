@@ -1,0 +1,22 @@
+# Ignore TypeScript files
+**/*.ts
+**/*.tsx
+**/*.d.ts
+
+# Ignore build outputs
+dist/
+build/
+.next/
+out/
+
+# Ignore dependencies
+node_modules/
+.pnpm-store/
+
+# Ignore test files
+**/*.spec.*
+**/*.test.*
+
+# Ignore config files
+*.config.js
+*.config.ts

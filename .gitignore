@@ -40,3 +40,43 @@ Thumbs.db
 
 .nx/cache
 .nx/workspace-data
+
+# Next.js
+.next
+out
+next-env.d.ts
+
+# Storybook
+storybook-static
+
+# Playwright
+test-results
+playwright-report
+playwright/.cache
+
+# Testing
+coverage
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+pnpm-debug.log*
+lerna-debug.log*
+
+# Temporary files
+*.swp
+*.swo
+*~
+.tmp
+
+# Build artifacts
+graph.html
+bundle-analysis.html
+static/

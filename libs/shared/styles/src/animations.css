@@ -1,0 +1,520 @@
+/**
+ * Matrix Advanced Animation System
+ * Production-grade animations with accessibility support
+ * Includes Matrix rain, glitch effects, and performance optimizations
+ *
+ * @layer animations
+ */
+
+/* ========================================
+   MOTION PREFERENCES
+   Respect user's motion settings
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
+   KEYFRAME ANIMATIONS LIBRARY
+   ======================================== */
+
+/* Matrix Rain Effect */
+@keyframes matrix-rain {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+/* Glitch Effect */
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+/* Glitch Clip Effect */
+@keyframes glitch-clip {
+  0% {
+    clip-path: inset(40% 0 61% 0);
+  }
+  20% {
+    clip-path: inset(92% 0 1% 0);
+  }
+  40% {
+    clip-path: inset(43% 0 1% 0);
+  }
+  60% {
+    clip-path: inset(25% 0 58% 0);
+  }
+  80% {
+    clip-path: inset(54% 0 7% 0);
+  }
+  100% {
+    clip-path: inset(58% 0 43% 0);
+  }
+}
+
+/* Glow Pulse */
+@keyframes glow-pulse {
+  0%,
+  100% {
+    text-shadow:
+      0 0 10px rgba(26, 255, 26, 0.8),
+      0 0 20px rgba(26, 255, 26, 0.6),
+      0 0 30px rgba(26, 255, 26, 0.4);
+    box-shadow:
+      0 0 10px rgba(26, 255, 26, 0.8),
+      0 0 20px rgba(26, 255, 26, 0.6),
+      0 0 30px rgba(26, 255, 26, 0.4);
+  }
+  50% {
+    text-shadow:
+      0 0 15px rgba(26, 255, 26, 1),
+      0 0 30px rgba(26, 255, 26, 0.8),
+      0 0 45px rgba(26, 255, 26, 0.6);
+    box-shadow:
+      0 0 15px rgba(26, 255, 26, 1),
+      0 0 30px rgba(26, 255, 26, 0.8),
+      0 0 45px rgba(26, 255, 26, 0.6);
+  }
+}
+
+/* Typing Effect */
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* Cursor Blink */
+@keyframes cursor-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Terminal Cursor */
+@keyframes terminal-cursor {
+  0%,
+  49% {
+    background-color: var(--color-brand-primary);
+  }
+  50%,
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* Scanline Effect */
+@keyframes scanline {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* Fade In */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Fade In Up */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade In Down */
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scale In */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Slide In Right */
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide In Left */
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Rotate In */
+@keyframes rotate-in {
+  from {
+    opacity: 0;
+    transform: rotate(-180deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+}
+
+/* Spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Bounce */
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+/* Ping */
+@keyframes ping {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Shimmer (Skeleton Loading) */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Shake */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-10px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(10px);
+  }
+}
+
+/* ========================================
+   UTILITY ANIMATION CLASSES
+   ======================================== */
+
+.animate-fade-in {
+  animation: fade-in var(--duration-base) var(--easing-ease-out);
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up var(--duration-base) var(--easing-ease-out);
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down var(--duration-base) var(--easing-ease-out);
+}
+
+.animate-scale-in {
+  animation: scale-in var(--duration-base) var(--easing-ease-out);
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right var(--duration-base) var(--easing-ease-out);
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left var(--duration-base) var(--easing-ease-out);
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s var(--easing-ease-in-out) infinite;
+}
+
+.animate-spin {
+  animation: spin 1s var(--easing-linear) infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s linear infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s var(--easing-ease-in-out);
+}
+
+.animate-glitch {
+  animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+}
+
+/* ========================================
+   TRANSITION UTILITIES
+   ======================================== */
+
+.transition-all {
+  transition: all var(--duration-base) var(--easing-ease-out);
+}
+
+.transition-colors {
+  transition:
+    color var(--duration-fast) var(--easing-ease-out),
+    background-color var(--duration-fast) var(--easing-ease-out),
+    border-color var(--duration-fast) var(--easing-ease-out);
+}
+
+.transition-opacity {
+  transition: opacity var(--duration-base) var(--easing-ease-out);
+}
+
+.transition-transform {
+  transition: transform var(--duration-base) var(--easing-ease-out);
+}
+
+.transition-shadow {
+  transition: box-shadow var(--duration-base) var(--easing-ease-out);
+}
+
+/* ========================================
+   PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+.will-change-auto {
+  will-change: auto;
+}
+
+/* GPU Acceleration */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* ========================================
+   MATRIX-SPECIFIC EFFECTS
+   ======================================== */
+
+/* Matrix Rain Background */
+.matrix-rain-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.matrix-rain-bg::before {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--color-brand-primary) 50%,
+    transparent 100%
+  );
+  opacity: 0.1;
+  animation: matrix-rain 4s linear infinite;
+  pointer-events: none;
+}
+
+/* CRT Scanline Effect */
+.crt-scanlines {
+  position: relative;
+  overflow: hidden;
+}
+
+.crt-scanlines::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  animation: scanline 8s linear infinite;
+}
+
+/* Terminal Typing Effect */
+.terminal-typing {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid var(--color-brand-primary);
+  animation:
+    typing 3s steps(40, end),
+    cursor-blink 0.75s step-end infinite;
+}
+
+/* Matrix Glitch Text */
+.matrix-glitch {
+  position: relative;
+  display: inline-block;
+}
+
+.matrix-glitch::before,
+.matrix-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.matrix-glitch::before {
+  left: 2px;
+  text-shadow: -2px 0 var(--color-error);
+  clip-path: inset(0 0 0 0);
+  animation: glitch-clip 3s infinite linear alternate-reverse;
+}
+
+.matrix-glitch::after {
+  left: -2px;
+  text-shadow: 2px 0 var(--color-info);
+  clip-path: inset(0 0 0 0);
+  animation: glitch-clip 2s infinite linear alternate-reverse;
+}
+
+/* Glowing Border Animation */
+.glow-border {
+  position: relative;
+  border: var(--border-width-base) solid var(--color-brand-primary);
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Matrix Code Rain Character */
+.matrix-char {
+  opacity: 0;
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.matrix-char:nth-child(odd) {
+  animation-delay: 0.1s;
+}
+
+.matrix-char:nth-child(even) {
+  animation-delay: 0.2s;
+}

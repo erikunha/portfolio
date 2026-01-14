@@ -1,0 +1,28 @@
+/* Skip Links Component Styles - Principal Level */
+
+.skip-links {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: var(--z-skip-link);
+  pointer-events: none;
+}
+
+.skip-links-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.skip-links-list li {
+  display: block;
+}
+
+/*
+  Skip links use the global .skip-link class
+  defined in accessibility.css for consistent styling
+*/

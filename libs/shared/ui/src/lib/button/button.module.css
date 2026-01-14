@@ -1,0 +1,165 @@
+/**
+ * Button Styles
+ * CSS Modules - scoped, zero runtime
+ * Uses design tokens exclusively
+ */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+  border-radius: var(--radius-base);
+  border: var(--border-width-base) solid transparent;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing-ease-out);
+  position: relative;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: var(--opacity-disabled);
+}
+
+/* ========================================
+   VARIANTS - Matrix Style
+   ======================================== */
+
+.primary {
+  background-color: var(--color-brand-primary);
+  color: var(--color-text-on-brand);
+  border-color: var(--color-brand-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.primary:hover:not(:disabled) {
+  background-color: var(--color-brand-primary-hover);
+  border-color: var(--color-brand-primary-hover);
+  box-shadow: var(--shadow-glow-strong);
+  transform: translateY(-1px);
+}
+
+.primary:active:not(:disabled) {
+  background-color: var(--color-brand-primary-active);
+  border-color: var(--color-brand-primary-active);
+  transform: translateY(0);
+}
+
+.secondary {
+  background-color: transparent;
+  color: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: var(--color-brand-primary);
+  color: var(--color-text-on-brand);
+  box-shadow: var(--shadow-glow);
+}
+
+.secondary:active:not(:disabled) {
+  background-color: var(--color-brand-primary-active);
+  border-color: var(--color-brand-primary-active);
+}
+
+.ghost {
+  background-color: transparent;
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.ghost:hover:not(:disabled) {
+  background-color: var(--color-surface);
+  border-color: var(--color-brand-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.danger {
+  background-color: var(--color-error);
+  color: var(--color-neutral-0);
+  border-color: var(--color-error);
+  box-shadow: 0 0 10px rgba(255, 26, 26, 0.6);
+}
+
+.danger:hover:not(:disabled) {
+  background-color: var(--color-error);
+  opacity: var(--opacity-hover);
+  box-shadow: 0 0 15px rgba(255, 26, 26, 0.8);
+}
+
+/* ========================================
+   SIZES
+   ======================================== */
+
+.sm {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.md {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-base);
+}
+
+.lg {
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--font-size-lg);
+}
+
+/* ========================================
+   STATES
+   ======================================== */
+
+.fullWidth {
+  width: 100%;
+}
+
+.loading {
+  pointer-events: none;
+}
+
+.loading .label {
+  opacity: 0;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ========================================
+   SPINNER (Loading State)
+   ======================================== */
+
+.spinner {
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-radius: var(--radius-full);
+  border-top-color: transparent;
+  animation: spin var(--duration-slow) var(--easing-linear) infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================
+   FOCUS STATE (Accessibility)
+   ======================================== */
+
+.button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}

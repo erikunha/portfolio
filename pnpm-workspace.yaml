@@ -1,1 +1,6 @@
+packages:
+  - 'apps/*'
+  - 'libs/*'
+  - 'libs/shared/*'
+
 autoInstallPeers: true

@@ -1,0 +1,257 @@
+import { Meta, Description, Source } from '@storybook/blocks';
+
+<Meta title="Shell/StructuredData/Documentation" />
+
+# StructuredData Component
+
+The StructuredData component generates JSON-LD structured data for enhanced search engine understanding and rich results.
+
+## What is Structured Data?
+
+Structured data helps search engines understand your content and can enable rich results like:
+
+- 👤 Person cards in search results
+- 🌐 Website information
+- ⭐ Reviews and ratings
+- 📅 Events
+- 🎭 Creative works
+
+## Features
+
+- 📋 **Schema.org Compliant**: Valid JSON-LD markup
+- 🔄 **Multiple Schema Types**: Person and Website schemas
+- 🎯 **SEO Optimized**: Enhances search visibility
+- ✅ **Type Safe**: Full TypeScript support
+
+## Usage
+
+### Person Schema (Default)
+
+Use on your homepage or about page to represent yourself:
+
+<Source
+  language="tsx"
+  code={`
+import { StructuredData } from '@/components/structured-data';
+
+export default function HomePage() {
+  return (
+    <>
+      <StructuredData type="Person" />
+      {/* Your page content */}
+    </>
+  );
+}
+`}
+/>
+
+This generates:
+
+<Source
+  language="json"
+  code={`
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Erik Henrique Alves Cunha",
+  "jobTitle": "Frontend Engineer",
+  "description": "Frontend engineer specializing in React, Next.js, and TypeScript",
+  "url": "https://erikunha.dev",
+  "sameAs": [
+    "https://github.com/erikunha",
+    "https://linkedin.com/in/erikunha",
+    "https://twitter.com/erikunha"
+  ],
+  "knowsAbout": [
+    "React",
+    "Next.js",
+    "TypeScript",
+    "JavaScript",
+    "Web Performance",
+    "Accessibility",
+    "CSS",
+    "Node.js"
+  ]
+}
+`}
+/>
+
+### Website Schema
+
+Use on your homepage to represent your website:
+
+<Source
+  language="tsx"
+  code={`
+import { StructuredData } from '@/components/structured-data';
+
+export default function HomePage() {
+  return (
+    <>
+      <StructuredData type="WebSite" />
+      {/* Your page content */}
+    </>
+  );
+}
+`}
+/>
+
+This generates:
+
+<Source
+  language="json"
+  code={`
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Erik Henrique Portfolio",
+  "url": "https://erikunha.dev",
+  "author": {
+    "@type": "Person",
+    "name": "Erik Henrique Alves Cunha"
+  }
+}
+`}
+/>
+
+### Multiple Schemas on One Page
+
+<Source
+  language="tsx"
+  code={`
+import { StructuredData } from '@/components/structured-data';
+
+export default function HomePage() {
+  return (
+    <>
+      <StructuredData type="Person" />
+      <StructuredData type="WebSite" />
+      {/* Your page content */}
+    </>
+  );
+}
+`}
+/>
+
+## Props API
+
+| Prop   | Type                    | Default    | Description             |
+| ------ | ----------------------- | ---------- | ----------------------- |
+| `type` | `'Person' \| 'WebSite'` | `'Person'` | Schema type to generate |
+
+## Schema Types
+
+### Person Schema
+
+**When to use**: Personal portfolio, about pages, author pages
+
+**Includes**:
+
+- Basic info (name, job title, description)
+- Social media profiles (`sameAs`)
+- Skills (`knowsAbout`)
+- Website URL
+
+**Benefits**:
+
+- Rich results in search (Knowledge Panel)
+- Social media link validation
+- Professional credibility
+
+### WebSite Schema
+
+**When to use**: Homepage, main landing page
+
+**Includes**:
+
+- Site name and URL
+- Author information (nested Person)
+
+**Benefits**:
+
+- Site name in search results
+- Sitelinks search box eligibility
+- Better search understanding
+
+## Testing Structured Data
+
+### Google Rich Results Test
+
+1. Visit [Rich Results Test](https://search.google.com/test/rich-results)
+2. Enter your page URL or paste HTML
+3. Verify no errors
+
+### Schema Markup Validator
+
+1. Visit [Schema.org Validator](https://validator.schema.org/)
+2. Enter your page URL
+3. Check validation results
+
+### View in Browser
+
+Right-click page → View Page Source → Search for `application/ld+json`
+
+## Best Practices
+
+### 1. **One Primary Schema Per Page**
+
+<Source
+  language="tsx"
+  code={`
+// ✅ Good - Clear hierarchy
+<StructuredData type="WebSite" />  // Primary
+<StructuredData type="Person" />   // Supporting
+
+// ❌ Avoid - Confusing
+
+<StructuredData type="Person" />
+<StructuredData type="Person" />  // Duplicate
+`}
+/>
+
+### 2. **Match Content to Schema**
+
+Only use Person schema on pages about you. Use appropriate schemas for other content types.
+
+### 3. **Keep Data Updated**
+
+Update social links and skills as they change:
+
+<Source
+  language="tsx"
+  code={`
+// Update in structured-data.tsx when you:
+// - Add new social profiles
+// - Learn new technologies
+// - Change job title
+// - Update website URL
+`}
+/>
+
+### 4. **Validate Before Deploy**
+
+Always test with Google's Rich Results Test after changes.
+
+## Common Schema Types (Future Additions)
+
+You can extend the component to support:
+
+- **Article**: Blog posts
+- **BreadcrumbList**: Navigation breadcrumbs
+- **Organization**: Company pages
+- **Product**: E-commerce items
+- **Review**: User reviews
+- **Event**: Calendar events
+
+## SEO Impact
+
+Structured data:
+
+- ✅ **Does Help**: Rich results, better understanding, click-through rates
+- ❌ **Doesn't Guarantee**: Rankings (not a ranking factor)
+- ⚡ **Best Use**: Supplement good content and SEO practices
+
+## Related Components
+
+- **SEO**: Meta tags and OpenGraph
+- **Link**: Internal navigation with proper semantics

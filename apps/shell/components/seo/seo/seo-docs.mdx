@@ -1,0 +1,187 @@
+import { Meta, Description, Source } from '@storybook/blocks';
+
+<Meta title="Shell/SEO/Documentation" />
+
+# SEO Component
+
+The SEO component is a wrapper around `next-seo` that provides consistent metadata management across the portfolio.
+
+## Features
+
+- 🎯 **Default Metadata**: Pre-configured with portfolio defaults
+- 🔧 **Customizable**: Override any metadata per page
+- 📱 **OpenGraph**: Full OpenGraph protocol support
+- 🐦 **Twitter Cards**: Summary large image cards
+- 🔍 **SEO Best Practices**: Canonical URLs, meta tags, structured markup
+
+## Usage
+
+### Basic Usage (Default Metadata)
+
+<Source
+  language="tsx"
+  code={`
+import { SEO } from '@/components/seo';
+
+export default function HomePage() {
+  return (
+    <>
+      <SEO />
+      {/* Your page content */}
+    </>
+  );
+}
+`}
+/>
+
+### Custom Page Metadata
+
+<Source
+  language="tsx"
+  code={`
+import { SEO } from '@/components/seo';
+
+export default function ProjectsPage() {
+  return (
+    <>
+      <SEO
+        title="My Projects - Erik Henrique"
+        description="Explore my portfolio of React and Next.js projects"
+        url="https://erikunha.dev/projects"
+        image="https://erikunha.dev/projects-og.jpg"
+      />
+      {/* Your page content */}
+    </>
+  );
+}
+`}
+/>
+
+### Blog Post with Custom Metadata
+
+<Source
+  language="tsx"
+  code={`
+import { SEO } from '@/components/seo';
+
+export default function BlogPost({ post }) {
+  return (
+    <>
+      <SEO
+        title={\`\${post.title} - Erik Henrique\`}
+        description={post.excerpt}
+        url={\`https://erikunha.dev/blog/\${post.slug}\`}
+        image={post.coverImage}
+        // Additional next-seo props
+        openGraph={{
+          type: 'article',
+          article: {
+            publishedTime: post.publishedAt,
+            authors: ['Erik Henrique Alves Cunha'],
+          },
+        }}
+      />
+      {/* Your page content */}
+    </>
+  );
+}
+`}
+/>
+
+## Default Configuration
+
+The component comes with these defaults:
+
+<Source
+  language="typescript"
+  code={`
+export const DEFAULT_SEO = {
+  title: 'Erik Henrique Alves Cunha - Frontend Engineer',
+  description: 'Portfolio of Erik Henrique Alves Cunha, a frontend engineer specializing in React, Next.js, and TypeScript.',
+  url: 'https://erikunha.dev',
+  image: 'https://erikunha.dev/og-image.jpg',
+  siteName: 'Erik Henrique Portfolio',
+};
+`}
+/>
+
+## Props API
+
+| Prop          | Type           | Default                   | Description      |
+| ------------- | -------------- | ------------------------- | ---------------- |
+| `title`       | `string`       | `DEFAULT_SEO.title`       | Page title       |
+| `description` | `string`       | `DEFAULT_SEO.description` | Meta description |
+| `url`         | `string`       | `DEFAULT_SEO.url`         | Canonical URL    |
+| `image`       | `string`       | `DEFAULT_SEO.image`       | OpenGraph image  |
+| `...rest`     | `NextSeoProps` | -                         | Any NextSeo prop |
+
+## OpenGraph Configuration
+
+Automatically configured with:
+
+- ✅ Type: `website`
+- ✅ Image dimensions: `1200x630` (optimal for social sharing)
+- ✅ Site name: "Erik Henrique Portfolio"
+- ✅ Twitter cards: `summary_large_image`
+- ✅ Twitter handle: `@erikunha`
+
+## Additional Meta Tags
+
+Includes:
+
+- `viewport`: Mobile-responsive configuration
+- `author`: Erik Henrique Alves Cunha
+- `keywords`: Frontend engineer, React developer, Next.js, TypeScript, etc.
+
+## Link Tags
+
+Includes:
+
+- `favicon`: `/favicon.ico`
+- `apple-touch-icon`: `/apple-touch-icon.png` (180x180)
+- `manifest`: `/site.webmanifest`
+
+## Best Practices
+
+### 1. **Always Use Canonical URLs**
+
+<Source
+  language="tsx"
+  code={`
+<SEO
+  url="https://erikunha.dev/about"  // ✅ Absolute URL
+  // NOT: url="/about"              // ❌ Relative URL
+/>
+`}
+/>
+
+### 2. **Optimize Descriptions**
+
+- Keep between 150-160 characters
+- Include primary keywords naturally
+- Make it compelling for click-through
+
+### 3. **Use High-Quality Images**
+
+- Minimum 1200x630px for OpenGraph
+- Use descriptive alt text
+- Optimize file size (< 1MB)
+
+### 4. **Update Per Page**
+
+Don't rely on defaults for every page - customize metadata to match page content.
+
+## Testing
+
+SEO metadata doesn't render visually. To test:
+
+1. **View Page Source**: Check `<head>` tags
+2. **Social Media Debuggers**:
+   - [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/)
+   - [Twitter Card Validator](https://cards-dev.twitter.com/validator)
+   - [LinkedIn Post Inspector](https://www.linkedin.com/post-inspector/)
+3. **SEO Tools**: Google Search Console, Lighthouse
+
+## Related Components
+
+- **StructuredData**: JSON-LD schema markup

@@ -1,0 +1,55 @@
+{
+  "name": "shell",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/shell",
+  "projectType": "application",
+  "tags": ["scope:shell", "type:app"],
+  "// targets": "to see all targets run: nx show project shell --web",
+  "targets": {
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "shell:build",
+        "dev": true,
+        "port": 3000
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "shell:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "shell:build:production",
+          "dev": false
+        }
+      }
+    },
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/shell"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "apps/shell"
+        },
+        "production": {
+          "outputPath": "dist/apps/shell"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/shell/jest.config.ts"
+      }
+    }
+  }
+}

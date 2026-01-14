@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd apps/shell && npx next build",
+  "installCommand": "pnpm install",
+  "outputDirectory": "apps/shell/.next"
+}
