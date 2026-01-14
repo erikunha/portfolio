@@ -1,0 +1,9 @@
+#!/bin/sh
+# Pre-commit Hook
+# Enforces code quality standards before commit
+
+# Lint
+pnpm lint
+
+# Format check
+pnpm format:check

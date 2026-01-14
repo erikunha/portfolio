@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Button Component Snapshot Testing matches snapshot for loading state 1`] = `
+<button
+  aria-busy="true"
+  aria-disabled="true"
+  class="button primary md loading"
+  disabled=""
+>
+  <span
+    class="label"
+  >
+    Loading Snapshot
+  </span>
+  <span
+    aria-live="polite"
+    class="spinner"
+    role="status"
+  >
+    <span
+      class="visually-hidden"
+    >
+      Loading
+    </span>
+  </span>
+</button>
+`;
+
+exports[`Button Component Snapshot Testing matches snapshot for primary variant 1`] = `
+<button
+  aria-busy="false"
+  aria-disabled="false"
+  class="button primary md"
+>
+  <span
+    class="label"
+  >
+    Snapshot
+  </span>
+</button>
+`;

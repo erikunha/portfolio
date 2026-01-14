@@ -1,0 +1,28 @@
+{
+  "name": "Erik Henrique Alves Cunha - Portfolio",
+  "short_name": "Erik Portfolio",
+  "description": "Portfolio of Erik Henrique Alves Cunha, a frontend engineer specializing in React, Next.js, and TypeScript",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#1aff1a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["portfolio", "developer", "technology"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "scope": "/"
+}

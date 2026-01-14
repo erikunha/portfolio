@@ -1,0 +1,335 @@
+/**
+ * Component-Specific Design Tokens
+ * Tokens that are specific to individual components
+ * These reference semantic tokens and can be overridden per component
+ *
+ * @layer components
+ */
+
+:root {
+  /* ========================================
+     BUTTON COMPONENT TOKENS
+     ======================================== */
+
+  /* Button Spacing */
+  --button-padding-x-sm: var(--space-3);
+  --button-padding-y-sm: var(--space-2);
+  --button-padding-x-md: var(--space-4);
+  --button-padding-y-md: var(--space-3);
+  --button-padding-x-lg: var(--space-6);
+  --button-padding-y-lg: var(--space-4);
+  --button-padding-x-xl: var(--space-8);
+  --button-padding-y-xl: var(--space-5);
+
+  /* Button Typography */
+  --button-font-size-sm: var(--font-size-sm);
+  --button-font-size-md: var(--font-size-base);
+  --button-font-size-lg: var(--font-size-lg);
+  --button-font-size-xl: var(--font-size-xl);
+  --button-font-weight: var(--font-weight-semibold);
+  --button-line-height: var(--line-height-tight);
+  --button-letter-spacing: var(--letter-spacing-wide);
+
+  /* Button Borders */
+  --button-border-width: var(--border-width-base);
+  --button-border-radius: var(--radius-base);
+
+  /* Button States */
+  --button-transition-duration: var(--duration-fast);
+  --button-transition-easing: var(--easing-ease-out);
+  --button-hover-translate-y: -2px;
+  --button-active-translate-y: 0;
+  --button-disabled-opacity: var(--opacity-disabled);
+
+  /* Button Glow Effects */
+  --button-glow-primary: var(--shadow-glow);
+  --button-glow-primary-hover: var(--shadow-glow-strong);
+  --button-glow-danger: 0 0 10px rgba(255, 26, 26, 0.6);
+  --button-glow-danger-hover: 0 0 15px rgba(255, 26, 26, 0.8);
+
+  /* ========================================
+     INPUT COMPONENT TOKENS
+     ======================================== */
+
+  /* Input Spacing */
+  --input-padding-x: var(--space-3);
+  --input-padding-y: var(--space-2-5);
+  --input-gap: var(--space-2);
+
+  /* Input Typography */
+  --input-font-size: var(--font-size-base);
+  --input-font-family: var(--font-family-mono);
+  --input-line-height: var(--line-height-normal);
+
+  /* Input Borders */
+  --input-border-width: var(--border-width-thin);
+  --input-border-radius: var(--radius-base);
+  --input-border-color: var(--color-border);
+  --input-border-color-focus: var(--color-brand-primary);
+  --input-border-color-error: var(--color-error);
+
+  /* Input States */
+  --input-bg: var(--color-background-elevated);
+  --input-bg-disabled: var(--color-surface);
+  --input-text-color: var(--color-text-primary);
+  --input-text-color-disabled: var(--color-text-disabled);
+  --input-placeholder-color: var(--color-text-tertiary);
+
+  /* Input Effects */
+  --input-focus-ring: var(--shadow-focus);
+  --input-focus-glow: 0 0 8px rgba(26, 255, 26, 0.4);
+  --input-transition: all var(--duration-fast) var(--easing-ease-out);
+
+  /* ========================================
+     CARD COMPONENT TOKENS
+     ======================================== */
+
+  /* Card Spacing */
+  --card-padding: var(--space-6);
+  --card-padding-sm: var(--space-4);
+  --card-padding-lg: var(--space-8);
+  --card-gap: var(--space-4);
+
+  /* Card Appearance */
+  --card-bg: var(--color-surface);
+  --card-border-width: var(--border-width-thin);
+  --card-border-color: var(--color-border);
+  --card-border-radius: var(--radius-lg);
+  --card-shadow: var(--shadow-base);
+  --card-shadow-hover: var(--shadow-md);
+
+  /* Card States */
+  --card-hover-translate-y: -4px;
+  --card-hover-glow: var(--shadow-glow);
+  --card-transition: all var(--duration-base) var(--easing-ease-out);
+
+  /* ========================================
+     NAVIGATION COMPONENT TOKENS
+     ======================================== */
+
+  /* Navigation Layout */
+  --nav-height: 64px;
+  --nav-height-sm: 56px;
+  --nav-padding-x: var(--space-6);
+  --nav-padding-y: var(--space-4);
+  --nav-gap: var(--space-8);
+
+  /* Navigation Appearance */
+  --nav-bg: var(--color-background);
+  --nav-border-color: var(--color-border);
+  --nav-shadow: var(--shadow-sm);
+  --nav-backdrop-blur: blur(8px);
+
+  /* Navigation Items */
+  --nav-item-padding-x: var(--space-4);
+  --nav-item-padding-y: var(--space-2);
+  --nav-item-color: var(--color-text-secondary);
+  --nav-item-color-hover: var(--color-brand-primary);
+  --nav-item-color-active: var(--color-brand-primary);
+  --nav-item-font-size: var(--font-size-sm);
+  --nav-item-font-weight: var(--font-weight-medium);
+  --nav-item-transition: color var(--duration-fast) var(--easing-ease-out);
+
+  /* Navigation Active Indicator */
+  --nav-indicator-height: 2px;
+  --nav-indicator-color: var(--color-brand-primary);
+  --nav-indicator-glow: var(--shadow-glow);
+
+  /* ========================================
+     MODAL COMPONENT TOKENS
+     ======================================== */
+
+  /* Modal Layout */
+  --modal-width: 90vw;
+  --modal-width-sm: 400px;
+  --modal-width-md: 600px;
+  --modal-width-lg: 800px;
+  --modal-width-xl: 1000px;
+  --modal-max-height: 90vh;
+  --modal-padding: var(--space-6);
+  --modal-gap: var(--space-4);
+
+  /* Modal Appearance */
+  --modal-bg: var(--color-background);
+  --modal-border-radius: var(--radius-xl);
+  --modal-border-width: var(--border-width-thin);
+  --modal-border-color: var(--color-border);
+  --modal-shadow: var(--shadow-xl);
+  --modal-backdrop-bg: rgba(0, 0, 0, 0.8);
+  --modal-backdrop-blur: blur(4px);
+
+  /* Modal Header */
+  --modal-header-padding: var(--space-6);
+  --modal-header-border-color: var(--color-border);
+  --modal-title-font-size: var(--font-size-2xl);
+  --modal-title-color: var(--color-brand-primary);
+
+  /* Modal Animation */
+  --modal-transition-duration: var(--duration-base);
+  --modal-transition-easing: var(--easing-ease-out);
+  --modal-scale-from: 0.95;
+  --modal-scale-to: 1;
+
+  /* ========================================
+     TOOLTIP COMPONENT TOKENS
+     ======================================== */
+
+  /* Tooltip Layout */
+  --tooltip-padding-x: var(--space-3);
+  --tooltip-padding-y: var(--space-2);
+  --tooltip-max-width: 250px;
+  --tooltip-arrow-size: 6px;
+
+  /* Tooltip Appearance */
+  --tooltip-bg: var(--color-neutral-900);
+  --tooltip-color: var(--color-neutral-0);
+  --tooltip-border-radius: var(--radius-md);
+  --tooltip-shadow: var(--shadow-lg);
+  --tooltip-font-size: var(--font-size-sm);
+  --tooltip-line-height: var(--line-height-tight);
+
+  /* Tooltip Animation */
+  --tooltip-transition-duration: var(--duration-fast);
+  --tooltip-transition-easing: var(--easing-ease-out);
+  --tooltip-delay: 200ms;
+
+  /* ========================================
+     BADGE COMPONENT TOKENS
+     ======================================== */
+
+  /* Badge Spacing */
+  --badge-padding-x: var(--space-2);
+  --badge-padding-y: var(--space-1);
+  --badge-gap: var(--space-1);
+
+  /* Badge Typography */
+  --badge-font-size: var(--font-size-xs);
+  --badge-font-weight: var(--font-weight-semibold);
+  --badge-line-height: var(--line-height-tight);
+  --badge-letter-spacing: var(--letter-spacing-wide);
+  --badge-text-transform: uppercase;
+
+  /* Badge Appearance */
+  --badge-border-radius: var(--radius-full);
+  --badge-border-width: var(--border-width-thin);
+  --badge-min-width: 20px;
+  --badge-height: 20px;
+
+  /* ========================================
+     LOADING COMPONENT TOKENS
+     ======================================== */
+
+  /* Spinner */
+  --spinner-size-sm: 16px;
+  --spinner-size-md: 24px;
+  --spinner-size-lg: 32px;
+  --spinner-size-xl: 48px;
+  --spinner-border-width: 2px;
+  --spinner-color: var(--color-brand-primary);
+  --spinner-bg-color: transparent;
+  --spinner-duration: 1s;
+
+  /* Skeleton */
+  --skeleton-bg: var(--color-surface);
+  --skeleton-highlight: var(--color-background-elevated);
+  --skeleton-border-radius: var(--radius-base);
+  --skeleton-animation-duration: 1.5s;
+
+  /* Progress Bar */
+  --progress-height: 4px;
+  --progress-bg: var(--color-surface);
+  --progress-fill: var(--color-brand-primary);
+  --progress-border-radius: var(--radius-full);
+  --progress-glow: var(--shadow-glow);
+
+  /* ========================================
+     ALERT/NOTIFICATION COMPONENT TOKENS
+     ======================================== */
+
+  /* Alert Layout */
+  --alert-padding: var(--space-4);
+  --alert-gap: var(--space-3);
+  --alert-border-radius: var(--radius-md);
+  --alert-border-width: var(--border-width-thin);
+
+  /* Alert Typography */
+  --alert-title-font-size: var(--font-size-base);
+  --alert-title-font-weight: var(--font-weight-semibold);
+  --alert-text-font-size: var(--font-size-sm);
+
+  /* Alert Variants */
+  --alert-success-bg: var(--color-success-bg);
+  --alert-success-border: var(--color-success-border);
+  --alert-success-color: var(--color-success);
+
+  --alert-warning-bg: var(--color-warning-bg);
+  --alert-warning-border: var(--color-warning-border);
+  --alert-warning-color: var(--color-warning);
+
+  --alert-error-bg: var(--color-error-bg);
+  --alert-error-border: var(--color-error-border);
+  --alert-error-color: var(--color-error);
+
+  --alert-info-bg: var(--color-info-bg);
+  --alert-info-border: var(--color-info-border);
+  --alert-info-color: var(--color-info);
+
+  /* ========================================
+     TABLE COMPONENT TOKENS
+     ======================================== */
+
+  /* Table Layout */
+  --table-border-width: var(--border-width-thin);
+  --table-border-color: var(--color-border);
+  --table-border-radius: var(--radius-lg);
+
+  /* Table Cell */
+  --table-cell-padding-x: var(--space-4);
+  --table-cell-padding-y: var(--space-3);
+  --table-cell-font-size: var(--font-size-sm);
+
+  /* Table Header */
+  --table-header-bg: var(--color-surface);
+  --table-header-color: var(--color-text-primary);
+  --table-header-font-weight: var(--font-weight-semibold);
+  --table-header-text-transform: uppercase;
+  --table-header-letter-spacing: var(--letter-spacing-wide);
+
+  /* Table Row */
+  --table-row-bg: var(--color-background);
+  --table-row-bg-hover: var(--color-surface);
+  --table-row-bg-selected: var(--color-background-elevated);
+  --table-row-transition: background-color var(--duration-fast)
+    var(--easing-ease-out);
+
+  /* Table Striping */
+  --table-stripe-bg: var(--color-surface);
+
+  /* ========================================
+     CODE BLOCK COMPONENT TOKENS
+     ======================================== */
+
+  /* Code Block Layout */
+  --code-padding: var(--space-4);
+  --code-border-radius: var(--radius-md);
+  --code-border-width: var(--border-width-thin);
+  --code-border-color: var(--color-border);
+
+  /* Code Block Appearance */
+  --code-bg: var(--color-surface);
+  --code-color: var(--color-brand-primary);
+  --code-font-family: var(--font-family-mono);
+  --code-font-size: var(--font-size-sm);
+  --code-line-height: var(--line-height-relaxed);
+
+  /* Syntax Highlighting */
+  --code-comment: var(--color-text-tertiary);
+  --code-keyword: var(--color-brand-primary);
+  --code-string: var(--color-success);
+  --code-number: var(--color-warning);
+  --code-function: var(--color-info);
+  --code-variable: var(--color-text-primary);
+
+  /* Code Block Glow */
+  --code-glow: 0 0 20px rgba(26, 255, 26, 0.2);
+}

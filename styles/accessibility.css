@@ -1,0 +1,424 @@
+/**
+ * Accessibility Utilities
+ * WCAG 2.1 AAA compliant accessibility features
+ * Including screen reader utilities, focus management, and high contrast support
+ *
+ * @layer accessibility
+ */
+
+/* ========================================
+   SCREEN READER UTILITIES
+   ======================================== */
+
+/* Visually hidden but accessible to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focusable when navigated to via keyboard */
+.sr-only-focusable:active,
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Not visually hidden but skip to screen reader */
+.sr-skip {
+  speak: none;
+}
+
+/* ========================================
+   FOCUS MANAGEMENT
+   ======================================== */
+
+/* Enhanced focus indicators */
+*:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-focus);
+  position: relative;
+  z-index: 1;
+}
+
+/* Focus within - parent gets style when child is focused */
+.focus-within:focus-within {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Remove outline for mouse/touch users */
+.js-focus-visible :focus:not(.focus-visible) {
+  outline: none;
+}
+
+/* Matrix-style focus ring with glow */
+.focus-matrix:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-brand-primary);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: var(--shadow-glow);
+}
+
+/* Error focus state */
+.focus-error:focus-visible {
+  outline-color: var(--color-focus-ring-error);
+  box-shadow: 0 0 0 3px rgba(255, 26, 26, 0.4);
+}
+
+/* ========================================
+   HIGH CONTRAST MODE SUPPORT
+   ======================================== */
+
+@media (prefers-contrast: high) {
+  :root {
+    /* Increase contrast ratios */
+    --color-background: #000000;
+    --color-text-primary: #ffffff;
+    --color-brand-primary: #00ff00;
+    --color-border: #ffffff;
+
+    /* Stronger borders */
+    --border-width-thin: 2px;
+    --border-width-base: 3px;
+
+    /* Remove subtle effects */
+    --shadow-xs: none;
+    --shadow-sm: none;
+    --shadow-base: none;
+  }
+
+  /* Remove background images in high contrast */
+  *::before,
+  *::after {
+    background-image: none !important;
+  }
+
+  /* Ensure all interactive elements are clearly visible */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    border: 2px solid currentColor !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --color-text-primary: #ffffff;
+    --color-background: #000000;
+    --color-border: #ffffff;
+  }
+}
+
+/* ========================================
+   FORCED COLORS MODE (Windows High Contrast)
+   ======================================== */
+
+@media (forced-colors: active) {
+  :root {
+    /* Use system colors */
+    --color-background: Canvas;
+    --color-text-primary: CanvasText;
+    --color-brand-primary: LinkText;
+    --color-border: CanvasText;
+
+    /* Remove custom shadows and glows */
+    --shadow-glow: none;
+    --shadow-glow-strong: none;
+    --shadow-focus: none;
+  }
+
+  /* Ensure borders are visible */
+  button,
+  input,
+  select,
+  textarea,
+  .card,
+  .modal {
+    border: 1px solid CanvasText !important;
+  }
+
+  /* Remove background images */
+  *::before,
+  *::after {
+    background-image: none !important;
+  }
+}
+
+/* ========================================
+   REDUCED TRANSPARENCY
+   ======================================== */
+
+@media (prefers-reduced-transparency: reduce) {
+  * {
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* ========================================
+   KEYBOARD NAVIGATION INDICATORS
+   ======================================== */
+
+/* Tab navigation indicator */
+body:not(.mouse-user) *:focus {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Focus trap for modals */
+.focus-trap {
+  position: relative;
+}
+
+.focus-trap:focus-within {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 4px;
+}
+
+/* ========================================
+   ARIA ATTRIBUTE STYLES
+   ======================================== */
+
+/* Disabled elements */
+[aria-disabled='true'],
+[disabled] {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Hidden elements */
+[aria-hidden='true'] {
+  display: none;
+}
+
+/* Expanded/Collapsed indicators */
+[aria-expanded='false']::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: var(--space-2);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 6px solid currentColor;
+}
+
+[aria-expanded='true']::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: var(--space-2);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 6px solid currentColor;
+}
+
+/* Invalid/Error states */
+[aria-invalid='true'] {
+  border-color: var(--color-error);
+  outline-color: var(--color-error);
+}
+
+[aria-invalid='true']:focus-visible {
+  outline-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(255, 26, 26, 0.4);
+}
+
+/* Required fields indicator */
+[aria-required='true']::before,
+[required]::before {
+  content: '*';
+  color: var(--color-error);
+  margin-right: var(--space-1);
+  font-weight: var(--font-weight-bold);
+}
+
+/* Selected/Checked states */
+[aria-selected='true'],
+[aria-checked='true'] {
+  background-color: var(--color-brand-primary);
+  color: var(--color-text-on-brand);
+  box-shadow: var(--shadow-glow);
+}
+
+/* Busy/Loading states */
+[aria-busy='true'] {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+[aria-busy='true']::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid var(--color-brand-primary);
+  border-radius: var(--radius-full);
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+/* ========================================
+   LIVE REGIONS
+   ======================================== */
+
+[aria-live='polite'],
+[aria-live='assertive'] {
+  position: relative;
+}
+
+/* Visual indicator for live regions during development */
+[data-dev-mode='true'] [aria-live]::before {
+  content: 'LIVE: ' attr(aria-live);
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-size: 10px;
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+}
+
+/* ========================================
+   COLOR BLINDNESS SUPPORT
+   ======================================== */
+
+/* Patterns and textures for color distinction */
+.pattern-success {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--color-success),
+    var(--color-success) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+.pattern-warning {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--color-warning),
+    var(--color-warning) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+.pattern-error {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--color-error),
+    var(--color-error) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+/* Add icons/symbols in addition to color */
+.status-icon-success::before {
+  content: '✓';
+  margin-right: var(--space-2);
+}
+
+.status-icon-warning::before {
+  content: '⚠';
+  margin-right: var(--space-2);
+}
+
+.status-icon-error::before {
+  content: '✗';
+  margin-right: var(--space-2);
+}
+
+/* ========================================
+   TEXT SPACING (WCAG 2.1 SC 1.4.12)
+   ======================================== */
+
+.spacing-comfortable {
+  line-height: 1.5 !important;
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}
+
+.spacing-comfortable p {
+  margin-bottom: 2em !important;
+}
+
+/* ========================================
+   TOUCH TARGET SIZE (Min 44x44px)
+   ======================================== */
+
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ========================================
+   PRINT STYLES (Accessibility)
+   ======================================== */
+
+@media print {
+  /* Remove animations and transitions */
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Ensure text is readable */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+  }
+
+  /* Show link URLs */
+  a[href]::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  /* Page breaks */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    page-break-after: avoid;
+  }
+
+  /* Hide interactive elements */
+  button,
+  nav {
+    display: none !important;
+  }
+}
