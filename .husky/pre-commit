@@ -1,9 +1,5 @@
 #!/bin/sh
 # Pre-commit Hook
-# Enforces code quality standards before commit
+# Runs linters and formatters only on staged files
 
-# Lint
-pnpm lint
-
-# Auto-format
-pnpm format:write
+pnpm lint-staged
