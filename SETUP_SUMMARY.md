@@ -178,7 +178,7 @@ All projects inherit from `tsconfig.base.json` with these strict rules.
 
 - **Config**: `.prettierrc`
 - **Integration**: Works with ESLint
-- **Scripts**: `pnpm format`, `pnpm format:check`
+- **Scripts**: `pnpm format:write`, `pnpm format:check`
 
 ---
 
@@ -187,18 +187,27 @@ All projects inherit from `tsconfig.base.json` with these strict rules.
 ### Pre-commit Hook
 
 ```bash
-pnpm nx affected -t lint --parallel=3
-pnpm nx affected -t test --parallel=3 --coverage=false
-pnpm prettier --check .
+pnpm lint
+pnpm format:write
 ```
 
-**Blocks broken commits before they reach the repo**
+**Auto-formats and validates code before each commit**
 
 ### Commit-msg Hook
 
 ```bash
 pnpm exec commitlint --edit "$1"
 ```
+
+**Validates commit messages follow Conventional Commits format**
+
+### Pre-push Hook
+
+```bash
+pnpm pre-push  # Type-check + test changed files
+```
+
+````
 
 **Enforces Conventional Commits specification**
 
@@ -296,7 +305,7 @@ pnpm exec commitlint --edit "$1"
   "graph": "View dependency graph",
   "reset": "Reset Nx cache and reinstall"
 }
-```
+````
 
 ---
 
@@ -353,8 +362,8 @@ http://localhost:3000
 
 1. Create feature branch
 2. Make changes
-3. Run `pnpm lint` and `pnpm test`
-4. Commit with Conventional Commits format
+3. Run `pnpm validate` (runs all checks)
+4. Commit (uses commitizen for conventional commits)
 5. Git hooks automatically validate
 6. Push and create PR
 
@@ -377,10 +386,9 @@ The following were deliberately excluded per your blueprint:
 
 ### Immediate Actions
 
-1. ✅ **Verify build**: `pnpm build:all`
-2. ✅ **Run tests**: `pnpm test:all`
-3. ✅ **Start apps**: `pnpm start:all`
-4. ✅ **View Storybook**: `pnpm storybook`
+1. ✅ **Verify build**: `pnpm build`
+2. ✅ **Run tests**: `pnpm test`
+3. ✅ **Start dev server**: `pnpm dev`
 
 ### Short-term Development
 
@@ -433,33 +441,61 @@ The following were deliberately excluded per your blueprint:
 ### Development
 
 ```bash
-pnpm start                 # Start shell app
-pnpm start:checkout        # Start checkout app
-pnpm storybook            # Run Storybook
+pnpm dev                  # Dev server with Turbopack
+pnpm dev:debug            # Dev server with debugger
+pnpm preview              # Preview production build
 ```
 
 ### Testing
 
 ```bash
-pnpm test                 # Test affected
-pnpm test:all             # Test all
-pnpm e2e                  # E2E tests
+pnpm test                 # Jest unit tests
+pnpm test:watch           # Watch mode
+pnpm test:coverage        # Coverage report
+pnpm test:ci              # CI-optimized tests
+pnpm test:unit            # Unit tests only
+pnpm test:changed         # Test changed files
+pnpm e2e                  # Playwright E2E tests
+pnpm e2e:ui               # Interactive E2E UI
+pnpm e2e:headed           # E2E with visible browser
+pnpm e2e:debug            # Debug E2E tests
+pnpm e2e:ci               # CI-optimized E2E
 ```
 
 ### Code Quality
 
 ```bash
-pnpm lint                 # Lint affected
-pnpm format               # Format all
+pnpm lint                 # ESLint check
+pnpm lint:fix             # Auto-fix linting issues
+pnpm format:write         # Format code
+pnpm format:check         # Check formatting
 pnpm type-check           # TypeScript check
+pnpm validate             # Run all checks (type + lint + format + test)
 ```
 
 ### Build & Deploy
 
 ```bash
-pnpm build                # Build affected
-pnpm build:all            # Build all
-pnpm graph                # View dependency graph
+pnpm build                # Standard build
+pnpm build:production     # Production-optimized build
+pnpm build:analyze        # Build with bundle analysis
+```
+
+### Maintenance
+
+```bash
+pnpm clean                # Clean build cache
+pnpm clean:full           # Full clean + reinstall
+pnpm deps:check           # Check outdated dependencies
+pnpm deps:update          # Interactive dependency updates
+pnpm audit                # Security audit
+```
+
+### CI/CD
+
+```bash
+pnpm ci                   # Full CI pipeline
+pnpm pre-push             # Pre-push validation
 ```
 
 ---

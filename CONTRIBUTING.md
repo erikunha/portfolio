@@ -42,7 +42,7 @@ pnpm install
 3. Start the development server:
 
 ```bash
-pnpm start
+pnpm dev
 ```
 
 4. Open [http://localhost:3000](http://localhost:3000)
@@ -54,33 +54,39 @@ pnpm start
 ### Running Tasks
 
 ```bash
-# Serve an app
-pnpm nx serve <app-name>
+# Development
+pnpm dev                # Dev server with Turbopack
+pnpm dev:debug          # Dev server with debugger
 
-# Build an app
-pnpm nx build <app-name>
+# Build
+pnpm build              # Production build
+pnpm build:production   # Production-optimized build
+pnpm build:analyze      # Build with bundle analysis
 
-# Run tests
-pnpm nx test <lib-name>
+# Testing
+pnpm test               # Run all tests
+pnpm test:watch         # Watch mode
+pnpm test:coverage      # Coverage report
+pnpm test:unit          # Unit tests only
+pnpm test:changed       # Test changed files
 
-# Run E2E tests
-pnpm nx e2e <app-name>-e2e
+# E2E Testing
+pnpm e2e                # Run E2E tests
+pnpm e2e:ui             # Interactive E2E UI
+pnpm e2e:headed         # E2E with visible browser
+pnpm e2e:debug          # Debug E2E tests
 
-# Lint
-pnpm nx lint <project-name>
+# Code Quality
+pnpm lint               # ESLint check
+pnpm lint:fix           # Auto-fix linting issues
+pnpm format:write       # Format code
+pnpm format:check       # Check formatting
+pnpm type-check         # TypeScript check
 
-# Run Storybook
-pnpm nx storybook ui
-```
-
-### Affected Commands
-
-Only run tasks on projects affected by your changes:
-
-```bash
-pnpm nx affected -t lint
-pnpm nx affected -t test
-pnpm nx affected -t build
+# Comprehensive Checks
+pnpm validate           # Run all checks (type + lint + format + test)
+pnpm ci                 # Full CI pipeline
+pnpm pre-push           # Pre-push validation
 ```
 
 ---

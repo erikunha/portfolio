@@ -10,13 +10,48 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- Commitizen for interactive semantic commit messages
-- Semantic Release automation for versioning and changelog generation
+- **Package Metadata**: Added description, author, repository, homepage, bugs, keywords, and engines fields to package.json
+- **Enhanced Testing Scripts**:
+  - `test:unit` - Run only unit tests
+  - `test:changed` - Test only changed files (faster iteration)
+- **Enhanced E2E Scripts**:
+  - `e2e:debug` - Debug E2E tests interactively
+  - `e2e:ci` - CI-optimized E2E with GitHub reporter
+  - `e2e:report` - View E2E test report
+- **Development Scripts**:
+  - `dev:debug` - Dev server with Node.js inspector enabled
+- **Build Scripts**:
+  - `build:analyze` - Build with bundle size analysis
+- **Quality Scripts**:
+  - `validate` - Run all quality checks (type + lint + format + test)
+  - `ci` - Complete CI pipeline (install + validate + e2e:ci)
+  - `pre-push` - Pre-push validation (type-check + test:changed)
+- **Maintenance Scripts**:
+  - `deps:check` - Check outdated dependencies
+  - `deps:update` - Interactive dependency updates
+  - `audit` - Security audit with moderate severity threshold
+- **Commitizen** for interactive semantic commit messages
+- **Commitlint** configuration with Conventional Commits validation
+- **Git Hooks**:
+  - `commit-msg` - Validates commit message format
+  - Enhanced `pre-commit` - Auto-formats code (was format:check, now format:write)
+  - Enhanced `pre-push` - Type-check + test changed files only
+- **Semantic Release** automation for versioning and changelog generation
 - GitHub Actions workflow for automated releases
 
 ### Changed
 
+- **Renamed**: `format` → `format:write` for clarity
+- **Pre-commit hook**: Now auto-formats code instead of just checking
+- **Enhanced test scripts**: Added silent mode and text-summary reporter for CI
+- **Improved coverage reporting**: Dual reporters (lcov + text-summary)
 - Enhanced commit workflow with `pnpm commit` command for guided commits
+- Updated documentation (README.md, CONTRIBUTING.md, SETUP_SUMMARY.md, AGENTS.md) to reflect new scripts and workflows
+
+### Fixed
+
+- Husky v10 compatibility - Removed deprecated shell script headers from commit-msg hook
+- Commitlint subject-case rule - Disabled overly strict sentence-case requirement
 
 ---
 

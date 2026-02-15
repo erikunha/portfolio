@@ -31,6 +31,7 @@
   },
   "scripts": {
     "prepare": "husky",
+    "preinstall": "npx only-allow pnpm",
     "dev": "next dev --turbopack",
     "dev:debug": "NODE_OPTIONS='--inspect' next dev --turbopack",
     "start": "next start",

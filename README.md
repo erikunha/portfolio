@@ -36,9 +36,14 @@ pnpm dev                # http://localhost:3000 (with Turbopack)
 
 ```bash
 pnpm test               # Jest unit tests
+pnpm test:watch         # Watch mode
+pnpm test:coverage      # Coverage report
 pnpm e2e                # Playwright E2E
+pnpm e2e:ui             # E2E interactive mode
 pnpm build              # Production build
 pnpm lint               # ESLint
+pnpm format:write       # Format code
+pnpm type-check         # TypeScript check
 ```
 
 ---
@@ -320,33 +325,61 @@ logger.error('API failure', error, { endpoint: '/api/data' });
 ### Local Development
 
 ```bash
-pnpm start                # Dev server (http://localhost:3000)
-pnpm storybook            # Component library (http://localhost:6006)
+pnpm dev                # Dev server with Turbopack (http://localhost:3000)
+pnpm dev:debug          # Dev server with debugger
+pnpm preview            # Preview production build locally
 ```
 
 ### Quality Checks
 
 ```bash
-pnpm lint                 # ESLint (strict rules)
-pnpm format               # Prettier
-pnpm type-check           # TypeScript compilation
-pnpm test                 # Jest unit tests
-pnpm e2e                  # Playwright E2E
+pnpm lint               # ESLint (strict rules)
+pnpm lint:fix           # Auto-fix linting issues
+pnpm format:write       # Format with Prettier
+pnpm format:check       # Check formatting
+pnpm type-check         # TypeScript compilation
+pnpm validate           # Run all quality checks (type + lint + format + test)
+```
+
+### Testing
+
+```bash
+pnpm test               # Jest unit tests
+pnpm test:watch         # Watch mode for development
+pnpm test:coverage      # Generate coverage report
+pnpm test:ci            # CI-optimized test run
+pnpm test:unit          # Run only unit tests
+pnpm test:changed       # Test only changed files
+pnpm e2e                # Playwright E2E tests
+pnpm e2e:ui             # Interactive E2E test UI
+pnpm e2e:headed         # E2E tests with visible browser
+pnpm e2e:debug          # Debug E2E tests
+pnpm e2e:ci             # CI-optimized E2E with GitHub reporter
 ```
 
 ### Building
 
 ```bash
-pnpm build                # Build affected projects
-pnpm build:all            # Build entire monorepo
+pnpm build              # Standard build
+pnpm build:production   # Production-optimized build
+pnpm build:analyze      # Build with bundle analysis
 ```
 
-### Nx Commands
+### Maintenance
 
 ```bash
-pnpm nx affected -t test  # Run tests only for changed code
-pnpm nx graph             # Visualize dependency graph
-pnpm nx reset             # Clear cache
+pnpm clean              # Clean build cache
+pnpm clean:full         # Full clean + reinstall
+pnpm deps:check         # Check outdated dependencies
+pnpm deps:update        # Interactive dependency updates
+pnpm audit              # Security audit
+```
+
+### CI/CD
+
+```bash
+pnpm ci                 # Full CI pipeline (install + validate + E2E)
+pnpm pre-push           # Pre-push checks (type-check + changed tests)
 ```
 
 ---
@@ -356,10 +389,10 @@ pnpm nx reset             # Clear cache
 ### Standalone Build (Recommended)
 
 ```bash
-pnpm nx build shell
+pnpm build:production
 ```
 
-Output: `dist/apps/shell/.next/standalone`
+Output: `.next/standalone`
 
 - **Size**: ~50MB (includes Node.js runtime)
 - **Docker**: Single-stage build (no dependencies)
@@ -371,9 +404,9 @@ Output: `dist/apps/shell/.next/standalone`
 ```dockerfile
 FROM node:22-alpine
 WORKDIR /app
-COPY dist/apps/shell/.next/standalone ./
-COPY dist/apps/shell/.next/static ./.next/static
-COPY apps/shell/public ./public
+COPY .next/standalone ./
+COPY .next/static ./.next/static
+COPY public ./public
 EXPOSE 3000
 CMD ["node", "server.js"]
 ```
@@ -585,8 +618,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 ```bash
 git checkout -b feature/your-feature
 # Make changes
-pnpm test && pnpm lint
-git commit -m "feat: add your feature"
+pnpm validate           # Run all quality checks
+git commit              # Uses commitizen for conventional commits
 # Push and open PR
 ```
 
