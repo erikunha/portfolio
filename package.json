@@ -26,8 +26,7 @@
     "web-vitals"
   ],
   "engines": {
-    "node": ">=22.21.0",
-    "pnpm": ">=10.29.3"
+    "node": ">=22.21.0"
   },
   "scripts": {
     "prepare": "husky",
