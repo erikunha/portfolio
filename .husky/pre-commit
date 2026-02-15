@@ -5,5 +5,5 @@
 # Lint
 pnpm lint
 
-# Format check
-pnpm format:check
+# Auto-format
+pnpm format:write

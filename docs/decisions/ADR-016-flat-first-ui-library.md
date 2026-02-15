@@ -136,7 +136,7 @@ libs/shared/ui/src/lib/
 - All components at top level of `lib/`
 - Each component in its own folder with full file set (tsx, css, spec, stories)
 - Export from root barrel: `export * from './lib/button'`
-- Consumer imports: `import { Button } from '../components/shared'`
+- Consumer imports: `import { Button } from '@erikunha-portifolio/ui'`
 
 #### Phase 2: Purpose-Based Grouping (8+ components)
 
@@ -177,7 +177,7 @@ export * from './lib/forms';
 export * from './lib/feedback';
 ```
 
-**Consumer Impact**: ZERO - imports remain `from '../components/shared'`
+**Consumer Impact**: ZERO - imports remain `from '@erikunha-portifolio/ui'`
 
 #### Pre-Approved Categories
 
@@ -223,17 +223,17 @@ When grouping becomes necessary, use these functional categories:
 **Contract**: Consumer code NEVER references internal structure.
 
 ```typescript
-// ✅ ALWAYS CORRECT - Barrel export import
-import { Button, Input, Alert } from '../components/shared';
+// ✅ ALWAYS CORRECT - Package root import
+import { Button, Input, Alert } from '@erikunha-portifolio/ui';
 
 // ❌ NEVER DO THIS - Deep imports expose internal structure
-import { Button } from '../components/shared/forms/button';
-import { Button } from '../components/shared/button';
+import { Button } from '@erikunha-portifolio/ui/forms/button';
+import { Button } from '@erikunha-portifolio/ui/button';
 ```
 
 **Enforcement**:
 
-- ESLint rule preventing deep imports into internal structure
+- ESLint rule preventing deep imports: `@erikunha-portifolio/ui/*`
 - CI validation ensuring all components exported from root barrel
 - Documentation explicitly prohibits deep imports
 
@@ -243,7 +243,7 @@ import { Button } from '../components/shared/button';
 2. **Add category barrel** exports (`lib/forms/index.ts`)
 3. **Update root barrel** to re-export from categories
 4. **Update Storybook titles** to mirror structure (`'Forms/Button'`)
-5. **Run tests**: `pnpm nx test ui -u` (update snapshots)
+5. **Run tests**: `pnpm test` (Jest with coverage)
 6. **Verify imports**: Consumer code should require ZERO changes
 7. **Update documentation**: STRUCTURE.md with new organization
 
@@ -301,7 +301,7 @@ export default {
 
 ### If External Consumers Emerge
 
-**Versioning**: Shared components now part of the monolithic app structure.
+**Versioning**: Consider semantic-release for `@erikunha-portifolio/ui` independently.
 
 **Breaking Changes**: Maintain import stability via deprecation warnings + 6-month migration window.
 

@@ -1,10 +1,8 @@
-import js from '@eslint/js';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default [
-  js.configs.recommended,
   ...tseslint.configs.recommended,
   {
     ignores: [
@@ -12,11 +10,12 @@ export default [
       '**/out-tsc',
       '**/.next',
       '**/node_modules',
-      '**/.nx',
       '**/next-env.d.ts',
       '**/storybook-static/**',
       '**/.storybook/manager-head-snippet.js',
       '**/.storybook/preview-head-snippet.js',
+      '**/playwright-report',
+      '**/test-results',
     ],
   },
   {
@@ -64,33 +63,6 @@ export default [
     files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     rules: {
       'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
-    },
-  },
-  {
-    files: [
-      '**/jest.preset.js',
-      '**/next.config.js',
-      '**/performance-budget.config.js',
-    ],
-    languageOptions: {
-      globals: {
-        module: 'readonly',
-        require: 'readonly',
-        __dirname: 'readonly',
-        process: 'readonly',
-      },
-    },
-  },
-  {
-    files: ['**/public/sw.js'],
-    languageOptions: {
-      globals: {
-        self: 'readonly',
-        caches: 'readonly',
-        fetch: 'readonly',
-        Response: 'readonly',
-        Request: 'readonly',
-      },
     },
   },
   {

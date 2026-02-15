@@ -16,6 +16,7 @@ We organize components by **what they do**:
 apps/shell/components/
 ├── layout/         → Structure & navigation
 ├── sections/       → Page content blocks
+├── ui/             → Interactive controls
 ├── seo/            → Metadata & structured data
 └── providers/      → Context & analytics
 
@@ -26,7 +27,7 @@ apps/shell/lib/
 **Benefits**:
 
 - **Clear Intent**: Component location indicates its purpose immediately
-- **Easy Discovery**: "Where's the skip links?" → `layout/`
+- **Easy Discovery**: "Where's the language switcher?" → `ui/`
 - **Stable Structure**: Purpose changes less frequently than size/complexity
 - **No Subjectivity**: Clear rules for placement (see Decision Matrix below)
 
@@ -37,7 +38,7 @@ apps/shell/lib/
 ### 1. `components/layout/`
 
 **Purpose**: Structure, navigation, and accessibility
-**Examples**: header, footer, sidebar
+**Examples**: skip-links, header, footer, sidebar
 
 **When to use**:
 
@@ -47,9 +48,9 @@ apps/shell/lib/
 
 ```
 layout/
-└── header/
+└── skip-links/
     ├── index.tsx
-    ├── header.module.css
+    ├── skip-links.module.css
     └── index.spec.tsx
 ```
 
@@ -82,7 +83,32 @@ sections/
 
 ---
 
-### 3. `components/seo/`
+### 3. `components/ui/`
+
+**Purpose**: Interactive controls and widgets
+**Examples**: theme-toggle, language-switcher, tooltips, modals
+
+**When to use**:
+
+- Component provides user interaction (clicks, toggles, input)
+- Standalone widget without complex business logic
+- Reusable across different page sections
+
+```
+ui/
+├── theme-toggle/
+│   ├── index.tsx
+│   ├── theme-toggle.module.css
+│   └── index.spec.tsx
+└── language-switcher/
+    ├── index.tsx
+    ├── language-switcher.module.css
+    └── index.spec.tsx
+```
+
+---
+
+### 4. `components/seo/`
 
 **Purpose**: SEO metadata and structured data
 **Examples**: seo (meta tags), structured-data (JSON-LD)
@@ -103,7 +129,7 @@ seo/
 
 ---
 
-### 4. `components/providers/`
+### 5. `components/providers/`
 
 **Purpose**: React Context providers, analytics, tracking
 **Examples**: web-vitals-tracker, analytics-provider, error-boundary
@@ -123,7 +149,7 @@ providers/
 
 ---
 
-### 5. `lib/infrastructure/`
+### 6. `lib/infrastructure/`
 
 **Purpose**: System-level utilities (not React components)
 **Examples**: bfcache-handler, route-announcer, service-worker-registration
@@ -163,6 +189,14 @@ Use this flowchart when deciding where to place a new component:
 │  (Hero, About, Projects, etc.)       │
 └───────────┬─────────────────────────┘
             │ YES → components/sections/
+            │
+            NO
+            │
+┌───────────▼─────────────────────────┐
+│  Does it provide user interaction?  │
+│  (Buttons, toggles, inputs)          │
+└───────────┬─────────────────────────┘
+            │ YES → components/ui/
             │
             NO
             │
@@ -293,21 +327,20 @@ export default {
 
 ### Import Path Stability Guarantee
 
-**Public API Contract**: All components are exported from the shared component directory.
+**Public API Contract**: All components are exported from package root regardless of internal structure.
 
 ```typescript
-// ✅ ALWAYS CORRECT - Import from shared components
-import { Button } from '../components/shared/lib/button';
-// OR from the shared barrel export
-import { Button } from '../components/shared';
+// ✅ ALWAYS CORRECT - Import from package root
+import { Button } from '@erikunha-portifolio/ui';
 
-// ❌ AVOID - Deep imports bypass the public API
-import { Button } from '../components/shared/lib/button/button';
+// ❌ NEVER DO THIS - No deep imports
+import { Button } from '@erikunha-portifolio/ui/forms/button';
+import { Button } from '@erikunha-portifolio/ui/button';
 ```
 
-**Guarantee**: Internal reorganization will NEVER break consumer imports from the barrel.
+**Guarantee**: Internal reorganization (flat → grouped) will NEVER break consumer imports.
 
-**Implementation**: Barrel export system:
+**Implementation**: Two-tier barrel export system (when grouped):
 
 1. **Category barrels** (`lib/forms/index.ts`) - Export all category components
 2. **Root barrel** (`src/index.ts`) - Re-export from category barrels
@@ -343,9 +376,9 @@ libs/shared/ui/src/lib/
 ### App-Specific Components (apps/shell/components/)
 
 ```
-components/layout/skip-links/
+components/ui/theme-toggle/
 ├── index.tsx                    ← Default export, main component
-├── skip-links.module.css        ← Co-located styles (zero-runtime)
+├── theme-toggle.module.css      ← Co-located styles (zero-runtime)
 └── index.spec.tsx               ← Tests (70%+ coverage target)
 ```
 
@@ -353,7 +386,7 @@ components/layout/skip-links/
 
 - ❌ **NO** `.stories.tsx` files (app-coupled, not for Storybook)
 - ❌ **NO** barrel exports (direct imports only)
-- ✅ Single `index.tsx` with default export or named component
+- ✅ Single `index.tsx` with default export
 - ✅ CSS Modules with design tokens from `libs/shared/styles`
 - ✅ Tests co-located in same folder
 
@@ -384,42 +417,42 @@ libs/shared/ui/src/lib/button/
 **Good**:
 
 ```tsx
-// components/layout/header/index.tsx
-export function Header() {
-  // Single responsibility: site header
+// components/ui/theme-toggle/index.tsx
+export default function ThemeToggle() {
+  // Single responsibility: toggle theme
 }
 ```
 
 **Bad**:
 
 ```tsx
-// components/layout/header/index.tsx
-export function Header() {
-  // Mixing concerns: header + navigation + footer
+// components/ui/theme-toggle/index.tsx
+export default function ThemeToggle() {
+  // Mixing concerns: theme + language + user preferences
 }
 ```
 
 ### 2. Co-locate Related Files
 
 ```
-layout/skip-links/
+ui/theme-toggle/
 ├── index.tsx               ← Component logic
-├── skip-links.module.css   ← Styles (right next to component)
+├── theme-toggle.module.css ← Styles (right next to component)
 └── index.spec.tsx          ← Tests (right next to component)
 ```
 
 ### 3. Use Design Tokens
 
 ```css
-/* ✅ CORRECT - skip-links.module.css */
-.link {
+/* ✅ CORRECT - theme-toggle.module.css */
+.toggle {
   background: var(--color-primary-500);
   padding: var(--spacing-3);
   transition: all var(--transition-normal);
 }
 
 /* ❌ WRONG - hardcoded values */
-.link {
+.toggle {
   background: #3b82f6;
   padding: 12px;
 }
@@ -427,7 +460,17 @@ layout/skip-links/
 
 ### 4. Write Purpose-Driven Tests
 
-Test behavior and outcomes, not implementation details. Focus on what the component does for users.
+```typescript
+// ✅ CORRECT - tests the purpose
+it('should switch from light to dark theme when clicked', () => {
+  // Test behavior, not implementation
+});
+
+// ❌ WRONG - tests implementation details
+it('should call setTheme with "dark" parameter', () => {
+  // Brittle, couples to internal API
+});
+```
 
 ---
 
@@ -469,8 +512,8 @@ Test behavior and outcomes, not implementation details. Focus on what the compon
 **A**: Choose based on **primary purpose**:
 
 - `skip-links` provides navigation → `layout/` (even though it has UI)
+- `theme-toggle` is primarily interaction → `ui/` (even though it affects layout)
 - `web-vitals-tracker` is analytics → `providers/` (even though it's infrastructure)
-- `structured-data` is SEO → `seo/` (even though it could be considered infrastructure)
 
 ### Q: Should I create sections/ components now?
 
@@ -502,7 +545,7 @@ lib/
     └── alert/
 ```
 
-**Import stability**: Always import from the shared barrel export (`apps/shell/components/shared`), not deep imports. Internal structure changes won't break consumer code.
+**Import stability**: Always import from package root (`@erikunha-portifolio/ui`), never deep imports. Internal structure changes won't break consumer code.
 
 ---
 

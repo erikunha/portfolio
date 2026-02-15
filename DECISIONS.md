@@ -6,30 +6,30 @@ Format: [ADR Template](https://github.com/joelparkerhenderson/architecture-decis
 
 ---
 
-## ADR-001: Adopt Nx Monorepo with pnpm
+## ADR-001: Use pnpm as Package Manager
 
 **Date**: 2026-01-09
 
 **Status**: Accepted
 
 **Context**:
-We need a monorepo strategy that scales across multiple teams, supports deterministic builds, and integrates well with Next.js and Storybook.
+We need a fast, disk-efficient package manager that integrates well with Next.js and modern tooling.
 
 **Decision**:
-Adopt **Nx Monorepo (Integrated Mode)** with **pnpm** as the package manager.
+Use **pnpm** as the package manager for this Next.js application.
 
 **Rationale**:
 
-- Nx provides deterministic task execution and dependency graph management
-- Native support for Next.js, Storybook, and Playwright
 - pnpm is faster and more disk-efficient than npm/yarn
-- Nx caching significantly reduces CI times
+- Better dependency resolution and deduplication
+- Native workspace support for potential future expansion
+- Excellent integration with Next.js and TypeScript
 
 **Consequences**:
 
-- Positive: Faster builds, better dependency management, improved developer experience
-- Negative: Learning curve for engineers unfamiliar with Nx
-- Mitigation: Comprehensive onboarding documentation
+- Positive: Faster installs, reduced disk usage, better dependency management
+- Negative: Team members must use pnpm instead of npm/yarn
+- Mitigation: Document pnpm usage in README and CONTRIBUTING.md
 
 ---
 
@@ -252,7 +252,7 @@ We need a comprehensive testing strategy covering unit, integration, and end-to-
 
 **Rationale**:
 
-- Jest is fast and well-integrated with Nx
+- Jest is fast and well-integrated with Next.js and React Testing Library
 - Playwright supports modern web features and is faster than Selenium
 - Coverage targets ensure sufficient testing without diminishing returns
 
@@ -426,9 +426,9 @@ As the component library grows, we need a consistent organizational structure th
 **Decision**:
 Adopt **Purpose-Based Organization** for component structure:
 
-- **layout/**: Page structure and navigation (header, footer)
+- **layout/**: Page structure and navigation (skip-links, header, footer)
 - **sections/**: Page content blocks (hero, about, projects, contact)
-- **ui/**: Interactive controls (buttons, forms)
+- **ui/**: Interactive controls (theme-toggle, language-switcher, buttons)
 - **seo/**: Metadata and structured data
 - **providers/**: Context providers and analytics
 - **lib/infrastructure/**: System utilities (BFCache, Service Workers)
