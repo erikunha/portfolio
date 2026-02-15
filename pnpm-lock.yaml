@@ -141,7 +141,7 @@ importers:
         specifier: 30.2.0
         version: 30.2.0
       lint-staged:
-        specifier: ^16.2.7
+        specifier: 16.2.7
         version: 16.2.7
       next-router-mock:
         specifier: 1.0.5
