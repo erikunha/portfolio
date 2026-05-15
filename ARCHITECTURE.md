@@ -1,0 +1,558 @@
+# Portfolio Architecture — Staff/Principal Pass
+
+> Target stack: Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind v4 · Vercel Edge · Biome · pnpm · Playwright (contact path only)
+>
+> Author: Erik Henrique Alves Cunha
+> Last revised: 2026-05-13
+> Status: implemented (2026-05-15) — see DECISIONS.md for implementation notes
+
+---
+
+## 0. The meta-frame
+
+This portfolio is itself a hiring artifact for Staff/Principal frontend + applied-AI roles. The architecture has to **demonstrate the engineering it claims**. A site that says "performance-first" but ships a 400KB JS bundle is self-disqualifying. The architecture below treats the page as a small production service with the same rigor I'd apply to a payment platform — minus the multi-region overkill.
+
+The Principal-level moves here are mostly **what we don't build**:
+- No CMS (single-author, content fits in typed TS files)
+- No multi-region (portfolio, not regulated infra)
+- No state management library (3 client islands total)
+- No micro-frontends (one composition, no reuse pressure)
+- No GraphQL (REST + Server Actions, this isn't a federated graph)
+- No design system extraction (one page, no second consumer)
+
+What we build is small, opinionated, edge-deployed, and budget-enforced.
+
+---
+
+## 1. Requirements
+
+### Functional
+- Static composition of ~18 content sections (hero, README, projects, git log, NPM, SYS_HEALTH, PERF_RECEIPTS, visa, community, HOTTEST_TAKES, RESPONSIBILITIES, guitar_rig, unknowns, contact, MAN ERIK, INTERACTIVE_SHELL, footer)
+- Hero: Matrix dialog loop + boot sequence (typewriter)
+- IntersectionObserver typewriter reveal on scroll for content blocks
+- INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
+- Contact form: real submission, delivery to inbox, durable log
+- Live Lighthouse score (PSI API, cached daily)
+- `MOTION` indicator tied to `prefers-reduced-motion`
+- Dynamic OG image (recruiter-safe, optional role-targeted variant)
+- Machine-readable `erik.json` for AI recruiting agents
+- /robots.txt, /sitemap.xml, /llms.txt
+
+### Non-functional (non-negotiable)
+| Metric | Budget |
+|---|---|
+| LCP | < 1.8s on 4G |
+| INP | < 200ms |
+| CLS | < 0.05 |
+| JS gzipped (landing route) | < 120KB |
+| Lighthouse Performance | ≥ 95 |
+| Lighthouse Accessibility | = 100 |
+| Lighthouse Best Practices | ≥ 95 |
+| Lighthouse SEO | = 100 |
+| WCAG | 2.1 AA |
+| Monthly cost ceiling | $5 nominal · $50 hard cap |
+
+### Constraints
+- Single author, no editorial workflow
+- No analytics PII beyond IP hash for rate-limiting
+- Must survive sustained 1k-10k visits/month with occasional 50k/day bursts (HN spike scenario)
+- Must work without JS for content (progressive enhancement; only the shell, hero loop, form, and motion indicator require JS)
+- LLM `ask` cost must hard-cap; never blow the budget
+
+---
+
+## 2. High-level architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   GitHub repo (public)                                      │
+│       │                                                     │
+│       │ push → main                                         │
+│       ▼                                                     │
+│   GitHub Actions ──── PR gate: bundle size + lighthouse-ci │
+│       │              + playwright contact path + biome     │
+│       │                                                     │
+│       ▼                                                     │
+│   Vercel build ──── RSC compilation                        │
+│       │              static page emission                  │
+│       │              edge function bundling                │
+│       │                                                     │
+│       ▼                                                     │
+│   Vercel Edge Network (global CDN)                         │
+│       ├── / (static HTML, ~80KB JS island)                 │
+│       ├── /api/ask        (Edge Function, streaming)       │
+│       ├── /api/contact    (Server Action, Node)            │
+│       ├── /api/lighthouse (Edge, reads KV)                 │
+│       ├── /opengraph-image.tsx (Edge OG renderer)          │
+│       ├── /erik.json      (static, cached)                 │
+│       ├── /llms.txt       (static)                         │
+│       └── /robots.txt + /sitemap.xml (static)              │
+│           │                                                 │
+│           ▼                                                 │
+│   ┌────────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│   │ Upstash Redis  │  │ Anthropic    │  │ Resend       │  │
+│   │ ─ rate limits  │  │ ─ claude     │  │ ─ contact    │  │
+│   │ ─ ask cache    │  │   haiku      │  │   delivery   │  │
+│   │ ─ contact log  │  │              │  │              │  │
+│   │ ─ psi cache    │  │              │  │              │  │
+│   └────────────────┘  └──────────────┘  └──────────────┘  │
+│                                                             │
+│   Daily cron (Vercel) ──► PSI API ──► KV (lighthouse-score)│
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Why Vercel Edge end-to-end
+**Alternatives considered:**
+1. Cloudflare Pages + Workers — cheaper at scale, more setup
+2. Netlify + Functions — comparable to Vercel, less Next-native
+3. Self-hosted on VPS — full control, but ops overhead disqualifies
+
+**Discriminator:** Next.js 15 integration depth. Vercel ships Next features first; the OG image + Server Actions + Edge runtime story is more mature. For a single-author portfolio, the ops savings dwarf the per-request cost difference.
+
+**Recommend:** Vercel Edge. Move to Cloudflare only if `ask` traffic 10× and inference cost becomes the binding constraint.
+
+---
+
+## 3. Rendering model
+
+### Default: React Server Components, statically generated at build time
+Every section that doesn't depend on per-visitor state is RSC + SSG. Output is HTML + CSS, **zero JS bytes shipped** for those sections.
+
+### Client islands (the only things that ship JS):
+| Island | Why client | Size budget (gzipped) |
+|---|---|---|
+| Matrix dialog loop + boot typewriter | infinite animation w/ `useRef` mutation | ≤ 4KB |
+| INTERACTIVE_SHELL | input handling, streaming LLM response | ≤ 30KB (incl. Tone.js if guitar audio added) |
+| Contact form | Server Action client wrapper, optimistic UI | ≤ 6KB |
+| IntersectionObserver typewriter | reveal-on-scroll | ≤ 2KB |
+| MOTION indicator | `matchMedia` listener | ≤ 1KB |
+| **Total client JS budget** | | **≤ 43KB** |
+
+Naming convention: every client file ends in `.client.tsx`. The default is server; client is the exception, named explicitly. Forces RSC drift to be visible in code review.
+
+### Trade-off
+RSC + selective islands is harder to debug than full-CSR (smaller stack traces, more build steps). The win is hitting the JS budget without compromise. For a portfolio, the budget is the binding constraint — debuggability is mine alone to manage.
+
+---
+
+## 4. Directory layout
+
+```
+app/
+  layout.tsx                  # font, theme tokens, JSON-LD, metadata
+  page.tsx                    # single-page composition (RSC)
+  opengraph-image.tsx         # dynamic OG (Edge)
+  not-found.tsx               # Matrix-themed 404
+  robots.ts, sitemap.ts       # SEO basics
+  llms.txt/route.ts           # AI-agent manifest
+  api/
+    ask/route.ts              # Edge: LLM streaming
+    contact/route.ts          # Node: contact (uses Resend)
+    lighthouse/route.ts       # Edge: reads PSI cache from KV
+    erik.json/route.ts        # static profile, cached
+  contact/action.ts           # Server Action for the form
+
+components/
+  terminal/                   # Card, Prompt, GitLog, Tile, ManPage
+  sections/                   # HeroBoot, ProjectsGrid, PerfReceipts,
+                              # VisaTable, GuitarRig, Unknowns, etc.
+  client/                     # *.client.tsx — ONLY interactivity
+    matrix-dialog.client.tsx
+    shell.client.tsx
+    contact-form.client.tsx
+    typewriter-observer.client.tsx
+    motion-indicator.client.tsx
+  ui/                         # Button, Input, Field (minimal)
+
+content/
+  bio.ts                      # README content
+  projects.ts                 # 6 project tiles
+  employers.ts                # git log entries
+  perf-receipts.ts            # 8 tiles
+  npm-stack.ts                # 12 tiles
+  hottest-takes.ts            # 8 defended opinions
+  responsibilities.ts         # permissions matrix
+  guitar-rig.ts               # gear sheet
+  unknowns.ts                 # 5+4 items
+  visa.ts                     # jurisdiction table
+  community.ts                # devopsdays
+  man-page.ts                 # MAN ERIK content
+  social.ts                   # github / linkedin / email / site
+  zod-schemas.ts              # validation, build-time
+
+lib/
+  contact/                    # zod schema, rate-limit, honeypot, resend client
+  ask/                        # system prompt builder, streaming, anti-abuse
+  motion/                     # useReducedMotion, dialog-loop hook
+  observability/              # web-vitals reporter, sentry init (optional)
+  seo/                        # Person JSON-LD, metadata builder, llms.txt builder
+  edge/                       # KV clients (Upstash), PSI fetcher
+
+styles/
+  globals.css                 # Tailwind v4 + terminal CSS vars + CRT layers
+
+public/
+  og/                         # fallback OG images
+  fonts/                      # JetBrains Mono self-hosted
+
+tests/
+  e2e/                        # Playwright: contact happy + spam path
+  unit/                       # Vitest: zod schemas, rate-limit logic
+
+ARCHITECTURE.md               # this doc
+DECISIONS.md                  # ADR-lite, running log
+README.md                     # repo onboarding
+```
+
+---
+
+## 5. Data shape
+
+All content is **typed TS modules**, validated by Zod at build time. Build fails on schema violation. This serves three purposes:
+- Forces content to stay reviewable as PRs (diff-friendly)
+- Makes future CMS migration trivial (the schemas become the API contract)
+- Lets engineers reading the source see exactly what shape the site expects
+
+Example:
+```ts
+// content/perf-receipts.ts
+import { z } from 'zod';
+
+export const PerfReceiptSchema = z.object({
+  metric: z.string(),        // "API_LATENCY"
+  delta: z.number(),         // -0.975
+  unit: z.enum(['%', 'x']),  // '%'
+  employer: z.string(),      // "VENTURUS"
+  method: z.string(),        // "Query redesign + indexing"
+  detail: z.string().optional(), // "40s → <1s"
+});
+
+export const perfReceipts = [
+  { metric: 'API_LATENCY', delta: -0.975, unit: '%', employer: 'VENTURUS',
+    method: 'Query redesign + indexing', detail: '40s → <1s' },
+  // ... 7 more
+] as const satisfies z.infer<typeof PerfReceiptSchema>[];
+```
+
+---
+
+## 6. The `ask` LLM endpoint — deep dive
+
+This is the single highest-risk piece of the site (cost, abuse, latency).
+
+### Contract
+```
+POST /api/ask
+Content-Type: application/json
+{ "q": "string ≤ 500 chars" }
+
+→ 200 text/event-stream
+  data: { "type": "delta", "text": "..." }
+  data: { "type": "done", "tokens": 142 }
+
+→ 429 application/json
+  { "error": "rate_limited", "retry_after": 3300 }
+
+→ 503 application/json
+  { "error": "budget_exhausted", "fallback": "email erik@erikunha.com.br" }
+```
+
+### Stack
+- Vercel Edge Function (Node-compatible, but Edge for streaming + low cold-start)
+- Anthropic SDK with `claude-haiku-4-5-20251001` (cheapest tier with adequate quality)
+- System prompt = canonical CV text + the contents of the `~/.guitar_rig`, `~/.unknowns`, `~/HOTTEST_TAKES.MD` blocks, plus a short instruction set ("respond in erik's voice; cite specific receipts; if you don't know, say so")
+- Streaming response back to the client
+
+### Rate limiting
+Upstash Redis sliding window:
+- 8 questions per IP per rolling hour (corrected from initial 10/min spec)
+- IP hashed (SHA-256 + per-deployment salt) — never stored raw
+- No daily cap (budget cap is the primary spend control)
+
+### Caching
+Same question text (hash) within 24h returns cached response. Reduces Anthropic spend on accidental refresh / share-link clicks. TTL 24h, evict on content deploy.
+
+### Budget enforcement (the Principal-level move)
+Single hard counter in Redis: `ask:tokens:YYYY-MM`. Each completion increments via `INCRBY` with `tokens_in + tokens_out`. Monthly hard cap: 400,000 tokens (~$0.40 at Haiku pricing). Behavior:
+- 80% threshold: endpoint returns 503 with email fallback; no warning banner (conservative fail-closed)
+- Hard cap (100%): returns 503 with fallback message
+- Redis unavailable: fail-open (allow the request; durable rate-limit enforced on retry)
+- Prompt caching enabled on the system prompt via `cache_control: { type: 'ephemeral' }` (~93% token savings on cached context)
+
+Why this is non-negotiable: a public LLM endpoint without a hard cap is a $5,000 surprise waiting to happen. The graceful degradation is more credible than a 503 alone.
+
+### Abuse mitigation
+- Reject `q` over 500 chars (no prompt-stuffing)
+- Reject `q` containing system/role/assistant tokens (basic prompt-injection sanitization)
+- Reject identical `q` from same IP within 60s (no thumb-on-button spam)
+- Anthropic prompt cache enabled (massive token savings for the CV context that's constant)
+
+### What I'd revisit at scale
+- 100× traffic: move to Cloudflare Workers AI (Llama 3.3 self-served) — quality dip acceptable for the cost
+- If `ask` becomes a real product: separate service, persistent conversation context, billing surface, evals
+
+---
+
+## 7. Contact form — deep dive
+
+### Submission path
+```
+[client form]
+    ↓ Server Action (POST /contact/action)
+    ↓
+[Zod validation]
+    ↓
+[honeypot check] → silent 200 if filled
+    ↓
+[rate limit: 1 / IP / 5min]  → 429 if exceeded
+    ↓
+[write to Upstash KV: contact:msg:{uuid}]  ← durable first
+    ↓
+[Resend send] ← delivery second; failure is OK if KV write succeeded
+    ↓
+[return success regardless if spam path]
+```
+
+### Why KV before Resend
+If Resend is down, the message is captured. If KV is down, we fail loud (502) so the visitor knows. Durability beats delivery.
+
+### Anti-spam strategy
+- Honeypot field (`field_company` — hidden, no-fill)
+- Rate limit per IP
+- Min/max length on message (10 < x < 2000 chars)
+- No CAPTCHA (UX tax outweighs spam saved at this scale)
+
+### Accessibility
+- Real `<label for="...">` for each input
+- `aria-describedby` linking to inline error messages
+- The terminal-styled `user@terminal:~$ enter_name` is visual decoration, NOT the accessible name
+
+### What I'd revisit at scale
+- If spam volume rises: add Cloudflare Turnstile (invisible, ~0 UX cost)
+- If recruiters want richer fields: structured form (role, comp range, location), opens up a CRM ingestion path
+
+---
+
+## 8. Performance budget enforcement (CI)
+
+The page MUST fail to merge if it regresses past the budgets. This is where the architecture becomes self-enforcing.
+
+### GitHub Actions PR workflow
+```yaml
+- biome check  # lint + format
+- pnpm build
+- node scripts/check-bundle-size.mjs --max=120kb --route=/
+- lhci autorun --config=./lighthouserc.json
+   # gates: perf >= 95, a11y = 100, best-practices >= 95, seo = 100
+- pnpm test:unit  # zod schemas, server action logic
+- pnpm test:e2e   # Playwright on contact + ask
+- npx axe-core ./out/index.html
+```
+
+Any failure blocks merge. No overrides except by branch protection bypass — and using that is itself a smell.
+
+### Real-user monitoring
+Vercel Speed Insights (built-in, free) collects CWV from real visitors. Weekly check; alert if p75 LCP > 1.8s for 7 days.
+
+---
+
+## 9. Observability strategy
+
+Minimal but real:
+- **Vercel Web Analytics** for pageview counts, referrer distribution
+- **Vercel Speed Insights** for real-user CWV
+- **Vercel Logs** for Edge Function output (stdout/stderr)
+- **Upstash KV inspector** for contact submissions + ask queries
+- **(Optional) Sentry frontend SDK** — only if client errors become a problem; adds ~25KB so default OFF
+
+What I deliberately don't do:
+- No Datadog / NewRelic / LaunchDarkly (overkill)
+- No custom OpenTelemetry pipeline (no second consumer of the traces)
+- No alerting beyond Vercel's defaults (single-author site, no oncall)
+
+---
+
+## 10. SEO + AEO (the 2026 move)
+
+### Traditional SEO
+- `<title>` per route, `<meta description>` populated from content
+- Person JSON-LD with sameAs links (github, linkedin, erikunha.com.br)
+- og:image (recruiter-safe, dynamic), Twitter card variant
+- /sitemap.xml generated from route list
+- /robots.txt allows everything (no need to hide anything from crawlers)
+
+### Answer Engine Optimization (the new layer)
+- `/llms.txt` manifest — emerging standard for AI-readable site maps
+- `/api/erik.json` — machine-readable profile (HiringProfile custom type, no schema.org @context — `Engineer` is not a valid schema.org type). Cached 24h at edge. Returns a structured hiring profile document.
+- This is the Staff/Principal-2026 move: build for human readers AND for AI agents doing first-pass recruiter triage. Yes, AI agents are already doing this. Yes, most portfolios aren't ready.
+
+---
+
+## 11. Accessibility (non-negotiable)
+
+WCAG 2.1 AA at minimum. Specific risks for THIS aesthetic:
+
+| Risk | Mitigation |
+|---|---|
+| Lime-green-on-black at body sizes fails contrast | Use a two-token palette: `--signal` (#00FF41) for accents/headings/large text; `--fg` (#E6FFE6, ~13:1 contrast) for body. Never use `--signal` for paragraph text. |
+| Muted parentheticals in `~/.unknowns` and `~/.guitar_rig` | Bump muted color from typical 60% opacity to a fully resolved hex that hits 4.5:1 (e.g., `#5AE07B`) — or set those lines to 14px to qualify as Large Text (3:1 threshold). |
+| Matrix dialog loop is exhausting | `prefers-reduced-motion: reduce` disables loop, renders static `> The Matrix has you...`. Plus: MOTION badge in top bar becomes click-toggle for users on the borderline. |
+| Form labels invisible (terminal-styled prompts) | Real `<label for="...">` paired with each input. Terminal prompt is decoration. |
+| Heading hierarchy | Section headers are `<h2>`, not styled `<div>`s. Critical for screen-reader navigation. |
+| No skip-to-content link (WCAG 2.4.1 Level A) | Skip-to-content link added to AppShell as first focusable element, targets `#main-content` on the `<main>` element. |
+
+Run axe-core in CI; fail builds on any new violation. Manual screen-reader pass on the contact form path before launch.
+
+---
+
+## 12. Security posture
+
+Modest but professional:
+- CSP (with `connect-src 'self' api.anthropic.com` for streaming)
+- HSTS, X-Content-Type-Options, X-Frame-Options DENY
+- No third-party JS except self-hosted fonts (no Google Fonts CDN)
+- Anthropic API key in Vercel env vars, never client-side
+- IP hashing salt rotated per quarter (logs survive rotation, but de-anonymization beyond 90d becomes impractical)
+- No PII stored beyond the contact form payload (which the visitor explicitly submitted)
+
+securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; the page proves it).
+
+---
+
+## 13. Deployment + CI/CD
+
+### Branch strategy
+- `main` → production
+- `feature/*` → PR → Vercel preview → merge to main
+- No `dev` branch; preview deploys are the staging environment
+- Conventional commits enforced via commitlint
+- Squash-merge to main
+
+### Pre-commit (Husky)
+- Biome check
+- TypeScript --noEmit
+- Run unit tests touched by the changeset
+
+### CI (GitHub Actions, per PR)
+1. Install + cache
+2. Biome check
+3. TS check
+4. Unit tests
+5. Build
+6. Bundle size assertion
+7. Lighthouse CI (against PR preview)
+8. Playwright E2E (against PR preview)
+9. axe-core a11y scan
+10. Comment summary on PR
+
+### Production deploy
+Vercel auto-deploys main. No manual gate. Lighthouse CI on production deploy as a tripwire — fails the deploy if regression detected.
+
+### Rollback
+Vercel "Promote to Production" of previous deployment. <60 seconds. No manual config needed.
+
+---
+
+## 14. Cost model
+
+Steady-state monthly:
+| Service | Tier | Cost |
+|---|---|---|
+| Vercel (Hobby or Pro) | Hobby | $0 |
+| Upstash Redis | Free (10k cmd/day) | $0 |
+| Anthropic API (`ask`) | pay-as-you-go | ~$0.50 if 30 prompts/day |
+| Resend | Free (3k/month) | $0 |
+| GitHub | public repo | $0 |
+| PSI API | free | $0 |
+| Domain | erikunha.com.br | ~$1/mo amortized |
+| **Total expected** | | **~$2/month** |
+| **Hard cap (Anthropic spend alert)** | | **$50/month** |
+
+Burst scenario (HN spike, 50k visits/day for 3 days):
+- Vercel bandwidth: still inside Hobby free tier (100GB) — page is ~80KB total
+- Anthropic: if 5% of visitors use `ask`, 1 query each → 7,500 queries × ~$0.0015 = ~$11. Cap holds.
+- Resend: spike doesn't affect the static page
+
+The architecture is designed so that an HN hug-of-death doesn't generate a surprise bill. That's the Principal move.
+
+---
+
+## 15. Trade-offs I'd flag
+
+| Decision | What we give up | Why it's still right |
+|---|---|---|
+| RSC-first with client islands | Slightly harder to debug streaming hydration | Only way to hit 120KB JS budget |
+| No CMS | Erik edits TS files to update content | Single author; CMS is YAGNI |
+| Vercel Edge end-to-end | Vendor lock-in to Vercel's RSC story | Portability cost < ops savings at this scale |
+| Anthropic API for `ask` | $50/mo cap if abuse spikes | Quality-to-cost ratio beats self-hosted at portfolio scale |
+| No CAPTCHA | Some spam will get through | UX tax of CAPTCHA > value of perfect spam filtering |
+| `claude-haiku-4-5` not Sonnet | Slightly lower quality answers | 10× cheaper; quality difference invisible for CV Q&A |
+| Single-page composition | Long scroll, no per-section routing | Recruiters scan; engineers scroll. Both work on a single page. |
+| Synthetic git log entries (in the design content, not the deploy) | Stylized vs literal | Content choice, not architectural; the deployed git is real |
+
+---
+
+## 16. What I'd revisit as the system grows
+
+| Threshold | Trigger | Move |
+|---|---|---|
+| 100k visits/month sustained | Vercel Hobby bandwidth pressure | Vercel Pro tier ($20/mo) |
+| 1M visits/month | Anthropic cost > $200/month | Migrate `ask` to Cloudflare Workers AI (Llama 3.3) |
+| Contact submissions > 100/month with > 30% spam | Spam fatigue | Add Cloudflare Turnstile |
+| Recruiter scraping pressure on `/api/erik.json` | Free-tier abuse | Soft auth (email-gated full profile) |
+| Erik starts writing publicly | Want to publish posts | Add MDX, RSS feed, then re-evaluate CMS need |
+| `ask` becomes a real product | Conversational depth, multi-turn | Extract to its own service, persistent conversation state, billing |
+
+The principal-level discipline: **none of this is built today.** YAGNI is the default; the table above is a contingency map, not a roadmap.
+
+---
+
+## 17. Implementation order (PR sequence)
+
+When quota / time returns:
+
+1. **PR 1 — Foundation.** Next 15 scaffold, TS strict, Tailwind v4 with palette as CSS vars, Biome, JetBrains Mono via next/font, Vercel preview wired, bundle-size CI check, axe-core CI check. Zero content.
+
+2. **PR 2 — Content layer.** All `content/*.ts` typed + Zod-validated. Build fails on invalid content. No visual yet.
+
+3. **PR 3 — Static sections.** RSC composition of all 18 sections at final layout. Pure HTML output. Lighthouse pass at end of PR.
+
+4. **PR 4 — Client islands.** Matrix dialog loop, IntersectionObserver typewriter, MOTION indicator. Budget check.
+
+5. **PR 5 — Contact path.** Server Action + Resend + KV log + honeypot + rate limit + a11y form. Playwright happy + spam-trap.
+
+6. **PR 6 — `ask` endpoint.** Edge function, Anthropic SDK, system prompt, rate limit, budget cap, streaming. Anti-abuse layer. Cost alert wired.
+
+7. **PR 7 — OG + SEO.** Dynamic OG image (recruiter-safe), Person JSON-LD, /erik.json, /llms.txt, /sitemap.xml, /robots.txt.
+
+8. **PR 8 — Final polish.** PSI cron + Lighthouse badge wiring, securityheaders A+, mobile audit, screen-reader pass.
+
+Each PR is ~1-2 days of focused work. Total: ~2 weeks at part-time pace.
+
+---
+
+## 18. The single biggest risk
+
+The Matrix dialog loop and CRT effects are the most novel piece of the page and also the most fragile under the perf budget. If the loop ships with a `useState` per-keystroke pattern (instead of `useRef.textContent` mutation), INP will degrade past 200ms and Lighthouse Performance will fall below 95.
+
+Mitigation: PR 4 includes an INP measurement test that fails the build if the loop causes a long task > 50ms. This is the only test that gates an animation pattern — but it's the right one to enforce.
+
+---
+
+## 19. What this architecture proves
+
+If a hiring manager reads this doc alongside the deployed site, they should walk away knowing:
+- Erik picks frameworks, not just learns them
+- Erik subtracts before adding (no CMS, no Cloudflare, no GraphQL, no SSO — all considered and rejected for the use case)
+- Erik enforces budgets in CI, not in afterthoughts
+- Erik thinks about cost at the architecture layer, not the billing layer
+- Erik builds for AI-agent recruiters as well as human ones
+- Erik writes architecture docs that someone else could ship from
+
+That's the Staff/Principal hire. The portfolio is the proof.
+
+---
+
+*— end of document —*

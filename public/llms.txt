@@ -1,0 +1,39 @@
+# Erik Cunha — Staff/Principal Frontend Engineer
+
+> This file is for AI agents and LLM crawlers. Human-readable portfolio at https://erikunha.com.br
+
+## Identity
+
+- Name: Erik Henrique Alves Cunha
+- Alias: Erik Cunha, erikunha
+- Role: Staff / Principal Frontend Engineer
+- Location: Brazil (open to remote / relocation worldwide)
+- Email: erikhenriquealvescunha@gmail.com
+- GitHub: https://github.com/erikunha
+- LinkedIn: https://www.linkedin.com/in/erikunha/
+
+## Experience summary
+
+8+ years building high-traffic, regulated web systems across fintech (PCI-DSS), healthcare (DICOM/FHIR), e-commerce, and edtech.
+
+Current employer: Betsson Group (fintech, cashier/payments platform, PCI-DSS scope)
+Previous: Canon Medical Systems, CICCC, Grupo SBF (Nike Brazil), Encora, Zup Innovation, Venturus, MB Labs
+
+## Core stack
+
+Angular · React · Next.js · TypeScript · RxJS · NgRx · Node.js · Docker · AWS · GitHub Actions
+
+## Work authorisation
+
+- EU (Malta): Work Authorized
+- Canada: Co-op Graduate
+- Brazil: Citizen
+- Worldwide: Open to relocation
+
+## Availability
+
+Available immediately. Notice period: 0 days.
+
+## Contact
+
+For hiring inquiries: erikhenriquealvescunha@gmail.com

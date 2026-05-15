@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint branch name
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          echo "$BRANCH" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert)/.+$|^main$' \
+            || (echo "Invalid branch name: $BRANCH" && exit 1)
+
+      - name: Lint commit messages
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+      - name: Biome check
+        run: pnpm biome ci .
+
+      - name: Type check
+        run: pnpm tsc --noEmit
+
+      - name: Validate content
+        run: node scripts/validate-content.mjs
+
+      - name: Unit tests
+        run: pnpm vitest run
+
+      - name: Build
+        run: pnpm build
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
+          IP_HASH_SALT: ci-build-salt
+
+      - name: Bundle size gate
+        run: node scripts/check-bundle-size.mjs --max-route-kb=120 --max-client-kb=320
+
+      - name: Start preview server
+        run: pnpm start &
+        env:
+          PORT: 3000
+
+      - name: Wait for server
+        run: npx wait-on http://localhost:3000 --timeout 30000
+
+      - name: Lighthouse CI
+        run: pnpm lhci autorun
+        env:
+          LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
+
+      - name: axe-core a11y scan
+        run: pnpm playwright test tests/a11y
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build-and-gate
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm playwright install --with-deps chromium
+      - run: pnpm build
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
+          IP_HASH_SALT: ci-build-salt
+      - run: pnpm start &
+      - run: npx wait-on http://localhost:3000 --timeout 30000
+      - run: pnpm playwright test tests/e2e

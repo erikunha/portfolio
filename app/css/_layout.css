@@ -1,0 +1,395 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   PAGE CONTAINER
+   ───────────────────────────────────────────────────────────────────────── */
+.page {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 40px var(--pad) 0;
+}
+
+@media (max-width: 900px) {
+  .page {
+    padding: 20px 18px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Clear space for fixed dock at bottom */
+  body { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Page padding — 900px rule sets explicit 18px; 768px resets to var(--pad) = 14px */
+  .page { padding: 14px var(--pad) 0; }
+
+  /* Section order — all sections visible on mobile */
+  #sec-readme          { order: 1; }
+  #sec-man-page        { order: 2; }
+  #sec-now             { order: 3; }
+  #sec-projects        { order: 4; }
+  #sec-perf-receipts   { order: 5; }
+  #sec-git-log         { order: 6; }
+  #sec-npm-stack       { order: 7; }
+  #sec-sys-health      { order: 8; }
+  #sec-live-perf       { order: 9; }
+  #sec-hottest-takes   { order: 10; }
+  #sec-shell           { order: 11; }
+  #sec-guitar          { order: 12; }
+  #sec-visa            { order: 13; }
+  #sec-credentials     { order: 14; display: none; }
+  #sec-responsibilities { order: 15; }
+  #sec-community       { order: 16; }
+  #sec-unknowns        { order: 17; }
+  #sec-contact         { order: 18; }
+
+  /* Readme — narrower gutter on mobile */
+  .readme { grid-template-columns: 28px 1fr; font-size: 12.5px; }
+
+  /* Npm stack — square tiles on mobile */
+  .npm-stack li { aspect-ratio: 1 / 1; font-size: 9.5px; }
+
+  /* Hottest takes — tighter grid on mobile */
+  .take { grid-template-columns: 28px 1fr; padding: 10px 0; }
+  .take__num { font-size: 11.5px; }
+  .take__thesis { font-size: 12.5px; }
+  .take__body { font-size: 12px; }
+  .take__category { font-size: 9px; }
+  .takes__footer { font-size: 10.5px; }
+
+  /* Community — smaller text on mobile */
+  .community { font-size: 12px; }
+  .community .ctitle { font-size: 13px; }
+  .community .cstatus { font-size: 11px; }
+
+  /* Permatrix — smaller text on mobile */
+  .permatrix pre { font-size: 11px; }
+  .permatrix .pm-cmd { font-size: 10.5px; }
+  .permatrix .pm-foot { font-size: 10px; }
+
+  /* Unknowns — smaller text on mobile */
+  .unknowns pre { font-size: 11.5px; }
+
+  /* Live perf — tighter cells on mobile */
+  .perf-row { gap: 10px; }
+  .perf-cell .pk { font-size: 9.5px; letter-spacing: 0.14em; }
+  .perf-cell .pv { font-size: 22px; margin: 6px 0; }
+  .perf-cell .pv .of { font-size: 11px; }
+  .perf-cell .pbar { height: 3px; }
+  .perf-foot { font-size: 9.5px; }
+  .perf-foot .live-dot { width: 6px; height: 6px; margin-right: 6px; }
+
+  /* Shell bar — smaller on mobile */
+  .shell__bar { font-size: 9.5px; }
+
+  /* Contact inputs — touch-friendly on mobile */
+  .contact__input { font-size: 12.5px; min-height: 44px; }
+  .contact__input--area { min-height: 100px; }
+
+  /* Visa / guitar / credentials — smaller pre on mobile, allow wrapping */
+  .visa pre { font-size: 11.5px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: break-word; }
+  .visa-foot { font-size: 10.5px; }
+
+  /* Perf receipts — layout on mobile (font-size overrides are after desktop rules below) */
+  .receipts { gap: 8px; }
+  .receipt { padding: 12px 12px 10px; gap: 4px; min-height: 0; }
+  .receipt__metric { font-size: 9.5px; }
+  .receipt__note { font-size: 11px; }
+  .receipt.receipt--desktop-only { display: none; }
+  .receipt__metric-mobile { display: inline; }
+  .receipt__metric-desktop { display: none; }
+
+  /* Projects — smaller tiles on mobile */
+  .project { padding: 14px; }
+  .project__folder { width: 32px; height: 26px; }
+  .project__name { font-size: 14px; }
+  .project__desc { font-size: 12px; }
+
+  /* Blame — tighter timeline on mobile */
+  .blame { padding-left: 16px; }
+  .blame::before { left: 4px; }
+  .blame-row { padding: 0 0 16px; font-size: 12.5px; }
+  .blame-row::before { left: -16px; width: 9px; height: 9px; }
+  .blame-date { font-size: 10.5px; }
+  .blame-reason { font-size: 12px; line-height: 1.55; }
+
+  /* Footer mobile adaptations */
+  footer.shutdown { padding: 28px var(--pad) 24px; }
+  .sd-banner { flex-direction: column; gap: 4px; }
+  .sd-init { font-size: 12px; }
+  .sd-stamp { font-size: 10px; }
+  .sd-panel { padding: 12px 14px 14px; margin-bottom: 10px; }
+  .sp-head { font-size: 9.5px; letter-spacing: 0.16em; }
+  .sp-row { grid-template-columns: 100px 1fr; gap: 10px; font-size: 11px; }
+  .sd-dmesg .dm-line { grid-template-columns: 72px 1fr auto; gap: 8px; font-size: 10.5px; }
+  .sd-netstat pre { font-size: 10.5px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   HERO — bordered panel, 640px min, shake animation hooks.
+   ───────────────────────────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  border: 1px solid var(--signal-dim);
+  min-height: 640px;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  transition: transform 80ms ease-out;
+  margin-bottom: var(--vrhythm);
+}
+
+.hero.shake { transform: translate(2px, -2px); }
+.hero.shake-2 { transform: translate(-2px, 1px); }
+
+@media (max-width: 900px) {
+  .hero {
+    min-height: 520px;
+  }
+}
+
+.hero--desktop .hero__boot {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 40%;
+  bottom: 24px;
+  z-index: 2;
+  color: var(--fg);
+  font-size: 13px;
+  line-height: 1.7;
+  overflow: hidden;
+  text-shadow: 0 0 4px #000, 0 0 8px #000;
+}
+
+/* Boot animation text tokens */
+.boot__line         { display: block; }
+.boot__ok           { color: var(--signal); }
+.boot__enc          { color: var(--signal); font-weight: 700; text-shadow: 0 0 6px rgba(0,255,65,0.6), 0 0 4px #000; }
+.boot__welcome      { color: var(--fg); font-weight: 700; }
+.boot__prompt       { color: var(--muted); }
+.boot__cmd          { color: var(--fg); }
+.boot__matrix-prefix { color: var(--muted); margin-right: 4px; }
+.boot__matrix-out   { color: var(--signal); text-shadow: 0 0 8px rgba(0,255,65,0.4), 0 0 4px #000; }
+.boot__cursor {
+  display: inline-block;
+  width: 9px;
+  height: 1.05em;
+  background: var(--signal);
+  vertical-align: -2px;
+  margin-left: 2px;
+  animation: boot-blink 1.05s steps(2, start) infinite;
+}
+@keyframes boot-blink { to { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .boot__cursor { animation: none; } }
+
+/* Sysfail overlay — fade-in/out plate, matches prototype .sysfail + .sysfail-plate */
+.hero__headline {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 150;
+  display: block;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease-out;
+}
+.hero__headline.on {
+  opacity: 1;
+  transition: opacity 200ms ease-in;
+}
+.hero__headline-plate {
+  background: var(--signal);
+  color: #000;
+  font-family: var(--font-mono-stack);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  padding: 6px 18px 8px;
+  line-height: 1;
+  text-transform: uppercase;
+  box-shadow: 0 0 24px rgba(0, 255, 65, 0.55), 0 0 60px rgba(0, 255, 65, 0.25);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .hero__headline-plate {
+    font-size: 18px;
+    padding: 5px 14px 6px;
+  }
+}
+
+/* Freeze CRT animations while sysfail plate is visible */
+html.sysfail-on .crt-scan-beam,
+html.sysfail-on .crt-flicker,
+html.sysfail-on .crt-noise { animation-play-state: paused !important; }
+
+.hero--mobile .hero__name {
+  font-family: var(--font-mono-stack);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--signal);
+  border-top: 1px dashed var(--signal-dim-2);
+  padding-top: 14px;
+  margin-top: 6px;
+  margin-bottom: 2px;
+}
+
+.hero__tagline {
+  color: var(--fg);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  color: var(--muted);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+}
+
+.hero__meta b { color: var(--signal); font-weight: 700; }
+
+.hero__ctas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--signal-dim);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: box-shadow 200ms ease, background 200ms ease;
+}
+
+.hero__cta--primary {
+  background: var(--signal);
+  color: var(--bg);
+  border-color: var(--signal);
+}
+
+.hero__cta--primary:hover {
+  box-shadow: 0 0 12px var(--signal);
+}
+
+.hero__cta--secondary {
+  color: var(--signal);
+}
+
+.hero__cta--secondary:hover {
+  box-shadow: 0 0 12px var(--signal);
+  background: rgba(0, 255, 65, 0.06);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MODULE — every section is rendered through Module.tsx.
+   Module wraps the section content with a bordered panel (`.panel` semantics)
+   and a section header that takes an icon (`.section-head` semantics).
+   ───────────────────────────────────────────────────────────────────────── */
+.module {
+  margin-bottom: var(--vrhythm);
+}
+
+/* Section header — icon + uppercase label, like .section-head in the mockup */
+.module__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--signal);
+  font-family: var(--font-mono-stack);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+
+.module__icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  color: var(--signal);
+}
+
+.module__icon svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.4;
+}
+
+/* Desktop module body gets the bordered panel look. Mobile border is on the outer module. */
+.module--desktop .module__body {
+  border: 1px solid var(--signal-dim);
+  padding: var(--pad);
+  background: linear-gradient(180deg, rgba(0, 255, 65, 0.015), rgba(0, 0, 0, 0));
+  color: var(--fg);
+}
+
+.module--mobile .module__body {
+  color: var(--fg);
+}
+
+/* Mobile: outer module is the border container (overflow:hidden clips child borders) */
+.module--mobile {
+  border: 1px solid var(--signal-dim);
+  background: rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.module--mobile .module__toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 12px 14px;
+  min-height: 44px;
+  background: rgba(0, 255, 65, 0.04);
+  border-bottom: 1px solid var(--signal-dim-2);
+  color: var(--signal);
+  font-family: var(--font-mono-stack);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  text-align: left;
+  cursor: pointer;
+}
+
+.module--mobile .module__header-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.module--mobile .module__chevron {
+  color: var(--signal);
+  font-size: 12px;
+}
+
+.module--mobile[data-open='false'] .module__body {
+  display: none;
+}
+
+.module--mobile[data-open='true'] .module__body {
+  padding: var(--pad);
+}
+

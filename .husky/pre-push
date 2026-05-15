@@ -1,0 +1,3 @@
+branch=$(git rev-parse --abbrev-ref HEAD)
+echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert)/.+$|^main$' \
+  || (echo "Error: invalid branch name '$branch'. Use <type>/<description> or main." && exit 1)

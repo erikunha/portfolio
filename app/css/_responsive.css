@@ -1,0 +1,123 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   GLOBAL RESPONSIVE TUNING (matches mockup @media 900px breakpoint)
+   ───────────────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  :root {
+    --vrhythm: 40px;
+    --pad: 18px;
+  }
+  body {
+    font-size: 13px;
+  }
+}
+
+/* ─── Hero dialog typewriter line ────────────────────────────────────────── */
+.hero__dialog {
+  color: var(--signal);
+  font-family: var(--font-mono-stack);
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.45), 0 0 4px #000;
+}
+
+.hero--desktop .hero__dialog {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 24px;
+  z-index: 2;
+  font-size: 13px;
+  margin: 0;
+}
+
+.hero--mobile {
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  text-shadow: 0 0 4px #000, 0 0 8px #000;
+}
+
+.hero__inner {
+  position: relative;
+  z-index: 1;
+  padding: 16px 16px 18px;
+}
+
+.hero--mobile .hero__boot {
+  color: var(--fg);
+  font-size: 12px;
+  line-height: 1.65;
+  min-height: 165px;
+  margin: 0 0 12px;
+}
+
+.hero__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--signal-dim);
+  background: rgba(0, 255, 65, 0.05);
+  color: var(--signal);
+  padding: 4px 10px;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 14px;
+}
+
+.hero__status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--signal);
+  display: inline-block;
+  animation: blink 1.4s steps(2, start) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) { .hero__status-dot { animation: none; } }
+body[data-motion='reduce'] .hero__status-dot { animation: none !important; }
+
+/* ─── Window chrome (mobile) ─────────────────────────────────────────────── */
+.window-chrome {
+  position: sticky;
+  top: 28px; /* below status bar */
+  z-index: 109;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--signal-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.window-chrome__dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.window-chrome__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.window-chrome__dot--red    { background: #ff5f56; }
+.window-chrome__dot--yellow { background: #ffbd2e; }
+.window-chrome__dot--green  { background: #27c93f; }
+
+.window-chrome__title {
+  flex: 1;
+  text-align: center;
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.window-chrome__switch {
+  color: var(--signal);
+  border: 1px solid var(--signal-dim);
+  padding: 4px 8px;
+  border-radius: 2px;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+}
