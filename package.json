@@ -1,0 +1,70 @@
+{
+  "name": "erik-portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "lhci": "lhci autorun",
+    "validate-content": "node scripts/validate-content.mjs",
+    "bundle-check": "node scripts/check-bundle-size.mjs",
+    "ci": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm test && pnpm build && pnpm bundle-check",
+    "commit": "cz",
+    "prepare": "husky || true"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "sharp", "@biomejs/biome"]
+  },
+  "config": {
+    "commitizen": {
+      "path": "@commitlint/cz-commitlint"
+    }
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "@upstash/ratelimit": "latest",
+    "@upstash/redis": "latest",
+    "@vercel/analytics": "latest",
+    "@vercel/speed-insights": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "resend": "latest",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "latest",
+    "@biomejs/biome": "latest",
+    "@commitlint/cli": "^21.0.1",
+    "@commitlint/config-conventional": "^21.0.1",
+    "@commitlint/cz-commitlint": "^21.0.1",
+    "@lhci/cli": "latest",
+    "@next/bundle-analyzer": "latest",
+    "@tailwindcss/postcss": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@vitest/ui": "latest",
+    "commitizen": "^4.3.1",
+    "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
+    "playwright": "latest",
+    "tailwindcss": "latest",
+    "tsx": "^4.22.0",
+    "typescript": "latest",
+    "vitest": "latest"
+  }
+}

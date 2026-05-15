@@ -1,0 +1,53 @@
+{
+  "ci": {
+    "collect": {
+      "startServerCommand": "pnpm start",
+      "startServerReadyPattern": "ready started server",
+      "url": ["http://localhost:3000"],
+      "numberOfRuns": 3,
+      "settings": {
+        "preset": "desktop",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 40,
+          "throughputKbps": 10240,
+          "cpuSlowdownMultiplier": 1
+        }
+      }
+    },
+    "assert": {
+      "preset": "lighthouse:no-pwa",
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.95 }],
+        "categories:accessibility": ["error", { "minScore": 1.0 }],
+        "categories:best-practices": ["error", { "minScore": 0.95 }],
+        "categories:seo": ["error", { "minScore": 1.0 }],
+
+        "largest-contentful-paint": ["error", { "maxNumericValue": 1800 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05 }],
+        "total-blocking-time": ["error", { "maxNumericValue": 200 }],
+        "interactive": ["error", { "maxNumericValue": 2500 }],
+
+        "uses-text-compression": "error",
+        "uses-responsive-images": "error",
+        "uses-rel-preconnect": "off",
+        "render-blocking-resources": "warn",
+        "font-display": "error",
+
+        "color-contrast": "error",
+        "aria-required-attr": "error",
+        "label": "error",
+        "heading-order": "error",
+        "html-has-lang": "error",
+        "tap-targets": "error",
+
+        "is-crawlable": "error",
+        "robots-txt": "error",
+        "structured-data": "off"
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

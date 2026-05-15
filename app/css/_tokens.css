@@ -1,0 +1,27 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   TOKENS
+   Lifted from prototype/Portfolio.html :root.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --bg: #000000;
+  --signal: #00ff41;
+  --signal-dim: rgba(0, 255, 65, 0.4);
+  --signal-dim-2: rgba(0, 255, 65, 0.1);
+  --signal-faint: rgba(0, 255, 65, 0.12);
+  --fg: #c8facc;
+  --muted: #4ade80;
+  --highlight-bg: #00ff41;
+  --highlight-fg: #000000;
+  --border: rgba(0, 255, 65, 0.2);
+  --red: #ff5f57;
+  --yellow: #febc2e;
+  --green-light: #28c840;
+
+  --pad: 24px;
+  --maxw: 1200px;
+  --vrhythm: 64px;
+
+  --font-mono-stack: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-display-stack: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}
+

@@ -1,0 +1,118 @@
+# CLAUDE.md
+
+> Auto-loaded by Claude Code every session in this repo. Keep it tight — verbosity costs token budget on every invocation.
+
+## Project
+
+**erikunha.com.br** — personal portfolio. Hiring artifact for Staff/Principal Frontend + applied-AI roles. Matrix/brutalist terminal aesthetic. Single-page composition with ~18 sections.
+
+## Operating role
+
+Operate at Staff/Principal frontend engineer standard. The site is itself the hiring pitch. Code quality, architecture decisions, perf budgets, and a11y are part of the pitch, not afterthoughts.
+
+This means:
+- Cross-cutting concerns over local optimization
+- Mechanism-level reasoning (cause → effect), not pattern-matching
+- Trade-offs surfaced explicitly; one recommendation per decision
+- Perf, a11y (WCAG 2.1 AA), and security are implicit requirements on every change, not separate phases
+
+## Stack (locked)
+
+- Next.js 15 App Router · React 19 · TypeScript strict · Tailwind v4 · Biome · pnpm
+- Vercel Edge end-to-end deployment
+- Upstash Redis for rate-limit + KV log
+- Anthropic SDK with `claude-haiku-4-5-20251001` for `/api/ask`
+- Resend for contact form delivery
+- Playwright E2E (contact + ask path only)
+- Vitest unit tests
+- axe-core a11y CI gate
+- Lighthouse CI gates
+
+See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running ADR log, `LAUNCH.md` for the day-by-day implementation playbook.
+
+## Performance budgets (non-negotiable)
+
+| Metric | Budget |
+|---|---|
+| LCP | < 1.8s on 4G |
+| INP | < 200ms |
+| CLS | < 0.05 |
+| JS gzipped per route | < 120KB |
+| Client JS total (all islands combined) | < 43KB |
+| Lighthouse Performance | ≥ 95 |
+| Lighthouse Accessibility | = 100 |
+| Lighthouse Best Practices | ≥ 95 |
+| Lighthouse SEO | = 100 |
+
+CI enforces all of the above. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
+
+## Package + manager policy
+
+- **pnpm only.** `packageManager: pnpm@latest`. Don't use npm or yarn.
+- Every dep installed `@latest` at scaffold; `pnpm up --latest` for bumps.
+- `zod` is exact-pinned (`-E`) — its minor bumps break inference. Upgrade deliberately.
+- Caret semver in `package.json`; lockfile (`pnpm-lock.yaml`) is the source of truth.
+- CI runs `pnpm install --frozen-lockfile`.
+- Node 22+, pnpm 10+.
+
+## Rendering model
+
+- **Default: React Server Components, SSG at build time.** Zero JS shipped for static sections.
+- **Client islands by exception:** Matrix dialog loop, INTERACTIVE_SHELL, contact form, IntersectionObserver typewriter, MOTION indicator.
+- All client files named `*.client.tsx`. RSC drift must be visible in PR review.
+- **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** This is enforced by a Vitest test. Per-state re-renders tank INP.
+
+## Aesthetic constraints
+
+- Pure black background (`#000000`), lime signal-green (`#00FF41`) for accents.
+- Two-token palette: `--signal` for headings/accents/large text; `--fg` (#E6FFE6, ~13:1 contrast) for body. Never use `--signal` for paragraph text — it fails WCAG AA.
+- JetBrains Mono everywhere (self-hosted via `next/font/local`, not Google CDN).
+- The "THE MATRIX HAS YOU." headline is a heavy geometric sans (Geist Black or similar). All other text is mono.
+- CRT effects (scanlines + RGB sub-pixel mask + grain + scan beam + flicker + phosphor text-shadow) at dialed-back opacity. All disabled under `prefers-reduced-motion: reduce`.
+- 1px borders only, sharp corners (no rounded radius > 2px).
+
+## Content discipline
+
+- All content lives in `content/*.ts` as typed TS modules validated by Zod at build time. Build fails on schema violation.
+- HOTTEST_TAKES, `~/.guitar_rig`, `~/.now`, `~/.unknowns`, `~/.community`, `~/.visa`, `~/.credentials` — all driven from content files.
+- Never inline content in JSX. If you find yourself typing user-facing copy into a `.tsx`, stop and move it to `content/`.
+
+## Working agreement
+
+- Lead with the recommendation. For decisions: 2-3 options, trade-offs, failure modes, one discriminator, recommend one.
+- Show diffs and targeted snippets over full rewrites unless the change is pervasive.
+- Comment non-obvious logic only.
+- Don't ask clarifying questions unless missing info would change the decision — assume reasonably, state in one line, proceed.
+- Flag flaws once. Don't repeat concerns.
+- Skip disclaimers, boilerplate, "consult a professional" lines.
+- Skip tutorials and 101 content — the user is 8+ years in.
+- Track decisions in `DECISIONS.md`: one bullet, date, reversibility note. Update as we go.
+
+## Out of scope (unless asked)
+
+- i18n
+- Light theme toggle (the whole point is dark)
+- Blog / MDX content engine
+- Analytics beyond Vercel Web Analytics + Speed Insights
+- Auth, accounts, comments
+- CMS (single-author, content in TS)
+
+## Things that have been considered and rejected
+
+Before proposing any of these, check `DECISIONS.md` to see the reasoning that excluded them:
+- GraphQL · Cloudflare Workers · multi-region deploy · Sentry by default · CAPTCHA on the contact form · separate routes per section · state management library · design system extraction · MDX · separate CMS
+
+## Reference docs in this repo
+
+- `ARCHITECTURE.md` — system design, deep dive, trade-offs
+- `DECISIONS.md` — running ADR log
+- `LAUNCH.md` — 14-day implementation playbook
+- `scaffold/` — drop-in opinionated configs (Biome, tsconfig, globals.css, Zod schemas, CI workflow)
+- `scaffold/README.md` — explains every file in scaffold/
+- `prototype/Portfolio.html` — the Claude Design prototype (visual reference only, never served)
+
+## When in doubt
+
+- Read `ARCHITECTURE.md` §16 ("What I'd revisit as the system grows") before proposing infrastructure changes.
+- Read `LAUNCH.md` PR-by-PR order before suggesting we skip ahead.
+- If the request seems to conflict with a budget or gate, surface the conflict before complying.

@@ -1,0 +1,305 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   DESKTOP TOPBAR
+   ───────────────────────────────────────────────────────────────────────── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 110;
+  background: var(--bg);
+  border-bottom: 1px solid var(--signal-dim);
+}
+
+.topbar-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 10px var(--pad);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 44px;
+}
+
+.topbar__dots { display: flex; gap: 8px; align-items: center; }
+.topbar__dot { width: 12px; height: 12px; border-radius: 50%; display: block; }
+.topbar__dot--red    { background: var(--red); }
+.topbar__dot--yellow { background: var(--yellow); }
+.topbar__dot--green  { background: var(--green-light); }
+
+.topbar__tabs { display: flex; gap: 8px; margin-left: 8px; }
+.topbar__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  padding: 0 12px;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: var(--fg);
+  border: 1px solid transparent;
+}
+.topbar__tab--active {
+  color: var(--signal);
+  border-color: var(--signal-dim);
+  background: rgba(0,255,65,0.04);
+}
+.topbar__tab-close { color: var(--fg); margin-left: 6px; opacity: 0.8; }
+
+.topbar__nav {
+  margin-left: auto;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.topbar__navlink {
+  color: var(--signal);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.topbar__navlink:hover { text-shadow: 0 0 8px var(--signal); }
+
+.topbar__motion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  border: 1px solid var(--signal-dim);
+  padding: 4px 8px;
+  cursor: pointer;
+  background: transparent;
+}
+
+.topbar__mdot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--signal);
+  display: block;
+}
+.topbar__motion[data-motion='off'] .topbar__mdot {
+  background: var(--muted);
+  opacity: 0.4;
+}
+
+.topbar__btn-primary {
+  background: var(--signal);
+  color: #000;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 6px 14px;
+  font-size: 12px;
+  border: 1px solid var(--signal);
+  transition: box-shadow 200ms ease;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.topbar__btn-primary:hover { box-shadow: 0 0 12px var(--signal); }
+
+.topbar__btn-outline {
+  border: 1px solid var(--signal);
+  color: var(--signal);
+  padding: 6px 12px;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  display: inline-block;
+  transition: box-shadow 200ms ease, background 200ms ease;
+  white-space: nowrap;
+}
+.topbar__btn-outline:hover { box-shadow: 0 0 12px var(--signal); background: rgba(0,255,65,0.06); }
+
+@media (max-width: 1080px) {
+  .topbar__navlink { display: none; }
+  .topbar__motion { display: none; }
+}
+@media (max-width: 768px) {
+  .topbar { display: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MOBILE CHROME — status bar + dock.
+   ───────────────────────────────────────────────────────────────────────── */
+.statusbar {
+  position: sticky;
+  top: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(env(safe-area-inset-top, 0px) + 6px) 14px 6px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--signal-dim);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--signal);
+  font-variant-numeric: tabular-nums;
+}
+
+.statusbar__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusbar__time {
+  color: var(--signal);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.statusbar__carrier {
+  color: var(--fg);
+  opacity: 0.85;
+  font-size: 11px;
+}
+
+.statusbar__right {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusbar__signal {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.statusbar__signal i {
+  display: block;
+  width: 3px;
+  background: var(--signal);
+}
+
+.statusbar__cell {
+  color: var(--signal);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+.statusbar__battery {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.statusbar__battery-num {
+  font-size: 10.5px;
+}
+
+.statusbar__battery-box {
+  display: inline-block;
+  width: 22px;
+  height: 11px;
+  border: 1px solid var(--signal);
+  padding: 1px;
+  position: relative;
+}
+
+.statusbar__battery-box::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  top: 2px;
+  width: 2px;
+  height: 5px;
+  background: var(--signal);
+}
+
+.statusbar__battery-box i {
+  display: block;
+  height: 100%;
+  background: var(--signal);
+  width: 78%;
+}
+
+.dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 120;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid var(--signal-dim);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+}
+
+.dock a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 4px;
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  min-height: 48px;
+  border-radius: 4px;
+}
+
+.dock a svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.6;
+}
+
+.dock a.active  { color: var(--signal); background: rgba(0, 255, 65, 0.08); }
+.dock a:active  { background: rgba(0, 255, 65, 0.12); }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   BACK TO TOP BUTTON — mobile-only, fixed above the dock.
+   ───────────────────────────────────────────────────────────────────────── */
+.totop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .totop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: 14px;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 14px);
+    z-index: 115;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid var(--signal-dim);
+    color: var(--signal);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 200ms ease, transform 200ms ease;
+    pointer-events: none;
+  }
+
+  .totop.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .totop svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+}
+

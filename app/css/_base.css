@@ -1,0 +1,113 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   BASE
+   ───────────────────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* offset anchor scroll for sticky topbar on desktop */
+  scroll-padding-top: 52px;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono-stack);
+  font-size: 14px;
+  line-height: 1.55;
+  text-shadow: 0 0 1px rgba(0, 255, 65, 0.25);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  html {
+    scroll-padding-top: 76px; /* statusbar ~28px + window-chrome ~44px + buffer */
+  }
+}
+
+::selection {
+  background: var(--signal);
+  color: var(--highlight-fg);
+}
+
+a {
+  color: var(--signal);
+  text-decoration: none;
+}
+
+a:hover,
+a:focus-visible {
+  text-decoration: underline;
+}
+
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--signal);
+  color: #000;
+  font-family: var(--font-mono-stack);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: top 0.1s;
+}
+.skip-to-content:focus {
+  top: 0;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+pre,
+code {
+  font-family: var(--font-mono-stack);
+  white-space: pre;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-mono-stack);
+  font-weight: 700;
+  color: var(--signal);
+  margin: 0 0 8px 0;
+}
+
+h1 {
+  font-size: 48px;
+  font-family: var(--font-display-stack);
+  font-weight: 900;
+}
+
+@media (max-width: 768px) {
+  :root { --vrhythm: 18px; --pad: 14px; }
+  h1 { font-size: 32px; }
+}
+
+.not-found {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono-stack);
+  position: relative;
+}
+
