@@ -1,0 +1,33 @@
+# deps
+/node_modules
+
+# next
+/.next/
+/out/
+
+# production
+/build
+
+# env files
+.env
+.env*.local
+!.env.example
+
+# vercel
+.vercel
+
+# testing
+/coverage
+/test-results
+/playwright-report
+
+# local claude settings
+.claude/settings.local.json
+
+# playwright mcp session logs
+.playwright-mcp/
+
+tsconfig.tsbuildinfo
+
+# os
+.DS_Store

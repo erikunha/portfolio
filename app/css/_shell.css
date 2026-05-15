@@ -1,0 +1,132 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   INTERACTIVE SHELL
+   Lifted from .ishell / .ishell-bar / .ishell-body / .ishell-input / .ishell-chips.
+   Shell fills module__body edge-to-edge via negative margins so the panel border
+   serves as the terminal's outer border (no double-border).
+   ───────────────────────────────────────────────────────────────────────── */
+.shell {
+  background: #050505;
+  font-size: 13px;
+  font-family: var(--font-mono-stack);
+  line-height: 1.65;
+  margin: calc(-1 * var(--pad));
+}
+
+.shell__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--signal-dim);
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+
+.shell__bar-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.shell__bar-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: block;
+}
+
+.shell__bar-title { margin-left: auto; }
+
+.shell__feed {
+  padding: 14px 16px;
+  min-height: 220px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.shell__line {
+  margin: 0;
+  display: block;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.shell__line--prompt { color: var(--signal); }
+.shell__line--output { color: var(--fg); opacity: 0.95; }
+.shell__line--error  { color: #ff8a8a; }
+.shell__line--info   { color: var(--muted); }
+
+.shell__form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 16px 12px;
+  border-top: 1px solid var(--signal-dim-2);
+}
+
+.shell__prompt {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.shell__input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  caret-color: var(--signal);
+  min-width: 0;
+}
+
+.shell__input::placeholder { color: var(--muted); opacity: 0.6; }
+
+.shell__chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px 12px 10px;
+  border-top: 1px dashed var(--signal-dim-2);
+}
+
+.shell__chip {
+  border: 1px solid var(--signal-dim);
+  color: var(--signal);
+  padding: 4px 8px;
+  font-family: var(--font-mono-stack);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  border-radius: 2px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  background: transparent;
+}
+
+.shell__chip:active { background: rgba(0, 255, 65, 0.1); }
+
+/* Hint shown below the shell panel — matches .ishell-hint outside .ishell in prototype */
+.shell__commands {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  margin-top: 8px;
+  opacity: 0.75;
+}
+
+@media (max-width: 768px) {
+  .shell__commands { display: none; }
+}
+
+@media (max-width: 768px) {
+  .shell { margin-top: 0; }
+  .shell__feed { min-height: 200px; max-height: 320px; font-size: 11.5px; }
+  .shell__form { padding: 8px 12px 10px; }
+  .shell__prompt { font-size: 11.5px; }
+  .shell__input { font-size: 12px; }
+}
+
