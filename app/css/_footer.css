@@ -35,12 +35,12 @@ footer.shutdown {
   color: var(--signal);
   font-weight: 700;
   letter-spacing: 0.06em;
-  font-size: 13.5px;
+  font-size: var(--fs-base);
   text-shadow: 0 0 8px rgba(0, 255, 65, 0.35);
 }
 .sd-stamp {
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -52,7 +52,7 @@ footer.shutdown {
   font-variant-numeric: tabular-nums;
 }
 .sd-cmdline {
-  font-size: 13px;
+  font-size: var(--fs-base);
   margin: 0 0 14px;
   color: var(--fg);
 }
@@ -81,7 +81,7 @@ footer.shutdown {
 .sp-head {
   color: var(--signal);
   font-weight: 700;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.18em;
   margin-bottom: 12px;
   display: flex;
@@ -95,7 +95,7 @@ footer.shutdown {
   display: grid;
   grid-template-columns: 130px 1fr;
   gap: 12px;
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   line-height: 1.95;
   align-items: center;
 }
@@ -134,7 +134,7 @@ footer.shutdown {
 .sd-netstat pre {
   margin: 0;
   font-family: var(--font-mono-stack);
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   line-height: 1.95;
   color: var(--fg);
   white-space: pre;
@@ -183,7 +183,7 @@ footer.shutdown {
   list-style: none;
   margin: 0 0 24px;
   padding: 0;
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   line-height: 1.85;
 }
 .sd-dmesg .dm-line {
@@ -218,7 +218,7 @@ footer.shutdown {
   color: var(--signal);
   font-weight: 700;
   letter-spacing: 0.12em;
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 .sd-end {
   margin-top: 24px;
@@ -234,7 +234,7 @@ footer.shutdown {
   background: var(--signal);
   color: #000;
   font-weight: 700;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   letter-spacing: 0.16em;
   padding: 5px 12px 6px;
   line-height: 1;
@@ -256,7 +256,7 @@ footer.shutdown {
 .sd-halt-hint {
   flex: 0 0 auto;
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.12em;
   white-space: nowrap;
   opacity: 0;
@@ -273,7 +273,7 @@ footer.shutdown {
   padding: 1px 6px 2px;
   margin: 0 4px;
   font-family: inherit;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   letter-spacing: 0;
   border-radius: 2px;
   cursor: pointer;
@@ -285,7 +285,7 @@ footer.shutdown {
 }
 .shutdown-copy {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   margin-top: 22px;
   letter-spacing: 0.04em;
   opacity: 0.85;
@@ -300,24 +300,24 @@ footer.shutdown {
   }
   .sp-row {
     grid-template-columns: 110px 1fr;
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
   .sd-dmesg .dm-line {
     grid-template-columns: 72px 1fr auto;
     gap: 10px;
-    font-size: 11.5px;
+    font-size: var(--fs-xs);
   }
   .sd-netstat pre {
-    font-size: 11.5px;
+    font-size: var(--fs-xs);
   }
 }
 
 @media (max-width: 560px) {
   .sd-init {
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
   .sd-stamp {
-    font-size: 10.5px;
+    font-size: var(--fs-xs);
   }
   .sp-row {
     grid-template-columns: 92px 1fr;
