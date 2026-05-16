@@ -6,7 +6,7 @@
    ───────────────────────────────────────────────────────────────────────── */
 .shell {
   background: #050505;
-  font-size: 13px;
+  font-size: var(--fs-base);
   font-family: var(--font-mono-stack);
   line-height: 1.65;
   margin: calc(-1 * var(--pad));
@@ -19,7 +19,7 @@
   padding: 8px 14px;
   border-bottom: 1px solid var(--signal-dim);
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.14em;
 }
 
@@ -91,7 +91,7 @@
 
 .shell__prompt {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--fs-base);
   white-space: nowrap;
 }
 
@@ -108,7 +108,7 @@
   outline: 0;
   color: var(--fg);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--fs-base);
   caret-color: var(--signal);
   caret-shape: block;
 }
@@ -127,7 +127,7 @@
   opacity: 0.6;
   pointer-events: none;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--fs-base);
   white-space: nowrap;
   overflow: hidden;
   display: inline-flex;
@@ -170,7 +170,7 @@
   color: var(--signal);
   padding: 4px 8px;
   font-family: var(--font-mono-stack);
-  font-size: 10px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.1em;
   border-radius: 2px;
   min-height: 28px;
@@ -187,7 +187,7 @@
 /* Desktop command hints row — rendered inside shell panel, below the input form */
 .shell__commands {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.1em;
   line-height: 1.8;
   padding: 8px 16px 12px;
@@ -232,15 +232,15 @@
   .shell__feed {
     min-height: 200px;
     max-height: 320px;
-    font-size: 11.5px;
+    font-size: var(--fs-xs);
   }
   .shell__form {
     padding: 8px 12px 10px;
   }
   .shell__prompt {
-    font-size: 11.5px;
+    font-size: var(--fs-xs);
   }
   .shell__input {
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
 }
