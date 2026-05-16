@@ -107,7 +107,7 @@ export function ManPageSection() {
         </span>
 
         <span className="mp-sec">DESCRIPTION</span>
-        <span className="mp-body">{'Senior frontend engineer, 8+ years. Shipped production systems across payments (PCI-DSS), healthcare, e-commerce, and ed-tech. Angular, React/Next.js, Stencil micro-frontends powering €1B+ in revenue. 12-agent AI platform in production. Currently at Betsson (Malta, EU).'}</span>
+        <span className="mp-body">{manPage.descriptionMobile}</span>
 
         <span className="mp-sec">OPTIONS</span>
         <div className="mp-opts">
