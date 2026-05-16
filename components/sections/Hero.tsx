@@ -20,7 +20,7 @@ const DESKTOP_LINE_SPECS: LinePart[][] = [
 ];
 
 const MOBILE_LINE_SPECS: LinePart[][] = [
-  ['[BOOT SEQUENCE — MOBILE]'],
+  ['[BOOT SEQUENCE INITIATED]'],
   [' '],
   ['kernel modules... ', { cls: 'boot__ok', text: 'OK' }],
   ['mount fs... ',       { cls: 'boot__ok', text: 'OK' }],
