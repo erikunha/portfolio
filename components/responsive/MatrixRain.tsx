@@ -67,9 +67,15 @@ export function MatrixRain({
     }
 
     resize();
-    // pre-warm font so first frame uses the loaded typeface
+    // pre-warm font so first frame uses the loaded typeface — set once, persists across frames
     ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
-    window.addEventListener('resize', resize, { passive: true });
+
+    let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+    function debouncedResize() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resize, 100);
+    }
+    window.addEventListener('resize', debouncedResize, { passive: true });
 
     function frame(ts: number) {
       if (!running) return;
@@ -77,7 +83,6 @@ export function MatrixRain({
         last = ts;
         ctx!.fillStyle = tailFade;
         ctx!.fillRect(0, 0, w, h);
-        ctx!.font = `${fontSize}px "JetBrains Mono", monospace`;
         for (let i = 0; i < columns; i++) {
           const y = (drops[i] ?? 0) * fontSize;
           const ch = DIGITS[(Math.random() * DIGITS.length) | 0]!;
@@ -104,7 +109,7 @@ export function MatrixRain({
           { threshold: 0.05 },
         );
         io.observe(target);
-        return () => { io.disconnect(); pause(); window.removeEventListener('resize', resize); };
+        return () => { io.disconnect(); pause(); clearTimeout(resizeTimer); window.removeEventListener('resize', debouncedResize); };
       }
       // fallback if no IO support — start immediately
       resume();
@@ -118,14 +123,15 @@ export function MatrixRain({
       window.addEventListener('sysfail:end',   onSysfailEnd);
       return () => {
         pause();
-        window.removeEventListener('resize', resize);
+        clearTimeout(resizeTimer);
+        window.removeEventListener('resize', debouncedResize);
         document.removeEventListener('visibilitychange', onVisibility);
         window.removeEventListener('sysfail:start', onSysfailStart);
         window.removeEventListener('sysfail:end',   onSysfailEnd);
       };
     }
 
-    return () => { pause(); window.removeEventListener('resize', resize); };
+    return () => { pause(); clearTimeout(resizeTimer); window.removeEventListener('resize', debouncedResize); };
   }, [fontSize, speed, headColor, bodyColor, tailFade, watchRef]);
 
   return (
