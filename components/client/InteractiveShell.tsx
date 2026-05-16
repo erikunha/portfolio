@@ -19,16 +19,15 @@ const MOBILE_INITIAL: Omit<Line, 'id'>[] = [
 ];
 
 const COMMANDS: { label: string; cmd: string }[] = [
-  { label: 'help',               cmd: 'help' },
-  { label: 'whoami',             cmd: 'whoami' },
-  { label: 'whoami --recursive', cmd: 'whoami --recursive' },
-  { label: 'ls',                 cmd: 'ls' },
-  { label: 'cat skills.md',      cmd: 'cat skills.md' },
-  { label: 'cat ~/.now',         cmd: 'cat ~/.now' },
-  { label: 'contact',            cmd: 'contact' },
-  { label: 'face',               cmd: 'face' },
-  { label: 'hire',               cmd: 'hire' },
-  { label: 'clear',              cmd: 'clear' },
+  { label: 'help',          cmd: 'help' },
+  { label: 'whoami',        cmd: 'whoami' },
+  { label: 'ls',            cmd: 'ls' },
+  { label: 'cat skills.md', cmd: 'cat skills.md' },
+  { label: 'cat ~/.now',    cmd: 'cat ~/.now' },
+  { label: 'contact',       cmd: 'contact' },
+  { label: 'face',          cmd: 'face' },
+  { label: 'hire',          cmd: 'hire' },
+  { label: 'clear',         cmd: 'clear' },
 ];
 
 function withIds(lines: Omit<Line, 'id'>[], nextId: () => number): Line[] {
@@ -252,10 +251,10 @@ export function InteractiveShell() {
 
       {!isMobile && (
         <div className="shell__commands">
-          <span className="shell__commands-prefix">{'commands: '}</span>
+          {'commands: '}
           {COMMANDS.map(({ label, cmd }, i) => (
             <Fragment key={cmd}>
-              {i > 0 && <span className="shell__commands-sep">{' · '}</span>}
+              {i > 0 && ' · '}
               <button
                 type="button"
                 className="shell__cmd-hint"
@@ -266,7 +265,7 @@ export function InteractiveShell() {
               </button>
             </Fragment>
           ))}
-          <span className="shell__commands-tail">{' · anything else → Claude'}</span>
+          {' · anything else → Claude'}
         </div>
       )}
 
