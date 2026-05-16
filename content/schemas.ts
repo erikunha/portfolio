@@ -65,15 +65,22 @@ export const ResponsibilitySchema = z.object({
 });
 
 // GuitarSection — structured fields + influences
-export const GuitarFieldSchema = z.object({ label: z.string(), value: z.string() });
+export const GuitarFieldSchema = z.object({
+  label: z.string(),
+  labelMobile: z.string().optional(),
+  value: z.string(),
+  valueMobile: z.string().optional(),
+});
 export const GuitarInfluenceSchema = z.object({
   rank: z.number().int().min(1),
   name: z.string(),
 });
 export const GuitarRigSchema = z.object({
+  comment: z.string(),
+  commentMobile: z.string(),
   fields: z.array(GuitarFieldSchema).min(1),
   influences: z.array(GuitarInfluenceSchema).min(1),
-  comment: z.string(),
+  influencesMobile: z.array(GuitarInfluenceSchema).min(1),
 });
 
 // UnknownsSection
@@ -118,7 +125,7 @@ export const ManPageSchema = z.object({
   tagline: z.string(),
   version: z.string(),
   date: z.string(),
-  descriptionMobile: z.string(),
+  description: z.string(),
   options: z.array(z.object({ flag: z.string(), desc: z.string() })),
   knownBugs: z.array(z.string()),
 });
@@ -153,6 +160,32 @@ export const ShellResponseSchema = z.object({
   text: z.string().min(1),
 });
 export const ShellCommandsSchema = z.array(ShellResponseSchema).min(1);
+
+// ReadmeSection — prose copy extracted from JSX
+export const ReadmeCopySchema = z.object({
+  desktopH1: z.string(),
+  desktopIntro: z.string(),
+  desktopCoreStack: z.array(z.string()).min(1),
+  desktopPrinciples: z.array(z.string()).min(1),
+  desktopStatusH2: z.string(),
+  mobileH2: z.string(),
+  mobileBetssonPrefix: z.string(),
+  mobileBetssonSuffix: z.string(),
+  mobileCoreStack: z.array(z.string()).min(1),
+  mobilePrinciples: z.array(z.string()).min(1),
+  mobileStatusSuffix: z.string(),
+});
+export type ReadmeCopy = z.infer<typeof ReadmeCopySchema>;
+
+// Footer DMESG — structured so no JSX lives in content
+export const DmesgLineSchema = z.object({
+  off: z.number(),
+  prefix: z.string(),
+  bold: z.string().optional(),
+  suffix: z.string().optional(),
+  ok: z.boolean(),
+});
+export type DmesgLine = z.infer<typeof DmesgLineSchema>;
 
 // Exported types
 export type Social = z.infer<typeof SocialSchema>;

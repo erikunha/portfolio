@@ -1,8 +1,8 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { MatrixRain } from '@/components/responsive/MatrixRain';
+import { dmesgLines } from '@/content/dmesg';
 import { useBreakpoint } from '@/lib/use-breakpoint';
 
 function pad(n: number) {
@@ -17,66 +17,6 @@ function fmtClock(d: Date) {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
-type DmesgLine = { off: number; msg: ReactNode; ok: boolean };
-
-const DMESG: DmesgLine[] = [
-  { off: 0.001, msg: 'init: switching runlevel to 0', ok: false },
-  {
-    off: 0.142,
-    msg: (
-      <>
-        systemd: stopping <b>matrix_rain.daemon</b>
-      </>
-    ),
-    ok: true,
-  },
-  {
-    off: 0.213,
-    msg: (
-      <>
-        systemd: stopping <b>crt_flicker.service</b>
-      </>
-    ),
-    ok: true,
-  },
-  {
-    off: 0.288,
-    msg: (
-      <>
-        kernel: tcp: closing <b>3</b> connections
-      </>
-    ),
-    ok: true,
-  },
-  {
-    off: 0.401,
-    msg: (
-      <>
-        systemd: reached target <b>Shutdown</b>.
-      </>
-    ),
-    ok: false,
-  },
-  {
-    off: 0.502,
-    msg: (
-      <>
-        systemd: reached target <b>Final Step</b>.
-      </>
-    ),
-    ok: false,
-  },
-  {
-    off: 0.601,
-    msg: (
-      <>
-        kernel: <b>Power down.</b>
-      </>
-    ),
-    ok: false,
-  },
-];
-
 export function Footer() {
   const { isMobile } = useBreakpoint();
   const uptimeRef = useRef(Date.now());
@@ -86,9 +26,9 @@ export function Footer() {
   const [sectionsSeen, setSectionsSeen] = useState(0);
   const [totalSections, setTotalSections] = useState(0);
   const [commandsRun, setCommandsRun] = useState(0);
-  const [dmesgOn, setDmesgOn] = useState<boolean[]>(DMESG.map(() => false));
+  const [dmesgOn, setDmesgOn] = useState<boolean[]>(dmesgLines.map(() => false));
   const [haltOn, setHaltOn] = useState(false);
-  const [dmesgTs, setDmesgTs] = useState<string[]>(DMESG.map(() => ''));
+  const [dmesgTs, setDmesgTs] = useState<string[]>(dmesgLines.map(() => ''));
   const footerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -150,15 +90,15 @@ export function Footer() {
         if (!entry?.isIntersecting) return;
         obs.disconnect();
         const base = (Date.now() - uptimeRef.current) / 1000;
-        const ts = DMESG.map(({ off }) => {
+        const ts = dmesgLines.map(({ off }) => {
           const t = (base + off).toFixed(3).padStart(9, ' ');
           return `[${t}]`;
         });
         setDmesgTs(ts);
-        DMESG.forEach((_, i) => {
+        dmesgLines.forEach((_, i) => {
           setTimeout(() => {
             setDmesgOn((prev) => prev.map((v, j) => (j === i ? true : v)));
-            if (i === DMESG.length - 1) setTimeout(() => setHaltOn(true), 180);
+            if (i === dmesgLines.length - 1) setTimeout(() => setHaltOn(true), 180);
           }, i * 80);
         });
       },
@@ -305,10 +245,14 @@ export function Footer() {
         </div>
 
         <ul className="sd-dmesg" aria-label="kernel buffer tail">
-          {DMESG.map((line, i) => (
-            <li key={i} className={dmesgOn[i] ? 'dm-line on' : 'dm-line'}>
+          {dmesgLines.map((line, i) => (
+            <li key={line.off} className={dmesgOn[i] ? 'dm-line on' : 'dm-line'}>
               <span className="dm-t">{dmesgTs[i]}</span>
-              <span className="dm-msg">{line.msg}</span>
+              <span className="dm-msg">
+                {line.prefix}
+                {line.bold && <b>{line.bold}</b>}
+                {line.suffix}
+              </span>
               {line.ok && <span className="dm-ok">OK</span>}
               {!line.ok && <span className="dm-ok" aria-hidden="true" />}
             </li>
