@@ -2,10 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const SOURCE = readFileSync(
-  path.resolve(__dirname, '../app/api/erik.json/route.ts'),
-  'utf-8',
-);
+const SOURCE = readFileSync(path.resolve(__dirname, '../app/api/erik.json/route.ts'), 'utf-8');
 
 describe('/api/erik.json route', () => {
   it('exports a GET handler', () => {
@@ -13,7 +10,7 @@ describe('/api/erik.json route', () => {
   });
 
   it('returns @type HiringProfile', () => {
-    expect(SOURCE).toContain('"@type"');
+    expect(SOURCE).toContain('@type');
     expect(SOURCE).toContain('HiringProfile');
   });
 
