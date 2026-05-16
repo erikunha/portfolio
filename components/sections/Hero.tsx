@@ -282,8 +282,41 @@ function DesktopHero() {
 
   return (
     <section id="bio" className="hero hero--desktop" ref={sectionRef}>
-      <h1 className="sr-only">Erik Henrique Alves Cunha — Senior Frontend Engineer</h1>
-      <div ref={bootRef} className="hero__boot" />
+      <div className="hero__left">
+        <div ref={bootRef} className="hero__boot" />
+      </div>
+      <aside className="hero__bio">
+        <h1 className="hero__name">Erik Henrique Alves Cunha</h1>
+        <p className="hero__tagline">
+          Senior Frontend Engineer · 8+ yrs in regulated systems · fintech (PCI-DSS), healthcare,
+          global e-commerce
+        </p>
+        <p className="hero__meta">
+          <span>LOC: <b>Malta</b></span>
+          <span>NOW: <b>Betsson</b></span>
+          <span>EN/PT/FR/ES</span>
+        </p>
+        <p className="hero__status">
+          <span className="hero__status-dot" aria-hidden="true" />
+          OPEN_TO_RELOCATION · WORLDWIDE
+        </p>
+        <div className="hero__ctas">
+          <a
+            className="hero__cta hero__cta--primary"
+            href="mailto:erikhenriquealvescunha@gmail.com?subject=Let's%20talk"
+          >
+            EXEC HIRE
+          </a>
+          <a
+            className="hero__cta hero__cta--secondary"
+            href="https://github.com/erikunha"
+            target="_blank"
+            rel="noreferrer"
+          >
+            GITHUB ↗
+          </a>
+        </div>
+      </aside>
       <div ref={sysfailRef} className="hero__headline" aria-hidden="true" aria-live="off">
         <div className="hero__headline-plate">SYSTEM FAILURE</div>
       </div>
