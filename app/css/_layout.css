@@ -24,23 +24,23 @@
   /* Page padding — 900px rule sets explicit 18px; 768px resets to var(--pad) = 14px */
   .page { padding: 14px var(--pad) 0; }
 
-  /* Section order — all sections visible on mobile */
+  /* Section order — matches desktop DOM order */
   #sec-readme          { order: 1; }
-  #sec-man-page        { order: 2; }
-  #sec-now             { order: 3; }
-  #sec-projects        { order: 4; }
-  #sec-perf-receipts   { order: 5; }
+  #sec-shell           { order: 2; }
+  #sec-man-page        { order: 3; }
+  #sec-now             { order: 4; }
+  #sec-projects        { order: 5; }
   #sec-git-log         { order: 6; }
   #sec-npm-stack       { order: 7; }
   #sec-sys-health      { order: 8; }
   #sec-live-perf       { order: 9; }
-  #sec-hottest-takes   { order: 10; }
-  #sec-shell           { order: 11; }
-  #sec-guitar          { order: 12; }
-  #sec-visa            { order: 13; }
-  #sec-credentials     { order: 14; display: none; }
-  #sec-responsibilities { order: 15; }
-  #sec-community       { order: 16; }
+  #sec-perf-receipts   { order: 10; }
+  #sec-guitar          { order: 11; }
+  #sec-visa            { order: 12; }
+  #sec-credentials     { order: 13; display: none; }
+  #sec-community       { order: 14; }
+  #sec-hottest-takes   { order: 15; }
+  #sec-responsibilities { order: 16; }
   #sec-unknowns        { order: 17; }
   #sec-contact         { order: 18; }
 
