@@ -44,6 +44,13 @@ a:focus-visible {
   text-decoration: underline;
 }
 
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
 .skip-to-content {
   position: absolute;
   top: -100%;
@@ -95,6 +102,18 @@ h1 {
 @media (max-width: 768px) {
   :root { --vrhythm: 18px; --pad: 14px; }
   h1 { font-size: 32px; }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .not-found {
