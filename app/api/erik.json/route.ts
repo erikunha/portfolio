@@ -4,7 +4,7 @@ const PROFILE = {
   "@type": 'HiringProfile',
   name: 'Erik Henrique Alves Cunha',
   alias: 'Erik Cunha',
-  url: 'https://erikunha.com.br',
+  url: 'https://erikunha.dev',
   email: 'erikhenriquealvescunha@gmail.com',
   github: 'https://github.com/erikunha',
   linkedin: 'https://www.linkedin.com/in/erikunha/',

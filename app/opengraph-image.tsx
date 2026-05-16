@@ -45,7 +45,7 @@ export default async function Image() {
           opacity: 0.7,
         }}
       >
-        erikunha.com.br
+        erikunha.dev
       </div>
 
       <div
