@@ -5,7 +5,7 @@ const SHELL_RESPONSES: ShellResponse[] = ShellCommandsSchema.parse([
   {
     commands: ['help'],
     kind: 'output',
-    text: 'commands: help, whoami, whoami --recursive, ls, cat skills.md, cat ~/.now, contact, face, hire, clear, ask <q>',
+    text: 'commands: help · whoami · whoami --recursive · ls · cat skills.md · cat ~/.now · contact · face · hire · clear\nanything else → sent to Claude',
   },
   {
     commands: ['whoami'],
