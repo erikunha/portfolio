@@ -5,7 +5,7 @@ import { Module } from '../responsive/Module';
 type ReadmeLine = { text?: string; node?: ReactNode; cls?: string };
 
 const README_DESKTOP: ReadmeLine[] = [
-  { text: '# Erik Henrique Alves Cunha — Senior Frontend Engineer', cls: 'h1' },
+  { text: '# Erik Henrique Alves Cunha — Full-Stack Engineer (Frontend-Heavy)', cls: 'h1' },
   { text: '8+ years building frontend systems for regulated, high-traffic platforms in fintech (PCI-DSS), healthcare, and global e-commerce.' },
   { text: '## Core Stack', cls: 'h2' },
   { text: '- Angular · React · Next.js · TypeScript · Node.js · RxJS · NgRx' },
@@ -24,7 +24,7 @@ const README_DESKTOP: ReadmeLine[] = [
 const README_MOBILE: ReadmeLine[] = [
   { text: '# erik cunha', cls: 'h2' },
   { text: ' ' },
-  { text: 'senior frontend engineer.' },
+  { text: 'full-stack engineer (frontend-heavy).' },
   {
     node: (
       <>{'currently shipping the '}<span className="pill">{'betsson'}</span>{' cashier — 40M+ tx/yr,'}</>
