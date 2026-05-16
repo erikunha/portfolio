@@ -134,6 +134,14 @@ export function GuitarSection() {
           {'         '}
           <span className="gr-val">{'small venues · band setting'}</span>
           {'\n'}
+          <span className="gr-label">{'PRACTICE'}</span>
+          {'      '}
+          <span className="gr-val">{'jams · tones · live takes'}</span>
+          {'\n'}
+          <span className="gr-label">{'NEVER_LRND'}</span>
+          {'    '}
+          <span className="gr-val">{'tabs only · no staff notation'}</span>
+          {'\n'}
           <span className="gr-label">{'OBSESSION'}</span>
           {'    '}
           <span className="gr-val">{"Coldplay's \"Yellow\" · simplicity is hard"}</span>
