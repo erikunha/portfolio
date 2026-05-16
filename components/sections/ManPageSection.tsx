@@ -40,8 +40,7 @@ export function ManPageSection() {
        Stencil micro-frontends powering €1B+ in revenue.
        Ranges across web, mobile (Ionic), and desktop (Electron).
        Recently built a 12-agent AI engineering platform in
-       production. Currently embedded at Betsson (Malta, EU).
-       Senior through Staff/Principal track.\n\n`}
+       production. Currently embedded at Betsson (Malta, EU).\n\n`}
           <span className="m-sec">{'OPTIONS'}</span>
           {'\n       '}
           <span className="m-dim">{'--seniority'}</span>
