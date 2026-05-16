@@ -52,16 +52,19 @@ export async function POST(req: NextRequest) {
   }
 
   // Delivery second: failure is acceptable if KV write succeeded.
-  const { error } = await getResend().emails.send({
-    from: 'portfolio@erikunha.dev',
-    to: 'erikhenriquealvescunha@gmail.com',
-    replyTo: email,
-    subject: `[portfolio] message from ${name}`,
-    text: `From: ${name} <${email}>\nRef: ${msgId}\n\n${message}`,
-  });
-  if (error) {
-    console.error('[contact] resend error (message saved to KV as', msgId, ')', error);
-    return Response.json({ ok: true, warn: 'delivery delayed' });
+  try {
+    const { error } = await getResend().emails.send({
+      from: 'portfolio@erikunha.dev',
+      to: 'erikhenriquealvescunha@gmail.com',
+      replyTo: email,
+      subject: `[portfolio] message from ${name}`,
+      text: `From: ${name} <${email}>\nRef: ${msgId}\n\n${message}`,
+    });
+    if (error) {
+      console.error('[contact] resend error (message saved to KV as', msgId, ')', error);
+    }
+  } catch (sendErr) {
+    console.error('[contact] resend unavailable (message saved to KV as', msgId, ')', sendErr);
   }
 
   return Response.json({ ok: true });
