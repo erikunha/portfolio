@@ -11,21 +11,19 @@ export function CredentialsSection() {
       defaultOpen={false}
     >
       <div className="visa">
-        <pre>
-          <span className="cmd-line">
-            <span className="pr">$</span>
-            {'cat ~/.credentials'}
-          </span>
-          {'\n\n'}
+        <div className="cmd-line">
+          <span className="pr">$</span>
+          {'cat ~/.credentials'}
+        </div>
+        <div className="cr-table">
           {credentials.map((cred) => (
-            <span key={cred.label}>
-              <span className="cr-label">{cred.label.padEnd(14)}</span>
-              <span className="cr-badge">{cred.badge.padEnd(25)}</span>
+            <div key={cred.label} className="cr-row">
+              <span className="cr-label">{cred.label}</span>
+              <span className="cr-badge">{cred.badge}</span>
               <span className="cr-val">{cred.evidence}</span>
-              {'\n'}
-            </span>
+            </div>
           ))}
-        </pre>
+        </div>
       </div>
     </Module>
   );
