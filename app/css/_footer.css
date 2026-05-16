@@ -6,7 +6,7 @@
    ───────────────────────────────────────────────────────────────────────── */
 footer.shutdown {
   border-top: 0;
-  padding: 0 64px var(--pad) 32px;
+  padding: 28px var(--pad) 32px;
   background: transparent;
   position: relative;
   z-index: 1;
@@ -17,6 +17,7 @@ footer.shutdown {
   z-index: 1;
   max-width: var(--maxw);
   margin: 0 auto;
+  padding: 0 var(--pad);
   font-family: var(--font-mono-stack);
   text-shadow: 0 0 4px #000, 0 0 8px rgba(0,0,0,0.6);
 }
