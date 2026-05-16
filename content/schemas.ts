@@ -119,6 +119,8 @@ export const ManPageSchema = z.object({
   version: z.string(),
   date: z.string(),
   descriptionMobile: z.string(),
+  options: z.array(z.object({ flag: z.string(), desc: z.string() })),
+  knownBugs: z.array(z.string()),
 });
 
 // NowSection
