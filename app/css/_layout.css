@@ -335,6 +335,12 @@ html.sysfail-on .crt-noise { animation-play-state: paused !important; }
   stroke-width: 1.4;
 }
 
+/* Below-fold sections: skip paint until near viewport */
+.module--desktop {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 400px;
+}
+
 /* Desktop module body gets the bordered panel look. Mobile border is on the outer module. */
 .module--desktop .module__body {
   border: 1px solid var(--signal-dim);
