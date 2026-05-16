@@ -34,6 +34,53 @@ function withIds(lines: Omit<Line, 'id'>[], nextId: () => number): Line[] {
   return lines.map((l) => ({ ...l, id: nextId() }));
 }
 
+const PLACEHOLDER_SUGGESTIONS = [
+  'help',
+  'whoami',
+  'cat skills.md',
+  'cat ~/.now',
+  'what are your strongest projects?',
+  'open to relocation?',
+  'hire',
+];
+
+function AnimatedPlaceholder() {
+  const spanRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const el = spanRef.current;
+    if (!el) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.textContent = 'type a command or ask anything…';
+      return;
+    }
+    const node = el;
+    let cancelled = false;
+    let idx = 0;
+    let charIdx = 0;
+    let phase: 'type' | 'hold' | 'back' = 'type';
+
+    function tick() {
+      if (cancelled) return;
+      const suggestion = PLACEHOLDER_SUGGESTIONS[idx % PLACEHOLDER_SUGGESTIONS.length]!;
+      if (phase === 'type') {
+        node.textContent = suggestion.slice(0, ++charIdx);
+        if (charIdx >= suggestion.length) { phase = 'hold'; setTimeout(tick, 1800); }
+        else setTimeout(tick, 60);
+      } else if (phase === 'hold') {
+        phase = 'back';
+        setTimeout(tick, 40);
+      } else {
+        node.textContent = suggestion.slice(0, --charIdx);
+        if (charIdx <= 0) { idx++; charIdx = 0; phase = 'type'; setTimeout(tick, 300); }
+        else setTimeout(tick, 30);
+      }
+    }
+    tick();
+    return () => { cancelled = true; };
+  }, []);
+  return <span ref={spanRef} className="shell__placeholder-anim" aria-hidden="true" />;
+}
+
 const DOT_FRAMES = ['...', '..', '.', '..'] as const;
 
 function LoadingDots() {
@@ -53,6 +100,7 @@ export function InteractiveShell() {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const typingRef = useRef(false);
   const mountedRef = useRef(true);
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
@@ -235,18 +283,21 @@ export function InteractiveShell() {
         className="shell__form"
       >
         <span className="shell__prompt">erik@portfolio:~$</span>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          disabled={busy}
-          autoComplete="off"
-          autoCapitalize="off"
-          autoCorrect="off"
-          spellCheck={false}
-          placeholder="type a command or ask anything…"
-          className="shell__input"
-          aria-label="shell command"
-        />
+        <div className="shell__input-wrap">
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            disabled={busy}
+            autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            className="shell__input"
+            aria-label="shell command"
+          />
+          {!input && !busy && <AnimatedPlaceholder />}
+        </div>
       </form>
 
       {!isMobile && (
@@ -258,7 +309,7 @@ export function InteractiveShell() {
               <button
                 type="button"
                 className="shell__cmd-hint"
-                onClick={() => { if (!busy) setInput(cmd); }}
+                onClick={() => { if (!busy) { setInput(cmd); inputRef.current?.focus(); } }}
                 disabled={busy}
               >
                 {label}
