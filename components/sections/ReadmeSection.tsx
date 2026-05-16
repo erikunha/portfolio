@@ -16,7 +16,7 @@ const README_DESKTOP: ReadmeLine[] = [
   { text: '## Current Status', cls: 'h2' },
   {
     node: (
-      <>{'Open to '}<span className="pill">{'[Senior / Staff / Principal]'}</span>{' roles or high-stakes contracts · remote-first · EU/US/CA · English C1.'}</>
+      <>{'Open to '}<span className="pill">{'[Senior / Staff / Principal]'}</span>{' roles or impactful contract roles · remote-first · EU/US/CA · English C1.'}</>
     ),
   },
 ];

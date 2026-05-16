@@ -10,7 +10,7 @@ export const credentials: Credential[] = z.array(CredentialSchema).parse([
   {
     label: 'ENGLISH',
     badge: 'IELTS_C1',
-    evidence: 'band 6.5 (speaking & listening) · 2023',
+    evidence: 'IELTS General Training · C1 · 2023',
   },
   {
     label: 'INTL_DEGREE',
