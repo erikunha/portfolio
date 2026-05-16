@@ -63,13 +63,13 @@ export function ManPageSection() {
           <span className="m-sec">{'EXAMPLES'}</span>
           {'\n       '}
           <span className="m-mute">{'$'}</span> <span className="m-erik">{manPage.name}</span>
-          {' --seniority STAFF --domain PAYMENTS --ft\n       '}
+          {' --seniority STAFF --domain PAYMENTS --regulated PCI-DSS --ft\n       '}
           <span className="m-mute">{'$'}</span> <span className="m-erik">{manPage.name}</span>
-          {' --track LEAD --domain AI-TOOLING --ft\n       '}
+          {' --track LEAD --domain AI-TOOLING --stack "LLM, agents, RAG" --ft\n       '}
           <span className="m-mute">{'$'}</span> <span className="m-erik">{manPage.name}</span>
-          {' --seniority PRINCIPAL --region WORLDWIDE --relocation\n       '}
+          {' --seniority PRINCIPAL --track LEAD --region WORLDWIDE --relocation\n       '}
           <span className="m-mute">{'$'}</span> <span className="m-erik">{manPage.name}</span>
-          {' --contract --stack "TypeScript, micro-frontends, AI"\n\n'}
+          {' --contract --regulated --stack "TypeScript, micro-frontends"\n\n'}
           <span className="m-sec">{'KNOWN BUGS'}</span>
           {`\n       - Occasionally rewrites a working component for clarity.
        - Will not stop talking about bundle size.
@@ -113,15 +113,15 @@ export function ManPageSection() {
         <div className="mp-examples">
           <span className="mp-ex-line">
             <span className="mp-mute">$</span> <span className="mp-name">{manPage.name}</span>
-            {' --seniority STAFF --domain PAYMENTS --ft'}
+            {' --seniority STAFF --domain PAYMENTS --regulated PCI-DSS --ft'}
           </span>
           <span className="mp-ex-line">
             <span className="mp-mute">$</span> <span className="mp-name">{manPage.name}</span>
-            {' --track LEAD --domain AI-TOOLING --ft'}
+            {' --track LEAD --domain AI-TOOLING --stack "LLM, agents" --ft'}
           </span>
           <span className="mp-ex-line">
             <span className="mp-mute">$</span> <span className="mp-name">{manPage.name}</span>
-            {' --seniority PRINCIPAL --region WORLDWIDE --relocation'}
+            {' --seniority PRINCIPAL --track LEAD --region WORLDWIDE --relocation'}
           </span>
         </div>
 
