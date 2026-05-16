@@ -116,13 +116,10 @@
 
 /* Desktop command hints row — rendered inside shell panel, below the input form */
 .shell__commands {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0;
   color: var(--muted);
   font-size: 11px;
   letter-spacing: 0.1em;
+  line-height: 1.8;
   padding: 8px 16px 12px;
   border-top: 1px dashed var(--signal-dim-2);
   opacity: 0.75;
@@ -133,6 +130,7 @@
 }
 
 .shell__cmd-hint {
+  display: inline;
   background: none;
   border: none;
   padding: 0;
@@ -151,12 +149,6 @@
 
 .shell__cmd-hint:disabled {
   cursor: default;
-}
-
-.shell__commands-sep,
-.shell__commands-prefix,
-.shell__commands-tail {
-  pointer-events: none;
 }
 
 @media (max-width: 768px) {
