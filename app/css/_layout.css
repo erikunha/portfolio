@@ -64,12 +64,12 @@
   .community .cstatus { font-size: 11px; }
 
   /* Permatrix — smaller text on mobile */
-  .permatrix pre { font-size: 11px; }
+  .permatrix pre { font-size: 11px; white-space: pre-wrap; overflow-wrap: break-word; }
   .permatrix .pm-cmd { font-size: 10.5px; }
   .permatrix .pm-foot { font-size: 10px; }
 
   /* Unknowns — smaller text on mobile */
-  .unknowns pre { font-size: 11.5px; }
+  .unknowns pre { font-size: 11.5px; white-space: pre-wrap; overflow-wrap: break-word; }
 
   /* Live perf — tighter cells on mobile */
   .perf-row { gap: 10px; }
