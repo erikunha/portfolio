@@ -3,7 +3,7 @@
 import SHELL_RESPONSES from '@/content/shell-commands';
 import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 import { useBreakpoint } from '@/lib/use-breakpoint';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 type Line = { id: number; kind: 'prompt' | 'output' | 'error' | 'info' | 'loading'; text: string };
 
@@ -18,15 +18,17 @@ const MOBILE_INITIAL: Omit<Line, 'id'>[] = [
   { kind: 'info', text: 'welcome. type help, tap a chip, or ask me anything.' },
 ];
 
-const CHIPS: { label: string; cmd: string }[] = [
-  { label: 'whoami', cmd: 'whoami' },
-  { label: 'skills', cmd: 'cat skills.md' },
-  { label: '.now', cmd: 'cat ~/.now' },
-  { label: 'open to relocate?', cmd: 'open to relocate?' },
-  { label: 'strongest project?', cmd: 'strongest project?' },
-  { label: 'contact', cmd: 'contact' },
-  { label: 'help', cmd: 'help' },
-  { label: 'clear', cmd: 'clear' },
+const COMMANDS: { label: string; cmd: string }[] = [
+  { label: 'help',               cmd: 'help' },
+  { label: 'whoami',             cmd: 'whoami' },
+  { label: 'whoami --recursive', cmd: 'whoami --recursive' },
+  { label: 'ls',                 cmd: 'ls' },
+  { label: 'cat skills.md',      cmd: 'cat skills.md' },
+  { label: 'cat ~/.now',         cmd: 'cat ~/.now' },
+  { label: 'contact',            cmd: 'contact' },
+  { label: 'face',               cmd: 'face' },
+  { label: 'hire',               cmd: 'hire' },
+  { label: 'clear',              cmd: 'clear' },
 ];
 
 function withIds(lines: Omit<Line, 'id'>[], nextId: () => number): Line[] {
@@ -52,6 +54,7 @@ export function InteractiveShell() {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
+  const typingRef = useRef(false);
   const initializedRef = useRef(false);
 
   useEffect(() => {
@@ -171,6 +174,25 @@ export function InteractiveShell() {
     setBusy(false);
   }, [isMobile, nextId, streamQuestion]);
 
+  const runWithEffect = useCallback((cmd: string) => {
+    if (typingRef.current || busy) return;
+    typingRef.current = true;
+    let i = 0;
+    function tick() {
+      if (i <= cmd.length) {
+        setInput(cmd.slice(0, i));
+        i++;
+        setTimeout(tick, 30);
+      } else {
+        setTimeout(() => {
+          runCommand(cmd);
+          typingRef.current = false;
+        }, 300);
+      }
+    }
+    tick();
+  }, [busy, runCommand]);
+
   return (
     <div className="shell">
       <div className="shell__bar">
@@ -224,6 +246,26 @@ export function InteractiveShell() {
         />
       </form>
 
+      {!isMobile && (
+        <div className="shell__commands">
+          <span className="shell__commands-prefix">{'commands: '}</span>
+          {COMMANDS.map(({ label, cmd }, i) => (
+            <Fragment key={cmd}>
+              {i > 0 && <span className="shell__commands-sep">{' · '}</span>}
+              <button
+                type="button"
+                className="shell__cmd-hint"
+                onClick={() => { if (!busy) runWithEffect(cmd); }}
+                disabled={busy}
+              >
+                {label}
+              </button>
+            </Fragment>
+          ))}
+          <span className="shell__commands-tail">{' · anything else → Claude'}</span>
+        </div>
+      )}
+
       {isMobile && (
         <div
           className="shell__chips"
@@ -231,10 +273,10 @@ export function InteractiveShell() {
           aria-label="quick commands"
           onClick={(e) => {
             const cmd = (e.target as HTMLElement).closest<HTMLElement>('[data-cmd]')?.dataset.cmd;
-            if (cmd && !busy) runCommand(cmd);
+            if (cmd && !busy) runWithEffect(cmd);
           }}
         >
-          {CHIPS.map(({ label, cmd }) => (
+          {COMMANDS.map(({ label, cmd }) => (
             <button key={cmd} type="button" className="shell__chip" data-cmd={cmd}>
               {label}
             </button>
