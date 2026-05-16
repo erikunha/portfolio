@@ -6,14 +6,15 @@ import { Module } from '../responsive/Module';
 export function ManPageSection() {
   return (
     <Module id="sec-man-page" header="MAN ERIK(1)" icon={<IconManPage />} defaultOpen={false}>
-      <div className="manpage">
+      {/* Desktop: full pre with fixed-width columns */}
+      <div className="manpage manpage--desktop">
         <pre>
           <span className="m-head">{`${manPage.name.toUpperCase()}(1)                    User Commands                    ${manPage.name.toUpperCase()}(1)`}</span>
           {'\n\n\n'}
           <span className="m-sec">{'NAME'}</span>
           {'\n       '}
           <span className="m-erik">{manPage.name}</span>
-          {` \u2014 ${manPage.tagline}\n\n`}
+          {` — ${manPage.tagline}\n\n`}
           <span className="m-sec">{'SYNOPSIS'}</span>
           {'\n       '}
           <span className="m-erik">{manPage.name}</span>
@@ -93,6 +94,55 @@ export function ManPageSection() {
           {'\n       cv(1), github(1), linkedin(1), calendar(1)\n\n\n'}
           <span className="m-head">{`${manPage.version}                       ${manPage.date}                       ${manPage.name.toUpperCase()}(1)`}</span>
         </pre>
+      </div>
+
+      {/* Mobile: semantic layout — avoids pre-wrap column fighting */}
+      <div className="manpage--mobile">
+        <span className="mp-head">{`${manPage.name.toUpperCase()}(1) — User Commands`}</span>
+
+        <span className="mp-sec">NAME</span>
+        <span className="mp-body">
+          <span className="mp-name">{manPage.name}</span>
+          {` — ${manPage.tagline}`}
+        </span>
+
+        <span className="mp-sec">DESCRIPTION</span>
+        <span className="mp-body">{'Senior frontend engineer, 8+ years. Shipped production systems across payments (PCI-DSS), healthcare, e-commerce, and ed-tech. Angular, React/Next.js, Stencil micro-frontends powering €1B+ in revenue. 12-agent AI platform in production. Currently at Betsson (Malta, EU).'}</span>
+
+        <span className="mp-sec">OPTIONS</span>
+        <div className="mp-opts">
+          <span className="mp-flag">--seniority</span>
+          <span className="mp-desc">Senior → Staff/Principal</span>
+          <span className="mp-flag">--track</span>
+          <span className="mp-desc">IC or technical lead</span>
+          <span className="mp-flag">--domain</span>
+          <span className="mp-desc">Payments, healthcare, AI tooling</span>
+          <span className="mp-flag">--region</span>
+          <span className="mp-desc">Worldwide; remote-first</span>
+          <span className="mp-flag">--relocation</span>
+          <span className="mp-desc">Open to relocating</span>
+          <span className="mp-flag">--regulated</span>
+          <span className="mp-desc">PCI-DSS, healthcare, banking</span>
+          <span className="mp-flag">--contract</span>
+          <span className="mp-desc">Fixed-term or freelance</span>
+          <span className="mp-flag">--ft</span>
+          <span className="mp-desc">Full-time</span>
+          <span className="mp-flag">--hire</span>
+          <span className="mp-desc">Initiates handshake. See CONTACT.</span>
+        </div>
+
+        <span className="mp-sec">EXAMPLES</span>
+        <div className="mp-examples">
+          <span className="mp-ex-line"><span className="mp-mute">$</span>{' '}<span className="mp-name">{manPage.name}</span>{' --seniority STAFF --domain PAYMENTS --ft'}</span>
+          <span className="mp-ex-line"><span className="mp-mute">$</span>{' '}<span className="mp-name">{manPage.name}</span>{' --track LEAD --domain AI-TOOLING --ft'}</span>
+          <span className="mp-ex-line"><span className="mp-mute">$</span>{' '}<span className="mp-name">{manPage.name}</span>{' --seniority PRINCIPAL --region WORLDWIDE --relocation'}</span>
+        </div>
+
+        <span className="mp-sec">KNOWN BUGS</span>
+        <span className="mp-bugs">{'- Occasionally rewrites a working component for clarity.\n- Will not stop talking about bundle size.\n- Sometimes ships the test before the feature.'}</span>
+
+        <span className="mp-sec">AUTHOR</span>
+        <span className="mp-body">{'Written by Erik Henrique Alves Cunha.'}</span>
       </div>
     </Module>
   );
