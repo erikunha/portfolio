@@ -11,9 +11,10 @@ export type ModuleProps = {
   icon?: ReactNode;
   defaultOpen?: boolean;
   children: ReactNode;
+  postBody?: ReactNode;
 };
 
-export function Module({ id, header, mobileHeader, icon, defaultOpen = true, children }: ModuleProps) {
+export function Module({ id, header, mobileHeader, icon, defaultOpen = true, children, postBody }: ModuleProps) {
   const { isMobile } = useBreakpoint();
   const activeHeader = isMobile && mobileHeader ? mobileHeader : header;
 
@@ -29,6 +30,7 @@ export function Module({ id, header, mobileHeader, icon, defaultOpen = true, chi
           <span>{activeHeader}</span>
         </h2>
         <div className="module__body">{children}</div>
+        {postBody}
       </section>
     );
   }
