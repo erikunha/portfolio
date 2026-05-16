@@ -23,4 +23,14 @@
 
   --font-mono-stack: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-display-stack: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+
+  --fs-2xs: 9px;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: 14px;
+  --fs-md: 16px;
+  --fs-lg: 22px;
+  --fs-xl: 32px;
+  --fs-2xl: 48px;
+  --fs-3xl: 78px;
 }
