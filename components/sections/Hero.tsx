@@ -282,6 +282,7 @@ function DesktopHero() {
 
   return (
     <section id="bio" className="hero hero--desktop" ref={sectionRef}>
+      <h1 className="sr-only">Erik Henrique Alves Cunha — Staff/Principal Frontend Engineer</h1>
       <div ref={bootRef} className="hero__boot" />
       <div ref={sysfailRef} className="hero__headline" aria-hidden="true" aria-live="off">
         <div className="hero__headline-plate">SYSTEM FAILURE</div>
