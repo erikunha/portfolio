@@ -335,8 +335,10 @@ html.sysfail-on .crt-noise { animation-play-state: paused !important; }
   stroke-width: 1.4;
 }
 
-/* Below-fold sections: skip paint until near viewport */
-.module--desktop {
+/* Below-fold sections: skip paint until near viewport.
+   nth-of-type counts all <section> siblings: hero=1, readme=2, manpage=3, now=4, shell=5 → projects=6+.
+   Skips the first 5 sections which can appear in or near the initial viewport. */
+.page > section.module--desktop:nth-of-type(n+6) {
   content-visibility: auto;
   contain-intrinsic-size: 0 400px;
 }
