@@ -8,7 +8,7 @@
   z-index: 10;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 40px var(--pad) 0;
+  padding: 60px var(--pad) 0;
 }
 
 @media (max-width: 900px) {

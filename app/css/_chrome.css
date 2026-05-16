@@ -2,8 +2,10 @@
    DESKTOP TOPBAR
    ───────────────────────────────────────────────────────────────────────── */
 .topbar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 110;
   background: var(--bg);
   border-bottom: 1px solid var(--signal-dim);
