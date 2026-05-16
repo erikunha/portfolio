@@ -34,7 +34,7 @@ export function ContactForm() {
 
   if (status === 'success') {
     return (
-      <div className="contact contact--success">
+      <div className="contact contact--success" role="status">
         <p>EXECUTE_SEND :: SUCCESS</p>
         <p>handshake initiated · expect reply within 48h</p>
       </div>
@@ -42,7 +42,7 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={submit} className="contact">
+    <form onSubmit={submit} className="contact" aria-busy={status === 'submitting'}>
       <label className="contact__field">
         <span className="contact__prompt">
           <span className="contact__prompt-user">user@terminal:~$</span>{' '}
@@ -90,7 +90,7 @@ export function ContactForm() {
           className="contact__input contact__input--area"
         />
       </label>
-      <div className="contact__submitrow">
+      <div className="contact__submitrow" aria-live="polite">
         <button type="submit" disabled={status === 'submitting'} className="contact__send">
           {status === 'submitting' ? 'TRANSMITTING...' : 'EXECUTE_SEND'}
         </button>

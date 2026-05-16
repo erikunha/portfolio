@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { readMotion } from '@/lib/motion';
 
 const ROLES = ['Senior', 'Staff', 'Principal'];
 const TYPE_MS = 80;
@@ -16,7 +17,7 @@ export function RoleTyper() {
     if (!el) return;
     const node = el;
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!readMotion()) return;
 
     let cancelled = false;
     let roleIdx = 0;

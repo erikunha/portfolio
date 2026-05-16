@@ -2,6 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import SHELL_RESPONSES from '@/content/shell-commands';
+import { readMotion } from '@/lib/motion';
 import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 import { useBreakpoint } from '@/lib/use-breakpoint';
 
@@ -50,7 +51,7 @@ function AnimatedPlaceholder() {
     const el = textRef.current;
     if (!el) return;
     const node = el;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!readMotion()) {
       node.textContent = 'type a command or ask anything…';
       return;
     }

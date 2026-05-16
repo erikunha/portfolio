@@ -58,8 +58,8 @@ textarea:focus-visible {
 
 .skip-to-content {
   position: absolute;
-  top: -100%;
   left: 0;
+  top: 0;
   z-index: 9999;
   padding: 8px 16px;
   background: var(--signal);
@@ -68,10 +68,13 @@ textarea:focus-visible {
   font-size: var(--fs-md);
   font-weight: 700;
   text-decoration: none;
-  transition: top 0.1s;
+  clip-path: inset(50%);
+  overflow: hidden;
+  transition: clip-path 0.1s;
 }
 .skip-to-content:focus {
-  top: 0;
+  clip-path: inset(0);
+  overflow: visible;
 }
 
 button {
