@@ -19,111 +19,287 @@
 
 @media (max-width: 768px) {
   /* Clear space for fixed dock at bottom */
-  body { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+  body {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
 
   /* Page padding — 900px rule sets explicit 18px; 768px resets to var(--pad) = 14px */
-  .page { padding: 14px var(--pad) 0; }
+  .page {
+    padding: 14px var(--pad) 0;
+  }
 
   /* Section order — matches desktop DOM order */
-  #sec-readme          { order: 1; }
-  #sec-shell           { order: 2; }
-  #sec-man-page        { order: 3; }
-  #sec-now             { order: 4; }
-  #sec-projects        { order: 5; }
-  #sec-git-log         { order: 6; }
-  #sec-npm-stack       { order: 7; }
-  #sec-sys-health      { order: 8; }
-  #sec-live-perf       { order: 9; }
-  #sec-perf-receipts   { order: 10; }
-  #sec-guitar          { order: 11; }
-  #sec-visa            { order: 12; }
-  #sec-credentials     { order: 13; display: none; }
-  #sec-community       { order: 14; }
-  #sec-hottest-takes   { order: 15; }
-  #sec-responsibilities { order: 16; }
-  #sec-unknowns        { order: 17; }
-  #sec-contact         { order: 18; }
+  #sec-readme {
+    order: 1;
+  }
+  #sec-shell {
+    order: 2;
+  }
+  #sec-man-page {
+    order: 3;
+  }
+  #sec-now {
+    order: 4;
+  }
+  #sec-projects {
+    order: 5;
+  }
+  #sec-git-log {
+    order: 6;
+  }
+  #sec-npm-stack {
+    order: 7;
+  }
+  #sec-sys-health {
+    order: 8;
+  }
+  #sec-live-perf {
+    order: 9;
+  }
+  #sec-perf-receipts {
+    order: 10;
+  }
+  #sec-guitar {
+    order: 11;
+  }
+  #sec-visa {
+    order: 12;
+  }
+  #sec-credentials {
+    order: 13;
+    display: none;
+  }
+  #sec-community {
+    order: 14;
+  }
+  #sec-hottest-takes {
+    order: 15;
+  }
+  #sec-responsibilities {
+    order: 16;
+  }
+  #sec-unknowns {
+    order: 17;
+  }
+  #sec-contact {
+    order: 18;
+  }
 
   /* Readme — narrower gutter on mobile */
-  .readme { grid-template-columns: 28px 1fr; font-size: 12.5px; }
+  .readme {
+    grid-template-columns: 28px 1fr;
+    font-size: 12.5px;
+  }
 
   /* Npm stack — square tiles on mobile */
-  .npm-stack li { aspect-ratio: 1 / 1; font-size: 9.5px; }
+  .npm-stack li {
+    aspect-ratio: 1 / 1;
+    font-size: 9.5px;
+  }
 
   /* Hottest takes — tighter grid on mobile */
-  .take { grid-template-columns: 28px 1fr; padding: 10px 0; }
-  .take__num { font-size: 11.5px; }
-  .take__thesis { font-size: 12.5px; }
-  .take__body { font-size: 12px; }
-  .take__category { font-size: 9px; }
-  .takes__footer { font-size: 10.5px; }
+  .take {
+    grid-template-columns: 28px 1fr;
+    padding: 10px 0;
+  }
+  .take__num {
+    font-size: 11.5px;
+  }
+  .take__thesis {
+    font-size: 12.5px;
+  }
+  .take__body {
+    font-size: 12px;
+  }
+  .take__category {
+    font-size: 9px;
+  }
+  .takes__footer {
+    font-size: 10.5px;
+  }
 
   /* Community — smaller text on mobile */
-  .community { font-size: 12px; }
-  .community .ctitle { font-size: 13px; }
-  .community .cstatus { font-size: 11px; }
+  .community {
+    font-size: 12px;
+  }
+  .community .ctitle {
+    font-size: 13px;
+  }
+  .community .cstatus {
+    font-size: 11px;
+  }
 
   /* Permatrix — smaller text on mobile */
-  .permatrix pre { font-size: 11px; white-space: pre-wrap; overflow-wrap: break-word; }
-  .permatrix .pm-cmd { font-size: 10.5px; }
-  .permatrix .pm-foot { font-size: 10px; }
+  .permatrix pre {
+    font-size: 11px;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+  .permatrix .pm-cmd {
+    font-size: 10.5px;
+  }
+  .permatrix .pm-foot {
+    font-size: 10px;
+  }
 
   /* Unknowns — smaller text on mobile */
-  .unknowns pre { font-size: 11.5px; white-space: pre-wrap; overflow-wrap: break-word; }
+  .unknowns pre {
+    font-size: 11.5px;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
 
   /* Live perf — tighter cells on mobile */
-  .perf-row { gap: 10px; }
-  .perf-cell .pk { font-size: 9.5px; letter-spacing: 0.14em; }
-  .perf-cell .pv { font-size: 22px; margin: 6px 0; }
-  .perf-cell .pv .of { font-size: 11px; }
-  .perf-cell .pbar { height: 3px; }
-  .perf-foot { font-size: 9.5px; }
-  .perf-foot .live-dot { width: 6px; height: 6px; margin-right: 6px; }
+  .perf-row {
+    gap: 10px;
+  }
+  .perf-cell .pk {
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+  }
+  .perf-cell .pv {
+    font-size: 22px;
+    margin: 6px 0;
+  }
+  .perf-cell .pv .of {
+    font-size: 11px;
+  }
+  .perf-cell .pbar {
+    height: 3px;
+  }
+  .perf-foot {
+    font-size: 9.5px;
+  }
+  .perf-foot .live-dot {
+    width: 6px;
+    height: 6px;
+    margin-right: 6px;
+  }
 
   /* Shell bar — smaller on mobile */
-  .shell__bar { font-size: 9.5px; }
+  .shell__bar {
+    font-size: 9.5px;
+  }
 
   /* Contact inputs — touch-friendly on mobile */
-  .contact__input { font-size: 12.5px; min-height: 44px; }
-  .contact__input--area { min-height: 100px; }
+  .contact__input {
+    font-size: 12.5px;
+    min-height: 44px;
+  }
+  .contact__input--area {
+    min-height: 100px;
+  }
 
   /* Visa / guitar / credentials — smaller pre on mobile, allow wrapping */
-  .visa pre { font-size: 11.5px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: break-word; }
-  .visa-foot { font-size: 10.5px; }
+  .visa pre {
+    font-size: 11.5px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+  .visa-foot {
+    font-size: 10.5px;
+  }
 
   /* Perf receipts — layout on mobile (font-size overrides are after desktop rules below) */
-  .receipts { gap: 8px; }
-  .receipt { padding: 12px 12px 10px; gap: 4px; min-height: 0; }
-  .receipt__metric { font-size: 9.5px; }
-  .receipt__note { font-size: 11px; }
-  .receipt.receipt--desktop-only { display: none; }
-  .receipt__metric-mobile { display: inline; }
-  .receipt__metric-desktop { display: none; }
+  .receipts {
+    gap: 8px;
+  }
+  .receipt {
+    padding: 12px 12px 10px;
+    gap: 4px;
+    min-height: 0;
+  }
+  .receipt__metric {
+    font-size: 9.5px;
+  }
+  .receipt__note {
+    font-size: 11px;
+  }
+  .receipt.receipt--desktop-only {
+    display: none;
+  }
+  .receipt__metric-mobile {
+    display: inline;
+  }
+  .receipt__metric-desktop {
+    display: none;
+  }
 
   /* Projects — smaller tiles on mobile */
-  .project { padding: 14px; }
-  .project__folder { width: 32px; height: 26px; }
-  .project__name { font-size: 14px; }
-  .project__desc { font-size: 12px; }
+  .project {
+    padding: 14px;
+  }
+  .project__folder {
+    width: 32px;
+    height: 26px;
+  }
+  .project__name {
+    font-size: 14px;
+  }
+  .project__desc {
+    font-size: 12px;
+  }
 
   /* Blame — tighter timeline on mobile */
-  .blame { padding-left: 16px; }
-  .blame::before { left: 4px; }
-  .blame-row { padding: 0 0 16px; font-size: 12.5px; }
-  .blame-row::before { left: -16px; width: 9px; height: 9px; }
-  .blame-date { font-size: 10.5px; }
-  .blame-reason { font-size: 12px; line-height: 1.55; }
+  .blame {
+    padding-left: 16px;
+  }
+  .blame::before {
+    left: 4px;
+  }
+  .blame-row {
+    padding: 0 0 16px;
+    font-size: 12.5px;
+  }
+  .blame-row::before {
+    left: -16px;
+    width: 9px;
+    height: 9px;
+  }
+  .blame-date {
+    font-size: 10.5px;
+  }
+  .blame-reason {
+    font-size: 12px;
+    line-height: 1.55;
+  }
 
   /* Footer mobile adaptations */
-  footer.shutdown { padding: 28px var(--pad) 24px; }
-  .sd-banner { flex-direction: column; gap: 4px; }
-  .sd-init { font-size: 12px; }
-  .sd-stamp { font-size: 10px; }
-  .sd-panel { padding: 12px 14px 14px; margin-bottom: 10px; }
-  .sp-head { font-size: 9.5px; letter-spacing: 0.16em; }
-  .sp-row { grid-template-columns: 100px 1fr; gap: 10px; font-size: 11px; }
-  .sd-dmesg .dm-line { grid-template-columns: 72px 1fr auto; gap: 8px; font-size: 10.5px; }
-  .sd-netstat pre { font-size: 10.5px; }
+  footer.shutdown {
+    padding: 28px var(--pad) 24px;
+  }
+  .sd-banner {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sd-init {
+    font-size: 12px;
+  }
+  .sd-stamp {
+    font-size: 10px;
+  }
+  .sd-panel {
+    padding: 12px 14px 14px;
+    margin-bottom: 10px;
+  }
+  .sp-head {
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+  }
+  .sp-row {
+    grid-template-columns: 100px 1fr;
+    gap: 10px;
+    font-size: 11px;
+  }
+  .sd-dmesg .dm-line {
+    grid-template-columns: 72px 1fr auto;
+    gap: 8px;
+    font-size: 10.5px;
+  }
+  .sd-netstat pre {
+    font-size: 10.5px;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -140,8 +316,12 @@
   margin-bottom: var(--vrhythm);
 }
 
-.hero.shake { transform: translate(2px, -2px); }
-.hero.shake-2 { transform: translate(-2px, 1px); }
+.hero.shake {
+  transform: translate(2px, -2px);
+}
+.hero.shake-2 {
+  transform: translate(-2px, 1px);
+}
 
 @media (max-width: 900px) {
   .hero {
@@ -168,10 +348,12 @@
   bottom: 24px;
   z-index: 2;
   color: var(--fg);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.7;
   overflow: hidden;
-  text-shadow: 0 0 4px #000, 0 0 8px #000;
+  text-shadow:
+    0 0 4px #000,
+    0 0 8px #000;
 }
 
 .hero__bio {
@@ -187,13 +369,16 @@
 .hero__bio .hero__name {
   font-family: var(--font-mono-stack);
   font-weight: 700;
-  font-size: 18px;
+  font-size: 28px;
   color: var(--signal);
   margin: 0 0 4px;
+  line-height: 1.2;
 }
 
 .hero__bio .hero__tagline,
-.hero__bio .hero__meta { margin: 0; }
+.hero__bio .hero__meta {
+  margin: 0;
+}
 
 .hero__status {
   display: inline-flex;
@@ -202,7 +387,7 @@
   border: 1px solid var(--signal-dim);
   color: var(--signal);
   font-family: var(--font-mono-stack);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   padding: 6px 10px;
   white-space: nowrap;
@@ -219,25 +404,63 @@
 }
 
 @keyframes status-pulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--signal); }
-  50% { opacity: 0.35; box-shadow: none; }
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 4px var(--signal);
+  }
+  50% {
+    opacity: 0.35;
+    box-shadow: none;
+  }
 }
 
-@media (prefers-reduced-motion: reduce) { .hero__status-dot { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .hero__status-dot {
+    animation: none;
+  }
+}
 
 @media (max-width: 900px) {
-  .hero__bio { padding: 24px 18px; }
+  .hero__bio {
+    padding: 24px 18px;
+  }
 }
 
 /* Boot animation text tokens */
-.boot__line         { display: block; }
-.boot__ok           { color: var(--signal); }
-.boot__enc          { color: var(--signal); font-weight: 700; text-shadow: 0 0 6px rgba(0,255,65,0.6), 0 0 4px #000; }
-.boot__welcome      { color: var(--fg); font-weight: 700; }
-.boot__prompt       { color: var(--muted); }
-.boot__cmd          { color: var(--fg); }
-.boot__matrix-prefix { color: var(--muted); margin-right: 4px; }
-.boot__matrix-out   { color: var(--signal); text-shadow: 0 0 8px rgba(0,255,65,0.4), 0 0 4px #000; }
+.boot__line {
+  display: block;
+}
+.boot__ok {
+  color: var(--signal);
+}
+.boot__enc {
+  color: var(--signal);
+  font-weight: 700;
+  text-shadow:
+    0 0 6px rgba(0, 255, 65, 0.6),
+    0 0 4px #000;
+}
+.boot__welcome {
+  color: var(--fg);
+  font-weight: 700;
+}
+.boot__prompt {
+  color: var(--muted);
+}
+.boot__cmd {
+  color: var(--fg);
+}
+.boot__matrix-prefix {
+  color: var(--muted);
+  margin-right: 4px;
+}
+.boot__matrix-out {
+  color: var(--signal);
+  text-shadow:
+    0 0 8px rgba(0, 255, 65, 0.4),
+    0 0 4px #000;
+}
 .boot__cursor {
   display: inline-block;
   width: 9px;
@@ -247,8 +470,16 @@
   margin-left: 2px;
   animation: boot-blink 1.05s steps(2, start) infinite;
 }
-@keyframes boot-blink { to { background: transparent; } }
-@media (prefers-reduced-motion: reduce) { .boot__cursor { animation: none; } }
+@keyframes boot-blink {
+  to {
+    background: transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot__cursor {
+    animation: none;
+  }
+}
 
 /* Sysfail overlay — fade-in/out plate, matches prototype .sysfail + .sysfail-plate */
 .hero__headline {
@@ -276,7 +507,9 @@
   padding: 6px 18px 8px;
   line-height: 1;
   text-transform: uppercase;
-  box-shadow: 0 0 24px rgba(0, 255, 65, 0.55), 0 0 60px rgba(0, 255, 65, 0.25);
+  box-shadow:
+    0 0 24px rgba(0, 255, 65, 0.55),
+    0 0 60px rgba(0, 255, 65, 0.25);
   white-space: nowrap;
 }
 
@@ -290,12 +523,14 @@
 /* Freeze CRT animations while sysfail plate is visible */
 html.sysfail-on .crt-scan-beam,
 html.sysfail-on .crt-flicker,
-html.sysfail-on .crt-noise { animation-play-state: paused !important; }
+html.sysfail-on .crt-noise {
+  animation-play-state: paused !important;
+}
 
 .hero--mobile .hero__name {
   font-family: var(--font-mono-stack);
   font-weight: 700;
-  font-size: 17px;
+  font-size: 22px;
   color: var(--signal);
   border-top: 1px dashed var(--signal-dim-2);
   padding-top: 14px;
@@ -305,8 +540,8 @@ html.sysfail-on .crt-noise { animation-play-state: paused !important; }
 
 .hero__tagline {
   color: var(--fg);
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.55;
   margin-bottom: 8px;
 }
 
@@ -315,12 +550,15 @@ html.sysfail-on .crt-noise { animation-play-state: paused !important; }
   flex-wrap: wrap;
   gap: 6px 12px;
   color: var(--muted);
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   margin-bottom: 14px;
 }
 
-.hero__meta b { color: var(--signal); font-weight: 700; }
+.hero__meta b {
+  color: var(--signal);
+  font-weight: 700;
+}
 
 .hero__ctas {
   display: grid;
@@ -335,11 +573,13 @@ html.sysfail-on .crt-noise { animation-play-state: paused !important; }
   min-height: 44px;
   padding: 0 14px;
   border: 1px solid var(--signal-dim);
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  transition: box-shadow 200ms ease, background 200ms ease;
+  transition:
+    box-shadow 200ms ease,
+    background 200ms ease;
 }
 
 .hero__cta--primary {
@@ -377,7 +617,7 @@ html.sysfail-on .crt-noise { animation-play-state: paused !important; }
   gap: 8px;
   color: var(--signal);
   font-family: var(--font-mono-stack);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -404,7 +644,7 @@ html.sysfail-on .crt-noise { animation-play-state: paused !important; }
 /* Below-fold sections: skip paint until near viewport.
    nth-of-type counts all <section> siblings: hero=1, readme=2, manpage=3, now=4, shell=5 → projects=6+.
    Skips the first 5 sections which can appear in or near the initial viewport. */
-.page > section.module--desktop:nth-of-type(n+6) {
+.page > section.module--desktop:nth-of-type(n + 6) {
   content-visibility: auto;
   contain-intrinsic-size: 0 400px;
 }
@@ -459,11 +699,10 @@ html.sysfail-on .crt-noise { animation-play-state: paused !important; }
   font-size: 12px;
 }
 
-.module--mobile[data-open='false'] .module__body {
+.module--mobile[data-open="false"] .module__body {
   display: none;
 }
 
-.module--mobile[data-open='true'] .module__body {
+.module--mobile[data-open="true"] .module__body {
   padding: var(--pad);
 }
-
