@@ -39,6 +39,9 @@ export function MatrixRain({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const canvasEl = canvas;
+    const ctxEl = ctx;
+
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     let columns = 0;
     let drops: number[] = [];
@@ -50,13 +53,13 @@ export function MatrixRain({
     let h = 0;
 
     function resize() {
-      const r = canvas!.getBoundingClientRect();
+      const r = canvasEl.getBoundingClientRect();
       w = r.width;
       h = r.height;
-      canvas!.width = Math.max(1, Math.floor(w * dpr));
-      canvas!.height = Math.max(1, Math.floor(h * dpr));
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx!.font = `${fontSize}px "JetBrains Mono", monospace`;
+      canvasEl.width = Math.max(1, Math.floor(w * dpr));
+      canvasEl.height = Math.max(1, Math.floor(h * dpr));
+      ctxEl.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctxEl.font = `${fontSize}px "JetBrains Mono", monospace`;
       const newCols = Math.ceil(w / fontSize);
       const old = drops;
       drops = new Array(newCols);
@@ -65,8 +68,8 @@ export function MatrixRain({
           typeof old[i] === 'number' ? (old[i] as number) : -Math.random() * (h / fontSize);
       }
       columns = newCols;
-      ctx!.fillStyle = '#000';
-      ctx!.fillRect(0, 0, w, h);
+      ctxEl.fillStyle = '#000';
+      ctxEl.fillRect(0, 0, w, h);
     }
 
     resize();
@@ -82,15 +85,15 @@ export function MatrixRain({
       if (!running) return;
       if (ts - last >= FRAME_MS) {
         last = ts;
-        ctx!.fillStyle = tailFade;
-        ctx!.fillRect(0, 0, w, h);
+        ctxEl.fillStyle = tailFade;
+        ctxEl.fillRect(0, 0, w, h);
         for (let i = 0; i < columns; i++) {
           const y = (drops[i] ?? 0) * fontSize;
           const ch = DIGITS[(Math.random() * DIGITS.length) | 0]!;
-          ctx!.fillStyle = headColor;
-          ctx!.fillText(ch, i * fontSize, y);
-          ctx!.fillStyle = bodyColor;
-          ctx!.fillText(ch, i * fontSize, y - fontSize);
+          ctxEl.fillStyle = headColor;
+          ctxEl.fillText(ch, i * fontSize, y);
+          ctxEl.fillStyle = bodyColor;
+          ctxEl.fillText(ch, i * fontSize, y - fontSize);
           if (y > h && Math.random() > 0.975) drops[i] = -Math.random() * 6;
           drops[i] = (drops[i] ?? 0) + speed;
         }

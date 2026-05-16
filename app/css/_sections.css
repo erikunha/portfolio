@@ -189,6 +189,9 @@
 .guitar-mobile {
   display: none;
 }
+.guitar__spec-label {
+  font-size: var(--fs-xs);
+}
 
 .visa .cmd-line {
   color: var(--muted);
