@@ -19,7 +19,7 @@ const display = localFont({
   src: [{ path: '../public/fonts/inter-900.woff2', weight: '900', style: 'normal' }],
   variable: '--font-display',
   display: 'swap',
-  preload: true,
+  preload: false,
 });
 
 export const metadata: Metadata = {

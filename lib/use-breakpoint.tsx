@@ -1,7 +1,13 @@
-// lib/use-breakpoint.tsx
 'use client';
 
-import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 import { MOBILE_BREAKPOINT_PX } from './breakpoint';
 
 type BreakpointCtx = {
@@ -17,21 +23,31 @@ export function BreakpointProvider({
   children,
 }: {
   initialIsMobile: boolean;
-  /** When true (via ?force=desktop), skip matchMedia so the param persists
-   *  after hydration and doesn't get overridden by device width. */
   forceDesktop?: boolean;
   children: ReactNode;
 }) {
-  const [isMobile, setIsMobile] = useState(initialIsMobile);
+  const mqRef = useRef<MediaQueryList | null>(null);
+  if (!mqRef.current && typeof window !== 'undefined') {
+    mqRef.current = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
+  }
 
-  useEffect(() => {
-    if (forceDesktop) return;
-    const mq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
-    setIsMobile(mq.matches);
-    const handler = (event: MediaQueryListEvent) => setIsMobile(event.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, [forceDesktop]);
+  // subscribe must be stable — mqRef never changes after first mount
+  const subscribe = useCallback(
+    (cb: () => void) => {
+      mqRef.current?.addEventListener('change', cb);
+      return () => mqRef.current?.removeEventListener('change', cb);
+    },
+    // mqRef is a stable useRef, never recreated — empty deps is intentional
+    [],
+  );
+
+  const isMobileFromMedia = useSyncExternalStore(
+    subscribe,
+    () => mqRef.current?.matches ?? initialIsMobile,
+    () => initialIsMobile,
+  );
+
+  const isMobile = forceDesktop ? false : isMobileFromMedia;
 
   return <Ctx.Provider value={{ isMobile, forceDesktop }}>{children}</Ctx.Provider>;
 }
