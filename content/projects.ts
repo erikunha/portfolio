@@ -60,17 +60,17 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
     name: 'AI_AGENT_MESH',
     mobileName: 'ai_agent_mesh/',
     description:
-      '12-agent multi-agent system + orchestration — codegen, review, debugging, architectural validation.',
+      'GitHub Copilot 12-subagent system — codegen, review, debugging, arch validation. Path-scoped instructions + prompt workflows, shipped team-wide at Betsson.',
     mobileDescription:
-      '12-agent AI tooling mesh at Betsson — code review, doc-gen, spec-to-PR. -40% onboarding via a 35-page architecture knowledge system. Built the agents; also watched what they ship when nobody reads the diffs.',
+      "Copilot 12-subagent system at Betsson — code review, doc-gen, spec-to-PR. -40% onboarding via 35-page arch knowledge system. Built and maintains the agents. Also uses Claude API for personal tooling (this portfolio's shell).",
     stats: [
-      { label: 'AGENTS', value: '12 + ORCHESTRATOR' },
-      { label: 'SCOPE', value: 'TEAM-WIDE' },
-      { label: 'STACK', value: 'CUSTOM TOOLING' },
+      { label: 'SUBAGENTS', value: '12 + ORCHESTRATOR' },
+      { label: 'SCOPE',     value: 'TEAM-WIDE' },
+      { label: 'STACK',     value: 'COPILOT · PATH-SCOPED' },
     ],
     mobileMeta: [
-      { label: 'stack', value: 'claude · langchain · internal' },
-      { label: 'scale', value: '12 agents · 4 teams' },
+      { label: 'stack',  value: 'copilot · subagents · claude' },
+      { label: 'scale',  value: '12 agents · 4 teams' },
       { label: 'status', value: 'internal' },
     ],
     perm: '-rwx------',

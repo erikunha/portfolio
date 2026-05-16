@@ -5,14 +5,14 @@ import { type BlameEntry, BlameEntrySchema } from './schemas';
 
 export const employers: BlameEntry[] = z.array(BlameEntrySchema).parse([
   {
-    dates: '2024 → present',
+    dates: '2025 → present',
     company: 'BETSSON GROUP',
     role: 'Senior Frontend Engineer',
     reason:
-      'PCI-DSS cashier · 40M+ tx/yr · €1B+ ARR · micro-frontends with Stencil across Angular/React/Ember · built a 12-agent AI tooling mesh · -40% onboarding via 35-page arch system.',
+      'PCI-DSS cashier · 40M+ tx/yr · €1B+ ARR · micro-frontends across Angular/React/Ember via Stencil · 12-subagent Copilot system · -40% onboarding via 35-page arch knowledge system.',
   },
   {
-    dates: '2023 → 2024',
+    dates: '2023 → 2025',
     company: 'CANON MEDICAL',
     role: 'Senior Angular Engineer',
     reason:
@@ -22,24 +22,35 @@ export const employers: BlameEntry[] = z.array(BlameEntrySchema).parse([
     dates: '2021 → 2023',
     company: 'GRUPO SBF',
     role: 'Frontend Engineer · Nike BR / Centauro',
-    reason: '8M+ MAU storefronts. -32% page load. +10% conversion across 20+ A/B experiments. WebAR try-on.',
+    reason:
+      '8M+ MAU storefronts. -32% page load. +10% conversion across 20+ A/B experiments. WebAR uplift on add-to-cart.',
+  },
+  {
+    dates: '2021 → 2021',
+    company: 'ENCORA (VMware Pathfinder)',
+    role: 'Frontend Engineer',
+    reason:
+      '2.1M+ cumulative labs delivered globally. Angular, NgRx, AWS CodePipeline/CloudFront. Zoom API integration.',
   },
   {
     dates: '2020 → 2021',
-    company: 'ENCORA · ZUP / ITAÚ BANK',
-    role: 'Software Engineer',
-    reason: "Brazil's largest private bank. Internal tools, design system contributions, regulated banking UX.",
+    company: 'ZUP / ITAÚ BANK',
+    role: 'Frontend Engineer',
+    reason:
+      "Brazil's largest private bank. Angular Web Components, micro-frontend architecture, regulated banking UX.",
   },
   {
     dates: '2019 → 2020',
     company: 'VENTURUS',
     role: 'Full-stack Engineer',
-    reason: 'Reporting endpoint: 40s → <1s. -97.5% latency via query redesign + indexing. Headliner.',
+    reason:
+      'CCR AutoBAn highway ops dashboards (Angular/RxJS) + foreign trade platform: reporting 40s → <1s, -97.5% latency via query redesign + indexing.',
   },
   {
-    dates: '2017 → 2019',
+    dates: '2018 → 2019',
     company: 'MB LABS',
     role: 'Software Engineer',
-    reason: 'Shipped EdTech as Electron desktop across 5 OSes. -40% build time via consolidation.',
+    reason:
+      'Shipped EdTech as Electron desktop across 5 OSes. -80% vs native, -40% build time via Ionic + Angular consolidation.',
   },
 ]);
