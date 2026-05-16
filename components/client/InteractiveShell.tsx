@@ -55,6 +55,8 @@ export function InteractiveShell() {
   const [busy, setBusy] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
   const typingRef = useRef(false);
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
   const initializedRef = useRef(false);
 
   useEffect(() => {
@@ -179,12 +181,14 @@ export function InteractiveShell() {
     typingRef.current = true;
     let i = 0;
     function tick() {
+      if (!mountedRef.current) { typingRef.current = false; return; }
       if (i <= cmd.length) {
         setInput(cmd.slice(0, i));
         i++;
         setTimeout(tick, 30);
       } else {
         setTimeout(() => {
+          if (!mountedRef.current) { typingRef.current = false; return; }
           runCommand(cmd);
           typingRef.current = false;
         }, 300);
@@ -277,7 +281,7 @@ export function InteractiveShell() {
           }}
         >
           {COMMANDS.map(({ label, cmd }) => (
-            <button key={cmd} type="button" className="shell__chip" data-cmd={cmd}>
+            <button key={cmd} type="button" className="shell__chip" data-cmd={cmd} disabled={busy}>
               {label}
             </button>
           ))}
