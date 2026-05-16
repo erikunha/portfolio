@@ -44,7 +44,7 @@ export default async function Home({
   return (
     <BreakpointProvider initialIsMobile={initialIsMobile} forceDesktop={forceDesktop}>
       <AppShell>
-        <main className="page" id="main-content">
+        <main className="page" id="main-content" tabIndex={-1}>
           <ErrorBoundary>
             <Hero />
           </ErrorBoundary>

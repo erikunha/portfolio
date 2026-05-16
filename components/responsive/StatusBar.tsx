@@ -14,9 +14,30 @@ export function StatusBar() {
   const [time, setTime] = useState(() => fmtClock(new Date()));
 
   useEffect(() => {
-    setTime(fmtClock(new Date()));
-    const id = setInterval(() => setTime(fmtClock(new Date())), 15_000);
-    return () => clearInterval(id);
+    let id: ReturnType<typeof setInterval> | null = null;
+
+    function startClock() {
+      setTime(fmtClock(new Date()));
+      id = setInterval(() => setTime(fmtClock(new Date())), 15_000);
+    }
+
+    function onVisibility() {
+      if (document.hidden) {
+        if (id !== null) {
+          clearInterval(id);
+          id = null;
+        }
+      } else {
+        startClock();
+      }
+    }
+
+    startClock();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      if (id !== null) clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, []);
 
   return (
