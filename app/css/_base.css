@@ -17,7 +17,7 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-mono-stack);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
@@ -60,7 +60,7 @@ textarea:focus-visible {
   background: var(--signal);
   color: #000;
   font-family: var(--font-mono-stack);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   text-decoration: none;
   transition: top 0.1s;
