@@ -16,5 +16,7 @@ export const npmStack: NpmTile[] = z.array(NpmTileSchema).parse([
   { label: 'JEST',       path: 'M4 4h16v16H4z M8 14l3 3 5-6' },
   { label: 'PLAYWRIGHT', path: 'M3 12l4-7 4 7-4 7zM13 12l4-7 4 7-4 7z' },
   { label: 'A11Y',       path: 'M12 3a9 9 0 1 0 0 18A9 9 0 0 0 12 3z M8 12l3 3 5-6' },
-  { label: 'PCI-DSS',    path: 'M4 7h16v10H4z M4 11h16 M7 14a1 1 0 1 0 2 0 1 1 0 0 0-2 0z' },
+  { label: 'NGRX',        path: 'M12 3l8 5v8l-8 5-8-5V8z M12 9v6M9 10.5l3-1.5 3 1.5' },
+  { label: 'DOCKER',     path: 'M2 12h3v3H2zM6 12h3v3H6zM10 12h3v3h-3zM14 8h3v3h-3zM10 8h3v3h-3zM6 8h3v3H6zM10 4h3v3h-3z M19 12c0-1-1-2-2-2h-1V9c0-3-2-5-5-5' },
+  { label: 'AWS',        path: 'M4 16l8-12 8 12H4z M8 13h8 M12 8v3' },
 ]);
