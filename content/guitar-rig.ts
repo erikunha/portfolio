@@ -1,17 +1,59 @@
 import { type GuitarRig, GuitarRigSchema } from './schemas';
 
 export const guitarRig: GuitarRig = GuitarRigSchema.parse({
+  comment: '# updated 2026-05-13',
+  commentMobile: '# the other six strings',
   fields: [
-    { label: 'GUITAR_MAIN', value: 'Gretsch G5655TG · Electromatic Center Block Jr · Bigsby' },
-    { label: 'GUITAR_ALT', value: 'Martin acoustic' },
-    { label: 'AMP', value: 'modeled · no tube in the chain' },
-    { label: 'PEDALBOARD', value: 'Line 6 HX Stomp XL · amp + effects modeling' },
-    { label: 'STYLE', value: 'feel / expression over noise · clean tones, lots of space' },
-    { label: 'TUNING', value: 'standard E · sometimes drop D · never Eb' },
-    { label: 'PRACTICE', value: 'jams, tones, live takes · guitarcam' },
-    { label: 'GIGS', value: 'open mics · small venues · weddings' },
-    { label: 'NEVER_LEARNED', value: 'reading staff notation · tabs only' },
-    { label: 'LATEST_OBSESSION', value: `Coldplay's "Yellow" — the simplicity is the hard part` },
+    {
+      label: 'GUITAR_MAIN',
+      labelMobile: 'MAIN',
+      value: 'Gretsch G5655TG · Electromatic Center Block Jr · Bigsby',
+      valueMobile: 'Gretsch G5655TG · Bigsby',
+    },
+    { label: 'GUITAR_ALT', labelMobile: 'ALT', value: 'Martin acoustic' },
+    {
+      label: 'AMP',
+      value: 'modeled · no tube in the chain',
+      valueMobile: 'modeled · no tube',
+    },
+    {
+      label: 'PEDALBOARD',
+      labelMobile: 'PEDAL',
+      value: 'Line 6 HX Stomp XL · amp + effects modeling',
+      valueMobile: 'Line 6 HX Stomp XL',
+    },
+    {
+      label: 'STYLE',
+      value: 'feel / expression over noise · clean tones, lots of space',
+      valueMobile: 'feel over noise · lots of space',
+    },
+    {
+      label: 'TUNING',
+      value: 'standard E · sometimes drop D · never Eb',
+      valueMobile: 'standard E · sometimes drop D',
+    },
+    {
+      label: 'PRACTICE',
+      value: 'jams, tones, live takes · guitarcam from the desk',
+      valueMobile: 'jams · tones · live takes',
+    },
+    {
+      label: 'GIGS',
+      value: 'played live with a band · small venues',
+      valueMobile: 'small venues · band setting',
+    },
+    {
+      label: 'NEVER_LEARNED',
+      labelMobile: 'NEVER_LRND',
+      value: 'reading staff notation · tabs only',
+      valueMobile: 'tabs only · no staff notation',
+    },
+    {
+      label: 'LATEST_OBSESSION',
+      labelMobile: 'OBSESSION',
+      value: 'Coldplay\'s "Yellow" — the simplicity is the hard part',
+      valueMobile: 'Coldplay\'s "Yellow" · simplicity is hard',
+    },
   ],
   influences: [
     { rank: 1, name: 'John Mayer' },
@@ -20,5 +62,11 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
     { rank: 4, name: 'John Frusciante' },
     { rank: 5, name: "Iron Maiden's three (Murray · Smith · Gers)" },
   ],
-  comment: '# updated 2026-05-13',
+  influencesMobile: [
+    { rank: 1, name: 'John Mayer' },
+    { rank: 2, name: 'Mateus Asato' },
+    { rank: 3, name: 'Jimmy Page' },
+    { rank: 4, name: 'John Frusciante' },
+    { rank: 5, name: "Iron Maiden's three" },
+  ],
 });

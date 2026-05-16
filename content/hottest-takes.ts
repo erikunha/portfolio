@@ -52,3 +52,8 @@ export const hottestTakes: HottestTake[] = z.array(HottestTakeSchema).parse([
     body: `Architecture lives in the code review template, the ADR folder, and the linter config — not in a Confluence page nobody opens. The 35-page architecture system at Betsson cut onboarding -40% because it replaced "ask Erik" with "ask the doc". The doc doesn't go on PTO.`,
   },
 ]);
+
+export const hottestTakesConfig = {
+  preamble: "// opinions i'll defend in a whiteboard interview",
+  footer: 'willing to be wrong on any of these. willing to argue first.',
+} as const;

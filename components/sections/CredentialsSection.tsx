@@ -1,3 +1,4 @@
+import { credentials } from '@/content/credentials';
 import { IconCredentials } from '../Icons';
 import { Module } from '../responsive/Module';
 
@@ -16,23 +17,16 @@ export function CredentialsSection() {
             {'cat ~/.credentials'}
           </span>
           {'\n\n'}
-          <span className="cr-label">{'ANGULAR_DEV'}</span>
-          {'     '}
-          <span className="cr-badge">{'CERTIFIED'}</span>
-          {'       '}
-          <span className="cr-val">{'Alain Chautard (GDE Angular) · 2024'}</span>
-          {'\n'}
-          <span className="cr-label">{'ENGLISH'}</span>
-          {'         '}
-          <span className="cr-badge">{'IELTS_C1'}</span>
-          {'        '}
-          <span className="cr-val">{'band 6.5 (speaking & listening) · 2023'}</span>
-          {'\n'}
-          <span className="cr-label">{'INTL_DEGREE'}</span>
-          {'     '}
-          <span className="cr-badge">{'WES_VERIFIED'}</span>
-          {'    '}
-          <span className="cr-val">{'World Education Services · 2022'}</span>
+          {credentials.map((cred) => (
+            <span key={cred.label}>
+              <span className="cr-label">{cred.label}</span>
+              {'     '}
+              <span className="cr-badge">{cred.badge}</span>
+              {'       '}
+              <span className="cr-val">{cred.evidence}</span>
+              {'\n'}
+            </span>
+          ))}
         </pre>
       </div>
     </Module>
