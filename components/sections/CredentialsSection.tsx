@@ -19,10 +19,8 @@ export function CredentialsSection() {
           {'\n\n'}
           {credentials.map((cred) => (
             <span key={cred.label}>
-              <span className="cr-label">{cred.label}</span>
-              {'     '}
-              <span className="cr-badge">{cred.badge}</span>
-              {'       '}
+              <span className="cr-label">{cred.label.padEnd(14)}</span>
+              <span className="cr-badge">{cred.badge.padEnd(25)}</span>
               <span className="cr-val">{cred.evidence}</span>
               {'\n'}
             </span>
