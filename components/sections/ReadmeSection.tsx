@@ -23,18 +23,30 @@ const README_DESKTOP: ReadmeLine[] = [
 
 const README_MOBILE: ReadmeLine[] = [
   { text: '# erik cunha', cls: 'h2' },
-  { text: ' ' },
-  { text: 'full-stack engineer (frontend-heavy).' },
+  { text: ' ' },
+  { text: 'full-stack engineer (frontend-heavy). 8+ yrs.' },
   {
     node: (
-      <>{'currently shipping the '}<span className="pill">{'betsson'}</span>{' cashier — 40M+ tx/yr,'}</>
+      <>{'shipping the '}<span className="pill">{'betsson'}</span>{' cashier — 40M+ tx/yr,'}</>
     ),
   },
-  { text: '€1B+ annual revenue, PCI-DSS, micro-frontends.' },
-  { text: ' ' },
-  { text: '## what i do', cls: 'h1' },
-  { text: "build regulated, high-traffic frontends that don't break" },
-  { text: 'when finance / health / commerce regulators show up.' },
+  { text: 'PCI-DSS, micro-frontends, €1B+ annual revenue.' },
+  { text: ' ' },
+  { text: '## core stack', cls: 'h2' },
+  { text: '- Angular · React/Next.js · TypeScript · Node.js · RxJS' },
+  { text: '- Micro-frontends · Nx · Clean Architecture' },
+  { text: ' ' },
+  { text: '## operating principles', cls: 'h2' },
+  { text: '- Performance-first: LCP, TBT, bundle reduction in prod.' },
+  { text: '- A11y & compliance: WCAG 2.1 AA, PCI-DSS.' },
+  { text: ' ' },
+  { text: '## status', cls: 'h2' },
+  {
+    node: (
+      <>{'open to '}<span className="pill">{'[senior / staff / principal]'}</span>{' roles.'}</>
+    ),
+  },
+  { text: 'remote-first · EU/US/CA · English C1.' },
 ];
 
 function ReadmeBlock({ lines }: { lines: ReadmeLine[] }) {
