@@ -75,8 +75,14 @@
   white-space: nowrap;
 }
 
-.shell__input {
+.shell__input-wrap {
   flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.shell__input {
+  width: 100%;
   background: transparent;
   border: 0;
   outline: 0;
@@ -84,10 +90,21 @@
   font: inherit;
   font-size: 13px;
   caret-color: var(--signal);
-  min-width: 0;
 }
 
-.shell__input::placeholder { color: var(--muted); opacity: 0.6; }
+.shell__placeholder-anim {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  opacity: 0.6;
+  pointer-events: none;
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+}
 
 .shell__chips {
   display: flex;
