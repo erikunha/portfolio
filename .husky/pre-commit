@@ -1,1 +1,1 @@
-pnpm test
+pnpm check && pnpm typecheck && pnpm validate-content && pnpm test
