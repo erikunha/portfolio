@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import { headers } from 'next/headers';
 import './globals.css';
 
 // Self-hosted per CLAUDE.md — no Google CDN link shipped to the browser
@@ -85,13 +86,15 @@ const personJsonLd = JSON.stringify({
   ],
 });
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     <html lang="en" className={`${mono.variable} ${display.variable}`} suppressHydrationWarning>
       {/* if you're inspecting this, you're hiring me · erikhenriquealvescunha@gmail.com */}
       <head>
         {/* Disable browser scroll restoration so the page always loads at the top */}
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: 'history.scrollRestoration="manual";window.scrollTo(0,0)',
           }}
@@ -105,6 +108,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           eliminating the CRT animation flash for users with stored preferences.
         */}
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html:
               '(function(){try{var m=localStorage.getItem("erik.motion");var on=m==="on"?true:m==="off"?false:!window.matchMedia("(prefers-reduced-motion:reduce)").matches;document.body.dataset.motion=on?"full":"reduce";}catch(e){}})();',
