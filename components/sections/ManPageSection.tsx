@@ -117,7 +117,9 @@ export function ManPageSection() {
           </span>
           <span className="mp-ex-line">
             <span className="mp-mute">$</span> <span className="mp-name">{manPage.name}</span>
-            {' --track LEAD --domain AI-TOOLING --stack "Angular, LLM" --ft'}
+            {
+              ' --track LEAD --domain AI-TOOLING --stack "LLMs, RAG, AI Agents, Harness, and GenAI with Spec-Driven flow" --ft'
+            }
           </span>
           <span className="mp-ex-line">
             <span className="mp-mute">$</span> <span className="mp-name">{manPage.name}</span>
