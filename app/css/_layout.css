@@ -175,7 +175,7 @@
 }
 
 .hero__bio {
-  flex: 0 0 300px;
+  flex: 1;
   border-left: 1px dashed var(--signal-dim);
   display: flex;
   flex-direction: column;
@@ -226,7 +226,7 @@
 @media (prefers-reduced-motion: reduce) { .hero__status-dot { animation: none; } }
 
 @media (max-width: 900px) {
-  .hero__bio { flex: 0 0 260px; padding: 24px 18px; }
+  .hero__bio { padding: 24px 18px; }
 }
 
 /* Boot animation text tokens */
