@@ -33,14 +33,9 @@ export function ManPageSection() {
           <span className="m-dim">{'--ft'}</span>
           {']\n            [<target-stack> ...]\n\n'}
           <span className="m-sec">{'DESCRIPTION'}</span>
-          {`\n       Senior frontend engineer, 8+ years. Started full-stack,
-       evolved into frontend architecture. Shipped production
-       systems across payments (PCI-DSS), healthcare, banking,
-       e-commerce, and ed-tech — Angular, React/Next.js, and
-       Stencil micro-frontends powering €1B+ in revenue.
-       Ranges across web, mobile (Ionic), and desktop (Electron).
-       Recently built a 12-agent AI engineering platform in
-       production. Currently embedded at Betsson (Malta, EU).\n\n`}
+          {'\n       '}
+          {manPage.description}
+          {'\n\n'}
           <span className="m-sec">{'OPTIONS'}</span>
           {'\n       '}
           <span className="m-dim">{'--seniority'}</span>
@@ -100,7 +95,7 @@ export function ManPageSection() {
         </span>
 
         <span className="mp-sec">DESCRIPTION</span>
-        <span className="mp-body">{manPage.descriptionMobile}</span>
+        <span className="mp-body">{manPage.description}</span>
 
         <span className="mp-sec">OPTIONS</span>
         <div className="mp-opts">

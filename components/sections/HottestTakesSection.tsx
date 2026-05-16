@@ -1,4 +1,4 @@
-import { hottestTakes } from '@/content/hottest-takes';
+import { hottestTakes, hottestTakesConfig } from '@/content/hottest-takes';
 import { IconHottestTakes } from '../Icons';
 import { Module } from '../responsive/Module';
 
@@ -13,7 +13,7 @@ export function HottestTakesSection() {
       <div className="takes__preamble">
         <span className="gt">$</span>
         {'cat ~/hottest_takes.md  '}
-        <span style={{ opacity: 0.55 }}>{"// opinions i'll defend in a whiteboard interview"}</span>
+        <span style={{ opacity: 0.55 }}>{hottestTakesConfig.preamble}</span>
       </div>
       <ol className="takes" start={1}>
         {hottestTakes.map((t) => (
@@ -31,7 +31,7 @@ export function HottestTakesSection() {
       </ol>
       <div className="takes__footer">
         <span className="gt">{'>'}</span>
-        {'willing to be wrong on any of these. willing to argue first.'}
+        {hottestTakesConfig.footer}
       </div>
     </Module>
   );

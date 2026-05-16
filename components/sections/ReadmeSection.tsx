@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { readmeCopy as c } from '@/content/readme';
 import { RoleTyper } from '../client/RoleTyper';
 import { IconReadme } from '../Icons';
 import { Module } from '../responsive/Module';
@@ -6,17 +7,13 @@ import { Module } from '../responsive/Module';
 type ReadmeLine = { text?: string; node?: ReactNode; cls?: string };
 
 const README_DESKTOP: ReadmeLine[] = [
-  { text: '# Erik Henrique Alves Cunha — Full-Stack Engineer (Frontend-Heavy)', cls: 'h1' },
-  {
-    text: '8+ years building frontend systems for regulated, high-traffic platforms in fintech (PCI-DSS), healthcare, and global e-commerce.',
-  },
+  { text: c.desktopH1, cls: 'h1' },
+  { text: c.desktopIntro },
   { text: '## Core Stack', cls: 'h2' },
-  { text: '- Angular · React · Next.js · TypeScript · Node.js · RxJS · NgRx' },
-  { text: '- Micro-frontends · Nx monorepos · Clean Architecture · Web Components' },
+  ...c.desktopCoreStack.map((t) => ({ text: t })),
   { text: '## Operating Principles', cls: 'h2' },
-  { text: '- Performance-first: LCP, TBT, bundle reduction in production budgets.' },
-  { text: '- A11y & compliance: WCAG 2.1 AA, ARIA, PCI-DSS-grade safeguards.' },
-  { text: '## Current Status', cls: 'h2' },
+  ...c.desktopPrinciples.map((t) => ({ text: t })),
+  { text: c.desktopStatusH2, cls: 'h2' },
   {
     node: (
       <>
@@ -29,27 +26,25 @@ const README_DESKTOP: ReadmeLine[] = [
 ];
 
 const README_MOBILE: ReadmeLine[] = [
-  { text: '# erik cunha', cls: 'h2' },
+  { text: c.mobileH2, cls: 'h2' },
   { text: ' ' },
   { text: 'full-stack engineer (frontend-heavy). 8+ yrs.' },
   {
     node: (
       <>
-        {'shipping the '}
+        {c.mobileBetssonPrefix}
         <span className="pill">{'betsson'}</span>
         {' cashier — 40M+ tx/yr,'}
       </>
     ),
   },
-  { text: 'PCI-DSS, micro-frontends, €1B+ annual revenue.' },
+  { text: c.mobileBetssonSuffix },
   { text: ' ' },
   { text: '## core stack', cls: 'h2' },
-  { text: '- Angular · React/Next.js · TypeScript · Node.js · RxJS' },
-  { text: '- Micro-frontends · Nx · Clean Architecture' },
+  ...c.mobileCoreStack.map((t) => ({ text: t })),
   { text: ' ' },
   { text: '## operating principles', cls: 'h2' },
-  { text: '- Performance-first: LCP, TBT, bundle reduction in prod.' },
-  { text: '- A11y & compliance: WCAG 2.1 AA, PCI-DSS.' },
+  ...c.mobilePrinciples.map((t) => ({ text: t })),
   { text: ' ' },
   { text: '## status', cls: 'h2' },
   {
@@ -61,7 +56,7 @@ const README_MOBILE: ReadmeLine[] = [
       </>
     ),
   },
-  { text: 'remote-first · EU/US/CA · English C1.' },
+  { text: c.mobileStatusSuffix },
 ];
 
 function ReadmeBlock({ lines }: { lines: ReadmeLine[] }) {
