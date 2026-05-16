@@ -39,9 +39,14 @@ a {
   text-decoration: none;
 }
 
-a:hover,
+a:hover {
+  text-decoration: underline;
+}
+
 a:focus-visible {
   text-decoration: underline;
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
 }
 
 button:focus-visible,
