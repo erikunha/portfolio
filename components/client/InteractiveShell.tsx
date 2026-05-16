@@ -45,15 +45,15 @@ const PLACEHOLDER_SUGGESTIONS = [
 ];
 
 function AnimatedPlaceholder() {
-  const spanRef = useRef<HTMLSpanElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    const el = spanRef.current;
+    const el = textRef.current;
     if (!el) return;
+    const node = el;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      el.textContent = 'type a command or ask anything…';
+      node.textContent = 'type a command or ask anything…';
       return;
     }
-    const node = el;
     let cancelled = false;
     let idx = 0;
     let charIdx = 0;
@@ -78,7 +78,12 @@ function AnimatedPlaceholder() {
     tick();
     return () => { cancelled = true; };
   }, []);
-  return <span ref={spanRef} className="shell__placeholder-anim" aria-hidden="true" />;
+  return (
+    <span className="shell__placeholder-anim" aria-hidden="true">
+      <span ref={textRef} />
+      <span className="shell__cursor" />
+    </span>
+  );
 }
 
 const DOT_FRAMES = ['...', '..', '.', '..'] as const;
