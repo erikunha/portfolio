@@ -234,34 +234,48 @@ export function Footer() {
             ) : (
               <pre>
                 <span className="ns-hdr">{'Proto  State        Endpoint'}</span>
-                {'\ntcp    '}
-                <span className="ns-est">{'ESTABLISHED'}</span>
-                {'  '}
-                <a href="https://github.com/erikunha" target="_blank" rel="noopener noreferrer">
-                  {'github.com/erikunha'}
-                </a>
-                {'\ntcp    '}
-                <span className="ns-est">{'ESTABLISHED'}</span>
-                {'  '}
-                <a
-                  href="https://linkedin.com/in/erikunha"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {'linkedin.com/in/erikunha'}
-                </a>
-                {'\ntcp    '}
-                <span className="ns-listen">{'LISTEN'}</span>
-                {'       '}
-                <a href="mailto:erikhenriquealvescunha@gmail.com">
-                  {'erikhenriquealvescunha@gmail.com'}
-                </a>
-                {'\ntcp    '}
-                <span className="ns-est">{'ESTABLISHED'}</span>
-                {'  '}
-                <a href="https://erikunha.dev" target="_blank" rel="noopener noreferrer">
-                  {'erikunha.dev'}
-                </a>
+                {[
+                  {
+                    state: 'ESTABLISHED',
+                    cls: 'ns-est',
+                    href: 'https://github.com/erikunha',
+                    label: 'github.com/erikunha',
+                    external: true,
+                  },
+                  {
+                    state: 'ESTABLISHED',
+                    cls: 'ns-est',
+                    href: 'https://linkedin.com/in/erikunha',
+                    label: 'linkedin.com/in/erikunha',
+                    external: true,
+                  },
+                  {
+                    state: 'LISTEN',
+                    cls: 'ns-listen',
+                    href: 'mailto:erikhenriquealvescunha@gmail.com',
+                    label: 'erikhenriquealvescunha@gmail.com',
+                    external: false,
+                  },
+                  {
+                    state: 'ESTABLISHED',
+                    cls: 'ns-est',
+                    href: 'https://erikunha.dev',
+                    label: 'erikunha.dev',
+                    external: true,
+                  },
+                ].map((e) => (
+                  <span key={e.href}>
+                    {'\ntcp    '}
+                    <span className={e.cls}>{e.state}</span>
+                    {' '.repeat(13 - e.state.length)}
+                    <a
+                      href={e.href}
+                      {...(e.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                    >
+                      {e.label}
+                    </a>
+                  </span>
+                ))}
               </pre>
             )}
           </div>
