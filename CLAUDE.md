@@ -137,4 +137,4 @@ Before proposing any of these, check `DECISIONS.md` to see the reasoning that ex
 - Read `ARCHITECTURE.md` §16 ("What I'd revisit as the system grows") before proposing infrastructure changes.
 - Read `LAUNCH.md` PR-by-PR order before suggesting we skip ahead.
 - If the request seems to conflict with a budget or gate, surface the conflict before complying.
-- Before invoking `writing-plans`, dispatch `architect-reviewer` against the spec. It must clear: (1) no new client islands without a 43KB budget justification, (2) no pattern listed in `DECISIONS.md` as rejected, (3) no item from the "Out of scope" list in this file.
+- Before invoking `writing-plans`, dispatch `architect-reviewer` against the spec. It runs the four-gate spec-gate protocol (defined in `~/.claude/agents/architect-reviewer.md` §Spec-gate protocol) and must return `GATE_RESULT: PASS` before `writing-plans` proceeds.
