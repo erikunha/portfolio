@@ -73,7 +73,7 @@ describe('LIGHTHOUSE_FALLBACK', () => {
 - [ ] **Step 1.2 — Run test, confirm it fails**
 
 ```bash
-cd /Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio
+cd <repo-root>
 pnpm test __tests__/lighthouse-fallback.test.ts
 ```
 

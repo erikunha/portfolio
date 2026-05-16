@@ -20,7 +20,7 @@ The remote `https://github.com/erikunha/portfolio` contains an old stack (Next.j
 
 ```bash
 # 1. Init fresh local repo
-cd /Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio
+cd <repo-root>
 git init
 git checkout -b main
 
