@@ -8,12 +8,14 @@ const shell = readFileSync(path.resolve(__dirname, '../components/sections/Shell
 
 describe('paint cost CSS', () => {
   it('body rule has no text-shadow', () => {
-    const bodyBlock = base.match(/^html,\s*\nbody\s*\{[^}]+\}/m)?.[0] ?? '';
+    const bodyBlock = base.match(/^html,\s*\nbody\s*\{[^}]+\}/m)?.[0];
+    expect(bodyBlock).toBeDefined();
     expect(bodyBlock).not.toContain('text-shadow');
   });
 
   it('body rule has no text-rendering: optimizeLegibility', () => {
-    const bodyBlock = base.match(/^html,\s*\nbody\s*\{[^}]+\}/m)?.[0] ?? '';
+    const bodyBlock = base.match(/^html,\s*\nbody\s*\{[^}]+\}/m)?.[0];
+    expect(bodyBlock).toBeDefined();
     expect(bodyBlock).not.toContain('optimizeLegibility');
   });
 
