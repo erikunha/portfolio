@@ -316,8 +316,8 @@ function DesktopHero() {
       <aside className="hero__bio">
         <h1 className="hero__name">Erik Henrique Alves Cunha</h1>
         <p className="hero__tagline">
-          Senior Full-Stack Engineer · Frontend-heavy · 8+ yrs in regulated systems · fintech
-          (PCI-DSS), healthcare, global e-commerce
+          Senior Full-Stack Engineer, Frontend · 8+ yrs in regulated systems · fintech (PCI-DSS),
+          healthcare, global e-commerce
         </p>
         <p className="hero__meta">
           <span>
@@ -394,8 +394,8 @@ function MobileHero() {
 
         <h1 className="hero__name">Erik Henrique Alves Cunha</h1>
         <p className="hero__tagline">
-          Senior Full-Stack Engineer · Frontend-heavy · 8+ yrs in regulated systems · fintech
-          (PCI-DSS), healthcare, global e-commerce
+          Senior Full-Stack Engineer, Frontend · 8+ yrs in regulated systems · fintech (PCI-DSS),
+          healthcare, global e-commerce
         </p>
         <p className="hero__meta">
           <span>
