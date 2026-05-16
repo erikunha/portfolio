@@ -56,8 +56,8 @@ function MobileModule({ id, header, icon, defaultOpen, children }: ModuleProps) 
   // Listen for the 'module:open' custom event dispatched by Dock when the user
   // taps a nav item. This avoids direct DOM mutation (which bypasses React state).
   useEffect(() => {
-    const handler = (e: Event) => {
-      const { id: targetId } = (e as CustomEvent<{ id: string }>).detail;
+    const handler = (e: CustomEvent<{ id: string }>) => {
+      const { id: targetId } = e.detail;
       if (targetId === id) setOpen(true);
     };
     window.addEventListener('module:open', handler);

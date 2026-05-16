@@ -136,6 +136,7 @@ export function InteractiveShell() {
     if (isMobile) setHistory(withIds(MOBILE_INITIAL, nextId));
   }, [isMobile, nextId]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: history triggers scroll; feedRef is a stable ref
   useEffect(() => {
     if (feedRef.current) {
       feedRef.current.scrollTop = feedRef.current.scrollHeight;
