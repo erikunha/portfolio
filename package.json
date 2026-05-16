@@ -24,7 +24,8 @@
     "ci": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm test && pnpm build && pnpm bundle-check",
     "ci:local": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm test",
     "commit": "cz",
-    "prepare": "husky || true"
+    "prepare": "husky || true",
+    "postinstall": "node scripts/strip-next-polyfills.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -50,6 +51,13 @@
     "resend": "latest",
     "zod": "4.4.3"
   },
+  "browserslist": [
+    "chrome >= 93",
+    "edge >= 93",
+    "firefox >= 92",
+    "safari >= 15.4",
+    "not dead"
+  ],
   "devDependencies": {
     "@axe-core/playwright": "latest",
     "@biomejs/biome": "latest",

@@ -1,7 +1,13 @@
+import path from 'node:path';
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   typedRoutes: true,
+  turbopack: {
+    resolveAlias: {
+      'next/dist/build/polyfills/polyfill-module': path.resolve('./lib/polyfills-noop.ts'),
+    },
+  },
   headers: async () => [
     {
       source: '/(.*)',
