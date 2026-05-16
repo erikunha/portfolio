@@ -55,6 +55,7 @@ export function MatrixRain({
       canvas!.width = Math.max(1, Math.floor(w * dpr));
       canvas!.height = Math.max(1, Math.floor(h * dpr));
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx!.font = `${fontSize}px "JetBrains Mono", monospace`;
       const newCols = Math.ceil(w / fontSize);
       const old = drops;
       drops = new Array(newCols);
@@ -67,8 +68,6 @@ export function MatrixRain({
     }
 
     resize();
-    // pre-warm font so first frame uses the loaded typeface — set once, persists across frames
-    ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
 
     let resizeTimer: ReturnType<typeof setTimeout> | undefined;
     function debouncedResize() {

@@ -37,10 +37,14 @@
 
 .shell__bar-title { margin-left: auto; }
 
+.shell__bar-dot--red    { background: #FF5F57; }
+.shell__bar-dot--yellow { background: #FEBC2E; }
+.shell__bar-dot--green  { background: #28C840; }
+
 .shell__feed {
   padding: 14px 16px;
   min-height: 220px;
-  max-height: 360px;
+  max-height: 400px;
   overflow-y: auto;
 }
 
@@ -51,10 +55,11 @@
   word-wrap: break-word;
 }
 
-.shell__line--prompt { color: var(--signal); }
-.shell__line--output { color: var(--fg); opacity: 0.95; }
-.shell__line--error  { color: #ff8a8a; }
-.shell__line--info   { color: var(--muted); }
+.shell__line--prompt  { color: var(--signal); }
+.shell__line--output  { color: var(--fg); opacity: 0.95; }
+.shell__line--error   { color: #ff8a8a; }
+.shell__line--info    { color: var(--muted); }
+.shell__line--loading { color: var(--signal); opacity: 0.5; }
 
 .shell__form {
   display: flex;
