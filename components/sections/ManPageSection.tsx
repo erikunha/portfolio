@@ -33,7 +33,7 @@ export function ManPageSection() {
           <span className="m-dim">{'--ft'}</span>
           {']\n            [<target-stack> ...]\n\n'}
           <span className="m-sec">{'DESCRIPTION'}</span>
-          {`\n       Senior software engineer, 8+ years. Started full-stack,
+          {`\n       Senior frontend engineer, 8+ years. Started full-stack,
        evolved into frontend architecture. Shipped production
        systems across payments (PCI-DSS), healthcare, banking,
        e-commerce, and ed-tech — Angular, React/Next.js, and
@@ -41,11 +41,11 @@ export function ManPageSection() {
        Ranges across web, mobile (Ionic), and desktop (Electron).
        Recently built a 12-agent AI engineering platform in
        production. Currently embedded at Betsson (Malta, EU).
-       Senior/Staff/Principal track.\n\n`}
+       Senior through Staff/Principal track.\n\n`}
           <span className="m-sec">{'OPTIONS'}</span>
           {'\n       '}
           <span className="m-dim">{'--seniority'}</span>
-          {'    Senior through Principal\n       '}
+          {'    Senior → Staff/Principal\n       '}
           <span className="m-dim">{'--track'}</span>
           {'        Individual contributor or technical lead\n       '}
           <span className="m-dim">{'--domain'}</span>
