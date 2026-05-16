@@ -577,6 +577,11 @@
 
 .blame-row:last-child { padding-bottom: 0; }
 
+@media (max-width: 768px) {
+  .blame { padding-right: 56px; }
+  .blame-body { font-size: 12.5px; }
+}
+
 @media (max-width: 560px) {
   .blame-row { grid-template-columns: 1fr; gap: 4px; }
 }
