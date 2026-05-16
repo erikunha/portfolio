@@ -32,9 +32,18 @@ export function getContactLimit(): Ratelimit {
   return _contactLimit;
 }
 
+export function getClientIp(req: import('next/server').NextRequest): string {
+  return (
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    req.headers.get('x-real-ip') ??
+    'unknown'
+  );
+}
+
 // Monthly token budget — 400,000 tokens ≈ $0.40 at Haiku input pricing.
 // Hard cap at 100%; warn at 80%.
 const MONTHLY_TOKEN_BUDGET = 400_000;
+const BUDGET_WINDOW_S = 60 * 60 * 24 * 32;
 
 export function getBudgetKey(): string {
   const now = new Date();
@@ -57,17 +66,16 @@ export async function checkBudget(): Promise<{ allowed: boolean; pct: number }> 
   }
 }
 
-// Fire-and-forget — never awaited on the response path.
-export function incrementBudget(inputTokens: number, outputTokens: number): void {
+export async function incrementBudget(inputTokens: number, outputTokens: number): Promise<void> {
   const total = inputTokens + outputTokens;
   if (total <= 0) return;
-  getRedis()
-    .incrby(getBudgetKey(), total)
-    .then(() => {
-      // Set 32-day TTL on first write so the key expires naturally.
-      getRedis()
-        .expire(getBudgetKey(), 60 * 60 * 24 * 32, 'NX')
-        .catch(() => undefined);
-    })
-    .catch((err) => console.error('[ask] budget increment failed', err));
+  const key = getBudgetKey();
+  try {
+    const pipe = getRedis().pipeline();
+    pipe.incrby(key, total);
+    pipe.expire(key, BUDGET_WINDOW_S, 'NX');
+    await pipe.exec<[number, number]>();
+  } catch (err) {
+    console.error('[ask] budget increment failed', err);
+  }
 }

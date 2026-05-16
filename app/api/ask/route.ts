@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { NextRequest } from 'next/server';
-import { checkBudget, getAskLimit, incrementBudget } from '@/lib/rate-limit';
+import { checkBudget, getAskLimit, getClientIp, incrementBudget } from '@/lib/rate-limit';
 import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
 export const dynamic = 'force-dynamic';
@@ -112,10 +112,7 @@ Be direct and honest. Do not fabricate information. Keep answers under 200 words
 ];
 
 export async function POST(req: NextRequest) {
-  const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    req.headers.get('x-real-ip') ??
-    'anon';
+  const ip = getClientIp(req);
 
   // Per-IP rate limit
   const { success } = await getAskLimit().limit(ip);
