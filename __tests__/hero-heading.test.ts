@@ -13,11 +13,12 @@ describe('Hero headings', () => {
     expect(desktopFn).toMatch(/<h1/);
   });
 
-  it('DesktopHero h1 is visually hidden (sr-only pattern)', () => {
+  it('DesktopHero h1 is visible inside the bio panel', () => {
     const desktopFn = hero.slice(
       hero.indexOf('function DesktopHero'),
       hero.indexOf('function MobileHero'),
     );
-    expect(desktopFn).toMatch(/sr-only|visually-hidden|clip/);
+    expect(desktopFn).toMatch(/hero__bio/);
+    expect(desktopFn).toMatch(/hero__name/);
   });
 });
