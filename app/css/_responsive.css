@@ -7,7 +7,7 @@
     --pad: 18px;
   }
   body {
-    font-size: 13px;
+    font-size: var(--fs-base);
   }
 }
 
@@ -26,7 +26,7 @@
   right: 24px;
   bottom: 24px;
   z-index: 2;
-  font-size: 13px;
+  font-size: var(--fs-base);
   margin: 0;
 }
 
@@ -47,7 +47,7 @@
 
 .hero--mobile .hero__boot {
   color: var(--fg);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   line-height: 1.65;
   min-height: 165px;
   margin: 0 0 12px;
@@ -61,7 +61,7 @@
   background: rgba(0, 255, 65, 0.05);
   color: var(--signal);
   padding: 4px 10px;
-  font-size: 10.5px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin: 0 0 14px;
@@ -96,7 +96,7 @@ body[data-motion="reduce"] .hero__status-dot {
   padding: 10px 14px;
   background: var(--bg);
   border-bottom: 1px solid var(--signal-dim);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   text-transform: uppercase;
   letter-spacing: 0.14em;
 }
@@ -134,6 +134,6 @@ body[data-motion="reduce"] .hero__status-dot {
   border: 1px solid var(--signal-dim);
   padding: 4px 8px;
   border-radius: 2px;
-  font-size: 9.5px;
+  font-size: var(--fs-2xs);
   letter-spacing: 0.14em;
 }
