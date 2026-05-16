@@ -26,7 +26,11 @@
     "prepare": "husky || true"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "sharp", "@biomejs/biome"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "@biomejs/biome"
+    ]
   },
   "config": {
     "commitizen": {
@@ -53,6 +57,7 @@
     "@commitlint/cz-commitlint": "^21.0.1",
     "@lhci/cli": "latest",
     "@next/bundle-analyzer": "latest",
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "latest",
     "@types/node": "latest",
     "@types/react": "latest",
