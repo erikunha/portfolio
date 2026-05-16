@@ -22,7 +22,7 @@
 - [ ] **Step 1: Init the repo and set default branch to main**
 
 ```bash
-cd /Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio
+cd <repo-root>
 git init
 git checkout -b main
 ```

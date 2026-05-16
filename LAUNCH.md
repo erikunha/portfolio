@@ -30,7 +30,7 @@ This is the operational sequence. ARCHITECTURE.md tells you what to build; this 
 > **Package policy:** every dependency installed `@latest` at scaffold time, then `pnpm up --latest` after install to bump any transitive deps that resolved older. Lockfile (`pnpm-lock.yaml`) is the source of truth from PR 1 onward. Renovate or Dependabot can be wired in later for automated bumps.
 
 ```bash
-cd /Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio
+cd <repo-root>
 
 # verify pnpm is current (10.x or newer as of 2026)
 pnpm --version

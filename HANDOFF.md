@@ -4,7 +4,7 @@
 
 ## Step 1 — open the project in Claude Code
 
-The files are already on your Mac at `/Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio/` — Cowork mode wrote them there. You don't need to clone anything yet; everything is local.
+The files are already on your Mac at `<repo-root>/` — Cowork mode wrote them there. You don't need to clone anything yet; everything is local.
 
 ### First time (on this Mac, fresh)
 
@@ -13,7 +13,7 @@ The files are already on your Mac at `/Users/erikhenriquealvescunha/Documents/Cl
 claude --version || npm install -g @anthropic-ai/claude-code
 
 # 2. Go to the project directory
-cd "/Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio"
+cd "<repo-root>"
 
 # 3. Confirm the docs are in place
 ls -la
