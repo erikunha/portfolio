@@ -10,7 +10,7 @@
 .manpage pre {
   margin: 0;
   font-family: var(--font-mono-stack);
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1.65;
   color: var(--fg);
   white-space: pre;
@@ -43,7 +43,7 @@
 .manpage--mobile {
   display: none;
   font-family: var(--font-mono-stack);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   line-height: 1.7;
   color: var(--fg);
   flex-direction: column;
@@ -62,7 +62,7 @@
   color: var(--signal);
   font-weight: 700;
   letter-spacing: 0.04em;
-  font-size: 10px;
+  font-size: var(--fs-xs);
   margin-bottom: 10px;
   word-break: break-all;
 }
@@ -81,7 +81,7 @@
   color: var(--fg);
   white-space: pre-wrap;
   word-break: break-word;
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   line-height: 1.6;
 }
 .manpage--mobile .mp-opts {
@@ -93,13 +93,13 @@
 .manpage--mobile .mp-flag {
   color: var(--muted);
   opacity: 0.85;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   padding: 1px 0;
   white-space: nowrap;
 }
 .manpage--mobile .mp-desc {
   color: var(--fg);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   padding: 1px 0;
   line-height: 1.5;
 }
@@ -112,7 +112,7 @@
 .manpage--mobile .mp-ex-line {
   display: block;
   color: var(--fg);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   white-space: pre-wrap;
   word-break: break-all;
 }
@@ -125,7 +125,7 @@
 }
 .manpage--mobile .mp-bugs {
   color: var(--fg);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.6;
@@ -142,7 +142,7 @@
   margin: 0;
   color: var(--fg);
   font-family: var(--font-mono-stack);
-  font-size: 13px;
+  font-size: var(--fs-base);
   line-height: 1.85;
   white-space: pre;
 }
@@ -167,7 +167,7 @@
 }
 .visa-foot {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   margin-top: 14px;
   letter-spacing: 0.04em;
 }
@@ -231,7 +231,7 @@
   display: grid;
   grid-template-columns: 44px 1fr;
   font-family: var(--font-mono-stack);
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1.85;
   color: var(--fg);
 }
@@ -259,13 +259,13 @@
 .readme__row--h1 {
   color: var(--fg);
   font-weight: 700;
-  font-size: 20px;
+  font-size: var(--fs-lg);
   line-height: 1.4;
 }
 .readme__row--h2 {
   color: var(--signal);
   font-weight: 700;
-  font-size: 15px;
+  font-size: var(--fs-base);
   margin-top: 4px;
 }
 
@@ -306,7 +306,7 @@
   justify-content: space-between;
   align-items: center;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.14em;
   margin-bottom: 10px;
   font-family: var(--font-mono-stack);
@@ -320,7 +320,7 @@
 .codesample__pre {
   margin: 0;
   font-family: var(--font-mono-stack);
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   line-height: 1.7;
   color: var(--fg);
   overflow-x: auto;
@@ -353,7 +353,7 @@
    CAT ~/.NOW — key/value grid (module__body provides border + padding).
    ───────────────────────────────────────────────────────────────────────── */
 .nowblock {
-  font-size: 13px;
+  font-size: var(--fs-base);
   line-height: 1.9;
 }
 .nowblock .nrow {
@@ -390,12 +390,12 @@
 }
 .stat .slbl {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.16em;
 }
 .stat .sval {
   color: var(--signal);
-  font-size: 22px;
+  font-size: var(--fs-lg);
   font-weight: 700;
   margin: 8px 0 14px;
   letter-spacing: 0.02em;
@@ -431,7 +431,7 @@
     gap: 12px;
   }
   .stat .sval {
-    font-size: 16px;
+    font-size: var(--fs-md);
   }
 }
 
@@ -449,13 +449,13 @@
 }
 .perf-cell .pk {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.16em;
 }
 .perf-cell .pv {
   color: var(--signal);
   font-weight: 700;
-  font-size: 32px;
+  font-size: var(--fs-xl);
   line-height: 1;
   margin: 8px 0;
   letter-spacing: 0.01em;
@@ -463,7 +463,7 @@
 .perf-cell .pv .of {
   color: var(--muted);
   font-weight: 400;
-  font-size: 14px;
+  font-size: var(--fs-base);
   margin-left: 4px;
 }
 .perf-cell .pbar {
@@ -483,7 +483,7 @@
   align-items: center;
   margin-top: 18px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.14em;
 }
 .perf-foot .live-dot {
@@ -502,7 +502,7 @@
     grid-template-columns: repeat(2, 1fr);
   }
   .perf-cell .pv {
-    font-size: 26px;
+    font-size: var(--fs-xl);
   }
 }
 
@@ -527,7 +527,7 @@
   justify-content: center;
   gap: 6px;
   color: var(--signal);
-  font-size: 10px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.1em;
   transition:
     border-color 200ms ease,
@@ -561,7 +561,7 @@
   }
   .npm-stack li {
     aspect-ratio: 1 / 1;
-    font-size: 9.5px;
+    font-size: var(--fs-2xs);
   }
 }
 
@@ -618,7 +618,7 @@
 
 .project__perm {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   opacity: 0.75;
   margin: 0;
 }
@@ -626,21 +626,21 @@
 .project__name {
   color: var(--signal);
   font-weight: 700;
-  font-size: 16px;
+  font-size: var(--fs-md);
   letter-spacing: 0.04em;
   margin: 6px 0;
 }
 
 .project__desc {
   color: var(--fg);
-  font-size: 13px;
+  font-size: var(--fs-base);
   margin: 0 0 16px;
 }
 
 .project__stats {
   display: grid;
   gap: 4px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   margin: 0;
 }
 
@@ -699,27 +699,27 @@
 }
 .proj-perm {
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--fs-xs);
   opacity: 0.75;
   letter-spacing: 0.04em;
 }
 .proj-name {
   color: var(--signal);
   font-weight: 700;
-  font-size: 14px;
+  font-size: var(--fs-base);
   letter-spacing: 0.04em;
   margin: 4px 0;
 }
 .proj-desc {
   color: var(--fg);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   margin-bottom: 12px;
   line-height: 1.5;
 }
 .proj-meta {
   display: grid;
   gap: 3px;
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 .mrow {
   display: flex;
@@ -740,7 +740,7 @@
    ───────────────────────────────────────────────────────────────────────── */
 .gitfuller {
   font-family: var(--font-mono-stack);
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   line-height: 1.55;
   overflow-x: auto;
 }
@@ -750,7 +750,7 @@
   opacity: 0.7;
   margin-bottom: 12px;
   letter-spacing: 0.02em;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   white-space: pre;
 }
 
@@ -806,7 +806,7 @@
   color: var(--muted);
   opacity: 0.7;
   margin-top: 14px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   letter-spacing: 0.04em;
 }
 
@@ -864,7 +864,7 @@
     padding-right: 56px;
   }
   .blame-body {
-    font-size: 12.5px;
+    font-size: var(--fs-sm);
   }
 }
 
@@ -889,14 +889,14 @@
 
 .blame-date {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   letter-spacing: 0.06em;
   white-space: nowrap;
   font-family: var(--font-mono-stack);
 }
 
 .blame-body {
-  font-size: 13.5px;
+  font-size: var(--fs-base);
   line-height: 1.55;
 }
 
@@ -919,7 +919,7 @@
   display: block;
   color: var(--fg);
   margin-top: 4px;
-  font-size: 13px;
+  font-size: var(--fs-base);
   line-height: 1.6;
 }
 
@@ -969,7 +969,7 @@
 
 .receipt__metric {
   color: var(--muted);
-  font-size: 10.5px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.18em;
   margin: 0;
 }
@@ -991,32 +991,32 @@
   color: var(--signal);
   font-family: var(--font-mono-stack);
   font-weight: 700;
-  font-size: 38px;
+  font-size: var(--fs-xl);
   line-height: 1;
   letter-spacing: -0.01em;
   margin: 6px 0 8px;
 }
 
 .receipt__delta--hero {
-  font-size: 78px;
+  font-size: var(--fs-3xl);
 }
 
 @media (max-width: 900px) {
   .receipt__delta--hero {
-    font-size: 56px;
+    font-size: var(--fs-3xl);
   }
 }
 
 .receipt__company {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.14em;
   margin: 0;
 }
 
 .receipt__note {
   color: var(--fg);
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   line-height: 1.5;
   margin: auto 0 0;
   padding-top: 6px;
@@ -1024,7 +1024,7 @@
 }
 
 .receipt--hero .receipt__note {
-  font-size: 13.5px;
+  font-size: var(--fs-base);
   padding-top: 10px;
 }
 
@@ -1034,14 +1034,14 @@
     padding: 12px 12px 10px;
   }
   .receipt__delta {
-    font-size: 22px;
+    font-size: var(--fs-lg);
   }
   /* Higher specificity (0,2,0) beats .receipt__delta (0,1,0) */
   .receipt--hero .receipt__delta--hero {
-    font-size: 36px;
+    font-size: var(--fs-xl);
   }
   .visa-foot {
-    font-size: 9.5px;
+    font-size: var(--fs-2xs);
     white-space: nowrap;
     overflow: hidden;
   }
@@ -1070,14 +1070,14 @@
    COMMUNITY — panel with bullet list (module__body provides border + padding).
    ───────────────────────────────────────────────────────────────────────── */
 .community {
-  font-size: 13.5px;
+  font-size: var(--fs-base);
   line-height: 1.7;
 }
 .community .ctitle {
   color: var(--signal);
   font-weight: 700;
   letter-spacing: 0.06em;
-  font-size: 15px;
+  font-size: var(--fs-base);
   margin: 0 0 12px;
 }
 .community ul {
@@ -1100,7 +1100,7 @@
 }
 .community .cstatus {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   margin-top: 14px;
   border-top: 1px dashed var(--signal-dim-2);
   padding-top: 12px;
@@ -1118,7 +1118,7 @@
 }
 .permatrix .pm-cmd {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   letter-spacing: 0.06em;
   margin-bottom: 14px;
 }
@@ -1129,7 +1129,7 @@
 .permatrix pre {
   margin: 0;
   font-family: var(--font-mono-stack);
-  font-size: 13px;
+  font-size: var(--fs-base);
   line-height: 1.85;
   color: var(--fg);
   white-space: pre;
@@ -1154,7 +1154,7 @@
 }
 .permatrix .pm-foot {
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.06em;
   margin-top: 16px;
   padding-top: 12px;
@@ -1169,7 +1169,7 @@
 
 @media (max-width: 900px) {
   .permatrix pre {
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
   .permatrix .pm-foot {
     grid-template-columns: 1fr;
@@ -1182,7 +1182,7 @@
 .unknowns pre {
   margin: 0;
   font-family: var(--font-mono-stack);
-  font-size: 13px;
+  font-size: var(--fs-base);
   line-height: 1.75;
   color: var(--fg);
   white-space: pre-wrap;
@@ -1224,7 +1224,7 @@
 
 .takes__preamble {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   letter-spacing: 0.06em;
   margin: 0 0 18px;
   padding-bottom: 12px;
@@ -1238,7 +1238,7 @@
 
 .takes__footer {
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.06em;
   margin: 14px 0 0;
   padding-top: 12px;
@@ -1270,7 +1270,7 @@
 .take__num {
   color: var(--muted);
   font-family: var(--font-mono-stack);
-  font-size: 13px;
+  font-size: var(--fs-base);
   font-weight: 700;
   letter-spacing: 0.04em;
   padding-top: 2px;
@@ -1288,7 +1288,7 @@
   border: 1px solid var(--signal-dim-2);
   padding: 0 6px;
   margin-right: 8px;
-  font-size: 10.5px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.14em;
   vertical-align: 1px;
   font-weight: 500;
@@ -1305,7 +1305,7 @@
 
 .take__body {
   color: var(--fg);
-  font-size: 13.5px;
+  font-size: var(--fs-base);
   line-height: 1.65;
   margin: 0;
   max-width: 740px;
