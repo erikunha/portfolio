@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { RoleTyper } from '../client/RoleTyper';
 import { IconReadme } from '../Icons';
 import { Module } from '../responsive/Module';
 
@@ -43,7 +44,7 @@ const README_MOBILE: ReadmeLine[] = [
   { text: '## status', cls: 'h2' },
   {
     node: (
-      <>{'open to '}<span className="pill">{'[senior / staff / principal]'}</span>{' roles.'}</>
+      <>{'open to '}<RoleTyper />{' roles.'}</>
     ),
   },
   { text: 'remote-first · EU/US/CA · English C1.' },
