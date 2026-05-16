@@ -200,16 +200,33 @@
   color: var(--signal);
   margin-right: 4px;
 }
+.cr-table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 0.5em;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+.cr-row {
+  display: flex;
+  align-items: baseline;
+}
 .cr-label {
+  width: 14ch;
+  flex-shrink: 0;
   color: var(--fg);
   font-weight: 700;
   letter-spacing: 0.04em;
 }
 .cr-badge {
+  width: 25ch;
+  flex-shrink: 0;
   color: var(--signal);
   font-weight: 700;
 }
 .cr-val {
+  flex: 1;
   color: var(--fg);
 }
 .gr-label {
