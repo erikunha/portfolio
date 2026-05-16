@@ -16,6 +16,27 @@ This means:
 - Trade-offs surfaced explicitly; one recommendation per decision
 - Perf, a11y (WCAG 2.1 AA), and security are implicit requirements on every change, not separate phases
 
+## Project agent dispatch
+
+Invoke the named agent before the described action. These are definitions of done, not optional review steps.
+
+| Phase | Trigger | Agent |
+|---|---|---|
+| Planning | Before invoking `writing-plans` on any spec | `architect-reviewer` |
+| Implementation | After editing `app/`, `components/`, or `lib/` files | `nextjs-developer` |
+| Type safety | After editing `content/*.ts` or `content/schemas.ts` | `typescript-pro` |
+| Testing | When writing or modifying tests in `__tests__/` or `tests/` | `test-automator` |
+| Visual QA | After any UI change — section layout, CSS, responsive | `ui-ux-tester` |
+| AI feature | After editing `app/api/ask/` or `lib/stream-protocol.ts` | `ai-engineer` |
+| SEO | After editing `app/opengraph-image.tsx`, `sitemap.ts`, `robots.txt`, `llms.txt` | `seo-specialist` |
+| DX/Tooling | After editing `.husky/`, `ci.yml`, `vitest.config.ts`, `playwright.config.ts` | `dx-optimizer` |
+| Bundle | After adding any new dependency to `package.json` | `dependency-manager` |
+| Performance | After any Lighthouse-affecting change | `performance-engineer` |
+| Accessibility | After editing any component with interactive or semantic elements | `accessibility-tester` |
+| Code review | Before any commit on a PR branch | `code-reviewer` |
+| Security | After editing `app/api/`, `lib/rate-limit.ts`, or `.env.example` | `security-auditor` |
+| Refactoring | When restructuring components or CSS without behavior change | `refactoring-specialist` |
+
 ## Stack (locked)
 
 - Next.js 15 App Router · React 19 · TypeScript strict · Tailwind v4 · Biome · pnpm
@@ -116,3 +137,4 @@ Before proposing any of these, check `DECISIONS.md` to see the reasoning that ex
 - Read `ARCHITECTURE.md` §16 ("What I'd revisit as the system grows") before proposing infrastructure changes.
 - Read `LAUNCH.md` PR-by-PR order before suggesting we skip ahead.
 - If the request seems to conflict with a budget or gate, surface the conflict before complying.
+- Before invoking `writing-plans`, dispatch `architect-reviewer` against the spec. It must clear: (1) no new client islands without a 43KB budget justification, (2) no pattern listed in `DECISIONS.md` as rejected, (3) no item from the "Out of scope" list in this file.
