@@ -47,6 +47,7 @@ export async function getScores(): Promise<LighthouseScores> {
     const res = await fetch(psiUrl, {
       next: { revalidate: LIGHTHOUSE_TTL_S },
       signal: AbortSignal.timeout(8_000),
+      headers: { Referer: 'https://www.erikunha.dev/' },
     });
     if (!res.ok) throw new Error(`PSI API returned ${res.status}`);
 
