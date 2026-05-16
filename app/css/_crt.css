@@ -81,7 +81,7 @@
   inset: 0;
   pointer-events: none;
   background: rgba(0, 255, 65, 0.02);
-  animation: crt-flicker 0.3s infinite;
+  animation: crt-flicker 4s infinite;
   z-index: 4;
 }
 
