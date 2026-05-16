@@ -6,6 +6,22 @@
 
 **erikunha.com.br** — personal portfolio. Hiring artifact for Staff/Principal Frontend + applied-AI roles. Matrix/brutalist terminal aesthetic. Single-page composition with ~18 sections.
 
+## Commands
+
+| Command | Purpose |
+|---|---|
+| `pnpm dev` | Development server |
+| `pnpm build` | Production build |
+| `pnpm test` | Vitest unit tests |
+| `pnpm test:e2e` | Playwright E2E (contact + ask paths) |
+| `pnpm check` | Biome lint + format check |
+| `pnpm check:fix` | Biome auto-fix |
+| `pnpm typecheck` | TypeScript strict check |
+| `pnpm lhci` | Lighthouse CI locally |
+| `pnpm validate-content` | Zod content schema validation |
+| `pnpm ci:local` | Full local CI gate (lint + type + test) |
+| `pnpm bundle-check` | Bundle size gate check |
+
 ## Operating role
 
 Operate at Staff/Principal frontend engineer standard. The site is itself the hiring pitch. Code quality, architecture decisions, perf budgets, and a11y are part of the pitch, not afterthoughts.
@@ -24,18 +40,31 @@ Invoke the named agent before the described action. These are definitions of don
 |---|---|---|
 | Planning | Before invoking `writing-plans` on any spec | `architect-reviewer` |
 | Implementation | After editing `app/`, `components/`, or `lib/` files | `nextjs-developer` |
-| Type safety | After editing `content/*.ts` or `content/schemas.ts` | `typescript-pro` |
+| Type safety | After editing `content/*.ts` | `typescript-pro` |
 | Testing | When writing or modifying tests in `__tests__/` or `tests/` | `test-automator` |
 | Visual QA | After any UI change — section layout, CSS, responsive | `ui-ux-tester` |
 | AI feature | After editing `app/api/ask/` or `lib/stream-protocol.ts` | `ai-engineer` |
 | SEO | After editing `app/opengraph-image.tsx`, `sitemap.ts`, `robots.txt`, `llms.txt` | `seo-specialist` |
-| DX/Tooling | After editing `.husky/`, `ci.yml`, `vitest.config.ts`, `playwright.config.ts` | `dx-optimizer` |
+| DX/Tooling | After editing `.husky/`, `ci.yml`, `vitest.config.ts`, `playwright.config.ts`, `.github/workflows/`, `scripts/`, `biome.json`, `commitlint.config.ts` | `dx-optimizer` |
 | Bundle | After adding any new dependency to `package.json` | `dependency-manager` |
 | Performance | After any Lighthouse-affecting change | `performance-engineer` |
 | Accessibility | After editing any component with interactive or semantic elements | `accessibility-tester` |
 | Code review | Before any commit on a PR branch | `code-reviewer` |
-| Security | After editing `app/api/`, `lib/rate-limit.ts`, or `.env.example` | `security-auditor` |
+| Security | After editing `app/api/`, `lib/rate-limit.ts`, `.env.example`, or `middleware.ts` | `security-auditor` |
+| Edge/routing | After editing `middleware.ts` or `next.config.ts` | `nextjs-developer` + `performance-engineer` |
 | Refactoring | When restructuring components or CSS without behavior change | `refactoring-specialist` |
+
+## Skill dispatch
+
+Invoke the named skill inline (not as a subagent) before the described action.
+
+| Trigger | Skill |
+|---|---|
+| After editing any file in `components/` or `app/` | `react-best-practices` |
+| After editing `next.config.ts`, `.env.example`, or Vercel config | `vercel:nextjs` |
+| After editing `app/api/` or `middleware.ts` | `vercel:vercel-functions` |
+| When writing or modifying any test in `__tests__/` or `tests/` | `superpowers:test-driven-development` |
+| Before any UI code review (alongside `ui-ux-tester` dispatch) | `web-design-guidelines` |
 
 ## Stack (locked)
 
