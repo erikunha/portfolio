@@ -53,7 +53,7 @@
   gap: 8px;
   height: 26px;
   padding: 0 12px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   letter-spacing: 0.05em;
   color: var(--fg);
   border: 1px solid transparent;
@@ -79,7 +79,7 @@
 
 .topbar__navlink {
   color: var(--signal);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
@@ -92,7 +92,7 @@
   align-items: center;
   gap: 6px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.1em;
   border: 1px solid var(--signal-dim);
   padding: 4px 8px;
@@ -118,7 +118,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   padding: 6px 14px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   border: 1px solid var(--signal);
   transition: box-shadow 200ms ease;
   display: inline-flex;
@@ -134,7 +134,7 @@
   color: var(--signal);
   padding: 6px 12px;
   letter-spacing: 0.08em;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   display: inline-block;
   transition:
     box-shadow 200ms ease,
@@ -173,7 +173,7 @@
   padding: calc(env(safe-area-inset-top, 0px) + 6px) 14px 6px;
   background: var(--bg);
   border-bottom: 1px solid var(--signal-dim);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.06em;
   color: var(--signal);
   font-variant-numeric: tabular-nums;
@@ -187,14 +187,14 @@
 
 .statusbar__time {
   color: var(--signal);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 700;
 }
 
 .statusbar__carrier {
   color: var(--fg);
   opacity: 0.85;
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 
 .statusbar__right {
@@ -217,7 +217,7 @@
 
 .statusbar__cell {
   color: var(--signal);
-  font-size: 10px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.1em;
 }
 
@@ -230,7 +230,7 @@
 }
 
 .statusbar__battery-num {
-  font-size: 10.5px;
+  font-size: var(--fs-xs);
 }
 
 .statusbar__battery-box {
@@ -283,7 +283,7 @@
   gap: 3px;
   padding: 6px 4px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--fs-2xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   min-height: 48px;

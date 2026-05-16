@@ -24,9 +24,9 @@ const display = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://erikunha.dev'),
-  title: 'Erik Cunha — Senior Full-Stack Engineer',
+  title: 'Erik Cunha — Senior Full-Stack Engineer, Frontend',
   description:
-    'Senior Full-Stack Engineer (Frontend-heavy) with 8+ years building regulated, high-traffic systems in fintech (PCI-DSS), healthcare, and global e-commerce. Angular · React · Next.js · Node.js · TypeScript.',
+    'Senior Full-Stack Engineer, Frontend with 8+ years building regulated, high-traffic systems in fintech (PCI-DSS), healthcare, and global e-commerce. Angular · React · Next.js · Node.js · TypeScript.',
   keywords: [
     'Full-Stack Engineer',
     'Frontend Engineer',
@@ -48,17 +48,17 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://erikunha.dev',
-    title: 'Erik Cunha — Senior Full-Stack Engineer',
+    title: 'Erik Cunha — Senior Full-Stack Engineer, Frontend',
     description:
-      'Senior Full-Stack Engineer (Frontend-heavy) · 8+ yrs · Angular · React · Next.js · Node.js · AWS · PCI-DSS',
+      'Senior Full-Stack Engineer, Frontend · 8+ yrs · Angular · React · Next.js · Node.js · AWS · PCI-DSS',
     siteName: 'erikunha.dev',
     images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Erik Cunha Portfolio' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Erik Cunha — Senior Full-Stack Engineer',
+    title: 'Erik Cunha — Senior Full-Stack Engineer, Frontend',
     description:
-      'Senior Full-Stack Engineer · Angular · React · Next.js · Node.js · AWS · TypeScript',
+      'Senior Full-Stack Engineer, Frontend · Angular · React · Next.js · Node.js · AWS · TypeScript',
     images: ['/og-image.png'],
   },
   robots: {
@@ -77,9 +77,9 @@ const personJsonLd = JSON.stringify({
   '@type': 'Person',
   name: 'Erik Henrique Alves Cunha',
   alternateName: 'Erik Cunha',
-  jobTitle: 'Senior Full-Stack Engineer',
+  jobTitle: 'Senior Full-Stack Engineer, Frontend',
   description:
-    'Senior Full-Stack Engineer (Frontend-heavy) with 8+ years building regulated, high-traffic systems in fintech (PCI-DSS), healthcare, and global e-commerce.',
+    'Senior Full-Stack Engineer, Frontend with 8+ years building regulated, high-traffic systems in fintech (PCI-DSS), healthcare, and global e-commerce.',
   url: 'https://erikunha.dev',
   email: 'mailto:erikhenriquealvescunha@gmail.com',
   knowsLanguage: ['pt', 'en', 'fr', 'es'],
