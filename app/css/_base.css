@@ -19,9 +19,7 @@ body {
   font-family: var(--font-mono-stack);
   font-size: 14px;
   line-height: 1.55;
-  text-shadow: 0 0 1px rgba(0, 255, 65, 0.25);
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
   overflow-x: hidden;
 }
 
@@ -85,6 +83,7 @@ h3 {
   font-weight: 700;
   color: var(--signal);
   margin: 0 0 8px 0;
+  text-shadow: 0 0 2px rgba(0, 255, 65, 0.3);
 }
 
 h1 {

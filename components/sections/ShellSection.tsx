@@ -13,7 +13,7 @@ export function ShellSection() {
       icon={<IconShell />}
       postBody={
         <p className="shell__commands">
-          {'commands: help · whoami · whoami --recursive · ls · cat skills.md · cat ~/.now · contact · face · hire · clear · ask <question>'}
+          {'commands: help · whoami · whoami --recursive · ls · cat skills.md · cat ~/.now · contact · face · hire · clear · anything else → Claude'}
         </p>
       }
     >
