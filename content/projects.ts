@@ -65,12 +65,12 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
       "Copilot 12-subagent system at Betsson — code review, doc-gen, spec-to-PR. -40% onboarding via 35-page arch knowledge system. Built and maintains the agents. Also uses Claude API for personal tooling (this portfolio's shell).",
     stats: [
       { label: 'SUBAGENTS', value: '12 + ORCHESTRATOR' },
-      { label: 'SCOPE',     value: 'TEAM-WIDE' },
-      { label: 'STACK',     value: 'COPILOT · PATH-SCOPED' },
+      { label: 'SCOPE', value: 'TEAM-WIDE' },
+      { label: 'STACK', value: 'COPILOT · PATH-SCOPED' },
     ],
     mobileMeta: [
-      { label: 'stack',  value: 'copilot · subagents · claude' },
-      { label: 'scale',  value: '12 agents · 4 teams' },
+      { label: 'stack', value: 'copilot · subagents · claude' },
+      { label: 'scale', value: '12 agents · 4 teams' },
       { label: 'status', value: 'internal' },
     ],
     perm: '-rwx------',
