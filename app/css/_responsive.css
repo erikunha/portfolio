@@ -15,7 +15,9 @@
 .hero__dialog {
   color: var(--signal);
   font-family: var(--font-mono-stack);
-  text-shadow: 0 0 8px rgba(0, 255, 65, 0.45), 0 0 4px #000;
+  text-shadow:
+    0 0 8px rgba(0, 255, 65, 0.45),
+    0 0 4px #000;
 }
 
 .hero--desktop .hero__dialog {
@@ -32,7 +34,9 @@
   min-height: 0;
   position: relative;
   overflow: hidden;
-  text-shadow: 0 0 4px #000, 0 0 8px #000;
+  text-shadow:
+    0 0 4px #000,
+    0 0 8px #000;
 }
 
 .hero__inner {
@@ -72,8 +76,14 @@
   animation: blink 1.4s steps(2, start) infinite;
 }
 
-@media (prefers-reduced-motion: reduce) { .hero__status-dot { animation: none; } }
-body[data-motion='reduce'] .hero__status-dot { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .hero__status-dot {
+    animation: none;
+  }
+}
+body[data-motion="reduce"] .hero__status-dot {
+  animation: none !important;
+}
 
 /* ─── Window chrome (mobile) ─────────────────────────────────────────────── */
 .window-chrome {
@@ -102,9 +112,15 @@ body[data-motion='reduce'] .hero__status-dot { animation: none !important; }
   border-radius: 50%;
 }
 
-.window-chrome__dot--red    { background: #ff5f56; }
-.window-chrome__dot--yellow { background: #ffbd2e; }
-.window-chrome__dot--green  { background: #27c93f; }
+.window-chrome__dot--red {
+  background: #ff5f56;
+}
+.window-chrome__dot--yellow {
+  background: #ffbd2e;
+}
+.window-chrome__dot--green {
+  background: #27c93f;
+}
 
 .window-chrome__title {
   flex: 1;

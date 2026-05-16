@@ -5,10 +5,10 @@
 // navigation bars, Dock, and ToTopButton. Everything else (sections) is passed
 // as RSC children and rendered server-side — their code never ships to the client.
 
-import { useBreakpoint } from '@/lib/use-breakpoint';
 import type { ReactNode } from 'react';
-import { ErrorBoundary } from './ErrorBoundary.client';
+import { useBreakpoint } from '@/lib/use-breakpoint';
 import { ToTopButton } from './client/ToTopButton';
+import { ErrorBoundary } from './ErrorBoundary.client';
 import { CRTOverlay } from './responsive/CRTOverlay';
 import { DesktopTopbar } from './responsive/DesktopTopbar';
 import { Dock } from './responsive/Dock';

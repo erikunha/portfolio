@@ -9,7 +9,10 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     type: 'career',
     company: 'BETSSON_GROUP',
     role: 'SR FRONTEND ENGINEER · Malta (EU)',
-    body: ['wanted regulated multi-market scale; got 40M+ tx/yr', 'across 15+ jurisdictions on a PCI-DSS payment platform.'],
+    body: [
+      'wanted regulated multi-market scale; got 40M+ tx/yr',
+      'across 15+ jurisdictions on a PCI-DSS payment platform.',
+    ],
   },
   {
     hash: '4a9e1d886b3f2c7e0a8d5b9c1e6f4a2b3d7e8c01',
@@ -19,7 +22,10 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     type: 'career',
     company: 'CANON_MEDICAL_SYSTEMS',
     role: 'SR SOFTWARE ENG (CONSULTING) · Remote (CA)',
-    body: ['mission-critical hospital ops platform; full architectural', 'ownership across multi-site network.'],
+    body: [
+      'mission-critical hospital ops platform; full architectural',
+      'ownership across multi-site network.',
+    ],
   },
   {
     hash: 'cc1cc1ad202300823f5b1e8d9c4a7e2f0b6d8c1a',
@@ -29,7 +35,10 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     type: 'life',
     company: 'CICCC',
     role: 'WEB DEV CO-OP DIPLOMA · Vancouver, CA',
-    body: ['part-time, concurrent with Canon Medical role.', 'forcing function to relocate and earn CA work authorization.'],
+    body: [
+      'part-time, concurrent with Canon Medical role.',
+      'forcing function to relocate and earn CA work authorization.',
+    ],
   },
   {
     hash: '5b6f0a4c8d9e1b3a7c2f5d8b0a4e6c9f1b3d7a02',
@@ -39,7 +48,10 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     type: 'career',
     company: 'GRUPO_SBF (NIKE / CENTAURO)',
     role: 'REACT DEVELOPER · São Paulo, BR (remote)',
-    body: ['React at LATAM e-commerce scale (8M+ MAU); institutionalized', 'experiment-driven dev (20+ A/B tests).'],
+    body: [
+      'React at LATAM e-commerce scale (8M+ MAU); institutionalized',
+      'experiment-driven dev (20+ A/B tests).',
+    ],
   },
   {
     hash: '3d4e8c1a5b9f2c7e6d3a8b1c4e5f9d2a7b6c0e8d',
@@ -59,7 +71,10 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     type: 'career',
     company: 'ZUP_INNOVATION (ITAÚ)',
     role: 'FRONTEND ENGINEER · Campinas, BR',
-    body: ['first regulated / banking work; Web Components +', 'micro-frontends across multiple banking apps.'],
+    body: [
+      'first regulated / banking work; Web Components +',
+      'micro-frontends across multiple banking apps.',
+    ],
   },
   {
     hash: '9c8b7a6e5d4f3c2b1a0e9d8c7b6a5e4f3d2c1b0a',
@@ -69,7 +84,10 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     type: 'career',
     company: 'VENTURUS',
     role: 'MEAN STACK ENGINEER · Campinas, BR',
-    body: ['cut teeth on backend; -97.5% API latency (40s → <1s);', 'Mongo → Postgres migration with custom ETL.'],
+    body: [
+      'cut teeth on backend; -97.5% API latency (40s → <1s);',
+      'Mongo → Postgres migration with custom ETL.',
+    ],
   },
   {
     hash: '0e0f0a0b0c0d0e0f0a0b0c0d0e0f0a0b0c0d0e0f',
@@ -79,7 +97,10 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     type: 'career',
     company: 'MB_LABS',
     role: 'MOBILE / FULL STACK · Campinas, BR',
-    body: ['first job. shipped 5-OS cross-platform from one', 'Ionic + Angular + Electron codebase.'],
+    body: [
+      'first job. shipped 5-OS cross-platform from one',
+      'Ionic + Angular + Electron codebase.',
+    ],
     isRoot: true,
   },
 ]);

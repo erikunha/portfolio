@@ -9,7 +9,9 @@ export function MobileTitleBar() {
         <span className="window-chrome__dot window-chrome__dot--yellow" />
         <span className="window-chrome__dot window-chrome__dot--green" />
       </div>
-      <div className="window-chrome__title" aria-hidden="true">PORTFOLIO.SH</div>
+      <div className="window-chrome__title" aria-hidden="true">
+        PORTFOLIO.SH
+      </div>
       <a className="window-chrome__switch" href="?force=desktop">
         DESKTOP ↗
       </a>

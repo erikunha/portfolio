@@ -1,4 +1,3 @@
-
 import { IconGuitar } from '../Icons';
 import { Module } from '../responsive/Module';
 
@@ -6,16 +5,20 @@ export function GuitarSection() {
   return (
     <Module id="sec-guitar" header="CAT ~/.GUITAR_RIG" icon={<IconGuitar />} defaultOpen={false}>
       <div className="visa">
-
         {/* Desktop — matches Portfolio.html labels */}
         <pre className="guitar-desktop">
-          <span className="cmd-line"><span className="pr">$</span>{'cat ~/.guitar_rig'}</span>
+          <span className="cmd-line">
+            <span className="pr">$</span>
+            {'cat ~/.guitar_rig'}
+          </span>
           {'\n'}
           <span className="gr-comment">{'# updated 2026-05-13'}</span>
           {'\n\n'}
           <span className="gr-label">{'GUITAR_MAIN'}</span>
           {'       '}
-          <span className="gr-val">{'Gretsch G5655TG · Electromatic Center Block Jr · Bigsby'}</span>
+          <span className="gr-val">
+            {'Gretsch G5655TG · Electromatic Center Block Jr · Bigsby'}
+          </span>
           {'\n'}
           <span className="gr-label">{'GUITAR_ALT'}</span>
           {'        '}
@@ -33,29 +36,23 @@ export function GuitarSection() {
           {'        '}
           <span className="gr-val">{'in order:'}</span>
           {'\n                      '}
-          <span className="gr-num">{'1.'}</span>
-          {' '}
-          <span className="gr-name">{'John Mayer'}</span>
+          <span className="gr-num">{'1.'}</span> <span className="gr-name">{'John Mayer'}</span>
           {'\n                      '}
-          <span className="gr-num">{'2.'}</span>
-          {' '}
-          <span className="gr-name">{'Mateus Asato'}</span>
+          <span className="gr-num">{'2.'}</span> <span className="gr-name">{'Mateus Asato'}</span>
           {'\n                      '}
-          <span className="gr-num">{'3.'}</span>
-          {' '}
-          <span className="gr-name">{'Jimmy Page'}</span>
+          <span className="gr-num">{'3.'}</span> <span className="gr-name">{'Jimmy Page'}</span>
           {'\n                      '}
-          <span className="gr-num">{'4.'}</span>
-          {' '}
+          <span className="gr-num">{'4.'}</span>{' '}
           <span className="gr-name">{'John Frusciante'}</span>
           {'\n                      '}
-          <span className="gr-num">{'5.'}</span>
-          {' '}
+          <span className="gr-num">{'5.'}</span>{' '}
           <span className="gr-name">{"Iron Maiden's three (Murray · Smith · Gers)"}</span>
           {'\n\n'}
           <span className="gr-label">{'STYLE'}</span>
           {'             '}
-          <span className="gr-val">{'feel / expression over noise · clean tones, lots of space'}</span>
+          <span className="gr-val">
+            {'feel / expression over noise · clean tones, lots of space'}
+          </span>
           {'\n'}
           <span className="gr-label">{'TUNING'}</span>
           {'            '}
@@ -79,8 +76,19 @@ export function GuitarSection() {
         </pre>
 
         {/* Mobile — matches Portfolio.mobile.html labels */}
-        <pre className="guitar-mobile" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'break-word', fontSize: '11.5px', lineHeight: 1.7 }}>
-          <span className="cmd-line"><span className="pr">$</span>{'cat ~/.guitar_rig'}</span>
+        <pre
+          className="guitar-mobile"
+          style={{
+            whiteSpace: 'pre-wrap',
+            overflowWrap: 'break-word',
+            fontSize: '11.5px',
+            lineHeight: 1.7,
+          }}
+        >
+          <span className="cmd-line">
+            <span className="pr">$</span>
+            {'cat ~/.guitar_rig'}
+          </span>
           {'\n'}
           <span className="gr-comment">{'# the other six strings'}</span>
           {'\n\n'}
@@ -102,24 +110,16 @@ export function GuitarSection() {
           {'\n\n'}
           <span className="gr-label">{'INFLUENCES'}</span>
           {'\n              '}
-          <span className="gr-num">{'1.'}</span>
-          {' '}
-          <span className="gr-name">{'John Mayer'}</span>
+          <span className="gr-num">{'1.'}</span> <span className="gr-name">{'John Mayer'}</span>
           {'\n              '}
-          <span className="gr-num">{'2.'}</span>
-          {' '}
-          <span className="gr-name">{'Mateus Asato'}</span>
+          <span className="gr-num">{'2.'}</span> <span className="gr-name">{'Mateus Asato'}</span>
           {'\n              '}
-          <span className="gr-num">{'3.'}</span>
-          {' '}
-          <span className="gr-name">{'Jimmy Page'}</span>
+          <span className="gr-num">{'3.'}</span> <span className="gr-name">{'Jimmy Page'}</span>
           {'\n              '}
-          <span className="gr-num">{'4.'}</span>
-          {' '}
+          <span className="gr-num">{'4.'}</span>{' '}
           <span className="gr-name">{'John Frusciante'}</span>
           {'\n              '}
-          <span className="gr-num">{'5.'}</span>
-          {' '}
+          <span className="gr-num">{'5.'}</span>{' '}
           <span className="gr-name">{"Iron Maiden's three"}</span>
           {'\n\n'}
           <span className="gr-label">{'STYLE'}</span>
@@ -144,9 +144,8 @@ export function GuitarSection() {
           {'\n'}
           <span className="gr-label">{'OBSESSION'}</span>
           {'    '}
-          <span className="gr-val">{"Coldplay's \"Yellow\" · simplicity is hard"}</span>
+          <span className="gr-val">{'Coldplay\'s "Yellow" · simplicity is hard'}</span>
         </pre>
-
       </div>
     </Module>
   );

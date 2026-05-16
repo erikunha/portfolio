@@ -1,8 +1,8 @@
 // components/sections/Hero.tsx
 'use client';
 
-import { useBreakpoint } from '@/lib/use-breakpoint';
 import { useEffect, useRef } from 'react';
+import { useBreakpoint } from '@/lib/use-breakpoint';
 
 // ── Typed line-spec data ──────────────────────────────────────────────────────
 type Span = { cls: string; text: string };
@@ -12,9 +12,9 @@ const DESKTOP_LINE_SPECS: LinePart[][] = [
   ['[SYSTEM BOOT SEQUENCE INITIATED]'],
   [' '],
   ['Initializing kernel modules... ', { cls: 'boot__ok', text: 'OK' }],
-  ['Mounting local filesystems... ',  { cls: 'boot__ok', text: 'OK' }],
-  ['Starting network services... ',   { cls: 'boot__ok', text: 'OK' }],
-  ['Loading security protocols... ',  { cls: 'boot__enc', text: '[ENCRYPTED]' }],
+  ['Mounting local filesystems... ', { cls: 'boot__ok', text: 'OK' }],
+  ['Starting network services... ', { cls: 'boot__ok', text: 'OK' }],
+  ['Loading security protocols... ', { cls: 'boot__enc', text: '[ENCRYPTED]' }],
   [{ cls: 'boot__welcome', text: 'Welcome to DEV_OS v2.0.4-stable [user: erik]' }],
   [' '],
 ];
@@ -23,15 +23,20 @@ const MOBILE_LINE_SPECS: LinePart[][] = [
   ['[BOOT SEQUENCE INITIATED]'],
   [' '],
   ['kernel modules... ', { cls: 'boot__ok', text: 'OK' }],
-  ['mount fs... ',       { cls: 'boot__ok', text: 'OK' }],
-  ['network... ',        { cls: 'boot__ok', text: 'OK' }],
-  ['security... ',       { cls: 'boot__enc', text: '[ENCRYPTED]' }],
+  ['mount fs... ', { cls: 'boot__ok', text: 'OK' }],
+  ['network... ', { cls: 'boot__ok', text: 'OK' }],
+  ['security... ', { cls: 'boot__enc', text: '[ENCRYPTED]' }],
   [{ cls: 'boot__welcome', text: 'DEV_OS v2.0.4 [user: erik]' }],
   [' '],
 ];
 
-const DESKTOP_DIALOG = ['Wake up, Neo...', 'Wake up...', 'The Matrix has you...', 'Knock, knock, Neo...'];
-const MOBILE_DIALOG  = ['Wake up, Neo...', 'The Matrix has you...', 'Knock, knock, Neo...'];
+const DESKTOP_DIALOG = [
+  'Wake up, Neo...',
+  'Wake up...',
+  'The Matrix has you...',
+  'Knock, knock, Neo...',
+];
+const MOBILE_DIALOG = ['Wake up, Neo...', 'The Matrix has you...', 'Knock, knock, Neo...'];
 
 // ── Safe DOM builders (no innerHTML) ─────────────────────────────────────────
 function buildLine(parts: LinePart[]): HTMLElement {
@@ -101,7 +106,10 @@ export function runBoot(
 
   function revealLines(idx: number) {
     if (cancelled) return;
-    if (idx >= specs.length) { later(typeCmd, 350); return; }
+    if (idx >= specs.length) {
+      later(typeCmd, 350);
+      return;
+    }
     const spec = specs[idx];
     if (!spec) return;
     container.appendChild(buildLine(spec));
@@ -112,12 +120,12 @@ export function runBoot(
     if (cancelled) return;
     const cmdText = 'run bio.exe --verbose';
 
-    const line   = document.createElement('span');
+    const line = document.createElement('span');
     line.className = 'boot__line';
     const prompt = document.createElement('span');
     prompt.className = 'boot__prompt';
     prompt.textContent = 'erik@portfolio:~$';
-    const cmdEl  = document.createElement('span');
+    const cmdEl = document.createElement('span');
     cmdEl.className = 'boot__cmd';
     const cursor = document.createElement('span');
     cursor.className = 'boot__cursor';
@@ -145,14 +153,14 @@ export function runBoot(
   function startDialog() {
     if (cancelled) return;
 
-    const line   = document.createElement('span');
+    const line = document.createElement('span');
     line.className = 'boot__line';
     const prefix = document.createElement('span');
     prefix.className = 'boot__matrix-prefix';
     prefix.textContent = '>';
-    const out    = document.createElement('span');
+    const out = document.createElement('span');
     out.className = 'boot__matrix-out';
-    const cur    = document.createElement('span');
+    const cur = document.createElement('span');
     cur.className = 'boot__cursor';
     line.appendChild(prefix);
     line.appendChild(out);
@@ -160,20 +168,25 @@ export function runBoot(
     container.appendChild(line);
 
     let phraseIdx = 0;
-    let charIdx   = 0;
+    let charIdx = 0;
     let phase: 'type' | 'hold' | 'back' = 'type';
     let firedOnce = false;
 
     function tick() {
       if (cancelled) return;
       // Pause: store self as resume target and yield until resumeDialog() fires.
-      if (dialogPaused) { dialogResumeFn = tick; return; }
+      if (dialogPaused) {
+        dialogResumeFn = tick;
+        return;
+      }
       const phrase = dialog[phraseIdx];
       if (!phrase) return;
       if (phase === 'type') {
         out.textContent = phrase.slice(0, ++charIdx);
-        if (charIdx >= phrase.length) { phase = 'hold'; later(tick, opts.holdMs); }
-        else later(tick, opts.typeMs);
+        if (charIdx >= phrase.length) {
+          phase = 'hold';
+          later(tick, opts.holdMs);
+        } else later(tick, opts.typeMs);
       } else if (phase === 'hold') {
         phase = 'back';
         later(tick, opts.backMs);
@@ -198,11 +211,21 @@ export function runBoot(
   later(() => revealLines(0), opts.startMs);
 
   return {
-    cancel: () => { cancelled = true; timers.forEach(clearTimeout); dialogResumeFn = null; },
-    pauseDialog: () => { dialogPaused = true; },
+    cancel: () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+      dialogResumeFn = null;
+    },
+    pauseDialog: () => {
+      dialogPaused = true;
+    },
     resumeDialog: () => {
       dialogPaused = false;
-      if (dialogResumeFn) { const fn = dialogResumeFn; dialogResumeFn = null; fn(); }
+      if (dialogResumeFn) {
+        const fn = dialogResumeFn;
+        dialogResumeFn = null;
+        fn();
+      }
     },
   };
 }
@@ -215,10 +238,10 @@ export function Hero() {
 }
 
 function DesktopHero() {
-  const bootRef    = useRef<HTMLDivElement>(null);
+  const bootRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const sysfailRef = useRef<HTMLDivElement>(null);
-  const bootCtrl   = useRef<BootCtrl | null>(null);
+  const bootCtrl = useRef<BootCtrl | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -234,9 +257,14 @@ function DesktopHero() {
     }
 
     const ctrl = runBoot(el, DESKTOP_LINE_SPECS, DESKTOP_DIALOG, {
-      lineMs: 150, lineJitter: 60,
-      cmdMs:  70,  cmdJitter:  30,
-      typeMs: 80,  holdMs: 2000, backMs: 40, interMs: 300,
+      lineMs: 150,
+      lineJitter: 60,
+      cmdMs: 70,
+      cmdJitter: 30,
+      typeMs: 80,
+      holdMs: 2000,
+      backMs: 40,
+      interMs: 300,
       startMs: 250,
       onFirstLoop: () => {
         const section = sectionRef.current;
@@ -292,8 +320,12 @@ function DesktopHero() {
           global e-commerce
         </p>
         <p className="hero__meta">
-          <span>LOC: <b>Malta</b></span>
-          <span>NOW: <b>Betsson</b></span>
+          <span>
+            LOC: <b>Malta</b>
+          </span>
+          <span>
+            NOW: <b>Betsson</b>
+          </span>
           <span>EN/PT/FR/ES</span>
         </p>
         <p className="hero__status">
@@ -343,9 +375,14 @@ function MobileHero() {
     }
 
     return runBoot(el, MOBILE_LINE_SPECS, MOBILE_DIALOG, {
-      lineMs: 110, lineJitter: 50,
-      cmdMs:  60,  cmdJitter:  30,
-      typeMs: 75,  holdMs: 1800, backMs: 35, interMs: 300,
+      lineMs: 110,
+      lineJitter: 50,
+      cmdMs: 60,
+      cmdJitter: 30,
+      typeMs: 75,
+      holdMs: 1800,
+      backMs: 35,
+      interMs: 300,
       startMs: 200,
     }).cancel;
   }, []);
@@ -361,8 +398,12 @@ function MobileHero() {
           global e-commerce
         </p>
         <p className="hero__meta">
-          <span>LOC: <b>Malta</b></span>
-          <span>NOW: <b>Betsson</b></span>
+          <span>
+            LOC: <b>Malta</b>
+          </span>
+          <span>
+            NOW: <b>Betsson</b>
+          </span>
           <span>EN/PT/FR/ES</span>
         </p>
         <p className="hero__status">

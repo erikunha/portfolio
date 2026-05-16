@@ -10,7 +10,12 @@ const FolderIcon = () => (
 
 export function ProjectsSection() {
   return (
-    <Module id="sec-projects" header="LS -LA ./PROJECTS" mobileHeader="LS -LA ~/PROJECTS" icon={<IconProjects />}>
+    <Module
+      id="sec-projects"
+      header="LS -LA ./PROJECTS"
+      mobileHeader="LS -LA ~/PROJECTS"
+      icon={<IconProjects />}
+    >
       {/* Desktop card layout */}
       <ul className="projects proj-desktop">
         {projects.map((p) => (
@@ -40,7 +45,9 @@ export function ProjectsSection() {
         {projects.map((p) => (
           <div key={p.name} className="proj">
             <div className="proj-top">
-              <span className="proj-folder"><FolderIcon /></span>
+              <span className="proj-folder">
+                <FolderIcon />
+              </span>
               <span className="proj-perm">{p.perm ?? '-rwxr-xr-x'}</span>
             </div>
             <div className="proj-name">{p.mobileName}</div>

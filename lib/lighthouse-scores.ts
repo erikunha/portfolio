@@ -26,7 +26,9 @@ export const LIGHTHOUSE_TTL_S = 86_400; // 24 h
  */
 export async function getScores(): Promise<LighthouseScores> {
   // 1. Try cache
-  const cached = await getRedis().get<LighthouseScores>(CACHE_KEY).catch(() => null);
+  const cached = await getRedis()
+    .get<LighthouseScores>(CACHE_KEY)
+    .catch(() => null);
   if (cached) return cached;
 
   // 2. Fetch from PageSpeed Insights
@@ -34,11 +36,11 @@ export async function getScores(): Promise<LighthouseScores> {
   if (!apiKey) return LIGHTHOUSE_FALLBACK;
 
   const psiUrl =
-    `https://www.googleapis.com/pagespeedonline/v5/runPagespeed` +
+    'https://www.googleapis.com/pagespeedonline/v5/runPagespeed' +
     `?url=${encodeURIComponent('https://erikunha.dev')}` +
-    `&strategy=desktop` +
+    '&strategy=desktop' +
     `&key=${apiKey}` +
-    `&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO`;
+    '&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO';
 
   let scores: LighthouseScores;
   try {
@@ -60,11 +62,11 @@ export async function getScores(): Promise<LighthouseScores> {
     };
     const cats = data.lighthouseResult?.categories ?? {};
     scores = {
-      performance:   Math.round((cats.performance?.score ?? 1) * 100),
+      performance: Math.round((cats.performance?.score ?? 1) * 100),
       accessibility: Math.round((cats.accessibility?.score ?? 1) * 100),
       bestPractices: Math.round((cats['best-practices']?.score ?? 0.98) * 100),
-      seo:           Math.round((cats.seo?.score ?? 1) * 100),
-      fetchedAt:     new Date().toISOString(),
+      seo: Math.round((cats.seo?.score ?? 1) * 100),
+      fetchedAt: new Date().toISOString(),
     };
   } catch (err) {
     console.error('[lighthouse] PSI fetch failed:', err);
@@ -72,9 +74,9 @@ export async function getScores(): Promise<LighthouseScores> {
   }
 
   // 3. Write to Redis — fire-and-forget; don't let cache failure block response.
-  getRedis().set(CACHE_KEY, scores, { ex: LIGHTHOUSE_TTL_S }).catch((err) =>
-    console.error('[lighthouse] Redis set failed:', err),
-  );
+  getRedis()
+    .set(CACHE_KEY, scores, { ex: LIGHTHOUSE_TTL_S })
+    .catch((err) => console.error('[lighthouse] Redis set failed:', err));
 
   return scores;
 }

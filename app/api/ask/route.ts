@@ -1,7 +1,7 @@
-import { checkBudget, getAskLimit, incrementBudget } from '@/lib/rate-limit';
-import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 import Anthropic from '@anthropic-ai/sdk';
 import type { NextRequest } from 'next/server';
+import { checkBudget, getAskLimit, incrementBudget } from '@/lib/rate-limit';
+import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
 export const dynamic = 'force-dynamic';
 
@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
   });
 
   const enc = new TextEncoder();
-  let inputTokens  = 0;
+  let inputTokens = 0;
   let outputTokens = 0;
 
   const readable = new ReadableStream<Uint8Array>({

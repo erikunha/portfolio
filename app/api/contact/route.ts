@@ -1,7 +1,7 @@
-import { validateContact } from '@/lib/contact-validation';
-import { getContactLimit, getRedis } from '@/lib/rate-limit';
 import type { NextRequest } from 'next/server';
 import { Resend } from 'resend';
+import { validateContact } from '@/lib/contact-validation';
+import { getContactLimit, getRedis } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,13 +39,18 @@ export async function POST(req: NextRequest) {
 
   // Durability first: write to KV before attempting delivery.
   // Hash the IP before persisting — raw IP is personal data under LGPD/GDPR.
-  const msgId   = crypto.randomUUID();
-  const ipBytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ip + (process.env.DEPLOY_SALT ?? 'portfolio')));
-  const ipHash  = Buffer.from(ipBytes).toString('hex').slice(0, 16);
+  const msgId = crypto.randomUUID();
+  const ipBytes = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(ip + (process.env.DEPLOY_SALT ?? 'portfolio')),
+  );
+  const ipHash = Buffer.from(ipBytes).toString('hex').slice(0, 16);
   const payload = { name, email, message, receivedAt: new Date().toISOString(), ipHash };
 
   try {
-    await getRedis().set(`contact:msg:${msgId}`, JSON.stringify(payload), { ex: 60 * 60 * 24 * 90 });
+    await getRedis().set(`contact:msg:${msgId}`, JSON.stringify(payload), {
+      ex: 60 * 60 * 24 * 90,
+    });
   } catch (kvErr) {
     console.error('[contact] KV write failed', kvErr);
     return Response.json({ error: 'storage unavailable — try again' }, { status: 502 });

@@ -1,13 +1,20 @@
-
 import { IconCredentials } from '../Icons';
 import { Module } from '../responsive/Module';
 
 export function CredentialsSection() {
   return (
-    <Module id="sec-credentials" header="CAT ~/.CREDENTIALS" icon={<IconCredentials />} defaultOpen={false}>
+    <Module
+      id="sec-credentials"
+      header="CAT ~/.CREDENTIALS"
+      icon={<IconCredentials />}
+      defaultOpen={false}
+    >
       <div className="visa">
         <pre>
-          <span className="cmd-line"><span className="pr">$</span>{'cat ~/.credentials'}</span>
+          <span className="cmd-line">
+            <span className="pr">$</span>
+            {'cat ~/.credentials'}
+          </span>
           {'\n\n'}
           <span className="cr-label">{'ANGULAR_DEV'}</span>
           {'     '}

@@ -1,4 +1,3 @@
-
 import { nowRows } from '@/content/now';
 import { IconNow } from '../Icons';
 import { Module } from '../responsive/Module';

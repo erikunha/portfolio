@@ -22,7 +22,9 @@ export function StatusBar() {
   return (
     <div className="statusbar" role="status" aria-label="device status">
       <div className="statusbar__left">
-        <span className="statusbar__time" suppressHydrationWarning>{time}</span>
+        <span className="statusbar__time" suppressHydrationWarning>
+          {time}
+        </span>
         <span className="statusbar__carrier">DEV_OS</span>
       </div>
       <div className="statusbar__right" aria-hidden>
@@ -35,7 +37,9 @@ export function StatusBar() {
         <span className="statusbar__cell">5G</span>
         <span className="statusbar__battery" aria-hidden>
           <span className="statusbar__battery-num">78%</span>
-          <span className="statusbar__battery-box"><i /></span>
+          <span className="statusbar__battery-box">
+            <i />
+          </span>
         </span>
       </div>
     </div>

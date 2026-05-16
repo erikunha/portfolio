@@ -1,9 +1,9 @@
 // __tests__/motion.test.ts
 // Unit tests for lib/motion.ts — single source of truth for body.dataset.motion.
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // jsdom environment is set in vitest.config.ts
-import { readMotion, applyMotion } from '@/lib/motion';
+import { applyMotion, readMotion } from '@/lib/motion';
 
 describe('readMotion', () => {
   beforeEach(() => {

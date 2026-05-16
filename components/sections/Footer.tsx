@@ -1,9 +1,9 @@
 'use client';
 
-import { MatrixRain } from '@/components/responsive/MatrixRain';
-import { useBreakpoint } from '@/lib/use-breakpoint';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { MatrixRain } from '@/components/responsive/MatrixRain';
+import { useBreakpoint } from '@/lib/use-breakpoint';
 
 function pad(n: number) {
   return String(n).padStart(2, '0');
@@ -20,13 +20,61 @@ function fmtClock(d: Date) {
 type DmesgLine = { off: number; msg: ReactNode; ok: boolean };
 
 const DMESG: DmesgLine[] = [
-  { off: 0.001, msg: 'init: switching runlevel to 0',                              ok: false },
-  { off: 0.142, msg: <>systemd: stopping <b>matrix_rain.daemon</b></>,             ok: true  },
-  { off: 0.213, msg: <>systemd: stopping <b>crt_flicker.service</b></>,            ok: true  },
-  { off: 0.288, msg: <>kernel: tcp: closing <b>3</b> connections</>,               ok: true  },
-  { off: 0.401, msg: <>systemd: reached target <b>Shutdown</b>.</>,                ok: false },
-  { off: 0.502, msg: <>systemd: reached target <b>Final Step</b>.</>,              ok: false },
-  { off: 0.601, msg: <>kernel: <b>Power down.</b></>,                              ok: false },
+  { off: 0.001, msg: 'init: switching runlevel to 0', ok: false },
+  {
+    off: 0.142,
+    msg: (
+      <>
+        systemd: stopping <b>matrix_rain.daemon</b>
+      </>
+    ),
+    ok: true,
+  },
+  {
+    off: 0.213,
+    msg: (
+      <>
+        systemd: stopping <b>crt_flicker.service</b>
+      </>
+    ),
+    ok: true,
+  },
+  {
+    off: 0.288,
+    msg: (
+      <>
+        kernel: tcp: closing <b>3</b> connections
+      </>
+    ),
+    ok: true,
+  },
+  {
+    off: 0.401,
+    msg: (
+      <>
+        systemd: reached target <b>Shutdown</b>.
+      </>
+    ),
+    ok: false,
+  },
+  {
+    off: 0.502,
+    msg: (
+      <>
+        systemd: reached target <b>Final Step</b>.
+      </>
+    ),
+    ok: false,
+  },
+  {
+    off: 0.601,
+    msg: (
+      <>
+        kernel: <b>Power down.</b>
+      </>
+    ),
+    ok: false,
+  },
 ];
 
 export function Footer() {
@@ -148,8 +196,7 @@ export function Footer() {
           </span>
         </div>
         <div className="sd-cmdline">
-          <span className="sd-prompt">{'erik@portfolio:~$'}</span>
-          {' '}
+          <span className="sd-prompt">{'erik@portfolio:~$'}</span>{' '}
           <span className="sd-cmd">{'shutdown -h now'}</span>
         </div>
         <div className="sd-rule" aria-hidden="true" />
@@ -165,12 +212,16 @@ export function Footer() {
             </div>
             <div className="sp-row">
               <span className="sp-k">uptime</span>
-              <span className="sp-v"><b>{uptime}</b></span>
+              <span className="sp-v">
+                <b>{uptime}</b>
+              </span>
             </div>
             <div className="sp-row">
               <span className="sp-k">{isMobile ? 'scroll' : 'scroll depth'}</span>
               <span className="sp-v">
-                <span className="sp-bar2"><i style={{ width: `${scrollDepth}%` }} /></span>
+                <span className="sp-bar2">
+                  <i style={{ width: `${scrollDepth}%` }} />
+                </span>
                 <b>{scrollDepth}%</b>
               </span>
             </div>
@@ -184,7 +235,9 @@ export function Footer() {
             </div>
             <div className="sp-row">
               <span className="sp-k">{isMobile ? 'commands' : 'commands run'}</span>
-              <span className="sp-v"><b>{commandsRun}</b></span>
+              <span className="sp-v">
+                <b>{commandsRun}</b>
+              </span>
             </div>
           </div>
 
@@ -201,13 +254,15 @@ export function Footer() {
                   github.com/erikunha
                 </a>
                 <span className="ns-est">EST</span>
-                <a href="https://linkedin.com/in/erikunha" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://linkedin.com/in/erikunha"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   linkedin/erikunha
                 </a>
                 <span className="ns-listen">LSN</span>
-                <a href="mailto:erikhenriquealvescunha@gmail.com">
-                  erikh…@gmail.com
-                </a>
+                <a href="mailto:erikhenriquealvescunha@gmail.com">erikh…@gmail.com</a>
                 <span className="ns-est">EST</span>
                 <a href="https://erikunha.dev" target="_blank" rel="noopener noreferrer">
                   erikunha.dev
@@ -225,7 +280,11 @@ export function Footer() {
                 {'\ntcp    '}
                 <span className="ns-est">{'ESTABLISHED'}</span>
                 {'  '}
-                <a href="https://linkedin.com/in/erikunha" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://linkedin.com/in/erikunha"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {'linkedin.com/in/erikunha'}
                 </a>
                 {'\ntcp    '}
@@ -260,7 +319,9 @@ export function Footer() {
           <span className={haltOn ? 'sd-halt on' : 'sd-halt'}>[SYSTEM HALTED]</span>
           <span className="sd-halt-hint">
             {isMobile ? 'tap ' : 'press '}
-            <button type="button" onClick={() => window.location.reload()}><kbd>R</kbd></button>
+            <button type="button" onClick={() => window.location.reload()}>
+              <kbd>R</kbd>
+            </button>
             {' to reboot'}
           </span>
         </div>

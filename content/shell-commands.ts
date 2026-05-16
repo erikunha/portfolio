@@ -1,5 +1,5 @@
 // content/shell-commands.ts
-import { type ShellResponse, ShellCommandsSchema } from './schemas';
+import { ShellCommandsSchema, type ShellResponse } from './schemas';
 
 const SHELL_RESPONSES: ShellResponse[] = ShellCommandsSchema.parse([
   {

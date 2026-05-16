@@ -1,5 +1,5 @@
-import { validateContact } from '@/lib/contact-validation';
 import { describe, expect, it } from 'vitest';
+import { validateContact } from '@/lib/contact-validation';
 
 describe('contact payload validation', () => {
   it('rejects empty name', () => {
@@ -9,7 +9,11 @@ describe('contact payload validation', () => {
   });
 
   it('rejects invalid email', () => {
-    const r = validateContact({ name: 'Erik', email: 'notanemail', message: 'hello there recruiter' });
+    const r = validateContact({
+      name: 'Erik',
+      email: 'notanemail',
+      message: 'hello there recruiter',
+    });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toBe('invalid email address');
   });
@@ -27,7 +31,11 @@ describe('contact payload validation', () => {
   });
 
   it('accepts a valid payload', () => {
-    const r = validateContact({ name: 'Erik', email: 'a@b.com', message: 'Hello, I would like to connect.' });
+    const r = validateContact({
+      name: 'Erik',
+      email: 'a@b.com',
+      message: 'Hello, I would like to connect.',
+    });
     expect(r.ok).toBe(true);
   });
 });

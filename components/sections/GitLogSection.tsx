@@ -1,7 +1,7 @@
+import type { ReactNode } from 'react';
 import { employers } from '@/content/employers';
 import { gitLog } from '@/content/git-log';
 import type { GitCommit } from '@/content/schemas';
-import type { ReactNode } from 'react';
 import { IconGitLog } from '../Icons';
 import { Module } from '../responsive/Module';
 
@@ -15,20 +15,37 @@ function renderCommit(c: GitCommit, key: number): ReactNode {
   if (c.isRoot) {
     return (
       <span key={key}>
-        {star}{' '}<span className="g-label">commit</span>{' '}
-        <span className="g-hash">{c.hash}</span>{' '}
-        <span className="g-deco">{c.deco}</span>{'\n'}
-        {'  '}<span className="g-label">Author:    </span>{' '}
-        <span className="g-author">{'Erik Henrique Alves Cunha <erik@erikunha.dev>'}</span>{'\n'}
-        {'  '}<span className="g-label">AuthorDate:</span>{' '}
-        <span className="g-date">{c.date}</span>{'\n'}
-        {'  '}<span className="g-label">Branch:    </span>{' '}
-        <span className="g-branch">{c.branch}</span>{'\n'}
+        {star} <span className="g-label">commit</span> <span className="g-hash">{c.hash}</span>{' '}
+        <span className="g-deco">{c.deco}</span>
         {'\n'}
-        {'      '}<span className="g-msg">{'feat('}{c.type}{'): '}<span className="g-emp">{c.company}</span>{' · '}{c.role}</span>{'\n'}
+        {'  '}
+        <span className="g-label">Author: </span>{' '}
+        <span className="g-author">{'Erik Henrique Alves Cunha <erik@erikunha.dev>'}</span>
+        {'\n'}
+        {'  '}
+        <span className="g-label">AuthorDate:</span> <span className="g-date">{c.date}</span>
+        {'\n'}
+        {'  '}
+        <span className="g-label">Branch: </span> <span className="g-branch">{c.branch}</span>
+        {'\n'}
+        {'\n'}
+        {'      '}
+        <span className="g-msg">
+          {'feat('}
+          {c.type}
+          {'): '}
+          <span className="g-emp">{c.company}</span>
+          {' · '}
+          {c.role}
+        </span>
+        {'\n'}
         {'\n'}
         {c.body.map((line, i) => (
-          <span key={i}>{'      '}<span className="g-body">{line}</span>{'\n'}</span>
+          <span key={i}>
+            {'      '}
+            <span className="g-body">{line}</span>
+            {'\n'}
+          </span>
         ))}
       </span>
     );
@@ -36,22 +53,41 @@ function renderCommit(c: GitCommit, key: number): ReactNode {
 
   return (
     <span key={key}>
-      {star}{' '}<span className="g-label">commit</span>{' '}
-      <span className="g-hash">{c.hash}</span>{' '}
-      <span className="g-deco">{c.deco}</span>{'\n'}
-      {pipe}{' '}<span className="g-label">Author:    </span>{' '}
-      <span className="g-author">{'Erik Henrique Alves Cunha <erik@erikunha.dev>'}</span>{'\n'}
-      {pipe}{' '}<span className="g-label">AuthorDate:</span>{' '}
-      <span className="g-date">{c.date}</span>{'\n'}
-      {pipe}{' '}<span className="g-label">Branch:    </span>{' '}
-      <span className="g-branch">{c.branch}</span>{'\n'}
-      {pipe}{'\n'}
-      {pipe}{'     '}<span className="g-msg">{'feat('}{c.type}{'): '}<span className="g-emp">{c.company}</span>{' · '}{c.role}</span>{'\n'}
-      {pipe}{'\n'}
+      {star} <span className="g-label">commit</span> <span className="g-hash">{c.hash}</span>{' '}
+      <span className="g-deco">{c.deco}</span>
+      {'\n'}
+      {pipe} <span className="g-label">Author: </span>{' '}
+      <span className="g-author">{'Erik Henrique Alves Cunha <erik@erikunha.dev>'}</span>
+      {'\n'}
+      {pipe} <span className="g-label">AuthorDate:</span> <span className="g-date">{c.date}</span>
+      {'\n'}
+      {pipe} <span className="g-label">Branch: </span> <span className="g-branch">{c.branch}</span>
+      {'\n'}
+      {pipe}
+      {'\n'}
+      {pipe}
+      {'     '}
+      <span className="g-msg">
+        {'feat('}
+        {c.type}
+        {'): '}
+        <span className="g-emp">{c.company}</span>
+        {' · '}
+        {c.role}
+      </span>
+      {'\n'}
+      {pipe}
+      {'\n'}
       {c.body.map((line, i) => (
-        <span key={i}>{pipe}{'     '}<span className="g-body">{line}</span>{'\n'}</span>
+        <span key={i}>
+          {pipe}
+          {'     '}
+          <span className="g-body">{line}</span>
+          {'\n'}
+        </span>
       ))}
-      {pipe}{'\n'}
+      {pipe}
+      {'\n'}
     </span>
   );
 }
