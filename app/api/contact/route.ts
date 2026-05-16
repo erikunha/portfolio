@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { Resend } from 'resend';
 import { validateContact } from '@/lib/contact-validation';
-import { getContactLimit, getRedis } from '@/lib/rate-limit';
+import { getClientIp, getContactLimit, getRedis } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,10 +14,7 @@ function getResend(): Resend {
 }
 
 export async function POST(req: NextRequest) {
-  const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    req.headers.get('x-real-ip') ??
-    'anon';
+  const ip = getClientIp(req);
 
   const { success } = await getContactLimit().limit(ip);
   if (!success) {

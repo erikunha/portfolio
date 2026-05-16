@@ -145,16 +145,21 @@ export function InteractiveShell() {
 
   const streamQuestion = useCallback(
     async (question: string) => {
-      // Insert loading line immediately — before the fetch — so dots appear on Enter.
-      const streamId = nextId();
-      setHistory((h) => [...h, { id: streamId, kind: 'loading', text: '' }]);
+      const loadingId = nextId();
+      setHistory((h) => [...h, { id: loadingId, kind: 'loading', text: '' }]);
+      let streamSpan: HTMLSpanElement | null = null;
 
-      const replaceWithError = (msg: string) => {
-        setHistory((h) =>
-          h.map((l) =>
-            l.id === streamId ? { ...l, kind: 'error' as const, text: `error: ${msg}` } : l,
-          ),
-        );
+      const finalize = (finalText: string, errMsg?: string) => {
+        if (streamSpan) {
+          streamSpan.remove();
+          streamSpan = null;
+        }
+        const lines: Line[] = [];
+        if (finalText) lines.push({ id: nextId(), kind: 'output', text: finalText });
+        if (errMsg) lines.push({ id: nextId(), kind: 'error', text: `error: ${errMsg}` });
+        if (!finalText && !errMsg)
+          lines.push({ id: nextId(), kind: 'output', text: '(empty response)' });
+        setHistory((h) => [...h.filter((l) => l.id !== loadingId), ...lines]);
       };
 
       try {
@@ -165,13 +170,14 @@ export function InteractiveShell() {
         });
         if (!res.ok) {
           const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          replaceWithError(data?.error ?? `HTTP ${res.status}`);
+          finalize('', data?.error ?? `HTTP ${res.status}`);
           return;
         }
         if (!res.body) {
-          replaceWithError('response body unavailable');
+          finalize('', 'response body unavailable');
           return;
         }
+
         const reader = res.body.getReader();
         const dec = new TextDecoder();
         let accumulated = '';
@@ -184,45 +190,29 @@ export function InteractiveShell() {
           const displayText = (
             sentinelIdx !== -1 ? accumulated.slice(0, sentinelIdx) : accumulated
           ).trim();
-          setHistory((h) => {
-            const idx = h.findIndex((l) => l.id === streamId);
-            if (idx === -1) return h;
-            const next = [...h];
-            const item = next[idx];
-            if (!item) return h;
-            next[idx] = { ...item, kind: displayText ? 'output' : 'loading', text: displayText };
-            return next;
-          });
+          if (!displayText) continue;
+
+          if (!streamSpan) {
+            setHistory((h) => h.filter((l) => l.id !== loadingId));
+            streamSpan = document.createElement('span');
+            streamSpan.className = 'shell__line shell__line--output';
+            feedRef.current?.appendChild(streamSpan);
+          }
+          streamSpan.textContent = displayText;
+          if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
         }
 
         const sentinelIdx = accumulated.indexOf(STREAM_ERR_SENTINEL);
-        if (sentinelIdx !== -1) {
-          const cleanText = accumulated.slice(0, sentinelIdx).trim();
-          const errMsg =
-            accumulated.slice(sentinelIdx + STREAM_ERR_SENTINEL.length).trim() || 'upstream error';
-          setHistory((h) => {
-            const idx = h.findIndex((l) => l.id === streamId);
-            if (idx === -1) return h;
-            const next = [...h];
-            const item = next[idx];
-            if (!item) return h;
-            next[idx] = { ...item, text: cleanText || '(truncated)' };
-            return next;
-          });
-          setHistory((h) => [...h, { id: nextId(), kind: 'error', text: `error: ${errMsg}` }]);
-        } else if (!accumulated.trim()) {
-          setHistory((h) => {
-            const idx = h.findIndex((l) => l.id === streamId);
-            if (idx === -1) return h;
-            const next = [...h];
-            const item = next[idx];
-            if (!item) return h;
-            next[idx] = { ...item, text: '(empty response)' };
-            return next;
-          });
-        }
+        const finalText = (
+          sentinelIdx !== -1 ? accumulated.slice(0, sentinelIdx) : accumulated
+        ).trim();
+        const errMsg =
+          sentinelIdx !== -1
+            ? accumulated.slice(sentinelIdx + STREAM_ERR_SENTINEL.length).trim() || 'upstream error'
+            : undefined;
+        finalize(finalText, errMsg);
       } catch (err) {
-        replaceWithError((err as Error).message);
+        finalize('', (err as Error).message);
       }
     },
     [nextId],
