@@ -22,21 +22,19 @@
 .manpage .m-dim  { color: var(--muted); opacity: 0.7; }
 
 .manpage--desktop { display: block; }
-.manpage--mobile  { display: none; }
-
-@media (max-width: 768px) {
-  .manpage--desktop { display: none; }
-  .manpage--mobile  { display: block; }
-}
-
 .manpage--mobile {
+  display: none;
   font-family: var(--font-mono-stack);
   font-size: 12px;
   line-height: 1.7;
   color: var(--fg);
-  display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+@media (max-width: 768px) {
+  .manpage--desktop { display: none; }
+  .manpage--mobile  { display: flex; }
 }
 .manpage--mobile .mp-head {
   color: var(--signal);
