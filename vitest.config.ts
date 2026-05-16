@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: false,
+    exclude: ['**/node_modules/**', '**/tests/a11y/**'],
   },
   resolve: {
     alias: {
