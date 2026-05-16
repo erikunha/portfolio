@@ -40,14 +40,14 @@
 - [ ] **Step 1: Copy architect-reviewer from marketplace**
 
 ```bash
-cp "/Users/erikhenriquealvescunha/.claude/plugins/marketplaces/voltagent-subagents/categories/04-quality-security/architect-reviewer.md" \
-   "/Users/erikhenriquealvescunha/.claude/agents/architect-reviewer.md"
+cp "~/.claude/plugins/marketplaces/voltagent-subagents/categories/04-quality-security/architect-reviewer.md" \
+   "~/.claude/agents/architect-reviewer.md"
 ```
 
 - [ ] **Step 2: Append portfolio context to architect-reviewer**
 
 ```bash
-cat >> "/Users/erikhenriquealvescunha/.claude/agents/architect-reviewer.md" << 'EOF'
+cat >> "~/.claude/agents/architect-reviewer.md" << 'EOF'
 
 ## Portfolio project context
 - Stack: Next.js 15 App Router, React 19, TypeScript strict, Tailwind v4, Vercel edge
@@ -62,14 +62,14 @@ EOF
 - [ ] **Step 3: Copy nextjs-developer from marketplace**
 
 ```bash
-cp "/Users/erikhenriquealvescunha/.claude/plugins/marketplaces/voltagent-subagents/categories/02-language-specialists/nextjs-developer.md" \
-   "/Users/erikhenriquealvescunha/.claude/agents/nextjs-developer.md"
+cp "~/.claude/plugins/marketplaces/voltagent-subagents/categories/02-language-specialists/nextjs-developer.md" \
+   "~/.claude/agents/nextjs-developer.md"
 ```
 
 - [ ] **Step 4: Append portfolio context to nextjs-developer**
 
 ```bash
-cat >> "/Users/erikhenriquealvescunha/.claude/agents/nextjs-developer.md" << 'EOF'
+cat >> "~/.claude/agents/nextjs-developer.md" << 'EOF'
 
 ## Portfolio project context
 - Next.js 15 with Turbopack dev (`next dev --turbopack`)
@@ -87,14 +87,14 @@ EOF
 - [ ] **Step 5: Copy typescript-pro from marketplace**
 
 ```bash
-cp "/Users/erikhenriquealvescunha/.claude/plugins/marketplaces/voltagent-subagents/categories/02-language-specialists/typescript-pro.md" \
-   "/Users/erikhenriquealvescunha/.claude/agents/typescript-pro.md"
+cp "~/.claude/plugins/marketplaces/voltagent-subagents/categories/02-language-specialists/typescript-pro.md" \
+   "~/.claude/agents/typescript-pro.md"
 ```
 
 - [ ] **Step 6: Append portfolio context to typescript-pro**
 
 ```bash
-cat >> "/Users/erikhenriquealvescunha/.claude/agents/typescript-pro.md" << 'EOF'
+cat >> "~/.claude/agents/typescript-pro.md" << 'EOF'
 
 ## Portfolio project context
 - TypeScript strict mode enforced; `pnpm tsc --noEmit` is a CI gate
@@ -111,9 +111,9 @@ EOF
 
 ```bash
 grep -l "Portfolio project context" \
-  "/Users/erikhenriquealvescunha/.claude/agents/architect-reviewer.md" \
-  "/Users/erikhenriquealvescunha/.claude/agents/nextjs-developer.md" \
-  "/Users/erikhenriquealvescunha/.claude/agents/typescript-pro.md"
+  "~/.claude/agents/architect-reviewer.md" \
+  "~/.claude/agents/nextjs-developer.md" \
+  "~/.claude/agents/typescript-pro.md"
 ```
 
 Expected: all three paths printed.
@@ -137,14 +137,14 @@ Note: agent files live in `~/.claude/agents/` — they are not tracked by this r
 - [ ] **Step 1: Copy test-automator from marketplace**
 
 ```bash
-cp "/Users/erikhenriquealvescunha/.claude/plugins/marketplaces/voltagent-subagents/categories/04-quality-security/test-automator.md" \
-   "/Users/erikhenriquealvescunha/.claude/agents/test-automator.md"
+cp "~/.claude/plugins/marketplaces/voltagent-subagents/categories/04-quality-security/test-automator.md" \
+   "~/.claude/agents/test-automator.md"
 ```
 
 - [ ] **Step 2: Append portfolio context to test-automator**
 
 ```bash
-cat >> "/Users/erikhenriquealvescunha/.claude/agents/test-automator.md" << 'EOF'
+cat >> "~/.claude/agents/test-automator.md" << 'EOF'
 
 ## Portfolio project context
 - Unit tests: Vitest in `__tests__/` — run with `pnpm vitest run`
@@ -162,14 +162,14 @@ EOF
 - [ ] **Step 3: Copy ui-ux-tester from marketplace**
 
 ```bash
-cp "/Users/erikhenriquealvescunha/.claude/plugins/marketplaces/voltagent-subagents/categories/04-quality-security/ui-ux-tester.md" \
-   "/Users/erikhenriquealvescunha/.claude/agents/ui-ux-tester.md"
+cp "~/.claude/plugins/marketplaces/voltagent-subagents/categories/04-quality-security/ui-ux-tester.md" \
+   "~/.claude/agents/ui-ux-tester.md"
 ```
 
 - [ ] **Step 4: Append portfolio context to ui-ux-tester**
 
 ```bash
-cat >> "/Users/erikhenriquealvescunha/.claude/agents/ui-ux-tester.md" << 'EOF'
+cat >> "~/.claude/agents/ui-ux-tester.md" << 'EOF'
 
 ## Portfolio project context
 - Target URL: http://localhost:3000 (run `pnpm dev` or `pnpm start` first before invoking this agent)
@@ -190,8 +190,8 @@ EOF
 
 ```bash
 grep -l "Portfolio project context" \
-  "/Users/erikhenriquealvescunha/.claude/agents/test-automator.md" \
-  "/Users/erikhenriquealvescunha/.claude/agents/ui-ux-tester.md"
+  "~/.claude/agents/test-automator.md" \
+  "~/.claude/agents/ui-ux-tester.md"
 ```
 
 Expected: both paths printed.
@@ -207,14 +207,14 @@ Expected: both paths printed.
 - [ ] **Step 1: Copy ai-engineer from marketplace**
 
 ```bash
-cp "/Users/erikhenriquealvescunha/.claude/plugins/marketplaces/voltagent-subagents/categories/05-data-ai/ai-engineer.md" \
-   "/Users/erikhenriquealvescunha/.claude/agents/ai-engineer.md"
+cp "~/.claude/plugins/marketplaces/voltagent-subagents/categories/05-data-ai/ai-engineer.md" \
+   "~/.claude/agents/ai-engineer.md"
 ```
 
 - [ ] **Step 2: Append portfolio context to ai-engineer**
 
 ```bash
-cat >> "/Users/erikhenriquealvescunha/.claude/agents/ai-engineer.md" << 'EOF'
+cat >> "~/.claude/agents/ai-engineer.md" << 'EOF'
 
 ## Portfolio project context
 - AI endpoint: `app/api/ask/route.ts`
@@ -233,14 +233,14 @@ EOF
 - [ ] **Step 3: Copy seo-specialist from marketplace**
 
 ```bash
-cp "/Users/erikhenriquealvescunha/.claude/plugins/marketplaces/voltagent-subagents/categories/07-specialized-domains/seo-specialist.md" \
-   "/Users/erikhenriquealvescunha/.claude/agents/seo-specialist.md"
+cp "~/.claude/plugins/marketplaces/voltagent-subagents/categories/07-specialized-domains/seo-specialist.md" \
+   "~/.claude/agents/seo-specialist.md"
 ```
 
 - [ ] **Step 4: Append portfolio context to seo-specialist**
 
 ```bash
-cat >> "/Users/erikhenriquealvescunha/.claude/agents/seo-specialist.md" << 'EOF'
+cat >> "~/.claude/agents/seo-specialist.md" << 'EOF'
 
 ## Portfolio project context
 - Lighthouse SEO gate: must = 100 — this is a non-negotiable CI gate; never regress it
@@ -259,8 +259,8 @@ EOF
 
 ```bash
 grep -l "Portfolio project context" \
-  "/Users/erikhenriquealvescunha/.claude/agents/ai-engineer.md" \
-  "/Users/erikhenriquealvescunha/.claude/agents/seo-specialist.md"
+  "~/.claude/agents/ai-engineer.md" \
+  "~/.claude/agents/seo-specialist.md"
 ```
 
 Expected: both paths printed.
@@ -276,14 +276,14 @@ Expected: both paths printed.
 - [ ] **Step 1: Copy dx-optimizer from marketplace**
 
 ```bash
-cp "/Users/erikhenriquealvescunha/.claude/plugins/marketplaces/voltagent-subagents/categories/06-developer-experience/dx-optimizer.md" \
-   "/Users/erikhenriquealvescunha/.claude/agents/dx-optimizer.md"
+cp "~/.claude/plugins/marketplaces/voltagent-subagents/categories/06-developer-experience/dx-optimizer.md" \
+   "~/.claude/agents/dx-optimizer.md"
 ```
 
 - [ ] **Step 2: Append portfolio context to dx-optimizer**
 
 ```bash
-cat >> "/Users/erikhenriquealvescunha/.claude/agents/dx-optimizer.md" << 'EOF'
+cat >> "~/.claude/agents/dx-optimizer.md" << 'EOF'
 
 ## Portfolio project context
 - Package manager: pnpm 10 only (never npm or yarn)
@@ -302,14 +302,14 @@ EOF
 - [ ] **Step 3: Copy dependency-manager from marketplace**
 
 ```bash
-cp "/Users/erikhenriquealvescunha/.claude/plugins/marketplaces/voltagent-subagents/categories/06-developer-experience/dependency-manager.md" \
-   "/Users/erikhenriquealvescunha/.claude/agents/dependency-manager.md"
+cp "~/.claude/plugins/marketplaces/voltagent-subagents/categories/06-developer-experience/dependency-manager.md" \
+   "~/.claude/agents/dependency-manager.md"
 ```
 
 - [ ] **Step 4: Append portfolio context to dependency-manager**
 
 ```bash
-cat >> "/Users/erikhenriquealvescunha/.claude/agents/dependency-manager.md" << 'EOF'
+cat >> "~/.claude/agents/dependency-manager.md" << 'EOF'
 
 ## Portfolio project context
 - Package manager: pnpm 10; lockfile is `pnpm-lock.yaml` (source of truth for CI)
@@ -327,8 +327,8 @@ EOF
 
 ```bash
 grep -l "Portfolio project context" \
-  "/Users/erikhenriquealvescunha/.claude/agents/dx-optimizer.md" \
-  "/Users/erikhenriquealvescunha/.claude/agents/dependency-manager.md"
+  "~/.claude/agents/dx-optimizer.md" \
+  "~/.claude/agents/dependency-manager.md"
 ```
 
 Expected: both paths printed.
@@ -336,7 +336,7 @@ Expected: both paths printed.
 - [ ] **Step 6: Verify full agent roster — all 14 agents present**
 
 ```bash
-ls /Users/erikhenriquealvescunha/.claude/agents/ | sort
+ls ~/.claude/agents/ | sort
 ```
 
 Expected output includes all of:
@@ -616,7 +616,7 @@ git commit -m "feat(dx): harden pre-commit to full fast-gate chain, add ci:local
 
 ```bash
 for agent in architect-reviewer nextjs-developer typescript-pro test-automator ui-ux-tester ai-engineer seo-specialist dx-optimizer dependency-manager; do
-  count=$(grep -c "Portfolio project context" "/Users/erikhenriquealvescunha/.claude/agents/${agent}.md" 2>/dev/null || echo 0)
+  count=$(grep -c "Portfolio project context" "~/.claude/agents/${agent}.md" 2>/dev/null || echo 0)
   echo "${agent}: ${count}"
 done
 ```

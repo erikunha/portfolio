@@ -53,7 +53,7 @@
 - [ ] **Step 1: Verify no agent has a RISK label yet**
 
 ```bash
-grep -l "^- RISK:" /Users/erikhenriquealvescunha/.claude/agents/*.md 2>/dev/null || echo "none — good"
+grep -l "^- RISK:" ~/.claude/agents/*.md 2>/dev/null || echo "none — good"
 ```
 
 Expected: `none — good`
@@ -62,54 +62,54 @@ Expected: `none — good`
 
 ```bash
 echo '- RISK: critical — token budget cap (400K/month), rate-limit params, prompt caching; silent disabling costs money' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/ai-engineer.md"
+  >> "~/.claude/agents/ai-engineer.md"
 
 echo '- RISK: critical — attack surface review, env var handling; audit findings cascade to production' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/security-auditor.md"
+  >> "~/.claude/agents/security-auditor.md"
 
 echo '- RISK: critical — 320KB CI bundle gate + 43KB app-code budget; new deps can silently blow either' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/dependency-manager.md"
+  >> "~/.claude/agents/dependency-manager.md"
 
 echo '- RISK: critical — Lighthouse A11y = 100 is a hard CI gate; any regression blocks deploy' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/accessibility-tester.md"
+  >> "~/.claude/agents/accessibility-tester.md"
 
 echo '- RISK: critical — plan approval cascades to all implementation; wrong approval amplifies every subsequent task' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/architect-reviewer.md"
+  >> "~/.claude/agents/architect-reviewer.md"
 ```
 
 - [ ] **Step 3: Append RISK labels to the eight Standard agents**
 
 ```bash
 echo '- RISK: standard — RSC/client island decisions, INP-sensitive changes' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/nextjs-developer.md"
+  >> "~/.claude/agents/nextjs-developer.md"
 
 echo '- RISK: standard — type correctness, Zod schema changes' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/typescript-pro.md"
+  >> "~/.claude/agents/typescript-pro.md"
 
 echo '- RISK: standard — test coverage quality, assertion correctness' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/test-automator.md"
+  >> "~/.claude/agents/test-automator.md"
 
 echo '- RISK: standard — perf budgets enforced by Lighthouse CI gate' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/performance-engineer.md"
+  >> "~/.claude/agents/performance-engineer.md"
 
 echo '- RISK: standard — Lighthouse SEO = 100 enforced by CI gate' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/seo-specialist.md"
+  >> "~/.claude/agents/seo-specialist.md"
 
 echo '- RISK: standard — visual QA, viewport checks; CI does not catch visual regressions' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/ui-ux-tester.md"
+  >> "~/.claude/agents/ui-ux-tester.md"
 
 echo '- RISK: standard — general PR review' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/code-reviewer.md"
+  >> "~/.claude/agents/code-reviewer.md"
 
 echo '- RISK: standard — hook and CI config changes' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/dx-optimizer.md"
+  >> "~/.claude/agents/dx-optimizer.md"
 ```
 
 - [ ] **Step 4: Append RISK label to the one Mechanical agent**
 
 ```bash
 echo '- RISK: mechanical — behavior-preserving by definition; pnpm ci:local is the sufficient gate' \
-  >> "/Users/erikhenriquealvescunha/.claude/agents/refactoring-specialist.md"
+  >> "~/.claude/agents/refactoring-specialist.md"
 ```
 
 - [ ] **Step 5: Verify all 14 agents have a RISK label**
@@ -118,7 +118,7 @@ echo '- RISK: mechanical — behavior-preserving by definition; pnpm ci:local is
 for agent in ai-engineer security-auditor dependency-manager accessibility-tester architect-reviewer \
              nextjs-developer typescript-pro test-automator performance-engineer seo-specialist \
              ui-ux-tester code-reviewer dx-optimizer refactoring-specialist; do
-  count=$(grep -c "^- RISK:" "/Users/erikhenriquealvescunha/.claude/agents/${agent}.md" 2>/dev/null || echo 0)
+  count=$(grep -c "^- RISK:" "~/.claude/agents/${agent}.md" 2>/dev/null || echo 0)
   echo "${agent}: ${count}"
 done
 ```
@@ -129,11 +129,11 @@ Expected: all 14 print `1`.
 
 ```bash
 grep "^- RISK:" \
-  "/Users/erikhenriquealvescunha/.claude/agents/ai-engineer.md" \
-  "/Users/erikhenriquealvescunha/.claude/agents/security-auditor.md" \
-  "/Users/erikhenriquealvescunha/.claude/agents/dependency-manager.md" \
-  "/Users/erikhenriquealvescunha/.claude/agents/accessibility-tester.md" \
-  "/Users/erikhenriquealvescunha/.claude/agents/architect-reviewer.md"
+  "~/.claude/agents/ai-engineer.md" \
+  "~/.claude/agents/security-auditor.md" \
+  "~/.claude/agents/dependency-manager.md" \
+  "~/.claude/agents/accessibility-tester.md" \
+  "~/.claude/agents/architect-reviewer.md"
 ```
 
 Expected: all five lines contain `critical`.
@@ -148,7 +148,7 @@ Expected: all five lines contain `critical`.
 - [ ] **Step 1: Verify the section does not already exist**
 
 ```bash
-grep -c "Spec-gate protocol" "/Users/erikhenriquealvescunha/.claude/agents/architect-reviewer.md" || echo "0"
+grep -c "Spec-gate protocol" "~/.claude/agents/architect-reviewer.md" || echo "0"
 ```
 
 Expected: `0`
@@ -156,7 +156,7 @@ Expected: `0`
 - [ ] **Step 2: Append the spec-gate protocol section**
 
 ```bash
-cat >> "/Users/erikhenriquealvescunha/.claude/agents/architect-reviewer.md" << 'SPEC_GATE_EOF'
+cat >> "~/.claude/agents/architect-reviewer.md" << 'SPEC_GATE_EOF'
 
 ## Spec-gate protocol
 
@@ -209,9 +209,9 @@ SPEC_GATE_EOF
 - [ ] **Step 3: Verify the section was appended correctly**
 
 ```bash
-grep -c "Spec-gate protocol" "/Users/erikhenriquealvescunha/.claude/agents/architect-reviewer.md"
-grep -c "GATE_RESULT" "/Users/erikhenriquealvescunha/.claude/agents/architect-reviewer.md"
-grep -c "slidingWindow(8" "/Users/erikhenriquealvescunha/.claude/agents/architect-reviewer.md"
+grep -c "Spec-gate protocol" "~/.claude/agents/architect-reviewer.md"
+grep -c "GATE_RESULT" "~/.claude/agents/architect-reviewer.md"
+grep -c "slidingWindow(8" "~/.claude/agents/architect-reviewer.md"
 ```
 
 Expected: `1`, `2`, `1` (GATE_RESULT appears in gate output description and in the output template).
@@ -227,7 +227,7 @@ Expected: `1`, `2`, `1` (GATE_RESULT appears in gate output description and in t
 
 ```bash
 grep -n "writing-plans.*architect-reviewer\|architect-reviewer.*writing-plans" \
-  /Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio/CLAUDE.md
+  <repo-root>/CLAUDE.md
 ```
 
 Expected: one line containing both `writing-plans` and `architect-reviewer`, at approximately line 140.
@@ -251,7 +251,7 @@ Use the Read + Edit tools (not sed) to make this change safely.
 - [ ] **Step 3: Verify the replacement**
 
 ```bash
-grep -n "GATE_RESULT" /Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio/CLAUDE.md
+grep -n "GATE_RESULT" <repo-root>/CLAUDE.md
 ```
 
 Expected: one line near line 140 containing `GATE_RESULT: PASS`.
@@ -259,7 +259,7 @@ Expected: one line near line 140 containing `GATE_RESULT: PASS`.
 - [ ] **Step 4: Run the full gate chain**
 
 ```bash
-cd /Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio && pnpm ci:local
+cd <repo-root> && pnpm ci:local
 ```
 
 Expected: exits 0. Biome, tsc, validate-content, and vitest all pass.
@@ -267,7 +267,7 @@ Expected: exits 0. Biome, tsc, validate-content, and vitest all pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio
+cd <repo-root>
 git add CLAUDE.md
 git commit -m "feat(claude-md): replace inline spec-gate list with structured protocol reference"
 ```
@@ -282,7 +282,7 @@ git commit -m "feat(claude-md): replace inline spec-gate list with structured pr
 for agent in ai-engineer security-auditor dependency-manager accessibility-tester architect-reviewer \
              nextjs-developer typescript-pro test-automator performance-engineer seo-specialist \
              ui-ux-tester code-reviewer dx-optimizer refactoring-specialist; do
-  count=$(grep -c "^- RISK:" "/Users/erikhenriquealvescunha/.claude/agents/${agent}.md" 2>/dev/null || echo 0)
+  count=$(grep -c "^- RISK:" "~/.claude/agents/${agent}.md" 2>/dev/null || echo 0)
   echo "${agent}: ${count}"
 done
 ```
@@ -292,9 +292,9 @@ Expected: all 14 print `1`.
 - [ ] **architect-reviewer has both RISK label and spec-gate protocol**
 
 ```bash
-grep "^- RISK:" "/Users/erikhenriquealvescunha/.claude/agents/architect-reviewer.md"
-grep "Spec-gate protocol" "/Users/erikhenriquealvescunha/.claude/agents/architect-reviewer.md"
-grep "GATE_RESULT" "/Users/erikhenriquealvescunha/.claude/agents/architect-reviewer.md"
+grep "^- RISK:" "~/.claude/agents/architect-reviewer.md"
+grep "Spec-gate protocol" "~/.claude/agents/architect-reviewer.md"
+grep "GATE_RESULT" "~/.claude/agents/architect-reviewer.md"
 ```
 
 Expected: three lines of output, all non-empty.
@@ -302,7 +302,7 @@ Expected: three lines of output, all non-empty.
 - [ ] **CLAUDE.md references structured protocol**
 
 ```bash
-grep "GATE_RESULT: PASS" /Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio/CLAUDE.md
+grep "GATE_RESULT: PASS" <repo-root>/CLAUDE.md
 ```
 
 Expected: one matching line.
@@ -310,7 +310,7 @@ Expected: one matching line.
 - [ ] **ci:local passes**
 
 ```bash
-cd /Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio && pnpm ci:local 2>&1 | tail -4
+cd <repo-root> && pnpm ci:local 2>&1 | tail -4
 ```
 
 Expected: `Tests 54 passed (54)`, exit 0.

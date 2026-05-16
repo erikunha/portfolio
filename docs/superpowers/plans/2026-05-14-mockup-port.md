@@ -79,7 +79,7 @@ After each task, the engineer **must**:
 1. Run `pnpm dev` (if not already running). Wait for "Ready in" line.
 2. Open two browser windows side-by-side:
    - Left: `http://localhost:3000` (or use Playwright MCP if available)
-   - Right: `file:///Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio/prototype/Portfolio.html` for desktop verification, or `Portfolio.mobile.html` for mobile.
+   - Right: `file://<repo-root>/prototype/Portfolio.html` for desktop verification, or `Portfolio.mobile.html` for mobile.
 3. Resize browser to **1440×900** for desktop check, then to **390×844** for mobile check.
 4. Visually diff the area touched in this task.
 5. If diff is acceptable, commit. If not, fix before committing.
@@ -103,10 +103,10 @@ pnpm exec playwright screenshot --viewport-size=390,844 --full-page http://local
 
 ```bash
 mkdir -p prototype
-cp "/Users/erikhenriquealvescunha/Downloads/erik-portifolio - mobile/Portfolio.html" prototype/Portfolio.html
-cp "/Users/erikhenriquealvescunha/Downloads/erik-portifolio - mobile/Portfolio.mobile.html" prototype/Portfolio.mobile.html
-cp "/Users/erikhenriquealvescunha/Downloads/erik-portifolio - mobile/image-slot.js" prototype/image-slot.js
-cp -R "/Users/erikhenriquealvescunha/Downloads/erik-portifolio - mobile/assets" prototype/assets
+cp "~/Downloads/erik-portifolio - mobile/Portfolio.html" prototype/Portfolio.html
+cp "~/Downloads/erik-portifolio - mobile/Portfolio.mobile.html" prototype/Portfolio.mobile.html
+cp "~/Downloads/erik-portifolio - mobile/image-slot.js" prototype/image-slot.js
+cp -R "~/Downloads/erik-portifolio - mobile/assets" prototype/assets
 ```
 
 Verify: `ls prototype/` shows the four entries.
@@ -3181,4 +3181,4 @@ Run this after writing the plan, before handoff:
 - **Hydration warnings**: if React logs "did not match" during dev, check that `app/page.tsx` reads headers correctly and the initial breakpoint flows through.
 - **`/api/ask` rate limit**: the shell will return 429 after several rapid asks. Treat as expected; the error renders inline.
 - **Email deliverability**: contact-form success is "POST succeeded" — not "email definitely landed". Manual smoke test in step 7.4.2 is the only verification.
-- **Mockup absolute path**: Tasks 0 and the verification protocol reference `/Users/erikhenriquealvescunha/Documents/Claude/Projects/erik-portifolio/prototype/`. If a different engineer runs this, substitute their absolute repo path. The relative path `prototype/Portfolio.html` from the repo root works in any case.
+- **Mockup absolute path**: Tasks 0 and the verification protocol reference `<repo-root>/prototype/`. If a different engineer runs this, substitute their absolute repo path. The relative path `prototype/Portfolio.html` from the repo root works in any case.
