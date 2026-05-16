@@ -258,7 +258,7 @@ export function InteractiveShell() {
               <button
                 type="button"
                 className="shell__cmd-hint"
-                onClick={() => { if (!busy) runWithEffect(cmd); }}
+                onClick={() => { if (!busy) setInput(cmd); }}
                 disabled={busy}
               >
                 {label}
