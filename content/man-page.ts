@@ -6,11 +6,11 @@ export const manPage: ManPage = ManPageSchema.parse({
   version: 'v8.0',
   date: '2026-05-15',
   description:
-    'Senior frontend engineer, 8+ years. Shipped production systems across\n       payments (PCI-DSS), healthcare, and e-commerce. Angular, React/Next.js,\n       Stencil micro-frontends across 15+ regulated markets, €1B+ revenue.\n       12-agent AI platform in production. Currently at Betsson (Malta, EU).',
+    'Senior frontend engineer, 8+ years. Shipped production systems across\n       payments (PCI-DSS), healthcare, and e-commerce. Angular, React/Next.js,\n       Stencil micro-frontends across 15+ regulated markets, €1B+ revenue.\n       Spec-driven 12-agent AI platform in production. Betsson (Malta, EU).',
   options: [
     { flag: '--seniority', desc: 'Senior → Staff/Principal' },
     { flag: '--track', desc: 'IC or technical lead' },
-    { flag: '--domain', desc: 'Payments, healthcare, AI tooling' },
+    { flag: '--domain', desc: 'Frontend, payments, healthcare, AI tooling' },
     { flag: '--region', desc: 'Worldwide; remote-first' },
     { flag: '--relocation', desc: 'Open to relocating' },
     { flag: '--regulated', desc: 'PCI-DSS, healthcare, banking' },

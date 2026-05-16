@@ -51,6 +51,12 @@ export const hottestTakes: HottestTake[] = z.array(HottestTakeSchema).parse([
     thesis: 'If your PRs require a meeting to merge, your architecture is unwritten.',
     body: `Architecture lives in the code review template, the ADR folder, and the linter config — not in a Confluence page nobody opens. The 35-page architecture system at Betsson cut onboarding -40% because it replaced "ask Erik" with "ask the doc". The doc doesn't go on PTO.`,
   },
+  {
+    num: '09.',
+    category: 'AI',
+    thesis: 'Spec-first is the only disciplined way to ship with LLMs and agents.',
+    body: 'Vibe-coding generates output nobody can review. Spec-driven development inverts it: write the contract, expected behavior, and failure modes first — then the agent implements against a legible target. The spec is the review artifact, not the generated code. That is how I run the 12-agent Copilot system at Betsson: every agent gates on a written spec before touching a file. Without the spec, you have a black box you cannot audit, cannot roll back, and cannot hand off.',
+  },
 ]);
 
 export const hottestTakesConfig = {
