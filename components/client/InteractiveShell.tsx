@@ -41,7 +41,7 @@ function LoadingDots() {
     const id = setInterval(() => setFrame((f) => (f + 1) % DOT_FRAMES.length), 380);
     return () => clearInterval(id);
   }, []);
-  return <span className="shell__line shell__line--loading">{DOT_FRAMES[frame]}</span>;
+  return <span className="shell__line shell__line--loading" aria-hidden="true">{DOT_FRAMES[frame]}</span>;
 }
 
 export function InteractiveShell() {
@@ -189,7 +189,7 @@ export function InteractiveShell() {
         )}
       </div>
 
-      <div className="shell__feed" ref={feedRef} role="log" aria-live="polite">
+      <div className="shell__feed" ref={feedRef} role="log" aria-label="shell output" aria-live="polite" aria-busy={busy}>
         {history.map((l) =>
           l.kind === 'loading' ? (
             <LoadingDots key={l.id} />
