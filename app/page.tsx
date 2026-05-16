@@ -50,11 +50,11 @@ export default async function Home({
           <ReadmeSection />
           <ManPageSection />
           <NowSection />
+          <ShellSection />
           <ProjectsSection />
           <GitLogSection />
           <NpmStackSection />
           <SysHealthSection />
-          <ShellSection />
           <LivePerfSection />
           <PerfReceiptsSection />
           <GuitarSection />
