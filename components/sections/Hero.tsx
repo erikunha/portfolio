@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { readMotion } from '@/lib/motion';
 import { useBreakpoint } from '@/lib/use-breakpoint';
 
 // ── Typed line-spec data ──────────────────────────────────────────────────────
@@ -248,7 +249,7 @@ function DesktopHero() {
     const el = bootRef.current;
     if (!el) return;
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!readMotion()) {
       for (const s of DESKTOP_LINE_SPECS) el.appendChild(buildLine(s));
       el.appendChild(buildStaticCmdLine());
       el.appendChild(buildBlankLine());
@@ -286,7 +287,7 @@ function DesktopHero() {
         // 2. Pause rain + CRT effects + dialog
         window.dispatchEvent(new CustomEvent('sysfail:start'));
         document.documentElement.classList.add('sysfail-on');
-        bootCtrl.current?.pauseDialog();
+        ctrl.pauseDialog();
 
         // 3. Fade plate in
         if (sysfail) sysfail.classList.add('on');
@@ -298,14 +299,23 @@ function DesktopHero() {
           // Wait for fade-out transition (300ms) before resuming rain
           setTimeout(() => {
             window.dispatchEvent(new CustomEvent('sysfail:end'));
-            bootCtrl.current?.resumeDialog();
+            ctrl.resumeDialog();
           }, 300);
         }, 5000);
       },
     });
 
+    const onVisibility = () => {
+      if (document.hidden) ctrl.pauseDialog();
+      else ctrl.resumeDialog();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
     bootCtrl.current = ctrl;
-    return ctrl.cancel;
+    return () => {
+      ctrl.cancel();
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, []);
 
   return (
@@ -366,7 +376,7 @@ function MobileHero() {
     const el = bootRef.current;
     if (!el) return;
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!readMotion()) {
       for (const s of MOBILE_LINE_SPECS) el.appendChild(buildLine(s));
       el.appendChild(buildStaticCmdLine());
       el.appendChild(buildBlankLine());

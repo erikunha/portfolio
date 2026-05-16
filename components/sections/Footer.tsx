@@ -32,12 +32,35 @@ export function Footer() {
   const footerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const id = setInterval(() => {
+    let id: ReturnType<typeof setInterval> | null = null;
+
+    function tick() {
       const s = Math.floor((Date.now() - uptimeRef.current) / 1000);
       setUptime(fmtUptime(s));
       setTime(fmtClock(new Date()));
-    }, 1000);
-    return () => clearInterval(id);
+    }
+
+    function startClock() {
+      id = setInterval(tick, 1000);
+    }
+
+    function onVisibility() {
+      if (document.hidden) {
+        if (id !== null) {
+          clearInterval(id);
+          id = null;
+        }
+      } else {
+        startClock();
+      }
+    }
+
+    startClock();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      if (id !== null) clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, []);
 
   useEffect(() => {
