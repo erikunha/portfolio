@@ -65,7 +65,7 @@ textarea:focus-visible {
   background: var(--signal);
   color: #000;
   font-family: var(--font-mono-stack);
-  font-size: 16px;
+  font-size: var(--fs-md);
   font-weight: 700;
   text-decoration: none;
   transition: top 0.1s;
@@ -99,7 +99,7 @@ h3 {
 }
 
 h1 {
-  font-size: 48px;
+  font-size: var(--fs-2xl);
   font-family: var(--font-display-stack);
   font-weight: 900;
 }
@@ -108,9 +108,11 @@ h1 {
   :root {
     --vrhythm: 18px;
     --pad: 14px;
+    --fs-3xl: 56px;
+    --fs-2xl: 32px;
   }
   h1 {
-    font-size: 32px;
+    font-size: var(--fs-2xl);
   }
 }
 
