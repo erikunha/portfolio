@@ -10,7 +10,7 @@ export function MobileTitleBar() {
         <span className="window-chrome__dot window-chrome__dot--green" />
       </div>
       <div className="window-chrome__title" aria-hidden="true">
-        PORTFOLIO.SH
+        ERIK_CUNHA.SH
       </div>
       <div aria-hidden="true" />
     </div>
