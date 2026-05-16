@@ -142,7 +142,6 @@ footer.shutdown {
 }
 .sd-netstat .ns-hdr {
   color: var(--muted);
-  letter-spacing: 0.06em;
 }
 .sd-netstat .ns-est {
   color: var(--signal);
