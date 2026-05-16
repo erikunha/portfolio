@@ -90,7 +90,11 @@
   font: inherit;
   font-size: 13px;
   caret-color: var(--signal);
+  caret-shape: block;
 }
+
+.shell__input:focus,
+.shell__input:focus-visible { outline: none; }
 
 .shell__placeholder-anim {
   position: absolute;
@@ -104,6 +108,25 @@
   font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+}
+
+.shell__cursor {
+  display: inline-block;
+  width: 7px;
+  height: 1.05em;
+  background: var(--signal);
+  vertical-align: -2px;
+  margin-left: 1px;
+  opacity: 1;
+  animation: shell-blink 1.05s steps(2, start) infinite;
+}
+
+@keyframes shell-blink { to { background: transparent; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .shell__cursor { animation: none; }
 }
 
 .shell__chips {
