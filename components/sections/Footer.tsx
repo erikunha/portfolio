@@ -193,33 +193,26 @@ export function Footer() {
               <span className="sp-bar">{'▌'}</span>NETSTAT -AN
             </header>
             {isMobile ? (
-              <pre>
-                <span className="ns-hdr">{'State        Endpoint'}</span>
-                {'\n'}
-                <span className="ns-est">{'EST'}</span>
-                {'  '}
+              <div className="ns-grid">
+                <span className="ns-hdr-cell">State</span>
+                <span className="ns-hdr-cell">Endpoint</span>
+                <span className="ns-est">EST</span>
                 <a href="https://github.com/erikunha" target="_blank" rel="noopener noreferrer">
-                  {'github.com/erikunha'}
+                  github.com/erikunha
                 </a>
-                {'\n'}
-                <span className="ns-est">{'EST'}</span>
-                {'  '}
+                <span className="ns-est">EST</span>
                 <a href="https://linkedin.com/in/erikunha" target="_blank" rel="noopener noreferrer">
-                  {'linkedin/erikunha'}
+                  linkedin/erikunha
                 </a>
-                {'\n'}
-                <span className="ns-listen">{'LSN'}</span>
-                {'  '}
+                <span className="ns-listen">LSN</span>
                 <a href="mailto:erikhenriquealvescunha@gmail.com">
-                  {'erikh…@gmail.com'}
+                  erikh…@gmail.com
                 </a>
-                {'\n'}
-                <span className="ns-est">{'EST'}</span>
-                {'  '}
+                <span className="ns-est">EST</span>
                 <a href="https://erikunha.dev" target="_blank" rel="noopener noreferrer">
-                  {'erikunha.dev'}
+                  erikunha.dev
                 </a>
-              </pre>
+              </div>
             ) : (
               <pre>
                 <span className="ns-hdr">{'Proto  State        Endpoint'}</span>
