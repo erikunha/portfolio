@@ -1,7 +1,8 @@
 export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
-    'scope-enum': [2, 'always', ['ui', 'content', 'api', 'infra', 'deps', 'a11y', 'perf']],
+    // Scope is a feature area (shell, hero, css, layout, resume, …) — open set, no enum restriction.
+    'scope-enum': [0],
     'scope-empty': [1, 'never'],
     'subject-case': [2, 'never', ['sentence-case', 'start-case', 'pascal-case', 'upper-case']],
   },
