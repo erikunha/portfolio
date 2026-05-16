@@ -56,7 +56,7 @@ export function InteractiveShell() {
   const feedRef = useRef<HTMLDivElement>(null);
   const typingRef = useRef(false);
   const mountedRef = useRef(true);
-  useEffect(() => () => { mountedRef.current = false; }, []);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
   const initializedRef = useRef(false);
 
   useEffect(() => {
