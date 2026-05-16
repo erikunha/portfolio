@@ -48,9 +48,9 @@ export default async function Home({
             <Hero />
           </ErrorBoundary>
           <ReadmeSection />
+          <ShellSection />
           <ManPageSection />
           <NowSection />
-          <ShellSection />
           <ProjectsSection />
           <GitLogSection />
           <NpmStackSection />
