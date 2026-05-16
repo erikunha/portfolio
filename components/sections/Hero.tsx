@@ -309,11 +309,11 @@ function DesktopHero() {
           </a>
           <a
             className="hero__cta hero__cta--secondary"
-            href="https://github.com/erikunha"
+            href="https://www.linkedin.com/in/erikunha/"
             target="_blank"
             rel="noreferrer"
           >
-            GITHUB ↗
+            LINKEDIN ↗
           </a>
         </div>
       </aside>
@@ -376,11 +376,11 @@ function MobileHero() {
           </a>
           <a
             className="hero__cta hero__cta--secondary"
-            href="https://github.com/erikunha"
+            href="https://www.linkedin.com/in/erikunha/"
             target="_blank"
             rel="noreferrer"
           >
-            GITHUB ↗
+            LINKEDIN ↗
           </a>
         </div>
       </div>
