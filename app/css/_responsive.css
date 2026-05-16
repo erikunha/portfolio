@@ -128,12 +128,3 @@ body[data-motion="reduce"] .hero__status-dot {
   color: var(--signal);
   font-weight: 700;
 }
-
-.window-chrome__switch {
-  color: var(--signal);
-  border: 1px solid var(--signal-dim);
-  padding: 4px 8px;
-  border-radius: 2px;
-  font-size: var(--fs-2xs);
-  letter-spacing: 0.14em;
-}

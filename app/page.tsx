@@ -28,21 +28,12 @@ import { UnknownsSection } from '@/components/sections/UnknownsSection';
 import { VisaSection } from '@/components/sections/VisaSection';
 import { detectMobileFromUA } from '@/lib/breakpoint';
 import { BreakpointProvider } from '@/lib/use-breakpoint';
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string>>;
-}) {
-  const sp = await searchParams;
+export default async function Home() {
   const ua = (await headers()).get('user-agent');
-  // ?force=desktop lets mobile users opt into the desktop layout.
-  // initialIsMobile seeds SSR; the BreakpointProvider respects forceDesktop
-  // on the client to prevent matchMedia from switching back.
-  const forceDesktop = sp.force === 'desktop';
-  const initialIsMobile = forceDesktop ? false : detectMobileFromUA(ua);
+  const initialIsMobile = detectMobileFromUA(ua);
 
   return (
-    <BreakpointProvider initialIsMobile={initialIsMobile} forceDesktop={forceDesktop}>
+    <BreakpointProvider initialIsMobile={initialIsMobile}>
       <AppShell>
         <main className="page" id="main-content" tabIndex={-1}>
           <ErrorBoundary>

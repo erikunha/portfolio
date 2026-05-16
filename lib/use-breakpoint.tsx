@@ -12,18 +12,15 @@ import { MOBILE_BREAKPOINT_PX } from './breakpoint';
 
 type BreakpointCtx = {
   isMobile: boolean;
-  forceDesktop: boolean;
 };
 
 const Ctx = createContext<BreakpointCtx | null>(null);
 
 export function BreakpointProvider({
   initialIsMobile,
-  forceDesktop = false,
   children,
 }: {
   initialIsMobile: boolean;
-  forceDesktop?: boolean;
   children: ReactNode;
 }) {
   const mqRef = useRef<MediaQueryList | null>(null);
@@ -47,9 +44,7 @@ export function BreakpointProvider({
     () => initialIsMobile,
   );
 
-  const isMobile = forceDesktop ? false : isMobileFromMedia;
-
-  return <Ctx.Provider value={{ isMobile, forceDesktop }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ isMobile: isMobileFromMedia }}>{children}</Ctx.Provider>;
 }
 
 export function useBreakpoint(): BreakpointCtx {
