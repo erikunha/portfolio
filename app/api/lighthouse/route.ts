@@ -1,5 +1,5 @@
-import { getScores, LIGHTHOUSE_FALLBACK, LIGHTHOUSE_TTL_S } from '@/lib/lighthouse-scores';
 import type { NextRequest } from 'next/server';
+import { getScores, LIGHTHOUSE_FALLBACK, LIGHTHOUSE_TTL_S } from '@/lib/lighthouse-scores';
 
 export const dynamic = 'force-dynamic';
 

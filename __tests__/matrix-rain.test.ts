@@ -10,7 +10,7 @@ const src = readFileSync(
 describe('MatrixRain canvas perf', () => {
   it('ctx.font is not set inside the for-loop column draw block', () => {
     const frameBody = src.slice(src.indexOf('function frame('));
-    const forLoopBody = frameBody.match(/for \(let i = 0[\s\S]+?\n    \}/)?.[0] ?? '';
+    const forLoopBody = frameBody.match(/for \(let i = 0[\s\S]+?\n {4}\}/)?.[0] ?? '';
     expect(forLoopBody).not.toContain('ctx!.font =');
   });
 

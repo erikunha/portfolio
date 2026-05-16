@@ -3,8 +3,11 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const base = readFileSync(path.resolve(__dirname, '../app/css/_base.css'), 'utf-8');
-const crt  = readFileSync(path.resolve(__dirname, '../app/css/_crt.css'), 'utf-8');
-const shell = readFileSync(path.resolve(__dirname, '../components/sections/ShellSection.tsx'), 'utf-8');
+const crt = readFileSync(path.resolve(__dirname, '../app/css/_crt.css'), 'utf-8');
+const shell = readFileSync(
+  path.resolve(__dirname, '../components/sections/ShellSection.tsx'),
+  'utf-8',
+);
 
 describe('paint cost CSS', () => {
   it('body rule has no text-shadow', () => {

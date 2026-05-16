@@ -1,4 +1,3 @@
-
 import { manPage } from '@/content/man-page';
 import { IconManPage } from '../Icons';
 import { Module } from '../responsive/Module';
@@ -49,7 +48,9 @@ export function ManPageSection() {
           <span className="m-dim">{'--track'}</span>
           {'        Individual contributor or technical lead\n       '}
           <span className="m-dim">{'--domain'}</span>
-          {'       Strongest in regulated frontends (payments,\n                      healthcare, AI tooling); open to adjacent\n       '}
+          {
+            '       Strongest in regulated frontends (payments,\n                      healthcare, AI tooling); open to adjacent\n       '
+          }
           <span className="m-dim">{'--region'}</span>
           {'       Worldwide; remote-first\n       '}
           <span className="m-dim">{'--relocation'}</span>
@@ -66,21 +67,13 @@ export function ManPageSection() {
           {'.\n\n'}
           <span className="m-sec">{'EXAMPLES'}</span>
           {'\n       '}
-          <span className="m-mute">{'$'}</span>
-          {' '}
-          <span className="m-erik">{manPage.name}</span>
+          <span className="m-mute">{'$'}</span> <span className="m-erik">{manPage.name}</span>
           {' --seniority STAFF --domain PAYMENTS --ft\n       '}
-          <span className="m-mute">{'$'}</span>
-          {' '}
-          <span className="m-erik">{manPage.name}</span>
+          <span className="m-mute">{'$'}</span> <span className="m-erik">{manPage.name}</span>
           {' --track LEAD --domain AI-TOOLING --ft\n       '}
-          <span className="m-mute">{'$'}</span>
-          {' '}
-          <span className="m-erik">{manPage.name}</span>
+          <span className="m-mute">{'$'}</span> <span className="m-erik">{manPage.name}</span>
           {' --seniority PRINCIPAL --region WORLDWIDE --relocation\n       '}
-          <span className="m-mute">{'$'}</span>
-          {' '}
-          <span className="m-erik">{manPage.name}</span>
+          <span className="m-mute">{'$'}</span> <span className="m-erik">{manPage.name}</span>
           {' --contract --stack "TypeScript, micro-frontends, AI"\n\n'}
           <span className="m-sec">{'KNOWN BUGS'}</span>
           {`\n       - Occasionally rewrites a working component for clarity.
@@ -112,20 +105,33 @@ export function ManPageSection() {
         <span className="mp-sec">OPTIONS</span>
         <div className="mp-opts">
           {manPage.options.flatMap((opt) => [
-            <span key={`f-${opt.flag}`} className="mp-flag">{opt.flag}</span>,
-            <span key={`d-${opt.flag}`} className="mp-desc">{opt.desc}</span>,
+            <span key={`f-${opt.flag}`} className="mp-flag">
+              {opt.flag}
+            </span>,
+            <span key={`d-${opt.flag}`} className="mp-desc">
+              {opt.desc}
+            </span>,
           ])}
         </div>
 
         <span className="mp-sec">EXAMPLES</span>
         <div className="mp-examples">
-          <span className="mp-ex-line"><span className="mp-mute">$</span>{' '}<span className="mp-name">{manPage.name}</span>{' --seniority STAFF --domain PAYMENTS --ft'}</span>
-          <span className="mp-ex-line"><span className="mp-mute">$</span>{' '}<span className="mp-name">{manPage.name}</span>{' --track LEAD --domain AI-TOOLING --ft'}</span>
-          <span className="mp-ex-line"><span className="mp-mute">$</span>{' '}<span className="mp-name">{manPage.name}</span>{' --seniority PRINCIPAL --region WORLDWIDE --relocation'}</span>
+          <span className="mp-ex-line">
+            <span className="mp-mute">$</span> <span className="mp-name">{manPage.name}</span>
+            {' --seniority STAFF --domain PAYMENTS --ft'}
+          </span>
+          <span className="mp-ex-line">
+            <span className="mp-mute">$</span> <span className="mp-name">{manPage.name}</span>
+            {' --track LEAD --domain AI-TOOLING --ft'}
+          </span>
+          <span className="mp-ex-line">
+            <span className="mp-mute">$</span> <span className="mp-name">{manPage.name}</span>
+            {' --seniority PRINCIPAL --region WORLDWIDE --relocation'}
+          </span>
         </div>
 
         <span className="mp-sec">KNOWN BUGS</span>
-        <span className="mp-bugs">{manPage.knownBugs.map(b => `- ${b}`).join('\n')}</span>
+        <span className="mp-bugs">{manPage.knownBugs.map((b) => `- ${b}`).join('\n')}</span>
 
         <span className="mp-sec">AUTHOR</span>
         <span className="mp-body">{'Written by Erik Henrique Alves Cunha.'}</span>

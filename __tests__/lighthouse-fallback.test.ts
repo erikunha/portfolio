@@ -2,10 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const SOURCE = readFileSync(
-  path.resolve(__dirname, '../lib/lighthouse-scores.ts'),
-  'utf-8',
-);
+const SOURCE = readFileSync(path.resolve(__dirname, '../lib/lighthouse-scores.ts'), 'utf-8');
 
 describe('LIGHTHOUSE_FALLBACK', () => {
   it('does not use 100 as a fallback performance score', () => {

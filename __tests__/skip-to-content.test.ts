@@ -6,10 +6,7 @@ const APPSHELL = readFileSync(
   path.resolve(__dirname, '../components/AppShell.client.tsx'),
   'utf-8',
 );
-const PAGE = readFileSync(
-  path.resolve(__dirname, '../app/page.tsx'),
-  'utf-8',
-);
+const PAGE = readFileSync(path.resolve(__dirname, '../app/page.tsx'), 'utf-8');
 
 describe('skip-to-content link', () => {
   it('AppShell renders a skip-to-content element', () => {

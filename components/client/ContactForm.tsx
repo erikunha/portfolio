@@ -45,8 +45,7 @@ export function ContactForm() {
     <form onSubmit={submit} className="contact">
       <label className="contact__field">
         <span className="contact__prompt">
-          <span className="contact__prompt-user">user@terminal:~$</span>
-          {' '}
+          <span className="contact__prompt-user">user@terminal:~$</span>{' '}
           <span className="contact__prompt-cmd">enter_name</span>
         </span>
         <input
@@ -62,8 +61,7 @@ export function ContactForm() {
       </label>
       <label className="contact__field">
         <span className="contact__prompt">
-          <span className="contact__prompt-user">user@terminal:~$</span>
-          {' '}
+          <span className="contact__prompt-user">user@terminal:~$</span>{' '}
           <span className="contact__prompt-cmd">enter_email</span>
         </span>
         <input
@@ -78,8 +76,7 @@ export function ContactForm() {
       </label>
       <label className="contact__field">
         <span className="contact__prompt">
-          <span className="contact__prompt-user">user@terminal:~$</span>
-          {' '}
+          <span className="contact__prompt-user">user@terminal:~$</span>{' '}
           <span className="contact__prompt-cmd">enter_message</span>
         </span>
         <textarea
@@ -99,7 +96,11 @@ export function ContactForm() {
         </button>
         <p className="contact__cursor">waiting for manual override... _</p>
       </div>
-      {status === 'error' && <p role="alert" className="contact__error">error: {errorMsg}</p>}
+      {status === 'error' && (
+        <p role="alert" className="contact__error">
+          error: {errorMsg}
+        </p>
+      )}
     </form>
   );
 }

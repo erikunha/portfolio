@@ -1,9 +1,9 @@
 'use client';
 
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import SHELL_RESPONSES from '@/content/shell-commands';
 import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 import { useBreakpoint } from '@/lib/use-breakpoint';
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 type Line = { id: number; kind: 'prompt' | 'output' | 'error' | 'info' | 'loading'; text: string };
 
@@ -19,15 +19,15 @@ const MOBILE_INITIAL: Omit<Line, 'id'>[] = [
 ];
 
 const COMMANDS: { label: string; cmd: string }[] = [
-  { label: 'help',          cmd: 'help' },
-  { label: 'whoami',        cmd: 'whoami' },
-  { label: 'ls',            cmd: 'ls' },
+  { label: 'help', cmd: 'help' },
+  { label: 'whoami', cmd: 'whoami' },
+  { label: 'ls', cmd: 'ls' },
   { label: 'cat skills.md', cmd: 'cat skills.md' },
-  { label: 'cat ~/.now',    cmd: 'cat ~/.now' },
-  { label: 'contact',       cmd: 'contact' },
-  { label: 'face',          cmd: 'face' },
-  { label: 'hire',          cmd: 'hire' },
-  { label: 'clear',         cmd: 'clear' },
+  { label: 'cat ~/.now', cmd: 'cat ~/.now' },
+  { label: 'contact', cmd: 'contact' },
+  { label: 'face', cmd: 'face' },
+  { label: 'hire', cmd: 'hire' },
+  { label: 'clear', cmd: 'clear' },
 ];
 
 function withIds(lines: Omit<Line, 'id'>[], nextId: () => number): Line[] {
@@ -64,19 +64,27 @@ function AnimatedPlaceholder() {
       const suggestion = PLACEHOLDER_SUGGESTIONS[idx % PLACEHOLDER_SUGGESTIONS.length]!;
       if (phase === 'type') {
         node.textContent = suggestion.slice(0, ++charIdx);
-        if (charIdx >= suggestion.length) { phase = 'hold'; setTimeout(tick, 1800); }
-        else setTimeout(tick, 60);
+        if (charIdx >= suggestion.length) {
+          phase = 'hold';
+          setTimeout(tick, 1800);
+        } else setTimeout(tick, 60);
       } else if (phase === 'hold') {
         phase = 'back';
         setTimeout(tick, 40);
       } else {
         node.textContent = suggestion.slice(0, --charIdx);
-        if (charIdx <= 0) { idx++; charIdx = 0; phase = 'type'; setTimeout(tick, 300); }
-        else setTimeout(tick, 30);
+        if (charIdx <= 0) {
+          idx++;
+          charIdx = 0;
+          phase = 'type';
+          setTimeout(tick, 300);
+        } else setTimeout(tick, 30);
       }
     }
     tick();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
   return (
     <span className="shell__placeholder-anim" aria-hidden="true">
@@ -94,7 +102,11 @@ function LoadingDots() {
     const id = setInterval(() => setFrame((f) => (f + 1) % DOT_FRAMES.length), 380);
     return () => clearInterval(id);
   }, []);
-  return <span className="shell__line shell__line--loading" aria-hidden="true">{DOT_FRAMES[frame]}</span>;
+  return (
+    <span className="shell__line shell__line--loading" aria-hidden="true">
+      {DOT_FRAMES[frame]}
+    </span>
+  );
 }
 
 export function InteractiveShell() {
@@ -109,7 +121,12 @@ export function InteractiveShell() {
   const inputRef = useRef<HTMLInputElement>(null);
   const typingRef = useRef(false);
   const mountedRef = useRef(true);
-  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
   const initializedRef = useRef(false);
 
   useEffect(() => {
@@ -124,131 +141,153 @@ export function InteractiveShell() {
     }
   }, [history]);
 
-  const streamQuestion = useCallback(async (question: string) => {
-    // Insert loading line immediately — before the fetch — so dots appear on Enter.
-    const streamId = nextId();
-    setHistory((h) => [...h, { id: streamId, kind: 'loading', text: '' }]);
+  const streamQuestion = useCallback(
+    async (question: string) => {
+      // Insert loading line immediately — before the fetch — so dots appear on Enter.
+      const streamId = nextId();
+      setHistory((h) => [...h, { id: streamId, kind: 'loading', text: '' }]);
 
-    const replaceWithError = (msg: string) => {
-      setHistory((h) => h.map((l) => l.id === streamId ? { ...l, kind: 'error' as const, text: `error: ${msg}` } : l));
-    };
+      const replaceWithError = (msg: string) => {
+        setHistory((h) =>
+          h.map((l) =>
+            l.id === streamId ? { ...l, kind: 'error' as const, text: `error: ${msg}` } : l,
+          ),
+        );
+      };
 
-    try {
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question }),
-      });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        replaceWithError(data?.error ?? `HTTP ${res.status}`);
-        return;
-      }
-      if (!res.body) {
-        replaceWithError('response body unavailable');
-        return;
-      }
-      const reader = res.body.getReader();
-      const dec = new TextDecoder();
-      let accumulated = '';
+      try {
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question }),
+        });
+        if (!res.ok) {
+          const data = (await res.json().catch(() => null)) as { error?: string } | null;
+          replaceWithError(data?.error ?? `HTTP ${res.status}`);
+          return;
+        }
+        if (!res.body) {
+          replaceWithError('response body unavailable');
+          return;
+        }
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let accumulated = '';
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        accumulated += dec.decode(value, { stream: true });
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          accumulated += dec.decode(value, { stream: true });
+          const sentinelIdx = accumulated.indexOf(STREAM_ERR_SENTINEL);
+          const displayText = (
+            sentinelIdx !== -1 ? accumulated.slice(0, sentinelIdx) : accumulated
+          ).trim();
+          setHistory((h) => {
+            const idx = h.findIndex((l) => l.id === streamId);
+            if (idx === -1) return h;
+            const next = [...h];
+            const item = next[idx];
+            if (!item) return h;
+            next[idx] = { ...item, kind: displayText ? 'output' : 'loading', text: displayText };
+            return next;
+          });
+        }
+
         const sentinelIdx = accumulated.indexOf(STREAM_ERR_SENTINEL);
-        const displayText = (sentinelIdx !== -1 ? accumulated.slice(0, sentinelIdx) : accumulated).trim();
-        setHistory((h) => {
-          const idx = h.findIndex((l) => l.id === streamId);
-          if (idx === -1) return h;
-          const next = [...h];
-          const item = next[idx];
-          if (!item) return h;
-          next[idx] = { ...item, kind: displayText ? 'output' : 'loading', text: displayText };
-          return next;
-        });
+        if (sentinelIdx !== -1) {
+          const cleanText = accumulated.slice(0, sentinelIdx).trim();
+          const errMsg =
+            accumulated.slice(sentinelIdx + STREAM_ERR_SENTINEL.length).trim() || 'upstream error';
+          setHistory((h) => {
+            const idx = h.findIndex((l) => l.id === streamId);
+            if (idx === -1) return h;
+            const next = [...h];
+            const item = next[idx];
+            if (!item) return h;
+            next[idx] = { ...item, text: cleanText || '(truncated)' };
+            return next;
+          });
+          setHistory((h) => [...h, { id: nextId(), kind: 'error', text: `error: ${errMsg}` }]);
+        } else if (!accumulated.trim()) {
+          setHistory((h) => {
+            const idx = h.findIndex((l) => l.id === streamId);
+            if (idx === -1) return h;
+            const next = [...h];
+            const item = next[idx];
+            if (!item) return h;
+            next[idx] = { ...item, text: '(empty response)' };
+            return next;
+          });
+        }
+      } catch (err) {
+        replaceWithError((err as Error).message);
       }
+    },
+    [nextId],
+  );
 
-      const sentinelIdx = accumulated.indexOf(STREAM_ERR_SENTINEL);
-      if (sentinelIdx !== -1) {
-        const cleanText = accumulated.slice(0, sentinelIdx).trim();
-        const errMsg = accumulated.slice(sentinelIdx + STREAM_ERR_SENTINEL.length).trim() || 'upstream error';
-        setHistory((h) => {
-          const idx = h.findIndex((l) => l.id === streamId);
-          if (idx === -1) return h;
-          const next = [...h];
-          const item = next[idx];
-          if (!item) return h;
-          next[idx] = { ...item, text: cleanText || '(truncated)' };
-          return next;
-        });
-        setHistory((h) => [...h, { id: nextId(), kind: 'error', text: `error: ${errMsg}` }]);
-      } else if (!accumulated.trim()) {
-        setHistory((h) => {
-          const idx = h.findIndex((l) => l.id === streamId);
-          if (idx === -1) return h;
-          const next = [...h];
-          const item = next[idx];
-          if (!item) return h;
-          next[idx] = { ...item, text: '(empty response)' };
-          return next;
-        });
-      }
-    } catch (err) {
-      replaceWithError((err as Error).message);
-    }
-  }, [nextId]);
+  const runCommand = useCallback(
+    async (cmd: string) => {
+      window.dispatchEvent(new CustomEvent('shell-cmd-run'));
+      setHistory((h) => [...h, { id: nextId(), kind: 'prompt', text: `erik@portfolio:~$ ${cmd}` }]);
+      setInput('');
+      setBusy(true);
 
-  const runCommand = useCallback(async (cmd: string) => {
-    window.dispatchEvent(new CustomEvent('shell-cmd-run'));
-    setHistory((h) => [...h, { id: nextId(), kind: 'prompt', text: `erik@portfolio:~$ ${cmd}` }]);
-    setInput('');
-    setBusy(true);
-
-    if (cmd === 'clear') {
-      setHistory(withIds(isMobile ? MOBILE_INITIAL : INITIAL_LINES, nextId));
-      setBusy(false);
-      return;
-    }
-
-    // Strip optional "ask " prefix — treat as explicit AI query.
-    const explicitQuestion = cmd.startsWith('ask ') ? cmd.slice(4).trim() : null;
-
-    if (!explicitQuestion) {
-      // Check local commands first.
-      const local = SHELL_RESPONSES.find((r) => r.commands.includes(cmd));
-      if (local) {
-        setHistory((h) => [...h, { id: nextId(), kind: local.kind, text: local.text }]);
+      if (cmd === 'clear') {
+        setHistory(withIds(isMobile ? MOBILE_INITIAL : INITIAL_LINES, nextId));
         setBusy(false);
         return;
       }
-    }
 
-    // Known command not matched — route to Claude.
-    await streamQuestion(explicitQuestion ?? cmd);
-    setBusy(false);
-  }, [isMobile, nextId, streamQuestion]);
+      // Strip optional "ask " prefix — treat as explicit AI query.
+      const explicitQuestion = cmd.startsWith('ask ') ? cmd.slice(4).trim() : null;
 
-  const runWithEffect = useCallback((cmd: string) => {
-    if (typingRef.current || busy) return;
-    typingRef.current = true;
-    let i = 0;
-    function tick() {
-      if (!mountedRef.current) { typingRef.current = false; return; }
-      if (i <= cmd.length) {
-        setInput(cmd.slice(0, i));
-        i++;
-        setTimeout(tick, 30);
-      } else {
-        setTimeout(() => {
-          if (!mountedRef.current) { typingRef.current = false; return; }
-          runCommand(cmd);
-          typingRef.current = false;
-        }, 300);
+      if (!explicitQuestion) {
+        // Check local commands first.
+        const local = SHELL_RESPONSES.find((r) => r.commands.includes(cmd));
+        if (local) {
+          setHistory((h) => [...h, { id: nextId(), kind: local.kind, text: local.text }]);
+          setBusy(false);
+          return;
+        }
       }
-    }
-    tick();
-  }, [busy, runCommand]);
+
+      // Known command not matched — route to Claude.
+      await streamQuestion(explicitQuestion ?? cmd);
+      setBusy(false);
+    },
+    [isMobile, nextId, streamQuestion],
+  );
+
+  const runWithEffect = useCallback(
+    (cmd: string) => {
+      if (typingRef.current || busy) return;
+      typingRef.current = true;
+      let i = 0;
+      function tick() {
+        if (!mountedRef.current) {
+          typingRef.current = false;
+          return;
+        }
+        if (i <= cmd.length) {
+          setInput(cmd.slice(0, i));
+          i++;
+          setTimeout(tick, 30);
+        } else {
+          setTimeout(() => {
+            if (!mountedRef.current) {
+              typingRef.current = false;
+              return;
+            }
+            runCommand(cmd);
+            typingRef.current = false;
+          }, 300);
+        }
+      }
+      tick();
+    },
+    [busy, runCommand],
+  );
 
   return (
     <div className="shell">
@@ -268,7 +307,14 @@ export function InteractiveShell() {
         )}
       </div>
 
-      <div className="shell__feed" ref={feedRef} role="log" aria-label="shell output" aria-live="polite" aria-busy={busy}>
+      <div
+        className="shell__feed"
+        ref={feedRef}
+        role="log"
+        aria-label="shell output"
+        aria-live="polite"
+        aria-busy={busy}
+      >
         {history.map((l) =>
           l.kind === 'loading' ? (
             <LoadingDots key={l.id} />
@@ -317,7 +363,12 @@ export function InteractiveShell() {
               <button
                 type="button"
                 className="shell__cmd-hint"
-                onClick={() => { if (!busy) { setInput(cmd); inputRef.current?.focus(); } }}
+                onClick={() => {
+                  if (!busy) {
+                    setInput(cmd);
+                    inputRef.current?.focus();
+                  }
+                }}
                 disabled={busy}
               >
                 {label}

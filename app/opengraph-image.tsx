@@ -94,9 +94,7 @@ export default async function Image() {
     </div>,
     {
       ...size,
-      fonts: [
-        { name: 'JetBrains Mono', data: fontData, style: 'normal', weight: 700 },
-      ],
+      fonts: [{ name: 'JetBrains Mono', data: fontData, style: 'normal', weight: 700 }],
     },
   );
 }

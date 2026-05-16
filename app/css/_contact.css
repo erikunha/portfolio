@@ -20,8 +20,12 @@
   margin-bottom: 6px;
 }
 
-.contact__prompt-user { color: var(--muted); }
-.contact__prompt-cmd  { color: var(--signal); }
+.contact__prompt-user {
+  color: var(--muted);
+}
+.contact__prompt-cmd {
+  color: var(--signal);
+}
 
 .contact__submitrow {
   display: flex;
@@ -40,7 +44,9 @@
   font-size: 13px;
   padding: 10px 12px;
   outline: none;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .contact__input:focus {
@@ -99,4 +105,3 @@
   text-align: center;
   background: linear-gradient(180deg, rgba(0, 255, 65, 0.04), rgba(0, 0, 0, 0));
 }
-

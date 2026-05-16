@@ -1,8 +1,8 @@
 // components/responsive/CRTOverlay.tsx
 'use client';
 
-import { applyMotion, readMotion } from '@/lib/motion';
 import { useEffect } from 'react';
+import { applyMotion, readMotion } from '@/lib/motion';
 
 export function CRTOverlay() {
   useEffect(() => {
@@ -18,12 +18,12 @@ export function CRTOverlay() {
 
   return (
     <>
-      <div className="crt-vignette"   aria-hidden />
-      <div className="crt-overlay"    aria-hidden />
-      <div className="crt-mask"       aria-hidden />
-      <div className="crt-noise"      aria-hidden />
-      <div className="crt-flicker"    aria-hidden />
-      <div className="crt-scan-beam"  aria-hidden />
+      <div className="crt-vignette" aria-hidden />
+      <div className="crt-overlay" aria-hidden />
+      <div className="crt-mask" aria-hidden />
+      <div className="crt-noise" aria-hidden />
+      <div className="crt-flicker" aria-hidden />
+      <div className="crt-scan-beam" aria-hidden />
     </>
   );
 }

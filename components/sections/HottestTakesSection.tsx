@@ -4,7 +4,12 @@ import { Module } from '../responsive/Module';
 
 export function HottestTakesSection() {
   return (
-    <Module id="sec-hottest-takes" header="CAT ~/HOTTEST_TAKES.MD" icon={<IconHottestTakes />} defaultOpen={false}>
+    <Module
+      id="sec-hottest-takes"
+      header="CAT ~/HOTTEST_TAKES.MD"
+      icon={<IconHottestTakes />}
+      defaultOpen={false}
+    >
       <div className="takes__preamble">
         <span className="gt">$</span>
         {'cat ~/hottest_takes.md  '}
