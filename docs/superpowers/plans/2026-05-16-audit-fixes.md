@@ -227,13 +227,13 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
     },
     {
       label: 'PRACTICE',
-      value: 'jams, tones, live takes · guitarcam from the desk',
+      value: 'jams, tones, live takes · guitarcam',
       valueMobile: 'jams · tones · live takes',
     },
     {
       label: 'GIGS',
-      value: 'played live with a band · small venues',
-      valueMobile: 'small venues · band setting',
+      value: 'weddings · small venues ·  open mics',
+      valueMobile: 'weddings · small venues ·  open mics',
     },
     {
       label: 'NEVER_LEARNED',

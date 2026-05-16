@@ -1619,8 +1619,8 @@ INFLUENCES in order:
 
 STYLE             feel / expression over noise · clean tones, lots of space
 TUNING            standard E · sometimes drop D · never Eb
-PRACTICE          jams, tones, live takes · guitarcam from the desk
-GIGS              played live with a band · small venues
+PRACTICE          jams, tones, live takes · guitarcam
+GIGS              weddings · small venues ·  open mics
 NEVER_LEARNED     reading staff notation · tabs only
 LATEST_OBSESSION  Coldplay's "Yellow" — the simplicity is the hard part`}
       </pre>

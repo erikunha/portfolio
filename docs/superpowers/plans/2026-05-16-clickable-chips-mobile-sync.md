@@ -415,7 +415,7 @@ In `GuitarSection.tsx`, find the mobile pre's `GIGS` row (inside the `<pre class
 ```tsx
           <span className="gr-label">{'GIGS'}</span>
           {'         '}
-          <span className="gr-val">{'small venues · band setting'}</span>
+          <span className="gr-val">{'weddings · small venues ·  open mics'}</span>
           {'\n'}
 ```
 
