@@ -35,7 +35,7 @@ export async function getScores(): Promise<LighthouseScores> {
 
   const psiUrl =
     `https://www.googleapis.com/pagespeedonline/v5/runPagespeed` +
-    `?url=${encodeURIComponent('https://erikunha.com.br')}` +
+    `?url=${encodeURIComponent('https://erikunha.dev')}` +
     `&strategy=desktop` +
     `&key=${apiKey}` +
     `&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO`;
