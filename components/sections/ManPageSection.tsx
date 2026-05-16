@@ -23,7 +23,7 @@ export function ManPageSection() {
           <span className="m-dim">{'--track'}</span>
           {' IC|LEAD]\n            ['}
           <span className="m-dim">{'--domain'}</span>
-          {' PAYMENTS|HEALTHCARE|AI-TOOLING|E-COMMERCE]\n            ['}
+          {' FRONTEND|PAYMENTS|HEALTHCARE|AI-TOOLING]\n            ['}
           <span className="m-dim">{'--region'}</span>
           {' WORLDWIDE] ['}
           <span className="m-dim">{'--relocation'}</span>
@@ -63,13 +63,13 @@ export function ManPageSection() {
           <span className="m-sec">{'EXAMPLES'}</span>
           {'\n       '}
           <span className="m-mute">{'$'}</span> <span className="m-erik">{manPage.name}</span>
-          {' --seniority STAFF --domain PAYMENTS --regulated PCI-DSS --ft\n       '}
+          {' --seniority STAFF --domain FRONTEND --ft\n       '}
           <span className="m-mute">{'$'}</span> <span className="m-erik">{manPage.name}</span>
-          {' --track LEAD --domain AI-TOOLING --stack "LLM, agents, RAG" --ft\n       '}
+          {' --track LEAD --domain AI-TOOLING --stack "Angular, LLM, RAG" --ft\n       '}
           <span className="m-mute">{'$'}</span> <span className="m-erik">{manPage.name}</span>
           {' --seniority PRINCIPAL --track LEAD --region WORLDWIDE --relocation\n       '}
           <span className="m-mute">{'$'}</span> <span className="m-erik">{manPage.name}</span>
-          {' --contract --regulated --stack "TypeScript, micro-frontends"\n\n'}
+          {' --contract --regulated --stack "Angular, React, TypeScript"\n\n'}
           <span className="m-sec">{'KNOWN BUGS'}</span>
           {`\n       - Occasionally rewrites a working component for clarity.
        - Will not stop talking about bundle size.
@@ -113,11 +113,11 @@ export function ManPageSection() {
         <div className="mp-examples">
           <span className="mp-ex-line">
             <span className="mp-mute">$</span> <span className="mp-name">{manPage.name}</span>
-            {' --seniority STAFF --domain PAYMENTS --regulated PCI-DSS --ft'}
+            {' --seniority STAFF --domain FRONTEND --ft'}
           </span>
           <span className="mp-ex-line">
             <span className="mp-mute">$</span> <span className="mp-name">{manPage.name}</span>
-            {' --track LEAD --domain AI-TOOLING --stack "LLM, agents" --ft'}
+            {' --track LEAD --domain AI-TOOLING --stack "Angular, LLM" --ft'}
           </span>
           <span className="mp-ex-line">
             <span className="mp-mute">$</span> <span className="mp-name">{manPage.name}</span>

@@ -25,7 +25,7 @@ const SHELL_RESPONSES: ShellResponse[] = ShellCommandsSchema.parse([
   {
     commands: ['cat skills.md'],
     kind: 'output',
-    text: 'angular, react, next.js, typescript, node, rxjs, ngrx, web components, ai tooling',
+    text: 'angular, react, next.js, typescript, node, rxjs, ngrx, web components, spec-driven ai tooling',
   },
   {
     commands: ['cat ~/.now'],
