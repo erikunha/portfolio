@@ -99,7 +99,7 @@ export function ContactForm() {
         </button>
         <p className="contact__cursor">waiting for manual override... _</p>
       </div>
-      {status === 'error' && <p className="contact__error">error: {errorMsg}</p>}
+      {status === 'error' && <p role="alert" className="contact__error">error: {errorMsg}</p>}
     </form>
   );
 }
