@@ -132,8 +132,8 @@ footer.shutdown {
   color: var(--muted);
   letter-spacing: 0.06em;
 }
-.ns-grid .ns-est,
-.ns-grid .ns-listen { font-weight: 700; }
+.ns-grid .ns-est    { color: var(--signal); font-weight: 700; }
+.ns-grid .ns-listen { color: #FFD86B; font-weight: 700; }
 .sd-dmesg {
   list-style: none;
   margin: 0 0 24px;

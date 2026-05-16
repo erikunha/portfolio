@@ -98,7 +98,7 @@ export function ManPageSection() {
 
       {/* Mobile: semantic layout — avoids pre-wrap column fighting */}
       <div className="manpage--mobile">
-        <span className="mp-head">{`${manPage.name.toUpperCase()}(1) — User Commands`}</span>
+        <span className="mp-head">{`${manPage.name.toUpperCase()}(1) - User Commands`}</span>
 
         <span className="mp-sec">NAME</span>
         <span className="mp-body">
@@ -111,24 +111,10 @@ export function ManPageSection() {
 
         <span className="mp-sec">OPTIONS</span>
         <div className="mp-opts">
-          <span className="mp-flag">--seniority</span>
-          <span className="mp-desc">Senior → Staff/Principal</span>
-          <span className="mp-flag">--track</span>
-          <span className="mp-desc">IC or technical lead</span>
-          <span className="mp-flag">--domain</span>
-          <span className="mp-desc">Payments, healthcare, AI tooling</span>
-          <span className="mp-flag">--region</span>
-          <span className="mp-desc">Worldwide; remote-first</span>
-          <span className="mp-flag">--relocation</span>
-          <span className="mp-desc">Open to relocating</span>
-          <span className="mp-flag">--regulated</span>
-          <span className="mp-desc">PCI-DSS, healthcare, banking</span>
-          <span className="mp-flag">--contract</span>
-          <span className="mp-desc">Fixed-term or freelance</span>
-          <span className="mp-flag">--ft</span>
-          <span className="mp-desc">Full-time</span>
-          <span className="mp-flag">--hire</span>
-          <span className="mp-desc">Initiates handshake. See CONTACT.</span>
+          {manPage.options.flatMap((opt) => [
+            <span key={`f-${opt.flag}`} className="mp-flag">{opt.flag}</span>,
+            <span key={`d-${opt.flag}`} className="mp-desc">{opt.desc}</span>,
+          ])}
         </div>
 
         <span className="mp-sec">EXAMPLES</span>
@@ -139,7 +125,7 @@ export function ManPageSection() {
         </div>
 
         <span className="mp-sec">KNOWN BUGS</span>
-        <span className="mp-bugs">{'- Occasionally rewrites a working component for clarity.\n- Will not stop talking about bundle size.\n- Sometimes ships the test before the feature.'}</span>
+        <span className="mp-bugs">{manPage.knownBugs.map(b => `- ${b}`).join('\n')}</span>
 
         <span className="mp-sec">AUTHOR</span>
         <span className="mp-body">{'Written by Erik Henrique Alves Cunha.'}</span>
