@@ -5,7 +5,12 @@ import { Module } from '../responsive/Module';
 
 export function ContactSection() {
   return (
-    <Module id="sec-contact" header="SUDO CONTACT --INIT" icon={<IconContact />}>
+    <Module
+      id="sec-contact"
+      header="SUDO CONTACT --INIT"
+      mobileHeader="CONTACT"
+      icon={<IconContact />}
+    >
       <ErrorBoundary>
         <ContactForm />
       </ErrorBoundary>

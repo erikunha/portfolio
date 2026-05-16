@@ -7,7 +7,7 @@ import { Module } from '../responsive/Module';
 
 const COMMITS = gitLog;
 
-function renderCommit(c: GitCommit, key: number): ReactNode {
+function renderCommit(c: GitCommit, key: string): ReactNode {
   const g = (s: string) => <span className="g-graph">{s}</span>;
   const pipe = g('|');
   const star = g('*');
@@ -106,7 +106,7 @@ export function GitLogSection() {
           <span className="gf-prompt">erik@portfolio:~$</span>
           {' git log --graph --pretty=fuller --decorate --since="2018-06-01" ~/career'}
         </div>
-        <pre>{COMMITS.map((c, i) => renderCommit(c, i))}</pre>
+        <pre>{COMMITS.map((c) => renderCommit(c, c.hash))}</pre>
         <div className="gf-end">
           {'(END) — press '}
           <span style={{ color: 'var(--signal)' }}>q</span>
