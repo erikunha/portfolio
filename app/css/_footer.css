@@ -219,7 +219,7 @@ footer.shutdown {
 }
 
 @media (max-width: 900px) {
-  footer.shutdown { padding: 40px var(--pad) 24px; }
+  footer.shutdown { padding: 40px var(--pad) calc(24px + env(safe-area-inset-bottom, 0px)); }
   .sd-grid { grid-template-columns: 1fr; }
   .sp-row { grid-template-columns: 110px 1fr; font-size: 12px; }
   .sd-dmesg .dm-line { grid-template-columns: 72px 1fr auto; gap: 10px; font-size: 11.5px; }
