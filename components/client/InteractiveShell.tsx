@@ -98,6 +98,7 @@ export function InteractiveShell() {
   const nextId = useCallback(() => ++lineIdRef.current, []);
   const [history, setHistory] = useState<Line[]>(() => withIds(INITIAL_LINES, nextId));
   const [input, setInput] = useState('');
+  const [inputFocused, setInputFocused] = useState(false);
   const [busy, setBusy] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -288,6 +289,8 @@ export function InteractiveShell() {
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => setInputFocused(false)}
             disabled={busy}
             autoComplete="off"
             autoCapitalize="off"
@@ -296,7 +299,7 @@ export function InteractiveShell() {
             className="shell__input"
             aria-label="shell command"
           />
-          {!input && !busy && <AnimatedPlaceholder />}
+          {!input && !busy && !inputFocused && <AnimatedPlaceholder />}
         </div>
       </form>
 
