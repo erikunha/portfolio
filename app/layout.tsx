@@ -23,9 +23,9 @@ const display = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://erikunha.com.br'),
-  title: 'Erik Cunha — Staff/Principal Frontend Engineer',
+  title: 'Erik Cunha — Senior Frontend Engineer',
   description:
-    'Staff/Principal Frontend Engineer with 8+ years building regulated, high-traffic systems in fintech (PCI-DSS), healthcare, and global e-commerce. Angular · React · Next.js · TypeScript.',
+    'Senior Frontend Engineer with 8+ years building regulated, high-traffic systems in fintech (PCI-DSS), healthcare, and global e-commerce. Angular · React · Next.js · TypeScript.',
   keywords: [
     'Frontend Engineer',
     'Angular',
@@ -44,16 +44,16 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://erikunha.com.br',
-    title: 'Erik Cunha — Staff/Principal Frontend Engineer',
+    title: 'Erik Cunha — Senior Frontend Engineer',
     description:
-      'Staff/Principal Frontend Engineer · 8+ years · Angular · React · Next.js · PCI-DSS · Healthcare · E-commerce',
+      'Senior Frontend Engineer · 8+ years · Angular · React · Next.js · PCI-DSS · Healthcare · E-commerce',
     siteName: 'erikunha.com.br',
     images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Erik Cunha Portfolio' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Erik Cunha — Staff/Principal Frontend Engineer',
-    description: 'Staff/Principal Frontend Engineer · Angular · React · Next.js · TypeScript',
+    title: 'Erik Cunha — Senior Frontend Engineer',
+    description: 'Senior Frontend Engineer · Angular · React · Next.js · TypeScript',
     images: ['/og-image.png'],
   },
   robots: {
@@ -72,9 +72,9 @@ const personJsonLd = JSON.stringify({
   '@type': 'Person',
   name: 'Erik Henrique Alves Cunha',
   alternateName: 'Erik Cunha',
-  jobTitle: 'Staff/Principal Frontend Engineer',
+  jobTitle: 'Senior Frontend Engineer',
   description:
-    'Staff/Principal Frontend Engineer with 8+ years building regulated, high-traffic systems in fintech (PCI-DSS), healthcare, and global e-commerce.',
+    'Senior Frontend Engineer with 8+ years building regulated, high-traffic systems in fintech (PCI-DSS), healthcare, and global e-commerce.',
   url: 'https://erikunha.com.br',
   email: 'mailto:erikhenriquealvescunha@gmail.com',
   knowsLanguage: ['pt', 'en', 'fr', 'es'],

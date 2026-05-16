@@ -10,7 +10,7 @@ const SHELL_RESPONSES: ShellResponse[] = ShellCommandsSchema.parse([
   {
     commands: ['whoami'],
     kind: 'output',
-    text: 'erik — senior software engineer, frontend specialization',
+    text: 'erik — senior frontend engineer',
   },
   {
     commands: ['whoami --recursive'],
