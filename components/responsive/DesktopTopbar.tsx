@@ -1,7 +1,7 @@
 'use client';
 
-import { applyMotion, readMotion } from '@/lib/motion';
 import { useLayoutEffect, useState } from 'react';
+import { applyMotion, readMotion } from '@/lib/motion';
 
 export function DesktopTopbar() {
   const [motionOn, setMotionOn] = useState(true);
@@ -39,10 +39,18 @@ export function DesktopTopbar() {
           </div>
         </div>
         <nav className="topbar__nav" aria-label="Site navigation">
-          <a className="topbar__navlink" href="#bio">01_BIO</a>
-          <a className="topbar__navlink" href="#sec-projects">02_WORK</a>
-          <a className="topbar__navlink" href="#sec-git-log">03_LOGS</a>
-          <a className="topbar__navlink" href="#sec-npm-stack">04_DEPS</a>
+          <a className="topbar__navlink" href="#bio">
+            01_BIO
+          </a>
+          <a className="topbar__navlink" href="#sec-projects">
+            02_WORK
+          </a>
+          <a className="topbar__navlink" href="#sec-git-log">
+            03_LOGS
+          </a>
+          <a className="topbar__navlink" href="#sec-npm-stack">
+            04_DEPS
+          </a>
           <button
             type="button"
             className="topbar__motion"
@@ -53,11 +61,7 @@ export function DesktopTopbar() {
             <span className="topbar__mdot" />
             <span>{motionOn ? 'MOTION: ON' : 'MOTION: OFF'}</span>
           </button>
-          <a
-            className="topbar__btn-outline"
-            href="/erik-cunha-cv.pdf"
-            download
-          >
+          <a className="topbar__btn-outline" href="/erik-cunha-cv.pdf" download>
             DOWNLOAD_CV
           </a>
           <a

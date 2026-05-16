@@ -1,8 +1,8 @@
 // components/responsive/Module.tsx
 'use client';
 
-import { useBreakpoint } from '@/lib/use-breakpoint';
 import { type ReactNode, useEffect, useState } from 'react';
+import { useBreakpoint } from '@/lib/use-breakpoint';
 
 export type ModuleProps = {
   id: string;
@@ -14,7 +14,15 @@ export type ModuleProps = {
   postBody?: ReactNode;
 };
 
-export function Module({ id, header, mobileHeader, icon, defaultOpen = true, children, postBody }: ModuleProps) {
+export function Module({
+  id,
+  header,
+  mobileHeader,
+  icon,
+  defaultOpen = true,
+  children,
+  postBody,
+}: ModuleProps) {
   const { isMobile } = useBreakpoint();
   const activeHeader = isMobile && mobileHeader ? mobileHeader : header;
 

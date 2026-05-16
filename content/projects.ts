@@ -80,7 +80,8 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
     mobileName: 'edtech_omni/',
     description:
       'Cross-platform EdTech app — one codebase, five OSes (Android / iOS / Win / macOS / Linux).',
-    mobileDescription: 'Cross-platform EdTech. One codebase, five OSes. Ionic + Angular + Electron.',
+    mobileDescription:
+      'Cross-platform EdTech. One codebase, five OSes. Ionic + Angular + Electron.',
     stats: [
       { label: 'REUSE', value: '~90% LOGIC' },
       { label: 'COST', value: '-80% VS NATIVE' },

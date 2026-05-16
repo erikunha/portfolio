@@ -2,6 +2,8 @@
 // All section components are imported here (RSC context), so their code and
 // static data never ship to the client bundle. Only AppShell (nav/overlays)
 // and section components that are explicitly 'use client' end up in JS.
+
+import { headers } from 'next/headers';
 import { AppShell } from '@/components/AppShell.client';
 import { ErrorBoundary } from '@/components/ErrorBoundary.client';
 import { CommunitySection } from '@/components/sections/CommunitySection';
@@ -26,7 +28,6 @@ import { UnknownsSection } from '@/components/sections/UnknownsSection';
 import { VisaSection } from '@/components/sections/VisaSection';
 import { detectMobileFromUA } from '@/lib/breakpoint';
 import { BreakpointProvider } from '@/lib/use-breakpoint';
-import { headers } from 'next/headers';
 export default async function Home({
   searchParams,
 }: {

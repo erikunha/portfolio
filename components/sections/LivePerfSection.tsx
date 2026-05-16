@@ -1,5 +1,5 @@
-import { getScores, LIGHTHOUSE_FALLBACK, type LighthouseScores } from '@/lib/lighthouse-scores';
 import { Suspense } from 'react';
+import { getScores, LIGHTHOUSE_FALLBACK, type LighthouseScores } from '@/lib/lighthouse-scores';
 import { IconLivePerf } from '../Icons';
 import { Module } from '../responsive/Module';
 
@@ -11,10 +11,10 @@ async function PerfData() {
 function PerfBody({ scores }: { scores: LighthouseScores }) {
   const isFallback = scores.fetchedAt === LIGHTHOUSE_FALLBACK.fetchedAt;
   const cells = [
-    { label: 'PERFORMANCE',    value: scores.performance },
-    { label: 'ACCESSIBILITY',  value: scores.accessibility },
+    { label: 'PERFORMANCE', value: scores.performance },
+    { label: 'ACCESSIBILITY', value: scores.accessibility },
     { label: 'BEST PRACTICES', value: scores.bestPractices },
-    { label: 'SEO',            value: scores.seo },
+    { label: 'SEO', value: scores.seo },
   ];
 
   const lastCheck =
@@ -32,16 +32,16 @@ function PerfBody({ scores }: { scores: LighthouseScores }) {
               {isFallback ? '—' : s.value}
               <span className="of">/100</span>
             </div>
-            <div className="pbar"><i style={{ width: isFallback ? '0%' : `${s.value}%` }} /></div>
+            <div className="pbar">
+              <i style={{ width: isFallback ? '0%' : `${s.value}%` }} />
+            </div>
           </div>
         ))}
       </div>
       <div className="perf-foot">
         <span>
           <span className="live-dot" />
-          {isFallback
-            ? 'SOURCE: PSI API unavailable'
-            : 'SOURCE: PageSpeed Insights · cached daily'}
+          {isFallback ? 'SOURCE: PSI API unavailable' : 'SOURCE: PageSpeed Insights · cached daily'}
         </span>
         <span>LAST_CHECK: {lastCheck}</span>
       </div>
@@ -56,13 +56,20 @@ function PerfFallback() {
         {['PERFORMANCE', 'ACCESSIBILITY', 'BEST PRACTICES', 'SEO'].map((label) => (
           <div key={label} className="perf-cell">
             <div className="pk">{label}</div>
-            <div className="pv">—<span className="of">/100</span></div>
-            <div className="pbar"><i style={{ width: '0%' }} /></div>
+            <div className="pv">
+              —<span className="of">/100</span>
+            </div>
+            <div className="pbar">
+              <i style={{ width: '0%' }} />
+            </div>
           </div>
         ))}
       </div>
       <div className="perf-foot">
-        <span><span className="live-dot" />loading...</span>
+        <span>
+          <span className="live-dot" />
+          loading...
+        </span>
       </div>
     </div>
   );
@@ -70,7 +77,13 @@ function PerfFallback() {
 
 export function LivePerfSection() {
   return (
-    <Module id="sec-live-perf" header="LIVE_PERF.JSON" mobileHeader="LIVE_PERF · LIGHTHOUSE" icon={<IconLivePerf />} defaultOpen={false}>
+    <Module
+      id="sec-live-perf"
+      header="LIVE_PERF.JSON"
+      mobileHeader="LIVE_PERF · LIGHTHOUSE"
+      icon={<IconLivePerf />}
+      defaultOpen={false}
+    >
       <Suspense fallback={<PerfFallback />}>
         <PerfData />
       </Suspense>

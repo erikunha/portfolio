@@ -3,11 +3,21 @@ import type { PerfReceipt } from '@/content/schemas';
 import { IconPerfReceipts } from '../Icons';
 import { Module } from '../responsive/Module';
 
-function ReceiptCard({ metric, delta, company, note, hero, desktopOnly, mobileMetric }: PerfReceipt & { hero?: boolean }) {
+function ReceiptCard({
+  metric,
+  delta,
+  company,
+  note,
+  hero,
+  desktopOnly,
+  mobileMetric,
+}: PerfReceipt & { hero?: boolean }) {
   const cls = [
     hero ? 'receipt receipt--hero' : 'receipt',
     desktopOnly ? 'receipt--desktop-only' : '',
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <li className={cls}>
@@ -17,7 +27,9 @@ function ReceiptCard({ metric, delta, company, note, hero, desktopOnly, mobileMe
             <span className="receipt__metric-desktop">{metric}</span>
             <span className="receipt__metric-mobile">{mobileMetric}</span>
           </>
-        ) : metric}
+        ) : (
+          metric
+        )}
       </p>
       <p className={hero ? 'receipt__delta receipt__delta--hero' : 'receipt__delta'}>{delta}</p>
       <p className="receipt__company">{company}</p>
@@ -30,7 +42,12 @@ export function PerfReceiptsSection() {
   const [hero, ...rest] = perfReceipts;
   if (!hero) return null;
   return (
-    <Module id="sec-perf-receipts" header="PERF_RECEIPTS --HARD-NUMBERS" mobileHeader="PERF_RECEIPTS" icon={<IconPerfReceipts />}>
+    <Module
+      id="sec-perf-receipts"
+      header="PERF_RECEIPTS --HARD-NUMBERS"
+      mobileHeader="PERF_RECEIPTS"
+      icon={<IconPerfReceipts />}
+    >
       <ul className="receipts">
         <ReceiptCard {...hero} hero />
         {rest.map((r) => (

@@ -1,4 +1,3 @@
-
 import { sysStats } from '@/content/sys-health';
 import { IconSysHealth } from '../Icons';
 import { Module } from '../responsive/Module';
@@ -11,7 +10,9 @@ export function SysHealthSection() {
           <div key={s.label} className="stat">
             <div className="slbl">{s.label}</div>
             <div className="sval">{s.value}</div>
-            <div className="bar pulse"><i style={{ width: s.pct }} /></div>
+            <div className="bar pulse">
+              <i style={{ width: s.pct }} />
+            </div>
           </div>
         ))}
       </div>

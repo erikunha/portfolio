@@ -21,13 +21,32 @@
   height: 44px;
 }
 
-.topbar__dots { display: flex; gap: 8px; align-items: center; }
-.topbar__dot { width: 12px; height: 12px; border-radius: 50%; display: block; }
-.topbar__dot--red    { background: var(--red); }
-.topbar__dot--yellow { background: var(--yellow); }
-.topbar__dot--green  { background: var(--green-light); }
+.topbar__dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.topbar__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: block;
+}
+.topbar__dot--red {
+  background: var(--red);
+}
+.topbar__dot--yellow {
+  background: var(--yellow);
+}
+.topbar__dot--green {
+  background: var(--green-light);
+}
 
-.topbar__tabs { display: flex; gap: 8px; margin-left: 8px; }
+.topbar__tabs {
+  display: flex;
+  gap: 8px;
+  margin-left: 8px;
+}
 .topbar__tab {
   display: inline-flex;
   align-items: center;
@@ -42,9 +61,13 @@
 .topbar__tab--active {
   color: var(--signal);
   border-color: var(--signal-dim);
-  background: rgba(0,255,65,0.04);
+  background: rgba(0, 255, 65, 0.04);
 }
-.topbar__tab-close { color: var(--fg); margin-left: 6px; opacity: 0.8; }
+.topbar__tab-close {
+  color: var(--fg);
+  margin-left: 6px;
+  opacity: 0.8;
+}
 
 .topbar__nav {
   margin-left: auto;
@@ -60,7 +83,9 @@
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
-.topbar__navlink:hover { text-shadow: 0 0 8px var(--signal); }
+.topbar__navlink:hover {
+  text-shadow: 0 0 8px var(--signal);
+}
 
 .topbar__motion {
   display: inline-flex;
@@ -82,7 +107,7 @@
   background: var(--signal);
   display: block;
 }
-.topbar__motion[data-motion='off'] .topbar__mdot {
+.topbar__motion[data-motion="off"] .topbar__mdot {
   background: var(--muted);
   opacity: 0.4;
 }
@@ -100,7 +125,9 @@
   align-items: center;
   white-space: nowrap;
 }
-.topbar__btn-primary:hover { box-shadow: 0 0 12px var(--signal); }
+.topbar__btn-primary:hover {
+  box-shadow: 0 0 12px var(--signal);
+}
 
 .topbar__btn-outline {
   border: 1px solid var(--signal);
@@ -109,17 +136,28 @@
   letter-spacing: 0.08em;
   font-size: 11px;
   display: inline-block;
-  transition: box-shadow 200ms ease, background 200ms ease;
+  transition:
+    box-shadow 200ms ease,
+    background 200ms ease;
   white-space: nowrap;
 }
-.topbar__btn-outline:hover { box-shadow: 0 0 12px var(--signal); background: rgba(0,255,65,0.06); }
+.topbar__btn-outline:hover {
+  box-shadow: 0 0 12px var(--signal);
+  background: rgba(0, 255, 65, 0.06);
+}
 
 @media (max-width: 1080px) {
-  .topbar__navlink { display: none; }
-  .topbar__motion { display: none; }
+  .topbar__navlink {
+    display: none;
+  }
+  .topbar__motion {
+    display: none;
+  }
 }
 @media (max-width: 768px) {
-  .topbar { display: none; }
+  .topbar {
+    display: none;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -205,7 +243,7 @@
 }
 
 .statusbar__battery-box::after {
-  content: '';
+  content: "";
   position: absolute;
   right: -3px;
   top: 2px;
@@ -260,8 +298,13 @@
   stroke-width: 1.6;
 }
 
-.dock a.active  { color: var(--signal); background: rgba(0, 255, 65, 0.08); }
-.dock a:active  { background: rgba(0, 255, 65, 0.12); }
+.dock a.active {
+  color: var(--signal);
+  background: rgba(0, 255, 65, 0.08);
+}
+.dock a:active {
+  background: rgba(0, 255, 65, 0.12);
+}
 
 /* ─────────────────────────────────────────────────────────────────────────────
    BACK TO TOP BUTTON — mobile-only, fixed above the dock.
@@ -286,7 +329,9 @@
     color: var(--signal);
     opacity: 0;
     transform: translateY(8px);
-    transition: opacity 200ms ease, transform 200ms ease;
+    transition:
+      opacity 200ms ease,
+      transform 200ms ease;
     pointer-events: none;
   }
 
@@ -304,4 +349,3 @@
     stroke-width: 2;
   }
 }
-

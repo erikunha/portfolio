@@ -105,8 +105,13 @@ h1 {
 }
 
 @media (max-width: 768px) {
-  :root { --vrhythm: 18px; --pad: 14px; }
-  h1 { font-size: 32px; }
+  :root {
+    --vrhythm: 18px;
+    --pad: 14px;
+  }
+  h1 {
+    font-size: 32px;
+  }
 }
 
 .sr-only {
@@ -133,4 +138,3 @@ h1 {
   font-family: var(--font-mono-stack);
   position: relative;
 }
-

@@ -16,18 +16,18 @@ describe('runBoot onFirstLoop', () => {
     const container = document.createElement('div');
     const calls: number[] = [];
 
-    const ctrl = runBoot(
-      container,
-      [[' ']],
-      ['Hi', 'Yo'],
-      {
-        lineMs: 0, lineJitter: 0,
-        cmdMs: 0,  cmdJitter: 0,
-        typeMs: 0, holdMs: 0, backMs: 0, interMs: 0,
-        startMs: 0,
-        onFirstLoop: () => calls.push(Date.now()),
-      },
-    );
+    const ctrl = runBoot(container, [[' ']], ['Hi', 'Yo'], {
+      lineMs: 0,
+      lineJitter: 0,
+      cmdMs: 0,
+      cmdJitter: 0,
+      typeMs: 0,
+      holdMs: 0,
+      backMs: 0,
+      interMs: 0,
+      startMs: 0,
+      onFirstLoop: () => calls.push(Date.now()),
+    });
 
     await new Promise((r) => setTimeout(r, 1200));
     ctrl.cancel();

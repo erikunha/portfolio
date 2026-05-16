@@ -60,7 +60,8 @@ export function MatrixRain({
       const old = drops;
       drops = new Array(newCols);
       for (let i = 0; i < newCols; i++) {
-        drops[i] = typeof old[i] === 'number' ? (old[i] as number) : -Math.random() * (h / fontSize);
+        drops[i] =
+          typeof old[i] === 'number' ? (old[i] as number) : -Math.random() * (h / fontSize);
       }
       columns = newCols;
       ctx!.fillStyle = '#000';
@@ -96,41 +97,65 @@ export function MatrixRain({
       raf = requestAnimationFrame(frame);
     }
 
-    function pause() { running = false; cancelAnimationFrame(raf); }
-    function resume() { if (!running) { running = true; last = 0; raf = requestAnimationFrame(frame); } }
+    function pause() {
+      running = false;
+      cancelAnimationFrame(raf);
+    }
+    function resume() {
+      if (!running) {
+        running = true;
+        last = 0;
+        raf = requestAnimationFrame(frame);
+      }
+    }
 
     if (watchRef) {
       running = false;
       const target = watchRef.current;
       if (target && 'IntersectionObserver' in window) {
         const io = new IntersectionObserver(
-          (entries) => { entries.forEach((e) => { e.isIntersecting ? resume() : pause(); }); },
+          (entries) => {
+            entries.forEach((e) => {
+              e.isIntersecting ? resume() : pause();
+            });
+          },
           { threshold: 0.05 },
         );
         io.observe(target);
-        return () => { io.disconnect(); pause(); clearTimeout(resizeTimer); window.removeEventListener('resize', debouncedResize); };
+        return () => {
+          io.disconnect();
+          pause();
+          clearTimeout(resizeTimer);
+          window.removeEventListener('resize', debouncedResize);
+        };
       }
       // fallback if no IO support — start immediately
       resume();
     } else {
       raf = requestAnimationFrame(frame);
-      const onVisibility = () => { document.hidden ? pause() : resume(); };
+      const onVisibility = () => {
+        document.hidden ? pause() : resume();
+      };
       document.addEventListener('visibilitychange', onVisibility);
       const onSysfailStart = () => pause();
-      const onSysfailEnd   = () => resume();
+      const onSysfailEnd = () => resume();
       window.addEventListener('sysfail:start', onSysfailStart);
-      window.addEventListener('sysfail:end',   onSysfailEnd);
+      window.addEventListener('sysfail:end', onSysfailEnd);
       return () => {
         pause();
         clearTimeout(resizeTimer);
         window.removeEventListener('resize', debouncedResize);
         document.removeEventListener('visibilitychange', onVisibility);
         window.removeEventListener('sysfail:start', onSysfailStart);
-        window.removeEventListener('sysfail:end',   onSysfailEnd);
+        window.removeEventListener('sysfail:end', onSysfailEnd);
       };
     }
 
-    return () => { pause(); clearTimeout(resizeTimer); window.removeEventListener('resize', debouncedResize); };
+    return () => {
+      pause();
+      clearTimeout(resizeTimer);
+      window.removeEventListener('resize', debouncedResize);
+    };
   }, [fontSize, speed, headColor, bodyColor, tailFade, watchRef]);
 
   return (

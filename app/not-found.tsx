@@ -1,5 +1,5 @@
-import { CRTOverlay } from '@/components/responsive/CRTOverlay';
 import Link from 'next/link';
+import { CRTOverlay } from '@/components/responsive/CRTOverlay';
 
 export default function NotFound() {
   return (
