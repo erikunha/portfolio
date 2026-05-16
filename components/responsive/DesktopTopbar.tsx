@@ -30,7 +30,7 @@ export function DesktopTopbar() {
         <div className="topbar__tabs">
           <div className="topbar__tab topbar__tab--active">
             <span>&#9632;</span>
-            <span>PORTFOLIO.SH</span>
+            <span>ERIK_CUNHA.SH</span>
             <span className="topbar__tab-close">&times;</span>
           </div>
           <div className="topbar__tab">
