@@ -30,6 +30,8 @@ const CONTENT_FILES = [
   'content/git-log.ts',
   'content/sys-health.ts',
   'content/shell-commands.ts',
+  'content/readme.ts',
+  'content/dmesg.ts',
 ];
 
 const root = path.resolve(process.cwd());
