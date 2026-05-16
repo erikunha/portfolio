@@ -114,17 +114,49 @@
 
 .shell__chip:active { background: rgba(0, 255, 65, 0.1); }
 
-/* Hint shown below the shell panel — matches .ishell-hint outside .ishell in prototype */
+/* Desktop command hints row — rendered inside shell panel, below the input form */
 .shell__commands {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
   color: var(--muted);
   font-size: 11px;
   letter-spacing: 0.1em;
-  margin-top: 8px;
+  padding: 8px 16px 12px;
+  border-top: 1px dashed var(--signal-dim-2);
   opacity: 0.75;
 }
 
 @media (max-width: 768px) {
   .shell__commands { display: none; }
+}
+
+.shell__cmd-hint {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  transition: color 150ms ease, text-shadow 150ms ease;
+}
+
+.shell__cmd-hint:hover:not(:disabled) {
+  color: var(--signal);
+  text-shadow: 0 0 6px rgba(0, 255, 65, 0.5);
+}
+
+.shell__cmd-hint:disabled {
+  cursor: default;
+}
+
+.shell__commands-sep,
+.shell__commands-prefix,
+.shell__commands-tail {
+  pointer-events: none;
 }
 
 @media (max-width: 768px) {
