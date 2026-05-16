@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'Erik Cunha — Senior Frontend Engineer';
+export const alt = 'Erik Cunha — Senior Full-Stack Engineer';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -69,7 +69,7 @@ export default async function Image() {
           marginBottom: '40px',
         }}
       >
-        Senior Frontend Engineer
+        Senior Full-Stack Engineer
       </div>
 
       <div
@@ -87,9 +87,11 @@ export default async function Image() {
         <span style={{ opacity: 0.4 }}>·</span>
         <span>Next.js</span>
         <span style={{ opacity: 0.4 }}>·</span>
-        <span>TypeScript</span>
-        <span style={{ opacity: 0.4 }}>·</span>
         <span>Node.js</span>
+        <span style={{ opacity: 0.4 }}>·</span>
+        <span>AWS</span>
+        <span style={{ opacity: 0.4 }}>·</span>
+        <span>TypeScript</span>
       </div>
     </div>,
     {
