@@ -53,11 +53,13 @@ export function RoleTyper() {
     }
 
     tick();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
-    <span className="pill" ref={spanRef} aria-label="Senior, Staff, or Principal">
+    <span className="pill" ref={spanRef} aria-label="Senior, Staff, or Principal" role="img">
       [Senior]
     </span>
   );

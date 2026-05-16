@@ -10,6 +10,6 @@ describe('content-visibility', () => {
   });
 
   it('content-visibility is scoped to nth-of-type(n+6) to exclude near-viewport sections', () => {
-    expect(layout).toMatch(/nth-of-type\(n\+[5-9]\)/);
+    expect(layout).toMatch(/nth-of-type\(n\s*\+\s*[5-9]\)/);
   });
 });

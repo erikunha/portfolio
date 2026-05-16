@@ -1,4 +1,3 @@
-
 import { IconVisa } from '../Icons';
 import { Module } from '../responsive/Module';
 
@@ -12,12 +11,13 @@ export function VisaSection() {
       defaultOpen={false}
     >
       <div className="visa">
-
         {/* Desktop — 3-column table matching Portfolio.html */}
         <pre className="visa-desktop-pre">
           <span className="vh">{'JURISDICTION    STATUS                  EVIDENCE'}</span>
           {'\n'}
-          <span className="vrule">{'================================================================'}</span>
+          <span className="vrule">
+            {'================================================================'}
+          </span>
           {'\n'}
           <span className="vjur">{'EU (MALTA)'}</span>
           {'      '}
@@ -46,7 +46,10 @@ export function VisaSection() {
 
         {/* Mobile — 2-line per row matching Portfolio.mobile.html */}
         <pre className="visa-mobile-pre">
-          <span className="cmd-line"><span className="pr">$</span>{' cat ~/.visa'}</span>
+          <span className="cmd-line">
+            <span className="pr">$</span>
+            {' cat ~/.visa'}
+          </span>
           {'\n\n'}
           <span className="vh">{'REGION    STATUS'}</span>
           {'\n'}
@@ -81,13 +84,16 @@ export function VisaSection() {
           <span className="vev">{'considering opportunities'}</span>
         </pre>
 
-        <div className="visa-foot">// PT (native) · EN (C1) · FR (A2) · ES (A2)</div>
+        <div className="visa-foot">{'// PT (native) · EN (C1) · FR (A2) · ES (A2)'}</div>
       </div>
 
       {/* On mobile, credentials are embedded here (prototype combines both sections) */}
       <div className="visa-mobile-creds">
         <pre>
-          <span className="cmd-line"><span className="pr">$</span>{' cat ~/.credentials'}</span>
+          <span className="cmd-line">
+            <span className="pr">$</span>
+            {' cat ~/.credentials'}
+          </span>
           {'\n\n'}
           <span className="cr-label">{'ANGULAR_DEV'}</span>
           {'  '}

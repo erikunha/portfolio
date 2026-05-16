@@ -6,7 +6,8 @@ let _askLimit: Ratelimit | undefined;
 let _contactLimit: Ratelimit | undefined;
 
 export function getRedis(): Redis {
-  return (_redis ??= Redis.fromEnv());
+  if (!_redis) _redis = Redis.fromEnv();
+  return _redis;
 }
 
 export function getAskLimit(): Ratelimit {
@@ -36,17 +37,17 @@ export function getContactLimit(): Ratelimit {
 const MONTHLY_TOKEN_BUDGET = 400_000;
 
 export function getBudgetKey(): string {
-  const now  = new Date();
+  const now = new Date();
   const yyyy = now.getUTCFullYear();
-  const mm   = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
   return `ask:tokens:${yyyy}-${mm}`;
 }
 
 export async function checkBudget(): Promise<{ allowed: boolean; pct: number }> {
   try {
     const used = (await getRedis().get<number>(getBudgetKey())) ?? 0;
-    const pct  = used / MONTHLY_TOKEN_BUDGET;
-    if (pct >= 1)   return { allowed: false, pct };
+    const pct = used / MONTHLY_TOKEN_BUDGET;
+    if (pct >= 1) return { allowed: false, pct };
     if (pct >= 0.8) console.warn(`[ask] budget at ${Math.round(pct * 100)}% — approaching cap`);
     return { allowed: true, pct };
   } catch (err) {
@@ -64,7 +65,9 @@ export function incrementBudget(inputTokens: number, outputTokens: number): void
     .incrby(getBudgetKey(), total)
     .then(() => {
       // Set 32-day TTL on first write so the key expires naturally.
-      getRedis().expire(getBudgetKey(), 60 * 60 * 24 * 32, 'NX').catch(() => undefined);
+      getRedis()
+        .expire(getBudgetKey(), 60 * 60 * 24 * 32, 'NX')
+        .catch(() => undefined);
     })
     .catch((err) => console.error('[ask] budget increment failed', err));
 }
