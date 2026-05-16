@@ -216,8 +216,8 @@ export function Footer() {
                 {'\n'}
                 <span className="ns-est">{'EST'}</span>
                 {'  '}
-                <a href="https://erikunha.com.br" target="_blank" rel="noopener noreferrer">
-                  {'erikunha.com.br'}
+                <a href="https://erikunha.dev" target="_blank" rel="noopener noreferrer">
+                  {'erikunha.dev'}
                 </a>
               </pre>
             ) : (
@@ -244,8 +244,8 @@ export function Footer() {
                 {'\ntcp    '}
                 <span className="ns-est">{'ESTABLISHED'}</span>
                 {'  '}
-                <a href="https://erikunha.com.br" target="_blank" rel="noopener noreferrer">
-                  {'erikunha.com.br'}
+                <a href="https://erikunha.dev" target="_blank" rel="noopener noreferrer">
+                  {'erikunha.dev'}
                 </a>
               </pre>
             )}

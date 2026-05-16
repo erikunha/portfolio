@@ -19,7 +19,7 @@ function renderCommit(c: GitCommit, key: number): ReactNode {
         <span className="g-hash">{c.hash}</span>{' '}
         <span className="g-deco">{c.deco}</span>{'\n'}
         {'  '}<span className="g-label">Author:    </span>{' '}
-        <span className="g-author">{'Erik Henrique Alves Cunha <erik@erikunha.com.br>'}</span>{'\n'}
+        <span className="g-author">{'Erik Henrique Alves Cunha <erik@erikunha.dev>'}</span>{'\n'}
         {'  '}<span className="g-label">AuthorDate:</span>{' '}
         <span className="g-date">{c.date}</span>{'\n'}
         {'  '}<span className="g-label">Branch:    </span>{' '}
@@ -40,7 +40,7 @@ function renderCommit(c: GitCommit, key: number): ReactNode {
       <span className="g-hash">{c.hash}</span>{' '}
       <span className="g-deco">{c.deco}</span>{'\n'}
       {pipe}{' '}<span className="g-label">Author:    </span>{' '}
-      <span className="g-author">{'Erik Henrique Alves Cunha <erik@erikunha.com.br>'}</span>{'\n'}
+      <span className="g-author">{'Erik Henrique Alves Cunha <erik@erikunha.dev>'}</span>{'\n'}
       {pipe}{' '}<span className="g-label">AuthorDate:</span>{' '}
       <span className="g-date">{c.date}</span>{'\n'}
       {pipe}{' '}<span className="g-label">Branch:    </span>{' '}

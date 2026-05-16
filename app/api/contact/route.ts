@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
   // Delivery second: failure is acceptable if KV write succeeded.
   const { error } = await getResend().emails.send({
-    from: 'portfolio@erikunha.com.br',
+    from: 'portfolio@erikunha.dev',
     to: 'erikhenriquealvescunha@gmail.com',
     replyTo: email,
     subject: `[portfolio] message from ${name}`,
