@@ -25,6 +25,83 @@
   .manpage pre { white-space: pre-wrap; word-break: break-word; font-size: 11.5px; }
 }
 
+.manpage--desktop { display: block; }
+.manpage--mobile  { display: none; }
+
+@media (max-width: 768px) {
+  .manpage--desktop { display: none; }
+  .manpage--mobile  { display: block; }
+}
+
+.manpage--mobile {
+  font-family: var(--font-mono-stack);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--fg);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.manpage--mobile .mp-head {
+  color: var(--signal);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-size: 10px;
+  margin-bottom: 10px;
+  word-break: break-all;
+}
+.manpage--mobile .mp-sec {
+  color: var(--signal);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+.manpage--mobile .mp-name { color: var(--signal); font-weight: 700; }
+.manpage--mobile .mp-body {
+  color: var(--fg);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+.mp-opts {
+  display: grid;
+  grid-template-columns: 108px 1fr;
+  gap: 1px 8px;
+  margin-top: 2px;
+}
+.mp-flag {
+  color: var(--muted);
+  opacity: 0.85;
+  font-size: 11px;
+  padding: 1px 0;
+  white-space: nowrap;
+}
+.mp-desc {
+  color: var(--fg);
+  font-size: 11.5px;
+  padding: 1px 0;
+  line-height: 1.5;
+}
+.mp-examples { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
+.mp-ex-line {
+  display: block;
+  color: var(--fg);
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.mp-ex-line .mp-mute { color: var(--muted); }
+.mp-ex-line .mp-name { color: var(--signal); font-weight: 700; }
+.manpage--mobile .mp-bugs {
+  color: var(--fg);
+  font-size: 11.5px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    VISA / CREDENTIALS / GUITAR — pre container (.visa) + per-section span tokens.
    module__body provides the border + padding wrapper.
