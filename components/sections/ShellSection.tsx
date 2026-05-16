@@ -11,11 +11,6 @@ export function ShellSection() {
       header="./EXEC INTERACTIVE_SHELL"
       mobileHeader="/BIN/SH · INTERACTIVE"
       icon={<IconShell />}
-      postBody={
-        <p className="shell__commands">
-          {'commands: help · whoami · whoami --recursive · ls · cat skills.md · cat ~/.now · contact · face · hire · clear · anything else → Claude'}
-        </p>
-      }
     >
       <ErrorBoundary>
         <InteractiveShell />
