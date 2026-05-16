@@ -62,7 +62,9 @@ export function DesktopTopbar() {
           </a>
           <a
             className="topbar__btn-primary"
-            href="mailto:erikhenriquealvescunha@gmail.com"
+            href="https://www.linkedin.com/in/erikunha/"
+            target="_blank"
+            rel="noreferrer"
           >
             SSH_CONNECT
           </a>

@@ -303,17 +303,19 @@ function DesktopHero() {
         <div className="hero__ctas">
           <a
             className="hero__cta hero__cta--primary"
-            href="mailto:erikhenriquealvescunha@gmail.com?subject=Let's%20talk"
+            href="https://www.linkedin.com/in/erikunha/"
+            target="_blank"
+            rel="noreferrer"
           >
             EXEC HIRE
           </a>
           <a
             className="hero__cta hero__cta--secondary"
-            href="https://www.linkedin.com/in/erikunha/"
+            href="https://github.com/erikunha"
             target="_blank"
             rel="noreferrer"
           >
-            LINKEDIN ↗
+            GITHUB ↗
           </a>
         </div>
       </aside>
@@ -370,17 +372,19 @@ function MobileHero() {
         <div className="hero__ctas">
           <a
             className="hero__cta hero__cta--primary"
-            href="mailto:erikhenriquealvescunha@gmail.com?subject=Let's%20talk"
+            href="https://www.linkedin.com/in/erikunha/"
+            target="_blank"
+            rel="noreferrer"
           >
             EXEC HIRE
           </a>
           <a
             className="hero__cta hero__cta--secondary"
-            href="https://www.linkedin.com/in/erikunha/"
+            href="https://github.com/erikunha"
             target="_blank"
             rel="noreferrer"
           >
-            LINKEDIN ↗
+            GITHUB ↗
           </a>
         </div>
       </div>
