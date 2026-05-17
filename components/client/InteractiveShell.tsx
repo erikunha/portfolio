@@ -62,7 +62,7 @@ function AnimatedPlaceholder() {
 
     function tick() {
       if (cancelled) return;
-      const suggestion = PLACEHOLDER_SUGGESTIONS[idx % PLACEHOLDER_SUGGESTIONS.length]!;
+      const suggestion = PLACEHOLDER_SUGGESTIONS[idx % PLACEHOLDER_SUGGESTIONS.length] ?? '';
       if (phase === 'type') {
         node.textContent = suggestion.slice(0, ++charIdx);
         if (charIdx >= suggestion.length) {

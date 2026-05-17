@@ -89,7 +89,7 @@ export function MatrixRain({
         ctxEl.fillRect(0, 0, w, h);
         for (let i = 0; i < columns; i++) {
           const y = (drops[i] ?? 0) * fontSize;
-          const ch = DIGITS[(Math.random() * DIGITS.length) | 0]!;
+          const ch = DIGITS[(Math.random() * DIGITS.length) | 0] ?? '0';
           ctxEl.fillStyle = headColor;
           ctxEl.fillText(ch, i * fontSize, y);
           ctxEl.fillStyle = bodyColor;
