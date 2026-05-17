@@ -338,6 +338,7 @@
   }
   .readme--mobile {
     display: block;
+    font-size: var(--fs-sm);
   }
   .readme-codesample {
     display: none;
@@ -1126,6 +1127,7 @@
   }
   .guitar-mobile {
     display: block;
+    font-size: var(--fs-sm);
   }
 }
 
@@ -1378,5 +1380,20 @@
   .take {
     grid-template-columns: 36px 1fr;
     gap: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .community {
+    font-size: var(--fs-sm);
+  }
+  .unknowns pre {
+    font-size: var(--fs-sm);
+  }
+  .nowblock {
+    font-size: var(--fs-sm);
+  }
+  .take__body {
+    font-size: var(--fs-sm);
   }
 }
