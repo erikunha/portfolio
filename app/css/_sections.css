@@ -172,10 +172,6 @@
   letter-spacing: 0.04em;
 }
 
-/* Credentials embedded in visa — hidden by default; shown on mobile where visa+creds are one module */
-.visa-mobile-creds {
-  display: none;
-}
 /* Desktop/mobile content splits */
 .visa-desktop-pre {
   display: block;
@@ -1071,13 +1067,6 @@
   }
   .guitar-mobile {
     display: block;
-  }
-  /* On mobile, credentials are embedded inside VisaSection */
-  .visa-mobile-creds {
-    display: block;
-  }
-  #sec-credentials {
-    display: none;
   }
 }
 

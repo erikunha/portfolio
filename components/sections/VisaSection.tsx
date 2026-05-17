@@ -7,7 +7,7 @@ export function VisaSection() {
     <Module
       id="sec-visa"
       header="CAT ~/.VISA"
-      mobileHeader="CAT ~/.VISA & .CREDENTIALS"
+      mobileHeader="CAT ~/.VISA"
       icon={<IconVisa />}
       defaultOpen={false}
     >
@@ -52,36 +52,6 @@ export function VisaSection() {
         </pre>
 
         <div className="visa-foot">{'// PT (native) · EN (C1) · FR (A2) · ES (A2)'}</div>
-      </div>
-
-      <div className="visa-mobile-creds">
-        <pre>
-          <span className="cmd-line">
-            <span className="pr">$</span>
-            {' cat ~/.credentials'}
-          </span>
-          {'\n\n'}
-          <span className="cr-label">{'ANGULAR_DEV'}</span>
-          {'  '}
-          <span className="cr-badge">{'CERTIFIED'}</span>
-          {'\n'}
-          {'             '}
-          <span className="cr-val">{'Alain Chautard (GDE) · 2024'}</span>
-          {'\n'}
-          <span className="cr-label">{'ENGLISH'}</span>
-          {'      '}
-          <span className="cr-badge">{'IELTS_C1'}</span>
-          {'\n'}
-          {'             '}
-          <span className="cr-val">{'band 6.5 · 2023'}</span>
-          {'\n'}
-          <span className="cr-label">{'INTL_DEGREE'}</span>
-          {'  '}
-          <span className="cr-badge">{'WES_VERIFIED'}</span>
-          {'\n'}
-          {'             '}
-          <span className="cr-val">{'World Education Svcs · 2022'}</span>
-        </pre>
       </div>
     </Module>
   );
