@@ -163,32 +163,35 @@ footer.shutdown {
 }
 .ns-grid {
   display: grid;
-  grid-template-columns: 42px 1fr;
-  gap: 0 12px;
+  grid-template-columns: 28px 90px 1fr;
+  gap: 0 28px;
   align-items: center;
 }
 .ns-grid a {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 32px;
 }
 .ns-hdr-cell {
   color: var(--muted);
   letter-spacing: 0.06em;
+}
+.ns-proto {
+  color: var(--muted);
 }
 .ns-grid .ns-est {
   color: var(--signal);
   font-weight: 700;
   display: flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 32px;
 }
 .ns-grid .ns-listen {
   color: #ffd86b;
   font-weight: 700;
   display: flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 32px;
 }
 .sd-dmesg {
   list-style: none;
@@ -316,6 +319,9 @@ footer.shutdown {
   .sd-dmesg .dm-line {
     grid-template-columns: 72px 1fr auto;
     gap: 10px;
+    font-size: var(--fs-sm);
+  }
+  .sd-netstat {
     font-size: var(--fs-sm);
   }
   .sd-netstat pre {

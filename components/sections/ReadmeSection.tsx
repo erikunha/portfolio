@@ -25,40 +25,6 @@ const README_DESKTOP: ReadmeLine[] = [
   },
 ];
 
-const README_MOBILE: ReadmeLine[] = [
-  { text: c.mobileH2, cls: 'h2' },
-  { text: ' ' },
-  { text: 'full-stack engineer (frontend-heavy). 8+ yrs.' },
-  {
-    node: (
-      <>
-        {c.mobileBetssonPrefix}
-        <span className="pill">{'betsson'}</span>
-        {' cashier — 40M+ tx/yr,'}
-      </>
-    ),
-  },
-  { text: c.mobileBetssonSuffix },
-  { text: ' ' },
-  { text: '## core stack', cls: 'h2' },
-  ...c.mobileCoreStack.map((t) => ({ text: t })),
-  { text: ' ' },
-  { text: '## operating principles', cls: 'h2' },
-  ...c.mobilePrinciples.map((t) => ({ text: t })),
-  { text: ' ' },
-  { text: '## status', cls: 'h2' },
-  {
-    node: (
-      <>
-        {'open to '}
-        <RoleTyper />
-        {' roles.'}
-      </>
-    ),
-  },
-  { text: c.mobileStatusSuffix },
-];
-
 function ReadmeBlock({ lines }: { lines: ReadmeLine[] }) {
   return (
     <div className="readme">
@@ -84,12 +50,7 @@ function ReadmeBlock({ lines }: { lines: ReadmeLine[] }) {
 export function ReadmeSection() {
   return (
     <Module id="sec-readme" header="CAT README.MD" icon={<IconReadme />}>
-      <div className="readme--desktop">
-        <ReadmeBlock lines={README_DESKTOP} />
-      </div>
-      <div className="readme--mobile">
-        <ReadmeBlock lines={README_MOBILE} />
-      </div>
+      <ReadmeBlock lines={README_DESKTOP} />
 
       <div className="readme-codesample">
         <div className="codesample">
