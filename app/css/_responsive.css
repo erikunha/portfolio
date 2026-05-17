@@ -82,7 +82,7 @@
   }
 }
 body[data-motion="reduce"] .hero__status-dot {
-  animation: none !important;
+  animation: none;
 }
 
 /* ─── Window chrome (mobile) ─────────────────────────────────────────────── */

@@ -342,10 +342,10 @@ footer.shutdown {
 body[data-motion="reduce"] .sd-dmesg .dm-line,
 body[data-motion="reduce"] .sd-halt,
 body[data-motion="reduce"] .sd-halt-hint {
-  opacity: 1 !important;
-  transform: none !important;
-  transition: none !important;
+  opacity: 1;
+  transform: none;
+  transition: none;
 }
 body[data-motion="reduce"] .sp-bar2 > i {
-  transition: none !important;
+  transition: none;
 }

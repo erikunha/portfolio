@@ -1,6 +1,6 @@
 // __tests__/redis-singleton.test.ts
 
-import { readFileSync } from 'fs';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 describe('Redis singleton', () => {
