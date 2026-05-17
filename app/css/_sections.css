@@ -821,6 +821,12 @@
   letter-spacing: 0.04em;
 }
 
+.gitfuller--mobile pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: hidden;
+}
+
 /* career-desktop shows gitfuller, career-mobile shows blame — toggled by breakpoint */
 .career-mobile {
   display: none;
