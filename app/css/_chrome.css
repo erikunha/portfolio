@@ -341,6 +341,7 @@
     pointer-events: auto;
   }
 
+  /* biome-ignore lint/style/noDescendingSpecificity: .totop and .dock are sibling components — no actual conflict */
   .totop svg {
     width: 16px;
     height: 16px;

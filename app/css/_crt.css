@@ -138,6 +138,6 @@ body[data-motion="reduce"] .crt-scan-beam,
 body[data-motion="reduce"] .crt-noise,
 body[data-motion="reduce"] .bar.pulse > i,
 body[data-motion="reduce"] .perf-foot .live-dot {
-  animation: none !important;
+  animation: none;
   opacity: 0;
 }
