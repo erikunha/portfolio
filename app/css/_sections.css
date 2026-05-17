@@ -317,7 +317,7 @@
   line-height: 1.85;
 }
 .readme__row--h1 {
-  color: var(--fg);
+  color: var(--signal);
   font-weight: 700;
   font-size: var(--fs-lg);
   line-height: 1.4;
@@ -329,15 +329,8 @@
   margin-top: 4px;
 }
 
-.readme--mobile {
-  display: none;
-}
 @media (max-width: 768px) {
-  .readme--desktop {
-    display: none;
-  }
-  .readme--mobile {
-    display: block;
+  .readme {
     font-size: var(--fs-sm);
   }
   .readme-codesample {
@@ -872,13 +865,19 @@ span.proj-folder svg {
 }
 
 .gitfuller--mobile {
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
 }
 
 .gitfuller--mobile pre {
   white-space: pre-wrap;
   word-break: break-word;
   overflow-x: hidden;
+}
+
+.gitfuller--mobile .gf-cmdbar {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* career-desktop shows gitfuller, career-mobile shows blame — toggled by breakpoint */

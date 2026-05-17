@@ -169,12 +169,6 @@ export const ReadmeCopySchema = z.object({
   desktopCoreStack: z.array(z.string()).min(1),
   desktopPrinciples: z.array(z.string()).min(1),
   desktopStatusH2: z.string(),
-  mobileH2: z.string(),
-  mobileBetssonPrefix: z.string(),
-  mobileBetssonSuffix: z.string(),
-  mobileCoreStack: z.array(z.string()).min(1),
-  mobilePrinciples: z.array(z.string()).min(1),
-  mobileStatusSuffix: z.string(),
 });
 export type ReadmeCopy = z.infer<typeof ReadmeCopySchema>;
 
