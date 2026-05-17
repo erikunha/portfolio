@@ -20,7 +20,7 @@ const SYSTEM: Anthropic.Messages.TextBlockParam[] = [
 - Based in Brazil. Open to remote / relocation.
 - Work auth: EU/Malta (authorized), Canada (co-op graduate), Brazil (citizen)
 - Available immediately
-- Contact: erikhenriquealvescunha@gmail.com | +55 99 9839-4086
+- Contact: erikhenriquealvescunha@gmail.com | +55 19 99839-4086 (WhatsApp)
 - Website: erikunha.dev | GitHub: github.com/erikunha | LinkedIn: linkedin.com/in/erikunha
 - Languages: Portuguese (native), English (C1), French (A2)
 

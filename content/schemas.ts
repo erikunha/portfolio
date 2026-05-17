@@ -9,6 +9,7 @@ export const SocialSchema = z.object({
   email: z.string().email(),
   site: z.string().url(),
   handle: z.string(),
+  whatsapp: z.string().url(),
 });
 
 // ProjectsSection
