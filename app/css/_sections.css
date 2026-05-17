@@ -224,7 +224,7 @@
   gap: 4px;
   margin-top: 0.5em;
   font-family: var(--font-mono);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-base);
 }
 .cr-row {
   display: flex;
