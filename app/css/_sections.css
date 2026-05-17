@@ -250,7 +250,7 @@
 
 @media (max-width: 768px) {
   .cr-table {
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
     gap: 12px;
   }
   .cr-row {
@@ -265,7 +265,7 @@
   }
   .cr-val {
     color: var(--muted);
-    font-size: var(--fs-2xs);
+    font-size: var(--fs-xs);
   }
 }
 
