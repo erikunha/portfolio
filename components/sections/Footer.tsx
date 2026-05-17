@@ -210,27 +210,25 @@ export function Footer() {
             </header>
             {isMobile ? (
               <div className="ns-grid">
+                <span className="ns-hdr-cell">Proto</span>
                 <span className="ns-hdr-cell">State</span>
                 <span className="ns-hdr-cell">Endpoint</span>
-                <span className="ns-est">EST</span>
+                <span className="ns-proto">tcp</span>
+                <span className="ns-est">ESTABLISHED</span>
                 <a href="https://github.com/erikunha" target="_blank" rel="noopener noreferrer">
                   github.com/erikunha
                 </a>
-                <span className="ns-est">EST</span>
+                <span className="ns-proto">tcp</span>
+                <span className="ns-listen">LISTEN</span>
                 <a
                   href="https://linkedin.com/in/erikunha"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  linkedin/erikunha
+                  linkedin.com/in/erikunha
                 </a>
-                <span className="ns-listen">LSN</span>
-                <a href="mailto:erikhenriquealvescunha@gmail.com">erikh…@gmail.com</a>
-                <span className="ns-listen">LSN</span>
-                <a href="https://wa.me/5519998394086" target="_blank" rel="noopener noreferrer">
-                  +5519998394086
-                </a>
-                <span className="ns-est">EST</span>
+                <span className="ns-proto">tcp</span>
+                <span className="ns-est">ESTABLISHED</span>
                 <a href="https://erikunha.dev" target="_blank" rel="noopener noreferrer">
                   erikunha.dev
                 </a>
@@ -247,24 +245,10 @@ export function Footer() {
                     external: true,
                   },
                   {
-                    state: 'ESTABLISHED',
-                    cls: 'ns-est',
+                    state: 'LISTEN',
+                    cls: 'ns-listen',
                     href: 'https://linkedin.com/in/erikunha',
                     label: 'linkedin.com/in/erikunha',
-                    external: true,
-                  },
-                  {
-                    state: 'LISTEN',
-                    cls: 'ns-listen',
-                    href: 'mailto:erikhenriquealvescunha@gmail.com',
-                    label: 'erikhenriquealvescunha@gmail.com',
-                    external: false,
-                  },
-                  {
-                    state: 'LISTEN',
-                    cls: 'ns-listen',
-                    href: 'https://wa.me/5519998394086',
-                    label: 'wa.me/5519998394086',
                     external: true,
                   },
                   {
