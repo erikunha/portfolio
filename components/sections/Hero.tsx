@@ -326,12 +326,12 @@ function DesktopHero() {
       <aside className="hero__bio">
         <h1 className="hero__name">Erik Henrique Alves Cunha</h1>
         <p className="hero__tagline">
-          Senior Full-Stack Engineer, Frontend · 8+ yrs in regulated systems · fintech (PCI-DSS),
-          healthcare, global e-commerce
+          Senior Full-Stack Engineer, Frontend · 8+ yrs in building systems to support business
+          operations · fintech (PCI-DSS), healthcare, global e-commerce
         </p>
         <p className="hero__meta">
           <span>
-            LOC: <b>Malta</b>
+            LOC: <b>Brazil</b>
           </span>
           <span>
             NOW: <b>Betsson</b>
@@ -404,12 +404,12 @@ function MobileHero() {
 
         <h1 className="hero__name">Erik Henrique Alves Cunha</h1>
         <p className="hero__tagline">
-          Senior Full-Stack Engineer, Frontend · 8+ yrs in regulated systems · fintech (PCI-DSS),
-          healthcare, global e-commerce
+          Senior Full-Stack Engineer, Frontend · 8+ yrs in building systems to support business
+          operations · fintech (PCI-DSS), healthcare, global e-commerce
         </p>
         <p className="hero__meta">
           <span>
-            LOC: <b>Malta</b>
+            LOC: <b>Brazil</b>
           </span>
           <span>
             NOW: <b>Betsson</b>
