@@ -95,7 +95,7 @@ footer.shutdown {
   display: grid;
   grid-template-columns: 130px 1fr;
   gap: 12px;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-base);
   line-height: 1.95;
   align-items: center;
 }
@@ -134,7 +134,7 @@ footer.shutdown {
 .sd-netstat pre {
   margin: 0;
   font-family: var(--font-mono-stack);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-base);
   line-height: 1.95;
   color: var(--fg);
   white-space: pre;
@@ -194,7 +194,7 @@ footer.shutdown {
   list-style: none;
   margin: 0 0 24px;
   padding: 0;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-base);
   line-height: 1.85;
 }
 .sd-dmesg .dm-line {
@@ -296,7 +296,7 @@ footer.shutdown {
 }
 .shutdown-copy {
   color: var(--muted);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-base);
   margin-top: 22px;
   letter-spacing: 0.04em;
   opacity: 0.85;
@@ -316,10 +316,10 @@ footer.shutdown {
   .sd-dmesg .dm-line {
     grid-template-columns: 72px 1fr auto;
     gap: 10px;
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
   }
   .sd-netstat pre {
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
   }
 }
 
