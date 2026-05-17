@@ -1745,7 +1745,7 @@ const PROJECTS: Project[] = [
     stats: [
       { label: 'VOLUME', value: '40M+ TX / YR' },
       { label: 'REVENUE', value: '€1B+ / YR' },
-      { label: 'STACK', value: 'ANGULAR / STENCIL / NGRX' },
+      { label: 'STACK', value: 'ANGULAR / REACT / STENCIL / NGRX' },
     ],
   },
   {
