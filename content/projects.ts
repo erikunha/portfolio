@@ -12,7 +12,7 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
     stats: [
       { label: 'VOLUME', value: '40M+ TX / YR' },
       { label: 'REVENUE', value: '€1B+ / YR' },
-      { label: 'STACK', value: 'ANGULAR / STENCIL / NGRX' },
+      { label: 'STACK', value: 'ANGULAR / REACT / STENCIL / NGRX' },
     ],
     mobileMeta: [
       { label: 'stack', value: 'stencil · angular · rxjs' },
