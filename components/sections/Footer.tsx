@@ -226,6 +226,10 @@ export function Footer() {
                 </a>
                 <span className="ns-listen">LSN</span>
                 <a href="mailto:erikhenriquealvescunha@gmail.com">erikh…@gmail.com</a>
+                <span className="ns-listen">LSN</span>
+                <a href="https://wa.me/5519998394086" target="_blank" rel="noopener noreferrer">
+                  +5519998394086
+                </a>
                 <span className="ns-est">EST</span>
                 <a href="https://erikunha.dev" target="_blank" rel="noopener noreferrer">
                   erikunha.dev
@@ -255,6 +259,13 @@ export function Footer() {
                     href: 'mailto:erikhenriquealvescunha@gmail.com',
                     label: 'erikhenriquealvescunha@gmail.com',
                     external: false,
+                  },
+                  {
+                    state: 'LISTEN',
+                    cls: 'ns-listen',
+                    href: 'https://wa.me/5519998394086',
+                    label: 'wa.me/5519998394086',
+                    external: true,
                   },
                   {
                     state: 'ESTABLISHED',
