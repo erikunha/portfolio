@@ -1127,6 +1127,8 @@
   }
   .guitar-mobile {
     display: block;
+  }
+  pre.guitar-mobile {
     font-size: var(--fs-sm);
   }
 }
