@@ -26,7 +26,7 @@ export function RoleTyper() {
 
     function tick() {
       if (cancelled) return;
-      const role = ROLES[roleIdx % ROLES.length]!;
+      const role = ROLES[roleIdx % ROLES.length] ?? '';
       if (phase === 'type') {
         charIdx++;
         node.textContent = `[${role.slice(0, charIdx)}]`;
