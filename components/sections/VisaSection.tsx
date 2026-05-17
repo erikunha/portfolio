@@ -29,27 +29,19 @@ export function VisaSection() {
           ))}
         </pre>
 
-        <pre className="visa-mobile-pre">
-          <span className="cmd-line">
-            <span className="pr">$</span>
-            {' cat ~/.visa'}
-          </span>
-          {'\n\n'}
-          <span className="vh">{'REGION    STATUS'}</span>
-          {'\n'}
-          <span className="vrule">{'================================'}</span>
-          {'\n'}
-          {visaRows.map((row) => (
-            <span key={row.jurisdictionShort}>
-              <span className="vjur">{row.jurisdictionShort}</span>
-              {'   '}
-              <span className="vstat">{row.statusShort}</span>
-              {'\n          '}
-              <span className="vev">{row.evidence}</span>
-              {'\n'}
-            </span>
-          ))}
-        </pre>
+        <div className="visa-mobile-pre">
+          <div className="vm-grid">
+            {visaRows.map((row) => (
+              <div key={row.jurisdictionShort} className="vm-row">
+                <span className="vjur">{row.jurisdictionShort}</span>
+                <div className="vm-right">
+                  <span className="vstat">{row.statusShort}</span>
+                  <span className="vev">{row.evidence}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         <div className="visa-foot">{'// PT (native) · EN (C1) · FR (A2) · ES (A2)'}</div>
       </div>

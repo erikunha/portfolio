@@ -179,6 +179,28 @@
 .visa-mobile-pre {
   display: none;
 }
+.vm-grid {
+  margin-top: 0.5em;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-sm);
+}
+.vm-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.vm-row .vjur {
+  flex-shrink: 0;
+  width: 8ch;
+}
+.vm-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
 .guitar-desktop {
   display: block;
 }
@@ -197,29 +219,56 @@
   margin-right: 4px;
 }
 .cr-table {
-  display: grid;
-  grid-template-columns: 14ch 25ch 1fr;
-  row-gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   margin-top: 0.5em;
   font-family: var(--font-mono);
   font-size: var(--fs-sm);
-  align-items: baseline;
 }
 .cr-row {
-  display: contents;
+  display: flex;
+  align-items: baseline;
 }
 .cr-label {
+  width: 14ch;
+  flex-shrink: 0;
   color: var(--fg);
   font-weight: 700;
   letter-spacing: 0.04em;
 }
 .cr-badge {
+  width: 25ch;
+  flex-shrink: 0;
   color: var(--signal);
   font-weight: 700;
 }
 .cr-val {
+  flex: 1;
   color: var(--fg);
 }
+
+@media (max-width: 768px) {
+  .cr-table {
+    font-size: var(--fs-xs);
+    gap: 12px;
+  }
+  .cr-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .cr-label {
+    width: auto;
+  }
+  .cr-badge {
+    width: auto;
+  }
+  .cr-val {
+    color: var(--muted);
+    font-size: var(--fs-2xs);
+  }
+}
+
 .gr-label {
   color: var(--signal);
   font-weight: 700;
@@ -819,6 +868,10 @@
   margin-top: 14px;
   font-size: var(--fs-sm);
   letter-spacing: 0.04em;
+}
+
+.gitfuller--mobile {
+  font-size: var(--fs-xs);
 }
 
 .gitfuller--mobile pre {
