@@ -5,7 +5,12 @@ export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
+    // 'self' covers same-origin static scripts (Next's chunks, /init.js).
+    // 'nonce-...' covers Next's auto-injected inline data scripts (flight payloads, hydration).
+    // 'strict-dynamic' intentionally absent: site has no third-party scripts and CLAUDE.md
+    // rejects all categories that would justify transitive nonce trust (analytics, CMS, auth, CAPTCHA).
+    // See DECISIONS.md (2026-05-18).
+    `script-src 'self' 'nonce-${nonce}'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
     // 'unsafe-inline' required: Tailwind v4 injects styles at runtime; React inline style props cannot use nonces
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
