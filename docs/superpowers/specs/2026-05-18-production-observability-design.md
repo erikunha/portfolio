@@ -32,7 +32,7 @@ This spec converts the existing build-time rigor into a single runtime feedback 
 |---|---|---|---|
 | 1 | **Browser RUM** — re-add `@vercel/analytics` + `@vercel/speed-insights`, mount in `app/layout.tsx`, widen CSP for Vercel ingest endpoints | 7 — Flywheel | `app/layout.tsx`, `package.json`, `proxy.ts` |
 | 2 | **Structured-logging foundation** — `lib/log.ts` wrapping `pino` (server-only); migrate 11 enumerated `console.*` sites in `lib/` + `app/api/`; correlation-ID propagation via AsyncLocalStorage in middleware | 7 — Flywheel | `lib/log.ts` (new), `proxy.ts`, `lib/rate-limit.ts`, `lib/lighthouse-scores.ts`, `app/api/ask/route.ts`, `app/api/contact/route.ts` |
-| 3 | **Error tracking + `/api/ask` Q+A logging** — `app/api/log/route.ts` accepts structured client errors into Upstash KV (`err:{yyyy-mm-dd}:{uuid}`, 30-day TTL); client-side bridge (ErrorBoundary + window handlers); `/api/ask` persists `{Q+A+meta}` to Upstash KV (`ask:log:{yyyy-mm-dd}:{requestId}`, 90-day TTL) | 7 — Flywheel + Pillar 3 (Juiz, runtime evaluation) | `app/api/log/route.ts` (new), `lib/error-bridge.ts` (new), `lib/ask-log.ts` (new), `components/ErrorBoundary.client.tsx`, `components/AppShell.client.tsx`, `app/api/ask/route.ts` |
+| 3 | **Error tracking + `/api/ask` Q+A logging** — `app/api/log/route.ts` accepts structured client errors into Upstash KV (`err:{yyyy-mm-dd}:{uuid}`, 30-day TTL); client-side bridge (ErrorBoundary + window handlers); `/api/ask` persists `{Q+A+meta}` to Upstash KV (`ask:log:{yyyy-mm-dd}:{requestId}`, 90-day TTL); new `/api/ask/forget` GDPR/LGPD erasure endpoint | 7 — Flywheel (enables future Pillar 3 work, but capture ≠ judgment) | `app/api/log/route.ts` (new), `app/api/log/forget/route.ts` (new), `lib/error-bridge.ts` (new), `lib/ask-log.ts` (new), `components/ErrorBoundary.client.tsx`, `components/AppShell.client.tsx`, `components/sections/ShellSection.tsx` or wherever the `/api/ask` form lives (privacy notice), `app/api/ask/route.ts` |
 
 ### Out of scope
 
@@ -124,7 +124,7 @@ Visitors with ad-blockers (uBlock, Brave shields, etc.) block these endpoints. S
 
 ### What
 
-New `lib/log.ts` (~80 LoC including AsyncLocalStorage context plumbing) wraps `pino`:
+New `lib/log.ts` (~50 LoC) wraps `pino`:
 
 ```ts
 // public surface
@@ -133,16 +133,23 @@ export const log: {
   warn: (msg: string, ctx?: Record<string, unknown>) => void;
   error: (msg: string, ctx?: Record<string, unknown>) => void;
 };
-export function withRequestContext<T>(requestId: string, fn: () => Promise<T>): Promise<T>;
-export function currentRequestId(): string | undefined;
 ```
 
-`proxy.ts` (the existing Next middleware) wraps every request in `withRequestContext(crypto.randomUUID(), ...)` so any `log.*` call inside any route handler automatically picks up the correlation ID without manual threading.
+**Correlation-ID strategy (architect-review-corrected):** explicit-parameter passing, NOT AsyncLocalStorage. Each route handler generates a `requestId` at the top (via `crypto.randomUUID()`) and passes it as the first `ctx.requestId` field on every `log.*` call inside that handler. The 11 call-site migrations enumerated below include the `requestId` parameter where the call is request-scoped.
+
+Earlier draft of this spec proposed AsyncLocalStorage with the Next middleware wrapping every request in `withRequestContext(...)`, requiring an opt-out of Edge runtime (`export const config = { runtime: 'nodejs' }`). Rejected after architect-review:
+
+- Vercel Node middleware cold-starts are ~50-150ms vs Edge's ~5-20ms.
+- That 30-130ms TTFB hit feeds directly into LCP, which is currently 70% over target on mobile (PR #10's calibration evidence).
+- Opting middleware out of Edge while another sibling PR is actively fighting LCP is risk-stacking.
+- Explicit-parameter passing is mechanical (5 call sites that need correlation), keeps Edge runtime, costs nothing.
+
+If mobile LCP closes under target (PR #10 + Spec 1.5 land green), a follow-up spec can revisit ALS opt-in as a quality-of-life upgrade. Until then, explicit threading is the right trade.
 
 pino config:
 - `process.env.NODE_ENV === 'production'` → JSON line output (Vercel-parseable)
 - dev → `pino-pretty` formatter (human-readable)
-- base fields auto-added: `{ ts, level, requestId (from AsyncLocalStorage), env }`
+- base fields auto-added by pino: `{ ts, level, env }`. `requestId` is appended per call via `ctx`.
 
 ### Where (call-site migration plan)
 
@@ -170,19 +177,15 @@ Migrate exactly 11 `console.*` call sites:
 
 pino's transport layer can fail (e.g., file-system if configured). With Vercel runtime logs as the sink (stdout JSON), failures are limited to `JSON.stringify` edge cases (circular refs); pino has built-in handling for these.
 
-### Edge case (architect-review-critical)
+### Edge case
 
-**AsyncLocalStorage is unavailable in Edge runtime contexts.** `proxy.ts` runs in Edge by default per Next.js convention. Two mitigation paths:
-1. **Opt the middleware out of Edge:** declare `export const config = { runtime: 'nodejs' }` in `proxy.ts`. Adds minimal cold-start overhead. Preserves the automatic-correlation-ID benefit.
-2. **Fall back to explicit-parameter context passing in Edge contexts.** Plumb `requestId` through function signatures manually.
-
-Spec prefers (1). Middleware is small; adding Node-runtime overhead is negligible vs the value of automatic correlation-ID propagation. Document the runtime declaration explicitly in `proxy.ts`'s comments.
+`proxy.ts` continues to run in Edge runtime; no opt-out. The earlier draft of this spec proposed opting middleware out of Edge to enable AsyncLocalStorage; rejected at architect-review (see Correlation-ID strategy above). With explicit-parameter passing, Edge stays Edge, cold starts stay ~5-20ms, and request-scoped `requestId` is generated at the top of each route handler and threaded explicitly through `log.*` ctx parameters at the few call sites that need it.
 
 ---
 
 ## 7. Phase 3 — Error tracking + `/api/ask` Q+A logging
 
-**Pillars:** 7 (Flywheel) + 3 (Juiz, runtime evaluation).
+**Pillar:** 7 (Flywheel). *Enables future Pillar 3 (Juiz) work* by persisting the data a future evaluation/scoring loop would consume — capture is not judgment, so this spec does not claim Pillar 3 attribution directly.
 **Outcome:** Client exceptions persist to Upstash for retrospective triage. `/api/ask` interactions are auditable for 90 days.
 
 ### 7a. Custom error endpoint — `app/api/log/route.ts`
@@ -194,6 +197,8 @@ Spec prefers (1). Middleware is small; adding Node-runtime overhead is negligibl
 - Returns `{ ok: true }` 204 on success; 400 on validation fail; 503 on KV unreachable (fail-open — never block the user's page on error reporting).
 - Rate-limited (10 errors/IP/minute) via existing `getContactLimit`-style Upstash Ratelimit primitive (new `getErrorLogLimit()` factory in `lib/rate-limit.ts`).
 
+**Debug-affordance note (architect-review steel-man for Sentry):** raw stack traces from production are minified by Next's build output. The Sentry comparison: Sentry's source-map upload + symbolication produces readable stacks; the custom endpoint stores raw minified frames. To close this debug gap without adopting Sentry, Vercel's deployment pipeline already retains source maps for the current and previous deploys; the post-merge ops checklist (§9b item 5, added in this revision) includes a step to manually symbolicate a captured stack via Vercel's source maps if a real production error needs deeper triage. If this manual step becomes a recurring pain point, a future spec can add a small `/internal/symbolicate` route that does it on demand.
+
 ### 7b. Client-side bridge
 
 Extends existing `components/ErrorBoundary.client.tsx`:
@@ -202,17 +207,19 @@ Extends existing `components/ErrorBoundary.client.tsx`:
 New `lib/error-bridge.ts` (client-only, ~50 LoC, ~0.5KB gzip):
 - `'use client'` at the top.
 - Registers `window.addEventListener('error', handler)` and `window.addEventListener('unhandledrejection', handler)` at module scope.
-- Dedupes via a 5-second rolling window keyed on `{message, stack}` to prevent same-error spam.
+- Dedupes within a **100ms tail window** keyed on `{message, stack}`: first occurrence emits immediately, subsequent identical occurrences within 100ms are suppressed. React's error replay typically fires the same error 2-3 times within ~50ms during reconciliation; a 100ms window covers that without suppressing unrelated re-occurrences of the same error class later in the session. Earlier draft proposed a 5-second window — rejected after architect-review as unjustified and likely to suppress meaningful repeat-occurrence signal (e.g., a flaky network call that errors on every retry).
 - Imported once from `components/AppShell.client.tsx` so the listeners install on every page.
 
-### 7c. `/api/ask` Q+A persistence
+### 7c. `/api/ask` Q+A persistence (with GDPR/LGPD right-of-erasure affordance)
 
 Inside the existing POST handler in `app/api/ask/route.ts`, after the stream completes (alongside the existing `incrementBudget` fire-and-forget call):
 
 ```ts
+const requestId = crypto.randomUUID();
+// ...stream completes here; collectedAnswerText accumulated up to 1000 chars
 // Fire-and-forget; never blocks the response
 void persistAskInteraction({
-  requestId: currentRequestId() ?? crypto.randomUUID(),
+  requestId,
   ts: new Date().toISOString(),
   ipHash, // computed via existing helper
   question: question.slice(0, 500),
@@ -224,9 +231,25 @@ void persistAskInteraction({
 });
 ```
 
-`persistAskInteraction` lives in new `lib/ask-log.ts`. KV key: `ask:log:{yyyy-mm-dd}:{requestId}`, 90-day TTL (same as contact form). Status enum captures the five terminal states the handler can take.
+The response includes an `X-Request-Id: <requestId>` header so the requester can find their persisted record (visible in DevTools Network tab). `persistAskInteraction` lives in new `lib/ask-log.ts`. KV key: `ask:log:{yyyy-mm-dd}:{requestId}`, 90-day TTL. Status enum captures the five terminal states the handler can take.
 
 Answer collection: the existing stream loop in `route.ts` already accumulates `outputTokens`. Extend the same loop to also accumulate streamed text into a `collectedAnswerText` string (capped at 1000 chars to avoid memory bloat on long answers — defense in depth since `max_tokens: 512` already limits at Anthropic-token level).
+
+### 7d. `/api/ask/forget` — GDPR/LGPD right-of-erasure endpoint (architect-review-required)
+
+Storing user free-text questions + IP hash + timestamp creates derivative-identifiable data. GDPR Art. 17 and LGPD Art. 18 require a right-of-erasure mechanism. The earlier draft of this spec offered only a "queries are stored 90 days" notice; rejected after architect-review as insufficient.
+
+**New endpoint:** `app/api/log/forget/route.ts` (lives next to the error endpoint for locality). POST handler accepts `{ requestId: string }`. Looks up `ask:log:{yyyy-mm-dd}:{requestId}` across the last 90 days of date-prefix candidates (cheap: 90 GETs against existing key pattern, OR use an Upstash `SCAN` with the request-ID suffix). DELETEs any match. Returns `{ ok: true, deleted: <count> }` 200 on success; `{ ok: true, deleted: 0 }` 200 if no record exists (idempotent); 400 on validation; 503 on KV unreachable.
+
+**UI affordance:** the `/api/ask` form gets a single-line privacy notice below the submit button:
+
+> Queries are stored for 90 days for product improvement. Email `erikhenriquealvescunha@gmail.com` with your request ID (in response headers) to request deletion at any time, or POST the ID to `/api/ask/forget`.
+
+The endpoint is rate-limited (5/IP/hour via a new `getForgetLimit()` factory in `lib/rate-limit.ts`) to prevent abuse (e.g., enumeration attacks against random requestIds). UUIDv4 collision space (~5.3e36) makes brute-force enumeration computationally infeasible regardless.
+
+### Why preserve question text (not drop it entirely)
+
+Architect-review offered as alternative: drop question/answer text entirely; store only meta `{requestId, ts, ipHash, tokens, durationMs, status, questionLength, answerLength}`. Considered and rejected here: the brainstorming-stage decision (clarifying Q3) explicitly chose Q+A capture for two named values — (1) retrospective audit of what Haiku says about Erik, (2) product learning on what users actually ask. Meta-only loses both. The forget-endpoint mechanism preserves the chosen value while adding regulatory compliance. Cost is one additional ~30-line endpoint + UI line; benefit is keeping the original chosen value intact.
 
 ### Failure mode
 
@@ -243,17 +266,17 @@ Prompt injection attempts where users paste 50KB of text into the question. Trun
 | Phase | Test surface | Test type | Location |
 |---|---|---|---|
 | 1 | Source-grep: `layout.tsx` imports `Analytics` and `SpeedInsights`; both elements appear in JSX; `package.json` has both runtime deps; `proxy.ts` CSP `connect-src` includes the two Vercel ingest origins | Vitest unit | new `__tests__/browser-rum.test.ts` |
-| 2 | Source-grep: `lib/log.ts` exists and exports `log` + `withRequestContext` + `currentRequestId`; imports pino; `proxy.ts` wraps requests in `withRequestContext`; all 11 enumerated migrations complete (assert via per-site regex); the ErrorBoundary `console.error` is the ONLY remaining `console.*` in `lib/` + `app/api/` + that one client file | Vitest unit | new `__tests__/log-structured.test.ts` |
+| 2 | Source-grep: `lib/log.ts` exists and exports `log`; imports pino; all 11 enumerated migrations complete (assert via per-site regex); each route handler that needs correlation initialises a `requestId` at the top and threads it through `log.*` ctx; the ErrorBoundary `console.error` is the ONLY remaining `console.*` in `lib/` + `app/api/` + that one client file | Vitest unit | new `__tests__/log-structured.test.ts` |
 | 3a | Source-grep: `app/api/log/route.ts` exists with POST handler; validates shape via zod; uses `err:` KV prefix + 30-day TTL constant; rate-limits via new `getErrorLogLimit()` factory | Vitest unit | new `__tests__/api-log-shape.test.ts` |
-| 3b | Source-grep: `lib/error-bridge.ts` exists; `'use client'`; registers both `error` + `unhandledrejection` listeners; dedupes within 5s window; imported once from `AppShell.client.tsx`; `ErrorBoundary.client.tsx` componentDidCatch POSTs to `/api/log` | Vitest unit | extend `__tests__/api-log-shape.test.ts` |
+| 3b | Source-grep: `lib/error-bridge.ts` exists; `'use client'`; registers both `error` + `unhandledrejection` listeners; dedupes within a 100ms tail window (first emit immediate, identical within 100ms suppressed); imported once from `AppShell.client.tsx`; `ErrorBoundary.client.tsx` componentDidCatch POSTs to `/api/log` | Vitest unit | extend `__tests__/api-log-shape.test.ts` |
 | 3c | Source-grep: `lib/ask-log.ts` exports `persistAskInteraction` with the 9-field shape; KV key `ask:log:{yyyy-mm-dd}:{requestId}` + 90-day TTL; `app/api/ask/route.ts` calls `persistAskInteraction` after stream completion; answer text accumulator caps at 1000 chars | Vitest unit | new `__tests__/ask-log-persistence.test.ts` |
 | All | **Post-deploy verification:** Vercel dashboard shows analytics events landing within 5 min of merge; Upstash console shows new `err:` and `ask:log:` keys after manual triggers; Vercel runtime log stream emits JSON lines (not plain console output) for any new request | Manual | n/a |
 
 **Explicit non-tests:**
 - No mocking of pino itself (project's source-grep pattern; behavior verified manually)
 - No load test on the error endpoint (rate limit is documented; load testing is its own effort)
-- No end-to-end test that "an error in the browser actually reaches Upstash" (would require Playwright + real KV; covered by manual post-deploy check)
-- No test for AsyncLocalStorage context propagation (relies on Node.js correctness; spec author trusts the platform)
+- No end-to-end test that an in-browser error actually reaches Upstash (the Playwright smoke in criterion 8 covers `/api/log` endpoint shape; full client→endpoint round-trip is covered by manual post-merge ops checklist)
+- No test for correlation-ID propagation as a behavior (explicit-parameter passing means each call-site test in the migration table already asserts the `requestId` is present in the ctx — no separate end-to-end propagation test needed)
 
 ---
 
@@ -268,9 +291,24 @@ Binary checks; each must hold before merge.
 5. `lib/log.ts` exists with the documented public surface. Migration complete: `grep -rn 'console\.' lib/ app/api/` returns zero matches (every site moved to `log.*`). `components/ErrorBoundary.client.tsx` retains its `console.error` (client-side, intentional).
 6. `DECISIONS.md` has new bullets dated 2026-05-18: (a) Vercel Analytics + Speed Insights re-wired (reverses the earlier removal); (b) pino chosen over custom wrapper (deviation from the no-extra-plugins lock-in, justified); (c) custom Upstash error endpoint chosen over Sentry; (d) `/api/ask` Q+A logging shape (Q 500 chars + A 1000 chars + meta, 90-day TTL, IP-hashed).
 7. `ARCHITECTURE.md §9` rewritten to reflect the new observability layer (replaces the old "Sentry frontend SDK — only if client errors become a problem" framing).
-8. **Post-deploy ops checklist** (separate from CI gates, surfaced in the PR description, not test-enforced): operator manually triggers a deliberate client error (e.g., `throw new Error('test')` in console) and confirms it lands in Upstash under `err:*`; operator submits one test `/api/ask` query and confirms it lands under `ask:log:*`; operator inspects Vercel runtime logs and confirms JSON-line format on at least one production request.
+8. **CI-verifiable smoke (architect-review-required upgrade from manual checklist):** a Playwright spec in `tests/e2e/observability-smoke.spec.ts` that:
+   - POSTs a synthetic error payload to `/api/log` and asserts 204 response
+   - POSTs a synthetic `/api/ask/forget` request with a known requestId and asserts 200 with `{ ok: true }`
+   - These two assertions exercise the Phase 3 endpoints end-to-end against a real running server (CI's existing preview server). Replaces the prior manual "operator triggers a deliberate error" criterion — the smoke runs every PR.
 
 ---
+
+## 9b. Post-merge ops checklist (NOT success criteria)
+
+Separate from the binary CI-enforceable success criteria above. These are one-time human actions required after merge but not pre-merge:
+
+1. Open Vercel dashboard → Analytics + Speed Insights → verify pageview + CWV events landing within 5 minutes of the first post-merge production deploy.
+2. Open Upstash dashboard → Data Browser → `SCAN err:*` and `SCAN ask:log:*` after at least one real production request; verify keys exist with expected shape.
+3. Tail Vercel runtime logs after the first request → verify JSON-line format (not plain text); spot-check a `log.info` call with the expected `requestId` field.
+4. Visit `/api/ask` UI in a browser → verify the privacy notice (Phase 3d) is visible below the submit button.
+5. **On-demand stack symbolication (referenced from §7a).** When a captured production error in Upstash shows minified frames, the operator can pull the Vercel deployment's source maps via `vercel inspect <deploy-url> --logs` (or the Vercel dashboard's Source Maps tab) and manually symbolicate. If this manual step becomes recurring, a future spec adds an `/internal/symbolicate` route to do it on demand. Captured here to close the §7a steel-man counter cleanly without ad-hoc tooling now.
+
+This checklist lives in the implementation PR's description so the operator knows what to verify post-merge; it is not test-enforced and does not block merge.
 
 ## 10. Risks + reversibility
 
@@ -278,8 +316,8 @@ Binary checks; each must hold before merge.
 |---|---|---|---|---|---|
 | R1 | Ad-blockers reduce Vercel Analytics coverage; "real-user data" claim looks aspirational | High | Low | Document expected coverage band (~70-85%) in `ARCHITECTURE.md §9`; never claim 100% population coverage in the hiring pitch | Trivial — unmount the components |
 | R2 | pino dependency contradicts the "no extra plugins" architecture lock-in | Medium (already accepted) | Low | DECISIONS.md bullet captures the deviation + justification (server-only, no client bundle impact, battle-tested correlation IDs) | Trivial — `pnpm rm pino pino-pretty`; restore `console.*` |
-| R3 | AsyncLocalStorage unavailable in Edge runtime → middleware can't auto-propagate correlation IDs | Medium | Medium | Explicitly opt the middleware out of Edge: declare `export const config = { runtime: 'nodejs' }` in `proxy.ts`. If platform constraints later force Edge, fall back to explicit-parameter passing | Trivial — remove the runtime declaration; lose auto-propagation |
-| R4 | Q+A logging accidentally captures PII users paste into the question (emails, addresses) | Medium | Medium (LGPD/GDPR adjacency) | Truncation at 500 chars limits damage; IP already hashed; question content is user-submitted. Add a one-line privacy note to the `/api/ask` UI ("queries are stored for 90 days for product improvement") as a follow-up | Trivial — flip a feature flag; delete existing keys (`SCAN ask:log:*` + `DEL`) |
+| R3 | Explicit-parameter correlation-ID threading is forgotten at a call site, leaving the log without a `requestId` | Medium | Low | The per-site source-grep test in success criterion 5 asserts `requestId` is present in the ctx for every route-scoped `log.*` call; missing it fails the gate. Easier to forget than ALS would have been, but cheaper to catch via the existing test surface | Mechanical — add the `requestId` parameter at the missed site |
+| R4 | Q+A logging captures PII users paste into the question (emails, addresses, prompt-injection bodies) | Medium | Medium (LGPD/GDPR adjacency) | Three layers: (a) truncation at 500 chars limits damage; (b) IP is hashed via existing SHA-256 + DEPLOY_SALT; (c) `/api/log/forget` endpoint (§7d) + privacy notice on `/api/ask` UI provide GDPR/LGPD Art.17/Art.18 right-of-erasure affordance. The 90-day TTL is the worst-case retention window | Trivial — flip a feature flag in the route; or have operator `SCAN ask:log:* | DEL` |
 | R5 | Custom error endpoint sees an abuse spike (e.g., a script firing 10K errors/sec) → blows Upstash quota | Low | Medium | Per-IP rate limit (10/min) reuses existing primitive. Endpoint is rate-limit-protected before KV write. Worst case: rate-limit absorbs the storm at ~6000 errors/hour/IP max | Trivial — temporarily return 503 from the route |
 | R6 | pino JSON output overwhelms Vercel's log buffer on high-traffic moments | Low | Low | Vercel runtime logs handle JSON line format natively. If buffer pressure surfaces, sample (log 1-in-N for `info`, always for `warn`/`error`) | Adjust sample rate in `lib/log.ts` |
 | R7 | Browser RUM scripts (Vercel Analytics + Speed Insights) increase LCP by their loading cost — directly contradicting the perf-fix work in Spec 1.5 / PR #10 | Medium | Medium | Both scripts are async; SDK loads after page ready. Verify via `pnpm lhci:mobile` post-merge (calibration delta against Spec 1.5 baseline). If LCP regresses above 1800ms, defer the mount or move to a dynamic-import-after-LCP pattern | Trivial — unmount the components |
@@ -294,12 +332,13 @@ Binary checks; each must hold before merge.
 Informative for the plan-writing skill; final order may shift on dependency analysis.
 
 1. **Phase 1 — Browser RUM.** Smallest, most independent. Validates the CSP widening pattern in isolation before Phase 3 needs a similar (smaller) widening for self-origin.
-2. **Phase 2a — `lib/log.ts` + middleware context wrapper.** Foundation; no migration yet.
-3. **Phase 2b — Migrate the 11 enumerated `console.*` call sites.** Mechanical, gated by the drift test.
+2. **Phase 2a — `lib/log.ts` foundation.** Pino wrapper + the `log.*` surface. No migration yet, no middleware change. Edge runtime preserved.
+3. **Phase 2b — Migrate the 11 enumerated `console.*` call sites.** Mechanical. Each route handler that needs correlation initialises a `requestId` via `crypto.randomUUID()` at the top and threads it into `log.*` ctx parameters. Gated by the drift test in success criterion 5.
 4. **Phase 3a — Custom error endpoint `app/api/log/route.ts`.** Server-side primitive ready before clients use it.
-5. **Phase 3b — Client-side bridge (`lib/error-bridge.ts` + `ErrorBoundary.client.tsx` extension).** Wires the browser into the now-existing endpoint.
-6. **Phase 3c — `/api/ask` Q+A persistence.** Uses the structured-logging primitive from Phase 2; lands last so the full observability layer is in place when Q+A flows through it.
-7. **Final cleanup commit** — Update `DECISIONS.md` (4 bullets) and `ARCHITECTURE.md §9` (replace observability section). Post-deploy ops checklist runs after merge.
+5. **Phase 3b — Client-side bridge (`lib/error-bridge.ts` + `ErrorBoundary.client.tsx` extension).** Wires the browser into the now-existing endpoint with the 100ms tail-window dedup.
+6. **Phase 3c — `/api/ask` Q+A persistence + `X-Request-Id` response header.** Uses the structured-logging primitive from Phase 2.
+7. **Phase 3d — `/api/log/forget` endpoint + privacy notice on `/api/ask` UI.** GDPR/LGPD right-of-erasure affordance. Depends on Phase 3c (forget needs persisted records to act on).
+8. **Final cleanup commit** — Update `DECISIONS.md` (4 bullets) and `ARCHITECTURE.md §9` (replace observability section). Post-merge ops checklist (§9b) runs after merge.
 
 ---
 
@@ -312,7 +351,7 @@ Informative for the plan-writing skill; final order may shift on dependency anal
 - `ARCHITECTURE.md §12` — security posture (CSP context for the widening)
 - `DECISIONS.md` 2026-05-18 — CSP cleanup; CSS architecture lock-in (the "no extra plugins" rule the pino deviation acknowledges)
 - `DECISIONS.md` 2026-05-15 — Anthropic monthly budget cap; contact route KV durability (the precedent pattern for `/api/ask` Q+A persistence)
-- `proxy.ts` — Next middleware (CSP + Phase 2 context wrapper)
+- `proxy.ts` — Next middleware (CSP only; Phase 1 widens `connect-src` for Vercel analytics origins)
 - `lib/rate-limit.ts` — Upstash Ratelimit primitives (reused for `getErrorLogLimit()`)
 - `app/api/contact/route.ts` — durability-first KV pattern + IP hashing (the precedent for Phase 3c)
 - `components/ErrorBoundary.client.tsx` — existing client error boundary (to be extended in Phase 3b)
