@@ -134,7 +134,25 @@ export function MatrixRain({
       // fallback if no IO support — start immediately
       resume();
     } else {
-      raf = requestAnimationFrame(frame);
+      // Defer the 22fps canvas loop until the browser is idle so it doesn't
+      // contend for main-thread time during LCP/TBT measurement on mobile.
+      // requestIdleCallback yields after LCP on real loads; setTimeout fallback
+      // for environments without it. Canvas already painted black via resize().
+      type IdleWindow = Window & {
+        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+        cancelIdleCallback?: (handle: number) => void;
+      };
+      const idleWin = window as IdleWindow;
+      let idleHandle: number | undefined;
+      let idleTimer: ReturnType<typeof setTimeout> | undefined;
+      const startLoop = () => {
+        raf = requestAnimationFrame(frame);
+      };
+      if (typeof idleWin.requestIdleCallback === 'function') {
+        idleHandle = idleWin.requestIdleCallback(startLoop, { timeout: 2000 });
+      } else {
+        idleTimer = setTimeout(startLoop, 1000);
+      }
       const onVisibility = () => {
         document.hidden ? pause() : resume();
       };
@@ -145,6 +163,8 @@ export function MatrixRain({
       window.addEventListener('sysfail:end', onSysfailEnd);
       return () => {
         pause();
+        if (idleHandle !== undefined) idleWin.cancelIdleCallback?.(idleHandle);
+        if (idleTimer !== undefined) clearTimeout(idleTimer);
         clearTimeout(resizeTimer);
         window.removeEventListener('resize', debouncedResize);
         document.removeEventListener('visibilitychange', onVisibility);
