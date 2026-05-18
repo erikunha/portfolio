@@ -794,7 +794,7 @@ span.proj-folder svg {
    ───────────────────────────────────────────────────────────────────────── */
 .gitfuller {
   font-family: var(--font-mono-stack);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-base);
   line-height: 1.55;
   overflow-x: auto;
 }
