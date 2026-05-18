@@ -1,8 +1,13 @@
 // components/responsive/Module.tsx
-'use client';
+// Pure Server Component. No 'use client' boundary, no React state, no event
+// listeners, no useBreakpoint hook. Saves ~18 client-component hydrations
+// (one per section) at the cost of native <details> on mobile instead of a
+// custom toggle. The 'module:open' event from Dock is handled by a single
+// delegated listener in AppShell.client.tsx that flips the open attribute.
 
-import { type ReactNode, useEffect, useState } from 'react';
-import { useBreakpoint } from '@/lib/use-breakpoint';
+import { headers } from 'next/headers';
+import type { ReactNode } from 'react';
+import { detectMobileFromUA } from '@/lib/breakpoint';
 
 export type ModuleProps = {
   id: string;
@@ -11,19 +16,18 @@ export type ModuleProps = {
   icon?: ReactNode;
   defaultOpen?: boolean;
   children: ReactNode;
-  postBody?: ReactNode;
 };
 
-export function Module({
+export async function Module({
   id,
   header,
   mobileHeader,
   icon,
   defaultOpen = true,
   children,
-  postBody,
 }: ModuleProps) {
-  const { isMobile } = useBreakpoint();
+  const ua = (await headers()).get('user-agent');
+  const isMobile = detectMobileFromUA(ua);
   const activeHeader = isMobile && mobileHeader ? mobileHeader : header;
 
   if (!isMobile) {
@@ -38,56 +42,28 @@ export function Module({
           <span>{activeHeader}</span>
         </h2>
         <div className="module__body">{children}</div>
-        {postBody}
       </section>
     );
   }
 
   return (
-    <MobileModule id={id} header={activeHeader} icon={icon} defaultOpen={defaultOpen}>
-      {children}
-    </MobileModule>
-  );
-}
-
-function MobileModule({ id, header, icon, defaultOpen, children }: ModuleProps) {
-  const [open, setOpen] = useState(defaultOpen);
-
-  // Listen for the 'module:open' custom event dispatched by Dock when the user
-  // taps a nav item. This avoids direct DOM mutation (which bypasses React state).
-  useEffect(() => {
-    const handler = (e: CustomEvent<{ id: string }>) => {
-      const { id: targetId } = e.detail;
-      if (targetId === id) setOpen(true);
-    };
-    window.addEventListener('module:open', handler);
-    return () => window.removeEventListener('module:open', handler);
-  }, [id]);
-
-  return (
-    <section id={id} className="module module--mobile" data-open={open}>
-      <button
-        className="module__toggle"
-        aria-expanded={open}
-        aria-controls={`${id}-body`}
-        onClick={() => setOpen((o) => !o)}
-        type="button"
-      >
+    <details id={id} className="module module--mobile" open={defaultOpen || undefined}>
+      <summary className="module__toggle">
         <span className="module__header-label">
           {icon ? (
             <span className="module__icon" aria-hidden>
               {icon}
             </span>
           ) : null}
-          <span>{header}</span>
+          <span>{activeHeader}</span>
         </span>
         <span className="module__chevron" aria-hidden>
-          {open ? '▾' : '▸'}
+          ▸
         </span>
-      </button>
-      <div className="module__body" id={`${id}-body`} hidden={!open}>
+      </summary>
+      <div className="module__body" id={`${id}-body`}>
         {children}
       </div>
-    </section>
+    </details>
   );
 }
