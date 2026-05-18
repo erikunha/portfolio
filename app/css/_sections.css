@@ -207,10 +207,6 @@
 .guitar-mobile {
   display: none;
 }
-.guitar__spec-label {
-  font-size: var(--fs-xs);
-}
-
 .visa .cmd-line {
   color: var(--muted);
 }
@@ -898,102 +894,6 @@ span.proj-folder svg {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   GIT BLAME — mobile career timeline: vertical line + dot markers + date/role.
-   ───────────────────────────────────────────────────────────────────────── */
-.blame {
-  position: relative;
-  padding-left: 18px;
-}
-
-.blame::before {
-  content: "";
-  position: absolute;
-  left: 5px;
-  top: 6px;
-  bottom: 6px;
-  width: 1px;
-  background: var(--signal);
-  opacity: 0.7;
-}
-
-.blame-row {
-  position: relative;
-  padding: 0 0 18px;
-  display: grid;
-  grid-template-columns: 96px 1fr;
-  gap: 14px;
-  align-items: baseline;
-}
-
-.blame-row:last-child {
-  padding-bottom: 0;
-}
-
-@media (max-width: 768px) {
-  .blame {
-    padding-right: 56px;
-  }
-  .blame-body {
-    font-size: var(--fs-sm);
-  }
-}
-
-@media (max-width: 560px) {
-  .blame-row {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
-}
-
-.blame-row::before {
-  content: "";
-  position: absolute;
-  left: -18px;
-  top: 7px;
-  width: 11px;
-  height: 11px;
-  background: var(--signal);
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px #000;
-}
-
-.blame-date {
-  color: var(--muted);
-  font-size: var(--fs-sm);
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-  font-family: var(--font-mono-stack);
-}
-
-.blame-body {
-  font-size: var(--fs-base);
-  line-height: 1.55;
-}
-
-.blame-emp {
-  color: var(--signal);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-.blame-sep {
-  color: var(--muted);
-  margin: 0 6px;
-  opacity: 0.7;
-}
-.blame-role {
-  color: var(--signal);
-  opacity: 0.75;
-  letter-spacing: 0.04em;
-}
-.blame-reason {
-  display: block;
-  color: var(--fg);
-  margin-top: 4px;
-  font-size: var(--fs-base);
-  line-height: 1.6;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
    PERF RECEIPTS — 4-col grid, headliner at [0] spans 2 cols × 2 rows.
    ───────────────────────────────────────────────────────────────────────── */
 .receipts {
@@ -1277,10 +1177,9 @@ span.proj-folder svg {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   HOTTEST TAKES — 44px num gutter + tk-claim / tk-body, lifted from .takes.
-   Our current JSX renders .take__header with .take__num / .take__category /
-   .take__thesis on a flex row. We re-style to match the mockup's number-gutter
-   layout (tk-num column + claim/body column).
+   HOTTEST TAKES — JSX renders .take__num / .take__category / .take__thesis /
+   .take__body inside .take__content. Number-gutter layout: tk-num column +
+   claim/body column.
    ───────────────────────────────────────────────────────────────────────── */
 .takes {
   list-style: none;
