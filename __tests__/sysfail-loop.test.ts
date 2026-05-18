@@ -12,8 +12,8 @@ Object.defineProperty(window, 'matchMedia', {
 
 describe('runBoot onFirstLoop', () => {
   it('fires exactly once across multiple dialog loops', async () => {
-    // runBoot moved from Hero.tsx to HeroBootAnimation island in the RSC refactor.
-    const { runBoot } = await import('../components/client/HeroBootAnimation');
+    // runBoot extracted from HeroBootAnimation island to lib/boot-animation (pure, no React).
+    const { runBoot } = await import('../lib/boot-animation');
     const container = document.createElement('div');
     const calls: number[] = [];
 

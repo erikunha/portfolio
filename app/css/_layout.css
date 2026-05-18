@@ -707,14 +707,9 @@ html.sysfail-on .crt-noise {
    only the matching variant paints. Spec ref: 2026-05-18-mobile-lcp-perf-fix
    design §6.
 
-   .hero--desktop: default display: block (visibility baseline); the structural
-   display: flex rule above this block sets the two-column flex layout when visible.
+   .hero--desktop: flex layout for the two-column desktop structure.
    .hero--mobile: hidden by default; shown via media query below.
    ───────────────────────────────────────────────────────────────────────── */
-.hero--desktop {
-  display: block;
-}
-/* Override: restore flex layout for the two-column desktop structure. */
 .hero--desktop {
   display: flex;
 }

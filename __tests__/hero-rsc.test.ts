@@ -60,7 +60,7 @@ describe('Hero RSC conversion', () => {
   });
 
   it('_layout.css contains .hero--desktop / .hero--mobile media-query toggle', () => {
-    expect(LAYOUT_CSS).toMatch(/\.hero--desktop\s*\{\s*display:\s*block/);
+    expect(LAYOUT_CSS).toMatch(/\.hero--desktop\s*\{\s*display:\s*(block|flex)/);
     expect(LAYOUT_CSS).toMatch(/\.hero--mobile\s*\{\s*display:\s*none/);
     expect(LAYOUT_CSS).toMatch(/@media\s*\(max-width:\s*768px\)/);
   });
