@@ -1,7 +1,7 @@
 // content/shell-commands.ts
-import { ShellCommandsSchema, type ShellResponse } from './schemas';
+import type { ShellResponse } from './schemas';
 
-const SHELL_RESPONSES: ShellResponse[] = ShellCommandsSchema.parse([
+const SHELL_RESPONSES: ShellResponse[] = [
   {
     commands: ['help'],
     kind: 'output',
@@ -42,6 +42,6 @@ const SHELL_RESPONSES: ShellResponse[] = ShellCommandsSchema.parse([
     kind: 'output',
     text: '(•_•) ( •_•)>⌐■-■ (⌐■_■)',
   },
-]);
+];
 
 export default SHELL_RESPONSES;
