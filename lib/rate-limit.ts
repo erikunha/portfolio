@@ -33,6 +33,19 @@ export function getContactLimit(): Ratelimit {
   return _contactLimit;
 }
 
+let _errorLogLimit: Ratelimit | undefined;
+
+export function getErrorLogLimit(): Ratelimit {
+  if (!_errorLogLimit) {
+    _errorLogLimit = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(10, '1 m'),
+      prefix: 'rl:errlog',
+    });
+  }
+  return _errorLogLimit;
+}
+
 export function getClientIp(req: import('next/server').NextRequest): string {
   return (
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
