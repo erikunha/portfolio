@@ -8,7 +8,6 @@ Single-page Next.js 15 portfolio deployed to Vercel Edge. RSC-first composition 
   <img alt="Next.js 15" src="https://img.shields.io/badge/Next.js-15-000?logo=nextdotjs&logoColor=white" />
   <img alt="React 19" src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white" />
   <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" />
-  <img alt="Tailwind v4" src="https://img.shields.io/badge/Tailwind-v4-38BDF8?logo=tailwindcss&logoColor=white" />
   <img alt="Vercel" src="https://img.shields.io/badge/Vercel-Edge-000?logo=vercel&logoColor=white" />
   <img alt="pnpm 10" src="https://img.shields.io/badge/pnpm-10+-F69220?logo=pnpm&logoColor=white" />
   <img alt="Node 22" src="https://img.shields.io/badge/Node-22+-417E38?logo=nodedotjs&logoColor=white" />
@@ -61,7 +60,7 @@ Single-page Next.js 15 portfolio deployed to Vercel Edge. RSC-first composition 
 |---|---|
 | Framework | Next.js 15 (App Router) · React 19 |
 | Language | TypeScript strict (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`) |
-| Styles | Tailwind v4 + hand-written CSS layers under `app/css/` |
+| Styles | Hand-written global CSS, 10 files under `app/css/`, BEM-ish naming, design tokens in `_tokens.css`. No CSS framework. No PostCSS config — Next 16 + Turbopack handle nesting + autoprefix natively via Lightning CSS. |
 | Runtime | Vercel Edge end-to-end |
 | Cache / rate-limit / KV | Upstash Redis |
 | LLM | Anthropic SDK · `claude-haiku-4-5-20251001` with prompt caching |
@@ -92,7 +91,7 @@ Each choice below is one of two or three viable options. The rationale is the di
 
 **Biome 2 over ESLint + Prettier.** A single Rust binary that does both linting and formatting in milliseconds. The rule surface is a strict subset of ESLint's, but the subset covers what actually catches bugs. Speed matters here for the Husky pre-commit hook to stay below the 200 ms threshold where developers stop committing.
 
-**Tailwind v4 + raw CSS layers over CSS modules / styled-components.** Tailwind scales well at one-author scale (the utility surface fits in working memory), has zero runtime, and v4's new engine compiles in milliseconds. The parts Tailwind doesn't model cleanly (the CRT effects, the layered overlay system, the responsive chrome) live in hand-written CSS layers under `app/css/`. Styled-components would impose a ~30 KB runtime; CSS modules would split the styling concern across two paradigms.
+**Hand-written global CSS over Tailwind, CSS modules, or styled-components.** Tailwind v4 was the scaffold default; it survived two months without a single utility class being used in components (zero `@apply`, zero utilities in any JSX), so 2026-05-18 it was removed. The 10 files under `app/css/` are now the entire styling surface — tokens centralized in `_tokens.css`, BEM-ish per-section files, one entry point via `globals.css`. The architectural property that made this trim safe (one grep finds every reference to a class; one script audits orphans in <60 seconds) is the same property that makes CSS Modules a worse choice here: per-component scoping would scatter 31 KB of section styles across 18+ component files and break that audit surface. Styled-components would add ~30 KB of runtime JS on a budget that allocates 43 KB total for client islands. See `DECISIONS.md` 2026-05-18 for the full removal rationale and reversibility note.
 
 **Vitest over Jest.** Same test API, native ESM, no Babel pipeline, and runs ~3x faster on this repo's surface. Vitest's coverage uses V8 directly instead of Istanbul, which removes another step from CI.
 

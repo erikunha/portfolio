@@ -68,7 +68,8 @@ Invoke the named skill inline (not as a subagent) before the described action.
 
 ## Stack (locked)
 
-- Next.js 15 App Router · React 19 · TypeScript strict · Tailwind v4 · Biome · pnpm
+- Next.js 15 App Router · React 19 · TypeScript strict · Biome · pnpm
+- **CSS:** hand-rolled global CSS in 10 files under `app/css/`, BEM-ish naming, tokens centralized in `_tokens.css`, no framework. PostCSS pipeline removed — Next 16 + Turbopack handles nesting + autoprefix natively via Lightning CSS. _Tailwind v4 was removed 2026-05-18; see DECISIONS.md. Do not re-add._
 - Vercel Edge end-to-end deployment
 - Upstash Redis for rate-limit + KV log
 - Anthropic SDK with `claude-haiku-4-5-20251001` for `/api/ask`
@@ -150,7 +151,7 @@ CI enforces all of the above. **Never disable the gates to merge.** If a gate fa
 ## Things that have been considered and rejected
 
 Before proposing any of these, check `DECISIONS.md` to see the reasoning that excluded them:
-- GraphQL · Cloudflare Workers · multi-region deploy · Sentry by default · CAPTCHA on the contact form · separate routes per section · state management library · design system extraction · MDX · separate CMS
+- GraphQL · Cloudflare Workers · multi-region deploy · Sentry by default · CAPTCHA on the contact form · separate routes per section · state management library · design system extraction · MDX · separate CMS · Tailwind (removed 2026-05-18) · CSS Modules / CSS-in-JS / styled-components · PostCSS plugins beyond what Lightning CSS provides natively
 
 ## Reference docs in this repo
 
