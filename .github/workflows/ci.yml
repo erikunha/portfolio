@@ -72,7 +72,7 @@ jobs:
         run: npx wait-on http://localhost:3000 --timeout 30000
 
       - name: Lighthouse CI
-        run: pnpm lhci autorun
+        run: pnpm lhci
         env:
           LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
 
