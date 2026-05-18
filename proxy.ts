@@ -10,12 +10,20 @@ export function proxy(request: NextRequest) {
     // 'strict-dynamic' intentionally absent: site has no third-party scripts and CLAUDE.md
     // rejects all categories that would justify transitive nonce trust (analytics, CMS, auth, CAPTCHA).
     // See DECISIONS.md (2026-05-18).
-    `script-src 'self' 'nonce-${nonce}'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
+    // CSP origin notes (Spec 2 Phase 1):
+    //   - https://vitals.vercel-insights.com: legacy ingest endpoint for
+    //     @vercel/analytics + @vercel/speed-insights. Current SDK versions
+    //     prefer same-origin /_vercel/insights/* via Vercel's edge router,
+    //     but this remains as defensive coverage for future SDK changes.
+    //   - https://va.vercel-scripts.com (script-src, dev only): the dev-mode
+    //     SDK loads its script from here. Production uses same-origin
+    //     /_vercel/insights/script.js so no production widening needed.
+    `script-src 'self' 'nonce-${nonce}'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval' https://va.vercel-scripts.com" : ''}`,
     // 'unsafe-inline' required: Tailwind v4 injects styles at runtime; React inline style props cannot use nonces
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self'",
-    "connect-src 'self' https://api.anthropic.com https://*.vercel-insights.com https://va.vercel-scripts.com",
+    "connect-src 'self' https://api.anthropic.com https://vitals.vercel-insights.com https://va.vercel-scripts.com",
     "frame-ancestors 'none'",
     "object-src 'none'",
     "base-uri 'self'",

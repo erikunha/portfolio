@@ -32,12 +32,14 @@ describe('browser RUM (Vercel Analytics + Speed Insights)', () => {
   });
 
   it('mounts both Analytics and SpeedInsights inside <body>', () => {
-    expect(LAYOUT_SOURCE).toMatch(/<Analytics\s*\/>/);
-    expect(LAYOUT_SOURCE).toMatch(/<SpeedInsights\s*\/>/);
+    // Tightened to enforce position-within-body: both mounts must appear
+    // between the opening <body> tag and the closing </body> tag.
+    expect(LAYOUT_SOURCE).toMatch(/<body[\s\S]*<Analytics\s*\/>[\s\S]*<\/body>/);
+    expect(LAYOUT_SOURCE).toMatch(/<body[\s\S]*<SpeedInsights\s*\/>[\s\S]*<\/body>/);
   });
 
   it('proxy.ts CSP connect-src includes the two Vercel ingest origins', () => {
-    expect(PROXY_SOURCE).toMatch(/connect-src[^"]*https:\/\/\*\.vercel-insights\.com/);
+    expect(PROXY_SOURCE).toMatch(/connect-src[^"]*https:\/\/vitals\.vercel-insights\.com/);
     expect(PROXY_SOURCE).toMatch(/connect-src[^"]*https:\/\/va\.vercel-scripts\.com/);
   });
 });
