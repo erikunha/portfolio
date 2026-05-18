@@ -101,7 +101,11 @@ const CRITICAL_CSS = `
   --pad: 24px;
   --maxw: 1200px;
   --vrhythm: 64px;
+  /* Fallback-only: --font-mono is injected by the Next runtime at build time and is unavailable at first paint.
+     Chunked CSS overrides this with the runtime-resolved var() later; keeping fallback-only here ensures LCP paints with system mono immediately. */
   --font-mono-stack: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Fallback-only: --font-display is injected by the Next runtime at build time and is unavailable at first paint.
+     Chunked CSS overrides this with the runtime-resolved var() later. */
   --font-display-stack: ui-sans-serif, system-ui, sans-serif;
   --fs-2xs: 9px;
   --fs-xs: 11px;

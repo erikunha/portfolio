@@ -27,7 +27,9 @@ const CRITICAL_CSS = criticalMatch?.[1] ?? '';
 describe('critical CSS drift guard', () => {
   it('layout.tsx exports a CRITICAL_CSS constant', () => {
     expect(LAYOUT_SOURCE).toMatch(/const CRITICAL_CSS = `/);
-    expect(CRITICAL_CSS.length).toBeGreaterThan(500);
+    expect(CRITICAL_CSS.length).toBeGreaterThan(2000); // Inlined critical CSS is ~4.7KB; <2KB means extraction stopped early
+    expect(CRITICAL_CSS).toMatch(/:root\s*\{/); // Must contain the :root block (defined first)
+    expect(CRITICAL_CSS).toMatch(/\.hero__tagline/); // Must contain the LCP element selector (defined last among hero rules)
   });
 
   it('renders <style>{CRITICAL_CSS}</style> in <head>', () => {
@@ -52,6 +54,20 @@ describe('critical CSS drift guard', () => {
     const inlinedVars = new Set(Array.from(varMatches, (m) => m[1] as string));
     const missing: string[] = [];
     for (const v of inlinedVars) {
+      if (!tokens.includes(`${v}:`)) missing.push(v);
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it('every CSS variable DEFINED in CRITICAL_CSS :root is also defined in _tokens.css', () => {
+    const tokens = readFileSync(path.join(CSS_DIR, '_tokens.css'), 'utf-8');
+    // Extract the :root block from CRITICAL_CSS, then find property declarations (--name:).
+    const rootBlockMatch = CRITICAL_CSS.match(/:root\s*\{([\s\S]*?)\}/);
+    const rootBlock = rootBlockMatch?.[1] ?? '';
+    const definedMatches = rootBlock.matchAll(/(--[a-zA-Z][a-zA-Z0-9_-]*)\s*:/g);
+    const definedInCritical = new Set(Array.from(definedMatches, (m) => m[1] as string));
+    const missing: string[] = [];
+    for (const v of definedInCritical) {
       if (!tokens.includes(`${v}:`)) missing.push(v);
     }
     expect(missing).toEqual([]);
