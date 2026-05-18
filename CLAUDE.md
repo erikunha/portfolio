@@ -50,8 +50,8 @@ Invoke the named agent before the described action. These are definitions of don
 | Performance | After any Lighthouse-affecting change | `performance-engineer` |
 | Accessibility | After editing any component with interactive or semantic elements | `accessibility-tester` |
 | Code review | Before any commit on a PR branch | `code-reviewer` |
-| Security | After editing `app/api/`, `lib/rate-limit.ts`, `.env.example`, or `middleware.ts` | `security-auditor` |
-| Edge/routing | After editing `middleware.ts` or `next.config.ts` | `nextjs-developer` + `performance-engineer` |
+| Security | After editing `app/api/`, `lib/rate-limit.ts`, `.env.example`, or `proxy.ts` | `security-auditor` |
+| Edge/routing | After editing `proxy.ts` or `next.config.ts` | `nextjs-developer` + `performance-engineer` |
 | Refactoring | When restructuring components or CSS without behavior change | `refactoring-specialist` |
 
 ## Skill dispatch
@@ -62,7 +62,7 @@ Invoke the named skill inline (not as a subagent) before the described action.
 |---|---|
 | After editing any file in `components/` or `app/` | `react-best-practices` |
 | After editing `next.config.ts`, `.env.example`, or Vercel config | `vercel:nextjs` |
-| After editing `app/api/` or `middleware.ts` | `vercel:vercel-functions` |
+| After editing `app/api/` or `proxy.ts` | `vercel:vercel-functions` |
 | When writing or modifying any test in `__tests__/` or `tests/` | `superpowers:test-driven-development` |
 | Before any UI code review (alongside `ui-ux-tester` dispatch) | `web-design-guidelines` |
 
