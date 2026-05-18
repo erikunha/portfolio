@@ -107,8 +107,10 @@ After reading, before any commands run, tell me three things:
 
   1. The single biggest risk in Day 1 you see from the docs.
   2. Anything in the existing scaffold that you'd want to revise based
-     on what you know about Next 15 + React 19 + Tailwind v4 today
-     (the configs were drafted in May 2026 — anything obsolete?).
+     on what you know about Next 15 + React 19 today
+     (the configs were drafted in May 2026 — anything obsolete?
+     Note: Tailwind v4 was removed 2026-05-18, see DECISIONS.md;
+     site now uses hand-written global CSS under app/css/).
   3. The first 3 concrete commands I should run AFTER I've created
      the external accounts (Anthropic, Upstash, Resend, Vercel, PSI).
 
