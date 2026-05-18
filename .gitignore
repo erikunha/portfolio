@@ -31,3 +31,6 @@ tsconfig.tsbuildinfo
 
 # os
 .DS_Store
+
+# Copilot port — fallback output dir for non-darwin platforms (gitignored per spec §4)
+.copilot-port-output/
