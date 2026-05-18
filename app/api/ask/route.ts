@@ -116,7 +116,7 @@ Be direct and honest. Do not fabricate information. Keep answers under 200 words
 export async function POST(req: NextRequest) {
   const requestId = crypto.randomUUID();
   const ip = getClientIp(req);
-  log.info('ask request received', { requestId });
+  log.info('ask request received', { requestId, ip });
 
   // Per-IP rate limit
   const { success } = await getAskLimit().limit(ip);

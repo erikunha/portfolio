@@ -1,3 +1,5 @@
+import 'server-only';
+
 // lib/log.ts
 // Structured-logging wrapper around pino.
 //
