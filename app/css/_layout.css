@@ -660,14 +660,21 @@ html.sysfail-on .crt-noise {
   color: var(--fg);
 }
 
-/* Mobile: outer module is the border container (overflow:hidden clips child borders) */
+/* Mobile: outer module is a native <details> element. The border container
+   (overflow:hidden clips child borders). Native disclosure marker is hidden;
+   chevron rotation is driven by the native [open] attribute. */
 .module--mobile {
   border: 1px solid var(--signal-dim);
   background: rgba(0, 0, 0, 0.55);
   overflow: hidden;
 }
 
+/* Hide native disclosure triangle (Chrome/Safari + Firefox respectively) */
+.module--mobile .module__toggle::-webkit-details-marker {
+  display: none;
+}
 .module--mobile .module__toggle {
+  list-style: none;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -696,12 +703,17 @@ html.sysfail-on .crt-noise {
 .module--mobile .module__chevron {
   color: var(--signal);
   font-size: var(--fs-sm);
+  transition: transform 120ms ease-out;
 }
 
-.module--mobile[data-open="false"] .module__body {
+.module--mobile[open] .module__chevron {
+  transform: rotate(90deg);
+}
+
+.module--mobile:not([open]) .module__body {
   display: none;
 }
 
-.module--mobile[data-open="true"] .module__body {
+.module--mobile[open] .module__body {
   padding: var(--pad);
 }
