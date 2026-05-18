@@ -48,7 +48,7 @@
         "noNonNullAssertion": "warn"
       },
       "suspicious": {
-        "noConsole": { "level": "warn", "options": { "allow": ["log", "warn", "error"] } },
+        "noConsole": { "level": "warn", "options": { "allow": ["log", "info", "warn", "error"] } },
         "noExplicitAny": "error",
         "noEmptyBlockStatements": "warn"
       },
