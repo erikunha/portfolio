@@ -138,7 +138,7 @@ Expected: `PASS: defaultMode removed`.
 - [ ] **Step 1.11: Verify effective merged allowlist via jq recipe**
 
 ```bash
-jq -s '.[0].permissions + (.[1].permissions // {}) | .allow' \
+jq -s '(.[0].permissions.allow + (.[1].permissions.allow // [])) | unique' \
   .claude/settings.json .claude/settings.local.json 2>/dev/null
 ```
 
@@ -154,7 +154,7 @@ Find section 13 of `ARCHITECTURE.md` (the "Deployment + CI/CD" section). After t
 The repo ships a project-level Claude Code permissions baseline in `.claude/settings.json` (committed) — `defaultMode: "acceptEdits"` plus the minimum skill allowlist mandated by CLAUDE.md's dispatch matrix. Per-machine additions live in `.claude/settings.local.json` (gitignored). The effective merged allowlist is inspectable via:
 
 ```bash
-jq -s '.[0].permissions + (.[1].permissions // {}) | .allow' \
+jq -s '(.[0].permissions.allow + (.[1].permissions.allow // [])) | unique' \
   .claude/settings.json .claude/settings.local.json 2>/dev/null
 ```
 

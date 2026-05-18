@@ -273,10 +273,11 @@ Binary checks; each must hold before merge.
 7. Existing CI bundle gate (`< 320 KB client total`) still passes; no regression from new test dependencies.
 8. **Effective Claude permissions are inspectable.** The repo includes a documented one-liner (in `ARCHITECTURE.md §13` under "Claude harness configuration", a new subsection):
    ```bash
-   jq -s '.[0].permissions + (.[1].permissions // {}) | .allow' \
+   jq -s '(.[0].permissions.allow + (.[1].permissions.allow // [])) | unique' \
      .claude/settings.json .claude/settings.local.json 2>/dev/null
    ```
    Running this prints the effective merged allow-list. Optional for the implementer: a `scripts/print-claude-permissions.mjs` wrapper, but the `jq` recipe is sufficient for the criterion.
+   Recipe corrected post-implementation 2026-05-18: original spec text used `.[0].permissions + (.[1].permissions // {}) | .allow` which jq evaluates as object-merge (overwrites allow arrays on conflict) rather than array union. Current recipe correctly concatenates and dedupes.
 
 ---
 
