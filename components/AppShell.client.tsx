@@ -6,7 +6,7 @@
 // as RSC children and rendered server-side — their code never ships to the client.
 
 import dynamic from 'next/dynamic';
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import { useBreakpoint } from '@/lib/use-breakpoint';
 import { ErrorBoundary } from './ErrorBoundary.client';
 import { CRTOverlay } from './responsive/CRTOverlay';
@@ -23,6 +23,20 @@ const ToTopButton = dynamic(
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { isMobile } = useBreakpoint();
+
+  // Single delegated listener for Dock's 'module:open' event. Finds the target
+  // section by id and, if it's a native <details>, flips the open attribute.
+  // Replaces 18 individual listeners that the old client Module set up.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ id: string }>).detail;
+      const target = document.getElementById(detail.id);
+      if (target instanceof HTMLDetailsElement) target.open = true;
+    };
+    window.addEventListener('module:open', handler);
+    return () => window.removeEventListener('module:open', handler);
+  }, []);
+
   return (
     <>
       <a href="#main-content" className="skip-to-content">
