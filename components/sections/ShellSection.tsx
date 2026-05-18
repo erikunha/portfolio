@@ -1,4 +1,4 @@
-import { InteractiveShell } from '../client/InteractiveShell';
+import { InteractiveShellLazy } from '../client/InteractiveShellLazy';
 import { ErrorBoundary } from '../ErrorBoundary.client';
 import { IconShell } from '../Icons';
 import { Module } from '../responsive/Module';
@@ -12,7 +12,7 @@ export function ShellSection() {
       icon={<IconShell />}
     >
       <ErrorBoundary>
-        <InteractiveShell />
+        <InteractiveShellLazy />
       </ErrorBoundary>
     </Module>
   );
