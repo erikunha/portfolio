@@ -5,9 +5,9 @@
 // navigation bars, Dock, and ToTopButton. Everything else (sections) is passed
 // as RSC children and rendered server-side — their code never ships to the client.
 
+import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
 import { useBreakpoint } from '@/lib/use-breakpoint';
-import { ToTopButton } from './client/ToTopButton';
 import { ErrorBoundary } from './ErrorBoundary.client';
 import { CRTOverlay } from './responsive/CRTOverlay';
 import { DesktopTopbar } from './responsive/DesktopTopbar';
@@ -15,6 +15,11 @@ import { Dock } from './responsive/Dock';
 import { MatrixRain } from './responsive/MatrixRain';
 import { MobileTitleBar } from './responsive/MobileTitleBar';
 import { StatusBar } from './responsive/StatusBar';
+
+const ToTopButton = dynamic(
+  () => import('./client/ToTopButton').then((m) => ({ default: m.ToTopButton })),
+  { ssr: false },
+);
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { isMobile } = useBreakpoint();
