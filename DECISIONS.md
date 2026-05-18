@@ -32,3 +32,7 @@ ADR-lite running log. One bullet per decision · date · reversibility note.
 - **2026-05-15** · Ask rate limit corrected to `slidingWindow(8, '1 h')` — aligns with documented value (was 10/min = 600/hr). _More restrictive; budget cap is now the primary spend control._
 - **2026-05-15** · Skip-to-content link added to AppShell as first focusable element (WCAG 2.4.1 Level A). Targets `#main-content` on the `<main>` element. _Non-negotiable for WCAG compliance._
 - **2026-05-15** · `/api/erik.json` implemented. Returns a `HiringProfile` document (custom type, no schema.org @context — `Engineer` is not a valid schema.org type). 24-hour edge cache. _Reversible; static data._
+
+## 2026-05-18 — CSP cleanup
+
+- **2026-05-18** · Bootstrap scripts externalized to `/public/init.js`, loaded via `<Script src strategy="beforeInteractive" />` in `app/layout.tsx`. `'strict-dynamic'` removed from CSP in `proxy.ts`; `'self'` now honors same-origin static scripts without nonces. Eliminates the `nonce={nonce}` + `suppressHydrationWarning` invariant chain (which caused one production CSP regression in `ae8e6ac` this session) and lets `RootLayout` become sync (no `headers()` await). _Reversible. Re-introduce `'strict-dynamic'` if any third-party script source is ever added (analytics, embeds); per CLAUDE.md out-of-scope list, none are planned. The two inline scripts are gone; their content is now in `/public/init.js`._
