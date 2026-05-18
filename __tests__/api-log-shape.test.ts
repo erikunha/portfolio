@@ -28,9 +28,16 @@ describe('/api/log endpoint (Phase 3a)', () => {
     expect(LOG_ROUTE).toMatch(/z\.object\(/);
   });
 
-  it('hashes the IP via SHA-256 + DEPLOY_SALT (same pattern as /api/contact)', () => {
-    expect(LOG_ROUTE).toMatch(/SHA-256/);
-    expect(LOG_ROUTE).toMatch(/DEPLOY_SALT/);
+  it('hashes the IP via the centralised hashIp helper', () => {
+    expect(LOG_ROUTE).toMatch(/import\s*\{[^}]*\bhashIp\b[^}]*\}\s*from\s*['"]@\/lib\/ip-hash['"]/);
+    expect(LOG_ROUTE).toMatch(/hashIp\(\s*ip\s*\)/);
+  });
+
+  it('lib/ip-hash.ts uses SHA-256 + DEPLOY_SALT (centralised; previously inline in each route)', () => {
+    const IP_HASH = readFileSync(path.resolve(__dirname, '../lib/ip-hash.ts'), 'utf-8');
+    expect(IP_HASH).toMatch(/SHA-256/);
+    expect(IP_HASH).toMatch(/DEPLOY_SALT/);
+    expect(IP_HASH).toMatch(/^import 'server-only'/m);
   });
 
   it('writes to Upstash KV with err: prefix and 30-day TTL', () => {

@@ -7,6 +7,7 @@
 
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
 import { getClientIp, getErrorLogLimit, getRedis } from '@/lib/rate-limit';
 
@@ -17,7 +18,7 @@ const ERR_KV_TTL_S = 30 * 24 * 60 * 60; // 30 days = 2_592_000s
 const ErrorPayload = z.object({
   level: z.enum(['error', 'warn']),
   message: z.string().min(1).max(2000),
-  stack: z.string().max(8000).optional(),
+  stack: z.string().max(16000).optional(),
   url: z.string().max(2000).optional(),
   userAgent: z.string().max(500).optional(),
   ts: z.string().optional(),
@@ -30,7 +31,10 @@ export async function POST(req: NextRequest) {
   // Rate-limit BEFORE the KV write to absorb storms cheaply.
   const { success } = await getErrorLogLimit().limit(ip);
   if (!success) {
-    return Response.json({ error: 'too many error reports' }, { status: 429 });
+    return Response.json(
+      { error: 'too many error reports' },
+      { status: 429, headers: { 'Retry-After': '60' } },
+    );
   }
 
   let body: unknown;
@@ -48,12 +52,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Hash IP with SHA-256 + DEPLOY_SALT, same pattern as /api/contact.
-  const ipBytes = await crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(ip + (process.env.DEPLOY_SALT ?? 'portfolio')),
-  );
-  const ipHash = Buffer.from(ipBytes).toString('hex').slice(0, 16);
+  const ipHash = await hashIp(ip);
 
   const errId = crypto.randomUUID();
   const today = new Date().toISOString().slice(0, 10);
@@ -61,7 +60,6 @@ export async function POST(req: NextRequest) {
 
   const record = {
     ...parsed.data,
-    requestId,
     errId,
     ipHash,
     capturedAt: new Date().toISOString(),

@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { Resend } from 'resend';
 import { validateContact } from '@/lib/contact-validation';
+import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
 import { getClientIp, getContactLimit, getRedis } from '@/lib/rate-limit';
 
@@ -39,11 +40,7 @@ export async function POST(req: NextRequest) {
   // Durability first: write to KV before attempting delivery.
   // Hash the IP before persisting — raw IP is personal data under LGPD/GDPR.
   const msgId = crypto.randomUUID();
-  const ipBytes = await crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(ip + (process.env.DEPLOY_SALT ?? 'portfolio')),
-  );
-  const ipHash = Buffer.from(ipBytes).toString('hex').slice(0, 16);
+  const ipHash = await hashIp(ip);
   const payload = { name, email, message, receivedAt: new Date().toISOString(), ipHash };
 
   try {
