@@ -8,6 +8,10 @@ export const dynamic = 'force-dynamic';
 // Module-scope client — reused across warm invocations.
 const anthropic = new Anthropic();
 
+// Logs once per warm function instance. The value reveals the configured
+// state of the kill switch without inspecting the Vercel env-var dashboard.
+console.info('[ask] kill-switch on cold start:', process.env.ASK_ENABLED ?? 'unset');
+
 // cache_control marks this block for Anthropic prompt caching.
 // The system prompt is identical on every call — ~93% cheaper on cache hits.
 const SYSTEM: Anthropic.Messages.TextBlockParam[] = [
@@ -112,6 +116,19 @@ Be direct and honest. Do not fabricate information. Keep answers under 200 words
 ];
 
 export async function POST(req: NextRequest) {
+  // Kill switch: any "off" keyword (case-insensitive, trimmed) disables the route.
+  // Asymmetry is intentional: a typo during a billing/abuse emergency must STILL
+  // disable the route. The cost of "stays on accidentally" during a cost incident
+  // is exactly what this switch exists to prevent.
+  const askFlag = (process.env.ASK_ENABLED ?? '').trim().toLowerCase();
+  const OFF_KEYWORDS = new Set(['false', '0', 'off', 'no', 'disabled']);
+  if (OFF_KEYWORDS.has(askFlag)) {
+    return Response.json(
+      { error: 'temporarily unavailable — email erikhenriquealvescunha@gmail.com directly' },
+      { status: 503 },
+    );
+  }
+
   const ip = getClientIp(req);
 
   // Per-IP rate limit

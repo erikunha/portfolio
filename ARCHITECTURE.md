@@ -303,6 +303,16 @@ Why this is non-negotiable: a public LLM endpoint without a hard cap is a $5,000
 - 100× traffic: move to Cloudflare Workers AI (Llama 3.3 self-served) — quality dip acceptable for the cost
 - If `ask` becomes a real product: separate service, persistent conversation context, billing surface, evals
 
+### Kill switches
+
+A single env var, `ASK_ENABLED`, gates the route. The check runs first in the POST handler — before rate-limit and budget calls — so a trip costs zero Redis round-trips. The value is normalized with `.trim().toLowerCase()` and matched against the off-keyword set `{ 'false', '0', 'off', 'no', 'disabled' }`. Any match returns 503 with the email-fallback message; any other value (or unset) keeps the route live.
+
+The asymmetry is intentional: this is a kill switch, not a feature flag. During a billing or abuse incident, the operator is reaching for the off lever and may type any plausible off-keyword. False-positive disablement (typing `'no'` when meaning to enable) recovers in 60-90 seconds via env-var edit + redeploy. False-negative non-disablement during a cost emergency — what the alternative "typos default to enabled" semantics would produce — is exactly the failure mode the switch exists to prevent.
+
+A module-scope `console.info('[ask] kill-switch on cold start:', process.env.ASK_ENABLED ?? 'unset')` emits once per warm instance, providing deploy-time proof of the env-var value in Vercel runtime logs without inspecting the dashboard.
+
+History and rationale: see `DECISIONS.md` 2026-05-18.
+
 ---
 
 ## 7. Contact form — deep dive
