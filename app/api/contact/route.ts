@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { Resend } from 'resend';
 import { validateContact } from '@/lib/contact-validation';
+import { log } from '@/lib/log';
 import { getClientIp, getContactLimit, getRedis } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
@@ -14,6 +15,7 @@ function getResend(): Resend {
 }
 
 export async function POST(req: NextRequest) {
+  const requestId = crypto.randomUUID();
   const ip = getClientIp(req);
 
   const { success } = await getContactLimit().limit(ip);
@@ -49,7 +51,7 @@ export async function POST(req: NextRequest) {
       ex: 60 * 60 * 24 * 90,
     });
   } catch (kvErr) {
-    console.error('[contact] KV write failed', kvErr);
+    log.error('KV write failed', { requestId, msgId, err: kvErr });
     return Response.json({ error: 'storage unavailable — try again' }, { status: 502 });
   }
 
@@ -63,10 +65,12 @@ export async function POST(req: NextRequest) {
       text: `From: ${name} <${email}>\nRef: ${msgId}\n\n${message}`,
     });
     if (error) {
-      console.error('[contact] resend error (message saved to KV as', msgId, ')', error);
+      log.error('Resend error', { requestId, msgId, err: error });
     }
   } catch (sendErr) {
-    console.error('[contact] resend unavailable (message saved to KV as', msgId, ')', sendErr);
+    const reason = sendErr instanceof Error ? sendErr.message : String(sendErr);
+    // Distinguishes timeout ("resend timeout (10s)") from genuine SDK failures.
+    log.error('Resend unavailable', { requestId, msgId, reason, err: sendErr });
   }
 
   return Response.json({ ok: true });

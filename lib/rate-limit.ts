@@ -1,5 +1,6 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import { log } from '@/lib/log';
 
 let _redis: Redis | undefined;
 let _askLimit: Ratelimit | undefined;
@@ -57,11 +58,11 @@ export async function checkBudget(): Promise<{ allowed: boolean; pct: number }> 
     const used = (await getRedis().get<number>(getBudgetKey())) ?? 0;
     const pct = used / MONTHLY_TOKEN_BUDGET;
     if (pct >= 1) return { allowed: false, pct };
-    if (pct >= 0.8) console.warn(`[ask] budget at ${Math.round(pct * 100)}% — approaching cap`);
+    if (pct >= 0.8) log.warn('budget approaching cap', { pct });
     return { allowed: true, pct };
   } catch (err) {
     // Fail open: don't block users for Redis infra issues.
-    console.error('[ask] budget check failed, proceeding without cap', err);
+    log.error('budget check failed, proceeding without cap', { err });
     return { allowed: true, pct: 0 };
   }
 }
@@ -76,6 +77,6 @@ export async function incrementBudget(inputTokens: number, outputTokens: number)
     pipe.expire(key, BUDGET_WINDOW_S, 'NX');
     await pipe.exec<[number, number]>();
   } catch (err) {
-    console.error('[ask] budget increment failed', err);
+    log.error('budget increment failed', { err });
   }
 }

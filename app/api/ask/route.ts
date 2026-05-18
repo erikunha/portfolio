@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { NextRequest } from 'next/server';
+import { log } from '@/lib/log';
 import { checkBudget, getAskLimit, getClientIp, incrementBudget } from '@/lib/rate-limit';
 import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
@@ -7,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 // Module-scope client — reused across warm invocations.
 const anthropic = new Anthropic();
+log.info('kill-switch on cold start', { askEnabled: process.env.ASK_ENABLED ?? 'unset' });
 
 // cache_control marks this block for Anthropic prompt caching.
 // The system prompt is identical on every call — ~93% cheaper on cache hits.
@@ -112,7 +114,9 @@ Be direct and honest. Do not fabricate information. Keep answers under 200 words
 ];
 
 export async function POST(req: NextRequest) {
+  const requestId = crypto.randomUUID();
   const ip = getClientIp(req);
+  log.info('ask request received', { requestId });
 
   // Per-IP rate limit
   const { success } = await getAskLimit().limit(ip);

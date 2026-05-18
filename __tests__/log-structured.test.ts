@@ -43,8 +43,43 @@ describe('lib/log.ts foundation', () => {
   });
 });
 
-describe('console.* migration sites (Task 3 — placeholder)', () => {
-  it.skip('see Task 3 for migration assertions', () => {
-    // Task 3 will populate this block with console.* migration assertions.
+describe('console.* migration sites', () => {
+  const RATE_LIMIT = readFileSync(path.resolve(__dirname, '../lib/rate-limit.ts'), 'utf-8');
+  const LH_SCORES = readFileSync(path.resolve(__dirname, '../lib/lighthouse-scores.ts'), 'utf-8');
+  const ASK_ROUTE = readFileSync(path.resolve(__dirname, '../app/api/ask/route.ts'), 'utf-8');
+  const CONTACT_ROUTE = readFileSync(
+    path.resolve(__dirname, '../app/api/contact/route.ts'),
+    'utf-8',
+  );
+
+  it('lib/rate-limit.ts imports log and uses no console.*', () => {
+    expect(RATE_LIMIT).toMatch(/import\s*\{[^}]*\blog\b[^}]*\}\s*from\s*['"]@\/lib\/log['"]/);
+    expect(RATE_LIMIT).not.toMatch(/console\.(info|warn|error)\b/);
+  });
+
+  it('lib/lighthouse-scores.ts imports log and uses no console.*', () => {
+    expect(LH_SCORES).toMatch(/import\s*\{[^}]*\blog\b[^}]*\}\s*from\s*['"]@\/lib\/log['"]/);
+    expect(LH_SCORES).not.toMatch(/console\.(info|warn|error)\b/);
+  });
+
+  it('app/api/ask/route.ts imports log, uses no console.*, threads requestId', () => {
+    expect(ASK_ROUTE).toMatch(/import\s*\{[^}]*\blog\b[^}]*\}\s*from\s*['"]@\/lib\/log['"]/);
+    expect(ASK_ROUTE).not.toMatch(/console\.(info|warn|error)\b/);
+    expect(ASK_ROUTE).toMatch(/const\s+requestId\s*=\s*crypto\.randomUUID\(\)/);
+  });
+
+  it('app/api/contact/route.ts imports log, uses no console.*, threads requestId', () => {
+    expect(CONTACT_ROUTE).toMatch(/import\s*\{[^}]*\blog\b[^}]*\}\s*from\s*['"]@\/lib\/log['"]/);
+    expect(CONTACT_ROUTE).not.toMatch(/console\.(info|warn|error)\b/);
+    expect(CONTACT_ROUTE).toMatch(/const\s+requestId\s*=\s*crypto\.randomUUID\(\)/);
+  });
+
+  it('all migrated log calls include ctx (the second arg)', () => {
+    const allMigratedSources = [RATE_LIMIT, LH_SCORES, ASK_ROUTE, CONTACT_ROUTE].join('\n');
+    const logCalls = allMigratedSources.matchAll(/\blog\.(info|warn|error)\(([^)]+)\)/g);
+    for (const match of logCalls) {
+      const args = match[2] ?? '';
+      expect(args).toMatch(/,/);
+    }
   });
 });
