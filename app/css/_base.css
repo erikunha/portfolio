@@ -1,13 +1,59 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    BASE
+   Includes the subset of Tailwind v4 Preflight this site relied on. Authored
+   explicitly so there's one mental model (these files) and no runtime style
+   injection. See DECISIONS.md (2026-05-18) for the removal rationale.
    ───────────────────────────────────────────────────────────────────────── */
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html {
   /* offset anchor scroll for sticky topbar on desktop */
   scroll-padding-top: 52px;
+  /* prevent iOS Safari auto-zoom on rotate; consistent tab width in <pre> */
+  -webkit-text-size-adjust: 100%;
+  tab-size: 4;
+}
+
+/* Media + embeds default to block to kill inline baseline gap, and never
+   overflow their container. */
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block;
+  vertical-align: middle;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Form controls inherit typography from <body> rather than UA defaults. */
+input,
+textarea,
+select,
+optgroup {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+}
+
+/* Lists used as semantic containers (not bullet lists). */
+ul,
+ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 html,
