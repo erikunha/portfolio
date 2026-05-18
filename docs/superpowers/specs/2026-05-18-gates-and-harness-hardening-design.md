@@ -77,9 +77,9 @@ Add a second Lighthouse-CI gate that runs against the mobile preset with mobile-
 - **Modified:** `.github/workflows/ci.yml` — new `lhci-mobile` job, parallel to `build-and-gate` (no `needs:`). Runs: install → build → start server → `pnpm lhci autorun --config=lighthouserc.mobile.json`.
 - **Modified:** `package.json` — current `lhci` script gains `--config=lighthouserc.json` (explicit); new `lhci:mobile` script for symmetric local runs.
 
-### Threshold delta from desktop config
+### Threshold delta from desktop config (TARGETS, pending calibration)
 
-| Assertion | Desktop (existing) | Mobile (new) |
+| Assertion | Desktop (existing) | Mobile (target) |
 |---|---|---|
 | `categories:performance` | ≥ 0.95 | ≥ 0.95 |
 | `categories:accessibility` | = 1.0 | = 1.0 |
@@ -92,6 +92,8 @@ Add a second Lighthouse-CI gate that runs against the mobile preset with mobile-
 | `render-blocking-resources` | `warn` | **`error`** |
 
 The single per-mobile difference in assertion severity (`render-blocking-resources: error`) is intentional: that finding is the exact one that prompted today's perf pass. Promoting it to error on mobile prevents recurrence.
+
+**These mobile thresholds are TARGETS, not measured.** Implementation MUST start with a calibration step before the workflow PR opens (see §11 for the explicit step). The calibration runs `pnpm lhci autorun --config=lighthouserc.mobile.json` locally against current `main` for 3 runs, takes the p50, adds 20% headroom, and bakes the result into `lighthouserc.mobile.json`. If observed-p50 already exceeds these targets, the spec author must either (a) loosen thresholds to `observed_p50 × 1.2` or (b) open a follow-up perf PR before the gate ships — never (c) merge the gate at unmet thresholds, which would create the "turn off the gate to merge" anti-pattern explicitly forbidden in CLAUDE.md.
 
 ### Failure mode
 
@@ -114,9 +116,9 @@ Bound every upstream HTTP call to a maximum wall-clock duration with an explicit
 
 ### Where
 
-- **`app/api/ask/route.ts:9`** — change `new Anthropic()` to `new Anthropic({ timeout: 30_000, maxRetries: 0 })`.
+- **`app/api/ask/route.ts:9`** — change `new Anthropic()` to `new Anthropic({ timeout: 30_000 })`.
   - 30s covers normal Haiku-4.5 streams (typical: <10s; cap with `max_tokens: 512` already in place).
-  - `maxRetries: 0` prevents the SDK from silently doubling latency on transient failures; explicit error → existing `STREAM_ERR_SENTINEL` path is preferred over opaque retries.
+  - **Keep the SDK default `maxRetries: 2`.** Stream initialization is idempotent — no SSE events have been emitted to the client before the first `content_block_delta`, so retrying the initial handshake on a transient 5xx is safe and absorbs short-lived upstream blips without surfacing them as user-visible errors. Once the stream starts, the SDK no longer retries (correct: retries would re-emit text). The 30s timeout is the resource-bound guarantee; retries are the user-experience guarantee. Earlier draft of this spec proposed `maxRetries: 0` — rejected after architect-review because it offered no measurable protection (no observed retry-storm evidence) and exported every transient blip directly to users.
 - **`app/api/contact/route.ts:58-64`** — wrap `getResend().emails.send(...)` in `Promise.race` against `setTimeout(10_000)`. Resend SDK v6 does not accept `AbortSignal` natively; race pattern is the cleanest workaround.
   - On timeout, treat as Resend error: existing `catch` at `route.ts:68-70` logs `[contact] resend unavailable` with `msgId`; durability-first design (KV write before send) means client still receives `{ ok: true }`.
 
@@ -141,31 +143,42 @@ Streaming responses don't tick the SDK timeout per-chunk. If Anthropic stops sen
 
 ### What
 
-An environment-variable check at the top of the `/api/ask` `POST` handler. `ASK_ENABLED === 'false'` returns 503 with the email-fallback message; any other value (or unset) keeps the route live.
+An environment-variable check at the top of the `/api/ask` `POST` handler. Any "off" keyword (case-insensitive, trimmed) returns 503 with the email-fallback message; any other value or unset keeps the route live.
 
 ### Where
 
 - **`app/api/ask/route.ts`** — add early check before rate-limit + budget calls (so a kill-switch trip doesn't cost a Redis round-trip):
   ```ts
-  if (process.env.ASK_ENABLED === 'false') {
+  // Kill switch: any "off" keyword (case-insensitive, trimmed) disables the route.
+  // Asymmetry is intentional: a typo during a billing/abuse emergency must STILL
+  // disable the route. The cost of "stays on accidentally" during a cost incident
+  // is exactly what this switch exists to prevent.
+  const askFlag = (process.env.ASK_ENABLED ?? '').trim().toLowerCase();
+  const OFF_KEYWORDS = new Set(['false', '0', 'off', 'no', 'disabled']);
+  if (OFF_KEYWORDS.has(askFlag)) {
     return Response.json(
       { error: 'temporarily unavailable — email erikhenriquealvescunha@gmail.com directly' },
       { status: 503 },
     );
   }
   ```
-- **`.env.example`** — add `ASK_ENABLED=true` (documented default) with a one-line comment explaining emergency-stop semantics.
-- **`ARCHITECTURE.md §6`** (the `/api/ask` deep-dive) — append a "Kill switches" subsection documenting the flag.
-- **`DECISIONS.md`** — one bullet dated 2026-05-18 capturing the choice of env-var over Edge Config or Redis flag (rationale: 90s redeploy is acceptable for cost-emergency scenarios; live-toggle infra not justified at this scale).
+  Also add a cold-start log line at module scope so deploy logs prove the env var landed without grepping Vercel config:
+  ```ts
+  // Module scope, runs once per warm instance:
+  console.info('[ask] kill-switch on cold start:', process.env.ASK_ENABLED ?? 'unset');
+  ```
+- **`.env.example`** — add `ASK_ENABLED=true` (documented default) with a comment listing the off-keywords (`false | 0 | off | no | disabled`, case-insensitive).
+- **`ARCHITECTURE.md §6`** (the `/api/ask` deep-dive) — append a "Kill switches" subsection documenting the flag, its semantics, and the cold-start log line.
+- **`DECISIONS.md`** — one bullet dated 2026-05-18 capturing the choice of env-var over Edge Config or Redis flag (rationale: 90s redeploy acceptable for cost-emergency scenarios; live-toggle infra not justified at this scale). One bullet capturing the off-by-keyword semantics with the explicit asymmetry rationale.
 
 ### Semantics
 
-- `ASK_ENABLED === 'false'` (string literal) → disabled (503).
-- `ASK_ENABLED === 'true'` → enabled.
-- `ASK_ENABLED` unset → enabled (conservative default).
-- Any other value (`'FALSE'`, `'0'`, `'no'`, typo, whitespace) → enabled (conservative default).
+| `ASK_ENABLED` after `.trim().toLowerCase()` | Result |
+|---|---|
+| `'false'`, `'0'`, `'off'`, `'no'`, `'disabled'` | **Disabled** (503 + email-fallback message) |
+| `'true'`, `'1'`, `'on'`, `'yes'`, `'enabled'`, any other value, **unset** | Enabled |
 
-Rationale for asymmetric strictness: a typo in the env var defaults to **working**, not broken. False-negative outages are worse than false-positive enablements; this routes typos toward availability.
+Rationale for the asymmetric strictness: this is a **kill switch**, not a feature flag. During a cost or abuse incident the operator is reaching for the off lever; if their typing varies (`FALSE`, `0`, `off`, `disabled`), the route must STILL disable. The opposite asymmetry ("typos default to enabled") was rejected at architect-review: it inverts the purpose of the control. False-positive disablement (typing `'no'` when meaning to enable) is recoverable in 60-90s via env-var edit + redeploy; false-negative non-disablement during a billing emergency is exactly the outcome the switch exists to prevent.
 
 ### Failure mode
 
@@ -253,11 +266,17 @@ Binary checks; each must hold before merge.
 
 1. CI on the implementing PR shows three jobs green: `build-and-gate` ✓, `lhci-mobile` ✓, `e2e` ✓.
 2. `pnpm vitest run __tests__/ask-timeout.test.ts __tests__/ask-killswitch.test.ts` → 2 new tests pass; pre-existing 54 tests still pass.
-3. `.claude/settings.json` committed; `.claude/settings.local.json` has no entries matching `/^Bash\((rm -rf \.git|git init |git branch )/` and no `"defaultMode": "bypassPermissions"` line.
-4. `app/api/ask/route.ts` contains the `ASK_ENABLED` check above the rate-limit call; `.env.example` documents the flag.
-5. `ARCHITECTURE.md §6` updated with the "Kill switches" subsection. `DECISIONS.md` has one new bullet for the `ASK_ENABLED` choice and one bullet for the permissions lockdown, both dated 2026-05-18.
-6. Production Vercel env-vars include `ASK_ENABLED=true` set explicitly — so flipping to `false` is a known reversal rather than "did anyone configure this?".
+3. `.claude/settings.json` committed; `.claude/settings.local.json` has no entries matching `/^Bash\((rm -rf \.git|git init |git branch )/` and no `"defaultMode": "bypassPermissions"` line. The effective merged allowlist is inspectable via the documented recipe (see criterion 8).
+4. `app/api/ask/route.ts` contains the `ASK_ENABLED` off-keyword check above the rate-limit call **and** the module-scope cold-start log line; `.env.example` documents the flag with its off-keywords.
+5. `ARCHITECTURE.md §6` updated with the "Kill switches" subsection. `DECISIONS.md` has one new bullet for the `ASK_ENABLED` env-var choice, one bullet for the kill-switch off-by-keyword semantics, and one bullet for the permissions lockdown — all three dated 2026-05-18.
+6. **Production-config verification** (replacing the previous criterion 6, which was a manual checklist not CI-verifiable): the cold-start log line from §6 emits in Vercel runtime logs on the first request after deploy. Operator confirms `ASK_ENABLED` value is what was intended by inspecting the log line, not by inspecting the env-var dashboard. The log line is the deploy-time proof; the env-var dashboard is the source-of-truth. (The previous "set `ASK_ENABLED=true` explicitly in Vercel" instruction is now a *post-merge ops checklist item*, not a success criterion — it's a one-time human action, not a code property.)
 7. Existing CI bundle gate (`< 320 KB client total`) still passes; no regression from new test dependencies.
+8. **Effective Claude permissions are inspectable.** The repo includes a documented one-liner (in `ARCHITECTURE.md §13` under "Claude harness configuration", a new subsection):
+   ```bash
+   jq -s '.[0].permissions + (.[1].permissions // {}) | .allow' \
+     .claude/settings.json .claude/settings.local.json 2>/dev/null
+   ```
+   Running this prints the effective merged allow-list. Optional for the implementer: a `scripts/print-claude-permissions.mjs` wrapper, but the `jq` recipe is sufficient for the criterion.
 
 ---
 
@@ -270,7 +289,7 @@ Binary checks; each must hold before merge.
 | R3 | `ASK_ENABLED` accidentally typo'd in prod env (`'true '` w/ space, `'TRUE'`, etc.) → unintended state | Low | Medium | Only literal `'false'` disables. Typos default to enabled | Trivial — env edit + redeploy |
 | R4 | `acceptEdits` causes prompt-fatigue for routine Bash → temptation to restore `bypassPermissions` | Medium | Medium (defeats the fix) | Local `settings.local.json` can add commonly-used safe Bash entries (`pnpm *`, `git status`, etc.) per-machine after observing real friction | Reversible — restore the line in local file; document the choice in DECISIONS if you do |
 | R5 | A skill or hook that needs one of the dropped `Bash(...)` entries breaks silently | Low | Low | Run a full real session post-change (commit, push) to verify standard workflow; prompts that fire identify the gap | Trivial — add entry to local allowlist with a "why" comment |
-| R6 | Mobile thresholds (TBT < 400, TTI < 3500) prove unachievable on first CI run despite today's perf pass | Medium | Low | First-run failure surfaces real gap; tune thresholds in one follow-up PR or fix the underlying issue (preferred) | Trivial — adjust `lighthouserc.mobile.json` |
+| R6 | Mobile thresholds (TBT < 400, TTI < 3500) prove unachievable on first CI run despite today's perf pass | Medium | **Medium** (was Low) | Resolved upstream by the §11 calibration step: thresholds are not finalized in `lighthouserc.mobile.json` until local 3-run p50 against current `main` confirms feasibility with 20% headroom. The PR opening the workflow change MUST include the calibration evidence in its description. If calibration shows targets are unmet, fix the underlying perf issue before opening the gate PR — never ship the gate at known-failing thresholds | Trivial — adjust `lighthouserc.mobile.json`, but the calibration step prevents needing this reversal |
 
 **Aggregate reversibility:** single-commit-revertable. No data migrations, no schema changes, no destructive operations.
 
@@ -283,7 +302,11 @@ Informative for the plan-writing skill; final order may shift on dependency anal
 1. **Fix 4 — Permissions lockdown.** Smallest, no test surface, validates inheritance model first. Establishes the "fresh-session smoke test" workflow for later fixes.
 2. **Fix 3 — ASK_ENABLED.** Adds new test, simple env-var read, exercises the new vitest workflow.
 3. **Fix 2 — API timeouts.** Adds new test, modifies existing route handlers; validate sentinel path end-to-end.
-4. **Fix 1 — Mobile LHCI gate.** Largest CI change, validated last after smaller changes confirm CI health. Threshold-tuning may require one follow-up PR.
+4. **Fix 1 prep — Mobile LHCI calibration.** Before any CI workflow change: run `pnpm lhci autorun --config=lighthouserc.mobile.json` locally against current `main` for 3 runs. Capture observed p50 for `total-blocking-time`, `interactive`, `largest-contentful-paint`. Compute `observed_p50 × 1.2` as the bake-in threshold. Decision branch:
+   - If `observed_p50 × 1.2 ≤` the targets in §4 → use the §4 targets (the site already meets them).
+   - If `observed_p50 × 1.2 >` a §4 target → either loosen `lighthouserc.mobile.json` to `observed_p50 × 1.2` for that assertion, OR open a follow-up perf PR to fix the underlying issue before the gate PR opens. Never ship the gate at known-failing thresholds.
+   The calibration evidence (the 3-run output) MUST be included in the gate PR description.
+5. **Fix 1 ship — Mobile LHCI workflow change.** With calibrated thresholds locked in `lighthouserc.mobile.json`, add the `lhci-mobile` parallel job to `ci.yml` and the `lhci:mobile` script to `package.json`. Validated last after smaller changes confirm CI health.
 
 ---
 
