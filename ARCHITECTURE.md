@@ -463,6 +463,17 @@ Vercel auto-deploys main. No manual gate. Lighthouse CI on production deploy as 
 ### Rollback
 Vercel "Promote to Production" of previous deployment. <60 seconds. No manual config needed.
 
+### Claude harness configuration
+
+The repo ships a project-level Claude Code permissions baseline in `.claude/settings.json` (committed) — `defaultMode: "acceptEdits"` plus the minimum skill allowlist mandated by CLAUDE.md's dispatch matrix. Per-machine additions live in `.claude/settings.local.json` (gitignored). The effective merged allowlist is inspectable via:
+
+```bash
+jq -s '.[0].permissions + (.[1].permissions // {}) | .allow' \
+  .claude/settings.json .claude/settings.local.json 2>/dev/null
+```
+
+Configuration history and rationale: see `DECISIONS.md` 2026-05-18 (permissions lockdown bullet).
+
 ---
 
 ## 14. Cost model
