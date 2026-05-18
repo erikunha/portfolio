@@ -18,13 +18,14 @@ const isDev = process.env.NODE_ENV !== 'production';
 const baseOpts = {
   level: isDev ? 'debug' : 'info',
   base: { env: process.env.NODE_ENV ?? 'unknown' },
+  serializers: { err: pino.stdSerializers.err },
 };
 const pinoInstance = isDev
   ? pino({
       ...baseOpts,
       transport: {
         target: 'pino-pretty',
-        options: { colorize: true, translateTime: 'HH:MM:ss.l' },
+        options: { colorize: true, translateTime: 'SYS:HH:MM:ss.l' },
       },
     })
   : pino(baseOpts);
@@ -32,7 +33,7 @@ const pinoInstance = isDev
 type Ctx = Record<string, unknown>;
 
 export const log = {
-  info: (msg: string, ctx?: Ctx) => pinoInstance.info(ctx ?? {}, msg),
-  warn: (msg: string, ctx?: Ctx) => pinoInstance.warn(ctx ?? {}, msg),
-  error: (msg: string, ctx?: Ctx) => pinoInstance.error(ctx ?? {}, msg),
+  info: (msg: string, ctx?: Ctx) => pinoInstance.info(ctx, msg),
+  warn: (msg: string, ctx?: Ctx) => pinoInstance.warn(ctx, msg),
+  error: (msg: string, ctx?: Ctx) => pinoInstance.error(ctx, msg),
 };
