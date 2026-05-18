@@ -1,11 +1,23 @@
 # Launch Playbook — Portfolio Production
 
-> From prototype to deployed at erikunha.com.br
+> From prototype to deployed at erikunha.dev
 > Companion to ARCHITECTURE.md (system design) and DECISIONS.md (ADR log)
-> Started: 2026-05-13
+> Started: 2026-05-13 · Shipped: 2026-05-16
 > Estimated to ship: 2 focused weeks part-time, ~40 hours total
 
 This is the operational sequence. ARCHITECTURE.md tells you what to build; this tells you what to do **next**, in order, with the commands.
+
+> ## ⚠️ Post-launch stack changes — read before re-running these steps
+>
+> This playbook captures the **as-launched** scaffold from May 2026. The stack has since changed in ways that contradict the commands below. The DECISIONS.md ADR log is the canonical record; **trust it over the steps in this file** for anything dated after 2026-05-16.
+>
+> Material changes since launch:
+>
+> - **2026-05-18 — Tailwind v4 removed.** Do NOT run `--tailwind` in `create-next-app`, do NOT `pnpm add -D @tailwindcss/postcss tailwindcss`, do NOT copy `scaffold/postcss.config.mjs` (the file is gone). The site now uses hand-written global CSS under `app/css/` with no framework. Next 16 + Turbopack handle nesting + autoprefix natively via Lightning CSS, no PostCSS config needed.
+> - **2026-05-18 — @vercel/analytics + @vercel/speed-insights removed.** Do NOT run `pnpm add @vercel/analytics@latest @vercel/speed-insights@latest` unless you intend to wire them up in `app/layout.tsx`. They were declared since scaffold but never imported; removed to keep `package.json` honest.
+> - **Domain.** Migrated `erikunha.com.br → erikunha.dev` (commit `7b7bc21`). The URLs below still reference the original `.com.br` host in some places.
+>
+> See `DECISIONS.md` for rationale and reversibility notes on each.
 
 ---
 

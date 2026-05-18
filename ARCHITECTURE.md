@@ -1,9 +1,9 @@
 # Portfolio Architecture — Staff/Principal Pass
 
-> Target stack: Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind v4 · Vercel Edge · Biome · pnpm · Playwright (contact path only)
+> Target stack: Next.js 15 (App Router) · React 19 · TypeScript strict · hand-written global CSS · Vercel Edge · Biome · pnpm · Playwright (contact path only)
 >
 > Author: Erik Henrique Alves Cunha
-> Last revised: 2026-05-13
+> Last revised: 2026-05-13 (stack revised 2026-05-18 — Tailwind removed; see DECISIONS.md)
 > Status: implemented (2026-05-15) — see DECISIONS.md for implementation notes
 
 ---
@@ -190,8 +190,18 @@ lib/
   seo/                        # Person JSON-LD, metadata builder, llms.txt builder
   edge/                       # KV clients (Upstash), PSI fetcher
 
-styles/
-  globals.css                 # Tailwind v4 + terminal CSS vars + CRT layers
+app/css/                      # 10 hand-rolled global CSS files (no framework)
+  _tokens.css                 # design tokens (CSS vars: palette, spacing, type)
+  _base.css                   # reset (Preflight subset), focus, typography defaults
+  _crt.css                    # scanlines, RGB sub-pixel mask, grain, flicker, phosphor
+  _layout.css                 # page chrome, module containers, content-visibility
+  _sections.css               # per-section styles (BEM-ish, ~18 sections)
+  _chrome.css                 # topbar, dock, status bar
+  _shell.css                  # interactive shell terminal
+  _contact.css                # contact form
+  _footer.css                 # shutdown footer
+  _responsive.css             # mobile overrides + reduced-motion
+app/globals.css               # single entry point, @imports the 10 files above
 
 public/
   og/                         # fallback OG images
@@ -513,7 +523,7 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 
 When quota / time returns:
 
-1. **PR 1 — Foundation.** Next 15 scaffold, TS strict, Tailwind v4 with palette as CSS vars, Biome, JetBrains Mono via next/font, Vercel preview wired, bundle-size CI check, axe-core CI check. Zero content.
+1. **PR 1 — Foundation.** Next 15 scaffold, TS strict, hand-written global CSS with palette as CSS vars (Tailwind v4 was used as scaffold default then removed 2026-05-18 — see DECISIONS.md), Biome, JetBrains Mono via next/font, Vercel preview wired, bundle-size CI check, axe-core CI check. Zero content.
 
 2. **PR 2 — Content layer.** All `content/*.ts` typed + Zod-validated. Build fails on invalid content. No visual yet.
 
