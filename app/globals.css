@@ -1,6 +1,7 @@
-/* app/globals.css */
-
-@import "tailwindcss";
+/* app/globals.css
+   Single entry point for all CSS. No frameworks — every rule is in one of the
+   _*.css files below. Order matters: tokens → base reset → effects → layout →
+   sections → chrome → shell → contact → footer → responsive overrides. */
 
 @import "./css/_tokens.css";
 @import "./css/_base.css";

@@ -240,30 +240,6 @@
     font-size: var(--fs-sm);
   }
 
-  /* Blame — tighter timeline on mobile */
-  .blame {
-    padding-left: 16px;
-  }
-  .blame::before {
-    left: 4px;
-  }
-  .blame-row {
-    padding: 0 0 16px;
-    font-size: var(--fs-sm);
-  }
-  .blame-row::before {
-    left: -16px;
-    width: 9px;
-    height: 9px;
-  }
-  .blame-date {
-    font-size: var(--fs-xs);
-  }
-  .blame-reason {
-    font-size: var(--fs-sm);
-    line-height: 1.55;
-  }
-
   /* Footer mobile adaptations */
   footer.shutdown {
     padding: 28px var(--pad) 24px;
@@ -640,10 +616,15 @@ html.sysfail-on .crt-noise {
   stroke-width: 1.4;
 }
 
-/* Below-fold sections: skip paint until near viewport.
-   nth-of-type counts all <section> siblings: hero=1, readme=2, manpage=3, now=4, shell=5 → projects=6+.
-   Skips the first 5 sections which can appear in or near the initial viewport. */
-.page > section.module--desktop:nth-of-type(n + 6) {
+/* Below-fold sections: skip style/layout/paint until near viewport.
+   Two selectors because nth-of-type counts per element type:
+   - Desktop: Hero + 17 Modules are all <section>, so section.module--desktop nth-of-type starts at 2
+     (Hero is 1). 6th section = Projects → defer Projects→Contact (14 sections).
+   - Mobile: Modules render as <details>, so nth-of-type counts only details. 5th details =
+     Projects → same coverage. Without this rule mobile gets no deferral, which is why
+     Lighthouse mobile shows ~840ms style+layout on first paint. */
+.page > section.module--desktop:nth-of-type(n + 6),
+.page > details.module--mobile:nth-of-type(n + 5) {
   content-visibility: auto;
   contain-intrinsic-size: 0 400px;
 }
