@@ -304,7 +304,9 @@
   }
 }
 
-/* Desktop hero: boot animation left, bio panel right */
+/* Desktop hero: boot animation left, bio panel right.
+   Visibility is controlled by the HERO RESPONSIVE TOGGLE block at the bottom
+   of this file; the display: flex here sets the layout for when it is visible. */
 .hero--desktop {
   display: flex;
 }
@@ -697,4 +699,33 @@ html.sysfail-on .crt-noise {
 
 .module--mobile[open] .module__body {
   padding: var(--pad);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   HERO RESPONSIVE TOGGLE
+   Both variants are server-rendered (RSC). CSS media query swaps visibility so
+   only the matching variant paints. Spec ref: 2026-05-18-mobile-lcp-perf-fix
+   design §6.
+
+   .hero--desktop: default display: block (visibility baseline); the structural
+   display: flex rule above this block sets the two-column flex layout when visible.
+   .hero--mobile: hidden by default; shown via media query below.
+   ───────────────────────────────────────────────────────────────────────── */
+.hero--desktop {
+  display: block;
+}
+/* Override: restore flex layout for the two-column desktop structure. */
+.hero--desktop {
+  display: flex;
+}
+.hero--mobile {
+  display: none;
+}
+@media (max-width: 768px) {
+  .hero--desktop {
+    display: none;
+  }
+  .hero--mobile {
+    display: block;
+  }
 }

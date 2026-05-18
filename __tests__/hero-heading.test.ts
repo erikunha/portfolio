@@ -5,20 +5,13 @@ import { describe, expect, it } from 'vitest';
 const hero = readFileSync(path.resolve(__dirname, '../components/sections/Hero.tsx'), 'utf-8');
 
 describe('Hero headings', () => {
-  it('DesktopHero renders an h1 element', () => {
-    const desktopFn = hero.slice(
-      hero.indexOf('function DesktopHero'),
-      hero.indexOf('function MobileHero'),
-    );
-    expect(desktopFn).toMatch(/<h1/);
+  it('Hero RSC renders an h1 element', () => {
+    // Hero is now a single RSC; both desktop and mobile h1s live in Hero.tsx.
+    expect(hero).toMatch(/<h1/);
   });
 
-  it('DesktopHero h1 is visible inside the bio panel', () => {
-    const desktopFn = hero.slice(
-      hero.indexOf('function DesktopHero'),
-      hero.indexOf('function MobileHero'),
-    );
-    expect(desktopFn).toMatch(/hero__bio/);
-    expect(desktopFn).toMatch(/hero__name/);
+  it('Hero RSC h1 is inside the bio panel on desktop and the inner wrapper on mobile', () => {
+    expect(hero).toMatch(/hero__bio/);
+    expect(hero).toMatch(/hero__name/);
   });
 });
