@@ -103,6 +103,15 @@ Job fails the PR. Same severity as desktop LHCI today. No bypass path.
 
 Vercel cold-start variance can inflate a single LHCI run. The existing `numberOfRuns: 3` (median) already mitigates; carry over to the mobile config.
 
+### Status update (2026-05-18, post-calibration)
+
+Implementation Task 4 calibration (see plan `## Calibration evidence`) returned the FIX_PERF branch: observed mobile LCP is 3071ms vs 1800ms target. Two corrections to this spec section made during calibration:
+
+1. **LH12 syntax:** `"preset": "mobile"` is not a valid Lighthouse 12 setting. The correct mobile emulation is `emulatedFormFactor: "mobile"` plus explicit `mobileSlow4G` throttling constants (`rttMs: 150`, `throughputKbps: 1638.4`, `cpuSlowdownMultiplier: 4`, etc.). The plan's Step 4.1 JSON and the committed `lighthouserc.mobile.json` use the corrected form.
+2. **LH12 preset noise:** `lighthouse:no-pwa` in LH12 introduces several new insight audits (`network-dependency-tree-insight`, `render-blocking-insight`, `unused-javascript`, `dom-size`) that are out of scope for spec §4 assertions. The corrected config explicitly turns these off; `tap-targets` (removed entirely in LH12) is also explicitly off.
+
+Fix 1 implementation is **paused** pending a separate perf-fix PR to bring mobile LCP under 1800ms. Spec §4 threshold targets unchanged — the calibration step worked exactly as designed, catching the gap before the gate shipped.
+
 ---
 
 ## 5. Fix 2 — Anthropic + Resend client timeouts

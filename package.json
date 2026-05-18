@@ -19,6 +19,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "lhci": "lhci autorun",
+    "lhci:mobile": "lhci autorun --config=lighthouserc.mobile.json",
     "validate-content": "node scripts/validate-content.mjs",
     "bundle-check": "node scripts/check-bundle-size.mjs",
     "ci": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm test && pnpm build && pnpm bundle-check",
