@@ -12,6 +12,9 @@ const anthropic = new Anthropic();
 // state of the kill switch without inspecting the Vercel env-var dashboard.
 console.info('[ask] kill-switch on cold start:', process.env.ASK_ENABLED ?? 'unset');
 
+// Module-scoped: never changes between calls, avoids per-request Set allocation.
+const OFF_KEYWORDS = new Set(['false', '0', 'off', 'no', 'disabled']);
+
 // cache_control marks this block for Anthropic prompt caching.
 // The system prompt is identical on every call — ~93% cheaper on cache hits.
 const SYSTEM: Anthropic.Messages.TextBlockParam[] = [
@@ -121,7 +124,6 @@ export async function POST(req: NextRequest) {
   // disable the route. The cost of "stays on accidentally" during a cost incident
   // is exactly what this switch exists to prevent.
   const askFlag = (process.env.ASK_ENABLED ?? '').trim().toLowerCase();
-  const OFF_KEYWORDS = new Set(['false', '0', 'off', 'no', 'disabled']);
   if (OFF_KEYWORDS.has(askFlag)) {
     return Response.json(
       { error: 'temporarily unavailable — email erikhenriquealvescunha@gmail.com directly' },
