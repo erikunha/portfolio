@@ -23,6 +23,8 @@ Three coordinated fixes target the three measured contributors:
 
 Single PR, three commits (one per fix), one post-merge calibration confirms success.
 
+**On the per-fix LCP-impact estimates (architect-review-required framing):** every per-fix LCP delta cited in this spec is an *upper-bound guide*, not a measurement or a prediction. The 303ms render-block penalty is measured (Lighthouse calibration evidence); the per-fix recovery numbers (0-100ms, 200-400ms, 200-500ms) are author-estimated bounds informed by typical LCP attribution patterns, not empirical claims about THIS site. The only truth signal is the post-merge `pnpm lhci:mobile` 3-run pass (§8). If the cumulative estimates don't close to 1800ms in practice, the spec's failure path in §8 takes over — open Perf-Fix #2.
+
 ---
 
 ## 2. Scope
@@ -125,7 +127,7 @@ Apply both variables in the `<html>` className:
    ```
 2. Grep CSS for `font-weight: 500` and `font-weight: 700` (and `font-weight: bold`). For each selector, confirm or add `font-family: var(--font-mono-bold-stack)` so the bold font is requested when that element paints.
 
-Bounded: ~30 selectors, one-time audit.
+**Abort criterion (architect-review-required):** the implementer MUST count the affected selectors and files in Step 1 of the implementation. If the audit touches more than **10 selectors across more than 2 CSS files**, drop Fix A from this PR and defer to a separate sub-spec. Rationale: Fix A's direct LCP impact is acknowledged as marginal (see assessment above); if the CSS audit balloons, the regression risk (weight-500 elements rendering at weight 400) outweighs the bandwidth-contention saving. A 30-minute bounded audit is acceptable; a 3-hour audit with cross-file risk is not. The implementer's report MUST include the audit count so the abort decision is auditable.
 
 ### Failure mode
 
@@ -191,6 +193,14 @@ Initial extraction set (estimate ~50-100 lines, ~3-4KB of CSS):
 2. Selectors mentioned in `CRITICAL_CSS` (extracted via regex on `.classname` patterns) ALL exist in the source CSS files under `app/css/`. If a Hero selector is renamed in `_sections.css` without updating `CRITICAL_CSS`, this test fails.
 3. CSS variables referenced in `CRITICAL_CSS` (extracted via regex on `--variable-name`) ALL exist in `_tokens.css`. Same drift protection for token renames.
 
+**Drift test scope — documented limitation (architect-review-required):** this test is **selector-existence + variable-existence**, NOT **rule-body equivalence**. It catches structural drift (a selector renamed or removed in source) and token drift (a CSS variable deleted from `_tokens.css`). It does NOT catch stylistic drift — if `.hero__tagline { font-size: 18px }` in source CSS changes to `font-size: 22px`, the inlined `CRITICAL_CSS` with the old `18px` keeps the test green but causes a visible LCP-element regression. Rule-body equivalence would require AST-level CSS parsing + hash comparison, judged out of scope (significant new tooling for a single drift class). Mitigation layers:
+
+- Visual smoke from CI's axe-core run will surface obvious paint regressions
+- Post-merge LHCI continues to measure LCP; sustained regression triggers Perf-Fix #2
+- Any update to `.hero__*` rules SHOULD be paired with a manual `CRITICAL_CSS` review in the PR description
+
+The test file's docblock MUST document this limitation explicitly so future maintainers don't mistake it for full equivalence.
+
 ### Failure mode
 
 If the inlined block contains a selector that no longer exists in source CSS, the rule has no effect (no markup matches it). Lighthouse may even flag the unused selector. Drift test catches this on the next PR.
@@ -238,12 +248,27 @@ Restructure `components/sections/Hero.tsx` from 444 lines all `'use client'` int
 
 ### Boot animation DOM-target strategy
 
-The boot animation targets a specific DOM element via `bootRef`. With both variants in DOM, the ref needs to point at the *visible* variant. Two approaches; implementer chooses based on what's cleanest:
+The boot animation targets a specific DOM element via `bootRef`. With both variants in DOM, only the *visible* variant should run the animation.
 
-- **Each variant mounts its own `<HeroBootAnimation />` instance.** Each instance checks `getComputedStyle(this.containerRef.current).display !== 'none'` on mount; the hidden one no-ops; the visible one runs. Simple, no shared state.
-- **Single mount with a CSS-based target selector.** `useEffect` runs `document.querySelector('.hero--desktop:not([style*="display: none"]) .hero__boot, .hero--mobile:not([style*="display: none"]) .hero__boot')`. More fragile against CSS changes.
+**Approach (architect-review-corrected):** each variant mounts its own `<HeroBootAnimation variant="desktop"|"mobile" />` instance. Each instance gates on `window.matchMedia('(max-width: 768px)').matches` to decide whether to run — desktop instance runs when `matches === false`, mobile instance runs when `matches === true`. Pseudo:
 
-Recommend the first (independent mounts). One no-op render per page load is cheap; the alternative couples DOM lookup to CSS structure.
+```ts
+'use client';
+export function HeroBootAnimation({ variant }: { variant: 'desktop' | 'mobile' }) {
+  const bootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const isMobileVP = window.matchMedia('(max-width: 768px)').matches;
+    const shouldRun = variant === 'mobile' ? isMobileVP : !isMobileVP;
+    if (!shouldRun) return;
+    // ...existing runBoot(bootRef.current, ...) call
+  }, [variant]);
+  return <div ref={bootRef} className="hero__boot" />;
+}
+```
+
+**Why `matchMedia` and not `getComputedStyle`:** at mount time during hydration, the route-level `<link rel="stylesheet">` may not have applied to the DOM yet, so `getComputedStyle(...).display` could read default `block` for both variants, causing both animations to run. `matchMedia` evaluates the viewport against the registered media query deterministically, independent of stylesheet load order. It's also the same primitive `useBreakpoint` already uses, so the project has precedent. Earlier draft of this spec proposed the `getComputedStyle` check — rejected after architect-review for this race condition.
+
+Alternative considered and rejected: single mount with a CSS-based `querySelector` (`.hero--desktop:not([style*="display: none"]) .hero__boot`). Couples DOM lookup to CSS structure; brittle against any rule rename.
 
 ### Removed dependency
 
