@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { readMotion } from '@/lib/motion';
 
 const DIGITS = '0123456789'.split('');
 const FRAME_MS = 1000 / 22;
@@ -32,7 +31,6 @@ export function MatrixRain({
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!readMotion()) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
