@@ -6,7 +6,10 @@ import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 export const dynamic = 'force-dynamic';
 
 // Module-scope client — reused across warm invocations.
-// 30s covers normal Haiku-4.5 streams (typical <10s; max_tokens 512 caps duration).
+// 30s timeout applies to stream INITIATION (time-to-first-byte); once chunks
+// start arriving the SDK no longer enforces the timeout. Typical Haiku-4.5
+// time-to-first-byte is <2s; 30s is 15× headroom. Per-chunk watchdog for
+// stalled mid-stream connections is out of scope per spec §5 edge case.
 // Default maxRetries (2) preserved — stream init is idempotent (no SSE events
 // before first content_block_delta), so absorbing transient 5xx is safe.
 const anthropic = new Anthropic({ timeout: 30_000 });

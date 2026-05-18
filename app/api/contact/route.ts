@@ -73,7 +73,16 @@ export async function POST(req: NextRequest) {
       console.error('[contact] resend error (message saved to KV as', msgId, ')', error);
     }
   } catch (sendErr) {
-    console.error('[contact] resend unavailable (message saved to KV as', msgId, ')', sendErr);
+    const reason = sendErr instanceof Error ? sendErr.message : String(sendErr);
+    // Distinguishes timeout ("resend timeout (10s)") from genuine SDK failures
+    // in Vercel runtime logs without losing the original error object.
+    console.error(
+      '[contact] resend unavailable (message saved to KV as',
+      msgId,
+      ') reason:',
+      reason,
+      sendErr,
+    );
   }
 
   return Response.json({ ok: true });
