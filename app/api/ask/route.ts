@@ -6,7 +6,10 @@ import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 export const dynamic = 'force-dynamic';
 
 // Module-scope client — reused across warm invocations.
-const anthropic = new Anthropic();
+// 30s covers normal Haiku-4.5 streams (typical <10s; max_tokens 512 caps duration).
+// Default maxRetries (2) preserved — stream init is idempotent (no SSE events
+// before first content_block_delta), so absorbing transient 5xx is safe.
+const anthropic = new Anthropic({ timeout: 30_000 });
 
 // Logs once per warm function instance. The value reveals the configured
 // state of the kill switch without inspecting the Vercel env-var dashboard.

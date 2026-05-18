@@ -54,14 +54,21 @@ export async function POST(req: NextRequest) {
   }
 
   // Delivery second: failure is acceptable if KV write succeeded.
+  // 10s timeout via Promise.race — Resend SDK v6 doesn't accept AbortSignal
+  // natively. On timeout, the rejected Promise enters the existing catch path
+  // and the message remains durably persisted in KV with msgId for recovery.
   try {
-    const { error } = await getResend().emails.send({
+    const sendPromise = getResend().emails.send({
       from: 'onboarding@resend.dev',
       to: 'erikhenriquealvescunha@gmail.com',
       replyTo: email,
       subject: `[portfolio] message from ${name}`,
       text: `From: ${name} <${email}>\nRef: ${msgId}\n\n${message}`,
     });
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('resend timeout (10s)')), 10_000),
+    );
+    const { error } = await Promise.race([sendPromise, timeoutPromise]);
     if (error) {
       console.error('[contact] resend error (message saved to KV as', msgId, ')', error);
     }
