@@ -1,6 +1,5 @@
-import { headers } from 'next/headers';
 import { projects } from '@/content/projects';
-import { detectMobileFromUA } from '@/lib/breakpoint';
+import { getIsMobileForRequest } from '@/lib/get-is-mobile-for-request';
 import { IconProjects } from '../Icons';
 import { Module } from '../responsive/Module';
 
@@ -17,8 +16,7 @@ const FolderIcon = () => (
 // card layout (CSS layout media queries still apply). This is accepted — the
 // same trade-off is already made by Module.tsx for the section shell.
 export async function ProjectsSection({ defer }: { defer?: boolean } = {}) {
-  const ua = (await headers()).get('user-agent');
-  const isMobile = detectMobileFromUA(ua);
+  const isMobile = await getIsMobileForRequest();
 
   return (
     <Module

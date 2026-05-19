@@ -5,9 +5,8 @@
 // custom toggle. The 'module:open' event from Dock is handled by a single
 // delegated listener in AppShell.client.tsx that flips the open attribute.
 
-import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
-import { detectMobileFromUA } from '@/lib/breakpoint';
+import { getIsMobileForRequest } from '@/lib/get-is-mobile-for-request';
 
 export type ModuleProps = {
   id: string;
@@ -29,8 +28,7 @@ export async function Module({
   defer = false,
   children,
 }: ModuleProps) {
-  const ua = (await headers()).get('user-agent');
-  const isMobile = detectMobileFromUA(ua);
+  const isMobile = await getIsMobileForRequest();
   const activeHeader = isMobile && mobileHeader ? mobileHeader : header;
 
   if (!isMobile) {

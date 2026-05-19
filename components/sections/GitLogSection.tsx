@@ -1,8 +1,7 @@
-import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
 import { gitLog } from '@/content/git-log';
 import type { GitCommit } from '@/content/schemas';
-import { detectMobileFromUA } from '@/lib/breakpoint';
+import { getIsMobileForRequest } from '@/lib/get-is-mobile-for-request';
 import { IconGitLog } from '../Icons';
 import { Module } from '../responsive/Module';
 
@@ -224,11 +223,10 @@ function renderCommit(c: GitCommit, key: string): ReactNode {
 
 // Async RSC: renders only the matching viewport branch server-side.
 // Same UA-detection pattern as Module.tsx — avoids shipping both the
-// full-prettyer desktop log and the compact mobile log when only one
-// is visible at a time. 8 commits × ~15 spans each = ~120 nodes saved.
+// full `--pretty=fuller` desktop log and the compact mobile log when
+// only one is visible at a time. 8 commits × ~15 spans each = ~120 nodes saved.
 export async function GitLogSection({ defer }: { defer?: boolean } = {}) {
-  const ua = (await headers()).get('user-agent');
-  const isMobile = detectMobileFromUA(ua);
+  const isMobile = await getIsMobileForRequest();
 
   return (
     <Module

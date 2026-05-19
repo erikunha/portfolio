@@ -3,7 +3,6 @@
 // static data never ship to the client bundle. Only AppShell (nav/overlays)
 // and section components that are explicitly 'use client' end up in JS.
 
-import { headers } from 'next/headers';
 import { AppShell } from '@/components/AppShell.client';
 import { ErrorBoundary } from '@/components/ErrorBoundary.client';
 import { CommunitySection } from '@/components/sections/CommunitySection';
@@ -26,11 +25,10 @@ import { ShellSection } from '@/components/sections/ShellSection';
 import { SysHealthSection } from '@/components/sections/SysHealthSection';
 import { UnknownsSection } from '@/components/sections/UnknownsSection';
 import { VisaSection } from '@/components/sections/VisaSection';
-import { detectMobileFromUA } from '@/lib/breakpoint';
+import { getIsMobileForRequest } from '@/lib/get-is-mobile-for-request';
 import { BreakpointProvider } from '@/lib/use-breakpoint';
 export default async function Home() {
-  const ua = (await headers()).get('user-agent');
-  const initialIsMobile = detectMobileFromUA(ua);
+  const initialIsMobile = await getIsMobileForRequest();
 
   return (
     <BreakpointProvider initialIsMobile={initialIsMobile}>

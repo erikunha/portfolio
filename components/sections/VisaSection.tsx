@@ -1,6 +1,5 @@
-import { headers } from 'next/headers';
 import { visaRows } from '@/content/visa';
-import { detectMobileFromUA } from '@/lib/breakpoint';
+import { getIsMobileForRequest } from '@/lib/get-is-mobile-for-request';
 import { IconVisa } from '../Icons';
 import { Module } from '../responsive/Module';
 
@@ -8,8 +7,7 @@ import { Module } from '../responsive/Module';
 // Same UA-detection pattern as Module.tsx — avoids shipping both the
 // wide-table desktop pre and the mobile card grid when only one is visible.
 export async function VisaSection({ defer }: { defer?: boolean } = {}) {
-  const ua = (await headers()).get('user-agent');
-  const isMobile = detectMobileFromUA(ua);
+  const isMobile = await getIsMobileForRequest();
 
   return (
     <Module
