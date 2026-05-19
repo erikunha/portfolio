@@ -2,9 +2,9 @@ import { sysStats } from '@/content/sys-health';
 import { IconSysHealth } from '../Icons';
 import { Module } from '../responsive/Module';
 
-export function SysHealthSection() {
+export function SysHealthSection({ defer }: { defer?: boolean } = {}) {
   return (
-    <Module id="sec-sys-health" header="SYS_HEALTH_MONITOR" icon={<IconSysHealth />}>
+    <Module id="sec-sys-health" header="SYS_HEALTH_MONITOR" icon={<IconSysHealth />} defer={defer}>
       <div className="stats">
         {sysStats.map((s) => (
           <div key={s.label} className="stat">

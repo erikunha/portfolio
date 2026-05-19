@@ -2,13 +2,14 @@ import { responsibilities } from '@/content/responsibilities';
 import { IconResponsibilities } from '../Icons';
 import { Module } from '../responsive/Module';
 
-export function ResponsibilitiesSection() {
+export function ResponsibilitiesSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module
       id="sec-responsibilities"
       header="LS -LA ~/RESPONSIBILITIES"
       icon={<IconResponsibilities />}
       defaultOpen={false}
+      defer={defer}
     >
       <div className="permatrix">
         <div className="pm-cmd">
