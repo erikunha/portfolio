@@ -292,7 +292,7 @@ Always prioritize safety, incremental progress, and measurable improvement while
 ## Portfolio project context
 - Single-page composition with ~18 sections — no per-section routing; refactoring must preserve this
 - Client islands: any RSC→client conversion requires budget justification (43KB total gzipped)
-- CSS: Tailwind v4 utility classes + module-level CSS in `app/css/` — do not mix approaches; follow existing pattern
+- CSS: see CLAUDE.md "Stack" section for the locked CSS architecture; never reintroduce frameworks listed in DECISIONS.md as removed
 - Content is in `content/*.ts` (typed TS + Zod validated) — never inline content into JSX
 - Aesthetic constraints: 1px borders only, no border-radius > 2px, no new color tokens beyond --signal/--fg/--bg
 - Biome enforces formatting — run `pnpm check:fix` after any refactor to auto-fix style
