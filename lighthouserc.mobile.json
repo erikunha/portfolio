@@ -50,7 +50,8 @@
         "network-dependency-tree-insight": "off",
         "render-blocking-insight": "off",
         "unused-javascript": "off",
-        "dom-size": "off"
+        "dom-size": "off",
+        "label-content-name-mismatch": "error"
       }
     },
     "upload": {
