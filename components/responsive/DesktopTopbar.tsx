@@ -55,7 +55,6 @@ export function DesktopTopbar() {
             type="button"
             className="topbar__motion"
             onClick={toggleMotion}
-            aria-label="Toggle motion"
             data-motion={motionOn ? 'on' : 'off'}
           >
             <span className="topbar__mdot" />
