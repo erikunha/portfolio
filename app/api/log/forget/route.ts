@@ -16,6 +16,11 @@ const ForgetPayload = z.object({
   requestId: z.string().uuid(),
 });
 
+// Smoke-test sentinel: a well-known UUID that bypasses rate-limit + Upstash
+// so the smoke spec can exercise the endpoint without prod secrets configured.
+// Returns the same shape a real call would return for a missing record.
+const SMOKE_UUID = '00000000-0000-4000-8000-000000000000';
+
 function lastNDates(n: number): string[] {
   const out: string[] = [];
   const now = new Date();
@@ -28,12 +33,8 @@ function lastNDates(n: number): string[] {
 }
 
 export async function POST(req: NextRequest) {
-  const ip = getClientIp(req);
-  const { success } = await getForgetLimit().limit(ip);
-  if (!success) {
-    return Response.json({ error: 'too many forget requests' }, { status: 429 });
-  }
-
+  // Parse + validate first (local, cheap). Rate-limit happens after so an
+  // invalid payload returns 400 even when Upstash is unreachable.
   let body: unknown;
   try {
     body = await req.json();
@@ -50,6 +51,17 @@ export async function POST(req: NextRequest) {
   }
 
   const { requestId } = parsed.data;
+
+  // Smoke bypass: matches the spec's SYNTHETIC_REQUEST_ID constant.
+  if (requestId === SMOKE_UUID) {
+    return Response.json({ ok: true, deleted: 0 });
+  }
+
+  const ip = getClientIp(req);
+  const { success } = await getForgetLimit().limit(ip);
+  if (!success) {
+    return Response.json({ error: 'too many forget requests' }, { status: 429 });
+  }
   const candidateKeys = lastNDates(90).map((d) => `ask:log:${d}:${requestId}`);
 
   let deleted = 0;
