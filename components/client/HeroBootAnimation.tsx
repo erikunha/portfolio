@@ -15,10 +15,6 @@ import {
 } from '@/lib/boot-animation';
 import { readMotion } from '@/lib/motion';
 
-// Re-export kept for backwards-compat (sysfail-loop.test.ts imports from lib/boot-animation
-// directly, so this re-export is technically dead — remove in a follow-up refactor).
-export { type BootCtrl, runBoot } from '@/lib/boot-animation';
-
 // ── HeroBootAnimation island ──────────────────────────────────────────────────
 // Each variant mounts its own instance; only the one matching the viewport runs.
 // matchMedia is deterministic regardless of stylesheet load order — picked over

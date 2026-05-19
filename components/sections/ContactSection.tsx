@@ -3,13 +3,14 @@ import { ErrorBoundary } from '../ErrorBoundary.client';
 import { IconContact } from '../Icons';
 import { Module } from '../responsive/Module';
 
-export function ContactSection() {
+export function ContactSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module
       id="sec-contact"
       header="SUDO CONTACT --INIT"
       mobileHeader="CONTACT"
       icon={<IconContact />}
+      defer={defer}
     >
       <ErrorBoundary>
         <ContactFormLazy />

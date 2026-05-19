@@ -83,19 +83,13 @@ export const metadata: Metadata = {
   },
 };
 
-// Critical CSS inlined to eliminate render-block on Hero LCP element.
-// Drift-protected by __tests__/critical-css-drift.test.ts (selector +
-// variable existence checks; NOT rule-body equivalence — see test docblock).
-// Spec ref: docs/superpowers/specs/2026-05-18-mobile-lcp-perf-fix-design.md §5
-//
-// Render-blocking trade-off (Finding 12 acknowledged): inlining these rules does NOT
-// remove the render-blocking globals.css <link> — Next App Router's CSS pipeline always
-// emits `import './globals.css'` as a render-blocking stylesheet. The inline still helps:
-// the browser can START painting the hero with inline-described dimensions and tokens
-// before the full stylesheet arrives (rules reach the paint registry earlier in the HTML
-// parse). The LCP benefit is real but bounded by the pipeline. Async-loading globals.css
-// via preload/onload would require ejecting from Next's CSS pipeline — too risky. See
-// DECISIONS.md 2026-05-18 "Critical-CSS render-blocking trade-off".
+// Critical CSS inlined to get above-fold rules into the browser's style cache during HTML
+// parse, before the render-blocking ./globals.css link resolves. The full globals.css link
+// remains render-blocking under Next 15's CSS pipeline (import './globals.css' always emits
+// a blocking <link>); this inline is bounded by that constraint but nets a marginal LCP gain
+// in any rendering model that supports inline styles. Drift-protected by
+// __tests__/critical-css-drift.test.ts. Calibration of the actual LCP delta is Task 4
+// (blocked on PR #9 merge). See DECISIONS.md 2026-05-18 "Mobile critical CSS inline".
 const CRITICAL_CSS = `
 /* 1. :root tokens */
 :root {
@@ -214,10 +208,8 @@ body {
   }
   /* Mobile hero shaping rules — mirrors _responsive.css exactly so first paint
      matches final paint (no CLS when the external chunk applies).
-     NOTE: globals.css is still render-blocking (Next App Router CSS pipeline);
-     these inline rules get to the parser earlier in the HTML stream and ensure
-     the correct dimensions are painted on the first frame even if the stylesheet
-     hasn't arrived yet. See DECISIONS.md 2026-05-18 "render-blocking trade-off". */
+     globals.css is still render-blocking; these inline rules reach the parser
+     earlier in the HTML stream, ensuring correct dimensions on first frame. */
   .hero--mobile {
     display: block;
     min-height: 0;
