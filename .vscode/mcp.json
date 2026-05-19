@@ -1,29 +1,28 @@
 {
-  "inputs": [
-    {
-      "type": "promptString",
-      "id": "POSTMAN_API_KEY",
-      "description": "Value for POSTMAN_API_KEY",
-      "password": true
-    }
-  ],
+  "inputs": [],
   "servers": {
     "context7": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
     },
     "chrome-devtools": {
       "type": "stdio",
       "command": "npx",
-      "args": ["chrome-devtools-mcp@latest"]
+      "args": [
+        "chrome-devtools-mcp@latest"
+      ]
     },
     "postman": {
       "type": "http",
       "url": "https://mcp.postman.com/mcp",
       "headers": {
-        "Authorization": "Bearer ${input:POSTMAN_API_KEY}",
-        "X-Source": "claude-code-plugin"
+        "X-Source": "claude-code-plugin",
+        "X-Plugin-Version": "1.1.0",
+        "User-Agent": "postman-claude-code-plugin/1.1.0"
       }
     },
     "vercel": {
