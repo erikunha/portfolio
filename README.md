@@ -650,11 +650,11 @@ The static page renders without any environment variables; the runtime endpoints
 | `UPSTASH_REDIS_REST_TOKEN` | as above | as above |
 | `RESEND_API_KEY` | `/api/contact` delivery | [resend.com](https://resend.com) |
 | `PSI_API_KEY` | `/api/lighthouse` | Google Cloud Console > PageSpeed Insights API |
-| `DEPLOY_SALT` | IP hashing before KV persistence — see below | `openssl rand -base64 32` |
+| `DEPLOY_SALT` | IP hashing before KV persistence — **optional, auto-generated** | see below |
 
 Vercel projects scope each variable per-environment (production / preview / development) so preview deploys can use throttled keys without risking production quota.
 
-**`DEPLOY_SALT` setup.** `lib/ip-hash.ts` throws at module-eval when `NODE_ENV=production` and `DEPLOY_SALT` is unset — production cold-start fails loudly rather than silently falling back to a known-constant salt that would defeat the threat model. Generate a value with `openssl rand -base64 32` (or `openssl rand -hex 32`), then set it in **Vercel Dashboard → Project Settings → Environment Variables**, applying to **both Production and Preview**. Development unset is fine (falls back to the `'portfolio'` literal only when `NODE_ENV !== 'production'`). Rotating invalidates all prior per-IP rate-limit accounting and Q+A audit hash correlations; rotate on suspected leak rather than on a schedule.
+**`DEPLOY_SALT` is optional — auto-generated on first request and persisted in Upstash.** Resolution order on every cold start in `lib/ip-hash.ts`: explicit `process.env.DEPLOY_SALT` → Upstash KV key `meta:deploy-salt` (auto-created via `SETNX` on the first request after a fresh Upstash) → literal `'portfolio'` for non-production. The auto-generated value is a random 32-byte base64 string. The same value is read on every subsequent cold start, so the salt is stable across deploys (preserving per-IP rate-limit accounting and Q+A audit hash correlations) until the Upstash record is wiped. Concurrent cold-starts race the `SETNX` and converge on one value. Set `DEPLOY_SALT` explicitly only when you want a specific value (sharing across environments deliberately, or recovering from accidental Upstash wipe); generate with `openssl rand -base64 32`. Rotate on suspected leak by `DEL meta:deploy-salt` in Upstash — the next request generates a fresh value.
 
 ---
 
