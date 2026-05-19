@@ -105,8 +105,12 @@ pnpm dlx vercel env add UPSTASH_REDIS_REST_URL production
 pnpm dlx vercel env add UPSTASH_REDIS_REST_TOKEN production
 pnpm dlx vercel env add RESEND_API_KEY production
 pnpm dlx vercel env add PSI_API_KEY production
-pnpm dlx vercel env add IP_HASH_SALT production
-# also add same vars for preview and development
+# DEPLOY_SALT is optional — lib/ip-hash.ts auto-generates and persists it
+# in Upstash on first request. Set it explicitly only when you want a
+# specific value (e.g., to share across environments). Generate with:
+#   openssl rand -base64 32
+# pnpm dlx vercel env add DEPLOY_SALT production
+# also add the required vars for preview and development
 ```
 
 Drop the opinionated configs from `scaffold/` over the defaults Next.js created. Commit. Push. Confirm Vercel preview deploys green.
@@ -333,7 +337,7 @@ export async function submitContact(formData: FormData) {
 }
 
 async function hashIp(ip: string) {
-  const data = new TextEncoder().encode(ip + process.env.IP_HASH_SALT);
+  const data = new TextEncoder().encode(ip + process.env.DEPLOY_SALT);
   const buf = await crypto.subtle.digest('SHA-256', data);
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
