@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { config } from './copilot-port.config';
@@ -161,6 +162,20 @@ function main() {
   }
 
   for (const out of outputs) writeOutput(out, flags.dryRun);
+
+  // JSON outputs: JSON.stringify multi-lines arrays unconditionally, but
+  // biome's JSON formatter prefers short arrays inline. Without this pass,
+  // every `pnpm sync:copilot` would leave the tree failing `pnpm check`.
+  // Biome stays the source of truth for formatting; the generator only
+  // owns content. execFileSync avoids shell interpolation.
+  if (!flags.dryRun) {
+    const jsonPaths = outputs.filter((o) => o.path.endsWith('.json')).map((o) => o.path);
+    if (jsonPaths.length > 0) {
+      execFileSync('pnpm', ['exec', 'biome', 'format', '--write', ...jsonPaths], {
+        stdio: 'inherit',
+      });
+    }
+  }
 }
 
 main();
