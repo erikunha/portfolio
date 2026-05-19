@@ -10,6 +10,12 @@
 import { test } from './_helpers/fixtures';
 import { snapshotLocator } from './_helpers/snapshot';
 
+// Bump the per-test timeout above the snapshot's stability timeout (30s in
+// snapshot.ts). Default test timeout is 30s, so a 30s snapshot stability
+// budget would always hard-fail with "Test timeout exceeded" before the
+// snapshot got a chance to complete.
+test.describe.configure({ timeout: 60_000 });
+
 test.describe('visual regression', () => {
   test('1 — hero above-the-fold matches baseline', async ({ mockedPage }) => {
     // Hero renders BOTH .hero--desktop and .hero--mobile in the DOM; CSS hides
