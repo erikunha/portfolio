@@ -346,6 +346,13 @@ export function InteractiveShell() {
         </div>
       </form>
 
+      <p className="shell__privacy-notice">
+        Queries are stored 90 days for product improvement. POST your request ID (returned in the{' '}
+        <code>X-Request-Id</code> response header) to <code>/api/log/forget</code> or email{' '}
+        <a href="mailto:erikhenriquealvescunha@gmail.com">erikhenriquealvescunha@gmail.com</a> to
+        request deletion.
+      </p>
+
       {!isMobile && (
         <div className="shell__commands">
           {'commands: '}

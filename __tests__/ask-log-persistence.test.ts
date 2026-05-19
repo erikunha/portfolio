@@ -46,9 +46,55 @@ describe('Q+A persistence (Phase 3c)', () => {
   });
 });
 
-describe('/api/log/forget (Phase 3d — placeholder)', () => {
-  // Populated by Task 7.
-  it.skip('see Task 7 for forget-endpoint assertions', () => {
-    // intentional placeholder — assertions added in Task 7
+describe('/api/log/forget endpoint (Phase 3d)', () => {
+  const FORGET_ROUTE = readFileSync(
+    path.resolve(__dirname, '../app/api/log/forget/route.ts'),
+    'utf-8',
+  );
+  const RATE_LIMIT = readFileSync(path.resolve(__dirname, '../lib/rate-limit.ts'), 'utf-8');
+
+  it('exports a POST handler with NextRequest typing', () => {
+    expect(FORGET_ROUTE).toMatch(/export\s+async\s+function\s+POST\s*\(/);
+    expect(FORGET_ROUTE).toMatch(/NextRequest/);
+  });
+
+  it('marks the route as dynamic', () => {
+    expect(FORGET_ROUTE).toMatch(/export\s+const\s+dynamic\s*=\s*['"]force-dynamic['"]/);
+  });
+
+  it('validates requestId via zod', () => {
+    expect(FORGET_ROUTE).toMatch(/from\s*['"]zod['"]/);
+    expect(FORGET_ROUTE).toMatch(/requestId/);
+  });
+
+  it('deletes against the ask:log: KV key pattern', () => {
+    expect(FORGET_ROUTE).toMatch(/ask:log:/);
+    expect(FORGET_ROUTE).toMatch(/\.del\(/);
+  });
+
+  it('returns ok: true with a deleted count and is idempotent', () => {
+    expect(FORGET_ROUTE).toMatch(/ok:\s*true/);
+    expect(FORGET_ROUTE).toMatch(/deleted/);
+  });
+
+  it('uses the new getForgetLimit() rate-limit factory', () => {
+    expect(FORGET_ROUTE).toMatch(/getForgetLimit\(\)/);
+  });
+
+  it('lib/rate-limit.ts exports getForgetLimit factory with 5/hour limit', () => {
+    expect(RATE_LIMIT).toMatch(/export\s+function\s+getForgetLimit\b/);
+    expect(RATE_LIMIT).toMatch(/slidingWindow\(\s*5\s*,\s*['"]1\s*h['"]/);
+  });
+});
+
+describe('privacy notice on /api/ask form', () => {
+  const FORM_HOST = readFileSync(
+    path.resolve(__dirname, '../components/client/InteractiveShell.tsx'),
+    'utf-8',
+  );
+
+  it('mentions 90-day retention + the /api/log/forget endpoint', () => {
+    expect(FORM_HOST).toMatch(/90 days|90-day/);
+    expect(FORM_HOST).toMatch(/\/api\/log\/forget/);
   });
 });

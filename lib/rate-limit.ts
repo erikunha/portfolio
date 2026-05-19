@@ -46,6 +46,19 @@ export function getErrorLogLimit(): Ratelimit {
   return _errorLogLimit;
 }
 
+let _forgetLimit: Ratelimit | undefined;
+
+export function getForgetLimit(): Ratelimit {
+  if (!_forgetLimit) {
+    _forgetLimit = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(5, '1 h'),
+      prefix: 'rl:forget',
+    });
+  }
+  return _forgetLimit;
+}
+
 export function getClientIp(req: import('next/server').NextRequest): string {
   return (
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
