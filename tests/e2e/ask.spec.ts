@@ -104,10 +104,14 @@ test.describe('ask / interactive shell', () => {
     await expect(getShellInput(page)).toBeEnabled();
   });
 
-  test('7 — X-Request-Id header is present and non-empty in /api/ask response', async ({
+  test('7 — X-Request-Id header is the deterministic value from the happy mock', async ({
     page,
   }) => {
-    // Intercept the /api/ask response to capture headers.
+    // Single source of truth: the `ask: 'happy'` mock in mock-backend.ts owns
+    // the X-Request-Id contract (deterministic value 'test-request-id-abc123').
+    // We deliberately do NOT register a standalone page.route('**/api/ask', ...)
+    // here — a second handler would race the mock-backend registration and the
+    // ordering would silently determine which response wins.
     let requestId: string | null = null;
 
     page.on('response', (resp) => {
@@ -124,7 +128,9 @@ test.describe('ask / interactive shell', () => {
       timeout: 10_000,
     });
 
-    expect(requestId).not.toBeNull();
-    expect(requestId).not.toBe('');
+    // Assert the exact value emitted by the happy mock. Pinning (vs. just
+    // non-empty) makes any future drift in mock-backend.ts an intentional,
+    // reviewable change instead of silently passing through.
+    expect(requestId).toBe('test-request-id-abc123');
   });
 });

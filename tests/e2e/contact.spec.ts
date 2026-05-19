@@ -68,7 +68,9 @@ test.describe('contact form', () => {
 
     // The form stays mounted (no success replacement) — the error renders inside it.
     await expect(page.locator('form.contact')).toBeVisible();
-    const errorEl = page.locator('form.contact .contact__error[role="alert"]');
+    // Pure semantic selector: scoped to the form, identified by ARIA role only.
+    // Survives CSS refactors (e.g. renaming `.contact__error`) without churn.
+    const errorEl = page.locator('form.contact').getByRole('alert');
     await expect(errorEl).toBeVisible({ timeout: 5_000 });
     // Surfaces the upstream "try again" hint with retry-after window (10 minutes).
     await expect(errorEl).toContainText('try again');
@@ -87,7 +89,9 @@ test.describe('contact form', () => {
     // Form stays in place — no unhandled crash, no success state.
     await expect(page.locator('form.contact')).toBeVisible();
     await expect(page.locator('.contact.contact--success')).toHaveCount(0);
-    const errorEl = page.locator('form.contact .contact__error[role="alert"]');
+    // Pure semantic selector: scoped to the form, identified by ARIA role only.
+    // Survives CSS refactors (e.g. renaming `.contact__error`) without churn.
+    const errorEl = page.locator('form.contact').getByRole('alert');
     await expect(errorEl).toBeVisible({ timeout: 5_000 });
     await expect(errorEl).toContainText('storage unavailable');
 
