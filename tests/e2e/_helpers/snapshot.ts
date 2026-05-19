@@ -15,11 +15,18 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import { volatileMasks } from './mask-volatile';
 
+// 15s covers WebKit's slower scroll-stability + content-visibility:auto
+// reveal on cv-defer'd sections (e.g. #sec-contact). The default 5s is the
+// snapshot stability wait, not the per-action wait, so this is independent
+// from playwright.config's testTimeout.
+const SNAPSHOT_TIMEOUT_MS = 15_000;
+
 export async function snapshot(page: Page, name: string): Promise<void> {
   await expect(page).toHaveScreenshot(name, {
     mask: volatileMasks(page),
     maxDiffPixelRatio: 0.01,
     animations: 'disabled',
+    timeout: SNAPSHOT_TIMEOUT_MS,
   });
 }
 
@@ -28,5 +35,6 @@ export async function snapshotLocator(page: Page, locator: Locator, name: string
     mask: volatileMasks(page),
     maxDiffPixelRatio: 0.01,
     animations: 'disabled',
+    timeout: SNAPSHOT_TIMEOUT_MS,
   });
 }

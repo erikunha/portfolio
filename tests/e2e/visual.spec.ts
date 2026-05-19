@@ -14,14 +14,15 @@ test.describe('visual regression', () => {
   test('1 — hero above-the-fold matches baseline', async ({ mockedPage }) => {
     // Hero renders BOTH .hero--desktop and .hero--mobile in the DOM; CSS hides
     // the non-matching variant via a 768px breakpoint. The desktop section owns
-    // the #bio anchor, so a viewport-agnostic spec must (1) wait for whichever
-    // h1.hero__name becomes visible and (2) screenshot the visible <section>,
-    // not #bio. Playwright produces separate baselines per project, so each
-    // viewport's variant is captured against its own snapshot.
-    await mockedPage.waitForSelector('.hero--desktop h1.hero__name, .hero--mobile h1.hero__name', {
-      state: 'visible',
-    });
+    // the #bio anchor, so a viewport-agnostic spec must screenshot whichever
+    // <section.hero> is visible. waitForSelector with a multi-match selector
+    // picks the first DOM node regardless of visibility (and would stall on
+    // mobile where the desktop hero is :hidden first), so we filter on the
+    // locator side: .filter({ visible: true }) resolves to the variant the
+    // viewport actually paints. Playwright produces separate baselines per
+    // project, so each viewport's variant is captured against its own snapshot.
     const heroSection = mockedPage.locator('section.hero').filter({ visible: true });
+    await heroSection.waitFor({ state: 'visible' });
     await heroSection.scrollIntoViewIfNeeded();
     await snapshotLocator(mockedPage, heroSection, 'hero-above-fold.png');
   });
