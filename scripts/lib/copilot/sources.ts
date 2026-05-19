@@ -160,15 +160,19 @@ function scanAgentsDir(agentsDir: string): AgentSource[] {
   for (const entry of entries) {
     if (!entry.endsWith('.md')) continue;
     const filePath = path.join(agentsDir, entry);
-    const { data, body } = loadMarkdownFile(filePath);
-    const name = (data.name as string) || entry.replace(/\.md$/, '');
-    out.push({
-      kind: 'agent',
-      name,
-      path: filePath,
-      frontmatter: data,
-      body,
-    });
+    try {
+      const { data, body } = loadMarkdownFile(filePath);
+      const name = (data.name as string) || entry.replace(/\.md$/, '');
+      out.push({
+        kind: 'agent',
+        name,
+        path: filePath,
+        frontmatter: data,
+        body,
+      });
+    } catch {
+      // Corrupt or unreadable agent file — skip.
+    }
   }
   return out;
 }
