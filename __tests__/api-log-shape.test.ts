@@ -91,10 +91,9 @@ describe('client error bridge (Phase 3b)', () => {
     expect(BRIDGE).toMatch(/method:\s*['"]POST['"]/);
   });
 
-  it('AppShell.client.tsx imports lib/error-bridge once', () => {
-    expect(APP_SHELL).toMatch(
-      /import\s*(?:\{\s*\}\s*from\s*|\s*['"])(\.\.\/lib\/error-bridge|@\/lib\/error-bridge)['"]/,
-    );
+  it('AppShell.client.tsx imports lib/error-bridge once as a side-effect', () => {
+    // Bare side-effect import: `import '@/lib/error-bridge';` (or relative variant).
+    expect(APP_SHELL).toMatch(/import\s+['"](@\/lib\/error-bridge|\.\.\/lib\/error-bridge)['"]/);
   });
 
   it('ErrorBoundary.client.tsx componentDidCatch POSTs to /api/log', () => {

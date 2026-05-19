@@ -6,6 +6,8 @@
 
 import { Component, type ReactNode } from 'react';
 
+import { buildLogPayload } from '@/lib/error-bridge';
+
 interface Props {
   children: ReactNode;
   /** Fallback shown when an error is caught. Defaults to nothing (silent). */
@@ -32,14 +34,12 @@ export class ErrorBoundary extends Component<Props, State> {
       void fetch('/api/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          level: 'error',
-          message: `[ErrorBoundary] ${error.message}`,
-          stack: error.stack ?? info.componentStack ?? undefined,
-          url: window.location.href,
-          userAgent: navigator.userAgent,
-          ts: new Date().toISOString(),
-        }),
+        body: JSON.stringify(
+          buildLogPayload(
+            `[ErrorBoundary] ${error.message}`,
+            error.stack ?? info.componentStack ?? undefined,
+          ),
+        ),
         keepalive: true,
       }).catch(() => {
         // Intentional no-op.

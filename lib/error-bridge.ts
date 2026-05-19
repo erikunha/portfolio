@@ -22,6 +22,19 @@ type Payload = {
   ts: string;
 };
 
+export type LogPayload = Payload;
+
+export function buildLogPayload(message: string, stack: string | undefined): LogPayload {
+  return {
+    level: 'error',
+    message,
+    ...(stack !== undefined && { stack }),
+    url: typeof window !== 'undefined' ? window.location.href : '',
+    userAgent: typeof window !== 'undefined' ? navigator.userAgent : '',
+    ts: new Date().toISOString(),
+  };
+}
+
 function buildKey(message: string, stack: string | undefined): string {
   return `${message}|${stack ?? ''}`;
 }
@@ -46,6 +59,9 @@ function send(payload: Payload): void {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
     // keepalive lets the request finish even if the page is unloading.
+    // Browser caps total keepalive body size at 64KB per origin; the /api/log
+    // Zod schema (Task 4) limits stack to 16KB which keeps us well under that
+    // ceiling for any reasonable payload.
     keepalive: true,
   }).catch(() => {
     // Intentional no-op.
@@ -56,14 +72,7 @@ function handleError(event: ErrorEvent): void {
   const message = event.message ?? 'unknown error';
   const stack = event.error instanceof Error ? event.error.stack : undefined;
   if (!shouldEmit(buildKey(message, stack))) return;
-  send({
-    level: 'error',
-    message,
-    ...(stack !== undefined && { stack }),
-    url: window.location.href,
-    userAgent: navigator.userAgent,
-    ts: new Date().toISOString(),
-  });
+  send(buildLogPayload(message, stack));
 }
 
 function handleRejection(event: PromiseRejectionEvent): void {
@@ -76,20 +85,10 @@ function handleRejection(event: PromiseRejectionEvent): void {
         : 'unhandled promise rejection';
   const stack = reason instanceof Error ? reason.stack : undefined;
   if (!shouldEmit(buildKey(message, stack))) return;
-  send({
-    level: 'error',
-    message,
-    ...(stack !== undefined && { stack }),
-    url: window.location.href,
-    userAgent: navigator.userAgent,
-    ts: new Date().toISOString(),
-  });
+  send(buildLogPayload(message, stack));
 }
 
 if (typeof window !== 'undefined') {
   window.addEventListener('error', handleError);
   window.addEventListener('unhandledrejection', handleRejection);
 }
-
-// Empty export so AppShell can `import '@/lib/error-bridge'` for side effect.
-export {};
