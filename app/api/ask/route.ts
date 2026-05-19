@@ -122,9 +122,7 @@ export async function POST(req: NextRequest) {
   const ipHash = await hashIp(ip);
   log.info('ask request received', { requestId, ip });
 
-  // Per-IP rate limit
-  const { success } = await getAskLimit().limit(ip);
-  if (!success) {
+  const earlyExitPersist = (status: AskInteractionStatus): void =>
     void persistAskInteraction({
       requestId,
       ts: new Date().toISOString(),
@@ -134,25 +132,20 @@ export async function POST(req: NextRequest) {
       inputTokens: 0,
       outputTokens: 0,
       durationMs: Date.now() - startedAt,
-      status: 'rate-limited',
+      status,
     });
+
+  // Per-IP rate limit
+  const { success } = await getAskLimit().limit(ip);
+  if (!success) {
+    earlyExitPersist('rate-limited');
     return Response.json({ error: 'rate limit exceeded — try again in an hour' }, { status: 429 });
   }
 
   // Global monthly budget check
   const { allowed } = await checkBudget();
   if (!allowed) {
-    void persistAskInteraction({
-      requestId,
-      ts: new Date().toISOString(),
-      ipHash,
-      question: '',
-      answer: '',
-      inputTokens: 0,
-      outputTokens: 0,
-      durationMs: Date.now() - startedAt,
-      status: 'budget-exhausted',
-    });
+    earlyExitPersist('budget-exhausted');
     return Response.json(
       { error: 'monthly budget exhausted — email erikhenriquealvescunha@gmail.com directly' },
       { status: 503 },
@@ -163,32 +156,12 @@ export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as { question?: unknown };
     if (typeof body.question !== 'string' || !body.question.trim()) {
-      void persistAskInteraction({
-        requestId,
-        ts: new Date().toISOString(),
-        ipHash,
-        question: '',
-        answer: '',
-        inputTokens: 0,
-        outputTokens: 0,
-        durationMs: Date.now() - startedAt,
-        status: 'errored',
-      });
+      earlyExitPersist('errored');
       return Response.json({ error: 'question is required' }, { status: 400 });
     }
     question = body.question.trim().slice(0, 500);
   } catch {
-    void persistAskInteraction({
-      requestId,
-      ts: new Date().toISOString(),
-      ipHash,
-      question: '',
-      answer: '',
-      inputTokens: 0,
-      outputTokens: 0,
-      durationMs: Date.now() - startedAt,
-      status: 'errored',
-    });
+    earlyExitPersist('errored');
     return Response.json({ error: 'invalid request body' }, { status: 400 });
   }
 
@@ -217,7 +190,7 @@ export async function POST(req: NextRequest) {
           } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
             controller.enqueue(enc.encode(event.delta.text));
             if (collectedAnswerText.length < 1000) {
-              collectedAnswerText += event.delta.text;
+              collectedAnswerText = (collectedAnswerText + event.delta.text).slice(0, 1000);
             }
           }
         }
