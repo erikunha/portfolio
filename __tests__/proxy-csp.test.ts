@@ -15,8 +15,7 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const makeRequest = (): NextRequest =>
-  new NextRequest('https://erikunha.dev/', { method: 'GET' });
+const makeRequest = (): NextRequest => new NextRequest('https://erikunha.dev/', { method: 'GET' });
 
 afterEach(() => {
   // Reset NODE_ENV stub (and any other) so following tests inherit Vitest's
