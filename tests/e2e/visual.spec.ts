@@ -37,7 +37,7 @@ test.describe('visual regression', () => {
     // Removing the canvas from DOM eliminates the volatile region entirely
     // for snapshot purposes — the actual product behavior is untouched.
     await mockedPage.evaluate(() => {
-      document.querySelectorAll('canvas[aria-hidden]').forEach((c) => c.remove());
+      for (const c of document.querySelectorAll('canvas[aria-hidden]')) c.remove();
     });
     await snapshotLocator(mockedPage, heroSection, 'hero-above-fold.png');
   });
@@ -50,7 +50,7 @@ test.describe('visual regression', () => {
     await mockedPage.evaluate(() => document.fonts.ready);
     // Same canvas removal as test 1 — see comment there for rationale.
     await mockedPage.evaluate(() => {
-      document.querySelectorAll('canvas[aria-hidden]').forEach((c) => c.remove());
+      for (const c of document.querySelectorAll('canvas[aria-hidden]')) c.remove();
     });
     await snapshotLocator(mockedPage, contactSection, 'contact-section.png');
   });
