@@ -727,6 +727,18 @@ Four docs, four audiences, no overlap. If something is true in more than one, th
 
 ---
 
+## Copilot port (Claude Code harness mirrored to VS Code Copilot)
+
+Source: `~/.claude/` skills, agents, CLAUDE.md, MCP servers. Manifest in `scripts/copilot-port.config.ts`.
+
+- `pnpm sync:copilot` — regenerate `.github/{copilot-instructions.md,prompts/,chatmodes/,instructions/}` and `.vscode/mcp.json`.
+- The pre-commit hook regenerates automatically when `CLAUDE.md` or the manifest changes.
+- CI verifies (cache-independently) that any PR touching source also commits generated artifacts.
+- See `docs/superpowers/specs/2026-05-18-claude-to-copilot-port-design.md` for design.
+- Periodically run `pnpm sync:copilot` to absorb upstream plugin-content changes (these don't trigger the pre-commit hook).
+
+---
+
 ## License
 
 Source code: MIT. Content (copy, CV data, opinions, biographical material): all rights reserved. Forking the repo to learn from the architecture is welcome; forking it and replacing my name with yours is not.
