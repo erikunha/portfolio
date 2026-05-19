@@ -4,6 +4,7 @@ import path from 'node:path';
 import { config } from './copilot-port.config';
 import { scanClaudeSources } from './lib/copilot/sources';
 import { claudemdToInstructions } from './lib/copilot/translators/claudemd-to-instructions';
+import { mcpToVscode } from './lib/copilot/translators/mcp-to-vscode';
 import type { PortedNames, TranslatorOutput } from './lib/copilot/types';
 
 type Flags = {
@@ -47,7 +48,7 @@ function writeOutput(out: TranslatorOutput, dryRun: boolean) {
 
 function main() {
   const flags = parseFlags(process.argv.slice(2));
-  const _sources = scanClaudeSources();
+  const sources = scanClaudeSources();
   const portedNames = collectPortedNames();
 
   const outputs: TranslatorOutput[] = [];
@@ -72,6 +73,20 @@ function main() {
         `[warn] global CLAUDE.md not readable at ${globalPath}: ${(e as Error).message}`,
       );
     }
+  }
+
+  if (!flags.only || flags.only === 'mcp') {
+    const wanted = new Set(config.mcp);
+    const selected = [...wanted].map((name) => {
+      const src = sources.mcpServers.get(name);
+      if (!src) {
+        throw new Error(
+          `MCP server '${name}' not found in personal config or any enabled plugin. Available: ${[...sources.mcpServers.keys()].join(', ')}`,
+        );
+      }
+      return src;
+    });
+    outputs.push(mcpToVscode(selected));
   }
 
   for (const out of outputs) writeOutput(out, flags.dryRun);
