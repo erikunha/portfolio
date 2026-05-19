@@ -8,6 +8,7 @@
 // against the baseline. CI enforces maxDiffPixelRatio=0.01.
 
 import { expect, test } from './_helpers/fixtures';
+import { stripVolatileChrome } from './_helpers/mask-volatile';
 import { snapshotLocator } from './_helpers/snapshot';
 
 // Bump the per-test timeout above the snapshot's stability timeout (30s in
@@ -15,29 +16,6 @@ import { snapshotLocator } from './_helpers/snapshot';
 // budget would always hard-fail with "Test timeout exceeded" before the
 // snapshot got a chance to complete.
 test.describe.configure({ timeout: 60_000 });
-
-// Strip volatile <canvas> + fixed-position CRT chrome from the DOM before a
-// locator snapshot. The Matrix-rain canvas resizes during post-hydration
-// reflow and the masked region paints pink, so tiny bbox shifts produce big
-// diff deltas. The fixed CRT layers (scanlines, sub-pixel mask, grain,
-// flicker, scan beam, vignette) composite OVER the locator's clip box at
-// whatever scrollY Playwright's scrollIntoViewIfNeeded() lands at; on
-// viewports where a target exceeds viewport height (e.g. chromium-mobile
-// iPhone SE 320x568), the 4px-stride scanline composites at a different
-// phase per call and the snapshot bytes oscillate. Both layers are
-// decorative + aria-hidden + outside the assertion surface, so removing
-// them for snapshot purposes is sound. Used by Phase 3 tests 3-5; tests 1-2
-// keep their inline canvas-only removal to preserve Phase 1 baselines.
-async function stripVolatileChrome(page: import('@playwright/test').Page): Promise<void> {
-  await page.evaluate(() => {
-    for (const c of document.querySelectorAll('canvas[aria-hidden]')) c.remove();
-    for (const el of document.querySelectorAll(
-      '.crt-vignette,.crt-overlay,.crt-mask,.crt-noise,.crt-flicker,.crt-scan-beam',
-    )) {
-      (el as HTMLElement).style.display = 'none';
-    }
-  });
-}
 
 test.describe('visual regression', () => {
   test('1 — hero above-the-fold matches baseline', async ({ mockedPage }, testInfo) => {
