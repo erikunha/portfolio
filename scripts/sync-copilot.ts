@@ -6,6 +6,7 @@ import { createRefRewriter } from './lib/copilot/refs';
 import { scanClaudeSources } from './lib/copilot/sources';
 import { agentToChatmode } from './lib/copilot/translators/agent-to-chatmode';
 import { agentToPrompt } from './lib/copilot/translators/agent-to-prompt';
+import { applyToToInstructions } from './lib/copilot/translators/applyto-to-instructions';
 import { claudemdToInstructions } from './lib/copilot/translators/claudemd-to-instructions';
 import { mcpToVscode } from './lib/copilot/translators/mcp-to-vscode';
 import { skillToPrompt } from './lib/copilot/translators/skill-to-prompt';
@@ -139,6 +140,12 @@ function main() {
     for (const a of resolvedAgents) {
       outputs.push(agentToChatmode(a));
       outputs.push(agentToPrompt(a, rw));
+    }
+  }
+
+  if (!flags.only || flags.only === 'applyto') {
+    for (const entry of config.instructions.applyTo) {
+      outputs.push(applyToToInstructions(entry, sources));
     }
   }
 
