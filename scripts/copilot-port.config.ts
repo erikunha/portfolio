@@ -28,6 +28,9 @@ export const config: CopilotPortConfig = {
     ],
   },
 
+  // Skills only — slash commands (e.g. commit-commands:*, code-review:*) live in
+  // plugin `commands/` dirs and don't translate to Copilot prompt files via this
+  // generator. security-review removed (no skill of that name in cache).
   skills: [
     'superpowers:brainstorming',
     'superpowers:writing-plans',
@@ -37,10 +40,6 @@ export const config: CopilotPortConfig = {
     'thinking-pre-mortem',
     'thinking-model-router',
     'thinking-five-whys-plus',
-    'commit-commands:commit',
-    'commit-commands:commit-push-pr',
-    'code-review:code-review',
-    'security-review',
     'humanizer',
   ],
 
