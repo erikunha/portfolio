@@ -28,6 +28,13 @@ export const test = base.extend<Fixtures>({
       log: 'accept',
       forget: 'happy',
     });
+    // Force prefers-reduced-motion BEFORE goto so HeroBootAnimation reads
+    // `reduce` on mount and appends static dialog lines instead of running
+    // its indefinite typewriter loop. Required for toHaveScreenshot stability:
+    // without this, the hero section keeps mutating textContent (and on mobile
+    // grows in height as lines append), Playwright's two-consecutive-stable-
+    // screenshots check never settles, and snapshot regen times out.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
     // Wait for the critical above-the-fold content: the hero h1 (RSC, always
     // present once HTML lands) and the shell input (the InteractiveShell
