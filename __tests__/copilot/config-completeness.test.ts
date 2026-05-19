@@ -14,14 +14,15 @@ import { config } from '@/scripts/copilot-port.config';
 const CLAUDE_MD = path.resolve(__dirname, '..', '..', 'CLAUDE.md');
 
 /**
- * Return the text of CLAUDE.md between two heading strings (exclusive).
+ * Return the text of CLAUDE.md strictly between two heading strings,
+ * excluding both heading lines.
  */
 function extractSection(source: string, startHeading: string, endHeading: string): string {
   const startIdx = source.indexOf(startHeading);
   const endIdx = source.indexOf(endHeading, startIdx + startHeading.length);
   if (startIdx === -1) throw new Error(`Section "${startHeading}" not found in CLAUDE.md`);
   if (endIdx === -1) throw new Error(`Section "${endHeading}" not found in CLAUDE.md`);
-  return source.slice(startIdx, endIdx);
+  return source.slice(startIdx + startHeading.length, endIdx);
 }
 
 /**
