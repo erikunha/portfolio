@@ -370,8 +370,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             "1" in any Vercel environment (prod/preview) and unset in local builds
             and CI. Mounting them outside Vercel logs SDK errors to the browser
             console (no token/origin), which trips Lighthouse's errors-in-console
-            audit. Gating here makes the audit pass everywhere except real prod,
-            where the SDK errors would mean a misconfigured deploy anyway. */}
+            audit. Gating here makes the audit pass in local + CI; on prod/preview
+            the SDK initializes normally with the Vercel-injected token.
+
+            Caveat: process.env.VERCEL is read at BUILD time, not runtime. If a
+            build artifact is produced outside Vercel and later deployed to a
+            Vercel runtime (a "prebuilt" deploy flow), the gate stays false and
+            the RUM scripts won't mount even though the app IS running on Vercel.
+            This project always builds inside Vercel (every deploy is a fresh
+            `next build` in the Vercel runtime), so the build-time gate is correct.
+            If a future change splits build + deploy, flip this to a runtime check. */}
         {process.env.VERCEL === '1' && (
           <>
             <Analytics />
