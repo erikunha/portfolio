@@ -4,6 +4,14 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      update_visual_baselines:
+        description: 'Regenerate Linux visual baselines and upload them as an artifact (download + commit to refresh baselines).'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -129,4 +137,67 @@ jobs:
       - if: steps.check-e2e.outputs.exists == 'true'
         run: npx wait-on http://localhost:3000 --timeout 30000
       - if: steps.check-e2e.outputs.exists == 'true'
-        run: pnpm playwright test tests/e2e
+        # Explicit spec list: visual.spec.ts is owned by e2e-full (Linux baselines).
+        # Playwright CLI has no --ignore flag; enumerate the smoke specs instead.
+        run: pnpm playwright test --project=chromium tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/observability-smoke.spec.ts
+
+  e2e-full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Non-required: fails do not block merge. Promote to required after 5 stable runs.
+    # To make it required: add this job name to branch protection rules.
+    needs: build-and-gate
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, chromium-mobile, webkit-desktop, webkit-mobile]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Playwright browsers
+        run: pnpm playwright install --with-deps ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
+      - name: Build
+        run: pnpm build
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
+          DEPLOY_SALT: ci-build-salt
+      - name: Check if e2e-full tests exist
+        id: check-full
+        run: |
+          if ls tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/visual.spec.ts 2>/dev/null | grep -q .; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "No e2e-full spec files found — skipping."
+          fi
+      - if: steps.check-full.outputs.exists == 'true'
+        name: Start preview server
+        run: pnpm start &
+      - if: steps.check-full.outputs.exists == 'true'
+        name: Wait for server
+        run: npx wait-on http://localhost:3000 --timeout 30000
+      - if: steps.check-full.outputs.exists == 'true' && inputs.update_visual_baselines != 'true'
+        name: Run e2e-full tests
+        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/visual.spec.ts
+      - if: steps.check-full.outputs.exists == 'true' && inputs.update_visual_baselines == 'true'
+        name: Regenerate visual baselines (workflow_dispatch only)
+        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts --update-snapshots
+      - if: inputs.update_visual_baselines == 'true'
+        name: Upload regenerated visual baselines
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines-${{ matrix.project }}
+          path: tests/e2e/visual.spec.ts-snapshots/
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: test-results/
