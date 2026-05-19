@@ -137,7 +137,9 @@ jobs:
       - if: steps.check-e2e.outputs.exists == 'true'
         run: npx wait-on http://localhost:3000 --timeout 30000
       - if: steps.check-e2e.outputs.exists == 'true'
-        run: pnpm playwright test tests/e2e --project=chromium --ignore=tests/e2e/visual.spec.ts
+        # Explicit spec list: visual.spec.ts is owned by e2e-full (Linux baselines).
+        # Playwright CLI has no --ignore flag; enumerate the smoke specs instead.
+        run: pnpm playwright test --project=chromium tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/observability-smoke.spec.ts
 
   e2e-full:
     runs-on: ubuntu-latest
