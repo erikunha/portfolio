@@ -54,19 +54,42 @@ export async function POST(req: NextRequest) {
   }
 
   // Delivery second: failure is acceptable if KV write succeeded.
+  // 10s timeout via Promise.race — Resend SDK v6 doesn't accept AbortSignal
+  // natively. On timeout, the rejected Promise enters the existing catch path
+  // and the message remains durably persisted in KV with msgId for recovery.
+  // timerId is captured so the finally block can clear it after a fast success,
+  // preventing the serverless invocation from staying alive until the timer fires.
+  let timerId: ReturnType<typeof setTimeout> | undefined;
   try {
-    const { error } = await getResend().emails.send({
+    const sendPromise = getResend().emails.send({
       from: 'onboarding@resend.dev',
       to: 'erikhenriquealvescunha@gmail.com',
       replyTo: email,
       subject: `[portfolio] message from ${name}`,
       text: `From: ${name} <${email}>\nRef: ${msgId}\n\n${message}`,
     });
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timerId = setTimeout(() => reject(new Error('resend timeout (10s)')), 10_000);
+    });
+    const { error } = await Promise.race([sendPromise, timeoutPromise]);
     if (error) {
       console.error('[contact] resend error (message saved to KV as', msgId, ')', error);
     }
   } catch (sendErr) {
-    console.error('[contact] resend unavailable (message saved to KV as', msgId, ')', sendErr);
+    const reason = sendErr instanceof Error ? sendErr.message : String(sendErr);
+    // Distinguishes timeout ("resend timeout (10s)") from genuine SDK failures
+    // in Vercel runtime logs without losing the original error object.
+    console.error(
+      '[contact] resend unavailable (message saved to KV as',
+      msgId,
+      ') reason:',
+      reason,
+      sendErr,
+    );
+  } finally {
+    // Always clear the timer so the serverless invocation can exit immediately
+    // after a fast Resend success rather than staying alive for the full 10s.
+    if (timerId !== undefined) clearTimeout(timerId);
   }
 
   return Response.json({ ok: true });
