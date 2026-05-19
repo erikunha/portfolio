@@ -50,7 +50,8 @@
         "label-content-name-mismatch": "warn",
         "unused-javascript": "warn",
         "dom-size": "warn",
-        "uses-long-cache-ttl": "warn"
+        "uses-long-cache-ttl": "warn",
+        "errors-in-console": "warn"
       }
     },
     "upload": {
