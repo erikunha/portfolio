@@ -306,13 +306,75 @@ If we hit 6 campaign PRs without reaching 1800ms, or 4 calendar weeks elapse sin
 | Gate ratchet creates flakey CI as variance fluctuates | 5% safety margin; if a green PR flakes red within a week, widen the margin temporarily and document |
 | Campaign drags beyond 4 weeks | Hard circuit breaker (section 10) |
 
-## 12. Discovery findings (TBD - filled by Task 0)
+## 12. Discovery findings (Task 0)
 
-_To be populated as the first action of this campaign. Until then, all PR sequencing in section 8 is provisional._
+Captured 3 mobile Lighthouse runs on 2026-05-19T22:16:20.043Z (localhost production build via `pnpm start`, throttling per `lighthouserc.mobile.json`: simulated 4G + 4x CPU on Moto G4). Audit paths verified against Lighthouse 12.x via @lhci/cli output. Extraction is reproducible via `pnpm tsx scripts/extract-lcp-discovery.ts .lighthouseci/`.
+
+### Headline numbers
+
+| Metric | Value |
+|---|---|
+| LCP median (3 runs) | **3066 ms** |
+| LCP range across runs | 3065 ms - 3067 ms (spread 2 ms — essentially zero noise) |
+| Target | 1800 ms |
+| Gap to close | 1266 ms |
+| Performance score (median run) | 0.93 |
+| Server response time | 15 ms (localhost; real edge measured separately for PR-5) |
+| Lighthouse render-blocking estimate | 150 ms (`overallSavingsMs`) |
+| Lighthouse LCP-element render-savings estimate | 550 ms (`metricSavings.LCP` on largest-contentful-paint-element) |
+
+### LCP element (median run)
+
+- **Selector**: `main#main-content > section.hero > div.hero__inner > p.hero__tagline`
+- **Node label**: Senior Full-Stack Engineer, Frontend · 8+ yrs in building systems to support bu…
+- **Snippet**: `<p class="hero__tagline">`
+- Implication: the LCP element is text in the hero. Font-loading optimizations and CSS-defer effects on hero typography will affect this directly. Image-LCP optimizations do not apply.
+
+### Ranked contributor backlog
 
 | Rank | Contributor | Measured contribution | Estimated savings | Proposed fix | Risk |
 |---|---|---|---|---|---|
-| TBD | TBD | TBD | TBD | TBD | TBD |
+| 1 | LCP-element render path (`main#main-content > section.hero > div.hero__inner > p.hero__tagline`) | 550 ms (Lighthouse `metricSavings.LCP`) | 275-550 ms | optimize the LCP element's render path: inline more critical CSS for hero typography, preload the LCP-element font subset, or restructure the hero markup to remove layered effects affecting compositing | aesthetic regression on hero (CRT layer, font subset gaps) — visual regression + content-grep test gate |
+| 2 | Render-blocking resource: `00d3rpg2u6ip3.css` (compiled `globals.css`) | 302 ms `wastedMs` on critical chain (10 KB compressed) | 151-302 ms | preload+onload swap (defer the link, keep inline critical CSS) | FOUC on below-fold sections — visual regression matrix gate |
+
+### Out-of-scope contributors (documented for transparency)
+
+| Contributor | Bytes wasted | Why out of scope |
+|---|---|---|
+| `08i.qbnjzera3.js` | 34 KB (50% unused) | Next App Router framework bootstrap (per DECISIONS.md 2026-05-19 unused-javascript ADR) — cannot dynamically import |
+| `0fjplx8p.8hwa.js` | 21 KB (58% unused) | Next App Router framework bootstrap (per DECISIONS.md 2026-05-19 unused-javascript ADR) — cannot dynamically import |
+
+### PR-1 implementation-approach discriminator
+
+- Render-blocking CSS chunk: `_next/static/chunks/00d3rpg2u6ip3.css`
+- `totalBytes`: 10496 bytes (~10 KB compressed)
+- `wastedMs`: 302 ms on the critical chain
+- `overallSavingsMs` (Lighthouse conservative): 150 ms
+
+**Approach choice** (PR-1 own writing-plans pass must lock this in):
+
+- The CSS chunk URL is `_next/static/chunks/*.css` — emitted by Next 15's CSS pipeline with a content hash. This rules out **manual placement in `public/`** (would lose the hash and cache-bust).
+- The `next/font/local`-style asset emission pattern is for fonts, not arbitrary CSS — not applicable.
+- **Recommended approach**: a post-build script that reads the App Router build manifest, identifies the route's CSS chunk(s), and `app/layout.tsx` renders a `<link rel="preload" as="style" onload="this.rel='stylesheet'">` for those URLs at SSR time. The PR-1 writing-plans pass will validate this against Next 15's actual asset manifest shape and resolve the hash injection mechanism.
+
+### Exit criterion check
+
+- **Non-zero contributors identified: 2** (below the spec §6 PASS threshold of ≥3)
+- **Status: BRANCH (two large + long tail)** — apply spec §6 first branch point: ship PR-1 and PR-2 against the two large contributors, then re-measure. If the residual gap doesn't close from small-cuts, run Task 0 again against the post-PR-2 state to surface contributors that were previously masked.
+
+### Combined-savings reality check vs strict target
+
+Even in the optimistic case where both PR-1 and PR-2 achieve the high end of their estimated savings ranges, the combined savings (852 ms = 302 + 550) leaves a **residual gap of 414 ms** against the 1800 ms strict target. This is consistent with the spec §10 "convergence without success" path being the most likely outcome of this campaign. The campaign continues — both PRs are still worth shipping for the measured wins — but the strict 1800 ms target may require renegotiation via residual-gap ADR per spec §10. **Do not treat the 1800 ms gate as a hard deadline; treat the measured improvements as the deliverable.**
+
+### Campaign re-prioritization vs spec §8 sequence
+
+The spec's §8 PR sequence listed PR-1 as CSS defer and PR-3 as LCP-element optimization. The Task 0 data points to a different ordering by savings:
+
+- PR-1 stays as CSS defer (deterministic, well-understood pattern, smaller saving but lower risk). Ships first.
+- PR-2 becomes LCP-element optimization (bigger expected saving, higher risk on hero aesthetics). Ships second.
+- PR-3 through PR-6 of the original spec are de-prioritized — Task 0 shows the data does not surface them as material contributors. They may resurface after PR-1 + PR-2 if the residual gap analysis flags them.
+
+The other contributors named in spec §8 (font preload, JS hydration, TTFB, CRT compositing) are either already optimized (font-display score 1.0), out of scope (unused-JS = framework bootstrap), or not surfaced by Lighthouse as causing non-zero waste against the LCP element. PR-3 through PR-6 of the original §8 sequence are now **provisional and conditional on post-PR-2 re-discovery**.
 
 ## 13. Out-of-spec follow-ups
 
