@@ -13,7 +13,7 @@ const mono = localFont({
     { path: '../public/fonts/jetbrains-mono-700.woff2', weight: '700', style: 'normal' },
   ],
   variable: '--font-mono',
-  display: 'swap',
+  display: 'optional',
   preload: true,
 });
 
