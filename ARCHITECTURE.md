@@ -374,7 +374,7 @@ Implemented per Spec 2 (`docs/superpowers/specs/2026-05-18-production-observabil
 
 ### Real-user telemetry
 - **Vercel Web Analytics** + **Vercel Speed Insights** mounted in `app/layout.tsx`. Real-user pageview counts + LCP/INP/CLS land in the Vercel dashboards. Expected coverage 70-85% of visits (ad-blockers block the two ingest origins; never claim 100% population coverage in the hiring pitch).
-- **CSP** widened in `proxy.ts` to allow `https://*.vercel-insights.com` and `https://va.vercel-scripts.com`.
+- **CSP** widened in `proxy.ts` to allow `https://vitals.vercel-insights.com` (specific ingest origin, no wildcard) and `https://va.vercel-scripts.com`.
 
 ### Server-side structured logging
 - **`lib/log.ts`** wraps `pino` with a `{info, warn, error}` surface. Dev mode uses `pino-pretty` for human-readable output; production emits JSON lines for Vercel runtime-log parsing. Base fields auto-added: `{ts, level, env}`. Correlation IDs (`requestId`) are passed explicitly per-call via the second `ctx` argument — no AsyncLocalStorage / Edge-runtime opt-out (the trade-off was deliberate; cold-start cost would have stacked on top of the active LCP fight when Spec 2 landed).
