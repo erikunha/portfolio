@@ -13,7 +13,7 @@
 | `pnpm dev` | Development server |
 | `pnpm build` | Production build |
 | `pnpm test` | Vitest unit tests |
-| `pnpm test:e2e` | Playwright E2E (contact + ask paths) |
+| `pnpm test:e2e` | Playwright E2E — observability smoke, a11y scan, contact + ask user-journey tests, visual regression |
 | `pnpm check` | Biome lint + format check |
 | `pnpm check:fix` | Biome auto-fix |
 | `pnpm typecheck` | TypeScript strict check |
@@ -74,7 +74,7 @@ Invoke the named skill inline (not as a subagent) before the described action.
 - Upstash Redis for rate-limit + KV log
 - Anthropic SDK with `claude-haiku-4-5-20251001` for `/api/ask`
 - Resend for contact form delivery
-- Playwright E2E (contact + ask path only)
+- Playwright E2E: observability smoke (`tests/e2e/observability-smoke.spec.ts`), a11y scan (`tests/a11y/axe.spec.ts`), contact + ask user-journey tests, visual regression snapshots; 4-project matrix (chromium/webkit x desktop/mobile)
 - Vitest unit tests
 - axe-core a11y CI gate
 - Lighthouse CI gates
