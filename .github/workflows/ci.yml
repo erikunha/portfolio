@@ -175,7 +175,7 @@ jobs:
       - name: Check if e2e-full tests exist
         id: check-full
         run: |
-          if ls tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/visual.spec.ts 2>/dev/null | grep -q .; then
+          if ls tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/visual.spec.ts tests/e2e/cross-cutting.spec.ts 2>/dev/null | grep -q .; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
@@ -189,7 +189,7 @@ jobs:
         run: npx wait-on http://localhost:3000 --timeout 30000
       - if: steps.check-full.outputs.exists == 'true' && inputs.update_visual_baselines != 'true'
         name: Run e2e-full tests
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/visual.spec.ts
+        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/visual.spec.ts tests/e2e/cross-cutting.spec.ts
       - if: steps.check-full.outputs.exists == 'true' && inputs.update_visual_baselines == 'true'
         name: Regenerate visual baselines (workflow_dispatch only)
         run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts --update-snapshots
