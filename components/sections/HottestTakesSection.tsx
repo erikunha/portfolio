@@ -2,13 +2,14 @@ import { hottestTakes, hottestTakesConfig } from '@/content/hottest-takes';
 import { IconHottestTakes } from '../Icons';
 import { Module } from '../responsive/Module';
 
-export function HottestTakesSection() {
+export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module
       id="sec-hottest-takes"
       header="CAT ~/HOTTEST_TAKES.MD"
       icon={<IconHottestTakes />}
       defaultOpen={false}
+      defer={defer}
     >
       <div className="takes__preamble">
         <span className="gt">$</span>

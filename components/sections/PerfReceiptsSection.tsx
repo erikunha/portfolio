@@ -38,7 +38,7 @@ function ReceiptCard({
   );
 }
 
-export function PerfReceiptsSection() {
+export function PerfReceiptsSection({ defer }: { defer?: boolean } = {}) {
   const [hero, ...rest] = perfReceipts;
   if (!hero) return null;
   return (
@@ -47,6 +47,7 @@ export function PerfReceiptsSection() {
       header="PERF_RECEIPTS --HARD-NUMBERS"
       mobileHeader="PERF_RECEIPTS"
       icon={<IconPerfReceipts />}
+      defer={defer}
     >
       <ul className="receipts">
         <ReceiptCard {...hero} hero />
