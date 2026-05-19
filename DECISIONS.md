@@ -37,6 +37,10 @@ ADR-lite running log. One bullet per decision · date · reversibility note.
 
 - **2026-05-18** · Bootstrap scripts externalized to `/public/init.js`, loaded via `<Script src strategy="beforeInteractive" />` in `app/layout.tsx`. `'strict-dynamic'` removed from CSP in `proxy.ts`; `'self'` now honors same-origin static scripts without nonces. Eliminates the `nonce={nonce}` + `suppressHydrationWarning` invariant chain (which caused one production CSP regression in `ae8e6ac` this session) and lets `RootLayout` become sync (no `headers()` await). _Reversible. Re-introduce `'strict-dynamic'` if any third-party script source is ever added (analytics, embeds); per CLAUDE.md out-of-scope list, none are planned. The two inline scripts are gone; their content is now in `/public/init.js`._
 
+## 2026-05-18 — Harness hardening
+
+- **2026-05-18** · Claude permissions baseline locked down: `defaultMode: "acceptEdits"`, risky Bash entries dropped, minimum skill allowlist from CLAUDE.md dispatch matrix committed in `.claude/settings.json`. Per-machine additions go in `.claude/settings.local.json` (gitignored). Surfaces accidental scope creep early without blocking normal editing. _Reversible: edit `.claude/settings.json` or relax the allowlist; the committed file is the floor, not a ceiling._
+
 ## 2026-05-18 — Mobile Lighthouse pass + CSS architecture lock-in
 
 - **2026-05-18** · `content-visibility: auto` rule in `_layout.css` extended with a second selector for `details.module--mobile:nth-of-type(n+5)`. The original rule scoped to `section.module--desktop` only and never matched on mobile (where Module renders `<details>`), which is why mobile Lighthouse reported ~840ms style+layout for first paint. Below-fold deferral now covers both viewports. _Reversible. If the per-section content height variance grows beyond the 400px `contain-intrinsic-size` estimate, swap to per-section overrides._

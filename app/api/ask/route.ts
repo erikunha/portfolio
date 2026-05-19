@@ -165,13 +165,36 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'invalid request body' }, { status: 400 });
   }
 
-  const anthropicStream = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 512,
-    system: SYSTEM,
-    messages: [{ role: 'user', content: question }],
-    stream: true,
-  });
+  let anthropicStream: AsyncIterable<Anthropic.Messages.RawMessageStreamEvent>;
+  try {
+    anthropicStream = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 512,
+      system: SYSTEM,
+      messages: [{ role: 'user', content: question }],
+      stream: true,
+    });
+  } catch (err) {
+    // The 30s SDK timeout (or a network error) fired during stream establishment,
+    // before any SSE event was emitted. Return a 200 with the sentinel so the
+    // client's stream reader sees a structured error instead of an opaque 500.
+    const msg = err instanceof Error ? err.message : 'upstream error';
+    console.error('[ask] stream init failed', err);
+    const enc = new TextEncoder();
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
+        controller.close();
+      },
+    });
+    return new Response(body, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  }
 
   const enc = new TextEncoder();
   let inputTokens = 0;
