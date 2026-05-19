@@ -370,17 +370,37 @@ Vercel Speed Insights (built-in, free) collects CWV from real visitors. Weekly c
 
 ## 9. Observability strategy
 
-Minimal but real:
-- **Vercel Web Analytics** for pageview counts, referrer distribution
-- **Vercel Speed Insights** for real-user CWV
-- **Vercel Logs** for Edge Function output (stdout/stderr)
-- **Upstash KV inspector** for contact submissions + ask queries
-- **(Optional) Sentry frontend SDK** — only if client errors become a problem; adds ~25KB so default OFF
+Implemented per Spec 2 (`docs/superpowers/specs/2026-05-18-production-observability-design.md`):
 
-What I deliberately don't do:
-- No Datadog / NewRelic / LaunchDarkly (overkill)
-- No custom OpenTelemetry pipeline (no second consumer of the traces)
-- No alerting beyond Vercel's defaults (single-author site, no oncall)
+### Real-user telemetry
+- **Vercel Web Analytics** + **Vercel Speed Insights** mounted in `app/layout.tsx`. Real-user pageview counts + LCP/INP/CLS land in the Vercel dashboards. Expected coverage 70-85% of visits (ad-blockers block the two ingest origins; never claim 100% population coverage in the hiring pitch).
+- **CSP** widened in `proxy.ts` to allow `https://*.vercel-insights.com` and `https://va.vercel-scripts.com`.
+
+### Server-side structured logging
+- **`lib/log.ts`** wraps `pino` with a `{info, warn, error}` surface. Dev mode uses `pino-pretty` for human-readable output; production emits JSON lines for Vercel runtime-log parsing. Base fields auto-added: `{ts, level, env}`. Correlation IDs (`requestId`) are passed explicitly per-call via the second `ctx` argument — no AsyncLocalStorage / Edge-runtime opt-out (the trade-off was deliberate; cold-start cost would have stacked on top of the active LCP fight when Spec 2 landed).
+- Every server `console.*` call site in `lib/` + `app/api/` is migrated to `log.*`. The `ErrorBoundary.client.tsx` `console.error` is the lone retained console call — intentional, client-side; bridged separately to `/api/log` from `componentDidCatch`.
+
+### Client error capture
+- **`lib/error-bridge.ts`** registers `window.addEventListener('error')` + `unhandledrejection` at module scope (imported once from `AppShell.client.tsx`). Each capture POSTs to `/api/log` with `{level, message, stack, url, userAgent, ts}`. Dedup: 100ms tail-window keyed on `(message, stack)` — covers React's error replay (<50ms) without suppressing meaningful repeat-occurrence signal.
+- **`app/api/log/route.ts`** validates via zod, hashes IP via existing SHA-256 + DEPLOY_SALT pattern, writes to Upstash KV `err:{yyyy-mm-dd}:{uuid}` with 30-day TTL. Rate-limited (10/IP/min) via `getErrorLogLimit()` to absorb runaway client error loops.
+
+### `/api/ask` Q+A retention
+- **`lib/ask-log.ts`** persists every `/api/ask` interaction to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`. Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
+- **`X-Request-Id`** response header on `/api/ask` surfaces the requestId to the client for the GDPR/LGPD erasure flow.
+- **`app/api/log/forget/route.ts`** accepts POST `{requestId}` and idempotently DELETEs the matching record across the last 90 day-partitions. Rate-limited (5/IP/hour) via `getForgetLimit()`.
+
+### Inspection surfaces
+- **Vercel dashboard** → Analytics + Speed Insights for real-user data.
+- **Vercel runtime logs** for the JSON-line `log.*` stream; filterable by `requestId`, `level`, or `env`.
+- **Upstash console** → Data Browser; `SCAN err:*` / `SCAN ask:log:*` for ad-hoc inspection.
+- **Source-map symbolication** for captured production errors: Vercel retains maps per deploy; operator runs `vercel inspect <deploy-url> --logs` or the dashboard's Source Maps tab. If this becomes recurring, a future spec adds an `/internal/symbolicate` route on demand.
+
+### What I deliberately don't do
+- No Datadog / NewRelic / LaunchDarkly (overkill at this scale).
+- No Sentry — custom `/api/log` endpoint chosen instead for zero new SaaS vendor (see `DECISIONS.md` 2026-05-18).
+- No custom OpenTelemetry pipeline (no second consumer of the traces).
+- No alerting beyond Vercel's defaults + the `/api/ask` 80%/100% budget warnings (single-author site, no oncall rotation).
+- No client-side dashboards/UI; Upstash console + Vercel CLI are the inspection surfaces.
 
 ---
 
