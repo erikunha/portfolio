@@ -10,7 +10,14 @@ export const dynamic = 'force-dynamic';
 
 // Module-scope client — reused across warm invocations.
 const anthropic = new Anthropic();
-log.info('kill-switch on cold start', { askEnabled: process.env.ASK_ENABLED ?? 'unset' });
+// Module-eval log: wrapped in try/catch so logger init failures (e.g. pino
+// transport thread failing to start) never block the cold-start path.
+try {
+  log.info('kill-switch on cold start', { askEnabled: process.env.ASK_ENABLED ?? 'unset' });
+} catch {
+  // Logger init failed; do not block cold-start path.
+  console.error('[ask] logger unavailable on cold start');
+}
 
 // cache_control marks this block for Anthropic prompt caching.
 // The system prompt is identical on every call — ~93% cheaper on cache hits.
@@ -190,7 +197,10 @@ export async function POST(req: NextRequest) {
           } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
             controller.enqueue(enc.encode(event.delta.text));
             if (collectedAnswerText.length < 1000) {
-              collectedAnswerText = (collectedAnswerText + event.delta.text).slice(0, 1000);
+              // Slice the delta to only the remaining budget before concat so
+              // we never allocate a full delta string when the boundary is hit.
+              const remaining = 1000 - collectedAnswerText.length;
+              collectedAnswerText += event.delta.text.slice(0, remaining);
             }
           }
         }

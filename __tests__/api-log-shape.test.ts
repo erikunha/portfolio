@@ -28,9 +28,16 @@ describe('/api/log endpoint (Phase 3a)', () => {
     expect(LOG_ROUTE).toMatch(/z\.object\(/);
   });
 
-  it('hashes the IP via the centralised hashIp helper', () => {
-    expect(LOG_ROUTE).toMatch(/import\s*\{[^}]*\bhashIp\b[^}]*\}\s*from\s*['"]@\/lib\/ip-hash['"]/);
-    expect(LOG_ROUTE).toMatch(/hashIp\(\s*ip\s*\)/);
+  it('does NOT store ipHash in err:* records (personal-data-free design)', () => {
+    // err:* records intentionally omit ipHash so they contain no personal data
+    // and fall outside the /api/log/forget erasure scope. The IP is used only
+    // for rate-limiting and discarded. See DECISIONS.md 2026-05-19.
+    // Check code lines only (not comments) by filtering out comment lines.
+    const codeLines = LOG_ROUTE.split('\n')
+      .filter((l) => !l.trimStart().startsWith('//'))
+      .join('\n');
+    expect(codeLines).not.toMatch(/\bipHash\b/);
+    expect(codeLines).not.toMatch(/\bhashIp\b/);
   });
 
   it('lib/ip-hash.ts uses SHA-256 + DEPLOY_SALT (centralised; previously inline in each route)', () => {
@@ -59,6 +66,12 @@ describe('/api/log endpoint (Phase 3a)', () => {
     expect(LOG_ROUTE).toMatch(/status:\s*400/);
     expect(LOG_ROUTE).toMatch(/status:\s*503/);
   });
+
+  it('skips KV persistence for [smoke]-prefixed messages (smoke-test sentinel)', () => {
+    // SMOKE_PREFIX guard prevents CI smoke runs from polluting prod KV.
+    expect(LOG_ROUTE).toMatch(/SMOKE_PREFIX/);
+    expect(LOG_ROUTE).toMatch(/startsWith\(SMOKE_PREFIX\)/);
+  });
 });
 
 describe('client error bridge (Phase 3b)', () => {
@@ -84,6 +97,13 @@ describe('client error bridge (Phase 3b)', () => {
   it('dedupes via a 100ms tail window keyed on message + stack', () => {
     expect(BRIDGE).toMatch(/100/);
     expect(BRIDGE).toMatch(/\b(Map|Set|Record)\b/);
+  });
+
+  it('dedup Map is capped at MAX_DEDUP_SIZE to prevent unbounded growth', () => {
+    // MAX_DEDUP_SIZE guards against pathological growth when each error message
+    // contains a unique ID or timestamp (tight loops faster than 100ms window).
+    expect(BRIDGE).toMatch(/MAX_DEDUP_SIZE/);
+    expect(BRIDGE).toMatch(/export\s+const\s+MAX_DEDUP_SIZE\s*=\s*\d+/);
   });
 
   it('POSTs structured payload to /api/log', () => {

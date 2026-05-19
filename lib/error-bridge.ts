@@ -11,6 +11,10 @@
 // Spec ref: docs/superpowers/specs/2026-05-18-production-observability-design.md §7b
 
 const DEDUP_TAIL_MS = 100;
+// Backstop against unbounded Map growth when each error message contains a
+// unique ID or timestamp (tight loops faster than the 100ms window can drain).
+// FIFO eviction: oldest entry deleted before inserting when cap is hit.
+export const MAX_DEDUP_SIZE = 100;
 const recentEmissions = new Map<string, number>();
 
 type Payload = {
@@ -43,6 +47,12 @@ function shouldEmit(key: string): boolean {
   const now = Date.now();
   const last = recentEmissions.get(key);
   if (last !== undefined && now - last < DEDUP_TAIL_MS) return false;
+  // Evict the oldest entry (FIFO) when the Map hits the size cap. Map
+  // iteration order is insertion order, so .keys().next() is always oldest.
+  if (recentEmissions.size >= MAX_DEDUP_SIZE) {
+    const oldest = recentEmissions.keys().next().value;
+    if (oldest !== undefined) recentEmissions.delete(oldest);
+  }
   recentEmissions.set(key, now);
   // Opportunistic cleanup: drop stale entries every emit to avoid memory growth.
   for (const [k, ts] of recentEmissions) {

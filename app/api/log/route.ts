@@ -4,14 +4,25 @@
 // and persists them to Upstash KV with 30-day TTL for retrospective triage.
 //
 // Spec ref: docs/superpowers/specs/2026-05-18-production-observability-design.md §7a
+//
+// Privacy: err:* records do NOT store ipHash. The IP is used only for
+// rate-limiting and discarded. err:* records are therefore personal-data-free
+// and fall outside the /api/log/forget erasure scope (which covers
+// ask:log:* only). See DECISIONS.md 2026-05-19.
 
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
 import { getClientIp, getErrorLogLimit, getRedis } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
+
+// Smoke-test sentinel: messages prefixed '[smoke]' pass validation and
+// rate-limiting but are NOT written to KV. Prevents CI smoke runs from
+// polluting the err:{date}:* partition and skewing error-rate analysis.
+// Anyone sending a '[smoke]'-prefixed real error only self-suppresses;
+// no adverse effect on other clients. See tests/e2e/observability-smoke.spec.ts.
+const SMOKE_PREFIX = '[smoke]';
 
 const ERR_KV_TTL_S = 30 * 24 * 60 * 60; // 30 days = 2_592_000s
 
@@ -52,16 +63,22 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const ipHash = await hashIp(ip);
+  // Bypass KV persistence for smoke-test payloads; still return 204 so the
+  // smoke spec gets a real success response without touching storage.
+  if (parsed.data.message.startsWith(SMOKE_PREFIX)) {
+    return new Response(null, { status: 204 });
+  }
 
   const errId = crypto.randomUUID();
   const today = new Date().toISOString().slice(0, 10);
   const key = `err:${today}:${errId}`;
 
+  // ipHash intentionally omitted: err:* records must contain no personal data
+  // so that /api/log/forget (which targets ask:log:* only) covers the full
+  // erasure scope without needing to handle err:* records separately.
   const record = {
     ...parsed.data,
     errId,
-    ipHash,
     capturedAt: new Date().toISOString(),
   };
 

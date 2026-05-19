@@ -62,9 +62,14 @@ describe('console.* migration sites', () => {
     expect(LH_SCORES).not.toMatch(/console\.(info|warn|error)\b/);
   });
 
-  it('app/api/ask/route.ts imports log, uses no console.*, threads requestId', () => {
+  it('app/api/ask/route.ts imports log, uses no console.* for business logging, threads requestId', () => {
     expect(ASK_ROUTE).toMatch(/import\s*\{[^}]*\blog\b[^}]*\}\s*from\s*['"]@\/lib\/log['"]/);
-    expect(ASK_ROUTE).not.toMatch(/console\.(info|warn|error)\b/);
+    // Allow console.error in the cold-start logger-init catch block (Finding 6 defence-in-depth).
+    // Exclude catch block lines from the no-console assertion.
+    const nonCatchLines = ASK_ROUTE.split('\n')
+      .filter((l) => !l.includes('// Logger init failed') && !l.includes("console.error('[ask]"))
+      .join('\n');
+    expect(nonCatchLines).not.toMatch(/console\.(info|warn|error)\b/);
     expect(ASK_ROUTE).toMatch(/const\s+requestId\s*=\s*crypto\.randomUUID\(\)/);
   });
 
@@ -74,12 +79,20 @@ describe('console.* migration sites', () => {
     expect(CONTACT_ROUTE).toMatch(/const\s+requestId\s*=\s*crypto\.randomUUID\(\)/);
   });
 
-  it('all migrated log calls include ctx (the second arg)', () => {
+  it('all migrated log call sites have at least two arguments (msg + ctx)', () => {
+    // Count opening-token occurrences: `log.<level>(`. This avoids the
+    // [^)]+ shape which breaks on any log call whose args contain a closing
+    // paren (e.g. log.error('msg', { err: JSON.stringify(x) })). We do not
+    // try to parse argument lists -- just assert every call site has a comma
+    // by checking the source around each opening token.
     const allMigratedSources = [RATE_LIMIT, LH_SCORES, ASK_ROUTE, CONTACT_ROUTE].join('\n');
-    const logCalls = allMigratedSources.matchAll(/\blog\.(info|warn|error)\(([^)]+)\)/g);
-    for (const match of logCalls) {
-      const args = match[2] ?? '';
-      expect(args).toMatch(/,/);
+    // Match from `log.<level>(` to the next newline; the comma must appear
+    // before that newline for single-line calls (which all migrated calls are).
+    for (const match of allMigratedSources.matchAll(/\blog\.(?:info|warn|error)\(([^\n]*)/g)) {
+      const argsStart = match[1] ?? '';
+      // Skip the cold-start try/catch fallback line which uses console.error.
+      if (argsStart.startsWith('//')) continue;
+      expect(argsStart, `log call args missing ctx: log.?(${argsStart})`).toMatch(/,/);
     }
   });
 });

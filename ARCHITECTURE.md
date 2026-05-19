@@ -378,11 +378,11 @@ Implemented per Spec 2 (`docs/superpowers/specs/2026-05-18-production-observabil
 
 ### Server-side structured logging
 - **`lib/log.ts`** wraps `pino` with a `{info, warn, error}` surface. Dev mode uses `pino-pretty` for human-readable output; production emits JSON lines for Vercel runtime-log parsing. Base fields auto-added: `{ts, level, env}`. Correlation IDs (`requestId`) are passed explicitly per-call via the second `ctx` argument — no AsyncLocalStorage / Edge-runtime opt-out (the trade-off was deliberate; cold-start cost would have stacked on top of the active LCP fight when Spec 2 landed).
-- Every server `console.*` call site in `lib/` + `app/api/` is migrated to `log.*`. The `ErrorBoundary.client.tsx` `console.error` is the lone retained console call — intentional, client-side; bridged separately to `/api/log` from `componentDidCatch`.
+- Every server `console.*` call site in `lib/` + `app/api/` is migrated to `log.*`. `ErrorBoundary.client.tsx` retains `console.error` for DevTools visibility AND routes the same payload to `/api/log` via the shared `buildLogPayload` helper in `componentDidCatch` — intentional dual capture, not a contradiction. Both paths are always active; they are not alternatives.
 
 ### Client error capture
 - **`lib/error-bridge.ts`** registers `window.addEventListener('error')` + `unhandledrejection` at module scope (imported once from `AppShell.client.tsx`). Each capture POSTs to `/api/log` with `{level, message, stack, url, userAgent, ts}`. Dedup: 100ms tail-window keyed on `(message, stack)` — covers React's error replay (<50ms) without suppressing meaningful repeat-occurrence signal.
-- **`app/api/log/route.ts`** validates via zod, hashes IP via existing SHA-256 + DEPLOY_SALT pattern, writes to Upstash KV `err:{yyyy-mm-dd}:{uuid}` with 30-day TTL. Rate-limited (10/IP/min) via `getErrorLogLimit()` to absorb runaway client error loops.
+- **`app/api/log/route.ts`** validates via zod, writes to Upstash KV `err:{yyyy-mm-dd}:{uuid}` with 30-day TTL. Rate-limited (10/IP/min) via `getErrorLogLimit()` to absorb runaway client error loops. The IP is used only for rate-limiting and discarded — `err:*` records store no `ipHash`, making them personal-data-free and outside the `/api/log/forget` erasure scope.
 
 ### `/api/ask` Q+A retention
 - **`lib/ask-log.ts`** persists every `/api/ask` interaction to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`. Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
