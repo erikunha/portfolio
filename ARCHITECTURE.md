@@ -3,8 +3,10 @@
 > Target stack: Next.js 15 (App Router) · React 19 · TypeScript strict · hand-written global CSS · Vercel Edge · Biome · pnpm · Playwright (contact path only)
 >
 > Author: Erik Henrique Alves Cunha
-> Last revised: 2026-05-13 (stack revised 2026-05-18 — Tailwind removed; see DECISIONS.md)
+> Last revised: 2026-05-19 (Principal/Staff audit pass — see `docs/audit/2026-05-19-principal-audit.md` for the drift findings and the 8-PR remediation roadmap)
 > Status: implemented (2026-05-15) — see DECISIONS.md for implementation notes
+>
+> **Pending from audit roadmap:** The "Abuse mitigation" controls in §6 and the honeypot in §7 are documented but not yet shipped — PR 2 of the audit roadmap implements them. The `lib/` directory layout in §4 currently differs from this spec (flat with 16 files) — PR 5 restructures. The `'use client'` naming convention in §3 is not yet CI-enforced — PR 6 adds the gate.
 
 ---
 
@@ -98,7 +100,9 @@ What we build is small, opinionated, edge-deployed, and budget-enforced.
 │   │ ─ psi cache    │  │              │  │              │  │
 │   └────────────────┘  └──────────────┘  └──────────────┘  │
 │                                                             │
-│   Daily cron (Vercel) ──► PSI API ──► KV (lighthouse-score)│
+│   Lazy fill: first /api/lighthouse GET after 24h TTL        │
+│   refetches PSI → KV. (Cron is documented in §16 as the     │
+│   scale-time follow-up; not in scope today.)                │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -124,8 +128,8 @@ Every section that doesn't depend on per-visitor state is RSC + SSG. Output is H
 | Island | Why client | Size budget (gzipped) |
 |---|---|---|
 | Matrix dialog loop + boot typewriter | infinite animation w/ `useRef` mutation | ≤ 4KB |
-| INTERACTIVE_SHELL | input handling, streaming LLM response | ≤ 30KB (incl. Tone.js if guitar audio added) |
-| Contact form | Server Action client wrapper, optimistic UI | ≤ 6KB |
+| INTERACTIVE_SHELL | input handling, streaming LLM response | ≤ 30KB |
+| Contact form | client-side `fetch` to `/api/contact`, optimistic UI | ≤ 6KB |
 | IntersectionObserver typewriter | reveal-on-scroll | ≤ 2KB |
 | MOTION indicator | `matchMedia` listener | ≤ 1KB |
 | **Total client JS budget** | | **≤ 43KB** |
@@ -294,10 +298,19 @@ Single hard counter in Redis: `ask:tokens:YYYY-MM`. Each completion increments v
 Why this is non-negotiable: a public LLM endpoint without a hard cap is a $5,000 surprise waiting to happen. The graceful degradation is more credible than a 503 alone.
 
 ### Abuse mitigation
+
+**Currently shipped:**
 - Reject `q` over 500 chars (no prompt-stuffing)
-- Reject `q` containing system/role/assistant tokens (basic prompt-injection sanitization)
-- Reject identical `q` from same IP within 60s (no thumb-on-button spam)
-- Anthropic prompt cache enabled (massive token savings for the CV context that's constant)
+- Per-IP sliding window (8/h) — see `lib/rate-limit.ts`
+- Monthly token budget hard cap (`ask:tokens:YYYY-MM`)
+- `ASK_ENABLED` kill switch (env-var, off-by-keyword)
+
+**Pending — PR 2 of audit roadmap:**
+- Reject `q` containing `system|assistant|developer` tokens or known jailbreak prefixes (`ignore (all |previous )?(instructions|prompts)`, `disregard (the )?(above|previous|system)`)
+- Reject identical `q` from same IP within 60s (no thumb-on-button spam) — Redis NX SET with 60s expiry keyed on `ipHash + sha256(q)`
+- Wrap user input in `<question>` delimiters with a re-anchor instruction before forwarding to Anthropic
+
+**Prompt cache state (audit Theme 7):** `cache_control: { type: 'ephemeral' }` is set on the system block but the SYSTEM prompt is ~750 tokens — below Anthropic Haiku's 1024-token ephemeral cache minimum. **The cache directive currently never hits.** PR 4 of the audit roadmap pads SYSTEM above the threshold by assembling from `content/*.ts` at build time. Cache hit rate is a tracked metric once the fix lands (target: `cache_read_input_tokens / input_tokens > 0.7` in steady state).
 
 ### What I'd revisit at scale
 - 100× traffic: move to Cloudflare Workers AI (Llama 3.3 self-served) — quality dip acceptable for the cost
@@ -320,13 +333,13 @@ History and rationale: see `DECISIONS.md` 2026-05-18.
 ### Submission path
 ```
 [client form]
-    ↓ Server Action (POST /contact/action)
-    ↓
-[Zod validation]
-    ↓
-[honeypot check] → silent 200 if filled
+    ↓ POST /api/contact (client-side fetch — no Server Action)
     ↓
 [rate limit: 1 / IP / 5min]  → 429 if exceeded
+    ↓
+[Zod validation via validateContact()]
+    ↓
+[honeypot check] → silent 200 if filled  (PR 2 — pending)
     ↓
 [write to Upstash KV: contact:msg:{uuid}]  ← durable first
     ↓
@@ -335,14 +348,22 @@ History and rationale: see `DECISIONS.md` 2026-05-18.
 [return success regardless if spam path]
 ```
 
+Note: an earlier revision of this doc named a Server Action `/contact/action.ts`; the actual implementation is the route handler `app/api/contact/route.ts` invoked via client `fetch`. The progressive-enhancement claim (form works without JS) is therefore aspirational today — see `docs/audit/2026-05-19-principal-audit.md` Theme 1.3. Restoring true Server Action support is a follow-up.
+
 ### Why KV before Resend
 If Resend is down, the message is captured. If KV is down, we fail loud (502) so the visitor knows. Durability beats delivery.
 
 ### Anti-spam strategy
-- Honeypot field (`field_company` — hidden, no-fill)
-- Rate limit per IP
+
+**Currently shipped:**
+- Rate limit per IP (`lib/rate-limit.ts` — 1 / 5 min)
 - Min/max length on message (10 < x < 2000 chars)
 - No CAPTCHA (UX tax outweighs spam saved at this scale)
+
+**Pending — PR 2 of audit roadmap:**
+- Honeypot field (`field_company` — hidden, no-fill) rendered by `ContactForm` with `aria-hidden="true" tabindex="-1" autocomplete="off"`; validated server-side; silent 200 on trip with 50-150 ms timing jitter to eliminate the oracle.
+
+History: see `docs/audit/2026-05-19-principal-audit.md` Theme 1.4.
 
 ### Accessibility
 - Real `<label for="...">` for each input
