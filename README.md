@@ -650,9 +650,11 @@ The static page renders without any environment variables; the runtime endpoints
 | `UPSTASH_REDIS_REST_TOKEN` | as above | as above |
 | `RESEND_API_KEY` | `/api/contact` delivery | [resend.com](https://resend.com) |
 | `PSI_API_KEY` | `/api/lighthouse` | Google Cloud Console > PageSpeed Insights API |
-| `IP_HASH_SALT` / `DEPLOY_SALT` | IP hashing before KV persistence | any random string |
+| `DEPLOY_SALT` | IP hashing before KV persistence — see below | `openssl rand -base64 32` |
 
 Vercel projects scope each variable per-environment (production / preview / development) so preview deploys can use throttled keys without risking production quota.
+
+**`DEPLOY_SALT` setup.** `lib/ip-hash.ts` throws at module-eval when `NODE_ENV=production` and `DEPLOY_SALT` is unset — production cold-start fails loudly rather than silently falling back to a known-constant salt that would defeat the threat model. Generate a value with `openssl rand -base64 32` (or `openssl rand -hex 32`), then set it in **Vercel Dashboard → Project Settings → Environment Variables**, applying to **both Production and Preview**. Development unset is fine (falls back to the `'portfolio'` literal only when `NODE_ENV !== 'production'`). Rotating invalidates all prior per-IP rate-limit accounting and Q+A audit hash correlations; rotate on suspected leak rather than on a schedule.
 
 ---
 

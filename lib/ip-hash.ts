@@ -15,7 +15,10 @@ const DEPLOY_SALT = (() => {
         'Without it, IP hashes use a publicly-known constant ("portfolio") ' +
         'which defeats the salt threat model — an attacker who suspects ' +
         'a target IP can confirm its presence in any leaked KV record. ' +
-        'Set DEPLOY_SALT in the Vercel environment for production and preview.',
+        '\n\nGenerate locally:\n  openssl rand -base64 32\n\n' +
+        'Set in Vercel Dashboard → Project Settings → Environment Variables → ' +
+        'apply to Production AND Preview (Development may omit; falls back to ' +
+        '"portfolio" only when NODE_ENV !== "production").',
     );
   }
   return 'portfolio';
