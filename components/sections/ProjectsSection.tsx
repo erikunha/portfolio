@@ -8,13 +8,14 @@ const FolderIcon = () => (
   </svg>
 );
 
-export function ProjectsSection() {
+export function ProjectsSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module
       id="sec-projects"
       header="LS -LA ./PROJECTS"
       mobileHeader="LS -LA ~/PROJECTS"
       icon={<IconProjects />}
+      defer={defer}
     >
       {/* Desktop card layout */}
       <ul className="projects proj-desktop">
