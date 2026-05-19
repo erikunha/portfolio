@@ -234,7 +234,17 @@ test.describe('cross-cutting', () => {
 
   test('4 — shell input INP guard: keystroke commits <50ms with no long task >100ms', async ({
     page,
-  }) => {
+  }, testInfo) => {
+    // INP is a Chrome-only Core Web Vitals metric. webkit doesn't expose the
+    // PerformanceObserver('event' / 'longtask') entries used here, and webkit
+    // input-event dispatch is materially slower under Playwright emulation —
+    // measured 646ms on webkit-mobile CI vs <20ms on chromium. The 50ms wall-
+    // clock threshold reflects the CLAUDE.md INP budget which is itself a
+    // Chrome metric. Skip on webkit; chromium projects exercise the same code.
+    test.skip(
+      testInfo.project.name.startsWith('webkit-'),
+      'INP is Chrome-only; webkit input-event dispatch is too slow under emulation to assert <50ms',
+    );
     // Why this shape: precise Event Timing API readings from inside Playwright
     // are flaky because the relevant entry types (`event`, `first-input`) are
     // gated on cross-browser support and require the page to install a
