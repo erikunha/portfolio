@@ -102,12 +102,18 @@
   z-index: 4;
 }
 
+/* Animate via transform (GPU-composited) instead of `top` (layout-thread).
+   The previous `top` keyframes fired a LayoutShift PerformanceEntry on
+   every frame, accumulating CLS 0.075-0.083 on slower CI hardware (verified
+   measurement-driven; ubuntu CI ~= 30x devtools CPU throttle locally).
+   Transform animations skip layout entirely, so CLS contribution is zero.
+   See DECISIONS.md 2026-05-19 — closes the BLOCKING CRITERION ADR. */
 @keyframes crt-scan-beam {
   0% {
-    top: -120px;
+    transform: translateY(0);
   }
   100% {
-    top: 110vh;
+    transform: translateY(calc(110vh + 120px));
   }
 }
 
@@ -115,11 +121,13 @@
   position: fixed;
   left: 0;
   right: 0;
+  top: -120px;
   height: 110px;
   background: linear-gradient(180deg, transparent, rgba(0, 255, 65, 0.06) 50%, transparent);
   pointer-events: none;
   animation: crt-scan-beam 7s linear infinite;
   z-index: 5;
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
