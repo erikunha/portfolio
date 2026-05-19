@@ -24,7 +24,27 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, info: { componentStack?: string | null }) {
+    // Retain console.error for dev visibility (this client-side console.* is
+    // intentionally not migrated in Phase 2b per spec §6).
     console.error('[ErrorBoundary] client island crashed:', error, info.componentStack);
+    // Also POST to /api/log so it lands in Upstash for retrospective triage.
+    if (typeof window !== 'undefined') {
+      void fetch('/api/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          level: 'error',
+          message: `[ErrorBoundary] ${error.message}`,
+          stack: error.stack ?? info.componentStack ?? undefined,
+          url: window.location.href,
+          userAgent: navigator.userAgent,
+          ts: new Date().toISOString(),
+        }),
+        keepalive: true,
+      }).catch(() => {
+        // Intentional no-op.
+      });
+    }
   }
 
   override render() {

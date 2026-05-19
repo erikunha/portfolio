@@ -61,7 +61,45 @@ describe('/api/log endpoint (Phase 3a)', () => {
   });
 });
 
-describe('client error bridge (Phase 3b — placeholder)', () => {
-  // Populated by Task 5.
-  it.skip('see Task 5 for client-bridge assertions', () => {});
+describe('client error bridge (Phase 3b)', () => {
+  const BRIDGE = readFileSync(path.resolve(__dirname, '../lib/error-bridge.ts'), 'utf-8');
+  const ERROR_BOUNDARY = readFileSync(
+    path.resolve(__dirname, '../components/ErrorBoundary.client.tsx'),
+    'utf-8',
+  );
+  const APP_SHELL = readFileSync(
+    path.resolve(__dirname, '../components/AppShell.client.tsx'),
+    'utf-8',
+  );
+
+  it('lib/error-bridge.ts declares use client', () => {
+    expect(BRIDGE).toMatch(/^['"]use client['"]/m);
+  });
+
+  it('registers both window.onerror and unhandledrejection listeners', () => {
+    expect(BRIDGE).toMatch(/window\.addEventListener\(\s*['"]error['"]/);
+    expect(BRIDGE).toMatch(/window\.addEventListener\(\s*['"]unhandledrejection['"]/);
+  });
+
+  it('dedupes via a 100ms tail window keyed on message + stack', () => {
+    expect(BRIDGE).toMatch(/100/);
+    expect(BRIDGE).toMatch(/\b(Map|Set|Record)\b/);
+  });
+
+  it('POSTs structured payload to /api/log', () => {
+    expect(BRIDGE).toMatch(/fetch\(\s*['"]\/api\/log['"]/);
+    expect(BRIDGE).toMatch(/method:\s*['"]POST['"]/);
+  });
+
+  it('AppShell.client.tsx imports lib/error-bridge once', () => {
+    expect(APP_SHELL).toMatch(
+      /import\s*(?:\{\s*\}\s*from\s*|\s*['"])(\.\.\/lib\/error-bridge|@\/lib\/error-bridge)['"]/,
+    );
+  });
+
+  it('ErrorBoundary.client.tsx componentDidCatch POSTs to /api/log', () => {
+    expect(ERROR_BOUNDARY).toMatch(/console\.error/);
+    expect(ERROR_BOUNDARY).toMatch(/fetch\(\s*['"]\/api\/log['"]/);
+    expect(ERROR_BOUNDARY).toMatch(/method:\s*['"]POST['"]/);
+  });
 });
