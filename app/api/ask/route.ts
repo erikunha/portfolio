@@ -1,5 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { NextRequest } from 'next/server';
+import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log';
+import { hashIp } from '@/lib/ip-hash';
+import { log } from '@/lib/log';
 import { checkBudget, getAskLimit, getClientIp, incrementBudget } from '@/lib/rate-limit';
 import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
@@ -14,9 +17,14 @@ export const dynamic = 'force-dynamic';
 // before first content_block_delta), so absorbing transient 5xx is safe.
 const anthropic = new Anthropic({ timeout: 30_000 });
 
-// Logs once per warm function instance. The value reveals the configured
-// state of the kill switch without inspecting the Vercel env-var dashboard.
-console.info('[ask] kill-switch on cold start:', process.env.ASK_ENABLED ?? 'unset');
+// Module-eval log: wrapped in try/catch so logger init failures (e.g. pino
+// transport thread failing to start) never block the cold-start path.
+try {
+  log.info('kill-switch on cold start', { askEnabled: process.env.ASK_ENABLED ?? 'unset' });
+} catch {
+  // Logger init failed; do not block cold-start path.
+  console.error('[ask] logger unavailable on cold start');
+}
 
 // Module-scoped: never changes between calls, avoids per-request Set allocation.
 const OFF_KEYWORDS = new Set(['false', '0', 'off', 'no', 'disabled']);
@@ -137,17 +145,36 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const requestId = crypto.randomUUID();
+  const startedAt = Date.now();
   const ip = getClientIp(req);
+  const ipHash = await hashIp(ip);
+  log.info('ask request received', { requestId, ipHash });
+
+  const earlyExitPersist = (status: AskInteractionStatus): void =>
+    void persistAskInteraction({
+      requestId,
+      ts: new Date().toISOString(),
+      ipHash,
+      question: '',
+      answer: '',
+      inputTokens: 0,
+      outputTokens: 0,
+      durationMs: Date.now() - startedAt,
+      status,
+    });
 
   // Per-IP rate limit
   const { success } = await getAskLimit().limit(ip);
   if (!success) {
+    earlyExitPersist('rate-limited');
     return Response.json({ error: 'rate limit exceeded — try again in an hour' }, { status: 429 });
   }
 
   // Global monthly budget check
   const { allowed } = await checkBudget();
   if (!allowed) {
+    earlyExitPersist('budget-exhausted');
     return Response.json(
       { error: 'monthly budget exhausted — email erikhenriquealvescunha@gmail.com directly' },
       { status: 503 },
@@ -158,10 +185,12 @@ export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as { question?: unknown };
     if (typeof body.question !== 'string' || !body.question.trim()) {
+      earlyExitPersist('errored');
       return Response.json({ error: 'question is required' }, { status: 400 });
     }
     question = body.question.trim().slice(0, 500);
   } catch {
+    earlyExitPersist('errored');
     return Response.json({ error: 'invalid request body' }, { status: 400 });
   }
 
@@ -199,6 +228,8 @@ export async function POST(req: NextRequest) {
   const enc = new TextEncoder();
   let inputTokens = 0;
   let outputTokens = 0;
+  let collectedAnswerText = '';
+  let status: AskInteractionStatus = 'completed';
 
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -210,15 +241,33 @@ export async function POST(req: NextRequest) {
             outputTokens = event.usage.output_tokens;
           } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
             controller.enqueue(enc.encode(event.delta.text));
+            if (collectedAnswerText.length < 1000) {
+              // Slice the delta to only the remaining budget before concat so
+              // we never allocate a full delta string when the boundary is hit.
+              const remaining = 1000 - collectedAnswerText.length;
+              collectedAnswerText += event.delta.text.slice(0, remaining);
+            }
           }
         }
       } catch (err) {
+        status = 'errored';
         const msg = err instanceof Error ? err.message : 'upstream error';
         controller.enqueue(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
       } finally {
         controller.close();
         // Fire-and-forget — never blocks the response.
         incrementBudget(inputTokens, outputTokens);
+        void persistAskInteraction({
+          requestId,
+          ts: new Date().toISOString(),
+          ipHash,
+          question,
+          answer: collectedAnswerText,
+          inputTokens,
+          outputTokens,
+          durationMs: Date.now() - startedAt,
+          status,
+        });
       }
     },
   });
@@ -228,6 +277,7 @@ export async function POST(req: NextRequest) {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
+      'X-Request-Id': requestId,
     },
   });
 }
