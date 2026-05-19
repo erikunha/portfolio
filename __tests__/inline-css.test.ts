@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { INLINE_CSS } from '@/lib/inline-css';
@@ -32,10 +32,9 @@ describe('lib/inline-css', () => {
         fingerprint,
         `add a fingerprint for ${file} to __tests__/inline-css.test.ts`,
       ).toBeDefined();
-      expect(
-        INLINE_CSS,
-        `expected INLINE_CSS to contain "${fingerprint}" from ${file}`,
-      ).toContain(fingerprint as string);
+      expect(INLINE_CSS, `expected INLINE_CSS to contain "${fingerprint}" from ${file}`).toContain(
+        fingerprint as string,
+      );
     }
   });
 

@@ -20,3 +20,11 @@ export function validateContact(body: {
   if (message.length > 2000) return { ok: false, error: 'message too long (max 2000 chars)' };
   return { ok: true, name, email, message };
 }
+
+// Honeypot trip detection. ContactForm renders a hidden `field_company` input
+// off-screen with aria-hidden+tabindex=-1; legitimate users never see or fill
+// it, so any non-empty value is a bot signature. The route handler responds
+// with a successful-looking 200 to deny the bot any failure signal.
+export function isHoneypotTripped(body: { field_company?: unknown }): boolean {
+  return typeof body.field_company === 'string' && body.field_company.trim().length > 0;
+}

@@ -1,11 +1,18 @@
 import type { NextRequest } from 'next/server';
 import { Resend } from 'resend';
-import { validateContact } from '@/lib/contact-validation';
+import { isHoneypotTripped, validateContact } from '@/lib/contact-validation';
 import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
 import { getClientIp, getContactLimit, getRedis } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
+
+// Honeypot timing jitter range. Real Resend round-trip is typically 150-400ms;
+// a silent-success response with 50-150ms jitter sits inside that envelope so
+// a bot timing the response against legitimate submissions can't tell apart
+// "got 200 because honeypot tripped" vs "got 200 because email sent".
+const HONEYPOT_JITTER_MIN_MS = 50;
+const HONEYPOT_JITTER_MAX_MS = 150;
 
 let _resend: Resend | undefined;
 function getResend(): Resend {
@@ -29,6 +36,20 @@ export async function POST(req: NextRequest) {
     body = await req.json();
   } catch {
     return Response.json({ error: 'invalid request body' }, { status: 400 });
+  }
+
+  // Honeypot trip: return a successful-looking 200 with timing jitter that
+  // matches a real Resend round-trip. No persistence, no delivery, no error.
+  // Logs the trip so we can audit volume; the ipHash isn't computed here
+  // (lazy resolve cost is wasted on bot traffic — the IP would land in the
+  // rate-limit accounting anyway via the limit() call above).
+  if (isHoneypotTripped(body as Record<string, unknown>)) {
+    log.info('contact honeypot tripped', { requestId });
+    const jitterMs =
+      HONEYPOT_JITTER_MIN_MS +
+      Math.floor(Math.random() * (HONEYPOT_JITTER_MAX_MS - HONEYPOT_JITTER_MIN_MS));
+    await new Promise((r) => setTimeout(r, jitterMs));
+    return Response.json({ ok: true });
   }
 
   const result = validateContact(body as Record<string, unknown>);

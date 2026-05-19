@@ -31,9 +31,9 @@ describe('Q+A persistence (Phase 3c)', () => {
   it('app/api/ask/route.ts calls persistAskInteraction after stream completes', () => {
     expect(ASK_ROUTE).toMatch(/persistAskInteraction\(/);
     const persistIdx = ASK_ROUTE.indexOf('persistAskInteraction(');
-    const incrementIdx = ASK_ROUTE.indexOf('incrementBudget(');
+    const settleIdx = ASK_ROUTE.indexOf('settleBudget(reserved');
     expect(persistIdx).toBeGreaterThan(-1);
-    expect(incrementIdx).toBeGreaterThan(-1);
+    expect(settleIdx).toBeGreaterThan(-1);
   });
 
   it('app/api/ask/route.ts accumulates collectedAnswerText capped at 1000 chars', () => {
