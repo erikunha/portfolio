@@ -116,6 +116,12 @@ jobs:
           fi
       - if: steps.check-e2e.outputs.exists == 'true'
         run: pnpm start &
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
+          DEPLOY_SALT: ci-build-salt
       - if: steps.check-e2e.outputs.exists == 'true'
         run: npx wait-on http://localhost:3000 --timeout 30000
       - if: steps.check-e2e.outputs.exists == 'true'
