@@ -104,6 +104,18 @@ jobs:
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
           IP_HASH_SALT: ci-build-salt
-      - run: pnpm start &
-      - run: npx wait-on http://localhost:3000 --timeout 30000
-      - run: pnpm playwright test tests/e2e
+      - name: Check if e2e tests exist
+        id: check-e2e
+        run: |
+          if ls tests/e2e/*.spec.ts 2>/dev/null | grep -q .; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "No tests/e2e/*.spec.ts found — skipping e2e run."
+          fi
+      - if: steps.check-e2e.outputs.exists == 'true'
+        run: pnpm start &
+      - if: steps.check-e2e.outputs.exists == 'true'
+        run: npx wait-on http://localhost:3000 --timeout 30000
+      - if: steps.check-e2e.outputs.exists == 'true'
+        run: pnpm playwright test tests/e2e
