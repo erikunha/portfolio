@@ -41,6 +41,7 @@ export const config: CopilotPortConfig = {
     'thinking-model-router',
     'thinking-five-whys-plus',
     'humanizer',
+    'web-design-guidelines',
   ],
 
   agents: [
@@ -55,6 +56,9 @@ export const config: CopilotPortConfig = {
     'accessibility-tester',
     'ai-engineer',
     'dx-optimizer',
+    'dependency-manager',
+    'refactoring-specialist',
+    'seo-specialist',
   ],
 
   mcp: ['context7', 'chrome-devtools', 'postman', 'vercel'],
