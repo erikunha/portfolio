@@ -23,7 +23,7 @@
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* Page padding — 900px rule sets explicit 18px; 768px resets to var(--pad) = 14px */
+  /* Page padding — 900px rule sets explicit 18px; 768px keeps var(--pad) = 18px (set by _responsive.css 900px block) */
   .page {
     padding: 14px var(--pad) 0;
   }
@@ -620,12 +620,16 @@ html.sysfail-on .crt-noise {
 
 /* Below-fold sections: skip style/layout/paint until near viewport.
    Two selectors because nth-of-type counts per element type:
-   - Desktop: Hero + 17 Modules are all <section>, so section.module--desktop nth-of-type starts at 2
-     (Hero is 1). 6th section = Projects → defer Projects→Contact (14 sections).
+   - Desktop: Hero RSC renders TWO <section> elements (.hero--desktop + .hero--mobile) + 17 Module
+     sections, so section.module--desktop nth-of-type starts at 3 (hero--desktop=1, hero--mobile=2).
+     7th section = Projects → defer Projects→Contact (14 sections).
+     HACK: nth-of-type index is brittle — if markup gains/loses a top-level <section> before the
+     modules, this number silently regresses. A class-based selector (.cv-defer) would be robust;
+     deferred to a follow-up refactor to keep this PR minimal.
    - Mobile: Modules render as <details>, so nth-of-type counts only details. 5th details =
      Projects → same coverage. Without this rule mobile gets no deferral, which is why
      Lighthouse mobile shows ~840ms style+layout on first paint. */
-.page > section.module--desktop:nth-of-type(n + 6),
+.page > section.module--desktop:nth-of-type(n + 7),
 .page > details.module--mobile:nth-of-type(n + 5) {
   content-visibility: auto;
   contain-intrinsic-size: 0 400px;
@@ -707,12 +711,9 @@ html.sysfail-on .crt-noise {
    only the matching variant paints. Spec ref: 2026-05-18-mobile-lcp-perf-fix
    design §6.
 
-   .hero--desktop: flex layout for the two-column desktop structure.
+   .hero--desktop display:flex is declared above (two-column layout rule).
    .hero--mobile: hidden by default; shown via media query below.
    ───────────────────────────────────────────────────────────────────────── */
-.hero--desktop {
-  display: flex;
-}
 .hero--mobile {
   display: none;
 }

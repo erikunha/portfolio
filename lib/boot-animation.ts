@@ -9,24 +9,24 @@ export type LinePart = string | Span;
 
 export const DESKTOP_LINE_SPECS: LinePart[][] = [
   ['[SYSTEM BOOT SEQUENCE INITIATED]'],
-  [' '],
+  [' '], // non-breaking space: regular space collapses in some block contexts
   ['Initializing kernel modules... ', { cls: 'boot__ok', text: 'OK' }],
   ['Mounting local filesystems... ', { cls: 'boot__ok', text: 'OK' }],
   ['Starting network services... ', { cls: 'boot__ok', text: 'OK' }],
   ['Loading security protocols... ', { cls: 'boot__enc', text: '[ENCRYPTED]' }],
   [{ cls: 'boot__welcome', text: 'Welcome to DEV_OS v2.0.4-stable [user: erik]' }],
-  [' '],
+  [' '], // non-breaking space: regular space collapses in some block contexts
 ];
 
 export const MOBILE_LINE_SPECS: LinePart[][] = [
   ['[BOOT SEQUENCE INITIATED]'],
-  [' '],
+  [' '], // non-breaking space: regular space collapses in some block contexts
   ['kernel modules... ', { cls: 'boot__ok', text: 'OK' }],
   ['mount fs... ', { cls: 'boot__ok', text: 'OK' }],
   ['network... ', { cls: 'boot__ok', text: 'OK' }],
   ['security... ', { cls: 'boot__enc', text: '[ENCRYPTED]' }],
   [{ cls: 'boot__welcome', text: 'DEV_OS v2.0.4 [user: erik]' }],
-  [' '],
+  [' '], // non-breaking space: regular space collapses in some block contexts
 ];
 
 export const DESKTOP_DIALOG = [
@@ -61,7 +61,7 @@ export function buildLine(parts: LinePart[]): HTMLElement {
   return line;
 }
 
-// buildBlankLine removed (Fix 5): call sites use buildLine([' ']) directly.
+// buildBlankLine removed (Fix 5): call sites use buildLine([' ']) (nbsp) directly.
 
 export function buildStaticCmdLine(): HTMLElement {
   return buildLine([
@@ -149,8 +149,8 @@ export function runBoot(
       if (cancelled) return;
       if (i >= cmdText.length) {
         cursor.remove();
-        // Fix 5: was buildBlankLine()
-        container.appendChild(buildLine([' ']));
+        // Fix 5: was buildBlankLine(). Use nbsp so the blank span isn't collapsed.
+        container.appendChild(buildLine([' ']));
         later(startDialog, 350);
         return;
       }

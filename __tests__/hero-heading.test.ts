@@ -11,7 +11,10 @@ describe('Hero headings', () => {
   });
 
   it('Hero RSC h1 is inside the bio panel on desktop and the inner wrapper on mobile', () => {
-    expect(hero).toMatch(/hero__bio/);
-    expect(hero).toMatch(/hero__name/);
+    // Desktop: h1.hero__name must appear inside the hero__bio block.
+    // Regex confirms the className sequence: hero__bio ... h1 ... hero__name (DOM order).
+    expect(hero).toMatch(/hero__bio[\s\S]*?<h1[^>]*hero__name/);
+    // Mobile: h1.hero__name must appear inside the hero__inner block.
+    expect(hero).toMatch(/hero__inner[\s\S]*?<h1[^>]*hero__name/);
   });
 });

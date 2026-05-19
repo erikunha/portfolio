@@ -61,11 +61,16 @@ describe('critical CSS drift guard', () => {
 
   it('every CSS variable DEFINED in CRITICAL_CSS :root is also defined in _tokens.css', () => {
     const tokens = readFileSync(path.join(CSS_DIR, '_tokens.css'), 'utf-8');
-    // Extract the :root block from CRITICAL_CSS, then find property declarations (--name:).
-    const rootBlockMatch = CRITICAL_CSS.match(/:root\s*\{([\s\S]*?)\}/);
-    const rootBlock = rootBlockMatch?.[1] ?? '';
-    const definedMatches = rootBlock.matchAll(/(--[a-zA-Z][a-zA-Z0-9_-]*)\s*:/g);
-    const definedInCritical = new Set(Array.from(definedMatches, (m) => m[1] as string));
+    // Use matchAll (global flag) so ALL :root { } blocks are inspected — CRITICAL_CSS contains
+    // more than one (base block + mobile @media block). A single .match() only finds the first.
+    const rootBlockMatches = CRITICAL_CSS.matchAll(/:root\s*\{([\s\S]*?)\}/g);
+    const definedInCritical = new Set<string>();
+    for (const blockMatch of rootBlockMatches) {
+      const block = blockMatch[1] ?? '';
+      for (const m of block.matchAll(/(--[a-zA-Z][a-zA-Z0-9_-]*)\s*:/g)) {
+        definedInCritical.add(m[1] as string);
+      }
+    }
     const missing: string[] = [];
     for (const v of definedInCritical) {
       if (!tokens.includes(`${v}:`)) missing.push(v);

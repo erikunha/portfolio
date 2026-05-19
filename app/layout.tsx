@@ -87,6 +87,15 @@ export const metadata: Metadata = {
 // Drift-protected by __tests__/critical-css-drift.test.ts (selector +
 // variable existence checks; NOT rule-body equivalence — see test docblock).
 // Spec ref: docs/superpowers/specs/2026-05-18-mobile-lcp-perf-fix-design.md §5
+//
+// Render-blocking trade-off (Finding 12 acknowledged): inlining these rules does NOT
+// remove the render-blocking globals.css <link> — Next App Router's CSS pipeline always
+// emits `import './globals.css'` as a render-blocking stylesheet. The inline still helps:
+// the browser can START painting the hero with inline-described dimensions and tokens
+// before the full stylesheet arrives (rules reach the paint registry earlier in the HTML
+// parse). The LCP benefit is real but bounded by the pipeline. Async-loading globals.css
+// via preload/onload would require ejecting from Next's CSS pipeline — too risky. See
+// DECISIONS.md 2026-05-18 "Critical-CSS render-blocking trade-off".
 const CRITICAL_CSS = `
 /* 1. :root tokens */
 :root {
@@ -117,10 +126,19 @@ const CRITICAL_CSS = `
   --fs-2xl: 48px;
   --fs-3xl: 78px;
 }
+/* Token overrides at <=900px — mirrors _responsive.css :root block exactly.
+   At 768px BOTH the 900px and 768px media queries match, so _responsive.css's 900px
+   block is the final value. Critical CSS must match to avoid CLS when globals.css loads. */
+@media (max-width: 900px) {
+  :root {
+    --vrhythm: 40px;
+    --pad: 18px;
+  }
+}
+/* fs overrides at <=768px — no _responsive.css :root block at this breakpoint, so
+   these values hold without conflict. */
 @media (max-width: 768px) {
   :root {
-    --vrhythm: 18px;
-    --pad: 14px;
     --fs-3xl: 56px;
     --fs-2xl: 32px;
   }
@@ -194,8 +212,25 @@ body {
   .hero--desktop {
     display: none;
   }
+  /* Mobile hero shaping rules — mirrors _responsive.css exactly so first paint
+     matches final paint (no CLS when the external chunk applies).
+     NOTE: globals.css is still render-blocking (Next App Router CSS pipeline);
+     these inline rules get to the parser earlier in the HTML stream and ensure
+     the correct dimensions are painted on the first frame even if the stylesheet
+     hasn't arrived yet. See DECISIONS.md 2026-05-18 "render-blocking trade-off". */
   .hero--mobile {
     display: block;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero__inner {
+    position: relative;
+    z-index: 1;
+    padding: 16px 16px 18px;
+  }
+  .hero--mobile .hero__boot {
+    min-height: 165px;
   }
 }
 
