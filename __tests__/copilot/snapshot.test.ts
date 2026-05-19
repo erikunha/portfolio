@@ -60,7 +60,9 @@ describe('snapshot: full-pipeline output', () => {
   });
 
   it('skill → prompt.md', () => {
-    const skill = loadSkillFixture(path.resolve(__dirname, 'fixtures/skills/brainstorming-fixture.md'));
+    const skill = loadSkillFixture(
+      path.resolve(__dirname, 'fixtures/skills/brainstorming-fixture.md'),
+    );
     const rw = createRefRewriter(new Map() as PortedNames);
     expect(skillToPrompt(skill, rw).content).toMatchSnapshot();
   });
@@ -82,14 +84,17 @@ describe('snapshot: full-pipeline output', () => {
       {
         name: 'context7',
         path: path.join(fixtureDir, 'variant-a-bare.json'),
-        config: JSON.parse(readFileSync(path.join(fixtureDir, 'variant-a-bare.json'), 'utf8')).context7,
+        config: JSON.parse(readFileSync(path.join(fixtureDir, 'variant-a-bare.json'), 'utf8'))
+          .context7,
         origin: 'plugin',
         plugin: 'context7',
       },
       {
         name: 'postman',
         path: path.join(fixtureDir, 'variant-d-http-headers-secrets.json'),
-        config: JSON.parse(readFileSync(path.join(fixtureDir, 'variant-d-http-headers-secrets.json'), 'utf8')).mcpServers.postman,
+        config: JSON.parse(
+          readFileSync(path.join(fixtureDir, 'variant-d-http-headers-secrets.json'), 'utf8'),
+        ).mcpServers.postman,
         origin: 'plugin',
         plugin: 'postman',
       },
@@ -99,10 +104,7 @@ describe('snapshot: full-pipeline output', () => {
 
   it('applyTo (inline body) → instructions.md', () => {
     const idx: SourceIndex = { skills: new Map(), agents: new Map(), mcpServers: new Map() };
-    const out = applyToToInstructions(
-      { name: 'snap', applyTo: 'src/**', body: 'rule X' },
-      idx,
-    );
+    const out = applyToToInstructions({ name: 'snap', applyTo: 'src/**', body: 'rule X' }, idx);
     expect(out.content).toMatchSnapshot();
   });
 });
