@@ -303,6 +303,16 @@ Why this is non-negotiable: a public LLM endpoint without a hard cap is a $5,000
 - 100× traffic: move to Cloudflare Workers AI (Llama 3.3 self-served) — quality dip acceptable for the cost
 - If `ask` becomes a real product: separate service, persistent conversation context, billing surface, evals
 
+### Kill switches
+
+A single env var, `ASK_ENABLED`, gates the route. The check runs first in the POST handler — before rate-limit and budget calls — so a trip costs zero Redis round-trips. The value is normalized with `.trim().toLowerCase()` and matched against the off-keyword set `{ 'false', '0', 'off', 'no', 'disabled' }`. Any match returns 503 with the email-fallback message; any other value (or unset) keeps the route live.
+
+The asymmetry is intentional: this is a kill switch, not a feature flag. During a billing or abuse incident, the operator is reaching for the off lever and may type any plausible off-keyword. False-positive disablement (typing `'no'` when meaning to enable) recovers in 60-90 seconds via env-var edit + redeploy. False-negative non-disablement during a cost emergency — what the alternative "typos default to enabled" semantics would produce — is exactly the failure mode the switch exists to prevent.
+
+A module-scope `console.info('[ask] kill-switch on cold start:', process.env.ASK_ENABLED ?? 'unset')` emits once per warm instance, providing deploy-time proof of the env-var value in Vercel runtime logs without inspecting the dashboard.
+
+History and rationale: see `DECISIONS.md` 2026-05-18.
+
 ---
 
 ## 7. Contact form — deep dive
@@ -370,17 +380,37 @@ Vercel Speed Insights (built-in, free) collects CWV from real visitors. Weekly c
 
 ## 9. Observability strategy
 
-Minimal but real:
-- **Vercel Web Analytics** for pageview counts, referrer distribution
-- **Vercel Speed Insights** for real-user CWV
-- **Vercel Logs** for Edge Function output (stdout/stderr)
-- **Upstash KV inspector** for contact submissions + ask queries
-- **(Optional) Sentry frontend SDK** — only if client errors become a problem; adds ~25KB so default OFF
+Implemented per Spec 2 (`docs/superpowers/specs/2026-05-18-production-observability-design.md`):
 
-What I deliberately don't do:
-- No Datadog / NewRelic / LaunchDarkly (overkill)
-- No custom OpenTelemetry pipeline (no second consumer of the traces)
-- No alerting beyond Vercel's defaults (single-author site, no oncall)
+### Real-user telemetry
+- **Vercel Web Analytics** + **Vercel Speed Insights** mounted in `app/layout.tsx`. Real-user pageview counts + LCP/INP/CLS land in the Vercel dashboards. Expected coverage 70-85% of visits (ad-blockers block the two ingest origins; never claim 100% population coverage in the hiring pitch).
+- **CSP** widened in `proxy.ts` to allow `https://vitals.vercel-insights.com` (specific ingest origin, no wildcard) and `https://va.vercel-scripts.com`.
+
+### Server-side structured logging
+- **`lib/log.ts`** wraps `pino` with a `{info, warn, error}` surface. Dev mode uses `pino-pretty` for human-readable output; production emits JSON lines for Vercel runtime-log parsing. Base fields auto-added: `{ts, level, env}`. Correlation IDs (`requestId`) are passed explicitly per-call via the second `ctx` argument — no AsyncLocalStorage / Edge-runtime opt-out (the trade-off was deliberate; cold-start cost would have stacked on top of the active LCP fight when Spec 2 landed).
+- Every server `console.*` call site in `lib/` + `app/api/` is migrated to `log.*`. `ErrorBoundary.client.tsx` retains `console.error` for DevTools visibility AND routes the same payload to `/api/log` via the shared `buildLogPayload` helper in `componentDidCatch` — intentional dual capture, not a contradiction. Both paths are always active; they are not alternatives.
+
+### Client error capture
+- **`lib/error-bridge.ts`** registers `window.addEventListener('error')` + `unhandledrejection` at module scope (imported once from `AppShell.client.tsx`). Each capture POSTs to `/api/log` with `{level, message, stack, url, userAgent, ts}`. Dedup: 100ms tail-window keyed on `(message, stack)` — covers React's error replay (<50ms) without suppressing meaningful repeat-occurrence signal.
+- **`app/api/log/route.ts`** validates via zod, writes to Upstash KV `err:{yyyy-mm-dd}:{uuid}` with 30-day TTL. Rate-limited (10/IP/min) via `getErrorLogLimit()` to absorb runaway client error loops. The IP is used only for rate-limiting and discarded — `err:*` records store no `ipHash`, making them personal-data-free and outside the `/api/log/forget` erasure scope.
+
+### `/api/ask` Q+A retention
+- **`lib/ask-log.ts`** persists every `/api/ask` interaction to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`. Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
+- **`X-Request-Id`** response header on `/api/ask` surfaces the requestId to the client for the GDPR/LGPD erasure flow.
+- **`app/api/log/forget/route.ts`** accepts POST `{requestId}` and idempotently DELETEs the matching record across the last 90 day-partitions. Rate-limited (5/IP/hour) via `getForgetLimit()`.
+
+### Inspection surfaces
+- **Vercel dashboard** → Analytics + Speed Insights for real-user data.
+- **Vercel runtime logs** for the JSON-line `log.*` stream; filterable by `requestId`, `level`, or `env`.
+- **Upstash console** → Data Browser; `SCAN err:*` / `SCAN ask:log:*` for ad-hoc inspection.
+- **Source-map symbolication** for captured production errors: Vercel retains maps per deploy; operator runs `vercel inspect <deploy-url> --logs` or the dashboard's Source Maps tab. If this becomes recurring, a future spec adds an `/internal/symbolicate` route on demand.
+
+### What I deliberately don't do
+- No Datadog / NewRelic / LaunchDarkly (overkill at this scale).
+- No Sentry — custom `/api/log` endpoint chosen instead for zero new SaaS vendor (see `DECISIONS.md` 2026-05-18).
+- No custom OpenTelemetry pipeline (no second consumer of the traces).
+- No alerting beyond Vercel's defaults + the `/api/ask` 80%/100% budget warnings (single-author site, no oncall rotation).
+- No client-side dashboards/UI; Upstash console + Vercel CLI are the inspection surfaces.
 
 ---
 
@@ -462,6 +492,17 @@ Vercel auto-deploys main. No manual gate. Lighthouse CI on production deploy as 
 
 ### Rollback
 Vercel "Promote to Production" of previous deployment. <60 seconds. No manual config needed.
+
+### Claude harness configuration
+
+The repo ships a project-level Claude Code permissions baseline in `.claude/settings.json` (committed) — `defaultMode: "acceptEdits"` plus the minimum skill allowlist mandated by CLAUDE.md's dispatch matrix. Per-machine additions live in `.claude/settings.local.json` (gitignored). The effective merged allowlist is inspectable via:
+
+```bash
+jq -s '(.[0].permissions.allow + (.[1].permissions.allow // [])) | unique' \
+  .claude/settings.json .claude/settings.local.json 2>/dev/null
+```
+
+Configuration history and rationale: see `DECISIONS.md` 2026-05-18 (permissions lockdown bullet).
 
 ---
 

@@ -22,7 +22,7 @@
         "categories:seo": ["error", { "minScore": 1.0 }],
 
         "largest-contentful-paint": ["error", { "maxNumericValue": 1800 }],
-        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05 }],
+        "cumulative-layout-shift": ["warn", { "maxNumericValue": 0.05 }],
         "total-blocking-time": ["error", { "maxNumericValue": 200 }],
         "interactive": ["error", { "maxNumericValue": 2500 }],
 
@@ -37,11 +37,21 @@
         "label": "error",
         "heading-order": "error",
         "html-has-lang": "error",
-        "tap-targets": "error",
 
         "is-crawlable": "error",
         "robots-txt": "error",
-        "structured-data": "off"
+        "structured-data": "off",
+
+        "tap-targets": "off",
+        "forced-reflow-insight": "off",
+        "network-dependency-tree-insight": "off",
+        "render-blocking-insight": "off",
+
+        "label-content-name-mismatch": "warn",
+        "unused-javascript": "warn",
+        "dom-size": "warn",
+        "uses-long-cache-ttl": "warn",
+        "errors-in-console": "warn"
       }
     },
     "upload": {

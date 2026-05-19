@@ -414,7 +414,7 @@ sequenceDiagram
 
 **Why KV before Resend.** Both providers have 99.9% SLOs. The probability of simultaneous failure is low but non-zero. The asymmetry that matters: if Resend fails after we've already replied 200 to the client, the message is lost forever, and the client has no signal to retry. If KV fails before we touch Resend, we return 502 and the user retries. Durability comes first; delivery is a best-effort second pass. Resend failures after a successful KV write are logged with the message ID. A future job (not yet built) can replay un-delivered messages from KV by scanning the `contact:msg:*` keyspace.
 
-**Why IP hashing with a rotated salt.** The raw IP is personal data under LGPD and GDPR; logging it without consent is a compliance finding. Hashing with `DEPLOY_SALT` makes the stored value a stable identifier within a deployment window without being reversible. Rotating the salt quarterly (by redeploying with a new value) bounds the de-anonymization window even against an adversary who later compromises the salt. Old hashed values become orphaned strings; new submissions are bucketed against the new salt.
+**Why IP hashing with a salt.** The raw IP is personal data under LGPD and GDPR; logging it without consent is a compliance finding. Hashing with `DEPLOY_SALT` makes the stored value a stable identifier within a deployment window without being reversible. The salt is auto-generated on first request and persisted in Upstash so it stays stable across deploys (preserving per-IP rate-limit accounting and Q+A audit correlations); see the env-vars section below for the resolution order. Rotate on suspected leak (`DEL meta:deploy-salt` in Upstash → next request generates a fresh value) rather than on a schedule — scheduled rotation provides no extra security against an attacker who hasn't already compromised the salt, and it does invalidate every existing rate-limit counter. Old hashed values become orphaned strings; new submissions are bucketed against the new salt.
 
 The hash is truncated to 64 bits (16 hex chars) in storage because we don't need 256 bits of uniqueness for ~100 messages per month, and storing less is closer to data-minimization compliance.
 
@@ -650,9 +650,11 @@ The static page renders without any environment variables; the runtime endpoints
 | `UPSTASH_REDIS_REST_TOKEN` | as above | as above |
 | `RESEND_API_KEY` | `/api/contact` delivery | [resend.com](https://resend.com) |
 | `PSI_API_KEY` | `/api/lighthouse` | Google Cloud Console > PageSpeed Insights API |
-| `IP_HASH_SALT` / `DEPLOY_SALT` | IP hashing before KV persistence | any random string |
+| `DEPLOY_SALT` | IP hashing before KV persistence — **optional, auto-generated** | see below |
 
 Vercel projects scope each variable per-environment (production / preview / development) so preview deploys can use throttled keys without risking production quota.
+
+**`DEPLOY_SALT` is optional — auto-generated on first request and persisted in Upstash.** Resolution order on every cold start in `lib/ip-hash.ts`: explicit `process.env.DEPLOY_SALT` → Upstash KV key `meta:deploy-salt` (auto-created via `SETNX` on the first request after a fresh Upstash) → literal `'portfolio'` for non-production. The auto-generated value is a random 32-byte base64 string. The same value is read on every subsequent cold start, so the salt is stable across deploys (preserving per-IP rate-limit accounting and Q+A audit hash correlations) until the Upstash record is wiped. Concurrent cold-starts race the `SETNX` and converge on one value. Set `DEPLOY_SALT` explicitly only when you want a specific value (sharing across environments deliberately, or recovering from accidental Upstash wipe); generate with `openssl rand -base64 32`. Rotate on suspected leak by `DEL meta:deploy-salt` in Upstash — the next request generates a fresh value.
 
 ---
 

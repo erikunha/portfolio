@@ -220,7 +220,7 @@ function renderCommit(c: GitCommit, key: string): ReactNode {
   );
 }
 
-export function GitLogSection() {
+export function GitLogSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module
       id="sec-git-log"
@@ -228,6 +228,7 @@ export function GitLogSection() {
       mobileHeader="GIT LOG --CAREER"
       icon={<IconGitLog />}
       defaultOpen={false}
+      defer={defer}
     >
       <div className="gitfuller career-desktop">
         <div className="gf-cmdbar">

@@ -15,6 +15,8 @@ export type ModuleProps = {
   mobileHeader?: string;
   icon?: ReactNode;
   defaultOpen?: boolean;
+  /** Applies content-visibility:auto deferral for below-fold modules. */
+  defer?: boolean | undefined;
   children: ReactNode;
 };
 
@@ -24,6 +26,7 @@ export async function Module({
   mobileHeader,
   icon,
   defaultOpen = true,
+  defer = false,
   children,
 }: ModuleProps) {
   const ua = (await headers()).get('user-agent');
@@ -32,7 +35,7 @@ export async function Module({
 
   if (!isMobile) {
     return (
-      <section id={id} className="module module--desktop">
+      <section id={id} className={`module module--desktop${defer ? ' cv-defer' : ''}`}>
         <h2 className="module__header">
           {icon ? (
             <span className="module__icon" aria-hidden>
@@ -47,7 +50,11 @@ export async function Module({
   }
 
   return (
-    <details id={id} className="module module--mobile" open={defaultOpen || undefined}>
+    <details
+      id={id}
+      className={`module module--mobile${defer ? ' cv-defer' : ''}`}
+      open={defaultOpen || undefined}
+    >
       <summary className="module__toggle">
         <span className="module__header-label">
           {icon ? (

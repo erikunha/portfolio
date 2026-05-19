@@ -1,12 +1,33 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { NextRequest } from 'next/server';
+import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log';
+import { hashIp } from '@/lib/ip-hash';
+import { log } from '@/lib/log';
 import { checkBudget, getAskLimit, getClientIp, incrementBudget } from '@/lib/rate-limit';
 import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
 export const dynamic = 'force-dynamic';
 
 // Module-scope client — reused across warm invocations.
-const anthropic = new Anthropic();
+// 30s timeout applies to stream INITIATION (time-to-first-byte); once chunks
+// start arriving the SDK no longer enforces the timeout. Typical Haiku-4.5
+// time-to-first-byte is <2s; 30s is 15× headroom. Per-chunk watchdog for
+// stalled mid-stream connections is out of scope per spec §5 edge case.
+// Default maxRetries (2) preserved — stream init is idempotent (no SSE events
+// before first content_block_delta), so absorbing transient 5xx is safe.
+const anthropic = new Anthropic({ timeout: 30_000 });
+
+// Module-eval log: wrapped in try/catch so logger init failures (e.g. pino
+// transport thread failing to start) never block the cold-start path.
+try {
+  log.info('kill-switch on cold start', { askEnabled: process.env.ASK_ENABLED ?? 'unset' });
+} catch {
+  // Logger init failed; do not block cold-start path.
+  console.error('[ask] logger unavailable on cold start');
+}
+
+// Module-scoped: never changes between calls, avoids per-request Set allocation.
+const OFF_KEYWORDS = new Set(['false', '0', 'off', 'no', 'disabled']);
 
 // cache_control marks this block for Anthropic prompt caching.
 // The system prompt is identical on every call — ~93% cheaper on cache hits.
@@ -112,17 +133,48 @@ Be direct and honest. Do not fabricate information. Keep answers under 200 words
 ];
 
 export async function POST(req: NextRequest) {
+  // Kill switch: any "off" keyword (case-insensitive, trimmed) disables the route.
+  // Asymmetry is intentional: a typo during a billing/abuse emergency must STILL
+  // disable the route. The cost of "stays on accidentally" during a cost incident
+  // is exactly what this switch exists to prevent.
+  const askFlag = (process.env.ASK_ENABLED ?? '').trim().toLowerCase();
+  if (OFF_KEYWORDS.has(askFlag)) {
+    return Response.json(
+      { error: 'temporarily unavailable — email erikhenriquealvescunha@gmail.com directly' },
+      { status: 503 },
+    );
+  }
+
+  const requestId = crypto.randomUUID();
+  const startedAt = Date.now();
   const ip = getClientIp(req);
+  const ipHash = await hashIp(ip);
+  log.info('ask request received', { requestId, ipHash });
+
+  const earlyExitPersist = (status: AskInteractionStatus): void =>
+    void persistAskInteraction({
+      requestId,
+      ts: new Date().toISOString(),
+      ipHash,
+      question: '',
+      answer: '',
+      inputTokens: 0,
+      outputTokens: 0,
+      durationMs: Date.now() - startedAt,
+      status,
+    });
 
   // Per-IP rate limit
   const { success } = await getAskLimit().limit(ip);
   if (!success) {
+    earlyExitPersist('rate-limited');
     return Response.json({ error: 'rate limit exceeded — try again in an hour' }, { status: 429 });
   }
 
   // Global monthly budget check
   const { allowed } = await checkBudget();
   if (!allowed) {
+    earlyExitPersist('budget-exhausted');
     return Response.json(
       { error: 'monthly budget exhausted — email erikhenriquealvescunha@gmail.com directly' },
       { status: 503 },
@@ -133,24 +185,51 @@ export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as { question?: unknown };
     if (typeof body.question !== 'string' || !body.question.trim()) {
+      earlyExitPersist('errored');
       return Response.json({ error: 'question is required' }, { status: 400 });
     }
     question = body.question.trim().slice(0, 500);
   } catch {
+    earlyExitPersist('errored');
     return Response.json({ error: 'invalid request body' }, { status: 400 });
   }
 
-  const anthropicStream = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 512,
-    system: SYSTEM,
-    messages: [{ role: 'user', content: question }],
-    stream: true,
-  });
+  let anthropicStream: AsyncIterable<Anthropic.Messages.RawMessageStreamEvent>;
+  try {
+    anthropicStream = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 512,
+      system: SYSTEM,
+      messages: [{ role: 'user', content: question }],
+      stream: true,
+    });
+  } catch (err) {
+    // The 30s SDK timeout (or a network error) fired during stream establishment,
+    // before any SSE event was emitted. Return a 200 with the sentinel so the
+    // client's stream reader sees a structured error instead of an opaque 500.
+    const msg = err instanceof Error ? err.message : 'upstream error';
+    console.error('[ask] stream init failed', err);
+    const enc = new TextEncoder();
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
+        controller.close();
+      },
+    });
+    return new Response(body, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  }
 
   const enc = new TextEncoder();
   let inputTokens = 0;
   let outputTokens = 0;
+  let collectedAnswerText = '';
+  let status: AskInteractionStatus = 'completed';
 
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -162,15 +241,33 @@ export async function POST(req: NextRequest) {
             outputTokens = event.usage.output_tokens;
           } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
             controller.enqueue(enc.encode(event.delta.text));
+            if (collectedAnswerText.length < 1000) {
+              // Slice the delta to only the remaining budget before concat so
+              // we never allocate a full delta string when the boundary is hit.
+              const remaining = 1000 - collectedAnswerText.length;
+              collectedAnswerText += event.delta.text.slice(0, remaining);
+            }
           }
         }
       } catch (err) {
+        status = 'errored';
         const msg = err instanceof Error ? err.message : 'upstream error';
         controller.enqueue(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
       } finally {
         controller.close();
         // Fire-and-forget — never blocks the response.
         incrementBudget(inputTokens, outputTokens);
+        void persistAskInteraction({
+          requestId,
+          ts: new Date().toISOString(),
+          ipHash,
+          question,
+          answer: collectedAnswerText,
+          inputTokens,
+          outputTokens,
+          durationMs: Date.now() - startedAt,
+          status,
+        });
       }
     },
   });
@@ -180,6 +277,7 @@ export async function POST(req: NextRequest) {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
+      'X-Request-Id': requestId,
     },
   });
 }

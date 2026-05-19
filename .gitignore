@@ -21,6 +21,9 @@
 /test-results
 /playwright-report
 
+# lighthouse ci artifact reports
+/.lighthouseci/
+
 # local claude settings
 .claude/settings.local.json
 

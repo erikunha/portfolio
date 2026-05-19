@@ -39,24 +39,26 @@ export default async function Home() {
           <ErrorBoundary>
             <Hero />
           </ErrorBoundary>
+          {/* Modules 0-3: above the fold on desktop and mobile — no deferral */}
           <ReadmeSection />
           <ShellSection />
           <ManPageSection />
           <NowSection />
-          <ProjectsSection />
-          <GitLogSection />
-          <NpmStackSection />
-          <SysHealthSection />
-          <LivePerfSection />
-          <PerfReceiptsSection />
-          <GuitarSection />
-          <VisaSection />
-          <CredentialsSection />
-          <CommunitySection />
-          <HottestTakesSection />
-          <ResponsibilitiesSection />
-          <UnknownsSection />
-          <ContactSection />
+          {/* Modules 4+: below the fold — defer content-visibility */}
+          <ProjectsSection defer />
+          <GitLogSection defer />
+          <NpmStackSection defer />
+          <SysHealthSection defer />
+          <LivePerfSection defer />
+          <PerfReceiptsSection defer />
+          <GuitarSection defer />
+          <VisaSection defer />
+          <CredentialsSection defer />
+          <CommunitySection defer />
+          <HottestTakesSection defer />
+          <ResponsibilitiesSection defer />
+          <UnknownsSection defer />
+          <ContactSection defer />
         </main>
         <ErrorBoundary>
           <Footer />

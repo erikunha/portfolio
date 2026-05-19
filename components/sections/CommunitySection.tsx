@@ -2,7 +2,7 @@ import { communityEvent } from '@/content/community';
 import { IconCommunity } from '../Icons';
 import { Module } from '../responsive/Module';
 
-export function CommunitySection() {
+export function CommunitySection({ defer }: { defer?: boolean } = {}) {
   const e = communityEvent;
   return (
     <Module
@@ -10,6 +10,7 @@ export function CommunitySection() {
       header="CAT ~/.COMMUNITY"
       icon={<IconCommunity />}
       defaultOpen={false}
+      defer={defer}
     >
       <div className="community">
         <div className="ctitle">

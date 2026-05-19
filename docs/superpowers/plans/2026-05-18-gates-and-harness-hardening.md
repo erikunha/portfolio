@@ -138,7 +138,7 @@ Expected: `PASS: defaultMode removed`.
 - [ ] **Step 1.11: Verify effective merged allowlist via jq recipe**
 
 ```bash
-jq -s '.[0].permissions + (.[1].permissions // {}) | .allow' \
+jq -s '(.[0].permissions.allow + (.[1].permissions.allow // [])) | unique' \
   .claude/settings.json .claude/settings.local.json 2>/dev/null
 ```
 
@@ -154,7 +154,7 @@ Find section 13 of `ARCHITECTURE.md` (the "Deployment + CI/CD" section). After t
 The repo ships a project-level Claude Code permissions baseline in `.claude/settings.json` (committed) — `defaultMode: "acceptEdits"` plus the minimum skill allowlist mandated by CLAUDE.md's dispatch matrix. Per-machine additions live in `.claude/settings.local.json` (gitignored). The effective merged allowlist is inspectable via:
 
 ```bash
-jq -s '.[0].permissions + (.[1].permissions // {}) | .allow' \
+jq -s '(.[0].permissions.allow + (.[1].permissions.allow // [])) | unique' \
   .claude/settings.json .claude/settings.local.json 2>/dev/null
 ```
 
@@ -643,7 +643,7 @@ Expected: commit succeeds.
 
 - [ ] **Step 4.1: Create `lighthouserc.mobile.json` with TARGET thresholds**
 
-Create `lighthouserc.mobile.json` with this exact content (mirrors `lighthouserc.json` structure with mobile preset + spec §4 targets):
+Create `lighthouserc.mobile.json` with this exact content (mirrors `lighthouserc.json` structure with mobile form-factor emulation + spec §4 targets). NOTE: the original draft of this step used `"preset": "mobile"` which is not a valid Lighthouse 12 setting (LH12 accepts `perf | experimental | desktop` for preset). The correct LH12 way to emulate mobile is `emulatedFormFactor: "mobile"` plus explicit `throttling` constants matching `mobileSlow4G`:
 
 ```json
 {
@@ -654,8 +654,16 @@ Create `lighthouserc.mobile.json` with this exact content (mirrors `lighthouserc
       "url": ["http://localhost:3000"],
       "numberOfRuns": 3,
       "settings": {
-        "preset": "mobile",
-        "throttlingMethod": "simulate"
+        "emulatedFormFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "cpuSlowdownMultiplier": 4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.56,
+          "uploadThroughputKbps": 675
+        }
       }
     },
     "assert": {
@@ -682,11 +690,16 @@ Create `lighthouserc.mobile.json` with this exact content (mirrors `lighthouserc
         "label": "error",
         "heading-order": "error",
         "html-has-lang": "error",
-        "tap-targets": "error",
 
         "is-crawlable": "error",
         "robots-txt": "error",
-        "structured-data": "off"
+        "structured-data": "off",
+
+        "tap-targets": "off",
+        "network-dependency-tree-insight": "off",
+        "render-blocking-insight": "off",
+        "unused-javascript": "off",
+        "dom-size": "off"
       }
     },
     "upload": {
@@ -697,12 +710,13 @@ Create `lighthouserc.mobile.json` with this exact content (mirrors `lighthouserc
 ```
 
 Differences from `lighthouserc.json` (intentional, per spec §4):
-- `preset: "mobile"` (was `"desktop"`)
-- No explicit `throttling` block — mobile preset's default 4× CPU + Slow 4G applies
+- `emulatedFormFactor: "mobile"` + explicit `mobileSlow4G` throttling constants (replaces the desktop preset's near-no-throttle defaults)
 - `total-blocking-time` maxNumericValue: `400` (was 200)
 - `interactive` maxNumericValue: `3500` (was 2500)
 - `render-blocking-resources`: `"error"` (was `"warn"`)
-- All other thresholds identical
+- `tap-targets`: `"off"` (the audit was removed in LH12; left in the assertions list explicitly turned off so future readers see the deliberate suppression)
+- Four `"off"` overrides for LH12's `lighthouse:no-pwa` preset noise audits (`network-dependency-tree-insight`, `render-blocking-insight`, `unused-javascript`, `dom-size`) — these are LH12-introduced insight-style audits that are out of scope for spec §4 assertions
+- All other thresholds identical to desktop config
 
 - [ ] **Step 4.2: Add `lhci:mobile` script to `package.json`**
 
@@ -957,7 +971,61 @@ This checklist is intentionally OUTSIDE the spec's success criteria (which are c
 
 ## Calibration evidence
 
-(This section is populated during Task 4 Step 4.6. Leave blank until then.)
+> **STATUS: PRE-PERF-FIX SNAPSHOT (2026-05-18).** Calibration triggered the FIX_PERF branch per spec §11 step 4 — observed mobile LCP is 3071ms vs the 1800ms target (70% over). Task 4 ship and Task 5 (workflow change) are **paused** pending a separate perf-fix PR addressing render-blocking CSS + JetBrains Mono font load on Slow 4G + Hero RSC conversion. When the perf work lands, re-run from Step 4.4 against the new baseline and replace this section with fresh data. The findings below are kept verbatim because the 3 candidate fixes at the bottom are the input to the perf-fix spec/plan brainstorm.
+
+Captured: 2026-05-18 (local time, Brazil/BRT)
+Local machine: macOS arm64, Node 24.14.0, pnpm 10.15.0
+LHCI version: @lhci/cli@0.15.1 (Lighthouse 12.6.1 bundled)
+
+Config note: `"preset": "mobile"` is not a valid Lighthouse preset (choices: perf, experimental, desktop).
+Mobile simulation uses `emulatedFormFactor: "mobile"` with explicit Slow 4G throttling (rttMs: 150, throughputKbps: 1638.4, cpuSlowdownMultiplier: 4) — matches Lighthouse `mobileSlow4G` constants exactly.
+
+Raw 3-run results:
+- Run 1: LCP=3152ms, TBT=331ms, TTI=3246ms, CLS=0.0, Perf=0.85, A11y=1.0, BP=1.0, SEO=1.0
+- Run 2: LCP=3071ms, TBT=13ms,  TTI=3071ms, CLS=0.0, Perf=0.93, A11y=1.0, BP=1.0, SEO=1.0
+- Run 3: LCP=3071ms, TBT=14ms,  TTI=3071ms, CLS=0.0, Perf=0.93, A11y=1.0, BP=1.0, SEO=1.0
+
+| Metric | Target (spec §4) | Observed p50 | p50 x 1.2 | Final threshold | Decision |
+|---|---|---|---|---|---|
+| `largest-contentful-paint` | < 1800ms | 3071ms | 3685ms | n/a | FIX_PERF |
+| `total-blocking-time` | < 400ms | 14ms | 17ms | < 400ms | KEEP_TARGET |
+| `interactive` | < 3500ms | 3071ms | 3685ms | < 3700ms | LOOSEN (if LCP fixed) |
+| `cumulative-layout-shift` | < 0.05 | 0.0 | 0.0 | < 0.05 | KEEP_TARGET |
+| `categories:performance` | >= 0.95 | 0.93 | n/a | >= 0.93 | LOOSEN (if LCP fixed: score would improve) |
+
+Decision rules per spec §11 step 4:
+- **KEEP_TARGET** if `observed_p50 x 1.2 <= target` (site already meets target with headroom)
+- **LOOSEN** if `observed_p50 x 1.2 > target` but the gap is small (e.g., observed TBT is 410ms vs 400ms target)
+- **FIX_PERF** if the gap is large enough that the right move is to fix the underlying perf issue in a separate PR before this gate ships
+
+**Overall decision: FIX_PERF_REQUIRED**
+
+Root cause of LCP failure:
+- LCP element: `p.hero__tagline` (static text, SSR-rendered, visible above fold on mobile)
+- FCP: 1718ms, LCP: 3071ms — gap of 1353ms between first content and LCP element paint
+- Render-blocking CSS identified: `_next/static/chunks/0z6nds3k0-iey.css` (10KB, 303ms estimated waste)
+- Under Slow 4G simulation (1638 Kbps), self-hosted JetBrains Mono font files take longer to download
+- Font-display audit passes (score 1.0) — fonts use `swap`, but swap delay still causes FOIT/FOUT gap
+- Hero component is `"use client"` — `useBreakpoint` hook runs after hydration, causing a second render that may shift the largest element
+
+Additional Lighthouse 12 preset noise (not in spec §4 assertions; suppressed in updated config):
+- `tap-targets`: not a known audit in LH12 (removed; must be turned off explicitly)
+- `network-dependency-tree-insight`: new LH12 insight audit, fires on critical request chains; score=0 (fail)
+- `render-blocking-insight`: new LH12 insight, 1 item (the CSS chunk above); preset warns
+- `unused-javascript`: 2 items (~43KB wasted); preset asserts maxLength: 0 (fails); acceptable given bundle-check gate
+- `dom-size`: large DOM warning (score 0.5); the 18-section single-page composition produces a large DOM
+
+Config changes made during calibration (not in original spec Step 4.1 content):
+1. Replaced `"preset": "mobile"` with `emulatedFormFactor: "mobile"` + explicit Slow 4G throttling (LH12 rejects "mobile" as a preset)
+2. Added explicit `"off"` overrides for: `tap-targets`, `network-dependency-tree-insight`, `render-blocking-insight`, `unused-javascript`, `dom-size` (suppress LH12 preset noise not in spec §4 assertion scope)
+
+Escalation path per spec §11 step 4:
+Fix the LCP root cause in a separate perf PR, then re-run from Step 4.4. Candidate fixes:
+1. Preload the self-hosted JetBrains Mono woff2 font files (eliminates font load delay from LCP critical path)
+2. Inline critical CSS (the render-blocking chunk) or defer it — or investigate if Next.js 15 is chunking CSS suboptimally on this route
+3. Convert Hero to RSC with a static fallback so LCP text is paint-ready before hydration; move `useBreakpoint` to a smaller island
+
+Notes: TBT run-to-run flakiness is significant (13ms vs 331ms between runs). Run 1 had a cold-start effect (TBT spike), runs 2-3 were stable. The p50 is 14ms (robust), confirming TBT is not the issue. CLS is 0.0 across all runs (perfect). A11y, BP, and SEO all score 1.0 across all runs (perfect). The performance score of 0.93 is entirely driven by the LCP score (0.76 on run 2/3) since all other metrics score 1.0.
 
 ---
 
