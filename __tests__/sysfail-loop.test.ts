@@ -12,7 +12,8 @@ Object.defineProperty(window, 'matchMedia', {
 
 describe('runBoot onFirstLoop', () => {
   it('fires exactly once across multiple dialog loops', async () => {
-    const { runBoot } = await import('../components/sections/Hero');
+    // runBoot extracted from HeroBootAnimation island to lib/boot-animation (pure, no React).
+    const { runBoot } = await import('../lib/boot-animation');
     const container = document.createElement('div');
     const calls: number[] = [];
 

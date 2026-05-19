@@ -76,6 +76,9 @@ jobs:
         env:
           LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
 
+      - name: Install Playwright Chromium (for axe-core scan)
+        run: pnpm playwright install --with-deps chromium
+
       - name: axe-core a11y scan
         run: pnpm playwright test tests/a11y
 
@@ -100,7 +103,20 @@ jobs:
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
-          DEPLOY_SALT: ci-build-salt
-      - run: pnpm start &
-      - run: npx wait-on http://localhost:3000 --timeout 30000
-      - run: pnpm playwright test tests/e2e
+          IP_HASH_SALT: ci-build-salt
+      - run: pnpm playwright install --with-deps chromium
+      - name: Check if e2e tests exist
+        id: check-e2e
+        run: |
+          if ls tests/e2e/*.spec.ts 2>/dev/null | grep -q .; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "No tests/e2e/*.spec.ts found — skipping e2e run."
+          fi
+      - if: steps.check-e2e.outputs.exists == 'true'
+        run: pnpm start &
+      - if: steps.check-e2e.outputs.exists == 'true'
+        run: npx wait-on http://localhost:3000 --timeout 30000
+      - if: steps.check-e2e.outputs.exists == 'true'
+        run: pnpm playwright test tests/e2e

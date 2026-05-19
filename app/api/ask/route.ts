@@ -9,7 +9,14 @@ import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 export const dynamic = 'force-dynamic';
 
 // Module-scope client — reused across warm invocations.
-const anthropic = new Anthropic();
+// 30s timeout applies to stream INITIATION (time-to-first-byte); once chunks
+// start arriving the SDK no longer enforces the timeout. Typical Haiku-4.5
+// time-to-first-byte is <2s; 30s is 15× headroom. Per-chunk watchdog for
+// stalled mid-stream connections is out of scope per spec §5 edge case.
+// Default maxRetries (2) preserved — stream init is idempotent (no SSE events
+// before first content_block_delta), so absorbing transient 5xx is safe.
+const anthropic = new Anthropic({ timeout: 30_000 });
+
 // Module-eval log: wrapped in try/catch so logger init failures (e.g. pino
 // transport thread failing to start) never block the cold-start path.
 try {
@@ -18,6 +25,9 @@ try {
   // Logger init failed; do not block cold-start path.
   console.error('[ask] logger unavailable on cold start');
 }
+
+// Module-scoped: never changes between calls, avoids per-request Set allocation.
+const OFF_KEYWORDS = new Set(['false', '0', 'off', 'no', 'disabled']);
 
 // cache_control marks this block for Anthropic prompt caching.
 // The system prompt is identical on every call — ~93% cheaper on cache hits.
@@ -123,6 +133,18 @@ Be direct and honest. Do not fabricate information. Keep answers under 200 words
 ];
 
 export async function POST(req: NextRequest) {
+  // Kill switch: any "off" keyword (case-insensitive, trimmed) disables the route.
+  // Asymmetry is intentional: a typo during a billing/abuse emergency must STILL
+  // disable the route. The cost of "stays on accidentally" during a cost incident
+  // is exactly what this switch exists to prevent.
+  const askFlag = (process.env.ASK_ENABLED ?? '').trim().toLowerCase();
+  if (OFF_KEYWORDS.has(askFlag)) {
+    return Response.json(
+      { error: 'temporarily unavailable — email erikhenriquealvescunha@gmail.com directly' },
+      { status: 503 },
+    );
+  }
+
   const requestId = crypto.randomUUID();
   const startedAt = Date.now();
   const ip = getClientIp(req);
@@ -172,13 +194,36 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'invalid request body' }, { status: 400 });
   }
 
-  const anthropicStream = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 512,
-    system: SYSTEM,
-    messages: [{ role: 'user', content: question }],
-    stream: true,
-  });
+  let anthropicStream: AsyncIterable<Anthropic.Messages.RawMessageStreamEvent>;
+  try {
+    anthropicStream = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 512,
+      system: SYSTEM,
+      messages: [{ role: 'user', content: question }],
+      stream: true,
+    });
+  } catch (err) {
+    // The 30s SDK timeout (or a network error) fired during stream establishment,
+    // before any SSE event was emitted. Return a 200 with the sentinel so the
+    // client's stream reader sees a structured error instead of an opaque 500.
+    const msg = err instanceof Error ? err.message : 'upstream error';
+    console.error('[ask] stream init failed', err);
+    const enc = new TextEncoder();
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
+        controller.close();
+      },
+    });
+    return new Response(body, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  }
 
   const enc = new TextEncoder();
   let inputTokens = 0;

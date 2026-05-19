@@ -75,7 +75,7 @@ function PerfFallback() {
   );
 }
 
-export function LivePerfSection() {
+export function LivePerfSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module
       id="sec-live-perf"
@@ -83,6 +83,7 @@ export function LivePerfSection() {
       mobileHeader="LIVE_PERF · LIGHTHOUSE"
       icon={<IconLivePerf />}
       defaultOpen={false}
+      defer={defer}
     >
       <Suspense fallback={<PerfFallback />}>
         <PerfData />
