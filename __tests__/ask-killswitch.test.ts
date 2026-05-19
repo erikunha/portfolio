@@ -39,6 +39,13 @@ describe('/api/ask kill switch', () => {
   });
 
   it('emits a cold-start log line for ASK_ENABLED at module scope', () => {
-    expect(ASK_SOURCE).toMatch(/console\.info\(\s*'\[ask\] kill-switch on cold start:'/);
+    // PR #11 merged the cold-start logging into a try/catch using the pino
+    // log facade instead of console.info (logger init failures must not block
+    // cold-start path). Match either form so the test survives future refactors.
+    const hasConsoleInfo = /console\.info\(\s*'\[ask\] kill-switch on cold start:'/.test(
+      ASK_SOURCE,
+    );
+    const hasLogInfo = /log\.info\(\s*'kill-switch on cold start'/.test(ASK_SOURCE);
+    expect(hasConsoleInfo || hasLogInfo).toBe(true);
   });
 });
