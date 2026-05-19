@@ -1,6 +1,8 @@
+import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
 import { gitLog } from '@/content/git-log';
 import type { GitCommit } from '@/content/schemas';
+import { detectMobileFromUA } from '@/lib/breakpoint';
 import { IconGitLog } from '../Icons';
 import { Module } from '../responsive/Module';
 
@@ -220,7 +222,14 @@ function renderCommit(c: GitCommit, key: string): ReactNode {
   );
 }
 
-export function GitLogSection({ defer }: { defer?: boolean } = {}) {
+// Async RSC: renders only the matching viewport branch server-side.
+// Same UA-detection pattern as Module.tsx — avoids shipping both the
+// full-prettyer desktop log and the compact mobile log when only one
+// is visible at a time. 8 commits × ~15 spans each = ~120 nodes saved.
+export async function GitLogSection({ defer }: { defer?: boolean } = {}) {
+  const ua = (await headers()).get('user-agent');
+  const isMobile = detectMobileFromUA(ua);
+
   return (
     <Module
       id="sec-git-log"
@@ -230,25 +239,28 @@ export function GitLogSection({ defer }: { defer?: boolean } = {}) {
       defaultOpen={false}
       defer={defer}
     >
-      <div className="gitfuller career-desktop">
-        <div className="gf-cmdbar">
-          <span className="gf-prompt">erik@portfolio:~$</span>
-          {' git log --graph --pretty=fuller --decorate --since="2018-06-01" ~/career'}
+      {isMobile ? (
+        <div className="gitfuller gitfuller--mobile career-mobile">
+          <div className="gf-cmdbar">
+            <span className="gf-prompt">erik@portfolio:~$</span>
+            {' git log --career --graph'}
+          </div>
+          <pre>{COMMITS.map((c) => renderCommitMobile(c, `m-${c.hash}`))}</pre>
         </div>
-        <pre>{COMMITS.map((c) => renderCommit(c, c.hash))}</pre>
-        <div className="gf-end">
-          {'(END) — press '}
-          <span style={{ color: 'var(--signal)' }}>q</span>
-          {' to return to portfolio'}
+      ) : (
+        <div className="gitfuller career-desktop">
+          <div className="gf-cmdbar">
+            <span className="gf-prompt">erik@portfolio:~$</span>
+            {' git log --graph --pretty=fuller --decorate --since="2018-06-01" ~/career'}
+          </div>
+          <pre>{COMMITS.map((c) => renderCommit(c, c.hash))}</pre>
+          <div className="gf-end">
+            {'(END) — press '}
+            <span style={{ color: 'var(--signal)' }}>q</span>
+            {' to return to portfolio'}
+          </div>
         </div>
-      </div>
-      <div className="gitfuller gitfuller--mobile career-mobile">
-        <div className="gf-cmdbar">
-          <span className="gf-prompt">erik@portfolio:~$</span>
-          {' git log --career --graph'}
-        </div>
-        <pre>{COMMITS.map((c) => renderCommitMobile(c, `m-${c.hash}`))}</pre>
-      </div>
+      )}
     </Module>
   );
 }
