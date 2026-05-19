@@ -26,10 +26,16 @@ test.describe('visual regression', () => {
     await heroSection.scrollIntoViewIfNeeded();
     // Wait for self-hosted fonts (next/font) to fully load. Playwright's own
     // "fonts loaded" wait happens inside toHaveScreenshot but races font-swap
-    // re-flow: the bio panel wraps onto a different number of lines once the
-    // real JetBrains Mono / Geist Black metrics replace the fallback's, which
-    // breaks the two-consecutive-stable-screenshots check on chromium-mobile.
+    // re-flow.
     await mockedPage.evaluate(() => document.fonts.ready);
+    // Wait for the LAST bio child + 500ms settle. On chromium-mobile the
+    // matrix-rain <canvas aria-hidden> is sized to its parent; post-hydration
+    // reflow (next/font swap, IO callbacks) keeps the canvas redrawing for a
+    // few hundred ms after the DOM is stable, which trips Playwright's
+    // two-consecutive-stable-screenshots check. The 500ms hard wait paired
+    // with the 30s snapshot timeout in snapshot.ts brackets that reflow.
+    await heroSection.locator('.hero__ctas').waitFor({ state: 'visible' });
+    await mockedPage.waitForTimeout(500);
     await snapshotLocator(mockedPage, heroSection, 'hero-above-fold.png');
   });
 
