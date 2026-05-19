@@ -51,6 +51,11 @@ jobs:
       - name: Unit tests
         run: pnpm vitest run
 
+      - name: Verify Copilot port artifacts in sync
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || 'HEAD~1' }}
+        run: pnpm tsx scripts/check-copilot-drift.ts "$BASE_SHA..HEAD"
+
       - name: Build
         run: pnpm build
         env:
