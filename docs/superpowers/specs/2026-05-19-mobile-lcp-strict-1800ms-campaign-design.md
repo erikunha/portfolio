@@ -139,7 +139,17 @@ The backlog becomes the PR sequence. Each row becomes Tasks 1..N below.
 
 ### Exit criterion
 
-Task 0 is done when section 12 of this spec is filled in and committed, and the ranked backlog has at least 3 contributors with non-zero estimated savings (otherwise the LCP gap is mysteriously composed of small-cuts and the campaign shape may need to change).
+Task 0 is done when section 12 of this spec is filled in and committed, and the ranked backlog has at least 3 contributors with non-zero estimated savings.
+
+### Branch points if Discovery finds fewer than 3 contributors
+
+- **Two large contributors + long tail of small-cuts**: ship PR-1 and PR-2 against the two large ones, then re-measure. If the small-cuts collectively close the remaining gap, the campaign succeeds in 2 PRs. If not, run Task 0 again against the post-PR-2 state to surface contributors that were previously masked.
+- **One large contributor + everything else is noise-level**: this almost certainly means the LCP gap is dominated by a single architectural cause (render path of the LCP element itself, or framework-level cost). Open a separate spec for that root cause and put this campaign on pause. Do not ship "fix the small cuts anyway" PRs — they won't move the gate.
+- **Zero contributors with non-zero estimated savings**: Lighthouse's audit data didn't classify the gap, but the gap exists. Capture a Chrome DevTools Performance trace manually, classify by browser-internal phases (Recalculate Style, Layout, Paint, Composite), and re-spec from that data. Do not invoke `writing-plans` against this spec until the contributor classification exists.
+
+### Implementation-approach selection for PR-1
+
+PR-1's CSS-defer mechanism (§8 below) lists three candidate approaches without a discriminator. Task 0 produces the discriminator: measure the actual `globals.css` request timing (download + parse) on the Vercel preview, and document whether the bottleneck is the request itself or the parser blocking. Output this on section 12 alongside the contributor backlog. PR-1's own writing-plans pass requires the chosen approach to be locked in this spec first.
 
 ## 7. PR template (Tasks 1..N)
 
@@ -167,12 +177,16 @@ Every campaign PR follows this template:
 
 ### 7.3 Per-PR acceptance criteria
 
-- Median post-fix LCP is **lower than pre-fix median** by at least 50ms (otherwise the change isn't producing measurable improvement, even after variance).
+- Median post-fix LCP improvement must exceed **max(100ms, observed run-to-run spread in this measurement window)**. The original draft used 50ms; architect-reviewer flagged that as below Lighthouse's typical variance (±150ms at this LCP range). The two-threshold rule means a PR that shows a 90ms delta in a window with 200ms of run-to-run spread does **not** qualify as improvement — that delta is noise.
 - LHCI mobile gate stays green on the new threshold (within the PR's CI run).
 - Visual regression matrix stays green.
 - No new biome / typecheck / vitest errors.
 
 If a PR's measurement shows no improvement, the PR may still merge **without a gate ratchet** - the implementation may be a prerequisite for a later fix in the chain. But it must explicitly state this in the commit message and DECISIONS.md.
+
+### 7.4 Required reviewer agents per PR
+
+Per architect-reviewer spec-gate `DISPATCH_ADDITIONS` annotation: every PR in this campaign must dispatch both `performance-engineer` and `accessibility-tester` before merge. CSS-defer and font-loading changes are accessibility-adjacent (FOUC, font-swap delay can shift the LCP element timing and affect screen-reader announce ordering).
 
 ## 8. Likely PR sequence (pre-Task-0 estimate; data-driven after)
 
@@ -219,6 +233,7 @@ This is the best guess based on what's documented; Task 0 may re-rank.
 - **Implementation sketch**: confirm Vercel edge region configuration; consider `vercel.json` region pinning; verify that `headers()` calls (used for SSR UA branching) don't add measurable overhead.
 - **Expected savings**: 50-200ms.
 - **Primary risk**: region pinning can hurt users in other regions. Need RUM data (Vercel Speed Insights) to validate global impact.
+- **Merge precondition**: do not ship PR-5 unless Vercel Speed Insights has accumulated **at least 100 LCP samples per region** for the regions the pinning would deprioritize. Site is pre-launch; this dataset may not yet exist. If the precondition isn't met when PR-5's turn comes, skip PR-5 and proceed to PR-6 (or close the campaign with a residual-gap ADR if PR-5 was the last named contributor). Re-evaluate PR-5 post-launch once RUM has accumulated.
 
 ### PR-6 (contingency): CRT compositing layer
 
@@ -255,6 +270,9 @@ Lighthouse run-to-run variance on synthetic mobile is typically ±150ms even wit
 
 - Mobile LHCI gate at `maxNumericValue: 1800` (or lower, with safety margin)
 - Green CI on 3 consecutive runs against latest main
+- Final calibration PR re-tightens **two** gates in `lighthouserc.mobile.json`:
+  1. `largest-contentful-paint` `maxNumericValue` set to 1800 (the locked CLAUDE.md target)
+  2. `categories:performance` minScore re-tightened from the current 0.9 calibration back to 0.95 (the locked CLAUDE.md target). Re-tightening the perf-score gate alongside LCP is required because closing the LCP gap should also pull the composite Performance score above 0.95; if it doesn't, the residual gap is in non-LCP audits and needs a separate spec.
 - Final calibration PR records the journey in DECISIONS.md and closes the spec
 
 ### Convergence without success: residual gap
