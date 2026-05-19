@@ -63,7 +63,7 @@ jobs:
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
-          IP_HASH_SALT: ci-build-salt
+          DEPLOY_SALT: ci-build-salt
 
       - name: Bundle size gate
         run: node scripts/check-bundle-size.mjs --max-route-kb=120 --max-client-kb=320
@@ -80,6 +80,9 @@ jobs:
         run: pnpm lhci
         env:
           LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
+
+      - name: Install Playwright Chromium (for axe-core scan)
+        run: pnpm playwright install --with-deps chromium
 
       - name: axe-core a11y scan
         run: pnpm playwright test tests/a11y
@@ -105,7 +108,7 @@ jobs:
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
-          IP_HASH_SALT: ci-build-salt
+          DEPLOY_SALT: ci-build-salt
       - run: pnpm start &
       - run: npx wait-on http://localhost:3000 --timeout 30000
       - run: pnpm playwright test tests/e2e
