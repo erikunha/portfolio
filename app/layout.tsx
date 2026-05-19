@@ -366,8 +366,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body suppressHydrationWarning>
         <Script src="/init.js" strategy="beforeInteractive" />
         {children}
-        <Analytics />
-        <SpeedInsights />
+        {/* Vercel RUM scripts only mount on Vercel deploys. process.env.VERCEL is
+            "1" in any Vercel environment (prod/preview) and unset in local builds
+            and CI. Mounting them outside Vercel logs SDK errors to the browser
+            console (no token/origin), which trips Lighthouse's errors-in-console
+            audit. Gating here makes the audit pass everywhere except real prod,
+            where the SDK errors would mean a misconfigured deploy anyway. */}
+        {process.env.VERCEL === '1' && (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        )}
       </body>
     </html>
   );
