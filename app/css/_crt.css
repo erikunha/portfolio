@@ -107,21 +107,25 @@
    every frame, accumulating CLS 0.075-0.083 on slower CI hardware (verified
    measurement-driven; ubuntu CI ~= 30x devtools CPU throttle locally).
    Transform animations skip layout entirely, so CLS contribution is zero.
-   See DECISIONS.md 2026-05-19 — closes the BLOCKING CRITERION ADR. */
+   See DECISIONS.md 2026-05-19 — closes the BLOCKING CRITERION ADR.
+   --crt-scan-offset is the single source of truth for both start position
+   (top) and animation travel (calc); keeps the two in sync if the offset
+   ever changes. */
 @keyframes crt-scan-beam {
   0% {
     transform: translateY(0);
   }
   100% {
-    transform: translateY(calc(110vh + 120px));
+    transform: translateY(calc(100vh + var(--crt-scan-offset) * 2));
   }
 }
 
 .crt-scan-beam {
+  --crt-scan-offset: 120px;
   position: fixed;
   left: 0;
   right: 0;
-  top: -120px;
+  top: calc(var(--crt-scan-offset) * -1);
   height: 110px;
   background: linear-gradient(180deg, transparent, rgba(0, 255, 65, 0.06) 50%, transparent);
   pointer-events: none;
