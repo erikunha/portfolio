@@ -11,17 +11,12 @@
     "context7": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp"
-      ]
+      "args": ["-y", "@upstash/context7-mcp"]
     },
     "chrome-devtools": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "chrome-devtools-mcp@latest"
-      ]
+      "args": ["chrome-devtools-mcp@latest"]
     },
     "postman": {
       "type": "http",
