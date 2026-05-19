@@ -1,6 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { Resend } from 'resend';
 import { validateContact } from '@/lib/contact-validation';
+import { hashIp } from '@/lib/ip-hash';
+import { log } from '@/lib/log';
 import { getClientIp, getContactLimit, getRedis } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
@@ -14,6 +16,7 @@ function getResend(): Resend {
 }
 
 export async function POST(req: NextRequest) {
+  const requestId = crypto.randomUUID();
   const ip = getClientIp(req);
 
   const { success } = await getContactLimit().limit(ip);
@@ -37,11 +40,7 @@ export async function POST(req: NextRequest) {
   // Durability first: write to KV before attempting delivery.
   // Hash the IP before persisting — raw IP is personal data under LGPD/GDPR.
   const msgId = crypto.randomUUID();
-  const ipBytes = await crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(ip + (process.env.DEPLOY_SALT ?? 'portfolio')),
-  );
-  const ipHash = Buffer.from(ipBytes).toString('hex').slice(0, 16);
+  const ipHash = await hashIp(ip);
   const payload = { name, email, message, receivedAt: new Date().toISOString(), ipHash };
 
   try {
@@ -49,7 +48,7 @@ export async function POST(req: NextRequest) {
       ex: 60 * 60 * 24 * 90,
     });
   } catch (kvErr) {
-    console.error('[contact] KV write failed', kvErr);
+    log.error('KV write failed', { requestId, msgId, err: kvErr });
     return Response.json({ error: 'storage unavailable — try again' }, { status: 502 });
   }
 
@@ -73,19 +72,12 @@ export async function POST(req: NextRequest) {
     });
     const { error } = await Promise.race([sendPromise, timeoutPromise]);
     if (error) {
-      console.error('[contact] resend error (message saved to KV as', msgId, ')', error);
+      log.error('Resend error', { requestId, msgId, err: error });
     }
   } catch (sendErr) {
     const reason = sendErr instanceof Error ? sendErr.message : String(sendErr);
-    // Distinguishes timeout ("resend timeout (10s)") from genuine SDK failures
-    // in Vercel runtime logs without losing the original error object.
-    console.error(
-      '[contact] resend unavailable (message saved to KV as',
-      msgId,
-      ') reason:',
-      reason,
-      sendErr,
-    );
+    // Distinguishes timeout ("resend timeout (10s)") from genuine SDK failures.
+    log.error('Resend unavailable', { requestId, msgId, reason, err: sendErr });
   } finally {
     // Always clear the timer so the serverless invocation can exit immediately
     // after a fast Resend success rather than staying alive for the full 10s.

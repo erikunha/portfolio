@@ -5,6 +5,7 @@
 // navigation bars, Dock, and ToTopButton. Everything else (sections) is passed
 // as RSC children and rendered server-side — their code never ships to the client.
 
+import '@/lib/error-bridge';
 import dynamic from 'next/dynamic';
 import { type ReactNode, useEffect } from 'react';
 import { useBreakpoint } from '@/lib/use-breakpoint';

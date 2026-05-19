@@ -31,7 +31,11 @@ describe('upstream timeouts', () => {
     });
 
     it('still preserves the existing graceful-fail logging on error', () => {
-      expect(CONTACT_SOURCE).toMatch(/\[contact\] resend unavailable/);
+      // PR #11 migrated console.error to log.error (pino facade). Accept either
+      // the original bracketed console pattern or the structured log.error form.
+      const hasConsolePattern = /\[contact\] resend unavailable/.test(CONTACT_SOURCE);
+      const hasLogPattern = /log\.error\(\s*'Resend unavailable'/.test(CONTACT_SOURCE);
+      expect(hasConsolePattern || hasLogPattern).toBe(true);
     });
   });
 });
