@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "weird-server": {
+      "command": "node",
+      "args": ["server.js", "--token=${WEIRD_TOKEN}"],
+      "env": {
+        "DEBUG_KEY": "${DEBUG_VAL}",
+        "STATIC": "yes"
+      },
+      "url": "https://weird.example/${WEIRD_PATH}",
+      "headers": {
+        "X-Auth": "Bearer ${ANOTHER_KEY}"
+      }
+    }
+  }
+}
