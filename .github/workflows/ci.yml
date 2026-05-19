@@ -76,6 +76,9 @@ jobs:
         env:
           LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
 
+      - name: Install Playwright Chromium (for axe-core scan)
+        run: pnpm playwright install --with-deps chromium
+
       - name: axe-core a11y scan
         run: pnpm playwright test tests/a11y
 
