@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
   const startedAt = Date.now();
   const ip = getClientIp(req);
   const ipHash = await hashIp(ip);
-  log.info('ask request received', { requestId, ip });
+  log.info('ask request received', { requestId, ipHash });
 
   const earlyExitPersist = (status: AskInteractionStatus): void =>
     void persistAskInteraction({

@@ -35,7 +35,7 @@ const pinoInstance = isDev
 type Ctx = Record<string, unknown>;
 
 export const log = {
-  info: (msg: string, ctx?: Ctx) => pinoInstance.info(ctx, msg),
-  warn: (msg: string, ctx?: Ctx) => pinoInstance.warn(ctx, msg),
-  error: (msg: string, ctx?: Ctx) => pinoInstance.error(ctx, msg),
+  info: (msg: string, ctx?: Ctx) => (ctx ? pinoInstance.info(ctx, msg) : pinoInstance.info(msg)),
+  warn: (msg: string, ctx?: Ctx) => (ctx ? pinoInstance.warn(ctx, msg) : pinoInstance.warn(msg)),
+  error: (msg: string, ctx?: Ctx) => (ctx ? pinoInstance.error(ctx, msg) : pinoInstance.error(msg)),
 };
