@@ -39,7 +39,9 @@ test.describe('contact form', () => {
     await expect(successEl).toContainText('EXECUTE_SEND :: SUCCESS');
   });
 
-  test('2 — validation: blank submit shows field-level error (browser native)', async ({ page }) => {
+  test('2 — validation: blank submit shows field-level error (browser native)', async ({
+    page,
+  }) => {
     // Click submit without filling any fields. The browser prevents submission
     // via HTML5 validation (required attributes). No fetch call reaches /api/contact.
     await page.locator('form.contact button[type="submit"]').click();
@@ -50,9 +52,7 @@ test.describe('contact form', () => {
     const nameInput = page.locator('form.contact input[autocomplete="name"]');
     await expect(nameInput).toHaveAttribute('required');
     // Playwright exposes :invalid pseudo-class via evaluate.
-    const isInvalid = await nameInput.evaluate(
-      (el) => !((el as HTMLInputElement).validity.valid),
-    );
+    const isInvalid = await nameInput.evaluate((el) => !(el as HTMLInputElement).validity.valid);
     expect(isInvalid).toBe(true);
   });
 });

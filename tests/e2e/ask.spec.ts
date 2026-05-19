@@ -17,9 +17,13 @@ test.describe('ask / interactive shell', () => {
     await page.waitForSelector('.shell__form', { state: 'visible' });
   });
 
-  test('1 — happy path: type a question → canned answer renders in shell feed', async ({ page }) => {
+  test('1 — happy path: type a question → canned answer renders in shell feed', async ({
+    page,
+  }) => {
     // Type a question into the shell input.
-    const shellInput = page.locator('.shell__form input[type="text"], .shell__form input:not([type])').first();
+    const shellInput = page
+      .locator('.shell__form input[type="text"], .shell__form input:not([type])')
+      .first();
     await shellInput.fill('Who is Erik?');
     await shellInput.press('Enter');
 
@@ -29,7 +33,9 @@ test.describe('ask / interactive shell', () => {
     await expect(feed).toContainText('Erik is a Senior Full-Stack Engineer', { timeout: 10_000 });
   });
 
-  test('7 — X-Request-Id header is present and non-empty in /api/ask response', async ({ page }) => {
+  test('7 — X-Request-Id header is present and non-empty in /api/ask response', async ({
+    page,
+  }) => {
     // Intercept the /api/ask response to capture headers.
     let requestId: string | null = null;
 
@@ -39,12 +45,16 @@ test.describe('ask / interactive shell', () => {
       }
     });
 
-    const shellInput = page.locator('.shell__form input[type="text"], .shell__form input:not([type])').first();
+    const shellInput = page
+      .locator('.shell__form input[type="text"], .shell__form input:not([type])')
+      .first();
     await shellInput.fill('Test question for header check');
     await shellInput.press('Enter');
 
     // Wait for the response to arrive.
-    await page.waitForFunction(() => document.querySelector('.shell__line--output') !== null, { timeout: 10_000 });
+    await page.waitForFunction(() => document.querySelector('.shell__line--output') !== null, {
+      timeout: 10_000,
+    });
 
     expect(requestId).not.toBeNull();
     expect(requestId).not.toBe('');

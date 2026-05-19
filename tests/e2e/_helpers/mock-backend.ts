@@ -8,7 +8,13 @@
 import type { Page } from '@playwright/test';
 
 export type MockState = {
-  ask?: 'happy' | 'kill-switch' | 'rate-limit' | 'budget-exhausted' | 'stream-error' | 'pre-stream-timeout';
+  ask?:
+    | 'happy'
+    | 'kill-switch'
+    | 'rate-limit'
+    | 'budget-exhausted'
+    | 'stream-error'
+    | 'pre-stream-timeout';
   contact?: 'happy' | 'validation-error' | 'rate-limit' | 'server-error' | 'honeypot';
   log?: 'accept' | 'rate-limit' | 'storage-unavailable';
   forget?: 'happy' | 'not-found';
@@ -27,7 +33,9 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 503,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'temporarily unavailable — email erikhenriquealvescunha@gmail.com directly' }),
+        body: JSON.stringify({
+          error: 'temporarily unavailable — email erikhenriquealvescunha@gmail.com directly',
+        }),
       });
       return;
     }
@@ -45,7 +53,9 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 503,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'monthly budget exhausted — email erikhenriquealvescunha@gmail.com directly' }),
+        body: JSON.stringify({
+          error: 'monthly budget exhausted — email erikhenriquealvescunha@gmail.com directly',
+        }),
       });
       return;
     }
