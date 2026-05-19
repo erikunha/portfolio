@@ -48,8 +48,8 @@
         "render-blocking-insight": "off",
 
         "label-content-name-mismatch": "error",
-        "unused-javascript": "warn",
-        "dom-size": "warn",
+        "unused-javascript": ["warn", { "maxNumericValue": 60 }],
+        "dom-size": ["warn", { "maxNumericValue": 1500 }],
         "uses-long-cache-ttl": "warn",
         "errors-in-console": "warn"
       }
