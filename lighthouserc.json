@@ -47,7 +47,7 @@
         "network-dependency-tree-insight": "off",
         "render-blocking-insight": "off",
 
-        "label-content-name-mismatch": "warn",
+        "label-content-name-mismatch": "error",
         "unused-javascript": "warn",
         "dom-size": "warn",
         "uses-long-cache-ttl": "warn",
