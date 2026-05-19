@@ -103,7 +103,7 @@ jobs:
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
-          IP_HASH_SALT: ci-build-salt
+          DEPLOY_SALT: ci-build-salt
       - run: pnpm playwright install --with-deps chromium
       - name: Check if e2e tests exist
         id: check-e2e
