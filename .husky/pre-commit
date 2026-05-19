@@ -1,1 +1,12 @@
 pnpm check && pnpm typecheck && pnpm validate-content && pnpm test
+
+# Copilot port — regenerate when source changes (spec §9.1)
+if git diff --cached --name-only | grep -qE '^(CLAUDE\.md|scripts/copilot-port\.config\.ts)$'; then
+  echo "[pre-commit] Copilot source changed — regenerating .github/* and .vscode/mcp.json"
+  pnpm sync:copilot
+  git add .github/copilot-instructions.md \
+          .github/prompts \
+          .github/chatmodes \
+          .github/instructions \
+          .vscode/mcp.json
+fi
