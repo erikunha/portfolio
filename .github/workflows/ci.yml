@@ -129,7 +129,7 @@ jobs:
       - if: steps.check-e2e.outputs.exists == 'true'
         run: npx wait-on http://localhost:3000 --timeout 30000
       - if: steps.check-e2e.outputs.exists == 'true'
-        run: pnpm playwright test tests/e2e
+        run: pnpm playwright test tests/e2e --project=chromium --ignore=tests/e2e/visual.spec.ts
 
   e2e-full:
     runs-on: ubuntu-latest
@@ -181,4 +181,4 @@ jobs:
         if: failure()
         with:
           name: playwright-report-${{ matrix.project }}
-          path: playwright-report/
+          path: test-results/

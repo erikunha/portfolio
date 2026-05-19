@@ -25,7 +25,9 @@ export default defineConfig({
     // smoke specs, tripling CI minutes and likely failing on WebKit.
     {
       name: 'chromium-mobile',
-      use: { ...devices['iPhone SE'] },
+      // Override defaultBrowserType: devices['iPhone SE'] sets it to 'webkit',
+      // but this project intentionally tests Chromium with a mobile viewport.
+      use: { ...devices['iPhone SE'], defaultBrowserType: 'chromium' },
       testMatch: /tests\/e2e\/(contact|ask|visual|cross-cutting)\.spec\.ts$/,
     },
     {
