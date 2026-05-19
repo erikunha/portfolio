@@ -26,3 +26,33 @@ export function volatileMasks(page: Page): Locator[] {
     page.locator('[data-volatile]'),
   ];
 }
+
+/**
+ * Strip volatile DOM chrome BEFORE a snapshot. Distinct from volatileMasks():
+ * that returns locators for Playwright's `mask:` parameter (paints pink in
+ * captured pixels); this mutates the DOM directly.
+ *
+ * Why DOM mutation is required (not just masking): the fixed-position CRT
+ * overlays composite OVER a locator's clip box at the viewport's current
+ * scrollY. Playwright's Locator.screenshot() calls scrollIntoViewIfNeeded()
+ * before each capture; when the target exceeds viewport height (e.g.
+ * chromium-mobile iPhone SE 320x568 -> hero 671px), the page lands at a
+ * different scrollY per call and the 4px-stride scanline composites at a
+ * different phase. Masking the overlay region inside the locator clip can't
+ * fix this because the overlay renders at a DIFFERENT viewport position
+ * than the masked element. The MatrixRain canvas similarly resizes during
+ * post-hydration reflow producing huge masked-region bbox shifts.
+ *
+ * All stripped elements are decorative + aria-hidden + outside the
+ * assertion surface, so removal does not change asserted behavior.
+ */
+export async function stripVolatileChrome(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    for (const c of document.querySelectorAll('canvas[aria-hidden]')) c.remove();
+    for (const el of document.querySelectorAll(
+      '.crt-vignette,.crt-overlay,.crt-mask,.crt-noise,.crt-flicker,.crt-scan-beam',
+    )) {
+      (el as HTMLElement).style.display = 'none';
+    }
+  });
+}

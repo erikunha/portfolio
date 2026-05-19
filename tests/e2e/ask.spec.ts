@@ -2,7 +2,8 @@
 //
 // Phase 1 anchor tests (1, 7): happy path + X-Request-Id header.
 // Phase 2 expansion (2-6): kill-switch, rate-limit, budget-exhausted, stream-error,
-//                          pre-stream-timeout. Test 8 (privacy notice) ships in Phase 3.
+//                          pre-stream-timeout.
+// Phase 3 expansion (8): privacy notice + mailto link.
 
 import { expect, type Locator, type Page, test } from '@playwright/test';
 import { installMockBackend, type MockState } from './_helpers/mock-backend';
@@ -132,5 +133,35 @@ test.describe('ask / interactive shell', () => {
     // non-empty) makes any future drift in mock-backend.ts an intentional,
     // reviewable change instead of silently passing through.
     expect(requestId).toBe('test-request-id-abc123');
+  });
+
+  test('8 — privacy notice is visible with a working mailto: link to the canonical email', async ({
+    page,
+  }) => {
+    // The privacy notice was added in PR #11 directly below the /api/ask form
+    // inside InteractiveShell. It tells the visitor that queries are stored 90
+    // days and points to the canonical contact email for deletion requests.
+    // Neither the form nor /api/ask need to be exercised — we only assert that
+    // (a) the notice is rendered in the DOM after the shell hydrates, and
+    // (b) the mailto target matches the single source of truth used by
+    // content/social.ts, /api/contact, /api/ask, and the manpage section.
+    //
+    // No ask state is configured: if the test accidentally fires /api/ask the
+    // mock-backend default-throw branch will surface it as a real failure.
+    await setupAskPage(page, { log: 'accept' });
+
+    const notice = page.locator('.shell__privacy-notice');
+    await expect(notice).toBeVisible();
+    await expect(notice).toContainText('Queries are stored 90 days');
+    await expect(notice).toContainText('To request deletion');
+
+    // The mailto: link is the only <a> inside the notice. Pinning the exact
+    // address (vs. asserting "starts with mailto:") makes a drift between the
+    // notice copy and the canonical email a reviewable change instead of
+    // silently passing through.
+    const mailLink = notice.locator('a[href^="mailto:"]');
+    await expect(mailLink).toBeVisible();
+    await expect(mailLink).toHaveAttribute('href', 'mailto:erikhenriquealvescunha@gmail.com');
+    await expect(mailLink).toHaveText('erikhenriquealvescunha@gmail.com');
   });
 });
