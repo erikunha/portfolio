@@ -2,13 +2,14 @@ import { credentials } from '@/content/credentials';
 import { IconCredentials } from '../Icons';
 import { Module } from '../responsive/Module';
 
-export function CredentialsSection() {
+export function CredentialsSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module
       id="sec-credentials"
       header="CAT ~/.CREDENTIALS"
       icon={<IconCredentials />}
       defaultOpen={false}
+      defer={defer}
     >
       <div className="visa">
         <div className="cmd-line">

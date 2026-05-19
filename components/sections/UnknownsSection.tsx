@@ -2,9 +2,15 @@ import { unknowns } from '@/content/unknowns';
 import { IconUnknowns } from '../Icons';
 import { Module } from '../responsive/Module';
 
-export function UnknownsSection() {
+export function UnknownsSection({ defer }: { defer?: boolean } = {}) {
   return (
-    <Module id="sec-unknowns" header="CAT ~/.UNKNOWNS" icon={<IconUnknowns />} defaultOpen={false}>
+    <Module
+      id="sec-unknowns"
+      header="CAT ~/.UNKNOWNS"
+      icon={<IconUnknowns />}
+      defaultOpen={false}
+      defer={defer}
+    >
       <div className="unknowns">
         <pre>
           <span className="uk-cmd">

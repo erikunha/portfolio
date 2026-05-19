@@ -2,9 +2,15 @@ import { guitarRig } from '@/content/guitar-rig';
 import { IconGuitar } from '../Icons';
 import { Module } from '../responsive/Module';
 
-export function GuitarSection() {
+export function GuitarSection({ defer }: { defer?: boolean } = {}) {
   return (
-    <Module id="sec-guitar" header="CAT ~/.GUITAR_RIG" icon={<IconGuitar />} defaultOpen={false}>
+    <Module
+      id="sec-guitar"
+      header="CAT ~/.GUITAR_RIG"
+      icon={<IconGuitar />}
+      defaultOpen={false}
+      defer={defer}
+    >
       <div className="visa">
         <pre className="guitar-desktop">
           <span className="cmd-line">

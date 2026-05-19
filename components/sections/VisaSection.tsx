@@ -2,7 +2,7 @@ import { visaRows } from '@/content/visa';
 import { IconVisa } from '../Icons';
 import { Module } from '../responsive/Module';
 
-export function VisaSection() {
+export function VisaSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module
       id="sec-visa"
@@ -10,6 +10,7 @@ export function VisaSection() {
       mobileHeader="CAT ~/.VISA"
       icon={<IconVisa />}
       defaultOpen={false}
+      defer={defer}
     >
       <div className="visa">
         <pre className="visa-desktop-pre">
