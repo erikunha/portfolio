@@ -6,6 +6,8 @@
 
 import { Component, type ReactNode } from 'react';
 
+import { buildLogPayload } from '@/lib/error-bridge';
+
 interface Props {
   children: ReactNode;
   /** Fallback shown when an error is caught. Defaults to nothing (silent). */
@@ -24,7 +26,25 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, info: { componentStack?: string | null }) {
+    // Retain console.error for dev visibility (this client-side console.* is
+    // intentionally not migrated in Phase 2b per spec §6).
     console.error('[ErrorBoundary] client island crashed:', error, info.componentStack);
+    // Also POST to /api/log so it lands in Upstash for retrospective triage.
+    if (typeof window !== 'undefined') {
+      void fetch('/api/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(
+          buildLogPayload(
+            `[ErrorBoundary] ${error.message}`,
+            error.stack ?? info.componentStack ?? undefined,
+          ),
+        ),
+        keepalive: true,
+      }).catch(() => {
+        // Intentional no-op.
+      });
+    }
   }
 
   override render() {

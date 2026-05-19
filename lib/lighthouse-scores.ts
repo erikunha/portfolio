@@ -1,3 +1,4 @@
+import { log } from '@/lib/log';
 import { getRedis } from './rate-limit';
 
 export type LighthouseScores = {
@@ -70,14 +71,14 @@ export async function getScores(): Promise<LighthouseScores> {
       fetchedAt: new Date().toISOString(),
     };
   } catch (err) {
-    console.error('[lighthouse] PSI fetch failed:', err);
+    log.error('PSI fetch failed', { err });
     return LIGHTHOUSE_FALLBACK;
   }
 
   // 3. Write to Redis — fire-and-forget; don't let cache failure block response.
   getRedis()
     .set(CACHE_KEY, scores, { ex: LIGHTHOUSE_TTL_S })
-    .catch((err) => console.error('[lighthouse] Redis set failed:', err));
+    .catch((err) => log.error('Redis cache set failed', { err }));
 
   return scores;
 }

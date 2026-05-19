@@ -33,6 +33,24 @@ vi.mock('@/lib/rate-limit', () => ({
   incrementBudget: vi.fn(async () => undefined),
 }));
 
+// --- Mock PR #11 observability deps so server-only guard doesn't block ---
+vi.mock('@/lib/ask-log', () => ({
+  persistAskInteraction: vi.fn(async () => undefined),
+}));
+
+vi.mock('@/lib/ip-hash', () => ({
+  hashIp: vi.fn(async () => 'hashed-ip-test'),
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
 // Helper to read a streamed Response to a string.
 async function readBody(res: Response): Promise<string> {
   const reader = res.body?.getReader();

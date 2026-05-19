@@ -225,6 +225,31 @@
   cursor: default;
 }
 
+.shell__privacy-notice {
+  margin: 0;
+  padding: 0.5rem 16px;
+  border-top: 1px solid color-mix(in oklab, var(--signal) 14%, transparent);
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: color-mix(in oklab, var(--fg) 55%, transparent);
+}
+
+.shell__privacy-notice code {
+  font-family: inherit;
+  color: var(--signal);
+  opacity: 0.8;
+}
+
+.shell__privacy-notice a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.shell__privacy-notice a:hover {
+  color: var(--signal);
+}
+
 @media (max-width: 768px) {
   .shell {
     margin-top: 0;
