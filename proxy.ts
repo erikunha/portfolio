@@ -1,30 +1,30 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-// CSP nonce hybrid posture (PR 3 of audit roadmap, see
+// CSP nonce posture (PR 3 of audit roadmap, see
 // docs/audit/2026-05-19-principal-audit.md Theme 2 + Debate 1):
 //
-// 1) The nonce slot is retained in the response CSP header even though
-//    NO code currently renders `<script nonce={...}>`. The token matches
-//    zero scripts today — `'self'` does the actual matching for Next's
-//    static chunks and `/init.js`. Keeping the slot preserves optionality:
-//    a future analytics or embed PR that needs to attribute an inline
-//    script can render `nonce={nonce}` on the script tag without
-//    re-implementing the entropy primitive.
+// 1) The `x-nonce` request-header rewrite is REQUIRED, not dead code.
+//    Next.js's framework runtime reads `headers().get('x-nonce')` during
+//    SSR and attributes the nonce to its auto-injected inline scripts
+//    (RSC flight payloads, hydration data). Without the rewrite, Next
+//    emits ~40+ inline `<script>` tags WITHOUT the nonce, and Chrome
+//    blocks every one of them — fatal to hydration. Verified empirically
+//    via Chrome Issues panel (44 violations on every page load when the
+//    rewrite was absent). The audit's initial diagnosis greppped the
+//    repo for `x-nonce` consumers and found none in user code, missing
+//    the transitive Next-internal consumer. Drift-protected by
+//    `__tests__/proxy-csp.test.ts` (asserts request headers carry the
+//    same nonce as the response CSP).
 //
-// 2) The previously-existing `x-nonce` request-header rewrite has been
-//    deleted. No code reads `headers().get('x-nonce')` anywhere in the
-//    repo (audit verified). The rewrite cost a `Headers` clone per
-//    request to produce a value nothing consumed.
-//
-// 3) Entropy is fixed: 16 random bytes → 128 bits → 24-char base64,
+// 2) Entropy: 16 random bytes → 128 bits → 24-char base64,
 //    spec-conformant for the CSP nonce. The prior implementation
 //    base64-encoded the 36-character UUID *string* (including dashes),
 //    which produced a 48-char nonce backed by only ~122 bits of
 //    entropy drawn from the limited UUID alphabet — under the CSP
 //    "≥ 128 bits" recommendation.
 //
-// 4) Static parts of the CSP are hoisted to module scope. Only the
+// 3) Static parts of the CSP are hoisted to module scope. Only the
 //    nonce-bearing `script-src` directive is rebuilt per request.
 
 const STATIC_CSP_DIRECTIVES: readonly string[] = [
@@ -62,8 +62,9 @@ function mintNonce(): string {
 
 function buildScriptSrc(nonce: string): string {
   // - 'self' covers same-origin static scripts (Next's chunks, /init.js).
-  // - 'nonce-...' is retained for future inline-script use (see header
-  //   comment); matches zero scripts today.
+  // - 'nonce-...' covers Next's auto-injected inline RSC flight + hydration
+  //   scripts. Next reads `headers().get('x-nonce')` during SSR and
+  //   attributes the nonce to every `<script>` it emits.
   // - 'unsafe-eval' is dev-only: Next's HMR runtime evaluates strings.
   // - https://va.vercel-scripts.com (script-src): dev only. The dev-mode
   //   Vercel Analytics SDK loads its script from here. Production uses
@@ -75,13 +76,19 @@ function buildScriptSrc(nonce: string): string {
   return base;
 }
 
-// `_request` is intentional: the Next runtime calls proxy(request) but the
-// CSP does not depend on the request, so the parameter is unused. Renaming
-// to `_request` documents the intent and silences `noUnusedVariables`.
-export function proxy(_request: NextRequest) {
+export function proxy(request: NextRequest) {
   const nonce = mintNonce();
   const csp = `${buildScriptSrc(nonce)}; ${STATIC_CSP}`;
-  const response = NextResponse.next();
+
+  // Set `x-nonce` on the upstream request headers so Next's SSR runtime
+  // can read it via `headers().get('x-nonce')` and attribute the same
+  // nonce to every inline `<script>` it emits. See the file-level comment
+  // §1 for why this is required (Next-internal consumer, missed by the
+  // audit's source-grep).
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-nonce', nonce);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set('Content-Security-Policy', csp);
   return response;
 }

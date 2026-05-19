@@ -1,6 +1,6 @@
 // __tests__/proxy-csp.test.ts
-// Behavioral test for the CSP nonce hybrid posture shipped in PR 3 of the
-// audit roadmap. See docs/audit/2026-05-19-principal-audit.md Theme 2.
+// Behavioral test for the CSP nonce posture shipped in PR 3 of the audit
+// roadmap. See docs/audit/2026-05-19-principal-audit.md Theme 2.
 //
 // Verifies:
 //   1. CSP header is set on every response (matcher already excludes assets).
@@ -9,8 +9,12 @@
 //   3. Every static directive is present.
 //   4. Production CSP has no 'unsafe-eval' and no va.vercel-scripts.com in
 //      script-src; dev-mode CSP adds both.
-//   5. The proxy does NOT set an x-nonce request header — the previous
-//      Headers-clone work is gone.
+//   5. The proxy forwards `x-nonce` on the upstream request headers AND
+//      its value matches the nonce in the response CSP. Next reads
+//      `headers().get('x-nonce')` during SSR to attribute the nonce to
+//      its auto-injected inline scripts (RSC flight payloads). Without
+//      this, Chrome blocks every Next-emitted inline script as a CSP
+//      violation — see proxy.ts file-level comment §1.
 
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -92,11 +96,38 @@ describe('proxy CSP — hybrid nonce posture (PR 3)', () => {
     expect(scriptSrcLine).toContain('https://va.vercel-scripts.com');
   });
 
-  it('does NOT set the legacy x-nonce request header (audit Theme 2 removal)', async () => {
+  it('forwards x-nonce on the upstream request headers with the same value as the response CSP', async () => {
     const { proxy } = await import('@/proxy');
     const res = proxy(makeRequest());
-    // x-nonce was a request-header rewrite on the upstream request — no
-    // public response header should carry it either.
+
+    // Next encodes the upstream request-header rewrite into two pieces on
+    // the NextResponse:
+    //   - `x-middleware-override-headers`: comma-separated list of header
+    //     names that the middleware overrode on the upstream request.
+    //   - `x-middleware-request-<header-name>`: the new value for each
+    //     header in that list (lowercased).
+    // This is the public NextResponse contract for middleware header
+    // rewrites. If Next changes it, this test breaks loudly — which is
+    // what we want.
+    const overrides = (res.headers.get('x-middleware-override-headers') ?? '').split(',');
+    expect(overrides, 'middleware must declare x-nonce in its override list').toContain('x-nonce');
+
+    const forwardedNonce = res.headers.get('x-middleware-request-x-nonce');
+    expect(forwardedNonce, 'x-nonce must be set on the upstream request').toBeTruthy();
+
+    const cspNonce =
+      res.headers.get('content-security-policy')?.match(/'nonce-([A-Za-z0-9+/=]+)'/)?.[1] ?? '';
+    expect(cspNonce).toBeTruthy();
+
+    // The CSP's script-src nonce and the upstream-forwarded x-nonce MUST
+    // be the same value, otherwise Next's inline scripts won't match the
+    // CSP and Chrome will block them all.
+    expect(forwardedNonce).toBe(cspNonce);
+  });
+
+  it('does not leak x-nonce as a response header (only on the upstream request)', async () => {
+    const { proxy } = await import('@/proxy');
+    const res = proxy(makeRequest());
     expect(res.headers.get('x-nonce')).toBeNull();
   });
 });
