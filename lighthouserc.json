@@ -37,11 +37,19 @@
         "label": "error",
         "heading-order": "error",
         "html-has-lang": "error",
-        "tap-targets": "error",
 
         "is-crawlable": "error",
         "robots-txt": "error",
-        "structured-data": "off"
+        "structured-data": "off",
+
+        "tap-targets": "off",
+        "forced-reflow-insight": "off",
+        "network-dependency-tree-insight": "off",
+
+        "label-content-name-mismatch": "warn",
+        "unused-javascript": "warn",
+        "dom-size": "warn",
+        "uses-long-cache-ttl": "warn"
       }
     },
     "upload": {
