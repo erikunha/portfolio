@@ -24,6 +24,12 @@ test.describe('visual regression', () => {
     const heroSection = mockedPage.locator('section.hero').filter({ visible: true });
     await heroSection.waitFor({ state: 'visible' });
     await heroSection.scrollIntoViewIfNeeded();
+    // Wait for self-hosted fonts (next/font) to fully load. Playwright's own
+    // "fonts loaded" wait happens inside toHaveScreenshot but races font-swap
+    // re-flow: the bio panel wraps onto a different number of lines once the
+    // real JetBrains Mono / Geist Black metrics replace the fallback's, which
+    // breaks the two-consecutive-stable-screenshots check on chromium-mobile.
+    await mockedPage.evaluate(() => document.fonts.ready);
     await snapshotLocator(mockedPage, heroSection, 'hero-above-fold.png');
   });
 
@@ -32,6 +38,7 @@ test.describe('visual regression', () => {
     const contactSection = mockedPage.locator('#sec-contact');
     await contactSection.scrollIntoViewIfNeeded();
     await mockedPage.waitForSelector('form.contact', { state: 'visible' });
+    await mockedPage.evaluate(() => document.fonts.ready);
     await snapshotLocator(mockedPage, contactSection, 'contact-section.png');
   });
 });
