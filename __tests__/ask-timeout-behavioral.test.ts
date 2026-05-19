@@ -100,3 +100,63 @@ describe('/api/ask behavioral — pre-stream timeout handling', () => {
     expect(body).toContain('timed out');
   });
 });
+
+describe('/api/ask behavioral — X-Request-Id response header', () => {
+  // UUID v4 shape — what crypto.randomUUID() produces. Tightened from the
+  // catch-all hex regex in the e2e mock so a regression that returns 'abc' or
+  // a fixed value would fail here.
+  const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  beforeEach(() => {
+    process.env.ASK_ENABLED = 'true';
+    vi.resetModules();
+  });
+
+  it('returns X-Request-Id on the streaming success path', async () => {
+    // Mock the SDK to return a minimal valid async iterable so the route
+    // reaches the success ReadableStream branch (where the headers live).
+    mockMessagesCreate.mockResolvedValueOnce({
+      async *[Symbol.asyncIterator]() {
+        yield {
+          type: 'message_start',
+          message: { usage: { input_tokens: 10 } },
+        };
+        yield {
+          type: 'content_block_delta',
+          delta: { type: 'text_delta', text: 'hello' },
+        };
+        yield {
+          type: 'message_delta',
+          usage: { output_tokens: 5 },
+        };
+      },
+    });
+
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequest('Who is Erik?'));
+
+    expect(res.status).toBe(200);
+    const requestId = res.headers.get('x-request-id');
+    expect(requestId).not.toBeNull();
+    expect(requestId).toMatch(UUID_V4);
+
+    // Drain the body so the persistAskInteraction promise in `finally` can
+    // settle. Skipping this leaks a microtask but doesn't fail the assertion.
+    await readBody(res);
+  });
+
+  it('returns X-Request-Id on the pre-stream error path', async () => {
+    // Same surface as the timeout test above, but the assertion is on the
+    // header — this is the branch that returns from a `catch` and not the
+    // success branch.
+    mockMessagesCreate.mockRejectedValueOnce(new Error('upstream 503'));
+
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequest('Who is Erik?'));
+
+    expect(res.status).toBe(200);
+    const requestId = res.headers.get('x-request-id');
+    expect(requestId).not.toBeNull();
+    expect(requestId).toMatch(UUID_V4);
+  });
+});

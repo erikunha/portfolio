@@ -4,6 +4,14 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      update_visual_baselines:
+        description: 'Regenerate Linux visual baselines and upload them as an artifact (download + commit to refresh baselines).'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -174,9 +182,18 @@ jobs:
       - if: steps.check-full.outputs.exists == 'true'
         name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 30000
-      - if: steps.check-full.outputs.exists == 'true'
+      - if: steps.check-full.outputs.exists == 'true' && inputs.update_visual_baselines != 'true'
         name: Run e2e-full tests
         run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/visual.spec.ts
+      - if: steps.check-full.outputs.exists == 'true' && inputs.update_visual_baselines == 'true'
+        name: Regenerate visual baselines (workflow_dispatch only)
+        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts --update-snapshots
+      - if: inputs.update_visual_baselines == 'true'
+        name: Upload regenerated visual baselines
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines-${{ matrix.project }}
+          path: tests/e2e/visual.spec.ts-snapshots/
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

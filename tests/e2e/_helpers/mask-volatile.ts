@@ -4,11 +4,13 @@
 //   - CRT scan-beam, flicker, and noise overlays
 //   - Shell loading indicator and text cursor
 //   - Boot animation lines and cursor
-//   - Timestamp + "now" displays
 //   - Matrix rain canvas/overlay
 //
 // Pass the returned array as `mask:` to toHaveScreenshot() or to snapshot().
-// Adding a new volatile region: append a locator below; no other file changes needed.
+// Adding a new volatile region: append a locator below using a specific class
+// selector — never substring matchers like [class*="now"] (they overmatched
+// .unknowns previously). Use data-volatile="<reason>" for new ad-hoc regions
+// without coupling tests to incidental class names.
 
 import type { Locator, Page } from '@playwright/test';
 
@@ -17,8 +19,10 @@ export function volatileMasks(page: Page): Locator[] {
     page.locator('.crt-scan-beam, .crt-flicker, .crt-noise'),
     page.locator('.shell__line--loading, .shell__cursor'),
     page.locator('.boot__line, .boot__cursor'),
-    page.locator('[class*="timestamp"], [class*="now"]'),
     // MatrixRain renders <canvas aria-hidden> with no class name; use the attribute.
     page.locator('canvas[aria-hidden]'),
+    // Escape-hatch hook for ad-hoc volatile regions added later (e.g. live
+    // counters): mark the element with data-volatile="<reason>" in source.
+    page.locator('[data-volatile]'),
   ];
 }

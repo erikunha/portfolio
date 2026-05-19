@@ -29,8 +29,12 @@ export const test = base.extend<Fixtures>({
       forget: 'happy',
     });
     await page.goto('/');
-    // Wait for the critical above-the-fold content: the hero h1 and the shell.
+    // Wait for the critical above-the-fold content: the hero h1 (RSC, always
+    // present once HTML lands) and the shell input (the InteractiveShell
+    // island is dynamic({ ssr: false }), so its presence proves the client
+    // bundle has hydrated and event handlers are attached).
     await page.waitForSelector('h1.hero__name', { state: 'attached' });
+    await page.waitForSelector('.shell .shell__input', { state: 'visible' });
     await use(page);
   },
 });

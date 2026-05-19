@@ -2,8 +2,15 @@
 //
 // Installs Playwright page.route() interceptors for all four /api/* routes.
 // Call installMockBackend(page, state) before page.goto('/') in any test that
-// exercises a form or API call. Un-configured endpoints throw, so silent
-// pass-through never masks a missing mock.
+// exercises a form or API call.
+//
+// Throwing vs fail-silent (intentional asymmetry):
+//   - /api/ask + /api/contact throw when un-configured. These are user-facing
+//     critical paths — a missing mock indicates a real test bug, never a no-op.
+//   - /api/log + /api/log/forget default to success when un-configured. These
+//     are fire-and-forget observability endpoints designed to fail silently in
+//     production (per lib/log.ts); matching that posture in the mock prevents
+//     every UI test from having to wire `log: 'accept'` explicitly.
 
 import type { Page } from '@playwright/test';
 
