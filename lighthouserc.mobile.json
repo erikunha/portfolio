@@ -1,15 +1,20 @@
 {
   "ci": {
     "collect": {
+      "startServerCommand": "pnpm start",
+      "startServerReadyPattern": "ready started server",
       "url": ["http://localhost:3000"],
       "numberOfRuns": 3,
       "settings": {
-        "preset": "desktop",
+        "emulatedFormFactor": "mobile",
         "throttlingMethod": "simulate",
         "throttling": {
-          "rttMs": 40,
-          "throughputKbps": 10240,
-          "cpuSlowdownMultiplier": 1
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "cpuSlowdownMultiplier": 4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.56,
+          "uploadThroughputKbps": 675
         }
       }
     },
@@ -22,14 +27,14 @@
         "categories:seo": ["error", { "minScore": 1.0 }],
 
         "largest-contentful-paint": ["error", { "maxNumericValue": 1800 }],
-        "cumulative-layout-shift": ["warn", { "maxNumericValue": 0.05 }],
-        "total-blocking-time": ["error", { "maxNumericValue": 200 }],
-        "interactive": ["error", { "maxNumericValue": 2500 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05 }],
+        "total-blocking-time": ["error", { "maxNumericValue": 400 }],
+        "interactive": ["error", { "maxNumericValue": 3500 }],
 
         "uses-text-compression": "error",
         "uses-responsive-images": "error",
         "uses-rel-preconnect": "off",
-        "render-blocking-resources": "warn",
+        "render-blocking-resources": "error",
         "font-display": "error",
 
         "color-contrast": "error",
@@ -43,14 +48,10 @@
         "structured-data": "off",
 
         "tap-targets": "off",
-        "forced-reflow-insight": "off",
         "network-dependency-tree-insight": "off",
         "render-blocking-insight": "off",
-
-        "label-content-name-mismatch": "warn",
-        "unused-javascript": "warn",
-        "dom-size": "warn",
-        "uses-long-cache-ttl": "warn"
+        "unused-javascript": "off",
+        "dom-size": "off"
       }
     },
     "upload": {
