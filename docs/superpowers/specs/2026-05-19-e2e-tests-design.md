@@ -89,12 +89,28 @@ export default defineConfig({
     toHaveScreenshot: { maxDiffPixelRatio: 0.01 },
   },
   projects: [
-    // Existing smoke + a11y stays on chromium-desktop only
+    // Existing smoke + a11y stays on chromium-desktop only — no testMatch restriction,
+    // so observability-smoke.spec.ts and axe.spec.ts continue running here as before.
     { name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } } },
-    // New matrix projects (used by tests under tests/e2e/contact|ask|visual|cross-cutting)
-    { name: 'chromium-mobile', use: { ...devices['iPhone SE'] } },
-    { name: 'webkit-desktop',  use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 720 } } },
-    { name: 'webkit-mobile',   use: { ...devices['iPhone 14'] } },
+    // New matrix projects are scoped via testMatch so they only run the four new spec
+    // files. Without this, every pnpm playwright test run would fan out the existing
+    // a11y + observability smoke across all four projects — tripling CI minutes and
+    // likely breaking on WebKit (which has different a11y behaviour).
+    {
+      name: 'chromium-mobile',
+      use: { ...devices['iPhone SE'] },
+      testMatch: /tests\/e2e\/(contact|ask|visual|cross-cutting)\.spec\.ts$/,
+    },
+    {
+      name: 'webkit-desktop',
+      use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 720 } },
+      testMatch: /tests\/e2e\/(contact|ask|visual|cross-cutting)\.spec\.ts$/,
+    },
+    {
+      name: 'webkit-mobile',
+      use: { ...devices['iPhone 14'] },
+      testMatch: /tests\/e2e\/(contact|ask|visual|cross-cutting)\.spec\.ts$/,
+    },
   ],
 });
 ```
@@ -132,7 +148,10 @@ export function volatileMasks(page: Page): Locator[] {
     page.locator('.shell__feed [class*="loading"], .shell__cursor'),
     page.locator('.boot__line, .boot__cursor'),
     page.locator('[class*="timestamp"], [class*="now"]'),
-    page.locator('.matrix-rain'),
+    // MatrixRain renders a <canvas aria-hidden> with no class; it appears both as
+    // the full-page background (fixed, via AppShell) and inside the footer (.shutdown).
+    // The aria-hidden attribute is the stable selector — it does not match other canvases.
+    page.locator('canvas[aria-hidden]'),
   ];
 }
 ```
@@ -155,9 +174,9 @@ export async function snapshot(page: Page, name: string) {
 
 ## 6. Test surface
 
-22 tests × 4 projects (where applicable) = ~70-80 total runs.
+21 tests × 4 projects = **84 total runs** across the four new spec files (contact 4 + ask 8 + visual 5 + cross-cutting 4). The observability smoke (4 tests) and a11y scan (2 tests) run on chromium-desktop only via the existing `e2e` job — 6 additional runs — bringing the overall total to **90 runs**.
 
-### Contact form (5 tests)
+### Contact form (4 tests)
 
 | # | Behavior | Mock state |
 |---|---|---|
@@ -165,7 +184,8 @@ export async function snapshot(page: Page, name: string) {
 | 2 | Validation: blank submit shows inline errors + axe-checks the error state | `contact: 'validation-error'` |
 | 3 | Rate-limited: 429 response → user-visible "try again" + retry-after | `contact: 'rate-limit'` |
 | 4 | Server-error: 500 → graceful error UI, no crash | `contact: 'server-error'` |
-| 5 | Honeypot trip: hidden field filled → submit succeeds silently | `contact: 'honeypot'` |
+
+> Test 5 (honeypot trip) is dropped: `ContactForm`, `lib/contact-validation.ts`, and `app/api/contact/route.ts` have no honeypot field and no silent-success path. DECISIONS.md 2026-05-13 planned "honeypot + rate-limit" but the honeypot was never built. Testing non-existent behaviour would be a phantom test. See §16 for the open question on whether to implement it.
 
 ### Ask flow (8 tests)
 
@@ -289,9 +309,9 @@ Anchor PR makes `e2e-full` non-required (informational only). Once anchor stabil
 
 ### Expansion PRs (subsequent)
 
-- PR 2: contact tests 3-5 + ask tests 2-6
-- PR 3: ask test 8 + visual tests 3-5
-- PR 4: cross-cutting tests 1-4
+- PR 2: contact tests 3-4 + ask tests 2-6 (~7 tests)
+- PR 3: ask test 8 + visual tests 3-5 (~4 tests)
+- PR 4: cross-cutting tests 1-4 (4 tests)
 - PR 5: promote `e2e-full` to required
 
 Each expansion PR adds a small batch + reviews the resulting snapshot baseline changes inline.
@@ -300,12 +320,13 @@ Each expansion PR adds a small batch + reviews the resulting snapshot baseline c
 
 | Phase | Scope | PR |
 |---|---|---|
-| 1 | Anchor: helpers + 4 tests + workflow + config + CLAUDE.md fix | PR-anchor |
-| 2 | Contact + ask expansion (8 tests) | PR-2 |
-| 3 | Visual + cross-cutting expansion (7 tests) | PR-3 |
-| 4 | Promote `e2e-full` to required | PR-4 |
+| 1 | Anchor: helpers + 6 tests + workflow + config + CLAUDE.md fix | PR-anchor |
+| 2 | Contact + ask expansion (~7 tests: contact 3-4 + ask 2-6) | PR-2 |
+| 3 | ask + visual expansion (~4 tests: ask 8 + visual 3-5) | PR-3 |
+| 4 | Cross-cutting (4 tests) | PR-4 |
+| 5 | Promote `e2e-full` to required | PR-5 |
 
-Phase 1 ships independently. Phases 2-3 can be done in either order. Phase 4 only after the suite has been stable across 5+ CI runs.
+Phase 1 ships independently. Phases 2-3 can be done in either order. Phase 5 only after the suite has been stable across 5+ CI runs.
 
 ## 12. Success criteria
 
@@ -349,4 +370,5 @@ The observability smoke (`tests/e2e/observability-smoke.spec.ts`) and the a11y s
 
 - Should the anchor PR also fix the documented `label-content-name-mismatch` real a11y issue (currently warn in Lighthouse)? **Recommendation:** no — separate concern, separate PR.
 - Should WebKit mobile project use iPhone 14 (chosen) or a smaller viewport (iPhone SE 375×667 mirror of chromium-mobile)? **Recommendation:** iPhone 14 — exercises a different breakpoint cluster and is a realistic 2024+ device class.
-- Should the snapshot baseline update flow be wired into a `/snapshot-update` PR label that triggers a CI job to regenerate? **Recommendation:** defer to Phase 4; manual update is fine through Phase 3.
+- Should the snapshot baseline update flow be wired into a `/snapshot-update` PR label that triggers a CI job to regenerate? **Recommendation:** defer to Phase 5; manual update is fine through Phase 4.
+- **Honeypot field (known gap):** DECISIONS.md 2026-05-13 planned "honeypot + rate-limit" for the contact form but the honeypot was never built — `ContactForm`, `lib/contact-validation.ts`, and `app/api/contact/route.ts` have no hidden field and no silent-success branch. The planned contact test 5 (honeypot trip) has been removed from this spec because it tests non-existent behaviour. If the honeypot is added in a future PR, a contact test 5 should be added at the same time. That feature deserves its own spec entry before implementation.
