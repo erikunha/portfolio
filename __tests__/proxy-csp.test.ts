@@ -1,20 +1,20 @@
 // __tests__/proxy-csp.test.ts
-// Behavioral test for the CSP nonce posture shipped in PR 3 of the audit
-// roadmap. See docs/audit/2026-05-19-principal-audit.md Theme 2.
+// Behavioral test for the CSP posture shipped in PR 4 of the audit roadmap
+// (supersedes PR 3 hybrid nonce — see proxy.ts file-level comment for the
+// static-generation conflict that forced this revert).
 //
 // Verifies:
 //   1. CSP header is set on every response (matcher already excludes assets).
-//   2. The nonce is 16 random bytes base64-encoded (24 chars), not the
-//      36-char UUID string the prior implementation used.
+//   2. The CSP does NOT include a nonce-source on script-src — static page
+//      can't carry per-request nonce attributes, and a nonce-source would
+//      block every inline script (CSP-3 §6.7.2.4 ignores 'unsafe-inline'
+//      when a nonce-source is present).
 //   3. Every static directive is present.
 //   4. Production CSP has no 'unsafe-eval' and no va.vercel-scripts.com in
 //      script-src; dev-mode CSP adds both.
-//   5. The proxy forwards `x-nonce` on the upstream request headers AND
-//      its value matches the nonce in the response CSP. Next reads
-//      `headers().get('x-nonce')` during SSR to attribute the nonce to
-//      its auto-injected inline scripts (RSC flight payloads). Without
-//      this, Chrome blocks every Next-emitted inline script as a CSP
-//      violation — see proxy.ts file-level comment §1.
+//   5. The proxy does NOT set an x-nonce request header — no consumer.
+//   6. The same CSP value is emitted on every request (deterministic; no
+//      per-request mint).
 
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -22,13 +22,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const makeRequest = (): NextRequest => new NextRequest('https://erikunha.dev/', { method: 'GET' });
 
 afterEach(() => {
-  // Reset NODE_ENV stub (and any other) so following tests inherit Vitest's
-  // baseline. vi.stubEnv is the typed-safe way to mutate the readonly
-  // process.env.NODE_ENV in tests.
   vi.unstubAllEnvs();
 });
 
-describe('proxy CSP — hybrid nonce posture (PR 3)', () => {
+describe('proxy CSP — nonce-less posture (PR 4)', () => {
   beforeEach(() => {
     vi.resetModules();
   });
@@ -36,36 +33,20 @@ describe('proxy CSP — hybrid nonce posture (PR 3)', () => {
   it('sets a Content-Security-Policy header on the response', async () => {
     const { proxy } = await import('@/proxy');
     const res = proxy(makeRequest());
-    const csp = res.headers.get('content-security-policy');
-    expect(csp).toBeTruthy();
+    expect(res.headers.get('content-security-policy')).toBeTruthy();
   });
 
-  it('emits a 24-character base64 nonce (16 random bytes)', async () => {
+  it('does NOT include a nonce-source in script-src (audit Theme 2 reversion)', async () => {
     const { proxy } = await import('@/proxy');
-    const res = proxy(makeRequest());
-    const csp = res.headers.get('content-security-policy') ?? '';
-    const match = csp.match(/'nonce-([A-Za-z0-9+/=]+)'/);
-    expect(match, 'CSP must include a nonce-XXX token').not.toBeNull();
-    const nonce = match?.[1] ?? '';
-    // 16 random bytes base64-encode to 24 chars (with one '=' pad).
-    expect(nonce).toHaveLength(24);
-    expect(nonce.endsWith('=')).toBe(true);
-  });
-
-  it('emits a different nonce on consecutive requests', async () => {
-    const { proxy } = await import('@/proxy');
-    const a = proxy(makeRequest()).headers.get('content-security-policy') ?? '';
-    const b = proxy(makeRequest()).headers.get('content-security-policy') ?? '';
-    const nonceA = a.match(/'nonce-([^']+)'/)?.[1];
-    const nonceB = b.match(/'nonce-([^']+)'/)?.[1];
-    expect(nonceA).toBeTruthy();
-    expect(nonceA).not.toBe(nonceB);
+    const csp = proxy(makeRequest()).headers.get('content-security-policy') ?? '';
+    expect(csp).not.toMatch(/'nonce-/);
   });
 
   it('includes every static directive in the CSP', async () => {
     const { proxy } = await import('@/proxy');
     const csp = proxy(makeRequest()).headers.get('content-security-policy') ?? '';
     expect(csp).toContain("default-src 'self'");
+    expect(csp).toContain("script-src 'self' 'unsafe-inline'");
     expect(csp).toContain("style-src 'self' 'unsafe-inline'");
     expect(csp).toContain("img-src 'self' data: blob:");
     expect(csp).toContain("font-src 'self'");
@@ -84,7 +65,7 @@ describe('proxy CSP — hybrid nonce posture (PR 3)', () => {
     expect(scriptSrcLine).not.toContain('unsafe-eval');
     expect(scriptSrcLine).not.toContain('va.vercel-scripts.com');
     expect(scriptSrcLine).toContain("'self'");
-    expect(scriptSrcLine).toMatch(/'nonce-[A-Za-z0-9+/=]+'/);
+    expect(scriptSrcLine).toContain("'unsafe-inline'");
   });
 
   it('development script-src adds unsafe-eval + va.vercel-scripts.com', async () => {
@@ -96,38 +77,23 @@ describe('proxy CSP — hybrid nonce posture (PR 3)', () => {
     expect(scriptSrcLine).toContain('https://va.vercel-scripts.com');
   });
 
-  it('forwards x-nonce on the upstream request headers with the same value as the response CSP', async () => {
+  it('does not set x-nonce on the upstream request (no consumer)', async () => {
     const { proxy } = await import('@/proxy');
     const res = proxy(makeRequest());
-
-    // Next encodes the upstream request-header rewrite into two pieces on
-    // the NextResponse:
-    //   - `x-middleware-override-headers`: comma-separated list of header
-    //     names that the middleware overrode on the upstream request.
-    //   - `x-middleware-request-<header-name>`: the new value for each
-    //     header in that list (lowercased).
-    // This is the public NextResponse contract for middleware header
-    // rewrites. If Next changes it, this test breaks loudly — which is
-    // what we want.
-    const overrides = (res.headers.get('x-middleware-override-headers') ?? '').split(',');
-    expect(overrides, 'middleware must declare x-nonce in its override list').toContain('x-nonce');
-
-    const forwardedNonce = res.headers.get('x-middleware-request-x-nonce');
-    expect(forwardedNonce, 'x-nonce must be set on the upstream request').toBeTruthy();
-
-    const cspNonce =
-      res.headers.get('content-security-policy')?.match(/'nonce-([A-Za-z0-9+/=]+)'/)?.[1] ?? '';
-    expect(cspNonce).toBeTruthy();
-
-    // The CSP's script-src nonce and the upstream-forwarded x-nonce MUST
-    // be the same value, otherwise Next's inline scripts won't match the
-    // CSP and Chrome will block them all.
-    expect(forwardedNonce).toBe(cspNonce);
+    // The middleware-header-rewrite mechanism encodes upstream-request
+    // overrides on the response as `x-middleware-override-headers` +
+    // `x-middleware-request-x-nonce`. If we were rewriting x-nonce, those
+    // would be set. They must NOT be.
+    const overrides = res.headers.get('x-middleware-override-headers') ?? '';
+    expect(overrides).not.toContain('x-nonce');
+    expect(res.headers.get('x-middleware-request-x-nonce')).toBeNull();
+    expect(res.headers.get('x-nonce')).toBeNull();
   });
 
-  it('does not leak x-nonce as a response header (only on the upstream request)', async () => {
+  it('emits the same CSP on every request (deterministic; no per-request mint)', async () => {
     const { proxy } = await import('@/proxy');
-    const res = proxy(makeRequest());
-    expect(res.headers.get('x-nonce')).toBeNull();
+    const a = proxy(makeRequest()).headers.get('content-security-policy');
+    const b = proxy(makeRequest()).headers.get('content-security-policy');
+    expect(a).toBe(b);
   });
 });

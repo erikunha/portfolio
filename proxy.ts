@@ -1,39 +1,57 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-// CSP nonce posture (PR 3 of audit roadmap, see
-// docs/audit/2026-05-19-principal-audit.md Theme 2 + Debate 1):
+// CSP posture (PR 4 of audit roadmap — supersedes PR 3 hybrid nonce):
 //
-// 1) The `x-nonce` request-header rewrite is REQUIRED, not dead code.
-//    Next.js's framework runtime reads `headers().get('x-nonce')` during
-//    SSR and attributes the nonce to its auto-injected inline scripts
-//    (RSC flight payloads, hydration data). Without the rewrite, Next
-//    emits ~40+ inline `<script>` tags WITHOUT the nonce, and Chrome
-//    blocks every one of them — fatal to hydration. Verified empirically
-//    via Chrome Issues panel (44 violations on every page load when the
-//    rewrite was absent). The audit's initial diagnosis greppped the
-//    repo for `x-nonce` consumers and found none in user code, missing
-//    the transitive Next-internal consumer. Drift-protected by
-//    `__tests__/proxy-csp.test.ts` (asserts request headers carry the
-//    same nonce as the response CSP).
+// `script-src 'self' 'unsafe-inline'`. No nonce, no x-nonce header rewrite.
 //
-// 2) Entropy: 16 random bytes → 128 bits → 24-char base64,
-//    spec-conformant for the CSP nonce. The prior implementation
-//    base64-encoded the 36-character UUID *string* (including dashes),
-//    which produced a 48-char nonce backed by only ~122 bits of
-//    entropy drawn from the limited UUID alphabet — under the CSP
-//    "≥ 128 bits" recommendation.
+// Why we are NOT using a nonce-based CSP:
 //
-// 3) Static parts of the CSP are hoisted to module scope. Only the
-//    nonce-bearing `script-src` directive is rebuilt per request.
+// 1) `app/page.tsx` is static-generated (audit Theme 3 / PR 1). Static HTML
+//    is baked at build time, before any request, before any nonce exists.
+//    Inline `<script>` tags in the static HTML therefore carry no
+//    `nonce` attribute. Per CSP-3 spec §6.7.2.4, when a nonce-source is
+//    present in `script-src`, modern browsers IGNORE any co-listed
+//    `'unsafe-inline'` keyword and require a matching nonce attribute on
+//    every inline script. So `script-src 'nonce-X' 'unsafe-inline'` on a
+//    static page blocks every script (verified: 44 violations on
+//    `localhost:3000/`, Chrome 138).
+//
+// 2) The "hybrid nonce" posture shipped in PR 3 of the audit roadmap
+//    (commit ced30d8) anticipated future inline-script use-cases (analytics,
+//    embeds) and kept the nonce slot "for future-proofing". The audit's
+//    Theme 2 acknowledged the nonce has no consumer today. Combined with
+//    the static-generate move from Theme 3, the future-proofing cost
+//    became real and immediate: a broken page, the entire React 19 RSC
+//    flight payload blocked.
+//
+// 3) The pre-audit posture (DECISIONS.md 2026-05-15 "CSP cleanup") was
+//    `'unsafe-inline'`. That ADR documented the reasoning at length: no
+//    user-generated content vectors, no XSS surface, inline scripts are
+//    framework-emitted (Next/React Float). PR 4 restores this posture.
+//    The audit's entropy-fix work (Theme 2.3) and static-CSP hoisting
+//    (Theme 2.4) are moot once the nonce is dropped.
+//
+// 4) Re-acquire the nonce ONLY if a future PR adds a dynamic route that
+//    needs `<script nonce={...}>` (e.g., third-party analytics with a
+//    documented nonce requirement). At that point: re-introduce the
+//    middleware nonce + x-nonce header rewrite ONLY on that route's
+//    matcher pattern, NOT site-wide. The static `/` route must keep the
+//    nonce-less CSP for its inline scripts to load.
 
-const STATIC_CSP_DIRECTIVES: readonly string[] = [
+const CSP_DIRECTIVES: readonly string[] = [
   "default-src 'self'",
-  // 'unsafe-inline' required: React JSX style={{}} props produce inline
+  // 'self' covers same-origin static scripts (Next's chunks, /init.js).
+  // 'unsafe-inline' covers React 19 Float's RSC flight payload + hydration
+  // scripts that ship inline in the static HTML. See file-level comment §1.
+  // 'unsafe-eval' is dev-only: Next's HMR runtime evaluates strings.
+  // https://va.vercel-scripts.com (script-src): dev only.
+  process.env.NODE_ENV === 'development'
+    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com"
+    : "script-src 'self' 'unsafe-inline'",
+  // style-src 'unsafe-inline': React JSX style={{}} props produce inline
   // style="" attributes on DOM elements (not-found.tsx, opengraph-image.tsx).
-  // style-src does not support nonces for element-level inline styles;
-  // 'unsafe-inline' is the only way to allow them. Tailwind was removed
-  // 2026-05-18 — it is no longer the reason.
+  // Also the all-CSS inline `<style>` block from lib/inline-css.ts (PR 1).
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
@@ -50,46 +68,17 @@ const STATIC_CSP_DIRECTIVES: readonly string[] = [
   "base-uri 'self'",
 ];
 
-// Pre-join the static directives at module-eval. Per-request work is now
-// only the nonce + the dev-mode script-src branch.
-const STATIC_CSP = STATIC_CSP_DIRECTIVES.join('; ');
+// CSP is identical on every response (no per-request nonce). Pre-join once
+// at module-eval. Per-request work in `proxy()` is now just response-header
+// assignment.
+const CSP = CSP_DIRECTIVES.join('; ');
 
-function mintNonce(): string {
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return Buffer.from(bytes).toString('base64');
-}
-
-function buildScriptSrc(nonce: string): string {
-  // - 'self' covers same-origin static scripts (Next's chunks, /init.js).
-  // - 'nonce-...' covers Next's auto-injected inline RSC flight + hydration
-  //   scripts. Next reads `headers().get('x-nonce')` during SSR and
-  //   attributes the nonce to every `<script>` it emits.
-  // - 'unsafe-eval' is dev-only: Next's HMR runtime evaluates strings.
-  // - https://va.vercel-scripts.com (script-src): dev only. The dev-mode
-  //   Vercel Analytics SDK loads its script from here. Production uses
-  //   same-origin /_vercel/insights/script.js.
-  const base = `script-src 'self' 'nonce-${nonce}'`;
-  if (process.env.NODE_ENV === 'development') {
-    return `${base} 'unsafe-eval' https://va.vercel-scripts.com`;
-  }
-  return base;
-}
-
-export function proxy(request: NextRequest) {
-  const nonce = mintNonce();
-  const csp = `${buildScriptSrc(nonce)}; ${STATIC_CSP}`;
-
-  // Set `x-nonce` on the upstream request headers so Next's SSR runtime
-  // can read it via `headers().get('x-nonce')` and attribute the same
-  // nonce to every inline `<script>` it emits. See the file-level comment
-  // §1 for why this is required (Next-internal consumer, missed by the
-  // audit's source-grep).
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-nonce', nonce);
-
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
-  response.headers.set('Content-Security-Policy', csp);
+// `_request` is intentional: the Next runtime calls proxy(request) but the
+// CSP no longer depends on the request (no nonce). Renaming to `_request`
+// documents the intent and silences `noUnusedVariables`.
+export function proxy(_request: NextRequest) {
+  const response = NextResponse.next();
+  response.headers.set('Content-Security-Policy', CSP);
   return response;
 }
 
