@@ -1,5 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { NextRequest } from 'next/server';
+import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log';
+import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
 import { checkBudget, getAskLimit, getClientIp, incrementBudget } from '@/lib/rate-limit';
 import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
@@ -115,18 +117,42 @@ Be direct and honest. Do not fabricate information. Keep answers under 200 words
 
 export async function POST(req: NextRequest) {
   const requestId = crypto.randomUUID();
+  const startedAt = Date.now();
   const ip = getClientIp(req);
+  const ipHash = await hashIp(ip);
   log.info('ask request received', { requestId, ip });
 
   // Per-IP rate limit
   const { success } = await getAskLimit().limit(ip);
   if (!success) {
+    void persistAskInteraction({
+      requestId,
+      ts: new Date().toISOString(),
+      ipHash,
+      question: '',
+      answer: '',
+      inputTokens: 0,
+      outputTokens: 0,
+      durationMs: Date.now() - startedAt,
+      status: 'rate-limited',
+    });
     return Response.json({ error: 'rate limit exceeded — try again in an hour' }, { status: 429 });
   }
 
   // Global monthly budget check
   const { allowed } = await checkBudget();
   if (!allowed) {
+    void persistAskInteraction({
+      requestId,
+      ts: new Date().toISOString(),
+      ipHash,
+      question: '',
+      answer: '',
+      inputTokens: 0,
+      outputTokens: 0,
+      durationMs: Date.now() - startedAt,
+      status: 'budget-exhausted',
+    });
     return Response.json(
       { error: 'monthly budget exhausted — email erikhenriquealvescunha@gmail.com directly' },
       { status: 503 },
@@ -137,10 +163,32 @@ export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as { question?: unknown };
     if (typeof body.question !== 'string' || !body.question.trim()) {
+      void persistAskInteraction({
+        requestId,
+        ts: new Date().toISOString(),
+        ipHash,
+        question: '',
+        answer: '',
+        inputTokens: 0,
+        outputTokens: 0,
+        durationMs: Date.now() - startedAt,
+        status: 'errored',
+      });
       return Response.json({ error: 'question is required' }, { status: 400 });
     }
     question = body.question.trim().slice(0, 500);
   } catch {
+    void persistAskInteraction({
+      requestId,
+      ts: new Date().toISOString(),
+      ipHash,
+      question: '',
+      answer: '',
+      inputTokens: 0,
+      outputTokens: 0,
+      durationMs: Date.now() - startedAt,
+      status: 'errored',
+    });
     return Response.json({ error: 'invalid request body' }, { status: 400 });
   }
 
@@ -155,6 +203,8 @@ export async function POST(req: NextRequest) {
   const enc = new TextEncoder();
   let inputTokens = 0;
   let outputTokens = 0;
+  let collectedAnswerText = '';
+  let status: AskInteractionStatus = 'completed';
 
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -166,15 +216,30 @@ export async function POST(req: NextRequest) {
             outputTokens = event.usage.output_tokens;
           } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
             controller.enqueue(enc.encode(event.delta.text));
+            if (collectedAnswerText.length < 1000) {
+              collectedAnswerText += event.delta.text;
+            }
           }
         }
       } catch (err) {
+        status = 'errored';
         const msg = err instanceof Error ? err.message : 'upstream error';
         controller.enqueue(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
       } finally {
         controller.close();
         // Fire-and-forget — never blocks the response.
         incrementBudget(inputTokens, outputTokens);
+        void persistAskInteraction({
+          requestId,
+          ts: new Date().toISOString(),
+          ipHash,
+          question,
+          answer: collectedAnswerText,
+          inputTokens,
+          outputTokens,
+          durationMs: Date.now() - startedAt,
+          status,
+        });
       }
     },
   });
@@ -184,6 +249,7 @@ export async function POST(req: NextRequest) {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
+      'X-Request-Id': requestId,
     },
   });
 }
