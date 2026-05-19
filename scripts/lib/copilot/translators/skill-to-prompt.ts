@@ -11,8 +11,8 @@ function stripTagBlocks(body: string): string {
     const re = new RegExp(`<${tag}>[\\s\\S]*?<\\/${tag}>`, 'gi');
     out = out.replace(re, '');
   }
-  out = out.replace(/^.*invoke the Skill tool.*$/gim, '');
-  out = out.replace(/\n{3,}/g, '\n\n');
+  out = out.replace(/^.*invoke the Skill tool.*$\n?/gim, '');
+  out = out.replace(/\n{2,}/g, '\n\n');
   return out;
 }
 

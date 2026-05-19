@@ -18,6 +18,10 @@ type VscodeServer = {
 
 const SECRET_TOKEN_RE = /\$\{([A-Z_][A-Z0-9_]*)\}/g;
 
+// Variable names matching this pattern are treated as secrets (password: true).
+// Everything else is emitted as a plain promptString input.
+const SECRET_NAME_RE = /TOKEN|SECRET|KEY|PASSWORD|AUTH|CREDENTIAL/i;
+
 function rewriteSecretsInString(s: string, collected: Set<string>): string {
   return s.replace(SECRET_TOKEN_RE, (_, name) => {
     collected.add(name);
@@ -32,7 +36,8 @@ function rewriteSecretsInMap(
   if (!obj) return undefined;
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(obj)) {
-    out[k] = typeof v === 'string' ? rewriteSecretsInString(v, collected) : String(v);
+    // Coerce to string first so secret patterns in non-string values are also rewritten.
+    out[k] = rewriteSecretsInString(String(v), collected);
   }
   return out;
 }
@@ -42,7 +47,8 @@ function rewriteSecretsInArray(
   collected: Set<string>,
 ): string[] | undefined {
   if (!arr) return undefined;
-  return arr.map((v) => (typeof v === 'string' ? rewriteSecretsInString(v, collected) : String(v)));
+  // Coerce to string first so secret patterns in non-string values are also rewritten.
+  return arr.map((v) => rewriteSecretsInString(String(v), collected));
 }
 
 export function normalizeServer(src: McpServerSource): {
@@ -82,7 +88,7 @@ export function normalizeServer(src: McpServerSource): {
     type: 'promptString',
     id,
     description: `Value for ${id}`,
-    password: true,
+    password: SECRET_NAME_RE.test(id),
   }));
 
   return { server, inputs };

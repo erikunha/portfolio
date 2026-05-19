@@ -9,7 +9,12 @@ export function agentToPrompt(source: AgentSource, rw: RefRewriter): TranslatorO
   const claudeTools = Array.isArray(source.frontmatter.tools)
     ? (source.frontmatter.tools as string[])
     : [];
-  const { mapped } = mapClaudeTools(claudeTools);
+  const { mapped, dropped } = mapClaudeTools(claudeTools);
+  if (dropped.length > 0) {
+    console.warn(
+      `[warn] agentToPrompt(${source.name}): unmapped Claude tools dropped: ${dropped.join(', ')}`,
+    );
+  }
 
   const fmOpts: Parameters<typeof emitPromptFrontmatter>[0] = {
     mode: 'agent',

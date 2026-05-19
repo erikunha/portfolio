@@ -62,21 +62,24 @@ function resolveSkillsAndAgents(sources: ReturnType<typeof scanClaudeSources>) {
   return { resolvedSkills, resolvedAgents };
 }
 
-function detectCollisions(skills: SkillSource[], agents: AgentSource[]): Map<string, number> {
-  const counts = new Map<string, number>();
-  const allNames = [...skills.map((s) => s.name), ...agents.map((a) => a.name)];
-  for (const n of allNames) counts.set(n, (counts.get(n) ?? 0) + 1);
-  const collisions = new Map<string, number>();
-  for (const [name, count] of counts) {
-    if (count > 1) collisions.set(name, count);
-  }
-  return collisions;
-}
-
 function collectPortedNames(skills: SkillSource[], agents: AgentSource[]): PortedNames {
   const m: PortedNames = new Map();
-  for (const s of skills) m.set(s.name, 'skill');
-  for (const a of agents) m.set(a.name, 'agent');
+  for (const s of skills) {
+    if (m.has(s.name)) {
+      throw new Error(
+        `name collision: skill '${s.name}' conflicts with an agent of the same name. Use plugin-prefixed names in the manifest to disambiguate.`,
+      );
+    }
+    m.set(s.name, 'skill');
+  }
+  for (const a of agents) {
+    if (m.has(a.name)) {
+      throw new Error(
+        `name collision: agent '${a.name}' conflicts with a skill of the same name. Use plugin-prefixed names in the manifest to disambiguate.`,
+      );
+    }
+    m.set(a.name, 'agent');
+  }
   return m;
 }
 
@@ -96,14 +99,8 @@ function main() {
   const sources = scanClaudeSources();
   const { resolvedSkills, resolvedAgents } = resolveSkillsAndAgents(sources);
 
-  // Pass 1 — collect ported names + detect collisions
+  // Pass 1 — collect ported names (throws on skill/agent name collision)
   const portedNames = collectPortedNames(resolvedSkills, resolvedAgents);
-  const collisions = detectCollisions(resolvedSkills, resolvedAgents);
-  if (collisions.size > 0) {
-    console.warn(
-      `[warn] name collisions detected: ${[...collisions.keys()].join(', ')}. Using bare names; consider plugin prefixes in manifest.`,
-    );
-  }
 
   // Pass 2 — translate
   const outputs: TranslatorOutput[] = [];

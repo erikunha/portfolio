@@ -11,7 +11,12 @@ export function agentToChatmode(source: AgentSource): TranslatorOutput {
   const claudeTools = Array.isArray(source.frontmatter.tools)
     ? (source.frontmatter.tools as string[])
     : [];
-  const { mapped } = mapClaudeTools(claudeTools);
+  const { mapped, dropped } = mapClaudeTools(claudeTools);
+  if (dropped.length > 0) {
+    console.warn(
+      `[warn] agentToChatmode(${source.name}): unmapped Claude tools dropped: ${dropped.join(', ')}`,
+    );
+  }
 
   const fmOpts: Parameters<typeof emitChatmodeFrontmatter>[0] = {
     description: fmDescription,
