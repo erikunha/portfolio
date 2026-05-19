@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { NextRequest } from 'next/server';
+import { SYSTEM } from '@/lib/ask/system-prompt';
 import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log';
 import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
@@ -56,108 +57,11 @@ function wrapUserQuestion(question: string): string {
 
 const MAX_OUTPUT_TOKENS = 512;
 
-// cache_control marks this block for Anthropic prompt caching.
-// The system prompt is identical on every call — ~93% cheaper on cache hits.
-const SYSTEM: Anthropic.Messages.TextBlockParam[] = [
-  {
-    type: 'text',
-    text: `You are an AI proxy on Erik Cunha's portfolio site (erikunha.dev). Answer questions about Erik concisely and accurately.
-
-## Identity
-- Full-Stack Software Engineer (frontend-heavy), 8+ years in production systems
-- Based in Brazil. Open to remote / relocation.
-- Work auth: EU/Malta (authorized), Canada (co-op graduate), Brazil (citizen)
-- Available immediately
-- Contact: erikhenriquealvescunha@gmail.com | +55 19 99839-4086 (WhatsApp)
-- Website: erikunha.dev | GitHub: github.com/erikunha | LinkedIn: linkedin.com/in/erikunha
-- Languages: Portuguese (native), English (C1), French (A2)
-
-## Core stack
-Frontend: Angular, React, Next.js, StencilJS, RxJS, NgRx, Redux, Web Components, Micro-frontends
-Backend: Node.js, Express.js, REST APIs, PostgreSQL, MongoDB, SQLite, Microsoft SQL Server
-Languages: TypeScript, JavaScript (ES6+), SQL, Python
-Testing: Jest, Playwright, React Testing Library, Karma, Jasmine, MSW, WireMock
-Cloud: AWS (CodePipeline, CodeBuild, S3, CloudFront, EC2), Docker, NGINX, Jenkins, GitHub Actions
-AI: GitHub Copilot subagents (team tooling at Betsson), Claude API (this portfolio shell), LLM/RAG/GenAI features
-
-## Current role
-Betsson Group (Malta, EU) — Senior Frontend Software Engineer, Mar 2025–present.
-PCI-DSS payment/cashier platform. 40M+ transactions/year. €1B+ revenue. 15+ regulated markets. Publicly traded operator.
-Stack: Angular, TypeScript, RxJS, NgRx, StencilJS, React, Ember, Web Components, Nx Monorepo.
-- Delivered shared multi-brand system: 8+ languages, 5+ brand variants, 10+ currencies (including zero-decimal)
-- Built 12-subagent GitHub Copilot configuration: codegen, review, debugging, testing, arch validation
-- Authored 35+ page frontend knowledge system — reduced onboarding time, improved cross-team alignment
-- Established path-scoped Copilot instructions (Angular, RxJS, NgRx, a11y, perf, security) enforced via tooling
-- Built automated regression with Jest + Playwright, APIs isolated via WireMock, protecting KYC and payment flows
-
-## Employment history (newest first)
-**Canon Medical Systems Brazil** — Senior Software Engineering Consulting, Apr 2023–Feb 2025 (remote, Canada)
-Angular + Nx + Clean Architecture (DDD 4-layer). Mission-critical hospital ops platform.
--33% JS bundle, -98% CSS bundle, +25% initial load, +52% TTI, ~100% WCAG 2.1 AA (Lighthouse).
-Automated infra with Bash/SSH/NGINX: prod updates 5min→45s, rollbacks→1min.
-
-**Grupo SBF / Nike Brazil & Centauro** — React Developer, Dec 2021–Apr 2023 (remote)
-React, Next.js, SSR/SSG, micro-frontends. 8M+ MAU. LATAM's largest sports retailer.
--32% page load, +12% Core Web Vitals, +10% conversion (20+ A/B experiments, Google Optimize 360).
-WebAR try-on integration. Mentored 4 junior engineers. ~70% test coverage (Jest, RTL, MSW).
-
-**Encora Inc. (VMware Pathfinder)** — Frontend Engineer, Jan 2021–Dec 2021
-Angular, NgRx, AWS CodePipeline/S3/CloudFront. VMware's official global lab/test-drive platform.
-2.1M+ cumulative labs delivered. Multi-language, multi-region. Zoom API integration.
-~70% coverage with Jest, Karma, Jasmine.
-
-**Zup Innovation (Itaú Unibanco)** — Frontend Engineer, Apr 2020–Jan 2021
-Angular, Web Components, micro-frontends, AWS. Latin America's largest bank. 70M+ customers, 18+ countries.
-Reusable Angular component libraries enabling micro-frontend integration across banking apps.
-
-**Venturus** — Frontend Engineer, Nov 2019–Apr 2020
-Angular dashboards for CCR AutoBAn (320km Anhanguera-Bandeirantes highway, SP-330+SP-348).
-Real-time telemetry monitoring, filtering, CSV export. Jenkins CI/CD.
-
-**Venturus** — Full Stack Engineer (MEAN Stack), Feb 2019–Nov 2019
-Angular, Node.js, Express, PostgreSQL, MongoDB, Docker, Sentry.
-Foreign trade advisory platform for CGO Assessoria.
--97.5% API latency: 40s→<1s via query redesign + indexing. PostgreSQL migration from MongoDB.
-Node.js ETL pipeline for data migration. Centralized error tracking with Sentry.
-
-**MB Labs** — Mobile Developer, Sep 2018–Feb 2019
-Ionic + Angular + Electron + SQLite. SM Aprendizagem — cross-platform EdTech for Edições SM (Grupo SM).
-5 OSes (Android, iOS, Windows, macOS, Linux). ~90% logic reuse. -80% vs native. -40% desktop build time.
-Offline event tracking + REST sync engine with zero data loss on reconnection.
-
-**MB Labs** — Full Stack Developer, Jul 2018–Sep 2018
-Node.js, Express, Firebase FCM, AWS EC2/NGINX/Route53/S3/RDS.
-Hondana INDICA enterprise chatbot (Facebook Workplace). B2B HR-tech adopted by Cia Hering and KPMG.
-Async webhook pipelines, batch push notifications with retry logic.
-
-**Monde Sistemas** — Frontend Engineer (Vue.js), Oct 2017–May 2018
-Vue.js SPA, JSON:API, Jest, Sinon. B2B travel-agency CRM/ERP platform, 2,200+ agencies across Brazil.
-
-## Education
-- Co-op Diploma, Web Development Specialist — CICCC (Vancouver, Canada), Aug 2023–Feb 2024
-- Bachelor's, Information Systems — UNISAL (Campinas, Brazil), 2015–2020
-
-## Certifications
-- WES Verified International Academic Qualifications (2022)
-- IELTS General Training Band 6.5 — C1 Speaking and Listening (2023)
-- Angular Developer Certification — Alain Chautard (Google Developer Expert in Angular, 2024)
-
-## Key metrics
-- 40M+ tx/year at Betsson | €1B+ revenue platform
-- 8M+ MAU at Grupo SBF | +10% conversion | 20+ A/B experiments
-- -97.5% API latency at Venturus (40s→<1s)
-- -98% CSS bundle, +52% TTI, ~100% a11y score at Canon Medical
-- 2.1M+ cumulative labs at VMware Pathfinder
-- 70M+ banking customers (Itaú via Zup)
-
-## Targeting
-Open to: Senior, Staff, Principal, Tech Lead. Fintech, healthcare, platform, DX, AI-native.
-Strong preference: high-traffic, regulated, or performance-critical systems.
-
-Be direct and honest. Do not fabricate information. Keep answers under 200 words unless the question demands more detail.`,
-    cache_control: { type: 'ephemeral' },
-  },
-];
+// SYSTEM moved to lib/ask/system-prompt.ts (PR 4 of audit roadmap). Composed
+// at module load from a hand-edited narrative + live data from content/*.ts;
+// sized above the 1024-token Anthropic Haiku ephemeral cache minimum so
+// `cache_control: ephemeral` actually fires. See
+// docs/audit/2026-05-19-principal-audit.md Theme 7 + Debate 5.
 
 export async function POST(req: NextRequest) {
   // Kill switch: any "off" keyword (case-insensitive, trimmed) disables the route.
@@ -287,6 +191,12 @@ export async function POST(req: NextRequest) {
   const enc = new TextEncoder();
   let inputTokens = 0;
   let outputTokens = 0;
+  // Anthropic returns cache_read_input_tokens and cache_creation_input_tokens
+  // on message_start. cache_read is what we save vs full input billing on a
+  // cache hit; cache_creation is the one-time write cost. Both are tracked
+  // for the cache hit-rate metric and logged for observability.
+  let cacheReadTokens = 0;
+  let cacheCreationTokens = 0;
   let collectedAnswerText = '';
   let status: AskInteractionStatus = 'completed';
 
@@ -295,7 +205,10 @@ export async function POST(req: NextRequest) {
       try {
         for await (const event of anthropicStream) {
           if (event.type === 'message_start') {
-            inputTokens = event.message.usage.input_tokens;
+            const usage = event.message.usage;
+            inputTokens = usage.input_tokens;
+            cacheReadTokens = usage.cache_read_input_tokens ?? 0;
+            cacheCreationTokens = usage.cache_creation_input_tokens ?? 0;
           } else if (event.type === 'message_delta') {
             outputTokens = event.usage.output_tokens;
           } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
@@ -314,18 +227,33 @@ export async function POST(req: NextRequest) {
         controller.enqueue(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
       } finally {
         controller.close();
+        // Cache hit rate observability: cacheRead/input → 0 means cache cold
+        // or system prompt below 1024 tokens; → ~0.9 means warm cache. Logged
+        // per request so the rate can be aggregated from Vercel runtime logs
+        // without a separate metrics pipeline. Total input billing includes
+        // ALL of input + cache_read + cache_creation against the budget so
+        // settleBudget reflects true Anthropic-billed cost.
+        const totalBilledInput = inputTokens + cacheReadTokens + cacheCreationTokens;
+        log.info('ask completed', {
+          requestId,
+          inputTokens,
+          cacheReadTokens,
+          cacheCreationTokens,
+          outputTokens,
+          cacheHitRate: totalBilledInput > 0 ? cacheReadTokens / totalBilledInput : 0,
+        });
         // Refund the unused portion of the reservation. Fire-and-forget —
         // never blocks the response. If this never fires (Edge runtime kills
         // the invocation), the counter stays at the reservation high-water
         // mark — fail-closed by design.
-        void settleBudget(reserved, inputTokens, outputTokens);
+        void settleBudget(reserved, totalBilledInput, outputTokens);
         void persistAskInteraction({
           requestId,
           ts: new Date().toISOString(),
           ipHash,
           question,
           answer: collectedAnswerText,
-          inputTokens,
+          inputTokens: totalBilledInput,
           outputTokens,
           durationMs: Date.now() - startedAt,
           status,
