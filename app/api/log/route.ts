@@ -37,17 +37,10 @@ const ErrorPayload = z.object({
 
 export async function POST(req: NextRequest) {
   const requestId = crypto.randomUUID();
-  const ip = getClientIp(req);
 
-  // Rate-limit BEFORE the KV write to absorb storms cheaply.
-  const { success } = await getErrorLogLimit().limit(ip);
-  if (!success) {
-    return Response.json(
-      { error: 'too many error reports' },
-      { status: 429, headers: { 'Retry-After': '60' } },
-    );
-  }
-
+  // Parse + validate first (local, cheap). Smoke bypass runs BEFORE the
+  // rate-limit + KV calls so smoke testing doesn't require Upstash to be
+  // configured — important for CI environments without prod secrets.
   let body: unknown;
   try {
     body = await req.json();
@@ -63,10 +56,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Bypass KV persistence for smoke-test payloads; still return 204 so the
-  // smoke spec gets a real success response without touching storage.
+  // Smoke-test sentinel: messages prefixed '[smoke]' bypass rate-limit AND
+  // KV persistence. Anyone sending a '[smoke]'-prefixed real error only
+  // self-suppresses; no adverse effect on other clients.
   if (parsed.data.message.startsWith(SMOKE_PREFIX)) {
     return new Response(null, { status: 204 });
+  }
+
+  // Rate-limit BEFORE the KV write to absorb storms cheaply.
+  const ip = getClientIp(req);
+  const { success } = await getErrorLogLimit().limit(ip);
+  if (!success) {
+    return Response.json(
+      { error: 'too many error reports' },
+      { status: 429, headers: { 'Retry-After': '60' } },
+    );
   }
 
   const errId = crypto.randomUUID();
