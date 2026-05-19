@@ -28,14 +28,17 @@ test.describe('visual regression', () => {
     // "fonts loaded" wait happens inside toHaveScreenshot but races font-swap
     // re-flow.
     await mockedPage.evaluate(() => document.fonts.ready);
-    // Wait for the LAST bio child + 500ms settle. On chromium-mobile the
-    // matrix-rain <canvas aria-hidden> is sized to its parent; post-hydration
-    // reflow (next/font swap, IO callbacks) keeps the canvas redrawing for a
-    // few hundred ms after the DOM is stable, which trips Playwright's
-    // two-consecutive-stable-screenshots check. The 500ms hard wait paired
-    // with the 30s snapshot timeout in snapshot.ts brackets that reflow.
     await heroSection.locator('.hero__ctas').waitFor({ state: 'visible' });
-    await mockedPage.waitForTimeout(500);
+    // Remove the matrix-rain <canvas aria-hidden> before snapshotting. The
+    // canvas is sized to its parent and resizes / re-paints during post-
+    // hydration reflow; combined with Playwright's mask layer (which colors
+    // the canvas pink in the screenshot), tiny canvas-bbox shifts produce
+    // huge "diff" deltas in the two-consecutive-stable-screenshots check.
+    // Removing the canvas from DOM eliminates the volatile region entirely
+    // for snapshot purposes — the actual product behavior is untouched.
+    await mockedPage.evaluate(() => {
+      document.querySelectorAll('canvas[aria-hidden]').forEach((c) => c.remove());
+    });
     await snapshotLocator(mockedPage, heroSection, 'hero-above-fold.png');
   });
 
@@ -45,6 +48,10 @@ test.describe('visual regression', () => {
     await contactSection.scrollIntoViewIfNeeded();
     await mockedPage.waitForSelector('form.contact', { state: 'visible' });
     await mockedPage.evaluate(() => document.fonts.ready);
+    // Same canvas removal as test 1 — see comment there for rationale.
+    await mockedPage.evaluate(() => {
+      document.querySelectorAll('canvas[aria-hidden]').forEach((c) => c.remove());
+    });
     await snapshotLocator(mockedPage, contactSection, 'contact-section.png');
   });
 });
