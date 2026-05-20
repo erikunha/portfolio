@@ -19,7 +19,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary.client';
 import { CommunitySection } from '@/components/sections/CommunitySection';
 import { ContactSection } from '@/components/sections/ContactSection';
 import { CredentialsSection } from '@/components/sections/CredentialsSection';
-import { Footer } from '@/components/sections/Footer';
+import { FooterLazy } from '@/components/sections/FooterLazy.client';
 import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
 import { Hero } from '@/components/sections/Hero';
@@ -70,7 +70,7 @@ export default function Home() {
           <ContactSection defer />
         </main>
         <ErrorBoundary>
-          <Footer />
+          <FooterLazy />
         </ErrorBoundary>
       </AppShell>
     </BreakpointProvider>
