@@ -11,7 +11,10 @@ import { describe, expect, it } from 'vitest';
 
 const TESTS_DIR = join(process.cwd(), '__tests__');
 const SOURCE_HINT = /readFileSync|readFile\(/;
-const TARGETS_APP_SOURCE = /['"`][^'"`]*(?:^|\/)(app|components|lib|scripts)\//;
+// Matches a quoted path literal whose segments include app/ components/ lib/
+// scripts/ — whether the segment is at the literal's start (`'app/x'`) or
+// after a relative prefix (`'./app/x'`, `'../lib/y'`).
+const TARGETS_APP_SOURCE = /['"`](?:[^'"`]*\/)?(app|components|lib|scripts)\//;
 const ALLOW_TAG = /behavioral-test-allow:/;
 
 function walk(dir: string): string[] {
