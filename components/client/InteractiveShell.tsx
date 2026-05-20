@@ -3,7 +3,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import SHELL_RESPONSES from '@/content/shell-commands';
 import { readMotion } from '@/lib/motion';
-import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
+import { parseStreamChunk } from '@/lib/stream-protocol';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 
 type Line = { id: number; kind: 'prompt' | 'output' | 'error' | 'info' | 'loading'; text: string };
@@ -186,10 +186,7 @@ export function InteractiveShell() {
           const { done, value } = await reader.read();
           if (done) break;
           accumulated += dec.decode(value, { stream: true });
-          const sentinelIdx = accumulated.indexOf(STREAM_ERR_SENTINEL);
-          const displayText = (
-            sentinelIdx !== -1 ? accumulated.slice(0, sentinelIdx) : accumulated
-          ).trim();
+          const { displayText } = parseStreamChunk(accumulated);
           if (!displayText) continue;
 
           if (!streamSpan) {
@@ -202,14 +199,7 @@ export function InteractiveShell() {
           if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
         }
 
-        const sentinelIdx = accumulated.indexOf(STREAM_ERR_SENTINEL);
-        const finalText = (
-          sentinelIdx !== -1 ? accumulated.slice(0, sentinelIdx) : accumulated
-        ).trim();
-        const errMsg =
-          sentinelIdx !== -1
-            ? accumulated.slice(sentinelIdx + STREAM_ERR_SENTINEL.length).trim() || 'upstream error'
-            : undefined;
+        const { displayText: finalText, errorMessage: errMsg } = parseStreamChunk(accumulated);
         finalize(finalText, errMsg);
       } catch (err) {
         finalize('', (err as Error).message);

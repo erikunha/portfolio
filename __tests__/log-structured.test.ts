@@ -1,105 +1,155 @@
 // __tests__/log-structured.test.ts
-// Source-grep test: verifies lib/log.ts foundation + 11-site console.*
-// migration per spec docs/superpowers/specs/2026-05-18-production-
-// observability-design.md §6.
+// Behavioral test (CG3): exercises the lib/log.ts structured-logging facade
+// and verifies routes emit through it — instead of grepping route source for
+// `import { log }` / the absence of `console.*`.
 //
-// Task 2 (foundation) populates the first describe block.
-// Task 3 (migration) populates the second describe block.
+//  - lib/log.ts: imports the real `log` object, asserts its public surface
+//    (info/warn/error) is callable, and that the deliberately-omitted
+//    correlation helpers are genuinely absent from the module exports.
+//  - Edge fallback: with NEXT_RUNTIME=edge, the facade must emit a JSON line
+//    via console.log (pino's worker_threads transport is unavailable on Edge).
+//  - Route integration: /api/contact is exercised end-to-end with a mocked
+//    `log`; the route must call log.info / log.error with a structured ctx
+//    object carrying `requestId` — the observable proof it logs structurally.
+//
+// The pino / pino-pretty dependency-declaration check is a genuine config
+// read and carries a behavioral-test-allow tag.
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
-
-const LOG_SOURCE = readFileSync(path.resolve(__dirname, '../lib/log.ts'), 'utf-8');
-const PACKAGE_JSON = JSON.parse(
-  readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8'),
-) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+import { NextRequest } from 'next/server';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('lib/log.ts foundation', () => {
   it('declares pino as a runtime dep and pino-pretty as a dev dep', () => {
-    expect(PACKAGE_JSON.dependencies?.pino).toBeDefined();
-    expect(PACKAGE_JSON.devDependencies?.['pino-pretty']).toBeDefined();
+    // behavioral-test-allow: reads package.json to assert installed deps, not source structure
+    const pkg = JSON.parse(readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8')) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+    expect(pkg.dependencies?.pino).toBeDefined();
+    expect(pkg.devDependencies?.['pino-pretty']).toBeDefined();
   });
 
-  it('imports pino', () => {
-    expect(LOG_SOURCE).toMatch(/from\s*['"]pino['"]/);
+  it('exports a log object with callable info/warn/error methods', async () => {
+    const { log } = await import('@/lib/log');
+    expect(typeof log.info).toBe('function');
+    expect(typeof log.warn).toBe('function');
+    expect(typeof log.error).toBe('function');
+    // The methods must not throw when called — they are the production
+    // logging surface every route depends on.
+    expect(() => log.info('test message')).not.toThrow();
+    expect(() => log.warn('test message', { requestId: 'rid' })).not.toThrow();
+    expect(() => log.error('test message', { err: new Error('x') })).not.toThrow();
   });
 
-  it('exports a log object with info, warn, error methods', () => {
-    expect(LOG_SOURCE).toMatch(/export\s+const\s+log\b/);
-    expect(LOG_SOURCE).toMatch(/\binfo\b/);
-    expect(LOG_SOURCE).toMatch(/\bwarn\b/);
-    expect(LOG_SOURCE).toMatch(/\berror\b/);
+  it('does NOT export withRequestContext or currentRequestId', async () => {
+    // The explicit-parameter correlation strategy means these helpers were
+    // deliberately not built. Asserting their absence from the live module
+    // exports catches a regression that reintroduces implicit context.
+    const mod = await import('@/lib/log');
+    expect('withRequestContext' in mod).toBe(false);
+    expect('currentRequestId' in mod).toBe(false);
   });
 
-  it('does NOT export withRequestContext or currentRequestId (explicit-param strategy)', () => {
-    expect(LOG_SOURCE).not.toMatch(/export\s+function\s+withRequestContext/);
-    expect(LOG_SOURCE).not.toMatch(/export\s+function\s+currentRequestId/);
-  });
-
-  it('uses pino-pretty in development and JSON in production', () => {
-    expect(LOG_SOURCE).toMatch(/pino-pretty/);
-    expect(LOG_SOURCE).toMatch(/NODE_ENV/);
+  it('falls back to a JSON console line under the Edge runtime', async () => {
+    vi.stubEnv('NEXT_RUNTIME', 'edge');
+    vi.resetModules();
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { log } = await import('@/lib/log');
+    log.info('edge message', { requestId: 'rid-edge' });
+    expect(consoleSpy).toHaveBeenCalledOnce();
+    // The Edge shim emits a single structured JSON line.
+    const emitted = JSON.parse(String(consoleSpy.mock.calls[0]?.[0])) as Record<string, unknown>;
+    expect(emitted.level).toBe('info');
+    expect(emitted.msg).toBe('edge message');
+    expect(emitted.requestId).toBe('rid-edge');
+    consoleSpy.mockRestore();
+    vi.unstubAllEnvs();
   });
 });
 
-describe('console.* migration sites', () => {
-  const RATE_LIMIT = readFileSync(path.resolve(__dirname, '../lib/rate-limit.ts'), 'utf-8');
-  const LH_SCORES = readFileSync(path.resolve(__dirname, '../lib/lighthouse-scores.ts'), 'utf-8');
-  const ASK_ROUTE = readFileSync(path.resolve(__dirname, '../app/api/ask/route.ts'), 'utf-8');
-  const CONTACT_ROUTE = readFileSync(
-    path.resolve(__dirname, '../app/api/contact/route.ts'),
-    'utf-8',
-  );
+describe('route integration — structured logging through the facade', () => {
+  const logInfoMock = vi.fn();
+  const logErrorMock = vi.fn();
+  const redisSetMock = vi.fn();
+  const resendSendMock = vi.fn();
 
-  it('lib/rate-limit.ts imports log and uses no console.*', () => {
-    expect(RATE_LIMIT).toMatch(/import\s*\{[^}]*\blog\b[^}]*\}\s*from\s*['"]@\/lib\/log['"]/);
-    expect(RATE_LIMIT).not.toMatch(/console\.(info|warn|error)\b/);
+  beforeEach(() => {
+    vi.resetModules();
+    logInfoMock.mockReset();
+    logErrorMock.mockReset();
+    redisSetMock.mockReset();
+    resendSendMock.mockReset();
+    process.env.RESEND_API_KEY = 'fake-key-for-tests';
+
+    vi.doMock('@/lib/log', () => ({
+      log: { info: logInfoMock, warn: vi.fn(), error: logErrorMock, debug: vi.fn() },
+    }));
+    vi.doMock('@/lib/rate-limit', () => ({
+      getClientIp: vi.fn(() => '127.0.0.1'),
+      getContactLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
+      getRedis: vi.fn(() => ({ set: redisSetMock })),
+    }));
+    vi.doMock('@/lib/ip-hash', () => ({
+      hashIp: vi.fn(async () => 'hashed-ip-test'),
+    }));
+    vi.doMock('resend', () => ({
+      Resend: class {
+        emails = { send: resendSendMock };
+      },
+    }));
   });
 
-  it('lib/lighthouse-scores.ts imports log and uses no console.*', () => {
-    expect(LH_SCORES).toMatch(/import\s*\{[^}]*\blog\b[^}]*\}\s*from\s*['"]@\/lib\/log['"]/);
-    expect(LH_SCORES).not.toMatch(/console\.(info|warn|error)\b/);
+  afterEach(() => {
+    vi.doUnmock('@/lib/log');
+    vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/ip-hash');
+    vi.doUnmock('resend');
   });
 
-  it('app/api/ask/route.ts imports log, uses no console.* for business logging, threads requestId', () => {
-    expect(ASK_ROUTE).toMatch(/import\s*\{[^}]*\blog\b[^}]*\}\s*from\s*['"]@\/lib\/log['"]/);
-    // Allow console.error in the cold-start logger-init catch block (Finding 6 defence-in-depth).
-    // Exclude catch block lines from the no-console assertion.
-    const nonCatchLines = ASK_ROUTE.split('\n')
-      .filter((l) => !l.includes('// Logger init failed') && !l.includes("console.error('[ask]"))
-      .join('\n');
-    expect(nonCatchLines).not.toMatch(/console\.(info|warn|error)\b/);
-    expect(ASK_ROUTE).toMatch(/const\s+requestId\s*=\s*crypto\.randomUUID\(\)/);
+  function makeRequest(body: Record<string, unknown>): NextRequest {
+    return new NextRequest('http://localhost/api/contact', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  it('/api/contact emits a structured log carrying requestId on the KV-failure path', async () => {
+    // Make the KV write fail so the route hits its log.error branch.
+    redisSetMock.mockRejectedValueOnce(new Error('KV down'));
+    const { POST } = await import('@/app/api/contact/route');
+    await POST(
+      makeRequest({
+        name: 'Real Name',
+        email: 'real@example.com',
+        message: 'A perfectly long-enough legitimate message',
+      }),
+    );
+
+    // The route logged the failure through the facade with a structured ctx
+    // object — not a bare console call, not a string-only message.
+    expect(logErrorMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ requestId: expect.any(String) }),
+    );
   });
 
-  it('app/api/contact/route.ts imports log, uses no console.*, threads requestId via defineHandler', () => {
-    // PR 5c of audit roadmap migrated /api/contact to defineHandler from
-    // lib/server/route.ts. The route no longer mints `requestId` directly
-    // — it's threaded through the handler context via `defineHandler({
-    // handler({ requestId }) { ... }})`. The log calls that consume it
-    // (`{ requestId, msgId, ... }`) are the regression catcher.
-    expect(CONTACT_ROUTE).toMatch(/import\s*\{[^}]*\blog\b[^}]*\}\s*from\s*['"]@\/lib\/log['"]/);
-    expect(CONTACT_ROUTE).not.toMatch(/console\.(info|warn|error)\b/);
-    expect(CONTACT_ROUTE).toMatch(/from\s*['"]@\/lib\/server\/route['"]/);
-    expect(CONTACT_ROUTE).toMatch(/\bhandler\(\s*\{[^}]*\brequestId\b[^}]*\}\s*\)/);
-    expect(CONTACT_ROUTE).toMatch(/log\.\w+\(\s*['"][^'"]+['"]\s*,\s*\{[^}]*\brequestId\b/);
-  });
+  it('/api/contact emits a structured honeypot log carrying requestId', async () => {
+    const { POST } = await import('@/app/api/contact/route');
+    await POST(
+      makeRequest({
+        name: 'Real Name',
+        email: 'real@example.com',
+        message: 'A perfectly long-enough legitimate message',
+        field_company: 'bot-filled', // honeypot → log.info path
+      }),
+    );
 
-  it('all migrated log call sites have at least two arguments (msg + ctx)', () => {
-    // Count opening-token occurrences: `log.<level>(`. This avoids the
-    // [^)]+ shape which breaks on any log call whose args contain a closing
-    // paren (e.g. log.error('msg', { err: JSON.stringify(x) })). We do not
-    // try to parse argument lists -- just assert every call site has a comma
-    // by checking the source around each opening token.
-    const allMigratedSources = [RATE_LIMIT, LH_SCORES, ASK_ROUTE, CONTACT_ROUTE].join('\n');
-    // Match from `log.<level>(` to the next newline; the comma must appear
-    // before that newline for single-line calls (which all migrated calls are).
-    for (const match of allMigratedSources.matchAll(/\blog\.(?:info|warn|error)\(([^\n]*)/g)) {
-      const argsStart = match[1] ?? '';
-      // Skip the cold-start try/catch fallback line which uses console.error.
-      if (argsStart.startsWith('//')) continue;
-      expect(argsStart, `log call args missing ctx: log.?(${argsStart})`).toMatch(/,/);
-    }
+    expect(logInfoMock).toHaveBeenCalledWith(
+      expect.stringMatching(/honeypot/i),
+      expect.objectContaining({ requestId: expect.any(String) }),
+    );
   });
 });

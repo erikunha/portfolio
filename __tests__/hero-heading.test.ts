@@ -1,20 +1,44 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+// __tests__/hero-heading.test.ts
+// Behavioral test (CG3): renders the Hero RSC and asserts h1 placement in the
+// produced DOM, instead of regex-matching Hero.tsx source. The contract: each
+// viewport variant must carry exactly one h1.hero__name, nested inside its
+// bio/inner wrapper — so screen readers and SEO see a single, correctly
+// scoped document heading per visible layout.
 
-const hero = readFileSync(path.resolve(__dirname, '../components/sections/Hero.tsx'), 'utf-8');
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
+import { Hero } from '@/components/sections/Hero';
+
+// vitest runs under the jsdom environment — DOMParser turns the
+// server-rendered HTML into a real document the assertions can query.
+// createElement (not JSX) keeps this file a `.test.ts`.
+function renderHeroDom(): Document {
+  const html = renderToStaticMarkup(createElement(Hero));
+  return new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
+}
 
 describe('Hero headings', () => {
-  it('Hero RSC renders an h1 element', () => {
-    // Hero is now a single RSC; both desktop and mobile h1s live in Hero.tsx.
-    expect(hero).toMatch(/<h1/);
+  it('renders an h1 element', () => {
+    const doc = renderHeroDom();
+    expect(doc.querySelectorAll('h1').length).toBeGreaterThan(0);
   });
 
-  it('Hero RSC h1 is inside the bio panel on desktop and the inner wrapper on mobile', () => {
-    // Desktop: h1.hero__name must appear inside the hero__bio block.
-    // Regex confirms the className sequence: hero__bio ... h1 ... hero__name (DOM order).
-    expect(hero).toMatch(/hero__bio[\s\S]*?<h1[^>]*hero__name/);
-    // Mobile: h1.hero__name must appear inside the hero__inner block.
-    expect(hero).toMatch(/hero__inner[\s\S]*?<h1[^>]*hero__name/);
+  it('the desktop h1.hero__name lives inside the .hero__bio panel', () => {
+    const doc = renderHeroDom();
+    const desktop = doc.querySelector('.hero--desktop');
+    expect(desktop).not.toBeNull();
+    const bioHeading = desktop?.querySelector('.hero__bio h1.hero__name');
+    expect(bioHeading).not.toBeNull();
+    expect(bioHeading?.textContent).toContain('Erik');
+  });
+
+  it('the mobile h1.hero__name lives inside the .hero__inner wrapper', () => {
+    const doc = renderHeroDom();
+    const mobile = doc.querySelector('.hero--mobile');
+    expect(mobile).not.toBeNull();
+    const innerHeading = mobile?.querySelector('.hero__inner h1.hero__name');
+    expect(innerHeading).not.toBeNull();
+    expect(innerHeading?.textContent).toContain('Erik');
   });
 });
