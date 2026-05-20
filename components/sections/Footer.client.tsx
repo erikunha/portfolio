@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { MatrixRain } from '@/components/responsive/MatrixRain';
+import { MatrixRain } from '@/components/responsive/MatrixRain.client';
 import { dmesgLines } from '@/content/dmesg';
-import { useBreakpoint } from '@/lib/use-breakpoint';
+import { useBreakpoint } from '@/lib/use-breakpoint.client';
 
 function pad(n: number) {
   return String(n).padStart(2, '0');

@@ -133,7 +133,13 @@ test.describe('cross-cutting', () => {
     const fontStatuses = await page.evaluate(() =>
       Array.from(document.fonts).map((f) => ({ family: f.family, status: f.status })),
     );
-    const failedFonts = fontStatuses.filter((f) => f.status === 'error');
+    // next/font generates "<family> Fallback" faces with src: local(...) — their
+    // load status reflects CI system-font availability, not whether the
+    // self-hosted woff2 shipped. Exclude them; this assertion targets the real
+    // self-hosted faces only.
+    const failedFonts = fontStatuses.filter(
+      (f) => f.status === 'error' && !f.family.endsWith(' Fallback'),
+    );
     expect(failedFonts, `Self-hosted fonts failed to load: ${JSON.stringify(failedFonts)}`).toEqual(
       [],
     );

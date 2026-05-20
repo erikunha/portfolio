@@ -8,6 +8,11 @@ export function ContactForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  // Honeypot: hidden off-screen input. A real user never sees or fills this,
+  // so the value stays ''. Naive bots that submit every visible field will
+  // set it — the server then silently returns a successful-looking 200.
+  // See docs/audit/2026-05-19-principal-audit.md Theme 1.4.
+  const [honeypot, setHoneypot] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -19,7 +24,7 @@ export function ContactForm() {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, message }),
+        body: JSON.stringify({ name, email, message, field_company: honeypot }),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -43,6 +48,30 @@ export function ContactForm() {
 
   return (
     <form onSubmit={submit} className="contact" aria-busy={status === 'submitting'}>
+      {/* Honeypot field. Hidden off-screen with aria-hidden + tabindex=-1 so
+          keyboard + screen-reader users skip it entirely. The inline style is
+          deliberate (vs a class) to keep this single-purpose anti-spam input
+          encapsulated and not reliant on any external CSS rule a future
+          refactor could break. autoComplete=off + name=field_company match
+          the server-side check in lib/contact-validation.ts. */}
+      <input
+        type="text"
+        name="field_company"
+        value={honeypot}
+        onChange={(e) => setHoneypot(e.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        data-testid="contact-honeypot"
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          pointerEvents: 'none',
+        }}
+      />
       <label className="contact__field">
         <span className="contact__prompt">
           <span className="contact__prompt-user">user@terminal:~$</span>{' '}

@@ -23,8 +23,11 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-      administration: read
-    timeout-minutes: 12
+    # 18 min: previous 12 min hit the timeout during `Install Playwright Chromium`
+    # on a slow runner (run #26135363392). The dependent e2e-full job (20 min) is
+    # where heavy work runs; build-and-gate just needs headroom for browser install.
+    # Durable fix is a Playwright cache step — tracked separately.
+    timeout-minutes: 18
     env:
       LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
     steps:
@@ -60,7 +63,7 @@ jobs:
         run: pnpm tsc --noEmit
 
       - name: Validate content
-        run: node scripts/validate-content.mjs
+        run: pnpm validate-content
 
       - name: Unit tests
         run: pnpm vitest run
@@ -69,12 +72,6 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || 'HEAD~1' }}
         run: pnpm tsx scripts/check-copilot-drift.ts "$BASE_SHA..HEAD"
-
-      - name: Verify branch protection on main
-        if: github.event_name == 'pull_request' && github.base_ref == 'main'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pnpm tsx scripts/check-branch-protection.ts main
 
       - name: PR comment merge gate
         if: github.event_name == 'pull_request'

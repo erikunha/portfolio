@@ -4,11 +4,16 @@
 // across the last 90 days of date-partitioned keys.
 //
 // Spec ref: docs/superpowers/specs/2026-05-18-production-observability-design.md §7d
+// PR 5 of audit roadmap: refactored to use lib/server/route.ts defineHandler
+// for the unified envelope + X-Request-Id + standard pre-flight ordering.
+// The previously-exposed `deleted: count` field is REMOVED from the success
+// response (audit Theme 8 + Standard 4: it leaked an existence oracle).
 
-import type { NextRequest } from 'next/server';
 import { z } from 'zod';
+
 import { log } from '@/lib/log';
-import { getClientIp, getForgetLimit, getRedis } from '@/lib/rate-limit';
+import { getForgetLimit, getRedis } from '@/lib/rate-limit';
+import { defineHandler, err, ok } from '@/lib/server/route';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,9 +21,9 @@ const ForgetPayload = z.object({
   requestId: z.string().uuid(),
 });
 
-// Smoke-test sentinel: a well-known UUID that bypasses rate-limit + Upstash
-// so the smoke spec can exercise the endpoint without prod secrets configured.
-// Returns the same shape a real call would return for a missing record.
+// Smoke-test sentinel: a well-known UUID that bypasses Upstash so the smoke
+// spec can exercise the endpoint without prod secrets configured. Returns
+// the same shape a real call would return for a missing record.
 const SMOKE_UUID = '00000000-0000-4000-8000-000000000000';
 
 function lastNDates(n: number): string[] {
@@ -32,49 +37,43 @@ function lastNDates(n: number): string[] {
   return out;
 }
 
-export async function POST(req: NextRequest) {
-  // Parse + validate first (local, cheap). Rate-limit happens after so an
-  // invalid payload returns 400 even when Upstash is unreachable.
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ error: 'invalid JSON body' }, { status: 400 });
-  }
+export const POST = defineHandler({
+  schema: ForgetPayload,
+  rateLimit: getForgetLimit,
+  rateLimitErrorMessage: 'too many forget requests',
+  async handler({ body, requestId }) {
+    const { requestId: targetRequestId } = body;
 
-  const parsed = ForgetPayload.safeParse(body);
-  if (!parsed.success) {
-    return Response.json(
-      { error: 'invalid payload shape', issues: parsed.error.issues },
-      { status: 400 },
-    );
-  }
+    // Smoke bypass: matches the spec's SYNTHETIC_REQUEST_ID constant. We
+    // return success WITHOUT touching KV so CI smoke runs don't need prod
+    // Upstash secrets.
+    if (targetRequestId === SMOKE_UUID) {
+      return ok({ requestId });
+    }
 
-  const { requestId } = parsed.data;
+    const candidateKeys = lastNDates(90).map((d) => `ask:log:${d}:${targetRequestId}`);
 
-  // Smoke bypass: matches the spec's SYNTHETIC_REQUEST_ID constant.
-  if (requestId === SMOKE_UUID) {
-    return Response.json({ ok: true, deleted: 0 });
-  }
+    let deleted = 0;
+    try {
+      // Upstash supports `del` with multiple keys in a single call; cheaper
+      // than 90 separate round-trips when most candidates miss.
+      deleted = await getRedis().del(...candidateKeys);
+    } catch (kvErr) {
+      log.error('forget KV delete failed', { requestId, targetRequestId, err: kvErr });
+      return err({
+        requestId,
+        status: 503,
+        code: 'storage_unavailable',
+        message: 'storage unavailable',
+      });
+    }
 
-  const ip = getClientIp(req);
-  const { success } = await getForgetLimit().limit(ip);
-  if (!success) {
-    return Response.json({ error: 'too many forget requests' }, { status: 429 });
-  }
-  const candidateKeys = lastNDates(90).map((d) => `ask:log:${d}:${requestId}`);
-
-  let deleted = 0;
-  try {
-    const redis = getRedis();
-    // Upstash supports del with multiple keys in a single call; cheaper than
-    // 90 separate round-trips when most candidates miss.
-    deleted = await redis.del(...candidateKeys);
-  } catch (err) {
-    log.error('forget KV delete failed', { requestId, err });
-    return Response.json({ error: 'storage unavailable' }, { status: 503 });
-  }
-
-  log.info('forget request processed', { requestId, deleted });
-  return Response.json({ ok: true, deleted });
-}
+    // Log the delete count internally for audit, but DO NOT expose it on the
+    // wire response: audit Theme 8 flagged the prior `{ ok: true, deleted: N }`
+    // shape as an existence oracle — an attacker with a leaked requestId could
+    // confirm "was this Q+A actually persisted?" by inspecting the count.
+    // External response is uniformly `{ ok: true, requestId }`.
+    log.info('forget request processed', { requestId, targetRequestId, deleted });
+    return ok({ requestId });
+  },
+});

@@ -13,10 +13,16 @@ import { describe, expect, it } from 'vitest';
 const LOG_ROUTE = readFileSync(path.resolve(__dirname, '../app/api/log/route.ts'), 'utf-8');
 const RATE_LIMIT = readFileSync(path.resolve(__dirname, '../lib/rate-limit.ts'), 'utf-8');
 
-describe('/api/log endpoint (Phase 3a)', () => {
-  it('exports a POST handler with NextRequest typing', () => {
-    expect(LOG_ROUTE).toMatch(/export\s+async\s+function\s+POST\s*\(/);
-    expect(LOG_ROUTE).toMatch(/NextRequest/);
+describe('/api/log endpoint (Phase 3a + PR 5b of audit)', () => {
+  // PR 5b of audit roadmap refactored this route to use `defineHandler`
+  // from lib/server/route.ts. The POST export is now `export const POST =
+  // defineHandler({ ... })` (not an async function). Source-grep
+  // assertions updated; matching behavioral coverage lives in
+  // __tests__/route-handler.test.ts.
+
+  it('exports POST via defineHandler', () => {
+    expect(LOG_ROUTE).toMatch(/export\s+const\s+POST\s*=\s*defineHandler\(/);
+    expect(LOG_ROUTE).toMatch(/from\s*['"]@\/lib\/server\/route['"]/);
   });
 
   it('marks the route as dynamic', () => {
@@ -53,7 +59,9 @@ describe('/api/log endpoint (Phase 3a)', () => {
   });
 
   it('uses the new getErrorLogLimit() rate-limit factory', () => {
-    expect(LOG_ROUTE).toMatch(/getErrorLogLimit\(\)/);
+    // PR 5b: route now passes the factory (no parens) to defineHandler;
+    // defineHandler invokes it. So we look for the bare symbol.
+    expect(LOG_ROUTE).toMatch(/\bgetErrorLogLimit\b/);
   });
 
   it('lib/rate-limit.ts exports getErrorLogLimit factory with 10/min limit', () => {
@@ -61,9 +69,13 @@ describe('/api/log endpoint (Phase 3a)', () => {
     expect(RATE_LIMIT).toMatch(/slidingWindow\(\s*10\s*,\s*['"]1\s*m['"]/);
   });
 
-  it('returns 204 on success, 400 on validation fail, 503 on KV unreachable', () => {
-    expect(LOG_ROUTE).toMatch(/status:\s*204/);
-    expect(LOG_ROUTE).toMatch(/status:\s*400/);
+  it('returns ok envelope on success, err envelope with storage_unavailable on KV failure', () => {
+    // PR 5b: 204 No Content → 200 { ok: true, requestId } via defineHandler.
+    // 400 + 429 envelopes come from defineHandler itself (parse/validate/rl).
+    // The route still emits the 503 path via the err() helper when KV writes
+    // fail — the only error path the route still owns.
+    expect(LOG_ROUTE).toMatch(/\bok\(\s*\{\s*requestId\s*\}\s*\)/);
+    expect(LOG_ROUTE).toMatch(/code:\s*['"]storage_unavailable['"]/);
     expect(LOG_ROUTE).toMatch(/status:\s*503/);
   });
 
@@ -75,7 +87,7 @@ describe('/api/log endpoint (Phase 3a)', () => {
 });
 
 describe('client error bridge (Phase 3b)', () => {
-  const BRIDGE = readFileSync(path.resolve(__dirname, '../lib/error-bridge.ts'), 'utf-8');
+  const BRIDGE = readFileSync(path.resolve(__dirname, '../lib/error-bridge.client.ts'), 'utf-8');
   const ERROR_BOUNDARY = readFileSync(
     path.resolve(__dirname, '../components/ErrorBoundary.client.tsx'),
     'utf-8',
@@ -111,9 +123,13 @@ describe('client error bridge (Phase 3b)', () => {
     expect(BRIDGE).toMatch(/method:\s*['"]POST['"]/);
   });
 
-  it('AppShell.client.tsx imports lib/error-bridge once as a side-effect', () => {
-    // Bare side-effect import: `import '@/lib/error-bridge';` (or relative variant).
-    expect(APP_SHELL).toMatch(/import\s+['"](@\/lib\/error-bridge|\.\.\/lib\/error-bridge)['"]/);
+  it('AppShell.client.tsx imports lib/error-bridge.client once as a side-effect', () => {
+    // Bare side-effect import: `import '@/lib/error-bridge.client';` (or relative variant).
+    // PR 6b of audit roadmap renamed lib/error-bridge.ts to
+    // lib/error-bridge.client.ts to comply with Standard 2 naming gate.
+    expect(APP_SHELL).toMatch(
+      /import\s+['"](@\/lib\/error-bridge\.client|\.\.\/lib\/error-bridge\.client)['"]/,
+    );
   });
 
   it('ErrorBoundary.client.tsx componentDidCatch POSTs to /api/log', () => {

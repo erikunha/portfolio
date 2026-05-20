@@ -2,13 +2,24 @@
 // All section components are imported here (RSC context), so their code and
 // static data never ship to the client bundle. Only AppShell (nav/overlays)
 // and section components that are explicitly 'use client' end up in JS.
+//
+// STATIC: this route deliberately calls no dynamic APIs (headers / cookies /
+// searchParams) so Next generates and serves it from the CDN edge cache.
+// Sections that need UA detection (Projects / GitLog / Guitar / Visa / Module)
+// call `getIsMobileForRequest()` *internally*; doing so there keeps the
+// dynamic boundary scoped — those sections render dynamically while the page
+// shell stays static. BreakpointProvider's `initialIsMobile={false}` sets
+// the SSR snapshot to desktop; `useSyncExternalStore` then reads the real
+// viewport on the client during hydration and re-renders the mobile chrome
+// if needed. See docs/audit/2026-05-19-principal-audit.md (Theme 3) for
+// the ~750-1000 ms LCP impact this static boundary unlocks.
 
 import { AppShell } from '@/components/AppShell.client';
 import { ErrorBoundary } from '@/components/ErrorBoundary.client';
 import { CommunitySection } from '@/components/sections/CommunitySection';
 import { ContactSection } from '@/components/sections/ContactSection';
 import { CredentialsSection } from '@/components/sections/CredentialsSection';
-import { Footer } from '@/components/sections/Footer';
+import { FooterLazy } from '@/components/sections/FooterLazy.client';
 import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
 import { Hero } from '@/components/sections/Hero';
@@ -25,13 +36,13 @@ import { ShellSection } from '@/components/sections/ShellSection';
 import { SysHealthSection } from '@/components/sections/SysHealthSection';
 import { UnknownsSection } from '@/components/sections/UnknownsSection';
 import { VisaSection } from '@/components/sections/VisaSection';
-import { getIsMobileForRequest } from '@/lib/get-is-mobile-for-request';
-import { BreakpointProvider } from '@/lib/use-breakpoint';
-export default async function Home() {
-  const initialIsMobile = await getIsMobileForRequest();
+import { BreakpointProvider } from '@/lib/use-breakpoint.client';
 
+export const dynamic = 'force-static';
+
+export default function Home() {
   return (
-    <BreakpointProvider initialIsMobile={initialIsMobile}>
+    <BreakpointProvider initialIsMobile={false}>
       <AppShell>
         <main className="page" id="main-content" tabIndex={-1}>
           <ErrorBoundary>
@@ -59,7 +70,7 @@ export default async function Home() {
           <ContactSection defer />
         </main>
         <ErrorBoundary>
-          <Footer />
+          <FooterLazy />
         </ErrorBoundary>
       </AppShell>
     </BreakpointProvider>

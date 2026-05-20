@@ -6,7 +6,7 @@
 
 import { Component, type ReactNode } from 'react';
 
-import { buildLogPayload } from '@/lib/error-bridge';
+import { buildLogPayload } from '@/lib/error-bridge.client';
 
 interface Props {
   children: ReactNode;
