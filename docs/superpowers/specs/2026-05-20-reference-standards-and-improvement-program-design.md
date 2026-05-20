@@ -1,7 +1,7 @@
 # Reference Standards & Improvement Program — Design Spec
 
 - **Date:** 2026-05-20
-- **Status:** Approved (brainstorming) — pending architect-reviewer gate
+- **Status:** Approved — architect-reviewer spec gate `GATE_RESULT: PASS` (2026-05-20); advisory ordering refinements folded in
 - **Branch:** a new dedicated branch cut from `main`
 - **Author:** Erik Cunha
 
@@ -53,7 +53,7 @@ Only personally-verified findings appear below. The stale findings are explicitl
 | 2 | `e2e-full` is non-required — visual + WebKit/mobile regressions can land on `main` silently. | `.github/workflows/ci.yml:163` |
 | 3 | Bundle-budget theater — CI gate is `--max-client-kb=320` (full framework bundle). The `<43KB` app-JS budget is asserted nowhere. | `ci.yml:92` |
 | 4 | `check:client-naming` runs only in local `pre-push`/`verify`, not in CI — a non-author can merge a violation via the GitHub UI. | `ci.yml` (absent) |
-| 5 | Test suite asserts source, not behavior — 25 of 31 root test files call `readFileSync`; a large share grep file contents instead of exercising code. | `__tests__/*` |
+| 5 | Test suite asserts source, not behavior — 25 test files under `__tests__/` call `readFileSync`; a large share grep file contents instead of exercising code. | `__tests__/*` |
 | 6 | `InteractiveShell` streaming bypasses React — manual `createElement('span')` + `appendChild` + per-chunk `textContent` mutation inside an `aria-live` region React also owns. Fragile reconciliation boundary. | `components/client/InteractiveShell.tsx:195-202` |
 
 ### Tier 2 — medium
@@ -134,22 +134,30 @@ the supersession.
 ## 5. Deliverable 2 — Fix program (9 commit groups)
 
 Every verified finding maps to exactly one group. Each group is one revertable commit in the
-single PR.
+single PR. **Ordering:** CG9 lands last — `STANDARDS.md` documents the gates CG1–CG3 create, so a
+post-merge revert of any earlier group requires a `STANDARDS.md` follow-up. CG2 lands before CG6
+(see CG6).
 
 ### CG1 — Reproducibility
 
 - Read resolved versions from `pnpm-lock.yaml`; rewrite every `"latest"` / unbounded dependency in
   `package.json` to a caret-major range (`^x.y.z`).
+- Pin `next` tightly enough that `postinstall`'s `strip-next-polyfills.mjs` checksum target stays
+  stable across a fresh install. If a pin necessarily moves `next`, update the checksum in the same
+  commit. The guard must keep failing loud on mismatch — never silently.
 - Add `scripts/check-dep-pinning.mjs` — fails if any `dependencies`/`devDependencies` entry is
   `latest`, `*`, or otherwise unbounded.
 - Wire `check-dep-pinning` into `pnpm verify` and `ci.yml`.
 
 ### CG2 — CI gate teeth
 
-- **D1 resolved:** split `e2e-full`. The functional cross-browser specs (`contact.spec.ts`,
-  `ask.spec.ts`, `cross-cutting.spec.ts`) become a **required** job. `visual.spec.ts` stays a
-  separate **non-blocking** job with the existing `workflow_dispatch` baseline-refresh path.
-  Update `ci.yml`; document the required job names for branch protection.
+- **D1 resolved — reconciled against the real 3-job CI topology** (`build-and-gate`, `e2e`
+  chromium-smoke, `e2e-full` non-required matrix incl. visual): restructure so the functional
+  cross-browser specs (`contact.spec.ts`, `ask.spec.ts`, `cross-cutting.spec.ts`) run in a
+  **required** matrix job across chromium + webkit + mobile, and `visual.spec.ts` is isolated as
+  the sole **non-blocking** job retaining the `workflow_dispatch` baseline-refresh path. Fold or
+  replace the existing `e2e` chromium-smoke job — do not duplicate its coverage. Update `ci.yml`;
+  document the required job names for branch protection.
 - Add `pnpm check:client-naming` as a CI step.
 - Add `pnpm check:dep-pinning` as a CI step.
 - **D2 resolved:** gate on per-route **First Load JS** (a stable Next build metric) at a tightened
@@ -162,7 +170,8 @@ single PR.
   assertions (render component / call handler / inspect output). Genuine config/manifest reads
   (e.g. asserting an installed dependency version) are kept and tagged with an allow-list comment.
 - Add a behavioral-test meta-check: a Vitest test (or lint rule) that fails if a `__tests__` file
-  reads application source via `readFileSync` without the allow-list tag.
+  reads application source via `readFileSync` without the allow-list tag. The meta-check must land
+  in the same commit as (or after) the file rewrites within CG3 so CG3 does not fail its own gate.
 - Fill coverage gaps: `/api/contact` rate-limit path, `/api/ask` streaming chunk parsing,
   `ContactForm` a11y (tab order / focus / SR announcement).
 - No test is deleted without a behavioral replacement. Capture coverage before and after.
@@ -194,8 +203,10 @@ single PR.
   wrap each file's rules in its layer.
 - Replace the blanket `contain-intrinsic-size` with measured per-section values, or remove the
   size hint where measurement shows it is counterproductive.
+- **Ordering: CG2 must land before CG6.** The `@layer` reorder can shift pixels; the
+  visual-regression job must already be correctly wired (CG2) for that shift to be caught.
 - The visual-regression suite is the safety net; baselines are regenerated deliberately via the
-  `workflow_dispatch` path after this group.
+  `workflow_dispatch` path as the final step of this group.
 
 ### CG7 — Schemas & content
 
@@ -207,7 +218,8 @@ single PR.
 
 - `GitLogSection` — collapse the two render functions into one `renderCommit(commit, isMobile)`.
 - `ManPageSection` — extract `ManPageDesktop` and `ManPageMobile` as separate RSC components.
-- `getRedis()` — make singleton initialization atomic.
+- `getRedis()` — make singleton initialization atomic, preserving fail-open semantics on a Redis
+  *construction* error, not only on a `.limit()` error.
 - `InteractiveShell` — remove the no-op `useCallback(nextId, [])` wrapper.
 - `Footer.client.tsx` — batch the dmesg boot sequence into a single coalesced state update.
 - `MatrixRain` — stabilize color/speed props (or guard the effect) so the rAF loop is not
@@ -254,6 +266,7 @@ single PR.
 | `@layer` introduction reorders specificity → visual regression. | Visual-regression suite is the safety net; baselines regenerated deliberately post-CG6. |
 | Streaming refactor regresses INP. | D3: rAF-coalesced, dedicated state; INP verified via DevTools trace before/after. |
 | Pinning deps to lockfile versions changes behavior. | Pinning to *already-installed* lockfile versions is behavior-neutral; full `pnpm verify` + build after. |
+| CG1 caret ranges later resolve `next` to a new minor → `strip-next-polyfills.mjs` postinstall checksum guard fails. | Pin `next` tightly (or update the checksum in CG1's commit). A loud guard failure is correct behavior, not a regression. |
 
 ## 8. Testing strategy
 
@@ -264,6 +277,9 @@ single PR.
   required before the PR is marked ready.
 - The full `pnpm ci` gate (verify + build + bundle-check) passes on the final branch.
 - `pnpm ready-to-merge` passes before merge.
+- Per the architect-reviewer spec gate, `performance-engineer` is dispatched after CG4 and CG6
+  (INP / Lighthouse-affecting) and `accessibility-tester` after CG4 and CG6 (streaming + visual
+  a11y), in addition to the standing `CLAUDE.md` agent dispatch table.
 
 ## 9. Out of scope
 
