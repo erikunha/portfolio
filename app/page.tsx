@@ -36,7 +36,7 @@ import { ShellSection } from '@/components/sections/ShellSection';
 import { SysHealthSection } from '@/components/sections/SysHealthSection';
 import { UnknownsSection } from '@/components/sections/UnknownsSection';
 import { VisaSection } from '@/components/sections/VisaSection';
-import { BreakpointProvider } from '@/lib/use-breakpoint';
+import { BreakpointProvider } from '@/lib/use-breakpoint.client';
 
 export const dynamic = 'force-static';
 

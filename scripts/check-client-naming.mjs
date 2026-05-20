@@ -7,8 +7,10 @@
 // tree without opening every file — the audit's "RSC drift visible in
 // code review" property.
 //
-// Runs in WARN-ONLY mode for now (exits 0 even with violations). The flip
-// to error mode happens in PR 6b once the bulk rename is complete. See
+// Runs in STRICT mode (default): exits 1 on any violation, blocking CI.
+// Set CHECK_CLIENT_NAMING_LENIENT=1 to downgrade to warn-only (returns 0
+// after listing violations) — for temporary use only when adding a new
+// 'use client' file before renaming. See
 // docs/audit/2026-05-19-principal-audit.md Theme 4 + Standard 2.
 //
 // Usage: pnpm check:client-naming
@@ -101,26 +103,32 @@ for (const dir of SCAN_DIRS) {
   }
 }
 
-// Warn-only mode: surface violations but exit 0 so the gate ships before
-// the bulk rename lands. PR 6b flips this to `process.exit(1)`.
-const STRICT = process.env.CHECK_CLIENT_NAMING_STRICT === '1';
+// Strict-by-default: exit 1 on any violation so CI red-lights the PR.
+// Set CHECK_CLIENT_NAMING_LENIENT=1 to downgrade to warn-only — temporary
+// escape hatch for incremental migrations only.
+const LENIENT = process.env.CHECK_CLIENT_NAMING_LENIENT === '1';
 if (violations.length === 0) {
-  console.log('✓ client-naming: 0 violations — every "use client" file is in /client/ or *.client.*');
+  console.log(
+    '✓ client-naming: 0 violations — every "use client" file is in /client/ or *.client.*',
+  );
   process.exit(0);
 }
 
-console.warn(
-  `⚠ client-naming: ${violations.length} violation${violations.length === 1 ? '' : 's'} (warn-only):`,
+const prefix = LENIENT ? '⚠' : '✗';
+const tag = LENIENT ? '(lenient mode)' : '(strict)';
+console.error(
+  `${prefix} client-naming: ${violations.length} violation${
+    violations.length === 1 ? '' : 's'
+  } ${tag}:`,
 );
 for (const v of violations) {
-  console.warn(`  ${v}`);
+  console.error(`  ${v}`);
 }
-console.warn(
+console.error(
   '  Convention (audit Standard 2): "use client" files must end in *.client.{tsx,ts} OR live in a /client/ directory.',
 );
-console.warn('  Flip to strict mode by setting CHECK_CLIENT_NAMING_STRICT=1.');
-
-if (STRICT) {
-  process.exit(1);
+if (LENIENT) {
+  console.error('  Downgraded to warn-only via CHECK_CLIENT_NAMING_LENIENT=1.');
+  process.exit(0);
 }
-process.exit(0);
+process.exit(1);

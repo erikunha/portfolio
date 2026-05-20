@@ -3,7 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const src = readFileSync(
-  path.resolve(__dirname, '../components/responsive/MatrixRain.tsx'),
+  path.resolve(__dirname, '../components/responsive/MatrixRain.client.tsx'),
   'utf-8',
 );
 

@@ -25,7 +25,7 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 
-const Footer = dynamic(() => import('./Footer').then((m) => ({ default: m.Footer })), {
+const Footer = dynamic(() => import('./Footer.client').then((m) => ({ default: m.Footer })), {
   ssr: false,
 });
 

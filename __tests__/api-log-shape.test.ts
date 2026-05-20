@@ -75,7 +75,7 @@ describe('/api/log endpoint (Phase 3a)', () => {
 });
 
 describe('client error bridge (Phase 3b)', () => {
-  const BRIDGE = readFileSync(path.resolve(__dirname, '../lib/error-bridge.ts'), 'utf-8');
+  const BRIDGE = readFileSync(path.resolve(__dirname, '../lib/error-bridge.client.ts'), 'utf-8');
   const ERROR_BOUNDARY = readFileSync(
     path.resolve(__dirname, '../components/ErrorBoundary.client.tsx'),
     'utf-8',
@@ -111,9 +111,13 @@ describe('client error bridge (Phase 3b)', () => {
     expect(BRIDGE).toMatch(/method:\s*['"]POST['"]/);
   });
 
-  it('AppShell.client.tsx imports lib/error-bridge once as a side-effect', () => {
-    // Bare side-effect import: `import '@/lib/error-bridge';` (or relative variant).
-    expect(APP_SHELL).toMatch(/import\s+['"](@\/lib\/error-bridge|\.\.\/lib\/error-bridge)['"]/);
+  it('AppShell.client.tsx imports lib/error-bridge.client once as a side-effect', () => {
+    // Bare side-effect import: `import '@/lib/error-bridge.client';` (or relative variant).
+    // PR 6b of audit roadmap renamed lib/error-bridge.ts to
+    // lib/error-bridge.client.ts to comply with Standard 2 naming gate.
+    expect(APP_SHELL).toMatch(
+      /import\s+['"](@\/lib\/error-bridge\.client|\.\.\/lib\/error-bridge\.client)['"]/,
+    );
   });
 
   it('ErrorBoundary.client.tsx componentDidCatch POSTs to /api/log', () => {
