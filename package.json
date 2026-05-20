@@ -22,6 +22,7 @@
     "lhci:mobile": "lhci autorun --config=lighthouserc.mobile.json",
     "validate-content": "tsx scripts/validate-content.ts",
     "bundle-check": "node scripts/check-bundle-size.mjs",
+    "bundle:analyze": "ANALYZE=true next build",
     "check:client-naming": "node scripts/check-client-naming.mjs",
     "check:dep-pinning": "node scripts/check-dep-pinning.mjs",
     "pr:comments": "node scripts/inspect-pr-comments.mjs",

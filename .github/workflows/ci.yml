@@ -1,5 +1,8 @@
 name: CI
 
+# Required jobs for branch protection: build-and-gate, e2e-functional.
+# e2e-visual is intentionally NOT required (pixel-diff flakiness).
+
 on:
   pull_request:
   push:
@@ -65,6 +68,12 @@ jobs:
       - name: Validate content
         run: pnpm validate-content
 
+      - name: Client-naming gate
+        run: pnpm check:client-naming
+
+      - name: Dependency-pinning gate
+        run: pnpm check:dep-pinning
+
       - name: Unit tests
         run: pnpm vitest run
 
@@ -84,7 +93,11 @@ jobs:
           DEPLOY_SALT: ci-build-salt
 
       - name: Bundle size gate
-        run: node scripts/check-bundle-size.mjs --max-route-kb=120 --max-client-kb=320
+        # Gates the total client-chunk gzipped size (Next/React framework
+        # ~185KB co-bundled by Turbopack + app code). Per-route First Load JS
+        # is not extractable from the Turbopack manifest; the 43KB app-island
+        # design target is tracked via `pnpm bundle:analyze`, not gated here.
+        run: node scripts/check-bundle-size.mjs --max-client-kb=220
 
       - name: Start preview server
         run: pnpm start &
@@ -106,57 +119,9 @@ jobs:
       - name: axe-core a11y scan
         run: pnpm playwright test tests/a11y
 
-  e2e:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: build-and-gate
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm playwright install --with-deps chromium
-      - run: pnpm build
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
-          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
-          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
-          DEPLOY_SALT: ci-build-salt
-      - name: Check if e2e tests exist
-        id: check-e2e
-        run: |
-          if ls tests/e2e/*.spec.ts 2>/dev/null | grep -q .; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "No tests/e2e/*.spec.ts found — skipping e2e run."
-          fi
-      - if: steps.check-e2e.outputs.exists == 'true'
-        run: pnpm start &
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
-          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
-          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
-          DEPLOY_SALT: ci-build-salt
-      - if: steps.check-e2e.outputs.exists == 'true'
-        run: npx wait-on http://localhost:3000 --timeout 30000
-      - if: steps.check-e2e.outputs.exists == 'true'
-        # Explicit spec list: visual.spec.ts is owned by e2e-full (Linux baselines).
-        # Playwright CLI has no --ignore flag; enumerate the smoke specs instead.
-        run: pnpm playwright test --project=chromium tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/observability-smoke.spec.ts
-
-  e2e-full:
+  e2e-functional:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # Non-required: fails do not block merge. Promote to required after 5 stable runs.
-    # To make it required: add this job name to branch protection rules.
     needs: build-and-gate
     strategy:
       fail-fast: false
@@ -180,25 +145,55 @@ jobs:
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
           DEPLOY_SALT: ci-build-salt
-      - name: Check if e2e-full tests exist
-        id: check-full
-        run: |
-          if ls tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/visual.spec.ts tests/e2e/cross-cutting.spec.ts 2>/dev/null | grep -q .; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "No e2e-full spec files found — skipping."
-          fi
-      - if: steps.check-full.outputs.exists == 'true'
-        name: Start preview server
+      - name: Start preview server
         run: pnpm start &
-      - if: steps.check-full.outputs.exists == 'true'
-        name: Wait for server
+      - name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 30000
-      - if: steps.check-full.outputs.exists == 'true' && inputs.update_visual_baselines != 'true'
-        name: Run e2e-full tests
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/visual.spec.ts tests/e2e/cross-cutting.spec.ts
-      - if: steps.check-full.outputs.exists == 'true' && inputs.update_visual_baselines == 'true'
+      - name: Run functional e2e
+        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/cross-cutting.spec.ts tests/e2e/observability-smoke.spec.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: test-results/
+
+  e2e-visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Non-required: pixel-diff flakiness must not block merges. Visual
+    # regressions are reviewed via the uploaded report; baselines are
+    # refreshed deliberately via the workflow_dispatch path.
+    needs: build-and-gate
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, chromium-mobile, webkit-desktop, webkit-mobile]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Playwright browsers
+        run: pnpm playwright install --with-deps ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
+      - name: Build
+        run: pnpm build
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
+          DEPLOY_SALT: ci-build-salt
+      - name: Start preview server
+        run: pnpm start &
+      - name: Wait for server
+        run: npx wait-on http://localhost:3000 --timeout 30000
+      - if: inputs.update_visual_baselines != 'true'
+        name: Run visual regression
+        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts
+      - if: inputs.update_visual_baselines == 'true'
         name: Regenerate visual baselines (workflow_dispatch only)
         run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts --update-snapshots
       - if: inputs.update_visual_baselines == 'true'
@@ -210,5 +205,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report-${{ matrix.project }}
+          name: visual-report-${{ matrix.project }}
           path: test-results/
