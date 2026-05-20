@@ -2,35 +2,46 @@
    TOKENS
    Lifted from prototype/Portfolio.html :root.
    ───────────────────────────────────────────────────────────────────────── */
-:root {
-  --bg: #000000;
-  --signal: #00ff41;
-  --signal-dim: rgba(0, 255, 65, 0.4);
-  --signal-dim-2: rgba(0, 255, 65, 0.1);
-  --signal-faint: rgba(0, 255, 65, 0.12);
-  --fg: #c8facc;
-  --muted: #4ade80;
-  --highlight-bg: #00ff41;
-  --highlight-fg: #000000;
-  --border: rgba(0, 255, 65, 0.2);
-  --red: #ff5f57;
-  --yellow: #febc2e;
-  --green-light: #28c840;
+@layer tokens {
+  :root {
+    --bg: #000000;
+    --signal: #00ff41;
+    --signal-dim: rgba(0, 255, 65, 0.4);
+    --signal-dim-2: rgba(0, 255, 65, 0.1);
+    --signal-faint: rgba(0, 255, 65, 0.12);
+    --fg: #c8facc;
+    --muted: #4ade80;
+    --highlight-bg: #00ff41;
+    --highlight-fg: #000000;
+    --border: rgba(0, 255, 65, 0.2);
+    --red: #ff5f57;
+    --yellow: #febc2e;
+    --green-light: #28c840;
 
-  --pad: 24px;
-  --maxw: 1200px;
-  --vrhythm: 64px;
+    /* Chrome-dot colors reuse --red/--yellow/--green-light above (canonical
+       macOS traffic-light hexes). _shell.css and _responsive.css both target
+       these dots; _responsive.css previously drifted 1-2px off (#ff5f56 /
+       #ffbd2e / #27c93f) — now corrected to the canonical tokens. */
+    --shell-bg: #050505;
+    --highlight-yellow: #ffd86b;
+    --highlight-cyan: #7fe4ff;
+    --error-soft: #ff8a8a;
 
-  --font-mono-stack: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-display-stack: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    --pad: 24px;
+    --maxw: 1200px;
+    --vrhythm: 64px;
 
-  --fs-2xs: 9px;
-  --fs-xs: 11px;
-  --fs-sm: 12px;
-  --fs-base: 14px;
-  --fs-md: 16px;
-  --fs-lg: 22px;
-  --fs-xl: 32px;
-  --fs-2xl: 48px;
-  --fs-3xl: 78px;
+    --font-mono-stack: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --font-display-stack: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+
+    --fs-2xs: 9px;
+    --fs-xs: 11px;
+    --fs-sm: 12px;
+    --fs-base: 14px;
+    --fs-md: 16px;
+    --fs-lg: 22px;
+    --fs-xl: 32px;
+    --fs-2xl: 48px;
+    --fs-3xl: 78px;
+  }
 }

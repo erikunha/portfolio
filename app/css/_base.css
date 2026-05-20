@@ -4,188 +4,190 @@
    explicitly so there's one mental model (these files) and no runtime style
    injection. See DECISIONS.md (2026-05-18) for the removal rationale.
    ───────────────────────────────────────────────────────────────────────── */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 
-html {
-  /* offset anchor scroll for sticky topbar on desktop */
-  scroll-padding-top: 52px;
-  /* prevent iOS Safari auto-zoom on rotate; consistent tab width in <pre> */
-  -webkit-text-size-adjust: 100%;
-  tab-size: 4;
-}
-
-/* Media + embeds default to block to kill inline baseline gap, and never
-   overflow their container. */
-img,
-svg,
-video,
-canvas,
-audio,
-iframe,
-embed,
-object {
-  display: block;
-  vertical-align: middle;
-}
-
-img,
-video {
-  max-width: 100%;
-  height: auto;
-}
-
-/* Form controls inherit typography from <body> rather than UA defaults. */
-input,
-textarea,
-select,
-optgroup {
-  font: inherit;
-  color: inherit;
-  margin: 0;
-}
-
-/* Lists used as semantic containers (not bullet lists). */
-ul,
-ol {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-html,
-body {
-  margin: 0;
-  padding: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--font-mono-stack);
-  font-size: 16px;
-  line-height: 1.55;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-
-@media (max-width: 768px) {
   html {
-    scroll-padding-top: 76px; /* statusbar ~28px + window-chrome ~44px + buffer */
+    /* offset anchor scroll for sticky topbar on desktop */
+    scroll-padding-top: 52px;
+    /* prevent iOS Safari auto-zoom on rotate; consistent tab width in <pre> */
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
   }
-}
 
-::selection {
-  background: var(--signal);
-  color: var(--highlight-fg);
-}
-
-a {
-  color: var(--signal);
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-a:focus-visible {
-  text-decoration: underline;
-  outline: 2px solid var(--signal);
-  outline-offset: 2px;
-}
-
-button:focus-visible,
-input:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--signal);
-  outline-offset: 2px;
-}
-
-.skip-to-content {
-  position: absolute;
-  left: 0;
-  top: 0;
-  z-index: 9999;
-  padding: 8px 16px;
-  background: var(--signal);
-  color: #000;
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-md);
-  font-weight: 700;
-  text-decoration: none;
-  clip-path: inset(50%);
-  overflow: hidden;
-  transition: clip-path 0.1s;
-}
-.skip-to-content:focus {
-  clip-path: inset(0);
-  overflow: visible;
-}
-
-button {
-  font-family: inherit;
-  color: inherit;
-  background: transparent;
-  border: 1px solid var(--border);
-  cursor: pointer;
-}
-
-pre,
-code {
-  font-family: var(--font-mono-stack);
-  white-space: pre;
-}
-
-h1,
-h2,
-h3 {
-  font-family: var(--font-mono-stack);
-  font-weight: 700;
-  color: var(--signal);
-  margin: 0 0 8px 0;
-  text-shadow: 0 0 2px rgba(0, 255, 65, 0.3);
-}
-
-h1 {
-  font-size: var(--fs-2xl);
-  font-family: var(--font-display-stack);
-  font-weight: 900;
-}
-
-@media (max-width: 768px) {
-  :root {
-    --vrhythm: 18px;
-    --pad: 14px;
-    --fs-3xl: 56px;
-    --fs-2xl: 32px;
+  /* Media + embeds default to block to kill inline baseline gap, and never
+     overflow their container. */
+  img,
+  svg,
+  video,
+  canvas,
+  audio,
+  iframe,
+  embed,
+  object {
+    display: block;
+    vertical-align: middle;
   }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Form controls inherit typography from <body> rather than UA defaults. */
+  input,
+  textarea,
+  select,
+  optgroup {
+    font: inherit;
+    color: inherit;
+    margin: 0;
+  }
+
+  /* Lists used as semantic containers (not bullet lists). */
+  ul,
+  ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-mono-stack);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  @media (max-width: 768px) {
+    html {
+      scroll-padding-top: 76px; /* statusbar ~28px + window-chrome ~44px + buffer */
+    }
+  }
+
+  ::selection {
+    background: var(--signal);
+    color: var(--highlight-fg);
+  }
+
+  a {
+    color: var(--signal);
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  a:focus-visible {
+    text-decoration: underline;
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+  }
+
+  .skip-to-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 9999;
+    padding: 8px 16px;
+    background: var(--signal);
+    color: #000;
+    font-family: var(--font-mono-stack);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    text-decoration: none;
+    clip-path: inset(50%);
+    overflow: hidden;
+    transition: clip-path 0.1s;
+  }
+  .skip-to-content:focus {
+    clip-path: inset(0);
+    overflow: visible;
+  }
+
+  button {
+    font-family: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  pre,
+  code {
+    font-family: var(--font-mono-stack);
+    white-space: pre;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-mono-stack);
+    font-weight: 700;
+    color: var(--signal);
+    margin: 0 0 8px 0;
+    text-shadow: 0 0 2px rgba(0, 255, 65, 0.3);
+  }
+
   h1 {
     font-size: var(--fs-2xl);
+    font-family: var(--font-display-stack);
+    font-weight: 900;
   }
-}
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
+  @media (max-width: 768px) {
+    :root {
+      --vrhythm: 18px;
+      --pad: 14px;
+      --fs-3xl: 56px;
+      --fs-2xl: 32px;
+    }
+    h1 {
+      font-size: var(--fs-2xl);
+    }
+  }
 
-.not-found {
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--font-mono-stack);
-  position: relative;
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .not-found {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-mono-stack);
+    position: relative;
+  }
 }
