@@ -66,6 +66,17 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha || 'HEAD~1' }}
         run: pnpm tsx scripts/check-copilot-drift.ts "$BASE_SHA..HEAD"
 
+      - name: Verify branch protection on main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm tsx scripts/check-branch-protection.ts main
+
+      - name: PR comment merge gate
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm tsx scripts/check-pr-comments.ts ${{ github.event.pull_request.number }}
+
       - name: Build
         run: pnpm build
         env:
