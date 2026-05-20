@@ -1,12 +1,13 @@
 #!/usr/bin/env tsx
 import { execFileSync } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { hasAutoGenHeader } from './lib/copilot/auto-gen-header';
 
 const SOURCE_PATTERNS = [/^CLAUDE\.md$/, /^scripts\/copilot-port\.config\.ts$/];
 
 const GENERATED_PATTERNS = [
+  /^AGENTS\.md$/,
   /^\.github\/copilot-instructions\.md$/,
   /^\.github\/prompts\//,
   /^\.github\/chatmodes\//,
@@ -39,6 +40,13 @@ function readDirSafe(p: string): string[] {
 
 function listGeneratedFiles(): string[] {
   const files: string[] = [];
+  // Check for AGENTS.md at repo root
+  try {
+    statSync('AGENTS.md');
+    files.push('AGENTS.md');
+  } catch {
+    // not generated yet
+  }
   const githubEntries = readDirSafe('.github');
   if (githubEntries.includes('copilot-instructions.md')) {
     files.push('.github/copilot-instructions.md');
