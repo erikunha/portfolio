@@ -40,12 +40,23 @@ const CSS_FILES = [
  * Strips comments, collapses whitespace, removes unnecessary punctuation
  * spacing. Does not handle every CSS edge case (e.g., URLs containing `;` in
  * data: URIs), but our partials don't use those constructs.
+ *
+ * `+` and `-` are deliberately NOT in the punctuation-strip class because
+ * they're arithmetic operators inside `calc()` / `min()` / `max()` /
+ * `clamp()` that REQUIRE surrounding whitespace per spec:
+ *   `calc(80px + env(safe-area-inset-bottom, 0px))` is valid
+ *   `calc(80px+env(safe-area-inset-bottom, 0px))` is invalid (parses as a
+ *   unitless `+env(...)` literal). The codebase uses calc(... + ...) in
+ *   _chrome.css and _layout.css. We trade the ~5-byte saving from
+ *   stripping `+` in CSS combinators (`.a + .b` → `.a+.b`) for not
+ *   silently breaking every calc() expression. Drift-protected by
+ *   __tests__/inline-css.test.ts.
  */
 function minifyCss(css: string): string {
   return css
     .replace(/\/\*[\s\S]*?\*\//g, '') // strip /* comments */
     .replace(/\s+/g, ' ') // collapse whitespace
-    .replace(/\s*([{}:;,>+~])\s*/g, '$1') // remove spaces around CSS punctuation
+    .replace(/\s*([{}:;,>~])\s*/g, '$1') // remove spaces around CSS punctuation (excl. + and -)
     .replace(/;}/g, '}') // remove last semicolon before close brace
     .trim();
 }

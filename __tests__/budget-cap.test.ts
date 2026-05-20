@@ -61,38 +61,53 @@ describe('budget reservation pattern', () => {
     vi.clearAllMocks();
   });
 
+  // Reservation = RESERVED_INPUT_TOKENS (2200) + maxOutputTokens.
+  // PR 4 of audit roadmap padded SYSTEM above the 1024-token Haiku
+  // ephemeral cache minimum (~1500 tokens cache-cold). The original
+  // RESERVED_INPUT_TOKENS=1000 was sized for the pre-PR-4 SYSTEM and
+  // undercounts. Copilot flagged this on PR #29; the fix raises the
+  // reservation to 2200 so actual ≤ reserved holds AND settleBudget
+  // refunds a positive delta. See lib/rate-limit.ts file comment.
+  const INPUT_RESERVATION = 2200;
+
   it('reserves RESERVED_INPUT_TOKENS + maxOutputTokens upfront and allows within cap', async () => {
     const { reserveBudget } = await import('@/lib/rate-limit');
     const result = await reserveBudget(512);
     expect(result.allowed).toBe(true);
-    expect(result.reserved).toBe(1000 + 512);
-    expect(counter.value).toBe(1512);
+    expect(result.reserved).toBe(INPUT_RESERVATION + 512);
+    expect(counter.value).toBe(INPUT_RESERVATION + 512);
   });
 
   it('rejects and refunds the reservation when it would cross the 400k cap', async () => {
-    counter.value = 399_000; // 1k away from cap; +1512 reservation crosses it
+    // Place the counter 1k away from the cap so any reservation > 1k crosses.
+    counter.value = 399_000;
     const { reserveBudget } = await import('@/lib/rate-limit');
     const result = await reserveBudget(512);
     expect(result.allowed).toBe(false);
     expect(result.reserved).toBe(0);
     // The counter must be restored — fail-closed on the user side, but the
     // counter accounting must not stay artificially inflated.
-    expect(decrbyMock).toHaveBeenCalledWith(expect.stringMatching(/ask:tokens:/), 1512);
+    expect(decrbyMock).toHaveBeenCalledWith(
+      expect.stringMatching(/ask:tokens:/),
+      INPUT_RESERVATION + 512,
+    );
   });
 
   it('settleBudget refunds (reserved - actual) when actual is less than reserved', async () => {
     const { reserveBudget, settleBudget } = await import('@/lib/rate-limit');
-    await reserveBudget(512); // counter = 1512
+    const result = await reserveBudget(512);
+    const reserved = result.reserved;
     decrbyMock.mockClear();
-    await settleBudget(1512, /*actualIn*/ 120, /*actualOut*/ 80);
-    // refund = 1512 - 200 = 1312
-    expect(decrbyMock).toHaveBeenCalledWith(expect.stringMatching(/ask:tokens:/), 1312);
+    await settleBudget(reserved, /*actualIn*/ 120, /*actualOut*/ 80);
+    expect(decrbyMock).toHaveBeenCalledWith(expect.stringMatching(/ask:tokens:/), reserved - 200);
   });
 
   it('settleBudget is a no-op when actual >= reserved (defensive)', async () => {
     const { settleBudget } = await import('@/lib/rate-limit');
     decrbyMock.mockClear();
-    await settleBudget(1512, /*in*/ 1000, /*out*/ 600); // 1600 > 1512
+    // Pass actuals that intentionally exceed an arbitrary reservation. The
+    // defensive branch (no negative refund) is what we're asserting.
+    await settleBudget(INPUT_RESERVATION + 512, /*in*/ 2500, /*out*/ 600);
     expect(decrbyMock).not.toHaveBeenCalled();
   });
 
