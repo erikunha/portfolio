@@ -148,6 +148,19 @@ CI enforces all of the above. **Never disable the gates to merge.** If a gate fa
 - Auth, accounts, comments
 - CMS (single-author, content in TS)
 
+## PR merge gate
+
+Before any agent or human calls `gh pr merge` on this repo:
+
+1. **GitHub resolve-thread is ground truth.** A PR may not merge while `gh api graphql` returns any `PullRequestReviewThread` with `isResolved: false`. Enforced by GitHub branch protection (`required_conversation_resolution`) and by `pnpm ready-to-merge <pr>` locally.
+2. **AI agents must RESOLVE or ESCALATE every open comment.** RESOLVE = address with a fix commit and reply with the SHA. ESCALATE = surface to the human owner with the comment verbatim, 2-3 options, and a recommendation; wait for a decision. No third bucket. "Looks minor" is not allowed.
+3. **In-session reviewer findings count.** Output from `pr-review-toolkit:review-pr`, `code-review:code-review`, or `ultrareview` must be posted to the PR before merge so they fall under rule 1.
+4. **Self-resolve is detectable.** `scripts/check-pr-comments.ts` warns when the PR author is also the thread resolver. Document the override on the PR if intentional.
+5. **Mechanical command.** `pnpm ready-to-merge <pr>` runs `pnpm ci` (full local gate, including bundle-check) then queries unresolved threads. Must pass before `gh pr merge`.
+6. **The branch protection rule must stay enabled.** CI runs `scripts/check-branch-protection.ts` against `main`; the build fails if `required_conversation_resolution` is off.
+
+Rationale: human-in-the-loop quality gate for AI-assisted development on a Staff/Principal-bar artifact. See `DECISIONS.md` for residual-risk note. See `AGENTS.md` for the cross-tool surface (generated from this file).
+
 ## Things that have been considered and rejected
 
 Before proposing any of these, check `DECISIONS.md` to see the reasoning that excluded them:
