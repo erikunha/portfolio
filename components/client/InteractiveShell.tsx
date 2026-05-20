@@ -118,14 +118,21 @@ export function InteractiveShell() {
   const [input, setInput] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const [busy, setBusy] = useState(false);
+  // The live streaming answer is its own state field, NOT an entry in
+  // `history`: a per-chunk update must re-render only the streaming <span>,
+  // never the whole feed. `null` means no stream in flight.
+  const [streamingText, setStreamingText] = useState<string | null>(null);
   const feedRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const typingRef = useRef(false);
   const mountedRef = useRef(true);
+  // Pending requestAnimationFrame handle for the chunk-coalescing flush.
+  const rafRef = useRef<number | null>(null);
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
   }, []);
   const initializedRef = useRef(false);
@@ -136,24 +143,28 @@ export function InteractiveShell() {
     if (isMobile) setHistory(withIds(MOBILE_INITIAL, nextId));
   }, [isMobile, nextId]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: history triggers scroll; feedRef is a stable ref
+  // biome-ignore lint/correctness/useExhaustiveDependencies: history + streamingText trigger scroll; feedRef is a stable ref
   useEffect(() => {
     if (feedRef.current) {
       feedRef.current.scrollTop = feedRef.current.scrollHeight;
     }
-  }, [history]);
+  }, [history, streamingText]);
 
   const streamQuestion = useCallback(
     async (question: string) => {
       const loadingId = nextId();
       setHistory((h) => [...h, { id: loadingId, kind: 'loading', text: '' }]);
-      let streamSpan: HTMLSpanElement | null = null;
+
+      const clearRaf = () => {
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
+      };
 
       const finalize = (finalText: string, errMsg?: string) => {
-        if (streamSpan) {
-          streamSpan.remove();
-          streamSpan = null;
-        }
+        clearRaf();
+        setStreamingText(null);
         const lines: Line[] = [];
         if (finalText) lines.push({ id: nextId(), kind: 'output', text: finalText });
         if (errMsg) lines.push({ id: nextId(), kind: 'error', text: `error: ${errMsg}` });
@@ -181,22 +192,32 @@ export function InteractiveShell() {
         const reader = res.body.getReader();
         const dec = new TextDecoder();
         let accumulated = '';
+        let pending = '';
+        let loadingCleared = false;
+
+        // Coalesce chunk-driven re-renders to at most one per animation frame:
+        // a fast token stream cannot trigger a render storm (INP guard). The
+        // streaming text lands in `streamingText` state — isolated from
+        // `history` — so the flush re-renders only the streaming <span>.
+        const scheduleFlush = () => {
+          if (rafRef.current !== null) return;
+          rafRef.current = requestAnimationFrame(() => {
+            rafRef.current = null;
+            if (!loadingCleared) {
+              setHistory((h) => h.filter((l) => l.id !== loadingId));
+              loadingCleared = true;
+            }
+            setStreamingText(pending);
+          });
+        };
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           accumulated += dec.decode(value, { stream: true });
           const { displayText } = parseStreamChunk(accumulated);
-          if (!displayText) continue;
-
-          if (!streamSpan) {
-            setHistory((h) => h.filter((l) => l.id !== loadingId));
-            streamSpan = document.createElement('span');
-            streamSpan.className = 'shell__line shell__line--output';
-            feedRef.current?.appendChild(streamSpan);
-          }
-          streamSpan.textContent = displayText;
-          if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
+          pending = displayText;
+          if (pending) scheduleFlush();
         }
 
         const { displayText: finalText, errorMessage: errMsg } = parseStreamChunk(accumulated);
@@ -305,6 +326,9 @@ export function InteractiveShell() {
               {l.text}
             </span>
           ),
+        )}
+        {streamingText !== null && (
+          <span className="shell__line shell__line--output">{streamingText}</span>
         )}
       </div>
 

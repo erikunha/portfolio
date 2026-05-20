@@ -65,3 +65,20 @@ export async function flushMicrotasks(): Promise<void> {
     await new Promise<void>((r) => setTimeout(r, 0));
   });
 }
+
+/**
+ * Advances past one animation frame so a `requestAnimationFrame`-coalesced
+ * state update commits, then drains the resulting React work.
+ *
+ * jsdom schedules `requestAnimationFrame` callbacks on a ~16ms timer, so a
+ * `setTimeout(0)` tick (`flushMicrotasks`) does NOT flush them. Suites that
+ * exercise rAF-coalesced rendering (e.g. the InteractiveShell streaming line)
+ * call this to let the next frame fire and its `setState` settle. The 32ms
+ * wait clears one frame with margin; call it once per frame you need to
+ * observe.
+ */
+export async function flushFrames(): Promise<void> {
+  await act(async () => {
+    await new Promise<void>((r) => setTimeout(r, 32));
+  });
+}
