@@ -7,7 +7,10 @@ import { expect, test } from '@playwright/test';
 const SYNTHETIC_REQUEST_ID = '00000000-0000-4000-8000-000000000000';
 
 test.describe('observability smoke', () => {
-  test('/api/log accepts a structured error payload', async ({ request }) => {
+  test('/api/log accepts a structured error payload (unified envelope)', async ({ request }) => {
+    // PR 5b of audit roadmap migrated /api/log to defineHandler. Response
+    // shape is now { ok: true, requestId } with X-Request-Id header
+    // (previously 204 No Content). The smoke prefix still skips KV write.
     const res = await request.post('/api/log', {
       data: {
         level: 'error',
@@ -18,30 +21,47 @@ test.describe('observability smoke', () => {
         ts: new Date().toISOString(),
       },
     });
-    expect(res.status()).toBe(204);
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(body).toMatchObject({ ok: true });
+    expect(typeof body.requestId).toBe('string');
+    expect(res.headers()['x-request-id']).toBeTruthy();
   });
 
-  test('/api/log rejects an invalid payload with 400', async ({ request }) => {
+  test('/api/log rejects an invalid payload with 400 + validation_failed', async ({ request }) => {
     const res = await request.post('/api/log', {
       data: { not_a_valid_field: 'oops' },
     });
     expect(res.status()).toBe(400);
+    const body = await res.json();
+    expect(body).toMatchObject({ ok: false, error: { code: 'validation_failed' } });
   });
 
-  test('/api/log/forget accepts a UUID requestId and returns ok shape', async ({ request }) => {
+  test('/api/log/forget accepts a UUID requestId and returns unified envelope', async ({
+    request,
+  }) => {
+    // PR 5 of audit roadmap closed the deleted-count existence oracle —
+    // the response no longer exposes the deletion count. Shape is now
+    // simply { ok: true, requestId }.
     const res = await request.post('/api/log/forget', {
       data: { requestId: SYNTHETIC_REQUEST_ID },
     });
     expect(res.status()).toBe(200);
     const body = await res.json();
     expect(body).toMatchObject({ ok: true });
-    expect(typeof body.deleted).toBe('number');
+    expect(typeof body.requestId).toBe('string');
+    // Audit Theme 8: deleted count MUST NOT leak.
+    expect(body.deleted).toBeUndefined();
   });
 
-  test('/api/log/forget rejects non-UUID requestId with 400', async ({ request }) => {
+  test('/api/log/forget rejects non-UUID requestId with 400 + validation_failed', async ({
+    request,
+  }) => {
     const res = await request.post('/api/log/forget', {
       data: { requestId: 'not-a-uuid' },
     });
     expect(res.status()).toBe(400);
+    const body = await res.json();
+    expect(body).toMatchObject({ ok: false, error: { code: 'validation_failed' } });
   });
 });

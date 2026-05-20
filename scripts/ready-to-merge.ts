@@ -2,9 +2,17 @@
 // Usage: pnpm ready-to-merge [pr-number]
 //
 // Pre-merge wrapper: runs the local CI chain (lint + typecheck + content
-// validate + client-naming + tests) then the PR comment gate. PR number is
-// optional — when omitted, `check-pr-comments.ts` infers it from the
-// current branch via `gh pr view`.
+// validate + client-naming + tests), the branch-protection gate, then the
+// PR comment gate. PR number is optional — when omitted, `check-pr-comments.ts`
+// infers it from the current branch via `gh pr view`.
+//
+// Why the branch-protection check lives here and NOT in CI:
+//   The GitHub Actions GITHUB_TOKEN cannot read the
+//   `/branches/{branch}/protection` endpoint — it requires repo-admin token
+//   power (a PAT or GitHub App installation token), and `administration` is
+//   not even a grantable GITHUB_TOKEN permission. Run locally, `gh` carries
+//   the developer's own admin auth, so the check verifiably activates here.
+//   See DECISIONS.md (audit standard #4: no dead-code security theater).
 //
 // Why a wrapper script vs. a direct pnpm chain:
 //   pnpm ready-to-merge 42  →  pnpm interprets `42` as a pnpm flag, not a
@@ -21,6 +29,15 @@ try {
   execFileSync('pnpm', ['ci:local'], { stdio: 'inherit' });
 } catch {
   process.stderr.write('\n[ready-to-merge] ci:local failed — fix before re-running.\n');
+  process.exit(1);
+}
+
+try {
+  execFileSync('pnpm', ['tsx', 'scripts/check-branch-protection.ts', 'main'], {
+    stdio: 'inherit',
+  });
+} catch {
+  process.stderr.write('\n[ready-to-merge] branch-protection check failed. See message above.\n');
   process.exit(1);
 }
 

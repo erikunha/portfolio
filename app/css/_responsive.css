@@ -128,3 +128,23 @@ body[data-motion="reduce"] .hero__status-dot {
   color: var(--signal);
   font-weight: 700;
 }
+
+/* ─── Viewport-scoped visibility utilities ───────────────────────────────
+ * `app/page.tsx` is `force-static` (audit PR 1 Theme 3), so the static HTML
+ * has no per-request UA context. `AppShell.client.tsx` renders both
+ * viewport variants of the responsive shell (StatusBar + MobileTitleBar +
+ * Dock for narrow viewports; DesktopTopbar for wide) and lets CSS choose
+ * which is visible at the 768px breakpoint. Trade-off: ~30-50 extra DOM
+ * nodes. Benefit: zero CLS on mobile/desktop divergence; preserves the
+ * TTFB win from static-gen AND the < 0.05 CLS budget. See DECISIONS.md. */
+.mobile-only {
+  display: none;
+}
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none;
+  }
+  .mobile-only {
+    display: contents;
+  }
+}

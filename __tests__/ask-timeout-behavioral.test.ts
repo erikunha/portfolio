@@ -29,8 +29,9 @@ vi.mock('@anthropic-ai/sdk', () => {
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
   getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-  checkBudget: vi.fn(async () => ({ allowed: true })),
-  incrementBudget: vi.fn(async () => undefined),
+  reserveBudget: vi.fn(async () => ({ allowed: true, reserved: 1512, pct: 0 })),
+  settleBudget: vi.fn(async () => undefined),
+  checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
 }));
 
 // --- Mock PR #11 observability deps so server-only guard doesn't block ---

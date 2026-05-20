@@ -72,6 +72,26 @@ export function getClientIp(req: import('next/server').NextRequest): string {
 const MONTHLY_TOKEN_BUDGET = 400_000;
 const BUDGET_WINDOW_S = 60 * 60 * 24 * 32;
 
+// Reservation pattern constants. Worst-case input tokens cover:
+//   - SYSTEM prompt: ~1500 tokens cache-cold (PR 4 padded SYSTEM above the
+//     Anthropic Haiku ephemeral cache 1024-token minimum; SYSTEM_TEXT in
+//     lib/ask/system-prompt.ts is ~5500 chars ≈ 1500-1600 tokens).
+//   - Wrapped user question: max 500 chars of input + ~200 chars of
+//     <question> delimiter + re-anchor instruction ≈ 200 tokens.
+//   - Anthropic SDK framing overhead: ~100 tokens.
+// Total worst-case input ≈ 1800 tokens; reserve 2200 for a ~20% safety
+// buffer. Closes the audit Theme 8 follow-up (Copilot review on PR #29):
+// if actual billed input > reserved, settleBudget() becomes a no-op (the
+// refund branch is `if (refund <= 0) return`) and the counter undercounts,
+// defeating the "never below actual usage" guarantee. With 2200 tokens
+// reserved against worst-case 1800 actual, there's always positive headroom
+// to refund — settleBudget never undercounts.
+//
+// Drift-protected by __tests__/budget-cap.test.ts. Update both when SYSTEM
+// size moves (also update lib/ask/system-prompt.ts CACHE_ELIGIBILITY_MIN_CHARS
+// if relevant).
+const RESERVED_INPUT_TOKENS = 2200;
+
 export function getBudgetKey(): string {
   const now = new Date();
   const yyyy = now.getUTCFullYear();
@@ -79,30 +99,76 @@ export function getBudgetKey(): string {
   return `ask:tokens:${yyyy}-${mm}`;
 }
 
-export async function checkBudget(): Promise<{ allowed: boolean; pct: number }> {
-  try {
-    const used = (await getRedis().get<number>(getBudgetKey())) ?? 0;
-    const pct = used / MONTHLY_TOKEN_BUDGET;
-    if (pct >= 1) return { allowed: false, pct };
-    if (pct >= 0.8) log.warn('budget approaching cap', { pct });
-    return { allowed: true, pct };
-  } catch (err) {
-    // Fail open: don't block users for Redis infra issues.
-    log.error('budget check failed, proceeding without cap', { err });
-    return { allowed: true, pct: 0 };
-  }
-}
-
-export async function incrementBudget(inputTokens: number, outputTokens: number): Promise<void> {
-  const total = inputTokens + outputTokens;
-  if (total <= 0) return;
+// Reserve worst-case (input + max_tokens) against the monthly counter BEFORE
+// the Anthropic call. If the reservation crosses the cap, refund and reject.
+// Returns `reserved` so settleBudget() can refund the unused portion after
+// the stream completes. Fail-open on Redis infra failure (same posture as
+// rate-limit) — operator must rely on the out-of-band Anthropic spend alert
+// when Upstash is degraded.
+export async function reserveBudget(
+  maxOutputTokens: number,
+): Promise<{ allowed: boolean; reserved: number; pct: number }> {
+  const reserved = RESERVED_INPUT_TOKENS + maxOutputTokens;
   const key = getBudgetKey();
   try {
     const pipe = getRedis().pipeline();
-    pipe.incrby(key, total);
+    pipe.incrby(key, reserved);
     pipe.expire(key, BUDGET_WINDOW_S, 'NX');
-    await pipe.exec<[number, number]>();
+    const [used] = await pipe.exec<[number, number]>();
+    const pct = used / MONTHLY_TOKEN_BUDGET;
+    if (pct > 1) {
+      // Reservation pushed us over — refund and reject.
+      try {
+        await getRedis().decrby(key, reserved);
+      } catch (refundErr) {
+        log.error('budget reservation refund-on-reject failed', { err: refundErr });
+      }
+      return { allowed: false, reserved: 0, pct };
+    }
+    if (pct >= 0.8) log.warn('budget approaching cap', { pct });
+    return { allowed: true, reserved, pct };
   } catch (err) {
-    log.error('budget increment failed', { err });
+    log.error('budget reservation failed, proceeding without cap', { err });
+    return { allowed: true, reserved: 0, pct: 0 };
+  }
+}
+
+// After the Anthropic stream ends (or errors), refund (reserved - actual).
+// If actual exceeds the reservation (shouldn't happen but defensive), the net
+// is a no-op rather than a paradoxical refund — the counter stays at the
+// reservation high-water mark.
+export async function settleBudget(
+  reserved: number,
+  actualInputTokens: number,
+  actualOutputTokens: number,
+): Promise<void> {
+  if (reserved <= 0) return;
+  const actual = actualInputTokens + actualOutputTokens;
+  const refund = reserved - actual;
+  if (refund <= 0) return;
+  try {
+    await getRedis().decrby(getBudgetKey(), refund);
+  } catch (err) {
+    log.error('budget settlement refund failed', { err });
+  }
+}
+
+// Identical-question gate. Stores ipHash + sha256(question) in Redis with a
+// 60s TTL using SET NX. If the key already exists, the same IP asked the
+// exact question within the last 60 seconds — reject. Fail-open on Redis
+// failure (same posture as rate-limit).
+export async function checkIdenticalQuestion(
+  ipHash: string,
+  question: string,
+): Promise<{ allowed: boolean }> {
+  try {
+    const qBytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(question));
+    const qHash = Buffer.from(qBytes).toString('hex').slice(0, 16);
+    const key = `ask:dedup:${ipHash}:${qHash}`;
+    const result = await getRedis().set(key, '1', { nx: true, ex: 60 });
+    return { allowed: result === 'OK' };
+  } catch (err) {
+    log.error('identical-question check failed, allowing', { err });
+    return { allowed: true };
   }
 }

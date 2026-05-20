@@ -5,17 +5,17 @@
 // navigation bars, Dock, and ToTopButton. Everything else (sections) is passed
 // as RSC children and rendered server-side — their code never ships to the client.
 
-import '@/lib/error-bridge';
+import '@/lib/error-bridge.client';
 import dynamic from 'next/dynamic';
 import { type ReactNode, useEffect } from 'react';
-import { useBreakpoint } from '@/lib/use-breakpoint';
+import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { ErrorBoundary } from './ErrorBoundary.client';
-import { CRTOverlay } from './responsive/CRTOverlay';
-import { DesktopTopbar } from './responsive/DesktopTopbar';
-import { Dock } from './responsive/Dock';
-import { MatrixRain } from './responsive/MatrixRain';
-import { MobileTitleBar } from './responsive/MobileTitleBar';
-import { StatusBar } from './responsive/StatusBar';
+import { CRTOverlay } from './responsive/CRTOverlay.client';
+import { DesktopTopbar } from './responsive/DesktopTopbar.client';
+import { Dock } from './responsive/Dock.client';
+import { MatrixRain } from './responsive/MatrixRain.client';
+import { MobileTitleBar } from './responsive/MobileTitleBar.client';
+import { StatusBar } from './responsive/StatusBar.client';
 
 const ToTopButton = dynamic(
   () => import('./client/ToTopButton').then((m) => ({ default: m.ToTopButton })),
@@ -59,10 +59,25 @@ export function AppShell({ children }: { children: ReactNode }) {
       <ErrorBoundary>
         <CRTOverlay />
       </ErrorBoundary>
-      {isMobile ? <StatusBar /> : <DesktopTopbar />}
-      {isMobile ? <MobileTitleBar /> : null}
+      {/* Both viewport variants render; CSS chooses which is visible at the
+       * 768px breakpoint (see `.mobile-only` / `.desktop-only` in
+       * `app/css/_responsive.css`). Rationale: `app/page.tsx` is
+       * `force-static` (audit PR 1 Theme 3) and its HTML is baked at build
+       * time without UA context, so any JS-driven variant swap on hydration
+       * causes CLS. The two-variant CSS-toggle costs ~30-50 extra DOM nodes
+       * but preserves both the TTFB win from static-gen AND the < 0.05 CLS
+       * budget. */}
+      <div className="desktop-only">
+        <DesktopTopbar />
+      </div>
+      <div className="mobile-only">
+        <StatusBar />
+        <MobileTitleBar />
+      </div>
       {children}
-      {isMobile ? <Dock /> : null}
+      <div className="mobile-only">
+        <Dock />
+      </div>
       <ToTopButton />
     </>
   );
