@@ -91,7 +91,11 @@ export async function evaluatePullRequest(opts: {
   try {
     envelope = JSON.parse(raw) as GraphQLEnvelope;
   } catch (e) {
-    return { ok: false, code: 'graphql_failure', message: `non-JSON gh output: ${(e as Error).message}` };
+    return {
+      ok: false,
+      code: 'graphql_failure',
+      message: `non-JSON gh output: ${(e as Error).message}`,
+    };
   }
 
   if (envelope.errors && envelope.errors.length > 0) {

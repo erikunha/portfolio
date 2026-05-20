@@ -58,9 +58,7 @@ describe('evaluatePullRequest', () => {
   });
 
   it('warns "suspicious_self_resolve" when PR author resolved their own thread', async () => {
-    const ghExec = mockGh([
-      mkThread({ resolvedBy: { login: 'erikunha' } }),
-    ]);
+    const ghExec = mockGh([mkThread({ resolvedBy: { login: 'erikunha' } })]);
     const result = await evaluatePullRequest({
       prNumber: 42,
       owner: 'erikunha',
@@ -93,9 +91,7 @@ describe('evaluatePullRequest', () => {
   });
 
   it('fails with code "graphql_failure" when GraphQL returns errors array', async () => {
-    const ghExec = vi.fn(async () =>
-      JSON.stringify({ errors: [{ message: 'rate limited' }] }),
-    );
+    const ghExec = vi.fn(async () => JSON.stringify({ errors: [{ message: 'rate limited' }] }));
     const result = await evaluatePullRequest({
       prNumber: 42,
       owner: 'erikunha',
