@@ -73,6 +73,13 @@ Only personally-verified findings appear below. The stale findings are explicitl
 - dmesg boot sequence fires `dmesgLines.length` staggered `setState` calls → serial re-render storm (`components/sections/Footer.client.tsx`).
 - `/api/log` smoke-prefix check is case-sensitive (`[smoke]` only) — `app/api/log/route.ts`.
 - `MatrixRain` effect dependency array re-runs the rAF loop on any color/speed prop change.
+- 11 pre-existing Biome warnings: `noStaticOnlyClass` (`__tests__/budget-cap.test.ts`),
+  `noEmptyBlockStatements` (`__tests__/footer-lazy.test.ts`), `noNonNullAssertion`
+  (`scripts/lib/copilot/tool-map.ts`), and 8 `noTemplateCurlyInString`
+  (`__tests__/copilot/mcp-to-vscode.test.ts` — false positives in test descriptions/expected
+  values).
+- `.husky/prepare-commit-msg` is not TTY-safe — `/dev/tty: Device not configured` in
+  non-interactive contexts (the failure is currently swallowed).
 
 ## 4. Deliverable 1 — `STANDARDS.md`
 
@@ -206,6 +213,11 @@ single PR.
 - `MatrixRain` — stabilize color/speed props (or guard the effect) so the rAF loop is not
   cancelled and restarted on incidental parent re-renders.
 - `/api/log` — make the smoke-prefix check case-insensitive.
+- Clear the 11 pre-existing Biome warnings — fix `noStaticOnlyClass`, `noEmptyBlockStatements`,
+  and `noNonNullAssertion`; suppress the 8 false-positive `noTemplateCurlyInString` with
+  documented `biome-ignore` comments.
+- Make `.husky/prepare-commit-msg` TTY-safe — guard the interactive (commitizen) path behind a
+  TTY check so non-interactive commits do not emit a device error.
 
 ### CG9 — Docs & STANDARDS.md
 
