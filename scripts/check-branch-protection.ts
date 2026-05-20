@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { sanitizeSecrets } from './lib/sanitize-secrets';
 
 const execFileP = promisify(execFile);
 
@@ -79,7 +80,9 @@ async function main() {
     const { owner, repo } = await resolveOwnerRepo();
     const result = await evaluateBranchProtection({ owner, repo, branch, ghExec: defaultGhExec });
     if (!result.ok) {
-      process.stderr.write(`BRANCH_PROTECTION_FAIL code=${result.code} ${result.message}\n`);
+      process.stderr.write(
+        sanitizeSecrets(`BRANCH_PROTECTION_FAIL code=${result.code} ${result.message}\n`),
+      );
       process.exit(1);
     }
     process.stdout.write(
@@ -87,7 +90,9 @@ async function main() {
     );
     process.exit(0);
   } catch (e) {
-    process.stderr.write(`BRANCH_PROTECTION_FAIL code=unknown ${(e as Error).message}\n`);
+    process.stderr.write(
+      sanitizeSecrets(`BRANCH_PROTECTION_FAIL code=unknown ${(e as Error).message}\n`),
+    );
     process.exit(2);
   }
 }

@@ -43,30 +43,32 @@ function usage() {
 }
 
 function ghJson(endpoint) {
-  // `gh api` handles pagination via --paginate. Output is concatenated JSON
-  // arrays on stdout — combine them into one flat array before parsing.
-  const raw = execFileSync('gh', ['api', '--paginate', endpoint], {
+  // `gh api --paginate --slurp` follows the `Link: rel="next"` header through
+  // every page AND merges the responses into a single JSON array on stdout.
+  // No textual `][` boundary splitting required, which closes the prior
+  // bug where comment bodies containing markdown reference-link syntax
+  // (`[label][ref]`) could split paginated output mid-string. The slurp
+  // flag has been in gh since v2.46 (early 2024); we already require gh
+  // for the script to function.
+  const raw = execFileSync('gh', ['api', '--paginate', '--slurp', endpoint], {
     encoding: 'utf-8',
     maxBuffer: 32 * 1024 * 1024,
   });
-  // `--paginate` outputs each page as its own JSON; the simplest robust
-  // approach is to split-and-merge by trying to parse each top-level array.
   const trimmed = raw.trim();
-  if (trimmed.startsWith('[')) {
-    // Most endpoints — concat array pages. Find each `][` boundary and
-    // splice.
-    const pages = trimmed.split(/\]\s*\[/);
-    if (pages.length === 1) return JSON.parse(trimmed);
-    const merged = [];
-    for (let i = 0; i < pages.length; i++) {
-      let chunk = pages[i];
-      if (i > 0) chunk = `[${chunk}`;
-      if (i < pages.length - 1) chunk = `${chunk}]`;
-      for (const item of JSON.parse(chunk)) merged.push(item);
-    }
-    return merged;
+  if (!trimmed) return [];
+  const parsed = JSON.parse(trimmed);
+  // With --slurp, the shape is always an array. For single-page array
+  // endpoints (e.g. /comments) it's `[[item, item], [item]]` (one inner
+  // array per page) so flatten one level. For non-array endpoints
+  // (e.g. /pulls/N which returns an object), gh wraps the single object
+  // in an outer array of length 1 — caller treats that as the object.
+  if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
+    return parsed.flat();
   }
-  return JSON.parse(trimmed);
+  if (Array.isArray(parsed) && parsed.length === 1) {
+    return parsed[0];
+  }
+  return parsed;
 }
 
 function isNoise(comment) {
@@ -154,10 +156,21 @@ console.log('## Per-file inline review comments\n');
 if (sortedFiles.length === 0) {
   console.log('_(none)_\n');
 }
+// Sort by the SAME line value displayed (line ?? original_line) so outdated
+// review comments (where `line` is null but `original_line` is set) interleave
+// in source order with current comments rather than all sinking to the top
+// as line=0. `created_at` is the stable tiebreaker — preserves chronological
+// order when two comments target the same line.
+const lineKey = (c) => c.line ?? c.original_line ?? Number.MAX_SAFE_INTEGER;
 for (const file of sortedFiles) {
   const comments = byFile.get(file) ?? [];
   console.log(`### \`${file}\` (${comments.length})\n`);
-  for (const c of comments.sort((a, b) => (a.line ?? 0) - (b.line ?? 0))) {
+  const sorted = comments.sort((a, b) => {
+    const delta = lineKey(a) - lineKey(b);
+    if (delta !== 0) return delta;
+    return (a.created_at ?? '').localeCompare(b.created_at ?? '');
+  });
+  for (const c of sorted) {
     const line = c.line ?? c.original_line ?? '?';
     const author = c.user?.login ?? '(unknown)';
     const created = (c.created_at ?? '').slice(0, 10);

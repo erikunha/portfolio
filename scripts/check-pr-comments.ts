@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { sanitizeSecrets } from './lib/sanitize-secrets';
 
 const execFileP = promisify(execFile);
 
@@ -168,7 +169,7 @@ async function main() {
     const { owner, repo } = await resolveOwnerRepo();
     const result = await evaluatePullRequest({ prNumber, owner, repo, ghExec: defaultGhExec });
     if (!result.ok) {
-      process.stderr.write(`PR_GATE_FAIL code=${result.code} ${result.message}\n`);
+      process.stderr.write(sanitizeSecrets(`PR_GATE_FAIL code=${result.code} ${result.message}\n`));
       if (result.unresolvedThreads) {
         for (const id of result.unresolvedThreads) process.stderr.write(`  unresolved: ${id}\n`);
       }
@@ -180,16 +181,18 @@ async function main() {
       // GITHUB_ACTIONS is set to "true" in any actions runner.
       if (process.env.GITHUB_ACTIONS === 'true') {
         process.stderr.write(
-          `::warning title=PR review thread self-resolved::PR author resolved their own review thread (id=${w.threadId}). Verify the underlying issue was actually addressed.\n`,
+          sanitizeSecrets(
+            `::warning title=PR review thread self-resolved::PR author resolved their own review thread (id=${w.threadId}). Verify the underlying issue was actually addressed.\n`,
+          ),
         );
       } else {
-        process.stderr.write(`PR_GATE_WARN code=${w.code} thread=${w.threadId}\n`);
+        process.stderr.write(sanitizeSecrets(`PR_GATE_WARN code=${w.code} thread=${w.threadId}\n`));
       }
     }
     process.stdout.write(`PR gate OK (pr=${prNumber}, warnings=${result.warnings.length})\n`);
     process.exit(0);
   } catch (e) {
-    process.stderr.write(`PR_GATE_FAIL code=unknown ${(e as Error).message}\n`);
+    process.stderr.write(sanitizeSecrets(`PR_GATE_FAIL code=unknown ${(e as Error).message}\n`));
     process.exit(2);
   }
 }
