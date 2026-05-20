@@ -26,6 +26,8 @@ pattern, and polish — and produces a fresh authoritative `STANDARDS.md`.
 2. **Exhaustive remediation** of every verified audit finding (Tier 1, 2, and 3).
 3. **One consolidated PR**, structured as logically-grouped, individually-revertable commits — one
    commit per workstream — so review and `git bisect` still function on a large diff.
+4. **Remove the GitHub Copilot port** entirely (added per user direction, 2026-05-20) — the
+   harness, generated `.github/` artifacts, tests, and `AGENTS.md`. See CG0.
 
 ### Non-goals
 
@@ -126,17 +128,56 @@ the supersession.
 10. **Documentation & Decisions** — every file/function/budget named in `ARCHITECTURE.md` is
     verifiable against code; ADR entries cite the SHA they ship in; one canonical production
     domain across all files. Held by: PR review (a doc-claim verifier script is a stretch goal).
-11. **Developer Experience** — pre-commit is sub-second (`biome check` + conditional copilot-sync);
-    pre-push runs the heavier gate; `pnpm verify` is the named pre-PR command; CI gates are never
+11. **Developer Experience** — pre-commit is sub-second (`biome check`); pre-push runs the
+    heavier gate; `pnpm verify` is the named pre-PR command; CI gates are never
     disabled to merge — a failing gate means the underlying issue is fixed. Held by: git hooks +
     culture.
 
-## 5. Deliverable 2 — Fix program (9 commit groups)
+## 5. Deliverable 2 — Fix program (10 commit groups)
 
 Every verified finding maps to exactly one group. Each group is one revertable commit in the
-single PR. **Ordering:** CG9 lands last — `STANDARDS.md` documents the gates CG1–CG3 create, so a
+single PR. **Ordering:** CG0 lands first (isolated deletion — shrinks the surface every later
+group touches). CG9 lands last — `STANDARDS.md` documents the gates CG1–CG3 create, so a
 post-merge revert of any earlier group requires a `STANDARDS.md` follow-up. CG2 lands before CG6
 (see CG6).
+
+### CG0 — Remove the GitHub Copilot port
+
+Not an audit finding — added per user direction (2026-05-20, reaffirmed: remove it "like it was
+never implemented"). The Copilot-port harness — a generator, a drift gate, ~14 tests, ~40
+generated `.github/` files — is a maintenance surface tangential to a portfolio. Remove it
+entirely so the working tree carries no trace. Lands first: it shrinks the surface every later
+group operates on and deletes work otherwise scheduled in CG3 and CG8.
+
+**Scope boundary — résumé content stays.** Erik genuinely built GitHub Copilot subagent tooling
+at Betsson; `content/employers.ts`, `content/projects.ts`, `content/hottest-takes.ts`, and the
+`lib/ask/system-prompt.ts` narrative describe that real experience. Those are NOT touched —
+"drop Copilot" means the *port harness in this repo*, not Erik's career history. Git history is
+also not rewritten (PRs #28–#30 are merged; force-rewriting `main` is dangerous and out of
+scope) — "never implemented" applies to the working tree, not the commit log. Code comments that
+reference the GitHub Copilot *review bot* (e.g. "Copilot flagged this on PR #29") are accurate
+review history and are left as-is.
+
+Delete:
+- `.github/chatmodes/`, `.github/prompts/`, `.github/instructions/`, `.github/copilot-instructions.md`
+- `.vscode/mcp.json` (only this file; the rest of `.vscode/` stays)
+- `scripts/lib/copilot/`, `scripts/sync-copilot.ts`, `scripts/copilot-port.config.ts`,
+  `scripts/check-copilot-drift.ts`
+- `__tests__/copilot/`, `.copilot-port-output/`
+- `AGENTS.md` (per user decision — `CLAUDE.md` becomes the single agent-instruction source)
+- `docs/superpowers/specs/2026-05-18-claude-to-copilot-port-design.md` and
+  `docs/superpowers/plans/2026-05-18-claude-to-copilot-port.md` (the copilot-dedicated design docs)
+
+Modify:
+- `package.json` — remove the `sync:copilot` script; remove `gray-matter`, `semver`,
+  `@types/semver` (confirmed unused outside the copilot port).
+- `.husky/pre-commit` — remove the copilot-sync regeneration block (pre-commit becomes `pnpm check`).
+- `.github/workflows/ci.yml` — remove the "Verify Copilot port artifacts in sync" step.
+- `.gitignore` — remove the `.copilot-port-output/` entry.
+- `CLAUDE.md`, `DECISIONS.md`, `README.md` — strip Copilot-port and `AGENTS.md` references; the
+  copilot-port ADR entries are removed from `DECISIONS.md`.
+
+`.github/workflows/ci.yml` itself stays — it is CI, not Copilot.
 
 ### CG1 — Reproducibility
 
