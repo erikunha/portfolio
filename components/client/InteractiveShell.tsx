@@ -164,6 +164,9 @@ export function InteractiveShell() {
 
       const finalize = (finalText: string, errMsg?: string) => {
         clearRaf();
+        // Bail if the component unmounted mid-stream — the unmount effect has
+        // already cancelled the rAF; setState here would be a no-op warning.
+        if (!mountedRef.current) return;
         setStreamingText(null);
         const lines: Line[] = [];
         if (finalText) lines.push({ id: nextId(), kind: 'output', text: finalText });
