@@ -59,23 +59,23 @@ export function AppShell({ children }: { children: ReactNode }) {
       <ErrorBoundary>
         <CRTOverlay />
       </ErrorBoundary>
-      {/* Chrome is rendered in BOTH variants and CSS-toggled by viewport (see
-       * `.chrome--mobile` / `.chrome--desktop` in `app/css/_responsive.css`).
-       * Rationale: `app/page.tsx` is `force-static` (audit PR 1 Theme 3) and
-       * its HTML is baked at build time without UA context, so any JS-driven
-       * variant swap on hydration causes CLS. The two-variant CSS-toggle
-       * costs ~30-50 extra DOM nodes (acknowledged in DECISIONS.md PR 6 of
-       * audit roadmap) but preserves both the TTFB win (static page) AND the
-       * CLS < 0.05 budget. */}
-      <div className="chrome--desktop">
+      {/* Both viewport variants render; CSS chooses which is visible at the
+       * 768px breakpoint (see `.mobile-only` / `.desktop-only` in
+       * `app/css/_responsive.css`). Rationale: `app/page.tsx` is
+       * `force-static` (audit PR 1 Theme 3) and its HTML is baked at build
+       * time without UA context, so any JS-driven variant swap on hydration
+       * causes CLS. The two-variant CSS-toggle costs ~30-50 extra DOM nodes
+       * but preserves both the TTFB win from static-gen AND the < 0.05 CLS
+       * budget. */}
+      <div className="desktop-only">
         <DesktopTopbar />
       </div>
-      <div className="chrome--mobile">
+      <div className="mobile-only">
         <StatusBar />
         <MobileTitleBar />
       </div>
       {children}
-      <div className="chrome--mobile">
+      <div className="mobile-only">
         <Dock />
       </div>
       <ToTopButton />
