@@ -2,6 +2,12 @@
      Source: CLAUDE.md
      Regenerate with: pnpm sync:copilot -->
 
+## For AI Agents
+
+This file is the **tool-agnostic** version of `CLAUDE.md`. Every binding rule below applies to every AI coding agent operating in this repo: Claude Code, Copilot, Cursor, Codex, Aider, and future tools.
+
+**Hard rule — PR merges:** No agent may call `gh pr merge` while any GitHub review thread on the PR has `isResolved: false`. The gate is mechanically enforced by `pnpm ready-to-merge` and by GitHub branch protection (`required_conversation_resolution`). See the **PR merge gate** section below for the full contract — RESOLVE or ESCALATE; no third option.
+
 # CLAUDE.md
 
 > Auto-loaded by Claude Code every session in this repo. Keep it tight — verbosity costs token budget on every invocation.
@@ -38,8 +44,6 @@ This means:
 - Perf, a11y (WCAG 2.1 AA), and security are implicit requirements on every change, not separate phases
 
 ## Project agent dispatch
-> **Note:** Auto-trigger is Claude Code only. In Copilot Chat, invoke each prompt manually via `/<name>` or switch to the chat mode via `@<name>`.
-
 
 Invoke the named agent before the described action. These are definitions of done, not optional review steps.
 
@@ -62,8 +66,6 @@ Invoke the named agent before the described action. These are definitions of don
 | Refactoring | When restructuring components or CSS without behavior change | `refactoring-specialist` |
 
 ## Skill dispatch
-> **Note:** Auto-trigger is Claude Code only. In Copilot Chat, invoke each prompt manually via `/<name>` or switch to the chat mode via `@<name>`.
-
 
 Invoke the named skill inline (not as a subagent) before the described action.
 
@@ -106,21 +108,6 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 
 CI enforces all of the above. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
 
-## Reference standards (post-audit 2026-05-19)
-
-Established by the Principal/Staff audit (`docs/audit/2026-05-19-principal-audit.md`). Each is binding on every PR.
-
-1. **Doc-vs-code is a CI gate.** Every claim in `ARCHITECTURE.md` that names a file, function, or numeric budget MUST be verifiable by `scripts/audit/`. ADR entries in `DECISIONS.md` MUST reference the SHA they ship in.
-2. **`'use client'` is named and enforced.** Every file with `'use client'` MUST end in `.client.tsx`. CI gate via Biome custom rule or `scripts/check-client-naming.mjs`. No `.client.tsx` file may export an `async function`.
-3. **One API envelope.** Every `/api/*` returns `{ ok: true, requestId, data? } | { ok: false, requestId, error: { code, message, issues? } }` with `X-Request-Id` header. Order is `rate-limit → parse → validate → handle`. Centralized via `lib/server/route.ts`.
-4. **No dead-code security theater.** Every CSP directive MUST have a consumer or be deleted. Every cache directive MUST verifiably activate. Every kill switch MUST have a Vitest *behavioral* test (not source-grep).
-5. **Tests assert behavior, not source.** No `__tests__/*.ts` may use `indexOf` on file source to verify ordering. `e2e-full` is REQUIRED, not promote-after-stable.
-6. **Budgets bind in the smallest unit.** Bundle gate measures *application-only* JS (excluding Next framework bootstrap). Any route calling `headers()` / `cookies()` / `force-dynamic` requires an ADR entry justifying the cost.
-7. **AI features are measured.** `/api/ask` SYSTEM prompt MUST be ≥ 1024 tokens for Haiku ephemeral cache to fire. Cache hit rate (`cache_read_input_tokens / input_tokens > 0.7`) is tracked. `pnpm ask:eval` reads the 90d Q+A log against a rubric; deltas committed to `DECISIONS.md` on SYSTEM changes.
-8. **A11y is a unit test.** Every interactive client component has a Vitest test asserting tab order, focus visibility, keyboard activation, and SR announcement. Streaming UI emits discrete DOM nodes per chunk (NOT `textContent` mutation on a shared node).
-9. **DX is measured in seconds per commit.** Pre-commit runs only `pnpm check` + copilot-sync conditional (sub-second). `pre-push` runs `typecheck + validate-content + test`. `pnpm verify` is the named pre-PR command.
-10. **Reproducibility is the default.** Every dep pinned to major-locked range (`^16.2.6`, not `latest`). `strip-next-polyfills.mjs` verifies target checksum before overwriting; fail loud on mismatch.
-
 ## Package + manager policy
 
 - **pnpm only.** `packageManager: pnpm@latest`. Don't use npm or yarn.
@@ -135,7 +122,7 @@ Established by the Principal/Staff audit (`docs/audit/2026-05-19-principal-audit
 - **Default: React Server Components, SSG at build time.** Zero JS shipped for static sections.
 - **Client islands by exception:** Matrix dialog loop, INTERACTIVE_SHELL, contact form, IntersectionObserver typewriter, MOTION indicator.
 - All client files named `*.client.tsx`. RSC drift must be visible in PR review.
-- **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** Per-state re-renders tank INP. (PR 7 of the audit roadmap adds the missing Vitest enforcement test — see `docs/audit/2026-05-19-principal-audit.md` Theme 1.8.)
+- **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** This is enforced by a Vitest test. Per-state re-renders tank INP.
 
 ## Aesthetic constraints
 
@@ -195,7 +182,6 @@ Before proposing any of these, check `DECISIONS.md` to see the reasoning that ex
 - `ARCHITECTURE.md` — system design, deep dive, trade-offs
 - `DECISIONS.md` — running ADR log
 - `LAUNCH.md` — 14-day implementation playbook
-- `docs/audit/2026-05-19-principal-audit.md` — Principal/Staff pass audit; 12 themes, 5 debates, 10 standards, 8-PR roadmap
 - `scaffold/` — drop-in opinionated configs (Biome, tsconfig, globals.css, Zod schemas, CI workflow)
 - `scaffold/README.md` — explains every file in scaffold/
 - `prototype/Portfolio.html` — the Claude Design prototype (visual reference only, never served)
