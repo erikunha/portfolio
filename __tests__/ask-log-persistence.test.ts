@@ -31,9 +31,9 @@ describe('Q+A persistence (Phase 3c)', () => {
   it('app/api/ask/route.ts calls persistAskInteraction after stream completes', () => {
     expect(ASK_ROUTE).toMatch(/persistAskInteraction\(/);
     const persistIdx = ASK_ROUTE.indexOf('persistAskInteraction(');
-    const incrementIdx = ASK_ROUTE.indexOf('incrementBudget(');
+    const settleIdx = ASK_ROUTE.indexOf('settleBudget(reserved');
     expect(persistIdx).toBeGreaterThan(-1);
-    expect(incrementIdx).toBeGreaterThan(-1);
+    expect(settleIdx).toBeGreaterThan(-1);
   });
 
   it('app/api/ask/route.ts accumulates collectedAnswerText capped at 1000 chars', () => {
@@ -46,16 +46,22 @@ describe('Q+A persistence (Phase 3c)', () => {
   });
 });
 
-describe('/api/log/forget endpoint (Phase 3d)', () => {
+describe('/api/log/forget endpoint (Phase 3d + PR 5 of audit)', () => {
   const FORGET_ROUTE = readFileSync(
     path.resolve(__dirname, '../app/api/log/forget/route.ts'),
     'utf-8',
   );
   const RATE_LIMIT = readFileSync(path.resolve(__dirname, '../lib/rate-limit.ts'), 'utf-8');
 
-  it('exports a POST handler with NextRequest typing', () => {
-    expect(FORGET_ROUTE).toMatch(/export\s+async\s+function\s+POST\s*\(/);
-    expect(FORGET_ROUTE).toMatch(/NextRequest/);
+  // PR 5 of audit roadmap refactored this route to use `defineHandler` from
+  // lib/server/route.ts. The POST export is now `export const POST =
+  // defineHandler({ ... })` (not an async function). Source-grep assertions
+  // updated to match; matching behavioral coverage lives in the new
+  // __tests__/route-handler.test.ts.
+
+  it('exports POST via defineHandler', () => {
+    expect(FORGET_ROUTE).toMatch(/export\s+const\s+POST\s*=\s*defineHandler\(/);
+    expect(FORGET_ROUTE).toMatch(/from\s*['"]@\/lib\/server\/route['"]/);
   });
 
   it('marks the route as dynamic', () => {
@@ -72,13 +78,18 @@ describe('/api/log/forget endpoint (Phase 3d)', () => {
     expect(FORGET_ROUTE).toMatch(/\.del\(/);
   });
 
-  it('returns ok: true with a deleted count and is idempotent', () => {
-    expect(FORGET_ROUTE).toMatch(/ok:\s*true/);
-    expect(FORGET_ROUTE).toMatch(/deleted/);
+  it('does NOT expose the deleted count on the success response (audit Theme 8)', () => {
+    // The previous response shape `{ ok: true, deleted: N }` was an existence
+    // oracle — an attacker with a leaked requestId could confirm persistence
+    // by inspecting the count. New shape returns only `ok({ requestId })`;
+    // the deleted count is logged internally for audit.
+    expect(FORGET_ROUTE).toMatch(/\bok\(\s*\{\s*requestId\s*\}\s*\)/);
+    // Defensive: make sure no `ok({ requestId, deleted })` shape sneaks back in.
+    expect(FORGET_ROUTE).not.toMatch(/ok\(\s*\{[^}]*deleted[^}]*\}\s*\)/);
   });
 
   it('uses the new getForgetLimit() rate-limit factory', () => {
-    expect(FORGET_ROUTE).toMatch(/getForgetLimit\(\)/);
+    expect(FORGET_ROUTE).toMatch(/getForgetLimit/);
   });
 
   it('lib/rate-limit.ts exports getForgetLimit factory with 5/hour limit', () => {

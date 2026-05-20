@@ -1,3 +1,12 @@
+# Branch-name guard: every branch follows `<type>/<description>` from the
+# commitlint scope set, or is `main`.
 branch=$(git rev-parse --abbrev-ref HEAD)
 echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert)/.+$|^main$' \
   || (echo "Error: invalid branch name '$branch'. Use <type>/<description> or main." && exit 1)
+
+# Two-tier hook strategy (audit Standard 9): heavy gates run ONCE before
+# push instead of once per commit. Same safety net as the prior per-commit
+# chain (typecheck + validate-content + client-naming + tests) at a fraction
+# of the per-commit DX tax. `pnpm verify` is the manual equivalent.
+echo "[pre-push] Running verify chain (typecheck + validate-content + client-naming + tests)..."
+pnpm verify

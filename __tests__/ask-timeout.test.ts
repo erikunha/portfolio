@@ -26,8 +26,13 @@ describe('upstream timeouts', () => {
 
   describe('/api/contact Resend send', () => {
     it('wraps the Resend send in a Promise.race against a 10_000 ms timer', () => {
+      // PR 5c of audit roadmap extracted the literal to a named constant:
+      // `const RESEND_TIMEOUT_MS = 10_000`. Accept either the literal or
+      // the constant in the setTimeout call, but the constant declaration
+      // (which fixes the value at 10_000) must still be present.
       expect(CONTACT_SOURCE).toMatch(/Promise\.race/);
-      expect(CONTACT_SOURCE).toMatch(/setTimeout\(\s*[^,]+,\s*10_000/);
+      expect(CONTACT_SOURCE).toMatch(/setTimeout\(\s*[^,]+,\s*(?:10_000|RESEND_TIMEOUT_MS)\b/);
+      expect(CONTACT_SOURCE).toMatch(/RESEND_TIMEOUT_MS\s*=\s*10_000\b/);
     });
 
     it('still preserves the existing graceful-fail logging on error', () => {

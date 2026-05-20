@@ -1,6 +1,17 @@
-pnpm check && pnpm typecheck && pnpm validate-content && pnpm test
+# Two-tier hook strategy (audit Standard 9 — DX is measured in seconds per
+# commit). Pre-commit runs ONLY sub-second gates so per-commit tax stays low
+# during normal iteration. The heavy gates (typecheck, validate-content,
+# tests, client-naming) live in pre-push instead — they fire once before the
+# push, not once per commit. Manual pre-PR command: `pnpm verify`.
+#
+# Anything that should still block a single commit (formatting, lint
+# regressions, copilot-sync drift) belongs here.
 
-# Copilot port — regenerate when source changes (spec §9.1)
+pnpm check
+
+# Copilot port — regenerate when source changes (spec §9.1).
+# Keep in pre-commit so the regenerated files land in the same commit as the
+# source change; otherwise CI would have to handle the drift.
 if git diff --cached --name-only | grep -qE '^(CLAUDE\.md|scripts/copilot-port\.config\.ts)$'; then
   echo "[pre-commit] Copilot source changed — regenerating .github/* and .vscode/mcp.json"
   pnpm sync:copilot

@@ -4,7 +4,7 @@ import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import SHELL_RESPONSES from '@/content/shell-commands';
 import { readMotion } from '@/lib/motion';
 import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
-import { useBreakpoint } from '@/lib/use-breakpoint';
+import { useBreakpoint } from '@/lib/use-breakpoint.client';
 
 type Line = { id: number; kind: 'prompt' | 'output' | 'error' | 'info' | 'loading'; text: string };
 
