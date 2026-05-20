@@ -27,8 +27,8 @@ jobs:
       contents: read
       pull-requests: read
     # 18 min: previous 12 min hit the timeout during `Install Playwright Chromium`
-    # on a slow runner (run #26135363392). The dependent e2e-full job (20 min) is
-    # where heavy work runs; build-and-gate just needs headroom for browser install.
+    # on a slow runner (run #26135363392). The dependent e2e-functional job (20 min)
+    # is where heavy work runs; build-and-gate just needs headroom for browser install.
     # Durable fix is a Playwright cache step — tracked separately.
     timeout-minutes: 18
     env:
