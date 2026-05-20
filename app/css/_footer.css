@@ -149,7 +149,7 @@
     font-weight: 700;
   }
   .sd-netstat .ns-listen {
-    color: var(--highlight-yellow);
+    color: var(--accent-warm);
     font-weight: 700;
   }
   .sd-netstat a {
@@ -188,7 +188,7 @@
     min-height: 32px;
   }
   .ns-grid .ns-listen {
-    color: var(--highlight-yellow);
+    color: var(--accent-warm);
     font-weight: 700;
     display: flex;
     align-items: center;

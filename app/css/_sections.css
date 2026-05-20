@@ -390,10 +390,10 @@
     font-weight: 700;
   }
   .tk-t {
-    color: var(--highlight-yellow);
+    color: var(--accent-warm);
   }
   .tk-f {
-    color: var(--highlight-cyan);
+    color: var(--accent-cool);
   }
   .tk-p {
     color: var(--fg);
@@ -825,7 +825,7 @@
     opacity: 0.85;
   }
   .gitfuller .g-deco {
-    color: var(--highlight-yellow);
+    color: var(--accent-warm);
   }
   .gitfuller .g-label {
     color: var(--muted);
@@ -839,7 +839,7 @@
     opacity: 0.85;
   }
   .gitfuller .g-branch {
-    color: var(--highlight-cyan);
+    color: var(--accent-cool);
   }
   .gitfuller .g-msg {
     color: var(--signal);
@@ -1110,7 +1110,7 @@
     color: var(--muted);
   }
   .permatrix .pm-group {
-    color: var(--highlight-yellow);
+    color: var(--accent-warm);
   }
   .permatrix .pm-file {
     color: var(--fg);

@@ -22,9 +22,12 @@
        macOS traffic-light hexes). _shell.css and _responsive.css both target
        these dots; _responsive.css previously drifted 1-2px off (#ff5f56 /
        #ffbd2e / #27c93f) — now corrected to the canonical tokens. */
+
+    /* Shell background + syntax-highlight accents. Role-named (not
+       colour-named) so a future theme shift cannot make the name lie. */
     --shell-bg: #050505;
-    --highlight-yellow: #ffd86b;
-    --highlight-cyan: #7fe4ff;
+    --accent-warm: #ffd86b;
+    --accent-cool: #7fe4ff;
     --error-soft: #ff8a8a;
 
     --pad: 24px;
