@@ -73,10 +73,17 @@ describe('console.* migration sites', () => {
     expect(ASK_ROUTE).toMatch(/const\s+requestId\s*=\s*crypto\.randomUUID\(\)/);
   });
 
-  it('app/api/contact/route.ts imports log, uses no console.*, threads requestId', () => {
+  it('app/api/contact/route.ts imports log, uses no console.*, threads requestId via defineHandler', () => {
+    // PR 5c of audit roadmap migrated /api/contact to defineHandler from
+    // lib/server/route.ts. The route no longer mints `requestId` directly
+    // — it's threaded through the handler context via `defineHandler({
+    // handler({ requestId }) { ... }})`. The log calls that consume it
+    // (`{ requestId, msgId, ... }`) are the regression catcher.
     expect(CONTACT_ROUTE).toMatch(/import\s*\{[^}]*\blog\b[^}]*\}\s*from\s*['"]@\/lib\/log['"]/);
     expect(CONTACT_ROUTE).not.toMatch(/console\.(info|warn|error)\b/);
-    expect(CONTACT_ROUTE).toMatch(/const\s+requestId\s*=\s*crypto\.randomUUID\(\)/);
+    expect(CONTACT_ROUTE).toMatch(/from\s*['"]@\/lib\/server\/route['"]/);
+    expect(CONTACT_ROUTE).toMatch(/\bhandler\(\s*\{[^}]*\brequestId\b[^}]*\}\s*\)/);
+    expect(CONTACT_ROUTE).toMatch(/log\.\w+\(\s*['"][^'"]+['"]\s*,\s*\{[^}]*\brequestId\b/);
   });
 
   it('all migrated log call sites have at least two arguments (msg + ctx)', () => {
