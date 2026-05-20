@@ -1,19 +1,22 @@
 // app/api/log/route.ts
 // Custom client-error capture endpoint. Accepts structured error reports
-// from the browser bridge (lib/error-bridge.ts) + ErrorBoundary.client.tsx
+// from the browser bridge (lib/error-bridge.client.ts) + ErrorBoundary.client.tsx
 // and persists them to Upstash KV with 30-day TTL for retrospective triage.
 //
 // Spec ref: docs/superpowers/specs/2026-05-18-production-observability-design.md §7a
+// PR 5b of audit roadmap: refactored to use lib/server/route.ts defineHandler
+// for the unified envelope + X-Request-Id + standard pre-flight ordering.
 //
 // Privacy: err:* records do NOT store ipHash. The IP is used only for
 // rate-limiting and discarded. err:* records are therefore personal-data-free
 // and fall outside the /api/log/forget erasure scope (which covers
 // ask:log:* only). See DECISIONS.md 2026-05-19.
 
-import type { NextRequest } from 'next/server';
 import { z } from 'zod';
+
 import { log } from '@/lib/log';
-import { getClientIp, getErrorLogLimit, getRedis } from '@/lib/rate-limit';
+import { getErrorLogLimit, getRedis } from '@/lib/rate-limit';
+import { defineHandler, err, ok } from '@/lib/server/route';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,63 +38,45 @@ const ErrorPayload = z.object({
   ts: z.string().optional(),
 });
 
-export async function POST(req: NextRequest) {
-  const requestId = crypto.randomUUID();
+export const POST = defineHandler({
+  schema: ErrorPayload,
+  rateLimit: getErrorLogLimit,
+  rateLimitErrorMessage: 'too many error reports',
+  async handler({ body, requestId }) {
+    // Smoke bypass: messages prefixed '[smoke]' return success WITHOUT
+    // touching KV — prevents CI smoke runs from polluting the err: KV
+    // partition. The rate-limit hit IS taken (one slot per smoke message
+    // counts against the 10/min/IP quota); acceptable since CI smoke
+    // posts <10 messages per run.
+    if (body.message.startsWith(SMOKE_PREFIX)) {
+      return ok({ requestId });
+    }
 
-  // Parse + validate first (local, cheap). Smoke bypass runs BEFORE the
-  // rate-limit + KV calls so smoke testing doesn't require Upstash to be
-  // configured — important for CI environments without prod secrets.
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ error: 'invalid JSON body' }, { status: 400 });
-  }
+    const errId = crypto.randomUUID();
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `err:${today}:${errId}`;
 
-  const parsed = ErrorPayload.safeParse(body);
-  if (!parsed.success) {
-    return Response.json(
-      { error: 'invalid payload shape', issues: parsed.error.issues },
-      { status: 400 },
-    );
-  }
+    // ipHash intentionally omitted: err:* records must contain no personal data
+    // so that /api/log/forget (which targets ask:log:* only) covers the full
+    // erasure scope without needing to handle err:* records separately.
+    const record = {
+      ...body,
+      errId,
+      capturedAt: new Date().toISOString(),
+    };
 
-  // Smoke-test sentinel: messages prefixed '[smoke]' bypass rate-limit AND
-  // KV persistence. Anyone sending a '[smoke]'-prefixed real error only
-  // self-suppresses; no adverse effect on other clients.
-  if (parsed.data.message.startsWith(SMOKE_PREFIX)) {
-    return new Response(null, { status: 204 });
-  }
+    try {
+      await getRedis().set(key, JSON.stringify(record), { ex: ERR_KV_TTL_S });
+    } catch (kvErr) {
+      log.error('error-log KV write failed', { requestId, errId, err: kvErr });
+      return err({
+        requestId,
+        status: 503,
+        code: 'storage_unavailable',
+        message: 'storage unavailable',
+      });
+    }
 
-  // Rate-limit BEFORE the KV write to absorb storms cheaply.
-  const ip = getClientIp(req);
-  const { success } = await getErrorLogLimit().limit(ip);
-  if (!success) {
-    return Response.json(
-      { error: 'too many error reports' },
-      { status: 429, headers: { 'Retry-After': '60' } },
-    );
-  }
-
-  const errId = crypto.randomUUID();
-  const today = new Date().toISOString().slice(0, 10);
-  const key = `err:${today}:${errId}`;
-
-  // ipHash intentionally omitted: err:* records must contain no personal data
-  // so that /api/log/forget (which targets ask:log:* only) covers the full
-  // erasure scope without needing to handle err:* records separately.
-  const record = {
-    ...parsed.data,
-    errId,
-    capturedAt: new Date().toISOString(),
-  };
-
-  try {
-    await getRedis().set(key, JSON.stringify(record), { ex: ERR_KV_TTL_S });
-  } catch (kvErr) {
-    log.error('error-log KV write failed', { requestId, errId, err: kvErr });
-    return Response.json({ error: 'storage unavailable' }, { status: 503 });
-  }
-
-  return new Response(null, { status: 204 });
-}
+    return ok({ requestId });
+  },
+});
