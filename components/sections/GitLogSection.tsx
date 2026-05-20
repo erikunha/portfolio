@@ -64,8 +64,8 @@ function renderCommitMobile(c: GitCommit, key: string): ReactNode {
           </span>
         )}
         {'\n'}
-        {c.body.map((line, i) => (
-          <span key={i}>
+        {c.body.map((line) => (
+          <span key={`${c.hash}-${line}`}>
             {'      '}
             <span className="g-body">{line}</span>
             {'\n'}
@@ -124,8 +124,8 @@ function renderCommitMobile(c: GitCommit, key: string): ReactNode {
       )}
       {pipe}
       {'\n'}
-      {c.body.map((line, i) => (
-        <span key={i}>
+      {c.body.map((line) => (
+        <span key={`${c.hash}-${line}`}>
           {pipe} <span className="g-body">{line}</span>
           {'\n'}
         </span>
@@ -169,8 +169,8 @@ function renderCommit(c: GitCommit, key: string): ReactNode {
         </span>
         {'\n'}
         {'\n'}
-        {c.body.map((line, i) => (
-          <span key={i}>
+        {c.body.map((line) => (
+          <span key={`${c.hash}-${line}`}>
             {'      '}
             <span className="g-body">{line}</span>
             {'\n'}
@@ -207,8 +207,8 @@ function renderCommit(c: GitCommit, key: string): ReactNode {
       {'\n'}
       {pipe}
       {'\n'}
-      {c.body.map((line, i) => (
-        <span key={i}>
+      {c.body.map((line) => (
+        <span key={`${c.hash}-${line}`}>
           {pipe}
           {'     '}
           <span className="g-body">{line}</span>
