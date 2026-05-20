@@ -110,7 +110,7 @@ Established by the Principal/Staff audit (`docs/audit/2026-05-19-principal-audit
 6. **Budgets bind in the smallest unit.** Bundle gate measures *application-only* JS (excluding Next framework bootstrap). Any route calling `headers()` / `cookies()` / `force-dynamic` requires an ADR entry justifying the cost.
 7. **AI features are measured.** `/api/ask` SYSTEM prompt MUST be ≥ 1024 tokens for Haiku ephemeral cache to fire. Cache hit rate (`cache_read_input_tokens / input_tokens > 0.7`) is tracked. `pnpm ask:eval` reads the 90d Q+A log against a rubric; deltas committed to `DECISIONS.md` on SYSTEM changes.
 8. **A11y is a unit test.** Every interactive client component has a Vitest test asserting tab order, focus visibility, keyboard activation, and SR announcement. Streaming UI emits discrete DOM nodes per chunk (NOT `textContent` mutation on a shared node).
-9. **DX is measured in seconds per commit.** Pre-commit runs only `pnpm check` + copilot-sync conditional (sub-second). `pre-push` runs `typecheck + validate-content + test`. `pnpm verify` is the named pre-PR command.
+9. **DX is measured in seconds per commit.** Pre-commit runs only `pnpm check` (sub-second). `pre-push` runs `typecheck + validate-content + test`. `pnpm verify` is the named pre-PR command.
 10. **Reproducibility is the default.** Every dep pinned to major-locked range (`^16.2.6`, not `latest`). `strip-next-polyfills.mjs` verifies target checksum before overwriting; fail loud on mismatch.
 
 ## Package + manager policy
@@ -175,7 +175,7 @@ Before any agent or human calls `gh pr merge` on this repo:
 5. **Mechanical command.** `pnpm ready-to-merge <pr>` runs `pnpm ci:local` (lint + typecheck + content validate + client-naming + tests), the branch-protection check, then queries unresolved threads. Must pass before `gh pr merge`.
 6. **The branch protection rule must stay enabled.** `pnpm ready-to-merge <pr>` runs `scripts/check-branch-protection.ts` against `main` and fails if `required_conversation_resolution` is off. This is a local gate, not a CI step: the workflow `GITHUB_TOKEN` cannot read the branch-protection endpoint (it requires repo-admin token power). See `DECISIONS.md`.
 
-Rationale: human-in-the-loop quality gate for AI-assisted development on a Staff/Principal-bar artifact. See `DECISIONS.md` for residual-risk note. See `AGENTS.md` for the cross-tool surface (generated from this file).
+Rationale: human-in-the-loop quality gate for AI-assisted development on a Staff/Principal-bar artifact. See `DECISIONS.md` for residual-risk note.
 
 ## Things that have been considered and rejected
 
