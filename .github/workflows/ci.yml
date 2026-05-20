@@ -20,6 +20,10 @@ concurrency:
 jobs:
   build-and-gate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      administration: read
     timeout-minutes: 12
     env:
       LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
@@ -67,6 +71,7 @@ jobs:
         run: pnpm tsx scripts/check-copilot-drift.ts "$BASE_SHA..HEAD"
 
       - name: Verify branch protection on main
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pnpm tsx scripts/check-branch-protection.ts main

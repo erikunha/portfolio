@@ -8,7 +8,7 @@ export type Thread = {
   id: string;
   isResolved: boolean;
   resolvedBy: { login: string } | null;
-  comments: Array<{ author: { login: string }; body: string }>;
+  comments: Array<{ author: { login: string } }>;
 };
 
 export type Warning = { code: 'suspicious_self_resolve'; threadId: string };
@@ -33,7 +33,7 @@ const QUERY = `query($owner:String!,$repo:String!,$pr:Int!){
           id
           isResolved
           resolvedBy{login}
-          comments(first:1){nodes{author{login} body}}
+          comments(first:1){nodes{author{login}}}
         }
       }
     }
@@ -50,7 +50,7 @@ type GraphQLEnvelope = {
             id: string;
             isResolved: boolean;
             resolvedBy: { login: string } | null;
-            comments: { nodes: Array<{ author: { login: string }; body: string }> };
+            comments: { nodes: Array<{ author: { login: string } }> };
           }>;
         };
       };
@@ -175,7 +175,16 @@ async function main() {
       process.exit(1);
     }
     for (const w of result.warnings) {
-      process.stderr.write(`PR_GATE_WARN code=${w.code} thread=${w.threadId}\n`);
+      // Workflow annotation when running in GitHub Actions so the warning
+      // surfaces inline on the PR rather than being buried in raw CI logs.
+      // GITHUB_ACTIONS is set to "true" in any actions runner.
+      if (process.env.GITHUB_ACTIONS === 'true') {
+        process.stderr.write(
+          `::warning title=PR review thread self-resolved::PR author resolved their own review thread (id=${w.threadId}). Verify the underlying issue was actually addressed.\n`,
+        );
+      } else {
+        process.stderr.write(`PR_GATE_WARN code=${w.code} thread=${w.threadId}\n`);
+      }
     }
     process.stdout.write(`PR gate OK (pr=${prNumber}, warnings=${result.warnings.length})\n`);
     process.exit(0);

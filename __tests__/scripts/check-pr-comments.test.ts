@@ -6,7 +6,7 @@ function mkThread(overrides: Partial<Thread> = {}): Thread {
     id: 'T_1',
     isResolved: true,
     resolvedBy: { login: 'reviewer' },
-    comments: [{ author: { login: 'reviewer' }, body: 'lgtm' }],
+    comments: [{ author: { login: 'reviewer' } }],
     ...overrides,
   };
 }
