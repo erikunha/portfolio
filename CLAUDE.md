@@ -21,6 +21,7 @@
 | `pnpm validate-content` | Zod content schema validation |
 | `pnpm ci:local` | Full local CI gate (lint + type + test) |
 | `pnpm bundle-check` | Bundle size gate check |
+| `pnpm ready-to-merge [-- <pr>]` | Pre-merge gate: full CI + every GH review thread resolved |
 
 ## Operating role
 

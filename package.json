@@ -26,6 +26,7 @@
     "pr:comments": "node scripts/inspect-pr-comments.mjs",
     "ci": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm test && pnpm build && pnpm bundle-check",
     "ci:local": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm test",
+    "ready-to-merge": "pnpm ci && tsx scripts/check-pr-comments.ts",
     "commit": "cz",
     "prepare": "husky || true",
     "postinstall": "node scripts/strip-next-polyfills.mjs"
