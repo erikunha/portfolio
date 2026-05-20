@@ -56,7 +56,7 @@ jobs:
         run: pnpm tsc --noEmit
 
       - name: Validate content
-        run: node scripts/validate-content.mjs
+        run: pnpm validate-content
 
       - name: Unit tests
         run: pnpm vitest run
