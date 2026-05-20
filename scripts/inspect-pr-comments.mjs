@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// scripts/fetch-pr-comments.mjs
+// scripts/inspect-pr-comments.mjs
 //
 // PR review surface harness. Fetches the comments on a GitHub PR — both
 // in-line review comments (per-file, per-line) and top-level issue

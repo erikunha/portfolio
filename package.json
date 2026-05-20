@@ -23,7 +23,7 @@
     "lhci:mobile": "lhci autorun --config=lighthouserc.mobile.json",
     "validate-content": "node scripts/validate-content.mjs",
     "bundle-check": "node scripts/check-bundle-size.mjs",
-    "pr:comments": "node scripts/fetch-pr-comments.mjs",
+    "pr:comments": "node scripts/inspect-pr-comments.mjs",
     "ci": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm test && pnpm build && pnpm bundle-check",
     "ci:local": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm test",
     "commit": "cz",
