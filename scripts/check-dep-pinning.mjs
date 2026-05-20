@@ -12,8 +12,9 @@ import { readFileSync } from 'node:fs';
 const pkgPath = process.argv[2] ?? 'package.json';
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
 
-const BANNED = /^(latest|\*|x|next|canary|beta|alpha|)$/i;
-// Accept: ^1.2.3  ~1.2.3  1.2.3  >=1.2.3 <2.0.0 (explicit bounded range).
+const BANNED = /^(latest|\*|x|next|canary|beta|alpha)$/i;
+// Accept: ^1.2.3  ~1.2.3  1.2.3 — caret, tilde, or exact only. An empty or
+// otherwise unbounded spec fails the ALLOWED test below and is reported too.
 const ALLOWED = /^(\^|~)?\d+\.\d+\.\d+/;
 
 const violations = [];
