@@ -20,6 +20,7 @@
 
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mountClient } from './helpers/render';
 
 vi.mock('@/lib/motion', () => ({
   readMotion: () => true, // motion ON → the animated typing loop runs
@@ -70,7 +71,6 @@ describe('boot-animation: textContent-mutation invariant (CLAUDE.md Rendering mo
 
   it('HeroBootAnimation types into a useRef-held node imperatively, not via React children', async () => {
     const React = await import('react');
-    const { createRoot } = await import('react-dom/client');
     const { HeroBootAnimation } = await import('@/components/client/HeroBootAnimation');
 
     // matchMedia must exist for the island's effect; desktop variant runs.
@@ -83,13 +83,9 @@ describe('boot-animation: textContent-mutation invariant (CLAUDE.md Rendering mo
       })),
     );
 
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const root = createRoot(container);
-
-    await act(async () => {
-      root.render(React.createElement(HeroBootAnimation, { variant: 'desktop' }));
-    });
+    const { container, unmount } = await mountClient(
+      React.createElement(HeroBootAnimation, { variant: 'desktop' }),
+    );
 
     // The island's JSX is `<div ref={bootRef} className="hero__boot" />` — a
     // single empty element. Before the loop runs, the mount node has zero
@@ -119,7 +115,6 @@ describe('boot-animation: textContent-mutation invariant (CLAUDE.md Rendering mo
     expect(cmd?.childNodes.length).toBe(1);
     expect(cmd?.childNodes[0]?.nodeType).toBe(3 /* TEXT_NODE */);
 
-    await act(async () => root.unmount());
-    container.remove();
+    unmount();
   });
 });

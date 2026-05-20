@@ -11,8 +11,9 @@
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { act } from 'react';
+import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { type MountedClient, mountClient } from './helpers/render';
 
 vi.mock('@/lib/use-breakpoint.client', () => ({
   useBreakpoint: () => ({ isMobile: false }),
@@ -27,30 +28,22 @@ vi.mock('@/content/shell-commands', () => ({
 }));
 
 describe('shell command hint', () => {
-  let container: HTMLElement;
-  let root: import('react-dom/client').Root;
+  let mounted: MountedClient;
 
   beforeEach(() => {
     vi.resetModules();
-    container = document.createElement('div');
-    document.body.appendChild(container);
   });
 
   afterEach(() => {
-    act(() => root.unmount());
-    container.remove();
+    mounted?.unmount();
     vi.restoreAllMocks();
   });
 
   it('does not list "ask <question>" as a command in the rendered shell', async () => {
-    const { createElement } = await import('react');
-    const { createRoot } = await import('react-dom/client');
     const { InteractiveShell } = await import('@/components/client/InteractiveShell');
 
-    root = createRoot(container);
-    await act(async () => {
-      root.render(createElement(InteractiveShell));
-    });
+    mounted = await mountClient(createElement(InteractiveShell));
+    const { container } = mounted;
 
     // The desktop command hint is rendered; it must route free-form input to
     // Claude implicitly, never advertise an explicit `ask <question>` verb.

@@ -11,8 +11,9 @@
 //   2. The window resize handler is debounced — a burst of resize events
 //      triggers at most one resize recomputation after the debounce window.
 
-import { act } from 'react';
+import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { type MountedClient, mountClient } from './helpers/render';
 
 const CANVAS_RECT = {
   width: 400,
@@ -55,14 +56,11 @@ function makeInstrumentedCtx() {
 }
 
 describe('MatrixRain canvas perf', () => {
-  let container: HTMLElement;
-  let root: import('react-dom/client').Root;
+  let mounted: MountedClient;
   let rafCallbacks: FrameRequestCallback[];
 
   beforeEach(() => {
     vi.resetModules();
-    container = document.createElement('div');
-    document.body.appendChild(container);
     rafCallbacks = [];
 
     // Deterministic rAF: queue callbacks so the test drives frames explicitly.
@@ -80,8 +78,7 @@ describe('MatrixRain canvas perf', () => {
   });
 
   afterEach(() => {
-    act(() => root.unmount());
-    container.remove();
+    mounted?.unmount();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     vi.useRealTimers();
@@ -100,8 +97,6 @@ describe('MatrixRain canvas perf', () => {
   }
 
   it('does not re-set ctx.font inside the per-frame column draw loop', async () => {
-    const { createElement } = await import('react');
-    const { createRoot } = await import('react-dom/client');
     const { MatrixRain } = await import('@/components/responsive/MatrixRain.client');
 
     const instrument = makeInstrumentedCtx();
@@ -110,10 +105,7 @@ describe('MatrixRain canvas perf', () => {
       instrument.ctx as unknown as CanvasRenderingContext2D,
     );
 
-    root = createRoot(container);
-    await act(async () => {
-      root.render(createElement(MatrixRain, { fontSize: 16, speed: 0.7 }));
-    });
+    mounted = await mountClient(createElement(MatrixRain, { fontSize: 16, speed: 0.7 }));
 
     // Effect ran resize() once → font is set during init.
     const fontSetsAfterInit = instrument.fontSetCount();
@@ -133,8 +125,6 @@ describe('MatrixRain canvas perf', () => {
 
   it('debounces the window resize handler', async () => {
     vi.useFakeTimers();
-    const { createElement } = await import('react');
-    const { createRoot } = await import('react-dom/client');
     const { MatrixRain } = await import('@/components/responsive/MatrixRain.client');
 
     const rectSpy = vi
@@ -144,10 +134,7 @@ describe('MatrixRain canvas perf', () => {
       makeInstrumentedCtx().ctx as unknown as CanvasRenderingContext2D,
     );
 
-    root = createRoot(container);
-    await act(async () => {
-      root.render(createElement(MatrixRain, { fontSize: 16, speed: 0.7 }));
-    });
+    mounted = await mountClient(createElement(MatrixRain, { fontSize: 16, speed: 0.7 }));
 
     // resize() ran once on mount — each call queries getBoundingClientRect.
     const callsAfterMount = rectSpy.mock.calls.length;

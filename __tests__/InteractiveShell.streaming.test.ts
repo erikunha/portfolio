@@ -12,8 +12,9 @@
 //      the absence of key warnings + correct final ordering after re-renders.
 //   3. Streaming chunks are decoded and concatenated correctly.
 
-import { act } from 'react';
+import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { flushMicrotasks, type MountedClient, mountClient } from './helpers/render';
 
 vi.mock('@/lib/use-breakpoint.client', () => ({
   useBreakpoint: () => ({ isMobile: false }),
@@ -48,31 +49,19 @@ function streamingResponse(chunks: string[]): Response {
   });
 }
 
-async function flush(): Promise<void> {
-  await act(async () => {
-    await new Promise<void>((r) => setTimeout(r, 0));
-  });
-}
-
 describe('InteractiveShell streaming behavior', () => {
-  let container: HTMLElement;
-  let root: import('react-dom/client').Root;
+  let mounted: MountedClient;
 
   beforeEach(() => {
     vi.resetModules();
-    container = document.createElement('div');
-    document.body.appendChild(container);
   });
 
   afterEach(() => {
-    act(() => root.unmount());
-    container.remove();
+    mounted?.unmount();
     vi.restoreAllMocks();
   });
 
   it('renders the answer progressively as the /api/ask stream arrives', async () => {
-    const { createElement } = await import('react');
-    const { createRoot } = await import('react-dom/client');
     const { InteractiveShell } = await import('@/components/client/InteractiveShell');
 
     // Hold the second chunk back so we can observe a mid-stream paint.
@@ -95,10 +84,8 @@ describe('InteractiveShell streaming behavior', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    root = createRoot(container);
-    await act(async () => {
-      root.render(createElement(InteractiveShell));
-    });
+    mounted = await mountClient(createElement(InteractiveShell));
+    const { container } = mounted;
 
     // Submit a question (no local command matches → routes to /api/ask).
     const input = container.querySelector<HTMLInputElement>('input.shell__input');
@@ -115,7 +102,7 @@ describe('InteractiveShell streaming behavior', () => {
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
-    await flush();
+    await flushMicrotasks();
 
     // Mid-stream: only the first chunk has been emitted. The streaming span
     // must already be in the feed showing partial text — proof of progressive
@@ -126,16 +113,14 @@ describe('InteractiveShell streaming behavior', () => {
 
     // Release the rest of the stream and let it finalize.
     releaseSecondChunk();
-    await flush();
-    await flush();
+    await flushMicrotasks();
+    await flushMicrotasks();
 
     expect(fetchMock).toHaveBeenCalledWith('/api/ask', expect.objectContaining({ method: 'POST' }));
     expect(feed?.textContent).toContain('Hello world');
   });
 
   it('keys history lines stably so reconciliation does not collapse them', async () => {
-    const { createElement } = await import('react');
-    const { createRoot } = await import('react-dom/client');
     const { InteractiveShell } = await import('@/components/client/InteractiveShell');
 
     const fetchMock = vi.fn(async () => streamingResponse(['final answer']));
@@ -143,10 +128,8 @@ describe('InteractiveShell streaming behavior', () => {
 
     const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    root = createRoot(container);
-    await act(async () => {
-      root.render(createElement(InteractiveShell));
-    });
+    mounted = await mountClient(createElement(InteractiveShell));
+    const { container } = mounted;
 
     const input = container.querySelector<HTMLInputElement>('input.shell__input');
     const form = container.querySelector<HTMLFormElement>('form.shell__form');
@@ -158,8 +141,8 @@ describe('InteractiveShell streaming behavior', () => {
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
-    await flush();
-    await flush();
+    await flushMicrotasks();
+    await flushMicrotasks();
 
     // React emits a console.error for missing/duplicate keys. None expected.
     const keyWarnings = warnSpy.mock.calls.filter((c) => String(c[0]).includes('unique "key"'));

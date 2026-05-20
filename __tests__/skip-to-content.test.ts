@@ -6,9 +6,20 @@
 // The contract: a keyboard user pressing Tab on page load lands on a visible
 // "Skip to main content" link whose href targets #main-content, letting them
 // bypass the nav/overlay chrome.
+//
+// The third half of this contract — that a <main id="main-content"> landmark
+// actually exists in the composed page so the anchor resolves — is verified
+// end-to-end against the real rendered route by tests/e2e/cross-cutting.spec.ts
+// (test 1: it `waitForSelector('main#main-content')`, asserts the skip link's
+// href is `#main-content`, then activates it and confirms focus moves into the
+// landmark). Re-rendering Home() here is impractical: app/page.tsx is a
+// `force-static` RSC with async section components renderToStaticMarkup cannot
+// drive, and the previous attempt to cover it hand-walked the React element
+// tree — exactly the structural source-coupling CG3 removes.
 
-import { act } from 'react';
+import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { type MountedClient, mountClient } from './helpers/render';
 
 // AppShell pulls in MatrixRain (canvas), CRT overlays and responsive bars —
 // stub the breakpoint hook so it renders the desktop variant deterministically.
@@ -26,34 +37,27 @@ vi.mock('@/lib/motion', () => ({
 }));
 
 describe('skip-to-content link', () => {
-  let container: HTMLElement;
-  let root: import('react-dom/client').Root;
+  let mounted: MountedClient;
 
   beforeEach(() => {
     vi.resetModules();
-    container = document.createElement('div');
-    document.body.appendChild(container);
   });
 
   afterEach(() => {
-    act(() => root.unmount());
-    container.remove();
+    mounted?.unmount();
     vi.restoreAllMocks();
   });
 
-  it('AppShell renders a skip link targeting the main landmark', async () => {
-    const { createElement } = await import('react');
-    const { createRoot } = await import('react-dom/client');
+  async function renderAppShell(): Promise<HTMLElement> {
     const { AppShell } = await import('@/components/AppShell.client');
+    mounted = await mountClient(
+      createElement(AppShell, null, createElement('main', { id: 'main-content' }, 'content')),
+    );
+    return mounted.container;
+  }
 
-    root = createRoot(container);
-    await act(async () => {
-      root.render(
-        createElement(AppShell, {
-          children: createElement('main', { id: 'main-content' }, 'content'),
-        }),
-      );
-    });
+  it('AppShell renders a skip link targeting the main landmark', async () => {
+    const container = await renderAppShell();
 
     const skip = container.querySelector<HTMLAnchorElement>('a.skip-to-content');
     expect(skip).not.toBeNull();
@@ -62,41 +66,11 @@ describe('skip-to-content link', () => {
   });
 
   it('the skip link is the first link in the document (lands first on Tab)', async () => {
-    const { createElement } = await import('react');
-    const { createRoot } = await import('react-dom/client');
-    const { AppShell } = await import('@/components/AppShell.client');
-
-    root = createRoot(container);
-    await act(async () => {
-      root.render(
-        createElement(AppShell, {
-          children: createElement('main', { id: 'main-content' }, 'content'),
-        }),
-      );
-    });
+    const container = await renderAppShell();
 
     // The skip link must be the first anchor in DOM order so Shift-free Tab
     // from the address bar reaches it before any nav chrome.
     const firstLink = container.querySelector('a');
     expect(firstLink?.classList.contains('skip-to-content')).toBe(true);
-  });
-
-  it('app/page.tsx provides the #main-content landmark the skip link targets', async () => {
-    // Walk the real element tree Home() composes and find the <main> the skip
-    // link's href resolves to. This proves the anchor target genuinely exists
-    // in the page composition — not just in a test fixture.
-    const { default: Home } = await import('@/app/page');
-    const tree = Home();
-
-    function findMainWithId(node: unknown): boolean {
-      if (!node || typeof node !== 'object') return false;
-      if (Array.isArray(node)) return node.some(findMainWithId);
-      const el = node as { type?: unknown; props?: Record<string, unknown> };
-      if (el.type === 'main' && el.props?.id === 'main-content') return true;
-      if (el.props && 'children' in el.props) return findMainWithId(el.props.children);
-      return false;
-    }
-
-    expect(findMainWithId(tree)).toBe(true);
   });
 });

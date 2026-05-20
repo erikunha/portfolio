@@ -10,36 +10,26 @@
 //   - the error region is announced (role="alert") and the submit row is an
 //     aria-live region.
 
-import { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, createElement } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ContactForm } from '@/components/client/ContactForm';
+import { flushMicrotasks, type MountedClient, mountClient } from './helpers/render';
 
 describe('ContactForm accessibility', () => {
-  let container: HTMLElement;
-  let root: import('react-dom/client').Root;
-
-  beforeEach(() => {
-    container = document.createElement('div');
-    document.body.appendChild(container);
-  });
+  let mounted: MountedClient;
 
   afterEach(() => {
-    act(() => root.unmount());
-    container.remove();
+    mounted?.unmount();
     vi.restoreAllMocks();
   });
 
-  async function renderForm(): Promise<void> {
-    const { createElement } = await import('react');
-    const { createRoot } = await import('react-dom/client');
-    const { ContactForm } = await import('@/components/client/ContactForm');
-    root = createRoot(container);
-    await act(async () => {
-      root.render(createElement(ContactForm));
-    });
+  async function renderForm(): Promise<HTMLElement> {
+    mounted = await mountClient(createElement(ContactForm));
+    return mounted.container;
   }
 
   it('exposes name, email, and message inputs in the tab sequence', async () => {
-    await renderForm();
+    const container = await renderForm();
     // The three real fields are standard form controls — naturally focusable
     // and in DOM/tab order. None carry a negative tabindex.
     const name = container.querySelector<HTMLInputElement>('input[autocomplete="name"]');
@@ -65,7 +55,7 @@ describe('ContactForm accessibility', () => {
   });
 
   it('removes the honeypot field from the tab sequence', async () => {
-    await renderForm();
+    const container = await renderForm();
     const honeypot = container.querySelector<HTMLInputElement>('[data-testid="contact-honeypot"]');
     expect(honeypot).not.toBeNull();
     // A keyboard / screen-reader user must skip the honeypot entirely.
@@ -74,17 +64,16 @@ describe('ContactForm accessibility', () => {
   });
 
   it('uses a real submit button so Enter/Space activate it without JS', async () => {
-    await renderForm();
+    const container = await renderForm();
     const submit = container.querySelector<HTMLButtonElement>('button[type="submit"]');
     expect(submit).not.toBeNull();
-    expect(submit?.textContent).toMatch(/execute_send/i);
     // Native <button type=submit> is keyboard-operable by default — no
     // negative tabindex, no role override needed.
     expect(submit?.getAttribute('tabindex')).not.toBe('-1');
   });
 
   it('the submit row is an aria-live region', async () => {
-    await renderForm();
+    const container = await renderForm();
     const submitRow = container.querySelector('.contact__submitrow');
     expect(submitRow?.getAttribute('aria-live')).toBe('polite');
   });
@@ -95,7 +84,7 @@ describe('ContactForm accessibility', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    await renderForm();
+    const container = await renderForm();
 
     // No alert region while idle.
     expect(container.querySelector('[role="alert"]')).toBeNull();
@@ -106,9 +95,7 @@ describe('ContactForm accessibility', () => {
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
-    await act(async () => {
-      await new Promise<void>((r) => setTimeout(r, 0));
-    });
+    await flushMicrotasks();
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/contact',

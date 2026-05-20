@@ -10,8 +10,9 @@
 //   - the animated loading indicator is aria-hidden (decorative, must not be
 //     read out character-by-character).
 
-import { act } from 'react';
+import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { flushMicrotasks, type MountedClient, mountClient } from './helpers/render';
 
 vi.mock('@/lib/use-breakpoint.client', () => ({
   useBreakpoint: () => ({ isMobile: false }),
@@ -26,33 +27,25 @@ vi.mock('@/content/shell-commands', () => ({
 }));
 
 describe('shell feed accessibility', () => {
-  let container: HTMLElement;
-  let root: import('react-dom/client').Root;
+  let mounted: MountedClient;
 
   beforeEach(() => {
     vi.resetModules();
-    container = document.createElement('div');
-    document.body.appendChild(container);
   });
 
   afterEach(() => {
-    act(() => root.unmount());
-    container.remove();
+    mounted?.unmount();
     vi.restoreAllMocks();
   });
 
-  async function renderShell(): Promise<void> {
-    const { createElement } = await import('react');
-    const { createRoot } = await import('react-dom/client');
+  async function renderShell(): Promise<HTMLElement> {
     const { InteractiveShell } = await import('@/components/client/InteractiveShell');
-    root = createRoot(container);
-    await act(async () => {
-      root.render(createElement(InteractiveShell));
-    });
+    mounted = await mountClient(createElement(InteractiveShell));
+    return mounted.container;
   }
 
   it('the shell feed is a labelled live region', async () => {
-    await renderShell();
+    const container = await renderShell();
     const feed = container.querySelector('.shell__feed');
     expect(feed).not.toBeNull();
     expect(feed?.getAttribute('role')).toBe('log');
@@ -61,7 +54,7 @@ describe('shell feed accessibility', () => {
   });
 
   it('the feed exposes aria-busy (false while idle)', async () => {
-    await renderShell();
+    const container = await renderShell();
     const feed = container.querySelector('.shell__feed');
     // jsdom serializes the boolean attribute; idle shell is not busy.
     expect(feed?.getAttribute('aria-busy')).toBe('false');
@@ -80,7 +73,7 @@ describe('shell feed accessibility', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    await renderShell();
+    const container = await renderShell();
 
     const input = container.querySelector<HTMLInputElement>('input.shell__input');
     const form = container.querySelector<HTMLFormElement>('form.shell__form');
@@ -92,9 +85,7 @@ describe('shell feed accessibility', () => {
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
-    await act(async () => {
-      await new Promise<void>((r) => setTimeout(r, 0));
-    });
+    await flushMicrotasks();
 
     // While the request is in flight: feed is busy + the loading dots line
     // (decorative animation) is aria-hidden so AT doesn't announce '...'.
@@ -105,8 +96,6 @@ describe('shell feed accessibility', () => {
     expect(loading?.getAttribute('aria-hidden')).toBe('true');
 
     release();
-    await act(async () => {
-      await new Promise<void>((r) => setTimeout(r, 0));
-    });
+    await flushMicrotasks();
   });
 });

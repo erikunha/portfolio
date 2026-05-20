@@ -1,9 +1,16 @@
 // __tests__/meta/no-source-grep.test.ts
-// Enforces the Testing standard: a test must not assert application SOURCE
-// text. readFileSync of a file under app/ components/ lib/ scripts/ is a
-// violation unless the line carries an explicit allow tag:
+// Best-effort guard for the Testing standard: a test should not assert
+// application SOURCE text. It flags a readFileSync / readFile() of a file
+// under app/ components/ lib/ scripts/ unless the line carries an explicit
+// allow tag:
 //   // behavioral-test-allow: <reason>
 // Fixture reads (under __tests__/**/fixtures/) are always permitted.
+//
+// This is a lint, not airtight enforcement. It is a line-level regex scan, so
+// it will MISS aliased imports (`import { readFileSync as r }`), the
+// fs.promises API, dynamically built paths, and any read split across lines.
+// It catches the common, copy-pasted shape — treat a clean run as a smoke
+// signal, not a proof that no test couples to source.
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';

@@ -10,39 +10,28 @@
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, createElement } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ContactForm } from '@/components/client/ContactForm';
+import { flushMicrotasks, type MountedClient, mountClient } from './helpers/render';
 
 describe('contact form error region', () => {
-  let container: HTMLElement;
-  let root: import('react-dom/client').Root;
-
-  beforeEach(() => {
-    container = document.createElement('div');
-    document.body.appendChild(container);
-  });
+  let mounted: MountedClient;
 
   afterEach(() => {
-    act(() => root.unmount());
-    container.remove();
+    mounted?.unmount();
     vi.restoreAllMocks();
   });
 
   it('renders the error message in a role="alert" live region after a failed submit', async () => {
-    const { createElement } = await import('react');
-    const { createRoot } = await import('react-dom/client');
-    const { ContactForm } = await import('@/components/client/ContactForm');
-
     // Make the contact POST fail so the form enters its error state.
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(JSON.stringify({ error: 'boom' }), { status: 500 })),
     );
 
-    root = createRoot(container);
-    await act(async () => {
-      root.render(createElement(ContactForm));
-    });
+    mounted = await mountClient(createElement(ContactForm));
+    const { container } = mounted;
 
     // Idle state: no alert region present yet.
     expect(container.querySelector('[role="alert"]')).toBeNull();
@@ -52,9 +41,7 @@ describe('contact form error region', () => {
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
-    await act(async () => {
-      await new Promise<void>((r) => setTimeout(r, 0));
-    });
+    await flushMicrotasks();
 
     // Error state: the error paragraph is announced via role="alert".
     const alert = container.querySelector('[role="alert"]');

@@ -13,8 +13,9 @@
 //    notice mentions 90-day retention + a deletion route.
 
 import { NextRequest } from 'next/server';
-import { act } from 'react';
+import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mountClient } from './helpers/render';
 
 // --- lib/ask-log -------------------------------------------------------------
 describe('lib/ask-log — persistAskInteraction', () => {
@@ -184,16 +185,9 @@ describe('/api/ask privacy notice on the shell', () => {
   });
 
   it('renders a privacy notice mentioning 90-day retention and a deletion route', async () => {
-    const { createElement } = await import('react');
-    const { createRoot } = await import('react-dom/client');
     const { InteractiveShell } = await import('@/components/client/InteractiveShell');
 
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const root = createRoot(container);
-    await act(async () => {
-      root.render(createElement(InteractiveShell));
-    });
+    const { container, unmount } = await mountClient(createElement(InteractiveShell));
 
     const notice = container.querySelector('.shell__privacy-notice');
     expect(notice).not.toBeNull();
@@ -201,7 +195,6 @@ describe('/api/ask privacy notice on the shell', () => {
     expect(text).toMatch(/90 days|90-day/);
     expect(text).toContain('/api/log/forget');
 
-    act(() => root.unmount());
-    container.remove();
+    unmount();
   });
 });
