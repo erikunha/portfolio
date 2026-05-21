@@ -9,11 +9,11 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
-      // Warn at 60% lines — does not block the run.
+      // Enforce 60% lines coverage — exits with code 1 if not met.
       thresholds: {
         lines: 60,
       },
-      include: ['lib/**', 'components/**'],
+      include: ['lib/**', 'components/**', 'app/**'],
       exclude: ['**/node_modules/**', '**/__tests__/**', '**/tests/**', '**/content/**'],
       reportsDirectory: 'coverage',
     },

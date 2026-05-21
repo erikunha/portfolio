@@ -71,7 +71,15 @@ jobs:
         run: pnpm check:dep-pinning
 
       - name: Unit tests
-        run: pnpm vitest run
+        run: pnpm test:coverage
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
 
       - name: PR comment merge gate
         if: github.event_name == 'pull_request'
