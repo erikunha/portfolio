@@ -641,11 +641,10 @@
 
   /* ───────────────────────────────────────────────────────────────────────
      MODULE — ONE element, all viewports.
-     Module.tsx always renders a native <details>. The page is force-static so
-     the server cannot UA-detect; instead the *base* rules below give every
-     module the mobile collapsible chrome, and the `min-width: 769px` block
-     near the end of this file neutralizes collapsibility on desktop so the
-     <summary> reads as a plain <h2> section header (no cursor, no marker,
+     Module.tsx always renders a native <details>. The *base* rules below give
+     every module the mobile collapsible chrome, and the `min-width: 769px`
+     block near the end of this file neutralizes collapsibility on desktop so
+     the <summary> reads as a plain <h2> section header (no cursor, no marker,
      body always visible). The two header labels are width-toggled here.
      ─────────────────────────────────────────────────────────────────────── */
 
@@ -769,6 +768,14 @@
       background: linear-gradient(180deg, rgba(0, 255, 65, 0.015), rgba(0, 0, 0, 0));
       color: var(--fg);
     }
+  }
+
+  /* ManPage is not deferred, so its .module__body is not covered by the
+     content-visibility:auto block above. On mobile the PPR Suspense boundary
+     swaps the desktop fallback for the mobile variant — this anchors the
+     height so the swap does not generate measurable CLS. */
+  #sec-man-page .module__body {
+    contain-intrinsic-size: auto 300px;
   }
 
   /* ─────────────────────────────────────────────────────────────────────────────

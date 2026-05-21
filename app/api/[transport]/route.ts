@@ -18,8 +18,10 @@
 //
 // Node runtime: `mcp-handler` and the MCP SDK pull in Node built-ins
 // (`node:crypto`, stream internals) that the Edge runtime does not provide.
-// The two reused dependencies — the HIRING_PROFILE constant and the /api/ask
-// route — are runtime-agnostic, so this does not constrain them.
+// Next.js App Router defaults to the Node.js runtime for all route handlers,
+// so no `export const runtime` annotation is needed. (Under `cacheComponents:
+// true` / dynamicIO, runtime segment configs are incompatible and must be
+// omitted — the Node.js default is guaranteed by the framework.)
 
 import { createMcpHandler } from 'mcp-handler';
 import { registerAgentTools } from '@/lib/agent/mcp-tools';
