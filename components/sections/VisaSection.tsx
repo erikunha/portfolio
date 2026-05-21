@@ -49,7 +49,7 @@ function VisaMobile() {
   );
 }
 
-async function VisaContent() {
+export async function VisaContent() {
   const isMobile = await getIsMobile();
   return isMobile ? <VisaMobile /> : <VisaDesktop />;
 }

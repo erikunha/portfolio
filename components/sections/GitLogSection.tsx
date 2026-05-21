@@ -252,7 +252,7 @@ function GitLogMobile() {
   );
 }
 
-async function GitLogContent() {
+export async function GitLogContent() {
   const isMobile = await getIsMobile();
   return isMobile ? <GitLogMobile /> : <GitLogDesktop />;
 }

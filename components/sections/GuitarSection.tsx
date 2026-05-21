@@ -79,7 +79,7 @@ function GuitarMobile() {
   );
 }
 
-async function GuitarContent() {
+export async function GuitarContent() {
   const isMobile = await getIsMobile();
   return isMobile ? <GuitarMobile /> : <GuitarDesktop />;
 }

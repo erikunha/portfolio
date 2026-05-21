@@ -64,7 +64,7 @@ function ProjectsMobile() {
   );
 }
 
-async function ProjectsContent() {
+export async function ProjectsContent() {
   const isMobile = await getIsMobile();
   return isMobile ? <ProjectsMobile /> : <ProjectsDesktop />;
 }

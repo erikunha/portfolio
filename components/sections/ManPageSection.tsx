@@ -5,7 +5,7 @@ import { Module } from '../responsive/Module';
 import { ManPageDesktop } from './ManPageDesktop';
 import { ManPageMobile } from './ManPageMobile';
 
-async function ManPageContent() {
+export async function ManPageContent() {
   const isMobile = await getIsMobile();
   return isMobile ? <ManPageMobile /> : <ManPageDesktop />;
 }
