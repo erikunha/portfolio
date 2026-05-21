@@ -171,6 +171,12 @@ jobs:
   ai-eval:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Serialize per-ref: the eval mutates the shared *_BUILD Upstash instance
+    # (rate-limit, budget, dedup counters) and overwrites the `ask:eval:latest`
+    # key. Two quick pushes would race those — cancel the in-flight run.
+    concurrency:
+      group: ai-eval-${{ github.ref }}
+      cancel-in-progress: true
     # Non-blocking on purpose. The /api/ask quality eval (scripts/ask-eval.ts)
     # runs the real route through an LLM judge — non-deterministic by nature.
     # It needs ~5 baseline runs to establish a stable correctness/jailbreak
