@@ -24,7 +24,9 @@ export const dynamic = 'force-dynamic';
 // rate-limiting but are NOT written to KV. Prevents CI smoke runs from
 // polluting the err:{date}:* partition and skewing error-rate analysis.
 // Anyone sending a '[smoke]'-prefixed real error only self-suppresses;
-// no adverse effect on other clients. See tests/e2e/observability-smoke.spec.ts.
+// no adverse effect on other clients. The prefix match is case-insensitive
+// so '[SMOKE]' / '[Smoke]' are treated identically.
+// See tests/e2e/observability-smoke.spec.ts.
 const SMOKE_PREFIX = '[smoke]';
 
 const ERR_KV_TTL_S = 30 * 24 * 60 * 60; // 30 days = 2_592_000s
@@ -48,7 +50,7 @@ export const POST = defineHandler({
     // partition. The rate-limit hit IS taken (one slot per smoke message
     // counts against the 10/min/IP quota); acceptable since CI smoke
     // posts <10 messages per run.
-    if (body.message.startsWith(SMOKE_PREFIX)) {
+    if (body.message.toLowerCase().startsWith(SMOKE_PREFIX)) {
       return ok({ requestId });
     }
 

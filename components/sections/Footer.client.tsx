@@ -26,8 +26,12 @@ export function Footer() {
   const [sectionsSeen, setSectionsSeen] = useState(0);
   const [totalSections, setTotalSections] = useState(0);
   const [commandsRun, setCommandsRun] = useState(0);
-  const [dmesgOn, setDmesgOn] = useState<boolean[]>(dmesgLines.map(() => false));
-  const [haltOn, setHaltOn] = useState(false);
+  // The dmesg boot sequence is CSS-timed: a single `booted` flag flips the
+  // whole list from hidden to revealing. Each <li> staggers via its own
+  // `animation-delay` (see `.dm-line` in app/css/_footer.css), and the halt
+  // plate uses the trailing delay. This collapses what used to be a ~8-call
+  // staggered setState storm into one state update.
+  const [booted, setBooted] = useState(false);
   const [dmesgTs, setDmesgTs] = useState<string[]>(dmesgLines.map(() => ''));
   const footerRef = useRef<HTMLElement>(null);
 
@@ -118,12 +122,8 @@ export function Footer() {
           return `[${t}]`;
         });
         setDmesgTs(ts);
-        dmesgLines.forEach((_, i) => {
-          setTimeout(() => {
-            setDmesgOn((prev) => prev.map((v, j) => (j === i ? true : v)));
-            if (i === dmesgLines.length - 1) setTimeout(() => setHaltOn(true), 180);
-          }, i * 80);
-        });
+        // One state flip — the staggered reveal is CSS-driven from here.
+        setBooted(true);
       },
       { threshold: 0.1 },
     );
@@ -276,9 +276,9 @@ export function Footer() {
           </div>
         </div>
 
-        <ul className="sd-dmesg" aria-label="kernel buffer tail">
+        <ul className={booted ? 'sd-dmesg booted' : 'sd-dmesg'} aria-label="kernel buffer tail">
           {dmesgLines.map((line, i) => (
-            <li key={line.off} className={dmesgOn[i] ? 'dm-line on' : 'dm-line'}>
+            <li key={line.off} className="dm-line" style={{ animationDelay: `${i * 80}ms` }}>
               <span className="dm-t">{dmesgTs[i]}</span>
               <span className="dm-msg">
                 {line.prefix}
@@ -291,8 +291,8 @@ export function Footer() {
           ))}
         </ul>
 
-        <div className="sd-end">
-          <span className={haltOn ? 'sd-halt on' : 'sd-halt'}>[SYSTEM HALTED]</span>
+        <div className={booted ? 'sd-end booted' : 'sd-end'}>
+          <span className="sd-halt">[SYSTEM HALTED]</span>
           <span className="sd-halt-hint">
             {isMobile ? 'tap ' : 'press '}
             <button type="button" onClick={() => window.location.reload()}>

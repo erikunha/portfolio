@@ -113,6 +113,8 @@ function LoadingDots() {
 export function InteractiveShell() {
   const { isMobile } = useBreakpoint();
   const lineIdRef = useRef(0);
+  // Memoized for a STABLE identity — nextId appears in the dependency arrays
+  // of streamQuestion/runCommand below. The ref read is already stable.
   const nextId = useCallback(() => ++lineIdRef.current, []);
   const [history, setHistory] = useState<Line[]>(() => withIds(INITIAL_LINES, nextId));
   const [input, setInput] = useState('');

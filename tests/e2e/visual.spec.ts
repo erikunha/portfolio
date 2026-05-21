@@ -167,9 +167,10 @@ test.describe('visual regression', () => {
 
   test('5 — hottest takes section matches baseline', async ({ mockedPage }) => {
     // Representative below-fold module: exercises cv-defer (content-visibility:auto)
-    // + Module RSC layout (desktop: <section.module--desktop>; mobile: <details>
-    // with defaultOpen={false}). Scrolling reveals the cv-defer'd content and we
-    // force the mobile <details> open so both viewports capture the body.
+    // + Module RSC layout. Module always renders one <details>; CSS forces it
+    // open + non-collapsible on desktop, and it stays a native collapsible
+    // <details defaultOpen={false}> on mobile. Scrolling reveals the cv-defer'd
+    // content and we force the <details> open so both viewports capture the body.
     const hottest = mockedPage.locator('#sec-hottest-takes');
     await hottest.scrollIntoViewIfNeeded();
     // On mobile, Module renders <details defaultOpen={false}>. Force open via

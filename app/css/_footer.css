@@ -201,6 +201,10 @@
     font-size: var(--fs-base);
     line-height: 1.85;
   }
+  /* dmesg reveal: each line starts hidden; once `.sd-dmesg.booted` is set the
+     line plays `dmesg-reveal` with a per-line `animation-delay` supplied inline
+     by Footer.client.tsx. `animation-fill-mode: both` holds the line at the
+     0% (hidden) state during its delay and at 100% (visible) after. */
   .sd-dmesg .dm-line {
     display: grid;
     grid-template-columns: 92px 1fr auto;
@@ -209,13 +213,19 @@
     color: var(--fg);
     opacity: 0;
     transform: translateY(2px);
-    transition:
-      opacity 220ms ease,
-      transform 220ms ease;
   }
-  .sd-dmesg .dm-line.on {
-    opacity: 1;
-    transform: translateY(0);
+  .sd-dmesg.booted .dm-line {
+    animation: dmesg-reveal 220ms ease both;
+  }
+  @keyframes dmesg-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   .sd-dmesg .dm-t {
     color: var(--muted);
@@ -243,6 +253,10 @@
     gap: 14px 16px;
     row-gap: 10px;
   }
+  /* Halt plate reveal: keyed off `.sd-end.booted` and delayed past the dmesg
+     sequence (7 lines x 80ms + a ~180ms gap ~= 660ms) so the boot sequence
+     stays observable end-to-end. `animation-fill-mode: both` holds the hidden
+     state during the delay. */
   .sd-halt {
     display: inline-block;
     flex: 0 0 auto;
@@ -256,17 +270,23 @@
     white-space: nowrap;
     opacity: 0;
     transform: translateY(2px);
-    transition:
-      opacity 280ms ease,
-      transform 280ms ease,
-      box-shadow 280ms ease;
   }
-  .sd-halt.on {
-    opacity: 1;
-    transform: translateY(0);
-    box-shadow:
-      0 0 18px rgba(0, 255, 65, 0.45),
-      0 0 40px rgba(0, 255, 65, 0.15);
+  .sd-end.booted .sd-halt {
+    animation: sd-halt-reveal 280ms ease 660ms both;
+  }
+  @keyframes sd-halt-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+      box-shadow: none;
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+      box-shadow:
+        0 0 18px rgba(0, 255, 65, 0.45),
+        0 0 40px rgba(0, 255, 65, 0.15);
+    }
   }
   .sd-halt-hint {
     flex: 0 0 auto;
@@ -275,10 +295,17 @@
     letter-spacing: 0.12em;
     white-space: nowrap;
     opacity: 0;
-    transition: opacity 280ms ease 180ms;
   }
-  .sd-halt.on + .sd-halt-hint {
-    opacity: 1;
+  .sd-end.booted .sd-halt-hint {
+    animation: sd-halt-hint-reveal 280ms ease 840ms both;
+  }
+  @keyframes sd-halt-hint-reveal {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
   .sd-halt-hint kbd {
     display: inline-block;
@@ -346,12 +373,24 @@
     }
   }
 
+  /* Reduced motion: skip the staggered reveal animations entirely — the
+     dmesg lines, halt plate, and hint render in their final visible state
+     immediately. `animation: none` also cancels the inline animation-delay. */
   body[data-motion="reduce"] .sd-dmesg .dm-line,
+  body[data-motion="reduce"] .sd-dmesg.booted .dm-line,
   body[data-motion="reduce"] .sd-halt,
-  body[data-motion="reduce"] .sd-halt-hint {
+  body[data-motion="reduce"] .sd-end.booted .sd-halt,
+  body[data-motion="reduce"] .sd-halt-hint,
+  body[data-motion="reduce"] .sd-end.booted .sd-halt-hint {
     opacity: 1;
     transform: none;
     transition: none;
+    animation: none;
+  }
+  body[data-motion="reduce"] .sd-end.booted .sd-halt {
+    box-shadow:
+      0 0 18px rgba(0, 255, 65, 0.45),
+      0 0 40px rgba(0, 255, 65, 0.15);
   }
   body[data-motion="reduce"] .sp-bar2 > i {
     transition: none;

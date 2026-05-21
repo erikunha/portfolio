@@ -588,18 +588,22 @@
     margin-bottom: var(--vrhythm);
   }
 
-  /* Section header — icon + uppercase label, like .section-head in the mockup */
+  /* Section header — icon + uppercase label, like .section-head in the mockup.
+     Lives inside the <summary>; flex:1 lets it sit beside the chevron, margin
+     reset because the <summary> owns the header's padding. Mobile sizing is
+     the base; the `min-width: 769px` block restores the desktop --fs-base. */
   .module__header {
+    flex: 1;
     display: flex;
     align-items: center;
     gap: 8px;
     color: var(--signal);
     font-family: var(--font-mono-stack);
-    font-size: var(--fs-base);
+    font-size: var(--fs-xs);
     font-weight: 500;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    margin: 0 0 10px;
+    margin: 0;
   }
 
   .module__icon {
@@ -635,32 +639,31 @@
     contain-intrinsic-size: auto 520px;
   }
 
-  /* Desktop module body gets the bordered panel look. Mobile border is on the outer module. */
-  .module--desktop .module__body {
-    border: 1px solid var(--signal-dim);
-    padding: var(--pad);
-    background: linear-gradient(180deg, rgba(0, 255, 65, 0.015), rgba(0, 0, 0, 0));
-    color: var(--fg);
-  }
+  /* ───────────────────────────────────────────────────────────────────────
+     MODULE — ONE element, all viewports.
+     Module.tsx always renders a native <details>. The page is force-static so
+     the server cannot UA-detect; instead the *base* rules below give every
+     module the mobile collapsible chrome, and the `min-width: 769px` block
+     near the end of this file neutralizes collapsibility on desktop so the
+     <summary> reads as a plain <h2> section header (no cursor, no marker,
+     body always visible). The two header labels are width-toggled here.
+     ─────────────────────────────────────────────────────────────────────── */
 
-  .module--mobile .module__body {
-    color: var(--fg);
-  }
-
-  /* Mobile: outer module is a native <details> element. The border container
-     (overflow:hidden clips child borders). Native disclosure marker is hidden;
-     chevron rotation is driven by the native [open] attribute. */
-  .module--mobile {
+  /* Outer module is a native <details>: bordered panel container.
+     overflow:hidden clips child borders. */
+  .module {
     border: 1px solid var(--signal-dim);
     background: rgba(0, 0, 0, 0.55);
     overflow: hidden;
   }
 
-  /* Hide native disclosure triangle (Chrome/Safari + Firefox respectively) */
-  .module--mobile .module__toggle::-webkit-details-marker {
-    display: none;
+  .module__body {
+    color: var(--fg);
   }
-  .module--mobile .module__toggle {
+
+  /* <summary> is the section toggle: icon + uppercase label + chevron. */
+  .module__toggle {
+    /* Hide native disclosure triangle (Firefox) */
     list-style: none;
     display: flex;
     justify-content: space-between;
@@ -670,39 +673,102 @@
     min-height: 44px;
     background: rgba(0, 255, 65, 0.04);
     border-bottom: 1px solid var(--signal-dim-2);
-    color: var(--signal);
-    font-family: var(--font-mono-stack);
-    font-size: var(--fs-xs);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    text-align: left;
     cursor: pointer;
   }
 
-  .module--mobile .module__header-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
+  /* Hide native disclosure triangle (Chrome/Safari) */
+  .module__toggle::-webkit-details-marker {
+    display: none;
   }
 
-  .module--mobile .module__chevron {
+  /* Header labels: desktop label hidden ≤768px, mobile label hidden ≥769px. */
+  .module__label--mobile {
+    display: inline;
+  }
+  .module__label--desktop {
+    display: none;
+  }
+
+  .module__chevron {
     color: var(--signal);
     font-size: var(--fs-sm);
     transition: transform 120ms ease-out;
   }
 
-  .module--mobile[open] .module__chevron {
+  .module[open] .module__chevron {
     transform: rotate(90deg);
   }
 
-  .module--mobile:not([open]) .module__body {
+  /* Native <details> collapse: body hidden when closed, padded when open. */
+  .module:not([open]) .module__body {
     display: none;
   }
 
-  .module--mobile[open] .module__body {
+  .module[open] .module__body {
     padding: var(--pad);
+  }
+
+  /* ───────────────────────────────────────────────────────────────────────
+     MODULE — DESKTOP (≥769px): neutralize the native <details> collapsibility.
+     The single <details> must read as the old plain, always-expanded
+     <section> + <h2> here: body forced visible regardless of [open], no
+     chevron, summary stripped of its toggle chrome (no cursor / border /
+     background / min-height) so it looks exactly like the former standalone
+     <h2 class="module__header">. The native marker is already removed in the
+     base rules (list-style:none + ::-webkit-details-marker).
+     ─────────────────────────────────────────────────────────────────────── */
+  @media (min-width: 769px) {
+    /* Old desktop <section> had no outer border — the panel border lived on
+       the body. Drop the mobile container chrome. */
+    .module {
+      border: 0;
+      background: none;
+      overflow: visible;
+    }
+
+    /* <summary> becomes a transparent header slot: no toggle affordance.
+       margin-bottom restores the 10px gap the old standalone <h2> carried. */
+    .module__toggle {
+      display: block;
+      padding: 0;
+      min-height: 0;
+      background: none;
+      border-bottom: 0;
+      cursor: default;
+      margin-bottom: 10px;
+    }
+
+    /* Restore the desktop header type scale (mobile base uses --fs-xs). */
+    .module__header {
+      font-size: var(--fs-base);
+      letter-spacing: 0.1em;
+    }
+
+    /* Desktop shows the full header label; the mobile short label is hidden. */
+    .module__label--desktop {
+      display: inline;
+    }
+    .module__label--mobile {
+      display: none;
+    }
+
+    /* No disclosure chevron on desktop. */
+    .module__chevron {
+      display: none;
+    }
+
+    /* Body is ALWAYS visible on desktop — override the native
+       details:not([open]) collapse and the [open]-scoped padding so the
+       panel paints identically whether or not the element is open. */
+    .module .module__body,
+    .module:not([open]) .module__body,
+    .module[open] .module__body {
+      display: block;
+      border: 1px solid var(--signal-dim);
+      padding: var(--pad);
+      background: linear-gradient(180deg, rgba(0, 255, 65, 0.015), rgba(0, 0, 0, 0));
+      color: var(--fg);
+    }
   }
 
   /* ─────────────────────────────────────────────────────────────────────────────

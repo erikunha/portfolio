@@ -33,7 +33,9 @@ vi.mock('@/lib/use-breakpoint.client', () => ({
 // the full AppShell subtree commits without throwing.
 vi.mock('@/lib/motion', () => ({
   readMotion: () => false,
-  applyMotion: () => {},
+  applyMotion: () => {
+    /* no-op: motion application is not exercised here */
+  },
 }));
 
 describe('skip-to-content link', () => {

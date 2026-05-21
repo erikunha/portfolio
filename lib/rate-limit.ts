@@ -7,8 +7,12 @@ let _askLimit: Ratelimit | undefined;
 let _contactLimit: Ratelimit | undefined;
 
 export function getRedis(): Redis {
-  if (!_redis) _redis = Redis.fromEnv();
-  return _redis;
+  if (_redis) return _redis;
+  // Construct once. If construction throws, _redis stays undefined so the
+  // next call retries; the caller's try/catch keeps the request fail-open.
+  const instance = Redis.fromEnv();
+  _redis = instance;
+  return instance;
 }
 
 export function getAskLimit(): Ratelimit {

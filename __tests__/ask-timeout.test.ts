@@ -105,7 +105,11 @@ describe('/api/contact — Resend send 10s timeout', () => {
 
   it('resolves with the message persisted even when Resend never responds', async () => {
     // Resend send hangs forever — only the Promise.race timeout can unblock.
-    resendSendMock.mockReturnValueOnce(new Promise(() => {}));
+    resendSendMock.mockReturnValueOnce(
+      new Promise(() => {
+        /* intentionally never settles */
+      }),
+    );
     vi.useFakeTimers();
 
     const { POST } = await import('@/app/api/contact/route');

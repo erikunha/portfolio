@@ -29,7 +29,9 @@ class MockIO implements IntersectionObserver {
   observe(target: Element) {
     observedNodes.push(target);
   }
-  unobserve() {}
+  unobserve() {
+    /* not exercised by these tests */
+  }
   disconnect() {
     disconnected = true;
   }

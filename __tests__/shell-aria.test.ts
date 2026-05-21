@@ -63,7 +63,9 @@ describe('shell feed accessibility', () => {
   it('the loading indicator is rendered aria-hidden while a response streams', async () => {
     // Hold the fetch open so the loading line stays in the DOM long enough to
     // assert on it.
-    let release: () => void = () => {};
+    let release: () => void = () => {
+      /* reassigned by the Promise executor below */
+    };
     const gate = new Promise<void>((r) => {
       release = r;
     });

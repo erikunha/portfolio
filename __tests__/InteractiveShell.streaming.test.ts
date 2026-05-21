@@ -92,7 +92,9 @@ describe('InteractiveShell streaming behavior', () => {
     const { InteractiveShell } = await import('@/components/client/InteractiveShell');
 
     // Hold the second chunk back so we can observe a mid-stream paint.
-    let releaseSecondChunk: () => void = () => {};
+    let releaseSecondChunk: () => void = () => {
+      /* reassigned by the Promise executor below */
+    };
     const secondChunkGate = new Promise<void>((r) => {
       releaseSecondChunk = r;
     });
@@ -185,7 +187,9 @@ describe('InteractiveShell streaming behavior', () => {
     const fetchMock = vi.fn(async () => streamingResponse(['final answer']));
     vi.stubGlobal('fetch', fetchMock);
 
-    const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      /* silence expected error output */
+    });
 
     mounted = await mountClient(createElement(InteractiveShell));
     const { container } = mounted;

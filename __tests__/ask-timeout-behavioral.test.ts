@@ -138,7 +138,9 @@ describe('/api/ask behavioral — mid-stream timeout watchdog (CG5)', () => {
               });
             }
             // Step 3+: never resolve — the connection has stalled.
-            return new Promise<never>(() => {});
+            return new Promise<never>(() => {
+              /* intentionally never settles */
+            });
           },
         };
       },

@@ -14,13 +14,10 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-// Module is an async RSC that reads request headers; stub the UA detection so
-// it resolves deterministically to the desktop branch under test.
-vi.mock('@/lib/get-is-mobile-for-request', () => ({
-  getIsMobileForRequest: vi.fn(async () => false),
-}));
+// Module is a pure (sync, non-async) Server Component: one <details> for every
+// viewport, no UA detection. No stub needed — it renders deterministically.
 
 // Recursively walk a React element tree, collecting every node whose props
 // carry `defer: true`.
@@ -39,14 +36,14 @@ function countDeferredSections(node: unknown): number {
 describe('content-visibility deferral', () => {
   it('Module renders the cv-defer class only when defer is set', async () => {
     const { Module } = await import('@/components/responsive/Module');
-    // Module is async — invoke it to obtain the resolved element, then render.
-    const deferredEl = await Module({
+    // Module is a sync Server Component — call it to obtain the element.
+    const deferredEl = Module({
       id: 'test-deferred',
       header: 'T',
       defer: true,
       children: null,
     });
-    const eagerEl = await Module({
+    const eagerEl = Module({
       id: 'test-eager',
       header: 'T',
       defer: false,

@@ -55,7 +55,9 @@ describe('lib/log.ts foundation', () => {
   it('falls back to a JSON console line under the Edge runtime', async () => {
     vi.stubEnv('NEXT_RUNTIME', 'edge');
     vi.resetModules();
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+      /* capture only — suppress real console output */
+    });
     const { log } = await import('@/lib/log');
     log.info('edge message', { requestId: 'rid-edge' });
     expect(consoleSpy).toHaveBeenCalledOnce();
