@@ -1,720 +1,794 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    PAGE CONTAINER
    ───────────────────────────────────────────────────────────────────────── */
-.page {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 10;
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 60px var(--pad) 0;
-}
-
-@media (max-width: 900px) {
+@layer layout {
   .page {
-    padding: 20px 18px 0;
-  }
-}
-
-@media (max-width: 768px) {
-  /* Clear space for fixed dock at bottom */
-  body {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-  }
-
-  /* Page padding — 900px rule sets explicit 18px; 768px keeps var(--pad) = 18px (set by _responsive.css 900px block) */
-  .page {
-    padding: 14px var(--pad) 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 10;
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 60px var(--pad) 0;
   }
 
-  /* Section order — matches desktop DOM order */
-  #sec-readme {
-    order: 1;
-  }
-  #sec-shell {
-    order: 2;
-  }
-  #sec-man-page {
-    order: 3;
-  }
-  #sec-now {
-    order: 4;
-  }
-  #sec-projects {
-    order: 5;
-  }
-  #sec-git-log {
-    order: 6;
-  }
-  #sec-npm-stack {
-    order: 7;
-  }
-  #sec-sys-health {
-    order: 8;
-  }
-  #sec-live-perf {
-    order: 9;
-  }
-  #sec-perf-receipts {
-    order: 10;
-  }
-  #sec-guitar {
-    order: 11;
-  }
-  #sec-visa {
-    order: 12;
-  }
-  #sec-credentials {
-    order: 13;
-  }
-  #sec-community {
-    order: 14;
-  }
-  #sec-hottest-takes {
-    order: 15;
-  }
-  #sec-responsibilities {
-    order: 16;
-  }
-  #sec-unknowns {
-    order: 17;
-  }
-  #sec-contact {
-    order: 18;
+  @media (max-width: 900px) {
+    .page {
+      padding: 20px 18px 0;
+    }
   }
 
-  /* Readme — narrower gutter on mobile */
-  .readme {
-    grid-template-columns: 28px 1fr;
-    font-size: var(--fs-sm);
+  @media (max-width: 768px) {
+    /* Clear space for fixed dock at bottom */
+    body {
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Page padding — 900px rule sets explicit 18px; 768px keeps var(--pad) = 18px (set by _responsive.css 900px block) */
+    .page {
+      padding: 14px var(--pad) 0;
+    }
+
+    /* Section order — matches desktop DOM order */
+    #sec-readme {
+      order: 1;
+    }
+    #sec-shell {
+      order: 2;
+    }
+    #sec-man-page {
+      order: 3;
+    }
+    #sec-now {
+      order: 4;
+    }
+    #sec-projects {
+      order: 5;
+    }
+    #sec-git-log {
+      order: 6;
+    }
+    #sec-npm-stack {
+      order: 7;
+    }
+    #sec-sys-health {
+      order: 8;
+    }
+    #sec-live-perf {
+      order: 9;
+    }
+    #sec-perf-receipts {
+      order: 10;
+    }
+    #sec-guitar {
+      order: 11;
+    }
+    #sec-visa {
+      order: 12;
+    }
+    #sec-credentials {
+      order: 13;
+    }
+    #sec-community {
+      order: 14;
+    }
+    #sec-hottest-takes {
+      order: 15;
+    }
+    #sec-responsibilities {
+      order: 16;
+    }
+    #sec-unknowns {
+      order: 17;
+    }
+    #sec-contact {
+      order: 18;
+    }
+
+    /* Readme — narrower gutter on mobile */
+    .readme {
+      grid-template-columns: 28px 1fr;
+      font-size: var(--fs-sm);
+    }
+
+    /* Npm stack — square tiles on mobile */
+    .npm-stack li {
+      aspect-ratio: 1 / 1;
+      font-size: var(--fs-2xs);
+    }
+
+    /* Hottest takes — tighter grid on mobile */
+    .take {
+      grid-template-columns: 28px 1fr;
+      padding: 10px 0;
+    }
+    .take__num {
+      font-size: var(--fs-xs);
+    }
+    .take__thesis {
+      font-size: var(--fs-sm);
+    }
+    .take__body {
+      font-size: var(--fs-sm);
+    }
+    .take__category {
+      font-size: var(--fs-2xs);
+    }
+    .takes__footer {
+      font-size: var(--fs-xs);
+    }
+
+    /* Community — smaller text on mobile */
+    .community {
+      font-size: var(--fs-sm);
+    }
+    .community .ctitle {
+      font-size: var(--fs-base);
+    }
+    .community .cstatus {
+      font-size: var(--fs-xs);
+    }
+
+    /* Permatrix — smaller text on mobile */
+    .permatrix pre {
+      font-size: var(--fs-xs);
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+    .permatrix .pm-cmd {
+      font-size: var(--fs-xs);
+    }
+    .permatrix .pm-foot {
+      font-size: var(--fs-xs);
+    }
+
+    /* Unknowns — smaller text on mobile */
+    .unknowns pre {
+      font-size: var(--fs-xs);
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+
+    /* Live perf — tighter cells on mobile */
+    .perf-row {
+      gap: 10px;
+    }
+    .perf-cell .pk {
+      font-size: var(--fs-2xs);
+      letter-spacing: 0.14em;
+    }
+    .perf-cell .pv {
+      font-size: var(--fs-lg);
+      margin: 6px 0;
+    }
+    .perf-cell .pv .of {
+      font-size: var(--fs-xs);
+    }
+    .perf-cell .pbar {
+      height: 3px;
+    }
+    .perf-foot {
+      font-size: var(--fs-2xs);
+    }
+    .perf-foot .live-dot {
+      width: 6px;
+      height: 6px;
+      margin-right: 6px;
+    }
+
+    /* Shell bar — smaller on mobile */
+    .shell__bar {
+      font-size: var(--fs-2xs);
+    }
+
+    /* Contact inputs — touch-friendly on mobile */
+    .contact__input {
+      font-size: var(--fs-sm);
+      min-height: 44px;
+    }
+    .contact__input--area {
+      min-height: 100px;
+    }
+
+    /* Visa / guitar / credentials — smaller pre on mobile, allow wrapping */
+    .visa pre {
+      font-size: var(--fs-xs);
+      line-height: 1.7;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+    .visa-foot {
+      font-size: var(--fs-xs);
+    }
+
+    /* Perf receipts — layout on mobile (font-size overrides are after desktop rules below) */
+    .receipts {
+      gap: 8px;
+    }
+    .receipt {
+      padding: 12px 12px 10px;
+      gap: 4px;
+      min-height: 0;
+    }
+    .receipt__metric {
+      font-size: var(--fs-2xs);
+    }
+    .receipt__note {
+      font-size: var(--fs-xs);
+    }
+    .receipt.receipt--desktop-only {
+      display: none;
+    }
+    .receipt__metric-mobile {
+      display: inline;
+    }
+    .receipt__metric-desktop {
+      display: none;
+    }
+
+    /* Projects — smaller tiles on mobile */
+    .project {
+      padding: 14px;
+    }
+    .project__folder {
+      width: 32px;
+      height: 26px;
+    }
+    .project__name {
+      font-size: var(--fs-base);
+    }
+    .project__desc {
+      font-size: var(--fs-sm);
+    }
+
+    /* Footer mobile adaptations */
+    footer.shutdown {
+      padding: 28px var(--pad) 24px;
+    }
+    .sd-banner {
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sd-init {
+      font-size: var(--fs-sm);
+    }
+    .sd-stamp {
+      font-size: var(--fs-xs);
+    }
+    .sd-panel {
+      padding: 12px 14px 14px;
+      margin-bottom: 10px;
+    }
+    .sp-head {
+      font-size: var(--fs-2xs);
+      letter-spacing: 0.16em;
+    }
+    .sp-row {
+      grid-template-columns: 100px 1fr;
+      gap: 10px;
+      font-size: var(--fs-xs);
+    }
+    .sd-dmesg .dm-line {
+      grid-template-columns: 72px 1fr auto;
+      gap: 8px;
+      font-size: var(--fs-xs);
+    }
+    .sd-netstat pre {
+      font-size: var(--fs-sm);
+    }
   }
 
-  /* Npm stack — square tiles on mobile */
-  .npm-stack li {
-    aspect-ratio: 1 / 1;
-    font-size: var(--fs-2xs);
+  /* ─────────────────────────────────────────────────────────────────────────────
+     HERO — bordered panel, 640px min, shake animation hooks.
+     ───────────────────────────────────────────────────────────────────────── */
+  .hero {
+    position: relative;
+    border: 1px solid var(--signal-dim);
+    min-height: 640px;
+    padding: 0;
+    overflow: hidden;
+    background: transparent;
+    transition: transform 80ms ease-out;
+    margin-bottom: var(--vrhythm);
   }
 
-  /* Hottest takes — tighter grid on mobile */
-  .take {
-    grid-template-columns: 28px 1fr;
-    padding: 10px 0;
+  .hero.shake {
+    transform: translate(2px, -2px);
   }
-  .take__num {
-    font-size: var(--fs-xs);
-  }
-  .take__thesis {
-    font-size: var(--fs-sm);
-  }
-  .take__body {
-    font-size: var(--fs-sm);
-  }
-  .take__category {
-    font-size: var(--fs-2xs);
-  }
-  .takes__footer {
-    font-size: var(--fs-xs);
+  .hero.shake-2 {
+    transform: translate(-2px, 1px);
   }
 
-  /* Community — smaller text on mobile */
-  .community {
-    font-size: var(--fs-sm);
+  @media (max-width: 900px) {
+    .hero {
+      min-height: 520px;
+    }
   }
-  .community .ctitle {
+
+  /* Desktop hero: boot animation left, bio panel right.
+     Visibility is controlled by the HERO RESPONSIVE TOGGLE block at the bottom
+     of this file; the display: flex here sets the layout for when it is visible. */
+  .hero--desktop {
+    display: flex;
+  }
+
+  .hero__left {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero--desktop .hero__boot {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 40%;
+    bottom: 24px;
+    z-index: 2;
+    color: var(--fg);
     font-size: var(--fs-base);
-  }
-  .community .cstatus {
-    font-size: var(--fs-xs);
-  }
-
-  /* Permatrix — smaller text on mobile */
-  .permatrix pre {
-    font-size: var(--fs-xs);
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-  }
-  .permatrix .pm-cmd {
-    font-size: var(--fs-xs);
-  }
-  .permatrix .pm-foot {
-    font-size: var(--fs-xs);
+    line-height: 1.7;
+    overflow: hidden;
+    text-shadow:
+      0 0 4px #000,
+      0 0 8px #000;
   }
 
-  /* Unknowns — smaller text on mobile */
-  .unknowns pre {
-    font-size: var(--fs-xs);
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-  }
-
-  /* Live perf — tighter cells on mobile */
-  .perf-row {
+  .hero__bio {
+    flex: 1;
+    border-left: 1px dashed var(--signal-dim);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 32px 24px;
     gap: 10px;
   }
-  .perf-cell .pk {
-    font-size: var(--fs-2xs);
-    letter-spacing: 0.14em;
-  }
-  .perf-cell .pv {
-    font-size: var(--fs-lg);
-    margin: 6px 0;
-  }
-  .perf-cell .pv .of {
-    font-size: var(--fs-xs);
-  }
-  .perf-cell .pbar {
-    height: 3px;
-  }
-  .perf-foot {
-    font-size: var(--fs-2xs);
-  }
-  .perf-foot .live-dot {
-    width: 6px;
-    height: 6px;
-    margin-right: 6px;
+
+  .hero__bio .hero__name {
+    font-family: var(--font-mono-stack);
+    font-weight: 700;
+    font-size: var(--fs-xl);
+    color: var(--signal);
+    margin: 0 0 4px;
+    line-height: 1.2;
   }
 
-  /* Shell bar — smaller on mobile */
-  .shell__bar {
-    font-size: var(--fs-2xs);
+  .hero__tagline {
+    color: var(--fg);
+    font-size: var(--fs-base);
+    line-height: 1.55;
+    margin-bottom: 8px;
   }
 
-  /* Contact inputs — touch-friendly on mobile */
-  .contact__input {
+  .hero__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    color: var(--muted);
     font-size: var(--fs-sm);
-    min-height: 44px;
-  }
-  .contact__input--area {
-    min-height: 100px;
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
   }
 
-  /* Visa / guitar / credentials — smaller pre on mobile, allow wrapping */
-  .visa pre {
-    font-size: var(--fs-xs);
-    line-height: 1.7;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-  }
-  .visa-foot {
-    font-size: var(--fs-xs);
+  .hero__meta b {
+    color: var(--signal);
+    font-weight: 700;
   }
 
-  /* Perf receipts — layout on mobile (font-size overrides are after desktop rules below) */
-  .receipts {
+  .hero__bio .hero__tagline,
+  .hero__bio .hero__meta {
+    margin: 0;
+  }
+
+  .hero__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid var(--signal-dim);
+    color: var(--signal);
+    font-family: var(--font-mono-stack);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.12em;
+    padding: 6px 10px;
+    white-space: nowrap;
+    align-self: flex-start;
+  }
+
+  .hero__status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--signal);
+    flex-shrink: 0;
+    animation: status-pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes status-pulse {
+    0%,
+    100% {
+      opacity: 1;
+      box-shadow: 0 0 4px var(--signal);
+    }
+    50% {
+      opacity: 0.35;
+      box-shadow: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__status-dot {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .hero__bio {
+      padding: 24px 18px;
+    }
+  }
+
+  /* Boot animation text tokens */
+  .boot__line {
+    display: block;
+  }
+  .boot__ok {
+    color: var(--signal);
+  }
+  .boot__enc {
+    color: var(--signal);
+    font-weight: 700;
+    text-shadow:
+      0 0 6px rgba(0, 255, 65, 0.6),
+      0 0 4px #000;
+  }
+  .boot__welcome {
+    color: var(--fg);
+    font-weight: 700;
+  }
+  .boot__prompt {
+    color: var(--muted);
+  }
+  .boot__cmd {
+    color: var(--fg);
+  }
+  .boot__matrix-prefix {
+    color: var(--muted);
+    margin-right: 4px;
+  }
+  .boot__matrix-out {
+    color: var(--signal);
+    text-shadow:
+      0 0 8px rgba(0, 255, 65, 0.4),
+      0 0 4px #000;
+  }
+  .boot__cursor {
+    display: inline-block;
+    width: 9px;
+    height: 1.05em;
+    background: var(--signal);
+    vertical-align: -2px;
+    margin-left: 2px;
+    animation: boot-blink 1.05s steps(2, start) infinite;
+  }
+  @keyframes boot-blink {
+    to {
+      background: transparent;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .boot__cursor {
+      animation: none;
+    }
+  }
+
+  /* Sysfail overlay — fade-in/out plate, matches prototype .sysfail + .sysfail-plate */
+  .hero__headline {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 150;
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 300ms ease-out;
+  }
+  .hero__headline.on {
+    opacity: 1;
+    transition: opacity 200ms ease-in;
+  }
+  .hero__headline-plate {
+    background: var(--signal);
+    color: #000;
+    font-family: var(--font-mono-stack);
+    font-weight: 700;
+    font-size: var(--fs-lg);
+    letter-spacing: 0.08em;
+    padding: 6px 18px 8px;
+    line-height: 1;
+    text-transform: uppercase;
+    box-shadow:
+      0 0 24px rgba(0, 255, 65, 0.55),
+      0 0 60px rgba(0, 255, 65, 0.25);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 900px) {
+    .hero__headline-plate {
+      font-size: var(--fs-lg);
+      padding: 5px 14px 6px;
+    }
+  }
+
+  /* Freeze CRT animations while sysfail plate is visible */
+  html.sysfail-on .crt-scan-beam,
+  html.sysfail-on .crt-flicker,
+  html.sysfail-on .crt-noise {
+    animation-play-state: paused;
+  }
+
+  .hero--mobile .hero__name {
+    font-family: var(--font-mono-stack);
+    font-weight: 700;
+    font-size: var(--fs-lg);
+    color: var(--signal);
+    border-top: 1px dashed var(--signal-dim-2);
+    padding-top: 14px;
+    margin-top: 6px;
+    margin-bottom: 2px;
+  }
+
+  .hero__ctas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
-  .receipt {
-    padding: 12px 12px 10px;
-    gap: 4px;
-    min-height: 0;
+
+  .hero__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--signal-dim);
+    font-size: var(--fs-base);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition:
+      box-shadow 200ms ease,
+      background 200ms ease;
   }
-  .receipt__metric {
-    font-size: var(--fs-2xs);
+
+  .hero__cta--primary {
+    background: var(--signal);
+    color: var(--bg);
+    border-color: var(--signal);
   }
-  .receipt__note {
+
+  .hero__cta--primary:hover {
+    box-shadow: 0 0 12px var(--signal);
+  }
+
+  .hero__cta--secondary {
+    color: var(--signal);
+  }
+
+  .hero__cta--secondary:hover {
+    box-shadow: 0 0 12px var(--signal);
+    background: rgba(0, 255, 65, 0.06);
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     MODULE — every section is rendered through Module.tsx.
+     Module wraps the section content with a bordered panel (`.panel` semantics)
+     and a section header that takes an icon (`.section-head` semantics).
+     ───────────────────────────────────────────────────────────────────────── */
+  .module {
+    margin-bottom: var(--vrhythm);
+  }
+
+  /* Section header — icon + uppercase label, like .section-head in the mockup.
+     Lives inside the <summary>; flex:1 lets it sit beside the chevron, margin
+     reset because the <summary> owns the header's padding. Mobile sizing is
+     the base; the `min-width: 769px` block restores the desktop --fs-base. */
+  .module__header {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--signal);
+    font-family: var(--font-mono-stack);
     font-size: var(--fs-xs);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0;
   }
-  .receipt.receipt--desktop-only {
+
+  .module__icon {
+    display: inline-flex;
+    width: 16px;
+    height: 16px;
+    align-items: center;
+    justify-content: center;
+    color: var(--signal);
+  }
+
+  .module__icon svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.4;
+  }
+
+  /* Below-fold deferral: skip style/layout/paint until near viewport.
+     Applied via the .cv-defer class set in app/page.tsx on modules at index >= 4
+     (ProjectsSection onward — Readme/Shell/ManPage/Now are the four above-fold candidates).
+     Class-based selection survives section reorderings and hero-variant changes without
+     silent regression (replacing the previous nth-of-type positional approach). */
+  .cv-defer {
+    content-visibility: auto;
+    /* `auto 520px`: the 14 deferred sections vary too widely for one fixed
+       estimate (measured desktop 186-1837px, mobile 70-2538px; CG6 Task 6.3).
+       The `auto` keyword makes the browser cache each element's last-rendered
+       real size and reuse it as the intrinsic size — so after first paint the
+       placeholder is exact and scroll/CLS is correct per-section. 520px is the
+       first-paint fallback only, set near the cross-viewport median. */
+    contain-intrinsic-size: auto 520px;
+  }
+
+  /* ───────────────────────────────────────────────────────────────────────
+     MODULE — ONE element, all viewports.
+     Module.tsx always renders a native <details>. The page is force-static so
+     the server cannot UA-detect; instead the *base* rules below give every
+     module the mobile collapsible chrome, and the `min-width: 769px` block
+     near the end of this file neutralizes collapsibility on desktop so the
+     <summary> reads as a plain <h2> section header (no cursor, no marker,
+     body always visible). The two header labels are width-toggled here.
+     ─────────────────────────────────────────────────────────────────────── */
+
+  /* Outer module is a native <details>: bordered panel container.
+     overflow:hidden clips child borders. */
+  .module {
+    border: 1px solid var(--signal-dim);
+    background: rgba(0, 0, 0, 0.55);
+    overflow: hidden;
+  }
+
+  .module__body {
+    color: var(--fg);
+  }
+
+  /* <summary> is the section toggle: icon + uppercase label + chevron. */
+  .module__toggle {
+    /* Hide native disclosure triangle (Firefox) */
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 12px 14px;
+    min-height: 44px;
+    background: rgba(0, 255, 65, 0.04);
+    border-bottom: 1px solid var(--signal-dim-2);
+    cursor: pointer;
+  }
+
+  /* Hide native disclosure triangle (Chrome/Safari) */
+  .module__toggle::-webkit-details-marker {
     display: none;
   }
-  .receipt__metric-mobile {
+
+  /* Header labels: desktop label hidden ≤768px, mobile label hidden ≥769px. */
+  .module__label--mobile {
     display: inline;
   }
-  .receipt__metric-desktop {
+  .module__label--desktop {
     display: none;
   }
 
-  /* Projects — smaller tiles on mobile */
-  .project {
-    padding: 14px;
-  }
-  .project__folder {
-    width: 32px;
-    height: 26px;
-  }
-  .project__name {
-    font-size: var(--fs-base);
-  }
-  .project__desc {
+  .module__chevron {
+    color: var(--signal);
     font-size: var(--fs-sm);
+    transition: transform 120ms ease-out;
   }
 
-  /* Footer mobile adaptations */
-  footer.shutdown {
-    padding: 28px var(--pad) 24px;
+  .module[open] .module__chevron {
+    transform: rotate(90deg);
   }
-  .sd-banner {
-    flex-direction: column;
-    gap: 4px;
-  }
-  .sd-init {
-    font-size: var(--fs-sm);
-  }
-  .sd-stamp {
-    font-size: var(--fs-xs);
-  }
-  .sd-panel {
-    padding: 12px 14px 14px;
-    margin-bottom: 10px;
-  }
-  .sp-head {
-    font-size: var(--fs-2xs);
-    letter-spacing: 0.16em;
-  }
-  .sp-row {
-    grid-template-columns: 100px 1fr;
-    gap: 10px;
-    font-size: var(--fs-xs);
-  }
-  .sd-dmesg .dm-line {
-    grid-template-columns: 72px 1fr auto;
-    gap: 8px;
-    font-size: var(--fs-xs);
-  }
-  .sd-netstat pre {
-    font-size: var(--fs-sm);
-  }
-}
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   HERO — bordered panel, 640px min, shake animation hooks.
-   ───────────────────────────────────────────────────────────────────────── */
-.hero {
-  position: relative;
-  border: 1px solid var(--signal-dim);
-  min-height: 640px;
-  padding: 0;
-  overflow: hidden;
-  background: transparent;
-  transition: transform 80ms ease-out;
-  margin-bottom: var(--vrhythm);
-}
-
-.hero.shake {
-  transform: translate(2px, -2px);
-}
-.hero.shake-2 {
-  transform: translate(-2px, 1px);
-}
-
-@media (max-width: 900px) {
-  .hero {
-    min-height: 520px;
-  }
-}
-
-/* Desktop hero: boot animation left, bio panel right.
-   Visibility is controlled by the HERO RESPONSIVE TOGGLE block at the bottom
-   of this file; the display: flex here sets the layout for when it is visible. */
-.hero--desktop {
-  display: flex;
-}
-
-.hero__left {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-
-.hero--desktop .hero__boot {
-  position: absolute;
-  left: 24px;
-  right: 24px;
-  top: 40%;
-  bottom: 24px;
-  z-index: 2;
-  color: var(--fg);
-  font-size: var(--fs-base);
-  line-height: 1.7;
-  overflow: hidden;
-  text-shadow:
-    0 0 4px #000,
-    0 0 8px #000;
-}
-
-.hero__bio {
-  flex: 1;
-  border-left: 1px dashed var(--signal-dim);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 32px 24px;
-  gap: 10px;
-}
-
-.hero__bio .hero__name {
-  font-family: var(--font-mono-stack);
-  font-weight: 700;
-  font-size: var(--fs-xl);
-  color: var(--signal);
-  margin: 0 0 4px;
-  line-height: 1.2;
-}
-
-.hero__tagline {
-  color: var(--fg);
-  font-size: var(--fs-base);
-  line-height: 1.55;
-  margin-bottom: 8px;
-}
-
-.hero__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 12px;
-  color: var(--muted);
-  font-size: var(--fs-sm);
-  letter-spacing: 0.08em;
-  margin-bottom: 14px;
-}
-
-.hero__meta b {
-  color: var(--signal);
-  font-weight: 700;
-}
-
-.hero__bio .hero__tagline,
-.hero__bio .hero__meta {
-  margin: 0;
-}
-
-.hero__status {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  border: 1px solid var(--signal-dim);
-  color: var(--signal);
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-xs);
-  letter-spacing: 0.12em;
-  padding: 6px 10px;
-  white-space: nowrap;
-  align-self: flex-start;
-}
-
-.hero__status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--signal);
-  flex-shrink: 0;
-  animation: status-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes status-pulse {
-  0%,
-  100% {
-    opacity: 1;
-    box-shadow: 0 0 4px var(--signal);
-  }
-  50% {
-    opacity: 0.35;
-    box-shadow: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero__status-dot {
-    animation: none;
-  }
-}
-
-@media (max-width: 900px) {
-  .hero__bio {
-    padding: 24px 18px;
-  }
-}
-
-/* Boot animation text tokens */
-.boot__line {
-  display: block;
-}
-.boot__ok {
-  color: var(--signal);
-}
-.boot__enc {
-  color: var(--signal);
-  font-weight: 700;
-  text-shadow:
-    0 0 6px rgba(0, 255, 65, 0.6),
-    0 0 4px #000;
-}
-.boot__welcome {
-  color: var(--fg);
-  font-weight: 700;
-}
-.boot__prompt {
-  color: var(--muted);
-}
-.boot__cmd {
-  color: var(--fg);
-}
-.boot__matrix-prefix {
-  color: var(--muted);
-  margin-right: 4px;
-}
-.boot__matrix-out {
-  color: var(--signal);
-  text-shadow:
-    0 0 8px rgba(0, 255, 65, 0.4),
-    0 0 4px #000;
-}
-.boot__cursor {
-  display: inline-block;
-  width: 9px;
-  height: 1.05em;
-  background: var(--signal);
-  vertical-align: -2px;
-  margin-left: 2px;
-  animation: boot-blink 1.05s steps(2, start) infinite;
-}
-@keyframes boot-blink {
-  to {
-    background: transparent;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .boot__cursor {
-    animation: none;
-  }
-}
-
-/* Sysfail overlay — fade-in/out plate, matches prototype .sysfail + .sysfail-plate */
-.hero__headline {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 150;
-  display: block;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 300ms ease-out;
-}
-.hero__headline.on {
-  opacity: 1;
-  transition: opacity 200ms ease-in;
-}
-.hero__headline-plate {
-  background: var(--signal);
-  color: #000;
-  font-family: var(--font-mono-stack);
-  font-weight: 700;
-  font-size: var(--fs-lg);
-  letter-spacing: 0.08em;
-  padding: 6px 18px 8px;
-  line-height: 1;
-  text-transform: uppercase;
-  box-shadow:
-    0 0 24px rgba(0, 255, 65, 0.55),
-    0 0 60px rgba(0, 255, 65, 0.25);
-  white-space: nowrap;
-}
-
-@media (max-width: 900px) {
-  .hero__headline-plate {
-    font-size: var(--fs-lg);
-    padding: 5px 14px 6px;
-  }
-}
-
-/* Freeze CRT animations while sysfail plate is visible */
-html.sysfail-on .crt-scan-beam,
-html.sysfail-on .crt-flicker,
-html.sysfail-on .crt-noise {
-  animation-play-state: paused;
-}
-
-.hero--mobile .hero__name {
-  font-family: var(--font-mono-stack);
-  font-weight: 700;
-  font-size: var(--fs-lg);
-  color: var(--signal);
-  border-top: 1px dashed var(--signal-dim-2);
-  padding-top: 14px;
-  margin-top: 6px;
-  margin-bottom: 2px;
-}
-
-.hero__ctas {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.hero__cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid var(--signal-dim);
-  font-size: var(--fs-base);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition:
-    box-shadow 200ms ease,
-    background 200ms ease;
-}
-
-.hero__cta--primary {
-  background: var(--signal);
-  color: var(--bg);
-  border-color: var(--signal);
-}
-
-.hero__cta--primary:hover {
-  box-shadow: 0 0 12px var(--signal);
-}
-
-.hero__cta--secondary {
-  color: var(--signal);
-}
-
-.hero__cta--secondary:hover {
-  box-shadow: 0 0 12px var(--signal);
-  background: rgba(0, 255, 65, 0.06);
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   MODULE — every section is rendered through Module.tsx.
-   Module wraps the section content with a bordered panel (`.panel` semantics)
-   and a section header that takes an icon (`.section-head` semantics).
-   ───────────────────────────────────────────────────────────────────────── */
-.module {
-  margin-bottom: var(--vrhythm);
-}
-
-/* Section header — icon + uppercase label, like .section-head in the mockup */
-.module__header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--signal);
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-base);
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin: 0 0 10px;
-}
-
-.module__icon {
-  display: inline-flex;
-  width: 16px;
-  height: 16px;
-  align-items: center;
-  justify-content: center;
-  color: var(--signal);
-}
-
-.module__icon svg {
-  width: 14px;
-  height: 14px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 1.4;
-}
-
-/* Below-fold deferral: skip style/layout/paint until near viewport.
-   Applied via the .cv-defer class set in app/page.tsx on modules at index >= 4
-   (ProjectsSection onward — Readme/Shell/ManPage/Now are the four above-fold candidates).
-   Class-based selection survives section reorderings and hero-variant changes without
-   silent regression (replacing the previous nth-of-type positional approach). */
-.cv-defer {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 400px;
-}
-
-/* Desktop module body gets the bordered panel look. Mobile border is on the outer module. */
-.module--desktop .module__body {
-  border: 1px solid var(--signal-dim);
-  padding: var(--pad);
-  background: linear-gradient(180deg, rgba(0, 255, 65, 0.015), rgba(0, 0, 0, 0));
-  color: var(--fg);
-}
-
-.module--mobile .module__body {
-  color: var(--fg);
-}
-
-/* Mobile: outer module is a native <details> element. The border container
-   (overflow:hidden clips child borders). Native disclosure marker is hidden;
-   chevron rotation is driven by the native [open] attribute. */
-.module--mobile {
-  border: 1px solid var(--signal-dim);
-  background: rgba(0, 0, 0, 0.55);
-  overflow: hidden;
-}
-
-/* Hide native disclosure triangle (Chrome/Safari + Firefox respectively) */
-.module--mobile .module__toggle::-webkit-details-marker {
-  display: none;
-}
-.module--mobile .module__toggle {
-  list-style: none;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding: 12px 14px;
-  min-height: 44px;
-  background: rgba(0, 255, 65, 0.04);
-  border-bottom: 1px solid var(--signal-dim-2);
-  color: var(--signal);
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-xs);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  text-align: left;
-  cursor: pointer;
-}
-
-.module--mobile .module__header-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-}
-
-.module--mobile .module__chevron {
-  color: var(--signal);
-  font-size: var(--fs-sm);
-  transition: transform 120ms ease-out;
-}
-
-.module--mobile[open] .module__chevron {
-  transform: rotate(90deg);
-}
-
-.module--mobile:not([open]) .module__body {
-  display: none;
-}
-
-.module--mobile[open] .module__body {
-  padding: var(--pad);
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   HERO RESPONSIVE TOGGLE
-   Both variants are server-rendered (RSC). CSS media query swaps visibility so
-   only the matching variant paints. Spec ref: 2026-05-18-mobile-lcp-perf-fix
-   design §6.
-
-   .hero--desktop display:flex is declared above (two-column layout rule).
-   .hero--mobile: hidden by default; shown via media query below.
-   ───────────────────────────────────────────────────────────────────────── */
-.hero--mobile {
-  display: none;
-}
-@media (max-width: 768px) {
-  .hero--desktop {
+  /* Native <details> collapse: body hidden when closed, padded when open. */
+  .module:not([open]) .module__body {
     display: none;
   }
+
+  .module[open] .module__body {
+    padding: var(--pad);
+  }
+
+  /* ───────────────────────────────────────────────────────────────────────
+     MODULE — DESKTOP (≥769px): neutralize the native <details> collapsibility.
+     The single <details> must read as the old plain, always-expanded
+     <section> + <h2> here: body forced visible regardless of [open], no
+     chevron, summary stripped of its toggle chrome (no cursor / border /
+     background / min-height) so it looks exactly like the former standalone
+     <h2 class="module__header">. The native marker is already removed in the
+     base rules (list-style:none + ::-webkit-details-marker).
+     ─────────────────────────────────────────────────────────────────────── */
+  @media (min-width: 769px) {
+    /* Old desktop <section> had no outer border — the panel border lived on
+       the body. Drop the mobile container chrome. */
+    .module {
+      border: 0;
+      background: none;
+      overflow: visible;
+    }
+
+    /* <summary> becomes a transparent header slot: no toggle affordance.
+       margin-bottom restores the 10px gap the old standalone <h2> carried. */
+    .module__toggle {
+      display: block;
+      padding: 0;
+      min-height: 0;
+      background: none;
+      border-bottom: 0;
+      cursor: default;
+      margin-bottom: 10px;
+    }
+
+    /* Restore the desktop header type scale (mobile base uses --fs-xs). */
+    .module__header {
+      font-size: var(--fs-base);
+      letter-spacing: 0.1em;
+    }
+
+    /* Desktop shows the full header label; the mobile short label is hidden. */
+    .module__label--desktop {
+      display: inline;
+    }
+    .module__label--mobile {
+      display: none;
+    }
+
+    /* No disclosure chevron on desktop. */
+    .module__chevron {
+      display: none;
+    }
+
+    /* Body is ALWAYS visible on desktop — override the native
+       details:not([open]) collapse and the [open]-scoped padding so the
+       panel paints identically whether or not the element is open. */
+    .module .module__body,
+    .module:not([open]) .module__body,
+    .module[open] .module__body {
+      display: block;
+      border: 1px solid var(--signal-dim);
+      padding: var(--pad);
+      background: linear-gradient(180deg, rgba(0, 255, 65, 0.015), rgba(0, 0, 0, 0));
+      color: var(--fg);
+    }
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     HERO RESPONSIVE TOGGLE
+     Both variants are server-rendered (RSC). CSS media query swaps visibility so
+     only the matching variant paints. Spec ref: 2026-05-18-mobile-lcp-perf-fix
+     design §6.
+
+     .hero--desktop display:flex is declared above (two-column layout rule).
+     .hero--mobile: hidden by default; shown via media query below.
+     ───────────────────────────────────────────────────────────────────────── */
   .hero--mobile {
-    display: block;
+    display: none;
+  }
+  @media (max-width: 768px) {
+    .hero--desktop {
+      display: none;
+    }
+    .hero--mobile {
+      display: block;
+    }
   }
 }

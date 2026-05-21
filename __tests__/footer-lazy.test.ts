@@ -9,7 +9,9 @@
 // hydration (which has heavy dependencies — MatrixRain canvas, dmesg
 // content, breakpoint hook, setInterval — that are exercised elsewhere).
 
+import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mountClient } from './helpers/render';
 
 let observedNodes: Element[] = [];
 let lastCallback: IntersectionObserverCallback | undefined;
@@ -27,7 +29,9 @@ class MockIO implements IntersectionObserver {
   observe(target: Element) {
     observedNodes.push(target);
   }
-  unobserve() {}
+  unobserve() {
+    /* not exercised by these tests */
+  }
   disconnect() {
     disconnected = true;
   }
@@ -56,20 +60,11 @@ describe('FooterLazy — IntersectionObserver-gated mount (audit Theme 4)', () =
 
   it('IntersectionObserver is captured by the mount effect when component renders', async () => {
     // We exercise the IO contract directly by rendering FooterLazy into a
-    // jsdom container. React's createRoot is the smallest renderer.
-    const { createRoot } = await import('react-dom/client');
-    const React = await import('react');
+    // jsdom container. mountClient renders under act() so the mount effect
+    // commits before the call resolves.
     const { FooterLazy } = await import('@/components/sections/FooterLazy.client');
 
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const root = createRoot(container);
-
-    root.render(React.createElement(FooterLazy));
-    // useEffect commits after a macrotask in React 18/19 + jsdom. Two
-    // setTimeout(0) ticks reliably let the effect run.
-    await new Promise<void>((r) => setTimeout(r, 0));
-    await new Promise<void>((r) => setTimeout(r, 0));
+    const { container, unmount } = await mountClient(createElement(FooterLazy));
 
     // After mount, the sentinel element should be in the DOM with the
     // expected data-testid and ARIA hidden flag.
@@ -81,22 +76,13 @@ describe('FooterLazy — IntersectionObserver-gated mount (audit Theme 4)', () =
     expect(observedNodes).toHaveLength(1);
     expect(observedNodes[0]).toBe(sentinel);
 
-    root.unmount();
-    container.remove();
+    unmount();
   });
 
   it('disconnects the IntersectionObserver when the sentinel intersects', async () => {
-    const { createRoot } = await import('react-dom/client');
-    const React = await import('react');
     const { FooterLazy } = await import('@/components/sections/FooterLazy.client');
 
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const root = createRoot(container);
-
-    root.render(React.createElement(FooterLazy));
-    await new Promise<void>((r) => setTimeout(r, 0));
-    await new Promise<void>((r) => setTimeout(r, 0));
+    const { unmount } = await mountClient(createElement(FooterLazy));
 
     // Fire the IO callback with isIntersecting: true. The component should
     // disconnect the observer in response (no more callbacks needed).
@@ -112,7 +98,6 @@ describe('FooterLazy — IntersectionObserver-gated mount (audit Theme 4)', () =
     // The component's effect disconnects the observer after intersection.
     expect(disconnected).toBe(true);
 
-    root.unmount();
-    container.remove();
+    unmount();
   });
 });

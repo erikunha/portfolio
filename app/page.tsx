@@ -5,14 +5,17 @@
 //
 // STATIC: this route deliberately calls no dynamic APIs (headers / cookies /
 // searchParams) so Next generates and serves it from the CDN edge cache.
-// Sections that need UA detection (Projects / GitLog / Guitar / Visa / Module)
-// call `getIsMobileForRequest()` *internally*; doing so there keeps the
-// dynamic boundary scoped — those sections render dynamically while the page
-// shell stays static. BreakpointProvider's `initialIsMobile={false}` sets
-// the SSR snapshot to desktop; `useSyncExternalStore` then reads the real
-// viewport on the client during hydration and re-renders the mobile chrome
-// if needed. See docs/audit/2026-05-19-principal-audit.md (Theme 3) for
-// the ~750-1000 ms LCP impact this static boundary unlocks.
+// No section UA-detects: on a force-static build `getIsMobileForRequest()`
+// (which reads headers()) always yields desktop, so a section that branches
+// its markup by UA would ship desktop-only HTML and render empty on mobile.
+// Instead every section emits viewport-neutral markup that CSS resolves at
+// the 768px breakpoint — Projects/GitLog/Guitar/Visa emit both body variants;
+// Module renders a single <details> that CSS makes always-open on desktop.
+// BreakpointProvider's `initialIsMobile={false}` sets the SSR snapshot to
+// desktop; `useSyncExternalStore` then reads the real viewport on the client
+// during hydration and re-renders the mobile chrome if needed. See
+// docs/audit/2026-05-19-principal-audit.md (Theme 3) for the ~750-1000 ms LCP
+// impact this static boundary unlocks.
 
 import { AppShell } from '@/components/AppShell.client';
 import { ErrorBoundary } from '@/components/ErrorBoundary.client';

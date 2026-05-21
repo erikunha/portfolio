@@ -7,8 +7,12 @@ let _askLimit: Ratelimit | undefined;
 let _contactLimit: Ratelimit | undefined;
 
 export function getRedis(): Redis {
-  if (!_redis) _redis = Redis.fromEnv();
-  return _redis;
+  if (_redis) return _redis;
+  // Construct once. If construction throws, _redis stays undefined so the
+  // next call retries; the caller's try/catch keeps the request fail-open.
+  const instance = Redis.fromEnv();
+  _redis = instance;
+  return instance;
 }
 
 export function getAskLimit(): Ratelimit {
@@ -80,7 +84,7 @@ const BUDGET_WINDOW_S = 60 * 60 * 24 * 32;
 //     <question> delimiter + re-anchor instruction ≈ 200 tokens.
 //   - Anthropic SDK framing overhead: ~100 tokens.
 // Total worst-case input ≈ 1800 tokens; reserve 2200 for a ~20% safety
-// buffer. Closes the audit Theme 8 follow-up (Copilot review on PR #29):
+// buffer. Closes the audit Theme 8 follow-up (PR #29 review):
 // if actual billed input > reserved, settleBudget() becomes a no-op (the
 // refund branch is `if (refund <= 0) return`) and the counter undercounts,
 // defeating the "never below actual usage" guarantee. With 2200 tokens

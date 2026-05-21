@@ -5,13 +5,7 @@ import { Module } from '../responsive/Module';
 export function CommunitySection({ defer }: { defer?: boolean } = {}) {
   const e = communityEvent;
   return (
-    <Module
-      id="sec-community"
-      header="CAT ~/.COMMUNITY"
-      icon={<IconCommunity />}
-      defaultOpen={false}
-      defer={defer}
-    >
+    <Module id="sec-community" header="CAT ~/.COMMUNITY" icon={<IconCommunity />} defer={defer}>
       <div className="community">
         <div className="ctitle">
           {e.name} · {e.year} · {e.role}

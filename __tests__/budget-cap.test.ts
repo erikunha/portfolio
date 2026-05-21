@@ -42,13 +42,13 @@ vi.mock('@upstash/redis', () => ({
 }));
 
 // Skip the Upstash ratelimit wrapper — not exercised here.
-vi.mock('@upstash/ratelimit', () => ({
-  Ratelimit: class {
-    static slidingWindow() {
-      return {};
-    }
-  },
-}));
+vi.mock('@upstash/ratelimit', () => {
+  function Ratelimit() {
+    return {};
+  }
+  Ratelimit.slidingWindow = () => ({});
+  return { Ratelimit };
+});
 
 // Quiet the logger.
 vi.mock('@/lib/log', () => ({

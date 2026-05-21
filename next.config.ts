@@ -1,5 +1,8 @@
 import path from 'node:path';
+import withBundleAnalyzer from '@next/bundle-analyzer';
 import type { NextConfig } from 'next';
+
+const analyze = withBundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
 
 const nextConfig: NextConfig = {
   typedRoutes: true,
@@ -26,4 +29,4 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default nextConfig;
+export default analyze(nextConfig);

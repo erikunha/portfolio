@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "vercel": {
-      "type": "http",
-      "url": "https://mcp.vercel.com",
-      "note": "Official Vercel MCP server. Uses OAuth."
-    }
-  }
-}

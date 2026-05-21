@@ -82,7 +82,6 @@ export function LivePerfSection({ defer }: { defer?: boolean } = {}) {
       header="LIVE_PERF.JSON"
       mobileHeader="LIVE_PERF · LIGHTHOUSE"
       icon={<IconLivePerf />}
-      defaultOpen={false}
       defer={defer}
     >
       <Suspense fallback={<PerfFallback />}>

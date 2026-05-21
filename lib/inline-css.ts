@@ -35,6 +35,16 @@ const CSS_FILES = [
   '_responsive.css',
 ] as const;
 
+// Each app/css/*.css file wraps its rules in a named @layer (CG6). This
+// statement fixes the layer cascade priority explicitly and MUST be the first
+// thing in the inlined block. It mirrors the declaration in app/globals.css
+// and the CSS_FILES order above: later layers win regardless of source
+// position. Without it the cascade would fall back to first-appearance order
+// (which happens to match) — declaring it makes the order intentional, not
+// incidental, and survives any future reordering of the @layer blocks.
+const LAYER_ORDER =
+  '@layer tokens, base, effects, layout, sections, chrome, shell, contact, footer, responsive;';
+
 /**
  * Lightweight CSS minifier sufficient for Lighthouse's `unminified-css` audit.
  * Strips comments, collapses whitespace, removes unnecessary punctuation
@@ -62,5 +72,5 @@ function minifyCss(css: string): string {
 }
 
 export const INLINE_CSS: string = minifyCss(
-  CSS_FILES.map((f) => readFileSync(path.join(CSS_DIR, f), 'utf-8')).join('\n'),
+  [LAYER_ORDER, ...CSS_FILES.map((f) => readFileSync(path.join(CSS_DIR, f), 'utf-8'))].join('\n'),
 );

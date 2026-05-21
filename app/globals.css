@@ -1,7 +1,15 @@
 /* app/globals.css
    Single entry point for all CSS. No frameworks — every rule is in one of the
    _*.css files below. Order matters: tokens → base reset → effects → layout →
-   sections → chrome → shell → contact → footer → responsive overrides. */
+   sections → chrome → shell → contact → footer → responsive overrides.
+
+   The @layer declaration below fixes the cascade order explicitly. It MUST
+   match the @import sequence (and lib/inline-css.ts's CSS_FILES order): later
+   layers win regardless of source position, so the inlined critical-CSS block
+   and the imported stylesheet resolve identically. Each _*.css file wraps its
+   body in its named layer. */
+
+@layer tokens, base, effects, layout, sections, chrome, shell, contact, footer, responsive;
 
 @import "./css/_tokens.css";
 @import "./css/_base.css";

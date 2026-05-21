@@ -1,46 +1,140 @@
 // __tests__/ask-timeout.test.ts
-// Source-grep test: verifies explicit upstream timeouts on Anthropic
-// (/api/ask) and Resend (/api/contact). See spec docs/superpowers/
-// specs/2026-05-18-gates-and-harness-hardening-design.md §5.
+// Behavioral test (CG3): verifies the explicit upstream timeouts on the
+// Anthropic SDK (/api/ask) and Resend send (/api/contact) by EXERCISING them,
+// not by grepping route source.
+//
+// /api/ask  — mocks the Anthropic SDK constructor and captures the options
+//             object the route actually passes. Asserts timeout: 30_000 and
+//             that maxRetries is not pinned to 0 (SDK default retries kept).
+// /api/contact — makes the Resend send hang forever; with fake timers the
+//             route must still resolve (the Promise.race against the 10s
+//             timer fires) and the message stays durably persisted in KV.
 
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { NextRequest } from 'next/server';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const ASK_SOURCE = readFileSync(path.resolve(__dirname, '../app/api/ask/route.ts'), 'utf-8');
-const CONTACT_SOURCE = readFileSync(
-  path.resolve(__dirname, '../app/api/contact/route.ts'),
-  'utf-8',
-);
+// --- Anthropic SDK mock: capture constructor options -------------------------
+const anthropicCtorCalls: unknown[] = [];
+const mockMessagesCreate = vi.fn();
 
-describe('upstream timeouts', () => {
-  describe('/api/ask Anthropic SDK init', () => {
-    it('passes explicit timeout: 30_000 to the Anthropic constructor', () => {
-      expect(ASK_SOURCE).toMatch(/new Anthropic\(\s*\{\s*timeout:\s*30_000/);
-    });
+vi.mock('@anthropic-ai/sdk', () => {
+  class MockAnthropic {
+    messages = { create: mockMessagesCreate };
+    constructor(opts?: unknown) {
+      anthropicCtorCalls.push(opts);
+    }
+  }
+  return { default: MockAnthropic };
+});
 
-    it('does NOT set maxRetries: 0 (keeps SDK default of 2 retries)', () => {
-      expect(ASK_SOURCE).not.toMatch(/maxRetries:\s*0\b/);
-    });
+// --- rate-limit / observability mocks shared by both routes -----------------
+vi.mock('@/lib/rate-limit', () => ({
+  getClientIp: vi.fn(() => '127.0.0.1'),
+  getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
+  getContactLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
+  getRedis: vi.fn(() => ({ set: vi.fn(async () => 'OK') })),
+  reserveBudget: vi.fn(async () => ({ allowed: true, reserved: 1512, pct: 0 })),
+  settleBudget: vi.fn(async () => undefined),
+  checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
+}));
+
+vi.mock('@/lib/ask-log', () => ({
+  persistAskInteraction: vi.fn(async () => undefined),
+}));
+
+vi.mock('@/lib/ip-hash', () => ({
+  hashIp: vi.fn(async () => 'hashed-ip-test'),
+}));
+
+const logErrorMock = vi.fn();
+vi.mock('@/lib/log', () => ({
+  log: { info: vi.fn(), error: logErrorMock, warn: vi.fn(), debug: vi.fn() },
+}));
+
+// --- Resend mock: a send that never resolves --------------------------------
+const resendSendMock = vi.fn();
+vi.mock('resend', () => ({
+  Resend: class {
+    emails = { send: resendSendMock };
+  },
+}));
+
+function makeRequest(url: string, body: unknown): NextRequest {
+  return new NextRequest(url, {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+describe('/api/ask — Anthropic SDK timeout', () => {
+  beforeEach(() => {
+    process.env.ASK_ENABLED = 'true';
+    anthropicCtorCalls.length = 0;
+    vi.resetModules();
   });
 
-  describe('/api/contact Resend send', () => {
-    it('wraps the Resend send in a Promise.race against a 10_000 ms timer', () => {
-      // PR 5c of audit roadmap extracted the literal to a named constant:
-      // `const RESEND_TIMEOUT_MS = 10_000`. Accept either the literal or
-      // the constant in the setTimeout call, but the constant declaration
-      // (which fixes the value at 10_000) must still be present.
-      expect(CONTACT_SOURCE).toMatch(/Promise\.race/);
-      expect(CONTACT_SOURCE).toMatch(/setTimeout\(\s*[^,]+,\s*(?:10_000|RESEND_TIMEOUT_MS)\b/);
-      expect(CONTACT_SOURCE).toMatch(/RESEND_TIMEOUT_MS\s*=\s*10_000\b/);
-    });
+  it('constructs the Anthropic client with timeout: 30_000', async () => {
+    // Importing the route runs its module-scope `new Anthropic({ ... })`.
+    await import('@/app/api/ask/route');
+    expect(anthropicCtorCalls.length).toBeGreaterThan(0);
+    const opts = anthropicCtorCalls[0] as { timeout?: number } | undefined;
+    expect(opts?.timeout).toBe(30_000);
+  });
 
-    it('still preserves the existing graceful-fail logging on error', () => {
-      // PR #11 migrated console.error to log.error (pino facade). Accept either
-      // the original bracketed console pattern or the structured log.error form.
-      const hasConsolePattern = /\[contact\] resend unavailable/.test(CONTACT_SOURCE);
-      const hasLogPattern = /log\.error\(\s*'Resend unavailable'/.test(CONTACT_SOURCE);
-      expect(hasConsolePattern || hasLogPattern).toBe(true);
-    });
+  it('does NOT pin maxRetries to 0 — keeps the SDK default retry behavior', async () => {
+    await import('@/app/api/ask/route');
+    const opts = anthropicCtorCalls[0] as { maxRetries?: number } | undefined;
+    // Either unset (SDK default of 2) or explicitly non-zero. A 0 here would
+    // disable retries on idempotent stream initiation.
+    expect(opts?.maxRetries).not.toBe(0);
+  });
+});
+
+describe('/api/contact — Resend send 10s timeout', () => {
+  beforeEach(() => {
+    process.env.RESEND_API_KEY = 'fake-key-for-tests';
+    resendSendMock.mockReset();
+    logErrorMock.mockReset();
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('resolves with the message persisted even when Resend never responds', async () => {
+    // Resend send hangs forever — only the Promise.race timeout can unblock.
+    resendSendMock.mockReturnValueOnce(
+      new Promise(() => {
+        /* intentionally never settles */
+      }),
+    );
+    vi.useFakeTimers();
+
+    const { POST } = await import('@/app/api/contact/route');
+    const resPromise = POST(
+      makeRequest('http://localhost/api/contact', {
+        name: 'Real Name',
+        email: 'real@example.com',
+        message: 'A perfectly long-enough legitimate message',
+      }),
+    );
+
+    // Let the KV write + send kickoff microtasks flush, then trip the 10s timer.
+    await vi.advanceTimersByTimeAsync(10_000);
+    const res = await resPromise;
+
+    // KV write succeeded, so the route still returns a success envelope —
+    // delivery failure is acceptable once the message is durably stored.
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean };
+    expect(body.ok).toBe(true);
+
+    // The graceful-fail path logged the Resend failure (timeout reason).
+    expect(logErrorMock).toHaveBeenCalledWith(
+      'Resend unavailable',
+      expect.objectContaining({ reason: expect.stringMatching(/timeout/i) }),
+    );
   });
 });

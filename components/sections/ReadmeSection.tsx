@@ -4,17 +4,18 @@ import { RoleTyper } from '../client/RoleTyper';
 import { IconReadme } from '../Icons';
 import { Module } from '../responsive/Module';
 
-type ReadmeLine = { text?: string; node?: ReactNode; cls?: string };
+type ReadmeLine = { text?: string; node?: ReactNode; cls?: string; key: string };
 
 const README_DESKTOP: ReadmeLine[] = [
-  { text: c.desktopH1, cls: 'h1' },
-  { text: c.desktopIntro },
-  { text: '## Core Stack', cls: 'h2' },
-  ...c.desktopCoreStack.map((t) => ({ text: t })),
-  { text: '## Operating Principles', cls: 'h2' },
-  ...c.desktopPrinciples.map((t) => ({ text: t })),
-  { text: c.desktopStatusH2, cls: 'h2' },
+  { text: c.desktopH1, cls: 'h1', key: c.desktopH1 },
+  { text: c.desktopIntro, key: c.desktopIntro },
+  { text: '## Core Stack', cls: 'h2', key: '## Core Stack' },
+  ...c.desktopCoreStack.map((t) => ({ text: t, key: t })),
+  { text: '## Operating Principles', cls: 'h2', key: '## Operating Principles' },
+  ...c.desktopPrinciples.map((t) => ({ text: t, key: t })),
+  { text: c.desktopStatusH2, cls: 'h2', key: c.desktopStatusH2 },
   {
+    key: 'status-roletyper',
     node: (
       <>
         {'Open to '}
@@ -29,14 +30,14 @@ function ReadmeBlock({ lines }: { lines: ReadmeLine[] }) {
   return (
     <div className="readme">
       <div className="readme__gutter" aria-hidden="true">
-        {lines.map((_, i) => (
-          <span key={i}>{i + 1}</span>
+        {lines.map((line, i) => (
+          <span key={line.key}>{i + 1}</span>
         ))}
       </div>
       <div className="readme__code">
-        {lines.map((line, i) => (
+        {lines.map((line) => (
           <div
-            key={i}
+            key={line.key}
             className={line.cls ? `readme__row readme__row--${line.cls}` : 'readme__row'}
           >
             {line.node ?? line.text}

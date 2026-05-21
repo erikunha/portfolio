@@ -8,14 +8,13 @@ export function ResponsibilitiesSection({ defer }: { defer?: boolean } = {}) {
       id="sec-responsibilities"
       header="LS -LA ~/RESPONSIBILITIES"
       icon={<IconResponsibilities />}
-      defaultOpen={false}
       defer={defer}
     >
       <div className="permatrix">
         <div className="pm-cmd">
           <span className="gt">$</span>
           {'ls -la ~/responsibilities  '}
-          <span style={{ opacity: 0.55 }}>{'// role boundaries, in unix terms'}</span>
+          <span style={{ color: 'var(--muted-dim)' }}>{'// role boundaries, in unix terms'}</span>
         </div>
         <pre>
           {responsibilities.map((r) => (

@@ -1,111 +1,200 @@
 // __tests__/ask-log-persistence.test.ts
-// Source-grep test: verifies /api/ask Q+A persistence + X-Request-Id
-// header per spec docs/superpowers/specs/2026-05-18-production-
-// observability-design.md §7c.
+// Behavioral test (CG3): exercises the Q+A persistence + right-of-erasure
+// machinery, instead of grepping route/lib source text.
 //
-// Task 6 (Phase 3c) populates the persistence block.
-// Task 7 (Phase 3d) appends the /api/log/forget block.
+//  - lib/ask-log.persistAskInteraction: mocks getRedis, calls the function,
+//    asserts the KV key uses the `ask:log:<date>:` partition + 90-day TTL,
+//    that question/answer are truncated (500 / 1000 chars), and that a KV
+//    outage fails quiet (never throws into the /api/ask response path).
+//  - /api/log/forget: POSTs a requestId, asserts the DELETE targets the
+//    ask:log: key pattern and the success response does NOT leak a deleted
+//    count (existence-oracle fix, audit Theme 8).
+//  - InteractiveShell: renders the real component and asserts the privacy
+//    notice mentions 90-day retention + a deletion route.
 
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { NextRequest } from 'next/server';
+import { createElement } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mountClient } from './helpers/render';
 
-const ASK_LOG = readFileSync(path.resolve(__dirname, '../lib/ask-log.ts'), 'utf-8');
-const ASK_ROUTE = readFileSync(path.resolve(__dirname, '../app/api/ask/route.ts'), 'utf-8');
+// --- lib/ask-log -------------------------------------------------------------
+describe('lib/ask-log — persistAskInteraction', () => {
+  const redisSetMock = vi.fn();
+  const logErrorMock = vi.fn();
 
-describe('Q+A persistence (Phase 3c)', () => {
-  it('lib/ask-log.ts exports persistAskInteraction', () => {
-    expect(ASK_LOG).toMatch(/export\s+(async\s+)?function\s+persistAskInteraction\b/);
+  beforeEach(() => {
+    vi.resetModules();
+    redisSetMock.mockReset();
+    logErrorMock.mockReset();
+    vi.doMock('@/lib/rate-limit', () => ({ getRedis: vi.fn(() => ({ set: redisSetMock })) }));
+    vi.doMock('@/lib/log', () => ({
+      log: { info: vi.fn(), error: logErrorMock, warn: vi.fn(), debug: vi.fn() },
+    }));
   });
 
-  it('uses ask:log: KV prefix with date partition and 90-day TTL', () => {
-    expect(ASK_LOG).toMatch(/['"`]ask:log:/);
-    expect(ASK_LOG).toMatch(/7[_]?776[_]?000/);
+  afterEach(() => {
+    vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/log');
   });
 
-  it('truncates question to 500 chars and answer to 1000 chars', () => {
-    expect(ASK_LOG).toMatch(/\.slice\(\s*0\s*,\s*500\s*\)/);
-    expect(ASK_LOG).toMatch(/\.slice\(\s*0\s*,\s*1000\s*\)/);
+  const interaction = {
+    requestId: 'req-abc-123',
+    ts: '2026-05-20T12:34:56.000Z',
+    ipHash: 'hashed-ip',
+    question: 'Q',
+    answer: 'A',
+    inputTokens: 10,
+    outputTokens: 20,
+    durationMs: 100,
+    status: 'completed' as const,
+  };
+
+  it('writes to the date-partitioned ask:log: key with a 90-day TTL', async () => {
+    redisSetMock.mockResolvedValueOnce('OK');
+    const { persistAskInteraction } = await import('@/lib/ask-log');
+    await persistAskInteraction(interaction);
+
+    expect(redisSetMock).toHaveBeenCalledOnce();
+    const [key, , opts] = redisSetMock.mock.calls[0] ?? [];
+    // Key: ask:log:<yyyy-mm-dd>:<requestId>
+    expect(String(key)).toBe('ask:log:2026-05-20:req-abc-123');
+    expect(opts).toEqual({ ex: 7_776_000 }); // 90 days
   });
 
-  it('app/api/ask/route.ts calls persistAskInteraction after stream completes', () => {
-    expect(ASK_ROUTE).toMatch(/persistAskInteraction\(/);
-    const persistIdx = ASK_ROUTE.indexOf('persistAskInteraction(');
-    const settleIdx = ASK_ROUTE.indexOf('settleBudget(reserved');
-    expect(persistIdx).toBeGreaterThan(-1);
-    expect(settleIdx).toBeGreaterThan(-1);
+  it('truncates the question to 500 chars and the answer to 1000 chars', async () => {
+    redisSetMock.mockResolvedValueOnce('OK');
+    const { persistAskInteraction } = await import('@/lib/ask-log');
+    await persistAskInteraction({
+      ...interaction,
+      question: 'q'.repeat(900),
+      answer: 'a'.repeat(2000),
+    });
+
+    const [, value] = redisSetMock.mock.calls[0] ?? [];
+    const record = JSON.parse(String(value)) as { question: string; answer: string };
+    expect(record.question).toHaveLength(500);
+    expect(record.answer).toHaveLength(1000);
   });
 
-  it('app/api/ask/route.ts accumulates collectedAnswerText capped at 1000 chars', () => {
-    expect(ASK_ROUTE).toMatch(/collectedAnswerText/);
-  });
-
-  it('app/api/ask/route.ts sets X-Request-Id response header on the streamed Response', () => {
-    expect(ASK_ROUTE).toMatch(/['"]X-Request-Id['"]/);
-    expect(ASK_ROUTE).toMatch(/requestId/);
-  });
-});
-
-describe('/api/log/forget endpoint (Phase 3d + PR 5 of audit)', () => {
-  const FORGET_ROUTE = readFileSync(
-    path.resolve(__dirname, '../app/api/log/forget/route.ts'),
-    'utf-8',
-  );
-  const RATE_LIMIT = readFileSync(path.resolve(__dirname, '../lib/rate-limit.ts'), 'utf-8');
-
-  // PR 5 of audit roadmap refactored this route to use `defineHandler` from
-  // lib/server/route.ts. The POST export is now `export const POST =
-  // defineHandler({ ... })` (not an async function). Source-grep assertions
-  // updated to match; matching behavioral coverage lives in the new
-  // __tests__/route-handler.test.ts.
-
-  it('exports POST via defineHandler', () => {
-    expect(FORGET_ROUTE).toMatch(/export\s+const\s+POST\s*=\s*defineHandler\(/);
-    expect(FORGET_ROUTE).toMatch(/from\s*['"]@\/lib\/server\/route['"]/);
-  });
-
-  it('marks the route as dynamic', () => {
-    expect(FORGET_ROUTE).toMatch(/export\s+const\s+dynamic\s*=\s*['"]force-dynamic['"]/);
-  });
-
-  it('validates requestId via zod', () => {
-    expect(FORGET_ROUTE).toMatch(/from\s*['"]zod['"]/);
-    expect(FORGET_ROUTE).toMatch(/requestId/);
-  });
-
-  it('deletes against the ask:log: KV key pattern', () => {
-    expect(FORGET_ROUTE).toMatch(/ask:log:/);
-    expect(FORGET_ROUTE).toMatch(/\.del\(/);
-  });
-
-  it('does NOT expose the deleted count on the success response (audit Theme 8)', () => {
-    // The previous response shape `{ ok: true, deleted: N }` was an existence
-    // oracle — an attacker with a leaked requestId could confirm persistence
-    // by inspecting the count. New shape returns only `ok({ requestId })`;
-    // the deleted count is logged internally for audit.
-    expect(FORGET_ROUTE).toMatch(/\bok\(\s*\{\s*requestId\s*\}\s*\)/);
-    // Defensive: make sure no `ok({ requestId, deleted })` shape sneaks back in.
-    expect(FORGET_ROUTE).not.toMatch(/ok\(\s*\{[^}]*deleted[^}]*\}\s*\)/);
-  });
-
-  it('uses the new getForgetLimit() rate-limit factory', () => {
-    expect(FORGET_ROUTE).toMatch(/getForgetLimit/);
-  });
-
-  it('lib/rate-limit.ts exports getForgetLimit factory with 5/hour limit', () => {
-    expect(RATE_LIMIT).toMatch(/export\s+function\s+getForgetLimit\b/);
-    expect(RATE_LIMIT).toMatch(/slidingWindow\(\s*5\s*,\s*['"]1\s*h['"]/);
+  it('fails quiet on a KV outage — never throws into the /api/ask path', async () => {
+    redisSetMock.mockRejectedValueOnce(new Error('Upstash down'));
+    const { persistAskInteraction } = await import('@/lib/ask-log');
+    // Must resolve (not reject) so the streamed /api/ask response is unaffected.
+    await expect(persistAskInteraction(interaction)).resolves.toBeUndefined();
+    // The failure was logged structurally.
+    expect(logErrorMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ requestId: 'req-abc-123' }),
+    );
   });
 });
 
-describe('privacy notice on /api/ask form', () => {
-  const FORM_HOST = readFileSync(
-    path.resolve(__dirname, '../components/client/InteractiveShell.tsx'),
-    'utf-8',
-  );
+// --- /api/log/forget --------------------------------------------------------
+describe('/api/log/forget endpoint', () => {
+  const redisDelMock = vi.fn();
+  const logInfoMock = vi.fn();
 
-  it('mentions 90-day retention + the /api/log/forget endpoint', () => {
-    expect(FORM_HOST).toMatch(/90 days|90-day/);
-    expect(FORM_HOST).toMatch(/\/api\/log\/forget/);
+  beforeEach(() => {
+    vi.resetModules();
+    redisDelMock.mockReset();
+    logInfoMock.mockReset();
+    vi.doMock('@/lib/rate-limit', () => ({
+      getClientIp: vi.fn(() => '127.0.0.1'),
+      getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
+      getRedis: vi.fn(() => ({ del: redisDelMock })),
+    }));
+    vi.doMock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
+    vi.doMock('@/lib/log', () => ({
+      log: { info: logInfoMock, error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+    }));
+  });
+
+  afterEach(() => {
+    vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/ip-hash');
+    vi.doUnmock('@/lib/log');
+  });
+
+  function makeRequest(body: Record<string, unknown>): NextRequest {
+    return new NextRequest('http://localhost/api/log/forget', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // A syntactically valid v4 UUID that is NOT the smoke sentinel.
+  const REAL_UUID = '11111111-2222-4333-8444-555555555555';
+
+  it('DELETEs against the ask:log: key pattern for the given requestId', async () => {
+    redisDelMock.mockResolvedValueOnce(1);
+    const { POST } = await import('@/app/api/log/forget/route');
+    const res = await POST(makeRequest({ requestId: REAL_UUID }));
+
+    expect(res.status).toBe(200);
+    expect(redisDelMock).toHaveBeenCalledOnce();
+    const deletedKeys = redisDelMock.mock.calls[0] ?? [];
+    // Every candidate key targets the ask:log: partition for this requestId.
+    expect(deletedKeys.length).toBeGreaterThan(0);
+    for (const key of deletedKeys) {
+      expect(String(key)).toMatch(
+        /^ask:log:\d{4}-\d{2}-\d{2}:11111111-2222-4333-8444-555555555555$/,
+      );
+    }
+  });
+
+  it('does NOT leak a deleted count on the success response (existence-oracle fix)', async () => {
+    redisDelMock.mockResolvedValueOnce(1);
+    const { POST } = await import('@/app/api/log/forget/route');
+    const res = await POST(makeRequest({ requestId: REAL_UUID }));
+    const body = (await res.json()) as Record<string, unknown>;
+    // Uniform success envelope — no `deleted` field on the wire.
+    expect(body).toEqual({ ok: true, requestId: expect.any(String) });
+    expect('deleted' in body).toBe(false);
+    // The count IS logged internally for audit.
+    expect(logInfoMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ deleted: 1 }),
+    );
+  });
+
+  it('rejects a non-UUID requestId with a 400 validation error', async () => {
+    const { POST } = await import('@/app/api/log/forget/route');
+    const res = await POST(makeRequest({ requestId: 'not-a-uuid' }));
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { ok: false; error: { code: string } };
+    expect(body.error.code).toBe('validation_failed');
+  });
+});
+
+// --- InteractiveShell privacy notice ----------------------------------------
+describe('/api/ask privacy notice on the shell', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.doMock('@/lib/use-breakpoint.client', () => ({
+      useBreakpoint: () => ({ isMobile: false }),
+    }));
+    vi.doMock('@/lib/motion', () => ({ readMotion: () => false }));
+    vi.doMock('@/content/shell-commands', () => ({ default: [] }));
+  });
+
+  afterEach(() => {
+    vi.doUnmock('@/lib/use-breakpoint.client');
+    vi.doUnmock('@/lib/motion');
+    vi.doUnmock('@/content/shell-commands');
+  });
+
+  it('renders a privacy notice mentioning 90-day retention and a deletion route', async () => {
+    const { InteractiveShell } = await import('@/components/client/InteractiveShell');
+
+    const { container, unmount } = await mountClient(createElement(InteractiveShell));
+
+    const notice = container.querySelector('.shell__privacy-notice');
+    expect(notice).not.toBeNull();
+    const text = notice?.textContent ?? '';
+    expect(text).toMatch(/90 days|90-day/);
+    expect(text).toContain('/api/log/forget');
+
+    unmount();
   });
 });

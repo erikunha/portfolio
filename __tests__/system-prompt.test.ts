@@ -48,6 +48,20 @@ describe('lib/ask/system-prompt', () => {
     });
   });
 
+  describe('privacy (audit CG5)', () => {
+    it('does not embed a personal phone number in the SYSTEM prompt', () => {
+      // /api/ask's SYSTEM prompt is reachable on a publicly fetchable
+      // surface — a personal WhatsApp number must not be part of it.
+      // A phone number is a `+`-prefixed international number or a digit
+      // run of 9+ digits (the BR mobile shape). `YYYY-YYYY` date ranges
+      // and per-employer year spans in the résumé narrative are not.
+      expect(SYSTEM_TEXT).not.toMatch(/\+\d[\d\s()-]{6,}\d/);
+      expect(SYSTEM_TEXT).not.toMatch(/(?:\d[\s()-]?){9,}\d/);
+      expect(SYSTEM_TEXT).not.toContain('99839-4086');
+      expect(SYSTEM_TEXT).not.toMatch(/WhatsApp/i);
+    });
+  });
+
   describe('content drift detection (single source of truth)', () => {
     it('contains every perf-receipt metric and delta', () => {
       for (const r of perfReceipts) {
