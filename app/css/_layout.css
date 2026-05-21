@@ -775,7 +775,7 @@
      swaps the desktop fallback for the mobile variant — this anchors the
      height so the swap does not generate measurable CLS. */
   #sec-man-page .module__body {
-    contain-intrinsic-size: auto 300px;
+    min-height: 300px;
   }
 
   /* ─────────────────────────────────────────────────────────────────────────────
