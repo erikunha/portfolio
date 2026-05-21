@@ -147,6 +147,17 @@ jobs:
           DEPLOY_SALT: ci-build-salt
       - name: Start preview server
         run: pnpm start &
+        # Runtime env for the production preview server. DEPLOY_SALT is the
+        # load-bearing one: without it, lib/ip-hash.ts resolveSalt() takes the
+        # production Upstash path (CI has no Redis creds) and throws, so every
+        # validated /api/* request 500s via the unguarded hashIp() in
+        # lib/server/route.ts. The CI-job rework dropped this block.
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
+          DEPLOY_SALT: ci-build-salt
       - name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 30000
       - name: Run functional e2e
@@ -188,6 +199,17 @@ jobs:
           DEPLOY_SALT: ci-build-salt
       - name: Start preview server
         run: pnpm start &
+        # Runtime env for the production preview server. DEPLOY_SALT is the
+        # load-bearing one: without it, lib/ip-hash.ts resolveSalt() takes the
+        # production Upstash path (CI has no Redis creds) and throws, so every
+        # validated /api/* request 500s via the unguarded hashIp() in
+        # lib/server/route.ts. The CI-job rework dropped this block.
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
+          DEPLOY_SALT: ci-build-salt
       - name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 30000
       - if: inputs.update_visual_baselines != 'true'
