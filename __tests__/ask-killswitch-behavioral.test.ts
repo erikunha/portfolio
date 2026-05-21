@@ -12,17 +12,32 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockMessagesCreate = vi.fn();
+// The route reaches Anthropic through the Vercel AI Gateway via the `ai`
+// package's `streamText`. `mockStreamText` is the upstream seam.
+const mockStreamText = vi.fn();
 const rateLimitMock = vi.fn(async () => ({ success: true }));
 const reserveBudgetMock = vi.fn(async () => ({ allowed: true, reserved: 1512, pct: 0 }));
 const persistMock = vi.fn(async () => undefined);
 
-vi.mock('@anthropic-ai/sdk', () => {
-  class MockAnthropic {
-    messages = { create: mockMessagesCreate };
-  }
-  return { default: MockAnthropic };
-});
+vi.mock('ai', () => ({
+  streamText: mockStreamText,
+}));
+
+// AI SDK streamText result shape: textStream is AsyncIterable; usage and
+// providerMetadata are end-of-stream promises.
+function makeStreamTextResult(text = 'ok') {
+  return {
+    textStream: {
+      async *[Symbol.asyncIterator]() {
+        yield text;
+      },
+    },
+    usage: Promise.resolve({ inputTokens: 10, outputTokens: 1 }),
+    providerMetadata: Promise.resolve({
+      anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
+    }),
+  };
+}
 
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
@@ -54,7 +69,7 @@ function makeRequest(question = 'Who is Erik?'): NextRequest {
 
 beforeEach(() => {
   vi.resetModules();
-  mockMessagesCreate.mockReset();
+  mockStreamText.mockReset();
   rateLimitMock.mockReset().mockResolvedValue({ success: true });
   reserveBudgetMock.mockReset().mockResolvedValue({ allowed: true, reserved: 1512, pct: 0 });
   persistMock.mockClear();
@@ -80,7 +95,7 @@ describe('/api/ask kill switch — behavioral (PR 7, replaces source-grep)', () 
       // moved the kill check to AFTER any of these.
       expect(rateLimitMock).not.toHaveBeenCalled();
       expect(reserveBudgetMock).not.toHaveBeenCalled();
-      expect(mockMessagesCreate).not.toHaveBeenCalled();
+      expect(mockStreamText).not.toHaveBeenCalled();
       expect(persistMock).not.toHaveBeenCalled();
     });
   }
@@ -107,19 +122,13 @@ describe('/api/ask kill switch — behavioral (PR 7, replaces source-grep)', () 
 
   it("passes the request through when ASK_ENABLED='true'", async () => {
     vi.stubEnv('ASK_ENABLED', 'true');
-    mockMessagesCreate.mockResolvedValue({
-      async *[Symbol.asyncIterator]() {
-        yield { type: 'message_start', message: { usage: { input_tokens: 10 } } };
-        yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'ok' } };
-        yield { type: 'message_delta', usage: { output_tokens: 1 } };
-      },
-    });
+    mockStreamText.mockReturnValue(makeStreamTextResult());
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest());
     expect(res.status).toBe(200);
     expect(rateLimitMock).toHaveBeenCalledOnce();
     expect(reserveBudgetMock).toHaveBeenCalledOnce();
-    expect(mockMessagesCreate).toHaveBeenCalledOnce();
+    expect(mockStreamText).toHaveBeenCalledOnce();
 
     // Drain the stream so the persistAskInteraction promise in `finally`
     // can settle without leaking microtasks.
@@ -134,13 +143,7 @@ describe('/api/ask kill switch — behavioral (PR 7, replaces source-grep)', () 
 
   it('also passes when ASK_ENABLED is unset (treated as on)', async () => {
     vi.stubEnv('ASK_ENABLED', '');
-    mockMessagesCreate.mockResolvedValue({
-      async *[Symbol.asyncIterator]() {
-        yield { type: 'message_start', message: { usage: { input_tokens: 10 } } };
-        yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'ok' } };
-        yield { type: 'message_delta', usage: { output_tokens: 1 } };
-      },
-    });
+    mockStreamText.mockReturnValue(makeStreamTextResult());
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest());
     expect(res.status).toBe(200);
@@ -157,13 +160,7 @@ describe('/api/ask kill switch — behavioral (PR 7, replaces source-grep)', () 
   it('does NOT reject on arbitrary non-off keywords (`maybe`, `yes`, `enabled`)', async () => {
     for (const value of ['maybe', 'yes', 'enabled']) {
       vi.stubEnv('ASK_ENABLED', value);
-      mockMessagesCreate.mockResolvedValueOnce({
-        async *[Symbol.asyncIterator]() {
-          yield { type: 'message_start', message: { usage: { input_tokens: 10 } } };
-          yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'ok' } };
-          yield { type: 'message_delta', usage: { output_tokens: 1 } };
-        },
-      });
+      mockStreamText.mockReturnValueOnce(makeStreamTextResult());
       const { POST } = await import('@/app/api/ask/route');
       const res = await POST(makeRequest());
       expect(res.status).toBe(200);

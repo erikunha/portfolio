@@ -1,7 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { streamText } from 'ai';
 import type { NextRequest } from 'next/server';
 import { INJECTION_RE } from '@/lib/ask/injection';
-import { SYSTEM } from '@/lib/ask/system-prompt';
+import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log';
 import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
@@ -16,15 +16,30 @@ import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
 export const dynamic = 'force-dynamic';
 
-// Module-scope client — reused across warm invocations.
-// 30s timeout applies to stream INITIATION (time-to-first-byte); once chunks
-// start arriving the SDK no longer enforces the timeout. Typical Haiku-4.5
-// time-to-first-byte is <2s; 30s is 15× headroom. Stalled mid-stream
-// connections are covered separately by the MID_STREAM_TIMEOUT_MS watchdog
-// in the ReadableStream consumer below. Default maxRetries (2) preserved —
-// stream init is idempotent (no SSE events before first content_block_delta),
-// so absorbing transient 5xx is safe.
-const anthropic = new Anthropic({ timeout: 30_000 });
+// Anthropic is reached through the Vercel AI Gateway (the `ai` package's
+// `streamText` + the plain `provider/model` string form). The Gateway gives
+// one billing/observability seam in front of the model and keeps prompt
+// caching working via `providerOptions.anthropic.cacheControl`. The Gateway
+// is authenticated by `AI_GATEWAY_API_KEY` (or the Vercel OIDC token on
+// Vercel deployments) — the AI SDK resolves it from the environment, no
+// client construction needed. See DECISIONS.md (2026-05-21 spike + migration).
+//
+// `streamText` is synchronous: it returns a result handle immediately and
+// performs the HTTP request lazily as `result.textStream` is consumed. There
+// is therefore no separate "stream initiation" await to wrap — both stream
+// init failures AND mid-stream failures surface as a throw from the
+// `textStream` async iterator, handled uniformly by the consumer below.
+//
+// `abortSignal` carries a 30s deadline for stream INITIATION (time-to-first-
+// byte). Typical Haiku-4.5 TTFB is <2s; 30s is 15× headroom. Stalled
+// mid-stream connections are covered separately by the MID_STREAM_TIMEOUT_MS
+// watchdog in the ReadableStream consumer below.
+const STREAM_INIT_TIMEOUT_MS = 30_000;
+
+// Gateway model string. Plain `provider/model` form routes through the AI
+// Gateway without wiring `@ai-sdk/anthropic` directly — the Vercel-preferred
+// shape, and it still carries `providerOptions.anthropic.cacheControl`.
+const GATEWAY_MODEL = 'anthropic/claude-haiku-4-5';
 
 // Module-eval log: wrapped in try/catch so logger init failures (e.g. pino
 // transport thread failing to start) never block the cold-start path.
@@ -70,7 +85,7 @@ function mintQuestionSentinel(): string {
 
 const MAX_OUTPUT_TOKENS = 512;
 
-// Mid-stream watchdog window. The SDK's 30s `timeout` only covers stream
+// Mid-stream watchdog window. The 30s `abortSignal` only covers stream
 // INITIATION (time-to-first-byte); once chunks start arriving it no longer
 // fires, so a connection that goes silent mid-stream would hold the
 // ReadableStream open indefinitely. This deadline races each iterator step:
@@ -78,10 +93,10 @@ const MAX_OUTPUT_TOKENS = 512;
 // sentinel and closes. 15s is generous — Haiku inter-token gaps are sub-second.
 const MID_STREAM_TIMEOUT_MS = 15_000;
 
-// SYSTEM moved to lib/ask/system-prompt.ts (PR 4 of audit roadmap). Composed
-// at module load from a hand-edited narrative + live data from content/*.ts;
-// sized above the 1024-token Anthropic Haiku ephemeral cache minimum so
-// `cache_control: ephemeral` actually fires. See
+// SYSTEM_TEXT lives in lib/ask/system-prompt.ts. Composed at module load from
+// a hand-edited narrative + live data from content/*.ts; sized above the
+// 1024-token Anthropic Haiku ephemeral cache minimum so the `cacheControl`
+// directive below actually fires. See
 // docs/audit/2026-05-19-principal-audit.md Theme 7 + Debate 5.
 
 export async function POST(req: NextRequest) {
@@ -180,47 +195,48 @@ export async function POST(req: NextRequest) {
   // input to break out of the data lane the wrapper establishes.
   const questionSentinel = mintQuestionSentinel();
 
-  let anthropicStream: AsyncIterable<Anthropic.Messages.RawMessageStreamEvent>;
-  try {
-    anthropicStream = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: MAX_OUTPUT_TOKENS,
-      system: SYSTEM,
-      messages: [{ role: 'user', content: wrapUserQuestion(question, questionSentinel) }],
-      stream: true,
-    });
-  } catch (err) {
-    // Refund the reservation since no tokens were actually consumed.
-    void settleBudget(reserved, 0, 0);
-    // The 30s SDK timeout (or a network error) fired during stream establishment,
-    // before any SSE event was emitted. Return a 200 with the sentinel so the
-    // client's stream reader sees a structured error instead of an opaque 500.
-    const msg = err instanceof Error ? err.message : 'upstream error';
-    console.error('[ask] stream init failed', err);
-    const enc = new TextEncoder();
-    const body = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
-        controller.close();
+  // `streamText` is synchronous — it returns a handle and starts the HTTP
+  // request lazily as `textStream` is iterated. The system prompt is a
+  // `system`-role message carrying `cacheControl: ephemeral` so the Anthropic
+  // ephemeral prompt cache still fires through the Gateway (SYSTEM_TEXT is
+  // sized above the 1024-token cache minimum). Stream init failures and
+  // mid-stream failures both surface as a throw from `textStream`, handled
+  // uniformly by the consumer below.
+  const result = streamText({
+    model: GATEWAY_MODEL,
+    maxOutputTokens: MAX_OUTPUT_TOKENS,
+    abortSignal: AbortSignal.timeout(STREAM_INIT_TIMEOUT_MS),
+    messages: [
+      {
+        role: 'system',
+        content: SYSTEM_TEXT,
+        providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } },
       },
-    });
-    return new Response(body, {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-store',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Request-Id': requestId,
-      },
-    });
-  }
+      { role: 'user', content: wrapUserQuestion(question, questionSentinel) },
+    ],
+    // streamText suppresses stream errors by default; surface them so the
+    // mid-stream catch path and observability still fire.
+    onError({ error }) {
+      console.error('[ask] streamText error', error);
+    },
+  });
+
+  // Attach the usage/metadata handlers SYNCHRONOUSLY — right after streamText
+  // returns — so that if either end-of-stream promise rejects (an errored or
+  // aborted stream), the rejection is already handled and never surfaces as
+  // an unhandledRejection. settleAndPersist awaits these resolved-or-zeroed
+  // values rather than the raw promises.
+  const usagePromise = Promise.resolve(result.usage).catch(() => undefined);
+  const providerMetadataPromise = Promise.resolve(result.providerMetadata).catch(() => undefined);
 
   const enc = new TextEncoder();
   let inputTokens = 0;
   let outputTokens = 0;
-  // Anthropic returns cache_read_input_tokens and cache_creation_input_tokens
-  // on message_start. cache_read is what we save vs full input billing on a
-  // cache hit; cache_creation is the one-time write cost. Both are tracked
-  // for the cache hit-rate metric and logged for observability.
+  // The Gateway/AI-SDK reports cache_read_input_tokens and
+  // cache_creation_input_tokens via `providerMetadata.anthropic` (resolved at
+  // stream end). cache_read is what we save vs full input billing on a cache
+  // hit; cache_creation is the one-time write cost. Both are tracked for the
+  // cache hit-rate metric and logged for observability.
   let cacheReadTokens = 0;
   let cacheCreationTokens = 0;
   let collectedAnswerText = '';
@@ -230,16 +246,16 @@ export async function POST(req: NextRequest) {
     async start(controller) {
       // Race each iterator step against a mid-stream deadline. A bare
       // `for await` would hang forever on a connection that goes silent
-      // after the first byte (the SDK's 30s timeout only covers stream
+      // after the first byte (the 30s abortSignal only covers stream
       // initiation). On a stall the timeout rejects the race; the catch
       // below emits the sentinel and closes — same path as a real error.
-      // Hoisted so the finally block can signal the SDK stream to abort
-      // its underlying HTTP connection on every exit path.
-      const iterator = anthropicStream[Symbol.asyncIterator]();
+      // Hoisted so the finally block can signal the stream to abort its
+      // underlying HTTP connection on every exit path.
+      const iterator = result.textStream[Symbol.asyncIterator]();
       try {
         while (true) {
           let watchdog: ReturnType<typeof setTimeout> | undefined;
-          let next: IteratorResult<Anthropic.Messages.RawMessageStreamEvent>;
+          let next: IteratorResult<string>;
           try {
             next = await Promise.race([
               iterator.next(),
@@ -257,22 +273,13 @@ export async function POST(req: NextRequest) {
             if (watchdog !== undefined) clearTimeout(watchdog);
           }
           if (next.done) break;
-          const event = next.value;
-          if (event.type === 'message_start') {
-            const usage = event.message.usage;
-            inputTokens = usage.input_tokens;
-            cacheReadTokens = usage.cache_read_input_tokens ?? 0;
-            cacheCreationTokens = usage.cache_creation_input_tokens ?? 0;
-          } else if (event.type === 'message_delta') {
-            outputTokens = event.usage.output_tokens;
-          } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-            controller.enqueue(enc.encode(event.delta.text));
-            if (collectedAnswerText.length < 1000) {
-              // Slice the delta to only the remaining budget before concat so
-              // we never allocate a full delta string when the boundary is hit.
-              const remaining = 1000 - collectedAnswerText.length;
-              collectedAnswerText += event.delta.text.slice(0, remaining);
-            }
+          const text = next.value;
+          controller.enqueue(enc.encode(text));
+          if (collectedAnswerText.length < 1000) {
+            // Slice the delta to only the remaining budget before concat so
+            // we never allocate a full delta string when the boundary is hit.
+            const remaining = 1000 - collectedAnswerText.length;
+            collectedAnswerText += text.slice(0, remaining);
           }
         }
       } catch (err) {
@@ -280,47 +287,115 @@ export async function POST(req: NextRequest) {
         const msg = err instanceof Error ? err.message : 'upstream error';
         controller.enqueue(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
       } finally {
+        // Close the stream FIRST so the client sees the response complete
+        // immediately — settlement runs after and does not hold the
+        // connection open.
         controller.close();
         // Release the upstream async iterator. On a mid-stream timeout the
         // pending `iterator.next()` is abandoned; calling `return()` signals
-        // the SDK stream to abort its HTTP connection instead of leaking it.
+        // the stream to abort its HTTP connection instead of leaking it.
         // Optional-chained — a plain async generator may omit `return`.
         // Fire-and-forget: cleanup must never reject the response.
         void Promise.resolve(iterator.return?.()).catch(() => undefined);
-        // Cache hit rate observability: cacheRead/input → 0 means cache cold
-        // or system prompt below 1024 tokens; → ~0.9 means warm cache. Logged
-        // per request so the rate can be aggregated from Vercel runtime logs
-        // without a separate metrics pipeline. Total input billing includes
-        // ALL of input + cache_read + cache_creation against the budget so
-        // settleBudget reflects true Anthropic-billed cost.
-        const totalBilledInput = inputTokens + cacheReadTokens + cacheCreationTokens;
-        log.info('ask completed', {
-          requestId,
-          inputTokens,
-          cacheReadTokens,
-          cacheCreationTokens,
-          outputTokens,
-          cacheHitRate: totalBilledInput > 0 ? cacheReadTokens / totalBilledInput : 0,
-        });
-        // Refund the unused portion of the reservation. Fire-and-forget —
-        // never blocks the response. If this never fires (Edge runtime kills
-        // the invocation), the counter stays at the reservation high-water
-        // mark — fail-closed by design.
-        void settleBudget(reserved, totalBilledInput, outputTokens);
-        void persistAskInteraction({
-          requestId,
-          ts: new Date().toISOString(),
-          ipHash,
-          question,
-          answer: collectedAnswerText,
-          inputTokens: totalBilledInput,
-          outputTokens,
-          durationMs: Date.now() - startedAt,
-          status,
-        });
+        // Awaited (not fire-and-forget): the AI SDK exposes token counts via
+        // end-of-stream promises (`result.usage` / `result.providerMetadata`)
+        // rather than a message_start SSE event, so settlement is now async.
+        // It runs after `controller.close()`, so the client is unaffected;
+        // awaiting it here only defers when this `start()` promise settles,
+        // and guarantees budget settlement + persistence actually complete
+        // before the runtime can reclaim the invocation.
+        await settleAndPersist();
       }
     },
   });
+
+  // Resolve usage from the AI SDK's end-of-stream promises, then settle the
+  // budget reservation and persist the interaction. Unlike the direct SDK
+  // (usage on the message_start SSE event), the Gateway/AI SDK exposes token
+  // counts via `result.usage` and the cache breakdown via
+  // `result.providerMetadata.anthropic`, both settled once the stream
+  // finishes. `usagePromise` / `providerMetadataPromise` are the pre-handled
+  // (.catch-attached) forms — a usage-resolution failure (or an errored
+  // stream) degrades to `undefined`, never rejects the response.
+  //
+  // On a mid-stream STALL the upstream never finishes, so neither end-of-
+  // stream promise ever resolves. Both awaits are therefore bounded by a
+  // short deadline: if usage cannot be resolved, settlement skips the budget
+  // refund entirely — the reservation stays as the high-water mark, the
+  // fail-closed posture for a cap when the true cost is unknown — and still
+  // persists the errored interaction for observability.
+  async function settleAndPersist(): Promise<void> {
+    const USAGE_RESOLVE_TIMEOUT_MS = 1_000;
+    const usageTimedOut = Symbol('usage-timeout');
+    const deadline = async <T>(p: Promise<T>): Promise<T | typeof usageTimedOut> => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        return await Promise.race([
+          p,
+          new Promise<typeof usageTimedOut>((resolve) => {
+            timer = setTimeout(() => resolve(usageTimedOut), USAGE_RESOLVE_TIMEOUT_MS);
+          }),
+        ]);
+      } finally {
+        // Clear the deadline timer once the race settles — leaving it armed
+        // would leak a handle for up to USAGE_RESOLVE_TIMEOUT_MS.
+        if (timer !== undefined) clearTimeout(timer);
+      }
+    };
+
+    const usage = await deadline(usagePromise);
+    const meta = await deadline(providerMetadataPromise);
+    const usageResolved = usage !== usageTimedOut && meta !== usageTimedOut;
+
+    if (usage !== usageTimedOut) {
+      inputTokens = usage?.inputTokens ?? 0;
+      outputTokens = usage?.outputTokens ?? 0;
+    }
+    if (meta !== usageTimedOut) {
+      const anthropicMeta = meta?.anthropic as
+        | { cacheReadInputTokens?: number; cacheCreationInputTokens?: number }
+        | undefined;
+      cacheReadTokens = anthropicMeta?.cacheReadInputTokens ?? 0;
+      cacheCreationTokens = anthropicMeta?.cacheCreationInputTokens ?? 0;
+    }
+
+    // Cache hit rate observability: cacheRead/input → 0 means cache cold
+    // or system prompt below 1024 tokens; → ~0.9 means warm cache. Logged
+    // per request so the rate can be aggregated from Vercel runtime logs
+    // without a separate metrics pipeline. Total input billing includes
+    // ALL of input + cache_read + cache_creation against the budget so
+    // settleBudget reflects true Anthropic-billed cost.
+    const totalBilledInput = inputTokens + cacheReadTokens + cacheCreationTokens;
+    log.info('ask completed', {
+      requestId,
+      inputTokens,
+      cacheReadTokens,
+      cacheCreationTokens,
+      outputTokens,
+      cacheHitRate: totalBilledInput > 0 ? cacheReadTokens / totalBilledInput : 0,
+      usageResolved,
+    });
+    // Refund the unused portion of the reservation. Skipped when usage could
+    // not be resolved (stalled stream) — refunding against zeroed usage would
+    // give back the whole reservation despite tokens having been produced, so
+    // the reservation is held as the high-water mark instead: fail-closed by
+    // design. If settleBudget never fires at all (Edge runtime kills the
+    // invocation), the same high-water mark holds.
+    if (usageResolved) {
+      void settleBudget(reserved, totalBilledInput, outputTokens);
+    }
+    void persistAskInteraction({
+      requestId,
+      ts: new Date().toISOString(),
+      ipHash,
+      question,
+      answer: collectedAnswerText,
+      inputTokens: totalBilledInput,
+      outputTokens,
+      durationMs: Date.now() - startedAt,
+      status,
+    });
+  }
 
   return new Response(readable, {
     headers: {
