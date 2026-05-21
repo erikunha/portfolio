@@ -42,22 +42,13 @@
     display: block;
   }
   .manpage--mobile {
-    display: none;
+    display: flex;
     font-family: var(--font-mono-stack);
     font-size: var(--fs-sm);
     line-height: 1.7;
     color: var(--fg);
     flex-direction: column;
     gap: 2px;
-  }
-
-  @media (max-width: 768px) {
-    .manpage--desktop {
-      display: none;
-    }
-    .manpage--mobile {
-      display: flex;
-    }
   }
   .manpage--mobile .mp-head {
     color: var(--signal);
@@ -173,13 +164,6 @@
     letter-spacing: 0.04em;
   }
 
-  /* Desktop/mobile content splits */
-  .visa-desktop-pre {
-    display: block;
-  }
-  .visa-mobile-pre {
-    display: none;
-  }
   .vm-grid {
     margin-top: 0.5em;
     display: flex;
@@ -202,11 +186,8 @@
     flex-direction: column;
     gap: 1px;
   }
-  .guitar-desktop {
-    display: block;
-  }
-  .guitar-mobile {
-    display: none;
+  pre.guitar-mobile {
+    font-size: var(--fs-sm);
   }
   .visa .cmd-line {
     color: var(--muted);
@@ -793,20 +774,6 @@
     color: var(--fg);
   }
 
-  /* desktop/mobile project layout toggle */
-  .proj-mobile {
-    display: none;
-  }
-
-  @media (max-width: 768px) {
-    .proj-mobile {
-      display: block;
-    }
-    .projects.proj-desktop {
-      display: none;
-    }
-  }
-
   /* Mobile project cards — matches Portfolio.mobile.html .proj structure */
   .proj {
     border: 1px solid var(--signal-dim);
@@ -960,23 +927,6 @@
     text-overflow: ellipsis;
   }
 
-  /* career-desktop shows gitfuller, career-mobile shows blame — toggled by breakpoint */
-  .career-mobile {
-    display: none;
-  }
-  .career-desktop {
-    display: block;
-  }
-
-  @media (max-width: 900px) {
-    .career-desktop {
-      display: none;
-    }
-    .career-mobile {
-      display: block;
-    }
-  }
-
   /* ─────────────────────────────────────────────────────────────────────────────
      PERF RECEIPTS — 4-col grid, headliner at [0] spans 2 cols × 2 rows.
      ───────────────────────────────────────────────────────────────────────── */
@@ -1098,21 +1048,6 @@
       font-size: var(--fs-2xs);
       white-space: nowrap;
       overflow: hidden;
-    }
-    .visa-desktop-pre {
-      display: none;
-    }
-    .visa-mobile-pre {
-      display: block;
-    }
-    .guitar-desktop {
-      display: none;
-    }
-    .guitar-mobile {
-      display: block;
-    }
-    pre.guitar-mobile {
-      font-size: var(--fs-sm);
     }
   }
 

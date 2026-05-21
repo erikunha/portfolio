@@ -5,16 +5,16 @@
 // custom toggle. The 'module:open' event from Dock is handled by a single
 // delegated listener in AppShell.client.tsx that flips the open attribute.
 //
-// ONE element for every viewport. The page is `force-static`, so the server
-// has no per-request UA context. Module wraps ~18 sections; rendering both a
+// ONE element for every viewport. Module wraps ~18 sections; rendering both a
 // <section> and a <details> variant would duplicate every subtree (~2500+ DOM
 // nodes) and blow the dom-size budget. So Module always renders a native
 // <details open>. It must stay open: a closed <details> cannot be reopened by
 // CSS (browsers gate the collapse via the ::details-content pseudo-element,
-// which the Lightning CSS build strips), and force-static rules out a
-// per-viewport server choice. Desktop CSS (>= 769px) hides the chevron and
-// strips the summary toggle chrome so it reads as a plain <h2>; mobile keeps
-// the chevron and a section can be collapsed by tapping its summary.
+// which the Lightning CSS build strips). Desktop CSS (>= 769px) hides the
+// chevron and strips the summary toggle chrome so it reads as a plain <h2>;
+// mobile keeps the chevron and a section can be collapsed by tapping its
+// summary. Per-section content selects its viewport variant via an async RSC
+// + Suspense boundary (getIsMobile()); Module itself is always single-element.
 
 import type { ReactNode } from 'react';
 

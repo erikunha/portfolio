@@ -3,19 +3,16 @@
 // static data never ship to the client bundle. Only AppShell (nav/overlays)
 // and section components that are explicitly 'use client' end up in JS.
 //
-// STATIC: this route deliberately calls no dynamic APIs (headers / cookies /
-// searchParams) so Next generates and serves it from the CDN edge cache.
-// No section UA-detects: on a force-static build `getIsMobileForRequest()`
-// (which reads headers()) always yields desktop, so a section that branches
-// its markup by UA would ship desktop-only HTML and render empty on mobile.
-// Instead every section emits viewport-neutral markup that CSS resolves at
-// the 768px breakpoint — Projects/GitLog/Guitar/Visa emit both body variants;
-// Module renders a single <details> that CSS makes always-open on desktop.
-// BreakpointProvider's `initialIsMobile={false}` sets the SSR snapshot to
-// desktop; `useSyncExternalStore` then reads the real viewport on the client
-// during hydration and re-renders the mobile chrome if needed. See
-// docs/audit/2026-05-19-principal-audit.md (Theme 3) for the ~750-1000 ms LCP
-// impact this static boundary unlocks.
+// PPR (cacheComponents: true in next.config.ts): The static shell (Hero,
+// ReadmeSection, ShellSection, NowSection, and all below-fold sections that
+// don't branch by UA) is cached at the edge. Five dual-variant sections
+// (ManPage, Guitar, Projects, GitLog, Visa) each wrap an async inner RSC
+// inside <Suspense>; the inner RSC calls getIsMobile() → headers(), which
+// makes those subtrees dynamic. The Suspense fallback (desktop variant) is
+// included in the prerendered static shell, so the page is immediately usable
+// on desktop with no streaming delay. Mobile users see the fallback flash for
+// sub-millisecond UA resolution (no async I/O). Hero is intentionally outside
+// any Suspense boundary so LCP is never gated on dynamic resolution.
 
 import { AppShell } from '@/components/AppShell.client';
 import { ErrorBoundary } from '@/components/ErrorBoundary.client';
@@ -41,8 +38,6 @@ import { SysHealthSection } from '@/components/sections/SysHealthSection';
 import { UnknownsSection } from '@/components/sections/UnknownsSection';
 import { VisaSection } from '@/components/sections/VisaSection';
 import { BreakpointProvider } from '@/lib/use-breakpoint.client';
-
-export const dynamic = 'force-static';
 
 export default function Home() {
   return (
