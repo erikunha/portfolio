@@ -30,11 +30,14 @@ export const dynamic = 'force-dynamic';
 // init failures AND mid-stream failures surface as a throw from the
 // `textStream` async iterator, handled uniformly by the consumer below.
 //
-// `abortSignal` carries a 30s deadline for stream INITIATION (time-to-first-
-// byte). Typical Haiku-4.5 TTFB is <2s; 30s is 15× headroom. Stalled
-// mid-stream connections are covered separately by the MID_STREAM_TIMEOUT_MS
-// watchdog in the ReadableStream consumer below.
-const STREAM_INIT_TIMEOUT_MS = 30_000;
+// `abortSignal` carries a 30s deadline for the WHOLE request. `AbortSignal`
+// has no init-vs-flight notion — `AbortSignal.timeout(30_000)` simply fires 30s
+// after the call regardless of stream state. With the 512-token output cap a
+// real Haiku-4.5 answer finishes well under 30s, so this is a hard upper bound,
+// not a per-stage budget. Mid-flight stalls (a connection that goes silent
+// after the first byte but before 30s elapses) are owned by the separate
+// MID_STREAM_TIMEOUT_MS watchdog in the ReadableStream consumer below.
+const REQUEST_TIMEOUT_MS = 30_000;
 
 // Gateway model string. Plain `provider/model` form routes through the AI
 // Gateway without wiring `@ai-sdk/anthropic` directly — the Vercel-preferred
@@ -85,13 +88,24 @@ function mintQuestionSentinel(): string {
 
 const MAX_OUTPUT_TOKENS = 512;
 
-// Mid-stream watchdog window. The 30s `abortSignal` only covers stream
-// INITIATION (time-to-first-byte); once chunks start arriving it no longer
-// fires, so a connection that goes silent mid-stream would hold the
-// ReadableStream open indefinitely. This deadline races each iterator step:
-// if no event arrives within the window the consumer emits the stream-error
-// sentinel and closes. 15s is generous — Haiku inter-token gaps are sub-second.
+// Mid-stream watchdog window. The 30s `abortSignal` is a deadline for the
+// whole request, not a per-stage one; once chunks are arriving steadily it
+// will not catch a connection that goes silent mid-stream before 30s elapses,
+// so a silent stream could hold the ReadableStream open up to that long. This
+// deadline races each iterator step: if no event arrives within the window the
+// consumer emits the stream-error sentinel and closes. 15s is generous —
+// Haiku inter-token gaps are sub-second.
 const MID_STREAM_TIMEOUT_MS = 15_000;
+
+// End-of-stream usage-promise deadline. `result.usage` / `result.providerMetadata`
+// resolve in the same tick the stream closes on a healthy stream, so 1s is
+// ample headroom; the deadline only bites when a stalled stream leaves those
+// promises pending forever. Module-scoped alongside its timeout siblings.
+const USAGE_RESOLVE_TIMEOUT_MS = 1_000;
+
+// Sentinel returned by the usage deadline race when a promise times out.
+// Module-level so it is allocated once, not recreated per request.
+const USAGE_TIMED_OUT = Symbol('usage-timeout');
 
 // SYSTEM_TEXT lives in lib/ask/system-prompt.ts. Composed at module load from
 // a hand-edited narrative + live data from content/*.ts; sized above the
@@ -202,10 +216,15 @@ export async function POST(req: NextRequest) {
   // sized above the 1024-token cache minimum). Stream init failures and
   // mid-stream failures both surface as a throw from `textStream`, handled
   // uniformly by the consumer below.
+  // `maxRetries` is intentionally left at the AI SDK default (2). Stream
+  // initiation is idempotent — no tokens are billed and no state mutates until
+  // the first chunk arrives — so absorbing a transient upstream 5xx with two
+  // retries is safe and matches the pre-Gateway `@anthropic-ai/sdk` config.
+  // Do NOT pin it to 0: that removes the transient-failure cushion.
   const result = streamText({
     model: GATEWAY_MODEL,
     maxOutputTokens: MAX_OUTPUT_TOKENS,
-    abortSignal: AbortSignal.timeout(STREAM_INIT_TIMEOUT_MS),
+    abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     messages: [
       {
         role: 'system',
@@ -245,10 +264,11 @@ export async function POST(req: NextRequest) {
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
       // Race each iterator step against a mid-stream deadline. A bare
-      // `for await` would hang forever on a connection that goes silent
-      // after the first byte (the 30s abortSignal only covers stream
-      // initiation). On a stall the timeout rejects the race; the catch
-      // below emits the sentinel and closes — same path as a real error.
+      // `for await` would hang on a connection that goes silent after the
+      // first byte: the 30s request abortSignal is the only other backstop
+      // and a mid-flight stall could otherwise hold the stream open for the
+      // full 30s. On a stall the watchdog rejects the race; the catch below
+      // emits the sentinel and closes — same path as a real error.
       // Hoisted so the finally block can signal the stream to abort its
       // underlying HTTP connection on every exit path.
       const iterator = result.textStream[Symbol.asyncIterator]();
@@ -325,15 +345,13 @@ export async function POST(req: NextRequest) {
   // fail-closed posture for a cap when the true cost is unknown — and still
   // persists the errored interaction for observability.
   async function settleAndPersist(): Promise<void> {
-    const USAGE_RESOLVE_TIMEOUT_MS = 1_000;
-    const usageTimedOut = Symbol('usage-timeout');
-    const deadline = async <T>(p: Promise<T>): Promise<T | typeof usageTimedOut> => {
+    const deadline = async <T>(p: Promise<T>): Promise<T | typeof USAGE_TIMED_OUT> => {
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
         return await Promise.race([
           p,
-          new Promise<typeof usageTimedOut>((resolve) => {
-            timer = setTimeout(() => resolve(usageTimedOut), USAGE_RESOLVE_TIMEOUT_MS);
+          new Promise<typeof USAGE_TIMED_OUT>((resolve) => {
+            timer = setTimeout(() => resolve(USAGE_TIMED_OUT), USAGE_RESOLVE_TIMEOUT_MS);
           }),
         ]);
       } finally {
@@ -345,13 +363,22 @@ export async function POST(req: NextRequest) {
 
     const usage = await deadline(usagePromise);
     const meta = await deadline(providerMetadataPromise);
-    const usageResolved = usage !== usageTimedOut && meta !== usageTimedOut;
+    // The budget refund is gated on `usage` ALONE: `result.usage` and
+    // `result.providerMetadata` are two INDEPENDENT end-of-stream promises.
+    // Coupling the refund to both means a usage-resolved-but-metadata-timed-out
+    // request (a real success) would skip the refund and leak the full
+    // reservation as a phantom high-water mark. The cache breakdown from `meta`
+    // is observability-only and never gates settlement.
+    const usageResolved = usage !== USAGE_TIMED_OUT;
+    // `metaResolved` only annotates the log line — a missing/timed-out `meta`
+    // is treated as zero cache tokens, which is correct for the refund math.
+    const metaResolved = meta !== USAGE_TIMED_OUT;
 
-    if (usage !== usageTimedOut) {
+    if (usageResolved) {
       inputTokens = usage?.inputTokens ?? 0;
       outputTokens = usage?.outputTokens ?? 0;
     }
-    if (meta !== usageTimedOut) {
+    if (metaResolved) {
       const anthropicMeta = meta?.anthropic as
         | { cacheReadInputTokens?: number; cacheCreationInputTokens?: number }
         | undefined;
@@ -364,7 +391,9 @@ export async function POST(req: NextRequest) {
     // per request so the rate can be aggregated from Vercel runtime logs
     // without a separate metrics pipeline. Total input billing includes
     // ALL of input + cache_read + cache_creation against the budget so
-    // settleBudget reflects true Anthropic-billed cost.
+    // settleBudget reflects true Anthropic-billed cost. A missing/timed-out
+    // `meta` leaves cacheRead = cacheCreation = 0, so this is just `inputTokens`
+    // — the refund stays correct whenever real `usage` is known.
     const totalBilledInput = inputTokens + cacheReadTokens + cacheCreationTokens;
     log.info('ask completed', {
       requestId,
@@ -374,13 +403,15 @@ export async function POST(req: NextRequest) {
       outputTokens,
       cacheHitRate: totalBilledInput > 0 ? cacheReadTokens / totalBilledInput : 0,
       usageResolved,
+      metaResolved,
     });
-    // Refund the unused portion of the reservation. Skipped when usage could
-    // not be resolved (stalled stream) — refunding against zeroed usage would
-    // give back the whole reservation despite tokens having been produced, so
-    // the reservation is held as the high-water mark instead: fail-closed by
-    // design. If settleBudget never fires at all (Edge runtime kills the
-    // invocation), the same high-water mark holds.
+    // Refund the unused portion of the reservation. Gated on `usage` ALONE:
+    // skipped only when real usage could not be resolved (a stalled stream
+    // whose end-of-stream promises never settle) — refunding against zeroed
+    // usage would give back the whole reservation despite tokens having been
+    // produced, so the reservation is held as the high-water mark instead:
+    // fail-closed by design. If settleBudget never fires at all (Edge runtime
+    // kills the invocation), the same high-water mark holds.
     if (usageResolved) {
       void settleBudget(reserved, totalBilledInput, outputTokens);
     }
