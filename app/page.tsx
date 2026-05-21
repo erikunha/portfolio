@@ -19,6 +19,7 @@
 
 import { AppShell } from '@/components/AppShell.client';
 import { ErrorBoundary } from '@/components/ErrorBoundary.client';
+import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { CommunitySection } from '@/components/sections/CommunitySection';
 import { ContactSection } from '@/components/sections/ContactSection';
 import { CredentialsSection } from '@/components/sections/CredentialsSection';
@@ -62,6 +63,7 @@ export default function Home() {
           <NpmStackSection defer />
           <SysHealthSection defer />
           <LivePerfSection defer />
+          <AiMetricsSection defer />
           <PerfReceiptsSection defer />
           <GuitarSection defer />
           <VisaSection defer />

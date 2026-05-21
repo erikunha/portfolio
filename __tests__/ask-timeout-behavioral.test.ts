@@ -1,29 +1,29 @@
 // __tests__/ask-timeout-behavioral.test.ts
-// Behavioral test: verifies that a timeout (or any rejection) from
-// anthropic.messages.create() is caught BEFORE the ReadableStream is
-// constructed, and that the route still returns HTTP 200 with a
+// Behavioral test: verifies that a failure from the upstream model call
+// (/api/ask, now routed through the Vercel AI Gateway via the `ai` package's
+// `streamText`) is caught and surfaced as an HTTP 200 with a
 // STREAM_ERR_SENTINEL-prefixed body — not an unhandled 500.
 //
-// This is a deliberate precedent break from the source-grep-only unit pattern
-// (per Copilot review on PR #9). The source-grep version provably misses the
-// Finding 1 bug: it only checked that timeout: 30_000 was passed to the
-// constructor, not that a pre-stream rejection was caught. This test pairs
-// directly with the fix in app/api/ask/route.ts.
+// `streamText` is synchronous: it returns a result handle immediately and
+// performs the HTTP request lazily as `result.textStream` is consumed.
+// Unlike the prior direct-SDK `await anthropic.messages.create()` (which
+// could reject before the ReadableStream was constructed), BOTH stream-init
+// failures and mid-stream failures now surface as a throw from the
+// `textStream` async iterator — handled by the single consumer catch in the
+// route. This test exercises that path by EXERCISING the route, not grepping
+// source.
 
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Shared mock for messages.create — declared at module scope so tests can
-// call mockRejectedValueOnce on it without re-importing the SDK.
-const mockMessagesCreate = vi.fn();
+// Shared mock for streamText — declared at module scope so each test can
+// install its own textStream behavior without re-importing the SDK.
+const mockStreamText = vi.fn();
 
-// --- Mock @anthropic-ai/sdk before importing the route ---
-vi.mock('@anthropic-ai/sdk', () => {
-  class MockAnthropic {
-    messages = { create: mockMessagesCreate };
-  }
-  return { default: MockAnthropic };
-});
+// --- Mock the `ai` package (Vercel AI SDK) before importing the route ---
+vi.mock('ai', () => ({
+  streamText: mockStreamText,
+}));
 
 // --- Mock @/lib/rate-limit so we don't need Redis ---
 vi.mock('@/lib/rate-limit', () => ({
@@ -52,6 +52,76 @@ vi.mock('@/lib/log', () => ({
   },
 }));
 
+// streamText result whose textStream throws on the first iterator step —
+// simulates a stream-initiation failure (timeout / network error). The AI SDK
+// suppresses stream errors when `onError` is set (the route sets it), so
+// `usage` / `providerMetadata` still RESOLVE — to zeroed values on a failed
+// stream — rather than reject. The route's settlement path reads them after
+// the stream-error catch.
+function makeFailingResult(message: string) {
+  const err = new Error(message);
+  return {
+    textStream: {
+      [Symbol.asyncIterator]() {
+        return {
+          next() {
+            return Promise.reject(err);
+          },
+        };
+      },
+    },
+    usage: Promise.resolve({ inputTokens: 0, outputTokens: 0 }),
+    providerMetadata: Promise.resolve({
+      anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
+    }),
+  };
+}
+
+// streamText result with a textStream that yields one chunk, then stalls
+// forever — simulates a connection that goes silent mid-stream. `usage` and
+// `providerMetadata` resolve to zeros so the post-stall settlement path
+// completes without hanging on the watchdog-tripped error path.
+function makeStalledResult() {
+  return {
+    textStream: {
+      [Symbol.asyncIterator]() {
+        let step = 0;
+        return {
+          next() {
+            step += 1;
+            if (step === 1) {
+              return Promise.resolve({ done: false, value: 'partial answer' });
+            }
+            // Step 2+: never resolve — the connection has stalled.
+            return new Promise<never>(() => {
+              /* intentionally never settles */
+            });
+          },
+        };
+      },
+    },
+    usage: Promise.resolve({ inputTokens: 0, outputTokens: 0 }),
+    providerMetadata: Promise.resolve({
+      anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
+    }),
+  };
+}
+
+// A minimal successful streamText result.
+function makeOkResult(text = 'hello') {
+  return {
+    textStream: {
+      async *[Symbol.asyncIterator]() {
+        yield text;
+      },
+    },
+    usage: Promise.resolve({ inputTokens: 10, outputTokens: 5 }),
+    providerMetadata: Promise.resolve({
+      anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
+    }),
+  };
+}
+
 // Helper to read a streamed Response to a string.
 async function readBody(res: Response): Promise<string> {
   const reader = res.body?.getReader();
@@ -75,16 +145,17 @@ function makeRequest(question: string): NextRequest {
   });
 }
 
-describe('/api/ask behavioral — pre-stream timeout handling', () => {
+describe('/api/ask behavioral — stream-initiation failure handling', () => {
   beforeEach(() => {
-    // Ensure kill switch is off for every test.
     process.env.ASK_ENABLED = 'true';
     vi.resetModules();
+    mockStreamText.mockReset();
   });
 
-  it('returns HTTP 200 with STREAM_ERR_SENTINEL body when messages.create rejects', async () => {
-    // Arrange: make the SDK reject with a simulated timeout.
-    mockMessagesCreate.mockRejectedValueOnce(new Error('Request timed out after 30000ms'));
+  it('returns HTTP 200 with STREAM_ERR_SENTINEL body when the stream fails to start', async () => {
+    // Arrange: the textStream rejects on its first step — a stream-init
+    // failure (timeout / network error) surfaces through the iterator.
+    mockStreamText.mockReturnValueOnce(makeFailingResult('Request timed out after 30000ms'));
 
     // Re-import the route AFTER mocks are in place.
     const { POST } = await import('@/app/api/ask/route');
@@ -106,6 +177,7 @@ describe('/api/ask behavioral — mid-stream timeout watchdog (CG5)', () => {
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
     vi.resetModules();
+    mockStreamText.mockReset();
   });
 
   afterEach(() => {
@@ -114,38 +186,9 @@ describe('/api/ask behavioral — mid-stream timeout watchdog (CG5)', () => {
 
   it('emits STREAM_ERR_SENTINEL and closes when the stream stalls mid-flight', async () => {
     // A stream that yields one chunk, then stalls forever — no further
-    // chunk and no `done`. Without the watchdog the consumer's `for await`
-    // would hang the ReadableStream open indefinitely.
-    const stalledStream: AsyncIterable<unknown> = {
-      [Symbol.asyncIterator]() {
-        let step = 0;
-        return {
-          next() {
-            step += 1;
-            if (step === 1) {
-              return Promise.resolve({
-                done: false,
-                value: { type: 'message_start', message: { usage: { input_tokens: 10 } } },
-              });
-            }
-            if (step === 2) {
-              return Promise.resolve({
-                done: false,
-                value: {
-                  type: 'content_block_delta',
-                  delta: { type: 'text_delta', text: 'partial answer' },
-                },
-              });
-            }
-            // Step 3+: never resolve — the connection has stalled.
-            return new Promise<never>(() => {
-              /* intentionally never settles */
-            });
-          },
-        };
-      },
-    };
-    mockMessagesCreate.mockResolvedValueOnce(stalledStream);
+    // chunk and no `done`. Without the watchdog the consumer's iterator
+    // loop would hang the ReadableStream open indefinitely.
+    mockStreamText.mockReturnValueOnce(makeStalledResult());
 
     vi.useFakeTimers();
     const { POST } = await import('@/app/api/ask/route');
@@ -189,27 +232,13 @@ describe('/api/ask behavioral — X-Request-Id response header', () => {
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
     vi.resetModules();
+    mockStreamText.mockReset();
   });
 
   it('returns X-Request-Id on the streaming success path', async () => {
-    // Mock the SDK to return a minimal valid async iterable so the route
-    // reaches the success ReadableStream branch (where the headers live).
-    mockMessagesCreate.mockResolvedValueOnce({
-      async *[Symbol.asyncIterator]() {
-        yield {
-          type: 'message_start',
-          message: { usage: { input_tokens: 10 } },
-        };
-        yield {
-          type: 'content_block_delta',
-          delta: { type: 'text_delta', text: 'hello' },
-        };
-        yield {
-          type: 'message_delta',
-          usage: { output_tokens: 5 },
-        };
-      },
-    });
+    // Mock streamText to return a minimal valid result so the route reaches
+    // the success ReadableStream branch (where the headers live).
+    mockStreamText.mockReturnValueOnce(makeOkResult());
 
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest('Who is Erik?'));
@@ -219,16 +248,14 @@ describe('/api/ask behavioral — X-Request-Id response header', () => {
     expect(requestId).not.toBeNull();
     expect(requestId).toMatch(UUID_V4);
 
-    // Drain the body so the persistAskInteraction promise in `finally` can
-    // settle. Skipping this leaks a microtask but doesn't fail the assertion.
+    // Drain the body so the persistAskInteraction promise can settle.
     await readBody(res);
   });
 
-  it('returns X-Request-Id on the pre-stream error path', async () => {
-    // Same surface as the timeout test above, but the assertion is on the
-    // header — this is the branch that returns from a `catch` and not the
-    // success branch.
-    mockMessagesCreate.mockRejectedValueOnce(new Error('upstream 503'));
+  it('returns X-Request-Id even when the stream fails to start', async () => {
+    // The route mints the request id and sets the header before the stream
+    // is consumed, so the id is present even on the error path.
+    mockStreamText.mockReturnValueOnce(makeFailingResult('upstream 503'));
 
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest('Who is Erik?'));
@@ -237,5 +264,7 @@ describe('/api/ask behavioral — X-Request-Id response header', () => {
     const requestId = res.headers.get('x-request-id');
     expect(requestId).not.toBeNull();
     expect(requestId).toMatch(UUID_V4);
+
+    await readBody(res);
   });
 });

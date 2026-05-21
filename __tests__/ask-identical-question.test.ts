@@ -10,16 +10,31 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockMessagesCreate = vi.fn();
+// The route reaches Anthropic through the Vercel AI Gateway via the `ai`
+// package's `streamText`. `mockStreamText` is the upstream seam.
+const mockStreamText = vi.fn();
 const checkIdenticalQuestionMock = vi.fn();
 const reserveBudgetMock = vi.fn();
 
-vi.mock('@anthropic-ai/sdk', () => {
-  class MockAnthropic {
-    messages = { create: mockMessagesCreate };
-  }
-  return { default: MockAnthropic };
-});
+vi.mock('ai', () => ({
+  streamText: mockStreamText,
+}));
+
+// AI SDK streamText result shape: textStream is AsyncIterable; usage and
+// providerMetadata are end-of-stream promises.
+function makeStreamTextResult(text = 'ok') {
+  return {
+    textStream: {
+      async *[Symbol.asyncIterator]() {
+        yield text;
+      },
+    },
+    usage: Promise.resolve({ inputTokens: 10, outputTokens: 1 }),
+    providerMetadata: Promise.resolve({
+      anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
+    }),
+  };
+}
 
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
@@ -53,7 +68,7 @@ describe('/api/ask identical-question gate (audit Theme 1.2)', () => {
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
     vi.resetModules();
-    mockMessagesCreate.mockReset();
+    mockStreamText.mockReset();
     checkIdenticalQuestionMock.mockReset();
     reserveBudgetMock.mockReset();
   });
@@ -71,19 +86,13 @@ describe('/api/ask identical-question gate (audit Theme 1.2)', () => {
     // Critically: budget reservation must NOT have run, and Anthropic must
     // NOT have been called.
     expect(reserveBudgetMock).not.toHaveBeenCalled();
-    expect(mockMessagesCreate).not.toHaveBeenCalled();
+    expect(mockStreamText).not.toHaveBeenCalled();
   });
 
   it('passes the request through when gate allows', async () => {
     checkIdenticalQuestionMock.mockResolvedValue({ allowed: true });
     reserveBudgetMock.mockResolvedValue({ allowed: true, reserved: 1512, pct: 0 });
-    mockMessagesCreate.mockResolvedValue({
-      async *[Symbol.asyncIterator]() {
-        yield { type: 'message_start', message: { usage: { input_tokens: 10 } } };
-        yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'ok' } };
-        yield { type: 'message_delta', usage: { output_tokens: 1 } };
-      },
-    });
+    mockStreamText.mockReturnValue(makeStreamTextResult());
 
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest('A fresh question'));
@@ -91,7 +100,7 @@ describe('/api/ask identical-question gate (audit Theme 1.2)', () => {
     expect(res.status).toBe(200);
     expect(checkIdenticalQuestionMock).toHaveBeenCalledWith('hashed-ip-test', 'A fresh question');
     expect(reserveBudgetMock).toHaveBeenCalledOnce();
-    expect(mockMessagesCreate).toHaveBeenCalledOnce();
+    expect(mockStreamText).toHaveBeenCalledOnce();
 
     const reader = res.body?.getReader();
     if (reader) {

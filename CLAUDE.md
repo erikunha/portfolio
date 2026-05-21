@@ -73,7 +73,7 @@ Invoke the named skill inline (not as a subagent) before the described action.
 - **CSS:** hand-rolled global CSS in 10 files under `app/css/`, BEM-ish naming, tokens centralized in `_tokens.css`, no framework. PostCSS pipeline removed — Next 16 + Turbopack handles nesting + autoprefix natively via Lightning CSS. _Tailwind v4 was removed 2026-05-18; see DECISIONS.md. Do not re-add._
 - Vercel Edge end-to-end deployment
 - Upstash Redis for rate-limit + KV log
-- Anthropic SDK with `claude-haiku-4-5-20251001` for `/api/ask`
+- Vercel AI Gateway via the AI SDK v6 (`ai` package, `streamText`) with the model string `anthropic/claude-haiku-4-5` for `/api/ask`; ephemeral prompt cache preserved via `providerOptions.anthropic.cacheControl`. Needs `AI_GATEWAY_API_KEY` (OIDC token on Vercel). Migrated 2026-05-21 — see DECISIONS.md.
 - Resend for contact form delivery
 - Playwright E2E: observability smoke (`tests/e2e/observability-smoke.spec.ts`), a11y scan (`tests/a11y/axe.spec.ts`), contact + ask user-journey tests, visual regression snapshots; 4-project matrix (chromium/webkit x desktop/mobile)
 - Vitest unit tests
