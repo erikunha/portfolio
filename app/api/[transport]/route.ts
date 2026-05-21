@@ -38,12 +38,19 @@ const handler = createMcpHandler(
       name: 'erikunha.dev',
       version: '1.0.0',
     },
-    capabilities: {
-      tools: {},
-    },
+    // No explicit `capabilities`: the MCP SDK advertises the `tools`
+    // capability automatically on the first `registerTool` call. An empty
+    // `capabilities: { tools: {} }` here is redundant.
   },
   {
-    // Must match this route's location so the handler builds correct URLs.
+    // `basePath` must equal the static path prefix that the `[transport]`
+    // dynamic segment sits under. This route file is `app/api/[transport]/
+    // route.ts`, so the prefix is `/api`. `mcp-handler`'s
+    // `deriveEndpointsFromBasePath('/api')` produces the streamable-HTTP
+    // endpoint `'/api/mcp'`, which it then exact-matches against
+    // `url.pathname`; for `POST /api/mcp` they are equal, so the request is
+    // served (verified live — see `__tests__/agent-surfaces.test.ts`, which
+    // pins the derived endpoint to `/api/mcp` against this `basePath`).
     basePath: '/api',
     maxDuration: 60,
   },

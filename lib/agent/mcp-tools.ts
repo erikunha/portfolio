@@ -38,6 +38,16 @@ function textResult(text: string) {
  * `/api/ask` is `force-dynamic` and reads the request body + headers only; a
  * synthetic same-origin POST is a faithful caller. This is the documented
  * "reuse the real ask path" seam — no second Claude integration exists.
+ *
+ * KNOWN, ACCEPTED LIMITATION — shared rate-limit bucket. This synthetic Request
+ * carries no `x-forwarded-for` / `x-real-ip` header, so `getClientIp`
+ * (lib/rate-limit.ts) returns the literal string `'unknown'` for every MCP
+ * `ask_erik` call. Consequently ALL `ask_erik` calls worldwide key to the same
+ * IP and share ONE 8/hour `rl:ask` rate-limit bucket and one identical-question
+ * dedup bucket. This is intentional and not mitigated: per-caller limiting for
+ * MCP would be disproportionate for a single-author portfolio, and the monthly
+ * Anthropic token budget cap (lib/rate-limit.ts `reserveBudget`) is the real
+ * cost backstop. See DECISIONS.md (2026-05-21).
  */
 async function runAsk(question: string): Promise<string> {
   const req = new Request('https://erikunha.dev/api/ask', {
