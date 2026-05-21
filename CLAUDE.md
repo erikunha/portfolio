@@ -4,7 +4,7 @@
 
 ## Project
 
-**erikunha.com.br** — personal portfolio. Hiring artifact for Staff/Principal Frontend + applied-AI roles. Matrix/brutalist terminal aesthetic. Single-page composition with ~18 sections.
+**erikunha.dev** — personal portfolio. Hiring artifact for Staff/Principal Frontend + applied-AI roles. Matrix/brutalist terminal aesthetic. Single-page composition with ~18 sections.
 
 ## Commands
 
@@ -98,20 +98,9 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 
 CI enforces all of the above. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
 
-## Reference standards (post-audit 2026-05-19)
+## Engineering standards
 
-Established by the Principal/Staff audit (`docs/audit/2026-05-19-principal-audit.md`). Each is binding on every PR.
-
-1. **Doc-vs-code is a CI gate.** Every claim in `ARCHITECTURE.md` that names a file, function, or numeric budget MUST be verifiable by `scripts/audit/`. ADR entries in `DECISIONS.md` MUST reference the SHA they ship in.
-2. **`'use client'` is named and enforced.** Every file with `'use client'` MUST end in `.client.tsx`. CI gate via Biome custom rule or `scripts/check-client-naming.mjs`. No `.client.tsx` file may export an `async function`.
-3. **One API envelope.** Every `/api/*` returns `{ ok: true, requestId, data? } | { ok: false, requestId, error: { code, message, issues? } }` with `X-Request-Id` header. Order is `rate-limit → parse → validate → handle`. Centralized via `lib/server/route.ts`.
-4. **No dead-code security theater.** Every CSP directive MUST have a consumer or be deleted. Every cache directive MUST verifiably activate. Every kill switch MUST have a Vitest *behavioral* test (not source-grep).
-5. **Tests assert behavior, not source.** No `__tests__/*.ts` may use `indexOf` on file source to verify ordering. `e2e-full` is REQUIRED, not promote-after-stable.
-6. **Budgets bind in the smallest unit.** Bundle gate measures *application-only* JS (excluding Next framework bootstrap). Any route calling `headers()` / `cookies()` / `force-dynamic` requires an ADR entry justifying the cost.
-7. **AI features are measured.** `/api/ask` SYSTEM prompt MUST be ≥ 1024 tokens for Haiku ephemeral cache to fire. Cache hit rate (`cache_read_input_tokens / input_tokens > 0.7`) is tracked. `pnpm ask:eval` reads the 90d Q+A log against a rubric; deltas committed to `DECISIONS.md` on SYSTEM changes.
-8. **A11y is a unit test.** Every interactive client component has a Vitest test asserting tab order, focus visibility, keyboard activation, and SR announcement. Streaming UI emits discrete DOM nodes per chunk (NOT `textContent` mutation on a shared node).
-9. **DX is measured in seconds per commit.** Pre-commit runs only `pnpm check` (sub-second). `pre-push` runs `typecheck + validate-content + test`. `pnpm verify` is the named pre-PR command.
-10. **Reproducibility is the default.** Every dep pinned to major-locked range (`^16.2.6`, not `latest`). `strip-next-polyfills.mjs` verifies target checksum before overwriting; fail loud on mismatch.
+The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, each naming its enforcement mechanism (a CI gate, a PR-review item, or culture). It supersedes the prior inline 10-standard list established by the 2026-05-19 Principal/Staff audit. Every PR is held to it. When a request seems to conflict with a chapter, surface the conflict before complying.
 
 ## Package + manager policy
 
@@ -127,7 +116,7 @@ Established by the Principal/Staff audit (`docs/audit/2026-05-19-principal-audit
 - **Default: React Server Components, SSG at build time.** Zero JS shipped for static sections.
 - **Client islands by exception:** Matrix dialog loop, INTERACTIVE_SHELL, contact form, IntersectionObserver typewriter, MOTION indicator.
 - All client files named `*.client.tsx`. RSC drift must be visible in PR review.
-- **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** Per-state re-renders tank INP. (PR 7 of the audit roadmap adds the missing Vitest enforcement test — see `docs/audit/2026-05-19-principal-audit.md` Theme 1.8.)
+- **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** Per-state re-renders tank INP. The interactive shell's streaming answer, by contrast, renders *through* React (rAF-coalesced state) — see `STANDARDS.md` Chapter 1; enforced by `__tests__/InteractiveShell.streaming.test.ts`.
 
 ## Aesthetic constraints
 
@@ -174,6 +163,7 @@ Before any agent or human calls `gh pr merge` on this repo:
 4. **Self-resolve is detectable.** `scripts/check-pr-comments.ts` warns when the PR author is also the thread resolver. Document the override on the PR if intentional.
 5. **Mechanical command.** `pnpm ready-to-merge <pr>` runs `pnpm ci:local` (lint + typecheck + content validate + client-naming + tests), the branch-protection check, then queries unresolved threads. Must pass before `gh pr merge`.
 6. **The branch protection rule must stay enabled.** `pnpm ready-to-merge <pr>` runs `scripts/check-branch-protection.ts` against `main` and fails if `required_conversation_resolution` is off. This is a local gate, not a CI step: the workflow `GITHUB_TOKEN` cannot read the branch-protection endpoint (it requires repo-admin token power). See `DECISIONS.md`.
+7. **Every push to a PR triggers a Copilot review.** Copilot reviews a PR automatically on *open* but NOT on later pushes. So immediately after **any** `git push` to a PR branch, post a `@copilot /review` comment — `gh pr comment <pr> --body "@copilot /review"` — so the pushed state is always reviewed. The REST `requested_reviewers` endpoint and the GraphQL `requestReviews` mutation both reject the Copilot bot (`not a collaborator` / `not a User node`); the comment is the only programmatic trigger. Copilot returns the review as a PR **comment reply**, not a formal `reviews[]` object — poll `gh api repos/<o>/<r>/issues/<pr>/comments`, not `.../pulls/<pr>/reviews`, to detect it.
 
 Rationale: human-in-the-loop quality gate for AI-assisted development on a Staff/Principal-bar artifact. See `DECISIONS.md` for residual-risk note.
 
@@ -184,10 +174,11 @@ Before proposing any of these, check `DECISIONS.md` to see the reasoning that ex
 
 ## Reference docs in this repo
 
+- `STANDARDS.md` — the canonical engineering bar; 11 domain chapters, each naming its enforcement mechanism
 - `ARCHITECTURE.md` — system design, deep dive, trade-offs
 - `DECISIONS.md` — running ADR log
-- `LAUNCH.md` — 14-day implementation playbook
-- `docs/audit/2026-05-19-principal-audit.md` — Principal/Staff pass audit; 12 themes, 5 debates, 10 standards, 8-PR roadmap
+- `LAUNCH.md` — historical launch playbook (superseded; `STANDARDS.md` + `ARCHITECTURE.md` are authoritative)
+- `docs/audit/2026-05-19-principal-audit.md` — Principal/Staff pass audit (historical; superseded by `STANDARDS.md`)
 - `scaffold/` — drop-in opinionated configs (Biome, tsconfig, globals.css, Zod schemas, CI workflow)
 - `scaffold/README.md` — explains every file in scaffold/
 - `prototype/Portfolio.html` — the Claude Design prototype (visual reference only, never served)

@@ -40,4 +40,13 @@ describe('/api/erik.json route', () => {
     const res = await GET();
     expect(res.headers.get('x-content-type-options')).toBe('nosniff');
   });
+
+  it('does not emit X-Request-Id — a static route can only mint a constant', async () => {
+    // erik.json is `force-static`: the response is built once and cached, so a
+    // request id would be a build-time constant that cannot correlate to a
+    // request. Emitting one would be observability theater (STANDARDS.md Ch. 9).
+    // This guards against re-introducing it.
+    const res = await GET();
+    expect(res.headers.get('x-request-id')).toBeNull();
+  });
 });

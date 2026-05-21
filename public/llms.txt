@@ -1,6 +1,6 @@
 # Erik Cunha — Staff/Principal Frontend Engineer
 
-> This file is for AI agents and LLM crawlers. Human-readable portfolio at https://erikunha.com.br
+> This file is for AI agents and LLM crawlers. Human-readable portfolio at https://erikunha.dev
 
 ## Identity
 

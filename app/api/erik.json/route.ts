@@ -142,6 +142,15 @@ const PROFILE = {
 };
 
 export async function GET(): Promise<Response> {
+  // Deliberate exemption from the `lib/server/route.ts` envelope (STANDARDS.md
+  // Ch. 2): erik.json is a machine-readable resume *document*, not an
+  // *operation* — agent crawlers fetch it expecting a plain profile, and
+  // wrapping it in `{ ok, requestId, data }` would break those consumers.
+  //
+  // No `X-Request-Id`: this route is `force-static`, so the response is built
+  // once and served from cache. An id minted here would be a build-time
+  // constant that could never correlate to an individual request — emitting
+  // one would be observability theater (STANDARDS.md Ch. 9).
   return Response.json(PROFILE, {
     headers: {
       'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
