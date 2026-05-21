@@ -1,11 +1,13 @@
 // __tests__/ask-timeout.test.ts
-// Behavioral test (CG3): verifies the explicit upstream timeouts on the
-// Anthropic SDK (/api/ask) and Resend send (/api/contact) by EXERCISING them,
-// not by grepping route source.
+// Behavioral test (CG3): verifies the explicit upstream timeouts on the model
+// call (/api/ask, now routed through the Vercel AI Gateway via `streamText`)
+// and the Resend send (/api/contact) by EXERCISING them, not by grepping
+// route source.
 //
-// /api/ask  — mocks the Anthropic SDK constructor and captures the options
-//             object the route actually passes. Asserts timeout: 30_000 and
-//             that maxRetries is not pinned to 0 (SDK default retries kept).
+// /api/ask  — mocks the `ai` package's `streamText` and captures the options
+//             object the route actually passes. Asserts the call carries an
+//             `abortSignal` (the stream-initiation deadline) that is a real
+//             AbortSignal and is not already aborted at call time.
 // /api/contact — makes the Resend send hang forever; with fake timers the
 //             route must still resolve (the Promise.race against the 10s
 //             timer fires) and the message stays durably persisted in KV.
@@ -13,19 +15,27 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// --- Anthropic SDK mock: capture constructor options -------------------------
-const anthropicCtorCalls: unknown[] = [];
-const mockMessagesCreate = vi.fn();
+// --- AI SDK mock: capture streamText options --------------------------------
+const mockStreamText = vi.fn();
 
-vi.mock('@anthropic-ai/sdk', () => {
-  class MockAnthropic {
-    messages = { create: mockMessagesCreate };
-    constructor(opts?: unknown) {
-      anthropicCtorCalls.push(opts);
-    }
-  }
-  return { default: MockAnthropic };
-});
+vi.mock('ai', () => ({
+  streamText: mockStreamText,
+}));
+
+// A minimal successful streamText result.
+function makeOkResult(text = 'ok') {
+  return {
+    textStream: {
+      async *[Symbol.asyncIterator]() {
+        yield text;
+      },
+    },
+    usage: Promise.resolve({ inputTokens: 10, outputTokens: 1 }),
+    providerMetadata: Promise.resolve({
+      anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
+    }),
+  };
+}
 
 // --- rate-limit / observability mocks shared by both routes -----------------
 vi.mock('@/lib/rate-limit', () => ({
@@ -67,27 +77,65 @@ function makeRequest(url: string, body: unknown): NextRequest {
   });
 }
 
-describe('/api/ask — Anthropic SDK timeout', () => {
+describe('/api/ask — AI Gateway stream-initiation timeout', () => {
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
-    anthropicCtorCalls.length = 0;
     vi.resetModules();
+    mockStreamText.mockReset();
   });
 
-  it('constructs the Anthropic client with timeout: 30_000', async () => {
-    // Importing the route runs its module-scope `new Anthropic({ ... })`.
-    await import('@/app/api/ask/route');
-    expect(anthropicCtorCalls.length).toBeGreaterThan(0);
-    const opts = anthropicCtorCalls[0] as { timeout?: number } | undefined;
-    expect(opts?.timeout).toBe(30_000);
+  function makeRequestTo(question: string): NextRequest {
+    return new NextRequest('http://localhost/api/ask', {
+      method: 'POST',
+      body: JSON.stringify({ question }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  it('passes an AbortSignal stream-initiation deadline to streamText', async () => {
+    // The direct SDK's `new Anthropic({ timeout: 30_000 })` is replaced by an
+    // `abortSignal` on the streamText call — `AbortSignal.timeout(...)` carries
+    // the stream-initiation (time-to-first-byte) deadline. Assert the route
+    // actually wires one through, and that it is not already aborted at call
+    // time (a pre-aborted signal would kill every request instantly).
+    mockStreamText.mockReturnValueOnce(makeOkResult());
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequestTo('Who is Erik?'));
+    expect(res.status).toBe(200);
+
+    expect(mockStreamText).toHaveBeenCalledOnce();
+    const opts = mockStreamText.mock.calls[0]?.[0] as { abortSignal?: AbortSignal } | undefined;
+    expect(opts?.abortSignal).toBeInstanceOf(AbortSignal);
+    expect(opts?.abortSignal?.aborted).toBe(false);
+
+    // Drain so the persistAskInteraction promise can settle.
+    const reader = res.body?.getReader();
+    if (reader) {
+      while (true) {
+        const { done } = await reader.read();
+        if (done) break;
+      }
+    }
   });
 
-  it('does NOT pin maxRetries to 0 — keeps the SDK default retry behavior', async () => {
-    await import('@/app/api/ask/route');
-    const opts = anthropicCtorCalls[0] as { maxRetries?: number } | undefined;
-    // Either unset (SDK default of 2) or explicitly non-zero. A 0 here would
-    // disable retries on idempotent stream initiation.
-    expect(opts?.maxRetries).not.toBe(0);
+  it('routes through the AI Gateway with the plain provider/model string', async () => {
+    // The Gateway form is the plain `provider/model-name` string — no
+    // `@ai-sdk/anthropic` provider instance wired directly.
+    mockStreamText.mockReturnValueOnce(makeOkResult());
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequestTo('Who is Erik?'));
+    expect(res.status).toBe(200);
+
+    const opts = mockStreamText.mock.calls[0]?.[0] as { model?: unknown } | undefined;
+    expect(opts?.model).toBe('anthropic/claude-haiku-4-5');
+
+    const reader = res.body?.getReader();
+    if (reader) {
+      while (true) {
+        const { done } = await reader.read();
+        if (done) break;
+      }
+    }
   });
 });
 

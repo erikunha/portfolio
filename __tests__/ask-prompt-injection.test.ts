@@ -14,14 +14,30 @@ import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { INJECTION_RE } from '@/lib/ask/injection';
 
-const mockMessagesCreate = vi.fn();
+// The route reaches Anthropic through the Vercel AI Gateway via the `ai`
+// package's `streamText`. `streamText` is mocked here; `mockStreamText` is
+// the seam the route's upstream call goes through.
+const mockStreamText = vi.fn();
 
-vi.mock('@anthropic-ai/sdk', () => {
-  class MockAnthropic {
-    messages = { create: mockMessagesCreate };
-  }
-  return { default: MockAnthropic };
-});
+vi.mock('ai', () => ({
+  streamText: mockStreamText,
+}));
+
+// AI SDK streamText result shape: textStream is AsyncIterable; usage and
+// providerMetadata are end-of-stream promises.
+function makeStreamTextResult(text: string) {
+  return {
+    textStream: {
+      async *[Symbol.asyncIterator]() {
+        yield text;
+      },
+    },
+    usage: Promise.resolve({ inputTokens: 10, outputTokens: 1 }),
+    providerMetadata: Promise.resolve({
+      anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
+    }),
+  };
+}
 
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
@@ -77,11 +93,19 @@ const LEGITIMATE_SAMPLES = [
   'How many years of React?',
 ];
 
+// The wrapped user question is the second message in the streamText
+// `messages` array — `messages[0]` is the cacheable system prompt,
+// `messages[1]` is the user turn.
+function userContentOf(callArg: unknown): string {
+  const messages = (callArg as { messages?: { role: string; content: string }[] })?.messages ?? [];
+  return messages.find((m) => m.role === 'user')?.content ?? '';
+}
+
 describe('/api/ask prompt-injection sanitization (audit Theme 1.1)', () => {
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
     vi.resetModules();
-    mockMessagesCreate.mockReset();
+    mockStreamText.mockReset();
   });
 
   for (const sample of INJECTION_SAMPLES) {
@@ -91,23 +115,17 @@ describe('/api/ask prompt-injection sanitization (audit Theme 1.1)', () => {
       expect(res.status).toBe(400);
       const body = (await res.json()) as { error: string };
       expect(body.error.toLowerCase()).toContain('reject');
-      expect(mockMessagesCreate).not.toHaveBeenCalled();
+      expect(mockStreamText).not.toHaveBeenCalled();
     });
   }
 
   for (const sample of LEGITIMATE_SAMPLES) {
     it(`accepts and forwards to Anthropic for: ${sample}`, async () => {
-      mockMessagesCreate.mockResolvedValueOnce({
-        async *[Symbol.asyncIterator]() {
-          yield { type: 'message_start', message: { usage: { input_tokens: 10 } } };
-          yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'ok' } };
-          yield { type: 'message_delta', usage: { output_tokens: 1 } };
-        },
-      });
+      mockStreamText.mockReturnValueOnce(makeStreamTextResult('ok'));
       const { POST } = await import('@/app/api/ask/route');
       const res = await POST(makeRequest(sample));
       expect(res.status).toBe(200);
-      expect(mockMessagesCreate).toHaveBeenCalledOnce();
+      expect(mockStreamText).toHaveBeenCalledOnce();
 
       // Drain the body so the persistAskInteraction promise in `finally` can settle.
       const reader = res.body?.getReader();
@@ -126,19 +144,10 @@ describe('/api/ask prompt-injection sanitization (audit Theme 1.1)', () => {
     // input. The fix mints a 16-byte random hex sentinel per request and
     // uses `<q SENTINEL>` / `</q SENTINEL>` as the delimiter — unguessable
     // before the request lands, so the close tag can't be embedded.
-    mockMessagesCreate.mockResolvedValueOnce({
-      async *[Symbol.asyncIterator]() {
-        yield { type: 'message_start', message: { usage: { input_tokens: 10 } } };
-        yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'ok' } };
-        yield { type: 'message_delta', usage: { output_tokens: 1 } };
-      },
-    });
+    mockStreamText.mockReturnValueOnce(makeStreamTextResult('ok'));
     const { POST } = await import('@/app/api/ask/route');
     await POST(makeRequest('What is your stack?'));
-    const call = mockMessagesCreate.mock.calls[0]?.[0] as {
-      messages: { role: string; content: string }[];
-    };
-    const content = call.messages[0]?.content ?? '';
+    const content = userContentOf(mockStreamText.mock.calls[0]?.[0]);
     // Opening + closing tags with a 32-char hex sentinel
     const openMatch = content.match(/<q ([0-9a-f]{32})>/);
     const closeMatch = content.match(/<\/q ([0-9a-f]{32})>/);
@@ -151,27 +160,39 @@ describe('/api/ask prompt-injection sanitization (audit Theme 1.1)', () => {
   });
 
   it('uses a different sentinel per request (entropy holds)', async () => {
-    mockMessagesCreate.mockResolvedValue({
-      async *[Symbol.asyncIterator]() {
-        yield { type: 'message_start', message: { usage: { input_tokens: 10 } } };
-        yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'ok' } };
-        yield { type: 'message_delta', usage: { output_tokens: 1 } };
-      },
-    });
+    mockStreamText.mockReturnValue(makeStreamTextResult('ok'));
     const { POST } = await import('@/app/api/ask/route');
     await POST(makeRequest('first request'));
     await POST(makeRequest('second request'));
-    const firstContent =
-      (mockMessagesCreate.mock.calls[0]?.[0] as { messages: { content: string }[] })?.messages[0]
-        ?.content ?? '';
-    const secondContent =
-      (mockMessagesCreate.mock.calls[1]?.[0] as { messages: { content: string }[] })?.messages[0]
-        ?.content ?? '';
+    const firstContent = userContentOf(mockStreamText.mock.calls[0]?.[0]);
+    const secondContent = userContentOf(mockStreamText.mock.calls[1]?.[0]);
     const firstSentinel = firstContent.match(/<q ([0-9a-f]{32})>/)?.[1];
     const secondSentinel = secondContent.match(/<q ([0-9a-f]{32})>/)?.[1];
     expect(firstSentinel).toBeDefined();
     expect(secondSentinel).toBeDefined();
     expect(firstSentinel).not.toBe(secondSentinel);
+  });
+
+  it('passes the system prompt as a cache-controlled system message', async () => {
+    // The migration must preserve the ephemeral prompt cache: the system
+    // prompt is sent as a `system`-role message carrying
+    // providerOptions.anthropic.cacheControl. STANDARDS.md Ch.7.
+    mockStreamText.mockReturnValueOnce(makeStreamTextResult('ok'));
+    const { POST } = await import('@/app/api/ask/route');
+    await POST(makeRequest('What is your stack?'));
+    const callArg = mockStreamText.mock.calls[0]?.[0] as {
+      model: string;
+      messages: {
+        role: string;
+        content: string;
+        providerOptions?: { anthropic?: { cacheControl?: { type?: string } } };
+      }[];
+    };
+    // Routed through the AI Gateway with the plain provider/model string.
+    expect(callArg.model).toBe('anthropic/claude-haiku-4-5');
+    const systemMsg = callArg.messages.find((m) => m.role === 'system');
+    expect(systemMsg, 'expected a system-role message').toBeDefined();
+    expect(systemMsg?.providerOptions?.anthropic?.cacheControl?.type).toBe('ephemeral');
   });
 });
 

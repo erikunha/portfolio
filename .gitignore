@@ -24,6 +24,9 @@
 # lighthouse ci artifact reports
 /.lighthouseci/
 
+# ai-eval harness output (scripts/ask-eval.ts)
+/ask-eval-result.json
+
 # local claude settings
 .claude/settings.local.json
 
