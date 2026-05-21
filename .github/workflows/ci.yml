@@ -168,6 +168,38 @@ jobs:
           name: playwright-report-${{ matrix.project }}
           path: test-results/
 
+  ai-eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Non-blocking on purpose. The /api/ask quality eval (scripts/ask-eval.ts)
+    # runs the real route through an LLM judge — non-deterministic by nature.
+    # It needs ~5 baseline runs to establish a stable correctness/jailbreak
+    # floor before it can gate merges without false reds. POST-MERGE ACTION:
+    # after ~5 green baseline runs, drop `continue-on-error` and add `ai-eval`
+    # to the branch-protection required-checks list. Tracked in DECISIONS.md.
+    continue-on-error: true
+    needs: build-and-gate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: AI eval suite
+        run: pnpm ask:eval
+        env:
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY_BUILD }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ask-eval-result
+          path: ask-eval-result.json
+
   e2e-visual:
     runs-on: ubuntu-latest
     timeout-minutes: 20
