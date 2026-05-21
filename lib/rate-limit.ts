@@ -70,10 +70,9 @@ export function getForgetLimit(): Ratelimit {
 // On Vercel, both headers are set authoritatively by Vercel's edge
 // infrastructure BEFORE the request reaches this function. Vercel strips
 // any client-injected values for these headers, so spoofing is not
-// possible in the Vercel deployment context. The first entry in
-// x-forwarded-for is the real client IP (Vercel's edge appends, not
-// prepends, so index 0 is client-provided and safe here because Vercel
-// has already validated the chain).
+// possible in the Vercel deployment context. Index 0 of x-forwarded-for
+// is the real client IP because Vercel rewrites the entire header value,
+// guaranteeing all entries are Vercel-controlled and trustworthy.
 //
 // In local development (no proxy layer): neither header is set by the
 // Node server, so the function returns 'unknown'. Rate-limit and

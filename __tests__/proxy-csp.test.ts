@@ -97,10 +97,19 @@ describe('proxy CSP — nonce-less posture (PR 4)', () => {
     expect(a).toBe(b);
   });
 
-  it('production CSP includes report-uri /api/csp-report for violation observability', async () => {
-    vi.stubEnv('NODE_ENV', 'production');
+  it('CSP includes report-uri /api/csp-report in all environments', async () => {
+    // report-uri is environment-agnostic (present in dev and production).
+    // Test both to verify the directive is not conditionally gated.
     const { proxy } = await import('@/proxy');
-    const csp = proxy(makeRequest()).headers.get('content-security-policy') ?? '';
-    expect(csp).toContain('report-uri /api/csp-report');
+
+    // Production
+    vi.stubEnv('NODE_ENV', 'production');
+    const cspProd = proxy(makeRequest()).headers.get('content-security-policy') ?? '';
+    expect(cspProd).toContain('report-uri /api/csp-report');
+
+    // Development
+    vi.stubEnv('NODE_ENV', 'development');
+    const cspDev = proxy(makeRequest()).headers.get('content-security-policy') ?? '';
+    expect(cspDev).toContain('report-uri /api/csp-report');
   });
 });

@@ -80,8 +80,8 @@ const CSP_DIRECTIVES: readonly string[] = [
   "base-uri 'self'",
   // report-uri gives us CSP violation observability without changing the
   // enforcement posture. Browsers POST a JSON violation report to
-  // /api/csp-report on any policy breach. The route handler is a stub for
-  // now (logs to Vercel runtime logs); real alerting can be wired later.
+  // /api/csp-report on any policy breach. No route handler yet — violations
+  // will 404 silently until a stub is added in a follow-up; see DECISIONS.md.
   // Present in ALL environments so dev violations surface too.
   'report-uri /api/csp-report',
 ];
