@@ -1,7 +1,5 @@
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 
-export const dynamic = 'force-static';
-
 // The profile constant lives in `lib/hiring-profile.ts` — one source of truth
 // shared with the MCP server's `get_profile` tool so the two agent-facing
 // surfaces (this GET document + the MCP tool) can never drift.

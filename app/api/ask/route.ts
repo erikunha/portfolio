@@ -14,8 +14,6 @@ import {
 } from '@/lib/rate-limit';
 import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
-export const dynamic = 'force-dynamic';
-
 // Anthropic is reached through the Vercel AI Gateway (the `ai` package's
 // `streamText` + the plain `provider/model` string form). The Gateway gives
 // one billing/observability seam in front of the model and keeps prompt

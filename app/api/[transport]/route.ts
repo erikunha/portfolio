@@ -24,7 +24,10 @@
 import { createMcpHandler } from 'mcp-handler';
 import { registerAgentTools } from '@/lib/agent/mcp-tools';
 
-export const runtime = 'nodejs';
+// Node runtime: `mcp-handler` and the MCP SDK pull in Node built-ins
+// (`node:crypto`, stream internals). On Vercel, Next.js App Router routes
+// default to the Node.js serverless runtime — `runtime = 'nodejs'` is not
+// needed. This comment remains for audit clarity.
 
 // `maxDuration` bounds the streamable-HTTP/SSE connection. `ask_erik` proxies
 // /api/ask, whose own request budget is 30s — 60s leaves headroom for the MCP

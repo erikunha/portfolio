@@ -11,7 +11,10 @@ function fmtClock(d: Date) {
 }
 
 export function StatusBar() {
-  const [time, setTime] = useState(() => fmtClock(new Date()));
+  // Empty string on first render — dynamicIO prohibits new Date() during
+  // prerender outside a Suspense boundary. suppressHydrationWarning on the
+  // span handles the server/client mismatch. The clock starts in useEffect.
+  const [time, setTime] = useState('');
 
   useEffect(() => {
     let id: ReturnType<typeof setInterval> | null = null;

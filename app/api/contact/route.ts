@@ -16,8 +16,6 @@ import { log } from '@/lib/log';
 import { getContactLimit, getRedis } from '@/lib/rate-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
 
-export const dynamic = 'force-dynamic';
-
 // Honeypot timing jitter range. Real Resend round-trip is typically 150-400ms;
 // a silent-success response with 50-150ms jitter sits inside that envelope so
 // a bot timing the response against legitimate submissions can't tell apart

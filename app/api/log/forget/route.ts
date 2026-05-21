@@ -15,8 +15,6 @@ import { log } from '@/lib/log';
 import { getForgetLimit, getRedis } from '@/lib/rate-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
 
-export const dynamic = 'force-dynamic';
-
 const ForgetPayload = z.object({
   requestId: z.string().uuid(),
 });
