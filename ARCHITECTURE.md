@@ -270,7 +270,7 @@ Content-Type: application/json
   { "error": "rate_limited", "retry_after": 3300 }
 
 → 503 application/json
-  { "error": "budget_exhausted", "fallback": "email erik@erikunha.com.br" }
+  { "error": "budget_exhausted", "fallback": "email erik@erikunha.dev" }
 ```
 
 ### Stack
@@ -435,7 +435,7 @@ Implemented per Spec 2 (`docs/superpowers/specs/2026-05-18-production-observabil
 
 ### Traditional SEO
 - `<title>` per route, `<meta description>` populated from content
-- Person JSON-LD with sameAs links (github, linkedin, erikunha.com.br)
+- Person JSON-LD with sameAs links (github, linkedin, erikunha.dev)
 - og:image (recruiter-safe, dynamic), Twitter card variant
 - /sitemap.xml generated from route list
 - /robots.txt allows everything (no need to hide anything from crawlers)
@@ -534,7 +534,7 @@ Steady-state monthly:
 | Resend | Free (3k/month) | $0 |
 | GitHub | public repo | $0 |
 | PSI API | free | $0 |
-| Domain | erikunha.com.br | ~$1/mo amortized |
+| Domain | erikunha.dev | ~$1/mo amortized |
 | **Total expected** | | **~$2/month** |
 | **Hard cap (Anthropic spend alert)** | | **$50/month** |
 
