@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "2026-05-21",
+  "name": "Erik Cunha — portfolio agent surface",
+  "description": "Machine-readable capability manifest for erikunha.dev, the portfolio of Erik Cunha (Staff/Principal Frontend + applied-AI engineer). Lists the endpoints an AI agent can use to read his hiring profile and ask questions about his experience.",
+  "url": "https://erikunha.dev",
+  "provider": {
+    "name": "Erik Henrique Alves Cunha",
+    "url": "https://erikunha.dev",
+    "contact": "erikhenriquealvescunha@gmail.com"
+  },
+  "endpoints": [
+    {
+      "name": "ask",
+      "description": "Ask a question about Erik's experience, stack, or availability. Answered by Claude Haiku 4.5 grounded only in the site's CV context.",
+      "url": "https://erikunha.dev/api/ask",
+      "method": "POST",
+      "input": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "description": "A natural-language question about Erik.",
+              "maxLength": 500
+            }
+          },
+          "required": ["question"]
+        }
+      },
+      "output": {
+        "contentType": "text/plain",
+        "streaming": true,
+        "description": "A streamed plain-text answer. On a mid-stream upstream failure the body ends with a NUL-byte sentinel (\\u0000ERR:<message>)."
+      },
+      "rateLimit": {
+        "requests": 8,
+        "window": "1h",
+        "scope": "per-ip"
+      }
+    }
+  ],
+  "profiles": [
+    {
+      "name": "erik.json",
+      "description": "Structured HiringProfile document — employers, stack, receipts, work authorization, availability.",
+      "url": "https://erikunha.dev/api/erik.json",
+      "contentType": "application/json"
+    },
+    {
+      "name": "llms.txt",
+      "description": "Plain-text profile summary for LLM crawlers.",
+      "url": "https://erikunha.dev/llms.txt",
+      "contentType": "text/plain"
+    }
+  ],
+  "mcp": {
+    "name": "erikunha.dev MCP server",
+    "description": "Read-only Model Context Protocol server. Exposes get_profile (returns the HiringProfile) and ask_erik (proxies a question through /api/ask).",
+    "url": "https://erikunha.dev/api/mcp",
+    "transport": "http",
+    "tools": ["get_profile", "ask_erik"]
+  }
+}
