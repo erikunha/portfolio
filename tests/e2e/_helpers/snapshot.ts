@@ -23,7 +23,20 @@ import { volatileMasks } from './mask-volatile';
 // independent from playwright.config's testTimeout.
 const SNAPSHOT_TIMEOUT_MS = 30_000;
 
+// content-visibility:auto sections (the .cv-defer modules) skip rendering
+// their off-screen subtree. A full-element screenshot then captures that
+// subtree as solid black, so reveal them before any snapshot. Forcing
+// 'visible' only disables render-skipping; on-screen rendering is identical.
+async function revealDeferredContent(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    for (const el of document.querySelectorAll('.cv-defer')) {
+      (el as HTMLElement).style.setProperty('content-visibility', 'visible');
+    }
+  });
+}
+
 export async function snapshot(page: Page, name: string): Promise<void> {
+  await revealDeferredContent(page);
   await expect(page).toHaveScreenshot(name, {
     mask: volatileMasks(page),
     maxDiffPixelRatio: 0.01,
@@ -33,6 +46,7 @@ export async function snapshot(page: Page, name: string): Promise<void> {
 }
 
 export async function snapshotLocator(page: Page, locator: Locator, name: string): Promise<void> {
+  await revealDeferredContent(page);
   await expect(locator).toHaveScreenshot(name, {
     mask: volatileMasks(page),
     maxDiffPixelRatio: 0.01,

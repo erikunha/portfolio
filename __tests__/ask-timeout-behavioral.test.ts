@@ -11,7 +11,7 @@
 // directly with the fix in app/api/ask/route.ts.
 
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Shared mock for messages.create — declared at module scope so tests can
 // call mockRejectedValueOnce on it without re-importing the SDK.
@@ -99,6 +99,84 @@ describe('/api/ask behavioral — pre-stream timeout handling', () => {
     const { STREAM_ERR_SENTINEL } = await import('@/lib/stream-protocol');
     expect(body.startsWith(STREAM_ERR_SENTINEL)).toBe(true);
     expect(body).toContain('timed out');
+  });
+});
+
+describe('/api/ask behavioral — mid-stream timeout watchdog (CG5)', () => {
+  beforeEach(() => {
+    process.env.ASK_ENABLED = 'true';
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('emits STREAM_ERR_SENTINEL and closes when the stream stalls mid-flight', async () => {
+    // A stream that yields one chunk, then stalls forever — no further
+    // chunk and no `done`. Without the watchdog the consumer's `for await`
+    // would hang the ReadableStream open indefinitely.
+    const stalledStream: AsyncIterable<unknown> = {
+      [Symbol.asyncIterator]() {
+        let step = 0;
+        return {
+          next() {
+            step += 1;
+            if (step === 1) {
+              return Promise.resolve({
+                done: false,
+                value: { type: 'message_start', message: { usage: { input_tokens: 10 } } },
+              });
+            }
+            if (step === 2) {
+              return Promise.resolve({
+                done: false,
+                value: {
+                  type: 'content_block_delta',
+                  delta: { type: 'text_delta', text: 'partial answer' },
+                },
+              });
+            }
+            // Step 3+: never resolve — the connection has stalled.
+            return new Promise<never>(() => {
+              /* intentionally never settles */
+            });
+          },
+        };
+      },
+    };
+    mockMessagesCreate.mockResolvedValueOnce(stalledStream);
+
+    vi.useFakeTimers();
+    const { POST } = await import('@/app/api/ask/route');
+    const { STREAM_ERR_SENTINEL } = await import('@/lib/stream-protocol');
+
+    const res = await POST(makeRequest('Who is Erik?'));
+    expect(res.status).toBe(200);
+
+    // Drain the body while advancing fake timers past the watchdog deadline.
+    const reader = res.body?.getReader();
+    expect(reader).toBeDefined();
+    const dec = new TextDecoder();
+    let out = '';
+    const pump = (async () => {
+      if (!reader) return;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) out += dec.decode(value, { stream: true });
+      }
+    })();
+
+    // Trip the mid-stream watchdog. 15s window + slack.
+    await vi.advanceTimersByTimeAsync(20_000);
+    await pump;
+
+    // The partial text streamed before the stall is preserved, then the
+    // sentinel + timeout message is appended and the stream closes.
+    expect(out).toContain('partial answer');
+    expect(out).toContain(STREAM_ERR_SENTINEL);
+    expect(out).toContain('mid-stream timeout');
   });
 });
 

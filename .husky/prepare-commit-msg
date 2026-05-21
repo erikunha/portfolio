@@ -1,1 +1,6 @@
-exec < /dev/tty && node_modules/.bin/cz --hook || true
+# Only launch the interactive commitizen prompt when a TTY is attached.
+# Non-interactive commits (CI, agents, `git commit -m`) skip it silently,
+# avoiding the `/dev/tty: Device not configured` noise.
+if [ -t 0 ] || [ -e /dev/tty ]; then
+  exec < /dev/tty && node_modules/.bin/cz --hook || true
+fi
