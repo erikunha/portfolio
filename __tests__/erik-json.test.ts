@@ -41,11 +41,12 @@ describe('/api/erik.json route', () => {
     expect(res.headers.get('x-content-type-options')).toBe('nosniff');
   });
 
-  it('emits an X-Request-Id header for log correlation', async () => {
-    // erik.json is a documented exemption from the lib/server/route.ts
-    // envelope (STANDARDS.md Ch. 2) but still carries a request id.
+  it('does not emit X-Request-Id — a static route can only mint a constant', async () => {
+    // erik.json is `force-static`: the response is built once and cached, so a
+    // request id would be a build-time constant that cannot correlate to a
+    // request. Emitting one would be observability theater (STANDARDS.md Ch. 9).
+    // This guards against re-introducing it.
     const res = await GET();
-    const requestId = res.headers.get('x-request-id') ?? '';
-    expect(requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    expect(res.headers.get('x-request-id')).toBeNull();
   });
 });

@@ -68,9 +68,10 @@ documented choice per control: rate-limiting and the Redis singleton fail
 envelope. It is a machine-readable resume *document*, not an *operation* —
 agent crawlers and recruiters fetch it expecting a plain JSON profile, and
 wrapping it in `{ ok, requestId, data }` would break those consumers. It
-therefore stays bare JSON, but still emits an `X-Request-Id` header for log
-correlation; the route file carries a one-line comment recording this
-deliberate exemption. The streaming `/api/ask` route is likewise not refactored
+therefore stays bare JSON. Being `force-static`, it has no per-request
+handling, so it deliberately emits no `X-Request-Id` — a static route can only
+mint a build-time constant, and a constant request id is observability theater
+(see Ch. 9). The route file carries a comment recording this exemption. The streaming `/api/ask` route is likewise not refactored
 onto `defineHandler` — its response shape is intrinsically a token stream, not
 an envelope — but it still mints and exposes a request id.
 
@@ -130,10 +131,13 @@ output — render the component and inspect the DOM, call the handler and inspec
 the response, trigger the side effect and assert it happened. Reading
 application source under `app/`, `components/`, `lib/`, or `scripts/` with
 `readFileSync` to make a structural assertion (`.toContain`, `.toMatch` on file
-text) is banned. The single exception is a genuine config/manifest read — for
-example asserting an installed dependency version from `package.json` — which is
-permitted only when carrying an explicit `// behavioral-test-allow: <reason>`
-tag. Every API route, every kill switch, and every interactive client component
+text) is banned. The one permitted exception is a `readFileSync` carrying an
+explicit `// behavioral-test-allow: <reason>` tag — used where the file itself
+*is* the artifact under test and the unit layer has no behavioral substitute: a
+config/manifest read (e.g. asserting an installed dependency version from
+`package.json`), or a built CSS asset whose effect (`content-visibility`,
+`@keyframes`, `:focus-visible`) jsdom cannot evaluate. The tag forces the reason
+to be stated and reviewed; an untagged source read fails the gate. Every API route, every kill switch, and every interactive client component
 has a behavioral test. The functional cross-browser e2e specs are a *required*
 CI job; no test is deleted without a behavioral replacement.
 
