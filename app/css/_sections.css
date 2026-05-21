@@ -294,8 +294,7 @@
   }
 
   .readme__gutter {
-    color: var(--muted);
-    opacity: 0.55;
+    color: var(--muted-dim);
     text-align: right;
     padding-right: 16px;
     border-right: 1px solid var(--signal-dim-2);

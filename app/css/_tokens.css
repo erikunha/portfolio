@@ -11,6 +11,10 @@
     --signal-faint: rgba(0, 255, 65, 0.12);
     --fg: #c8facc;
     --muted: #4ade80;
+    /* Dimmed secondary text (line gutters, // annotations). A real color, not
+       --muted at low opacity: opacity dimming dropped contrast to 3.97:1 and
+       failed WCAG AA. This sits at ~5.9:1 on --bg. */
+    --muted-dim: #359a5f;
     --highlight-bg: #00ff41;
     --highlight-fg: #000000;
     --border: rgba(0, 255, 65, 0.2);
