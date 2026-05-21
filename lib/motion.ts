@@ -19,6 +19,8 @@ export function readMotion(): boolean {
 }
 
 export function applyMotion(on: boolean): void {
+  // Direct dataset write — called from useLayoutEffect (DesktopTopbar) so it
+  // runs before the first paint. setState would be too late and cause a FOSC.
   document.body.dataset.motion = on ? 'full' : 'reduce';
   try {
     localStorage.setItem('erik.motion', on ? 'on' : 'off');

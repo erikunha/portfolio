@@ -7,4 +7,6 @@ declare global {
   }
 }
 
-export {};
+export function dispatchModuleOpen(id: string): void {
+  window.dispatchEvent(new CustomEvent('module:open', { detail: { id } }));
+}

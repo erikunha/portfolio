@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 
 type RainTunables = {
   fontSize: number;
@@ -48,7 +48,13 @@ export function MatrixRain({
     bodyColor,
     tailFade,
   });
-  tunablesRef.current = { fontSize, speed, headColor, bodyColor, tailFade };
+  // Sync props → ref in a layout effect so this is an explicit side effect,
+  // not an accidental render-body mutation. No dep array: runs every render,
+  // matching the frequency of the old inline assignment, but fires before paint
+  // so the next rAF frame always sees current tunables.
+  useLayoutEffect(() => {
+    tunablesRef.current = { fontSize, speed, headColor, bodyColor, tailFade };
+  });
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
