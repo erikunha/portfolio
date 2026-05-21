@@ -5,7 +5,7 @@ import { ManPageMobile } from './ManPageMobile';
 
 export function ManPageSection() {
   return (
-    <Module id="sec-man-page" header="MAN ERIK(1)" icon={<IconManPage />} defaultOpen={false}>
+    <Module id="sec-man-page" header="MAN ERIK(1)" icon={<IconManPage />}>
       <ManPageDesktop />
       <ManPageMobile />
     </Module>

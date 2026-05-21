@@ -8,7 +8,6 @@ export function ResponsibilitiesSection({ defer }: { defer?: boolean } = {}) {
       id="sec-responsibilities"
       header="LS -LA ~/RESPONSIBILITIES"
       icon={<IconResponsibilities />}
-      defaultOpen={false}
       defer={defer}
     >
       <div className="permatrix">

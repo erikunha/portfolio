@@ -8,7 +8,6 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
       id="sec-hottest-takes"
       header="CAT ~/HOTTEST_TAKES.MD"
       icon={<IconHottestTakes />}
-      defaultOpen={false}
       defer={defer}
     >
       <div className="takes__preamble">

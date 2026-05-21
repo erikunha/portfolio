@@ -7,13 +7,7 @@ import { Module } from '../responsive/Module';
 // headers() is empty server-side and detection would always yield desktop.
 export function GuitarSection({ defer }: { defer?: boolean } = {}) {
   return (
-    <Module
-      id="sec-guitar"
-      header="CAT ~/.GUITAR_RIG"
-      icon={<IconGuitar />}
-      defaultOpen={false}
-      defer={defer}
-    >
+    <Module id="sec-guitar" header="CAT ~/.GUITAR_RIG" icon={<IconGuitar />} defer={defer}>
       <div className="visa">
         <pre className="guitar-desktop">
           <span className="cmd-line">

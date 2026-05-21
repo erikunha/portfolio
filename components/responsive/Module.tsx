@@ -6,15 +6,15 @@
 // delegated listener in AppShell.client.tsx that flips the open attribute.
 //
 // ONE element for every viewport. The page is `force-static`, so the server
-// has no per-request UA context — picking <section> vs <details> by UA
-// detection always resolved to desktop and mobile visitors never got the
-// collapsible chrome. Module wraps ~18 sections; rendering both variants
-// would duplicate every section's subtree (~2500+ DOM nodes) and blow the
-// dom-size budget. So Module always renders a native <details> and CSS
-// neutralizes its collapsibility on desktop: at >= 769px the body is forced
-// visible and the chevron hidden, so the <summary> reads as a plain <h2>
-// section header — visually and behaviorally identical to the old desktop
-// <section>. Mobile (<= 768px) keeps the real collapsible <details>.
+// has no per-request UA context. Module wraps ~18 sections; rendering both a
+// <section> and a <details> variant would duplicate every subtree (~2500+ DOM
+// nodes) and blow the dom-size budget. So Module always renders a native
+// <details open>. It must stay open: a closed <details> cannot be reopened by
+// CSS (browsers gate the collapse via the ::details-content pseudo-element,
+// which the Lightning CSS build strips), and force-static rules out a
+// per-viewport server choice. Desktop CSS (>= 769px) hides the chevron and
+// strips the summary toggle chrome so it reads as a plain <h2>; mobile keeps
+// the chevron and a section can be collapsed by tapping its summary.
 
 import type { ReactNode } from 'react';
 
@@ -29,28 +29,19 @@ export type ModuleProps = {
    */
   mobileHeader?: string;
   icon?: ReactNode;
-  defaultOpen?: boolean;
   /** Applies content-visibility:auto deferral for below-fold modules. */
   defer?: boolean | undefined;
   children: ReactNode;
 };
 
-export function Module({
-  id,
-  header,
-  mobileHeader,
-  icon,
-  defaultOpen = true,
-  defer = false,
-  children,
-}: ModuleProps) {
+export function Module({ id, header, mobileHeader, icon, defer = false, children }: ModuleProps) {
   return (
     <details
       id={id}
       className={`module${defer ? ' cv-defer' : ''}`}
-      // Desktop visibility is forced by CSS regardless of [open]; the attribute
-      // exists for the mobile native semantics — mobile honors defaultOpen.
-      open={defaultOpen || undefined}
+      // Always open: see the file header. A section can still be collapsed by
+      // tapping its summary on mobile.
+      open
     >
       <summary className="module__toggle">
         <h2 className="module__header">

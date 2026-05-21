@@ -231,7 +231,6 @@ export function GitLogSection({ defer }: { defer?: boolean } = {}) {
       header="GIT LOG ~/CAREER --PRETTY=FULLER --DECORATE --GRAPH"
       mobileHeader="GIT LOG --CAREER"
       icon={<IconGitLog />}
-      defaultOpen={false}
       defer={defer}
     >
       <div className="gitfuller career-desktop">

@@ -12,7 +12,6 @@ export function VisaSection({ defer }: { defer?: boolean } = {}) {
       header="CAT ~/.VISA"
       mobileHeader="CAT ~/.VISA"
       icon={<IconVisa />}
-      defaultOpen={false}
       defer={defer}
     >
       <div className="visa">
