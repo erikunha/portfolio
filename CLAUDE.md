@@ -143,6 +143,7 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 - Skip disclaimers, boilerplate, "consult a professional" lines.
 - Skip tutorials and 101 content — the user is 8+ years in.
 - Track decisions in `DECISIONS.md`: one bullet, date, reversibility note. Update as we go.
+- **Process feedback mid-workflow is a hard stop.** When the user gives process or workflow feedback while a task is executing: pause immediately, incorporate it into CLAUDE.md and/or memory, confirm the change with the user, then resume. Do not barrel through to completion and address feedback after the fact.
 
 ## Out of scope (unless asked)
 
