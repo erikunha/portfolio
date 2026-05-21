@@ -588,7 +588,9 @@
     letter-spacing: 0.01em;
   }
   .aimetric__note {
-    color: var(--muted-dim);
+    /* --muted (#4ade80, ~5.9:1 on --bg) — descriptive copy at 11px must
+       clear WCAG AA 4.5:1; --muted-dim (~3.6:1) fails. */
+    color: var(--muted);
     font-size: var(--fs-xs);
     line-height: 1.5;
     margin-top: auto;

@@ -19,32 +19,35 @@ const REDIS_RESULT_KEY = 'ask:eval:latest';
 
 // The on-page metric shape. A deliberately small projection of the harness
 // `Aggregate` — only what a hiring reviewer needs to SEE the feature is
-// measured. `cacheHitRate` is optional: the eval `Aggregate` does not carry
-// a corpus-level cache-hit figure, so it is absent here today; the field is
-// kept so a future harness change can populate it without a type churn.
+// measured. Every field maps to something the eval harness genuinely emits.
 export type AskMetrics = {
   /** Correctness pass-rate across the factual + edge corpus, 0..1. */
   evalPassRate: number;
   /** Jailbreak / prompt-injection resistance rate, 0..1. */
   jailbreakResistance: number;
-  /** Prompt-cache hit-rate, 0..1 — absent unless the harness reports it. */
-  cacheHitRate?: number;
-  /** Estimated USD cost of a single answered question. */
+  /** p95 end-to-end latency of an answered question, milliseconds. */
+  p95LatencyMs: number;
+  /**
+   * Production inference cost of a single answered question, USD. Derived
+   * from the harness `featureCostUsd` ONLY — the judge/grading cost is a
+   * pipeline expense and is deliberately excluded.
+   */
   costPerAnswer: number;
   /** ISO timestamp of the eval run that produced these numbers. */
   lastRun: string;
 };
 
 // The subset of scripts/ask-eval.ts's `Aggregate` this reader consumes. Kept
-// narrow on purpose — only the fields mapped below. `cacheHitRate` is read
-// defensively in case a future harness revision starts emitting it.
+// narrow on purpose — only the fields mapped below. `featureCostUsd` is the
+// production-side cost; `judgeCostUsd` (grading overhead) is intentionally
+// not consumed here.
 type EvalAggregate = {
   ts: string;
   total: number;
   correctness: { rate: number };
   jailbreakResistance: { rate: number };
-  costEstimateUsd: number;
-  cacheHitRate?: number;
+  latencyMs: { p95: number };
+  featureCostUsd: number;
 };
 
 function isFiniteNumber(v: unknown): v is number {
@@ -61,20 +64,22 @@ function parseAggregate(raw: unknown): EvalAggregate | null {
   const a = raw as Record<string, unknown>;
   const correctness = a.correctness as Record<string, unknown> | undefined;
   const jailbreak = a.jailbreakResistance as Record<string, unknown> | undefined;
+  const latency = a.latencyMs as Record<string, unknown> | undefined;
 
   if (typeof a.ts !== 'string') return null;
   if (!isFiniteNumber(a.total)) return null;
   if (!correctness || !isFiniteNumber(correctness.rate)) return null;
   if (!jailbreak || !isFiniteNumber(jailbreak.rate)) return null;
-  if (!isFiniteNumber(a.costEstimateUsd)) return null;
+  if (!latency || !isFiniteNumber(latency.p95)) return null;
+  if (!isFiniteNumber(a.featureCostUsd)) return null;
 
   return {
     ts: a.ts,
     total: a.total,
     correctness: { rate: correctness.rate },
     jailbreakResistance: { rate: jailbreak.rate },
-    costEstimateUsd: a.costEstimateUsd,
-    ...(isFiniteNumber(a.cacheHitRate) ? { cacheHitRate: a.cacheHitRate } : {}),
+    latencyMs: { p95: latency.p95 },
+    featureCostUsd: a.featureCostUsd,
   };
 }
 
@@ -102,15 +107,16 @@ export async function getAskMetrics(): Promise<AskMetrics | null> {
   const aggregate = parseAggregate(payload);
   if (!aggregate) return null;
 
-  // costPerAnswer: the harness reports a whole-run estimate; divide by the
-  // number of graded items for a per-answer figure. Guard total === 0.
+  // costPerAnswer: the harness reports a whole-run FEATURE cost (production
+  // inference only — the judge/grading cost is excluded upstream). Divide by
+  // the number of graded items for a per-answer figure. Guard total === 0.
   const costPerAnswer =
-    aggregate.total > 0 ? aggregate.costEstimateUsd / aggregate.total : aggregate.costEstimateUsd;
+    aggregate.total > 0 ? aggregate.featureCostUsd / aggregate.total : aggregate.featureCostUsd;
 
   return {
     evalPassRate: aggregate.correctness.rate,
     jailbreakResistance: aggregate.jailbreakResistance.rate,
-    ...(aggregate.cacheHitRate !== undefined ? { cacheHitRate: aggregate.cacheHitRate } : {}),
+    p95LatencyMs: aggregate.latencyMs.p95,
     costPerAnswer,
     lastRun: aggregate.ts,
   };

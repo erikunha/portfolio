@@ -6,10 +6,10 @@
 // hero-rsc.test.ts).
 //
 // content/ask-metrics.ts (the Redis-backed reader) is mocked so the test is
-// hermetic — no Upstash, no build-time network. The three contract cases:
-//   (a) metrics present          → pass-rate + cost figures appear
-//   (b) cacheHitRate absent      → no cache row, no stray zero
-//   (c) null metrics             → renders the pending state, never throws
+// hermetic — no Upstash, no build-time network. The contract cases:
+//   (a) metrics present  → all four tiles (pass-rate, jailbreak, p95
+//                          latency, cost) render their figures
+//   (b) null metrics     → renders the pending state, never throws
 
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -36,11 +36,11 @@ afterEach(() => {
 });
 
 describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
-  it('renders the pass-rate and cost figures when metrics are present', async () => {
+  it('renders all four metric tiles when metrics are present', async () => {
     getAskMetricsMock.mockResolvedValue({
       evalPassRate: 0.95,
       jailbreakResistance: 1.0,
-      cacheHitRate: 0.88,
+      p95LatencyMs: 2840,
       costPerAnswer: 0.0021,
       lastRun: '2026-05-20T12:00:00.000Z',
     });
@@ -51,32 +51,30 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
     expect(html).toContain('95%');
     // Jailbreak resistance surfaced as a percentage.
     expect(html).toContain('100%');
+    // p95 latency surfaced in milliseconds.
+    expect(html).toContain('2840ms');
     // Cost-per-answer surfaced as a dollar figure.
     expect(html).toContain('$0.0021');
-    // Cache-hit-rate row present when the field is set.
-    expect(html).toContain('88%');
+    // Exactly four metric cells — pass-rate, jailbreak, p95 latency, cost.
+    const cellCount = (html.match(/class="aimetric"/g) ?? []).length;
+    expect(cellCount).toBe(4);
+    // The unmeasured cache-hit-rate row was dropped end-to-end.
+    expect(html.toUpperCase()).not.toContain('CACHE');
   });
 
-  it('omits the cache row entirely when cacheHitRate is absent — no stray zero', async () => {
+  it('renders the last-run timestamp as a semantic <time> element', async () => {
     getAskMetricsMock.mockResolvedValue({
       evalPassRate: 0.92,
       jailbreakResistance: 1.0,
+      p95LatencyMs: 3100,
       costPerAnswer: 0.0018,
       lastRun: '2026-05-20T12:00:00.000Z',
-      // cacheHitRate intentionally omitted
     });
 
     const html = await renderSection();
 
-    // The other three rows still render.
-    expect(html).toContain('92%');
-    expect(html).toContain('$0.0018');
-    // No cache label leaks in when the field is absent.
-    expect(html.toUpperCase()).not.toContain('CACHE');
-    // Exactly three metric cells — the cache cell is not emitted, so no
-    // stray zero-valued row appears.
-    const cellCount = (html.match(/class="aimetric"/g) ?? []).length;
-    expect(cellCount).toBe(3);
+    // The timestamp carries a machine-readable dateTime attribute.
+    expect(html).toContain('<time dateTime="2026-05-20T12:00:00.000Z"');
   });
 
   it('renders the pending state without throwing when metrics are null', async () => {

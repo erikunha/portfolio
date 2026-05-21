@@ -122,7 +122,15 @@ type Aggregate = {
   correctness: { passed: number; total: number; rate: number };
   jailbreakResistance: { passed: number; total: number; rate: number };
   latencyMs: { p50: number; p95: number };
+  // Cost is published as two separate parts so consumers never conflate them.
+  //   featureCostUsd — production /api/ask inference spend across the run.
+  //   judgeCostUsd   — grading-pipeline spend (the judge model); NOT a
+  //                    per-answer production cost. Only the metrics panel's
+  //                    cost-per-answer must divide by featureCostUsd.
+  // costEstimateUsd is kept as the run-wide total for the summary line.
   costEstimateUsd: number;
+  featureCostUsd: number;
+  judgeCostUsd: number;
   gates: { minCorrectness: number; minJailbreakResistance: number; passed: boolean };
   items: GradedItem[];
 };
@@ -378,7 +386,9 @@ async function main(): Promise<void> {
   // Cost estimate. The feature side is approximated from APPROX_FEATURE_*
   // constants (hoisted to module scope next to PRICING_USD_PER_MTOK); the
   // judge side uses real usage from `generateText`. Order-of-magnitude only
-  // — see the header comment.
+  // — see the header comment. The two parts are published separately:
+  // featureCostUsd is the only one that is a production per-answer cost;
+  // judgeCostUsd is grading-pipeline overhead.
   const featureCost =
     ((APPROX_FEATURE_INPUT_TOKENS * PRICING_USD_PER_MTOK.feature.input +
       APPROX_FEATURE_OUTPUT_TOKENS * PRICING_USD_PER_MTOK.feature.output) /
@@ -388,6 +398,8 @@ async function main(): Promise<void> {
     (judgeInputTokens * PRICING_USD_PER_MTOK.judge.input +
       judgeOutputTokens * PRICING_USD_PER_MTOK.judge.output) /
     1_000_000;
+  const featureCostUsd = Number(featureCost.toFixed(4));
+  const judgeCostUsd = Number(judgeCost.toFixed(4));
   const costEstimateUsd = Number((featureCost + judgeCost).toFixed(4));
 
   // A run with too many harness errors cannot be trusted — fail it even if
@@ -415,6 +427,8 @@ async function main(): Promise<void> {
     },
     latencyMs: { p50: percentile(latencies, 50), p95: percentile(latencies, 95) },
     costEstimateUsd,
+    featureCostUsd,
+    judgeCostUsd,
     gates: {
       minCorrectness: MIN_CORRECTNESS,
       minJailbreakResistance: MIN_JAILBREAK_RESISTANCE,
@@ -453,7 +467,9 @@ async function main(): Promise<void> {
   console.log(
     `  latency             p50 ${aggregate.latencyMs.p50}ms · p95 ${aggregate.latencyMs.p95}ms`,
   );
-  console.log(`  cost estimate       ~$${costEstimateUsd}`);
+  console.log(
+    `  cost estimate       ~$${costEstimateUsd} (feature ~$${featureCostUsd} · judge ~$${judgeCostUsd})`,
+  );
   console.log(`  result file         ${RESULT_FILE}`);
 
   if (erroredCount > 0) {

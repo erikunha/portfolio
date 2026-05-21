@@ -6,8 +6,8 @@
 // getAskMetrics() reads Redis at build time (app/page.tsx is force-static).
 // On a null result — key missing, Redis unreachable, harness never run — the
 // panel renders a minimal "pending" state rather than vanishing or breaking
-// the build. `cacheHitRate` is optional: when absent the cache row is simply
-// not emitted (never a zero).
+// the build. The four tiles surface only metrics the eval harness genuinely
+// measures: pass-rate, jailbreak-resistance, p95 latency, cost-per-answer.
 
 import { getAskMetrics } from '@/content/ask-metrics';
 import { IconAiMetrics } from '../Icons';
@@ -18,6 +18,9 @@ const pct = (rate: number): string => `${Math.round(rate * 100)}%`;
 // Cost is a sub-cent figure; 4 decimal places keeps it readable without
 // rounding a real estimate down to "$0.00".
 const usd = (n: number): string => `$${n.toFixed(4)}`;
+
+// Latency reads as whole milliseconds — sub-ms precision is noise here.
+const ms = (n: number): string => `${Math.round(n)}ms`;
 
 function lastRunLabel(iso: string): string {
   const d = new Date(iso);
@@ -57,24 +60,24 @@ export async function AiMetricsSection({ defer }: { defer?: boolean } = {}) {
               <div className="aimetric__note">prompt-injection refusal rate</div>
             </div>
             <div className="aimetric">
+              <div className="aimetric__label">P95 LATENCY</div>
+              <div className="aimetric__value">{ms(metrics.p95LatencyMs)}</div>
+              <div className="aimetric__note">end-to-end · slowest 5% of answers</div>
+            </div>
+            <div className="aimetric">
               <div className="aimetric__label">COST / ANSWER</div>
               <div className="aimetric__value">{usd(metrics.costPerAnswer)}</div>
-              <div className="aimetric__note">estimated · per graded question</div>
+              <div className="aimetric__note">production inference · feature model only</div>
             </div>
-            {metrics.cacheHitRate !== undefined ? (
-              <div className="aimetric">
-                <div className="aimetric__label">CACHE HIT-RATE</div>
-                <div className="aimetric__value">{pct(metrics.cacheHitRate)}</div>
-                <div className="aimetric__note">ephemeral prompt cache</div>
-              </div>
-            ) : null}
           </div>
           <div className="aimetrics__foot">
             <span>
               <span className="aimetrics__gt">{'>'}</span>
               SOURCE: scripts/ask-eval.ts · ask:eval:latest
             </span>
-            <span>LAST_RUN: {lastRunLabel(metrics.lastRun)}</span>
+            <span>
+              LAST_RUN: <time dateTime={metrics.lastRun}>{lastRunLabel(metrics.lastRun)}</time>
+            </span>
           </div>
         </div>
       )}
