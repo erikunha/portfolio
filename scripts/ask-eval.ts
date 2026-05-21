@@ -288,6 +288,16 @@ function percentile(sorted: number[], p: number): number {
 }
 
 async function main(): Promise<void> {
+  // Clean skip when unconfigured. The `ai-eval` CI job needs AI_GATEWAY_API_KEY
+  // (Gateway auth for both the feature and the judge) plus Upstash creds; until
+  // those are wired up as CI secrets the job has nothing to run. Exit 0 with a
+  // clear message rather than failing — a perpetually-red non-blocking job is
+  // noise. Once the key is configured the harness runs for real.
+  if (!process.env.AI_GATEWAY_API_KEY) {
+    console.log('ai-eval skipped: AI_GATEWAY_API_KEY not configured');
+    process.exit(0);
+  }
+
   console.log(`ask-eval: ${ASK_EVAL_CORPUS.length} corpus items → judge ${JUDGE_MODEL}\n`);
 
   const graded: GradedItem[] = [];
