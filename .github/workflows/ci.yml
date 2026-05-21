@@ -81,6 +81,9 @@ jobs:
           path: coverage/
           retention-days: 7
 
+      - name: Package age gate (supply-chain)
+        run: node scripts/check-pkg-age.mjs --warn-only
+
       - name: PR comment merge gate
         if: github.event_name == 'pull_request'
         env:
@@ -102,6 +105,7 @@ jobs:
           name: next-build
           path: .next/
           retention-days: 1
+          include-hidden-files: true
 
       - name: Bundle size gate
         # Gates the total client-chunk gzipped size (Next/React framework

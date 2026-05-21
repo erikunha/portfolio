@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-05-21 — Supply-chain package age gate
+
+- **2026-05-21** · **Package age gate added (`scripts/check-pkg-age.mjs`).** Queries the npm registry for every resolved package in `pnpm-lock.yaml` and warns/fails on any version published within the last 7 days. Rationale: newly published versions are a common supply-chain vector — attackers publish malicious versions and hope CI installs them before they are flagged. The 7-day window gives the community time to vet a release. `.npmrc` also gains `audit-level=high` to block installs with known high/critical CVEs. CI runs the script with `--warn-only` so legitimate `pnpm up --latest` runs do not hard-block the pipeline; developers run it without the flag before committing lockfile changes. _Reversible: delete `scripts/check-pkg-age.mjs`, remove the `check:pkg-age` script from `package.json`, remove the CI step, and remove `audit-level=high` from `.npmrc`._
+
 ## 2026-05-21 — Perf gates + polyfill re-eval (Phase 3, Task 3.4)
 
 - **2026-05-21** · **TTFB assertions added to LHCI configs; INP turned off (field metric only).** `server-response-time` added as `warn` to both configs (800ms desktop, 1800ms mobile — warn-only because simulated TTFB in LHCI is highly variable). `interaction-to-next-paint` turned `"off"` in both configs: INP is a field metric that requires real user interactions; without a scripted interaction sequence, Lighthouse's lab simulation never fires the audit (`auditRan: 0`), causing spurious CI failures. INP monitoring is covered by Vercel SpeedInsights (real CrUX data). CLAUDE.md budget of < 200ms INP remains the target, enforced by field data not LHCI. _Reversible: change TTFB to error, add INP with a Puppeteer interaction script._
