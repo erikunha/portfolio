@@ -26,10 +26,6 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    # 18 min: previous 12 min hit the timeout during `Install Playwright Chromium`
-    # on a slow runner (run #26135363392). The dependent e2e-functional job (20 min)
-    # is where heavy work runs; build-and-gate just needs headroom for browser install.
-    # Durable fix is a Playwright cache step — tracked separately.
     timeout-minutes: 18
     env:
       LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
@@ -92,6 +88,13 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
           DEPLOY_SALT: ci-build-salt
 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: .next/
+          retention-days: 1
+
       - name: Bundle size gate
         # Gates the total client-chunk gzipped size (Next/React framework
         # ~185KB co-bundled by Turbopack + app code). Per-route First Load JS
@@ -113,6 +116,12 @@ jobs:
       - name: Lighthouse CI (mobile)
         run: pnpm lhci:mobile
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
       - name: Install Playwright Chromium (for axe-core scan)
         run: pnpm playwright install --with-deps chromium
 
@@ -121,7 +130,7 @@ jobs:
 
   e2e-functional:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     needs: build-and-gate
     strategy:
       fail-fast: false
@@ -135,28 +144,24 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install Playwright browsers
         run: pnpm playwright install --with-deps ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
-      - name: Build
-        run: pnpm build
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
-          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
-          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
-          DEPLOY_SALT: ci-build-salt
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: .next/
       - name: Start preview server
         run: pnpm start &
-        # Runtime env for the production preview server. DEPLOY_SALT is the
-        # load-bearing one: without it, lib/ip-hash.ts resolveSalt() takes the
-        # production Upstash path (CI has no Redis creds) and throws, so every
-        # validated /api/* request 500s via the unguarded hashIp() in
-        # lib/server/route.ts. The CI-job rework dropped this block.
+        # DEPLOY_SALT is load-bearing: without it, lib/ip-hash.ts resolveSalt()
+        # takes the production Upstash path (CI has no Redis creds) and throws,
+        # so every validated /api/* request 500s via hashIp() in lib/server/route.ts.
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
-          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
-          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 30000
@@ -208,7 +213,7 @@ jobs:
 
   e2e-visual:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     # Non-required: pixel-diff flakiness must not block merges. Visual
     # regressions are reviewed via the uploaded report; baselines are
     # refreshed deliberately via the workflow_dispatch path.
@@ -225,28 +230,24 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install Playwright browsers
         run: pnpm playwright install --with-deps ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
-      - name: Build
-        run: pnpm build
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
-          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
-          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
-          DEPLOY_SALT: ci-build-salt
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: .next/
       - name: Start preview server
         run: pnpm start &
-        # Runtime env for the production preview server. DEPLOY_SALT is the
-        # load-bearing one: without it, lib/ip-hash.ts resolveSalt() takes the
-        # production Upstash path (CI has no Redis creds) and throws, so every
-        # validated /api/* request 500s via the unguarded hashIp() in
-        # lib/server/route.ts. The CI-job rework dropped this block.
+        # DEPLOY_SALT is load-bearing: without it, lib/ip-hash.ts resolveSalt()
+        # takes the production Upstash path (CI has no Redis creds) and throws,
+        # so every validated /api/* request 500s via hashIp() in lib/server/route.ts.
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
-          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
-          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 30000
