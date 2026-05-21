@@ -142,10 +142,16 @@ const PROFILE = {
 };
 
 export async function GET(): Promise<Response> {
+  // Deliberate exemption from the `lib/server/route.ts` envelope (STANDARDS.md
+  // Ch. 2): erik.json is a machine-readable resume *document*, not an
+  // *operation* — agent crawlers fetch it expecting a plain profile, and
+  // wrapping it in `{ ok, requestId, data }` would break those consumers. It
+  // stays bare JSON but still emits `X-Request-Id` for log correlation.
   return Response.json(PROFILE, {
     headers: {
       'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
       'X-Content-Type-Options': 'nosniff',
+      'X-Request-Id': crypto.randomUUID(),
     },
   });
 }

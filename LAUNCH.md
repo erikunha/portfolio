@@ -7,15 +7,21 @@
 
 This is the operational sequence. ARCHITECTURE.md tells you what to build; this tells you what to do **next**, in order, with the commands.
 
-> ## ⚠️ Post-launch stack changes — read before re-running these steps
+> ## ⚠️ HISTORICAL PLAYBOOK — superseded; do not re-run verbatim
 >
-> This playbook captures the **as-launched** scaffold from May 2026. The stack has since changed in ways that contradict the commands below. The DECISIONS.md ADR log is the canonical record; **trust it over the steps in this file** for anything dated after 2026-05-16.
+> This file captures the **as-launched** scaffold sequence from May 2026. The
+> site has shipped; the stack has since changed in ways that contradict the
+> commands below. It is retained as a record of how the project was built, not
+> as live instructions. The authoritative current-state references are
+> `STANDARDS.md` (the engineering bar), `ARCHITECTURE.md` (system design), and
+> `DECISIONS.md` (the ADR log) — **trust those over any step in this file.**
 >
 > Material changes since launch:
 >
 > - **2026-05-18 — Tailwind v4 removed.** Do NOT run `--tailwind` in `create-next-app`, do NOT `pnpm add -D @tailwindcss/postcss tailwindcss`, do NOT copy `scaffold/postcss.config.mjs` (the file is gone). The site now uses hand-written global CSS under `app/css/` with no framework. Next 16 + Turbopack handle nesting + autoprefix natively via Lightning CSS, no PostCSS config needed.
 > - **2026-05-18 — @vercel/analytics + @vercel/speed-insights removed.** Do NOT run `pnpm add @vercel/analytics@latest @vercel/speed-insights@latest` unless you intend to wire them up in `app/layout.tsx`. They were declared since scaffold but never imported; removed to keep `package.json` honest.
-> - **Domain.** Migrated `erikunha.com.br → erikunha.dev` (commit `7b7bc21`). The URLs below still reference the original `.com.br` host in some places.
+> - **2026-05-18 — Domain.** Migrated `erikunha.com.br → erikunha.dev` (commit `7b7bc21`). `erikunha.dev` is the single canonical domain; any `.com.br` still in the Day-1 steps below is stale scaffold text.
+> - **2026-05-20 — Dependency pinning.** The "install everything `@latest`" note below is superseded: every dependency is now major-locked (`^x.y.z`), enforced by `scripts/check-dep-pinning.mjs`. See `STANDARDS.md` Chapter 5.
 >
 > See `DECISIONS.md` for rationale and reversibility notes on each.
 
@@ -29,8 +35,8 @@ This is the operational sequence. ARCHITECTURE.md tells you what to build; this 
 
 - [ ] **Anthropic API key** — console.anthropic.com → create key, set spend cap at $50/month, save the key
 - [ ] **Upstash Redis** — upstash.com → create one Redis database (region: us-east-1 or fra1, free tier) → grab URL + token
-- [ ] **Resend** — resend.com → sign up, verify your domain `erikunha.com.br` for sending, grab API key
-- [ ] **Vercel** — vercel.com → sign in with GitHub, connect erikunha.com.br domain (DNS records: A or CNAME per Vercel docs)
+- [ ] **Resend** — resend.com → sign up, verify your domain `erikunha.dev` for sending, grab API key
+- [ ] **Vercel** — vercel.com → sign in with GitHub, connect erikunha.dev domain (DNS records: A or CNAME per Vercel docs)
 - [ ] **PageSpeed Insights API** — console.cloud.google.com → enable PSI API → grab key (free, daily quota plenty)
 
 ### Export the prototype HTML
@@ -148,7 +154,7 @@ All four should pass on an empty `app/page.tsx`.
 - JetBrains Mono via `next/font/local` (self-hosted, not Google CDN — the BUILT_WITH line claims zero external)
 - Person JSON-LD inline
 - `metadata` export with title/description
-- HTML comment at top: `<!-- if you're inspecting this, you're hiring me. erik@erikunha.com.br · https://github.com/erikunha -->`
+- HTML comment at top: `<!-- if you're inspecting this, you're hiring me. erik@erikunha.dev · https://github.com/erikunha -->`
 - console.log greeting script tag
 
 **End of Day 3:** the page is empty but the build, CI, and design-token foundation are bulletproof.
@@ -324,7 +330,7 @@ export async function submitContact(formData: FormData) {
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
-      from: 'portfolio@erikunha.com.br',
+      from: 'portfolio@erikunha.dev',
       to: 'erikhenriquealvescunha@gmail.com',
       subject: `[portfolio] ${parsed.data.name}`,
       text: `From: ${parsed.data.name} <${parsed.data.email}>\n\n${parsed.data.message}`,
@@ -474,7 +480,7 @@ Verify in Slack/LinkedIn link preview, structured-data tester, securityheaders.c
 - [ ] Spend alerts confirmed firing at 80%/95%
 - [ ] securityheaders.com A+
 - [ ] Lighthouse production run: ≥95 / =100 / ≥95 / =100
-- [ ] Domain DNS propagated; `erikunha.com.br` resolves
+- [ ] Domain DNS propagated; `erikunha.dev` resolves
 - [ ] HSTS, CSP active
 - [ ] Vercel Speed Insights enabled
 - [ ] Web Analytics enabled

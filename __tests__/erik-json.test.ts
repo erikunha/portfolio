@@ -40,4 +40,12 @@ describe('/api/erik.json route', () => {
     const res = await GET();
     expect(res.headers.get('x-content-type-options')).toBe('nosniff');
   });
+
+  it('emits an X-Request-Id header for log correlation', async () => {
+    // erik.json is a documented exemption from the lib/server/route.ts
+    // envelope (STANDARDS.md Ch. 2) but still carries a request id.
+    const res = await GET();
+    const requestId = res.headers.get('x-request-id') ?? '';
+    expect(requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+  });
 });
