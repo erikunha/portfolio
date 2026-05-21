@@ -40,7 +40,7 @@ import { NextResponse } from 'next/server';
 //    nonce-less CSP for its inline scripts to load.
 //
 // 5) Hash-based CSP (Task 3.3 — deferred): replacing `'unsafe-inline'`
-//    with SHA-256 hashes is not feasible today. Next.js 15 static
+//    with SHA-256 hashes is not feasible today. Next.js 16 static
 //    generation emits RSC flight payloads whose SHA-256 changes on every
 //    content edit, meaning hashes must be recomputed and hard-coded in
 //    this file on every build. A build-time step that: (a) runs `next
@@ -78,11 +78,10 @@ const CSP_DIRECTIVES: readonly string[] = [
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
-  // report-uri gives us CSP violation observability without changing the
-  // enforcement posture. Browsers POST a JSON violation report to
-  // /api/csp-report on any policy breach. No route handler yet — violations
-  // will 404 silently until a stub is added in a follow-up; see DECISIONS.md.
-  // Present in ALL environments so dev violations surface too.
+  // report-uri: browsers POST JSON violation reports to /api/csp-report on
+  // any policy breach. The route handler (app/api/csp-report/route.ts) returns
+  // 204 to acknowledge receipt. Present in ALL environments so dev violations
+  // surface too.
   'report-uri /api/csp-report',
 ];
 

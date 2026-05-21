@@ -2,13 +2,12 @@
 // CSP violation report collector. Browsers POST JSON violation reports here
 // when any directive in the Content-Security-Policy header is breached.
 //
-// This stub accepts and discards the body (returning 204) so the report-uri
-// directive in proxy.ts doesn't generate 404 noise. The JSON report body
-// appears in Vercel runtime logs via the implicit Next.js request logging,
-// providing baseline violation observability without storing anything.
+// Returns 204 to acknowledge receipt and prevent 404 noise from the report-uri
+// directive in proxy.ts. The violation body is intentionally not read — the
+// signal that the endpoint was hit at all is visible in Vercel Function logs.
 //
-// Upgrade path: parse the body, extract `violated-directive` + `blocked-uri`,
-// and emit a structured log line via lib/log.ts if alerting is needed.
+// Upgrade path: parse body, extract `violated-directive` + `blocked-uri`, emit
+// a structured lib/log.ts line if alerting on specific violations is needed.
 export async function POST(): Promise<Response> {
   return new Response(null, { status: 204 });
 }
