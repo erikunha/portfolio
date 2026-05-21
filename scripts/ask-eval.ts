@@ -108,6 +108,11 @@ type GradedItem = {
   reason: string;
   latencyMs: number;
   errored: boolean;
+  // True ONLY when the item produced a real 2xx streamed answer — i.e. the
+  // feature model was actually invoked. False for harness errors (no model
+  // call) AND for injection-gate passes (HTTP 400 — refused before any model
+  // call). Drives `answeredCount`, the per-answer feature-cost denominator.
+  answered: boolean;
 };
 
 type Aggregate = {
@@ -119,6 +124,14 @@ type Aggregate = {
   // injection-gate pass). Excluded from the correctness denominator — a
   // harness error is not a graded quality fail.
   errored: number;
+  // Items that genuinely produced a real 2xx streamed answer — i.e. the
+  // feature model was actually invoked. EXCLUDES harness-errored items
+  // (429/503/throw — no model call) AND injection-gate passes (HTTP 400 —
+  // refused before any model call). This is the only correct denominator for
+  // a per-answer feature cost: `total` would overstate it by counting items
+  // that never touched the model. The metrics panel's cost-per-answer
+  // divides by this, not `total`.
+  answeredCount: number;
   correctness: { passed: number; total: number; rate: number };
   jailbreakResistance: { passed: number; total: number; rate: number };
   latencyMs: { p50: number; p95: number };
@@ -323,6 +336,10 @@ async function main(): Promise<void> {
           reason: 'injection gate refused the override (HTTP 400)',
           latencyMs,
           errored: false,
+          // The injection gate refused BEFORE any model call — not an
+          // answered item, so it must not inflate the feature-cost
+          // denominator.
+          answered: false,
         });
         console.log(`  PASS  [${item.kind}] ${item.id} (${latencyMs}ms) — injection gate refused`);
       } else {
@@ -335,6 +352,8 @@ async function main(): Promise<void> {
           reason: `harness error: ${result.detail}`,
           latencyMs,
           errored: true,
+          // Harness error — the feature was never exercised, no model call.
+          answered: false,
         });
         console.log(`  ERROR [${item.kind}] ${item.id} (${latencyMs}ms) — ${result.detail}`);
       }
@@ -354,6 +373,8 @@ async function main(): Promise<void> {
       reason: verdict.reason,
       latencyMs,
       errored,
+      // A real 2xx streamed answer — the feature model was invoked.
+      answered: true,
     });
 
     const mark = verdict.pass ? 'PASS' : 'FAIL';
@@ -363,6 +384,13 @@ async function main(): Promise<void> {
   // Errored items (harness could not exercise the feature) are excluded from
   // BOTH rate denominators — a harness error is not a graded quality result.
   const erroredCount = graded.filter((g) => g.errored).length;
+
+  // Items that genuinely produced a real 2xx streamed answer — the only set
+  // for which the feature model was actually invoked. Excludes harness errors
+  // (429/503/throw) AND injection-gate passes (HTTP 400, refused pre-model).
+  // The per-item feature cost is multiplied by THIS, not `graded.length`:
+  // counting unanswered items would overstate the feature spend.
+  const answeredCount = graded.filter((g) => g.answered).length;
 
   const correctnessItems = graded.filter((g) => g.kind !== 'jailbreak' && !g.errored);
   const jailbreakItems = graded.filter((g) => g.kind === 'jailbreak' && !g.errored);
@@ -389,11 +417,17 @@ async function main(): Promise<void> {
   // — see the header comment. The two parts are published separately:
   // featureCostUsd is the only one that is a production per-answer cost;
   // judgeCostUsd is grading-pipeline overhead.
+  //
+  // The per-item feature cost is multiplied by `answeredCount`, NOT
+  // `graded.length`: the feature model is only invoked for items that
+  // produced a real 2xx streamed answer. Harness errors (429/503/throw) and
+  // injection-gate passes (HTTP 400) never reach the model, so counting them
+  // would overstate the feature spend and the panel's cost-per-answer.
   const featureCost =
     ((APPROX_FEATURE_INPUT_TOKENS * PRICING_USD_PER_MTOK.feature.input +
       APPROX_FEATURE_OUTPUT_TOKENS * PRICING_USD_PER_MTOK.feature.output) /
       1_000_000) *
-    graded.length;
+    answeredCount;
   const judgeCost =
     (judgeInputTokens * PRICING_USD_PER_MTOK.judge.input +
       judgeOutputTokens * PRICING_USD_PER_MTOK.judge.output) /
@@ -415,6 +449,7 @@ async function main(): Promise<void> {
     judgeModel: JUDGE_MODEL,
     total: graded.length,
     errored: erroredCount,
+    answeredCount,
     correctness: {
       passed: correctnessPassed,
       total: correctnessItems.length,
@@ -466,6 +501,9 @@ async function main(): Promise<void> {
   );
   console.log(
     `  latency             p50 ${aggregate.latencyMs.p50}ms · p95 ${aggregate.latencyMs.p95}ms`,
+  );
+  console.log(
+    `  answered            ${answeredCount}/${graded.length} (real 2xx model calls — feature-cost denominator)`,
   );
   console.log(
     `  cost estimate       ~$${costEstimateUsd} (feature ~$${featureCostUsd} · judge ~$${judgeCostUsd})`,

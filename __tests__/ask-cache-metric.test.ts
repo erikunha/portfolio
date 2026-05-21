@@ -296,4 +296,92 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
     const meta = completed?.[1] as { cacheHitRate: number };
     expect(meta.cacheHitRate).toBe(0);
   });
+
+  // Fail-closed budget posture: a REJECTED `result.usage` promise must NOT
+  // refund the reservation. A rejection resolves to the USAGE_TIMED_OUT
+  // sentinel inside the route (not `undefined`), so `usageResolved` is false
+  // and `settleBudget` is skipped — the reservation is held as the
+  // high-water mark, exactly as on a stalled stream. Degrading the rejection
+  // to `undefined` would refund the full reservation against zero tokens
+  // despite the stream having billed real ones (the bug Copilot flagged).
+  it('holds the reservation (no refund) when result.usage rejects', async () => {
+    // A streamText result that streams fine but whose end-of-stream `usage`
+    // promise rejects. The noop `.catch` keeps the test runner from flagging
+    // an unhandled rejection before the route attaches its own handler.
+    const rejectingUsage = Promise.reject(new Error('usage unavailable — stream aborted'));
+    rejectingUsage.catch(() => undefined);
+    mockStreamText.mockReturnValue({
+      textStream: {
+        async *[Symbol.asyncIterator]() {
+          yield 'an answer was streamed';
+        },
+      },
+      usage: rejectingUsage,
+      providerMetadata: Promise.resolve({
+        anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
+      }),
+    });
+
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(200);
+    expect(await drain(res)).toContain('an answer was streamed');
+
+    // The interaction is still persisted (observability) — wait on that to
+    // know the settlement path ran to completion.
+    await vi.waitFor(() => expect(persistMock).toHaveBeenCalled());
+
+    // The refund is gated on real usage being known: a rejected `usage`
+    // means it is NOT known, so settleBudget must never fire — the full
+    // reservation is held, not refunded.
+    expect(settleBudgetMock).not.toHaveBeenCalled();
+
+    // The completed log line marks usage as unresolved.
+    const completed = logInfoMock.mock.calls.find((c) => c[0] === 'ask completed');
+    expect(completed, "expected an 'ask completed' log line").toBeDefined();
+    const meta = completed?.[1] as { usageResolved: boolean };
+    expect(meta.usageResolved).toBe(false);
+  });
+
+  // A REJECTED `result.providerMetadata` is observability-only: the cache
+  // breakdown degrades to zero, but the refund must STILL fire because real
+  // `usage` resolved. Only a `usage` rejection holds the reservation.
+  it('still refunds when providerMetadata rejects but usage resolves', async () => {
+    const rejectingMeta = Promise.reject(new Error('metadata unavailable'));
+    rejectingMeta.catch(() => undefined);
+    mockStreamText.mockReturnValue({
+      textStream: {
+        async *[Symbol.asyncIterator]() {
+          yield 'answer with no cache breakdown';
+        },
+      },
+      usage: Promise.resolve({ inputTokens: 300, outputTokens: 40 }),
+      providerMetadata: rejectingMeta,
+    });
+
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequest());
+    await drain(res);
+
+    // usage resolved → the refund fires; the cache breakdown degrades to 0,
+    // so totalBilledInput is just inputTokens.
+    await vi.waitFor(() => expect(settleBudgetMock).toHaveBeenCalledOnce());
+    const firstCall = settleBudgetMock.mock.calls[0];
+    expect(firstCall?.[1]).toBe(300);
+    expect(firstCall?.[2]).toBe(40);
+
+    // `usageResolved` is true (the refund fired). `metaResolved` only
+    // distinguishes a TIMED-OUT meta promise from a settled one — a rejected
+    // meta is caught to `undefined`, which is NOT the timeout sentinel, so
+    // `metaResolved` is true and the cache breakdown is read as zero.
+    const completed = logInfoMock.mock.calls.find((c) => c[0] === 'ask completed');
+    const meta = completed?.[1] as {
+      usageResolved: boolean;
+      cacheReadTokens: number;
+      cacheCreationTokens: number;
+    };
+    expect(meta.usageResolved).toBe(true);
+    expect(meta.cacheReadTokens).toBe(0);
+    expect(meta.cacheCreationTokens).toBe(0);
+  });
 });

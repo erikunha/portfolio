@@ -245,7 +245,20 @@ export async function POST(req: NextRequest) {
   // aborted stream), the rejection is already handled and never surfaces as
   // an unhandledRejection. settleAndPersist awaits these resolved-or-zeroed
   // values rather than the raw promises.
-  const usagePromise = Promise.resolve(result.usage).catch(() => undefined);
+  //
+  // A `result.usage` REJECTION resolves to the USAGE_TIMED_OUT sentinel — NOT
+  // `undefined`. The refund is gated on `usage !== USAGE_TIMED_OUT`: degrading a
+  // rejection to `undefined` would read as "resolved" and refund the whole
+  // reservation against zeroed tokens despite the stream having billed real
+  // ones. Mapping a rejection to the timeout sentinel makes `usageResolved`
+  // false → the refund is skipped → the reservation is held (fail-closed),
+  // the same posture as a stalled stream whose usage promise never settles.
+  const usageOrTimeout = Promise.resolve(result.usage).catch(
+    (): typeof USAGE_TIMED_OUT => USAGE_TIMED_OUT,
+  );
+  // `result.providerMetadata` rejection degrades to `undefined` — the cache
+  // breakdown is observability-only, so a meta-rejection must NOT block the
+  // refund. A missing `meta` is correctly treated as zero cache tokens.
   const providerMetadataPromise = Promise.resolve(result.providerMetadata).catch(() => undefined);
 
   const enc = new TextEncoder();
@@ -334,9 +347,11 @@ export async function POST(req: NextRequest) {
   // (usage on the message_start SSE event), the Gateway/AI SDK exposes token
   // counts via `result.usage` and the cache breakdown via
   // `result.providerMetadata.anthropic`, both settled once the stream
-  // finishes. `usagePromise` / `providerMetadataPromise` are the pre-handled
-  // (.catch-attached) forms — a usage-resolution failure (or an errored
-  // stream) degrades to `undefined`, never rejects the response.
+  // finishes. `usageOrTimeout` / `providerMetadataPromise` are the pre-handled
+  // (.catch-attached) forms — a usage REJECTION resolves to the
+  // USAGE_TIMED_OUT sentinel (treated as "unavailable", holds the reservation);
+  // a metadata rejection degrades to `undefined` (zero cache tokens), never
+  // rejecting the response.
   //
   // On a mid-stream STALL the upstream never finishes, so neither end-of-
   // stream promise ever resolves. Both awaits are therefore bounded by a
@@ -361,7 +376,7 @@ export async function POST(req: NextRequest) {
       }
     };
 
-    const usage = await deadline(usagePromise);
+    const usage = await deadline(usageOrTimeout);
     const meta = await deadline(providerMetadataPromise);
     // The budget refund is gated on `usage` ALONE: `result.usage` and
     // `result.providerMetadata` are two INDEPENDENT end-of-stream promises.
@@ -369,16 +384,21 @@ export async function POST(req: NextRequest) {
     // request (a real success) would skip the refund and leak the full
     // reservation as a phantom high-water mark. The cache breakdown from `meta`
     // is observability-only and never gates settlement.
+    //
+    // `usage` is the USAGE_TIMED_OUT sentinel when the usage promise either
+    // timed out OR rejected (a rejection is mapped to the sentinel upstream).
+    // Either way real usage is unknown → `usageResolved` false → the refund is
+    // skipped and the reservation is held (fail-closed).
     const usageResolved = usage !== USAGE_TIMED_OUT;
     // `metaResolved` only annotates the log line — a missing/timed-out `meta`
     // is treated as zero cache tokens, which is correct for the refund math.
     const metaResolved = meta !== USAGE_TIMED_OUT;
 
-    if (usageResolved) {
+    if (usage !== USAGE_TIMED_OUT) {
       inputTokens = usage?.inputTokens ?? 0;
       outputTokens = usage?.outputTokens ?? 0;
     }
-    if (metaResolved) {
+    if (meta !== USAGE_TIMED_OUT) {
       const anthropicMeta = meta?.anthropic as
         | { cacheReadInputTokens?: number; cacheCreationInputTokens?: number }
         | undefined;

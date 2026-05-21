@@ -40,10 +40,14 @@ export type AskMetrics = {
 // The subset of scripts/ask-eval.ts's `Aggregate` this reader consumes. Kept
 // narrow on purpose — only the fields mapped below. `featureCostUsd` is the
 // production-side cost; `judgeCostUsd` (grading overhead) is intentionally
-// not consumed here.
+// not consumed here. `answeredCount` is the count of items that genuinely
+// produced a real 2xx streamed answer (the feature model was invoked) — the
+// only correct per-answer cost denominator, since `total` also counts harness
+// errors and injection-gate passes that never touched the model.
 type EvalAggregate = {
   ts: string;
   total: number;
+  answeredCount: number;
   correctness: { rate: number };
   jailbreakResistance: { rate: number };
   latencyMs: { p95: number };
@@ -68,6 +72,7 @@ function parseAggregate(raw: unknown): EvalAggregate | null {
 
   if (typeof a.ts !== 'string') return null;
   if (!isFiniteNumber(a.total)) return null;
+  if (!isFiniteNumber(a.answeredCount)) return null;
   if (!correctness || !isFiniteNumber(correctness.rate)) return null;
   if (!jailbreak || !isFiniteNumber(jailbreak.rate)) return null;
   if (!latency || !isFiniteNumber(latency.p95)) return null;
@@ -76,6 +81,7 @@ function parseAggregate(raw: unknown): EvalAggregate | null {
   return {
     ts: a.ts,
     total: a.total,
+    answeredCount: a.answeredCount,
     correctness: { rate: correctness.rate },
     jailbreakResistance: { rate: jailbreak.rate },
     latencyMs: { p95: latency.p95 },
@@ -109,9 +115,15 @@ export async function getAskMetrics(): Promise<AskMetrics | null> {
 
   // costPerAnswer: the harness reports a whole-run FEATURE cost (production
   // inference only — the judge/grading cost is excluded upstream). Divide by
-  // the number of graded items for a per-answer figure. Guard total === 0.
+  // `answeredCount` — the count of items that genuinely produced a real 2xx
+  // streamed answer — NOT `total`. `total` also counts harness errors
+  // (429/503) and injection-gate passes (HTTP 400) that never invoked the
+  // model, so dividing by it understates the true cost per answered question.
+  // Guard answeredCount === 0.
   const costPerAnswer =
-    aggregate.total > 0 ? aggregate.featureCostUsd / aggregate.total : aggregate.featureCostUsd;
+    aggregate.answeredCount > 0
+      ? aggregate.featureCostUsd / aggregate.answeredCount
+      : aggregate.featureCostUsd;
 
   return {
     evalPassRate: aggregate.correctness.rate,
