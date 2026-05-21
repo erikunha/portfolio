@@ -38,6 +38,18 @@ import { NextResponse } from 'next/server';
 //    middleware nonce + x-nonce header rewrite ONLY on that route's
 //    matcher pattern, NOT site-wide. The static `/` route must keep the
 //    nonce-less CSP for its inline scripts to load.
+//
+// 5) Hash-based CSP (Task 3.3 — deferred): replacing `'unsafe-inline'`
+//    with SHA-256 hashes is not feasible today. Next.js 15 static
+//    generation emits RSC flight payloads whose SHA-256 changes on every
+//    content edit, meaning hashes must be recomputed and hard-coded in
+//    this file on every build. A build-time step that: (a) runs `next
+//    build`, (b) scans every generated HTML for inline `<script>` tags,
+//    (c) computes SHA-256 of each, and (d) patches this file before the
+//    server starts — does not yet exist. Will revisit when a dynamic
+//    route with third-party scripts is added (see DECISIONS.md).
+//    See also: violation observability via `report-uri /api/csp-report`
+//    added below.
 
 const CSP_DIRECTIVES: readonly string[] = [
   "default-src 'self'",
@@ -66,6 +78,12 @@ const CSP_DIRECTIVES: readonly string[] = [
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
+  // report-uri gives us CSP violation observability without changing the
+  // enforcement posture. Browsers POST a JSON violation report to
+  // /api/csp-report on any policy breach. The route handler is a stub for
+  // now (logs to Vercel runtime logs); real alerting can be wired later.
+  // Present in ALL environments so dev violations surface too.
+  'report-uri /api/csp-report',
 ];
 
 // CSP is identical on every response (no per-request nonce). Pre-join once

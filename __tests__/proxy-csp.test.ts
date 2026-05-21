@@ -96,4 +96,11 @@ describe('proxy CSP — nonce-less posture (PR 4)', () => {
     const b = proxy(makeRequest()).headers.get('content-security-policy');
     expect(a).toBe(b);
   });
+
+  it('production CSP includes report-uri /api/csp-report for violation observability', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    const { proxy } = await import('@/proxy');
+    const csp = proxy(makeRequest()).headers.get('content-security-policy') ?? '';
+    expect(csp).toContain('report-uri /api/csp-report');
+  });
 });
