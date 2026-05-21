@@ -6,9 +6,9 @@
 // as RSC children and rendered server-side — their code never ships to the client.
 
 import '@/lib/error-bridge.client';
-import dynamic from 'next/dynamic';
 import { type ReactNode, useEffect } from 'react';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
+import { ToTopButton } from './client/ToTopButton';
 import { ErrorBoundary } from './ErrorBoundary.client';
 import { CRTOverlay } from './responsive/CRTOverlay.client';
 import { DesktopTopbar } from './responsive/DesktopTopbar.client';
@@ -16,11 +16,6 @@ import { Dock } from './responsive/Dock.client';
 import { MatrixRain } from './responsive/MatrixRain.client';
 import { MobileTitleBar } from './responsive/MobileTitleBar.client';
 import { StatusBar } from './responsive/StatusBar.client';
-
-const ToTopButton = dynamic(
-  () => import('./client/ToTopButton').then((m) => ({ default: m.ToTopButton })),
-  { ssr: false },
-);
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { isMobile } = useBreakpoint();
@@ -59,14 +54,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <ErrorBoundary>
         <CRTOverlay />
       </ErrorBoundary>
-      {/* Both viewport variants render; CSS chooses which is visible at the
-       * 768px breakpoint (see `.mobile-only` / `.desktop-only` in
-       * `app/css/_responsive.css`). Rationale: `app/page.tsx` is
-       * `force-static` (audit PR 1 Theme 3) and its HTML is baked at build
-       * time without UA context, so any JS-driven variant swap on hydration
-       * causes CLS. The two-variant CSS-toggle costs ~30-50 extra DOM nodes
-       * but preserves both the TTFB win from static-gen AND the < 0.05 CLS
-       * budget. */}
+      {/* Navigation chrome uses CSS `.desktop-only`/`.mobile-only` toggles
+       * because these components live inside the client boundary — server-only
+       * `getIsMobile()` is unavailable here, and client-side detection would
+       * cause a hydration mismatch. Both variants are always in the DOM;
+       * CSS chooses which is visible at the 768px breakpoint. */}
       <div className="desktop-only">
         <DesktopTopbar />
       </div>

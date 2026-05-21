@@ -18,8 +18,6 @@ import { log } from '@/lib/log';
 import { getErrorLogLimit, getRedis } from '@/lib/rate-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
 
-export const dynamic = 'force-dynamic';
-
 // Smoke-test sentinel: messages prefixed '[smoke]' pass validation and
 // rate-limiting but are NOT written to KV. Prevents CI smoke runs from
 // polluting the err:{date}:* partition and skewing error-rate analysis.

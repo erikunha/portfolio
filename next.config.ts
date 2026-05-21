@@ -5,6 +5,7 @@ import type { NextConfig } from 'next';
 const analyze = withBundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
 
 const nextConfig: NextConfig = {
+  cacheComponents: true,
   typedRoutes: true,
   turbopack: {
     resolveAlias: {

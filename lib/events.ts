@@ -7,4 +7,7 @@ declare global {
   }
 }
 
-export {};
+export function dispatchModuleOpen(id: string): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent('module:open', { detail: { id } }));
+}

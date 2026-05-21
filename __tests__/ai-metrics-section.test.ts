@@ -1,9 +1,13 @@
 // __tests__/ai-metrics-section.test.ts
-// Behavioral test (CG3): AiMetricsSection is a true Server Component that
-// surfaces the /api/ask eval metrics. It renders to static HTML with zero
-// client runtime — rendering it server-side and asserting on the produced
-// markup proves the guarantee through observable output (same pattern as
+// Behavioral test (CG3): AiMetricsSection surfaces /api/ask eval metrics.
+// It renders to static HTML with zero client runtime — rendering server-side
+// and asserting on the produced markup proves the guarantee (same pattern as
 // hero-rsc.test.ts).
+//
+// AiMetricsSection is now a sync RSC that wraps the async AiMetricsData RSC
+// in a <Suspense> boundary (PPR pattern). AiMetricsData is tested directly
+// for the data rendering contract — it is the async inner RSC responsible
+// for fetching metrics and producing the metrics markup.
 //
 // content/ask-metrics.ts (the Redis-backed reader) is mocked so the test is
 // hermetic — no Upstash, no build-time network. The contract cases:
@@ -21,12 +25,11 @@ vi.mock('@/content/ask-metrics', () => ({
   getAskMetrics: getAskMetricsMock,
 }));
 
-// AiMetricsSection is an async RSC: await the element it resolves to, then
-// render that to static markup. The component is invoked as a plain async
-// function (no JSX) so this file stays a `.test.ts`.
-async function renderSection(): Promise<string> {
-  const { AiMetricsSection } = await import('@/components/sections/AiMetricsSection');
-  const element = await AiMetricsSection();
+// AiMetricsData is the async inner RSC that fetches and renders metrics.
+// It is invoked as a plain async function so this file stays a `.test.ts`.
+async function renderData(): Promise<string> {
+  const { AiMetricsData } = await import('@/components/sections/AiMetricsSection');
+  const element = await AiMetricsData();
   return renderToStaticMarkup(element);
 }
 
@@ -45,7 +48,7 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
       lastRun: '2026-05-20T12:00:00.000Z',
     });
 
-    const html = await renderSection();
+    const html = await renderData();
 
     // Eval pass-rate surfaced as a percentage.
     expect(html).toContain('95%');
@@ -71,7 +74,7 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
       lastRun: '2026-05-20T12:00:00.000Z',
     });
 
-    const html = await renderSection();
+    const html = await renderData();
 
     // The timestamp carries a machine-readable dateTime attribute.
     expect(html).toContain('<time dateTime="2026-05-20T12:00:00.000Z"');
@@ -83,7 +86,7 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
     let html = '';
     await expect(
       (async () => {
-        html = await renderSection();
+        html = await renderData();
       })(),
     ).resolves.not.toThrow();
 

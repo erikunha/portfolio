@@ -1,8 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { getScores, LIGHTHOUSE_FALLBACK, LIGHTHOUSE_TTL_S } from '@/lib/lighthouse-scores';
 
-export const dynamic = 'force-dynamic';
-
 export async function GET(_req: NextRequest): Promise<Response> {
   try {
     const scores = await getScores();

@@ -1,5 +1,7 @@
 'use client';
 
+import { dispatchModuleOpen } from '@/lib/events';
+
 const ITEMS = [
   {
     label: 'HOME',
@@ -59,7 +61,7 @@ export function Dock() {
     // Dispatch a custom event so MobileModule React state opens — avoids
     // direct DOM mutation which desyncs from React state and breaks on re-render.
     if (el.classList.contains('module--mobile')) {
-      window.dispatchEvent(new CustomEvent('module:open', { detail: { id: target } }));
+      dispatchModuleOpen(target);
     }
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
