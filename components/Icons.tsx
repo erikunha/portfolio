@@ -188,6 +188,17 @@ export function IconUnknowns() {
   );
 }
 
+// ASK_EVAL.JSON — gauge / checkmark dial
+export function IconAiMetrics() {
+  return (
+    <svg {...baseProps}>
+      <path d="M4 14a8 8 0 0 1 16 0" />
+      <path d="M12 14l4-3" />
+      <path d="M3 18h18" />
+    </svg>
+  );
+}
+
 // SUDO CONTACT --INIT — play triangle (filled)
 export function IconContact() {
   return (

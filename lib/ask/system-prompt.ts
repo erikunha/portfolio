@@ -159,6 +159,12 @@ export const SYSTEM_TEXT: string = `${NARRATIVE}\n\n${LIVE_DATA}`;
  * (≈ 3500-4000 chars for English text). SYSTEM_TEXT is sized to clear this
  * threshold with buffer; see `__tests__/system-prompt.test.ts` for the
  * length assertion.
+ *
+ * NOTE: the live `/api/ask` route consumes `SYSTEM_TEXT` directly (the AI
+ * Gateway path carries `cacheControl` via `providerOptions`, not this shape).
+ * `SYSTEM` is RETAINED for the documented PATH-B direct-`@anthropic-ai/sdk`
+ * fallback (DECISIONS.md, 2026-05-21) and is asserted by
+ * `__tests__/system-prompt.test.ts` — do not delete it.
  */
 export const SYSTEM: Anthropic.Messages.TextBlockParam[] = [
   {

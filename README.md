@@ -39,6 +39,7 @@ Single-page Next.js 15 portfolio deployed to Vercel Edge. RSC-first composition 
    - [`POST /api/contact`](#post-apicontact)
    - [`GET /api/lighthouse`](#get-apilighthouse)
    - [`GET /api/erik.json`](#get-apierikjson)
+   - [Agent surfaces](#agent-surfaces)
 8. [Performance budgets](#performance-budgets)
 9. [Accessibility](#accessibility)
 10. [Security](#security)
@@ -433,6 +434,24 @@ If KV is empty or unreachable, the route returns a placeholder object with zero 
 Static machine-readable hiring profile, 24-hour edge cache. The shape is a custom `HiringProfile` (the schema.org `Engineer` type does not exist; `Person` exists but lacks the role-specific fields). The endpoint is advertised in `public/llms.txt` so AI agents performing first-pass recruiter triage can parse the profile directly without scraping the HTML page.
 
 The 24-hour TTL is deliberately generous: the underlying data changes maybe once a month, and serving stale-for-an-hour is preferable to taking a build deploy to update one field.
+
+### Agent surfaces
+
+The site is a hiring artifact for an applied-AI engineer, so it is built to be read by AI agents, not only humans. Four surfaces are exposed for that audience; an agent can discover all of them from the capability manifest.
+
+| Surface | Path | Shape | Purpose |
+|---|---|---|---|
+| Capability manifest | [`/.well-known/agent.json`](./public/.well-known/agent.json) | Static JSON | Single discovery document: site identity, the `/api/ask` endpoint contract (input, streamed output, rate limit), and links to the profiles and the MCP server. |
+| Hiring profile | [`/api/erik.json`](#get-apierikjson) | JSON | Structured `HiringProfile` — employers, stack, receipts, work authorization, availability. |
+| LLM profile | [`/llms.txt`](./public/llms.txt) | Plain text | Plain-text profile summary for LLM crawlers. |
+| MCP server | `/api/mcp` | MCP (streamable HTTP) | Read-only [Model Context Protocol](https://modelcontextprotocol.io) server. |
+
+The MCP server is implemented at [`app/api/[transport]/route.ts`](./app/api/[transport]/route.ts) with [`mcp-handler`](https://github.com/vercel/mcp-handler) (the maintained successor to `@vercel/mcp-adapter`). The `[transport]` dynamic segment is the package convention — streamable HTTP resolves at `/api/mcp`. It is read-only, unauthenticated, and adds no new infrastructure. It exposes exactly two tools:
+
+- **`get_profile`** — returns the `HiringProfile` object. Reuses the shared `HIRING_PROFILE` constant in [`lib/hiring-profile.ts`](./lib/hiring-profile.ts), the same source `/api/erik.json` serves, so the two surfaces cannot drift.
+- **`ask_erik`** — takes `{ question: string }` and returns the answer. Re-invokes the real [`POST /api/ask`](#post-apiask) handler in-process, so the Claude call, rate limit, budget cap, and prompt-injection guard are not re-implemented.
+
+The tool registration lives in [`lib/agent/mcp-tools.ts`](./lib/agent/mcp-tools.ts), factored out of the route so the production tool surface is unit-tested directly against an `McpServer` instance ([`__tests__/agent-surfaces.test.ts`](./__tests__/agent-surfaces.test.ts)).
 
 ---
 
