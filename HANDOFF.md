@@ -1,5 +1,15 @@
 # Handoff to Claude Code
 
+> **HISTORICAL — SUPERSEDED.** This was the one-time bootstrap to move the
+> project from Cowork mode into Claude Code for the initial production build.
+> The project has since shipped: the repo exists, git is initialized, the
+> 8-PR launch roadmap and the Reference Standards & Improvement Program are
+> done. The Day-1 steps, the plugin marketplace names, and the "we're at Day 1"
+> framing below no longer apply. The authoritative current-state references are
+> `STANDARDS.md` (the engineering bar), `CLAUDE.md` (operating constraints),
+> `ARCHITECTURE.md` (system design), and `DECISIONS.md` (the ADR log). This file
+> is retained only as the record of the original handoff.
+
 > One-time setup to move this project from Cowork mode into Claude Code for the production build.
 
 ## Step 1 — open the project in Claude Code

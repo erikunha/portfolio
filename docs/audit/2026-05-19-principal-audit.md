@@ -1,5 +1,13 @@
 # Portfolio Audit — Principal/Staff Pass
 
+> **HISTORICAL — SUPERSEDED.** This 2026-05-19 audit describes the pre-roadmap
+> state of the codebase. Its 8-PR roadmap shipped, and the Reference Standards &
+> Improvement Program (`docs/superpowers/specs/2026-05-20-reference-standards-and-improvement-program-design.md`)
+> remediated the remaining findings. The canonical engineering bar now lives in
+> `STANDARDS.md`. This file is retained as the record of the audit that produced
+> those standards; do not action items from it without re-verifying against the
+> live code.
+
 > **Subject:** erikunha.dev portfolio
 > **Date:** 2026-05-19
 > **Scope:** every layer (architecture, security, performance, a11y, types, tests, AI, DX, SEO/AEO)
