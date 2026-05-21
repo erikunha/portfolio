@@ -27,6 +27,8 @@
         "largest-contentful-paint": ["error", { "maxNumericValue": 3066 }],
         "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05 }],
         "total-blocking-time": ["error", { "maxNumericValue": 400 }],
+        "interaction-to-next-paint": ["error", { "maxNumericValue": 500 }],
+        "server-response-time": ["warn", { "maxNumericValue": 1800 }],
         "interactive": ["error", { "maxNumericValue": 4500 }],
 
         "uses-text-compression": "error",
