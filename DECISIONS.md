@@ -15,7 +15,7 @@ ADR-lite running log. One bullet per decision · date · reversibility note.
 
 ## 2026-05-21 — Security hardening (Phase 3, Task 3.3)
 
-- **2026-05-21** · Hash-based CSP deferred — Next.js 15 static generation emits RSC flight payloads whose SHA-256 changes on every content edit; a build-time hash-extraction step (build → scan HTML → compute SHA-256 → patch proxy.ts) is required but does not exist yet. `'unsafe-inline'` stays. CSP violation observability added via `report-uri /api/csp-report` (present in all environments; route handler stub deferred to a follow-up). Will revisit hash-based CSP when a dynamic route with third-party scripts is added. (reversible; see proxy.ts §5 comment)
+- **2026-05-21** · Hash-based CSP deferred — Next.js 16 static generation emits RSC flight payloads whose SHA-256 changes on every content edit; a build-time hash-extraction step (build → scan HTML → compute SHA-256 → patch proxy.ts) is required but does not exist yet. `'unsafe-inline'` stays. CSP violation observability added via `report-uri /api/csp-report` (present in all environments); `app/api/csp-report/route.ts` returns 204 to acknowledge receipt and prevent 404 noise. Will revisit hash-based CSP when a dynamic route with third-party scripts is added. (reversible; see proxy.ts §5 comment)
 - **2026-05-21** · `getClientIp` proxy trust posture documented — no code change. Vercel's edge sets `x-forwarded-for` and `x-real-ip` authoritatively and strips client-injected values; the header-precedence order and local-dev 'unknown' fallback are documented inline in `lib/rate-limit.ts`. (informational; no behavior change)
 
 ## 2026-05-21 — PPR / `cacheComponents` API spike (Phase 2, Task 2.1)
