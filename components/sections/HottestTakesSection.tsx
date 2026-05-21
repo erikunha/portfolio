@@ -8,13 +8,12 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
       id="sec-hottest-takes"
       header="CAT ~/HOTTEST_TAKES.MD"
       icon={<IconHottestTakes />}
-      defaultOpen={false}
       defer={defer}
     >
       <div className="takes__preamble">
         <span className="gt">$</span>
         {'cat ~/hottest_takes.md  '}
-        <span style={{ opacity: 0.55 }}>{hottestTakesConfig.preamble}</span>
+        <span style={{ color: 'var(--muted-dim)' }}>{hottestTakesConfig.preamble}</span>
       </div>
       <ol className="takes" start={1}>
         {hottestTakes.map((t) => (

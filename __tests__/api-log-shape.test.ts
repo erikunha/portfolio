@@ -1,140 +1,174 @@
 // __tests__/api-log-shape.test.ts
-// Source-grep test: verifies the /api/log endpoint shape + rate-limit
-// reuse + KV key pattern per spec docs/superpowers/specs/
-// 2026-05-18-production-observability-design.md §7a.
+// Behavioral test (CG3): exercises the /api/log endpoint, lib/ip-hash, and the
+// client error bridge end-to-end, instead of grepping their source text.
 //
-// Task 4 (Phase 3a) populates the endpoint block.
-// Task 5 (Phase 3b) appends the client-bridge block.
+//  - /api/log endpoint: POST a structured error, assert the KV write uses the
+//    `err:` key prefix + 30-day TTL, the success envelope, the smoke-prefix
+//    bypass, the personal-data-free record (no ipHash), and the
+//    storage-unavailable error path.
+//  - lib/ip-hash: hashIp produces a stable 16-char SHA-256-derived hex digest.
+//  - lib/error-bridge.client: an unhandled window error POSTs a structured
+//    payload to /api/log, and the dedup window suppresses replayed errors.
 
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { NextRequest } from 'next/server';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const LOG_ROUTE = readFileSync(path.resolve(__dirname, '../app/api/log/route.ts'), 'utf-8');
-const RATE_LIMIT = readFileSync(path.resolve(__dirname, '../lib/rate-limit.ts'), 'utf-8');
+// --- /api/log endpoint -------------------------------------------------------
+describe('/api/log endpoint', () => {
+  const redisSetMock = vi.fn();
 
-describe('/api/log endpoint (Phase 3a + PR 5b of audit)', () => {
-  // PR 5b of audit roadmap refactored this route to use `defineHandler`
-  // from lib/server/route.ts. The POST export is now `export const POST =
-  // defineHandler({ ... })` (not an async function). Source-grep
-  // assertions updated; matching behavioral coverage lives in
-  // __tests__/route-handler.test.ts.
-
-  it('exports POST via defineHandler', () => {
-    expect(LOG_ROUTE).toMatch(/export\s+const\s+POST\s*=\s*defineHandler\(/);
-    expect(LOG_ROUTE).toMatch(/from\s*['"]@\/lib\/server\/route['"]/);
+  beforeEach(() => {
+    vi.resetModules();
+    redisSetMock.mockReset();
+    vi.doMock('@/lib/rate-limit', () => ({
+      getClientIp: vi.fn(() => '127.0.0.1'),
+      getErrorLogLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
+      getRedis: vi.fn(() => ({ set: redisSetMock })),
+    }));
+    vi.doMock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
+    vi.doMock('@/lib/log', () => ({
+      log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+    }));
   });
 
-  it('marks the route as dynamic', () => {
-    expect(LOG_ROUTE).toMatch(/export\s+const\s+dynamic\s*=\s*['"]force-dynamic['"]/);
+  afterEach(() => {
+    vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/ip-hash');
+    vi.doUnmock('@/lib/log');
   });
 
-  it('validates the request shape with zod', () => {
-    expect(LOG_ROUTE).toMatch(/from\s*['"]zod['"]/);
-    expect(LOG_ROUTE).toMatch(/z\.object\(/);
+  function makeRequest(body: Record<string, unknown>): NextRequest {
+    return new NextRequest('http://localhost/api/log', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  it('persists a valid error to KV with the err: prefix and a 30-day TTL', async () => {
+    redisSetMock.mockResolvedValueOnce('OK');
+    const { POST } = await import('@/app/api/log/route');
+    const res = await POST(makeRequest({ level: 'error', message: 'boom in the browser' }));
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; requestId: string };
+    expect(body.ok).toBe(true);
+    expect(body.requestId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(res.headers.get('x-request-id')).toBe(body.requestId);
+
+    expect(redisSetMock).toHaveBeenCalledOnce();
+    const [key, , opts] = redisSetMock.mock.calls[0] ?? [];
+    expect(String(key)).toMatch(/^err:/);
+    expect(opts).toEqual({ ex: 2_592_000 }); // 30 days
   });
 
-  it('does NOT store ipHash in err:* records (personal-data-free design)', () => {
-    // err:* records intentionally omit ipHash so they contain no personal data
-    // and fall outside the /api/log/forget erasure scope. The IP is used only
-    // for rate-limiting and discarded. See DECISIONS.md 2026-05-19.
-    // Check code lines only (not comments) by filtering out comment lines.
-    const codeLines = LOG_ROUTE.split('\n')
-      .filter((l) => !l.trimStart().startsWith('//'))
-      .join('\n');
-    expect(codeLines).not.toMatch(/\bipHash\b/);
-    expect(codeLines).not.toMatch(/\bhashIp\b/);
+  it('stores no ipHash in the err: record (personal-data-free design)', async () => {
+    redisSetMock.mockResolvedValueOnce('OK');
+    const { POST } = await import('@/app/api/log/route');
+    await POST(makeRequest({ level: 'error', message: 'boom' }));
+
+    const [, value] = redisSetMock.mock.calls[0] ?? [];
+    const record = JSON.parse(String(value)) as Record<string, unknown>;
+    expect('ipHash' in record).toBe(false);
+    expect(record.message).toBe('boom');
   });
 
-  it('lib/ip-hash.ts uses SHA-256 + DEPLOY_SALT (centralised; previously inline in each route)', () => {
-    const IP_HASH = readFileSync(path.resolve(__dirname, '../lib/ip-hash.ts'), 'utf-8');
-    expect(IP_HASH).toMatch(/SHA-256/);
-    expect(IP_HASH).toMatch(/DEPLOY_SALT/);
-    expect(IP_HASH).toMatch(/^import 'server-only'/m);
+  it('skips KV persistence for [smoke]-prefixed messages', async () => {
+    const { POST } = await import('@/app/api/log/route');
+    const res = await POST(makeRequest({ level: 'error', message: '[smoke] CI probe' }));
+    expect(res.status).toBe(200);
+    expect(redisSetMock).not.toHaveBeenCalled();
   });
 
-  it('writes to Upstash KV with err: prefix and 30-day TTL', () => {
-    expect(LOG_ROUTE).toMatch(/['"`]err:/);
-    expect(LOG_ROUTE).toMatch(/2[_]?592[_]?000/);
+  it('rejects a malformed payload with a 400 validation error', async () => {
+    const { POST } = await import('@/app/api/log/route');
+    // `level` must be 'error' | 'warn'; 'debug' is invalid.
+    const res = await POST(makeRequest({ level: 'debug', message: 'x' }));
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { ok: false; error: { code: string } };
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe('validation_failed');
   });
 
-  it('uses the new getErrorLogLimit() rate-limit factory', () => {
-    // PR 5b: route now passes the factory (no parens) to defineHandler;
-    // defineHandler invokes it. So we look for the bare symbol.
-    expect(LOG_ROUTE).toMatch(/\bgetErrorLogLimit\b/);
-  });
-
-  it('lib/rate-limit.ts exports getErrorLogLimit factory with 10/min limit', () => {
-    expect(RATE_LIMIT).toMatch(/export\s+function\s+getErrorLogLimit\b/);
-    expect(RATE_LIMIT).toMatch(/slidingWindow\(\s*10\s*,\s*['"]1\s*m['"]/);
-  });
-
-  it('returns ok envelope on success, err envelope with storage_unavailable on KV failure', () => {
-    // PR 5b: 204 No Content → 200 { ok: true, requestId } via defineHandler.
-    // 400 + 429 envelopes come from defineHandler itself (parse/validate/rl).
-    // The route still emits the 503 path via the err() helper when KV writes
-    // fail — the only error path the route still owns.
-    expect(LOG_ROUTE).toMatch(/\bok\(\s*\{\s*requestId\s*\}\s*\)/);
-    expect(LOG_ROUTE).toMatch(/code:\s*['"]storage_unavailable['"]/);
-    expect(LOG_ROUTE).toMatch(/status:\s*503/);
-  });
-
-  it('skips KV persistence for [smoke]-prefixed messages (smoke-test sentinel)', () => {
-    // SMOKE_PREFIX guard prevents CI smoke runs from polluting prod KV.
-    expect(LOG_ROUTE).toMatch(/SMOKE_PREFIX/);
-    expect(LOG_ROUTE).toMatch(/startsWith\(SMOKE_PREFIX\)/);
+  it('returns storage_unavailable (503) when the KV write throws', async () => {
+    redisSetMock.mockRejectedValueOnce(new Error('Upstash down'));
+    const { POST } = await import('@/app/api/log/route');
+    const res = await POST(makeRequest({ level: 'error', message: 'boom' }));
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as { ok: false; error: { code: string } };
+    expect(body.error.code).toBe('storage_unavailable');
   });
 });
 
-describe('client error bridge (Phase 3b)', () => {
-  const BRIDGE = readFileSync(path.resolve(__dirname, '../lib/error-bridge.client.ts'), 'utf-8');
-  const ERROR_BOUNDARY = readFileSync(
-    path.resolve(__dirname, '../components/ErrorBoundary.client.tsx'),
-    'utf-8',
-  );
-  const APP_SHELL = readFileSync(
-    path.resolve(__dirname, '../components/AppShell.client.tsx'),
-    'utf-8',
-  );
-
-  it('lib/error-bridge.ts declares use client', () => {
-    expect(BRIDGE).toMatch(/^['"]use client['"]/m);
+// --- lib/ip-hash -------------------------------------------------------------
+describe('lib/ip-hash', () => {
+  beforeEach(() => {
+    vi.resetModules();
   });
 
-  it('registers both window.onerror and unhandledrejection listeners', () => {
-    expect(BRIDGE).toMatch(/window\.addEventListener\(\s*['"]error['"]/);
-    expect(BRIDGE).toMatch(/window\.addEventListener\(\s*['"]unhandledrejection['"]/);
+  it('hashIp returns a stable 16-char hex digest, distinct per IP', async () => {
+    const { hashIp } = await import('@/lib/ip-hash');
+    const a1 = await hashIp('203.0.113.7');
+    const a2 = await hashIp('203.0.113.7');
+    const b = await hashIp('198.51.100.1');
+
+    // Deterministic — same IP hashes identically (rate-limit accounting relies
+    // on this), and the digest is the documented 16-hex-char SHA-256 slice.
+    expect(a1).toBe(a2);
+    expect(a1).toMatch(/^[0-9a-f]{16}$/);
+    // Different IPs map to different hashes.
+    expect(a1).not.toBe(b);
+  });
+});
+
+// --- lib/error-bridge.client -------------------------------------------------
+// The bridge registers window listeners as a module side effect with no
+// teardown hook. Import it exactly ONCE for this block (no resetModules) so
+// only a single listener set is attached; each test uses a unique error
+// message so the per-module dedup Map never cross-contaminates tests.
+describe('client error bridge', () => {
+  let bridge: typeof import('@/lib/error-bridge.client');
+
+  beforeAll(async () => {
+    bridge = await import('@/lib/error-bridge.client');
   });
 
-  it('dedupes via a 100ms tail window keyed on message + stack', () => {
-    expect(BRIDGE).toMatch(/100/);
-    expect(BRIDGE).toMatch(/\b(Map|Set|Record)\b/);
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
-  it('dedup Map is capped at MAX_DEDUP_SIZE to prevent unbounded growth', () => {
-    // MAX_DEDUP_SIZE guards against pathological growth when each error message
-    // contains a unique ID or timestamp (tight loops faster than 100ms window).
-    expect(BRIDGE).toMatch(/MAX_DEDUP_SIZE/);
-    expect(BRIDGE).toMatch(/export\s+const\s+MAX_DEDUP_SIZE\s*=\s*\d+/);
-  });
+  it('POSTs a structured payload to /api/log on an unhandled window error', async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
 
-  it('POSTs structured payload to /api/log', () => {
-    expect(BRIDGE).toMatch(/fetch\(\s*['"]\/api\/log['"]/);
-    expect(BRIDGE).toMatch(/method:\s*['"]POST['"]/);
-  });
-
-  it('AppShell.client.tsx imports lib/error-bridge.client once as a side-effect', () => {
-    // Bare side-effect import: `import '@/lib/error-bridge.client';` (or relative variant).
-    // PR 6b of audit roadmap renamed lib/error-bridge.ts to
-    // lib/error-bridge.client.ts to comply with Standard 2 naming gate.
-    expect(APP_SHELL).toMatch(
-      /import\s+['"](@\/lib\/error-bridge\.client|\.\.\/lib\/error-bridge\.client)['"]/,
+    window.dispatchEvent(
+      new ErrorEvent('error', { message: 'kaboom-unique', error: new Error('kaboom-unique') }),
     );
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/log', expect.objectContaining({ method: 'POST' }));
+    const call = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    const init = call[1];
+    const payload = JSON.parse(String(init.body)) as { level: string; message: string };
+    expect(payload.level).toBe('error');
+    expect(payload.message).toBe('kaboom-unique');
   });
 
-  it('ErrorBoundary.client.tsx componentDidCatch POSTs to /api/log', () => {
-    expect(ERROR_BOUNDARY).toMatch(/console\.error/);
-    expect(ERROR_BOUNDARY).toMatch(/fetch\(\s*['"]\/api\/log['"]/);
-    expect(ERROR_BOUNDARY).toMatch(/method:\s*['"]POST['"]/);
+  it('dedupes a replayed identical error inside the 100ms tail window', async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    // React's error replay fires the same error 2-3x in <50ms — only the
+    // first should be POSTed.
+    const err = new Error('replayed-unique');
+    window.dispatchEvent(new ErrorEvent('error', { message: 'replayed-unique', error: err }));
+    window.dispatchEvent(new ErrorEvent('error', { message: 'replayed-unique', error: err }));
+    window.dispatchEvent(new ErrorEvent('error', { message: 'replayed-unique', error: err }));
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('exposes a MAX_DEDUP_SIZE cap to bound the dedup Map', () => {
+    expect(typeof bridge.MAX_DEDUP_SIZE).toBe('number');
+    expect(bridge.MAX_DEDUP_SIZE).toBeGreaterThan(0);
   });
 });

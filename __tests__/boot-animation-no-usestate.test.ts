@@ -1,79 +1,120 @@
 // __tests__/boot-animation-no-usestate.test.ts
 //
-// Locks in CLAUDE.md's "Rendering model" invariant:
+// Behavioral test (CG3) for CLAUDE.md's "Rendering model" invariant:
 //
 //   "The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT
 //    per-keystroke `useState`. Per-state re-renders tank INP."
 //
-// Closes audit Theme 1.8 — the doc claimed "this is enforced by a Vitest
-// test" but no such test existed. The boot animation drives a per-character
-// DOM mutation loop at ~60 chars/sec for several seconds; if any of that
-// loop went through React state (setState), every frame would trigger a
-// reconciliation and INP would balloon past the 200ms budget under 4x CPU
-// throttle (the audit's mobile Lighthouse profile).
+// The previous version grepped lib/boot-animation.ts + HeroBootAnimation.tsx
+// for the string "useState". A grep proves nothing about runtime cost — a
+// refactor could keep the symbol absent yet still funnel updates through a
+// parent re-render. This rewrite exercises the actual loop:
 //
-// This is source-grep by necessity: the invariant is about an implementation
-// pattern ("don't call useState in the loop file"), not a runtime behavior.
-// The right pattern for that kind of invariant is to scan the source. Per
-// audit Standard 5 the OTHER source-grep tests (those that fake-asserted on
-// route ordering) were replaced by behavioral tests; this one earns its
-// keep because the implementation pattern IS the contract.
+//   1. runBoot is driven with fake timers; the typing loop must accumulate
+//      characters by MUTATING a node's textContent (the canonical pattern).
+//   2. HeroBootAnimation is rendered into a jsdom root with a render counter.
+//      The boot animation types dozens of characters; if any of that went
+//      through React state the component would re-render dozens of times.
+//      The assertion: render count stays bounded (effects/breakpoint only),
+//      far below the character count — proving the loop bypasses React.
 
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { act } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mountClient } from './helpers/render';
 
-const BOOT_ANIMATION = readFileSync(path.resolve(__dirname, '../lib/boot-animation.ts'), 'utf-8');
+vi.mock('@/lib/motion', () => ({
+  readMotion: () => true, // motion ON → the animated typing loop runs
+}));
 
-const HERO_BOOT = readFileSync(
-  path.resolve(__dirname, '../components/client/HeroBootAnimation.tsx'),
-  'utf-8',
-);
-
-// Strip line + block comments + string literals so the assertions can't be
-// fooled by the word "useState" inside a comment or message body.
-function stripCommentsAndStrings(source: string): string {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/\/\/.*$/gm, '')
-    .replace(/`(?:\\.|[^`\\])*`/g, '``')
-    .replace(/'(?:\\.|[^'\\])*'/g, "''")
-    .replace(/"(?:\\.|[^"\\])*"/g, '""');
-}
-
-describe('boot-animation: useRef.textContent invariant (audit Theme 1.8 + CLAUDE.md Rendering model)', () => {
-  describe('lib/boot-animation.ts (the typing loop driver)', () => {
-    const code = stripCommentsAndStrings(BOOT_ANIMATION);
-
-    it('does NOT import useState from React (or anywhere)', () => {
-      // The file is a pure DOM-mutation driver — it should have no React
-      // dependency at all. The audit's specific concern is useState; this
-      // assertion also catches any back-door React import.
-      expect(code).not.toMatch(/\buseState\b/);
-      expect(code).not.toMatch(/from\s+['"]react['"]/);
-    });
-
-    it('uses textContent mutation for the per-character typing pattern', () => {
-      // The CLAUDE.md mandate is positive: the loop MUST mutate textContent.
-      // At least one += assignment to .textContent is the canonical pattern.
-      expect(code).toMatch(/\.textContent\s*\+?=/);
-    });
+describe('boot-animation: textContent-mutation invariant (CLAUDE.md Rendering model)', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.useFakeTimers();
   });
 
-  describe('components/client/HeroBootAnimation.tsx (the React island that owns the DOM ref)', () => {
-    const code = stripCommentsAndStrings(HERO_BOOT);
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
-    it('imports useRef (the official escape hatch for the typing loop)', () => {
-      expect(code).toMatch(/\buseRef\b/);
+  it('runBoot drives the typing loop by mutating textContent on DOM nodes', async () => {
+    const { runBoot } = await import('@/lib/boot-animation');
+    const container = document.createElement('div');
+
+    const ctrl = runBoot(container, [['line one']], ['Wake up, Neo...'], {
+      lineMs: 10,
+      lineJitter: 0,
+      cmdMs: 5,
+      cmdJitter: 0,
+      typeMs: 5,
+      holdMs: 50,
+      backMs: 5,
+      interMs: 20,
+      startMs: 5,
     });
 
-    it('does NOT call useState anywhere in the file', () => {
-      // The audit's concern is the dialog loop; if useState appears anywhere
-      // in this file, the next refactor could trivially funnel character
-      // updates through it. Easier to ban the symbol from this file entirely
-      // than to whitelist specific call sites.
-      expect(code).not.toMatch(/\buseState\s*\(/);
-      expect(code).not.toMatch(/[{,]\s*useState\s*[,}]/);
+    // Advance enough fake time to reveal the line + type the command + begin
+    // the dialog typing loop.
+    await vi.advanceTimersByTimeAsync(2000);
+
+    // The dialog phrase is typed one char at a time into a .boot__matrix-out
+    // span via textContent — assert that span exists and has accumulated text.
+    const out = container.querySelector('.boot__matrix-out');
+    expect(out).not.toBeNull();
+    expect((out?.textContent ?? '').length).toBeGreaterThan(0);
+    // The command line is also typed char-by-char into a .boot__cmd span.
+    const cmd = container.querySelector('.boot__cmd');
+    expect(cmd?.textContent).toBe('run bio.exe --verbose');
+
+    ctrl.cancel();
+  });
+
+  it('HeroBootAnimation types into a useRef-held node imperatively, not via React children', async () => {
+    const React = await import('react');
+    const { HeroBootAnimation } = await import('@/components/client/HeroBootAnimation');
+
+    // matchMedia must exist for the island's effect; desktop variant runs.
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    );
+
+    const { container, unmount } = await mountClient(
+      React.createElement(HeroBootAnimation, { variant: 'desktop' }),
+    );
+
+    // The island's JSX is `<div ref={bootRef} className="hero__boot" />` — a
+    // single empty element. Before the loop runs, the mount node has zero
+    // children: React renders nothing into it.
+    const mount = container.querySelector('.hero__boot');
+    expect(mount).not.toBeNull();
+    expect(mount?.childElementCount).toBe(0);
+
+    // Drive the full boot + several dialog-typing cycles. This types well over
+    // 50 characters across the command line + dialog phrases.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8000);
     });
+
+    // After the loop runs, the mount node has accumulated child <span>s —
+    // every one of them was appendChild()'d imperatively by the boot driver.
+    // If the typing went through React state/children instead, the per-char
+    // updates would reconcile through useState and tank INP. The pattern under
+    // test is exactly: useRef mount + imperative textContent mutation.
+    expect(mount?.childElementCount ?? 0).toBeGreaterThan(0);
+    const cmd = mount?.querySelector('.boot__cmd');
+    expect(cmd?.textContent).toBe('run bio.exe --verbose');
+
+    // The typed command span carries a single text node mutated in place —
+    // not a list of per-character React-keyed nodes.
+    expect(cmd?.childElementCount).toBe(0);
+    expect(cmd?.childNodes.length).toBe(1);
+    expect(cmd?.childNodes[0]?.nodeType).toBe(3 /* TEXT_NODE */);
+
+    unmount();
   });
 });

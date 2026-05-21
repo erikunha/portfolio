@@ -4,64 +4,55 @@
 // (one per section) at the cost of native <details> on mobile instead of a
 // custom toggle. The 'module:open' event from Dock is handled by a single
 // delegated listener in AppShell.client.tsx that flips the open attribute.
+//
+// ONE element for every viewport. The page is `force-static`, so the server
+// has no per-request UA context. Module wraps ~18 sections; rendering both a
+// <section> and a <details> variant would duplicate every subtree (~2500+ DOM
+// nodes) and blow the dom-size budget. So Module always renders a native
+// <details open>. It must stay open: a closed <details> cannot be reopened by
+// CSS (browsers gate the collapse via the ::details-content pseudo-element,
+// which the Lightning CSS build strips), and force-static rules out a
+// per-viewport server choice. Desktop CSS (>= 769px) hides the chevron and
+// strips the summary toggle chrome so it reads as a plain <h2>; mobile keeps
+// the chevron and a section can be collapsed by tapping its summary.
 
 import type { ReactNode } from 'react';
-import { getIsMobileForRequest } from '@/lib/get-is-mobile-for-request';
 
 export type ModuleProps = {
   id: string;
   header: string;
+  /**
+   * Shorter header shown on mobile. With a single static element the header
+   * text can't be branched by viewport at render time, so both labels are
+   * emitted and CSS toggles them at the 768px breakpoint (same pattern the
+   * four leaf sections use for their body variants). Falls back to `header`.
+   */
   mobileHeader?: string;
   icon?: ReactNode;
-  defaultOpen?: boolean;
   /** Applies content-visibility:auto deferral for below-fold modules. */
   defer?: boolean | undefined;
   children: ReactNode;
 };
 
-export async function Module({
-  id,
-  header,
-  mobileHeader,
-  icon,
-  defaultOpen = true,
-  defer = false,
-  children,
-}: ModuleProps) {
-  const isMobile = await getIsMobileForRequest();
-  const activeHeader = isMobile && mobileHeader ? mobileHeader : header;
-
-  if (!isMobile) {
-    return (
-      <section id={id} className={`module module--desktop${defer ? ' cv-defer' : ''}`}>
+export function Module({ id, header, mobileHeader, icon, defer = false, children }: ModuleProps) {
+  return (
+    <details
+      id={id}
+      className={`module${defer ? ' cv-defer' : ''}`}
+      // Always open: see the file header. A section can still be collapsed by
+      // tapping its summary on mobile.
+      open
+    >
+      <summary className="module__toggle">
         <h2 className="module__header">
           {icon ? (
             <span className="module__icon" aria-hidden>
               {icon}
             </span>
           ) : null}
-          <span>{activeHeader}</span>
+          <span className="module__label module__label--desktop">{header}</span>
+          <span className="module__label module__label--mobile">{mobileHeader ?? header}</span>
         </h2>
-        <div className="module__body">{children}</div>
-      </section>
-    );
-  }
-
-  return (
-    <details
-      id={id}
-      className={`module module--mobile${defer ? ' cv-defer' : ''}`}
-      open={defaultOpen || undefined}
-    >
-      <summary className="module__toggle">
-        <span className="module__header-label">
-          {icon ? (
-            <span className="module__icon" aria-hidden>
-              {icon}
-            </span>
-          ) : null}
-          <span>{activeHeader}</span>
-        </span>
         <span className="module__chevron" aria-hidden>
           ▸
         </span>

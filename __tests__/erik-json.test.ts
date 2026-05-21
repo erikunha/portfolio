@@ -1,32 +1,43 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+// __tests__/erik-json.test.ts
+// Behavioral test (CG3): calls the real GET handler of /api/erik.json and
+// asserts the parsed JSON body + response headers, instead of grepping the
+// route source text. This exercises the actual machine-readable hiring
+// profile a recruiter's tooling would fetch.
 
-const SOURCE = readFileSync(path.resolve(__dirname, '../app/api/erik.json/route.ts'), 'utf-8');
+import { describe, expect, it } from 'vitest';
+import { GET } from '@/app/api/erik.json/route';
 
 describe('/api/erik.json route', () => {
-  it('exports a GET handler', () => {
-    expect(SOURCE).toContain('export async function GET');
+  it('GET returns a JSON 200 response', async () => {
+    const res = await GET();
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toMatch(/application\/json/);
   });
 
-  it('returns @type HiringProfile', () => {
-    expect(SOURCE).toContain('@type');
-    expect(SOURCE).toContain('HiringProfile');
+  it('body is typed as a HiringProfile', async () => {
+    const body = (await (await GET()).json()) as Record<string, unknown>;
+    expect(body['@type']).toBe('HiringProfile');
   });
 
-  it('includes availability field', () => {
-    expect(SOURCE).toContain('availability');
+  it('body exposes the recruiter-facing fields', async () => {
+    const body = (await (await GET()).json()) as Record<string, unknown>;
+    expect(body.availability).toBeDefined();
+    expect(body.stack_primary).toBeDefined();
+    expect(Array.isArray(body.stack_primary)).toBe(true);
+    expect(body.work_auth).toBeDefined();
   });
 
-  it('includes stack_primary field', () => {
-    expect(SOURCE).toContain('stack_primary');
+  it('sets a long-lived public cache header', async () => {
+    const res = await GET();
+    const cacheControl = res.headers.get('cache-control') ?? '';
+    expect(cacheControl).toMatch(/max-age=\d+/);
+    // max-age must be non-trivial — a static hiring manifest should cache.
+    const maxAge = Number(cacheControl.match(/max-age=(\d+)/)?.[1] ?? '0');
+    expect(maxAge).toBeGreaterThanOrEqual(3600);
   });
 
-  it('includes work_auth field', () => {
-    expect(SOURCE).toContain('work_auth');
-  });
-
-  it('sets a long-lived cache header', () => {
-    expect(SOURCE).toContain('max-age');
+  it('sets X-Content-Type-Options: nosniff', async () => {
+    const res = await GET();
+    expect(res.headers.get('x-content-type-options')).toBe('nosniff');
   });
 });

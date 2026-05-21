@@ -8,77 +8,80 @@ export const SocialSchema = z.object({
   linkedin: z.string().url(),
   email: z.string().email(),
   site: z.string().url(),
-  handle: z.string(),
+  handle: z.string().min(1),
   whatsapp: z.string().url(),
 });
 
 // ProjectsSection
-export const StatSchema = z.object({ label: z.string(), value: z.string() });
+export const StatSchema = z.object({
+  label: z.string().min(1),
+  value: z.string().min(1),
+});
 export const ProjectSchema = z.object({
-  name: z.string(),
-  mobileName: z.string(),
-  description: z.string(),
-  mobileDescription: z.string(),
+  name: z.string().min(1),
+  mobileName: z.string().min(1),
+  description: z.string().min(1),
+  mobileDescription: z.string().min(1),
   stats: z.array(StatSchema).min(1),
   mobileMeta: z.array(StatSchema).min(1),
-  perm: z.string().optional(),
+  perm: z.string().min(1).optional(),
 });
 
 // GitLogSection — the "blame" view of career history
 export const BlameEntrySchema = z.object({
-  dates: z.string(),
-  company: z.string(),
-  role: z.string(),
-  reason: z.string(),
+  dates: z.string().min(1),
+  company: z.string().min(1),
+  role: z.string().min(1),
+  reason: z.string().min(1),
 });
 
 // PerfReceiptsSection
 export const PerfReceiptSchema = z.object({
-  metric: z.string(),
-  delta: z.string(),
-  company: z.string(),
-  note: z.string(),
-  mobileMetric: z.string().optional(), // abbreviated label for narrow viewports
+  metric: z.string().min(1),
+  delta: z.string().min(1),
+  company: z.string().min(1),
+  note: z.string().min(1),
+  mobileMetric: z.string().min(1).optional(), // abbreviated label for narrow viewports
   desktopOnly: z.boolean().optional(), // hidden on mobile via CSS
 });
 
 // NpmStackSection — SVG path is inline, kept in data layer
 export const NpmTileSchema = z.object({
-  label: z.string(),
-  path: z.string(),
+  label: z.string().min(1),
+  path: z.string().min(1),
 });
 
 // HottestTakesSection
 export const HottestTakeSchema = z.object({
-  num: z.string(),
-  category: z.string(),
-  thesis: z.string(),
-  body: z.string(),
+  num: z.string().min(1),
+  category: z.string().min(1),
+  thesis: z.string().min(1),
+  body: z.string().min(1),
 });
 
 // ResponsibilitiesSection
 export const ResponsibilitySchema = z.object({
   perms: z.string().regex(/^[-d][rwx-]{9}$/),
-  user: z.string(),
-  group: z.string(),
-  name: z.string(),
+  user: z.string().min(1),
+  group: z.string().min(1),
+  name: z.string().min(1),
   highlight: z.boolean().default(false),
 });
 
 // GuitarSection — structured fields + influences
 export const GuitarFieldSchema = z.object({
-  label: z.string(),
-  labelMobile: z.string().optional(),
-  value: z.string(),
-  valueMobile: z.string().optional(),
+  label: z.string().min(1),
+  labelMobile: z.string().min(1).optional(),
+  value: z.string().min(1),
+  valueMobile: z.string().min(1).optional(),
 });
 export const GuitarInfluenceSchema = z.object({
   rank: z.number().int().min(1),
-  name: z.string(),
+  name: z.string().min(1),
 });
 export const GuitarRigSchema = z.object({
-  comment: z.string(),
-  commentMobile: z.string(),
+  comment: z.string().min(1),
+  commentMobile: z.string().min(1),
   fields: z.array(GuitarFieldSchema).min(1),
   influences: z.array(GuitarInfluenceSchema).min(1),
   influencesMobile: z.array(GuitarInfluenceSchema).min(1),
@@ -86,77 +89,80 @@ export const GuitarRigSchema = z.object({
 
 // UnknownsSection
 export const UnknownItemSchema = z.object({
-  claim: z.string(),
-  context: z.string(),
+  claim: z.string().min(1),
+  context: z.string().min(1),
 });
 export const UnknownsSchema = z.object({
   learning: z.array(UnknownItemSchema).min(1),
   notSpecializing: z.array(UnknownItemSchema).min(1),
-  footer: z.string(),
+  footer: z.string().min(1),
 });
 
 // VisaSection
 export const VisaRowSchema = z.object({
-  jurisdiction: z.string(),
-  jurisdictionShort: z.string(),
-  status: z.string(),
-  statusShort: z.string(),
-  evidence: z.string(),
+  jurisdiction: z.string().min(1),
+  jurisdictionShort: z.string().min(1),
+  status: z.string().min(1),
+  statusShort: z.string().min(1),
+  evidence: z.string().min(1),
 });
 
 // CredentialsSection
 export const CredentialSchema = z.object({
-  label: z.string(),
-  badge: z.string(),
-  evidence: z.string(),
+  label: z.string().min(1),
+  badge: z.string().min(1),
+  evidence: z.string().min(1),
 });
 
 // CommunitySection
 export const CommunityEventSchema = z.object({
-  name: z.string(),
+  name: z.string().min(1),
   year: z.number().int(),
-  role: z.string(),
-  bullets: z.array(z.string()).min(1),
-  statusLine: z.string(),
+  role: z.string().min(1),
+  bullets: z.array(z.string().min(1)).min(1),
+  statusLine: z.string().min(1),
 });
 
 // ManPageSection — text content extracted for type-safety
 export const ManPageSchema = z.object({
-  name: z.string(),
-  tagline: z.string(),
-  version: z.string(),
-  date: z.string(),
-  description: z.string(),
-  options: z.array(z.object({ flag: z.string(), desc: z.string() })),
-  knownBugs: z.array(z.string()),
+  name: z.string().min(1),
+  tagline: z.string().min(1),
+  version: z.string().min(1),
+  date: z.string().min(1),
+  description: z.string().min(1),
+  options: z.array(z.object({ flag: z.string().min(1), desc: z.string().min(1) })),
+  knownBugs: z.array(z.string().min(1)),
 });
 
 // NowSection
-export const NowRowSchema = z.object({ k: z.string(), v: z.string() });
+export const NowRowSchema = z.object({
+  k: z.string().min(1),
+  v: z.string().min(1),
+});
 
 // SysHealthSection
 export const SysStatSchema = z.object({
-  label: z.string(),
-  value: z.string(),
+  label: z.string().min(1),
+  value: z.string().min(1),
   pct: z.string().regex(/^\d{1,3}%$/),
 });
 
 // GitLogSection
 export const GitCommitSchema = z.object({
-  hash: z.string(),
-  deco: z.string(),
-  date: z.string(),
-  branch: z.string(),
+  hash: z.string().min(1),
+  deco: z.string().min(1),
+  date: z.string().min(1),
+  branch: z.string().min(1),
   type: z.enum(['career', 'life']),
-  company: z.string(),
-  role: z.string(),
-  body: z.array(z.string()),
+  company: z.string().min(1),
+  role: z.string().min(1),
+  body: z.array(z.string().min(1)),
   isRoot: z.boolean().optional(),
 });
 
 // InteractiveShell — local command responses
 export const ShellResponseSchema = z.object({
-  commands: z.array(z.string()).min(1),
+  commands: z.array(z.string().min(1)).min(1),
   kind: z.enum(['output', 'error']).default('output'),
   text: z.string().min(1),
 });
@@ -164,20 +170,20 @@ export const ShellCommandsSchema = z.array(ShellResponseSchema).min(1);
 
 // ReadmeSection — prose copy extracted from JSX
 export const ReadmeCopySchema = z.object({
-  desktopH1: z.string(),
-  desktopIntro: z.string(),
-  desktopCoreStack: z.array(z.string()).min(1),
-  desktopPrinciples: z.array(z.string()).min(1),
-  desktopStatusH2: z.string(),
+  desktopH1: z.string().min(1),
+  desktopIntro: z.string().min(1),
+  desktopCoreStack: z.array(z.string().min(1)).min(1),
+  desktopPrinciples: z.array(z.string().min(1)).min(1),
+  desktopStatusH2: z.string().min(1),
 });
 export type ReadmeCopy = z.infer<typeof ReadmeCopySchema>;
 
 // Footer DMESG — structured so no JSX lives in content
 export const DmesgLineSchema = z.object({
   off: z.number(),
-  prefix: z.string(),
-  bold: z.string().optional(),
-  suffix: z.string().optional(),
+  prefix: z.string().min(1),
+  bold: z.string().min(1).optional(),
+  suffix: z.string().min(1).optional(),
   ok: z.boolean(),
 });
 export type DmesgLine = z.infer<typeof DmesgLineSchema>;

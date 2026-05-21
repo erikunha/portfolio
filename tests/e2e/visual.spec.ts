@@ -46,16 +46,12 @@ test.describe('visual regression', () => {
     // re-flow.
     await mockedPage.evaluate(() => document.fonts.ready);
     await heroSection.locator('.hero__ctas').waitFor({ state: 'visible' });
-    // Remove the matrix-rain <canvas aria-hidden> before snapshotting. The
-    // canvas is sized to its parent and resizes / re-paints during post-
-    // hydration reflow; combined with Playwright's mask layer (which colors
-    // the canvas pink in the screenshot), tiny canvas-bbox shifts produce
-    // huge "diff" deltas in the two-consecutive-stable-screenshots check.
-    // Removing the canvas from DOM eliminates the volatile region entirely
-    // for snapshot purposes — the actual product behavior is untouched.
-    await mockedPage.evaluate(() => {
-      for (const c of document.querySelectorAll('canvas[aria-hidden]')) c.remove();
-    });
+    // Strip volatile chrome (matrix-rain canvas + CRT overlays) from the DOM.
+    // Masking is not enough for the CRT layers: under reduced-motion they are
+    // opacity:0 but keep a full-viewport bounding box (.crt-noise is
+    // inset:-50%), so Playwright's mask would paint the whole capture #FF00FF.
+    // DOM removal is the only reliable strip; product behavior is untouched.
+    await stripVolatileChrome(mockedPage);
     await snapshotLocator(mockedPage, heroSection, 'hero-above-fold.png');
   });
 
@@ -65,10 +61,9 @@ test.describe('visual regression', () => {
     await contactSection.scrollIntoViewIfNeeded();
     await mockedPage.waitForSelector('form.contact', { state: 'visible' });
     await mockedPage.evaluate(() => document.fonts.ready);
-    // Same canvas removal as test 1 — see comment there for rationale.
-    await mockedPage.evaluate(() => {
-      for (const c of document.querySelectorAll('canvas[aria-hidden]')) c.remove();
-    });
+    // Strip volatile chrome (canvas + CRT overlays). See test 1 for why
+    // masking the CRT layers is insufficient.
+    await stripVolatileChrome(mockedPage);
     await snapshotLocator(mockedPage, contactSection, 'contact-section.png');
   });
 
@@ -167,9 +162,10 @@ test.describe('visual regression', () => {
 
   test('5 — hottest takes section matches baseline', async ({ mockedPage }) => {
     // Representative below-fold module: exercises cv-defer (content-visibility:auto)
-    // + Module RSC layout (desktop: <section.module--desktop>; mobile: <details>
-    // with defaultOpen={false}). Scrolling reveals the cv-defer'd content and we
-    // force the mobile <details> open so both viewports capture the body.
+    // + Module RSC layout. Module always renders one <details>; CSS forces it
+    // open + non-collapsible on desktop, and it stays a native collapsible
+    // <details defaultOpen={false}> on mobile. Scrolling reveals the cv-defer'd
+    // content and we force the <details> open so both viewports capture the body.
     const hottest = mockedPage.locator('#sec-hottest-takes');
     await hottest.scrollIntoViewIfNeeded();
     // On mobile, Module renders <details defaultOpen={false}>. Force open via

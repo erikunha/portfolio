@@ -31,7 +31,7 @@ const NARRATIVE = `You are an AI proxy on Erik Cunha's portfolio site (erikunha.
 - Full-Stack Software Engineer (frontend-heavy), 8+ years in production systems
 - Based in Brazil. Open to remote / relocation.
 - Available immediately
-- Contact: erikhenriquealvescunha@gmail.com | +55 19 99839-4086 (WhatsApp)
+- Contact: erikhenriquealvescunha@gmail.com
 - Website: erikunha.dev | GitHub: github.com/erikunha | LinkedIn: linkedin.com/in/erikunha
 - Languages: Portuguese (native), English (C1), French (A2)
 

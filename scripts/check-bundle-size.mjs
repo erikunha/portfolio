@@ -1,31 +1,37 @@
 #!/usr/bin/env node
 
-// Fails the build if any route or shared client chunk exceeds gzipped budgets.
-// Reads .next/build-manifest.json and .next/static/chunks/ sizes.
+// Fails the build if the total client-chunk gzipped size exceeds the budget.
 //
-// NOTE: With Turbopack, React 19 + Next.js 15 runtime (~185KB gzipped) is co-bundled
-// with application code into the same chunks. The --max-client-kb threshold covers
-// the full bundle (framework + app). Use @next/bundle-analyzer to measure app-only
-// islands (~43KB budget, tracked separately via CLAUDE.md).
+// --max-client-kb : the FULL client-chunk total (gzipped). Under Next 16 +
+//                   Turbopack the Next/React framework (~185KB) is co-bundled
+//                   with application code into the same chunks, so this number
+//                   is framework-inclusive. It is the only honest measurement
+//                   this script can produce.
 //
-// Usage: node scripts/check-bundle-size.mjs --max-route-kb=120 --max-client-kb=320
+// Per-route First Load JS is intentionally NOT gated here: it is not
+// extractable from the Turbopack manifest. `.next/build-manifest.json`'s
+// `pages` map carries only the legacy empty `/_app: []` shape, there is no
+// `app-build-manifest.json`, and `app-path-routes-manifest.json` has no chunk
+// lists — a per-route check would silently measure /_app at 0KB.
+//
+// The 43KB app-island figure (client JS excluding framework bootstrap) is a
+// design target tracked via `pnpm bundle:analyze`, not gated here.
+//
+// Usage: node scripts/check-bundle-size.mjs --max-client-kb=220
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { gzipSync } from 'node:zlib';
 
 const { values } = parseArgs({
   options: {
-    'max-route-kb': { type: 'string', default: '120' },
-    'max-client-kb': { type: 'string', default: '320' },
+    'max-client-kb': { type: 'string', default: '220' },
   },
 });
 
-const MAX_ROUTE_KB = Number(values['max-route-kb']);
 const MAX_CLIENT_KB = Number(values['max-client-kb']);
 const CHUNKS_DIR = '.next/static/chunks';
-const MANIFEST = '.next/build-manifest.json';
 
 function gzipKb(path) {
   const buf = readFileSync(path);
@@ -34,28 +40,7 @@ function gzipKb(path) {
 
 let failed = false;
 
-console.log(`\nBundle size gate · route: ${MAX_ROUTE_KB}KB · client: ${MAX_CLIENT_KB}KB\n`);
-
-try {
-  const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'));
-  for (const [route, files] of Object.entries(manifest.pages ?? {})) {
-    if (!Array.isArray(files)) continue;
-    let totalKb = 0;
-    for (const f of files) {
-      const fullPath = join('.next', f);
-      if (existsSync(fullPath)) totalKb += gzipKb(fullPath);
-    }
-    const totalRounded = Math.round(totalKb * 10) / 10;
-    const ok = totalRounded <= MAX_ROUTE_KB;
-    console.log(
-      `${ok ? 'OK  ' : 'FAIL'}  route ${route.padEnd(30)} ${totalRounded}KB / ${MAX_ROUTE_KB}KB`,
-    );
-    if (!ok) failed = true;
-  }
-} catch (e) {
-  console.error('Could not read .next/build-manifest.json — did the build run?', e.message);
-  process.exit(2);
-}
+console.log(`\nBundle size gate · client chunks: ${MAX_CLIENT_KB}KB\n`);
 
 try {
   const chunks = readdirSync(CHUNKS_DIR).filter((f) => f.endsWith('.js'));
@@ -66,11 +51,12 @@ try {
   const clientRounded = Math.round(clientTotalKb * 10) / 10;
   const ok = clientRounded <= MAX_CLIENT_KB;
   console.log(
-    `\n${ok ? 'OK  ' : 'FAIL'}  client chunks total ${clientRounded}KB / ${MAX_CLIENT_KB}KB`,
+    `${ok ? 'OK  ' : 'FAIL'}  client chunks total ${clientRounded}KB / ${MAX_CLIENT_KB}KB`,
   );
   if (!ok) failed = true;
 } catch (e) {
-  console.error('Could not read chunks dir', e.message);
+  console.error('Could not read chunks dir — did the build run?', e.message);
+  process.exit(2);
 }
 
 console.log();

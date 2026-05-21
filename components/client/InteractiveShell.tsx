@@ -3,7 +3,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import SHELL_RESPONSES from '@/content/shell-commands';
 import { readMotion } from '@/lib/motion';
-import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
+import { parseStreamChunk } from '@/lib/stream-protocol';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 
 type Line = { id: number; kind: 'prompt' | 'output' | 'error' | 'info' | 'loading'; text: string };
@@ -113,19 +113,28 @@ function LoadingDots() {
 export function InteractiveShell() {
   const { isMobile } = useBreakpoint();
   const lineIdRef = useRef(0);
+  // Memoized for a STABLE identity — nextId appears in the dependency arrays
+  // of streamQuestion/runCommand below. The ref read is already stable.
   const nextId = useCallback(() => ++lineIdRef.current, []);
   const [history, setHistory] = useState<Line[]>(() => withIds(INITIAL_LINES, nextId));
   const [input, setInput] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const [busy, setBusy] = useState(false);
+  // The live streaming answer is its own state field, NOT an entry in
+  // `history`: a per-chunk update must re-render only the streaming <span>,
+  // never the whole feed. `null` means no stream in flight.
+  const [streamingText, setStreamingText] = useState<string | null>(null);
   const feedRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const typingRef = useRef(false);
   const mountedRef = useRef(true);
+  // Pending requestAnimationFrame handle for the chunk-coalescing flush.
+  const rafRef = useRef<number | null>(null);
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
   }, []);
   const initializedRef = useRef(false);
@@ -136,24 +145,31 @@ export function InteractiveShell() {
     if (isMobile) setHistory(withIds(MOBILE_INITIAL, nextId));
   }, [isMobile, nextId]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: history triggers scroll; feedRef is a stable ref
+  // biome-ignore lint/correctness/useExhaustiveDependencies: history + streamingText trigger scroll; feedRef is a stable ref
   useEffect(() => {
     if (feedRef.current) {
       feedRef.current.scrollTop = feedRef.current.scrollHeight;
     }
-  }, [history]);
+  }, [history, streamingText]);
 
   const streamQuestion = useCallback(
     async (question: string) => {
       const loadingId = nextId();
       setHistory((h) => [...h, { id: loadingId, kind: 'loading', text: '' }]);
-      let streamSpan: HTMLSpanElement | null = null;
+
+      const clearRaf = () => {
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
+      };
 
       const finalize = (finalText: string, errMsg?: string) => {
-        if (streamSpan) {
-          streamSpan.remove();
-          streamSpan = null;
-        }
+        clearRaf();
+        // Bail if the component unmounted mid-stream — the unmount effect has
+        // already cancelled the rAF; setState here would be a no-op warning.
+        if (!mountedRef.current) return;
+        setStreamingText(null);
         const lines: Line[] = [];
         if (finalText) lines.push({ id: nextId(), kind: 'output', text: finalText });
         if (errMsg) lines.push({ id: nextId(), kind: 'error', text: `error: ${errMsg}` });
@@ -181,35 +197,35 @@ export function InteractiveShell() {
         const reader = res.body.getReader();
         const dec = new TextDecoder();
         let accumulated = '';
+        let pending = '';
+        let loadingCleared = false;
+
+        // Coalesce chunk-driven re-renders to at most one per animation frame:
+        // a fast token stream cannot trigger a render storm (INP guard). The
+        // streaming text lands in `streamingText` state — isolated from
+        // `history` — so the flush re-renders only the streaming <span>.
+        const scheduleFlush = () => {
+          if (rafRef.current !== null) return;
+          rafRef.current = requestAnimationFrame(() => {
+            rafRef.current = null;
+            if (!loadingCleared) {
+              setHistory((h) => h.filter((l) => l.id !== loadingId));
+              loadingCleared = true;
+            }
+            setStreamingText(pending);
+          });
+        };
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           accumulated += dec.decode(value, { stream: true });
-          const sentinelIdx = accumulated.indexOf(STREAM_ERR_SENTINEL);
-          const displayText = (
-            sentinelIdx !== -1 ? accumulated.slice(0, sentinelIdx) : accumulated
-          ).trim();
-          if (!displayText) continue;
-
-          if (!streamSpan) {
-            setHistory((h) => h.filter((l) => l.id !== loadingId));
-            streamSpan = document.createElement('span');
-            streamSpan.className = 'shell__line shell__line--output';
-            feedRef.current?.appendChild(streamSpan);
-          }
-          streamSpan.textContent = displayText;
-          if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
+          const { displayText } = parseStreamChunk(accumulated);
+          pending = displayText;
+          if (pending) scheduleFlush();
         }
 
-        const sentinelIdx = accumulated.indexOf(STREAM_ERR_SENTINEL);
-        const finalText = (
-          sentinelIdx !== -1 ? accumulated.slice(0, sentinelIdx) : accumulated
-        ).trim();
-        const errMsg =
-          sentinelIdx !== -1
-            ? accumulated.slice(sentinelIdx + STREAM_ERR_SENTINEL.length).trim() || 'upstream error'
-            : undefined;
+        const { displayText: finalText, errorMessage: errMsg } = parseStreamChunk(accumulated);
         finalize(finalText, errMsg);
       } catch (err) {
         finalize('', (err as Error).message);
@@ -315,6 +331,9 @@ export function InteractiveShell() {
               {l.text}
             </span>
           ),
+        )}
+        {streamingText !== null && (
+          <span className="shell__line shell__line--output">{streamingText}</span>
         )}
       </div>
 

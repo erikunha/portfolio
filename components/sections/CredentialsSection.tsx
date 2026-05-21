@@ -8,7 +8,6 @@ export function CredentialsSection({ defer }: { defer?: boolean } = {}) {
       id="sec-credentials"
       header="CAT ~/.CREDENTIALS"
       icon={<IconCredentials />}
-      defaultOpen={false}
       defer={defer}
     >
       <div className="visa">

@@ -2,6 +2,14 @@
 
 import { useEffect, useRef } from 'react';
 
+type RainTunables = {
+  fontSize: number;
+  speed: number;
+  headColor: string;
+  bodyColor: string;
+  tailFade: string;
+};
+
 const DIGITS = '0123456789'.split('');
 const FRAME_MS = 1000 / 22;
 
@@ -29,6 +37,19 @@ export function MatrixRain({
 }: RainCfg) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  // Live tunables read by the rAF loop each frame. Holding them in a ref keeps
+  // the animation effect's dependency array structural (`[watchRef]` only), so
+  // an incidental prop change (e.g. a parent re-render passing a new color)
+  // updates the ref WITHOUT tearing down and restarting the loop.
+  const tunablesRef = useRef<RainTunables>({
+    fontSize,
+    speed,
+    headColor,
+    bodyColor,
+    tailFade,
+  });
+  tunablesRef.current = { fontSize, speed, headColor, bodyColor, tailFade };
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -51,19 +72,19 @@ export function MatrixRain({
     let h = 0;
 
     function resize() {
+      const { fontSize: fs } = tunablesRef.current;
       const r = canvasEl.getBoundingClientRect();
       w = r.width;
       h = r.height;
       canvasEl.width = Math.max(1, Math.floor(w * dpr));
       canvasEl.height = Math.max(1, Math.floor(h * dpr));
       ctxEl.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctxEl.font = `${fontSize}px "JetBrains Mono", monospace`;
-      const newCols = Math.ceil(w / fontSize);
+      ctxEl.font = `${fs}px "JetBrains Mono", monospace`;
+      const newCols = Math.ceil(w / fs);
       const old = drops;
       drops = new Array(newCols);
       for (let i = 0; i < newCols; i++) {
-        drops[i] =
-          typeof old[i] === 'number' ? (old[i] as number) : -Math.random() * (h / fontSize);
+        drops[i] = typeof old[i] === 'number' ? (old[i] as number) : -Math.random() * (h / fs);
       }
       columns = newCols;
       ctxEl.fillStyle = '#000';
@@ -83,17 +104,24 @@ export function MatrixRain({
       if (!running) return;
       if (ts - last >= FRAME_MS) {
         last = ts;
-        ctxEl.fillStyle = tailFade;
+        const {
+          fontSize: fs,
+          speed: spd,
+          headColor: head,
+          bodyColor: body,
+          tailFade: tail,
+        } = tunablesRef.current;
+        ctxEl.fillStyle = tail;
         ctxEl.fillRect(0, 0, w, h);
         for (let i = 0; i < columns; i++) {
-          const y = (drops[i] ?? 0) * fontSize;
+          const y = (drops[i] ?? 0) * fs;
           const ch = DIGITS[(Math.random() * DIGITS.length) | 0] ?? '0';
-          ctxEl.fillStyle = headColor;
-          ctxEl.fillText(ch, i * fontSize, y);
-          ctxEl.fillStyle = bodyColor;
-          ctxEl.fillText(ch, i * fontSize, y - fontSize);
+          ctxEl.fillStyle = head;
+          ctxEl.fillText(ch, i * fs, y);
+          ctxEl.fillStyle = body;
+          ctxEl.fillText(ch, i * fs, y - fs);
           if (y > h && Math.random() > 0.975) drops[i] = -Math.random() * 6;
-          drops[i] = (drops[i] ?? 0) + speed;
+          drops[i] = (drops[i] ?? 0) + spd;
         }
       }
       raf = requestAnimationFrame(frame);
@@ -178,7 +206,10 @@ export function MatrixRain({
       clearTimeout(resizeTimer);
       window.removeEventListener('resize', debouncedResize);
     };
-  }, [fontSize, speed, headColor, bodyColor, tailFade, watchRef]);
+    // Only `watchRef` is structural — the visual tunables (fontSize, speed,
+    // colors, tailFade) are read from tunablesRef each frame, so changing them
+    // never re-runs this effect (no loop teardown/restart).
+  }, [watchRef]);
 
   return (
     <canvas
