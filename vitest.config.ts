@@ -6,6 +6,17 @@ export default defineConfig({
     environment: 'jsdom',
     globals: false,
     exclude: ['**/node_modules/**', '**/tests/a11y/**', '**/tests/e2e/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'html'],
+      // Enforce 60% lines coverage — exits with code 1 if not met.
+      thresholds: {
+        lines: 60,
+      },
+      include: ['lib/**', 'components/**', 'app/**'],
+      exclude: ['**/node_modules/**', '**/__tests__/**', '**/tests/**', '**/content/**'],
+      reportsDirectory: 'coverage',
+    },
   },
   resolve: {
     alias: {

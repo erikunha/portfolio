@@ -16,6 +16,7 @@
     "check:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "lhci": "lhci autorun",
@@ -26,6 +27,7 @@
     "bundle:analyze": "ANALYZE=true next build",
     "check:client-naming": "node scripts/check-client-naming.mjs",
     "check:dep-pinning": "node scripts/check-dep-pinning.mjs",
+    "check:pkg-age": "node scripts/check-pkg-age.mjs",
     "pr:comments": "node scripts/inspect-pr-comments.mjs",
     "pr:gate": "tsx scripts/check-pr-comments.ts",
     "ready-to-merge": "tsx scripts/ready-to-merge.ts",
@@ -83,7 +85,8 @@
     "@types/node": "^25.7.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitest/ui": "^4.1.6",
+    "@vitest/coverage-v8": "^4.1.7",
+    "@vitest/ui": "^4.1.7",
     "commitizen": "^4.3.1",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
@@ -91,6 +94,6 @@
     "playwright": "^1.60.0",
     "tsx": "^4.22.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.7"
   }
 }

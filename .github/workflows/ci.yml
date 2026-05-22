@@ -71,7 +71,18 @@ jobs:
         run: pnpm check:dep-pinning
 
       - name: Unit tests
-        run: pnpm vitest run
+        run: pnpm test:coverage
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+      - name: Package age gate (supply-chain)
+        run: node scripts/check-pkg-age.mjs --warn-only
 
       - name: PR comment merge gate
         if: github.event_name == 'pull_request'
@@ -94,6 +105,7 @@ jobs:
           name: next-build
           path: .next/
           retention-days: 1
+          include-hidden-files: true
 
       - name: Bundle size gate
         # Gates the total client-chunk gzipped size (Next/React framework
@@ -120,7 +132,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-chromium-
 
       - name: Install Playwright Chromium (for axe-core scan)
         run: pnpm playwright install --with-deps chromium
@@ -148,7 +162,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-
       - name: Install Playwright browsers
         run: pnpm playwright install --with-deps ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
       - name: Download build artifact
@@ -234,7 +250,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-
       - name: Install Playwright browsers
         run: pnpm playwright install --with-deps ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
       - name: Download build artifact
