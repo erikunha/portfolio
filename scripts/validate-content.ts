@@ -34,6 +34,8 @@ const CONTENT_FILES = [
   'content/sys-health.ts',
   'content/readme.ts',
   'content/ask-eval-corpus.ts',
+  'content/hero.ts',
+  'content/seo.ts',
   // Client-imported content (dmesg, shell-commands) is pure typed data with
   // no Zod runtime to avoid CSP eval violations. Their schemas are validated
   // via the standalone validator below, which is never imported by app code.

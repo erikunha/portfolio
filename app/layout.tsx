@@ -3,6 +3,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import Script from 'next/script';
+import { personSchema } from '@/content/seo';
 import { INLINE_CSS } from '@/lib/inline-css';
 
 // Self-hosted per CLAUDE.md — no Google CDN link shipped to the browser
@@ -26,23 +27,26 @@ const display = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://erikunha.dev'),
-  title: 'Erik Cunha — Senior Full-Stack Engineer, Frontend',
+  title: 'Erik Cunha — Staff Full-Stack Engineer · Applied AI',
   description:
-    'Senior Full-Stack Engineer, Frontend with 8+ years building regulated, high-traffic systems in fintech (PCI-DSS), healthcare, and global e-commerce. Angular · React · Next.js · Node.js · TypeScript.',
+    'Full-Stack Engineer, 8+ yrs. LLM, RAG, multi-agent in production. €1B+ ARR, 8M+ MAU. Targeting Staff/Principal at AI-forward companies. Brazil, remote.',
   keywords: [
+    'Staff Engineer',
+    'Principal Engineer',
     'Full-Stack Engineer',
-    'Frontend Engineer',
+    'Applied AI',
+    'LLM Engineering',
+    'RAG',
+    'Multi-Agent Systems',
     'Angular',
     'React',
     'Next.js',
     'Node.js',
-    'AWS',
     'TypeScript',
-    'Staff Engineer',
-    'Principal Engineer',
     'PCI-DSS',
     'Healthcare',
     'E-commerce',
+    'iGaming',
   ],
   authors: [{ name: 'Erik Henrique Alves Cunha', url: 'https://erikunha.dev' }],
   creator: 'Erik Henrique Alves Cunha',
@@ -62,17 +66,17 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://erikunha.dev',
-    title: 'Erik Cunha — Senior Full-Stack Engineer, Frontend',
+    title: 'Erik Cunha — Staff Full-Stack Engineer · Applied AI',
     description:
-      'Senior Full-Stack Engineer, Frontend · 8+ yrs · Angular · React · Next.js · Node.js · AWS · PCI-DSS',
+      'Staff Full-Stack Engineer · Applied AI · 8+ yrs · LLM · RAG · Angular · React · Next.js · Node.js',
     siteName: 'erikunha.dev',
     images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Erik Cunha Portfolio' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Erik Cunha — Senior Full-Stack Engineer, Frontend',
+    title: 'Erik Cunha — Staff Full-Stack Engineer · Applied AI',
     description:
-      'Senior Full-Stack Engineer, Frontend · Angular · React · Next.js · Node.js · AWS · TypeScript',
+      'Staff Full-Stack Engineer · Applied AI · Angular · React · Next.js · Node.js · TypeScript',
     images: ['/og-image.png'],
   },
   robots: {
@@ -86,23 +90,7 @@ export const metadata: Metadata = {
 };
 
 // React 19 renders script children via textContent (safe; no innerHTML)
-const personJsonLd = JSON.stringify({
-  '@context': 'https://schema.org',
-  '@type': 'Person',
-  name: 'Erik Henrique Alves Cunha',
-  alternateName: 'Erik Cunha',
-  jobTitle: 'Senior Full-Stack Engineer, Frontend',
-  description:
-    'Senior Full-Stack Engineer, Frontend with 8+ years building regulated, high-traffic systems in fintech (PCI-DSS), healthcare, and global e-commerce.',
-  url: 'https://erikunha.dev',
-  email: 'mailto:erikhenriquealvescunha@gmail.com',
-  knowsLanguage: ['pt', 'en', 'fr', 'es'],
-  sameAs: [
-    'https://github.com/erikunha',
-    'https://www.linkedin.com/in/erikunha/',
-    'https://erikunha.dev',
-  ],
-});
+const personJsonLd = JSON.stringify(personSchema);
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

@@ -1,39 +1,133 @@
-# Erik Cunha — Staff/Principal Frontend Engineer
+# Erik Cunha — Staff Full-Stack Engineer · Applied AI
 
-> This file is for AI agents and LLM crawlers. Human-readable portfolio at https://erikunha.dev
-
-## Identity
-
-- Name: Erik Henrique Alves Cunha
-- Alias: Erik Cunha, erikunha
-- Role: Staff / Principal Frontend Engineer
-- Location: Brazil (open to remote / relocation worldwide)
-- Email: erikhenriquealvescunha@gmail.com
-- GitHub: https://github.com/erikunha
-- LinkedIn: https://www.linkedin.com/in/erikunha/
-
-## Experience summary
-
-8+ years building high-traffic, regulated web systems across fintech (PCI-DSS), healthcare (DICOM/FHIR), e-commerce, and edtech.
-
-Current employer: Betsson Group (fintech, cashier/payments platform, PCI-DSS scope)
-Previous: Canon Medical Systems, CICCC, Grupo SBF (Nike Brazil), Encora, Zup Innovation, Venturus, MB Labs
-
-## Core stack
-
-Angular · React · Next.js · TypeScript · RxJS · NgRx · Node.js · Docker · AWS · GitHub Actions
-
-## Work authorisation
-
-- EU (Malta): Work Authorized
-- Canada: Co-op Graduate
-- Brazil: Citizen
-- Worldwide: Open to relocation
+> Full-Stack Software Engineer with 8+ years shipping production AI systems
+> and high-scale frontend architecture. Currently building LLM, RAG, and
+> multi-agent features at Betsson Group (PCI-DSS, €1B+ ARR, 40M+ tx/yr,
+> EU-regulated). Impact at scale: 8M+ MAU e-commerce (Nike Brazil), 70M+
+> banking customers (Itaú Unibanco), enterprise healthcare (Canon Medical).
+> Targeting Senior, Staff, or Principal IC roles at AI-forward product
+> companies. Based in Brazil (UTC-3), fully remote, open to relocation with
+> sponsorship. English C1, WES-verified.
 
 ## Availability
 
-Available immediately. Notice period: 0 days.
+- Status: Actively exploring new opportunities
+- Location: Campinas, São Paulo, Brazil (UTC-3)
+- Remote: Yes — currently working remotely for an EU-regulated company
+- Relocation: Open, requires visa sponsorship
+- Target role: Senior / Staff / Principal IC — Applied AI & Full-Stack
+- Work authorization: Brazilian national. WES-verified academic credentials. English C1.
+- Contact: erikhenriquealvescunha@gmail.com | +5519998394086
 
-## Contact
+## AI Engineering
 
-For hiring inquiries: erikhenriquealvescunha@gmail.com
+Shipping production LLM, RAG, and multi-agent systems since 2024:
+
+- Streaming LLM endpoint: Vercel AI Gateway + Anthropic Claude Haiku 4.5,
+  ephemeral prompt caching, cost tracking, token budget management
+- Multi-agent orchestration: 12-agent GitHub Copilot system deployed to
+  engineering team at Betsson Group — automating code generation, review,
+  debugging, testing, and architectural validation across a €1B+ ARR platform
+- Prompt engineering at production scale: structured output, tool use,
+  function calling, context window management
+- RAG pipeline design, GenAI feature integration, AI evaluation loops
+- AI cost optimization: prompt caching strategies, model selection for
+  latency/cost trade-offs
+
+Keywords: LLM Engineering · RAG · Generative AI · Multi-Agent Orchestration ·
+Anthropic Claude · Function Calling · Context Window Management · Prompt Caching ·
+Streaming LLM · AI Evaluation · LLM Cost Optimization
+
+## Impact at Scale
+
+- -97.5% API latency — reporting endpoints from ~40s → <1s (query + indexing)
+- -98% CSS bundle reduction (Canon Medical Systems)
+- -52% Time to Interactive improvement (Canon Medical Systems)
+- -33% JavaScript bundle reduction (Canon Medical Systems)
+- -32% page load reduction (Nike Brazil / Centauro)
+- +10% conversion rate via 20+ A/B experiments (Nike Brazil)
+- -80% platform delivery cost — shared cross-platform codebase (MB Labs)
+- €1B+ ARR cashier platform (Betsson Group, 40M+ transactions/yr)
+- 8M+ monthly active users (Nike Brazil + Centauro)
+- 70M+ customers served (Itaú Unibanco banking platform)
+- 12-agent AI system deployed to production engineering team
+
+## Technical Skills
+
+Applied AI: LLM Engineering · RAG · Generative AI · Multi-Agent Orchestration ·
+Anthropic Claude · Prompt Engineering · Prompt Caching · Streaming LLM ·
+Function Calling · Context Window Management · LLM Cost Optimization · AI Evaluation
+
+Frontend: TypeScript (strict) · React 19 · React Server Components ·
+Next.js 16 (App Router) · Angular · RxJS · NgRx · Redux · StencilJS ·
+Web Components · Vue.js · Ionic · SSR/SSG · Micro-Frontend Architecture
+
+Backend & APIs: Node.js · Express.js · REST APIs · WebSocket (STOMP/SockJS) ·
+Python · Backend for Frontend (BFF)
+
+Architecture: Clean Architecture (DDD 4-layer) · Nx Monorepo ·
+Component-Driven Architecture · Reactive Architecture
+
+Cloud & DevOps: AWS (S3 · CloudFront · EC2 · CodePipeline · CodeBuild) ·
+Docker · NGINX · GitHub Actions · Jenkins · CI/CD
+
+Data: PostgreSQL · MongoDB · Redis · SQL · SQLite
+
+Testing: Playwright · Vitest · Jest · React Testing Library · MSW · WireMock
+
+Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
+
+## Professional Experience
+
+| Period | Company | Role | Scale |
+|---|---|---|---|
+| 03/2025–present | Betsson Group (EU, remote from Brazil) | Senior Frontend SE | €1B+ ARR · 40M+ tx/yr · 15+ regulated markets |
+| 04/2023–02/2025 | Canon Medical Systems (remote) | Senior SE Consulting | Enterprise healthcare · multi-site hospital ops |
+| 12/2021–04/2023 | Grupo SBF — Nike Brazil / Centauro | React Developer | 8M+ MAU · LATAM's largest sports retailer |
+| 01/2021–12/2021 | Encora — VMware Pathfinder | Frontend Engineer | 2.1M+ labs · multi-region |
+| 04/2020–01/2021 | Zup Innovation — Itaú Unibanco | Frontend Engineer | 70M+ customers · Latin America's largest bank |
+| 11/2019–04/2020 | Venturus — CCR AutoBAn | Frontend Engineer | 320km highway operations · real-time telemetry |
+| 02/2019–11/2019 | Venturus — CGO Assessoria | Full Stack Engineer | -97.5% API latency · MEAN stack |
+| 09/2018–02/2019 | MB Labs — SM Aprendizagem | Mobile Developer | 5-OS cross-platform · -80% delivery cost |
+| 07/2018–09/2018 | MB Labs — Hondana | Full Stack Developer | Enterprise chatbot · Cia Hering · KPMG |
+| 10/2017–05/2018 | Monde Sistemas | Frontend Engineer (Vue.js) | 2,200+ travel agencies |
+
+## Industries
+
+- iGaming / Regulated Markets — PCI-DSS, 15+ jurisdictions, €1B+ ARR
+- E-commerce — 8M+ MAU, multi-brand, LATAM
+- Banking / Fintech — 70M+ customers, digital banking
+- Healthcare — enterprise hospital operations, WCAG 2.1 AA
+- EdTech — 5-OS offline-first educational platform
+- HR-tech / Corporate Training — enterprise chatbot (Cia Hering, KPMG)
+- SaaS / CRM — travel agency management, 2,200+ clients
+- Infrastructure / Logistics — highway ops dashboards, real-time telemetry
+
+## Education
+
+- Web Development Specialist Co-op Diploma — CICCC, Vancouver, Canada (2023–2024)
+- Bachelor's in Information Systems — UNISAL, Campinas, Brazil (2015–2020)
+- WES Verified International Academic Qualifications (2022)
+- Angular Developer Certification — Alain Chautard, Google Developer Expert (2024)
+
+## Languages
+
+- Portuguese: Native
+- English: C1
+- French: A2
+- Spanish: A2
+
+## Community
+
+- DevOpsDays Campinas 2024 — Organizer
+  Speaker sourcing and program curation, 10+ talks across DevOps,
+  cloud infrastructure, and platform engineering
+
+## Links
+
+- [Portfolio](https://erikunha.dev): Live site with streaming AI terminal,
+  performance receipts, and full project showcase
+- [GitHub](https://github.com/erikunha): Open source projects
+- [LinkedIn](https://linkedin.com/in/erikunha): Full professional history
+- [Hiring profile API](https://erikunha.dev/api/erik.json): Machine-readable
+  hiring profile (JSON)

@@ -3,8 +3,10 @@
 // Both variants are server-rendered; CSS media query hides the non-matching one.
 // Spec: docs/superpowers/specs/2026-05-18-mobile-lcp-perf-fix-design.md §6.
 
+import { heroTagline } from '@/content/hero';
 import { HeroBootAnimation } from '../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../client/HeroSystemFailure';
+import { HeroStats } from '../HeroStats';
 
 export function Hero() {
   return (
@@ -18,10 +20,7 @@ export function Hero() {
         </div>
         <aside className="hero__bio">
           <h1 className="hero__name">Erik Henrique Alves Cunha</h1>
-          <p className="hero__tagline">
-            Senior Full-Stack Engineer, Frontend · 8+ yrs in building systems to support business
-            operations · fintech (PCI-DSS), healthcare, global e-commerce
-          </p>
+          <p className="hero__tagline">{heroTagline}</p>
           <p className="hero__meta">
             <span>
               LOC: <b>Brazil</b>
@@ -35,6 +34,7 @@ export function Hero() {
             <span className="hero__status-dot" aria-hidden="true" />
             OPEN_TO_RELOCATION · WORLDWIDE
           </p>
+          <HeroStats />
           <div className="hero__ctas">
             <a
               className="hero__cta hero__cta--primary"
@@ -66,10 +66,7 @@ export function Hero() {
           <HeroBootAnimation variant="mobile" />
 
           <h1 className="hero__name">Erik Henrique Alves Cunha</h1>
-          <p className="hero__tagline">
-            Senior Full-Stack Engineer, Frontend · 8+ yrs in building systems to support business
-            operations · fintech (PCI-DSS), healthcare, global e-commerce
-          </p>
+          <p className="hero__tagline">{heroTagline}</p>
           <p className="hero__meta">
             <span>
               LOC: <b>Brazil</b>
@@ -83,6 +80,7 @@ export function Hero() {
             <span className="hero__status-dot" aria-hidden="true" />
             OPEN_TO_RELOCATION · WORLDWIDE
           </p>
+          <HeroStats />
           <div className="hero__ctas">
             <a
               className="hero__cta hero__cta--primary"
