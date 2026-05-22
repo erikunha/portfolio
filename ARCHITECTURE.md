@@ -111,7 +111,7 @@ What we build is small, opinionated, edge-deployed, and budget-enforced.
 2. Netlify + Functions — comparable to Vercel, less Next-native
 3. Self-hosted on VPS — full control, but ops overhead disqualifies
 
-**Discriminator:** Next.js 15 integration depth. Vercel ships Next features first; the OG image + Server Actions + Edge runtime story is more mature. For a single-author portfolio, the ops savings dwarf the per-request cost difference.
+**Discriminator:** Next.js 16 integration depth. Vercel ships Next features first; the OG image + Server Actions + Edge runtime story is more mature. For a single-author portfolio, the ops savings dwarf the per-request cost difference.
 
 **Recommend:** Vercel Edge. Move to Cloudflare only if `ask` traffic 10× and inference cost becomes the binding constraint.
 
