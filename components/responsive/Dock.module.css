@@ -37,11 +37,6 @@
   stroke-width: 1.6;
 }
 
-.root a.active {
-  color: var(--signal);
-  background: rgba(0, 255, 65, 0.08);
-}
-
 .root a:active {
   background: rgba(0, 255, 65, 0.12);
 }
