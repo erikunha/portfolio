@@ -6,7 +6,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: 'https://erikunha.dev',
       lastModified: process.env.CONTENT_UPDATED_AT
         ? new Date(process.env.CONTENT_UPDATED_AT)
-        : new Date(),
+        : new Date('2026-05-22'),
       changeFrequency: 'monthly',
       priority: 1,
     },

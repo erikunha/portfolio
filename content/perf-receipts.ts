@@ -56,9 +56,13 @@ export const perfReceipts: PerfReceipt[] = z.array(PerfReceiptSchema).parse([
   },
 ]);
 
-export const heroStats: Stat[] = z.array(StatSchema).parse([
-  { value: '€1B+ ARR', label: 'cashier platform' },
-  { value: '8M+ MAU', label: 'e-commerce' },
-  { value: '-97.5% latency', label: 'API performance' },
-  { value: '12-agent AI', label: 'platform' },
-]);
+// .length(4) enforced: CSS grid uses repeat(4,1fr) + nth-child border rules that break with any other count
+export const heroStats: Stat[] = z
+  .array(StatSchema)
+  .length(4)
+  .parse([
+    { value: '€1B+ ARR', label: 'cashier platform' },
+    { value: '8M+ MAU', label: 'e-commerce' },
+    { value: '-97.5% latency', label: 'API performance' },
+    { value: '12-agent AI', label: 'platform' },
+  ]);
