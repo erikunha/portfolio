@@ -1,0 +1,66 @@
+/* NpmStackSection.module.css */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   NPM STACK — 6-up tile grid, lifted from .npm + .tile in mockup.
+   ───────────────────────────────────────────────────────────────────────── */
+.root {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+}
+
+.root li {
+  border: 1px solid var(--signal-dim);
+  aspect-ratio: 1.6 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--signal);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.1em;
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.root li svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 1.5;
+  opacity: 0.85;
+}
+
+.root li:hover {
+  border-color: var(--signal);
+  box-shadow: 0 0 14px rgba(0, 255, 65, 0.18);
+}
+
+@media (max-width: 900px) {
+  .root {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .root {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .root li {
+    aspect-ratio: 1 / 1;
+    font-size: var(--fs-2xs);
+  }
+}
+
+@media (max-width: 340px) {
+  .root {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

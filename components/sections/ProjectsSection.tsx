@@ -3,6 +3,7 @@ import { projects } from '@/content/projects';
 import { getIsMobile } from '@/lib/ua';
 import { IconProjects } from '../Icons';
 import { Module } from '../responsive/Module';
+import styles from './ProjectsSection.module.css';
 
 const FolderIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -12,18 +13,18 @@ const FolderIcon = () => (
 
 function ProjectsDesktop() {
   return (
-    <ul className="projects proj-desktop">
+    <ul className={styles.root} data-testid="proj-desktop">
       {projects.map((p) => (
-        <li key={p.name} className="project">
-          <div className="project__top">
-            <svg className="project__folder" viewBox="0 0 24 18" aria-hidden="true">
+        <li key={p.name} className={styles.project}>
+          <div className={styles.projectTop}>
+            <svg className={styles.projectFolder} viewBox="0 0 24 18" aria-hidden="true">
               <path d="M0 2 L0 18 L24 18 L24 5 L12 5 L9 2 Z" />
             </svg>
-            <span className="project__perm">{p.perm ?? 'drwxr-xr-x'}</span>
+            <span className={styles.projectPerm}>{p.perm ?? 'drwxr-xr-x'}</span>
           </div>
-          <h3 className="project__name">{p.name}</h3>
-          <p className="project__desc">{p.description}</p>
-          <dl className="project__stats">
+          <h3 className={styles.projectName}>{p.name}</h3>
+          <p className={styles.projectDesc}>{p.description}</p>
+          <dl className={styles.projectStats}>
             {p.stats.map((s) => (
               <div key={s.label}>
                 <dt>{s.label}:</dt>
@@ -39,22 +40,22 @@ function ProjectsDesktop() {
 
 function ProjectsMobile() {
   return (
-    <div className="proj-mobile">
+    <div data-testid="proj-mobile">
       {projects.map((p) => (
-        <div key={p.name} className="proj">
-          <div className="proj-top">
-            <span className="proj-folder">
+        <div key={p.name} className={styles.card}>
+          <div className={styles.cardTop}>
+            <span className={styles.cardFolder}>
               <FolderIcon />
             </span>
-            <span className="proj-perm">{p.perm ?? '-rwxr-xr-x'}</span>
+            <span className={styles.cardPerm}>{p.perm ?? '-rwxr-xr-x'}</span>
           </div>
-          <div className="proj-name">{p.mobileName}</div>
-          <div className="proj-desc">{p.mobileDescription}</div>
-          <div className="proj-meta">
+          <div className={styles.cardName}>{p.mobileName}</div>
+          <div className={styles.cardDesc}>{p.mobileDescription}</div>
+          <div className={styles.cardMeta}>
             {p.mobileMeta.map((m) => (
-              <div key={m.label} className="mrow">
-                <span className="mk">{m.label}</span>
-                <span className="mv">{m.value}</span>
+              <div key={m.label} className={styles.mrow}>
+                <span className={styles.mk}>{m.label}</span>
+                <span className={styles.mv}>{m.value}</span>
               </div>
             ))}
           </div>

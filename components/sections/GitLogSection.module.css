@@ -1,0 +1,104 @@
+/* GitLogSection.module.css */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GIT LOG — syntax-highlighted pre using .gitfuller wrapper + .g-* color spans.
+   ───────────────────────────────────────────────────────────────────────── */
+.root {
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-base);
+  line-height: 1.55;
+  overflow-x: auto;
+}
+
+.root .cmdbar {
+  color: var(--muted);
+  opacity: 0.7;
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+  font-size: var(--fs-sm);
+  white-space: pre;
+}
+
+.root .prompt {
+  color: var(--signal);
+  opacity: 0.8;
+  margin-right: 6px;
+}
+
+.root pre {
+  margin: 0;
+  white-space: pre;
+  color: var(--fg);
+}
+
+.root .gGraph {
+  color: var(--signal);
+}
+
+.root .gHash {
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+.root .gDeco {
+  color: var(--accent-warm);
+}
+
+.root .gLabel {
+  color: var(--muted);
+}
+
+.root .gAuthor {
+  color: var(--fg);
+  opacity: 0.85;
+}
+
+.root .gDate {
+  color: var(--fg);
+  opacity: 0.85;
+}
+
+.root .gBranch {
+  color: var(--accent-cool);
+}
+
+.root .gMsg {
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.root .gEmp {
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.root .gBody {
+  color: var(--fg);
+}
+
+.root .end {
+  color: var(--muted);
+  opacity: 0.7;
+  margin-top: 14px;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.04em;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Mobile variant — smaller font, wrapping pre
+   ───────────────────────────────────────────────────────────────────────── */
+.mobile {
+  font-size: var(--fs-sm);
+}
+
+.mobile pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: hidden;
+}
+
+.mobile .cmdbar {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

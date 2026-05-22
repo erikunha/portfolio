@@ -40,8 +40,8 @@ describe('responsive section mobile variants', () => {
   it('ProjectsContent emits the mobile variant when UA is mobile', async () => {
     const el = await ProjectsContent();
     const html = renderToStaticMarkup(el);
-    expect(html).toContain('proj-mobile');
-    expect(html).not.toContain('proj-desktop');
+    expect(html).toContain('data-testid="proj-mobile"');
+    expect(html).not.toContain('data-testid="proj-desktop"');
   });
 
   it('GitLogContent emits the mobile variant when UA is mobile', async () => {

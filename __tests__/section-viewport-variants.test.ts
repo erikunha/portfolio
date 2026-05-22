@@ -38,8 +38,8 @@ import { VisaSection } from '@/components/sections/VisaSection';
 describe('responsive section viewport variants', () => {
   it('ProjectsSection emits exactly the desktop variant (no mobile markup)', () => {
     const html = renderToStaticMarkup(createElement(ProjectsSection));
-    expect(html).toContain('proj-desktop');
-    expect(html).not.toContain('proj-mobile');
+    expect(html).toContain('data-testid="proj-desktop"');
+    expect(html).not.toContain('data-testid="proj-mobile"');
   });
 
   it('GitLogSection emits exactly the desktop variant (no mobile markup)', () => {
