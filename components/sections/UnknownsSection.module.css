@@ -36,15 +36,9 @@
 }
 
 @media (max-width: 768px) {
-  /* _layout.css fragment */
-  .root pre {
-    font-size: var(--fs-xs);
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-  }
-
-  /* _sections.css fragment — font-size: fs-sm wins (later rule) */
   .root pre {
     font-size: var(--fs-sm);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
   }
 }

@@ -68,15 +68,6 @@
   gap: 1px;
 }
 
-/* .visa .cmd-line — _sections.css lines 192–198 */
-.root .cmdLine {
-  color: var(--muted);
-}
-.root .cmdLine .pr {
-  color: var(--signal);
-  margin-right: 4px;
-}
-
 /* ── 768px responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
   /* _layout.css lines 194–202 — visa pre + visa-foot (fs-xs) */
