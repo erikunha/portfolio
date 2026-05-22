@@ -63,6 +63,24 @@ export function getForgetLimit(): Ratelimit {
   return _forgetLimit;
 }
 
+// Proxy trust posture for getClientIp:
+//
+// Header precedence: x-forwarded-for → x-real-ip → 'unknown'.
+//
+// On Vercel, both headers are set authoritatively by Vercel's edge
+// infrastructure BEFORE the request reaches this function. Vercel strips
+// any client-injected values for these headers, so spoofing is not
+// possible in the Vercel deployment context. Index 0 of x-forwarded-for
+// is the real client IP because Vercel rewrites the entire header value,
+// guaranteeing all entries are Vercel-controlled and trustworthy.
+//
+// In local development (no proxy layer): neither header is set by the
+// Node server, so the function returns 'unknown'. Rate-limit and
+// identical-question gates are keyed to 'unknown' locally, meaning all
+// local requests share one bucket — acceptable for a single-developer
+// workflow. The MCP ask_erik tool also resolves to 'unknown' for the
+// same reason (synthetic Request, no proxy headers); see DECISIONS.md
+// 2026-05-21 "MCP ask_erik shares one global rate-limit bucket".
 export function getClientIp(req: import('next/server').NextRequest): string {
   return (
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??

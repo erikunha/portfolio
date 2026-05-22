@@ -96,4 +96,16 @@ describe('proxy CSP — nonce-less posture (PR 4)', () => {
     const b = proxy(makeRequest()).headers.get('content-security-policy');
     expect(a).toBe(b);
   });
+
+  it('CSP includes report-uri /api/csp-report (unconditional — not env-gated)', async () => {
+    // report-uri is not in a conditional branch — it is present in both dev
+    // and production. No env stub needed: the directive must appear regardless
+    // of NODE_ENV, so a plain import (with whatever env the test runner sets)
+    // is the correct assertion. Env-stubbing here would be inert anyway because
+    // proxy.ts computes CSP_DIRECTIVES at module-eval time, before any test-body
+    // code runs — stubbing after import does not affect the cached CSP string.
+    const { proxy } = await import('@/proxy');
+    const csp = proxy(makeRequest()).headers.get('content-security-policy') ?? '';
+    expect(csp).toContain('report-uri /api/csp-report');
+  });
 });
