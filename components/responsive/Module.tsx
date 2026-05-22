@@ -17,6 +17,7 @@
 // + Suspense boundary (getIsMobile()); Module itself is always single-element.
 
 import type { ReactNode } from 'react';
+import styles from './Module.module.css';
 
 export type ModuleProps = {
   id: string;
@@ -38,26 +39,26 @@ export function Module({ id, header, mobileHeader, icon, defer = false, children
   return (
     <details
       id={id}
-      className={`module${defer ? ' cv-defer' : ''}`}
+      className={defer ? `${styles.root} ${styles.cvDefer}` : styles.root}
       // Always open: see the file header. A section can still be collapsed by
       // tapping its summary on mobile.
       open
     >
-      <summary className="module__toggle">
-        <h2 className="module__header">
+      <summary className={styles.toggle}>
+        <h2 className={styles.header}>
           {icon ? (
-            <span className="module__icon" aria-hidden>
+            <span className={styles.icon} aria-hidden>
               {icon}
             </span>
           ) : null}
-          <span className="module__label module__label--desktop">{header}</span>
-          <span className="module__label module__label--mobile">{mobileHeader ?? header}</span>
+          <span className={`${styles.label} ${styles.labelDesktop}`}>{header}</span>
+          <span className={`${styles.label} ${styles.labelMobile}`}>{mobileHeader ?? header}</span>
         </h2>
-        <span className="module__chevron" aria-hidden>
+        <span className={styles.chevron} aria-hidden>
           ▸
         </span>
       </summary>
-      <div className="module__body" id={`${id}-body`}>
+      <div className={styles.body} id={`${id}-body`}>
         {children}
       </div>
     </details>
