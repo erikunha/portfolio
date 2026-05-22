@@ -89,9 +89,11 @@ export function getClientIp(req: import('next/server').NextRequest): string {
   );
 }
 
-// Monthly token budget — 400,000 tokens ≈ $0.40 at Haiku input pricing.
+// Monthly token budget — 3,000,000 tokens ≈ $5 blended Haiku 4.5 pricing.
+// Blended rate: 77% input × $0.80/MTok + 23% output × $4.00/MTok ≈ $1.54/MTok.
+// At ~2,200 tokens/request that's ~1,350 requests before the cap.
 // Hard cap at 100%; warn at 80%.
-const MONTHLY_TOKEN_BUDGET = 400_000;
+const MONTHLY_TOKEN_BUDGET = 3_000_000;
 const BUDGET_WINDOW_S = 60 * 60 * 24 * 32;
 
 // Reservation pattern constants. Worst-case input tokens cover:
