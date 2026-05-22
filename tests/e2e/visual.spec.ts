@@ -40,7 +40,8 @@ test.describe('visual regression', () => {
     // project, so each viewport's variant is captured against its own snapshot.
     const heroSection = mockedPage
       .locator('[data-testid="hero-desktop"], [data-testid="hero-mobile"]')
-      .filter({ visible: true });
+      .filter({ visible: true })
+      .first();
     await heroSection.waitFor({ state: 'visible' });
     await heroSection.scrollIntoViewIfNeeded();
     // Wait for self-hosted fonts (next/font) to fully load. Playwright's own

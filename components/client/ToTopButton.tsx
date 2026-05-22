@@ -7,7 +7,11 @@ export function ToTopButton() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 400);
+    const onScroll = () =>
+      setVisible((v) => {
+        const next = window.scrollY > 400;
+        return v === next ? v : next;
+      });
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
