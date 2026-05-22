@@ -63,7 +63,7 @@ const CSP_DIRECTIVES: readonly string[] = [
     : "script-src 'self' 'unsafe-inline'",
   // style-src 'unsafe-inline': React JSX style={{}} props produce inline
   // style="" attributes on DOM elements (not-found.tsx, opengraph-image.tsx).
-  // Also the all-CSS inline `<style>` block from lib/inline-css.ts (PR 1).
+  // Also the global CSS stylesheet delivered via Next's CSS pipeline (app/globals.css).
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
