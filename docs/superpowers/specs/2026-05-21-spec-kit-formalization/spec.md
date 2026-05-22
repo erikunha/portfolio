@@ -49,23 +49,27 @@ docs/superpowers/specs/{YYYY-MM-DD-feature-name}/
 
 ### Naming rule
 
-Directory name = plan filename (no extension). Spec files with `-design` suffix
-have it stripped when forming the directory name.
+Directory name = spec basename with `-design` suffix stripped. For the one spec
+without a `-design` suffix (`2026-05-16-clickable-chips-mobile-sync.md`), use
+the basename as-is. For near-match pairs where spec and plan have different
+filenames, see the explicit mapping table in Section 4.
 
 | Existing spec file | Existing plan file | New directory |
 |---|---|---|
 | `2026-05-16-spec-kit-upgrade-design.md` | `2026-05-16-spec-kit-upgrade.md` | `2026-05-16-spec-kit-upgrade/` |
+| `2026-05-16-clickable-chips-mobile-sync.md` | `2026-05-16-clickable-chips-mobile-sync.md` | `2026-05-16-clickable-chips-mobile-sync/` |
 | `2026-05-21-2026-modernization-program-design.md` | `2026-05-21-2026-modernization-program.md` | `2026-05-21-2026-modernization-program/` |
 
 ### Orphan handling
 
-**Plan without spec (6 cases):** create a stub `spec.md`:
+**Plan without spec (7 cases):** create a stub `spec.md`:
 ```markdown
 # {Title}
 > Historical: implemented without a formal design doc.
 ```
 
-**Spec without plan (0 cases currently):** create a stub `plan.md`:
+**Spec without plan (1 case — `2026-05-19-mobile-lcp-strict-1800ms-campaign`):**
+create a stub `plan.md`:
 ```markdown
 # {Title} — Implementation Plan
 > Historical: designed but not implemented, or plan not recorded.
@@ -180,36 +184,63 @@ No other CLAUDE.md changes.
 
 | Type | Count | Action |
 |---|---|---|
-| Flat specs (`*-design.md`) | 17 | Move to `{feature}/spec.md` |
-| Flat plans (`plans/*.md`) | 23 | Move to `{feature}/plan.md` |
-| Plans without a spec | 6 | Create stub `spec.md` |
+| Flat specs (16 with `-design` suffix + 1 flat) | 17 | Move to `{feature}/spec.md` |
+| Flat plans | 23 | Move to `{feature}/plan.md` |
+| Exact-match pairs (same base name) | 14 | Standard move |
+| Near-match pairs (same feature, different filenames) | 2 | Move with explicit mapping (see below) |
+| Orphan plans (plan with no spec) | 7 | Create stub `spec.md` |
+| Orphan specs (spec with no plan) | 1 | Create stub `plan.md` |
 | `docs/superpowers/plans/` dir | 1 | Delete after migration |
 
-### 6 orphan plans (plan without matching spec)
+### Near-match pairs (explicit mapping)
 
-| Plan file | Stub spec title |
-|---|---|
-| `2026-05-14-repo-bootstrap-commitizen.md` | Repo Bootstrap & Commitizen |
-| `2026-05-15-architectural-audit-fixes.md` | Architectural Audit Fixes |
-| `2026-05-15-perf-a11y.md` | Performance & A11y Fixes |
-| `2026-05-15-principal-review-fixes.md` | Principal Review Fixes |
-| `2026-05-19-mobile-lcp-task-0-discovery.md` | Mobile LCP — Task 0 Discovery |
-| `2026-05-19-pr-comment-harness.md` | PR Comment Harness |
+These pairs share a feature but have different filenames. Directory name uses the
+spec basename (with `-design` stripped):
+
+| Spec file | Plan file | New directory |
+|---|---|---|
+| `2026-05-14-mobile-responsive-design.md` | `2026-05-14-mobile-responsive-layout.md` | `2026-05-14-mobile-responsive/` |
+| `2026-05-14-commitizen-conventional-commits-design.md` | `2026-05-14-repo-bootstrap-commitizen.md` | `2026-05-14-commitizen-conventional-commits/` |
+
+### 7 orphan plans (plan without matching spec)
+
+| Plan file | New directory | Stub spec title |
+|---|---|---|
+| `2026-05-15-architectural-audit-fixes.md` | `2026-05-15-architectural-audit-fixes/` | Architectural Audit Fixes |
+| `2026-05-15-perf-a11y.md` | `2026-05-15-perf-a11y/` | Performance & A11y Fixes |
+| `2026-05-15-principal-review-fixes.md` | `2026-05-15-principal-review-fixes/` | Principal Review Fixes |
+| `2026-05-16-mobile-responsive-fixes.md` | `2026-05-16-mobile-responsive-fixes/` | Mobile Responsive Fixes |
+| `2026-05-19-mobile-lcp-pr-1-css-defer.md` | `2026-05-19-mobile-lcp-pr-1-css-defer/` | Mobile LCP — PR 1 CSS Defer |
+| `2026-05-19-mobile-lcp-task-0-discovery.md` | `2026-05-19-mobile-lcp-task-0-discovery/` | Mobile LCP — Task 0 Discovery |
+| `2026-05-19-pr-comment-harness.md` | `2026-05-19-pr-comment-harness/` | PR Comment Harness |
+
+### 1 orphan spec (spec without matching plan)
+
+| Spec file | New directory | Stub plan title |
+|---|---|---|
+| `2026-05-19-mobile-lcp-strict-1800ms-campaign-design.md` | `2026-05-19-mobile-lcp-strict-1800ms-campaign/` | Mobile LCP Strict 1800ms Campaign |
 
 ### Migration steps (one atomic commit)
 
-For each of the 23 feature pairs:
+For each of the 14 exact-match pairs:
 1. `mkdir docs/superpowers/specs/{feature-name}/`
 2. `git mv docs/superpowers/specs/{feature}-design.md docs/superpowers/specs/{feature-name}/spec.md`
 3. `git mv docs/superpowers/plans/{feature}.md docs/superpowers/specs/{feature-name}/plan.md`
 
-For each of the 6 orphan plans:
+For the 2 near-match pairs (use explicit mapping table above):
+1. `mkdir docs/superpowers/specs/{feature-name}/`
+2. `git mv docs/superpowers/specs/{spec-file} docs/superpowers/specs/{feature-name}/spec.md`
+3. `git mv docs/superpowers/plans/{plan-file} docs/superpowers/specs/{feature-name}/plan.md`
+
+For each of the 7 orphan plans:
 1. `mkdir docs/superpowers/specs/{feature-name}/`
 2. Write stub `spec.md`
 3. `git mv docs/superpowers/plans/{feature}.md docs/superpowers/specs/{feature-name}/plan.md`
 
-For the 5 specs with no matching plan (none currently — confirm before executing):
-- No action needed unless inventory changes.
+For the 1 orphan spec:
+1. `mkdir docs/superpowers/specs/2026-05-19-mobile-lcp-strict-1800ms-campaign/`
+2. `git mv docs/superpowers/specs/2026-05-19-mobile-lcp-strict-1800ms-campaign-design.md docs/superpowers/specs/2026-05-19-mobile-lcp-strict-1800ms-campaign/spec.md`
+3. Write stub `plan.md`
 
 Final steps:
 4. `rmdir docs/superpowers/plans/` (should be empty after all moves)
@@ -263,27 +294,29 @@ All migrated in commit chore(docs): migrate specs to per-feature dirs.
 |---|---|
 | `CONSTITUTION.md` | Create |
 | `docs/superpowers/README.md` | Create |
-| `docs/superpowers/specs/{23 feature dirs}/spec.md` | Create (moved from flat) |
-| `docs/superpowers/specs/{23 feature dirs}/plan.md` | Create (moved from flat) |
-| `docs/superpowers/specs/{6 orphan dirs}/spec.md` | Create (stub) |
+| `docs/superpowers/specs/{24 feature dirs}/spec.md` | Create (moved from flat or stub) |
+| `docs/superpowers/specs/{24 feature dirs}/plan.md` | Create (moved from flat or stub) |
 | `docs/superpowers/plans/` | Delete (emptied) |
 | `CLAUDE.md` | Modify — 2 targeted additions |
+
+Total feature directories: 14 exact pairs + 2 near-match pairs + 7 orphan plans + 1 orphan spec = 24.
 
 ---
 
 ## Spec self-review
 
-**Placeholder scan:** No TBD or TODO. All 6 orphan plan names are explicit.
-CONSTITUTION.md content is fully written out. Migration steps are mechanical and
-complete.
+**Placeholder scan:** No TBD or TODO. All 7 orphan plan filenames and all 2
+near-match pair mappings are explicit. The 1 orphan spec is named. CONSTITUTION.md
+content is fully written out.
 
 **Internal consistency:** Section 1 naming rule matches the migration table in
-Section 4. CLAUDE.md changes in Section 3 reference the paths defined in Section
-1. CONSTITUTION.md workflow block references the same paths.
+Section 4. Near-match pairs in Section 4 use directory names derived from the
+spec basename (with -design stripped), consistent with the Section 1 rule.
+CLAUDE.md changes in Section 3 reference the paths defined in Section 1.
 
 **Scope check:** Doc-only change. No app code, no CI, no dependencies. A single
 focused commit. Tractable as one implementation plan.
 
 **Ambiguity check:** "Atomic commit" is explicit. "Stub spec.md" content is shown
-verbatim. "Orphan plan" definition (plan without matching spec) is named with the
-6 specific files.
+verbatim. Every orphan file is named explicitly. The non-`-design` spec file
+(`clickable-chips-mobile-sync.md`) has its own row in the naming rule table.
