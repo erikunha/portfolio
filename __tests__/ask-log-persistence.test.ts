@@ -189,7 +189,7 @@ describe('/api/ask privacy notice on the shell', () => {
 
     const { container, unmount } = await mountClient(createElement(InteractiveShell));
 
-    const notice = container.querySelector('.shell__privacy-notice');
+    const notice = container.querySelector('[data-testid="shell-privacy-notice"]');
     expect(notice).not.toBeNull();
     const text = notice?.textContent ?? '';
     expect(text).toMatch(/90 days|90-day/);

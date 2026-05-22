@@ -46,7 +46,7 @@ describe('shell feed accessibility', () => {
 
   it('the shell feed is a labelled live region', async () => {
     const container = await renderShell();
-    const feed = container.querySelector('.shell__feed');
+    const feed = container.querySelector('[role="log"]');
     expect(feed).not.toBeNull();
     expect(feed?.getAttribute('role')).toBe('log');
     expect(feed?.getAttribute('aria-label')).toBe('shell output');
@@ -55,7 +55,7 @@ describe('shell feed accessibility', () => {
 
   it('the feed exposes aria-busy (false while idle)', async () => {
     const container = await renderShell();
-    const feed = container.querySelector('.shell__feed');
+    const feed = container.querySelector('[role="log"]');
     // jsdom serializes the boolean attribute; idle shell is not busy.
     expect(feed?.getAttribute('aria-busy')).toBe('false');
   });
@@ -77,8 +77,8 @@ describe('shell feed accessibility', () => {
 
     const container = await renderShell();
 
-    const input = container.querySelector<HTMLInputElement>('input.shell__input');
-    const form = container.querySelector<HTMLFormElement>('form.shell__form');
+    const input = container.querySelector<HTMLInputElement>('input[aria-label="shell command"]');
+    const form = container.querySelector<HTMLFormElement>('form');
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
     await act(async () => {
       if (input && setter) setter.call(input, 'a question');
@@ -91,9 +91,9 @@ describe('shell feed accessibility', () => {
 
     // While the request is in flight: feed is busy + the loading dots line
     // (decorative animation) is aria-hidden so AT doesn't announce '...'.
-    const feed = container.querySelector('.shell__feed');
+    const feed = container.querySelector('[role="log"]');
     expect(feed?.getAttribute('aria-busy')).toBe('true');
-    const loading = container.querySelector('.shell__line--loading');
+    const loading = container.querySelector('[data-testid="shell-line-loading"]');
     expect(loading).not.toBeNull();
     expect(loading?.getAttribute('aria-hidden')).toBe('true');
 

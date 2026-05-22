@@ -47,7 +47,7 @@ describe('shell command hint', () => {
 
     // The desktop command hint is rendered; it must route free-form input to
     // Claude implicitly, never advertise an explicit `ask <question>` verb.
-    const hint = container.querySelector('.shell__commands');
+    const hint = container.querySelector('[data-testid="shell-commands"]');
     expect(hint).not.toBeNull();
     expect(hint?.textContent ?? '').not.toContain('ask <question>');
   });

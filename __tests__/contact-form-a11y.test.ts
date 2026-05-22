@@ -74,7 +74,7 @@ describe('ContactForm accessibility', () => {
 
   it('the submit row is an aria-live region', async () => {
     const container = await renderForm();
-    const submitRow = container.querySelector('.contact__submitrow');
+    const submitRow = container.querySelector('[aria-live="polite"]');
     expect(submitRow?.getAttribute('aria-live')).toBe('polite');
   });
 
@@ -91,7 +91,7 @@ describe('ContactForm accessibility', () => {
 
     // Submitting the form (the path a keyboard user triggers by pressing Enter
     // in a field or activating the submit button) fires the request.
-    const form = container.querySelector<HTMLFormElement>('form.contact');
+    const form = container.querySelector<HTMLFormElement>('form');
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });

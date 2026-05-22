@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import styles from './ContactForm.module.css';
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -39,7 +40,7 @@ export function ContactForm() {
 
   if (status === 'success') {
     return (
-      <div className="contact contact--success" role="status">
+      <div className={styles.success} role="status">
         <p>EXECUTE_SEND :: SUCCESS</p>
         <p>handshake initiated · expect reply within 48h</p>
       </div>
@@ -47,7 +48,7 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={submit} className="contact" aria-busy={status === 'submitting'}>
+    <form onSubmit={submit} className={styles.root} aria-busy={status === 'submitting'}>
       {/* Honeypot field. Hidden off-screen with aria-hidden + tabindex=-1 so
           keyboard + screen-reader users skip it entirely. The inline style is
           deliberate (vs a class) to keep this single-purpose anti-spam input
@@ -72,10 +73,10 @@ export function ContactForm() {
           pointerEvents: 'none',
         }}
       />
-      <label className="contact__field">
-        <span className="contact__prompt">
-          <span className="contact__prompt-user">user@terminal:~$</span>{' '}
-          <span className="contact__prompt-cmd">enter_name</span>
+      <label className={styles.field}>
+        <span className={styles.prompt}>
+          <span className={styles.promptUser}>user@terminal:~$</span>{' '}
+          <span className={styles.promptCmd}>enter_name</span>
         </span>
         <input
           value={name}
@@ -85,13 +86,13 @@ export function ContactForm() {
           maxLength={80}
           autoComplete="name"
           placeholder="[INPUT REQUIRED]"
-          className="contact__input"
+          className={styles.input}
         />
       </label>
-      <label className="contact__field">
-        <span className="contact__prompt">
-          <span className="contact__prompt-user">user@terminal:~$</span>{' '}
-          <span className="contact__prompt-cmd">enter_email</span>
+      <label className={styles.field}>
+        <span className={styles.prompt}>
+          <span className={styles.promptUser}>user@terminal:~$</span>{' '}
+          <span className={styles.promptCmd}>enter_email</span>
         </span>
         <input
           type="email"
@@ -100,13 +101,13 @@ export function ContactForm() {
           required
           autoComplete="email"
           placeholder="[INPUT REQUIRED]"
-          className="contact__input"
+          className={styles.input}
         />
       </label>
-      <label className="contact__field">
-        <span className="contact__prompt">
-          <span className="contact__prompt-user">user@terminal:~$</span>{' '}
-          <span className="contact__prompt-cmd">enter_message</span>
+      <label className={styles.field}>
+        <span className={styles.prompt}>
+          <span className={styles.promptUser}>user@terminal:~$</span>{' '}
+          <span className={styles.promptCmd}>enter_message</span>
         </span>
         <textarea
           value={message}
@@ -116,17 +117,17 @@ export function ContactForm() {
           maxLength={2000}
           rows={5}
           placeholder="[READY FOR DATA INPUT...]"
-          className="contact__input contact__input--area"
+          className={`${styles.input} ${styles.inputArea}`}
         />
       </label>
-      <div className="contact__submitrow" aria-live="polite">
-        <button type="submit" disabled={status === 'submitting'} className="contact__send">
+      <div className={styles.submitrow} aria-live="polite">
+        <button type="submit" disabled={status === 'submitting'} className={styles.send}>
           {status === 'submitting' ? 'TRANSMITTING...' : 'EXECUTE_SEND'}
         </button>
-        <p className="contact__cursor">waiting for manual override... _</p>
+        <p className={styles.cursor}>waiting for manual override... _</p>
       </div>
       {status === 'error' && (
-        <p role="alert" className="contact__error">
+        <p role="alert" className={styles.error}>
           error: {errorMsg}
         </p>
       )}

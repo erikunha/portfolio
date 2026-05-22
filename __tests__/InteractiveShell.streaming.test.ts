@@ -64,8 +64,8 @@ function isReactOwned(node: Element): boolean {
 // Drives a question through the shell form. React controlled input — the value
 // must be set via the native setter before the input event so React picks it up.
 function submitQuestion(container: HTMLElement, question: string): Promise<void> {
-  const input = container.querySelector<HTMLInputElement>('input.shell__input');
-  const form = container.querySelector<HTMLFormElement>('form.shell__form');
+  const input = container.querySelector<HTMLInputElement>('input[aria-label="shell command"]');
+  const form = container.querySelector<HTMLFormElement>('form');
   expect(input).not.toBeNull();
   expect(form).not.toBeNull();
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
@@ -126,7 +126,7 @@ describe('InteractiveShell streaming behavior', () => {
     // Mid-stream: only the first chunk has been emitted. The streaming span
     // must already be in the feed showing partial text — proof of progressive
     // (non-buffered) rendering.
-    const feed = container.querySelector('.shell__feed');
+    const feed = container.querySelector('[role="log"]');
     expect(feed?.textContent).toContain('Hello');
     expect(feed?.textContent).not.toContain('world');
 
@@ -154,7 +154,7 @@ describe('InteractiveShell streaming behavior', () => {
     await flushFrames();
     await flushFrames();
 
-    const feed = container.querySelector('.shell__feed') as HTMLElement;
+    const feed = container.querySelector('[role="log"]') as HTMLElement;
 
     // Mid-stream invariant: while the answer is streaming, the live line is a
     // React-owned child of the feed. If the implementation regresses to an
@@ -206,7 +206,7 @@ describe('InteractiveShell streaming behavior', () => {
     // The prompt echo and the answer both survive as distinct feed lines —
     // index-based keys would have collapsed/duplicated under the loading-line
     // removal that happens mid-stream.
-    const feed = container.querySelector('.shell__feed');
+    const feed = container.querySelector('[role="log"]');
     expect(feed?.textContent).toContain('a question');
     expect(feed?.textContent).toContain('final answer');
 

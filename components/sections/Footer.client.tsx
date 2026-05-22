@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MatrixRain } from '@/components/responsive/MatrixRain.client';
 import { dmesgLines } from '@/content/dmesg';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
+import styles from './Footer.module.css';
 
 function pad(n: number) {
   return String(n).padStart(2, '0');
@@ -28,7 +29,7 @@ export function Footer() {
   const [commandsRun, setCommandsRun] = useState(0);
   // The dmesg boot sequence is CSS-timed: a single `booted` flag flips the
   // whole list from hidden to revealing. Each <li> staggers via its own
-  // `animation-delay` (see `.dm-line` in app/css/_footer.css), and the halt
+  // `animation-delay` (see `.dmLine` in Footer.module.css), and the halt
   // plate uses the trailing delay. This collapses what used to be a ~8-call
   // staggered setState storm into one state update.
   const [booted, setBooted] = useState(false);
@@ -132,7 +133,7 @@ export function Footer() {
   }, []);
 
   return (
-    <footer className="shutdown" id="shutdown" ref={footerRef}>
+    <footer className={styles.root} id="shutdown" ref={footerRef}>
       <MatrixRain
         fontSize={14}
         speed={0.9}
@@ -150,76 +151,76 @@ export function Footer() {
           WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, #000 18%, #000 100%)',
         }}
       />
-      <div className="shutdown-inner">
-        <div className="sd-banner">
-          <span className="sd-init">[SYSTEM SHUTDOWN INITIATED]</span>
-          <span className="sd-stamp">
+      <div className={styles.inner}>
+        <div className={styles.banner}>
+          <span className={styles.init}>[SYSTEM SHUTDOWN INITIATED]</span>
+          <span className={styles.stamp}>
             {'halted at '}
             <b suppressHydrationWarning>{time}</b>
           </span>
         </div>
-        <div className="sd-cmdline">
-          <span className="sd-prompt">{'erik@portfolio:~$'}</span>{' '}
-          <span className="sd-cmd">{'shutdown -h now'}</span>
+        <div className={styles.cmdline}>
+          <span className={styles.sdPrompt}>{'erik@portfolio:~$'}</span>{' '}
+          <span className={styles.sdCmd}>{'shutdown -h now'}</span>
         </div>
-        <div className="sd-rule" aria-hidden="true" />
+        <div className={styles.rule} aria-hidden="true" />
 
-        <div className="sd-grid">
-          <div className="sd-panel">
-            <header className="sp-head">
-              <span className="sp-bar">{'▌'}</span>SESSION_REPORT
+        <div className={styles.grid}>
+          <div className={styles.panel}>
+            <header className={styles.spHead}>
+              <span className={styles.spBar}>{'▌'}</span>SESSION_REPORT
             </header>
-            <div className="sp-row">
-              <span className="sp-k">user</span>
-              <span className="sp-v">erik@portfolio</span>
+            <div className={styles.spRow}>
+              <span className={styles.spK}>user</span>
+              <span className={styles.spV}>erik@portfolio</span>
             </div>
-            <div className="sp-row">
-              <span className="sp-k">uptime</span>
-              <span className="sp-v">
+            <div className={styles.spRow}>
+              <span className={styles.spK}>uptime</span>
+              <span className={styles.spV}>
                 <b>{uptime}</b>
               </span>
             </div>
-            <div className="sp-row">
-              <span className="sp-k">{isMobile ? 'scroll' : 'scroll depth'}</span>
-              <span className="sp-v">
-                <span className="sp-bar2">
+            <div className={styles.spRow}>
+              <span className={styles.spK}>{isMobile ? 'scroll' : 'scroll depth'}</span>
+              <span className={styles.spV}>
+                <span className={styles.spBar2}>
                   <i style={{ width: `${scrollDepth}%` }} />
                 </span>
                 <b>{scrollDepth}%</b>
               </span>
             </div>
-            <div className="sp-row">
-              <span className="sp-k">{isMobile ? 'sections' : 'sections seen'}</span>
-              <span className="sp-v">
+            <div className={styles.spRow}>
+              <span className={styles.spK}>{isMobile ? 'sections' : 'sections seen'}</span>
+              <span className={styles.spV}>
                 <b>{sectionsSeen}</b>
                 {' / '}
                 {totalSections}
               </span>
             </div>
-            <div className="sp-row">
-              <span className="sp-k">{isMobile ? 'commands' : 'commands run'}</span>
-              <span className="sp-v">
+            <div className={styles.spRow}>
+              <span className={styles.spK}>{isMobile ? 'commands' : 'commands run'}</span>
+              <span className={styles.spV}>
                 <b>{commandsRun}</b>
               </span>
             </div>
           </div>
 
-          <div className="sd-panel sd-netstat">
-            <header className="sp-head">
-              <span className="sp-bar">{'▌'}</span>NETSTAT -AN
+          <div className={`${styles.panel} ${styles.netstat}`}>
+            <header className={styles.spHead}>
+              <span className={styles.spBar}>{'▌'}</span>NETSTAT -AN
             </header>
             {isMobile ? (
-              <div className="ns-grid">
-                <span className="ns-hdr-cell">Proto</span>
-                <span className="ns-hdr-cell">State</span>
-                <span className="ns-hdr-cell">Endpoint</span>
-                <span className="ns-proto">tcp</span>
-                <span className="ns-est">ESTABLISHED</span>
+              <div className={styles.nsGrid}>
+                <span className={styles.nsHdrCell}>Proto</span>
+                <span className={styles.nsHdrCell}>State</span>
+                <span className={styles.nsHdrCell}>Endpoint</span>
+                <span className={styles.nsProto}>tcp</span>
+                <span className={styles.nsEst}>ESTABLISHED</span>
                 <a href="https://github.com/erikunha" target="_blank" rel="noopener noreferrer">
                   github.com/erikunha
                 </a>
-                <span className="ns-proto">tcp</span>
-                <span className="ns-listen">LISTEN</span>
+                <span className={styles.nsProto}>tcp</span>
+                <span className={styles.nsListen}>LISTEN</span>
                 <a
                   href="https://linkedin.com/in/erikunha"
                   target="_blank"
@@ -227,33 +228,33 @@ export function Footer() {
                 >
                   linkedin.com/in/erikunha
                 </a>
-                <span className="ns-proto">tcp</span>
-                <span className="ns-est">ESTABLISHED</span>
+                <span className={styles.nsProto}>tcp</span>
+                <span className={styles.nsEst}>ESTABLISHED</span>
                 <a href="https://erikunha.dev" target="_blank" rel="noopener noreferrer">
                   erikunha.dev
                 </a>
               </div>
             ) : (
               <pre>
-                <span className="ns-hdr">{'Proto  State        Endpoint'}</span>
+                <span className={styles.nsHdr}>{'Proto  State        Endpoint'}</span>
                 {[
                   {
                     state: 'ESTABLISHED',
-                    cls: 'ns-est',
+                    cls: styles.nsEst,
                     href: 'https://github.com/erikunha',
                     label: 'github.com/erikunha',
                     external: true,
                   },
                   {
                     state: 'LISTEN',
-                    cls: 'ns-listen',
+                    cls: styles.nsListen,
                     href: 'https://linkedin.com/in/erikunha',
                     label: 'linkedin.com/in/erikunha',
                     external: true,
                   },
                   {
                     state: 'ESTABLISHED',
-                    cls: 'ns-est',
+                    cls: styles.nsEst,
                     href: 'https://erikunha.dev',
                     label: 'erikunha.dev',
                     external: true,
@@ -276,24 +277,27 @@ export function Footer() {
           </div>
         </div>
 
-        <ul className={booted ? 'sd-dmesg booted' : 'sd-dmesg'} aria-label="kernel buffer tail">
+        <ul
+          className={booted ? `${styles.dmesg} ${styles.booted}` : styles.dmesg}
+          aria-label="kernel buffer tail"
+        >
           {dmesgLines.map((line, i) => (
-            <li key={line.off} className="dm-line" style={{ animationDelay: `${i * 80}ms` }}>
-              <span className="dm-t">{dmesgTs[i]}</span>
-              <span className="dm-msg">
+            <li key={line.off} className={styles.dmLine} style={{ animationDelay: `${i * 80}ms` }}>
+              <span className={styles.dmT}>{dmesgTs[i]}</span>
+              <span className={styles.dmMsg}>
                 {line.prefix}
                 {line.bold && <b>{line.bold}</b>}
                 {line.suffix}
               </span>
-              {line.ok && <span className="dm-ok">OK</span>}
-              {!line.ok && <span className="dm-ok" aria-hidden="true" />}
+              {line.ok && <span className={styles.dmOk}>OK</span>}
+              {!line.ok && <span className={styles.dmOk} aria-hidden="true" />}
             </li>
           ))}
         </ul>
 
-        <div className={booted ? 'sd-end booted' : 'sd-end'}>
-          <span className="sd-halt">[SYSTEM HALTED]</span>
-          <span className="sd-halt-hint">
+        <div className={booted ? `${styles.end} ${styles.booted}` : styles.end}>
+          <span className={styles.halt}>[SYSTEM HALTED]</span>
+          <span className={styles.haltHint}>
             {isMobile ? 'tap ' : 'press '}
             <button type="button" onClick={() => window.location.reload()}>
               <kbd>R</kbd>
@@ -302,7 +306,7 @@ export function Footer() {
           </span>
         </div>
 
-        <div className="shutdown-copy">
+        <div className={styles.copy}>
           © 2026 erik cunha · this session ends here · the work doesn&apos;t.
         </div>
       </div>
