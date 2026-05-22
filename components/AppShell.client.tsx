@@ -6,6 +6,7 @@
 // as RSC children and rendered server-side — their code never ships to the client.
 
 import '@/lib/error-bridge.client';
+import './AppShell.module.css';
 import { type ReactNode, useEffect } from 'react';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { ToTopButton } from './client/ToTopButton';

@@ -1,0 +1,65 @@
+/* Cross-cutting layout rules. These target global DOM ids (set by Module.tsx
+   via the section `id` prop) and the document body, so they cannot be scoped.
+   The .page flex column (page.module.css) is what makes `order` effective. */
+
+@media (max-width: 768px) {
+  :global(#sec-readme) {
+    order: 1;
+  }
+  :global(#sec-shell) {
+    order: 2;
+  }
+  :global(#sec-man-page) {
+    order: 3;
+  }
+  :global(#sec-now) {
+    order: 4;
+  }
+  :global(#sec-projects) {
+    order: 5;
+  }
+  :global(#sec-git-log) {
+    order: 6;
+  }
+  :global(#sec-npm-stack) {
+    order: 7;
+  }
+  :global(#sec-sys-health) {
+    order: 8;
+  }
+  :global(#sec-live-perf) {
+    order: 9;
+  }
+  :global(#sec-perf-receipts) {
+    order: 10;
+  }
+  :global(#sec-guitar) {
+    order: 11;
+  }
+  :global(#sec-visa) {
+    order: 12;
+  }
+  :global(#sec-credentials) {
+    order: 13;
+  }
+  :global(#sec-community) {
+    order: 14;
+  }
+  :global(#sec-hottest-takes) {
+    order: 15;
+  }
+  :global(#sec-responsibilities) {
+    order: 16;
+  }
+  :global(#sec-unknowns) {
+    order: 17;
+  }
+  :global(#sec-contact) {
+    order: 18;
+  }
+
+  /* Clear space for the fixed mobile dock at the bottom of the viewport. */
+  :global(body) {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+}
