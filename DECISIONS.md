@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-05-22 — `turbopack.resolveAlias` removed from next.config.ts
+
+- **2026-05-22** · **`turbopack.resolveAlias` removed from `next.config.ts`.** Vercel CLI 54.3.0 introduced a `modifyConfig` crash (`TypeError: The "path" argument must be of type string. Received undefined`, `ERR_INVALID_ARG_TYPE`) when processing `turbopack.resolveAlias` in production builds. The alias only applied to Turbopack dev builds; `scripts/strip-next-polyfills.mjs` postinstall was always the sole polyfill-stripping mechanism for webpack production builds. `lib/polyfills-noop.ts` (the alias target) deleted as unreferenced. _Reversible: re-add `turbopack: { resolveAlias: { 'next/dist/build/polyfills/polyfill-module': path.resolve('./lib/polyfills-noop.ts') } }` to `next.config.ts` if a future Vercel CLI fixes `modifyConfig`._
+
 ## 2026-05-22 — `ai-eval` CI job flipped to required
 
 - **2026-05-22** · **`ai-eval` promoted from non-blocking (`continue-on-error: true`) to a required status check on `main`.** The job runs `scripts/ask-eval.ts` — an LLM-judge eval over the `/api/ask` route scoring correctness (target ≥ 0.90) and jailbreak resistance (target = 1.0). It was shipped non-blocking in PR #34 to collect baseline data before gating merges (LLM-judge scoring is non-deterministic; premature gating risks false reds). After 6 green CI runs on `main` since P1 merged (2026-05-21 → 2026-05-22), the floor is stable. Changes: (a) removed `continue-on-error: true` from `.github/workflows/ci.yml`; (b) added `ai-eval` to `main`'s branch-protection required-status-checks list via `gh api -X PUT repos/erikunha/portfolio/branches/main/protection`. _Reversible: restore `continue-on-error: true` in `ci.yml` and remove `ai-eval` from branch-protection via the same `gh api -X PUT repos/erikunha/portfolio/branches/main/protection` call._

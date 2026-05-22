@@ -1,4 +1,3 @@
-import path from 'node:path';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 import type { NextConfig } from 'next';
 
@@ -7,11 +6,6 @@ const analyze = withBundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
 const nextConfig: NextConfig = {
   cacheComponents: true,
   typedRoutes: true,
-  turbopack: {
-    resolveAlias: {
-      'next/dist/build/polyfills/polyfill-module': path.resolve('./lib/polyfills-noop.ts'),
-    },
-  },
   headers: async () => [
     {
       source: '/(.*)',
