@@ -56,7 +56,7 @@ describe('responsive section viewport variants', () => {
 
   it('VisaSection emits exactly the desktop variant (no mobile markup)', () => {
     const html = renderToStaticMarkup(createElement(VisaSection));
-    expect(html).toContain('visa-desktop-pre');
-    expect(html).not.toContain('visa-mobile-pre');
+    expect(html).toContain('data-testid="visa-desktop"');
+    expect(html).not.toContain('data-testid="visa-mobile"');
   });
 });

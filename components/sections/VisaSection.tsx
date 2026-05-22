@@ -8,7 +8,7 @@ import s from './VisaSection.module.css';
 function VisaDesktop() {
   return (
     <div className={s.root}>
-      <pre className="visa-desktop-pre">
+      <pre data-testid="visa-desktop">
         <span className={s.vh}>{'JURISDICTION    STATUS                  EVIDENCE'}</span>
         {'\n'}
         <span className={s.vrule}>
@@ -32,7 +32,7 @@ function VisaDesktop() {
 function VisaMobile() {
   return (
     <div className={s.root}>
-      <div className="visa-mobile-pre">
+      <div data-testid="visa-mobile">
         <div className={s.vmGrid}>
           {visaRows.map((row) => (
             <div key={row.jurisdictionShort} className={s.vmRow}>

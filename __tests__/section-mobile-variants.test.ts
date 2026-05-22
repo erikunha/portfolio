@@ -54,8 +54,8 @@ describe('responsive section mobile variants', () => {
   it('VisaContent emits the mobile variant when UA is mobile', async () => {
     const el = await VisaContent();
     const html = renderToStaticMarkup(el);
-    expect(html).toContain('visa-mobile-pre');
-    expect(html).not.toContain('visa-desktop-pre');
+    expect(html).toContain('data-testid="visa-mobile"');
+    expect(html).not.toContain('data-testid="visa-desktop"');
   });
 
   it('ManPageContent emits the mobile variant when UA is mobile', async () => {

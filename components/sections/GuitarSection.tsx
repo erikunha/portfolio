@@ -45,11 +45,7 @@ function GuitarDesktop() {
 function GuitarMobile() {
   return (
     <div className={s.root}>
-      <pre
-        className={s.guitarMobile}
-        data-testid="guitar-mobile"
-        style={{ whiteSpace: 'pre-wrap', overflowWrap: 'break-word', lineHeight: 1.7 }}
-      >
+      <pre className={s.guitarMobile} data-testid="guitar-mobile">
         <span className={s.cmdLine}>
           <span className={s.pr}>$</span>
           {'cat ~/.guitar_rig'}
