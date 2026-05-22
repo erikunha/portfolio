@@ -1,0 +1,89 @@
+.root {
+  overflow-x: auto;
+}
+
+.root .cmd {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
+
+.root .cmd .gt {
+  color: var(--signal);
+  margin-right: 6px;
+}
+
+.root pre {
+  margin: 0;
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-base);
+  line-height: 1.85;
+  color: var(--fg);
+  white-space: pre;
+}
+
+.root .perm {
+  color: var(--signal);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.root .user {
+  color: var(--muted);
+}
+
+.root .group {
+  color: var(--accent-warm);
+}
+
+.root .file {
+  color: var(--fg);
+}
+
+.root .file.crit {
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.root .foot {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--signal-dim-2);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 24px;
+}
+
+.root .foot .k {
+  color: var(--signal);
+}
+
+@media (max-width: 900px) {
+  .root pre {
+    font-size: var(--fs-sm);
+  }
+
+  .root .foot {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .root pre {
+    font-size: var(--fs-xs);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
+  .root .cmd {
+    font-size: var(--fs-xs);
+  }
+
+  .root .foot {
+    font-size: var(--fs-xs);
+  }
+}

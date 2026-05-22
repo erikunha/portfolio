@@ -1,6 +1,7 @@
 import { responsibilities } from '@/content/responsibilities';
 import { IconResponsibilities } from '../Icons';
 import { Module } from '../responsive/Module';
+import styles from './ResponsibilitiesSection.module.css';
 
 export function ResponsibilitiesSection({ defer }: { defer?: boolean } = {}) {
   return (
@@ -10,41 +11,43 @@ export function ResponsibilitiesSection({ defer }: { defer?: boolean } = {}) {
       icon={<IconResponsibilities />}
       defer={defer}
     >
-      <div className="permatrix">
-        <div className="pm-cmd">
-          <span className="gt">$</span>
+      <div className={styles.root}>
+        <div className={styles.cmd}>
+          <span className={styles.gt}>$</span>
           {'ls -la ~/responsibilities  '}
           <span style={{ color: 'var(--muted-dim)' }}>{'// role boundaries, in unix terms'}</span>
         </div>
         <pre>
           {responsibilities.map((r) => (
             <span key={r.name}>
-              <span className="pm-perm">{r.perms}</span>
+              <span className={styles.perm}>{r.perms}</span>
               {'  '}
-              <span className="pm-user">{r.user}</span>
+              <span className={styles.user}>{r.user}</span>
               {'  '}
-              <span className="pm-group">{r.group}</span>
+              <span className={styles.group}>{r.group}</span>
               {'  '}
-              <span className={`pm-file${r.highlight ? ' crit' : ''}`}>{r.name}</span>
+              <span className={`${styles.file}${r.highlight ? ` ${styles.crit}` : ''}`}>
+                {r.name}
+              </span>
               {'\n'}
             </span>
           ))}
         </pre>
-        <div className="pm-foot">
+        <div className={styles.foot}>
           <span>
-            <span className="pm-k">drwxr-xr-x</span>
+            <span className={styles.k}>drwxr-xr-x</span>
             {'  i own it, you can read it, you can run against it'}
           </span>
           <span>
-            <span className="pm-k">drwxrwxrwx</span>
+            <span className={styles.k}>drwxrwxrwx</span>
             {'  explicitly shared — please write here too'}
           </span>
           <span>
-            <span className="pm-k">drwxr-x---</span>
+            <span className={styles.k}>drwxr-x---</span>
             {'  owned, run only by trusted group (security, compliance)'}
           </span>
           <span>
-            <span className="pm-k">-rwx------</span>
+            <span className={styles.k}>-rwx------</span>
             {'  not delegable; this is the one i bring to the room'}
           </span>
         </div>
