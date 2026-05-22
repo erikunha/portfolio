@@ -3,6 +3,7 @@
 
 import { useEffect } from 'react';
 import { applyMotion, readMotion } from '@/lib/motion';
+import styles from './CRTOverlay.module.css';
 
 export function CRTOverlay() {
   useEffect(() => {
@@ -18,12 +19,12 @@ export function CRTOverlay() {
 
   return (
     <>
-      <div className="crt-vignette" aria-hidden />
-      <div className="crt-overlay" aria-hidden />
-      <div className="crt-mask" aria-hidden />
-      <div className="crt-noise" aria-hidden />
-      <div className="crt-flicker" aria-hidden />
-      <div className="crt-scan-beam" aria-hidden />
+      <div className={styles.vignette} aria-hidden />
+      <div className={styles.overlay} aria-hidden />
+      <div className={styles.mask} aria-hidden />
+      <div className={styles.noise} aria-hidden />
+      <div className={styles.flicker} aria-hidden />
+      <div className={styles.scanBeam} aria-hidden />
     </>
   );
 }
