@@ -9,14 +9,11 @@
  * Practices). Turbopack resolveAlias cannot intercept relative requires
  * inside node_modules, so postinstall overwrite is the only clean hook.
  *
- * Verification (2026-05-21): `next.config.ts` has `turbopack.resolveAlias`
- * pointing polyfill-module to `lib/polyfills-noop.ts`, but this only applies
- * to Turbopack builds (dev mode). The webpack production bundle still contains
- * the guard patterns (Array.prototype.at, Object.hasOwn, flatMap, fromEntries,
- * trimStart, URL.canParse) — confirmed by grepping .next/static/chunks/ after
- * `pnpm build` which returned 32 matches including if(!x.prototype.method)
- * guard assignments. This postinstall script remains the only mechanism that
- * strips polyfills from the webpack production build. See DECISIONS.md.
+ * Update (2026-05-22): `turbopack.resolveAlias` was removed from `next.config.ts`
+ * because Vercel CLI 54.3.0 `modifyConfig` crashes (ERR_INVALID_ARG_TYPE) when
+ * processing `resolveAlias` entries in production builds. The alias only ever
+ * applied to Turbopack dev builds anyway — this postinstall script is the sole
+ * mechanism stripping polyfills from webpack production builds. See DECISIONS.md.
  *
  * Safe to re-run: writes a fixed string, idempotent.
  */
