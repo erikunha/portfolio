@@ -289,7 +289,7 @@ All migrated in commit chore(docs): migrate specs to per-feature dirs.
 - Installing spec-kit's `.specify/` directory or slash commands — superpowers covers the workflow layer.
 - Restructuring content of existing specs/plans — files are moved, not rewritten.
 - Adding `contracts/` to historical features — only future complex features need it.
-- Changing the CI pipeline, tests, or any app code.
+- Changing application logic, CI pipeline behavior, or production code.
 
 ---
 
