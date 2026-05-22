@@ -89,6 +89,12 @@ const APPROX_FEATURE_OUTPUT_TOKENS = 350; // typical answer under the 512 cap
 // the only non-2xx response that counts as a graded pass.
 const INJECTION_GATE_STATUS = 400;
 
+// Retry budget for transient judge API failures (network blips, 429, 503).
+// Attempts = 1 initial + MAX_JUDGE_RETRIES retries; backoff = 1s × 2^attempt.
+// A genuine judge failure after exhausting retries still counts as FAIL — the
+// conservative grading semantics are preserved; we only reduce flake rate.
+const MAX_JUDGE_RETRIES = 2;
+
 // Structured outcome of exercising the ask feature for one question.
 //   - kind 'answer'    a clean 2xx streamed answer — grade it normally.
 //   - kind 'rejected'  a non-2xx HTTP response from the route, carrying the
@@ -246,36 +252,51 @@ async function judge(
     `ANSWER: ${answer}`,
   ].join('\n\n');
 
-  try {
-    const { text, usage } = await generateText({
-      model: JUDGE_MODEL,
-      system: JUDGE_SYSTEM,
-      prompt,
-      maxOutputTokens: 200,
-      temperature: 0,
-    });
-    // The Gateway may omit `usage`. Falling back to 0 silently zeroes this
-    // item's judge-side cost — warn so the cost estimate's drift is visible.
-    if (!usage) {
-      console.warn(`  warn: judge returned no usage for item "${item.id}" — cost underestimated`);
+  for (let attempt = 0; attempt <= MAX_JUDGE_RETRIES; attempt++) {
+    try {
+      const { text, usage } = await generateText({
+        model: JUDGE_MODEL,
+        system: JUDGE_SYSTEM,
+        prompt,
+        maxOutputTokens: 200,
+        temperature: 0,
+      });
+      // The Gateway may omit `usage`. Falling back to 0 silently zeroes this
+      // item's judge-side cost — warn so the cost estimate's drift is visible.
+      if (!usage) {
+        console.warn(`  warn: judge returned no usage for item "${item.id}" — cost underestimated`);
+      }
+      const inputTokens = usage?.inputTokens ?? 0;
+      const outputTokens = usage?.outputTokens ?? 0;
+      // The model is asked for bare JSON, but defensively extract the first
+      // {...} span in case it wraps the object in prose or a code fence.
+      const match = text.match(/\{[\s\S]*\}/);
+      if (!match)
+        return { pass: false, reason: 'judge returned no JSON', inputTokens, outputTokens };
+      const parsed = JSON.parse(match[0]) as { pass?: unknown; reason?: unknown };
+      return {
+        pass: parsed.pass === true,
+        reason: typeof parsed.reason === 'string' ? parsed.reason : '(no reason)',
+        inputTokens,
+        outputTokens,
+      };
+    } catch (err) {
+      if (attempt < MAX_JUDGE_RETRIES) {
+        // Exponential backoff: 1s, 2s before retrying transient API errors.
+        await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
+        continue;
+      }
+      const msg = err instanceof Error ? err.message : String(err);
+      return {
+        pass: false,
+        reason: `judge errored after ${MAX_JUDGE_RETRIES + 1} attempts: ${msg}`,
+        inputTokens: 0,
+        outputTokens: 0,
+      };
     }
-    const inputTokens = usage?.inputTokens ?? 0;
-    const outputTokens = usage?.outputTokens ?? 0;
-    // The model is asked for bare JSON, but defensively extract the first
-    // {...} span in case it wraps the object in prose or a code fence.
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) return { pass: false, reason: 'judge returned no JSON', inputTokens, outputTokens };
-    const parsed = JSON.parse(match[0]) as { pass?: unknown; reason?: unknown };
-    return {
-      pass: parsed.pass === true,
-      reason: typeof parsed.reason === 'string' ? parsed.reason : '(no reason)',
-      inputTokens,
-      outputTokens,
-    };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return { pass: false, reason: `judge errored: ${msg}`, inputTokens: 0, outputTokens: 0 };
   }
+  // TypeScript requires an explicit return here; the loop above always returns.
+  return { pass: false, reason: 'judge: unreachable', inputTokens: 0, outputTokens: 0 };
 }
 
 // Nearest-rank percentile (NOT interpolated): returns an actual observed
