@@ -393,9 +393,7 @@
 }
 
 /* ── Status badge — responsive override (_responsive.css wins cascade) ─────
-   The full block below overrides the _layout.css .status rules above.
-   Includes the .statusDot mobile rule with @keyframes blink reference
-   (pre-existing latent bug: @keyframes blink is not defined anywhere — preserved as-is). */
+   The full block below overrides the _layout.css .status rules above. */
 
 .status {
   display: inline-flex;
@@ -417,8 +415,7 @@
   border-radius: 50%;
   background: var(--signal);
   display: inline-block;
-  /* @keyframes blink is not defined — pre-existing latent bug, do not fix */
-  animation: blink 1.4s steps(2, start) infinite;
+  animation: status-pulse 1.6s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
