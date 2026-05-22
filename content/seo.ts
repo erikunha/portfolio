@@ -147,12 +147,15 @@ export const personSchema = {
       'Conference organizer — speaker sourcing, program curation, 10+ talks across DevOps, cloud, and platform engineering',
   },
   seeks: {
-    '@type': 'JobPosting',
-    title: 'Senior, Staff, or Principal Engineer — Applied AI Systems & Full-Stack',
-    employmentType: 'FULL_TIME',
-    jobLocationType: 'TELECOMMUTE',
-    description:
-      'Targeting Applied AI engineering roles (Senior, Staff, or Principal IC) at AI-forward product companies. Currently based in Brazil (UTC-3), working remotely for an EU-regulated company. Open to fully remote worldwide or relocation with visa sponsorship. 8+ years across regulated industries. WES-verified credentials, English C1.',
+    '@type': 'Demand',
+    itemOffered: {
+      '@type': 'JobPosting',
+      title: 'Senior, Staff, or Principal Engineer — Applied AI Systems & Full-Stack',
+      employmentType: 'FULL_TIME',
+      jobLocationType: 'TELECOMMUTE',
+      description:
+        'Targeting Applied AI engineering roles (Senior, Staff, or Principal IC) at AI-forward product companies. Currently based in Brazil (UTC-3), working remotely for an EU-regulated company. Open to fully remote worldwide or relocation with visa sponsorship. 8+ years across regulated industries. WES-verified credentials, English C1.',
+    },
   },
 } as const;
 
