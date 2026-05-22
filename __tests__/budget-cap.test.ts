@@ -78,9 +78,9 @@ describe('budget reservation pattern', () => {
     expect(counter.value).toBe(INPUT_RESERVATION + 512);
   });
 
-  it('rejects and refunds the reservation when it would cross the 400k cap', async () => {
+  it('rejects and refunds the reservation when it would cross the 3M cap', async () => {
     // Place the counter 1k away from the cap so any reservation > 1k crosses.
-    counter.value = 399_000;
+    counter.value = 2_999_000;
     const { reserveBudget } = await import('@/lib/rate-limit');
     const result = await reserveBudget(512);
     expect(result.allowed).toBe(false);
