@@ -3,6 +3,7 @@
 // Both variants are server-rendered; CSS media query hides the non-matching one.
 // Spec: docs/superpowers/specs/2026-05-18-mobile-lcp-perf-fix-design.md §6.
 
+import { heroTagline } from '@/content/hero';
 import { HeroBootAnimation } from '../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../client/HeroSystemFailure';
 import { HeroStats } from '../HeroStats';
@@ -19,10 +20,7 @@ export function Hero() {
         </div>
         <aside className="hero__bio">
           <h1 className="hero__name">Erik Henrique Alves Cunha</h1>
-          <p className="hero__tagline">
-            Staff Full-Stack Engineer · Applied AI · 8+ yrs building regulated, high-scale systems
-            across iGaming (PCI-DSS), healthcare, and e-commerce
-          </p>
+          <p className="hero__tagline">{heroTagline}</p>
           <p className="hero__meta">
             <span>
               LOC: <b>Brazil</b>
@@ -68,10 +66,7 @@ export function Hero() {
           <HeroBootAnimation variant="mobile" />
 
           <h1 className="hero__name">Erik Henrique Alves Cunha</h1>
-          <p className="hero__tagline">
-            Staff Full-Stack Engineer · Applied AI · 8+ yrs building regulated, high-scale systems
-            across iGaming (PCI-DSS), healthcare, and e-commerce
-          </p>
+          <p className="hero__tagline">{heroTagline}</p>
           <p className="hero__meta">
             <span>
               LOC: <b>Brazil</b>
