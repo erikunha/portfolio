@@ -1,7 +1,7 @@
 # Branch-name guard: every branch follows `<type>/<description>` from the
 # commitlint scope set, or is `main`.
 branch=$(git rev-parse --abbrev-ref HEAD)
-echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert)/.+$|^main$' \
+echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot)/.+$|^main$' \
   || (echo "Error: invalid branch name '$branch'. Use <type>/<description> or main." && exit 1)
 
 # Two-tier hook strategy (audit Standard 9): heavy gates run ONCE before
