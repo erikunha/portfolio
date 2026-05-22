@@ -3,39 +3,37 @@
 //
 // Guarantees under test:
 //   - role="status" is present (makes it a live region; implies aria-live="polite")
-//   - aria-live="polite" is present (redundant but explicit, aids AT compatibility)
-//   - role="img" is NOT present (the old incorrect pattern that silenced updates)
-//   - no static aria-label (live region content must flow through text content)
+//   - aria-live="polite" is present (redundant but explicit, aids AT compat)
+//   - role="img" is NOT present (old pattern that silenced dynamic updates)
+//   - no static aria-label (live region content flows through text content)
 //
-// Uses renderToStaticMarkup to assert on the committed static HTML — the same
-// pattern as hero-rsc.test.ts. useEffect/useRef effects do not run under
-// renderToStaticMarkup, so only the initial JSX attributes are examined.
+// Uses renderToStaticMarkup + DOMParser (jsdom env) for element-scoped queries
+// instead of substring scanning the full HTML blob — safe as the tree grows.
 
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { RoleTyper } from '@/components/client/RoleTyper';
 
-const render = () => renderToStaticMarkup(createElement(RoleTyper));
+function getSpan() {
+  const html = renderToStaticMarkup(createElement(RoleTyper));
+  return new DOMParser().parseFromString(html, 'text/html').querySelector('span.pill');
+}
 
 describe('RoleTyper ARIA live-region contract', () => {
   it('carries role="status" so screen readers treat it as a live region', () => {
-    const html = render();
-    expect(html).toContain('role="status"');
+    expect(getSpan()?.getAttribute('role')).toBe('status');
   });
 
   it('carries aria-live="polite" for explicit AT compatibility', () => {
-    const html = render();
-    expect(html).toContain('aria-live="polite"');
+    expect(getSpan()?.getAttribute('aria-live')).toBe('polite');
   });
 
   it('does NOT carry role="img" (static image role silences dynamic updates)', () => {
-    const html = render();
-    expect(html).not.toContain('role="img"');
+    expect(getSpan()?.getAttribute('role')).not.toBe('img');
   });
 
   it('does NOT carry a static aria-label (live region content is announced via text)', () => {
-    const html = render();
-    expect(html).not.toContain('aria-label=');
+    expect(getSpan()?.hasAttribute('aria-label')).toBe(false);
   });
 });
