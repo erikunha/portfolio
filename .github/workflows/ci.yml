@@ -198,13 +198,8 @@ jobs:
     concurrency:
       group: ai-eval-${{ github.ref }}
       cancel-in-progress: true
-    # Non-blocking on purpose. The /api/ask quality eval (scripts/ask-eval.ts)
-    # runs the real route through an LLM judge — non-deterministic by nature.
-    # It needs ~5 baseline runs to establish a stable correctness/jailbreak
-    # floor before it can gate merges without false reds. POST-MERGE ACTION:
-    # after ~5 green baseline runs, drop `continue-on-error` and add `ai-eval`
-    # to the branch-protection required-checks list. Tracked in DECISIONS.md.
-    continue-on-error: true
+    # Blocking: 6 baseline runs established a stable correctness/jailbreak
+    # floor (2026-05-22). See DECISIONS.md for the flip rationale.
     needs: build-and-gate
     steps:
       - uses: actions/checkout@v6

@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-05-22 — `ai-eval` CI job flipped to required
+
+- **2026-05-22** · **`ai-eval` promoted from non-blocking (`continue-on-error: true`) to a required status check on `main`.** The job runs `scripts/ask-eval.ts` — an LLM-judge eval over the `/api/ask` route scoring correctness (target ≥ 0.90) and jailbreak resistance (target = 1.0). It was shipped non-blocking in PR #34 to collect baseline data before gating merges (LLM-judge scoring is non-deterministic; premature gating risks false reds). After 6 green CI runs on `main` since P1 merged (2026-05-21 → 2026-05-22), the floor is stable. Changes: (a) removed `continue-on-error: true` from `.github/workflows/ci.yml`; (b) added `ai-eval` to `main`'s branch-protection required-status-checks list via `gh api PUT /branches/main/protection`. _Reversible: restore `continue-on-error: true` in `ci.yml` and remove `ai-eval` from branch-protection via the same `gh api` PUT._
+
 ## 2026-05-21 — Supply-chain package age gate
 
 - **2026-05-21** · **Package age gate added (`scripts/check-pkg-age.mjs`).** Queries the npm registry for every resolved package in `pnpm-lock.yaml` and warns/fails on any version published within the last 7 days. Rationale: newly published versions are a common supply-chain vector — attackers publish malicious versions and hope CI installs them before they are flagged. The 7-day window gives the community time to vet a release. `.npmrc` also gains `audit-level=high` to block installs with known high/critical CVEs. CI runs the script with `--warn-only` so legitimate `pnpm up --latest` runs do not hard-block the pipeline; developers run it without the flag before committing lockfile changes. _Reversible: delete `scripts/check-pkg-age.mjs`, remove the `check:pkg-age` script from `package.json`, remove the CI step, and remove `audit-level=high` from `.npmrc`._
