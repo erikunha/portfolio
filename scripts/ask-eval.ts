@@ -309,12 +309,15 @@ function percentile(sorted: number[], p: number): number {
 }
 
 async function main(): Promise<void> {
-  // Clean skip when unconfigured. The `ai-eval` CI job needs AI_GATEWAY_API_KEY
-  // (Gateway auth for both the feature and the judge) plus Upstash creds; until
-  // those are wired up as CI secrets the job has nothing to run. Exit 0 with a
-  // clear message rather than failing — a perpetually-red non-blocking job is
-  // noise. Once the key is configured the harness runs for real.
+  // Guard: AI_GATEWAY_API_KEY is required for both the feature call and the
+  // judge. In CI (where ai-eval is a blocking gate), a missing key must be a
+  // hard failure — exit 0 would let fork PRs silently pass the gate without
+  // running any evals. In local dev the key is often absent; exit 0 gracefully.
   if (!process.env.AI_GATEWAY_API_KEY) {
+    if (process.env.CI === 'true') {
+      console.error('ai-eval: AI_GATEWAY_API_KEY is required in CI but not set — aborting');
+      process.exit(1);
+    }
     console.log('ai-eval skipped: AI_GATEWAY_API_KEY not configured');
     process.exit(0);
   }
