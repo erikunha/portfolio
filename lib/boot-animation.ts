@@ -28,24 +28,24 @@ export type LinePart = string | Span;
 
 export const DESKTOP_LINE_SPECS: LinePart[][] = [
   ['[SYSTEM BOOT SEQUENCE INITIATED]'],
-  [' '], // non-breaking space: regular space collapses in some block contexts
+  [' '], // non-breaking space: prevents HTML whitespace collapse in block spans
   ['Initializing kernel modules... ', { cls: 'bootOk', text: 'OK' }],
   ['Mounting local filesystems... ', { cls: 'bootOk', text: 'OK' }],
   ['Starting network services... ', { cls: 'bootOk', text: 'OK' }],
   ['Loading security protocols... ', { cls: 'bootEnc', text: '[ENCRYPTED]' }],
   [{ cls: 'bootWelcome', text: 'Welcome to DEV_OS v2.0.4-stable [user: erik]' }],
-  [' '], // non-breaking space: regular space collapses in some block contexts
+  [' '], // non-breaking space: prevents HTML whitespace collapse in block spans
 ];
 
 export const MOBILE_LINE_SPECS: LinePart[][] = [
   ['[BOOT SEQUENCE INITIATED]'],
-  [' '], // non-breaking space: regular space collapses in some block contexts
+  [' '], // non-breaking space: prevents HTML whitespace collapse in block spans
   ['kernel modules... ', { cls: 'bootOk', text: 'OK' }],
   ['mount fs... ', { cls: 'bootOk', text: 'OK' }],
   ['network... ', { cls: 'bootOk', text: 'OK' }],
   ['security... ', { cls: 'bootEnc', text: '[ENCRYPTED]' }],
   [{ cls: 'bootWelcome', text: 'DEV_OS v2.0.4 [user: erik]' }],
-  [' '], // non-breaking space: regular space collapses in some block contexts
+  [' '], // non-breaking space: prevents HTML whitespace collapse in block spans
 ];
 
 export const DESKTOP_DIALOG = [
@@ -82,7 +82,7 @@ export function buildLine(parts: LinePart[], cls: BootClasses): HTMLElement {
   return line;
 }
 
-// buildBlankLine removed (Fix 5): call sites use buildLine([' '], cls) (nbsp) directly.
+// buildBlankLine removed (Fix 5): call sites use buildLine(['\u00a0'], cls) directly.
 
 export function buildStaticCmdLine(cls: BootClasses): HTMLElement {
   return buildLine(
@@ -179,8 +179,8 @@ export function runBoot(
       if (cancelled) return;
       if (i >= cmdText.length) {
         cursor.remove();
-        // Fix 5: was buildBlankLine(). Use nbsp so the blank span isn't collapsed.
-        container.appendChild(buildLine([' '], cls));
+        // Fix 5: was buildBlankLine(). NBSP prevents whitespace collapse in block spans.
+        container.appendChild(buildLine([' '], cls));
         later(startDialog, 350);
         return;
       }

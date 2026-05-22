@@ -15,6 +15,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import moduleStyles from '@/components/responsive/Module.module.css';
 
 // Module is a pure (sync, non-async) Server Component: one <details> for every
 // viewport, no UA detection. No stub needed — it renders deterministically.
@@ -49,8 +50,8 @@ describe('content-visibility deferral', () => {
       defer: false,
       children: null,
     });
-    expect(renderToStaticMarkup(deferredEl)).toContain('cvDefer');
-    expect(renderToStaticMarkup(eagerEl)).not.toContain('cvDefer');
+    expect(renderToStaticMarkup(deferredEl)).toContain(moduleStyles.cvDefer);
+    expect(renderToStaticMarkup(eagerEl)).not.toContain(moduleStyles.cvDefer);
   });
 
   it('app/page.tsx defers every below-fold section (>= 14)', async () => {
