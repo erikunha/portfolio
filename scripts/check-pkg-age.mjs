@@ -23,7 +23,17 @@ import { resolve } from 'node:path';
 const args = process.argv.slice(2);
 const warnOnly = args.includes('--warn-only');
 const minDaysIdx = args.indexOf('--min-days');
-const MIN_DAYS_OLD = minDaysIdx !== -1 ? Number(args[minDaysIdx + 1]) : 7;
+let MIN_DAYS_OLD = 7;
+if (minDaysIdx !== -1) {
+  const parsed = Number(args[minDaysIdx + 1]);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    console.error(
+      `[pkg-age] Invalid --min-days value: ${args[minDaysIdx + 1]}. Must be a positive number.`,
+    );
+    process.exit(1);
+  }
+  MIN_DAYS_OLD = parsed;
+}
 const MIN_AGE_MS = MIN_DAYS_OLD * 24 * 60 * 60 * 1000;
 
 const lockfile = readFileSync(resolve('pnpm-lock.yaml'), 'utf8');
