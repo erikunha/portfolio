@@ -8,7 +8,9 @@ test.describe('axe-core a11y scan', () => {
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
-      .exclude('.crt-vignette, .crt-overlay, .crt-mask, .crt-noise, .crt-flicker, .crt-scan-beam')
+      .exclude(
+        '[data-testid="crt-vignette"], [data-testid="crt-overlay"], [data-testid="crt-mask"], [data-testid="crt-noise"], [data-testid="crt-flicker"], [data-testid="crt-scan-beam"]',
+      )
       .analyze();
 
     expect(results.violations).toEqual([]);

@@ -19,12 +19,12 @@ export function CRTOverlay() {
 
   return (
     <>
-      <div className={styles.vignette} aria-hidden />
-      <div className={styles.overlay} aria-hidden />
-      <div className={styles.mask} aria-hidden />
-      <div className={styles.noise} aria-hidden />
-      <div className={styles.flicker} aria-hidden />
-      <div className={styles.scanBeam} aria-hidden />
+      <div className={styles.vignette} data-testid="crt-vignette" aria-hidden />
+      <div className={styles.overlay} data-testid="crt-overlay" aria-hidden />
+      <div className={styles.mask} data-testid="crt-mask" aria-hidden />
+      <div className={styles.noise} data-testid="crt-noise" aria-hidden />
+      <div className={styles.flicker} data-testid="crt-flicker" aria-hidden />
+      <div className={styles.scanBeam} data-testid="crt-scan-beam" aria-hidden />
     </>
   );
 }

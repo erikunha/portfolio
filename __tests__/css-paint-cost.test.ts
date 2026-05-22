@@ -57,8 +57,8 @@ describe('paint cost CSS (shipped build assets)', () => {
   it('the body rule carries no text-shadow and no optimizeLegibility', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate paint cost
     const base = readFileSync(path.resolve(__dirname, '../app/css/_base.css'), 'utf-8');
-    // Leading \s* tolerates the 2-space indent from the `@layer base { ... }`
-    // wrapper introduced in CG6 (cascade layers).
+    // Leading \s* tolerates any indentation level; the @layer base wrapper was
+    // removed during the CSS Modules migration.
     const bodyBlock = base.match(/^\s*html,\s*\n\s*body\s*\{[^}]+\}/m)?.[0];
     expect(bodyBlock).toBeDefined();
     expect(bodyBlock).not.toContain('text-shadow');

@@ -16,7 +16,9 @@ import type { Locator, Page } from '@playwright/test';
 
 export function volatileMasks(page: Page): Locator[] {
   return [
-    page.locator('.crt-scan-beam, .crt-flicker, .crt-noise'),
+    page.locator(
+      '[data-testid="crt-scan-beam"], [data-testid="crt-flicker"], [data-testid="crt-noise"]',
+    ),
     page.locator('.shell__line--loading, .shell__cursor'),
     page.locator('[data-testid="boot-line"], [data-testid="boot-cursor"]'),
     // MatrixRain renders <canvas aria-hidden> with no class name; use the attribute.
@@ -50,7 +52,7 @@ export async function stripVolatileChrome(page: Page): Promise<void> {
   await page.evaluate(() => {
     for (const c of document.querySelectorAll('canvas[aria-hidden]')) c.remove();
     for (const el of document.querySelectorAll(
-      '.crt-vignette,.crt-overlay,.crt-mask,.crt-noise,.crt-flicker,.crt-scan-beam',
+      '[data-testid="crt-vignette"],[data-testid="crt-overlay"],[data-testid="crt-mask"],[data-testid="crt-noise"],[data-testid="crt-flicker"],[data-testid="crt-scan-beam"]',
     )) {
       (el as HTMLElement).style.display = 'none';
     }

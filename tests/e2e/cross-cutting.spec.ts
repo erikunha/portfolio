@@ -205,7 +205,11 @@ test.describe('cross-cutting', () => {
       // CSS rules in _crt.css to disable: assert either animationName is
       // 'none', animationPlayState is 'paused', or computed opacity is 0
       // (the CSS uses `opacity: 0` as a belt-and-braces fallback).
-      const selectors = ['.crt-flicker', '.crt-scan-beam', '.crt-noise'];
+      const selectors = [
+        '[data-testid="crt-flicker"]',
+        '[data-testid="crt-scan-beam"]',
+        '[data-testid="crt-noise"]',
+      ];
       let asserted = 0;
       for (const selector of selectors) {
         const el = page.locator(selector).first();
