@@ -11,13 +11,13 @@ const INTER_MS = 300;
 
 export function RoleTyper() {
   const spanRef = useRef<HTMLSpanElement>(null);
+  const liveRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    const el: HTMLSpanElement | null = spanRef.current;
+    const el = spanRef.current;
     if (!el) return;
-    const node = el;
-
     if (!readMotion()) return;
+    const node: HTMLSpanElement = el;
 
     let cancelled = false;
     let roleIdx = 0;
@@ -32,6 +32,8 @@ export function RoleTyper() {
         node.textContent = `[${role.slice(0, charIdx)}]`;
         if (charIdx >= role.length) {
           phase = 'hold';
+          // Announce only the completed role, not each character
+          if (liveRef.current) liveRef.current.textContent = role;
           setTimeout(tick, HOLD_MS);
         } else {
           setTimeout(tick, TYPE_MS);
@@ -60,8 +62,13 @@ export function RoleTyper() {
   }, []);
 
   return (
-    <span className="pill" ref={spanRef} aria-label="Senior, Staff, or Principal" role="img">
-      [Senior]
-    </span>
+    <>
+      <span className="pill" ref={spanRef} aria-hidden="true">
+        [Senior]
+      </span>
+      <span className="sr-only" ref={liveRef} role="status" aria-live="polite">
+        Senior
+      </span>
+    </>
   );
 }
