@@ -1,0 +1,95 @@
+.root {
+  position: sticky;
+  top: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(env(safe-area-inset-top, 0px) + 6px) 14px 6px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--signal-dim);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  color: var(--signal);
+  font-variant-numeric: tabular-nums;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.time {
+  color: var(--signal);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.carrier {
+  color: var(--fg);
+  opacity: 0.85;
+  font-size: var(--fs-xs);
+}
+
+.right {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.signal {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.signal i {
+  display: block;
+  width: 3px;
+  background: var(--signal);
+}
+
+.cell {
+  color: var(--signal);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.1em;
+}
+
+.battery {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.batteryNum {
+  font-size: var(--fs-xs);
+}
+
+.batteryBox {
+  display: inline-block;
+  width: 22px;
+  height: 11px;
+  border: 1px solid var(--signal);
+  padding: 1px;
+  position: relative;
+}
+
+.batteryBox::after {
+  content: "";
+  position: absolute;
+  right: -3px;
+  top: 2px;
+  width: 2px;
+  height: 5px;
+  background: var(--signal);
+}
+
+.batteryBox i {
+  display: block;
+  height: 100%;
+  background: var(--signal);
+  width: 78%;
+}

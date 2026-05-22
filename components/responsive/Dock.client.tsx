@@ -1,6 +1,7 @@
 'use client';
 
 import { dispatchModuleOpen } from '@/lib/events';
+import styles from './Dock.module.css';
 
 const ITEMS = [
   {
@@ -67,7 +68,7 @@ export function Dock() {
   };
 
   return (
-    <nav className="dock" aria-label="primary">
+    <nav className={styles.root} aria-label="primary">
       {ITEMS.map((it) => (
         <a key={it.target} href={`#${it.target}`} onClick={onJump(it.target)}>
           {it.icon}

@@ -1,24 +1,20 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
+import styles from './ToTopButton.module.css';
 
 export function ToTopButton() {
-  const btnRef = useRef<HTMLButtonElement>(null);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const btn = btnRef.current;
-    if (!btn) return;
-    const onScroll = () => {
-      btn.classList.toggle('show', window.scrollY > 400);
-    };
+    const onScroll = () => setVisible(window.scrollY > 400);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   return (
     <button
-      ref={btnRef}
-      className="totop"
+      className={visible ? `${styles.root} ${styles.show}` : styles.root}
       aria-label="back to top"
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       type="button"

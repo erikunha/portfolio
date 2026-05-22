@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import styles from './StatusBar.module.css';
 
 function pad(n: number) {
   return String(n).padStart(2, '0');
@@ -44,24 +45,24 @@ export function StatusBar() {
   }, []);
 
   return (
-    <div className="statusbar" role="status" aria-label="device status">
-      <div className="statusbar__left">
-        <span className="statusbar__time" suppressHydrationWarning>
+    <div className={styles.root} role="status" aria-label="device status">
+      <div className={styles.left}>
+        <span className={styles.time} suppressHydrationWarning>
           {time}
         </span>
-        <span className="statusbar__carrier">DEV_OS</span>
+        <span className={styles.carrier}>DEV_OS</span>
       </div>
-      <div className="statusbar__right" aria-hidden>
-        <span className="statusbar__signal">
+      <div className={styles.right} aria-hidden>
+        <span className={styles.signal}>
           <i style={{ height: 4 }} />
           <i style={{ height: 7 }} />
           <i style={{ height: 10 }} />
           <i style={{ height: 13, opacity: 0.5 }} />
         </span>
-        <span className="statusbar__cell">5G</span>
-        <span className="statusbar__battery" aria-hidden>
-          <span className="statusbar__battery-num">78%</span>
-          <span className="statusbar__battery-box">
+        <span className={styles.cell}>5G</span>
+        <span className={styles.battery} aria-hidden>
+          <span className={styles.batteryNum}>78%</span>
+          <span className={styles.batteryBox}>
             <i />
           </span>
         </span>

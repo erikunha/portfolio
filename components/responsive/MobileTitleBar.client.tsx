@@ -1,15 +1,17 @@
 // components/responsive/MobileTitleBar.tsx
 'use client';
 
+import styles from './MobileTitleBar.module.css';
+
 export function MobileTitleBar() {
   return (
-    <div className="window-chrome window-chrome--mobile">
-      <div className="window-chrome__dots" aria-hidden="true">
-        <span className="window-chrome__dot window-chrome__dot--red" />
-        <span className="window-chrome__dot window-chrome__dot--yellow" />
-        <span className="window-chrome__dot window-chrome__dot--green" />
+    <div className={styles.root}>
+      <div className={styles.dots} aria-hidden="true">
+        <span className={`${styles.dot} ${styles.dotRed}`} />
+        <span className={`${styles.dot} ${styles.dotYellow}`} />
+        <span className={`${styles.dot} ${styles.dotGreen}`} />
       </div>
-      <div className="window-chrome__title" aria-hidden="true">
+      <div className={styles.title} aria-hidden="true">
         ERIK_CUNHA.SH
       </div>
       <div aria-hidden="true" />
