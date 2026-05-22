@@ -70,18 +70,12 @@
 
 /* ── 768px responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  /* _layout.css lines 194–202 — visa pre + visa-foot (fs-xs) */
   .root pre {
     font-size: var(--fs-xs);
     line-height: 1.7;
     white-space: pre-wrap;
     overflow-wrap: break-word;
   }
-  .foot {
-    font-size: var(--fs-xs);
-  }
-
-  /* _sections.css lines 1047–1051 — visa-foot override (fs-2xs wins over fs-xs) */
   .foot {
     font-size: var(--fs-2xs);
     white-space: nowrap;

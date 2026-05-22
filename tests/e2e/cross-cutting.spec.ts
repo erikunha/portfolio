@@ -202,7 +202,7 @@ test.describe('cross-cutting', () => {
       await expect.poll(() => page.evaluate(() => document.body.dataset.motion)).toBe('reduce');
 
       // For each decorative animation we expect the prefers-reduced-motion
-      // CSS rules in _crt.css to disable: assert either animationName is
+      // CSS rules in CRTOverlay.module.css to disable: assert either animationName is
       // 'none', animationPlayState is 'paused', or computed opacity is 0
       // (the CSS uses `opacity: 0` as a belt-and-braces fallback).
       const selectors = [
