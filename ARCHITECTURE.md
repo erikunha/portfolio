@@ -1,6 +1,6 @@
 # Portfolio Architecture — Staff/Principal Pass
 
-> Target stack: Next.js 15 (App Router) · React 19 · TypeScript strict · hand-written global CSS · Vercel Edge · Biome · pnpm · Playwright (contact path only)
+> Target stack: Next.js 16 (App Router) · React 19 · TypeScript strict · hand-written global CSS · Vercel Edge · Biome · pnpm · Playwright (contact path only)
 >
 > Author: Erik Henrique Alves Cunha
 > Last revised: 2026-05-22 (Phase 4 a11y + docs pass — 2026 modernization program complete)
@@ -132,7 +132,7 @@ Every section that doesn't depend on per-visitor state is RSC + SSG. Output is H
 | MOTION indicator | `matchMedia` listener | ≤ 1KB |
 | **Total client JS budget** | | **≤ 43KB** |
 
-> The 43 KB total is a tracked target enforced by `pnpm bundle-check`; it is not an automated CI gate on every PR. Individual island budgets are aspirational guidelines.
+> The 43 KB app-island total is a tracked design target, not a per-PR CI gate. `pnpm bundle-check` gates the combined client chunks (framework-inclusive); the 43 KB figure is monitored via `pnpm bundle:analyze`. Individual island budgets are aspirational guidelines.
 
 Naming convention: every client file ends in `.client.tsx`. The default is server; client is the exception, named explicitly. Forces RSC drift to be visible in code review.
 
@@ -193,7 +193,7 @@ lib/
   ask-log.ts                   # KV interaction log per /api/ask request
   boot-animation.ts            # boot sequence data
   breakpoint.ts                # viewport breakpoint constants
-  contact-validation.ts        # honeypot check + Zod schema
+  contact-validation.ts        # honeypot check (Zod shape validation lives in the route)
   error-bridge.client.ts       # window error → /api/log bridge
   events.ts                    # typed dispatchModuleOpen helper
   hiring-profile.ts            # HiringProfile reader for /api/erik.json
@@ -204,7 +204,7 @@ lib/
   motion.ts                    # readMotion / applyMotion (body data-attr)
   polyfills-noop.ts            # no-op stub (postinstall strips Next polyfills)
   rate-limit.ts                # Upstash sliding-window + budget reserve/settle
-  stream-protocol.ts           # SSE framing helpers for /api/ask response
+  stream-protocol.ts           # NUL-byte error sentinel + parseStreamChunk buffer parser
   ua.ts                        # UA-based device detection (headers())
   use-breakpoint.client.tsx    # useBreakpoint hook (client-only)
 

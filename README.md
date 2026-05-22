@@ -1,11 +1,11 @@
 # erikunha.dev
 
-Single-page Next.js 15 portfolio deployed to Vercel Edge. RSC-first composition of ~18 sections with four client islands, a streaming LLM endpoint, a durable contact form, and a CI pipeline that enforces performance, accessibility, and bundle size as hard contracts.
+Single-page Next.js 16 portfolio deployed to Vercel Edge. RSC-first composition of ~18 sections with four client islands, a streaming LLM endpoint, a durable contact form, and a CI pipeline that enforces performance, accessibility, and bundle size as hard contracts.
 
 **Live:** [erikunha.dev](https://erikunha.dev)
 
 <p>
-  <img alt="Next.js 15" src="https://img.shields.io/badge/Next.js-15-000?logo=nextdotjs&logoColor=white" />
+  <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000?logo=nextdotjs&logoColor=white" />
   <img alt="React 19" src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white" />
   <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" />
   <img alt="Vercel" src="https://img.shields.io/badge/Vercel-Edge-000?logo=vercel&logoColor=white" />
@@ -31,7 +31,7 @@ The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic 
 
 | Technology | Purpose |
 |---|---|
-| Next.js 15 (App Router) | RSC-first static generation with selective client islands |
+| Next.js 16 (App Router) | RSC-first static generation with selective client islands |
 | React 19 | Server components + streaming hydration |
 | TypeScript strict | `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` |
 | Vercel AI Gateway + Anthropic Haiku 4.5 | Streaming `/api/ask` with prompt caching and cost tracking |
@@ -39,7 +39,7 @@ The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic 
 | Hand-written CSS (10 files) | No framework; BEM-ish naming, tokens in `_tokens.css` |
 | Biome | Lint + format in a single Rust binary |
 | Vitest + Playwright | Unit + E2E + axe-core a11y CI suite |
-| Lighthouse CI | LCP, INP, CLS, bundle size gated per PR |
+| Lighthouse CI | LCP, INP, CLS gated per PR |
 | pnpm 10+ / Node 22+ | Strict dependency resolution, content-addressed store |
 
 ---
