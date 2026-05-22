@@ -70,7 +70,14 @@ for (let i = 0; i < entries.length; i += BATCH) {
           headers: { Accept: 'application/vnd.npm.install-v1+json' },
           signal: AbortSignal.timeout(8000),
         });
-        if (!res.ok) return; // private/scoped packages may 404 - skip
+        // 404/401 = private/scoped package not in public registry — skip silently.
+        // Any other non-OK (429, 5xx) is a registry reliability issue — record it
+        // so the run is noisy and doesn't silently pass too-new packages.
+        if (!res.ok) {
+          if (res.status === 404 || res.status === 401) return;
+          fetchErrors.push(`  WARN ${name}@${version}: registry returned HTTP ${res.status}`);
+          return;
+        }
         const data = await res.json();
         const publishedAt = data.time?.[version];
         if (!publishedAt) return; // version absent from registry time map - skip
@@ -82,7 +89,8 @@ for (let i = 0; i < entries.length; i += BATCH) {
       } catch (err) {
         // Network failures are non-fatal: the age gate must not block
         // offline or air-gapped builds.
-        fetchErrors.push(`  SKIP ${name}@${version}: ${err.message}`);
+        const msg = err instanceof Error ? err.message : String(err);
+        fetchErrors.push(`  SKIP ${name}@${version}: ${msg}`);
       }
     }),
   );
