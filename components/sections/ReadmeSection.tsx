@@ -3,6 +3,7 @@ import { readmeCopy as c } from '@/content/readme';
 import { RoleTyper } from '../client/RoleTyper';
 import { IconReadme } from '../Icons';
 import { Module } from '../responsive/Module';
+import styles from './ReadmeSection.module.css';
 
 type ReadmeLine = { text?: string; node?: ReactNode; cls?: string; key: string };
 
@@ -28,17 +29,19 @@ const README_DESKTOP: ReadmeLine[] = [
 
 function ReadmeBlock({ lines }: { lines: ReadmeLine[] }) {
   return (
-    <div className="readme">
-      <div className="readme__gutter" aria-hidden="true">
+    <div className={styles.root}>
+      <div className={styles.gutter} aria-hidden="true">
         {lines.map((line, i) => (
           <span key={line.key}>{i + 1}</span>
         ))}
       </div>
-      <div className="readme__code">
+      <div className={styles.code}>
         {lines.map((line) => (
           <div
             key={line.key}
-            className={line.cls ? `readme__row readme__row--${line.cls}` : 'readme__row'}
+            className={
+              line.cls === 'h1' ? styles.rowH1 : line.cls === 'h2' ? styles.rowH2 : styles.row
+            }
           >
             {line.node ?? line.text}
           </div>
@@ -53,92 +56,94 @@ export function ReadmeSection() {
     <Module id="sec-readme" header="CAT README.MD" icon={<IconReadme />}>
       <ReadmeBlock lines={README_DESKTOP} />
 
-      <div className="readme-codesample">
-        <div className="codesample">
-          <div className="codesample__bar">
+      <div className={styles.codeSampleWrap}>
+        <div className={styles.codeSample}>
+          <div className={styles.codeSampleBar}>
             <span>{'$ cat src/lib/with-retry.ts'}</span>
             <a href="https://github.com/erikunha" target="_blank" rel="noopener noreferrer">
               {'// view full repo →'}
             </a>
           </div>
-          <pre className="codesample__pre">
-            <span className="tk-c">
+          <pre className={styles.codeSamplePre}>
+            <span className={styles.tkC}>
               {'// retry an RxJS stream with exponential backoff + jitter — used in'}
             </span>
             {'\n'}
-            <span className="tk-c">
+            <span className={styles.tkC}>
               {"// the cashier's deposit polling loop. signals abort on permanent 4xx."}
             </span>
             {'\n'}
-            <span className="tk-k">{'export function'}</span>{' '}
-            <span className="tk-f">{'withRetry'}</span>
-            <span className="tk-p">{'<'}</span>
-            <span className="tk-t">{'T'}</span>
-            <span className="tk-p">{'>'}</span>
-            <span className="tk-p">{'('}</span>
+            <span className={styles.tkK}>{'export function'}</span>{' '}
+            <span className={styles.tkF}>{'withRetry'}</span>
+            <span className={styles.tkP}>{'<'}</span>
+            <span className={styles.tkT}>{'T'}</span>
+            <span className={styles.tkP}>{'>'}</span>
+            <span className={styles.tkP}>{'('}</span>
             {'\n'}
             {'  '}
-            <span className="tk-p">{'{ max = '}</span>
-            <span className="tk-t">{'5'}</span>
-            <span className="tk-p">{', base = '}</span>
-            <span className="tk-t">{'300'}</span>
-            <span className="tk-p">{', isFatal }: '}</span>
-            <span className="tk-t">{'RetryOpts'}</span>
-            <span className="tk-p">{','}</span>
+            <span className={styles.tkP}>{'{ max = '}</span>
+            <span className={styles.tkT}>{'5'}</span>
+            <span className={styles.tkP}>{', base = '}</span>
+            <span className={styles.tkT}>{'300'}</span>
+            <span className={styles.tkP}>{', isFatal }: '}</span>
+            <span className={styles.tkT}>{'RetryOpts'}</span>
+            <span className={styles.tkP}>{','}</span>
             {'\n'}
-            <span className="tk-p">{'): '}</span>
-            <span className="tk-t">{'MonoTypeOperatorFunction'}</span>
-            <span className="tk-p">{'<'}</span>
-            <span className="tk-t">{'T'}</span>
-            <span className="tk-p">{'> {'}</span>
+            <span className={styles.tkP}>{'): '}</span>
+            <span className={styles.tkT}>{'MonoTypeOperatorFunction'}</span>
+            <span className={styles.tkP}>{'<'}</span>
+            <span className={styles.tkT}>{'T'}</span>
+            <span className={styles.tkP}>{'> {'}</span>
             {'\n'}
             {'  '}
-            <span className="tk-k">{'return'}</span> <span className="tk-f">{'retry'}</span>
-            <span className="tk-p">{'({'}</span>
+            <span className={styles.tkK}>{'return'}</span>{' '}
+            <span className={styles.tkF}>{'retry'}</span>
+            <span className={styles.tkP}>{'({'}</span>
             {'\n'}
             {'    count'}
-            <span className="tk-p">{':'}</span>
+            <span className={styles.tkP}>{':'}</span>
             {' max'}
-            <span className="tk-p">{','}</span>
+            <span className={styles.tkP}>{','}</span>
             {'\n'}
             {'    delay'}
-            <span className="tk-p">{': (err, attempt) => {'}</span>
+            <span className={styles.tkP}>{': (err, attempt) => {'}</span>
             {'\n'}
             {'      '}
-            <span className="tk-k">{'if'}</span> <span className="tk-p">{'('}</span>
-            <span className="tk-f">{'isFatal'}</span>
-            <span className="tk-p">{'?.(err)) '}</span>
-            <span className="tk-k">{'throw'}</span>
+            <span className={styles.tkK}>{'if'}</span> <span className={styles.tkP}>{'('}</span>
+            <span className={styles.tkF}>{'isFatal'}</span>
+            <span className={styles.tkP}>{'?.(err)) '}</span>
+            <span className={styles.tkK}>{'throw'}</span>
             {' err'}
-            <span className="tk-p">{';'}</span>
+            <span className={styles.tkP}>{';'}</span>
             {'\n'}
             {'      '}
-            <span className="tk-k">{'const'}</span>
+            <span className={styles.tkK}>{'const'}</span>
             {' wait '}
-            <span className="tk-p">{'='}</span>
+            <span className={styles.tkP}>{'='}</span>
             {' base '}
-            <span className="tk-p">{'* '}</span>
-            <span className="tk-t">{'2'}</span>
-            <span className="tk-p">{'**'}</span>
+            <span className={styles.tkP}>{'* '}</span>
+            <span className={styles.tkT}>{'2'}</span>
+            <span className={styles.tkP}>{'**'}</span>
             {'attempt '}
-            <span className="tk-p">{'+ '}</span>
-            <span className="tk-f">{'Math.random'}</span>
-            <span className="tk-p">{'() * '}</span>
+            <span className={styles.tkP}>{'+ '}</span>
+            <span className={styles.tkF}>{'Math.random'}</span>
+            <span className={styles.tkP}>{'() * '}</span>
             {'base'}
-            <span className="tk-p">{';'}</span>
+            <span className={styles.tkP}>{';'}</span>
             {'\n'}
             {'      '}
-            <span className="tk-k">{'return'}</span> <span className="tk-f">{'timer'}</span>
-            <span className="tk-p">{'(wait);'}</span>
+            <span className={styles.tkK}>{'return'}</span>{' '}
+            <span className={styles.tkF}>{'timer'}</span>
+            <span className={styles.tkP}>{'(wait);'}</span>
             {'\n'}
             {'    '}
-            <span className="tk-p">{'}'}</span>
-            <span className="tk-p">{','}</span>
+            <span className={styles.tkP}>{'}'}</span>
+            <span className={styles.tkP}>{','}</span>
             {'\n'}
             {'  '}
-            <span className="tk-p">{'});'}</span>
+            <span className={styles.tkP}>{'});'}</span>
             {'\n'}
-            <span className="tk-p">{'}'}</span>
+            <span className={styles.tkP}>{'}'}</span>
           </pre>
         </div>
       </div>

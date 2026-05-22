@@ -61,6 +61,6 @@ describe('responsive section mobile variants', () => {
   it('ManPageContent emits the mobile variant when UA is mobile', async () => {
     const el = await ManPageContent();
     const html = renderToStaticMarkup(el);
-    expect(html).toContain('manpage--mobile');
+    expect(html).toContain('data-testid="manpage-mobile"');
   });
 });

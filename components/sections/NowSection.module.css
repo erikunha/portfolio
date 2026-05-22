@@ -1,0 +1,32 @@
+.root {
+  font-size: var(--fs-base);
+  line-height: 1.9;
+}
+
+.root .row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 16px;
+}
+
+.root .k {
+  color: var(--signal);
+  letter-spacing: 0.04em;
+}
+
+.root .v {
+  color: var(--fg);
+}
+
+@media (max-width: 900px) {
+  .root .row {
+    grid-template-columns: 90px 1fr;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .root {
+    font-size: var(--fs-sm);
+  }
+}
