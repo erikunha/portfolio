@@ -45,7 +45,7 @@ test.describe('visual regression', () => {
     // "fonts loaded" wait happens inside toHaveScreenshot but races font-swap
     // re-flow.
     await mockedPage.evaluate(() => document.fonts.ready);
-    await heroSection.locator('.hero__ctas').waitFor({ state: 'visible' });
+    await heroSection.locator('[data-testid="hero-ctas"]').waitFor({ state: 'visible' });
     // Strip volatile chrome (matrix-rain canvas + CRT overlays) from the DOM.
     // Masking is not enough for the CRT layers: under reduced-motion they are
     // opacity:0 but keep a full-viewport bounding box (.crt-noise is

@@ -269,7 +269,7 @@
 }
 
 /* ── Mobile variant — stacked layout ─────────────────────────────────────
-   .hero--mobile .hero__name override */
+   .mobile .name override */
 
 .mobile .name {
   font-family: var(--font-mono-stack);

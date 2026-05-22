@@ -20,7 +20,9 @@ export function Hero() {
           <HeroBootAnimation variant="desktop" />
         </div>
         <aside className={styles.bio}>
-          <h1 className={styles.name}>Erik Henrique Alves Cunha</h1>
+          <h1 className={styles.name} data-testid="hero-name">
+            Erik Henrique Alves Cunha
+          </h1>
           <p className={styles.tagline}>{heroTagline}</p>
           <p className={styles.meta}>
             <span>
@@ -36,7 +38,7 @@ export function Hero() {
             OPEN_TO_RELOCATION · WORLDWIDE
           </p>
           <HeroStats />
-          <div className={styles.ctas}>
+          <div className={styles.ctas} data-testid="hero-ctas">
             <a
               className={`${styles.cta} ${styles.ctaPrimary}`}
               href="https://www.linkedin.com/in/erikunha/"
@@ -66,7 +68,9 @@ export function Hero() {
         <div className={styles.inner}>
           <HeroBootAnimation variant="mobile" />
 
-          <h1 className={styles.name}>Erik Henrique Alves Cunha</h1>
+          <h1 className={styles.name} data-testid="hero-name">
+            Erik Henrique Alves Cunha
+          </h1>
           <p className={styles.tagline}>{heroTagline}</p>
           <p className={styles.meta}>
             <span>
@@ -82,7 +86,7 @@ export function Hero() {
             OPEN_TO_RELOCATION · WORLDWIDE
           </p>
           <HeroStats />
-          <div className={styles.ctas}>
+          <div className={styles.ctas} data-testid="hero-ctas">
             <a
               className={`${styles.cta} ${styles.ctaPrimary}`}
               href="https://www.linkedin.com/in/erikunha/"

@@ -194,7 +194,7 @@ test.describe('cross-cutting', () => {
     try {
       await installMockBackend(page, { log: 'accept', forget: 'happy' });
       await page.goto('/');
-      await page.waitForSelector('h1.hero__name', { state: 'attached' });
+      await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
 
       // Wait for /init.js to apply body[data-motion]. The script runs inline
       // (no defer) but Playwright's "load" event ordering is engine-specific;

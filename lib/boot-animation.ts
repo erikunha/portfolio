@@ -68,6 +68,7 @@ const SYSFAIL_FADE_TAIL_MS = 300;
 export function buildLine(parts: LinePart[], cls: BootClasses): HTMLElement {
   const line = document.createElement('span');
   line.className = cls.bootLine;
+  line.dataset.testid = 'boot-line';
   for (const p of parts) {
     if (typeof p === 'string') {
       line.appendChild(document.createTextNode(p));
@@ -158,6 +159,7 @@ export function runBoot(
 
     const line = document.createElement('span');
     line.className = cls.bootLine;
+    line.dataset.testid = 'boot-line';
     const prompt = document.createElement('span');
     prompt.className = cls.bootPrompt;
     prompt.textContent = 'erik@portfolio:~$';
@@ -165,6 +167,7 @@ export function runBoot(
     cmdEl.className = cls.bootCmd;
     const cursor = document.createElement('span');
     cursor.className = cls.bootCursor;
+    cursor.dataset.testid = 'boot-cursor';
     line.appendChild(prompt);
     line.appendChild(document.createTextNode(' '));
     line.appendChild(cmdEl);
@@ -192,6 +195,7 @@ export function runBoot(
 
     const line = document.createElement('span');
     line.className = cls.bootLine;
+    line.dataset.testid = 'boot-line';
     const prefix = document.createElement('span');
     prefix.className = cls.bootMatrixPrefix;
     prefix.textContent = '>';
@@ -199,6 +203,7 @@ export function runBoot(
     out.className = cls.bootMatrixOut;
     const cur = document.createElement('span');
     cur.className = cls.bootCursor;
+    cur.dataset.testid = 'boot-cursor';
     line.appendChild(prefix);
     line.appendChild(out);
     line.appendChild(cur);

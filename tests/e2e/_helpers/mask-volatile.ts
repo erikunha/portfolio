@@ -18,7 +18,7 @@ export function volatileMasks(page: Page): Locator[] {
   return [
     page.locator('.crt-scan-beam, .crt-flicker, .crt-noise'),
     page.locator('.shell__line--loading, .shell__cursor'),
-    page.locator('.boot__line, .boot__cursor'),
+    page.locator('[data-testid="boot-line"], [data-testid="boot-cursor"]'),
     // MatrixRain renders <canvas aria-hidden> with no class name; use the attribute.
     page.locator('canvas[aria-hidden]'),
     // Escape-hatch hook for ad-hoc volatile regions added later (e.g. live
