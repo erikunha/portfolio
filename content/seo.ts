@@ -1,6 +1,8 @@
 // content/seo.ts
 // JSON-LD Person schema — sourced here, consumed by app/layout.tsx.
-// No Zod: this is static config, not user-facing content. pnpm typecheck is the gate.
+// Full structural typing handled by TypeScript `as const`; Zod guards the key
+// user-facing identity fields at module load so pnpm validate-content catches drift.
+import { z } from 'zod';
 
 export const personSchema = {
   '@context': 'https://schema.org',
@@ -152,3 +154,12 @@ export const personSchema = {
       'Targeting Applied AI engineering roles (Senior, Staff, or Principal IC) at AI-forward product companies. Currently based in Brazil (UTC-3), working remotely for an EU-regulated company. Open to fully remote worldwide or relocation with visa sponsorship. 8+ years across regulated industries. WES-verified credentials, English C1.',
   },
 } as const;
+
+z.object({
+  name: z.string().min(1),
+  alternateName: z.string().min(1),
+  jobTitle: z.string().min(1),
+  description: z.string().min(1),
+  url: z.string().url(),
+  email: z.string().email(),
+}).parse(personSchema);

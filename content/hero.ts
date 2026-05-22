@@ -1,6 +1,8 @@
-// content/hero.ts
-// Hero section copy — single source of truth for both desktop and mobile variants.
-// No Zod: static config, not user-facing content. pnpm typecheck is the gate.
+import { z } from 'zod';
 
-export const heroTagline =
-  'Staff Full-Stack Engineer · Applied AI · 8+ yrs building regulated, high-scale systems across iGaming (PCI-DSS), healthcare, and e-commerce' as const;
+export const heroTagline = z
+  .string()
+  .min(1)
+  .parse(
+    'Staff Full-Stack Engineer · Applied AI · 8+ yrs building regulated, high-scale systems across iGaming (PCI-DSS), healthcare, and e-commerce',
+  );
