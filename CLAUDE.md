@@ -61,10 +61,11 @@ Invoke the named skill inline (not as a subagent) before the described action.
 
 | Trigger | Skill |
 |---|---|
+| **Before writing any new file, function, or script** | **`thinking-inversion` — what specifically makes this fail? answers become test cases** |
+| **Before implementing any new file, function, or script** | **`superpowers:test-driven-development` — tests first, always; implementation satisfies them** |
 | After editing any file in `components/` or `app/` | `react-best-practices` |
 | After editing `next.config.ts`, `.env.example`, or Vercel config | `vercel:nextjs` |
 | After editing `app/api/` or `proxy.ts` | `vercel:vercel-functions` |
-| When writing or modifying any test in `__tests__/` or `tests/` | `superpowers:test-driven-development` |
 | Before any UI code review (alongside `ui-ux-tester` dispatch) | `web-design-guidelines` |
 
 ## Stack (locked)
@@ -145,6 +146,7 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 - Track decisions in `DECISIONS.md`: one bullet, date, reversibility note. Update as we go.
 - **Process feedback mid-workflow is a hard stop.** When the user gives process or workflow feedback while a task is executing: pause immediately, incorporate it into CLAUDE.md and/or memory, confirm the change with the user, then resume. Do not barrel through to completion and address feedback after the fact.
 - **Code review is not optional on PR branches.** Run `code-review:code-review` on the staged diff before every commit — scripts, config files, routes, and one-liners all count. "It's just a small change" is not an exemption. Skipping this step is the direct cause of multi-round Copilot review cycles (PR #36: 3 rounds, 12 preventable findings). The review catches TypeScript safety issues (`err.message` on `unknown`), input validation gaps (NaN bypass), missing tests, and documentation accuracy before they reach Copilot.
+- **The review should be boring.** If `code-review:code-review` or Copilot finds real bugs, the pre-implementation discipline failed — not the review. Principal/Staff level means bugs don't reach the review; the test suite already encodes the failure modes found by `thinking-inversion`. Multi-round Copilot cycles are a signal to fix the writing process, not the reviewing process.
 
 ## Out of scope (unless asked)
 
