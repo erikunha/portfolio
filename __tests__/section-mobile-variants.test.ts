@@ -33,8 +33,8 @@ describe('responsive section mobile variants', () => {
   it('GuitarContent emits the mobile variant when UA is mobile', async () => {
     const el = await GuitarContent();
     const html = renderToStaticMarkup(el);
-    expect(html).toContain('guitar-mobile');
-    expect(html).not.toContain('guitar-desktop');
+    expect(html).toContain('data-testid="guitar-mobile"');
+    expect(html).not.toContain('data-testid="guitar-desktop"');
   });
 
   it('ProjectsContent emits the mobile variant when UA is mobile', async () => {

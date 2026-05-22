@@ -1,0 +1,99 @@
+/* ── VisaSection ───────────────────────────────────────────────────── */
+
+/* .visa container — _sections.css lines 130–132 */
+.root {
+  overflow-x: auto;
+}
+
+/* .visa pre — _sections.css lines 133–140 */
+.root pre {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-base);
+  line-height: 1.85;
+  white-space: pre;
+}
+
+/* span tokens inside .visa — _sections.css lines 141–165 */
+.vh {
+  color: var(--signal);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.vrule {
+  color: var(--signal);
+  opacity: 0.55;
+}
+.vjur {
+  color: var(--signal);
+  font-weight: 700;
+}
+.vstat {
+  color: var(--fg);
+}
+.vev {
+  color: var(--muted);
+}
+
+/* .visa-foot — _sections.css lines 160–165 */
+.foot {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  margin-top: 14px;
+  letter-spacing: 0.04em;
+}
+
+/* .vm-grid/.vm-row/.vm-right — _sections.css lines 167–188 */
+.vmGrid {
+  margin-top: 0.5em;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-sm);
+}
+.vmRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.vmRow .vjur {
+  flex-shrink: 0;
+  width: 8ch;
+}
+.vmRight {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* .visa .cmd-line — _sections.css lines 192–198 */
+.root .cmdLine {
+  color: var(--muted);
+}
+.root .cmdLine .pr {
+  color: var(--signal);
+  margin-right: 4px;
+}
+
+/* ── 768px responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* _layout.css lines 194–202 — visa pre + visa-foot (fs-xs) */
+  .root pre {
+    font-size: var(--fs-xs);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+  .foot {
+    font-size: var(--fs-xs);
+  }
+
+  /* _sections.css lines 1047–1051 — visa-foot override (fs-2xs wins over fs-xs) */
+  .foot {
+    font-size: var(--fs-2xs);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+}

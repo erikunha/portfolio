@@ -1,0 +1,58 @@
+/* ── GuitarSection ─────────────────────────────────────────────────── */
+
+/* shared .visa pre-container — replicated from _sections.css lines 130–140 */
+.root {
+  overflow-x: auto;
+}
+.root pre {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-base);
+  line-height: 1.85;
+  white-space: pre;
+}
+
+/* .visa .cmd-line — replicated from _sections.css lines 192–198 */
+.root .cmdLine {
+  color: var(--muted);
+}
+.root .cmdLine .pr {
+  color: var(--signal);
+  margin-right: 4px;
+}
+
+/* .gr-* — _sections.css lines 250–266 */
+.grLabel {
+  color: var(--signal);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.grVal {
+  color: var(--fg);
+}
+.grComment {
+  color: var(--muted);
+}
+.grNum {
+  color: var(--muted);
+}
+.grName {
+  color: var(--fg);
+}
+
+/* pre.guitar-mobile — _sections.css lines 189–191 */
+.guitarMobile {
+  font-size: var(--fs-sm);
+}
+
+/* ── 768px responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* .visa pre — _layout.css lines 194–199 */
+  .root pre {
+    font-size: var(--fs-xs);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+}

@@ -50,8 +50,8 @@ describe('responsive section viewport variants', () => {
 
   it('GuitarSection emits exactly the desktop variant (no mobile markup)', () => {
     const html = renderToStaticMarkup(createElement(GuitarSection));
-    expect(html).toContain('guitar-desktop');
-    expect(html).not.toContain('guitar-mobile');
+    expect(html).toContain('data-testid="guitar-desktop"');
+    expect(html).not.toContain('data-testid="guitar-mobile"');
   });
 
   it('VisaSection emits exactly the desktop variant (no mobile markup)', () => {
