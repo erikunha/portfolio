@@ -3,6 +3,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import Script from 'next/script';
+import { personSchema } from '@/content/seo';
 import { INLINE_CSS } from '@/lib/inline-css';
 
 // Self-hosted per CLAUDE.md — no Google CDN link shipped to the browser
@@ -86,23 +87,7 @@ export const metadata: Metadata = {
 };
 
 // React 19 renders script children via textContent (safe; no innerHTML)
-const personJsonLd = JSON.stringify({
-  '@context': 'https://schema.org',
-  '@type': 'Person',
-  name: 'Erik Henrique Alves Cunha',
-  alternateName: 'Erik Cunha',
-  jobTitle: 'Senior Full-Stack Engineer, Frontend',
-  description:
-    'Senior Full-Stack Engineer, Frontend with 8+ years building regulated, high-traffic systems in fintech (PCI-DSS), healthcare, and global e-commerce.',
-  url: 'https://erikunha.dev',
-  email: 'mailto:erikhenriquealvescunha@gmail.com',
-  knowsLanguage: ['pt', 'en', 'fr', 'es'],
-  sameAs: [
-    'https://github.com/erikunha',
-    'https://www.linkedin.com/in/erikunha/',
-    'https://erikunha.dev',
-  ],
-});
+const personJsonLd = JSON.stringify(personSchema);
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
