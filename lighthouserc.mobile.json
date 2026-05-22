@@ -49,6 +49,7 @@
         "structured-data": "off",
 
         "tap-targets": "off",
+        "forced-reflow-insight": "off",
         "network-dependency-tree-insight": "off",
         "render-blocking-insight": "off",
         "unused-javascript": "off",
