@@ -41,7 +41,7 @@ export const test = base.extend<Fixtures>({
     // island is dynamic({ ssr: false }), so its presence proves the client
     // bundle has hydrated and event handlers are attached).
     await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
-    await page.waitForSelector('.shell .shell__input', { state: 'visible' });
+    await page.waitForSelector('[aria-label="shell command"]', { state: 'visible' });
     await use(page);
   },
 });

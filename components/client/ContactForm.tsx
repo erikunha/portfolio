@@ -48,7 +48,12 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={submit} className={styles.root} aria-busy={status === 'submitting'}>
+    <form
+      onSubmit={submit}
+      className={styles.root}
+      aria-busy={status === 'submitting'}
+      data-testid="contact-form"
+    >
       {/* Honeypot field. Hidden off-screen with aria-hidden + tabindex=-1 so
           keyboard + screen-reader users skip it entirely. The inline style is
           deliberate (vs a class) to keep this single-purpose anti-spam input

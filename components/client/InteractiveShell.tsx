@@ -97,9 +97,9 @@ function AnimatedPlaceholder() {
     };
   }, []);
   return (
-    <span className={styles.placeholderAnim} aria-hidden="true">
+    <span className={styles.placeholderAnim} aria-hidden="true" data-testid="shell-placeholder">
       <span ref={textRef} />
-      <span className={styles.cursor} />
+      <span className={styles.cursor} data-testid="shell-cursor" />
     </span>
   );
 }
@@ -340,13 +340,15 @@ export function InteractiveShell() {
           l.kind === 'loading' ? (
             <LoadingDots key={l.id} />
           ) : (
-            <span key={l.id} className={`${styles.line} ${KIND_CLASS[l.kind]}`}>
+            <span key={l.id} className={`${styles.line} ${KIND_CLASS[l.kind]}`} data-kind={l.kind}>
               {l.text}
             </span>
           ),
         )}
         {streamingText !== null && (
-          <span className={`${styles.line} ${styles.lineOutput}`}>{streamingText}</span>
+          <span className={`${styles.line} ${styles.lineOutput}`} data-kind="output">
+            {streamingText}
+          </span>
         )}
       </div>
 
@@ -357,6 +359,7 @@ export function InteractiveShell() {
           if (cmd && !busy) runCommand(cmd);
         }}
         className={styles.form}
+        data-testid="shell-form"
       >
         <span className={styles.prompt}>erik@portfolio:~$</span>
         <div className={styles.inputWrap}>

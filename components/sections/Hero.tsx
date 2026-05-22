@@ -15,7 +15,7 @@ export function Hero() {
       {/* Desktop: two-column layout — boot animation left, bio panel right.
           id="bio" is the anchor target used by DesktopTopbar nav links.
           Hidden on mobile via .desktop CSS rule (max-width: 768px). */}
-      <section id="bio" className={`${styles.root} ${styles.desktop}`}>
+      <section id="bio" className={`${styles.root} ${styles.desktop}`} data-testid="hero-desktop">
         <div className={styles.left}>
           <HeroBootAnimation variant="desktop" />
         </div>
@@ -64,7 +64,7 @@ export function Hero() {
       {/* Mobile: stacked layout — boot animation on top, bio below.
           Hidden on desktop via .mobile CSS rule (min-width: 769px).
           No id needed here — anchor target #bio is on the desktop section. */}
-      <section className={`${styles.root} ${styles.mobile}`}>
+      <section className={`${styles.root} ${styles.mobile}`} data-testid="hero-mobile">
         <div className={styles.inner}>
           <HeroBootAnimation variant="mobile" />
 

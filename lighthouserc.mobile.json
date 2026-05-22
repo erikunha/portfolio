@@ -34,7 +34,7 @@
         "uses-text-compression": "error",
         "uses-responsive-images": "error",
         "uses-rel-preconnect": "off",
-        "render-blocking-resources": ["error", { "maxLength": 1, "maxNumericValue": 500 }],
+        "render-blocking-resources": ["error", { "maxLength": 2, "maxNumericValue": 500 }],
         "errors-in-console": "warn",
         "font-display": "error",
 

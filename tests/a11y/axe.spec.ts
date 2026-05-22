@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
 test.describe('axe-core a11y scan', () => {
   test('homepage has no automatically detectable accessibility violations', async ({ page }) => {
     await page.goto('/');
-    await page.waitForSelector('.shell__feed');
+    await page.waitForSelector('[role="log"]');
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -18,12 +18,12 @@ test.describe('axe-core a11y scan', () => {
 
   test('contact form error state has no violations', async ({ page }) => {
     await page.goto('/');
-    await page.waitForSelector('form.contact');
+    await page.waitForSelector('[data-testid="contact-form"]');
     await page.click('button[type="submit"]');
     await page.waitForTimeout(500);
 
     const results = await new AxeBuilder({ page })
-      .include('form.contact')
+      .include('[data-testid="contact-form"]')
       .withTags(['wcag2a', 'wcag2aa'])
       .analyze();
 

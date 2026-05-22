@@ -19,7 +19,7 @@ export function volatileMasks(page: Page): Locator[] {
     page.locator(
       '[data-testid="crt-scan-beam"], [data-testid="crt-flicker"], [data-testid="crt-noise"]',
     ),
-    page.locator('.shell__line--loading, .shell__cursor'),
+    page.locator('[data-testid="shell-line-loading"], [data-testid="shell-cursor"]'),
     page.locator('[data-testid="boot-line"], [data-testid="boot-cursor"]'),
     // MatrixRain renders <canvas aria-hidden> with no class name; use the attribute.
     page.locator('canvas[aria-hidden]'),

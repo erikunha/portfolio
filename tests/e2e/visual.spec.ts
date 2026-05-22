@@ -38,7 +38,9 @@ test.describe('visual regression', () => {
     // locator side: .filter({ visible: true }) resolves to the variant the
     // viewport actually paints. Playwright produces separate baselines per
     // project, so each viewport's variant is captured against its own snapshot.
-    const heroSection = mockedPage.locator('section.hero').filter({ visible: true });
+    const heroSection = mockedPage
+      .locator('[data-testid="hero-desktop"], [data-testid="hero-mobile"]')
+      .filter({ visible: true });
     await heroSection.waitFor({ state: 'visible' });
     await heroSection.scrollIntoViewIfNeeded();
     // Wait for self-hosted fonts (next/font) to fully load. Playwright's own
@@ -59,7 +61,7 @@ test.describe('visual regression', () => {
     // Scroll the contact section into view and wait for the lazy ContactForm island.
     const contactSection = mockedPage.locator('#sec-contact');
     await contactSection.scrollIntoViewIfNeeded();
-    await mockedPage.waitForSelector('form.contact', { state: 'visible' });
+    await mockedPage.waitForSelector('[data-testid="contact-form"]', { state: 'visible' });
     await mockedPage.evaluate(() => document.fonts.ready);
     // Strip volatile chrome (canvas + CRT overlays). See test 1 for why
     // masking the CRT layers is insufficient.
@@ -76,8 +78,8 @@ test.describe('visual regression', () => {
     await shellSection.scrollIntoViewIfNeeded();
     // Wait for the form + initial info line. The fixture already proved the input
     // is visible; the form wrap and feed are siblings inside the same hydrated tree.
-    await mockedPage.waitForSelector('.shell__form', { state: 'visible' });
-    await mockedPage.waitForSelector('.shell__feed .shell__line--info', { state: 'visible' });
+    await mockedPage.waitForSelector('[data-testid="shell-form"]', { state: 'visible' });
+    await mockedPage.waitForSelector('[role="log"] [data-kind="info"]', { state: 'visible' });
     await mockedPage.evaluate(() => document.fonts.ready);
     // The animated placeholder ("type a command or ask anything…") types a
     // suggestion char-by-char on a 60ms timer until reduced-motion is set.
@@ -88,7 +90,7 @@ test.describe('visual regression', () => {
     // motion-detection drift can't reintroduce char-by-char churn into the
     // baseline.
     await mockedPage.evaluate(() => {
-      const ph = document.querySelector('.shell__placeholder-anim');
+      const ph = document.querySelector('[data-testid="shell-placeholder"]');
       if (ph) (ph as HTMLElement).style.visibility = 'hidden';
     });
     await stripVolatileChrome(mockedPage);
@@ -134,13 +136,11 @@ test.describe('visual regression', () => {
     // addInitScript only takes effect on the NEXT navigation. The fixture already
     // navigated, so reload to pick up the patched fetch.
     await mockedPage.reload();
-    await mockedPage.waitForSelector('.shell .shell__input', { state: 'visible' });
+    await mockedPage.waitForSelector('[aria-label="shell command"]', { state: 'visible' });
 
     const shellSection = mockedPage.locator('#sec-shell');
     await shellSection.scrollIntoViewIfNeeded();
-    const input = mockedPage
-      .locator('.shell__form input[type="text"], .shell__form input:not([type])')
-      .first();
+    const input = mockedPage.locator('[aria-label="shell command"]').first();
     await input.fill('who is erik');
     await input.press('Enter');
 
@@ -148,12 +148,12 @@ test.describe('visual regression', () => {
     // .shell__line--output span on the first non-empty chunk; the
     // text content is set synchronously from streamSpan.textContent so
     // toContainText is the right wait.
-    const outputLine = mockedPage.locator('.shell__feed .shell__line--output');
+    const outputLine = mockedPage.locator('[role="log"] [data-kind="output"]');
     await expect(outputLine).toContainText('Erik is a Senior', { timeout: 10_000 });
     await mockedPage.evaluate(() => document.fonts.ready);
     // Hide the same animated placeholder + privacy notice cursor churn as test 3.
     await mockedPage.evaluate(() => {
-      const ph = document.querySelector('.shell__placeholder-anim');
+      const ph = document.querySelector('[data-testid="shell-placeholder"]');
       if (ph) (ph as HTMLElement).style.visibility = 'hidden';
     });
     await stripVolatileChrome(mockedPage);
