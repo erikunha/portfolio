@@ -41,7 +41,6 @@
   color: var(--fg);
 }
 
-/* pre.guitar-mobile — _sections.css lines 189–191 */
 .guitarMobile {
   font-size: var(--fs-sm);
   white-space: pre-wrap;
@@ -51,11 +50,14 @@
 
 /* ── 768px responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  /* .visa pre — _layout.css lines 194–199 */
   .root pre {
     font-size: var(--fs-xs);
     line-height: 1.7;
     white-space: pre-wrap;
     overflow-wrap: break-word;
+  }
+  /* .root .guitarMobile (0,2,0) beats .root pre (0,1,1) — restores fs-sm on mobile UA narrow viewport */
+  .root .guitarMobile {
+    font-size: var(--fs-sm);
   }
 }
