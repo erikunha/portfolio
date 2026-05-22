@@ -1,5 +1,7 @@
 import { z } from 'zod';
-import { type PerfReceipt, PerfReceiptSchema } from './schemas';
+import { type PerfReceipt, PerfReceiptSchema, StatSchema } from './schemas';
+
+type Stat = z.infer<typeof StatSchema>;
 
 export const perfReceipts: PerfReceipt[] = z.array(PerfReceiptSchema).parse([
   {
@@ -52,4 +54,11 @@ export const perfReceipts: PerfReceipt[] = z.array(PerfReceiptSchema).parse([
     note: '35-page architecture knowledge system + diagrams.',
     mobileMetric: 'ONBOARDING',
   },
+]);
+
+export const heroStats: Stat[] = z.array(StatSchema).parse([
+  { value: '€1B+ ARR', label: 'cashier platform' },
+  { value: '8M+ MAU', label: 'e-commerce' },
+  { value: '-97.5% latency', label: 'API performance' },
+  { value: '12-agent AI', label: 'platform' },
 ]);
