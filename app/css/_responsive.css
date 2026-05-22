@@ -156,5 +156,18 @@
     .mobile-only {
       display: contents;
     }
+
+    .hero-stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .hero-stats__item:nth-child(2) {
+      border-right: none;
+    }
+
+    .hero-stats__item:nth-child(1),
+    .hero-stats__item:nth-child(2) {
+      border-bottom: 1px solid var(--signal-dim);
+    }
   }
 }

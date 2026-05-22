@@ -5,6 +5,7 @@
 
 import { HeroBootAnimation } from '../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../client/HeroSystemFailure';
+import { HeroStats } from '../HeroStats';
 
 export function Hero() {
   return (
@@ -19,8 +20,8 @@ export function Hero() {
         <aside className="hero__bio">
           <h1 className="hero__name">Erik Henrique Alves Cunha</h1>
           <p className="hero__tagline">
-            Senior Full-Stack Engineer, Frontend · 8+ yrs in building systems to support business
-            operations · fintech (PCI-DSS), healthcare, global e-commerce
+            Staff Full-Stack Engineer · Applied AI · 8+ yrs building regulated, high-scale systems
+            across iGaming (PCI-DSS), healthcare, and e-commerce
           </p>
           <p className="hero__meta">
             <span>
@@ -35,6 +36,7 @@ export function Hero() {
             <span className="hero__status-dot" aria-hidden="true" />
             OPEN_TO_RELOCATION · WORLDWIDE
           </p>
+          <HeroStats />
           <div className="hero__ctas">
             <a
               className="hero__cta hero__cta--primary"
@@ -67,8 +69,8 @@ export function Hero() {
 
           <h1 className="hero__name">Erik Henrique Alves Cunha</h1>
           <p className="hero__tagline">
-            Senior Full-Stack Engineer, Frontend · 8+ yrs in building systems to support business
-            operations · fintech (PCI-DSS), healthcare, global e-commerce
+            Staff Full-Stack Engineer · Applied AI · 8+ yrs building regulated, high-scale systems
+            across iGaming (PCI-DSS), healthcare, and e-commerce
           </p>
           <p className="hero__meta">
             <span>
@@ -83,6 +85,7 @@ export function Hero() {
             <span className="hero__status-dot" aria-hidden="true" />
             OPEN_TO_RELOCATION · WORLDWIDE
           </p>
+          <HeroStats />
           <div className="hero__ctas">
             <a
               className="hero__cta hero__cta--primary"
