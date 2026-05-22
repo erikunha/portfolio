@@ -130,6 +130,14 @@
     font-weight: 700;
   }
 
+  /* ─── Narrow-viewport status badge ──────────────────────────────────────── */
+  @media (max-width: 359px) {
+    .hero__status {
+      letter-spacing: 0.06em;
+      font-size: 10px;
+    }
+  }
+
   /* ─── Viewport-scoped visibility utilities ───────────────────────────────
    * `app/page.tsx` is `force-static` (audit PR 1 Theme 3), so the static HTML
    * has no per-request UA context. `AppShell.client.tsx` renders both

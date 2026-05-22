@@ -60,7 +60,7 @@ export function RoleTyper() {
   }, []);
 
   return (
-    <span className="pill" ref={spanRef} aria-label="Senior, Staff, or Principal" role="img">
+    <span className="pill" ref={spanRef} role="status" aria-live="polite">
       [Senior]
     </span>
   );
