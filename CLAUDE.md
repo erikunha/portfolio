@@ -50,7 +50,7 @@ Invoke the named agent before the described action. These are definitions of don
 | Bundle | After adding any new dependency to `package.json` | `dependency-manager` |
 | Performance | After any Lighthouse-affecting change | `performance-engineer` |
 | Accessibility | After editing any component with interactive or semantic elements | `accessibility-tester` |
-| Code review | Before any commit on a PR branch | `code-reviewer` |
+| **Code review** | **Before any commit on a PR branch — no exceptions, no "minor" exemptions** | **`code-reviewer`** |
 | Security | After editing `app/api/`, `lib/rate-limit.ts`, `.env.example`, or `proxy.ts` | `security-auditor` |
 | Edge/routing | After editing `proxy.ts` or `next.config.ts` | `nextjs-developer` + `performance-engineer` |
 | Refactoring | When restructuring components or CSS without behavior change | `refactoring-specialist` |
@@ -144,6 +144,7 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 - Skip tutorials and 101 content — the user is 8+ years in.
 - Track decisions in `DECISIONS.md`: one bullet, date, reversibility note. Update as we go.
 - **Process feedback mid-workflow is a hard stop.** When the user gives process or workflow feedback while a task is executing: pause immediately, incorporate it into CLAUDE.md and/or memory, confirm the change with the user, then resume. Do not barrel through to completion and address feedback after the fact.
+- **Code review is not optional on PR branches.** Run `code-review:code-review` on the staged diff before every commit — scripts, config files, routes, and one-liners all count. "It's just a small change" is not an exemption. Skipping this step is the direct cause of multi-round Copilot review cycles (PR #36: 3 rounds, 12 preventable findings). The review catches TypeScript safety issues (`err.message` on `unknown`), input validation gaps (NaN bypass), missing tests, and documentation accuracy before they reach Copilot.
 
 ## Out of scope (unless asked)
 
