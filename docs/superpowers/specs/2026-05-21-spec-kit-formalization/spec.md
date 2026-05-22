@@ -102,10 +102,10 @@ bar of the artifact?
 - Performance: LCP < 1.8s, INP < 200ms, CLS < 0.05, JS gzipped < 120KB/route,
   client total < 43KB, Lighthouse Perf ≥ 95, A11y = 100, SEO = 100.
 - Rendering: RSC by default; client islands by exception; all client files named
-  *.client.tsx; zero client JS for static sections.
+  `*.client.tsx`; zero client JS for static sections.
 - Aesthetic: #000000 background, --signal (#00FF41) accents, --fg (#E6FFE6) body,
   JetBrains Mono everywhere, 1px borders, no border-radius > 2px.
-- Stack: Next.js 15 App Router, React 19, TypeScript strict, Biome, pnpm.
+- Stack: Next.js App Router, React 19, TypeScript strict, Biome, pnpm.
   No Tailwind, no CSS Modules, no CSS-in-JS. Lightning CSS via Next.js/Turbopack.
 - Content: all user-facing copy lives in content/*.ts, Zod-validated at build time.
 
@@ -131,7 +131,7 @@ Skills:
 
 ## Quality bar
 See STANDARDS.md (11 chapters). Summary:
-1. Client JS: RSC-first, *.client.tsx naming, 43KB total budget enforced by CI.
+1. Client JS: RSC-first, `*.client.tsx` naming; 43KB app-island design target, CI gates 220KB framework-inclusive total.
 2. Tests: Vitest unit + Playwright E2E + axe a11y; no mocks on DB/Redis paths.
 3. Security: CSP strict, rate-limit on all AI endpoints, no raw IP storage.
 4. Performance: Lighthouse CI gates on every PR; LCP/INP/CLS non-negotiable.
@@ -140,7 +140,7 @@ See STANDARDS.md (11 chapters). Summary:
 7. Content: typed TS modules, never inline copy in JSX.
 8. Observability: Vercel RUM + Speed Insights; pino structured logs on API routes.
 9. A11y: WCAG 2.1 AA minimum; Lighthouse A11y = 100 is a CI gate.
-10. DX: pre-commit runs full fast-gate chain; CI = 2-job pipeline.
+10. DX: pre-commit runs `pnpm check`; pre-push runs full fast-gate chain; CI has 4 required check jobs (build-and-gate, e2e-functional, e2e-visual, ai-eval).
 11. Supply chain: deps pinned at latest on install; age gate > 7d before merge.
 
 ## Active phases
@@ -222,10 +222,15 @@ spec basename (with `-design` stripped):
 
 ### Migration steps (one atomic commit)
 
-For each of the 14 exact-match pairs:
+For each of the 13 exact-match pairs with `-design` suffix:
 1. `mkdir docs/superpowers/specs/{feature-name}/`
 2. `git mv docs/superpowers/specs/{feature}-design.md docs/superpowers/specs/{feature-name}/spec.md`
 3. `git mv docs/superpowers/plans/{feature}.md docs/superpowers/specs/{feature-name}/plan.md`
+
+For the 1 exact-match pair without `-design` suffix (`clickable-chips-mobile-sync`):
+1. `mkdir docs/superpowers/specs/2026-05-16-clickable-chips-mobile-sync/`
+2. `git mv docs/superpowers/specs/2026-05-16-clickable-chips-mobile-sync.md docs/superpowers/specs/2026-05-16-clickable-chips-mobile-sync/spec.md`
+3. `git mv docs/superpowers/plans/2026-05-16-clickable-chips-mobile-sync.md docs/superpowers/specs/2026-05-16-clickable-chips-mobile-sync/plan.md`
 
 For the 2 near-match pairs (use explicit mapping table above):
 1. `mkdir docs/superpowers/specs/{feature-name}/`
