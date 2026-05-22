@@ -3,10 +3,8 @@
 > Target stack: Next.js 15 (App Router) · React 19 · TypeScript strict · hand-written global CSS · Vercel Edge · Biome · pnpm · Playwright (contact path only)
 >
 > Author: Erik Henrique Alves Cunha
-> Last revised: 2026-05-19 (Principal/Staff audit pass — see `docs/audit/2026-05-19-principal-audit.md` for the drift findings and the 8-PR remediation roadmap)
-> Status: implemented (2026-05-15) — see DECISIONS.md for implementation notes
->
-> **Pending from audit roadmap:** The `lib/` directory layout in §4 currently differs from this spec (flat with 16 files) — PR 5 restructures. The `'use client'` naming convention in §3 is not yet CI-enforced — PR 6 adds the gate. (§6 abuse mitigation and §7 honeypot shipped 2026-05-19 in PR 2 of the audit roadmap.)
+> Last revised: 2026-05-22 (Phase 4 a11y + docs pass — 2026 modernization program complete)
+> Status: implemented — see DECISIONS.md for implementation notes
 
 ---
 
@@ -134,6 +132,8 @@ Every section that doesn't depend on per-visitor state is RSC + SSG. Output is H
 | MOTION indicator | `matchMedia` listener | ≤ 1KB |
 | **Total client JS budget** | | **≤ 43KB** |
 
+> The 43 KB total is a tracked target enforced by `pnpm bundle-check`; it is not an automated CI gate on every PR. Individual island budgets are aspirational guidelines.
+
 Naming convention: every client file ends in `.client.tsx`. The default is server; client is the exception, named explicitly. Forces RSC drift to be visible in code review.
 
 ### Trade-off
@@ -187,12 +187,26 @@ content/
   zod-schemas.ts              # validation, build-time
 
 lib/
-  contact/                    # zod schema, rate-limit, honeypot, resend client
-  ask/                        # system prompt builder, streaming, anti-abuse
-  motion/                     # useReducedMotion, dialog-loop hook
-  observability/              # web-vitals reporter, sentry init (optional)
-  seo/                        # Person JSON-LD, metadata builder, llms.txt builder
-  edge/                       # KV clients (Upstash), PSI fetcher
+  agent/                       # agent-readiness helpers (MCP handler)
+  ask/                         # system prompt builder, streaming, anti-abuse
+  server/                      # server-only utilities
+  ask-log.ts                   # KV interaction log per /api/ask request
+  boot-animation.ts            # boot sequence data
+  breakpoint.ts                # viewport breakpoint constants
+  contact-validation.ts        # honeypot check + Zod schema
+  error-bridge.client.ts       # window error → /api/log bridge
+  events.ts                    # typed dispatchModuleOpen helper
+  hiring-profile.ts            # HiringProfile reader for /api/erik.json
+  inline-css.ts                # critical CSS inline helper
+  ip-hash.ts                   # IP → SHA-256 for rate-limit keys
+  lighthouse-scores.ts         # PSI API fetcher (cached daily)
+  log.ts                       # pino wrapper (text dev / JSON prod)
+  motion.ts                    # readMotion / applyMotion (body data-attr)
+  polyfills-noop.ts            # no-op stub (postinstall strips Next polyfills)
+  rate-limit.ts                # Upstash sliding-window + budget reserve/settle
+  stream-protocol.ts           # SSE framing helpers for /api/ask response
+  ua.ts                        # UA-based device detection (headers())
+  use-breakpoint.client.tsx    # useBreakpoint hook (client-only)
 
 app/css/                      # 10 hand-rolled global CSS files (no framework)
   _tokens.css                 # design tokens (CSS vars: palette, spacing, type)
@@ -328,6 +342,8 @@ History and rationale: see `DECISIONS.md` 2026-05-18.
 
 ## 7. Contact form — deep dive
 
+> **Progressive enhancement caveat:** The contact form requires JavaScript — it uses a client `fetch` to `POST /api/contact`. A true Server Action path (`<form action={...}>`) would work without JS but is not currently implemented. This is a known trade-off; the form degrades to a non-functional state without JS rather than submitting natively.
+
 ### Submission path
 ```
 [client form]
@@ -337,7 +353,7 @@ History and rationale: see `DECISIONS.md` 2026-05-18.
     ↓
 [Zod validation via validateContact()]
     ↓
-[honeypot check] → silent 200 if filled  (PR 2 — pending)
+[honeypot check] → silent 200 if filled
     ↓
 [write to Upstash KV: contact:msg:{uuid}]  ← durable first
     ↓
@@ -345,8 +361,6 @@ History and rationale: see `DECISIONS.md` 2026-05-18.
     ↓
 [return success regardless if spam path]
 ```
-
-Note: an earlier revision of this doc named a Server Action `/contact/action.ts`; the actual implementation is the route handler `app/api/contact/route.ts` invoked via client `fetch`. The progressive-enhancement claim (form works without JS) is therefore aspirational today — see `docs/audit/2026-05-19-principal-audit.md` Theme 1.3. Restoring true Server Action support is a follow-up.
 
 ### Why KV before Resend
 If Resend is down, the message is captured. If KV is down, we fail loud (502) so the visitor knows. Durability beats delivery.
