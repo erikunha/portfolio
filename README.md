@@ -52,7 +52,7 @@ cd portfolio
 pnpm install
 cp .env.example .env.local   # fill in API keys
 pnpm dev                      # http://localhost:3000
-pnpm test --run               # 249 unit tests
+pnpm test                     # unit tests (vitest)
 pnpm test:e2e                 # Playwright E2E + a11y
 pnpm build                    # production build
 ```

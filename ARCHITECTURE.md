@@ -1,6 +1,6 @@
 # Portfolio Architecture — Staff/Principal Pass
 
-> Target stack: Next.js 16 (App Router) · React 19 · TypeScript strict · hand-written global CSS · Vercel Edge · Biome · pnpm · Playwright (contact path only)
+> Target stack: Next.js 16 (App Router) · React 19 · TypeScript strict · hand-written global CSS · Vercel Edge · Biome · pnpm · Playwright E2E (contact, ask, a11y, visual)
 >
 > Author: Erik Henrique Alves Cunha
 > Last revised: 2026-05-22 (Phase 4 a11y + docs pass — 2026 modernization program complete)
