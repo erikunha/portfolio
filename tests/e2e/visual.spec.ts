@@ -179,7 +179,9 @@ test.describe('visual regression', () => {
     });
     // Wait for the takes ordered list to be visible — proves cv-defer'd content
     // has rendered + the details (if mobile) painted its body.
-    await mockedPage.waitForSelector('#sec-hottest-takes .takes', { state: 'visible' });
+    await mockedPage.waitForSelector('#sec-hottest-takes [data-testid="hottest-takes-list"]', {
+      state: 'visible',
+    });
     await mockedPage.evaluate(() => document.fonts.ready);
     await stripVolatileChrome(mockedPage);
     await snapshotLocator(mockedPage, hottest, 'hottest-takes-section.png');

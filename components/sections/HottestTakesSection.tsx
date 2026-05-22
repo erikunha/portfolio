@@ -16,7 +16,7 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
         {'cat ~/hottest_takes.md  '}
         <span style={{ color: 'var(--muted-dim)' }}>{hottestTakesConfig.preamble}</span>
       </div>
-      <ol className={styles.root} start={1}>
+      <ol className={styles.root} start={1} data-testid="hottest-takes-list">
         {hottestTakes.map((t) => (
           <li key={t.num} className={styles.take}>
             <span className={styles.num}>{t.num}</span>

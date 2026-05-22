@@ -40,7 +40,7 @@ export function ContactForm() {
 
   if (status === 'success') {
     return (
-      <div className={styles.success} role="status">
+      <div className={styles.success} role="status" data-testid="contact-success">
         <p>EXECUTE_SEND :: SUCCESS</p>
         <p>handshake initiated · expect reply within 48h</p>
       </div>

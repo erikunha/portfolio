@@ -29,7 +29,7 @@ const SNAPSHOT_TIMEOUT_MS = 30_000;
 // 'visible' only disables render-skipping; on-screen rendering is identical.
 async function revealDeferredContent(page: Page): Promise<void> {
   await page.evaluate(() => {
-    for (const el of document.querySelectorAll('.cv-defer')) {
+    for (const el of document.querySelectorAll('[data-cv-defer]')) {
       (el as HTMLElement).style.setProperty('content-visibility', 'visible');
     }
   });

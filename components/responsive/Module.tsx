@@ -43,6 +43,7 @@ export function Module({ id, header, mobileHeader, icon, defer = false, children
       // Always open: see the file header. A section can still be collapsed by
       // tapping its summary on mobile.
       open
+      {...(defer ? { 'data-cv-defer': 'true' } : {})}
     >
       <summary className={styles.toggle}>
         <h2 className={styles.header}>
