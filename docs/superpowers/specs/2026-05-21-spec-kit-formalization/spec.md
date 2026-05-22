@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-21
 **Status:** Approved
-**Branch:** chore/p3-hardening (doc only — no code changes)
+**Branch:** chore/p3-hardening (spec only — implementation deferred)
 
 ---
 
