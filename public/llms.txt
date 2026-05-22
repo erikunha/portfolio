@@ -115,6 +115,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
 - Portuguese: Native
 - English: C1
 - French: A2
+- Spanish: A2
 
 ## Community
 

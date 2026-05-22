@@ -17,6 +17,7 @@ export const personSchema = {
     { '@type': 'Language', name: 'Portuguese', alternateName: 'Native' },
     { '@type': 'Language', name: 'English', alternateName: 'C1' },
     { '@type': 'Language', name: 'French', alternateName: 'A2' },
+    { '@type': 'Language', name: 'Spanish', alternateName: 'A2' },
   ],
   nationality: { '@type': 'Country', name: 'Brazil' },
   address: {
