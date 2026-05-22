@@ -202,7 +202,6 @@ lib/
   lighthouse-scores.ts         # PSI API fetcher (cached daily)
   log.ts                       # pino wrapper (text dev / JSON prod)
   motion.ts                    # readMotion / applyMotion (body data-attr)
-  polyfills-noop.ts            # no-op stub (postinstall strips Next polyfills)
   rate-limit.ts                # Upstash sliding-window + budget reserve/settle
   stream-protocol.ts           # NUL-byte error sentinel + parseStreamChunk buffer parser
   ua.ts                        # UA-based device detection (headers())

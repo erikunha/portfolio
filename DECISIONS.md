@@ -4,7 +4,7 @@ ADR-lite running log. One bullet per decision · date · reversibility note.
 
 ## 2026-05-22 — `turbopack.resolveAlias` removed from next.config.ts
 
-- **2026-05-22** · **`turbopack.resolveAlias` removed from `next.config.ts`.** Vercel CLI 54.3.0 introduced a `modifyConfig` crash (`TypeError: The "path" argument must be of type string. Received undefined`, `ERR_INVALID_ARG_TYPE`) when processing `turbopack.resolveAlias` in production builds. The alias only applied to Turbopack dev builds; `scripts/strip-next-polyfills.mjs` postinstall was always the sole polyfill-stripping mechanism for webpack production builds. `lib/polyfills-noop.ts` (the alias target) deleted as unreferenced. _Reversible: re-add `turbopack: { resolveAlias: { 'next/dist/build/polyfills/polyfill-module': path.resolve('./lib/polyfills-noop.ts') } }` to `next.config.ts` if a future Vercel CLI fixes `modifyConfig`._
+- **2026-05-22** · **`turbopack.resolveAlias` removed from `next.config.ts`.** Vercel CLI 54.3.0 introduced a `modifyConfig` crash (`TypeError: The "path" argument must be of type string. Received undefined`, `ERR_INVALID_ARG_TYPE`) when processing `turbopack.resolveAlias` in production builds. The alias only applied to Turbopack dev builds; `scripts/strip-next-polyfills.mjs` postinstall was always the sole polyfill-stripping mechanism for webpack production builds. `lib/polyfills-noop.ts` (the alias target) deleted as unreferenced. _Reversible: restore `lib/polyfills-noop.ts`, add `import path from 'node:path'` back to `next.config.ts`, and re-add `turbopack: { resolveAlias: { 'next/dist/build/polyfills/polyfill-module': path.resolve('./lib/polyfills-noop.ts') } }` if a future Vercel CLI fixes `modifyConfig`._
 
 ## 2026-05-22 — `ai-eval` CI job flipped to required
 
