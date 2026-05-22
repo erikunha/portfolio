@@ -1,0 +1,449 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   HERO — bordered panel, boot animation, bio panel, CTAs, sysfail plate.
+   Shared across Hero.tsx, HeroBootAnimation.tsx, HeroSystemFailure.tsx.
+
+   Source: _layout.css lines 284–580 + 819–837
+           _responsive.css lines 15–87 + 134–139
+   Ordering: _layout.css rules first; _responsive.css rules after per-class
+   (mirrors the old @layer responsive cascade behavior).
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── Hero panel ─────────────────────────────────────────────────────────── */
+
+.root {
+  position: relative;
+  border: 1px solid var(--signal-dim);
+  min-height: 640px;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  transition: transform 80ms ease-out;
+  margin-bottom: var(--vrhythm);
+}
+
+.shake {
+  transform: translate(2px, -2px);
+}
+
+.shake2 {
+  transform: translate(-2px, 1px);
+}
+
+@media (max-width: 900px) {
+  .root {
+    min-height: 520px;
+  }
+}
+
+/* ── Desktop variant — two-column flex layout ─────────────────────────────
+   display:flex declared here sets the layout when visible.
+   Visibility toggled by .desktop / .mobile responsive rules at bottom. */
+
+.desktop {
+  display: flex;
+}
+
+.left {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.desktop .boot {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 40%;
+  bottom: 24px;
+  z-index: 2;
+  color: var(--fg);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+  overflow: hidden;
+  text-shadow:
+    0 0 4px #000,
+    0 0 8px #000;
+}
+
+.bio {
+  flex: 1;
+  border-left: 1px dashed var(--signal-dim);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 32px 24px;
+  gap: 10px;
+}
+
+.bio .name {
+  font-family: var(--font-mono-stack);
+  font-weight: 700;
+  font-size: var(--fs-xl);
+  color: var(--signal);
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+
+.tagline {
+  color: var(--fg);
+  font-size: var(--fs-base);
+  line-height: 1.55;
+  margin-bottom: 8px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+}
+
+.meta b {
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.bio .tagline,
+.bio .meta {
+  margin: 0;
+}
+
+/* ── Status badge ────────────────────────────────────────────────────────── */
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--signal-dim);
+  color: var(--signal);
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.12em;
+  padding: 6px 10px;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--signal);
+  flex-shrink: 0;
+  animation: status-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 4px var(--signal);
+  }
+  50% {
+    opacity: 0.35;
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .statusDot {
+    animation: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .bio {
+    padding: 24px 18px;
+  }
+}
+
+/* ── Boot animation text tokens ─────────────────────────────────────────── */
+
+.bootLine {
+  display: block;
+}
+
+.bootOk {
+  color: var(--signal);
+}
+
+.bootEnc {
+  color: var(--signal);
+  font-weight: 700;
+  text-shadow:
+    0 0 6px rgba(0, 255, 65, 0.6),
+    0 0 4px #000;
+}
+
+.bootWelcome {
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.bootPrompt {
+  color: var(--muted);
+}
+
+.bootCmd {
+  color: var(--fg);
+}
+
+.bootMatrixPrefix {
+  color: var(--muted);
+  margin-right: 4px;
+}
+
+.bootMatrixOut {
+  color: var(--signal);
+  text-shadow:
+    0 0 8px rgba(0, 255, 65, 0.4),
+    0 0 4px #000;
+}
+
+.bootCursor {
+  display: inline-block;
+  width: 9px;
+  height: 1.05em;
+  background: var(--signal);
+  vertical-align: -2px;
+  margin-left: 2px;
+  animation: boot-blink 1.05s steps(2, start) infinite;
+}
+
+@keyframes boot-blink {
+  to {
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bootCursor {
+    animation: none;
+  }
+}
+
+/* ── Sysfail overlay ─────────────────────────────────────────────────────── */
+/* Fade-in/out plate, matches prototype .sysfail + .sysfail-plate */
+
+.headline {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 150;
+  display: block;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease-out;
+}
+
+.headline.on {
+  opacity: 1;
+  transition: opacity 200ms ease-in;
+}
+
+.headlinePlate {
+  background: var(--signal);
+  color: #000;
+  font-family: var(--font-mono-stack);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  letter-spacing: 0.08em;
+  padding: 6px 18px 8px;
+  line-height: 1;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 24px rgba(0, 255, 65, 0.55),
+    0 0 60px rgba(0, 255, 65, 0.25);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .headlinePlate {
+    font-size: var(--fs-lg);
+    padding: 5px 14px 6px;
+  }
+}
+
+/* ── Mobile variant — stacked layout ─────────────────────────────────────
+   .hero--mobile .hero__name override */
+
+.mobile .name {
+  font-family: var(--font-mono-stack);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  color: var(--signal);
+  border-top: 1px dashed var(--signal-dim-2);
+  padding-top: 14px;
+  margin-top: 6px;
+  margin-bottom: 2px;
+}
+
+/* ── CTAs ────────────────────────────────────────────────────────────────── */
+
+.ctas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--signal-dim);
+  font-size: var(--fs-base);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition:
+    box-shadow 200ms ease,
+    background 200ms ease;
+}
+
+.ctaPrimary {
+  background: var(--signal);
+  color: var(--bg);
+  border-color: var(--signal);
+}
+
+.ctaPrimary:hover {
+  box-shadow: 0 0 12px var(--signal);
+}
+
+.ctaSecondary {
+  color: var(--signal);
+}
+
+.ctaSecondary:hover {
+  box-shadow: 0 0 12px var(--signal);
+  background: rgba(0, 255, 65, 0.06);
+}
+
+/* ── Hero responsive toggle ──────────────────────────────────────────────
+   Both variants are server-rendered (RSC). CSS media query swaps visibility.
+   Source: _layout.css lines 819–837. */
+
+.mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop {
+    display: none;
+  }
+  .mobile {
+    display: block;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   _responsive.css rules — placed AFTER _layout.css rules to preserve the
+   original @layer responsive cascade behavior.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── Hero dialog typewriter line ─────────────────────────────────────────── */
+
+.dialog {
+  color: var(--signal);
+  font-family: var(--font-mono-stack);
+  text-shadow:
+    0 0 8px rgba(0, 255, 65, 0.45),
+    0 0 4px #000;
+}
+
+.desktop .dialog {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 24px;
+  z-index: 2;
+  font-size: var(--fs-base);
+  margin: 0;
+}
+
+/* Mobile variant overrides from _responsive.css */
+
+.mobile {
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  text-shadow:
+    0 0 4px #000,
+    0 0 8px #000;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  padding: 16px 16px 18px;
+}
+
+.mobile .boot {
+  color: var(--fg);
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+  min-height: 165px;
+  margin: 0 0 12px;
+}
+
+/* ── Status badge — responsive override (_responsive.css wins cascade) ─────
+   The full block below overrides the _layout.css .status rules above.
+   Includes the .statusDot mobile rule with @keyframes blink reference
+   (pre-existing latent bug: @keyframes blink is not defined anywhere — preserved as-is). */
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--signal-dim);
+  background: rgba(0, 255, 65, 0.05);
+  color: var(--signal);
+  padding: 4px 10px;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 14px;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--signal);
+  display: inline-block;
+  /* @keyframes blink is not defined — pre-existing latent bug, do not fix */
+  animation: blink 1.4s steps(2, start) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .statusDot {
+    animation: none;
+  }
+}
+
+/* data-motion="reduce" override — mirrors _responsive.css */
+:global(body[data-motion="reduce"]) .statusDot {
+  animation: none;
+}
+
+/* ── Narrow-viewport status badge ──────────────────────────────────────── */
+
+@media (max-width: 359px) {
+  .status {
+    letter-spacing: 0.06em;
+    font-size: 10px;
+  }
+}
+
+/* ── Standalone .on class for sysfail headline state ────────────────────── */
+
+.on {
+  opacity: 1;
+  transition: opacity 200ms ease-in;
+}

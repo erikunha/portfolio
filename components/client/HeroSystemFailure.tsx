@@ -1,21 +1,23 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
+import styles from '../sections/Hero.module.css';
 
 // The SYSTEM FAILURE headline overlay, extracted from Hero.tsx DesktopHero.
 // Listens for 'hero:sysfail:show' and 'hero:sysfail:hide' window events
 // dispatched by HeroBootAnimation when the first dialog loop completes.
 // The existing 'sysfail:start' / 'sysfail:end' events continue to handle
 // MatrixRain pause/resume (unchanged from original wiring).
+//
+// State-based visibility replaces the prior classList.add/remove('on') approach:
+// CSS Modules scopes class names to hashes, so direct DOM classList mutation
+// would inject the un-scoped string 'on' which the module CSS never matches.
 export function HeroSystemFailure() {
-  const sysfailRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const el = sysfailRef.current;
-    if (!el) return;
-
-    const onShow = () => el.classList.add('on');
-    const onHide = () => el.classList.remove('on');
+    const onShow = () => setVisible(true);
+    const onHide = () => setVisible(false);
 
     window.addEventListener('hero:sysfail:show', onShow);
     window.addEventListener('hero:sysfail:hide', onHide);
@@ -26,8 +28,12 @@ export function HeroSystemFailure() {
   }, []);
 
   return (
-    <div ref={sysfailRef} className="hero__headline" aria-hidden="true" aria-live="off">
-      <div className="hero__headline-plate">SYSTEM FAILURE</div>
+    <div
+      className={`${styles.headline}${visible ? ` ${styles.on}` : ''}`}
+      aria-hidden="true"
+      aria-live="off"
+    >
+      <div className={styles.headlinePlate}>SYSTEM FAILURE</div>
     </div>
   );
 }

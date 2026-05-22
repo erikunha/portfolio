@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import {
+  type BootClasses,
   type BootCtrl,
   buildDesktopOnFirstLoop,
   buildLine,
@@ -14,6 +15,7 @@ import {
   runBoot,
 } from '@/lib/boot-animation';
 import { readMotion } from '@/lib/motion';
+import styles from '../sections/Hero.module.css';
 
 // ── HeroBootAnimation island ──────────────────────────────────────────────────
 // Each variant mounts its own instance; only the one matching the viewport runs.
@@ -27,6 +29,25 @@ import { readMotion } from '@/lib/motion';
 
 type Props = {
   variant: 'desktop' | 'mobile';
+};
+
+// BootClasses map: resolves logical keys to CSS Module scoped class names.
+// Passed into boot-animation.ts so that lib stays CSS-system-agnostic.
+// Non-null assertions are safe: all keys are statically present in Hero.module.css.
+// noUncheckedIndexedAccess widens CSS Module index signatures to string|undefined;
+// the assertions narrow back to string without runtime cost.
+const bootCls: BootClasses = {
+  bootLine: styles.bootLine as string,
+  bootOk: styles.bootOk as string,
+  bootEnc: styles.bootEnc as string,
+  bootWelcome: styles.bootWelcome as string,
+  bootPrompt: styles.bootPrompt as string,
+  bootCmd: styles.bootCmd as string,
+  bootMatrixPrefix: styles.bootMatrixPrefix as string,
+  bootMatrixOut: styles.bootMatrixOut as string,
+  bootCursor: styles.bootCursor as string,
+  shake: styles.shake as string,
+  shake2: styles.shake2 as string,
 };
 
 export function HeroBootAnimation({ variant }: Props) {
@@ -67,11 +88,11 @@ export function HeroBootAnimation({ variant }: Props) {
       const dialog = variant === 'desktop' ? DESKTOP_DIALOG : MOBILE_DIALOG;
 
       if (!readMotion()) {
-        for (const s of specs) el.appendChild(buildLine(s));
-        el.appendChild(buildStaticCmdLine());
+        for (const s of specs) el.appendChild(buildLine(s, bootCls));
+        el.appendChild(buildStaticCmdLine(bootCls));
         // Fix 5: was buildBlankLine()
-        el.appendChild(buildLine([' ']));
-        el.appendChild(buildStaticDialogLine('The Matrix has you...'));
+        el.appendChild(buildLine([' '], bootCls));
+        el.appendChild(buildStaticDialogLine('The Matrix has you...', bootCls));
         return;
       }
 
@@ -99,12 +120,14 @@ export function HeroBootAnimation({ variant }: Props) {
       };
       const timing = variant === 'desktop' ? timingDesktop : timingMobile;
 
-      const onFirstLoop = variant === 'desktop' ? buildDesktopOnFirstLoop(el, ctrlRef) : undefined;
+      const onFirstLoop =
+        variant === 'desktop' ? buildDesktopOnFirstLoop(el, ctrlRef, bootCls) : undefined;
 
       ctrlRef.current = runBoot(
         el,
         specs,
         dialog,
+        bootCls,
         onFirstLoop ? { ...timing, onFirstLoop } : timing,
       );
 
@@ -134,5 +157,5 @@ export function HeroBootAnimation({ variant }: Props) {
     };
   }, [variant]);
 
-  return <div ref={bootRef} className="hero__boot" />;
+  return <div ref={bootRef} className={styles.boot} />;
 }
