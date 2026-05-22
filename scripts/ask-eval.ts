@@ -314,7 +314,7 @@ async function main(): Promise<void> {
   // hard failure — exit 0 would let fork PRs silently pass the gate without
   // running any evals. In local dev the key is often absent; exit 0 gracefully.
   if (!process.env.AI_GATEWAY_API_KEY) {
-    if (process.env.CI === 'true') {
+    if (process.env.CI) {
       console.error('ai-eval: AI_GATEWAY_API_KEY is required in CI but not set — aborting');
       process.exit(1);
     }

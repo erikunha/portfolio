@@ -192,6 +192,10 @@ jobs:
   ai-eval:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Skip on fork PRs: repository secrets (AI_GATEWAY_API_KEY, Upstash creds)
+    # are not available to forks. GitHub treats a skipped required check as
+    # satisfied, so this does not block merges for first-party PRs.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     # Serialize per-ref: the eval mutates the shared *_BUILD Upstash instance
     # (rate-limit, budget, dedup counters) and overwrites the `ask:eval:latest`
     # key. Two quick pushes would race those — cancel the in-flight run.
