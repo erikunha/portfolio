@@ -70,7 +70,7 @@ Invoke the named skill inline (not as a subagent) before the described action.
 
 ## Stack (locked)
 
-- Next.js 15 App Router · React 19 · TypeScript strict · Biome · pnpm
+- Next.js 16 App Router · React 19 · TypeScript strict · Biome · pnpm
 - **CSS:** hand-rolled global CSS in 10 files under `app/css/`, BEM-ish naming, tokens centralized in `_tokens.css`, no framework. PostCSS pipeline removed — Next 16 + Turbopack handles nesting + autoprefix natively via Lightning CSS. _Tailwind v4 was removed 2026-05-18; see DECISIONS.md. Do not re-add._
 - Vercel Edge end-to-end deployment
 - Upstash Redis for rate-limit + KV log
@@ -166,7 +166,9 @@ Before any agent or human calls `gh pr merge` on this repo:
 3. **In-session reviewer findings count.** Output from `pr-review-toolkit:review-pr`, `code-review:code-review`, or `ultrareview` must be posted to the PR before merge so they fall under rule 1.
 4. **Self-resolve is detectable.** `scripts/check-pr-comments.ts` warns when the PR author is also the thread resolver. Document the override on the PR if intentional.
 5. **Mechanical command.** `pnpm ready-to-merge <pr>` runs `pnpm ci:local` (lint + typecheck + content validate + client-naming + tests), the branch-protection check, then queries unresolved threads. Must pass before `gh pr merge`.
-6. **The branch protection rule must stay enabled.** `pnpm ready-to-merge <pr>` runs `scripts/check-branch-protection.ts` against `main` and fails if `required_conversation_resolution` is off. This is a local gate, not a CI step: the workflow `GITHUB_TOKEN` cannot read the branch-protection endpoint (it requires repo-admin token power). See `DECISIONS.md`.
+6. **The branch protection rule must stay enabled.**
+8. **Local playwright visual check before merge.** After all review fixes are pushed, start the dev server (`pnpm dev`) and use playwright MCP to verify desktop (1280×720) and mobile (375×812). Check all changed sections and the golden path. CI visual snapshots compare against a frozen baseline — they don't catch intent regressions.
+9. **Rebase before merge (non-dependabot only).** Run `git fetch && git rebase origin/main` before merging. Keeps a linear history on main. Skip for `dependabot/*` branches — those are auto-managed and rebasing breaks their signature. `pnpm ready-to-merge <pr>` runs `scripts/check-branch-protection.ts` against `main` and fails if `required_conversation_resolution` is off. This is a local gate, not a CI step: the workflow `GITHUB_TOKEN` cannot read the branch-protection endpoint (it requires repo-admin token power). See `DECISIONS.md`.
 7. **Copilot auto-reviews on PR open; reply to threads + re-request after every review-feedback push.** Copilot reviews a PR automatically on *open* — do NOT post any comment on open. After any push that addresses Copilot or reviewer feedback:
    - **Thread replies (required):** reply to each resolved thread: `gh api repos/erikunha/portfolio/pulls/<pr>/comments/<databaseId>/replies -f body="Fixed in <sha>. <one-sentence technical reason>"`. This closes the feedback loop in context for each finding.
    - **Re-request (required):** `gh pr edit <pr> --add-reviewer copilot-pull-request-reviewer`. This is the trigger — Copilot sees the new commits + the thread replies.
