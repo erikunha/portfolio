@@ -13,6 +13,7 @@ import type { AskMetrics } from '@/content/ask-metrics';
 import { getAskMetrics } from '@/content/ask-metrics';
 import { IconAiMetrics } from '../Icons';
 import { Module } from '../responsive/Module';
+import styles from './AiMetricsSection.module.css';
 
 const pct = (rate: number): string => `${Math.round(rate * 100)}%`;
 
@@ -31,9 +32,9 @@ function lastRunLabel(iso: string): string {
 
 function AiMetricsPending() {
   return (
-    <div className="aimetrics aimetrics--pending">
-      <p className="aimetrics__pending">
-        <span className="aimetrics__gt">{'>'}</span>
+    <div className={styles.root}>
+      <p className={styles.pending}>
+        <span className={styles.gt}>{'>'}</span>
         eval pending — run <code>pnpm ask:eval</code> to publish the latest aggregate
       </p>
     </div>
@@ -44,32 +45,32 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
   if (metrics === null) return <AiMetricsPending />;
 
   return (
-    <div className="aimetrics">
-      <div className="aimetrics__grid">
-        <div className="aimetric">
-          <div className="aimetric__label">EVAL PASS-RATE</div>
-          <div className="aimetric__value">{pct(metrics.evalPassRate)}</div>
-          <div className="aimetric__note">correctness · factual + edge corpus</div>
+    <div className={styles.root}>
+      <div className={styles.grid}>
+        <div className={styles.metric}>
+          <div className={styles.label}>EVAL PASS-RATE</div>
+          <div className={styles.value}>{pct(metrics.evalPassRate)}</div>
+          <div className={styles.note}>correctness · factual + edge corpus</div>
         </div>
-        <div className="aimetric">
-          <div className="aimetric__label">JAILBREAK RESIST</div>
-          <div className="aimetric__value">{pct(metrics.jailbreakResistance)}</div>
-          <div className="aimetric__note">prompt-injection refusal rate</div>
+        <div className={styles.metric}>
+          <div className={styles.label}>JAILBREAK RESIST</div>
+          <div className={styles.value}>{pct(metrics.jailbreakResistance)}</div>
+          <div className={styles.note}>prompt-injection refusal rate</div>
         </div>
-        <div className="aimetric">
-          <div className="aimetric__label">P95 LATENCY</div>
-          <div className="aimetric__value">{ms(metrics.p95LatencyMs)}</div>
-          <div className="aimetric__note">end-to-end · slowest 5% of answers</div>
+        <div className={styles.metric}>
+          <div className={styles.label}>P95 LATENCY</div>
+          <div className={styles.value}>{ms(metrics.p95LatencyMs)}</div>
+          <div className={styles.note}>end-to-end · slowest 5% of answers</div>
         </div>
-        <div className="aimetric">
-          <div className="aimetric__label">COST / ANSWER</div>
-          <div className="aimetric__value">{usd(metrics.costPerAnswer)}</div>
-          <div className="aimetric__note">production inference · feature model only</div>
+        <div className={styles.metric}>
+          <div className={styles.label}>COST / ANSWER</div>
+          <div className={styles.value}>{usd(metrics.costPerAnswer)}</div>
+          <div className={styles.note}>production inference · feature model only</div>
         </div>
       </div>
-      <div className="aimetrics__foot">
+      <div className={styles.foot}>
         <span>
-          <span className="aimetrics__gt">{'>'}</span>
+          <span className={styles.gt}>{'>'}</span>
           SOURCE: scripts/ask-eval.ts · ask:eval:latest
         </span>
         <span>

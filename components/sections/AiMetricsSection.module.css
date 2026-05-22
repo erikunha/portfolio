@@ -1,0 +1,94 @@
+/* AiMetricsSection.module.css
+   ASK_EVAL.JSON — AI eval/cost metric tiles. Surfaces the /api/ask quality
+   harness aggregate. module__body provides the border + padding wrapper.
+   Sourced from _sections.css lines 540–622.
+*/
+
+.root {
+  font-family: var(--font-mono-stack);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.metric {
+  border: 1px solid var(--signal-dim);
+  padding: 16px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.16em;
+}
+
+.value {
+  color: var(--signal);
+  font-weight: 700;
+  font-size: var(--fs-xl);
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.note {
+  /* --muted (#4ade80, ~5.9:1 on --bg) — descriptive copy at 11px must
+     clear WCAG AA 4.5:1; --muted-dim (~3.6:1) fails. */
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  margin-top: auto;
+}
+
+.foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--signal-dim-2);
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+}
+
+.gt {
+  color: var(--signal);
+  margin-right: 6px;
+}
+
+.pending {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.pending code {
+  color: var(--signal);
+  font-family: var(--font-mono-stack);
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .value {
+    font-size: var(--fs-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  .foot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: var(--fs-2xs);
+  }
+}
