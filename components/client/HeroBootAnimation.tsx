@@ -90,8 +90,8 @@ export function HeroBootAnimation({ variant }: Props) {
       if (!readMotion()) {
         for (const s of specs) el.appendChild(buildLine(s, bootCls));
         el.appendChild(buildStaticCmdLine(bootCls));
-        // Fix 5: was buildBlankLine()
-        el.appendChild(buildLine([' '], bootCls));
+        // Fix 5: was buildBlankLine();   prevents HTML whitespace collapse
+        el.appendChild(buildLine([' '], bootCls));
         el.appendChild(buildStaticDialogLine('The Matrix has you...', bootCls));
         return;
       }

@@ -272,7 +272,7 @@ test.describe('cross-cutting', () => {
     //      and recent WebKit; missing support degrades to checking only (a).
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
     await page.goto('/');
-    await page.waitForSelector('.shell .shell__input', { state: 'visible' });
+    await page.waitForSelector('[aria-label="shell command"]', { state: 'visible' });
 
     // Install the longtask observer BEFORE the keystroke so it captures
     // anything fired during the input. Stash the entries on window for the
@@ -292,7 +292,7 @@ test.describe('cross-cutting', () => {
       }
     });
 
-    const input = page.locator('.shell .shell__input');
+    const input = page.locator('[aria-label="shell command"]');
     await input.focus();
     await expect(input).toHaveValue('');
 
@@ -300,7 +300,7 @@ test.describe('cross-cutting', () => {
     // reflecting the character. We measure in the browser to avoid
     // Playwright-roundtrip latency dominating the reading.
     const elapsedMs = await page.evaluate(async () => {
-      const el = document.querySelector('.shell .shell__input') as HTMLInputElement | null;
+      const el = document.querySelector('[aria-label="shell command"]') as HTMLInputElement | null;
       if (!el) throw new Error('shell input not found');
       const start = performance.now();
       // Dispatch a synthetic 'a' keystroke via the InputEvent path React
