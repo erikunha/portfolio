@@ -69,6 +69,12 @@
   animation: blink 1.6s steps(2, start) infinite;
 }
 
+@keyframes blink {
+  to {
+    opacity: 0;
+  }
+}
+
 @media (max-width: 900px) {
   .root {
     grid-template-columns: repeat(2, 1fr);

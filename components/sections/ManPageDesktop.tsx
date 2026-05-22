@@ -1,8 +1,8 @@
 import { manPage } from '@/content/man-page';
 import styles from './ManPageSection.module.css';
 
-// Desktop man-page: full pre with fixed-width columns. Plain RSC — CSS
-// (`.desktop`) toggles visibility against the mobile variant.
+// Desktop man-page: full pre with fixed-width columns. Plain RSC — rendered
+// when ManPageContent detects a non-mobile UA via getIsMobile().
 export function ManPageDesktop() {
   return (
     <div className={`${styles.root} ${styles.desktop}`}>

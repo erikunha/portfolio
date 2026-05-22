@@ -2,7 +2,7 @@ import { manPage } from '@/content/man-page';
 import styles from './ManPageSection.module.css';
 
 // Mobile man-page: semantic layout — avoids pre-wrap column fighting. Plain
-// RSC — CSS (`.mobile`) toggles visibility against the desktop variant.
+// RSC — rendered when ManPageContent detects a mobile UA via getIsMobile().
 export function ManPageMobile() {
   return (
     <div className={styles.mobile} data-testid="manpage-mobile">
