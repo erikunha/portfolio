@@ -30,13 +30,13 @@ jobs:
     env:
       LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -74,7 +74,7 @@ jobs:
         run: pnpm test:coverage
 
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage-report
@@ -100,7 +100,7 @@ jobs:
           DEPLOY_SALT: ci-build-salt
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: next-build
           path: .next/
@@ -129,7 +129,7 @@ jobs:
         run: pnpm lhci:mobile
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
@@ -151,15 +151,15 @@ jobs:
       matrix:
         project: [chromium, chromium-mobile, webkit-desktop, webkit-mobile]
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ hashFiles('pnpm-lock.yaml') }}
@@ -168,7 +168,7 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm playwright install --with-deps ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: next-build
           path: .next/
@@ -183,7 +183,7 @@ jobs:
         run: npx wait-on http://localhost:3000 --timeout 30000
       - name: Run functional e2e
         run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/cross-cutting.spec.ts tests/e2e/observability-smoke.spec.ts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report-${{ matrix.project }}
@@ -207,9 +207,9 @@ jobs:
     continue-on-error: true
     needs: build-and-gate
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -221,7 +221,7 @@ jobs:
           AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY_BUILD }}
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: ask-eval-result
@@ -239,15 +239,15 @@ jobs:
       matrix:
         project: [chromium, chromium-mobile, webkit-desktop, webkit-mobile]
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ hashFiles('pnpm-lock.yaml') }}
@@ -256,7 +256,7 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm playwright install --with-deps ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: next-build
           path: .next/
@@ -277,11 +277,11 @@ jobs:
         run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts --update-snapshots
       - if: inputs.update_visual_baselines == 'true'
         name: Upload regenerated visual baselines
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: visual-baselines-${{ matrix.project }}
           path: tests/e2e/visual.spec.ts-snapshots/
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: visual-report-${{ matrix.project }}
