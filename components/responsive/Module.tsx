@@ -51,8 +51,8 @@ export function Module({ id, header, mobileHeader, icon, defer = false, children
               {icon}
             </span>
           ) : null}
-          <span className={`${styles.label} ${styles.labelDesktop}`}>{header}</span>
-          <span className={`${styles.label} ${styles.labelMobile}`}>{mobileHeader ?? header}</span>
+          <span className={styles.labelDesktop}>{header}</span>
+          <span className={styles.labelMobile}>{mobileHeader ?? header}</span>
         </h2>
         <span className={styles.chevron} aria-hidden>
           ▸
