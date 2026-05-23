@@ -131,3 +131,11 @@ Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
 - [LinkedIn](https://linkedin.com/in/erikunha): Full professional history
 - [Hiring profile API](https://erikunha.dev/api/erik.json): Machine-readable
   hiring profile (JSON)
+
+## Design System
+
+Published design system at /design-system. Covers:
+- Two-tier token pipeline (JSON to CSS custom properties via Style Dictionary)
+- 7 RSC primitive components (Button, Field, Badge, TerminalPanel, StatTile, CmdLine, KbdKey)
+- Enforcement: boundary lint, no-magic-values lint, contrast check, all in CI
+- Docs: /design-system/tokens, /design-system/components, /design-system/enforcement, /design-system/changelog
