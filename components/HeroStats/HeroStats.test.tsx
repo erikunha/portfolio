@@ -1,8 +1,8 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { HeroStats } from '@/components/HeroStats';
 import { heroStats } from '@/content/perf-receipts';
+import { HeroStats } from './HeroStats';
 
 function getDOM() {
   const html = renderToStaticMarkup(createElement(HeroStats));
