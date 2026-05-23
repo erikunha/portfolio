@@ -16,17 +16,19 @@ describe('HeroStats', () => {
   });
 
   it('each item renders a value element', () => {
-    const values = getDOM().querySelectorAll('[data-testid="hero-stats-value"]');
+    // StatTile renders value in <dd>
+    const values = getDOM().querySelectorAll('[data-testid="hero-stats-item"] dd');
     expect(values).toHaveLength(heroStats.length);
   });
 
   it('each item renders a label element', () => {
-    const labels = getDOM().querySelectorAll('[data-testid="hero-stats-label"]');
+    // StatTile renders label in <dt>
+    const labels = getDOM().querySelectorAll('[data-testid="hero-stats-item"] dt');
     expect(labels).toHaveLength(heroStats.length);
   });
 
   it('first stat value matches heroStats[0].value', () => {
-    const first = getDOM().querySelector('[data-testid="hero-stats-value"]');
+    const first = getDOM().querySelector('[data-testid="hero-stats-item"] dd');
     expect(first?.textContent).toBe(heroStats[0]?.value);
   });
 

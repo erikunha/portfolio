@@ -20,7 +20,7 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } },
     },
-    // New matrix projects — scoped via testMatch to the four new spec files only.
+    // New matrix projects — scoped via testMatch to the five new spec files only.
     // Without testMatch these projects would also run the existing a11y + observability
     // smoke specs, tripling CI minutes and likely failing on WebKit.
     {
@@ -28,17 +28,20 @@ export default defineConfig({
       // Override defaultBrowserType: devices['iPhone SE'] sets it to 'webkit',
       // but this project intentionally tests Chromium with a mobile viewport.
       use: { ...devices['iPhone SE'], defaultBrowserType: 'chromium' },
-      testMatch: /tests\/e2e\/(contact|ask|visual|cross-cutting)\.spec\.ts$/,
+      testMatch:
+        /tests\/e2e\/(contact|ask|visual|cross-cutting|design-system-components)\.spec\.ts$/,
     },
     {
       name: 'webkit-desktop',
       use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 720 } },
-      testMatch: /tests\/e2e\/(contact|ask|visual|cross-cutting)\.spec\.ts$/,
+      testMatch:
+        /tests\/e2e\/(contact|ask|visual|cross-cutting|design-system-components)\.spec\.ts$/,
     },
     {
       name: 'webkit-mobile',
       use: { ...devices['iPhone 14'] },
-      testMatch: /tests\/e2e\/(contact|ask|visual|cross-cutting)\.spec\.ts$/,
+      testMatch:
+        /tests\/e2e\/(contact|ask|visual|cross-cutting|design-system-components)\.spec\.ts$/,
     },
   ],
 });

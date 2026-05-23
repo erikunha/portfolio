@@ -1,0 +1,33 @@
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { TerminalPanel } from './TerminalPanel';
+import styles from './TerminalPanel.module.css';
+
+describe('TerminalPanel', () => {
+  it('renders children', () => {
+    render(<TerminalPanel>content</TerminalPanel>);
+    expect(screen.getByText('content')).toBeDefined();
+  });
+  it('renders as div by default', () => {
+    const { container } = render(<TerminalPanel>x</TerminalPanel>);
+    expect(container.firstElementChild?.nodeName).toBe('DIV');
+  });
+  it('renders as section when as="section"', () => {
+    const { container } = render(<TerminalPanel as="section">x</TerminalPanel>);
+    expect(container.firstElementChild?.nodeName).toBe('SECTION');
+  });
+  it('applies dashed border class when borderStyle=dashed', () => {
+    const { container } = render(<TerminalPanel borderStyle="dashed">x</TerminalPanel>);
+    expect(container.firstElementChild?.classList.contains(styles.dashed as string)).toBe(true);
+  });
+  it('renders header bar when header prop provided', () => {
+    render(<TerminalPanel header="[ PANEL ]">x</TerminalPanel>);
+    expect(screen.getByText('[ PANEL ]')).toBeDefined();
+  });
+  it('does not apply an undefined solid class when borderStyle=solid (default)', () => {
+    const { container } = render(<TerminalPanel>x</TerminalPanel>);
+    const classList = container.firstElementChild?.classList.toString() ?? '';
+    expect(classList).not.toContain('undefined');
+    expect(classList).not.toContain('solid');
+  });
+});

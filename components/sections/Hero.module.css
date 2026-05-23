@@ -111,47 +111,12 @@
   margin: 0;
 }
 
-/* ── Status badge ────────────────────────────────────────────────────────── */
+/* ── Status badge layout ─────────────────────────────────────────────────
+   Visual styles (border, color, animation) owned by Badge primitive.
+   align-self prevents stretch in the bio flex column. */
 
 .status {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  border: 1px solid var(--ds-color-signal-subtle);
-  color: var(--ds-color-signal);
-  font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-xs);
-  letter-spacing: 0.12em;
-  padding: 6px 10px;
-  white-space: nowrap;
   align-self: flex-start;
-}
-
-.statusDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--ds-color-signal);
-  flex-shrink: 0;
-  animation: status-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes status-pulse {
-  0%,
-  100% {
-    opacity: 1;
-    box-shadow: 0 0 4px var(--ds-color-signal);
-  }
-  50% {
-    opacity: 0.35;
-    box-shadow: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .statusDot {
-    animation: none;
-  }
 }
 
 @media (max-width: 900px) {
@@ -282,48 +247,13 @@
   margin-bottom: 2px;
 }
 
-/* ── CTAs ────────────────────────────────────────────────────────────────── */
+/* ── CTAs grid — visual styles owned by Button primitive ─────────────────── */
 
 .ctas {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 12px;
-}
-
-.cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid var(--ds-color-signal-subtle);
-  font-size: var(--ds-font-size-body);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition:
-    box-shadow 200ms ease,
-    background 200ms ease;
-}
-
-.ctaPrimary {
-  background: var(--ds-color-signal);
-  color: var(--ds-color-surface-base);
-  border-color: var(--ds-color-signal);
-}
-
-.ctaPrimary:hover {
-  box-shadow: 0 0 12px var(--ds-color-signal);
-}
-
-.ctaSecondary {
-  color: var(--ds-color-signal);
-}
-
-.ctaSecondary:hover {
-  box-shadow: 0 0 12px var(--ds-color-signal);
-  background: rgba(0, 255, 65, 0.06);
 }
 
 /* ── Hero responsive toggle ──────────────────────────────────────────────
@@ -394,49 +324,13 @@
   margin: 0 0 12px;
 }
 
-/* ── Status badge — responsive override (_responsive.css wins cascade) ─────
-   The full block below overrides the _layout.css .status rules above. */
+/* ── Status badge — mobile spacing override ─────────────────────────────────
+   Mobile layout uses no flex gap (unlike desktop bio column); margin provides
+   spacing between the badge and HeroStats below it. */
 
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--ds-color-signal-subtle);
-  background: rgba(0, 255, 65, 0.05);
-  color: var(--ds-color-signal);
-  padding: 4px 10px;
-  font-size: var(--ds-font-size-xs);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin: 0 0 14px;
-}
-
-.statusDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--ds-color-signal);
-  display: inline-block;
-  animation: status-pulse 1.6s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .statusDot {
-    animation: none;
-  }
-}
-
-/* data-motion="reduce" override — mirrors _responsive.css */
-:global(body[data-motion="reduce"]) .statusDot {
-  animation: none;
-}
-
-/* ── Narrow-viewport status badge ──────────────────────────────────────── */
-
-@media (max-width: 359px) {
+@media (max-width: 768px) {
   .status {
-    letter-spacing: 0.06em;
-    font-size: 10px;
+    margin-bottom: 14px;
   }
 }
 

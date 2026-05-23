@@ -1,4 +1,5 @@
 import { heroStats } from '@/content/perf-receipts';
+import { StatTile } from '@/design-system';
 import styles from './HeroStats.module.css';
 
 export function HeroStats() {
@@ -10,12 +11,7 @@ export function HeroStats() {
           className={styles.item}
           data-testid="hero-stats-item"
         >
-          <span className={styles.value} data-testid="hero-stats-value">
-            {stat.value}
-          </span>
-          <span className={styles.label} data-testid="hero-stats-label">
-            {stat.label}
-          </span>
+          <StatTile value={stat.value} label={stat.label} />
         </div>
       ))}
     </section>

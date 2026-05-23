@@ -4,6 +4,7 @@
 // Spec: docs/superpowers/specs/2026-05-18-mobile-lcp-perf-fix-design.md §6.
 
 import { heroTagline } from '@/content/hero';
+import { Badge, Button } from '@/design-system';
 import { HeroBootAnimation } from '../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../client/HeroSystemFailure';
 import { HeroStats } from '../HeroStats';
@@ -33,28 +34,29 @@ export function Hero() {
             </span>
             <span>EN/PT/FR/ES</span>
           </p>
-          <p className={styles.status}>
-            <span className={styles.statusDot} aria-hidden="true" />
-            OPEN_TO_RELOCATION · WORLDWIDE
-          </p>
+          <div className={styles.status}>
+            <Badge variant="dot">OPEN_TO_RELOCATION · WORLDWIDE</Badge>
+          </div>
           <HeroStats />
           <div className={styles.ctas} data-testid="hero-ctas">
-            <a
-              className={`${styles.cta} ${styles.ctaPrimary}`}
+            <Button
+              as="a"
+              variant="primary"
               href="https://www.linkedin.com/in/erikunha/"
               target="_blank"
               rel="noreferrer"
             >
               EXEC HIRE
-            </a>
-            <a
-              className={`${styles.cta} ${styles.ctaSecondary}`}
+            </Button>
+            <Button
+              as="a"
+              variant="secondary"
               href="https://github.com/erikunha"
               target="_blank"
               rel="noreferrer"
             >
               GITHUB ↗
-            </a>
+            </Button>
           </div>
         </aside>
         {/* Sysfail overlay — mounted once, desktop-only (event-driven show/hide). */}
@@ -81,28 +83,29 @@ export function Hero() {
             </span>
             <span>EN/PT/FR/ES</span>
           </p>
-          <p className={styles.status}>
-            <span className={styles.statusDot} aria-hidden="true" />
-            OPEN_TO_RELOCATION · WORLDWIDE
-          </p>
+          <div className={styles.status}>
+            <Badge variant="dot">OPEN_TO_RELOCATION · WORLDWIDE</Badge>
+          </div>
           <HeroStats />
           <div className={styles.ctas} data-testid="hero-ctas">
-            <a
-              className={`${styles.cta} ${styles.ctaPrimary}`}
+            <Button
+              as="a"
+              variant="primary"
               href="https://www.linkedin.com/in/erikunha/"
               target="_blank"
               rel="noreferrer"
             >
               EXEC HIRE
-            </a>
-            <a
-              className={`${styles.cta} ${styles.ctaSecondary}`}
+            </Button>
+            <Button
+              as="a"
+              variant="secondary"
               href="https://github.com/erikunha"
               target="_blank"
               rel="noreferrer"
             >
               GITHUB ↗
-            </a>
+            </Button>
           </div>
         </div>
       </section>
