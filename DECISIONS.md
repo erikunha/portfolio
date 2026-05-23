@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-05-23 — Design system token pipeline adopted
+
+- **2026-05-23** · **Adopted two-tier token pipeline (Style Dictionary, design-system/tokens/*.json → dist/tokens.css). Replaces app/css/_tokens.css.** Rationale: programmatic token generation from a single source-of-truth JSON structure enables scaling design token coverage across themes, components, and variants without hand-written CSS maintenance. Style Dictionary compiles tokens to CSS variables, ensuring consistency across platform and reducing drift. _Reversible: `git revert` + restore app/css/_tokens.css to source control and remove design-system/ build step from CI._
+
 ## 2026-05-22 — CSS Modules migration completed
 
 - **2026-05-22** · **CSS Modules migration (PR #44): 8 global CSS files replaced with 30 colocated `.module.css` files; `lib/inline-css.ts` and its test deleted; `@layer` wrappers removed from `_tokens.css` and `_base.css`; `globals.css` slimmed to 2 imports (tokens + base resets only).** Rationale: CSS class hashing eliminates specificity collisions without any runtime overhead; colocated modules make component styles discoverable and deletable. LHCI `render-blocking-resources` budget raised from `maxLength: 1` to `maxLength: 2` in `lighthouserc.mobile.json` — old `lib/inline-css.ts` embedded all CSS as inline `<style>` (Lighthouse: 0 external blocking); CSS Modules + globals are served as external `<link>` stylesheets (Lighthouse: 2). Dock's `module--mobile` class check replaced with `el.tagName === 'DETAILS'` — CSS Modules hashes class names making classList-based detection unreliable. Visual regression baselines must be regenerated post-merge (class names changed; old baselines are stale). _Reversible: restore global CSS files, re-add `@layer`, restore `lib/inline-css.ts`, revert `lighthouserc.mobile.json`, rerun `pnpm test:e2e --update-snapshots`._
