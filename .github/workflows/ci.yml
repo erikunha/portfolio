@@ -70,6 +70,21 @@ jobs:
       - name: Dependency-pinning gate
         run: pnpm check:dep-pinning
 
+      - name: Token build
+        run: pnpm tokens:build
+
+      - name: Token drift check
+        run: pnpm tokens:check
+
+      - name: Token boundary lint
+        run: pnpm lint:token-boundary
+
+      - name: No-magic-values lint
+        run: pnpm lint:no-magic-values
+
+      - name: Contrast check
+        run: pnpm lint:contrast
+
       - name: Unit tests
         run: pnpm test:coverage
 
