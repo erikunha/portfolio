@@ -37,8 +37,8 @@
 }
 
 .note {
-  /* --ds-color-text-muted (#4ade80, ~5.9:1 on --ds-color-surface-base) — descriptive copy at 11px must
-     clear WCAG AA 4.5:1; --ds-color-text-faint (~3.6:1) fails. */
+  /* WCAG AA requires 4.5:1 for small text (11px). --ds-color-text-muted meets this;
+     --ds-color-text-faint does not, so it is intentionally excluded here. */
   color: var(--ds-color-text-muted);
   font-size: var(--ds-font-size-xs);
   line-height: 1.5;
