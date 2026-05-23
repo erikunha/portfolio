@@ -32,6 +32,7 @@
     "check:dep-pinning": "node scripts/check-dep-pinning.mjs",
     "check:pkg-age": "node scripts/check-pkg-age.mjs",
     "lint:token-boundary": "node scripts/lint-token-boundary.mjs",
+    "lint:no-magic-values": "node scripts/lint-no-magic-values.mjs",
     "pr:comments": "node scripts/inspect-pr-comments.mjs",
     "pr:gate": "tsx scripts/check-pr-comments.ts",
     "ready-to-merge": "tsx scripts/ready-to-merge.ts",
