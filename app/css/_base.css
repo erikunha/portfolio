@@ -191,10 +191,10 @@ h1 {
 }
 
 /* ─── Global responsive token overrides (migrated from _responsive.css) ───────
-   Placed AFTER the (max-width: 768px) :root block above. At viewports ≤768px
-   both blocks match; later source order wins — this reproduces the cascade the
-   old @layer responsive provided (responsive layer beat the base layer). */
-@media (max-width: 900px) {
+   Scoped to 769px–900px so the ≤768px :root block above takes precedence at
+   mobile widths. Using a min-width lower bound prevents the cascade from
+   overriding the more-specific 768px values at narrower viewports. */
+@media (min-width: 769px) and (max-width: 900px) {
   :root {
     --ds-space-rhythm: 40px;
     --ds-space-pad: 18px;

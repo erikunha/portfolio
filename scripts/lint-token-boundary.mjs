@@ -16,13 +16,19 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 // They are terminal tokens (no semantic alias wraps them). Direct use
 // in CSS (e.g. line-height: var(--ds-text-leading-base)) is correct.
 const FORBIDDEN = [
-  { pattern: /var\(--ds-green-\d+\)/g, hint: 'use --ds-color-* semantic alias' },
-  { pattern: /var\(--ds-text-\d+\)/g, hint: 'use --ds-color-text-* semantic alias' },
-  { pattern: /var\(--ds-neutral-\d+\)/g, hint: 'use --ds-color-surface-* semantic alias' },
-  { pattern: /var\(--ds-accent-[a-z]+\)/g, hint: 'use --ds-color-accent-* semantic alias' },
-  { pattern: /var\(--ds-feedback-[a-z]+\)/g, hint: 'use --ds-color-feedback-* semantic alias' },
-  { pattern: /var\(--ds-space-\d+\)/g, hint: 'use --ds-space-pad/rhythm semantic alias' },
-  { pattern: /var\(--ds-text-size-[a-z0-9-]+\)/g, hint: 'use --ds-font-size-* semantic alias' },
+  { pattern: /var\(\s*--ds-green-\d+[^)]*\)/g, hint: 'use --ds-color-* semantic alias' },
+  { pattern: /var\(\s*--ds-text-\d+[^)]*\)/g, hint: 'use --ds-color-text-* semantic alias' },
+  { pattern: /var\(\s*--ds-neutral-\d+[^)]*\)/g, hint: 'use --ds-color-surface-* semantic alias' },
+  { pattern: /var\(\s*--ds-accent-[a-z]+[^)]*\)/g, hint: 'use --ds-color-accent-* semantic alias' },
+  {
+    pattern: /var\(\s*--ds-feedback-[a-z]+[^)]*\)/g,
+    hint: 'use --ds-color-feedback-* semantic alias',
+  },
+  { pattern: /var\(\s*--ds-space-\d+[^)]*\)/g, hint: 'use --ds-space-pad/rhythm semantic alias' },
+  {
+    pattern: /var\(\s*--ds-text-size-[a-z0-9-]+[^)]*\)/g,
+    hint: 'use --ds-font-size-* semantic alias',
+  },
 ];
 
 // Scan all .module.css files except the dist/tokens.css file (primitives are valid there).

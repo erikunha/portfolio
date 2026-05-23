@@ -70,9 +70,6 @@ jobs:
       - name: Dependency-pinning gate
         run: pnpm check:dep-pinning
 
-      - name: Token build
-        run: pnpm tokens:build
-
       - name: Token drift check
         run: pnpm tokens:check
 
