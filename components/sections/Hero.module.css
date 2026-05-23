@@ -12,13 +12,13 @@
 
 .root {
   position: relative;
-  border: 1px solid var(--signal-dim);
+  border: 1px solid var(--ds-color-signal-subtle);
   min-height: 640px;
   padding: 0;
   overflow: hidden;
   background: transparent;
   transition: transform 80ms ease-out;
-  margin-bottom: var(--vrhythm);
+  margin-bottom: var(--ds-space-rhythm);
 }
 
 .shake {
@@ -56,8 +56,8 @@
   top: 40%;
   bottom: 24px;
   z-index: 2;
-  color: var(--fg);
-  font-size: var(--fs-base);
+  color: var(--ds-color-text-body);
+  font-size: var(--ds-font-size-body);
   line-height: 1.7;
   overflow: hidden;
   text-shadow:
@@ -67,7 +67,7 @@
 
 .bio {
   flex: 1;
-  border-left: 1px dashed var(--signal-dim);
+  border-left: 1px dashed var(--ds-color-signal-subtle);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -76,17 +76,17 @@
 }
 
 .bio .name {
-  font-family: var(--font-mono-stack);
+  font-family: var(--ds-font-family-mono);
   font-weight: 700;
-  font-size: var(--fs-xl);
-  color: var(--signal);
+  font-size: var(--ds-font-size-heading-md);
+  color: var(--ds-color-signal);
   margin: 0 0 4px;
   line-height: 1.2;
 }
 
 .tagline {
-  color: var(--fg);
-  font-size: var(--fs-base);
+  color: var(--ds-color-text-body);
+  font-size: var(--ds-font-size-body);
   line-height: 1.55;
   margin-bottom: 8px;
 }
@@ -95,14 +95,14 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px 12px;
-  color: var(--muted);
-  font-size: var(--fs-sm);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-sm);
   letter-spacing: 0.08em;
   margin-bottom: 14px;
 }
 
 .meta b {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
 }
 
@@ -117,10 +117,10 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  border: 1px solid var(--signal-dim);
-  color: var(--signal);
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-xs);
+  border: 1px solid var(--ds-color-signal-subtle);
+  color: var(--ds-color-signal);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.12em;
   padding: 6px 10px;
   white-space: nowrap;
@@ -131,7 +131,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--signal);
+  background: var(--ds-color-signal);
   flex-shrink: 0;
   animation: status-pulse 1.6s ease-in-out infinite;
 }
@@ -140,7 +140,7 @@
   0%,
   100% {
     opacity: 1;
-    box-shadow: 0 0 4px var(--signal);
+    box-shadow: 0 0 4px var(--ds-color-signal);
   }
   50% {
     opacity: 0.35;
@@ -167,11 +167,11 @@
 }
 
 .bootOk {
-  color: var(--signal);
+  color: var(--ds-color-signal);
 }
 
 .bootEnc {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
   text-shadow:
     0 0 6px rgba(0, 255, 65, 0.6),
@@ -179,25 +179,25 @@
 }
 
 .bootWelcome {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   font-weight: 700;
 }
 
 .bootPrompt {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 
 .bootCmd {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
 }
 
 .bootMatrixPrefix {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   margin-right: 4px;
 }
 
 .bootMatrixOut {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   text-shadow:
     0 0 8px rgba(0, 255, 65, 0.4),
     0 0 4px #000;
@@ -207,7 +207,7 @@
   display: inline-block;
   width: 9px;
   height: 1.05em;
-  background: var(--signal);
+  background: var(--ds-color-signal);
   vertical-align: -2px;
   margin-left: 2px;
   animation: boot-blink 1.05s steps(2, start) infinite;
@@ -246,11 +246,11 @@
 }
 
 .headlinePlate {
-  background: var(--signal);
+  background: var(--ds-color-signal);
   color: #000;
-  font-family: var(--font-mono-stack);
+  font-family: var(--ds-font-family-mono);
   font-weight: 700;
-  font-size: var(--fs-lg);
+  font-size: var(--ds-font-size-heading-sm);
   letter-spacing: 0.08em;
   padding: 6px 18px 8px;
   line-height: 1;
@@ -263,7 +263,7 @@
 
 @media (max-width: 900px) {
   .headlinePlate {
-    font-size: var(--fs-lg);
+    font-size: var(--ds-font-size-heading-sm);
     padding: 5px 14px 6px;
   }
 }
@@ -272,11 +272,11 @@
    .mobile .name override */
 
 .mobile .name {
-  font-family: var(--font-mono-stack);
+  font-family: var(--ds-font-family-mono);
   font-weight: 700;
-  font-size: var(--fs-lg);
-  color: var(--signal);
-  border-top: 1px dashed var(--signal-dim-2);
+  font-size: var(--ds-font-size-heading-sm);
+  color: var(--ds-color-signal);
+  border-top: 1px dashed var(--ds-color-signal-quiet);
   padding-top: 14px;
   margin-top: 6px;
   margin-bottom: 2px;
@@ -297,8 +297,8 @@
   justify-content: center;
   min-height: 44px;
   padding: 0 14px;
-  border: 1px solid var(--signal-dim);
-  font-size: var(--fs-base);
+  border: 1px solid var(--ds-color-signal-subtle);
+  font-size: var(--ds-font-size-body);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -308,21 +308,21 @@
 }
 
 .ctaPrimary {
-  background: var(--signal);
-  color: var(--bg);
-  border-color: var(--signal);
+  background: var(--ds-color-signal);
+  color: var(--ds-color-surface-base);
+  border-color: var(--ds-color-signal);
 }
 
 .ctaPrimary:hover {
-  box-shadow: 0 0 12px var(--signal);
+  box-shadow: 0 0 12px var(--ds-color-signal);
 }
 
 .ctaSecondary {
-  color: var(--signal);
+  color: var(--ds-color-signal);
 }
 
 .ctaSecondary:hover {
-  box-shadow: 0 0 12px var(--signal);
+  box-shadow: 0 0 12px var(--ds-color-signal);
   background: rgba(0, 255, 65, 0.06);
 }
 
@@ -351,8 +351,8 @@
 /* ── Hero dialog typewriter line ─────────────────────────────────────────── */
 
 .dialog {
-  color: var(--signal);
-  font-family: var(--font-mono-stack);
+  color: var(--ds-color-signal);
+  font-family: var(--ds-font-family-mono);
   text-shadow:
     0 0 8px rgba(0, 255, 65, 0.45),
     0 0 4px #000;
@@ -364,7 +364,7 @@
   right: 24px;
   bottom: 24px;
   z-index: 2;
-  font-size: var(--fs-base);
+  font-size: var(--ds-font-size-body);
   margin: 0;
 }
 
@@ -387,8 +387,8 @@
 }
 
 .mobile .boot {
-  color: var(--fg);
-  font-size: var(--fs-sm);
+  color: var(--ds-color-text-body);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.65;
   min-height: 165px;
   margin: 0 0 12px;
@@ -401,11 +401,11 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--signal-dim);
+  border: 1px solid var(--ds-color-signal-subtle);
   background: rgba(0, 255, 65, 0.05);
-  color: var(--signal);
+  color: var(--ds-color-signal);
   padding: 4px 10px;
-  font-size: var(--fs-xs);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin: 0 0 14px;
@@ -415,7 +415,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--signal);
+  background: var(--ds-color-signal);
   display: inline-block;
   animation: status-pulse 1.6s ease-in-out infinite;
 }

@@ -4,36 +4,36 @@
 
 .root pre {
   margin: 0;
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-base);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-body);
   line-height: 1.65;
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   white-space: pre;
 }
 
 .root .mHead {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
   letter-spacing: 0.04em;
 }
 
 .root .mSec {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
   letter-spacing: 0.08em;
 }
 
 .root .mErik {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
 }
 
 .root .mMute {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 
 .root .mDim {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   opacity: 0.7;
 }
 
@@ -43,25 +43,25 @@
 
 .mobile {
   display: flex;
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-sm);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.7;
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   flex-direction: column;
   gap: 2px;
 }
 
 .mobile .mpHead {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
   letter-spacing: 0.04em;
-  font-size: var(--fs-xs);
+  font-size: var(--ds-font-size-xs);
   margin-bottom: 10px;
   word-break: break-all;
 }
 
 .mobile .mpSec {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
   letter-spacing: 0.08em;
   margin-top: 12px;
@@ -69,15 +69,15 @@
 }
 
 .mobile .mpName {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
 }
 
 .mobile .mpBody {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   white-space: pre-wrap;
   word-break: break-word;
-  font-size: var(--fs-xs);
+  font-size: var(--ds-font-size-xs);
   line-height: 1.6;
 }
 
@@ -89,16 +89,16 @@
 }
 
 .mobile .mpFlag {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   opacity: 0.85;
-  font-size: var(--fs-xs);
+  font-size: var(--ds-font-size-xs);
   padding: 1px 0;
   white-space: nowrap;
 }
 
 .mobile .mpDesc {
-  color: var(--fg);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-body);
+  font-size: var(--ds-font-size-xs);
   padding: 1px 0;
   line-height: 1.5;
 }
@@ -112,24 +112,24 @@
 
 .mobile .mpExLine {
   display: block;
-  color: var(--fg);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-body);
+  font-size: var(--ds-font-size-xs);
   white-space: pre-wrap;
   word-break: break-all;
 }
 
 .mobile .mpExLine .mpMute {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 
 .mobile .mpExLine .mpName {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
 }
 
 .mobile .mpBugs {
-  color: var(--fg);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-body);
+  font-size: var(--ds-font-size-xs);
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.6;

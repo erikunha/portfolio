@@ -1,0 +1,31 @@
+{
+  "ds-text-size-2xs": { "$value": "9px", "$type": "dimension" },
+  "ds-text-size-xs": { "$value": "11px", "$type": "dimension" },
+  "ds-text-size-sm": { "$value": "12px", "$type": "dimension" },
+  "ds-text-size-base": { "$value": "14px", "$type": "dimension" },
+  "ds-text-size-md": { "$value": "16px", "$type": "dimension" },
+  "ds-text-size-lg": { "$value": "22px", "$type": "dimension" },
+  "ds-text-size-xl": { "$value": "32px", "$type": "dimension" },
+  "ds-text-size-2xl": { "$value": "48px", "$type": "dimension" },
+  "ds-text-size-3xl": { "$value": "78px", "$type": "dimension" },
+  "ds-text-leading-tight": { "$value": 1.2, "$type": "number" },
+  "ds-text-leading-base": { "$value": 1.55, "$type": "number" },
+  "ds-text-leading-relaxed": { "$value": 1.85, "$type": "number" },
+  "ds-font-size-2xs": { "$value": "{ds-text-size-2xs}", "$type": "dimension" },
+  "ds-font-size-xs": { "$value": "{ds-text-size-xs}", "$type": "dimension" },
+  "ds-font-size-sm": { "$value": "{ds-text-size-sm}", "$type": "dimension" },
+  "ds-font-size-body": { "$value": "{ds-text-size-base}", "$type": "dimension" },
+  "ds-font-size-md": { "$value": "{ds-text-size-md}", "$type": "dimension" },
+  "ds-font-size-heading-sm": { "$value": "{ds-text-size-lg}", "$type": "dimension" },
+  "ds-font-size-heading-md": { "$value": "{ds-text-size-xl}", "$type": "dimension" },
+  "ds-font-size-heading-lg": { "$value": "{ds-text-size-2xl}", "$type": "dimension" },
+  "ds-font-size-heading-xl": { "$value": "{ds-text-size-3xl}", "$type": "dimension" },
+  "ds-font-family-mono": {
+    "$value": "var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+    "$type": "fontFamily"
+  },
+  "ds-font-family-display": {
+    "$value": "var(--font-display), ui-sans-serif, system-ui, sans-serif",
+    "$type": "fontFamily"
+  }
+}

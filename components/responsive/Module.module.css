@@ -4,21 +4,21 @@
    and a section header that takes an icon (`.section-head` semantics).
    ───────────────────────────────────────────────────────────────────────── */
 .root {
-  margin-bottom: var(--vrhythm);
+  margin-bottom: var(--ds-space-rhythm);
 }
 
 /* Section header — icon + uppercase label, like .section-head in the mockup.
    Lives inside the <summary>; flex:1 lets it sit beside the chevron, margin
    reset because the <summary> owns the header's padding. Mobile sizing is
-   the base; the `min-width: 769px` block restores the desktop --fs-base. */
+   the base; the `min-width: 769px` block restores the desktop --ds-font-size-body. */
 .header {
   flex: 1;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--signal);
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-signal);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-xs);
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -31,7 +31,7 @@
   height: 16px;
   align-items: center;
   justify-content: center;
-  color: var(--signal);
+  color: var(--ds-color-signal);
 }
 
 .icon svg {
@@ -70,13 +70,13 @@
 /* Outer module is a native <details>: bordered panel container.
    overflow:hidden clips child borders. */
 .root {
-  border: 1px solid var(--signal-dim);
+  border: 1px solid var(--ds-color-signal-subtle);
   background: rgba(0, 0, 0, 0.55);
   overflow: hidden;
 }
 
 .body {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
 }
 
 /* <summary> is the section toggle: icon + uppercase label + chevron. */
@@ -90,7 +90,7 @@
   padding: 12px 14px;
   min-height: 44px;
   background: rgba(0, 255, 65, 0.04);
-  border-bottom: 1px solid var(--signal-dim-2);
+  border-bottom: 1px solid var(--ds-color-signal-quiet);
   cursor: pointer;
 }
 
@@ -108,8 +108,8 @@
 }
 
 .chevron {
-  color: var(--signal);
-  font-size: var(--fs-sm);
+  color: var(--ds-color-signal);
+  font-size: var(--ds-font-size-sm);
   transition: transform 120ms ease-out;
 }
 
@@ -123,7 +123,7 @@
 }
 
 .root[open] .body {
-  padding: var(--pad);
+  padding: var(--ds-space-pad);
 }
 
 /* ───────────────────────────────────────────────────────────────────────
@@ -156,9 +156,9 @@
     margin-bottom: 10px;
   }
 
-  /* Restore the desktop header type scale (mobile base uses --fs-xs). */
+  /* Restore the desktop header type scale (mobile base uses --ds-font-size-xs). */
   .header {
-    font-size: var(--fs-base);
+    font-size: var(--ds-font-size-body);
     letter-spacing: 0.1em;
   }
 
@@ -182,9 +182,9 @@
   .root:not([open]) .body,
   .root[open] .body {
     display: block;
-    border: 1px solid var(--signal-dim);
-    padding: var(--pad);
+    border: 1px solid var(--ds-color-signal-subtle);
+    padding: var(--ds-space-pad);
     background: linear-gradient(180deg, rgba(0, 255, 65, 0.015), rgba(0, 0, 0, 0));
-    color: var(--fg);
+    color: var(--ds-color-text-body);
   }
 }

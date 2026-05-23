@@ -15,7 +15,9 @@ export function ResponsibilitiesSection({ defer }: { defer?: boolean } = {}) {
         <div className={styles.cmd}>
           <span className={styles.gt}>$</span>
           {'ls -la ~/responsibilities  '}
-          <span style={{ color: 'var(--muted-dim)' }}>{'// role boundaries, in unix terms'}</span>
+          <span style={{ color: 'var(--ds-color-text-faint)' }}>
+            {'// role boundaries, in unix terms'}
+          </span>
         </div>
         <pre>
           {responsibilities.map((r) => (

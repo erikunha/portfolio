@@ -9,6 +9,7 @@
       "!node_modules",
       "!out",
       "!dist",
+      "!design-system/dist",
       "!coverage",
       "!public",
       "!prototype",

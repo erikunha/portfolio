@@ -4,11 +4,11 @@
    ───────────────────────────────────────────────────────────────────────── */
 
 .root {
-  background: var(--shell-bg);
-  font-size: var(--fs-base);
-  font-family: var(--font-mono-stack);
+  background: var(--ds-color-surface-shell);
+  font-size: var(--ds-font-size-body);
+  font-family: var(--ds-font-family-mono);
   line-height: 1.65;
-  margin: calc(-1 * var(--pad));
+  margin: calc(-1 * var(--ds-space-pad));
 }
 
 .bar {
@@ -16,9 +16,9 @@
   align-items: center;
   gap: 10px;
   padding: 8px 14px;
-  border-bottom: 1px solid var(--signal-dim);
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  border-bottom: 1px solid var(--ds-color-signal-subtle);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.14em;
 }
 
@@ -39,13 +39,13 @@
 }
 
 .barDotRed {
-  background: var(--red);
+  background: var(--ds-chrome-close);
 }
 .barDotYellow {
-  background: var(--yellow);
+  background: var(--ds-chrome-minimize);
 }
 .barDotGreen {
-  background: var(--green-light);
+  background: var(--ds-chrome-maximize);
 }
 
 .feed {
@@ -63,20 +63,20 @@
 }
 
 .linePrompt {
-  color: var(--signal);
+  color: var(--ds-color-signal);
 }
 .lineOutput {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   opacity: 0.95;
 }
 .lineError {
-  color: var(--error-soft);
+  color: var(--ds-color-feedback-error);
 }
 .lineInfo {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 .lineLoading {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   opacity: 0.5;
 }
 
@@ -85,12 +85,12 @@
   gap: 8px;
   align-items: center;
   padding: 8px 16px 12px;
-  border-top: 1px solid var(--signal-dim-2);
+  border-top: 1px solid var(--ds-color-signal-quiet);
 }
 
 .prompt {
-  color: var(--muted);
-  font-size: var(--fs-base);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-body);
   white-space: nowrap;
 }
 
@@ -105,10 +105,10 @@
   background: transparent;
   border: 0;
   outline: 0;
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   font: inherit;
-  font-size: var(--fs-base);
-  caret-color: var(--signal);
+  font-size: var(--ds-font-size-body);
+  caret-color: var(--ds-color-signal);
   caret-shape: block;
 }
 
@@ -122,11 +122,11 @@
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   opacity: 0.6;
   pointer-events: none;
   font: inherit;
-  font-size: var(--fs-base);
+  font-size: var(--ds-font-size-body);
   white-space: nowrap;
   overflow: hidden;
   display: inline-flex;
@@ -137,7 +137,7 @@
   display: inline-block;
   width: 7px;
   height: 1.05em;
-  background: var(--signal);
+  background: var(--ds-color-signal);
   vertical-align: -2px;
   margin-left: 1px;
   opacity: 1;
@@ -161,15 +161,15 @@
   gap: 6px;
   flex-wrap: wrap;
   padding: 8px 12px 10px;
-  border-top: 1px dashed var(--signal-dim-2);
+  border-top: 1px dashed var(--ds-color-signal-quiet);
 }
 
 .chip {
-  border: 1px solid var(--signal-dim);
-  color: var(--signal);
+  border: 1px solid var(--ds-color-signal-subtle);
+  color: var(--ds-color-signal);
   padding: 4px 8px;
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-xs);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.1em;
   border-radius: 2px;
   min-height: 28px;
@@ -185,12 +185,12 @@
 
 /* Desktop command hints row — rendered inside shell panel, below the input form */
 .commands {
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.1em;
   line-height: 1.8;
   padding: 8px 16px 12px;
-  border-top: 1px dashed var(--signal-dim-2);
+  border-top: 1px dashed var(--ds-color-signal-quiet);
   opacity: 0.75;
 }
 
@@ -216,7 +216,7 @@
 }
 
 .cmdHint:hover:not(:disabled) {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   text-shadow: 0 0 6px rgba(0, 255, 65, 0.5);
 }
 
@@ -227,15 +227,15 @@
 .privacyNotice {
   margin: 0;
   padding: 0.5rem 16px;
-  border-top: 1px solid color-mix(in oklab, var(--signal) 14%, transparent);
+  border-top: 1px solid color-mix(in oklab, var(--ds-color-signal) 14%, transparent);
   font-size: 0.7rem;
   line-height: 1.5;
-  color: color-mix(in oklab, var(--fg) 55%, transparent);
+  color: color-mix(in oklab, var(--ds-color-text-body) 55%, transparent);
 }
 
 .privacyNotice code {
   font-family: inherit;
-  color: var(--signal);
+  color: var(--ds-color-signal);
   opacity: 0.8;
 }
 
@@ -246,7 +246,7 @@
 }
 
 .privacyNotice a:hover {
-  color: var(--signal);
+  color: var(--ds-color-signal);
 }
 
 @media (max-width: 768px) {
@@ -256,19 +256,19 @@
   .feed {
     min-height: 200px;
     max-height: 320px;
-    font-size: var(--fs-xs);
+    font-size: var(--ds-font-size-xs);
   }
   .form {
     padding: 8px 12px 10px;
   }
   .prompt {
-    font-size: var(--fs-xs);
+    font-size: var(--ds-font-size-xs);
   }
   .input {
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
   /* From _layout.css 768px block */
   .bar {
-    font-size: var(--fs-2xs);
+    font-size: var(--ds-font-size-2xs);
   }
 }

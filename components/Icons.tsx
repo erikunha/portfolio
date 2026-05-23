@@ -1,7 +1,7 @@
 // components/Icons.tsx
 // Inline SVG icons used in section headers. Paths lifted verbatim from
 // prototype/Portfolio.html. Each icon renders at 14×14 with a 1.4 stroke
-// in --signal via `currentColor`.
+// in --ds-color-signal via `currentColor`.
 
 import type { JSX } from 'react';
 

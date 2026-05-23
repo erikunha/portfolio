@@ -8,7 +8,7 @@
   background: rgba(0, 0, 0, 0.92);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-top: 1px solid var(--signal-dim);
+  border-top: 1px solid var(--ds-color-signal-subtle);
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 2px;
@@ -21,8 +21,8 @@
   justify-content: center;
   gap: 3px;
   padding: 6px 4px;
-  color: var(--muted);
-  font-size: var(--fs-2xs);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-2xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   min-height: 48px;

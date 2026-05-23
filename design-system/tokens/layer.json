@@ -1,0 +1,6 @@
+{
+  "ds-layer-base": { "$value": 0, "$type": "number" },
+  "ds-layer-sticky": { "$value": 50, "$type": "number" },
+  "ds-layer-overlay": { "$value": 100, "$type": "number" },
+  "ds-layer-headline": { "$value": 150, "$type": "number" }
+}

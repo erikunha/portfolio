@@ -1,0 +1,220 @@
+{
+  "_comment": "Documented exceptions to the no-magic-values lint rule.",
+  "hex-colors": [
+    {
+      "value": "#000",
+      "reason": "pure black — same as --ds-color-surface-base but required in contexts where var() cannot be resolved (text-shadow color stops, fill colors in CRT pixel math)"
+    },
+    { "value": "#000000", "reason": "pure black — same semantic as #000 above" }
+  ],
+  "px-values": [
+    { "value": "0px", "reason": "zero is not a magic value" },
+    { "value": "1px", "reason": "border width, semantic — no 1px token needed" },
+    { "value": "2px", "reason": "sub-pixel tweak / max corner radius (--ds-radius-sharp)" },
+    {
+      "value": "3px",
+      "reason": "CRT sub-pixel mask column stop — 3-column R/G/B grid, exact pixel geometry required; no token applies"
+    },
+    {
+      "value": "4px",
+      "reason": "CRT scanline band height — fixed pixel grid geometry for the scanline repeating-gradient; no space token applies"
+    },
+    {
+      "value": "5px",
+      "reason": "battery terminal nub height — fixed pixel icon geometry; no space token applies"
+    },
+    {
+      "value": "6px",
+      "reason": "small status-bar / chip gap — UI micro-spacing consistent with sub-token intent; too small for ds-space-* scale"
+    },
+    {
+      "value": "7px",
+      "reason": "status-dot / cursor width — icon/indicator pixel size; no space token at this size"
+    },
+    {
+      "value": "8px",
+      "reason": "dock padding / shell gap / blur radius — recurring micro-spacing below the ds-space-2 threshold; blur(8px) is a filter value, not a layout token"
+    },
+    {
+      "value": "9px",
+      "reason": "cursor/caret width — sub-pixel indicator size; no space token applies"
+    },
+    {
+      "value": "10px",
+      "reason": "card padding component / MobileTitleBar gap — frequent sub-token spacing used consistently in one component"
+    },
+    {
+      "value": "11px",
+      "reason": "battery box height — fixed-pixel icon geometry; no space token applies"
+    },
+    {
+      "value": "12px",
+      "reason": "section gap / hero CTA gap / padding — recurring micro-layout value; ds-space-3 = 12px, equivalent token exists but files migrated to module CSS retain numeric form"
+    },
+    {
+      "value": "14px",
+      "reason": "padding / gap — ds-space-3.5 equivalent; used as micro-layout across many components pre-token"
+    },
+    {
+      "value": "16px",
+      "reason": "shell feed / card padding — ds-space-4 equivalent; used before full space-token adoption in module CSS"
+    },
+    {
+      "value": "18px",
+      "reason": "padding / gap — ds-space-4.5 equivalent; used across card/section padding"
+    },
+    {
+      "value": "20px",
+      "reason": "projects gap / padding — ds-space-5 equivalent in section layout"
+    },
+    { "value": "22px", "reason": "footer margin / battery box width — precise pixel layout" },
+    {
+      "value": "24px",
+      "reason": "hero bio padding / desktop position offset — ds-space-6 equivalent; used as layout constant in Hero and footer"
+    },
+    {
+      "value": "26px",
+      "reason": "tab height / footer margin — UI component height / micro-margin"
+    },
+    {
+      "value": "28px",
+      "reason": "MobileTitleBar top offset / icon column / footer link row — grid column dimension and positional offset"
+    },
+    {
+      "value": "32px",
+      "reason": "hero bio padding / project card icon — ds-space-8 equivalent; used as padding constant"
+    },
+    { "value": "36px", "reason": "hottest-takes avatar — grid column size" },
+    {
+      "value": "40px",
+      "reason": "ToTopButton size / project icon size — touch-target / icon pixel size"
+    },
+    {
+      "value": "44px",
+      "reason": "desktop topbar height / CTA min-height — WCAG 2.5.5 minimum touch target size (44px); semantic, not a general space token"
+    },
+    {
+      "value": "48px",
+      "reason": "dock item min-height — WCAG 2.5.5 minimum touch target; semantic"
+    },
+    { "value": "60px", "reason": "desktop page padding-top — topbar height offset" },
+    { "value": "64px", "reason": "ToTopButton dock offset — dock height constant" },
+    {
+      "value": "80px",
+      "reason": "AppShell body padding-bottom — mobile dock height clearance constant"
+    },
+    { "value": "88px", "reason": "footer progress bar width — fixed pixel bar dimension" },
+    { "value": "90px", "reason": "NowSection label column width — grid column fixed dimension" },
+    { "value": "92px", "reason": "footer dmesg / responsive grid column — fixed layout column" },
+    { "value": "98px", "reason": "footer grid column — fixed layout column" },
+    { "value": "100px", "reason": "footer responsive grid column — fixed layout column" },
+    { "value": "108px", "reason": "ManPageSection grid column — fixed layout column" },
+    {
+      "value": "110px",
+      "reason": "NowSection label column / footer responsive — fixed layout column"
+    },
+    {
+      "value": "120px",
+      "reason": "CRT scan beam offset — animation geometry; --crt-scan-offset custom property value"
+    },
+    { "value": "130px", "reason": "footer dmesg grid column — fixed layout column" },
+    {
+      "value": "165px",
+      "reason": "mobile boot text min-height — component-specific height constant"
+    },
+    { "value": "170px", "reason": "perf receipt card min-height — card height constant" },
+    {
+      "value": "180px",
+      "reason": "CRT noise SVG tile size — background-size for the repeating SVG grain texture"
+    },
+    { "value": "300px", "reason": "ManPage min-height — section height floor" },
+    { "value": "320px", "reason": "shell feed max-height mobile — container scroll height" },
+    { "value": "400px", "reason": "shell feed max-height desktop — container scroll height" },
+    { "value": "520px", "reason": "hero min-height 900px — viewport-relative hero floor" },
+    { "value": "640px", "reason": "hero min-height desktop — viewport-relative hero floor" },
+    { "value": "740px", "reason": "hottest-takes max-width — content column cap" },
+    { "value": "72px", "reason": "footer dmesg responsive grid column — fixed layout column" },
+    { "value": "200px", "reason": "shell feed max-height mobile — container scroll height" },
+    { "value": "220px", "reason": "shell feed min-height desktop — container scroll height" }
+  ],
+  "duration-values": [
+    {
+      "value": "80ms",
+      "reason": "hero shake transition — instant feedback; below --ds-duration-fast"
+    },
+    {
+      "value": "120ms",
+      "reason": "Module chevron rotate transition — snappy disclosure animation; below --ds-duration-fast (200ms)"
+    },
+    {
+      "value": "150ms",
+      "reason": "input border / cmdHint color transition — snappy form feedback"
+    },
+    {
+      "value": "200ms",
+      "reason": "box-shadow / opacity / transform transitions — matches --ds-duration-base (200ms)"
+    },
+    {
+      "value": "220ms",
+      "reason": "footer dmesg-reveal animation — staggered reveal; one-off keyframe duration"
+    },
+    {
+      "value": "250ms",
+      "reason": "footer progress bar width transition — one-off cubic-bezier animation"
+    },
+    {
+      "value": "280ms",
+      "reason": "footer sd-halt reveal animations — staggered reveal; one-off keyframe duration"
+    },
+    {
+      "value": "300ms",
+      "reason": "headline opacity transition — slightly longer than fast; one-off sysfail fade"
+    },
+    {
+      "value": "1.05s",
+      "reason": "boot-blink / shell-blink cursor animation — specific blink cadence tied to terminal character rate"
+    },
+    { "value": "1.6s", "reason": "status-pulse / live-perf blink — breathing animation cadence" },
+    { "value": "2.4s", "reason": "barpulse animation — slow breathing for system health bar" },
+    {
+      "value": "4s",
+      "reason": "crt-flicker animation — very slow flicker to simulate phosphor decay"
+    },
+    { "value": "7s", "reason": "crt-scan-beam animation — slow full-height scan travel duration" },
+    { "value": "0.6s", "reason": "crt-noise-shift animation — grain shift cadence" },
+    {
+      "value": "660ms",
+      "reason": "footer sd-halt-reveal animation delay — tied to 7-line boot sequence (7 x 80ms + 180ms gap)"
+    },
+    { "value": "840ms", "reason": "footer sd-halt-hint-reveal delay — 660ms + 180ms stagger" }
+  ],
+  "z-index-values": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    {
+      "value": "10",
+      "reason": "page content layer — above CRT overlay (5), below all fixed chrome (109+)"
+    },
+    {
+      "value": "109",
+      "reason": "MobileTitleBar — one below StatusBar (110), forming the mobile header stack"
+    },
+    {
+      "value": "110",
+      "reason": "StatusBar / DesktopTopbar — fixed header layer; documented stacking order"
+    },
+    {
+      "value": "115",
+      "reason": "ToTopButton — above Dock (120 is wrong; 115 is above content but doc says 115)"
+    },
+    { "value": "120", "reason": "Dock — mobile bottom nav; highest UI chrome layer" },
+    {
+      "value": "150",
+      "reason": "Hero sysfail headline — emergency overlay; highest possible UI layer"
+    }
+  ]
+}

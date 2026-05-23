@@ -6,43 +6,43 @@
 }
 .root pre {
   margin: 0;
-  color: var(--fg);
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-base);
+  color: var(--ds-color-text-body);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-body);
   line-height: 1.85;
   white-space: pre;
 }
 
 /* .visa .cmd-line — replicated from _sections.css lines 192–198 */
 .root .cmdLine {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 .root .cmdLine .pr {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   margin-right: 4px;
 }
 
 /* .gr-* — _sections.css lines 250–266 */
 .grLabel {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 .grVal {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
 }
 .grComment {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 .grNum {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 .grName {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
 }
 
 .guitarMobile {
-  font-size: var(--fs-sm);
+  font-size: var(--ds-font-size-sm);
   white-space: pre-wrap;
   overflow-wrap: break-word;
   line-height: 1.7;
@@ -51,13 +51,13 @@
 /* ── 768px responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .root pre {
-    font-size: var(--fs-xs);
+    font-size: var(--ds-font-size-xs);
     line-height: 1.7;
     white-space: pre-wrap;
     overflow-wrap: break-word;
   }
   /* .root .guitarMobile (0,2,0) beats .root pre (0,1,1) — restores fs-sm on mobile UA narrow viewport */
   .root .guitarMobile {
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
 }

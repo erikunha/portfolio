@@ -241,7 +241,7 @@ function GitLogDesktop() {
       <pre>{COMMITS.map((c) => renderCommit(c, c.hash))}</pre>
       <div className={styles.end}>
         {'(END) — press '}
-        <span style={{ color: 'var(--signal)' }}>q</span>
+        <span style={{ color: 'var(--ds-color-signal)' }}>q</span>
         {' to return to portfolio'}
       </div>
     </div>

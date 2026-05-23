@@ -1,13 +1,13 @@
 .root {
-  font-size: var(--fs-base);
+  font-size: var(--ds-font-size-body);
   line-height: 1.7;
 }
 
 .root .title {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
   letter-spacing: 0.06em;
-  font-size: var(--fs-base);
+  font-size: var(--ds-font-size-body);
   margin: 0 0 12px;
 }
 
@@ -18,7 +18,7 @@
 }
 
 .root li {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   padding-left: 18px;
   position: relative;
   margin-bottom: 4px;
@@ -26,35 +26,35 @@
 
 .root li::before {
   content: "-";
-  color: var(--signal);
+  color: var(--ds-color-signal);
   position: absolute;
   left: 4px;
   top: 0;
 }
 
 .root .status {
-  color: var(--muted);
-  font-size: var(--fs-sm);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-sm);
   margin-top: 14px;
-  border-top: 1px dashed var(--signal-dim-2);
+  border-top: 1px dashed var(--ds-color-signal-quiet);
   padding-top: 12px;
 }
 
 .root .status .gt {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   margin-right: 6px;
 }
 
 @media (max-width: 768px) {
   .root {
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
 
   .root .title {
-    font-size: var(--fs-base);
+    font-size: var(--ds-font-size-body);
   }
 
   .root .status {
-    font-size: var(--fs-xs);
+    font-size: var(--ds-font-size-xs);
   }
 }

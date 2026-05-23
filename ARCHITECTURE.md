@@ -207,8 +207,7 @@ lib/
   ua.ts                        # UA-based device detection (headers())
   use-breakpoint.client.tsx    # useBreakpoint hook (client-only)
 
-app/css/                      # 10 hand-rolled global CSS files (no framework)
-  _tokens.css                 # design tokens (CSS vars: palette, spacing, type)
+app/css/                      # global CSS files (no framework)
   _base.css                   # reset (Preflight subset), focus, typography defaults
   _crt.css                    # scanlines, RGB sub-pixel mask, grain, flicker, phosphor
   _layout.css                 # page chrome, module containers, content-visibility

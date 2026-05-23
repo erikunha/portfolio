@@ -14,7 +14,7 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
       <div className={styles.preamble}>
         <span className={styles.gt}>$</span>
         {'cat ~/hottest_takes.md  '}
-        <span style={{ color: 'var(--muted-dim)' }}>{hottestTakesConfig.preamble}</span>
+        <span style={{ color: 'var(--ds-color-text-faint)' }}>{hottestTakesConfig.preamble}</span>
       </div>
       <ol className={styles.root} start={1} data-testid="hottest-takes-list">
         {hottestTakes.map((t) => (

@@ -48,7 +48,7 @@ jobs:
         env:
           BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
-          echo "$BRANCH" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot)/.+$|^main$' \
+          echo "$BRANCH" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot|design-system)/.+$|^main$' \
             || (echo "Invalid branch name: $BRANCH" && exit 1)
 
       - name: Lint commit messages
@@ -69,6 +69,18 @@ jobs:
 
       - name: Dependency-pinning gate
         run: pnpm check:dep-pinning
+
+      - name: Token drift check
+        run: pnpm tokens:check
+
+      - name: Token boundary lint
+        run: pnpm lint:token-boundary
+
+      - name: No-magic-values lint
+        run: pnpm lint:no-magic-values
+
+      - name: Contrast check
+        run: pnpm lint:contrast
 
       - name: Unit tests
         run: pnpm test:coverage

@@ -20,7 +20,7 @@
 
 .project {
   position: relative;
-  border: 1px solid var(--signal-dim);
+  border: 1px solid var(--ds-color-signal-subtle);
   padding: 20px;
   transition:
     border-color 200ms ease,
@@ -28,7 +28,7 @@
 }
 
 .project:hover {
-  border-color: var(--signal);
+  border-color: var(--ds-color-signal);
   box-shadow: 0 0 16px rgba(0, 255, 65, 0.18);
 }
 
@@ -42,34 +42,34 @@
 .projectFolder {
   width: 40px;
   height: 32px;
-  fill: var(--signal);
+  fill: var(--ds-color-signal);
 }
 
 .projectPerm {
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   opacity: 0.75;
   margin: 0;
 }
 
 .projectName {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
-  font-size: var(--fs-md);
+  font-size: var(--ds-font-size-md);
   letter-spacing: 0.04em;
   margin: 6px 0;
 }
 
 .projectDesc {
-  color: var(--fg);
-  font-size: var(--fs-base);
+  color: var(--ds-color-text-body);
+  font-size: var(--ds-font-size-body);
   margin: 0 0 16px;
 }
 
 .projectStats {
   display: grid;
   gap: 4px;
-  font-size: var(--fs-sm);
+  font-size: var(--ds-font-size-sm);
   margin: 0;
 }
 
@@ -80,12 +80,12 @@
 }
 
 .projectStats dt {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 
 .projectStats dd {
   margin: 0;
-  color: var(--fg);
+  color: var(--ds-color-text-body);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -100,10 +100,10 @@
     height: 26px;
   }
   .projectName {
-    font-size: var(--fs-base);
+    font-size: var(--ds-font-size-body);
   }
   .projectDesc {
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
 }
 
@@ -111,7 +111,7 @@
    Mobile project cards — matches Portfolio.mobile.html .proj structure
    ───────────────────────────────────────────────────────────────────────── */
 .card {
-  border: 1px solid var(--signal-dim);
+  border: 1px solid var(--ds-color-signal-subtle);
   padding: 14px;
   margin-bottom: 10px;
 }
@@ -135,27 +135,27 @@
 .cardFolder svg {
   width: 100%;
   height: 100%;
-  fill: var(--signal);
+  fill: var(--ds-color-signal);
 }
 
 .cardPerm {
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   opacity: 0.75;
   letter-spacing: 0.04em;
 }
 
 .cardName {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
-  font-size: var(--fs-base);
+  font-size: var(--ds-font-size-body);
   letter-spacing: 0.04em;
   margin: 4px 0;
 }
 
 .cardDesc {
-  color: var(--fg);
-  font-size: var(--fs-sm);
+  color: var(--ds-color-text-body);
+  font-size: var(--ds-font-size-sm);
   margin-bottom: 12px;
   line-height: 1.5;
 }
@@ -163,7 +163,7 @@
 .cardMeta {
   display: grid;
   gap: 3px;
-  font-size: var(--fs-xs);
+  font-size: var(--ds-font-size-xs);
 }
 
 .mrow {
@@ -173,11 +173,11 @@
 }
 
 .mk {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   flex-shrink: 0;
 }
 
 .mv {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   text-align: right;
 }

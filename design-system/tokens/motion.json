@@ -1,0 +1,8 @@
+{
+  "ds-duration-fast": { "$value": "80ms", "$type": "duration" },
+  "ds-duration-base": { "$value": "200ms", "$type": "duration" },
+  "ds-duration-slow": { "$value": "300ms", "$type": "duration" },
+  "ds-ease-out": { "$value": "ease-out", "$type": "cubicBezier" },
+  "ds-ease-in": { "$value": "ease-in", "$type": "cubicBezier" },
+  "ds-ease-in-out": { "$value": "ease-in-out", "$type": "cubicBezier" }
+}

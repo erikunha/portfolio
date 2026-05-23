@@ -14,8 +14,8 @@
     width: 40px;
     height: 40px;
     background: rgba(0, 0, 0, 0.85);
-    border: 1px solid var(--signal-dim);
-    color: var(--signal);
+    border: 1px solid var(--ds-color-signal-subtle);
+    color: var(--ds-color-signal);
     opacity: 0;
     transform: translateY(8px);
     transition:

@@ -14,30 +14,30 @@
 }
 
 .cell .pk {
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.16em;
 }
 
 .cell .pv {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
-  font-size: var(--fs-xl);
+  font-size: var(--ds-font-size-heading-md);
   line-height: 1;
   margin: 8px 0;
   letter-spacing: 0.01em;
 }
 
 .cell .pv .of {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   font-weight: 400;
-  font-size: var(--fs-base);
+  font-size: var(--ds-font-size-body);
   margin-left: 4px;
 }
 
 .cell .pbar {
   height: 4px;
-  background: var(--signal-dim-2);
+  background: var(--ds-color-signal-quiet);
   position: relative;
   overflow: hidden;
 }
@@ -45,7 +45,7 @@
 .cell .pbar > i {
   display: block;
   height: 100%;
-  background: var(--signal);
+  background: var(--ds-color-signal);
 }
 
 .foot {
@@ -53,8 +53,8 @@
   justify-content: space-between;
   align-items: center;
   margin-top: 18px;
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.14em;
 }
 
@@ -63,7 +63,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--signal);
+  background: var(--ds-color-signal);
   margin-right: 8px;
   vertical-align: -1px;
   animation: blink 1.6s steps(2, start) infinite;
@@ -80,7 +80,7 @@
     grid-template-columns: repeat(2, 1fr);
   }
   .cell .pv {
-    font-size: var(--fs-xl);
+    font-size: var(--ds-font-size-heading-md);
   }
 }
 
@@ -90,21 +90,21 @@
     gap: 10px;
   }
   .cell .pk {
-    font-size: var(--fs-2xs);
+    font-size: var(--ds-font-size-2xs);
     letter-spacing: 0.14em;
   }
   .cell .pv {
-    font-size: var(--fs-lg);
+    font-size: var(--ds-font-size-heading-sm);
     margin: 6px 0;
   }
   .cell .pv .of {
-    font-size: var(--fs-xs);
+    font-size: var(--ds-font-size-xs);
   }
   .cell .pbar {
     height: 3px;
   }
   .foot {
-    font-size: var(--fs-2xs);
+    font-size: var(--ds-font-size-2xs);
   }
   .foot .liveDot {
     width: 6px;

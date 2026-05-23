@@ -1,43 +1,43 @@
 .root pre {
   margin: 0;
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-base);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-body);
   line-height: 1.75;
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   white-space: pre-wrap;
 }
 
 .root .cmd {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 
 .root .cmd .gt {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   margin-right: 4px;
 }
 
 .root .h {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   letter-spacing: 0.02em;
 }
 
 .root .mute {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   opacity: 0.85;
 }
 
 .root .bul {
-  color: var(--signal);
+  color: var(--ds-color-signal);
 }
 
 .root .open {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
 }
 
 @media (max-width: 768px) {
   .root pre {
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
     white-space: pre-wrap;
     overflow-wrap: break-word;
   }

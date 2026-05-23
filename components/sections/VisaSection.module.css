@@ -8,38 +8,38 @@
 /* .visa pre — _sections.css lines 133–140 */
 .root pre {
   margin: 0;
-  color: var(--fg);
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-base);
+  color: var(--ds-color-text-body);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-body);
   line-height: 1.85;
   white-space: pre;
 }
 
 /* span tokens inside .visa — _sections.css lines 141–165 */
 .vh {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
   letter-spacing: 0.06em;
 }
 .vrule {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   opacity: 0.55;
 }
 .vjur {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
 }
 .vstat {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
 }
 .vev {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 
 /* .visa-foot — _sections.css lines 160–165 */
 .foot {
-  color: var(--muted);
-  font-size: var(--fs-sm);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-sm);
   margin-top: 14px;
   letter-spacing: 0.04em;
 }
@@ -50,8 +50,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-sm);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-sm);
 }
 .vmRow {
   display: flex;
@@ -71,13 +71,13 @@
 /* ── 768px responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .root pre {
-    font-size: var(--fs-xs);
+    font-size: var(--ds-font-size-xs);
     line-height: 1.7;
     white-space: pre-wrap;
     overflow-wrap: break-word;
   }
   .foot {
-    font-size: var(--fs-2xs);
+    font-size: var(--ds-font-size-2xs);
     white-space: nowrap;
     overflow: hidden;
   }
