@@ -62,6 +62,7 @@ Invoke the named skill inline (not as a subagent) before the described action.
 | Trigger | Skill |
 |---|---|
 | **Before writing any new file, function, or script** | **`thinking-inversion` — what specifically makes this fail? answers become test cases** |
+| **Before `writing-plans` on any migration or refactor spec** | **`thinking-inversion` — enumerate the class-of-bugs the transformation introduces (specificity drift, dead rules, broken selectors, type gaps); each becomes an explicit plan task, not a Copilot finding** |
 | **Before implementing any new file, function, or script** | **`superpowers:test-driven-development` — tests first, always; implementation satisfies them** |
 | After editing any file in `components/` or `app/` | `react-best-practices` |
 | After editing `next.config.ts`, `.env.example`, or Vercel config | `vercel:nextjs` |
@@ -147,6 +148,7 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 - **Process feedback mid-workflow is a hard stop.** When the user gives process or workflow feedback while a task is executing: pause immediately, incorporate it into CLAUDE.md and/or memory, confirm the change with the user, then resume. Do not barrel through to completion and address feedback after the fact.
 - **Code review is not optional on PR branches.** Run `code-review:code-review` on the staged diff before every commit — scripts, config files, routes, and one-liners all count. "It's just a small change" is not an exemption. Skipping this step is the direct cause of multi-round Copilot review cycles (PR #36: 3 rounds, 12 preventable findings). The review catches TypeScript safety issues (`err.message` on `unknown`), input validation gaps (NaN bypass), missing tests, and documentation accuracy before they reach Copilot.
 - **The review should be boring.** If `code-review:code-review` or Copilot finds real bugs, the pre-implementation discipline failed — not the review. Principal/Staff level means bugs don't reach the review; the test suite already encodes the failure modes found by `thinking-inversion`. Multi-round Copilot cycles are a signal to fix the writing process, not the reviewing process.
+- **Migration plans must include a correctness checklist.** For any PR that renames, restructures, or migrates syntax (CSS modules, module systems, file reorganization): the plan must contain explicit tasks for: (1) specificity audit — grep for element selectors removed and verify equivalent specificity in the new form; (2) dead-rule scan — grep for duplicate or now-unreachable rules; (3) test selector inventory — list every test string keyed on old naming conventions and update them. These are not polish tasks — they are the primary failure modes of migrations. Omitting them caused 11 Copilot review rounds on PR #44 (CSS Modules migration) where all findings were predictable from first principles.
 
 ## Out of scope (unless asked)
 
