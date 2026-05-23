@@ -36,7 +36,7 @@
 | `tests/storybook/button-disabled.test.ts` | Interaction test: Button disabled state click suppression |
 | `tests/storybook/theme-switcher.test.ts` | Interaction test: future-proofing for ThemeSwitcher persistence (skipped in PR E; activated in PR D) |
 | `scripts/check-stories-exist.mjs` | CI gate: every `design-system/components/<Name>/` has `<Name>.stories.tsx` |
-| `vercel.json` *(at repo root for `erikunha-ds` project)* | Output dir, framework, CORS headers — see Task 16 |
+| `storybook.vercel.json` *(at repo root; passed via `--local-config` to avoid touching main portfolio config)* | Output dir, framework, CORS headers — see Task 16 |
 | `.github/workflows/storybook-deploy.yml` | Storybook build + Vercel CLI deploy on main pushes touching primitives |
 
 ### Files MODIFIED
@@ -68,7 +68,7 @@
   1. **Storybook Vite builder conflicts with Next 16's Turbopack** — symptoms: Storybook hangs on first start, or alias resolution silently picks Next's webpack config instead of Vite's. Mitigation: Storybook runs entirely on `@storybook/react-vite`; no shared bundler config. Detection: Task 3 verifies `pnpm storybook` boots clean before any story is authored.
   2. **Stories drift from primitive API** — symptoms: rename a Button prop in PR F+ and the stories still pass TS locally because Storybook only typechecks on build. Mitigation: `pnpm storybook:build` runs in CI on every PR that touches `design-system/components/**`; TS error fails the build (Task 15). Detection: Task 18 — build-time component-↔-story existence check.
   3. **`ds.erikunha.dev` SSL provisioning fails or lags** — symptoms: deploy succeeds, custom domain shows "SSL certificate pending" for 24h+. Mitigation: deploy URL `erikunha-ds.vercel.app` remains valid; documented as the fallback in DECISIONS.md (Task 17, Task 20).
-  4. **CORS blocks `ds.erikunha.dev` content embedded inside `erikunha.dev`** — symptoms: future `/design-system` page tries to embed a Storybook iframe and the browser blocks it. Mitigation: `vercel.json` for `erikunha-ds` sets `Access-Control-Allow-Origin: https://erikunha.dev` (Task 16).
+  4. **CORS blocks `ds.erikunha.dev` content embedded inside `erikunha.dev`** — symptoms: future `/design-system` page tries to embed a Storybook iframe and the browser blocks it. Mitigation: `storybook.vercel.json` for `erikunha-ds` sets `Access-Control-Allow-Origin: https://erikunha.dev` (Task 16).
   5. **`addon-a11y` catches violations the PR B integration axe spec didn't** — symptoms: PR B passed axe at the section integration level but the per-story axe scan in Storybook finds a primitive-level violation (e.g., Badge dot's `aria-hidden` regression in an isolated context). Mitigation: PR E expects this is a tightening, not a new floor; if it surfaces a real bug, it is fixed in PR E and back-ported. Detection: Task 14 + the CI `storybook:test` gate (Task 15).
   6. **Storybook adds runtime dep weight to the main portfolio bundle** — symptoms: a `storybook/test` import sneaks into `design-system/components/*` and ships to `/`. Mitigation: `pnpm bundle-check` on `/` route is already the gate; Storybook addon imports MUST live only in `*.stories.tsx` files and `tests/storybook/*`. Lint check via existing `check:client-naming` patterns is sufficient — no new lint required.
   7. **Story file lives in `design-system/components/<Name>/` but the component itself is broken** — story renders pass but the primitive misbehaves in real consumers. Mitigation: out of scope for PR E; PR B test suite owns this.
@@ -1293,7 +1293,7 @@ git commit -m "ci(storybook): build + test-runner on PRs touching primitives; de
 
 ---
 
-## Task 16: Vercel project setup + `vercel.json` (one-time manual + repo file)
+## Task 16: Vercel project setup + `storybook.vercel.json` (one-time manual + repo file)
 
 **Files:**
 - Create: `storybook.vercel.json` (NOT `vercel.json` at repo root — see rationale below)
@@ -1352,8 +1352,8 @@ curl -I https://ds.erikunha.dev/
 - [ ] **Step 3: `code-review:code-review`; commit**
 
 ```bash
-git add vercel.json
-git commit -m "feat(storybook): vercel.json for erikunha-ds — CORS + frame-ancestors for embed safety"
+git add storybook.vercel.json
+git commit -m "feat(storybook): storybook.vercel.json for erikunha-ds — CORS + frame-ancestors for embed safety"
 ```
 
 ---
@@ -1561,7 +1561,7 @@ Mapped from spec §12 "Storybook (PR E)" acceptance criteria, plus the per-task 
 - [ ] `pnpm storybook:build` passes in CI on every PR touching `design-system/components/**` (Task 15)
 - [ ] `pnpm check:stories` passes — every primitive has a colocated story file (Task 18)
 - [ ] `pnpm storybook:test` passes locally + in CI — interaction tests for Field error + Button disabled pass; ThemeSwitcher slot skipped (Task 14)
-- [ ] `vercel.json` ships with `Access-Control-Allow-Origin: https://erikunha.dev` + `frame-ancestors` CSP (Task 16)
+- [ ] `storybook.vercel.json` ships with `Access-Control-Allow-Origin: https://erikunha.dev` + `frame-ancestors` CSP (Task 16)
 - [ ] `llms.txt` references the Storybook subdomain (Task 19)
 - [ ] `ARCHITECTURE.md` documents the dual-surface boundary (Task 19)
 - [ ] `DECISIONS.md` records the ADR + manual provisioning prerequisites + SSL fallback (Task 20)
