@@ -1,3 +1,5 @@
+'use client';
+
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { cx } from '../../lib/cx';
 import styles from './Field.module.css';
