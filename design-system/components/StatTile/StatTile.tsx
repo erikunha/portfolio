@@ -6,8 +6,8 @@ export type StatTileProps = { value: string; label: string; variant?: 'default' 
 export function StatTile({ value, label, variant = 'default' }: StatTileProps) {
   return (
     <dl className={cx(styles.root, styles[variant])}>
-      <dd className={styles.value}>{value}</dd>
       <dt className={styles.label}>{label}</dt>
+      <dd className={styles.value}>{value}</dd>
     </dl>
   );
 }

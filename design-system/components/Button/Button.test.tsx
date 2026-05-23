@@ -16,13 +16,15 @@ describe('Button', () => {
     expect(screen.getByRole('link')).toBeDefined();
   });
   it('applies disabled state and aria-disabled on anchor', () => {
-    render(
+    const { container } = render(
       <Button as="a" href="/test" disabled>
         Disabled
       </Button>,
     );
-    const el = screen.getByRole('link');
-    expect(el.getAttribute('aria-disabled')).toBe('true');
+    const el = container.querySelector('a');
+    expect(el?.getAttribute('aria-disabled')).toBe('true');
+    expect(el?.getAttribute('href')).toBeNull();
+    expect(el?.getAttribute('tabindex')).toBe('-1');
   });
   it('applies primary variant class by default', () => {
     const { container } = render(<Button>Primary</Button>);

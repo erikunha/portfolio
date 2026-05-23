@@ -34,6 +34,9 @@
     animation: none;
   }
 }
+:global(body[data-motion="reduce"]) .dot {
+  animation: none;
+}
 .sm {
   font-size: var(--ds-font-size-xs);
   padding: 3px 8px;
