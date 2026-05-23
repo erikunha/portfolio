@@ -18,7 +18,7 @@ The system has eight deliverables:
 1. **Two-tier token pipeline** (primitives + semantic) authored in JSON, generated to CSS + TypeScript + JSON, consumed by every CSS Module in the codebase.
 2. **Motion semantic layer** layered on top of duration/easing primitives so theme variants can re-tune motion identity without touching components.
 3. **Eight primitive components** extracted from existing portfolio patterns: Button, Field, Badge, TerminalPanel, StatTile, CmdLine, KbdKey, **Link**.
-4. **Theme variant capability with a live demo** — second theme (CRT amber) shipped as a switcher on `/design-system` that proves the two-tier architecture without component churn.
+4. **Theme variant capability with a live demo** — second theme (CRT amber) shipped as a switcher on `/design-system/themes` that proves the two-tier architecture without component churn.
 5. **Bidirectional Figma Tokens sync** — `tokens.json` exported in Figma Tokens spec format, consumable by the Figma Tokens plugin; round-trip diff gate ensures Figma and code do not drift.
 6. **Auto-generated component API tables** — build-time TypeScript-to-MDX generator produces the props/variants table for each component docs page. Single source of truth between TS types and docs.
 7. **Public MDX documentation** at `/design-system` (palette, type scale, components with live previews, enforcement rules, changelog) — discoverable from main portfolio nav.
@@ -183,7 +183,7 @@ The two-tier architecture makes a theme variant a single-file change: redefine t
 
 **Output:** Style Dictionary generates per-theme CSS scoped to the data attribute selector. The two themes share one bundle (~600 bytes added for the second theme; both selectors live in `tokens.css`). No JS, no runtime theme bundle.
 
-**Switcher (on `/design-system` only):** a small client island (`ThemeSwitcher.client.tsx`, ~500 bytes gzipped) sets `document.documentElement.dataset.theme`. Persistence via `localStorage`. SSR-safe (default attribute set in the root layout's `<html>` before hydration so there's no flash). The switcher is NOT shipped on the main portfolio routes — the portfolio itself stays on `crt-green` always.
+**Switcher (on `/design-system/themes` only):** a small client island (`ThemeSwitcher.client.tsx`, ~500 bytes gzipped) sets `document.documentElement.dataset.theme`. Persistence via `localStorage`. SSR-safe via an inline blocking `<script>` in the `<head>` that reads `localStorage` and writes `data-theme` on `<html>` before React hydrates — this is the only way to avoid flash-of-wrong-theme without a cookie round-trip. The default (no stored preference) renders `crt-green`. The switcher is NOT shipped on the main portfolio routes — the portfolio itself stays on `crt-green` always.
 
 **Theme contract gate:** `scripts/check-theme-contract.mjs` walks every theme file, asserts every semantic token name in `crt-green` is also defined in every other theme (no missing roles), and runs the contrast check (§3.6) per theme. Adding a new theme requires defining every semantic role; partial themes fail CI.
 

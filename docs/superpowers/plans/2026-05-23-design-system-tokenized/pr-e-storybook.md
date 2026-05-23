@@ -1298,7 +1298,7 @@ git commit -m "ci(storybook): build + test-runner on PRs touching primitives; de
 **Files:**
 - Create: `vercel.json`
 
-**Context:** Per spec §6.2 + §7.5 — separate Vercel project `erikunha-ds`, root = `storybook-static/`, framework = "Other", CORS headers permissive for `https://erikunha.dev` (mitigates failure mode 4, Task 1). The CLI deploy command in Task 15 passes `storybook-static/` as the project root explicitly so the same repo can host both the main portfolio and the Storybook deploy without `vercel.json` conflicts at the repo root.
+**Context:** Per spec §6.2 + §7.5 — separate Vercel project `erikunha-ds`, root = `storybook-static/`, framework = "Other". Embed safety is governed by `Content-Security-Policy: frame-ancestors 'self' https://erikunha.dev` (controls iframe embedding); `Access-Control-Allow-Origin: https://erikunha.dev` covers CORS for XHR/fetch use cases from the portfolio. Together these mitigate failure mode 4 (Task 1). The CLI deploy command in Task 15 passes `storybook-static/` as the project root explicitly so the same repo can host both the main portfolio and the Storybook deploy without `vercel.json` conflicts at the repo root.
 
 **Manual prerequisite (documented in Task 20's DECISIONS.md entry):**
 1. In Vercel dashboard: create project `erikunha-ds`, link to this GitHub repo, set root directory to `storybook-static/`, framework preset = "Other", build command = `(empty — uploaded by CI)`, output directory = `.`.
