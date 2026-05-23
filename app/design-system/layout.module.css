@@ -14,8 +14,10 @@
 }
 
 /* WCAG 1.4.1: inline links must be distinguishable without color alone.
-   --signal (#00ff41) vs --fg (#e6ffe6) has only 1.28:1 contrast, so underline is required. */
-.content a {
+   --signal (#00ff41) vs --fg (#e6ffe6) has only 1.28:1 contrast, so underline is required.
+   :not([class]) targets classless prose links only — component anchors (Button etc.)
+   carry a className and are excluded so their own text-decoration rules win. */
+.content a:not([class]) {
   text-decoration: underline;
 }
 

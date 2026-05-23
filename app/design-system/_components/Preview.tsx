@@ -10,12 +10,12 @@ type PreviewProps = {
 export function Preview({ source, children }: PreviewProps) {
   return (
     <div data-testid="ds-preview">
-      <TerminalPanel className={styles.root as string}>
-        <div className={styles.live as string}>{children}</div>
+      <TerminalPanel className={styles.root ?? ''}>
+        <div className={styles.live}>{children}</div>
         {source != null && (
-          <details className={styles.sourceToggle as string}>
-            <summary className={styles.summary as string}>VIEW SOURCE</summary>
-            <pre className={styles.source as string}>
+          <details className={styles.sourceToggle}>
+            <summary className={styles.summary}>VIEW SOURCE</summary>
+            <pre className={styles.source}>
               <code>{source}</code>
             </pre>
           </details>
