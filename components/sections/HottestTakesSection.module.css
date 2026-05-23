@@ -5,30 +5,30 @@
 }
 
 .preamble {
-  color: var(--muted);
-  font-size: var(--fs-sm);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-sm);
   letter-spacing: 0.06em;
   margin: 0 0 18px;
   padding-bottom: 12px;
-  border-bottom: 1px dashed var(--signal-dim-2);
+  border-bottom: 1px dashed var(--ds-color-signal-quiet);
 }
 
 .preamble .gt {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   margin-right: 6px;
 }
 
 .footer {
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.06em;
   margin: 14px 0 0;
   padding-top: 12px;
-  border-top: 1px solid var(--signal-dim-2);
+  border-top: 1px solid var(--ds-color-signal-quiet);
 }
 
 .footer .gt {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   margin-right: 6px;
 }
 
@@ -37,7 +37,7 @@
   grid-template-columns: 44px 1fr;
   gap: 10px;
   padding: 14px 0;
-  border-bottom: 1px dashed var(--signal-dim-2);
+  border-bottom: 1px dashed var(--ds-color-signal-quiet);
 }
 
 .take:last-child {
@@ -50,9 +50,9 @@
 }
 
 .num {
-  color: var(--muted);
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-base);
+  color: var(--ds-color-text-muted);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-body);
   font-weight: 700;
   letter-spacing: 0.04em;
   padding-top: 2px;
@@ -66,11 +66,11 @@
 
 .category {
   display: inline-block;
-  color: var(--muted);
-  border: 1px solid var(--signal-dim-2);
+  color: var(--ds-color-text-muted);
+  border: 1px solid var(--ds-color-signal-quiet);
   padding: 0 6px;
   margin-right: 8px;
-  font-size: var(--fs-xs);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.14em;
   vertical-align: 1px;
   font-weight: 500;
@@ -78,7 +78,7 @@
 }
 
 .thesis {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
   letter-spacing: 0.02em;
   margin: 0;
@@ -86,8 +86,8 @@
 }
 
 .body {
-  color: var(--fg);
-  font-size: var(--fs-base);
+  color: var(--ds-color-text-body);
+  font-size: var(--ds-font-size-body);
   line-height: 1.65;
   margin: 0;
   max-width: 740px;
@@ -107,22 +107,22 @@
   }
 
   .num {
-    font-size: var(--fs-xs);
+    font-size: var(--ds-font-size-xs);
   }
 
   .thesis {
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
 
   .body {
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
 
   .category {
-    font-size: var(--fs-2xs);
+    font-size: var(--ds-font-size-2xs);
   }
 
   .footer {
-    font-size: var(--fs-xs);
+    font-size: var(--ds-font-size-xs);
   }
 }

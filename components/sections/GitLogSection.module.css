@@ -4,23 +4,23 @@
    GIT LOG — syntax-highlighted pre using .gitfuller wrapper + .g-* color spans.
    ───────────────────────────────────────────────────────────────────────── */
 .root {
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-base);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-body);
   line-height: 1.55;
   overflow-x: auto;
 }
 
 .root .cmdbar {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   opacity: 0.7;
   margin-bottom: 12px;
   letter-spacing: 0.02em;
-  font-size: var(--fs-sm);
+  font-size: var(--ds-font-size-sm);
   white-space: pre;
 }
 
 .root .prompt {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   opacity: 0.8;
   margin-right: 6px;
 }
@@ -28,59 +28,59 @@
 .root pre {
   margin: 0;
   white-space: pre;
-  color: var(--fg);
+  color: var(--ds-color-text-body);
 }
 
 .root .gGraph {
-  color: var(--signal);
+  color: var(--ds-color-signal);
 }
 
 .root .gHash {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   opacity: 0.85;
 }
 
 .root .gDeco {
-  color: var(--accent-warm);
+  color: var(--ds-color-accent-warm);
 }
 
 .root .gLabel {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 
 .root .gAuthor {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   opacity: 0.85;
 }
 
 .root .gDate {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   opacity: 0.85;
 }
 
 .root .gBranch {
-  color: var(--accent-cool);
+  color: var(--ds-color-accent-cool);
 }
 
 .root .gMsg {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
 }
 
 .root .gEmp {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
 }
 
 .root .gBody {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
 }
 
 .root .end {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   opacity: 0.7;
   margin-top: 14px;
-  font-size: var(--fs-sm);
+  font-size: var(--ds-font-size-sm);
   letter-spacing: 0.04em;
 }
 
@@ -88,7 +88,7 @@
    Mobile variant — smaller font, wrapping pre
    ───────────────────────────────────────────────────────────────────────── */
 .mobile {
-  font-size: var(--fs-sm);
+  font-size: var(--ds-font-size-sm);
 }
 
 .mobile pre {

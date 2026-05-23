@@ -3,9 +3,9 @@
   flex-direction: column;
   position: relative;
   z-index: 10;
-  max-width: var(--maxw);
+  max-width: var(--ds-layout-maxw);
   margin: 0 auto;
-  padding: 60px var(--pad) 0;
+  padding: 60px var(--ds-space-pad) 0;
 }
 
 @media (max-width: 900px) {
@@ -16,6 +16,6 @@
 
 @media (max-width: 768px) {
   .page {
-    padding: 14px var(--pad) 0;
+    padding: 14px var(--ds-space-pad) 0;
   }
 }

@@ -1,17 +1,17 @@
 .root {
   display: grid;
   grid-template-columns: 44px 1fr;
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-base);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-body);
   line-height: 1.85;
-  color: var(--fg);
+  color: var(--ds-color-text-body);
 }
 
 .gutter {
-  color: var(--muted-dim);
+  color: var(--ds-color-text-faint);
   text-align: right;
   padding-right: 16px;
-  border-right: 1px solid var(--signal-dim-2);
+  border-right: 1px solid var(--ds-color-signal-quiet);
   user-select: none;
 }
 
@@ -28,22 +28,22 @@
 }
 
 .rowH1 {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
-  font-size: var(--fs-lg);
+  font-size: var(--ds-font-size-heading-sm);
   line-height: 1.4;
 }
 
 .rowH2 {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
-  font-size: var(--fs-base);
+  font-size: var(--ds-font-size-body);
   margin-top: 4px;
 }
 
 .pill {
-  background: var(--highlight-bg);
-  color: var(--highlight-fg);
+  background: var(--ds-color-highlight-bg);
+  color: var(--ds-color-highlight-fg);
   padding: 1px 6px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -55,7 +55,7 @@
 
 .codeSample {
   margin-top: 22px;
-  border-top: 1px dashed var(--signal-dim-2);
+  border-top: 1px dashed var(--ds-color-signal-quiet);
   padding-top: 18px;
 }
 
@@ -63,58 +63,58 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.14em;
   margin-bottom: 10px;
-  font-family: var(--font-mono-stack);
+  font-family: var(--ds-font-family-mono);
 }
 
 .codeSampleBar a {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   text-decoration: none;
 }
 
 .codeSamplePre {
   margin: 0;
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-sm);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.7;
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   overflow-x: auto;
   padding: 14px 16px;
   background: rgba(0, 255, 65, 0.03);
-  border: 1px solid var(--signal-dim-2);
+  border: 1px solid var(--ds-color-signal-quiet);
   white-space: pre;
 }
 
 .tkC {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   font-style: italic;
 }
 
 .tkK {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
 }
 
 .tkT {
-  color: var(--accent-warm);
+  color: var(--ds-color-accent-warm);
 }
 
 .tkF {
-  color: var(--accent-cool);
+  color: var(--ds-color-accent-cool);
 }
 
 .tkP {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   opacity: 0.85;
 }
 
 @media (max-width: 768px) {
   .root {
     grid-template-columns: 28px 1fr;
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
   .codeSampleWrap {
     display: none;

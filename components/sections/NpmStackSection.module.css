@@ -13,15 +13,15 @@
 }
 
 .root li {
-  border: 1px solid var(--signal-dim);
+  border: 1px solid var(--ds-color-signal-subtle);
   aspect-ratio: 1.6 / 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  color: var(--signal);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-signal);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.1em;
   transition:
     border-color 200ms ease,
@@ -32,13 +32,13 @@
   width: 20px;
   height: 20px;
   fill: none;
-  stroke: var(--signal);
+  stroke: var(--ds-color-signal);
   stroke-width: 1.5;
   opacity: 0.85;
 }
 
 .root li:hover {
-  border-color: var(--signal);
+  border-color: var(--ds-color-signal);
   box-shadow: 0 0 14px rgba(0, 255, 65, 0.18);
 }
 
@@ -55,7 +55,7 @@
   }
   .root li {
     aspect-ratio: 1 / 1;
-    font-size: var(--fs-2xs);
+    font-size: var(--ds-font-size-2xs);
   }
 }
 

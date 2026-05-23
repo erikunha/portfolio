@@ -4,14 +4,14 @@
   left: 0;
   right: 0;
   z-index: 110;
-  background: var(--bg);
-  border-bottom: 1px solid var(--signal-dim);
+  background: var(--ds-color-surface-base);
+  border-bottom: 1px solid var(--ds-color-signal-subtle);
 }
 
 .inner {
-  max-width: var(--maxw);
+  max-width: var(--ds-layout-maxw);
   margin: 0 auto;
-  padding: 10px var(--pad);
+  padding: 10px var(--ds-space-pad);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -32,15 +32,15 @@
 }
 
 .dotRed {
-  background: var(--red);
+  background: var(--ds-chrome-close);
 }
 
 .dotYellow {
-  background: var(--yellow);
+  background: var(--ds-chrome-minimize);
 }
 
 .dotGreen {
-  background: var(--green-light);
+  background: var(--ds-chrome-maximize);
 }
 
 .tabs {
@@ -55,20 +55,20 @@
   gap: 8px;
   height: 26px;
   padding: 0 12px;
-  font-size: var(--fs-sm);
+  font-size: var(--ds-font-size-sm);
   letter-spacing: 0.05em;
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   border: 1px solid transparent;
 }
 
 .tabActive {
-  color: var(--signal);
-  border-color: var(--signal-dim);
+  color: var(--ds-color-signal);
+  border-color: var(--ds-color-signal-subtle);
   background: rgba(0, 255, 65, 0.04);
 }
 
 .tabClose {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   margin-left: 6px;
   opacity: 0.8;
 }
@@ -82,24 +82,24 @@
 }
 
 .navlink {
-  color: var(--signal);
-  font-size: var(--fs-sm);
+  color: var(--ds-color-signal);
+  font-size: var(--ds-font-size-sm);
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
 
 .navlink:hover {
-  text-shadow: 0 0 8px var(--signal);
+  text-shadow: 0 0 8px var(--ds-color-signal);
 }
 
 .motion {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.1em;
-  border: 1px solid var(--signal-dim);
+  border: 1px solid var(--ds-color-signal-subtle);
   padding: 4px 8px;
   cursor: pointer;
   background: transparent;
@@ -109,23 +109,23 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--signal);
+  background: var(--ds-color-signal);
   display: block;
 }
 
 .motion[data-motion="off"] .mdot {
-  background: var(--muted);
+  background: var(--ds-color-text-muted);
   opacity: 0.4;
 }
 
 .btnPrimary {
-  background: var(--signal);
+  background: var(--ds-color-signal);
   color: #000;
   font-weight: 700;
   letter-spacing: 0.08em;
   padding: 6px 14px;
-  font-size: var(--fs-sm);
-  border: 1px solid var(--signal);
+  font-size: var(--ds-font-size-sm);
+  border: 1px solid var(--ds-color-signal);
   transition: box-shadow 200ms ease;
   display: inline-flex;
   align-items: center;
@@ -133,15 +133,15 @@
 }
 
 .btnPrimary:hover {
-  box-shadow: 0 0 12px var(--signal);
+  box-shadow: 0 0 12px var(--ds-color-signal);
 }
 
 .btnOutline {
-  border: 1px solid var(--signal);
-  color: var(--signal);
+  border: 1px solid var(--ds-color-signal);
+  color: var(--ds-color-signal);
   padding: 6px 12px;
   letter-spacing: 0.08em;
-  font-size: var(--fs-xs);
+  font-size: var(--ds-font-size-xs);
   display: inline-block;
   transition:
     box-shadow 200ms ease,
@@ -150,7 +150,7 @@
 }
 
 .btnOutline:hover {
-  box-shadow: 0 0 12px var(--signal);
+  box-shadow: 0 0 12px var(--ds-color-signal);
   background: rgba(0, 255, 65, 0.06);
 }
 

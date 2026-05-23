@@ -5,7 +5,7 @@
 */
 
 .root {
-  font-family: var(--font-mono-stack);
+  font-family: var(--ds-font-family-mono);
 }
 
 .grid {
@@ -15,7 +15,7 @@
 }
 
 .metric {
-  border: 1px solid var(--signal-dim);
+  border: 1px solid var(--ds-color-signal-subtle);
   padding: 16px 16px 18px;
   display: flex;
   flex-direction: column;
@@ -23,24 +23,24 @@
 }
 
 .label {
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.16em;
 }
 
 .value {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
-  font-size: var(--fs-xl);
+  font-size: var(--ds-font-size-heading-md);
   line-height: 1;
   letter-spacing: 0.01em;
 }
 
 .note {
-  /* --muted (#4ade80, ~5.9:1 on --bg) — descriptive copy at 11px must
-     clear WCAG AA 4.5:1; --muted-dim (~3.6:1) fails. */
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  /* --ds-color-text-muted (#4ade80, ~5.9:1 on --ds-color-surface-base) — descriptive copy at 11px must
+     clear WCAG AA 4.5:1; --ds-color-text-faint (~3.6:1) fails. */
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   line-height: 1.5;
   margin-top: auto;
 }
@@ -51,27 +51,27 @@
   align-items: center;
   margin-top: 18px;
   padding-top: 12px;
-  border-top: 1px dashed var(--signal-dim-2);
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  border-top: 1px dashed var(--ds-color-signal-quiet);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.06em;
 }
 
 .gt {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   margin-right: 6px;
 }
 
 .pending {
-  color: var(--muted);
-  font-size: var(--fs-sm);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-sm);
   letter-spacing: 0.04em;
   margin: 0;
 }
 
 .pending code {
-  color: var(--signal);
-  font-family: var(--font-mono-stack);
+  color: var(--ds-color-signal);
+  font-family: var(--ds-font-family-mono);
 }
 
 @media (max-width: 900px) {
@@ -80,7 +80,7 @@
     gap: 12px;
   }
   .value {
-    font-size: var(--fs-lg);
+    font-size: var(--ds-font-size-heading-sm);
   }
 }
 
@@ -89,6 +89,6 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
-    font-size: var(--fs-2xs);
+    font-size: var(--ds-font-size-2xs);
   }
 }

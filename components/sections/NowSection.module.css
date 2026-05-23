@@ -1,5 +1,5 @@
 .root {
-  font-size: var(--fs-base);
+  font-size: var(--ds-font-size-body);
   line-height: 1.9;
 }
 
@@ -10,12 +10,12 @@
 }
 
 .root .k {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   letter-spacing: 0.04em;
 }
 
 .root .v {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
 }
 
 @media (max-width: 900px) {
@@ -27,6 +27,6 @@
 
 @media (max-width: 768px) {
   .root {
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
 }

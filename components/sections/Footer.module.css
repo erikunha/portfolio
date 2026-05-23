@@ -8,7 +8,7 @@
    ───────────────────────────────────────────────────────────────────────── */
 .root {
   border-top: 0;
-  padding: 0 0 var(--pad) 0;
+  padding: 0 0 var(--ds-space-pad) 0;
   background: transparent;
   position: relative;
   z-index: 1;
@@ -17,10 +17,10 @@
 .inner {
   position: relative;
   z-index: 1;
-  max-width: var(--maxw);
+  max-width: var(--ds-layout-maxw);
   margin: 0 auto;
-  padding: 0 var(--pad);
-  font-family: var(--font-mono-stack);
+  padding: 0 var(--ds-space-pad);
+  font-family: var(--ds-font-family-mono);
   text-shadow:
     0 0 4px #000,
     0 0 8px rgba(0, 0, 0, 0.6);
@@ -34,38 +34,38 @@
   margin-bottom: 8px;
 }
 .init {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
   letter-spacing: 0.06em;
-  font-size: var(--fs-base);
+  font-size: var(--ds-font-size-body);
   text-shadow: 0 0 8px rgba(0, 255, 65, 0.35);
 }
 .stamp {
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 .stamp b {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   font-weight: 700;
   margin-left: 6px;
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
 }
 .cmdline {
-  font-size: var(--fs-base);
+  font-size: var(--ds-font-size-body);
   margin: 0 0 14px;
-  color: var(--fg);
+  color: var(--ds-color-text-body);
 }
 .cmdline .sdPrompt {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 .cmdline .sdCmd {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
 }
 .rule {
-  border-top: 1px dashed var(--signal-dim);
+  border-top: 1px dashed var(--ds-color-signal-subtle);
   margin: 0 0 22px;
 }
 .grid {
@@ -75,15 +75,15 @@
   margin-bottom: 26px;
 }
 .panel {
-  border: 1px solid var(--signal-dim);
+  border: 1px solid var(--ds-color-signal-subtle);
   padding: 14px 16px 16px;
   background: linear-gradient(180deg, rgba(0, 255, 65, 0.025), rgba(0, 0, 0, 0));
   position: relative;
 }
 .spHead {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
-  font-size: var(--fs-xs);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.18em;
   margin-bottom: 12px;
   display: flex;
@@ -91,26 +91,26 @@
   gap: 6px;
 }
 .spBar {
-  color: var(--signal);
+  color: var(--ds-color-signal);
 }
 .spRow {
   display: grid;
   grid-template-columns: 130px 1fr;
   gap: 12px;
-  font-size: var(--fs-base);
+  font-size: var(--ds-font-size-body);
   line-height: 1.95;
   align-items: center;
 }
 .spK {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   letter-spacing: 0.04em;
 }
 .spV {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   font-variant-numeric: tabular-nums;
 }
 .spV b {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -119,7 +119,7 @@
   width: 88px;
   height: 6px;
   background: rgba(0, 255, 65, 0.06);
-  border: 1px solid var(--signal-dim);
+  border: 1px solid var(--ds-color-signal-subtle);
   vertical-align: 0;
   margin-right: 8px;
   position: relative;
@@ -129,38 +129,38 @@
   display: block;
   height: 100%;
   width: 0;
-  background: var(--signal);
+  background: var(--ds-color-signal);
   box-shadow: 0 0 6px rgba(0, 255, 65, 0.45);
   transition: width 250ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 .netstat pre {
   margin: 0;
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-base);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-body);
   line-height: 1.95;
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   white-space: pre;
   overflow-x: auto;
 }
 .netstat .nsHdr {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 .netstat .nsEst {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
 }
 .netstat .nsListen {
-  color: var(--accent-warm);
+  color: var(--ds-color-accent-warm);
   font-weight: 700;
 }
 .netstat a {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   text-decoration: underline;
-  text-decoration-color: var(--signal-dim);
+  text-decoration-color: var(--ds-color-signal-subtle);
   text-underline-offset: 2px;
 }
 .netstat a:hover {
-  text-decoration-color: var(--signal);
+  text-decoration-color: var(--ds-color-signal);
   text-shadow: 0 0 8px rgba(0, 255, 65, 0.4);
 }
 .nsGrid {
@@ -175,21 +175,21 @@
   min-height: 32px;
 }
 .nsHdrCell {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   letter-spacing: 0.06em;
 }
 .nsProto {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
 }
 .nsGrid .nsEst {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
   display: flex;
   align-items: center;
   min-height: 32px;
 }
 .nsGrid .nsListen {
-  color: var(--accent-warm);
+  color: var(--ds-color-accent-warm);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -199,7 +199,7 @@
   list-style: none;
   margin: 0 0 24px;
   padding: 0;
-  font-size: var(--fs-base);
+  font-size: var(--ds-font-size-body);
   line-height: 1.85;
 }
 /* dmesg reveal: each line starts hidden; once `.dmesg.booted` is set the
@@ -211,7 +211,7 @@
   grid-template-columns: 92px 1fr auto;
   gap: 14px;
   align-items: baseline;
-  color: var(--fg);
+  color: var(--ds-color-text-body);
   opacity: 0;
   transform: translateY(2px);
 }
@@ -229,22 +229,22 @@
   }
 }
 .dmesg .dmT {
-  color: var(--muted);
+  color: var(--ds-color-text-muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .dmesg .dmMsg {
-  color: var(--fg);
+  color: var(--ds-color-text-body);
 }
 .dmesg .dmMsg b {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
 }
 .dmesg .dmOk {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
   letter-spacing: 0.12em;
-  font-size: var(--fs-xs);
+  font-size: var(--ds-font-size-xs);
 }
 .end {
   margin-top: 24px;
@@ -261,10 +261,10 @@
 .halt {
   display: inline-block;
   flex: 0 0 auto;
-  background: var(--signal);
+  background: var(--ds-color-signal);
   color: #000;
   font-weight: 700;
-  font-size: var(--fs-sm);
+  font-size: var(--ds-font-size-sm);
   letter-spacing: 0.16em;
   padding: 5px 12px 6px;
   line-height: 1;
@@ -291,8 +291,8 @@
 }
 .haltHint {
   flex: 0 0 auto;
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0.12em;
   white-space: nowrap;
   opacity: 0;
@@ -310,13 +310,13 @@
 }
 .haltHint kbd {
   display: inline-block;
-  border: 1px solid var(--signal-dim);
+  border: 1px solid var(--ds-color-signal-subtle);
   background: rgba(0, 255, 65, 0.06);
-  color: var(--signal);
+  color: var(--ds-color-signal);
   padding: 1px 6px 2px;
   margin: 0 4px;
   font-family: inherit;
-  font-size: var(--fs-xs);
+  font-size: var(--ds-font-size-xs);
   letter-spacing: 0;
   border-radius: 2px;
   cursor: pointer;
@@ -327,8 +327,8 @@
   box-shadow: 0 0 8px rgba(0, 255, 65, 0.3);
 }
 .copy {
-  color: var(--muted);
-  font-size: var(--fs-base);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-body);
   margin-top: 22px;
   letter-spacing: 0.04em;
   opacity: 0.85;
@@ -336,34 +336,34 @@
 
 @media (max-width: 900px) {
   .root {
-    padding: 0 0 40px var(--pad) calc(24px + env(safe-area-inset-bottom, 0px));
+    padding: 0 0 40px var(--ds-space-pad) calc(24px + env(safe-area-inset-bottom, 0px));
   }
   .grid {
     grid-template-columns: 1fr;
   }
   .spRow {
     grid-template-columns: 110px 1fr;
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
   .dmesg .dmLine {
     grid-template-columns: 72px 1fr auto;
     gap: 10px;
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
   .netstat {
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
   .netstat pre {
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
 }
 
 @media (max-width: 560px) {
   .init {
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
   .stamp {
-    font-size: var(--fs-xs);
+    font-size: var(--ds-font-size-xs);
   }
   .spRow {
     grid-template-columns: 92px 1fr;
@@ -399,37 +399,37 @@ body[data-motion="reduce"] .spBar2 > i {
 
 @media (max-width: 768px) {
   .root {
-    padding: 28px var(--pad) 24px;
+    padding: 28px var(--ds-space-pad) 24px;
   }
   .banner {
     flex-direction: column;
     gap: 4px;
   }
   .init {
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
   .stamp {
-    font-size: var(--fs-xs);
+    font-size: var(--ds-font-size-xs);
   }
   .panel {
     padding: 12px 14px 14px;
     margin-bottom: 10px;
   }
   .spHead {
-    font-size: var(--fs-2xs);
+    font-size: var(--ds-font-size-2xs);
     letter-spacing: 0.16em;
   }
   .spRow {
     grid-template-columns: 100px 1fr;
     gap: 10px;
-    font-size: var(--fs-xs);
+    font-size: var(--ds-font-size-xs);
   }
   .dmesg .dmLine {
     grid-template-columns: 72px 1fr auto;
     gap: 8px;
-    font-size: var(--fs-xs);
+    font-size: var(--ds-font-size-xs);
   }
   .netstat pre {
-    font-size: var(--fs-sm);
+    font-size: var(--ds-font-size-sm);
   }
 }

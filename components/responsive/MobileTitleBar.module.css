@@ -6,9 +6,9 @@
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--signal-dim);
-  font-size: var(--fs-xs);
+  background: var(--ds-color-surface-base);
+  border-bottom: 1px solid var(--ds-color-signal-subtle);
+  font-size: var(--ds-font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.14em;
 }
@@ -25,20 +25,20 @@
 }
 
 .dotRed {
-  background: var(--red);
+  background: var(--ds-chrome-close);
 }
 
 .dotYellow {
-  background: var(--yellow);
+  background: var(--ds-chrome-minimize);
 }
 
 .dotGreen {
-  background: var(--green-light);
+  background: var(--ds-chrome-maximize);
 }
 
 .title {
   flex: 1;
   text-align: center;
-  color: var(--signal);
+  color: var(--ds-color-signal);
   font-weight: 700;
 }
