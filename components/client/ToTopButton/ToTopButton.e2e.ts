@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
 
+// Force mobile viewport: ToTopButton is CSS display:none above 768px
+test.use({ viewport: { width: 375, height: 812 } });
+
 test.describe('ToTopButton — scroll-to-top affordance', () => {
   test('button is hidden on initial load (page top)', async ({ page }) => {
     await page.goto('/');
