@@ -67,7 +67,12 @@ test.describe('visual regression', () => {
     // Strip volatile chrome (canvas + CRT overlays). See test 1 for why
     // masking the CRT layers is insufficient.
     await stripVolatileChrome(mockedPage);
-    await snapshotLocator(mockedPage, contactSection, 'contact-section.png');
+    // maxDiffPixels disables the ratio gate (snapshotLocator AND logic) and sets
+    // an absolute budget. 3000px absorbs the 1px sub-pixel height oscillation
+    // (486↔487px) on Chromium mobile without masking real layout regressions.
+    await snapshotLocator(mockedPage, contactSection, 'contact-section.png', {
+      maxDiffPixels: 3000,
+    });
   });
 
   test('3 — shell + ask form (idle) matches baseline', async ({ mockedPage }) => {
