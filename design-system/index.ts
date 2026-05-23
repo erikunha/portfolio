@@ -4,8 +4,6 @@ export type { ButtonProps } from './components/Button/Button';
 export { Button } from './components/Button/Button';
 export type { CmdLineProps } from './components/CmdLine/CmdLine';
 export { CmdLine } from './components/CmdLine/CmdLine';
-export type { FieldProps } from './components/Field/Field';
-export { Field } from './components/Field/Field';
 export type { KbdKeyProps } from './components/KbdKey/KbdKey';
 export { KbdKey } from './components/KbdKey/KbdKey';
 export type { StatTileProps } from './components/StatTile/StatTile';
