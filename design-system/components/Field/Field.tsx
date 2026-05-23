@@ -14,10 +14,11 @@ export function Field({
   label,
   error,
   multiline,
+  id: consumerId,
   className: consumerClassName,
   ...rest
 }: FieldProps) {
-  const id = `field-${name}`;
+  const id = consumerId ?? `field-${name}`;
   const errId = error ? `${id}-error` : undefined;
   const consumerDescribedBy = (rest as { 'aria-describedby'?: string })['aria-describedby'];
   const describedBy = [consumerDescribedBy, errId].filter(Boolean).join(' ') || undefined;
