@@ -1,0 +1,15 @@
+.root {
+  border: 1px solid var(--ds-color-signal-subtle);
+  background: transparent;
+}
+.dashed {
+  border-style: dashed;
+}
+.header {
+  border-bottom: 1px solid var(--ds-color-signal-subtle);
+  padding: 6px var(--ds-space-pad);
+  font-size: var(--ds-font-size-xs);
+  letter-spacing: 0.12em;
+  color: var(--ds-color-signal);
+  font-family: var(--ds-font-family-mono);
+}
