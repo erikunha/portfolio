@@ -10,7 +10,7 @@ test.describe('Hero -- above the fold', () => {
 
   test('GitHub CTA link has correct href', async ({ page }) => {
     await page.goto('/');
-    const githubLink = page.getByRole('link', { name: /github/i });
+    const githubLink = page.getByRole('link', { name: /github/i }).first();
     await expect(githubLink).toHaveAttribute('href', 'https://github.com/erikunha');
   });
 
