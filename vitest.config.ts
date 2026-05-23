@@ -14,7 +14,7 @@ export default defineConfig({
       thresholds: {
         lines: 60,
       },
-      include: ['lib/**', 'components/**', 'app/**'],
+      include: ['lib/**', 'components/**', 'app/**', 'design-system/components/**'],
       exclude: ['**/node_modules/**', '**/__tests__/**', '**/tests/**', '**/content/**'],
       reportsDirectory: 'coverage',
     },

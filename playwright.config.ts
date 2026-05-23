@@ -15,18 +15,13 @@ export default defineConfig({
     toHaveScreenshot: { maxDiffPixelRatio: 0.01 },
   },
   projects: [
-    // Default project: all existing smoke + a11y tests run here unchanged.
+    // ── Existing projects (testDir: './tests', unchanged) ────────────────
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } },
     },
-    // New matrix projects — scoped via testMatch to the five new spec files only.
-    // Without testMatch these projects would also run the existing a11y + observability
-    // smoke specs, tripling CI minutes and likely failing on WebKit.
     {
       name: 'chromium-mobile',
-      // Override defaultBrowserType: devices['iPhone SE'] sets it to 'webkit',
-      // but this project intentionally tests Chromium with a mobile viewport.
       use: { ...devices['iPhone SE'], defaultBrowserType: 'chromium' },
       testMatch:
         /tests\/e2e\/(contact|ask|visual|cross-cutting|design-system-components)\.spec\.ts$/,
@@ -42,6 +37,32 @@ export default defineConfig({
       use: { ...devices['iPhone 14'] },
       testMatch:
         /tests\/e2e\/(contact|ask|visual|cross-cutting|design-system-components)\.spec\.ts$/,
+    },
+
+    // ── Co-located component E2E (testDir: '.', scoped to *.e2e.ts) ─────
+    {
+      name: 'chromium-components',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } },
+      testDir: '.',
+      testMatch: /\/(components|app)\/.*\.e2e\.ts$/,
+    },
+    {
+      name: 'chromium-mobile-components',
+      use: { ...devices['iPhone SE'], defaultBrowserType: 'chromium' },
+      testDir: '.',
+      testMatch: /\/(components|app)\/.*\.e2e\.ts$/,
+    },
+    {
+      name: 'webkit-desktop-components',
+      use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 720 } },
+      testDir: '.',
+      testMatch: /\/(components|app)\/.*\.e2e\.ts$/,
+    },
+    {
+      name: 'webkit-mobile-components',
+      use: { ...devices['iPhone 14'] },
+      testDir: '.',
+      testMatch: /\/(components|app)\/.*\.e2e\.ts$/,
     },
   ],
 });
