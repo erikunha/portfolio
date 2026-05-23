@@ -27,7 +27,7 @@ afterEach(() => {
 describe('LivePerfSection — fetch-error fallback', () => {
   it('renders without throwing when getScores throws', async () => {
     getScoresMock.mockRejectedValue(new Error('PSI API unavailable'));
-    await expect(renderPerfData()).resolves.not.toThrow();
+    await expect(renderPerfData()).resolves.toBeDefined();
   });
 
   it('does not render fabricated 100 scores on fetch failure', async () => {

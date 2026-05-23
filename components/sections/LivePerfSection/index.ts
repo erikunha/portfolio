@@ -1,1 +1,1 @@
-export { LivePerfSection } from './LivePerfSection';
+export { LivePerfSection, PerfData } from './LivePerfSection';

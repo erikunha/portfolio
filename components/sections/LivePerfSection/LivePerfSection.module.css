@@ -1,6 +1,5 @@
 /* LivePerfSection.module.css
    LIVE_PERF.JSON — 4-col Lighthouse scores with progress bars and live footer.
-   Sourced from _sections.css lines 469–538 + _layout.css lines 152–177 + motion-reduction from _crt.css.
 */
 
 .root {
@@ -84,7 +83,6 @@
   }
 }
 
-/* Responsive add from _layout.css lines 152–177 (768px mobile block) */
 @media (max-width: 768px) {
   .root {
     gap: 10px;
