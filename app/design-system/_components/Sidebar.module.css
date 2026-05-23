@@ -10,7 +10,7 @@
 .link,
 .active {
   font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   letter-spacing: 0.1em;
   padding: 6px 10px;
   color: var(--ds-color-text-muted);

@@ -17,7 +17,7 @@
 .summary {
   padding: 6px var(--ds-space-pad);
   font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   letter-spacing: 0.1em;
   color: var(--ds-color-text-muted);
   cursor: pointer;
@@ -34,7 +34,7 @@
   padding: var(--ds-space-rhythm-tight) var(--ds-space-pad);
   overflow-x: auto;
   font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-color-text-body);
   border-top: 1px dashed var(--ds-color-signal-subtle);
 }
