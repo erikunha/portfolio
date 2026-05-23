@@ -1,4 +1,4 @@
-// __tests__/roletyper-a11y.test.ts
+// components/client/RoleTyper/RoleTyper.test.tsx
 // Behavioral test (Phase 4 a11y): RoleTyper two-span ARIA contract.
 //
 // Structure under test:
@@ -18,7 +18,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { RoleTyper } from '@/components/client/RoleTyper';
+import { RoleTyper } from './RoleTyper';
 
 function getDOM() {
   const html = renderToStaticMarkup(createElement(RoleTyper));

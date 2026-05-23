@@ -15,7 +15,7 @@ import {
   runBoot,
 } from '@/lib/boot-animation';
 import { readMotion } from '@/lib/motion';
-import styles from '../sections/Hero/Hero.module.css';
+import styles from '../../sections/Hero/Hero.module.css';
 
 // ── HeroBootAnimation island ──────────────────────────────────────────────────
 // Each variant mounts its own instance; only the one matching the viewport runs.

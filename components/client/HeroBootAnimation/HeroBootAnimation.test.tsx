@@ -1,4 +1,4 @@
-// __tests__/boot-animation-no-usestate.test.ts
+// components/client/HeroBootAnimation/HeroBootAnimation.test.tsx
 //
 // Behavioral test (CG3) for CLAUDE.md's "Rendering model" invariant:
 //
@@ -20,8 +20,8 @@
 
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mountClient } from '@/__tests__/helpers/render';
 import styles from '@/components/sections/Hero/Hero.module.css';
-import { mountClient } from './helpers/render';
 
 vi.mock('@/lib/motion', () => ({
   readMotion: () => true, // motion ON => the animated typing loop runs
@@ -90,7 +90,7 @@ describe('boot-animation: textContent-mutation invariant (CLAUDE.md Rendering mo
 
   it('HeroBootAnimation types into a useRef-held node imperatively, not via React children', async () => {
     const React = await import('react');
-    const { HeroBootAnimation } = await import('@/components/client/HeroBootAnimation');
+    const { HeroBootAnimation } = await import('./HeroBootAnimation');
 
     // matchMedia must exist for the island's effect; desktop variant runs.
     vi.stubGlobal(

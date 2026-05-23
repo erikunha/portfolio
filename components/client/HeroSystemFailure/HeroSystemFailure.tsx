@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import styles from '../sections/Hero/Hero.module.css';
+import styles from '../../sections/Hero/Hero.module.css';
 
 // The SYSTEM FAILURE headline overlay, extracted from Hero.tsx DesktopHero.
 // Listens for 'hero:sysfail:show' and 'hero:sysfail:hide' window events

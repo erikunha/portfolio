@@ -1,4 +1,4 @@
-// __tests__/sysfail-loop.test.ts
+// components/client/HeroSystemFailure/HeroSystemFailure.test.tsx
 import { describe, expect, it, vi } from 'vitest';
 
 Object.defineProperty(window, 'matchMedia', {
@@ -29,7 +29,7 @@ const testCls = {
 describe('runBoot onFirstLoop', () => {
   it('fires exactly once across multiple dialog loops', async () => {
     // runBoot extracted from HeroBootAnimation island to lib/boot-animation (pure, no React).
-    const { runBoot } = await import('../lib/boot-animation');
+    const { runBoot } = await import('@/lib/boot-animation');
     const container = document.createElement('div');
     const calls: number[] = [];
 
