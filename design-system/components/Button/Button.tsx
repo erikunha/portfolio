@@ -30,7 +30,7 @@ export function Button({
       <a
         {...anchorRest}
         className={classes}
-        aria-disabled={disabled ? 'true' : undefined}
+        {...(disabled ? { 'aria-disabled': 'true' as const } : {})}
         href={disabled ? undefined : href}
         tabIndex={disabled ? -1 : tabIndex}
         onClick={disabled ? (e) => e.preventDefault() : onClick}
