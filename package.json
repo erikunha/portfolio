@@ -30,6 +30,7 @@
     "bundle:analyze": "ANALYZE=true next build",
     "check:client-naming": "node scripts/check-client-naming.mjs",
     "check:dep-pinning": "node scripts/check-dep-pinning.mjs",
+    "check:component-docs": "node scripts/check-component-docs-coverage.mjs",
     "check:pkg-age": "node scripts/check-pkg-age.mjs",
     "lint:token-boundary": "node scripts/lint-token-boundary.mjs",
     "lint:no-magic-values": "node scripts/lint-no-magic-values.mjs",

@@ -1,7 +1,25 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
+const DS_ROUTES = [
+  '/design-system',
+  '/design-system/tokens',
+  '/design-system/components',
+  '/design-system/enforcement',
+  '/design-system/changelog',
+];
+
 test.describe('axe-core a11y scan', () => {
+  for (const route of DS_ROUTES) {
+    test(`${route} has no automatically detectable accessibility violations`, async ({ page }) => {
+      await page.goto(route);
+      const results = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+        .analyze();
+      expect(results.violations).toEqual([]);
+    });
+  }
+
   test('homepage has no automatically detectable accessibility violations', async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('[role="log"]');

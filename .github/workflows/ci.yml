@@ -70,6 +70,9 @@ jobs:
       - name: Dependency-pinning gate
         run: pnpm check:dep-pinning
 
+      - name: Component docs coverage
+        run: pnpm check:component-docs
+
       - name: Token drift check
         run: pnpm tokens:check
 

@@ -1,7 +1,14 @@
 {
   "ci": {
     "collect": {
-      "url": ["http://localhost:3000"],
+      "url": [
+        "http://localhost:3000",
+        "http://localhost:3000/design-system",
+        "http://localhost:3000/design-system/tokens",
+        "http://localhost:3000/design-system/components",
+        "http://localhost:3000/design-system/enforcement",
+        "http://localhost:3000/design-system/changelog"
+      ],
       "numberOfRuns": 3,
       "settings": {
         "preset": "desktop",
