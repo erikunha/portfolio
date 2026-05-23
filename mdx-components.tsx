@@ -1,4 +1,5 @@
 import type { MDXComponents } from 'mdx/types';
+import { CopyButton } from './app/design-system/_components/CopyButton';
 import { Preview } from './app/design-system/_components/Preview';
 import { Badge, Button, CmdLine, KbdKey, StatTile, TerminalPanel } from './design-system';
 
@@ -11,6 +12,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     StatTile,
     CmdLine,
     KbdKey,
+    CopyButton,
     ...components,
   };
 }

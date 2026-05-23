@@ -1,13 +1,13 @@
 export const metadata = {
   title: 'Components — Design System — erikunha.dev',
-  description: '7 primitive components for erikunha.dev (6 RSC, Field is client)',
+  description: '8 primitive components for erikunha.dev (6 RSC, Field and CopyButton are client)',
 };
 
 import { Field } from '../../../design-system/components/Field';
 
 # COMPONENTS
 
-6 of 7 primitives are React Server Components. `Field` is a client component (`'use client'`) for controlled input state — all others ship zero client JavaScript.
+6 of 8 primitives are React Server Components. `Field` and `CopyButton` are client components (`'use client'`) — all others ship zero client JavaScript.
 
 ## Button
 
@@ -88,6 +88,16 @@ import { Field } from '../../../design-system/components/Field';
 </Preview>
 
 **Accessibility:** Uses semantic `<kbd>` element.
+
+## CopyButton
+
+**Props:** `text: string`
+
+<Preview>
+  <CopyButton text="pnpm install @/design-system" />
+</Preview>
+
+**Behavior:** Copies `text` to clipboard on click. Label changes from `COPY` to `COPIED` for 1.5s. Falls back silently if clipboard API is unavailable.
 
 ---
 
