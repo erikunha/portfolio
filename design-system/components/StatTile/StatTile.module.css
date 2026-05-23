@@ -5,6 +5,7 @@
   margin: 0;
 }
 .value {
+  order: -1;
   color: var(--ds-color-signal);
   font-size: var(--ds-font-size-sm);
   font-weight: 700;

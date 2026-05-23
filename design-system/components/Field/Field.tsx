@@ -25,12 +25,12 @@ export function Field({ name, label, error, multiline, ...rest }: FieldProps) {
       </label>
       {multiline ? (
         <textarea
-          {...inputProps}
-          {...(rest as TextareaHTMLAttributes<HTMLTextAreaElement>)}
           rows={(rest as MultiLineProps).rows ?? 4}
+          {...(rest as TextareaHTMLAttributes<HTMLTextAreaElement>)}
+          {...inputProps}
         />
       ) : (
-        <input {...inputProps} {...(rest as InputHTMLAttributes<HTMLInputElement>)} />
+        <input {...(rest as InputHTMLAttributes<HTMLInputElement>)} {...inputProps} />
       )}
       {error && (
         <span id={errId} className={styles.error}>

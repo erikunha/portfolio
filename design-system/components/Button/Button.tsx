@@ -25,8 +25,17 @@ export function Button({
 }: ButtonProps) {
   const classes = cx(styles.root, styles[variant], styles[size], className);
   if (as === 'a') {
-    const { disabled, ...anchorRest } = rest as AsAnchor;
-    return <a className={classes} aria-disabled={disabled ? 'true' : undefined} {...anchorRest} />;
+    const { disabled, href, onClick, tabIndex, ...anchorRest } = rest as AsAnchor;
+    return (
+      <a
+        className={classes}
+        aria-disabled={disabled ? 'true' : undefined}
+        href={disabled ? undefined : href}
+        tabIndex={disabled ? -1 : tabIndex}
+        onClick={disabled ? (e) => e.preventDefault() : onClick}
+        {...anchorRest}
+      />
+    );
   }
   return <button type="button" className={classes} {...(rest as AsButton)} />;
 }

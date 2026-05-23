@@ -5,9 +5,8 @@
   margin-top: 12px;
 }
 
-/* Cell layout — visual typography owned by StatTile primitive */
+/* Cell layout — padding owned by StatTile primitive, only border stays here */
 .item {
-  padding: 7px 10px;
   border-right: 1px solid var(--ds-color-signal-subtle);
 }
 
