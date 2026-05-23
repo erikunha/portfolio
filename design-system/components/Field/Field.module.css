@@ -21,7 +21,6 @@
   transition: border-color var(--ds-duration-base) var(--ds-ease-out);
 }
 .input:focus-visible {
-  outline: none;
   border-color: var(--ds-color-signal);
 }
 .input[aria-invalid="true"] {
