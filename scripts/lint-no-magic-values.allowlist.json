@@ -139,7 +139,11 @@
     { "value": "740px", "reason": "hottest-takes max-width — content column cap" },
     { "value": "72px", "reason": "footer dmesg responsive grid column — fixed layout column" },
     { "value": "200px", "reason": "shell feed max-height mobile — container scroll height" },
-    { "value": "220px", "reason": "shell feed min-height desktop — container scroll height" }
+    { "value": "220px", "reason": "shell feed min-height desktop — container scroll height" },
+    {
+      "value": "720px",
+      "reason": "design-system docs content pane max-width — prose line length limit"
+    }
   ],
   "duration-values": [
     {
