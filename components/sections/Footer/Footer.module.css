@@ -1,6 +1,5 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    SHUTDOWN FOOTER — CSS Module
-   Migrated from app/css/_footer.css (Task 14c)
    ───────────────────────────────────────────────────────────────────────── */
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -336,7 +335,7 @@
 
 @media (max-width: 900px) {
   .root {
-    padding: 0 0 40px var(--ds-space-pad) calc(24px + env(safe-area-inset-bottom, 0px));
+    padding: 0 var(--ds-space-pad) calc(40px + env(safe-area-inset-bottom, 0px)) var(--ds-space-pad);
   }
   .grid {
     grid-template-columns: 1fr;
