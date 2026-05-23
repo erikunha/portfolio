@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { MatrixRain } from '@/components/responsive/MatrixRain.client';
+import { MatrixRain } from '@/components/responsive/MatrixRain';
 import { dmesgLines } from '@/content/dmesg';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import styles from './Footer.module.css';

@@ -1,4 +1,4 @@
-// __tests__/matrix-rain.test.ts
+// components/responsive/MatrixRain/MatrixRain.test.tsx
 // Behavioral test (CG3): renders the real MatrixRain and exercises its canvas
 // draw loop against an instrumented 2D context — instead of slicing the
 // component source and string-matching the for-loop body.
@@ -13,7 +13,7 @@
 
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type MountedClient, mountClient } from './helpers/render';
+import { type MountedClient, mountClient } from '@/__tests__/helpers/render';
 
 const CANVAS_RECT = {
   width: 400,
@@ -97,7 +97,7 @@ describe('MatrixRain canvas perf', () => {
   }
 
   it('does not re-set ctx.font inside the per-frame column draw loop', async () => {
-    const { MatrixRain } = await import('@/components/responsive/MatrixRain.client');
+    const { MatrixRain } = await import('./MatrixRain.client');
 
     const instrument = makeInstrumentedCtx();
     vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockReturnValue(CANVAS_RECT);
@@ -125,7 +125,7 @@ describe('MatrixRain canvas perf', () => {
 
   it('debounces the window resize handler', async () => {
     vi.useFakeTimers();
-    const { MatrixRain } = await import('@/components/responsive/MatrixRain.client');
+    const { MatrixRain } = await import('./MatrixRain.client');
 
     const rectSpy = vi
       .spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect')
