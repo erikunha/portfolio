@@ -97,6 +97,10 @@
       "value": "48px",
       "reason": "dock item min-height — WCAG 2.5.5 minimum touch target; semantic"
     },
+    {
+      "value": "52px",
+      "reason": "Button lg min-height — generous touch target above WCAG 2.5.5 minimum (44px); component-specific size constant"
+    },
     { "value": "60px", "reason": "desktop page padding-top — topbar height offset" },
     { "value": "64px", "reason": "ToTopButton dock offset — dock height constant" },
     {
