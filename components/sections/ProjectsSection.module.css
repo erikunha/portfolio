@@ -1,0 +1,183 @@
+/* ProjectsSection.module.css */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   PROJECTS — 3-up bordered tiles with hover glow (desktop grid)
+   ───────────────────────────────────────────────────────────────────────── */
+.root {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .root {
+    grid-template-columns: 1fr;
+  }
+}
+
+.project {
+  position: relative;
+  border: 1px solid var(--signal-dim);
+  padding: 20px;
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.project:hover {
+  border-color: var(--signal);
+  box-shadow: 0 0 16px rgba(0, 255, 65, 0.18);
+}
+
+.projectTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 12px;
+}
+
+.projectFolder {
+  width: 40px;
+  height: 32px;
+  fill: var(--signal);
+}
+
+.projectPerm {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  opacity: 0.75;
+  margin: 0;
+}
+
+.projectName {
+  color: var(--signal);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  letter-spacing: 0.04em;
+  margin: 6px 0;
+}
+
+.projectDesc {
+  color: var(--fg);
+  font-size: var(--fs-base);
+  margin: 0 0 16px;
+}
+
+.projectStats {
+  display: grid;
+  gap: 4px;
+  font-size: var(--fs-sm);
+  margin: 0;
+}
+
+.projectStats div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.projectStats dt {
+  color: var(--muted);
+}
+
+.projectStats dd {
+  margin: 0;
+  color: var(--fg);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive — smaller tiles on mobile (from _layout.css lines 229–242)
+   ───────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .project {
+    padding: 14px;
+  }
+  .projectFolder {
+    width: 32px;
+    height: 26px;
+  }
+  .projectName {
+    font-size: var(--fs-base);
+  }
+  .projectDesc {
+    font-size: var(--fs-sm);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Mobile project cards — matches Portfolio.mobile.html .proj structure
+   ───────────────────────────────────────────────────────────────────────── */
+.card {
+  border: 1px solid var(--signal-dim);
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+.card:last-child {
+  margin-bottom: 0;
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.cardFolder {
+  width: 32px;
+  height: 26px;
+}
+
+.cardFolder svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--signal);
+}
+
+.cardPerm {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  opacity: 0.75;
+  letter-spacing: 0.04em;
+}
+
+.cardName {
+  color: var(--signal);
+  font-weight: 700;
+  font-size: var(--fs-base);
+  letter-spacing: 0.04em;
+  margin: 4px 0;
+}
+
+.cardDesc {
+  color: var(--fg);
+  font-size: var(--fs-sm);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.cardMeta {
+  display: grid;
+  gap: 3px;
+  font-size: var(--fs-xs);
+}
+
+.mrow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mk {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.mv {
+  color: var(--fg);
+  text-align: right;
+}

@@ -7,21 +7,24 @@ import { heroTagline } from '@/content/hero';
 import { HeroBootAnimation } from '../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../client/HeroSystemFailure';
 import { HeroStats } from '../HeroStats';
+import styles from './Hero.module.css';
 
 export function Hero() {
   return (
     <>
       {/* Desktop: two-column layout — boot animation left, bio panel right.
           id="bio" is the anchor target used by DesktopTopbar nav links.
-          Hidden on mobile via .hero--desktop CSS rule (max-width: 768px). */}
-      <section id="bio" className="hero hero--desktop">
-        <div className="hero__left">
+          Hidden on mobile via .desktop CSS rule (max-width: 768px). */}
+      <section id="bio" className={`${styles.root} ${styles.desktop}`} data-testid="hero-desktop">
+        <div className={styles.left}>
           <HeroBootAnimation variant="desktop" />
         </div>
-        <aside className="hero__bio">
-          <h1 className="hero__name">Erik Henrique Alves Cunha</h1>
-          <p className="hero__tagline">{heroTagline}</p>
-          <p className="hero__meta">
+        <aside className={styles.bio}>
+          <h1 className={styles.name} data-testid="hero-name">
+            Erik Henrique Alves Cunha
+          </h1>
+          <p className={styles.tagline}>{heroTagline}</p>
+          <p className={styles.meta}>
             <span>
               LOC: <b>Brazil</b>
             </span>
@@ -30,14 +33,14 @@ export function Hero() {
             </span>
             <span>EN/PT/FR/ES</span>
           </p>
-          <p className="hero__status">
-            <span className="hero__status-dot" aria-hidden="true" />
+          <p className={styles.status}>
+            <span className={styles.statusDot} aria-hidden="true" />
             OPEN_TO_RELOCATION · WORLDWIDE
           </p>
           <HeroStats />
-          <div className="hero__ctas">
+          <div className={styles.ctas} data-testid="hero-ctas">
             <a
-              className="hero__cta hero__cta--primary"
+              className={`${styles.cta} ${styles.ctaPrimary}`}
               href="https://www.linkedin.com/in/erikunha/"
               target="_blank"
               rel="noreferrer"
@@ -45,7 +48,7 @@ export function Hero() {
               EXEC HIRE
             </a>
             <a
-              className="hero__cta hero__cta--secondary"
+              className={`${styles.cta} ${styles.ctaSecondary}`}
               href="https://github.com/erikunha"
               target="_blank"
               rel="noreferrer"
@@ -59,15 +62,17 @@ export function Hero() {
       </section>
 
       {/* Mobile: stacked layout — boot animation on top, bio below.
-          Hidden on desktop via .hero--mobile CSS rule (min-width: 769px).
+          Hidden on desktop via .mobile CSS rule (min-width: 769px).
           No id needed here — anchor target #bio is on the desktop section. */}
-      <section className="hero hero--mobile">
-        <div className="hero__inner">
+      <section className={`${styles.root} ${styles.mobile}`} data-testid="hero-mobile">
+        <div className={styles.inner}>
           <HeroBootAnimation variant="mobile" />
 
-          <h1 className="hero__name">Erik Henrique Alves Cunha</h1>
-          <p className="hero__tagline">{heroTagline}</p>
-          <p className="hero__meta">
+          <h1 className={styles.name} data-testid="hero-name">
+            Erik Henrique Alves Cunha
+          </h1>
+          <p className={styles.tagline}>{heroTagline}</p>
+          <p className={styles.meta}>
             <span>
               LOC: <b>Brazil</b>
             </span>
@@ -76,14 +81,14 @@ export function Hero() {
             </span>
             <span>EN/PT/FR/ES</span>
           </p>
-          <p className="hero__status">
-            <span className="hero__status-dot" aria-hidden="true" />
+          <p className={styles.status}>
+            <span className={styles.statusDot} aria-hidden="true" />
             OPEN_TO_RELOCATION · WORLDWIDE
           </p>
           <HeroStats />
-          <div className="hero__ctas">
+          <div className={styles.ctas} data-testid="hero-ctas">
             <a
-              className="hero__cta hero__cta--primary"
+              className={`${styles.cta} ${styles.ctaPrimary}`}
               href="https://www.linkedin.com/in/erikunha/"
               target="_blank"
               rel="noreferrer"
@@ -91,7 +96,7 @@ export function Hero() {
               EXEC HIRE
             </a>
             <a
-              className="hero__cta hero__cta--secondary"
+              className={`${styles.cta} ${styles.ctaSecondary}`}
               href="https://github.com/erikunha"
               target="_blank"
               rel="noreferrer"

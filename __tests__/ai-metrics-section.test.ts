@@ -33,6 +33,12 @@ async function renderData(): Promise<string> {
   return renderToStaticMarkup(element);
 }
 
+// CSS Modules scopes class names — import styles to get the hashed key for assertions.
+async function getStyles() {
+  const styles = await import('@/components/sections/AiMetricsSection.module.css');
+  return styles.default as Record<string, string>;
+}
+
 afterEach(() => {
   vi.resetModules();
   getAskMetricsMock.mockReset();
@@ -59,7 +65,10 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
     // Cost-per-answer surfaced as a dollar figure.
     expect(html).toContain('$0.0021');
     // Exactly four metric cells — pass-rate, jailbreak, p95 latency, cost.
-    const cellCount = (html.match(/class="aimetric"/g) ?? []).length;
+    // CSS Modules scopes the class name; use the module key for the regex.
+    const s = await getStyles();
+    const metricClass = s.metric as string;
+    const cellCount = (html.match(new RegExp(`class="${metricClass}"`, 'g')) ?? []).length;
     expect(cellCount).toBe(4);
     // The unmeasured cache-hit-rate row was dropped end-to-end.
     expect(html.toUpperCase()).not.toContain('CACHE');

@@ -38,12 +38,13 @@ import { SysHealthSection } from '@/components/sections/SysHealthSection';
 import { UnknownsSection } from '@/components/sections/UnknownsSection';
 import { VisaSection } from '@/components/sections/VisaSection';
 import { BreakpointProvider } from '@/lib/use-breakpoint.client';
+import styles from './page.module.css';
 
 export default function Home() {
   return (
     <BreakpointProvider initialIsMobile={false}>
       <AppShell>
-        <main className="page" id="main-content" tabIndex={-1}>
+        <main className={styles.page} id="main-content" tabIndex={-1}>
           <ErrorBoundary>
             <Hero />
           </ErrorBoundary>

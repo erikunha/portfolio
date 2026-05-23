@@ -20,11 +20,29 @@
 
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import styles from '@/components/sections/Hero.module.css';
 import { mountClient } from './helpers/render';
 
 vi.mock('@/lib/motion', () => ({
-  readMotion: () => true, // motion ON → the animated typing loop runs
+  readMotion: () => true, // motion ON => the animated typing loop runs
 }));
+
+// Minimal BootClasses fixture for unit tests that call runBoot directly.
+// In production, HeroBootAnimation provides scoped CSS Module class names.
+// For direct runBoot tests, we use simple string keys; DOM queries match.
+const testCls = {
+  bootLine: 'bootLine',
+  bootOk: 'bootOk',
+  bootEnc: 'bootEnc',
+  bootWelcome: 'bootWelcome',
+  bootPrompt: 'bootPrompt',
+  bootCmd: 'bootCmd',
+  bootMatrixPrefix: 'bootMatrixPrefix',
+  bootMatrixOut: 'bootMatrixOut',
+  bootCursor: 'bootCursor',
+  shake: 'shake',
+  shake2: 'shake2',
+} as const;
 
 describe('boot-animation: textContent-mutation invariant (CLAUDE.md Rendering model)', () => {
   beforeEach(() => {
@@ -41,7 +59,7 @@ describe('boot-animation: textContent-mutation invariant (CLAUDE.md Rendering mo
     const { runBoot } = await import('@/lib/boot-animation');
     const container = document.createElement('div');
 
-    const ctrl = runBoot(container, [['line one']], ['Wake up, Neo...'], {
+    const ctrl = runBoot(container, [['line one']], ['Wake up, Neo...'], testCls, {
       lineMs: 10,
       lineJitter: 0,
       cmdMs: 5,
@@ -57,13 +75,14 @@ describe('boot-animation: textContent-mutation invariant (CLAUDE.md Rendering mo
     // the dialog typing loop.
     await vi.advanceTimersByTimeAsync(2000);
 
-    // The dialog phrase is typed one char at a time into a .boot__matrix-out
+    // The dialog phrase is typed one char at a time into a .bootMatrixOut
     // span via textContent — assert that span exists and has accumulated text.
-    const out = container.querySelector('.boot__matrix-out');
+    // testCls uses plain strings, so querySelector uses those directly.
+    const out = container.querySelector('.bootMatrixOut');
     expect(out).not.toBeNull();
     expect((out?.textContent ?? '').length).toBeGreaterThan(0);
-    // The command line is also typed char-by-char into a .boot__cmd span.
-    const cmd = container.querySelector('.boot__cmd');
+    // The command line is also typed char-by-char into a .bootCmd span.
+    const cmd = container.querySelector('.bootCmd');
     expect(cmd?.textContent).toBe('run bio.exe --verbose');
 
     ctrl.cancel();
@@ -87,10 +106,10 @@ describe('boot-animation: textContent-mutation invariant (CLAUDE.md Rendering mo
       React.createElement(HeroBootAnimation, { variant: 'desktop' }),
     );
 
-    // The island's JSX is `<div ref={bootRef} className="hero__boot" />` — a
-    // single empty element. Before the loop runs, the mount node has zero
-    // children: React renders nothing into it.
-    const mount = container.querySelector('.hero__boot');
+    // The island's JSX is `<div ref={bootRef} className={styles.boot} />` — a
+    // single empty element. Use the CSS Module scoped class name for the query.
+    const bootClass = styles.boot as string;
+    const mount = container.querySelector(`.${bootClass}`);
     expect(mount).not.toBeNull();
     expect(mount?.childElementCount).toBe(0);
 
@@ -106,7 +125,9 @@ describe('boot-animation: textContent-mutation invariant (CLAUDE.md Rendering mo
     // updates would reconcile through useState and tank INP. The pattern under
     // test is exactly: useRef mount + imperative textContent mutation.
     expect(mount?.childElementCount ?? 0).toBeGreaterThan(0);
-    const cmd = mount?.querySelector('.boot__cmd');
+    // bootCmd class: HeroBootAnimation passes bootCls which maps 'bootCmd' to styles.bootCmd.
+    const cmdClass = styles.bootCmd as string;
+    const cmd = mount?.querySelector(`.${cmdClass}`);
     expect(cmd?.textContent).toBe('run bio.exe --verbose');
 
     // The typed command span carries a single text node mutated in place —

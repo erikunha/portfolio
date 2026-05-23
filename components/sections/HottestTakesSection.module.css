@@ -1,0 +1,128 @@
+.root {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.preamble {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  letter-spacing: 0.06em;
+  margin: 0 0 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--signal-dim-2);
+}
+
+.preamble .gt {
+  color: var(--signal);
+  margin-right: 6px;
+}
+
+.footer {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--signal-dim-2);
+}
+
+.footer .gt {
+  color: var(--signal);
+  margin-right: 6px;
+}
+
+.take {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  padding: 14px 0;
+  border-bottom: 1px dashed var(--signal-dim-2);
+}
+
+.take:last-child {
+  border-bottom: 0;
+  padding-bottom: 4px;
+}
+
+.take:first-of-type {
+  padding-top: 4px;
+}
+
+.num {
+  color: var(--muted);
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-base);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding-top: 2px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.category {
+  display: inline-block;
+  color: var(--muted);
+  border: 1px solid var(--signal-dim-2);
+  padding: 0 6px;
+  margin-right: 8px;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.14em;
+  vertical-align: 1px;
+  font-weight: 500;
+  background: transparent;
+}
+
+.thesis {
+  color: var(--signal);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.body {
+  color: var(--fg);
+  font-size: var(--fs-base);
+  line-height: 1.65;
+  margin: 0;
+  max-width: 740px;
+}
+
+@media (max-width: 900px) {
+  .take {
+    grid-template-columns: 36px 1fr;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .take {
+    grid-template-columns: 28px 1fr;
+    padding: 10px 0;
+  }
+
+  .num {
+    font-size: var(--fs-xs);
+  }
+
+  .thesis {
+    font-size: var(--fs-sm);
+  }
+
+  .body {
+    font-size: var(--fs-sm);
+  }
+
+  .category {
+    font-size: var(--fs-2xs);
+  }
+
+  .footer {
+    font-size: var(--fs-xs);
+  }
+}

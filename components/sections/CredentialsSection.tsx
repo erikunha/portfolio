@@ -1,6 +1,7 @@
 import { credentials } from '@/content/credentials';
 import { IconCredentials } from '../Icons';
 import { Module } from '../responsive/Module';
+import s from './CredentialsSection.module.css';
 
 export function CredentialsSection({ defer }: { defer?: boolean } = {}) {
   return (
@@ -10,17 +11,17 @@ export function CredentialsSection({ defer }: { defer?: boolean } = {}) {
       icon={<IconCredentials />}
       defer={defer}
     >
-      <div className="visa">
-        <div className="cmd-line">
-          <span className="pr">$</span>
+      <div className={s.root}>
+        <div className={s.cmdLine}>
+          <span className={s.pr}>$</span>
           {'cat ~/.credentials'}
         </div>
-        <div className="cr-table">
+        <div className={s.table}>
           {credentials.map((cred) => (
-            <div key={cred.label} className="cr-row">
-              <span className="cr-label">{cred.label}</span>
-              <span className="cr-badge">{cred.badge}</span>
-              <span className="cr-val">{cred.evidence}</span>
+            <div key={cred.label} className={s.row}>
+              <span className={s.label}>{cred.label}</span>
+              <span className={s.badge}>{cred.badge}</span>
+              <span className={s.val}>{cred.evidence}</span>
             </div>
           ))}
         </div>

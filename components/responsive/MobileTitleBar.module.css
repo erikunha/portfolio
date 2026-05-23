@@ -1,0 +1,44 @@
+.root {
+  position: sticky;
+  top: 28px; /* below status bar */
+  z-index: 109;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--signal-dim);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.dotRed {
+  background: var(--red);
+}
+
+.dotYellow {
+  background: var(--yellow);
+}
+
+.dotGreen {
+  background: var(--green-light);
+}
+
+.title {
+  flex: 1;
+  text-align: center;
+  color: var(--signal);
+  font-weight: 700;
+}

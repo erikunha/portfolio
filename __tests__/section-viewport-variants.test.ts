@@ -38,8 +38,8 @@ import { VisaSection } from '@/components/sections/VisaSection';
 describe('responsive section viewport variants', () => {
   it('ProjectsSection emits exactly the desktop variant (no mobile markup)', () => {
     const html = renderToStaticMarkup(createElement(ProjectsSection));
-    expect(html).toContain('proj-desktop');
-    expect(html).not.toContain('proj-mobile');
+    expect(html).toContain('data-testid="proj-desktop"');
+    expect(html).not.toContain('data-testid="proj-mobile"');
   });
 
   it('GitLogSection emits exactly the desktop variant (no mobile markup)', () => {
@@ -50,13 +50,13 @@ describe('responsive section viewport variants', () => {
 
   it('GuitarSection emits exactly the desktop variant (no mobile markup)', () => {
     const html = renderToStaticMarkup(createElement(GuitarSection));
-    expect(html).toContain('guitar-desktop');
-    expect(html).not.toContain('guitar-mobile');
+    expect(html).toContain('data-testid="guitar-desktop"');
+    expect(html).not.toContain('data-testid="guitar-mobile"');
   });
 
   it('VisaSection emits exactly the desktop variant (no mobile markup)', () => {
     const html = renderToStaticMarkup(createElement(VisaSection));
-    expect(html).toContain('visa-desktop-pre');
-    expect(html).not.toContain('visa-mobile-pre');
+    expect(html).toContain('data-testid="visa-desktop"');
+    expect(html).not.toContain('data-testid="visa-mobile"');
   });
 });

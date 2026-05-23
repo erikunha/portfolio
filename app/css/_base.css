@@ -4,190 +4,218 @@
    explicitly so there's one mental model (these files) and no runtime style
    injection. See DECISIONS.md (2026-05-18) for the removal rationale.
    ───────────────────────────────────────────────────────────────────────── */
-@layer base {
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
+html {
+  /* offset anchor scroll for sticky topbar on desktop */
+  scroll-padding-top: 52px;
+  /* prevent iOS Safari auto-zoom on rotate; consistent tab width in <pre> */
+  -webkit-text-size-adjust: 100%;
+  tab-size: 4;
+}
+
+/* Media + embeds default to block to kill inline baseline gap, and never
+   overflow their container. */
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block;
+  vertical-align: middle;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Form controls inherit typography from <body> rather than UA defaults. */
+input,
+textarea,
+select,
+optgroup {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+}
+
+/* Lists used as semantic containers (not bullet lists). */
+ul,
+ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono-stack);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
   html {
-    /* offset anchor scroll for sticky topbar on desktop */
-    scroll-padding-top: 52px;
-    /* prevent iOS Safari auto-zoom on rotate; consistent tab width in <pre> */
-    -webkit-text-size-adjust: 100%;
-    tab-size: 4;
+    scroll-padding-top: 76px; /* statusbar ~28px + window-chrome ~44px + buffer */
   }
+}
 
-  /* Media + embeds default to block to kill inline baseline gap, and never
-     overflow their container. */
-  img,
-  svg,
-  video,
-  canvas,
-  audio,
-  iframe,
-  embed,
-  object {
-    display: block;
-    vertical-align: middle;
-  }
+::selection {
+  background: var(--signal);
+  color: var(--highlight-fg);
+}
 
-  img,
-  video {
-    max-width: 100%;
-    height: auto;
-  }
+a {
+  color: var(--signal);
+  text-decoration: none;
+}
 
-  /* Form controls inherit typography from <body> rather than UA defaults. */
-  input,
-  textarea,
-  select,
-  optgroup {
-    font: inherit;
-    color: inherit;
-    margin: 0;
-  }
+a:hover {
+  text-decoration: underline;
+}
 
-  /* Lists used as semantic containers (not bullet lists). */
-  ul,
-  ol {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
+a:focus-visible {
+  text-decoration: underline;
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
 
-  html,
-  body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--fg);
-    font-family: var(--font-mono-stack);
-    font-size: 16px;
-    line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
-  }
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
 
-  @media (max-width: 768px) {
-    html {
-      scroll-padding-top: 76px; /* statusbar ~28px + window-chrome ~44px + buffer */
-    }
-  }
+.skip-to-content {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--signal);
+  color: #000;
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  text-decoration: none;
+  clip-path: inset(50%);
+  overflow: hidden;
+  transition: clip-path 0.1s;
+}
+.skip-to-content:focus {
+  clip-path: inset(0);
+  overflow: visible;
+}
 
-  ::selection {
-    background: var(--signal);
-    color: var(--highlight-fg);
-  }
+button {
+  font-family: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
 
-  a {
-    color: var(--signal);
-    text-decoration: none;
-  }
+pre,
+code {
+  font-family: var(--font-mono-stack);
+  white-space: pre;
+}
 
-  a:hover {
-    text-decoration: underline;
-  }
+h1,
+h2,
+h3 {
+  font-family: var(--font-mono-stack);
+  font-weight: 700;
+  color: var(--signal);
+  margin: 0 0 8px 0;
+  text-shadow: 0 0 2px rgba(0, 255, 65, 0.3);
+}
 
-  a:focus-visible {
-    text-decoration: underline;
-    outline: 2px solid var(--signal);
-    outline-offset: 2px;
-  }
+h1 {
+  font-size: var(--fs-2xl);
+  font-family: var(--font-display-stack);
+  font-weight: 900;
+}
 
-  button:focus-visible,
-  input:focus-visible,
-  textarea:focus-visible {
-    outline: 2px solid var(--signal);
-    outline-offset: 2px;
+@media (max-width: 768px) {
+  :root {
+    --vrhythm: 18px;
+    --pad: 14px;
+    --fs-3xl: 56px;
+    --fs-2xl: 32px;
   }
-
-  .skip-to-content {
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 9999;
-    padding: 8px 16px;
-    background: var(--signal);
-    color: #000;
-    font-family: var(--font-mono-stack);
-    font-size: var(--fs-md);
-    font-weight: 700;
-    text-decoration: none;
-    clip-path: inset(50%);
-    overflow: hidden;
-    transition: clip-path 0.1s;
-  }
-  .skip-to-content:focus {
-    clip-path: inset(0);
-    overflow: visible;
-  }
-
-  button {
-    font-family: inherit;
-    color: inherit;
-    background: transparent;
-    border: 1px solid var(--border);
-    cursor: pointer;
-  }
-
-  pre,
-  code {
-    font-family: var(--font-mono-stack);
-    white-space: pre;
-  }
-
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-mono-stack);
-    font-weight: 700;
-    color: var(--signal);
-    margin: 0 0 8px 0;
-    text-shadow: 0 0 2px rgba(0, 255, 65, 0.3);
-  }
-
   h1 {
     font-size: var(--fs-2xl);
-    font-family: var(--font-display-stack);
-    font-weight: 900;
   }
+}
 
-  @media (max-width: 768px) {
-    :root {
-      --vrhythm: 18px;
-      --pad: 14px;
-      --fs-3xl: 56px;
-      --fs-2xl: 32px;
-    }
-    h1 {
-      font-size: var(--fs-2xl);
-    }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.not-found {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono-stack);
+  position: relative;
+}
+
+/* ─── Global responsive token overrides (migrated from _responsive.css) ───────
+   Placed AFTER the (max-width: 768px) :root block above. At viewports ≤768px
+   both blocks match; later source order wins — this reproduces the cascade the
+   old @layer responsive provided (responsive layer beat the base layer). */
+@media (max-width: 900px) {
+  :root {
+    --vrhythm: 40px;
+    --pad: 18px;
   }
-
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+  body {
+    font-size: var(--fs-base);
   }
+}
 
-  .not-found {
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    background: var(--bg);
-    color: var(--fg);
-    font-family: var(--font-mono-stack);
-    position: relative;
+/* ─── Viewport-scoped visibility utilities (migrated from _responsive.css) ─────
+   AppShell renders both viewport variants of the nav chrome; CSS picks which is
+   visible at the 768px breakpoint. Global because AppShell sets these as plain
+   string classNames. */
+.mobile-only {
+  display: none;
+}
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none;
+  }
+  .mobile-only {
+    display: contents;
   }
 }

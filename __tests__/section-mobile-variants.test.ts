@@ -33,15 +33,15 @@ describe('responsive section mobile variants', () => {
   it('GuitarContent emits the mobile variant when UA is mobile', async () => {
     const el = await GuitarContent();
     const html = renderToStaticMarkup(el);
-    expect(html).toContain('guitar-mobile');
-    expect(html).not.toContain('guitar-desktop');
+    expect(html).toContain('data-testid="guitar-mobile"');
+    expect(html).not.toContain('data-testid="guitar-desktop"');
   });
 
   it('ProjectsContent emits the mobile variant when UA is mobile', async () => {
     const el = await ProjectsContent();
     const html = renderToStaticMarkup(el);
-    expect(html).toContain('proj-mobile');
-    expect(html).not.toContain('proj-desktop');
+    expect(html).toContain('data-testid="proj-mobile"');
+    expect(html).not.toContain('data-testid="proj-desktop"');
   });
 
   it('GitLogContent emits the mobile variant when UA is mobile', async () => {
@@ -54,13 +54,13 @@ describe('responsive section mobile variants', () => {
   it('VisaContent emits the mobile variant when UA is mobile', async () => {
     const el = await VisaContent();
     const html = renderToStaticMarkup(el);
-    expect(html).toContain('visa-mobile-pre');
-    expect(html).not.toContain('visa-desktop-pre');
+    expect(html).toContain('data-testid="visa-mobile"');
+    expect(html).not.toContain('data-testid="visa-desktop"');
   });
 
   it('ManPageContent emits the mobile variant when UA is mobile', async () => {
     const el = await ManPageContent();
     const html = renderToStaticMarkup(el);
-    expect(html).toContain('manpage--mobile');
+    expect(html).toContain('data-testid="manpage-mobile"');
   });
 });

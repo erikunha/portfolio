@@ -47,7 +47,7 @@ describe('shell command hint', () => {
 
     // The desktop command hint is rendered; it must route free-form input to
     // Claude implicitly, never advertise an explicit `ask <question>` verb.
-    const hint = container.querySelector('.shell__commands');
+    const hint = container.querySelector('[data-testid="shell-commands"]');
     expect(hint).not.toBeNull();
     expect(hint?.textContent ?? '').not.toContain('ask <question>');
   });
@@ -57,8 +57,8 @@ describe('paint cost CSS (shipped build assets)', () => {
   it('the body rule carries no text-shadow and no optimizeLegibility', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate paint cost
     const base = readFileSync(path.resolve(__dirname, '../app/css/_base.css'), 'utf-8');
-    // Leading \s* tolerates the 2-space indent from the `@layer base { ... }`
-    // wrapper introduced in CG6 (cascade layers).
+    // Leading \s* tolerates any indentation level; the @layer base wrapper was
+    // removed during the CSS Modules migration.
     const bodyBlock = base.match(/^\s*html,\s*\n\s*body\s*\{[^}]+\}/m)?.[0];
     expect(bodyBlock).toBeDefined();
     expect(bodyBlock).not.toContain('text-shadow');
@@ -67,8 +67,11 @@ describe('paint cost CSS (shipped build assets)', () => {
 
   it('the crt-flicker animation runs at >= 3s (cheap, not jittery)', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate @keyframes timing
-    const crt = readFileSync(path.resolve(__dirname, '../app/css/_crt.css'), 'utf-8');
-    const flicker = crt.match(/\.crt-flicker\s*\{[^}]+\}/)?.[0] ?? '';
+    const crt = readFileSync(
+      path.resolve(__dirname, '../components/responsive/CRTOverlay.module.css'),
+      'utf-8',
+    );
+    const flicker = crt.match(/\.flicker\s*\{[^}]+\}/)?.[0] ?? '';
     const dur = flicker.match(/animation:\s*crt-flicker\s+([\d.]+)s/)?.[1];
     expect(Number(dur)).toBeGreaterThanOrEqual(3);
   });

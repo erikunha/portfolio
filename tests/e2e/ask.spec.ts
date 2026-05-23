@@ -12,11 +12,11 @@ async function setupAskPage(page: Page, state: MockState): Promise<void> {
   await installMockBackend(page, state);
   await page.goto('/');
   // Wait for the Shell island to hydrate (shell form is present).
-  await page.waitForSelector('.shell__form', { state: 'visible' });
+  await page.waitForSelector('[data-testid="shell-form"]', { state: 'visible' });
 }
 
 function getShellInput(page: Page): Locator {
-  return page.locator('.shell__form input[type="text"], .shell__form input:not([type])').first();
+  return page.locator('[aria-label="shell command"]').first();
 }
 
 async function ask(page: Page, question: string): Promise<void> {
@@ -34,7 +34,7 @@ test.describe('ask / interactive shell', () => {
 
     // After submission the canned mock answer should appear in the feed.
     // The mock returns: "Erik is a Senior Full-Stack Engineer with 8+ years of experience."
-    const feed = page.locator('.shell__feed');
+    const feed = page.locator('[role="log"]');
     await expect(feed).toContainText('Erik is a Senior Full-Stack Engineer', { timeout: 10_000 });
   });
 
@@ -45,7 +45,7 @@ test.describe('ask / interactive shell', () => {
     await setupAskPage(page, { ask: 'kill-switch', log: 'accept' });
     await ask(page, 'are you available?');
 
-    const errorLine = page.locator('.shell__feed .shell__line--error');
+    const errorLine = page.locator('[role="log"] [data-kind="error"]');
     await expect(errorLine).toBeVisible({ timeout: 10_000 });
     await expect(errorLine).toContainText('temporarily unavailable');
   });
@@ -55,7 +55,7 @@ test.describe('ask / interactive shell', () => {
     await setupAskPage(page, { ask: 'rate-limit', log: 'accept' });
     await ask(page, 'spammy question');
 
-    const errorLine = page.locator('.shell__feed .shell__line--error');
+    const errorLine = page.locator('[role="log"] [data-kind="error"]');
     await expect(errorLine).toBeVisible({ timeout: 10_000 });
     await expect(errorLine).toContainText('try again in an hour');
   });
@@ -67,7 +67,7 @@ test.describe('ask / interactive shell', () => {
     await setupAskPage(page, { ask: 'budget-exhausted', log: 'accept' });
     await ask(page, 'what is your stack?');
 
-    const errorLine = page.locator('.shell__feed .shell__line--error');
+    const errorLine = page.locator('[role="log"] [data-kind="error"]');
     await expect(errorLine).toBeVisible({ timeout: 10_000 });
     await expect(errorLine).toContainText('budget exhausted');
   });
@@ -82,7 +82,7 @@ test.describe('ask / interactive shell', () => {
     await setupAskPage(page, { ask: 'stream-error', log: 'accept' });
     await ask(page, 'tell me about your projects');
 
-    const errorLine = page.locator('.shell__feed .shell__line--error');
+    const errorLine = page.locator('[role="log"] [data-kind="error"]');
     await expect(errorLine).toBeVisible({ timeout: 10_000 });
     await expect(errorLine).toContainText('upstream error');
   });
@@ -96,7 +96,7 @@ test.describe('ask / interactive shell', () => {
     await setupAskPage(page, { ask: 'pre-stream-timeout', log: 'accept' });
     await ask(page, 'slow question');
 
-    const errorLine = page.locator('.shell__feed .shell__line--error');
+    const errorLine = page.locator('[role="log"] [data-kind="error"]');
     await expect(errorLine).toBeVisible({ timeout: 10_000 });
     await expect(errorLine).toContainText('Request Timeout');
 
@@ -125,7 +125,7 @@ test.describe('ask / interactive shell', () => {
     await ask(page, 'Test question for header check');
 
     // Wait for the response to arrive.
-    await page.waitForFunction(() => document.querySelector('.shell__line--output') !== null, {
+    await page.waitForFunction(() => document.querySelector('[data-kind="output"]') !== null, {
       timeout: 10_000,
     });
 
@@ -150,7 +150,7 @@ test.describe('ask / interactive shell', () => {
     // mock-backend default-throw branch will surface it as a real failure.
     await setupAskPage(page, { log: 'accept' });
 
-    const notice = page.locator('.shell__privacy-notice');
+    const notice = page.locator('[data-testid="shell-privacy-notice"]');
     await expect(notice).toBeVisible();
     await expect(notice).toContainText('Queries are stored 90 days');
     await expect(notice).toContainText('To request deletion');

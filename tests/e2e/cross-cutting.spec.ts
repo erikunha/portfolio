@@ -194,7 +194,7 @@ test.describe('cross-cutting', () => {
     try {
       await installMockBackend(page, { log: 'accept', forget: 'happy' });
       await page.goto('/');
-      await page.waitForSelector('h1.hero__name', { state: 'attached' });
+      await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
 
       // Wait for /init.js to apply body[data-motion]. The script runs inline
       // (no defer) but Playwright's "load" event ordering is engine-specific;
@@ -202,10 +202,14 @@ test.describe('cross-cutting', () => {
       await expect.poll(() => page.evaluate(() => document.body.dataset.motion)).toBe('reduce');
 
       // For each decorative animation we expect the prefers-reduced-motion
-      // CSS rules in _crt.css to disable: assert either animationName is
+      // CSS rules in CRTOverlay.module.css to disable: assert either animationName is
       // 'none', animationPlayState is 'paused', or computed opacity is 0
       // (the CSS uses `opacity: 0` as a belt-and-braces fallback).
-      const selectors = ['.crt-flicker', '.crt-scan-beam', '.crt-noise'];
+      const selectors = [
+        '[data-testid="crt-flicker"]',
+        '[data-testid="crt-scan-beam"]',
+        '[data-testid="crt-noise"]',
+      ];
       let asserted = 0;
       for (const selector of selectors) {
         const el = page.locator(selector).first();
@@ -268,7 +272,7 @@ test.describe('cross-cutting', () => {
     //      and recent WebKit; missing support degrades to checking only (a).
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
     await page.goto('/');
-    await page.waitForSelector('.shell .shell__input', { state: 'visible' });
+    await page.waitForSelector('[aria-label="shell command"]', { state: 'visible' });
 
     // Install the longtask observer BEFORE the keystroke so it captures
     // anything fired during the input. Stash the entries on window for the
@@ -288,7 +292,7 @@ test.describe('cross-cutting', () => {
       }
     });
 
-    const input = page.locator('.shell .shell__input');
+    const input = page.locator('[aria-label="shell command"]');
     await input.focus();
     await expect(input).toHaveValue('');
 
@@ -296,7 +300,7 @@ test.describe('cross-cutting', () => {
     // reflecting the character. We measure in the browser to avoid
     // Playwright-roundtrip latency dominating the reading.
     const elapsedMs = await page.evaluate(async () => {
-      const el = document.querySelector('.shell .shell__input') as HTMLInputElement | null;
+      const el = document.querySelector('[aria-label="shell command"]') as HTMLInputElement | null;
       if (!el) throw new Error('shell input not found');
       const start = performance.now();
       // Dispatch a synthetic 'a' keystroke via the InputEvent path React

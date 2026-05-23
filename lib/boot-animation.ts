@@ -4,29 +4,48 @@
 // without pulling in any client-island machinery.
 
 // ── Typed line-spec data ──────────────────────────────────────────────────────
-export type Span = { cls: string; text: string };
+
+// Boot class keys — logical names resolved to scoped class strings at runtime.
+// HeroBootAnimation passes the CSS Module class map; boot-animation.ts stays
+// CSS-agnostic (no import of *.module.css from a pure lib file).
+export type BootClassKey =
+  | 'bootOk'
+  | 'bootEnc'
+  | 'bootWelcome'
+  | 'bootPrompt'
+  | 'bootCmd'
+  | 'bootMatrixPrefix'
+  | 'bootMatrixOut'
+  | 'bootCursor'
+  | 'bootLine'
+  | 'shake'
+  | 'shake2';
+
+export type BootClasses = Record<BootClassKey, string>;
+
+export type Span = { cls: BootClassKey; text: string };
 export type LinePart = string | Span;
 
 export const DESKTOP_LINE_SPECS: LinePart[][] = [
   ['[SYSTEM BOOT SEQUENCE INITIATED]'],
-  [' '], // non-breaking space: regular space collapses in some block contexts
-  ['Initializing kernel modules... ', { cls: 'boot__ok', text: 'OK' }],
-  ['Mounting local filesystems... ', { cls: 'boot__ok', text: 'OK' }],
-  ['Starting network services... ', { cls: 'boot__ok', text: 'OK' }],
-  ['Loading security protocols... ', { cls: 'boot__enc', text: '[ENCRYPTED]' }],
-  [{ cls: 'boot__welcome', text: 'Welcome to DEV_OS v2.0.4-stable [user: erik]' }],
-  [' '], // non-breaking space: regular space collapses in some block contexts
+  [' '], // non-breaking space: prevents HTML whitespace collapse in block spans
+  ['Initializing kernel modules... ', { cls: 'bootOk', text: 'OK' }],
+  ['Mounting local filesystems... ', { cls: 'bootOk', text: 'OK' }],
+  ['Starting network services... ', { cls: 'bootOk', text: 'OK' }],
+  ['Loading security protocols... ', { cls: 'bootEnc', text: '[ENCRYPTED]' }],
+  [{ cls: 'bootWelcome', text: 'Welcome to DEV_OS v2.0.4-stable [user: erik]' }],
+  [' '], // non-breaking space: prevents HTML whitespace collapse in block spans
 ];
 
 export const MOBILE_LINE_SPECS: LinePart[][] = [
   ['[BOOT SEQUENCE INITIATED]'],
-  [' '], // non-breaking space: regular space collapses in some block contexts
-  ['kernel modules... ', { cls: 'boot__ok', text: 'OK' }],
-  ['mount fs... ', { cls: 'boot__ok', text: 'OK' }],
-  ['network... ', { cls: 'boot__ok', text: 'OK' }],
-  ['security... ', { cls: 'boot__enc', text: '[ENCRYPTED]' }],
-  [{ cls: 'boot__welcome', text: 'DEV_OS v2.0.4 [user: erik]' }],
-  [' '], // non-breaking space: regular space collapses in some block contexts
+  [' '], // non-breaking space: prevents HTML whitespace collapse in block spans
+  ['kernel modules... ', { cls: 'bootOk', text: 'OK' }],
+  ['mount fs... ', { cls: 'bootOk', text: 'OK' }],
+  ['network... ', { cls: 'bootOk', text: 'OK' }],
+  ['security... ', { cls: 'bootEnc', text: '[ENCRYPTED]' }],
+  [{ cls: 'bootWelcome', text: 'DEV_OS v2.0.4 [user: erik]' }],
+  [' '], // non-breaking space: prevents HTML whitespace collapse in block spans
 ];
 
 export const DESKTOP_DIALOG = [
@@ -37,23 +56,25 @@ export const DESKTOP_DIALOG = [
 ];
 export const MOBILE_DIALOG = ['Wake up, Neo...', 'The Matrix has you...', 'Knock, knock, Neo...'];
 
-// ── Sysfail timing constants (Fix 4: replaces bare magic numbers) ─────────────
-// Timeline: shake at 0ms → shake-2 at 40ms → clear at 80ms → hide at 5000ms → rain resumes at 5300ms
+// Sysfail timing constants (Fix 4: replaces bare magic numbers)
+// Timeline: shake at 0ms -> shake-2 at 40ms -> clear at 80ms -> hide at 5000ms -> rain resumes at 5300ms
 const SYSFAIL_SHAKE_FRAME_1_MS = 40;
 const SYSFAIL_SHAKE_FRAME_2_MS = 80;
 const SYSFAIL_VISIBLE_MS = 5000;
 const SYSFAIL_FADE_TAIL_MS = 300;
 
-// ── Safe DOM builders (no innerHTML) ─────────────────────────────────────────
-export function buildLine(parts: LinePart[]): HTMLElement {
+// Safe DOM builders (no innerHTML) — accept BootClasses so callers provide
+// scoped CSS Module class strings; the lib stays CSS-system-agnostic.
+export function buildLine(parts: LinePart[], cls: BootClasses): HTMLElement {
   const line = document.createElement('span');
-  line.className = 'boot__line';
+  line.className = cls.bootLine;
+  line.dataset.testid = 'boot-line';
   for (const p of parts) {
     if (typeof p === 'string') {
       line.appendChild(document.createTextNode(p));
     } else {
       const s = document.createElement('span');
-      s.className = p.cls;
+      s.className = cls[p.cls];
       s.textContent = p.text;
       line.appendChild(s);
     }
@@ -61,24 +82,30 @@ export function buildLine(parts: LinePart[]): HTMLElement {
   return line;
 }
 
-// buildBlankLine removed (Fix 5): call sites use buildLine([' ']) (nbsp) directly.
+// buildBlankLine removed (Fix 5): call sites use buildLine(['\u00a0'], cls) directly.
 
-export function buildStaticCmdLine(): HTMLElement {
-  return buildLine([
-    { cls: 'boot__prompt', text: 'erik@portfolio:~$' },
-    ' ',
-    { cls: 'boot__cmd', text: 'run bio.exe --verbose' },
-  ]);
+export function buildStaticCmdLine(cls: BootClasses): HTMLElement {
+  return buildLine(
+    [
+      { cls: 'bootPrompt', text: 'erik@portfolio:~$' },
+      ' ',
+      { cls: 'bootCmd', text: 'run bio.exe --verbose' },
+    ],
+    cls,
+  );
 }
 
-export function buildStaticDialogLine(text: string): HTMLElement {
-  return buildLine([
-    { cls: 'boot__matrix-prefix', text: '>' },
-    { cls: 'boot__matrix-out', text: text },
-  ]);
+export function buildStaticDialogLine(text: string, cls: BootClasses): HTMLElement {
+  return buildLine(
+    [
+      { cls: 'bootMatrixPrefix', text: '>' },
+      { cls: 'bootMatrixOut', text: text },
+    ],
+    cls,
+  );
 }
 
-// ── Boot animation (DOM mutations, no per-char useState — matches proto) ──────
+// Boot animation (DOM mutations, no per-char useState — matches proto)
 export type BootCtrl = {
   cancel: () => void;
   pauseDialog: () => void;
@@ -90,6 +117,7 @@ export function runBoot(
   container: HTMLElement,
   specs: LinePart[][],
   dialog: string[],
+  cls: BootClasses,
   opts: {
     lineMs: number;
     lineJitter: number;
@@ -121,7 +149,7 @@ export function runBoot(
     }
     const spec = specs[idx];
     if (!spec) return;
-    container.appendChild(buildLine(spec));
+    container.appendChild(buildLine(spec, cls));
     later(() => revealLines(idx + 1), opts.lineMs + Math.random() * opts.lineJitter);
   }
 
@@ -130,14 +158,16 @@ export function runBoot(
     const cmdText = 'run bio.exe --verbose';
 
     const line = document.createElement('span');
-    line.className = 'boot__line';
+    line.className = cls.bootLine;
+    line.dataset.testid = 'boot-line';
     const prompt = document.createElement('span');
-    prompt.className = 'boot__prompt';
+    prompt.className = cls.bootPrompt;
     prompt.textContent = 'erik@portfolio:~$';
     const cmdEl = document.createElement('span');
-    cmdEl.className = 'boot__cmd';
+    cmdEl.className = cls.bootCmd;
     const cursor = document.createElement('span');
-    cursor.className = 'boot__cursor';
+    cursor.className = cls.bootCursor;
+    cursor.dataset.testid = 'boot-cursor';
     line.appendChild(prompt);
     line.appendChild(document.createTextNode(' '));
     line.appendChild(cmdEl);
@@ -149,8 +179,8 @@ export function runBoot(
       if (cancelled) return;
       if (i >= cmdText.length) {
         cursor.remove();
-        // Fix 5: was buildBlankLine(). Use nbsp so the blank span isn't collapsed.
-        container.appendChild(buildLine([' ']));
+        // Fix 5: was buildBlankLine(). NBSP prevents whitespace collapse in block spans.
+        container.appendChild(buildLine([' '], cls));
         later(startDialog, 350);
         return;
       }
@@ -164,14 +194,16 @@ export function runBoot(
     if (cancelled) return;
 
     const line = document.createElement('span');
-    line.className = 'boot__line';
+    line.className = cls.bootLine;
+    line.dataset.testid = 'boot-line';
     const prefix = document.createElement('span');
-    prefix.className = 'boot__matrix-prefix';
+    prefix.className = cls.bootMatrixPrefix;
     prefix.textContent = '>';
     const out = document.createElement('span');
-    out.className = 'boot__matrix-out';
+    out.className = cls.bootMatrixOut;
     const cur = document.createElement('span');
-    cur.className = 'boot__cursor';
+    cur.className = cls.bootCursor;
+    cur.dataset.testid = 'boot-cursor';
     line.appendChild(prefix);
     line.appendChild(out);
     line.appendChild(cur);
@@ -240,7 +272,7 @@ export function runBoot(
   };
 }
 
-// ── onFirstLoop builder (Fix 2: eliminates ctrl temporal dead zone) ───────────
+// onFirstLoop builder (Fix 2: eliminates ctrl temporal dead zone)
 // The onFirstLoop callback must call ctrl.pauseDialog() / ctrl.resumeDialog(),
 // but it is passed as an argument to runBoot — which means ctrl is not yet
 // assigned when the closure is created.
@@ -249,15 +281,19 @@ export function runBoot(
 // looks up ctrlRef.current at invocation time (seconds later, always assigned)
 // rather than capturing a pre-assignment binding.
 //
+// cls: scoped shake/shake2 class names threaded in from HeroBootAnimation
+// so the lib stays CSS-system-agnostic.
+//
 // Used exclusively by HeroBootAnimation.tsx; kept here so it lives next to
 // runBoot and the sysfail timing constants it references.
 export function buildDesktopOnFirstLoop(
   el: HTMLElement,
   ctrlRef: { current: BootCtrl | null },
+  cls: Pick<BootClasses, 'shake' | 'shake2'>,
 ): () => void {
   return () => {
     // Find the parent <section> via DOM traversal — works since el is mounted
-    // inside .hero--desktop > .hero__left.
+    // inside the desktop hero left panel.
     const section = el.closest('section');
 
     // Skip if hero is off-screen.
@@ -266,11 +302,11 @@ export function buildDesktopOnFirstLoop(
       if (r.bottom < 0 || r.top > window.innerHeight) return;
     }
 
-    // 1. Shake hero panel: shake at 0ms → shake-2 at FRAME_1_MS → clear at FRAME_2_MS
+    // 1. Shake hero panel: shake at 0ms -> shake-2 at FRAME_1_MS -> clear at FRAME_2_MS
     if (section) {
-      section.classList.add('shake');
-      setTimeout(() => section.classList.replace('shake', 'shake-2'), SYSFAIL_SHAKE_FRAME_1_MS);
-      setTimeout(() => section.classList.remove('shake', 'shake-2'), SYSFAIL_SHAKE_FRAME_2_MS);
+      section.classList.add(cls.shake);
+      setTimeout(() => section.classList.replace(cls.shake, cls.shake2), SYSFAIL_SHAKE_FRAME_1_MS);
+      setTimeout(() => section.classList.remove(cls.shake, cls.shake2), SYSFAIL_SHAKE_FRAME_2_MS);
     }
 
     // 2. Pause rain + CRT effects + dialog.
@@ -281,7 +317,7 @@ export function buildDesktopOnFirstLoop(
     ctrlRef.current?.pauseDialog();
 
     // 3. Signal HeroSystemFailure to show the overlay via DOM event.
-    // HeroSystemFailure listens on 'hero:sysfail:show' and toggles .on.
+    // HeroSystemFailure listens on 'hero:sysfail:show' and toggles state.
     window.dispatchEvent(new CustomEvent('hero:sysfail:show'));
 
     // 4. After display hold: hide overlay, restore CRT, resume rain + dialog.

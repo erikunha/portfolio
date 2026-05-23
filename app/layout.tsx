@@ -1,10 +1,10 @@
+import './globals.css';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import Script from 'next/script';
 import { personSchema } from '@/content/seo';
-import { INLINE_CSS } from '@/lib/inline-css';
 
 // Self-hosted per CLAUDE.md — no Google CDN link shipped to the browser
 const mono = localFont({
@@ -97,7 +97,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className={`${mono.variable} ${display.variable}`} suppressHydrationWarning>
       {/* if you're inspecting this, you're hiring me · erikhenriquealvescunha@gmail.com */}
       <head>
-        <style>{INLINE_CSS}</style>
         <script type="application/ld+json">{personJsonLd}</script>
       </head>
       {/* body[data-motion] is mutated at runtime by /init.js before paint; keep

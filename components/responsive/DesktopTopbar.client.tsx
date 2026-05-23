@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useState } from 'react';
 import { applyMotion, readMotion } from '@/lib/motion';
+import styles from './DesktopTopbar.module.css';
 
 export function DesktopTopbar() {
   const [motionOn, setMotionOn] = useState(true);
@@ -20,51 +21,51 @@ export function DesktopTopbar() {
   }
 
   return (
-    <div className="topbar">
-      <div className="topbar-inner">
-        <div className="topbar__dots" aria-hidden="true">
-          <span className="topbar__dot topbar__dot--red" />
-          <span className="topbar__dot topbar__dot--yellow" />
-          <span className="topbar__dot topbar__dot--green" />
+    <div className={styles.root}>
+      <div className={styles.inner}>
+        <div className={styles.dots} aria-hidden="true">
+          <span className={`${styles.dot} ${styles.dotRed}`} />
+          <span className={`${styles.dot} ${styles.dotYellow}`} />
+          <span className={`${styles.dot} ${styles.dotGreen}`} />
         </div>
-        <div className="topbar__tabs">
-          <div className="topbar__tab topbar__tab--active">
+        <div className={styles.tabs}>
+          <div className={`${styles.tab} ${styles.tabActive}`}>
             <span>&#9632;</span>
             <span>ERIK_CUNHA.SH</span>
-            <span className="topbar__tab-close">&times;</span>
+            <span className={styles.tabClose}>&times;</span>
           </div>
-          <div className="topbar__tab">
+          <div className={styles.tab}>
             <span>&#9635;</span>
             <span>PROJECTS</span>
           </div>
         </div>
-        <nav className="topbar__nav" aria-label="Site navigation">
-          <a className="topbar__navlink" href="#bio">
+        <nav className={styles.nav} aria-label="Site navigation">
+          <a className={styles.navlink} href="#bio">
             01_BIO
           </a>
-          <a className="topbar__navlink" href="#sec-projects">
+          <a className={styles.navlink} href="#sec-projects">
             02_WORK
           </a>
-          <a className="topbar__navlink" href="#sec-git-log">
+          <a className={styles.navlink} href="#sec-git-log">
             03_LOGS
           </a>
-          <a className="topbar__navlink" href="#sec-npm-stack">
+          <a className={styles.navlink} href="#sec-npm-stack">
             04_DEPS
           </a>
           <button
             type="button"
-            className="topbar__motion"
+            className={styles.motion}
             onClick={toggleMotion}
             data-motion={motionOn ? 'on' : 'off'}
           >
-            <span className="topbar__mdot" />
+            <span className={styles.mdot} />
             <span>{motionOn ? 'MOTION: ON' : 'MOTION: OFF'}</span>
           </button>
-          <a className="topbar__btn-outline" href="/erik-cunha-cv.pdf" download>
+          <a className={styles.btnOutline} href="/erik-cunha-cv.pdf" download>
             DOWNLOAD_CV
           </a>
           <a
-            className="topbar__btn-primary"
+            className={styles.btnPrimary}
             href="https://www.linkedin.com/in/erikunha/"
             target="_blank"
             rel="noreferrer"

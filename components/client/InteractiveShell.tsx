@@ -5,8 +5,17 @@ import SHELL_RESPONSES from '@/content/shell-commands';
 import { readMotion } from '@/lib/motion';
 import { parseStreamChunk } from '@/lib/stream-protocol';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
+import styles from './InteractiveShell.module.css';
 
 type Line = { id: number; kind: 'prompt' | 'output' | 'error' | 'info' | 'loading'; text: string };
+
+const KIND_CLASS: Record<Line['kind'], string> = {
+  prompt: styles.linePrompt ?? '',
+  output: styles.lineOutput ?? '',
+  error: styles.lineError ?? '',
+  info: styles.lineInfo ?? '',
+  loading: styles.lineLoading ?? '',
+};
 
 const INITIAL_LINES: Omit<Line, 'id'>[] = [
   {
@@ -88,9 +97,9 @@ function AnimatedPlaceholder() {
     };
   }, []);
   return (
-    <span className="shell__placeholder-anim" aria-hidden="true">
+    <span className={styles.placeholderAnim} aria-hidden="true" data-testid="shell-placeholder">
       <span ref={textRef} />
-      <span className="shell__cursor" />
+      <span className={styles.cursor} data-testid="shell-cursor" />
     </span>
   );
 }
@@ -104,7 +113,11 @@ function LoadingDots() {
     return () => clearInterval(id);
   }, []);
   return (
-    <span className="shell__line shell__line--loading" aria-hidden="true">
+    <span
+      className={`${styles.line} ${styles.lineLoading}`}
+      aria-hidden="true"
+      data-testid="shell-line-loading"
+    >
       {DOT_FRAMES[frame]}
     </span>
   );
@@ -298,25 +311,25 @@ export function InteractiveShell() {
   );
 
   return (
-    <div className="shell">
-      <div className="shell__bar">
-        <div className="shell__bar-dots" aria-hidden="true">
-          <span className="shell__bar-dot shell__bar-dot--red" />
-          <span className="shell__bar-dot shell__bar-dot--yellow" />
-          <span className="shell__bar-dot shell__bar-dot--green" />
+    <div className={styles.root}>
+      <div className={styles.bar}>
+        <div className={styles.barDots} aria-hidden="true">
+          <span className={`${styles.barDot} ${styles.barDotRed}`} />
+          <span className={`${styles.barDot} ${styles.barDotYellow}`} />
+          <span className={`${styles.barDot} ${styles.barDotGreen}`} />
         </div>
         {isMobile ? (
-          <span className="shell__bar-title">ZSH</span>
+          <span className={styles.barTitle}>ZSH</span>
         ) : (
           <>
             <span>erik@portfolio · /bin/sh</span>
-            <span className="shell__bar-title">SESSION_ID: 0xDEADBEEF</span>
+            <span className={styles.barTitle}>SESSION_ID: 0xDEADBEEF</span>
           </>
         )}
       </div>
 
       <div
-        className="shell__feed"
+        className={styles.feed}
         ref={feedRef}
         role="log"
         aria-label="shell output"
@@ -327,13 +340,15 @@ export function InteractiveShell() {
           l.kind === 'loading' ? (
             <LoadingDots key={l.id} />
           ) : (
-            <span key={l.id} className={`shell__line shell__line--${l.kind}`}>
+            <span key={l.id} className={`${styles.line} ${KIND_CLASS[l.kind]}`} data-kind={l.kind}>
               {l.text}
             </span>
           ),
         )}
         {streamingText !== null && (
-          <span className="shell__line shell__line--output">{streamingText}</span>
+          <span className={`${styles.line} ${styles.lineOutput}`} data-kind="output">
+            {streamingText}
+          </span>
         )}
       </div>
 
@@ -343,10 +358,11 @@ export function InteractiveShell() {
           const cmd = input.trim();
           if (cmd && !busy) runCommand(cmd);
         }}
-        className="shell__form"
+        className={styles.form}
+        data-testid="shell-form"
       >
-        <span className="shell__prompt">erik@portfolio:~$</span>
-        <div className="shell__input-wrap">
+        <span className={styles.prompt}>erik@portfolio:~$</span>
+        <div className={styles.inputWrap}>
           <input
             ref={inputRef}
             value={input}
@@ -358,14 +374,14 @@ export function InteractiveShell() {
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
-            className="shell__input"
+            className={styles.input}
             aria-label="shell command"
           />
           {!input && !busy && !inputFocused && <AnimatedPlaceholder />}
         </div>
       </form>
 
-      <p className="shell__privacy-notice">
+      <p className={styles.privacyNotice} data-testid="shell-privacy-notice">
         Queries are stored 90 days for product improvement. To request deletion, email{' '}
         <a href="mailto:erikhenriquealvescunha@gmail.com">erikhenriquealvescunha@gmail.com</a>. If
         you are technical, you can also POST your request ID (in the <code>X-Request-Id</code>{' '}
@@ -373,14 +389,14 @@ export function InteractiveShell() {
       </p>
 
       {!isMobile && (
-        <div className="shell__commands">
+        <div className={styles.commands} data-testid="shell-commands">
           {'commands: '}
           {COMMANDS.map(({ label, cmd }, i) => (
             <Fragment key={cmd}>
               {i > 0 && ' · '}
               <button
                 type="button"
-                className="shell__cmd-hint"
+                className={styles.cmdHint}
                 onClick={() => {
                   if (!busy) {
                     setInput(cmd);
@@ -399,7 +415,7 @@ export function InteractiveShell() {
 
       {isMobile && (
         <div
-          className="shell__chips"
+          className={styles.chips}
           role="toolbar"
           aria-label="quick commands"
           onClick={(e) => {
@@ -408,7 +424,7 @@ export function InteractiveShell() {
           }}
         >
           {COMMANDS.map(({ label, cmd }) => (
-            <button key={cmd} type="button" className="shell__chip" data-cmd={cmd} disabled={busy}>
+            <button key={cmd} type="button" className={styles.chip} data-cmd={cmd} disabled={busy}>
               {label}
             </button>
           ))}

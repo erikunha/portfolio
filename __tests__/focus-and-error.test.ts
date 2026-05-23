@@ -36,7 +36,7 @@ describe('contact form error region', () => {
     // Idle state: no alert region present yet.
     expect(container.querySelector('[role="alert"]')).toBeNull();
 
-    const form = container.querySelector<HTMLFormElement>('form.contact');
+    const form = container.querySelector<HTMLFormElement>('form');
     expect(form).not.toBeNull();
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));

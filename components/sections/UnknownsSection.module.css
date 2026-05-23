@@ -1,0 +1,44 @@
+.root pre {
+  margin: 0;
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-base);
+  line-height: 1.75;
+  color: var(--fg);
+  white-space: pre-wrap;
+}
+
+.root .cmd {
+  color: var(--muted);
+}
+
+.root .cmd .gt {
+  color: var(--signal);
+  margin-right: 4px;
+}
+
+.root .h {
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.root .mute {
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+.root .bul {
+  color: var(--signal);
+}
+
+.root .open {
+  color: var(--signal);
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .root pre {
+    font-size: var(--fs-sm);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+}

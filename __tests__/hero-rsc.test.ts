@@ -13,6 +13,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { Hero } from '@/components/sections/Hero';
+import styles from '@/components/sections/Hero.module.css';
 
 // createElement (not JSX) keeps this file a `.test.ts` — the meta-check
 // no-source-grep walks `*.test.ts`, so a `.tsx` rename would be invisible.
@@ -28,8 +29,11 @@ describe('Hero RSC conversion', () => {
   it('renders both the desktop and mobile hero variants', () => {
     const html = renderHero();
     // Both variants are emitted server-side; CSS hides the non-matching one.
-    expect(html).toMatch(/class="hero hero--desktop"/);
-    expect(html).toMatch(/class="hero hero--mobile"/);
+    // Class names are scoped by CSS Modules — use module keys for assertions.
+    const desktopClass = styles.desktop as string;
+    const mobileClass = styles.mobile as string;
+    expect(html).toContain(desktopClass);
+    expect(html).toContain(mobileClass);
   });
 
   it('emits an h1 in each variant', () => {
@@ -40,9 +44,11 @@ describe('Hero RSC conversion', () => {
 
   it('mounts the HeroBootAnimation client islands as descendants', () => {
     const html = renderHero();
-    // The client island renders its hero__boot mount container into static
-    // markup even though its effect logic only runs in the browser.
-    const bootCount = (html.match(/class="hero__boot"/g) ?? []).length;
+    // The client island renders its boot mount container into static markup
+    // even though its effect logic only runs in the browser.
+    // Class names are scoped by CSS Modules — use the module key.
+    const bootClass = styles.boot as string;
+    const bootCount = (html.match(new RegExp(`class="${bootClass}"`, 'g')) ?? []).length;
     expect(bootCount).toBe(2);
   });
 

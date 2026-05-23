@@ -2,6 +2,7 @@ import { perfReceipts } from '@/content/perf-receipts';
 import type { PerfReceipt } from '@/content/schemas';
 import { IconPerfReceipts } from '../Icons';
 import { Module } from '../responsive/Module';
+import styles from './PerfReceiptsSection.module.css';
 
 function ReceiptCard({
   metric,
@@ -13,27 +14,28 @@ function ReceiptCard({
   mobileMetric,
 }: PerfReceipt & { hero?: boolean }) {
   const cls = [
-    hero ? 'receipt receipt--hero' : 'receipt',
-    desktopOnly ? 'receipt--desktop-only' : '',
+    styles.receipt,
+    hero ? styles.receiptHero : '',
+    desktopOnly ? styles.receiptDesktopOnly : '',
   ]
     .filter(Boolean)
     .join(' ');
 
   return (
     <li className={cls}>
-      <p className="receipt__metric">
+      <p className={styles.metric}>
         {mobileMetric ? (
           <>
-            <span className="receipt__metric-desktop">{metric}</span>
-            <span className="receipt__metric-mobile">{mobileMetric}</span>
+            <span className={styles.metricDesktop}>{metric}</span>
+            <span className={styles.metricMobile}>{mobileMetric}</span>
           </>
         ) : (
           metric
         )}
       </p>
-      <p className={hero ? 'receipt__delta receipt__delta--hero' : 'receipt__delta'}>{delta}</p>
-      <p className="receipt__company">{company}</p>
-      <p className="receipt__note">{note}</p>
+      <p className={hero ? `${styles.delta} ${styles.deltaHero}` : styles.delta}>{delta}</p>
+      <p className={styles.company}>{company}</p>
+      <p className={styles.note}>{note}</p>
     </li>
   );
 }
@@ -49,7 +51,7 @@ export function PerfReceiptsSection({ defer }: { defer?: boolean } = {}) {
       icon={<IconPerfReceipts />}
       defer={defer}
     >
-      <ul className="receipts">
+      <ul className={styles.root}>
         <ReceiptCard {...hero} hero />
         {rest.map((r) => (
           <ReceiptCard key={r.metric} {...r} />

@@ -1,0 +1,274 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   INTERACTIVE SHELL — CSS Module
+   Migrated from app/css/_shell.css (Task 14a)
+   ───────────────────────────────────────────────────────────────────────── */
+
+.root {
+  background: var(--shell-bg);
+  font-size: var(--fs-base);
+  font-family: var(--font-mono-stack);
+  line-height: 1.65;
+  margin: calc(-1 * var(--pad));
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--signal-dim);
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.14em;
+}
+
+.barDots {
+  display: flex;
+  gap: 6px;
+}
+
+.barDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: block;
+}
+
+.barTitle {
+  margin-left: auto;
+}
+
+.barDotRed {
+  background: var(--red);
+}
+.barDotYellow {
+  background: var(--yellow);
+}
+.barDotGreen {
+  background: var(--green-light);
+}
+
+.feed {
+  padding: 14px 16px;
+  min-height: 220px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.line {
+  margin: 0;
+  display: block;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.linePrompt {
+  color: var(--signal);
+}
+.lineOutput {
+  color: var(--fg);
+  opacity: 0.95;
+}
+.lineError {
+  color: var(--error-soft);
+}
+.lineInfo {
+  color: var(--muted);
+}
+.lineLoading {
+  color: var(--signal);
+  opacity: 0.5;
+}
+
+.form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 16px 12px;
+  border-top: 1px solid var(--signal-dim-2);
+}
+
+.prompt {
+  color: var(--muted);
+  font-size: var(--fs-base);
+  white-space: nowrap;
+}
+
+.inputWrap {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--fs-base);
+  caret-color: var(--signal);
+  caret-shape: block;
+}
+
+.input:focus,
+.input:focus-visible {
+  outline: none;
+}
+
+.placeholderAnim {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  opacity: 0.6;
+  pointer-events: none;
+  font: inherit;
+  font-size: var(--fs-base);
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+}
+
+.cursor {
+  display: inline-block;
+  width: 7px;
+  height: 1.05em;
+  background: var(--signal);
+  vertical-align: -2px;
+  margin-left: 1px;
+  opacity: 1;
+  animation: shell-blink 1.05s steps(2, start) infinite;
+}
+
+@keyframes shell-blink {
+  to {
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor {
+    animation: none;
+  }
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px 12px 10px;
+  border-top: 1px dashed var(--signal-dim-2);
+}
+
+.chip {
+  border: 1px solid var(--signal-dim);
+  color: var(--signal);
+  padding: 4px 8px;
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.1em;
+  border-radius: 2px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  background: transparent;
+}
+
+.chip:active {
+  background: rgba(0, 255, 65, 0.1);
+}
+
+/* Desktop command hints row — rendered inside shell panel, below the input form */
+.commands {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.1em;
+  line-height: 1.8;
+  padding: 8px 16px 12px;
+  border-top: 1px dashed var(--signal-dim-2);
+  opacity: 0.75;
+}
+
+@media (max-width: 768px) {
+  .commands {
+    display: none;
+  }
+}
+
+.cmdHint {
+  display: inline;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  transition:
+    color 150ms ease,
+    text-shadow 150ms ease;
+}
+
+.cmdHint:hover:not(:disabled) {
+  color: var(--signal);
+  text-shadow: 0 0 6px rgba(0, 255, 65, 0.5);
+}
+
+.cmdHint:disabled {
+  cursor: default;
+}
+
+.privacyNotice {
+  margin: 0;
+  padding: 0.5rem 16px;
+  border-top: 1px solid color-mix(in oklab, var(--signal) 14%, transparent);
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: color-mix(in oklab, var(--fg) 55%, transparent);
+}
+
+.privacyNotice code {
+  font-family: inherit;
+  color: var(--signal);
+  opacity: 0.8;
+}
+
+.privacyNotice a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.privacyNotice a:hover {
+  color: var(--signal);
+}
+
+@media (max-width: 768px) {
+  .root {
+    margin-top: 0;
+  }
+  .feed {
+    min-height: 200px;
+    max-height: 320px;
+    font-size: var(--fs-xs);
+  }
+  .form {
+    padding: 8px 12px 10px;
+  }
+  .prompt {
+    font-size: var(--fs-xs);
+  }
+  .input {
+    font-size: var(--fs-sm);
+  }
+  /* From _layout.css 768px block */
+  .bar {
+    font-size: var(--fs-2xs);
+  }
+}

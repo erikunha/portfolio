@@ -29,7 +29,7 @@ const SNAPSHOT_TIMEOUT_MS = 30_000;
 // 'visible' only disables render-skipping; on-screen rendering is identical.
 async function revealDeferredContent(page: Page): Promise<void> {
   await page.evaluate(() => {
-    for (const el of document.querySelectorAll('.cv-defer')) {
+    for (const el of document.querySelectorAll('[data-cv-defer]')) {
       (el as HTMLElement).style.setProperty('content-visibility', 'visible');
     }
   });
@@ -45,11 +45,23 @@ export async function snapshot(page: Page, name: string): Promise<void> {
   });
 }
 
-export async function snapshotLocator(page: Page, locator: Locator, name: string): Promise<void> {
+export async function snapshotLocator(
+  page: Page,
+  locator: Locator,
+  name: string,
+  options?: { maxDiffPixelRatio?: number; maxDiffPixels?: number },
+): Promise<void> {
   await revealDeferredContent(page);
   await expect(locator).toHaveScreenshot(name, {
     mask: volatileMasks(page),
-    maxDiffPixelRatio: 0.01,
+    // maxDiffPixelRatio and maxDiffPixels use AND logic — both must pass.
+    // Spread exactly one: absolute budget disables the ratio gate entirely so
+    // it is the sole constraint. exactOptionalPropertyTypes forbids assigning
+    // undefined to either property — the conditional spread omits rather than
+    // nullifies whichever mode is not active.
+    ...(options?.maxDiffPixels !== undefined
+      ? { maxDiffPixels: options.maxDiffPixels }
+      : { maxDiffPixelRatio: options?.maxDiffPixelRatio ?? 0.01 }),
     animations: 'disabled',
     timeout: SNAPSHOT_TIMEOUT_MS,
   });

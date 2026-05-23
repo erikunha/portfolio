@@ -1,0 +1,21 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 60px var(--pad) 0;
+}
+
+@media (max-width: 900px) {
+  .page {
+    padding: 20px 18px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 14px var(--pad) 0;
+  }
+}

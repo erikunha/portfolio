@@ -1,0 +1,435 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   SHUTDOWN FOOTER — CSS Module
+   Migrated from app/css/_footer.css (Task 14c)
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SHUTDOWN FOOTER — session dashboard, netstat, dmesg reveal, halt plate.
+   ───────────────────────────────────────────────────────────────────────── */
+.root {
+  border-top: 0;
+  padding: 0 0 var(--pad) 0;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+.inner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--pad);
+  font-family: var(--font-mono-stack);
+  text-shadow:
+    0 0 4px #000,
+    0 0 8px rgba(0, 0, 0, 0.6);
+}
+.banner {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.init {
+  color: var(--signal);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-size: var(--fs-base);
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.35);
+}
+.stamp {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.stamp b {
+  color: var(--fg);
+  font-weight: 700;
+  margin-left: 6px;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.cmdline {
+  font-size: var(--fs-base);
+  margin: 0 0 14px;
+  color: var(--fg);
+}
+.cmdline .sdPrompt {
+  color: var(--muted);
+}
+.cmdline .sdCmd {
+  color: var(--fg);
+}
+.rule {
+  border-top: 1px dashed var(--signal-dim);
+  margin: 0 0 22px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 18px;
+  margin-bottom: 26px;
+}
+.panel {
+  border: 1px solid var(--signal-dim);
+  padding: 14px 16px 16px;
+  background: linear-gradient(180deg, rgba(0, 255, 65, 0.025), rgba(0, 0, 0, 0));
+  position: relative;
+}
+.spHead {
+  color: var(--signal);
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.18em;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.spBar {
+  color: var(--signal);
+}
+.spRow {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 12px;
+  font-size: var(--fs-base);
+  line-height: 1.95;
+  align-items: center;
+}
+.spK {
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.spV {
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.spV b {
+  color: var(--signal);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.spBar2 {
+  display: inline-block;
+  width: 88px;
+  height: 6px;
+  background: rgba(0, 255, 65, 0.06);
+  border: 1px solid var(--signal-dim);
+  vertical-align: 0;
+  margin-right: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.spBar2 > i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--signal);
+  box-shadow: 0 0 6px rgba(0, 255, 65, 0.45);
+  transition: width 250ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.netstat pre {
+  margin: 0;
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-base);
+  line-height: 1.95;
+  color: var(--fg);
+  white-space: pre;
+  overflow-x: auto;
+}
+.netstat .nsHdr {
+  color: var(--muted);
+}
+.netstat .nsEst {
+  color: var(--signal);
+  font-weight: 700;
+}
+.netstat .nsListen {
+  color: var(--accent-warm);
+  font-weight: 700;
+}
+.netstat a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--signal-dim);
+  text-underline-offset: 2px;
+}
+.netstat a:hover {
+  text-decoration-color: var(--signal);
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.4);
+}
+.nsGrid {
+  display: grid;
+  grid-template-columns: 28px 90px 1fr;
+  gap: 0 28px;
+  align-items: center;
+}
+.nsGrid a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+}
+.nsHdrCell {
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+.nsProto {
+  color: var(--muted);
+}
+.nsGrid .nsEst {
+  color: var(--signal);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+.nsGrid .nsListen {
+  color: var(--accent-warm);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+.dmesg {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  font-size: var(--fs-base);
+  line-height: 1.85;
+}
+/* dmesg reveal: each line starts hidden; once `.dmesg.booted` is set the
+   line plays `dmesg-reveal` with a per-line `animation-delay` supplied inline
+   by Footer.client.tsx. `animation-fill-mode: both` holds the line at the
+   0% (hidden) state during its delay and at 100% (visible) after. */
+.dmesg .dmLine {
+  display: grid;
+  grid-template-columns: 92px 1fr auto;
+  gap: 14px;
+  align-items: baseline;
+  color: var(--fg);
+  opacity: 0;
+  transform: translateY(2px);
+}
+.dmesg.booted .dmLine {
+  animation: dmesg-reveal 220ms ease both;
+}
+@keyframes dmesg-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.dmesg .dmT {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dmesg .dmMsg {
+  color: var(--fg);
+}
+.dmesg .dmMsg b {
+  color: var(--signal);
+  font-weight: 700;
+}
+.dmesg .dmOk {
+  color: var(--signal);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  font-size: var(--fs-xs);
+}
+.end {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px 16px;
+  row-gap: 10px;
+}
+/* Halt plate reveal: keyed off `.end.booted` and delayed past the dmesg
+   sequence (7 lines x 80ms + a ~180ms gap ~= 660ms) so the boot sequence
+   stays observable end-to-end. `animation-fill-mode: both` holds the hidden
+   state during the delay. */
+.halt {
+  display: inline-block;
+  flex: 0 0 auto;
+  background: var(--signal);
+  color: #000;
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.16em;
+  padding: 5px 12px 6px;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(2px);
+}
+.end.booted .halt {
+  animation: sd-halt-reveal 280ms ease 660ms both;
+}
+@keyframes sd-halt-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+    box-shadow: none;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    box-shadow:
+      0 0 18px rgba(0, 255, 65, 0.45),
+      0 0 40px rgba(0, 255, 65, 0.15);
+  }
+}
+.haltHint {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  opacity: 0;
+}
+.end.booted .haltHint {
+  animation: sd-halt-hint-reveal 280ms ease 840ms both;
+}
+@keyframes sd-halt-hint-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.haltHint kbd {
+  display: inline-block;
+  border: 1px solid var(--signal-dim);
+  background: rgba(0, 255, 65, 0.06);
+  color: var(--signal);
+  padding: 1px 6px 2px;
+  margin: 0 4px;
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  letter-spacing: 0;
+  border-radius: 2px;
+  cursor: pointer;
+  vertical-align: 1px;
+}
+.haltHint kbd:hover {
+  background: rgba(0, 255, 65, 0.12);
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.3);
+}
+.copy {
+  color: var(--muted);
+  font-size: var(--fs-base);
+  margin-top: 22px;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+@media (max-width: 900px) {
+  .root {
+    padding: 0 0 40px var(--pad) calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .spRow {
+    grid-template-columns: 110px 1fr;
+    font-size: var(--fs-sm);
+  }
+  .dmesg .dmLine {
+    grid-template-columns: 72px 1fr auto;
+    gap: 10px;
+    font-size: var(--fs-sm);
+  }
+  .netstat {
+    font-size: var(--fs-sm);
+  }
+  .netstat pre {
+    font-size: var(--fs-sm);
+  }
+}
+
+@media (max-width: 560px) {
+  .init {
+    font-size: var(--fs-sm);
+  }
+  .stamp {
+    font-size: var(--fs-xs);
+  }
+  .spRow {
+    grid-template-columns: 92px 1fr;
+    gap: 8px;
+  }
+  .spBar2 {
+    width: 64px;
+  }
+}
+
+/* Reduced motion: skip the staggered reveal animations entirely — the
+   dmesg lines, halt plate, and hint render in their final visible state
+   immediately. `animation: none` also cancels the inline animation-delay. */
+body[data-motion="reduce"] .dmesg .dmLine,
+body[data-motion="reduce"] .dmesg.booted .dmLine,
+body[data-motion="reduce"] .halt,
+body[data-motion="reduce"] .end.booted .halt,
+body[data-motion="reduce"] .haltHint,
+body[data-motion="reduce"] .end.booted .haltHint {
+  opacity: 1;
+  transform: none;
+  transition: none;
+  animation: none;
+}
+body[data-motion="reduce"] .end.booted .halt {
+  box-shadow:
+    0 0 18px rgba(0, 255, 65, 0.45),
+    0 0 40px rgba(0, 255, 65, 0.15);
+}
+body[data-motion="reduce"] .spBar2 > i {
+  transition: none;
+}
+
+@media (max-width: 768px) {
+  .root {
+    padding: 28px var(--pad) 24px;
+  }
+  .banner {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .init {
+    font-size: var(--fs-sm);
+  }
+  .stamp {
+    font-size: var(--fs-xs);
+  }
+  .panel {
+    padding: 12px 14px 14px;
+    margin-bottom: 10px;
+  }
+  .spHead {
+    font-size: var(--fs-2xs);
+    letter-spacing: 0.16em;
+  }
+  .spRow {
+    grid-template-columns: 100px 1fr;
+    gap: 10px;
+    font-size: var(--fs-xs);
+  }
+  .dmesg .dmLine {
+    grid-template-columns: 72px 1fr auto;
+    gap: 8px;
+    font-size: var(--fs-xs);
+  }
+  .netstat pre {
+    font-size: var(--fs-sm);
+  }
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import { dispatchModuleOpen } from '@/lib/events';
+import styles from './Dock.module.css';
 
 const ITEMS = [
   {
@@ -58,16 +59,17 @@ export function Dock() {
     e.preventDefault();
     const el = document.getElementById(target);
     if (!el) return;
-    // Dispatch a custom event so MobileModule React state opens — avoids
-    // direct DOM mutation which desyncs from React state and breaks on re-render.
-    if (el.classList.contains('module--mobile')) {
+    // If the target is a <details> (Module) element it may be collapsed on
+    // mobile. Dispatch module:open so AppShell flips the open attribute.
+    // tagName check is class-name-agnostic — CSS Modules hashes class names.
+    if (el.tagName === 'DETAILS') {
       dispatchModuleOpen(target);
     }
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
-    <nav className="dock" aria-label="primary">
+    <nav className={styles.root} aria-label="primary">
       {ITEMS.map((it) => (
         <a key={it.target} href={`#${it.target}`} onClick={onJump(it.target)}>
           {it.icon}

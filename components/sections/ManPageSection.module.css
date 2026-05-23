@@ -1,0 +1,140 @@
+.root {
+  overflow-x: auto;
+}
+
+.root pre {
+  margin: 0;
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-base);
+  line-height: 1.65;
+  color: var(--fg);
+  white-space: pre;
+}
+
+.root .mHead {
+  color: var(--signal);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.root .mSec {
+  color: var(--signal);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.root .mErik {
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.root .mMute {
+  color: var(--muted);
+}
+
+.root .mDim {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.desktop {
+  display: block;
+}
+
+.mobile {
+  display: flex;
+  font-family: var(--font-mono-stack);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  color: var(--fg);
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobile .mpHead {
+  color: var(--signal);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-size: var(--fs-xs);
+  margin-bottom: 10px;
+  word-break: break-all;
+}
+
+.mobile .mpSec {
+  color: var(--signal);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+.mobile .mpName {
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.mobile .mpBody {
+  color: var(--fg);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+}
+
+.mobile .mpOpts {
+  display: grid;
+  grid-template-columns: 108px 1fr;
+  gap: 1px 8px;
+  margin-top: 2px;
+}
+
+.mobile .mpFlag {
+  color: var(--muted);
+  opacity: 0.85;
+  font-size: var(--fs-xs);
+  padding: 1px 0;
+  white-space: nowrap;
+}
+
+.mobile .mpDesc {
+  color: var(--fg);
+  font-size: var(--fs-xs);
+  padding: 1px 0;
+  line-height: 1.5;
+}
+
+.mobile .mpExamples {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.mobile .mpExLine {
+  display: block;
+  color: var(--fg);
+  font-size: var(--fs-xs);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.mobile .mpExLine .mpMute {
+  color: var(--muted);
+}
+
+.mobile .mpExLine .mpName {
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.mobile .mpBugs {
+  color: var(--fg);
+  font-size: var(--fs-xs);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+
+:global(#sec-man-page-body) {
+  min-height: 300px;
+}

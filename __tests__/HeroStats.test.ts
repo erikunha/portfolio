@@ -11,27 +11,27 @@ function getDOM() {
 
 describe('HeroStats', () => {
   it('renders one item per heroStats entry', () => {
-    const items = getDOM().querySelectorAll('.hero-stats__item');
+    const items = getDOM().querySelectorAll('[data-testid="hero-stats-item"]');
     expect(items).toHaveLength(heroStats.length);
   });
 
   it('each item renders a value element', () => {
-    const values = getDOM().querySelectorAll('.hero-stats__value');
+    const values = getDOM().querySelectorAll('[data-testid="hero-stats-value"]');
     expect(values).toHaveLength(heroStats.length);
   });
 
   it('each item renders a label element', () => {
-    const labels = getDOM().querySelectorAll('.hero-stats__label');
+    const labels = getDOM().querySelectorAll('[data-testid="hero-stats-label"]');
     expect(labels).toHaveLength(heroStats.length);
   });
 
   it('first stat value matches heroStats[0].value', () => {
-    const first = getDOM().querySelector('.hero-stats__value');
+    const first = getDOM().querySelector('[data-testid="hero-stats-value"]');
     expect(first?.textContent).toBe(heroStats[0]?.value);
   });
 
   it('container carries aria-label for AT context', () => {
-    const container = getDOM().querySelector('.hero-stats');
+    const container = getDOM().querySelector('[data-testid="hero-stats"]');
     expect(container?.getAttribute('aria-label')).toBe('Impact at scale');
   });
 });
