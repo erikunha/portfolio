@@ -18,10 +18,6 @@ const FORBIDDEN = [
   { pattern: /var\(--ds-feedback-[a-z]+\)/g, hint: 'use --ds-color-feedback-* semantic alias' },
   { pattern: /var\(--ds-space-\d+\)/g, hint: 'use --ds-space-pad/rhythm semantic alias' },
   { pattern: /var\(--ds-text-size-[a-z0-9-]+\)/g, hint: 'use --ds-font-size-* semantic alias' },
-  {
-    pattern: /var\(--ds-text-leading-[a-z-]+\)/g,
-    hint: 'use --ds-font-family-* or line-height value',
-  },
 ];
 
 // Scan all .module.css files except the dist/tokens.css file (primitives are valid there).

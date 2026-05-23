@@ -12,6 +12,7 @@
   --ds-green-100: rgba(0, 255, 65, 0.1);
   --ds-green-150: rgba(0, 255, 65, 0.12);
   --ds-green-300: rgba(0, 255, 65, 0.2);
+  --ds-green-350: #4ade80;
   --ds-green-400: rgba(0, 255, 65, 0.4);
   --ds-green-500: #00ff41;
   --ds-green-700: #0a8a2a;
@@ -65,7 +66,7 @@
   --ds-color-signal-quiet: var(--ds-green-100);
   --ds-color-signal-faint: var(--ds-green-150);
   --ds-color-text-body: var(--ds-text-100);
-  --ds-color-text-muted: var(--ds-green-400);
+  --ds-color-text-muted: var(--ds-green-350);
   --ds-color-text-faint: var(--ds-text-300);
   --ds-color-surface-base: var(--ds-neutral-0);
   --ds-color-surface-shell: var(--ds-neutral-50);

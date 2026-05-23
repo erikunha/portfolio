@@ -152,7 +152,7 @@
     },
     {
       "value": "200ms",
-      "reason": "box-shadow / opacity / transform transitions — matches --ds-duration-fast (200ms)"
+      "reason": "box-shadow / opacity / transform transitions — matches --ds-duration-base (200ms)"
     },
     {
       "value": "220ms",
