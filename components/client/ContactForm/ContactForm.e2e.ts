@@ -1,4 +1,4 @@
-// tests/e2e/contact.spec.ts
+// components/client/ContactForm/ContactForm.e2e.ts
 //
 // Phase 1 anchor tests (1-2): happy path + blank-submit validation.
 // Phase 2 expansion (3-4): rate-limit + server-error.
