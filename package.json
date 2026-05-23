@@ -10,6 +10,7 @@
   "packageManager": "pnpm@10.15.0",
   "scripts": {
     "dev": "next dev --turbopack",
+    "prebuild": "pnpm tokens:build",
     "build": "next build",
     "start": "next start",
     "check": "biome check .",
@@ -21,6 +22,8 @@
     "test:e2e": "playwright test",
     "lhci": "lhci autorun",
     "lhci:mobile": "lhci autorun --config=lighthouserc.mobile.json",
+    "tokens:build": "tsx design-system/sd.config.ts",
+    "tokens:check": "tsx design-system/sd.config.ts && git diff --exit-code design-system/dist/",
     "validate-content": "tsx scripts/validate-content.ts",
     "ask:eval": "TSX_TSCONFIG_PATH=scripts/tsconfig.eval.json tsx scripts/ask-eval.ts",
     "bundle-check": "node scripts/check-bundle-size.mjs",
