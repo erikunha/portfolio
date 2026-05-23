@@ -37,5 +37,6 @@ export function Button({
       />
     );
   }
-  return <button type="button" className={classes} {...(rest as AsButton)} />;
+  const { type = 'button', ...buttonRest } = rest as AsButton;
+  return <button className={classes} type={type} {...buttonRest} />;
 }
