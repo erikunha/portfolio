@@ -400,7 +400,7 @@ Build-time TypeScript→MDX generator (`scripts/gen-component-api.mjs`) walks ev
 
 **Source of truth:** TypeScript prop type definitions. JSDoc comments on each prop become the description column. If the JSDoc is missing, the generator fails CI with `MISSING_PROP_DOC: <Component>.<propName>`.
 
-**Drift gate:** `pnpm gen-api:check` regenerates and diffs against committed fragments; fails on drift (catches missing regeneration in PR B/C).
+**Drift gate:** `pnpm gen-api:check` regenerates all fragments and asserts the generator runs to completion without error; fails on `MISSING_PROP_DOC` or generator exception. Fragments are gitignored — the gate is generator determinism + JSDoc completeness, not committed-file drift.
 
 ### 5.10 Visual changelog automation
 
@@ -571,7 +571,7 @@ Dependency graph: A → B → C, with D depending on A+C, and E depending on B (
 1. MDX + Turbopack incompatibility — **HARD GATE on `writing-plans` for PR C.** Pre-plan spike on throwaway branch: smallest possible MDX page in `app/_spike/page.mdx`. Outcome (works / works-with-webpack-fallback / does-not-work) feeds the plan; if no fallback works, PR C scope is reconsidered (eject MDX, ship TSX-compiled docs)
 2. Bundle leak into main routes — per-route `pnpm bundle-check`; required 0-byte delta on `/`
 3. Live preview hydration mismatch — RSC-default + `<noscript>` fallback for copy button
-4. Auto-API drift — `pnpm gen-api:check` regenerates and diffs against committed fragments; fails CI on drift
+4. Auto-API drift — `pnpm gen-api:check` regenerates fragments (gitignored) and asserts deterministic output + JSDoc completeness; fails CI on `MISSING_PROP_DOC` or generator exception
 5. Missing JSDoc on a prop — generator fails CI with `MISSING_PROP_DOC: <Component>.<propName>`; documented in contributor docs
 6. Visual-changelog workflow misses a baseline update — defensive: pre-merge check confirms the workflow ran successfully on the PR
 7. SEO ranking shift — accepted; canonical URLs prevent cross-portfolio duplication
@@ -673,7 +673,7 @@ Per the CLAUDE.md `thinking-inversion before writing-plans` rule, the explicit c
 | Theme switcher flash-of-wrong-theme | Client hydration sets a different theme than SSR initial render | PR D root layout reads theme cookie SSR-side and sets `data-theme` on `<html>` before any client code runs |
 | Figma sync direction conflict | Designer pushes from Figma while engineer pushes from code; both land overlapping changes | Both directions land as PRs that require review on the receiving repo; code is the source of truth; Figma's change is a proposal |
 | Figma token format drift | W3C Design Tokens spec changes break sync | Spec version exact-pinned in `tokens.figma.json` schema reference; CI fails on schema mismatch |
-| Auto-API generator drops a prop | `ts-morph` extraction misses a complex generic prop | `pnpm gen-api:check` regenerates and diffs; missing props show as removed rows in the committed `_generated-api.mdx`; reviewer catches in PR |
+| Auto-API generator drops a prop | `ts-morph` extraction misses a complex generic prop | `pnpm gen-api:check` regenerates fragments (gitignored) and asserts no `MISSING_PROP_DOC` error; missing props surface as generator failures, not as diff against committed files |
 | JSDoc missing on a primitive's prop | Component prop has no JSDoc; generator emits empty description | Generator fails CI with `MISSING_PROP_DOC: <Component>.<propName>`; build doesn't pass until docs added |
 | Visual changelog spam from environmental drift | Font rendering change in Chromium causes hundreds of trivial diff entries | `[no-changelog]` commit-message label skips the changelog entry; for systemic drift, baseline-regen PR labeled `[no-changelog]` |
 | Storybook stories drift from primitive API | Renaming a Button prop breaks all stories | `pnpm storybook:build` runs in CI on every PR touching `design-system/components/*`; TS error fails the build |
