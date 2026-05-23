@@ -23,4 +23,10 @@ describe('TerminalPanel', () => {
     render(<TerminalPanel header="[ PANEL ]">x</TerminalPanel>);
     expect(screen.getByText('[ PANEL ]')).toBeDefined();
   });
+  it('does not apply an undefined solid class when borderStyle=solid (default)', () => {
+    const { container } = render(<TerminalPanel>x</TerminalPanel>);
+    const classList = container.firstElementChild?.classList.toString() ?? '';
+    expect(classList).not.toContain('undefined');
+    expect(classList).not.toContain('solid');
+  });
 });
