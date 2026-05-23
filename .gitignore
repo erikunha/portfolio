@@ -35,6 +35,9 @@
 
 tsconfig.tsbuildinfo
 
+# git worktrees (superpowers using-git-worktrees skill creates these here)
+.worktrees/
+
 # os
 .DS_Store
 .worktrees/

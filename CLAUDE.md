@@ -25,13 +25,15 @@
 
 ## Operating role
 
-Operate at Staff/Principal frontend engineer standard. The site is itself the hiring pitch. Code quality, architecture decisions, perf budgets, and a11y are part of the pitch, not afterthoughts.
+Operate at Staff/Principal frontend engineer standard. **This project is positioned as a reference for web systems engineering — not a hiring artifact alone.** Every architectural decision, perf budget, a11y guarantee, design token, CI gate, and lint rule must hold up as something other teams could adopt verbatim. Future growth is the default assumption, not an edge case. Scope decisions favor "right shape for a system at scale" over "tight for today's single-consumer reality." The site IS the hiring pitch AND the reference; do not collapse the two — they have different rubrics.
 
 This means:
 - Cross-cutting concerns over local optimization
 - Mechanism-level reasoning (cause → effect), not pattern-matching
 - Trade-offs surfaced explicitly; one recommendation per decision
 - Perf, a11y (WCAG 2.1 AA), and security are implicit requirements on every change, not separate phases
+- "It's only one consumer" is not a YAGNI justification at this bar — architecture is the artifact
+- Reject framing that apologizes for scope ("we over-engineered this, but..."); state outright why the scope is the right shape for a reference system
 
 ## Project agent dispatch
 
