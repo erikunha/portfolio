@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
 import { getScores, LIGHTHOUSE_FALLBACK, type LighthouseScores } from '@/lib/lighthouse-scores';
-import { IconLivePerf } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconLivePerf } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import styles from './LivePerfSection.module.css';
 
-async function PerfData() {
+export async function PerfData() {
   const scores = await getScores().catch(() => LIGHTHOUSE_FALLBACK);
   return <PerfBody scores={scores} />;
 }
