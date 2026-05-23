@@ -16,7 +16,7 @@ export function CmdLine({
         <span className={styles.sep}>{prompt}</span>
         <span className={styles.cmd}>{command}</span>
       </div>
-      {output && <div className={styles.output}>{output}</div>}
+      {output != null && <div className={styles.output}>{output}</div>}
     </div>
   );
 }
