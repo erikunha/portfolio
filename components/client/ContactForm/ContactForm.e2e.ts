@@ -5,7 +5,7 @@
 // Test 5 (honeypot trip) was removed — the honeypot field was planned but never built.
 
 import { expect, type Page, test } from '@playwright/test';
-import { installMockBackend, type MockState } from './_helpers/mock-backend';
+import { installMockBackend, type MockState } from '../../../tests/e2e/_helpers/mock-backend';
 
 async function setupContactPage(page: Page, state: MockState): Promise<void> {
   // Install mocks before navigation so no real /api/* call escapes.

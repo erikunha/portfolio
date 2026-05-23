@@ -23,20 +23,17 @@ export default defineConfig({
     {
       name: 'chromium-mobile',
       use: { ...devices['iPhone SE'], defaultBrowserType: 'chromium' },
-      testMatch:
-        /tests\/e2e\/(contact|ask|visual|cross-cutting|design-system-components)\.spec\.ts$/,
+      testMatch: /tests\/e2e\/(ask|visual|cross-cutting|design-system-components)\.spec\.ts$/,
     },
     {
       name: 'webkit-desktop',
       use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 720 } },
-      testMatch:
-        /tests\/e2e\/(contact|ask|visual|cross-cutting|design-system-components)\.spec\.ts$/,
+      testMatch: /tests\/e2e\/(ask|visual|cross-cutting|design-system-components)\.spec\.ts$/,
     },
     {
       name: 'webkit-mobile',
       use: { ...devices['iPhone 14'] },
-      testMatch:
-        /tests\/e2e\/(contact|ask|visual|cross-cutting|design-system-components)\.spec\.ts$/,
+      testMatch: /tests\/e2e\/(ask|visual|cross-cutting|design-system-components)\.spec\.ts$/,
     },
 
     // ── Co-located component E2E (testDir: '.', scoped to *.e2e.ts) ─────
