@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Field } from '@/design-system';
+import { Field } from '@/design-system/components/Field';
 import styles from './ContactForm.module.css';
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
