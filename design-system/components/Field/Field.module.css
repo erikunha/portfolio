@@ -9,6 +9,7 @@
   letter-spacing: 0.08em;
 }
 .input {
+  width: 100%;
   background: transparent;
   border: 1px solid var(--ds-color-border-default);
   color: var(--ds-color-text-body);
