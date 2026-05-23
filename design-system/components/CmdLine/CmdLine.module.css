@@ -1,0 +1,23 @@
+.root {
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-body);
+  line-height: 1.55;
+}
+.prompt {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 4px;
+}
+.user {
+  color: var(--ds-color-text-muted);
+}
+.sep {
+  color: var(--ds-color-text-muted);
+}
+.cmd {
+  color: var(--ds-color-text-body);
+}
+.output {
+  color: var(--ds-color-text-body);
+  margin-top: 4px;
+}
