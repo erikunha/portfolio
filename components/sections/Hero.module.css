@@ -287,7 +287,8 @@
 .ctas {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .cta {
@@ -371,6 +372,7 @@
 
 .mobile {
   min-height: 0;
+  margin-top: 8px;
   position: relative;
   overflow: hidden;
   text-shadow:

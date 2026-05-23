@@ -62,6 +62,7 @@ Invoke the named skill inline (not as a subagent) before the described action.
 | Trigger | Skill |
 |---|---|
 | **Before writing any new file, function, or script** | **`thinking-inversion` — what specifically makes this fail? answers become test cases** |
+| **Before `writing-plans` on any spec** | **`thinking-inversion` — enumerate the class-of-bugs the implementation introduces; each becomes an explicit plan task, not a Copilot finding** |
 | **Before implementing any new file, function, or script** | **`superpowers:test-driven-development` — tests first, always; implementation satisfies them** |
 | After editing any file in `components/` or `app/` | `react-best-practices` |
 | After editing `next.config.ts`, `.env.example`, or Vercel config | `vercel:nextjs` |
@@ -147,6 +148,7 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 - **Process feedback mid-workflow is a hard stop.** When the user gives process or workflow feedback while a task is executing: pause immediately, incorporate it into CLAUDE.md and/or memory, confirm the change with the user, then resume. Do not barrel through to completion and address feedback after the fact.
 - **Code review is not optional on PR branches.** Run `code-review:code-review` on the staged diff before every commit — scripts, config files, routes, and one-liners all count. "It's just a small change" is not an exemption. Skipping this step is the direct cause of multi-round Copilot review cycles (PR #36: 3 rounds, 12 preventable findings). The review catches TypeScript safety issues (`err.message` on `unknown`), input validation gaps (NaN bypass), missing tests, and documentation accuracy before they reach Copilot.
 - **The review should be boring.** If `code-review:code-review` or Copilot finds real bugs, the pre-implementation discipline failed — not the review. Principal/Staff level means bugs don't reach the review; the test suite already encodes the failure modes found by `thinking-inversion`. Multi-round Copilot cycles are a signal to fix the writing process, not the reviewing process.
+- **Every plan must include a failure-mode checklist.** `thinking-inversion` against the spec before `writing-plans` produces the class-of-bugs the implementation introduces. Each bug class becomes an explicit plan task — not a Copilot finding after the fact. This applies to every development flow: features, migrations, refactors, dependency changes, tooling. Omitting it is what turns predictable bugs into multi-round review cycles.
 
 ## Out of scope (unless asked)
 
@@ -180,7 +182,9 @@ Rationale: human-in-the-loop quality gate for AI-assisted development on a Staff
 ## Things that have been considered and rejected
 
 Before proposing any of these, check `DECISIONS.md` to see the reasoning that excluded them:
-- GraphQL · Cloudflare Workers · multi-region deploy · Sentry by default · CAPTCHA on the contact form · separate routes per section · state management library · design system extraction · MDX · separate CMS · Tailwind (removed 2026-05-18) · CSS Modules / CSS-in-JS / styled-components · PostCSS plugins beyond what Lightning CSS provides natively
+- GraphQL · Cloudflare Workers · multi-region deploy · Sentry by default · CAPTCHA on the contact form · per-portfolio-section routes (splitting `/` into multiple routes — distinct from purpose-built routes like `/design-system`) · state management library · MDX as a blog/content engine (distinct from MDX as docs surface for `/design-system`) · separate CMS · Tailwind (removed 2026-05-18) · CSS-in-JS / styled-components · PostCSS plugins beyond what Lightning CSS provides natively
+
+Updated 2026-05-23: removed "design system extraction" (now accepted, see DECISIONS.md 2026-05-23), narrowed "MDX" to "MDX as a blog/content engine," narrowed "separate routes per section" to "per-portfolio-section routes," and removed "CSS Modules" (adopted 2026-05-22).
 
 ## Reference docs in this repo
 
