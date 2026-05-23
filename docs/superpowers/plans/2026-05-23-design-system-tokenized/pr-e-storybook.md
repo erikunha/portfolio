@@ -1296,9 +1296,9 @@ git commit -m "ci(storybook): build + test-runner on PRs touching primitives; de
 ## Task 16: Vercel project setup + `vercel.json` (one-time manual + repo file)
 
 **Files:**
-- Create: `vercel.json`
+- Create: `storybook.vercel.json` (NOT `vercel.json` at repo root — see rationale below)
 
-**Context:** Per spec §6.2 + §7.5 — separate Vercel project `erikunha-ds`, root = `storybook-static/`, framework = "Other". Embed safety is governed by `Content-Security-Policy: frame-ancestors 'self' https://erikunha.dev` (controls iframe embedding); `Access-Control-Allow-Origin: https://erikunha.dev` covers CORS for XHR/fetch use cases from the portfolio. Together these mitigate failure mode 4 (Task 1). The CLI deploy command in Task 15 passes `storybook-static/` as the project root explicitly so the same repo can host both the main portfolio and the Storybook deploy without `vercel.json` conflicts at the repo root.
+**Context:** Per spec §6.2 + §7.5 — separate Vercel project `erikunha-ds`, root = `storybook-static/`, framework = "Other". Embed safety is governed by `Content-Security-Policy: frame-ancestors 'self' https://erikunha.dev` (controls iframe embedding); `Access-Control-Allow-Origin: https://erikunha.dev` covers CORS for XHR/fetch use cases from the portfolio. Together these mitigate failure mode 4 (Task 1). Using `storybook.vercel.json` + `--local-config storybook.vercel.json` in the deploy command (Task 15) avoids the risk that any Vercel project connected to this repo could pick up a repo-root `vercel.json` and alter the main portfolio deploy unintentionally.
 
 **Manual prerequisite (documented in Task 20's DECISIONS.md entry):**
 1. In Vercel dashboard: create project `erikunha-ds`, link to this GitHub repo, set root directory to `storybook-static/`, framework preset = "Other", build command = `(empty — uploaded by CI)`, output directory = `.`.
@@ -1306,9 +1306,9 @@ git commit -m "ci(storybook): build + test-runner on PRs touching primitives; de
 3. Add custom domain `ds.erikunha.dev` to the project; Vercel auto-issues SSL.
 4. Copy the project's IDs into repo secrets: `VERCEL_TOKEN`, `VERCEL_TEAM` (slug), `VERCEL_ORG_ID`, `VERCEL_DS_PROJECT_ID`.
 
-- [ ] **Step 1: Write `vercel.json`**
+- [ ] **Step 1: Write `storybook.vercel.json`**
 
-This file is consumed by the `erikunha-ds` project specifically. The main portfolio project does NOT use this file (it relies on the Next.js defaults baked into the project settings).
+This file is named `storybook.vercel.json` (not `vercel.json`) to avoid any risk that Vercel auto-picks it up for the main portfolio project. The deploy command in Task 15 passes `--local-config storybook.vercel.json` explicitly.
 
 ```json
 {
@@ -1335,7 +1335,7 @@ This file is consumed by the `erikunha-ds` project specifically. The main portfo
 }
 ```
 
-If the main portfolio project at the repo root ever needs its own `vercel.json` (currently it does not), this file must be moved out of the repo root and the deploy command in Task 15 must explicitly point at it (`vercel deploy --local-config storybook.vercel.json`). Document the migration in DECISIONS.md if/when that happens.
+If this file ever needs to move (e.g. repo restructure), update the `--local-config` flag in the Task 15 CI workflow accordingly and document the change in DECISIONS.md.
 
 - [ ] **Step 2: Verify the Vercel project responds**
 
