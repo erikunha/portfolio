@@ -17,4 +17,10 @@ describe('StatTile', () => {
     const { container } = render(<StatTile value="1" label="x" variant="compact" />);
     expect(container.firstElementChild?.classList.toString()).toContain('compact');
   });
+  it('does not apply an undefined default class when variant=default', () => {
+    const { container } = render(<StatTile value="1" label="x" />);
+    const classList = container.firstElementChild?.classList.toString() ?? '';
+    expect(classList).not.toContain('undefined');
+    expect(classList).not.toContain('default');
+  });
 });
