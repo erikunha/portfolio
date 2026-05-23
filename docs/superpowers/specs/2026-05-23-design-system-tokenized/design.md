@@ -56,7 +56,8 @@ Naming: `--ds-{category}-{scale}` or `--ds-{category}-{role}` for non-scale prim
 | Color | `--ds-green-50` (#0a1f0d, solid), `--ds-green-100` (rgba(0,255,65,0.1)), `--ds-green-150` (rgba(0,255,65,0.12)), `--ds-green-300` (rgba(0,255,65,0.2)), `--ds-green-400` (rgba(0,255,65,0.4)), `--ds-green-500` (#00FF41, solid), `--ds-green-700` (#0a8a2a, solid) |
 | Color (text) | `--ds-text-100` (#E6FFE6), `--ds-text-300` (#5AE07B) |
 | Color (neutral) | `--ds-neutral-0` (#000000), `--ds-neutral-50` (#050505) |
-| Color (accent) | `--ds-accent-amber`, `--ds-accent-cyan`, `--ds-feedback-error` |
+| Color (accent) | `--ds-accent-amber` (#ffd86b), `--ds-accent-cyan` (#7fe4ff), `--ds-feedback-error` (#ff8a8a) |
+| Color (chrome dots) | `--ds-chrome-close` (#ff5f57), `--ds-chrome-minimize` (#febc2e), `--ds-chrome-maximize` (#28c840) — macOS traffic-light canonical hexes; no semantic layer (like motion/layer); components reference these primitives directly |
 | Space | `--ds-space-1` (4px) through `--ds-space-16` (64px) |
 | Typography size | `--ds-text-size-2xs` (9px) through `--ds-text-size-3xl` (78px) — 9 sizes |
 | Typography leading | `--ds-text-leading-tight` (1.2), `--ds-text-leading-base` (1.55), `--ds-text-leading-relaxed` (1.85) |
@@ -103,18 +104,28 @@ Naming: `--ds-{category}-{role}-{state?}`. Each references a primitive.
 
 The full size scale (`--ds-font-size-2xs` through `--ds-font-size-3xl`) is also published as semantic tokens for cases where the heading hierarchy doesn't fit — but `--ds-font-size-heading-*` is preferred for headings, `--ds-font-size-body` for body.
 
+**Primitives renamed but with no semantic alias** (referenced directly, like `--ds-duration-*`):
+
+| Old name | New primitive name |
+|---|---|
+| `--red` | `--ds-chrome-close` |
+| `--yellow` | `--ds-chrome-minimize` |
+| `--green-light` | `--ds-chrome-maximize` |
+
 ### 3.4 Enforcement: token boundary lint
 
 `scripts/lint-token-boundary.mjs` runs in CI. Scans every `.module.css` file under `components/`, `app/`, and `design-system/components/`.
 
 **Rejects** any `var()` reference to primitives that DO have a semantic layer:
-- `--ds-green-*`, `--ds-text-N` (numeric N), `--ds-neutral-*`, `--ds-accent-*`, `--ds-feedback-*` (color primitives — semantic layer is `--ds-color-*`)
-- `--ds-space-N` (numeric N) (space primitives — semantic layer is `--ds-space-pad{,-tight}`, `--ds-space-rhythm{,-tight}`)
+- `--ds-green-*`, `--ds-text-\d+` (digit-suffix only — matches `--ds-text-100`, `--ds-text-300`; does NOT match `--ds-text-size-*` or `--ds-text-leading-*`), `--ds-neutral-*`, `--ds-accent-*`, `--ds-feedback-*` (color primitives — semantic layer is `--ds-color-*`)
+- `--ds-space-\d+` (digit-suffix — matches `--ds-space-4`, `--ds-space-16`; space primitives — semantic layer is `--ds-space-pad{,-tight}`, `--ds-space-rhythm{,-tight}`)
 - `--ds-text-size-*`, `--ds-text-leading-*` (typography primitives — semantic layer is `--ds-font-size-*`, `--ds-font-family-*`)
 
-**Allows** semantic tokens AND primitives that have no semantic layer in v1 (motion, layer, radius, border — components reference these primitives directly because there is nothing else to reference):
+**Allows** semantic tokens AND primitives that have no semantic layer in v1 (motion, layer, radius, border, chrome dots — components reference these primitives directly):
 - `var(--ds-color-*)`, `var(--ds-space-pad)`, `var(--ds-space-pad-tight)`, `var(--ds-space-rhythm)`, `var(--ds-space-rhythm-tight)`, `var(--ds-font-*)`, `var(--ds-layout-*)`
-- `var(--ds-duration-*)`, `var(--ds-ease-*)`, `var(--ds-layer-*)`, `var(--ds-radius-*)`, `var(--ds-border-*)`
+- `var(--ds-duration-*)`, `var(--ds-ease-*)`, `var(--ds-layer-*)`, `var(--ds-radius-*)`, `var(--ds-border-*)`, `var(--ds-chrome-*)`
+
+**Naming convention:** primitives MUST NOT use the `--ds-color-` prefix (reserved for semantic tokens only). This keeps the `var(--ds-color-*)` allowlist correct as the system grows.
 
 **Exception path:** the semantic-layer CSS file itself (`design-system/dist/tokens.css`) — primitives are the input there.
 
@@ -137,6 +148,7 @@ Allowlist file: `scripts/lint-no-magic-values.allowlist.json` — documented exc
 - `--ds-color-text-faint` on `--ds-color-surface-base` (≥ 4.5:1)
 - `--ds-color-signal` on `--ds-color-surface-base` (≥ 3:1 — used for large headings)
 - `--ds-color-text-body` on `--ds-color-surface-shell` (≥ 4.5:1)
+- `--ds-color-signal` on `--ds-color-surface-shell` (≥ 3:1 — terminal headers and prompts render on the shell background)
 
 ### 3.7 Build pipeline
 
@@ -153,7 +165,7 @@ Allowlist file: `scripts/lint-no-magic-values.allowlist.json` — documented exc
 
 ### 3.8 Migration
 
-- Codemod (`scripts/migrate-tokens.mjs`) with explicit before→after map applies the rename across all 31 `.module.css` files
+- Codemod (`scripts/migrate-tokens.mjs`) with explicit before→after map applies the rename across all 31 `.module.css` files **and** `.tsx` files with inline `style` prop `var()` references. Two known `.tsx` cases: `components/sections/HottestTakesSection.tsx:17` and `components/sections/ResponsibilitiesSection.tsx:18` (both `var(--muted-dim)` → `var(--ds-color-text-faint)`). Either extend the codemod regex to match `style={{ ... var(--legacy-name) ... }}` patterns, or refactor these two call sites to className-based approaches as part of PR A. Pick one approach; both are valid.
 - `app/css/_tokens.css` deleted
 - `app/globals.css` imports `design-system/dist/tokens.css` instead
 - Ripgrep CI gate fails on any orphan reference to a legacy token name (`--signal`, `--fg`, `--pad`, etc.) outside the legacy-map file in `scripts/migrate-tokens.mjs`
@@ -353,7 +365,7 @@ Three PRs in strict order. Each is independently mergeable.
 
 ### 6.1 PR A — Token pipeline + mechanical migration
 
-**Goal:** retire `app/css/_tokens.css`; project consumes `design-system/dist/tokens.css` only; portfolio renders byte-identical.
+**Goal:** retire `app/css/_tokens.css`; project consumes `design-system/dist/tokens.css` only; portfolio renders within visual baseline tolerance (some semantic token value remaps are deliberate; Playwright baselines regenerated as part of PR; contrast gate confirms WCAG AA maintained throughout).
 
 **Files added:**
 - `design-system/tokens/{color,space,typography,motion,layer,border}.json`
