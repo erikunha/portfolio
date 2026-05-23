@@ -3,21 +3,28 @@
 **Status:** spec → architect-reviewer → writing-plans
 **Date:** 2026-05-23
 **Author:** Erik Cunha (with brainstorming via Claude Code)
-**Spans:** 3 PRs (A: tokens, B: components, C: docs route)
+**Spans:** 5 PRs (A: token pipeline + Figma sync; B: 8 primitive components; C: /design-system MDX docs + auto-API + visual changelog; D: theme variants + switcher; E: Storybook subdomain)
 
 ---
 
 ## 1. Goal
 
-Build a published design system for erikunha.dev positioned at `/design-system`. The system itself is part of the Staff/Principal hiring artifact — the architecture, the rigor, the docs, and the enforcement together demonstrate frontend system thinking at the level the role demands.
+Build a published design system that positions erikunha.dev as a **reference for web systems engineering** — not as a hiring artifact alone. The architecture, the enforcement, the docs, the tooling pipeline, and the design-engineering bridge together are something other teams could adopt verbatim. Future growth is the default assumption: a future second consumer (a side project, a new product surface, an internal tool) finds a system that already handles theming, design-tool sync, and primitive composition without architectural rework.
 
-**The tradeoff stated outright.** A 20-token, single-consumer portfolio does not engineer-justify a two-tier token pipeline, Style Dictionary, four CI lint gates, an extracted primitive component library, and a documented public docs surface. By every conventional scale-vs-cost rubric this is over-engineered. We accept that cost deliberately because the artifact is the point: the demonstration *is* the architecture, the enforcement, and the discipline. A Staff/Principal reviewer reading the repo should recognize the over-engineering as intentional craft, not accidental scope. The architecture must therefore be done well enough that the demonstration lands; half-built over-engineering is worse than no over-engineering.
+The scope is the right shape for that goal. There is no "we accept the over-engineering" hedge here — at this bar, the architecture *is* the artifact, and YAGNI is the wrong frame. A reference system is built for the case where things grow, because the cost of bolting capabilities onto a flat system later is far higher than the cost of designing the layered surface up front. See CLAUDE.md "Operating role" for the framing that makes this the project's default standard, and STANDARDS.md Chapter 12 for the enforcement bar.
 
-The system has three deliverables:
+The system has eight deliverables:
 
 1. **Two-tier token pipeline** (primitives + semantic) authored in JSON, generated to CSS + TypeScript + JSON, consumed by every CSS Module in the codebase.
-2. **Seven primitive components** extracted from existing portfolio patterns: Button, Field, Badge, TerminalPanel, StatTile, CmdLine, KbdKey.
-3. **Public documentation** at `/design-system` with palette, type scale, components (live previews), enforcement rules, and changelog — discoverable from the main portfolio nav.
+2. **Motion semantic layer** layered on top of duration/easing primitives so theme variants can re-tune motion identity without touching components.
+3. **Eight primitive components** extracted from existing portfolio patterns: Button, Field, Badge, TerminalPanel, StatTile, CmdLine, KbdKey, **Link**.
+4. **Theme variant capability with a live demo** — second theme (CRT amber) shipped as a switcher on `/design-system/themes` that proves the two-tier architecture without component churn.
+5. **Bidirectional Figma Tokens sync** — `tokens.json` exported in Figma Tokens spec format, consumable by the Figma Tokens plugin; round-trip diff gate ensures Figma and code do not drift.
+6. **Auto-generated component API tables** — build-time TypeScript-to-MDX generator produces the props/variants table for each component docs page. Single source of truth between TS types and docs.
+7. **Public MDX documentation** at `/design-system` (palette, type scale, components with live previews, enforcement rules, changelog) — discoverable from main portfolio nav.
+8. **Storybook subdomain** at `ds.erikunha.dev` — interactive component playground, exhaustive variant matrix, separate deploy. Complements `/design-system` (curated MDX narrative) rather than replacing it.
+
+Plus: visual-changelog automation from Playwright diffs that posts to `/design-system/changelog` and PR threads.
 
 ---
 
@@ -25,14 +32,11 @@ The system has three deliverables:
 
 Explicitly out of scope:
 
-- Versioning, semver tags, published changelogs as separate releases
-- Storybook (deferred; MDX-driven docs are the chosen surface)
-- Extracted npm package (deferred; single-app consumption only)
-- Theme variants beyond the current "CRT green" aesthetic (deferred; the two-tier architecture enables this later without component churn)
-- Figma sync (deferred; tokens.json export is built so this is one tooling task away)
-- Composed (non-primitive) components like TerminalSection, StatGrid, DataTable, Dock — these stay as section code in the portfolio
-- Visual-changelog automation from Playwright diffs (deferred)
-- Auto-generated component API tables from TypeScript types (deferred; manual MDX tables in v1)
+- Versioning, semver tags, published changelogs as separate releases — the design system evolves in lockstep with the portfolio for now; semver becomes meaningful only when there is a second consumer
+- Extracted npm package — deferred until there is a second consumer. The architecture supports extraction (deep-path imports, no Next-only dependencies in `design-system/`) — extraction itself is one PR away once justified
+- Composed (non-primitive) components like TerminalSection, DataTable, Dock — stay as section code in the portfolio. Documented as "Composition Patterns" on `/design-system/components` so the boundary is explicit
+- Theme variants beyond the two shipped in v1 (CRT green canonical + CRT amber demo) — the architecture supports more; v1 ships two as the demonstration
+- Light theme (the project's brutalist aesthetic is dark-only by design) — see CLAUDE.md "Out of scope" — and the design system's theme architecture is for variants of the dark aesthetic, not light/dark switching
 
 ---
 
@@ -45,7 +49,7 @@ Explicitly out of scope:
 - `color.json` — primitives (green ramp, neutrals, accents, feedback) + semantic aliases (signal, text, surface, border, feedback)
 - `space.json` — primitives (numeric scale) + semantic (`pad`, `pad-tight`, `rhythm`, `rhythm-tight`)
 - `typography.json` — primitives (size scale, line-height scale, font stacks) + semantic (`body`, `heading-sm/md/lg/xl`, `mono`, `display`)
-- `motion.json` — primitives (duration scale, easing curves); no semantic layer needed at v1 — components reference duration primitives directly
+- `motion.json` — primitives (duration scale, easing curves) + semantic (`--ds-motion-*` shorthand aliases); components consume semantics, `@keyframes` blocks may reference primitives directly
 - `layer.json` — primitives (z-index scale: base/sticky/overlay/headline)
 - `border.json` — primitives (width, style: solid/dashed)
 
@@ -102,8 +106,12 @@ Naming: `--ds-{category}-{role}-{state?}`. Each references a primitive.
 | `--ds-font-family-mono` | (JetBrains Mono stack) | `--font-mono-stack` |
 | `--ds-font-family-display` | (Geist stack) | `--font-display-stack` |
 | `--ds-layout-maxw` | (1200px) | `--maxw` |
+| `--ds-motion-fade-default` | `--ds-duration-base --ds-ease-in-out` | (new — currently inline opacity transitions) |
+| `--ds-motion-press` | `--ds-duration-fast --ds-ease-out` | (new — button/CTA hover/active transitions) |
+| `--ds-motion-reveal` | `--ds-duration-slow --ds-ease-out` | (new — overlay/headline reveals) |
+| `--ds-motion-shimmer` | `--ds-duration-slow --ds-ease-in-out` | (new — text/glow shimmer effects) |
 
-The full size scale (`--ds-font-size-2xs` through `--ds-font-size-3xl`) is also published as semantic tokens for cases where the heading hierarchy doesn't fit — but `--ds-font-size-heading-*` is preferred for headings, `--ds-font-size-body` for body.
+The full size scale (`--ds-font-size-2xs` through `--ds-font-size-3xl`) is also published as semantic tokens for cases where the heading hierarchy doesn't fit — but `--ds-font-size-heading-*` is preferred for headings, `--ds-font-size-body` for body. Motion semantic tokens use shorthand notation (`duration easing`) and are consumed as `transition: opacity var(--ds-motion-fade-default)`; components MUST consume motion semantics, not raw duration/easing primitives, except in `@keyframes` definitions where the primitives are still legal.
 
 ### 3.4 Enforcement: token boundary lint
 
@@ -113,10 +121,11 @@ The full size scale (`--ds-font-size-2xs` through `--ds-font-size-3xl`) is also 
 - `--ds-green-*`, `--ds-text-N` (numeric N), `--ds-neutral-*`, `--ds-accent-*`, `--ds-feedback-*` (color primitives — semantic layer is `--ds-color-*`)
 - `--ds-space-N` (numeric N) (space primitives — semantic layer is `--ds-space-pad{,-tight}`, `--ds-space-rhythm{,-tight}`)
 - `--ds-text-size-*`, `--ds-text-leading-*` (typography primitives — semantic layer is `--ds-font-size-*`, `--ds-font-family-*`)
+- `--ds-duration-*`, `--ds-ease-*` (motion primitives — semantic layer is `--ds-motion-*`). Exception: `@keyframes` blocks may consume motion primitives directly since named animations don't compose via the shorthand `duration easing` form
 
-**Allows** semantic tokens AND primitives that have no semantic layer in v1 (motion, layer, radius, border — components reference these primitives directly because there is nothing else to reference):
-- `var(--ds-color-*)`, `var(--ds-space-pad)`, `var(--ds-space-pad-tight)`, `var(--ds-space-rhythm)`, `var(--ds-space-rhythm-tight)`, `var(--ds-font-*)`, `var(--ds-layout-*)`
-- `var(--ds-duration-*)`, `var(--ds-ease-*)`, `var(--ds-layer-*)`, `var(--ds-radius-*)`, `var(--ds-border-*)`
+**Allows** semantic tokens AND primitives that have no semantic layer in v1 (layer, radius, border — components reference these primitives directly because there is nothing else to reference):
+- `var(--ds-color-*)`, `var(--ds-space-pad)`, `var(--ds-space-pad-tight)`, `var(--ds-space-rhythm)`, `var(--ds-space-rhythm-tight)`, `var(--ds-font-*)`, `var(--ds-layout-*)`, `var(--ds-motion-*)`
+- `var(--ds-layer-*)`, `var(--ds-radius-*)`, `var(--ds-border-*)`
 
 **Exception path:** the semantic-layer CSS file itself (`design-system/dist/tokens.css`) — primitives are the input there.
 
@@ -163,11 +172,40 @@ Allowlist file: `scripts/lint-no-magic-values.allowlist.json` — documented exc
 - Ripgrep CI gate fails on any orphan reference to a legacy token name (`--signal`, `--fg`, `--pad`, etc.) outside the legacy-map file in `scripts/migrate-tokens.mjs`
 - DECISIONS.md gets an ADR entry for the migration
 
+### 3.9 Theme variants
+
+The two-tier architecture makes a theme variant a single-file change: redefine the semantic→primitive mapping in a new theme file. v1 ships two themes:
+
+- **`crt-green` (canonical)** — the existing aesthetic. `[data-theme="crt-green"]` on `<html>` (default).
+- **`crt-amber` (demo)** — an alt-theme variant. `[data-theme="crt-amber"]` on `<html>`. Maps `--ds-color-signal` to `--ds-amber-500` (new primitive) and the signal family accordingly. Text, surface, layer tokens unchanged.
+
+**Authoring:** `design-system/tokens/themes/{crt-green,crt-amber}.json` — each file owns the semantic→primitive mappings for that theme; primitives live in shared files (`color.json`, etc.) including the new amber ramp added for `crt-amber`.
+
+**Output:** Style Dictionary generates per-theme CSS scoped to the data attribute selector. The two themes share one bundle (~600 bytes added for the second theme; both selectors live in `tokens.css`). No JS, no runtime theme bundle.
+
+**Switcher (on `/design-system/themes` only):** a small client island (`ThemeSwitcher.client.tsx`, ~500 bytes gzipped) sets `document.documentElement.dataset.theme`. **Dual persistence:** (1) `localStorage` for client-side instant apply; (2) a `theme` cookie via `/api/theme` (fire-and-forget) so the server reads the preference on subsequent SSR navigations. SSR-safe: `app/layout.tsx` reads the `theme` cookie server-side and sets `data-theme` on `<html>` before sending HTML — zero flash, no hydration mismatch. The default (no cookie or invalid value) is `crt-green`. The switcher is NOT shipped on the main portfolio routes — the portfolio itself stays on `crt-green` always.
+
+**Theme contract gate:** `scripts/check-theme-contract.mjs` walks every theme file, asserts every semantic token name in `crt-green` is also defined in every other theme (no missing roles), and runs the contrast check (§3.6) per theme. Adding a new theme requires defining every semantic role; partial themes fail CI.
+
+### 3.10 Figma Tokens sync pipeline
+
+**Goal:** designers update tokens in Figma; designers and engineers see drift surfaced in PRs.
+
+**Format:** `design-system/dist/tokens.figma.json` is the W3C Design Tokens Community Group format ([`tokens.json` spec v0.6+](https://design-tokens.github.io/community-group/format/)) consumed by the Figma Tokens plugin (Tokens Studio). Style Dictionary v4 has a built-in W3C format transformer; we use it directly with one custom transform for our specific reference syntax.
+
+**Workflow direction A — code → Figma:** on every push to main, GitHub Action `tokens-figma-sync.yml` POSTs `tokens.figma.json` to a GitHub repo (`erikunha/design-tokens-figma-sync`) that the Tokens Studio Figma plugin pulls from. Designers see updated tokens within minutes of merge.
+
+**Workflow direction B — Figma → code:** designers push token changes from Tokens Studio to the same GitHub repo on a feature branch; the GH Action `tokens-figma-pull.yml` opens a PR to this repo with the diff applied to `design-system/tokens/*.json`. Engineers review like any other PR — the codebase remains the source of truth; Figma's change becomes a proposal, not a fait accompli.
+
+**Drift gate:** `scripts/check-figma-token-drift.mjs` runs in CI on every PR, regenerates `tokens.figma.json`, and compares against the last-synced version recorded in `design-system/.figma-sync-state.json`. Fails on drift; resolution is either to push the new state (if code changed) or to pull the Figma change (if Figma changed). Drift is information, not a permanent block.
+
+**Out of scope for v1:** Figma file ownership of styles/effects beyond tokens; design-tool sync for component variants (just tokens).
+
 ---
 
 ## 4. Components
 
-Seven primitive components. Each is a single-responsibility, RSC-by-default, semantic-token-only React component. Each ships with a unit test, a Playwright visual baseline, and an MDX docs page.
+Eight primitive components. Each is a single-responsibility, RSC-by-default, semantic-token-only React component. Each ships with a unit test, a Playwright visual baseline, and an MDX docs page.
 
 ### 4.1 File layout per component
 
@@ -236,6 +274,16 @@ design-system/lib/cx.ts   # ~20 LoC, classnames-style composer with literal-type
 - **Variants:** default
 - **A11y:** uses semantic `<kbd>` element; styled with bordered terminal aesthetic
 
+#### Link
+- **Replaces:** every navigation anchor in the portfolio (in-page anchors, external links, dock/topbar nav items). Distinct from `<Button as="a">` which is reserved for ACTION-shaped anchors (CTAs that happen to be links).
+- **Props:** `href: string`, `variant: 'inline' | 'nav' | 'external'`, `as?: 'a'` (always anchor; included for API symmetry with Button), `...HTMLAnchorElement attrs`
+- **Variants:**
+  - `inline` (default) — underlined inline anchor inside text; the canonical "this word is a link" treatment
+  - `nav` — undecorated nav-bar anchor (topbar links, dock links); border-on-focus, no underline
+  - `external` — inline + small `↗` glyph appended via `::after`; auto-detects `target="_blank"` and `rel="noopener noreferrer"`
+- **States:** default, hover (underline thickens or glow appears, per variant), focus-visible (signal-color outline), visited (no special treatment — the terminal aesthetic does not surface visited state)
+- **A11y:** native `<a>` element; external variant announces "(external)" via visually-hidden text after the link content; `rel="noopener noreferrer"` mandatory on external for security; never override the user agent's keyboard activation
+
 ### 4.3 Variant strategy
 
 Each variant maps to its own CSS Module class (`.primary`, `.secondary`, `.sm`, `.md`, `.lg`). Composition via `cx()`. Default values handled in TS props, not in CSS fallbacks. Example:
@@ -259,11 +307,12 @@ export { TerminalPanel } from './components/TerminalPanel';
 export { StatTile } from './components/StatTile';
 export { CmdLine } from './components/CmdLine';
 export { KbdKey } from './components/KbdKey';
+export { Link } from './components/Link';
 export { tokens } from './dist/tokens';  // typed const tree
 export type { Tokens } from './dist/tokens';
 ```
 
-Consumers import as `import { Button } from '@/design-system'`.
+Consumers import as `import { Button } from '@/design-system'` for RSC contexts; in client islands, import via deep paths (`import { Field } from '@/design-system/components/Field'`) to avoid the barrel-leak bundle vector documented in §9.
 
 ---
 
@@ -275,7 +324,8 @@ Consumers import as `import { Button } from '@/design-system'`.
 |---|---|
 | `/design-system` | Landing — overview, principles, links to other pages |
 | `/design-system/tokens` | Palette, type scale, spacing, motion, layers, borders — visual tables |
-| `/design-system/components` | All 7 components on one scrollable page with anchor links (`#button`, etc.) |
+| `/design-system/components` | All 8 components on one scrollable page with anchor links (`#button`, etc.). Auto-API tables generated from TS types at build time |
+| `/design-system/themes` | Theme variant gallery: `crt-green` (canonical) and `crt-amber` (demo). Live switcher; tokens diffed side-by-side |
 | `/design-system/enforcement` | Lint rules, CI gates, contributing guide, codemod info |
 | `/design-system/changelog` | Token + component change log (manually maintained MDX, auto-suggestion script optional) |
 
@@ -334,7 +384,7 @@ Total client JS added to `/design-system/*` routes: **< 2 KB gzipped.** Under th
 
 ### 5.8 Accessibility of the docs
 
-- Extend `tests/a11y/axe.spec.ts` to cover all 5 new routes
+- Extend `tests/a11y/axe.spec.ts` to cover all 6 new routes (5 from PR C + `/design-system/themes` from PR D)
 - Sidebar nav: `<nav aria-label="Design system">` landmark
 - Heading hierarchy: strict h1 → h2 → h3 per page
 - Live previews: source `<details>` is keyboard-navigable
@@ -342,81 +392,158 @@ Total client JS added to `/design-system/*` routes: **< 2 KB gzipped.** Under th
 - Code blocks: `<pre tabIndex={0} role="region" aria-label="Code sample">` so screen readers navigate as a single landmark
 - Lighthouse a11y score = 100 enforced on all new routes
 
-### 5.9 Performance budget
+### 5.9 Auto-generated component API tables
+
+Build-time TypeScript→MDX generator (`scripts/gen-component-api.mjs`) walks every `design-system/components/<Name>/index.ts`, extracts the exported component's props type via `ts-morph`, and emits an MDX fragment table to `design-system/components/<Name>/_generated-api.mdx`. Each component's docs page imports that fragment.
+
+**Output shape per component:** props table (name | type | default | required | description), variants table (variant | classes applied | a11y notes), composition examples (taken from `<Preview>` blocks in the docs page itself).
+
+**Source of truth:** TypeScript prop type definitions. JSDoc comments on each prop become the description column. If the JSDoc is missing, the generator fails CI with `MISSING_PROP_DOC: <Component>.<propName>`.
+
+**Drift gate:** `pnpm gen-api:check` regenerates all fragments and asserts the generator runs to completion without error; fails on `MISSING_PROP_DOC` or generator exception. Fragments are gitignored — the gate is generator determinism + JSDoc completeness, not committed-file drift.
+
+### 5.10 Visual changelog automation
+
+Every Playwright visual baseline that updates produces an entry on `/design-system/changelog`. The workflow `.github/workflows/visual-changelog.yml` runs on PRs that update any baseline under `tests/e2e/visual.spec.ts-snapshots/` or `tests/e2e/design-system-components.spec.ts-snapshots/`:
+
+1. Compares old vs new baseline images
+2. Generates a side-by-side diff PNG for each
+3. Uploads diffs as PR artifact
+4. Posts a PR comment with the diff thumbnails
+5. On merge to main, appends an entry to `app/design-system/changelog/page.mdx` with the PR number, date, component name, and diff thumbnails
+
+**Manual override:** baseline updates labeled `[no-changelog]` in the commit message skip the changelog entry (for trivial environmental drift).
+
+**Source of truth:** the `.png` baselines themselves; the changelog is generated artifact, not hand-edited.
+
+### 5.11 Performance budget
 
 - LCP target: < 1.8s on 4G stays
-- Bundle: < 2KB client JS added to `/design-system/*`; zero added to `/`
-- Build time: +3-5s total (~1-2s Style Dictionary cached on no-op + ~2-3s Shiki MDX syntax highlighting across 5 routes, uncached)
-- LHCI runs against the 5 new routes; budgets per route enforced
+- Bundle: < 2.5KB client JS added to `/design-system/*` (Sidebar + CopyButton + ThemeSwitcher); zero added to `/`
+- Build time: +5-8s total (~1-2s Style Dictionary cached on no-op + ~2-3s Shiki MDX + ~1-2s component API generation + ~1s theme contract check)
+- LHCI runs against the 6 new routes (including `/design-system/themes`); budgets per route enforced
 
 ---
 
-## 6. PR Decomposition
+## 6. Storybook Subdomain (`ds.erikunha.dev`)
 
-Three PRs in strict order. Each is independently mergeable.
+Storybook 8 deployed independently to a Vercel project bound to `ds.erikunha.dev`. Complements `/design-system` (the curated narrative) by providing the exhaustive interactive playground.
 
-### 6.1 PR A — Token pipeline + mechanical migration
+### 6.1 What Storybook adds beyond /design-system
 
-**Goal:** retire `app/css/_tokens.css`; project consumes `design-system/dist/tokens.css` only; portfolio renders byte-identical.
+| Surface | Strength | Use case |
+|---|---|---|
+| `/design-system` (MDX) | Curated narrative; principles + opinion + the story of the system | Hiring-facing artifact; recruiter scrolls through, gets the system's posture |
+| `ds.erikunha.dev` (Storybook) | Exhaustive variant matrix; every prop combination; controls panel; a11y addon; interaction tests | Engineering-facing tool; designer/contributor opens a specific component and explores |
+
+Both are first-class. Neither is an afterthought of the other.
+
+### 6.2 Storybook architecture
+
+- **Stories colocated:** every primitive ships `design-system/components/<Name>/<Name>.stories.tsx` alongside its other files
+- **CSF 3 + Storybook 8:** uses the modern CSF 3 format (`const meta: Meta<typeof Button>`, `Default: Story = { args: ... }`)
+- **Addons in v1:** `@storybook/addon-essentials` (controls, actions, viewport, backgrounds), `@storybook/addon-a11y` (axe inside the Storybook iframe), `@storybook/addon-interactions` (testing-library scenarios)
+- **Theming:** Storybook surface itself uses a custom theme matching the CRT aesthetic (terminal background, signal-green accents); component preview area uses the design system theme directly (loads `tokens.css`)
+- **No Vite override:** Storybook's Vite builder used as-is; we don't fork its config except for path aliases to mirror `@/design-system/*`
+- **Build:** `pnpm storybook:build` outputs to `storybook-static/` (gitignored)
+- **Deploy:** dedicated Vercel project (`erikunha-ds`), root = `storybook-static/`, framework = "Other," CORS headers permissive for embedded viewing on `/design-system` previews
+- **DNS:** `ds.erikunha.dev` CNAME → Vercel; SSL auto-provisioned
+
+### 6.3 What does NOT live in Storybook
+
+- Composition examples (those live in `/design-system/components` MDX)
+- Token documentation (that's `/design-system/tokens`)
+- Principles / overview (that's `/design-system` landing)
+- The hiring narrative (that's the entire main portfolio)
+
+Storybook is the engineering tool; the MDX docs are the system's story.
+
+### 6.4 CI integration
+
+- `pnpm storybook:test` runs the test-runner against every story (uses `@storybook/test-runner`, headless Chrome under Playwright); covers a11y per story and any interaction-test assertions
+- `pnpm storybook:build` runs in CI on every PR; fails if any story fails to build (catches API drift between component and story)
+- Visual regression: Storybook stories AND `/design-system/components` previews both get visual baselines; the two surfaces are double-catched
+
+### 6.5 Why both surfaces (justification)
+
+A skeptical reviewer asks "isn't /design-system enough?" The honest answer: at scale, yes — a real published design system needs both. MDX is the right format for a narrative, Storybook is the right format for an exhaustive interactive matrix. Conflating them forces compromises in either direction. For a reference web system, the two-surface model is the canonical pattern (Material, Carbon, Polaris, Spectrum, every major DS does both). We adopt the canonical pattern, not a compressed version.
+
+---
+
+## 7. PR Decomposition
+
+Five PRs in dependency order. Each is independently mergeable; the portfolio works after each PR is merged even if the next never ships.
+
+Dependency graph: A → B → C, with D depending on A+C, and E depending on B (independent of C and D). D and E may interleave or ship in either order once their dependencies merge.
+
+### 7.1 PR A — Token pipeline + Figma sync + mechanical migration
+
+**Goal:** retire `app/css/_tokens.css`; project consumes `design-system/dist/tokens.css` only; portfolio renders byte-identical; Figma sync infrastructure live.
 
 **Files added:**
-- `design-system/tokens/{color,space,typography,motion,layer,border}.json`
+- `design-system/tokens/{color,space,typography,motion,layer,border}.json` (primitives + semantic)
+- `design-system/tokens/themes/crt-green.json` (canonical theme mappings — empty in PR A; populated when PR D ships amber alongside)
 - `design-system/sd.config.ts`
-- `design-system/dist/{tokens.css,tokens.ts,tokens.json}` (gitignored)
-- `scripts/migrate-tokens.mjs`, `scripts/lint-token-boundary.mjs`, `scripts/lint-no-magic-values.mjs`, `scripts/contrast-check.mjs`
-- `scripts/lint-no-magic-values.allowlist.json`
-- New `pnpm tokens:build` and `pnpm tokens:check` scripts
-- CI workflow updates: 4 new gates (token build, boundary lint, magic-values lint, contrast)
+- `design-system/dist/{tokens.css,tokens.ts,tokens.json,tokens.figma.json}` (gitignored)
+- `scripts/migrate-tokens.mjs`, `scripts/lint-token-boundary.mjs`, `scripts/lint-no-magic-values.mjs`, `scripts/contrast-check.mjs`, `scripts/check-theme-contract.mjs`, `scripts/check-figma-token-drift.mjs`, `scripts/diff-baselines.mjs`
+- `scripts/lint-no-magic-values.allowlist.json` — pre-populated with every legitimate exception found by first lint run
+- `.github/workflows/tokens-figma-sync.yml`, `.github/workflows/tokens-figma-pull.yml`
+- New `pnpm tokens:build`, `pnpm tokens:check`, `pnpm tokens:figma:export`, `pnpm tokens:figma:check` scripts
+- CI workflow updates: 6 new gates (token build, boundary lint, magic-values lint, contrast, theme contract, Figma drift)
 
 **Files changed:**
 - All 31 `.module.css` files (codemod-rewritten)
 - `app/globals.css` (token import path)
 - `app/css/_tokens.css` (deleted)
-- Playwright visual baselines (regenerated as part of PR)
+- Playwright visual baselines (regenerated as part of PR; manual-review gate via `diff-baselines.mjs` before commit)
+- `package.json` (predev + prebuild lifecycle hooks; new scripts)
+- `.gitignore` (`design-system/dist/` added)
 - DECISIONS.md, ARCHITECTURE.md, CLAUDE.md updates
 
 **Failure modes specific to PR A:**
-1. Codemod typos cause silent value changes — mitigated by visual baselines AND contrast gate
-2. Mass-rename PR creates massive review diff — mitigated by structuring codemod commit separately from token-pipeline commits; reviewer reads codemod once, then mechanical diffs
-3. Style Dictionary transitive dep surface — mitigated by exact-pinning + `pnpm bundle-check` confirms zero runtime bundle change (Style Dictionary is build-time only)
-4. CI time regression — mitigated by token build cache keyed on `design-system/tokens/` hash
-5. Codemod misses tokens inside `calc()` / `color-mix()` / `linear-gradient()` wrappers — mitigated by using `postcss-value-parser` AST traversal, NOT regex. Codemod includes a self-test against a fixture file containing every known wrapper form
-6. Visual baseline regeneration masks real drift — mitigated by manual-review gate: before committing regenerated baselines, the contributor runs `scripts/diff-baselines.mjs` (PR A adds this) that emits a per-image diff visualization; contributor confirms each diff is intentional, then commits
-7. `dist/*` missing on fresh clone breaks `pnpm dev` — mitigated by `predev` lifecycle hook (in addition to `prebuild`) that runs `pnpm tokens:build` if `dist/tokens.css` is absent; `dist/` directory added to `.gitignore` as part of PR A
-8. No-magic-values lint allowlist not pre-populated — PR A includes the allowlist file with every legitimate exception in current `.module.css` files (sub-pixel borders, animation timings, 9999px honeypot, etc.) before the gate goes live
+1. Codemod typos cause silent value changes — visual baselines + contrast gate catch them
+2. Mass-rename PR creates massive review diff — codemod commit structured separately from token-pipeline commits
+3. Style Dictionary transitive dep surface — exact-pinning + `pnpm bundle-check` confirms zero runtime bundle change
+4. Codemod misses tokens inside `calc()` / `color-mix()` / `linear-gradient()` wrappers — uses `postcss-value-parser` AST traversal, NOT regex; codemod ships a self-test against a fixture
+5. Visual baseline regeneration masks real drift — manual-review gate via `diff-baselines.mjs` before commit
+6. `dist/*` missing on fresh clone — `predev` lifecycle hook + banner in generated files
+7. Allowlist not pre-populated — first lint run produces the allowlist as part of PR A; lint clean before mergeable
+8. Figma sync workflows leak tokens before code review — both directions require PR review on the receiving repo before propagating
 
 **Reversibility:** medium. Single `git revert` + regenerated visual baselines.
 
-### 6.2 PR B — Primitive components
+### 7.2 PR B — Eight primitive components
 
-**Goal:** 7 primitives shipped under `design-system/components/`; existing portfolio refactored to consume them; renders byte-identical.
+**Goal:** 8 primitives shipped under `design-system/components/`; existing portfolio refactored to consume them; renders byte-identical.
 
 **Files added:**
-- 7 component directories under `design-system/components/{Button,Field,Badge,TerminalPanel,StatTile,CmdLine,KbdKey}/` (4 files each: `.tsx`, `.module.css`, `.test.tsx`, `index.ts`)
+- 8 component directories under `design-system/components/{Button,Field,Badge,TerminalPanel,StatTile,CmdLine,KbdKey,Link}/` (4 files each: `.tsx`, `.module.css`, `.test.tsx`, `index.ts`)
 - `design-system/lib/cx.ts`
-- `design-system/index.ts` (barrel)
+- `design-system/index.ts` (barrel re-export; consumers in client islands MUST use deep paths per §4.4)
 - `tests/e2e/design-system-components.spec.ts` (per-component Playwright visual baselines)
 
 **Files changed:**
 - `components/sections/Hero.tsx` — `<Button>`, `<Badge>`, `<CmdLine>` adoption
-- `components/sections/ContactSection.tsx` + ContactForm island — `<Field>` adoption
+- `components/sections/ContactSection.tsx` + ContactForm island — `<Field>` adoption (via deep-path import)
 - `components/HeroStats.tsx` — `<StatTile>` adoption
 - Every section using a bordered panel — `<TerminalPanel>` adoption
 - ManPage, Shell, Visa, Guitar — `<KbdKey>` + `<CmdLine>` adoption
+- Every nav anchor (topbar, dock, in-section links) — `<Link>` adoption
 - Multiple `.module.css` files shrink as styles move into primitives
 
 **Failure modes specific to PR B:**
-1. Component API doesn't match call sites — mitigated by `thinking-inversion` task in the plan: read every existing call site BEFORE designing each component's API
-2. Visual drift between extracted and inline — mitigated by per-component baselines AND existing section-level baselines (double-catch)
-3. A11y regression — mitigated by per-component axe test AND existing integration axe suite
-4. Bundle regression — mitigated by `pnpm bundle-check` AND lint rule rejecting `"use client"` in `design-system/components/*` without exception comment
-5. Forgotten consumers — ripgrep CI gate fails if any inline `.cta`, `.status`, `.field` class survives outside `design-system/components/`
+1. Component API doesn't match call sites — `thinking-inversion` task: read every existing call site BEFORE designing each component's API
+2. Visual drift between extracted and inline — per-component + section-level baselines double-catch
+3. A11y regression — per-component axe test + existing integration axe suite
+4. Bundle regression — `pnpm bundle-check` + lint rule rejecting `"use client"` in `design-system/components/*` without exception comment
+5. Forgotten consumers — ripgrep CI gate fails if any inline `.cta`, `.status`, `.field`, anchor with old styling survives outside `design-system/components/`
+6. **Barrel-import bundle leak** — client islands importing primitives via the barrel pull the entire surface in. `pnpm bundle-check` per-route diffs `/` route pre/post PR B; required 0-byte delta. If a leak surfaces, deep-path-only import pattern is the remediation; documented in contributor docs
 
 **Reversibility:** medium. Pure-additive primitives; revert is `git revert` + re-inlining.
 
-### 6.3 PR C — `/design-system` route + MDX docs
+### 7.3 PR C — `/design-system` MDX docs + auto-API + visual changelog
 
-**Goal:** public design-system pages live, linked from nav, discoverable.
+**Goal:** public design-system pages live, linked from nav, discoverable; auto-API generation + visual changelog automation infrastructure live.
 
 **Files added:**
 - `app/design-system/{layout.tsx, page.mdx}` (landing)
@@ -425,30 +552,95 @@ Three PRs in strict order. Each is independently mergeable.
 - `app/design-system/enforcement/page.mdx`
 - `app/design-system/changelog/page.mdx`
 - `app/design-system/_components/{Sidebar.client.tsx, CopyButton.client.tsx, Preview.tsx}`
+- `scripts/gen-component-api.mjs` (TS→MDX prop-table generator using `ts-morph`)
+- `design-system/components/<Name>/_generated-api.mdx` (one per component; gitignored)
+- `.github/workflows/visual-changelog.yml`
+- `scripts/build-visual-changelog.mjs` (consumes Playwright diffs; updates `app/design-system/changelog/page.mdx`)
 - `tests/e2e/design-system-pages.spec.ts` (per-route e2e + a11y)
 
 **Files changed:**
 - `next.config.ts` — MDX plugin config
-- `components/DesktopTopbar.tsx` — DESIGN_SYSTEM nav link
+- `components/DesktopTopbar.tsx` — `DESIGN_SYSTEM` nav link
 - `components/Dock.tsx` — 6th slot
-- `app/sitemap.ts` — 5 new URLs
-- `public/llms.txt` — new section
-- `lighthouse.config.cjs` — 5 new routes in LHCI runs
+- `app/sitemap.ts` — 5 new URLs (themes added in PR D)
+- `public/llms.txt` — new section pointing to `/design-system/*`
+- `lighthouse.config.cjs` — 5 new routes in LHCI runs (`/design-system/themes` added in PR D)
 - DECISIONS.md, ARCHITECTURE.md updates
 
 **Failure modes specific to PR C:**
-1. MDX + Turbopack incompatibility — **HARD GATE on writing-plans for PR C.** Before any planning happens, run a 30-min spike on a throwaway branch: smallest possible MDX page in `app/_spike/page.mdx`, observe whether Turbopack compiles it cleanly. Spike outcome (works / works-with-webpack-fallback / does-not-work) feeds the plan. If "does-not-work" without webpack fallback, the entire PR C scope is reconsidered (eject MDX, ship TSX-compiled docs)
-2. Bundle leak into main routes — mitigated by per-route `pnpm bundle-check` with explicit assertion that `/` route client JS does not increase
-3. Live preview hydration mismatch — mitigated by RSC-default + `<noscript>` fallback for copy button only
-4. SEO ranking shift — accepted as goal of the work
-5. A11y regression — mitigated by extending axe spec to all 5 routes; LHCI a11y = 100 enforced
-6. Maintenance load: every new token/component requires a docs update — mitigated by build-time check that every component in `design-system/components/*` has a corresponding `## ComponentName` heading in `app/design-system/components/page.mdx`
+1. MDX + Turbopack incompatibility — **HARD GATE on `writing-plans` for PR C.** Pre-plan spike on throwaway branch: smallest possible MDX page in `app/_spike/page.mdx`. Outcome (works / works-with-webpack-fallback / does-not-work) feeds the plan; if no fallback works, PR C scope is reconsidered (eject MDX, ship TSX-compiled docs)
+2. Bundle leak into main routes — per-route `pnpm bundle-check`; required 0-byte delta on `/`
+3. Live preview hydration mismatch — RSC-default + `<noscript>` fallback for copy button
+4. Auto-API drift — `pnpm gen-api:check` regenerates fragments (gitignored) and asserts deterministic output + JSDoc completeness; fails CI on `MISSING_PROP_DOC` or generator exception
+5. Missing JSDoc on a prop — generator fails CI with `MISSING_PROP_DOC: <Component>.<propName>`; documented in contributor docs
+6. Visual-changelog workflow misses a baseline update — defensive: pre-merge check confirms the workflow ran successfully on the PR
+7. SEO ranking shift — accepted; canonical URLs prevent cross-portfolio duplication
+8. A11y regression on docs — axe spec extended to all 5 routes (themes route added in PR D); LHCI a11y = 100 enforced
+9. Component↔heading drift — build-time check fails if a primitive lacks a `## ComponentName` heading in `app/design-system/components/page.mdx`
 
 **Reversibility:** high. Pure-additive route; revert is `git revert` + nav link removal.
 
+### 7.4 PR D — Theme variants (CRT amber) + theme switcher
+
+**Goal:** second theme (`crt-amber`) shipped as a switcher on `/design-system/themes`; demonstrates the two-tier architecture handles theme variants without component churn.
+
+**Depends on:** PR A (tokens), PR C (docs route)
+
+**Files added:**
+- `design-system/tokens/themes/crt-amber.json` (amber semantic→primitive mappings)
+- `design-system/tokens/color.json` (extended with `--ds-amber-50` through `--ds-amber-700` ramp)
+- `app/design-system/themes/page.mdx` (theme gallery + live switcher)
+- `app/design-system/_components/ThemeSwitcher.client.tsx` (~500 bytes; sets `[data-theme]` on `<html>`, persists via localStorage)
+
+**Files changed:**
+- `app/layout.tsx` — read theme preference cookie SSR-side, set `data-theme` on `<html>` before hydration (zero-flash contract)
+- `app/sitemap.ts` — `/design-system/themes` URL added
+- `components/AppShell.tsx` — theme cookie write on theme change
+- `design-system/dist/tokens.css` — regenerated with two-theme scoped selectors
+- `scripts/contrast-check.mjs` — extended to check both themes
+- DECISIONS.md entry
+
+**Failure modes specific to PR D:**
+1. Theme switch flashes wrong theme on first paint — SSR-side `data-theme` set in root `<html>` from cookie; client switch only updates after initial paint
+2. Amber theme breaks contrast on a pair — `check-theme-contract.mjs` walks both themes; CI fails before merge
+3. Missing semantic role in amber theme — `check-theme-contract.mjs` asserts every role in `crt-green` exists in `crt-amber`
+4. localStorage unavailable (privacy mode) — fallback to cookie; if neither, default to `crt-green`; never throw
+5. ThemeSwitcher leaks into main portfolio bundle — only mounted on `/design-system/themes`; `pnpm bundle-check` confirms zero delta on `/`
+
+**Reversibility:** high. Pure-additive; revert is `git revert`.
+
+### 7.5 PR E — Storybook subdomain
+
+**Goal:** Storybook 8 deployed to `ds.erikunha.dev` as interactive component playground.
+
+**Depends on:** PR B (primitives)
+
+**Files added:**
+- `.storybook/{main.ts,preview.ts,theme.ts}`
+- `design-system/components/<Name>/<Name>.stories.tsx` — one per primitive (8 total)
+- `tests/storybook/*.test.ts` — interaction tests for primitives with state (Field error state, Button disabled, ThemeSwitcher)
+- `vercel.json` (or `vercel.ts`) for the `erikunha-ds` Vercel project — root = `storybook-static/`, headers config
+- `.github/workflows/storybook-deploy.yml` — separate deploy pipeline triggered on main pushes that touch primitives
+
+**Files changed:**
+- `package.json` — `storybook`, `@storybook/*` deps (exact-pinned); `pnpm storybook`, `pnpm storybook:build`, `pnpm storybook:test` scripts
+- `.gitignore` — `storybook-static/` added
+- `tsconfig.json` — Storybook path aliases (`@/design-system/*`)
+- `public/llms.txt` — Storybook subdomain referenced
+- ARCHITECTURE.md, DECISIONS.md updates
+
+**Failure modes specific to PR E:**
+1. Storybook Vite builder conflicts with Next's Turbopack — Storybook runs in its own builder; no shared config; the conflict is structural-only, not runtime
+2. Stories drift from component API — `pnpm storybook:build` runs in CI on every PR that touches `design-system/components/*`; fails on TS error
+3. Subdomain SSL provisioning fails — Vercel auto-provisions; if it fails, fall back to `erikunha-ds.vercel.app` deploy URL until DNS resolves
+4. CORS on embedded preview from `/design-system` — explicit `Access-Control-Allow-Origin: https://erikunha.dev` header in `vercel.json`
+5. Storybook a11y test failure on first push — `@storybook/addon-a11y` runs axe per story; primitives already passed integration axe in PR B, so this should be a tightening, not a new floor
+
+**Reversibility:** high. Independent deploy; revert is `git revert` + Vercel project deletion + DNS cleanup.
+
 ---
 
-## 7. Cross-cutting failure-mode checklist
+## 8. Cross-cutting failure-mode checklist
 
 Per the CLAUDE.md `thinking-inversion before writing-plans` rule, the explicit class-of-bugs this work introduces:
 
@@ -476,70 +668,122 @@ Per the CLAUDE.md `thinking-inversion before writing-plans` rule, the explicit c
 | `design-system/dist/*` is gitignored but imported — `pnpm dev` fails on a fresh clone without `tokens:build` | Developer clones, runs `pnpm dev`, gets import error from `app/globals.css` | PR A adds a `predev` lifecycle hook (in addition to `prebuild`) that runs `pnpm tokens:build` if `dist/tokens.css` is missing |
 | MDX + Turbopack incompatibility discovered mid-plan, plan blocks | Plan assumes MDX works, implementation discovers it doesn't | **PR C spike runs BEFORE plan writing.** Spike outcome (works / works-with-webpack-fallback / does-not-work) is a hard gate on `writing-plans` for PR C |
 | Barrel import leaks primitives into client islands | `ContactForm.client.tsx` imports `<Field>` from `@/design-system`; tree-shaker pulls the entire barrel surface | PR B `pnpm bundle-check` diffs `/` route pre/post, required 0-byte delta; fallback is deep-path import pattern (`@/design-system/components/Field`) documented in contributor docs |
+| Motion primitive leakage into components | `Hero.module.css` uses `transition: opacity var(--ds-duration-base) var(--ds-ease-in-out)` instead of `var(--ds-motion-fade-default)` | PR A boundary lint extended to motion primitives; `@keyframes` blocks are the documented exception |
+| Theme contract drift | `crt-amber.json` missing a semantic role that `crt-green.json` defines | PR A ships `scripts/check-theme-contract.mjs`; PR D extends it to enforce per-theme contrast |
+| Theme switcher flash-of-wrong-theme | Client hydration sets a different theme than SSR initial render | PR D root layout reads theme cookie SSR-side and sets `data-theme` on `<html>` before any client code runs |
+| Figma sync direction conflict | Designer pushes from Figma while engineer pushes from code; both land overlapping changes | Both directions land as PRs that require review on the receiving repo; code is the source of truth; Figma's change is a proposal |
+| Figma token format drift | W3C Design Tokens spec changes break sync | Spec version exact-pinned in `tokens.figma.json` schema reference; CI fails on schema mismatch |
+| Auto-API generator drops a prop | `ts-morph` extraction misses a complex generic prop | `pnpm gen-api:check` regenerates fragments (gitignored) and asserts no `MISSING_PROP_DOC` error; missing props surface as generator failures, not as diff against committed files |
+| JSDoc missing on a primitive's prop | Component prop has no JSDoc; generator emits empty description | Generator fails CI with `MISSING_PROP_DOC: <Component>.<propName>`; build doesn't pass until docs added |
+| Visual changelog spam from environmental drift | Font rendering change in Chromium causes hundreds of trivial diff entries | `[no-changelog]` commit-message label skips the changelog entry; for systemic drift, baseline-regen PR labeled `[no-changelog]` |
+| Storybook stories drift from primitive API | Renaming a Button prop breaks all stories | `pnpm storybook:build` runs in CI on every PR touching `design-system/components/*`; TS error fails the build |
+| Storybook subdomain SSL fails to provision | Vercel DNS bind takes longer than expected | Fall back to `erikunha-ds.vercel.app` deploy URL; documented in PR E spec; DS subdomain follows when DNS resolves |
+| Storybook CORS blocks embedded preview from `/design-system` | Browser refuses to load `ds.erikunha.dev` content inside `erikunha.dev` page | `vercel.json` for `erikunha-ds` sets `Access-Control-Allow-Origin: https://erikunha.dev`; tested in PR E |
+| New component lacks Storybook story | Primitive added in a future PR has no `Component.stories.tsx` | Build-time check fails if `design-system/components/<Name>/` lacks `<Name>.stories.tsx` |
 
 ---
 
-## 8. Testing strategy
+## 9. Testing strategy
 
-**Unit (vitest):** every component gets a `Component.test.tsx` covering: default render, each variant, each size, disabled state, error state (Field), polymorphic `as` (Button, TerminalPanel), prefers-reduced-motion (Badge dot).
+**Unit (vitest):** every primitive gets a `Component.test.tsx` covering: default render, each variant, each size, disabled state, error state (Field), polymorphic `as` (Button, TerminalPanel, Link), prefers-reduced-motion (Badge dot), theme-aware rendering (Link variants × both themes).
 
-**Visual (Playwright):** every component gets a per-variant baseline in `tests/e2e/design-system-components.spec.ts`. Existing section-level baselines in `tests/e2e/visual.spec.ts` continue to catch integration drift.
+**Visual (Playwright):** every primitive gets a per-variant baseline in `tests/e2e/design-system-components.spec.ts`. Existing section-level baselines in `tests/e2e/visual.spec.ts` continue to catch integration drift. Theme variants (PR D) add a second baseline matrix (every component × every theme).
 
-**A11y (axe):** every component gets an axe scan in its test; every new docs route extends `tests/a11y/axe.spec.ts`.
+**A11y (axe):** every primitive gets an axe scan in its test; every new docs route extends `tests/a11y/axe.spec.ts`; Storybook stories run axe via `@storybook/addon-a11y` (PR E).
 
-**E2E (Playwright):** every docs route gets a smoke test in `tests/e2e/design-system-pages.spec.ts` — navigates, asserts content, asserts copy button works (chromium only), asserts live preview renders.
+**E2E (Playwright):** every docs route gets a smoke test in `tests/e2e/design-system-pages.spec.ts` — navigates, asserts content, asserts copy button works (chromium only), asserts live preview renders, asserts theme switcher persists across reload (PR D).
 
-**Lint:** boundary lint, no-magic-values lint, contrast check — all CI gates added in PR A.
+**Storybook (PR E):** `pnpm storybook:test` runs `@storybook/test-runner` against every story (headless Chrome under Playwright); interaction tests in `tests/storybook/*.test.ts` cover state-bearing primitives (Field error state, Button disabled, ThemeSwitcher persistence).
 
-**Build:** `pnpm tokens:check` is a CI gate; `pnpm bundle-check` per route is a CI gate.
+**Lint:** boundary lint, no-magic-values lint, contrast check, theme contract check, Figma drift check, auto-API drift check — all CI gates added by PR A (first 5) and PR C (auto-API).
+
+**Build:** `pnpm tokens:check`, `pnpm tokens:figma:check`, `pnpm gen-api:check`, `pnpm bundle-check` per route — all CI gates. `pnpm storybook:build` runs on every PR touching `design-system/components/*`.
+
+**Pre-plan spike (PR C):** MDX+Turbopack compatibility verified on throwaway branch before `writing-plans` for PR C is invoked. Spike outcome recorded in the spec's appendix (added during PR C planning).
 
 ---
 
-## 9. Performance budget impact
+## 10. Performance budget impact
 
 | Metric | Current | After all PRs | Δ |
 |---|---|---|---|
 | LCP on `/` | <1.8s | <1.8s | 0 |
-| Client JS on `/` | ~30KB | ~30KB | 0 (RSC primitives ship nothing) |
-| Client JS on `/design-system/*` | n/a | <2KB | new |
+| Client JS on `/` | ~30KB | ~30KB | 0 (RSC primitives ship nothing; barrel-leak gated by `pnpm bundle-check`) |
+| Client JS on `/design-system/*` | n/a | <2.5KB total (Sidebar ~1KB + CopyButton ~0.6KB + ThemeSwitcher ~0.5KB + Preview ~0.4KB) | new |
+| Client JS on `ds.erikunha.dev` (Storybook) | n/a | independent deploy; Storybook's own bundle (~250KB) is acceptable for the engineering tool — NOT counted against portfolio budgets | new (separate domain) |
 | Lighthouse Perf on `/` | ≥95 | ≥95 | 0 |
-| Lighthouse Perf on `/design-system/*` | n/a | ≥95 (enforced) | new |
-| Lighthouse A11y everywhere | =100 | =100 | 0 |
-| Build time | ~current | +3-5s total (~1-2s Style Dictionary cached on no-op + ~2-3s Shiki MDX syntax highlighting across 5 routes, uncached) | accepted |
+| Lighthouse Perf on `/design-system/*` | n/a | ≥95 (enforced on 6 routes including `/design-system/themes`) | new |
+| Lighthouse Perf on Storybook | n/a | not gated (engineering tool) | new |
+| Lighthouse A11y everywhere | =100 | =100 (DS routes included; Storybook stories gated via `@storybook/addon-a11y`) | 0 |
+| Build time | ~current | +8-12s total (~1-2s Style Dictionary cached + ~2-3s Shiki MDX + ~1-2s component API gen + ~1s theme contract + ~3-4s Storybook build only when triggered) | accepted at this scale |
 
 **Note on the "Client JS on `/` unchanged" assumption:** PR B introduces a `design-system/index.ts` barrel re-export (§4.4). Barrel imports are a known bundle-leak vector — if a client island like `ContactForm.client.tsx` imports `<Field>` from `@/design-system`, naive tree-shaking can pull the entire barrel surface into the client bundle, even though `<Field>` itself is RSC-safe. PR B includes an explicit verification: `pnpm bundle-check` diffs the `/` route bundle pre-PR-B vs post-PR-B; required result is 0-byte delta. If a leak appears, the remediation is to import primitives via deep paths (`@/design-system/components/Field`) and document the deep-path-only pattern in the design system contributor docs.
 
 ---
 
-## 10. Open questions for architect-reviewer
+## 11. Open questions for architect-reviewer
 
-Each carries a recommendation; architect-reviewer evaluates the recommendation, not invents an answer.
+Most prior open questions resolved during scope expansion 2026-05-23. The remaining open items + the decisions taken:
 
-1. **Motion semantic layer.** Recommendation: NO in v1. Components reference `--ds-duration-*` and `--ds-ease-*` primitives directly. The cost of adding `--ds-motion-fade-default`, `--ds-motion-press-bounce`, etc. without a known second consumer is YAGNI. Adding the layer later is a non-breaking change (primitives remain). Risk: future "snappy vs calm" theme variants require a small follow-up; acceptable.
-2. **`KbdKey` inclusion in v1.** Recommendation: INCLUDE. The component is ~20 LoC, has one clear use site, and tightens the artifact narrative ("we have a coherent set of terminal primitives"). Excluding it just to hit 6 is arbitrary. **Decision confirmed 2026-05-23 after architect-reviewer pressure-test.**
+1. **Motion semantic layer.** **Decision 2026-05-23: INCLUDED in v1.** Per CLAUDE.md "Operating role" — YAGNI is the wrong frame at this bar. Motion semantics (`--ds-motion-fade-default`, `--ds-motion-press`, `--ds-motion-reveal`, `--ds-motion-shimmer`) layered on duration/easing primitives. Components consume the semantics; `@keyframes` blocks remain a documented primitive-consumption exception.
+2. **`KbdKey` inclusion in v1.** **Decision: INCLUDE.** Coherent terminal-primitive set; ~20 LoC; multiple use sites in ManPage and Shell.
+3. **`StatTile` with one consumer.** **Decision: KEEP in v1.** Documenting the primitive sets up the next StatGrid consumer cleanly. The composition pattern (`StatGrid`) lives in the docs page, not the primitive set — the boundary is explicit.
+4. **`Link` as a primitive.** **Decision 2026-05-23: INCLUDE in v1.** Resolves the Button/anchor semantic conflation flagged by architect-reviewer. Three variants (`inline`, `nav`, `external`) cover every anchor pattern in the portfolio. v1 component count is 8.
+5. **`StatGrid` composition on `/design-system/components`.** **Decision: YES**, under a "Composition Patterns" subsection. Documents the canonical 4-up grid using `StatTile` with the source visible.
+6. **`<Preview>` source-of-truth model.** **Decision: AUTOMATED from JSX children** via `@mdx-js/loader` AST walking at build time. Removes the source-vs-preview drift bug class.
+7. **Mobile sidebar mechanism.** **Decision: native `<details>`** — zero JS, accessibility-safe, aesthetic-consistent.
 
-2a. **`StatTile` with only one consumer (HeroStats) in v1.** Architect-reviewer flagged this as "a primitive with one consumer is a component, not a primitive." **Decision: KEEP in v1.** Rationale: (a) the artifact's value is the SYSTEM, not the consumption-count math — documenting StatTile as a primitive sets up the next StatGrid consumer cleanly; (b) the spec already excludes the parent `StatGrid` composition from primitive scope (§4.2 note), which addresses the "scope creep" concern from a different angle; (c) the over-engineering tradeoff in §1 is the same one — we accept it deliberately.
+**New open question (raised by scope expansion):**
 
-2b. **`Link` as a missing primitive.** Architect-reviewer flagged that anchors and `<Button as="a">` conflate "navigation" and "action" semantics. **Decision: DEFER to v2.** Rationale: (a) keeps v1 scope at 7; (b) the existing portfolio's anchors are inconsistent enough that discovering the right Link API is itself a design exercise that deserves its own brainstorm; (c) `<Button as="a">` for the small number of action-shaped anchors (Hero CTA → GitHub) is acceptable for v1 — Button is the action primitive, anchor is the rendering choice. A future `<Link>` brainstorm covers the navigation anchors specifically.
-3. **`StatGrid` composition on `/design-system/components`.** Recommendation: YES, in a separate "Composition Patterns" subsection at the bottom of the components page. Documents the canonical 4-up grid using `StatTile`, with the source visible. Sets up future composition documentation without bloating the primitives list.
-4. **`<Preview>` source-of-truth model.** Recommendation: AUTOMATED from JSX children. Use `@mdx-js/loader` AST walking at build time to serialize the children of `<Preview>` into the source-display block. Removes a class of drift bugs. Adds ~50 LoC of build glue; one-time cost.
-5. **Mobile sidebar mechanism.** Recommendation: native `<details>` is acceptable for the polish bar. The CRT/brutalist aesthetic favors native, not animated. Zero JS, zero accessibility risk, ships immediately. Revisit only if user testing flags a problem.
+8. **Figma sync repository topology.** Recommendation: a single shared repo `erikunha/design-tokens-figma-sync` that both this codebase pushes to AND Tokens Studio plugin pulls from. Alternative: direct webhook to Figma. Recommendation favors the shared repo because GitHub's PR review surface is the desired control point (the spec says "Figma's change becomes a proposal" — that proposal needs a PR to exist).
+9. **Storybook subdomain authentication.** Recommendation: PUBLIC (no auth). Reasoning: the design system is public-by-design; the hiring-artifact value depends on discoverability. Alternative is Vercel password protection, which would obscure the artifact. Open to override if specific stories carry confidential examples (none anticipated in v1).
+10. **Visual changelog cadence on `/design-system/changelog`.** Recommendation: one entry per merged PR that updates a baseline. Alternative is daily/weekly batched entries (less spam, less granularity). Per-PR matches the spec's "single source of truth = the baseline files themselves" principle.
 
 ---
 
-## 11. Acceptance criteria
+## 12. Acceptance criteria
 
 The work is complete when:
 
-- [ ] All 3 PRs (A, B, C) merged
+**Token system (PR A):**
 - [ ] `app/css/_tokens.css` deleted; project consumes `design-system/dist/tokens.css`
-- [ ] Every `.module.css` uses semantic tokens only (boundary lint passing)
-- [ ] Zero hardcoded magic values in `.module.css` (no-magic-values lint passing)
-- [ ] All WCAG AA contrast pairs pass (contrast check passing)
-- [ ] All 7 primitives extracted and consumed in the existing portfolio
-- [ ] `/design-system/{,tokens,components,enforcement,changelog}` live, linked from topbar + dock
-- [ ] Lighthouse Perf ≥95, A11y =100 on `/` AND all 5 new routes
-- [ ] Client JS on `/` unchanged
-- [ ] Visual baselines regenerated and committed
-- [ ] DECISIONS.md, ARCHITECTURE.md, CLAUDE.md reflect the new system
-- [ ] `architect-reviewer` returned `GATE_RESULT: PASS` on this spec before plan writing
+- [ ] Two-tier architecture: primitives + semantic in separate JSON files; Style Dictionary generates outputs
+- [ ] Every `.module.css` uses semantic tokens only (boundary lint passing; motion primitives allowed in `@keyframes` only)
+- [ ] Zero hardcoded magic values in `.module.css` (no-magic-values lint passing; allowlist populated)
+- [ ] All WCAG AA contrast pairs pass for `crt-green` (contrast check passing)
+- [ ] Motion semantic layer (`--ds-motion-*`) defined and consumed by components
+- [ ] Figma sync workflows live (both directions); drift gate passing
+- [ ] `predev` lifecycle hook present; fresh clone runs `pnpm dev` without manual `tokens:build`
+
+**Components (PR B):**
+- [ ] All 8 primitives extracted (Button, Field, Badge, TerminalPanel, StatTile, CmdLine, KbdKey, Link) and consumed in the existing portfolio
+- [ ] Per-component unit tests, visual baselines, axe scans all green
+- [ ] Barrel import bundle-leak gate: 0-byte delta on `/` route client JS
+- [ ] Every nav anchor uses `<Link>`; every action anchor uses `<Button as="a">`; no inline `.cta`/`.status`/`.field` survives outside `design-system/components/`
+
+**Docs route (PR C):**
+- [ ] `/design-system/{,tokens,components,enforcement,changelog}` live, linked from topbar + dock + sitemap + llms.txt
+- [ ] Auto-API tables generated at build time; every component prop has JSDoc; `gen-api:check` passing
+- [ ] Visual changelog workflow live; PRs that update baselines post diff comments + changelog entries
+- [ ] Lighthouse Perf ≥95, A11y =100 on `/design-system/*`
+
+**Theme variants (PR D):**
+- [ ] `crt-amber` theme shipped; theme contract check passing for both themes
+- [ ] `/design-system/themes` page live with switcher; SSR-safe (no theme flash on first paint)
+- [ ] All WCAG AA contrast pairs pass for `crt-amber` (extended contrast check passing)
+- [ ] Main portfolio routes stay on `crt-green` always; ThemeSwitcher is `/design-system/themes`-only
+
+**Storybook (PR E):**
+- [ ] `ds.erikunha.dev` resolves to Storybook 8 deploy
+- [ ] Every primitive has a `<Name>.stories.tsx` with default + variant stories
+- [ ] `@storybook/addon-a11y` runs on every story; no violations
+- [ ] `pnpm storybook:build` runs in CI; fails on TS error or story drift
+- [ ] Build-time check: every `design-system/components/<Name>/` has `<Name>.stories.tsx`
+
+**Cross-cutting:**
+- [ ] Lighthouse Perf ≥95, A11y =100 on `/` (unchanged)
+- [ ] Client JS on `/` unchanged (RSC primitives ship nothing)
+- [ ] Visual baselines regenerated and reviewed via `diff-baselines.mjs` before commit
+- [ ] DECISIONS.md, ARCHITECTURE.md, CLAUDE.md, STANDARDS.md reflect the new system
+- [ ] `architect-reviewer` returned `GATE_RESULT: PASS` on this spec before plan writing (final pass; this spec)
+- [ ] MDX+Turbopack spike completed before PR C planning (recorded outcome)
