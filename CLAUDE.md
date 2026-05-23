@@ -44,7 +44,7 @@ Invoke the named agent before the described action. These are definitions of don
 | Planning | Before invoking `writing-plans` on any spec | `architect-reviewer` |
 | Implementation | After editing `app/`, `components/`, or `lib/` files | `nextjs-developer` |
 | Type safety | After editing `content/*.ts` | `typescript-pro` |
-| Testing | When writing or modifying tests in `__tests__/` or `tests/` | `test-automator` |
+| Testing | When writing or modifying tests in `components/`, `app/`, or `tests/` | `test-automator` |
 | Visual QA | After any UI change — section layout, CSS, responsive | `ui-ux-tester` |
 | AI feature | After editing `app/api/ask/` or `lib/stream-protocol.ts` | `ai-engineer` |
 | SEO | After editing `app/opengraph-image.tsx`, `sitemap.ts`, `robots.txt`, `llms.txt` | `seo-specialist` |
@@ -120,7 +120,7 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 - **Default: React Server Components, SSG at build time.** Zero JS shipped for static sections.
 - **Client islands by exception:** Matrix dialog loop, INTERACTIVE_SHELL, contact form, IntersectionObserver typewriter, MOTION indicator.
 - All client files named `*.client.tsx`. RSC drift must be visible in PR review.
-- **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** Per-state re-renders tank INP. The interactive shell's streaming answer, by contrast, renders *through* React (rAF-coalesced state) — see `STANDARDS.md` Chapter 1; enforced by `__tests__/InteractiveShell.streaming.test.ts`.
+- **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** Per-state re-renders tank INP. The interactive shell's streaming answer, by contrast, renders *through* React (rAF-coalesced state) — see `STANDARDS.md` Chapter 1; enforced by `components/client/InteractiveShell/InteractiveShell.test.tsx`.
 
 ## Aesthetic constraints
 
