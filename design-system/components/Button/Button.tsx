@@ -13,7 +13,7 @@ export type ButtonBaseProps = {
 export type AsButton = ButtonBaseProps &
   ButtonHTMLAttributes<HTMLButtonElement> & { as?: 'button' };
 export type AsAnchor = ButtonBaseProps &
-  AnchorHTMLAttributes<HTMLAnchorElement> & { as: 'a'; disabled?: boolean };
+  AnchorHTMLAttributes<HTMLAnchorElement> & { as: 'a'; href: string; disabled?: boolean };
 export type ButtonProps = AsButton | AsAnchor;
 
 export function Button({
