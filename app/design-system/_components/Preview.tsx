@@ -9,12 +9,12 @@ type PreviewProps = {
 
 export function Preview({ source, children }: PreviewProps) {
   return (
-    <TerminalPanel className={styles.root}>
-      <div className={styles.live}>{children}</div>
-      {source && (
-        <details className={styles.sourceToggle}>
-          <summary className={styles.summary}>VIEW SOURCE</summary>
-          <pre className={styles.source}>
+    <TerminalPanel className={styles.root as string}>
+      <div className={styles.live as string}>{children}</div>
+      {source != null && (
+        <details className={styles.sourceToggle as string}>
+          <summary className={styles.summary as string}>VIEW SOURCE</summary>
+          <pre className={styles.source as string}>
             <code>{source}</code>
           </pre>
         </details>

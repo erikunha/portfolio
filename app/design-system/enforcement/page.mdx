@@ -1,0 +1,59 @@
+export const metadata = {
+  title: 'Enforcement — Design System — erikunha.dev',
+  description: 'Lint rules and CI gates enforcing the design token system',
+};
+
+# ENFORCEMENT
+
+The design system is enforced in CI — rules are not documentation, they are gates.
+
+## CI Gates (PR A)
+
+Four new steps run in `build-and-gate` before the build:
+
+| Gate | Script | What it checks |
+|---|---|---|
+| Token build | `pnpm tokens:build` | Style Dictionary builds without error |
+| Token drift | `pnpm tokens:check` | `design-system/dist/` matches source JSON |
+| Boundary lint | `pnpm lint:token-boundary` | No primitive refs in component CSS |
+| No-magic-values | `pnpm lint:no-magic-values` | No raw hex/px/ms/z-index in module CSS |
+| Contrast | `pnpm lint:contrast` | All WCAG AA pairs pass |
+
+## Token Boundary Lint
+
+**File:** `scripts/lint-token-boundary.mjs`
+
+Rejects any `.module.css` file that uses a CSS primitive var when a semantic alias exists.
+
+**Forbidden (primitives with semantic aliases):**
+- `var(--ds-green-NNN)` — use `var(--ds-color-signal)` (or other signal alias)
+- `var(--ds-text-NNN)` (digit suffix) — use `var(--ds-color-text-*)`
+- `var(--ds-space-NNN)` (digit suffix) — use `var(--ds-space-pad)` or `--ds-space-rhythm`
+- `var(--ds-text-size-*)` — use `var(--ds-font-size-*)`
+
+**Allowed (no semantic layer exists):**
+- `var(--ds-duration-*)`, `var(--ds-ease-*)`, `var(--ds-layer-*)`, `var(--ds-radius-*)`, `var(--ds-border-*)`, `var(--ds-chrome-*)`
+
+## No-Magic-Values Lint
+
+**File:** `scripts/lint-no-magic-values.mjs`
+
+Rejects raw values that should be token references:
+- Hex colors (`#rrggbb`) — use `var(--ds-color-*)`
+- Raw `px` values outside the allowlist — use spacing tokens
+- Raw `ms`/`s` durations — use `var(--ds-duration-*)`
+- Raw `z-index` integers — use `var(--ds-layer-*)`
+
+Exceptions are documented in `scripts/lint-no-magic-values.allowlist.json`.
+
+## Naming Convention
+
+**Primitives MUST NOT use the `--ds-color-` prefix.** That prefix is reserved for semantic tokens. The boundary lint allowlist `var(--ds-color-*)` works correctly only if this convention holds.
+
+## Adding a New Component
+
+1. Create `design-system/components/NewComponent/` with 4 files (`.tsx`, `.module.css`, `.test.tsx`, `index.ts`)
+2. Export from `design-system/index.ts`
+3. Use only semantic tokens in `.module.css` — boundary lint will fail otherwise
+4. Add `## NewComponent` heading in `app/design-system/components/page.mdx` — the `check:component-docs` gate will fail if missing
+5. Write Playwright visual baseline in `tests/e2e/design-system-components.spec.ts`

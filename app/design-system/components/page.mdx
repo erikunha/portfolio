@@ -1,0 +1,105 @@
+export const metadata = {
+  title: 'Components — Design System — erikunha.dev',
+  description: '7 primitive RSC components for erikunha.dev',
+};
+
+# COMPONENTS
+
+All 7 primitives are React Server Components. Zero client JavaScript.
+
+## Button
+
+**Props:** `variant: 'primary' | 'secondary'`, `size: 'sm' | 'md' | 'lg'`, `as: 'button' | 'a'`
+
+<Preview>
+  <Button variant="primary" as="a" href="#">EXEC_HIRE</Button>
+  <Button variant="secondary" as="a" href="#">DOWNLOAD_CV</Button>
+  <Button variant="primary" size="sm" as="a" href="#">SM</Button>
+  <Button variant="secondary" size="lg" as="a" href="#">LG</Button>
+</Preview>
+
+**Accessibility:** 44px touch target on md size. `focus-visible` outline using `--ds-color-signal`. Disabled anchors use `aria-disabled="true"` (anchors can't be natively disabled).
+
+## Field
+
+**Props:** `name`, `label`, `multiline?: boolean`, `rows?: number`, `error?: string`
+
+<Preview>
+  <Field name="email" label="$ email:" type="email" />
+  <Field name="msg" label="$ message:" multiline rows={3} />
+  <Field name="broken" label="$ broken:" error="Required field" />
+</Preview>
+
+**Accessibility:** Label always rendered and programmatically associated. `aria-describedby` points to error text. `aria-invalid="true"` set on error state.
+
+## Badge
+
+**Props:** `variant: 'default' | 'dot'`, `size: 'sm' | 'md'`
+
+<Preview>
+  <Badge variant="dot">OPEN_TO_WORK</Badge>
+  <Badge variant="default">AVAILABLE</Badge>
+  <Badge size="sm">SMALL</Badge>
+</Preview>
+
+**Accessibility:** Dot is `aria-hidden`. Pulse animation suppressed under `prefers-reduced-motion`.
+
+## TerminalPanel
+
+**Props:** `borderStyle: 'solid' | 'dashed'`, `as: 'div' | 'section' | 'article'`, `header?: ReactNode`
+
+<Preview>
+  <TerminalPanel header="[ STATUS ]">Content here.</TerminalPanel>
+  <TerminalPanel borderStyle="dashed">Dashed panel.</TerminalPanel>
+</Preview>
+
+## StatTile
+
+**Props:** `value: string`, `label: string`, `variant: 'default' | 'compact'`
+
+<Preview>
+  <StatTile value="99" label="LH_SCORE" />
+  <StatTile value="5+" label="YRS_EXP" />
+  <StatTile value="1.2s" label="LCP" variant="compact" />
+</Preview>
+
+**Accessibility:** Rendered as `<dl><dt>{label}</dt><dd>{value}</dd></dl>` — screen readers announce "label: value".
+
+## CmdLine
+
+**Props:** `user?: string`, `command: string`, `output?: ReactNode`, `prompt?: string`
+
+<Preview>
+  <CmdLine command="cat README.md" />
+  <CmdLine user="root@prod" prompt="#" command="whoami" output={<span>root</span>} />
+</Preview>
+
+## KbdKey
+
+**Props:** `size: 'sm' | 'md'`
+
+<Preview>
+  <KbdKey>Ctrl</KbdKey>
+  <KbdKey>+</KbdKey>
+  <KbdKey>K</KbdKey>
+  <KbdKey size="sm">Enter</KbdKey>
+</Preview>
+
+**Accessibility:** Uses semantic `<kbd>` element.
+
+---
+
+## Composition Patterns
+
+### Stat grid using StatTile
+
+Four `StatTile` components in a CSS grid. The grid layout stays in the consumer — primitives don't embed layout opinions.
+
+```tsx
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--ds-color-signal-subtle)' }}>
+  <StatTile value="99" label="LH_SCORE" />
+  <StatTile value="5+" label="YRS_EXP" />
+  <StatTile value="1.2s" label="LCP" />
+  <StatTile value="0" label="CLS" />
+</div>
+```

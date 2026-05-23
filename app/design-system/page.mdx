@@ -1,0 +1,26 @@
+export const metadata = {
+  title: 'Design System — erikunha.dev',
+  description: 'Two-tier token pipeline, 7 primitives, and enforcement docs for erikunha.dev',
+  robots: 'index, follow',
+};
+
+# DESIGN SYSTEM
+
+A published design system for erikunha.dev — positioned at `/design-system` as part of the Staff/Principal frontend hiring artifact.
+
+## What's here
+
+| Section | Purpose |
+|---|---|
+| [Tokens](/design-system/tokens) | Color palette, type scale, spacing, motion, layers |
+| [Components](/design-system/components) | 7 primitive components with live previews |
+| [Enforcement](/design-system/enforcement) | Lint rules, CI gates, contributing guide |
+| [Changelog](/design-system/changelog) | Token and component change log |
+
+## Principles
+
+**Semantic over primitive.** CSS always references semantic tokens (`--ds-color-signal`), never primitives (`--ds-green-500`). The semantic layer enables theme variants without component churn.
+
+**RSC by default.** All 7 primitives are React Server Components — zero client JavaScript unless a component explicitly needs it (none do in v1).
+
+**Enforced, not documented.** Boundary lint, no-magic-values lint, and contrast check run in CI. The rules don't rely on developer discipline.
