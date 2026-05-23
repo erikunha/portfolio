@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Field } from '@/design-system';
 import styles from './ContactForm.module.css';
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
@@ -78,53 +79,39 @@ export function ContactForm() {
           pointerEvents: 'none',
         }}
       />
-      <label className={styles.field}>
-        <span className={styles.prompt}>
-          <span className={styles.promptUser}>user@terminal:~$</span>{' '}
-          <span className={styles.promptCmd}>enter_name</span>
-        </span>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          minLength={2}
-          maxLength={80}
-          autoComplete="name"
-          placeholder="[INPUT REQUIRED]"
-          className={styles.input}
-        />
-      </label>
-      <label className={styles.field}>
-        <span className={styles.prompt}>
-          <span className={styles.promptUser}>user@terminal:~$</span>{' '}
-          <span className={styles.promptCmd}>enter_email</span>
-        </span>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          autoComplete="email"
-          placeholder="[INPUT REQUIRED]"
-          className={styles.input}
-        />
-      </label>
-      <label className={styles.field}>
-        <span className={styles.prompt}>
-          <span className={styles.promptUser}>user@terminal:~$</span>{' '}
-          <span className={styles.promptCmd}>enter_message</span>
-        </span>
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          required
-          minLength={10}
-          maxLength={2000}
-          rows={5}
-          placeholder="[READY FOR DATA INPUT...]"
-          className={`${styles.input} ${styles.inputArea}`}
-        />
-      </label>
+      <Field
+        name="name"
+        label="$ name:"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        required
+        minLength={2}
+        maxLength={80}
+        autoComplete="name"
+        placeholder="[INPUT REQUIRED]"
+      />
+      <Field
+        name="email"
+        label="$ email:"
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+        autoComplete="email"
+        placeholder="[INPUT REQUIRED]"
+      />
+      <Field
+        name="message"
+        label="$ message:"
+        multiline
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        required
+        minLength={10}
+        maxLength={2000}
+        rows={5}
+        placeholder="[READY FOR DATA INPUT...]"
+      />
       <div className={styles.submitrow} aria-live="polite">
         <button type="submit" disabled={status === 'submitting'} className={styles.send}>
           {status === 'submitting' ? 'TRANSMITTING...' : 'EXECUTE_SEND'}

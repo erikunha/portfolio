@@ -1,31 +1,13 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    CONTACT FORM — CSS Module
    Migrated from app/css/_contact.css (Task 14b)
+   Field visual styles (label, input, error) owned by Field primitive.
    ───────────────────────────────────────────────────────────────────────── */
 
 .root {
   display: flex;
   flex-direction: column;
-  gap: 0;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 14px;
-}
-
-.prompt {
-  font-size: var(--ds-font-size-xs);
-  margin-bottom: 6px;
-}
-
-.promptUser {
-  color: var(--ds-color-text-muted);
-}
-.promptCmd {
-  color: var(--ds-color-signal);
+  gap: 14px;
 }
 
 .submitrow {
@@ -34,35 +16,6 @@
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 4px;
-}
-
-.input {
-  width: 100%;
-  background: transparent;
-  border: 1px solid var(--ds-color-signal-subtle);
-  color: var(--ds-color-text-body);
-  font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-body);
-  padding: 10px 12px;
-  outline: none;
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease;
-}
-
-.input:focus {
-  border-color: var(--ds-color-signal);
-  box-shadow: 0 0 10px rgba(0, 255, 65, 0.18);
-}
-
-.input::placeholder {
-  color: var(--ds-color-text-muted);
-  opacity: 0.7;
-}
-
-.inputArea {
-  min-height: 110px;
-  resize: vertical;
 }
 
 .send {
@@ -105,14 +58,4 @@
   color: var(--ds-color-signal);
   text-align: center;
   background: linear-gradient(180deg, rgba(0, 255, 65, 0.04), rgba(0, 0, 0, 0));
-}
-
-@media (max-width: 768px) {
-  .input {
-    font-size: var(--ds-font-size-sm);
-    min-height: 44px;
-  }
-  .inputArea {
-    min-height: 100px;
-  }
 }
