@@ -1,4 +1,4 @@
-// __tests__/ai-metrics-section.test.ts
+// components/sections/AiMetricsSection/AiMetricsSection.test.tsx
 // Behavioral test (CG3): AiMetricsSection surfaces /api/ask eval metrics.
 // It renders to static HTML with zero client runtime — rendering server-side
 // and asserting on the produced markup proves the guarantee (same pattern as
@@ -28,14 +28,14 @@ vi.mock('@/content/ask-metrics', () => ({
 // AiMetricsData is the async inner RSC that fetches and renders metrics.
 // It is invoked as a plain async function so this file stays a `.test.ts`.
 async function renderData(): Promise<string> {
-  const { AiMetricsData } = await import('@/components/sections/AiMetricsSection');
+  const { AiMetricsData } = await import('./AiMetricsSection');
   const element = await AiMetricsData();
   return renderToStaticMarkup(element);
 }
 
 // CSS Modules scopes class names — import styles to get the hashed key for assertions.
 async function getStyles() {
-  const styles = await import('@/components/sections/AiMetricsSection.module.css');
+  const styles = await import('./AiMetricsSection.module.css');
   return styles.default as Record<string, string>;
 }
 

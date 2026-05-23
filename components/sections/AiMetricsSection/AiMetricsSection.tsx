@@ -11,8 +11,8 @@
 import { Suspense } from 'react';
 import type { AskMetrics } from '@/content/ask-metrics';
 import { getAskMetrics } from '@/content/ask-metrics';
-import { IconAiMetrics } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconAiMetrics } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import styles from './AiMetricsSection.module.css';
 
 const pct = (rate: number): string => `${Math.round(rate * 100)}%`;
