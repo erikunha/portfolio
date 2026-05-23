@@ -21,7 +21,7 @@ export function TerminalPanel({
 }: TerminalPanelProps) {
   return (
     <Element className={cx(styles.root, borderStyle === 'dashed' && styles.dashed, className)}>
-      {header && <div className={styles.header}>{header}</div>}
+      {header != null && <div className={styles.header}>{header}</div>}
       {children}
     </Element>
   );

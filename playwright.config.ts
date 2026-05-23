@@ -20,7 +20,7 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } },
     },
-    // New matrix projects — scoped via testMatch to the four new spec files only.
+    // New matrix projects — scoped via testMatch to the five new spec files only.
     // Without testMatch these projects would also run the existing a11y + observability
     // smoke specs, tripling CI minutes and likely failing on WebKit.
     {
