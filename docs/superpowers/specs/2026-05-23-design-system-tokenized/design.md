@@ -49,7 +49,7 @@ Explicitly out of scope:
 - `color.json` — primitives (green ramp, neutrals, accents, feedback) + semantic aliases (signal, text, surface, border, feedback)
 - `space.json` — primitives (numeric scale) + semantic (`pad`, `pad-tight`, `rhythm`, `rhythm-tight`)
 - `typography.json` — primitives (size scale, line-height scale, font stacks) + semantic (`body`, `heading-sm/md/lg/xl`, `mono`, `display`)
-- `motion.json` — primitives (duration scale, easing curves); no semantic layer needed at v1 — components reference duration primitives directly
+- `motion.json` — primitives (duration scale, easing curves) + semantic (`--ds-motion-*` shorthand aliases); components consume semantics, `@keyframes` blocks may reference primitives directly
 - `layer.json` — primitives (z-index scale: base/sticky/overlay/headline)
 - `border.json` — primitives (width, style: solid/dashed)
 

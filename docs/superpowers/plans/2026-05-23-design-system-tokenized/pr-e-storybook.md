@@ -1326,10 +1326,6 @@ This file is consumed by the `erikunha-ds` project specifically. The main portfo
           "value": "https://erikunha.dev"
         },
         {
-          "key": "X-Frame-Options",
-          "value": "ALLOW-FROM https://erikunha.dev"
-        },
-        {
           "key": "Content-Security-Policy",
           "value": "frame-ancestors 'self' https://erikunha.dev"
         }
