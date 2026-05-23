@@ -5,9 +5,9 @@
 
 import { heroTagline } from '@/content/hero';
 import { Badge, Button } from '@/design-system';
-import { HeroBootAnimation } from '../client/HeroBootAnimation';
-import { HeroSystemFailure } from '../client/HeroSystemFailure';
-import { HeroStats } from '../HeroStats';
+import { HeroBootAnimation } from '../../client/HeroBootAnimation';
+import { HeroSystemFailure } from '../../client/HeroSystemFailure';
+import { HeroStats } from '../../HeroStats';
 import styles from './Hero.module.css';
 
 export function Hero() {

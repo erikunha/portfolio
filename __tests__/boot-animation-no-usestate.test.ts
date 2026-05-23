@@ -20,7 +20,7 @@
 
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import styles from '@/components/sections/Hero.module.css';
+import styles from '@/components/sections/Hero/Hero.module.css';
 import { mountClient } from './helpers/render';
 
 vi.mock('@/lib/motion', () => ({
