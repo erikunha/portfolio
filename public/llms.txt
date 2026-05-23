@@ -136,6 +136,6 @@ Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
 
 Published design system at /design-system. Covers:
 - Two-tier token pipeline (JSON to CSS custom properties via Style Dictionary)
-- 7 RSC primitive components (Button, Field, Badge, TerminalPanel, StatTile, CmdLine, KbdKey)
+- 7 primitive components (6 RSC; Field is client for form interactivity): Button, Field, Badge, TerminalPanel, StatTile, CmdLine, KbdKey
 - Enforcement: boundary lint, no-magic-values lint, contrast check, all in CI
 - Docs: /design-system/tokens, /design-system/components, /design-system/enforcement, /design-system/changelog
