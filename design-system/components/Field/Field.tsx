@@ -1,11 +1,12 @@
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import styles from './Field.module.css';
 
-type FieldBase = { name: string; label: string; error?: string };
-type SingleLineProps = FieldBase & InputHTMLAttributes<HTMLInputElement> & { multiline?: false };
-type MultiLineProps = FieldBase &
+export type FieldBase = { name: string; label: string; error?: string };
+export type SingleLineProps = FieldBase &
+  InputHTMLAttributes<HTMLInputElement> & { multiline?: false };
+export type MultiLineProps = FieldBase &
   TextareaHTMLAttributes<HTMLTextAreaElement> & { multiline: true; rows?: number };
-type FieldProps = SingleLineProps | MultiLineProps;
+export type FieldProps = SingleLineProps | MultiLineProps;
 
 export function Field({ name, label, error, multiline, ...rest }: FieldProps) {
   const id = `field-${name}`;

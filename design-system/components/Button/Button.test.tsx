@@ -26,16 +26,16 @@ describe('Button', () => {
   });
   it('applies primary variant class by default', () => {
     const { container } = render(<Button>Primary</Button>);
-    expect(container.firstChild?.classList.toString()).toContain('primary');
+    expect(container.firstElementChild?.classList.toString()).toContain('primary');
   });
   it('applies secondary variant class', () => {
     const { container } = render(<Button variant="secondary">Secondary</Button>);
-    expect(container.firstChild?.classList.toString()).toContain('secondary');
+    expect(container.firstElementChild?.classList.toString()).toContain('secondary');
   });
   it('applies size classes', () => {
     const { container: smContainer } = render(<Button size="sm">Sm</Button>);
-    expect(smContainer.firstChild?.classList.toString()).toContain('sm');
+    expect(smContainer.firstElementChild?.classList.toString()).toContain('sm');
     const { container: lgContainer } = render(<Button size="lg">Lg</Button>);
-    expect(lgContainer.firstChild?.classList.toString()).toContain('lg');
+    expect(lgContainer.firstElementChild?.classList.toString()).toContain('lg');
   });
 });

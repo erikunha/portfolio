@@ -5,7 +5,7 @@ import { KbdKey } from './KbdKey';
 describe('KbdKey', () => {
   it('renders as <kbd> element', () => {
     const { container } = render(<KbdKey>Ctrl</KbdKey>);
-    expect(container.firstChild?.nodeName).toBe('KBD');
+    expect(container.firstElementChild?.nodeName).toBe('KBD');
   });
   it('renders children text', () => {
     render(<KbdKey>Enter</KbdKey>);
@@ -13,6 +13,6 @@ describe('KbdKey', () => {
   });
   it('applies sm size class', () => {
     const { container } = render(<KbdKey size="sm">Tab</KbdKey>);
-    expect(container.firstChild?.classList.toString()).toContain('sm');
+    expect(container.firstElementChild?.classList.toString()).toContain('sm');
   });
 });

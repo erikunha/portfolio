@@ -23,6 +23,6 @@ describe('Field', () => {
     const input = screen.getByRole('textbox');
     const errId = input.getAttribute('aria-describedby');
     expect(errId).toBeDefined();
-    expect(document.getElementById(errId!)?.textContent).toBe('Bad input');
+    expect(document.getElementById(errId ?? '')?.textContent).toBe('Bad input');
   });
 });

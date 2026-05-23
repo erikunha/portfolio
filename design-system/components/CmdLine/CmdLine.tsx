@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import styles from './CmdLine.module.css';
 
-type CmdLineProps = { user?: string; command: string; output?: ReactNode; prompt?: string };
+export type CmdLineProps = { user?: string; command: string; output?: ReactNode; prompt?: string };
 
 export function CmdLine({
   user = 'erik@portfolio',

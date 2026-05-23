@@ -19,6 +19,6 @@ describe('Badge', () => {
   });
   it('applies sm size class', () => {
     const { container } = render(<Badge size="sm">Small</Badge>);
-    expect(container.firstChild?.classList.toString()).toContain('sm');
+    expect(container.firstElementChild?.classList.toString()).toContain('sm');
   });
 });
