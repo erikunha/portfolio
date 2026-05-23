@@ -334,15 +334,6 @@
   }
 }
 
-/* ── Narrow-viewport status badge ──────────────────────────────────────── */
-
-@media (max-width: 359px) {
-  .status {
-    letter-spacing: 0.06em;
-    font-size: 10px;
-  }
-}
-
 /* ── Standalone .on class for sysfail headline state ────────────────────── */
 
 .on {

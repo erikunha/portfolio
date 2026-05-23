@@ -30,4 +30,14 @@ test.describe('design-system components (visual baselines)', () => {
     await page.goto('/design-system/components#stat-tile');
     await expect(page.locator('#stat-tile')).toHaveScreenshot('stat-tile-variants.png');
   });
+
+  test('CmdLine variants', async ({ page }) => {
+    await page.goto('/design-system/components#cmd-line');
+    await expect(page.locator('#cmd-line')).toHaveScreenshot('cmd-line-variants.png');
+  });
+
+  test('KbdKey variants', async ({ page }) => {
+    await page.goto('/design-system/components#kbd-key');
+    await expect(page.locator('#kbd-key')).toHaveScreenshot('kbd-key-variants.png');
+  });
 });
