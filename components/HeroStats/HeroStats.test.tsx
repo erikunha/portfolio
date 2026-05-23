@@ -29,7 +29,10 @@ describe('HeroStats', () => {
 
   it('first stat value matches heroStats[0].value', () => {
     const first = getDOM().querySelector('[data-testid="hero-stats-item"] dd');
-    expect(first?.textContent).toBe(heroStats[0]?.value);
+    expect(first).not.toBeNull();
+    const expectedValue = heroStats[0]?.value;
+    expect(expectedValue).toBeDefined();
+    expect(first?.textContent).toBe(expectedValue);
   });
 
   it('container carries aria-label for AT context', () => {

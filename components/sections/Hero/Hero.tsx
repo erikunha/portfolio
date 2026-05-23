@@ -3,11 +3,11 @@
 // Both variants are server-rendered; CSS media query hides the non-matching one.
 // Spec: docs/superpowers/specs/2026-05-18-mobile-lcp-perf-fix-design.md §6.
 
+import { HeroStats } from '@/components/HeroStats';
 import { heroTagline } from '@/content/hero';
 import { Badge, Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
-import { HeroStats } from '../../HeroStats';
 import styles from './Hero.module.css';
 
 export function Hero() {
