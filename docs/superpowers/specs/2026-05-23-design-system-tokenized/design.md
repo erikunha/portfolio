@@ -154,10 +154,11 @@ Allowlist file: `scripts/lint-no-magic-values.allowlist.json` — documented exc
 
 - **Tool:** Style Dictionary (exact-pinned, no caret)
 - **Config:** `design-system/sd.config.ts`
-- **Outputs** (gitignored, regenerated in CI):
+- **Outputs** (committed to the repository — never gitignore these):
   - `design-system/dist/tokens.css` — both tiers in CSS custom properties
   - `design-system/dist/tokens.ts` — typed const tree with literal types for use in TS/TSX
   - `design-system/dist/tokens.json` — flat key/value (Figma sync, AI tooling, generated docs)
+  - `design-system/dist/` is committed to the repository. The `tokens:check` script (`pnpm tokens:check`) builds the pipeline and runs `git diff --exit-code design-system/dist/` to detect drift between source tokens and committed artifacts. Never add `design-system/dist/` to `.gitignore`.
 - **Scripts:**
   - `pnpm tokens:build` — runs Style Dictionary, regenerates dist
   - `pnpm tokens:check` — regenerates AND diffs against committed; fails on drift (catches hand-edited dist files)
@@ -377,7 +378,7 @@ Three PRs in strict order. Each is independently mergeable.
 **Files added:**
 - `design-system/tokens/{color,space,typography,motion,layer,border}.json`
 - `design-system/sd.config.ts`
-- `design-system/dist/{tokens.css,tokens.ts,tokens.json}` (gitignored)
+- `design-system/dist/{tokens.css,tokens.ts,tokens.json}` (committed — not gitignored; drift checked by `pnpm tokens:check`)
 - `scripts/migrate-tokens.mjs`, `scripts/lint-token-boundary.mjs`, `scripts/lint-no-magic-values.mjs`, `scripts/contrast-check.mjs`
 - `scripts/lint-no-magic-values.allowlist.json`
 - New `pnpm tokens:build` and `pnpm tokens:check` scripts

@@ -10,6 +10,10 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 // Patterns that are FORBIDDEN (primitives that have semantic aliases).
 // Use negative lookahead to avoid matching numeric-suffix tokens that
 // look like typography names (--ds-text-size-* is allowed; --ds-text-\d+ is not).
+//
+// Note: --ds-text-leading-* tokens are intentionally NOT in FORBIDDEN.
+// They are terminal tokens (no semantic alias wraps them). Direct use
+// in CSS (e.g. line-height: var(--ds-text-leading-base)) is correct.
 const FORBIDDEN = [
   { pattern: /var\(--ds-green-\d+\)/g, hint: 'use --ds-color-* semantic alias' },
   { pattern: /var\(--ds-text-\d+\)/g, hint: 'use --ds-color-text-* semantic alias' },

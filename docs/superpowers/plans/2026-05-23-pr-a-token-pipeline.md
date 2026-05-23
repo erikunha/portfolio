@@ -6,7 +6,7 @@
 
 **Architecture:** JSON token files in `design-system/tokens/` are the source of truth. Style Dictionary reads them and generates `design-system/dist/tokens.css` (both tiers as CSS custom properties), `tokens.ts` (typed const tree), and `tokens.json` (flat key/value). `app/globals.css` imports the dist file. A codemod script renames all legacy token references. Four lint scripts (token-boundary, no-magic-values, contrast check, drift check) enforce the system in CI.
 
-**Tech Stack:** Style Dictionary v4 (exact-pinned), Node ESM scripts (`.mjs`), pnpm, Biome, Vitest, Playwright, GitHub Actions CI
+**Tech Stack:** Style Dictionary v5 (exact-pinned), Node ESM scripts (`.mjs`), pnpm, Biome, Vitest, Playwright, GitHub Actions CI
 
 ---
 

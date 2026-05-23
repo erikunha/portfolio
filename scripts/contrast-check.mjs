@@ -32,7 +32,7 @@ function contrastRatio(hex1, hex2) {
 }
 
 function resolveToken(name) {
-  // tokens.json has camelCase keys without --
+  // tokens.json has PascalCase keys without -- (e.g. DsColorTextBody)
   return tokens[name];
 }
 

@@ -41,32 +41,43 @@ function stripMediaConditions(css) {
   return css.replace(/@media\s*\([^)]*\)/g, (match) => match.replace(/\d+px/g, '___px'));
 }
 
-// Patterns to detect; each returns { match, message } or null
+/**
+ * Strip var() calls so values used as var() fallbacks or inside var() references
+ * are never flagged. Replaces var(...) with a placeholder that won't match any
+ * of the check patterns. This avoids variable-length lookbehind assertions, which
+ * are legal in V8/Node 22 but are unnecessarily complex.
+ */
+function stripVarCalls(css) {
+  return css.replace(/var\([^)]*\)/g, 'VAR_REF');
+}
+
+// Patterns to detect magic values; run against pre-processed content (no comments,
+// no @media conditions, no var() calls) to avoid false-positives.
 const checks = [
-  // Hex colors outside var() arguments
+  // Hex colors
   {
-    pattern: /(?<!var\([^)]*?)#[0-9a-fA-F]{3,8}\b/g,
+    pattern: /#[0-9a-fA-F]{3,8}\b/g,
     extract: (m) => m,
     filter: (m) => !allowedHex.has(m),
     message: (m) => `hardcoded hex color ${m} — use a --ds-color-* token or add to allowlist`,
   },
-  // Raw ms durations (not inside var())
+  // Raw ms durations
   {
-    pattern: /(?<!var\([^)]*?)\b(\d+)ms\b/g,
+    pattern: /\b(\d+)ms\b/g,
     extract: (_m, p1) => `${p1}ms`,
     filter: (m) => !allowedDurations.has(m),
     message: (m) => `hardcoded duration ${m} — use var(--ds-duration-*) or add to allowlist`,
   },
-  // Raw s durations (not inside var()) — matches e.g. 0.6s, 1.05s, 4s
+  // Raw s durations — matches e.g. 0.6s, 1.05s, 4s
   {
-    pattern: /(?<!var\([^)]*?)\b(\d+(?:\.\d+)?)s\b/g,
+    pattern: /\b(\d+(?:\.\d+)?)s\b/g,
     extract: (_m, p1) => `${p1}s`,
     filter: (m) => !allowedDurations.has(m),
     message: (m) => `hardcoded duration ${m} — use var(--ds-duration-*) or add to allowlist`,
   },
-  // Raw px values not in allowlist (not inside var())
+  // Raw px values not in allowlist
   {
-    pattern: /(?<!var\([^)]*?)\b(\d+)px\b/g,
+    pattern: /\b(\d+)px\b/g,
     extract: (_m, p1) => `${p1}px`,
     filter: (m) => !allowedPx.has(m),
     message: (m) => `magic px value ${m} — use a --ds-space-* token or add to allowlist`,
@@ -91,8 +102,9 @@ let violations = 0;
 for (const rel of files.sort()) {
   const abs = path.join(ROOT, rel);
   const raw = readFileSync(abs, 'utf8');
-  // Strip comments first, then media conditions, before scanning for values
-  const content = stripMediaConditions(stripComments(raw));
+  // Strip comments, media conditions, and var() calls before scanning for values.
+  // Order matters: strip comments first so var() inside comments don't suppress real findings.
+  const content = stripVarCalls(stripMediaConditions(stripComments(raw)));
   for (const check of checks) {
     for (const match of content.matchAll(check.pattern)) {
       const val = check.extract ? check.extract(match[0], match[1]) : match[0];
