@@ -21,4 +21,8 @@ describe('Badge', () => {
     const { container } = render(<Badge size="sm">Small</Badge>);
     expect(container.firstElementChild?.classList.toString()).toContain('sm');
   });
+  it('does not apply dot animation class to root span when variant=dot', () => {
+    const { container } = render(<Badge variant="dot">Active</Badge>);
+    expect(container.firstElementChild?.classList.toString()).not.toContain('dot');
+  });
 });
