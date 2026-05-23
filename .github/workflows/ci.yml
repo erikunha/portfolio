@@ -48,7 +48,7 @@ jobs:
         env:
           BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
-          echo "$BRANCH" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot)/.+$|^main$' \
+          echo "$BRANCH" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot|design-system)/.+$|^main$' \
             || (echo "Invalid branch name: $BRANCH" && exit 1)
 
       - name: Lint commit messages
