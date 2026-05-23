@@ -1,4 +1,5 @@
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import { cx } from '../../lib/cx';
 import styles from './Field.module.css';
 
 export type FieldBase = { name: string; label: string; error?: string };
@@ -8,7 +9,14 @@ export type MultiLineProps = FieldBase &
   TextareaHTMLAttributes<HTMLTextAreaElement> & { multiline: true; rows?: number };
 export type FieldProps = SingleLineProps | MultiLineProps;
 
-export function Field({ name, label, error, multiline, ...rest }: FieldProps) {
+export function Field({
+  name,
+  label,
+  error,
+  multiline,
+  className: consumerClassName,
+  ...rest
+}: FieldProps) {
   const id = `field-${name}`;
   const errId = error ? `${id}-error` : undefined;
   const consumerDescribedBy = (rest as { 'aria-describedby'?: string })['aria-describedby'];
@@ -16,7 +24,7 @@ export function Field({ name, label, error, multiline, ...rest }: FieldProps) {
   const inputProps = {
     id,
     name,
-    className: styles.input,
+    className: cx(styles.input, consumerClassName),
     'aria-invalid': error ? ('true' as const) : undefined,
     'aria-describedby': describedBy,
   };
