@@ -2,7 +2,7 @@
  * Do not edit directly, this file was auto-generated.
  */
 
-export const DsRadiusNone = 0;
+export const DsRadiusNone = "0px";
 export const DsRadiusSharp = "2px";
 export const DsBorderWidthDefault = "1px";
 export const DsBorderStyleSolid = "solid";

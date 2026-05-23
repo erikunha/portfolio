@@ -1,5 +1,5 @@
 {
-  "ds-radius-none": { "$value": "0", "$type": "dimension" },
+  "ds-radius-none": { "$value": "0px", "$type": "dimension" },
   "ds-radius-sharp": { "$value": "2px", "$type": "dimension" },
   "ds-border-width-default": { "$value": "1px", "$type": "dimension" },
   "ds-border-style-solid": { "$value": "solid", "$type": "string" },

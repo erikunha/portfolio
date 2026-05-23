@@ -3,7 +3,7 @@
  */
 
 :root {
-  --ds-radius-none: 0;
+  --ds-radius-none: 0px;
   --ds-radius-sharp: 2px;
   --ds-border-width-default: 1px;
   --ds-border-style-solid: solid;
