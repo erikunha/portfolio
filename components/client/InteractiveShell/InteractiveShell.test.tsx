@@ -1,4 +1,31 @@
-// __tests__/InteractiveShell.streaming.test.ts
+// components/client/InteractiveShell/InteractiveShell.test.tsx
+// Merged from:
+//   __tests__/InteractiveShell.streaming.test.ts  (streaming behavior)
+//   __tests__/shell-aria.test.ts                  (a11y contract)
+
+import { act, createElement } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  flushFrames,
+  flushMicrotasks,
+  type MountedClient,
+  mountClient,
+} from '@/__tests__/helpers/render';
+
+vi.mock('@/lib/use-breakpoint.client', () => ({
+  useBreakpoint: () => ({ isMobile: false }),
+}));
+
+vi.mock('@/lib/motion', () => ({
+  readMotion: () => false,
+}));
+
+vi.mock('@/content/shell-commands', () => ({
+  default: [],
+}));
+
+// ── Streaming behavior ────────────────────────────────────────────────────────
+//
 // Behavioral test (CG3 rewrite, CG4 extension): renders the real
 // InteractiveShell, drives a command that routes to /api/ask, and asserts the
 // streaming UX through observable DOM — instead of grepping the component
@@ -17,22 +44,6 @@
 //      `document.createElement('span')` + `feedRef.appendChild` and mutated
 //      `textContent` per chunk inside an aria-live region React also owns.
 //      This test fails if the implementation reverts to that.
-
-import { act, createElement } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { flushFrames, flushMicrotasks, type MountedClient, mountClient } from './helpers/render';
-
-vi.mock('@/lib/use-breakpoint.client', () => ({
-  useBreakpoint: () => ({ isMobile: false }),
-}));
-
-vi.mock('@/lib/motion', () => ({
-  readMotion: () => false,
-}));
-
-vi.mock('@/content/shell-commands', () => ({
-  default: [],
-}));
 
 // Build a streamed Response whose body emits the given text chunks one at a
 // time, with a microtask gap between them so progressive rendering is
@@ -89,7 +100,7 @@ describe('InteractiveShell streaming behavior', () => {
   });
 
   it('renders the answer progressively as the /api/ask stream arrives', async () => {
-    const { InteractiveShell } = await import('@/components/client/InteractiveShell');
+    const { InteractiveShell } = await import('./InteractiveShell');
 
     // Hold the second chunk back so we can observe a mid-stream paint.
     let releaseSecondChunk: () => void = () => {
@@ -140,7 +151,7 @@ describe('InteractiveShell streaming behavior', () => {
   });
 
   it('renders streamed text into a React-owned feed node — no out-of-tree DOM', async () => {
-    const { InteractiveShell } = await import('@/components/client/InteractiveShell');
+    const { InteractiveShell } = await import('./InteractiveShell');
 
     const fetchMock = vi.fn(async () => streamingResponse(['Hello ', 'from ', 'Claude']));
     vi.stubGlobal('fetch', fetchMock);
@@ -182,7 +193,7 @@ describe('InteractiveShell streaming behavior', () => {
   });
 
   it('keys history lines stably so reconciliation does not collapse them', async () => {
-    const { InteractiveShell } = await import('@/components/client/InteractiveShell');
+    const { InteractiveShell } = await import('./InteractiveShell');
 
     const fetchMock = vi.fn(async () => streamingResponse(['final answer']));
     vi.stubGlobal('fetch', fetchMock);
@@ -211,5 +222,94 @@ describe('InteractiveShell streaming behavior', () => {
     expect(feed?.textContent).toContain('final answer');
 
     warnSpy.mockRestore();
+  });
+});
+
+// ── Shell feed accessibility ──────────────────────────────────────────────────
+//
+// Behavioral test (CG3): renders the real InteractiveShell and queries the
+// committed DOM for its accessibility contract, instead of grepping the
+// component source for aria-* string literals.
+//
+// Guarantees under test:
+//   - the shell feed is a labelled live region (role=log, aria-label) so a
+//     screen reader announces streamed output;
+//   - the feed exposes aria-busy so AT knows when a response is in flight;
+//   - the animated loading indicator is aria-hidden (decorative, must not be
+//     read out character-by-character).
+
+describe('shell feed accessibility', () => {
+  let mounted: MountedClient;
+
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.restoreAllMocks();
+  });
+
+  async function renderShell(): Promise<HTMLElement> {
+    const { InteractiveShell } = await import('./InteractiveShell');
+    mounted = await mountClient(createElement(InteractiveShell));
+    return mounted.container;
+  }
+
+  it('the shell feed is a labelled live region', async () => {
+    const container = await renderShell();
+    const feed = container.querySelector('[role="log"]');
+    expect(feed).not.toBeNull();
+    expect(feed?.getAttribute('role')).toBe('log');
+    expect(feed?.getAttribute('aria-label')).toBe('shell output');
+    expect(feed?.getAttribute('aria-live')).toBe('polite');
+  });
+
+  it('the feed exposes aria-busy (false while idle)', async () => {
+    const container = await renderShell();
+    const feed = container.querySelector('[role="log"]');
+    // jsdom serializes the boolean attribute; idle shell is not busy.
+    expect(feed?.getAttribute('aria-busy')).toBe('false');
+  });
+
+  it('the loading indicator is rendered aria-hidden while a response streams', async () => {
+    // Hold the fetch open so the loading line stays in the DOM long enough to
+    // assert on it.
+    let release: () => void = () => {
+      /* reassigned by the Promise executor below */
+    };
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    const fetchMock = vi.fn(async () => {
+      await gate;
+      return new Response('answer', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const container = await renderShell();
+
+    const input = container.querySelector<HTMLInputElement>('input[aria-label="shell command"]');
+    const form = container.querySelector<HTMLFormElement>('form');
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    await act(async () => {
+      if (input && setter) setter.call(input, 'a question');
+      input?.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    await act(async () => {
+      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    await flushMicrotasks();
+
+    // While the request is in flight: feed is busy + the loading dots line
+    // (decorative animation) is aria-hidden so AT doesn't announce '...'.
+    const feed = container.querySelector('[role="log"]');
+    expect(feed?.getAttribute('aria-busy')).toBe('true');
+    const loading = container.querySelector('[data-testid="shell-line-loading"]');
+    expect(loading).not.toBeNull();
+    expect(loading?.getAttribute('aria-hidden')).toBe('true');
+
+    release();
+    await flushMicrotasks();
   });
 });

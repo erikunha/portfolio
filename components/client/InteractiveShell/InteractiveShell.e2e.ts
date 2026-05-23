@@ -1,4 +1,4 @@
-// tests/e2e/ask.spec.ts
+// components/client/InteractiveShell/InteractiveShell.e2e.ts
 //
 // Phase 1 anchor tests (1, 7): happy path + X-Request-Id header.
 // Phase 2 expansion (2-6): kill-switch, rate-limit, budget-exhausted, stream-error,
@@ -6,7 +6,7 @@
 // Phase 3 expansion (8): privacy notice + mailto link.
 
 import { expect, type Locator, type Page, test } from '@playwright/test';
-import { installMockBackend, type MockState } from './_helpers/mock-backend';
+import { installMockBackend, type MockState } from '../../../tests/e2e/_helpers/mock-backend';
 
 async function setupAskPage(page: Page, state: MockState): Promise<void> {
   await installMockBackend(page, state);
