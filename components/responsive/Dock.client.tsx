@@ -3,9 +3,17 @@
 import { dispatchModuleOpen } from '@/lib/events';
 import styles from './Dock.module.css';
 
-const ITEMS = [
+type DockItem = {
+  label: string;
+  href: string;
+  target?: string;
+  icon: React.ReactNode;
+};
+
+const ITEMS: DockItem[] = [
   {
     label: 'HOME',
+    href: '#sec-readme',
     target: 'sec-readme',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -16,6 +24,7 @@ const ITEMS = [
   },
   {
     label: 'WORK',
+    href: '#sec-projects',
     target: 'sec-projects',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -25,6 +34,7 @@ const ITEMS = [
   },
   {
     label: 'PERF',
+    href: '#sec-perf-receipts',
     target: 'sec-perf-receipts',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -35,6 +45,7 @@ const ITEMS = [
   },
   {
     label: 'SHELL',
+    href: '#sec-shell',
     target: 'sec-shell',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -45,6 +56,7 @@ const ITEMS = [
   },
   {
     label: 'HIRE',
+    href: '#sec-contact',
     target: 'sec-contact',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -52,11 +64,25 @@ const ITEMS = [
       </svg>
     ),
   },
+  {
+    label: 'DS',
+    href: '/design-system',
+    icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="3" width="8" height="8" />
+        <rect x="13" y="3" width="8" height="8" />
+        <rect x="3" y="13" width="8" height="8" />
+        <rect x="13" y="13" width="8" height="8" />
+      </svg>
+    ),
+  },
 ];
 
 export function Dock() {
-  const onJump = (target: string) => (e: React.MouseEvent) => {
+  const onJump = (href: string, target?: string) => (e: React.MouseEvent) => {
+    if (!href.startsWith('#')) return;
     e.preventDefault();
+    if (!target) return;
     const el = document.getElementById(target);
     if (!el) return;
     // If the target is a <details> (Module) element it may be collapsed on
@@ -71,7 +97,7 @@ export function Dock() {
   return (
     <nav className={styles.root} aria-label="primary">
       {ITEMS.map((it) => (
-        <a key={it.target} href={`#${it.target}`} onClick={onJump(it.target)}>
+        <a key={it.href} href={it.href} onClick={onJump(it.href, it.target)}>
           {it.icon}
           {it.label}
         </a>

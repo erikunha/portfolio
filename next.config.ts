@@ -1,9 +1,23 @@
 import withBundleAnalyzer from '@next/bundle-analyzer';
+import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
 
 const analyze = withBundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
 
+const withMDX = createMDX({
+  options: {
+    // All plugins MUST be string-tuple refs — Turbopack serialization requirement.
+    // Absolute path required: Turbopack evaluates plugin resolution in a different
+    // CWD than the project root, so relative paths fail in production builds.
+    // remark-preview-source runs at the MDAST stage (before JSX compilation) so it
+    // can slice raw MDX source text via position offsets to inject the `source` prop.
+    remarkPlugins: [[`${process.cwd()}/lib/mdx/remark-preview-source.mjs`, {}]],
+    rehypePlugins: [['rehype-pretty-code', { theme: 'github-dark-dimmed' }]],
+  },
+});
+
 const nextConfig: NextConfig = {
+  pageExtensions: ['ts', 'tsx', 'mdx'],
   cacheComponents: true,
   typedRoutes: true,
   headers: async () => [
@@ -24,4 +38,4 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default analyze(nextConfig);
+export default analyze(withMDX(nextConfig));

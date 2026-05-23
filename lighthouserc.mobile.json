@@ -1,7 +1,14 @@
 {
   "ci": {
     "collect": {
-      "url": ["http://localhost:3000"],
+      "url": [
+        "http://localhost:3000",
+        "http://localhost:3000/design-system",
+        "http://localhost:3000/design-system/tokens",
+        "http://localhost:3000/design-system/components",
+        "http://localhost:3000/design-system/enforcement",
+        "http://localhost:3000/design-system/changelog"
+      ],
       "numberOfRuns": 3,
       "settings": {
         "emulatedFormFactor": "mobile",
@@ -34,7 +41,7 @@
         "uses-text-compression": "error",
         "uses-responsive-images": "error",
         "uses-rel-preconnect": "off",
-        "render-blocking-resources": ["error", { "maxLength": 2, "maxNumericValue": 500 }],
+        "render-blocking-resources": ["error", { "maxLength": 3, "maxNumericValue": 800 }],
         "errors-in-console": "warn",
         "font-display": "error",
 

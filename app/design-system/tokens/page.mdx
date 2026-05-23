@@ -1,0 +1,82 @@
+export const metadata = {
+  title: 'Tokens — Design System — erikunha.dev',
+  description: 'Color palette, type scale, spacing, motion, and layer tokens',
+};
+
+# TOKENS
+
+## Color
+
+### Signal (brand green)
+
+| Token | Value | Usage |
+|---|---|---|
+| `--ds-color-signal` | #00FF41 | Headings, accents, interactive elements |
+| `--ds-color-signal-subtle` | rgba(0,255,65,0.4) | Borders, dividers |
+| `--ds-color-signal-quiet` | rgba(0,255,65,0.1) | Hover backgrounds |
+| `--ds-color-signal-faint` | rgba(0,255,65,0.12) | Very subtle backgrounds |
+
+### Text
+
+| Token | Value | Usage |
+|---|---|---|
+| `--ds-color-text-body` | #E6FFE6 | Body text (13:1+ contrast on black) |
+| `--ds-color-text-muted` | rgba(0,255,65,0.4) | Secondary text, labels |
+| `--ds-color-text-faint` | #5AE07B | Annotations, gutters |
+
+### Surface
+
+| Token | Value | Usage |
+|---|---|---|
+| `--ds-color-surface-base` | #000000 | Page background |
+| `--ds-color-surface-shell` | #050505 | Shell/terminal backgrounds |
+
+### Feedback
+
+| Token | Value | Usage |
+|---|---|---|
+| `--ds-color-feedback-error` | #ff8a8a | Error states, validation messages |
+| `--ds-color-accent-warm` | #ffd86b | Warm syntax highlight accents |
+| `--ds-color-accent-cool` | #7fe4ff | Cool syntax highlight accents |
+
+## Type Scale
+
+| Token | Value |
+|---|---|
+| `--ds-font-size-2xs` | 9px |
+| `--ds-font-size-xs` | 11px |
+| `--ds-font-size-sm` | 12px |
+| `--ds-font-size-body` | 14px |
+| `--ds-font-size-md` | 16px |
+| `--ds-font-size-heading-sm` | 22px |
+| `--ds-font-size-heading-md` | 32px |
+| `--ds-font-size-heading-lg` | 48px |
+| `--ds-font-size-heading-xl` | 78px |
+
+## Spacing
+
+| Token | Value | Usage |
+|---|---|---|
+| `--ds-space-pad` | 24px | Standard section padding |
+| `--ds-space-pad-tight` | 12px | Mobile padding |
+| `--ds-space-rhythm` | 64px | Vertical section rhythm |
+| `--ds-space-rhythm-tight` | 16px | Mobile rhythm |
+
+## Motion
+
+| Token | Value |
+|---|---|
+| `--ds-duration-fast` | 80ms |
+| `--ds-duration-base` | 200ms |
+| `--ds-duration-slow` | 300ms |
+
+All motion tokens are suppressed under `prefers-reduced-motion: reduce`.
+
+## Layers
+
+| Token | Value |
+|---|---|
+| `--ds-layer-base` | 0 |
+| `--ds-layer-sticky` | 50 |
+| `--ds-layer-overlay` | 100 |
+| `--ds-layer-headline` | 150 |

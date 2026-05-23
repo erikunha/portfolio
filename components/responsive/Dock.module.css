@@ -10,7 +10,7 @@
   -webkit-backdrop-filter: blur(8px);
   border-top: 1px solid var(--ds-color-signal-subtle);
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 2px;
 }
 

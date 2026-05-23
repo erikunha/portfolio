@@ -52,6 +52,9 @@ export function DesktopTopbar() {
           <a className={styles.navlink} href="#sec-npm-stack">
             04_DEPS
           </a>
+          <a className={styles.navlink} href="/design-system">
+            DESIGN_SYSTEM
+          </a>
           <button
             type="button"
             className={styles.motion}
