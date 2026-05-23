@@ -1,4 +1,4 @@
-// components/sections/AiMetricsSection.tsx
+// components/sections/AiMetricsSection/AiMetricsSection.tsx
 // Pure Server Component — no 'use client', no client JS. Surfaces the
 // /api/ask quality-eval metrics published by scripts/ask-eval.ts so a hiring
 // reviewer can SEE the AI feature is measured, not just claimed.
