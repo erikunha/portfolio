@@ -20,7 +20,7 @@
   resize: vertical;
   transition: border-color var(--ds-duration-base) var(--ds-ease-out);
 }
-.input:focus {
+.input:focus-visible {
   outline: none;
   border-color: var(--ds-color-signal);
 }

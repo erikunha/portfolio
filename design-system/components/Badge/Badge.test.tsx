@@ -10,7 +10,7 @@ describe('Badge', () => {
   it('renders dot as aria-hidden when variant=dot', () => {
     const { container } = render(<Badge variant="dot">Status</Badge>);
     const dot = container.querySelector('[aria-hidden="true"]');
-    expect(dot).toBeDefined();
+    expect(dot).not.toBeNull();
   });
   it('does not render dot when variant=default', () => {
     const { container } = render(<Badge variant="default">Status</Badge>);
