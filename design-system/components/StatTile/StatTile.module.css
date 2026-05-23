@@ -25,6 +25,3 @@
 .compact .value {
   font-size: var(--ds-font-size-xs);
 }
-.compact .label {
-  font-size: var(--ds-font-size-2xs);
-}
