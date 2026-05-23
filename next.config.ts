@@ -1,9 +1,20 @@
 import withBundleAnalyzer from '@next/bundle-analyzer';
+import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
 
 const analyze = withBundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
 
+const withMDX = createMDX({
+  options: {
+    // All plugins MUST be string-tuple refs — Turbopack serialization requirement.
+    // Do NOT use imported function references here.
+    rehypePlugins: [['rehype-pretty-code', { theme: 'github-dark-dimmed' }]],
+    recmaPlugins: [['./lib/mdx/recma-preview-source', {}]],
+  },
+});
+
 const nextConfig: NextConfig = {
+  pageExtensions: ['ts', 'tsx', 'mdx'],
   cacheComponents: true,
   typedRoutes: true,
   headers: async () => [
@@ -24,4 +35,4 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default analyze(nextConfig);
+export default analyze(withMDX(nextConfig));
