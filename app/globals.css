@@ -2,5 +2,5 @@
    base resets. Every component owns its styles in a colocated *.module.css.
    See docs/superpowers/specs/2026-05-22-css-modules-migration/design.md */
 
-@import "./css/_tokens.css";
+@import "../design-system/dist/tokens.css";
 @import "./css/_base.css";
