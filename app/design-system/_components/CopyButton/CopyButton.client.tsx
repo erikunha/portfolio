@@ -23,7 +23,7 @@ export function CopyButton({ text }: { text: string }) {
   }
 
   return (
-    <button type="button" className={styles.root} onClick={copy} aria-label="Copy code">
+    <button type="button" className={styles.root} onClick={copy}>
       {copied ? 'COPIED' : 'COPY'}
     </button>
   );

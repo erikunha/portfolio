@@ -44,4 +44,9 @@ test.describe('design-system components (visual baselines)', () => {
     await page.goto('/design-system/components#kbd-key');
     await snapshotLocator(page, page.locator('#kbd-key'), 'kbd-key-variants.png');
   });
+
+  test('CopyButton variants', async ({ page }) => {
+    await page.goto('/design-system/components#copybutton');
+    await snapshotLocator(page, page.locator('#copybutton'), 'copybutton-variants.png');
+  });
 });
