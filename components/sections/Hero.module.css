@@ -371,6 +371,7 @@
 
 .mobile {
   min-height: 0;
+  margin-top: 8px;
   position: relative;
   overflow: hidden;
   text-shadow:
