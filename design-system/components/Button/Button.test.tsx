@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Button } from './Button';
+import styles from './Button.module.css';
 
 describe('Button', () => {
   it('renders as <button> by default', () => {
@@ -37,16 +38,16 @@ describe('Button', () => {
   });
   it('applies primary variant class by default', () => {
     const { container } = render(<Button>Primary</Button>);
-    expect(container.firstElementChild?.classList.toString()).toContain('primary');
+    expect(container.firstElementChild?.classList.contains(styles.primary as string)).toBe(true);
   });
   it('applies secondary variant class', () => {
     const { container } = render(<Button variant="secondary">Secondary</Button>);
-    expect(container.firstElementChild?.classList.toString()).toContain('secondary');
+    expect(container.firstElementChild?.classList.contains(styles.secondary as string)).toBe(true);
   });
   it('applies size classes', () => {
     const { container: smContainer } = render(<Button size="sm">Sm</Button>);
-    expect(smContainer.firstElementChild?.classList.toString()).toContain('sm');
+    expect(smContainer.firstElementChild?.classList.contains(styles.sm as string)).toBe(true);
     const { container: lgContainer } = render(<Button size="lg">Lg</Button>);
-    expect(lgContainer.firstElementChild?.classList.toString()).toContain('lg');
+    expect(lgContainer.firstElementChild?.classList.contains(styles.lg as string)).toBe(true);
   });
 });

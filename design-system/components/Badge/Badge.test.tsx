@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Badge } from './Badge';
+import styles from './Badge.module.css';
 
 describe('Badge', () => {
   it('renders children text', () => {
@@ -19,10 +20,10 @@ describe('Badge', () => {
   });
   it('applies sm size class', () => {
     const { container } = render(<Badge size="sm">Small</Badge>);
-    expect(container.firstElementChild?.classList.toString()).toContain('sm');
+    expect(container.firstElementChild?.classList.contains(styles.sm as string)).toBe(true);
   });
   it('does not apply dot animation class to root span when variant=dot', () => {
     const { container } = render(<Badge variant="dot">Active</Badge>);
-    expect(container.firstElementChild?.classList.toString()).not.toContain('dot');
+    expect(container.firstElementChild?.classList.contains(styles.dot as string)).toBe(false);
   });
 });

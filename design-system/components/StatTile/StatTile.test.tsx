@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { StatTile } from './StatTile';
+import styles from './StatTile.module.css';
 
 describe('StatTile', () => {
   it('renders value and label as dl/dt/dd with dt before dd in DOM', () => {
@@ -15,7 +16,7 @@ describe('StatTile', () => {
   });
   it('applies compact class when variant=compact', () => {
     const { container } = render(<StatTile value="1" label="x" variant="compact" />);
-    expect(container.firstElementChild?.classList.toString()).toContain('compact');
+    expect(container.firstElementChild?.classList.contains(styles.compact as string)).toBe(true);
   });
   it('does not apply an undefined default class when variant=default', () => {
     const { container } = render(<StatTile value="1" label="x" />);

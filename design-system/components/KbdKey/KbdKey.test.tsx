@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { KbdKey } from './KbdKey';
+import styles from './KbdKey.module.css';
 
 describe('KbdKey', () => {
   it('renders as <kbd> element', () => {
@@ -13,6 +14,6 @@ describe('KbdKey', () => {
   });
   it('applies sm size class', () => {
     const { container } = render(<KbdKey size="sm">Tab</KbdKey>);
-    expect(container.firstElementChild?.classList.toString()).toContain('sm');
+    expect(container.firstElementChild?.classList.contains(styles.sm as string)).toBe(true);
   });
 });
