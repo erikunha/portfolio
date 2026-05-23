@@ -13,6 +13,12 @@
   overflow-x: hidden;
 }
 
+/* WCAG 1.4.1: inline links must be distinguishable without color alone.
+   --signal (#00ff41) vs --fg (#e6ffe6) has only 1.28:1 contrast, so underline is required. */
+.content a {
+  text-decoration: underline;
+}
+
 @media (max-width: 768px) {
   .root {
     flex-direction: column;
