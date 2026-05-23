@@ -9,7 +9,7 @@ const HOLD_MS = 2000;
 const BACK_MS = 40;
 const INTER_MS = 300;
 
-export function RoleTyper() {
+export function RoleTyper({ className }: { className?: string | undefined }) {
   const spanRef = useRef<HTMLSpanElement>(null);
   const liveRef = useRef<HTMLSpanElement>(null);
 
@@ -63,7 +63,7 @@ export function RoleTyper() {
 
   return (
     <>
-      <span className="pill" ref={spanRef} aria-hidden="true">
+      <span className={className} ref={spanRef} aria-hidden="true">
         [Senior]
       </span>
       <span className="sr-only" ref={liveRef} role="status" aria-live="polite">

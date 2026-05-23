@@ -2,7 +2,7 @@
 // Behavioral test (Phase 4 a11y): RoleTyper two-span ARIA contract.
 //
 // Structure under test:
-//   - <span.pill aria-hidden="true"> — animated visual; AT-invisible
+//   - <span aria-hidden="true"> — animated visual; AT-invisible; className passed via prop
 //   - <span.sr-only role="status" aria-live="polite"> — live region;
 //     updated only when a full role name is completed (not per-character)
 //
@@ -26,7 +26,7 @@ function getDOM() {
 }
 
 function getPill() {
-  return getDOM().querySelector('span.pill');
+  return getDOM().querySelector('span[aria-hidden="true"]');
 }
 
 function getLiveRegion() {
