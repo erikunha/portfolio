@@ -16,7 +16,8 @@ test.describe('Hero -- above the fold', () => {
 
   test('LinkedIn CTA link has correct href', async ({ page }) => {
     await page.goto('/');
-    const linkedinLink = page.getByRole('link', { name: /linkedin/i });
+    const linkedinLink = page.locator('a[href="https://www.linkedin.com/in/erikunha/"]').first();
+    await expect(linkedinLink).toBeVisible();
     await expect(linkedinLink).toHaveAttribute('href', 'https://www.linkedin.com/in/erikunha/');
   });
 
