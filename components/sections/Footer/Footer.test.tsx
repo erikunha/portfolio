@@ -1,4 +1,4 @@
-// __tests__/footer-lazy.test.ts
+// components/sections/Footer/Footer.test.tsx
 // Behavioral test for the FooterLazy IntersectionObserver-gated mount.
 // PR 6 of audit roadmap (Theme 4).
 //
@@ -11,7 +11,7 @@
 
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { mountClient } from './helpers/render';
+import { mountClient } from '@/__tests__/helpers/render';
 
 let observedNodes: Element[] = [];
 let lastCallback: IntersectionObserverCallback | undefined;
