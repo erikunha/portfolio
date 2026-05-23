@@ -4,8 +4,9 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { glob } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(import.meta.dirname, '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 // Order matters: longer names first to prevent partial matches.
 // e.g. --signal-dim-2 before --signal-dim before --signal

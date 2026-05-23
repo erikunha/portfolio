@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace `app/css/_tokens.css` with a Style Dictionary–driven two-tier token pipeline; migrate all 31 `.module.css` files and 2 `.tsx` inline-style call sites to the new token names; add 4 CI lint gates; portfolio renders within visual baseline tolerance.
+**Goal:** Replace `app/css/_tokens.css` with a Style Dictionary–driven two-tier token pipeline; migrate all 31 `.module.css` files and 4 `.tsx` inline-style call sites to the new token names; add 4 CI lint gates; portfolio renders within visual baseline tolerance.
 
 **Architecture:** JSON token files in `design-system/tokens/` are the source of truth. Style Dictionary reads them and generates `design-system/dist/tokens.css` (both tiers as CSS custom properties), `tokens.ts` (typed const tree), and `tokens.json` (flat key/value). `app/globals.css` imports the dist file. A codemod script renames all legacy token references. Four lint scripts (token-boundary, no-magic-values, contrast check, drift check) enforce the system in CI.
 
@@ -431,7 +431,7 @@ console.log(`\nMigration complete: ${changed} file(s) updated.`);
 node scripts/migrate-tokens.mjs
 ```
 
-Expected: List of updated files. Should be ~31 `.module.css` files plus 2 `.tsx` files.
+Expected: List of updated files. Should be ~31 `.module.css` files plus 4 `.tsx` files.
 
 - [ ] **Step 3: Verify a sample file was transformed correctly**
 

@@ -4,8 +4,9 @@
 import { readFileSync } from 'node:fs';
 import { glob } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(import.meta.dirname, '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 // Patterns that are FORBIDDEN (primitives that have semantic aliases).
 // Each regex matches only the specific token shape that must be aliased:
