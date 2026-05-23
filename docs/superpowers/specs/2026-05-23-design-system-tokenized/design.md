@@ -119,11 +119,11 @@ The full size scale (`--ds-font-size-2xs` through `--ds-font-size-3xl`) is also 
 **Rejects** any `var()` reference to primitives that DO have a semantic layer:
 - `--ds-green-*`, `--ds-text-\d+` (digit-suffix only — matches `--ds-text-100`, `--ds-text-300`; does NOT match `--ds-text-size-*` or `--ds-text-leading-*`), `--ds-neutral-*`, `--ds-accent-*`, `--ds-feedback-*` (color primitives — semantic layer is `--ds-color-*`)
 - `--ds-space-\d+` (digit-suffix — matches `--ds-space-4`, `--ds-space-16`; space primitives — semantic layer is `--ds-space-pad{,-tight}`, `--ds-space-rhythm{,-tight}`)
-- `--ds-text-size-*`, `--ds-text-leading-*` (typography primitives — semantic layer is `--ds-font-size-*`, `--ds-font-family-*`)
+- `--ds-text-size-*` (typography size primitives — semantic layer is `--ds-font-size-*`)
 
-**Allows** semantic tokens AND primitives that have no semantic layer in v1 (motion, layer, radius, border, chrome dots — components reference these primitives directly):
+**Allows** semantic tokens AND primitives that have no semantic layer in v1 (motion, layer, radius, border, chrome dots, and leading — components reference these primitives directly):
 - `var(--ds-color-*)`, `var(--ds-space-pad)`, `var(--ds-space-pad-tight)`, `var(--ds-space-rhythm)`, `var(--ds-space-rhythm-tight)`, `var(--ds-font-*)`, `var(--ds-layout-*)`
-- `var(--ds-duration-*)`, `var(--ds-ease-*)`, `var(--ds-layer-*)`, `var(--ds-radius-*)`, `var(--ds-border-*)`, `var(--ds-chrome-*)`
+- `var(--ds-duration-*)`, `var(--ds-ease-*)`, `var(--ds-layer-*)`, `var(--ds-radius-*)`, `var(--ds-border-*)`, `var(--ds-chrome-*)`, `var(--ds-text-leading-*)` (terminal tokens; no semantic alias wraps them — direct use is correct)
 
 **Naming convention:** primitives MUST NOT use the `--ds-color-` prefix (reserved for semantic tokens only). This keeps the `var(--ds-color-*)` allowlist correct as the system grows.
 
@@ -156,7 +156,7 @@ Allowlist file: `scripts/lint-no-magic-values.allowlist.json` — documented exc
 - **Config:** `design-system/sd.config.ts`
 - **Outputs** (committed to the repository — never gitignore these):
   - `design-system/dist/tokens.css` — both tiers in CSS custom properties
-  - `design-system/dist/tokens.ts` — typed const tree with literal types for use in TS/TSX
+  - `design-system/dist/tokens.ts` — flat named `export const` values (Style Dictionary `javascript/es6` format, e.g. `export const DsColorSignal = "#00ff41";`); one export per token, PascalCase name
   - `design-system/dist/tokens.json` — flat key/value (Figma sync, AI tooling, generated docs)
   - `design-system/dist/` is committed to the repository. The `tokens:check` script (`pnpm tokens:check`) builds the pipeline and runs `git diff --exit-code design-system/dist/` to detect drift between source tokens and committed artifacts. Never add `design-system/dist/` to `.gitignore`.
 - **Scripts:**
@@ -268,8 +268,7 @@ export { TerminalPanel } from './components/TerminalPanel';
 export { StatTile } from './components/StatTile';
 export { CmdLine } from './components/CmdLine';
 export { KbdKey } from './components/KbdKey';
-export { tokens } from './dist/tokens';  // typed const tree
-export type { Tokens } from './dist/tokens';
+export * from './dist/tokens';  // flat named export consts (javascript/es6 format)
 ```
 
 Consumers import as `import { Button } from '@/design-system'`.

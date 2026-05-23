@@ -60,9 +60,9 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--font-mono-stack);
+  background: var(--ds-color-surface-base);
+  color: var(--ds-color-text-body);
+  font-family: var(--ds-font-family-mono);
   font-size: 16px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -76,12 +76,12 @@ body {
 }
 
 ::selection {
-  background: var(--signal);
-  color: var(--highlight-fg);
+  background: var(--ds-color-signal);
+  color: var(--ds-color-highlight-fg);
 }
 
 a {
-  color: var(--signal);
+  color: var(--ds-color-signal);
   text-decoration: none;
 }
 
@@ -91,14 +91,14 @@ a:hover {
 
 a:focus-visible {
   text-decoration: underline;
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--ds-color-signal);
   outline-offset: 2px;
 }
 
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--ds-color-signal);
   outline-offset: 2px;
 }
 
@@ -108,10 +108,10 @@ textarea:focus-visible {
   top: 0;
   z-index: 9999;
   padding: 8px 16px;
-  background: var(--signal);
+  background: var(--ds-color-signal);
   color: #000;
-  font-family: var(--font-mono-stack);
-  font-size: var(--fs-md);
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-md);
   font-weight: 700;
   text-decoration: none;
   clip-path: inset(50%);
@@ -127,41 +127,41 @@ button {
   font-family: inherit;
   color: inherit;
   background: transparent;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ds-color-border-default);
   cursor: pointer;
 }
 
 pre,
 code {
-  font-family: var(--font-mono-stack);
+  font-family: var(--ds-font-family-mono);
   white-space: pre;
 }
 
 h1,
 h2,
 h3 {
-  font-family: var(--font-mono-stack);
+  font-family: var(--ds-font-family-mono);
   font-weight: 700;
-  color: var(--signal);
+  color: var(--ds-color-signal);
   margin: 0 0 8px 0;
   text-shadow: 0 0 2px rgba(0, 255, 65, 0.3);
 }
 
 h1 {
-  font-size: var(--fs-2xl);
-  font-family: var(--font-display-stack);
+  font-size: var(--ds-font-size-heading-lg);
+  font-family: var(--ds-font-family-display);
   font-weight: 900;
 }
 
 @media (max-width: 768px) {
   :root {
-    --vrhythm: 18px;
-    --pad: 14px;
-    --fs-3xl: 56px;
-    --fs-2xl: 32px;
+    --ds-space-rhythm: 18px;
+    --ds-space-pad: 14px;
+    --ds-font-size-heading-xl: 56px;
+    --ds-font-size-heading-lg: 32px;
   }
   h1 {
-    font-size: var(--fs-2xl);
+    font-size: var(--ds-font-size-heading-lg);
   }
 }
 
@@ -184,9 +184,9 @@ h1 {
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--font-mono-stack);
+  background: var(--ds-color-surface-base);
+  color: var(--ds-color-text-body);
+  font-family: var(--ds-font-family-mono);
   position: relative;
 }
 
@@ -196,11 +196,11 @@ h1 {
    old @layer responsive provided (responsive layer beat the base layer). */
 @media (max-width: 900px) {
   :root {
-    --vrhythm: 40px;
-    --pad: 18px;
+    --ds-space-rhythm: 40px;
+    --ds-space-pad: 18px;
   }
   body {
-    font-size: var(--fs-base);
+    font-size: var(--ds-font-size-body);
   }
 }
 

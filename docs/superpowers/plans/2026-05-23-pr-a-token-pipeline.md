@@ -574,7 +574,7 @@ Expected: `Token boundary check passed (31 files).` — no violations after the 
 
 In `package.json` scripts, add: `"lint:token-boundary": "node scripts/lint-token-boundary.mjs"`
 
-Also add to `"verify"` script chain: `... && pnpm lint:token-boundary`
+Wire as a separate CI step in `.github/workflows/ci.yml` (not into the `verify` chain). The `verify` script covers Biome + typecheck + content + client-naming + dep-pinning + tests; token gates run as independent steps after `Token drift check` in the CI workflow.
 
 ```bash
 git add scripts/lint-token-boundary.mjs package.json
@@ -692,7 +692,7 @@ Iterate until the check passes.
 - [ ] **Step 4: Add scripts and commit**
 
 Add to `package.json`: `"lint:no-magic-values": "node scripts/lint-no-magic-values.mjs"`
-Add to `"verify"` chain.
+Wire as a separate CI step in `.github/workflows/ci.yml` (not into the `verify` chain). Same pattern as `lint:token-boundary`.
 
 ```bash
 git add scripts/lint-no-magic-values.mjs scripts/lint-no-magic-values.allowlist.json package.json
@@ -798,7 +798,7 @@ Expected: All PASS lines. If any FAIL, the token value needs to be adjusted.
 - [ ] **Step 3: Add to package.json and commit**
 
 Add: `"lint:contrast": "node scripts/contrast-check.mjs"`
-Add to `"verify"` chain.
+Wire as a separate CI step in `.github/workflows/ci.yml` (not into the `verify` chain). Same pattern as `lint:token-boundary`.
 
 ```bash
 git add scripts/contrast-check.mjs package.json

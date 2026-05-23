@@ -8,8 +8,9 @@ import path from 'node:path';
 const ROOT = path.resolve(import.meta.dirname, '..');
 
 // Patterns that are FORBIDDEN (primitives that have semantic aliases).
-// Use negative lookahead to avoid matching numeric-suffix tokens that
-// look like typography names (--ds-text-size-* is allowed; --ds-text-\d+ is not).
+// Each regex matches only the specific token shape that must be aliased:
+// --ds-text-\d+ matches digit-suffix color tokens (--ds-text-100, --ds-text-300)
+// without catching --ds-text-size-* or --ds-text-leading-* (those have letter suffixes).
 //
 // Note: --ds-text-leading-* tokens are intentionally NOT in FORBIDDEN.
 // They are terminal tokens (no semantic alias wraps them). Direct use
