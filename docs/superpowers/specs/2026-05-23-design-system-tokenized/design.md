@@ -11,6 +11,8 @@
 
 Build a published design system for erikunha.dev positioned at `/design-system`. The system itself is part of the Staff/Principal hiring artifact — the architecture, the rigor, the docs, and the enforcement together demonstrate frontend system thinking at the level the role demands.
 
+**The tradeoff stated outright.** A 20-token, single-consumer portfolio does not engineer-justify a two-tier token pipeline, Style Dictionary, four CI lint gates, an extracted primitive component library, and a documented public docs surface. By every conventional scale-vs-cost rubric this is over-engineered. We accept that cost deliberately because the artifact is the point: the demonstration *is* the architecture, the enforcement, and the discipline. A Staff/Principal reviewer reading the repo should recognize the over-engineering as intentional craft, not accidental scope. The architecture must therefore be done well enough that the demonstration lands; half-built over-engineering is worse than no over-engineering.
+
 The system has three deliverables:
 
 1. **Two-tier token pipeline** (primitives + semantic) authored in JSON, generated to CSS + TypeScript + JSON, consumed by every CSS Module in the codebase.
@@ -128,6 +130,8 @@ The full size scale (`--ds-font-size-2xs` through `--ds-font-size-3xl`) is also 
 - Hardcoded z-index values (must use `--ds-layer-*`)
 
 Allowlist file: `scripts/lint-no-magic-values.allowlist.json` — documented exceptions (e.g., 9999px honeypot offset, sub-pixel borders).
+
+**Allowlist population is part of PR A scope.** First lint run against existing `.module.css` files will surface dozens of legitimate-but-unmapped values: sub-pixel borders, animation timings that predate motion tokens, magic offsets like the 9999px sr-only positioning, exact color values used in shadow/gradient operations. Each gets a one-line allowlist entry with the file path, the value, and a one-sentence justification. Lint must pass clean (zero unallowlisted violations) before PR A is mergeable.
 
 ### 3.6 Enforcement: contrast audit
 
@@ -342,7 +346,7 @@ Total client JS added to `/design-system/*` routes: **< 2 KB gzipped.** Under th
 
 - LCP target: < 1.8s on 4G stays
 - Bundle: < 2KB client JS added to `/design-system/*`; zero added to `/`
-- Build time: +1-2s for Style Dictionary; cached on no-op token changes
+- Build time: +3-5s total (~1-2s Style Dictionary cached on no-op + ~2-3s Shiki MDX syntax highlighting across 5 routes, uncached)
 - LHCI runs against the 5 new routes; budgets per route enforced
 
 ---
@@ -376,6 +380,10 @@ Three PRs in strict order. Each is independently mergeable.
 2. Mass-rename PR creates massive review diff — mitigated by structuring codemod commit separately from token-pipeline commits; reviewer reads codemod once, then mechanical diffs
 3. Style Dictionary transitive dep surface — mitigated by exact-pinning + `pnpm bundle-check` confirms zero runtime bundle change (Style Dictionary is build-time only)
 4. CI time regression — mitigated by token build cache keyed on `design-system/tokens/` hash
+5. Codemod misses tokens inside `calc()` / `color-mix()` / `linear-gradient()` wrappers — mitigated by using `postcss-value-parser` AST traversal, NOT regex. Codemod includes a self-test against a fixture file containing every known wrapper form
+6. Visual baseline regeneration masks real drift — mitigated by manual-review gate: before committing regenerated baselines, the contributor runs `scripts/diff-baselines.mjs` (PR A adds this) that emits a per-image diff visualization; contributor confirms each diff is intentional, then commits
+7. `dist/*` missing on fresh clone breaks `pnpm dev` — mitigated by `predev` lifecycle hook (in addition to `prebuild`) that runs `pnpm tokens:build` if `dist/tokens.css` is absent; `dist/` directory added to `.gitignore` as part of PR A
+8. No-magic-values lint allowlist not pre-populated — PR A includes the allowlist file with every legitimate exception in current `.module.css` files (sub-pixel borders, animation timings, 9999px honeypot, etc.) before the gate goes live
 
 **Reversibility:** medium. Single `git revert` + regenerated visual baselines.
 
@@ -429,7 +437,7 @@ Three PRs in strict order. Each is independently mergeable.
 - DECISIONS.md, ARCHITECTURE.md updates
 
 **Failure modes specific to PR C:**
-1. MDX + Turbopack incompatibility — mitigated by 30-min prototype spike BEFORE plan is written; plan absorbs webpack-per-route fallback if needed
+1. MDX + Turbopack incompatibility — **HARD GATE on writing-plans for PR C.** Before any planning happens, run a 30-min spike on a throwaway branch: smallest possible MDX page in `app/_spike/page.mdx`, observe whether Turbopack compiles it cleanly. Spike outcome (works / works-with-webpack-fallback / does-not-work) feeds the plan. If "does-not-work" without webpack fallback, the entire PR C scope is reconsidered (eject MDX, ship TSX-compiled docs)
 2. Bundle leak into main routes — mitigated by per-route `pnpm bundle-check` with explicit assertion that `/` route client JS does not increase
 3. Live preview hydration mismatch — mitigated by RSC-default + `<noscript>` fallback for copy button only
 4. SEO ranking shift — accepted as goal of the work
@@ -463,6 +471,11 @@ Per the CLAUDE.md `thinking-inversion before writing-plans` rule, the explicit c
 | Docs a11y regression | new sidebar nav lacks landmark | PR C extended axe spec |
 | Docs maintenance drift | new component lacks docs entry | PR C build-time component↔heading check |
 | Style Dictionary version drift | minor bump changes output format | Exact-pin Style Dictionary in PR A |
+| Codemod misses tokens inside `calc()` / `color-mix()` wrappers | `calc(var(--signal) + 10px)` not rewritten because regex doesn't enter the wrapper | PR A codemod uses AST-aware CSS parser (`postcss-value-parser`), NOT regex — explicitly required, not optional |
+| Visual baseline regeneration masks real drift | Tokens get a 1px-off resolved value; baselines regenerate and pass; the drift never surfaces | PR A introduces a manual-review gate: regenerate baselines, then visually diff the prior baseline against the new one BEFORE committing; reviewer (human, not automated) confirms intent |
+| `design-system/dist/*` is gitignored but imported — `pnpm dev` fails on a fresh clone without `tokens:build` | Developer clones, runs `pnpm dev`, gets import error from `app/globals.css` | PR A adds a `predev` lifecycle hook (in addition to `prebuild`) that runs `pnpm tokens:build` if `dist/tokens.css` is missing |
+| MDX + Turbopack incompatibility discovered mid-plan, plan blocks | Plan assumes MDX works, implementation discovers it doesn't | **PR C spike runs BEFORE plan writing.** Spike outcome (works / works-with-webpack-fallback / does-not-work) is a hard gate on `writing-plans` for PR C |
+| Barrel import leaks primitives into client islands | `ContactForm.client.tsx` imports `<Field>` from `@/design-system`; tree-shaker pulls the entire barrel surface | PR B `pnpm bundle-check` diffs `/` route pre/post, required 0-byte delta; fallback is deep-path import pattern (`@/design-system/components/Field`) documented in contributor docs |
 
 ---
 
@@ -492,7 +505,9 @@ Per the CLAUDE.md `thinking-inversion before writing-plans` rule, the explicit c
 | Lighthouse Perf on `/` | ≥95 | ≥95 | 0 |
 | Lighthouse Perf on `/design-system/*` | n/a | ≥95 (enforced) | new |
 | Lighthouse A11y everywhere | =100 | =100 | 0 |
-| Build time | ~current | +1-2s (Style Dictionary, cached on no-op) | minimal |
+| Build time | ~current | +3-5s total (~1-2s Style Dictionary cached on no-op + ~2-3s Shiki MDX syntax highlighting across 5 routes, uncached) | accepted |
+
+**Note on the "Client JS on `/` unchanged" assumption:** PR B introduces a `design-system/index.ts` barrel re-export (§4.4). Barrel imports are a known bundle-leak vector — if a client island like `ContactForm.client.tsx` imports `<Field>` from `@/design-system`, naive tree-shaking can pull the entire barrel surface into the client bundle, even though `<Field>` itself is RSC-safe. PR B includes an explicit verification: `pnpm bundle-check` diffs the `/` route bundle pre-PR-B vs post-PR-B; required result is 0-byte delta. If a leak appears, the remediation is to import primitives via deep paths (`@/design-system/components/Field`) and document the deep-path-only pattern in the design system contributor docs.
 
 ---
 
@@ -501,7 +516,11 @@ Per the CLAUDE.md `thinking-inversion before writing-plans` rule, the explicit c
 Each carries a recommendation; architect-reviewer evaluates the recommendation, not invents an answer.
 
 1. **Motion semantic layer.** Recommendation: NO in v1. Components reference `--ds-duration-*` and `--ds-ease-*` primitives directly. The cost of adding `--ds-motion-fade-default`, `--ds-motion-press-bounce`, etc. without a known second consumer is YAGNI. Adding the layer later is a non-breaking change (primitives remain). Risk: future "snappy vs calm" theme variants require a small follow-up; acceptable.
-2. **`KbdKey` inclusion in v1.** Recommendation: INCLUDE. The component is ~20 LoC, has one clear use site, and tightens the artifact narrative ("we have a coherent set of terminal primitives"). Excluding it just to hit 6 is arbitrary.
+2. **`KbdKey` inclusion in v1.** Recommendation: INCLUDE. The component is ~20 LoC, has one clear use site, and tightens the artifact narrative ("we have a coherent set of terminal primitives"). Excluding it just to hit 6 is arbitrary. **Decision confirmed 2026-05-23 after architect-reviewer pressure-test.**
+
+2a. **`StatTile` with only one consumer (HeroStats) in v1.** Architect-reviewer flagged this as "a primitive with one consumer is a component, not a primitive." **Decision: KEEP in v1.** Rationale: (a) the artifact's value is the SYSTEM, not the consumption-count math — documenting StatTile as a primitive sets up the next StatGrid consumer cleanly; (b) the spec already excludes the parent `StatGrid` composition from primitive scope (§4.2 note), which addresses the "scope creep" concern from a different angle; (c) the over-engineering tradeoff in §1 is the same one — we accept it deliberately.
+
+2b. **`Link` as a missing primitive.** Architect-reviewer flagged that anchors and `<Button as="a">` conflate "navigation" and "action" semantics. **Decision: DEFER to v2.** Rationale: (a) keeps v1 scope at 7; (b) the existing portfolio's anchors are inconsistent enough that discovering the right Link API is itself a design exercise that deserves its own brainstorm; (c) `<Button as="a">` for the small number of action-shaped anchors (Hero CTA → GitHub) is acceptable for v1 — Button is the action primitive, anchor is the rendering choice. A future `<Link>` brainstorm covers the navigation anchors specifically.
 3. **`StatGrid` composition on `/design-system/components`.** Recommendation: YES, in a separate "Composition Patterns" subsection at the bottom of the components page. Documents the canonical 4-up grid using `StatTile`, with the source visible. Sets up future composition documentation without bloating the primitives list.
 4. **`<Preview>` source-of-truth model.** Recommendation: AUTOMATED from JSX children. Use `@mdx-js/loader` AST walking at build time to serialize the children of `<Preview>` into the source-display block. Removes a class of drift bugs. Adds ~50 LoC of build glue; one-time cost.
 5. **Mobile sidebar mechanism.** Recommendation: native `<details>` is acceptable for the polish bar. The CRT/brutalist aesthetic favors native, not animated. Zero JS, zero accessibility risk, ships immediately. Revisit only if user testing flags a problem.

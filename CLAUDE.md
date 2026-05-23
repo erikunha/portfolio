@@ -182,7 +182,9 @@ Rationale: human-in-the-loop quality gate for AI-assisted development on a Staff
 ## Things that have been considered and rejected
 
 Before proposing any of these, check `DECISIONS.md` to see the reasoning that excluded them:
-- GraphQL · Cloudflare Workers · multi-region deploy · Sentry by default · CAPTCHA on the contact form · separate routes per section · state management library · design system extraction · MDX · separate CMS · Tailwind (removed 2026-05-18) · CSS Modules / CSS-in-JS / styled-components · PostCSS plugins beyond what Lightning CSS provides natively
+- GraphQL · Cloudflare Workers · multi-region deploy · Sentry by default · CAPTCHA on the contact form · per-portfolio-section routes (splitting `/` into multiple routes — distinct from purpose-built routes like `/design-system`) · state management library · MDX as a blog/content engine (distinct from MDX as docs surface for `/design-system`) · separate CMS · Tailwind (removed 2026-05-18) · CSS-in-JS / styled-components · PostCSS plugins beyond what Lightning CSS provides natively
+
+Updated 2026-05-23: removed "design system extraction" (now accepted, see DECISIONS.md 2026-05-23), narrowed "MDX" to "MDX as a blog/content engine," narrowed "separate routes per section" to "per-portfolio-section routes," and removed "CSS Modules" (adopted 2026-05-22).
 
 ## Reference docs in this repo
 
