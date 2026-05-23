@@ -289,10 +289,13 @@ Consumers import as `import { Button } from '@/design-system'`.
 
 ### 5.2 MDX setup
 
-- `@next/mdx` package (exact-pinned)
-- Configured via `next.config.ts` — `pageExtensions: ['ts', 'tsx', 'mdx']`
+- `@next/mdx` package (exact-pinned), `@mdx-js/loader`, `@mdx-js/react`, `@types/mdx` (dev), `rehype-pretty-code`, `shiki` — all exact-pinned
+- Configured via `next.config.ts` — `createMDX({ options })` wrapper, `pageExtensions: ['ts', 'tsx', 'mdx']`
+- **`mdx-components.tsx` required at project root.** `@next/mdx` checks for this file first; without it the fallback to `@mdx-js/react` triggers a `React.createContext` crash in RSC production bundles (createContext is client-only). The root file exports `useMDXComponents` and is the MDX component map: auto-id'd headings for anchor nav, `<Preview>` component, `<SyntaxBlock>` wrapper.
+- **Turbopack plugin constraint:** all remark/rehype/recma plugins in `next.config.ts` MUST be referenced as `['package-name', { plainOptions }]` string tuples, NOT as imported function references. Turbopack requires serializable loader options; function references fail validation. `@next/mdx`'s internal `importPluginForPath` resolves them by package name at MDX compile time.
+- Code blocks via `rehype-pretty-code` + `shiki` — build-time syntax highlighting, zero runtime cost. Referenced as `['rehype-pretty-code', { theme: 'github-dark-dimmed' }]`.
 - File-based routing: `app/design-system/page.mdx`, `app/design-system/tokens/page.mdx`, etc.
-- Custom MDX component map: auto-id'd headings for anchor nav, code blocks via `shiki` (build-time syntax highlighting, zero runtime cost), inline React components imported normally
+- Inline React component imports in MDX work normally (`import { Button } from '../../design-system/components/Button'`); imported components are treated as RSC by default (no client JS if they have no `'use client'` directive).
 
 ### 5.3 Layout
 
@@ -313,7 +316,11 @@ Consumers import as `import { Button } from '@/design-system'`.
 </Preview>
 ```
 
-Renders the live component inside a bordered panel (`TerminalPanel`) plus a "View source" disclosure via native `<details>` (zero JS) showing the raw TSX.
+Renders the live component inside a bordered panel (`TerminalPanel`) plus a "View source" disclosure via native `<details>` (zero JS) showing the raw TSX. Source display and live render share one authored source — drift is impossible because source is injected at build time (see below).
+
+**Source injection:** `lib/mdx/recma-preview-source.ts` — a recma plugin operating at the ESTree (JavaScript AST) level, after MDX compiles JSX to JS. It walks the ESTree for `JSXElement` nodes whose opening tag is `<Preview>`, serializes the children JSX back to a source string via `estree-util-to-js`, and injects it as a `source` string prop on the `<Preview>` element before React sees it. The `Preview` component receives both `children` (live render) and `source` (display string) from a single authored node.
+
+Referenced in `next.config.ts` as `['./lib/mdx/recma-preview-source', {}]` (string path — Turbopack serialization requirement).
 
 Components themselves are RSC — render server-side, ship zero client JS.
 
@@ -441,7 +448,7 @@ Three PRs in strict order. Each is independently mergeable.
 - DECISIONS.md, ARCHITECTURE.md updates
 
 **Failure modes specific to PR C:**
-1. MDX + Turbopack incompatibility — mitigated by 30-min prototype spike BEFORE plan is written; plan absorbs webpack-per-route fallback if needed
+1. MDX + Turbopack compatibility — **spiked, confirmed WORKS (no webpack fallback needed).** Two mandatory setup steps: (a) `mdx-components.tsx` at project root (prevents `@mdx-js/react` createContext crash in RSC production); (b) all plugins in `next.config.ts` as `['package-name', { plainOptions }]` string tuples (Turbopack serialization requirement — imported function references fail). `rehype-pretty-code` + shiki and custom recma plugin both confirmed compatible via string reference.
 2. Bundle leak into main routes — mitigated by per-route `pnpm bundle-check` with explicit assertion that `/` route client JS does not increase
 3. Live preview hydration mismatch — mitigated by RSC-default + `<noscript>` fallback for copy button only
 4. SEO ranking shift — accepted as goal of the work
@@ -469,7 +476,7 @@ Per the CLAUDE.md `thinking-inversion before writing-plans` rule, the explicit c
 | A11y regression on extraction | extracted Badge loses `aria-hidden` on dot | PR B per-component axe + integration axe |
 | Bundle regression from components | accidental `"use client"` in a primitive | PR B `pnpm bundle-check` + lint |
 | Forgotten consumers | a section keeps inline `.cta` styles | PR B ripgrep CI gate |
-| MDX + Turbopack break | Next 16 + MDX page fails to compile | PR C prototype spike before plan |
+| MDX + Turbopack break | Next 16 + MDX page fails to compile | Spiked — confirmed WORKS; `mdx-components.tsx` + string-tuple plugin refs required |
 | Bundle leak to main routes | sidebar lib imported into `/` | PR C per-route bundle check |
 | Live preview hydration | preview drifts from displayed source | PR C: single-source-of-truth or diff check |
 | Docs a11y regression | new sidebar nav lacks landmark | PR C extended axe spec |
@@ -515,7 +522,7 @@ Each carries a recommendation; architect-reviewer evaluates the recommendation, 
 1. **Motion semantic layer.** Recommendation: NO in v1. Components reference `--ds-duration-*` and `--ds-ease-*` primitives directly. The cost of adding `--ds-motion-fade-default`, `--ds-motion-press-bounce`, etc. without a known second consumer is YAGNI. Adding the layer later is a non-breaking change (primitives remain). Risk: future "snappy vs calm" theme variants require a small follow-up; acceptable.
 2. **`KbdKey` inclusion in v1.** Recommendation: INCLUDE. The component is ~20 LoC, has one clear use site, and tightens the artifact narrative ("we have a coherent set of terminal primitives"). Excluding it just to hit 6 is arbitrary.
 3. **`StatGrid` composition on `/design-system/components`.** Recommendation: YES, in a separate "Composition Patterns" subsection at the bottom of the components page. Documents the canonical 4-up grid using `StatTile`, with the source visible. Sets up future composition documentation without bloating the primitives list.
-4. **`<Preview>` source-of-truth model.** Recommendation: AUTOMATED from JSX children. Use `@mdx-js/loader` AST walking at build time to serialize the children of `<Preview>` into the source-display block. Removes a class of drift bugs. Adds ~50 LoC of build glue; one-time cost.
+4. **`<Preview>` source-of-truth model.** Resolved. A recma plugin (`lib/mdx/recma-preview-source.ts`, ~40 LoC) operates at the ESTree level after MDX compiles JSX to JS. It serializes `<Preview>` children back to a source string via `estree-util-to-js` and injects a `source` prop — live render and display share one authored node, drift is impossible. Must be referenced by path string in `next.config.ts` (Turbopack serialization constraint). `estree-util-to-js` and `estree-util-visit` are transitive MDX deps, zero new runtime cost.
 5. **Mobile sidebar mechanism.** Recommendation: native `<details>` is acceptable for the polish bar. The CRT/brutalist aesthetic favors native, not animated. Zero JS, zero accessibility risk, ships immediately. Revisit only if user testing flags a problem.
 
 ---
