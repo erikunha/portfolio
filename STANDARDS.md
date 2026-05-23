@@ -365,6 +365,16 @@ branch protection) is the human-in-the-loop backstop.
 
 ---
 
+## 12. Design System
+
+**Rule.** All design tokens are authored in JSON under `design-system/tokens/` — per-category primitive files (`color.json`, `space.json`, `typography.json`, `motion.json`, `layer.json`, `border.json`, `radius.json`) plus per-theme semantic mapping files under `design-system/tokens/themes/` (`crt-green.json`, `crt-amber.json`). Style Dictionary (exact-pinned) generates `design-system/dist/tokens.{css,ts,json}` plus `design-system/dist/tokens.figma.json` (W3C Design Tokens format for Figma Tokens plugin sync). The token system is two-tier: primitives (raw palette, `--ds-{category}-{scale}`) and semantic (role-based aliases, `--ds-{category}-{role}`). Components consume only semantic tokens; primitive references in component CSS are a lint failure (`scripts/lint-token-boundary.mjs`), with two explicit exceptions: (1) token categories that have no semantic layer in v1 (`--ds-layer-*`, `--ds-border-*`, `--ds-radius-*`) may be referenced directly since there is nothing else to reference; (2) motion primitives (`--ds-duration-*`, `--ds-ease-*`) are allowed inside `@keyframes` blocks where the shorthand semantic form does not compose. Raw hex literals, raw px outside an allowlist, raw ms/s for durations, and hardcoded z-index values in any `.module.css` are also lint failures (`scripts/lint-no-magic-values.mjs`, with `scripts/lint-no-magic-values.allowlist.json` for documented exceptions). Every semantic text/surface pair audited for WCAG AA contrast in CI (`scripts/contrast-check.mjs`). Every primitive component lives under `design-system/components/<Name>/` with `.tsx`, `.module.css`, `.test.tsx`, `index.ts`, and a corresponding MDX docs page. `<Name>` files imported via deep paths only when consumed inside client islands (the barrel re-export from `@/design-system` is RSC-safe only — see Chapter 1).
+
+**Rationale.** A single source of truth for design decisions prevents the drift the audit found in the pre-tokens era (`#ff5f57` vs `#ff5f56` for the same chrome dot in two files). The two-tier split separates "what colors exist" (palette) from "what each role is" (semantics), allowing the palette to be repainted without component churn — the architecture the project is the reference for. Lint gates make the rules machine-checkable; PR review is the safety net for everything lint cannot detect. The contrast gate exists because changing a primitive value can silently break a semantic pair below WCAG AA; review alone has historically missed this kind of regression.
+
+**How it is held.** _(Planned — enforcement gates land in PRs A–E of the design system tokenized spec; see `docs/superpowers/specs/2026-05-23-design-system-tokenized/design.md`. Until those PRs merge, this chapter is a forward-declared standard, not a live gate.)_ Six CI gates: (1) `pnpm tokens:check` regenerates dist and fails on drift, (2) `scripts/lint-token-boundary.mjs` rejects primitives in component CSS, (3) `scripts/lint-no-magic-values.mjs` rejects raw values, (4) `scripts/contrast-check.mjs` walks every documented text/surface pair, (5) `pnpm bundle-check` per route asserts the design system barrel does not leak primitives into the main `/` client bundle, (6) build-time component↔heading check fails if a primitive lacks a corresponding `## ComponentName` heading in `app/design-system/components/page.mdx`. Visual regression Playwright suite covers every primitive component AND every section consuming it (double-catch). The `architect-reviewer` agent runs against any spec touching the design system before `writing-plans`. The `design-system/dist/` directory is gitignored AND covered by a `predev` lifecycle hook so a fresh clone does not break `pnpm dev`. ADR entries for every token-system change live in `DECISIONS.md`. Provenance for this chapter: spec at `docs/superpowers/specs/2026-05-23-design-system-tokenized/design.md`; supersedes the parts of Chapter 7 that pre-date the tokenized design system.
+
+---
+
 ## Provenance
 
 This document supersedes the inline "Reference standards (post-audit
@@ -372,6 +382,8 @@ This document supersedes the inline "Reference standards (post-audit
 the Reference Standards & Improvement Program — see
 `docs/superpowers/specs/2026-05-20-reference-standards-and-improvement-program-design.md`
 for the design rationale and `DECISIONS.md` for the ADR entry recording the
-supersession. Every gate named above was verified present in the repository at
-the time of writing; a citation to a gate that does not exist is itself a
-violation of Chapter 10.
+supersession. Every gate named in Chapters 1–11 was verified present in the
+repository at the time of writing; a citation to a gate that does not exist is
+itself a violation of Chapter 10. Chapter 12 is explicitly forward-declared
+(gates land in PRs A–E of the design system tokenized spec) and is exempt from
+this verification requirement until those PRs merge.

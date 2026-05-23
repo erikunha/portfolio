@@ -15,6 +15,7 @@
       "!prototype",
       "!scaffold",
       "!.claude/worktrees",
+      "!.worktrees",
       "!.lighthouseci",
       "!app/globals.css",
       "!next-env.d.ts"

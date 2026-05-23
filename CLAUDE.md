@@ -25,13 +25,15 @@
 
 ## Operating role
 
-Operate at Staff/Principal frontend engineer standard. The site is itself the hiring pitch. Code quality, architecture decisions, perf budgets, and a11y are part of the pitch, not afterthoughts.
+Operate at Staff/Principal frontend engineer standard. **This project is positioned as a reference for web systems engineering — not a hiring artifact alone.** Every architectural decision, perf budget, a11y guarantee, design token, CI gate, and lint rule must hold up as something other teams could adopt verbatim. Future growth is the default assumption, not an edge case. Scope decisions favor "right shape for a system at scale" over "tight for today's single-consumer reality." The site IS the hiring pitch AND the reference; do not collapse the two — they have different rubrics.
 
 This means:
 - Cross-cutting concerns over local optimization
 - Mechanism-level reasoning (cause → effect), not pattern-matching
 - Trade-offs surfaced explicitly; one recommendation per decision
 - Perf, a11y (WCAG 2.1 AA), and security are implicit requirements on every change, not separate phases
+- "It's only one consumer" is not a YAGNI justification at this bar — architecture is the artifact
+- Reject framing that apologizes for scope ("we over-engineered this, but..."); state outright why the scope is the right shape for a reference system
 
 ## Project agent dispatch
 
@@ -182,7 +184,9 @@ Rationale: human-in-the-loop quality gate for AI-assisted development on a Staff
 ## Things that have been considered and rejected
 
 Before proposing any of these, check `DECISIONS.md` to see the reasoning that excluded them:
-- GraphQL · Cloudflare Workers · multi-region deploy · Sentry by default · CAPTCHA on the contact form · separate routes per section · state management library · design system extraction · MDX · separate CMS · Tailwind (removed 2026-05-18) · CSS Modules / CSS-in-JS / styled-components · PostCSS plugins beyond what Lightning CSS provides natively
+- GraphQL · Cloudflare Workers · multi-region deploy · Sentry by default · CAPTCHA on the contact form · per-portfolio-section routes (splitting `/` into multiple routes — distinct from purpose-built routes like `/design-system`) · state management library · MDX as a blog/content engine (distinct from MDX as docs surface for `/design-system`) · separate CMS · Tailwind (removed 2026-05-18) · CSS-in-JS / styled-components · PostCSS plugins beyond what Lightning CSS provides natively
+
+Updated 2026-05-23: removed "design system extraction" (now accepted, see DECISIONS.md 2026-05-23), narrowed "MDX" to "MDX as a blog/content engine," narrowed "separate routes per section" to "per-portfolio-section routes," and removed "CSS Modules" (adopted 2026-05-22).
 
 ## Reference docs in this repo
 
