@@ -44,16 +44,18 @@ const RENAME_MAP = [
   ['--fs-3xl', '--ds-font-size-heading-xl'],
 ];
 
-// Build a single regex that matches any legacy name in a var() context.
-// For CSS: var(--signal) | For TSX inline: 'var(--signal)' or "var(--signal)"
+// Build a single regex that matches any occurrence of a legacy token name —
+// in CSS declarations, var() calls, string literals, etc. — followed by a
+// non-identifier character or end-of-string (prevents partial matches such as
+// matching --signal inside --signal-dim).
 const legacyNames = RENAME_MAP.map(([from]) => from.replace(/[-]/g, '\\$&'));
 const pattern = new RegExp(`(${legacyNames.join('|')})(?=[^-a-zA-Z0-9]|$)`, 'g');
 
+// O(1) lookup map built once; avoids O(n) Array.find per regex match.
+const RENAME_MAP_LOOKUP = new Map(RENAME_MAP);
+
 function applyRenames(content) {
-  return content.replace(pattern, (match) => {
-    const entry = RENAME_MAP.find(([from]) => from === match);
-    return entry ? entry[1] : match;
-  });
+  return content.replace(pattern, (match) => RENAME_MAP_LOOKUP.get(match) ?? match);
 }
 
 // Process all .module.css files and .tsx files with inline style var() refs

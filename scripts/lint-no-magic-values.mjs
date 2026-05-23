@@ -44,8 +44,8 @@ function stripMediaConditions(css) {
 /**
  * Strip var() calls so values used as var() fallbacks or inside var() references
  * are never flagged. Replaces var(...) with a placeholder that won't match any
- * of the check patterns. This avoids variable-length lookbehind assertions, which
- * are legal in V8/Node 22 but are unnecessarily complex.
+ * of the check patterns. Pre-processing the content this way is simpler and more
+ * reliable than using complex regex lookahead/lookbehind assertions.
  */
 function stripVarCalls(css) {
   return css.replace(/var\([^)]*\)/g, 'VAR_REF');
