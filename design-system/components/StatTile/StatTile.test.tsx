@@ -12,6 +12,6 @@ describe('StatTile', () => {
   });
   it('applies compact class when variant=compact', () => {
     const { container } = render(<StatTile value="1" label="x" variant="compact" />);
-    expect(container.firstChild?.classList.toString()).toContain('compact');
+    expect(container.firstElementChild?.classList.toString()).toContain('compact');
   });
 });

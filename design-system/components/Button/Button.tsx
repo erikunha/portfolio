@@ -2,18 +2,19 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from 'react';
 import { cx } from '../../lib/cx';
 import styles from './Button.module.css';
 
-type ButtonVariant = 'primary' | 'secondary';
-type ButtonSize = 'sm' | 'md' | 'lg';
+export type ButtonVariant = 'primary' | 'secondary';
+export type ButtonSize = 'sm' | 'md' | 'lg';
 
-type ButtonBaseProps = {
+export type ButtonBaseProps = {
   variant?: ButtonVariant;
   size?: ButtonSize;
 };
 
-type AsButton = ButtonBaseProps & ButtonHTMLAttributes<HTMLButtonElement> & { as?: 'button' };
-type AsAnchor = ButtonBaseProps &
+export type AsButton = ButtonBaseProps &
+  ButtonHTMLAttributes<HTMLButtonElement> & { as?: 'button' };
+export type AsAnchor = ButtonBaseProps &
   AnchorHTMLAttributes<HTMLAnchorElement> & { as: 'a'; disabled?: boolean };
-type ButtonProps = AsButton | AsAnchor;
+export type ButtonProps = AsButton | AsAnchor;
 
 export function Button({
   variant = 'primary',
