@@ -6,7 +6,7 @@ describe('StatTile', () => {
   it('renders value and label as dl/dt/dd with dt before dd in DOM', () => {
     render(<StatTile value="99%" label="uptime" />);
     const dl = screen.getByRole('definition').closest('dl');
-    expect(dl).toBeDefined();
+    expect(dl).not.toBeNull();
     expect(screen.getByText('uptime').tagName).toBe('DT');
     expect(screen.getByText('99%').tagName).toBe('DD');
     const children = Array.from(dl?.children ?? []);

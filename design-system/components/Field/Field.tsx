@@ -28,7 +28,7 @@ export function Field({
     id,
     name,
     className: cx(styles.input, consumerClassName),
-    'aria-invalid': error ? ('true' as const) : undefined,
+    ...(error ? { 'aria-invalid': 'true' as const } : {}),
     'aria-describedby': describedBy,
   };
   return (
