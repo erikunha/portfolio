@@ -26,6 +26,15 @@ describe('Button', () => {
     expect(el?.getAttribute('href')).toBeNull();
     expect(el?.getAttribute('tabindex')).toBe('-1');
   });
+  it('does not allow caller aria-disabled to override disabled=true on anchor', () => {
+    const { container } = render(
+      <Button as="a" href="/test" disabled aria-disabled="false">
+        Disabled
+      </Button>,
+    );
+    const el = container.querySelector('a');
+    expect(el?.getAttribute('aria-disabled')).toBe('true');
+  });
   it('applies primary variant class by default', () => {
     const { container } = render(<Button>Primary</Button>);
     expect(container.firstElementChild?.classList.toString()).toContain('primary');

@@ -25,4 +25,16 @@ describe('Field', () => {
     expect(errId).toBeDefined();
     expect(document.getElementById(errId ?? '')?.textContent).toBe('Bad input');
   });
+  it('merges consumer aria-describedby with error id', () => {
+    render(<Field name="email" label="Email" error="Required" aria-describedby="hint-id" />);
+    const input = screen.getByRole('textbox');
+    const described = input.getAttribute('aria-describedby') ?? '';
+    expect(described).toContain('hint-id');
+    expect(described).toContain('field-email-error');
+  });
+  it('does not set an empty aria-describedby when no error and no consumer value', () => {
+    render(<Field name="email" label="Email" />);
+    const input = screen.getByRole('textbox');
+    expect(input.getAttribute('aria-describedby')).toBeNull();
+  });
 });

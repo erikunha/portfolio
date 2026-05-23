@@ -11,12 +11,14 @@ export type FieldProps = SingleLineProps | MultiLineProps;
 export function Field({ name, label, error, multiline, ...rest }: FieldProps) {
   const id = `field-${name}`;
   const errId = error ? `${id}-error` : undefined;
+  const consumerDescribedBy = (rest as { 'aria-describedby'?: string })['aria-describedby'];
+  const describedBy = [consumerDescribedBy, errId].filter(Boolean).join(' ') || undefined;
   const inputProps = {
     id,
     name,
     className: styles.input,
     'aria-invalid': error ? ('true' as const) : undefined,
-    'aria-describedby': errId,
+    'aria-describedby': describedBy,
   };
   return (
     <div className={styles.root}>

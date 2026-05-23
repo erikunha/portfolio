@@ -28,12 +28,12 @@ export function Button({
     const { disabled, href, onClick, tabIndex, ...anchorRest } = rest as AsAnchor;
     return (
       <a
+        {...anchorRest}
         className={classes}
         aria-disabled={disabled ? 'true' : undefined}
         href={disabled ? undefined : href}
         tabIndex={disabled ? -1 : tabIndex}
         onClick={disabled ? (e) => e.preventDefault() : onClick}
-        {...anchorRest}
       />
     );
   }
