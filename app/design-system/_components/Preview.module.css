@@ -1,12 +1,12 @@
 .root {
-  margin: var(--ds-space-4) 0;
+  margin: var(--ds-space-rhythm-tight) 0;
 }
 
 .live {
   padding: var(--ds-space-pad);
   display: flex;
   flex-wrap: wrap;
-  gap: var(--ds-space-3);
+  gap: var(--ds-space-pad-tight);
   align-items: flex-start;
 }
 
@@ -31,7 +31,7 @@
 
 .source {
   margin: 0;
-  padding: var(--ds-space-4) var(--ds-space-pad);
+  padding: var(--ds-space-rhythm-tight) var(--ds-space-pad);
   overflow-x: auto;
   font-family: var(--ds-font-family-mono);
   font-size: var(--ds-font-size-xs);
