@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import moduleStyles from '@/components/responsive/Module.module.css';
+import moduleStyles from '@/components/responsive/Module/Module.module.css';
 
 // Module is a pure (sync, non-async) Server Component: one <details> for every
 // viewport, no UA detection. No stub needed — it renders deterministically.
@@ -68,7 +68,7 @@ describe('content-visibility deferral', () => {
   it('Module.module.css ships the cvDefer content-visibility rule', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate content-visibility
     const moduleCss = readFileSync(
-      path.resolve(__dirname, '../components/responsive/Module.module.css'),
+      path.resolve(__dirname, '../components/responsive/Module/Module.module.css'),
       'utf-8',
     );
     expect(moduleCss).toContain('.cvDefer');
