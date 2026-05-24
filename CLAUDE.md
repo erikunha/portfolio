@@ -32,7 +32,7 @@
 | `pnpm ready-for-pr` | Before `gh pr create` — runs ci:local + pr-size, prints next-step checklist |
 | `pnpm ready-to-merge [<pr>]` | Before `gh pr merge` — runs ci:local + branch-protection + Copilot review + resolved threads + pr-metrics |
 | `pnpm pr-metrics [<pr>]` | During or after PR review — reports Copilot cycle count, size, days open |
-| `pnpm changelog:sync` | After any `(design-system)` commits — regenerates `/design-system/changelog` from git log |
+| `pnpm changelog:sync` | After any commit with scope `(design-system)` — regenerates `app/design-system/changelog/page.mdx` from full git history |
 
 ## Engineering context
 
@@ -172,8 +172,8 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - Track decisions in `DECISIONS.md`: one bullet, date, reversibility note. Update as we go.
 - **Process feedback mid-workflow is a hard stop.** Pause immediately, incorporate into CLAUDE.md and/or memory, confirm with the user, then resume.
 - **Commit in scope blocks; merge by milestone.** Work accumulates in commits grouped by concern — one logical unit per commit (a component, a fix, a config change). After each block, run `pnpm pr-size`. When `pr-size` hits yellow AND the block is a natural milestone, open a PR. Do not accumulate past red. If mid-milestone the branch hits red, split at the last clean commit boundary and open what's done.
-- **Review before every push — no exceptions.** Before any `git push origin main` (or any branch), invoke `pr-review-toolkit:review-pr` against the accumulated unpushed diff. Address all Critical and Important findings, then push. This applies to direct-to-main pushes too, not only PR flows.
-- **Auto-review before opening any PR.** Run `pnpm ready-for-pr` (ci:local + pr-size). Then invoke `pr-review-toolkit:review-pr` against the diff. Address all Critical and Important findings before `gh pr create`. Opening with known issues requires written justification in the PR body.
+- **Review before every push — no exceptions.** Before any `git push` (to main or any branch), invoke `pr-review-toolkit:review-pr` against the accumulated unpushed diff. Address all Critical and Important findings, then push. This applies to direct-to-main pushes too, not only PR flows.
+- **Auto-review before opening any PR.** Run `pnpm ready-for-pr` (ci:local + pr-size). Then invoke `pr-review-toolkit:review-pr` against the diff. Address all Critical and Important findings before `gh pr create`. `pnpm ready-for-pr` is required even when the pre-push review has already run — it additionally covers `bundle-check` and `pr-size`. Opening with known issues requires written justification in the PR body.
 - **The review should be boring.** If `pr-review-toolkit:review-pr` or Copilot finds real bugs, the pre-implementation discipline failed. `thinking-inversion` before writing and TDD during implementation are the actual defences — not the review. Multi-round Copilot cycles mean the writing process needs fixing.
 - **Every plan must include a failure-mode checklist.** Run `thinking-inversion` before `writing-plans` on any task. Each bug class becomes an explicit plan task — not a Copilot finding after the fact.
 
