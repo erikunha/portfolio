@@ -41,8 +41,5 @@ tsconfig.tsbuildinfo
 # os
 .DS_Store
 
-# development screenshots (root-level only — portfolio images in public/ are tracked)
-/*.png
-
 # git worktree symlinks (.claude/worktrees/ — created by superpowers using-git-worktrees)
 .claude/worktrees/
