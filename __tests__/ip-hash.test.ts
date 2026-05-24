@@ -17,6 +17,7 @@ vi.mock('@upstash/redis', () => ({
 }));
 
 vi.mock('@upstash/ratelimit', () => {
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional stub constructor
   function Ratelimit() {}
   Ratelimit.slidingWindow = () => ({});
   return { Ratelimit };
