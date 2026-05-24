@@ -140,6 +140,13 @@ import { Field } from '../../../design-system/components/Field';
 
 Four `StatTile` components in a CSS grid. The grid layout stays in the consumer — primitives don't embed layout opinions.
 
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--ds-color-signal-subtle)', marginBottom: 'var(--ds-space-4)' }}>
+  <StatTile value="99" label="LH_SCORE" />
+  <StatTile value="5+" label="YRS_EXP" />
+  <StatTile value="1.2s" label="LCP" />
+  <StatTile value="0" label="CLS" />
+</div>
+
 ```tsx
 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--ds-color-signal-subtle)' }}>
   <StatTile value="99" label="LH_SCORE" />
