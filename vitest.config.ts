@@ -29,6 +29,9 @@ export default defineConfig({
         '**/*.test.*',
         '**/*.spec.*',
         '**/index.ts', // barrel re-exports — no logic to cover
+        '**/*.e2e.ts', // Playwright specs — not executed in Vitest/jsdom
+        '**/*.module.css', // CSS modules transform to JS objects in jsdom; no logic to cover
+        '**/*.mjs', // remark/recma plugins — not unit tested
       ],
       reportsDirectory: 'coverage',
     },
