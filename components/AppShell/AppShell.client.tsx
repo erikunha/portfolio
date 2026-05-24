@@ -9,14 +9,14 @@ import '@/lib/error-bridge.client';
 import './AppShell.module.css';
 import { type ReactNode, useEffect } from 'react';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
-import { ToTopButton } from './client/ToTopButton';
-import { ErrorBoundary } from './ErrorBoundary.client';
-import { CRTOverlay } from './responsive/CRTOverlay';
-import { DesktopTopbar } from './responsive/DesktopTopbar';
-import { Dock } from './responsive/Dock';
-import { MatrixRain } from './responsive/MatrixRain';
-import { MobileTitleBar } from './responsive/MobileTitleBar';
-import { StatusBar } from './responsive/StatusBar';
+import { ToTopButton } from '../client/ToTopButton';
+import { ErrorBoundary } from '../ErrorBoundary';
+import { CRTOverlay } from '../responsive/CRTOverlay';
+import { DesktopTopbar } from '../responsive/DesktopTopbar';
+import { Dock } from '../responsive/Dock';
+import { MatrixRain } from '../responsive/MatrixRain';
+import { MobileTitleBar } from '../responsive/MobileTitleBar';
+import { StatusBar } from '../responsive/StatusBar';
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { isMobile } = useBreakpoint();

@@ -51,7 +51,7 @@ describe('skip-to-content link', () => {
   });
 
   async function renderAppShell(): Promise<HTMLElement> {
-    const { AppShell } = await import('@/components/AppShell.client');
+    const { AppShell } = await import('@/components/AppShell');
     mounted = await mountClient(
       createElement(AppShell, null, createElement('main', { id: 'main-content' }, 'content')),
     );

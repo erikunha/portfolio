@@ -14,8 +14,8 @@
 // sub-millisecond UA resolution (no async I/O). Hero is intentionally outside
 // any Suspense boundary so LCP is never gated on dynamic resolution.
 
-import { AppShell } from '@/components/AppShell.client';
-import { ErrorBoundary } from '@/components/ErrorBoundary.client';
+import { AppShell } from '@/components/AppShell';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { CommunitySection } from '@/components/sections/CommunitySection';
 import { ContactSection } from '@/components/sections/ContactSection';
