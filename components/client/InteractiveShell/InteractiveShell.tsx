@@ -143,11 +143,14 @@ export function InteractiveShell() {
   const mountedRef = useRef(true);
   // Pending requestAnimationFrame handle for the chunk-coalescing flush.
   const rafRef = useRef<number | null>(null);
+  // Pending setTimeout handle for the runWithEffect typing animation.
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      if (typingTimerRef.current !== null) clearTimeout(typingTimerRef.current);
     };
   }, []);
   const initializedRef = useRef(false);
@@ -241,7 +244,7 @@ export function InteractiveShell() {
         const { displayText: finalText, errorMessage: errMsg } = parseStreamChunk(accumulated);
         finalize(finalText, errMsg);
       } catch (err) {
-        finalize('', (err as Error).message);
+        finalize('', err instanceof Error ? err.message : String(err));
       }
     },
     [nextId],
@@ -286,6 +289,7 @@ export function InteractiveShell() {
       typingRef.current = true;
       let i = 0;
       function tick() {
+        typingTimerRef.current = null;
         if (!mountedRef.current) {
           typingRef.current = false;
           return;
@@ -293,9 +297,10 @@ export function InteractiveShell() {
         if (i <= cmd.length) {
           setInput(cmd.slice(0, i));
           i++;
-          setTimeout(tick, 30);
+          typingTimerRef.current = setTimeout(tick, 30);
         } else {
-          setTimeout(() => {
+          typingTimerRef.current = setTimeout(() => {
+            typingTimerRef.current = null;
             if (!mountedRef.current) {
               typingRef.current = false;
               return;

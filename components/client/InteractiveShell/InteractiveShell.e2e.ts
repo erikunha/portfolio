@@ -113,21 +113,15 @@ test.describe('ask / interactive shell', () => {
     // We deliberately do NOT register a standalone page.route('**/api/ask', ...)
     // here — a second handler would race the mock-backend registration and the
     // ordering would silently determine which response wins.
-    let requestId: string | null = null;
-
-    page.on('response', (resp) => {
-      if (resp.url().includes('/api/ask')) {
-        requestId = resp.headers()['x-request-id'] ?? null;
-      }
-    });
-
     await setupAskPage(page, { ask: 'happy', log: 'accept' });
-    await ask(page, 'Test question for header check');
 
-    // Wait for the response to arrive.
-    await page.waitForFunction(() => document.querySelector('[data-kind="output"]') !== null, {
-      timeout: 10_000,
-    });
+    // waitForResponse guarantees the response is fully settled before we read
+    // headers — avoids a race where page.on('response') fires after the DOM
+    // mutation that waitForFunction would otherwise gate on.
+    const responsePromise = page.waitForResponse('**/api/ask', { timeout: 10_000 });
+    await ask(page, 'Test question for header check');
+    const response = await responsePromise;
+    const requestId = response.headers()['x-request-id'] ?? null;
 
     // Assert the exact value emitted by the happy mock. Pinning (vs. just
     // non-empty) makes any future drift in mock-backend.ts an intentional,

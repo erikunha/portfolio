@@ -34,7 +34,7 @@ export function ContactForm() {
       }
       setStatus('success');
     } catch (err) {
-      setErrorMsg((err as Error).message);
+      setErrorMsg(err instanceof Error ? err.message : String(err));
       setStatus('error');
     }
   }

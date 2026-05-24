@@ -222,6 +222,7 @@ describe('/api/contact honeypot (audit Theme 1.4)', () => {
     vi.resetModules();
     redisSetMock.mockReset();
     resendSendMock.mockReset();
+    rateLimitMock.mockResolvedValue({ success: true });
   });
 
   it('returns 200 ok without persisting or sending when field_company is filled', async () => {
@@ -296,7 +297,7 @@ describe('/api/contact honeypot (audit Theme 1.4)', () => {
 // Behavioral test: the rate-limit factory is mocked to deny the request; the
 // POST handler must short-circuit with a 429, the standard error envelope
 // { ok: false, error: { code: 'rate_limited' } }, and an X-Request-Id header
-// — WITHOUT touching KV or Resend. Modeled on __tests__/contact-honeypot.test.ts.
+// — WITHOUT touching KV or Resend. Modeled on the '/api/contact honeypot' describe block above in this file.
 
 const VALID_BODY = {
   name: 'Real Name',

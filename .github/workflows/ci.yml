@@ -196,8 +196,12 @@ jobs:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 30000
-      - name: Run functional e2e
+      - name: Run functional e2e (tests/e2e specs)
+        if: matrix.project != 'chromium-components'
         run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/cross-cutting.spec.ts tests/e2e/observability-smoke.spec.ts
+      - name: Run functional e2e (co-located component specs)
+        if: matrix.project == 'chromium-components'
+        run: pnpm playwright test --project=${{ matrix.project }}
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

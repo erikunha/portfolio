@@ -21,9 +21,9 @@ test.describe('Hero -- above the fold', () => {
     await expect(linkedinLink).toHaveAttribute('href', 'https://www.linkedin.com/in/erikunha/');
   });
 
-  test('role typewriter element is present with aria-live', async ({ page }) => {
+  test('availability badge is visible', async ({ page }) => {
     await page.goto('/');
-    const live = page.locator('[aria-live]').first();
-    await expect(live).toBeAttached();
+    const badge = page.locator('[data-testid="hero-desktop"]').getByText('OPEN_TO_RELOCATION');
+    await expect(badge).toBeVisible();
   });
 });

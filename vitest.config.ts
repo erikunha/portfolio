@@ -28,7 +28,7 @@ export default defineConfig({
         '**/content/**',
         '**/*.test.*',
         '**/*.spec.*',
-        '**/index.ts',
+        '**/index.ts', // barrel re-exports — no logic to cover
       ],
       reportsDirectory: 'coverage',
     },

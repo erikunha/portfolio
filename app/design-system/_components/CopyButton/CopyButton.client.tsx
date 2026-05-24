@@ -15,10 +15,13 @@ export function CopyButton({ text }: { text: string }) {
   async function copy() {
     try {
       await navigator.clipboard.writeText(text);
+      if (timerRef.current !== null) clearTimeout(timerRef.current);
       setCopied(true);
       timerRef.current = setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // Clipboard unavailable (insecure context, permission denied) — no-op.
+    } catch (err) {
+      // Clipboard unavailable: insecure context or permission denied.
+      // DOMException is the only error writeText is specified to throw — re-throw anything else.
+      if (!(err instanceof DOMException)) throw err;
     }
   }
 
