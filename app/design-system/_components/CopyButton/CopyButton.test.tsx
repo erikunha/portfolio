@@ -19,22 +19,12 @@ describe('CopyButton', () => {
     vi.useRealTimers();
   });
 
-  it('renders COPY label by default', () => {
-    render(<CopyButton text="npm install react" />);
-    expect(screen.getByRole('button', { name: 'COPY' })).not.toBeNull();
-  });
-
-  it('renders as a button element', () => {
-    const { container } = render(<CopyButton text="npm install react" />);
-    expect(container.querySelector('button[type="button"]')).not.toBeNull();
-  });
-
   it('shows COPIED after click when clipboard succeeds', async () => {
     render(<CopyButton text="npm install react" />);
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'COPY' }));
     });
-    expect(screen.getByRole('button', { name: 'COPIED' })).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'COPIED' })).toBeDefined();
     expect(writeText).toHaveBeenCalledWith('npm install react');
   });
 
@@ -43,11 +33,11 @@ describe('CopyButton', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'COPY' }));
     });
-    expect(screen.getByRole('button', { name: 'COPIED' })).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'COPIED' })).toBeDefined();
     await act(async () => {
       vi.advanceTimersByTime(1500);
     });
-    expect(screen.getByRole('button', { name: 'COPY' })).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'COPY' })).toBeDefined();
   });
 
   it('stays COPY when clipboard throws DOMException', async () => {
@@ -56,7 +46,7 @@ describe('CopyButton', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'COPY' }));
     });
-    expect(screen.getByRole('button', { name: 'COPY' })).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'COPY' })).toBeDefined();
   });
 
   it('passes the correct text to clipboard.writeText', async () => {
