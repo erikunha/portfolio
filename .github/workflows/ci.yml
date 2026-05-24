@@ -96,7 +96,10 @@ jobs:
           path: coverage/
           retention-days: 7
 
-      - name: Package age gate (supply-chain)
+      - name: Package age check (supply-chain, info-only)
+        # --warn-only: exits 0 always. This is deliberate — blocking a push for
+        # 7 days on a freshly-released dep is too aggressive for solo development.
+        # Warnings are visible in CI logs; upgrade deliberately when flagged.
         run: node scripts/check-pkg-age.mjs --warn-only
 
       - name: PR comment merge gate

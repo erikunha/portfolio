@@ -57,16 +57,17 @@ This codebase is a **reference system** — every architectural decision, perf b
 
 ## Skill dispatch
 
-Invoke the named skill inline (not as a subagent) before the described action.
+Invoke the named skill inline (not as a subagent) before the described action. Project triggers below override global CLAUDE.md when both apply to the same action.
 
 | Trigger | Skill |
 |---|---|
-| **Before writing any new file, function, or script** | **`thinking-inversion` — what specifically makes this fail? answers become test cases** |
+| **Before writing any new file, API handler, or complex logic block** | **`thinking-inversion` — what specifically makes this fail? answers become test cases** |
 | **Before `writing-plans` on any spec** | **`thinking-inversion` — enumerate the class-of-bugs the implementation introduces; each becomes an explicit plan task, not a Copilot finding** |
 | **Before implementing any new file, function, or script** | **`superpowers:test-driven-development` — tests first, always; implementation satisfies them** |
-| After editing any file in `components/` or `app/` | `react-best-practices` |
+| Before implementing any component (in `components/` or `design-system/`) | Run DS component pre-mortem: (1) which attrs does the consumer control? (`id`, `className`, `aria-*`) — passthrough, never override; (2) any `outline: none` on `:focus` must be `:focus-visible`; (3) `querySelector` returns `null` not `undefined` — use `.not.toBeNull()`; (4) can this component be rendered twice? hardcoded `id` breaks the second instance |
+| After creating a new component or adding significant client-side state/effects | `react-best-practices` |
 | After editing `next.config.ts`, `.env.example`, or Vercel config | `vercel:nextjs` |
-| After editing `app/api/` or `proxy.ts` | `vercel:vercel-functions` |
+| After editing `app/api/`, `lib/server/route.ts`, `lib/rate-limit.ts`, or `proxy.ts` | `vercel:vercel-functions` |
 | Before any UI code review (alongside `ui-ux-tester` dispatch) | `web-design-guidelines` |
 
 ## Stack (locked)
@@ -150,7 +151,6 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 - **Auto-review before opening any PR.** Run `pnpm ready-for-pr` (ci:local + pr-size). Then invoke `pr-review-toolkit:review-pr` against the diff. Address all Critical and Important findings before `gh pr create`. Opening with known issues requires written justification in the PR body.
 - **The review should be boring.** If `pr-review-toolkit:review-pr` or Copilot finds real bugs, the pre-implementation discipline failed. `thinking-inversion` before writing and TDD during implementation are the actual defences — not the review. Multi-round Copilot cycles mean the writing process needs fixing.
 - **Every plan must include a failure-mode checklist.** Run `thinking-inversion` before `writing-plans` on any task. Each bug class becomes an explicit plan task — not a Copilot finding after the fact.
-- **Design-system component pre-mortem.** Before implementing any component: (1) Which attributes does the consumer always control? (`id`, `className`, `aria-*`) — passthrough, never override. (2) Any `outline: none` on `:focus` must be `:focus-visible`. (3) `querySelector` returns `null`, not `undefined` — use `not.toBeNull()`. (4) Can this component be rendered twice? Hardcoded `id` breaks second instance.
 
 ## Out of scope (unless asked)
 
@@ -167,8 +167,8 @@ Before any agent or human calls `gh pr merge` on this repo:
 
 1. **AI agents may not call `gh pr merge` without Copilot LGTM.** Before any agent-initiated merge, `copilot-pull-request-reviewer` must have reviewed the PR and all Copilot threads must be resolved. If Copilot is over quota or unavailable, the agent must wait — it may not self-authorize the merge. The repo owner may merge at their own discretion at any time.
 2. **GitHub resolve-thread is ground truth.** A PR may not merge while `gh api graphql` returns any `PullRequestReviewThread` with `isResolved: false`. Enforced by GitHub branch protection (`required_conversation_resolution`) and by `pnpm ready-to-merge <pr>` locally.
-3. **AI agents must RESOLVE or ESCALATE every open comment.** RESOLVE = address with a fix commit and reply with the SHA. ESCALATE = surface to the repo owner with the comment verbatim, 2-3 options, and a recommendation; wait for a decision. No third bucket. "Looks minor" is not allowed.
-4. **In-session reviewer findings count.** Output from `pr-review-toolkit:review-pr`, `code-review:code-review`, or `ultrareview` must be posted to the PR before merge so they fall under rule 2.
+3. **AI agents must RESOLVE or ESCALATE every open comment.** RESOLVE = address with a fix commit and reply with the SHA. For behavioral bugs the fix commit must include or update a behavioral test that would have caught the regression. ESCALATE = surface to the repo owner with the comment verbatim, 2-3 options, and a recommendation; wait for a decision. No third bucket. "Looks minor" is not allowed.
+4. **In-session reviewer findings count.** Critical/Important findings from `pr-review-toolkit:review-pr`, `code-review:code-review`, or `ultrareview` must be either fixed (fix commit covers them) or posted as file-line review threads (`gh api repos/{owner}/{repo}/pulls/{n}/comments` with `path` + `line`) so they fall under rule 2. Do not post as PR timeline comments — that violates rule 8.
 5. **Self-resolve is detectable.** `scripts/check-pr-comments.ts` warns when the PR author is also the thread resolver. Document the override on the PR if intentional.
 6. **Mechanical command.** `pnpm ready-to-merge <pr>` runs `pnpm ci:local` (lint + typecheck + content validate + client-naming + tests), the branch-protection check, then queries unresolved threads. Must pass before `gh pr merge`.
 7. **The branch protection rule must stay enabled.**
