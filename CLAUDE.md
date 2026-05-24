@@ -21,7 +21,9 @@
 | `pnpm validate-content` | Zod content schema validation |
 | `pnpm ci:local` | Full local CI gate (lint + type + test) |
 | `pnpm bundle-check` | Bundle size gate check |
-| `pnpm ready-to-merge [-- <pr>]` | Pre-merge gate: full CI + every GH review thread resolved |
+| `pnpm pr-size` | Branch complexity report — files/lines/subsystems vs origin/main; exits 1 if red |
+| `pnpm ready-for-pr` | Pre-PR gate: ci:local + pr-size; run before `gh pr create` |
+| `pnpm ready-to-merge [<pr>]` | Pre-merge gate: ci:local + branch-protection + Copilot LGTM + resolved threads |
 
 ## Operating role
 
@@ -37,25 +39,22 @@ This means:
 
 ## Project agent dispatch
 
-Invoke the named agent before the described action. These are definitions of done, not optional review steps.
+**Hard gates** — these block the next step if skipped:
 
-| Phase | Trigger | Agent |
+| Gate | Trigger | Agent |
 |---|---|---|
-| Planning | Before invoking `writing-plans` on any spec | `architect-reviewer` |
-| Implementation | After editing `app/`, `components/`, or `lib/` files | `nextjs-developer` |
-| Type safety | After editing `content/*.ts` | `typescript-pro` |
-| Testing | When writing or modifying tests in `components/`, `app/`, or `tests/` | `test-automator` |
-| Visual QA | After any UI change — section layout, CSS, responsive | `ui-ux-tester` |
-| AI feature | After editing `app/api/ask/` or `lib/stream-protocol.ts` | `ai-engineer` |
-| SEO | After editing `app/opengraph-image.tsx`, `sitemap.ts`, `robots.txt`, `llms.txt` | `seo-specialist` |
-| DX/Tooling | After editing `.husky/`, `ci.yml`, `vitest.config.ts`, `playwright.config.ts`, `.github/workflows/`, `scripts/`, `biome.json`, `commitlint.config.ts` | `dx-optimizer` |
-| Bundle | After adding any new dependency to `package.json` | `dependency-manager` |
-| Performance | After any Lighthouse-affecting change | `performance-engineer` |
-| Accessibility | After editing any component with interactive or semantic elements | `accessibility-tester` |
-| **Code review** | **Before any commit on a PR branch — no exceptions, no "minor" exemptions** | **`code-reviewer`** |
-| Security | After editing `app/api/`, `lib/rate-limit.ts`, `.env.example`, or `proxy.ts` | `security-auditor` |
-| Edge/routing | After editing `proxy.ts` or `next.config.ts` | `nextjs-developer` + `performance-engineer` |
-| Refactoring | When restructuring components or CSS without behavior change | `refactoring-specialist` |
+| Before opening any PR | After all milestone commits, before `gh pr create` | `pr-review-toolkit:review-pr` — address all Critical/Important before opening |
+| Before writing plans | Before invoking `writing-plans` on any spec | `architect-reviewer` |
+| After API changes | After editing `app/api/`, `lib/rate-limit.ts`, or `proxy.ts` | `security-auditor` |
+
+**Spot-check agents** — invoke when the concern is the primary risk in the current change:
+
+| Concern | Trigger | Agent |
+|---|---|---|
+| Visual correctness | After CSS, layout, or responsive changes | `ui-ux-tester` |
+| Accessibility | After adding/editing interactive or semantic elements | `accessibility-tester` |
+| Performance | After changes that could affect LCP/INP/CLS | `performance-engineer` |
+| Bundle growth | After adding a new dependency | `dependency-manager` |
 
 ## Skill dispatch
 
@@ -147,13 +146,12 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 - Skip disclaimers, boilerplate, "consult a professional" lines.
 - Skip tutorials and 101 content — the user is 8+ years in.
 - Track decisions in `DECISIONS.md`: one bullet, date, reversibility note. Update as we go.
-- **Process feedback mid-workflow is a hard stop.** When the user gives process or workflow feedback while a task is executing: pause immediately, incorporate it into CLAUDE.md and/or memory, confirm the change with the user, then resume. Do not barrel through to completion and address feedback after the fact.
-- **Code review is not optional on PR branches.** Run `code-review:code-review` on the staged diff before every commit — scripts, config files, routes, and one-liners all count. "It's just a small change" is not an exemption. Skipping this step is the direct cause of multi-round Copilot review cycles (PR #36: 3 rounds, 12 preventable findings). The review catches TypeScript safety issues (`err.message` on `unknown`), input validation gaps (NaN bypass), missing tests, and documentation accuracy before they reach Copilot.
-- **The review should be boring.** If `code-review:code-review` or Copilot finds real bugs, the pre-implementation discipline failed — not the review. Principal/Staff level means bugs don't reach the review; the test suite already encodes the failure modes found by `thinking-inversion`. Multi-round Copilot cycles are a signal to fix the writing process, not the reviewing process.
-- **Every plan must include a failure-mode checklist.** `thinking-inversion` against the spec before `writing-plans` produces the class-of-bugs the implementation introduces. Each bug class becomes an explicit plan task — not a Copilot finding after the fact. This applies to every development flow: features, migrations, refactors, dependency changes, tooling. Omitting it is what turns predictable bugs into multi-round review cycles.
-- **Design-system primitive pre-mortem (run before implementing any component).** These four checks must appear as explicit plan tasks — not Copilot findings: (1) Which HTML attributes does the consumer always control? (`id`, `className`, `type`, `aria-*`) — compose or passthrough, never silently override. (2) Does any CSS rule fire on mouse click that shouldn't? Any `outline: none` on `:focus` must be `:focus-visible` (WCAG 2.4.7). (3) Are test assertions verifying the actual return type? `querySelector` returns `null`, not `undefined` — use `not.toBeNull()`, never `toBeDefined()`. (4) Can this component be rendered twice on the same page? Hardcoded `id` values break any second instance.
-- **Split work into small, focused PRs.** Each PR must address a single concern (one feature, one refactor, one migration phase). A PR that touches >5 unrelated files or spans multiple systems is a signal to split. Smaller PRs reduce review surface, accelerate merge, and isolate regressions. When planning multi-step work, write each phase as an independently mergeable PR from the start.
-- **Run the full auto-review suite before opening any PR.** Before calling `gh pr create`, invoke `pr-review-toolkit:review-pr` (or dispatch `code-reviewer`, `pr-test-analyzer`, `silent-failure-hunter`, and `comment-analyzer` agents) against the branch diff. Address all Critical and Important findings before the PR is opened — not after Copilot reviews it. Opening a PR with known issues is a deliberate decision that requires written justification in the PR body.
+- **Process feedback mid-workflow is a hard stop.** Pause immediately, incorporate into CLAUDE.md and/or memory, confirm with the user, then resume.
+- **Commit in scope blocks; merge by milestone.** Work accumulates in commits grouped by concern — one logical unit per commit (a component, a fix, a config change). After each block, run `pnpm pr-size`. When `pr-size` hits yellow AND the block is a natural milestone, open a PR. Do not accumulate past red. If mid-milestone the branch hits red, split at the last clean commit boundary and open what's done.
+- **Auto-review before opening any PR.** Run `pnpm ready-for-pr` (ci:local + pr-size). Then invoke `pr-review-toolkit:review-pr` against the diff. Address all Critical and Important findings before `gh pr create`. Opening with known issues requires written justification in the PR body.
+- **The review should be boring.** If `pr-review-toolkit:review-pr` or Copilot finds real bugs, the pre-implementation discipline failed. `thinking-inversion` before writing and TDD during implementation are the actual defences — not the review. Multi-round Copilot cycles mean the writing process needs fixing.
+- **Every plan must include a failure-mode checklist.** Run `thinking-inversion` before `writing-plans` on any task. Each bug class becomes an explicit plan task — not a Copilot finding after the fact.
+- **Design-system component pre-mortem.** Before implementing any component: (1) Which attributes does the consumer always control? (`id`, `className`, `aria-*`) — passthrough, never override. (2) Any `outline: none` on `:focus` must be `:focus-visible`. (3) `querySelector` returns `null`, not `undefined` — use `not.toBeNull()`. (4) Can this component be rendered twice? Hardcoded `id` breaks second instance.
 
 ## Out of scope (unless asked)
 
@@ -168,20 +166,20 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 
 Before any agent or human calls `gh pr merge` on this repo:
 
-0. **Copilot LGTM is required before merge — no exceptions.** A PR must have at least one approved Copilot review (`copilot-pull-request-reviewer` left a review with no unresolved threads) before `gh pr merge` is called. If Copilot is over quota or unavailable, wait — do not merge without it. There is no override for this rule.
-1. **GitHub resolve-thread is ground truth.** A PR may not merge while `gh api graphql` returns any `PullRequestReviewThread` with `isResolved: false`. Enforced by GitHub branch protection (`required_conversation_resolution`) and by `pnpm ready-to-merge <pr>` locally.
-2. **AI agents must RESOLVE or ESCALATE every open comment.** RESOLVE = address with a fix commit and reply with the SHA. ESCALATE = surface to the human owner with the comment verbatim, 2-3 options, and a recommendation; wait for a decision. No third bucket. "Looks minor" is not allowed.
-3. **In-session reviewer findings count.** Output from `pr-review-toolkit:review-pr`, `code-review:code-review`, or `ultrareview` must be posted to the PR before merge so they fall under rule 1.
-4. **Self-resolve is detectable.** `scripts/check-pr-comments.ts` warns when the PR author is also the thread resolver. Document the override on the PR if intentional.
-5. **Mechanical command.** `pnpm ready-to-merge <pr>` runs `pnpm ci:local` (lint + typecheck + content validate + client-naming + tests), the branch-protection check, then queries unresolved threads. Must pass before `gh pr merge`.
-6. **The branch protection rule must stay enabled.**
-8. **Local playwright visual check before merge.** After all review fixes are pushed, start the dev server (`pnpm dev`) and use playwright MCP to verify desktop (1280×720) and mobile (375×812). Check all changed sections and the golden path. CI visual snapshots compare against a frozen baseline — they don't catch intent regressions.
-9. **Rebase before merge (non-dependabot only).** Run `git fetch && git rebase origin/main` before merging. Keeps a linear history on main. Skip for `dependabot/*` branches — those are auto-managed and rebasing breaks their signature. `pnpm ready-to-merge <pr>` runs `scripts/check-branch-protection.ts` against `main` and fails if `required_conversation_resolution` is off. This is a local gate, not a CI step: the workflow `GITHUB_TOKEN` cannot read the branch-protection endpoint (it requires repo-admin token power). See `DECISIONS.md`.
-7. **Copilot auto-reviews on PR open; reply to threads + re-request after every review-feedback push.** Copilot reviews a PR automatically on *open* — do NOT post any comment on open. After any push that addresses Copilot or reviewer feedback:
-   - **Thread replies (required):** reply to each resolved thread: `gh api repos/erikunha/portfolio/pulls/<pr>/comments/<databaseId>/replies -f body="Fixed in <sha>. <one-sentence technical reason>"`. This closes the feedback loop in context for each finding.
+1. **AI agents may not call `gh pr merge` without Copilot LGTM.** Before any agent-initiated merge, `copilot-pull-request-reviewer` must have reviewed the PR and all Copilot threads must be resolved. If Copilot is over quota or unavailable, the agent must wait — it may not self-authorize the merge. The repo owner may merge at their own discretion at any time.
+2. **GitHub resolve-thread is ground truth.** A PR may not merge while `gh api graphql` returns any `PullRequestReviewThread` with `isResolved: false`. Enforced by GitHub branch protection (`required_conversation_resolution`) and by `pnpm ready-to-merge <pr>` locally.
+3. **AI agents must RESOLVE or ESCALATE every open comment.** RESOLVE = address with a fix commit and reply with the SHA. ESCALATE = surface to the repo owner with the comment verbatim, 2-3 options, and a recommendation; wait for a decision. No third bucket. "Looks minor" is not allowed.
+4. **In-session reviewer findings count.** Output from `pr-review-toolkit:review-pr`, `code-review:code-review`, or `ultrareview` must be posted to the PR before merge so they fall under rule 2.
+5. **Self-resolve is detectable.** `scripts/check-pr-comments.ts` warns when the PR author is also the thread resolver. Document the override on the PR if intentional.
+6. **Mechanical command.** `pnpm ready-to-merge <pr>` runs `pnpm ci:local` (lint + typecheck + content validate + client-naming + tests), the branch-protection check, then queries unresolved threads. Must pass before `gh pr merge`.
+7. **The branch protection rule must stay enabled.**
+8. **Copilot auto-reviews on PR open; reply to threads + re-request after every review-feedback push.** Copilot reviews a PR automatically on *open* — do NOT post any comment on open. After any push that addresses Copilot or reviewer feedback:
+   - **Thread replies (required):** reply to each resolved thread: `gh api repos/{owner}/{repo}/pulls/<pr>/comments/<databaseId>/replies -f body="Fixed in <sha>. <one-sentence technical reason>"`. This closes the feedback loop in context for each finding.
    - **Re-request (required):** `gh pr edit <pr> --add-reviewer copilot-pull-request-reviewer`. This is the trigger — Copilot sees the new commits + the thread replies.
    - **No PR-level comment.** Do not post a general comment on the PR timeline (e.g. "What changed since your last review", "Addressed feedback", etc.) — that is redundant noise. Thread replies + re-request is the complete sequence.
    - Note: the raw REST `requested_reviewers` API and GraphQL `requestReviews` mutation both reject Copilot as `not a collaborator`; `gh pr edit` uses a different mechanism that works.
+9. **Local playwright visual check before merge.** After all review fixes are pushed, start the dev server (`pnpm dev`) and use playwright MCP to verify desktop (1280×720) and mobile (375×812). Check all changed sections and the golden path. CI visual snapshots compare against a frozen baseline — they don't catch intent regressions.
+10. **Rebase before merge (non-dependabot only).** Run `git fetch && git rebase origin/main` before merging. Keeps a linear history on main. Skip for `dependabot/*` branches — those are auto-managed and rebasing breaks their signature. `pnpm ready-to-merge <pr>` runs `scripts/check-branch-protection.ts` against `main` and fails if `required_conversation_resolution` is off. This is a local gate, not a CI step: the workflow `GITHUB_TOKEN` cannot read the branch-protection endpoint (it requires repo-admin token power). See `DECISIONS.md`.
 
 Rationale: human-in-the-loop quality gate for AI-assisted development on a Staff/Principal-bar artifact. See `DECISIONS.md` for residual-risk note.
 

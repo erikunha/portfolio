@@ -41,6 +41,15 @@ try {
   process.exit(1);
 }
 
+// Gate 0: Copilot must have reviewed before merge — no exceptions.
+const copilotArgs = ['tsx', 'scripts/check-copilot-approval.ts', ...(prNumber ? [prNumber] : [])];
+try {
+  execFileSync('pnpm', copilotArgs, { stdio: 'inherit' });
+} catch {
+  process.stderr.write('\n[ready-to-merge] Copilot LGTM gate failed. See message above.\n');
+  process.exit(1);
+}
+
 const gateArgs = ['tsx', 'scripts/check-pr-comments.ts', ...(prNumber ? [prNumber] : [])];
 try {
   execFileSync('pnpm', gateArgs, { stdio: 'inherit' });

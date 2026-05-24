@@ -10,7 +10,7 @@
 //   2. For each unresolved thread, either:
 //        a) resolve it at Principal/Staff level (fix the code, reply
 //           on the thread with the fix SHA + a 1-2 sentence rationale),
-//        b) flag to Erik with a "Why not" analysis (why the comment is
+//        b) escalate to the repo owner with a "Why not" analysis (why the comment is
 //           wrong, decline, or out of scope).
 //   3. Unaddressed comments block merge.
 //
@@ -196,5 +196,5 @@ for (const c of filteredIssues) {
 }
 
 console.log(
-  '> Workflow: resolve each `[ ]` either by (a) fixing the code at Principal/Staff level and replying with the fix SHA, or (b) flagging to Erik with a "Why not" rationale. Unresolved threads block merge — see CLAUDE.md feedback memory `pr_review_quality_gate`.',
+  '> Workflow: resolve each `[ ]` either by (a) fixing the code at Principal/Staff level and replying with the fix SHA, or (b) escalating to the repo owner with a "Why not" rationale. Unresolved threads block merge.',
 );
