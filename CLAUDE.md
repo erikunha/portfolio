@@ -4,7 +4,7 @@
 
 ## Project
 
-**erikunha.dev** — personal portfolio. Hiring artifact for Staff/Principal Frontend + applied-AI roles. Matrix/brutalist terminal aesthetic. Single-page composition with ~18 sections.
+**erikunha.dev** — personal portfolio and reference web system. Matrix/brutalist terminal aesthetic. Single-page composition with ~18 sections.
 
 ## Commands
 
@@ -25,17 +25,16 @@
 | `pnpm ready-for-pr` | Pre-PR gate: ci:local + pr-size; run before `gh pr create` |
 | `pnpm ready-to-merge [<pr>]` | Pre-merge gate: ci:local + branch-protection + Copilot LGTM + resolved threads |
 
-## Operating role
+## Engineering context
 
-Operate at Staff/Principal frontend engineer standard. **This project is positioned as a reference for web systems engineering — not a hiring artifact alone.** Every architectural decision, perf budget, a11y guarantee, design token, CI gate, and lint rule must hold up as something other teams could adopt verbatim. Future growth is the default assumption, not an edge case. Scope decisions favor "right shape for a system at scale" over "tight for today's single-consumer reality." The site IS the hiring pitch AND the reference; do not collapse the two — they have different rubrics.
+This codebase is a **reference system** — every architectural decision, perf budget, a11y guarantee, design token, CI gate, and lint rule must hold up as something another team could adopt verbatim. Architecture is the artifact. Scope decisions follow these rules:
 
-This means:
 - Cross-cutting concerns over local optimization
-- Mechanism-level reasoning (cause → effect), not pattern-matching
-- Trade-offs surfaced explicitly; one recommendation per decision
-- Perf, a11y (WCAG 2.1 AA), and security are implicit requirements on every change, not separate phases
-- "It's only one consumer" is not a YAGNI justification at this bar — architecture is the artifact
-- Reject framing that apologizes for scope ("we over-engineered this, but..."); state outright why the scope is the right shape for a reference system
+- Mechanism-level reasoning (cause → effect) — explain the why, not just the what
+- Surface trade-offs explicitly; give one recommendation per decision
+- Perf, a11y (WCAG 2.1 AA), and security are implicit on every change — not separate phases
+- "It's only one consumer" is not a valid YAGNI argument — architecture scales with adoption
+- Don't frame scope apologetically; state directly why the shape fits a reference system
 
 ## Project agent dispatch
 
@@ -103,7 +102,7 @@ CI enforces all of the above. **Never disable the gates to merge.** If a gate fa
 
 ## Engineering standards
 
-The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, each naming its enforcement mechanism (a CI gate, a PR-review item, or culture). It supersedes the prior inline 10-standard list established by the 2026-05-19 Principal/Staff audit. Every PR is held to it. When a request seems to conflict with a chapter, surface the conflict before complying.
+The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, each naming its enforcement mechanism (a CI gate, a PR-review item, or culture). Every PR is held to it. When a request seems to conflict with a chapter, surface the conflict before complying.
 
 ## Package + manager policy
 
@@ -144,7 +143,7 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 - Don't ask clarifying questions unless missing info would change the decision — assume reasonably, state in one line, proceed.
 - Flag flaws once. Don't repeat concerns.
 - Skip disclaimers, boilerplate, "consult a professional" lines.
-- Skip tutorials and 101 content — the user is 8+ years in.
+- Assume deep TypeScript, React, and Next.js expertise — skip syntax explanations and 101 content.
 - Track decisions in `DECISIONS.md`: one bullet, date, reversibility note. Update as we go.
 - **Process feedback mid-workflow is a hard stop.** Pause immediately, incorporate into CLAUDE.md and/or memory, confirm with the user, then resume.
 - **Commit in scope blocks; merge by milestone.** Work accumulates in commits grouped by concern — one logical unit per commit (a component, a fix, a config change). After each block, run `pnpm pr-size`. When `pr-size` hits yellow AND the block is a natural milestone, open a PR. Do not accumulate past red. If mid-milestone the branch hits red, split at the last clean commit boundary and open what's done.
@@ -181,7 +180,7 @@ Before any agent or human calls `gh pr merge` on this repo:
 9. **Local playwright visual check before merge.** After all review fixes are pushed, start the dev server (`pnpm dev`) and use playwright MCP to verify desktop (1280×720) and mobile (375×812). Check all changed sections and the golden path. CI visual snapshots compare against a frozen baseline — they don't catch intent regressions.
 10. **Rebase before merge (non-dependabot only).** Run `git fetch && git rebase origin/main` before merging. Keeps a linear history on main. Skip for `dependabot/*` branches — those are auto-managed and rebasing breaks their signature. `pnpm ready-to-merge <pr>` runs `scripts/check-branch-protection.ts` against `main` and fails if `required_conversation_resolution` is off. This is a local gate, not a CI step: the workflow `GITHUB_TOKEN` cannot read the branch-protection endpoint (it requires repo-admin token power). See `DECISIONS.md`.
 
-Rationale: human-in-the-loop quality gate for AI-assisted development on a Staff/Principal-bar artifact. See `DECISIONS.md` for residual-risk note.
+Rationale: human-in-the-loop quality gate — the gate chain (thinking-inversion → TDD → code-review → pr-review-toolkit → Copilot LGTM → ready-to-merge) is the enforceable bar. See `DECISIONS.md` for residual-risk note.
 
 ## Things that have been considered and rejected
 
