@@ -3,13 +3,14 @@ import { TerminalPanel } from '@/design-system';
 import styles from './Preview.module.css';
 
 type PreviewProps = {
+  id?: string;
   source?: string;
   children: ReactNode;
 };
 
-export function Preview({ source, children }: PreviewProps) {
+export function Preview({ id, source, children }: PreviewProps) {
   return (
-    <div data-testid="ds-preview">
+    <div id={id} data-testid="ds-preview">
       <TerminalPanel className={styles.root ?? ''}>
         <div className={styles.live}>{children}</div>
         {source != null && (

@@ -13,7 +13,7 @@ import { Field } from '../../../design-system/components/Field';
 
 **Props:** `variant: 'primary' | 'secondary'`, `size: 'sm' | 'md' | 'lg'`, `as: 'button' | 'a'`
 
-<Preview>
+<Preview id="button">
   <Button variant="primary" as="a" href="#">EXEC_HIRE</Button>
   <Button variant="secondary" as="a" href="#">DOWNLOAD_CV</Button>
   <Button variant="primary" size="sm" as="a" href="#">SM</Button>
@@ -26,7 +26,7 @@ import { Field } from '../../../design-system/components/Field';
 
 **Props:** `name`, `label`, `multiline?: boolean`, `rows?: number`, `error?: string`
 
-<Preview>
+<Preview id="field">
   <Field name="email" label="$ email:" type="email" />
   <Field name="msg" label="$ message:" multiline rows={3} />
   <Field name="broken" label="$ broken:" error="Required field" />
@@ -38,7 +38,7 @@ import { Field } from '../../../design-system/components/Field';
 
 **Props:** `variant: 'default' | 'dot'`, `size: 'sm' | 'md'`
 
-<Preview>
+<Preview id="badge">
   <Badge variant="dot">OPEN_TO_WORK</Badge>
   <Badge variant="default">AVAILABLE</Badge>
   <Badge size="sm">SMALL</Badge>
@@ -50,7 +50,7 @@ import { Field } from '../../../design-system/components/Field';
 
 **Props:** `borderStyle: 'solid' | 'dashed'`, `as: 'div' | 'section' | 'article'`, `header?: ReactNode`
 
-<Preview>
+<Preview id="terminal-panel">
   <TerminalPanel header="[ STATUS ]">Content here.</TerminalPanel>
   <TerminalPanel borderStyle="dashed">Dashed panel.</TerminalPanel>
 </Preview>
@@ -59,7 +59,7 @@ import { Field } from '../../../design-system/components/Field';
 
 **Props:** `value: string`, `label: string`, `variant: 'default' | 'compact'`
 
-<Preview>
+<Preview id="stat-tile">
   <StatTile value="99" label="LH_SCORE" />
   <StatTile value="5+" label="YRS_EXP" />
   <StatTile value="1.2s" label="LCP" variant="compact" />
@@ -71,7 +71,7 @@ import { Field } from '../../../design-system/components/Field';
 
 **Props:** `user?: string`, `command: string`, `output?: ReactNode`, `prompt?: string`
 
-<Preview>
+<Preview id="cmd-line">
   <CmdLine command="cat README.md" />
   <CmdLine user="root@prod" prompt="#" command="whoami" output={<span>root</span>} />
 </Preview>
@@ -80,7 +80,7 @@ import { Field } from '../../../design-system/components/Field';
 
 **Props:** `size: 'sm' | 'md'`
 
-<Preview>
+<Preview id="kbd-key">
   <KbdKey>Ctrl</KbdKey>
   <KbdKey>+</KbdKey>
   <KbdKey>K</KbdKey>
@@ -93,7 +93,7 @@ import { Field } from '../../../design-system/components/Field';
 
 **Props:** `text: string`
 
-<Preview>
+<Preview id="copybutton">
   <CopyButton text="pnpm install @/design-system" />
 </Preview>
 
