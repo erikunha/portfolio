@@ -399,6 +399,8 @@ describe('contact form — submitting state', () => {
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
+    // Flush microtasks to ensure React state (aria-busy) has propagated to the DOM.
+    await flushMicrotasks();
 
     expect(form?.getAttribute('aria-busy')).toBe('true');
     const submitBtn = container.querySelector<HTMLButtonElement>('button[type="submit"]');
