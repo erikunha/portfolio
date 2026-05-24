@@ -21,6 +21,78 @@
   text-decoration: underline;
 }
 
+/* ─── MDX Prose ──────────────────────────────────────────────────────────── */
+
+.content p {
+  margin: 0 0 var(--ds-space-4) 0;
+}
+
+.content h2 {
+  margin-top: var(--ds-space-8);
+  margin-bottom: var(--ds-space-3);
+}
+
+.content h3 {
+  margin-top: var(--ds-space-6);
+  margin-bottom: var(--ds-space-2);
+}
+
+/* Restore bullet/number lists stripped by the global ul/ol reset */
+.content ul,
+.content ol {
+  list-style: disc;
+  padding-left: var(--ds-space-6);
+  margin: 0 0 var(--ds-space-4) 0;
+}
+
+.content ol {
+  list-style: decimal;
+}
+
+.content li {
+  margin-bottom: var(--ds-space-1);
+  line-height: 1.6;
+}
+
+/* ─── Tables ─────────────────────────────────────────────────────────────── */
+
+.content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--ds-space-6);
+  font-size: var(--ds-font-size-sm);
+}
+
+.content th,
+.content td {
+  text-align: left;
+  padding: var(--ds-space-2) var(--ds-space-3);
+  border: 1px solid var(--ds-color-signal-subtle);
+  vertical-align: top;
+  line-height: 1.4;
+}
+
+.content th {
+  color: var(--ds-color-signal);
+  font-size: var(--ds-font-size-xs);
+  letter-spacing: 0.05em;
+  background: rgba(0, 255, 65, 0.04);
+  white-space: nowrap;
+}
+
+.content td code {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-signal);
+}
+
+@media (max-width: 768px) {
+  .content table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 @media (max-width: 768px) {
   .root {
     flex-direction: column;

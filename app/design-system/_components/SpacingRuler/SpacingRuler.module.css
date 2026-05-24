@@ -3,7 +3,7 @@
   grid-template-columns: 220px 1fr;
   align-items: center;
   gap: var(--ds-space-3);
-  padding: var(--ds-space-2) 0;
+  padding: var(--ds-space-3) 0;
   border-bottom: 1px solid var(--ds-color-signal-subtle);
 }
 
@@ -14,7 +14,7 @@
 .labels {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--ds-space-1);
 }
 
 .name {
@@ -23,13 +23,13 @@
 }
 
 .value {
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-color-text-muted);
   font-family: var(--ds-font-family-mono);
 }
 
 .usage {
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-color-text-faint);
 }
 

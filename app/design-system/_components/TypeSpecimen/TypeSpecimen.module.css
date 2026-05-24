@@ -2,9 +2,8 @@
   display: flex;
   align-items: center;
   gap: var(--ds-space-4);
-  padding: var(--ds-space-2) 0;
+  padding: var(--ds-space-3) 0;
   border-bottom: 1px solid var(--ds-color-signal-subtle);
-  overflow: hidden;
 }
 
 .row:last-child {
@@ -12,19 +11,21 @@
 }
 
 .specimen {
-  width: 80px;
+  width: 120px;
+  height: 88px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
   line-height: 1;
   color: var(--ds-color-signal);
   font-family: var(--ds-font-family-mono);
-  overflow: hidden;
-  white-space: nowrap;
 }
 
 .meta {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--ds-space-1);
 }
 
 .name {
@@ -33,7 +34,7 @@
 }
 
 .value {
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-color-text-muted);
   font-family: var(--ds-font-family-mono);
 }

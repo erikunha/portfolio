@@ -6,14 +6,16 @@ export const metadata = {
 
 # DESIGN SYSTEM
 
-<Badge variant="dot">LIVE</Badge>
+<div style={{marginBottom:'var(--ds-space-3)'}}>
+  <Badge variant="dot">LIVE</Badge>
+</div>
 
 A published design system for erikunha.dev — positioned at `/design-system` as part of the Staff/Principal frontend hiring artifact.
 
 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',border:'1px solid var(--ds-color-signal-subtle)',marginBottom:'var(--ds-space-6)'}}>
-  <StatTile value="8" label="PRIMITIVES" />
-  <StatTile value="6" label="RSC" />
-  <StatTile value="100" label="A11Y" />
+  <div style={{borderRight:'1px solid var(--ds-color-signal-subtle)'}}><StatTile value="8" label="PRIMITIVES" /></div>
+  <div style={{borderRight:'1px solid var(--ds-color-signal-subtle)'}}><StatTile value="6" label="RSC" /></div>
+  <div style={{borderRight:'1px solid var(--ds-color-signal-subtle)'}}><StatTile value="100" label="A11Y" /></div>
   <StatTile value="0" label="CLIENT_KB" />
 </div>
 
