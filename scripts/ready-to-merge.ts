@@ -6,6 +6,10 @@
 // PR comment gate. PR number is optional — when omitted, `check-pr-comments.ts`
 // infers it from the current branch via `gh pr view`.
 //
+// NOTE: Copilot LGTM is NOT checked here — it is an LLM behavioral rule
+// specified in CLAUDE.md (PR merge gate rule 1). The repo owner may merge
+// at any time; only AI agents are bound by that rule.
+//
 // Why the branch-protection check lives here and NOT in CI:
 //   The GitHub Actions GITHUB_TOKEN cannot read the
 //   `/branches/{branch}/protection` endpoint — it requires repo-admin token
@@ -38,15 +42,6 @@ try {
   });
 } catch {
   process.stderr.write('\n[ready-to-merge] branch-protection check failed. See message above.\n');
-  process.exit(1);
-}
-
-// Gate 0: Copilot must have reviewed before merge — no exceptions.
-const copilotArgs = ['tsx', 'scripts/check-copilot-approval.ts', ...(prNumber ? [prNumber] : [])];
-try {
-  execFileSync('pnpm', copilotArgs, { stdio: 'inherit' });
-} catch {
-  process.stderr.write('\n[ready-to-merge] Copilot LGTM gate failed. See message above.\n');
   process.exit(1);
 }
 

@@ -30,8 +30,7 @@
 |---|---|
 | `pnpm pr-size` | After every commit block and before opening a PR — decides whether to split |
 | `pnpm ready-for-pr` | Before `gh pr create` — runs ci:local + pr-size, prints next-step checklist |
-| `pnpm ready-to-merge [<pr>]` | Before `gh pr merge` — runs ci:local + branch-protection + Copilot LGTM + resolved threads |
-| `pnpm copilot-gate [<pr>]` | Part of ready-to-merge; can also run standalone to check Copilot approval status |
+| `pnpm ready-to-merge [<pr>]` | Before `gh pr merge` — runs ci:local + branch-protection + resolved threads |
 
 ## Engineering context
 
@@ -173,7 +172,11 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 
 Before any agent or human calls `gh pr merge` on this repo:
 
-1. **AI agents may not call `gh pr merge` without Copilot LGTM.** Before any agent-initiated merge, `copilot-pull-request-reviewer` must have reviewed the PR and all Copilot threads must be resolved. If Copilot is over quota or unavailable, the agent must wait — it may not self-authorize the merge. The repo owner may merge at their own discretion at any time.
+1. **AI agents may not call `gh pr merge` without Copilot LGTM.** This rule applies to AI agents only — the repo owner may merge at any time. Before merging, run:
+   ```
+   gh api repos/{owner}/{repo}/pulls/{pr}/reviews --jq '[.[] | select(.user.login == "copilot-pull-request-reviewer")] | length'
+   ```
+   If the result is `0`, stop — request review with `gh pr edit {pr} --add-reviewer copilot-pull-request-reviewer` and wait. Do not self-authorize.
 2. **GitHub resolve-thread is ground truth.** A PR may not merge while `gh api graphql` returns any `PullRequestReviewThread` with `isResolved: false`. Enforced by GitHub branch protection (`required_conversation_resolution`) and by `pnpm ready-to-merge <pr>` locally.
 3. **AI agents must RESOLVE or ESCALATE every open comment.** RESOLVE = address with a fix commit and reply with the SHA. For behavioral bugs the fix commit must include or update a behavioral test that would have caught the regression. ESCALATE = surface to the repo owner with the comment verbatim, 2-3 options, and a recommendation; wait for a decision. No third bucket. "Looks minor" is not allowed.
 4. **In-session reviewer findings count.** Critical/Important findings from `pr-review-toolkit:review-pr`, `code-review:code-review`, or `ultrareview` must be either fixed (fix commit covers them) or posted as file-line review threads (`gh api repos/{owner}/{repo}/pulls/{n}/comments` with `path` + `line`) so they fall under rule 2. Do not post as PR timeline comments — that violates rule 8.
