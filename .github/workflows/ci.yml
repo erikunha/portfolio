@@ -164,7 +164,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [chromium, chromium-mobile, webkit-desktop, webkit-mobile]
+        project: [chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components]
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
@@ -196,8 +196,12 @@ jobs:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 30000
-      - name: Run functional e2e
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/contact.spec.ts tests/e2e/ask.spec.ts tests/e2e/cross-cutting.spec.ts tests/e2e/observability-smoke.spec.ts
+      - name: Run functional e2e (tests/e2e specs)
+        if: matrix.project != 'chromium-components'
+        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/cross-cutting.spec.ts tests/e2e/observability-smoke.spec.ts
+      - name: Run functional e2e (co-located component specs)
+        if: matrix.project == 'chromium-components'
+        run: pnpm playwright test --project=${{ matrix.project }}
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

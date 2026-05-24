@@ -44,7 +44,7 @@ Invoke the named agent before the described action. These are definitions of don
 | Planning | Before invoking `writing-plans` on any spec | `architect-reviewer` |
 | Implementation | After editing `app/`, `components/`, or `lib/` files | `nextjs-developer` |
 | Type safety | After editing `content/*.ts` | `typescript-pro` |
-| Testing | When writing or modifying tests in `__tests__/` or `tests/` | `test-automator` |
+| Testing | When writing or modifying tests in `components/`, `app/`, or `tests/` | `test-automator` |
 | Visual QA | After any UI change — section layout, CSS, responsive | `ui-ux-tester` |
 | AI feature | After editing `app/api/ask/` or `lib/stream-protocol.ts` | `ai-engineer` |
 | SEO | After editing `app/opengraph-image.tsx`, `sitemap.ts`, `robots.txt`, `llms.txt` | `seo-specialist` |
@@ -120,7 +120,7 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 - **Default: React Server Components, SSG at build time.** Zero JS shipped for static sections.
 - **Client islands by exception:** Matrix dialog loop, INTERACTIVE_SHELL, contact form, IntersectionObserver typewriter, MOTION indicator.
 - All client files named `*.client.tsx`. RSC drift must be visible in PR review.
-- **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** Per-state re-renders tank INP. The interactive shell's streaming answer, by contrast, renders *through* React (rAF-coalesced state) — see `STANDARDS.md` Chapter 1; enforced by `__tests__/InteractiveShell.streaming.test.ts`.
+- **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** Per-state re-renders tank INP. The interactive shell's streaming answer, by contrast, renders *through* React (rAF-coalesced state) — see `STANDARDS.md` Chapter 1; enforced by `components/client/InteractiveShell/InteractiveShell.test.tsx`.
 
 ## Aesthetic constraints
 
@@ -152,6 +152,8 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 - **The review should be boring.** If `code-review:code-review` or Copilot finds real bugs, the pre-implementation discipline failed — not the review. Principal/Staff level means bugs don't reach the review; the test suite already encodes the failure modes found by `thinking-inversion`. Multi-round Copilot cycles are a signal to fix the writing process, not the reviewing process.
 - **Every plan must include a failure-mode checklist.** `thinking-inversion` against the spec before `writing-plans` produces the class-of-bugs the implementation introduces. Each bug class becomes an explicit plan task — not a Copilot finding after the fact. This applies to every development flow: features, migrations, refactors, dependency changes, tooling. Omitting it is what turns predictable bugs into multi-round review cycles.
 - **Design-system primitive pre-mortem (run before implementing any component).** These four checks must appear as explicit plan tasks — not Copilot findings: (1) Which HTML attributes does the consumer always control? (`id`, `className`, `type`, `aria-*`) — compose or passthrough, never silently override. (2) Does any CSS rule fire on mouse click that shouldn't? Any `outline: none` on `:focus` must be `:focus-visible` (WCAG 2.4.7). (3) Are test assertions verifying the actual return type? `querySelector` returns `null`, not `undefined` — use `not.toBeNull()`, never `toBeDefined()`. (4) Can this component be rendered twice on the same page? Hardcoded `id` values break any second instance.
+- **Split work into small, focused PRs.** Each PR must address a single concern (one feature, one refactor, one migration phase). A PR that touches >5 unrelated files or spans multiple systems is a signal to split. Smaller PRs reduce review surface, accelerate merge, and isolate regressions. When planning multi-step work, write each phase as an independently mergeable PR from the start.
+- **Run the full auto-review suite before opening any PR.** Before calling `gh pr create`, invoke `pr-review-toolkit:review-pr` (or dispatch `code-reviewer`, `pr-test-analyzer`, `silent-failure-hunter`, and `comment-analyzer` agents) against the branch diff. Address all Critical and Important findings before the PR is opened — not after Copilot reviews it. Opening a PR with known issues is a deliberate decision that requires written justification in the PR body.
 
 ## Out of scope (unless asked)
 

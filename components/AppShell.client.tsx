@@ -14,7 +14,7 @@ import { ErrorBoundary } from './ErrorBoundary.client';
 import { CRTOverlay } from './responsive/CRTOverlay.client';
 import { DesktopTopbar } from './responsive/DesktopTopbar.client';
 import { Dock } from './responsive/Dock.client';
-import { MatrixRain } from './responsive/MatrixRain.client';
+import { MatrixRain } from './responsive/MatrixRain';
 import { MobileTitleBar } from './responsive/MobileTitleBar.client';
 import { StatusBar } from './responsive/StatusBar.client';
 

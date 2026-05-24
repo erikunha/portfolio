@@ -42,7 +42,7 @@ animation frame — keeps the DOM React-owned and INP frame-bounded.
 (`pnpm check:client-naming`) runs in the `build-and-gate` CI job and in the
 `pre-push` hook — it fails the build if any `'use client'` file is misnamed or
 exports `async function`. The streaming-through-React contract is held by the
-behavioral test `__tests__/InteractiveShell.streaming.test.ts`, which asserts
+behavioral test `components/client/InteractiveShell/InteractiveShell.test.tsx`, which asserts
 every child of the shell feed is a React-owned node (`__reactFiber$` key
 present). `force-static` on the root route is held by PR review against this
 chapter.
@@ -85,11 +85,12 @@ structured error instead of an open connection.
 **How it is held.** Behavioral tests: `__tests__/route-handler.test.ts`
 exercises `defineHandler` and asserts the envelope shape, the `X-Request-Id`
 header, and the `rate-limit → parse → validate → handle` ordering by observable
-behavior (not source inspection). `__tests__/contact-rate-limit.test.ts`,
+behavior (not source inspection). `components/client/ContactForm/ContactForm.test.tsx`,
 `__tests__/api-log-shape.test.ts`, and the `/api/ask` test suite assert the
 envelope and error paths per route. The `erik.json` exemption is documented in
 its route file and here. The full surface is also covered by the required
-`e2e-functional` CI job (`contact.spec.ts`, `ask.spec.ts`,
+`e2e-functional` CI job (`components/client/ContactForm/ContactForm.e2e.ts`,
+`components/client/InteractiveShell/InteractiveShell.e2e.ts`,
 `observability-smoke.spec.ts`).
 
 ---
@@ -154,7 +155,7 @@ runs as part of `pnpm test` inside `pnpm verify` and CI. Kill switches and CSP
 are covered by behavioral tests (`__tests__/ask-killswitch-behavioral.test.ts`,
 `__tests__/proxy-csp.test.ts`) — no kill switch is verified by grepping source.
 Cross-browser functional coverage is the **required** `e2e-functional` CI job
-(chromium, chromium-mobile, webkit-desktop, webkit-mobile); `e2e-visual` is a
+(chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components); `e2e-visual` is a
 separate, intentionally **non-required** job because pixel-diff flakiness must
 not block merges.
 
@@ -266,8 +267,8 @@ unpredictably; discrete React-owned nodes announce cleanly.
 the `axe-core a11y scan` step in `build-and-gate`) fails the build on any axe
 violation; Lighthouse CI gates the Accessibility category at 100 (Chapter 3).
 Per-component behavioral a11y tests — for example
-`__tests__/contact-form-a11y.test.ts` (tab order, `role`/`aria-live` error
-region, keyboard-activatable submit) and `__tests__/shell-aria.test.ts` — run
+`components/client/ContactForm/ContactForm.test.tsx` (tab order, `role`/`aria-live` error
+region, keyboard-activatable submit) and `components/client/InteractiveShell/InteractiveShell.test.tsx` — run
 inside `pnpm test`. `prefers-reduced-motion` coverage is exercised by the
 `cross-cutting.spec.ts` e2e spec in the required `e2e-functional` job.
 
