@@ -26,6 +26,9 @@ export function volatileMasks(page: Page): Locator[] {
     // Escape-hatch hook for ad-hoc volatile regions added later (e.g. live
     // counters): mark the element with data-volatile="<reason>" in source.
     page.locator('[data-volatile]'),
+    // Next.js dev overlay (cache indicator, build status) appears intermittently
+    // in dev-server runs; mask it so it never causes snapshot diffs.
+    page.locator('nextjs-portal'),
   ];
 }
 
@@ -51,6 +54,9 @@ export function volatileMasks(page: Page): Locator[] {
 export async function stripVolatileChrome(page: Page): Promise<void> {
   await page.evaluate(() => {
     for (const c of document.querySelectorAll('canvas[aria-hidden]')) c.remove();
+    // Next.js dev overlay (cache indicator, build status) renders into a
+    // <nextjs-portal> custom element. Remove it so it never appears in snapshots.
+    for (const el of document.querySelectorAll('nextjs-portal')) el.remove();
     for (const el of document.querySelectorAll(
       '[data-testid="crt-vignette"],[data-testid="crt-overlay"],[data-testid="crt-mask"],[data-testid="crt-noise"],[data-testid="crt-flicker"],[data-testid="crt-scan-beam"]',
     )) {

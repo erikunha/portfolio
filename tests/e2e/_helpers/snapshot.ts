@@ -27,11 +27,14 @@ const SNAPSHOT_TIMEOUT_MS = 30_000;
 // their off-screen subtree. A full-element screenshot then captures that
 // subtree as solid black, so reveal them before any snapshot. Forcing
 // 'visible' only disables render-skipping; on-screen rendering is identical.
+// Also removes <nextjs-portal> (dev cache/build indicator) which appears
+// non-deterministically and would cause baseline drift if left in the DOM.
 async function revealDeferredContent(page: Page): Promise<void> {
   await page.evaluate(() => {
     for (const el of document.querySelectorAll('[data-cv-defer]')) {
       (el as HTMLElement).style.setProperty('content-visibility', 'visible');
     }
+    for (const el of document.querySelectorAll('nextjs-portal')) el.remove();
   });
 }
 
@@ -54,13 +57,14 @@ export async function snapshotLocator(
   await revealDeferredContent(page);
   await expect(locator).toHaveScreenshot(name, {
     mask: volatileMasks(page),
-    // maxDiffPixelRatio and maxDiffPixels use AND logic — both must pass.
-    // Spread exactly one: absolute budget disables the ratio gate entirely so
-    // it is the sole constraint. exactOptionalPropertyTypes forbids assigning
-    // undefined to either property — the conditional spread omits rather than
-    // nullifies whichever mode is not active.
+    // Playwright applies maxDiffPixelRatio AND maxDiffPixels (AND logic), and
+    // the global config's maxDiffPixelRatio: 0.01 always participates unless
+    // explicitly overridden here. When maxDiffPixels is the sole constraint,
+    // set maxDiffPixelRatio: 1.0 to disable the ratio gate entirely so only
+    // the absolute pixel budget applies. exactOptionalPropertyTypes forbids
+    // assigning undefined, so we spread either mode, never both.
     ...(options?.maxDiffPixels !== undefined
-      ? { maxDiffPixels: options.maxDiffPixels }
+      ? { maxDiffPixels: options.maxDiffPixels, maxDiffPixelRatio: 1.0 }
       : { maxDiffPixelRatio: options?.maxDiffPixelRatio ?? 0.01 }),
     animations: 'disabled',
     timeout: SNAPSHOT_TIMEOUT_MS,
