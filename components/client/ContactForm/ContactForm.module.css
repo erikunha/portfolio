@@ -59,3 +59,13 @@
   text-align: center;
   background: linear-gradient(180deg, rgba(0, 255, 65, 0.04), rgba(0, 0, 0, 0));
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .send {
+    transition: none;
+  }
+}
+
+body[data-motion="reduce"] .send {
+  transition: none;
+}

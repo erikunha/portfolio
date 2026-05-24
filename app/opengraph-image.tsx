@@ -63,7 +63,7 @@ export default async function Image() {
 
       <div
         style={{
-          color: '#c8facc',
+          color: '#e6ffe6',
           fontSize: '26px',
           letterSpacing: '0.04em',
           marginBottom: '40px',

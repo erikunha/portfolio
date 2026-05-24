@@ -188,6 +188,26 @@
   .bootCursor {
     animation: none;
   }
+
+  .root {
+    transition: none;
+  }
+
+  .headline {
+    transition: none;
+  }
+}
+
+body[data-motion="reduce"] .bootCursor {
+  animation: none;
+}
+
+body[data-motion="reduce"] .root {
+  transition: none;
+}
+
+body[data-motion="reduce"] .headline {
+  transition: none;
 }
 
 /* ── Sysfail overlay ─────────────────────────────────────────────────────── */

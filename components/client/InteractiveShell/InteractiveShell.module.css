@@ -154,6 +154,18 @@
   .cursor {
     animation: none;
   }
+
+  .cmdHint {
+    transition: none;
+  }
+}
+
+body[data-motion="reduce"] .cursor {
+  animation: none;
+}
+
+body[data-motion="reduce"] .cmdHint {
+  transition: none;
 }
 
 .chips {

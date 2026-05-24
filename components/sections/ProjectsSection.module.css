@@ -107,6 +107,16 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .project {
+    transition: none;
+  }
+}
+
+body[data-motion="reduce"] .project {
+  transition: none;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    Mobile project cards — matches Portfolio.mobile.html .proj structure
    ───────────────────────────────────────────────────────────────────────── */

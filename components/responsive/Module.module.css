@@ -117,6 +117,16 @@
   transform: rotate(90deg);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+body[data-motion="reduce"] .chevron {
+  transition: none;
+}
+
 /* Native <details> collapse: body hidden when closed, padded when open. */
 .root:not([open]) .body {
   display: none;

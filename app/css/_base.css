@@ -123,6 +123,12 @@ textarea:focus-visible {
   overflow: visible;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .skip-to-content {
+    transition: none;
+  }
+}
+
 button {
   font-family: inherit;
   color: inherit;

@@ -44,3 +44,12 @@
 .md {
   font-size: var(--ds-font-size-xs);
 }
+
+/* At very narrow viewports (<360px) the badge text overflows the hero
+   container. Allow wrapping so it stays within bounds. */
+@media (max-width: 359px) {
+  .root {
+    white-space: normal;
+    flex-wrap: wrap;
+  }
+}

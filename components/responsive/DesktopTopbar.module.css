@@ -169,3 +169,15 @@
     display: none;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .btnPrimary,
+  .btnOutline {
+    transition: none;
+  }
+}
+
+body[data-motion="reduce"] .btnPrimary,
+body[data-motion="reduce"] .btnOutline {
+  transition: none;
+}

@@ -38,3 +38,13 @@
     stroke-width: 2;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    transition: none;
+  }
+}
+
+body[data-motion="reduce"] .root {
+  transition: none;
+}

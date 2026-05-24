@@ -64,3 +64,13 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .root li {
+    transition: none;
+  }
+}
+
+body[data-motion="reduce"] .root li {
+  transition: none;
+}
