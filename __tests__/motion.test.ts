@@ -37,6 +37,16 @@ describe('readMotion', () => {
     });
     expect(readMotion()).toBe(false);
   });
+
+  it('returns true when window is undefined (SSR path)', () => {
+    const originalWindow = globalThis.window;
+    vi.stubGlobal('window', undefined);
+    try {
+      expect(readMotion()).toBe(true);
+    } finally {
+      vi.stubGlobal('window', originalWindow);
+    }
+  });
 });
 
 describe('applyMotion', () => {

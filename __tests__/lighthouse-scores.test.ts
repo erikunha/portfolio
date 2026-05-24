@@ -39,6 +39,15 @@ describe('getScores — cache hit', () => {
     const result = await getScores();
     expect(result).toEqual(cachedScores);
   });
+
+  it('continues (returns fallback) when Redis GET throws', async () => {
+    redisMock.get.mockRejectedValueOnce(new Error('Redis down'));
+    delete process.env.PSI_API_KEY;
+    const { getScores, LIGHTHOUSE_FALLBACK } = await import('@/lib/lighthouse-scores');
+    const result = await getScores();
+    // Redis error is caught; PSI_API_KEY absent so returns fallback.
+    expect(result).toEqual(LIGHTHOUSE_FALLBACK);
+  });
 });
 
 describe('getScores — no PSI API key', () => {
@@ -153,5 +162,30 @@ describe('getScores — PSI fetch success', () => {
       expect.objectContaining({ performance: 95 }),
       { ex: LIGHTHOUSE_TTL_S },
     );
+  });
+
+  it('returns scores and swallows error when Redis SET fails (fire-and-forget error path)', async () => {
+    const psiBody = {
+      lighthouseResult: {
+        categories: {
+          performance: { score: 0.96 },
+          accessibility: { score: 1.0 },
+          'best-practices': { score: 0.97 },
+          seo: { score: 1.0 },
+        },
+      },
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify(psiBody), { status: 200 })),
+    );
+    // Make the Redis SET fail to exercise the fire-and-forget catch branch.
+    redisMock.set.mockRejectedValueOnce(new Error('Redis set failed'));
+    const { getScores } = await import('@/lib/lighthouse-scores');
+    const result = await getScores();
+    // Scores still returned despite cache-write failure.
+    expect(result.performance).toBe(96);
+    // Give fire-and-forget a tick to settle.
+    await new Promise((r) => setTimeout(r, 10));
   });
 });

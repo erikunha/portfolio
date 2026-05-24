@@ -69,6 +69,34 @@ describe('lib/log.ts foundation', () => {
     consoleSpy.mockRestore();
     vi.unstubAllEnvs();
   });
+
+  it('log.warn falls back to JSON console line under Edge runtime', async () => {
+    vi.stubEnv('NEXT_RUNTIME', 'edge');
+    vi.resetModules();
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { log } = await import('@/lib/log');
+    log.warn('edge warn', { requestId: 'rid-warn' });
+    expect(consoleSpy).toHaveBeenCalledOnce();
+    const emitted = JSON.parse(String(consoleSpy.mock.calls[0]?.[0])) as Record<string, unknown>;
+    expect(emitted.level).toBe('warn');
+    expect(emitted.msg).toBe('edge warn');
+    consoleSpy.mockRestore();
+    vi.unstubAllEnvs();
+  });
+
+  it('log.error falls back to JSON console line under Edge runtime', async () => {
+    vi.stubEnv('NEXT_RUNTIME', 'edge');
+    vi.resetModules();
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { log } = await import('@/lib/log');
+    log.error('edge error', { requestId: 'rid-err' });
+    expect(consoleSpy).toHaveBeenCalledOnce();
+    const emitted = JSON.parse(String(consoleSpy.mock.calls[0]?.[0])) as Record<string, unknown>;
+    expect(emitted.level).toBe('error');
+    expect(emitted.msg).toBe('edge error');
+    consoleSpy.mockRestore();
+    vi.unstubAllEnvs();
+  });
 });
 
 describe('route integration — structured logging through the facade', () => {

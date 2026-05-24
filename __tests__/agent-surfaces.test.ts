@@ -137,6 +137,50 @@ describe('MCP server tool surface', () => {
       await client.close();
     }
   });
+
+  it('ask_erik surfaces the error message when the ask endpoint returns non-2xx JSON', async () => {
+    const { POST: askMock } = await import('@/app/api/ask/route');
+    (askMock as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: 'rate limit exceeded' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const client = await connectTestClient();
+    try {
+      const result = await client.callTool({
+        name: 'ask_erik',
+        arguments: { question: 'Will this hit the rate limit?' },
+      });
+      const block = (result.content as Array<{ type: string; text: string }>)[0];
+      expect(block?.text).toBe('rate limit exceeded');
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('ask_erik surfaces a status fallback when the non-2xx response is not JSON', async () => {
+    const { POST: askMock } = await import('@/app/api/ask/route');
+    (askMock as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      new Response('not json', {
+        status: 503,
+        headers: { 'Content-Type': 'text/plain' },
+      }),
+    );
+
+    const client = await connectTestClient();
+    try {
+      const result = await client.callTool({
+        name: 'ask_erik',
+        arguments: { question: 'Trigger a 503' },
+      });
+      const block = (result.content as Array<{ type: string; text: string }>)[0];
+      expect(block?.text).toContain('503');
+    } finally {
+      await client.close();
+    }
+  });
 });
 
 // Reads one SSE stream body and returns the first `data:` line's JSON payload.
