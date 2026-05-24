@@ -111,7 +111,22 @@ CI enforces all of the above. **Never disable the gates to merge.** If a gate fa
 
 ## Engineering standards
 
-The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, each naming its enforcement mechanism (a CI gate, a PR-review item, or culture). Every PR is held to it. When a request seems to conflict with a chapter, surface the conflict before complying.
+Full rationale in `STANDARDS.md`. Load that file when a chapter is directly relevant. One-line enforcement per chapter:
+
+| Chapter | Mechanical gate / enforcement |
+|---|---|
+| 1 — RSC/Architecture | `check-client-naming.mjs` — `*.client.tsx` naming + no `async function` export; streaming-through-React held by behavioral test |
+| 2 — API boundary | `defineHandler` enforces envelope + rate-limit→parse→validate→handle; held by behavioral tests + e2e |
+| 3 — Performance | Lighthouse CI (perf ≥95, a11y =100, BP ≥95, SEO =100); `check-bundle-size.mjs` gates gzipped chunks |
+| 4 — Testing | `no-source-grep.test.ts` bans `readFileSync` without allow tag; behavioral assertions only |
+| 5 — Dependencies | `check-dep-pinning.mjs` rejects `latest`/`*`; `--frozen-lockfile` in CI |
+| 6 — Content | `validate-content.ts` Zod schemas at build time; no copy inlined in `.tsx` |
+| 7 — CSS/tokens | `lint-token-boundary` + `lint-no-magic-values` + `contrast-check`; token palette only, no raw hex |
+| 8 — A11y | axe-core gate + Lighthouse =100; per-component behavioral a11y tests |
+| 9 — Security | Behavioral tests for CSP + kill switches (not source-grep); `security-auditor` on any `app/api/` change |
+| 10 — Docs | PR review: doc claims must match live code; ADRs cite SHA + reversibility note |
+| 11 — DX | pre-commit = Biome (<1s); pre-push = full verify; never disable a gate to merge |
+| 12 — Design system | `tokens:check` + `lint-token-boundary` + `lint-no-magic-values` + `contrast-check` + component-docs CI gates |
 
 ## Package + manager policy
 

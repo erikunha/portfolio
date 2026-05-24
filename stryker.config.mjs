@@ -18,8 +18,8 @@ export default {
   ],
   thresholds: {
     high: 80,
-    low: 60,
-    break: 50,
+    low: 65,
+    break: 65,
   },
   reporters: ['html', 'clear-text', 'json'],
   htmlReporter: { fileName: 'mutation-report.html' },

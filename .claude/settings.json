@@ -12,5 +12,18 @@
       "Skill(security-review)"
     ],
     "defaultMode": "acceptEdits"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/bash-guard.sh"
+          }
+        ]
+      }
+    ]
   }
 }
