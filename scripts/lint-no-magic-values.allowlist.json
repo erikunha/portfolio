@@ -129,7 +129,7 @@
     { "value": "170px", "reason": "perf receipt card min-height — card height constant" },
     {
       "value": "180px",
-      "reason": "CRT noise SVG tile size — background-size for the repeating SVG grain texture"
+      "reason": "CRT noise SVG tile size — background-size for the repeating SVG grain texture; also design-system Sidebar min-width — prose nav column minimum below ds-space-* scale range"
     },
     { "value": "300px", "reason": "ManPage min-height — section height floor" },
     { "value": "320px", "reason": "shell feed max-height mobile — container scroll height" },

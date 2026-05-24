@@ -83,7 +83,7 @@
   color: var(--ds-color-signal);
   font-size: var(--ds-font-size-xs);
   letter-spacing: 0.05em;
-  background: rgba(0, 255, 65, 0.04);
+  background: var(--ds-color-signal-quiet);
   white-space: nowrap;
 }
 

@@ -3,7 +3,8 @@ import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const CHANGELOG_PATH = join(import.meta.dirname, '../app/design-system/changelog/page.mdx');
+const ROOT = join(import.meta.dirname, '..');
+const CHANGELOG_PATH = join(ROOT, 'app/design-system/changelog/page.mdx');
 
 const HEADER = `export const metadata = {
   title: 'Changelog — Design System — erikunha.dev',
@@ -18,12 +19,10 @@ type Entry = { type: string; description: string };
 type GroupedByDate = Map<string, Entry[]>;
 
 function parseCommits(): GroupedByDate {
-  const raw = execFileSync('git', [
-    'log',
-    '--format=%ad|%s',
-    '--date=short',
-    '--no-merges',
-  ]).toString();
+  const raw = execFileSync('git', ['log', '--format=%ad|%s', '--date=short', '--no-merges'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
 
   const groups: GroupedByDate = new Map();
 
