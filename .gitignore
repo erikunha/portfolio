@@ -41,3 +41,6 @@ tsconfig.tsbuildinfo
 # os
 .DS_Store
 .worktrees/
+
+# development screenshots (root-level only — portfolio images in public/ are tracked)
+/*.png
