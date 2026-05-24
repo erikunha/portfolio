@@ -11,7 +11,10 @@ const withMDX = createMDX({
     // CWD than the project root, so relative paths fail in production builds.
     // remark-preview-source runs at the MDAST stage (before JSX compilation) so it
     // can slice raw MDX source text via position offsets to inject the `source` prop.
-    remarkPlugins: [[`${process.cwd()}/lib/mdx/remark-preview-source.mjs`, {}]],
+    remarkPlugins: [
+      [`${process.cwd()}/lib/mdx/remark-gfm-wrapper.mjs`, {}],
+      [`${process.cwd()}/lib/mdx/remark-preview-source.mjs`, {}],
+    ],
     rehypePlugins: [['rehype-pretty-code', { theme: 'github-dark-dimmed' }]],
   },
 });
