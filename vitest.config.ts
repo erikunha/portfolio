@@ -28,6 +28,7 @@ export default defineConfig({
         '**/content/**',
         '**/*.test.*',
         '**/*.spec.*',
+        '**/index.ts',
       ],
       reportsDirectory: 'coverage',
     },
