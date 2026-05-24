@@ -313,3 +313,61 @@ describe('shell feed accessibility', () => {
     await flushMicrotasks();
   });
 });
+
+// ─── Multi-turn history ───────────────────────────────────────────────────────
+// Locks down: a second question appends a new answer to the history log rather
+// than replacing or clobbering the first answer.
+
+describe('InteractiveShell — multi-turn history', () => {
+  let mounted: MountedClient;
+
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.restoreAllMocks();
+  });
+
+  it('appends the second answer below the first in the log feed', async () => {
+    let callCount = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        callCount++;
+        const answer = callCount === 1 ? 'First answer.' : 'Second answer.';
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode(answer));
+            controller.close();
+          },
+        });
+        return new Response(stream, { status: 200 });
+      }),
+    );
+
+    const { InteractiveShell } = await import('./InteractiveShell');
+    mounted = await mountClient(createElement(InteractiveShell));
+    const { container } = mounted;
+
+    await submitQuestion(container, 'first question');
+    await flushMicrotasks();
+    await flushFrames();
+    await flushFrames();
+
+    await submitQuestion(container, 'second question');
+    await flushMicrotasks();
+    await flushFrames();
+    await flushFrames();
+
+    const log = container.querySelector('[role="log"]');
+    const text = log?.textContent ?? '';
+    expect(text).toContain('First answer.');
+    expect(text).toContain('Second answer.');
+    const firstIdx = text.indexOf('First answer.');
+    const secondIdx = text.indexOf('Second answer.');
+    expect(firstIdx).toBeLessThan(secondIdx);
+  });
+});
