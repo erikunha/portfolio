@@ -36,7 +36,9 @@ function parseCommits(): GroupedByDate {
     const match = subject.match(/^(\w+)\(design-system\):\s+(.+)$/);
     if (!match) continue;
 
-    const [, type, description] = match;
+    const type = match[1];
+    const description = match[2];
+    if (!type || !description) continue;
     if (!groups.has(date)) groups.set(date, []);
     groups.get(date)?.push({ type, description });
   }
