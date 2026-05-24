@@ -155,9 +155,10 @@ runs as part of `pnpm test` inside `pnpm verify` and CI. Kill switches and CSP
 are covered by behavioral tests (`__tests__/ask-killswitch-behavioral.test.ts`,
 `__tests__/proxy-csp.test.ts`) — no kill switch is verified by grepping source.
 Cross-browser functional coverage is the **required** `e2e-functional` CI job
-(chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components); `e2e-visual` is a
-separate, intentionally **non-required** job because pixel-diff flakiness must
-not block merges.
+(chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components). Visual regression
+is split across two jobs: `e2e-visual-chromium` is **required** (Linux Chromium rendering is
+deterministic); `e2e-visual-webkit` is **non-required** (webkit pixel rendering varies from
+Chromium baselines and must not block merges).
 
 ---
 

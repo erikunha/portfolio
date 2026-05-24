@@ -3,6 +3,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
+    reporters: process.env.GITHUB_ACTIONS ? ['github-actions', 'verbose'] : ['verbose'],
     environment: 'jsdom',
     globals: false,
     setupFiles: ['./tests/mocks/rtl-setup.ts'],
