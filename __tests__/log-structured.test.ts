@@ -73,6 +73,7 @@ describe('lib/log.ts foundation', () => {
   it('log.warn falls back to JSON console line under Edge runtime', async () => {
     vi.stubEnv('NEXT_RUNTIME', 'edge');
     vi.resetModules();
+    // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op to suppress real console output
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const { log } = await import('@/lib/log');
     log.warn('edge warn', { requestId: 'rid-warn' });
@@ -87,6 +88,7 @@ describe('lib/log.ts foundation', () => {
   it('log.error falls back to JSON console line under Edge runtime', async () => {
     vi.stubEnv('NEXT_RUNTIME', 'edge');
     vi.resetModules();
+    // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op to suppress real console output
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const { log } = await import('@/lib/log');
     log.error('edge error', { requestId: 'rid-err' });
