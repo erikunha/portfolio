@@ -6,7 +6,7 @@ pattern: git\s+mv\s+
 action: warn
 ---
 
-**`git mv` detected — check for stale file-path header comments.**
+**`git mv` detected: check for stale file-path header comments.**
 
 After moving a file, any `// path/to/OldName.tsx` comment at the top of the moved file now points to the old location. This project actively maintains these comments as file-locator metadata.
 
