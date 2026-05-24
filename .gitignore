@@ -44,3 +44,4 @@ tsconfig.tsbuildinfo
 
 # development screenshots (root-level only — portfolio images in public/ are tracked)
 /*.png
+# git worktree symlinks
