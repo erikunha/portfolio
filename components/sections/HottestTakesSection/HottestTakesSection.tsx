@@ -1,6 +1,6 @@
 import { hottestTakes, hottestTakesConfig } from '@/content/hottest-takes';
-import { IconHottestTakes } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconHottestTakes } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import styles from './HottestTakesSection.module.css';
 
 export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {

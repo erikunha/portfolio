@@ -1,6 +1,6 @@
 import { unknowns } from '@/content/unknowns';
-import { IconUnknowns } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconUnknowns } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import styles from './UnknownsSection.module.css';
 
 export function UnknownsSection({ defer }: { defer?: boolean } = {}) {

@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import { visaRows } from '@/content/visa';
 import { getIsMobile } from '@/lib/ua';
-import { IconVisa } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconVisa } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import s from './VisaSection.module.css';
 
 function VisaDesktop() {

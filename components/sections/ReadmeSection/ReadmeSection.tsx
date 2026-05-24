@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { readmeCopy as c } from '@/content/readme';
-import { RoleTyper } from '../client/RoleTyper';
-import { IconReadme } from '../Icons';
-import { Module } from '../responsive/Module';
+import { RoleTyper } from '../../client/RoleTyper';
+import { IconReadme } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import styles from './ReadmeSection.module.css';
 
 type ReadmeLine = { text?: string; node?: ReactNode; cls?: string; key: string };

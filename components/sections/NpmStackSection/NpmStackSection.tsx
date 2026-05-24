@@ -1,6 +1,6 @@
 import { npmStack } from '@/content/npm-stack';
-import { IconNpmStack } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconNpmStack } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import styles from './NpmStackSection.module.css';
 
 export function NpmStackSection({ defer }: { defer?: boolean } = {}) {

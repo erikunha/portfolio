@@ -1,7 +1,7 @@
-import { InteractiveShellLazy } from '../client/InteractiveShellLazy';
-import { ErrorBoundary } from '../ErrorBoundary';
-import { IconShell } from '../Icons';
-import { Module } from '../responsive/Module';
+import { InteractiveShellLazy } from '../../client/InteractiveShellLazy';
+import { ErrorBoundary } from '../../ErrorBoundary';
+import { IconShell } from '../../Icons';
+import { Module } from '../../responsive/Module';
 
 export function ShellSection() {
   return (

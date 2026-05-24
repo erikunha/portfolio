@@ -3,8 +3,8 @@ import { Suspense } from 'react';
 import { gitLog } from '@/content/git-log';
 import type { GitCommit } from '@/content/schemas';
 import { getIsMobile } from '@/lib/ua';
-import { IconGitLog } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconGitLog } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import styles from './GitLogSection.module.css';
 
 const COMMITS = gitLog;

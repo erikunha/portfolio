@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import { guitarRig } from '@/content/guitar-rig';
 import { getIsMobile } from '@/lib/ua';
-import { IconGuitar } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconGuitar } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import s from './GuitarSection.module.css';
 
 function GuitarDesktop() {

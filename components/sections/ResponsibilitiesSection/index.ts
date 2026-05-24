@@ -1,0 +1,1 @@
+export { ResponsibilitiesSection } from './ResponsibilitiesSection';

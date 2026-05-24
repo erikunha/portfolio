@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import { projects } from '@/content/projects';
 import { getIsMobile } from '@/lib/ua';
-import { IconProjects } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconProjects } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import styles from './ProjectsSection.module.css';
 
 const FolderIcon = () => (

@@ -1,6 +1,6 @@
 import { communityEvent } from '@/content/community';
-import { IconCommunity } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconCommunity } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import styles from './CommunitySection.module.css';
 
 export function CommunitySection({ defer }: { defer?: boolean } = {}) {

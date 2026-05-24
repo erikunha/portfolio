@@ -1,6 +1,6 @@
 import { responsibilities } from '@/content/responsibilities';
-import { IconResponsibilities } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconResponsibilities } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import styles from './ResponsibilitiesSection.module.css';
 
 export function ResponsibilitiesSection({ defer }: { defer?: boolean } = {}) {

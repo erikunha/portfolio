@@ -1,6 +1,6 @@
 import { sysStats } from '@/content/sys-health';
-import { IconSysHealth } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconSysHealth } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import styles from './SysHealthSection.module.css';
 
 export function SysHealthSection({ defer }: { defer?: boolean } = {}) {

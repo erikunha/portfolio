@@ -1,7 +1,7 @@
 import { perfReceipts } from '@/content/perf-receipts';
 import type { PerfReceipt } from '@/content/schemas';
-import { IconPerfReceipts } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconPerfReceipts } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import styles from './PerfReceiptsSection.module.css';
 
 function ReceiptCard({

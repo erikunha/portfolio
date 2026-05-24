@@ -1,6 +1,6 @@
 import { nowRows } from '@/content/now';
-import { IconNow } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconNow } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import styles from './NowSection.module.css';
 
 export function NowSection() {

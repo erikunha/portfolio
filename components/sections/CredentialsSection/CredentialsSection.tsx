@@ -1,6 +1,6 @@
 import { credentials } from '@/content/credentials';
-import { IconCredentials } from '../Icons';
-import { Module } from '../responsive/Module';
+import { IconCredentials } from '../../Icons';
+import { Module } from '../../responsive/Module';
 import s from './CredentialsSection.module.css';
 
 export function CredentialsSection({ defer }: { defer?: boolean } = {}) {
