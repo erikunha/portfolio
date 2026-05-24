@@ -96,17 +96,18 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 
 ## Performance budgets (non-negotiable)
 
-| Metric | Budget |
-|---|---|
-| LCP | < 1.8s on 4G |
-| INP | < 200ms |
-| CLS | < 0.05 |
-| JS gzipped per route | < 120KB |
-| Client JS total (all islands combined) | < 43KB |
-| Lighthouse Performance | ≥ 95 |
-| Lighthouse Accessibility | = 100 |
-| Lighthouse Best Practices | ≥ 95 |
-| Lighthouse SEO | = 100 |
+| Metric | Desktop | Mobile |
+|---|---|---|
+| LCP | < 1.8s | < 3.5s |
+| INP | < 200ms | < 200ms |
+| CLS | < 0.05 | < 0.05 |
+| TBT | < 200ms | < 400ms |
+| JS gzipped per route | < 120KB | < 120KB |
+| Client JS total (all islands combined) | < 43KB | < 43KB |
+| Lighthouse Performance | ≥ 95 | ≥ 90 |
+| Lighthouse Accessibility | = 100 | = 100 |
+| Lighthouse Best Practices | ≥ 95 | ≥ 95 |
+| Lighthouse SEO | = 100 | = 100 |
 
 CI enforces all of the above. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
 
@@ -175,11 +176,13 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **Review before every push — no exceptions.** Before any `git push` (to main or any branch), invoke `pr-review-toolkit:review-pr` against the accumulated unpushed diff. Address all Critical and Important findings, then push. This applies to direct-to-main pushes too, not only PR flows.
 - **Whenever coding work stops, run the review suite — no exceptions, no user prompt needed.** Trigger: any moment changes stop (task done, branch finishing, session ending on a feature). Process: (1) check what changed (`git diff`, `git status`); (2) invoke `pr-review-toolkit:review-pr` — it inspects the changed files and dispatches the appropriate agents in parallel (code-reviewer, pr-test-analyzer, silent-failure-hunter, type-design-analyzer, etc. based on what changed); (3) fix all Critical/Important findings before transitioning to the next step (push, PR, or declaring done). Never skip because you're confident in the code.
 - **Auto-review before opening any PR.** Run `pnpm ready-for-pr` (ci:local + pr-size). Then invoke `pr-review-toolkit:review-pr` against the diff. Address all Critical and Important findings before `gh pr create`. `pnpm ready-for-pr` is required even when the pre-push review has already run — it additionally covers `bundle-check` and `pr-size`. Opening with known issues requires written justification in the PR body.
+- **Fill the PR template when creating PRs.** Read `.github/pull_request_template.md`, fill every section. Use `gh pr create --body-file .github/pull_request_template.md` as a base or write the body inline with all sections completed. Do not submit a PR with empty template sections.
 - **The review should be boring.** If `pr-review-toolkit:review-pr` or Copilot finds real bugs, the pre-implementation discipline failed. `thinking-inversion` before writing and TDD during implementation are the actual defences — not the review. Multi-round Copilot cycles mean the writing process needs fixing.
 - **Every plan must include a failure-mode checklist.** Run `thinking-inversion` before `writing-plans` on any task. Each bug class becomes an explicit plan task — not a Copilot finding after the fact.
 - **When dispatching implementer subagents, always include in the prompt:** "Use `git add -u` or `git add <specific files>` — never `git add .`, `git add -A`, or `git add --all`. Stage only the files you created or modified in this task."
 - **File-move tasks must include a consumer-scan step.** Before writing plan tasks for any `git mv` operation, grep for all callers of the files being moved (`grep -r 'OldPath' --include='*.ts' --include='*.tsx'`) and include path-update tasks for every match including test files. Stale path comments (`// components/OldPath.tsx`) in moved files are a separate required fix step.
 - **Verification before any completion claim.** Before reporting done, fixing, or passing: run `pnpm typecheck && pnpm test --run && pnpm build`, read the output, cite the result. "Should pass" is not evidence. Invoke `superpowers:verification-before-completion` if rationalizing.
+- **Re-run review after fixing findings.** After fixing any Critical or Important finding from a review agent, re-dispatch that same agent against the affected files before declaring the fix done. One-line fixes can skip this; any logic change cannot.
 
 ## Out of scope (unless asked)
 

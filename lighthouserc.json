@@ -31,14 +31,14 @@
         "largest-contentful-paint": ["error", { "maxNumericValue": 1800 }],
         "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05 }],
         "total-blocking-time": ["error", { "maxNumericValue": 200 }],
-        "interaction-to-next-paint": ["warn", { "maxNumericValue": 200 }],
+        "interaction-to-next-paint": ["error", { "maxNumericValue": 200 }],
         "server-response-time": ["warn", { "maxNumericValue": 800 }],
         "interactive": ["error", { "maxNumericValue": 2500 }],
 
         "uses-text-compression": "error",
         "uses-responsive-images": "error",
         "uses-rel-preconnect": "off",
-        "render-blocking-resources": "warn",
+        "render-blocking-resources": ["warn", { "maxLength": 3, "maxNumericValue": 800 }],
         "font-display": "error",
 
         "color-contrast": "error",
