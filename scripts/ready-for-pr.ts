@@ -1,17 +1,20 @@
 #!/usr/bin/env tsx
-// Usage: pnpm ready-for-pr
+// Usage: pnpm ready-for-pr [--skip-runtime]
 //
 // Pre-PR gate: verifies the branch is clean and sized correctly before
 // `gh pr create`. Run this before opening any PR.
 //
 // Gates (in order):
-//   1. pnpm ci:local  — lint + typecheck + content validate + tests
-//   2. pnpm pr-size   — branch complexity; exits 1 if red (split required)
+//   1. pnpm ci:local      — lint + typecheck + content validate + tests
+//   2. pnpm pr-size       — branch complexity; exits 1 if red (split required)
+//   3. pnpm gates:runtime — build + server + LHCI + axe + E2E (skip with --skip-runtime)
 //
 // On pass: prints next-step reminder (visual check + auto-review).
 // On fail: exits 1 with clear message about which gate failed.
 
 import { execFileSync } from 'node:child_process';
+
+const SKIP_RUNTIME = process.argv.includes('--skip-runtime');
 
 const C = {
   reset: '\x1b[0m',
@@ -51,6 +54,23 @@ if (sizeRed) {
     `${C.dim}  If you intentionally want to open a large PR, skip this gate and run gh pr create manually.${C.reset}\n\n`,
   );
   process.exit(1);
+}
+
+// Gate 3: runtime gates (build + server + LHCI + axe + E2E)
+if (SKIP_RUNTIME) {
+  process.stdout.write(`${C.yellow}[ready-for-pr] Gate 3 skipped (--skip-runtime).${C.reset}\n`);
+} else {
+  try {
+    execFileSync('pnpm', ['gates:runtime'], { stdio: 'inherit' });
+  } catch {
+    process.stderr.write(
+      `\n${C.red}[ready-for-pr] FAIL${C.reset} — gates:runtime failed. Fix Lighthouse/a11y/E2E before opening PR.\n`,
+    );
+    process.stderr.write(
+      `${C.dim}  Run \`pnpm gates:runtime --skip-build\` after a fix to re-run without rebuilding.${C.reset}\n\n`,
+    );
+    process.exit(1);
+  }
 }
 
 process.stdout.write(`\n${C.green}${C.bold}[ready-for-pr] OK${C.reset} — safe to open PR.\n`);

@@ -23,13 +23,15 @@
 | `pnpm validate-content` | Zod content schema validation |
 | `pnpm ci:local` | Full local CI chain (lint + type + content + client-naming + harness-size + tests) |
 | `pnpm bundle-check` | Bundle size gate |
+| `pnpm gates:runtime` | Server-dependent gates: build + server + LHCI desktop + LHCI mobile + axe-core + E2E functional |
+| `pnpm gates:runtime --skip-build` | Same as above but reuses existing `.next/` (must exist) |
 
 **AI agent workflow** — the AI runs these consciously as part of its process; not automated:
 
 | Command | When the AI runs it |
 |---|---|
 | `pnpm pr-size` | After every commit block and before opening a PR — decides whether to split |
-| `pnpm ready-for-pr` | Before `gh pr create` — runs ci:local + pr-size, prints next-step checklist |
+| `pnpm ready-for-pr` | Before `gh pr create` — runs ci:local + pr-size + gates:runtime, prints next-step checklist |
 | `pnpm ready-to-merge [<pr>]` | Before `gh pr merge` — runs ci:local + branch-protection + Copilot review + resolved threads + pr-metrics |
 | `pnpm pr-metrics [<pr>]` | During or after PR review — reports Copilot cycle count, size, days open |
 | `pnpm changelog:sync` | After any commit with scope `(design-system)` — regenerates `app/design-system/changelog/page.mdx` from full git history |
@@ -174,8 +176,9 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **Process feedback mid-workflow is a hard stop.** Pause immediately, incorporate into CLAUDE.md and/or memory, confirm with the user, then resume.
 - **Commit in scope blocks; merge by milestone.** Work accumulates in commits grouped by concern — one logical unit per commit (a component, a fix, a config change). After each block, run `pnpm pr-size`. When `pr-size` hits yellow AND the block is a natural milestone, open a PR. Do not accumulate past red. If mid-milestone the branch hits red, split at the last clean commit boundary and open what's done.
 - **Review before every push — no exceptions.** Before any `git push` (to main or any branch), invoke `pr-review-toolkit:review-pr` against the accumulated unpushed diff. Address all Critical and Important findings, then push. This applies to direct-to-main pushes too, not only PR flows.
+- **Runtime gates before any push touching non-docs files.** After `pr-review-toolkit:review-pr` passes, run `pnpm gates:runtime` (build + LHCI + axe + E2E). If the build artifact from a recent `pnpm build` is still fresh, use `--skip-build`. Exception: commits that touch only `*.md`, `content/`, `docs/`, or config files with no runtime effect may skip `gates:runtime`.
 - **Whenever coding work stops, run the review suite — no exceptions, no user prompt needed.** Trigger: any moment changes stop (task done, branch finishing, session ending on a feature). Process: (1) check what changed (`git diff`, `git status`); (2) invoke `pr-review-toolkit:review-pr` — it inspects the changed files and dispatches the appropriate agents in parallel (code-reviewer, pr-test-analyzer, silent-failure-hunter, type-design-analyzer, etc. based on what changed); (3) fix all Critical/Important findings before transitioning to the next step (push, PR, or declaring done). Never skip because you're confident in the code.
-- **Auto-review before opening any PR.** Run `pnpm ready-for-pr` (ci:local + pr-size). Then invoke `pr-review-toolkit:review-pr` against the diff. Address all Critical and Important findings before `gh pr create`. `pnpm ready-for-pr` is required even when the pre-push review has already run — it additionally covers `bundle-check` and `pr-size`. Opening with known issues requires written justification in the PR body.
+- **Auto-review before opening any PR.** Run `pnpm ready-for-pr` (ci:local + pr-size + gates:runtime). Then invoke `pr-review-toolkit:review-pr` against the diff. Address all Critical and Important findings before `gh pr create`. `pnpm ready-for-pr` is required even when the pre-push review has already run — it additionally covers `bundle-check`, `pr-size`, and runtime gates. Use `--skip-runtime` only for docs-only PRs. Opening with known issues requires written justification in the PR body.
 - **Fill the PR template when creating PRs.** Read `.github/pull_request_template.md`, fill every section. Use `gh pr create --body-file .github/pull_request_template.md` as a base or write the body inline with all sections completed. Do not submit a PR with empty template sections.
 - **The review should be boring.** If `pr-review-toolkit:review-pr` or Copilot finds real bugs, the pre-implementation discipline failed. `thinking-inversion` before writing and TDD during implementation are the actual defences — not the review. Multi-round Copilot cycles mean the writing process needs fixing.
 - **Every plan must include a failure-mode checklist.** Run `thinking-inversion` before `writing-plans` on any task. Each bug class becomes an explicit plan task — not a Copilot finding after the fact.

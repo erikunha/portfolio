@@ -24,6 +24,9 @@
 # lighthouse ci artifact reports
 /.lighthouseci/
 
+# local gates-runtime LHCI filesystem output
+/.lhci-local/
+
 # ai-eval harness output (scripts/ask-eval.ts)
 /ask-eval-result.json
 
