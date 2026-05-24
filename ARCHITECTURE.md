@@ -189,6 +189,7 @@ content/
 lib/
   agent/                       # agent-readiness helpers (MCP handler)
   ask/                         # system prompt builder, streaming, anti-abuse
+  mdx/                         # MDX remark/recma plugins for /design-system docs
   server/                      # server-only utilities
   ask-log.ts                   # KV interaction log per /api/ask request
   boot-animation.ts            # boot sequence data
@@ -197,7 +198,6 @@ lib/
   error-bridge.client.ts       # window error → /api/log bridge
   events.ts                    # typed dispatchModuleOpen helper
   hiring-profile.ts            # HiringProfile reader for /api/erik.json
-  inline-css.ts                # critical CSS inline helper
   ip-hash.ts                   # IP → SHA-256 for rate-limit keys
   lighthouse-scores.ts         # PSI API fetcher (cached daily)
   log.ts                       # pino wrapper (text dev / JSON prod)
@@ -207,17 +207,10 @@ lib/
   ua.ts                        # UA-based device detection (headers())
   use-breakpoint.client.tsx    # useBreakpoint hook (client-only)
 
-app/css/                      # global CSS files (no framework)
-  _base.css                   # reset (Preflight subset), focus, typography defaults
-  _crt.css                    # scanlines, RGB sub-pixel mask, grain, flicker, phosphor
-  _layout.css                 # page chrome, module containers, content-visibility
-  _sections.css               # per-section styles (BEM-ish, ~18 sections)
-  _chrome.css                 # topbar, dock, status bar
-  _shell.css                  # interactive shell terminal
-  _contact.css                # contact form
-  _footer.css                 # shutdown footer
-  _responsive.css             # mobile overrides + reduced-motion
-app/globals.css               # single entry point, @imports the 10 files above
+app/css/                      # truly-global styles only (CSS Modules migration 2026-05-22)
+  _base.css                   # element-level resets (Preflight subset, focus, typography)
+                              # all component styles live in colocated *.module.css files
+app/globals.css               # entry point: @imports tokens.css + _base.css only
 
 public/
   og/                         # fallback OG images
@@ -589,9 +582,9 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 
 ---
 
-## 17. Implementation order (PR sequence)
+## 17. Implementation order (historical PR sequence)
 
-When quota / time returns:
+> All PRs below shipped as of 2026-05-19. This section is retained as a record of how the system was built. The authoritative current state is `ARCHITECTURE.md` (design) + `DECISIONS.md` (ADR log).
 
 1. **PR 1 — Foundation.** Next 15 scaffold, TS strict, hand-written global CSS with palette as CSS vars (Tailwind v4 was used as scaffold default then removed 2026-05-18 — see DECISIONS.md), Biome, JetBrains Mono via next/font, Vercel preview wired, bundle-size CI check, axe-core CI check. Zero content.
 
@@ -608,8 +601,6 @@ When quota / time returns:
 7. **PR 7 — OG + SEO.** Dynamic OG image (recruiter-safe), Person JSON-LD, /erik.json, /llms.txt, /sitemap.xml, /robots.txt.
 
 8. **PR 8 — Final polish.** PSI cron + Lighthouse badge wiring, securityheaders A+, mobile audit, screen-reader pass.
-
-Each PR is ~1-2 days of focused work. Total: ~2 weeks at part-time pace.
 
 ---
 
