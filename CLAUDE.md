@@ -177,6 +177,9 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **Auto-review before opening any PR.** Run `pnpm ready-for-pr` (ci:local + pr-size). Then invoke `pr-review-toolkit:review-pr` against the diff. Address all Critical and Important findings before `gh pr create`. `pnpm ready-for-pr` is required even when the pre-push review has already run — it additionally covers `bundle-check` and `pr-size`. Opening with known issues requires written justification in the PR body.
 - **The review should be boring.** If `pr-review-toolkit:review-pr` or Copilot finds real bugs, the pre-implementation discipline failed. `thinking-inversion` before writing and TDD during implementation are the actual defences — not the review. Multi-round Copilot cycles mean the writing process needs fixing.
 - **Every plan must include a failure-mode checklist.** Run `thinking-inversion` before `writing-plans` on any task. Each bug class becomes an explicit plan task — not a Copilot finding after the fact.
+- **When dispatching implementer subagents, always include in the prompt:** "Use `git add -u` or `git add <specific files>` — never `git add .`, `git add -A`, or `git add --all`. Stage only the files you created or modified in this task."
+- **File-move tasks must include a consumer-scan step.** Before writing plan tasks for any `git mv` operation, grep for all callers of the files being moved (`grep -r 'OldPath' --include='*.ts' --include='*.tsx'`) and include path-update tasks for every match including test files. Stale path comments (`// components/OldPath.tsx`) in moved files are a separate required fix step.
+- **Verification before any completion claim.** Before reporting done, fixing, or passing: run `pnpm typecheck && pnpm test --run && pnpm build`, read the output, cite the result. "Should pass" is not evidence. Invoke `superpowers:verification-before-completion` if rationalizing.
 
 ## Out of scope (unless asked)
 
