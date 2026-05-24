@@ -34,6 +34,31 @@
   outline-offset: 2px;
 }
 
+.home {
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-sm);
+  letter-spacing: 0.1em;
+  padding: 6px 10px;
+  color: var(--ds-color-text-faint);
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.home:hover {
+  color: var(--ds-color-text-body);
+}
+
+.home:focus-visible {
+  outline: 2px solid var(--ds-color-signal);
+  outline-offset: 2px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--ds-color-signal-subtle);
+  margin: var(--ds-space-2) 0;
+}
+
 @media (max-width: 768px) {
   .root {
     flex-direction: row;

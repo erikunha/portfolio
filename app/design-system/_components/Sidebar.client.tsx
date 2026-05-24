@@ -15,6 +15,10 @@ export function Sidebar() {
 
   return (
     <nav aria-label="Design system" className={styles.root}>
+      <a href="/" className={styles.home}>
+        ← HOME
+      </a>
+      <hr className={styles.divider} />
       {LINKS.map(({ href, label }) => (
         <a
           key={href}

@@ -49,7 +49,8 @@
     "ci:local": "pnpm verify",
     "commit": "cz",
     "prepare": "husky || true",
-    "postinstall": "node scripts/strip-next-polyfills.mjs"
+    "postinstall": "node scripts/strip-next-polyfills.mjs",
+    "changelog:sync": "tsx scripts/sync-changelog.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

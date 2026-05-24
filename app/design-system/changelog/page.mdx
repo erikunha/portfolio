@@ -5,26 +5,20 @@ export const metadata = {
 
 # CHANGELOG
 
-## 2026-05-23 — Initial release (v1)
+## 2026-05-24
 
-### Token Pipeline (PR A)
-- Two-tier token architecture: 6 JSON source files, Style Dictionary build
-- 15 color primitives, 14 semantic color tokens, 14 space/typography/motion tokens
-- Added: `--ds-chrome-close/minimize/maximize` (macOS traffic-light dots, no semantic layer)
-- Migrated 31 `.module.css` files from legacy `--signal/--fg/--pad` names
-- 5 new CI gates: token build, drift, boundary lint, no-magic-values, contrast
+- **fix:** stat grids full content-column width via negative margins
+- **feat:** add live stat grid render to composition patterns
+- **fix:** code block overflow scroll and h3 visual hierarchy
+- **fix:** prose rhythm, table styles, token component legibility
+- **feat:** landing page — stat grid, import CmdLine, LIVE badge
+- **feat:** component docs — anchor nav + props tables
+- **feat:** token visualization + fix GFM tables
+- **fix:** seed visual baselines and add section IDs to Preview components
 
-### Components (PR B)
-- Added: Button (primary/secondary, sm/md/lg, polymorphic as button|a)
-- Added: Field (text/multiline, label association, error state)
-- Added: Badge (default/dot variants, pulse animation)
-- Added: TerminalPanel (solid/dashed borders, polymorphic as div|section|article)
-- Added: StatTile (default/compact, semantic dl/dt/dd markup)
-- Added: CmdLine (user/prompt/command/output)
-- Added: KbdKey (sm/md, semantic kbd element)
+## 2026-05-23
 
-### Docs (PR C)
-- Added: `/design-system` documentation route (5 pages)
-- Added: Live component previews with auto-injected source display
-- Added: Sidebar navigation (desktop) / collapsible nav (mobile)
-- Added: LHCI coverage for all 5 new routes
+- **feat:** /design-system route + MDX docs (PR-C) (#50)
+- **feat:** 7 primitive components + site-wide adoption (#49)
+- **feat:** two-tier token pipeline (Style Dictionary + migration) (#47)
+- **docs:** design system tokenized spec, plans A-E, MDX spike
