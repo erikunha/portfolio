@@ -11,9 +11,9 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
-      // Enforce 75% lines coverage — exits with code 1 if not met.
+      // Enforce 80% lines coverage — exits with code 1 if not met.
       thresholds: {
-        lines: 75,
+        lines: 80,
       },
       include: [
         'lib/**',
