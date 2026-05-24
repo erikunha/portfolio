@@ -1,4 +1,4 @@
-import { ContactFormLazy } from '../../client/ContactFormLazy';
+import { ContactFormLazy } from '../../client/ContactForm';
 import { ErrorBoundary } from '../../ErrorBoundary';
 import { IconContact } from '../../Icons';
 import { Module } from '../../responsive/Module';

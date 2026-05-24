@@ -20,7 +20,7 @@ import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { CommunitySection } from '@/components/sections/CommunitySection';
 import { ContactSection } from '@/components/sections/ContactSection';
 import { CredentialsSection } from '@/components/sections/CredentialsSection';
-import { FooterLazy } from '@/components/sections/FooterLazy.client';
+import { FooterLazy } from '@/components/sections/Footer';
 import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
 import { Hero } from '@/components/sections/Hero';

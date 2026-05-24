@@ -54,7 +54,7 @@ afterEach(() => {
 
 describe('FooterLazy — IntersectionObserver-gated mount (audit Theme 4)', () => {
   it('imports and exposes a FooterLazy named export', async () => {
-    const mod = await import('@/components/sections/FooterLazy.client');
+    const mod = await import('@/components/sections/Footer');
     expect(typeof mod.FooterLazy).toBe('function');
   });
 
@@ -62,7 +62,7 @@ describe('FooterLazy — IntersectionObserver-gated mount (audit Theme 4)', () =
     // We exercise the IO contract directly by rendering FooterLazy into a
     // jsdom container. mountClient renders under act() so the mount effect
     // commits before the call resolves.
-    const { FooterLazy } = await import('@/components/sections/FooterLazy.client');
+    const { FooterLazy } = await import('@/components/sections/Footer');
 
     const { container, unmount } = await mountClient(createElement(FooterLazy));
 
@@ -80,7 +80,7 @@ describe('FooterLazy — IntersectionObserver-gated mount (audit Theme 4)', () =
   });
 
   it('disconnects the IntersectionObserver when the sentinel intersects', async () => {
-    const { FooterLazy } = await import('@/components/sections/FooterLazy.client');
+    const { FooterLazy } = await import('@/components/sections/Footer');
 
     const { unmount } = await mountClient(createElement(FooterLazy));
 

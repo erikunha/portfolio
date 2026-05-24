@@ -25,12 +25,9 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 
-const Footer = dynamic(
-  () => import('./Footer/Footer.client').then((m) => ({ default: m.Footer })),
-  {
-    ssr: false,
-  },
-);
+const Footer = dynamic(() => import('./Footer.client').then((m) => ({ default: m.Footer })), {
+  ssr: false,
+});
 
 const MOUNT_ROOT_MARGIN = '400px';
 const SENTINEL_MIN_HEIGHT = '400px';

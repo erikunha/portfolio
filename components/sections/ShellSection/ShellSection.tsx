@@ -1,4 +1,4 @@
-import { InteractiveShellLazy } from '../../client/InteractiveShellLazy';
+import { InteractiveShellLazy } from '../../client/InteractiveShell';
 import { ErrorBoundary } from '../../ErrorBoundary';
 import { IconShell } from '../../Icons';
 import { Module } from '../../responsive/Module';
