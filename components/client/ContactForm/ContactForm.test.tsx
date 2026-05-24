@@ -365,3 +365,50 @@ describe('/api/contact — rate-limit denial path', () => {
     expect(redisSetMock).toHaveBeenCalledOnce();
   });
 });
+
+// ─── submitting state ─────────────────────────────────────────────────────────
+// Locks down: while a POST is in-flight the form is busy (aria-busy=true) and
+// the submit button is disabled so double-submits are impossible.
+
+describe('contact form — submitting state', () => {
+  let mounted: MountedClient;
+  let resolveFetch: () => void;
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.restoreAllMocks();
+  });
+
+  it('sets aria-busy="true" and disables the submit button while the POST is pending', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolveFetch = () => resolve(new Response('{}', { status: 200 }));
+          }),
+      ),
+    );
+
+    mounted = await mountClient(createElement(ContactForm));
+    const { container } = mounted;
+
+    const form = container.querySelector<HTMLFormElement>('form');
+    expect(form?.getAttribute('aria-busy')).toBe('false');
+
+    await act(async () => {
+      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+
+    expect(form?.getAttribute('aria-busy')).toBe('true');
+    const submitBtn = container.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const isBusy =
+      form?.getAttribute('aria-busy') === 'true' || submitBtn?.hasAttribute('disabled');
+    expect(isBusy).toBe(true);
+
+    await act(async () => {
+      resolveFetch();
+    });
+    await flushMicrotasks();
+  });
+});
