@@ -1,17 +1,28 @@
 export const metadata = {
   title: 'Design System — erikunha.dev',
-  description: 'Two-tier token pipeline, 7 primitives, and enforcement docs for erikunha.dev',
+  description: 'Two-tier token pipeline, 8 primitive components, and enforcement docs for erikunha.dev',
   robots: 'index, follow',
 };
 
 # DESIGN SYSTEM
 
+<Badge variant="dot">LIVE</Badge>
+
 A published design system for erikunha.dev — positioned at `/design-system` as part of the Staff/Principal frontend hiring artifact.
 
-## What's here
+<div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',border:'1px solid var(--ds-color-signal-subtle)',marginBottom:'var(--ds-space-6)'}}>
+  <StatTile value="8" label="PRIMITIVES" />
+  <StatTile value="6" label="RSC" />
+  <StatTile value="100" label="A11Y" />
+  <StatTile value="0" label="CLIENT_KB" />
+</div>
+
+<CmdLine command="import { Button, Badge, Field, StatTile } from '@/design-system'" />
+
+## Sections
 
 - [Tokens](/design-system/tokens) — Color palette, type scale, spacing, motion, layers
-- [Components](/design-system/components) — 7 primitive components with live previews
+- [Components](/design-system/components) — 8 primitive components with live previews and source
 - [Enforcement](/design-system/enforcement) — Lint rules, CI gates, contributing guide
 - [Changelog](/design-system/changelog) — Token and component change log
 
@@ -19,6 +30,6 @@ A published design system for erikunha.dev — positioned at `/design-system` as
 
 **Semantic over primitive.** CSS always references semantic tokens (`--ds-color-signal`), never primitives (`--ds-green-500`). The semantic layer enables theme variants without component churn.
 
-**RSC by default.** 6 of 7 primitives are React Server Components — zero client JavaScript. The exception is `Field`, which requires `'use client'` for controlled input state and form interactivity.
+**RSC by default.** 6 of 8 primitives are React Server Components — zero client JavaScript. `Field` and `CopyButton` require `'use client'` for controlled input state and clipboard access respectively.
 
 **Enforced, not documented.** Boundary lint, no-magic-values lint, and contrast check run in CI. The rules don't rely on developer discipline.
