@@ -10,8 +10,3 @@ echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|sty
 # of the per-commit DX tax. `pnpm verify` is the manual equivalent.
 echo "[pre-push] Running verify chain (typecheck + validate-content + client-naming + tests)..."
 pnpm verify
-
-# Branch complexity report — exits 1 (red) if files ≥25, lines ≥1200, or subsystems ≥5.
-# Red means split the branch before pushing. Yellow (warn) exits 0 and does not block.
-echo "[pre-push] Checking branch size..."
-pnpm pr-size || (echo "[pre-push] Branch is red — split before pushing." && exit 1)

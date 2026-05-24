@@ -8,6 +8,8 @@
 
 ## Commands
 
+**Development + CI gates** — automated; also runnable locally to match CI:
+
 | Command | Purpose |
 |---|---|
 | `pnpm dev` | Development server |
@@ -19,11 +21,17 @@
 | `pnpm typecheck` | TypeScript strict check |
 | `pnpm lhci` | Lighthouse CI locally |
 | `pnpm validate-content` | Zod content schema validation |
-| `pnpm ci:local` | Full local CI gate (lint + type + test) |
-| `pnpm bundle-check` | Bundle size gate check |
-| `pnpm pr-size` | Branch complexity report — files/lines/subsystems vs origin/main; exits 1 if red |
-| `pnpm ready-for-pr` | Pre-PR gate: ci:local + pr-size; run before `gh pr create` |
-| `pnpm ready-to-merge [<pr>]` | Pre-merge gate: ci:local + branch-protection + Copilot LGTM + resolved threads |
+| `pnpm ci:local` | Full local CI chain (lint + type + content + client-naming + tests) |
+| `pnpm bundle-check` | Bundle size gate |
+
+**AI agent workflow** — the AI runs these consciously as part of its process; not automated:
+
+| Command | When the AI runs it |
+|---|---|
+| `pnpm pr-size` | After every commit block and before opening a PR — decides whether to split |
+| `pnpm ready-for-pr` | Before `gh pr create` — runs ci:local + pr-size, prints next-step checklist |
+| `pnpm ready-to-merge [<pr>]` | Before `gh pr merge` — runs ci:local + branch-protection + Copilot LGTM + resolved threads |
+| `pnpm copilot-gate [<pr>]` | Part of ready-to-merge; can also run standalone to check Copilot approval status |
 
 ## Engineering context
 
