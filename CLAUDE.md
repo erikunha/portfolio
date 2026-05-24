@@ -168,6 +168,7 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 
 Before any agent or human calls `gh pr merge` on this repo:
 
+0. **Copilot LGTM is required before merge — no exceptions.** A PR must have at least one approved Copilot review (`copilot-pull-request-reviewer` left a review with no unresolved threads) before `gh pr merge` is called. If Copilot is over quota or unavailable, wait — do not merge without it. There is no override for this rule.
 1. **GitHub resolve-thread is ground truth.** A PR may not merge while `gh api graphql` returns any `PullRequestReviewThread` with `isResolved: false`. Enforced by GitHub branch protection (`required_conversation_resolution`) and by `pnpm ready-to-merge <pr>` locally.
 2. **AI agents must RESOLVE or ESCALATE every open comment.** RESOLVE = address with a fix commit and reply with the SHA. ESCALATE = surface to the human owner with the comment verbatim, 2-3 options, and a recommendation; wait for a decision. No third bucket. "Looks minor" is not allowed.
 3. **In-session reviewer findings count.** Output from `pr-review-toolkit:review-pr`, `code-review:code-review`, or `ultrareview` must be posted to the PR before merge so they fall under rule 1.
