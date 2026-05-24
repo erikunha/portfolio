@@ -1,5 +1,6 @@
 import type { MDXComponents } from 'mdx/types';
 import { ColorSwatch } from './app/design-system/_components/ColorSwatch';
+import { ComponentNav } from './app/design-system/_components/ComponentNav';
 import { CopyButton } from './app/design-system/_components/CopyButton';
 import { Preview } from './app/design-system/_components/Preview';
 import { SpacingRuler } from './app/design-system/_components/SpacingRuler';
@@ -19,6 +20,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ColorSwatch,
     SpacingRuler,
     TypeSpecimen,
+    ComponentNav,
     ...components,
   };
 }

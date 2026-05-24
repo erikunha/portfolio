@@ -9,9 +9,15 @@ import { Field } from '../../../design-system/components/Field';
 
 6 of 8 primitives are React Server Components. `Field` and `CopyButton` are client components (`'use client'`) — all others ship zero client JavaScript.
 
+<ComponentNav />
+
 ## Button
 
-**Props:** `variant: 'primary' | 'secondary'`, `size: 'sm' | 'md' | 'lg'`, `as: 'button' | 'a'`
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `variant` | `'primary' \| 'secondary'` | `'primary'` | no |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | no |
+| `as` | `'button' \| 'a'` | `'button'` | no |
 
 <Preview id="button">
   <Button variant="primary" as="a" href="#">EXEC_HIRE</Button>
@@ -24,7 +30,14 @@ import { Field } from '../../../design-system/components/Field';
 
 ## Field
 
-**Props:** `name`, `label`, `multiline?: boolean`, `rows?: number`, `error?: string`
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `name` | `string` | — | yes |
+| `label` | `string` | — | yes |
+| `type` | `string` | `'text'` | no |
+| `multiline` | `boolean` | `false` | no |
+| `rows` | `number` | `3` | no |
+| `error` | `string` | — | no |
 
 <Preview id="field">
   <Field name="email" label="$ email:" type="email" />
@@ -36,7 +49,10 @@ import { Field } from '../../../design-system/components/Field';
 
 ## Badge
 
-**Props:** `variant: 'default' | 'dot'`, `size: 'sm' | 'md'`
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `variant` | `'default' \| 'dot'` | `'default'` | no |
+| `size` | `'sm' \| 'md'` | `'md'` | no |
 
 <Preview id="badge">
   <Badge variant="dot">OPEN_TO_WORK</Badge>
@@ -48,7 +64,11 @@ import { Field } from '../../../design-system/components/Field';
 
 ## TerminalPanel
 
-**Props:** `borderStyle: 'solid' | 'dashed'`, `as: 'div' | 'section' | 'article'`, `header?: ReactNode`
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `borderStyle` | `'solid' \| 'dashed'` | `'solid'` | no |
+| `as` | `'div' \| 'section' \| 'article'` | `'div'` | no |
+| `header` | `ReactNode` | — | no |
 
 <Preview id="terminal-panel">
   <TerminalPanel header="[ STATUS ]">Content here.</TerminalPanel>
@@ -57,7 +77,11 @@ import { Field } from '../../../design-system/components/Field';
 
 ## StatTile
 
-**Props:** `value: string`, `label: string`, `variant: 'default' | 'compact'`
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `value` | `string` | — | yes |
+| `label` | `string` | — | yes |
+| `variant` | `'default' \| 'compact'` | `'default'` | no |
 
 <Preview id="stat-tile">
   <StatTile value="99" label="LH_SCORE" />
@@ -69,7 +93,12 @@ import { Field } from '../../../design-system/components/Field';
 
 ## CmdLine
 
-**Props:** `user?: string`, `command: string`, `output?: ReactNode`, `prompt?: string`
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `command` | `string` | — | yes |
+| `user` | `string` | `'erikunha@dev'` | no |
+| `prompt` | `string` | `'$'` | no |
+| `output` | `ReactNode` | — | no |
 
 <Preview id="cmd-line">
   <CmdLine command="cat README.md" />
@@ -78,7 +107,9 @@ import { Field } from '../../../design-system/components/Field';
 
 ## KbdKey
 
-**Props:** `size: 'sm' | 'md'`
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `size` | `'sm' \| 'md'` | `'md'` | no |
 
 <Preview id="kbd-key">
   <KbdKey>Ctrl</KbdKey>
@@ -91,7 +122,9 @@ import { Field } from '../../../design-system/components/Field';
 
 ## CopyButton
 
-**Props:** `text: string`
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `text` | `string` | — | yes |
 
 <Preview id="copybutton">
   <CopyButton text="pnpm install @/design-system" />

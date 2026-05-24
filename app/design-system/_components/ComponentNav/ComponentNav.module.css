@@ -1,0 +1,27 @@
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2);
+  margin-bottom: var(--ds-space-6);
+  padding-bottom: var(--ds-space-4);
+  border-bottom: 1px solid var(--ds-color-signal-subtle);
+}
+
+.link {
+  font-size: var(--ds-font-size-xs);
+  font-family: var(--ds-font-family-mono);
+  color: var(--ds-color-text-muted);
+  text-decoration: none;
+  border: 1px solid var(--ds-color-signal-subtle);
+  padding: 2px var(--ds-space-2);
+  transition:
+    color var(--ds-duration-fast),
+    border-color var(--ds-duration-fast);
+}
+
+.link:hover,
+.link:focus-visible {
+  color: var(--ds-color-signal);
+  border-color: var(--ds-color-signal);
+  outline: none;
+}
