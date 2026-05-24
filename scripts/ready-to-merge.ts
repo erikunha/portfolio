@@ -59,4 +59,14 @@ try {
   process.exit(1);
 }
 
+// PR metrics — informational, does not gate. Surfaces cycle count so multi-round
+// review cycles are visible at merge time as a signal about upstream process health.
+try {
+  execFileSync('pnpm', ['tsx', 'scripts/pr-metrics.ts', ...(prNumber ? [prNumber] : [])], {
+    stdio: 'inherit',
+  });
+} catch {
+  // Non-fatal: gh may not be authenticated in some envs. Skip silently.
+}
+
 process.stdout.write('\n[ready-to-merge] OK — safe to gh pr merge.\n');

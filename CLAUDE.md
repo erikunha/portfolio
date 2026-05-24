@@ -21,7 +21,7 @@
 | `pnpm typecheck` | TypeScript strict check |
 | `pnpm lhci` | Lighthouse CI locally |
 | `pnpm validate-content` | Zod content schema validation |
-| `pnpm ci:local` | Full local CI chain (lint + type + content + client-naming + tests) |
+| `pnpm ci:local` | Full local CI chain (lint + type + content + client-naming + harness-size + tests) |
 | `pnpm bundle-check` | Bundle size gate |
 
 **AI agent workflow** — the AI runs these consciously as part of its process; not automated:
@@ -30,7 +30,8 @@
 |---|---|
 | `pnpm pr-size` | After every commit block and before opening a PR — decides whether to split |
 | `pnpm ready-for-pr` | Before `gh pr create` — runs ci:local + pr-size, prints next-step checklist |
-| `pnpm ready-to-merge [<pr>]` | Before `gh pr merge` — runs ci:local + branch-protection + Copilot review + resolved threads |
+| `pnpm ready-to-merge [<pr>]` | Before `gh pr merge` — runs ci:local + branch-protection + Copilot review + resolved threads + pr-metrics |
+| `pnpm pr-metrics [<pr>]` | During or after PR review — reports Copilot cycle count, size, days open |
 
 ## Engineering context
 

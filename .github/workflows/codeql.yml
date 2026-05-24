@@ -1,19 +1,28 @@
 name: CodeQL
 
+# SAST scan — catches security vulnerabilities in TypeScript/JavaScript source.
+# Non-blocking on PR (informational); findings surface as GitHub security alerts.
+# Weekly scan catches supply-chain regressions independent of PR activity.
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 8 * * 1'
+    - cron: '0 3 * * 1'  # Weekly Monday 03:00 UTC
+  workflow_dispatch:
 
 jobs:
   analyze:
+    name: Analyze (javascript-typescript)
     runs-on: ubuntu-latest
     permissions:
       security-events: write
       contents: read
+      actions: read
+    timeout-minutes: 20
+
     steps:
       - uses: actions/checkout@v6
 
@@ -29,7 +38,16 @@ jobs:
       - uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
+          config: |
+            paths-ignore:
+              - design-system/dist
+              - coverage
+              - .next
+              - node_modules
+              - prototype
 
       - uses: github/codeql-action/autobuild@v4
 
       - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:javascript-typescript

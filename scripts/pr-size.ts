@@ -45,9 +45,9 @@ const linesChanged = insertions + deletions;
 // Group files into subsystems: top-2 path segments, collapsing known groups
 function toSubsystem(filePath: string): string {
   const parts = filePath.split('/');
-  if (parts.length === 1) return parts[0]; // root file
+  if (parts.length === 1) return parts[0] ?? filePath; // root file
   // Keep top two segments for meaningful grouping
-  return `${parts[0]}/${parts[1]}`;
+  return `${parts[0] ?? ''}/${parts[1] ?? ''}`;
 }
 
 const subsystemMap = new Map<string, number>();
