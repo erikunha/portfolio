@@ -42,13 +42,13 @@ try {
   process.exit(1);
 }
 
-// Copilot LGTM gate — AI agents only. The repo owner may skip by calling
+// Copilot review gate — AI agents only. The repo owner may skip by calling
 // gh pr merge directly without running this script.
 const copilotArgs = ['tsx', 'scripts/check-copilot-approval.ts', ...(prNumber ? [prNumber] : [])];
 try {
   execFileSync('pnpm', copilotArgs, { stdio: 'inherit' });
 } catch {
-  process.stderr.write('\n[ready-to-merge] Copilot LGTM gate failed. See message above.\n');
+  process.stderr.write('\n[ready-to-merge] Copilot review gate failed. See message above.\n');
   process.exit(1);
 }
 

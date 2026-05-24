@@ -30,7 +30,7 @@
 |---|---|
 | `pnpm pr-size` | After every commit block and before opening a PR — decides whether to split |
 | `pnpm ready-for-pr` | Before `gh pr create` — runs ci:local + pr-size, prints next-step checklist |
-| `pnpm ready-to-merge [<pr>]` | Before `gh pr merge` — runs ci:local + branch-protection + Copilot LGTM + resolved threads |
+| `pnpm ready-to-merge [<pr>]` | Before `gh pr merge` — runs ci:local + branch-protection + Copilot review + resolved threads |
 
 ## Engineering context
 
@@ -172,7 +172,7 @@ The canonical engineering bar lives in `STANDARDS.md` — 11 domain chapters, ea
 
 Before any agent or human calls `gh pr merge` on this repo:
 
-1. **AI agents may not call `gh pr merge` without Copilot LGTM.** This rule applies to AI agents only — the repo owner may merge at any time by calling `gh pr merge` directly. AI agents must go through `pnpm ready-to-merge <pr>`, which runs `check-copilot-approval.ts` and exits 1 if Copilot has not reviewed. If Copilot is over quota or unavailable, stop and wait — do not self-authorize.
+1. **AI agents may not call `gh pr merge` without Copilot review.** This rule applies to AI agents only — the repo owner may merge at any time by calling `gh pr merge` directly. AI agents must go through `pnpm ready-to-merge <pr>`, which runs `check-copilot-approval.ts` and exits 1 if Copilot has not reviewed. If Copilot is over quota or unavailable, stop and wait — do not self-authorize.
 2. **GitHub resolve-thread is ground truth.** A PR may not merge while `gh api graphql` returns any `PullRequestReviewThread` with `isResolved: false`. Enforced by GitHub branch protection (`required_conversation_resolution`) and by `pnpm ready-to-merge <pr>` locally.
 3. **AI agents must RESOLVE or ESCALATE every open comment.** RESOLVE = address with a fix commit and reply with the SHA. For behavioral bugs the fix commit must include or update a behavioral test that would have caught the regression. ESCALATE = surface to the repo owner with the comment verbatim, 2-3 options, and a recommendation; wait for a decision. No third bucket. "Looks minor" is not allowed.
 4. **In-session reviewer findings count.** Critical/Important findings from `pr-review-toolkit:review-pr`, `code-review:code-review`, or `ultrareview` must be either fixed (fix commit covers them) or posted as file-line review threads (`gh api repos/{owner}/{repo}/pulls/{n}/comments` with `path` + `line`) so they fall under rule 2. Do not post as PR timeline comments — that violates rule 8.
@@ -187,7 +187,7 @@ Before any agent or human calls `gh pr merge` on this repo:
 9. **Local playwright visual check before merge.** After all review fixes are pushed, start the dev server (`pnpm dev`) and use playwright MCP to verify desktop (1280×720) and mobile (375×812). Check all changed sections and the golden path. CI visual snapshots compare against a frozen baseline — they don't catch intent regressions.
 10. **Rebase before merge (non-dependabot only).** Run `git fetch && git rebase origin/main` before merging. Keeps a linear history on main. Skip for `dependabot/*` branches — those are auto-managed and rebasing breaks their signature. `pnpm ready-to-merge <pr>` runs `scripts/check-branch-protection.ts` against `main` and fails if `required_conversation_resolution` is off. This is a local gate, not a CI step: the workflow `GITHUB_TOKEN` cannot read the branch-protection endpoint (it requires repo-admin token power). See `DECISIONS.md`.
 
-Rationale: human-in-the-loop quality gate — the gate chain (thinking-inversion → TDD → code-review → pr-review-toolkit → Copilot LGTM → ready-to-merge) is the enforceable bar. See `DECISIONS.md` for residual-risk note.
+Rationale: human-in-the-loop quality gate — the gate chain (thinking-inversion → TDD → code-review → pr-review-toolkit → Copilot review → ready-to-merge) is the enforceable bar. See `DECISIONS.md` for residual-risk note.
 
 ## Things that have been considered and rejected
 
