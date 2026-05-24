@@ -64,13 +64,23 @@ process.on('SIGTERM', () => {
   process.exit(143);
 });
 
-function run(label: string, file: string, args: string[], env?: NodeJS.ProcessEnv) {
+function run(
+  label: string,
+  file: string,
+  args: string[],
+  env?: Record<string, string | undefined>,
+) {
   step(label);
   execFileSync(file, args, { stdio: 'inherit', env: { ...process.env, ...env } });
   pass(label);
 }
 
-function gate(label: string, file: string, args: string[], env?: NodeJS.ProcessEnv) {
+function gate(
+  label: string,
+  file: string,
+  args: string[],
+  env?: Record<string, string | undefined>,
+) {
   try {
     run(label, file, args, env);
   } catch {
