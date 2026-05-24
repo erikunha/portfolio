@@ -1,6 +1,6 @@
 'use client';
 
-// components/sections/FooterLazy.client.tsx
+// components/sections/Footer/FooterLazy.client.tsx
 //
 // IntersectionObserver-gated lazy mount of <Footer>. PR 6 of audit roadmap.
 //
