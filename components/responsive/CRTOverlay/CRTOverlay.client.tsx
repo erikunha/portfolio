@@ -1,4 +1,4 @@
-// components/responsive/CRTOverlay.tsx
+// components/responsive/CRTOverlay/CRTOverlay.client.tsx
 'use client';
 
 import { useEffect } from 'react';

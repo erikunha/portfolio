@@ -1,4 +1,4 @@
-// components/responsive/Module.tsx
+// components/responsive/Module/Module.tsx
 // Pure Server Component. No 'use client' boundary, no React state, no event
 // listeners, no useBreakpoint hook. Saves ~18 client-component hydrations
 // (one per section) at the cost of native <details> on mobile instead of a

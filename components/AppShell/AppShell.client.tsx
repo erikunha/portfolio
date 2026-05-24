@@ -1,6 +1,6 @@
 'use client';
 
-// components/AppShell.client.tsx
+// components/AppShell/AppShell.client.tsx
 // Client boundary for all layout chrome: MatrixRain, CRT overlays, responsive
 // navigation bars, Dock, and ToTopButton. Everything else (sections) is passed
 // as RSC children and rendered server-side — their code never ships to the client.

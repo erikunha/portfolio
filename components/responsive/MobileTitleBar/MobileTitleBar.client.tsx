@@ -1,4 +1,4 @@
-// components/responsive/MobileTitleBar.tsx
+// components/responsive/MobileTitleBar/MobileTitleBar.client.tsx
 'use client';
 
 import styles from './MobileTitleBar.module.css';

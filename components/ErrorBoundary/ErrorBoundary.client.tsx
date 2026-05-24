@@ -1,6 +1,6 @@
 'use client';
 
-// components/ErrorBoundary.client.tsx
+// components/ErrorBoundary/ErrorBoundary.client.tsx
 // Wraps client islands so a single failure doesn't crash the entire page.
 // Named *.client.tsx per CLAUDE.md convention.
 
