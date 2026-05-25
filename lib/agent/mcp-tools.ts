@@ -75,13 +75,13 @@ async function runAsk(question: string): Promise<string> {
   }
 
   const raw = await res.text();
-  const { displayText, errorMessage } = parseStreamChunk(raw);
-  if (errorMessage) {
-    return displayText
-      ? `${displayText}\n\n[upstream error: ${errorMessage}]`
-      : `error: ${errorMessage}`;
+  const chunk = parseStreamChunk(raw);
+  if (!chunk.ok) {
+    return chunk.displayText
+      ? `${chunk.displayText}\n\n[upstream error: ${chunk.errorMessage}]`
+      : `error: ${chunk.errorMessage}`;
   }
-  return displayText || '(empty answer)';
+  return chunk.displayText || '(empty answer)';
 }
 
 /**

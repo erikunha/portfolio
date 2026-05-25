@@ -14,14 +14,14 @@ import { parseStreamChunk, STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 describe('parseStreamChunk — /api/ask stream protocol', () => {
   it('returns the whole buffer as displayText when there is no sentinel', () => {
     const result = parseStreamChunk('Erik has 8 years of frontend experience.');
+    expect(result.ok).toBe(true);
     expect(result.displayText).toBe('Erik has 8 years of frontend experience.');
-    expect(result.errorMessage).toBeUndefined();
   });
 
   it('trims surrounding whitespace from the display text', () => {
     const result = parseStreamChunk('  \n  hello world  \n');
+    expect(result.ok).toBe(true);
     expect(result.displayText).toBe('hello world');
-    expect(result.errorMessage).toBeUndefined();
   });
 
   it('splits display text from the error message when the sentinel is present', () => {
@@ -30,21 +30,24 @@ describe('parseStreamChunk — /api/ask stream protocol', () => {
     // The user sees only the text that arrived before the upstream failure.
     expect(result.displayText).toBe('Partial answer so far');
     // The error after the sentinel is surfaced separately.
-    expect(result.errorMessage).toBe('rate limit exceeded');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errorMessage).toBe('rate limit exceeded');
   });
 
   it('handles a stream that errors before any answer text arrived', () => {
     const buffer = `${STREAM_ERR_SENTINEL}upstream 503`;
     const result = parseStreamChunk(buffer);
+    expect(result.ok).toBe(false);
     expect(result.displayText).toBe('');
-    expect(result.errorMessage).toBe('upstream 503');
+    if (!result.ok) expect(result.errorMessage).toBe('upstream 503');
   });
 
   it('falls back to a generic message when the sentinel carries no detail', () => {
     const buffer = `Some answer${STREAM_ERR_SENTINEL}`;
     const result = parseStreamChunk(buffer);
+    expect(result.ok).toBe(false);
     expect(result.displayText).toBe('Some answer');
-    expect(result.errorMessage).toBe('upstream error');
+    if (!result.ok) expect(result.errorMessage).toBe('upstream error');
   });
 
   it('is stable across progressive accumulation — display text only grows', () => {
@@ -76,10 +79,11 @@ describe('parseStreamChunk — /api/ask stream protocol', () => {
     // full sentinel is present, the parser must cleanly separate the error.
     const partial = parseStreamChunk('answer text\x00ER');
     // The lone partial sentinel is not yet recognized — it stays in display.
-    expect(partial.errorMessage).toBeUndefined();
+    expect(partial.ok).toBe(true);
 
     const complete = parseStreamChunk(`answer text${STREAM_ERR_SENTINEL}boom`);
     expect(complete.displayText).toBe('answer text');
-    expect(complete.errorMessage).toBe('boom');
+    expect(complete.ok).toBe(false);
+    if (!complete.ok) expect(complete.errorMessage).toBe('boom');
   });
 });

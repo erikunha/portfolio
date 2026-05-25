@@ -49,26 +49,64 @@ export default function Home() {
             <Hero />
           </ErrorBoundary>
           {/* Modules 0-3: above the fold on desktop and mobile — no deferral */}
-          <ReadmeSection />
-          <ShellSection />
-          <ManPageSection />
-          <NowSection />
+          <ErrorBoundary>
+            <ReadmeSection />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <ShellSection />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <ManPageSection />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <NowSection />
+          </ErrorBoundary>
           {/* Modules 4+: below the fold — defer content-visibility */}
-          <ProjectsSection defer />
-          <GitLogSection defer />
-          <NpmStackSection defer />
-          <SysHealthSection defer />
-          <LivePerfSection defer />
-          <AiMetricsSection defer />
-          <PerfReceiptsSection defer />
-          <GuitarSection defer />
-          <VisaSection defer />
-          <CredentialsSection defer />
-          <CommunitySection defer />
-          <HottestTakesSection defer />
-          <ResponsibilitiesSection defer />
-          <UnknownsSection defer />
-          <ContactSection defer />
+          <ErrorBoundary>
+            <ProjectsSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <GitLogSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <NpmStackSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <SysHealthSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <LivePerfSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <AiMetricsSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <PerfReceiptsSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <GuitarSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <VisaSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <CredentialsSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <CommunitySection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <HottestTakesSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <ResponsibilitiesSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <UnknownsSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <ContactSection defer />
+          </ErrorBoundary>
         </main>
         <ErrorBoundary>
           <FooterLazy />

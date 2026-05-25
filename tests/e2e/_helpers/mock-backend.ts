@@ -177,29 +177,22 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
   await page.route('**/api/log/forget', async (route) => {
     const s = state.forget;
 
-    if (s === 'happy') {
+    if (s === 'happy' || s === 'not-found') {
+      // Real route returns { ok: true, requestId } — deleted count is
+      // intentionally absent to avoid leaking an existence oracle.
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ ok: true, deleted: 1 }),
+        body: JSON.stringify({ ok: true, requestId: crypto.randomUUID() }),
       });
       return;
     }
 
-    if (s === 'not-found') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ ok: true, deleted: 0 }),
-      });
-      return;
-    }
-
-    // Default: return happy shape so tests that don't configure forget still pass.
+    // Default: return success shape so tests that don't configure forget still pass.
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ ok: true, deleted: 0 }),
+      body: JSON.stringify({ ok: true, requestId: crypto.randomUUID() }),
     });
   });
 }

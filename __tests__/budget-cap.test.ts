@@ -92,9 +92,9 @@ describe('budget reservation pattern', () => {
   it('settleBudget refunds (reserved - actual) when actual is less than reserved', async () => {
     const { reserveBudget, settleBudget } = await import('@/lib/rate-limit');
     const result = await reserveBudget(512);
-    const reserved = result.reserved;
+    const { reserved, budgetKey } = result;
     decrbyMock.mockClear();
-    await settleBudget(reserved, /*actualIn*/ 120, /*actualOut*/ 80);
+    await settleBudget(reserved, /*actualIn*/ 120, /*actualOut*/ 80, budgetKey);
     expect(decrbyMock).toHaveBeenCalledWith(expect.stringMatching(/ask:tokens:/), reserved - 200);
   });
 
@@ -103,14 +103,14 @@ describe('budget reservation pattern', () => {
     decrbyMock.mockClear();
     // Pass actuals that intentionally exceed an arbitrary reservation. The
     // defensive branch (no negative refund) is what we're asserting.
-    await settleBudget(INPUT_RESERVATION + 512, /*in*/ 2500, /*out*/ 600);
+    await settleBudget(INPUT_RESERVATION + 512, /*in*/ 2500, /*out*/ 600, 'ask:tokens:test');
     expect(decrbyMock).not.toHaveBeenCalled();
   });
 
   it('settleBudget skips when reserved <= 0 (Redis-failure path)', async () => {
     const { settleBudget } = await import('@/lib/rate-limit');
     decrbyMock.mockClear();
-    await settleBudget(0, 100, 200);
+    await settleBudget(0, 100, 200, 'ask:tokens:test');
     expect(decrbyMock).not.toHaveBeenCalled();
   });
 });

@@ -130,47 +130,48 @@ export function getBudgetKey(): string {
 // when Upstash is degraded.
 export async function reserveBudget(
   maxOutputTokens: number,
-): Promise<{ allowed: boolean; reserved: number; pct: number }> {
+): Promise<{ allowed: boolean; reserved: number; pct: number; budgetKey: string }> {
   const reserved = RESERVED_INPUT_TOKENS + maxOutputTokens;
-  const key = getBudgetKey();
+  const budgetKey = getBudgetKey();
   try {
     const pipe = getRedis().pipeline();
-    pipe.incrby(key, reserved);
-    pipe.expire(key, BUDGET_WINDOW_S, 'NX');
+    pipe.incrby(budgetKey, reserved);
+    pipe.expire(budgetKey, BUDGET_WINDOW_S, 'NX');
     const [used] = await pipe.exec<[number, number]>();
     const pct = used / MONTHLY_TOKEN_BUDGET;
     if (pct > 1) {
       // Reservation pushed us over — refund and reject.
       try {
-        await getRedis().decrby(key, reserved);
+        await getRedis().decrby(budgetKey, reserved);
       } catch (refundErr) {
         log.error('budget reservation refund-on-reject failed', { err: refundErr });
       }
-      return { allowed: false, reserved: 0, pct };
+      return { allowed: false, reserved: 0, pct, budgetKey };
     }
     if (pct >= 0.8) log.warn('budget approaching cap', { pct });
-    return { allowed: true, reserved, pct };
+    return { allowed: true, reserved, pct, budgetKey };
   } catch (err) {
     log.error('budget reservation failed, proceeding without cap', { err });
-    return { allowed: true, reserved: 0, pct: 0 };
+    return { allowed: true, reserved: 0, pct: 0, budgetKey };
   }
 }
 
 // After the Anthropic stream ends (or errors), refund (reserved - actual).
-// If actual exceeds the reservation (shouldn't happen but defensive), the net
-// is a no-op rather than a paradoxical refund — the counter stays at the
-// reservation high-water mark.
+// budgetKey must be the same key returned by reserveBudget — callers must not
+// call getBudgetKey() independently, to avoid a month-boundary TOCTOU where
+// reserve and settle operate on different monthly keys.
 export async function settleBudget(
   reserved: number,
   actualInputTokens: number,
   actualOutputTokens: number,
+  budgetKey: string,
 ): Promise<void> {
   if (reserved <= 0) return;
   const actual = actualInputTokens + actualOutputTokens;
   const refund = reserved - actual;
   if (refund <= 0) return;
   try {
-    await getRedis().decrby(getBudgetKey(), refund);
+    await getRedis().decrby(budgetKey, refund);
   } catch (err) {
     log.error('budget settlement refund failed', { err });
   }

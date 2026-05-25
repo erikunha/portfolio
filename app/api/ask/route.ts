@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
   // budget-drain pattern. Fail-open on Redis (rate-limit is the next gate).
   const { allowed: notDuplicate } = await checkIdenticalQuestion(ipHash, question);
   if (!notDuplicate) {
-    earlyExitPersist('rate-limited');
+    earlyExitPersist('dedup-rejected');
     return Response.json(
       { error: 'identical question — wait 60 seconds before asking again' },
       { status: 429 },
@@ -208,7 +208,7 @@ export async function POST(req: NextRequest) {
   // the unused portion after the stream completes. This pattern survives client
   // disconnects: the counter never undercounts (worst case: phantom tokens if
   // settleBudget fails to fire, which is the right side to err on for a cap).
-  const { allowed, reserved } = await reserveBudget(MAX_OUTPUT_TOKENS);
+  const { allowed, reserved, budgetKey } = await reserveBudget(MAX_OUTPUT_TOKENS);
   if (!allowed) {
     earlyExitPersist('budget-exhausted');
     return Response.json(
@@ -446,7 +446,7 @@ export async function POST(req: NextRequest) {
     // fail-closed by design. If settleBudget never fires at all (Edge runtime
     // kills the invocation), the same high-water mark holds.
     if (usageResolved) {
-      await settleBudget(reserved, totalBilledInput, outputTokens);
+      await settleBudget(reserved, totalBilledInput, outputTokens, budgetKey);
     }
     await persistAskInteraction({
       requestId,

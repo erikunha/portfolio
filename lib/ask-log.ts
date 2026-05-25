@@ -14,7 +14,12 @@ import { getRedis } from '@/lib/rate-limit';
 
 const ASK_KV_TTL_S = 90 * 24 * 60 * 60; // 90 days = 7_776_000s
 
-export type AskInteractionStatus = 'completed' | 'errored' | 'rate-limited' | 'budget-exhausted';
+export type AskInteractionStatus =
+  | 'completed'
+  | 'errored'
+  | 'rate-limited'
+  | 'dedup-rejected'
+  | 'budget-exhausted';
 
 export type AskInteraction = {
   requestId: string;

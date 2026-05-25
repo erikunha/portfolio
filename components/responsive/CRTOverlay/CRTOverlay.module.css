@@ -81,6 +81,7 @@
   opacity: 0.07;
   mix-blend-mode: screen;
   animation: crt-noise-shift 0.6s steps(6) infinite;
+  will-change: transform;
   z-index: 4;
 }
 
@@ -100,6 +101,7 @@
   pointer-events: none;
   background: rgba(0, 255, 65, 0.02);
   animation: crt-flicker 4s infinite;
+  will-change: opacity;
   z-index: 4;
 }
 
@@ -141,6 +143,7 @@
   .noise {
     animation: none;
     opacity: 0;
+    will-change: auto;
   }
 }
 
@@ -149,6 +152,7 @@ body[data-motion="reduce"] .scanBeam,
 body[data-motion="reduce"] .noise {
   animation: none;
   opacity: 0;
+  will-change: auto;
 }
 
 /* Freeze CRT animations while the sysfail plate is visible.
