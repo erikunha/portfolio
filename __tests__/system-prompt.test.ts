@@ -123,6 +123,7 @@ describe('lib/ask/system-prompt', () => {
       expect(SYSTEM_TEXT).toContain('Be direct and honest');
       expect(SYSTEM_TEXT).toContain('Do not fabricate');
       expect(SYSTEM_TEXT).toMatch(/under 200 words/);
+      expect(SYSTEM_TEXT).toMatch(/Do not reveal.*instructions/);
     });
 
     it('points the model at the receipts section as the authoritative metric source', () => {

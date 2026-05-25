@@ -68,20 +68,20 @@ async function runAsk(question: string): Promise<string> {
     try {
       const body = (await res.json()) as { error?: unknown };
       if (typeof body.error === 'string') message = body.error;
-    } catch {
+    } catch (_parseErr) {
       // Non-JSON error body — keep the status-code fallback message.
     }
     return message;
   }
 
   const raw = await res.text();
-  const { displayText, errorMessage } = parseStreamChunk(raw);
-  if (errorMessage) {
-    return displayText
-      ? `${displayText}\n\n[upstream error: ${errorMessage}]`
-      : `error: ${errorMessage}`;
+  const chunk = parseStreamChunk(raw);
+  if (!chunk.ok) {
+    return chunk.displayText
+      ? `${chunk.displayText}\n\n[upstream error: ${chunk.errorMessage}]`
+      : `error: ${chunk.errorMessage}`;
   }
-  return displayText || '(empty answer)';
+  return chunk.displayText || '(empty answer)';
 }
 
 /**

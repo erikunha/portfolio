@@ -60,8 +60,9 @@ export function DesktopTopbar() {
             className={styles.motion}
             onClick={toggleMotion}
             data-motion={motionOn ? 'on' : 'off'}
+            aria-pressed={motionOn}
           >
-            <span className={styles.mdot} />
+            <span className={styles.mdot} aria-hidden="true" />
             <span>{motionOn ? 'MOTION: ON' : 'MOTION: OFF'}</span>
           </button>
           <a className={styles.btnOutline} href="/erik-cunha-cv.pdf" download>
@@ -71,9 +72,10 @@ export function DesktopTopbar() {
             className={styles.btnPrimary}
             href="https://www.linkedin.com/in/erikunha/"
             target="_blank"
-            rel="noreferrer"
+            rel="noreferrer noopener"
           >
             SSH_CONNECT
+            <span className="sr-only"> (opens in new window)</span>
           </a>
         </nav>
       </div>

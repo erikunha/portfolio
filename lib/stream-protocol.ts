@@ -12,13 +12,12 @@ export const STREAM_ERR_SENTINEL = '\x00ERR:';
 /**
  * Result of splitting an accumulated /api/ask stream buffer into the
  * user-visible answer text and an optional upstream error message.
+ * Discriminated on `ok` so callers can branch structurally instead of
+ * null-checking `errorMessage`.
  */
-export type ParsedStreamChunk = {
-  /** The trimmed answer text to display (everything before the sentinel). */
-  displayText: string;
-  /** The error message after the sentinel, or undefined if no error. */
-  errorMessage: string | undefined;
-};
+export type ParsedStreamChunk =
+  | { ok: true; displayText: string }
+  | { ok: false; displayText: string; errorMessage: string };
 
 /**
  * Pure parser for the /api/ask stream protocol. Given an accumulated buffer of
@@ -39,9 +38,9 @@ export type ParsedStreamChunk = {
 export function parseStreamChunk(accumulated: string): ParsedStreamChunk {
   const sentinelIdx = accumulated.indexOf(STREAM_ERR_SENTINEL);
   if (sentinelIdx === -1) {
-    return { displayText: accumulated.trim(), errorMessage: undefined };
+    return { ok: true, displayText: accumulated.trim() };
   }
   const displayText = accumulated.slice(0, sentinelIdx).trim();
   const rawError = accumulated.slice(sentinelIdx + STREAM_ERR_SENTINEL.length).trim();
-  return { displayText, errorMessage: rawError || 'upstream error' };
+  return { ok: false, displayText, errorMessage: rawError || 'upstream error' };
 }

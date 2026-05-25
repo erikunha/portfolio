@@ -16,7 +16,10 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const TESTS_DIR = join(process.cwd(), '__tests__');
+const ROOT_DIR = process.cwd();
+const SCAN_DIRS = ['__tests__', 'components', 'lib', 'app', 'design-system'].map((d) =>
+  join(ROOT_DIR, d),
+);
 const SOURCE_HINT = /readFileSync|readFile\(/;
 // Matches a quoted path literal whose segments include app/ components/ lib/
 // scripts/ — whether the segment is at the literal's start (`'app/x'`) or
@@ -24,18 +27,21 @@ const SOURCE_HINT = /readFileSync|readFile\(/;
 const TARGETS_APP_SOURCE = /['"`](?:[^'"`]*\/)?(app|components|lib|scripts)\//;
 const ALLOW_TAG = /behavioral-test-allow:/;
 
+const SKIP_DIRS = new Set(['node_modules', '.next', 'coverage', 'dist', '.claude']);
+
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((e) => {
+    if (SKIP_DIRS.has(e)) return [];
     const full = join(dir, e);
     if (statSync(full).isDirectory()) return walk(full);
-    return /\.test\.ts$/.test(e) ? [full] : [];
+    return /\.test\.tsx?$/.test(e) ? [full] : [];
   });
 }
 
 describe('meta: tests assert behavior, not source', () => {
   it('no test reads application source for a structural assertion', () => {
     const violations: string[] = [];
-    for (const file of walk(TESTS_DIR)) {
+    for (const file of SCAN_DIRS.flatMap(walk)) {
       const lines = readFileSync(file, 'utf8').split('\n');
       lines.forEach((line, i) => {
         if (!SOURCE_HINT.test(line)) return;

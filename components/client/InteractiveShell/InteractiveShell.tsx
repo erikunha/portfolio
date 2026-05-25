@@ -241,8 +241,8 @@ export function InteractiveShell() {
           if (pending) scheduleFlush();
         }
 
-        const { displayText: finalText, errorMessage: errMsg } = parseStreamChunk(accumulated);
-        finalize(finalText, errMsg);
+        const chunkFinal = parseStreamChunk(accumulated);
+        finalize(chunkFinal.displayText, chunkFinal.ok ? undefined : chunkFinal.errorMessage);
       } catch (err) {
         finalize('', err instanceof Error ? err.message : String(err));
       }

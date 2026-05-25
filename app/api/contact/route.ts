@@ -98,7 +98,7 @@ export const POST = defineHandler({
     let timerId: ReturnType<typeof setTimeout> | undefined;
     try {
       const sendPromise = getResend().emails.send({
-        from: 'onboarding@resend.dev',
+        from: 'contact@erikunha.dev',
         to: 'erikhenriquealvescunha@gmail.com',
         replyTo: email,
         subject: `[portfolio] message from ${name}`,

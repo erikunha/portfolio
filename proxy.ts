@@ -69,14 +69,24 @@ const CSP_DIRECTIVES: readonly string[] = [
   // - https://va.vercel-scripts.com (connect-src): present in ALL environments.
   //   The Analytics runtime may fetch additional resources (config, chunks)
   //   from this origin even when the entry script is served same-origin.
-  "connect-src 'self' https://api.anthropic.com https://vitals.vercel-insights.com https://va.vercel-scripts.com",
+  // NOTE: https://api.anthropic.com removed — AI calls are server-side only;
+  //   no browser fetch ever reaches that origin.
+  "connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com",
   "frame-ancestors 'none'",
+  // frame-src: explicit frame blocking (distinct from frame-ancestors which
+  // controls who can embed us; frame-src controls what we can embed).
+  "frame-src 'none'",
   "object-src 'none'",
   "base-uri 'self'",
-  // report-uri: browsers POST JSON violation reports to /api/csp-report on
-  // any policy breach. The route handler (app/api/csp-report/route.ts) returns
-  // 204 to acknowledge receipt. Present in ALL environments so dev violations
-  // surface too.
+  // form-action: restricts where form submissions may navigate. Prevents
+  // form hijacking to external URLs (relevant to the contact form).
+  "form-action 'self'",
+  // worker-src: prevents external service worker injection.
+  "worker-src 'self'",
+  // report-to: Chrome 94+ replacement for report-uri. Both are present —
+  // report-to is used by Chromium; report-uri is the fallback for Safari/Firefox.
+  // Reporting-Endpoints header (set below) names the endpoint.
+  'report-to csp-endpoint',
   'report-uri /api/csp-report',
 ];
 
@@ -85,12 +95,17 @@ const CSP_DIRECTIVES: readonly string[] = [
 // assignment.
 const CSP = CSP_DIRECTIVES.join('; ');
 
-// `_request` is intentional: the Next runtime calls proxy(request) but the
-// CSP no longer depends on the request (no nonce). Renaming to `_request`
-// documents the intent and silences `noUnusedVariables`.
-export function proxy(_request: NextRequest) {
+// The W3C Reporting API spec requires absolute URLs in `Reporting-Endpoints`.
+// Chrome 94+ silently ignores relative-URL endpoint values, making `report-to`
+// inert. Build the origin from the incoming request so preview deployments
+// (which have different domains than production) get a working endpoint too.
+export function proxy(request: NextRequest) {
   const response = NextResponse.next();
   response.headers.set('Content-Security-Policy', CSP);
+  // Reporting-Endpoints: names the endpoint for `report-to csp-endpoint`.
+  // Chrome 94+ uses this header; Safari/Firefox fall back to `report-uri`.
+  const origin = new URL(request.url).origin;
+  response.headers.set('Reporting-Endpoints', `csp-endpoint="${origin}/api/csp-report"`);
   return response;
 }
 

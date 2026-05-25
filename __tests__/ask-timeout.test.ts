@@ -43,7 +43,12 @@ vi.mock('@/lib/rate-limit', () => ({
   getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
   getContactLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
   getRedis: vi.fn(() => ({ set: vi.fn(async () => 'OK') })),
-  reserveBudget: vi.fn(async () => ({ allowed: true, reserved: 1512, pct: 0 })),
+  reserveBudget: vi.fn(async () => ({
+    allowed: true,
+    reserved: 1512,
+    pct: 0,
+    budgetKey: 'ask:tokens:test',
+  })),
   settleBudget: vi.fn(async () => undefined),
   checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
 }));

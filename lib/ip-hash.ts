@@ -68,10 +68,15 @@ async function resolveSalt(): Promise<string> {
 export async function hashIp(ip: string): Promise<string> {
   if (!resolvedSalt) {
     if (!resolvePromise) {
-      resolvePromise = resolveSalt().then((salt) => {
-        resolvedSalt = salt;
-        return salt;
-      });
+      resolvePromise = resolveSalt()
+        .then((salt) => {
+          resolvedSalt = salt;
+          return salt;
+        })
+        .catch((err: unknown) => {
+          resolvePromise = null;
+          throw err;
+        });
     }
     await resolvePromise;
   }

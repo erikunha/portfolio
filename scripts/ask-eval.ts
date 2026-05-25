@@ -208,11 +208,14 @@ async function askFeature(question: string, clientIp: string): Promise<AskResult
   }
   accumulated += decoder.decode();
 
-  const { displayText, errorMessage } = parseStreamChunk(accumulated);
-  if (errorMessage) {
-    return { kind: 'answer', text: `[ask stream errored: ${errorMessage}]\n${displayText}`.trim() };
+  const chunk = parseStreamChunk(accumulated);
+  if (!chunk.ok) {
+    return {
+      kind: 'answer',
+      text: `[ask stream errored: ${chunk.errorMessage}]\n${chunk.displayText}`.trim(),
+    };
   }
-  return { kind: 'answer', text: displayText };
+  return { kind: 'answer', text: chunk.displayText };
 }
 
 /**

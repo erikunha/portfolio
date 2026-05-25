@@ -55,8 +55,14 @@ export interface DefineHandlerOpts<TSchema extends ZodTypeAny> {
   handler: (ctx: HandlerContext<z.infer<TSchema>>) => Promise<Response>;
 }
 
+export type ApiErrorCode =
+  | 'rate_limited'
+  | 'invalid_json'
+  | 'validation_failed'
+  | 'storage_unavailable';
+
 interface ApiError {
-  code: string;
+  code: ApiErrorCode | (string & {});
   message: string;
   issues?: unknown;
 }
@@ -86,7 +92,7 @@ export function ok<T>(opts: { requestId: string; data?: T; status?: number }): R
 export function err(opts: {
   requestId: string;
   status: number;
-  code: string;
+  code: ApiErrorCode | (string & {});
   message: string;
   issues?: unknown;
   extraHeaders?: Record<string, string>;

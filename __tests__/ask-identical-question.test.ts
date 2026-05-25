@@ -72,7 +72,12 @@ describe('/api/ask identical-question gate', () => {
 
   it('returns 429 and does not reserve budget or call Anthropic when gate denies', async () => {
     checkIdenticalQuestionMock.mockResolvedValue({ allowed: false });
-    reserveBudgetMock.mockResolvedValue({ allowed: true, reserved: 1512, pct: 0 });
+    reserveBudgetMock.mockResolvedValue({
+      allowed: true,
+      reserved: 1512,
+      pct: 0,
+      budgetKey: 'ask:tokens:test',
+    });
 
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest('Same question again'));
@@ -88,7 +93,12 @@ describe('/api/ask identical-question gate', () => {
 
   it('passes the request through when gate allows', async () => {
     checkIdenticalQuestionMock.mockResolvedValue({ allowed: true });
-    reserveBudgetMock.mockResolvedValue({ allowed: true, reserved: 1512, pct: 0 });
+    reserveBudgetMock.mockResolvedValue({
+      allowed: true,
+      reserved: 1512,
+      pct: 0,
+      budgetKey: 'ask:tokens:test',
+    });
     mockStreamText.mockReturnValue(makeStreamTextResult());
 
     const { POST } = await import('@/app/api/ask/route');

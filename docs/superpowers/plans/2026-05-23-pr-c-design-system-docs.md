@@ -1,5 +1,7 @@
 # PR C — /design-system Route + MDX Docs Implementation Plan
 
+> **HISTORICAL DOCUMENT — do not follow as implementation guidance.** Token examples in this doc reference `--ds-layer-*` which were never shipped; `layer.json` does not exist. See `STANDARDS.md` Ch.12 for the authoritative token surface.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 > **Prerequisites:** PR A and PR B must be merged to `main` before starting this plan.
 

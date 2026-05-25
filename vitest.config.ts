@@ -14,6 +14,9 @@ export default defineConfig({
       // Enforce 80% lines coverage — exits with code 1 if not met.
       thresholds: {
         lines: 80,
+        branches: 70,
+        functions: 80,
+        statements: 80,
       },
       include: [
         'lib/**',

@@ -50,10 +50,15 @@ describe('proxy CSP — nonce-less posture', () => {
     expect(csp).toContain("img-src 'self' data: blob:");
     expect(csp).toContain("font-src 'self'");
     expect(csp).toContain('connect-src');
-    expect(csp).toContain('api.anthropic.com');
+    // api.anthropic.com intentionally absent — AI calls are server-side only.
+    expect(csp).not.toContain('api.anthropic.com');
     expect(csp).toContain("frame-ancestors 'none'");
+    expect(csp).toContain("frame-src 'none'");
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("base-uri 'self'");
+    expect(csp).toContain("form-action 'self'");
+    expect(csp).toContain("worker-src 'self'");
+    expect(csp).toContain('report-to csp-endpoint');
   });
 
   it('production script-src omits unsafe-eval and va.vercel-scripts.com', async () => {
@@ -96,15 +101,19 @@ describe('proxy CSP — nonce-less posture', () => {
     expect(a).toBe(b);
   });
 
-  it('CSP includes report-uri /api/csp-report (unconditional — not env-gated)', async () => {
-    // report-uri is not in a conditional branch — it is present in both dev
-    // and production. No env stub needed: the directive must appear regardless
-    // of NODE_ENV, so a plain import (with whatever env the test runner sets)
-    // is the correct assertion. Env-stubbing here would be inert anyway because
-    // proxy.ts computes CSP_DIRECTIVES at module-eval time, before any test-body
-    // code runs — stubbing after import does not affect the cached CSP string.
+  it('CSP includes report-uri and report-to, and Reporting-Endpoints header is set', async () => {
+    // report-uri and report-to are not in conditional branches — present in both
+    // dev and production. Reporting-Endpoints names the report-to endpoint so
+    // Chrome 94+ can deliver violation reports.
     const { proxy } = await import('@/proxy');
-    const csp = proxy(makeRequest()).headers.get('content-security-policy') ?? '';
+    const res = proxy(makeRequest());
+    const csp = res.headers.get('content-security-policy') ?? '';
     expect(csp).toContain('report-uri /api/csp-report');
+    expect(csp).toContain('report-to csp-endpoint');
+    // Reporting API spec requires absolute URLs; relative URLs are silently
+    // ignored by Chrome 94+. Verify the header carries a full absolute URL.
+    expect(res.headers.get('reporting-endpoints')).toContain(
+      'csp-endpoint="https://erikunha.dev/api/csp-report"',
+    );
   });
 });

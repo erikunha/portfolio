@@ -1,5 +1,7 @@
 # PR A — Token Pipeline + Migration Implementation Plan
 
+> **HISTORICAL DOCUMENT — do not follow as implementation guidance.** This plan was authored before implementation and describes a design that partially diverged during execution. Specifically: `layer.json` and `--ds-layer-*` tokens were never created (the token is dead code per audit finding P3-2 in `docs/superpowers/specs/2026-05-25-principal-review-migration.md`); `tokens.ts` and `tokens.figma.json` were not added to the Style Dictionary output. The authoritative token surface is documented in `STANDARDS.md` Ch.12.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace `app/css/_tokens.css` with a Style Dictionary–driven two-tier token pipeline; migrate all 31 `.module.css` files and 4 `.tsx` inline-style call sites to the new token names; add 4 CI lint gates; portfolio renders within visual baseline tolerance.
