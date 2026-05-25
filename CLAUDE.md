@@ -32,6 +32,7 @@
 |---|---|
 | `pnpm pr-size` | After every commit block and before opening a PR — decides whether to split |
 | `pnpm ready-for-pr` | Before `gh pr create` — runs ci:local + pr-size + gates:runtime, prints next-step checklist |
+| `pnpm validate-pr-body [<pr>]` | After `gh pr create` — exits 1 if any template section is missing or empty; must pass before requesting review |
 | `pnpm ready-to-merge [<pr>]` | Before `gh pr merge` — runs ci:local + branch-protection + Copilot review + resolved threads + pr-metrics |
 | `pnpm pr-metrics [<pr>]` | During or after PR review — reports Copilot cycle count, size, days open |
 | `pnpm changelog:sync` | After any commit with scope `(design-system)` — regenerates `app/design-system/changelog/page.mdx` from full git history |
