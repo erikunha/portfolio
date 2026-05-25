@@ -35,7 +35,7 @@ function getPrBody(prArg: string | undefined): string {
   return (JSON.parse(raw) as { body: string }).body ?? '';
 }
 
-function isSectionFilled(heading: string, body: string): boolean {
+export function isSectionFilled(heading: string, body: string): boolean {
   const lines = body.split('\n');
   const headingIdx = lines.findIndex((l) => l.trim() === `## ${heading}`);
   if (headingIdx === -1) return false;
@@ -58,47 +58,54 @@ function isSectionFilled(heading: string, body: string): boolean {
     if (/^<!--/.test(t)) return false;
     // Bare unchecked checkbox with no trailing text is placeholder
     if (/^-\s*\[\s*\]\s*$/.test(t)) return false;
+    // Bare bullet with no content is placeholder (e.g. lone "-" in Summary)
+    if (/^-\s*$/.test(t)) return false;
     return true;
   });
 
   return meaningful.length > 0;
 }
 
-const prArg = process.argv[2];
+function main() {
+  const prArg = process.argv[2];
 
-let body: string;
-try {
-  body = getPrBody(prArg);
-} catch (err) {
-  process.stderr.write(
-    `${C.red}[validate-pr-body] Could not fetch PR body.${C.reset} Are you on a PR branch? (${err})\n`,
-  );
-  process.exit(1);
-}
+  let body: string;
+  try {
+    body = getPrBody(prArg);
+  } catch (err) {
+    process.stderr.write(
+      `${C.red}[validate-pr-body] Could not fetch PR body.${C.reset} Are you on a PR branch? (${err})\n`,
+    );
+    process.exit(1);
+  }
 
-const headings = getTemplateHeadings();
-const failures: string[] = [];
+  const headings = getTemplateHeadings();
+  const failures: string[] = [];
 
-for (const heading of headings) {
-  if (!isSectionFilled(heading, body)) {
-    failures.push(heading);
+  for (const heading of headings) {
+    if (!isSectionFilled(heading, body)) {
+      failures.push(heading);
+    }
+  }
+
+  if (failures.length === 0) {
+    process.stdout.write(
+      `${C.green}${C.bold}[validate-pr-body] PASS${C.reset} — all template sections are filled.\n`,
+    );
+    process.exit(0);
+  } else {
+    process.stderr.write(
+      `\n${C.red}${C.bold}[validate-pr-body] FAIL${C.reset} — ${failures.length} template section(s) missing or empty:\n`,
+    );
+    for (const f of failures) {
+      process.stderr.write(`  ${C.yellow}•${C.reset} ## ${f}\n`);
+    }
+    process.stderr.write(
+      `\n${C.dim}Fill every section from .github/pull_request_template.md before opening a PR.${C.reset}\n\n`,
+    );
+    process.exit(1);
   }
 }
 
-if (failures.length === 0) {
-  process.stdout.write(
-    `${C.green}${C.bold}[validate-pr-body] PASS${C.reset} — all template sections are filled.\n`,
-  );
-  process.exit(0);
-} else {
-  process.stderr.write(
-    `\n${C.red}${C.bold}[validate-pr-body] FAIL${C.reset} — ${failures.length} template section(s) missing or empty:\n`,
-  );
-  for (const f of failures) {
-    process.stderr.write(`  ${C.yellow}•${C.reset} ## ${f}\n`);
-  }
-  process.stderr.write(
-    `\n${C.dim}Fill every section from .github/pull_request_template.md before opening a PR.${C.reset}\n\n`,
-  );
-  process.exit(1);
-}
+const isMain = import.meta.url === `file://${process.argv[1]}`;
+if (isMain) main();
