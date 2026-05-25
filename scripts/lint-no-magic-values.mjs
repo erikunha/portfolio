@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Rejects hardcoded magic values in .module.css: hex colors, non-token px,
-// hardcoded ms/s durations, raw z-index integers.
+// Rejects hardcoded magic values in .module.css: hex colors, color function literals
+// (rgba/rgb/hsl/hsla), non-token px, hardcoded ms/s durations, raw z-index integers.
 //
 // Intentionally does NOT flag:
 //   - Values inside CSS comments (/* ... */)
@@ -23,6 +23,7 @@ const allowedDurations = new Set(allowlist['duration-values'].map((e) => e.value
 const allowedZIndex = new Set(
   allowlist['z-index-values'].map((e) => (typeof e === 'string' ? e : e.value)),
 );
+const allowedColorFunctions = new Set((allowlist['color-functions'] ?? []).map((e) => e.value));
 
 /**
  * Strip CSS block comments from content so we never flag values inside them.
@@ -60,6 +61,14 @@ const checks = [
     extract: (m) => m,
     filter: (m) => !allowedHex.has(m),
     message: (m) => `hardcoded hex color ${m} — use a --ds-color-* token or add to allowlist`,
+  },
+  // rgba / rgb / hsl color function calls
+  {
+    pattern: /\b(?:rgba?|hsla?)\s*\([^)]*\)/gi,
+    extract: (m) => m.replace(/\s+/g, ' ').trim(),
+    filter: (m) => !allowedColorFunctions.has(m),
+    message: (m) =>
+      `hardcoded color function ${m} — use a --ds-color-* token or add to allowlist with a reason`,
   },
   // Raw ms durations
   {

@@ -13,6 +13,7 @@
 //     every UI test from having to wire `log: 'accept'` explicitly.
 
 import type { Page } from '@playwright/test';
+import { STREAM_ERR_SENTINEL } from '../../../lib/stream-protocol';
 
 export type MockState = {
   ask?:
@@ -26,10 +27,6 @@ export type MockState = {
   log?: 'accept' | 'rate-limit' | 'storage-unavailable';
   forget?: 'happy' | 'not-found';
 };
-
-// STREAM_ERR_SENTINEL matches lib/stream-protocol.ts. Duplicated here so the
-// helper has zero runtime dependency on the Next.js source tree.
-const STREAM_ERR_SENTINEL = '\x00ERR:';
 
 export async function installMockBackend(page: Page, state: MockState = {}): Promise<void> {
   // --- /api/ask ---
