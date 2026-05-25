@@ -7,11 +7,9 @@
 //   - px values inside @media conditions (those are breakpoints, not layout tokens)
 //   - Values already in the allowlist with documented reasons
 import { readFileSync } from 'node:fs';
-import { glob } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { ROOT, scanCssModules } from './lib/scan-css.mjs';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const allowlist = JSON.parse(
   readFileSync(path.join(ROOT, 'scripts/lint-no-magic-values.allowlist.json'), 'utf8'),
 );
@@ -24,14 +22,6 @@ const allowedZIndex = new Set(
   allowlist['z-index-values'].map((e) => (typeof e === 'string' ? e : e.value)),
 );
 const allowedColorFunctions = new Set((allowlist['color-functions'] ?? []).map((e) => e.value));
-
-/**
- * Strip CSS block comments from content so we never flag values inside them.
- * Preserves line count by replacing comment bodies with spaces.
- */
-function stripComments(css) {
-  return css.replace(/\/\*[\s\S]*?\*\//g, (match) => match.replace(/[^\n]/g, ' '));
-}
 
 /**
  * Strip @media condition strings so breakpoint px values (768px, 900px, etc.)
@@ -100,20 +90,14 @@ const checks = [
   },
 ];
 
-const files = await Array.fromAsync(
-  glob('**/*.module.css', {
-    cwd: ROOT,
-    ignore: ['node_modules/**', '.next/**', '.claude/**', 'design-system/dist/**'],
-  }),
-);
+const cssFiles = await scanCssModules();
 
 let violations = 0;
-for (const rel of files.sort()) {
-  const abs = path.join(ROOT, rel);
-  const raw = readFileSync(abs, 'utf8');
-  // Strip comments, media conditions, and var() calls before scanning for values.
-  // Order matters: strip comments first so var() inside comments don't suppress real findings.
-  const content = stripVarCalls(stripMediaConditions(stripComments(raw)));
+for (const { rel, stripped } of cssFiles) {
+  // Strip media conditions and var() calls before scanning for values.
+  // Comments are already stripped by scanCssModules(). Order matters:
+  // strip media conditions before var() calls to avoid false-positives.
+  const content = stripVarCalls(stripMediaConditions(stripped));
   for (const check of checks) {
     for (const match of content.matchAll(check.pattern)) {
       const val = check.extract ? check.extract(match[0], match[1]) : match[0];
@@ -128,4 +112,4 @@ if (violations > 0) {
   console.error(`\n${violations} magic value(s) found. Fix or add to allowlist.`);
   process.exit(1);
 }
-console.log(`No-magic-values check passed (${files.length} files).`);
+console.log(`No-magic-values check passed (${cssFiles.length} files).`);
