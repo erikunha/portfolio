@@ -74,14 +74,20 @@ if (SKIP_RUNTIME) {
 }
 
 process.stdout.write(`\n${C.green}${C.bold}[ready-for-pr] OK${C.reset} — safe to open PR.\n`);
-process.stdout.write(`\n${C.dim}Next steps before gh pr create:${C.reset}\n`);
+process.stdout.write(`\n${C.dim}Before gh pr create:${C.reset}\n`);
 process.stdout.write(
   `${C.dim}  1. Playwright visual check (desktop 1280×720 + mobile 375×812)${C.reset}\n`,
 );
 process.stdout.write(
   `${C.dim}  2. Run pr-review-toolkit:review-pr skill — address Critical/Important findings${C.reset}\n`,
 );
-process.stdout.write(`${C.dim}  3. gh pr create${C.reset}\n`);
 process.stdout.write(
-  `${C.dim}  4. gh pr edit <pr> --add-reviewer copilot-pull-request-reviewer${C.reset}\n\n`,
+  `${C.dim}  3. gh pr create — fill EVERY section from .github/pull_request_template.md${C.reset}\n`,
+);
+process.stdout.write(`\n${C.dim}After gh pr create:${C.reset}\n`);
+process.stdout.write(
+  `${C.dim}  4. pnpm validate-pr-body <pr> — gate: fails if any template section is empty${C.reset}\n`,
+);
+process.stdout.write(
+  `${C.dim}  5. gh pr edit <pr> --add-reviewer copilot-pull-request-reviewer${C.reset}\n\n`,
 );

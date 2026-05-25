@@ -19,11 +19,14 @@ test.describe('Badge — behavioral E2E', () => {
   test('default variant renders without a dot span', async ({ page }) => {
     await page.goto('/design-system/components');
     const preview = page.locator('#badge');
-    const availableBadge = preview.getByText('AVAILABLE');
+    // hasText matches transitively, so parent spans also pass the text filter.
+    // hasNot pins selection to the actual badge span, which has no aria-hidden
+    // dot child (unlike any ancestor wrapper that might also contain "AVAILABLE").
+    const availableBadge = preview
+      .locator('span')
+      .filter({ hasText: /^AVAILABLE$/ })
+      .filter({ hasNot: page.locator('span[aria-hidden="true"]') });
     await expect(availableBadge).toBeVisible();
-    // Default variant must not render a decorative dot.
-    await expect(
-      availableBadge.locator('xpath=..').locator('span[aria-hidden="true"]'),
-    ).not.toBeAttached();
+    await expect(availableBadge.locator('span[aria-hidden="true"]')).not.toBeAttached();
   });
 });

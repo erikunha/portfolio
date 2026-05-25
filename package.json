@@ -39,6 +39,7 @@
     "pr:comments": "node scripts/inspect-pr-comments.mjs",
     "pr:gate": "tsx scripts/check-pr-comments.ts",
     "pr-size": "tsx scripts/pr-size.ts",
+    "validate-pr-body": "tsx scripts/validate-pr-body.ts",
     "pr-metrics": "tsx scripts/pr-metrics.ts",
     "ready-for-pr": "tsx scripts/ready-for-pr.ts",
     "copilot-gate": "tsx scripts/check-copilot-approval.ts",

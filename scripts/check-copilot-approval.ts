@@ -12,7 +12,8 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execFileP = promisify(execFile);
-const COPILOT_LOGIN = 'copilot-pull-request-reviewer';
+const COPILOT_LOGIN = 'copilot-pull-request-reviewer[bot]'; // REST API user.login
+const COPILOT_REVIEWER = 'copilot-pull-request-reviewer'; // --add-reviewer handle
 
 async function run() {
   const passed = process.argv[2];
@@ -21,10 +22,10 @@ async function run() {
 
   const { stdout: repoOut } = await execFileP(
     'gh',
-    ['repo', 'view', '--json', 'owner,name', '-q', '"(.owner.login)/(.name)"'],
+    ['repo', 'view', '--json', 'owner,name', '-q', '.owner.login + "/" + .name'],
     { encoding: 'utf8' },
   );
-  const repo = repoOut.trim().replace(/"/g, '');
+  const repo = repoOut.trim();
 
   const { stdout } = await execFileP('gh', ['api', `repos/${repo}/pulls/${prNumber}/reviews`], {
     encoding: 'utf8',
@@ -39,7 +40,7 @@ async function run() {
       `[copilot-gate] No review found from ${COPILOT_LOGIN} on PR #${prNumber}.\n`,
     );
     process.stderr.write(
-      `  Request review: gh pr edit ${prNumber} --add-reviewer copilot-pull-request-reviewer\n`,
+      `  Request review: gh pr edit ${prNumber} --add-reviewer ${COPILOT_REVIEWER}\n`,
     );
     process.stderr.write('  Then wait for Copilot to review, address all threads, and re-run.\n');
     process.exit(1);

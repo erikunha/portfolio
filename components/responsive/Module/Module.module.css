@@ -10,7 +10,7 @@
 /* Section header — icon + uppercase label, like .section-head in the mockup.
    Lives inside the <summary>; flex:1 lets it sit beside the chevron, margin
    reset because the <summary> owns the header's padding. Mobile sizing is
-   the base; the `min-width: 769px` block restores the desktop --ds-font-size-body. */
+   the base; the `min-width: 769px` block steps up to --ds-font-size-sm. */
 .header {
   flex: 1;
   display: flex;
@@ -166,9 +166,10 @@ body[data-motion="reduce"] .chevron {
     margin-bottom: 10px;
   }
 
-  /* Restore the desktop header type scale (mobile base uses --ds-font-size-xs). */
+  /* Desktop header steps up one notch from mobile xs — sm keeps chrome
+     visually subordinate to body content (body = 14px) at the same scale. */
   .header {
-    font-size: var(--ds-font-size-body);
+    font-size: var(--ds-font-size-sm);
     letter-spacing: 0.1em;
   }
 
