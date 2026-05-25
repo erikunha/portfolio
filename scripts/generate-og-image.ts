@@ -79,7 +79,6 @@ const HTML = `<!DOCTYPE html>
     margin-top: 6px;
     white-space: nowrap;
   }
-  .title .sep { color: #00FF41; opacity: 0.5; margin: 0 10px; }
   .stack {
     display: flex;
     gap: 14px;

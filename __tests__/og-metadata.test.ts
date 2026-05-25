@@ -10,6 +10,13 @@ describe('layout metadata og:image', () => {
     expect(metadata.metadataBase?.toString()).toBe('https://erikunha.dev/');
   });
 
+  it('page title matches the LinkedIn headline branding', async () => {
+    const { metadata } = await import('@/app/layout');
+    expect(metadata.title).toBe(
+      'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
+    );
+  });
+
   it('openGraph.images is a non-empty array with url, width, height, and alt', async () => {
     const { metadata } = await import('@/app/layout');
     const og = metadata.openGraph as Record<string, unknown>;
