@@ -268,13 +268,13 @@ body[data-motion="reduce"] .cmdHint {
   .feed {
     min-height: 200px;
     max-height: 320px;
-    font-size: var(--ds-font-size-xs);
+    font-size: var(--ds-font-size-sm);
   }
   .form {
     padding: 8px 12px 10px;
   }
   .prompt {
-    font-size: var(--ds-font-size-xs);
+    font-size: var(--ds-font-size-sm);
   }
   .input {
     font-size: var(--ds-font-size-sm);
