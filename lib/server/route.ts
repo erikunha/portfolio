@@ -9,19 +9,17 @@
 //   4. Emit responses through one standardized envelope so the client can
 //      tell success from error without per-route shape switches.
 //
-// Standardized envelope (Audit Standard 3):
+// Standardized envelope:
 //   - Success: { ok: true, requestId, data?: T }
 //   - Error:   { ok: false, requestId, error: { code, message, issues? } }
 //
-// Every response carries `X-Request-Id` header. This closes the audit Theme 5
-// gap where only /api/ask exposed the request-id and the GDPR forget flow
-// couldn't correlate to errors from other surfaces.
+// Every response carries `X-Request-Id` header for cross-surface correlation.
 //
-// Scope is deliberately small (audit Debate 3 verdict): defineHandler owns
-// rate-limit → parse → validate → envelope. Routes own everything else
-// (KV writes, side effects, business logic). Streaming routes (/api/ask)
-// are intentionally NOT refactored to this helper — their response shape
-// is intrinsically different and the abstraction wouldn't earn its keep.
+// Scope is deliberately small: defineHandler owns rate-limit → parse →
+// validate → envelope. Routes own everything else (KV writes, side effects,
+// business logic). Streaming routes (/api/ask) are intentionally NOT
+// refactored to this helper — their response shape is intrinsically
+// different and the abstraction wouldn't earn its keep.
 
 import 'server-only';
 

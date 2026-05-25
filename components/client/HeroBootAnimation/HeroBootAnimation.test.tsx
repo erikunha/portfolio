@@ -1,9 +1,9 @@
 // components/client/HeroBootAnimation/HeroBootAnimation.test.tsx
 //
-// Behavioral test (CG3) for CLAUDE.md's "Rendering model" invariant:
+// Behavioral test for the "Rendering model" invariant:
 //
-//   "The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT
-//    per-keystroke `useState`. Per-state re-renders tank INP."
+//   The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT
+//   per-keystroke `useState`. Per-state re-renders tank INP.
 //
 // The previous version grepped lib/boot-animation.ts + HeroBootAnimation.tsx
 // for the string "useState". A grep proves nothing about runtime cost — a
@@ -44,7 +44,7 @@ const testCls = {
   shake2: 'shake2',
 } as const;
 
-describe('boot-animation: textContent-mutation invariant (CLAUDE.md Rendering model)', () => {
+describe('boot-animation: textContent-mutation invariant', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.useFakeTimers();

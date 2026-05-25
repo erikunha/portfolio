@@ -3,9 +3,6 @@
 // the same IP within 60 seconds. The gate sits between the per-IP rate limit
 // and the budget reservation, so a 429 here means the budget is not touched
 // (no reservation, no settlement, no Anthropic call).
-//
-// Closes audit Theme 1.2 (documented control was missing).
-// See docs/audit/2026-05-19-principal-audit.md.
 
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -64,7 +61,7 @@ function makeRequest(question: string): NextRequest {
   });
 }
 
-describe('/api/ask identical-question gate (audit Theme 1.2)', () => {
+describe('/api/ask identical-question gate', () => {
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
     vi.resetModules();

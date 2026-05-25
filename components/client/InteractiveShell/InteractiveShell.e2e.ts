@@ -132,9 +132,9 @@ test.describe('ask / interactive shell', () => {
   test('8 — privacy notice is visible with a working mailto: link to the canonical email', async ({
     page,
   }) => {
-    // The privacy notice was added in PR #11 directly below the /api/ask form
-    // inside InteractiveShell. It tells the visitor that queries are stored 90
-    // days and points to the canonical contact email for deletion requests.
+    // The privacy notice lives directly below the /api/ask form inside
+    // InteractiveShell. It tells the visitor that queries are stored 90 days
+    // and points to the canonical contact email for deletion requests.
     // Neither the form nor /api/ask need to be exercised — we only assert that
     // (a) the notice is rendered in the DOM after the shell hydrates, and
     // (b) the mailto target matches the single source of truth used by

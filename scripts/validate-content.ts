@@ -1,9 +1,9 @@
 /**
- * Build-time Zod content validation. PR 8 of audit roadmap rewrites the
- * previous `validate-content.mjs` that spawned 17 sequential `tsx` child
- * processes (~3.4s of pure Node startup overhead) into a single tsx run
- * that does `await import()` directly. Same per-file pass/fail reporting,
- * fraction of the wall-clock cost.
+ * Build-time Zod content validation. Replaces the previous
+ * `validate-content.mjs` that spawned 17 sequential `tsx` child processes
+ * (~3.4s of pure Node startup overhead) with a single tsx run that does
+ * `await import()` directly. Same per-file pass/fail reporting, fraction
+ * of the wall-clock cost.
  *
  * Each `content/*.ts` calls `Schema.parse(...)` at module-evaluation time;
  * importing the file IS the validation. A failed `parse()` throws here and

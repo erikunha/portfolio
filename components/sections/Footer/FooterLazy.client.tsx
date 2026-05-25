@@ -2,13 +2,12 @@
 
 // components/sections/Footer/FooterLazy.client.tsx
 //
-// IntersectionObserver-gated lazy mount of <Footer>. PR 6 of audit roadmap.
+// IntersectionObserver-gated lazy mount of <Footer>.
 //
-// Why: the audit (Theme 4) flagged Footer as silently consuming the 43KB
-// client-JS budget below the fold. Footer carries 5 useState, 5 useEffect,
-// a MatrixRain canvas, a setInterval clock, and a scroll listener — all
-// hydrating immediately on page load even though most visitors never scroll
-// past the 18 sections above it.
+// Why: Footer carries 5 useState, 5 useEffect, a MatrixRain canvas, a
+// setInterval clock, and a scroll listener — all hydrating immediately on
+// page load even though most visitors never scroll past the 18 sections
+// above it.
 //
 // dynamic({ ssr: false }) alone would skip SSR but still ship + hydrate
 // Footer on the critical path. The IntersectionObserver sentinel below it

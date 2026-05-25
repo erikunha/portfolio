@@ -1,5 +1,5 @@
 // __tests__/api-log-shape.test.ts
-// Behavioral test (CG3): exercises the /api/log endpoint, lib/ip-hash, and the
+// Behavioral test: exercises the /api/log endpoint, lib/ip-hash, and the
 // client error bridge end-to-end, instead of grepping their source text.
 //
 //  - /api/log endpoint: POST a structured error, assert the KV write uses the

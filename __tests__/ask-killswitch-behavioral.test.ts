@@ -1,6 +1,5 @@
 // __tests__/ask-killswitch-behavioral.test.ts
 // Behavioral replacement for the prior source-grep ask-killswitch.test.ts.
-// PR 7 of audit roadmap — Standard 5 ("tests assert behavior, not source").
 //
 // Verifies the actual kill-switch contract by calling POST /api/ask with
 // each off-keyword AND asserts that the dependencies that SHOULD NOT have

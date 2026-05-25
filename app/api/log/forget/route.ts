@@ -3,11 +3,8 @@
 // Q+A logs. Accepts { requestId } and DELETEs the matching KV record
 // across the last 90 days of date-partitioned keys.
 //
-// Spec ref: docs/superpowers/specs/2026-05-18-production-observability-design.md §7d
-// PR 5 of audit roadmap: refactored to use lib/server/route.ts defineHandler
-// for the unified envelope + X-Request-Id + standard pre-flight ordering.
-// The previously-exposed `deleted: count` field is REMOVED from the success
-// response (audit Theme 8 + Standard 4: it leaked an existence oracle).
+// The `deleted: count` field is intentionally absent from the success
+// response — it would leak an existence oracle.
 
 import { z } from 'zod';
 
@@ -66,10 +63,10 @@ export const POST = defineHandler({
       });
     }
 
-    // Log the delete count internally for audit, but DO NOT expose it on the
-    // wire response: audit Theme 8 flagged the prior `{ ok: true, deleted: N }`
-    // shape as an existence oracle — an attacker with a leaked requestId could
-    // confirm "was this Q+A actually persisted?" by inspecting the count.
+    // Log the delete count internally for observability, but DO NOT expose it
+    // on the wire response — the prior `{ ok: true, deleted: N }` shape was an
+    // existence oracle: an attacker with a leaked requestId could confirm
+    // whether the Q+A was persisted by inspecting the count.
     // External response is uniformly `{ ok: true, requestId }`.
     log.info('forget request processed', { requestId, targetRequestId, deleted });
     return ok({ requestId });

@@ -1,13 +1,11 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-// CSP posture (PR 4 of audit roadmap — supersedes PR 3 hybrid nonce):
-//
-// `script-src 'self' 'unsafe-inline'`. No nonce, no x-nonce header rewrite.
+// CSP posture: `script-src 'self' 'unsafe-inline'`. No nonce, no x-nonce header rewrite.
 //
 // Why we are NOT using a nonce-based CSP:
 //
-// 1) `app/page.tsx` is static-generated (audit Theme 3 / PR 1). Static HTML
+// 1) `app/page.tsx` is static-generated. Static HTML
 //    is baked at build time, before any request, before any nonce exists.
 //    Inline `<script>` tags in the static HTML therefore carry no
 //    `nonce` attribute. Per CSP-3 spec §6.7.2.4, when a nonce-source is
@@ -17,37 +15,34 @@ import { NextResponse } from 'next/server';
 //    static page blocks every script (verified: 44 violations on
 //    `localhost:3000/`, Chrome 138).
 //
-// 2) The "hybrid nonce" posture shipped in PR 3 of the audit roadmap
-//    (commit ced30d8) anticipated future inline-script use-cases (analytics,
-//    embeds) and kept the nonce slot "for future-proofing". The audit's
-//    Theme 2 acknowledged the nonce has no consumer today. Combined with
-//    the static-generate move from Theme 3, the future-proofing cost
+// 2) The "hybrid nonce" posture (commit ced30d8) anticipated future
+//    inline-script use-cases (analytics, embeds) and kept the nonce slot
+//    "for future-proofing". There is no nonce consumer today. Combined with
+//    the static-generate constraint, the future-proofing cost
 //    became real and immediate: a broken page, the entire React 19 RSC
 //    flight payload blocked.
 //
-// 3) The pre-audit posture (DECISIONS.md 2026-05-15 "CSP cleanup") was
-//    `'unsafe-inline'`. That ADR documented the reasoning at length: no
-//    user-generated content vectors, no XSS surface, inline scripts are
-//    framework-emitted (Next/React Float). PR 4 restores this posture.
-//    The audit's entropy-fix work (Theme 2.3) and static-CSP hoisting
-//    (Theme 2.4) are moot once the nonce is dropped.
+// 3) The pre-`'unsafe-inline'`-only posture was documented in DECISIONS.md
+//    (2026-05-15 "CSP cleanup"): no user-generated content vectors, no XSS
+//    surface, inline scripts are framework-emitted (Next/React Float).
+//    This file restores that posture.
 //
-// 4) Re-acquire the nonce ONLY if a future PR adds a dynamic route that
+// 4) Re-acquire the nonce ONLY if a future change adds a dynamic route that
 //    needs `<script nonce={...}>` (e.g., third-party analytics with a
 //    documented nonce requirement). At that point: re-introduce the
 //    middleware nonce + x-nonce header rewrite ONLY on that route's
 //    matcher pattern, NOT site-wide. The static `/` route must keep the
 //    nonce-less CSP for its inline scripts to load.
 //
-// 5) Hash-based CSP (Task 3.3 — deferred): replacing `'unsafe-inline'`
-//    with SHA-256 hashes is not feasible today. Next.js 16 static
-//    generation emits RSC flight payloads whose SHA-256 changes on every
-//    content edit, meaning hashes must be recomputed and hard-coded in
-//    this file on every build. A build-time step that: (a) runs `next
-//    build`, (b) scans every generated HTML for inline `<script>` tags,
-//    (c) computes SHA-256 of each, and (d) patches this file before the
-//    server starts — does not yet exist. Will revisit when a dynamic
-//    route with third-party scripts is added (see DECISIONS.md).
+// 5) Hash-based CSP (deferred): replacing `'unsafe-inline'` with SHA-256
+//    hashes is not feasible today. Next.js 16 static generation emits RSC
+//    flight payloads whose SHA-256 changes on every content edit, meaning
+//    hashes must be recomputed and hard-coded in this file on every build.
+//    A build-time step that: (a) runs `next build`, (b) scans every
+//    generated HTML for inline `<script>` tags, (c) computes SHA-256 of
+//    each, and (d) patches this file before the server starts — does not
+//    yet exist. Will revisit when a dynamic route with third-party scripts
+//    is added (see DECISIONS.md).
 //    See also: violation observability via `report-uri /api/csp-report`
 //    added below.
 

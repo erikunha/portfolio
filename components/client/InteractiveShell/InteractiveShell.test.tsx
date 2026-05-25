@@ -1,8 +1,3 @@
-// components/client/InteractiveShell/InteractiveShell.test.tsx
-// Merged from:
-//   __tests__/InteractiveShell.streaming.test.ts  (streaming behavior)
-//   __tests__/shell-aria.test.ts                  (a11y contract)
-
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -26,10 +21,9 @@ vi.mock('@/content/shell-commands', () => ({
 
 // ── Streaming behavior ────────────────────────────────────────────────────────
 //
-// Behavioral test (CG3 rewrite, CG4 extension): renders the real
-// InteractiveShell, drives a command that routes to /api/ask, and asserts the
-// streaming UX through observable DOM — instead of grepping the component
-// source for getReader()/TextDecoder.
+// Behavioral test: renders the real InteractiveShell, drives a command that
+// routes to /api/ask, and asserts the streaming UX through observable DOM —
+// instead of grepping the component source for getReader()/TextDecoder.
 //
 // The guarantees under test:
 //   1. Progressive rendering — the answer span appears and grows BEFORE the
@@ -39,11 +33,11 @@ vi.mock('@/content/shell-commands', () => ({
 //      React reconciles by identity, not array index. We assert this through
 //      the absence of key warnings + correct final ordering after re-renders.
 //   3. Streaming chunks are decoded and concatenated correctly.
-//   4. (CG4) The streaming line is a React-OWNED feed node — there is no
-//      out-of-tree DOM. The previous implementation called
-//      `document.createElement('span')` + `feedRef.appendChild` and mutated
-//      `textContent` per chunk inside an aria-live region React also owns.
-//      This test fails if the implementation reverts to that.
+//   4. The streaming line is a React-OWNED feed node — there is no out-of-tree
+//      DOM. The previous implementation called `document.createElement('span')`
+//      + `feedRef.appendChild` and mutated `textContent` per chunk inside an
+//      aria-live region React also owns. This test fails if the implementation
+//      reverts to that.
 
 // Build a streamed Response whose body emits the given text chunks one at a
 // time, with a microtask gap between them so progressive rendering is
@@ -227,7 +221,7 @@ describe('InteractiveShell streaming behavior', () => {
 
 // ── Shell feed accessibility ──────────────────────────────────────────────────
 //
-// Behavioral test (CG3): renders the real InteractiveShell and queries the
+// Behavioral test: renders the real InteractiveShell and queries the
 // committed DOM for its accessibility contract, instead of grepping the
 // component source for aria-* string literals.
 //

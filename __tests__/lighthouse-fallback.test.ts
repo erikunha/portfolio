@@ -1,5 +1,5 @@
 // __tests__/lighthouse-fallback.test.ts
-// Behavioral test (CG3): imports the real LIGHTHOUSE_FALLBACK constant and
+// Behavioral test: imports the real LIGHTHOUSE_FALLBACK constant and
 // asserts its runtime values, instead of grepping lib/lighthouse-scores.ts
 // source text. The guarantee under test: the fallback shown when the PSI API
 // is unavailable must NOT pose as a perfect score — it must read as

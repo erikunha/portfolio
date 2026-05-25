@@ -50,7 +50,7 @@
 .cvDefer {
   content-visibility: auto;
   /* `auto 520px`: the 14 deferred sections vary too widely for one fixed
-     estimate (measured desktop 186-1837px, mobile 70-2538px; CG6 Task 6.3).
+     estimate (measured desktop 186-1837px, mobile 70-2538px).
      The `auto` keyword makes the browser cache each element's last-rendered
      real size and reuse it as the intrinsic size — so after first paint the
      placeholder is exact and scroll/CLS is correct per-section. 520px is the

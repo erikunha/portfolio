@@ -5,13 +5,13 @@
 // in-line review comments (per-file, per-line) and top-level issue
 // comments — and renders a structured markdown checklist sorted by file.
 //
-// Workflow (per CLAUDE.md "PR review quality gate" feedback memory):
+// Workflow:
 //   1. Run `pnpm pr:comments <PR-number>` to dump the review surface.
 //   2. For each unresolved thread, either:
-//        a) resolve it at Principal/Staff level (fix the code, reply
-//           on the thread with the fix SHA + a 1-2 sentence rationale),
-//        b) escalate to the repo owner with a "Why not" analysis (why the comment is
-//           wrong, decline, or out of scope).
+//        a) resolve it (fix the code, reply on the thread with the fix SHA
+//           + a 1-2 sentence rationale),
+//        b) escalate to the repo owner with a "Why not" analysis (why the
+//           comment is wrong, decline, or out of scope).
 //   3. Unaddressed comments block merge.
 //
 // Auth: uses `gh` CLI under the hood (must be authenticated).

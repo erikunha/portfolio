@@ -6,7 +6,7 @@ import localFont from 'next/font/local';
 import Script from 'next/script';
 import { personSchema } from '@/content/seo';
 
-// Self-hosted per CLAUDE.md — no Google CDN link shipped to the browser
+// Self-hosted — no Google CDN link shipped to the browser
 const mono = localFont({
   src: [
     { path: '../public/fonts/jetbrains-mono-400.woff2', weight: '400', style: 'normal' },

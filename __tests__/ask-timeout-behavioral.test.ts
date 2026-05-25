@@ -34,7 +34,7 @@ vi.mock('@/lib/rate-limit', () => ({
   checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
 }));
 
-// --- Mock PR #11 observability deps so server-only guard doesn't block ---
+// --- Mock observability deps so server-only guard doesn't block ---
 vi.mock('@/lib/ask-log', () => ({
   persistAskInteraction: vi.fn(async () => undefined),
 }));
@@ -173,7 +173,7 @@ describe('/api/ask behavioral — stream-initiation failure handling', () => {
   });
 });
 
-describe('/api/ask behavioral — mid-stream timeout watchdog (CG5)', () => {
+describe('/api/ask behavioral — mid-stream timeout watchdog', () => {
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
     vi.resetModules();

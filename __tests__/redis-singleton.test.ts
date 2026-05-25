@@ -1,5 +1,5 @@
 // __tests__/redis-singleton.test.ts
-// Behavioral test (CG3): proves lib/lighthouse-scores.ts reads its cache
+// Behavioral test: proves lib/lighthouse-scores.ts reads its cache
 // through the SHARED Redis singleton (getRedis from lib/rate-limit) rather
 // than instantiating its own client.
 //

@@ -98,19 +98,17 @@ const MONTHLY_TOKEN_BUDGET = 3_000_000;
 const BUDGET_WINDOW_S = 60 * 60 * 24 * 32;
 
 // Reservation pattern constants. Worst-case input tokens cover:
-//   - SYSTEM prompt: ~1500 tokens cache-cold (PR 4 padded SYSTEM above the
-//     Anthropic Haiku ephemeral cache 1024-token minimum; SYSTEM_TEXT in
+//   - SYSTEM prompt: ~1500 tokens cache-cold (SYSTEM_TEXT in
 //     lib/ask/system-prompt.ts is ~5500 chars ≈ 1500-1600 tokens).
 //   - Wrapped user question: max 500 chars of input + ~200 chars of
 //     <question> delimiter + re-anchor instruction ≈ 200 tokens.
 //   - Anthropic SDK framing overhead: ~100 tokens.
 // Total worst-case input ≈ 1800 tokens; reserve 2200 for a ~20% safety
-// buffer. Closes the audit Theme 8 follow-up (PR #29 review):
-// if actual billed input > reserved, settleBudget() becomes a no-op (the
-// refund branch is `if (refund <= 0) return`) and the counter undercounts,
-// defeating the "never below actual usage" guarantee. With 2200 tokens
-// reserved against worst-case 1800 actual, there's always positive headroom
-// to refund — settleBudget never undercounts.
+// buffer. If actual billed input > reserved, settleBudget() becomes a
+// no-op (the refund branch is `if (refund <= 0) return`) and the counter
+// undercounts, defeating the "never below actual usage" guarantee. With
+// 2200 tokens reserved against worst-case 1800 actual, there is always
+// positive headroom to refund — settleBudget never undercounts.
 //
 // Drift-protected by __tests__/budget-cap.test.ts. Update both when SYSTEM
 // size moves (also update lib/ask/system-prompt.ts CACHE_ELIGIBILITY_MIN_CHARS

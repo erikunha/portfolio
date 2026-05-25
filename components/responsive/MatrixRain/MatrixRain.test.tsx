@@ -1,5 +1,5 @@
 // components/responsive/MatrixRain/MatrixRain.test.tsx
-// Behavioral test (CG3): renders the real MatrixRain and exercises its canvas
+// Behavioral test: renders the real MatrixRain and exercises its canvas
 // draw loop against an instrumented 2D context — instead of slicing the
 // component source and string-matching the for-loop body.
 //

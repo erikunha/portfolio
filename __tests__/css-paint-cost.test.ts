@@ -1,5 +1,5 @@
 // __tests__/css-paint-cost.test.ts
-// Behavioral test (CG3): the shell command hint must not advertise an
+// Behavioral test: the shell command hint must not advertise an
 // `ask <question>` command — proven by rendering the real InteractiveShell
 // and inspecting its committed DOM.
 //

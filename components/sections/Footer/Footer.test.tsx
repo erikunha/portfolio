@@ -1,6 +1,5 @@
 // components/sections/Footer/Footer.test.tsx
 // Behavioral test for the FooterLazy IntersectionObserver-gated mount.
-// PR 6 of audit roadmap (Theme 4).
 //
 // The contract: FooterLazy renders an aria-hidden sentinel initially; only
 // after the sentinel scrolls into view (or the rootMargin buffer hits) does
@@ -52,7 +51,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('FooterLazy — IntersectionObserver-gated mount (audit Theme 4)', () => {
+describe('FooterLazy — IntersectionObserver-gated mount', () => {
   it('imports and exposes a FooterLazy named export', async () => {
     const mod = await import('@/components/sections/Footer');
     expect(typeof mod.FooterLazy).toBe('function');

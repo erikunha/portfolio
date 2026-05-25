@@ -1,7 +1,6 @@
 // __tests__/proxy-csp.test.ts
-// Behavioral test for the CSP posture shipped in PR 4 of the audit roadmap
-// (supersedes PR 3 hybrid nonce — see proxy.ts file-level comment for the
-// static-generation conflict that forced this revert).
+// Behavioral test for the nonce-less CSP posture (see proxy.ts file-level
+// comment for the static-generation constraint that makes nonces infeasible).
 //
 // Verifies:
 //   1. CSP header is set on every response (matcher already excludes assets).
@@ -25,7 +24,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe('proxy CSP — nonce-less posture (PR 4)', () => {
+describe('proxy CSP — nonce-less posture', () => {
   beforeEach(() => {
     vi.resetModules();
   });
@@ -36,7 +35,7 @@ describe('proxy CSP — nonce-less posture (PR 4)', () => {
     expect(res.headers.get('content-security-policy')).toBeTruthy();
   });
 
-  it('does NOT include a nonce-source in script-src (audit Theme 2 reversion)', async () => {
+  it('does NOT include a nonce-source in script-src', async () => {
     const { proxy } = await import('@/proxy');
     const csp = proxy(makeRequest()).headers.get('content-security-policy') ?? '';
     expect(csp).not.toMatch(/'nonce-/);

@@ -1,9 +1,8 @@
 // __tests__/ask-cache-metric.test.ts
 // Behavioral test: pins the cache-hit accounting of /api/ask.
 //
-// STANDARDS.md Ch.7 + the audit (Theme 7 / Debate 5) require the ephemeral
-// prompt cache to fire and its hit-rate to be tracked. The accounting
-// invariant under test:
+// The ephemeral prompt cache must fire and its hit-rate must be tracked.
+// The accounting invariant under test:
 //
 //   totalBilledInput = inputTokens + cacheReadInputTokens + cacheCreationInputTokens
 //   cacheHitRate     = cacheReadInputTokens / totalBilledInput

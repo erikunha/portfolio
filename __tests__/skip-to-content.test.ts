@@ -1,5 +1,5 @@
 // __tests__/skip-to-content.test.ts
-// Behavioral test (CG3): renders the real AppShell and asserts the
+// Behavioral test: renders the real AppShell and asserts the
 // skip-to-content link exists, is the first focusable element, and points at
 // the page's main landmark — instead of grepping AppShell/page source text.
 //
@@ -14,8 +14,7 @@
 // href is `#main-content`, then activates it and confirms focus moves into the
 // landmark). Re-rendering Home() here is impractical: app/page.tsx is a
 // `force-static` RSC with async section components renderToStaticMarkup cannot
-// drive, and the previous attempt to cover it hand-walked the React element
-// tree — exactly the structural source-coupling CG3 removes.
+// drive.
 
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

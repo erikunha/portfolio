@@ -1,5 +1,5 @@
 // __tests__/log-structured.test.ts
-// Behavioral test (CG3): exercises the lib/log.ts structured-logging facade
+// Behavioral test: exercises the lib/log.ts structured-logging facade
 // and verifies routes emit through it — instead of grepping route source for
 // `import { log }` / the absence of `console.*`.
 //

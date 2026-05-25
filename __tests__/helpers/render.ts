@@ -1,11 +1,9 @@
 // __tests__/helpers/render.ts
-// Shared jsdom client-render plumbing for behavioral tests (CG3).
+// Shared jsdom client-render plumbing for behavioral tests.
 //
-// ~10 rewritten test files re-implemented the identical mount/unmount/flush
-// boilerplate: create a container <div>, append it, createRoot + render under
-// act(), then unmount + remove on teardown, plus a microtask drain that lets
-// React 19 effects commit in jsdom. This helper centralizes that plumbing so
-// each suite keeps only its behavioral assertions.
+// Centralizes the mount/unmount/flush boilerplate: create a container <div>,
+// append it, createRoot + render under act(), then unmount + remove on
+// teardown, plus a microtask drain that lets React 19 effects commit in jsdom.
 //
 // NOTE: this is a helper, not a *.test.ts file — Vitest does not run it as a
 // suite, and the no-source-grep meta-check (which only scans *.test.ts) does
