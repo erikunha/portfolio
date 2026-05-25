@@ -165,8 +165,8 @@ type Aggregate = {
  * the harness would then "exercise" the feature with a literal 429 rejection,
  * and a jailbreak item reading a 429 as "refused the override" could report
  * 100% jailbreak resistance without a single real model call. clientIpForItem
- * uses a per-run RUN_SEED as the third octet so reruns never share buckets
- * with prior runs, and the item index varies the last octet within a run.
+ * uses a per-run RUN_SEED as the second octet so reruns never share buckets
+ * with prior runs, and the item index varies the third and fourth octets within a run.
  *
  * Non-2xx responses are returned as a structured `rejected` result carrying
  * the HTTP status — never as a string handed to the judge. main() classifies

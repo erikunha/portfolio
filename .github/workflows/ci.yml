@@ -13,7 +13,8 @@ name: CI
 #               content/projects.ts, content/unknowns.ts, content/visa.ts,
 #               scripts/ask-eval.ts
 #               Gates: ai-eval (also gates on e2e-functional to avoid credit waste)
-#   app=true  → app/, components/, design-system/, lib/, content/, public/, next.config.ts
+#   app=true  → app/, components/, design-system/, lib/, content/, public/, next.config.ts,
+#               .github/workflows/ (workflow changes exercise CI itself)
 #               Gates: performance, e2e-visual-chromium, e2e-visual-webkit
 # Skipped required checks are treated as satisfied by GitHub branch protection.
 
@@ -454,7 +455,8 @@ jobs:
             && echo "ai=true" >> "$GITHUB_OUTPUT" \
             || echo "ai=false" >> "$GITHUB_OUTPUT"
           app_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
-            app/ components/ design-system/ lib/ content/ public/ next.config.ts)
+            app/ components/ design-system/ lib/ content/ public/ next.config.ts \
+            .github/workflows/)
           [[ -n "$app_changed" ]] \
             && echo "app=true" >> "$GITHUB_OUTPUT" \
             || echo "app=false" >> "$GITHUB_OUTPUT"
