@@ -404,13 +404,16 @@ describe('contact form — submitting state', () => {
 
     expect(form?.getAttribute('aria-busy')).toBe('true');
     const submitBtn = container.querySelector<HTMLButtonElement>('button[type="submit"]');
-    const isBusy =
-      form?.getAttribute('aria-busy') === 'true' || submitBtn?.hasAttribute('disabled');
-    expect(isBusy).toBe(true);
+    expect(submitBtn?.hasAttribute('disabled')).toBe(true);
 
     await act(async () => {
       resolveFetch();
     });
     await flushMicrotasks();
+
+    // After a successful response the form is replaced by the success UI —
+    // aria-busy and disabled are cleared because the form element unmounts.
+    expect(container.querySelector('[data-testid="contact-success"]')).not.toBeNull();
+    expect(container.querySelector('form')).toBeNull();
   });
 });

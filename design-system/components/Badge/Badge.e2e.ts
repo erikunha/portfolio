@@ -18,6 +18,11 @@ test.describe('Badge — behavioral E2E', () => {
   test('default variant renders without a dot span', async ({ page }) => {
     await page.goto('/design-system/components');
     const preview = page.locator('#badge');
-    await expect(preview.getByText('AVAILABLE')).toBeVisible();
+    const availableBadge = preview.getByText('AVAILABLE');
+    await expect(availableBadge).toBeVisible();
+    // Default variant must not render a decorative dot.
+    await expect(
+      availableBadge.locator('xpath=..').locator('span[aria-hidden="true"]'),
+    ).not.toBeAttached();
   });
 });

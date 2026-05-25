@@ -42,7 +42,8 @@ describe('StatusBar — visibilitychange handler', () => {
   });
 
   it('restarts the clock when document becomes visible again', async () => {
-    const container = await render();
+    const setIntervalSpy = vi.spyOn(globalThis, 'setInterval');
+    await render();
 
     // First, hide the document to pause the clock
     Object.defineProperty(document, 'hidden', { value: true, configurable: true });
@@ -50,14 +51,16 @@ describe('StatusBar — visibilitychange handler', () => {
       document.dispatchEvent(new Event('visibilitychange'));
     });
 
-    // Now show — startClock() should call setTime again
+    const callsAfterHide = setIntervalSpy.mock.calls.length;
+
+    // Now show — startClock() should schedule a new interval
     Object.defineProperty(document, 'hidden', { value: false, configurable: true });
     await act(async () => {
       document.dispatchEvent(new Event('visibilitychange'));
     });
 
-    // After restoring visibility, the clock restarts; component is still rendering
-    expect(container.textContent).toBeTruthy();
+    // setInterval must have been called again to restart the clock.
+    expect(setIntervalSpy.mock.calls.length).toBeGreaterThan(callsAfterHide);
   });
 
   it('does not clear interval if it was already null (hidden while interval was null)', async () => {
