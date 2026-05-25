@@ -9,7 +9,57 @@
 // not exist, and `Person` lacks the role-specific fields a recruiter's tooling
 // wants — so `@type` is a stable contract string both consumers assert on.
 
-export const HIRING_PROFILE = {
+import { z } from 'zod';
+
+const EmployerSchema = z.object({
+  name: z.string(),
+  role: z.string(),
+  domain: z.string(),
+  current: z.boolean().optional(),
+  dates: z.string(),
+});
+
+const LanguageSchema = z.object({
+  code: z.string(),
+  level: z.string(),
+});
+
+export const HiringProfileSchema = z.object({
+  '@type': z.literal('HiringProfile'),
+  name: z.string(),
+  alias: z.string(),
+  url: z.string().url(),
+  email: z.string().email(),
+  github: z.string().url(),
+  linkedin: z.string().url(),
+  seniority: z.array(z.string()),
+  yoe: z.number().int().positive(),
+  stack_primary: z.array(z.string()),
+  stack_secondary: z.array(z.string()),
+  domains: z.array(z.string()),
+  employers: z.array(EmployerSchema),
+  receipts: z.record(z.string(), z.string()),
+  work_auth: z.record(z.string(), z.string()),
+  education: z.array(
+    z.object({
+      institution: z.string(),
+      degree: z.string(),
+      location: z.string(),
+      years: z.string(),
+    }),
+  ),
+  certifications: z.array(z.string()),
+  availability: z.string(),
+  notice_period_days: z.number().int().nonnegative(),
+  open_to: z.array(z.string()),
+  location: z.string(),
+  languages: z.array(LanguageSchema),
+  last_updated: z.string(),
+});
+
+export type HiringProfile = z.infer<typeof HiringProfileSchema>;
+
+export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   '@type': 'HiringProfile',
   name: 'Erik Henrique Alves Cunha',
   alias: 'Erik Cunha',
@@ -148,6 +198,4 @@ export const HIRING_PROFILE = {
     { code: 'fr', level: 'A2' },
   ],
   last_updated: '2026-05-15',
-} as const;
-
-export type HiringProfile = typeof HIRING_PROFILE;
+});

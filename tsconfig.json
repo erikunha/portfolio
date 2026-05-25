@@ -19,7 +19,7 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": false,
+    "verbatimModuleSyntax": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "plugins": [

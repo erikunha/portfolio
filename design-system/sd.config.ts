@@ -1,10 +1,9 @@
 /**
  * Style Dictionary v5 config for the design-system token pipeline.
  *
- * Produces three build artifacts in design-system/dist/:
+ * Produces two build artifacts in design-system/dist/:
  *   tokens.css  — CSS custom properties with semantic tokens referencing primitives via var()
- *   tokens.ts   — ES6 named exports (JS constants)
- *   tokens.json — flat key/value JSON
+ *   tokens.json — flat key/value JSON (consumed by scripts/contrast-check.mjs)
  *
  * Token names are flat DTCG keys (e.g. "ds-green-500") at the root of each JSON file.
  * The css/variables format with outputReferences:true preserves inter-token references
@@ -27,16 +26,6 @@ const sd = new StyleDictionary({
             selector: ':root',
             outputReferences: true,
           },
-        },
-      ],
-    },
-    ts: {
-      transformGroup: 'js',
-      buildPath: 'design-system/dist/',
-      files: [
-        {
-          destination: 'tokens.ts',
-          format: 'javascript/es6',
         },
       ],
     },
