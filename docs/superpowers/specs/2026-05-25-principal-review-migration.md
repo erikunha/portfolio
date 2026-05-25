@@ -18,7 +18,7 @@
 **Finding:** `openGraph: { images: [{ url: '/og-image.png' }] }` — `/og-image.png` does not exist in `public/`. The actual image generator is the Next.js `opengraph-image` route handler. Social previews on every platform (LinkedIn, Twitter/X, Slack, iMessage) are broken — they either show nothing or a broken image.  
 **Fix:** Remove the static `images` array from both `openGraph` and `twitter` metadata fields (if present). Next.js automatically picks up the `opengraph-image.tsx` route handler when no static `images` override is present.
 
-### P0-3: Budget counter permanently overcounts after each request
+### P0-3: Budget counter may overcount when settlement promises are dropped
 **File:** `app/api/ask/route.ts` (the `settleAndPersist` closure)  
 **Finding:** `void settleBudget(...)` and `void persistAskInteraction(...)` inside `settleAndPersist()` fire-and-forget instead of being awaited. The function is `async` — the `void` calls discard their promises, so `settleBudget` is not guaranteed to run before the function returns. If the process exits early or an error occurs, the monthly token budget reservation (~2,712 tokens per request) may not be refunded. Over enough requests, the counter could hit the 3M cap and the ask endpoint would return 402 even though actual usage is lower.  
 **Fix:** `await settleBudget(...)` and `await persistAskInteraction(...)` inside `settleAndPersist`. Remove the `void` prefix.
@@ -87,7 +87,7 @@ Keep `report-uri` as a fallback for Safari/Firefox compatibility.
 ```
 
 ### P1-6: External links missing new-window indication (WCAG 3.2.2)
-**File:** `DesktopTopbar.client.tsx` and other link consumers  
+**File:** `components/responsive/DesktopTopbar/DesktopTopbar.client.tsx` and other link consumers  
 **Finding:** Links with `target="_blank"` have no visual or accessible indication that they open a new window. Screen reader users and keyboard-only users are not warned. This is a WCAG 2.1 Level A violation.  
 **Fix:** Add `<span className="sr-only"> (opens in new window)</span>` inside external links, or use a visually hidden text + icon pattern. At minimum add `rel="noopener noreferrer"` if not already present.
 
@@ -111,9 +111,9 @@ Keep `report-uri` as a fallback for Safari/Firefox compatibility.
 **Finding:** `<BreakpointProvider initialIsMobile={false}>` hardcodes the initial SSR value as desktop. On mobile devices, React renders desktop layout on the server, ships it to the browser, then flips to mobile after hydration. This causes a layout flash (CLS) and briefly shows the wrong layout.  
 **Fix:** Use `getIsMobile()` from `lib/ua.ts` (reads the `User-Agent` header via `headers()`) to pass the correct `initialIsMobile` based on the actual request. This is already the pattern used in the dual-variant Suspense sections.
 
-### P2-2: 18 sections have no ErrorBoundary
+### P2-2: 19 sections have no ErrorBoundary
 **File:** `app/page.tsx`  
-**Finding:** Only `Hero` and `FooterLazy` are wrapped in `ErrorBoundary`. If any of the 18 middle sections (Skills, GitLog, Shell, etc.) throws during render, the entire page crashes. Given that several sections use `use client` + `useEffect` patterns that can fail in edge cases (Redis timeout, malformed content, intersection observer unavailable), this is a real risk.  
+**Finding:** Only `Hero` and `FooterLazy` are wrapped in `ErrorBoundary`. If any of the 19 middle sections (ReadmeSection, ShellSection, GitLogSection, etc.) throws during render, the entire page crashes. Given that several sections use `use client` + `useEffect` patterns that can fail in edge cases (Redis timeout, malformed content, intersection observer unavailable), this is a real risk.  
 **Fix:** Wrap each section in a `<SectionErrorBoundary>` that renders a minimal fallback (the section header + "–" placeholder). This is a defensive change, not a known active bug.
 
 ### P2-3: `req.json() as { question?: unknown }` — false narrowing in ask route
