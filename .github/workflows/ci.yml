@@ -1,10 +1,12 @@
 name: CI
 
-# Required jobs for branch protection: quality, test, build, performance,
+# Required jobs for branch protection: quality-fast, typecheck, test, build, performance,
 # e2e-functional, e2e-visual-chromium, ai-eval.
 # e2e-visual-webkit is intentionally NOT required (webkit pixel rendering variance).
 # vercel-preview is intentionally NOT required (informational only).
 # Manual step: add "CodeQL / Analyze (javascript-typescript)" to required checks in GitHub Settings.
+# Manual step (post-merge): in GitHub Settings → Branches → main → Required status checks,
+# replace "quality" with "quality-fast" AND "typecheck".
 
 on:
   pull_request:
@@ -21,20 +23,20 @@ on:
 
 # Top-level cancel-in-progress is false: a push to main must not cancel the
 # slower visual/e2e jobs still running from the previous commit.
-# Fast jobs (quality, test, build) use per-job concurrency groups instead.
+# Fast jobs (quality-fast, typecheck, test, build) use per-job concurrency groups instead.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  quality:
+  quality-fast:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
     timeout-minutes: 8
     concurrency:
-      group: quality-${{ github.ref }}
+      group: quality-fast-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
@@ -64,9 +66,6 @@ jobs:
 
       - name: Biome check
         run: pnpm biome ci .
-
-      - name: Type check
-        run: pnpm tsc --noEmit
 
       - name: Validate content
         run: pnpm validate-content
@@ -105,6 +104,28 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pnpm tsx scripts/check-pr-comments.ts ${{ github.event.pull_request.number }}
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: typecheck-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm tsc --noEmit
 
   test:
     runs-on: ubuntu-latest
@@ -227,7 +248,7 @@ jobs:
       id-token: write
       attestations: write
     timeout-minutes: 12
-    needs: [quality, test]
+    needs: [quality-fast, typecheck, test]
     concurrency:
       group: build-${{ github.ref }}
       cancel-in-progress: true
