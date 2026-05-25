@@ -106,8 +106,20 @@ function main() {
   try {
     body = getPrBody(prArg);
   } catch (err) {
+    const code = (err as { code?: string }).code;
+    const stderr = (err as { stderr?: Buffer | string }).stderr?.toString() ?? '';
+    let hint: string;
+    if (code === 'ENOENT') {
+      hint = '`gh` CLI not found — install from https://cli.github.com.';
+    } else if (stderr.includes('not logged') || stderr.includes('authentication')) {
+      hint = 'Not authenticated — run `gh auth login` then retry.';
+    } else if (stderr.includes('no pull requests') || stderr.includes('Could not resolve')) {
+      hint = 'No open PR for this branch. Pass a number: pnpm validate-pr-body <pr-number>.';
+    } else {
+      hint = 'Are you on a PR branch? Run `gh auth status` to check authentication.';
+    }
     process.stderr.write(
-      `${C.red}[validate-pr-body] Could not fetch PR body.${C.reset} Are you on a PR branch? (${err})\n`,
+      `${C.red}[validate-pr-body] Could not fetch PR body.${C.reset} ${hint}\n${C.dim}(${err})${C.reset}\n`,
     );
     process.exit(1);
   }
