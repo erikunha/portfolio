@@ -143,13 +143,30 @@ jobs:
           retention-days: 7
 
       - name: Post coverage comment
-        if: github.event_name == 'pull_request'
+        # Skip on fork PRs: GITHUB_TOKEN write permission is not granted to forks.
+        # Mirrors the same guard used in the ai-eval job.
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+            if (!fs.existsSync('coverage/coverage-summary.json')) {
+              core.warning('coverage/coverage-summary.json not found — skipping coverage comment. Did pnpm test:coverage complete?');
+              return;
+            }
+            let summary;
+            try {
+              summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+            } catch (err) {
+              core.warning(`Failed to parse coverage-summary.json: ${err.message}`);
+              return;
+            }
             const t = summary.total;
+            if (!t || typeof t.lines?.pct !== 'number') {
+              core.warning('coverage-summary.json is missing expected "total" fields. Skipping coverage comment.');
+              return;
+            }
             const pct = (n) => `${n.pct.toFixed(1)}%`;
             const marker = '<!-- coverage-bot -->';
             const body = [
@@ -162,26 +179,31 @@ jobs:
               `| Branches | ${pct(t.branches)} | -- |`,
               `| Statements | ${pct(t.statements)} | -- |`,
             ].join('\n');
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const existing = comments.find(c => c.body.includes(marker));
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
+            try {
+              const { data: comments } = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body,
+                per_page: 100,
               });
+              const existing = comments.find(c => c.body.includes(marker) && c.user?.type === 'Bot');
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body,
+                });
+              }
+            } catch (err) {
+              core.warning(`Failed to post coverage comment (GitHub API error): ${err.message}. Coverage data is available in the uploaded artifact.`);
             }
 
   dependency-review:
