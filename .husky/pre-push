@@ -2,7 +2,7 @@
 # commitlint scope set, or is `main`.
 branch=$(git rev-parse --abbrev-ref HEAD)
 echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot|design-system)/.+$|^main$' \
-  || (echo "Error: invalid branch name '$branch'. Use <type>/<description> or main." && exit 1)
+  || { echo "Error: invalid branch name '$branch'. Use <type>/<description> or main."; exit 1; }
 
 # Review stamp gate: every push requires prior dispatch of the full agent
 # review battery (pr-review-toolkit, security-auditor, accessibility-tester,
