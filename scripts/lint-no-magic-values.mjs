@@ -64,7 +64,7 @@ const checks = [
   },
   // rgba / rgb / hsl color function calls
   {
-    pattern: /\b(?:rgba?|hsla?)\s*\([^)]*\)/g,
+    pattern: /\b(?:rgba?|hsla?)\s*\([^)]*\)/gi,
     extract: (m) => m.replace(/\s+/g, ' ').trim(),
     filter: (m) => !allowedColorFunctions.has(m),
     message: (m) =>
