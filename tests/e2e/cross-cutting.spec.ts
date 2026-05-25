@@ -7,6 +7,8 @@
 //   3. prefers-reduced-motion disables CRT/decorative animations
 //   4. Matrix loop INP guard: a keystroke into the shell input round-trips
 //      under 50ms and produces no long task >100ms
+//   5. Motion toggle INP guard: a button click commits under 200ms (two rAF
+//      cycles — matches the INP "time to next frame presentation" definition)
 //
 // Each test owns its motion-emulation contract. We deliberately use the
 // unprefixed `test` from @playwright/test (not the mockedPage fixture) because
@@ -336,5 +338,44 @@ test.describe('cross-cutting', () => {
     expect(offenders, `Long tasks >100ms during keystroke: ${JSON.stringify(offenders)}`).toEqual(
       [],
     );
+  });
+
+  test('5 — motion toggle INP guard: click commits under 200ms (two rAF cycles)', async ({
+    page,
+  }, testInfo) => {
+    // INP is a Chrome-only Core Web Vitals metric — same rationale as test 4.
+    test.skip(
+      testInfo.project.name.startsWith('webkit-'),
+      'INP is Chrome-only; skip on webkit projects',
+    );
+
+    // Why two rAF cycles: INP is defined as the time from interaction to next
+    // frame *presentation*. The first rAF callback fires before the browser
+    // has committed the paint; the second fires after. Two cycles is the
+    // standard measurement proxy used by web-vitals and Chrome DevTools.
+    //
+    // This test replaces the LHCI `interaction-to-next-paint` lab assertion,
+    // which returns auditRan:0 for SSG pages because Lighthouse navigation mode
+    // never synthesises a click interaction — the audit is structurally N/A in
+    // that context. See DECISIONS.md 2026-05-25.
+    await installMockBackend(page, { log: 'accept', forget: 'happy' });
+    await page.goto('/');
+    // Wait for React hydration — [data-motion] is set inside useLayoutEffect.
+    await page.waitForSelector('[data-motion]', { state: 'visible' });
+
+    const elapsedMs = await page.evaluate(async () => {
+      const btn = document.querySelector<HTMLButtonElement>('[data-motion]');
+      if (!btn) throw new Error('[data-motion] button not found after hydration');
+      const t0 = performance.now();
+      btn.click();
+      // Two rAF cycles to span input → processing → frame presentation.
+      await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+      return performance.now() - t0;
+    });
+
+    expect(
+      elapsedMs,
+      `motion toggle → next paint should be <200ms (got ${elapsedMs.toFixed(1)}ms)`,
+    ).toBeLessThan(200);
   });
 });
