@@ -38,6 +38,9 @@
 
 tsconfig.tsbuildinfo
 
+# review stamp — local signal that review agents passed for HEAD
+.review-passed
+
 # git worktrees (superpowers using-git-worktrees skill creates these here)
 .worktrees/
 

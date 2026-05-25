@@ -4,6 +4,35 @@ branch=$(git rev-parse --abbrev-ref HEAD)
 echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot|design-system)/.+$|^main$' \
   || (echo "Error: invalid branch name '$branch'. Use <type>/<description> or main." && exit 1)
 
+# Review stamp gate: every push requires prior dispatch of the full agent
+# review battery (pr-review-toolkit, security-auditor, accessibility-tester,
+# performance-engineer, dependency-manager). After all agents pass:
+#   pnpm review:stamp   → writes HEAD SHA to .review-passed
+# A new commit clears the stamp (post-commit hook), requiring a fresh review.
+STAMP_FILE=".review-passed"
+HEAD_SHA=$(git rev-parse HEAD)
+if [ ! -f "$STAMP_FILE" ]; then
+  echo ""
+  echo "BLOCKED: no review stamp found."
+  echo "  1. Run review agents: pr-review-toolkit, security-auditor,"
+  echo "     accessibility-tester, performance-engineer, dependency-manager"
+  echo "  2. Fix all Critical/Important findings"
+  echo "  3. Run: pnpm review:stamp"
+  echo ""
+  exit 1
+fi
+STAMPED_SHA=$(cat "$STAMP_FILE")
+if [ "$STAMPED_SHA" != "$HEAD_SHA" ]; then
+  echo ""
+  echo "BLOCKED: review stamp is stale."
+  echo "  Stamped: $STAMPED_SHA"
+  echo "  HEAD:    $HEAD_SHA"
+  echo "  Re-run review agents for new commits, then: pnpm review:stamp"
+  echo ""
+  exit 1
+fi
+echo "[pre-push] Review stamp valid ($HEAD_SHA)"
+
 # Two-tier hook strategy (audit Standard 9): heavy gates run ONCE before
 # push instead of once per commit. Same safety net as the prior per-commit
 # chain (typecheck + validate-content + client-naming + tests) at a fraction
