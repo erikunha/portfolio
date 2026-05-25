@@ -345,8 +345,8 @@ test.describe('cross-cutting', () => {
   }, testInfo) => {
     // INP is a Chrome-only Core Web Vitals metric — same rationale as test 4.
     test.skip(
-      testInfo.project.name.startsWith('webkit-'),
-      'INP is Chrome-only; skip on webkit projects',
+      testInfo.project.name.startsWith('webkit-') || testInfo.project.name.includes('mobile'),
+      'INP is Chrome-only; motion toggle button is desktop-only (display:none on mobile)',
     );
 
     // Why two rAF cycles: INP is defined as the time from interaction to next
@@ -360,19 +360,26 @@ test.describe('cross-cutting', () => {
     // that context. See DECISIONS.md 2026-05-25.
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
     await page.goto('/');
-    // Wait for React hydration — [data-motion] is set inside useLayoutEffect.
-    await page.waitForSelector('[data-motion]', { state: 'visible' });
+    // Wait for the DesktopTopbar button — body[data-motion] is set by init.js
+    // before React, so [data-motion] would match <body> first. Scope to button.
+    await page.waitForSelector('button[data-motion]', { state: 'visible' });
 
-    const elapsedMs = await page.evaluate(async () => {
-      const btn = document.querySelector<HTMLButtonElement>('[data-motion]');
-      if (!btn) throw new Error('[data-motion] button not found after hydration');
+    const { elapsedMs, motionFlipped } = await page.evaluate(async () => {
+      const btn = document.querySelector<HTMLButtonElement>('button[data-motion]');
+      if (!btn || btn.tagName !== 'BUTTON')
+        throw new Error('button[data-motion] not found after hydration');
+      const before = document.body.dataset.motion;
       const t0 = performance.now();
       btn.click();
       // Two rAF cycles to span input → processing → frame presentation.
       await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
-      return performance.now() - t0;
+      return {
+        elapsedMs: performance.now() - t0,
+        motionFlipped: document.body.dataset.motion !== before,
+      };
     });
 
+    expect(motionFlipped, 'motion toggle click must flip body[data-motion]').toBe(true);
     expect(
       elapsedMs,
       `motion toggle → next paint should be <200ms (got ${elapsedMs.toFixed(1)}ms)`,
