@@ -43,8 +43,9 @@ function isSectionFilled(heading: string, body: string): boolean {
   // Collect lines until next ## heading
   const contentLines: string[] = [];
   for (let i = headingIdx + 1; i < lines.length; i++) {
-    if (lines[i].startsWith('## ')) break;
-    contentLines.push(lines[i]);
+    const line = lines[i] ?? '';
+    if (line.startsWith('## ')) break;
+    contentLines.push(line);
   }
 
   // A section is filled if it has at least one line that is not:
