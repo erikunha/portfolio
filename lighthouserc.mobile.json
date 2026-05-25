@@ -42,7 +42,7 @@
         "uses-responsive-images": "error",
         "uses-rel-preconnect": "off",
         "render-blocking-resources": ["error", { "maxLength": 3, "maxNumericValue": 800 }],
-        "errors-in-console": "warn",
+        "errors-in-console": "error",
         "font-display": "error",
 
         "color-contrast": "error",

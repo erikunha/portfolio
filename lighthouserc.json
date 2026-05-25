@@ -60,7 +60,7 @@
         "unused-javascript": ["warn", { "maxNumericValue": 60 }],
         "dom-size": ["warn", { "maxNumericValue": 1500 }],
         "uses-long-cache-ttl": "warn",
-        "errors-in-console": "warn"
+        "errors-in-console": "error"
       }
     },
     "upload": {
