@@ -467,15 +467,20 @@ jobs:
     # Skip on fork PRs: repository secrets are not available to forks.
     # Skip when no AI-relevant files changed: GitHub treats skipped required checks as satisfied.
     if: |
-      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+      always()
+      && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
       && needs.detect-changes.outputs.ai == 'true'
+      && !contains(needs.*.result, 'failure')
+      && !contains(needs.*.result, 'cancelled')
     # Serialize per-ref: the eval mutates the shared *_BUILD Upstash instance
     # (rate-limit, budget, dedup counters) and overwrites the `ask:eval:latest` key.
     concurrency:
       group: ai-eval-${{ github.ref }}
       cancel-in-progress: true
-    # Run after e2e-functional: avoids burning AI Gateway credits when other gates already fail.
-    needs: [e2e-functional, detect-changes]
+    # Run last: avoids burning AI Gateway credits when any required gate already fails.
+    # always() lets GitHub evaluate the condition even when upstream jobs fail.
+    # skipped (path-filtered) jobs are allowed — only failure/cancelled blocks.
+    needs: [detect-changes, quality-fast, typecheck, test, build, e2e-functional, performance, e2e-visual-chromium, e2e-visual-webkit]
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
