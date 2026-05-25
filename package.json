@@ -25,6 +25,7 @@
     "tokens:build": "tsx design-system/sd.config.ts",
     "tokens:check": "tsx design-system/sd.config.ts && git diff --exit-code design-system/dist/",
     "validate-content": "tsx scripts/validate-content.ts",
+    "generate:og": "tsx scripts/generate-og-image.ts",
     "ask:eval": "TSX_TSCONFIG_PATH=scripts/tsconfig.eval.json tsx scripts/ask-eval.ts",
     "bundle-check": "node scripts/check-bundle-size.mjs",
     "bundle:analyze": "ANALYZE=true next build",
