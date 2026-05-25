@@ -1,5 +1,7 @@
 # Design System Tokenized — Design
 
+> **HISTORICAL DOCUMENT — do not follow as implementation guidance.** This spec describes a design that partially diverged during execution. `layer.json` and `--ds-layer-*` tokens were never created. The Style Dictionary config does not generate `tokens.ts` or `tokens.figma.json`. The authoritative token surface is in `STANDARDS.md` Ch.12.
+
 **Status:** spec → architect-reviewer → writing-plans
 **Date:** 2026-05-23
 **Author:** Erik Cunha (with brainstorming via Claude Code)
