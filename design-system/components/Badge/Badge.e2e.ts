@@ -19,7 +19,8 @@ test.describe('Badge — behavioral E2E', () => {
   test('default variant renders without a dot span', async ({ page }) => {
     await page.goto('/design-system/components');
     const preview = page.locator('#badge');
-    const availableBadge = preview.getByText('AVAILABLE');
+    // Scope to span to avoid matching code-example text nodes on the same page.
+    const availableBadge = preview.locator('span').getByText('AVAILABLE').first();
     await expect(availableBadge).toBeVisible();
     // Default variant must not render a decorative dot.
     await expect(

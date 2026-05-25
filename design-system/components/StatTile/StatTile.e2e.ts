@@ -14,8 +14,9 @@ test.describe('StatTile — behavioral E2E', () => {
   test('value and label are rendered with correct text', async ({ page }) => {
     await page.goto('/design-system/components');
     const preview = page.locator('#stat-tile');
-    await expect(preview.getByText('99')).toBeVisible();
-    await expect(preview.getByText('LH_SCORE')).toBeVisible();
+    // Scope to dd to avoid matching code-example text nodes on the same page.
+    await expect(preview.locator('dd').getByText('99').first()).toBeVisible();
+    await expect(preview.locator('dt').getByText('LH_SCORE').first()).toBeVisible();
   });
 
   test('compact variant renders its value and label', async ({ page }) => {
