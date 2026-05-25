@@ -5,7 +5,7 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 
 // Usage: pnpm generate:og
-// Requires: dev server running on http://localhost:3000 (pnpm dev)
+// Requires: dev server running on http://localhost:3000 (pnpm dev) with /opengraph-image route present
 // Output: public/og.png (1200x630 PNG)
 
 async function main() {
@@ -13,10 +13,15 @@ async function main() {
   try {
     const page = await browser.newPage();
     await page.setViewportSize({ width: 1200, height: 630 });
-    await page.goto('http://localhost:3000/opengraph-image', {
+    const response = await page.goto('http://localhost:3000/opengraph-image', {
       waitUntil: 'networkidle',
       timeout: 10000,
     });
+    if (!response || response.status() !== 200) {
+      throw new Error(
+        `/opengraph-image returned ${response?.status() ?? 'no response'} — route must exist to generate OG image`,
+      );
+    }
     const buffer = await page.screenshot({ type: 'png', fullPage: false });
     const outputPath = path.resolve(process.cwd(), 'public/og.png');
     writeFileSync(outputPath, buffer);
