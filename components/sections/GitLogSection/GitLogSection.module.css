@@ -88,7 +88,7 @@
    Mobile variant — smaller font, wrapping pre
    ───────────────────────────────────────────────────────────────────────── */
 .mobile {
-  font-size: var(--ds-font-size-sm);
+  font-size: var(--ds-font-size-xs);
 }
 
 .mobile pre {
@@ -101,4 +101,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .root {
+    font-size: var(--ds-font-size-xs);
+  }
 }
