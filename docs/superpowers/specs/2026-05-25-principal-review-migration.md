@@ -9,7 +9,7 @@
 
 ### P0-1: Contact form silently drops all email delivery
 **File:** `app/api/contact/route.ts`  
-**Finding:** `from: 'onboarding@resend.dev'` is Resend's sandbox sender. Resend blocks delivery to any address other than the account owner's verified email. Every contact form submission appears to succeed (200 OK) but the email never arrives.  
+**Finding:** `from: 'onboarding@resend.dev'` is Resend's sandbox sender. Resend restricts delivery to the account owner's verified email only. Every contact form submission appears to succeed (200 OK) but emails sent to any other recipient are silently dropped by Resend.  
 **Fix:** Set `from:` to a verified sender on your Resend account (e.g. `contact@erikunha.dev` or `noreply@erikunha.dev`). Requires the domain to be verified in Resend dashboard.  
 **Previously flagged:** `docs/audit/2026-05-19-principal-audit.md:166` as High. Never fixed.
 
@@ -20,7 +20,7 @@
 
 ### P0-3: Budget counter permanently overcounts after each request
 **File:** `app/api/ask/route.ts` (the `settleAndPersist` closure)  
-**Finding:** `void settleBudget(...)` and `void persistAskInteraction(...)` inside `settleAndPersist()` fire-and-forget instead of being awaited. The function is `async` — the `void` calls discard their promises, meaning `settleBudget` never runs before the function returns. The monthly token budget reservation (~2,712 tokens per request) is never refunded. After ~1,100 requests, the counter hits the 3M cap and the ask endpoint returns 402 for the rest of the month even though actual usage may be far below.  
+**Finding:** `void settleBudget(...)` and `void persistAskInteraction(...)` inside `settleAndPersist()` fire-and-forget instead of being awaited. The function is `async` — the `void` calls discard their promises, so `settleBudget` is not guaranteed to run before the function returns. If the process exits early or an error occurs, the monthly token budget reservation (~2,712 tokens per request) may not be refunded. Over enough requests, the counter could hit the 3M cap and the ask endpoint would return 402 even though actual usage is lower.  
 **Fix:** `await settleBudget(...)` and `await persistAskInteraction(...)` inside `settleAndPersist`. Remove the `void` prefix.
 
 ### P0-4: `lib/ip-hash.ts` permanently breaks after any salt-resolution failure
@@ -113,7 +113,7 @@ Keep `report-uri` as a fallback for Safari/Firefox compatibility.
 
 ### P2-2: 18 sections have no ErrorBoundary
 **File:** `app/page.tsx`  
-**Finding:** Only `Hero` and `FooterLazy` are wrapped in `ErrorBoundary`. If any of the 18 middle sections (Skills, GitLog, Shell, etc.) throws during render, the entire page crashes. Given that several sections use `use client` + `useEffect` patterns that can fail in edge cases (Redis timeout, mal-formed content, intersection observer unavailable), this is a real risk.  
+**Finding:** Only `Hero` and `FooterLazy` are wrapped in `ErrorBoundary`. If any of the 18 middle sections (Skills, GitLog, Shell, etc.) throws during render, the entire page crashes. Given that several sections use `use client` + `useEffect` patterns that can fail in edge cases (Redis timeout, malformed content, intersection observer unavailable), this is a real risk.  
 **Fix:** Wrap each section in a `<SectionErrorBoundary>` that renders a minimal fallback (the section header + "–" placeholder). This is a defensive change, not a known active bug.
 
 ### P2-3: `req.json() as { question?: unknown }` — false narrowing in ask route
