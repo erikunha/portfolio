@@ -7,6 +7,12 @@ import { type ComponentType, createElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
 
+function firstOf<T>(arr: readonly T[]): T {
+  expect(arr.length).toBeGreaterThan(0);
+  // biome-ignore lint/style/noNonNullAssertion: length asserted by expect above
+  return arr[0]!;
+}
+
 // ContactSection imports ContactFormLazy — stub it so no lazy/Suspense setup needed.
 vi.mock('@/components/client/ContactForm', () => ({
   ContactFormLazy: () => null,
@@ -114,7 +120,7 @@ describe('CredentialsSection', () => {
   it('renders at least one credential row', async () => {
     const container = await render();
     const { credentials } = await import('@/content/credentials');
-    expect(container.textContent).toContain(credentials[0]?.label ?? '');
+    expect(container.textContent).toContain(firstOf(credentials).label);
   });
 
   it('renders without error with defer prop', async () => {
@@ -158,7 +164,7 @@ describe('HottestTakesSection', () => {
   it('renders at least one take item', async () => {
     const container = await render();
     const { hottestTakes } = await import('@/content/hottest-takes');
-    expect(container.textContent).toContain(hottestTakes[0]?.thesis ?? '');
+    expect(container.textContent).toContain(firstOf(hottestTakes).thesis);
   });
 
   it('renders without error with defer prop', async () => {
@@ -196,7 +202,7 @@ describe('NpmStackSection', () => {
   it('renders at least one npm stack item', async () => {
     const container = await render();
     const { npmStack } = await import('@/content/npm-stack');
-    expect(container.textContent).toContain(npmStack[0]?.label ?? '');
+    expect(container.textContent).toContain(firstOf(npmStack).label);
   });
 
   it('renders without error with defer prop', async () => {
@@ -230,7 +236,7 @@ describe('NowSection', () => {
   it('renders at least one now row', async () => {
     const container = await render();
     const { nowRows } = await import('@/content/now');
-    expect(container.textContent).toContain(nowRows[0]?.k ?? '');
+    expect(container.textContent).toContain(firstOf(nowRows).k);
   });
 });
 
@@ -263,7 +269,7 @@ describe('ResponsibilitiesSection', () => {
   it('renders at least one responsibility entry', async () => {
     const container = await render();
     const { responsibilities } = await import('@/content/responsibilities');
-    expect(container.textContent).toContain(responsibilities[0]?.name ?? '');
+    expect(container.textContent).toContain(firstOf(responsibilities).name);
   });
 
   it('renders without error with defer prop', async () => {
@@ -329,7 +335,7 @@ describe('SysHealthSection', () => {
   it('renders at least one sys health stat', async () => {
     const container = await render();
     const { sysStats } = await import('@/content/sys-health');
-    expect(container.textContent).toContain(sysStats[0]?.label ?? '');
+    expect(container.textContent).toContain(firstOf(sysStats).label);
   });
 
   it('renders without error with defer prop', async () => {
@@ -367,7 +373,7 @@ describe('UnknownsSection', () => {
   it('renders learning items', async () => {
     const container = await render();
     const { unknowns } = await import('@/content/unknowns');
-    expect(container.textContent).toContain(unknowns.learning[0]?.claim ?? '');
+    expect(container.textContent).toContain(firstOf(unknowns.learning).claim);
   });
 
   it('renders without error with defer prop', async () => {
