@@ -5,7 +5,7 @@ vi.mock('next/font/local', () => ({
 }));
 
 describe('layout metadata og:image', () => {
-  it('metadataBase resolves relative og:image URLs to the canonical origin', async () => {
+  it('metadataBase is set to the canonical origin', async () => {
     const { metadata } = await import('@/app/layout');
     expect(metadata.metadataBase?.toString()).toBe('https://erikunha.dev/');
   });
