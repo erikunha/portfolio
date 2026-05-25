@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Rejects hardcoded magic values in .module.css: hex colors, non-token px,
-// hardcoded ms/s durations, raw z-index integers.
+// Rejects hardcoded magic values in .module.css: hex colors, color function literals
+// (rgba/rgb/hsl/hsla), non-token px, hardcoded ms/s durations, raw z-index integers.
 //
 // Intentionally does NOT flag:
 //   - Values inside CSS comments (/* ... */)
