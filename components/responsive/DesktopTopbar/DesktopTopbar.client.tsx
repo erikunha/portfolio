@@ -60,7 +60,6 @@ export function DesktopTopbar() {
             className={styles.motion}
             onClick={toggleMotion}
             data-motion={motionOn ? 'on' : 'off'}
-            aria-label="Toggle motion effects"
             aria-pressed={motionOn}
           >
             <span className={styles.mdot} aria-hidden="true" />
