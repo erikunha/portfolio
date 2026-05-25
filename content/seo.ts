@@ -9,7 +9,7 @@ export const personSchema = {
   '@type': 'Person',
   name: 'Erik Henrique Alves Cunha',
   alternateName: 'Erik Cunha',
-  jobTitle: 'Staff Full-Stack Engineer · Applied AI',
+  jobTitle: 'Senior Full-Stack Engineer · Frontend Architecture & AI',
   url: 'https://erikunha.dev',
   email: 'erikhenriquealvescunha@gmail.com',
   telephone: '+5519998394086',
