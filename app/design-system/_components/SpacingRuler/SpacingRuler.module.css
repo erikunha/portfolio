@@ -2,8 +2,8 @@
   display: grid;
   grid-template-columns: 220px 1fr;
   align-items: center;
-  gap: var(--ds-space-3);
-  padding: var(--ds-space-3) 0;
+  gap: var(--ds-space-pad-tight);
+  padding: var(--ds-space-pad-tight) 0;
   border-bottom: 1px solid var(--ds-color-signal-subtle);
 }
 
@@ -14,7 +14,7 @@
 .labels {
   display: flex;
   flex-direction: column;
-  gap: var(--ds-space-1);
+  gap: var(--ds-space-nano);
 }
 
 .name {

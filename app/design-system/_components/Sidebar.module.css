@@ -56,7 +56,7 @@
 .divider {
   border: none;
   border-top: 1px solid var(--ds-color-signal-subtle);
-  margin: var(--ds-space-2) 0;
+  margin: var(--ds-space-gap) 0;
 }
 
 @media (max-width: 768px) {

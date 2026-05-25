@@ -1,9 +1,9 @@
 .root {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--ds-space-2);
-  margin-bottom: var(--ds-space-6);
-  padding-bottom: var(--ds-space-4);
+  gap: var(--ds-space-gap);
+  margin-bottom: var(--ds-space-pad);
+  padding-bottom: var(--ds-space-rhythm-tight);
   border-bottom: 1px solid var(--ds-color-signal-subtle);
 }
 
@@ -13,7 +13,7 @@
   color: var(--ds-color-text-muted);
   text-decoration: none;
   border: 1px solid var(--ds-color-signal-subtle);
-  padding: 2px var(--ds-space-2);
+  padding: 2px var(--ds-space-gap);
   transition:
     color var(--ds-duration-fast),
     border-color var(--ds-duration-fast);

@@ -76,10 +76,13 @@
   --ds-color-accent-cool: var(--ds-accent-cyan);
   --ds-color-highlight-bg: var(--ds-green-500);
   --ds-color-highlight-fg: var(--ds-neutral-0);
-  --ds-space-pad: var(--ds-space-6);
+  --ds-space-nano: var(--ds-space-1);
+  --ds-space-gap: var(--ds-space-2);
   --ds-space-pad-tight: var(--ds-space-3);
-  --ds-space-rhythm: var(--ds-space-16);
   --ds-space-rhythm-tight: var(--ds-space-4);
+  --ds-space-pad: var(--ds-space-6);
+  --ds-space-section: var(--ds-space-8);
+  --ds-space-rhythm: var(--ds-space-16);
   --ds-font-size-2xs: var(--ds-text-size-2xs);
   --ds-font-size-xs: var(--ds-text-size-xs);
   --ds-font-size-sm: var(--ds-text-size-sm);

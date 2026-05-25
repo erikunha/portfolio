@@ -48,7 +48,6 @@
     "ci": "pnpm verify && pnpm build && pnpm bundle-check",
     "ci:local": "pnpm verify",
     "gates:runtime": "tsx scripts/gates-runtime.ts",
-    "commit": "cz",
     "prepare": "husky || true",
     "postinstall": "node scripts/strip-next-polyfills.mjs",
     "changelog:sync": "tsx scripts/sync-changelog.ts"
@@ -58,11 +57,9 @@
       "esbuild",
       "sharp",
       "@biomejs/biome"
-    ]
-  },
-  "config": {
-    "commitizen": {
-      "path": "@commitlint/cz-commitlint"
+    ],
+    "overrides": {
+      "lodash": ">=4.18.0"
     }
   },
   "dependencies": {
@@ -101,7 +98,6 @@
     "@biomejs/biome": "^2.4.15",
     "@commitlint/cli": "^21.0.1",
     "@commitlint/config-conventional": "^21.0.1",
-    "@commitlint/cz-commitlint": "^21.0.1",
     "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.2.6",
     "@playwright/test": "^1.60.0",
@@ -116,7 +112,6 @@
     "@types/react-dom": "^19.2.3",
     "@vitest/coverage-v8": "^4.1.7",
     "@vitest/ui": "^4.1.7",
-    "commitizen": "^4.3.1",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "pino-pretty": "^13.1.3",
