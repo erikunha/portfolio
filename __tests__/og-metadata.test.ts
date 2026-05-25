@@ -19,7 +19,9 @@ describe('layout metadata og:image', () => {
     expect(images[0]?.url).toBe('/og.png');
     expect(images[0]?.width).toBe(1200);
     expect(images[0]?.height).toBe(630);
-    expect(images[0]?.alt).toBe('Erik Cunha — Staff Full-Stack Engineer · Applied AI');
+    expect(images[0]?.alt).toBe(
+      'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
+    );
   });
 
   it('twitter.images is a non-empty array pointing to /og.png', async () => {
