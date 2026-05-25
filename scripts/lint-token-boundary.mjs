@@ -27,11 +27,11 @@ const FORBIDDEN = [
   },
 ];
 
-// Scan all .module.css files except the dist/tokens.css file (primitives are valid there).
+// Scan all .module.css files; design-system/dist/** is excluded by scanCssModules().
 const cssFiles = await scanCssModules();
 
 let violations = 0;
-for (const { rel, stripped: content } of cssFiles) {
+for (const { rel, raw: content } of cssFiles) {
   for (const { pattern, hint } of FORBIDDEN) {
     const matches = content.match(pattern);
     if (matches) {
