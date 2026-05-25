@@ -45,8 +45,13 @@ describe('isSectionFilled', () => {
     expect(isSectionFilled('Type of change', b)).toBe(true);
   });
 
-  it('returns true when an unchecked checkbox has trailing text', () => {
-    const b = body(['Type of change', '- [ ] `feat` — new feature']);
+  it('returns false when all checkboxes are unchecked even with text', () => {
+    const b = body(['Type of change', '- [ ] `feat` — new feature\n- [ ] `fix` — bug fix']);
+    expect(isSectionFilled('Type of change', b)).toBe(false);
+  });
+
+  it('returns true when at least one checkbox is checked', () => {
+    const b = body(['Type of change', '- [ ] `feat` — new feature\n- [x] `fix` — bug fix']);
     expect(isSectionFilled('Type of change', b)).toBe(true);
   });
 
@@ -75,6 +80,11 @@ describe('isSectionFilled', () => {
     const b = '## Summary\n\n-\n\n  ## Type of change\n\n- [x] `fix` — bug fix';
     expect(isSectionFilled('Summary', b)).toBe(false);
     expect(isSectionFilled('Type of change', b)).toBe(true);
+  });
+
+  it('returns false for an unclosed HTML comment (no closing -->)', () => {
+    const b = body(['Summary', '<!-- this comment has no closing tag\nsome text after']);
+    expect(isSectionFilled('Summary', b)).toBe(false);
   });
 
   it('returns false when template file placeholder (lone hyphen) is left in place', () => {

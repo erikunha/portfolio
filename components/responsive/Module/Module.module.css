@@ -10,7 +10,7 @@
 /* Section header — icon + uppercase label, like .section-head in the mockup.
    Lives inside the <summary>; flex:1 lets it sit beside the chevron, margin
    reset because the <summary> owns the header's padding. Mobile sizing is
-   the base; the `min-width: 769px` block restores the desktop --ds-font-size-body. */
+   the base; the `min-width: 769px` block steps up to --ds-font-size-sm. */
 .header {
   flex: 1;
   display: flex;

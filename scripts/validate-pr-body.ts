@@ -58,14 +58,20 @@ export function isSectionFilled(heading: string, body: string): boolean {
     contentLines.push(line);
   }
 
-  // Strip multi-line <!-- ... --> comment blocks before line-level checks
-  const stripped = contentLines.join('\n').replace(/<!--[\s\S]*?-->/g, '');
+  // Strip closed <!-- ... --> blocks, then any unclosed <!-- to end of content.
+  // Two-pass prevents CodeQL "incomplete multi-character sanitization" (an
+  // unclosed opener would leave "<!--" in the output after the first pass).
+  const stripped = contentLines
+    .join('\n')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<!--[\s\S]*/g, '');
 
   const meaningful = stripped.split('\n').filter((l) => {
     const t = l.trim();
     if (!t) return false;
-    // Bare unchecked checkbox with no trailing text is placeholder
-    if (/^-\s*\[\s*\]\s*$/.test(t)) return false;
+    // Any unchecked checkbox (with or without trailing text) is placeholder.
+    // Only a checked box "- [x]" or plain non-checkbox text counts as filled.
+    if (/^-\s*\[\s*\]/.test(t)) return false;
     // Bare bullet with no content is placeholder (e.g. lone "-" in Summary)
     if (/^-\s*$/.test(t)) return false;
     return true;
