@@ -200,6 +200,7 @@ Updated 2026-05-23: removed "design system extraction" (now accepted, see DECISI
 
 ## Reference docs in this repo
 
+- `CLAUDE-process.md` — process protocol: commits, reviews, pushes, PR workflow, merge gate
 - `STANDARDS.md` — the canonical engineering bar; 11 domain chapters, each naming its enforcement mechanism
 - `ARCHITECTURE.md` — system design, deep dive, trade-offs
 - `DECISIONS.md` — running ADR log
