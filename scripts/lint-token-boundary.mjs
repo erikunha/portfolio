@@ -1,12 +1,7 @@
 #!/usr/bin/env node
 // Rejects direct primitive references in .module.css when a semantic alias exists.
 // Run: node scripts/lint-token-boundary.mjs
-import { readFileSync } from 'node:fs';
-import { glob } from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+import { scanCssModules } from './lib/scan-css.mjs';
 
 // Patterns that are FORBIDDEN (primitives that have semantic aliases).
 // Each regex matches only the specific token shape that must be aliased:
@@ -32,18 +27,11 @@ const FORBIDDEN = [
   },
 ];
 
-// Scan all .module.css files except the dist/tokens.css file (primitives are valid there).
-const files = await Array.fromAsync(
-  glob('**/*.module.css', {
-    cwd: ROOT,
-    ignore: ['node_modules/**', '.next/**', '.claude/**', 'design-system/dist/**'],
-  }),
-);
+// Scan all .module.css files; design-system/dist/** is excluded by scanCssModules().
+const cssFiles = await scanCssModules();
 
 let violations = 0;
-for (const rel of files) {
-  const abs = path.join(ROOT, rel);
-  const content = readFileSync(abs, 'utf8');
+for (const { rel, raw: content } of cssFiles) {
   for (const { pattern, hint } of FORBIDDEN) {
     const matches = content.match(pattern);
     if (matches) {
@@ -59,4 +47,4 @@ if (violations > 0) {
   console.error(`\n${violations} token boundary violation(s). Fix before merging.`);
   process.exit(1);
 }
-console.log(`Token boundary check passed (${files.length} files).`);
+console.log(`Token boundary check passed (${cssFiles.length} files).`);
