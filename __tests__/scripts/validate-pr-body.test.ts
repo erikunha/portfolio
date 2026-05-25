@@ -40,7 +40,7 @@ describe('isSectionFilled', () => {
     expect(isSectionFilled('Summary', b)).toBe(false);
   });
 
-  it('returns true when a checkbox has text after it', () => {
+  it('returns true when a checkbox is checked', () => {
     const b = body(['Type of change', '- [x] `fix` — bug fix']);
     expect(isSectionFilled('Type of change', b)).toBe(true);
   });

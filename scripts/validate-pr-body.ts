@@ -4,7 +4,9 @@
 // Checks that a PR body fills every section from .github/pull_request_template.md.
 // A section is considered filled when:
 //   - its ## heading is present in the body, AND
-//   - at least one non-comment, non-empty line follows before the next ## heading
+//   - at least one meaningful line follows before the next ## heading
+//     (HTML comments, unchecked checkboxes "- [ ] …", and bare "-" bullets
+//      are all treated as placeholders and do not count)
 //
 // Exits 0 on pass, 1 on any violation.
 
