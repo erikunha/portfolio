@@ -60,4 +60,25 @@ describe('isSectionFilled', () => {
     const b = body(['Summary', '- Fixed mobile cmdbar font size']);
     expect(isSectionFilled('Summary', b)).toBe(true);
   });
+
+  it('returns false for a multi-line HTML comment only', () => {
+    const b = body(['Summary', '<!--\nWhat changed and why.\n2-3 bullets.\n-->']);
+    expect(isSectionFilled('Summary', b)).toBe(false);
+  });
+
+  it('returns false for multi-line comment mixed with bare bullets', () => {
+    const b = body(['Summary', '<!--\nexplain here\n-->\n-\n-']);
+    expect(isSectionFilled('Summary', b)).toBe(false);
+  });
+
+  it('does not bleed through indented headings', () => {
+    const b = '## Summary\n\n-\n\n  ## Type of change\n\n- [x] `fix` — bug fix';
+    expect(isSectionFilled('Summary', b)).toBe(false);
+    expect(isSectionFilled('Type of change', b)).toBe(true);
+  });
+
+  it('returns false when template file placeholder (lone hyphen) is left in place', () => {
+    const templateDefault = '## Summary\n\n<!-- What changed and why. 2-3 bullets. -->\n\n-\n-\n';
+    expect(isSectionFilled('Summary', templateDefault)).toBe(false);
+  });
 });

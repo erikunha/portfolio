@@ -22,7 +22,17 @@ const C = {
 };
 
 function getTemplateHeadings(): string[] {
-  const template = readFileSync(resolve(process.cwd(), '.github/pull_request_template.md'), 'utf8');
+  const templatePath = resolve(process.cwd(), '.github/pull_request_template.md');
+  let template: string;
+  try {
+    template = readFileSync(templatePath, 'utf8');
+  } catch {
+    process.stderr.write(
+      `${C.red}[validate-pr-body] Template not found:${C.reset} ${templatePath}\n` +
+        `${C.dim}Run this script from the repo root where .github/pull_request_template.md exists.${C.reset}\n`,
+    );
+    process.exit(1);
+  }
   return template
     .split('\n')
     .filter((l) => l.startsWith('## '))
@@ -44,18 +54,16 @@ export function isSectionFilled(heading: string, body: string): boolean {
   const contentLines: string[] = [];
   for (let i = headingIdx + 1; i < lines.length; i++) {
     const line = lines[i] ?? '';
-    if (line.startsWith('## ')) break;
+    if (line.trim().startsWith('## ')) break;
     contentLines.push(line);
   }
 
-  // A section is filled if it has at least one line that is not:
-  //   - empty / whitespace-only
-  //   - an HTML comment <!-- ... -->
-  //   - an unchecked checkbox "- [ ]" with no surrounding text
-  const meaningful = contentLines.filter((l) => {
+  // Strip multi-line <!-- ... --> comment blocks before line-level checks
+  const stripped = contentLines.join('\n').replace(/<!--[\s\S]*?-->/g, '');
+
+  const meaningful = stripped.split('\n').filter((l) => {
     const t = l.trim();
     if (!t) return false;
-    if (/^<!--/.test(t)) return false;
     // Bare unchecked checkbox with no trailing text is placeholder
     if (/^-\s*\[\s*\]\s*$/.test(t)) return false;
     // Bare bullet with no content is placeholder (e.g. lone "-" in Summary)
