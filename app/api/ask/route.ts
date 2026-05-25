@@ -350,7 +350,15 @@ export async function POST(req: NextRequest) {
         // awaiting it here only defers when this `start()` promise settles,
         // and guarantees budget settlement + persistence actually complete
         // before the runtime can reclaim the invocation.
-        await settleAndPersist();
+        // Wrapped in try/catch: a throw here (e.g. persistAskInteraction KV
+        // failure) would reject the start() promise after controller.close()
+        // has already been called, producing a silent unhandledRejection with
+        // no user-facing effect. Catch and log instead.
+        try {
+          await settleAndPersist();
+        } catch (settleErr) {
+          log.error('settle-and-persist failed', { requestId, err: settleErr });
+        }
       }
     },
   });

@@ -15,7 +15,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // package's `streamText`. `mockStreamText` is the upstream seam.
 const mockStreamText = vi.fn();
 const rateLimitMock = vi.fn(async () => ({ success: true }));
-const reserveBudgetMock = vi.fn(async () => ({ allowed: true, reserved: 1512, pct: 0 }));
+const reserveBudgetMock = vi.fn(async () => ({
+  allowed: true,
+  reserved: 1512,
+  pct: 0,
+  budgetKey: 'ask:tokens:test',
+}));
 const persistMock = vi.fn(async () => undefined);
 
 vi.mock('ai', () => ({
@@ -70,7 +75,9 @@ beforeEach(() => {
   vi.resetModules();
   mockStreamText.mockReset();
   rateLimitMock.mockReset().mockResolvedValue({ success: true });
-  reserveBudgetMock.mockReset().mockResolvedValue({ allowed: true, reserved: 1512, pct: 0 });
+  reserveBudgetMock
+    .mockReset()
+    .mockResolvedValue({ allowed: true, reserved: 1512, pct: 0, budgetKey: 'ask:tokens:test' });
   persistMock.mockClear();
 });
 

@@ -95,15 +95,17 @@ const CSP_DIRECTIVES: readonly string[] = [
 // assignment.
 const CSP = CSP_DIRECTIVES.join('; ');
 
-// `_request` is intentional: the Next runtime calls proxy(request) but the
-// CSP no longer depends on the request (no nonce). Renaming to `_request`
-// documents the intent and silences `noUnusedVariables`.
-export function proxy(_request: NextRequest) {
+// The W3C Reporting API spec requires absolute URLs in `Reporting-Endpoints`.
+// Chrome 94+ silently ignores relative-URL endpoint values, making `report-to`
+// inert. Build the origin from the incoming request so preview deployments
+// (which have different domains than production) get a working endpoint too.
+export function proxy(request: NextRequest) {
   const response = NextResponse.next();
   response.headers.set('Content-Security-Policy', CSP);
   // Reporting-Endpoints: names the endpoint for `report-to csp-endpoint`.
   // Chrome 94+ uses this header; Safari/Firefox fall back to `report-uri`.
-  response.headers.set('Reporting-Endpoints', 'csp-endpoint="/api/csp-report"');
+  const origin = new URL(request.url).origin;
+  response.headers.set('Reporting-Endpoints', `csp-endpoint="${origin}/api/csp-report"`);
   return response;
 }
 

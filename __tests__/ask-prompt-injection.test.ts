@@ -39,7 +39,12 @@ function makeStreamTextResult(text: string) {
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
   getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-  reserveBudget: vi.fn(async () => ({ allowed: true, reserved: 1512, pct: 0 })),
+  reserveBudget: vi.fn(async () => ({
+    allowed: true,
+    reserved: 1512,
+    pct: 0,
+    budgetKey: 'ask:tokens:test',
+  })),
   settleBudget: vi.fn(async () => undefined),
   checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
 }));

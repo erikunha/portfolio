@@ -166,7 +166,13 @@ export async function settleBudget(
   actualOutputTokens: number,
   budgetKey: string,
 ): Promise<void> {
-  if (reserved <= 0) return;
+  if (reserved <= 0) {
+    log.warn(
+      'budget settlement skipped — reserved=0 (Redis fail-open bypassed cap for this request)',
+      { budgetKey },
+    );
+    return;
+  }
   const actual = actualInputTokens + actualOutputTokens;
   const refund = reserved - actual;
   if (refund <= 0) return;

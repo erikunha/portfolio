@@ -44,9 +44,15 @@ vi.mock('@anthropic-ai/sdk', () => {
 // receives totalBilledInput as its second argument. Typed explicitly so
 // `.mock.calls` carries the argument tuple (not an empty `[]`).
 const settleBudgetMock = vi.fn(
-  async (_reserved: number, _actualIn: number, _actualOut: number): Promise<void> => undefined,
+  async (_reserved: number, _actualIn: number, _actualOut: number, _key: string): Promise<void> =>
+    undefined,
 );
-const reserveBudgetMock = vi.fn(async () => ({ allowed: true, reserved: 2712, pct: 0 }));
+const reserveBudgetMock = vi.fn(async () => ({
+  allowed: true,
+  reserved: 2712,
+  pct: 0,
+  budgetKey: 'ask:tokens:test',
+}));
 
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
@@ -176,7 +182,9 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
     mockMessagesCreate.mockReset();
     mockStreamText.mockReset();
     settleBudgetMock.mockClear();
-    reserveBudgetMock.mockClear().mockResolvedValue({ allowed: true, reserved: 2712, pct: 0 });
+    reserveBudgetMock
+      .mockClear()
+      .mockResolvedValue({ allowed: true, reserved: 2712, pct: 0, budgetKey: 'ask:tokens:test' });
     persistMock.mockClear();
     logInfoMock.mockClear();
   });
@@ -202,14 +210,16 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
     // the body fully drains — wait for it.
     await vi.waitFor(() => expect(settleBudgetMock).toHaveBeenCalledOnce());
 
-    // settleBudget(reserved, totalBilledInput, outputTokens) — arg index 1
+    // settleBudget(reserved, totalBilledInput, outputTokens, budgetKey) — arg index 1
     // is totalBilledInput = input + cacheRead + cacheCreation.
+    // arg index 3 (budgetKey) must be threaded from reserveBudget — TOCTOU fix.
     const firstCall = settleBudgetMock.mock.calls[0];
     expect(firstCall).toBeDefined();
     const billedInput = firstCall?.[1];
     const outTokens = firstCall?.[2];
     expect(billedInput).toBe(200 + 1500 + 0);
     expect(outTokens).toBe(80);
+    expect(firstCall?.[3]).toBe('ask:tokens:test');
 
     // The persisted ask-log record's inputTokens is also totalBilledInput.
     expect(persistMock).toHaveBeenCalled();

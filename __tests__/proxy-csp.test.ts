@@ -110,6 +110,10 @@ describe('proxy CSP — nonce-less posture', () => {
     const csp = res.headers.get('content-security-policy') ?? '';
     expect(csp).toContain('report-uri /api/csp-report');
     expect(csp).toContain('report-to csp-endpoint');
-    expect(res.headers.get('reporting-endpoints')).toContain('/api/csp-report');
+    // Reporting API spec requires absolute URLs; relative URLs are silently
+    // ignored by Chrome 94+. Verify the header carries a full absolute URL.
+    expect(res.headers.get('reporting-endpoints')).toContain(
+      'csp-endpoint="https://erikunha.dev/api/csp-report"',
+    );
   });
 });
