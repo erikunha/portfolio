@@ -3,7 +3,7 @@
 // Locks down: provider renders children; hook returns the provided isMobile value;
 // hook throws when called outside the provider.
 
-import { createElement } from 'react';
+import { type ComponentType, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushMicrotasks, mountClient } from '@/__tests__/helpers/render';
 import { BreakpointProvider, useBreakpoint } from '@/lib/use-breakpoint.client';
@@ -36,9 +36,10 @@ describe('BreakpointProvider', () => {
   });
 
   it('renders children without throwing', async () => {
+    type BP = ComponentType<{ initialIsMobile: boolean }>;
     const { container, unmount } = await mountClient(
       createElement(
-        BreakpointProvider,
+        BreakpointProvider as BP,
         { initialIsMobile: false },
         createElement('span', { 'data-testid': 'child' }, 'inner'),
       ),
@@ -55,8 +56,9 @@ describe('BreakpointProvider', () => {
       return createElement('span', null, null);
     }
 
+    type BP = ComponentType<{ initialIsMobile: boolean }>;
     const { unmount } = await mountClient(
-      createElement(BreakpointProvider, { initialIsMobile: false }, createElement(Consumer)),
+      createElement(BreakpointProvider as BP, { initialIsMobile: false }, createElement(Consumer)),
     );
     await flushMicrotasks();
 
@@ -73,8 +75,9 @@ describe('BreakpointProvider', () => {
       return createElement('span', null, null);
     }
 
+    type BP = ComponentType<{ initialIsMobile: boolean }>;
     const { unmount } = await mountClient(
-      createElement(BreakpointProvider, { initialIsMobile: true }, createElement(Consumer)),
+      createElement(BreakpointProvider as BP, { initialIsMobile: true }, createElement(Consumer)),
     );
     await flushMicrotasks();
 

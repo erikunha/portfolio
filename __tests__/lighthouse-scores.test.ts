@@ -6,7 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const redisMock = {
-  get: vi.fn(async () => null),
+  get: vi.fn(async () => null as unknown),
   set: vi.fn(async () => 'OK'),
 };
 

@@ -21,8 +21,8 @@ vi.mock('@upstash/redis', () => ({
 }));
 
 vi.mock('@upstash/ratelimit', () => {
-  function Ratelimit(opts: unknown) {
-    Object.assign(this as object, opts);
+  function Ratelimit(this: object, opts: unknown) {
+    Object.assign(this, opts);
   }
   Ratelimit.slidingWindow = vi.fn(() => ({}));
   return { Ratelimit };
@@ -91,7 +91,7 @@ describe('rate-limit factory getters — configured correctly', () => {
     const { getAskLimit } = await import('@/lib/rate-limit');
     getAskLimit();
     expect(
-      (Ratelimit as { slidingWindow: ReturnType<typeof vi.fn> }).slidingWindow,
+      (Ratelimit as unknown as { slidingWindow: ReturnType<typeof vi.fn> }).slidingWindow,
     ).toHaveBeenCalledWith(8, '1 h');
   });
 
@@ -100,7 +100,7 @@ describe('rate-limit factory getters — configured correctly', () => {
     const { getContactLimit } = await import('@/lib/rate-limit');
     getContactLimit();
     expect(
-      (Ratelimit as { slidingWindow: ReturnType<typeof vi.fn> }).slidingWindow,
+      (Ratelimit as unknown as { slidingWindow: ReturnType<typeof vi.fn> }).slidingWindow,
     ).toHaveBeenCalledWith(3, '10 m');
   });
 
@@ -109,7 +109,7 @@ describe('rate-limit factory getters — configured correctly', () => {
     const { getForgetLimit } = await import('@/lib/rate-limit');
     getForgetLimit();
     expect(
-      (Ratelimit as { slidingWindow: ReturnType<typeof vi.fn> }).slidingWindow,
+      (Ratelimit as unknown as { slidingWindow: ReturnType<typeof vi.fn> }).slidingWindow,
     ).toHaveBeenCalledWith(5, '1 h');
   });
 

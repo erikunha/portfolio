@@ -4,7 +4,7 @@
 // the hero class modifier; ReceiptCard with mobileMetric renders both spans;
 // desktopOnly cards are rendered in the DOM (CSS controls visibility).
 
-import { createElement } from 'react';
+import { type ComponentType, createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
 
@@ -19,7 +19,9 @@ describe('PerfReceiptsSection', () => {
     const { PerfReceiptsSection } = await import(
       '@/components/sections/PerfReceiptsSection/PerfReceiptsSection'
     );
-    mounted = await mountClient(createElement(PerfReceiptsSection, props));
+    mounted = await mountClient(
+      createElement(PerfReceiptsSection as ComponentType<{ defer?: boolean }>, props),
+    );
     return mounted.container;
   }
 

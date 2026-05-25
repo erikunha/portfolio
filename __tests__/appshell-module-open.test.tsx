@@ -81,7 +81,7 @@ describe('AppShell — module:open delegated handler', () => {
     });
 
     // No error thrown; div is not a details element — open property not set
-    expect((div as HTMLDetailsElement).open).toBeUndefined();
+    expect((div as unknown as HTMLDetailsElement).open).toBeUndefined();
 
     document.body.removeChild(div);
   });
