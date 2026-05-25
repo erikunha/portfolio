@@ -480,7 +480,7 @@ jobs:
     # Run last: avoids burning AI Gateway credits when any required gate already fails.
     # always() lets GitHub evaluate the condition even when upstream jobs fail.
     # skipped (path-filtered) jobs are allowed — only failure/cancelled blocks.
-    needs: [detect-changes, quality-fast, typecheck, test, build, e2e-functional, performance, e2e-visual-chromium, e2e-visual-webkit]
+    needs: [detect-changes, quality-fast, typecheck, test, build, e2e-functional, performance, e2e-visual-chromium]
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
