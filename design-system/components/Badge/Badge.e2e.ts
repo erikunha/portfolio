@@ -19,9 +19,9 @@ test.describe('Badge — behavioral E2E', () => {
   test('default variant renders without a dot span', async ({ page }) => {
     await page.goto('/design-system/components');
     const preview = page.locator('#badge');
-    // Find the default badge by filtering to spans with "AVAILABLE" that have
-    // no aria-hidden dot span inside them — distinguishes it from the dot variant
-    // whose container also has "AVAILABLE" text visible in it.
+    // hasText matches transitively, so parent spans also pass the text filter.
+    // hasNot pins selection to the actual badge span, which has no aria-hidden
+    // dot child (unlike any ancestor wrapper that might also contain "AVAILABLE").
     const availableBadge = preview
       .locator('span')
       .filter({ hasText: /^AVAILABLE$/ })
