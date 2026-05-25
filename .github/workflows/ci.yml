@@ -5,8 +5,10 @@ name: CI
 # e2e-visual-webkit is intentionally NOT required (webkit pixel rendering variance).
 # vercel-preview is intentionally NOT required (informational only).
 # Manual step: add "CodeQL / Analyze (javascript-typescript)" to required checks in GitHub Settings.
-# Manual step (post-merge): in GitHub Settings → Branches → main → Required status checks,
-# replace "quality" with "quality-fast" AND "typecheck".
+# ai-eval path-filter: only runs when AI-relevant files change (app/api/ask/, lib/agent/,
+# lib/stream-protocol.ts, lib/rate-limit.ts, content/ask-eval-corpus.ts, scripts/ask-eval.ts,
+# content/hiring-profile.ts). Skipped jobs satisfy the required check automatically.
+# ai-eval also gates on e2e-functional to avoid burning credits when other checks already fail.
 
 on:
   pull_request:
@@ -411,18 +413,55 @@ jobs:
           name: playwright-report-${{ matrix.project }}
           path: test-results/
 
+  detect-ai-changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      relevant: ${{ steps.check.outputs.relevant }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Check if AI-relevant files changed
+        id: check
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [[ "$EVENT_NAME" != "pull_request" ]]; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- \
+            app/api/ask/ \
+            lib/stream-protocol.ts \
+            lib/rate-limit.ts \
+            lib/agent/ \
+            content/ask-eval-corpus.ts \
+            scripts/ask-eval.ts \
+            content/hiring-profile.ts)
+          if [[ -n "$changed" ]]; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "relevant=false" >> "$GITHUB_OUTPUT"
+          fi
+
   ai-eval:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Skip on fork PRs: repository secrets are not available to forks.
-    # GitHub treats a skipped required check as satisfied.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Skip when no AI-relevant files changed: GitHub treats skipped required checks as satisfied.
+    if: |
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+      && needs.detect-ai-changes.outputs.relevant == 'true'
     # Serialize per-ref: the eval mutates the shared *_BUILD Upstash instance
     # (rate-limit, budget, dedup counters) and overwrites the `ask:eval:latest` key.
     concurrency:
       group: ai-eval-${{ github.ref }}
       cancel-in-progress: true
-    needs: build
+    # Run after e2e-functional: avoids burning AI Gateway credits when other gates already fail.
+    needs: [e2e-functional, detect-ai-changes]
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
