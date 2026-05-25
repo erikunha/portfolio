@@ -7,7 +7,13 @@ export default defineConfig({
     environment: 'jsdom',
     globals: false,
     setupFiles: ['./tests/mocks/rtl-setup.ts'],
-    exclude: ['**/node_modules/**', '**/tests/a11y/**', '**/tests/e2e/**', '**/.claude/**'],
+    exclude: [
+      '**/node_modules/**',
+      '**/tests/a11y/**',
+      '**/tests/e2e/**',
+      '**/.claude/**',
+      '**/.worktrees/**',
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
