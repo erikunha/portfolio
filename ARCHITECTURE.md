@@ -84,7 +84,6 @@ What we build is small, opinionated, edge-deployed, and budget-enforced.
 │       ├── /api/ask        (Edge Function, streaming)       │
 │       ├── /api/contact    (Server Action, Node)            │
 │       ├── /api/lighthouse (Edge, reads KV)                 │
-│       ├── /opengraph-image.tsx (Edge OG renderer)          │
 │       ├── /erik.json      (static, cached)                 │
 │       ├── /llms.txt       (static)                         │
 │       └── /robots.txt + /sitemap.xml (static)              │
@@ -147,7 +146,6 @@ RSC + selective islands is harder to debug than full-CSR (smaller stack traces, 
 app/
   layout.tsx                  # font, theme tokens, JSON-LD, metadata
   page.tsx                    # single-page composition (RSC)
-  opengraph-image.tsx         # dynamic OG (Edge)
   not-found.tsx               # Matrix-themed 404
   robots.ts, sitemap.ts       # SEO basics
   llms.txt/route.ts           # AI-agent manifest

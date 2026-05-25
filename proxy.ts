@@ -57,7 +57,7 @@ const CSP_DIRECTIVES: readonly string[] = [
     ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com"
     : "script-src 'self' 'unsafe-inline'",
   // style-src 'unsafe-inline': React JSX style={{}} props produce inline
-  // style="" attributes on DOM elements (not-found.tsx, opengraph-image.tsx).
+  // style="" attributes on DOM elements (not-found.tsx).
   // External <link> stylesheets from Next's CSS pipeline are covered by 'self', not 'unsafe-inline'.
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
