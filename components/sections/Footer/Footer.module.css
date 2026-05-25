@@ -78,6 +78,7 @@
   padding: 14px 16px 16px;
   background: linear-gradient(180deg, rgba(0, 255, 65, 0.025), rgba(0, 0, 0, 0));
   position: relative;
+  min-width: 0;
 }
 .spHead {
   color: var(--ds-color-signal);
@@ -164,7 +165,7 @@
 }
 .nsGrid {
   display: grid;
-  grid-template-columns: 28px 90px 1fr;
+  grid-template-columns: 28px 90px minmax(0, 1fr);
   gap: 0 28px;
   align-items: center;
 }
@@ -430,5 +431,14 @@ body[data-motion="reduce"] .spBar2 > i {
   }
   .netstat pre {
     font-size: var(--ds-font-size-sm);
+  }
+  .nsGrid {
+    grid-template-columns: 28px 80px minmax(0, 1fr);
+    gap: 0 10px;
+  }
+  .nsGrid a {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
