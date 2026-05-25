@@ -7,7 +7,7 @@
 
 ## P0 — Critical (bugs in production right now)
 
-### P0-1: Contact form silently drops all email delivery
+### P0-1: Contact form delivery silently fails for unverified recipients
 **File:** `app/api/contact/route.ts`  
 **Finding:** `from: 'onboarding@resend.dev'` is Resend's sandbox sender. Resend restricts delivery to the account owner's verified email only. Every contact form submission appears to succeed (200 OK) but emails sent to any other recipient are silently dropped by Resend.  
 **Fix:** Set `from:` to a verified sender on your Resend account (e.g. `contact@erikunha.dev` or `noreply@erikunha.dev`). Requires the domain to be verified in Resend dashboard.  
@@ -16,7 +16,7 @@
 ### P0-2: OG image points to a file that does not exist
 **File:** `app/layout.tsx`  
 **Finding:** `openGraph: { images: [{ url: '/og-image.png' }] }` — `/og-image.png` does not exist in `public/`. The actual image generator is the Next.js `opengraph-image` route handler. Social previews on every platform (LinkedIn, Twitter/X, Slack, iMessage) are broken — they either show nothing or a broken image.  
-**Fix:** Remove the static `images` array from the metadata export. Next.js automatically picks up the `opengraph-image.tsx` route handler when no static `images` override is present.
+**Fix:** Remove the static `images` array from both `openGraph` and `twitter` metadata fields (if present). Next.js automatically picks up the `opengraph-image.tsx` route handler when no static `images` override is present.
 
 ### P0-3: Budget counter permanently overcounts after each request
 **File:** `app/api/ask/route.ts` (the `settleAndPersist` closure)  
@@ -26,7 +26,7 @@
 ### P0-4: `lib/ip-hash.ts` permanently breaks after any salt-resolution failure
 **File:** `lib/ip-hash.ts`  
 **Finding:** The `resolvePromise` variable is set to a rejected promise if `resolveSalt()` throws. On every subsequent call to `hashIp()`, the cached rejected promise throws immediately. All rate-limiting, dedup, and audit-log operations that call `hashIp()` fail for the entire process lifetime — equivalent to a silent DoS on those features.  
-**Fix:** Clear `resolvePromise = undefined` in the catch block so the next call retries salt resolution rather than serving the cached rejection.
+**Fix:** Set `resolvePromise = null` (not `undefined` — the type is `Promise<string> | null`) inside a `.catch()` handler so the next call retries salt resolution rather than serving the cached rejection.
 
 ---
 
