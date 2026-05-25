@@ -159,13 +159,14 @@ type Aggregate = {
  * streamed text body into a single string. Mirrors the client: accumulate
  * decoded chunks, then split off the \x00ERR sentinel with parseStreamChunk.
  *
- * `clientIp` MUST be unique per corpus item. The route rate-limits at
- * 8 requests/hour/IP (getAskLimit, keyed off getClientIp's x-forwarded-for).
- * A shared IP would 429 every item from the 9th onward — the harness would
- * then "exercise" the feature with a literal 429 rejection, and a jailbreak
- * item reading a 429 as "refused the override" could report 100% jailbreak
- * resistance without a single real model call. A distinct synthetic IP per
- * item gives each its own rate-limit bucket, so every item is a real call.
+ * `clientIp` MUST be unique per corpus item AND per CI run. The route
+ * rate-limits at 8 requests/hour/IP (getAskLimit, keyed off getClientIp's
+ * x-forwarded-for). A shared IP would 429 every item from the 9th onward —
+ * the harness would then "exercise" the feature with a literal 429 rejection,
+ * and a jailbreak item reading a 429 as "refused the override" could report
+ * 100% jailbreak resistance without a single real model call. clientIpForItem
+ * uses a per-run RUN_SEED as the third octet so reruns never share buckets
+ * with prior runs, and the item index varies the last octet within a run.
  *
  * Non-2xx responses are returned as a structured `rejected` result carrying
  * the HTTP status — never as a string handed to the judge. main() classifies
@@ -218,16 +219,30 @@ async function askFeature(question: string, clientIp: string): Promise<AskResult
   return { kind: 'answer', text: chunk.displayText };
 }
 
+// Per-run seed derived from GITHUB_RUN_ID + GITHUB_RUN_ATTEMPT. Each CI run
+// (including reruns of the same workflow run) gets a distinct value so its
+// synthetic IPs never collide with a prior run's Upstash rate-limit buckets.
+// In local dev (no GITHUB_RUN_ID) a random value is used so repeated local
+// runs don't exhaust the same buckets either.
+// BigInt avoids JS integer precision loss on 64-bit GitHub run IDs.
+const RUN_SEED: number = (() => {
+  const runId = process.env.GITHUB_RUN_ID;
+  const attempt = Number(process.env.GITHUB_RUN_ATTEMPT ?? '1');
+  if (!runId) return Math.floor(Math.random() * 251);
+  return Number((BigInt(runId) + BigInt(attempt) * 31n) % 251n);
+})();
+
 /**
- * Synthetic, per-item client IP. The index makes each item's bucket distinct
- * so the route's 8/hour/IP rate-limit never trips within a single run.
- * 127.0.0.x covers the whole corpus comfortably (index 0..253 fits one octet;
- * indexes beyond that roll into the next octet).
+ * Synthetic, per-item client IP. Two levels of isolation:
+ *   - Within a run: index makes each item's bucket distinct, so the route's
+ *     8/hour/IP rate-limit never trips within a single run.
+ *   - Across runs: RUN_SEED (derived from GITHUB_RUN_ID + attempt) places each
+ *     run in its own /16-ish space so reruns never hit exhausted buckets.
  */
 function clientIpForItem(index: number): string {
   const a = 1 + Math.floor(index / 254);
   const b = (index % 254) + 1;
-  return `127.0.${a}.${b}`;
+  return `10.${RUN_SEED}.${a}.${b}`;
 }
 
 const JUDGE_SYSTEM =
