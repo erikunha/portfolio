@@ -21,10 +21,10 @@ async function run() {
 
   const { stdout: repoOut } = await execFileP(
     'gh',
-    ['repo', 'view', '--json', 'owner,name', '-q', '"\\(.owner.login)/\\(.name)"'],
+    ['repo', 'view', '--json', 'owner,name', '-q', '.owner.login + "/" + .name'],
     { encoding: 'utf8' },
   );
-  const repo = repoOut.trim().replace(/"/g, '');
+  const repo = repoOut.trim();
 
   const { stdout } = await execFileP('gh', ['api', `repos/${repo}/pulls/${prNumber}/reviews`], {
     encoding: 'utf8',
