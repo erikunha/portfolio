@@ -68,7 +68,7 @@ async function runAsk(question: string): Promise<string> {
     try {
       const body = (await res.json()) as { error?: unknown };
       if (typeof body.error === 'string') message = body.error;
-    } catch {
+    } catch (_parseErr) {
       // Non-JSON error body — keep the status-code fallback message.
     }
     return message;

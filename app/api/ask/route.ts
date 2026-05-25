@@ -110,6 +110,17 @@ const USAGE_TIMED_OUT = Symbol('usage-timeout');
 // directive below actually fires. See
 // docs/audit/2026-05-19-principal-audit.md Theme 7 + Debate 5.
 
+function isAnthropicCacheMeta(
+  v: unknown,
+): v is { cacheReadInputTokens?: number; cacheCreationInputTokens?: number } {
+  if (typeof v !== 'object' || v === null) return false;
+  const obj = v as Record<string, unknown>;
+  return (
+    (obj.cacheReadInputTokens === undefined || typeof obj.cacheReadInputTokens === 'number') &&
+    (obj.cacheCreationInputTokens === undefined || typeof obj.cacheCreationInputTokens === 'number')
+  );
+}
+
 export async function POST(req: NextRequest) {
   // Kill switch: any "off" keyword (case-insensitive, trimmed) disables the route.
   // Asymmetry is intentional: a typo during a billing/abuse emergency must STILL
@@ -151,12 +162,17 @@ export async function POST(req: NextRequest) {
 
   let question: string;
   try {
-    const body = (await req.json()) as { question?: unknown };
-    if (typeof body.question !== 'string' || !body.question.trim()) {
+    const rawBody: unknown = await req.json();
+    const body =
+      typeof rawBody === 'object' && rawBody !== null && !Array.isArray(rawBody)
+        ? (rawBody as Record<string, unknown>)
+        : {};
+    const q = body.question;
+    if (typeof q !== 'string' || !q.trim()) {
       earlyExitPersist('errored');
       return Response.json({ error: 'question is required' }, { status: 400 });
     }
-    question = body.question.trim().slice(0, 500);
+    question = q.trim().slice(0, 500);
   } catch {
     earlyExitPersist('errored');
     return Response.json({ error: 'invalid request body' }, { status: 400 });
@@ -396,11 +412,11 @@ export async function POST(req: NextRequest) {
       outputTokens = usage?.outputTokens ?? 0;
     }
     if (meta !== USAGE_TIMED_OUT) {
-      const anthropicMeta = meta?.anthropic as
-        | { cacheReadInputTokens?: number; cacheCreationInputTokens?: number }
-        | undefined;
-      cacheReadTokens = anthropicMeta?.cacheReadInputTokens ?? 0;
-      cacheCreationTokens = anthropicMeta?.cacheCreationInputTokens ?? 0;
+      const anthropic = meta?.anthropic;
+      if (isAnthropicCacheMeta(anthropic)) {
+        cacheReadTokens = anthropic.cacheReadInputTokens ?? 0;
+        cacheCreationTokens = anthropic.cacheCreationInputTokens ?? 0;
+      }
     }
 
     // Cache hit rate observability: cacheRead/input → 0 means cache cold
@@ -430,9 +446,9 @@ export async function POST(req: NextRequest) {
     // fail-closed by design. If settleBudget never fires at all (Edge runtime
     // kills the invocation), the same high-water mark holds.
     if (usageResolved) {
-      void settleBudget(reserved, totalBilledInput, outputTokens);
+      await settleBudget(reserved, totalBilledInput, outputTokens);
     }
-    void persistAskInteraction({
+    await persistAskInteraction({
       requestId,
       ts: new Date().toISOString(),
       ipHash,
