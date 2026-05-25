@@ -36,9 +36,10 @@ The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic 
 | TypeScript strict | `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` |
 | Vercel AI Gateway + Anthropic Haiku 4.5 | Streaming `/api/ask` with prompt caching and cost tracking |
 | Upstash Redis | Rate limiting, budget cap, KV interaction log |
-| Hand-written CSS (10 files) | No framework; BEM-ish naming, tokens in `_tokens.css` |
+| CSS Modules + Style Dictionary | 1 global baseline + 77 scoped modules; design tokens generated from JSON into `design-system/dist/tokens.css` |
+| Design system (`/design-system`) | 7 RSC primitives (Badge, Button, StatTile, Card, Code, Tag, Prose), token pipeline, live docs route |
 | Biome | Lint + format in a single Rust binary |
-| Vitest + Playwright | Unit + E2E + axe-core a11y CI suite |
+| Vitest + Playwright | Unit (80% line coverage gate) + E2E + axe-core a11y CI suite |
 | Lighthouse CI | LCP, INP, CLS gated per PR |
 | pnpm 10+ / Node 22+ | Strict dependency resolution, content-addressed store |
 
