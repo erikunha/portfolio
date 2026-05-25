@@ -12,9 +12,9 @@ describe('layout metadata og:image', () => {
     const images = og.images as { url: string; width: number; height: number; alt: string }[];
     expect(Array.isArray(images)).toBe(true);
     expect(images.length).toBeGreaterThan(0);
-    expect(images[0].url).toBe('/og.png');
-    expect(images[0].width).toBe(1200);
-    expect(images[0].height).toBe(630);
+    expect(images[0]?.url).toBe('/og.png');
+    expect(images[0]?.width).toBe(1200);
+    expect(images[0]?.height).toBe(630);
   });
 
   it('twitter.images is a non-empty array pointing to /og.png', async () => {
