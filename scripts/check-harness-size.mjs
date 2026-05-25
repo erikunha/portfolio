@@ -3,9 +3,9 @@
 // attention window. Context files above ~300 lines lose tail content to model
 // attention degradation — rules near the bottom stop firing reliably.
 //
-// Threshold: 250 lines (current ~215 ± growth headroom before the problem zone).
+// Threshold: 250 lines (current ~217 after P3-8 split; process rules live in CLAUDE-process.md).
 // When triggered: trim rules that duplicate STANDARDS.md, collapse prose into
-// bullet tables, or move one-time decisions to DECISIONS.md.
+// bullet tables, or move process/merge rules to CLAUDE-process.md.
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
