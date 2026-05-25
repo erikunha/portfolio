@@ -58,15 +58,32 @@ export function isSectionFilled(heading: string, body: string): boolean {
     contentLines.push(line);
   }
 
-  // Strip closed <!-- ... --> blocks, then any unclosed <!-- to end of content.
-  // Two-pass prevents CodeQL "incomplete multi-character sanitization" (an
-  // unclosed opener would leave "<!--" in the output after the first pass).
-  const stripped = contentLines
-    .join('\n')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/<!--[\s\S]*/g, '');
+  // Strip HTML comment blocks via a state machine — avoids regex-based
+  // replacement that CodeQL flags as "incomplete multi-character sanitization".
+  const withoutComments: string[] = [];
+  let inComment = false;
+  for (const rawLine of contentLines) {
+    let cur = rawLine;
+    if (inComment) {
+      const end = cur.indexOf('-->');
+      if (end === -1) continue;
+      inComment = false;
+      cur = cur.slice(end + 3);
+    }
+    while (cur.includes('<!--')) {
+      const start = cur.indexOf('<!--');
+      const end = cur.indexOf('-->', start);
+      if (end === -1) {
+        cur = cur.slice(0, start);
+        inComment = true;
+        break;
+      }
+      cur = cur.slice(0, start) + cur.slice(end + 3);
+    }
+    withoutComments.push(cur);
+  }
 
-  const meaningful = stripped.split('\n').filter((l) => {
+  const meaningful = withoutComments.filter((l) => {
     const t = l.trim();
     if (!t) return false;
     // Any unchecked checkbox (with or without trailing text) is placeholder.
