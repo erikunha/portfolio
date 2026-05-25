@@ -108,6 +108,8 @@ jobs:
   typecheck:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
     concurrency:
       group: typecheck-${{ github.ref }}
       cancel-in-progress: true

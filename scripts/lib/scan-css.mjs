@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // Shared utilities for CSS module scanning scripts.
 import { readFileSync } from 'node:fs';
 import { glob } from 'node:fs/promises';
