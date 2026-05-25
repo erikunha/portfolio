@@ -1,5 +1,5 @@
 // __tests__/erik-json.test.ts
-// Behavioral test (CG3): calls the real GET handler of /api/erik.json and
+// Behavioral test: calls the real GET handler of /api/erik.json and
 // asserts the parsed JSON body + response headers, instead of grepping the
 // route source text. This exercises the actual machine-readable hiring
 // profile a recruiter's tooling would fetch.

@@ -1,21 +1,18 @@
 // __tests__/system-prompt.test.ts
 // Behavioral tests for lib/ask/system-prompt.ts.
 //
-// Two invariants matter for the audit Theme 7 fix to actually work:
+// Two invariants:
 //
 //   1. SYSTEM_TEXT must be ≥ ~3500 characters → ≥ ~1024 tokens (English
 //      averages ~3.5 chars/token for the Anthropic tokenizer). If SYSTEM
 //      falls below the Haiku ephemeral cache minimum, the cache_control
 //      directive matches nothing and per-call input billing stays at
-//      full price (the silently-broken state the audit found).
+//      full price.
 //
 //   2. SYSTEM must contain live data from content/*.ts so it drifts
 //      automatically when those files change. Each appended content
 //      file is asserted via a unique fingerprint that should survive
 //      cosmetic edits.
-//
-// See docs/audit/2026-05-19-principal-audit.md Theme 7 + Debate 5 +
-// Standard 7 (AI features are measured, not asserted).
 
 import { describe, expect, it } from 'vitest';
 import { perfReceipts } from '@/content/perf-receipts';
@@ -31,7 +28,7 @@ import { SYSTEM, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 const CACHE_ELIGIBILITY_MIN_CHARS = 3500;
 
 describe('lib/ask/system-prompt', () => {
-  describe('cache eligibility (audit Theme 7)', () => {
+  describe('cache eligibility', () => {
     it('SYSTEM_TEXT is ≥ 3500 chars (proxy for ≥ 1024 tokens, Haiku ephemeral cache minimum)', () => {
       expect(SYSTEM_TEXT.length).toBeGreaterThanOrEqual(CACHE_ELIGIBILITY_MIN_CHARS);
     });
@@ -48,7 +45,7 @@ describe('lib/ask/system-prompt', () => {
     });
   });
 
-  describe('privacy (audit CG5)', () => {
+  describe('privacy', () => {
     it('does not embed a personal phone number in the SYSTEM prompt', () => {
       // /api/ask's SYSTEM prompt is reachable on a publicly fetchable
       // surface — a personal WhatsApp number must not be part of it.

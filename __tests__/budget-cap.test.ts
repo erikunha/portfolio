@@ -1,8 +1,8 @@
 // __tests__/budget-cap.test.ts
 // Behavioral tests for the reservation-pattern monthly token budget cap.
 //
-// Reservation pattern (PR 2 of audit roadmap, replaces the prior
-// check-then-increment pattern that could undercount on client disconnect):
+// Reservation pattern (replaces the prior check-then-increment pattern that
+// could undercount on client disconnect):
 //   1. reserveBudget(maxOutputTokens) INCRBYs the counter by
 //      RESERVED_INPUT_TOKENS + maxOutputTokens BEFORE the Anthropic call.
 //   2. If the reservation crosses 100%, refund and reject.
@@ -10,8 +10,7 @@
 //      DECRBYs by (reserved - actual) to refund unused tokens.
 //
 // These are behavioral assertions against the rate-limit module — they exercise
-// the actual Redis pipeline contract, not source layout. See
-// docs/audit/2026-05-19-principal-audit.md Standard 5.
+// the actual Redis pipeline contract, not source layout.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -62,12 +61,9 @@ describe('budget reservation pattern', () => {
   });
 
   // Reservation = RESERVED_INPUT_TOKENS (2200) + maxOutputTokens.
-  // PR 4 of audit roadmap padded SYSTEM above the 1024-token Haiku
-  // ephemeral cache minimum (~1500 tokens cache-cold). The original
-  // RESERVED_INPUT_TOKENS=1000 was sized for the pre-PR-4 SYSTEM and
-  // undercounts. Copilot flagged this on PR #29; the fix raises the
-  // reservation to 2200 so actual ≤ reserved holds AND settleBudget
-  // refunds a positive delta. See lib/rate-limit.ts file comment.
+  // SYSTEM is ~1500 tokens cache-cold. The reservation is 2200 so
+  // actual ≤ reserved holds AND settleBudget refunds a positive delta.
+  // See lib/rate-limit.ts file comment.
   const INPUT_RESERVATION = 2200;
 
   it('reserves RESERVED_INPUT_TOKENS + maxOutputTokens upfront and allows within cap', async () => {

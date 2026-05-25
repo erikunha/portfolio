@@ -1,5 +1,5 @@
 // __tests__/ask-stream-parsing.test.ts
-// Coverage gap (CG3 Task 3.4): the /api/ask stream chunk parser.
+// Behavioral test: the /api/ask stream chunk parser.
 //
 // parseStreamChunk is the pure protocol helper extracted from
 // InteractiveShell.streamQuestion — it splits an accumulated stream buffer

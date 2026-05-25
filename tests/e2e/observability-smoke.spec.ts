@@ -40,9 +40,8 @@ test.describe('observability smoke', () => {
   test('/api/log/forget accepts a UUID requestId and returns unified envelope', async ({
     request,
   }) => {
-    // PR 5 of audit roadmap closed the deleted-count existence oracle —
-    // the response no longer exposes the deletion count. Shape is now
-    // simply { ok: true, requestId }.
+    // The response no longer exposes the deletion count (existence oracle
+    // protection). Shape is simply { ok: true, requestId }.
     const res = await request.post('/api/log/forget', {
       data: { requestId: SYNTHETIC_REQUEST_ID },
     });

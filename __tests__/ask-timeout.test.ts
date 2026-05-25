@@ -1,6 +1,6 @@
 // __tests__/ask-timeout.test.ts
-// Behavioral test (CG3): verifies the explicit upstream timeouts on the model
-// call (/api/ask, now routed through the Vercel AI Gateway via `streamText`)
+// Behavioral test: verifies the explicit upstream timeouts on the model
+// call (/api/ask, routed through the Vercel AI Gateway via `streamText`)
 // and the Resend send (/api/contact) by EXERCISING them, not by grepping
 // route source.
 //

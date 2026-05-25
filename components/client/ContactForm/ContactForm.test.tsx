@@ -1,11 +1,3 @@
-// ContactForm.test.tsx
-// Merged unit test suite for the ContactForm component.
-// Combines the following source files:
-//   - __tests__/contact-form-a11y.test.ts   (accessibility contract)
-//   - __tests__/focus-and-error.test.ts     (error region + focus rings)
-//   - __tests__/contact-honeypot.test.ts    (/api/contact honeypot)
-//   - __tests__/contact-rate-limit.test.ts  (/api/contact rate-limit denial)
-
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { NextRequest } from 'next/server';
@@ -13,18 +5,6 @@ import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
 import { ContactForm } from './ContactForm';
-
-// ─── ContactForm accessibility ────────────────────────────────────────────────
-// Coverage gap (CG3 Task 3.4): ContactForm accessibility contract.
-//
-// Renders the real ContactForm into jsdom and asserts:
-//   - every visible field is reachable in source/tab order, and the honeypot
-//     is removed from the tab sequence (tabIndex=-1 + aria-hidden);
-//   - the submit control is a real <button type="submit"> so Enter / Space
-//     activate it without JS;
-//   - submitting via the keyboard path triggers the request;
-//   - the error region is announced (role="alert") and the submit row is an
-//     aria-live region.
 
 describe('ContactForm accessibility', () => {
   let mounted: MountedClient;
@@ -123,7 +103,7 @@ describe('ContactForm accessibility', () => {
 });
 
 // ─── contact form error region ────────────────────────────────────────────────
-// Behavioral test (CG3): renders the real ContactForm and asserts its error
+// Behavioral test: renders the real ContactForm and asserts its error
 // region carries role="alert" through the committed DOM, instead of grepping
 // the component source for the string literal.
 //
@@ -177,12 +157,9 @@ describe('focus rings', () => {
   });
 });
 
-// ─── /api/contact honeypot (audit Theme 1.4) ─────────────────────────────────
+// ─── /api/contact honeypot ───────────────────────────────────────────────────
 // Behavioral test: verifies /api/contact silently returns 200 when the
 // `field_company` honeypot is filled, WITHOUT touching KV or Resend.
-//
-// Closes audit Theme 1.4 (documented anti-spam control was missing).
-// See docs/audit/2026-05-19-principal-audit.md.
 
 const redisSetMock = vi.fn();
 const resendSendMock = vi.fn();
@@ -216,7 +193,7 @@ function makeRequest(body: Record<string, unknown>): NextRequest {
   });
 }
 
-describe('/api/contact honeypot (audit Theme 1.4)', () => {
+describe('/api/contact honeypot', () => {
   beforeEach(() => {
     process.env.RESEND_API_KEY = 'fake-key-for-tests';
     vi.resetModules();
@@ -292,12 +269,10 @@ describe('/api/contact honeypot (audit Theme 1.4)', () => {
 });
 
 // ─── /api/contact — rate-limit denial path ───────────────────────────────────
-// Coverage gap (CG3 Task 3.4): the /api/contact rate-limit denial path.
-//
 // Behavioral test: the rate-limit factory is mocked to deny the request; the
 // POST handler must short-circuit with a 429, the standard error envelope
 // { ok: false, error: { code: 'rate_limited' } }, and an X-Request-Id header
-// — WITHOUT touching KV or Resend. Modeled on the '/api/contact honeypot' describe block above in this file.
+// — WITHOUT touching KV or Resend.
 
 const VALID_BODY = {
   name: 'Real Name',

@@ -1,5 +1,5 @@
 // __tests__/ask-log-persistence.test.ts
-// Behavioral test (CG3): exercises the Q+A persistence + right-of-erasure
+// Behavioral test: exercises the Q+A persistence + right-of-erasure
 // machinery, instead of grepping route/lib source text.
 //
 //  - lib/ask-log.persistAskInteraction: mocks getRedis, calls the function,
@@ -8,7 +8,7 @@
 //    outage fails quiet (never throws into the /api/ask response path).
 //  - /api/log/forget: POSTs a requestId, asserts the DELETE targets the
 //    ask:log: key pattern and the success response does NOT leak a deleted
-//    count (existence-oracle fix, audit Theme 8).
+//    count (existence-oracle protection).
 //  - InteractiveShell: renders the real component and asserts the privacy
 //    notice mentions 90-day retention + a deletion route.
 

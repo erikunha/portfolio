@@ -1,6 +1,5 @@
 // components/sections/Hero/Hero.test.tsx
-// Merged from __tests__/hero-heading.test.ts and __tests__/hero-rsc.test.ts.
-// Behavioral tests (CG3): renders the Hero RSC and asserts on produced DOM.
+// Behavioral tests: renders the Hero RSC and asserts on produced DOM.
 // createElement (not JSX) keeps rendering type-safe without a JSX transform in test env.
 
 import { createElement } from 'react';

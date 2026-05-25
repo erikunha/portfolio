@@ -249,8 +249,8 @@ test.describe('cross-cutting', () => {
     // PerformanceObserver('event' / 'longtask') entries used here, and webkit
     // input-event dispatch is materially slower under Playwright emulation —
     // measured 646ms on webkit-mobile CI vs <20ms on chromium. The 50ms wall-
-    // clock threshold reflects the CLAUDE.md INP budget which is itself a
-    // Chrome metric. Skip on webkit; chromium projects exercise the same code.
+    // clock threshold reflects the project INP budget, which is a Chrome
+    // metric. Skip on webkit; chromium projects exercise the same code.
     test.skip(
       testInfo.project.name.startsWith('webkit-'),
       'INP is Chrome-only; webkit input-event dispatch is too slow under emulation to assert <50ms',
@@ -259,12 +259,12 @@ test.describe('cross-cutting', () => {
     // are flaky because the relevant entry types (`event`, `first-input`) are
     // gated on cross-browser support and require the page to install a
     // PerformanceObserver before the event fires. Instead we measure two
-    // proxies that together cover the CLAUDE.md INP budget:
+    // proxies that together cover the INP budget:
     //
     //   a. Wall-clock from synthetic input dispatch -> React commit -> input
     //      value reflecting the keystroke. If the matrix loop's per-state
-    //      re-renders ever come back (CLAUDE.md banned this), this round-trip
-    //      blows past 50ms.
+    //      re-renders ever come back (banned by the rendering model), this
+    //      round-trip blows past 50ms.
     //
     //   b. PerformanceObserver('longtask') during the keystroke window. The
     //      INP budget is 200ms total; a single long task >100ms is the
@@ -318,9 +318,9 @@ test.describe('cross-cutting', () => {
       return performance.now() - start;
     });
 
-    // 50ms leaves headroom under the CLAUDE.md 200ms INP budget (input
-    // delay + processing + presentation). Processing alone should be a
-    // small fraction of that.
+    // 50ms leaves headroom under the 200ms INP budget (input delay +
+    // processing + presentation). Processing alone should be a small
+    // fraction of that.
     expect(
       elapsedMs,
       `keystroke -> DOM commit should be <50ms (got ${elapsedMs.toFixed(1)}ms)`,

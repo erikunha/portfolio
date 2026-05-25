@@ -2,7 +2,6 @@
 
 // components/ErrorBoundary/ErrorBoundary.client.tsx
 // Wraps client islands so a single failure doesn't crash the entire page.
-// Named *.client.tsx per CLAUDE.md convention.
 
 import { Component, type ReactNode } from 'react';
 

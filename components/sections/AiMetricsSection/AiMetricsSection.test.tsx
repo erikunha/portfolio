@@ -1,5 +1,5 @@
 // components/sections/AiMetricsSection/AiMetricsSection.test.tsx
-// Behavioral test (CG3): AiMetricsSection surfaces /api/ask eval metrics.
+// Behavioral test: AiMetricsSection surfaces /api/ask eval metrics.
 // It renders to static HTML with zero client runtime — rendering server-side
 // and asserting on the produced markup proves the guarantee (same pattern as
 // hero-rsc.test.ts).

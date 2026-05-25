@@ -1,5 +1,5 @@
 // __tests__/content-visibility.test.ts
-// Behavioral test (CG3): verifies the below-fold deferral mechanism.
+// Behavioral test: verifies the below-fold deferral mechanism.
 //
 //  - The `defer` prop on a section must produce the `.cvDefer` class on the
 //    rendered <section> — proven by rendering the Module shell both ways.

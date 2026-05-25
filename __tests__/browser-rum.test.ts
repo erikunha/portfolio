@@ -1,5 +1,5 @@
 // __tests__/browser-rum.test.ts
-// Behavioral test (CG3): verifies the Vercel RUM wiring by EXERCISING it.
+// Behavioral test: verifies the Vercel RUM wiring by EXERCISING it.
 //
 //  - RootLayout is rendered with VERCEL=1 and VERCEL unset; the gated
 //    <Analytics/> + <SpeedInsights/> fragment must appear only on Vercel.

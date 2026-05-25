@@ -3,8 +3,6 @@
 // Verifies the standardized pre-flight (rate-limit → parse → validate →
 // handler) AND the standardized envelope ({ ok, requestId, data?/error })
 // AND the X-Request-Id header presence.
-//
-// PR 5 of audit roadmap — Standard 3.
 
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
