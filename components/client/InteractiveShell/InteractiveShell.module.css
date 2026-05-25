@@ -279,6 +279,9 @@ body[data-motion="reduce"] .cmdHint {
   .input {
     font-size: var(--ds-font-size-sm);
   }
+  .placeholderAnim {
+    font-size: var(--ds-font-size-sm);
+  }
   /* From _layout.css 768px block */
   .bar {
     font-size: var(--ds-font-size-2xs);
