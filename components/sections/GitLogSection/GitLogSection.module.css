@@ -98,6 +98,7 @@
 }
 
 .mobile .cmdbar {
+  font-size: var(--ds-font-size-xs);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
