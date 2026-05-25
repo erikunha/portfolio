@@ -202,7 +202,7 @@ i18n · light theme · blog/MDX engine · analytics beyond Vercel Web Analytics 
 5. **Self-resolve is detectable.** `scripts/check-pr-comments.ts` warns; document override if intentional.
 6. **Mechanical command.** `pnpm ready-to-merge <pr>` — ci:local + branch-protection + unresolved-thread check. Must pass before `gh pr merge`.
 7. **The branch protection rule must stay enabled.**
-8. **Copilot auto-reviews on PR open.** After every feedback push: reply to each thread (`gh api .../comments/<id>/replies -f body="Fixed in <sha>. <reason>"`), then re-request (`gh pr edit <pr> --add-reviewer copilot-pull-request-reviewer`). No PR-level timeline comment. (Raw REST API rejects Copilot; `gh pr edit` works.)
+8. **Copilot auto-reviews on PR open — do NOT post any comment on open.** After every feedback push: reply to each thread (`gh api repos/{owner}/{repo}/pulls/<pr>/comments/<databaseId>/replies -f body="Fixed in <sha>. <reason>"`), then re-request (`gh pr edit <pr> --add-reviewer copilot-pull-request-reviewer`). No PR-level timeline comment. (Raw REST API rejects Copilot; `gh pr edit` works.)
 9. **Local playwright visual check before merge.** `pnpm dev` + playwright MCP: desktop (1280×720) + mobile (375×812) on all changed sections. CI baselines don't catch intent regressions.
 10. **Rebase before merge (non-dependabot only).** `git fetch && git rebase origin/main`. Skip `dependabot/*` branches. See `DECISIONS.md` for why this is a local gate only.
 
@@ -213,7 +213,7 @@ Before proposing any of these, check `DECISIONS.md` to see the reasoning that ex
 
 ## Reference docs in this repo
 
-- `STANDARDS.md` — canonical engineering bar; 12 domain chapters, each naming its enforcement mechanism
+- `STANDARDS.md` — canonical engineering bar; domain chapters, each naming its enforcement mechanism
 - `ARCHITECTURE.md` — system design, deep dive, trade-offs
 - `DECISIONS.md` — running ADR log
 - `LAUNCH.md` — historical launch playbook (superseded by `STANDARDS.md` + `ARCHITECTURE.md`)
