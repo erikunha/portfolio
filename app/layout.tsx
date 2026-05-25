@@ -70,12 +70,21 @@ export const metadata: Metadata = {
     description:
       'Staff Full-Stack Engineer · Applied AI · 8+ yrs · LLM · RAG · Angular · React · Next.js · Node.js',
     siteName: 'erikunha.dev',
+    images: [
+      {
+        url: '/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'Erik Cunha — Staff Full-Stack Engineer · Applied AI',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Erik Cunha — Staff Full-Stack Engineer · Applied AI',
     description:
       'Staff Full-Stack Engineer · Applied AI · Angular · React · Next.js · Node.js · TypeScript',
+    images: ['/og.png'],
   },
   robots: {
     index: true,
