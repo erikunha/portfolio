@@ -196,6 +196,67 @@
     },
     { "value": "840ms", "reason": "footer sd-halt-hint-reveal delay — 660ms + 180ms stagger" }
   ],
+  "color-functions": [
+    { "value": "rgba(0, 0, 0, 0)", "reason": "transparent black — gradient endpoint" },
+    { "value": "rgba(0, 0, 0, 0.38)", "reason": "vignette overlay — CRT corner darkening" },
+    {
+      "value": "rgba(0, 0, 0, 0.45)",
+      "reason": "CRT scanline pixel stop — exact opacity required"
+    },
+    {
+      "value": "rgba(0, 0, 0, 0.55)",
+      "reason": "module backdrop scrim — no semantic overlay token"
+    },
+    { "value": "rgba(0, 0, 0, 0.6)", "reason": "dialog/overlay scrim" },
+    { "value": "rgba(0, 0, 0, 0.85)", "reason": "heavy scrim — near-opaque backdrop" },
+    { "value": "rgba(0, 0, 0, 0.92)", "reason": "dock backdrop — near-black translucent surface" },
+    {
+      "value": "rgba(0, 80, 20, 0.12)",
+      "reason": "CRT phosphor glow radial — dark green ambient, no token"
+    },
+    {
+      "value": "rgba(0, 255, 0, 0.06)",
+      "reason": "CRT RGB sub-pixel green channel — exact geometry required"
+    },
+    {
+      "value": "rgba(0, 255, 65, 0.015)",
+      "reason": "signal-green opacity variant — hairline glow"
+    },
+    {
+      "value": "rgba(0, 255, 65, 0.02)",
+      "reason": "signal-green opacity variant — barely-visible tint"
+    },
+    { "value": "rgba(0, 255, 65, 0.025)", "reason": "signal-green opacity variant" },
+    { "value": "rgba(0, 255, 65, 0.03)", "reason": "signal-green opacity variant — subtle tint" },
+    {
+      "value": "rgba(0, 255, 65, 0.04)",
+      "reason": "signal-green opacity variant — hover/focus surface"
+    },
+    { "value": "rgba(0, 255, 65, 0.06)", "reason": "signal-green opacity variant — light surface" },
+    { "value": "rgba(0, 255, 65, 0.1)", "reason": "signal-green opacity variant" },
+    {
+      "value": "rgba(0, 255, 65, 0.12)",
+      "reason": "signal-green opacity variant — dock highlight"
+    },
+    { "value": "rgba(0, 255, 65, 0.15)", "reason": "signal-green opacity variant" },
+    { "value": "rgba(0, 255, 65, 0.18)", "reason": "signal-green opacity variant" },
+    { "value": "rgba(0, 255, 65, 0.25)", "reason": "signal-green opacity variant" },
+    { "value": "rgba(0, 255, 65, 0.3)", "reason": "signal-green opacity variant" },
+    { "value": "rgba(0, 255, 65, 0.35)", "reason": "signal-green opacity variant" },
+    { "value": "rgba(0, 255, 65, 0.4)", "reason": "signal-green opacity variant" },
+    { "value": "rgba(0, 255, 65, 0.45)", "reason": "signal-green opacity variant" },
+    { "value": "rgba(0, 255, 65, 0.5)", "reason": "signal-green opacity variant" },
+    { "value": "rgba(0, 255, 65, 0.55)", "reason": "signal-green opacity variant" },
+    { "value": "rgba(0, 255, 65, 0.6)", "reason": "signal-green opacity variant" },
+    {
+      "value": "rgba(0, 0, 255, 0.06)",
+      "reason": "CRT RGB sub-pixel blue channel — exact geometry required"
+    },
+    {
+      "value": "rgba(255, 0, 0, 0.06)",
+      "reason": "CRT RGB sub-pixel red channel — exact geometry required"
+    }
+  ],
   "z-index-values": [
     "0",
     "1",
