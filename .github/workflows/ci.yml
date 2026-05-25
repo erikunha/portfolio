@@ -441,13 +441,13 @@ jobs:
             echo "app=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          ai_changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- \
+          ai_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
             app/api/ask/ lib/stream-protocol.ts lib/rate-limit.ts lib/agent/ \
             content/ask-eval-corpus.ts scripts/ask-eval.ts content/hiring-profile.ts)
           [[ -n "$ai_changed" ]] \
             && echo "ai=true" >> "$GITHUB_OUTPUT" \
             || echo "ai=false" >> "$GITHUB_OUTPUT"
-          app_changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- \
+          app_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
             app/ components/ design-system/ lib/ content/ public/ next.config.ts)
           [[ -n "$app_changed" ]] \
             && echo "app=true" >> "$GITHUB_OUTPUT" \
