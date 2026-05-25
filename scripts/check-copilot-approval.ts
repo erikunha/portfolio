@@ -12,7 +12,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execFileP = promisify(execFile);
-const COPILOT_LOGIN = 'copilot-pull-request-reviewer';
+const COPILOT_LOGIN = 'copilot-pull-request-reviewer[bot]';
 
 async function run() {
   const passed = process.argv[2];
@@ -21,7 +21,7 @@ async function run() {
 
   const { stdout: repoOut } = await execFileP(
     'gh',
-    ['repo', 'view', '--json', 'owner,name', '-q', '"(.owner.login)/(.name)"'],
+    ['repo', 'view', '--json', 'owner,name', '-q', '"\\(.owner.login)/\\(.name)"'],
     { encoding: 'utf8' },
   );
   const repo = repoOut.trim().replace(/"/g, '');
