@@ -30,3 +30,12 @@
   font-size: var(--ds-font-size-xs);
   color: var(--ds-color-feedback-error);
 }
+
+@media (max-width: 768px) {
+  .label {
+    font-size: var(--ds-font-size-sm);
+  }
+  .input {
+    font-size: var(--ds-font-size-sm);
+  }
+}
