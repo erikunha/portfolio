@@ -310,13 +310,16 @@ describe('ToTopButton — visible=true className branch', () => {
     }
   });
 
-  it('renders the button element when scrollY > 400', async () => {
+  it('applies the show class to the button when scrollY > 400', async () => {
+    const styles = await import('@/components/client/ToTopButton/ToTopButton.module.css');
     const { ToTopButton } = await import('@/components/client/ToTopButton/ToTopButton');
     mounted = await mountClient(createElement(ToTopButton));
-    // Button is always in the DOM; CSS controls visibility via class
     const btn = mounted.container.querySelector('button');
     expect(btn).not.toBeNull();
-    // The aria-label must always be present regardless of visible state
     expect(btn?.getAttribute('aria-label')).toBe('back to top');
+    // useEffect calls onScroll() immediately at mount — with scrollY=500, visible
+    // flips to true and the show class is applied. This is the branch under test.
+    // biome-ignore lint/style/noNonNullAssertion: CSS modules are identity-mapped in jsdom — key always resolves
+    expect(btn?.classList.contains(styles.default.show!)).toBe(true);
   });
 });
