@@ -262,39 +262,26 @@ describe('ManPageSection — Suspense fallback branch', () => {
 // ---------------------------------------------------------------------------
 
 describe('ErrorBoundary — custom fallback prop branch', () => {
-  it('renders the custom fallback when provided and a child throws', async () => {
-    const { ErrorBoundary } = await import('@/components/ErrorBoundary');
+  it('renders the custom fallback when provided and hasError is true', async () => {
+    // Import directly from the client file to avoid the doMock on the barrel
+    // registered by the AppShell describe block above.
+    const { ErrorBoundary } = await import('@/components/ErrorBoundary/ErrorBoundary.client');
 
-    // Suppress console.error from componentDidCatch
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {
-      /* suppress componentDidCatch noise */
-    });
-
-    // A component that always throws
-    function Exploder(): never {
-      throw new Error('test explosion');
+    // Subclass with pre-set error state avoids triggering an actual render-time
+    // throw, which React 19 act() re-throws even when a boundary catches it.
+    // The fallback ternary at render() line 50 is exercised without throw noise.
+    class ErroredBoundary extends ErrorBoundary {
+      override state = { hasError: true };
     }
 
     const customFallback = createElement('div', { 'data-testid': 'custom-fallback' }, 'custom');
+    const { container, unmount } = await mountClient(
+      // biome-ignore lint/suspicious/noExplicitAny: children:ReactNode required by prop type, test-only
+      createElement(ErroredBoundary, { fallback: customFallback } as any, createElement('span')),
+    );
 
-    // renderToStaticMarkup is synchronous and doesn't go through act() so
-    // React does not re-throw the caught error in test environments.
-    const exploderEl = createElement(Exploder);
-    let html = '';
-    try {
-      html = renderToStaticMarkup(
-        // children is passed as third arg — cast to satisfy strict children:ReactNode
-        // biome-ignore lint/suspicious/noExplicitAny: test-only cast
-        createElement(ErrorBoundary, { fallback: customFallback } as any, exploderEl),
-      );
-    } catch {
-      // React 19 SSR re-throws even with error boundaries — if so, skip assertion
-      errorSpy.mockRestore();
-      return;
-    }
-
-    expect(html).toContain('custom-fallback');
-    errorSpy.mockRestore();
+    expect(container.querySelector('[data-testid="custom-fallback"]')).not.toBeNull();
+    unmount();
   });
 });
 
