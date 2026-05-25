@@ -6,10 +6,6 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 export default async function Image() {
-  const fontData = await fetch(
-    new URL('../public/fonts/jetbrains-mono-700.woff2', import.meta.url),
-  ).then((res) => res.arrayBuffer());
-
   return new ImageResponse(
     <div
       style={{
@@ -21,7 +17,7 @@ export default async function Image() {
         alignItems: 'flex-start',
         justifyContent: 'center',
         padding: '80px 80px',
-        fontFamily: '"JetBrains Mono", monospace',
+        fontFamily: 'monospace',
         position: 'relative',
       }}
     >
@@ -96,7 +92,6 @@ export default async function Image() {
     </div>,
     {
       ...size,
-      fonts: [{ name: 'JetBrains Mono', data: fontData, style: 'normal', weight: 700 }],
     },
   );
 }
