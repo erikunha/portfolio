@@ -107,4 +107,7 @@
   .root {
     font-size: var(--ds-font-size-xs);
   }
+  .root .cmdbar {
+    font-size: var(--ds-font-size-xs);
+  }
 }
