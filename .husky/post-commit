@@ -1,0 +1,3 @@
+# Clear review stamp on every new commit — the new HEAD must be reviewed
+# before pushing. Run review agents, then: pnpm review:stamp
+rm -f .review-passed

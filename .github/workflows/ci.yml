@@ -5,8 +5,18 @@ name: CI
 # e2e-visual-webkit is intentionally NOT required (webkit pixel rendering variance).
 # vercel-preview is intentionally NOT required (informational only).
 # Manual step: add "CodeQL / Analyze (javascript-typescript)" to required checks in GitHub Settings.
-# Manual step (post-merge): in GitHub Settings → Branches → main → Required status checks,
-# replace "quality" with "quality-fast" AND "typecheck".
+#
+# Path-filter strategy (detect-changes job):
+#   ai=true   → app/api/ask/, lib/ask/, lib/ask-log.ts, lib/ip-hash.ts, lib/agent/,
+#               lib/hiring-profile.ts, lib/stream-protocol.ts, lib/rate-limit.ts,
+#               content/ask-eval-corpus.ts, content/perf-receipts.ts,
+#               content/projects.ts, content/unknowns.ts, content/visa.ts,
+#               scripts/ask-eval.ts
+#               Gates: ai-eval (also gates on e2e-functional to avoid credit waste)
+#   app=true  → app/, components/, design-system/, lib/, content/, public/, next.config.ts,
+#               .github/workflows/ (workflow changes exercise CI itself)
+#               Gates: performance, e2e-visual-chromium, e2e-visual-webkit
+# Skipped required checks are treated as satisfied by GitHub branch protection.
 
 on:
   pull_request:
@@ -310,7 +320,9 @@ jobs:
     permissions:
       contents: read
     timeout-minutes: 12
-    needs: build
+    # Skip on PRs that touch only scripts/docs/CI — LHCI only matters for app code changes.
+    if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
+    needs: [build, detect-changes]
     env:
       LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
     steps:
@@ -411,18 +423,64 @@ jobs:
           name: playwright-report-${{ matrix.project }}
           path: test-results/
 
+  detect-changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      ai: ${{ steps.check.outputs.ai }}
+      app: ${{ steps.check.outputs.app }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Detect changed file categories
+        id: check
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [[ "$EVENT_NAME" != "pull_request" ]]; then
+            echo "ai=true" >> "$GITHUB_OUTPUT"
+            echo "app=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          ai_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
+            app/api/ask/ lib/ask/ lib/ask-log.ts lib/ip-hash.ts \
+            lib/stream-protocol.ts lib/rate-limit.ts lib/agent/ lib/hiring-profile.ts \
+            content/ask-eval-corpus.ts content/perf-receipts.ts \
+            content/projects.ts content/unknowns.ts content/visa.ts \
+            scripts/ask-eval.ts)
+          [[ -n "$ai_changed" ]] \
+            && echo "ai=true" >> "$GITHUB_OUTPUT" \
+            || echo "ai=false" >> "$GITHUB_OUTPUT"
+          app_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
+            app/ components/ design-system/ lib/ content/ public/ next.config.ts \
+            .github/workflows/)
+          [[ -n "$app_changed" ]] \
+            && echo "app=true" >> "$GITHUB_OUTPUT" \
+            || echo "app=false" >> "$GITHUB_OUTPUT"
+
   ai-eval:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Skip on fork PRs: repository secrets are not available to forks.
-    # GitHub treats a skipped required check as satisfied.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Skip when no AI-relevant files changed: GitHub treats skipped required checks as satisfied.
+    if: |
+      always()
+      && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+      && needs.detect-changes.outputs.ai == 'true'
+      && !contains(needs.*.result, 'failure')
+      && !contains(needs.*.result, 'cancelled')
     # Serialize per-ref: the eval mutates the shared *_BUILD Upstash instance
     # (rate-limit, budget, dedup counters) and overwrites the `ask:eval:latest` key.
     concurrency:
       group: ai-eval-${{ github.ref }}
       cancel-in-progress: true
-    needs: build
+    # Run last: avoids burning AI Gateway credits when any required gate already fails.
+    # always() lets GitHub evaluate the condition even when upstream jobs fail.
+    # skipped (path-filtered) jobs are allowed — only failure/cancelled blocks.
+    needs: [detect-changes, quality-fast, typecheck, test, build, e2e-functional, performance, e2e-visual-chromium]
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
@@ -449,7 +507,9 @@ jobs:
     timeout-minutes: 15
     # REQUIRED: Linux Chromium rendering is deterministic — pixel-diff comparisons
     # are stable enough to gate on. Baselines are refreshed via workflow_dispatch.
-    needs: build
+    # Skip on PRs that touch only scripts/docs/CI — visual diffs only matter for app code.
+    if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
+    needs: [build, detect-changes]
     strategy:
       fail-fast: false
       matrix:
@@ -505,7 +565,9 @@ jobs:
     timeout-minutes: 15
     # Non-required: webkit pixel rendering differs from Chromium baselines and
     # from local macOS Safari. Regressions are reviewed via the uploaded artifact.
-    needs: build
+    # Skip on PRs that touch only scripts/docs/CI.
+    if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
+    needs: [build, detect-changes]
     strategy:
       fail-fast: false
       matrix:

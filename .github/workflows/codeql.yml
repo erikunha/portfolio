@@ -38,13 +38,7 @@ jobs:
       - uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
-          config: |
-            paths-ignore:
-              - design-system/dist
-              - coverage
-              - .next
-              - node_modules
-              - prototype
+          config-file: .github/codeql/codeql-config.yml
 
       - uses: github/codeql-action/autobuild@v4
 
