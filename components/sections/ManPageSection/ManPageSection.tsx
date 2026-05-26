@@ -10,9 +10,9 @@ export async function ManPageContent() {
   return isMobile ? <ManPageMobile /> : <ManPageDesktop />;
 }
 
-export function ManPageSection() {
+export function ManPageSection({ defer }: { defer?: boolean } = {}) {
   return (
-    <Module id="sec-man-page" header="MAN ERIK(1)" icon={<IconManPage />}>
+    <Module id="sec-man-page" header="MAN ERIK(1)" icon={<IconManPage />} defer={defer}>
       <Suspense fallback={<ManPageDesktop />}>
         <ManPageContent />
       </Suspense>

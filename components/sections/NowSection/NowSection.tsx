@@ -3,9 +3,9 @@ import { IconNow } from '../../Icons';
 import { Module } from '../../responsive/Module';
 import styles from './NowSection.module.css';
 
-export function NowSection() {
+export function NowSection({ defer }: { defer?: boolean } = {}) {
   return (
-    <Module id="sec-now" header="CAT ~/.NOW" icon={<IconNow />}>
+    <Module id="sec-now" header="CAT ~/.NOW" icon={<IconNow />} defer={defer}>
       <div className={styles.root}>
         {nowRows.map((r) => (
           <div key={r.k} className={styles.row}>

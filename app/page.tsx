@@ -4,15 +4,13 @@
 // and section components that are explicitly 'use client' end up in JS.
 //
 // PPR (cacheComponents: true in next.config.ts): The static shell (Hero,
-// ReadmeSection, ShellSection, ProjectsSection, and all below-fold sections
-// that don't branch by UA) is cached at the edge. Five dual-variant sections
-// (ManPage, Guitar, Projects, GitLog, Visa) each wrap an async inner RSC
-// inside <Suspense>; the inner RSC calls getIsMobile() → headers(), which
-// makes those subtrees dynamic. The Suspense fallback (desktop variant) is
-// included in the prerendered static shell, so the page is immediately usable
-// on desktop with no streaming delay. Mobile users see the fallback flash for
-// sub-millisecond UA resolution (no async I/O). Hero is intentionally outside
-// any Suspense boundary so LCP is never gated on dynamic resolution.
+// ReadmeSection, ShellSection, and all non-Suspense sections) is cached at
+// the edge. Five dual-variant sections (ManPage, Guitar, Projects, GitLog,
+// Visa) each wrap an async inner RSC inside <Suspense>; the inner RSC calls
+// getIsMobile() → headers(), which makes those subtrees dynamic. Only the
+// Suspense fallback (desktop variant) is prerendered — the actual content
+// streams on mobile UA resolution. Hero sits outside any Suspense boundary
+// so LCP is never gated on dynamic resolution.
 
 import { AppShell } from '@/components/AppShell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -66,7 +64,7 @@ export default function Home() {
             <ResponsibilitiesSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
-            <NowSection />
+            <NowSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <NpmStackSection defer />
@@ -75,7 +73,7 @@ export default function Home() {
             <GitLogSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
-            <ManPageSection />
+            <ManPageSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <AiMetricsSection defer />
