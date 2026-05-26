@@ -160,7 +160,7 @@
 
 .chevron {
   color: var(--ds-color-signal);
-  font-size: var(--ds-font-size-sm);
+  font-size: var(--ds-font-size-md);
   flex-shrink: 0;
   /* Material standard easing — smooth in both directions. */
   transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
