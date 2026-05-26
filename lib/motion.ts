@@ -25,8 +25,9 @@ export function applyMotion(on: boolean): void {
   document.body.dataset.motion = on ? 'full' : 'reduce';
   try {
     localStorage.setItem('erik.motion', on ? 'on' : 'off');
-  } catch {
-    // ignore write failure
+  } catch (err) {
+    // Storage unavailable — preference will not persist across reloads.
+    console.warn('[motion] Failed to persist motion preference:', err);
   }
   // Notify JS-driven animations (MatrixRain, RoleTyper) so they stop/start
   // immediately without waiting for a page reload.

@@ -146,10 +146,16 @@ export function MatrixRain({
       }
     }
 
+    // Tracks whether the watchRef element is currently in the viewport.
+    // onMotionChange checks this so re-enabling motion doesn't start the canvas
+    // loop while the element is off-screen (only matters when watchRef is set).
+    let isIntersecting = false;
+
     const onMotionChange = (e: Event) => {
       const on = (e as CustomEvent<{ on: boolean }>).detail.on;
       if (on) {
-        resume();
+        // Resume only when IO-gating is satisfied — skip if off-screen.
+        if (!watchRef || isIntersecting) resume();
       } else {
         pause();
         // Clear to black so the frozen frame isn't visible against the background.
@@ -169,6 +175,7 @@ export function MatrixRain({
         const io = new IntersectionObserver(
           (entries) => {
             entries.forEach((e) => {
+              isIntersecting = e.isIntersecting;
               if (e.isIntersecting && readMotion()) resume();
               else pause();
             });

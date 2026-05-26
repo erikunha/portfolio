@@ -19,6 +19,7 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
     const node: HTMLSpanElement = el;
 
     let cancelled = false;
+    let timerId: ReturnType<typeof setTimeout> | undefined;
     let roleIdx = 0;
     let charIdx = 0;
     let phase: 'type' | 'hold' | 'back' = 'type';
@@ -33,13 +34,13 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
           phase = 'hold';
           // Announce only the completed role, not each character
           if (liveRef.current) liveRef.current.textContent = role;
-          setTimeout(tick, HOLD_MS);
+          timerId = setTimeout(tick, HOLD_MS);
         } else {
-          setTimeout(tick, TYPE_MS);
+          timerId = setTimeout(tick, TYPE_MS);
         }
       } else if (phase === 'hold') {
         phase = 'back';
-        setTimeout(tick, BACK_MS);
+        timerId = setTimeout(tick, BACK_MS);
       } else {
         charIdx--;
         node.textContent = charIdx > 0 ? `[${role.slice(0, charIdx)}]` : '[]';
@@ -47,9 +48,9 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
           roleIdx++;
           charIdx = 0;
           phase = 'type';
-          setTimeout(tick, INTER_MS);
+          timerId = setTimeout(tick, INTER_MS);
         } else {
-          setTimeout(tick, BACK_MS);
+          timerId = setTimeout(tick, BACK_MS);
         }
       }
     }
@@ -60,6 +61,7 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
       const on = (e as CustomEvent<{ on: boolean }>).detail.on;
       if (!on) {
         cancelled = true;
+        clearTimeout(timerId);
       } else if (cancelled) {
         cancelled = false;
         roleIdx = 0;
@@ -72,6 +74,7 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
 
     return () => {
       cancelled = true;
+      clearTimeout(timerId);
       window.removeEventListener('motionchange', onMotionChange);
     };
   }, []);
