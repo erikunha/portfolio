@@ -75,7 +75,45 @@
   overflow: hidden;
 }
 
+/* Chrome 131 introduced ::details-content, which animates block-size between
+   0 and auto on open/close, freezing the CSS cascade for child elements during
+   the animation — CSS class transitions on .body won't fire while it's running.
+   Neutralising it here lets the grid-template-rows transition on .body run
+   uninterrupted. Other browsers ignore ::details-content entirely. */
+.root::details-content {
+  display: block;
+  block-size: auto;
+  overflow: visible;
+  transition: none;
+  content-visibility: visible;
+}
+
+/* .body is the grid animation container.
+   grid-template-rows transitions between 0fr (collapsed) and 1fr (expanded).
+   .bodyInner must have min-height:0 for 0fr to truly collapse to zero —
+   without it the track resolves to the child's min-content size instead. */
 .body {
+  display: grid;
+  /* Default: closed easing (destination-state trick — ease-in snaps at the end). */
+  transition: grid-template-rows var(--ds-duration-slow) var(--ds-ease-in);
+  grid-template-rows: 0fr;
+}
+
+.root[open] .body {
+  grid-template-rows: 1fr;
+  /* Opening easing: ease-out reaches full height quickly in the first third. */
+  transition: grid-template-rows var(--ds-duration-slow) var(--ds-ease-out);
+}
+
+.bodyInner {
+  min-height: 0; /* allows 0fr row to collapse to 0 — padding would block this */
+  overflow: hidden; /* clips bodyContent during the collapse animation */
+}
+
+/* bodyContent carries padding and text color; sits inside the overflow:hidden
+   clip so the grid can collapse .bodyInner to true 0. */
+.bodyContent {
+  padding: var(--ds-space-pad);
   color: var(--ds-color-text-body);
 }
 
@@ -118,22 +156,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chevron {
+  .chevron,
+  .body {
     transition: none;
   }
 }
 
-body[data-motion="reduce"] .chevron {
+body[data-motion="reduce"] .chevron,
+body[data-motion="reduce"] .body {
   transition: none;
-}
-
-/* Native <details> collapse: body hidden when closed, padded when open. */
-.root:not([open]) .body {
-  display: none;
-}
-
-.root[open] .body {
-  padding: var(--ds-space-pad);
 }
 
 /* ───────────────────────────────────────────────────────────────────────
@@ -146,34 +177,34 @@ body[data-motion="reduce"] .chevron {
    base rules (list-style:none + ::-webkit-details-marker).
    ─────────────────────────────────────────────────────────────────────── */
 @media (min-width: 769px) {
-  /* Old desktop <section> had no outer border — the panel border lived on
-     the body. Drop the mobile container chrome. */
+  /* Desktop sections are togglable — drop the mobile container chrome but
+     keep the header clickable with chevron indicator. */
   .root {
     border: 0;
     background: none;
     overflow: visible;
   }
 
-  /* <summary> becomes a transparent header slot: no toggle affordance.
-     margin-bottom restores the 10px gap the old standalone <h2> carried. */
+  /* <summary> stripped of mobile panel chrome; chevron visible, cursor active. */
   .toggle {
-    display: block;
+    display: flex;
     padding: 0;
     min-height: 0;
     background: none;
     border-bottom: 0;
-    cursor: default;
-    margin-bottom: 10px;
+    cursor: pointer;
+    margin-bottom: 8px;
+    justify-content: space-between;
+    align-items: center;
   }
 
-  /* Desktop header steps up one notch from mobile xs — sm keeps chrome
-     visually subordinate to body content (body = 14px) at the same scale. */
+  /* Desktop header steps up one notch from mobile xs. */
   .header {
     font-size: var(--ds-font-size-sm);
     letter-spacing: 0.1em;
   }
 
-  /* Desktop shows the full header label; the mobile short label is hidden. */
+  /* Desktop shows the full header label. */
   .labelDesktop {
     display: inline;
   }
@@ -181,21 +212,16 @@ body[data-motion="reduce"] .chevron {
     display: none;
   }
 
-  /* No disclosure chevron on desktop. */
+  /* Chevron visible on desktop — inherits rotation from base [open] rule. */
   .chevron {
-    display: none;
+    display: inline;
   }
 
-  /* Body is ALWAYS visible on desktop — override the native
-     details:not([open]) collapse and the [open]-scoped padding so the
-     panel paints identically whether or not the element is open. */
-  .root .body,
-  .root:not([open]) .body,
-  .root[open] .body {
-    display: block;
+  /* Panel border + tint live on bodyContent (which has the padding), not on
+     bodyInner. This avoids a 1px border artefact on the collapsed 0px state
+     and keeps the border visually inside the padding space. */
+  .root[open] .bodyContent {
     border: 1px solid var(--ds-color-signal-subtle);
-    padding: var(--ds-space-pad);
     background: linear-gradient(180deg, rgba(0, 255, 65, 0.015), rgba(0, 0, 0, 0));
-    color: var(--ds-color-text-body);
   }
 }

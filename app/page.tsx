@@ -48,12 +48,15 @@ export default function Home() {
           <ErrorBoundary>
             <Hero />
           </ErrorBoundary>
-          {/* Modules 1-3: above the fold — no deferral */}
+          {/* Modules 1-4: above the fold — no deferral */}
           <ErrorBoundary>
             <ReadmeSection />
           </ErrorBoundary>
           <ErrorBoundary>
             <ShellSection />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <AiMetricsSection />
           </ErrorBoundary>
           <ErrorBoundary>
             <ProjectsSection />
@@ -76,9 +79,6 @@ export default function Home() {
           </ErrorBoundary>
           <ErrorBoundary>
             <ManPageSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <AiMetricsSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <LivePerfSection defer />

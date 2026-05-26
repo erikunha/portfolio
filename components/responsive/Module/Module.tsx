@@ -60,7 +60,11 @@ export function Module({ id, header, mobileHeader, icon, defer = false, children
         </span>
       </summary>
       <div className={styles.body} id={`${id}-body`}>
-        {children}
+        {/* bodyInner: grid item — no padding so 0fr collapses to true 0.
+            bodyContent: padding+color wrapper inside the overflow:hidden clip. */}
+        <div className={styles.bodyInner}>
+          <div className={styles.bodyContent}>{children}</div>
+        </div>
       </div>
     </details>
   );
