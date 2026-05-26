@@ -12,7 +12,7 @@ export function readMotion(): boolean {
   } catch {
     // localStorage unavailable (private browsing, etc.)
   }
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
     return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
   return true;
@@ -28,4 +28,7 @@ export function applyMotion(on: boolean): void {
   } catch {
     // ignore write failure
   }
+  // Notify JS-driven animations (MatrixRain, RoleTyper) so they stop/start
+  // immediately without waiting for a page reload.
+  window.dispatchEvent(new CustomEvent('motionchange', { detail: { on } }));
 }

@@ -16,7 +16,6 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
   useEffect(() => {
     const el = spanRef.current;
     if (!el) return;
-    if (!readMotion()) return;
     const node: HTMLSpanElement = el;
 
     let cancelled = false;
@@ -55,9 +54,25 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
       }
     }
 
-    tick();
+    if (readMotion()) tick();
+
+    const onMotionChange = (e: Event) => {
+      const on = (e as CustomEvent<{ on: boolean }>).detail.on;
+      if (!on) {
+        cancelled = true;
+      } else if (cancelled) {
+        cancelled = false;
+        roleIdx = 0;
+        charIdx = 0;
+        phase = 'type';
+        tick();
+      }
+    };
+    window.addEventListener('motionchange', onMotionChange);
+
     return () => {
       cancelled = true;
+      window.removeEventListener('motionchange', onMotionChange);
     };
   }, []);
 

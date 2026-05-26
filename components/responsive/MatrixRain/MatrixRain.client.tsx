@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useRef } from 'react';
+import { readMotion } from '@/lib/motion';
 
 type RainTunables = {
   fontSize: number;
@@ -145,6 +146,22 @@ export function MatrixRain({
       }
     }
 
+    const onMotionChange = (e: Event) => {
+      const on = (e as CustomEvent<{ on: boolean }>).detail.on;
+      if (on) {
+        resume();
+      } else {
+        pause();
+        // Clear to black so the frozen frame isn't visible against the background.
+        ctxEl.fillStyle = '#000';
+        ctxEl.fillRect(0, 0, w, h);
+      }
+    };
+    window.addEventListener('motionchange', onMotionChange);
+
+    // Don't start the loop if motion is already disabled at mount.
+    const motionOff = !readMotion();
+
     if (watchRef) {
       running = false;
       const target = watchRef.current;
@@ -152,7 +169,8 @@ export function MatrixRain({
         const io = new IntersectionObserver(
           (entries) => {
             entries.forEach((e) => {
-              e.isIntersecting ? resume() : pause();
+              if (e.isIntersecting && readMotion()) resume();
+              else pause();
             });
           },
           { threshold: 0.05 },
@@ -163,10 +181,11 @@ export function MatrixRain({
           pause();
           clearTimeout(resizeTimer);
           window.removeEventListener('resize', debouncedResize);
+          window.removeEventListener('motionchange', onMotionChange);
         };
       }
       // fallback if no IO support — start immediately
-      resume();
+      if (!motionOff) resume();
     } else {
       // Defer the 22fps canvas loop until the browser is idle so it doesn't
       // contend for main-thread time during LCP/TBT measurement on mobile.
@@ -180,12 +199,14 @@ export function MatrixRain({
       let idleHandle: number | undefined;
       let idleTimer: ReturnType<typeof setTimeout> | undefined;
       const startLoop = () => {
-        raf = requestAnimationFrame(frame);
+        if (readMotion()) raf = requestAnimationFrame(frame);
       };
-      if (typeof idleWin.requestIdleCallback === 'function') {
-        idleHandle = idleWin.requestIdleCallback(startLoop, { timeout: 2000 });
-      } else {
-        idleTimer = setTimeout(startLoop, 1000);
+      if (!motionOff) {
+        if (typeof idleWin.requestIdleCallback === 'function') {
+          idleHandle = idleWin.requestIdleCallback(startLoop, { timeout: 2000 });
+        } else {
+          idleTimer = setTimeout(startLoop, 1000);
+        }
       }
       const onVisibility = () => {
         document.hidden ? pause() : resume();
@@ -204,6 +225,7 @@ export function MatrixRain({
         document.removeEventListener('visibilitychange', onVisibility);
         window.removeEventListener('sysfail:start', onSysfailStart);
         window.removeEventListener('sysfail:end', onSysfailEnd);
+        window.removeEventListener('motionchange', onMotionChange);
       };
     }
 
@@ -211,6 +233,7 @@ export function MatrixRain({
       pause();
       clearTimeout(resizeTimer);
       window.removeEventListener('resize', debouncedResize);
+      window.removeEventListener('motionchange', onMotionChange);
     };
     // Only `watchRef` is structural — the visual tunables (fontSize, speed,
     // colors, tailFade) are read from tunablesRef each frame, so changing them
