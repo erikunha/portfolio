@@ -34,10 +34,6 @@ export function DesktopTopbar() {
             <span>ERIK_CUNHA.SH</span>
             <span className={styles.tabClose}>&times;</span>
           </div>
-          <div className={styles.tab}>
-            <span>&#9635;</span>
-            <span>PROJECTS</span>
-          </div>
         </div>
         <nav className={styles.nav} aria-label="Site navigation">
           <a className={styles.navlink} href="#bio">
