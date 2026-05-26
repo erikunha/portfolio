@@ -102,6 +102,11 @@
   /* Isolate grid-template-rows layout recalc to this subtree so it does not
      dirty the root stacking context on every animation frame. */
   contain: layout style;
+  /* Chrome's UA stylesheet for ::details-content (Chrome 131+) imposes a
+     min-height on children derived from the cached contain-intrinsic-size,
+     overriding a plain author min-height:0. !important beats the UA rule. */
+  /* biome-ignore lint/complexity/noImportantStyles: Chrome 131 UA override */
+  min-height: 0 !important;
 }
 
 .root[open] .body {
