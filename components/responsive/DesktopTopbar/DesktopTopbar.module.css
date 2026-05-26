@@ -105,14 +105,14 @@
   background: transparent;
   white-space: nowrap;
   transition:
-    box-shadow 200ms ease,
-    background 200ms ease,
-    border-color 200ms ease;
+    box-shadow var(--ds-duration-base) var(--ds-ease-out),
+    background var(--ds-duration-base) var(--ds-ease-out),
+    border-color var(--ds-duration-base) var(--ds-ease-out);
 }
 
 .motion:hover {
   box-shadow: 0 0 12px var(--ds-color-signal);
-  background: rgba(0, 255, 65, 0.06);
+  background: var(--ds-color-signal-quiet);
   border-color: var(--ds-color-signal);
 }
 
@@ -137,7 +137,7 @@
   padding: 6px 14px;
   font-size: var(--ds-font-size-sm);
   border: 1px solid var(--ds-color-signal);
-  transition: box-shadow 200ms ease;
+  transition: box-shadow var(--ds-duration-base) var(--ds-ease-out);
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
@@ -155,14 +155,14 @@
   font-size: var(--ds-font-size-xs);
   display: inline-block;
   transition:
-    box-shadow 200ms ease,
-    background 200ms ease;
+    box-shadow var(--ds-duration-base) var(--ds-ease-out),
+    background var(--ds-duration-base) var(--ds-ease-out);
   white-space: nowrap;
 }
 
 .btnOutline:hover {
   box-shadow: 0 0 12px var(--ds-color-signal);
-  background: rgba(0, 255, 65, 0.06);
+  background: var(--ds-color-signal-quiet);
 }
 
 @media (max-width: 1080px) {
