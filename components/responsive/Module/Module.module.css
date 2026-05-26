@@ -119,6 +119,9 @@
 .bodyContent {
   padding: var(--ds-space-pad);
   color: var(--ds-color-text-body);
+  /* Subtle signal tint so content reads against the black background — same on
+     mobile and desktop so both viewports look identical. */
+  background: rgba(0, 255, 65, 0.05);
   /* Closing: fade over the full 300ms in sync with the height collapse so
      content and container reach 0 together rather than content vanishing first. */
   opacity: 0;
@@ -235,11 +238,9 @@ body[data-motion="reduce"] .bodyContent {
     display: inline;
   }
 
-  /* Panel border + tint live on bodyContent (which has the padding), not on
-     bodyInner. This avoids a 1px border artefact on the collapsed 0px state
-     and keeps the border visually inside the padding space. */
+  /* Panel border lives on bodyContent (not bodyInner) to avoid a 1px artefact
+     on the collapsed 0px state. Background inherits the base rgba tint. */
   .root[open] .bodyContent {
     border: 1px solid var(--ds-color-signal-subtle);
-    background: linear-gradient(180deg, rgba(0, 255, 65, 0.015), rgba(0, 0, 0, 0));
   }
 }
