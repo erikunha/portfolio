@@ -191,51 +191,32 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 
 ## Out of scope (unless asked)
 
-- i18n
-- Light theme toggle (the whole point is dark)
-- Blog / MDX content engine
-- Analytics beyond Vercel Web Analytics + Speed Insights
-- Auth, accounts, comments
-- CMS (single-author, content in TS)
+i18n · light theme · blog/MDX engine · analytics beyond Vercel Web Analytics + Speed Insights · auth/accounts/comments · CMS
 
 ## PR merge gate
 
-Before any agent or human calls `gh pr merge` on this repo:
-
-1. **AI agents may not call `gh pr merge` without Copilot review.** This rule applies to AI agents only — the repo owner may merge at any time by calling `gh pr merge` directly. AI agents must go through `pnpm ready-to-merge <pr>`, which runs `check-copilot-approval.ts` and exits 1 if Copilot has not reviewed. If Copilot is over quota or unavailable, stop and wait — do not self-authorize.
-2. **GitHub resolve-thread is ground truth.** A PR may not merge while `gh api graphql` returns any `PullRequestReviewThread` with `isResolved: false`. Enforced by GitHub branch protection (`required_conversation_resolution`) and by `pnpm ready-to-merge <pr>` locally.
-3. **AI agents must RESOLVE or ESCALATE every open comment.** RESOLVE = address with a fix commit and reply with the SHA. For behavioral bugs the fix commit must include or update a behavioral test that would have caught the regression. ESCALATE = surface to the repo owner with the comment verbatim, 2-3 options, and a recommendation; wait for a decision. No third bucket. "Looks minor" is not allowed.
-4. **In-session reviewer findings count.** Critical/Important findings from `pr-review-toolkit:review-pr`, `code-review:code-review`, or `ultrareview` must be either fixed (fix commit covers them) or posted as file-line review threads (`gh api repos/{owner}/{repo}/pulls/{n}/comments` with `path` + `line`) so they fall under rule 2. Do not post as PR timeline comments — that violates rule 8.
-5. **Self-resolve is detectable.** `scripts/check-pr-comments.ts` warns when the PR author is also the thread resolver. Document the override on the PR if intentional.
-6. **Mechanical command.** `pnpm ready-to-merge <pr>` runs `pnpm ci:local` (lint + typecheck + content validate + client-naming + tests), the branch-protection check, then queries unresolved threads. Must pass before `gh pr merge`.
+1. **AI agents may not call `gh pr merge` without Copilot review.** Repo owner may merge directly. Agents: `pnpm ready-to-merge <pr>` must pass; wait if Copilot unavailable — do not self-authorize.
+2. **GitHub resolve-thread is ground truth.** No merge while any `PullRequestReviewThread` is `isResolved: false` (`required_conversation_resolution` branch protection).
+3. **AI agents must RESOLVE or ESCALATE every open comment.** RESOLVE = fix commit + SHA reply + behavioral test update. ESCALATE = verbatim comment + 2-3 options + recommendation; wait for decision. No third bucket.
+4. **In-session reviewer findings count.** Critical/Important from `pr-review-toolkit`, `code-review`, or `ultrareview` must be fixed (commit) or posted as file-line review threads (not timeline comments).
+5. **Self-resolve is detectable.** `scripts/check-pr-comments.ts` warns; document override if intentional.
+6. **Mechanical command.** `pnpm ready-to-merge <pr>` — ci:local + branch-protection + unresolved-thread check. Must pass before `gh pr merge`.
 7. **The branch protection rule must stay enabled.**
-8. **Copilot auto-reviews on PR open; reply to threads + re-request after every review-feedback push.** Copilot reviews a PR automatically on *open* — do NOT post any comment on open. After any push that addresses Copilot or reviewer feedback:
-   - **Thread replies (required):** reply to each resolved thread: `gh api repos/{owner}/{repo}/pulls/<pr>/comments/<databaseId>/replies -f body="Fixed in <sha>. <one-sentence technical reason>"`. This closes the feedback loop in context for each finding.
-   - **Re-request (required):** `gh pr edit <pr> --add-reviewer copilot-pull-request-reviewer`. This is the trigger — Copilot sees the new commits + the thread replies.
-   - **No PR-level comment.** Do not post a general comment on the PR timeline (e.g. "What changed since your last review", "Addressed feedback", etc.) — that is redundant noise. Thread replies + re-request is the complete sequence.
-   - Note: the raw REST `requested_reviewers` API and GraphQL `requestReviews` mutation both reject Copilot as `not a collaborator`; `gh pr edit` uses a different mechanism that works.
-9. **Local playwright visual check before merge.** After all review fixes are pushed, start the dev server (`pnpm dev`) and use playwright MCP to verify desktop (1280×720) and mobile (375×812). Check all changed sections and the golden path. CI visual snapshots compare against a frozen baseline — they don't catch intent regressions.
-10. **Rebase before merge (non-dependabot only).** Run `git fetch && git rebase origin/main` before merging. Keeps a linear history on main. Skip for `dependabot/*` branches — those are auto-managed and rebasing breaks their signature. `pnpm ready-to-merge <pr>` runs `scripts/check-branch-protection.ts` against `main` and fails if `required_conversation_resolution` is off. This is a local gate, not a CI step: the workflow `GITHUB_TOKEN` cannot read the branch-protection endpoint (it requires repo-admin token power). See `DECISIONS.md`.
-
-Rationale: human-in-the-loop quality gate — the gate chain (thinking-inversion → TDD → code-review → pr-review-toolkit → Copilot review → ready-to-merge) is the enforceable bar. See `DECISIONS.md` for residual-risk note.
+8. **Copilot auto-reviews on PR open — do NOT post any comment on open.** After every feedback push: reply to each thread (`gh api repos/{owner}/{repo}/pulls/<pr>/comments/<databaseId>/replies -f body="Fixed in <sha>. <reason>"`), then re-request (`gh pr edit <pr> --add-reviewer copilot-pull-request-reviewer`). No PR-level timeline comment. (Raw REST API rejects Copilot; `gh pr edit` works.)
+9. **Local playwright visual check before merge.** `pnpm dev` + playwright MCP: desktop (1280×720) + mobile (375×812) on all changed sections. CI baselines don't catch intent regressions.
+10. **Rebase before merge (non-dependabot only).** `git fetch && git rebase origin/main`. Skip `dependabot/*` branches. See `DECISIONS.md` for why this is a local gate only.
 
 ## Things that have been considered and rejected
 
 Before proposing any of these, check `DECISIONS.md` to see the reasoning that excluded them:
-- GraphQL · Cloudflare Workers · multi-region deploy · Sentry by default · CAPTCHA on the contact form · per-portfolio-section routes (splitting `/` into multiple routes — distinct from purpose-built routes like `/design-system`) · state management library · MDX as a blog/content engine (distinct from MDX as docs surface for `/design-system`) · separate CMS · Tailwind (removed 2026-05-18) · CSS-in-JS / styled-components · PostCSS plugins beyond what Lightning CSS provides natively
-
-Updated 2026-05-23: removed "design system extraction" (now accepted, see DECISIONS.md 2026-05-23), narrowed "MDX" to "MDX as a blog/content engine," narrowed "separate routes per section" to "per-portfolio-section routes," and removed "CSS Modules" (adopted 2026-05-22).
+- GraphQL · Cloudflare Workers · multi-region deploy · Sentry by default · CAPTCHA on the contact form · per-portfolio-section routes · state management library · MDX as a blog/content engine · separate CMS · Tailwind (removed 2026-05-18) · CSS-in-JS / styled-components · PostCSS plugins beyond what Lightning CSS provides natively
 
 ## Reference docs in this repo
 
-- `STANDARDS.md` — the canonical engineering bar; 11 domain chapters, each naming its enforcement mechanism
+- `STANDARDS.md` — canonical engineering bar; domain chapters, each naming its enforcement mechanism
 - `ARCHITECTURE.md` — system design, deep dive, trade-offs
 - `DECISIONS.md` — running ADR log
-- `LAUNCH.md` — historical launch playbook (superseded; `STANDARDS.md` + `ARCHITECTURE.md` are authoritative)
-- `docs/audit/2026-05-19-principal-audit.md` — Principal/Staff pass audit (historical; superseded by `STANDARDS.md`)
-- `scaffold/` — drop-in opinionated configs (Biome, tsconfig, globals.css, Zod schemas, CI workflow)
-- `scaffold/README.md` — explains every file in scaffold/
-- `prototype/Portfolio.html` — the Claude Design prototype (visual reference only, never served)
+- `LAUNCH.md` — historical launch playbook (superseded by `STANDARDS.md` + `ARCHITECTURE.md`)
 
 ## When in doubt
 
