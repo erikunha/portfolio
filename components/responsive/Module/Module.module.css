@@ -119,14 +119,15 @@
 .bodyContent {
   padding: var(--ds-space-pad);
   color: var(--ds-color-text-body);
-  /* Closing: fast fade-out, no delay — content disappears before height collapses. */
+  /* Closing: fade over the full 300ms in sync with the height collapse so
+     content and container reach 0 together rather than content vanishing first. */
   opacity: 0;
-  transition: opacity 120ms ease-in;
+  transition: opacity var(--ds-duration-slow) cubic-bezier(0.32, 0, 0.67, 0);
 }
 
 .root[open] .bodyContent {
   opacity: 1;
-  /* Opening: fade-in delayed slightly so the panel pops open first. */
+  /* Opening: fade-in delayed 80ms so the panel pops open before content appears. */
   transition: opacity 200ms ease-out 80ms;
 }
 
