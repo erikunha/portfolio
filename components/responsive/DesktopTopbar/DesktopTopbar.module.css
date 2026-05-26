@@ -97,10 +97,10 @@
   align-items: center;
   gap: 6px;
   color: var(--ds-color-text-muted);
-  font-size: var(--ds-font-size-xs);
-  letter-spacing: 0.1em;
+  font-size: var(--ds-font-size-sm);
+  letter-spacing: 0.08em;
   border: 1px solid var(--ds-color-signal-subtle);
-  padding: 4px 8px;
+  padding: 6px 14px;
   cursor: pointer;
   background: transparent;
   white-space: nowrap;
