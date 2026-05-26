@@ -6,9 +6,6 @@
 
 .root {
   font-family: var(--ds-font-family-mono);
-  /* Reserves the resolved-state height so the Suspense fallback (single
-     paragraph) does not cause a layout shift when the grid streams in. */
-  min-height: 160px;
 }
 
 .grid {
@@ -70,6 +67,16 @@
   font-size: var(--ds-font-size-sm);
   letter-spacing: 0.04em;
   margin: 0;
+  /* Reserves resolved-state height so the Suspense fallback does not cause a
+     layout shift when the 4-card grid streams in. Only on the fallback element
+     so the resolved state controls its own natural height. */
+  min-height: 160px;
+}
+
+@media (max-width: 900px) {
+  .pending {
+    min-height: 290px; /* 2-col grid is 2 rows tall */
+  }
 }
 
 .pending code {
@@ -78,10 +85,6 @@
 }
 
 @media (max-width: 900px) {
-  .root {
-    /* 2-col grid is 2 rows tall — update min-height to match. */
-    min-height: 290px;
-  }
   .grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;

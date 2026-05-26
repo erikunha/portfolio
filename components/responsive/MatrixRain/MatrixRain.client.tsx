@@ -152,7 +152,9 @@ export function MatrixRain({
     let isIntersecting = false;
 
     const onMotionChange = (e: Event) => {
-      const on = (e as CustomEvent<{ on: boolean }>).detail.on;
+      const detail = (e as CustomEvent).detail as unknown;
+      if (!detail || typeof (detail as { on?: unknown }).on !== 'boolean') return;
+      const on = (detail as { on: boolean }).on;
       if (on) {
         // Resume only when IO-gating is satisfied — skip if off-screen.
         if (!watchRef || isIntersecting) resume();
@@ -252,7 +254,7 @@ export function MatrixRain({
       ref={canvasRef}
       aria-hidden
       className={className}
-      style={{ display: 'block', width: '100%', height: '100%', ...style }}
+      style={{ ...style, display: 'block', width: '100%', height: '100%' }}
     />
   );
 }

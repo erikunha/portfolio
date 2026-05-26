@@ -99,6 +99,9 @@
   grid-template-rows: 0fr;
   /* Destination-state trick: closing uses easeInCubic — slow start, fast snap. */
   transition: grid-template-rows var(--ds-duration-slow) cubic-bezier(0.32, 0, 0.67, 0);
+  /* Isolate grid-template-rows layout recalc to this subtree so it does not
+     dirty the root stacking context on every animation frame. */
+  contain: layout style;
 }
 
 .root[open] .body {
@@ -185,12 +188,20 @@
   .bodyContent {
     transition: none;
   }
+  /* Force content visible — prevents invisible-content trap when transitions
+     are disabled and the opacity:0 default never animates to 1. */
+  .bodyContent {
+    opacity: 1;
+  }
 }
 
 body[data-motion="reduce"] .chevron,
 body[data-motion="reduce"] .body,
 body[data-motion="reduce"] .bodyContent {
   transition: none;
+}
+body[data-motion="reduce"] .bodyContent {
+  opacity: 1;
 }
 
 /* ───────────────────────────────────────────────────────────────────────

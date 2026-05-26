@@ -58,12 +58,15 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
     if (readMotion()) tick();
 
     const onMotionChange = (e: Event) => {
-      const on = (e as CustomEvent<{ on: boolean }>).detail.on;
+      const detail = (e as CustomEvent).detail as unknown;
+      if (!detail || typeof (detail as { on?: unknown }).on !== 'boolean') return;
+      const on = (detail as { on: boolean }).on;
       if (!on) {
         cancelled = true;
         clearTimeout(timerId);
       } else if (cancelled) {
         cancelled = false;
+        clearTimeout(timerId);
         roleIdx = 0;
         charIdx = 0;
         phase = 'type';
