@@ -217,8 +217,6 @@ Before proposing any of these, check `DECISIONS.md` to see the reasoning that ex
 - `ARCHITECTURE.md` — system design, deep dive, trade-offs
 - `DECISIONS.md` — running ADR log
 - `LAUNCH.md` — historical launch playbook (superseded by `STANDARDS.md` + `ARCHITECTURE.md`)
-- `scaffold/` — drop-in opinionated configs (Biome, tsconfig, globals.css, Zod schemas, CI workflow); see `scaffold/README.md`
-- `prototype/Portfolio.html` — visual reference prototype (never served)
 
 ## When in doubt
 
