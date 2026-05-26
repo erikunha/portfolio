@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import type { Browser } from 'playwright';
@@ -9,18 +9,40 @@ import { chromium } from 'playwright';
 // No dev server required — renders the OG design from inline HTML.
 // Output: public/og.png (1200x630 PNG)
 
-const HTML = `<!DOCTYPE html>
+const fontsDir = path.resolve(process.cwd(), 'public/fonts');
+
+function fontBase64(file: string): string {
+  return readFileSync(path.join(fontsDir, file)).toString('base64');
+}
+
+function buildHtml(): string {
+  const mono400 = fontBase64('jetbrains-mono-400.woff2');
+  const mono700 = fontBase64('jetbrains-mono-700.woff2');
+
+  return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <style>
+  @font-face {
+    font-family: 'JetBrains Mono';
+    src: url('data:font/woff2;base64,${mono400}') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono';
+    src: url('data:font/woff2;base64,${mono700}') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     width: 1200px;
     height: 630px;
     background: #000;
     color: #E6FFE6;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
     overflow: hidden;
     position: relative;
   }
@@ -45,16 +67,17 @@ const HTML = `<!DOCTYPE html>
     flex-direction: column;
     justify-content: space-between;
   }
-  .top { display: flex; flex-direction: column; gap: 10px; }
+  .top { display: flex; flex-direction: column; gap: 8px; }
   .domain {
     font-size: 20px;
+    font-weight: 400;
     color: #00FF41;
     letter-spacing: 0.1em;
     opacity: 0.65;
   }
   .name {
-    font-size: 108px;
-    font-weight: 900;
+    font-size: 120px;
+    font-weight: 700;
     color: #00FF41;
     letter-spacing: 0.04em;
     line-height: 1;
@@ -64,7 +87,7 @@ const HTML = `<!DOCTYPE html>
     margin-top: 4px;
   }
   .title {
-    font-size: 28px;
+    font-size: 44px;
     font-weight: 700;
     color: #E6FFE6;
     letter-spacing: 0.04em;
@@ -72,21 +95,22 @@ const HTML = `<!DOCTYPE html>
     white-space: nowrap;
   }
   .subtitle {
-    font-size: 23px;
+    font-size: 26px;
+    font-weight: 400;
     color: #E6FFE6;
     letter-spacing: 0.03em;
-    opacity: 0.72;
+    opacity: 0.75;
     margin-top: 6px;
     white-space: nowrap;
   }
   .stack {
     display: flex;
-    gap: 14px;
+    gap: 12px;
     flex-wrap: wrap;
     align-items: center;
   }
   .tag {
-    font-size: 22px;
+    font-size: 26px;
     font-weight: 700;
     color: #00FF41;
     border: 1.5px solid rgba(0,255,65,0.7);
@@ -116,6 +140,7 @@ const HTML = `<!DOCTYPE html>
 </div>
 </body>
 </html>`;
+}
 
 async function main() {
   let browser: Browser | undefined;
@@ -123,7 +148,7 @@ async function main() {
     browser = await chromium.launch();
     const page = await browser.newPage();
     await page.setViewportSize({ width: 1200, height: 630 });
-    await page.setContent(HTML, { waitUntil: 'load' });
+    await page.setContent(buildHtml(), { waitUntil: 'networkidle' });
     const buffer = await page.screenshot({ type: 'png', fullPage: false });
     if (!buffer || buffer.length === 0) {
       throw new Error('Screenshot returned empty buffer');
