@@ -103,6 +103,7 @@
   padding: 4px 8px;
   cursor: pointer;
   background: transparent;
+  white-space: nowrap;
 }
 
 .mdot {
