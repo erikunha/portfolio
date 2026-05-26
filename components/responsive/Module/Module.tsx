@@ -46,6 +46,9 @@ export function Module({ id, header, mobileHeader, icon, defer = false, children
       {...(defer ? { 'data-cv-defer': 'true' } : {})}
     >
       <summary className={styles.toggle}>
+        <span className={styles.chevron} aria-hidden>
+          ▸
+        </span>
         <h2 className={styles.header}>
           {icon ? (
             <span className={styles.icon} aria-hidden>
@@ -55,9 +58,6 @@ export function Module({ id, header, mobileHeader, icon, defer = false, children
           <span className={styles.labelDesktop}>{header}</span>
           <span className={styles.labelMobile}>{mobileHeader ?? header}</span>
         </h2>
-        <span className={styles.chevron} aria-hidden>
-          ▸
-        </span>
       </summary>
       <div className={styles.body} id={`${id}-body`}>
         {/* bodyInner: grid item — no padding so 0fr collapses to true 0.

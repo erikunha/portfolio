@@ -27,16 +27,16 @@
 
 .icon {
   display: inline-flex;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   align-items: center;
   justify-content: center;
   color: var(--ds-color-signal);
 }
 
 .icon svg {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   stroke: currentColor;
   fill: none;
   stroke-width: 1.4;
@@ -91,18 +91,20 @@
 /* .body is the grid animation container.
    grid-template-rows transitions between 0fr (collapsed) and 1fr (expanded).
    .bodyInner must have min-height:0 for 0fr to truly collapse to zero —
-   without it the track resolves to the child's min-content size instead. */
+   without it the track resolves to the child's min-content size instead.
+   Custom cubic-bezier curves: easeInCubic (closing) and easeOutCubic (opening)
+   feel snappier and more intentional than the built-in ease-in/ease-out. */
 .body {
   display: grid;
-  /* Default: closed easing (destination-state trick — ease-in snaps at the end). */
-  transition: grid-template-rows var(--ds-duration-slow) var(--ds-ease-in);
   grid-template-rows: 0fr;
+  /* Destination-state trick: closing uses easeInCubic — slow start, fast snap. */
+  transition: grid-template-rows var(--ds-duration-slow) cubic-bezier(0.32, 0, 0.67, 0);
 }
 
 .root[open] .body {
   grid-template-rows: 1fr;
-  /* Opening easing: ease-out reaches full height quickly in the first third. */
-  transition: grid-template-rows var(--ds-duration-slow) var(--ds-ease-out);
+  /* Opening uses easeOutCubic — fast pop, smooth settle. */
+  transition: grid-template-rows var(--ds-duration-slow) cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 .bodyInner {
@@ -110,20 +112,31 @@
   overflow: hidden; /* clips bodyContent during the collapse animation */
 }
 
-/* bodyContent carries padding and text color; sits inside the overflow:hidden
-   clip so the grid can collapse .bodyInner to true 0. */
+/* bodyContent carries padding, text color, and the opacity fade.
+   Sits inside the overflow:hidden clip so the grid can collapse .bodyInner to 0.
+   Fade-out fires immediately on close (content hides first, then panel collapses).
+   Fade-in is delayed 80ms so content appears after the panel has started opening. */
 .bodyContent {
   padding: var(--ds-space-pad);
   color: var(--ds-color-text-body);
+  /* Closing: fast fade-out, no delay — content disappears before height collapses. */
+  opacity: 0;
+  transition: opacity 120ms ease-in;
 }
 
-/* <summary> is the section toggle: icon + uppercase label + chevron. */
+.root[open] .bodyContent {
+  opacity: 1;
+  /* Opening: fade-in delayed slightly so the panel pops open first. */
+  transition: opacity 200ms ease-out 80ms;
+}
+
+/* <summary> is the section toggle: chevron + icon + uppercase label. */
 .toggle {
   /* Hide native disclosure triangle (Firefox) */
   list-style: none;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
   width: 100%;
   padding: 12px 14px;
   min-height: 44px;
@@ -148,7 +161,9 @@
 .chevron {
   color: var(--ds-color-signal);
   font-size: var(--ds-font-size-sm);
-  transition: transform 120ms ease-out;
+  flex-shrink: 0;
+  /* Material standard easing — smooth in both directions. */
+  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .root[open] .chevron {
@@ -157,13 +172,15 @@
 
 @media (prefers-reduced-motion: reduce) {
   .chevron,
-  .body {
+  .body,
+  .bodyContent {
     transition: none;
   }
 }
 
 body[data-motion="reduce"] .chevron,
-body[data-motion="reduce"] .body {
+body[data-motion="reduce"] .body,
+body[data-motion="reduce"] .bodyContent {
   transition: none;
 }
 
@@ -194,8 +211,8 @@ body[data-motion="reduce"] .body {
     border-bottom: 0;
     cursor: pointer;
     margin-bottom: 8px;
-    justify-content: space-between;
     align-items: center;
+    gap: 8px;
   }
 
   /* Desktop header steps up one notch from mobile xs. */
