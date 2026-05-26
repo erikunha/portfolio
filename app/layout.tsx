@@ -27,9 +27,9 @@ const display = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://erikunha.dev'),
-  title: 'Erik Cunha — Staff Full-Stack Engineer · Applied AI',
+  title: 'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
   description:
-    'Full-Stack Engineer, 8+ yrs. LLM, RAG, multi-agent in production. €1B+ ARR, 8M+ MAU. Targeting Staff/Principal at AI-forward companies. Brazil, remote.',
+    'Senior Full-Stack Engineer specializing in Frontend Architecture, Platform & AI Applied Engineering. UI/UX, Accessibility, Web Performance for High-Traffic Apps. React, Next.js, Angular, TypeScript, Node.js, AWS.',
   keywords: [
     'Staff Engineer',
     'Principal Engineer',
@@ -66,24 +66,24 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://erikunha.dev',
-    title: 'Erik Cunha — Staff Full-Stack Engineer · Applied AI',
+    title: 'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
     description:
-      'Staff Full-Stack Engineer · Applied AI · 8+ yrs · LLM · RAG · Angular · React · Next.js · Node.js',
+      'Senior Full-Stack Engineer · Frontend Architecture · Platform & AI Applied Engineering · React · Next.js · Angular · TypeScript · Node.js · AWS',
     siteName: 'erikunha.dev',
     images: [
       {
         url: '/og.png',
         width: 1200,
         height: 630,
-        alt: 'Erik Cunha — Staff Full-Stack Engineer · Applied AI',
+        alt: 'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Erik Cunha — Staff Full-Stack Engineer · Applied AI',
+    title: 'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
     description:
-      'Staff Full-Stack Engineer · Applied AI · Angular · React · Next.js · Node.js · TypeScript',
+      'Frontend Architecture · Platform & AI Applied Engineering · UI/UX · Accessibility · React · Next.js · Angular · TypeScript · Node.js · AWS',
     images: ['/og.png'],
   },
   robots: {

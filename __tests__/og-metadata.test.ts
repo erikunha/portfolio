@@ -10,6 +10,13 @@ describe('layout metadata og:image', () => {
     expect(metadata.metadataBase?.toString()).toBe('https://erikunha.dev/');
   });
 
+  it('page title matches the LinkedIn headline branding', async () => {
+    const { metadata } = await import('@/app/layout');
+    expect(metadata.title).toBe(
+      'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
+    );
+  });
+
   it('openGraph.images is a non-empty array with url, width, height, and alt', async () => {
     const { metadata } = await import('@/app/layout');
     const og = metadata.openGraph as Record<string, unknown>;
@@ -19,7 +26,9 @@ describe('layout metadata og:image', () => {
     expect(images[0]?.url).toBe('/og.png');
     expect(images[0]?.width).toBe(1200);
     expect(images[0]?.height).toBe(630);
-    expect(images[0]?.alt).toBe('Erik Cunha — Staff Full-Stack Engineer · Applied AI');
+    expect(images[0]?.alt).toBe(
+      'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
+    );
   });
 
   it('twitter.images is a non-empty array pointing to /og.png', async () => {
