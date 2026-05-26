@@ -104,6 +104,16 @@
   cursor: pointer;
   background: transparent;
   white-space: nowrap;
+  transition:
+    box-shadow 200ms ease,
+    background 200ms ease,
+    border-color 200ms ease;
+}
+
+.motion:hover {
+  box-shadow: 0 0 12px var(--ds-color-signal);
+  background: rgba(0, 255, 65, 0.06);
+  border-color: var(--ds-color-signal);
 }
 
 .mdot {
