@@ -4,13 +4,15 @@
 // and section components that are explicitly 'use client' end up in JS.
 //
 // PPR (cacheComponents: true in next.config.ts): The static shell (Hero,
-// ReadmeSection, ShellSection, and all non-Suspense sections) is cached at
-// the edge. Five dual-variant sections (ManPage, Guitar, Projects, GitLog,
-// Visa) each wrap an async inner RSC inside <Suspense>; the inner RSC calls
-// getIsMobile() → headers(), which makes those subtrees dynamic. Only the
-// Suspense fallback (desktop variant) is prerendered — the actual content
-// streams on mobile UA resolution. Hero sits outside any Suspense boundary
-// so LCP is never gated on dynamic resolution.
+// ReadmeSection, ShellSection) is cached at the edge. Five dual-variant
+// sections (ManPage, Guitar, Projects, GitLog, Visa) each wrap an async inner
+// RSC inside <Suspense>; the inner RSC calls getIsMobile() → headers(), which
+// makes those subtrees dynamic. Only the Suspense fallback (desktop variant)
+// is prerendered — the actual content streams on mobile UA resolution. Hero
+// sits outside any Suspense boundary so LCP is never gated on dynamic
+// resolution. ProjectsSection is above the fold but is one of the five
+// dual-variant sections — its desktop fallback is in the prerendered shell so
+// above-fold paint is unblocked.
 
 import { AppShell } from '@/components/AppShell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -46,7 +48,7 @@ export default function Home() {
           <ErrorBoundary>
             <Hero />
           </ErrorBoundary>
-          {/* Modules 0-2: above the fold — no deferral */}
+          {/* Modules 1-3: above the fold — no deferral */}
           <ErrorBoundary>
             <ReadmeSection />
           </ErrorBoundary>

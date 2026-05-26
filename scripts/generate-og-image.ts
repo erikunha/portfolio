@@ -149,6 +149,7 @@ async function main() {
     const page = await browser.newPage();
     await page.setViewportSize({ width: 1200, height: 630 });
     await page.setContent(buildHtml(), { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready);
     const buffer = await page.screenshot({ type: 'png', fullPage: false });
     if (!buffer || buffer.length === 0) {
       throw new Error('Screenshot returned empty buffer');
