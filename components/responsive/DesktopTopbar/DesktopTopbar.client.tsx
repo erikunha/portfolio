@@ -36,17 +36,17 @@ export function DesktopTopbar() {
           </div>
         </div>
         <nav className={styles.nav} aria-label="Site navigation">
-          <a className={styles.navlink} href="#bio">
-            01_BIO
-          </a>
           <a className={styles.navlink} href="#sec-projects">
-            02_WORK
+            01_WORK
           </a>
-          <a className={styles.navlink} href="#sec-git-log">
-            03_LOGS
+          <a className={styles.navlink} href="#sec-perf-receipts">
+            02_IMPACT
           </a>
           <a className={styles.navlink} href="#sec-npm-stack">
-            04_DEPS
+            03_DEPS
+          </a>
+          <a className={styles.navlink} href="#sec-contact">
+            04_CONTACT
           </a>
           <a className={styles.navlink} href="/design-system">
             DESIGN_SYSTEM

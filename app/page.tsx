@@ -4,8 +4,8 @@
 // and section components that are explicitly 'use client' end up in JS.
 //
 // PPR (cacheComponents: true in next.config.ts): The static shell (Hero,
-// ReadmeSection, ShellSection, NowSection, and all below-fold sections that
-// don't branch by UA) is cached at the edge. Five dual-variant sections
+// ReadmeSection, ShellSection, ProjectsSection, and all below-fold sections
+// that don't branch by UA) is cached at the edge. Five dual-variant sections
 // (ManPage, Guitar, Projects, GitLog, Visa) each wrap an async inner RSC
 // inside <Suspense>; the inner RSC calls getIsMobile() → headers(), which
 // makes those subtrees dynamic. The Suspense fallback (desktop variant) is
@@ -48,7 +48,7 @@ export default function Home() {
           <ErrorBoundary>
             <Hero />
           </ErrorBoundary>
-          {/* Modules 0-3: above the fold on desktop and mobile — no deferral */}
+          {/* Modules 0-2: above the fold — no deferral */}
           <ErrorBoundary>
             <ReadmeSection />
           </ErrorBoundary>
@@ -56,41 +56,41 @@ export default function Home() {
             <ShellSection />
           </ErrorBoundary>
           <ErrorBoundary>
-            <ManPageSection />
+            <ProjectsSection />
+          </ErrorBoundary>
+          {/* Modules 3+: below the fold — defer content-visibility */}
+          <ErrorBoundary>
+            <PerfReceiptsSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <ResponsibilitiesSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <NowSection />
-          </ErrorBoundary>
-          {/* Modules 4+: below the fold — defer content-visibility */}
-          <ErrorBoundary>
-            <ProjectsSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <GitLogSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <NpmStackSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
-            <SysHealthSection defer />
+            <GitLogSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
-            <LivePerfSection defer />
+            <ManPageSection />
           </ErrorBoundary>
           <ErrorBoundary>
             <AiMetricsSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
-            <PerfReceiptsSection defer />
+            <LivePerfSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
-            <GuitarSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <VisaSection defer />
+            <SysHealthSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <CredentialsSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <VisaSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <CommunitySection defer />
@@ -99,7 +99,7 @@ export default function Home() {
             <HottestTakesSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
-            <ResponsibilitiesSection defer />
+            <GuitarSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <UnknownsSection defer />
