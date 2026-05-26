@@ -4,15 +4,16 @@
 // and section components that are explicitly 'use client' end up in JS.
 //
 // PPR (cacheComponents: true in next.config.ts): The static shell (Hero,
-// ReadmeSection, ShellSection) is cached at the edge. Five dual-variant
+// ReadmeSection, ShellSection, AiMetricsSection, ProjectsSection) is cached
+// at the edge. AiMetricsSection is above the fold and wraps a Redis-bound
+// async RSC in <Suspense>; its fallback (single-line pending stub) reserves
+// the resolved grid height via min-height to prevent CLS. Five dual-variant
 // sections (ManPage, Guitar, Projects, GitLog, Visa) each wrap an async inner
 // RSC inside <Suspense>; the inner RSC calls getIsMobile() → headers(), which
 // makes those subtrees dynamic. Only the Suspense fallback (desktop variant)
 // is prerendered — the actual content streams on mobile UA resolution. Hero
 // sits outside any Suspense boundary so LCP is never gated on dynamic
-// resolution. ProjectsSection is above the fold but is one of the five
-// dual-variant sections — its desktop fallback is in the prerendered shell so
-// above-fold paint is unblocked.
+// resolution.
 
 import { AppShell } from '@/components/AppShell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';

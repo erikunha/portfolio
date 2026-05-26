@@ -6,6 +6,9 @@
 
 .root {
   font-family: var(--ds-font-family-mono);
+  /* Reserves the resolved-state height so the Suspense fallback (single
+     paragraph) does not cause a layout shift when the grid streams in. */
+  min-height: 160px;
 }
 
 .grid {
@@ -75,6 +78,10 @@
 }
 
 @media (max-width: 900px) {
+  .root {
+    /* 2-col grid is 2 rows tall — update min-height to match. */
+    min-height: 290px;
+  }
   .grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
