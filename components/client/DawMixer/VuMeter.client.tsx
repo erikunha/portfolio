@@ -21,9 +21,9 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
     (i: number, currentLevel: number): string => {
       const filledCount = Math.round((currentLevel / 100) * segments);
       const isRed = clipping && currentLevel > 85 && i >= segments - 2;
-      if (isRed) return s.vuSegRed;
-      if (i < filledCount) return s.vuSegFilled;
-      return s.vuSegEmpty;
+      if (isRed) return s.vuSegRed ?? '';
+      if (i < filledCount) return s.vuSegFilled ?? '';
+      return s.vuSegEmpty ?? '';
     },
     [segments, clipping],
   );

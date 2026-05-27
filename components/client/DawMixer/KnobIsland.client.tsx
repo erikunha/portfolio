@@ -48,7 +48,7 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
     }
   }, []);
 
-  const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
       isDragging.current = true;
@@ -59,7 +59,7 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
     }
   };
 
-  const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging.current) return;
     // Upward drag (negative deltaY) = increase angle
     const deltaY = dragStartY.current - e.clientY;
