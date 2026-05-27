@@ -340,7 +340,10 @@ body[data-motion="reduce"] .headline {
   color: var(--ds-color-text-body);
   font-size: var(--ds-font-size-sm);
   line-height: 1.65;
-  min-height: 165px;
+  /* 11 lines × (12px × 1.65) ≈ 218px; fixed height reserves the full space
+     before the animation appends lines, preventing CLS on mobile. */
+  height: 220px;
+  overflow: hidden;
   margin: 0 0 12px;
 }
 
