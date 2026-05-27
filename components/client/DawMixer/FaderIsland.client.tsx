@@ -77,12 +77,14 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
       onKeyDown={(e) => {
         if (isDragging.current) return;
         if (e.key === 'ArrowRight') {
+          e.preventDefault();
           const next = Math.min(100, livePct.current + 2);
           livePct.current = next;
           applyPct(next);
           setPct(next);
         }
         if (e.key === 'ArrowLeft') {
+          e.preventDefault();
           const next = Math.max(0, livePct.current - 2);
           livePct.current = next;
           applyPct(next);
