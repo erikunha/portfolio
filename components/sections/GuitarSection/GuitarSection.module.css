@@ -83,7 +83,7 @@
 .camOverlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 255, 65, 0.12);
+  background: color-mix(in srgb, var(--ds-color-signal) 12%, transparent);
   mix-blend-mode: screen;
   pointer-events: none;
 }
@@ -94,8 +94,8 @@
     0deg,
     transparent 0px,
     transparent 2px,
-    rgba(0, 0, 0, 0.22) 2px,
-    rgba(0, 0, 0, 0.22) 4px
+    color-mix(in srgb, black 22%, transparent) 2px,
+    color-mix(in srgb, black 22%, transparent) 4px
   );
   pointer-events: none;
 }
@@ -104,7 +104,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: rgba(0, 255, 65, 0.3);
+  background: color-mix(in srgb, var(--ds-color-signal) 30%, transparent);
   pointer-events: none;
   animation: scanBeam 4s linear infinite;
   top: 0;

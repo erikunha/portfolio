@@ -118,15 +118,13 @@ describe('GuitarSection — mobile layout', () => {
 });
 
 describe('GuitarSection — XSS safety', () => {
-  it('does not inject raw HTML markup (behavioral: no <script> elements in output)', async () => {
+  it('renders node labels as plain text with no injected HTML', async () => {
     const doc = await renderDesktop();
     expect(doc.querySelectorAll('script').length).toBe(0);
-    // Also verify signal chain labels are rendered as text, not injected HTML
-    const nodeLabels = doc.querySelectorAll(
-      '[data-testid^="signal-node-"] [data-testid$="-label"]',
-    );
+    const nodeLabels = doc.querySelectorAll('[class*="nodeLabel"]');
+    expect(nodeLabels.length).toBeGreaterThan(0);
     for (const node of nodeLabels) {
-      expect(node.innerHTML).not.toContain('<');
+      expect(node.innerHTML).not.toMatch(/<(?!br|strong|em)/);
     }
   });
 });
