@@ -1,0 +1,96 @@
+/* DawMixer client island styles — filled fully in Task 8 */
+.vuMeter {
+  display: flex;
+  gap: 2px;
+  cursor: ew-resize;
+  padding: 4px 0;
+  align-items: flex-end;
+  height: 20px;
+  outline: none;
+}
+.vuMeter:focus-visible {
+  outline: 2px solid var(--ds-color-signal);
+  outline-offset: 2px;
+}
+.vuSegFilled {
+  flex: 1;
+  background: var(--ds-color-signal);
+  height: 100%;
+}
+.vuSegEmpty {
+  flex: 1;
+  background: var(--ds-color-signal-quiet);
+  height: 100%;
+}
+.vuSegRed {
+  flex: 1;
+  background: var(--ds-color-feedback-error);
+  height: 100%;
+}
+
+/* Placeholders for FaderIsland, KnobIsland, RmsButtons (filled in Tasks 4-6) */
+.faderTrack {
+  position: relative;
+  height: 10px;
+  background: var(--ds-color-surface-shell);
+  border: 1px solid var(--ds-color-border-default);
+  cursor: ew-resize;
+  outline: none;
+}
+.faderThumb {
+  position: absolute;
+  top: -4px;
+  width: 12px;
+  height: 18px;
+  background: var(--ds-color-signal);
+  border: 1px solid var(--ds-color-signal);
+  cursor: ew-resize;
+}
+.knob {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.knobSvg {
+  cursor: ns-resize;
+  outline: none;
+}
+.knobSvg:focus-visible {
+  outline: 2px solid var(--ds-color-signal);
+  outline-offset: 2px;
+}
+.knobLabel {
+  font-size: var(--ds-font-size-2xs);
+  color: var(--ds-color-text-muted);
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+.rmsButtons {
+  display: flex;
+  gap: 3px;
+}
+.rmsActive {
+  border: 1px solid var(--ds-color-signal);
+  background: var(--ds-color-signal);
+  color: var(--ds-color-surface-base);
+  padding: 3px 8px;
+  font-size: var(--ds-font-size-xs);
+  font-family: var(--ds-font-family-mono);
+  cursor: pointer;
+  font-weight: 700;
+}
+.rmsInactive {
+  border: 1px solid var(--ds-color-border-default);
+  background: transparent;
+  color: var(--ds-color-text-muted);
+  padding: 3px 8px;
+  font-size: var(--ds-font-size-xs);
+  font-family: var(--ds-font-family-mono);
+  cursor: pointer;
+}
+.rmsActive:focus-visible,
+.rmsInactive:focus-visible {
+  outline: 2px solid var(--ds-color-signal);
+  outline-offset: 2px;
+}
