@@ -41,7 +41,7 @@ describe('GuitarSection — signal chain (desktop)', () => {
     const doc = await renderDesktop();
     const fxNode = doc.querySelector('[data-testid="signal-node-FX"]');
     expect(fxNode).not.toBeNull();
-    const bullets = fxNode?.querySelectorAll('[aria-hidden="true"]');
+    const bullets = fxNode?.querySelectorAll('[class*="fxBullet"]');
     expect(bullets?.length).toBe(5);
   });
 
