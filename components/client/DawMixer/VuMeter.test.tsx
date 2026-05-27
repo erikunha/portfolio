@@ -110,3 +110,36 @@ describe('VuMeter — keyboard', () => {
     expect(Number(slider.getAttribute('aria-valuenow'))).toBeLessThanOrEqual(100);
   });
 });
+
+describe('VuMeter — pointer drag behavior', () => {
+  let unmount: (() => void) | undefined;
+  afterEach(() => {
+    unmount?.();
+    unmount = undefined;
+  });
+
+  it('pointermove without pointerdown does not change level', async () => {
+    const { container, unmount: u } = await mountClient(
+      createElement(VuMeter, { ...defaults, initialLevel: 50 }),
+    );
+    unmount = u;
+    const slider = container.querySelector('[role="slider"]') as HTMLElement;
+    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 300, bubbles: true }));
+    expect(slider.getAttribute('aria-valuenow')).toBe('50');
+  });
+
+  it('aria-valuenow is always a valid integer after pointer events', async () => {
+    const { container, unmount: u } = await mountClient(
+      createElement(VuMeter, { ...defaults, initialLevel: 50 }),
+    );
+    unmount = u;
+    const slider = container.querySelector('[role="slider"]') as HTMLElement;
+    slider.dispatchEvent(new PointerEvent('pointerdown', { clientX: 100, bubbles: true }));
+    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 200, bubbles: true }));
+    slider.dispatchEvent(new PointerEvent('pointerup', { clientX: 200, bubbles: true }));
+    const val = Number(slider.getAttribute('aria-valuenow'));
+    expect(Number.isNaN(val)).toBe(false);
+    expect(val).toBeGreaterThanOrEqual(0);
+    expect(val).toBeLessThanOrEqual(100);
+  });
+});

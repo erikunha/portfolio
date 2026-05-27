@@ -42,15 +42,19 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
 
   const getLevelFromPointer = useCallback((clientX: number): number | null => {
     const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return null;
+    if (!rect || rect.width === 0) return null;
     return Math.max(0, Math.min(100, Math.round(((clientX - rect.left) / rect.width) * 100)));
   }, []);
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    isDragging.current = true;
     const newLevel = getLevelFromPointer(e.clientX);
-    if (newLevel !== null) applyLevel(newLevel);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+      isDragging.current = true;
+      if (newLevel !== null) applyLevel(newLevel);
+    } catch {
+      if (newLevel !== null) setLevel(newLevel);
+    }
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
