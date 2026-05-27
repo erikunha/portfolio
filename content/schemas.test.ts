@@ -37,3 +37,31 @@ describe('GuitarRigSchema v2', () => {
     ).not.toThrow();
   });
 });
+
+describe('DawMixerSchema', () => {
+  it('accepts a valid 6-channel config', async () => {
+    const { DawMixerSchema } = await import('./schemas');
+    expect(() =>
+      DawMixerSchema.parse({
+        sessionName: 'TEST.ALS',
+        bpm: 87,
+        timeSignature: '4/4',
+        channels: [
+          {
+            id: 'CH 01',
+            name: 'TEST',
+            desc: 'test desc',
+            plugins: [{ name: 'COMP', active: true, strength: 3 }],
+            faderPct: 72,
+            db: '-2.5',
+            meterPct: 71,
+            knob1: { label: 'GAIN', angleDeg: -30 },
+            knob2: { label: 'PAN', angleDeg: 0 },
+            buttons: ['R', 'M', 'S'],
+            activeButtons: [],
+          },
+        ],
+      }),
+    ).not.toThrow();
+  });
+});

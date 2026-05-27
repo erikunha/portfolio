@@ -202,6 +202,44 @@ export const DmesgLineSchema = z.object({
 });
 export type DmesgLine = z.infer<typeof DmesgLineSchema>;
 
+// DawMixerSection
+const DawMixerPluginSchema = z.object({
+  name: z.string().min(1),
+  active: z.boolean(),
+  strength: z.number().int().min(0).max(5),
+});
+
+const DawMixerKnobSchema = z.object({
+  label: z.string().min(1),
+  angleDeg: z.number().min(-150).max(150),
+});
+
+const DawMixerChannelSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  desktopName: z.string().optional(),
+  desc: z.string().min(1),
+  focused: z.boolean().optional(),
+  plugins: z.array(DawMixerPluginSchema).min(1).max(5),
+  faderPct: z.number().min(0).max(100),
+  db: z.string().min(1),
+  meterPct: z.number().min(0).max(100),
+  meterClipping: z.boolean().optional(),
+  knob1: DawMixerKnobSchema,
+  knob2: DawMixerKnobSchema,
+  buttons: z.array(z.string().min(1)),
+  activeButtons: z.array(z.string().min(1)),
+  footer: z.object({ lufs: z.string(), pk: z.string() }).optional(),
+  terminalLines: z.array(z.string().min(1)).optional(),
+});
+
+export const DawMixerSchema = z.object({
+  sessionName: z.string().min(1),
+  bpm: z.number().int(),
+  timeSignature: z.string().min(1),
+  channels: z.array(DawMixerChannelSchema).min(1),
+});
+
 // Exported types
 export type Social = z.infer<typeof SocialSchema>;
 export type Project = z.infer<typeof ProjectSchema>;
@@ -221,3 +259,6 @@ export type NowRow = z.infer<typeof NowRowSchema>;
 export type SysStat = z.infer<typeof SysStatSchema>;
 export type GitCommit = z.infer<typeof GitCommitSchema>;
 export type ShellResponse = z.infer<typeof ShellResponseSchema>;
+export type DawMixer = z.infer<typeof DawMixerSchema>;
+export type DawMixerChannel = z.infer<typeof DawMixerChannelSchema>;
+export type DawMixerPlugin = z.infer<typeof DawMixerPluginSchema>;
