@@ -18,7 +18,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { RoleTyper } from './RoleTyper';
+import { ROLES, RoleTyper } from './RoleTyper';
 
 function getDOM() {
   const html = renderToStaticMarkup(createElement(RoleTyper));
@@ -32,6 +32,20 @@ function getPill() {
 function getLiveRegion() {
   return getDOM().querySelector('span.sr-only[role="status"]');
 }
+
+// Guards the pill min-width budget in ReadmeSection.module.css.
+// The CSS reserves 9em for the longest role including brackets.
+// At 14px body / 0.6em-per-char in JetBrains Mono: 9em = 126px outer,
+// minus 12px padding = 114px content; [Principal] = 11 chars ≈ 92px + letter-spacing.
+// If a role longer than [Principal] is added, the pill will reflow.
+describe('RoleTyper: ROLES length budget', () => {
+  it('no role exceeds 9 chars (so [role] stays ≤ 11 chars, within the 9em CSS budget)', () => {
+    const longest = Math.max(...ROLES.map((r) => r.length));
+    // bracket wrap adds 2 chars, so pill text = role.length + 2
+    // 9 chars + 2 brackets = 11 chars; matches min-width: 9em budget
+    expect(longest).toBeLessThanOrEqual(9);
+  });
+});
 
 describe('RoleTyper ARIA contract — animated pill', () => {
   it('is aria-hidden so AT ignores per-character textContent mutations', () => {

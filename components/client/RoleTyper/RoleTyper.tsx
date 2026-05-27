@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { readMotion } from '@/lib/motion';
 
-const ROLES = ['Senior', 'Staff', 'Principal'];
+export const ROLES = ['Senior', 'Staff', 'Principal'];
 const TYPE_MS = 80;
 const HOLD_MS = 2000;
 const BACK_MS = 40;
