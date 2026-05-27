@@ -89,11 +89,13 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
       onPointerCancel={onPointerUp}
       onKeyDown={(e) => {
         if (e.key === 'ArrowRight') {
+          e.preventDefault();
           const next = Math.min(100, liveLevel.current + 5);
           applyLevel(next);
           setLevel(next);
         }
         if (e.key === 'ArrowLeft') {
+          e.preventDefault();
           const next = Math.max(0, liveLevel.current - 5);
           applyLevel(next);
           setLevel(next);
