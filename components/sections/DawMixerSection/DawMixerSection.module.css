@@ -1,0 +1,297 @@
+/* ── DawMixerSection ────────────────────────────────────────────────────── */
+
+/* ─── Shared ─────────────────────────────────────────────────────────── */
+.statusDot {
+  color: var(--ds-color-signal);
+}
+.dots {
+  display: flex;
+  gap: 2px;
+}
+.dotFilled {
+  width: 6px;
+  height: 6px;
+  background: var(--ds-color-signal);
+  flex-shrink: 0;
+}
+.dotEmpty {
+  width: 6px;
+  height: 6px;
+  background: var(--ds-color-signal-quiet);
+  flex-shrink: 0;
+}
+
+.channelBadge {
+  border: 1px solid var(--ds-color-border-default);
+  padding: 1px 5px;
+  font-size: var(--ds-font-size-xs);
+  font-family: var(--ds-font-family-mono);
+  color: var(--ds-color-text-body);
+  letter-spacing: 0.04em;
+}
+.masterBadge {
+  border: 1px solid var(--ds-color-signal);
+  padding: 2px 8px;
+  font-size: var(--ds-font-size-xs);
+  font-family: var(--ds-font-family-mono);
+  font-weight: 700;
+  color: var(--ds-color-signal);
+  letter-spacing: 0.12em;
+}
+.dbValue {
+  font-weight: 700;
+  color: var(--ds-color-signal);
+  font-size: var(--ds-font-size-sm);
+}
+.dbUnit {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+}
+.lufs {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  display: block;
+}
+
+/* Signal flow <details> */
+.signalFlow {
+  width: 100%;
+}
+.signalFlowToggle {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  user-select: none;
+}
+.signalFlowToggle::-webkit-details-marker {
+  display: none;
+}
+details[open] .signalFlowToggle {
+  color: var(--ds-color-signal);
+}
+.signalFlowDot {
+  transition: opacity 0.15s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .signalFlowDot {
+    transition: none;
+  }
+}
+.pluginRowActive {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-signal);
+  border: 1px solid var(--ds-color-signal-quiet);
+  margin-bottom: 2px;
+}
+.pluginRowInactive {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  margin-bottom: 2px;
+}
+.pluginBullet {
+  flex-shrink: 0;
+  font-size: 8px;
+}
+.pluginName {
+  flex: 1;
+}
+
+/* ─── Desktop ────────────────────────────────────────────────────────── */
+.root {
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-body);
+  color: var(--ds-color-text-body);
+}
+.sessionHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--ds-color-border-default);
+  letter-spacing: 0.02em;
+}
+/* Grid: ID | TRACK | I/O | R/M/S | PLUGIN CHAIN | METER | FADER | DB */
+.tableHeader,
+.channelRow {
+  display: grid;
+  grid-template-columns: 72px 1fr 100px 76px 1fr 130px 120px 52px;
+  gap: 0;
+  align-items: center;
+}
+.tableHeader {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--ds-color-border-default);
+  padding: 5px 0;
+}
+.tableHeader > div {
+  padding: 0 6px;
+}
+.channelRow {
+  border-bottom: 1px solid var(--ds-color-signal-quiet);
+  padding: 8px 0;
+}
+.channelRow > div {
+  padding: 0 6px;
+}
+.channelFocused {
+  border-left: 2px solid var(--ds-color-signal);
+  padding-left: 0;
+}
+.channelSubName {
+  display: block;
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  margin-top: 3px;
+}
+.colId {
+  display: flex;
+  flex-direction: column;
+}
+.colTrack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.trackName {
+  font-weight: 700;
+  font-size: var(--ds-font-size-sm);
+  color: var(--ds-color-signal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.trackDesc {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.colIo {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.colRms {
+  display: flex;
+  justify-content: flex-start;
+}
+.colPlugins {
+  min-width: 0;
+}
+.colMeter {
+  padding: 0 6px;
+}
+.colFader {
+  padding: 0 6px;
+}
+.colDb {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* ─── Mobile ─────────────────────────────────────────────────────────── */
+.rootMobile {
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-sm);
+  color: var(--ds-color-text-body);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sessionHeaderMobile {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  line-height: 1.8;
+  border-bottom: 1px solid var(--ds-color-border-default);
+  padding-bottom: 8px;
+}
+.tapHint {
+  color: var(--ds-color-text-faint);
+  font-size: var(--ds-font-size-xs);
+}
+.channelCard {
+  border: 1px solid var(--ds-color-border-default);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.channelCardFocused {
+  border-left: 2px solid var(--ds-color-signal);
+}
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cardName {
+  flex: 1;
+  font-weight: 700;
+  font-size: var(--ds-font-size-sm);
+  color: var(--ds-color-signal);
+  letter-spacing: 0.04em;
+}
+.cardDb {
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  margin-left: auto;
+}
+.cardDesc {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  line-height: 1.6;
+}
+.cardKnobs {
+  display: flex;
+  gap: 20px;
+  justify-content: flex-start;
+}
+.cardButtons {
+  display: flex;
+}
+.cardFooter {
+  position: relative;
+  height: 4px;
+  background: var(--ds-color-surface-shell);
+  border: 1px solid var(--ds-color-border-default);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+.faderFooterBar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--ds-color-signal-quiet);
+}
+.terminalBlock {
+  border: 1px solid var(--ds-color-signal-quiet);
+  padding: 8px 10px;
+  margin-top: 4px;
+}
+.terminalLine {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  line-height: 1.8;
+}

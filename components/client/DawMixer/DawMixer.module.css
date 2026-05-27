@@ -1,11 +1,13 @@
-/* DawMixer client island styles — filled fully in Task 8 */
+/* ── DawMixer client islands ────────────────────────────────────────────── */
+
+/* VuMeter */
 .vuMeter {
   display: flex;
   gap: 2px;
-  cursor: ew-resize;
-  padding: 4px 0;
   align-items: flex-end;
-  height: 20px;
+  height: 16px;
+  cursor: ew-resize;
+  padding: 2px 0;
   outline: none;
 }
 .vuMeter:focus-visible {
@@ -28,7 +30,7 @@
   height: 100%;
 }
 
-/* Placeholders for FaderIsland, KnobIsland, RmsButtons (filled in Tasks 4-6) */
+/* FaderIsland */
 .faderTrack {
   position: relative;
   height: 10px;
@@ -36,6 +38,10 @@
   border: 1px solid var(--ds-color-border-default);
   cursor: ew-resize;
   outline: none;
+}
+.faderTrack:focus-visible {
+  outline: 2px solid var(--ds-color-signal);
+  outline-offset: 2px;
 }
 .faderThumb {
   position: absolute;
@@ -46,11 +52,13 @@
   border: 1px solid var(--ds-color-signal);
   cursor: ew-resize;
 }
+
+/* KnobIsland */
 .knob {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
 .knobSvg {
   cursor: ns-resize;
@@ -65,7 +73,10 @@
   color: var(--ds-color-text-muted);
   text-align: center;
   letter-spacing: 0.04em;
+  font-family: var(--ds-font-family-mono);
 }
+
+/* RmsButtons */
 .rmsButtons {
   display: flex;
   gap: 3px;
@@ -77,8 +88,8 @@
   padding: 3px 8px;
   font-size: var(--ds-font-size-xs);
   font-family: var(--ds-font-family-mono);
-  cursor: pointer;
   font-weight: 700;
+  cursor: pointer;
 }
 .rmsInactive {
   border: 1px solid var(--ds-color-border-default);
