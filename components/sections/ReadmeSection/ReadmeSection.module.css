@@ -42,6 +42,12 @@
 }
 
 .pill {
+  display: inline-block;
+  /* Reserve width of the longest role ([Principal] = 11 chars).
+     Prevents text after the pill from reflowing as roles cycle.
+     Update if ROLES array in RoleTyper.tsx changes. */
+  min-width: 8.2em;
+  text-align: center;
   background: var(--ds-color-highlight-bg);
   color: var(--ds-color-highlight-fg);
   padding: 1px 6px;
