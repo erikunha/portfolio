@@ -21,6 +21,7 @@ import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { CommunitySection } from '@/components/sections/CommunitySection';
 import { ContactSection } from '@/components/sections/ContactSection';
 import { CredentialsSection } from '@/components/sections/CredentialsSection';
+import { DawMixerSection } from '@/components/sections/DawMixerSection';
 import { FooterLazy } from '@/components/sections/Footer';
 import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
@@ -101,6 +102,9 @@ export default function Home() {
           </ErrorBoundary>
           <ErrorBoundary>
             <GuitarSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <DawMixerSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <UnknownsSection defer />
