@@ -44,6 +44,9 @@ tsconfig.tsbuildinfo
 # git worktrees (superpowers using-git-worktrees skill creates these here)
 .worktrees/
 
+# visual brainstorming companion mockups
+.superpowers/
+
 # os
 .DS_Store
 
