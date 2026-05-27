@@ -29,6 +29,7 @@ interface KnobProps {
 
 export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
   const [angle, setAngle] = useState(initialAngle);
+  const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const needleRef = useRef<SVGLineElement>(null);
   const isDragging = useRef(false);
@@ -38,7 +39,7 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
 
   const updateNeedle = useCallback((newAngle: number) => {
     liveAngle.current = newAngle;
-    const el = svgRef.current?.parentElement;
+    const el = containerRef.current;
     if (el) el.setAttribute('aria-valuenow', String(newAngle));
     const needle = needleRef.current;
     if (needle) {
@@ -77,6 +78,7 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
 
   return (
     <div
+      ref={containerRef}
       className={s.knob}
       role="slider"
       aria-label={`${channelName} ${label}`}
@@ -88,6 +90,7 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
       onKeyDown={(e) => {
         if (isDragging.current) return;
         if (e.key === 'ArrowUp') {

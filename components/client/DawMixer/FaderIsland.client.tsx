@@ -27,7 +27,7 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
       trackRef.current.setAttribute('aria-valuenow', String(newPct));
     }
     if (thumbRef.current) {
-      thumbRef.current.style.left = `calc(${newPct}% - 6px)`;
+      thumbRef.current.style.transform = `translateX(calc(${newPct}% - 6px))`;
     }
   }, []);
 
@@ -74,6 +74,7 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
       onKeyDown={(e) => {
         if (isDragging.current) return;
         if (e.key === 'ArrowRight') {
@@ -95,7 +96,7 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
       <div
         ref={thumbRef}
         className={s.faderThumb}
-        style={{ left: `calc(${pct}% - 6px)` }}
+        style={{ transform: `translateX(calc(${pct}% - 6px))` }}
         aria-hidden="true"
       />
     </div>

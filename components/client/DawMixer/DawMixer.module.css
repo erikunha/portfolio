@@ -46,11 +46,13 @@
 .faderThumb {
   position: absolute;
   top: -4px;
+  left: 0;
   width: 12px;
   height: 18px;
   background: var(--ds-color-signal);
   border: 1px solid var(--ds-color-signal);
   cursor: ew-resize;
+  will-change: transform;
 }
 
 /* KnobIsland */

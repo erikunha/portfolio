@@ -108,6 +108,7 @@
   pointer-events: none;
   animation: scanBeam 4s linear infinite;
   top: 0;
+  will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {
   .scanBeam {
@@ -116,10 +117,10 @@
 }
 @keyframes scanBeam {
   from {
-    top: 0;
+    transform: translateY(0);
   }
   to {
-    top: 100%;
+    transform: translateY(100%);
   }
 }
 .camCaption {
