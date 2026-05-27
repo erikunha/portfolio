@@ -20,7 +20,9 @@ const README_DESKTOP: ReadmeLine[] = [
     node: (
       <>
         {'Open to '}
-        <RoleTyper className={styles.pill} />
+        <span className={styles.pillWrap}>
+          <RoleTyper className={styles.pill} />
+        </span>
         {' roles or impactful contract roles · remote-first · EU/US/CA · English C1.'}
       </>
     ),
