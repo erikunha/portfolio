@@ -68,23 +68,37 @@ export const ResponsibilitySchema = z.object({
   highlight: z.boolean().default(false),
 });
 
-// GuitarSection — structured fields + influences
-export const GuitarFieldSchema = z.object({
-  label: z.string().min(1),
-  labelMobile: z.string().min(1).optional(),
-  value: z.string().min(1),
-  valueMobile: z.string().min(1).optional(),
-});
-export const GuitarInfluenceSchema = z.object({
-  rank: z.number().int().min(1),
+// GuitarSection v2 — signal chain + influences + stats + live cam
+export const SignalChainNodeSchema = z.object({
+  role: z.enum(['INPUT', 'FX', 'AMP', 'OUT']),
   name: z.string().min(1),
+  subtitle: z.string().min(1),
+  strengthDots: z.number().int().min(0).max(8).optional(),
+  blocks: z.array(z.object({ name: z.string().min(1), active: z.boolean() })).optional(),
 });
+
+export const InfluenceSchema = z.object({
+  rank: z.number().int().min(1).max(5),
+  name: z.string().min(1),
+  strength: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
+  active: z.boolean().optional(),
+});
+
+export const StatCellSchema = z.object({
+  label: z.string().min(1),
+  value: z.string().min(1),
+  sub: z.string().min(1),
+});
+
 export const GuitarRigSchema = z.object({
-  comment: z.string().min(1),
-  commentMobile: z.string().min(1),
-  fields: z.array(GuitarFieldSchema).min(1),
-  influences: z.array(GuitarInfluenceSchema).min(1),
-  influencesMobile: z.array(GuitarInfluenceSchema).min(1),
+  signalChain: z.array(SignalChainNodeSchema).length(4),
+  influences: z.array(InfluenceSchema).length(5),
+  nowObsessing: z.string().min(1),
+  stats: z.array(StatCellSchema).length(4),
+  liveCam: z.object({
+    photo: z.string().min(1),
+    caption: z.string().min(1),
+  }),
 });
 
 // UnknownsSection
