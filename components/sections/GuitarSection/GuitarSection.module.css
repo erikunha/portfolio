@@ -1,63 +1,333 @@
-/* ── GuitarSection ─────────────────────────────────────────────────── */
+/* ── GuitarSection v2 (signal chain terminal aesthetic) ──────────────── */
 
-/* shared .visa pre-container — replicated from _sections.css lines 130–140 */
-.root {
-  overflow-x: auto;
+/* ─── Shared ─────────────────────────────────────────────────────────── */
+.nodeLabel {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 3px;
 }
-.root pre {
-  margin: 0;
-  color: var(--ds-color-text-body);
-  font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-body);
-  line-height: 1.85;
-  white-space: pre;
+.nodeName {
+  font-weight: 700;
+  font-size: var(--ds-font-size-sm);
+  color: var(--ds-color-signal);
+  margin-bottom: 2px;
 }
-
-/* .visa .cmd-line — replicated from _sections.css lines 192–198 */
-.root .cmdLine {
+.nodeSub {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  margin-bottom: 8px;
+}
+.dots {
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
+}
+.dotFilled {
+  width: 8px;
+  height: 8px;
+  background: var(--ds-color-signal);
+  flex-shrink: 0;
+}
+.dotEmpty {
+  width: 8px;
+  height: 8px;
+  background: var(--ds-color-signal-quiet);
+  flex-shrink: 0;
+}
+.statCell {
+  padding: 10px 12px;
+}
+.statLabel {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 3px;
+}
+.statValue {
+  font-weight: 700;
+  color: var(--ds-color-signal);
+  font-size: var(--ds-font-size-sm);
+  margin-bottom: 2px;
+}
+.statSub {
+  font-size: var(--ds-font-size-xs);
   color: var(--ds-color-text-muted);
 }
-.root .cmdLine .pr {
-  color: var(--ds-color-signal);
-  margin-right: 4px;
+
+/* ─── Live cam (shared desktop + mobile) ──────────────────────────────── */
+.liveCam {
+  border: 1px solid var(--ds-color-border-default);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.camHeader {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  background: var(--ds-color-surface-shell);
+}
+.camPhoto {
+  position: relative;
+  min-height: 130px;
+  overflow: hidden;
+  flex: 1;
+}
+.camImg {
+  object-fit: cover;
+  filter: grayscale(1) brightness(0.45);
+}
+.camOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 255, 65, 0.12);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.scanLines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.22) 2px,
+    rgba(0, 0, 0, 0.22) 4px
+  );
+  pointer-events: none;
+}
+.scanBeam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 255, 65, 0.3);
+  pointer-events: none;
+  animation: scanBeam 4s linear infinite;
+  top: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scanBeam {
+    animation: none;
+  }
+}
+@keyframes scanBeam {
+  from {
+    top: 0;
+  }
+  to {
+    top: 100%;
+  }
+}
+.camCaption {
+  padding: 4px 8px;
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  background: var(--ds-color-surface-shell);
 }
 
-/* .gr-* — _sections.css lines 250–266 */
-.grLabel {
+/* ─── Influences (shared desktop + mobile) ─────────────────────────────── */
+.influences {
+  border: 1px solid var(--ds-color-border-default);
+  padding: 12px;
+}
+.influencesHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.infActive {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
   color: var(--ds-color-signal);
   font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: var(--ds-font-size-xs);
 }
-.grVal {
-  color: var(--ds-color-text-body);
-}
-.grComment {
+.infItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
   color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
 }
-.grNum {
-  color: var(--ds-color-text-muted);
+.infName {
+  flex: 1;
+  margin-right: 8px;
+  font-family: var(--ds-font-family-mono);
 }
-.grName {
-  color: var(--ds-color-text-body);
+.nowObsessing {
+  margin-top: 10px;
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-signal);
+  line-height: 1.6;
 }
 
-.guitarMobile {
+/* ─── Desktop ──────────────────────────────────────────────────────────── */
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-body);
+  color: var(--ds-color-text-body);
+}
+.panel {
+  border: 1px solid var(--ds-color-border-default);
+  padding: 12px;
+}
+.statusBar {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  margin-bottom: 12px;
+}
+.statusDot {
+  color: var(--ds-color-signal);
+}
+.chainGrid {
+  display: flex;
+  align-items: stretch;
+}
+.chainEntry {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+}
+.arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: var(--ds-color-text-muted);
+  flex-shrink: 0;
+}
+.node {
+  border: 1px solid var(--ds-color-border-default);
+  padding: 10px 12px;
+  flex: 1;
+  min-width: 0;
+}
+.nodeFx {
+  border: 1px solid var(--ds-color-border-default);
+  padding: 10px 12px;
+  flex: 1.6;
+  min-width: 0;
+}
+.fxGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-top: 6px;
+}
+.fxActive {
+  border: 1px solid var(--ds-color-border-default);
+  padding: 3px 4px;
+  font-size: var(--ds-font-size-2xs);
+  text-align: center;
+  position: relative;
+  color: var(--ds-color-signal);
+}
+.fxInactive {
+  border: 1px solid var(--ds-color-signal-quiet);
+  padding: 3px 4px;
+  font-size: var(--ds-font-size-2xs);
+  text-align: center;
+  color: var(--ds-color-text-muted);
+}
+.fxBullet {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 7px;
+  line-height: 1;
+  color: var(--ds-color-signal);
+}
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 12px;
+}
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--ds-color-border-default);
+}
+.statsGrid .statCell {
+  border-right: 1px solid var(--ds-color-border-default);
+}
+.statsGrid .statCell:last-child {
+  border-right: none;
+}
+
+/* ─── Mobile ────────────────────────────────────────────────────────────── */
+.rootMobile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: var(--ds-font-family-mono);
   font-size: var(--ds-font-size-sm);
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
+  color: var(--ds-color-text-body);
+}
+.panelMobile {
+  border: 1px solid var(--ds-color-border-default);
+  padding: 10px;
+}
+.statusBarMobile {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  margin-bottom: 10px;
   line-height: 1.7;
 }
-
-/* ── 768px responsive ─────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .root pre {
-    font-size: var(--ds-font-size-xs);
-    line-height: 1.7;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-  }
-  /* .root .guitarMobile (0,2,0) beats .root pre (0,1,1) — restores fs-sm on mobile UA narrow viewport */
-  .root .guitarMobile {
-    font-size: var(--ds-font-size-sm);
-  }
+.nodeMobile {
+  border: 1px solid var(--ds-color-border-default);
+  padding: 10px;
+}
+.arrowDown {
+  text-align: center;
+  padding: 5px 0;
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-sm);
+}
+.fxList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+}
+.fxRowActive {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--ds-color-signal);
+  font-size: var(--ds-font-size-xs);
+  border: 1px solid var(--ds-color-signal-quiet);
+  padding: 3px 8px;
+}
+.fxRowInactive {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
+  padding: 3px 8px;
+}
+.statsGridMobile {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--ds-color-border-default);
+}
+.statsGridMobile .statCell:nth-child(odd) {
+  border-right: 1px solid var(--ds-color-border-default);
+}
+.statsGridMobile .statCell:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--ds-color-border-default);
 }
