@@ -69,3 +69,14 @@
 body[data-motion="reduce"] .send {
   transition: none;
 }
+
+@media (max-width: 768px) {
+  .submitrow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .send {
+    width: 100%;
+    align-self: auto;
+  }
+}

@@ -268,19 +268,19 @@ body[data-motion="reduce"] .cmdHint {
   .feed {
     min-height: 200px;
     max-height: 320px;
-    font-size: var(--ds-font-size-sm);
+    font-size: var(--ds-font-size-xs);
   }
   .form {
     padding: 8px 12px 10px;
   }
   .prompt {
-    font-size: var(--ds-font-size-sm);
+    font-size: var(--ds-font-size-xs);
   }
   .input {
-    font-size: var(--ds-font-size-sm);
+    font-size: var(--ds-font-size-xs);
   }
   .placeholderAnim {
-    font-size: var(--ds-font-size-sm);
+    font-size: var(--ds-font-size-xs);
   }
   /* From _layout.css 768px block */
   .bar {

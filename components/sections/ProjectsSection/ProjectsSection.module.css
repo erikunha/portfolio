@@ -170,6 +170,15 @@ body[data-motion="reduce"] .project {
   line-height: 1.5;
 }
 
+@media (max-width: 768px) {
+  .cardName {
+    font-size: var(--ds-font-size-xs);
+  }
+  .cardDesc {
+    font-size: var(--ds-font-size-xs);
+  }
+}
+
 .cardMeta {
   display: grid;
   gap: 3px;
