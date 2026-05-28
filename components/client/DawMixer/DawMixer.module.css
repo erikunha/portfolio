@@ -26,7 +26,7 @@
   flex: 1;
   background: var(--ds-color-signal);
   height: 100%;
-  opacity: 0.35;
+  opacity: 0.55;
 }
 .vuSegRed {
   flex: 1;
