@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import s from './DawMixer.module.css';
+import s from './FaderIsland.module.css';
 
 interface FaderProps {
   initialPct: number;

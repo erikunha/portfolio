@@ -1,8 +1,8 @@
 import { type CSSProperties, Suspense } from 'react';
-import { FaderIsland } from '@/components/client/DawMixer/FaderIsland.client';
-import { KnobIsland } from '@/components/client/DawMixer/KnobIsland.client';
-import { RmsButtons } from '@/components/client/DawMixer/RmsButtons.client';
-import { VuMeter } from '@/components/client/DawMixer/VuMeter.client';
+import { FaderIsland } from '@/components/client/DawMixer/FaderIsland/FaderIsland.client';
+import { KnobIsland } from '@/components/client/DawMixer/KnobIsland/KnobIsland.client';
+import { RmsButtons } from '@/components/client/DawMixer/RmsButtons/RmsButtons.client';
+import { VuMeter } from '@/components/client/DawMixer/VuMeter/VuMeter.client';
 import { dawMixer } from '@/content/daw-mixer';
 import type { DawMixer, DawMixerChannel } from '@/content/schemas';
 import { getIsMobile } from '@/lib/ua';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import s from './DawMixer.module.css';
+import s from './RmsButtons.module.css';
 
 const BUTTON_LABELS: Record<string, string> = {
   R: 'record arm',

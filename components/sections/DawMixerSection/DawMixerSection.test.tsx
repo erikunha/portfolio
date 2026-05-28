@@ -6,19 +6,19 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
 // Stub client islands with minimal HTML so RSC tests stay hermetic
-vi.mock('@/components/client/DawMixer/VuMeter.client', () => ({
+vi.mock('@/components/client/DawMixer/VuMeter/VuMeter.client', () => ({
   VuMeter: ({ channelName, initialLevel }: { channelName: string; initialLevel: number }) =>
     createElement('div', { 'data-testid': `vu-${channelName}`, 'data-level': initialLevel }),
 }));
-vi.mock('@/components/client/DawMixer/FaderIsland.client', () => ({
+vi.mock('@/components/client/DawMixer/FaderIsland/FaderIsland.client', () => ({
   FaderIsland: ({ channelName, initialPct }: { channelName: string; initialPct: number }) =>
     createElement('div', { 'data-testid': `fader-${channelName}`, 'data-pct': initialPct }),
 }));
-vi.mock('@/components/client/DawMixer/KnobIsland.client', () => ({
+vi.mock('@/components/client/DawMixer/KnobIsland/KnobIsland.client', () => ({
   KnobIsland: ({ label }: { label: string }) =>
     createElement('div', { 'data-testid': `knob-${label}` }),
 }));
-vi.mock('@/components/client/DawMixer/RmsButtons.client', () => ({
+vi.mock('@/components/client/DawMixer/RmsButtons/RmsButtons.client', () => ({
   RmsButtons: ({ buttons }: { buttons: string[] }) =>
     createElement('div', { 'data-testid': `rms-${buttons.join('-')}` }),
 }));

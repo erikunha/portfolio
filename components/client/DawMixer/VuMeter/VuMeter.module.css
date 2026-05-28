@@ -1,0 +1,32 @@
+.vuMeter {
+  position: relative;
+  height: 14px;
+  border: 1px solid var(--ds-color-signal-quiet);
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: stretch;
+  gap: 1px;
+  padding: 1px;
+  cursor: ew-resize;
+  outline: none;
+}
+.vuMeter:focus-visible {
+  outline: 2px solid var(--ds-color-signal);
+  outline-offset: 2px;
+}
+.vuSegFilled {
+  flex: 1;
+  background: var(--ds-color-signal);
+  height: 100%;
+}
+.vuSegEmpty {
+  flex: 1;
+  background: var(--ds-color-signal);
+  height: 100%;
+  opacity: 0.55;
+}
+.vuSegRed {
+  flex: 1;
+  background: var(--ds-color-feedback-error);
+  height: 100%;
+}

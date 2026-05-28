@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
-import s from './DawMixer.module.css';
+import s from './VuMeter.module.css';
 
 interface VuMeterProps {
   segments: number;

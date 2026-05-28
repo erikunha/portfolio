@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import s from './DawMixer.module.css';
+import s from './KnobIsland.module.css';
 
 const MIN_ANGLE = -150;
 const MAX_ANGLE = 150;
