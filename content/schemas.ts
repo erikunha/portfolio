@@ -69,13 +69,23 @@ export const ResponsibilitySchema = z.object({
 });
 
 // GuitarSection v2 — signal chain + influences + stats + live cam
-export const SignalChainNodeSchema = z.object({
-  role: z.enum(['INPUT', 'FX', 'AMP', 'OUT']),
-  name: z.string().min(1),
-  subtitle: z.string().min(1),
-  strengthDots: z.number().int().min(0).max(8).optional(),
-  blocks: z.array(z.object({ name: z.string().min(1), active: z.boolean() })).optional(),
-});
+const _signalNodeBase = { name: z.string().min(1), subtitle: z.string().min(1) };
+const _dotsNode = (role: 'INPUT' | 'AMP' | 'OUT') =>
+  z.object({
+    ..._signalNodeBase,
+    role: z.literal(role),
+    strengthDots: z.number().int().min(0).max(8),
+  });
+export const SignalChainNodeSchema = z.discriminatedUnion('role', [
+  _dotsNode('INPUT'),
+  z.object({
+    ..._signalNodeBase,
+    role: z.literal('FX'),
+    blocks: z.array(z.object({ name: z.string().min(1), active: z.boolean() })).min(1),
+  }),
+  _dotsNode('AMP'),
+  _dotsNode('OUT'),
+]);
 
 export const InfluenceSchema = z.object({
   rank: z.number().int().min(1).max(5),

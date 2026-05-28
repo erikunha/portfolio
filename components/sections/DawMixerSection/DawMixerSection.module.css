@@ -167,7 +167,7 @@
 .tableHeader,
 .channelRow {
   display: grid;
-  grid-template-columns: 64px 1.4fr 86px 64px 2.4fr 1.5fr 1fr 64px;
+  grid-template-columns: 64px 1.4fr 86px 80px 2.4fr 1.5fr 1fr 64px;
   gap: 14px;
   align-items: center;
 }

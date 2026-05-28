@@ -7,7 +7,7 @@ import { IconGuitar } from '../../Icons';
 import { Module } from '../../responsive/Module';
 import s from './GuitarSection.module.css';
 
-type Block = NonNullable<GuitarRig['signalChain'][number]['blocks']>[number];
+type Block = Extract<GuitarRig['signalChain'][number], { role: 'FX' }>['blocks'][number];
 type Influence = GuitarRig['influences'][number];
 
 function SignalBars({ filled, total }: { filled: number; total: number }) {
@@ -150,10 +150,10 @@ export function GuitarDesktop() {
                 </div>
                 <div className={s.nodeName}>{node.name}</div>
                 <div className={s.nodeSub}>{node.subtitle}</div>
-                {node.blocks ? (
+                {node.role === 'FX' ? (
                   <FxGrid blocks={node.blocks} />
                 ) : (
-                  <SignalBars filled={node.strengthDots ?? 0} total={8} />
+                  <SignalBars filled={node.strengthDots} total={8} />
                 )}
               </div>
             );
@@ -211,10 +211,10 @@ export function GuitarMobile() {
               </div>
               <div className={s.nodeName}>{node.name}</div>
               <div className={s.nodeSub}>{node.subtitle}</div>
-              {node.blocks ? (
+              {node.role === 'FX' ? (
                 <FxList blocks={node.blocks} />
               ) : (
-                <SignalBars filled={node.strengthDots ?? 0} total={8} />
+                <SignalBars filled={node.strengthDots} total={8} />
               )}
             </div>
           </div>
