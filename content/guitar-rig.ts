@@ -48,10 +48,10 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
     { label: 'STYLE', value: 'feel over noise', sub: 'lots of space' },
     { label: 'TUNING', value: 'standard E', sub: 'sometimes drop D' },
     { label: 'ALT RIG', value: 'Martin', sub: 'acoustic' },
-    { label: 'GIGS', value: 'small venues', sub: 'band setting' },
+    { label: 'GIGS', value: 'small venues', sub: 'church · weddings' },
   ],
   liveCam: {
     photo: '/images/guitar-live.jpg',
-    caption: './GIGS --LIVE · SMALL VENUES · FEEL OVER NOISE',
+    caption: './GIGS --LIVE · SACRED + SWORN · FEEL OVER NOISE',
   },
 });
