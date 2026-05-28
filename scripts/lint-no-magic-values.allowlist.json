@@ -90,9 +90,8 @@
     },
     {
       "value": "32px",
-      "reason": "hero bio padding / project card icon — ds-space-8 equivalent; used as padding constant"
+      "reason": "hero bio padding / project card icon / R/M/S button min-width — ds-space-8 equivalent; recurring size constant"
     },
-    { "value": "32px", "reason": "R/M/S button min-width — touch-friendly DAW mixer button" },
     { "value": "36px", "reason": "hottest-takes avatar — grid column size" },
     {
       "value": "40px",
