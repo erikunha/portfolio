@@ -76,13 +76,14 @@ const _dotsNode = (role: 'INPUT' | 'AMP' | 'OUT') =>
     role: z.literal(role),
     strengthDots: z.number().int().min(0).max(8),
   });
+const _fxNode = z.object({
+  ..._signalNodeBase,
+  role: z.literal('FX'),
+  blocks: z.array(z.object({ name: z.string().min(1), active: z.boolean() })).min(1),
+});
 export const SignalChainNodeSchema = z.discriminatedUnion('role', [
   _dotsNode('INPUT'),
-  z.object({
-    ..._signalNodeBase,
-    role: z.literal('FX'),
-    blocks: z.array(z.object({ name: z.string().min(1), active: z.boolean() })).min(1),
-  }),
+  _fxNode,
   _dotsNode('AMP'),
   _dotsNode('OUT'),
 ]);
@@ -101,7 +102,10 @@ export const StatCellSchema = z.object({
 });
 
 export const GuitarRigSchema = z.object({
-  signalChain: z.array(SignalChainNodeSchema).length(4),
+  // Tuple enforces exact role sequence: INPUT → FX → AMP → OUT.
+  // z.array().length(4) would allow any combination (e.g. two INPUT nodes), which
+  // would silently break the renderer and pass validate-content.
+  signalChain: z.tuple([_dotsNode('INPUT'), _fxNode, _dotsNode('AMP'), _dotsNode('OUT')]),
   influences: z.array(InfluenceSchema).length(5),
   nowObsessing: z.string().min(1),
   stats: z.array(StatCellSchema).length(4),

@@ -51,7 +51,13 @@ for (const file of tsxFiles) {
 }
 
 const appShellCss = readFileSync(resolve(root, 'components/AppShell/AppShell.module.css'), 'utf8');
-const orderedIds = new Set([...appShellCss.matchAll(/:global\(#(sec-[^)]+)\)/g)].map((m) => m[1]));
+// Extract only the @media (max-width: 768px) block to avoid false-positives
+// from :global(#sec-...) selectors used outside mobile ordering context.
+const mobileBlockMatch = appShellCss.match(
+  /@media\s*\(max-width:\s*768px\)\s*\{([\s\S]*?)(?=\n[}\s]*$|\n@media|\n\/\*[^@])/,
+);
+const mobileBlock = mobileBlockMatch ? mobileBlockMatch[1] : '';
+const orderedIds = new Set([...mobileBlock.matchAll(/:global\(#(sec-[^)]+)\)/g)].map((m) => m[1]));
 
 const missing = [...sectionIds].filter((id) => !orderedIds.has(id) && !KNOWN_UNORDERED.has(id));
 
