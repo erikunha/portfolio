@@ -387,12 +387,12 @@ test.describe('cross-cutting', () => {
   });
 
   test('6 — DAW mixer mobile CSS override is compiled into the bundle', async ({ page }) => {
-    // DawMixerMobile only renders when the server UA-detects a mobile agent.
-    // E2E tests use a desktop UA so the component is never in the DOM — the
-    // only automated check available is stylesheet inspection. This asserts
-    // the compiled bundle contains the .rootMobile .mxChain::after override
-    // that hides the orphaned signal-flow arrow on mobile, so any accidental
-    // deletion of the CSS rule will fail CI before reaching production.
+    // Stylesheet inspection is used here because getComputedStyle on a ::after
+    // pseudo-element requires the element to be in the DOM, and the DAW mixer
+    // renders either DawMixerDesktop or DawMixerMobile based on server-side UA
+    // detection — making DOM-based assertions project-dependent. Checking the
+    // compiled stylesheet directly is deterministic across all four projects
+    // and catches any accidental deletion of the scoped CSS override.
     await page.goto(BASE_URL);
     await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
 
@@ -401,7 +401,11 @@ test.describe('cross-cutting', () => {
         try {
           for (const rule of sheet.cssRules) {
             const text = rule.cssText ?? '';
+            // The selector must reference both rootMobile (parent scope) and
+            // mxChain::after (the arrow pseudo-element being hidden). An
+            // unscoped `.mxChain::after { display:none }` would not qualify.
             if (
+              text.includes('rootMobile') &&
               text.includes('mxChain') &&
               text.includes('::after') &&
               text.includes('display: none')
@@ -418,7 +422,7 @@ test.describe('cross-cutting', () => {
 
     expect(
       ruleFound,
-      'compiled CSS bundle must contain a .mxChain::after { display: none } rule scoped to the mobile root',
+      'compiled CSS bundle must contain a .rootMobile .mxChain::after { display: none } scoped rule',
     ).toBe(true);
   });
 });
