@@ -53,13 +53,16 @@
   position: absolute;
   left: 24px;
   right: 24px;
-  top: 40%;
+  top: 24px;
   bottom: 24px;
   z-index: 2;
   color: var(--ds-color-text-body);
   font-size: var(--ds-font-size-sm);
   line-height: 1.7;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   text-shadow:
     0 0 4px #000,
     0 0 8px #000;

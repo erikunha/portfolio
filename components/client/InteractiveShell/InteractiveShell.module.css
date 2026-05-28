@@ -126,7 +126,7 @@
   opacity: 0.6;
   pointer-events: none;
   font: inherit;
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   white-space: nowrap;
   overflow: hidden;
   display: inline-flex;
