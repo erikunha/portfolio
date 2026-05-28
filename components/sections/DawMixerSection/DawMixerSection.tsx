@@ -22,18 +22,7 @@ function ParsedText({ text }: { text: string }) {
   );
 }
 
-function StrengthDots({ filled, total = 5 }: { filled: number; total?: number }) {
-  return (
-    <div role="img" className={s.dots} aria-label={`${filled} of ${total}`}>
-      {Array.from({ length: total }, (_, i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: positional dots — no stable id exists
-        <span key={i} className={i < filled ? s.dotFilled : s.dotEmpty} />
-      ))}
-    </div>
-  );
-}
-
-function PluginList({
+function PluginChain({
   plugins,
   channelId,
 }: {
@@ -41,27 +30,23 @@ function PluginList({
   channelId: string;
 }) {
   return (
-    <details className={s.signalFlow} open>
-      <summary className={s.signalFlowToggle}>
-        {'// SIGNAL FLOW '}
-        <span className={s.signalFlowDot} aria-hidden="true">
-          ●
-        </span>
-      </summary>
+    <div className={s.pluginChain}>
       {plugins.map((p) => (
         <div
           key={p.name}
-          className={p.active ? s.pluginRowActive : s.pluginRowInactive}
+          className={`${s.pluginCard} ${p.active ? s.pluginCardOn : s.pluginCardBypass}`}
           data-testid={`plugin-${channelId}-${p.name}`}
         >
-          <span className={s.pluginBullet} aria-hidden="true">
-            {p.active ? '●' : '○'}
-          </span>
           <span className={s.pluginName}>{p.name}</span>
-          <StrengthDots filled={p.strength} total={5} />
+          <span className={s.pluginAmt} aria-hidden="true">
+            {Array.from({ length: 5 }, (_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: positional strength dots
+              <span key={i} className={i < p.strength ? s.pluginDotOn : s.pluginDotOff} />
+            ))}
+          </span>
         </div>
       ))}
-    </details>
+    </div>
   );
 }
 
@@ -69,12 +54,15 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
   const isMaster = ch.id === 'MASTER';
   return (
     <div
-      className={`${s.channelRow} ${ch.focused ? s.channelFocused : ''}`}
+      className={`${s.channelRow} ${ch.focused ? s.channelFocused : ''} ${isMaster ? s.channelMaster : ''}`}
       data-testid={`channel-${ch.id}`}
     >
       <div className={s.colId}>
         <span className={isMaster ? s.masterBadge : s.channelBadge}>{ch.id}</span>
         <span className={s.channelSubName}>{ch.name}</span>
+        <div className={s.clipBar} aria-hidden="true">
+          <div className={s.clipFill} style={{ width: `${ch.faderPct}%` }} />
+        </div>
       </div>
       <div className={s.colTrack}>
         <span className={s.trackName}>{ch.desktopName ?? ch.name}</span>
@@ -90,11 +78,11 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
         <RmsButtons buttons={ch.buttons} initialActive={ch.activeButtons} />
       </div>
       <div className={s.colPlugins}>
-        <PluginList plugins={ch.plugins} channelId={ch.id} />
+        <PluginChain plugins={ch.plugins} channelId={ch.id} />
       </div>
       <div className={s.colMeter}>
         <VuMeter
-          segments={14}
+          segments={12}
           initialLevel={ch.meterPct}
           clipping={ch.meterClipping ?? false}
           channelName={ch.name}
@@ -105,6 +93,7 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
       </div>
       <div className={s.colDb}>
         <span className={s.dbValue}>{ch.db}</span>
+        <br />
         <span className={s.dbUnit}>dB</span>
         {ch.footer && (
           <span className={s.lufs}>
@@ -156,8 +145,8 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
       <div className={s.cardDesc}>
         <ParsedText text={ch.desc} />
       </div>
-      <StaticMeter pct={ch.meterPct} segments={14} clipping={ch.meterClipping ?? false} />
-      <PluginList plugins={ch.plugins} channelId={`${ch.id}-mobile`} />
+      <StaticMeter pct={ch.meterPct} segments={12} clipping={ch.meterClipping ?? false} />
+      <PluginChain plugins={ch.plugins} channelId={`${ch.id}-mobile`} />
       <div className={s.cardFooter}>
         <div className={s.faderFooterBar} style={{ width: `${ch.faderPct}%` }} aria-hidden="true" />
         {ch.footer && (
@@ -185,18 +174,19 @@ function SessionHeaderDesktop({ mixer }: { mixer: DawMixer }) {
     <div className={s.sessionHeader} data-testid="session-header">
       <span>
         {'SESSION: '}
-        {mixer.sessionName}
+        <strong style={{ color: 'var(--ds-color-signal)' }}>{mixer.sessionName}</strong>
         {' · '}
         {mixer.channels.length - 1}
         {' GTR TRACKS + MASTER · '}
-        <span className={s.statusDot}>●</span>
-        {' MIXING'}
+        <span className={s.statusArm}>MIXING</span>
       </span>
-      <span>
-        {'▶ 00:01:24:08 | '}
-        {mixer.bpm}
-        {' BPM | '}
-        {mixer.timeSignature}
+      <span className={s.transport}>
+        <span className={s.transportPlay} aria-hidden="true" />
+        <span className={s.transportTime}>00:01:24:08</span>
+        <span className={s.transportSep}>|</span>
+        <span>{mixer.bpm} BPM</span>
+        <span className={s.transportSep}>|</span>
+        <span>{mixer.timeSignature}</span>
       </span>
     </div>
   );
@@ -209,8 +199,7 @@ function SessionHeaderMobile({ mixer }: { mixer: DawMixer }) {
         {'SESSION: '}
         {mixer.sessionName}
         {' · '}
-        <span className={s.statusDot}>●</span>
-        {' MIXING'}
+        <span className={s.statusArm}>MIXING</span>
       </div>
       <div>
         {'▶ 00:01:24:08 | '}
@@ -219,10 +208,9 @@ function SessionHeaderMobile({ mixer }: { mixer: DawMixer }) {
         {mixer.timeSignature}
       </div>
       <div>
-        <span className={s.statusDot}>●</span> {mixer.channels.length - 1}
+        <span className={s.statusArm}>●</span> {mixer.channels.length - 1}
         {' GTR + MASTER'}
       </div>
-      <div className={s.tapHint}>TAP A ROW TO FOCUS</div>
     </div>
   );
 }
@@ -237,7 +225,7 @@ function TableHeader() {
       <div>PLUGIN CHAIN</div>
       <div>METER</div>
       <div>FADER</div>
-      <div>DB</div>
+      <div className={s.colEndLabel}>dB</div>
     </div>
   );
 }

@@ -1,13 +1,16 @@
 /* ── DawMixer client islands ────────────────────────────────────────────── */
 
-/* VuMeter */
+/* VuMeter — horizontal 12-segment bar, 14px height */
 .vuMeter {
+  position: relative;
+  height: 14px;
+  border: 1px solid var(--ds-color-signal-quiet);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
-  gap: 2px;
-  align-items: flex-end;
-  height: 16px;
+  align-items: stretch;
+  gap: 1px;
+  padding: 1px;
   cursor: ew-resize;
-  padding: 2px 0;
   outline: none;
 }
 .vuMeter:focus-visible {
@@ -21,8 +24,9 @@
 }
 .vuSegEmpty {
   flex: 1;
-  background: var(--ds-color-signal-quiet);
+  background: var(--ds-color-signal);
   height: 100%;
+  opacity: 0.22;
 }
 .vuSegRed {
   flex: 1;
@@ -30,14 +34,25 @@
   height: 100%;
 }
 
-/* FaderIsland */
+/* FaderIsland — 18px track with center rail + 14×22px thumb */
 .faderTrack {
   position: relative;
-  height: 10px;
-  background: var(--ds-color-surface-shell);
-  border: 1px solid var(--ds-color-border-default);
+  height: 18px;
+  background: color-mix(in srgb, var(--ds-color-signal) 3%, transparent);
+  border: 1px solid var(--ds-color-signal-quiet);
   cursor: ew-resize;
   outline: none;
+}
+.faderTrack::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  height: 1px;
+  background: var(--ds-color-signal-quiet);
+  transform: translateY(-0.5px);
+  pointer-events: none;
 }
 .faderTrack:focus-visible {
   outline: 2px solid var(--ds-color-signal);
@@ -45,22 +60,33 @@
 }
 .faderThumb {
   position: absolute;
-  top: -4px;
+  top: -2px;
   left: 0;
-  width: 12px;
-  height: 18px;
+  width: 14px;
+  height: 22px;
   background: var(--ds-color-signal);
-  border: 1px solid var(--ds-color-signal);
+  box-shadow: 0 0 8px var(--ds-color-signal);
+  border: 1px solid #000;
   cursor: ew-resize;
   will-change: transform;
 }
+.faderThumb::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 3px;
+  bottom: 3px;
+  width: 1px;
+  background: #000;
+  transform: translateX(-50%);
+}
 
-/* KnobIsland */
+/* KnobIsland — 26px circle knob */
 .knob {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   outline: none;
 }
 .knob:focus-visible {
@@ -71,36 +97,50 @@
   cursor: ns-resize;
 }
 .knobLabel {
-  font-size: var(--ds-font-size-2xs);
+  font-size: 8.5px;
   color: var(--ds-color-text-muted);
   text-align: center;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.1em;
   font-family: var(--ds-font-family-mono);
 }
 
-/* RmsButtons */
+/* RmsButtons — 18×18px squares */
 .rmsButtons {
   display: flex;
   gap: 3px;
 }
 .rmsActive {
+  width: 18px;
+  height: 18px;
   border: 1px solid var(--ds-color-signal);
-  background: var(--ds-color-signal);
-  color: var(--ds-color-surface-base);
-  padding: 4px 8px;
-  font-size: var(--ds-font-size-xs);
+  background: color-mix(in srgb, var(--ds-color-signal) 10%, transparent);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--ds-color-signal) 35%, transparent);
+  color: var(--ds-color-signal);
+  font-size: 9.5px;
   font-family: var(--ds-font-family-mono);
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 .rmsInactive {
-  border: 1px solid var(--ds-color-border-default);
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--ds-color-signal-quiet);
   background: transparent;
   color: var(--ds-color-text-muted);
-  padding: 4px 8px;
-  font-size: var(--ds-font-size-xs);
+  font-size: 9.5px;
   font-family: var(--ds-font-family-mono);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 .rmsActive:focus-visible,
 .rmsInactive:focus-visible {

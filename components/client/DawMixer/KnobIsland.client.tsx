@@ -5,9 +5,9 @@ import s from './DawMixer.module.css';
 
 const MIN_ANGLE = -150;
 const MAX_ANGLE = 150;
-const KNOB_SIZE = 38;
-const KNOB_CENTER = 19;
-const NEEDLE_LENGTH = 12;
+const KNOB_SIZE = 26;
+const KNOB_CENTER = 13;
+const NEEDLE_LENGTH = 9;
 
 function clamp(v: number) {
   return Math.max(MIN_ANGLE, Math.min(MAX_ANGLE, v));
@@ -120,18 +120,10 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
         <circle
           cx={KNOB_CENTER}
           cy={KNOB_CENTER}
-          r="16"
-          stroke="var(--ds-color-signal-quiet)"
+          r="11"
+          stroke="var(--ds-color-signal)"
           strokeWidth="1"
-          fill="none"
-        />
-        <circle
-          cx={KNOB_CENTER}
-          cy={KNOB_CENTER}
-          r="14"
-          fill="var(--ds-color-surface-base)"
-          stroke="var(--ds-color-border-default)"
-          strokeWidth="1"
+          fill="rgba(0,0,0,0.7)"
         />
         <line
           ref={needleRef}

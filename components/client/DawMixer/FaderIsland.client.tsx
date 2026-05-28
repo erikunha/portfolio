@@ -27,7 +27,7 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
       trackRef.current.setAttribute('aria-valuenow', String(newPct));
     }
     if (thumbRef.current) {
-      thumbRef.current.style.transform = `translateX(calc(${newPct}% - 6px))`;
+      thumbRef.current.style.transform = `translateX(calc(${newPct}% - 7px))`;
     }
   }, []);
 
@@ -96,7 +96,7 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
       <div
         ref={thumbRef}
         className={s.faderThumb}
-        style={{ transform: `translateX(calc(${pct}% - 6px))` }}
+        style={{ transform: `translateX(calc(${pct}% - 7px))` }}
         aria-hidden="true"
       />
     </div>

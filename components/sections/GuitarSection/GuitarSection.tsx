@@ -10,14 +10,25 @@ import s from './GuitarSection.module.css';
 type Block = NonNullable<GuitarRig['signalChain'][number]['blocks']>[number];
 type Influence = GuitarRig['influences'][number];
 
-function StrengthDots({ filled, total }: { filled: number; total: number }) {
+function SignalBars({ filled, total }: { filled: number; total: number }) {
   return (
-    <div role="img" className={s.dots} aria-label={`${filled} of ${total}`}>
+    <div role="img" className={s.dots} aria-label={`${filled} of ${total}`} aria-hidden="true">
       {Array.from({ length: total }, (_, i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: positional dots — no stable id exists
+        // biome-ignore lint/suspicious/noArrayIndexKey: positional bars — no stable id exists
         <span key={i} className={i < filled ? s.dotFilled : s.dotEmpty} />
       ))}
     </div>
+  );
+}
+
+function InfluenceBars({ filled }: { filled: number }) {
+  return (
+    <span className={s.infBar} aria-hidden="true">
+      {Array.from({ length: 5 }, (_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: positional bars
+        <span key={i} className={i < filled ? s.infBarFilled : s.infBarEmpty} />
+      ))}
+    </span>
   );
 }
 
@@ -61,18 +72,20 @@ function InfluencesList({
   return (
     <div className={s.influences}>
       <div className={s.influencesHeader}>
-        <span>INFLUENCES.QUEUE · {influences.length} LOADED</span>
+        <span>
+          {'INFLUENCES.QUEUE · '}
+          <span style={{ color: 'var(--ds-color-signal)' }}>{influences.length} LOADED</span>
+        </span>
         <span>{'// SHUFFLE OFF'}</span>
       </div>
       {influences.map((inf) => (
         <div key={inf.rank} className={inf.active ? s.infActive : s.infItem}>
-          <span className={s.infName}>
-            <span aria-hidden="true">{inf.active ? '▶' : '  '}</span>
+          <span className={s.infRank}>
+            {inf.active ? '▶ ' : ''}
             {String(inf.rank).padStart(2, '0')}
-            {'  '}
-            {inf.name}
           </span>
-          <StrengthDots filled={inf.strength} total={5} />
+          <span className={s.infName}>{inf.name}</span>
+          <InfluenceBars filled={inf.strength} />
         </div>
       ))}
       <div className={s.nowObsessing}>
@@ -95,11 +108,14 @@ function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
           alt="Erik playing guitar on stage, live show"
           fill
           className={s.camImg}
-          sizes="(max-width: 768px) 100vw, 220px"
+          sizes="(max-width: 768px) 100vw, 320px"
         />
         <div className={s.camOverlay} aria-hidden="true" />
         <div className={s.scanLines} aria-hidden="true" />
         <div className={s.scanBeam} aria-hidden="true" />
+        <div className={s.camCorners} aria-hidden="true">
+          <i />
+        </div>
       </div>
       <div className={s.camCaption}>{liveCam.caption}</div>
     </div>
@@ -121,14 +137,10 @@ export function GuitarDesktop() {
           <span>TAIL -F ~/.RIG</span>
         </div>
         <div className={s.chainGrid}>
-          {signalChain.map((node, i) => (
-            <div key={node.role} className={s.chainEntry}>
-              {i > 0 && (
-                <span className={s.arrow} aria-hidden="true">
-                  →
-                </span>
-              )}
+          {signalChain.flatMap((node, i) => {
+            const nodeEl = (
               <div
+                key={node.role}
                 className={node.role === 'FX' ? s.nodeFx : s.node}
                 data-testid={`signal-node-${node.role}`}
               >
@@ -141,11 +153,14 @@ export function GuitarDesktop() {
                 {node.blocks ? (
                   <FxGrid blocks={node.blocks} />
                 ) : (
-                  <StrengthDots filled={node.strengthDots ?? 0} total={8} />
+                  <SignalBars filled={node.strengthDots ?? 0} total={8} />
                 )}
               </div>
-            </div>
-          ))}
+            );
+            if (i === 0) return [nodeEl];
+            // biome-ignore lint/suspicious/noArrayIndexKey: positional arrow — no stable id
+            return [<span key={`arrow-${i}`} className={s.arrow} aria-hidden="true" />, nodeEl];
+          })}
         </div>
       </div>
       <div className={s.twoCol}>
@@ -199,7 +214,7 @@ export function GuitarMobile() {
               {node.blocks ? (
                 <FxList blocks={node.blocks} />
               ) : (
-                <StrengthDots filled={node.strengthDots ?? 0} total={8} />
+                <SignalBars filled={node.strengthDots ?? 0} total={8} />
               )}
             </div>
           </div>
