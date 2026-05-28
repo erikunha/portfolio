@@ -74,7 +74,7 @@ function InfluencesList({
       <div className={s.influencesHeader}>
         <span>
           {'INFLUENCES.QUEUE · '}
-          <span style={{ color: 'var(--ds-color-signal)' }}>{influences.length} LOADED</span>
+          <span className={s.queueCount}>{influences.length} LOADED</span>
         </span>
         <span>{'// SHUFFLE OFF'}</span>
       </div>

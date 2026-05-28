@@ -80,6 +80,7 @@
   min-height: 200px;
   overflow: hidden;
   flex: 1;
+  isolation: isolate;
 }
 .camImg {
   object-fit: cover;
@@ -112,13 +113,14 @@
   );
   mix-blend-mode: screen;
   pointer-events: none;
-  animation: scanBeam 6s linear infinite;
+  animation: scanBeam 7s linear infinite;
   top: 0;
   will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {
   .scanBeam {
     animation: none;
+    display: none;
   }
 }
 @keyframes scanBeam {
@@ -198,6 +200,9 @@
   color: var(--ds-color-text-muted);
   letter-spacing: 0.16em;
   margin-bottom: 12px;
+}
+.queueCount {
+  color: var(--ds-color-signal);
 }
 .infActive {
   display: grid;

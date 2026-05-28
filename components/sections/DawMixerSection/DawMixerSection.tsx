@@ -93,7 +93,6 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
       </div>
       <div className={s.colDb}>
         <span className={s.dbValue}>{ch.db}</span>
-        <br />
         <span className={s.dbUnit}>dB</span>
         {ch.footer && (
           <span className={s.lufs}>
@@ -174,7 +173,7 @@ function SessionHeaderDesktop({ mixer }: { mixer: DawMixer }) {
     <div className={s.sessionHeader} data-testid="session-header">
       <span>
         {'SESSION: '}
-        <strong style={{ color: 'var(--ds-color-signal)' }}>{mixer.sessionName}</strong>
+        <strong className={s.sessionName}>{mixer.sessionName}</strong>
         {' · '}
         {mixer.channels.length - 1}
         {' GTR TRACKS + MASTER · '}
@@ -208,7 +207,7 @@ function SessionHeaderMobile({ mixer }: { mixer: DawMixer }) {
         {mixer.timeSignature}
       </div>
       <div>
-        <span className={s.statusArm}>●</span> {mixer.channels.length - 1}
+        <span className={s.statusArm}>{mixer.channels.length - 1}</span>
         {' GTR + MASTER'}
       </div>
     </div>

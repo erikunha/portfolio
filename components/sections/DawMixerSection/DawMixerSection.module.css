@@ -8,6 +8,9 @@
   content: "● ";
 }
 
+.sessionName {
+  color: var(--ds-color-signal);
+}
 .channelBadge {
   border: 1px solid var(--ds-color-border-default);
   padding: 1px 5px;
