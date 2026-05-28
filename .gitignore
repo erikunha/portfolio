@@ -18,8 +18,12 @@
 
 # testing
 /coverage
+/coverage-report
 /test-results
 /playwright-report
+
+# local build artifact (next-build/ used by gates:runtime --skip-build)
+/next-build
 
 # lighthouse ci artifact reports
 /.lighthouseci/

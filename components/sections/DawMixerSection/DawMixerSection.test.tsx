@@ -24,7 +24,7 @@ vi.mock('@/components/client/DawMixer/RmsButtons/RmsButtons.client', () => ({
 }));
 
 async function renderDesktop(): Promise<Document> {
-  const { DawMixerDesktop } = await import('./DawMixerSection');
+  const { DawMixerDesktop } = await import('./DawMixerDesktop');
   const html = renderToStaticMarkup(createElement(DawMixerDesktop));
   return new DOMParser().parseFromString(html, 'text/html');
 }
