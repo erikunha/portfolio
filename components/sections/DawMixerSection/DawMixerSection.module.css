@@ -261,13 +261,26 @@ details[open] .signalFlowToggle {
   color: var(--ds-color-text-muted);
   line-height: 1.6;
 }
-.cardKnobs {
+.staticMeter {
   display: flex;
-  gap: 20px;
-  justify-content: flex-start;
+  gap: 2px;
+  height: 16px;
+  padding: 2px 0;
 }
-.cardButtons {
-  display: flex;
+.segFilled {
+  flex: 1;
+  background: var(--ds-color-signal);
+  height: 100%;
+}
+.segEmpty {
+  flex: 1;
+  background: var(--ds-color-signal-quiet);
+  height: 100%;
+}
+.segRed {
+  flex: 1;
+  background: var(--ds-color-feedback-error);
+  height: 100%;
 }
 .cardFooter {
   position: relative;

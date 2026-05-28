@@ -60,6 +60,7 @@
         "unused-javascript": ["warn", { "maxNumericValue": 60 }],
         "dom-size": ["warn", { "maxNumericValue": 1500 }],
         "uses-long-cache-ttl": "warn",
+        "unused-css-rules": ["warn", { "maxLength": 10 }],
         "errors-in-console": "error",
 
         "bf-cache": "warn",

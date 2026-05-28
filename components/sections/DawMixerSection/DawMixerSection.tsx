@@ -116,6 +116,28 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
   );
 }
 
+function StaticMeter({
+  pct,
+  segments,
+  clipping,
+}: {
+  pct: number;
+  segments: number;
+  clipping: boolean;
+}) {
+  const filledCount = Math.round((pct / 100) * segments);
+  return (
+    <div className={s.staticMeter} aria-hidden="true">
+      {Array.from({ length: segments }, (_, i) => {
+        const isRed = clipping && pct > 85 && i >= segments - 2;
+        const cls = isRed ? s.segRed : i < filledCount ? s.segFilled : s.segEmpty;
+        // biome-ignore lint/suspicious/noArrayIndexKey: positional segments — no stable id exists
+        return <span key={i} className={cls} />;
+      })}
+    </div>
+  );
+}
+
 function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
   const isMaster = ch.id === 'MASTER';
   return (
@@ -134,21 +156,8 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
       <div className={s.cardDesc}>
         <ParsedText text={ch.desc} />
       </div>
-      <VuMeter
-        segments={14}
-        initialLevel={ch.meterPct}
-        clipping={ch.meterClipping ?? false}
-        channelName={ch.name}
-      />
-      <FaderIsland initialPct={ch.faderPct} channelName={ch.name} />
+      <StaticMeter pct={ch.meterPct} segments={14} clipping={ch.meterClipping ?? false} />
       <PluginList plugins={ch.plugins} channelId={`${ch.id}-mobile`} />
-      <div className={s.cardKnobs}>
-        <KnobIsland initialAngle={ch.knob1.angleDeg} label={ch.knob1.label} channelName={ch.name} />
-        <KnobIsland initialAngle={ch.knob2.angleDeg} label={ch.knob2.label} channelName={ch.name} />
-      </div>
-      <div className={s.cardButtons}>
-        <RmsButtons buttons={ch.buttons} initialActive={ch.activeButtons} />
-      </div>
       <div className={s.cardFooter}>
         <div className={s.faderFooterBar} style={{ width: `${ch.faderPct}%` }} aria-hidden="true" />
         {ch.footer && (

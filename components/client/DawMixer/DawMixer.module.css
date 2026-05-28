@@ -87,7 +87,7 @@
   border: 1px solid var(--ds-color-signal);
   background: var(--ds-color-signal);
   color: var(--ds-color-surface-base);
-  padding: 3px 8px;
+  padding: 4px 8px;
   font-size: var(--ds-font-size-xs);
   font-family: var(--ds-font-family-mono);
   font-weight: 700;
@@ -97,7 +97,7 @@
   border: 1px solid var(--ds-color-border-default);
   background: transparent;
   color: var(--ds-color-text-muted);
-  padding: 3px 8px;
+  padding: 4px 8px;
   font-size: var(--ds-font-size-xs);
   font-family: var(--ds-font-family-mono);
   cursor: pointer;
