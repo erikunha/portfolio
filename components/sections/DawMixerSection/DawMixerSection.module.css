@@ -357,11 +357,6 @@
   margin-right: 6px;
   vertical-align: 1px;
 }
-@media (prefers-reduced-motion: reduce) {
-  .mixLegendDot {
-    box-shadow: none;
-  }
-}
 
 /* channel cards — border-bottom list */
 .channelCard {
@@ -385,11 +380,6 @@
   width: 3px;
   background: var(--ds-color-signal);
   box-shadow: 0 0 10px var(--ds-color-signal);
-}
-@media (prefers-reduced-motion: reduce) {
-  .channelCardFocused::before {
-    box-shadow: none;
-  }
 }
 .channelCardMaster {
   background: linear-gradient(
@@ -588,14 +578,6 @@
   font-size: 9px;
   text-shadow: 0 0 4px var(--ds-color-signal);
 }
-@media (prefers-reduced-motion: reduce) {
-  .mxChain::before {
-    box-shadow: none;
-  }
-  .mxChain::after {
-    text-shadow: none;
-  }
-}
 .mxPlug {
   display: grid;
   grid-template-columns: 14px minmax(90px, auto) 1fr;
@@ -625,11 +607,6 @@
 .mxPlugOn .mxPlugLed {
   background: var(--ds-color-signal);
   box-shadow: 0 0 4px var(--ds-color-signal);
-}
-@media (prefers-reduced-motion: reduce) {
-  .mxPlugOn .mxPlugLed {
-    box-shadow: none;
-  }
 }
 .mxPlugName {
   font-size: 10.5px;
@@ -704,11 +681,6 @@
   transform-origin: 50% 12px;
   transform: translateX(-50%) rotate(var(--mx-knob-angle, 0deg));
 }
-@media (prefers-reduced-motion: reduce) {
-  .mxDial::after {
-    box-shadow: none;
-  }
-}
 .mxKnobLabel {
   font-size: 9.5px;
   letter-spacing: 0.1em;
@@ -748,11 +720,6 @@
   letter-spacing: 0.04em;
   background: color-mix(in srgb, var(--ds-color-signal) 10%, transparent);
   box-shadow: 0 0 5px rgba(0, 255, 65, 0.35);
-}
-@media (prefers-reduced-motion: reduce) {
-  .mxBtnOn {
-    box-shadow: none;
-  }
 }
 .mxClip {
   flex: 1;
