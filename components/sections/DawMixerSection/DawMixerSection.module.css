@@ -580,6 +580,12 @@
   font-size: var(--ds-font-size-2xs);
   text-shadow: 0 0 4px var(--ds-color-signal);
 }
+.rootMobile .mxChain::after {
+  display: none;
+}
+.rootMobile .mxChain {
+  padding-bottom: 0;
+}
 .mxPlug {
   display: grid;
   grid-template-columns: 14px minmax(90px, auto) 1fr;

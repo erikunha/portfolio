@@ -385,4 +385,44 @@ test.describe('cross-cutting', () => {
       `motion toggle → next paint should be <200ms (got ${elapsedMs.toFixed(1)}ms)`,
     ).toBeLessThan(200);
   });
+
+  test('6 — DAW mixer mobile CSS override is compiled into the bundle', async ({ page }) => {
+    // Stylesheet inspection is used here because getComputedStyle on a ::after
+    // pseudo-element requires the element to be in the DOM, and the DAW mixer
+    // renders either DawMixerDesktop or DawMixerMobile based on server-side UA
+    // detection — making DOM-based assertions project-dependent. Checking the
+    // compiled stylesheet directly is deterministic across all four projects
+    // and catches any accidental deletion of the scoped CSS override.
+    await page.goto(BASE_URL);
+    await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
+
+    const ruleFound = await page.evaluate((): boolean => {
+      for (const sheet of document.styleSheets) {
+        try {
+          for (const rule of sheet.cssRules) {
+            const text = rule.cssText ?? '';
+            // The selector must reference both rootMobile (parent scope) and
+            // mxChain::after (the arrow pseudo-element being hidden). An
+            // unscoped `.mxChain::after { display:none }` would not qualify.
+            if (
+              text.includes('rootMobile') &&
+              text.includes('mxChain') &&
+              text.includes('::after') &&
+              text.includes('display: none')
+            ) {
+              return true;
+            }
+          }
+        } catch {
+          // cross-origin sheets throw SecurityError — skip
+        }
+      }
+      return false;
+    });
+
+    expect(
+      ruleFound,
+      'compiled CSS bundle must contain a .rootMobile .mxChain::after { display: none } scoped rule',
+    ).toBe(true);
+  });
 });
