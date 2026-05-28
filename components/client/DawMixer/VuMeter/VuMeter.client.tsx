@@ -20,7 +20,7 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
   const getSegmentClass = useCallback(
     (i: number, currentLevel: number): string => {
       const filledCount = Math.round((currentLevel / 100) * segments);
-      const isRed = clipping && currentLevel > 85 && i >= segments - 2;
+      const isRed = clipping && currentLevel > 85 && i >= segments - 2 && i < filledCount;
       if (isRed) return s.vuSegRed ?? '';
       if (i < filledCount) return s.vuSegFilled ?? '';
       return s.vuSegEmpty ?? '';
@@ -109,7 +109,7 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
       }}
     >
       {Array.from({ length: segments }, (_, i) => {
-        const isRed = clipping && initialLevel > 85 && i >= segments - 2;
+        const isRed = clipping && initialLevel > 85 && i >= segments - 2 && i < filledCount;
         const isFilled = i < filledCount;
         const cls = isRed ? s.vuSegRed : isFilled ? s.vuSegFilled : s.vuSegEmpty;
         const setRef = (el: HTMLSpanElement | null) => {

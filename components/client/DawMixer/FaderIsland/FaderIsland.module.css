@@ -31,7 +31,6 @@
   box-shadow: 0 0 8px var(--ds-color-signal);
   border: 1px solid #000;
   cursor: ew-resize;
-  will-change: transform;
 }
 .faderThumb::after {
   content: "";

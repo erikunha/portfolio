@@ -40,7 +40,11 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
   const updateNeedle = useCallback((newAngle: number) => {
     liveAngle.current = newAngle;
     const el = containerRef.current;
-    if (el) el.setAttribute('aria-valuenow', String(newAngle));
+    if (el) {
+      const rounded = Math.round(newAngle);
+      el.setAttribute('aria-valuenow', String(rounded));
+      el.setAttribute('aria-valuetext', `${rounded > 0 ? '+' : ''}${rounded} degrees`);
+    }
     const needle = needleRef.current;
     if (needle) {
       const { x2, y2 } = angleToCoords(newAngle);

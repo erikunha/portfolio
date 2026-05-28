@@ -237,7 +237,12 @@ export const DawMixerSchema = z.object({
   sessionName: z.string().min(1),
   bpm: z.number().int(),
   timeSignature: z.string().min(1),
-  channels: z.array(DawMixerChannelSchema).min(1),
+  channels: z
+    .array(DawMixerChannelSchema)
+    .length(6)
+    .refine((chs) => chs[chs.length - 1]?.id === 'MASTER', {
+      message: 'Last channel must be MASTER',
+    }),
 });
 
 // Exported types

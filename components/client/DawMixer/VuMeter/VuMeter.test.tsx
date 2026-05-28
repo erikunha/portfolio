@@ -62,9 +62,17 @@ describe('VuMeter — segments', () => {
     expect(doc.querySelector('[class*="vuSegRed"]')).toBeNull();
   });
 
-  it('last 2 segments get red class when clipping=true and level > 85', () => {
-    const doc = renderStatic({ ...defaults, initialLevel: 93, clipping: true });
+  it('last 2 filled segments get red class when clipping=true and level fills both red-zone slots', () => {
+    // initialLevel:97 with segments:14 → filledCount=14, so both red-zone slots (12,13) are filled
+    const doc = renderStatic({ ...defaults, initialLevel: 97, clipping: true });
     expect(doc.querySelectorAll('[class*="vuSegRed"]').length).toBe(2);
+  });
+
+  it('only filled red-zone segments get red class — unfilled slots stay empty', () => {
+    // initialLevel:93 with segments:14 → filledCount=13: slot 12 is red+filled, slot 13 is empty
+    const doc = renderStatic({ ...defaults, initialLevel: 93, clipping: true });
+    expect(doc.querySelectorAll('[class*="vuSegRed"]').length).toBe(1);
+    expect(doc.querySelector('[class*="vuSegEmpty"]')).not.toBeNull();
   });
 });
 

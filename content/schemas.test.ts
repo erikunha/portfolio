@@ -38,30 +38,67 @@ describe('GuitarRigSchema v2', () => {
   });
 });
 
+const baseChannel = (id: string) => ({
+  id,
+  name: 'TEST',
+  desc: 'test desc',
+  plugins: [{ name: 'COMP', active: true, strength: 3 }],
+  faderPct: 72,
+  db: '-2.5',
+  meterPct: 71,
+  knob1: { label: 'GAIN', angleDeg: -30 },
+  knob2: { label: 'PAN', angleDeg: 0 },
+  buttons: ['R', 'M', 'S'],
+  activeButtons: [],
+});
+
+const validSixChannels = [
+  baseChannel('CH 01'),
+  baseChannel('CH 02'),
+  baseChannel('CH 03'),
+  baseChannel('CH 04'),
+  baseChannel('CH 05'),
+  { ...baseChannel('MASTER'), buttons: ['FX', 'EQ'] },
+];
+
 describe('DawMixerSchema', () => {
-  it('accepts a valid 6-channel config', async () => {
+  it('accepts a valid 6-channel config with MASTER last', async () => {
     const { DawMixerSchema } = await import('./schemas');
     expect(() =>
       DawMixerSchema.parse({
         sessionName: 'TEST.ALS',
         bpm: 87,
         timeSignature: '4/4',
-        channels: [
-          {
-            id: 'CH 01',
-            name: 'TEST',
-            desc: 'test desc',
-            plugins: [{ name: 'COMP', active: true, strength: 3 }],
-            faderPct: 72,
-            db: '-2.5',
-            meterPct: 71,
-            knob1: { label: 'GAIN', angleDeg: -30 },
-            knob2: { label: 'PAN', angleDeg: 0 },
-            buttons: ['R', 'M', 'S'],
-            activeButtons: [],
-          },
-        ],
+        channels: validSixChannels,
       }),
     ).not.toThrow();
+  });
+
+  it('rejects fewer than 6 channels', async () => {
+    const { DawMixerSchema } = await import('./schemas');
+    expect(() =>
+      DawMixerSchema.parse({
+        sessionName: 'TEST.ALS',
+        bpm: 87,
+        timeSignature: '4/4',
+        channels: validSixChannels.slice(0, 5),
+      }),
+    ).toThrow();
+  });
+
+  it('rejects 6 channels when last is not MASTER', async () => {
+    const { DawMixerSchema } = await import('./schemas');
+    const noMaster = validSixChannels.map((c) => ({
+      ...c,
+      id: c.id === 'MASTER' ? 'CH 06' : c.id,
+    }));
+    expect(() =>
+      DawMixerSchema.parse({
+        sessionName: 'TEST.ALS',
+        bpm: 87,
+        timeSignature: '4/4',
+        channels: noMaster,
+      }),
+    ).toThrow();
   });
 });

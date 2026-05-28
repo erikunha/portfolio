@@ -117,7 +117,7 @@ function StaticMeter({
   return (
     <div className={s.staticMeter} aria-hidden="true">
       {Array.from({ length: segments }, (_, i) => {
-        const isRed = clipping && pct > 85 && i >= segments - 2;
+        const isRed = clipping && pct > 85 && i >= segments - 2 && i < filledCount;
         const cls = isRed ? s.segRed : i < filledCount ? s.segFilled : s.segEmpty;
         // biome-ignore lint/suspicious/noArrayIndexKey: positional segments — no stable id exists
         return <span key={i} className={cls} />;
