@@ -40,7 +40,7 @@
   color: var(--ds-color-text-muted);
 }
 .lufs {
-  font-size: 9px;
+  font-size: var(--ds-font-size-2xs);
   color: var(--ds-color-text-muted);
   display: block;
   letter-spacing: 0.08em;
@@ -534,7 +534,7 @@
   margin-bottom: 2px;
 }
 .mxChainTitle {
-  font-size: 9px;
+  font-size: var(--ds-font-size-2xs);
   letter-spacing: 0.18em;
   color: var(--ds-color-text-muted);
   text-transform: uppercase;
@@ -575,7 +575,7 @@
   left: -1px;
   bottom: -8px;
   color: var(--ds-color-signal);
-  font-size: 9px;
+  font-size: var(--ds-font-size-2xs);
   text-shadow: 0 0 4px var(--ds-color-signal);
 }
 .mxPlug {
