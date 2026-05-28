@@ -95,6 +95,7 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
       onKeyDown={(e) => {
+        if (isDragging.current) return;
         if (e.key === 'ArrowRight') {
           e.preventDefault();
           applyLevel(Math.min(100, liveLevel.current + 5));

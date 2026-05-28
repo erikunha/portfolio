@@ -114,6 +114,26 @@ describe('VuMeter — keyboard', () => {
     slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBeLessThanOrEqual(100);
   });
+
+  it('keyboard ignored during active pointer drag', async () => {
+    const { container, unmount: u } = await mountClient(
+      createElement(VuMeter, { ...defaults, initialLevel: 50 }),
+    );
+    unmount = u;
+    const slider = container.querySelector('[role="slider"]') as HTMLElement;
+
+    Object.defineProperty(slider, 'getBoundingClientRect', {
+      value: () => ({ left: 0, right: 100, width: 100, top: 0, bottom: 20, height: 20 }),
+      configurable: true,
+    });
+
+    slider.dispatchEvent(new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
+    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 80, bubbles: true }));
+    expect(slider.getAttribute('aria-valuenow')).toBe('80');
+
+    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    expect(slider.getAttribute('aria-valuenow')).toBe('80');
+  });
 });
 
 describe('VuMeter — pointer drag behavior', () => {
