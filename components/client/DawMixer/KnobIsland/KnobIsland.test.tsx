@@ -103,8 +103,10 @@ describe('KnobIsland — pointer drag behavior', () => {
     // drag up 50px → deltaY=50 → newAngle = -30 + 50*1.5 = 45
     slider.dispatchEvent(new PointerEvent('pointermove', { clientY: 50, bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBe(45);
+    expect(slider.getAttribute('aria-valuetext')).toBe('+45 degrees');
 
     slider.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBe(-30);
+    expect(slider.getAttribute('aria-valuetext')).toBe('-30 degrees');
   });
 });

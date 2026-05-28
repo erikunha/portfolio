@@ -1,4 +1,5 @@
 .faderTrack {
+  --fader-thumb-w: 14px;
   position: relative;
   height: 18px;
   background: color-mix(in srgb, var(--ds-color-signal) 3%, transparent);
@@ -25,7 +26,7 @@
   position: absolute;
   top: -2px;
   left: 0;
-  width: 14px;
+  width: var(--fader-thumb-w);
   height: 22px;
   background: var(--ds-color-signal);
   box-shadow: 0 0 8px var(--ds-color-signal);
