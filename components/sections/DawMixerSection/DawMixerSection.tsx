@@ -75,7 +75,7 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
         <KnobIsland initialAngle={ch.knob2.angleDeg} label={ch.knob2.label} channelName={ch.name} />
       </div>
       <div className={s.colRms}>
-        <RmsButtons buttons={ch.buttons} initialActive={ch.activeButtons} />
+        <RmsButtons buttons={ch.buttons} initialActive={ch.activeButtons} channelName={ch.name} />
       </div>
       <div className={s.colPlugins}>
         <PluginChain plugins={ch.plugins} channelId={ch.id} />

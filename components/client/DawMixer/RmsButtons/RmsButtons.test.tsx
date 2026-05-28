@@ -11,19 +11,34 @@ function renderStatic(props: Parameters<typeof RmsButtons>[0]) {
 
 describe('RmsButtons — initial render', () => {
   it('renders one button per label', () => {
-    const doc = renderStatic({ buttons: ['R', 'M', 'S'], initialActive: [] });
+    const doc = renderStatic({ buttons: ['R', 'M', 'S'], initialActive: [], channelName: 'CH 01' });
     expect(doc.querySelectorAll('button').length).toBe(3);
   });
 
+  it('aria-label includes channelName prefix for each button', () => {
+    const doc = renderStatic({ buttons: ['R', 'M', 'S'], initialActive: [], channelName: 'CH 01' });
+    const buttons = Array.from(doc.querySelectorAll('button'));
+    const rBtn = buttons.find((b) => b.textContent?.trim() === 'R');
+    const mBtn = buttons.find((b) => b.textContent?.trim() === 'M');
+    const sBtn = buttons.find((b) => b.textContent?.trim() === 'S');
+    expect(rBtn?.getAttribute('aria-label')).toBe('CH 01 record arm');
+    expect(mBtn?.getAttribute('aria-label')).toBe('CH 01 mute');
+    expect(sBtn?.getAttribute('aria-label')).toBe('CH 01 solo');
+  });
+
   it('active buttons have aria-pressed="true"', () => {
-    const doc = renderStatic({ buttons: ['R', 'M', 'S'], initialActive: ['M'] });
+    const doc = renderStatic({
+      buttons: ['R', 'M', 'S'],
+      initialActive: ['M'],
+      channelName: 'CH 01',
+    });
     const buttons = doc.querySelectorAll('button');
     const mBtn = Array.from(buttons).find((b) => b.textContent?.trim() === 'M');
     expect(mBtn?.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('inactive buttons have aria-pressed="false"', () => {
-    const doc = renderStatic({ buttons: ['R', 'M', 'S'], initialActive: [] });
+    const doc = renderStatic({ buttons: ['R', 'M', 'S'], initialActive: [], channelName: 'CH 01' });
     const buttons = doc.querySelectorAll('button');
     for (const b of buttons) {
       expect(b.getAttribute('aria-pressed')).toBe('false');
@@ -40,7 +55,11 @@ describe('RmsButtons — toggle interaction', () => {
 
   it('clicking an inactive button sets aria-pressed to true', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(RmsButtons, { buttons: ['R', 'M', 'S'], initialActive: [] }),
+      createElement(RmsButtons, {
+        buttons: ['R', 'M', 'S'],
+        initialActive: [],
+        channelName: 'CH 01',
+      }),
     );
     unmount = u;
     const rBtn = Array.from(container.querySelectorAll('button')).find(
@@ -55,7 +74,11 @@ describe('RmsButtons — toggle interaction', () => {
 
   it('clicking an active button sets aria-pressed to false', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(RmsButtons, { buttons: ['R', 'M', 'S'], initialActive: ['S'] }),
+      createElement(RmsButtons, {
+        buttons: ['R', 'M', 'S'],
+        initialActive: ['S'],
+        channelName: 'CH 01',
+      }),
     );
     unmount = u;
     const sBtn = Array.from(container.querySelectorAll('button')).find(
@@ -70,7 +93,11 @@ describe('RmsButtons — toggle interaction', () => {
 
   it('toggling one button does not affect others', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(RmsButtons, { buttons: ['R', 'M', 'S'], initialActive: ['M'] }),
+      createElement(RmsButtons, {
+        buttons: ['R', 'M', 'S'],
+        initialActive: ['M'],
+        channelName: 'CH 01',
+      }),
     );
     unmount = u;
     const rBtn = Array.from(container.querySelectorAll('button')).find(

@@ -9,8 +9,8 @@ FILE=$(printf '%s' "$INPUT" | python3 -c "
 import json, sys
 try:
   data = json.load(sys.stdin)
-  # Edit tool uses 'file_path'; Write tool uses 'file_path'
-  print(data.get('file_path', ''))
+  # PostToolUse payload: path is nested under tool_input.file_path
+  print(data.get('tool_input', {}).get('file_path', '') or data.get('file_path', ''))
 except Exception:
   print('')
 " 2>/dev/null || echo "")

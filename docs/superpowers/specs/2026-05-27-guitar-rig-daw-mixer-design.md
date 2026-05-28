@@ -428,7 +428,7 @@ background: var(--ds-color-signal-quiet) // empty
 - `components/client/DawMixer/RmsButtons.client.tsx`
 - `components/client/DawMixer/SignalFlow.client.tsx`
 - `content/daw-mixer.ts`
-- `public/images/guitar-live.jpg` — copy from `/Users/erikhenriquealvescunha/Downloads/me_playing_guitar.jpg`
+- `public/images/guitar-live.jpg` — external artifact; supply a live-performance photo resized to 800×600 before running the resize step
 
 ### Modified files
 - `content/guitar-rig.ts` — complete rewrite for new schema

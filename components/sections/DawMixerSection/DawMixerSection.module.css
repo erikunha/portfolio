@@ -596,7 +596,7 @@
   background: color-mix(in srgb, var(--ds-color-signal) 8%, transparent);
 }
 .mxPlugBypass {
-  opacity: 0.45;
+  border-color: color-mix(in srgb, var(--ds-color-signal-quiet) 40%, transparent);
 }
 .mxPlugLed {
   width: 6px;
@@ -604,6 +604,9 @@
   border-radius: 50%;
   background: var(--ds-color-signal-quiet);
   justify-self: center;
+}
+.mxPlugBypass .mxPlugLed {
+  opacity: 0.4;
 }
 .mxPlugOn .mxPlugLed {
   background: var(--ds-color-signal);
@@ -622,6 +625,9 @@
   gap: 2px;
   align-items: flex-end;
   height: 7px;
+}
+.mxPlugBypass .mxPlugAmt {
+  opacity: 0.4;
 }
 .mxPlugAmtOn {
   display: block;

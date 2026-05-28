@@ -12,9 +12,10 @@ const BUTTON_LABELS: Record<string, string> = {
 interface RmsButtonsProps {
   buttons: string[];
   initialActive: string[];
+  channelName: string;
 }
 
-export function RmsButtons({ buttons, initialActive }: RmsButtonsProps) {
+export function RmsButtons({ buttons, initialActive, channelName }: RmsButtonsProps) {
   const [active, setActive] = useState<Set<string>>(() => new Set(initialActive));
 
   const toggle = (btn: string) => {
@@ -32,7 +33,7 @@ export function RmsButtons({ buttons, initialActive }: RmsButtonsProps) {
         <button
           key={btn}
           type="button"
-          aria-label={BUTTON_LABELS[btn] ?? btn}
+          aria-label={`${channelName} ${BUTTON_LABELS[btn] ?? btn}`}
           aria-pressed={active.has(btn) ? 'true' : 'false'}
           className={active.has(btn) ? s.rmsActive : s.rmsInactive}
           onClick={() => toggle(btn)}
