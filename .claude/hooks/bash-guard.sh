@@ -31,6 +31,28 @@ if printf '%s' "$CMD" | grep -qP 'git push.*(--force|-f)\b.*\bmain\b|git push.*\
   exit 1
 fi
 
+# ── Warn: commit header > 100 chars ─────────────────────────────────────────
+# commitlint enforces this post-hoc; catching it here avoids the wasted round-trip.
+if printf '%s' "$CMD" | grep -qE "git commit.*-m"; then
+  HEADER=$(python3 -c "
+import sys, shlex
+cmd = sys.argv[1] if len(sys.argv) > 1 else ''
+try:
+    parts = shlex.split(cmd)
+    for i, p in enumerate(parts):
+        if p == '-m' and i + 1 < len(parts):
+            print(parts[i + 1].split(chr(10))[0])
+            break
+except Exception:
+    pass
+" "$CMD" 2>/dev/null || echo "")
+  HEADER_LEN=${#HEADER}
+  if [ -n "$HEADER" ] && [ "$HEADER_LEN" -gt 100 ]; then
+    printf '[WARN] Commit header is %s chars (limit: 100). commitlint will reject this.\n' "$HEADER_LEN"
+    printf 'Shorten the subject line to 100 chars or fewer before running.\n'
+  fi
+fi
+
 # ── Warn: gh pr create without ready-for-pr ──────────────────────────────────
 # Not a hard block — the user may have already run ready-for-pr manually.
 # The warning surfaces in Claude's context so it can confirm before proceeding.
