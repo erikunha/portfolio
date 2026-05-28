@@ -77,7 +77,7 @@
     overflow-wrap: break-word;
   }
   .foot {
-    font-size: var(--ds-font-size-2xs);
+    font-size: var(--ds-font-size-xs);
     white-space: nowrap;
     overflow: hidden;
   }

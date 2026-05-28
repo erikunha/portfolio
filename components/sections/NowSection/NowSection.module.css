@@ -27,6 +27,6 @@
 
 @media (max-width: 768px) {
   .root {
-    font-size: var(--ds-font-size-sm);
+    font-size: var(--ds-font-size-xs);
   }
 }

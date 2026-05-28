@@ -106,6 +106,10 @@
     padding: 10px 0;
   }
 
+  .preamble {
+    font-size: var(--ds-font-size-xs);
+  }
+
   .num {
     font-size: var(--ds-font-size-xs);
   }
@@ -119,7 +123,7 @@
   }
 
   .category {
-    font-size: var(--ds-font-size-2xs);
+    font-size: var(--ds-font-size-xs);
   }
 
   .footer {

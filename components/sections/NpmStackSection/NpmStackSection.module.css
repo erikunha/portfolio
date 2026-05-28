@@ -55,7 +55,7 @@
   }
   .root li {
     aspect-ratio: 1 / 1;
-    font-size: var(--ds-font-size-2xs);
+    font-size: var(--ds-font-size-xs);
   }
 }
 

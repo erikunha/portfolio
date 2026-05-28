@@ -416,7 +416,7 @@ body[data-motion="reduce"] .spBar2 > i {
     margin-bottom: 10px;
   }
   .spHead {
-    font-size: var(--ds-font-size-2xs);
+    font-size: var(--ds-font-size-xs);
     letter-spacing: 0.16em;
   }
   .spRow {

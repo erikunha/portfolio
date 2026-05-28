@@ -284,6 +284,9 @@ body[data-motion="reduce"] .cmdHint {
   }
   /* From _layout.css 768px block */
   .bar {
-    font-size: var(--ds-font-size-2xs);
+    font-size: var(--ds-font-size-xs);
+  }
+  .privacyNotice {
+    font-size: var(--ds-font-size-xs);
   }
 }
