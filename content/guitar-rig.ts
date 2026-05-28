@@ -53,5 +53,7 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
   liveCam: {
     photo: '/images/guitar-live.jpg',
     caption: './GIGS --LIVE · SACRED + SWORN · FEEL OVER NOISE',
+    status: '▶ REC · LIVE',
+    cameraLabel: 'CAM/01 · STAGE',
   },
 });

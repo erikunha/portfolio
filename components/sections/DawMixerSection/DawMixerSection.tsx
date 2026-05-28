@@ -271,11 +271,11 @@ function SessionHeaderDesktop({ mixer }: { mixer: DawMixer }) {
         {' · '}
         {mixer.channels.length - 1}
         {' GTR TRACKS + MASTER · '}
-        <span className={s.statusArm}>MIXING</span>
+        <span className={s.statusArm}>{mixer.status}</span>
       </span>
       <span className={s.transport}>
         <span className={s.transportPlay} aria-hidden="true" />
-        <span className={s.transportTime}>00:01:24:08</span>
+        <span className={s.transportTime}>{mixer.transportTime}</span>
         <span className={s.transportSep}>|</span>
         <span>{mixer.bpm} BPM</span>
         <span className={s.transportSep}>|</span>
@@ -292,10 +292,12 @@ function SessionHeaderMobile({ mixer }: { mixer: DawMixer }) {
         {'SESSION: '}
         {mixer.sessionName}
         {' · '}
-        <span className={s.statusArm}>MIXING</span>
+        <span className={s.statusArm}>{mixer.status}</span>
       </div>
       <div>
-        {'▶ 00:01:24:08 | '}
+        {'▶ '}
+        {mixer.transportTime}
+        {' | '}
         {mixer.bpm}
         {' BPM | '}
         {mixer.timeSignature}

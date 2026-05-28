@@ -99,8 +99,8 @@ function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
   return (
     <div className={s.liveCam}>
       <div className={s.camHeader}>
-        <span>▶ REC · LIVE</span>
-        <span>CAM/01 · STAGE</span>
+        <span>{liveCam.status}</span>
+        <span>{liveCam.cameraLabel}</span>
       </div>
       <div className={s.camPhoto}>
         <Image

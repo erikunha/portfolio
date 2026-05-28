@@ -32,7 +32,12 @@ describe('GuitarRigSchema v2', () => {
           { label: 'ALT RIG', value: 'Martin', sub: 'acoustic' },
           { label: 'GIGS', value: 'small', sub: 'band' },
         ],
-        liveCam: { photo: '/images/guitar-live.jpg', caption: './GIGS' },
+        liveCam: {
+          photo: '/images/guitar-live.jpg',
+          caption: './GIGS',
+          status: '▶ REC',
+          cameraLabel: 'CAM/01',
+        },
       }),
     ).not.toThrow();
   });
@@ -69,6 +74,8 @@ describe('DawMixerSchema', () => {
         sessionName: 'TEST.ALS',
         bpm: 87,
         timeSignature: '4/4',
+        status: 'MIXING',
+        transportTime: '00:01:24:08',
         channels: validSixChannels,
       }),
     ).not.toThrow();
@@ -81,6 +88,8 @@ describe('DawMixerSchema', () => {
         sessionName: 'TEST.ALS',
         bpm: 87,
         timeSignature: '4/4',
+        status: 'MIXING',
+        transportTime: '00:01:24:08',
         channels: validSixChannels.slice(0, 5),
       }),
     ).toThrow();
@@ -97,6 +106,8 @@ describe('DawMixerSchema', () => {
         sessionName: 'TEST.ALS',
         bpm: 87,
         timeSignature: '4/4',
+        status: 'MIXING',
+        transportTime: '00:01:24:08',
         channels: noMaster,
       }),
     ).toThrow();

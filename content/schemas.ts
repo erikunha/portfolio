@@ -98,6 +98,8 @@ export const GuitarRigSchema = z.object({
   liveCam: z.object({
     photo: z.string().min(1),
     caption: z.string().min(1),
+    status: z.string().min(1),
+    cameraLabel: z.string().min(1),
   }),
 });
 
@@ -237,6 +239,8 @@ export const DawMixerSchema = z.object({
   sessionName: z.string().min(1),
   bpm: z.number().int(),
   timeSignature: z.string().min(1),
+  status: z.string().min(1),
+  transportTime: z.string().min(1),
   channels: z
     .array(DawMixerChannelSchema)
     .length(6)

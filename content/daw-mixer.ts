@@ -4,6 +4,8 @@ export const dawMixer: DawMixer = DawMixerSchema.parse({
   sessionName: 'YELLOW_TAKE_03.ALS',
   bpm: 87,
   timeSignature: '4/4',
+  status: 'MIXING',
+  transportTime: '00:01:24:08',
   channels: [
     {
       id: 'CH 01',

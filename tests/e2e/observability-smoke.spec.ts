@@ -46,9 +46,12 @@ test.describe('observability smoke', () => {
       data: { requestId: SYNTHETIC_REQUEST_ID },
     });
     const status = res.status();
-    // Rate limit (5/h) fires before handler — 429 after repeated local runs. CI
-    // always gets 200 on a fresh window.
-    if (status === 429) return;
+    // Rate limit (5/h) fires before handler — 429 after repeated local runs.
+    // In CI the window is always fresh; a 429 there signals misconfiguration.
+    if (status === 429) {
+      if (process.env.CI) throw new Error('Rate-limit hit in CI — check window configuration');
+      return;
+    }
     expect(status).toBe(200);
     const body = await res.json();
     expect(body).toMatchObject({ ok: true });
@@ -64,9 +67,12 @@ test.describe('observability smoke', () => {
       data: { requestId: 'not-a-uuid' },
     });
     const status = res.status();
-    // Rate limit (5/h) fires before validation — 429 is expected after repeated
-    // local test runs. CI always gets 400 on a fresh window.
-    if (status === 429) return;
+    // Rate limit (5/h) fires before validation — 429 after repeated local runs.
+    // In CI the window is always fresh; a 429 there signals misconfiguration.
+    if (status === 429) {
+      if (process.env.CI) throw new Error('Rate-limit hit in CI — check window configuration');
+      return;
+    }
     expect(status).toBe(400);
     const body = await res.json();
     expect(body).toMatchObject({ ok: false, error: { code: 'validation_failed' } });
