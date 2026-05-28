@@ -3,6 +3,12 @@
 import { useState } from 'react';
 import s from './DawMixer.module.css';
 
+const BUTTON_LABELS: Record<string, string> = {
+  R: 'record arm',
+  M: 'mute',
+  S: 'solo',
+};
+
 interface RmsButtonsProps {
   buttons: string[];
   initialActive: string[];
@@ -26,6 +32,7 @@ export function RmsButtons({ buttons, initialActive }: RmsButtonsProps) {
         <button
           key={btn}
           type="button"
+          aria-label={BUTTON_LABELS[btn] ?? btn}
           aria-pressed={active.has(btn) ? 'true' : 'false'}
           className={active.has(btn) ? s.rmsActive : s.rmsInactive}
           onClick={() => toggle(btn)}

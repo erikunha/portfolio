@@ -47,6 +47,11 @@ describe('FaderIsland — ARIA contract', () => {
     const thumb = doc.querySelector('[class*="faderThumb"]');
     expect(thumb?.getAttribute('aria-hidden')).toBe('true');
   });
+
+  it('aria-valuetext shows initialPct as percentage', () => {
+    const doc = renderStatic(defaults);
+    expect(doc.querySelector('[role="slider"]')?.getAttribute('aria-valuetext')).toBe('72%');
+  });
 });
 
 describe('FaderIsland — keyboard', () => {
@@ -127,5 +132,25 @@ describe('FaderIsland — pointer drag behavior', () => {
     expect(Number.isNaN(val)).toBe(false);
     expect(val).toBeGreaterThanOrEqual(0);
     expect(val).toBeLessThanOrEqual(100);
+  });
+
+  it('pointercancel restores position to drag-start value', async () => {
+    const { container, unmount: u } = await mountClient(
+      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST' }),
+    );
+    unmount = u;
+    const slider = container.querySelector('[role="slider"]') as HTMLElement;
+
+    Object.defineProperty(slider, 'getBoundingClientRect', {
+      value: () => ({ left: 0, right: 100, width: 100, top: 0, bottom: 20, height: 20 }),
+      configurable: true,
+    });
+
+    slider.dispatchEvent(new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
+    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 80, bubbles: true }));
+    expect(slider.getAttribute('aria-valuenow')).toBe('80');
+
+    slider.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true }));
+    expect(slider.getAttribute('aria-valuenow')).toBe('50');
   });
 });

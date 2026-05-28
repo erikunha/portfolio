@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import s from './DawMixer.module.css';
 
 interface VuMeterProps {
@@ -11,11 +11,11 @@ interface VuMeterProps {
 }
 
 export function VuMeter({ segments, initialLevel, clipping = false, channelName }: VuMeterProps) {
-  const [level, setLevel] = useState(initialLevel);
   const containerRef = useRef<HTMLDivElement>(null);
   const segmentRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const isDragging = useRef(false);
   const liveLevel = useRef(initialLevel);
+  const dragStartLevel = useRef(initialLevel);
 
   const getSegmentClass = useCallback(
     (i: number, currentLevel: number): string => {
@@ -32,7 +32,10 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
     (newLevel: number) => {
       liveLevel.current = newLevel;
       const el = containerRef.current;
-      if (el) el.setAttribute('aria-valuenow', String(newLevel));
+      if (el) {
+        el.setAttribute('aria-valuenow', String(newLevel));
+        el.setAttribute('aria-valuetext', `${newLevel}%`);
+      }
       segmentRefs.current.forEach((seg, i) => {
         if (seg) seg.className = getSegmentClass(i, newLevel);
       });
@@ -47,14 +50,15 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
   }, []);
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragStartLevel.current = liveLevel.current;
     const newLevel = getLevelFromPointer(e.clientX);
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
-      isDragging.current = true;
-      if (newLevel !== null) applyLevel(newLevel);
     } catch {
-      if (newLevel !== null) setLevel(newLevel);
+      // setPointerCapture not supported; drag still works within element bounds
     }
+    isDragging.current = true;
+    if (newLevel !== null) applyLevel(newLevel);
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -63,47 +67,46 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
     if (newLevel !== null) applyLevel(newLevel);
   };
 
-  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current) return;
+  const onPointerUp = () => {
     isDragging.current = false;
-    const newLevel = getLevelFromPointer(e.clientX);
-    if (newLevel !== null) setLevel(newLevel);
   };
 
-  const filledCount = Math.round((level / 100) * segments);
+  const onPointerCancel = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    applyLevel(dragStartLevel.current);
+  };
+
+  const filledCount = Math.round((initialLevel / 100) * segments);
 
   return (
     <div
       ref={containerRef}
       role="slider"
       aria-label={`${channelName} VU meter demonstration, drag to adjust level`}
-      aria-valuenow={level}
+      aria-valuenow={initialLevel}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-valuetext={`${level}%`}
+      aria-valuetext={`${initialLevel}%`}
       tabIndex={0}
       className={s.vuMeter}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      onPointerCancel={onPointerCancel}
       onKeyDown={(e) => {
         if (e.key === 'ArrowRight') {
           e.preventDefault();
-          const next = Math.min(100, liveLevel.current + 5);
-          applyLevel(next);
-          setLevel(next);
+          applyLevel(Math.min(100, liveLevel.current + 5));
         }
         if (e.key === 'ArrowLeft') {
           e.preventDefault();
-          const next = Math.max(0, liveLevel.current - 5);
-          applyLevel(next);
-          setLevel(next);
+          applyLevel(Math.max(0, liveLevel.current - 5));
         }
       }}
     >
       {Array.from({ length: segments }, (_, i) => {
-        const isRed = clipping && level > 85 && i >= segments - 2;
+        const isRed = clipping && initialLevel > 85 && i >= segments - 2;
         const isFilled = i < filledCount;
         const cls = isRed ? s.vuSegRed : isFilled ? s.vuSegFilled : s.vuSegEmpty;
         const setRef = (el: HTMLSpanElement | null) => {

@@ -84,3 +84,27 @@ describe('KnobIsland — keyboard (clamp + direction)', () => {
     expect(Number(slider.getAttribute('aria-valuenow'))).toBeGreaterThanOrEqual(-150);
   });
 });
+
+describe('KnobIsland — pointer drag behavior', () => {
+  let unmount: (() => void) | undefined;
+  afterEach(() => {
+    unmount?.();
+    unmount = undefined;
+  });
+
+  it('pointercancel restores angle to drag-start value', async () => {
+    const { container, unmount: u } = await mountClient(
+      createElement(KnobIsland, { initialAngle: -30, label: 'GAIN', channelName: 'CH 01' }),
+    );
+    unmount = u;
+    const slider = container.querySelector('[role="slider"]') as HTMLElement;
+
+    slider.dispatchEvent(new PointerEvent('pointerdown', { clientY: 100, bubbles: true }));
+    // drag up 50px → deltaY=50 → newAngle = -30 + 50*1.5 = 45
+    slider.dispatchEvent(new PointerEvent('pointermove', { clientY: 50, bubbles: true }));
+    expect(Number(slider.getAttribute('aria-valuenow'))).toBe(45);
+
+    slider.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true }));
+    expect(Number(slider.getAttribute('aria-valuenow'))).toBe(-30);
+  });
+});

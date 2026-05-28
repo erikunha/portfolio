@@ -355,7 +355,7 @@ export async function DawMixerContent() {
 export function DawMixerSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module id="sec-daw-mixer" header="./MIX --LIVE — DAW MIXER" icon={<IconMixer />} defer={defer}>
-      <Suspense fallback={<DawMixerDesktop />}>
+      <Suspense fallback={null}>
         <DawMixerContent />
       </Suspense>
     </Module>

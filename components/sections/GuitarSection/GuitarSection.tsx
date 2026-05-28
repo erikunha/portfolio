@@ -108,7 +108,7 @@ function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
           alt="Erik playing guitar on stage, live show"
           fill
           className={s.camImg}
-          sizes="(max-width: 768px) 100vw, 320px"
+          sizes="(max-width: 768px) min(100vw, 800px), 320px"
         />
         <div className={s.camOverlay} aria-hidden="true" />
         <div className={s.scanLines} aria-hidden="true" />
@@ -246,7 +246,7 @@ export async function GuitarContent() {
 export function GuitarSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module id="sec-guitar" header="CAT ~/.GUITAR_RIG" icon={<IconGuitar />} defer={defer}>
-      <Suspense fallback={<GuitarDesktop />}>
+      <Suspense fallback={null}>
         <GuitarContent />
       </Suspense>
     </Module>

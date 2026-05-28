@@ -30,6 +30,11 @@ describe('VuMeter — ARIA contract', () => {
     expect(slider?.getAttribute('aria-valuemax')).toBe('100');
   });
 
+  it('aria-valuetext shows initialLevel as percentage', () => {
+    const doc = renderStatic(defaults);
+    expect(doc.querySelector('[role="slider"]')?.getAttribute('aria-valuetext')).toBe('70%');
+  });
+
   it('aria-label includes channel name and "VU meter"', () => {
     const doc = renderStatic(defaults);
     const label = doc.querySelector('[role="slider"]')?.getAttribute('aria-label') ?? '';
@@ -141,5 +146,43 @@ describe('VuMeter — pointer drag behavior', () => {
     expect(Number.isNaN(val)).toBe(false);
     expect(val).toBeGreaterThanOrEqual(0);
     expect(val).toBeLessThanOrEqual(100);
+  });
+
+  it('updates aria-valuenow and aria-valuetext via ref mutation during drag', async () => {
+    const { container, unmount: u } = await mountClient(
+      createElement(VuMeter, { segments: 10, initialLevel: 10, channelName: 'TEST' }),
+    );
+    unmount = u;
+    const slider = container.querySelector('[role="slider"]') as HTMLElement;
+
+    Object.defineProperty(slider, 'getBoundingClientRect', {
+      value: () => ({ left: 0, right: 100, width: 100, top: 0, bottom: 20, height: 20 }),
+      configurable: true,
+    });
+
+    slider.dispatchEvent(new PointerEvent('pointerdown', { clientX: 10, bubbles: true }));
+    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 80, bubbles: true }));
+    expect(slider.getAttribute('aria-valuenow')).toBe('80');
+    expect(slider.getAttribute('aria-valuetext')).toBe('80%');
+  });
+
+  it('pointercancel restores level to drag-start value', async () => {
+    const { container, unmount: u } = await mountClient(
+      createElement(VuMeter, { ...defaults, initialLevel: 50 }),
+    );
+    unmount = u;
+    const slider = container.querySelector('[role="slider"]') as HTMLElement;
+
+    Object.defineProperty(slider, 'getBoundingClientRect', {
+      value: () => ({ left: 0, right: 100, width: 100, top: 0, bottom: 20, height: 20 }),
+      configurable: true,
+    });
+
+    slider.dispatchEvent(new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
+    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 90, bubbles: true }));
+    expect(slider.getAttribute('aria-valuenow')).toBe('90');
+
+    slider.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true }));
+    expect(slider.getAttribute('aria-valuenow')).toBe('50');
   });
 });

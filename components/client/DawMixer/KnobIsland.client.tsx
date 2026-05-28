@@ -50,14 +50,14 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
   }, []);
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragStartY.current = e.clientY;
+    dragStartAngle.current = liveAngle.current;
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
-      isDragging.current = true;
-      dragStartY.current = e.clientY;
-      dragStartAngle.current = liveAngle.current;
     } catch {
-      // setPointerCapture not supported; drag won't work but no crash
+      // setPointerCapture not supported; drag works within element bounds
     }
+    isDragging.current = true;
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -72,6 +72,13 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
     if (!isDragging.current) return;
     isDragging.current = false;
     setAngle(Math.round(liveAngle.current));
+  };
+
+  const onPointerCancel = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    updateNeedle(dragStartAngle.current);
+    setAngle(Math.round(dragStartAngle.current));
   };
 
   const { x2, y2 } = angleToCoords(angle);
@@ -90,7 +97,7 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      onPointerCancel={onPointerCancel}
       onKeyDown={(e) => {
         if (isDragging.current) return;
         if (e.key === 'ArrowUp') {

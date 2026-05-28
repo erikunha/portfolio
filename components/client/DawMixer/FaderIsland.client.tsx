@@ -14,6 +14,7 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
   const thumbRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const livePct = useRef(initialPct);
+  const dragStartPct = useRef(initialPct);
 
   const getPctFromPointer = useCallback((clientX: number): number | null => {
     const rect = trackRef.current?.getBoundingClientRect();
@@ -25,6 +26,7 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
     livePct.current = newPct;
     if (trackRef.current) {
       trackRef.current.setAttribute('aria-valuenow', String(newPct));
+      trackRef.current.setAttribute('aria-valuetext', `${newPct}%`);
     }
     if (thumbRef.current) {
       thumbRef.current.style.transform = `translateX(calc(${newPct}% - 7px))`;
@@ -32,17 +34,15 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
   }, []);
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragStartPct.current = livePct.current;
     const newPct = getPctFromPointer(e.clientX);
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
-      isDragging.current = true;
-      if (newPct !== null) applyPct(newPct);
     } catch {
-      if (newPct !== null) {
-        livePct.current = newPct;
-        setPct(newPct);
-      }
+      // setPointerCapture not supported; drag works within element bounds
     }
+    isDragging.current = true;
+    if (newPct !== null) applyPct(newPct);
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -61,6 +61,13 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
     }
   };
 
+  const onPointerCancel = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    applyPct(dragStartPct.current);
+    setPct(dragStartPct.current);
+  };
+
   return (
     <div
       ref={trackRef}
@@ -69,12 +76,13 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
       aria-valuenow={pct}
       aria-valuemin={0}
       aria-valuemax={100}
+      aria-valuetext={`${pct}%`}
       tabIndex={0}
       className={s.faderTrack}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      onPointerCancel={onPointerCancel}
       onKeyDown={(e) => {
         if (isDragging.current) return;
         if (e.key === 'ArrowRight') {
