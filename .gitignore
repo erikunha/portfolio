@@ -36,6 +36,12 @@
 # playwright mcp session logs
 .playwright-mcp/
 
+# verification/playwright MCP screenshots dumped to repo root during development
+/*.png
+/*.jpg
+/*.jpeg
+/*.webp
+
 tsconfig.tsbuildinfo
 
 # review stamp — local signal that review agents passed for HEAD
