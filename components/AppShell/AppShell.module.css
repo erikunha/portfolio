@@ -36,26 +36,29 @@
   :global(#sec-guitar) {
     order: 11;
   }
-  :global(#sec-visa) {
+  :global(#sec-daw-mixer) {
     order: 12;
   }
-  :global(#sec-credentials) {
+  :global(#sec-visa) {
     order: 13;
   }
-  :global(#sec-community) {
+  :global(#sec-credentials) {
     order: 14;
   }
-  :global(#sec-hottest-takes) {
+  :global(#sec-community) {
     order: 15;
   }
-  :global(#sec-responsibilities) {
+  :global(#sec-hottest-takes) {
     order: 16;
   }
-  :global(#sec-unknowns) {
+  :global(#sec-responsibilities) {
     order: 17;
   }
-  :global(#sec-contact) {
+  :global(#sec-unknowns) {
     order: 18;
+  }
+  :global(#sec-contact) {
+    order: 19;
   }
 
   /* Clear space for the fixed mobile dock at the bottom of the viewport. */
