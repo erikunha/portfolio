@@ -574,7 +574,7 @@
   content: "\25bc";
   position: absolute;
   left: -1px;
-  bottom: -8px;
+  bottom: 0;
   color: var(--ds-color-signal);
   font-size: var(--ds-font-size-2xs);
   text-shadow: 0 0 4px var(--ds-color-signal);
