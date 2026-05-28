@@ -5,6 +5,12 @@ import type { DawMixerChannel } from '@/content/schemas';
 import { getIsMobile } from '@/lib/ua';
 import { IconMixer } from '../../Icons';
 import { Module } from '../../responsive/Module';
+// Keep island CSS in the static bundle — without these side-effect imports,
+// Next.js splits island CSS into a 4th render-blocking chunk (dynamic import boundary).
+import '@/components/client/DawMixer/FaderIsland/FaderIsland.module.css';
+import '@/components/client/DawMixer/KnobIsland/KnobIsland.module.css';
+import '@/components/client/DawMixer/RmsButtons/RmsButtons.module.css';
+import '@/components/client/DawMixer/VuMeter/VuMeter.module.css';
 import s from './DawMixerSection.module.css';
 
 // Desktop content (with interactive client islands) is code-split so its JS
