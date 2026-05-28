@@ -29,7 +29,7 @@ const allowedColorFunctions = new Set((allowlist['color-functions'] ?? []).map((
  * Pattern matches: @media (max-width: Npx), (min-width: Npx), etc.
  */
 function stripMediaConditions(css) {
-  return css.replace(/@media\s*\([^)]*\)/g, (match) => match.replace(/\d+px/g, '___px'));
+  return css.replace(/@media\s*\([^)]*\)/g, (match) => match.replace(/\d+(?:\.\d+)?px/g, '___px'));
 }
 
 /**
@@ -74,9 +74,9 @@ const checks = [
     filter: (m) => !allowedDurations.has(m),
     message: (m) => `hardcoded duration ${m} — use var(--ds-duration-*) or add to allowlist`,
   },
-  // Raw px values not in allowlist
+  // Raw px values not in allowlist (integer and decimal, e.g. 8.5px)
   {
-    pattern: /\b(\d+)px\b/g,
+    pattern: /\b(\d+(?:\.\d+)?)px\b/g,
     extract: (_m, p1) => `${p1}px`,
     filter: (m) => !allowedPx.has(m),
     message: (m) => `magic px value ${m} — use a --ds-space-* token or add to allowlist`,

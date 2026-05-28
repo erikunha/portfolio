@@ -98,7 +98,7 @@
   cursor: ns-resize;
 }
 .knobLabel {
-  font-size: 8.5px;
+  font-size: var(--ds-font-size-2xs);
   color: var(--ds-color-text-muted);
   text-align: center;
   letter-spacing: 0.1em;

@@ -83,6 +83,8 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
     <div
       ref={containerRef}
       role="slider"
+      aria-live="polite"
+      aria-atomic="true"
       aria-label={`${channelName} VU meter demonstration, drag to adjust level`}
       aria-valuenow={initialLevel}
       aria-valuemin={0}

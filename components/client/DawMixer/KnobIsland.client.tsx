@@ -92,7 +92,7 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
       aria-valuenow={angle}
       aria-valuemin={MIN_ANGLE}
       aria-valuemax={MAX_ANGLE}
-      aria-valuetext={`${angle > 0 ? '+' : ''}${angle}°`}
+      aria-valuetext={`${angle > 0 ? '+' : ''}${angle} degrees`}
       tabIndex={0}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

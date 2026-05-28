@@ -87,7 +87,7 @@
   color: var(--ds-color-text-muted);
 }
 .pluginName {
-  font-size: 9.5px;
+  font-size: var(--ds-font-size-2xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   white-space: nowrap;
@@ -123,6 +123,7 @@
   border: 1px solid var(--ds-color-border-default);
   background: rgba(0, 0, 0, 0.5);
   overflow: hidden;
+  min-height: 520px;
 }
 
 /* Session / transport bar */
@@ -171,7 +172,7 @@
   align-items: center;
 }
 .tableHeader {
-  font-size: 9.5px;
+  font-size: var(--ds-font-size-2xs);
   color: var(--ds-color-text-muted);
   letter-spacing: 0.18em;
   border-bottom: 1px solid var(--ds-color-signal-quiet);
@@ -342,7 +343,7 @@
   padding: 8px 14px;
   border-bottom: 1px solid var(--ds-color-signal-quiet);
   background: rgba(0, 0, 0, 0.6);
-  font-size: 9.5px;
+  font-size: var(--ds-font-size-2xs);
   letter-spacing: 0.16em;
   color: var(--ds-color-text-muted);
   text-transform: uppercase;
@@ -398,7 +399,7 @@
   align-items: center;
 }
 .mxId {
-  font-size: 9.5px;
+  font-size: var(--ds-font-size-2xs);
   letter-spacing: 0.18em;
   color: var(--ds-color-text-muted);
   border: 1px solid var(--ds-color-signal-quiet);
@@ -609,7 +610,7 @@
   box-shadow: 0 0 4px var(--ds-color-signal);
 }
 .mxPlugName {
-  font-size: 10.5px;
+  font-size: var(--ds-font-size-xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -683,7 +684,7 @@
   transform: translateX(-50%) rotate(var(--mx-knob-angle, 0deg));
 }
 .mxKnobLabel {
-  font-size: 9.5px;
+  font-size: var(--ds-font-size-2xs);
   letter-spacing: 0.1em;
   color: var(--ds-color-text-muted);
   text-transform: uppercase;
