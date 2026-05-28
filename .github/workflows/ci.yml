@@ -180,7 +180,7 @@ jobs:
         # Mirrors the same guard used in the ai-eval job.
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         continue-on-error: true
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -248,7 +248,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/dependency-review-action@v4
+      - uses: actions/dependency-review-action@v5
         with:
           fail-on-severity: high
           deny-licenses: GPL-3.0, AGPL-3.0, GPL-2.0
@@ -311,7 +311,7 @@ jobs:
 
       - name: Attest build provenance
         if: github.ref == 'refs/heads/main'
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: .next/
 
@@ -641,7 +641,7 @@ jobs:
 
       - name: Wait for Vercel preview deployment
         id: vercel-url
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const sha = context.payload.pull_request.head.sha;
