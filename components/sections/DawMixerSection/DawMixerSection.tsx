@@ -219,9 +219,12 @@ export function DawMixerMobile() {
     <div className={s.rootMobile} data-testid="daw-mixer-mobile">
       <SessionHeaderMobile />
       <MixLegendMobile />
-      {dawMixer.channels.slice(0, 2).map((ch) => (
-        <ChannelMobile key={ch.id} ch={ch} />
-      ))}
+      {dawMixer.channels
+        .filter((ch) => ch.id !== 'MASTER')
+        .slice(0, 2)
+        .map((ch) => (
+          <ChannelMobile key={ch.id} ch={ch} />
+        ))}
     </div>
   );
 }

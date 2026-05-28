@@ -89,6 +89,12 @@ describe('DawMixerSection — mobile', () => {
     expect(doc.querySelector('[data-testid="channel-mobile-MASTER"]')).toBeNull();
   });
 
+  it('renders CH 01 and CH 02 specifically (first 2 non-MASTER channels)', async () => {
+    const doc = await renderMobile();
+    expect(doc.querySelector('[data-testid="channel-mobile-CH 01"]')).not.toBeNull();
+    expect(doc.querySelector('[data-testid="channel-mobile-CH 02"]')).not.toBeNull();
+  });
+
   it('bold text from **markers** renders as <strong> in channel desc', async () => {
     const doc = await renderMobile();
     const ch02 = doc.querySelector('[data-testid="channel-mobile-CH 02"]');
