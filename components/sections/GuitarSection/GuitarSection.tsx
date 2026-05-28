@@ -12,7 +12,7 @@ type Influence = GuitarRig['influences'][number];
 
 function SignalBars({ filled, total }: { filled: number; total: number }) {
   return (
-    <div role="img" className={s.dots} aria-label={`${filled} of ${total}`} aria-hidden="true">
+    <div role="img" className={s.dots} aria-label={`${filled} of ${total}`}>
       {Array.from({ length: total }, (_, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: positional bars — no stable id exists
         <span key={i} className={i < filled ? s.dotFilled : s.dotEmpty} />

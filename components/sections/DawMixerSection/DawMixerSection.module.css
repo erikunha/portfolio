@@ -80,7 +80,8 @@
   background: var(--ds-color-signal);
 }
 .pluginCardBypass {
-  opacity: 0.5;
+  border-color: var(--ds-color-signal-quiet);
+  color: var(--ds-color-text-muted);
 }
 .pluginName {
   font-size: 9.5px;
