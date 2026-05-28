@@ -9,6 +9,10 @@
   ],
   "px-values": [
     { "value": "0px", "reason": "zero is not a magic value" },
+    {
+      "value": "0.5px",
+      "reason": "sub-pixel centering (translateY(-0.5px)) for hairline rail alignment — no token warranted"
+    },
     { "value": "1px", "reason": "border width, semantic — no 1px token needed" },
     { "value": "2px", "reason": "sub-pixel tweak / max corner radius (--ds-radius-sharp)" },
     {
@@ -52,6 +56,10 @@
       "reason": "section gap / hero CTA gap / padding — recurring micro-layout value; ds-space-3 = 12px, equivalent token exists but files migrated to module CSS retain numeric form"
     },
     {
+      "value": "13px",
+      "reason": "signal-chain node horizontal padding — prototype-matched tight cell padding; between 12px (ds-space-3) and 14px"
+    },
+    {
       "value": "14px",
       "reason": "padding / gap — ds-space-3.5 equivalent; used as micro-layout across many components pre-token"
     },
@@ -81,8 +89,12 @@
       "reason": "MobileTitleBar top offset / icon column / footer link row — grid column dimension and positional offset"
     },
     {
+      "value": "30px",
+      "reason": "scanBeam animation start offset — translateY(-30px) keeps 28px beam fully off-screen before animation entry; geometry constant"
+    },
+    {
       "value": "32px",
-      "reason": "hero bio padding / project card icon — ds-space-8 equivalent; used as padding constant"
+      "reason": "hero bio padding / project card icon / R/M/S button min-width — ds-space-8 equivalent; recurring size constant"
     },
     { "value": "36px", "reason": "hottest-takes avatar — grid column size" },
     {
@@ -107,6 +119,10 @@
       "value": "80px",
       "reason": "AppShell body padding-bottom — mobile dock height clearance constant"
     },
+    {
+      "value": "86px",
+      "reason": "DawMixer I/O column width — fixed grid column for knob pair; prototype-matched layout constant"
+    },
     { "value": "88px", "reason": "footer progress bar width — fixed pixel bar dimension" },
     { "value": "90px", "reason": "NowSection label column width — grid column fixed dimension" },
     { "value": "92px", "reason": "footer dmesg / responsive grid column — fixed layout column" },
@@ -118,10 +134,22 @@
       "reason": "NowSection label column / footer responsive — fixed layout column"
     },
     {
+      "value": "124px",
+      "reason": "signal-chain node min-height — prototype-matched cell height ensuring uniform node grid row; no ds-height-* token at this scale"
+    },
+    {
       "value": "120px",
       "reason": "CRT scan beam offset — animation geometry; --crt-scan-offset custom property value"
     },
     { "value": "130px", "reason": "footer dmesg grid column — fixed layout column" },
+    {
+      "value": "160px",
+      "reason": "AiMetricsSection chart height — fixed chart canvas height; no ds-height-* token at this scale"
+    },
+    {
+      "value": "290px",
+      "reason": "AiMetricsSection chart width — fixed chart canvas width; no ds-width-* token at this scale"
+    },
     {
       "value": "165px",
       "reason": "mobile boot text min-height — component-specific height constant"
@@ -198,6 +226,30 @@
   ],
   "color-functions": [
     { "value": "rgba(0, 0, 0, 0)", "reason": "transparent black — gradient endpoint" },
+    {
+      "value": "rgba(0, 0, 0, 0.3)",
+      "reason": "scanLine per-row darkening — CRT scanline repeating-gradient stop; lighter than 0.38 to allow phosphor glow through"
+    },
+    {
+      "value": "rgba(0, 0, 0, 0.35)",
+      "reason": "signal-chain panel / influence row background — subtle dark scrim on terminal panels"
+    },
+    {
+      "value": "rgba(0, 0, 0, 0.4)",
+      "reason": "mobile signal-chain node background — slightly heavier panel scrim for readability"
+    },
+    {
+      "value": "rgba(0, 0, 0, 0.5)",
+      "reason": "DAW mixer section root background — half-opacity dark panel behind channel rows"
+    },
+    {
+      "value": "rgba(0, 0, 0, 0.65)",
+      "reason": "influences list background — heavier scrim for list readability over photo"
+    },
+    {
+      "value": "rgba(0, 0, 0, 0.7)",
+      "reason": "VuMeter + knob SVG fill — near-opaque backgrounds for small control elements"
+    },
     { "value": "rgba(0, 0, 0, 0.38)", "reason": "vignette overlay — CRT corner darkening" },
     {
       "value": "rgba(0, 0, 0, 0.45)",
@@ -231,6 +283,10 @@
     {
       "value": "rgba(0, 255, 65, 0.04)",
       "reason": "signal-green opacity variant — hover/focus surface"
+    },
+    {
+      "value": "rgba(0, 255, 65, 0.05)",
+      "reason": "signal-green opacity variant — hairline surface tint"
     },
     { "value": "rgba(0, 255, 65, 0.06)", "reason": "signal-green opacity variant — light surface" },
     { "value": "rgba(0, 255, 65, 0.1)", "reason": "signal-green opacity variant" },

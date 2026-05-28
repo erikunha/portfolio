@@ -4,7 +4,7 @@
   gap: 6px;
 }
 .label {
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-color-text-muted);
   letter-spacing: 0.08em;
 }
@@ -14,7 +14,7 @@
   border: 1px solid var(--ds-color-border-default);
   color: var(--ds-color-text-body);
   font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   padding: 8px 10px;
   min-height: 44px;
   resize: vertical;
@@ -29,13 +29,4 @@
 .error {
   font-size: var(--ds-font-size-xs);
   color: var(--ds-color-feedback-error);
-}
-
-@media (max-width: 768px) {
-  .label {
-    font-size: var(--ds-font-size-sm);
-  }
-  .input {
-    font-size: var(--ds-font-size-sm);
-  }
 }

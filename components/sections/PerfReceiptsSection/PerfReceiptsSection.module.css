@@ -103,7 +103,7 @@
 }
 
 .receiptHero .note {
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   padding-top: 10px;
 }
 

@@ -68,23 +68,53 @@ export const ResponsibilitySchema = z.object({
   highlight: z.boolean().default(false),
 });
 
-// GuitarSection — structured fields + influences
-export const GuitarFieldSchema = z.object({
-  label: z.string().min(1),
-  labelMobile: z.string().min(1).optional(),
-  value: z.string().min(1),
-  valueMobile: z.string().min(1).optional(),
+// GuitarSection v2 — signal chain + influences + stats + live cam
+const _signalNodeBase = { name: z.string().min(1), subtitle: z.string().min(1) };
+const _dotsNode = (role: 'INPUT' | 'AMP' | 'OUT') =>
+  z.object({
+    ..._signalNodeBase,
+    role: z.literal(role),
+    strengthDots: z.number().int().min(0).max(8),
+  });
+const _fxNode = z.object({
+  ..._signalNodeBase,
+  role: z.literal('FX'),
+  blocks: z.array(z.object({ name: z.string().min(1), active: z.boolean() })).min(1),
 });
-export const GuitarInfluenceSchema = z.object({
-  rank: z.number().int().min(1),
+export const SignalChainNodeSchema = z.discriminatedUnion('role', [
+  _dotsNode('INPUT'),
+  _fxNode,
+  _dotsNode('AMP'),
+  _dotsNode('OUT'),
+]);
+
+export const InfluenceSchema = z.object({
+  rank: z.number().int().min(1).max(5),
   name: z.string().min(1),
+  strength: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
+  active: z.boolean().optional(),
 });
+
+export const StatCellSchema = z.object({
+  label: z.string().min(1),
+  value: z.string().min(1),
+  sub: z.string().min(1),
+});
+
 export const GuitarRigSchema = z.object({
-  comment: z.string().min(1),
-  commentMobile: z.string().min(1),
-  fields: z.array(GuitarFieldSchema).min(1),
-  influences: z.array(GuitarInfluenceSchema).min(1),
-  influencesMobile: z.array(GuitarInfluenceSchema).min(1),
+  // Tuple enforces exact role sequence: INPUT → FX → AMP → OUT.
+  // z.array().length(4) would allow any combination (e.g. two INPUT nodes), which
+  // would silently break the renderer and pass validate-content.
+  signalChain: z.tuple([_dotsNode('INPUT'), _fxNode, _dotsNode('AMP'), _dotsNode('OUT')]),
+  influences: z.array(InfluenceSchema).length(5),
+  nowObsessing: z.string().min(1),
+  stats: z.array(StatCellSchema).length(4),
+  liveCam: z.object({
+    photo: z.string().min(1),
+    caption: z.string().min(1),
+    status: z.string().min(1),
+    cameraLabel: z.string().min(1),
+  }),
 });
 
 // UnknownsSection
@@ -188,6 +218,51 @@ export const DmesgLineSchema = z.object({
 });
 export type DmesgLine = z.infer<typeof DmesgLineSchema>;
 
+// DawMixerSection
+const DawMixerPluginSchema = z.object({
+  name: z.string().min(1),
+  active: z.boolean(),
+  strength: z.number().int().min(0).max(5),
+});
+
+const DawMixerKnobSchema = z.object({
+  label: z.string().min(1),
+  angleDeg: z.number().min(-150).max(150),
+});
+
+const DawMixerChannelSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  desktopName: z.string().optional(),
+  desc: z.string().min(1),
+  focused: z.boolean().optional(),
+  plugins: z.array(DawMixerPluginSchema).min(1).max(5),
+  faderPct: z.number().min(0).max(100),
+  db: z.string().min(1),
+  meterPct: z.number().min(0).max(100),
+  meterClipping: z.boolean().optional(),
+  knob1: DawMixerKnobSchema,
+  knob2: DawMixerKnobSchema,
+  buttons: z.array(z.string().min(1)),
+  activeButtons: z.array(z.string().min(1)),
+  footer: z.object({ lufs: z.string(), pk: z.string() }).optional(),
+  terminalLines: z.array(z.string().min(1)).optional(),
+});
+
+export const DawMixerSchema = z.object({
+  sessionName: z.string().min(1),
+  bpm: z.number().int(),
+  timeSignature: z.string().min(1),
+  status: z.string().min(1),
+  transportTime: z.string().min(1),
+  channels: z
+    .array(DawMixerChannelSchema)
+    .length(6)
+    .refine((chs) => chs[chs.length - 1]?.id === 'MASTER', {
+      message: 'Last channel must be MASTER',
+    }),
+});
+
 // Exported types
 export type Social = z.infer<typeof SocialSchema>;
 export type Project = z.infer<typeof ProjectSchema>;
@@ -207,3 +282,6 @@ export type NowRow = z.infer<typeof NowRowSchema>;
 export type SysStat = z.infer<typeof SysStatSchema>;
 export type GitCommit = z.infer<typeof GitCommitSchema>;
 export type ShellResponse = z.infer<typeof ShellResponseSchema>;
+export type DawMixer = z.infer<typeof DawMixerSchema>;
+export type DawMixerChannel = z.infer<typeof DawMixerChannelSchema>;
+export type DawMixerPlugin = z.infer<typeof DawMixerPluginSchema>;

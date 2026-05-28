@@ -5,7 +5,7 @@
 .root pre {
   margin: 0;
   font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.65;
   color: var(--ds-color-text-body);
   white-space: pre;

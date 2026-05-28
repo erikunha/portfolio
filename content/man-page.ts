@@ -10,7 +10,7 @@ export const manPage: ManPage = ManPageSchema.parse({
   options: [
     { flag: '--seniority', desc: 'Senior → Staff/Principal' },
     { flag: '--track', desc: 'IC or technical lead' },
-    { flag: '--domain', desc: 'Frontend, payments, healthcare, AI tooling' },
+    { flag: '--domain', desc: 'Frontend, payments, healthcare, AI tooling, e-commerce' },
     { flag: '--region', desc: 'Worldwide; remote-first' },
     { flag: '--relocation', desc: 'Open to relocating' },
     { flag: '--regulated', desc: 'PCI-DSS, healthcare, banking' },

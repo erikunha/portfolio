@@ -1,5 +1,5 @@
 .root {
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.7;
 }
 
@@ -47,7 +47,7 @@
 
 @media (max-width: 768px) {
   .root {
-    font-size: var(--ds-font-size-sm);
+    font-size: var(--ds-font-size-xs);
   }
 
   .root .title {
@@ -55,6 +55,6 @@
   }
 
   .root .status {
-    font-size: var(--ds-font-size-xs);
+    font-size: var(--ds-font-size-sm);
   }
 }

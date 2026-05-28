@@ -1,0 +1,52 @@
+.faderTrack {
+  --fader-thumb-w: 14px;
+  position: relative;
+  height: 18px;
+  min-height: 24px;
+  background: color-mix(in srgb, var(--ds-color-signal) 3%, transparent);
+  border: 1px solid var(--ds-color-signal-quiet);
+  cursor: ew-resize;
+  outline: none;
+}
+.faderTrack::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  height: 1px;
+  background: var(--ds-color-signal-quiet);
+  transform: translateY(-0.5px);
+  pointer-events: none;
+}
+.faderTrack:focus-visible {
+  outline: 2px solid var(--ds-color-signal);
+  outline-offset: 2px;
+}
+.faderThumb {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: var(--fader-thumb-w);
+  height: 22px;
+  background: var(--ds-color-signal);
+  box-shadow: 0 0 8px var(--ds-color-signal);
+  border: 1px solid #000;
+  cursor: ew-resize;
+}
+.faderThumb::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 3px;
+  bottom: 3px;
+  width: 1px;
+  background: #000;
+  transform: translateX(-50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faderThumb {
+    box-shadow: none;
+  }
+}

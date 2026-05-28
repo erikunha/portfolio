@@ -18,8 +18,12 @@
 
 # testing
 /coverage
+/coverage-report
 /test-results
 /playwright-report
+
+# local build artifact (next-build/ used by gates:runtime --skip-build)
+/next-build
 
 # lighthouse ci artifact reports
 /.lighthouseci/
@@ -36,6 +40,12 @@
 # playwright mcp session logs
 .playwright-mcp/
 
+# verification/playwright MCP screenshots dumped to repo root during development
+/*.png
+/*.jpg
+/*.jpeg
+/*.webp
+
 tsconfig.tsbuildinfo
 
 # review stamp — local signal that review agents passed for HEAD
@@ -43,6 +53,9 @@ tsconfig.tsbuildinfo
 
 # git worktrees (superpowers using-git-worktrees skill creates these here)
 .worktrees/
+
+# visual brainstorming companion mockups
+.superpowers/
 
 # os
 .DS_Store

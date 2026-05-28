@@ -34,6 +34,7 @@
     "check:component-docs": "node scripts/check-component-docs-coverage.mjs",
     "check:pkg-age": "node scripts/check-pkg-age.mjs",
     "check:harness-size": "node scripts/check-harness-size.mjs",
+    "check:section-order": "node scripts/check-section-order.mjs",
     "lint:token-boundary": "node scripts/lint-token-boundary.mjs",
     "lint:no-magic-values": "node scripts/lint-no-magic-values.mjs",
     "lint:contrast": "node scripts/contrast-check.mjs",
@@ -47,7 +48,7 @@
     "ready-to-merge": "tsx scripts/ready-to-merge.ts",
     "review:stamp": "git rev-parse HEAD > .review-passed && echo 'Review stamp set:' $(cat .review-passed)",
     "test:mutation": "stryker run",
-    "verify": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm check:client-naming && pnpm check:dep-pinning && pnpm check:harness-size && pnpm test",
+    "verify": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm check:client-naming && pnpm check:dep-pinning && pnpm check:harness-size && pnpm check:section-order && pnpm test",
     "ci": "pnpm verify && pnpm build && pnpm bundle-check",
     "ci:local": "pnpm verify",
     "gates:runtime": "tsx scripts/gates-runtime.ts",
@@ -62,7 +63,8 @@
       "@biomejs/biome"
     ],
     "overrides": {
-      "lodash": ">=4.18.0"
+      "lodash": ">=4.18.0",
+      "tmp": "^0.2.6"
     }
   },
   "dependencies": {

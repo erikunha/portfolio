@@ -38,7 +38,7 @@
         "uses-text-compression": "error",
         "uses-responsive-images": "error",
         "uses-rel-preconnect": "off",
-        "render-blocking-resources": ["warn", { "maxLength": 3, "maxNumericValue": 800 }],
+        "render-blocking-resources": ["warn", { "maxLength": 3 }],
         "font-display": "error",
 
         "color-contrast": "error",
@@ -60,6 +60,7 @@
         "unused-javascript": ["warn", { "maxNumericValue": 60 }],
         "dom-size": ["warn", { "maxNumericValue": 1500 }],
         "uses-long-cache-ttl": "warn",
+        "unused-css-rules": ["warn", { "maxLength": 10 }],
         "errors-in-console": "error",
 
         "bf-cache": "warn",

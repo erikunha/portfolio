@@ -43,15 +43,15 @@
   --ds-space-12: 48px;
   --ds-space-16: 64px;
   --ds-layout-maxw: 1200px;
-  --ds-text-size-2xs: 9px;
+  --ds-text-size-2xs: 10px;
   --ds-text-size-xs: 11px;
   --ds-text-size-sm: 12px;
   --ds-text-size-base: 14px;
   --ds-text-size-md: 16px;
-  --ds-text-size-lg: 22px;
+  --ds-text-size-lg: 24px;
   --ds-text-size-xl: 32px;
   --ds-text-size-2xl: 48px;
-  --ds-text-size-3xl: 78px;
+  --ds-text-size-3xl: 64px;
   --ds-text-leading-tight: 1.2;
   --ds-text-leading-base: 1.55;
   --ds-text-leading-relaxed: 1.85;

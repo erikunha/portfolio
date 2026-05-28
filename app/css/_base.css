@@ -165,6 +165,10 @@ h1 {
     --ds-space-pad: 14px;
     --ds-font-size-heading-xl: 56px;
     --ds-font-size-heading-lg: 32px;
+    /* Lighthouse font-size audit requires ≥12px on mobile. 2xs/xs are
+       intentionally sub-12px on desktop for CRT density; clamp here. */
+    --ds-text-size-2xs: 12px;
+    --ds-text-size-xs: 12px;
   }
   h1 {
     font-size: var(--ds-font-size-heading-lg);

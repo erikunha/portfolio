@@ -48,9 +48,11 @@ describe('responsive section viewport variants', () => {
     expect(html).not.toContain('career-mobile');
   });
 
-  it('GuitarSection emits exactly the desktop variant (no mobile markup)', () => {
+  it('GuitarSection static render does not emit mobile markup', () => {
+    // Suspense fallback is null (C2 perf fix: desktop fallback caused CLS on mobile).
+    // Production Next.js resolves GuitarContent async server-side; the fallback
+    // is never seen by real users. Static render emits the section shell only.
     const html = renderToStaticMarkup(createElement(GuitarSection));
-    expect(html).toContain('data-testid="guitar-desktop"');
     expect(html).not.toContain('data-testid="guitar-mobile"');
   });
 

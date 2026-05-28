@@ -53,7 +53,7 @@
   font-variant-numeric: tabular-nums;
 }
 .cmdline {
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   margin: 0 0 14px;
   color: var(--ds-color-text-body);
 }
@@ -97,7 +97,7 @@
   display: grid;
   grid-template-columns: 130px 1fr;
   gap: 12px;
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.95;
   align-items: center;
 }
@@ -136,7 +136,7 @@
 .netstat pre {
   margin: 0;
   font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.95;
   color: var(--ds-color-text-body);
   white-space: pre;
@@ -199,7 +199,7 @@
   list-style: none;
   margin: 0 0 24px;
   padding: 0;
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.85;
 }
 /* dmesg reveal: each line starts hidden; once `.dmesg.booted` is set the
@@ -328,7 +328,7 @@
 }
 .copy {
   color: var(--ds-color-text-muted);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   margin-top: 22px;
   letter-spacing: 0.04em;
   opacity: 0.85;

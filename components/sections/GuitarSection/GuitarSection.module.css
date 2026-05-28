@@ -1,63 +1,439 @@
-/* ── GuitarSection ─────────────────────────────────────────────────── */
+/* ── GuitarSection v2 (signal chain terminal aesthetic) ──────────────── */
 
-/* shared .visa pre-container — replicated from _sections.css lines 130–140 */
-.root {
-  overflow-x: auto;
-}
-.root pre {
-  margin: 0;
-  color: var(--ds-color-text-body);
-  font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-body);
-  line-height: 1.85;
-  white-space: pre;
-}
-
-/* .visa .cmd-line — replicated from _sections.css lines 192–198 */
-.root .cmdLine {
+/* ─── Shared ─────────────────────────────────────────────────────────── */
+.nodeLabel {
+  font-size: var(--ds-font-size-xs);
   color: var(--ds-color-text-muted);
+  letter-spacing: 0.04em;
 }
-.root .cmdLine .pr {
+.nodeName {
+  font-weight: 700;
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-color-signal);
-  margin-right: 4px;
+  line-height: 1.2;
+}
+.nodeSub {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-body);
+  opacity: 0.85;
+}
+/* Bar-style VU indicators (shared desktop + mobile signal chain) */
+.dots {
+  display: flex;
+  gap: 2px;
+  margin-top: auto;
+}
+.dotFilled {
+  width: 7px;
+  height: 10px;
+  background: var(--ds-color-signal);
+  flex-shrink: 0;
+}
+.dotEmpty {
+  width: 7px;
+  height: 10px;
+  background: var(--ds-color-signal);
+  flex-shrink: 0;
+  opacity: 0.22;
+}
+.statCell {
+  background: var(--ds-color-surface-base);
+  padding: 11px 13px 13px;
+}
+.statLabel {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.statValue {
+  font-weight: 700;
+  color: var(--ds-color-signal);
+  font-size: var(--ds-font-size-sm);
+  line-height: 1.4;
+}
+.statSub {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-body);
+  line-height: 1.4;
 }
 
-/* .gr-* — _sections.css lines 250–266 */
-.grLabel {
+/* ─── Live cam (shared desktop + mobile) ──────────────────────────────── */
+.liveCam {
+  border: 1px solid var(--ds-color-signal);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.camHeader {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 9px;
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  background: rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.12em;
+  border-bottom: 1px solid var(--ds-color-signal-quiet);
+}
+.camPhoto {
+  position: relative;
+  min-height: 200px;
+  overflow: hidden;
+  flex: 1;
+  isolation: isolate;
+}
+.camImg {
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.18) brightness(0.95);
+}
+.camOverlay {
+  position: absolute;
+  inset: 0;
+  background: var(--ds-color-signal);
+  mix-blend-mode: multiply;
+  opacity: 0.6;
+  pointer-events: none;
+}
+.scanLines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+}
+.scanBeam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -30px;
+  height: 28px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--ds-color-signal) 32%, transparent) 50%,
+    transparent
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: scanBeam 7s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scanBeam {
+    animation: none;
+    display: none;
+  }
+}
+@keyframes scanBeam {
+  from {
+    top: -30px;
+  }
+  to {
+    top: 100%;
+  }
+}
+/* Corner bracket overlays on the photo */
+.camCorners {
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  z-index: 2;
+}
+.camCorners::before,
+.camCorners::after,
+.camCorners > i::before,
+.camCorners > i::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--ds-color-signal);
+}
+.camCorners::before {
+  top: 0;
+  left: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+.camCorners::after {
+  top: 0;
+  right: 0;
+  border-left: 0;
+  border-bottom: 0;
+}
+.camCorners > i {
+  position: absolute;
+  inset: 0;
+}
+.camCorners > i::before {
+  bottom: 0;
+  left: 0;
+  border-right: 0;
+  border-top: 0;
+  top: auto;
+}
+.camCorners > i::after {
+  bottom: 0;
+  right: 0;
+  border-left: 0;
+  border-top: 0;
+  top: auto;
+}
+.camCaption {
+  padding: 6px 9px;
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  background: rgba(0, 0, 0, 0.65);
+  letter-spacing: 0.12em;
+  border-top: 1px solid var(--ds-color-signal-quiet);
+}
+
+/* ─── Influences (shared desktop + mobile) ─────────────────────────────── */
+.influences {
+  border: 1px solid var(--ds-color-border-default);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 14px;
+}
+.influencesHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  letter-spacing: 0.16em;
+  margin-bottom: 12px;
+}
+.queueCount {
+  color: var(--ds-color-signal);
+}
+.infActive {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 9px;
   color: var(--ds-color-signal);
   font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: var(--ds-font-size-xs);
 }
-.grVal {
+.infItem {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 9px;
   color: var(--ds-color-text-body);
+  font-size: var(--ds-font-size-xs);
 }
-.grComment {
+.infRank {
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
+  letter-spacing: 0.1em;
+}
+.infName {
+  font-family: var(--ds-font-family-mono);
+}
+/* Influence bar indicators (5-segment) */
+.infBar {
+  display: inline-flex;
+  gap: 2px;
+}
+.infBarFilled {
+  display: block;
+  width: 6px;
+  height: 10px;
+  background: var(--ds-color-signal);
+}
+.infBarEmpty {
+  display: block;
+  width: 6px;
+  height: 10px;
+  background: var(--ds-color-signal);
+  opacity: 0.22;
+}
+.nowObsessing {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--ds-color-signal-quiet);
+  font-size: var(--ds-font-size-xs);
   color: var(--ds-color-text-muted);
 }
-.grNum {
-  color: var(--ds-color-text-muted);
-}
-.grName {
-  color: var(--ds-color-text-body);
+.nowObsessing strong {
+  color: var(--ds-color-signal);
+  font-weight: 700;
 }
 
-.guitarMobile {
+/* ─── Desktop ──────────────────────────────────────────────────────────── */
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: var(--ds-font-family-mono);
   font-size: var(--ds-font-size-sm);
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
+  color: var(--ds-color-text-body);
+}
+.panel {
+  border: 1px solid var(--ds-color-border-default);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 14px;
+}
+.statusBar {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  letter-spacing: 0.16em;
+  margin-bottom: 12px;
+}
+.statusDot {
+  color: var(--ds-color-signal);
+}
+/* Signal chain: horizontal 7-column grid (4 nodes + 3 arrows) */
+.chainGrid {
+  display: grid;
+  grid-template-columns: 1.05fr 26px 1.4fr 26px 1fr 26px 0.85fr;
+  gap: 6px;
+  align-items: stretch;
+}
+.arrow {
+  align-self: center;
+  justify-self: center;
+  color: var(--ds-color-signal);
+  text-shadow: 0 0 6px var(--ds-color-signal);
+  font-size: 11px;
+}
+.arrow::before {
+  content: "\2500\2500\25b6";
+}
+.node {
+  border: 1px solid var(--ds-color-signal);
+  background: color-mix(in srgb, var(--ds-color-signal) 4%, transparent);
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 124px;
+}
+.nodeFx {
+  border: 1px solid var(--ds-color-signal);
+  background: color-mix(in srgb, var(--ds-color-signal) 8%, transparent);
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 124px;
+}
+.fxGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-top: 6px;
+}
+.fxActive {
+  border: 1px solid var(--ds-color-border-default);
+  padding: 5px 0;
+  font-size: var(--ds-font-size-2xs);
+  text-align: center;
+  position: relative;
+  color: var(--ds-color-signal);
+  background: color-mix(in srgb, var(--ds-color-signal) 8%, transparent);
+  border-color: var(--ds-color-signal);
+  letter-spacing: 0.1em;
+}
+.fxInactive {
+  border: 1px solid var(--ds-color-signal-quiet);
+  padding: 5px 0;
+  font-size: var(--ds-font-size-2xs);
+  text-align: center;
+  color: var(--ds-color-text-muted);
+  background: rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.1em;
+}
+.fxBullet {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ds-color-signal);
+  font-size: 0;
+  display: block;
+}
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+}
+/* Stats: gap-as-divider technique matching prototype */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--ds-color-signal-quiet);
+  border: 1px solid var(--ds-color-signal-quiet);
+}
+
+/* ─── Mobile ────────────────────────────────────────────────────────────── */
+.rootMobile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: var(--ds-font-family-mono);
+  font-size: var(--ds-font-size-sm);
+  color: var(--ds-color-text-body);
+}
+.panelMobile {
+  border: 1px solid var(--ds-color-border-default);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 10px;
+}
+.statusBarMobile {
+  font-size: var(--ds-font-size-xs);
+  color: var(--ds-color-text-muted);
+  margin-bottom: 10px;
   line-height: 1.7;
 }
-
-/* ── 768px responsive ─────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .root pre {
-    font-size: var(--ds-font-size-xs);
-    line-height: 1.7;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-  }
-  /* .root .guitarMobile (0,2,0) beats .root pre (0,1,1) — restores fs-sm on mobile UA narrow viewport */
-  .root .guitarMobile {
-    font-size: var(--ds-font-size-sm);
-  }
+.nodeMobile {
+  border: 1px solid var(--ds-color-signal);
+  background: color-mix(in srgb, var(--ds-color-signal) 4%, transparent);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.arrowDown {
+  text-align: center;
+  padding: 5px 0;
+  color: var(--ds-color-signal);
+  text-shadow: 0 0 6px var(--ds-color-signal);
+  font-size: var(--ds-font-size-sm);
+}
+.fxList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+}
+.fxRowActive {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--ds-color-signal);
+  font-size: var(--ds-font-size-xs);
+  border: 1px solid var(--ds-color-signal);
+  background: color-mix(in srgb, var(--ds-color-signal) 8%, transparent);
+  padding: 3px 8px;
+}
+.fxRowInactive {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
+  padding: 3px 8px;
+}
+.statsGridMobile {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--ds-color-signal-quiet);
+  border: 1px solid var(--ds-color-signal-quiet);
 }

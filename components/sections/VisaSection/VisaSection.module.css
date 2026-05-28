@@ -10,7 +10,7 @@
   margin: 0;
   color: var(--ds-color-text-body);
   font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.85;
   white-space: pre;
 }

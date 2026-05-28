@@ -42,10 +42,10 @@ describe('TypeSpecimen', () => {
 
   it('applies the font size as inline style on the specimen element', async () => {
     const container = await render({ token: 'ds-text-size-lg' });
-    // ds-text-size-lg = 22px
+    // ds-text-size-lg = 24px
     const specimen = container.querySelector('[aria-hidden="true"]') as HTMLElement | null;
     expect(specimen).not.toBeNull();
-    expect(specimen?.style.fontSize).toBe('22px');
+    expect(specimen?.style.fontSize).toBe('24px');
   });
 
   it('renders "Aa" sample text in the specimen', async () => {

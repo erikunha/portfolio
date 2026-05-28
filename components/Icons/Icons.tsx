@@ -215,3 +215,17 @@ export function IconContact() {
     </svg>
   );
 }
+
+// ./MIX --LIVE — three fader bars at different heights
+export function IconMixer() {
+  return (
+    <svg {...baseProps}>
+      <line x1="6" y1="5" x2="6" y2="19" />
+      <line x1="12" y1="9" x2="12" y2="19" />
+      <line x1="18" y1="3" x2="18" y2="19" />
+      <rect x="3" y="8" width="6" height="2" />
+      <rect x="9" y="13" width="6" height="2" />
+      <rect x="15" y="6" width="6" height="2" />
+    </svg>
+  );
+}

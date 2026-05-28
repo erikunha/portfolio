@@ -1,0 +1,44 @@
+.rmsButtons {
+  display: flex;
+  gap: 3px;
+}
+.rmsActive {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0 6px;
+  border: 1px solid var(--ds-color-signal);
+  background: color-mix(in srgb, var(--ds-color-signal) 10%, transparent);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--ds-color-signal) 35%, transparent);
+  color: var(--ds-color-signal);
+  font-size: var(--ds-font-size-2xs);
+  font-family: var(--ds-font-family-mono);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+.rmsInactive {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0 6px;
+  border: 1px solid var(--ds-color-signal-quiet);
+  background: transparent;
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-2xs);
+  font-family: var(--ds-font-family-mono);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+.rmsActive:focus-visible,
+.rmsInactive:focus-visible {
+  outline: 2px solid var(--ds-color-signal);
+  outline-offset: 2px;
+}
