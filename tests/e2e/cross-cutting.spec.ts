@@ -385,4 +385,40 @@ test.describe('cross-cutting', () => {
       `motion toggle → next paint should be <200ms (got ${elapsedMs.toFixed(1)}ms)`,
     ).toBeLessThan(200);
   });
+
+  test('6 — DAW mixer mobile CSS override is compiled into the bundle', async ({ page }) => {
+    // DawMixerMobile only renders when the server UA-detects a mobile agent.
+    // E2E tests use a desktop UA so the component is never in the DOM — the
+    // only automated check available is stylesheet inspection. This asserts
+    // the compiled bundle contains the .rootMobile .mxChain::after override
+    // that hides the orphaned signal-flow arrow on mobile, so any accidental
+    // deletion of the CSS rule will fail CI before reaching production.
+    await page.goto(BASE_URL);
+    await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
+
+    const ruleFound = await page.evaluate((): boolean => {
+      for (const sheet of document.styleSheets) {
+        try {
+          for (const rule of sheet.cssRules) {
+            const text = rule.cssText ?? '';
+            if (
+              text.includes('mxChain') &&
+              text.includes('::after') &&
+              text.includes('display: none')
+            ) {
+              return true;
+            }
+          }
+        } catch {
+          // cross-origin sheets throw SecurityError — skip
+        }
+      }
+      return false;
+    });
+
+    expect(
+      ruleFound,
+      'compiled CSS bundle must contain a .mxChain::after { display: none } rule scoped to the mobile root',
+    ).toBe(true);
+  });
 });
