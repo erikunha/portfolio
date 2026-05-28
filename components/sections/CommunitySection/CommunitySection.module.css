@@ -1,5 +1,5 @@
 .root {
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.7;
 }
 

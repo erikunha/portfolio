@@ -118,7 +118,7 @@
 /* ─── Desktop ────────────────────────────────────────────────────────── */
 .root {
   font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-color-text-body);
   border: 1px solid var(--ds-color-border-default);
   background: rgba(0, 0, 0, 0.5);

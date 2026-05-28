@@ -2,7 +2,7 @@
   display: grid;
   grid-template-columns: 44px 1fr;
   font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.85;
   color: var(--ds-color-text-body);
 }

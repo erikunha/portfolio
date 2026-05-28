@@ -52,7 +52,7 @@
 .num {
   color: var(--ds-color-text-muted);
   font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   font-weight: 700;
   letter-spacing: 0.04em;
   padding-top: 2px;
@@ -87,7 +87,7 @@
 
 .body {
   color: var(--ds-color-text-body);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.65;
   margin: 0;
   max-width: 740px;

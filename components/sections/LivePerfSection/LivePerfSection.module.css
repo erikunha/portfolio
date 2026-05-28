@@ -30,7 +30,7 @@
 .cell .pv .of {
   color: var(--ds-color-text-muted);
   font-weight: 400;
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   margin-left: 4px;
 }
 

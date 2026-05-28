@@ -57,7 +57,7 @@
   bottom: 24px;
   z-index: 2;
   color: var(--ds-color-text-body);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.7;
   overflow: hidden;
   text-shadow:
@@ -86,7 +86,7 @@
 
 .tagline {
   color: var(--ds-color-text-body);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.55;
   margin-bottom: 8px;
 }
@@ -314,7 +314,7 @@ body[data-motion="reduce"] .headline {
   right: 24px;
   bottom: 24px;
   z-index: 2;
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   margin: 0;
 }
 

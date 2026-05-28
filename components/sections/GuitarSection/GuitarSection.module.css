@@ -267,7 +267,7 @@
   flex-direction: column;
   gap: 16px;
   font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-color-text-body);
 }
 .panel {
