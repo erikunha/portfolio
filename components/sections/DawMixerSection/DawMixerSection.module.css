@@ -556,6 +556,7 @@
   gap: 3px;
   border-left: 1px dashed var(--ds-color-signal-quiet);
   padding-left: 12px;
+  padding-bottom: 10px;
   margin-left: 4px;
   position: relative;
 }
@@ -574,7 +575,7 @@
   content: "\25bc";
   position: absolute;
   left: -1px;
-  bottom: -8px;
+  bottom: 0;
   color: var(--ds-color-signal);
   font-size: var(--ds-font-size-2xs);
   text-shadow: 0 0 4px var(--ds-color-signal);

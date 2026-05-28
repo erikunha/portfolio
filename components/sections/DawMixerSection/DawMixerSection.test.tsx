@@ -1,5 +1,5 @@
 // components/sections/DawMixerSection/DawMixerSection.test.tsx
-// RSC behavioral tests: renders all 6 channels, session header, client islands receive props.
+// RSC behavioral tests: renders first 2 channels on mobile, session header, client islands receive props.
 
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -74,9 +74,9 @@ describe('DawMixerSection — desktop', () => {
 });
 
 describe('DawMixerSection — mobile', () => {
-  it('renders 6 channel cards', async () => {
+  it('renders 2 channel cards', async () => {
     const doc = await renderMobile();
-    expect(doc.querySelectorAll('[data-testid^="channel-mobile-"]').length).toBe(6);
+    expect(doc.querySelectorAll('[data-testid^="channel-mobile-"]').length).toBe(2);
   });
 
   it('renders mobile session header', async () => {
@@ -84,18 +84,23 @@ describe('DawMixerSection — mobile', () => {
     expect(doc.querySelector('[data-testid="session-header-mobile"]')).not.toBeNull();
   });
 
-  it('MASTER channel renders terminal block', async () => {
+  it('MASTER channel is not rendered on mobile', async () => {
     const doc = await renderMobile();
-    const master = doc.querySelector('[data-testid="channel-mobile-MASTER"]');
-    expect(master?.querySelector('[class*="terminalBlock"]')).not.toBeNull();
+    expect(doc.querySelector('[data-testid="channel-mobile-MASTER"]')).toBeNull();
   });
 
-  it('terminal block contains bold text from **markers**', async () => {
+  it('renders CH 01 and CH 02 specifically (first 2 non-MASTER channels)', async () => {
     const doc = await renderMobile();
-    const master = doc.querySelector('[data-testid="channel-mobile-MASTER"]');
-    const strong = master?.querySelector('[class*="terminalBlock"] strong');
+    expect(doc.querySelector('[data-testid="channel-mobile-CH 01"]')).not.toBeNull();
+    expect(doc.querySelector('[data-testid="channel-mobile-CH 02"]')).not.toBeNull();
+  });
+
+  it('bold text from **markers** renders as <strong> in channel desc', async () => {
+    const doc = await renderMobile();
+    const ch02 = doc.querySelector('[data-testid="channel-mobile-CH 02"]');
+    const strong = ch02?.querySelector('[class*="mxRef"] strong');
     expect(strong).not.toBeNull();
-    expect(strong?.textContent).toContain('fewer plugins');
+    expect(strong?.textContent).toContain('the voice');
   });
 });
 
