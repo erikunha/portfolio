@@ -323,52 +323,153 @@
   color: var(--ds-color-text-body);
   display: flex;
   flex-direction: column;
-  gap: 12px;
 }
 .sessionHeaderMobile {
   font-size: var(--ds-font-size-xs);
   color: var(--ds-color-text-muted);
   line-height: 1.8;
   border-bottom: 1px solid var(--ds-color-border-default);
-  padding-bottom: 8px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--ds-color-signal) 5%, transparent);
+  letter-spacing: 0.14em;
 }
+
+/* mix-legend hint strip */
+.mixLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--ds-color-signal-quiet);
+  background: rgba(0, 0, 0, 0.6);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--ds-color-text-muted);
+  text-transform: uppercase;
+}
+.mixLegendDot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ds-color-signal);
+  box-shadow: 0 0 5px var(--ds-color-signal);
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mixLegendDot {
+    box-shadow: none;
+  }
+}
+
+/* channel cards — border-bottom list */
 .channelCard {
-  border: 1px solid var(--ds-color-border-default);
-  padding: 12px;
+  position: relative;
+  border-bottom: 1px solid var(--ds-color-signal-quiet);
+  padding: 12px 14px 14px;
+  background: rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 .channelCardFocused {
-  border-left: 2px solid var(--ds-color-signal);
+  background: color-mix(in srgb, var(--ds-color-signal) 7%, transparent);
 }
-.cardHeader {
-  display: flex;
+.channelCardFocused::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--ds-color-signal);
+  box-shadow: 0 0 10px var(--ds-color-signal);
+}
+@media (prefers-reduced-motion: reduce) {
+  .channelCardFocused::before {
+    box-shadow: none;
+  }
+}
+.channelCardMaster {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ds-color-signal) 6%, transparent),
+    transparent
+  );
+  border-top: 2px solid var(--ds-color-signal);
+}
+
+/* head row: badge | name | dB */
+.mxHead {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
   align-items: center;
-  gap: 8px;
 }
-.cardName {
-  flex: 1;
+.mxId {
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  color: var(--ds-color-text-muted);
+  border: 1px solid var(--ds-color-signal-quiet);
+  padding: 3px 7px;
+  background: rgba(0, 0, 0, 0.55);
   font-weight: 700;
-  font-size: var(--ds-font-size-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.channelCardFocused .mxId {
   color: var(--ds-color-signal);
+  border-color: var(--ds-color-signal);
+  background: color-mix(in srgb, var(--ds-color-signal) 10%, transparent);
+}
+.mxName {
+  color: var(--ds-color-text-body);
+  font-size: 14px;
+  font-weight: 700;
   letter-spacing: 0.04em;
+  line-height: 1.15;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.cardDb {
-  display: flex;
-  align-items: baseline;
-  gap: 1px;
-  margin-left: auto;
+.channelCardFocused .mxName,
+.channelCardMaster .mxName {
+  color: var(--ds-color-signal);
 }
-.cardDesc {
+.mxDb {
   font-size: var(--ds-font-size-xs);
   color: var(--ds-color-text-muted);
-  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  text-align: right;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* description */
+.mxRef {
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+.mxRef strong {
+  color: var(--ds-color-signal);
+  font-weight: 700;
+}
+
+/* VU meter + static fader: stacked column */
+.mxMeters {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 .staticMeter {
   display: flex;
   gap: 1px;
-  height: 14px;
+  height: 12px;
   padding: 1px;
   border: 1px solid var(--ds-color-signal-quiet);
   background: rgba(0, 0, 0, 0.7);
@@ -389,22 +490,287 @@
   background: var(--ds-color-feedback-error);
   height: 100%;
 }
-.cardFooter {
+
+/* static fader — track + overshooting thumb */
+.mxFader {
   position: relative;
-  height: 4px;
-  background: var(--ds-color-surface-shell);
-  border: 1px solid var(--ds-color-border-default);
-  overflow: hidden;
+  height: 22px;
+  border: 1px solid var(--ds-color-signal-quiet);
+  background: rgba(0, 255, 65, 0.03);
+}
+.mxFader::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  height: 1px;
+  background: var(--ds-color-signal-quiet);
+  transform: translateY(-0.5px);
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--ds-color-signal-quiet) 0 1px,
+    transparent 1px 25%
+  );
+}
+.mxFaderThumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 28px;
+  background: var(--ds-color-signal);
+  box-shadow: 0 0 10px var(--ds-color-signal);
+  border: 1px solid #000;
+}
+.mxFaderThumb::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  bottom: 4px;
+  width: 1px;
+  background: #000;
+  transform: translateX(-50%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mxFaderThumb {
+    box-shadow: none;
+  }
+}
+
+/* vertical plugin chain */
+.mxChainWrap {
+  margin-bottom: 2px;
+}
+.mxChainTitle {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--ds-color-text-muted);
+  text-transform: uppercase;
+  margin-bottom: 5px;
   display: flex;
   align-items: center;
+  gap: 6px;
 }
-.faderFooterBar {
+.mxChainTitle::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--ds-color-signal-quiet);
+}
+.mxChain {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-left: 1px dashed var(--ds-color-signal-quiet);
+  padding-left: 12px;
+  margin-left: 4px;
+  position: relative;
+}
+.mxChain::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: -2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ds-color-signal);
+  box-shadow: 0 0 4px var(--ds-color-signal);
+}
+.mxChain::after {
+  content: "\25bc";
+  position: absolute;
+  left: -1px;
+  bottom: -8px;
+  color: var(--ds-color-signal);
+  font-size: 9px;
+  text-shadow: 0 0 4px var(--ds-color-signal);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mxChain::before {
+    box-shadow: none;
+  }
+  .mxChain::after {
+    text-shadow: none;
+  }
+}
+.mxPlug {
+  display: grid;
+  grid-template-columns: 14px minmax(90px, auto) 1fr;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--ds-color-signal-quiet);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 6px 10px;
+  color: var(--ds-color-text-muted);
+  position: relative;
+}
+.mxPlugOn {
+  color: var(--ds-color-signal);
+  border-color: var(--ds-color-signal);
+  background: color-mix(in srgb, var(--ds-color-signal) 8%, transparent);
+}
+.mxPlugBypass {
+  opacity: 0.45;
+}
+.mxPlugLed {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ds-color-signal-quiet);
+  justify-self: center;
+}
+.mxPlugOn .mxPlugLed {
+  background: var(--ds-color-signal);
+  box-shadow: 0 0 4px var(--ds-color-signal);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mxPlugOn .mxPlugLed {
+    box-shadow: none;
+  }
+}
+.mxPlugName {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+}
+.mxPlugAmt {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 7px;
+}
+.mxPlugAmtOn {
+  display: block;
+  width: 4px;
+  height: 6px;
+  background: var(--ds-color-signal);
+}
+.mxPlugAmtOff {
+  display: block;
+  width: 4px;
+  height: 6px;
+  background: var(--ds-color-signal);
+  opacity: 0.22;
+}
+
+/* controls: knobs + R/M/S + clip bar */
+.mxCtrls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--ds-color-signal-quiet);
+}
+.mxCtrlRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mxKnobRow {
+  display: flex;
+  gap: 18px;
+}
+.mxKnob {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.mxDial {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--ds-color-signal);
+  border-radius: 50%;
+  position: relative;
+  background: radial-gradient(circle at 35% 30%, rgba(0, 255, 65, 0.18), rgba(0, 0, 0, 0.7));
+  flex-shrink: 0;
+}
+.mxDial::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  width: 1px;
+  height: 12px;
+  background: var(--ds-color-signal);
+  box-shadow: 0 0 4px var(--ds-color-signal);
+  transform-origin: 50% 12px;
+  transform: translateX(-50%) rotate(var(--mx-knob-angle, 0deg));
+}
+@media (prefers-reduced-motion: reduce) {
+  .mxDial::after {
+    box-shadow: none;
+  }
+}
+.mxKnobLabel {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: var(--ds-color-text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.mxBtns {
+  display: flex;
+  gap: 6px;
+}
+.mxBtn {
+  min-width: 32px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--ds-color-signal-quiet);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-sm);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.04em;
+  background: rgba(0, 0, 0, 0.5);
+}
+.mxBtnOn {
+  min-width: 32px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--ds-color-signal);
+  color: var(--ds-color-signal);
+  font-size: var(--ds-font-size-sm);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.04em;
+  background: color-mix(in srgb, var(--ds-color-signal) 10%, transparent);
+  box-shadow: 0 0 5px rgba(0, 255, 65, 0.35);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mxBtnOn {
+    box-shadow: none;
+  }
+}
+.mxClip {
+  flex: 1;
+  height: 6px;
+  background: var(--ds-color-signal-quiet);
+  border: 1px solid var(--ds-color-signal-quiet);
+  position: relative;
+  overflow: hidden;
+}
+.mxClipFill {
   position: absolute;
   left: 0;
   top: 0;
-  height: 100%;
-  background: var(--ds-color-signal-quiet);
+  bottom: 0;
+  background: var(--ds-color-signal);
+  opacity: 0.85;
 }
+
 .terminalBlock {
   border: 1px solid var(--ds-color-signal-quiet);
   padding: 8px 10px;

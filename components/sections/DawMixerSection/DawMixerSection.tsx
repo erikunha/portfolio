@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { type CSSProperties, Suspense } from 'react';
 import { FaderIsland } from '@/components/client/DawMixer/FaderIsland.client';
 import { KnobIsland } from '@/components/client/DawMixer/KnobIsland.client';
 import { RmsButtons } from '@/components/client/DawMixer/RmsButtons.client';
@@ -126,33 +126,127 @@ function StaticMeter({
   );
 }
 
+function StaticFader({ pct }: { pct: number }) {
+  return (
+    <div className={s.mxFader} aria-hidden="true">
+      <div className={s.mxFaderThumb} style={{ left: `${pct}%` }} />
+    </div>
+  );
+}
+
+function PluginChainMobile({
+  plugins,
+  channelId,
+}: {
+  plugins: DawMixerChannel['plugins'];
+  channelId: string;
+}) {
+  return (
+    <div className={s.mxChainWrap}>
+      <div className={s.mxChainTitle}>{'// signal flow'}</div>
+      <div className={s.mxChain}>
+        {plugins.map((p) => (
+          <div
+            key={p.name}
+            className={`${s.mxPlug} ${p.active ? s.mxPlugOn : s.mxPlugBypass}`}
+            data-testid={`plugin-mobile-${channelId}-${p.name}`}
+          >
+            <span className={s.mxPlugLed} aria-hidden="true" />
+            <span className={s.mxPlugName}>{p.name}</span>
+            <span className={s.mxPlugAmt} aria-hidden="true">
+              {Array.from({ length: 5 }, (_, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: positional strength dots
+                <span key={i} className={i < p.strength ? s.mxPlugAmtOn : s.mxPlugAmtOff} />
+              ))}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StaticKnob({ angleDeg, label }: { angleDeg: number; label: string }) {
+  return (
+    <div className={s.mxKnob}>
+      <div
+        className={s.mxDial}
+        style={{ '--mx-knob-angle': `${angleDeg}deg` } as CSSProperties}
+        aria-hidden="true"
+      />
+      <span className={s.mxKnobLabel}>{label}</span>
+    </div>
+  );
+}
+
+function MixLegend({ mixer }: { mixer: DawMixer }) {
+  const lead = mixer.channels.find((ch) => ch.focused && ch.id !== 'MASTER');
+  return (
+    <div className={s.mixLegend} aria-hidden="true">
+      <span>
+        <span className={s.mixLegendDot} />
+        {mixer.channels.length - 1}
+        {' GTR + MASTER'}
+      </span>
+      {lead && (
+        <span>
+          {lead.id}
+          {' = lead'}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
   const isMaster = ch.id === 'MASTER';
   return (
     <div
-      className={`${s.channelCard} ${ch.focused ? s.channelCardFocused : ''}`}
+      className={`${s.channelCard} ${ch.focused ? s.channelCardFocused : ''} ${isMaster ? s.channelCardMaster : ''}`}
       data-testid={`channel-mobile-${ch.id}`}
     >
-      <div className={s.cardHeader}>
-        <span className={isMaster ? s.masterBadge : s.channelBadge}>{ch.id}</span>
-        <span className={s.cardName}>{ch.name}</span>
-        <div className={s.cardDb}>
+      <div className={s.mxHead}>
+        <span className={isMaster ? s.masterBadge : s.mxId}>{ch.id}</span>
+        <span className={s.mxName}>{ch.name}</span>
+        <div className={s.mxDb}>
           <span className={s.dbValue}>{ch.db}</span>
-          <span className={s.dbUnit}> dB</span>
+          <span className={s.dbUnit}>dB</span>
         </div>
       </div>
-      <div className={s.cardDesc}>
+      <div className={s.mxRef}>
         <ParsedText text={ch.desc} />
       </div>
-      <StaticMeter pct={ch.meterPct} segments={12} clipping={ch.meterClipping ?? false} />
-      <PluginChain plugins={ch.plugins} channelId={`${ch.id}-mobile`} />
-      <div className={s.cardFooter}>
-        <div className={s.faderFooterBar} style={{ width: `${ch.faderPct}%` }} aria-hidden="true" />
-        {ch.footer && (
-          <span className={s.lufs}>
-            LUFS {ch.footer.lufs} · PK {ch.footer.pk}
-          </span>
-        )}
+      <div className={s.mxMeters}>
+        <StaticMeter pct={ch.meterPct} segments={12} clipping={ch.meterClipping ?? false} />
+        <StaticFader pct={ch.faderPct} />
+      </div>
+      <PluginChainMobile plugins={ch.plugins} channelId={ch.id} />
+      <div className={s.mxCtrls}>
+        <div className={s.mxCtrlRow}>
+          <div className={s.mxKnobRow}>
+            <StaticKnob angleDeg={ch.knob1.angleDeg} label={ch.knob1.label} />
+            <StaticKnob angleDeg={ch.knob2.angleDeg} label={ch.knob2.label} />
+          </div>
+        </div>
+        <div className={s.mxCtrlRow}>
+          <div className={s.mxBtns}>
+            {ch.buttons.map((btn) => (
+              <div key={btn} className={ch.activeButtons.includes(btn) ? s.mxBtnOn : s.mxBtn}>
+                {btn}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className={s.mxCtrlRow}>
+          <div className={s.mxClip} aria-hidden="true">
+            <div className={s.mxClipFill} style={{ width: `${ch.faderPct}%` }} />
+          </div>
+          {ch.footer && (
+            <span className={s.lufs}>
+              LUFS {ch.footer.lufs} · PK {ch.footer.pk}
+            </span>
+          )}
+        </div>
       </div>
       {ch.terminalLines && (
         <div className={s.terminalBlock}>
@@ -245,6 +339,7 @@ export function DawMixerMobile() {
   return (
     <div className={s.rootMobile} data-testid="daw-mixer-mobile">
       <SessionHeaderMobile mixer={dawMixer} />
+      <MixLegend mixer={dawMixer} />
       {dawMixer.channels.map((ch) => (
         <ChannelMobile key={ch.id} ch={ch} />
       ))}
