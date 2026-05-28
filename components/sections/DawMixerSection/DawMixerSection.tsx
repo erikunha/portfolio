@@ -82,7 +82,7 @@ function PluginChainMobile({
   channelId: string;
 }) {
   return (
-    <div className={s.mxChainWrap}>
+    <div className={s.mxChainWrap} aria-hidden="true">
       <div className={s.mxChainTitle}>{'// signal flow'}</div>
       <div className={s.mxChain}>
         {plugins.map((p) => (
