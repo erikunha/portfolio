@@ -34,7 +34,7 @@
 
 .root .status {
   color: var(--ds-color-text-muted);
-  font-size: var(--ds-font-size-sm);
+  font-size: var(--ds-font-size-xs);
   margin-top: 14px;
   border-top: 1px dashed var(--ds-color-signal-quiet);
   padding-top: 12px;

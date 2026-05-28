@@ -5,7 +5,7 @@
 
 .root {
   background: var(--ds-color-surface-shell);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   font-family: var(--ds-font-family-mono);
   line-height: 1.65;
   margin: calc(-1 * var(--ds-space-pad));
@@ -90,7 +90,7 @@
 
 .prompt {
   color: var(--ds-color-text-muted);
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   white-space: nowrap;
 }
 
@@ -107,7 +107,7 @@
   outline: 0;
   color: var(--ds-color-text-body);
   font: inherit;
-  font-size: var(--ds-font-size-body);
+  font-size: var(--ds-font-size-sm);
   caret-color: var(--ds-color-signal);
   caret-shape: block;
 }
@@ -198,7 +198,7 @@ body[data-motion="reduce"] .cmdHint {
 /* Desktop command hints row — rendered inside shell panel, below the input form */
 .commands {
   color: var(--ds-color-text-muted);
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   letter-spacing: 0.1em;
   line-height: 1.8;
   padding: 8px 16px 12px;
