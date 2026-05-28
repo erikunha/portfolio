@@ -9,6 +9,10 @@
   ],
   "px-values": [
     { "value": "0px", "reason": "zero is not a magic value" },
+    {
+      "value": "0.5px",
+      "reason": "sub-pixel centering (translateY(-0.5px)) for hairline rail alignment — no token warranted"
+    },
     { "value": "1px", "reason": "border width, semantic — no 1px token needed" },
     { "value": "2px", "reason": "sub-pixel tweak / max corner radius (--ds-radius-sharp)" },
     {
