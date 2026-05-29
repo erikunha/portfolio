@@ -9,56 +9,59 @@
   :global(#sec-shell) {
     order: 2;
   }
-  :global(#sec-man-page) {
+  :global(#sec-ai-metrics) {
     order: 3;
   }
-  :global(#sec-now) {
+  :global(#sec-man-page) {
     order: 4;
   }
-  :global(#sec-projects) {
+  :global(#sec-now) {
     order: 5;
   }
-  :global(#sec-git-log) {
+  :global(#sec-projects) {
     order: 6;
   }
-  :global(#sec-npm-stack) {
+  :global(#sec-git-log) {
     order: 7;
   }
-  :global(#sec-sys-health) {
+  :global(#sec-npm-stack) {
     order: 8;
   }
-  :global(#sec-live-perf) {
+  :global(#sec-sys-health) {
     order: 9;
   }
-  :global(#sec-perf-receipts) {
+  :global(#sec-live-perf) {
     order: 10;
   }
-  :global(#sec-guitar) {
+  :global(#sec-perf-receipts) {
     order: 11;
   }
-  :global(#sec-daw-mixer) {
+  :global(#sec-guitar) {
     order: 12;
   }
-  :global(#sec-visa) {
+  :global(#sec-daw-mixer) {
     order: 13;
   }
-  :global(#sec-credentials) {
+  :global(#sec-visa) {
     order: 14;
   }
-  :global(#sec-community) {
+  :global(#sec-credentials) {
     order: 15;
   }
-  :global(#sec-hottest-takes) {
+  :global(#sec-community) {
     order: 16;
   }
-  :global(#sec-responsibilities) {
+  :global(#sec-hottest-takes) {
     order: 17;
   }
-  :global(#sec-unknowns) {
+  :global(#sec-responsibilities) {
     order: 18;
   }
-  :global(#sec-contact) {
+  :global(#sec-unknowns) {
     order: 19;
+  }
+  :global(#sec-contact) {
+    order: 20;
   }
 
   /* Clear space for the fixed mobile dock at the bottom of the viewport. */
