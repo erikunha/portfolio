@@ -33,7 +33,7 @@ function VisaMobile() {
   return (
     <div className={s.root}>
       <div data-testid="visa-mobile">
-        <div className={s.vruleMobile}>
+        <div className={s.vruleMobile} aria-hidden="true">
           {'================================================================'}
         </div>
         <div className={s.vmGrid}>

@@ -71,7 +71,7 @@
    overflow:hidden clips child borders. */
 .root {
   border: 1px solid var(--ds-color-signal-subtle);
-  background: rgba(0, 0, 0, 0.22);
+  background: rgba(0, 0, 0, 0.55);
   overflow: hidden;
 }
 
@@ -207,6 +207,15 @@ body[data-motion="reduce"] .bodyContent {
 }
 body[data-motion="reduce"] .bodyContent {
   opacity: 1;
+}
+
+/* ── Mobile scrim override (<=768px) ────────────────────────────────────
+   Base .root uses 0.55 so desktop's `background: none` override wins cleanly.
+   This block lightens the scrim explicitly for mobile. */
+@media (max-width: 768px) {
+  .root {
+    background: rgba(0, 0, 0, 0.22);
+  }
 }
 
 /* ───────────────────────────────────────────────────────────────────────
