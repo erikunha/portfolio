@@ -256,6 +256,10 @@
       "reason": "CRT scanline pixel stop — exact opacity required"
     },
     {
+      "value": "rgba(0, 0, 0, 0.22)",
+      "reason": "module backdrop scrim (mobile) — lightened from 0.55 to reduce visual weight"
+    },
+    {
       "value": "rgba(0, 0, 0, 0.55)",
       "reason": "module backdrop scrim — no semantic overlay token"
     },

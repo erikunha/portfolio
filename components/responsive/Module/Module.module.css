@@ -71,7 +71,7 @@
    overflow:hidden clips child borders. */
 .root {
   border: 1px solid var(--ds-color-signal-subtle);
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.22);
   overflow: hidden;
 }
 
