@@ -266,7 +266,7 @@
   flex-direction: column;
   gap: 16px;
   font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-sm);
+  font-size: var(--ds-font-size-body);
   color: var(--ds-color-text-body);
 }
 .panel {
@@ -277,7 +277,7 @@
 .statusBar {
   display: flex;
   justify-content: space-between;
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-color-text-muted);
   letter-spacing: 0.16em;
   margin-bottom: 12px;
@@ -297,7 +297,7 @@
   justify-self: center;
   color: var(--ds-color-signal);
   text-shadow: 0 0 6px var(--ds-color-signal);
-  font-size: 11px;
+  font-size: 13px;
 }
 .arrow::before {
   content: "\2500\2500\25b6";
@@ -329,7 +329,7 @@
 .fxActive {
   border: 1px solid var(--ds-color-border-default);
   padding: 5px 0;
-  font-size: var(--ds-font-size-2xs);
+  font-size: var(--ds-font-size-xs);
   text-align: center;
   position: relative;
   color: var(--ds-color-signal);
@@ -340,7 +340,7 @@
 .fxInactive {
   border: 1px solid var(--ds-color-signal-quiet);
   padding: 5px 0;
-  font-size: var(--ds-font-size-2xs);
+  font-size: var(--ds-font-size-xs);
   text-align: center;
   color: var(--ds-color-text-muted);
   background: rgba(0, 0, 0, 0.4);
@@ -369,6 +369,29 @@
   gap: 1px;
   background: var(--ds-color-signal-quiet);
   border: 1px solid var(--ds-color-signal-quiet);
+}
+
+/* ─── Desktop font overrides for shared classes ─────────────────────────── */
+.root .nodeLabel,
+.root .statLabel,
+.root .camHeader,
+.root .camCaption,
+.root .influencesHeader,
+.root .infActive,
+.root .infItem,
+.root .infRank,
+.root .nowObsessing {
+  font-size: var(--ds-font-size-sm);
+}
+
+.root .nodeName,
+.root .statValue {
+  font-size: var(--ds-font-size-body);
+}
+
+.root .nodeSub,
+.root .statSub {
+  font-size: var(--ds-font-size-sm);
 }
 
 /* ─── Mobile ────────────────────────────────────────────────────────────── */
@@ -409,7 +432,7 @@
 .fxList {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 10px;
   margin-top: 6px;
 }
 .fxRowActive {
@@ -420,7 +443,7 @@
   font-size: var(--ds-font-size-xs);
   border: 1px solid var(--ds-color-signal);
   background: color-mix(in srgb, var(--ds-color-signal) 8%, transparent);
-  padding: 3px 8px;
+  padding: 11px 8px;
 }
 .fxRowInactive {
   display: flex;
@@ -428,7 +451,8 @@
   align-items: center;
   color: var(--ds-color-text-muted);
   font-size: var(--ds-font-size-xs);
-  padding: 3px 8px;
+  border: 1px solid var(--ds-color-signal-subtle);
+  padding: 11px 8px;
 }
 .statsGridMobile {
   display: grid;

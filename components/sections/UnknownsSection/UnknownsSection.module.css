@@ -41,4 +41,8 @@
     white-space: pre-wrap;
     overflow-wrap: break-word;
   }
+
+  .root .open {
+    font-size: var(--ds-font-size-xs);
+  }
 }

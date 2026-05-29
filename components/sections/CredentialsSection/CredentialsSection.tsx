@@ -12,10 +12,6 @@ export function CredentialsSection({ defer }: { defer?: boolean } = {}) {
       defer={defer}
     >
       <div className={s.root}>
-        <div className={s.cmdLine}>
-          <span className={s.pr}>$</span>
-          {'cat ~/.credentials'}
-        </div>
         <div className={s.table}>
           {credentials.map((cred) => (
             <div key={cred.label} className={s.row}>

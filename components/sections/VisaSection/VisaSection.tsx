@@ -33,6 +33,9 @@ function VisaMobile() {
   return (
     <div className={s.root}>
       <div data-testid="visa-mobile">
+        <div className={s.vruleMobile}>
+          {'================================================================'}
+        </div>
         <div className={s.vmGrid}>
           {visaRows.map((row) => (
             <div key={row.jurisdictionShort} className={s.vmRow}>

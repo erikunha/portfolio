@@ -22,6 +22,15 @@
   font-family: var(--ds-font-family-mono);
   line-height: 1.3;
 }
+
+@media (min-width: 769px) {
+  .value {
+    font-size: var(--ds-font-size-body);
+  }
+  .label {
+    font-size: var(--ds-font-size-xs);
+  }
+}
 .compact .value {
   font-size: var(--ds-font-size-xs);
 }

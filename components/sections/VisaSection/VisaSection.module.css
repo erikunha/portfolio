@@ -68,8 +68,22 @@
   gap: 1px;
 }
 
+.vruleMobile {
+  display: none;
+}
+
 /* ── 768px responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .vruleMobile {
+    display: block;
+    color: var(--ds-color-signal);
+    opacity: 0.55;
+    font-family: var(--ds-font-family-mono);
+    font-size: var(--ds-font-size-xs);
+    overflow: hidden;
+    white-space: nowrap;
+    margin-bottom: 0.5em;
+  }
   .root pre {
     font-size: var(--ds-font-size-xs);
     line-height: 1.7;

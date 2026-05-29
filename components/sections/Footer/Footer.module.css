@@ -416,13 +416,13 @@ body[data-motion="reduce"] .spBar2 > i {
     margin-bottom: 10px;
   }
   .spHead {
-    font-size: var(--ds-font-size-xs);
+    font-size: var(--ds-font-size-sm);
     letter-spacing: 0.16em;
   }
   .spRow {
     grid-template-columns: 100px 1fr;
     gap: 10px;
-    font-size: var(--ds-font-size-xs);
+    font-size: var(--ds-font-size-sm);
   }
   .dmesg .dmLine {
     grid-template-columns: 72px 1fr auto;
