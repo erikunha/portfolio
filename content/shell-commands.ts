@@ -8,12 +8,12 @@ const SHELL_RESPONSES: ShellResponse[] = [
     text: 'commands: help · whois · whois --recursive · ls · cat skills.md · cat ~/.now · contact · face · hire · clear\nanything else → sent to Claude',
   },
   {
-    commands: ['whois'],
+    commands: ['whois', 'whoami'],
     kind: 'output',
     text: 'erik — full-stack engineer (frontend-heavy)',
   },
   {
-    commands: ['whois --recursive'],
+    commands: ['whois --recursive', 'whoami --recursive'],
     kind: 'output',
     text: 'erik → engineer → builder → student → curious → 9yo with a guitar',
   },
