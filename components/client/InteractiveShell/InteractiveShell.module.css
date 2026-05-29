@@ -18,7 +18,7 @@
   padding: 8px 14px;
   border-bottom: 1px solid var(--ds-color-signal-subtle);
   color: var(--ds-color-text-muted);
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   letter-spacing: 0.14em;
 }
 
@@ -90,7 +90,7 @@
 
 .prompt {
   color: var(--ds-color-text-muted);
-  font-size: var(--ds-font-size-sm);
+  font-size: var(--ds-font-size-body);
   white-space: nowrap;
 }
 
@@ -107,7 +107,7 @@
   outline: 0;
   color: var(--ds-color-text-body);
   font: inherit;
-  font-size: var(--ds-font-size-sm);
+  font-size: var(--ds-font-size-body);
   caret-color: var(--ds-color-signal);
   caret-shape: block;
 }
@@ -126,7 +126,7 @@
   opacity: 0.6;
   pointer-events: none;
   font: inherit;
-  font-size: var(--ds-font-size-sm);
+  font-size: var(--ds-font-size-body);
   white-space: nowrap;
   overflow: hidden;
   display: inline-flex;
@@ -268,25 +268,25 @@ body[data-motion="reduce"] .cmdHint {
   .feed {
     min-height: 200px;
     max-height: 320px;
-    font-size: var(--ds-font-size-xs);
+    font-size: var(--ds-font-size-sm);
   }
   .form {
     padding: 8px 12px 10px;
   }
   .prompt {
-    font-size: var(--ds-font-size-xs);
+    font-size: var(--ds-font-size-sm);
   }
   .input {
-    font-size: var(--ds-font-size-xs);
+    font-size: var(--ds-font-size-sm);
   }
   .placeholderAnim {
-    font-size: var(--ds-font-size-xs);
+    font-size: var(--ds-font-size-sm);
   }
   /* From _layout.css 768px block */
   .bar {
     font-size: var(--ds-font-size-xs);
   }
   .privacyNotice {
-    font-size: var(--ds-font-size-xs);
+    font-size: 9px;
   }
 }
