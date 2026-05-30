@@ -24,7 +24,7 @@ export const LIGHTHOUSE_FALLBACK: LighthouseScores = {
 const CACHE_KEY = (strategy: Strategy) => `lh:scores:${strategy}`;
 export const LIGHTHOUSE_TTL_S = 90_000; // 25 h — survives a missed cron run
 
-async function fetchAndCache(strategy: Strategy): Promise<LighthouseScores> {
+async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<LighthouseScores> {
   const apiKey = process.env.PSI_API_KEY;
   if (!apiKey) throw new Error('PSI_API_KEY is not set');
 
@@ -35,12 +35,25 @@ async function fetchAndCache(strategy: Strategy): Promise<LighthouseScores> {
     `&key=${apiKey}` +
     '&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO';
 
+  // WHY: cron calls must bypass Next.js fetch cache to guarantee a live PSI network call.
+  const fetchCache: RequestInit = forceRefresh
+    ? { cache: 'no-store' }
+    : { next: { revalidate: LIGHTHOUSE_TTL_S } };
+
   const res = await fetch(psiUrl, {
-    next: { revalidate: LIGHTHOUSE_TTL_S },
+    ...fetchCache,
     signal: AbortSignal.timeout(8_000),
     headers: { Referer: 'https://www.erikunha.dev/' },
   });
-  if (!res.ok) throw new Error(`PSI API returned ${res.status}`);
+  if (!res.ok) {
+    let body = '(unreadable)';
+    try {
+      body = await res.text();
+    } catch {
+      // ignore — error message already has status code
+    }
+    throw new Error(`PSI API returned ${res.status} for strategy=${strategy}: ${body}`);
+  }
 
   const data = (await res.json()) as {
     lighthouseResult?: {
@@ -76,7 +89,10 @@ async function fetchAndCache(strategy: Strategy): Promise<LighthouseScores> {
 export async function getScores(strategy: Strategy = 'desktop'): Promise<LighthouseScores> {
   const cached = await getRedis()
     .get<LighthouseScores>(CACHE_KEY(strategy))
-    .catch(() => null);
+    .catch((err) => {
+      log.error('Redis cache GET failed', { err, strategy });
+      return null;
+    });
   if (cached) return cached;
 
   try {
@@ -92,5 +108,5 @@ export async function getScores(strategy: Strategy = 'desktop'): Promise<Lightho
  * Throws on PSI failure — caller handles per-strategy via Promise.allSettled.
  */
 export async function refreshScores(strategy: Strategy): Promise<LighthouseScores> {
-  return fetchAndCache(strategy);
+  return fetchAndCache(strategy, true);
 }

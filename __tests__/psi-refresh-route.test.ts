@@ -41,40 +41,32 @@ const MOBILE_SCORES = {
 
 describe('GET /api/psi-refresh — auth', () => {
   it('returns 401 when CRON_SECRET is not set', async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
     const { GET } = await import('@/app/api/psi-refresh/route');
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
-    const res = await GET(makeRequest('Bearer anything') as any);
+    const res = await GET(makeRequest('Bearer anything') as never);
     expect(res.status).toBe(401);
   });
 
   it('returns 401 when Authorization header is missing', async () => {
     process.env.CRON_SECRET = 'secret123';
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
     const { GET } = await import('@/app/api/psi-refresh/route');
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
-    const res = await GET(makeRequest() as any);
+    const res = await GET(makeRequest() as never);
     expect(res.status).toBe(401);
   });
 
   it('returns 401 when Bearer token does not match CRON_SECRET', async () => {
     process.env.CRON_SECRET = 'secret123';
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
     const { GET } = await import('@/app/api/psi-refresh/route');
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
-    const res = await GET(makeRequest('Bearer wrong') as any);
+    const res = await GET(makeRequest('Bearer wrong') as never);
     expect(res.status).toBe(401);
   });
 });
 
 describe('GET /api/psi-refresh — success', () => {
-  it('returns 200 with desktop and mobile scores', async () => {
+  it('returns 200 with desktop and mobile scores when both succeed', async () => {
     process.env.CRON_SECRET = 'secret123';
     mockRefreshScores.mockResolvedValueOnce(DESKTOP_SCORES).mockResolvedValueOnce(MOBILE_SCORES);
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
     const { GET } = await import('@/app/api/psi-refresh/route');
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
-    const res = await GET(makeRequest('Bearer secret123') as any);
+    const res = await GET(makeRequest('Bearer secret123') as never);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.desktop).toEqual(DESKTOP_SCORES);
@@ -85,26 +77,36 @@ describe('GET /api/psi-refresh — success', () => {
   it('calls refreshScores for both desktop and mobile', async () => {
     process.env.CRON_SECRET = 'secret123';
     mockRefreshScores.mockResolvedValue(DESKTOP_SCORES);
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
     const { GET } = await import('@/app/api/psi-refresh/route');
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
-    await GET(makeRequest('Bearer secret123') as any);
+    await GET(makeRequest('Bearer secret123') as never);
     expect(mockRefreshScores).toHaveBeenCalledWith('desktop');
     expect(mockRefreshScores).toHaveBeenCalledWith('mobile');
   });
 
-  it('returns null for a failed strategy while the other succeeds', async () => {
+  it('returns 500 with null for a failed strategy while the other succeeds', async () => {
     process.env.CRON_SECRET = 'secret123';
     mockRefreshScores
       .mockResolvedValueOnce(DESKTOP_SCORES)
       .mockRejectedValueOnce(new Error('mobile PSI failed'));
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
     const { GET } = await import('@/app/api/psi-refresh/route');
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
-    const res = await GET(makeRequest('Bearer secret123') as any);
-    expect(res.status).toBe(200);
+    const res = await GET(makeRequest('Bearer secret123') as never);
+    // WHY: 500 so Vercel Cron retries and surfaces the failure in the dashboard.
+    expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.desktop).toEqual(DESKTOP_SCORES);
+    expect(body.mobile).toBeNull();
+  });
+
+  it('returns 500 when both strategies fail', async () => {
+    process.env.CRON_SECRET = 'secret123';
+    mockRefreshScores
+      .mockRejectedValueOnce(new Error('desktop PSI failed'))
+      .mockRejectedValueOnce(new Error('mobile PSI failed'));
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    const res = await GET(makeRequest('Bearer secret123') as never);
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.desktop).toBeNull();
     expect(body.mobile).toBeNull();
   });
 
@@ -113,10 +115,8 @@ describe('GET /api/psi-refresh — success', () => {
     mockRefreshScores
       .mockResolvedValueOnce(DESKTOP_SCORES)
       .mockRejectedValueOnce(new Error('mobile PSI failed'));
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
     const { GET } = await import('@/app/api/psi-refresh/route');
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
-    await GET(makeRequest('Bearer secret123') as any);
+    await GET(makeRequest('Bearer secret123') as never);
     expect(mockLogError).toHaveBeenCalledWith(
       'psi-refresh mobile failed',
       expect.objectContaining({ err: expect.any(Error) }),
@@ -126,10 +126,8 @@ describe('GET /api/psi-refresh — success', () => {
   it('logs completion with durationMs', async () => {
     process.env.CRON_SECRET = 'secret123';
     mockRefreshScores.mockResolvedValue(DESKTOP_SCORES);
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
     const { GET } = await import('@/app/api/psi-refresh/route');
-    // biome-ignore lint/suspicious/noExplicitAny: NextRequest type not directly exported
-    await GET(makeRequest('Bearer secret123') as any);
+    await GET(makeRequest('Bearer secret123') as never);
     expect(mockLogInfo).toHaveBeenCalledWith(
       'psi-refresh completed',
       expect.objectContaining({ durationMs: expect.any(Number) }),

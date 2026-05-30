@@ -27,6 +27,8 @@ export async function GET(req: NextRequest): Promise<Response> {
     log.error('psi-refresh mobile failed', { err: mobileResult.reason });
   }
 
-  log.info('psi-refresh completed', { durationMs: result.durationMs });
-  return Response.json(result);
+  const anyFailed = desktopResult.status === 'rejected' || mobileResult.status === 'rejected';
+  log.info('psi-refresh completed', { durationMs: result.durationMs, anyFailed });
+  // WHY: non-2xx signals Vercel Cron to retry and surface the failure in the dashboard.
+  return Response.json(result, { status: anyFailed ? 500 : 200 });
 }

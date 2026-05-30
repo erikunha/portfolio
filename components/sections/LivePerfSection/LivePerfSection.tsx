@@ -38,7 +38,14 @@ function PerfBody({ scores, strategy }: { scores: LighthouseScores; strategy: St
               {isFallback ? '—' : s.value}
               <span className={styles.of}>/100</span>
             </div>
-            <div className={styles.pbar}>
+            <div
+              className={styles.pbar}
+              role="progressbar"
+              aria-valuenow={isFallback ? 0 : s.value}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${s.label}: ${isFallback ? 'unavailable' : `${s.value} out of 100`}`}
+            >
               <i style={{ width: isFallback ? '0%' : `${s.value}%` }} />
             </div>
           </div>
@@ -65,7 +72,14 @@ function StrategyFallback({ strategy }: { strategy: string }) {
             <div className={styles.pv}>
               —<span className={styles.of}>/100</span>
             </div>
-            <div className={styles.pbar}>
+            <div
+              className={styles.pbar}
+              role="progressbar"
+              aria-valuenow={0}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${label}: loading`}
+            >
               <i style={{ width: '0%' }} />
             </div>
           </div>
