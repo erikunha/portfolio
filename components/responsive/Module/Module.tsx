@@ -52,7 +52,7 @@ export function Module({
   return (
     <details
       id={id}
-      className={defer ? `${styles.root} ${styles.cvDefer}` : styles.root}
+      className={styles.root}
       // Always open: see the file header. A section can still be collapsed by
       // tapping its summary on mobile.
       open

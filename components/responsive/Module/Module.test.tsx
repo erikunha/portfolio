@@ -33,4 +33,15 @@ describe('Module', () => {
     const el = container.querySelector('[data-variant]');
     expect(el).toBeNull();
   });
+
+  it('adds data-cv-defer attribute when defer=true, no cvDefer class', async () => {
+    const { container } = render(
+      <Module id="test" header="TEST" defer>
+        content
+      </Module>,
+    );
+    const details = container.querySelector('details');
+    expect(details?.getAttribute('data-cv-defer')).toBe('true');
+    expect(details?.className).not.toContain('cvDefer');
+  });
 });

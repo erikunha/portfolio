@@ -43,11 +43,8 @@
 }
 
 /* Below-fold deferral: skip style/layout/paint until near viewport.
-   Applied via the .cvDefer class set in app/page.tsx on modules at index >= 4
-   (ProjectsSection onward — Readme/Shell/ManPage/Now are the four above-fold candidates).
-   Class-based selection survives section reorderings and hero-variant changes without
-   silent regression (replacing the previous nth-of-type positional approach). */
-.cvDefer {
+   Applied via data-cv-defer attribute on the <details> element when defer=true. */
+details[data-cv-defer="true"] {
   content-visibility: auto;
   /* `auto 520px`: the 14 deferred sections vary too widely for one fixed
      estimate (measured desktop 186-1837px, mobile 70-2538px).
