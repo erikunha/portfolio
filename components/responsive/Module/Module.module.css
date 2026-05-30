@@ -127,8 +127,7 @@
 .bodyContent {
   padding: var(--ds-space-pad);
   color: var(--ds-color-text-body);
-  /* Default: SESSION_REPORT gradient — matches the footer panel treatment. */
-  background: linear-gradient(180deg, rgba(0, 255, 65, 0.025), rgba(0, 0, 0, 0));
+  background: transparent;
   /* Closing: fade over the full 300ms in sync with the height collapse so
      content and container reach 0 together rather than content vanishing first. */
   opacity: 0;
