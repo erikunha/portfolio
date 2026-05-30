@@ -203,16 +203,6 @@
 .queueCount {
   color: var(--ds-color-signal);
 }
-.infActive {
-  display: grid;
-  grid-template-columns: 36px 1fr auto;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 9px;
-  color: var(--ds-color-signal);
-  font-weight: 700;
-  font-size: var(--ds-font-size-xs);
-}
 .infItem {
   display: grid;
   grid-template-columns: 36px 1fr auto;
@@ -221,6 +211,10 @@
   margin-bottom: 9px;
   color: var(--ds-color-text-body);
   font-size: var(--ds-font-size-xs);
+}
+.infItem[data-active] {
+  color: var(--ds-color-signal);
+  font-weight: 700;
 }
 .infRank {
   color: var(--ds-color-text-muted);
@@ -377,7 +371,6 @@
 .root .camHeader,
 .root .camCaption,
 .root .influencesHeader,
-.root .infActive,
 .root .infItem,
 .root .infRank,
 .root .nowObsessing {

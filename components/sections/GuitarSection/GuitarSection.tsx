@@ -79,7 +79,7 @@ function InfluencesList({
         <span>{'// SHUFFLE OFF'}</span>
       </div>
       {influences.map((inf) => (
-        <div key={inf.rank} className={inf.active ? s.infActive : s.infItem}>
+        <div key={inf.rank} className={s.infItem} data-active={inf.active || undefined}>
           <span className={s.infRank}>
             {inf.active ? '▶ ' : ''}
             {String(inf.rank).padStart(2, '0')}
