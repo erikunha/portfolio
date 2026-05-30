@@ -20,6 +20,10 @@
   resize: vertical;
   transition: border-color var(--ds-duration-base) var(--ds-ease-out);
 }
+.input::placeholder {
+  color: var(--ds-color-signal);
+  opacity: 0.6;
+}
 .input:focus-visible {
   border-color: var(--ds-color-signal);
 }

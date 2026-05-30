@@ -12,7 +12,13 @@ export async function ManPageContent() {
 
 export function ManPageSection({ defer }: { defer?: boolean } = {}) {
   return (
-    <Module id="sec-man-page" header="MAN ERIK(1)" icon={<IconManPage />} defer={defer}>
+    <Module
+      id="sec-man-page"
+      header="MAN ERIK(1)"
+      icon={<IconManPage />}
+      defer={defer}
+      variant="green"
+    >
       <Suspense fallback={<ManPageDesktop />}>
         <ManPageContent />
       </Suspense>

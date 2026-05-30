@@ -245,7 +245,13 @@ export async function GuitarContent() {
 
 export function GuitarSection({ defer }: { defer?: boolean } = {}) {
   return (
-    <Module id="sec-guitar" header="CAT ~/.GUITAR_RIG" icon={<IconGuitar />} defer={defer}>
+    <Module
+      id="sec-guitar"
+      header="CAT ~/.GUITAR_RIG"
+      icon={<IconGuitar />}
+      defer={defer}
+      variant="green"
+    >
       <Suspense fallback={null}>
         <GuitarContent />
       </Suspense>

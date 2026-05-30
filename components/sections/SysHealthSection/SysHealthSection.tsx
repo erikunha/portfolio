@@ -5,7 +5,13 @@ import styles from './SysHealthSection.module.css';
 
 export function SysHealthSection({ defer }: { defer?: boolean } = {}) {
   return (
-    <Module id="sec-sys-health" header="SYS_HEALTH_MONITOR" icon={<IconSysHealth />} defer={defer}>
+    <Module
+      id="sec-sys-health"
+      header="SYS_HEALTH_MONITOR"
+      icon={<IconSysHealth />}
+      defer={defer}
+      variant="green"
+    >
       <div className={styles.root}>
         {sysStats.map((s) => (
           <div key={s.label} className={styles.stat}>

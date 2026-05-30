@@ -75,6 +75,7 @@ export function ProjectsSection({ defer }: { defer?: boolean } = {}) {
     <Module
       id="sec-projects"
       header="LS -LA ./PROJECTS"
+      variant="green"
       mobileHeader="LS -LA ~/PROJECTS"
       icon={<IconProjects />}
       defer={defer}

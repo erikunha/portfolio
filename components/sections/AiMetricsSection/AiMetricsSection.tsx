@@ -93,6 +93,7 @@ export function AiMetricsSection({ defer }: { defer?: boolean } = {}) {
     <Module
       id="sec-ai-metrics"
       header="ASK_EVAL.JSON --MEASURED"
+      variant="green"
       mobileHeader="ASK_EVAL.JSON"
       icon={<IconAiMetrics />}
       defer={defer}
