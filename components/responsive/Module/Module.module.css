@@ -134,7 +134,7 @@
   transition: opacity var(--ds-duration-slow) cubic-bezier(0.32, 0, 0.67, 0);
 }
 
-.bodyContentGreen {
+.bodyContent[data-variant="green"] {
   background: rgba(0, 255, 65, 0.05);
 }
 

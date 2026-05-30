@@ -76,13 +76,7 @@ export function Module({
         {/* bodyInner: grid item — no padding so 0fr collapses to true 0.
             bodyContent: padding+color wrapper inside the overflow:hidden clip. */}
         <div className={styles.bodyInner}>
-          <div
-            className={
-              variant === 'green'
-                ? `${styles.bodyContent} ${styles.bodyContentGreen}`
-                : styles.bodyContent
-            }
-          >
+          <div className={styles.bodyContent} data-variant={variant}>
             {children}
           </div>
         </div>
