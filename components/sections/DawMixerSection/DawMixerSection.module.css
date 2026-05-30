@@ -188,10 +188,10 @@
   padding: 14px 18px;
   position: relative;
 }
-.channelFocused {
+.channelRow[data-focused] {
   background: color-mix(in srgb, var(--ds-color-signal) 6%, transparent);
 }
-.channelFocused::before {
+.channelRow[data-focused]::before {
   content: "";
   position: absolute;
   left: 0;
@@ -201,7 +201,7 @@
   background: var(--ds-color-signal);
   box-shadow: 0 0 10px var(--ds-color-signal);
 }
-.channelMaster {
+.channelRow[data-channel="master"] {
   background: linear-gradient(
     90deg,
     color-mix(in srgb, var(--ds-color-signal) 8%, transparent),
@@ -236,11 +236,11 @@
   background: var(--ds-color-signal);
   opacity: 0.85;
 }
-.channelFocused .clipBar {
+.channelRow[data-focused] .clipBar {
   border-color: var(--ds-color-signal);
   box-shadow: 0 0 6px color-mix(in srgb, var(--ds-color-signal) 40%, transparent);
 }
-.channelFocused .clipFill {
+.channelRow[data-focused] .clipFill {
   opacity: 1;
 }
 
@@ -258,8 +258,8 @@
   letter-spacing: 0.04em;
   line-height: 1;
 }
-.channelFocused .trackName,
-.channelMaster .trackName {
+.channelRow[data-focused] .trackName,
+.channelRow[data-channel="master"] .trackName {
   color: var(--ds-color-signal);
 }
 .trackDesc {
@@ -387,10 +387,10 @@
   flex-direction: column;
   gap: 12px;
 }
-.channelCardFocused {
+.channelCard[data-focused] {
   background: color-mix(in srgb, var(--ds-color-signal) 7%, transparent);
 }
-.channelCardFocused::before {
+.channelCard[data-focused]::before {
   content: "";
   position: absolute;
   left: 0;
@@ -400,7 +400,7 @@
   background: var(--ds-color-signal);
   box-shadow: 0 0 10px var(--ds-color-signal);
 }
-.channelCardMaster {
+.channelCard[data-channel="master"] {
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--ds-color-signal) 6%, transparent),
@@ -427,7 +427,7 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
-.channelCardFocused .mxId {
+.channelCard[data-focused] .mxId {
   color: var(--ds-color-signal);
   border-color: var(--ds-color-signal);
   background: color-mix(in srgb, var(--ds-color-signal) 10%, transparent);
@@ -443,8 +443,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.channelCardFocused .mxName,
-.channelCardMaster .mxName {
+.channelCard[data-focused] .mxName,
+.channelCard[data-channel="master"] .mxName {
   color: var(--ds-color-signal);
 }
 .mxDb {

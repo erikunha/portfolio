@@ -50,7 +50,9 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
   const isMaster = ch.id === 'MASTER';
   return (
     <div
-      className={`${s.channelRow} ${ch.focused ? s.channelFocused : ''} ${isMaster ? s.channelMaster : ''}`}
+      className={s.channelRow}
+      data-focused={ch.focused || undefined}
+      data-channel={isMaster ? 'master' : undefined}
       data-testid={`channel-${ch.id}`}
     >
       <div className={s.colId}>

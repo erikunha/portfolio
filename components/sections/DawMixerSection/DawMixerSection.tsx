@@ -154,7 +154,9 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
   const isMaster = ch.id === 'MASTER';
   return (
     <div
-      className={`${s.channelCard} ${ch.focused ? s.channelCardFocused : ''} ${isMaster ? s.channelCardMaster : ''}`}
+      className={s.channelCard}
+      data-focused={ch.focused || undefined}
+      data-channel={isMaster ? 'master' : undefined}
       data-testid={`channel-mobile-${ch.id}`}
     >
       <div className={s.mxHead}>
