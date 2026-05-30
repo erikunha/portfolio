@@ -366,7 +366,7 @@ test.describe('cross-cutting', () => {
 
     const { elapsedMs, motionFlipped } = await page.evaluate(async () => {
       const btn = document.querySelector<HTMLButtonElement>('button[data-motion]');
-      if (!btn || btn.tagName !== 'BUTTON')
+      if (btn?.tagName !== 'BUTTON')
         throw new Error('button[data-motion] not found after hydration');
       const before = document.body.dataset.motion;
       const t0 = performance.now();

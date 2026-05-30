@@ -162,7 +162,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Dependency vulnerability audit
-        run: pnpm audit --audit-level=high
+        # GHSA-w5hq-g745-h8pq (uuid via @lhci/cli): dev-only, no prod exposure.
+        # Fix requires uuid >=11.1.1 major bump; blocked on @lhci/cli upstream.
+        # Remove --ignore once @lhci/cli ships uuid >=11.1.1. See DECISIONS.md.
+        run: pnpm audit --audit-level=moderate --ignore GHSA-w5hq-g745-h8pq
 
       - name: Unit tests
         run: pnpm test:coverage
