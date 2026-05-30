@@ -1,6 +1,8 @@
 import { log } from '@/lib/log';
 import { getRedis } from './rate-limit';
 
+export type Strategy = 'desktop' | 'mobile';
+
 export type LighthouseScores = {
   performance: number;
   accessibility: number;
@@ -9,7 +11,6 @@ export type LighthouseScores = {
   fetchedAt: string;
 };
 
-// Fallback scores used when the PSI API is unavailable or the API key is absent.
 export const LIGHTHOUSE_FALLBACK: LighthouseScores = {
   performance: 0,
   accessibility: 0,
@@ -18,67 +19,76 @@ export const LIGHTHOUSE_FALLBACK: LighthouseScores = {
   fetchedAt: '—',
 };
 
-const CACHE_KEY = 'lh:scores';
-export const LIGHTHOUSE_TTL_S = 86_400; // 24 h
+const CACHE_KEY = (strategy: Strategy) => `lh:scores:${strategy}`;
+export const LIGHTHOUSE_TTL_S = 90_000; // 25 h — survives a missed cron run
 
-/**
- * Returns Lighthouse scores from Redis cache, or fetches fresh from PSI API.
- * Shared by both the RSC LivePerfSection and the /api/lighthouse route handler.
- */
-export async function getScores(): Promise<LighthouseScores> {
-  // 1. Try cache
-  const cached = await getRedis()
-    .get<LighthouseScores>(CACHE_KEY)
-    .catch(() => null);
-  if (cached) return cached;
-
-  // 2. Fetch from PageSpeed Insights
+async function fetchAndCache(strategy: Strategy): Promise<LighthouseScores> {
   const apiKey = process.env.PSI_API_KEY;
-  if (!apiKey) return LIGHTHOUSE_FALLBACK;
+  if (!apiKey) throw new Error('PSI_API_KEY is not set');
 
   const psiUrl =
     'https://www.googleapis.com/pagespeedonline/v5/runPagespeed' +
     `?url=${encodeURIComponent('https://www.erikunha.dev')}` +
-    '&strategy=desktop' +
+    `&strategy=${strategy}` +
     `&key=${apiKey}` +
     '&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO';
 
-  let scores: LighthouseScores;
-  try {
-    const res = await fetch(psiUrl, {
-      next: { revalidate: LIGHTHOUSE_TTL_S },
-      signal: AbortSignal.timeout(8_000),
-      headers: { Referer: 'https://www.erikunha.dev/' },
-    });
-    if (!res.ok) throw new Error(`PSI API returned ${res.status}`);
+  const res = await fetch(psiUrl, {
+    next: { revalidate: LIGHTHOUSE_TTL_S },
+    signal: AbortSignal.timeout(8_000),
+    headers: { Referer: 'https://www.erikunha.dev/' },
+  });
+  if (!res.ok) throw new Error(`PSI API returned ${res.status}`);
 
-    const data = (await res.json()) as {
-      lighthouseResult?: {
-        categories?: {
-          performance?: { score?: number };
-          accessibility?: { score?: number };
-          'best-practices'?: { score?: number };
-          seo?: { score?: number };
-        };
+  const data = (await res.json()) as {
+    lighthouseResult?: {
+      categories?: {
+        performance?: { score?: number };
+        accessibility?: { score?: number };
+        'best-practices'?: { score?: number };
+        seo?: { score?: number };
       };
     };
-    const cats = data.lighthouseResult?.categories ?? {};
-    scores = {
-      performance: Math.round((cats.performance?.score ?? 1) * 100),
-      accessibility: Math.round((cats.accessibility?.score ?? 1) * 100),
-      bestPractices: Math.round((cats['best-practices']?.score ?? 0.98) * 100),
-      seo: Math.round((cats.seo?.score ?? 1) * 100),
-      fetchedAt: new Date().toISOString(),
-    };
-  } catch (err) {
-    log.error('PSI fetch failed', { err });
-    return LIGHTHOUSE_FALLBACK;
-  }
+  };
+  const cats = data.lighthouseResult?.categories ?? {};
+  const scores: LighthouseScores = {
+    performance: Math.round((cats.performance?.score ?? 1) * 100),
+    accessibility: Math.round((cats.accessibility?.score ?? 1) * 100),
+    bestPractices: Math.round((cats['best-practices']?.score ?? 0.98) * 100),
+    seo: Math.round((cats.seo?.score ?? 1) * 100),
+    fetchedAt: new Date().toISOString(),
+  };
 
-  // 3. Write to Redis — fire-and-forget; don't let cache failure block response.
+  // Fire-and-forget — don't let cache failure block the response.
   getRedis()
-    .set(CACHE_KEY, scores, { ex: LIGHTHOUSE_TTL_S })
+    .set(CACHE_KEY(strategy), scores, { ex: LIGHTHOUSE_TTL_S })
     .catch((err) => log.error('Redis cache set failed', { err }));
 
   return scores;
+}
+
+/**
+ * Cache-first. Returns cached scores if available; fetches from PSI on miss.
+ * Falls back to LIGHTHOUSE_FALLBACK on any error. Default strategy: desktop.
+ */
+export async function getScores(strategy: Strategy = 'desktop'): Promise<LighthouseScores> {
+  const cached = await getRedis()
+    .get<LighthouseScores>(CACHE_KEY(strategy))
+    .catch(() => null);
+  if (cached) return cached;
+
+  try {
+    return await fetchAndCache(strategy);
+  } catch (err) {
+    log.error('PSI fetch failed', { err, strategy });
+    return LIGHTHOUSE_FALLBACK;
+  }
+}
+
+/**
+ * Always fetches from PSI and updates cache. Used by the cron handler.
+ * Throws on PSI failure — caller handles per-strategy via Promise.allSettled.
+ */
+export async function refreshScores(strategy: Strategy): Promise<LighthouseScores> {
+  return fetchAndCache(strategy);
 }

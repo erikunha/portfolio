@@ -45,7 +45,7 @@ describe('Redis singleton — lighthouse-scores reuses the shared client', () =>
     // was used for the cache read. A private Redis.fromEnv() inside
     // lighthouse-scores.ts would never hit this mocked factory.
     expect(getRedisMock).toHaveBeenCalled();
-    expect(getMock).toHaveBeenCalledWith('lh:scores');
+    expect(getMock).toHaveBeenCalledWith('lh:scores:desktop');
 
     if (prevKey === undefined) delete process.env.PSI_API_KEY;
     else process.env.PSI_API_KEY = prevKey;
@@ -65,6 +65,6 @@ describe('Redis singleton — lighthouse-scores reuses the shared client', () =>
     const result = await getScores();
 
     expect(result).toEqual(cached);
-    expect(getMock).toHaveBeenCalledWith('lh:scores');
+    expect(getMock).toHaveBeenCalledWith('lh:scores:desktop');
   });
 });
