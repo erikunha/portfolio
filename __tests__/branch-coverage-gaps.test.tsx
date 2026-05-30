@@ -33,7 +33,7 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
 
   async function renderPerfData(): Promise<string> {
     const { PerfData } = await import('@/components/sections/LivePerfSection/LivePerfSection');
-    const element = await PerfData();
+    const element = await PerfData({ strategy: 'desktop' });
     return renderToStaticMarkup(element);
   }
 
