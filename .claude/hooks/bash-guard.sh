@@ -82,9 +82,15 @@ if printf '%s' "$FALLOW_CMD" | grep -qE '(^|[[:space:]&|;/])fallow[[:space:]@]';
     printf '[BLOCKED] fallow env (FALLOW_*) or config-file flag — exfil + untrusted-config surface.\n'
     exit 2
   fi
-  # C. No destructive / runtime / cloud flags anywhere in the command.
-  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply'; then
-    printf '[BLOCKED] fallow write/cloud flag detected — read-only audit only.\n'
+  # C. No destructive / file-writing / runtime / cloud / CI flags anywhere.
+  # NB: read-only subcommands DO expose file-write flags (--sarif-file writes an
+  # arbitrary path; --save-*baseline/--save-snapshot write files, and
+  # --save-regression-baseline with no path writes INTO .fallowrc). --save- is a
+  # forward-compatible prefix; --ci is anchored so it does not match --circular-deps.
+  # This is a deny-list (the subcommand gate D is the allow-list); new fallow flags
+  # are covered by the re-audit-on-bump protocol in DECISIONS.md.
+  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply|--save-|--sarif-file|--ci[[:space:]=]'; then
+    printf '[BLOCKED] fallow write/cloud/CI flag detected (e.g. --sarif-file, --save-*, --ci) — read-only audit only.\n'
     exit 2
   fi
   # D. Fail-closed allow-list: the WHOLE command must be exactly the pinned npx
