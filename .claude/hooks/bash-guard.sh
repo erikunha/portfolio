@@ -51,36 +51,49 @@ if printf '%s' "$CMD" | grep -qP 'git push.*(--force|-f)\b.*\bmain\b|git push.*\
   exit 2
 fi
 
-# ── fallow CLI: enforce pinned + read-only ───────────────────────────────────
-# fallow is an on-demand audit tool (see .claude/skills/fallow-audit). Allowed form:
-#   npx fallow@2.85.0 <read-only subcommand>
-# Read-only analysis: dead-code dupes health flags audit list explain config schema.
-# Blocked: fix/--fix (deletes source), init/hooks/setup-hooks/migrate (write git hooks
-# + config), watch (long-running), ci/coverage/license/telemetry (paid-runtime / CI
-# posting). WHY: npx has no lockfile protection and fix mutates source — this regex is
-# the mechanical gate, not the SKILL.md prose. See DECISIONS.md.
+# ── fallow CLI: enforce pinned + read-only (FAIL-CLOSED allow-list) ──────────
+# fallow is an on-demand audit tool (see .claude/skills/fallow-audit). The ONLY
+# allowed form is a single, un-chained:  npx fallow@<PIN> <read-only-subcommand>
+# Anything else is denied: write/runtime subcommands (fix/init/hooks/migrate/
+# watch/ci/coverage/license/telemetry), --fix/cloud flags, FALLOW_* env, config
+# flags, alternate runners (pnpm dlx/bunx/yarn dlx), unpinned/global/wrong-version,
+# and any shell chaining/substitution. WHY: npx has no lockfile protection and
+# fix mutates source; this is the mechanical gate (PreToolUse exit 2), not the
+# SKILL.md prose. The allow-list is fail-closed — unrecognized shapes are denied,
+# so new fallow subcommands/flags are blocked until reviewed. PIN drives the regex.
+# Residual limit: a renamed/copied binary (cp .../fallow /tmp/f && /tmp/f fix) has
+# no `fallow` token and cannot be name-matched — see DECISIONS.md.
 FALLOW_PIN='2.85.0'
-if printf '%s' "$CMD" | grep -qE 'npx[[:space:]].*fallow' \
-   || printf '%s' "$CMD" | grep -qE '(^|[[:space:]&|;]|/)fallow([[:space:]@]|$)'; then
-  # 1. Block destructive / write / runtime / CI subcommands + --fix flag.
-  if printf '%s' "$CMD" | grep -qE '(^|[[:space:]])(fix|init|hooks|setup-hooks|migrate|watch|coverage|license|telemetry|ci|ci-template)([[:space:]]|$)' \
-     || printf '%s' "$CMD" | grep -qE -- '--fix\b'; then
-    printf '[BLOCKED] fallow is read-only here.\n'
-    printf 'Blocked: fix/init/hooks/setup-hooks/migrate/watch/coverage/license/telemetry/ci.\n'
-    printf 'Use a read-only analysis command: npx fallow@%s audit|dead-code|dupes|health|flags\n' "$FALLOW_PIN"
+FALLOW_PIN_RE=$(printf '%s' "$FALLOW_PIN" | sed 's/\./\\./g')
+# Normalize whitespace and append a trailing space so end-of-token == a space.
+FALLOW_CMD=$(printf '%s ' "$CMD" | tr '\n\t' '  ')
+if printf '%s' "$FALLOW_CMD" | grep -qE '(^|[[:space:]&|;/])fallow[[:space:]@]'; then
+  # A. No shell chaining / substitution alongside fallow (kills the decoy-token
+  #    bypass: a valid pinned call paired with a second malicious clause).
+  if printf '%s' "$FALLOW_CMD" | grep -qE '[;|&`]|\$\('; then
+    printf '[BLOCKED] Run fallow as a single, un-chained command — no ; | & backticks $() or pipes.\n'
+    printf 'Read its output directly: npx fallow@%s audit\n' "$FALLOW_PIN"
     exit 2
   fi
-  # 2. Block cloud / runtime / CI-posting flags + env (network exfil channel).
-  if printf '%s' "$CMD" | grep -qE -- '--upload\b|--cloud\b|--runtime\b|--comment\b|--review\b|--remote\b' \
-     || printf '%s' "$CMD" | grep -qE '\bFALLOW_(COMMENT|REVIEW|TOKEN|API_KEY|LICENSE)='; then
-    printf '[BLOCKED] fallow cloud/runtime/CI-posting surface detected.\n'
-    printf 'These create a network exfil channel. Local read-only audit only.\n'
+  # B. No FALLOW_* env (exfil/runtime/config namespace) and no config-file flag
+  #    (a .fallowrc can enable auto-fix or a remote extends: URL).
+  if printf '%s' "$FALLOW_CMD" | grep -qE '(^|[[:space:]])FALLOW_[A-Z0-9_]+=' \
+     || printf '%s' "$FALLOW_CMD" | grep -qE -- '(^|[[:space:]])(-c|--config|--fallowrc)([[:space:]=])'; then
+    printf '[BLOCKED] fallow env (FALLOW_*) or config-file flag — exfil + untrusted-config surface.\n'
     exit 2
   fi
-  # 3. Require the exact pinned npx form (block floating npx fallow + global fallow).
-  if ! printf '%s' "$CMD" | grep -qE 'npx[[:space:]]+(--yes[[:space:]]+|-y[[:space:]]+)?fallow@2\.85\.0([[:space:]]|$)'; then
-    printf '[BLOCKED] fallow must be pinned: npx fallow@%s ...\n' "$FALLOW_PIN"
-    printf 'Bare npx fallow floats to latest (no lockfile protection); global fallow is unpinned.\n'
+  # C. No destructive / runtime / cloud flags anywhere in the command.
+  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply'; then
+    printf '[BLOCKED] fallow write/cloud flag detected — read-only audit only.\n'
+    exit 2
+  fi
+  # D. Fail-closed allow-list: the WHOLE command must be exactly the pinned npx
+  #    form with a read-only subcommand. Rejects unpinned, global, wrong-version,
+  #    pnpm dlx/bunx/yarn dlx, path forms, and every write subcommand.
+  if ! printf '%s' "$FALLOW_CMD" | grep -qE "^[[:space:]]*npx[[:space:]]+(--yes[[:space:]]+|-y[[:space:]]+)?fallow@${FALLOW_PIN_RE}[[:space:]]+(audit|dead-code|dupes|health|flags|list|workspaces|explain|config|schema)[[:space:]]"; then
+    printf '[BLOCKED] fallow must be exactly: npx fallow@%s <read-only subcommand>\n' "$FALLOW_PIN"
+    printf 'Allowed: audit dead-code dupes health flags list workspaces explain config schema.\n'
+    printf 'Rejected: unpinned/global fallow, other versions, pnpm dlx/bunx/yarn dlx, write subcommands.\n'
     exit 2
   fi
 fi
