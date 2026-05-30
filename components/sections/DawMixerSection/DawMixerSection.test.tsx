@@ -57,7 +57,13 @@ describe('DawMixerSection — desktop', () => {
   it('CH 02 has focused class (active channel indicator)', async () => {
     const doc = await renderDesktop();
     const ch02 = doc.querySelector('[data-testid="channel-CH 02"]');
-    expect(ch02?.className).toContain('channelFocused');
+    expect(ch02?.hasAttribute('data-focused')).toBe(true);
+  });
+
+  it('MASTER channel row has data-channel="master"', async () => {
+    const doc = await renderDesktop();
+    const masterRow = doc.querySelector('[data-testid="channel-MASTER"]');
+    expect(masterRow?.getAttribute('data-channel')).toBe('master');
   });
 
   it('MASTER row shows LUFS data', async () => {

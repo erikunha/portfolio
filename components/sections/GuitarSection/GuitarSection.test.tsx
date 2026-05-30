@@ -60,7 +60,7 @@ describe('GuitarSection — influences (desktop)', () => {
 
   it('renders John Mayer as the active (▶) influence', async () => {
     const doc = await renderDesktop();
-    const active = doc.querySelector('[data-testid="guitar-desktop"] [class*="infActive"]');
+    const active = doc.querySelector('[data-testid="guitar-desktop"] [data-active]');
     expect(active?.textContent).toContain('John Mayer');
   });
 

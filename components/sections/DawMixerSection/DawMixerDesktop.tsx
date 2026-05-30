@@ -50,11 +50,15 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
   const isMaster = ch.id === 'MASTER';
   return (
     <div
-      className={`${s.channelRow} ${ch.focused ? s.channelFocused : ''} ${isMaster ? s.channelMaster : ''}`}
+      className={s.channelRow}
+      data-focused={ch.focused || undefined}
+      data-channel={isMaster ? 'master' : undefined}
       data-testid={`channel-${ch.id}`}
     >
       <div className={s.colId}>
-        <span className={isMaster ? s.masterBadge : s.channelBadge}>{ch.id}</span>
+        <span className={s.channelBadge} data-channel={isMaster ? 'master' : undefined}>
+          {ch.id}
+        </span>
         <span className={s.channelSubName}>{ch.name}</span>
         <div className={s.clipBar} aria-hidden="true">
           <div className={s.clipFill} style={{ width: `${ch.faderPct}%` }} />

@@ -76,12 +76,12 @@
   margin: 6px 0 8px;
 }
 
-.deltaHero {
+.delta[data-featured] {
   font-size: var(--ds-font-size-heading-xl);
 }
 
 @media (max-width: 900px) {
-  .deltaHero {
+  .delta[data-featured] {
     font-size: var(--ds-font-size-heading-xl);
   }
 }
@@ -107,7 +107,7 @@
   padding-top: 10px;
 }
 
-.receiptHero .deltaHero {
+.receiptHero .delta[data-featured] {
   font-size: var(--ds-font-size-heading-xl);
 }
 
@@ -119,8 +119,8 @@
   .delta {
     font-size: var(--ds-font-size-heading-sm);
   }
-  /* Higher specificity (0,2,0) beats .delta (0,1,0) */
-  .receiptHero .deltaHero {
+  /* Specificity: .receiptHero .delta[data-featured] = 0,3,0 beats .delta[data-featured] = 0,2,0 */
+  .receiptHero .delta[data-featured] {
     font-size: var(--ds-font-size-heading-md);
   }
 }

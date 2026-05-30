@@ -1,21 +1,20 @@
 // __tests__/content-visibility.test.ts
 // Behavioral test: verifies the below-fold deferral mechanism.
 //
-//  - The `defer` prop on a section must produce the `.cvDefer` class on the
-//    rendered <section> — proven by rendering the Module shell both ways.
+//  - The `defer` prop on a section must produce the `data-cv-defer` attribute
+//    on the rendered <details> — proven by rendering the Module shell both ways.
 //  - The page composition must mark every below-fold section with defer —
 //    proven by walking the real element tree app/page.tsx's Home() returns.
 //
-// The `.cvDefer { content-visibility: auto }` CSS rule itself is a build
-// asset; that single read carries a behavioral-test-allow tag (jsdom does not
-// evaluate stylesheet `content-visibility`, so the shipped rule's presence in
-// Module.module.css is the strongest verifiable signal).
+// The `details[data-cv-defer="true"] { content-visibility: auto }` CSS rule
+// itself is a build asset; that single read carries a behavioral-test-allow
+// tag (jsdom does not evaluate stylesheet `content-visibility`, so the shipped
+// rule's presence in Module.module.css is the strongest verifiable signal).
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import moduleStyles from '@/components/responsive/Module/Module.module.css';
 
 // Module is a pure (sync, non-async) Server Component: one <details> for every
 // viewport, no UA detection. No stub needed — it renders deterministically.
@@ -35,7 +34,7 @@ function countDeferredSections(node: unknown): number {
 }
 
 describe('content-visibility deferral', () => {
-  it('Module renders the cv-defer class only when defer is set', async () => {
+  it('Module renders data-cv-defer attribute only when defer is set', async () => {
     const { Module } = await import('@/components/responsive/Module');
     // Module is a sync Server Component — call it to obtain the element.
     const deferredEl = Module({
@@ -50,8 +49,8 @@ describe('content-visibility deferral', () => {
       defer: false,
       children: null,
     });
-    expect(renderToStaticMarkup(deferredEl)).toContain(moduleStyles.cvDefer);
-    expect(renderToStaticMarkup(eagerEl)).not.toContain(moduleStyles.cvDefer);
+    expect(renderToStaticMarkup(deferredEl)).toContain('data-cv-defer="true"');
+    expect(renderToStaticMarkup(eagerEl)).not.toContain('data-cv-defer');
   });
 
   it('app/page.tsx defers every below-fold section (>= 14)', async () => {
@@ -65,15 +64,15 @@ describe('content-visibility deferral', () => {
     expect(deferredCount).toBeGreaterThanOrEqual(14);
   });
 
-  it('Module.module.css ships the cvDefer content-visibility rule', () => {
+  it('Module.module.css ships the data-cv-defer content-visibility rule', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate content-visibility
     const moduleCss = readFileSync(
       path.resolve(__dirname, '../components/responsive/Module/Module.module.css'),
       'utf-8',
     );
-    expect(moduleCss).toContain('.cvDefer');
+    expect(moduleCss).toContain('data-cv-defer');
     expect(moduleCss).toContain('content-visibility: auto');
-    // Class-based selection replaced the brittle nth-of-type positional
+    // Attribute-based selection replaced the brittle nth-of-type positional
     // selector — guard against a regression back to positional deferral.
     expect(moduleCss).not.toMatch(/nth-of-type\(n\s*\+\s*\d+\)/);
   });

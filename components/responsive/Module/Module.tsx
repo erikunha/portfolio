@@ -34,7 +34,7 @@ export type ModuleProps = {
   defer?: boolean | undefined;
   /**
    * "green": full rgba(0,255,65,0.05) tint — for data-heavy/interactive sections.
-   * Default: SESSION_REPORT-style subtle gradient — for narrative/context sections.
+   * Default (omitted): transparent background — for narrative/context sections.
    */
   variant?: 'green';
   children: ReactNode;
@@ -52,7 +52,7 @@ export function Module({
   return (
     <details
       id={id}
-      className={defer ? `${styles.root} ${styles.cvDefer}` : styles.root}
+      className={styles.root}
       // Always open: see the file header. A section can still be collapsed by
       // tapping its summary on mobile.
       open
@@ -76,13 +76,7 @@ export function Module({
         {/* bodyInner: grid item — no padding so 0fr collapses to true 0.
             bodyContent: padding+color wrapper inside the overflow:hidden clip. */}
         <div className={styles.bodyInner}>
-          <div
-            className={
-              variant === 'green'
-                ? `${styles.bodyContent} ${styles.bodyContentGreen}`
-                : styles.bodyContent
-            }
-          >
+          <div className={styles.bodyContent} data-variant={variant}>
             {children}
           </div>
         </div>
