@@ -43,8 +43,10 @@
 }
 
 /* Below-fold deferral: skip style/layout/paint until near viewport.
-   Applied via data-cv-defer attribute on the <details> element when defer=true. */
-details[data-cv-defer="true"] {
+   Applied via data-cv-defer attribute on the <details> element when defer=true.
+   WHY: .root[data-cv-defer="true"] (0,2,0) — CSS Modules requires at least one local
+   class; element-only selectors are rejected as impure. */
+.root[data-cv-defer="true"] {
   content-visibility: auto;
   /* `auto 520px`: the 14 deferred sections vary too widely for one fixed
      estimate (measured desktop 186-1837px, mobile 70-2538px).
