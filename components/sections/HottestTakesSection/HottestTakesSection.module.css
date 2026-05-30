@@ -19,7 +19,8 @@
 }
 
 .footer {
-  color: var(--ds-color-text-muted);
+  color: var(--ds-color-signal);
+  font-weight: 700;
   font-size: var(--ds-font-size-xs);
   letter-spacing: 0.06em;
   margin: 14px 0 0;
@@ -106,6 +107,10 @@
     padding: 10px 0;
   }
 
+  .preamble {
+    font-size: 9px;
+  }
+
   .num {
     font-size: var(--ds-font-size-xs);
   }
@@ -119,7 +124,7 @@
   }
 
   .category {
-    font-size: var(--ds-font-size-2xs);
+    font-size: var(--ds-font-size-xs);
   }
 
   .footer {

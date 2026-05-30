@@ -48,7 +48,7 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
     { label: 'STYLE', value: 'dynamics > drive', sub: 'space is the note' },
     { label: 'TUNING', value: 'standard E', sub: 'sometimes drop D' },
     { label: 'ALT RIG', value: 'Martin', sub: 'acoustic' },
-    { label: 'GIGS', value: 'venues', sub: 'church · weddings + open mics' },
+    { label: 'GIGS', value: 'venues', sub: 'church · wedding · open mic' },
   ],
   liveCam: {
     photo: '/images/guitar-live.jpg',

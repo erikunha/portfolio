@@ -70,6 +70,12 @@ body[data-motion="reduce"] .send {
   transition: none;
 }
 
+@media (min-width: 769px) {
+  .cursor {
+    font-size: var(--ds-font-size-sm);
+  }
+}
+
 @media (max-width: 768px) {
   .submitrow {
     flex-direction: column;

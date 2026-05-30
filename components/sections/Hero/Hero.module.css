@@ -57,7 +57,7 @@
   bottom: 24px;
   z-index: 2;
   color: var(--ds-color-text-body);
-  font-size: var(--ds-font-size-sm);
+  font-size: var(--ds-font-size-body);
   line-height: 1.7;
   overflow: hidden;
   display: flex;
@@ -102,6 +102,14 @@
   font-size: var(--ds-font-size-sm);
   letter-spacing: 0.08em;
   margin-bottom: 14px;
+}
+
+.bio .tagline {
+  font-size: var(--ds-font-size-body);
+}
+
+.bio .meta {
+  font-size: var(--ds-font-size-body);
 }
 
 .meta b {
@@ -343,10 +351,10 @@ body[data-motion="reduce"] .headline {
   color: var(--ds-color-text-body);
   font-size: var(--ds-font-size-sm);
   line-height: 1.65;
-  /* 11 lines × (--ds-font-size-sm:12px × line-height:1.65) ≈ 218px; fixed
+  /* 8 lines × (--ds-font-size-sm:12px × line-height:1.65) ≈ 158px; fixed
      height reserves the full space before the animation appends lines,
      preventing CLS on mobile. Update if either token changes. */
-  height: 220px;
+  height: 165px;
   overflow: hidden;
   margin: 0 0 12px;
 }

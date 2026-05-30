@@ -400,14 +400,20 @@ test.describe('cross-cutting', () => {
       for (const sheet of document.styleSheets) {
         try {
           for (const rule of sheet.cssRules) {
-            const text = rule.cssText ?? '';
+            // Normalize before matching: collapse whitespace, strip :: to :
+            // so :after matches both :after and ::after across Chromium/WebKit
+            // CSSOM serialization differences. Lowercase for case-insensitivity.
+            const text = (rule.cssText ?? '')
+              .replace(/\s+/g, ' ')
+              .replace(/::/g, ':')
+              .toLowerCase();
             // The selector must reference both rootMobile (parent scope) and
-            // mxChain::after (the arrow pseudo-element being hidden). An
-            // unscoped `.mxChain::after { display:none }` would not qualify.
+            // mxChain:after (the arrow pseudo-element being hidden). An
+            // unscoped `.mxChain:after { display:none }` would not qualify.
             if (
-              text.includes('rootMobile') &&
-              text.includes('mxChain') &&
-              text.includes('::after') &&
+              text.includes('rootmobile') &&
+              text.includes('mxchain') &&
+              text.includes(':after') &&
               text.includes('display: none')
             ) {
               return true;

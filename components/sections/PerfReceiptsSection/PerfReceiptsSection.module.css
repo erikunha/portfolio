@@ -136,7 +136,7 @@
     min-height: 0;
   }
   .metric {
-    font-size: var(--ds-font-size-2xs);
+    font-size: var(--ds-font-size-xs);
   }
   .note {
     font-size: var(--ds-font-size-xs);

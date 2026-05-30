@@ -30,7 +30,7 @@ const MOBILE_INITIAL: Omit<Line, 'id'>[] = [
 
 const COMMANDS: { label: string; cmd: string }[] = [
   { label: 'help', cmd: 'help' },
-  { label: 'whoami', cmd: 'whoami' },
+  { label: 'whois', cmd: 'whois' },
   { label: 'ls', cmd: 'ls' },
   { label: 'cat skills.md', cmd: 'cat skills.md' },
   { label: 'cat ~/.now', cmd: 'cat ~/.now' },
@@ -46,7 +46,7 @@ function withIds(lines: Omit<Line, 'id'>[], nextId: () => number): Line[] {
 
 const PLACEHOLDER_SUGGESTIONS = [
   'help',
-  'whoami',
+  'whois',
   'cat skills.md',
   'cat ~/.now',
   'what are your strongest projects?',
@@ -160,6 +160,17 @@ export function InteractiveShell() {
     initializedRef.current = true;
     if (isMobile) setHistory(withIds(MOBILE_INITIAL, nextId));
   }, [isMobile, nextId]);
+
+  // Re-focus the input on desktop whenever a command finishes (busy: true → false).
+  // Skipped on mobile — programmatic focus pops the virtual keyboard after chip taps.
+  // wasBusyRef prevents firing on initial mount when busy is already false.
+  const wasBusyRef = useRef(false);
+  useEffect(() => {
+    if (!isMobile && wasBusyRef.current && !busy) {
+      inputRef.current?.focus();
+    }
+    wasBusyRef.current = busy;
+  }, [busy, isMobile]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: history + streamingText trigger scroll; feedRef is a stable ref
   useEffect(() => {

@@ -14,7 +14,7 @@
 
 .cell .pk {
   color: var(--ds-color-text-muted);
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   letter-spacing: 0.16em;
 }
 
@@ -88,7 +88,7 @@
     gap: 10px;
   }
   .cell .pk {
-    font-size: var(--ds-font-size-2xs);
+    font-size: var(--ds-font-size-xs);
     letter-spacing: 0.14em;
   }
   .cell .pv {
@@ -102,7 +102,7 @@
     height: 3px;
   }
   .foot {
-    font-size: var(--ds-font-size-2xs);
+    font-size: 9px;
   }
   .foot .liveDot {
     width: 6px;

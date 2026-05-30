@@ -41,11 +41,8 @@ export const MOBILE_LINE_SPECS: LinePart[][] = [
   ['[BOOT SEQUENCE INITIATED]'],
   [' '], // non-breaking space: prevents HTML whitespace collapse in block spans
   ['kernel modules... ', { cls: 'bootOk', text: 'OK' }],
-  ['mount fs... ', { cls: 'bootOk', text: 'OK' }],
-  ['network... ', { cls: 'bootOk', text: 'OK' }],
   ['security... ', { cls: 'bootEnc', text: '[ENCRYPTED]' }],
   [{ cls: 'bootWelcome', text: 'DEV_OS v2.0.4 [user: erik]' }],
-  [' '], // non-breaking space: prevents HTML whitespace collapse in block spans
 ];
 
 export const DESKTOP_DIALOG = [

@@ -87,7 +87,7 @@
   color: var(--ds-color-text-muted);
 }
 .pluginName {
-  font-size: var(--ds-font-size-2xs);
+  font-size: var(--ds-font-size-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   white-space: nowrap;
@@ -118,7 +118,7 @@
 /* ─── Desktop ────────────────────────────────────────────────────────── */
 .root {
   font-family: var(--ds-font-family-mono);
-  font-size: var(--ds-font-size-sm);
+  font-size: var(--ds-font-size-body);
   color: var(--ds-color-text-body);
   border: 1px solid var(--ds-color-border-default);
   background: rgba(0, 0, 0, 0.5);
@@ -135,7 +135,7 @@
   padding: 12px 18px;
   border-bottom: 1px solid var(--ds-color-border-default);
   background: color-mix(in srgb, var(--ds-color-signal) 5%, transparent);
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-color-text-muted);
   letter-spacing: 0.14em;
 }
@@ -156,7 +156,7 @@
 .transportTime {
   color: var(--ds-color-signal);
   font-weight: 700;
-  font-size: var(--ds-font-size-sm);
+  font-size: var(--ds-font-size-body);
   letter-spacing: 0.06em;
 }
 .transportSep {
@@ -172,7 +172,7 @@
   align-items: center;
 }
 .tableHeader {
-  font-size: var(--ds-font-size-2xs);
+  font-size: var(--ds-font-size-xs);
   color: var(--ds-color-text-muted);
   letter-spacing: 0.18em;
   border-bottom: 1px solid var(--ds-color-signal-quiet);
@@ -218,7 +218,7 @@
 }
 .channelSubName {
   display: block;
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-color-text-muted);
 }
 .clipBar {
@@ -253,7 +253,7 @@
 }
 .trackName {
   font-weight: 700;
-  font-size: 14px;
+  font-size: var(--ds-font-size-md);
   color: var(--ds-color-text-body);
   letter-spacing: 0.04em;
   line-height: 1;
@@ -263,7 +263,7 @@
   color: var(--ds-color-signal);
 }
 .trackDesc {
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-color-text-muted);
   line-height: 1.3;
   white-space: nowrap;
@@ -312,9 +312,27 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
   line-height: 1.1;
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-color-text-muted);
   text-align: right;
+}
+
+/* ─── Desktop font overrides for shared classes ─────────────────────────── */
+.root .channelBadge,
+.root .masterBadge {
+  font-size: var(--ds-font-size-sm);
+}
+
+.root .dbValue {
+  font-size: var(--ds-font-size-body);
+}
+
+.root .dbUnit {
+  font-size: var(--ds-font-size-sm);
+}
+
+.root .lufs {
+  font-size: var(--ds-font-size-xs);
 }
 
 /* ─── Mobile ─────────────────────────────────────────────────────────── */

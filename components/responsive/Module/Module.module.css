@@ -209,6 +209,15 @@ body[data-motion="reduce"] .bodyContent {
   opacity: 1;
 }
 
+/* ── Mobile scrim override (<=768px) ────────────────────────────────────
+   Base .root uses 0.55 so desktop's `background: none` override wins cleanly.
+   This block lightens the scrim explicitly for mobile. */
+@media (max-width: 768px) {
+  .root {
+    background: rgba(0, 0, 0, 0.22);
+  }
+}
+
 /* ───────────────────────────────────────────────────────────────────────
    MODULE — DESKTOP (>=769px): neutralize the native <details> collapsibility.
    The single <details> must read as the old plain, always-expanded

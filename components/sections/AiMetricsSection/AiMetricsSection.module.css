@@ -37,10 +37,10 @@
 }
 
 .note {
-  /* WCAG AA requires 4.5:1 for small text (11px). --ds-color-text-muted meets this;
+  /* WCAG AA requires 4.5:1 for small text (<18pt). --ds-color-text-muted meets this;
      --ds-color-text-faint does not, so it is intentionally excluded here. */
   color: var(--ds-color-text-muted);
-  font-size: var(--ds-font-size-xs);
+  font-size: var(--ds-font-size-sm);
   line-height: 1.5;
   margin-top: auto;
 }
@@ -99,6 +99,6 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
-    font-size: var(--ds-font-size-2xs);
+    font-size: 9px;
   }
 }

@@ -33,8 +33,9 @@
 }
 
 .root .status {
-  color: var(--ds-color-text-muted);
-  font-size: var(--ds-font-size-sm);
+  color: var(--ds-color-signal);
+  font-weight: 700;
+  font-size: var(--ds-font-size-xs);
   margin-top: 14px;
   border-top: 1px dashed var(--ds-color-signal-quiet);
   padding-top: 12px;
@@ -54,7 +55,11 @@
     font-size: var(--ds-font-size-body);
   }
 
-  .root .status {
+  .root li {
     font-size: var(--ds-font-size-sm);
+  }
+
+  .root .status {
+    font-size: var(--ds-font-size-xs);
   }
 }
