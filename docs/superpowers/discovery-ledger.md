@@ -5,6 +5,8 @@
 > **Scan date:** 2026-05-30. **Method:** catalog/frontmatter only, nothing installed or executed. **Rubric — Fit 1-5:** 5 = closes a real gap not already covered; 3 = useful but overlaps existing gates; 1 = irrelevant. **Verdict:** ADD (fit≥4, net-new, safe) · WATCH (promising but risk/uncertain/overlap) · SKIP (redundant/irrelevant/SaaS-exfil) · HAVE (installed).
 >
 > This ledger is the dedupe baseline for the next scan. Update verdicts here rather than re-discovering.
+>
+> **Post-scan change (2026-05-30):** the `semgrep` plugin + Homebrew binary were **removed** (it was enabled-but-unauthenticated, erroring on every edit). Any "HAVE" mention of semgrep below is the as-scanned state, now stale. The repo's security gates are the `security-auditor` agent + behavioral CSP/kill-switch tests.
 
 ## Tail enumeration (per-row, 2026-05-30) — closes the category-sampling gap
 
