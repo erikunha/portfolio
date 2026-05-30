@@ -41,7 +41,7 @@
     },
     {
       "value": "9px",
-      "reason": "cursor/caret width — sub-pixel indicator size; no space token applies"
+      "reason": "sub-token micro-dimension between ds-space-2 (8px) and ds-space-2.5 (10px) — cursor/caret width (Hero bootCursor), icon box size (MobileTitleBar close button), fader track border (DawMixer), compact cell padding/margin (GuitarSection); no single space token covers all sites"
     },
     {
       "value": "10px",
