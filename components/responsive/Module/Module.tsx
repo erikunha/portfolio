@@ -34,7 +34,7 @@ export type ModuleProps = {
   defer?: boolean | undefined;
   /**
    * "green": full rgba(0,255,65,0.05) tint — for data-heavy/interactive sections.
-   * Default: SESSION_REPORT-style subtle gradient — for narrative/context sections.
+   * Default (omitted): transparent background — for narrative/context sections.
    */
   variant?: 'green';
   children: ReactNode;

@@ -28,9 +28,9 @@ describe('PerfReceiptsSection — hero data-featured variant', () => {
 
   it('non-hero delta elements do not carry data-featured', async () => {
     const doc = await renderSection();
-    // All delta elements: the hero one carries data-featured, the rest do not.
-    // Verify at least one delta element exists without the attribute.
-    const withoutFeatured = doc.querySelectorAll('p:not([data-featured])');
-    expect(withoutFeatured.length).toBeGreaterThan(0);
+    // Query delta elements specifically (not all paragraphs) to avoid matching
+    // company/note/metric <p> elements that are never delta candidates.
+    const nonFeaturedDeltas = doc.querySelectorAll('[class*="delta"]:not([data-featured])');
+    expect(nonFeaturedDeltas.length).toBeGreaterThan(0);
   });
 });
