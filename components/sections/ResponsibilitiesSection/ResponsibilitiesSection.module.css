@@ -41,7 +41,7 @@
   color: var(--ds-color-text-body);
 }
 
-.root .file.crit {
+.root .file[data-highlight] {
   color: var(--ds-color-signal);
   font-weight: 700;
 }

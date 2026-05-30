@@ -28,7 +28,7 @@ export function ResponsibilitiesSection({ defer }: { defer?: boolean } = {}) {
               {'  '}
               <span className={styles.group}>{r.group}</span>
               {'  '}
-              <span className={`${styles.file}${r.highlight ? ` ${styles.crit}` : ''}`}>
+              <span className={styles.file} data-highlight={r.highlight || undefined}>
                 {r.name}
               </span>
               {'\n'}
