@@ -1,15 +1,20 @@
 import { Suspense } from 'react';
-import { getScores, LIGHTHOUSE_FALLBACK, type LighthouseScores } from '@/lib/lighthouse-scores';
+import {
+  getScores,
+  LIGHTHOUSE_FALLBACK,
+  type LighthouseScores,
+  type Strategy,
+} from '@/lib/lighthouse-scores';
 import { IconLivePerf } from '../../Icons';
 import { Module } from '../../responsive/Module';
 import styles from './LivePerfSection.module.css';
 
-export async function PerfData() {
-  const scores = await getScores().catch(() => LIGHTHOUSE_FALLBACK);
-  return <PerfBody scores={scores} />;
+export async function PerfData({ strategy }: { strategy: Strategy }) {
+  const scores = await getScores(strategy).catch(() => LIGHTHOUSE_FALLBACK);
+  return <PerfBody scores={scores} strategy={strategy} />;
 }
 
-function PerfBody({ scores }: { scores: LighthouseScores }) {
+function PerfBody({ scores, strategy }: { scores: LighthouseScores; strategy: Strategy }) {
   const isFallback = scores.fetchedAt === LIGHTHOUSE_FALLBACK.fetchedAt;
   const cells = [
     { label: 'PERFORMANCE', value: scores.performance },
@@ -33,7 +38,14 @@ function PerfBody({ scores }: { scores: LighthouseScores }) {
               {isFallback ? '—' : s.value}
               <span className={styles.of}>/100</span>
             </div>
-            <div className={styles.pbar}>
+            <div
+              className={styles.pbar}
+              role="progressbar"
+              aria-valuenow={isFallback ? 0 : s.value}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${s.label}: ${isFallback ? 'unavailable' : `${s.value} out of 100`}`}
+            >
               <i style={{ width: isFallback ? '0%' : `${s.value}%` }} />
             </div>
           </div>
@@ -42,7 +54,7 @@ function PerfBody({ scores }: { scores: LighthouseScores }) {
       <div className={styles.foot}>
         <span>
           <span className={styles.liveDot} />
-          {isFallback ? 'SOURCE: PSI API unavailable' : 'SOURCE: PageSpeed Insights · cached daily'}
+          {isFallback ? 'SOURCE: PSI API unavailable' : `SOURCE: PageSpeed Insights · ${strategy}`}
         </span>
         <span>LAST_CHECK: {lastCheck}</span>
       </div>
@@ -50,9 +62,9 @@ function PerfBody({ scores }: { scores: LighthouseScores }) {
   );
 }
 
-function PerfFallback() {
+function StrategyFallback({ strategy }: { strategy: string }) {
   return (
-    <div aria-busy="true" style={{ opacity: 0.4 }}>
+    <div aria-busy="true">
       <div className={styles.root}>
         {['PERFORMANCE', 'ACCESSIBILITY', 'BEST PRACTICES', 'SEO'].map((label) => (
           <div key={label} className={styles.cell}>
@@ -60,7 +72,14 @@ function PerfFallback() {
             <div className={styles.pv}>
               —<span className={styles.of}>/100</span>
             </div>
-            <div className={styles.pbar}>
+            <div
+              className={styles.pbar}
+              role="progressbar"
+              aria-valuenow={0}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${label}: loading`}
+            >
               <i style={{ width: '0%' }} />
             </div>
           </div>
@@ -69,10 +88,25 @@ function PerfFallback() {
       <div className={styles.foot}>
         <span>
           <span className={styles.liveDot} />
-          loading...
+          {strategy} · loading...
         </span>
       </div>
     </div>
+  );
+}
+
+function PerfFallback() {
+  return (
+    <>
+      <div className={styles.strategyBlock}>
+        <p className={styles.strategyLabel}>DESKTOP</p>
+        <StrategyFallback strategy="desktop" />
+      </div>
+      <div className={styles.strategyBlock}>
+        <p className={styles.strategyLabel}>MOBILE</p>
+        <StrategyFallback strategy="mobile" />
+      </div>
+    </>
   );
 }
 
@@ -87,7 +121,14 @@ export function LivePerfSection({ defer }: { defer?: boolean } = {}) {
       defer={defer}
     >
       <Suspense fallback={<PerfFallback />}>
-        <PerfData />
+        <div className={styles.strategyBlock}>
+          <p className={styles.strategyLabel}>DESKTOP</p>
+          <PerfData strategy="desktop" />
+        </div>
+        <div className={styles.strategyBlock}>
+          <p className={styles.strategyLabel}>MOBILE</p>
+          <PerfData strategy="mobile" />
+        </div>
       </Suspense>
     </Module>
   );

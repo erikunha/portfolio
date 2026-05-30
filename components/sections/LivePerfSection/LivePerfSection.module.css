@@ -122,3 +122,16 @@ body[data-motion="reduce"] .foot .liveDot {
   animation: none;
   opacity: 0;
 }
+
+.strategyBlock + .strategyBlock {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ds-color-border-default);
+}
+
+.strategyLabel {
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-xs);
+  letter-spacing: 0.18em;
+  margin-bottom: 10px;
+}
