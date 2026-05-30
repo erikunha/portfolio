@@ -68,20 +68,20 @@ if printf '%s' "$CMD" | grep -qE 'npx[[:space:]].*fallow' \
     printf '[BLOCKED] fallow is read-only here.\n'
     printf 'Blocked: fix/init/hooks/setup-hooks/migrate/watch/coverage/license/telemetry/ci.\n'
     printf 'Use a read-only analysis command: npx fallow@%s audit|dead-code|dupes|health|flags\n' "$FALLOW_PIN"
-    exit 1
+    exit 2
   fi
   # 2. Block cloud / runtime / CI-posting flags + env (network exfil channel).
   if printf '%s' "$CMD" | grep -qE -- '--upload\b|--cloud\b|--runtime\b|--comment\b|--review\b|--remote\b' \
      || printf '%s' "$CMD" | grep -qE '\bFALLOW_(COMMENT|REVIEW|TOKEN|API_KEY|LICENSE)='; then
     printf '[BLOCKED] fallow cloud/runtime/CI-posting surface detected.\n'
     printf 'These create a network exfil channel. Local read-only audit only.\n'
-    exit 1
+    exit 2
   fi
   # 3. Require the exact pinned npx form (block floating npx fallow + global fallow).
   if ! printf '%s' "$CMD" | grep -qE 'npx[[:space:]]+(--yes[[:space:]]+|-y[[:space:]]+)?fallow@2\.85\.0([[:space:]]|$)'; then
     printf '[BLOCKED] fallow must be pinned: npx fallow@%s ...\n' "$FALLOW_PIN"
     printf 'Bare npx fallow floats to latest (no lockfile protection); global fallow is unpinned.\n'
-    exit 1
+    exit 2
   fi
 fi
 
