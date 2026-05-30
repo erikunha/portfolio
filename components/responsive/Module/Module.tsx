@@ -32,10 +32,23 @@ export type ModuleProps = {
   icon?: ReactNode;
   /** Applies content-visibility:auto deferral for below-fold modules. */
   defer?: boolean | undefined;
+  /**
+   * "green": full rgba(0,255,65,0.05) tint — for data-heavy/interactive sections.
+   * Default: SESSION_REPORT-style subtle gradient — for narrative/context sections.
+   */
+  variant?: 'green';
   children: ReactNode;
 };
 
-export function Module({ id, header, mobileHeader, icon, defer = false, children }: ModuleProps) {
+export function Module({
+  id,
+  header,
+  mobileHeader,
+  icon,
+  defer = false,
+  variant,
+  children,
+}: ModuleProps) {
   return (
     <details
       id={id}
@@ -63,7 +76,15 @@ export function Module({ id, header, mobileHeader, icon, defer = false, children
         {/* bodyInner: grid item — no padding so 0fr collapses to true 0.
             bodyContent: padding+color wrapper inside the overflow:hidden clip. */}
         <div className={styles.bodyInner}>
-          <div className={styles.bodyContent}>{children}</div>
+          <div
+            className={
+              variant === 'green'
+                ? `${styles.bodyContent} ${styles.bodyContentGreen}`
+                : styles.bodyContent
+            }
+          >
+            {children}
+          </div>
         </div>
       </div>
     </details>

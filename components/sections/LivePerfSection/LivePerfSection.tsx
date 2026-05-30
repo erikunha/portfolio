@@ -81,6 +81,7 @@ export function LivePerfSection({ defer }: { defer?: boolean } = {}) {
     <Module
       id="sec-live-perf"
       header="LIVE_PERF.JSON"
+      variant="green"
       mobileHeader="LIVE_PERF · LIGHTHOUSE"
       icon={<IconLivePerf />}
       defer={defer}

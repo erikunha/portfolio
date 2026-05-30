@@ -127,13 +127,15 @@
 .bodyContent {
   padding: var(--ds-space-pad);
   color: var(--ds-color-text-body);
-  /* Subtle signal tint so content reads against the black background — same on
-     mobile and desktop so both viewports look identical. */
-  background: rgba(0, 255, 65, 0.05);
+  background: transparent;
   /* Closing: fade over the full 300ms in sync with the height collapse so
      content and container reach 0 together rather than content vanishing first. */
   opacity: 0;
   transition: opacity var(--ds-duration-slow) cubic-bezier(0.32, 0, 0.67, 0);
+}
+
+.bodyContentGreen {
+  background: rgba(0, 255, 65, 0.05);
 }
 
 .root[open] .bodyContent {

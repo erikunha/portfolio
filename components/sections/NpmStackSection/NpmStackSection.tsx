@@ -5,7 +5,13 @@ import styles from './NpmStackSection.module.css';
 
 export function NpmStackSection({ defer }: { defer?: boolean } = {}) {
   return (
-    <Module id="sec-npm-stack" header="NPM LIST --GLOBAL" icon={<IconNpmStack />} defer={defer}>
+    <Module
+      id="sec-npm-stack"
+      header="NPM LIST --GLOBAL"
+      icon={<IconNpmStack />}
+      defer={defer}
+      variant="green"
+    >
       <ul className={styles.root}>
         {npmStack.map((t) => (
           <li key={t.label}>

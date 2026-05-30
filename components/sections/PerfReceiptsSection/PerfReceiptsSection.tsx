@@ -47,6 +47,7 @@ export function PerfReceiptsSection({ defer }: { defer?: boolean } = {}) {
     <Module
       id="sec-perf-receipts"
       header="PERF_RECEIPTS --HARD-NUMBERS"
+      variant="green"
       mobileHeader="PERF_RECEIPTS"
       icon={<IconPerfReceipts />}
       defer={defer}

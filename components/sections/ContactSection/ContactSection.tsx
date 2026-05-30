@@ -11,6 +11,7 @@ export function ContactSection({ defer }: { defer?: boolean } = {}) {
       mobileHeader="CONTACT"
       icon={<IconContact />}
       defer={defer}
+      variant="green"
     >
       <ErrorBoundary>
         <ContactFormLazy />
