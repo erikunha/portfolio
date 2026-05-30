@@ -33,7 +33,9 @@ function ReceiptCard({
           metric
         )}
       </p>
-      <p className={hero ? `${styles.delta} ${styles.deltaHero}` : styles.delta}>{delta}</p>
+      <p className={styles.delta} data-featured={hero || undefined}>
+        {delta}
+      </p>
       <p className={styles.company}>{company}</p>
       <p className={styles.note}>{note}</p>
     </li>
