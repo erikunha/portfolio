@@ -68,10 +68,12 @@ FALLOW_PIN_RE=$(printf '%s' "$FALLOW_PIN" | sed 's/\./\\./g')
 # Normalize whitespace and append a trailing space so end-of-token == a space.
 FALLOW_CMD=$(printf '%s ' "$CMD" | tr '\n\t' '  ')
 if printf '%s' "$FALLOW_CMD" | grep -qE '(^|[[:space:]&|;/])fallow[[:space:]@]'; then
-  # A. No shell chaining / substitution alongside fallow (kills the decoy-token
-  #    bypass: a valid pinned call paired with a second malicious clause).
-  if printf '%s' "$FALLOW_CMD" | grep -qE '[;|&`]|\$\('; then
-    printf '[BLOCKED] Run fallow as a single, un-chained command — no ; | & backticks $() or pipes.\n'
+  # A. No shell chaining / substitution / REDIRECTION alongside fallow. Kills the
+  #    decoy-token bypass (valid pinned call + a second malicious clause) AND the
+  #    redirect-write primitive (`fallow audit > ~/.zshrc` truncates an arbitrary
+  #    file with fallow output). Redirect chars < > are blocked with ; | & ` $(.
+  if printf '%s' "$FALLOW_CMD" | grep -qE '[;|&`<>]|\$\('; then
+    printf '[BLOCKED] Run fallow bare — no chaining/substitution/redirection (; | & ` $() < >).\n'
     printf 'Read its output directly: npx fallow@%s audit\n' "$FALLOW_PIN"
     exit 2
   fi
