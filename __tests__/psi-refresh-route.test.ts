@@ -133,4 +133,17 @@ describe('GET /api/psi-refresh — success', () => {
       expect.objectContaining({ durationMs: expect.any(Number) }),
     );
   });
+
+  it('logs an error when desktop strategy fails', async () => {
+    process.env.CRON_SECRET = 'secret123';
+    mockRefreshScores
+      .mockRejectedValueOnce(new Error('desktop PSI failed'))
+      .mockResolvedValueOnce(MOBILE_SCORES);
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    await GET(makeRequest('Bearer secret123') as never);
+    expect(mockLogError).toHaveBeenCalledWith(
+      'psi-refresh desktop failed',
+      expect.objectContaining({ err: expect.any(Error) }),
+    );
+  });
 });

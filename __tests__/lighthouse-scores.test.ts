@@ -119,10 +119,39 @@ describe('getScores — cache miss', () => {
   it('returns LIGHTHOUSE_FALLBACK when PSI returns non-OK status', async () => {
     mockGet.mockResolvedValue(null);
     process.env.PSI_API_KEY = 'test-key';
-    mockFetch.mockResolvedValue({ ok: false, status: 500 });
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: async () => 'Internal Server Error',
+    });
     const { getScores, LIGHTHOUSE_FALLBACK } = await import('@/lib/lighthouse-scores');
     const result = await getScores('desktop');
     expect(result).toEqual(LIGHTHOUSE_FALLBACK);
+  });
+
+  it('calls fetch with next.revalidate (not cache: no-store) on cache miss', async () => {
+    mockGet.mockResolvedValue(null);
+    process.env.PSI_API_KEY = 'test-key';
+    mockFetch.mockResolvedValue(makePsiResponse(0.99));
+    const { getScores, LIGHTHOUSE_TTL_S } = await import('@/lib/lighthouse-scores');
+    await getScores('desktop');
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('pagespeedonline'),
+      expect.objectContaining({ next: { revalidate: LIGHTHOUSE_TTL_S } }),
+    );
+  });
+
+  it('logs error when Redis GET fails', async () => {
+    mockGet.mockRejectedValue(new Error('Redis connection refused'));
+    mockSet.mockResolvedValue('OK');
+    process.env.PSI_API_KEY = 'test-key';
+    mockFetch.mockResolvedValue(makePsiResponse(0.99));
+    const { getScores } = await import('@/lib/lighthouse-scores');
+    await getScores('desktop');
+    expect(mockLogError).toHaveBeenCalledWith(
+      'Redis cache GET failed',
+      expect.objectContaining({ strategy: 'desktop' }),
+    );
   });
 });
 
@@ -153,8 +182,45 @@ describe('refreshScores', () => {
 
   it('throws when PSI returns non-OK status', async () => {
     process.env.PSI_API_KEY = 'test-key';
-    mockFetch.mockResolvedValue({ ok: false, status: 503 });
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 503,
+      text: async () => 'Service Unavailable',
+    });
     const { refreshScores } = await import('@/lib/lighthouse-scores');
     await expect(refreshScores('desktop')).rejects.toThrow('PSI API returned 503');
+  });
+
+  it('calls fetch with cache: no-store to bypass Next.js fetch cache', async () => {
+    process.env.PSI_API_KEY = 'test-key';
+    mockFetch.mockResolvedValue(makePsiResponse(0.98));
+    mockSet.mockResolvedValue('OK');
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    await refreshScores('desktop');
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('pagespeedonline'),
+      expect.objectContaining({ cache: 'no-store' }),
+    );
+  });
+
+  it('awaits the Redis SET so the cron write completes before returning', async () => {
+    process.env.PSI_API_KEY = 'test-key';
+    mockFetch.mockResolvedValue(makePsiResponse(0.95));
+    let setResolved = false;
+    mockSet.mockImplementation(async () => {
+      setResolved = true;
+      return 'OK';
+    });
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    await refreshScores('desktop');
+    expect(setResolved).toBe(true);
+  });
+
+  it('throws when Redis SET fails during refresh', async () => {
+    process.env.PSI_API_KEY = 'test-key';
+    mockFetch.mockResolvedValue(makePsiResponse(0.95));
+    mockSet.mockRejectedValue(new Error('Redis write failed'));
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    await expect(refreshScores('desktop')).rejects.toThrow('Redis write failed');
   });
 });

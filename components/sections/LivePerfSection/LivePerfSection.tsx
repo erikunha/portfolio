@@ -64,7 +64,7 @@ function PerfBody({ scores, strategy }: { scores: LighthouseScores; strategy: St
 
 function StrategyFallback({ strategy }: { strategy: string }) {
   return (
-    <div aria-busy="true" style={{ opacity: 0.4 }}>
+    <div aria-busy="true">
       <div className={styles.root}>
         {['PERFORMANCE', 'ACCESSIBILITY', 'BEST PRACTICES', 'SEO'].map((label) => (
           <div key={label} className={styles.cell}>

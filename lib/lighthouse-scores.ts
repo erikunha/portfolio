@@ -48,7 +48,7 @@ async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<
   if (!res.ok) {
     let body = '(unreadable)';
     try {
-      body = await res.text();
+      body = (await res.text()).slice(0, 500);
     } catch {
       // ignore — error message already has status code
     }
@@ -74,10 +74,20 @@ async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<
     fetchedAt: new Date().toISOString(),
   };
 
-  // Fire-and-forget — don't let cache failure block the response.
-  getRedis()
-    .set(CACHE_KEY(strategy), scores, { ex: LIGHTHOUSE_TTL_S })
-    .catch((err) => log.error('Redis cache set failed', { err }));
+  if (forceRefresh) {
+    // WHY: cron path — write is the deliverable; failure must surface so Vercel retries.
+    await getRedis()
+      .set(CACHE_KEY(strategy), scores, { ex: LIGHTHOUSE_TTL_S })
+      .catch((err) => {
+        log.error('Redis cache set failed during refresh', { err, strategy });
+        throw err;
+      });
+  } else {
+    // Request path: fire-and-forget — don't block the response on cache write.
+    getRedis()
+      .set(CACHE_KEY(strategy), scores, { ex: LIGHTHOUSE_TTL_S })
+      .catch((err) => log.error('Redis cache set failed', { err }));
+  }
 
   return scores;
 }
