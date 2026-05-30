@@ -27,20 +27,20 @@ vi.mock('@/lib/motion', () => ({
   readMotion: () => true, // motion ON => the animated typing loop runs
 }));
 
-// Guards the height: 220px invariant in Hero.module.css (.mobile .boot).
-// 11 lines × (--ds-font-size-sm:12px × line-height:1.65) ≈ 218px.
+// Guards the height: 165px invariant in Hero.module.css (.mobile .boot).
+// 8 lines × (--ds-font-size-sm:12px × line-height:1.65) ≈ 158px.
 // Fails early if MOBILE_LINE_SPECS grows or runBoot appends extra lines,
 // before overflow: hidden clips them silently.
 describe('mobile boot container: line-count → height invariant', () => {
-  it('MOBILE_LINE_SPECS + cmd + blank + dialog = 11 lines; fits height: 220px', async () => {
+  it('MOBILE_LINE_SPECS + cmd + blank + dialog = 8 lines; fits height: 165px', async () => {
     const { MOBILE_LINE_SPECS } = await import('@/lib/boot-animation');
     // typeCmd: prompt line (1) + blank line after typing (1); startDialog: dialog line (1)
     const extraLines = 3;
     const totalLines = MOBILE_LINE_SPECS.length + extraLines;
-    const containerHeightPx = 220; // height: 220px in .mobile .boot
+    const containerHeightPx = 165; // height: 165px in .mobile .boot
     const fontSizePx = 12; // --ds-font-size-sm = 12px
     const lineHeight = 1.65;
-    expect(totalLines).toBe(11);
+    expect(totalLines).toBe(8);
     expect(Math.ceil(totalLines * fontSizePx * lineHeight)).toBeLessThanOrEqual(containerHeightPx);
   });
 });
