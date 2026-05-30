@@ -126,7 +126,7 @@ body[data-motion="reduce"] .foot .liveDot {
 .strategyBlock + .strategyBlock {
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid var(--ds-color-border);
+  border-top: 1px solid var(--ds-color-border-default);
 }
 
 .strategyLabel {
