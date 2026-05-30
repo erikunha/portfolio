@@ -160,7 +160,9 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
       data-testid={`channel-mobile-${ch.id}`}
     >
       <div className={s.mxHead}>
-        <span className={isMaster ? s.masterBadge : s.mxId}>{ch.id}</span>
+        <span className={s.mxId} data-channel={isMaster ? 'master' : undefined}>
+          {ch.id}
+        </span>
         <span className={s.mxName}>{ch.name}</span>
         <div className={s.mxDb}>
           <span className={s.dbValue}>{ch.db}</span>

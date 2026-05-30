@@ -56,7 +56,9 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
       data-testid={`channel-${ch.id}`}
     >
       <div className={s.colId}>
-        <span className={isMaster ? s.masterBadge : s.channelBadge}>{ch.id}</span>
+        <span className={s.channelBadge} data-channel={isMaster ? 'master' : undefined}>
+          {ch.id}
+        </span>
         <span className={s.channelSubName}>{ch.name}</span>
         <div className={s.clipBar} aria-hidden="true">
           <div className={s.clipFill} style={{ width: `${ch.faderPct}%` }} />
