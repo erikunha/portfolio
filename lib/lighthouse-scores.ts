@@ -11,12 +11,14 @@ export type LighthouseScores = {
   fetchedAt: string;
 };
 
+const SCORES_UNAVAILABLE = '—';
+
 export const LIGHTHOUSE_FALLBACK: LighthouseScores = {
   performance: 0,
   accessibility: 0,
   bestPractices: 0,
   seo: 0,
-  fetchedAt: '—',
+  fetchedAt: SCORES_UNAVAILABLE,
 };
 
 const CACHE_KEY = (strategy: Strategy) => `lh:scores:${strategy}`;

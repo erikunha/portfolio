@@ -19,6 +19,7 @@ afterEach(() => {
   mockSet.mockReset();
   mockFetch.mockReset();
   mockLogError.mockReset();
+  delete process.env.PSI_API_KEY;
 });
 
 const CACHED_DESKTOP = {
@@ -79,7 +80,6 @@ describe('getScores — cache miss', () => {
     const result = await getScores('desktop');
     expect(result.performance).toBe(99);
     expect(result.fetchedAt).not.toBe('—');
-    delete process.env.PSI_API_KEY;
   });
 
   it('writes result to Redis with TTL', async () => {
@@ -96,7 +96,6 @@ describe('getScores — cache miss', () => {
       expect.objectContaining({ performance: 95 }),
       { ex: LIGHTHOUSE_TTL_S },
     );
-    delete process.env.PSI_API_KEY;
   });
 
   it('returns LIGHTHOUSE_FALLBACK when PSI_API_KEY is absent', async () => {
@@ -115,7 +114,15 @@ describe('getScores — cache miss', () => {
     const { getScores, LIGHTHOUSE_FALLBACK } = await import('@/lib/lighthouse-scores');
     const result = await getScores('desktop');
     expect(result).toEqual(LIGHTHOUSE_FALLBACK);
-    delete process.env.PSI_API_KEY;
+  });
+
+  it('returns LIGHTHOUSE_FALLBACK when PSI returns non-OK status', async () => {
+    mockGet.mockResolvedValue(null);
+    process.env.PSI_API_KEY = 'test-key';
+    mockFetch.mockResolvedValue({ ok: false, status: 500 });
+    const { getScores, LIGHTHOUSE_FALLBACK } = await import('@/lib/lighthouse-scores');
+    const result = await getScores('desktop');
+    expect(result).toEqual(LIGHTHOUSE_FALLBACK);
   });
 });
 
@@ -129,7 +136,6 @@ describe('refreshScores', () => {
     const result = await refreshScores('desktop');
     expect(result.performance).toBe(98);
     expect(mockFetch).toHaveBeenCalledOnce();
-    delete process.env.PSI_API_KEY;
   });
 
   it('throws when PSI fetch fails', async () => {
@@ -137,12 +143,18 @@ describe('refreshScores', () => {
     mockFetch.mockRejectedValue(new Error('PSI down'));
     const { refreshScores } = await import('@/lib/lighthouse-scores');
     await expect(refreshScores('desktop')).rejects.toThrow('PSI down');
-    delete process.env.PSI_API_KEY;
   });
 
   it('throws when PSI_API_KEY is absent', async () => {
     delete process.env.PSI_API_KEY;
     const { refreshScores } = await import('@/lib/lighthouse-scores');
     await expect(refreshScores('desktop')).rejects.toThrow();
+  });
+
+  it('throws when PSI returns non-OK status', async () => {
+    process.env.PSI_API_KEY = 'test-key';
+    mockFetch.mockResolvedValue({ ok: false, status: 503 });
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    await expect(refreshScores('desktop')).rejects.toThrow('PSI API returned 503');
   });
 });
