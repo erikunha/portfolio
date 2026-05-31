@@ -213,7 +213,7 @@ body[data-motion="reduce"] .bodyContent {
 /* ── Mobile scrim override (<=768px) ────────────────────────────────────
    Base .root uses 0.55 so desktop's `background: none` override wins cleanly.
    This block lightens the scrim explicitly for mobile. */
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   .root {
     background: var(--ds-overlay-22);
   }
@@ -228,7 +228,7 @@ body[data-motion="reduce"] .bodyContent {
    <h2 class="module__header">. The native marker is already removed in the
    base rules (list-style:none + ::-webkit-details-marker).
    ─────────────────────────────────────────────────────────────────────── */
-@media (min-width: 769px) {
+@media (min-width: 769px) /* --bp-mobile-up */ {
   /* Desktop sections are togglable — drop the mobile container chrome but
      keep the header clickable with chevron indicator. */
   .root {
