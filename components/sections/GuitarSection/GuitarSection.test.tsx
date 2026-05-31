@@ -41,7 +41,7 @@ describe('GuitarSection — signal chain (desktop)', () => {
     const doc = await renderDesktop();
     const fxNode = doc.querySelector('[data-testid="signal-node-FX"]');
     expect(fxNode).not.toBeNull();
-    const bullets = fxNode?.querySelectorAll('[class*="fxBullet"]');
+    const bullets = fxNode?.querySelectorAll('[data-testid="fx-bullet"]');
     expect(bullets?.length).toBe(5);
   });
 
@@ -107,7 +107,7 @@ describe('GuitarSection — mobile layout', () => {
     const doc = await renderMobile();
     const fxNode = doc.querySelector('[data-testid="signal-node-mobile-FX"]');
     expect(fxNode).not.toBeNull();
-    const list = fxNode?.querySelector('[class*="fxList"]');
+    const list = fxNode?.querySelector('[data-testid="fx-list"]');
     expect(list).not.toBeNull();
   });
 
@@ -121,7 +121,7 @@ describe('GuitarSection — XSS safety', () => {
   it('renders node labels as plain text with no injected HTML', async () => {
     const doc = await renderDesktop();
     expect(doc.querySelectorAll('script').length).toBe(0);
-    const nodeLabels = doc.querySelectorAll('[class*="nodeLabel"]');
+    const nodeLabels = doc.querySelectorAll('[data-testid="node-label"]');
     expect(nodeLabels.length).toBeGreaterThan(0);
     for (const node of nodeLabels) {
       expect(node.innerHTML).not.toMatch(/<(?!br|strong|em)/);

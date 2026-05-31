@@ -117,7 +117,7 @@ describe('DawMixerSection — mobile', () => {
   it('bold text from **markers** renders as <strong> in channel desc', async () => {
     const doc = await renderMobile();
     const ch02 = doc.querySelector('[data-testid="channel-mobile-CH 02"]');
-    const strong = ch02?.querySelector('[class*="mxRef"] strong');
+    const strong = ch02?.querySelector('[data-testid="mx-ref"] strong');
     expect(strong).not.toBeNull();
     expect(strong?.textContent).toContain('the voice');
   });
