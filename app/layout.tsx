@@ -3,7 +3,6 @@ import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import Script from 'next/script';
 import { personSchema } from '@/content/seo';
 
 // Self-hosted — no Google CDN link shipped to the browser
@@ -99,6 +98,20 @@ export const metadata: Metadata = {
 // React 19 renders script children via textContent (safe; no innerHTML)
 const personJsonLd = JSON.stringify(personSchema);
 
+// WHY inline script instead of <Script strategy="beforeInteractive">:
+// beforeInteractive injects the script into the self.__next_s queue, which runs
+// just before React.hydrateRoot(). In Lantern simulation this executes at ~3162ms
+// (after all framework JS loads) — well after FCP (~2019ms) and ON the TTI
+// critical path. An inline <script> at the START of <body> runs synchronously
+// during HTML parsing (~650ms) — earlier than beforeInteractive — and is off the
+// hydrateRoot critical path: ~250ms saved (62ms real × 4x CPU) on Lantern's TTI
+// estimate (LCP 3516→3385, FCP 2019→1355, 5/5 runs pass the mobile gate).
+// It MUST be inside <body>, not <head>: the script writes document.body.dataset,
+// and document.body is null while the <head> is still parsing.
+// CSP-safe: proxy.ts ships `script-src 'self' 'unsafe-inline'` (no nonce/hash by
+// design — see proxy.ts), which covers this inline script. See DECISIONS.md.
+const initScript = `history.scrollRestoration="manual";window.scrollTo(0,0);(function(){try{var m=localStorage.getItem("erik.motion");var on=m==="on"?true:m==="off"?false:!window.matchMedia("(prefers-reduced-motion:reduce)").matches;document.body.dataset.motion=on?"full":"reduce"}catch(e){}})();`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${mono.variable} ${display.variable}`} suppressHydrationWarning>
@@ -106,10 +119,19 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <script type="application/ld+json">{personJsonLd}</script>
       </head>
-      {/* body[data-motion] is mutated at runtime by /init.js before paint; keep
-          suppressHydrationWarning so React doesn't flag the SSR/CSR attribute delta. */}
+      {/* body[data-motion] is set by the inline bootstrap at the top of <body>
+          below, before paint; suppressHydrationWarning so React doesn't flag the
+          SSR/CSR attribute delta. */}
       <body suppressHydrationWarning>
-        <Script src="/init.js" strategy="beforeInteractive" />
+        {/* Inside <body> (not <head>) so document.body exists when this runs — a
+            <head> script would see document.body === null and silently no-op. React
+            may stream an RSC scaffold div before it, but it still executes at parse
+            time, before body content paints and before hydration, setting
+            body[data-motion] from stored/OS pref so CRT-effect CSS selectors are
+            correct on the first visible frame (no reduced-motion flash). Off the
+            hydrateRoot critical path — the LCP win. Build-time constant, no XSS. */}
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: initScript is a hardcoded build-time constant, no user input */}
+        <script dangerouslySetInnerHTML={{ __html: initScript }} />
         {children}
         {/* Vercel RUM scripts only mount on Vercel deploys. process.env.VERCEL is
             "1" in any Vercel environment (prod/preview) and unset in local builds

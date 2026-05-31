@@ -48,9 +48,10 @@ import { NextResponse } from 'next/server';
 
 const CSP_DIRECTIVES: readonly string[] = [
   "default-src 'self'",
-  // 'self' covers same-origin static scripts (Next's chunks, /init.js).
+  // 'self' covers same-origin static scripts (Next's chunks).
   // 'unsafe-inline' covers React 19 Float's RSC flight payload + hydration
-  // scripts that ship inline in the static HTML. See file-level comment §1.
+  // scripts that ship inline in the static HTML, plus the body[data-motion]
+  // bootstrap inline script in app/layout.tsx. See file-level comment §1.
   // 'unsafe-eval' is dev-only: Next's HMR runtime evaluates strings.
   // https://va.vercel-scripts.com (script-src): dev only.
   process.env.NODE_ENV === 'development'

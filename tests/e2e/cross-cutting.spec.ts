@@ -120,14 +120,13 @@ test.describe('cross-cutting', () => {
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
     await page.goto('/', { waitUntil: 'networkidle' });
 
-    // Sanity: critical same-origin assets the layout depends on must have
-    // loaded successfully. We collect their URLs from the DOM rather than
-    // hard-coding chunk hashes (which change every build).
-    const initScriptSrc = await page.evaluate(() => {
-      const initScript = document.querySelector('script[src="/init.js"]');
-      return initScript instanceof HTMLScriptElement ? initScript.src : null;
-    });
-    expect(initScriptSrc, '/init.js should be referenced from the document').toContain('/init.js');
+    // The data-motion bootstrap runs as an inline <script> at the start of
+    // <body> (app/layout.tsx), not an external /init.js. Assert its observable
+    // effect rather than an implementation detail: it must set body[data-motion]
+    // before paint. An unset attribute would mean the script was CSP-blocked or
+    // threw — so this also guards the 'unsafe-inline' script-src posture it needs.
+    const motionAttr = await page.evaluate(() => document.body.dataset.motion ?? null);
+    expect(motionAttr, 'inline bootstrap must set body[data-motion]').toMatch(/^(full|reduce)$/);
 
     // Self-hosted fonts (next/font) must have loaded. document.fonts.ready
     // resolves once every registered FontFace finishes loading or fails.
@@ -187,8 +186,8 @@ test.describe('cross-cutting', () => {
 
   test('3 — prefers-reduced-motion disables decorative animations', async ({ browser }) => {
     // Use a fresh context with reducedMotion: 'reduce' set BEFORE any
-    // navigation, so /init.js (which writes body[data-motion]) reads the
-    // correct preference on first paint. emulateMedia after goto would be
+    // navigation, so the inline bootstrap script (which writes body[data-motion])
+    // reads the correct preference on first paint. emulateMedia after goto would be
     // too late — the CRT classes mount with animations already running and
     // some keyframes are not restartable cleanly.
     const context = await browser.newContext({ reducedMotion: 'reduce' });
@@ -198,9 +197,9 @@ test.describe('cross-cutting', () => {
       await page.goto('/');
       await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
 
-      // Wait for /init.js to apply body[data-motion]. The script runs inline
-      // (no defer) but Playwright's "load" event ordering is engine-specific;
-      // poll briefly so the test is deterministic across browsers.
+      // Wait for the inline bootstrap script to apply body[data-motion]. It runs
+      // inline at <body> start (no defer) but Playwright's "load" event ordering
+      // is engine-specific; poll briefly so the test is deterministic across browsers.
       await expect.poll(() => page.evaluate(() => document.body.dataset.motion)).toBe('reduce');
 
       // For each decorative animation we expect the prefers-reduced-motion
@@ -360,8 +359,9 @@ test.describe('cross-cutting', () => {
     // that context. See DECISIONS.md 2026-05-25.
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
     await page.goto('/');
-    // Wait for the DesktopTopbar button — body[data-motion] is set by init.js
-    // before React, so [data-motion] would match <body> first. Scope to button.
+    // Wait for the DesktopTopbar button — body[data-motion] is set by the inline
+    // bootstrap script before React, so [data-motion] would match <body> first.
+    // Scope to button.
     await page.waitForSelector('button[data-motion]', { state: 'visible' });
 
     const { elapsedMs, motionFlipped } = await page.evaluate(async () => {
