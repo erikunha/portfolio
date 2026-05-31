@@ -8,6 +8,14 @@
   --ds-border-width-default: 1px;
   --ds-border-style-solid: solid;
   --ds-border-style-dashed: dashed;
+  --ds-bp-mobile: 768px;
+  --ds-bp-mobile-up: 769px;
+  --ds-bp-tablet: 900px;
+  --ds-bp-tablet-up: 901px;
+  --ds-bp-wide: 1080px;
+  --ds-bp-narrow: 560px;
+  --ds-bp-xs: 359px;
+  --ds-bp-xxs: 340px;
   --ds-green-50: #0a1f0d;
   --ds-green-100: rgba(0, 255, 65, 0.1);
   --ds-green-150: rgba(0, 255, 65, 0.12);

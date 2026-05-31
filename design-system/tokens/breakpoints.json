@@ -1,0 +1,10 @@
+{
+  "ds-bp-mobile": { "$value": "768px", "$type": "dimension" },
+  "ds-bp-mobile-up": { "$value": "769px", "$type": "dimension" },
+  "ds-bp-tablet": { "$value": "900px", "$type": "dimension" },
+  "ds-bp-tablet-up": { "$value": "901px", "$type": "dimension" },
+  "ds-bp-wide": { "$value": "1080px", "$type": "dimension" },
+  "ds-bp-narrow": { "$value": "560px", "$type": "dimension" },
+  "ds-bp-xs": { "$value": "359px", "$type": "dimension" },
+  "ds-bp-xxs": { "$value": "340px", "$type": "dimension" }
+}

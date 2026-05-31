@@ -1,0 +1,48 @@
+/* app/css/_breakpoints.css — Single source of truth for all responsive breakpoints.
+   WHY: 54 raw @media literals existed across 7 distinct values. The 768/769 pair was
+   kept in sync by hand across 32 sites — one off-by-one creates a silent 1px dead-zone.
+   This file is the ONLY place breakpoint values are authorised. Adding a new breakpoint
+   requires updating this file first; lint-breakpoints.mjs rejects raw width @media
+   elsewhere unless the value is listed here.
+
+   CSS Modules cannot share @custom-media definitions across module boundaries (confirmed
+   by spike 2026-05-30 — see DECISIONS.md). The contract is: modules may use the raw
+   pixel values listed below; the lint gate validates each module's @media against this
+   approved set. Unknown values are rejected.
+
+   Token mapping (Style Dictionary → design-system/tokens/breakpoints.json):
+     --ds-bp-mobile     768px   max-width, ×34 — phone breakpoint (base→mobile override)
+     --ds-bp-mobile-up  769px   min-width, ×4  — tablet+ min (paired with mobile)
+     --ds-bp-tablet     900px   max-width, ×18 — tablet breakpoint
+     --ds-bp-tablet-up  901px   min-width       — desktop min (paired with tablet)
+
+   Orphan breakpoints — documented component-level patches:
+     --ds-bp-wide       1080px  DesktopTopbar — collapses nav at 1080px (wide viewport guard)
+     --ds-bp-narrow     560px   Footer — collapses multi-column footer grid at 560px
+     --ds-bp-xs         359px   (reserved — no current consumer; matches iPhone SE 1st gen)
+     --ds-bp-xxs        340px   NpmStackSection — extra-compact 2-col grid at 340px
+
+   768/769 invariant: both values are defined here. The off-by-one cannot occur because
+   the only valid min-width companion to 768px is 769px — a typo would be caught by the
+   lint gate (769px is in the approved set; 770px is not).
+*/
+
+/*
+  Approved breakpoint values. lint-breakpoints.mjs reads the --bp-* custom properties
+  below to build the approved set. Raw width @media queries that use any OTHER pixel
+  value will fail the CI gate. To add a new breakpoint: register it here first.
+  CSS custom properties also allow JS access: getComputedStyle(root).getPropertyValue('--bp-mobile')
+*/
+:root {
+  /* Canonical breakpoints — read via JS as `getComputedStyle(root).getPropertyValue('--bp-mobile')` */
+  --bp-mobile: 768px;
+  --bp-mobile-up: 769px;
+  --bp-tablet: 900px;
+  --bp-tablet-up: 901px;
+
+  /* Orphan breakpoints */
+  --bp-wide: 1080px;
+  --bp-narrow: 560px;
+  --bp-xs: 359px;
+  --bp-xxs: 340px;
+}
