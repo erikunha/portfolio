@@ -14,7 +14,7 @@
   border-right: none;
 }
 
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .root {
     grid-template-columns: repeat(2, 1fr);
   }

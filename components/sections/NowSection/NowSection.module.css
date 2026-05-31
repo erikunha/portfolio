@@ -18,14 +18,14 @@
   color: var(--ds-color-text-body);
 }
 
-@media (max-width: 900px) /* --bp-tablet */ {
+@media (max-width: 900px) {
   .root .row {
     grid-template-columns: 90px 1fr;
     gap: 10px;
   }
 }
 
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .root {
     font-size: var(--ds-font-size-xs);
   }

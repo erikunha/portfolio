@@ -72,7 +72,7 @@
   min-height: 160px;
 }
 
-@media (max-width: 900px) /* --bp-tablet */ {
+@media (max-width: 900px) {
   .pending {
     min-height: 290px; /* 2-col grid is 2 rows tall */
   }
@@ -83,7 +83,7 @@
   font-family: var(--ds-font-family-mono);
 }
 
-@media (max-width: 900px) /* --bp-tablet */ {
+@media (max-width: 900px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
@@ -93,7 +93,7 @@
   }
 }
 
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .foot {
     flex-direction: column;
     align-items: flex-start;

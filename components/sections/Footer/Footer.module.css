@@ -334,7 +334,7 @@
   opacity: 0.85;
 }
 
-@media (max-width: 900px) /* --bp-tablet */ {
+@media (max-width: 900px) {
   .root {
     padding: 0 var(--ds-space-pad) calc(40px + env(safe-area-inset-bottom, 0px)) var(--ds-space-pad);
   }
@@ -358,7 +358,7 @@
   }
 }
 
-@media (max-width: 560px) /* --bp-narrow */ {
+@media (max-width: 560px) {
   .init {
     font-size: var(--ds-font-size-sm);
   }
@@ -397,7 +397,7 @@ body[data-motion="reduce"] .spBar2 > i {
   transition: none;
 }
 
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .root {
     padding: 28px var(--ds-space-pad) 24px;
   }

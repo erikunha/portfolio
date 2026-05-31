@@ -188,7 +188,7 @@ body[data-motion="reduce"] .cmdHint {
   opacity: 0.75;
 }
 
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .commands {
     display: none;
   }
@@ -243,7 +243,7 @@ body[data-motion="reduce"] .cmdHint {
   color: var(--ds-color-signal);
 }
 
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .root {
     margin-top: 0;
   }

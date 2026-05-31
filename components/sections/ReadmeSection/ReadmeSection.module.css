@@ -119,7 +119,7 @@
   opacity: 0.85;
 }
 
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .root {
     grid-template-columns: 28px 1fr;
     font-size: var(--ds-font-size-xs);

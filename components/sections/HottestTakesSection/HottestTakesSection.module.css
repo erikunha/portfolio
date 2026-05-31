@@ -94,14 +94,14 @@
   max-width: 740px;
 }
 
-@media (max-width: 900px) /* --bp-tablet */ {
+@media (max-width: 900px) {
   .take {
     grid-template-columns: 36px 1fr;
     gap: 8px;
   }
 }
 
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .take {
     grid-template-columns: 28px 1fr;
     padding: 10px 0;

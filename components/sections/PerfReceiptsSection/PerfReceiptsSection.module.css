@@ -14,7 +14,7 @@
   gap: 14px;
 }
 
-@media (max-width: 900px) /* --bp-tablet */ {
+@media (max-width: 900px) {
   .root {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -39,7 +39,7 @@
   min-height: 0;
 }
 
-@media (max-width: 900px) /* --bp-tablet */ {
+@media (max-width: 900px) {
   .receiptHero {
     grid-column: span 2;
     grid-row: span 1;
@@ -54,7 +54,7 @@
 }
 
 /* Desktop-only receipt and metric label variants — desktop defaults */
-@media (min-width: 769px) /* --bp-mobile-up */ {
+@media (min-width: 769px) {
   .receipt.receiptDesktopOnly {
     display: flex;
   }
@@ -80,7 +80,7 @@
   font-size: var(--ds-font-size-heading-xl);
 }
 
-@media (max-width: 900px) /* --bp-tablet */ {
+@media (max-width: 900px) {
   .delta[data-featured] {
     font-size: var(--ds-font-size-heading-xl);
   }
@@ -112,7 +112,7 @@
 }
 
 /* Mobile overrides — placed after desktop rules so source order wins */
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .receiptHero {
     padding: 12px 12px 10px;
   }
@@ -126,7 +126,7 @@
 }
 
 /* Responsive add from _layout.css lines 204–227 (768px mobile block) */
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .root {
     gap: 8px;
   }

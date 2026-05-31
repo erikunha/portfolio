@@ -150,7 +150,7 @@
   }
 }
 
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .root {
     display: none;
   }

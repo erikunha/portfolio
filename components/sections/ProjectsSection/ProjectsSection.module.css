@@ -12,7 +12,7 @@
   gap: 20px;
 }
 
-@media (max-width: 900px) /* --bp-tablet */ {
+@media (max-width: 900px) {
   .root {
     grid-template-columns: 1fr;
   }
@@ -91,7 +91,7 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    Responsive — smaller tiles on mobile (from _layout.css lines 229–242)
    ───────────────────────────────────────────────────────────────────────── */
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .project {
     padding: 14px;
   }
@@ -170,7 +170,7 @@ body[data-motion="reduce"] .project {
   line-height: 1.5;
 }
 
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .cardName {
     font-size: var(--ds-font-size-xs);
   }

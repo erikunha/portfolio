@@ -46,7 +46,7 @@
   margin-right: 6px;
 }
 
-@media (max-width: 768px) /* --bp-mobile */ {
+@media (max-width: 768px) {
   .root {
     font-size: var(--ds-font-size-xs);
   }
