@@ -51,7 +51,7 @@ function ReadmeBlock({ lines }: { lines: ReadmeLine[] }) {
               line.cls === 'h1'
                 ? 'text-signal font-bold text-2xl leading-[1.4]'
                 : line.cls === 'h2'
-                  ? 'text-signal font-bold text-[length:var(--ds-font-size-body,14px)] mt-1 max-[768px]:text-sm'
+                  ? 'text-signal font-bold text-sm mt-1 max-[768px]:text-sm'
                   : 'leading-[1.85]'
             }
           >

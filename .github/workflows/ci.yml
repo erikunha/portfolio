@@ -92,11 +92,11 @@ jobs:
       - name: Component docs coverage
         run: pnpm check:component-docs
 
-      - name: Token drift check
-        run: pnpm tokens:check
-
       - name: Contrast check
         run: pnpm lint:contrast
+
+      - name: No undefined --ds-* vars
+        run: pnpm lint:no-ds-vars
 
       - name: Package age check (supply-chain, info-only)
         # --warn-only: exits 0 always. Blocking a push for a freshly-released dep

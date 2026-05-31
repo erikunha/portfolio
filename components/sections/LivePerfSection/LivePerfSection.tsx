@@ -56,7 +56,7 @@ function PerfBody({ scores, strategy }: { scores: LighthouseScores; strategy: St
           </div>
         ))}
       </div>
-      <div className="flex justify-between items-center mt-[18px] text-text-muted text-[9px] md:text-xs tracking-[0.14em]">
+      <div className="flex justify-between items-center mt-[18px] text-text-muted text-xs tracking-[0.14em]">
         <span>
           <span className="live-dot" />
           {isFallback ? 'SOURCE: PSI API unavailable' : `SOURCE: PageSpeed Insights · ${strategy}`}
@@ -92,7 +92,7 @@ function StrategyFallback({ strategy }: { strategy: string }) {
           </div>
         ))}
       </div>
-      <div className="flex justify-between items-center mt-[18px] text-text-muted text-[9px] md:text-xs tracking-[0.14em]">
+      <div className="flex justify-between items-center mt-[18px] text-text-muted text-xs tracking-[0.14em]">
         <span>
           <span className="live-dot" />
           {strategy} · loading...

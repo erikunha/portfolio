@@ -331,7 +331,7 @@ export function InteractiveShell() {
   );
 
   return (
-    <div className="interactive-shell bg-[var(--color-surface-shell)] text-xs font-mono leading-[1.65] -m-[var(--ds-space-pad,14px)]">
+    <div className="interactive-shell bg-[var(--color-surface-shell)] text-xs font-mono leading-[1.65] -m-[14px]">
       <div className="flex items-center gap-[10px] px-[14px] py-2 border-b border-[var(--color-signal-subtle)] text-text-muted text-xs tracking-[0.14em]">
         <WindowChrome size={10} />
         {isMobile ? (
@@ -407,7 +407,7 @@ export function InteractiveShell() {
       </form>
 
       <p
-        className="m-0 px-4 py-2 border-t border-[color-mix(in_oklab,var(--color-signal)_14%,transparent)] text-[0.7rem] leading-[1.5] text-[color-mix(in_oklab,var(--color-text-body)_55%,transparent)] max-md:text-[9px]"
+        className="m-0 px-4 py-2 border-t border-[color-mix(in_oklab,var(--color-signal)_14%,transparent)] text-xs leading-[1.5] text-[color-mix(in_oklab,var(--color-text-body)_55%,transparent)]"
         data-testid="shell-privacy-notice"
       >
         Queries are stored 90 days for product improvement. To request deletion, email{' '}

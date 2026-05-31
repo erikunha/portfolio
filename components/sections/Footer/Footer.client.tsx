@@ -133,7 +133,7 @@ export function Footer() {
 
   return (
     <footer
-      className="site-footer border-t-0 pb-[var(--ds-space-pad,20px)] bg-transparent relative z-[1] overflow-hidden max-[900px]:pt-0 max-[900px]:pb-[calc(40px+env(safe-area-inset-bottom,0px))] max-[900px]:px-[var(--ds-space-pad,20px)] max-[768px]:py-7 max-[768px]:px-[var(--ds-space-pad,20px)]"
+      className="site-footer border-t-0 pb-[20px] bg-transparent relative z-[1] overflow-hidden max-[900px]:pt-0 max-[900px]:pb-[calc(40px+env(safe-area-inset-bottom,0px))] max-[900px]:px-[20px] max-[768px]:py-7 max-[768px]:px-[20px]"
       id="shutdown"
       ref={footerRef}
     >
@@ -155,13 +155,13 @@ export function Footer() {
         }}
       />
       <div
-        className="relative z-[1] max-w-[var(--ds-layout-maxw,1200px)] mx-auto px-[var(--ds-space-pad,20px)] font-mono"
+        className="relative z-[1] max-w-[1200px] mx-auto px-[20px] font-mono"
         style={{ textShadow: '0 0 4px #000, 0 0 8px rgba(0,0,0,0.6)' }}
       >
         {/* Banner */}
         <div className="flex items-baseline justify-between gap-6 flex-wrap mb-2 max-[768px]:flex-col max-[768px]:gap-1">
           <span
-            className="text-signal font-bold tracking-[0.06em] text-[length:var(--ds-font-size-body,14px)] max-[560px]:text-sm max-[768px]:text-sm"
+            className="text-signal font-bold tracking-[0.06em] text-sm max-[560px]:text-sm max-[768px]:text-sm"
             style={{ textShadow: '0 0 8px rgba(0,255,65,0.35)' }}
           >
             [SYSTEM SHUTDOWN INITIATED]
