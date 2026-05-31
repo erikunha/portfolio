@@ -1,0 +1,51 @@
+/* app/css/theme.css — Tailwind v4 @theme: brand palette + font.
+   Standard Tailwind scale handles spacing, typography sizes, z-index, and breakpoints.
+   Only values Tailwind has no opinion on live here. */
+
+@theme {
+  /* ── Brand palette ──────────────────────────────────────────────────────── */
+  --color-signal: #00ff41;
+  --color-signal-subtle: #00ff4166;
+  --color-signal-quiet: #00ff411a;
+  --color-signal-faint: #00ff411f;
+  --color-fg: #e6ffe6;
+  --color-text-body: #e6ffe6;
+  --color-text-muted: #4ade80;
+  --color-text-faint: #5ae07b;
+  --color-surface: #000000;
+  --color-surface-shell: #050505;
+  --color-border-default: #00ff4133;
+  --color-surface-panel: transparent;
+  --color-error: #ff8a8a;
+  --color-accent-warm: #ffd86b;
+  --color-accent-cool: #7fe4ff;
+  --color-highlight-bg: #00ff41;
+  --color-highlight-fg: #000000;
+
+  /* ── Window chrome dots ─────────────────────────────────────────────────── */
+  --color-chrome-close: #ff5f57;
+  --color-chrome-minimize: #febc2e;
+  --color-chrome-maximize: #28c840;
+
+  /* ── Glow alpha stops — used in box-shadow, text-shadow, gradients ────────
+     Referenced as var(--color-glow-*) inside @layer components only.
+     Also generates bg-glow-* / text-glow-* utilities as a bonus. */
+  --color-glow-03: rgba(0, 255, 65, 0.03);
+  --color-glow-04: rgba(0, 255, 65, 0.04);
+  --color-glow-05: rgba(0, 255, 65, 0.05);
+  --color-glow-06: rgba(0, 255, 65, 0.06);
+  --color-glow-15: rgba(0, 255, 65, 0.15);
+  --color-glow-18: rgba(0, 255, 65, 0.18);
+  --color-glow-25: rgba(0, 255, 65, 0.25);
+  --color-glow-30: rgba(0, 255, 65, 0.3);
+  --color-glow-35: rgba(0, 255, 65, 0.35);
+  --color-glow-40: rgba(0, 255, 65, 0.4);
+  --color-glow-45: rgba(0, 255, 65, 0.45);
+  --color-glow-50: rgba(0, 255, 65, 0.5);
+  --color-glow-55: rgba(0, 255, 65, 0.55);
+  --color-glow-60: rgba(0, 255, 65, 0.6);
+
+  /* ── Typography ─────────────────────────────────────────────────────────── */
+  --font-mono: "JetBrains Mono", monospace;
+  --font-display: "Geist Black", sans-serif;
+}
