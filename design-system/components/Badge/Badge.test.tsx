@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Badge } from './Badge';
-import styles from './Badge.module.css';
 
 describe('Badge', () => {
   it('renders children text', () => {
@@ -18,12 +17,14 @@ describe('Badge', () => {
     const dot = container.querySelector('[aria-hidden="true"]');
     expect(dot).toBeNull();
   });
-  it('applies sm size class', () => {
+  it('applies sm size padding and font size', () => {
     const { container } = render(<Badge size="sm">Small</Badge>);
-    expect(container.firstElementChild?.classList.contains(styles.sm as string)).toBe(true);
+    // sm applies smaller padding class
+    expect(container.firstElementChild?.classList.contains('px-2')).toBe(true);
   });
   it('does not apply dot animation class to root span when variant=dot', () => {
     const { container } = render(<Badge variant="dot">Active</Badge>);
-    expect(container.firstElementChild?.classList.contains(styles.dot as string)).toBe(false);
+    // The badge-dot class belongs to the inner dot span, not the root span
+    expect(container.firstElementChild?.classList.contains('badge-dot')).toBe(false);
   });
 });

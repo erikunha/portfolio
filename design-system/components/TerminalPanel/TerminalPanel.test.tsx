@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { TerminalPanel } from './TerminalPanel';
-import styles from './TerminalPanel.module.css';
 
 describe('TerminalPanel', () => {
   it('renders children', () => {
@@ -18,7 +17,7 @@ describe('TerminalPanel', () => {
   });
   it('applies dashed border class when borderStyle=dashed', () => {
     const { container } = render(<TerminalPanel borderStyle="dashed">x</TerminalPanel>);
-    expect(container.firstElementChild?.classList.contains(styles.dashed as string)).toBe(true);
+    expect(container.firstElementChild?.classList.contains('border-dashed')).toBe(true);
   });
   it('renders header bar when header prop provided', () => {
     render(<TerminalPanel header="[ PANEL ]">x</TerminalPanel>);
