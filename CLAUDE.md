@@ -205,9 +205,9 @@ i18n · light theme · blog/MDX engine · analytics beyond Vercel Web Analytics 
 5. **Self-resolve is detectable.** `scripts/check-pr-comments.ts` warns; document override if intentional.
 6. **Mechanical command.** `pnpm ready-to-merge <pr>` — ci:local + branch-protection + unresolved-thread check. Must pass before `gh pr merge`.
 7. **The branch protection rule must stay enabled.**
-8. **Copilot auto-reviews on PR open — do NOT post any comment on open.** After every feedback push: reply to each thread (`gh api repos/{owner}/{repo}/pulls/<pr>/comments/<databaseId>/replies -f body="Fixed in <sha>. <reason>"`), then re-request (`gh pr edit <pr> --add-reviewer copilot-pull-request-reviewer`). No PR-level timeline comment. (Raw REST API rejects Copilot; `gh pr edit` works.)
+8. **Copilot auto-reviews on PR open — do NOT post any comment on open.** After any push that fixes a **Copilot thread**: reply to each addressed thread (`gh api repos/{owner}/{repo}/pulls/<pr>/comments/<databaseId>/replies -f body="Fixed in <sha>. <reason>"`), then re-request (`gh pr edit <pr> --add-reviewer copilot-pull-request-reviewer`). Do NOT re-request after self-found fixes (CI failures, self-discovered bugs) — that burns a review cycle with no new signal. No PR-level timeline comment. (Raw REST API rejects Copilot; `gh pr edit` works.)
 9. **Local playwright visual check before merge.** `pnpm dev` + playwright MCP: desktop (1280×720) + mobile (375×812) on all changed sections. CI baselines don't catch intent regressions.
-10. **Rebase before merge (non-dependabot only).** `git fetch && git rebase origin/main`. Skip `dependabot/*` branches. See `DECISIONS.md` for why this is a local gate only.
+10. **Rebase before merge (non-dependabot only).** `git fetch && git rebase origin/main`. Skip `dependabot/*` branches. Exception: when the user says "merge"/"ship" on a PR that already passed the full review battery and CI — execute `gh pr merge` immediately, no rebase (rebasing would change HEAD, invalidate the review stamp, and trigger the pre-push hook needlessly). See `DECISIONS.md` for why this is a local gate only.
 
 ## Things that have been considered and rejected
 
