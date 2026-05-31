@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import s from './RmsButtons.module.css';
+import { cn } from '@/lib/cn';
 
 const BUTTON_LABELS: Record<string, string> = {
   R: 'record arm',
@@ -28,15 +28,26 @@ export function RmsButtons({ buttons, initialActive, channelName }: RmsButtonsPr
   };
 
   return (
-    <div className={s.rmsButtons}>
+    <div className="flex gap-[3px]">
       {buttons.map((btn) => (
         <button
           key={btn}
           type="button"
           aria-label={`${channelName} ${BUTTON_LABELS[btn] ?? btn}`}
           aria-pressed={active.has(btn) ? 'true' : 'false'}
-          className={active.has(btn) ? s.rmsActive : s.rmsInactive}
           onClick={() => toggle(btn)}
+          className={cn(
+            'min-w-[24px] min-h-[24px] px-[6px] font-mono text-[10px] font-bold flex items-center justify-center cursor-pointer tracking-[0.02em] shrink-0',
+            'focus-visible:outline-2 focus-visible:outline-signal focus-visible:outline-offset-2',
+            active.has(btn)
+              ? [
+                  'rms-active',
+                  'border border-signal text-signal',
+                  'bg-[color-mix(in_srgb,var(--color-signal)_10%,transparent)]',
+                  'shadow-[0_0_5px_color-mix(in_srgb,var(--color-signal)_35%,transparent)]',
+                ].join(' ')
+              : 'rms-inactive border border-[var(--color-signal-quiet)] bg-transparent text-text-muted',
+          )}
         >
           {btn}
         </button>

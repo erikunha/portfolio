@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
-import s from './VuMeter.module.css';
 
 interface VuMeterProps {
   segments: number;
@@ -21,9 +20,9 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
     (i: number, currentLevel: number): string => {
       const filledCount = Math.round((currentLevel / 100) * segments);
       const isRed = clipping && currentLevel > 85 && i >= segments - 2 && i < filledCount;
-      if (isRed) return s.vuSegRed ?? '';
-      if (i < filledCount) return s.vuSegFilled ?? '';
-      return s.vuSegEmpty ?? '';
+      if (isRed) return 'vuSegRed';
+      if (i < filledCount) return 'vuSegFilled';
+      return 'vuSegEmpty';
     },
     [segments, clipping],
   );
@@ -91,7 +90,7 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
       aria-valuemax={100}
       aria-valuetext={`${initialLevel}%`}
       tabIndex={0}
-      className={s.vuMeter}
+      className="vu-meter"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -111,7 +110,7 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
       {Array.from({ length: segments }, (_, i) => {
         const isRed = clipping && initialLevel > 85 && i >= segments - 2 && i < filledCount;
         const isFilled = i < filledCount;
-        const cls = isRed ? s.vuSegRed : isFilled ? s.vuSegFilled : s.vuSegEmpty;
+        const cls = isRed ? 'vuSegRed' : isFilled ? 'vuSegFilled' : 'vuSegEmpty';
         const setRef = (el: HTMLSpanElement | null) => {
           segmentRefs.current[i] = el;
         };
