@@ -14,29 +14,6 @@
   letter-spacing: 0.14em;
 }
 
-.dots {
-  display: inline-flex;
-  gap: 6px;
-}
-
-.dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-}
-
-.dotRed {
-  background: var(--ds-chrome-close);
-}
-
-.dotYellow {
-  background: var(--ds-chrome-minimize);
-}
-
-.dotGreen {
-  background: var(--ds-chrome-maximize);
-}
-
 .title {
   flex: 1;
   text-align: center;

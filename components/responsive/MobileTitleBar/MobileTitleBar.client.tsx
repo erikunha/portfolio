@@ -1,16 +1,13 @@
 // components/responsive/MobileTitleBar/MobileTitleBar.client.tsx
 'use client';
 
+import { WindowChrome } from '@/design-system';
 import styles from './MobileTitleBar.module.css';
 
 export function MobileTitleBar() {
   return (
     <div className={styles.root}>
-      <div className={styles.dots} aria-hidden="true">
-        <span className={`${styles.dot} ${styles.dotRed}`} />
-        <span className={`${styles.dot} ${styles.dotYellow}`} />
-        <span className={`${styles.dot} ${styles.dotGreen}`} />
-      </div>
+      <WindowChrome size={9} />
       <div className={styles.title} aria-hidden="true">
         ERIK_CUNHA.SH
       </div>
