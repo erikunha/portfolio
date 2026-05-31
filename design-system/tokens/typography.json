@@ -1,4 +1,5 @@
 {
+  "ds-text-size-micro": { "$value": "9px", "$type": "dimension" },
   "ds-text-size-2xs": { "$value": "10px", "$type": "dimension" },
   "ds-text-size-xs": { "$value": "10px", "$type": "dimension" },
   "ds-text-size-sm": { "$value": "12px", "$type": "dimension" },
@@ -11,6 +12,7 @@
   "ds-text-leading-tight": { "$value": 1.2, "$type": "number" },
   "ds-text-leading-base": { "$value": 1.55, "$type": "number" },
   "ds-text-leading-relaxed": { "$value": 1.85, "$type": "number" },
+  "ds-font-size-micro": { "$value": "{ds-text-size-micro}", "$type": "dimension" },
   "ds-font-size-2xs": { "$value": "{ds-text-size-2xs}", "$type": "dimension" },
   "ds-font-size-xs": { "$value": "{ds-text-size-xs}", "$type": "dimension" },
   "ds-font-size-sm": { "$value": "{ds-text-size-sm}", "$type": "dimension" },
