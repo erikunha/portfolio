@@ -1,4 +1,4 @@
-import { FaderIsland } from '@/components/client/DawMixer/FaderIsland/FaderIsland.client';
+import { FaderDbIsland } from '@/components/client/DawMixer/FaderIsland/FaderDbIsland.client';
 import { KnobIsland } from '@/components/client/DawMixer/KnobIsland/KnobIsland.client';
 import { RmsButtons } from '@/components/client/DawMixer/RmsButtons/RmsButtons.client';
 import { VuMeter } from '@/components/client/DawMixer/VuMeter/VuMeter.client';
@@ -88,18 +88,7 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
           channelName={ch.name}
         />
       </div>
-      <div className={s.colFader}>
-        <FaderIsland initialPct={ch.faderPct} channelName={ch.name} />
-      </div>
-      <div className={s.colDb}>
-        <span className={s.dbValue}>{ch.db}</span>
-        <span className={s.dbUnit}>dB</span>
-        {ch.footer && (
-          <span className={s.lufs}>
-            LUFS {ch.footer.lufs} · PK {ch.footer.pk}
-          </span>
-        )}
-      </div>
+      <FaderDbIsland initialPct={ch.faderPct} channelName={ch.name} footer={ch.footer} />
     </div>
   );
 }

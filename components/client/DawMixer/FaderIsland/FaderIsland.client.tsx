@@ -6,9 +6,11 @@ import s from './FaderIsland.module.css';
 interface FaderProps {
   initialPct: number;
   channelName: string;
+  onPctChange?: (pct: number) => void;
+  onAriaValueText?: (pct: number) => string;
 }
 
-export function FaderIsland({ initialPct, channelName }: FaderProps) {
+export function FaderIsland({ initialPct, channelName, onPctChange, onAriaValueText }: FaderProps) {
   const [pct, setPct] = useState(initialPct);
   const trackRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
@@ -22,16 +24,23 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
     return Math.max(0, Math.min(100, Math.round(((clientX - rect.left) / rect.width) * 100)));
   }, []);
 
-  const applyPct = useCallback((newPct: number) => {
-    livePct.current = newPct;
-    if (trackRef.current) {
-      trackRef.current.setAttribute('aria-valuenow', String(newPct));
-      trackRef.current.setAttribute('aria-valuetext', `${newPct}%`);
-    }
-    if (thumbRef.current) {
-      thumbRef.current.style.left = `calc(${newPct}% - var(--fader-thumb-w) / 2)`;
-    }
-  }, []);
+  const applyPct = useCallback(
+    (newPct: number) => {
+      livePct.current = newPct;
+      if (trackRef.current) {
+        trackRef.current.setAttribute('aria-valuenow', String(newPct));
+        trackRef.current.setAttribute(
+          'aria-valuetext',
+          onAriaValueText ? onAriaValueText(newPct) : `${newPct}%`,
+        );
+      }
+      if (thumbRef.current) {
+        thumbRef.current.style.left = `calc(${newPct}% - var(--fader-thumb-w) / 2)`;
+      }
+      onPctChange?.(newPct);
+    },
+    [onPctChange, onAriaValueText],
+  );
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     dragStartPct.current = livePct.current;
@@ -56,7 +65,7 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
     isDragging.current = false;
     const newPct = getPctFromPointer(e.clientX);
     if (newPct !== null) {
-      livePct.current = newPct;
+      applyPct(newPct);
       setPct(newPct);
     }
   };
@@ -76,7 +85,7 @@ export function FaderIsland({ initialPct, channelName }: FaderProps) {
       aria-valuenow={pct}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-valuetext={`${pct}%`}
+      aria-valuetext={onAriaValueText ? onAriaValueText(pct) : `${pct}%`}
       tabIndex={0}
       className={s.faderTrack}
       onPointerDown={onPointerDown}

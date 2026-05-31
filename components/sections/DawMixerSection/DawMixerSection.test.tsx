@@ -10,9 +10,22 @@ vi.mock('@/components/client/DawMixer/VuMeter/VuMeter.client', () => ({
   VuMeter: ({ channelName, initialLevel }: { channelName: string; initialLevel: number }) =>
     createElement('div', { 'data-testid': `vu-${channelName}`, 'data-level': initialLevel }),
 }));
-vi.mock('@/components/client/DawMixer/FaderIsland/FaderIsland.client', () => ({
-  FaderIsland: ({ channelName, initialPct }: { channelName: string; initialPct: number }) =>
-    createElement('div', { 'data-testid': `fader-${channelName}`, 'data-pct': initialPct }),
+vi.mock('@/components/client/DawMixer/FaderIsland/FaderDbIsland.client', () => ({
+  FaderDbIsland: ({
+    channelName,
+    initialPct,
+    footer,
+  }: {
+    channelName: string;
+    initialPct: number;
+    footer?: { lufs: string; pk: string };
+  }) =>
+    createElement(
+      'div',
+      { 'data-testid': `fader-${channelName}`, 'data-pct': initialPct },
+      footer ? createElement('span', null, `LUFS ${footer.lufs} · PK ${footer.pk}`) : null,
+    ),
+  pctToDb: (pct: number) => String(pct),
 }));
 vi.mock('@/components/client/DawMixer/KnobIsland/KnobIsland.client', () => ({
   KnobIsland: ({ label }: { label: string }) =>

@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
 import { type CSSProperties, Suspense } from 'react';
+import { pctToDb } from '@/components/client/DawMixer/FaderIsland/pct-to-db';
 import { dawMixer } from '@/content/daw-mixer';
 import type { DawMixerChannel } from '@/content/schemas';
 import { getIsMobile } from '@/lib/ua';
@@ -165,7 +166,7 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
         </span>
         <span className={s.mxName}>{ch.name}</span>
         <div className={s.mxDb}>
-          <span className={s.dbValue}>{ch.db}</span>
+          <span className={s.dbValue}>{pctToDb(ch.faderPct)}</span>
           <span className={s.dbUnit}>dB</span>
         </div>
       </div>
