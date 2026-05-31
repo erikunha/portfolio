@@ -4,6 +4,11 @@
   max-width: var(--ds-layout-maxw);
   margin: 0 auto;
   padding-top: 44px;
+
+  @media (max-width: 768px) /* --bp-mobile */ {
+    flex-direction: column;
+    padding-top: 0;
+  }
 }
 
 .content {
@@ -68,6 +73,12 @@
   border-collapse: collapse;
   margin-bottom: var(--ds-space-pad);
   font-size: var(--ds-font-size-sm);
+
+  @media (max-width: 768px) /* --bp-mobile */ {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .content th,
@@ -90,19 +101,4 @@
 .content td code {
   font-size: var(--ds-font-size-xs);
   color: var(--ds-color-signal);
-}
-
-@media (max-width: 768px) /* --bp-mobile */ {
-  .content table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-@media (max-width: 768px) /* --bp-mobile */ {
-  .root {
-    flex-direction: column;
-    padding-top: 0;
-  }
 }

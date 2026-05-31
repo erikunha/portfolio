@@ -1,9 +1,7 @@
 .root {
   display: none;
-}
 
-@media (max-width: 768px) {
-  .root {
+  @media (max-width: 768px) {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -24,14 +22,18 @@
       transform 200ms ease;
     pointer-events: none;
   }
+}
 
-  .root.show {
+.root.show {
+  @media (max-width: 768px) {
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
   }
+}
 
-  .root svg {
+.root svg {
+  @media (max-width: 768px) {
     width: 16px;
     height: 16px;
     stroke: currentColor;

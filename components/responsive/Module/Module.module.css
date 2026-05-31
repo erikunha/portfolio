@@ -23,6 +23,11 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin: 0;
+
+  @media (min-width: 769px) {
+    font-size: var(--ds-font-size-sm);
+    letter-spacing: 0.1em;
+  }
 }
 
 .icon {
@@ -72,6 +77,21 @@
   border: 1px solid var(--ds-color-signal-subtle);
   background: var(--ds-overlay-55);
   overflow: hidden;
+
+  /* ── Mobile scrim override (<=768px) ────────────────────────────────────
+     Base .root uses 0.55 so desktop's `background: none` override wins cleanly.
+     This block lightens the scrim explicitly for mobile. */
+  @media (max-width: 768px) {
+    background: var(--ds-overlay-22);
+  }
+
+  @media (min-width: 769px) {
+    /* Desktop sections are togglable — drop the mobile container chrome but
+       keep the header clickable with chevron indicator. */
+    border: 0;
+    background: none;
+    overflow: visible;
+  }
 }
 
 /* Chrome 131 introduced ::details-content, which animates block-size between
@@ -141,6 +161,10 @@
   opacity: 1;
   /* Opening: fade-in delayed 80ms so the panel pops open before content appears. */
   transition: opacity var(--ds-duration-base) var(--ds-ease-out) var(--ds-duration-fast);
+
+  @media (min-width: 769px) {
+    border: 1px solid var(--ds-color-signal-subtle);
+  }
 }
 
 /* <summary> is the section toggle: chevron + icon + uppercase label. */
@@ -156,6 +180,19 @@
   background: var(--ds-glow-04);
   border-bottom: 1px solid var(--ds-color-signal-quiet);
   cursor: pointer;
+
+  @media (min-width: 769px) {
+    /* <summary> stripped of mobile panel chrome; chevron visible, cursor active. */
+    display: flex;
+    padding: 0;
+    min-height: 0;
+    background: none;
+    border-bottom: 0;
+    cursor: pointer;
+    margin-bottom: 8px;
+    align-items: center;
+    gap: 8px;
+  }
 }
 
 /* Hide native disclosure triangle (Chrome/Safari) */
@@ -171,9 +208,17 @@
 /* Header labels: desktop label hidden <=768px, mobile label hidden >=769px. */
 .labelMobile {
   display: inline;
+
+  @media (min-width: 769px) {
+    display: none;
+  }
 }
 .labelDesktop {
   display: none;
+
+  @media (min-width: 769px) {
+    display: inline;
+  }
 }
 
 .chevron {
@@ -182,6 +227,11 @@
   flex-shrink: 0;
   /* Material standard easing — smooth in both directions. */
   transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  @media (min-width: 769px) {
+    /* Chevron visible on desktop — inherits rotation from base [open] rule. */
+    display: inline;
+  }
 }
 
 .root[open] .chevron {
@@ -208,70 +258,4 @@ body[data-motion="reduce"] .bodyContent {
 }
 body[data-motion="reduce"] .bodyContent {
   opacity: 1;
-}
-
-/* ── Mobile scrim override (<=768px) ────────────────────────────────────
-   Base .root uses 0.55 so desktop's `background: none` override wins cleanly.
-   This block lightens the scrim explicitly for mobile. */
-@media (max-width: 768px) {
-  .root {
-    background: var(--ds-overlay-22);
-  }
-}
-
-/* ───────────────────────────────────────────────────────────────────────
-   MODULE — DESKTOP (>=769px): neutralize the native <details> collapsibility.
-   The single <details> must read as the old plain, always-expanded
-   <section> + <h2> here: body forced visible regardless of [open], no
-   chevron, summary stripped of its toggle chrome (no cursor / border /
-   background / min-height) so it looks exactly like the former standalone
-   <h2 class="module__header">. The native marker is already removed in the
-   base rules (list-style:none + ::-webkit-details-marker).
-   ─────────────────────────────────────────────────────────────────────── */
-@media (min-width: 769px) {
-  /* Desktop sections are togglable — drop the mobile container chrome but
-     keep the header clickable with chevron indicator. */
-  .root {
-    border: 0;
-    background: none;
-    overflow: visible;
-  }
-
-  /* <summary> stripped of mobile panel chrome; chevron visible, cursor active. */
-  .toggle {
-    display: flex;
-    padding: 0;
-    min-height: 0;
-    background: none;
-    border-bottom: 0;
-    cursor: pointer;
-    margin-bottom: 8px;
-    align-items: center;
-    gap: 8px;
-  }
-
-  /* Desktop header steps up one notch from mobile xs. */
-  .header {
-    font-size: var(--ds-font-size-sm);
-    letter-spacing: 0.1em;
-  }
-
-  /* Desktop shows the full header label. */
-  .labelDesktop {
-    display: inline;
-  }
-  .labelMobile {
-    display: none;
-  }
-
-  /* Chevron visible on desktop — inherits rotation from base [open] rule. */
-  .chevron {
-    display: inline;
-  }
-
-  /* Panel border lives on bodyContent (not bodyInner) to avoid a 1px artefact
-     on the collapsed 0px state. Background inherits the base rgba tint. */
-  .root[open] .bodyContent {
-    border: 1px solid var(--ds-color-signal-subtle);
-  }
 }

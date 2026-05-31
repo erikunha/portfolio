@@ -9,6 +9,10 @@
   font-family: var(--ds-font-family-mono);
   line-height: 1.65;
   margin: calc(-1 * var(--ds-space-pad));
+
+  @media (max-width: 768px) {
+    margin-top: 0;
+  }
 }
 
 .bar {
@@ -20,6 +24,10 @@
   color: var(--ds-color-text-muted);
   font-size: var(--ds-font-size-sm);
   letter-spacing: 0.14em;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-xs);
+  }
 }
 
 .barTitle {
@@ -31,6 +39,12 @@
   min-height: 220px;
   max-height: 400px;
   overflow-y: auto;
+
+  @media (max-width: 768px) {
+    min-height: 200px;
+    max-height: 320px;
+    font-size: var(--ds-font-size-sm);
+  }
 }
 
 .line {
@@ -64,12 +78,20 @@
   align-items: center;
   padding: 8px 16px 12px;
   border-top: 1px solid var(--ds-color-signal-quiet);
+
+  @media (max-width: 768px) {
+    padding: 8px 12px 10px;
+  }
 }
 
 .prompt {
   color: var(--ds-color-text-muted);
   font-size: var(--ds-font-size-body);
   white-space: nowrap;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-sm);
+  }
 }
 
 .inputWrap {
@@ -88,6 +110,10 @@
   font-size: var(--ds-font-size-body);
   caret-color: var(--ds-color-signal);
   caret-shape: block;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-sm);
+  }
 }
 
 /* Keyboard focus shows a real ring (WCAG 2.4.7); the block caret alone is too
@@ -113,6 +139,10 @@
   overflow: hidden;
   display: inline-flex;
   align-items: center;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-sm);
+  }
 }
 
 .cursor {
@@ -186,10 +216,8 @@ body[data-motion="reduce"] .cmdHint {
   padding: 8px 16px 12px;
   border-top: 1px dashed var(--ds-color-signal-quiet);
   opacity: 0.75;
-}
 
-@media (max-width: 768px) {
-  .commands {
+  @media (max-width: 768px) {
     display: none;
   }
 }
@@ -225,6 +253,10 @@ body[data-motion="reduce"] .cmdHint {
   font-size: 0.7rem;
   line-height: 1.5;
   color: color-mix(in oklab, var(--ds-color-text-body) 55%, transparent);
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-micro);
+  }
 }
 
 .privacyNotice code {
@@ -241,34 +273,4 @@ body[data-motion="reduce"] .cmdHint {
 
 .privacyNotice a:hover {
   color: var(--ds-color-signal);
-}
-
-@media (max-width: 768px) {
-  .root {
-    margin-top: 0;
-  }
-  .feed {
-    min-height: 200px;
-    max-height: 320px;
-    font-size: var(--ds-font-size-sm);
-  }
-  .form {
-    padding: 8px 12px 10px;
-  }
-  .prompt {
-    font-size: var(--ds-font-size-sm);
-  }
-  .input {
-    font-size: var(--ds-font-size-sm);
-  }
-  .placeholderAnim {
-    font-size: var(--ds-font-size-sm);
-  }
-  /* From _layout.css 768px block */
-  .bar {
-    font-size: var(--ds-font-size-xs);
-  }
-  .privacyNotice {
-    font-size: var(--ds-font-size-micro);
-  }
 }

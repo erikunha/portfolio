@@ -1,6 +1,10 @@
 .root {
   font-size: var(--ds-font-size-sm);
   line-height: 1.7;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-xs);
+  }
 }
 
 .root .title {
@@ -9,6 +13,10 @@
   letter-spacing: 0.06em;
   font-size: var(--ds-font-size-body);
   margin: 0 0 12px;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-body);
+  }
 }
 
 .root ul {
@@ -22,6 +30,10 @@
   padding-left: 18px;
   position: relative;
   margin-bottom: 4px;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-sm);
+  }
 }
 
 .root li::before {
@@ -39,27 +51,13 @@
   margin-top: 14px;
   border-top: 1px dashed var(--ds-color-signal-quiet);
   padding-top: 12px;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-xs);
+  }
 }
 
 .root .status .gt {
   color: var(--ds-color-signal);
   margin-right: 6px;
-}
-
-@media (max-width: 768px) {
-  .root {
-    font-size: var(--ds-font-size-xs);
-  }
-
-  .root .title {
-    font-size: var(--ds-font-size-body);
-  }
-
-  .root li {
-    font-size: var(--ds-font-size-sm);
-  }
-
-  .root .status {
-    font-size: var(--ds-font-size-xs);
-  }
 }

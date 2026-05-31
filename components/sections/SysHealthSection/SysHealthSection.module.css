@@ -7,6 +7,11 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 18px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
 }
 
 .stat {
@@ -25,6 +30,10 @@
   font-weight: 700;
   margin: 8px 0 14px;
   letter-spacing: 0.02em;
+
+  @media (max-width: 900px) {
+    font-size: var(--ds-font-size-md);
+  }
 }
 
 .bar {
@@ -52,16 +61,6 @@
   50% {
     opacity: 1;
     box-shadow: 0 0 8px var(--ds-color-signal);
-  }
-}
-
-@media (max-width: 900px) {
-  .root {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  .stat .value {
-    font-size: var(--ds-font-size-md);
   }
 }
 

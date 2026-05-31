@@ -10,6 +10,25 @@
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 10px;
+
+  /* Non-monotonic grid: 6 → 3 → 4 → 2 columns. Intentional.
+     At tablet (≤900px) tiles keep aspect-ratio 2:1, so 3 wide columns fits.
+     At mobile (≤768px) aspect-ratio switches to 1:1 (square), which halves tile
+     height — 4 compact square tiles per row fits comfortably at <768px.
+     At 340px (--bp-xxs) further collapses to 2 extra-wide tiles.
+     This is not a mistake: the column count follows tile geometry, not just width. */
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  @media (max-width: 340px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .root li {
@@ -26,6 +45,12 @@
   transition:
     border-color 200ms ease,
     box-shadow 200ms ease;
+
+  @media (max-width: 768px) {
+    aspect-ratio: 1 / 1;
+    font-size: var(--ds-font-size-micro);
+    gap: 4px;
+  }
 }
 
 .root li svg {
@@ -40,36 +65,6 @@
 .root li:hover {
   border-color: var(--ds-color-signal);
   box-shadow: 0 0 14px var(--ds-glow-18);
-}
-
-/* Non-monotonic grid: 6 → 3 → 4 → 2 columns. Intentional.
-   At tablet (≤900px) tiles keep aspect-ratio 2:1, so 3 wide columns fits.
-   At mobile (≤768px) aspect-ratio switches to 1:1 (square), which halves tile
-   height — 4 compact square tiles per row fits comfortably at <768px.
-   At 340px (--bp-xxs) further collapses to 2 extra-wide tiles.
-   This is not a mistake: the column count follows tile geometry, not just width. */
-@media (max-width: 900px) {
-  .root {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .root {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-  }
-  .root li {
-    aspect-ratio: 1 / 1;
-    font-size: var(--ds-font-size-micro);
-    gap: 4px;
-  }
-}
-
-@media (max-width: 340px) {
-  .root {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -8,6 +8,10 @@
   font-size: var(--ds-font-size-sm);
   line-height: 1.55;
   overflow-x: auto;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-xs);
+  }
 }
 
 .root .cmdbar {
@@ -17,6 +21,10 @@
   letter-spacing: 0.02em;
   font-size: var(--ds-font-size-sm);
   white-space: pre;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-xs);
+  }
 }
 
 .root .prompt {
@@ -102,13 +110,4 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-@media (max-width: 768px) {
-  .root {
-    font-size: var(--ds-font-size-xs);
-  }
-  .root .cmdbar {
-    font-size: var(--ds-font-size-xs);
-  }
 }

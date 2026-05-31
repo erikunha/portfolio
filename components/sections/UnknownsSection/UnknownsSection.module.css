@@ -5,6 +5,12 @@
   line-height: 1.75;
   color: var(--ds-color-text-body);
   white-space: pre-wrap;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-sm);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
 }
 
 .root .cmd {
@@ -33,16 +39,8 @@
 .root .open {
   color: var(--ds-color-signal);
   font-weight: 700;
-}
 
-@media (max-width: 768px) {
-  .root pre {
-    font-size: var(--ds-font-size-sm);
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-  }
-
-  .root .open {
+  @media (max-width: 768px) {
     font-size: var(--ds-font-size-xs);
   }
 }

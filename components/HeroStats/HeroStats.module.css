@@ -3,6 +3,10 @@
   grid-template-columns: repeat(4, 1fr);
   border: 1px solid var(--ds-color-signal-subtle);
   margin-top: 12px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* Cell layout — padding owned by StatTile primitive, only border stays here */
@@ -14,17 +18,15 @@
   border-right: none;
 }
 
-@media (max-width: 768px) {
-  .root {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .item:nth-child(2) {
+.item:nth-child(2) {
+  @media (max-width: 768px) {
     border-right: none;
   }
+}
 
-  .item:nth-child(1),
-  .item:nth-child(2) {
+.item:nth-child(1),
+.item:nth-child(2) {
+  @media (max-width: 768px) {
     border-bottom: 1px solid var(--ds-color-signal-subtle);
   }
 }

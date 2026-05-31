@@ -12,6 +12,14 @@
   position: relative;
   z-index: 1;
   overflow: hidden;
+
+  @media (max-width: 900px) {
+    padding: 0 var(--ds-space-pad) calc(40px + env(safe-area-inset-bottom, 0px)) var(--ds-space-pad);
+  }
+
+  @media (max-width: 768px) {
+    padding: 28px var(--ds-space-pad) 24px;
+  }
 }
 .inner {
   position: relative;
@@ -31,6 +39,11 @@
   gap: 24px;
   flex-wrap: wrap;
   margin-bottom: 8px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 4px;
+  }
 }
 .init {
   color: var(--ds-color-signal);
@@ -38,12 +51,28 @@
   letter-spacing: 0.06em;
   font-size: var(--ds-font-size-body);
   text-shadow: 0 0 8px var(--ds-glow-35);
+
+  @media (max-width: 560px) {
+    font-size: var(--ds-font-size-sm);
+  }
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-sm);
+  }
 }
 .stamp {
   color: var(--ds-color-text-muted);
   font-size: var(--ds-font-size-xs);
   letter-spacing: 0.14em;
   text-transform: uppercase;
+
+  @media (max-width: 560px) {
+    font-size: var(--ds-font-size-xs);
+  }
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-xs);
+  }
 }
 .stamp b {
   color: var(--ds-color-text-body);
@@ -72,6 +101,10 @@
   grid-template-columns: 1fr 1.15fr;
   gap: 18px;
   margin-bottom: 26px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
 }
 .panel {
   border: 1px solid var(--ds-color-signal-subtle);
@@ -79,6 +112,11 @@
   background: linear-gradient(180deg, rgba(0, 255, 65, 0.025), rgba(0, 0, 0, 0));
   position: relative;
   min-width: 0;
+
+  @media (max-width: 768px) {
+    padding: 12px 14px 14px;
+    margin-bottom: 10px;
+  }
 }
 .spHead {
   color: var(--ds-color-signal);
@@ -89,6 +127,11 @@
   display: flex;
   align-items: baseline;
   gap: 6px;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-sm);
+    letter-spacing: 0.16em;
+  }
 }
 .spBar {
   color: var(--ds-color-signal);
@@ -100,6 +143,22 @@
   font-size: var(--ds-font-size-sm);
   line-height: 1.95;
   align-items: center;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 110px 1fr;
+    font-size: var(--ds-font-size-sm);
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 92px 1fr;
+    gap: 8px;
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 100px 1fr;
+    gap: 10px;
+    font-size: var(--ds-font-size-sm);
+  }
 }
 .spK {
   color: var(--ds-color-text-muted);
@@ -124,6 +183,10 @@
   margin-right: 8px;
   position: relative;
   overflow: hidden;
+
+  @media (max-width: 560px) {
+    width: 64px;
+  }
 }
 .spBar2 > i {
   display: block;
@@ -141,6 +204,14 @@
   color: var(--ds-color-text-body);
   white-space: pre;
   overflow-x: auto;
+
+  @media (max-width: 900px) {
+    font-size: var(--ds-font-size-sm);
+  }
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-sm);
+  }
 }
 .netstat .nsHdr {
   color: var(--ds-color-text-muted);
@@ -163,16 +234,32 @@
   text-decoration-color: var(--ds-color-signal);
   text-shadow: 0 0 8px var(--ds-glow-40);
 }
+.netstat {
+  @media (max-width: 900px) {
+    font-size: var(--ds-font-size-sm);
+  }
+}
 .nsGrid {
   display: grid;
   grid-template-columns: 28px 90px minmax(0, 1fr);
   gap: 0 28px;
   align-items: center;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 28px 80px minmax(0, 1fr);
+    gap: 0 10px;
+  }
 }
 .nsGrid a {
   display: inline-flex;
   align-items: center;
   min-height: 32px;
+
+  @media (max-width: 768px) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 .nsHdrCell {
   color: var(--ds-color-text-muted);
@@ -214,6 +301,18 @@
   color: var(--ds-color-text-body);
   opacity: 0;
   transform: translateY(2px);
+
+  @media (max-width: 900px) {
+    grid-template-columns: 72px 1fr auto;
+    gap: 10px;
+    font-size: var(--ds-font-size-sm);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 72px 1fr auto;
+    gap: 8px;
+    font-size: var(--ds-font-size-xs);
+  }
 }
 .dmesg.booted .dmLine {
   animation: dmesg-reveal 220ms ease both;
@@ -334,46 +433,6 @@
   opacity: 0.85;
 }
 
-@media (max-width: 900px) {
-  .root {
-    padding: 0 var(--ds-space-pad) calc(40px + env(safe-area-inset-bottom, 0px)) var(--ds-space-pad);
-  }
-  .grid {
-    grid-template-columns: 1fr;
-  }
-  .spRow {
-    grid-template-columns: 110px 1fr;
-    font-size: var(--ds-font-size-sm);
-  }
-  .dmesg .dmLine {
-    grid-template-columns: 72px 1fr auto;
-    gap: 10px;
-    font-size: var(--ds-font-size-sm);
-  }
-  .netstat {
-    font-size: var(--ds-font-size-sm);
-  }
-  .netstat pre {
-    font-size: var(--ds-font-size-sm);
-  }
-}
-
-@media (max-width: 560px) {
-  .init {
-    font-size: var(--ds-font-size-sm);
-  }
-  .stamp {
-    font-size: var(--ds-font-size-xs);
-  }
-  .spRow {
-    grid-template-columns: 92px 1fr;
-    gap: 8px;
-  }
-  .spBar2 {
-    width: 64px;
-  }
-}
-
 /* Reduced motion: skip the staggered reveal animations entirely — the
    dmesg lines, halt plate, and hint render in their final visible state
    immediately. `animation: none` also cancels the inline animation-delay. */
@@ -395,50 +454,4 @@ body[data-motion="reduce"] .end.booted .halt {
 }
 body[data-motion="reduce"] .spBar2 > i {
   transition: none;
-}
-
-@media (max-width: 768px) {
-  .root {
-    padding: 28px var(--ds-space-pad) 24px;
-  }
-  .banner {
-    flex-direction: column;
-    gap: 4px;
-  }
-  .init {
-    font-size: var(--ds-font-size-sm);
-  }
-  .stamp {
-    font-size: var(--ds-font-size-xs);
-  }
-  .panel {
-    padding: 12px 14px 14px;
-    margin-bottom: 10px;
-  }
-  .spHead {
-    font-size: var(--ds-font-size-sm);
-    letter-spacing: 0.16em;
-  }
-  .spRow {
-    grid-template-columns: 100px 1fr;
-    gap: 10px;
-    font-size: var(--ds-font-size-sm);
-  }
-  .dmesg .dmLine {
-    grid-template-columns: 72px 1fr auto;
-    gap: 8px;
-    font-size: var(--ds-font-size-xs);
-  }
-  .netstat pre {
-    font-size: var(--ds-font-size-sm);
-  }
-  .nsGrid {
-    grid-template-columns: 28px 80px minmax(0, 1fr);
-    gap: 0 10px;
-  }
-  .nsGrid a {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
 }

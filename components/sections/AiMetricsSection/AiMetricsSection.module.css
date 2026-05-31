@@ -12,6 +12,11 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
 }
 
 .metric {
@@ -33,6 +38,10 @@
   font-size: var(--ds-font-size-heading-md);
   line-height: 1;
   letter-spacing: 0.01em;
+
+  @media (max-width: 900px) {
+    font-size: var(--ds-font-size-heading-sm);
+  }
 }
 
 .note {
@@ -54,6 +63,13 @@
   color: var(--ds-color-text-muted);
   font-size: var(--ds-font-size-xs);
   letter-spacing: 0.06em;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: var(--ds-font-size-micro);
+  }
 }
 
 .gt {
@@ -70,10 +86,8 @@
      layout shift when the 4-card grid streams in. Only on the fallback element
      so the resolved state controls its own natural height. */
   min-height: 160px;
-}
 
-@media (max-width: 900px) {
-  .pending {
+  @media (max-width: 900px) {
     min-height: 290px; /* 2-col grid is 2 rows tall */
   }
 }
@@ -81,23 +95,4 @@
 .pending code {
   color: var(--ds-color-signal);
   font-family: var(--ds-font-family-mono);
-}
-
-@media (max-width: 900px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  .value {
-    font-size: var(--ds-font-size-heading-sm);
-  }
-}
-
-@media (max-width: 768px) {
-  .foot {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    font-size: var(--ds-font-size-micro);
-  }
 }

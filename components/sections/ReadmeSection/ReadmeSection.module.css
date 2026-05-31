@@ -5,6 +5,11 @@
   font-size: var(--ds-font-size-sm);
   line-height: 1.85;
   color: var(--ds-color-text-body);
+
+  @media (max-width: 768px) {
+    grid-template-columns: 28px 1fr;
+    font-size: var(--ds-font-size-xs);
+  }
 }
 
 .gutter {
@@ -39,6 +44,10 @@
   font-weight: 700;
   font-size: var(--ds-font-size-body);
   margin-top: 4px;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-sm);
+  }
 }
 
 .pillWrap {
@@ -59,6 +68,10 @@
 
 .codeSampleWrap {
   /* visible by default; hidden on mobile (see media query below) */
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 
 .codeSample {
@@ -117,17 +130,4 @@
 .tkP {
   color: var(--ds-color-text-body);
   opacity: 0.85;
-}
-
-@media (max-width: 768px) {
-  .root {
-    grid-template-columns: 28px 1fr;
-    font-size: var(--ds-font-size-xs);
-  }
-  .rowH2 {
-    font-size: var(--ds-font-size-sm);
-  }
-  .codeSampleWrap {
-    display: none;
-  }
 }

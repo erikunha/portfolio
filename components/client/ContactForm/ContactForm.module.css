@@ -16,6 +16,11 @@
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 4px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .send {
@@ -29,6 +34,11 @@
   letter-spacing: 0.08em;
   cursor: pointer;
   transition: box-shadow var(--ds-duration-base) ease;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    align-self: auto;
+  }
 }
 
 .send:hover:not(:disabled) {
@@ -45,6 +55,10 @@
   font-size: var(--ds-font-size-xs);
   opacity: 0.85;
   margin: 0;
+
+  @media (min-width: 769px) {
+    font-size: var(--ds-font-size-sm);
+  }
 }
 
 .error {
@@ -68,21 +82,4 @@
 
 body[data-motion="reduce"] .send {
   transition: none;
-}
-
-@media (min-width: 769px) {
-  .cursor {
-    font-size: var(--ds-font-size-sm);
-  }
-}
-
-@media (max-width: 768px) {
-  .submitrow {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .send {
-    width: 100%;
-    align-self: auto;
-  }
 }

@@ -6,6 +6,14 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 18px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    gap: 10px;
+  }
 }
 
 .cell {
@@ -16,6 +24,11 @@
   color: var(--ds-color-text-muted);
   font-size: var(--ds-font-size-sm);
   letter-spacing: 0.16em;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-xs);
+    letter-spacing: 0.14em;
+  }
 }
 
 .cell .pv {
@@ -25,6 +38,15 @@
   line-height: 1;
   margin: 8px 0;
   letter-spacing: 0.01em;
+
+  @media (max-width: 900px) {
+    font-size: var(--ds-font-size-heading-md);
+  }
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-heading-sm);
+    margin: 6px 0;
+  }
 }
 
 .cell .pv .of {
@@ -32,6 +54,10 @@
   font-weight: 400;
   font-size: var(--ds-font-size-sm);
   margin-left: 4px;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-xs);
+  }
 }
 
 .cell .pbar {
@@ -39,6 +65,10 @@
   background: var(--ds-color-signal-quiet);
   position: relative;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    height: 3px;
+  }
 }
 
 .cell .pbar > i {
@@ -55,6 +85,10 @@
   color: var(--ds-color-text-muted);
   font-size: var(--ds-font-size-xs);
   letter-spacing: 0.14em;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-micro);
+  }
 }
 
 .foot .liveDot {
@@ -66,48 +100,17 @@
   margin-right: 8px;
   vertical-align: -1px;
   animation: blink 1.6s steps(2, start) infinite;
+
+  @media (max-width: 768px) {
+    width: 6px;
+    height: 6px;
+    margin-right: 6px;
+  }
 }
 
 @keyframes blink {
   to {
     opacity: 0;
-  }
-}
-
-@media (max-width: 900px) {
-  .root {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .cell .pv {
-    font-size: var(--ds-font-size-heading-md);
-  }
-}
-
-@media (max-width: 768px) {
-  .root {
-    gap: 10px;
-  }
-  .cell .pk {
-    font-size: var(--ds-font-size-xs);
-    letter-spacing: 0.14em;
-  }
-  .cell .pv {
-    font-size: var(--ds-font-size-heading-sm);
-    margin: 6px 0;
-  }
-  .cell .pv .of {
-    font-size: var(--ds-font-size-xs);
-  }
-  .cell .pbar {
-    height: 3px;
-  }
-  .foot {
-    font-size: var(--ds-font-size-micro);
-  }
-  .foot .liveDot {
-    width: 6px;
-    height: 6px;
-    margin-right: 6px;
   }
 }
 

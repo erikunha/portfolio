@@ -19,6 +19,10 @@
   background: transparent;
   transition: transform var(--ds-duration-fast) var(--ds-ease-out);
   margin-bottom: var(--ds-space-rhythm);
+
+  @media (max-width: 900px) {
+    min-height: 520px;
+  }
 }
 
 .shake {
@@ -27,12 +31,6 @@
 
 .shake2 {
   transform: translate(-2px, 1px);
-}
-
-@media (max-width: 900px) {
-  .root {
-    min-height: 520px;
-  }
 }
 
 /* ── Desktop variant — two-column flex layout ─────────────────────────────
@@ -76,6 +74,10 @@
   justify-content: flex-end;
   padding: 32px 24px;
   gap: 10px;
+
+  @media (max-width: 900px) {
+    padding: 24px 18px;
+  }
 }
 
 .bio .name {
@@ -128,11 +130,12 @@
 
 .status {
   align-self: flex-start;
-}
 
-@media (max-width: 900px) {
-  .bio {
-    padding: 24px 18px;
+  /* ── Status badge — mobile spacing override ─────────────────────────────────
+     Mobile layout uses no flex gap (unlike desktop bio column); margin provides
+     spacing between the badge and HeroStats below it. */
+  @media (max-width: 768px) {
+    margin-bottom: 14px;
   }
 }
 
@@ -255,10 +258,8 @@ body[data-motion="reduce"] .headline {
     0 0 24px var(--ds-glow-55),
     0 0 60px var(--ds-glow-25);
   white-space: nowrap;
-}
 
-@media (max-width: 900px) {
-  .headlinePlate {
+  @media (max-width: 900px) {
     font-size: var(--ds-font-size-heading-sm);
     padding: 5px 14px 6px;
   }
@@ -295,11 +296,14 @@ body[data-motion="reduce"] .headline {
   display: none;
 }
 
-@media (max-width: 768px) {
-  .desktop {
+.desktop {
+  @media (max-width: 768px) {
     display: none;
   }
-  .mobile {
+}
+
+.mobile {
+  @media (max-width: 768px) {
     display: block;
   }
 }
@@ -357,16 +361,6 @@ body[data-motion="reduce"] .headline {
   height: 165px;
   overflow: hidden;
   margin: 0 0 12px;
-}
-
-/* ── Status badge — mobile spacing override ─────────────────────────────────
-   Mobile layout uses no flex gap (unlike desktop bio column); margin provides
-   spacing between the badge and HeroStats below it. */
-
-@media (max-width: 768px) {
-  .status {
-    margin-bottom: 14px;
-  }
 }
 
 /* ── Standalone .on class for sysfail headline state ────────────────────── */

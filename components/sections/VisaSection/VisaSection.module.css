@@ -13,6 +13,13 @@
   font-size: var(--ds-font-size-sm);
   line-height: 1.85;
   white-space: pre;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-xs);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
 }
 
 /* span tokens inside .visa — _sections.css lines 141–165 */
@@ -42,6 +49,12 @@
   font-size: var(--ds-font-size-xs);
   margin-top: 14px;
   letter-spacing: 0.04em;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-xs);
+    white-space: nowrap;
+    overflow: hidden;
+  }
 }
 
 /* .vm-grid/.vm-row/.vm-right — _sections.css lines 167–188 */
@@ -70,11 +83,8 @@
 
 .vruleMobile {
   display: none;
-}
 
-/* ── 768px responsive ─────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .vruleMobile {
+  @media (max-width: 768px) {
     display: block;
     color: var(--ds-color-signal);
     opacity: 0.55;
@@ -83,16 +93,5 @@
     overflow: hidden;
     white-space: nowrap;
     margin-bottom: 0.5em;
-  }
-  .root pre {
-    font-size: var(--ds-font-size-xs);
-    line-height: 1.7;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-  }
-  .foot {
-    font-size: var(--ds-font-size-xs);
-    white-space: nowrap;
-    overflow: hidden;
   }
 }

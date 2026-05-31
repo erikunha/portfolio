@@ -1,12 +1,21 @@
 .root {
   font-size: var(--ds-font-size-sm);
   line-height: 1.9;
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-xs);
+  }
 }
 
 .root .row {
   display: grid;
   grid-template-columns: 110px 1fr;
   gap: 16px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 90px 1fr;
+    gap: 10px;
+  }
 }
 
 .root .k {
@@ -16,17 +25,4 @@
 
 .root .v {
   color: var(--ds-color-text-body);
-}
-
-@media (max-width: 900px) {
-  .root .row {
-    grid-template-columns: 90px 1fr;
-    gap: 10px;
-  }
-}
-
-@media (max-width: 768px) {
-  .root {
-    font-size: var(--ds-font-size-xs);
-  }
 }

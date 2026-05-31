@@ -6,16 +6,12 @@
   max-width: var(--ds-layout-maxw);
   margin: 0 auto;
   padding: 60px var(--ds-space-pad) 0;
-}
 
-@media (max-width: 900px) /* --bp-tablet */ {
-  .page {
+  @media (max-width: 900px) /* --bp-tablet */ {
     padding: 20px 18px 0;
   }
-}
 
-@media (max-width: 768px) /* --bp-mobile */ {
-  .page {
+  @media (max-width: 768px) /* --bp-mobile */ {
     padding: 14px var(--ds-space-pad) 0;
   }
 }

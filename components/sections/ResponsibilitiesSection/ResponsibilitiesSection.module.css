@@ -21,6 +21,16 @@
   line-height: 1.85;
   color: var(--ds-color-text-body);
   white-space: pre;
+
+  @media (max-width: 900px) {
+    font-size: var(--ds-font-size-sm);
+  }
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-xs);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
 }
 
 .root .perm {
@@ -56,34 +66,22 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 6px 24px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+
+  @media (max-width: 768px) {
+    font-size: var(--ds-font-size-xs);
+  }
 }
 
 .root .foot .k {
   color: var(--ds-color-signal);
 }
 
-@media (max-width: 900px) {
-  .root pre {
-    font-size: var(--ds-font-size-sm);
-  }
-
-  .root .foot {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  .root pre {
-    font-size: var(--ds-font-size-xs);
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-  }
-
-  .root .cmd {
-    font-size: var(--ds-font-size-xs);
-  }
-
-  .root .foot {
+.root .cmd {
+  @media (max-width: 768px) {
     font-size: var(--ds-font-size-xs);
   }
 }

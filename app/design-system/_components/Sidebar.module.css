@@ -5,6 +5,15 @@
   padding: var(--ds-space-pad);
   border-right: 1px solid var(--ds-color-signal-subtle);
   min-width: 180px;
+
+  @media (max-width: 768px) /* --bp-mobile */ {
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: none;
+    border-bottom: 1px solid var(--ds-color-signal-subtle);
+    min-width: 0;
+    padding: var(--ds-space-pad-tight);
+  }
 }
 
 .link,
@@ -57,15 +66,4 @@
   border: none;
   border-top: 1px solid var(--ds-color-signal-subtle);
   margin: var(--ds-space-gap) 0;
-}
-
-@media (max-width: 768px) /* --bp-mobile */ {
-  .root {
-    flex-direction: row;
-    flex-wrap: wrap;
-    border-right: none;
-    border-bottom: 1px solid var(--ds-color-signal-subtle);
-    min-width: 0;
-    padding: var(--ds-space-pad-tight);
-  }
 }
