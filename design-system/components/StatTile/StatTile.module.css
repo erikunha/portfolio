@@ -23,7 +23,7 @@
   line-height: 1.3;
 }
 
-@media (min-width: 769px) /* --bp-mobile-up */ {
+@media (min-width: 769px) {
   .value {
     font-size: var(--ds-font-size-body);
   }
