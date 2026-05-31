@@ -32,7 +32,7 @@ Rejects any `.module.css` file that uses a CSS primitive var when a semantic ali
 - `var(--ds-text-size-*)` — use `var(--ds-font-size-*)`
 
 **Allowed (no semantic layer exists):**
-- `var(--ds-duration-*)`, `var(--ds-ease-*)`, `var(--ds-layer-*)`, `var(--ds-radius-*)`, `var(--ds-border-*)`, `var(--ds-chrome-*)`
+- `var(--ds-duration-*)`, `var(--ds-ease-*)`, `var(--ds-z-*)`, `var(--ds-radius-*)`, `var(--ds-border-*)`, `var(--ds-chrome-*)`
 
 ## No-Magic-Values Lint
 
@@ -42,7 +42,7 @@ Rejects raw values that should be token references:
 - Hex colors (`#rrggbb`) — use `var(--ds-color-*)`
 - Raw `px` values outside the allowlist — use spacing tokens
 - Raw `ms`/`s` durations — use `var(--ds-duration-*)`
-- Raw `z-index` integers — use `var(--ds-layer-*)`
+- Raw `z-index` integers — use `var(--ds-z-*)`
 
 Exceptions are documented in `scripts/lint-no-magic-values.allowlist.json`.
 

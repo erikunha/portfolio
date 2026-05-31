@@ -102,7 +102,7 @@
     height: 3px;
   }
   .foot {
-    font-size: 9px;
+    font-size: var(--ds-font-size-micro);
   }
   .foot .liveDot {
     width: 6px;

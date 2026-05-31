@@ -108,7 +108,7 @@
   }
 
   .preamble {
-    font-size: 9px;
+    font-size: var(--ds-font-size-micro);
   }
 
   .num {

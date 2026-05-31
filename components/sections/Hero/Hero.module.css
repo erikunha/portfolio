@@ -17,7 +17,7 @@
   padding: 0;
   overflow: hidden;
   background: transparent;
-  transition: transform 80ms ease-out;
+  transition: transform var(--ds-duration-fast) var(--ds-ease-out);
   margin-bottom: var(--ds-space-rhythm);
 }
 
@@ -229,16 +229,16 @@ body[data-motion="reduce"] .headline {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  z-index: 150;
+  z-index: var(--ds-z-emergency);
   display: block;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 300ms ease-out;
+  transition: opacity var(--ds-duration-slow) var(--ds-ease-out);
 }
 
 .headline.on {
   opacity: 1;
-  transition: opacity 200ms ease-in;
+  transition: opacity var(--ds-duration-base) var(--ds-ease-in);
 }
 
 .headlinePlate {
@@ -373,5 +373,5 @@ body[data-motion="reduce"] .headline {
 
 .on {
   opacity: 1;
-  transition: opacity 200ms ease-in;
+  transition: opacity var(--ds-duration-base) var(--ds-ease-in);
 }

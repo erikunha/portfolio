@@ -26,12 +26,20 @@
   --ds-chrome-close: #ff5f57;
   --ds-chrome-minimize: #febc2e;
   --ds-chrome-maximize: #28c840;
+  --ds-z-base: 0;
+  --ds-z-content: 10;
+  --ds-z-chrome: 110;
+  --ds-z-dock: 120;
+  --ds-z-emergency: 150;
+  --ds-z-skiplink: 9999;
   --ds-duration-fast: 80ms;
   --ds-duration-base: 200ms;
   --ds-duration-slow: 300ms;
   --ds-ease-out: ease-out;
   --ds-ease-in: ease-in;
   --ds-ease-in-out: ease-in-out;
+  --ds-ease-emphasized-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --ds-ease-emphasized-in: cubic-bezier(0.32, 0, 0.67, 0);
   --ds-space-1: 4px;
   --ds-space-2: 8px;
   --ds-space-3: 12px;
@@ -43,6 +51,7 @@
   --ds-space-12: 48px;
   --ds-space-16: 64px;
   --ds-layout-maxw: 1200px;
+  --ds-text-size-micro: 9px;
   --ds-text-size-2xs: 10px;
   --ds-text-size-xs: 10px;
   --ds-text-size-sm: 12px;
@@ -79,6 +88,7 @@
   --ds-space-pad: var(--ds-space-6);
   --ds-space-section: var(--ds-space-8);
   --ds-space-rhythm: var(--ds-space-16);
+  --ds-font-size-micro: var(--ds-text-size-micro);
   --ds-font-size-2xs: var(--ds-text-size-2xs);
   --ds-font-size-xs: var(--ds-text-size-xs);
   --ds-font-size-sm: var(--ds-text-size-sm);

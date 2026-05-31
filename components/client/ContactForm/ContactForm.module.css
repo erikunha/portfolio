@@ -28,7 +28,7 @@
   font-size: var(--ds-font-size-sm);
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: box-shadow 200ms ease;
+  transition: box-shadow var(--ds-duration-base) ease;
 }
 
 .send:hover:not(:disabled) {

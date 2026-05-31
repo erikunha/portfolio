@@ -319,31 +319,16 @@
   ],
   "z-index-values": [
     "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
     {
-      "value": "10",
-      "reason": "page content layer — above CRT overlay (5), below all fixed chrome (109+)"
+      "value": "1",
+      "reason": "component-local stacking only (Footer/Hero decorative layers, CRT vignette) — not part of the cross-cutting --ds-z-* chrome contract"
     },
     {
-      "value": "109",
-      "reason": "MobileTitleBar — one below StatusBar (110), forming the mobile header stack"
+      "value": "2",
+      "reason": "component-local stacking only (Hero/Guitar layers, CRT scanlines) — not part of the --ds-z-* chrome contract"
     },
-    {
-      "value": "110",
-      "reason": "StatusBar / DesktopTopbar — fixed header layer; documented stacking order"
-    },
-    {
-      "value": "115",
-      "reason": "ToTopButton — above Dock (120 is wrong; 115 is above content but doc says 115)"
-    },
-    { "value": "120", "reason": "Dock — mobile bottom nav; highest UI chrome layer" },
-    {
-      "value": "150",
-      "reason": "Hero sysfail headline — emergency overlay; highest possible UI layer"
-    }
+    { "value": "3", "reason": "CRT sub-pixel mask layer — local effect stack" },
+    { "value": "4", "reason": "CRT noise/flicker layer — local effect stack" },
+    { "value": "5", "reason": "CRT scan-beam layer — local effect stack" }
   ]
 }

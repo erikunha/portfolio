@@ -33,6 +33,7 @@ export const metadata = {
 
 ## Type Scale
 
+<TypeSpecimen token="ds-font-size-micro" />
 <TypeSpecimen token="ds-font-size-2xs" />
 <TypeSpecimen token="ds-font-size-xs" />
 <TypeSpecimen token="ds-font-size-sm" />
@@ -67,13 +68,28 @@ export const metadata = {
 | `--ds-duration-base` | 200ms |
 | `--ds-duration-slow` | 300ms |
 
+| Easing token | Curve |
+|---|---|
+| `--ds-ease-out` | `ease-out` |
+| `--ds-ease-in` | `ease-in` |
+| `--ds-ease-in-out` | `ease-in-out` |
+| `--ds-ease-emphasized-out` | `cubic-bezier(0.33, 1, 0.68, 1)` — opening (easeOutCubic) |
+| `--ds-ease-emphasized-in` | `cubic-bezier(0.32, 0, 0.67, 0)` — closing (easeInCubic) |
+
 All motion tokens are suppressed under `prefers-reduced-motion: reduce`.
 
 ## Layers
 
-| Token | Value |
-|---|---|
-| `--ds-layer-base` | 0 |
-| `--ds-layer-sticky` | 50 |
-| `--ds-layer-overlay` | 100 |
-| `--ds-layer-headline` | 150 |
+The cross-cutting z-index contract. Component-local stacking (CRT effect layers 1–5,
+in-component decorative layers) is intentionally not tokenized.
+
+| Token | Value | Usage |
+|---|---|---|
+| `--ds-z-base` | 0 | default flow |
+| `--ds-z-content` | 10 | page content above the CRT overlay |
+| `--ds-z-chrome` | 110 | fixed header chrome (DesktopTopbar / StatusBar — never co-render) |
+| `--ds-z-dock` | 120 | mobile bottom dock |
+| `--ds-z-emergency` | 150 | Hero sysfail plate |
+| `--ds-z-skiplink` | 9999 | skip-to-content link, always on top |
+
+MobileTitleBar uses `calc(var(--ds-z-chrome) - 1)`; ToTopButton uses `calc(var(--ds-z-chrome) + 5)`.

@@ -106,7 +106,7 @@ textarea:focus-visible {
   position: absolute;
   left: 0;
   top: 0;
-  z-index: 9999;
+  z-index: var(--ds-z-skiplink);
   padding: 8px 16px;
   background: var(--ds-color-signal);
   color: #000;

@@ -86,7 +86,7 @@ const checks = [
     pattern: /z-index\s*:\s*(\d+)/g,
     extract: (_m, p1) => p1,
     filter: (m) => !allowedZIndex.has(m),
-    message: (m) => `hardcoded z-index ${m} — use var(--ds-layer-*) or add to allowlist`,
+    message: (m) => `hardcoded z-index ${m} — use a var(--ds-z-*) token or add to allowlist`,
   },
 ];
 

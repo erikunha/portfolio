@@ -10,7 +10,8 @@
     position: fixed;
     right: 14px;
     bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 14px);
-    z-index: 115;
+    /* Above header chrome, below the dock. */
+    z-index: calc(var(--ds-z-chrome) + 5);
     width: 40px;
     height: 40px;
     background: rgba(0, 0, 0, 0.85);

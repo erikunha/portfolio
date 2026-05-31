@@ -112,9 +112,13 @@
   caret-shape: block;
 }
 
-.input:focus,
+/* Keyboard focus shows a real ring (WCAG 2.4.7); the block caret alone is too
+   weak a sole indicator. :focus-visible scopes it to keyboard focus, so mouse
+   users still get the clean block-caret-only affordance. Matches the global
+   input focus ring in app/css/_base.css. */
 .input:focus-visible {
-  outline: none;
+  outline: 2px solid var(--ds-color-signal);
+  outline-offset: 2px;
 }
 
 .placeholderAnim {
@@ -287,6 +291,6 @@ body[data-motion="reduce"] .cmdHint {
     font-size: var(--ds-font-size-xs);
   }
   .privacyNotice {
-    font-size: 9px;
+    font-size: var(--ds-font-size-micro);
   }
 }
