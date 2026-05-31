@@ -1,6 +1,5 @@
 import typographyTokens from '../../../../design-system/tokens/typography.json';
 import { resolveValue } from '../../_lib/resolve-tokens';
-import styles from './TypeSpecimen.module.css';
 
 type Props = { token: string };
 
@@ -13,13 +12,17 @@ export function TypeSpecimen({ token }: Props) {
   );
 
   return (
-    <div className={styles.row}>
-      <div className={styles.specimen} style={{ fontSize: resolved }} aria-hidden="true">
+    <div className="flex items-baseline gap-4 py-2 border-b border-border-default last:border-0">
+      <div
+        className="text-signal font-mono flex-shrink-0 w-16 overflow-hidden leading-none"
+        style={{ fontSize: resolved }}
+        aria-hidden="true"
+      >
         Aa
       </div>
-      <div className={styles.meta}>
-        <code className={styles.name}>--{token}</code>
-        <span className={styles.value}>{resolved}</span>
+      <div className="flex flex-col gap-0.5">
+        <code className="text-[10px] font-mono text-text-muted tracking-widest">--{token}</code>
+        <span className="text-xs font-mono text-text-body">{resolved}</span>
       </div>
     </div>
   );
