@@ -2,6 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import SHELL_RESPONSES from '@/content/shell-commands';
+import { WindowChrome } from '@/design-system';
 import { readMotion } from '@/lib/motion';
 import { parseStreamChunk } from '@/lib/stream-protocol';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
@@ -329,11 +330,7 @@ export function InteractiveShell() {
   return (
     <div className={styles.root}>
       <div className={styles.bar}>
-        <div className={styles.barDots} aria-hidden="true">
-          <span className={`${styles.barDot} ${styles.barDotRed}`} />
-          <span className={`${styles.barDot} ${styles.barDotYellow}`} />
-          <span className={`${styles.barDot} ${styles.barDotGreen}`} />
-        </div>
+        <WindowChrome size={10} />
         {isMobile ? (
           <span className={styles.barTitle}>ZSH</span>
         ) : (

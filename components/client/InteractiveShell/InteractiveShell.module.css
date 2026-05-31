@@ -22,30 +22,8 @@
   letter-spacing: 0.14em;
 }
 
-.barDots {
-  display: flex;
-  gap: 6px;
-}
-
-.barDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: block;
-}
-
 .barTitle {
   margin-left: auto;
-}
-
-.barDotRed {
-  background: var(--ds-chrome-close);
-}
-.barDotYellow {
-  background: var(--ds-chrome-minimize);
-}
-.barDotGreen {
-  background: var(--ds-chrome-maximize);
 }
 
 .feed {
