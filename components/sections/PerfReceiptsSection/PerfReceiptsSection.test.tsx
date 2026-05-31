@@ -30,7 +30,7 @@ describe('PerfReceiptsSection — hero data-featured variant', () => {
     const doc = await renderSection();
     // Query delta elements specifically (not all paragraphs) to avoid matching
     // company/note/metric <p> elements that are never delta candidates.
-    const nonFeaturedDeltas = doc.querySelectorAll('[class*="delta"]:not([data-featured])');
+    const nonFeaturedDeltas = doc.querySelectorAll('[data-delta]:not([data-featured])');
     expect(nonFeaturedDeltas.length).toBeGreaterThan(0);
   });
 });

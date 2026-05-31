@@ -7,7 +7,6 @@ import {
 } from '@/lib/lighthouse-scores';
 import { IconLivePerf } from '../../Icons';
 import { Module } from '../../responsive/Module';
-import styles from './LivePerfSection.module.css';
 
 export async function PerfData({ strategy }: { strategy: Strategy }) {
   const scores = await getScores(strategy).catch(() => LIGHTHOUSE_FALLBACK);
@@ -30,30 +29,36 @@ function PerfBody({ scores, strategy }: { scores: LighthouseScores; strategy: St
 
   return (
     <div>
-      <div className={styles.root}>
+      {/* 4-col grid, 2-col on ≤900px, smaller gap on mobile */}
+      <div className="grid grid-cols-2 min-[901px]:grid-cols-4 gap-[10px] md:gap-[18px]">
         {cells.map((s) => (
-          <div key={s.label} className={styles.cell}>
-            <div className={styles.pk}>{s.label}</div>
-            <div className={styles.pv}>
+          <div key={s.label} className="text-left">
+            <div className="text-text-muted text-[10px] md:text-xs tracking-[0.16em] md:tracking-[0.14em]">
+              {s.label}
+            </div>
+            <div className="text-signal font-bold text-[24px] md:text-[32px] leading-none my-[6px] md:my-2 tracking-[0.01em]">
               {isFallback ? '—' : s.value}
-              <span className={styles.of}>/100</span>
+              <span className="text-text-muted font-normal text-xs md:text-[10px] ml-1">/100</span>
             </div>
             <div
-              className={styles.pbar}
+              className="h-[3px] md:h-1 bg-[var(--color-signal-quiet)] relative overflow-hidden"
               role="progressbar"
               aria-valuenow={isFallback ? 0 : s.value}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-label={`${s.label}: ${isFallback ? 'unavailable' : `${s.value} out of 100`}`}
             >
-              <i style={{ width: isFallback ? '0%' : `${s.value}%` }} />
+              <i
+                className="block h-full bg-signal"
+                style={{ width: isFallback ? '0%' : `${s.value}%` }}
+              />
             </div>
           </div>
         ))}
       </div>
-      <div className={styles.foot}>
+      <div className="flex justify-between items-center mt-[18px] text-text-muted text-[9px] md:text-[10px] tracking-[0.14em]">
         <span>
-          <span className={styles.liveDot} />
+          <span className="live-dot" />
           {isFallback ? 'SOURCE: PSI API unavailable' : `SOURCE: PageSpeed Insights · ${strategy}`}
         </span>
         <span>LAST_CHECK: {lastCheck}</span>
@@ -65,29 +70,31 @@ function PerfBody({ scores, strategy }: { scores: LighthouseScores; strategy: St
 function StrategyFallback({ strategy }: { strategy: string }) {
   return (
     <div aria-busy="true">
-      <div className={styles.root}>
+      <div className="grid grid-cols-2 min-[901px]:grid-cols-4 gap-[10px] md:gap-[18px]">
         {['PERFORMANCE', 'ACCESSIBILITY', 'BEST PRACTICES', 'SEO'].map((label) => (
-          <div key={label} className={styles.cell}>
-            <div className={styles.pk}>{label}</div>
-            <div className={styles.pv}>
-              —<span className={styles.of}>/100</span>
+          <div key={label} className="text-left">
+            <div className="text-text-muted text-[10px] md:text-xs tracking-[0.16em] md:tracking-[0.14em]">
+              {label}
+            </div>
+            <div className="text-signal font-bold text-[24px] md:text-[32px] leading-none my-[6px] md:my-2 tracking-[0.01em]">
+              —<span className="text-text-muted font-normal text-xs md:text-[10px] ml-1">/100</span>
             </div>
             <div
-              className={styles.pbar}
+              className="h-[3px] md:h-1 bg-[var(--color-signal-quiet)] relative overflow-hidden"
               role="progressbar"
               aria-valuenow={0}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-label={`${label}: loading`}
             >
-              <i style={{ width: '0%' }} />
+              <i className="block h-full bg-signal" style={{ width: '0%' }} />
             </div>
           </div>
         ))}
       </div>
-      <div className={styles.foot}>
+      <div className="flex justify-between items-center mt-[18px] text-text-muted text-[9px] md:text-[10px] tracking-[0.14em]">
         <span>
-          <span className={styles.liveDot} />
+          <span className="live-dot" />
           {strategy} · loading...
         </span>
       </div>
@@ -98,12 +105,12 @@ function StrategyFallback({ strategy }: { strategy: string }) {
 function PerfFallback() {
   return (
     <>
-      <div className={styles.strategyBlock}>
-        <p className={styles.strategyLabel}>DESKTOP</p>
+      <div className="strategy-block">
+        <p className="text-text-muted text-[10px] tracking-[0.18em] mb-[10px]">DESKTOP</p>
         <StrategyFallback strategy="desktop" />
       </div>
-      <div className={styles.strategyBlock}>
-        <p className={styles.strategyLabel}>MOBILE</p>
+      <div className="strategy-block">
+        <p className="text-text-muted text-[10px] tracking-[0.18em] mb-[10px]">MOBILE</p>
         <StrategyFallback strategy="mobile" />
       </div>
     </>
@@ -121,12 +128,12 @@ export function LivePerfSection({ defer }: { defer?: boolean } = {}) {
       defer={defer}
     >
       <Suspense fallback={<PerfFallback />}>
-        <div className={styles.strategyBlock}>
-          <p className={styles.strategyLabel}>DESKTOP</p>
+        <div className="strategy-block">
+          <p className="text-text-muted text-[10px] tracking-[0.18em] mb-[10px]">DESKTOP</p>
           <PerfData strategy="desktop" />
         </div>
-        <div className={styles.strategyBlock}>
-          <p className={styles.strategyLabel}>MOBILE</p>
+        <div className="strategy-block">
+          <p className="text-text-muted text-[10px] tracking-[0.18em] mb-[10px]">MOBILE</p>
           <PerfData strategy="mobile" />
         </div>
       </Suspense>

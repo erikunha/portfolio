@@ -536,4 +536,309 @@
   body[data-motion="reduce"] .module-body-content {
     opacity: 1;
   }
+
+  /* ── LivePerfSection — live indicator dot ──────────────────────────────── */
+
+  @keyframes live-blink {
+    to {
+      opacity: 0;
+    }
+  }
+
+  .live-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-signal);
+    margin-right: 8px;
+    vertical-align: -1px;
+    animation: live-blink 1.6s steps(2, start) infinite;
+  }
+
+  @media (max-width: 768px) {
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      margin-right: 6px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .live-dot {
+      animation: none;
+      opacity: 0;
+    }
+  }
+
+  body[data-motion="reduce"] .live-dot {
+    animation: none;
+    opacity: 0;
+  }
+
+  /* ── LivePerfSection — strategy block separator ────────────────────────── */
+
+  .strategy-block + .strategy-block {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border-default);
+  }
+
+  /* ── PerfReceiptsSection — hero card gradient background ───────────────── */
+
+  .receipt-hero-gradient {
+    background: linear-gradient(180deg, var(--color-glow-04), var(--color-surface-panel));
+  }
+
+  /* ── GuitarSection — scan beam animation ──────────────────────────────── */
+
+  @keyframes guitar-scan-beam {
+    from {
+      top: -30px;
+    }
+    to {
+      top: 100%;
+    }
+  }
+
+  .guitar-scan-beam {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -30px;
+    height: 28px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--color-signal) 32%, transparent) 50%,
+      transparent
+    );
+    mix-blend-mode: screen;
+    pointer-events: none;
+    animation: guitar-scan-beam 7s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .guitar-scan-beam {
+      animation: none;
+      display: none;
+    }
+  }
+
+  body[data-motion="reduce"] .guitar-scan-beam {
+    animation: none;
+    display: none;
+  }
+
+  /* ── GuitarSection — camera corner brackets ────────────────────────────── */
+
+  .cam-corners {
+    position: absolute;
+    inset: 8px;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .cam-corners::before,
+  .cam-corners::after,
+  .cam-corners > i::before,
+  .cam-corners > i::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--color-signal);
+  }
+
+  .cam-corners::before {
+    top: 0;
+    left: 0;
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  .cam-corners::after {
+    top: 0;
+    right: 0;
+    border-left: 0;
+    border-bottom: 0;
+  }
+
+  .cam-corners > i {
+    position: absolute;
+    inset: 0;
+  }
+
+  .cam-corners > i::before {
+    bottom: 0;
+    left: 0;
+    border-right: 0;
+    border-top: 0;
+    top: auto;
+  }
+
+  .cam-corners > i::after {
+    bottom: 0;
+    right: 0;
+    border-left: 0;
+    border-top: 0;
+    top: auto;
+  }
+
+  /* ── GuitarSection / DawMixer — signal chain arrow ─────────────────────── */
+
+  .signal-chain-arrow::before {
+    content: "\2500\2500\25b6";
+  }
+
+  /* ── DawMixerSection — channel row grid ─────────────────────────────────── */
+
+  .daw-channel-row {
+    display: grid;
+    grid-template-columns: 64px 1.4fr 86px 80px 2.4fr 1.5fr 1fr 64px;
+    gap: 14px;
+    align-items: center;
+  }
+
+  /* ── DawMixerSection — transport play triangle ──────────────────────────── */
+
+  .transport-play {
+    width: 0;
+    height: 0;
+    border-left: 9px solid var(--color-signal);
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    filter: drop-shadow(0 0 4px var(--color-signal));
+  }
+
+  /* ── DawMixerSection — static fader track tick marks ───────────────────── */
+
+  .mx-fader {
+    position: relative;
+    height: 22px;
+    border: 1px solid var(--color-signal-quiet);
+    background: var(--color-glow-03);
+  }
+
+  .mx-fader::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 50%;
+    height: 1px;
+    transform: translateY(-0.5px);
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--color-signal-quiet) 0 1px,
+      transparent 1px 25%
+    );
+  }
+
+  /* ── DawMixerSection — dial indicator needle ────────────────────────────── */
+
+  .mx-dial::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    width: 1px;
+    height: 12px;
+    background: var(--color-signal);
+    box-shadow: 0 0 4px var(--color-signal);
+    transform-origin: 50% 12px;
+    transform: translateX(-50%) rotate(var(--mx-knob-angle, 0deg));
+  }
+
+  /* ── DawMixerSection — mobile chain line decorators ─────────────────────── */
+
+  .mx-chain {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border-left: 1px dashed var(--color-signal-quiet);
+    padding-left: 12px;
+    padding-bottom: 10px;
+    margin-left: 4px;
+    position: relative;
+  }
+
+  .mx-chain::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: -2px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-signal);
+    box-shadow: 0 0 4px var(--color-signal);
+  }
+
+  .mx-chain::after {
+    content: "\25bc";
+    position: absolute;
+    left: -1px;
+    bottom: 0;
+    color: var(--color-signal);
+    font-size: 10px;
+    text-shadow: 0 0 4px var(--color-signal);
+  }
+
+  /* Mobile: no arrow glyph at bottom, no bottom padding */
+  .mx-chain-mobile::after {
+    display: none;
+  }
+
+  .mx-chain-mobile {
+    padding-bottom: 0;
+  }
+
+  /* ── DawMixerSection — chain title separator line ───────────────────────── */
+
+  .mx-chain-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--color-signal-quiet);
+  }
+
+  /* ── DawMixerSection — fader thumb (mobile) ─────────────────────────────── */
+
+  .mx-fader-thumb::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 4px;
+    bottom: 4px;
+    width: 1px;
+    background: #000;
+    transform: translateX(-50%);
+  }
+
+  /* ── DawMixerSection — plugin card active dot ───────────────────────────── */
+
+  .plugin-card-on::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-signal);
+  }
+
+  /* ── DawMixerSection — focused channel indicator bar ───────────────────── */
+
+  .channel-row-focused::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--color-signal);
+    box-shadow: 0 0 10px var(--color-signal);
+  }
 }
