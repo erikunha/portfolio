@@ -6,16 +6,15 @@ import { WindowChrome } from '@/design-system';
 import { readMotion } from '@/lib/motion';
 import { parseStreamChunk } from '@/lib/stream-protocol';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
-import styles from './InteractiveShell.module.css';
 
 type Line = { id: number; kind: 'prompt' | 'output' | 'error' | 'info' | 'loading'; text: string };
 
 const KIND_CLASS: Record<Line['kind'], string> = {
-  prompt: styles.linePrompt ?? '',
-  output: styles.lineOutput ?? '',
-  error: styles.lineError ?? '',
-  info: styles.lineInfo ?? '',
-  loading: styles.lineLoading ?? '',
+  prompt: 'text-signal',
+  output: 'text-text-body opacity-[0.95]',
+  error: 'text-error',
+  info: 'text-text-muted',
+  loading: 'text-signal opacity-50',
 };
 
 const INITIAL_LINES: Omit<Line, 'id'>[] = [
@@ -98,9 +97,13 @@ function AnimatedPlaceholder() {
     };
   }, []);
   return (
-    <span className={styles.placeholderAnim} aria-hidden="true" data-testid="shell-placeholder">
+    <span
+      className="absolute left-0 top-1/2 -translate-y-1/2 text-text-muted opacity-60 pointer-events-none font-inherit text-[14px] whitespace-nowrap overflow-hidden inline-flex items-center"
+      aria-hidden="true"
+      data-testid="shell-placeholder"
+    >
       <span ref={textRef} />
-      <span className={styles.cursor} data-testid="shell-cursor" />
+      <span className="shell-cursor" data-testid="shell-cursor" />
     </span>
   );
 }
@@ -115,7 +118,7 @@ function LoadingDots() {
   }, []);
   return (
     <span
-      className={`${styles.line} ${styles.lineLoading}`}
+      className="m-0 block whitespace-pre-wrap break-words text-signal opacity-50"
       aria-hidden="true"
       data-testid="shell-line-loading"
     >
@@ -328,21 +331,21 @@ export function InteractiveShell() {
   );
 
   return (
-    <div className={styles.root}>
-      <div className={styles.bar}>
+    <div className="bg-[var(--color-surface-shell)] text-xs font-mono leading-[1.65] -m-[var(--ds-space-pad,14px)]">
+      <div className="flex items-center gap-[10px] px-[14px] py-2 border-b border-[var(--color-signal-subtle)] text-text-muted text-xs tracking-[0.14em]">
         <WindowChrome size={10} />
         {isMobile ? (
-          <span className={styles.barTitle}>ZSH</span>
+          <span className="ml-auto">ZSH</span>
         ) : (
           <>
             <span>erik@portfolio · /bin/sh</span>
-            <span className={styles.barTitle}>SESSION_ID: 0xDEADBEEF</span>
+            <span className="ml-auto">SESSION_ID: 0xDEADBEEF</span>
           </>
         )}
       </div>
 
       <div
-        className={styles.feed}
+        className="px-4 py-[14px] min-h-[220px] max-h-[400px] overflow-y-auto max-md:min-h-[200px] max-md:max-h-[320px] max-md:text-xs"
         ref={feedRef}
         role="log"
         aria-label="shell output"
@@ -353,13 +356,20 @@ export function InteractiveShell() {
           l.kind === 'loading' ? (
             <LoadingDots key={l.id} />
           ) : (
-            <span key={l.id} className={`${styles.line} ${KIND_CLASS[l.kind]}`} data-kind={l.kind}>
+            <span
+              key={l.id}
+              className={`m-0 block whitespace-pre-wrap break-words ${KIND_CLASS[l.kind]}`}
+              data-kind={l.kind}
+            >
               {l.text}
             </span>
           ),
         )}
         {streamingText !== null && (
-          <span className={`${styles.line} ${styles.lineOutput}`} data-kind="output">
+          <span
+            className="m-0 block whitespace-pre-wrap break-words text-text-body opacity-[0.95]"
+            data-kind="output"
+          >
             {streamingText}
           </span>
         )}
@@ -371,11 +381,13 @@ export function InteractiveShell() {
           const cmd = input.trim();
           if (cmd && !busy) runCommand(cmd);
         }}
-        className={styles.form}
+        className="flex gap-2 items-center px-4 py-2 pb-3 border-t border-[var(--color-signal-quiet)] max-md:px-3 max-md:pb-[10px]"
         data-testid="shell-form"
       >
-        <span className={styles.prompt}>erik@portfolio:~$</span>
-        <div className={styles.inputWrap}>
+        <span className="text-text-muted text-[14px] whitespace-nowrap max-md:text-xs">
+          erik@portfolio:~$
+        </span>
+        <div className="flex-1 relative min-w-0">
           <input
             ref={inputRef}
             value={input}
@@ -387,29 +399,41 @@ export function InteractiveShell() {
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
-            className={styles.input}
+            className="w-full bg-transparent border-0 outline-none text-text-body font-inherit text-[14px] caret-signal [caret-shape:block] focus-visible:outline-2 focus-visible:outline-signal focus-visible:outline-offset-2 max-md:text-xs"
             aria-label="shell command"
           />
           {!input && !busy && !inputFocused && <AnimatedPlaceholder />}
         </div>
       </form>
 
-      <p className={styles.privacyNotice} data-testid="shell-privacy-notice">
+      <p
+        className="m-0 px-4 py-2 border-t border-[color-mix(in_oklab,var(--color-signal)_14%,transparent)] text-[0.7rem] leading-[1.5] text-[color-mix(in_oklab,var(--color-text-body)_55%,transparent)] max-md:text-[9px]"
+        data-testid="shell-privacy-notice"
+      >
         Queries are stored 90 days for product improvement. To request deletion, email{' '}
-        <a href="mailto:erikhenriquealvescunha@gmail.com">erikhenriquealvescunha@gmail.com</a>. If
-        you are technical, you can also POST your request ID (in the <code>X-Request-Id</code>{' '}
-        response header) directly to <code>/api/log/forget</code>.
+        <a
+          href="mailto:erikhenriquealvescunha@gmail.com"
+          className="inherit underline underline-offset-2 hover:text-signal"
+        >
+          erikhenriquealvescunha@gmail.com
+        </a>
+        . If you are technical, you can also POST your request ID (in the{' '}
+        <code className="font-inherit text-signal opacity-80">X-Request-Id</code> response header)
+        directly to <code className="font-inherit text-signal opacity-80">/api/log/forget</code>.
       </p>
 
       {!isMobile && (
-        <div className={styles.commands} data-testid="shell-commands">
+        <div
+          className="text-text-muted text-xs tracking-[0.1em] leading-[1.8] px-4 py-2 pb-3 border-t border-dashed border-[var(--color-signal-quiet)] opacity-75 max-md:hidden"
+          data-testid="shell-commands"
+        >
           {'commands: '}
           {COMMANDS.map(({ label, cmd }, i) => (
             <Fragment key={cmd}>
               {i > 0 && ' · '}
               <button
                 type="button"
-                className={styles.cmdHint}
+                className="shell-cmd-hint inline bg-none border-none p-0 cursor-pointer font-inherit text-inherit tracking-inherit color-inherit disabled:cursor-default"
                 onClick={() => {
                   if (!busy) {
                     setInput(cmd);
@@ -428,7 +452,7 @@ export function InteractiveShell() {
 
       {isMobile && (
         <div
-          className={styles.chips}
+          className="flex gap-[6px] flex-wrap px-3 py-2 pb-[10px] border-t border-dashed border-[var(--color-signal-quiet)]"
           role="toolbar"
           aria-label="quick commands"
           onClick={(e) => {
@@ -437,7 +461,13 @@ export function InteractiveShell() {
           }}
         >
           {COMMANDS.map(({ label, cmd }) => (
-            <button key={cmd} type="button" className={styles.chip} data-cmd={cmd} disabled={busy}>
+            <button
+              key={cmd}
+              type="button"
+              className="border border-[var(--color-signal-subtle)] text-signal px-2 py-1 font-mono text-[10px] tracking-[0.1em] rounded-[2px] min-h-[28px] inline-flex items-center cursor-pointer bg-transparent active:bg-[var(--color-signal-quiet)]"
+              data-cmd={cmd}
+              disabled={busy}
+            >
               {label}
             </button>
           ))}
