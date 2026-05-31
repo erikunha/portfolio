@@ -1,10 +1,8 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    BASE — @layer base
-   Replaces _base.css. Uses Tailwind v4 @layer base wrapper.
-   Variable mapping: --ds-color-* / --ds-font-family-* / --ds-glow-* →
-   --color-* / --font-* tokens from theme.css.
-   All --ds-* spacing/font-size/z-index references replaced with resolved
-   literals (Style Dictionary dist/ removed in Task 11).
+   Element resets and document-level defaults. Colours and fonts come from the
+   @theme tokens in theme.css (--color-* / --font-*); type, spacing, and z-index
+   use Tailwind's standard scale, applied here as resolved literals.
    ───────────────────────────────────────────────────────────────────────── */
 
 @layer base {
@@ -64,8 +62,8 @@
   body {
     margin: 0;
     padding: 0;
-    background: var(--color-surface);
-    color: var(--color-text-body);
+    background: var(--color-secondary-950);
+    color: var(--color-tertiary-50);
     font-family: var(--font-mono);
     font-size: 16px;
     line-height: 1.55;
@@ -80,12 +78,12 @@
   }
 
   ::selection {
-    background: var(--color-signal);
-    color: var(--color-highlight-fg);
+    background: var(--color-primary-500);
+    color: var(--color-secondary-950);
   }
 
   a {
-    color: var(--color-signal);
+    color: var(--color-primary-500);
     text-decoration: none;
   }
 
@@ -95,14 +93,14 @@
 
   a:focus-visible {
     text-decoration: underline;
-    outline: 2px solid var(--color-signal);
+    outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
   }
 
   button:focus-visible,
   input:focus-visible,
   textarea:focus-visible {
-    outline: 2px solid var(--color-signal);
+    outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
   }
 
@@ -112,7 +110,7 @@
     top: 0;
     z-index: 9999;
     padding: 8px 16px;
-    background: var(--color-signal);
+    background: var(--color-primary-500);
     color: #000;
     font-family: var(--font-mono);
     font-size: 16px;
@@ -137,7 +135,7 @@
     font-family: inherit;
     color: inherit;
     background: transparent;
-    border: 1px solid var(--color-border-default);
+    border: 1px solid var(--color-primary-border);
     cursor: pointer;
   }
 
@@ -152,7 +150,7 @@
   h3 {
     font-family: var(--font-mono);
     font-weight: 700;
-    color: var(--color-signal);
+    color: var(--color-primary-500);
     margin: 0 0 8px 0;
     text-shadow: 0 0 2px var(--color-glow-30);
   }
@@ -190,8 +188,8 @@
     align-items: center;
     justify-content: center;
     padding: 2rem;
-    background: var(--color-surface);
-    color: var(--color-text-body);
+    background: var(--color-secondary-950);
+    color: var(--color-tertiary-50);
     font-family: var(--font-mono);
     position: relative;
   }

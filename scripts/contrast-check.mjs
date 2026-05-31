@@ -63,11 +63,11 @@ function get(name) {
 
 // Pairs: [fg token name, bg token name, minRatio, label]
 const PAIRS = [
-  ['text-muted', 'surface', 4.5, 'muted text on base'],
-  ['text-faint', 'surface', 4.5, 'faint text on base'],
-  ['signal', 'surface', 3.0, 'signal on base (large text)'],
-  ['text-body', 'surface-shell', 4.5, 'body text on shell'],
-  ['signal', 'surface-shell', 3.0, 'signal on shell (large text)'],
+  ['primary-400', 'secondary-950', 4.5, 'muted text on base'],
+  ['primary-300', 'secondary-950', 4.5, 'faint text on base'],
+  ['primary-500', 'secondary-950', 3.0, 'signal on base (large text)'],
+  ['tertiary-50', 'secondary-900', 4.5, 'body text on shell'],
+  ['primary-500', 'secondary-900', 3.0, 'signal on shell (large text)'],
 ];
 
 let failures = 0;

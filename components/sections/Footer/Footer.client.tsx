@@ -161,16 +161,16 @@ export function Footer() {
         {/* Banner */}
         <div className="flex items-baseline justify-between gap-6 flex-wrap mb-2 max-[768px]:flex-col max-[768px]:gap-1">
           <span
-            className="text-signal font-bold tracking-[0.06em] text-sm max-[560px]:text-sm max-[768px]:text-sm"
+            className="text-primary-500 font-bold tracking-[0.06em] text-sm max-[560px]:text-sm max-[768px]:text-sm"
             style={{ textShadow: '0 0 8px rgba(0,255,65,0.35)' }}
           >
             [SYSTEM SHUTDOWN INITIATED]
           </span>
-          <span className="text-text-muted text-xs tracking-[0.14em] uppercase max-[560px]:text-xs max-[768px]:text-xs">
+          <span className="text-primary-400 text-xs tracking-[0.14em] uppercase max-[560px]:text-xs max-[768px]:text-xs">
             {'halted at '}
             <b
               suppressHydrationWarning
-              className="text-text-body font-bold ml-1.5 tracking-[0.04em] tabular-nums"
+              className="text-tertiary-50 font-bold ml-1.5 tracking-[0.04em] tabular-nums"
             >
               {time}
             </b>
@@ -178,73 +178,78 @@ export function Footer() {
         </div>
 
         {/* Cmdline */}
-        <div className="text-sm mb-[14px] text-text-body">
-          <span className="text-text-muted">{'erik@portfolio:~$'}</span>{' '}
-          <span className="text-text-body">{'shutdown -h now'}</span>
+        <div className="text-sm mb-[14px] text-tertiary-50">
+          <span className="text-primary-400">{'erik@portfolio:~$'}</span>{' '}
+          <span className="text-tertiary-50">{'shutdown -h now'}</span>
         </div>
 
         {/* Rule */}
-        <div className="border-t border-dashed border-signal-subtle mb-[22px]" aria-hidden="true" />
+        <div
+          className="border-t border-dashed border-primary-subtle mb-[22px]"
+          aria-hidden="true"
+        />
 
         {/* Grid — 2 panels */}
         <div className="grid grid-cols-[1fr_1.15fr] gap-[18px] mb-[26px] max-[900px]:grid-cols-1">
           {/* SESSION_REPORT panel */}
           <div
-            className="border border-signal-subtle p-[14px_16px_16px] relative min-w-0 max-[768px]:p-[12px_14px_14px] max-[768px]:mb-2.5"
+            className="border border-primary-subtle p-[14px_16px_16px] relative min-w-0 max-[768px]:p-[12px_14px_14px] max-[768px]:mb-2.5"
             style={{ background: 'linear-gradient(180deg, rgba(0,255,65,0.025), rgba(0,0,0,0))' }}
           >
-            <header className="text-signal font-bold text-xs tracking-[0.18em] mb-3 flex items-baseline gap-1.5 max-[768px]:text-sm max-[768px]:tracking-[0.16em]">
-              <span className="text-signal">{'▌'}</span>SESSION_REPORT
+            <header className="text-primary-500 font-bold text-xs tracking-[0.18em] mb-3 flex items-baseline gap-1.5 max-[768px]:text-sm max-[768px]:tracking-[0.16em]">
+              <span className="text-primary-500">{'▌'}</span>SESSION_REPORT
             </header>
             <div className="grid grid-cols-[130px_1fr] gap-3 text-sm leading-[1.95] items-center max-[900px]:grid-cols-[110px_1fr] max-[768px]:grid-cols-[100px_1fr] max-[768px]:gap-2.5 max-[560px]:grid-cols-[92px_1fr] max-[560px]:gap-2">
-              <span className="text-text-muted tracking-[0.04em]">user</span>
-              <span className="text-text-body tabular-nums">erik@portfolio</span>
-              <span className="text-text-muted tracking-[0.04em]">uptime</span>
-              <span className="text-text-body tabular-nums">
-                <b className="text-signal font-bold tabular-nums">{uptime}</b>
+              <span className="text-primary-400 tracking-[0.04em]">user</span>
+              <span className="text-tertiary-50 tabular-nums">erik@portfolio</span>
+              <span className="text-primary-400 tracking-[0.04em]">uptime</span>
+              <span className="text-tertiary-50 tabular-nums">
+                <b className="text-primary-500 font-bold tabular-nums">{uptime}</b>
               </span>
-              <span className="text-text-muted tracking-[0.04em]">
+              <span className="text-primary-400 tracking-[0.04em]">
                 {isMobile ? 'scroll' : 'scroll depth'}
               </span>
-              <span className="text-text-body tabular-nums">
+              <span className="text-tertiary-50 tabular-nums">
                 {/* sp-bar in components.css */}
                 <span className="sp-bar">
                   <i style={{ width: `${scrollDepth}%` }} />
                 </span>
-                <b className="text-signal font-bold tabular-nums">{scrollDepth}%</b>
+                <b className="text-primary-500 font-bold tabular-nums">{scrollDepth}%</b>
               </span>
-              <span className="text-text-muted tracking-[0.04em]">
+              <span className="text-primary-400 tracking-[0.04em]">
                 {isMobile ? 'sections' : 'sections seen'}
               </span>
-              <span className="text-text-body tabular-nums">
-                <b className="text-signal font-bold tabular-nums">{sectionsSeen}</b>
+              <span className="text-tertiary-50 tabular-nums">
+                <b className="text-primary-500 font-bold tabular-nums">{sectionsSeen}</b>
                 {' / '}
                 {totalSections}
               </span>
-              <span className="text-text-muted tracking-[0.04em]">
+              <span className="text-primary-400 tracking-[0.04em]">
                 {isMobile ? 'commands' : 'commands run'}
               </span>
-              <span className="text-text-body tabular-nums">
-                <b className="text-signal font-bold tabular-nums">{commandsRun}</b>
+              <span className="text-tertiary-50 tabular-nums">
+                <b className="text-primary-500 font-bold tabular-nums">{commandsRun}</b>
               </span>
             </div>
           </div>
 
           {/* NETSTAT panel */}
           <div
-            className="border border-signal-subtle p-[14px_16px_16px] relative min-w-0 max-[768px]:p-[12px_14px_14px] max-[768px]:mb-2.5"
+            className="border border-primary-subtle p-[14px_16px_16px] relative min-w-0 max-[768px]:p-[12px_14px_14px] max-[768px]:mb-2.5"
             style={{ background: 'linear-gradient(180deg, rgba(0,255,65,0.025), rgba(0,0,0,0))' }}
           >
-            <header className="text-signal font-bold text-xs tracking-[0.18em] mb-3 flex items-baseline gap-1.5">
-              <span className="text-signal">{'▌'}</span>NETSTAT -AN
+            <header className="text-primary-500 font-bold text-xs tracking-[0.18em] mb-3 flex items-baseline gap-1.5">
+              <span className="text-primary-500">{'▌'}</span>NETSTAT -AN
             </header>
             {isMobile ? (
               <div className="grid grid-cols-[28px_90px_minmax(0,1fr)] gap-x-[28px] items-center max-[768px]:grid-cols-[28px_80px_minmax(0,1fr)] max-[768px]:gap-x-2.5">
-                <span className="text-text-muted tracking-[0.06em]">Proto</span>
-                <span className="text-text-muted tracking-[0.06em]">State</span>
-                <span className="text-text-muted tracking-[0.06em]">Endpoint</span>
-                <span className="text-text-muted">tcp</span>
-                <span className="text-signal font-bold flex items-center min-h-8">ESTABLISHED</span>
+                <span className="text-primary-400 tracking-[0.06em]">Proto</span>
+                <span className="text-primary-400 tracking-[0.06em]">State</span>
+                <span className="text-primary-400 tracking-[0.06em]">Endpoint</span>
+                <span className="text-primary-400">tcp</span>
+                <span className="text-primary-500 font-bold flex items-center min-h-8">
+                  ESTABLISHED
+                </span>
                 <a
                   href="https://github.com/erikunha"
                   target="_blank"
@@ -253,8 +258,8 @@ export function Footer() {
                 >
                   github.com/erikunha
                 </a>
-                <span className="text-text-muted">tcp</span>
-                <span className="text-accent-warm font-bold flex items-center min-h-8">LISTEN</span>
+                <span className="text-primary-400">tcp</span>
+                <span className="text-quinary-300 font-bold flex items-center min-h-8">LISTEN</span>
                 <a
                   href="https://linkedin.com/in/erikunha"
                   target="_blank"
@@ -263,8 +268,10 @@ export function Footer() {
                 >
                   linkedin.com/in/erikunha
                 </a>
-                <span className="text-text-muted">tcp</span>
-                <span className="text-signal font-bold flex items-center min-h-8">ESTABLISHED</span>
+                <span className="text-primary-400">tcp</span>
+                <span className="text-primary-500 font-bold flex items-center min-h-8">
+                  ESTABLISHED
+                </span>
                 <a
                   href="https://erikunha.dev"
                   target="_blank"
@@ -275,26 +282,26 @@ export function Footer() {
                 </a>
               </div>
             ) : (
-              <pre className="m-0 font-mono text-sm leading-[1.95] text-text-body whitespace-pre overflow-x-auto max-[900px]:text-sm max-[768px]:text-sm">
-                <span className="text-text-muted">{'Proto  State        Endpoint'}</span>
+              <pre className="m-0 font-mono text-sm leading-[1.95] text-tertiary-50 whitespace-pre overflow-x-auto max-[900px]:text-sm max-[768px]:text-sm">
+                <span className="text-primary-400">{'Proto  State        Endpoint'}</span>
                 {[
                   {
                     state: 'ESTABLISHED',
-                    cls: 'text-signal font-bold',
+                    cls: 'text-primary-500 font-bold',
                     href: 'https://github.com/erikunha',
                     label: 'github.com/erikunha',
                     external: true,
                   },
                   {
                     state: 'LISTEN',
-                    cls: 'text-accent-warm font-bold',
+                    cls: 'text-quinary-300 font-bold',
                     href: 'https://linkedin.com/in/erikunha',
                     label: 'linkedin.com/in/erikunha',
                     external: true,
                   },
                   {
                     state: 'ESTABLISHED',
-                    cls: 'text-signal font-bold',
+                    cls: 'text-primary-500 font-bold',
                     href: 'https://erikunha.dev',
                     label: 'erikunha.dev',
                     external: true,
@@ -326,21 +333,21 @@ export function Footer() {
           {dmesgLines.map((line, i) => (
             <li
               key={line.off}
-              className="dmesg-line grid grid-cols-[92px_1fr_auto] gap-x-[14px] items-baseline text-text-body max-[900px]:grid-cols-[72px_1fr_auto] max-[900px]:gap-x-2.5 max-[900px]:text-sm max-[768px]:grid-cols-[72px_1fr_auto] max-[768px]:gap-x-2 max-[768px]:text-xs"
+              className="dmesg-line grid grid-cols-[92px_1fr_auto] gap-x-[14px] items-baseline text-tertiary-50 max-[900px]:grid-cols-[72px_1fr_auto] max-[900px]:gap-x-2.5 max-[900px]:text-sm max-[768px]:grid-cols-[72px_1fr_auto] max-[768px]:gap-x-2 max-[768px]:text-xs"
               style={{ animationDelay: `${i * 80}ms` }}
             >
-              <span className="text-text-muted tabular-nums whitespace-nowrap">{dmesgTs[i]}</span>
-              <span className="text-text-body">
+              <span className="text-primary-400 tabular-nums whitespace-nowrap">{dmesgTs[i]}</span>
+              <span className="text-tertiary-50">
                 {line.prefix}
-                {line.bold && <b className="text-signal font-bold">{line.bold}</b>}
+                {line.bold && <b className="text-primary-500 font-bold">{line.bold}</b>}
                 {line.suffix}
               </span>
               {line.ok && (
-                <span className="text-signal font-bold tracking-[0.12em] text-xs">OK</span>
+                <span className="text-primary-500 font-bold tracking-[0.12em] text-xs">OK</span>
               )}
               {!line.ok && (
                 <span
-                  className="text-signal font-bold tracking-[0.12em] text-xs"
+                  className="text-primary-500 font-bold tracking-[0.12em] text-xs"
                   aria-hidden="true"
                 />
               )}
@@ -352,10 +359,10 @@ export function Footer() {
         <div
           className={`mt-6 flex items-center flex-wrap gap-x-4 gap-y-2.5${booted ? ' halt-booted' : ''}`}
         >
-          <span className="halt-plate inline-block shrink-0 bg-signal text-black font-bold text-sm tracking-[0.16em] px-3 py-[5px] leading-none whitespace-nowrap">
+          <span className="halt-plate inline-block shrink-0 bg-primary-500 text-black font-bold text-sm tracking-[0.16em] px-3 py-[5px] leading-none whitespace-nowrap">
             [SYSTEM HALTED]
           </span>
-          <span className="halt-hint shrink-0 text-text-muted text-xs tracking-[0.12em] whitespace-nowrap">
+          <span className="halt-hint shrink-0 text-primary-400 text-xs tracking-[0.12em] whitespace-nowrap">
             {isMobile ? 'tap ' : 'press '}
             <button type="button" onClick={() => window.location.reload()}>
               {/* kbd-key class in components.css */}
@@ -366,7 +373,7 @@ export function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="text-text-muted text-sm mt-[22px] tracking-[0.04em] opacity-85">
+        <div className="text-primary-400 text-sm mt-[22px] tracking-[0.04em] opacity-85">
           © 2026 erik cunha · this session ends here · the work doesn&apos;t.
         </div>
       </div>

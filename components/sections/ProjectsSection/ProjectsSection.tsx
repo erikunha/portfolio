@@ -20,28 +20,30 @@ function ProjectsDesktop() {
         <li
           key={p.name}
           className={[
-            'project-card relative border border-signal-subtle p-5 md:p-5',
+            'project-card relative border border-primary-subtle p-5 md:p-5',
             'transition-[border-color,box-shadow] duration-200',
-            'hover:border-signal hover:shadow-[0_0_16px_var(--color-glow-18)]',
+            'hover:border-primary-500 hover:shadow-[0_0_16px_var(--color-glow-18)]',
             'motion-reduce:transition-none',
             '[body[data-motion=reduce]_&]:transition-none',
           ].join(' ')}
         >
           <div className="flex justify-between items-end mb-3">
-            <svg className="w-10 h-8 fill-signal" viewBox="0 0 24 18" aria-hidden="true">
+            <svg className="w-10 h-8 fill-primary-500" viewBox="0 0 24 18" aria-hidden="true">
               <path d="M0 2 L0 18 L24 18 L24 5 L12 5 L9 2 Z" />
             </svg>
-            <span className="text-text-muted text-xs opacity-75 m-0">{p.perm ?? 'drwxr-xr-x'}</span>
+            <span className="text-primary-400 text-xs opacity-75 m-0">
+              {p.perm ?? 'drwxr-xr-x'}
+            </span>
           </div>
-          <h3 className="project-name text-signal font-bold text-sm md:text-base tracking-[0.04em] my-1.5">
+          <h3 className="project-name text-primary-500 font-bold text-sm md:text-base tracking-[0.04em] my-1.5">
             {p.name}
           </h3>
-          <p className="project-desc text-text-body text-xs md:text-sm mb-4">{p.description}</p>
+          <p className="project-desc text-tertiary-50 text-xs md:text-sm mb-4">{p.description}</p>
           <dl className="grid gap-1 text-xs md:text-sm m-0">
             {p.stats.map((s) => (
               <div key={s.label} className="flex justify-between gap-2">
-                <dt className="text-text-muted">{s.label}:</dt>
-                <dd className="m-0 text-text-body">{s.value}</dd>
+                <dt className="text-primary-400">{s.label}:</dt>
+                <dd className="m-0 text-tertiary-50">{s.value}</dd>
               </div>
             ))}
           </dl>
@@ -58,25 +60,27 @@ function ProjectsMobile() {
         <div
           key={p.name}
           className={[
-            'border border-signal-subtle p-3.5',
+            'border border-primary-subtle p-3.5',
             i < projects.length - 1 ? 'mb-2.5' : '',
           ].join(' ')}
         >
           <div className="flex justify-between items-start mb-2">
-            <span className="w-8 h-[26px] [&_svg]:w-full [&_svg]:h-full [&_svg]:fill-signal">
+            <span className="w-8 h-[26px] [&_svg]:w-full [&_svg]:h-full [&_svg]:fill-primary-500">
               <FolderIcon />
             </span>
-            <span className="text-text-muted text-xs opacity-75 tracking-[0.04em]">
+            <span className="text-primary-400 text-xs opacity-75 tracking-[0.04em]">
               {p.perm ?? '-rwxr-xr-x'}
             </span>
           </div>
-          <div className="text-signal font-bold text-xs tracking-[0.04em] my-1">{p.mobileName}</div>
-          <div className="text-text-body text-xs mb-3 leading-[1.5]">{p.mobileDescription}</div>
+          <div className="text-primary-500 font-bold text-xs tracking-[0.04em] my-1">
+            {p.mobileName}
+          </div>
+          <div className="text-tertiary-50 text-xs mb-3 leading-[1.5]">{p.mobileDescription}</div>
           <div className="grid gap-[3px] text-xs">
             {p.mobileMeta.map((m) => (
               <div key={m.label} className="flex justify-between gap-2">
-                <span className="text-text-muted shrink-0">{m.label}</span>
-                <span className="text-text-body text-right">{m.value}</span>
+                <span className="text-primary-400 shrink-0">{m.label}</span>
+                <span className="text-tertiary-50 text-right">{m.value}</span>
               </div>
             ))}
           </div>

@@ -1,35 +1,99 @@
-/* app/css/theme.css — Tailwind v4 @theme: brand palette + font.
-   Standard Tailwind scale handles spacing, typography sizes, z-index, and breakpoints.
-   Only values Tailwind has no opinion on live here. */
+/* app/css/theme.css — Tailwind v4 @theme: the colour system.
+   Six ordinal colour families, each a 50–900 ramp. Standard Tailwind scale
+   handles spacing, typography sizes, z-index, and breakpoints.
+
+   Family → hue:
+     primary    green   (the brand)
+     secondary  black   (surfaces)
+     tertiary   white   (foreground / body)
+     quaternary cyan
+     quinary    yellow
+     senary     red
+
+   Stops carrying a real in-use colour are marked ✓ EXACT; the rest are
+   interpolated fills for completeness. */
 
 @theme {
-  /* ── Brand palette ──────────────────────────────────────────────────────── */
-  --color-signal: #00ff41;
-  --color-signal-subtle: #00ff4166;
-  --color-signal-quiet: #00ff411a;
-  --color-signal-faint: #00ff411f;
-  --color-fg: #e6ffe6;
-  --color-text-body: #e6ffe6;
-  --color-text-muted: #4ade80;
-  --color-text-faint: #5ae07b;
-  --color-surface: #000000;
-  --color-surface-shell: #050505;
-  --color-border-default: #00ff4133;
-  --color-surface-panel: transparent;
-  --color-error: #ff8a8a;
-  --color-accent-warm: #ffd86b;
-  --color-accent-cool: #7fe4ff;
-  --color-highlight-bg: #00ff41;
-  --color-highlight-fg: #000000;
+  /* ── primary · green ──────────────────────────────────────────────────────── */
+  --color-primary-50: #eafff0;
+  --color-primary-100: #c4ffd8;
+  --color-primary-200: #8ff2b2;
+  --color-primary-300: #5ae07b; /* ✓ text-faint */
+  --color-primary-400: #4ade80; /* ✓ text-muted (Tailwind green-400) */
+  --color-primary-500: #00ff41; /* ✓ signal / brand / highlight-bg */
+  --color-primary-600: #28c840; /* ✓ chrome-maximize */
+  --color-primary-700: #1e9b32;
+  --color-primary-800: #166f24;
+  --color-primary-900: #0c4015;
+  /* primary green at fixed opacities — kept as explicit values (not opacity
+     modifiers) so the computed colour is byte-identical (no color-mix). */
+  --color-primary-subtle: #00ff4166; /* ✓ borders/dividers (40%) */
+  --color-primary-border: #00ff4133; /* ✓ default border (20%) */
+  --color-primary-faint: #00ff411f; /* ✓ very subtle bg (12%) */
+  --color-primary-quiet: #00ff411a; /* ✓ hover bg (10%) */
 
-  /* ── Window chrome dots ─────────────────────────────────────────────────── */
-  --color-chrome-close: #ff5f57;
-  --color-chrome-minimize: #febc2e;
-  --color-chrome-maximize: #28c840;
+  /* ── secondary · black ────────────────────────────────────────────────────── */
+  --color-secondary-50: #e8e8e8;
+  --color-secondary-100: #cfcfcf;
+  --color-secondary-200: #a8a8a8;
+  --color-secondary-300: #808080;
+  --color-secondary-400: #5c5c5c;
+  --color-secondary-500: #3d3d3d;
+  --color-secondary-600: #262626;
+  --color-secondary-700: #141414;
+  --color-secondary-800: #0a0a0a;
+  --color-secondary-900: #050505; /* ✓ surface-shell */
+  --color-secondary-950: #000000; /* ✓ surface / highlight-fg */
 
-  /* ── Glow alpha stops — used in box-shadow, text-shadow, gradients ────────
-     Referenced as var(--color-glow-*) inside @layer components only.
-     Also generates bg-glow-* / text-glow-* utilities as a bonus. */
+  /* ── tertiary · white ─────────────────────────────────────────────────────── */
+  --color-tertiary-50: #e6ffe6; /* ✓ fg / body text */
+  --color-tertiary-100: #dbf2db;
+  --color-tertiary-200: #c4d9c4;
+  --color-tertiary-300: #a9bda9;
+  --color-tertiary-400: #8a9d8a;
+  --color-tertiary-500: #6b7c6b;
+  --color-tertiary-600: #515f51;
+  --color-tertiary-700: #3a463a;
+  --color-tertiary-800: #262f26;
+  --color-tertiary-900: #161b16;
+
+  /* ── quaternary · cyan ────────────────────────────────────────────────────── */
+  --color-quaternary-50: #ecfbff;
+  --color-quaternary-100: #d0f5ff;
+  --color-quaternary-200: #a8ecff;
+  --color-quaternary-300: #8de8ff;
+  --color-quaternary-400: #7fe4ff; /* ✓ accent-cool */
+  --color-quaternary-500: #45cdf0;
+  --color-quaternary-600: #22a8cc;
+  --color-quaternary-700: #1a7f9b;
+  --color-quaternary-800: #155a6e;
+  --color-quaternary-900: #0e3a47;
+
+  /* ── quinary · yellow ─────────────────────────────────────────────────────── */
+  --color-quinary-50: #fff8e6;
+  --color-quinary-100: #ffeebf;
+  --color-quinary-200: #ffe293;
+  --color-quinary-300: #ffd86b; /* ✓ accent-warm */
+  --color-quinary-400: #ffca47;
+  --color-quinary-500: #febc2e; /* ✓ chrome-minimize */
+  --color-quinary-600: #d99a1f;
+  --color-quinary-700: #a8741a;
+  --color-quinary-800: #785214;
+  --color-quinary-900: #4a330c;
+
+  /* ── senary · red ─────────────────────────────────────────────────────────── */
+  --color-senary-50: #fff0f0;
+  --color-senary-100: #ffdcdc;
+  --color-senary-200: #ffb3b3;
+  --color-senary-300: #ff8a8a; /* ✓ error */
+  --color-senary-400: #ff7570;
+  --color-senary-500: #ff5f57; /* ✓ chrome-close */
+  --color-senary-600: #e03e36;
+  --color-senary-700: #b02b25;
+  --color-senary-800: #801e1a;
+  --color-senary-900: #4f110f;
+
+  /* ── glow alpha stops · green — box-shadow / text-shadow / gradients ──────── */
   --color-glow-03: rgba(0, 255, 65, 0.03);
   --color-glow-04: rgba(0, 255, 65, 0.04);
   --color-glow-05: rgba(0, 255, 65, 0.05);

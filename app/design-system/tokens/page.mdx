@@ -1,95 +1,163 @@
 export const metadata = {
   title: 'Tokens — Design System — erikunha.dev',
-  description: 'Color palette, type scale, spacing, motion, and layer tokens',
+  description: 'Brand colour from @theme, plus the Tailwind scale used for type, spacing, motion, and layers',
 };
 
 # TOKENS
 
+Brand **colour** is the only hand-authored token layer. It lives in
+`app/css/theme.css` (`@theme`), and Tailwind generates the `--color-*` custom
+properties plus the matching utilities (`text-primary-500`, `border-primary-subtle`).
+The swatches below are read directly from `theme.css` — one source, no drift.
+
+Type, spacing, motion, and z-index use Tailwind's standard scale (with arbitrary
+values where the design needs a specific number). They are not tokenised
+separately, so the tables below document the scale as it is used.
+
 ## Color
 
-### Signal (brand green)
+Six ordinal families, each a 50–900 ramp defined in `@theme`. Swatches read
+their values straight from `theme.css`.
 
-<ColorSwatch token="ds-color-signal" usage="Headings, accents, interactive elements" />
-<ColorSwatch token="ds-color-signal-subtle" usage="Borders, dividers" />
-<ColorSwatch token="ds-color-signal-quiet" usage="Hover backgrounds" />
-<ColorSwatch token="ds-color-signal-faint" usage="Very subtle backgrounds" />
+### primary · green (the brand)
 
-### Text
+<ColorSwatch token="primary-50" />
+<ColorSwatch token="primary-100" />
+<ColorSwatch token="primary-200" />
+<ColorSwatch token="primary-300" usage="Annotations, gutters" />
+<ColorSwatch token="primary-400" usage="Secondary text, labels" />
+<ColorSwatch token="primary-500" usage="Headings, accents, interactive elements" />
+<ColorSwatch token="primary-600" />
+<ColorSwatch token="primary-700" />
+<ColorSwatch token="primary-800" />
+<ColorSwatch token="primary-900" />
+<ColorSwatch token="primary-subtle" usage="Borders, dividers (green 40%)" />
+<ColorSwatch token="primary-border" usage="Default border (green 20%)" />
+<ColorSwatch token="primary-faint" usage="Very subtle background (green 12%)" />
+<ColorSwatch token="primary-quiet" usage="Hover background (green 10%)" />
 
-<ColorSwatch token="ds-color-text-body" usage="Body text (13:1+ contrast on black)" />
-<ColorSwatch token="ds-color-text-muted" usage="Secondary text, labels" />
-<ColorSwatch token="ds-color-text-faint" usage="Annotations, gutters" />
+### secondary · black (surfaces)
 
-### Surface
+<ColorSwatch token="secondary-50" />
+<ColorSwatch token="secondary-100" />
+<ColorSwatch token="secondary-200" />
+<ColorSwatch token="secondary-300" />
+<ColorSwatch token="secondary-400" />
+<ColorSwatch token="secondary-500" />
+<ColorSwatch token="secondary-600" />
+<ColorSwatch token="secondary-700" />
+<ColorSwatch token="secondary-800" />
+<ColorSwatch token="secondary-900" usage="Shell / terminal backgrounds" />
+<ColorSwatch token="secondary-950" usage="Page background" />
 
-<ColorSwatch token="ds-color-surface-base" usage="Page background" />
-<ColorSwatch token="ds-color-surface-shell" usage="Shell/terminal backgrounds" />
+### tertiary · white (foreground)
 
-### Feedback
+<ColorSwatch token="tertiary-50" usage="Body text (13:1+ contrast on black)" />
+<ColorSwatch token="tertiary-100" />
+<ColorSwatch token="tertiary-200" />
+<ColorSwatch token="tertiary-300" />
+<ColorSwatch token="tertiary-400" />
+<ColorSwatch token="tertiary-500" />
+<ColorSwatch token="tertiary-600" />
+<ColorSwatch token="tertiary-700" />
+<ColorSwatch token="tertiary-800" />
+<ColorSwatch token="tertiary-900" />
 
-<ColorSwatch token="ds-color-feedback-error" usage="Error states, validation messages" />
-<ColorSwatch token="ds-color-accent-warm" usage="Warm syntax highlight accents" />
-<ColorSwatch token="ds-color-accent-cool" usage="Cool syntax highlight accents" />
+### quaternary · cyan
+
+<ColorSwatch token="quaternary-50" />
+<ColorSwatch token="quaternary-100" />
+<ColorSwatch token="quaternary-200" />
+<ColorSwatch token="quaternary-300" />
+<ColorSwatch token="quaternary-400" usage="Cool syntax highlight accents" />
+<ColorSwatch token="quaternary-500" />
+<ColorSwatch token="quaternary-600" />
+<ColorSwatch token="quaternary-700" />
+<ColorSwatch token="quaternary-800" />
+<ColorSwatch token="quaternary-900" />
+
+### quinary · yellow
+
+<ColorSwatch token="quinary-50" />
+<ColorSwatch token="quinary-100" />
+<ColorSwatch token="quinary-200" />
+<ColorSwatch token="quinary-300" usage="Warm syntax highlight accents" />
+<ColorSwatch token="quinary-400" />
+<ColorSwatch token="quinary-500" usage="Window-chrome minimize dot" />
+<ColorSwatch token="quinary-600" />
+<ColorSwatch token="quinary-700" />
+<ColorSwatch token="quinary-800" />
+<ColorSwatch token="quinary-900" />
+
+### senary · red
+
+<ColorSwatch token="senary-50" />
+<ColorSwatch token="senary-100" />
+<ColorSwatch token="senary-200" />
+<ColorSwatch token="senary-300" usage="Error states, validation messages" />
+<ColorSwatch token="senary-400" />
+<ColorSwatch token="senary-500" usage="Window-chrome close dot" />
+<ColorSwatch token="senary-600" />
+<ColorSwatch token="senary-700" />
+<ColorSwatch token="senary-800" />
+<ColorSwatch token="senary-900" />
 
 ## Type Scale
 
-<TypeSpecimen token="ds-font-size-micro" />
-<TypeSpecimen token="ds-font-size-2xs" />
-<TypeSpecimen token="ds-font-size-xs" />
-<TypeSpecimen token="ds-font-size-sm" />
-<TypeSpecimen token="ds-font-size-body" />
-<TypeSpecimen token="ds-font-size-md" />
-<TypeSpecimen token="ds-font-size-heading-sm" />
-<TypeSpecimen token="ds-font-size-heading-md" />
-<TypeSpecimen token="ds-font-size-heading-lg" />
-<TypeSpecimen token="ds-font-size-heading-xl" />
+Applied with Tailwind `text-*` utilities; arbitrary values (`text-[32px]`) are
+used where a heading needs a specific size. Headings use the `--font-display`
+(Geist Black) face; everything else is `--font-mono` (JetBrains Mono) — both
+defined in `theme.css`.
+
+| Utility | Size |
+|---|---|
+| `text-xs` | 0.75rem / 12px |
+| `text-sm` | 0.875rem / 14px |
+| `text-base` | 1rem / 16px |
+| `text-lg` | 1.125rem / 18px |
+| `text-xl` | 1.25rem / 20px |
+| `text-2xl` | 1.5rem / 24px |
+| `text-3xl` | 1.875rem / 30px |
 
 ## Spacing
 
-<SpacingRuler token="ds-space-1" usage="Micro gap" />
-<SpacingRuler token="ds-space-2" usage="Tight gap" />
-<SpacingRuler token="ds-space-3" usage="Small gap" />
-<SpacingRuler token="ds-space-4" usage="Base gap" />
-<SpacingRuler token="ds-space-6" usage="Standard gap" />
-<SpacingRuler token="ds-space-8" />
-<SpacingRuler token="ds-space-10" />
-<SpacingRuler token="ds-space-12" />
-<SpacingRuler token="ds-space-16" />
-<SpacingRuler token="ds-space-pad" usage="Standard section padding" />
-<SpacingRuler token="ds-space-pad-tight" usage="Mobile padding" />
-<SpacingRuler token="ds-space-rhythm" usage="Vertical section rhythm" />
-<SpacingRuler token="ds-space-rhythm-tight" usage="Mobile rhythm" />
+Tailwind's 4px scale, applied with padding / margin / gap utilities. Step N =
+N × 0.25rem.
+
+| Step | Value | |
+|---|---|---|
+| `1` | 0.25rem | 4px |
+| `2` | 0.5rem | 8px |
+| `3` | 0.75rem | 12px |
+| `4` | 1rem | 16px |
+| `6` | 1.5rem | 24px |
+| `8` | 2rem | 32px |
+| `12` | 3rem | 48px |
+| `16` | 4rem | 64px |
 
 ## Motion
 
-| Token | Value |
-|---|---|
-| `--ds-duration-fast` | 80ms |
-| `--ds-duration-base` | 200ms |
-| `--ds-duration-slow` | 300ms |
+Durations are applied with Tailwind `duration-*` utilities, easing with
+`ease-out`. All motion is suppressed under `prefers-reduced-motion: reduce`.
 
-| Easing token | Curve |
-|---|---|
-| `--ds-ease-out` | `ease-out` |
-| `--ds-ease-in` | `ease-in` |
-| `--ds-ease-in-out` | `ease-in-out` |
-| `--ds-ease-emphasized-out` | `cubic-bezier(0.33, 1, 0.68, 1)` — opening (easeOutCubic) |
-| `--ds-ease-emphasized-in` | `cubic-bezier(0.32, 0, 0.67, 0)` — closing (easeInCubic) |
-
-All motion tokens are suppressed under `prefers-reduced-motion: reduce`.
+| Utility | Value | Usage |
+|---|---|---|
+| `duration-[80ms]` | 80ms | micro transitions (hover, press) |
+| `duration-100` | 100ms | fast UI feedback |
+| `duration-200` | 200ms | standard transitions |
+| `ease-out` | — | the one shared easing curve |
 
 ## Layers
 
-The cross-cutting z-index contract. Component-local stacking (CRT effect layers 1–5,
-in-component decorative layers) is intentionally not tokenized.
+z-index is applied with Tailwind `z-[N]` utilities — there is no CSS-var token
+layer. The cross-cutting contract:
 
-| Token | Value | Usage |
+| Layer | z-index | Usage |
 |---|---|---|
-| `--ds-z-base` | 0 | default flow |
-| `--ds-z-content` | 10 | page content above the CRT overlay |
-| `--ds-z-chrome` | 110 | fixed header chrome (DesktopTopbar / StatusBar — never co-render) |
-| `--ds-z-dock` | 120 | mobile bottom dock |
-| `--ds-z-emergency` | 150 | Hero sysfail plate |
-| `--ds-z-skiplink` | 9999 | skip-to-content link, always on top |
+| content | `z-[1]` | page content above the CRT overlay |
+| header chrome | `z-[110]` | DesktopTopbar / StatusBar (MobileTitleBar `z-[109]`) |
+| mobile dock | `z-[120]` | bottom navigation dock |
+| skip link | `9999` | skip-to-content link, always on top |
 
-MobileTitleBar uses `calc(var(--ds-z-chrome) - 1)`; ToTopButton uses `calc(var(--ds-z-chrome) + 5)`.
+Component-local stacking (CRT effect layers 1–5) is intentionally not part of the
+contract.

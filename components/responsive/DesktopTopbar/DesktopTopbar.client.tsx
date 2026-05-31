@@ -22,19 +22,19 @@ export function DesktopTopbar() {
   }
 
   return (
-    <div className="desktop-topbar fixed top-0 left-0 right-0 z-[110] bg-surface border-b border-signal-subtle hidden md:block">
+    <div className="desktop-topbar fixed top-0 left-0 right-0 z-[110] bg-secondary-950 border-b border-primary-subtle hidden md:block">
       <div className="max-w-[1200px] mx-auto px-[14px] md:px-[18px] flex items-center gap-4 h-11">
         <WindowChrome size={12} style={{ gap: '8px' }} />
         <div className="flex gap-2 ml-2">
           <div
             className={cn(
-              'inline-flex items-center gap-2 h-[26px] px-3 text-[12px] tracking-[0.05em] text-text-body border border-transparent',
-              'text-signal border-signal-subtle bg-glow-04',
+              'inline-flex items-center gap-2 h-[26px] px-3 text-[12px] tracking-[0.05em] text-tertiary-50 border border-transparent',
+              'text-primary-500 border-primary-subtle bg-glow-04',
             )}
           >
             <span>&#9632;</span>
             <span>ERIK_CUNHA.SH</span>
-            <span className="text-text-body ml-1.5 opacity-80">&times;</span>
+            <span className="text-tertiary-50 ml-1.5 opacity-80">&times;</span>
           </div>
         </div>
         <nav
@@ -42,31 +42,31 @@ export function DesktopTopbar() {
           aria-label="Site navigation"
         >
           <a
-            className="text-signal text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-signal)] hidden xl:inline"
+            className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
             href="#sec-projects"
           >
             01_WORK
           </a>
           <a
-            className="text-signal text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-signal)] hidden xl:inline"
+            className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
             href="#sec-perf-receipts"
           >
             02_IMPACT
           </a>
           <a
-            className="text-signal text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-signal)] hidden xl:inline"
+            className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
             href="#sec-npm-stack"
           >
             03_DEPS
           </a>
           <a
-            className="text-signal text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-signal)] hidden xl:inline"
+            className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
             href="#sec-contact"
           >
             04_CONTACT
           </a>
           <a
-            className="text-signal text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-signal)] hidden xl:inline"
+            className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
             href="/design-system"
           >
             DESIGN_SYSTEM
@@ -74,10 +74,10 @@ export function DesktopTopbar() {
           <button
             type="button"
             className={cn(
-              'inline-flex items-center gap-1.5 text-text-muted text-[12px] tracking-[0.08em]',
-              'border border-signal-subtle px-[14px] py-1.5 cursor-pointer bg-transparent whitespace-nowrap',
+              'inline-flex items-center gap-1.5 text-primary-400 text-[12px] tracking-[0.08em]',
+              'border border-primary-subtle px-[14px] py-1.5 cursor-pointer bg-transparent whitespace-nowrap',
               'transition-[box-shadow,background,border-color] duration-200 ease-out',
-              'hover:shadow-[0_0_12px_var(--color-signal)] hover:bg-signal-quiet hover:border-signal',
+              'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:border-primary-500',
               'hidden xl:inline-flex',
               'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
             )}
@@ -87,8 +87,8 @@ export function DesktopTopbar() {
           >
             <span
               className={cn(
-                'w-1.5 h-1.5 rounded-full bg-signal block',
-                !motionOn && 'bg-text-muted opacity-40',
+                'w-1.5 h-1.5 rounded-full bg-primary-500 block',
+                !motionOn && 'bg-primary-400 opacity-40',
               )}
               aria-hidden="true"
             />
@@ -96,9 +96,9 @@ export function DesktopTopbar() {
           </button>
           <a
             className={cn(
-              'border border-signal text-signal px-3 py-1.5 tracking-[0.08em] text-xs inline-block whitespace-nowrap',
+              'border border-primary-500 text-primary-500 px-3 py-1.5 tracking-[0.08em] text-xs inline-block whitespace-nowrap',
               'transition-[box-shadow,background] duration-200 ease-out',
-              'hover:shadow-[0_0_12px_var(--color-signal)] hover:bg-signal-quiet',
+              'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet',
               'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
             )}
             href="/erik-cunha-cv.pdf"
@@ -108,9 +108,9 @@ export function DesktopTopbar() {
           </a>
           <a
             className={cn(
-              'bg-signal text-black font-bold tracking-[0.08em] px-[14px] py-1.5 text-[12px] border border-signal',
+              'bg-primary-500 text-black font-bold tracking-[0.08em] px-[14px] py-1.5 text-[12px] border border-primary-500',
               'transition-[box-shadow] duration-200 ease-out',
-              'hover:shadow-[0_0_12px_var(--color-signal)]',
+              'hover:shadow-[0_0_12px_var(--color-primary-500)]',
               'inline-flex items-center whitespace-nowrap',
               'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
             )}

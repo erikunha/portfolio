@@ -11,8 +11,8 @@ export function NowSection({ defer }: { defer?: boolean } = {}) {
             key={r.k}
             className="grid grid-cols-[110px_1fr] gap-4 max-[900px]:grid-cols-[90px_1fr] max-[900px]:gap-2.5"
           >
-            <span className="text-signal tracking-[0.04em]">{r.k}</span>
-            <span className="text-text-body">{r.v}</span>
+            <span className="text-primary-500 tracking-[0.04em]">{r.k}</span>
+            <span className="text-tertiary-50">{r.v}</span>
           </div>
         ))}
       </div>

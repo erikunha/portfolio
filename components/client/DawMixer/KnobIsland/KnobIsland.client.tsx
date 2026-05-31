@@ -131,7 +131,7 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
           cx={KNOB_CENTER}
           cy={KNOB_CENTER}
           r="11"
-          stroke="var(--color-signal)"
+          stroke="var(--color-primary-500)"
           strokeWidth="1"
           fill="rgba(0,0,0,0.7)"
         />
@@ -141,12 +141,12 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
           y1={KNOB_CENTER}
           x2={x2.toFixed(2)}
           y2={y2.toFixed(2)}
-          stroke="var(--color-signal)"
+          stroke="var(--color-primary-500)"
           strokeWidth="2"
           strokeLinecap="round"
         />
       </svg>
-      <div className="text-xs text-text-muted text-center tracking-[0.1em] font-mono">{label}</div>
+      <div className="text-xs text-primary-400 text-center tracking-[0.1em] font-mono">{label}</div>
     </div>
   );
 }

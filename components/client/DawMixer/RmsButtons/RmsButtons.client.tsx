@@ -38,15 +38,15 @@ export function RmsButtons({ buttons, initialActive, channelName }: RmsButtonsPr
           onClick={() => toggle(btn)}
           className={cn(
             'min-w-[24px] min-h-[24px] px-[6px] font-mono text-xs font-bold flex items-center justify-center cursor-pointer tracking-[0.02em] shrink-0',
-            'focus-visible:outline-2 focus-visible:outline-signal focus-visible:outline-offset-2',
+            'focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2',
             active.has(btn)
               ? [
                   'rms-active',
-                  'border border-signal text-signal',
-                  'bg-[color-mix(in_srgb,var(--color-signal)_10%,transparent)]',
-                  'shadow-[0_0_5px_color-mix(in_srgb,var(--color-signal)_35%,transparent)]',
+                  'border border-primary-500 text-primary-500',
+                  'bg-[color-mix(in_srgb,var(--color-primary-500)_10%,transparent)]',
+                  'shadow-[0_0_5px_color-mix(in_srgb,var(--color-primary-500)_35%,transparent)]',
                 ].join(' ')
-              : 'rms-inactive border border-[var(--color-signal-quiet)] bg-transparent text-text-muted',
+              : 'rms-inactive border border-[var(--color-primary-quiet)] bg-transparent text-primary-400',
           )}
         >
           {btn}

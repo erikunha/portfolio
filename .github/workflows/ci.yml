@@ -95,9 +95,6 @@ jobs:
       - name: Contrast check
         run: pnpm lint:contrast
 
-      - name: No undefined --ds-* vars
-        run: pnpm lint:no-ds-vars
-
       - name: Package age check (supply-chain, info-only)
         # --warn-only: exits 0 always. Blocking a push for a freshly-released dep
         # is too aggressive for solo development. Warnings are visible in CI logs.

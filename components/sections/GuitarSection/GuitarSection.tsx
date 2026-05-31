@@ -12,7 +12,7 @@ type Influence = GuitarRig['influences'][number];
 
 function SignalBars({ filled, total }: { filled: number; total: number }) {
   const bars = Array.from({ length: total }, (_, i) => ({
-    cls: cn('w-[7px] h-[10px] shrink-0 bg-signal', i >= filled && 'opacity-[0.22]'),
+    cls: cn('w-[7px] h-[10px] shrink-0 bg-primary-500', i >= filled && 'opacity-[0.22]'),
   }));
   return (
     <div role="img" className="flex gap-[2px] mt-auto" aria-label={`${filled} of ${total}`}>
@@ -26,7 +26,7 @@ function SignalBars({ filled, total }: { filled: number; total: number }) {
 
 function InfluenceBars({ filled }: { filled: number }) {
   const bars = Array.from({ length: 5 }, (_, i) => ({
-    cls: cn('block w-[6px] h-[10px] bg-signal', i >= filled && 'opacity-[0.22]'),
+    cls: cn('block w-[6px] h-[10px] bg-primary-500', i >= filled && 'opacity-[0.22]'),
   }));
   return (
     <span className="inline-flex gap-[2px]" aria-hidden="true">
@@ -48,16 +48,16 @@ function FxGrid({ blocks }: { blocks: Block[] }) {
             'py-[5px] text-xs text-center tracking-[0.1em]',
             b.active
               ? [
-                  'border border-signal text-signal relative',
-                  'bg-[color-mix(in_srgb,var(--color-signal)_8%,transparent)]',
+                  'border border-primary-500 text-primary-500 relative',
+                  'bg-[color-mix(in_srgb,var(--color-primary-500)_8%,transparent)]',
                 ].join(' ')
-              : 'border border-[var(--color-signal-quiet)] text-text-muted bg-black/40',
+              : 'border border-[var(--color-primary-quiet)] text-primary-400 bg-black/40',
           )}
         >
           {b.name}
           {b.active && (
             <span
-              className="absolute top-[3px] right-[3px] w-1 h-1 rounded-full bg-signal text-[0px] block"
+              className="absolute top-[3px] right-[3px] w-1 h-1 rounded-full bg-primary-500 text-[0px] block"
               aria-hidden="true"
               data-testid="fx-bullet"
             >
@@ -80,10 +80,10 @@ function FxList({ blocks }: { blocks: Block[] }) {
             'flex gap-2 items-center text-xs px-2 py-[11px]',
             b.active
               ? [
-                  'border border-signal text-signal',
-                  'bg-[color-mix(in_srgb,var(--color-signal)_8%,transparent)]',
+                  'border border-primary-500 text-primary-500',
+                  'bg-[color-mix(in_srgb,var(--color-primary-500)_8%,transparent)]',
                 ].join(' ')
-              : 'border border-signal-subtle text-text-muted',
+              : 'border border-primary-subtle text-primary-400',
           )}
         >
           <span aria-hidden="true">{b.active ? '●' : '○'}</span>
@@ -102,11 +102,11 @@ function InfluencesList({
   nowObsessing: string;
 }) {
   return (
-    <div className="border border-[var(--color-border-default)] bg-black/35 p-[14px]">
-      <div className="flex justify-between text-xs text-text-muted tracking-[0.16em] mb-3">
+    <div className="border border-[var(--color-primary-border)] bg-black/35 p-[14px]">
+      <div className="flex justify-between text-xs text-primary-400 tracking-[0.16em] mb-3">
         <span>
           {'INFLUENCES.QUEUE · '}
-          <span className="text-signal">{influences.length} LOADED</span>
+          <span className="text-primary-500">{influences.length} LOADED</span>
         </span>
         <span>{'// SHUFFLE OFF'}</span>
       </div>
@@ -115,12 +115,12 @@ function InfluencesList({
           key={inf.rank}
           className={cn(
             'grid grid-cols-[36px_1fr_auto] gap-[10px] items-center mb-[9px]',
-            'text-text-body text-xs',
-            inf.active && 'text-signal font-bold',
+            'text-tertiary-50 text-xs',
+            inf.active && 'text-primary-500 font-bold',
           )}
           data-active={inf.active || undefined}
         >
-          <span className="text-text-muted text-xs tracking-[0.1em]">
+          <span className="text-primary-400 text-xs tracking-[0.1em]">
             {inf.active ? '▶ ' : ''}
             {String(inf.rank).padStart(2, '0')}
           </span>
@@ -128,8 +128,8 @@ function InfluencesList({
           <InfluenceBars filled={inf.strength} />
         </div>
       ))}
-      <div className="mt-3 pt-[10px] border-t border-dashed border-[var(--color-signal-quiet)] text-xs text-text-muted">
-        <strong className="text-signal font-bold">now obsessing:</strong> {nowObsessing}
+      <div className="mt-3 pt-[10px] border-t border-dashed border-[var(--color-primary-quiet)] text-xs text-primary-400">
+        <strong className="text-primary-500 font-bold">now obsessing:</strong> {nowObsessing}
       </div>
     </div>
   );
@@ -137,8 +137,8 @@ function InfluencesList({
 
 function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
   return (
-    <div className="border border-signal flex flex-col overflow-hidden">
-      <div className="flex justify-between px-[9px] py-[6px] text-xs text-text-muted bg-black/60 tracking-[0.12em] border-b border-[var(--color-signal-quiet)]">
+    <div className="border border-primary-500 flex flex-col overflow-hidden">
+      <div className="flex justify-between px-[9px] py-[6px] text-xs text-primary-400 bg-black/60 tracking-[0.12em] border-b border-[var(--color-primary-quiet)]">
         <span>{liveCam.status}</span>
         <span>{liveCam.cameraLabel}</span>
       </div>
@@ -152,7 +152,7 @@ function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
         />
         {/* Green channel tint overlay */}
         <div
-          className="absolute inset-0 bg-signal mix-blend-multiply opacity-60 pointer-events-none"
+          className="absolute inset-0 bg-primary-500 mix-blend-multiply opacity-60 pointer-events-none"
           aria-hidden="true"
         />
         {/* Scan lines */}
@@ -167,7 +167,7 @@ function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
           <i />
         </div>
       </div>
-      <div className="px-[9px] py-[6px] text-xs text-text-muted bg-black/65 tracking-[0.12em] border-t border-[var(--color-signal-quiet)]">
+      <div className="px-[9px] py-[6px] text-xs text-primary-400 bg-black/65 tracking-[0.12em] border-t border-[var(--color-primary-quiet)]">
         {liveCam.caption}
       </div>
     </div>
@@ -178,14 +178,14 @@ export function GuitarDesktop() {
   const { signalChain, influences, nowObsessing, stats, liveCam } = guitarRig;
   return (
     <div
-      className="flex flex-col gap-4 font-mono text-sm text-text-body"
+      className="flex flex-col gap-4 font-mono text-sm text-tertiary-50"
       data-testid="guitar-desktop"
     >
       {/* Signal chain panel */}
-      <div className="border border-[var(--color-border-default)] bg-black/35 p-[14px]">
-        <div className="flex justify-between text-xs text-text-muted tracking-[0.16em] mb-3">
+      <div className="border border-[var(--color-primary-border)] bg-black/35 p-[14px]">
+        <div className="flex justify-between text-xs text-primary-400 tracking-[0.16em] mb-3">
           <span>
-            <span className="text-signal" aria-hidden="true">
+            <span className="text-primary-500" aria-hidden="true">
               ●
             </span>
             {' SIGNAL_CHAIN.LIVE · SIGNAL OK'}
@@ -202,20 +202,23 @@ export function GuitarDesktop() {
               <div
                 key={node.role}
                 className={cn(
-                  'border border-signal flex flex-col gap-[5px]',
+                  'border border-primary-500 flex flex-col gap-[5px]',
                   'px-3 pt-[10px] pb-3 min-h-[124px]',
                   node.role === 'FX'
-                    ? 'bg-[color-mix(in_srgb,var(--color-signal)_8%,transparent)]'
-                    : 'bg-[color-mix(in_srgb,var(--color-signal)_4%,transparent)]',
+                    ? 'bg-[color-mix(in_srgb,var(--color-primary-500)_8%,transparent)]'
+                    : 'bg-[color-mix(in_srgb,var(--color-primary-500)_4%,transparent)]',
                 )}
                 data-testid={`signal-node-${node.role}`}
               >
-                <div className="text-xs text-text-muted tracking-[0.04em]" data-testid="node-label">
+                <div
+                  className="text-xs text-primary-400 tracking-[0.04em]"
+                  data-testid="node-label"
+                >
                   {'// '}
                   {node.role}
                 </div>
-                <div className="font-bold text-sm text-signal leading-[1.2]">{node.name}</div>
-                <div className="text-xs text-text-body opacity-85">{node.subtitle}</div>
+                <div className="font-bold text-sm text-primary-500 leading-[1.2]">{node.name}</div>
+                <div className="text-xs text-tertiary-50 opacity-85">{node.subtitle}</div>
                 {node.role === 'FX' ? (
                   <FxGrid blocks={node.blocks} />
                 ) : (
@@ -228,7 +231,7 @@ export function GuitarDesktop() {
             const arrowEl = (
               <span
                 key={arrowKey}
-                className="signal-chain-arrow self-center justify-self-center text-signal [text-shadow:0_0_6px_var(--color-signal)] text-[13px]"
+                className="signal-chain-arrow self-center justify-self-center text-primary-500 [text-shadow:0_0_6px_var(--color-primary-500)] text-[13px]"
                 aria-hidden="true"
               />
             );
@@ -242,19 +245,19 @@ export function GuitarDesktop() {
         <LiveCam liveCam={liveCam} />
       </div>
       {/* Stats grid — gap-as-divider technique */}
-      <div className="grid grid-cols-4 gap-px bg-[var(--color-signal-quiet)] border border-[var(--color-signal-quiet)]">
+      <div className="grid grid-cols-4 gap-px bg-[var(--color-primary-quiet)] border border-[var(--color-primary-quiet)]">
         {stats.map((stat) => (
           <div
             key={stat.label}
             className="bg-black px-[13px] pt-[11px] pb-[13px]"
             data-testid={`stat-${stat.label}`}
           >
-            <div className="text-xs text-text-muted tracking-[0.04em] mb-1">
+            <div className="text-xs text-primary-400 tracking-[0.04em] mb-1">
               {'// '}
               {stat.label}
             </div>
-            <div className="font-bold text-signal text-sm leading-[1.4]">{stat.value}</div>
-            <div className="text-xs text-text-body leading-[1.4]">{stat.sub}</div>
+            <div className="font-bold text-primary-500 text-sm leading-[1.4]">{stat.value}</div>
+            <div className="text-xs text-tertiary-50 leading-[1.4]">{stat.sub}</div>
           </div>
         ))}
       </div>
@@ -266,13 +269,13 @@ export function GuitarMobile() {
   const { signalChain, influences, nowObsessing, stats, liveCam } = guitarRig;
   return (
     <div
-      className="flex flex-col gap-3 font-mono text-xs text-text-body"
+      className="flex flex-col gap-3 font-mono text-xs text-tertiary-50"
       data-testid="guitar-mobile"
     >
-      <div className="border border-[var(--color-border-default)] bg-black/35 p-[10px]">
-        <div className="text-xs text-text-muted mb-[10px] leading-[1.7]">
+      <div className="border border-[var(--color-primary-border)] bg-black/35 p-[10px]">
+        <div className="text-xs text-primary-400 mb-[10px] leading-[1.7]">
           <div>
-            <span className="text-signal" aria-hidden="true">
+            <span className="text-primary-500" aria-hidden="true">
               ●
             </span>
             {' SIGNAL_CHAIN.LIVE · SIGNAL OK'}
@@ -283,22 +286,22 @@ export function GuitarMobile() {
           <div key={node.role}>
             {i > 0 && (
               <div
-                className="text-center py-[5px] text-signal text-xs [text-shadow:0_0_6px_var(--color-signal)]"
+                className="text-center py-[5px] text-primary-500 text-xs [text-shadow:0_0_6px_var(--color-primary-500)]"
                 aria-hidden="true"
               >
                 ▼
               </div>
             )}
             <div
-              className="border border-signal bg-[color-mix(in_srgb,var(--color-signal)_4%,transparent)] p-[10px] flex flex-col gap-1"
+              className="border border-primary-500 bg-[color-mix(in_srgb,var(--color-primary-500)_4%,transparent)] p-[10px] flex flex-col gap-1"
               data-testid={`signal-node-mobile-${node.role}`}
             >
-              <div className="text-xs text-text-muted tracking-[0.04em]">
+              <div className="text-xs text-primary-400 tracking-[0.04em]">
                 {'// '}
                 {node.role}
               </div>
-              <div className="font-bold text-xs text-signal leading-[1.2]">{node.name}</div>
-              <div className="text-xs text-text-body opacity-85">{node.subtitle}</div>
+              <div className="font-bold text-xs text-primary-500 leading-[1.2]">{node.name}</div>
+              <div className="text-xs text-tertiary-50 opacity-85">{node.subtitle}</div>
               {node.role === 'FX' ? (
                 <FxList blocks={node.blocks} />
               ) : (
@@ -311,19 +314,19 @@ export function GuitarMobile() {
       <InfluencesList influences={influences} nowObsessing={nowObsessing} />
       <LiveCam liveCam={liveCam} />
       {/* Stats grid — 2-col gap-as-divider on mobile */}
-      <div className="grid grid-cols-2 gap-px bg-[var(--color-signal-quiet)] border border-[var(--color-signal-quiet)]">
+      <div className="grid grid-cols-2 gap-px bg-[var(--color-primary-quiet)] border border-[var(--color-primary-quiet)]">
         {stats.map((stat) => (
           <div
             key={stat.label}
             className="bg-black px-[13px] pt-[11px] pb-[13px]"
             data-testid={`stat-mobile-${stat.label}`}
           >
-            <div className="text-xs text-text-muted tracking-[0.04em] mb-1">
+            <div className="text-xs text-primary-400 tracking-[0.04em] mb-1">
               {'// '}
               {stat.label}
             </div>
-            <div className="font-bold text-signal text-xs leading-[1.4]">{stat.value}</div>
-            <div className="text-xs text-text-body leading-[1.4]">{stat.sub}</div>
+            <div className="font-bold text-primary-500 text-xs leading-[1.4]">{stat.value}</div>
+            <div className="text-xs text-tertiary-50 leading-[1.4]">{stat.sub}</div>
           </div>
         ))}
       </div>

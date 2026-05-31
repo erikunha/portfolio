@@ -18,14 +18,14 @@ export function CredentialsSection({ defer }: { defer?: boolean } = {}) {
               className="flex items-baseline max-[768px]:flex-col max-[768px]:gap-0.5"
             >
               {/* 14ch wide label, auto on mobile */}
-              <span className="w-[14ch] shrink-0 text-text-body font-bold tracking-[0.04em] max-[768px]:w-auto">
+              <span className="w-[14ch] shrink-0 text-tertiary-50 font-bold tracking-[0.04em] max-[768px]:w-auto">
                 {cred.label}
               </span>
               {/* 25ch wide badge, auto on mobile */}
-              <span className="w-[25ch] shrink-0 text-signal font-bold max-[768px]:w-auto">
+              <span className="w-[25ch] shrink-0 text-primary-500 font-bold max-[768px]:w-auto">
                 {cred.badge}
               </span>
-              <span className="flex-1 text-text-body max-[768px]:text-text-muted max-[768px]:text-xs">
+              <span className="flex-1 text-tertiary-50 max-[768px]:text-primary-400 max-[768px]:text-xs">
                 {cred.evidence}
               </span>
             </div>

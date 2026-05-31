@@ -24,14 +24,14 @@ export function TerminalPanel({
   return (
     <Element
       className={cn(
-        'terminal-panel border border-signal-subtle bg-transparent',
+        'terminal-panel border border-primary-subtle bg-transparent',
         borderStyle === 'dashed' && 'border-dashed',
         className,
       )}
       {...rest}
     >
       {header != null && (
-        <div className="border-b border-signal-subtle py-[6px] px-[14px] md:px-[18px] lg:px-6 text-xs tracking-[0.12em] text-signal font-mono">
+        <div className="border-b border-primary-subtle py-[6px] px-[14px] md:px-[18px] lg:px-6 text-xs tracking-[0.12em] text-primary-500 font-mono">
           {header}
         </div>
       )}

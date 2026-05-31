@@ -11,7 +11,7 @@ export type MultiLineProps = FieldBase &
 export type FieldProps = SingleLineProps | MultiLineProps;
 
 const inputClasses =
-  'field-input w-full bg-transparent border border-border-default text-text-body font-mono text-xs px-[10px] py-2 min-h-11 resize-y transition-[border-color] duration-200 ease-out placeholder:text-signal placeholder:opacity-60 focus-visible:border-signal aria-[invalid=true]:border-error';
+  'field-input w-full bg-transparent border border-primary-border text-tertiary-50 font-mono text-xs px-[10px] py-2 min-h-11 resize-y transition-[border-color] duration-200 ease-out placeholder:text-primary-500 placeholder:opacity-60 focus-visible:border-primary-500 aria-[invalid=true]:border-senary-300';
 
 export function Field({
   name,
@@ -35,7 +35,7 @@ export function Field({
   };
   return (
     <div className="field flex flex-col gap-[6px]">
-      <label htmlFor={id} className="text-xs text-text-muted tracking-[0.08em]">
+      <label htmlFor={id} className="text-xs text-primary-400 tracking-[0.08em]">
         {label}
       </label>
       {multiline ? (
@@ -48,7 +48,7 @@ export function Field({
         <input {...(rest as InputHTMLAttributes<HTMLInputElement>)} {...inputProps} />
       )}
       {error && (
-        <span id={errId} className="field-error text-xs text-error">
+        <span id={errId} className="field-error text-xs text-senary-300">
           {error}
         </span>
       )}

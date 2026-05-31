@@ -3,8 +3,6 @@ import { ColorSwatch } from './app/design-system/_components/ColorSwatch';
 import { ComponentNav } from './app/design-system/_components/ComponentNav';
 import { CopyButton } from './app/design-system/_components/CopyButton';
 import { Preview } from './app/design-system/_components/Preview';
-import { SpacingRuler } from './app/design-system/_components/SpacingRuler';
-import { TypeSpecimen } from './app/design-system/_components/TypeSpecimen';
 import { Badge, Button, CmdLine, KbdKey, StatTile, TerminalPanel } from './design-system';
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
@@ -18,8 +16,6 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     KbdKey,
     CopyButton,
     ColorSwatch,
-    SpacingRuler,
-    TypeSpecimen,
     ComponentNav,
     ...components,
   };

@@ -118,16 +118,16 @@ export function ContactForm() {
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="contact-send self-start max-md:self-auto max-md:w-full bg-signal text-black border border-signal px-[18px] py-[10px] font-bold text-xs tracking-[0.08em] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          className="contact-send self-start max-md:self-auto max-md:w-full bg-primary-500 text-black border border-primary-500 px-[18px] py-[10px] font-bold text-xs tracking-[0.08em] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {status === 'submitting' ? 'TRANSMITTING...' : 'EXECUTE_SEND'}
         </button>
-        <p className="text-text-muted text-xs opacity-85 m-0 md:text-xs">
+        <p className="text-primary-400 text-xs opacity-85 m-0 md:text-xs">
           waiting for manual override... _
         </p>
       </div>
       {status === 'error' && (
-        <p role="alert" className="text-error text-xs">
+        <p role="alert" className="text-senary-300 text-xs">
           error: {errorMsg}
         </p>
       )}

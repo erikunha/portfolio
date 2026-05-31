@@ -6,37 +6,37 @@ export function UnknownsSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module id="sec-unknowns" header="CAT ~/.UNKNOWNS" icon={<IconUnknowns />} defer={defer}>
       <div>
-        <pre className="m-0 font-mono text-sm leading-[1.75] text-text-body whitespace-pre-wrap max-[768px]:whitespace-pre-wrap max-[768px]:break-words">
-          <span className="text-text-muted">
-            <span className="text-signal mr-1"> </span>
+        <pre className="m-0 font-mono text-sm leading-[1.75] text-tertiary-50 whitespace-pre-wrap max-[768px]:whitespace-pre-wrap max-[768px]:break-words">
+          <span className="text-primary-400">
+            <span className="text-primary-500 mr-1"> </span>
             {' cat ~/.unknowns'}
           </span>
           {'\n\n'}
-          <span className="text-text-muted tracking-[0.02em]">
+          <span className="text-primary-400 tracking-[0.02em]">
             {"# things i'm actively learning"}
           </span>
           {'\n\n'}
           {unknowns.learning.map((item) => (
             <span key={item.claim}>
-              <span className="text-signal">{'-'}</span>
+              <span className="text-primary-500">{'-'}</span>
               {` ${item.claim}\n`}
-              <span className="text-text-muted opacity-85">{`  (${item.context})`}</span>
+              <span className="text-primary-400 opacity-85">{`  (${item.context})`}</span>
               {'\n\n'}
             </span>
           ))}
-          <span className="text-text-muted tracking-[0.02em]">
+          <span className="text-primary-400 tracking-[0.02em]">
             {"# things i've chosen not to specialize in (yet)"}
           </span>
           {'\n\n'}
           {unknowns.notSpecializing.map((item) => (
             <span key={item.claim}>
-              <span className="text-signal">{'-'}</span>
+              <span className="text-primary-500">{'-'}</span>
               {` ${item.claim}\n`}
-              <span className="text-text-muted opacity-85">{`  (${item.context})`}</span>
+              <span className="text-primary-400 opacity-85">{`  (${item.context})`}</span>
               {'\n\n'}
             </span>
           ))}
-          <span className="text-signal font-bold max-[768px]:text-xs">{unknowns.footer}</span>
+          <span className="text-primary-500 font-bold max-[768px]:text-xs">{unknowns.footer}</span>
         </pre>
       </div>
     </Module>

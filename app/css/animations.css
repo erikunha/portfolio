@@ -14,7 +14,7 @@
     display: inline-block;
     width: 9px;
     height: 1.05em;
-    background: var(--color-signal);
+    background: var(--color-primary-500);
     vertical-align: -2px;
     margin-left: 2px;
     animation: boot-blink 1.05s steps(2, start) infinite;
@@ -35,7 +35,7 @@
     0%,
     100% {
       opacity: 1;
-      box-shadow: 0 0 4px var(--color-signal);
+      box-shadow: 0 0 4px var(--color-primary-500);
     }
     50% {
       opacity: 0.35;
@@ -47,7 +47,7 @@
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--color-signal);
+    background: var(--color-primary-500);
     flex-shrink: 0;
     animation: badge-pulse 1.6s ease-in-out infinite;
   }
@@ -98,8 +98,8 @@
     top: 24px;
     bottom: 24px;
     z-index: 2;
-    color: var(--color-text-body);
-    font-size: 14px; /* --ds-font-size-body */
+    color: var(--color-tertiary-50);
+    font-size: 14px;
     line-height: 1.7;
     overflow: hidden;
     display: flex;
@@ -118,17 +118,17 @@
     right: 24px;
     bottom: 24px;
     z-index: 2;
-    font-size: 12px; /* --ds-font-size-sm */
+    font-size: 12px;
     margin: 0;
-    color: var(--color-signal);
+    color: var(--color-primary-500);
     font-family: var(--font-mono);
   }
 
   /* ── Hero boot container (mobile) ─────────────────────────────────────────── */
 
   .hero-boot-mobile {
-    color: var(--color-text-body);
-    font-size: 12px; /* --ds-font-size-sm */
+    color: var(--color-tertiary-50);
+    font-size: 12px;
     line-height: 1.65;
     /* 8 lines × (12px × 1.65) ≈ 158px; fixed height reserves the full space
        before the animation appends lines, preventing CLS on mobile.
@@ -175,11 +175,11 @@
   }
 
   .hero-boot-ok {
-    color: var(--color-signal);
+    color: var(--color-primary-500);
   }
 
   .hero-boot-enc {
-    color: var(--color-signal);
+    color: var(--color-primary-500);
     font-weight: 700;
     text-shadow:
       0 0 6px var(--color-glow-60),
@@ -187,25 +187,25 @@
   }
 
   .hero-boot-welcome {
-    color: var(--color-text-body);
+    color: var(--color-tertiary-50);
     font-weight: 700;
   }
 
   .hero-boot-prompt {
-    color: var(--color-text-muted);
+    color: var(--color-primary-400);
   }
 
   .hero-boot-cmd {
-    color: var(--color-text-body);
+    color: var(--color-tertiary-50);
   }
 
   .hero-boot-matrix-prefix {
-    color: var(--color-text-muted);
+    color: var(--color-primary-400);
     margin-right: 4px;
   }
 
   .hero-boot-matrix-out {
-    color: var(--color-signal);
+    color: var(--color-primary-500);
     text-shadow:
       0 0 8px var(--color-glow-40),
       0 0 4px #000;
@@ -336,7 +336,7 @@
     }
     50% {
       opacity: 1;
-      box-shadow: 0 0 8px var(--color-signal);
+      box-shadow: 0 0 8px var(--color-primary-500);
     }
   }
 
@@ -369,7 +369,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--color-signal);
+    background: var(--color-primary-500);
     margin-right: 8px;
     vertical-align: -1px;
     animation: live-blink 1.6s steps(2, start) infinite;
@@ -415,7 +415,7 @@
     background: linear-gradient(
       180deg,
       transparent,
-      color-mix(in srgb, var(--color-signal) 32%, transparent) 50%,
+      color-mix(in srgb, var(--color-primary-500) 32%, transparent) 50%,
       transparent
     );
     mix-blend-mode: screen;

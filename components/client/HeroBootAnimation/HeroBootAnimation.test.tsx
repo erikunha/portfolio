@@ -31,7 +31,7 @@ const bootDesktopClass = 'hero-boot-desktop';
 const bootCmdClass = 'hero-boot-cmd';
 
 // Guards the height: 165px invariant in components.css (.hero-boot-mobile).
-// 8 lines × (--ds-font-size-sm:12px × line-height:1.65) ≈ 158px.
+// 8 lines × (12px font-size × line-height:1.65) ≈ 158px.
 // Fails early if MOBILE_LINE_SPECS grows or runBoot appends extra lines,
 // before overflow: hidden clips them silently.
 describe('mobile boot container: line-count → height invariant', () => {
@@ -41,7 +41,7 @@ describe('mobile boot container: line-count → height invariant', () => {
     const extraLines = 3;
     const totalLines = MOBILE_LINE_SPECS.length + extraLines;
     const containerHeightPx = 165; // height: 165px in .hero-boot-mobile
-    const fontSizePx = 12; // --ds-font-size-sm = 12px
+    const fontSizePx = 12; // font-size: 12px in .hero-boot-mobile
     const lineHeight = 1.65;
     expect(totalLines).toBe(8);
     expect(Math.ceil(totalLines * fontSizePx * lineHeight)).toBeLessThanOrEqual(containerHeightPx);

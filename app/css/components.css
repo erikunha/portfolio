@@ -20,7 +20,7 @@
   /* ── Sysfail plate / emergency overlay ─────────────────────────────────── */
 
   .sysfail-plate {
-    background: var(--color-signal);
+    background: var(--color-primary-500);
     color: #000;
     font-family: var(--font-mono);
     font-weight: 700;
@@ -80,7 +80,7 @@
 
   /* Chevron rotates 90° when section is open. */
   .module-chevron {
-    color: var(--color-signal);
+    color: var(--color-primary-500);
     font-size: 24px; /* ds-font-size-heading-sm */
     flex-shrink: 0;
     transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -93,7 +93,7 @@
   /* bodyContent: opacity fade — hides before panel collapses, reveals after open. */
   .module-body-content {
     padding: 14px; /* ds-space-pad mobile */
-    color: var(--color-text-body);
+    color: var(--color-tertiary-50);
     background: transparent;
     opacity: 0;
     transition: opacity 300ms cubic-bezier(0.32, 0, 0.67, 0);
@@ -116,7 +116,7 @@
 
   @media (min-width: 769px) {
     .module-root[open] .module-body-content {
-      border: 1px solid var(--color-signal-subtle);
+      border: 1px solid var(--color-primary-subtle);
     }
   }
 
@@ -143,14 +143,14 @@
   /* ── Footer — netstat link hover ─────────────────────────────────────── */
 
   .netstat-link {
-    color: var(--color-text-body);
+    color: var(--color-tertiary-50);
     text-decoration: underline;
-    text-decoration-color: var(--color-signal-subtle);
+    text-decoration-color: var(--color-primary-subtle);
     text-underline-offset: 2px;
   }
 
   .netstat-link:hover {
-    text-decoration-color: var(--color-signal);
+    text-decoration-color: var(--color-primary-500);
     text-shadow: 0 0 8px var(--color-glow-40);
   }
 
@@ -158,9 +158,9 @@
 
   .kbd-key {
     display: inline-block;
-    border: 1px solid var(--color-signal-subtle);
+    border: 1px solid var(--color-primary-subtle);
     background: var(--color-glow-06);
-    color: var(--color-signal);
+    color: var(--color-primary-500);
     padding: 1px 6px 2px;
     margin: 0 4px;
     font-family: inherit;
@@ -172,7 +172,7 @@
   }
 
   .kbd-key:hover {
-    background: var(--color-signal-faint);
+    background: var(--color-primary-faint);
     box-shadow: 0 0 8px var(--color-glow-30);
   }
 
@@ -183,7 +183,7 @@
     width: 88px;
     height: 6px;
     background: var(--color-glow-06);
-    border: 1px solid var(--color-signal-subtle);
+    border: 1px solid var(--color-primary-subtle);
     vertical-align: 0;
     margin-right: 8px;
     position: relative;
@@ -194,7 +194,7 @@
     display: block;
     height: 100%;
     width: 0;
-    background: var(--color-signal);
+    background: var(--color-primary-500);
     box-shadow: 0 0 6px var(--color-glow-45);
     transition: width 250ms cubic-bezier(0.2, 0.7, 0.2, 1);
   }
@@ -223,13 +223,13 @@
   .strategy-block + .strategy-block {
     margin-top: 24px;
     padding-top: 20px;
-    border-top: 1px solid var(--color-border-default);
+    border-top: 1px solid var(--color-primary-border);
   }
 
   /* ── PerfReceiptsSection — hero card gradient background ───────────────── */
 
   .receipt-hero-gradient {
-    background: linear-gradient(180deg, var(--color-glow-04), var(--color-surface-panel));
+    background: linear-gradient(180deg, var(--color-glow-04), transparent);
   }
 
   /* ── GuitarSection — camera corner brackets ────────────────────────────── */
@@ -249,7 +249,7 @@
     position: absolute;
     width: 14px;
     height: 14px;
-    border: 1px solid var(--color-signal);
+    border: 1px solid var(--color-primary-500);
   }
 
   .cam-corners::before {
@@ -307,10 +307,10 @@
   .transport-play {
     width: 0;
     height: 0;
-    border-left: 9px solid var(--color-signal);
+    border-left: 9px solid var(--color-primary-500);
     border-top: 6px solid transparent;
     border-bottom: 6px solid transparent;
-    filter: drop-shadow(0 0 4px var(--color-signal));
+    filter: drop-shadow(0 0 4px var(--color-primary-500));
   }
 
   /* ── DawMixerSection — static fader track tick marks ───────────────────── */
@@ -318,7 +318,7 @@
   .mx-fader {
     position: relative;
     height: 22px;
-    border: 1px solid var(--color-signal-quiet);
+    border: 1px solid var(--color-primary-quiet);
     background: var(--color-glow-03);
   }
 
@@ -332,7 +332,7 @@
     transform: translateY(-0.5px);
     background-image: repeating-linear-gradient(
       to right,
-      var(--color-signal-quiet) 0 1px,
+      var(--color-primary-quiet) 0 1px,
       transparent 1px 25%
     );
   }
@@ -346,8 +346,8 @@
     left: 50%;
     width: 1px;
     height: 12px;
-    background: var(--color-signal);
-    box-shadow: 0 0 4px var(--color-signal);
+    background: var(--color-primary-500);
+    box-shadow: 0 0 4px var(--color-primary-500);
     transform-origin: 50% 12px;
     transform: translateX(-50%) rotate(var(--mx-knob-angle, 0deg));
   }
@@ -358,7 +358,7 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
-    border-left: 1px dashed var(--color-signal-quiet);
+    border-left: 1px dashed var(--color-primary-quiet);
     padding-left: 12px;
     padding-bottom: 10px;
     margin-left: 4px;
@@ -373,8 +373,8 @@
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: var(--color-signal);
-    box-shadow: 0 0 4px var(--color-signal);
+    background: var(--color-primary-500);
+    box-shadow: 0 0 4px var(--color-primary-500);
   }
 
   .mx-chain::after {
@@ -382,9 +382,9 @@
     position: absolute;
     left: -1px;
     bottom: 0;
-    color: var(--color-signal);
+    color: var(--color-primary-500);
     font-size: 10px;
-    text-shadow: 0 0 4px var(--color-signal);
+    text-shadow: 0 0 4px var(--color-primary-500);
   }
 
   /* Mobile: no arrow glyph at bottom, no bottom padding */
@@ -402,7 +402,7 @@
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--color-signal-quiet);
+    background: var(--color-primary-quiet);
   }
 
   /* ── DawMixerSection — fader thumb (mobile) ─────────────────────────────── */
@@ -428,7 +428,7 @@
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: var(--color-signal);
+    background: var(--color-primary-500);
   }
 
   /* ── DawMixerSection — focused channel indicator bar ───────────────────── */
@@ -440,18 +440,18 @@
     top: 0;
     bottom: 0;
     width: 3px;
-    background: var(--color-signal);
-    box-shadow: 0 0 10px var(--color-signal);
+    background: var(--color-primary-500);
+    box-shadow: 0 0 10px var(--color-primary-500);
   }
 
   /* ── ContactForm — success panel gradient ───────────────────────────────── */
 
   .contact-success {
-    border: 1px solid var(--color-signal);
+    border: 1px solid var(--color-primary-500);
     padding: 24px;
-    color: var(--color-signal);
+    color: var(--color-primary-500);
     text-align: center;
-    background: linear-gradient(180deg, var(--color-glow-04), var(--color-surface-panel));
+    background: linear-gradient(180deg, var(--color-glow-04), transparent);
   }
 
   /* ── ContactForm — send button hover glow + motion ───────────────────────── */
@@ -461,7 +461,7 @@
   }
 
   .contact-send:hover:not(:disabled) {
-    box-shadow: 0 0 12px var(--color-signal);
+    box-shadow: 0 0 12px var(--color-primary-500);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -486,7 +486,7 @@
     display: inline-block;
     width: 7px;
     height: 1.05em;
-    background: var(--color-signal);
+    background: var(--color-primary-500);
     vertical-align: -2px;
     margin-left: 1px;
     opacity: 1;
@@ -512,7 +512,7 @@
   }
 
   .shell-cmd-hint:hover:not(:disabled) {
-    color: var(--color-signal);
+    color: var(--color-primary-500);
     text-shadow: 0 0 6px var(--color-glow-50);
   }
 
@@ -527,7 +527,7 @@
   }
 
   .shell-cmd-hint:focus-visible {
-    outline: 2px solid var(--color-signal);
+    outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
   }
 
@@ -549,8 +549,8 @@
       width: 40px;
       height: 40px;
       background: rgba(0, 0, 0, 0.85);
-      border: 1px solid var(--color-signal-subtle);
-      color: var(--color-signal);
+      border: 1px solid var(--color-primary-subtle);
+      color: var(--color-primary-500);
       opacity: 0;
       transform: translateY(8px);
       transition:
@@ -577,7 +577,7 @@
   }
 
   .to-top-btn:focus-visible {
-    outline: 2px solid var(--color-signal);
+    outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
   }
 
@@ -588,8 +588,8 @@
     position: relative;
     height: 18px;
     min-height: 24px;
-    background: color-mix(in srgb, var(--color-signal) 3%, transparent);
-    border: 1px solid var(--color-signal-quiet);
+    background: color-mix(in srgb, var(--color-primary-500) 3%, transparent);
+    border: 1px solid var(--color-primary-quiet);
     cursor: ew-resize;
     outline: none;
   }
@@ -601,13 +601,13 @@
     right: 8px;
     top: 50%;
     height: 1px;
-    background: var(--color-signal-quiet);
+    background: var(--color-primary-quiet);
     transform: translateY(-0.5px);
     pointer-events: none;
   }
 
   .fader-track:focus-visible {
-    outline: 2px solid var(--color-signal);
+    outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
   }
 
@@ -618,8 +618,8 @@
     left: 0;
     width: var(--fader-thumb-w);
     height: 22px;
-    background: var(--color-signal);
-    box-shadow: 0 0 8px var(--color-signal);
+    background: var(--color-primary-500);
+    box-shadow: 0 0 8px var(--color-primary-500);
     border: 1px solid #000;
     cursor: ew-resize;
   }
@@ -647,7 +647,7 @@
     position: relative;
     height: 14px;
     min-height: 24px;
-    border: 1px solid var(--color-signal-quiet);
+    border: 1px solid var(--color-primary-quiet);
     background: rgba(0, 0, 0, 0.7);
     display: flex;
     align-items: stretch;
@@ -658,27 +658,27 @@
   }
 
   .vu-meter:focus-visible {
-    outline: 2px solid var(--color-signal);
+    outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
   }
 
   /* Segment class names preserved — tests use [class*="vuSegFilled"] etc. */
   .vuSegFilled {
     flex: 1;
-    background: var(--color-signal);
+    background: var(--color-primary-500);
     height: 100%;
   }
 
   .vuSegEmpty {
     flex: 1;
-    background: var(--color-signal);
+    background: var(--color-primary-500);
     height: 100%;
     opacity: 0.55;
   }
 
   .vuSegRed {
     flex: 1;
-    background: var(--color-error);
+    background: var(--color-senary-300);
     height: 100%;
   }
 
@@ -694,7 +694,7 @@
   }
 
   .knob-container:focus-visible {
-    outline: 2px solid var(--color-signal);
+    outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
   }
 
@@ -702,7 +702,7 @@
 
   .rms-active:focus-visible,
   .rms-inactive:focus-visible {
-    outline: 2px solid var(--color-signal);
+    outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
   }
 
@@ -711,18 +711,18 @@
   /* dbValue and lufs class names preserved — tests use [class*="dbValue"] etc. */
   .dbValue {
     font-weight: 700;
-    color: var(--color-signal);
+    color: var(--color-primary-500);
     font-size: 12px;
   }
 
   .dbUnit {
     font-size: 10px;
-    color: var(--color-text-muted);
+    color: var(--color-primary-400);
   }
 
   .lufs {
     font-size: 10px;
-    color: var(--color-text-muted);
+    color: var(--color-primary-400);
     display: block;
     letter-spacing: 0.08em;
     margin-top: 2px;

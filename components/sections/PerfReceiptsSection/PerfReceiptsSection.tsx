@@ -16,16 +16,16 @@ function ReceiptCard({
   return (
     <li
       className={cn(
-        'receipt-card relative border border-signal-subtle',
+        'receipt-card relative border border-primary-subtle',
         'flex flex-col gap-[4px] md:gap-[6px]',
         'min-h-0 md:min-h-[170px]',
         'p-3 md:p-[18px_16px_16px]',
         hero &&
-          'receipt-hero-gradient border-signal col-span-2 row-span-2 md:row-span-2 p-3 md:p-[24px_22px_22px]',
+          'receipt-hero-gradient border-primary-500 col-span-2 row-span-2 md:row-span-2 p-3 md:p-[24px_22px_22px]',
         desktopOnly && 'hidden md:flex',
       )}
     >
-      <p className="text-text-muted text-xs tracking-[0.18em] m-0">
+      <p className="text-primary-400 text-xs tracking-[0.18em] m-0">
         {mobileMetric ? (
           <>
             <span className="hidden md:inline">{metric}</span>
@@ -37,7 +37,7 @@ function ReceiptCard({
       </p>
       <p
         className={cn(
-          'text-signal font-mono font-bold leading-none tracking-[-0.01em] m-[4px_0_8px] md:m-[6px_0_8px]',
+          'text-primary-500 font-mono font-bold leading-none tracking-[-0.01em] m-[4px_0_8px] md:m-[6px_0_8px]',
           hero ? 'text-[32px] md:text-[64px]' : 'text-[24px] md:text-[32px]',
         )}
         data-featured={hero || undefined}
@@ -45,11 +45,11 @@ function ReceiptCard({
       >
         {delta}
       </p>
-      <p className="text-text-muted text-xs tracking-[0.14em] m-0">{company}</p>
+      <p className="text-primary-400 text-xs tracking-[0.14em] m-0">{company}</p>
       <p
         className={cn(
-          'text-text-body leading-[1.5] mt-auto pt-[6px]',
-          'border-t border-dashed border-[var(--color-signal-quiet)]',
+          'text-tertiary-50 leading-[1.5] mt-auto pt-[6px]',
+          'border-t border-dashed border-[var(--color-primary-quiet)]',
           'text-xs md:text-xs',
           hero && 'md:pt-[10px]',
         )}

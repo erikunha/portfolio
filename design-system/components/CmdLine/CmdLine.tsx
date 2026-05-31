@@ -11,11 +11,11 @@ export function CmdLine({
   return (
     <div className="cmd-line font-mono text-sm leading-[1.55]">
       <div className="flex flex-wrap gap-x-1">
-        <span className="text-text-muted">{user}</span>
-        <span className="text-text-muted">{prompt}</span>
-        <span className="text-text-body">{command}</span>
+        <span className="text-primary-400">{user}</span>
+        <span className="text-primary-400">{prompt}</span>
+        <span className="text-tertiary-50">{command}</span>
       </div>
-      {output != null && <div className="text-text-body mt-1">{output}</div>}
+      {output != null && <div className="text-tertiary-50 mt-1">{output}</div>}
     </div>
   );
 }

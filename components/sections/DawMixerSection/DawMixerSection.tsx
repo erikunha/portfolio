@@ -38,14 +38,18 @@ function StaticMeter({
   const filledCount = Math.round((pct / 100) * segments);
   return (
     <div
-      className="flex gap-px h-3 p-px border border-[var(--color-signal-quiet)] bg-black/70"
+      className="flex gap-px h-3 p-px border border-[var(--color-primary-quiet)] bg-black/70"
       aria-hidden="true"
     >
       {Array.from({ length: segments }, (_, i) => {
         const isRed = clipping && pct > 85 && i >= segments - 2 && i < filledCount;
         const cls = cn(
           'flex-1 h-full',
-          isRed ? 'bg-[#ff8a8a]' : i < filledCount ? 'bg-signal' : 'bg-signal opacity-[0.22]',
+          isRed
+            ? 'bg-senary-300'
+            : i < filledCount
+              ? 'bg-primary-500'
+              : 'bg-primary-500 opacity-[0.22]',
         );
         return (
           // biome-ignore lint/suspicious/noArrayIndexKey: positional segments — no stable id exists
@@ -65,7 +69,7 @@ function StaticFader({ pct }: { pct: number }) {
         className={cn(
           'absolute top-1/2 -translate-x-1/2 -translate-y-1/2',
           'w-[18px] h-[28px]',
-          'bg-signal shadow-[0_0_10px_var(--color-signal)] border border-black',
+          'bg-primary-500 shadow-[0_0_10px_var(--color-primary-500)] border border-black',
           'motion-reduce:shadow-none',
           'mx-fader-thumb',
         )}
@@ -81,14 +85,14 @@ function StaticKnob({ angleDeg, label }: { angleDeg: number; label: string }) {
       {/* Dial — needle rotation via CSS custom property + named class pseudo-element */}
       <div
         className={cn(
-          'w-[30px] h-[30px] border border-signal rounded-full relative shrink-0',
+          'w-[30px] h-[30px] border border-primary-500 rounded-full relative shrink-0',
           'bg-[radial-gradient(circle_at_35%_30%,var(--color-glow-18),rgba(0,0,0,0.7))]',
           'mx-dial',
         )}
         style={{ '--mx-knob-angle': `${angleDeg}deg` } as CSSProperties}
         aria-hidden="true"
       />
-      <span className="text-xs tracking-[0.1em] text-text-muted uppercase font-bold">{label}</span>
+      <span className="text-xs tracking-[0.1em] text-primary-400 uppercase font-bold">{label}</span>
     </div>
   );
 }
@@ -103,7 +107,7 @@ function PluginChainMobile({
   return (
     <div className="mx-chain-wrap mb-[2px]" aria-hidden="true">
       {/* Title with trailing separator line — pseudo-element in components.css */}
-      <div className="text-xs tracking-[0.18em] text-text-muted uppercase mb-[5px] flex items-center gap-[6px] mx-chain-title">
+      <div className="text-xs tracking-[0.18em] text-primary-400 uppercase mb-[5px] flex items-center gap-[6px] mx-chain-title">
         {'// signal flow'}
       </div>
       {/* Chain line with decorators — complex pseudo-elements, named class */}
@@ -113,13 +117,13 @@ function PluginChainMobile({
             key={p.name}
             className={cn(
               'grid items-center gap-2 border px-[10px] py-2 relative',
-              'text-text-muted',
+              'text-primary-400',
               p.active
                 ? [
-                    'border-signal text-signal',
-                    'bg-[color-mix(in_srgb,var(--color-signal)_8%,transparent)]',
+                    'border-primary-500 text-primary-500',
+                    'bg-[color-mix(in_srgb,var(--color-primary-500)_8%,transparent)]',
                   ].join(' ')
-                : 'border-[color-mix(in_srgb,var(--color-signal-quiet)_40%,transparent)]',
+                : 'border-[color-mix(in_srgb,var(--color-primary-quiet)_40%,transparent)]',
             )}
             style={{ gridTemplateColumns: '14px minmax(90px, auto) 1fr' }}
             data-testid={`plugin-mobile-${channelId}-${p.name}`}
@@ -129,8 +133,8 @@ function PluginChainMobile({
               className={cn(
                 'w-[6px] h-[6px] rounded-full justify-self-center',
                 p.active
-                  ? 'bg-signal shadow-[0_0_4px_var(--color-signal)]'
-                  : 'bg-[var(--color-signal-quiet)]',
+                  ? 'bg-primary-500 shadow-[0_0_4px_var(--color-primary-500)]'
+                  : 'bg-[var(--color-primary-quiet)]',
               )}
               aria-hidden="true"
             />
@@ -143,7 +147,10 @@ function PluginChainMobile({
               aria-hidden="true"
             >
               {Array.from({ length: 5 }, (_, i) => {
-                const cls = cn('block w-1 h-[6px] bg-signal', i >= p.strength && 'opacity-[0.22]');
+                const cls = cn(
+                  'block w-1 h-[6px] bg-primary-500',
+                  i >= p.strength && 'opacity-[0.22]',
+                );
                 return (
                   // biome-ignore lint/suspicious/noArrayIndexKey: positional strength dots
                   <span key={i} className={cls} />
@@ -160,14 +167,14 @@ function PluginChainMobile({
 function SessionHeaderMobile() {
   return (
     <div
-      className="text-xs text-text-muted leading-[1.8] border-b border-[var(--color-border-default)] px-[14px] py-[10px] tracking-[0.14em] bg-[color-mix(in_srgb,var(--color-signal)_5%,transparent)]"
+      className="text-xs text-primary-400 leading-[1.8] border-b border-[var(--color-primary-border)] px-[14px] py-[10px] tracking-[0.14em] bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]"
       data-testid="session-header-mobile"
     >
       <div>
         {'SESSION: '}
         {dawMixer.sessionName}
         {' · '}
-        <span className="text-signal">{dawMixer.status}</span>
+        <span className="text-primary-500">{dawMixer.status}</span>
       </div>
       <div>
         {'▶ '}
@@ -178,7 +185,7 @@ function SessionHeaderMobile() {
         {dawMixer.timeSignature}
       </div>
       <div>
-        <span className="text-signal">{dawMixer.channels.length - 1}</span>
+        <span className="text-primary-500">{dawMixer.channels.length - 1}</span>
         {' GTR + MASTER'}
       </div>
     </div>
@@ -189,11 +196,11 @@ function MixLegendMobile() {
   const lead = dawMixer.channels.find((ch) => ch.focused && ch.id !== 'MASTER');
   return (
     <div
-      className="flex flex-col gap-[3px] px-[14px] py-2 border-b border-[var(--color-signal-quiet)] bg-black/60 text-xs tracking-[0.16em] text-text-muted uppercase"
+      className="flex flex-col gap-[3px] px-[14px] py-2 border-b border-[var(--color-primary-quiet)] bg-black/60 text-xs tracking-[0.16em] text-primary-400 uppercase"
       aria-hidden="true"
     >
       <span>
-        <span className="inline-block w-[5px] h-[5px] rounded-full bg-signal shadow-[0_0_5px_var(--color-signal)] mr-[6px] align-[1px]" />
+        <span className="inline-block w-[5px] h-[5px] rounded-full bg-primary-500 shadow-[0_0_5px_var(--color-primary-500)] mr-[6px] align-[1px]" />
         {dawMixer.channels.length - 1}
         {' GTR + MASTER'}
       </span>
@@ -212,13 +219,13 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
   return (
     <div
       className={cn(
-        'relative border-b border-[var(--color-signal-quiet)] px-[14px] pt-4 pb-[18px] flex flex-col gap-3',
+        'relative border-b border-[var(--color-primary-quiet)] px-[14px] pt-4 pb-[18px] flex flex-col gap-3',
         ch.focused
-          ? 'bg-[color-mix(in_srgb,var(--color-signal)_7%,transparent)] channel-row-focused'
+          ? 'bg-[color-mix(in_srgb,var(--color-primary-500)_7%,transparent)] channel-row-focused'
           : 'bg-black/35',
         isMaster && [
-          'bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-signal)_6%,transparent),transparent)]',
-          'border-t-2 border-t-signal',
+          'bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-primary-500)_6%,transparent),transparent)]',
+          'border-t-2 border-t-primary-500',
         ],
       )}
       data-focused={ch.focused || undefined}
@@ -234,10 +241,10 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
           className={cn(
             'text-xs tracking-[0.18em] border font-bold whitespace-nowrap shrink-0 px-[7px] py-[3px]',
             ch.focused
-              ? 'text-signal border-signal bg-[color-mix(in_srgb,var(--color-signal)_10%,transparent)]'
-              : 'text-text-muted border-[var(--color-signal-quiet)] bg-black/55',
+              ? 'text-primary-500 border-primary-500 bg-[color-mix(in_srgb,var(--color-primary-500)_10%,transparent)]'
+              : 'text-primary-400 border-[var(--color-primary-quiet)] bg-black/55',
             isMaster &&
-              'border-signal px-2 py-[2px] text-[12px] tracking-[0.12em] font-bold text-signal bg-transparent',
+              'border-primary-500 px-2 py-[2px] text-[12px] tracking-[0.12em] font-bold text-primary-500 bg-transparent',
           )}
           data-channel={isMaster ? 'master' : undefined}
         >
@@ -246,18 +253,21 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
         <span
           className={cn(
             'text-[14px] font-bold tracking-[0.04em] leading-[1.15] min-w-0 overflow-hidden text-ellipsis whitespace-nowrap',
-            ch.focused || isMaster ? 'text-signal' : 'text-text-body',
+            ch.focused || isMaster ? 'text-primary-500' : 'text-tertiary-50',
           )}
         >
           {ch.name}
         </span>
-        <div className="text-xs text-text-muted tabular-nums tracking-[0.04em] text-right leading-[1.1] whitespace-nowrap">
-          <span className="font-bold text-signal text-xs">{pctToDb(ch.faderPct)}</span>
-          <span className="text-xs text-text-muted">dB</span>
+        <div className="text-xs text-primary-400 tabular-nums tracking-[0.04em] text-right leading-[1.1] whitespace-nowrap">
+          <span className="font-bold text-primary-500 text-xs">{pctToDb(ch.faderPct)}</span>
+          <span className="text-xs text-primary-400">dB</span>
         </div>
       </div>
       {/* description */}
-      <div className="text-text-muted text-xs tracking-[0.02em] leading-[1.4]" data-testid="mx-ref">
+      <div
+        className="text-primary-400 text-xs tracking-[0.02em] leading-[1.4]"
+        data-testid="mx-ref"
+      >
         <ParsedText text={ch.desc} />
       </div>
       {/* meter + fader */}
@@ -267,7 +277,7 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
       </div>
       <PluginChainMobile plugins={ch.plugins} channelId={ch.id} />
       {/* knobs + buttons + clip bar */}
-      <div className="flex flex-col gap-[14px] pt-[14px] border-t border-dashed border-[var(--color-signal-quiet)]">
+      <div className="flex flex-col gap-[14px] pt-[14px] border-t border-dashed border-[var(--color-primary-quiet)]">
         <div className="flex items-center justify-between gap-3">
           <div className="flex gap-[18px]">
             <StaticKnob angleDeg={ch.knob1.angleDeg} label={ch.knob1.label} />
@@ -284,11 +294,11 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
                   'text-xs font-bold tracking-[0.04em]',
                   ch.activeButtons.includes(btn)
                     ? [
-                        'border border-signal text-signal',
-                        'bg-[color-mix(in_srgb,var(--color-signal)_10%,transparent)]',
+                        'border border-primary-500 text-primary-500',
+                        'bg-[color-mix(in_srgb,var(--color-primary-500)_10%,transparent)]',
                         'shadow-[0_0_5px_var(--color-glow-35)]',
                       ].join(' ')
-                    : 'border border-[var(--color-signal-quiet)] text-text-muted bg-black/50',
+                    : 'border border-[var(--color-primary-quiet)] text-primary-400 bg-black/50',
                 )}
               >
                 {btn}
@@ -298,26 +308,26 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
         </div>
         <div className="flex items-center justify-between gap-3">
           <div
-            className="flex-1 h-[6px] bg-[var(--color-signal-quiet)] border border-[var(--color-signal-quiet)] relative overflow-hidden"
+            className="flex-1 h-[6px] bg-[var(--color-primary-quiet)] border border-[var(--color-primary-quiet)] relative overflow-hidden"
             aria-hidden="true"
           >
             <div
-              className="absolute left-0 top-0 bottom-0 bg-signal opacity-85"
+              className="absolute left-0 top-0 bottom-0 bg-primary-500 opacity-85"
               style={{ width: `${ch.faderPct}%` }}
             />
           </div>
           {ch.footer && (
-            <span className="text-xs text-text-muted block tracking-[0.08em] mt-[2px] opacity-80">
+            <span className="text-xs text-primary-400 block tracking-[0.08em] mt-[2px] opacity-80">
               LUFS {ch.footer.lufs} · PK {ch.footer.pk}
             </span>
           )}
         </div>
       </div>
       {ch.terminalLines && (
-        <div className="border border-[var(--color-signal-quiet)] px-[10px] py-2 mt-1">
+        <div className="border border-[var(--color-primary-quiet)] px-[10px] py-2 mt-1">
           {ch.terminalLines.map((line, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: positional terminal lines
-            <div key={i} className="text-xs text-text-muted leading-[1.8]">
+            <div key={i} className="text-xs text-primary-400 leading-[1.8]">
               <ParsedText text={line} />
             </div>
           ))}
@@ -329,7 +339,10 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
 
 export function DawMixerMobile() {
   return (
-    <div className="font-mono text-xs text-text-body flex flex-col" data-testid="daw-mixer-mobile">
+    <div
+      className="font-mono text-xs text-tertiary-50 flex flex-col"
+      data-testid="daw-mixer-mobile"
+    >
       <SessionHeaderMobile />
       <MixLegendMobile />
       {dawMixer.channels
