@@ -223,6 +223,8 @@ job. The "no copy in `.tsx`" rule is held by PR review against this chapter.
 
 **How it is held.** `scripts/contrast-check.mjs` audits every documented text/surface pair against WCAG AA ratios; values are hardcoded from `@theme` (update both when the palette changes). CSS modules are allowed for components with complex styling needs that utilities cannot express. Visual regression (`tests/e2e/visual.spec.ts`) catches any layout shift from CSS changes. The `ui-ux-tester` agent dispatches on CSS/layout changes. ADR entries for CSS system changes live in `DECISIONS.md`.
 
+**Co-authoring rule — where new CSS goes:** Tailwind utilities in JSX `className` handle all spacing, color, layout, typography, and responsive breakpoints. A named class in `@layer components` is required (not optional) when a pattern needs any of the following: `@keyframes` or `animation:`, pseudo-element overlays (`::before`/`::after`), `mix-blend-mode`, simultaneous coordination of 5+ CSS declarations on one element, or a CSS custom property local variable (`--var: value`). Everything else is a Tailwind utility. When in doubt: if it can be expressed as 1-4 utility classes, it stays in JSX. Files: `crt.css` for CRT overlay effects, `animations.css` for `@keyframes`-heavy section animations, `components.css` for everything else.
+
 ---
 
 ## 8. Accessibility
