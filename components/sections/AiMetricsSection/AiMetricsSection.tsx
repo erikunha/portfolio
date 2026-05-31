@@ -11,6 +11,7 @@
 import { Suspense } from 'react';
 import type { AskMetrics } from '@/content/ask-metrics';
 import { getAskMetrics } from '@/content/ask-metrics';
+import { TerminalPanel } from '@/design-system';
 import { IconAiMetrics } from '../../Icons';
 import { Module } from '../../responsive/Module';
 import styles from './AiMetricsSection.module.css';
@@ -47,26 +48,26 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
   return (
     <div className={styles.root}>
       <div className={styles.grid}>
-        <div className={styles.metric}>
+        <TerminalPanel className={styles.metric}>
           <div className={styles.label}>EVAL PASS-RATE</div>
           <div className={styles.value}>{pct(metrics.evalPassRate)}</div>
           <div className={styles.note}>correctness · factual + edge corpus</div>
-        </div>
-        <div className={styles.metric}>
+        </TerminalPanel>
+        <TerminalPanel className={styles.metric}>
           <div className={styles.label}>JAILBREAK RESIST</div>
           <div className={styles.value}>{pct(metrics.jailbreakResistance)}</div>
           <div className={styles.note}>prompt-injection refusal rate</div>
-        </div>
-        <div className={styles.metric}>
+        </TerminalPanel>
+        <TerminalPanel className={styles.metric}>
           <div className={styles.label}>P95 LATENCY</div>
           <div className={styles.value}>{ms(metrics.p95LatencyMs)}</div>
           <div className={styles.note}>end-to-end · slowest 5% of answers</div>
-        </div>
-        <div className={styles.metric}>
+        </TerminalPanel>
+        <TerminalPanel className={styles.metric}>
           <div className={styles.label}>COST / ANSWER</div>
           <div className={styles.value}>{usd(metrics.costPerAnswer)}</div>
           <div className={styles.note}>production inference · feature model only</div>
-        </div>
+        </TerminalPanel>
       </div>
       <div className={styles.foot}>
         <span>

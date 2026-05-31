@@ -32,7 +32,7 @@
 
 .receiptHero {
   border-color: var(--ds-color-signal);
-  background: linear-gradient(180deg, rgba(0, 255, 65, 0.04), rgba(0, 0, 0, 0));
+  background: linear-gradient(180deg, var(--ds-glow-04), var(--ds-color-surface-panel));
   padding: 24px 22px 22px;
   grid-column: span 2;
   grid-row: span 2;

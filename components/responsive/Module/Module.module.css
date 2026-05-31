@@ -70,7 +70,7 @@
    overflow:hidden clips child borders. */
 .root {
   border: 1px solid var(--ds-color-signal-subtle);
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--ds-overlay-55);
   overflow: hidden;
 }
 
@@ -134,7 +134,7 @@
 }
 
 .bodyContent[data-variant="green"] {
-  background: rgba(0, 255, 65, 0.05);
+  background: var(--ds-glow-05);
 }
 
 .root[open] .bodyContent {
@@ -153,7 +153,7 @@
   width: 100%;
   padding: 12px 14px;
   min-height: 44px;
-  background: rgba(0, 255, 65, 0.04);
+  background: var(--ds-glow-04);
   border-bottom: 1px solid var(--ds-color-signal-quiet);
   cursor: pointer;
 }
@@ -215,7 +215,7 @@ body[data-motion="reduce"] .bodyContent {
    This block lightens the scrim explicitly for mobile. */
 @media (max-width: 768px) {
   .root {
-    background: rgba(0, 0, 0, 0.22);
+    background: var(--ds-overlay-22);
   }
 }
 

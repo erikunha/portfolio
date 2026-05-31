@@ -1,4 +1,5 @@
 import { sysStats } from '@/content/sys-health';
+import { TerminalPanel } from '@/design-system';
 import { IconSysHealth } from '../../Icons';
 import { Module } from '../../responsive/Module';
 import styles from './SysHealthSection.module.css';
@@ -14,13 +15,13 @@ export function SysHealthSection({ defer }: { defer?: boolean } = {}) {
     >
       <div className={styles.root}>
         {sysStats.map((s) => (
-          <div key={s.label} className={styles.stat}>
+          <TerminalPanel key={s.label} className={styles.stat}>
             <div className={styles.label}>{s.label}</div>
             <div className={styles.value}>{s.value}</div>
             <div className={`${styles.bar} ${styles.pulse}`}>
               <i style={{ width: s.pct }} />
             </div>
-          </div>
+          </TerminalPanel>
         ))}
       </div>
     </Module>

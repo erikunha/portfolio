@@ -22,30 +22,8 @@
   letter-spacing: 0.14em;
 }
 
-.barDots {
-  display: flex;
-  gap: 6px;
-}
-
-.barDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: block;
-}
-
 .barTitle {
   margin-left: auto;
-}
-
-.barDotRed {
-  background: var(--ds-chrome-close);
-}
-.barDotYellow {
-  background: var(--ds-chrome-minimize);
-}
-.barDotGreen {
-  background: var(--ds-chrome-maximize);
 }
 
 .feed {
@@ -196,7 +174,7 @@ body[data-motion="reduce"] .cmdHint {
 }
 
 .chip:active {
-  background: rgba(0, 255, 65, 0.1);
+  background: var(--ds-color-signal-quiet);
 }
 
 /* Desktop command hints row — rendered inside shell panel, below the input form */
@@ -233,7 +211,7 @@ body[data-motion="reduce"] .cmdHint {
 
 .cmdHint:hover:not(:disabled) {
   color: var(--ds-color-signal);
-  text-shadow: 0 0 6px rgba(0, 255, 65, 0.5);
+  text-shadow: 0 0 6px var(--ds-glow-50);
 }
 
 .cmdHint:disabled {

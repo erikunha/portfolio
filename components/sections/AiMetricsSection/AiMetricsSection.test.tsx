@@ -66,9 +66,12 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
     expect(html).toContain('$0.0021');
     // Exactly four metric cells — pass-rate, jailbreak, p95 latency, cost.
     // CSS Modules scopes the class name; use the module key for the regex.
+    // Match class attribute containing metricClass (may include additional classes
+    // from TerminalPanel's root, so we match the class token anywhere in the list).
     const s = await getStyles();
     const metricClass = s.metric as string;
-    const cellCount = (html.match(new RegExp(`class="${metricClass}"`, 'g')) ?? []).length;
+    const cellCount = (html.match(new RegExp(`class="[^"]*\\b${metricClass}\\b`, 'g')) ?? [])
+      .length;
     expect(cellCount).toBe(4);
     // The unmeasured cache-hit-rate row was dropped end-to-end.
     expect(html.toUpperCase()).not.toContain('CACHE');

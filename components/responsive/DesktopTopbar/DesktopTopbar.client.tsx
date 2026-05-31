@@ -1,6 +1,7 @@
 'use client';
 
 import { useLayoutEffect, useState } from 'react';
+import { WindowChrome } from '@/design-system';
 import { applyMotion, readMotion } from '@/lib/motion';
 import styles from './DesktopTopbar.module.css';
 
@@ -23,11 +24,7 @@ export function DesktopTopbar() {
   return (
     <div className={styles.root}>
       <div className={styles.inner}>
-        <div className={styles.dots} aria-hidden="true">
-          <span className={`${styles.dot} ${styles.dotRed}`} />
-          <span className={`${styles.dot} ${styles.dotYellow}`} />
-          <span className={`${styles.dot} ${styles.dotGreen}`} />
-        </div>
+        <WindowChrome size={12} style={{ gap: '8px' }} />
         <div className={styles.tabs}>
           <div className={`${styles.tab} ${styles.tabActive}`}>
             <span>&#9632;</span>

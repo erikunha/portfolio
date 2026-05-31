@@ -1,6 +1,6 @@
 .root {
   border: 1px solid var(--ds-color-signal-subtle);
-  background: transparent;
+  background: var(--ds-color-surface-panel);
 }
 .dashed {
   border-style: dashed;

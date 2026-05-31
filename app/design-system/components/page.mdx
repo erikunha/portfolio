@@ -1,13 +1,14 @@
 export const metadata = {
   title: 'Components — Design System — erikunha.dev',
-  description: '8 primitive components for erikunha.dev (6 RSC, Field and CopyButton are client)',
+  description: '9 primitive components for erikunha.dev (7 RSC, Field and CopyButton are client)',
 };
 
 import { Field } from '../../../design-system/components/Field';
+import { WindowChrome } from '../../../design-system/components/WindowChrome/WindowChrome';
 
 # COMPONENTS
 
-6 of 8 primitives are React Server Components. `Field` and `CopyButton` are client components (`'use client'`) — all others ship zero client JavaScript.
+7 of 9 primitives are React Server Components. `Field` and `CopyButton` are client components (`'use client'`) — all others ship zero client JavaScript.
 
 <ComponentNav />
 
@@ -74,6 +75,22 @@ import { Field } from '../../../design-system/components/Field';
   <TerminalPanel header="[ STATUS ]">Content here.</TerminalPanel>
   <TerminalPanel borderStyle="dashed">Dashed panel.</TerminalPanel>
 </Preview>
+
+## WindowChrome
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `size` | `number` | `10` | no |
+| `className` | `string` | — | no |
+| `style` | `CSSProperties` | — | no |
+
+<Preview id="window-chrome">
+  <WindowChrome />
+  <WindowChrome size={12} />
+  <WindowChrome size={9} />
+</Preview>
+
+Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RSC. Dots are `aria-hidden="true"` — purely decorative, no focus management. The `size` prop sets dot diameter in px; pass it explicitly for context-aware sizing (9px mobile title bar, 10px shell, 12px desktop topbar).
 
 ## StatTile
 

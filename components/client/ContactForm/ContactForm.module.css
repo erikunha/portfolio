@@ -57,7 +57,7 @@
   padding: 24px;
   color: var(--ds-color-signal);
   text-align: center;
-  background: linear-gradient(180deg, rgba(0, 255, 65, 0.04), rgba(0, 0, 0, 0));
+  background: linear-gradient(180deg, var(--ds-glow-04), var(--ds-color-surface-panel));
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -10,4 +10,6 @@ export type { StatTileProps } from './components/StatTile/StatTile';
 export { StatTile } from './components/StatTile/StatTile';
 export type { TerminalPanelProps } from './components/TerminalPanel/TerminalPanel';
 export { TerminalPanel } from './components/TerminalPanel/TerminalPanel';
+export type { WindowChromeProps } from './components/WindowChrome/WindowChrome';
+export { WindowChrome } from './components/WindowChrome/WindowChrome';
 export { cx } from './lib/cx';

@@ -225,96 +225,45 @@
     { "value": "840ms", "reason": "footer sd-halt-hint-reveal delay — 660ms + 180ms stagger" }
   ],
   "color-functions": [
-    { "value": "rgba(0, 0, 0, 0)", "reason": "transparent black — gradient endpoint" },
     {
-      "value": "rgba(0, 0, 0, 0.3)",
-      "reason": "scanLine per-row darkening — CRT scanline repeating-gradient stop; lighter than 0.38 to allow phosphor glow through"
+      "value": "rgba(0, 0, 0, 0)",
+      "reason": "transparent black — gradient endpoint; used as the terminal stop in linear-gradient fades"
     },
     {
-      "value": "rgba(0, 0, 0, 0.35)",
-      "reason": "signal-chain panel / influence row background — subtle dark scrim on terminal panels"
+      "value": "rgba(0, 0, 0, 0.38)",
+      "reason": "CRT vignette corner darkening — effect layer exception; not a UI overlay token"
     },
-    {
-      "value": "rgba(0, 0, 0, 0.4)",
-      "reason": "mobile signal-chain node background — slightly heavier panel scrim for readability"
-    },
-    {
-      "value": "rgba(0, 0, 0, 0.5)",
-      "reason": "DAW mixer section root background — half-opacity dark panel behind channel rows"
-    },
-    {
-      "value": "rgba(0, 0, 0, 0.65)",
-      "reason": "influences list background — heavier scrim for list readability over photo"
-    },
-    {
-      "value": "rgba(0, 0, 0, 0.7)",
-      "reason": "VuMeter + knob SVG fill — near-opaque backgrounds for small control elements"
-    },
-    { "value": "rgba(0, 0, 0, 0.38)", "reason": "vignette overlay — CRT corner darkening" },
     {
       "value": "rgba(0, 0, 0, 0.45)",
-      "reason": "CRT scanline pixel stop — exact opacity required"
+      "reason": "CRT scanline pixel stop — exact opacity required for repeating-linear-gradient stop geometry; effect layer exception"
     },
-    {
-      "value": "rgba(0, 0, 0, 0.22)",
-      "reason": "module backdrop scrim (mobile) — lightened from 0.55 to reduce visual weight"
-    },
-    {
-      "value": "rgba(0, 0, 0, 0.55)",
-      "reason": "module backdrop scrim — no semantic overlay token"
-    },
-    { "value": "rgba(0, 0, 0, 0.6)", "reason": "dialog/overlay scrim" },
-    { "value": "rgba(0, 0, 0, 0.85)", "reason": "heavy scrim — near-opaque backdrop" },
-    { "value": "rgba(0, 0, 0, 0.92)", "reason": "dock backdrop — near-black translucent surface" },
     {
       "value": "rgba(0, 80, 20, 0.12)",
-      "reason": "CRT phosphor glow radial — dark green ambient, no token"
+      "reason": "CRT phosphor glow radial gradient — dark green ambient center bloom; effect layer exception, no semantic token"
     },
     {
       "value": "rgba(0, 255, 0, 0.06)",
-      "reason": "CRT RGB sub-pixel green channel — exact geometry required"
-    },
-    {
-      "value": "rgba(0, 255, 65, 0.015)",
-      "reason": "signal-green opacity variant — hairline glow"
+      "reason": "CRT RGB sub-pixel green channel — 3-column R/G/B pixel mask; exact geometry required; effect layer exception"
     },
     {
       "value": "rgba(0, 255, 65, 0.02)",
-      "reason": "signal-green opacity variant — barely-visible tint"
-    },
-    { "value": "rgba(0, 255, 65, 0.025)", "reason": "signal-green opacity variant" },
-    { "value": "rgba(0, 255, 65, 0.03)", "reason": "signal-green opacity variant — subtle tint" },
-    {
-      "value": "rgba(0, 255, 65, 0.04)",
-      "reason": "signal-green opacity variant — hover/focus surface"
+      "reason": "CRT flicker layer fill — CRTOverlay.module.css effect layer; not a UI color token"
     },
     {
-      "value": "rgba(0, 255, 65, 0.05)",
-      "reason": "signal-green opacity variant — hairline surface tint"
+      "value": "rgba(0, 255, 65, 0.025)",
+      "reason": "Footer panel gradient hairline — alpha 0.025 cannot be round-tripped through Style Dictionary hex encoding (0x06 = 0.0235); single site, not tokenizable without precision loss"
     },
-    { "value": "rgba(0, 255, 65, 0.06)", "reason": "signal-green opacity variant — light surface" },
-    { "value": "rgba(0, 255, 65, 0.1)", "reason": "signal-green opacity variant" },
     {
-      "value": "rgba(0, 255, 65, 0.12)",
-      "reason": "signal-green opacity variant — dock highlight"
+      "value": "rgba(0, 255, 65, 0.06)",
+      "reason": "CRT scan beam gradient stop — CRTOverlay.module.css effect layer exception; not a UI color token"
     },
-    { "value": "rgba(0, 255, 65, 0.15)", "reason": "signal-green opacity variant" },
-    { "value": "rgba(0, 255, 65, 0.18)", "reason": "signal-green opacity variant" },
-    { "value": "rgba(0, 255, 65, 0.25)", "reason": "signal-green opacity variant" },
-    { "value": "rgba(0, 255, 65, 0.3)", "reason": "signal-green opacity variant" },
-    { "value": "rgba(0, 255, 65, 0.35)", "reason": "signal-green opacity variant" },
-    { "value": "rgba(0, 255, 65, 0.4)", "reason": "signal-green opacity variant" },
-    { "value": "rgba(0, 255, 65, 0.45)", "reason": "signal-green opacity variant" },
-    { "value": "rgba(0, 255, 65, 0.5)", "reason": "signal-green opacity variant" },
-    { "value": "rgba(0, 255, 65, 0.55)", "reason": "signal-green opacity variant" },
-    { "value": "rgba(0, 255, 65, 0.6)", "reason": "signal-green opacity variant" },
     {
       "value": "rgba(0, 0, 255, 0.06)",
-      "reason": "CRT RGB sub-pixel blue channel — exact geometry required"
+      "reason": "CRT RGB sub-pixel blue channel — 3-column R/G/B pixel mask; exact geometry required; effect layer exception"
     },
     {
       "value": "rgba(255, 0, 0, 0.06)",
-      "reason": "CRT RGB sub-pixel red channel — exact geometry required"
+      "reason": "CRT RGB sub-pixel red channel — 3-column R/G/B pixel mask; exact geometry required; effect layer exception"
     }
   ],
   "z-index-values": [

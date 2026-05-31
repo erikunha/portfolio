@@ -150,7 +150,7 @@
   color: var(--ds-color-signal);
   font-weight: 700;
   text-shadow:
-    0 0 6px rgba(0, 255, 65, 0.6),
+    0 0 6px var(--ds-glow-60),
     0 0 4px #000;
 }
 
@@ -175,7 +175,7 @@
 .bootMatrixOut {
   color: var(--ds-color-signal);
   text-shadow:
-    0 0 8px rgba(0, 255, 65, 0.4),
+    0 0 8px var(--ds-glow-40),
     0 0 4px #000;
 }
 
@@ -252,8 +252,8 @@ body[data-motion="reduce"] .headline {
   line-height: 1;
   text-transform: uppercase;
   box-shadow:
-    0 0 24px rgba(0, 255, 65, 0.55),
-    0 0 60px rgba(0, 255, 65, 0.25);
+    0 0 24px var(--ds-glow-55),
+    0 0 60px var(--ds-glow-25);
   white-space: nowrap;
 }
 
@@ -315,7 +315,7 @@ body[data-motion="reduce"] .headline {
   color: var(--ds-color-signal);
   font-family: var(--ds-font-family-mono);
   text-shadow:
-    0 0 8px rgba(0, 255, 65, 0.45),
+    0 0 8px var(--ds-glow-45),
     0 0 4px #000;
 }
 

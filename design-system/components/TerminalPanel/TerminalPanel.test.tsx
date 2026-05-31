@@ -30,4 +30,17 @@ describe('TerminalPanel', () => {
     expect(classList).not.toContain('undefined');
     expect(classList).not.toContain('solid');
   });
+  it('forwards className to the root element', () => {
+    const { container } = render(<TerminalPanel className="my-panel">x</TerminalPanel>);
+    expect(container.firstElementChild?.classList.contains('my-panel')).toBe(true);
+  });
+  it('renders twice without id collision (no hardcoded id)', () => {
+    const { container: a } = render(<TerminalPanel>first</TerminalPanel>);
+    const { container: b } = render(<TerminalPanel>second</TerminalPanel>);
+    const idA = a.firstElementChild?.id ?? '';
+    const idB = b.firstElementChild?.id ?? '';
+    // Neither instance should have a hardcoded id
+    expect(idA).toBe('');
+    expect(idB).toBe('');
+  });
 });
