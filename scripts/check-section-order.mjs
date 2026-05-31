@@ -53,8 +53,10 @@ for (const file of tsxFiles) {
 const appShellCss = readFileSync(resolve(root, 'components/AppShell/AppShell.module.css'), 'utf8');
 // Extract only the @media (max-width: 768px) block to avoid false-positives
 // from :global(#sec-...) selectors used outside mobile ordering context.
+// Regex allows an optional inline /* --bp-mobile */ comment between ) and {
+// Added 2026-05-30 when lint-breakpoints migration appended token-name comments.
 const mobileBlockMatch = appShellCss.match(
-  /@media\s*\(max-width:\s*768px\)\s*\{([\s\S]*?)(?=\n[}\s]*$|\n@media|\n\/\*[^@])/,
+  /@media\s*\(max-width:\s*768px\)(?:\s*\/\*[^*]*\*\/)?\s*\{([\s\S]*?)(?=\n[}\s]*$|\n@media|\n\/\*[^@])/,
 );
 const mobileBlock = mobileBlockMatch ? mobileBlockMatch[1] : '';
 const orderedIds = new Set([...mobileBlock.matchAll(/:global\(#(sec-[^)]+)\)/g)].map((m) => m[1]));
