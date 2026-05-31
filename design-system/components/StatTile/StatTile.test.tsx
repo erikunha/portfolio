@@ -16,7 +16,7 @@ describe('StatTile', () => {
   it('applies compact font size override when variant=compact', () => {
     const { container } = render(<StatTile value="1" label="x" variant="compact" />);
     const dd = container.querySelector('dd');
-    // compact overrides the default text-2xl down to text-xs (twMerge removes the base class)
+    // compact applies text-xs; the base text-2xl is not applied (mutually exclusive conditional)
     expect(dd?.classList.contains('text-xs')).toBe(true);
     expect(dd?.classList.contains('text-2xl')).toBe(false);
   });

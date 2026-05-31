@@ -65,6 +65,7 @@
 
         "bf-cache": "warn",
         "valid-source-maps": "off",
+        "unused-css-rules": ["warn", { "maxLength": 10 }],
         "unminified-css": "warn",
         "unminified-javascript": "warn",
         "cls-culprits-insight": "off",
