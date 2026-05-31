@@ -9,7 +9,7 @@ export function CmdLine({
   prompt = ':~$',
 }: CmdLineProps) {
   return (
-    <div className="font-mono text-sm leading-[1.55]">
+    <div className="cmd-line font-mono text-sm leading-[1.55]">
       <div className="flex flex-wrap gap-x-1">
         <span className="text-text-muted">{user}</span>
         <span className="text-text-muted">{prompt}</span>

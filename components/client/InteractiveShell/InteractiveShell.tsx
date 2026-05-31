@@ -331,7 +331,7 @@ export function InteractiveShell() {
   );
 
   return (
-    <div className="bg-[var(--color-surface-shell)] text-xs font-mono leading-[1.65] -m-[var(--ds-space-pad,14px)]">
+    <div className="interactive-shell bg-[var(--color-surface-shell)] text-xs font-mono leading-[1.65] -m-[var(--ds-space-pad,14px)]">
       <div className="flex items-center gap-[10px] px-[14px] py-2 border-b border-[var(--color-signal-subtle)] text-text-muted text-xs tracking-[0.14em]">
         <WindowChrome size={10} />
         {isMobile ? (

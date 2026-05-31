@@ -24,7 +24,7 @@ export function TerminalPanel({
   return (
     <Element
       className={cn(
-        'border border-signal-subtle bg-transparent',
+        'terminal-panel border border-signal-subtle bg-transparent',
         borderStyle === 'dashed' && 'border-dashed',
         className,
       )}

@@ -16,7 +16,7 @@ export function Sidebar() {
   return (
     <nav
       aria-label="Design system"
-      className="flex flex-col gap-0.5 p-6 border-r border-border-default min-w-[180px] max-md:flex-row max-md:flex-wrap max-md:border-r-0 max-md:border-b max-md:min-w-0 max-md:p-3"
+      className="ds-sidebar flex flex-col gap-0.5 p-6 border-r border-border-default min-w-[180px] max-md:flex-row max-md:flex-wrap max-md:border-r-0 max-md:border-b max-md:min-w-0 max-md:p-3"
     >
       <a
         href="/"

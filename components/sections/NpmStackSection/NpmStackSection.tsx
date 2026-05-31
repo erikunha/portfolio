@@ -14,7 +14,7 @@ export function NpmStackSection({ defer }: { defer?: boolean } = {}) {
       {/* Mobile-first: 2-col → 4-col (≥341px) → 3-col (≥901px) → 6-col (≥1025px) */}
       <ul
         className={[
-          'list-none m-0 p-0',
+          'npm-stack-grid list-none m-0 p-0',
           'grid grid-cols-2 min-[341px]:grid-cols-4 gap-2',
           'min-[901px]:grid-cols-3 min-[901px]:gap-[10px]',
           'lg:grid-cols-6',
@@ -24,7 +24,7 @@ export function NpmStackSection({ defer }: { defer?: boolean } = {}) {
           <li
             key={t.label}
             className={[
-              'border border-signal-subtle',
+              'npm-stack-item border border-signal-subtle',
               'aspect-square min-[341px]:aspect-[2/1]',
               'flex flex-col items-center justify-center gap-1',
               'text-signal text-xs min-[341px]:text-xs min-[901px]:text-xs',

@@ -13,14 +13,14 @@ const FolderIcon = () => (
 function ProjectsDesktop() {
   return (
     <ul
-      className="list-none m-0 p-0 grid grid-cols-1 md:grid-cols-3 gap-5"
+      className="projects-grid list-none m-0 p-0 grid grid-cols-1 md:grid-cols-3 gap-5"
       data-testid="proj-desktop"
     >
       {projects.map((p) => (
         <li
           key={p.name}
           className={[
-            'relative border border-signal-subtle p-5 md:p-5',
+            'project-card relative border border-signal-subtle p-5 md:p-5',
             'transition-[border-color,box-shadow] duration-200',
             'hover:border-signal hover:shadow-[0_0_16px_var(--color-glow-18)]',
             'motion-reduce:transition-none',
@@ -33,10 +33,10 @@ function ProjectsDesktop() {
             </svg>
             <span className="text-text-muted text-xs opacity-75 m-0">{p.perm ?? 'drwxr-xr-x'}</span>
           </div>
-          <h3 className="text-signal font-bold text-sm md:text-base tracking-[0.04em] my-1.5">
+          <h3 className="project-name text-signal font-bold text-sm md:text-base tracking-[0.04em] my-1.5">
             {p.name}
           </h3>
-          <p className="text-text-body text-xs md:text-sm mb-4">{p.description}</p>
+          <p className="project-desc text-text-body text-xs md:text-sm mb-4">{p.description}</p>
           <dl className="grid gap-1 text-xs md:text-sm m-0">
             {p.stats.map((s) => (
               <div key={s.label} className="flex justify-between gap-2">

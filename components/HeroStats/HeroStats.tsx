@@ -4,7 +4,7 @@ import { StatTile } from '@/design-system';
 export function HeroStats() {
   return (
     <section
-      className="grid grid-cols-2 md:grid-cols-4 border border-signal-subtle mt-3"
+      className="hero-stats grid grid-cols-2 md:grid-cols-4 border border-signal-subtle mt-3"
       aria-label="Impact at scale"
       data-testid="hero-stats"
     >

@@ -9,7 +9,7 @@ type PreviewProps = {
 
 export function Preview({ id, source, children }: PreviewProps) {
   return (
-    <div id={id} data-testid="ds-preview">
+    <div id={id} className="ds-preview" data-testid="ds-preview">
       <TerminalPanel className="my-4">
         <div className="p-6 flex flex-wrap gap-3 items-start">{children}</div>
         {source != null && (

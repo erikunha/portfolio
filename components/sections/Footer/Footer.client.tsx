@@ -133,7 +133,7 @@ export function Footer() {
 
   return (
     <footer
-      className="border-t-0 pb-[var(--ds-space-pad,20px)] bg-transparent relative z-[1] overflow-hidden max-[900px]:pt-0 max-[900px]:pb-[calc(40px+env(safe-area-inset-bottom,0px))] max-[900px]:px-[var(--ds-space-pad,20px)] max-[768px]:py-7 max-[768px]:px-[var(--ds-space-pad,20px)]"
+      className="site-footer border-t-0 pb-[var(--ds-space-pad,20px)] bg-transparent relative z-[1] overflow-hidden max-[900px]:pt-0 max-[900px]:pb-[calc(40px+env(safe-area-inset-bottom,0px))] max-[900px]:px-[var(--ds-space-pad,20px)] max-[768px]:py-7 max-[768px]:px-[var(--ds-space-pad,20px)]"
       id="shutdown"
       ref={footerRef}
     >

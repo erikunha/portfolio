@@ -16,7 +16,7 @@ function ReceiptCard({
   return (
     <li
       className={cn(
-        'relative border border-signal-subtle',
+        'receipt-card relative border border-signal-subtle',
         'flex flex-col gap-[4px] md:gap-[6px]',
         'min-h-0 md:min-h-[170px]',
         'p-3 md:p-[18px_16px_16px]',
@@ -73,7 +73,7 @@ export function PerfReceiptsSection({ defer }: { defer?: boolean } = {}) {
       defer={defer}
     >
       {/* 4-col grid, 2-col on ≤900px. Hero spans 2 cols × 2 rows on desktop, 2 cols × 1 row on tablet. */}
-      <ul className="list-none m-0 p-0 grid grid-cols-2 min-[901px]:grid-cols-4 gap-2 md:gap-[14px]">
+      <ul className="perf-receipts-grid list-none m-0 p-0 grid grid-cols-2 min-[901px]:grid-cols-4 gap-2 md:gap-[14px]">
         <ReceiptCard {...hero} hero />
         {rest.map((r) => (
           <ReceiptCard key={r.metric} {...r} />

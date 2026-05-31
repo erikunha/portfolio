@@ -15,7 +15,7 @@ export type WindowChromeProps = ComponentPropsWithoutRef<'div'> & {
 export function WindowChrome({ size = 10, className, style, ...rest }: WindowChromeProps) {
   return (
     <div
-      className={cn('flex gap-[6px] items-center', className)}
+      className={cn('window-chrome flex gap-[6px] items-center', className)}
       style={{ '--wc-dot-size': `${size}px`, ...style } as React.CSSProperties}
       {...rest}
     >

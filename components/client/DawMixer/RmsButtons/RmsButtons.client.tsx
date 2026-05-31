@@ -28,7 +28,7 @@ export function RmsButtons({ buttons, initialActive, channelName }: RmsButtonsPr
   };
 
   return (
-    <div className="flex gap-[3px]">
+    <div className="rms-buttons flex gap-[3px]">
       {buttons.map((btn) => (
         <button
           key={btn}

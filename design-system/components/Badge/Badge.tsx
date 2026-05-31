@@ -9,7 +9,7 @@ export function Badge({ variant = 'default', size = 'md', children }: BadgeProps
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-[7px] border border-signal-subtle text-signal font-mono tracking-[0.12em] py-1 px-[10px] whitespace-nowrap uppercase',
+        'badge inline-flex items-center gap-[7px] border border-signal-subtle text-signal font-mono tracking-[0.12em] py-1 px-[10px] whitespace-nowrap uppercase',
         // At very narrow viewports (<360px) allow wrapping so it stays within bounds.
         // Tailwind has no built-in 360px breakpoint; use inline style via a CSS class.
         'max-[359px]:whitespace-normal max-[359px]:flex-wrap',

@@ -45,7 +45,7 @@ export function StatusBar() {
 
   return (
     <div
-      className="sticky top-0 z-[110] flex items-center justify-between px-[14px] py-1.5 pt-[calc(env(safe-area-inset-top,0px)+6px)] bg-surface border-b border-signal-subtle text-xs tracking-[0.06em] text-signal [font-variant-numeric:tabular-nums]"
+      className="status-bar sticky top-0 z-[110] flex items-center justify-between px-[14px] py-1.5 pt-[calc(env(safe-area-inset-top,0px)+6px)] bg-surface border-b border-signal-subtle text-xs tracking-[0.06em] text-signal [font-variant-numeric:tabular-nums]"
       role="status"
       aria-label="device status"
     >

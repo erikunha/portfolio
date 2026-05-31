@@ -12,7 +12,7 @@ const COMPONENTS = [
 export function ComponentNav() {
   return (
     <nav
-      className="flex flex-wrap gap-2 mb-6 pb-4 border-b border-border-default"
+      className="component-nav flex flex-wrap gap-2 mb-6 pb-4 border-b border-border-default"
       aria-label="Jump to component"
     >
       {COMPONENTS.map(({ id, label }) => (

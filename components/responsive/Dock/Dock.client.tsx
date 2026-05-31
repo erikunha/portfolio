@@ -95,7 +95,7 @@ export function Dock() {
 
   return (
     <nav
-      className="fixed left-0 right-0 bottom-0 z-[120] pb-[calc(8px+env(safe-area-inset-bottom,0px))] pt-2 px-2 bg-[rgba(0,0,0,0.92)] backdrop-blur-md border-t border-signal-subtle grid grid-cols-6 gap-0.5"
+      className="dock fixed left-0 right-0 bottom-0 z-[120] pb-[calc(8px+env(safe-area-inset-bottom,0px))] pt-2 px-2 bg-[rgba(0,0,0,0.92)] backdrop-blur-md border-t border-signal-subtle grid grid-cols-6 gap-0.5"
       aria-label="primary"
     >
       {ITEMS.map((it) => (

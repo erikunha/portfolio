@@ -50,7 +50,7 @@ export function ContactForm() {
   return (
     <form
       onSubmit={submit}
-      className="flex flex-col gap-[14px]"
+      className="contact-form flex flex-col gap-[14px]"
       aria-busy={status === 'submitting'}
       data-testid="contact-form"
     >
