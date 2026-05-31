@@ -134,6 +134,8 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 | 11 — DX | pre-commit = Biome (<1s) + commitlint (scope required, error on missing); pre-push = full verify + branch-name `<type>/<description>` enforced; never disable a gate to merge |
 | 12 — Design system | `tokens:check` + `lint-token-boundary` + `lint-no-magic-values` + `contrast-check` + component-docs CI gates |
 
+**Hook authoring:** `.claude/hooks/*` PreToolUse guards that must BLOCK a tool call exit with code **2** (exit 1 is a non-blocking warning — the command still runs). `bash-guard.sh` blocks (broad `git add`, npm/yarn, `gh pr merge`, force-push, fallow non-read-only) use `exit 2`; verify a guard blocks with a live test, not its printed `[BLOCKED]` message.
+
 ## Package + manager policy
 
 - **pnpm only.** `packageManager: pnpm@latest`. Don't use npm or yarn.

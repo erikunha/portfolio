@@ -51,6 +51,61 @@ if printf '%s' "$CMD" | grep -qP 'git push.*(--force|-f)\b.*\bmain\b|git push.*\
   exit 2
 fi
 
+# ── fallow CLI: enforce pinned + read-only (FAIL-CLOSED allow-list) ──────────
+# fallow is an on-demand audit tool (see .claude/skills/fallow-audit). The ONLY
+# allowed form is a single, un-chained:  npx fallow@<PIN> <read-only-subcommand>
+# Anything else is denied: write/runtime subcommands (fix/init/hooks/migrate/
+# watch/ci/coverage/license/telemetry), --fix/cloud flags, FALLOW_* env, config
+# flags, alternate runners (pnpm dlx/bunx/yarn dlx), unpinned/global/wrong-version,
+# and any shell chaining/substitution. WHY: npx has no lockfile protection and
+# fix mutates source; this is the mechanical gate (PreToolUse exit 2), not the
+# SKILL.md prose. The allow-list is fail-closed — unrecognized shapes are denied,
+# so new fallow subcommands/flags are blocked until reviewed. PIN drives the regex.
+# Residual limit: a renamed/copied binary (cp .../fallow /tmp/f && /tmp/f fix) has
+# no `fallow` token and cannot be name-matched — see DECISIONS.md.
+FALLOW_PIN='2.85.0'
+FALLOW_PIN_RE=$(printf '%s' "$FALLOW_PIN" | sed 's/\./\\./g')
+# Normalize whitespace and append a trailing space so end-of-token == a space.
+FALLOW_CMD=$(printf '%s ' "$CMD" | tr '\n\t' '  ')
+if printf '%s' "$FALLOW_CMD" | grep -qE '(^|[[:space:]&|;/])fallow[[:space:]@]'; then
+  # A. No shell chaining / substitution / REDIRECTION alongside fallow. Kills the
+  #    decoy-token bypass (valid pinned call + a second malicious clause) AND the
+  #    redirect-write primitive (`fallow audit > ~/.zshrc` truncates an arbitrary
+  #    file with fallow output). Redirect chars < > are blocked with ; | & ` $(.
+  if printf '%s' "$FALLOW_CMD" | grep -qE '[;|&`<>]|\$\('; then
+    printf '[BLOCKED] Run fallow bare — no chaining/substitution/redirection (; | & ` $() < >).\n'
+    printf 'Read its output directly: npx fallow@%s audit\n' "$FALLOW_PIN"
+    exit 2
+  fi
+  # B. No FALLOW_* env (exfil/runtime/config namespace) and no config-file flag
+  #    (a .fallowrc can enable auto-fix or a remote extends: URL).
+  if printf '%s' "$FALLOW_CMD" | grep -qE '(^|[[:space:]])FALLOW_[A-Z0-9_]+=' \
+     || printf '%s' "$FALLOW_CMD" | grep -qE -- '(^|[[:space:]])(-c|--config|--fallowrc)([[:space:]=])'; then
+    printf '[BLOCKED] fallow env (FALLOW_*) or config-file flag — exfil + untrusted-config surface.\n'
+    exit 2
+  fi
+  # C. No destructive / file-writing / runtime / cloud / CI flags anywhere.
+  # NB: read-only subcommands DO expose file-write flags (--sarif-file writes an
+  # arbitrary path; --save-*baseline/--save-snapshot write files, and
+  # --save-regression-baseline with no path writes INTO .fallowrc). --save- is a
+  # forward-compatible prefix; --ci is anchored so it does not match --circular-deps.
+  # This is a deny-list (the subcommand gate D is the allow-list); new fallow flags
+  # are covered by the re-audit-on-bump protocol in DECISIONS.md.
+  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply|--save-|--sarif-file|--ci[[:space:]=]'; then
+    printf '[BLOCKED] fallow write/cloud/CI flag detected (e.g. --sarif-file, --save-*, --ci) — read-only audit only.\n'
+    exit 2
+  fi
+  # D. Fail-closed allow-list: the WHOLE command must be exactly the pinned npx
+  #    form with a read-only subcommand. Rejects unpinned, global, wrong-version,
+  #    pnpm dlx/bunx/yarn dlx, path forms, and every write subcommand.
+  if ! printf '%s' "$FALLOW_CMD" | grep -qE "^[[:space:]]*npx[[:space:]]+(--yes[[:space:]]+|-y[[:space:]]+)?fallow@${FALLOW_PIN_RE}[[:space:]]+(audit|dead-code|dupes|health|flags|list|workspaces|explain|config|schema)[[:space:]]"; then
+    printf '[BLOCKED] fallow must be exactly: npx fallow@%s <read-only subcommand>\n' "$FALLOW_PIN"
+    printf 'Allowed: audit dead-code dupes health flags list workspaces explain config schema.\n'
+    printf 'Rejected: unpinned/global fallow, other versions, pnpm dlx/bunx/yarn dlx, write subcommands.\n'
+    exit 2
+  fi
+fi
+
 # ── Warn: (design-system) commit scope — changelog:sync required ─────────────
 # CLAUDE.md: after any (design-system) commit, run pnpm changelog:sync.
 # This warn fires before the commit so the agent queues the follow-up immediately.
