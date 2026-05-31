@@ -728,4 +728,12 @@
     margin-top: 2px;
     opacity: 0.8;
   }
+
+  /* ── GuitarSection scan beam container ──────────────────────────────────── */
+  /* WHY: guitar-scan-beam uses 100cqh in its @keyframes to traverse the live-cam
+     container height without animating layout-triggering `top`. container-type
+     provides the containment context so cqh resolves to the element's height. */
+  .guitar-content {
+    container-type: size;
+  }
 }

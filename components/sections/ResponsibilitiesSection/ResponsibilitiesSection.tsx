@@ -18,7 +18,7 @@ export function ResponsibilitiesSection({ defer }: { defer?: boolean } = {}) {
             {'// role boundaries, in unix terms'}
           </span>
         </div>
-        <pre className="m-0 font-mono text-sm leading-[1.85] text-text-body whitespace-pre max-[768px]:text-xs max-[768px]:whitespace-pre-wrap max-[768px]:overflow-wrap-break">
+        <pre className="m-0 font-mono text-sm leading-[1.85] text-text-body whitespace-pre max-[768px]:text-xs max-[768px]:whitespace-pre-wrap max-[768px]:break-words">
           {responsibilities.map((r) => (
             <span key={r.name}>
               <span className="text-signal font-bold tracking-[0.02em]">{r.perms}</span>

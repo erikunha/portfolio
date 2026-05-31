@@ -142,7 +142,7 @@ function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
         <span>{liveCam.status}</span>
         <span>{liveCam.cameraLabel}</span>
       </div>
-      <div className="relative min-h-[200px] overflow-hidden flex-1 isolate">
+      <div className="guitar-content relative min-h-[200px] overflow-hidden flex-1 isolate">
         <Image
           src={liveCam.photo}
           alt="Erik playing guitar on stage, live show"

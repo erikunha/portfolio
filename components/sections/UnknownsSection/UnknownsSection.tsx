@@ -6,7 +6,7 @@ export function UnknownsSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module id="sec-unknowns" header="CAT ~/.UNKNOWNS" icon={<IconUnknowns />} defer={defer}>
       <div>
-        <pre className="m-0 font-mono text-sm leading-[1.75] text-text-body whitespace-pre-wrap max-[768px]:whitespace-pre-wrap max-[768px]:overflow-wrap-break">
+        <pre className="m-0 font-mono text-sm leading-[1.75] text-text-body whitespace-pre-wrap max-[768px]:whitespace-pre-wrap max-[768px]:break-words">
           <span className="text-text-muted">
             <span className="text-signal mr-1"> </span>
             {' cat ~/.unknowns'}

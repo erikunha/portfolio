@@ -399,10 +399,10 @@
 
   @keyframes guitar-scan-beam {
     from {
-      top: -30px;
+      transform: translateY(0);
     }
     to {
-      top: 100%;
+      transform: translateY(calc(100cqh + 60px));
     }
   }
 
@@ -421,6 +421,7 @@
     mix-blend-mode: screen;
     pointer-events: none;
     animation: guitar-scan-beam 7s linear infinite;
+    will-change: transform;
   }
 
   @media (prefers-reduced-motion: reduce) {
