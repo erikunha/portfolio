@@ -1,7 +1,8 @@
 .root {
   position: sticky;
   top: 28px; /* below status bar */
-  z-index: 109;
+  /* One below the header chrome (StatusBar) so it sits beneath it in the mobile stack. */
+  z-index: calc(var(--ds-z-chrome) - 1);
   display: flex;
   align-items: center;
   gap: 10px;

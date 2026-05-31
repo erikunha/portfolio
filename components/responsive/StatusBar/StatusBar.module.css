@@ -1,7 +1,9 @@
 .root {
   position: sticky;
   top: 0;
-  z-index: 110;
+  /* Co-planar with DesktopTopbar by design — the two never render at the same
+     viewport (desktop topbar vs mobile status bar), so sharing --ds-z-chrome is safe. */
+  z-index: var(--ds-z-chrome);
   display: flex;
   align-items: center;
   justify-content: space-between;
