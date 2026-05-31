@@ -21,7 +21,7 @@
 .project {
   position: relative;
   border: 1px solid var(--ds-color-signal-subtle);
-  padding: 20px;
+  padding: var(--ds-space-pad);
   transition:
     border-color 200ms ease,
     box-shadow 200ms ease;
@@ -92,9 +92,6 @@
    Responsive — smaller tiles on mobile (from _layout.css lines 229–242)
    ───────────────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .project {
-    padding: 14px;
-  }
   .projectFolder {
     width: 32px;
     height: 26px;
