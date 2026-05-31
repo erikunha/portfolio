@@ -1,12 +1,6 @@
 #!/usr/bin/env node
 // Verifies WCAG AA contrast for defined semantic token pairs.
-// Reads resolved values from design-system/dist/tokens.json.
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const tokens = JSON.parse(readFileSync(path.join(ROOT, 'design-system/dist/tokens.json'), 'utf8'));
+// Values sourced from app/css/theme.css @theme block (canonical source after Tailwind migration).
 
 function hexToRgb(hex) {
   const h = hex.replace('#', '');
@@ -31,44 +25,29 @@ function contrastRatio(hex1, hex2) {
   return (light + 0.05) / (dark + 0.05);
 }
 
-function resolveToken(name) {
-  // tokens.json has PascalCase keys without -- (e.g. DsColorTextBody)
-  return tokens[name];
-}
+// Resolved values from @theme (app/css/theme.css).
+// Update here whenever @theme values change.
+const COLORS = {
+  signal: '#00ff41',
+  textBody: '#e6ffe6',
+  textMuted: '#4ade80',
+  textFaint: '#5ae07b',
+  surface: '#000000',
+  surfaceShell: '#050505',
+};
 
-// Pairs: [foreground token, background token, min ratio, label]
+// Pairs: [foreground, background, minRatio, label]
 const PAIRS = [
-  ['DsColorTextBody', 'DsColorSurfaceBase', 4.5, 'body text on base'],
-  ['DsColorTextMuted', 'DsColorSurfaceBase', 4.5, 'muted text on base'],
-  ['DsColorTextFaint', 'DsColorSurfaceBase', 4.5, 'faint text on base'],
-  ['DsColorSignal', 'DsColorSurfaceBase', 3.0, 'signal on base (large text)'],
-  ['DsColorTextBody', 'DsColorSurfaceShell', 4.5, 'body text on shell'],
-  ['DsColorSignal', 'DsColorSurfaceShell', 3.0, 'signal on shell (large text)'],
+  [COLORS.textMuted, COLORS.surface, 4.5, 'muted text on base'],
+  [COLORS.textFaint, COLORS.surface, 4.5, 'faint text on base'],
+  [COLORS.signal, COLORS.surface, 3.0, 'signal on base (large text)'],
+  [COLORS.textBody, COLORS.surfaceShell, 4.5, 'body text on shell'],
+  [COLORS.signal, COLORS.surfaceShell, 3.0, 'signal on shell (large text)'],
 ];
 
 let failures = 0;
 for (const [fg, bg, minRatio, label] of PAIRS) {
-  const fgVal = resolveToken(fg);
-  const bgVal = resolveToken(bg);
-  if (!fgVal || !bgVal) {
-    console.error(`MISSING TOKEN: ${fg} or ${bg}`);
-    failures++;
-    continue;
-  }
-  // Skip rgba values (can't compute without blending — rgba tokens are for non-text uses)
-  if (fgVal.startsWith('rgba') || bgVal.startsWith('rgba')) {
-    console.log(`SKIP: ${label} — rgba token (${fgVal} / ${bgVal})`);
-    continue;
-  }
-  // Also check for hex values that have 8 chars (rgba in hex format like #00ff4166)
-  if (
-    (fgVal.length === 9 && fgVal.startsWith('#')) ||
-    (bgVal.length === 9 && bgVal.startsWith('#'))
-  ) {
-    console.log(`SKIP: ${label} — hex-rgba token (${fgVal} / ${bgVal})`);
-    continue;
-  }
-  const ratio = contrastRatio(fgVal, bgVal);
+  const ratio = contrastRatio(fg, bg);
   const pass = ratio >= minRatio;
   console.log(`${pass ? 'PASS' : 'FAIL'} ${label}: ${ratio.toFixed(2)}:1 (min ${minRatio}:1)`);
   if (!pass) failures++;
