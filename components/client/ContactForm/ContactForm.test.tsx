@@ -150,9 +150,9 @@ describe('contact form error region', () => {
 // ─── focus rings ─────────────────────────────────────────────────────────────
 
 describe('focus rings', () => {
-  it('_base.css ships a button:focus-visible rule', () => {
+  it('base.css ships a button:focus-visible rule', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate :focus-visible
-    const base = readFileSync(path.resolve(__dirname, '../../../app/css/_base.css'), 'utf-8');
+    const base = readFileSync(path.resolve(__dirname, '../../../app/css/base.css'), 'utf-8');
     expect(base).toMatch(/button:focus-visible/);
   });
 });

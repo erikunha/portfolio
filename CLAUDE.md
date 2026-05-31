@@ -86,7 +86,7 @@ Invoke the named skill inline (not as a subagent) before the described action. P
 ## Stack (locked)
 
 - Next.js 16 App Router · React 19 · TypeScript strict · Biome · pnpm
-- **CSS:** Tailwind v4 (`@tailwindcss/vite`, theme in `app/css/theme.css`). Design tokens live in `app/css/theme.css` as CSS custom properties — no Style Dictionary pipeline, no CSS modules. PostCSS pipeline removed — Next.js + Turbopack handles nesting + autoprefix natively via Lightning CSS. See `DECISIONS.md` for the Tailwind v4 migration ADR (2026-05-31).
+- **CSS:** Tailwind v4 (`@tailwindcss/postcss`, theme in `app/css/theme.css`). Design tokens live in `app/css/theme.css` as CSS custom properties — no Style Dictionary pipeline, no CSS modules. PostCSS pipeline added back for Tailwind v4 via `@tailwindcss/postcss` — no other PostCSS plugins. See `DECISIONS.md` for the Tailwind v4 migration ADR (2026-05-31).
 - Vercel Edge end-to-end deployment
 - Upstash Redis for rate-limit + KV log
 - Vercel AI Gateway via the AI SDK v6 (`ai` package, `streamText`) with the model string `anthropic/claude-haiku-4-5` for `/api/ask`; ephemeral prompt cache preserved via `providerOptions.anthropic.cacheControl`. Needs `AI_GATEWAY_API_KEY` (OIDC token on Vercel). Migrated 2026-05-21 — see DECISIONS.md.

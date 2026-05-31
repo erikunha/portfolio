@@ -16,7 +16,7 @@ export type AsAnchor = ButtonBaseProps &
 export type ButtonProps = AsButton | AsAnchor;
 
 const baseClasses =
-  'inline-flex items-center justify-content-center px-[14px] border border-signal-subtle text-xs font-bold tracking-[0.1em] uppercase cursor-pointer transition-[box-shadow,background] duration-[var(--ds-duration-base)] ease-out no-underline focus-visible:outline-2 focus-visible:outline-signal focus-visible:outline-offset-2 aria-disabled:opacity-40 aria-disabled:pointer-events-none disabled:opacity-40 disabled:pointer-events-none';
+  'inline-flex items-center justify-center px-[14px] border border-signal-subtle text-xs font-bold tracking-[0.1em] uppercase cursor-pointer transition-[box-shadow,background] duration-200 ease-out no-underline focus-visible:outline-2 focus-visible:outline-signal focus-visible:outline-offset-2 aria-disabled:opacity-40 aria-disabled:pointer-events-none disabled:opacity-40 disabled:pointer-events-none';
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary: 'bg-signal text-surface border-signal hover:shadow-[0_0_12px_var(--color-signal)]',

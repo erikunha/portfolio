@@ -1118,6 +1118,11 @@
     transition: none;
   }
 
+  .shell-cmd-hint:focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 2px;
+  }
+
   /* ── ToTopButton — show/hide transition + fixed positioning ─────────────── */
 
   .to-top-btn {
@@ -1161,6 +1166,11 @@
 
   body[data-motion="reduce"] .to-top-btn {
     transition: none;
+  }
+
+  .to-top-btn:focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 2px;
   }
 
   /* ── FaderIsland — interactive draggable fader ───────────────────────────── */

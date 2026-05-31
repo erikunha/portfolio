@@ -56,7 +56,7 @@ describe('shell command hint', () => {
 describe('paint cost CSS (shipped build assets)', () => {
   it('the body rule carries no text-shadow and no optimizeLegibility', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate paint cost
-    const base = readFileSync(path.resolve(__dirname, '../app/css/_base.css'), 'utf-8');
+    const base = readFileSync(path.resolve(__dirname, '../app/css/base.css'), 'utf-8');
     // Leading \s* tolerates any indentation level; the @layer base wrapper was
     // removed during the CSS Modules migration.
     const bodyBlock = base.match(/^\s*html,\s*\n\s*body\s*\{[^}]+\}/m)?.[0];
