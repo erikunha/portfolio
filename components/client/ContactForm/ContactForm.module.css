@@ -70,13 +70,13 @@ body[data-motion="reduce"] .send {
   transition: none;
 }
 
-@media (min-width: 769px) {
+@media (min-width: 769px) /* --bp-mobile-up */ {
   .cursor {
     font-size: var(--ds-font-size-sm);
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   .submitrow {
     flex-direction: column;
     align-items: stretch;
