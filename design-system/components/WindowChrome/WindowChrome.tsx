@@ -5,8 +5,7 @@
 // a specific context size (9px mobile, 10px shell, 12px desktop) pass it
 // explicitly so the primitive stays context-aware without conditional logic.
 import type { ComponentPropsWithoutRef } from 'react';
-import { cx } from '../../lib/cx';
-import styles from './WindowChrome.module.css';
+import { cn } from '@/lib/cn';
 
 export type WindowChromeProps = ComponentPropsWithoutRef<'div'> & {
   /** Dot diameter in px. Defaults to 10. */
@@ -16,13 +15,28 @@ export type WindowChromeProps = ComponentPropsWithoutRef<'div'> & {
 export function WindowChrome({ size = 10, className, style, ...rest }: WindowChromeProps) {
   return (
     <div
-      className={cx(styles.root, className)}
+      className={cn('flex gap-[6px] items-center', className)}
       style={{ '--wc-dot-size': `${size}px`, ...style } as React.CSSProperties}
       {...rest}
     >
-      <span aria-hidden="true" className={cx(styles.dot, styles.dotRed)} data-dot="red" />
-      <span aria-hidden="true" className={cx(styles.dot, styles.dotYellow)} data-dot="yellow" />
-      <span aria-hidden="true" className={cx(styles.dot, styles.dotGreen)} data-dot="green" />
+      <span
+        aria-hidden="true"
+        className="block flex-shrink-0 rounded-full bg-chrome-close"
+        style={{ width: 'var(--wc-dot-size)', height: 'var(--wc-dot-size)' }}
+        data-dot="red"
+      />
+      <span
+        aria-hidden="true"
+        className="block flex-shrink-0 rounded-full bg-chrome-minimize"
+        style={{ width: 'var(--wc-dot-size)', height: 'var(--wc-dot-size)' }}
+        data-dot="yellow"
+      />
+      <span
+        aria-hidden="true"
+        className="block flex-shrink-0 rounded-full bg-chrome-maximize"
+        style={{ width: 'var(--wc-dot-size)', height: 'var(--wc-dot-size)' }}
+        data-dot="green"
+      />
     </div>
   );
 }
