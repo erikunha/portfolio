@@ -2,7 +2,7 @@
    via the section `id` prop) and the document body, so they cannot be scoped.
    The .page flex column (page.module.css) is what makes `order` effective. */
 
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   :global(#sec-readme) {
     order: 1;
   }

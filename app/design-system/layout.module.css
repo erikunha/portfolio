@@ -92,7 +92,7 @@
   color: var(--ds-color-signal);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   .content table {
     display: block;
     overflow-x: auto;
@@ -100,7 +100,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   .root {
     flex-direction: column;
     padding-top: 0;

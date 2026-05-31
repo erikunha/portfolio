@@ -59,7 +59,7 @@
   margin: var(--ds-space-gap) 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   .root {
     flex-direction: row;
     flex-wrap: wrap;

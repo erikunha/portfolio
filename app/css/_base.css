@@ -69,7 +69,7 @@ body {
   overflow-x: hidden;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   html {
     scroll-padding-top: 76px; /* statusbar ~28px + window-chrome ~44px + buffer */
   }
@@ -159,7 +159,7 @@ h1 {
   font-weight: 900;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   :root {
     --ds-space-rhythm: 18px;
     --ds-space-pad: 14px;
@@ -202,7 +202,7 @@ h1 {
    Scoped to 769px–900px so the ≤768px :root block above takes precedence at
    mobile widths. Using a min-width lower bound prevents the cascade from
    overriding the more-specific 768px values at narrower viewports. */
-@media (min-width: 769px) and (max-width: 900px) {
+@media (min-width: 769px) /* --bp-mobile-up */ and (max-width: 900px) {
   :root {
     --ds-space-rhythm: 40px;
     --ds-space-pad: 18px;
@@ -219,7 +219,7 @@ h1 {
 .mobile-only {
   display: none;
 }
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   .desktop-only {
     display: none;
   }

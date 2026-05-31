@@ -8,13 +8,13 @@
   padding: 60px var(--ds-space-pad) 0;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px) /* --bp-tablet */ {
   .page {
     padding: 20px 18px 0;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   .page {
     padding: 14px var(--ds-space-pad) 0;
   }
