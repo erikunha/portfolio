@@ -18,7 +18,11 @@ function parseTokens(css: string): Record<string, string> {
   // Match: --token-name: value;
   const re = /--([a-z0-9-]+)\s*:\s*([^;]+);/g;
   for (const m of css.matchAll(re)) {
-    map[`--${m[1]}`] = m[2].trim();
+    const name = m[1];
+    const value = m[2];
+    if (name !== undefined && value !== undefined) {
+      map[`--${name}`] = value.trim();
+    }
   }
   return map;
 }
