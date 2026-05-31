@@ -2,4 +2,6 @@
 @import "tailwindcss";
 @import "./css/theme.css";
 @import "./css/base.css";
+@import "./css/crt.css";
+@import "./css/animations.css";
 @import "./css/components.css";
