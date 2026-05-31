@@ -1,6 +1,5 @@
 import spaceTokens from '../../../../design-system/tokens/space.json';
 import { resolveValue } from '../../_lib/resolve-tokens';
-import styles from './SpacingRuler.module.css';
 
 type Props = { token: string; usage?: string };
 
@@ -14,14 +13,18 @@ export function SpacingRuler({ token, usage }: Props) {
   const barWidth = Number.isNaN(numericPx) ? '100%' : `${Math.min(numericPx, MAX_BAR_PX)}px`;
 
   return (
-    <div className={styles.row}>
-      <div className={styles.labels}>
-        <code className={styles.name}>--{token}</code>
-        <span className={styles.value}>{resolved}</span>
-        {usage && <span className={styles.usage}>{usage}</span>}
+    <div className="flex items-center gap-3 py-2 border-b border-border-default last:border-0">
+      <div className="flex flex-col gap-0.5 min-w-[140px]">
+        <code className="text-[10px] font-mono text-text-muted tracking-widest">--{token}</code>
+        <span className="text-xs font-mono text-text-body">{resolved}</span>
+        {usage && <span className="text-[10px] font-mono text-text-faint">{usage}</span>}
       </div>
-      <div className={styles.track}>
-        <div className={styles.bar} style={{ width: barWidth }} aria-hidden="true" />
+      <div className="flex-1 h-3 bg-surface border border-border-default relative overflow-hidden">
+        <div
+          className="absolute left-0 top-0 h-full bg-signal-quiet border-r border-signal"
+          style={{ width: barWidth }}
+          aria-hidden="true"
+        />
       </div>
     </div>
   );
