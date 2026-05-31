@@ -28,21 +28,21 @@
 */
 
 /*
-  Approved breakpoint values. lint-breakpoints.mjs reads the --bp-* custom properties
+  Approved breakpoint values. lint-breakpoints.mjs reads the --ds-bp-* custom properties
   below to build the approved set. Raw width @media queries that use any OTHER pixel
   value will fail the CI gate. To add a new breakpoint: register it here first.
-  CSS custom properties also allow JS access: getComputedStyle(root).getPropertyValue('--bp-mobile')
+  CSS custom properties also allow JS access: getComputedStyle(root).getPropertyValue('--ds-bp-mobile')
 */
 :root {
-  /* Canonical breakpoints — read via JS as `getComputedStyle(root).getPropertyValue('--bp-mobile')` */
-  --bp-mobile: 768px;
-  --bp-mobile-up: 769px;
-  --bp-tablet: 900px;
-  --bp-tablet-up: 901px;
+  /* Canonical breakpoints — read via JS as `getComputedStyle(root).getPropertyValue('--ds-bp-mobile')` */
+  --ds-bp-mobile: 768px;
+  --ds-bp-mobile-up: 769px;
+  --ds-bp-tablet: 900px;
+  --ds-bp-tablet-up: 901px;
 
   /* Orphan breakpoints */
-  --bp-wide: 1080px;
-  --bp-narrow: 560px;
-  --bp-xs: 359px;
-  --bp-xxs: 340px;
+  --ds-bp-wide: 1080px;
+  --ds-bp-narrow: 560px;
+  --ds-bp-xs: 359px;
+  --ds-bp-xxs: 340px;
 }

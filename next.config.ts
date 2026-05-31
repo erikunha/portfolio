@@ -24,10 +24,9 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   typedRoutes: true,
   experimental: {
-    // Force @custom-media resolution in Lightning CSS (applies to both Turbopack
-    // and webpack). WHY: The breakpoint contract (M3) uses @custom-media to
-    // centralise 54 raw width literals. 'include' forces transpilation regardless
-    // of browserslist targets. Spike conducted 2026-05-30; see DECISIONS.md.
+    // WHY: @custom-media is NOT resolved across CSS Module boundaries in Lightning CSS
+    // (spike 2026-05-30, see DECISIONS.md — NOT RESOLVED verdict). This flag is retained
+    // for same-file @custom-media usage. M3 breakpoint contract uses a lint gate instead.
     lightningCssFeatures: {
       include: ['custom-media-queries'],
     },

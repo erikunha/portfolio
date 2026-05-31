@@ -46,10 +46,10 @@ try {
 }
 
 // Extract approved pixel values from CSS custom properties in the definition file.
-// Reads --bp-* properties defined in :root whose values are plain pixel values.
-// E.g. "--bp-mobile: 768px;" → approves "768px".
+// Reads --ds-bp-* properties defined in :root whose values are plain pixel values.
+// E.g. "--ds-bp-mobile: 768px;" → approves "768px".
 // This avoids requiring empty @media blocks (which trigger Biome noEmptyBlock).
-const DEFINITION_PROP_RE = /--bp-[a-z-]+\s*:\s*(\d+px)\s*;/g;
+const DEFINITION_PROP_RE = /--ds-bp-[a-z-]+\s*:\s*(\d+px)\s*;/g;
 const approvedValues = new Set();
 for (const match of definitionContent.matchAll(DEFINITION_PROP_RE)) {
   approvedValues.add(match[1]);
@@ -60,34 +60,6 @@ if (approvedValues.size === 0) {
     `lint-breakpoints: no approved values found in ${DEFINITION_REL} — gate cannot run`,
   );
   process.exit(1);
-}
-
-// --- Feature-query allowlist: patterns that match NON-width media features ---
-// If a media query contains ONLY these features, skip it entirely.
-const FEATURE_ALLOWLIST = [
-  /prefers-reduced-motion/,
-  /prefers-color-scheme/,
-  /hover\s*:/,
-  /pointer\s*:/,
-  /any-hover\s*:/,
-  /any-pointer\s*:/,
-  /color\s*:/,
-  /color-index\s*:/,
-  /monochrome\s*:/,
-  /aspect-ratio\s*:/,
-  /resolution\s*:/,
-  /orientation\s*:/,
-  /print/,
-  /screen/,
-  /speech/,
-  /all/,
-  /not\s+all/,
-  /not\s+print/,
-];
-
-/** Returns true if a media condition is a non-width feature query that should be ignored. */
-function isAllowlistedFeature(mediaCondition) {
-  return FEATURE_ALLOWLIST.some((re) => re.test(mediaCondition));
 }
 
 /** Returns true if a media condition contains a width query (max-width or min-width). */
@@ -133,12 +105,6 @@ for (const rel of allFiles.sort()) {
 
     // Skip queries that don't contain any width constraint at all
     if (!containsWidthQuery(condition)) continue;
-
-    // If the entire condition is allowlisted (e.g. a pure feature query that
-    // happens to include "width" via "min-device-width" — rare but defensive), skip it.
-    // For compound queries like "(max-width: 768px) and (prefers-reduced-motion: reduce)"
-    // we still check the width part.
-    if (isAllowlistedFeature(condition) && !containsWidthQuery(condition)) continue;
 
     // Extract each width px value from the condition
     for (const valueMatch of condition.matchAll(WIDTH_VALUE_RE)) {
