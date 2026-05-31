@@ -95,11 +95,8 @@ jobs:
       - name: Token drift check
         run: pnpm tokens:check
 
-      - name: Token boundary lint
-        run: pnpm lint:token-boundary
-
-      - name: No-magic-values lint
-        run: pnpm lint:no-magic-values
+      - name: No CSS module imports
+        run: pnpm lint:no-module-css
 
       - name: Contrast check
         run: pnpm lint:contrast

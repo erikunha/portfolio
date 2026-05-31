@@ -67,11 +67,8 @@ describe('paint cost CSS (shipped build assets)', () => {
 
   it('the crt-flicker animation runs at >= 3s (cheap, not jittery)', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate @keyframes timing
-    const crt = readFileSync(
-      path.resolve(__dirname, '../components/responsive/CRTOverlay/CRTOverlay.module.css'),
-      'utf-8',
-    );
-    const flicker = crt.match(/\.flicker\s*\{[^}]+\}/)?.[0] ?? '';
+    const crt = readFileSync(path.resolve(__dirname, '../app/css/components.css'), 'utf-8');
+    const flicker = crt.match(/\.crt-flicker\s*\{[^}]+\}/)?.[0] ?? '';
     const dur = flicker.match(/animation:\s*crt-flicker\s+([\d.]+)s/)?.[1];
     expect(Number(dur)).toBeGreaterThanOrEqual(3);
   });
