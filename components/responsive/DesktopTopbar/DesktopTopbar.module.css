@@ -18,31 +18,6 @@
   height: 44px;
 }
 
-.dots {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: block;
-}
-
-.dotRed {
-  background: var(--ds-chrome-close);
-}
-
-.dotYellow {
-  background: var(--ds-chrome-minimize);
-}
-
-.dotGreen {
-  background: var(--ds-chrome-maximize);
-}
-
 .tabs {
   display: flex;
   gap: 8px;
