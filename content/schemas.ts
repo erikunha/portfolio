@@ -238,7 +238,6 @@ const DawMixerChannelSchema = z.object({
   focused: z.boolean().optional(),
   plugins: z.array(DawMixerPluginSchema).min(1).max(5),
   faderPct: z.number().min(0).max(100),
-  db: z.string().min(1),
   meterPct: z.number().min(0).max(100),
   meterClipping: z.boolean().optional(),
   knob1: DawMixerKnobSchema,
