@@ -73,7 +73,7 @@
 }
 
 /* ── 768px responsive ─────────────────────────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   .vruleMobile {
     display: block;
     color: var(--ds-color-signal);

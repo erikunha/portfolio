@@ -47,7 +47,7 @@
 
 /* At very narrow viewports (<360px) the badge text overflows the hero
    container. Allow wrapping so it stays within bounds. */
-@media (max-width: 359px) {
+@media (max-width: 359px) /* --bp-xs */ {
   .root {
     white-space: normal;
     flex-wrap: wrap;

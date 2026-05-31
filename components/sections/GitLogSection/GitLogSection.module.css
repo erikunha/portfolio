@@ -104,7 +104,7 @@
   text-overflow: ellipsis;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   .root {
     font-size: var(--ds-font-size-xs);
   }

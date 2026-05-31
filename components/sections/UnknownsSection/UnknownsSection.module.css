@@ -35,7 +35,7 @@
   font-weight: 700;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   .root pre {
     font-size: var(--ds-font-size-sm);
     white-space: pre-wrap;
