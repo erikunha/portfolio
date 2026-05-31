@@ -8,37 +8,43 @@ import { heroTagline } from '@/content/hero';
 import { Badge, Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
-import styles from './Hero.module.css';
 
 export function Hero() {
   return (
     <>
       {/* Desktop: two-column layout — boot animation left, bio panel right.
           id="bio" is the anchor target used by DesktopTopbar nav links.
-          Hidden on mobile via .desktop CSS rule (max-width: 768px). */}
-      <section id="bio" className={`${styles.root} ${styles.desktop}`} data-testid="hero-desktop">
-        <div className={styles.left}>
+          Hidden on mobile via max-md CSS (max-width: 768px). */}
+      <section
+        id="bio"
+        className="hero-desktop relative border border-signal-subtle min-h-[640px] overflow-hidden mb-10 md:mb-[40px] bg-transparent transition-transform duration-100 ease-out motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none flex"
+        data-testid="hero-desktop"
+      >
+        <div className="flex-1 relative overflow-hidden">
           <HeroBootAnimation variant="desktop" />
         </div>
-        <aside className={styles.bio}>
-          <h1 className={styles.name} data-testid="hero-name">
+        <aside className="hero-bio flex-1 border-l border-dashed border-signal-subtle flex flex-col justify-end px-6 py-8 gap-[10px]">
+          <h1
+            className="font-mono font-bold text-[32px] md:text-[48px] text-signal m-0 mb-1 leading-[1.2]"
+            data-testid="hero-name"
+          >
             Erik Henrique Alves Cunha
           </h1>
-          <p className={styles.tagline}>{heroTagline}</p>
-          <p className={styles.meta}>
+          <p className="text-text-body text-sm leading-[1.55] mb-2">{heroTagline}</p>
+          <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-text-muted text-sm tracking-[0.08em] mb-3.5">
             <span>
-              LOC: <b>Brazil</b>
+              LOC: <b className="text-signal font-bold">Brazil</b>
             </span>
             <span>
-              NOW: <b>Betsson</b>
+              NOW: <b className="text-signal font-bold">Betsson</b>
             </span>
             <span>EN/PT/FR/ES</span>
           </p>
-          <div className={styles.status}>
+          <div className="self-start">
             <Badge variant="dot">OPEN_TO_RELOCATION · WORLDWIDE</Badge>
           </div>
           <HeroStats />
-          <div className={styles.ctas} data-testid="hero-ctas">
+          <div className="grid grid-cols-2 gap-3 mt-3" data-testid="hero-ctas">
             <Button
               as="a"
               variant="primary"
@@ -64,30 +70,36 @@ export function Hero() {
       </section>
 
       {/* Mobile: stacked layout — boot animation on top, bio below.
-          Hidden on desktop via .mobile CSS rule (min-width: 769px).
+          Hidden on desktop via hero-mobile CSS class (min-width: 769px).
           No id needed here — anchor target #bio is on the desktop section. */}
-      <section className={`${styles.root} ${styles.mobile}`} data-testid="hero-mobile">
-        <div className={styles.inner}>
+      <section
+        className="hero-mobile relative border border-signal-subtle overflow-hidden mb-10 bg-transparent mt-2 hero-boot-text"
+        data-testid="hero-mobile"
+      >
+        <div className="relative z-[1] p-4 pb-[18px]">
           <HeroBootAnimation variant="mobile" />
 
-          <h1 className={styles.name} data-testid="hero-name">
+          <h1
+            className="font-mono font-bold text-[24px] text-signal border-t border-dashed border-signal-quiet pt-3.5 mt-1.5 mb-0.5 leading-[1.2]"
+            data-testid="hero-name"
+          >
             Erik Henrique Alves Cunha
           </h1>
-          <p className={styles.tagline}>{heroTagline}</p>
-          <p className={styles.meta}>
+          <p className="text-text-body text-sm leading-[1.55] mb-2">{heroTagline}</p>
+          <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-text-muted text-sm tracking-[0.08em] mb-3.5">
             <span>
-              LOC: <b>Brazil</b>
+              LOC: <b className="text-signal font-bold">Brazil</b>
             </span>
             <span>
-              NOW: <b>Betsson</b>
+              NOW: <b className="text-signal font-bold">Betsson</b>
             </span>
             <span>EN/PT/FR/ES</span>
           </p>
-          <div className={styles.status}>
+          <div className="self-start mb-3.5">
             <Badge variant="dot">OPEN_TO_RELOCATION · WORLDWIDE</Badge>
           </div>
           <HeroStats />
-          <div className={styles.ctas} data-testid="hero-ctas">
+          <div className="grid grid-cols-2 gap-3 mt-3" data-testid="hero-ctas">
             <Button
               as="a"
               variant="primary"

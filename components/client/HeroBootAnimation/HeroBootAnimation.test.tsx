@@ -21,13 +21,16 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mountClient } from '@/__tests__/helpers/render';
-import styles from '@/components/sections/Hero/Hero.module.css';
 
 vi.mock('@/lib/motion', () => ({
   readMotion: () => true, // motion ON => the animated typing loop runs
 }));
 
-// Guards the height: 165px invariant in Hero.module.css (.mobile .boot).
+// Class name constants — migrated from CSS Modules to @layer components named classes.
+const bootDesktopClass = 'hero-boot-desktop';
+const bootCmdClass = 'hero-boot-cmd';
+
+// Guards the height: 165px invariant in components.css (.hero-boot-mobile).
 // 8 lines × (--ds-font-size-sm:12px × line-height:1.65) ≈ 158px.
 // Fails early if MOBILE_LINE_SPECS grows or runBoot appends extra lines,
 // before overflow: hidden clips them silently.
@@ -37,7 +40,7 @@ describe('mobile boot container: line-count → height invariant', () => {
     // typeCmd: prompt line (1) + blank line after typing (1); startDialog: dialog line (1)
     const extraLines = 3;
     const totalLines = MOBILE_LINE_SPECS.length + extraLines;
-    const containerHeightPx = 165; // height: 165px in .mobile .boot
+    const containerHeightPx = 165; // height: 165px in .hero-boot-mobile
     const fontSizePx = 12; // --ds-font-size-sm = 12px
     const lineHeight = 1.65;
     expect(totalLines).toBe(8);
@@ -46,7 +49,7 @@ describe('mobile boot container: line-count → height invariant', () => {
 });
 
 // Minimal BootClasses fixture for unit tests that call runBoot directly.
-// In production, HeroBootAnimation provides scoped CSS Module class names.
+// In production, HeroBootAnimation provides named @layer components class names.
 // For direct runBoot tests, we use simple string keys; DOM queries match.
 const testCls = {
   bootLine: 'bootLine',
@@ -124,10 +127,9 @@ describe('boot-animation: textContent-mutation invariant', () => {
       React.createElement(HeroBootAnimation, { variant: 'desktop' }),
     );
 
-    // The island's JSX is `<div ref={bootRef} className={styles.boot} />` — a
-    // single empty element. Use the CSS Module scoped class name for the query.
-    const bootClass = styles.boot as string;
-    const mount = container.querySelector(`.${bootClass}`);
+    // The island's JSX is `<div ref={bootRef} className="hero-boot-desktop" />` — a
+    // single empty element. Use the named @layer components class for the query.
+    const mount = container.querySelector(`.${bootDesktopClass}`);
     expect(mount).not.toBeNull();
     expect(mount?.childElementCount).toBe(0);
 
@@ -143,9 +145,8 @@ describe('boot-animation: textContent-mutation invariant', () => {
     // updates would reconcile through useState and tank INP. The pattern under
     // test is exactly: useRef mount + imperative textContent mutation.
     expect(mount?.childElementCount ?? 0).toBeGreaterThan(0);
-    // bootCmd class: HeroBootAnimation passes bootCls which maps 'bootCmd' to styles.bootCmd.
-    const cmdClass = styles.bootCmd as string;
-    const cmd = mount?.querySelector(`.${cmdClass}`);
+    // bootCmd class: HeroBootAnimation passes bootCls which maps 'bootCmd' to 'hero-boot-cmd'.
+    const cmd = mount?.querySelector(`.${bootCmdClass}`);
     expect(cmd?.textContent).toBe('run bio.exe --verbose');
 
     // The typed command span carries a single text node mutated in place —

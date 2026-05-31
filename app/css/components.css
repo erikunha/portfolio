@@ -259,6 +259,185 @@
     }
   }
 
+  /* ── Hero responsive visibility toggles ─────────────────────────────────
+     Both variants are server-rendered (RSC). CSS media query swaps visibility.
+     .hero-desktop is the two-column flex layout (flex declared here).
+     .hero-mobile is the stacked layout. */
+
+  .hero-desktop {
+    display: flex;
+  }
+
+  .hero-mobile {
+    display: block;
+  }
+
+  @media (max-width: 768px) {
+    .hero-desktop {
+      display: none;
+    }
+    .hero-mobile {
+      display: block;
+    }
+  }
+
+  @media (min-width: 769px) {
+    .hero-mobile {
+      display: none;
+    }
+  }
+
+  /* ── Hero boot container (desktop) — absolute-positioned inside .left ─────── */
+
+  .hero-boot-desktop {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 24px;
+    bottom: 24px;
+    z-index: 2;
+    color: var(--color-text-body);
+    font-size: 14px; /* --ds-font-size-body */
+    line-height: 1.7;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    text-shadow:
+      0 0 4px #000,
+      0 0 8px #000;
+  }
+
+  /* ── Hero dialog typewriter line (desktop) ───────────────────────────────── */
+
+  .hero-dialog-desktop {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 24px;
+    z-index: 2;
+    font-size: 12px; /* --ds-font-size-sm */
+    margin: 0;
+    color: var(--color-signal);
+    font-family: var(--font-mono);
+  }
+
+  /* ── Hero boot container (mobile) ─────────────────────────────────────────── */
+
+  .hero-boot-mobile {
+    color: var(--color-text-body);
+    font-size: 12px; /* --ds-font-size-sm */
+    line-height: 1.65;
+    /* 8 lines × (12px × 1.65) ≈ 158px; fixed height reserves the full space
+       before the animation appends lines, preventing CLS on mobile.
+       Update if either token changes. */
+    height: 165px;
+    overflow: hidden;
+    margin: 0 0 12px;
+  }
+
+  /* ── Hero panel ─────────────────────────────────────────────────────────── */
+
+  /* Shake animation keyframes — used by boot animation's sysfail trigger. */
+  @keyframes hero-shake-1 {
+    to {
+      transform: translate(2px, -2px);
+    }
+  }
+  @keyframes hero-shake-2 {
+    to {
+      transform: translate(-2px, 1px);
+    }
+  }
+
+  .hero-shake {
+    transform: translate(2px, -2px);
+  }
+
+  .hero-shake2 {
+    transform: translate(-2px, 1px);
+  }
+
+  /* ── Boot text container — phosphor text-shadow ──────────────────────────── */
+
+  .hero-boot-text {
+    text-shadow:
+      0 0 4px #000,
+      0 0 8px #000;
+  }
+
+  /* ── Boot line token classes ─────────────────────────────────────────────── */
+
+  .hero-boot-line {
+    display: block;
+  }
+
+  .hero-boot-ok {
+    color: var(--color-signal);
+  }
+
+  .hero-boot-enc {
+    color: var(--color-signal);
+    font-weight: 700;
+    text-shadow:
+      0 0 6px var(--color-glow-60),
+      0 0 4px #000;
+  }
+
+  .hero-boot-welcome {
+    color: var(--color-text-body);
+    font-weight: 700;
+  }
+
+  .hero-boot-prompt {
+    color: var(--color-text-muted);
+  }
+
+  .hero-boot-cmd {
+    color: var(--color-text-body);
+  }
+
+  .hero-boot-matrix-prefix {
+    color: var(--color-text-muted);
+    margin-right: 4px;
+  }
+
+  .hero-boot-matrix-out {
+    color: var(--color-signal);
+    text-shadow:
+      0 0 8px var(--color-glow-40),
+      0 0 4px #000;
+  }
+
+  /* ── Sysfail overlay — fixed position, fade in/out ───────────────────────── */
+
+  .hero-sysfail {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 400ms ease-out;
+  }
+
+  .hero-sysfail-on {
+    opacity: 1;
+    transition: opacity 200ms ease-in;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-sysfail {
+      transition: none;
+    }
+  }
+
+  body[data-motion="reduce"] .hero-sysfail {
+    transition: none;
+  }
+
   /* ── Module — section accordion (migrated from Module.module.css) ─────────── */
 
   /* Below-fold deferral via content-visibility. Requires the class on <details>
