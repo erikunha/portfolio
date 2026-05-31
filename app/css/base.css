@@ -3,8 +3,8 @@
    Replaces _base.css. Uses Tailwind v4 @layer base wrapper.
    Variable mapping: --ds-color-* / --ds-font-family-* / --ds-glow-* →
    --color-* / --font-* tokens from theme.css.
-   Spacing, font-size, z-index tokens that don't exist in theme.css are kept
-   as --ds-* references (still provided by design-system/dist/tokens.css).
+   All --ds-* spacing/font-size/z-index references replaced with resolved
+   literals (Style Dictionary dist/ removed in Task 11).
    ───────────────────────────────────────────────────────────────────────── */
 
 @layer base {
@@ -110,12 +110,12 @@
     position: absolute;
     left: 0;
     top: 0;
-    z-index: var(--ds-z-skiplink);
+    z-index: 9999;
     padding: 8px 16px;
     background: var(--color-signal);
     color: #000;
     font-family: var(--font-mono);
-    font-size: var(--ds-font-size-md);
+    font-size: 16px;
     font-weight: 700;
     text-decoration: none;
     clip-path: inset(50%);
@@ -158,22 +158,16 @@
   }
 
   h1 {
-    font-size: var(--ds-font-size-heading-lg);
+    font-size: 48px; /* DsFontSizeHeadingLg */
     font-family: var(--font-display);
     font-weight: 900;
   }
 
   @media (max-width: 768px) {
-    :root {
-      --ds-space-rhythm: 18px;
-      --ds-space-pad: 14px;
-      --ds-font-size-heading-xl: 56px;
-      --ds-font-size-heading-lg: 32px;
-      /* 2xs/xs are intentional CRT metadata sizes — 10px labels/status text.
-         sm (12px) is the smallest size for any prose the user reads. */
-    }
+    /* 2xs/xs are intentional CRT metadata sizes — 10px labels/status text.
+       sm (12px) is the smallest size for any prose the user reads. */
     h1 {
-      font-size: var(--ds-font-size-heading-lg);
+      font-size: 32px; /* DsFontSizeHeadingMd — mobile override */
     }
   }
 
@@ -207,12 +201,8 @@
      mobile widths. Using a min-width lower bound prevents the cascade from
      overriding the more-specific 768px values at narrower viewports. */
   @media (min-width: 769px) and (max-width: 900px) {
-    :root {
-      --ds-space-rhythm: 40px;
-      --ds-space-pad: 18px;
-    }
     body {
-      font-size: var(--ds-font-size-body);
+      font-size: 14px; /* DsFontSizeBody */
     }
   }
 
