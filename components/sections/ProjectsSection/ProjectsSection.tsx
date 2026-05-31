@@ -3,7 +3,6 @@ import { projects } from '@/content/projects';
 import { getIsMobile } from '@/lib/ua';
 import { IconProjects } from '../../Icons';
 import { Module } from '../../responsive/Module';
-import styles from './ProjectsSection.module.css';
 
 const FolderIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -13,22 +12,36 @@ const FolderIcon = () => (
 
 function ProjectsDesktop() {
   return (
-    <ul className={styles.root} data-testid="proj-desktop">
+    <ul
+      className="list-none m-0 p-0 grid grid-cols-1 md:grid-cols-3 gap-5"
+      data-testid="proj-desktop"
+    >
       {projects.map((p) => (
-        <li key={p.name} className={styles.project}>
-          <div className={styles.projectTop}>
-            <svg className={styles.projectFolder} viewBox="0 0 24 18" aria-hidden="true">
+        <li
+          key={p.name}
+          className={[
+            'relative border border-signal-subtle p-5 md:p-5',
+            'transition-[border-color,box-shadow] duration-200',
+            'hover:border-signal hover:shadow-[0_0_16px_var(--color-glow-18)]',
+            'motion-reduce:transition-none',
+            '[body[data-motion=reduce]_&]:transition-none',
+          ].join(' ')}
+        >
+          <div className="flex justify-between items-end mb-3">
+            <svg className="w-10 h-8 fill-signal" viewBox="0 0 24 18" aria-hidden="true">
               <path d="M0 2 L0 18 L24 18 L24 5 L12 5 L9 2 Z" />
             </svg>
-            <span className={styles.projectPerm}>{p.perm ?? 'drwxr-xr-x'}</span>
+            <span className="text-text-muted text-xs opacity-75 m-0">{p.perm ?? 'drwxr-xr-x'}</span>
           </div>
-          <h3 className={styles.projectName}>{p.name}</h3>
-          <p className={styles.projectDesc}>{p.description}</p>
-          <dl className={styles.projectStats}>
+          <h3 className="text-signal font-bold text-sm md:text-base tracking-[0.04em] my-1.5">
+            {p.name}
+          </h3>
+          <p className="text-text-body text-xs md:text-sm mb-4">{p.description}</p>
+          <dl className="grid gap-1 text-xs md:text-sm m-0">
             {p.stats.map((s) => (
-              <div key={s.label}>
-                <dt>{s.label}:</dt>
-                <dd>{s.value}</dd>
+              <div key={s.label} className="flex justify-between gap-2">
+                <dt className="text-text-muted">{s.label}:</dt>
+                <dd className="m-0 text-text-body">{s.value}</dd>
               </div>
             ))}
           </dl>
@@ -41,21 +54,29 @@ function ProjectsDesktop() {
 function ProjectsMobile() {
   return (
     <div data-testid="proj-mobile">
-      {projects.map((p) => (
-        <div key={p.name} className={styles.card}>
-          <div className={styles.cardTop}>
-            <span className={styles.cardFolder}>
+      {projects.map((p, i) => (
+        <div
+          key={p.name}
+          className={[
+            'border border-signal-subtle p-3.5',
+            i < projects.length - 1 ? 'mb-2.5' : '',
+          ].join(' ')}
+        >
+          <div className="flex justify-between items-start mb-2">
+            <span className="w-8 h-[26px] [&_svg]:w-full [&_svg]:h-full [&_svg]:fill-signal">
               <FolderIcon />
             </span>
-            <span className={styles.cardPerm}>{p.perm ?? '-rwxr-xr-x'}</span>
+            <span className="text-text-muted text-xs opacity-75 tracking-[0.04em]">
+              {p.perm ?? '-rwxr-xr-x'}
+            </span>
           </div>
-          <div className={styles.cardName}>{p.mobileName}</div>
-          <div className={styles.cardDesc}>{p.mobileDescription}</div>
-          <div className={styles.cardMeta}>
+          <div className="text-signal font-bold text-xs tracking-[0.04em] my-1">{p.mobileName}</div>
+          <div className="text-text-body text-xs mb-3 leading-[1.5]">{p.mobileDescription}</div>
+          <div className="grid gap-[3px] text-xs">
             {p.mobileMeta.map((m) => (
-              <div key={m.label} className={styles.mrow}>
-                <span className={styles.mk}>{m.label}</span>
-                <span className={styles.mv}>{m.value}</span>
+              <div key={m.label} className="flex justify-between gap-2">
+                <span className="text-text-muted shrink-0">{m.label}</span>
+                <span className="text-text-body text-right">{m.value}</span>
               </div>
             ))}
           </div>
