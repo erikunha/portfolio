@@ -32,6 +32,7 @@
   "ds-color-accent-cool": { "$value": "{ds-accent-cyan}", "$type": "color" },
   "ds-color-highlight-bg": { "$value": "{ds-green-500}", "$type": "color" },
   "ds-color-highlight-fg": { "$value": "{ds-neutral-0}", "$type": "color" },
+  "ds-color-surface-panel": { "$value": "transparent", "$type": "color" },
 
   "ds-overlay-22": { "$value": "rgba(0, 0, 0, 0.22)", "$type": "color" },
   "ds-overlay-30": { "$value": "rgba(0, 0, 0, 0.3)", "$type": "color" },

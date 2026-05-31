@@ -26,6 +26,7 @@
   --ds-chrome-close: #ff5f57;
   --ds-chrome-minimize: #febc2e;
   --ds-chrome-maximize: #28c840;
+  --ds-color-surface-panel: rgba(0, 0, 0, 0);
   --ds-overlay-22: rgba(0, 0, 0, 0.22);
   --ds-overlay-30: rgba(0, 0, 0, 0.3);
   --ds-overlay-35: rgba(0, 0, 0, 0.35);
