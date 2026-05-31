@@ -221,4 +221,75 @@
       display: contents;
     }
   }
+
+  /* ─── Mobile section order (migrated from AppShell.module.css) ──────────────
+     Cross-cutting layout rules targeting global DOM ids (set by Module.tsx via
+     the section `id` prop). The .page flex column makes `order` effective. */
+  @media (max-width: 768px) {
+    #sec-readme {
+      order: 1;
+    }
+    #sec-shell {
+      order: 2;
+    }
+    #sec-ai-metrics {
+      order: 3;
+    }
+    #sec-man-page {
+      order: 4;
+    }
+    #sec-now {
+      order: 5;
+    }
+    #sec-projects {
+      order: 6;
+    }
+    #sec-git-log {
+      order: 7;
+    }
+    #sec-npm-stack {
+      order: 8;
+    }
+    #sec-sys-health {
+      order: 9;
+    }
+    #sec-live-perf {
+      order: 10;
+    }
+    #sec-perf-receipts {
+      order: 11;
+    }
+    #sec-guitar {
+      order: 12;
+    }
+    #sec-daw-mixer {
+      order: 13;
+    }
+    #sec-visa {
+      order: 14;
+    }
+    #sec-credentials {
+      order: 15;
+    }
+    #sec-community {
+      order: 16;
+    }
+    #sec-hottest-takes {
+      order: 17;
+    }
+    #sec-responsibilities {
+      order: 18;
+    }
+    #sec-unknowns {
+      order: 19;
+    }
+    #sec-contact {
+      order: 20;
+    }
+
+    /* Clear space for the fixed mobile dock at the bottom of the viewport. */
+    body {
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    }
+  }
 }

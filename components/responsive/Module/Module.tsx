@@ -17,7 +17,6 @@
 // + Suspense boundary (getIsMobile()); Module itself is always single-element.
 
 import type { ReactNode } from 'react';
-import styles from './Module.module.css';
 
 export type ModuleProps = {
   id: string;
@@ -52,31 +51,58 @@ export function Module({
   return (
     <details
       id={id}
-      className={styles.root}
+      // module-root: houses ::details-content override + [open] selectors for body/chevron/bodyContent
+      // Mobile: bordered panel (border + bg-[rgba(0,0,0,0.22)] + overflow-hidden)
+      // Desktop (>=769px): border/bg/overflow removed via media query in components.css
+      className={[
+        'module-root',
+        'mb-[18px] md:mb-10',
+        'border border-signal-subtle bg-[rgba(0,0,0,0.22)] md:bg-transparent overflow-hidden md:overflow-visible',
+        'md:border-0',
+        defer ? 'module-deferred' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       // Always open: see the file header. A section can still be collapsed by
       // tapping its summary on mobile.
       open
       {...(defer ? { 'data-cv-defer': 'true' } : {})}
     >
-      <summary className={styles.toggle}>
-        <span className={styles.chevron} aria-hidden>
+      {/* summary: mobile — collapsible chrome; desktop — plain section header */}
+      <summary
+        className={[
+          // Remove native disclosure marker
+          '[list-style:none] [&::-webkit-details-marker]:hidden',
+          'flex items-center gap-2 w-full',
+          // Mobile chrome
+          'px-[14px] py-3 min-h-11 bg-glow-04 border-b border-signal-quiet cursor-pointer',
+          'focus-visible:outline-2 focus-visible:outline-signal focus-visible:outline-offset-2',
+          // Desktop: strip mobile chrome
+          'md:px-0 md:py-0 md:min-h-0 md:bg-transparent md:border-b-0 md:mb-2',
+        ].join(' ')}
+      >
+        {/* module-chevron: handles rotate on [open], hidden on desktop via components.css */}
+        <span className="module-chevron" aria-hidden>
           ▸
         </span>
-        <h2 className={styles.header}>
+        <h2 className="flex-1 flex items-center gap-2 text-signal font-mono text-[10px] md:text-[12px] font-medium tracking-[0.14em] md:tracking-[0.1em] uppercase m-0">
           {icon ? (
-            <span className={styles.icon} aria-hidden>
+            <span
+              className="inline-flex w-5 h-5 items-center justify-center text-signal [&_svg]:w-[18px] [&_svg]:h-[18px] [&_svg]:stroke-current [&_svg]:fill-none [&_svg]:[stroke-width:1.4]"
+              aria-hidden
+            >
               {icon}
             </span>
           ) : null}
-          <span className={styles.labelDesktop}>{header}</span>
-          <span className={styles.labelMobile}>{mobileHeader ?? header}</span>
+          <span className="hidden md:inline">{header}</span>
+          <span className="md:hidden">{mobileHeader ?? header}</span>
         </h2>
       </summary>
-      <div className={styles.body} id={`${id}-body`}>
+      <div className="module-body" id={`${id}-body`}>
         {/* bodyInner: grid item — no padding so 0fr collapses to true 0.
             bodyContent: padding+color wrapper inside the overflow:hidden clip. */}
-        <div className={styles.bodyInner}>
-          <div className={styles.bodyContent} data-variant={variant}>
+        <div className="min-h-0 overflow-hidden">
+          <div className="module-body-content" data-variant={variant}>
             {children}
           </div>
         </div>

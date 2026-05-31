@@ -258,4 +258,103 @@
       padding: 5px 14px 6px;
     }
   }
+
+  /* ── Module — section accordion (migrated from Module.module.css) ─────────── */
+
+  /* Below-fold deferral via content-visibility. Requires the class on <details>
+     to get (0,1,0) specificity — element-only selectors are ignored as impure
+     in CSS Modules, but this global class is fine here. */
+  .module-deferred {
+    content-visibility: auto;
+    /* auto 520px: cross-viewport median first-paint fallback. After first paint
+       the browser caches the real size and reuses it, so scroll/CLS is correct. */
+    contain-intrinsic-size: auto 520px;
+  }
+
+  /* Neutralise Chrome 131 ::details-content UA animation so the author
+     grid-template-rows transition on .module-body runs uninterrupted. */
+  .module-root::details-content {
+    display: block;
+    block-size: auto;
+    overflow: visible;
+    transition: none;
+    content-visibility: visible;
+  }
+
+  /* Grid-animation container: collapses to 0fr (closed) or 1fr (open). */
+  .module-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 300ms cubic-bezier(0.32, 0, 0.67, 0);
+    contain: layout style;
+    /* biome-ignore lint/complexity/noImportantStyles: Chrome 131 UA override */
+    min-height: 0 !important;
+  }
+
+  .module-root[open] .module-body {
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 300ms cubic-bezier(0.33, 1, 0.68, 1);
+  }
+
+  /* Chevron rotates 90° when section is open. */
+  .module-chevron {
+    color: var(--color-signal);
+    font-size: 24px; /* ds-font-size-heading-sm */
+    flex-shrink: 0;
+    transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .module-root[open] .module-chevron {
+    transform: rotate(90deg);
+  }
+
+  /* bodyContent: opacity fade — hides before panel collapses, reveals after open. */
+  .module-body-content {
+    padding: 14px; /* ds-space-pad mobile */
+    color: var(--color-text-body);
+    background: transparent;
+    opacity: 0;
+    transition: opacity 300ms cubic-bezier(0.32, 0, 0.67, 0);
+  }
+
+  @media (min-width: 769px) {
+    .module-body-content {
+      padding: 18px; /* ds-space-pad desktop */
+    }
+  }
+
+  .module-body-content[data-variant="green"] {
+    background: var(--color-glow-05);
+  }
+
+  .module-root[open] .module-body-content {
+    opacity: 1;
+    transition: opacity 200ms ease-out 80ms;
+  }
+
+  @media (min-width: 769px) {
+    .module-root[open] .module-body-content {
+      border: 1px solid var(--color-signal-subtle);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .module-chevron,
+    .module-body,
+    .module-body-content {
+      transition: none;
+    }
+    .module-body-content {
+      opacity: 1;
+    }
+  }
+
+  body[data-motion="reduce"] .module-chevron,
+  body[data-motion="reduce"] .module-body,
+  body[data-motion="reduce"] .module-body-content {
+    transition: none;
+  }
+  body[data-motion="reduce"] .module-body-content {
+    opacity: 1;
+  }
 }
