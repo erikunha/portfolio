@@ -407,12 +407,12 @@ test.describe('cross-cutting', () => {
               .replace(/\s+/g, ' ')
               .replace(/::/g, ':')
               .toLowerCase();
-            // The selector must reference both rootMobile (parent scope) and
-            // mxChain:after (the arrow pseudo-element being hidden). An
-            // unscoped `.mxChain:after { display:none }` would not qualify.
+            // After Tailwind v4 migration the scoping moved from a parent-child
+            // selector (.rootMobile .mxChain::after) to a modifier-class selector
+            // (.mx-chain-mobile::after). Both express the same invariant: the chain
+            // arrow glyph is hidden in the mobile DAW mixer view only.
             if (
-              text.includes('rootmobile') &&
-              text.includes('mxchain') &&
+              text.includes('mx-chain-mobile') &&
               text.includes(':after') &&
               text.includes('display: none')
             ) {
@@ -428,7 +428,7 @@ test.describe('cross-cutting', () => {
 
     expect(
       ruleFound,
-      'compiled CSS bundle must contain a .rootMobile .mxChain::after { display: none } scoped rule',
+      'compiled CSS bundle must contain a .mx-chain-mobile::after { display: none } rule',
     ).toBe(true);
   });
 });
