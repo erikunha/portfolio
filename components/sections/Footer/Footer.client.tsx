@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { MatrixRain } from '@/components/responsive/MatrixRain';
 import { dmesgLines } from '@/content/dmesg';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
-import styles from './Footer.module.css';
 
 function pad(n: number) {
   return String(n).padStart(2, '0');
@@ -29,9 +28,9 @@ export function Footer() {
   const [commandsRun, setCommandsRun] = useState(0);
   // The dmesg boot sequence is CSS-timed: a single `booted` flag flips the
   // whole list from hidden to revealing. Each <li> staggers via its own
-  // `animation-delay` (see `.dmLine` in Footer.module.css), and the halt
-  // plate uses the trailing delay. This collapses what used to be a ~8-call
-  // staggered setState storm into one state update.
+  // `animation-delay` (see `.dmesg-line` / `.dmesg-booted` in components.css),
+  // and the halt plate uses the trailing delay. This collapses what used to be
+  // a ~8-call staggered setState storm into one state update.
   const [booted, setBooted] = useState(false);
   const [dmesgTs, setDmesgTs] = useState<string[]>(dmesgLines.map(() => ''));
   const footerRef = useRef<HTMLElement>(null);
@@ -133,7 +132,11 @@ export function Footer() {
   }, []);
 
   return (
-    <footer className={styles.root} id="shutdown" ref={footerRef}>
+    <footer
+      className="border-t-0 pb-[var(--ds-space-pad,20px)] bg-transparent relative z-[1] overflow-hidden max-[900px]:pt-0 max-[900px]:pb-[calc(40px+env(safe-area-inset-bottom,0px))] max-[900px]:px-[var(--ds-space-pad,20px)] max-[768px]:py-7 max-[768px]:px-[var(--ds-space-pad,20px)]"
+      id="shutdown"
+      ref={footerRef}
+    >
       <MatrixRain
         fontSize={14}
         speed={0.9}
@@ -151,110 +154,147 @@ export function Footer() {
           WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, #000 18%, #000 100%)',
         }}
       />
-      <div className={styles.inner}>
-        <div className={styles.banner}>
-          <span className={styles.init}>[SYSTEM SHUTDOWN INITIATED]</span>
-          <span className={styles.stamp}>
+      <div
+        className="relative z-[1] max-w-[var(--ds-layout-maxw,1200px)] mx-auto px-[var(--ds-space-pad,20px)] font-mono"
+        style={{ textShadow: '0 0 4px #000, 0 0 8px rgba(0,0,0,0.6)' }}
+      >
+        {/* Banner */}
+        <div className="flex items-baseline justify-between gap-6 flex-wrap mb-2 max-[768px]:flex-col max-[768px]:gap-1">
+          <span
+            className="text-signal font-bold tracking-[0.06em] text-[length:var(--ds-font-size-body,14px)] max-[560px]:text-sm max-[768px]:text-sm"
+            style={{ textShadow: '0 0 8px rgba(0,255,65,0.35)' }}
+          >
+            [SYSTEM SHUTDOWN INITIATED]
+          </span>
+          <span className="text-text-muted text-xs tracking-[0.14em] uppercase max-[560px]:text-xs max-[768px]:text-xs">
             {'halted at '}
-            <b suppressHydrationWarning>{time}</b>
+            <b
+              suppressHydrationWarning
+              className="text-text-body font-bold ml-1.5 tracking-[0.04em] tabular-nums"
+            >
+              {time}
+            </b>
           </span>
         </div>
-        <div className={styles.cmdline}>
-          <span className={styles.sdPrompt}>{'erik@portfolio:~$'}</span>{' '}
-          <span className={styles.sdCmd}>{'shutdown -h now'}</span>
-        </div>
-        <div className={styles.rule} aria-hidden="true" />
 
-        <div className={styles.grid}>
-          <div className={styles.panel}>
-            <header className={styles.spHead}>
-              <span className={styles.spBar}>{'▌'}</span>SESSION_REPORT
+        {/* Cmdline */}
+        <div className="text-sm mb-[14px] text-text-body">
+          <span className="text-text-muted">{'erik@portfolio:~$'}</span>{' '}
+          <span className="text-text-body">{'shutdown -h now'}</span>
+        </div>
+
+        {/* Rule */}
+        <div className="border-t border-dashed border-signal-subtle mb-[22px]" aria-hidden="true" />
+
+        {/* Grid — 2 panels */}
+        <div className="grid grid-cols-[1fr_1.15fr] gap-[18px] mb-[26px] max-[900px]:grid-cols-1">
+          {/* SESSION_REPORT panel */}
+          <div
+            className="border border-signal-subtle p-[14px_16px_16px] relative min-w-0 max-[768px]:p-[12px_14px_14px] max-[768px]:mb-2.5"
+            style={{ background: 'linear-gradient(180deg, rgba(0,255,65,0.025), rgba(0,0,0,0))' }}
+          >
+            <header className="text-signal font-bold text-xs tracking-[0.18em] mb-3 flex items-baseline gap-1.5 max-[768px]:text-sm max-[768px]:tracking-[0.16em]">
+              <span className="text-signal">{'▌'}</span>SESSION_REPORT
             </header>
-            <div className={styles.spRow}>
-              <span className={styles.spK}>user</span>
-              <span className={styles.spV}>erik@portfolio</span>
-            </div>
-            <div className={styles.spRow}>
-              <span className={styles.spK}>uptime</span>
-              <span className={styles.spV}>
-                <b>{uptime}</b>
+            <div className="grid grid-cols-[130px_1fr] gap-3 text-sm leading-[1.95] items-center max-[900px]:grid-cols-[110px_1fr] max-[768px]:grid-cols-[100px_1fr] max-[768px]:gap-2.5 max-[560px]:grid-cols-[92px_1fr] max-[560px]:gap-2">
+              <span className="text-text-muted tracking-[0.04em]">user</span>
+              <span className="text-text-body tabular-nums">erik@portfolio</span>
+              <span className="text-text-muted tracking-[0.04em]">uptime</span>
+              <span className="text-text-body tabular-nums">
+                <b className="text-signal font-bold tabular-nums">{uptime}</b>
               </span>
-            </div>
-            <div className={styles.spRow}>
-              <span className={styles.spK}>{isMobile ? 'scroll' : 'scroll depth'}</span>
-              <span className={styles.spV}>
-                <span className={styles.spBar2}>
+              <span className="text-text-muted tracking-[0.04em]">
+                {isMobile ? 'scroll' : 'scroll depth'}
+              </span>
+              <span className="text-text-body tabular-nums">
+                {/* sp-bar in components.css */}
+                <span className="sp-bar">
                   <i style={{ width: `${scrollDepth}%` }} />
                 </span>
-                <b>{scrollDepth}%</b>
+                <b className="text-signal font-bold tabular-nums">{scrollDepth}%</b>
               </span>
-            </div>
-            <div className={styles.spRow}>
-              <span className={styles.spK}>{isMobile ? 'sections' : 'sections seen'}</span>
-              <span className={styles.spV}>
-                <b>{sectionsSeen}</b>
+              <span className="text-text-muted tracking-[0.04em]">
+                {isMobile ? 'sections' : 'sections seen'}
+              </span>
+              <span className="text-text-body tabular-nums">
+                <b className="text-signal font-bold tabular-nums">{sectionsSeen}</b>
                 {' / '}
                 {totalSections}
               </span>
-            </div>
-            <div className={styles.spRow}>
-              <span className={styles.spK}>{isMobile ? 'commands' : 'commands run'}</span>
-              <span className={styles.spV}>
-                <b>{commandsRun}</b>
+              <span className="text-text-muted tracking-[0.04em]">
+                {isMobile ? 'commands' : 'commands run'}
+              </span>
+              <span className="text-text-body tabular-nums">
+                <b className="text-signal font-bold tabular-nums">{commandsRun}</b>
               </span>
             </div>
           </div>
 
-          <div className={`${styles.panel} ${styles.netstat}`}>
-            <header className={styles.spHead}>
-              <span className={styles.spBar}>{'▌'}</span>NETSTAT -AN
+          {/* NETSTAT panel */}
+          <div
+            className="border border-signal-subtle p-[14px_16px_16px] relative min-w-0 max-[768px]:p-[12px_14px_14px] max-[768px]:mb-2.5"
+            style={{ background: 'linear-gradient(180deg, rgba(0,255,65,0.025), rgba(0,0,0,0))' }}
+          >
+            <header className="text-signal font-bold text-xs tracking-[0.18em] mb-3 flex items-baseline gap-1.5">
+              <span className="text-signal">{'▌'}</span>NETSTAT -AN
             </header>
             {isMobile ? (
-              <div className={styles.nsGrid}>
-                <span className={styles.nsHdrCell}>Proto</span>
-                <span className={styles.nsHdrCell}>State</span>
-                <span className={styles.nsHdrCell}>Endpoint</span>
-                <span className={styles.nsProto}>tcp</span>
-                <span className={styles.nsEst}>ESTABLISHED</span>
-                <a href="https://github.com/erikunha" target="_blank" rel="noopener noreferrer">
+              <div className="grid grid-cols-[28px_90px_minmax(0,1fr)] gap-x-[28px] items-center max-[768px]:grid-cols-[28px_80px_minmax(0,1fr)] max-[768px]:gap-x-2.5">
+                <span className="text-text-muted tracking-[0.06em]">Proto</span>
+                <span className="text-text-muted tracking-[0.06em]">State</span>
+                <span className="text-text-muted tracking-[0.06em]">Endpoint</span>
+                <span className="text-text-muted">tcp</span>
+                <span className="text-signal font-bold flex items-center min-h-8">ESTABLISHED</span>
+                <a
+                  href="https://github.com/erikunha"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="netstat-link flex items-center min-h-8 max-[768px]:overflow-hidden max-[768px]:text-ellipsis max-[768px]:whitespace-nowrap"
+                >
                   github.com/erikunha
                 </a>
-                <span className={styles.nsProto}>tcp</span>
-                <span className={styles.nsListen}>LISTEN</span>
+                <span className="text-text-muted">tcp</span>
+                <span className="text-accent-warm font-bold flex items-center min-h-8">LISTEN</span>
                 <a
                   href="https://linkedin.com/in/erikunha"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="netstat-link flex items-center min-h-8 max-[768px]:overflow-hidden max-[768px]:text-ellipsis max-[768px]:whitespace-nowrap"
                 >
                   linkedin.com/in/erikunha
                 </a>
-                <span className={styles.nsProto}>tcp</span>
-                <span className={styles.nsEst}>ESTABLISHED</span>
-                <a href="https://erikunha.dev" target="_blank" rel="noopener noreferrer">
+                <span className="text-text-muted">tcp</span>
+                <span className="text-signal font-bold flex items-center min-h-8">ESTABLISHED</span>
+                <a
+                  href="https://erikunha.dev"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="netstat-link flex items-center min-h-8 max-[768px]:overflow-hidden max-[768px]:text-ellipsis max-[768px]:whitespace-nowrap"
+                >
                   erikunha.dev
                 </a>
               </div>
             ) : (
-              <pre>
-                <span className={styles.nsHdr}>{'Proto  State        Endpoint'}</span>
+              <pre className="m-0 font-mono text-sm leading-[1.95] text-text-body whitespace-pre overflow-x-auto max-[900px]:text-sm max-[768px]:text-sm">
+                <span className="text-text-muted">{'Proto  State        Endpoint'}</span>
                 {[
                   {
                     state: 'ESTABLISHED',
-                    cls: styles.nsEst,
+                    cls: 'text-signal font-bold',
                     href: 'https://github.com/erikunha',
                     label: 'github.com/erikunha',
                     external: true,
                   },
                   {
                     state: 'LISTEN',
-                    cls: styles.nsListen,
+                    cls: 'text-accent-warm font-bold',
                     href: 'https://linkedin.com/in/erikunha',
                     label: 'linkedin.com/in/erikunha',
                     external: true,
                   },
                   {
                     state: 'ESTABLISHED',
-                    cls: styles.nsEst,
+                    cls: 'text-signal font-bold',
                     href: 'https://erikunha.dev',
                     label: 'erikunha.dev',
                     external: true,
@@ -266,6 +306,7 @@ export function Footer() {
                     {' '.repeat(13 - e.state.length)}
                     <a
                       href={e.href}
+                      className="netstat-link"
                       {...(e.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                     >
                       {e.label}
@@ -277,36 +318,55 @@ export function Footer() {
           </div>
         </div>
 
+        {/* dmesg list — dmesg-booted / dmesg-line in components.css */}
         <ul
-          className={booted ? `${styles.dmesg} ${styles.booted}` : styles.dmesg}
+          className={`list-none m-0 mb-6 p-0 text-sm leading-[1.85]${booted ? ' dmesg-booted' : ''}`}
           aria-label="kernel buffer tail"
         >
           {dmesgLines.map((line, i) => (
-            <li key={line.off} className={styles.dmLine} style={{ animationDelay: `${i * 80}ms` }}>
-              <span className={styles.dmT}>{dmesgTs[i]}</span>
-              <span className={styles.dmMsg}>
+            <li
+              key={line.off}
+              className="dmesg-line grid grid-cols-[92px_1fr_auto] gap-x-[14px] items-baseline text-text-body max-[900px]:grid-cols-[72px_1fr_auto] max-[900px]:gap-x-2.5 max-[900px]:text-sm max-[768px]:grid-cols-[72px_1fr_auto] max-[768px]:gap-x-2 max-[768px]:text-xs"
+              style={{ animationDelay: `${i * 80}ms` }}
+            >
+              <span className="text-text-muted tabular-nums whitespace-nowrap">{dmesgTs[i]}</span>
+              <span className="text-text-body">
                 {line.prefix}
-                {line.bold && <b>{line.bold}</b>}
+                {line.bold && <b className="text-signal font-bold">{line.bold}</b>}
                 {line.suffix}
               </span>
-              {line.ok && <span className={styles.dmOk}>OK</span>}
-              {!line.ok && <span className={styles.dmOk} aria-hidden="true" />}
+              {line.ok && (
+                <span className="text-signal font-bold tracking-[0.12em] text-xs">OK</span>
+              )}
+              {!line.ok && (
+                <span
+                  className="text-signal font-bold tracking-[0.12em] text-xs"
+                  aria-hidden="true"
+                />
+              )}
             </li>
           ))}
         </ul>
 
-        <div className={booted ? `${styles.end} ${styles.booted}` : styles.end}>
-          <span className={styles.halt}>[SYSTEM HALTED]</span>
-          <span className={styles.haltHint}>
+        {/* Halt plate + hint — halt-booted / halt-plate / halt-hint in components.css */}
+        <div
+          className={`mt-6 flex items-center flex-wrap gap-x-4 gap-y-2.5${booted ? ' halt-booted' : ''}`}
+        >
+          <span className="halt-plate inline-block shrink-0 bg-signal text-black font-bold text-sm tracking-[0.16em] px-3 py-[5px] leading-none whitespace-nowrap">
+            [SYSTEM HALTED]
+          </span>
+          <span className="halt-hint shrink-0 text-text-muted text-xs tracking-[0.12em] whitespace-nowrap">
             {isMobile ? 'tap ' : 'press '}
             <button type="button" onClick={() => window.location.reload()}>
-              <kbd>R</kbd>
+              {/* kbd-key class in components.css */}
+              <kbd className="kbd-key">R</kbd>
             </button>
             {' to reboot'}
           </span>
         </div>
 
-        <div className={styles.copy}>
+        {/* Copyright */}
+        <div className="text-text-muted text-sm mt-[22px] tracking-[0.04em] opacity-85">
           © 2026 erik cunha · this session ends here · the work doesn&apos;t.
         </div>
       </div>
