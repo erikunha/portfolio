@@ -10,8 +10,8 @@ export function StatTile({ value, label, variant = 'default' }: StatTileProps) {
       </dt>
       <dd
         className={cn(
-          'order-first text-signal text-xs md:text-sm font-bold tracking-[0.04em] font-mono leading-[1.3] m-0',
-          variant === 'compact' && 'text-xs md:text-xs',
+          'order-first text-signal text-2xl font-bold tracking-[0.04em] font-mono leading-none m-0',
+          variant === 'compact' && 'text-xs',
         )}
       >
         {value}

@@ -16,8 +16,9 @@ describe('StatTile', () => {
   it('applies compact font size override when variant=compact', () => {
     const { container } = render(<StatTile value="1" label="x" variant="compact" />);
     const dd = container.querySelector('dd');
-    // compact forces text-xs on desktop too, verified by class presence
-    expect(dd?.classList.contains('md:text-xs')).toBe(true);
+    // compact overrides the default text-2xl down to text-xs (twMerge removes the base class)
+    expect(dd?.classList.contains('text-xs')).toBe(true);
+    expect(dd?.classList.contains('text-2xl')).toBe(false);
   });
   it('does not apply an undefined default class when variant=default', () => {
     const { container } = render(<StatTile value="1" label="x" />);
