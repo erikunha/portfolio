@@ -1,6 +1,5 @@
 import colorTokens from '../../../../design-system/tokens/color.json';
 import { resolveValue } from '../../_lib/resolve-tokens';
-import styles from './ColorSwatch.module.css';
 
 type Props = { token: string; usage?: string };
 
@@ -10,12 +9,16 @@ export function ColorSwatch({ token, usage }: Props) {
   const resolved = resolveValue(entry.$value, colorTokens as Parameters<typeof resolveValue>[1]);
 
   return (
-    <div className={styles.row}>
-      <div className={styles.swatch} style={{ background: resolved }} aria-hidden="true" />
-      <div className={styles.meta}>
-        <code className={styles.name}>--{token}</code>
-        <span className={styles.value}>{resolved}</span>
-        {usage && <span className={styles.usage}>{usage}</span>}
+    <div className="flex items-center gap-3 py-2 border-b border-border-default last:border-0">
+      <div
+        className="w-8 h-8 flex-shrink-0 border border-border-default"
+        style={{ background: resolved }}
+        aria-hidden="true"
+      />
+      <div className="flex flex-col gap-0.5">
+        <code className="text-[10px] font-mono text-text-muted tracking-widest">--{token}</code>
+        <span className="text-xs font-mono text-text-body">{resolved}</span>
+        {usage && <span className="text-[10px] font-mono text-text-faint">{usage}</span>}
       </div>
     </div>
   );
