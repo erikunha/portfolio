@@ -51,6 +51,7 @@
   --ds-space-12: 48px;
   --ds-space-16: 64px;
   --ds-layout-maxw: 1200px;
+  --ds-text-size-micro: 9px;
   --ds-text-size-2xs: 10px;
   --ds-text-size-xs: 10px;
   --ds-text-size-sm: 12px;
@@ -87,6 +88,7 @@
   --ds-space-pad: var(--ds-space-6);
   --ds-space-section: var(--ds-space-8);
   --ds-space-rhythm: var(--ds-space-16);
+  --ds-font-size-micro: var(--ds-text-size-micro);
   --ds-font-size-2xs: var(--ds-text-size-2xs);
   --ds-font-size-xs: var(--ds-text-size-xs);
   --ds-font-size-sm: var(--ds-text-size-sm);
