@@ -31,5 +31,32 @@
   "ds-color-accent-warm": { "$value": "{ds-accent-amber}", "$type": "color" },
   "ds-color-accent-cool": { "$value": "{ds-accent-cyan}", "$type": "color" },
   "ds-color-highlight-bg": { "$value": "{ds-green-500}", "$type": "color" },
-  "ds-color-highlight-fg": { "$value": "{ds-neutral-0}", "$type": "color" }
+  "ds-color-highlight-fg": { "$value": "{ds-neutral-0}", "$type": "color" },
+
+  "ds-overlay-22": { "$value": "rgba(0, 0, 0, 0.22)", "$type": "color" },
+  "ds-overlay-30": { "$value": "rgba(0, 0, 0, 0.3)", "$type": "color" },
+  "ds-overlay-35": { "$value": "rgba(0, 0, 0, 0.35)", "$type": "color" },
+  "ds-overlay-40": { "$value": "rgba(0, 0, 0, 0.4)", "$type": "color" },
+  "ds-overlay-50": { "$value": "rgba(0, 0, 0, 0.5)", "$type": "color" },
+  "ds-overlay-55": { "$value": "rgba(0, 0, 0, 0.55)", "$type": "color" },
+  "ds-overlay-60": { "$value": "rgba(0, 0, 0, 0.6)", "$type": "color" },
+  "ds-overlay-65": { "$value": "rgba(0, 0, 0, 0.65)", "$type": "color" },
+  "ds-overlay-70": { "$value": "rgba(0, 0, 0, 0.7)", "$type": "color" },
+  "ds-overlay-85": { "$value": "rgba(0, 0, 0, 0.85)", "$type": "color" },
+  "ds-overlay-92": { "$value": "rgba(0, 0, 0, 0.92)", "$type": "color" },
+
+  "ds-glow-03": { "$value": "rgba(0, 255, 65, 0.03)", "$type": "color" },
+  "ds-glow-04": { "$value": "rgba(0, 255, 65, 0.04)", "$type": "color" },
+  "ds-glow-05": { "$value": "rgba(0, 255, 65, 0.05)", "$type": "color" },
+  "ds-glow-06": { "$value": "rgba(0, 255, 65, 0.06)", "$type": "color" },
+  "ds-glow-15": { "$value": "rgba(0, 255, 65, 0.15)", "$type": "color" },
+  "ds-glow-18": { "$value": "rgba(0, 255, 65, 0.18)", "$type": "color" },
+  "ds-glow-25": { "$value": "rgba(0, 255, 65, 0.25)", "$type": "color" },
+  "ds-glow-30": { "$value": "rgba(0, 255, 65, 0.3)", "$type": "color" },
+  "ds-glow-35": { "$value": "rgba(0, 255, 65, 0.35)", "$type": "color" },
+  "ds-glow-40": { "$value": "rgba(0, 255, 65, 0.4)", "$type": "color" },
+  "ds-glow-45": { "$value": "rgba(0, 255, 65, 0.45)", "$type": "color" },
+  "ds-glow-50": { "$value": "rgba(0, 255, 65, 0.5)", "$type": "color" },
+  "ds-glow-55": { "$value": "rgba(0, 255, 65, 0.55)", "$type": "color" },
+  "ds-glow-60": { "$value": "rgba(0, 255, 65, 0.6)", "$type": "color" }
 }
