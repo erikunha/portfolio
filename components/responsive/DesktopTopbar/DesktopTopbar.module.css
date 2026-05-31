@@ -64,7 +64,7 @@
 .tabActive {
   color: var(--ds-color-signal);
   border-color: var(--ds-color-signal-subtle);
-  background: rgba(0, 255, 65, 0.04);
+  background: var(--ds-glow-04);
 }
 
 .tabClose {

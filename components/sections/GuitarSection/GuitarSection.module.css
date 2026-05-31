@@ -71,7 +71,7 @@
   padding: 6px 9px;
   font-size: var(--ds-font-size-xs);
   color: var(--ds-color-text-muted);
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--ds-overlay-60);
   letter-spacing: 0.12em;
   border-bottom: 1px solid var(--ds-color-signal-quiet);
 }
@@ -97,7 +97,7 @@
 .scanLines {
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px);
+  background: repeating-linear-gradient(to bottom, var(--ds-overlay-30) 0 1px, transparent 1px 3px);
   pointer-events: none;
 }
 .scanBeam {
@@ -181,7 +181,7 @@
   padding: 6px 9px;
   font-size: var(--ds-font-size-xs);
   color: var(--ds-color-text-muted);
-  background: rgba(0, 0, 0, 0.65);
+  background: var(--ds-overlay-65);
   letter-spacing: 0.12em;
   border-top: 1px solid var(--ds-color-signal-quiet);
 }
@@ -189,7 +189,7 @@
 /* ─── Influences (shared desktop + mobile) ─────────────────────────────── */
 .influences {
   border: 1px solid var(--ds-color-border-default);
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--ds-overlay-35);
   padding: 14px;
 }
 .influencesHeader {
@@ -265,7 +265,7 @@
 }
 .panel {
   border: 1px solid var(--ds-color-border-default);
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--ds-overlay-35);
   padding: 14px;
 }
 .statusBar {
@@ -337,7 +337,7 @@
   font-size: var(--ds-font-size-xs);
   text-align: center;
   color: var(--ds-color-text-muted);
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--ds-overlay-40);
   letter-spacing: 0.1em;
 }
 .fxBullet {
@@ -398,7 +398,7 @@
 }
 .panelMobile {
   border: 1px solid var(--ds-color-border-default);
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--ds-overlay-35);
   padding: 10px;
 }
 .statusBarMobile {

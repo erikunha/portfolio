@@ -91,7 +91,7 @@
   color: var(--ds-color-text-body);
   overflow-x: auto;
   padding: 14px 16px;
-  background: rgba(0, 255, 65, 0.03);
+  background: var(--ds-glow-03);
   border: 1px solid var(--ds-color-signal-quiet);
   white-space: pre;
 }

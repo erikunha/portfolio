@@ -3,7 +3,7 @@
   height: 14px;
   min-height: 24px;
   border: 1px solid var(--ds-color-signal-quiet);
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--ds-overlay-70);
   display: flex;
   align-items: stretch;
   gap: 1px;

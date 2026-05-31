@@ -39,7 +39,7 @@
 
 .root li:hover {
   border-color: var(--ds-color-signal);
-  box-shadow: 0 0 14px rgba(0, 255, 65, 0.18);
+  box-shadow: 0 0 14px var(--ds-glow-18);
 }
 
 @media (max-width: 900px) {

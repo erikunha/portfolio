@@ -29,7 +29,7 @@
 
 .project:hover {
   border-color: var(--ds-color-signal);
-  box-shadow: 0 0 16px rgba(0, 255, 65, 0.18);
+  box-shadow: 0 0 16px var(--ds-glow-18);
 }
 
 .projectTop {
