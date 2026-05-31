@@ -55,7 +55,7 @@
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px) /* --bp-tablet */ {
   .root {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;

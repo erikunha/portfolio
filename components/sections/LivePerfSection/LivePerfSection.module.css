@@ -74,7 +74,7 @@
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px) /* --bp-tablet */ {
   .root {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -83,7 +83,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   .root {
     gap: 10px;
   }

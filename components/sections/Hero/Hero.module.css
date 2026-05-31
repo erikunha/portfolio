@@ -29,7 +29,7 @@
   transform: translate(-2px, 1px);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px) /* --bp-tablet */ {
   .root {
     min-height: 520px;
   }
@@ -130,7 +130,7 @@
   align-self: flex-start;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px) /* --bp-tablet */ {
   .bio {
     padding: 24px 18px;
   }
@@ -257,7 +257,7 @@ body[data-motion="reduce"] .headline {
   white-space: nowrap;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px) /* --bp-tablet */ {
   .headlinePlate {
     font-size: var(--ds-font-size-heading-sm);
     padding: 5px 14px 6px;
@@ -295,7 +295,7 @@ body[data-motion="reduce"] .headline {
   display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   .desktop {
     display: none;
   }
@@ -363,7 +363,7 @@ body[data-motion="reduce"] .headline {
    Mobile layout uses no flex gap (unlike desktop bio column); margin provides
    spacing between the badge and HeroStats below it. */
 
-@media (max-width: 768px) {
+@media (max-width: 768px) /* --bp-mobile */ {
   .status {
     margin-bottom: 14px;
   }
