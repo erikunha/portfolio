@@ -26,6 +26,12 @@
   --ds-chrome-close: #ff5f57;
   --ds-chrome-minimize: #febc2e;
   --ds-chrome-maximize: #28c840;
+  --ds-z-base: 0;
+  --ds-z-content: 10;
+  --ds-z-chrome: 110;
+  --ds-z-dock: 120;
+  --ds-z-emergency: 150;
+  --ds-z-skiplink: 9999;
   --ds-duration-fast: 80ms;
   --ds-duration-base: 200ms;
   --ds-duration-slow: 300ms;

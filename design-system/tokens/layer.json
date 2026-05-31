@@ -1,0 +1,8 @@
+{
+  "ds-z-base": { "$value": 0, "$type": "number" },
+  "ds-z-content": { "$value": 10, "$type": "number" },
+  "ds-z-chrome": { "$value": 110, "$type": "number" },
+  "ds-z-dock": { "$value": 120, "$type": "number" },
+  "ds-z-emergency": { "$value": 150, "$type": "number" },
+  "ds-z-skiplink": { "$value": 9999, "$type": "number" }
+}
