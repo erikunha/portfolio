@@ -97,7 +97,7 @@
   display: grid;
   grid-template-rows: 0fr;
   /* Destination-state trick: closing uses easeInCubic — slow start, fast snap. */
-  transition: grid-template-rows var(--ds-duration-slow) cubic-bezier(0.32, 0, 0.67, 0);
+  transition: grid-template-rows var(--ds-duration-slow) var(--ds-ease-emphasized-in);
   /* Isolate grid-template-rows layout recalc to this subtree so it does not
      dirty the root stacking context on every animation frame. */
   contain: layout style;
@@ -111,7 +111,7 @@
 .root[open] .body {
   grid-template-rows: 1fr;
   /* Opening uses easeOutCubic — fast pop, smooth settle. */
-  transition: grid-template-rows var(--ds-duration-slow) cubic-bezier(0.33, 1, 0.68, 1);
+  transition: grid-template-rows var(--ds-duration-slow) var(--ds-ease-emphasized-out);
 }
 
 .bodyInner {
@@ -130,7 +130,7 @@
   /* Closing: fade over the full 300ms in sync with the height collapse so
      content and container reach 0 together rather than content vanishing first. */
   opacity: 0;
-  transition: opacity var(--ds-duration-slow) cubic-bezier(0.32, 0, 0.67, 0);
+  transition: opacity var(--ds-duration-slow) var(--ds-ease-emphasized-in);
 }
 
 .bodyContent[data-variant="green"] {
@@ -140,7 +140,7 @@
 .root[open] .bodyContent {
   opacity: 1;
   /* Opening: fade-in delayed 80ms so the panel pops open before content appears. */
-  transition: opacity 200ms ease-out 80ms;
+  transition: opacity var(--ds-duration-base) var(--ds-ease-out) var(--ds-duration-fast);
 }
 
 /* <summary> is the section toggle: chevron + icon + uppercase label. */

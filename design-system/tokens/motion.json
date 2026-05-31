@@ -4,5 +4,7 @@
   "ds-duration-slow": { "$value": "300ms", "$type": "duration" },
   "ds-ease-out": { "$value": "ease-out", "$type": "cubicBezier" },
   "ds-ease-in": { "$value": "ease-in", "$type": "cubicBezier" },
-  "ds-ease-in-out": { "$value": "ease-in-out", "$type": "cubicBezier" }
+  "ds-ease-in-out": { "$value": "ease-in-out", "$type": "cubicBezier" },
+  "ds-ease-emphasized-out": { "$value": "cubic-bezier(0.33, 1, 0.68, 1)", "$type": "cubicBezier" },
+  "ds-ease-emphasized-in": { "$value": "cubic-bezier(0.32, 0, 0.67, 0)", "$type": "cubicBezier" }
 }
