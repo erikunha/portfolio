@@ -19,7 +19,7 @@ export function ComponentNav() {
         <a
           key={id}
           href={`#${id}`}
-          className="text-[10px] font-mono text-text-muted no-underline border border-border-default px-2 py-0.5 transition-[color,border-color] duration-[80ms] hover:text-signal hover:border-signal focus-visible:text-signal focus-visible:border-signal focus-visible:outline-none"
+          className="text-xs font-mono text-text-muted no-underline border border-border-default px-2 py-0.5 transition-[color,border-color] duration-[80ms] hover:text-signal hover:border-signal focus-visible:text-signal focus-visible:border-signal focus-visible:outline-none"
         >
           {label}
         </a>

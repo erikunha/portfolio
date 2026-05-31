@@ -31,7 +31,7 @@ export function TerminalPanel({
       {...rest}
     >
       {header != null && (
-        <div className="border-b border-signal-subtle py-[6px] px-[14px] md:px-[18px] lg:px-6 text-[10px] tracking-[0.12em] text-signal font-mono">
+        <div className="border-b border-signal-subtle py-[6px] px-[14px] md:px-[18px] lg:px-6 text-xs tracking-[0.12em] text-signal font-mono">
           {header}
         </div>
       )}

@@ -15,9 +15,9 @@ export function SpacingRuler({ token, usage }: Props) {
   return (
     <div className="flex items-center gap-3 py-2 border-b border-border-default last:border-0">
       <div className="flex flex-col gap-0.5 min-w-[140px]">
-        <code className="text-[10px] font-mono text-text-muted tracking-widest">--{token}</code>
+        <code className="text-xs font-mono text-text-muted tracking-widest">--{token}</code>
         <span className="text-xs font-mono text-text-body">{resolved}</span>
-        {usage && <span className="text-[10px] font-mono text-text-faint">{usage}</span>}
+        {usage && <span className="text-xs font-mono text-text-faint">{usage}</span>}
       </div>
       <div className="flex-1 h-3 bg-surface border border-border-default relative overflow-hidden">
         <div

@@ -5,7 +5,7 @@ export type StatTileProps = { value: string; label: string; variant?: 'default' 
 export function StatTile({ value, label, variant = 'default' }: StatTileProps) {
   return (
     <dl className="flex flex-col py-[7px] px-[10px] m-0">
-      <dt className="text-text-body text-[10px] tracking-[0.08em] opacity-65 font-mono leading-[1.3]">
+      <dt className="text-text-body text-xs tracking-[0.08em] opacity-65 font-mono leading-[1.3]">
         {label}
       </dt>
       <dd

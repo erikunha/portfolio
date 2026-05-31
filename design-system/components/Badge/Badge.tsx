@@ -13,8 +13,8 @@ export function Badge({ variant = 'default', size = 'md', children }: BadgeProps
         // At very narrow viewports (<360px) allow wrapping so it stays within bounds.
         // Tailwind has no built-in 360px breakpoint; use inline style via a CSS class.
         'max-[359px]:whitespace-normal max-[359px]:flex-wrap',
-        size === 'sm' && 'text-[10px] py-[3px] px-2',
-        size === 'md' && 'text-[10px]',
+        size === 'sm' && 'text-xs py-[3px] px-2',
+        size === 'md' && 'text-xs',
       )}
     >
       {variant === 'dot' && <span className="badge-dot" aria-hidden="true" />}

@@ -122,7 +122,7 @@ export function ContactForm() {
         >
           {status === 'submitting' ? 'TRANSMITTING...' : 'EXECUTE_SEND'}
         </button>
-        <p className="text-text-muted text-[10px] opacity-85 m-0 md:text-xs">
+        <p className="text-text-muted text-xs opacity-85 m-0 md:text-xs">
           waiting for manual override... _
         </p>
       </div>

@@ -25,7 +25,7 @@ function ReceiptCard({
         desktopOnly && 'hidden md:flex',
       )}
     >
-      <p className="text-text-muted text-[10px] tracking-[0.18em] m-0">
+      <p className="text-text-muted text-xs tracking-[0.18em] m-0">
         {mobileMetric ? (
           <>
             <span className="hidden md:inline">{metric}</span>
@@ -45,12 +45,12 @@ function ReceiptCard({
       >
         {delta}
       </p>
-      <p className="text-text-muted text-[10px] tracking-[0.14em] m-0">{company}</p>
+      <p className="text-text-muted text-xs tracking-[0.14em] m-0">{company}</p>
       <p
         className={cn(
           'text-text-body leading-[1.5] mt-auto pt-[6px]',
           'border-t border-dashed border-[var(--color-signal-quiet)]',
-          'text-[10px] md:text-xs',
+          'text-xs md:text-xs',
           hero && 'md:pt-[10px]',
         )}
       >

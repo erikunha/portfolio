@@ -8,7 +8,7 @@ export function KbdKey({ size = 'md', children }: KbdKeyProps) {
     <kbd
       className={cn(
         'inline-flex items-center border border-border-default text-text-body font-mono rounded-[2px]',
-        size === 'sm' && 'text-[10px] px-1 py-0',
+        size === 'sm' && 'text-xs px-1 py-0',
         size === 'md' && 'text-xs px-[6px] py-px',
       )}
     >

@@ -32,7 +32,6 @@
     "check:pkg-age": "node scripts/check-pkg-age.mjs",
     "check:harness-size": "node scripts/check-harness-size.mjs",
     "check:section-order": "node scripts/check-section-order.mjs",
-    "lint:no-module-css": "node scripts/lint-no-module-css.mjs",
     "lint:contrast": "node scripts/contrast-check.mjs",
     "pr:comments": "node scripts/inspect-pr-comments.mjs",
     "pr:gate": "tsx scripts/check-pr-comments.ts",

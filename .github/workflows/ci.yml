@@ -95,9 +95,6 @@ jobs:
       - name: Token drift check
         run: pnpm tokens:check
 
-      - name: No CSS module imports
-        run: pnpm lint:no-module-css
-
       - name: Contrast check
         run: pnpm lint:contrast
 

@@ -48,7 +48,7 @@ export function Field({
         <input {...(rest as InputHTMLAttributes<HTMLInputElement>)} {...inputProps} />
       )}
       {error && (
-        <span id={errId} className="text-[10px] text-error">
+        <span id={errId} className="text-xs text-error">
           {error}
         </span>
       )}

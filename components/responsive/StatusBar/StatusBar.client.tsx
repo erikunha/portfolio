@@ -45,7 +45,7 @@ export function StatusBar() {
 
   return (
     <div
-      className="sticky top-0 z-[110] flex items-center justify-between px-[14px] py-1.5 pt-[calc(env(safe-area-inset-top,0px)+6px)] bg-surface border-b border-signal-subtle text-[10px] tracking-[0.06em] text-signal [font-variant-numeric:tabular-nums]"
+      className="sticky top-0 z-[110] flex items-center justify-between px-[14px] py-1.5 pt-[calc(env(safe-area-inset-top,0px)+6px)] bg-surface border-b border-signal-subtle text-xs tracking-[0.06em] text-signal [font-variant-numeric:tabular-nums]"
       role="status"
       aria-label="device status"
     >
@@ -63,9 +63,9 @@ export function StatusBar() {
           <i className="block w-[3px] bg-signal" style={{ height: 10 }} />
           <i className="block w-[3px] bg-signal opacity-50" style={{ height: 13 }} />
         </span>
-        <span className="text-signal text-[10px] tracking-[0.1em]">5G</span>
+        <span className="text-signal text-xs tracking-[0.1em]">5G</span>
         <span className="inline-flex items-center gap-[3px] text-signal font-bold" aria-hidden>
-          <span className="text-[10px]">78%</span>
+          <span className="text-xs">78%</span>
           <span className="inline-block w-[22px] h-[11px] border border-signal p-px relative after:content-[''] after:absolute after:right-[-3px] after:top-[2px] after:w-[2px] after:h-[5px] after:bg-signal">
             <i className="block h-full bg-signal w-[78%]" />
           </span>

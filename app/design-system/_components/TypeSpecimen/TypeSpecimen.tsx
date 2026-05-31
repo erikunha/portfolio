@@ -21,7 +21,7 @@ export function TypeSpecimen({ token }: Props) {
         Aa
       </div>
       <div className="flex flex-col gap-0.5">
-        <code className="text-[10px] font-mono text-text-muted tracking-widest">--{token}</code>
+        <code className="text-xs font-mono text-text-muted tracking-widest">--{token}</code>
         <span className="text-xs font-mono text-text-body">{resolved}</span>
       </div>
     </div>

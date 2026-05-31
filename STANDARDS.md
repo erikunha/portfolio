@@ -221,7 +221,7 @@ job. The "no copy in `.tsx`" rule is held by PR review against this chapter.
 
 **Rationale.** Tailwind v4 eliminates the authoring friction of typing raw `@media (max-width: 768px)` literals at every responsive override site. `md:` and `lg:` prefixes encode the breakpoint contract directly in the markup, colocated with the layout intent. `@theme` is the superior reference-system artifact: it is the current industry standard for design tokens in Next.js projects, readable by any senior frontend reviewer, and enforced by the same single-source-of-truth discipline the old Style Dictionary provided — without the build pipeline. PostCSS returns to the stack exclusively as the `@tailwindcss/postcss` plugin; no other PostCSS transformations are applied.
 
-**How it is held.** `scripts/lint-no-module-css.mjs` runs in CI and exits 1 if any `.tsx` or `.ts` file imports a `.module.css` file. `scripts/contrast-check.mjs` audits every documented text/surface pair against WCAG AA ratios; values are hardcoded from `@theme` (update both when the palette changes). Visual regression (`tests/e2e/visual.spec.ts`) catches any layout shift from CSS changes. The `ui-ux-tester` agent dispatches on CSS/layout changes. ADR entries for CSS system changes live in `DECISIONS.md`.
+**How it is held.** `scripts/contrast-check.mjs` audits every documented text/surface pair against WCAG AA ratios; values are hardcoded from `@theme` (update both when the palette changes). CSS modules are allowed for components with complex styling needs that utilities cannot express. Visual regression (`tests/e2e/visual.spec.ts`) catches any layout shift from CSS changes. The `ui-ux-tester` agent dispatches on CSS/layout changes. ADR entries for CSS system changes live in `DECISIONS.md`.
 
 ---
 
@@ -349,7 +349,7 @@ branch protection) is the human-in-the-loop backstop.
 
 **Rationale.** Tailwind `@theme` replaces Style Dictionary as the design token source with zero build pipeline overhead — same single-source-of-truth discipline, immediately recognisable to any senior reviewer, and live-verified by TypeScript autocomplete on every utility class. The JSON token files are retained because they encode the palette structure and semantic intent legibly for documentation and human review; they are just not the build-time source of truth anymore.
 
-**How it is held.** CI gates: (1) `lint:no-module-css` rejects `.module.css` imports in `.tsx`/`.ts`, (2) `scripts/contrast-check.mjs` audits semantic pairs against WCAG AA, (3) `pnpm bundle-check` gates JS bundle size per route, (4) `check:component-docs-coverage` fails if a primitive component lacks a `## ComponentName` heading in `app/design-system/components/page.mdx`. Visual regression covers every primitive component. The `architect-reviewer` agent runs against any spec touching the design system before `writing-plans`. ADR entries for design-system changes live in `DECISIONS.md`.
+**How it is held.** CI gates: (1) `scripts/contrast-check.mjs` audits semantic pairs against WCAG AA, (2) `pnpm bundle-check` gates JS bundle size per route, (3) `check:component-docs-coverage` fails if a primitive component lacks a `## ComponentName` heading in `app/design-system/components/page.mdx`. CSS modules are allowed when a component needs them. Visual regression covers every primitive component. The `architect-reviewer` agent runs against any spec touching the design system before `writing-plans`. ADR entries for design-system changes live in `DECISIONS.md`.
 
 ---
 

@@ -127,12 +127,12 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 | 4 — Testing | `no-source-grep.test.ts` bans `readFileSync` without allow tag; behavioral assertions only |
 | 5 — Dependencies | `check-dep-pinning.mjs` rejects `latest`/`*`; `--frozen-lockfile` in CI |
 | 6 — Content | `validate-content.ts` Zod schemas at build time; no copy inlined in `.tsx` |
-| 7 — CSS/tokens | `lint:no-module-css` + `lint:contrast`; Tailwind utilities only, no CSS modules, no raw hex |
+| 7 — CSS/tokens | `lint:contrast`; token palette only, no raw hex; CSS modules allowed for components with complex styling needs |
 | 8 — A11y | axe-core gate + Lighthouse =100; per-component behavioral a11y tests |
 | 9 — Security | Behavioral tests for CSP + kill switches (not source-grep); `security-auditor` on any `app/api/` change |
 | 10 — Docs | PR review: doc claims must match live code; ADRs cite SHA + reversibility note |
 | 11 — DX | pre-commit = Biome (<1s) + commitlint (scope required, error on missing); pre-push = full verify + branch-name `<type>/<description>` enforced; never disable a gate to merge |
-| 12 — Design system | `lint:no-module-css` + `lint:contrast` + component-docs CI gates |
+| 12 — Design system | `lint:contrast` + component-docs CI gates |
 
 **Hook authoring:** `.claude/hooks/*` PreToolUse guards that must BLOCK a tool call exit with code **2** (exit 1 is a non-blocking warning — the command still runs). `bash-guard.sh` blocks (broad `git add`, npm/yarn, `gh pr merge`, force-push, fallow non-read-only) use `exit 2`; verify a guard blocks with a live test, not its printed `[BLOCKED]` message.
 

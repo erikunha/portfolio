@@ -103,7 +103,7 @@ export function Dock() {
           key={it.href}
           href={it.href}
           onClick={onJump(it.href, it.target)}
-          className="flex flex-col items-center justify-center gap-[3px] py-1.5 px-1 text-text-muted text-[10px] tracking-[0.1em] uppercase min-h-12 rounded-[4px] active:bg-signal-faint [&_svg]:w-[18px] [&_svg]:h-[18px] [&_svg]:stroke-current [&_svg]:fill-none [&_svg]:[stroke-width:1.6]"
+          className="flex flex-col items-center justify-center gap-[3px] py-1.5 px-1 text-text-muted text-xs tracking-[0.1em] uppercase min-h-12 rounded-[4px] active:bg-signal-faint [&_svg]:w-[18px] [&_svg]:h-[18px] [&_svg]:stroke-current [&_svg]:fill-none [&_svg]:[stroke-width:1.6]"
         >
           {it.icon}
           {it.label}

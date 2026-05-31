@@ -45,7 +45,7 @@ function FxGrid({ blocks }: { blocks: Block[] }) {
         <div
           key={b.name}
           className={cn(
-            'py-[5px] text-[10px] text-center tracking-[0.1em]',
+            'py-[5px] text-xs text-center tracking-[0.1em]',
             b.active
               ? [
                   'border border-signal text-signal relative',
@@ -77,7 +77,7 @@ function FxList({ blocks }: { blocks: Block[] }) {
         <div
           key={b.name}
           className={cn(
-            'flex gap-2 items-center text-[10px] px-2 py-[11px]',
+            'flex gap-2 items-center text-xs px-2 py-[11px]',
             b.active
               ? [
                   'border border-signal text-signal',
@@ -103,7 +103,7 @@ function InfluencesList({
 }) {
   return (
     <div className="border border-[var(--color-border-default)] bg-black/35 p-[14px]">
-      <div className="flex justify-between text-[10px] text-text-muted tracking-[0.16em] mb-3">
+      <div className="flex justify-between text-xs text-text-muted tracking-[0.16em] mb-3">
         <span>
           {'INFLUENCES.QUEUE · '}
           <span className="text-signal">{influences.length} LOADED</span>
@@ -115,12 +115,12 @@ function InfluencesList({
           key={inf.rank}
           className={cn(
             'grid grid-cols-[36px_1fr_auto] gap-[10px] items-center mb-[9px]',
-            'text-text-body text-[10px]',
+            'text-text-body text-xs',
             inf.active && 'text-signal font-bold',
           )}
           data-active={inf.active || undefined}
         >
-          <span className="text-text-muted text-[10px] tracking-[0.1em]">
+          <span className="text-text-muted text-xs tracking-[0.1em]">
             {inf.active ? '▶ ' : ''}
             {String(inf.rank).padStart(2, '0')}
           </span>
@@ -128,7 +128,7 @@ function InfluencesList({
           <InfluenceBars filled={inf.strength} />
         </div>
       ))}
-      <div className="mt-3 pt-[10px] border-t border-dashed border-[var(--color-signal-quiet)] text-[10px] text-text-muted">
+      <div className="mt-3 pt-[10px] border-t border-dashed border-[var(--color-signal-quiet)] text-xs text-text-muted">
         <strong className="text-signal font-bold">now obsessing:</strong> {nowObsessing}
       </div>
     </div>
@@ -138,7 +138,7 @@ function InfluencesList({
 function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
   return (
     <div className="border border-signal flex flex-col overflow-hidden">
-      <div className="flex justify-between px-[9px] py-[6px] text-[10px] text-text-muted bg-black/60 tracking-[0.12em] border-b border-[var(--color-signal-quiet)]">
+      <div className="flex justify-between px-[9px] py-[6px] text-xs text-text-muted bg-black/60 tracking-[0.12em] border-b border-[var(--color-signal-quiet)]">
         <span>{liveCam.status}</span>
         <span>{liveCam.cameraLabel}</span>
       </div>
@@ -167,7 +167,7 @@ function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
           <i />
         </div>
       </div>
-      <div className="px-[9px] py-[6px] text-[10px] text-text-muted bg-black/65 tracking-[0.12em] border-t border-[var(--color-signal-quiet)]">
+      <div className="px-[9px] py-[6px] text-xs text-text-muted bg-black/65 tracking-[0.12em] border-t border-[var(--color-signal-quiet)]">
         {liveCam.caption}
       </div>
     </div>
@@ -270,7 +270,7 @@ export function GuitarMobile() {
       data-testid="guitar-mobile"
     >
       <div className="border border-[var(--color-border-default)] bg-black/35 p-[10px]">
-        <div className="text-[10px] text-text-muted mb-[10px] leading-[1.7]">
+        <div className="text-xs text-text-muted mb-[10px] leading-[1.7]">
           <div>
             <span className="text-signal" aria-hidden="true">
               ●
@@ -293,12 +293,12 @@ export function GuitarMobile() {
               className="border border-signal bg-[color-mix(in_srgb,var(--color-signal)_4%,transparent)] p-[10px] flex flex-col gap-1"
               data-testid={`signal-node-mobile-${node.role}`}
             >
-              <div className="text-[10px] text-text-muted tracking-[0.04em]">
+              <div className="text-xs text-text-muted tracking-[0.04em]">
                 {'// '}
                 {node.role}
               </div>
               <div className="font-bold text-xs text-signal leading-[1.2]">{node.name}</div>
-              <div className="text-[10px] text-text-body opacity-85">{node.subtitle}</div>
+              <div className="text-xs text-text-body opacity-85">{node.subtitle}</div>
               {node.role === 'FX' ? (
                 <FxList blocks={node.blocks} />
               ) : (
@@ -318,12 +318,12 @@ export function GuitarMobile() {
             className="bg-black px-[13px] pt-[11px] pb-[13px]"
             data-testid={`stat-mobile-${stat.label}`}
           >
-            <div className="text-[10px] text-text-muted tracking-[0.04em] mb-1">
+            <div className="text-xs text-text-muted tracking-[0.04em] mb-1">
               {'// '}
               {stat.label}
             </div>
             <div className="font-bold text-signal text-xs leading-[1.4]">{stat.value}</div>
-            <div className="text-[10px] text-text-body leading-[1.4]">{stat.sub}</div>
+            <div className="text-xs text-text-body leading-[1.4]">{stat.sub}</div>
           </div>
         ))}
       </div>

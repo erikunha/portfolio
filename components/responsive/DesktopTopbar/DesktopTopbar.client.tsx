@@ -96,7 +96,7 @@ export function DesktopTopbar() {
           </button>
           <a
             className={cn(
-              'border border-signal text-signal px-3 py-1.5 tracking-[0.08em] text-[10px] inline-block whitespace-nowrap',
+              'border border-signal text-signal px-3 py-1.5 tracking-[0.08em] text-xs inline-block whitespace-nowrap',
               'transition-[box-shadow,background] duration-200 ease-out',
               'hover:shadow-[0_0_12px_var(--color-signal)] hover:bg-signal-quiet',
               'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',

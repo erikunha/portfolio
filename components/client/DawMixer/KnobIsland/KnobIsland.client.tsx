@@ -146,9 +146,7 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
           strokeLinecap="round"
         />
       </svg>
-      <div className="text-[10px] text-text-muted text-center tracking-[0.1em] font-mono">
-        {label}
-      </div>
+      <div className="text-xs text-text-muted text-center tracking-[0.1em] font-mono">{label}</div>
     </div>
   );
 }
