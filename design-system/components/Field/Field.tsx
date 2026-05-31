@@ -1,8 +1,7 @@
 'use client';
 
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
-import { cx } from '../../lib/cx';
-import styles from './Field.module.css';
+import { cn } from '@/lib/cn';
 
 export type FieldBase = { name: string; label: string; error?: string };
 export type SingleLineProps = FieldBase &
@@ -10,6 +9,9 @@ export type SingleLineProps = FieldBase &
 export type MultiLineProps = FieldBase &
   TextareaHTMLAttributes<HTMLTextAreaElement> & { multiline: true; rows?: number };
 export type FieldProps = SingleLineProps | MultiLineProps;
+
+const inputClasses =
+  'w-full bg-transparent border border-border-default text-text-body font-mono text-xs px-[10px] py-2 min-h-11 resize-y transition-[border-color] duration-[var(--ds-duration-base)] ease-out placeholder:text-signal placeholder:opacity-60 focus-visible:border-signal aria-[invalid=true]:border-error';
 
 export function Field({
   name,
@@ -27,13 +29,13 @@ export function Field({
   const inputProps = {
     id,
     name,
-    className: cx(styles.input, consumerClassName),
+    className: cn(inputClasses, consumerClassName),
     ...(error ? { 'aria-invalid': 'true' as const } : {}),
     'aria-describedby': describedBy,
   };
   return (
-    <div className={styles.root}>
-      <label htmlFor={id} className={styles.label}>
+    <div className="flex flex-col gap-[6px]">
+      <label htmlFor={id} className="text-xs text-text-muted tracking-[0.08em]">
         {label}
       </label>
       {multiline ? (
@@ -46,7 +48,7 @@ export function Field({
         <input {...(rest as InputHTMLAttributes<HTMLInputElement>)} {...inputProps} />
       )}
       {error && (
-        <span id={errId} className={styles.error}>
+        <span id={errId} className="text-[10px] text-error">
           {error}
         </span>
       )}

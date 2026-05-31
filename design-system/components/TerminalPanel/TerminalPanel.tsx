@@ -1,6 +1,5 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
-import { cx } from '../../lib/cx';
-import styles from './TerminalPanel.module.css';
+import { cn } from '@/lib/cn';
 
 export type BorderStyle = 'solid' | 'dashed';
 export type AsElement = 'div' | 'section' | 'article';
@@ -24,10 +23,18 @@ export function TerminalPanel({
   const Element = as;
   return (
     <Element
-      className={cx(styles.root, borderStyle === 'dashed' && styles.dashed, className)}
+      className={cn(
+        'border border-signal-subtle bg-transparent',
+        borderStyle === 'dashed' && 'border-dashed',
+        className,
+      )}
       {...rest}
     >
-      {header != null && <div className={styles.header}>{header}</div>}
+      {header != null && (
+        <div className="border-b border-signal-subtle py-[6px] px-[var(--ds-space-pad)] text-[10px] tracking-[0.12em] text-signal font-mono">
+          {header}
+        </div>
+      )}
       {children}
     </Element>
   );

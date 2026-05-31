@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import styles from './CmdLine.module.css';
 
 export type CmdLineProps = { user?: string; command: string; output?: ReactNode; prompt?: string };
 
@@ -10,13 +9,13 @@ export function CmdLine({
   prompt = ':~$',
 }: CmdLineProps) {
   return (
-    <div className={styles.root}>
-      <div className={styles.prompt}>
-        <span className={styles.user}>{user}</span>
-        <span className={styles.sep}>{prompt}</span>
-        <span className={styles.cmd}>{command}</span>
+    <div className="font-mono text-sm leading-[1.55]">
+      <div className="flex flex-wrap gap-x-1">
+        <span className="text-text-muted">{user}</span>
+        <span className="text-text-muted">{prompt}</span>
+        <span className="text-text-body">{command}</span>
       </div>
-      {output != null && <div className={styles.output}>{output}</div>}
+      {output != null && <div className="text-text-body mt-1">{output}</div>}
     </div>
   );
 }

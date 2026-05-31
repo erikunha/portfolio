@@ -1,9 +1,18 @@
 import type { ReactNode } from 'react';
-import { cx } from '../../lib/cx';
-import styles from './KbdKey.module.css';
+import { cn } from '@/lib/cn';
 
 export type KbdKeyProps = { size?: 'sm' | 'md'; children: ReactNode };
 
 export function KbdKey({ size = 'md', children }: KbdKeyProps) {
-  return <kbd className={cx(styles.root, styles[size])}>{children}</kbd>;
+  return (
+    <kbd
+      className={cn(
+        'inline-flex items-center border border-border-default text-text-body font-mono rounded-[2px]',
+        size === 'sm' && 'text-[10px] px-1 py-0',
+        size === 'md' && 'text-xs px-[6px] py-px',
+      )}
+    >
+      {children}
+    </kbd>
+  );
 }
