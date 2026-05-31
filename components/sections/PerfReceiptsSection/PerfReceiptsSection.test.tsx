@@ -1,7 +1,7 @@
 // components/sections/PerfReceiptsSection/PerfReceiptsSection.test.tsx
 // Behavioral tests: hero receipt carries data-featured attribute instead of a
-// concatenated CSS class — the attribute drives the CSS variant selector
-// .delta[data-featured] in PerfReceiptsSection.module.css.
+// concatenated CSS class — the attribute drives the Tailwind variant selector
+// via data-[featured]:... utility classes.
 
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';

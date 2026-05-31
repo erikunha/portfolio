@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { CmdLine } from './CmdLine';
-import styles from './CmdLine.module.css';
 
 describe('CmdLine', () => {
   it('renders user, prompt, and command', () => {
@@ -21,6 +20,7 @@ describe('CmdLine', () => {
   });
   it('does not render output wrapper when output is undefined', () => {
     const { container } = render(<CmdLine command="ls" />);
-    expect(container.querySelector(`.${styles.output as string}`)).toBeNull();
+    // Root div has exactly one child (the prompt row) when no output is provided
+    expect(container.firstElementChild?.childElementCount).toBe(1);
   });
 });

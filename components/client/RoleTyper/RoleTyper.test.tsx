@@ -33,7 +33,7 @@ function getLiveRegion() {
   return getDOM().querySelector('span.sr-only[role="status"]');
 }
 
-// Guards the pill min-width budget in ReadmeSection.module.css.
+// Guards the pill min-width budget via Tailwind min-w-[9em] utility.
 // The CSS reserves 9em for the longest role including brackets.
 // At 14px body / 0.6em-per-char in JetBrains Mono: 9em = 126px outer,
 // minus 12px padding = 114px content; [Principal] = 11 chars ≈ 92px + letter-spacing.
