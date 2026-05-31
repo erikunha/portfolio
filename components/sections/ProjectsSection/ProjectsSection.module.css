@@ -19,10 +19,14 @@
 .project {
   position: relative;
   border: 1px solid var(--ds-color-signal-subtle);
-  padding: var(--ds-space-pad);
+  padding: 20px;
   transition:
     border-color 200ms ease,
     box-shadow 200ms ease;
+
+  @media (max-width: 768px) {
+    padding: 14px;
+  }
 }
 
 .project:hover {
