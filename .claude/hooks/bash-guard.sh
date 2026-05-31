@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # PreToolUse hook for Bash tool.
-# Receives tool input JSON on stdin. Exit 0 = allow. Exit non-zero = block.
+# Receives tool input JSON on stdin. Exit 0 = allow. Exit 2 = block. Exit 1 = non-blocking warning.
 # Output is shown to Claude as the blocking reason.
 
 INPUT=$(cat)
@@ -20,7 +20,7 @@ if printf '%s' "$CMD" | grep -qE 'git\s+add\s+(-A\b|--all\b|\.\s*$|\.\s+)'; then
   printf '[BLOCKED] Broad git add detected.\n'
   printf 'CLAUDE.md: use git add -u or git add <specific files> only.\n'
   printf 'git add . / -A / --all stages unintended files (screenshots, worktree artifacts).\n'
-  exit 1
+  exit 2
 fi
 
 # ── Block: npm or yarn — wrong package manager ────────────────────────────────
@@ -29,7 +29,7 @@ if printf '%s' "$CMD" | grep -qE '^\s*(npm|yarn)\s+'; then
   SUBCMD=$(printf '%s' "$CMD" | sed -E 's/^[[:space:]]*(npm|yarn)[[:space:]]+//')
   printf '[BLOCKED] npm/yarn detected. This project uses pnpm only.\n'
   printf 'Use instead: pnpm %s\n' "$SUBCMD"
-  exit 1
+  exit 2
 fi
 
 # ── Block: gh pr merge called directly by an AI agent ───────────────────────
@@ -40,7 +40,7 @@ if printf '%s' "$CMD" | grep -qE 'gh pr merge'; then
   printf 'AI agents must run: pnpm ready-to-merge [pr-number]\n'
   printf 'This enforces: ci:local + branch-protection + Copilot review gate + resolved threads.\n'
   printf 'The repo owner may run gh pr merge directly in an external terminal to bypass.\n'
-  exit 1
+  exit 2
 fi
 
 # ── Block: force push to main ────────────────────────────────────────────────
@@ -48,7 +48,7 @@ if printf '%s' "$CMD" | grep -qP 'git push.*(--force|-f)\b.*\bmain\b|git push.*\
    printf '%s' "$CMD" | grep -E 'git push.*(--force|--force-with-lease).*main|git push.*main.*(--force|--force-with-lease)' > /dev/null 2>&1; then
   printf '[BLOCKED] Force push to main is not allowed.\n'
   printf 'Rebase the feature branch onto main and merge via PR instead.\n'
-  exit 1
+  exit 2
 fi
 
 # ── Warn: (design-system) commit scope — changelog:sync required ─────────────

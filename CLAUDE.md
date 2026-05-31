@@ -34,8 +34,8 @@
 | `pnpm pr-size` | After every commit block and before opening a PR — decides whether to split |
 | `pnpm ready-for-pr` | Before `gh pr create` — runs ci:local + pr-size + gates:runtime, prints next-step checklist |
 | `pnpm validate-pr-body [<pr>]` | After `gh pr create` — exits 1 if any template section is missing or empty; must pass before requesting review |
-| `pnpm ready-to-merge [<pr>]` | Before `gh pr merge` — runs ci:local + branch-protection + resolved threads + pr-metrics |
-| `pnpm pr-metrics [<pr>]` | During or after PR review — reports review cycle count, size, days open |
+| `pnpm ready-to-merge [<pr>]` | Before `gh pr merge` — runs ci:local + branch-protection + Copilot review + resolved threads + pr-metrics |
+| `pnpm pr-metrics [<pr>]` | During or after PR review — reports Copilot cycle count, size, days open |
 | `pnpm changelog:sync` | After any commit with scope `(design-system)` — regenerates `app/design-system/changelog/page.mdx` from full git history |
 
 ## Engineering context
@@ -131,7 +131,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 | 8 — A11y | axe-core gate + Lighthouse =100; per-component behavioral a11y tests |
 | 9 — Security | Behavioral tests for CSP + kill switches (not source-grep); `security-auditor` on any `app/api/` change |
 | 10 — Docs | PR review: doc claims must match live code; ADRs cite SHA + reversibility note |
-| 11 — DX | pre-commit = Biome (<1s); pre-push = full verify; never disable a gate to merge |
+| 11 — DX | pre-commit = Biome (<1s) + commitlint (scope required, error on missing); pre-push = full verify + branch-name `<type>/<description>` enforced; never disable a gate to merge |
 | 12 — Design system | `tokens:check` + `lint-token-boundary` + `lint-no-magic-values` + `contrast-check` + component-docs CI gates |
 
 ## Package + manager policy
@@ -183,8 +183,8 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **Auto-review before opening any PR.** Run `pnpm ready-for-pr` (ci:local + pr-size + gates:runtime). Then invoke `pr-review-toolkit:review-pr` against the diff. Address all Critical and Important findings before `gh pr create`. `pnpm ready-for-pr` is required even when the pre-push review has already run — it additionally covers `bundle-check`, `pr-size`, and runtime gates. Use `--skip-runtime` only for docs-only PRs. Opening with known issues requires written justification in the PR body.
 - **Fill the PR template when creating PRs — hard gate.** Before writing a PR body: `cat .github/pull_request_template.md`, then fill EVERY section (Summary, Type of change, Test plan, Visual changes, Checklist). Never write a custom body from scratch — always start from the template structure. After `gh pr create`, run `pnpm validate-pr-body <pr>` immediately; it exits 1 if any section is missing or empty. Do not proceed to reviewer request until it passes.
 - **Playwright MCP visual check before writing or changing tests.** After implementing any section or component (or after changes that affect rendering), run `pnpm dev` and use the Playwright MCP tool to visually inspect desktop (1280×720) + mobile (375×812) BEFORE touching test files. Tests must assert observable, verified behavior — not assumed behavior. If the visual check reveals something unexpected, fix it first. Only then write or update tests. This also applies before the pre-PR Playwright check (PR merge gate #9 below).
-- **The review should be boring.** If `pr-review-toolkit:review-pr` finds real bugs, the pre-implementation discipline failed. `thinking-inversion` before writing and TDD during implementation are the actual defences — not the review. Multi-round review cycles mean the writing process needs fixing.
-- **Every plan must include a failure-mode checklist.** Run `thinking-inversion` before `writing-plans` on any task. Each bug class becomes an explicit plan task — not a reviewer finding after the fact.
+- **The review should be boring.** If `pr-review-toolkit:review-pr` or Copilot finds real bugs, the pre-implementation discipline failed. `thinking-inversion` before writing and TDD during implementation are the actual defences — not the review. Multi-round Copilot cycles mean the writing process needs fixing.
+- **Every plan must include a failure-mode checklist.** Run `thinking-inversion` before `writing-plans` on any task. Each bug class becomes an explicit plan task — not a Copilot finding after the fact.
 - **When dispatching implementer subagents, always include in the prompt:** "Use `git add -u` or `git add <specific files>` — never `git add .`, `git add -A`, or `git add --all`. Stage only the files you created or modified in this task."
 - **File-move tasks must include a consumer-scan step.** Before writing plan tasks for any `git mv` operation, grep for all callers of the files being moved (`grep -r 'OldPath' --include='*.ts' --include='*.tsx'`) and include path-update tasks for every match including test files. Stale path comments (`// components/OldPath.tsx`) in moved files are a separate required fix step.
 - **Verification before any completion claim.** Before reporting done, fixing, or passing: run `pnpm typecheck && pnpm test --run && pnpm build`, read the output, cite the result. "Should pass" is not evidence. Invoke `superpowers:verification-before-completion` if rationalizing.
@@ -198,14 +198,16 @@ i18n · light theme · blog/MDX engine · analytics beyond Vercel Web Analytics 
 
 ## PR merge gate
 
-1. **GitHub resolve-thread is ground truth.** No merge while any `PullRequestReviewThread` is `isResolved: false` (`required_conversation_resolution` branch protection).
-2. **AI agents must RESOLVE or ESCALATE every open comment.** RESOLVE = fix commit + SHA reply + behavioral test update. ESCALATE = verbatim comment + 2-3 options + recommendation; wait for decision. No third bucket.
-3. **In-session reviewer findings count.** Critical/Important from `pr-review-toolkit`, `code-review`, or `ultrareview` must be fixed (commit) or posted as file-line review threads (not timeline comments).
-4. **Self-resolve is detectable.** `scripts/check-pr-comments.ts` warns; document override if intentional.
-5. **Mechanical command.** `pnpm ready-to-merge <pr>` — ci:local + branch-protection + unresolved-thread check. Must pass before `gh pr merge`.
-6. **The branch protection rule must stay enabled.**
-7. **Local playwright visual check before merge.** `pnpm dev` + playwright MCP: desktop (1280×720) + mobile (375×812) on all changed sections. CI baselines don't catch intent regressions.
-8. **Rebase before merge (non-dependabot only).** `git fetch && git rebase origin/main`. Skip `dependabot/*` branches. Exception: when the user says "merge"/"ship" on a PR that already passed the full review battery and CI — execute `gh pr merge` immediately, no rebase (rebasing would change HEAD, invalidate the review stamp, and trigger the pre-push hook needlessly). See `DECISIONS.md` for why this is a local gate only.
+1. **AI agents may not call `gh pr merge` without Copilot review.** Repo owner may merge directly. Agents: `pnpm ready-to-merge <pr>` must pass; wait if Copilot unavailable — do not self-authorize.
+2. **GitHub resolve-thread is ground truth.** No merge while any `PullRequestReviewThread` is `isResolved: false` (`required_conversation_resolution` branch protection).
+3. **AI agents must RESOLVE or ESCALATE every open comment.** RESOLVE = fix commit + SHA reply + behavioral test update. ESCALATE = verbatim comment + 2-3 options + recommendation; wait for decision. No third bucket.
+4. **In-session reviewer findings count.** Critical/Important from `pr-review-toolkit`, `code-review`, or `ultrareview` must be fixed (commit) or posted as file-line review threads (not timeline comments).
+5. **Self-resolve is detectable.** `scripts/check-pr-comments.ts` warns; document override if intentional.
+6. **Mechanical command.** `pnpm ready-to-merge <pr>` — ci:local + branch-protection + Copilot approval + unresolved-thread check. Must pass before `gh pr merge`.
+7. **The branch protection rule must stay enabled.**
+8. **Copilot auto-reviews on PR open — do NOT post any comment on open.** After any push that fixes a **Copilot thread**: reply to each addressed thread (`gh api repos/{owner}/{repo}/pulls/<pr>/comments/<databaseId>/replies -f body="Fixed in <sha>. <reason>"`), then re-request (`gh pr edit <pr> --add-reviewer copilot-pull-request-reviewer`). Do NOT re-request after self-found fixes (CI failures, self-discovered bugs) — that burns a review cycle with no new signal. No PR-level timeline comment. (Raw REST API rejects Copilot; `gh pr edit` works.)
+9. **Local playwright visual check before merge.** `pnpm dev` + playwright MCP: desktop (1280×720) + mobile (375×812) on all changed sections. CI baselines don't catch intent regressions.
+10. **Rebase before merge (non-dependabot only).** `git fetch && git rebase origin/main`. Skip `dependabot/*` branches. Exception: when the user says "merge"/"ship" on a PR that already passed the full review battery and CI — execute `gh pr merge` immediately, no rebase (rebasing would change HEAD, invalidate the review stamp, and trigger the pre-push hook needlessly). See `DECISIONS.md` for why this is a local gate only.
 
 ## Things that have been considered and rejected
 

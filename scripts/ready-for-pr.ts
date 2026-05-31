@@ -6,8 +6,9 @@
 //
 // Gates (in order):
 //   1. pnpm ci:local      — lint + typecheck + content validate + tests
-//   2. pnpm pr-size       — branch complexity; exits 1 if red (split required)
-//   3. pnpm gates:runtime — build + server + LHCI + axe + E2E (skip with --skip-runtime)
+//   2. pnpm bundle-check  — gzipped chunk size gate
+//   3. pnpm pr-size       — branch complexity; exits 1 if red (split required)
+//   4. pnpm gates:runtime — build + server + LHCI + axe + E2E (skip with --skip-runtime)
 //
 // On pass: prints next-step reminder (visual check + auto-review).
 // On fail: exits 1 with clear message about which gate failed.
@@ -37,7 +38,17 @@ try {
   process.exit(1);
 }
 
-// Gate 2: PR size
+// Gate 2: bundle size
+try {
+  execFileSync('pnpm', ['bundle-check'], { stdio: 'inherit' });
+} catch {
+  process.stderr.write(
+    `\n${C.red}[ready-for-pr] FAIL${C.reset} — bundle-check failed. Reduce chunk sizes before opening PR.\n`,
+  );
+  process.exit(1);
+}
+
+// Gate 3: PR size
 let sizeRed = false;
 try {
   execFileSync('pnpm', ['pr-size'], { stdio: 'inherit' });
@@ -56,7 +67,7 @@ if (sizeRed) {
   process.exit(1);
 }
 
-// Gate 3: runtime gates (build + server + LHCI + axe + E2E)
+// Gate 4: runtime gates (build + server + LHCI + axe + E2E)
 if (SKIP_RUNTIME) {
   process.stdout.write(`${C.yellow}[ready-for-pr] Gate 3 skipped (--skip-runtime).${C.reset}\n`);
 } else {
