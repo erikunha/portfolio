@@ -1,3 +1,5 @@
+> **Status: Superseded by PR #80** — Tailwind v4 migration replaces the CSS module + Style Dictionary system described here. See `docs/superpowers/specs/2026-05-31-tailwind-v4-migration-design.md` and `DECISIONS.md` (2026-05-31 entry).
+
 # Design System Tokenized — Design
 
 > **HISTORICAL DOCUMENT — do not follow as implementation guidance.** This spec describes a design that partially diverged during execution. `layer.json` and `--ds-layer-*` tokens were never created. The Style Dictionary config does not generate `tokens.ts` or `tokens.figma.json`. The authoritative token surface is in `STANDARDS.md` Ch.12.

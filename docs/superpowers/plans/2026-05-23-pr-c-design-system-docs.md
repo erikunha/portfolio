@@ -1,3 +1,5 @@
+> **Status: Superseded by PR #80** — Tailwind v4 migration replaces the CSS module + Style Dictionary system described here. See `docs/superpowers/specs/2026-05-31-tailwind-v4-migration-design.md` and `DECISIONS.md` (2026-05-31 entry).
+
 # PR C — /design-system Route + MDX Docs Implementation Plan
 
 > **HISTORICAL DOCUMENT — do not follow as implementation guidance.** Token examples in this doc reference `--ds-layer-*` which were never shipped; `layer.json` does not exist. See `STANDARDS.md` Ch.12 for the authoritative token surface.

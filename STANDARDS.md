@@ -217,35 +217,11 @@ job. The "no copy in `.tsx`" rule is held by PR review against this chapter.
 
 ## 7. CSS & Visual System
 
-**Rule.** Colors and sizes come from `app/css/_tokens.css` only — no hardcoded
-hex literals scattered across files, no drifted near-duplicates of the same
-color in different partials. `@layer` cascade layers declare the ordering
-explicitly (`tokens, base, effects, layout, sections, chrome, shell, contact,
-footer, responsive`, declared in `app/globals.css`); every CSS file wraps its
-rules in its named layer. CLS-safe size reservations (`contain-intrinsic-size`)
-are *measured*, not estimated. The palette is two tokens: `--signal` (lime
-`#00FF41`) for headings, accents, and large text only; `--fg` (`#E6FFE6`,
-~13:1 contrast) for body text. `--signal` is never used for paragraph text — it
-fails WCAG AA at body size. 1px borders, sharp corners.
+**Rule.** All brand colors and font definitions live in `app/css/theme.css` under a single `@theme {}` block — these become Tailwind utility classes (`text-signal`, `bg-surface`, `border-signal-subtle`, etc.). Standard Tailwind utilities handle all spacing, typography, layout, and responsive breakpoints. Complex CSS that cannot be expressed as utilities — CRT scanlines, phosphor glow, `@keyframes`, pseudo-element overlays — lives in `app/css/components.css` under `@layer components` as named classes (`.crt-scanlines`, `.signal-glow`, `.boot-cursor`). No CSS module files exist anywhere in the project. The palette is two semantic roles: `--color-signal` (#00FF41) for headings/accents/large text only; `--color-text-body` (#E6FFE6, ~13:1 contrast) for body. `--color-signal` is never used for paragraph text — it fails WCAG AA at body size. 1px borders, sharp corners.
 
-**Rationale.** A token is a single source of truth; a hardcoded literal is a
-drift waiting to happen — and the audit found exactly that (`#ff5f57` vs
-`#ff5f56` for the same chrome dot across two files). Explicit `@layer` ordering
-removes specificity guesswork: a later file no longer accidentally overrides an
-earlier one through selector weight. An *estimated* `contain-intrinsic-size` is
-a CLS hazard — if the reserved height is wrong, the layout shifts when the real
-content paints.
+**Rationale.** Tailwind v4 eliminates the authoring friction of typing raw `@media (max-width: 768px)` literals at every responsive override site. `md:` and `lg:` prefixes encode the breakpoint contract directly in the markup, colocated with the layout intent. `@theme` is the superior reference-system artifact: it is the current industry standard for design tokens in Next.js projects, readable by any senior frontend reviewer, and enforced by the same single-source-of-truth discipline the old Style Dictionary provided — without the build pipeline. PostCSS returns to the stack exclusively as the `@tailwindcss/postcss` plugin; no other PostCSS transformations are applied.
 
-**How it is held.** PR review against this chapter is the primary mechanism —
-token discipline, layer placement, and the two-token palette rule are checked by
-the reviewer (and the `ui-ux-tester` / `web-design-guidelines` dispatch). The
-safety net for any pixel shift introduced by a token or `@layer` change is the
-`e2e-visual` CI job (`tests/e2e/visual.spec.ts`, four-project matrix);
-baselines are regenerated deliberately via the `workflow_dispatch`
-`update_visual_baselines` path, never silently. CLS itself is gated by
-Lighthouse CI (Chapter 3). There is no source-level "no hardcoded hex" lint
-gate today — that is held by review, stated here so the absence is not
-mistaken for an oversight.
+**How it is held.** `scripts/lint-no-module-css.mjs` runs in CI and exits 1 if any `.tsx` or `.ts` file imports a `.module.css` file. `scripts/contrast-check.mjs` audits every documented text/surface pair against WCAG AA ratios; values are hardcoded from `@theme` (update both when the palette changes). Visual regression (`tests/e2e/visual.spec.ts`) catches any layout shift from CSS changes. The `ui-ux-tester` agent dispatches on CSS/layout changes. ADR entries for CSS system changes live in `DECISIONS.md`.
 
 ---
 
@@ -369,11 +345,11 @@ branch protection) is the human-in-the-loop backstop.
 
 ## 12. Design System
 
-**Rule.** All design tokens are authored in JSON under `design-system/tokens/` — per-category primitive files (`color.json`, `space.json`, `typography.json`, `motion.json`, `border.json`) plus per-theme semantic mapping files under `design-system/tokens/themes/` (`crt-green.json`, `crt-amber.json`). Style Dictionary (exact-pinned) generates two build artifacts: `design-system/dist/tokens.css` (CSS custom properties consumed by all components) and `design-system/dist/tokens.json` (flat key/value JSON consumed by `scripts/contrast-check.mjs`). The token system is two-tier: primitives (raw palette, `--ds-{category}-{scale}`) and semantic (role-based aliases, `--ds-{category}-{role}`). Components consume only semantic tokens; primitive references in component CSS are a lint failure (`scripts/lint-token-boundary.mjs`), with two explicit exceptions: (1) token categories that have no semantic layer in v1 (`--ds-border-*`, `--ds-radius-*`, `--ds-chrome-*`, `--ds-layout-*`) may be referenced directly since there is nothing else to reference; (2) motion primitives (`--ds-duration-*`, `--ds-ease-*`) are allowed inside `@keyframes` blocks where the shorthand semantic form does not compose. Raw hex literals, raw px outside an allowlist, raw ms/s for durations, and hardcoded z-index values in any `.module.css` are also lint failures (`scripts/lint-no-magic-values.mjs`, with `scripts/lint-no-magic-values.allowlist.json` for documented exceptions). Every semantic text/surface pair audited for WCAG AA contrast in CI (`scripts/contrast-check.mjs`). Every primitive component lives under `design-system/components/<Name>/` with `.tsx`, `.module.css`, `.test.tsx`, `index.ts`, and a corresponding MDX docs page. `<Name>` files imported via deep paths only when consumed inside client islands (the barrel re-export from `@/design-system` is RSC-safe only — see Chapter 1).
+**Rule.** Brand design tokens (colors, glow stops, font families) are authored in `app/css/theme.css` under `@theme {}` — the single source of truth consumed by Tailwind's utility-class generator at build time. Standard Tailwind scale handles spacing (`p-4`, `gap-5`), typography (`text-sm`, `text-base`), z-index (`z-10`, `z-50`), and duration (`duration-200`). The `design-system/tokens/*.json` JSON source files are retained as documentation artifacts — they are NOT consumed at build time. Every primitive component lives under `design-system/components/<Name>/` with `.tsx`, `.test.tsx`, `index.ts`, and a corresponding MDX docs page under `app/design-system/`. Components use Tailwind utilities directly; no `.module.css` files exist. Complex per-component visual patterns that cannot be expressed as utilities (pseudo-elements, `@keyframes`, complex box-shadow stacks) are added to `app/css/components.css` under `@layer components` as named classes and referenced by plain className strings. Every semantic text/surface pair is audited for WCAG AA contrast in CI (`scripts/contrast-check.mjs`).
 
-**Rationale.** A single source of truth for design decisions prevents the drift the audit found in the pre-tokens era (`#ff5f57` vs `#ff5f56` for the same chrome dot in two files). The two-tier split separates "what colors exist" (palette) from "what each role is" (semantics), allowing the palette to be repainted without component churn — the architecture the project is the reference for. Lint gates make the rules machine-checkable; PR review is the safety net for everything lint cannot detect. The contrast gate exists because changing a primitive value can silently break a semantic pair below WCAG AA; review alone has historically missed this kind of regression.
+**Rationale.** Tailwind `@theme` replaces Style Dictionary as the design token source with zero build pipeline overhead — same single-source-of-truth discipline, immediately recognisable to any senior reviewer, and live-verified by TypeScript autocomplete on every utility class. The JSON token files are retained because they encode the palette structure and semantic intent legibly for documentation and human review; they are just not the build-time source of truth anymore.
 
-**How it is held.** _(Planned — enforcement gates land in PRs A–E of the design system tokenized spec; see `docs/superpowers/specs/2026-05-23-design-system-tokenized/design.md`. Until those PRs merge, this chapter is a forward-declared standard, not a live gate.)_ Six CI gates: (1) `pnpm tokens:check` regenerates dist and fails on drift, (2) `scripts/lint-token-boundary.mjs` rejects primitives in component CSS, (3) `scripts/lint-no-magic-values.mjs` rejects raw values, (4) `scripts/contrast-check.mjs` walks every documented text/surface pair, (5) `pnpm bundle-check` per route asserts the design system barrel does not leak primitives into the main `/` client bundle, (6) build-time component↔heading check fails if a primitive lacks a corresponding `## ComponentName` heading in `app/design-system/components/page.mdx`. Visual regression Playwright suite covers every primitive component AND every section consuming it (double-catch). The `architect-reviewer` agent runs against any spec touching the design system before `writing-plans`. The `design-system/dist/` directory is gitignored AND covered by a `predev` lifecycle hook so a fresh clone does not break `pnpm dev`. ADR entries for every token-system change live in `DECISIONS.md`. Provenance for this chapter: spec at `docs/superpowers/specs/2026-05-23-design-system-tokenized/design.md`; supersedes the parts of Chapter 7 that pre-date the tokenized design system.
+**How it is held.** CI gates: (1) `lint:no-module-css` rejects `.module.css` imports in `.tsx`/`.ts`, (2) `scripts/contrast-check.mjs` audits semantic pairs against WCAG AA, (3) `pnpm bundle-check` gates JS bundle size per route, (4) `check:component-docs-coverage` fails if a primitive component lacks a `## ComponentName` heading in `app/design-system/components/page.mdx`. Visual regression covers every primitive component. The `architect-reviewer` agent runs against any spec touching the design system before `writing-plans`. ADR entries for design-system changes live in `DECISIONS.md`.
 
 ---
 
