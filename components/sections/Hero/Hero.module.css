@@ -229,7 +229,7 @@ body[data-motion="reduce"] .headline {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  z-index: 150;
+  z-index: var(--ds-z-emergency);
   display: block;
   opacity: 0;
   pointer-events: none;

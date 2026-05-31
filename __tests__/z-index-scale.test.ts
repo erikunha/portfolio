@@ -41,6 +41,7 @@ describe('--ds-z-* layer scale', () => {
   it('emits unitless custom properties in tokens.css (no px on z-index)', () => {
     const match = css.match(/--ds-z-chrome:\s*([^;]+);/);
     expect(match, '--ds-z-chrome must be present in tokens.css').not.toBeNull();
-    expect(match?.[1].trim()).not.toMatch(/px/);
+    const value = (match?.[1] ?? '').trim();
+    expect(value).not.toMatch(/px/);
   });
 });
