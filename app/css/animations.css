@@ -168,6 +168,12 @@
       0 0 8px #000;
   }
 
+  /* CTA buttons must not inherit the boot phosphor shadow: a black-on-green
+     primary button gets a muddy dark halo from it. Match desktop (no shadow). */
+  .hero-boot-text [data-testid="hero-ctas"] {
+    text-shadow: none;
+  }
+
   /* ── Boot line token classes ─────────────────────────────────────────────── */
 
   .hero-boot-line {
