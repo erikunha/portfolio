@@ -7,7 +7,7 @@
 // Gates (in order):
 //   1. pnpm ci:local      — lint + typecheck + content validate + tests
 //   2. pnpm bundle-check  — gzipped chunk size gate
-//   3. pnpm pr-size       — branch complexity; exits 1 if red (split required)
+//   3. pnpm pr-size       — branch complexity; exit 1 = red (split), 2 = blocked
 //   4. pnpm gates:runtime — build + server + LHCI + axe + E2E (skip with --skip-runtime)
 //
 // On pass: prints next-step reminder (visual check + auto-review).
@@ -48,15 +48,26 @@ try {
   process.exit(1);
 }
 
-// Gate 3: PR size
-let sizeRed = false;
+// Gate 3: PR size. pr-size exits 1 = red (split recommended), 2 = blocked
+// (invalid --base / unfetched base ref) — don't conflate the two.
+let sizeFail: 'red' | 'blocked' | null = null;
 try {
   execFileSync('pnpm', ['pr-size'], { stdio: 'inherit' });
-} catch {
-  sizeRed = true;
+} catch (err) {
+  sizeFail = (err as { status?: number }).status === 2 ? 'blocked' : 'red';
 }
 
-if (sizeRed) {
+if (sizeFail === 'blocked') {
+  process.stderr.write(
+    `\n${C.red}[ready-for-pr] FAIL${C.reset} — pr-size could not run (invalid --base or the base ref isn't fetched).\n`,
+  );
+  process.stderr.write(
+    `${C.dim}  Run \`git fetch origin\`, or fix --base / PR_BASE, then retry.${C.reset}\n\n`,
+  );
+  process.exit(1);
+}
+
+if (sizeFail === 'red') {
   process.stderr.write(`\n${C.red}[ready-for-pr] FAIL${C.reset} — branch is too large (red).\n`);
   process.stderr.write(
     `${C.dim}  Open a PR now with completed milestones, continue remaining work on a new branch.${C.reset}\n`,
