@@ -48,13 +48,24 @@ try {
   process.exit(1);
 }
 
-// Gate 3: PR size. pr-size exits 1 = red (split recommended), 2 = blocked
-// (invalid --base / unfetched base ref) — don't conflate the two.
-let sizeFail: 'red' | 'blocked' | null = null;
+// Gate 3: PR size. Map pr-size's exit code exactly — 1 = red (split), 2 =
+// blocked (invalid --base / unfetched base ref) — and treat anything else
+// (signal kill, spawn error, unexpected code) as an unknown failure rather
+// than silently calling it "red".
+let sizeFail: 'red' | 'blocked' | 'error' | null = null;
+let sizeExit: number | undefined;
 try {
   execFileSync('pnpm', ['pr-size'], { stdio: 'inherit' });
 } catch (err) {
-  sizeFail = (err as { status?: number }).status === 2 ? 'blocked' : 'red';
+  sizeExit = (err as { status?: number }).status;
+  sizeFail = sizeExit === 1 ? 'red' : sizeExit === 2 ? 'blocked' : 'error';
+}
+
+if (sizeFail === 'error') {
+  process.stderr.write(
+    `\n${C.red}[ready-for-pr] FAIL${C.reset} — pr-size failed unexpectedly (exit ${sizeExit ?? 'signal/unknown'}). Re-run \`pnpm pr-size\` to see the error.\n\n`,
+  );
+  process.exit(1);
 }
 
 if (sizeFail === 'blocked') {
