@@ -98,7 +98,7 @@ function AnimatedPlaceholder() {
   }, []);
   return (
     <span
-      className="absolute left-0 top-1/2 -translate-y-1/2 text-primary-400 opacity-60 pointer-events-none font-inherit text-[14px] md:text-base whitespace-nowrap overflow-hidden inline-flex items-center"
+      className="absolute left-0 top-1/2 -translate-y-1/2 text-primary-400 opacity-60 pointer-events-none font-inherit text-[14px] whitespace-nowrap overflow-hidden inline-flex items-center"
       aria-hidden="true"
       data-testid="shell-placeholder"
     >
@@ -385,9 +385,7 @@ export function InteractiveShell() {
         className="flex gap-2 items-center px-4 py-2 pb-3 border-t border-[var(--color-primary-quiet)] max-md:px-3 max-md:pb-[10px]"
         data-testid="shell-form"
       >
-        <span className="text-primary-400 text-[14px] md:text-base whitespace-nowrap max-md:text-xs">
-          erik@portfolio:~$
-        </span>
+        <span className="text-primary-400 text-[14px] whitespace-nowrap">erik@portfolio:~$</span>
         <div className="flex-1 relative min-w-0">
           <input
             ref={inputRef}
@@ -400,7 +398,7 @@ export function InteractiveShell() {
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
-            className="w-full bg-transparent border-0 outline-none text-tertiary-50 font-inherit text-[14px] md:text-base caret-primary-500 [caret-shape:block] focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 max-md:text-xs"
+            className="w-full bg-transparent border-0 outline-none text-tertiary-50 font-inherit text-[14px] caret-primary-500 [caret-shape:block] focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
             aria-label="shell command"
           />
           {!input && !busy && !inputFocused && <AnimatedPlaceholder />}
