@@ -27,7 +27,7 @@ import { WindowChrome } from '../../../design-system/components/WindowChrome/Win
   <Button variant="secondary" size="lg" as="a" href="#">LG</Button>
 </Preview>
 
-**Accessibility:** 44px touch target on md size. `focus-visible` outline using `--ds-color-signal`. Disabled anchors use `aria-disabled="true"` (anchors can't be natively disabled).
+**Accessibility:** 44px touch target on md size. `focus-visible` outline using `--color-primary-500`. Disabled anchors use `aria-disabled="true"` (anchors can't be natively disabled).
 
 ## Field
 
@@ -157,7 +157,7 @@ Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RS
 
 Four `StatTile` components in a CSS grid. The grid layout stays in the consumer — primitives don't embed layout opinions.
 
-<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--ds-color-signal-subtle)', marginBottom: 'var(--ds-space-4)', marginLeft: 'calc(-1 * var(--ds-space-pad))', marginRight: 'calc(-1 * var(--ds-space-pad))' }}>
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--color-primary-subtle)', marginBottom: '16px', marginLeft: '-24px', marginRight: '-24px' }}>
   <StatTile value="99" label="LH_SCORE" />
   <StatTile value="5+" label="YRS_EXP" />
   <StatTile value="1.2s" label="LCP" />
@@ -165,7 +165,7 @@ Four `StatTile` components in a CSS grid. The grid layout stays in the consumer 
 </div>
 
 ```tsx
-<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--ds-color-signal-subtle)' }}>
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--color-primary-subtle)' }}>
   <StatTile value="99" label="LH_SCORE" />
   <StatTile value="5+" label="YRS_EXP" />
   <StatTile value="1.2s" label="LCP" />

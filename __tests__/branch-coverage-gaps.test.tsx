@@ -311,7 +311,6 @@ describe('ToTopButton — visible=true className branch', () => {
   });
 
   it('applies the show class to the button when scrollY > 400', async () => {
-    const styles = await import('@/components/client/ToTopButton/ToTopButton.module.css');
     const { ToTopButton } = await import('@/components/client/ToTopButton/ToTopButton');
     mounted = await mountClient(createElement(ToTopButton));
     const btn = mounted.container.querySelector('button');
@@ -319,7 +318,7 @@ describe('ToTopButton — visible=true className branch', () => {
     expect(btn?.getAttribute('aria-label')).toBe('back to top');
     // useEffect calls onScroll() immediately at mount — with scrollY=500, visible
     // flips to true and the show class is applied. This is the branch under test.
-    // biome-ignore lint/style/noNonNullAssertion: CSS modules are identity-mapped in jsdom — key always resolves
-    expect(btn?.classList.contains(styles.default.show!)).toBe(true);
+    // CSS modules removed — class is now a plain string literal 'to-top-show'.
+    expect(btn?.classList.contains('to-top-show')).toBe(true);
   });
 });

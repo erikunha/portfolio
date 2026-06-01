@@ -1,59 +1,56 @@
 export const metadata = {
   title: 'Enforcement — Design System — erikunha.dev',
-  description: 'Lint rules and CI gates enforcing the design token system',
+  description: 'The CI gates that hold the design system to its contract',
 };
 
 # ENFORCEMENT
 
-The design system is enforced in CI — rules are not documentation, they are gates.
+These rules are gates, not documentation — they run in CI and block the merge.
 
-## CI Gates (PR A)
+## Tokens
 
-Four new steps run in `build-and-gate` before the build:
+`app/css/theme.css` (`@theme`) is the single source of truth for brand colour.
+Tailwind generates the `--color-*` custom properties and the matching utilities
+from it; the token swatches on the [Tokens](/design-system/tokens) page read the
+same file.
 
-| Gate | Script | What it checks |
+| Gate | Command | Checks |
 |---|---|---|
-| Token build | `pnpm tokens:build` | Style Dictionary builds without error |
-| Token drift | `pnpm tokens:check` | `design-system/dist/` matches source JSON |
-| Boundary lint | `pnpm lint:token-boundary` | No primitive refs in component CSS |
-| No-magic-values | `pnpm lint:no-magic-values` | No raw hex/px/ms/z-index in module CSS |
-| Contrast | `pnpm lint:contrast` | All WCAG AA pairs pass |
+| Contrast | `pnpm lint:contrast` | Parses `--color-*` from `theme.css`; fails if any documented pair misses WCAG AA |
 
-## Token Boundary Lint
+Type, spacing, motion, and z-index use Tailwind's standard scale (plus arbitrary
+values where required). There is no hand-maintained token layer for them — nothing
+to drift, nothing to lint.
 
-**File:** `scripts/lint-token-boundary.mjs`
+## Styling
 
-Rejects any `.module.css` file that uses a CSS primitive var when a semantic alias exists.
+Components are styled with Tailwind utilities. There are no CSS Modules: the
+`.module.css` files were removed in the Tailwind v4 migration (see `DECISIONS.md`),
+and Lightning CSS handles nesting and autoprefixing natively.
 
-**Forbidden (primitives with semantic aliases):**
-- `var(--ds-green-NNN)` — use `var(--ds-color-signal)` (or other signal alias)
-- `var(--ds-text-NNN)` (digit suffix) — use `var(--ds-color-text-*)`
-- `var(--ds-space-NNN)` (digit suffix) — use `var(--ds-space-pad)` or `--ds-space-rhythm`
-- `var(--ds-text-size-*)` — use `var(--ds-font-size-*)`
+## Components
 
-**Allowed (no semantic layer exists):**
-- `var(--ds-duration-*)`, `var(--ds-ease-*)`, `var(--ds-z-*)`, `var(--ds-radius-*)`, `var(--ds-border-*)`, `var(--ds-chrome-*)`
+| Gate | Command | Checks |
+|---|---|---|
+| Component docs | `pnpm check:component-docs` | Every exported primitive has a `## Name` section in `components/page.mdx` |
+| Visual regression | `tests/e2e/design-system-components.spec.ts` | Linux Chromium pixel baselines per primitive |
+| A11y | `pnpm playwright test tests/a11y` | axe-core scan, zero violations |
 
-## No-Magic-Values Lint
+## Cross-cutting
 
-**File:** `scripts/lint-no-magic-values.mjs`
-
-Rejects raw values that should be token references:
-- Hex colors (`#rrggbb`) — use `var(--ds-color-*)`
-- Raw `px` values outside the allowlist — use spacing tokens
-- Raw `ms`/`s` durations — use `var(--ds-duration-*)`
-- Raw `z-index` integers — use `var(--ds-z-*)`
-
-Exceptions are documented in `scripts/lint-no-magic-values.allowlist.json`.
-
-## Naming Convention
-
-**Primitives MUST NOT use the `--ds-color-` prefix.** That prefix is reserved for semantic tokens. The boundary lint allowlist `var(--ds-color-*)` works correctly only if this convention holds.
+| Gate | Command |
+|---|---|
+| Lint + format | `pnpm biome ci .` |
+| Types | `pnpm typecheck` |
+| Content schema | `pnpm validate-content` |
+| Client/RSC naming | `pnpm check:client-naming` |
+| Dependency pinning | `pnpm check:dep-pinning` |
+| Bundle size | `node scripts/check-bundle-size.mjs` |
+| Lighthouse (a11y = 100) | `pnpm lhci` · `pnpm lhci:mobile` |
 
 ## Adding a New Component
 
-1. Create `design-system/components/NewComponent/` with 4 files (`.tsx`, `.module.css`, `.test.tsx`, `index.ts`)
-2. Export from `design-system/index.ts`
-3. Use only semantic tokens in `.module.css` — boundary lint will fail otherwise
-4. Add `## NewComponent` heading in `app/design-system/components/page.mdx` — the `check:component-docs` gate will fail if missing
-5. Write Playwright visual baseline in `tests/e2e/design-system-components.spec.ts`
+1. Create `design-system/components/NewComponent/` with `.tsx`, `.test.tsx`, and `index.ts` — styled with Tailwind utilities, no `.module.css`.
+2. Export it from `design-system/index.ts`.
+3. Add a `## NewComponent` heading in `app/design-system/components/page.mdx` — `check:component-docs` fails if it is missing.
+4. Add a Playwright visual baseline in `tests/e2e/design-system-components.spec.ts`.

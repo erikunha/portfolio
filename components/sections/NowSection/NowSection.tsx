@@ -1,16 +1,18 @@
 import { nowRows } from '@/content/now';
 import { IconNow } from '../../Icons';
 import { Module } from '../../responsive/Module';
-import styles from './NowSection.module.css';
 
 export function NowSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module id="sec-now" header="CAT ~/.NOW" icon={<IconNow />} defer={defer}>
-      <div className={styles.root}>
+      <div className="text-sm leading-[1.9] max-[768px]:text-xs">
         {nowRows.map((r) => (
-          <div key={r.k} className={styles.row}>
-            <span className={styles.k}>{r.k}</span>
-            <span className={styles.v}>{r.v}</span>
+          <div
+            key={r.k}
+            className="grid grid-cols-[110px_1fr] gap-4 max-[900px]:grid-cols-[90px_1fr] max-[900px]:gap-2.5"
+          >
+            <span className="text-primary-500 tracking-[0.04em]">{r.k}</span>
+            <span className="text-tertiary-50">{r.v}</span>
           </div>
         ))}
       </div>

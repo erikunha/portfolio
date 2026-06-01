@@ -6,16 +6,16 @@ export const metadata = {
 
 # DESIGN SYSTEM
 
-<div style={{marginBottom:'var(--ds-space-3)'}}>
+<div style={{marginBottom:'12px'}}>
   <Badge variant="dot">LIVE</Badge>
 </div>
 
 A published design system for erikunha.dev — positioned at `/design-system` as part of the Staff/Principal frontend hiring artifact.
 
-<div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',border:'1px solid var(--ds-color-signal-subtle)',marginBottom:'var(--ds-space-6)',marginLeft:'calc(-1 * var(--ds-space-pad))',marginRight:'calc(-1 * var(--ds-space-pad))'}}>
-  <div style={{borderRight:'1px solid var(--ds-color-signal-subtle)'}}><StatTile value="8" label="PRIMITIVES" /></div>
-  <div style={{borderRight:'1px solid var(--ds-color-signal-subtle)'}}><StatTile value="6" label="RSC" /></div>
-  <div style={{borderRight:'1px solid var(--ds-color-signal-subtle)'}}><StatTile value="100" label="A11Y" /></div>
+<div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',border:'1px solid var(--color-primary-subtle)',marginBottom:'24px',marginLeft:'-24px',marginRight:'-24px'}}>
+  <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="8" label="PRIMITIVES" /></div>
+  <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="6" label="RSC" /></div>
+  <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="100" label="A11Y" /></div>
   <StatTile value="0" label="CLIENT_KB" />
 </div>
 
@@ -30,8 +30,8 @@ A published design system for erikunha.dev — positioned at `/design-system` as
 
 ## Principles
 
-**Semantic over primitive.** CSS always references semantic tokens (`--ds-color-signal`), never primitives (`--ds-green-500`). The semantic layer enables theme variants without component churn.
+**Utilities over raw values.** Components reference Tailwind utilities backed by the `@theme` palette (`text-primary-500`, `border-primary-subtle`), never raw hex. The single `@theme` block in `theme.css` is the one place a colour changes.
 
 **RSC by default.** 6 of 8 primitives are React Server Components — zero client JavaScript. `Field` and `CopyButton` require `'use client'` for controlled input state and clipboard access respectively.
 
-**Enforced, not documented.** Boundary lint, no-magic-values lint, and contrast check run in CI. The rules don't rely on developer discipline.
+**Enforced, not documented.** The contrast gate, axe-core a11y scan, and Lighthouse (a11y = 100) run in CI. The rules don't rely on developer discipline.

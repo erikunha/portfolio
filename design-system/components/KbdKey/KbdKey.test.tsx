@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { KbdKey } from './KbdKey';
-import styles from './KbdKey.module.css';
 
 describe('KbdKey', () => {
   it('renders as <kbd> element', () => {
@@ -12,8 +11,9 @@ describe('KbdKey', () => {
     render(<KbdKey>Enter</KbdKey>);
     expect(screen.getByText('Enter')).toBeDefined();
   });
-  it('applies sm size class', () => {
+  it('applies sm size padding', () => {
     const { container } = render(<KbdKey size="sm">Tab</KbdKey>);
-    expect(container.firstElementChild?.classList.contains(styles.sm as string)).toBe(true);
+    // sm applies tighter padding class
+    expect(container.firstElementChild?.classList.contains('px-1')).toBe(true);
   });
 });

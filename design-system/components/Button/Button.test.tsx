@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Button } from './Button';
-import styles from './Button.module.css';
 
 describe('Button', () => {
   it('renders as <button> by default', () => {
@@ -36,18 +35,24 @@ describe('Button', () => {
     const el = container.querySelector('a');
     expect(el?.getAttribute('aria-disabled')).toBe('true');
   });
-  it('applies primary variant class by default', () => {
+  it('applies primary variant styles by default', () => {
     const { container } = render(<Button>Primary</Button>);
-    expect(container.firstElementChild?.classList.contains(styles.primary as string)).toBe(true);
+    const el = container.firstElementChild;
+    // Primary: signal background + signal border
+    expect(el?.classList.contains('bg-primary-500')).toBe(true);
+    expect(el?.classList.contains('border-primary-500')).toBe(true);
   });
-  it('applies secondary variant class', () => {
+  it('applies secondary variant styles', () => {
     const { container } = render(<Button variant="secondary">Secondary</Button>);
-    expect(container.firstElementChild?.classList.contains(styles.secondary as string)).toBe(true);
+    const el = container.firstElementChild;
+    // Secondary: transparent background + signal text
+    expect(el?.classList.contains('bg-transparent')).toBe(true);
+    expect(el?.classList.contains('text-primary-500')).toBe(true);
   });
   it('applies size classes', () => {
     const { container: smContainer } = render(<Button size="sm">Sm</Button>);
-    expect(smContainer.firstElementChild?.classList.contains(styles.sm as string)).toBe(true);
+    expect(smContainer.firstElementChild?.classList.contains('min-h-9')).toBe(true);
     const { container: lgContainer } = render(<Button size="lg">Lg</Button>);
-    expect(lgContainer.firstElementChild?.classList.contains(styles.lg as string)).toBe(true);
+    expect(lgContainer.firstElementChild?.classList.contains('min-h-[52px]')).toBe(true);
   });
 });

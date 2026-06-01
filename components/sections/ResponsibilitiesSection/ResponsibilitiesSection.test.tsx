@@ -20,7 +20,7 @@ describe('ResponsibilitiesSection — highlight attribute', () => {
 
   it('non-highlighted items do not carry data-highlight', async () => {
     const doc = await render();
-    const all = doc.querySelectorAll('[class*="file"]');
+    const all = doc.querySelectorAll('[data-file]');
     const withAttr = doc.querySelectorAll('[data-highlight]');
     expect(withAttr.length).toBeGreaterThan(0);
     expect(withAttr.length).toBeLessThan(all.length);

@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import s from './FaderIsland.module.css';
 
 interface FaderProps {
   initialPct: number;
@@ -87,7 +86,7 @@ export function FaderIsland({ initialPct, channelName, onPctChange, onAriaValueT
       aria-valuemax={100}
       aria-valuetext={onAriaValueText ? onAriaValueText(pct) : `${pct}%`}
       tabIndex={0}
-      className={s.faderTrack}
+      className="fader-track"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -112,7 +111,7 @@ export function FaderIsland({ initialPct, channelName, onPctChange, onAriaValueT
     >
       <div
         ref={thumbRef}
-        className={s.faderThumb}
+        className="faderThumb"
         style={{ left: `calc(${pct}% - var(--fader-thumb-w) / 2)` }}
         aria-hidden="true"
       />

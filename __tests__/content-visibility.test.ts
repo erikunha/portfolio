@@ -64,16 +64,17 @@ describe('content-visibility deferral', () => {
     expect(deferredCount).toBeGreaterThanOrEqual(14);
   });
 
-  it('Module.module.css ships the data-cv-defer content-visibility rule', () => {
+  it('components.css ships the .module-deferred content-visibility rule', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate content-visibility
-    const moduleCss = readFileSync(
-      path.resolve(__dirname, '../components/responsive/Module/Module.module.css'),
+    const componentsCss = readFileSync(
+      path.resolve(__dirname, '../app/css/components.css'),
       'utf-8',
     );
-    expect(moduleCss).toContain('data-cv-defer');
-    expect(moduleCss).toContain('content-visibility: auto');
-    // Attribute-based selection replaced the brittle nth-of-type positional
-    // selector — guard against a regression back to positional deferral.
-    expect(moduleCss).not.toMatch(/nth-of-type\(n\s*\+\s*\d+\)/);
+    // .module-deferred class (applied when defer=true) must carry content-visibility: auto
+    expect(componentsCss).toContain('.module-deferred');
+    expect(componentsCss).toContain('content-visibility: auto');
+    // Class-based selection replaced the old CSS-module attribute selector —
+    // guard against regression back to positional deferral.
+    expect(componentsCss).not.toMatch(/nth-of-type\(n\s*\+\s*\d+\)/);
   });
 });

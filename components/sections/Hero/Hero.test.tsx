@@ -6,7 +6,6 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { Hero } from './Hero';
-import styles from './Hero.module.css';
 
 // vitest runs under the jsdom environment — DOMParser turns the
 // server-rendered HTML into a real document the assertions can query.
@@ -18,6 +17,13 @@ function renderHeroDom(): Document {
 // createElement (not JSX) keeps this file compilable without per-file JSX pragma.
 const renderHero = () => renderToStaticMarkup(createElement(Hero));
 
+// Class name constants — migrated from CSS Modules to @layer components named classes.
+const desktopClass = 'hero-desktop';
+const mobileClass = 'hero-mobile';
+const bioClass = 'hero-bio';
+const bootDesktopClass = 'hero-boot-desktop';
+const bootMobileClass = 'hero-boot-mobile';
+
 describe('Hero headings', () => {
   it('renders an h1 element', () => {
     const doc = renderHeroDom();
@@ -26,26 +32,19 @@ describe('Hero headings', () => {
 
   it('the desktop h1 lives inside the bio panel', () => {
     const doc = renderHeroDom();
-    // Class names are scoped by CSS Modules — import and use module keys.
-    const desktopClass = styles.desktop as string;
-    const bioClass = styles.bio as string;
-    const nameClass = styles.name as string;
     const desktop = doc.querySelector(`.${desktopClass}`);
     expect(desktop).not.toBeNull();
-    const bioHeading = desktop?.querySelector(`.${bioClass} h1.${nameClass}`);
+    const bioHeading = desktop?.querySelector(`.${bioClass} h1`);
     expect(bioHeading).not.toBeNull();
     expect(bioHeading?.textContent).toContain('Erik');
   });
 
   it('the mobile h1 lives inside the inner wrapper', () => {
     const doc = renderHeroDom();
-    // Class names are scoped by CSS Modules — import and use module keys.
-    const mobileClass = styles.mobile as string;
-    const innerClass = styles.inner as string;
-    const nameClass = styles.name as string;
     const mobile = doc.querySelector(`.${mobileClass}`);
     expect(mobile).not.toBeNull();
-    const innerHeading = mobile?.querySelector(`.${innerClass} h1.${nameClass}`);
+    // Mobile uses a relative div wrapper (not a named class), query h1 directly inside mobile
+    const innerHeading = mobile?.querySelector('h1');
     expect(innerHeading).not.toBeNull();
     expect(innerHeading?.textContent).toContain('Erik');
   });
@@ -61,9 +60,6 @@ describe('Hero RSC conversion', () => {
   it('renders both the desktop and mobile hero variants', () => {
     const html = renderHero();
     // Both variants are emitted server-side; CSS hides the non-matching one.
-    // Class names are scoped by CSS Modules — use module keys for assertions.
-    const desktopClass = styles.desktop as string;
-    const mobileClass = styles.mobile as string;
     expect(html).toContain(desktopClass);
     expect(html).toContain(mobileClass);
   });
@@ -78,10 +74,12 @@ describe('Hero RSC conversion', () => {
     const html = renderHero();
     // The client island renders its boot mount container into static markup
     // even though its effect logic only runs in the browser.
-    // Class names are scoped by CSS Modules — use the module key.
-    const bootClass = styles.boot as string;
-    const bootCount = (html.match(new RegExp(`class="${bootClass}"`, 'g')) ?? []).length;
-    expect(bootCount).toBe(2);
+    const desktopBootCount = (html.match(new RegExp(`class="${bootDesktopClass}"`, 'g')) ?? [])
+      .length;
+    const mobileBootCount = (html.match(new RegExp(`class="${bootMobileClass}"`, 'g')) ?? [])
+      .length;
+    expect(desktopBootCount).toBe(1);
+    expect(mobileBootCount).toBe(1);
   });
 
   it('renders the hire CTA anchors statically (no JS gate)', () => {

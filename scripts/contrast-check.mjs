@@ -1,19 +1,39 @@
 #!/usr/bin/env node
-// Verifies WCAG AA contrast for defined semantic token pairs.
-// Reads resolved values from design-system/dist/tokens.json.
+// Verifies WCAG AA contrast. Parses color values from app/css/theme.css @theme block.
+// No hardcoded values — the @theme block is the single source of truth.
+
 import { readFileSync } from 'node:fs';
-import path from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const tokens = JSON.parse(readFileSync(path.join(ROOT, 'design-system/dist/tokens.json'), 'utf8'));
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const themeCss = readFileSync(resolve(__dirname, '../app/css/theme.css'), 'utf8');
+
+function parseThemeColors(css) {
+  const colors = {};
+  const re = /--color-([\w-]+):\s*([^;]+);/g;
+  for (const [, name, value] of css.matchAll(re)) {
+    colors[name.trim()] = value.trim();
+  }
+  return colors;
+}
 
 function hexToRgb(hex) {
-  const h = hex.replace('#', '');
+  // Handle 8-digit hex (RGBA) by stripping alpha
+  const h = hex.replace('#', '').slice(0, 6);
   const len = h.length === 3 ? 1 : 2;
   return [0, 1, 2].map((i) =>
     parseInt(h.substring(i * len, i * len + len).padEnd(2, h[i * len]), 16),
   );
+}
+
+function parseColor(value) {
+  // Handle hex
+  if (value.startsWith('#')) return hexToRgb(value);
+  // Handle rgba()
+  const m = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (m) return [Number(m[1]), Number(m[2]), Number(m[3])];
+  return null;
 }
 
 function relativeLuminance([r, g, b]) {
@@ -24,54 +44,43 @@ function relativeLuminance([r, g, b]) {
   }, 0);
 }
 
-function contrastRatio(hex1, hex2) {
-  const L1 = relativeLuminance(hexToRgb(hex1));
-  const L2 = relativeLuminance(hexToRgb(hex2));
+function contrastRatio(c1, c2) {
+  const L1 = relativeLuminance(c1);
+  const L2 = relativeLuminance(c2);
   const [light, dark] = L1 > L2 ? [L1, L2] : [L2, L1];
   return (light + 0.05) / (dark + 0.05);
 }
 
-function resolveToken(name) {
-  // tokens.json has PascalCase keys without -- (e.g. DsColorTextBody)
-  return tokens[name];
+const theme = parseThemeColors(themeCss);
+
+function get(name) {
+  const val = theme[name];
+  if (!val) throw new Error(`--color-${name} not found in app/css/theme.css`);
+  const rgb = parseColor(val);
+  if (!rgb) throw new Error(`Cannot parse --color-${name}: ${val}`);
+  return rgb;
 }
 
-// Pairs: [foreground token, background token, min ratio, label]
+// Pairs: [fg token name, bg token name, minRatio, label]
 const PAIRS = [
-  ['DsColorTextBody', 'DsColorSurfaceBase', 4.5, 'body text on base'],
-  ['DsColorTextMuted', 'DsColorSurfaceBase', 4.5, 'muted text on base'],
-  ['DsColorTextFaint', 'DsColorSurfaceBase', 4.5, 'faint text on base'],
-  ['DsColorSignal', 'DsColorSurfaceBase', 3.0, 'signal on base (large text)'],
-  ['DsColorTextBody', 'DsColorSurfaceShell', 4.5, 'body text on shell'],
-  ['DsColorSignal', 'DsColorSurfaceShell', 3.0, 'signal on shell (large text)'],
+  ['primary-400', 'secondary-950', 4.5, 'muted text on base'],
+  ['primary-300', 'secondary-950', 4.5, 'faint text on base'],
+  ['primary-500', 'secondary-950', 3.0, 'signal on base (large text)'],
+  ['tertiary-50', 'secondary-900', 4.5, 'body text on shell'],
+  ['primary-500', 'secondary-900', 3.0, 'signal on shell (large text)'],
 ];
 
 let failures = 0;
 for (const [fg, bg, minRatio, label] of PAIRS) {
-  const fgVal = resolveToken(fg);
-  const bgVal = resolveToken(bg);
-  if (!fgVal || !bgVal) {
-    console.error(`MISSING TOKEN: ${fg} or ${bg}`);
+  try {
+    const ratio = contrastRatio(get(fg), get(bg));
+    const pass = ratio >= minRatio;
+    console.log(`${pass ? 'PASS' : 'FAIL'} ${label}: ${ratio.toFixed(2)}:1 (min ${minRatio}:1)`);
+    if (!pass) failures++;
+  } catch (err) {
+    console.error(`ERROR ${label}: ${err.message}`);
     failures++;
-    continue;
   }
-  // Skip rgba values (can't compute without blending — rgba tokens are for non-text uses)
-  if (fgVal.startsWith('rgba') || bgVal.startsWith('rgba')) {
-    console.log(`SKIP: ${label} — rgba token (${fgVal} / ${bgVal})`);
-    continue;
-  }
-  // Also check for hex values that have 8 chars (rgba in hex format like #00ff4166)
-  if (
-    (fgVal.length === 9 && fgVal.startsWith('#')) ||
-    (bgVal.length === 9 && bgVal.startsWith('#'))
-  ) {
-    console.log(`SKIP: ${label} — hex-rgba token (${fgVal} / ${bgVal})`);
-    continue;
-  }
-  const ratio = contrastRatio(fgVal, bgVal);
-  const pass = ratio >= minRatio;
-  console.log(`${pass ? 'PASS' : 'FAIL'} ${label}: ${ratio.toFixed(2)}:1 (min ${minRatio}:1)`);
-  if (!pass) failures++;
 }
 
 if (failures > 0) {

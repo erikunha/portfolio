@@ -50,7 +50,7 @@ describe('CopyButton', () => {
   });
 
   it('passes the correct text to clipboard.writeText', async () => {
-    const tokenValue = '--ds-color-signal: #00FF41;';
+    const tokenValue = '--color-primary-500: #00FF41;';
     render(<CopyButton text={tokenValue} />);
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'COPY' }));

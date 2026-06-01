@@ -56,7 +56,7 @@ describe('shell command hint', () => {
 describe('paint cost CSS (shipped build assets)', () => {
   it('the body rule carries no text-shadow and no optimizeLegibility', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate paint cost
-    const base = readFileSync(path.resolve(__dirname, '../app/css/_base.css'), 'utf-8');
+    const base = readFileSync(path.resolve(__dirname, '../app/css/base.css'), 'utf-8');
     // Leading \s* tolerates any indentation level; the @layer base wrapper was
     // removed during the CSS Modules migration.
     const bodyBlock = base.match(/^\s*html,\s*\n\s*body\s*\{[^}]+\}/m)?.[0];
@@ -66,12 +66,9 @@ describe('paint cost CSS (shipped build assets)', () => {
   });
 
   it('the crt-flicker animation runs at >= 3s (cheap, not jittery)', () => {
-    // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate @keyframes timing
-    const crt = readFileSync(
-      path.resolve(__dirname, '../components/responsive/CRTOverlay/CRTOverlay.module.css'),
-      'utf-8',
-    );
-    const flicker = crt.match(/\.flicker\s*\{[^}]+\}/)?.[0] ?? '';
+    // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate @keyframes timing; crt.css is authoritative after the components.css split (2026-05-31)
+    const crt = readFileSync(path.resolve(__dirname, '../app/css/crt.css'), 'utf-8');
+    const flicker = crt.match(/\.crt-flicker\s*\{[^}]+\}/)?.[0] ?? '';
     const dur = flicker.match(/animation:\s*crt-flicker\s+([\d.]+)s/)?.[1];
     expect(Number(dur)).toBeGreaterThanOrEqual(3);
   });

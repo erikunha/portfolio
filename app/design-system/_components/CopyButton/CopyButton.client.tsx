@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import styles from './CopyButton.module.css';
 
 export function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -26,7 +25,11 @@ export function CopyButton({ text }: { text: string }) {
   }
 
   return (
-    <button type="button" className={styles.root} onClick={copy}>
+    <button
+      type="button"
+      className="font-mono text-xs tracking-widest text-primary-400 bg-transparent border border-primary-border px-2 py-0.5 cursor-pointer hover:text-primary-500 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
+      onClick={copy}
+    >
       {copied ? 'COPIED' : 'COPY'}
     </button>
   );

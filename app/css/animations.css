@@ -1,0 +1,438 @@
+/* app/css/animations.css — @layer components: section/component @keyframes and animation classes.
+   Everything @keyframes-heavy that is NOT a CRT overlay effect. */
+
+@layer components {
+  /* ── Boot cursor ─────────────────────────────────────────────────────────── */
+
+  @keyframes boot-blink {
+    to {
+      background: transparent;
+    }
+  }
+
+  .boot-cursor {
+    display: inline-block;
+    width: 9px;
+    height: 1.05em;
+    background: var(--color-primary-500);
+    vertical-align: -2px;
+    margin-left: 2px;
+    animation: boot-blink 1.05s steps(2, start) infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .boot-cursor {
+      animation: none;
+    }
+  }
+  body[data-motion="reduce"] .boot-cursor {
+    animation: none;
+  }
+
+  /* ── Badge pulse ─────────────────────────────────────────────────────────── */
+
+  @keyframes badge-pulse {
+    0%,
+    100% {
+      opacity: 1;
+      box-shadow: 0 0 4px var(--color-primary-500);
+    }
+    50% {
+      opacity: 0.35;
+      box-shadow: none;
+    }
+  }
+
+  .badge-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-primary-500);
+    flex-shrink: 0;
+    animation: badge-pulse 1.6s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .badge-dot {
+      animation: none;
+    }
+  }
+  body[data-motion="reduce"] .badge-dot {
+    animation: none;
+  }
+
+  /* ── Hero responsive visibility toggles ─────────────────────────────────
+     Both variants are server-rendered (RSC). CSS media query swaps visibility.
+     .hero-desktop is the two-column flex layout (flex declared here).
+     .hero-mobile is the stacked layout. */
+
+  .hero-desktop {
+    display: flex;
+  }
+
+  .hero-mobile {
+    display: block;
+  }
+
+  @media (max-width: 768px) {
+    .hero-desktop {
+      display: none;
+    }
+    .hero-mobile {
+      display: block;
+    }
+  }
+
+  @media (min-width: 769px) {
+    .hero-mobile {
+      display: none;
+    }
+  }
+
+  /* ── Hero boot container (desktop) — absolute-positioned inside .left ─────── */
+
+  .hero-boot-desktop {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 24px;
+    bottom: 24px;
+    z-index: 2;
+    color: var(--color-tertiary-50);
+    font-size: 14px;
+    line-height: 1.7;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    text-shadow:
+      0 0 4px #000,
+      0 0 8px #000;
+  }
+
+  /* ── Hero dialog typewriter line (desktop) ───────────────────────────────── */
+
+  .hero-dialog-desktop {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 24px;
+    z-index: 2;
+    font-size: 12px;
+    margin: 0;
+    color: var(--color-primary-500);
+    font-family: var(--font-mono);
+  }
+
+  /* ── Hero boot container (mobile) ─────────────────────────────────────────── */
+
+  .hero-boot-mobile {
+    color: var(--color-tertiary-50);
+    font-size: 12px;
+    line-height: 1.65;
+    /* 8 lines × (12px × 1.65) ≈ 158px; fixed height reserves the full space
+       before the animation appends lines, preventing CLS on mobile.
+       Update if either token changes. */
+    height: 165px;
+    overflow: hidden;
+    margin: 0 0 12px;
+  }
+
+  /* ── Hero panel ─────────────────────────────────────────────────────────── */
+
+  /* Shake animation keyframes — used by boot animation's sysfail trigger. */
+  @keyframes hero-shake-1 {
+    to {
+      transform: translate(2px, -2px);
+    }
+  }
+  @keyframes hero-shake-2 {
+    to {
+      transform: translate(-2px, 1px);
+    }
+  }
+
+  .hero-shake {
+    transform: translate(2px, -2px);
+  }
+
+  .hero-shake2 {
+    transform: translate(-2px, 1px);
+  }
+
+  /* ── Boot text container — phosphor text-shadow ──────────────────────────── */
+
+  .hero-boot-text {
+    text-shadow:
+      0 0 4px #000,
+      0 0 8px #000;
+  }
+
+  /* ── Boot line token classes ─────────────────────────────────────────────── */
+
+  .hero-boot-line {
+    display: block;
+  }
+
+  .hero-boot-ok {
+    color: var(--color-primary-500);
+  }
+
+  .hero-boot-enc {
+    color: var(--color-primary-500);
+    font-weight: 700;
+    text-shadow:
+      0 0 6px var(--color-glow-60),
+      0 0 4px #000;
+  }
+
+  .hero-boot-welcome {
+    color: var(--color-tertiary-50);
+    font-weight: 700;
+  }
+
+  .hero-boot-prompt {
+    color: var(--color-primary-400);
+  }
+
+  .hero-boot-cmd {
+    color: var(--color-tertiary-50);
+  }
+
+  .hero-boot-matrix-prefix {
+    color: var(--color-primary-400);
+    margin-right: 4px;
+  }
+
+  .hero-boot-matrix-out {
+    color: var(--color-primary-500);
+    text-shadow:
+      0 0 8px var(--color-glow-40),
+      0 0 4px #000;
+  }
+
+  /* ── Sysfail overlay — fixed position, fade in/out ───────────────────────── */
+
+  .hero-sysfail {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 400ms ease-out;
+  }
+
+  .hero-sysfail-on {
+    opacity: 1;
+    transition: opacity 200ms ease-in;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-sysfail {
+      transition: none;
+    }
+  }
+
+  body[data-motion="reduce"] .hero-sysfail {
+    transition: none;
+  }
+
+  /* ── Footer — dmesg reveal animation ─────────────────────────────────── */
+  /* Each dmesg line starts hidden; once `.dmesg-booted` is set the line plays
+     `dmesg-reveal` with a per-line `animation-delay` supplied inline. */
+
+  @keyframes dmesg-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .dmesg-line {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  .dmesg-booted .dmesg-line {
+    animation: dmesg-reveal 220ms ease both;
+  }
+
+  /* ── Footer — halt plate reveal animation ────────────────────────────── */
+  /* Delayed past dmesg sequence (7 lines × 80ms + ~180ms gap ≈ 660ms) */
+
+  @keyframes sd-halt-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+      box-shadow: none;
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+      box-shadow:
+        0 0 18px var(--color-glow-45),
+        0 0 40px var(--color-glow-15);
+    }
+  }
+
+  @keyframes sd-halt-hint-reveal {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .halt-plate {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  .halt-hint {
+    opacity: 0;
+  }
+
+  .halt-booted .halt-plate {
+    animation: sd-halt-reveal 280ms ease 660ms both;
+  }
+
+  .halt-booted .halt-hint {
+    animation: sd-halt-hint-reveal 280ms ease 840ms both;
+  }
+
+  /* Reduced motion: skip staggered reveal — render in final visible state immediately. */
+  body[data-motion="reduce"] .dmesg-line,
+  body[data-motion="reduce"] .dmesg-booted .dmesg-line,
+  body[data-motion="reduce"] .halt-plate,
+  body[data-motion="reduce"] .halt-booted .halt-plate,
+  body[data-motion="reduce"] .halt-hint,
+  body[data-motion="reduce"] .halt-booted .halt-hint {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    animation: none;
+  }
+
+  body[data-motion="reduce"] .halt-booted .halt-plate {
+    box-shadow:
+      0 0 18px var(--color-glow-45),
+      0 0 40px var(--color-glow-15);
+  }
+
+  /* ── SysHealthSection — animated progress bar pulse ────────────────────── */
+
+  @keyframes barpulse {
+    0%,
+    100% {
+      opacity: 0.85;
+    }
+    50% {
+      opacity: 1;
+      box-shadow: 0 0 8px var(--color-primary-500);
+    }
+  }
+
+  .bar-pulse > i {
+    animation: barpulse 2.4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bar-pulse > i {
+      animation: none;
+      opacity: 0;
+    }
+  }
+
+  body[data-motion="reduce"] .bar-pulse > i {
+    animation: none;
+    opacity: 0;
+  }
+
+  /* ── LivePerfSection — live indicator dot ──────────────────────────────── */
+
+  @keyframes live-blink {
+    to {
+      opacity: 0;
+    }
+  }
+
+  .live-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-primary-500);
+    margin-right: 8px;
+    vertical-align: -1px;
+    animation: live-blink 1.6s steps(2, start) infinite;
+  }
+
+  @media (max-width: 768px) {
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      margin-right: 6px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .live-dot {
+      animation: none;
+      opacity: 0;
+    }
+  }
+
+  body[data-motion="reduce"] .live-dot {
+    animation: none;
+    opacity: 0;
+  }
+
+  /* ── GuitarSection — scan beam animation ──────────────────────────────── */
+
+  @keyframes guitar-scan-beam {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(100cqh + 60px));
+    }
+  }
+
+  .guitar-scan-beam {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -30px;
+    height: 28px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--color-primary-500) 32%, transparent) 50%,
+      transparent
+    );
+    mix-blend-mode: screen;
+    pointer-events: none;
+    animation: guitar-scan-beam 7s linear infinite;
+    will-change: transform;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .guitar-scan-beam {
+      animation: none;
+      display: none;
+    }
+  }
+
+  body[data-motion="reduce"] .guitar-scan-beam {
+    animation: none;
+    display: none;
+  }
+}

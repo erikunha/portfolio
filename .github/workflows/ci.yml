@@ -92,15 +92,6 @@ jobs:
       - name: Component docs coverage
         run: pnpm check:component-docs
 
-      - name: Token drift check
-        run: pnpm tokens:check
-
-      - name: Token boundary lint
-        run: pnpm lint:token-boundary
-
-      - name: No-magic-values lint
-        run: pnpm lint:no-magic-values
-
       - name: Contrast check
         run: pnpm lint:contrast
 
@@ -162,10 +153,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Dependency vulnerability audit
-        # GHSA-w5hq-g745-h8pq (uuid via @lhci/cli): dev-only, no prod exposure.
-        # Fix requires uuid >=11.1.1 major bump; blocked on @lhci/cli upstream.
-        # Remove --ignore once @lhci/cli ships uuid >=11.1.1. See DECISIONS.md.
-        run: pnpm audit --audit-level=moderate --ignore GHSA-w5hq-g745-h8pq
+        run: pnpm audit --audit-level=moderate
 
       - name: Unit tests
         run: pnpm test:coverage

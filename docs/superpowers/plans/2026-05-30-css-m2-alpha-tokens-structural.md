@@ -1,3 +1,5 @@
+> **Status: Superseded by PR #80** — Tailwind v4 migration replaces the CSS module + Style Dictionary system described here. See `docs/superpowers/specs/2026-05-31-tailwind-v4-migration-design.md` and `DECISIONS.md` (2026-05-31 entry).
+
 # CSS System M2 — Alpha Tokens + Structural Extractions
 
 > **Source spec:** `docs/superpowers/specs/2026-05-30-css-system-review.md`

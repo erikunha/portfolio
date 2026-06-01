@@ -1,3 +1,5 @@
+> **Status: Superseded by PR #80** — Tailwind v4 migration (`feat/tailwind-v4`) deletes all CSS modules and replaces the breakpoint lint gate with standard `md:`/`lg:` prefixes. See `docs/superpowers/specs/2026-05-31-tailwind-v4-migration-design.md`.
+
 # CSS System M3 — Breakpoint Contract
 
 > **Source spec:** `docs/superpowers/specs/2026-05-30-css-system-review.md` §C2

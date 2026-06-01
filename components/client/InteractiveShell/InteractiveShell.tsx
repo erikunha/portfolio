@@ -1,21 +1,20 @@
 'use client';
 
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import SHELL_RESPONSES from '@/content/shell-commands';
 import { WindowChrome } from '@/design-system';
 import { readMotion } from '@/lib/motion';
 import { parseStreamChunk } from '@/lib/stream-protocol';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
-import styles from './InteractiveShell.module.css';
 
 type Line = { id: number; kind: 'prompt' | 'output' | 'error' | 'info' | 'loading'; text: string };
 
 const KIND_CLASS: Record<Line['kind'], string> = {
-  prompt: styles.linePrompt ?? '',
-  output: styles.lineOutput ?? '',
-  error: styles.lineError ?? '',
-  info: styles.lineInfo ?? '',
-  loading: styles.lineLoading ?? '',
+  prompt: 'text-primary-500',
+  output: 'text-tertiary-50 opacity-[0.95]',
+  error: 'text-senary-300',
+  info: 'text-primary-400',
+  loading: 'text-primary-500 opacity-50',
 };
 
 const INITIAL_LINES: Omit<Line, 'id'>[] = [
@@ -98,9 +97,13 @@ function AnimatedPlaceholder() {
     };
   }, []);
   return (
-    <span className={styles.placeholderAnim} aria-hidden="true" data-testid="shell-placeholder">
+    <span
+      className="absolute left-0 top-1/2 -translate-y-1/2 text-primary-400 opacity-60 pointer-events-none font-inherit text-[14px] md:text-base whitespace-nowrap overflow-hidden inline-flex items-center"
+      aria-hidden="true"
+      data-testid="shell-placeholder"
+    >
       <span ref={textRef} />
-      <span className={styles.cursor} data-testid="shell-cursor" />
+      <span className="shell-cursor" data-testid="shell-cursor" />
     </span>
   );
 }
@@ -115,7 +118,7 @@ function LoadingDots() {
   }, []);
   return (
     <span
-      className={`${styles.line} ${styles.lineLoading}`}
+      className="m-0 block whitespace-pre-wrap break-words text-primary-500 opacity-50"
       aria-hidden="true"
       data-testid="shell-line-loading"
     >
@@ -312,11 +315,12 @@ export function InteractiveShell() {
           typingTimerRef.current = setTimeout(tick, 30);
         } else {
           typingTimerRef.current = setTimeout(() => {
-            typingTimerRef.current = null;
             if (!mountedRef.current) {
+              typingTimerRef.current = null;
               typingRef.current = false;
               return;
             }
+            typingTimerRef.current = null;
             runCommand(cmd);
             typingRef.current = false;
           }, 300);
@@ -328,21 +332,21 @@ export function InteractiveShell() {
   );
 
   return (
-    <div className={styles.root}>
-      <div className={styles.bar}>
+    <div className="interactive-shell bg-[var(--color-secondary-900)] text-xs font-mono leading-[1.65] -m-[14px]">
+      <div className="flex items-center gap-[10px] px-[14px] py-2 border-b border-[var(--color-primary-subtle)] text-primary-400 text-xs tracking-[0.14em]">
         <WindowChrome size={10} />
         {isMobile ? (
-          <span className={styles.barTitle}>ZSH</span>
+          <span className="ml-auto max-md:text-[10px]">ZSH</span>
         ) : (
           <>
             <span>erik@portfolio · /bin/sh</span>
-            <span className={styles.barTitle}>SESSION_ID: 0xDEADBEEF</span>
+            <span className="ml-auto">SESSION_ID: 0xDEADBEEF</span>
           </>
         )}
       </div>
 
       <div
-        className={styles.feed}
+        className="px-4 py-[14px] min-h-[220px] max-h-[400px] overflow-y-auto md:text-sm max-md:min-h-[200px] max-md:max-h-[320px] max-md:text-xs"
         ref={feedRef}
         role="log"
         aria-label="shell output"
@@ -353,13 +357,20 @@ export function InteractiveShell() {
           l.kind === 'loading' ? (
             <LoadingDots key={l.id} />
           ) : (
-            <span key={l.id} className={`${styles.line} ${KIND_CLASS[l.kind]}`} data-kind={l.kind}>
+            <span
+              key={l.id}
+              className={`m-0 block whitespace-pre-wrap break-words ${KIND_CLASS[l.kind]}`}
+              data-kind={l.kind}
+            >
               {l.text}
             </span>
           ),
         )}
         {streamingText !== null && (
-          <span className={`${styles.line} ${styles.lineOutput}`} data-kind="output">
+          <span
+            className="m-0 block whitespace-pre-wrap break-words text-tertiary-50 opacity-[0.95]"
+            data-kind="output"
+          >
             {streamingText}
           </span>
         )}
@@ -371,11 +382,13 @@ export function InteractiveShell() {
           const cmd = input.trim();
           if (cmd && !busy) runCommand(cmd);
         }}
-        className={styles.form}
+        className="flex gap-2 items-center px-4 py-2 pb-3 border-t border-[var(--color-primary-quiet)] max-md:px-3 max-md:pb-[10px]"
         data-testid="shell-form"
       >
-        <span className={styles.prompt}>erik@portfolio:~$</span>
-        <div className={styles.inputWrap}>
+        <span className="text-primary-400 text-[14px] md:text-base whitespace-nowrap max-md:text-xs">
+          erik@portfolio:~$
+        </span>
+        <div className="flex-1 relative min-w-0">
           <input
             ref={inputRef}
             value={input}
@@ -387,48 +400,64 @@ export function InteractiveShell() {
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
-            className={styles.input}
+            className="w-full bg-transparent border-0 outline-none text-tertiary-50 font-inherit text-[14px] md:text-base caret-primary-500 [caret-shape:block] focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 max-md:text-xs"
             aria-label="shell command"
           />
           {!input && !busy && !inputFocused && <AnimatedPlaceholder />}
         </div>
       </form>
 
-      <p className={styles.privacyNotice} data-testid="shell-privacy-notice">
+      <p
+        className="m-0 px-4 py-2 border-t border-[color-mix(in_oklab,var(--color-primary-500)_14%,transparent)] text-xs leading-[1.5] text-[color-mix(in_oklab,var(--color-tertiary-50)_55%,transparent)]"
+        data-testid="shell-privacy-notice"
+      >
         Queries are stored 90 days for product improvement. To request deletion, email{' '}
-        <a href="mailto:erikhenriquealvescunha@gmail.com">erikhenriquealvescunha@gmail.com</a>. If
-        you are technical, you can also POST your request ID (in the <code>X-Request-Id</code>{' '}
-        response header) directly to <code>/api/log/forget</code>.
+        <a
+          href="mailto:erikhenriquealvescunha@gmail.com"
+          className="inherit underline underline-offset-2 hover:text-primary-500"
+        >
+          erikhenriquealvescunha@gmail.com
+        </a>
+        . If you are technical, you can also POST your request ID (in the{' '}
+        <code className="font-inherit text-primary-500 opacity-80">X-Request-Id</code> response
+        header) directly to{' '}
+        <code className="font-inherit text-primary-500 opacity-80">/api/log/forget</code>.
       </p>
 
       {!isMobile && (
-        <div className={styles.commands} data-testid="shell-commands">
-          {'commands: '}
-          {COMMANDS.map(({ label, cmd }, i) => (
-            <Fragment key={cmd}>
-              {i > 0 && ' · '}
-              <button
-                type="button"
-                className={styles.cmdHint}
-                onClick={() => {
-                  if (!busy) {
-                    setInput(cmd);
-                    inputRef.current?.focus();
-                  }
-                }}
-                disabled={busy}
-              >
-                {label}
-              </button>
-            </Fragment>
+        <div
+          className="flex gap-[6px] flex-wrap items-center px-4 py-2 pb-3 border-t border-dashed border-[var(--color-primary-quiet)] max-md:hidden"
+          role="toolbar"
+          aria-label="quick commands"
+          data-testid="shell-commands"
+          onClick={(e) => {
+            const cmd = (e.target as HTMLElement).closest<HTMLElement>('[data-cmd]')?.dataset.cmd;
+            if (cmd && !busy) runWithEffect(cmd);
+          }}
+        >
+          {COMMANDS.map(({ label, cmd }) => (
+            <button
+              key={cmd}
+              type="button"
+              className="shell-cmd-hint border border-[var(--color-primary-subtle)] text-primary-500 px-2 py-1 font-mono text-xs tracking-[0.1em] rounded-[2px] min-h-[28px] inline-flex items-center cursor-pointer bg-transparent hover:bg-[var(--color-primary-quiet)] disabled:cursor-default disabled:opacity-50"
+              data-cmd={cmd}
+              disabled={busy}
+            >
+              {label}
+            </button>
           ))}
-          {' · anything else → Claude'}
+          <span
+            aria-hidden="true"
+            className="text-primary-400 opacity-60 text-xs tracking-[0.1em] ml-1 whitespace-nowrap"
+          >
+            anything else → Claude
+          </span>
         </div>
       )}
 
       {isMobile && (
         <div
-          className={styles.chips}
+          className="flex gap-[6px] flex-wrap px-3 py-2 pb-[10px] border-t border-dashed border-[var(--color-primary-quiet)]"
           role="toolbar"
           aria-label="quick commands"
           onClick={(e) => {
@@ -437,7 +466,13 @@ export function InteractiveShell() {
           }}
         >
           {COMMANDS.map(({ label, cmd }) => (
-            <button key={cmd} type="button" className={styles.chip} data-cmd={cmd} disabled={busy}>
+            <button
+              key={cmd}
+              type="button"
+              className="border border-[var(--color-primary-subtle)] text-primary-500 px-2 py-1 font-mono text-xs max-md:text-[10px] tracking-[0.1em] rounded-[2px] min-h-[28px] inline-flex items-center cursor-pointer bg-transparent active:bg-[var(--color-primary-quiet)]"
+              data-cmd={cmd}
+              disabled={busy}
+            >
               {label}
             </button>
           ))}

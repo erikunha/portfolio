@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { StatTile } from './StatTile';
-import styles from './StatTile.module.css';
 
 describe('StatTile', () => {
   it('renders value and label as dl/dt/dd with dt before dd in DOM', () => {
@@ -14,9 +13,12 @@ describe('StatTile', () => {
     expect(children[0]?.tagName).toBe('DT');
     expect(children[1]?.tagName).toBe('DD');
   });
-  it('applies compact class when variant=compact', () => {
+  it('applies compact font size override when variant=compact', () => {
     const { container } = render(<StatTile value="1" label="x" variant="compact" />);
-    expect(container.firstElementChild?.classList.contains(styles.compact as string)).toBe(true);
+    const dd = container.querySelector('dd');
+    // compact applies text-xs; the base text-2xl is not applied (mutually exclusive conditional)
+    expect(dd?.classList.contains('text-xs')).toBe(true);
+    expect(dd?.classList.contains('text-2xl')).toBe(false);
   });
   it('does not apply an undefined default class when variant=default', () => {
     const { container } = render(<StatTile value="1" label="x" />);

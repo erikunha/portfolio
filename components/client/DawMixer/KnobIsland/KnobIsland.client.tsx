@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import s from './KnobIsland.module.css';
 
 const MIN_ANGLE = -150;
 const MAX_ANGLE = 150;
@@ -90,7 +89,7 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
   return (
     <div
       ref={containerRef}
-      className={s.knob}
+      className="knob-container"
       role="slider"
       aria-label={`${channelName} ${label}`}
       aria-valuenow={angle}
@@ -125,14 +124,14 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
         width={KNOB_SIZE}
         height={KNOB_SIZE}
         viewBox={`0 0 ${KNOB_SIZE} ${KNOB_SIZE}`}
-        className={s.knobSvg}
+        className="cursor-ns-resize"
         aria-hidden="true"
       >
         <circle
           cx={KNOB_CENTER}
           cy={KNOB_CENTER}
           r="11"
-          stroke="var(--ds-color-signal)"
+          stroke="var(--color-primary-500)"
           strokeWidth="1"
           fill="rgba(0,0,0,0.7)"
         />
@@ -142,12 +141,12 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
           y1={KNOB_CENTER}
           x2={x2.toFixed(2)}
           y2={y2.toFixed(2)}
-          stroke="var(--ds-color-signal)"
+          stroke="var(--color-primary-500)"
           strokeWidth="2"
           strokeLinecap="round"
         />
       </svg>
-      <div className={s.knobLabel}>{label}</div>
+      <div className="text-xs text-primary-400 text-center tracking-[0.1em] font-mono">{label}</div>
     </div>
   );
 }

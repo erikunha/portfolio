@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
-import { cx } from '../../lib/cx';
-import styles from './Badge.module.css';
+import { cn } from '@/lib/cn';
 
 export type BadgeVariant = 'default' | 'dot';
 export type BadgeSize = 'sm' | 'md';
@@ -8,8 +7,17 @@ export type BadgeProps = { variant?: BadgeVariant; size?: BadgeSize; children: R
 
 export function Badge({ variant = 'default', size = 'md', children }: BadgeProps) {
   return (
-    <span className={cx(styles.root, styles[size])}>
-      {variant === 'dot' && <span className={styles.dot} aria-hidden="true" />}
+    <span
+      className={cn(
+        'badge inline-flex items-center gap-[7px] border border-primary-subtle text-primary-500 font-mono tracking-[0.12em] py-1 px-[10px] whitespace-nowrap uppercase max-md:text-[10px]',
+        // At very narrow viewports (<360px) allow wrapping so it stays within bounds.
+        // Tailwind has no built-in 360px breakpoint; use inline style via a CSS class.
+        'max-[359px]:whitespace-normal max-[359px]:flex-wrap',
+        size === 'sm' && 'text-xs py-[3px] px-2',
+        size === 'md' && 'text-xs',
+      )}
+    >
+      {variant === 'dot' && <span className="badge-dot" aria-hidden="true" />}
       {children}
     </span>
   );

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Field } from '@/design-system/components/Field';
-import styles from './ContactForm.module.css';
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -41,7 +40,7 @@ export function ContactForm() {
 
   if (status === 'success') {
     return (
-      <div className={styles.success} role="status" data-testid="contact-success">
+      <div className="contact-success" role="status" data-testid="contact-success">
         <p>EXECUTE_SEND :: SUCCESS</p>
         <p>handshake initiated · expect reply within 48h</p>
       </div>
@@ -51,7 +50,7 @@ export function ContactForm() {
   return (
     <form
       onSubmit={submit}
-      className={styles.root}
+      className="contact-form flex flex-col gap-[14px]"
       aria-busy={status === 'submitting'}
       data-testid="contact-form"
     >
@@ -112,14 +111,23 @@ export function ContactForm() {
         rows={5}
         placeholder="[READY FOR DATA INPUT...]"
       />
-      <div className={styles.submitrow} aria-live="polite">
-        <button type="submit" disabled={status === 'submitting'} className={styles.send}>
+      <div
+        className="flex items-center gap-3 flex-wrap mt-1 max-md:flex-col max-md:items-stretch"
+        aria-live="polite"
+      >
+        <button
+          type="submit"
+          disabled={status === 'submitting'}
+          className="contact-send self-start max-md:self-auto max-md:w-full bg-primary-500 text-black border border-primary-500 px-[18px] py-[10px] font-bold text-xs tracking-[0.08em] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+        >
           {status === 'submitting' ? 'TRANSMITTING...' : 'EXECUTE_SEND'}
         </button>
-        <p className={styles.cursor}>waiting for manual override... _</p>
+        <p className="text-primary-400 text-xs opacity-85 m-0 md:text-xs">
+          waiting for manual override... _
+        </p>
       </div>
       {status === 'error' && (
-        <p role="alert" className={styles.error}>
+        <p role="alert" className="text-senary-300 text-xs">
           error: {errorMsg}
         </p>
       )}

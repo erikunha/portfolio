@@ -14,7 +14,6 @@ import { getAskMetrics } from '@/content/ask-metrics';
 import { TerminalPanel } from '@/design-system';
 import { IconAiMetrics } from '../../Icons';
 import { Module } from '../../responsive/Module';
-import styles from './AiMetricsSection.module.css';
 
 const pct = (rate: number): string => `${Math.round(rate * 100)}%`;
 
@@ -33,10 +32,13 @@ function lastRunLabel(iso: string): string {
 
 function AiMetricsPending() {
   return (
-    <div className={styles.root}>
-      <p className={styles.pending}>
-        <span className={styles.gt}>{'>'}</span>
-        eval pending — run <code>pnpm ask:eval</code> to publish the latest aggregate
+    <div className="font-mono">
+      {/* min-height reserves resolved-state height so the Suspense fallback does not cause a
+          layout shift when the 4-card grid streams in. Different heights for 4-col vs 2-col. */}
+      <p className="text-primary-400 text-sm tracking-[0.04em] m-0 min-h-[160px] max-[900px]:min-h-[290px]">
+        <span className="text-primary-500 mr-1.5">{'>'}</span>
+        eval pending — run <code className="text-primary-500 font-mono">pnpm ask:eval</code> to
+        publish the latest aggregate
       </p>
     </div>
   );
@@ -46,32 +48,57 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
   if (metrics === null) return <AiMetricsPending />;
 
   return (
-    <div className={styles.root}>
-      <div className={styles.grid}>
-        <TerminalPanel className={styles.metric}>
-          <div className={styles.label}>EVAL PASS-RATE</div>
-          <div className={styles.value}>{pct(metrics.evalPassRate)}</div>
-          <div className={styles.note}>correctness · factual + edge corpus</div>
+    <div className="font-mono">
+      {/* 4-col desktop, 2-col at ≤900px */}
+      <div className="grid grid-cols-4 gap-[14px] max-[900px]:grid-cols-2 max-[900px]:gap-3">
+        <TerminalPanel className="p-4 pb-[18px] flex flex-col gap-2" data-metric>
+          <div className="text-primary-400 text-xs max-md:text-[10px] tracking-[0.16em]">
+            EVAL PASS-RATE
+          </div>
+          <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
+            {pct(metrics.evalPassRate)}
+          </div>
+          <div className="text-primary-400 text-sm leading-[1.5] mt-auto">
+            correctness · factual + edge corpus
+          </div>
         </TerminalPanel>
-        <TerminalPanel className={styles.metric}>
-          <div className={styles.label}>JAILBREAK RESIST</div>
-          <div className={styles.value}>{pct(metrics.jailbreakResistance)}</div>
-          <div className={styles.note}>prompt-injection refusal rate</div>
+        <TerminalPanel className="p-4 pb-[18px] flex flex-col gap-2" data-metric>
+          <div className="text-primary-400 text-xs max-md:text-[10px] tracking-[0.16em]">
+            JAILBREAK RESIST
+          </div>
+          <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
+            {pct(metrics.jailbreakResistance)}
+          </div>
+          <div className="text-primary-400 text-sm leading-[1.5] mt-auto">
+            prompt-injection refusal rate
+          </div>
         </TerminalPanel>
-        <TerminalPanel className={styles.metric}>
-          <div className={styles.label}>P95 LATENCY</div>
-          <div className={styles.value}>{ms(metrics.p95LatencyMs)}</div>
-          <div className={styles.note}>end-to-end · slowest 5% of answers</div>
+        <TerminalPanel className="p-4 pb-[18px] flex flex-col gap-2" data-metric>
+          <div className="text-primary-400 text-xs max-md:text-[10px] tracking-[0.16em]">
+            P95 LATENCY
+          </div>
+          <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
+            {ms(metrics.p95LatencyMs)}
+          </div>
+          <div className="text-primary-400 text-sm leading-[1.5] mt-auto">
+            end-to-end · slowest 5% of answers
+          </div>
         </TerminalPanel>
-        <TerminalPanel className={styles.metric}>
-          <div className={styles.label}>COST / ANSWER</div>
-          <div className={styles.value}>{usd(metrics.costPerAnswer)}</div>
-          <div className={styles.note}>production inference · feature model only</div>
+        <TerminalPanel className="p-4 pb-[18px] flex flex-col gap-2" data-metric>
+          <div className="text-primary-400 text-xs max-md:text-[10px] tracking-[0.16em]">
+            COST / ANSWER
+          </div>
+          <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
+            {usd(metrics.costPerAnswer)}
+          </div>
+          <div className="text-primary-400 text-sm leading-[1.5] mt-auto">
+            production inference · feature model only
+          </div>
         </TerminalPanel>
       </div>
-      <div className={styles.foot}>
+      <div className="flex justify-between items-center mt-[18px] pt-3 border-t border-dashed border-primary-quiet text-primary-400 text-xs tracking-[0.06em] max-[768px]:flex-col max-[768px]:items-start max-[768px]:gap-1.5 max-[768px]:text-xs">
         <span>
-          <span className={styles.gt}>{'>'}</span>
+          <span className="text-primary-500 mr-1.5">{'>'}</span>
           SOURCE: scripts/ask-eval.ts · ask:eval:latest
         </span>
         <span>

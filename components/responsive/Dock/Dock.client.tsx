@@ -1,7 +1,6 @@
 'use client';
 
 import { dispatchModuleOpen } from '@/lib/events';
-import styles from './Dock.module.css';
 
 type DockItem = {
   label: string;
@@ -95,9 +94,17 @@ export function Dock() {
   };
 
   return (
-    <nav className={styles.root} aria-label="primary">
+    <nav
+      className="dock fixed left-0 right-0 bottom-0 z-[120] pb-[calc(8px+env(safe-area-inset-bottom,0px))] pt-2 px-2 bg-[rgba(0,0,0,0.92)] backdrop-blur-md border-t border-primary-subtle grid grid-cols-6 gap-0.5"
+      aria-label="primary"
+    >
       {ITEMS.map((it) => (
-        <a key={it.href} href={it.href} onClick={onJump(it.href, it.target)}>
+        <a
+          key={it.href}
+          href={it.href}
+          onClick={onJump(it.href, it.target)}
+          className="flex flex-col items-center justify-center gap-[3px] py-1.5 px-1 text-primary-400 text-xs tracking-[0.1em] uppercase min-h-12 rounded-[4px] active:bg-primary-faint [&_svg]:w-[18px] [&_svg]:h-[18px] [&_svg]:stroke-current [&_svg]:fill-none [&_svg]:[stroke-width:1.6]"
+        >
           {it.icon}
           {it.label}
         </a>

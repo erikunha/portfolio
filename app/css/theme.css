@@ -1,0 +1,115 @@
+/* app/css/theme.css — Tailwind v4 @theme: the colour system.
+   Six ordinal colour families, each a 50–900 ramp. Standard Tailwind scale
+   handles spacing, typography sizes, z-index, and breakpoints.
+
+   Family → hue:
+     primary    green   (the brand)
+     secondary  black   (surfaces)
+     tertiary   white   (foreground / body)
+     quaternary cyan
+     quinary    yellow
+     senary     red
+
+   Stops carrying a real in-use colour are marked ✓ EXACT; the rest are
+   interpolated fills for completeness. */
+
+@theme {
+  /* ── primary · green ──────────────────────────────────────────────────────── */
+  --color-primary-50: #eafff0;
+  --color-primary-100: #c4ffd8;
+  --color-primary-200: #8ff2b2;
+  --color-primary-300: #5ae07b; /* ✓ text-faint */
+  --color-primary-400: #4ade80; /* ✓ text-muted (Tailwind green-400) */
+  --color-primary-500: #00ff41; /* ✓ signal / brand / highlight-bg */
+  --color-primary-600: #28c840; /* ✓ chrome-maximize */
+  --color-primary-700: #1e9b32;
+  --color-primary-800: #166f24;
+  --color-primary-900: #0c4015;
+  /* primary green at fixed opacities — kept as explicit values (not opacity
+     modifiers) so the computed colour is byte-identical (no color-mix). */
+  --color-primary-subtle: #00ff4166; /* ✓ borders/dividers (40%) */
+  --color-primary-border: #00ff4133; /* ✓ default border (20%) */
+  --color-primary-faint: #00ff411f; /* ✓ very subtle bg (12%) */
+  --color-primary-quiet: #00ff411a; /* ✓ hover bg (10%) */
+
+  /* ── secondary · black ────────────────────────────────────────────────────── */
+  --color-secondary-50: #e8e8e8;
+  --color-secondary-100: #cfcfcf;
+  --color-secondary-200: #a8a8a8;
+  --color-secondary-300: #808080;
+  --color-secondary-400: #5c5c5c;
+  --color-secondary-500: #3d3d3d;
+  --color-secondary-600: #262626;
+  --color-secondary-700: #141414;
+  --color-secondary-800: #0a0a0a;
+  --color-secondary-900: #050505; /* ✓ surface-shell */
+  --color-secondary-950: #000000; /* ✓ surface / highlight-fg */
+
+  /* ── tertiary · white ─────────────────────────────────────────────────────── */
+  --color-tertiary-50: #e6ffe6; /* ✓ fg / body text */
+  --color-tertiary-100: #dbf2db;
+  --color-tertiary-200: #c4d9c4;
+  --color-tertiary-300: #a9bda9;
+  --color-tertiary-400: #8a9d8a;
+  --color-tertiary-500: #6b7c6b;
+  --color-tertiary-600: #515f51;
+  --color-tertiary-700: #3a463a;
+  --color-tertiary-800: #262f26;
+  --color-tertiary-900: #161b16;
+
+  /* ── quaternary · cyan ────────────────────────────────────────────────────── */
+  --color-quaternary-50: #ecfbff;
+  --color-quaternary-100: #d0f5ff;
+  --color-quaternary-200: #a8ecff;
+  --color-quaternary-300: #8de8ff;
+  --color-quaternary-400: #7fe4ff; /* ✓ accent-cool */
+  --color-quaternary-500: #45cdf0;
+  --color-quaternary-600: #22a8cc;
+  --color-quaternary-700: #1a7f9b;
+  --color-quaternary-800: #155a6e;
+  --color-quaternary-900: #0e3a47;
+
+  /* ── quinary · yellow ─────────────────────────────────────────────────────── */
+  --color-quinary-50: #fff8e6;
+  --color-quinary-100: #ffeebf;
+  --color-quinary-200: #ffe293;
+  --color-quinary-300: #ffd86b; /* ✓ accent-warm */
+  --color-quinary-400: #ffca47;
+  --color-quinary-500: #febc2e; /* ✓ chrome-minimize */
+  --color-quinary-600: #d99a1f;
+  --color-quinary-700: #a8741a;
+  --color-quinary-800: #785214;
+  --color-quinary-900: #4a330c;
+
+  /* ── senary · red ─────────────────────────────────────────────────────────── */
+  --color-senary-50: #fff0f0;
+  --color-senary-100: #ffdcdc;
+  --color-senary-200: #ffb3b3;
+  --color-senary-300: #ff8a8a; /* ✓ error */
+  --color-senary-400: #ff7570;
+  --color-senary-500: #ff5f57; /* ✓ chrome-close */
+  --color-senary-600: #e03e36;
+  --color-senary-700: #b02b25;
+  --color-senary-800: #801e1a;
+  --color-senary-900: #4f110f;
+
+  /* ── glow alpha stops · green — box-shadow / text-shadow / gradients ──────── */
+  --color-glow-03: rgba(0, 255, 65, 0.03);
+  --color-glow-04: rgba(0, 255, 65, 0.04);
+  --color-glow-05: rgba(0, 255, 65, 0.05);
+  --color-glow-06: rgba(0, 255, 65, 0.06);
+  --color-glow-15: rgba(0, 255, 65, 0.15);
+  --color-glow-18: rgba(0, 255, 65, 0.18);
+  --color-glow-25: rgba(0, 255, 65, 0.25);
+  --color-glow-30: rgba(0, 255, 65, 0.3);
+  --color-glow-35: rgba(0, 255, 65, 0.35);
+  --color-glow-40: rgba(0, 255, 65, 0.4);
+  --color-glow-45: rgba(0, 255, 65, 0.45);
+  --color-glow-50: rgba(0, 255, 65, 0.5);
+  --color-glow-55: rgba(0, 255, 65, 0.55);
+  --color-glow-60: rgba(0, 255, 65, 0.6);
+
+  /* ── Typography ─────────────────────────────────────────────────────────── */
+  --font-mono: "JetBrains Mono", monospace;
+  --font-display: "Geist Black", sans-serif;
+}
