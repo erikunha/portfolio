@@ -61,6 +61,18 @@ try {
   process.exit(2);
 }
 
+// The `${BASE}...HEAD` diffs below use the merge-base (the PR-diff semantic), so
+// a common ancestor must exist. Guard it: an unrelated base or a shallow clone
+// without the merge-base would otherwise crash mid-diff with a cryptic git error.
+try {
+  run('git', ['merge-base', BASE, 'HEAD']);
+} catch {
+  process.stderr.write(
+    `pr-size: no common history between "${BASE}" and HEAD (unrelated base, or a shallow clone missing the merge-base). Fetch full history (\`git fetch --unshallow\` / \`git fetch origin\`).\n`,
+  );
+  process.exit(2);
+}
+
 // Changed file names
 const filesRaw = run('git', ['diff', `${BASE}...HEAD`, '--name-only']);
 const files = filesRaw.trim().split('\n').filter(Boolean);
