@@ -11,7 +11,7 @@ export function StatTile({ value, label, variant = 'default' }: StatTileProps) {
       <dd
         className={cn(
           'stat-tile-value order-first text-primary-500 font-bold tracking-[0.04em] font-mono leading-none m-0',
-          variant === 'compact' ? 'text-xs' : 'text-2xl max-md:text-xs',
+          variant === 'compact' ? 'text-xs' : 'text-base max-md:text-xs',
         )}
       >
         {value}
