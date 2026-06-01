@@ -7,7 +7,7 @@ export function CommunitySection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module id="sec-community" header="CAT ~/.COMMUNITY" icon={<IconCommunity />} defer={defer}>
       <div className="text-sm max-md:text-xs leading-[1.7]">
-        <div className="text-primary-500 font-bold tracking-[0.06em] text-sm mb-3">
+        <div className="text-primary-500 font-bold tracking-[0.06em] text-sm max-md:text-xs mb-3">
           {e.name} · {e.year} · {e.role}
         </div>
         <ul className="list-none ml-1 p-0 mb-0">

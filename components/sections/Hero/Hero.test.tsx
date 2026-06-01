@@ -54,7 +54,7 @@ describe('Hero RSC conversion', () => {
   it('renders to static markup with no client runtime', () => {
     const html = renderHero();
     expect(html.length).toBeGreaterThan(0);
-    expect(html).toContain('Erik Henrique Alves Cunha');
+    expect(html).toContain('Erik Cunha');
   });
 
   it('renders both the desktop and mobile hero variants', () => {

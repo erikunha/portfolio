@@ -25,7 +25,7 @@ export function CredentialsSection({ defer }: { defer?: boolean } = {}) {
               <span className="w-[25ch] shrink-0 text-primary-500 font-bold max-[768px]:w-auto">
                 {cred.badge}
               </span>
-              <span className="flex-1 text-tertiary-50 max-[768px]:text-primary-400 max-md:text-[10px]">
+              <span className="flex-1 text-tertiary-50 max-[768px]:text-primary-400 max-md:text-[11px]">
                 {cred.evidence}
               </span>
             </div>

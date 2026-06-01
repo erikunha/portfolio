@@ -199,7 +199,7 @@ export function Footer() {
             <header className="text-primary-500 font-bold text-xs tracking-[0.18em] mb-3 flex items-baseline gap-1.5 max-[768px]:tracking-[0.16em]">
               <span className="text-primary-500">{'▌'}</span>SESSION_REPORT
             </header>
-            <div className="grid grid-cols-[130px_1fr] gap-3 text-sm max-md:text-xs leading-[1.95] items-center max-[900px]:grid-cols-[110px_1fr] max-[768px]:grid-cols-[100px_1fr] max-[768px]:gap-2.5 max-[560px]:grid-cols-[92px_1fr] max-[560px]:gap-2">
+            <div className="grid grid-cols-[130px_1fr] gap-3 text-sm max-md:text-xs leading-[1.95] max-md:leading-[1.5] items-center max-[900px]:grid-cols-[110px_1fr] max-[768px]:grid-cols-[100px_1fr] max-[768px]:gap-x-2.5 max-[768px]:gap-y-0.5 max-[560px]:grid-cols-[92px_1fr] max-[560px]:gap-x-2">
               <span className="text-primary-400 tracking-[0.04em]">user</span>
               <span className="text-tertiary-50 tabular-nums">erik@portfolio</span>
               <span className="text-primary-400 tracking-[0.04em]">uptime</span>
@@ -242,7 +242,7 @@ export function Footer() {
               <span className="text-primary-500">{'▌'}</span>NETSTAT -AN
             </header>
             {isMobile ? (
-              <div className="grid grid-cols-[28px_90px_minmax(0,1fr)] gap-x-[28px] items-center text-xs max-[768px]:grid-cols-[28px_80px_minmax(0,1fr)] max-[768px]:gap-x-2.5">
+              <div className="grid grid-cols-[28px_90px_minmax(0,1fr)] gap-x-[28px] items-center text-xs max-[768px]:grid-cols-[34px_74px_minmax(0,1fr)] max-[768px]:gap-x-1.5 max-[768px]:text-[11px]">
                 <span className="text-primary-400 tracking-[0.06em]">Proto</span>
                 <span className="text-primary-400 tracking-[0.06em]">State</span>
                 <span className="text-primary-400 tracking-[0.06em]">Endpoint</span>
@@ -333,7 +333,7 @@ export function Footer() {
           {dmesgLines.map((line, i) => (
             <li
               key={line.off}
-              className="dmesg-line grid grid-cols-[92px_1fr_auto] gap-x-[14px] items-baseline text-tertiary-50 max-[900px]:grid-cols-[72px_1fr_auto] max-[900px]:gap-x-2.5 max-[900px]:text-sm max-[768px]:grid-cols-[72px_1fr_auto] max-[768px]:gap-x-2 max-md:text-[10px]"
+              className="dmesg-line grid grid-cols-[92px_1fr_auto] gap-x-[14px] items-baseline text-tertiary-50 max-[900px]:grid-cols-[72px_1fr_auto] max-[900px]:gap-x-2.5 max-[900px]:text-sm max-[768px]:grid-cols-[64px_1fr_auto] max-[768px]:gap-x-1.5 max-md:text-xs"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <span className="text-primary-400 tabular-nums whitespace-nowrap">{dmesgTs[i]}</span>
@@ -343,7 +343,7 @@ export function Footer() {
                 {line.suffix}
               </span>
               {line.ok && (
-                <span className="text-primary-500 font-bold tracking-[0.12em] text-xs max-md:text-[10px]">
+                <span className="text-primary-500 font-bold tracking-[0.12em] text-xs max-md:text-xs">
                   OK
                 </span>
               )}
@@ -359,7 +359,7 @@ export function Footer() {
 
         {/* Halt plate + hint — halt-booted / halt-plate / halt-hint in components.css */}
         <div
-          className={`mt-6 flex items-center flex-wrap gap-x-4 gap-y-2.5 max-md:flex-col max-md:items-start${booted ? ' halt-booted' : ''}`}
+          className={`mt-6 flex items-start md:items-center flex-wrap gap-x-4 gap-y-2.5 max-md:flex-col${booted ? ' halt-booted' : ''}`}
         >
           <span className="halt-plate inline-block shrink-0 bg-primary-500 text-black font-bold text-sm max-md:text-xs tracking-[0.16em] px-3 py-[5px] leading-none whitespace-nowrap">
             [SYSTEM HALTED]

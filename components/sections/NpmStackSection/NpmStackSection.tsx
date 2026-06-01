@@ -11,13 +11,13 @@ export function NpmStackSection({ defer }: { defer?: boolean } = {}) {
       defer={defer}
       variant="green"
     >
-      {/* Mobile-first: 2-col → 4-col (≥341px) → 3-col (≥901px) → 6-col (≥1025px) */}
+      {/* Mobile-first: 2-col → 4-col (≥341px) → 3-col (≥901px) → 8-col (lg, ≥1024px, flatter tiles) */}
       <ul
         className={[
           'npm-stack-grid list-none m-0 p-0',
           'grid grid-cols-2 min-[341px]:grid-cols-4 gap-2',
           'min-[901px]:grid-cols-3 min-[901px]:gap-[10px]',
-          'lg:grid-cols-6',
+          'lg:grid-cols-8',
         ].join(' ')}
       >
         {npmStack.map((t) => (
@@ -25,10 +25,14 @@ export function NpmStackSection({ defer }: { defer?: boolean } = {}) {
             key={t.label}
             className={[
               'npm-stack-item border border-primary-subtle',
-              'aspect-square min-[341px]:aspect-[2/1]',
-              'flex flex-col items-center justify-center gap-1',
+              // Content-driven height (icon + label) sized by padding/gap — no
+              // aspect-ratio. Tune the box via px/py + gap per breakpoint.
+              'flex flex-col items-center justify-center',
+              'gap-1.5 px-2 py-3 max-md:gap-1 max-md:px-1 max-md:py-2.5',
               'text-primary-500 text-xs max-md:text-[9px]',
-              'tracking-[0.1em]',
+              // Tighter tracking on mobile keeps two-word labels (MODULE FED) on
+              // one line, so content-driven tile heights stay uniform per row.
+              'tracking-[0.1em] max-md:tracking-[0.04em]',
               'transition-[border-color,box-shadow] duration-200 ease-[ease]',
               'hover:border-primary-500 hover:shadow-[0_0_14px_var(--color-glow-18)]',
               'motion-reduce:transition-none',

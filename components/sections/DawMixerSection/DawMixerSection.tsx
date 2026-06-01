@@ -167,7 +167,7 @@ function PluginChainMobile({
 function SessionHeaderMobile() {
   return (
     <div
-      className="text-xs text-primary-400 leading-[1.8] border-b border-[var(--color-primary-border)] px-[14px] py-[10px] tracking-[0.14em] bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]"
+      className="text-[10px] text-primary-400 leading-[1.8] border-b border-[var(--color-primary-border)] px-[14px] py-[10px] tracking-[0.14em] bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]"
       data-testid="session-header-mobile"
     >
       <div>
