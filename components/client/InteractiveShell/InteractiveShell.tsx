@@ -315,11 +315,12 @@ export function InteractiveShell() {
           typingTimerRef.current = setTimeout(tick, 30);
         } else {
           typingTimerRef.current = setTimeout(() => {
-            typingTimerRef.current = null;
             if (!mountedRef.current) {
+              typingTimerRef.current = null;
               typingRef.current = false;
               return;
             }
+            typingTimerRef.current = null;
             runCommand(cmd);
             typingRef.current = false;
           }, 300);
@@ -445,7 +446,10 @@ export function InteractiveShell() {
               {label}
             </button>
           ))}
-          <span className="text-primary-400 opacity-60 text-xs tracking-[0.1em] ml-1 whitespace-nowrap">
+          <span
+            aria-hidden="true"
+            className="text-primary-400 opacity-60 text-xs tracking-[0.1em] ml-1 whitespace-nowrap"
+          >
             anything else → Claude
           </span>
         </div>
