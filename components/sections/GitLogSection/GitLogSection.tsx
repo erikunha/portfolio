@@ -16,131 +16,50 @@ const g = (s: string): ReactNode => <span className="text-primary-500">{s}</span
 const PIPE = g('|');
 const STAR = g('*');
 
+// The graph rail: a `*` for the commit node, then a `|` for every following
+// visual line. Rendered as an absolutely-positioned gutter clipped to the
+// commit block's height, so exactly one glyph lands on each line-height slot —
+// wrapped continuation lines included. This is the part that survives wrapping:
+// the rail is decoupled from the text flow instead of prefixing each row. 48
+// pipes covers the tallest commit; the remainder is clipped by overflow-hidden.
+const RAIL = `*\n${'|\n'.repeat(48)}`;
+
 function renderCommitMobile(c: GitCommit, key: string): ReactNode {
   const hashShort = c.hash.slice(0, 7);
   // "Sat Mar 1 09:42:11 2025 +0100" → "Sat Mar 1 2025"
   const dp = c.date.split(' ');
   const dateShort = `${dp[0]} ${dp[1]} ${dp[2]} ${dp[4]}`;
-  const [roleTitle, ...locParts] = c.role.split(' · ');
-  const roleLocation = locParts.join(' · ');
-
-  if (c.isRoot) {
-    return (
-      <span key={key}>
-        {STAR} <span className="text-primary-400">{'commit '}</span>
-        <span className="text-primary-400 opacity-85">{hashShort}</span>
-        {'\n'}
-        {'  '}
-        <span className="text-quinary-300">{c.deco}</span>
-        {'\n'}
-        {'  '}
-        <span className="text-primary-400">{'Author:  '}</span>
-        <span className="text-tertiary-50 opacity-85">{'Erik Henrique Alves Cunha'}</span>
-        {'\n'}
-        {'           '}
-        <span className="text-tertiary-50 opacity-85">{'<erik@erikunha.dev>'}</span>
-        {'\n'}
-        {'  '}
-        <span className="text-primary-400">{'AuthorDate:'}</span>{' '}
-        <span className="text-tertiary-50 opacity-85">{dateShort}</span>
-        {'\n'}
-        {'  '}
-        <span className="text-primary-400">{'Branch: '}</span>{' '}
-        <span className="text-quaternary-400">{c.branch}</span>
-        {'\n'}
-        {'\n'}
-        {'      '}
-        <span className="text-primary-500 font-bold">
-          {'feat('}
-          {c.type}
-          {'):'}
-        </span>
-        {'\n'}
-        {'        '}
-        <span className="text-primary-500 font-bold">{c.company}</span>
-        {'\n'}
-        {'        '}
-        <span className="text-tertiary-50 opacity-85">{roleTitle}</span>
-        {'\n'}
-        {roleLocation && (
-          <span>
-            {'        '}
-            <span className="text-tertiary-50 opacity-85" style={{ opacity: 0.65 }}>
-              {roleLocation}
-            </span>
-            {'\n'}
-          </span>
-        )}
-        {'\n'}
-        {c.body.map((line) => (
-          <span key={`${c.hash}-${line}`}>
-            {'      '}
-            <span className="text-tertiary-50">{line}</span>
-            {'\n'}
-          </span>
-        ))}
-      </span>
-    );
-  }
-
+  // Author line omitted (every commit is Erik's career — pure noise on mobile).
+  // Content is one pre-wrap flow at the inherited fixed line-height so the rail
+  // overlay stays aligned to every line, wrapped or not.
   return (
-    <span key={key}>
-      {STAR} <span className="text-primary-400">{'commit '}</span>
-      <span className="text-primary-400 opacity-85">{hashShort}</span>
-      {'\n'}
-      {PIPE} <span className="text-quinary-300">{c.deco}</span>
-      {'\n'}
-      {PIPE} <span className="text-primary-400">{'Author:  '}</span>
-      <span className="text-tertiary-50 opacity-85">{'Erik Henrique Alves Cunha'}</span>
-      {'\n'}
-      {PIPE}
-      {'          '}
-      <span className="text-tertiary-50 opacity-85">{'<erik@erikunha.dev>'}</span>
-      {'\n'}
-      {PIPE} <span className="text-primary-400">{'AuthorDate:'}</span>{' '}
-      <span className="text-tertiary-50 opacity-85">{dateShort}</span>
-      {'\n'}
-      {PIPE} <span className="text-primary-400">{'Branch: '}</span>{' '}
-      <span className="text-quaternary-400">{c.branch}</span>
-      {'\n'}
-      {PIPE}
-      {'\n'}
-      {PIPE}{' '}
-      <span className="text-primary-500 font-bold">
-        {'feat('}
-        {c.type}
-        {'):'}
+    <li key={key} className="relative pl-[1.7ch] pb-5 last:pb-0">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 left-0 w-[1ch] overflow-hidden whitespace-pre text-primary-500 select-none"
+      >
+        {RAIL}
       </span>
-      {'\n'}
-      {PIPE}
-      {'   '}
-      <span className="text-primary-500 font-bold">{c.company}</span>
-      {'\n'}
-      {PIPE}
-      {'   '}
-      <span className="text-tertiary-50 opacity-85">{roleTitle}</span>
-      {'\n'}
-      {roleLocation && (
-        <span>
-          {PIPE}
-          {'   '}
-          <span className="text-tertiary-50 opacity-85" style={{ opacity: 0.65 }}>
-            {roleLocation}
-          </span>
-          {'\n'}
-        </span>
-      )}
-      {PIPE}
-      {'\n'}
-      {c.body.map((line) => (
-        <span key={`${c.hash}-${line}`}>
-          {PIPE} <span className="text-tertiary-50">{line}</span>
-          {'\n'}
-        </span>
-      ))}
-      {PIPE}
-      {'\n'}
-    </span>
+      {/* WHY: the rail overlay aligns one glyph per line by sharing this block's
+          line-height. Do NOT set `leading-*` on any inner span — it desyncs the
+          rail from that line down (invisible to unit tests; caught only by visual
+          regression). Keep all content at the inherited text-[13px]/leading-[1.5]. */}
+      <div className="whitespace-pre-wrap break-words">
+        <span className="text-primary-400">{'commit '}</span>
+        <span className="text-primary-400 opacity-70">{hashShort}</span>
+        {c.deco ? <span className="text-quinary-300">{` ${c.deco}`}</span> : null}
+        {'\n'}
+        <span className="text-primary-400 opacity-75">{dateShort}</span>
+        <span className="text-primary-400 opacity-40">{' · '}</span>
+        <span className="text-quaternary-400">{c.branch}</span>
+        {'\n\n'}
+        <span className="font-bold text-primary-500">{`feat(${c.type}): ${c.company}`}</span>
+        {'\n'}
+        <span className="text-tertiary-50 opacity-85">{c.role}</span>
+        {'\n\n'}
+        <span className="text-tertiary-50">{c.body.join(' ')}</span>
+      </div>
+    </li>
   );
 }
 
@@ -259,17 +178,14 @@ function GitLogDesktop() {
 
 function GitLogMobile() {
   return (
-    <div
-      className="font-mono text-xs max-md:text-[11px] leading-[1.55] overflow-x-auto"
-      data-testid="career-mobile"
-    >
-      <div className="text-primary-400 opacity-70 mb-3 tracking-[0.02em] text-xs max-md:text-[10px] whitespace-nowrap overflow-hidden text-ellipsis">
+    <div className="font-mono text-[13px] leading-[1.5] break-words" data-testid="career-mobile">
+      <div className="text-primary-400 opacity-70 mb-4 tracking-[0.02em] whitespace-nowrap overflow-hidden text-ellipsis">
         <span className="text-primary-500 opacity-80 mr-1.5">erik@portfolio:~$</span>
         {' git log --career --graph'}
       </div>
-      <pre className="m-0 whitespace-pre-wrap break-words overflow-x-hidden text-tertiary-50">
+      <ul className="m-0 p-0 list-none text-tertiary-50">
         {COMMITS.map((c) => renderCommitMobile(c, `m-${c.hash}`))}
-      </pre>
+      </ul>
     </div>
   );
 }
