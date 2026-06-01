@@ -7,7 +7,7 @@
 // Gates (in order):
 //   1. pnpm ci:local      — lint + typecheck + content validate + tests
 //   2. pnpm bundle-check  — gzipped chunk size gate
-//   3. pnpm pr-size       — branch complexity; exits 1 if red (split required)
+//   3. pnpm pr-size       — branch complexity; exit 1 = red (split), 2 = blocked
 //   4. pnpm gates:runtime — build + server + LHCI + axe + E2E (skip with --skip-runtime)
 //
 // On pass: prints next-step reminder (visual check + auto-review).
@@ -48,15 +48,37 @@ try {
   process.exit(1);
 }
 
-// Gate 3: PR size
-let sizeRed = false;
+// Gate 3: PR size. Map pr-size's exit code exactly — 1 = red (split), 2 =
+// blocked (invalid --base / unfetched base ref) — and treat anything else
+// (signal kill, spawn error, unexpected code) as an unknown failure rather
+// than silently calling it "red".
+let sizeFail: 'red' | 'blocked' | 'error' | null = null;
+let sizeExit: number | undefined;
 try {
   execFileSync('pnpm', ['pr-size'], { stdio: 'inherit' });
-} catch {
-  sizeRed = true;
+} catch (err) {
+  sizeExit = (err as { status?: number }).status;
+  sizeFail = sizeExit === 1 ? 'red' : sizeExit === 2 ? 'blocked' : 'error';
 }
 
-if (sizeRed) {
+if (sizeFail === 'error') {
+  process.stderr.write(
+    `\n${C.red}[ready-for-pr] FAIL${C.reset} — pr-size failed unexpectedly (exit ${sizeExit ?? 'signal/unknown'}). Re-run \`pnpm pr-size\` to see the error.\n\n`,
+  );
+  process.exit(1);
+}
+
+if (sizeFail === 'blocked') {
+  process.stderr.write(
+    `\n${C.red}[ready-for-pr] FAIL${C.reset} — pr-size could not run (invalid --base or the base ref isn't fetched).\n`,
+  );
+  process.stderr.write(
+    `${C.dim}  Run \`git fetch origin\`, or fix --base / PR_BASE, then retry.${C.reset}\n\n`,
+  );
+  process.exit(1);
+}
+
+if (sizeFail === 'red') {
   process.stderr.write(`\n${C.red}[ready-for-pr] FAIL${C.reset} — branch is too large (red).\n`);
   process.stderr.write(
     `${C.dim}  Open a PR now with completed milestones, continue remaining work on a new branch.${C.reset}\n`,
