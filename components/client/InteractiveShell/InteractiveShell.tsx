@@ -408,7 +408,7 @@ export function InteractiveShell() {
       </form>
 
       <p
-        className="m-0 px-4 py-2 border-t border-[color-mix(in_oklab,var(--color-primary-500)_14%,transparent)] text-xs leading-[1.5] text-[color-mix(in_oklab,var(--color-tertiary-50)_55%,transparent)]"
+        className="m-0 px-4 py-2 border-t border-[color-mix(in_oklab,var(--color-primary-500)_14%,transparent)] text-xs max-md:text-[10px] leading-[1.5] text-[color-mix(in_oklab,var(--color-tertiary-50)_55%,transparent)]"
         data-testid="shell-privacy-notice"
       >
         Queries are stored 90 days for product improvement. To request deletion, email{' '}

@@ -26,7 +26,7 @@ export function NpmStackSection({ defer }: { defer?: boolean } = {}) {
             className={[
               'npm-stack-item border border-primary-subtle',
               'aspect-square min-[341px]:aspect-[2/1]',
-              'flex flex-col items-center justify-center gap-1',
+              'flex flex-col items-center justify-center gap-1 max-md:p-2',
               'text-primary-500 text-xs max-md:text-[9px]',
               'tracking-[0.1em]',
               'transition-[border-color,box-shadow] duration-200 ease-[ease]',

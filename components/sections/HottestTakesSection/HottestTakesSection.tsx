@@ -10,7 +10,7 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
       icon={<IconHottestTakes />}
       defer={defer}
     >
-      <div className="text-primary-400 text-sm tracking-[0.06em] mb-[18px] pb-3 border-b border-dashed border-primary-quiet max-md:text-[9px]">
+      <div className="text-primary-400 text-sm tracking-[0.06em] mb-[18px] pb-3 border-b border-dashed border-primary-quiet max-md:text-[11px]">
         <span className="text-primary-500 mr-1.5">$</span>
         {'cat ~/hottest_takes.md  '}
         <span style={{ color: 'var(--color-primary-300)' }}>{hottestTakesConfig.preamble}</span>

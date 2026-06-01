@@ -260,7 +260,7 @@ function GitLogDesktop() {
 function GitLogMobile() {
   return (
     <div
-      className="font-mono text-xs max-md:text-[10px] leading-[1.55] overflow-x-auto"
+      className="font-mono text-xs max-md:text-[11px] leading-[1.55] overflow-x-auto"
       data-testid="career-mobile"
     >
       <div className="text-primary-400 opacity-70 mb-3 tracking-[0.02em] text-xs max-md:text-[10px] whitespace-nowrap overflow-hidden text-ellipsis">

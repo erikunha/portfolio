@@ -103,7 +103,7 @@ function InfluencesList({
 }) {
   return (
     <div className="border border-[var(--color-primary-border)] bg-black/35 p-[14px]">
-      <div className="flex justify-between text-xs text-primary-400 tracking-[0.16em] mb-3">
+      <div className="flex justify-between text-xs max-md:text-[10px] text-primary-400 tracking-[0.16em] mb-3">
         <span>
           {'INFLUENCES.QUEUE · '}
           <span className="text-primary-500">{influences.length} LOADED</span>
@@ -115,12 +115,12 @@ function InfluencesList({
           key={inf.rank}
           className={cn(
             'grid grid-cols-[36px_1fr_auto] gap-[10px] items-center mb-[9px]',
-            'text-tertiary-50 text-xs',
+            'text-tertiary-50 text-xs max-md:text-[10px]',
             inf.active && 'text-primary-500 font-bold',
           )}
           data-active={inf.active || undefined}
         >
-          <span className="text-primary-400 text-xs tracking-[0.1em]">
+          <span className="text-primary-400 text-xs max-md:text-[10px] tracking-[0.1em]">
             {inf.active ? '▶ ' : ''}
             {String(inf.rank).padStart(2, '0')}
           </span>
@@ -128,7 +128,7 @@ function InfluencesList({
           <InfluenceBars filled={inf.strength} />
         </div>
       ))}
-      <div className="mt-3 pt-[10px] border-t border-dashed border-[var(--color-primary-quiet)] text-xs text-primary-400">
+      <div className="mt-3 pt-[10px] border-t border-dashed border-[var(--color-primary-quiet)] text-xs max-md:text-[10px] text-primary-400">
         <strong className="text-primary-500 font-bold">now obsessing:</strong> {nowObsessing}
       </div>
     </div>

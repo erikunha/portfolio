@@ -46,7 +46,7 @@ function VisaMobile() {
         >
           {'================================================================'}
         </div>
-        <div className="mt-[0.5em] flex flex-col gap-2 font-mono text-sm max-md:text-[10px]">
+        <div className="mt-[0.5em] flex flex-col gap-2 font-mono text-sm max-md:text-[12px]">
           {visaRows.map((row) => (
             <div key={row.jurisdictionShort} className="flex gap-3 items-start">
               <span className="text-primary-500 font-bold shrink-0 w-[8ch]">
@@ -60,7 +60,7 @@ function VisaMobile() {
           ))}
         </div>
       </div>
-      <div className="text-primary-400 text-xs mt-[14px] tracking-[0.04em] whitespace-nowrap overflow-hidden">
+      <div className="text-primary-400 text-xs max-md:text-[10px] mt-[14px] tracking-[0.04em] whitespace-nowrap overflow-hidden">
         {'// PT (native) · EN (C1) · FR (A2) · ES (A2)'}
       </div>
     </div>

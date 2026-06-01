@@ -58,7 +58,7 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
           <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
             {pct(metrics.evalPassRate)}
           </div>
-          <div className="text-primary-400 text-sm leading-[1.5] mt-auto">
+          <div className="text-primary-400 text-sm max-md:text-xs leading-[1.5] mt-auto">
             correctness · factual + edge corpus
           </div>
         </TerminalPanel>
@@ -69,7 +69,7 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
           <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
             {pct(metrics.jailbreakResistance)}
           </div>
-          <div className="text-primary-400 text-sm leading-[1.5] mt-auto">
+          <div className="text-primary-400 text-sm max-md:text-xs leading-[1.5] mt-auto">
             prompt-injection refusal rate
           </div>
         </TerminalPanel>
@@ -80,7 +80,7 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
           <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
             {ms(metrics.p95LatencyMs)}
           </div>
-          <div className="text-primary-400 text-sm leading-[1.5] mt-auto">
+          <div className="text-primary-400 text-sm max-md:text-xs leading-[1.5] mt-auto">
             end-to-end · slowest 5% of answers
           </div>
         </TerminalPanel>
@@ -91,12 +91,12 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
           <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
             {usd(metrics.costPerAnswer)}
           </div>
-          <div className="text-primary-400 text-sm leading-[1.5] mt-auto">
+          <div className="text-primary-400 text-sm max-md:text-xs leading-[1.5] mt-auto">
             production inference · feature model only
           </div>
         </TerminalPanel>
       </div>
-      <div className="flex justify-between items-center mt-[18px] pt-3 border-t border-dashed border-primary-quiet text-primary-400 text-xs tracking-[0.06em] max-[768px]:flex-col max-[768px]:items-start max-[768px]:gap-1.5 max-[768px]:text-xs">
+      <div className="flex justify-between items-center mt-[18px] pt-3 border-t border-dashed border-primary-quiet text-primary-400 text-xs tracking-[0.06em] max-[768px]:flex-col max-[768px]:items-start max-[768px]:gap-1.5 max-[768px]:text-[11px]">
         <span>
           <span className="text-primary-500 mr-1.5">{'>'}</span>
           SOURCE: scripts/ask-eval.ts · ask:eval:latest
