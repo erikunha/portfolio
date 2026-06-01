@@ -11,7 +11,7 @@ export function NpmStackSection({ defer }: { defer?: boolean } = {}) {
       defer={defer}
       variant="green"
     >
-      {/* Mobile-first: 2-col → 4-col (≥341px) → 3-col (≥901px) → 8-col (≥1025px, flatter tiles) */}
+      {/* Mobile-first: 2-col → 4-col (≥341px) → 3-col (≥901px) → 8-col (lg, ≥1024px, flatter tiles) */}
       <ul
         className={[
           'npm-stack-grid list-none m-0 p-0',
