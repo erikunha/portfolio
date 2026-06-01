@@ -3,6 +3,26 @@
    See crt.css for CRT overlay effects; animations.css for @keyframes-heavy section animations. */
 
 @layer components {
+  /* ── MDX prose code surfaces (design-system docs) ────────────────────────── */
+
+  /* Inline code: distinct surface + allow wrapping. base.css sets `code` to
+     white-space: pre, which overflows long inline tokens in the 720px column.
+     Excludes pre/td/th so fenced blocks and table-cell code keep their own styling. */
+  .ds-prose :not(pre):not(td):not(th) > code {
+    background: var(--color-primary-quiet);
+    border: 1px solid var(--color-primary-border);
+    padding: 0.1em 0.35em;
+    color: var(--color-primary-500);
+    white-space: normal;
+  }
+
+  /* Fenced code blocks: panel surface (base.css + layout supply only mono + overflow + margin). */
+  .ds-prose pre {
+    background: var(--color-primary-quiet);
+    border: 1px solid var(--color-primary-border);
+    padding: 0.75rem 1rem;
+  }
+
   /* ── Phosphor / signal glow text-shadow ─────────────────────────────────── */
 
   .signal-glow {
