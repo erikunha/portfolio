@@ -13,7 +13,11 @@
     border: 1px solid var(--color-primary-border);
     padding: 0.1em 0.35em;
     color: var(--color-primary-500);
+    /* `normal` re-enables wrapping (base.css sets code to pre); `anywhere`
+       lets long unbreakable tokens (package names, URLs) break instead of
+       overflowing the 720px docs column. */
     white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   /* Fenced code blocks: panel surface (base.css + layout supply only mono + overflow + margin). */
