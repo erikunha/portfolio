@@ -127,7 +127,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 | 4 — Testing | `no-source-grep.test.ts` bans `readFileSync` without allow tag; behavioral assertions only |
 | 5 — Dependencies | `check-dep-pinning.mjs` rejects `latest`/`*`; `--frozen-lockfile` in CI |
 | 6 — Content | `validate-content.ts` Zod schemas at build time; no copy inlined in `.tsx` |
-| 7 — CSS/tokens | `lint:contrast`; token palette only, no raw hex; CSS modules allowed for components with complex styling needs |
+| 7 — CSS/tokens | `lint:contrast`; `@theme` tokens in `app/css/theme.css`, no raw hex; complex patterns as named classes in `@layer components` (`app/css/components.css`), no CSS modules |
 | 8 — A11y | axe-core gate + Lighthouse =100; per-component behavioral a11y tests |
 | 9 — Security | Behavioral tests for CSP + kill switches (not source-grep); `security-auditor` on any `app/api/` change |
 | 10 — Docs | PR review: doc claims must match live code; ADRs cite SHA + reversibility note |
@@ -214,7 +214,7 @@ i18n · light theme · blog/MDX engine · analytics beyond Vercel Web Analytics 
 ## Things that have been considered and rejected
 
 Before proposing any of these, check `DECISIONS.md` to see the reasoning that excluded them:
-- GraphQL · Cloudflare Workers · multi-region deploy · Sentry by default · CAPTCHA on the contact form · per-portfolio-section routes · state management library · MDX as a blog/content engine · separate CMS · CSS modules · CSS-in-JS / styled-components · PostCSS plugins beyond what Lightning CSS provides natively
+- GraphQL · Cloudflare Workers · multi-region deploy · Sentry by default · CAPTCHA on the contact form · per-portfolio-section routes · state management library · MDX as a blog/content engine · separate CMS · CSS modules · CSS-in-JS / styled-components · PostCSS plugins beyond `@tailwindcss/postcss`
 
 ## Reference docs in this repo
 
