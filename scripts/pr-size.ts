@@ -33,7 +33,17 @@ function run(cmd: string, args: string[]): string {
 // (CI sets GITHUB_BASE_REF to the PR target) > origin/main.
 function resolveBase(): string {
   const i = process.argv.indexOf('--base');
-  if (i !== -1 && process.argv[i + 1]) return process.argv[i + 1] as string;
+  if (i !== -1) {
+    // --base is present: require an explicit ref. Silently falling back to
+    // env/default here would let you think you're sizing against a custom base
+    // when you aren't.
+    const val = process.argv[i + 1];
+    if (!val || val.startsWith('--')) {
+      process.stderr.write('pr-size: --base requires a ref, e.g. `--base origin/feat/x`.\n');
+      process.exit(2);
+    }
+    return val;
+  }
   if (process.env.PR_BASE) return process.env.PR_BASE;
   if (process.env.GITHUB_BASE_REF) return `origin/${process.env.GITHUB_BASE_REF}`;
   return 'origin/main';
@@ -89,7 +99,8 @@ try {
   const log = run('git', ['rev-list', '--count', `${BASE}..HEAD`]);
   commitCount = Number(log.trim());
 } catch {
-  // ignore if base ref is unavailable
+  // BASE is already verified above, so a failure here means truncated history
+  // (e.g. a shallow clone with no merge-base) — leave commitCount at 0.
 }
 
 type Level = 'green' | 'yellow' | 'red';
