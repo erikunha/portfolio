@@ -44,7 +44,7 @@ export function Hero() {
             <Badge variant="dot">OPEN_TO_RELOCATION · WORLDWIDE</Badge>
           </div>
           <HeroStats />
-          <div className="grid grid-cols-2 gap-3 mt-3" data-testid="hero-ctas">
+          <div className="grid grid-cols-2 gap-3 mt-3 [text-shadow:none]" data-testid="hero-ctas">
             <Button
               as="a"
               variant="primary"
@@ -99,7 +99,7 @@ export function Hero() {
             <Badge variant="dot">OPEN_TO_RELOCATION · WORLDWIDE</Badge>
           </div>
           <HeroStats />
-          <div className="grid grid-cols-2 gap-3 mt-3" data-testid="hero-ctas">
+          <div className="grid grid-cols-2 gap-3 mt-3 [text-shadow:none]" data-testid="hero-ctas">
             <Button
               as="a"
               variant="primary"
