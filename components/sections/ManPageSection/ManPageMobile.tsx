@@ -6,7 +6,7 @@ export function ManPageMobile() {
   return (
     <div
       id="sec-man-page-body"
-      className="flex font-mono text-sm leading-[1.7] text-tertiary-50 flex-col gap-0.5"
+      className="flex font-mono text-sm max-md:text-xs leading-[1.7] text-tertiary-50 flex-col gap-0.5"
       data-testid="manpage-mobile"
     >
       {/* #sec-man-page-body min-height: 300px in components.css — preserves space while streaming */}

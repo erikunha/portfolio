@@ -8,7 +8,7 @@ function VisaDesktop() {
   return (
     <div className="overflow-x-auto">
       <pre
-        className="m-0 text-tertiary-50 font-mono text-sm leading-[1.85] whitespace-pre"
+        className="m-0 text-tertiary-50 font-mono text-sm max-md:text-[10px] leading-[1.85] whitespace-pre"
         data-testid="visa-desktop"
       >
         <span className="text-primary-500 font-bold tracking-[0.06em]">
@@ -46,7 +46,7 @@ function VisaMobile() {
         >
           {'================================================================'}
         </div>
-        <div className="mt-[0.5em] flex flex-col gap-2 font-mono text-sm">
+        <div className="mt-[0.5em] flex flex-col gap-2 font-mono text-sm max-md:text-[10px]">
           {visaRows.map((row) => (
             <div key={row.jurisdictionShort} className="flex gap-3 items-start">
               <span className="text-primary-500 font-bold shrink-0 w-[8ch]">

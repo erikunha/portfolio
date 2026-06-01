@@ -300,7 +300,9 @@ export function GuitarMobile() {
                 {'// '}
                 {node.role}
               </div>
-              <div className="font-bold text-xs text-primary-500 leading-[1.2]">{node.name}</div>
+              <div className="font-bold text-xs max-md:text-sm text-primary-500 leading-[1.2]">
+                {node.name}
+              </div>
               <div className="text-xs text-tertiary-50 opacity-85">{node.subtitle}</div>
               {node.role === 'FX' ? (
                 <FxList blocks={node.blocks} />
@@ -325,7 +327,9 @@ export function GuitarMobile() {
               {'// '}
               {stat.label}
             </div>
-            <div className="font-bold text-primary-500 text-xs leading-[1.4]">{stat.value}</div>
+            <div className="font-bold text-primary-500 text-xs max-md:text-sm leading-[1.4]">
+              {stat.value}
+            </div>
             <div className="text-xs text-tertiary-50 leading-[1.4]">{stat.sub}</div>
           </div>
         ))}

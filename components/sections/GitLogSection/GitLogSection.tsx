@@ -237,15 +237,18 @@ function renderCommit(c: GitCommit, key: string): ReactNode {
 
 function GitLogDesktop() {
   return (
-    <div className="font-mono text-sm leading-[1.55] overflow-x-auto" data-testid="career-desktop">
-      <div className="text-primary-400 opacity-70 mb-3 tracking-[0.02em] text-sm whitespace-pre">
+    <div
+      className="font-mono text-sm max-md:text-[10px] leading-[1.55] overflow-x-auto"
+      data-testid="career-desktop"
+    >
+      <div className="text-primary-400 opacity-70 mb-3 tracking-[0.02em] text-sm max-md:text-[10px] whitespace-pre">
         <span className="text-primary-500 opacity-80 mr-1.5">erik@portfolio:~$</span>
         {' git log --graph --pretty=fuller --decorate --since="2018-06-01" ~/career'}
       </div>
       <pre className="m-0 whitespace-pre text-tertiary-50">
         {COMMITS.map((c) => renderCommit(c, c.hash))}
       </pre>
-      <div className="text-primary-400 opacity-70 mt-[14px] text-sm tracking-[0.04em]">
+      <div className="text-primary-400 opacity-70 mt-[14px] text-sm max-md:text-[10px] tracking-[0.04em]">
         {'(END) — press '}
         <span style={{ color: 'var(--color-primary-500)' }}>q</span>
         {' to return to portfolio'}
@@ -256,8 +259,11 @@ function GitLogDesktop() {
 
 function GitLogMobile() {
   return (
-    <div className="font-mono text-xs leading-[1.55] overflow-x-auto" data-testid="career-mobile">
-      <div className="text-primary-400 opacity-70 mb-3 tracking-[0.02em] text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+    <div
+      className="font-mono text-xs max-md:text-[10px] leading-[1.55] overflow-x-auto"
+      data-testid="career-mobile"
+    >
+      <div className="text-primary-400 opacity-70 mb-3 tracking-[0.02em] text-xs max-md:text-[10px] whitespace-nowrap overflow-hidden text-ellipsis">
         <span className="text-primary-500 opacity-80 mr-1.5">erik@portfolio:~$</span>
         {' git log --career --graph'}
       </div>

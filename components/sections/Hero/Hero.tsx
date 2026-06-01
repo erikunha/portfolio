@@ -80,13 +80,13 @@ export function Hero() {
           <HeroBootAnimation variant="mobile" />
 
           <h1
-            className="font-mono font-bold text-[24px] text-primary-500 border-t border-dashed border-primary-quiet pt-3.5 mt-1.5 mb-0.5 leading-[1.2]"
+            className="font-mono font-bold text-[24px] text-primary-500 border-t border-dashed border-primary-quiet pt-3.5 mt-1.5 mb-0.5 leading-[1.55]"
             data-testid="hero-name"
           >
             Erik Henrique Alves Cunha
           </h1>
-          <p className="text-tertiary-50 text-sm leading-[1.55] mb-2">{heroTagline}</p>
-          <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-sm tracking-[0.08em] mb-3.5">
+          <p className="text-tertiary-50 text-xs leading-[1.55] mb-2">{heroTagline}</p>
+          <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-xs tracking-[0.08em] mb-3.5">
             <span>
               LOC: <b className="text-primary-500 font-bold">Brazil</b>
             </span>

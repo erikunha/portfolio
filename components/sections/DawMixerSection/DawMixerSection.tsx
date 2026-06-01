@@ -259,8 +259,10 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
           {ch.name}
         </span>
         <div className="text-xs text-primary-400 tabular-nums tracking-[0.04em] text-right leading-[1.1] whitespace-nowrap">
-          <span className="font-bold text-primary-500 text-xs">{pctToDb(ch.faderPct)}</span>
-          <span className="text-xs text-primary-400">dB</span>
+          <span className="font-bold text-primary-500 text-xs max-md:text-sm">
+            {pctToDb(ch.faderPct)}
+          </span>
+          <span className="text-xs max-md:text-sm text-primary-400">dB</span>
         </div>
       </div>
       {/* description */}

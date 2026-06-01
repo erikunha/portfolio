@@ -27,7 +27,7 @@ export function NpmStackSection({ defer }: { defer?: boolean } = {}) {
               'npm-stack-item border border-primary-subtle',
               'aspect-square min-[341px]:aspect-[2/1]',
               'flex flex-col items-center justify-center gap-1',
-              'text-primary-500 text-xs min-[341px]:text-xs min-[901px]:text-xs',
+              'text-primary-500 text-xs max-md:text-[9px]',
               'tracking-[0.1em]',
               'transition-[border-color,box-shadow] duration-200 ease-[ease]',
               'hover:border-primary-500 hover:shadow-[0_0_14px_var(--color-glow-18)]',

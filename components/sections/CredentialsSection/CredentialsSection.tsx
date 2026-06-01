@@ -11,7 +11,7 @@ export function CredentialsSection({ defer }: { defer?: boolean } = {}) {
       defer={defer}
     >
       <div className="overflow-x-auto">
-        <div className="flex flex-col gap-1 mt-[0.5em] font-mono text-sm max-[768px]:gap-3">
+        <div className="flex flex-col gap-1 mt-[0.5em] font-mono text-sm max-md:text-xs max-[768px]:gap-3">
           {credentials.map((cred) => (
             <div
               key={cred.label}
@@ -25,7 +25,7 @@ export function CredentialsSection({ defer }: { defer?: boolean } = {}) {
               <span className="w-[25ch] shrink-0 text-primary-500 font-bold max-[768px]:w-auto">
                 {cred.badge}
               </span>
-              <span className="flex-1 text-tertiary-50 max-[768px]:text-primary-400 max-[768px]:text-xs">
+              <span className="flex-1 text-tertiary-50 max-[768px]:text-primary-400 max-md:text-[10px]">
                 {cred.evidence}
               </span>
             </div>

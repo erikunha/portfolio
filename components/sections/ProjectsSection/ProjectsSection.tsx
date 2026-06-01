@@ -35,7 +35,7 @@ function ProjectsDesktop() {
               {p.perm ?? 'drwxr-xr-x'}
             </span>
           </div>
-          <h3 className="project-name text-primary-500 font-bold text-sm md:text-base tracking-[0.04em] my-1.5">
+          <h3 className="project-name text-primary-500 font-bold text-sm max-md:text-xs md:text-base tracking-[0.04em] my-1.5">
             {p.name}
           </h3>
           <p className="project-desc text-tertiary-50 text-xs md:text-sm mb-4">{p.description}</p>

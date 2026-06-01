@@ -714,6 +714,12 @@
     color: var(--color-primary-500);
     font-size: 12px;
   }
+  /* Mobile matches prod's 14px dB readout; desktop stays 12px. */
+  @media (max-width: 768px) {
+    .dbValue {
+      font-size: 14px;
+    }
+  }
 
   .dbUnit {
     font-size: 10px;

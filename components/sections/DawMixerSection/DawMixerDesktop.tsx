@@ -194,7 +194,7 @@ function TableHeader() {
     <div
       className={cn(
         'daw-channel-row',
-        'text-xs text-primary-400 tracking-[0.18em] uppercase',
+        'text-xs max-md:text-[10px] text-primary-400 tracking-[0.18em] uppercase',
         'border-b border-[var(--color-primary-quiet)] px-[18px] py-[7px]',
         'bg-black/50',
       )}
