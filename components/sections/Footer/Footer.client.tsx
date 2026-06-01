@@ -161,12 +161,12 @@ export function Footer() {
         {/* Banner */}
         <div className="flex items-baseline justify-between gap-6 flex-wrap mb-2 max-[768px]:flex-col max-[768px]:gap-1">
           <span
-            className="text-primary-500 font-bold tracking-[0.06em] text-sm max-[560px]:text-sm max-[768px]:text-sm"
+            className="text-primary-500 font-bold tracking-[0.06em] text-sm max-md:text-xs"
             style={{ textShadow: '0 0 8px rgba(0,255,65,0.35)' }}
           >
             [SYSTEM SHUTDOWN INITIATED]
           </span>
-          <span className="text-primary-400 text-xs tracking-[0.14em] uppercase max-[560px]:text-xs max-[768px]:text-xs">
+          <span className="text-primary-400 text-xs max-md:text-[10px] tracking-[0.14em] uppercase">
             {'halted at '}
             <b
               suppressHydrationWarning
@@ -178,7 +178,7 @@ export function Footer() {
         </div>
 
         {/* Cmdline */}
-        <div className="text-sm mb-[14px] text-tertiary-50">
+        <div className="text-sm max-md:text-xs mb-[14px] text-tertiary-50">
           <span className="text-primary-400">{'erik@portfolio:~$'}</span>{' '}
           <span className="text-tertiary-50">{'shutdown -h now'}</span>
         </div>
@@ -196,10 +196,10 @@ export function Footer() {
             className="border border-primary-subtle p-[14px_16px_16px] relative min-w-0 max-[768px]:p-[12px_14px_14px] max-[768px]:mb-2.5"
             style={{ background: 'linear-gradient(180deg, rgba(0,255,65,0.025), rgba(0,0,0,0))' }}
           >
-            <header className="text-primary-500 font-bold text-xs tracking-[0.18em] mb-3 flex items-baseline gap-1.5 max-[768px]:text-sm max-[768px]:tracking-[0.16em]">
+            <header className="text-primary-500 font-bold text-xs tracking-[0.18em] mb-3 flex items-baseline gap-1.5 max-[768px]:tracking-[0.16em]">
               <span className="text-primary-500">{'▌'}</span>SESSION_REPORT
             </header>
-            <div className="grid grid-cols-[130px_1fr] gap-3 text-sm leading-[1.95] items-center max-[900px]:grid-cols-[110px_1fr] max-[768px]:grid-cols-[100px_1fr] max-[768px]:gap-2.5 max-[560px]:grid-cols-[92px_1fr] max-[560px]:gap-2">
+            <div className="grid grid-cols-[130px_1fr] gap-3 text-sm max-md:text-xs leading-[1.95] items-center max-[900px]:grid-cols-[110px_1fr] max-[768px]:grid-cols-[100px_1fr] max-[768px]:gap-2.5 max-[560px]:grid-cols-[92px_1fr] max-[560px]:gap-2">
               <span className="text-primary-400 tracking-[0.04em]">user</span>
               <span className="text-tertiary-50 tabular-nums">erik@portfolio</span>
               <span className="text-primary-400 tracking-[0.04em]">uptime</span>
@@ -242,7 +242,7 @@ export function Footer() {
               <span className="text-primary-500">{'▌'}</span>NETSTAT -AN
             </header>
             {isMobile ? (
-              <div className="grid grid-cols-[28px_90px_minmax(0,1fr)] gap-x-[28px] items-center max-[768px]:grid-cols-[28px_80px_minmax(0,1fr)] max-[768px]:gap-x-2.5">
+              <div className="grid grid-cols-[28px_90px_minmax(0,1fr)] gap-x-[28px] items-center text-xs max-[768px]:grid-cols-[28px_80px_minmax(0,1fr)] max-[768px]:gap-x-2.5">
                 <span className="text-primary-400 tracking-[0.06em]">Proto</span>
                 <span className="text-primary-400 tracking-[0.06em]">State</span>
                 <span className="text-primary-400 tracking-[0.06em]">Endpoint</span>
@@ -282,7 +282,7 @@ export function Footer() {
                 </a>
               </div>
             ) : (
-              <pre className="m-0 font-mono text-sm leading-[1.95] text-tertiary-50 whitespace-pre overflow-x-auto max-[900px]:text-sm max-[768px]:text-sm">
+              <pre className="m-0 font-mono text-sm leading-[1.95] text-tertiary-50 whitespace-pre overflow-x-auto max-[900px]:text-sm max-md:text-xs">
                 <span className="text-primary-400">{'Proto  State        Endpoint'}</span>
                 {[
                   {
@@ -333,7 +333,7 @@ export function Footer() {
           {dmesgLines.map((line, i) => (
             <li
               key={line.off}
-              className="dmesg-line grid grid-cols-[92px_1fr_auto] gap-x-[14px] items-baseline text-tertiary-50 max-[900px]:grid-cols-[72px_1fr_auto] max-[900px]:gap-x-2.5 max-[900px]:text-sm max-[768px]:grid-cols-[72px_1fr_auto] max-[768px]:gap-x-2 max-[768px]:text-xs"
+              className="dmesg-line grid grid-cols-[92px_1fr_auto] gap-x-[14px] items-baseline text-tertiary-50 max-[900px]:grid-cols-[72px_1fr_auto] max-[900px]:gap-x-2.5 max-[900px]:text-sm max-[768px]:grid-cols-[72px_1fr_auto] max-[768px]:gap-x-2 max-md:text-[10px]"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <span className="text-primary-400 tabular-nums whitespace-nowrap">{dmesgTs[i]}</span>
@@ -343,7 +343,9 @@ export function Footer() {
                 {line.suffix}
               </span>
               {line.ok && (
-                <span className="text-primary-500 font-bold tracking-[0.12em] text-xs">OK</span>
+                <span className="text-primary-500 font-bold tracking-[0.12em] text-xs max-md:text-[10px]">
+                  OK
+                </span>
               )}
               {!line.ok && (
                 <span
@@ -357,12 +359,12 @@ export function Footer() {
 
         {/* Halt plate + hint — halt-booted / halt-plate / halt-hint in components.css */}
         <div
-          className={`mt-6 flex items-center flex-wrap gap-x-4 gap-y-2.5${booted ? ' halt-booted' : ''}`}
+          className={`mt-6 flex items-center flex-wrap gap-x-4 gap-y-2.5 max-md:flex-col max-md:items-start${booted ? ' halt-booted' : ''}`}
         >
-          <span className="halt-plate inline-block shrink-0 bg-primary-500 text-black font-bold text-sm tracking-[0.16em] px-3 py-[5px] leading-none whitespace-nowrap">
+          <span className="halt-plate inline-block shrink-0 bg-primary-500 text-black font-bold text-sm max-md:text-xs tracking-[0.16em] px-3 py-[5px] leading-none whitespace-nowrap">
             [SYSTEM HALTED]
           </span>
-          <span className="halt-hint shrink-0 text-primary-400 text-xs tracking-[0.12em] whitespace-nowrap">
+          <span className="halt-hint shrink-0 text-primary-400 text-xs max-md:text-[10px] tracking-[0.12em] whitespace-nowrap">
             {isMobile ? 'tap ' : 'press '}
             <button type="button" onClick={() => window.location.reload()}>
               {/* kbd-key class in components.css */}
@@ -373,7 +375,7 @@ export function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="text-primary-400 text-sm mt-[22px] tracking-[0.04em] opacity-85">
+        <div className="text-primary-400 text-sm max-md:text-xs mt-[22px] tracking-[0.04em] opacity-85">
           © 2026 erik cunha · this session ends here · the work doesn&apos;t.
         </div>
       </div>
