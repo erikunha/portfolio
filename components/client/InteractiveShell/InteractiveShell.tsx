@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import SHELL_RESPONSES from '@/content/shell-commands';
 import { WindowChrome } from '@/design-system';
 import { readMotion } from '@/lib/motion';
@@ -98,7 +98,7 @@ function AnimatedPlaceholder() {
   }, []);
   return (
     <span
-      className="absolute left-0 top-1/2 -translate-y-1/2 text-primary-400 opacity-60 pointer-events-none font-inherit text-[14px] whitespace-nowrap overflow-hidden inline-flex items-center"
+      className="absolute left-0 top-1/2 -translate-y-1/2 text-primary-400 opacity-60 pointer-events-none font-inherit text-[14px] md:text-base whitespace-nowrap overflow-hidden inline-flex items-center"
       aria-hidden="true"
       data-testid="shell-placeholder"
     >
@@ -345,7 +345,7 @@ export function InteractiveShell() {
       </div>
 
       <div
-        className="px-4 py-[14px] min-h-[220px] max-h-[400px] overflow-y-auto max-md:min-h-[200px] max-md:max-h-[320px] max-md:text-xs"
+        className="px-4 py-[14px] min-h-[220px] max-h-[400px] overflow-y-auto md:text-sm max-md:min-h-[200px] max-md:max-h-[320px] max-md:text-xs"
         ref={feedRef}
         role="log"
         aria-label="shell output"
@@ -384,7 +384,7 @@ export function InteractiveShell() {
         className="flex gap-2 items-center px-4 py-2 pb-3 border-t border-[var(--color-primary-quiet)] max-md:px-3 max-md:pb-[10px]"
         data-testid="shell-form"
       >
-        <span className="text-primary-400 text-[14px] whitespace-nowrap max-md:text-xs">
+        <span className="text-primary-400 text-[14px] md:text-base whitespace-nowrap max-md:text-xs">
           erik@portfolio:~$
         </span>
         <div className="flex-1 relative min-w-0">
@@ -399,7 +399,7 @@ export function InteractiveShell() {
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
-            className="w-full bg-transparent border-0 outline-none text-tertiary-50 font-inherit text-[14px] caret-primary-500 [caret-shape:block] focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 max-md:text-xs"
+            className="w-full bg-transparent border-0 outline-none text-tertiary-50 font-inherit text-[14px] md:text-base caret-primary-500 [caret-shape:block] focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 max-md:text-xs"
             aria-label="shell command"
           />
           {!input && !busy && !inputFocused && <AnimatedPlaceholder />}
@@ -425,29 +425,29 @@ export function InteractiveShell() {
 
       {!isMobile && (
         <div
-          className="text-primary-400 text-xs tracking-[0.1em] leading-[1.8] px-4 py-2 pb-3 border-t border-dashed border-[var(--color-primary-quiet)] opacity-75 max-md:hidden"
+          className="flex gap-[6px] flex-wrap items-center px-4 py-2 pb-3 border-t border-dashed border-[var(--color-primary-quiet)] max-md:hidden"
+          role="toolbar"
+          aria-label="quick commands"
           data-testid="shell-commands"
+          onClick={(e) => {
+            const cmd = (e.target as HTMLElement).closest<HTMLElement>('[data-cmd]')?.dataset.cmd;
+            if (cmd && !busy) runWithEffect(cmd);
+          }}
         >
-          {'commands: '}
-          {COMMANDS.map(({ label, cmd }, i) => (
-            <Fragment key={cmd}>
-              {i > 0 && ' · '}
-              <button
-                type="button"
-                className="shell-cmd-hint inline bg-none border-none p-0 cursor-pointer font-inherit text-inherit tracking-inherit color-inherit disabled:cursor-default"
-                onClick={() => {
-                  if (!busy) {
-                    setInput(cmd);
-                    inputRef.current?.focus();
-                  }
-                }}
-                disabled={busy}
-              >
-                {label}
-              </button>
-            </Fragment>
+          {COMMANDS.map(({ label, cmd }) => (
+            <button
+              key={cmd}
+              type="button"
+              className="shell-cmd-hint border border-[var(--color-primary-subtle)] text-primary-500 px-2 py-1 font-mono text-xs tracking-[0.1em] rounded-[2px] min-h-[28px] inline-flex items-center cursor-pointer bg-transparent hover:bg-[var(--color-primary-quiet)] disabled:cursor-default disabled:opacity-50"
+              data-cmd={cmd}
+              disabled={busy}
+            >
+              {label}
+            </button>
           ))}
-          {' · anything else → Claude'}
+          <span className="text-primary-400 opacity-60 text-xs tracking-[0.1em] ml-1 whitespace-nowrap">
+            anything else → Claude
+          </span>
         </div>
       )}
 
