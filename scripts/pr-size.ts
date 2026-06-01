@@ -13,7 +13,8 @@
 //   Lines:       yellow ≥400  red ≥1200
 //   Subsystems:  yellow ≥3    red ≥5
 //
-// Exits 0 = green/yellow (ok or warn), 1 = red (split recommended).
+// Exit codes: 0 = green/yellow (ok or warn), 1 = red (split recommended),
+// 2 = blocked (invalid `--base` usage, or the base ref isn't fetched locally).
 
 import { execFileSync } from 'node:child_process';
 
