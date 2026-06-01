@@ -1,9 +1,12 @@
 #!/usr/bin/env tsx
-// Usage: pnpm pr-size
+// Usage: pnpm pr-size [--base <ref>]   (also reads PR_BASE / GITHUB_BASE_REF)
 //
-// Calculates branch complexity vs origin/main and signals whether to split.
-// Designed to run after each milestone block so you know when to open a PR
-// vs keep accumulating commits.
+// Calculates branch complexity vs the BASE branch and signals whether to split.
+// Base resolution: --base <ref> > PR_BASE > origin/$GITHUB_BASE_REF (CI) >
+// origin/main. For a sub-PR into an integration branch, size against that
+// branch (e.g. `PR_BASE=origin/feat/x pnpm pr-size`) so it reads as its own
+// small diff, not the cumulative diff from main.
+// Designed to run after each milestone block so you know when to open a PR.
 //
 // Thresholds:
 //   Files:       yellow ≥10   red ≥25
@@ -24,12 +27,35 @@ function run(cmd: string, args: string[]): string {
   return execFileSync(cmd, args, { encoding: 'utf8' });
 }
 
+// Base ref to size against. Sub-PRs into an integration branch should size
+// against THAT branch (set --base / PR_BASE), not main, or they read as the
+// full diff from main. Resolution: --base <ref> > PR_BASE > origin/$GITHUB_BASE_REF
+// (CI sets GITHUB_BASE_REF to the PR target) > origin/main.
+function resolveBase(): string {
+  const i = process.argv.indexOf('--base');
+  if (i !== -1 && process.argv[i + 1]) return process.argv[i + 1] as string;
+  if (process.env.PR_BASE) return process.env.PR_BASE;
+  if (process.env.GITHUB_BASE_REF) return `origin/${process.env.GITHUB_BASE_REF}`;
+  return 'origin/main';
+}
+const BASE = resolveBase();
+
+// Fail early with a clear message if the base ref isn't present locally.
+try {
+  run('git', ['rev-parse', '--verify', '--quiet', `${BASE}^{commit}`]);
+} catch {
+  process.stderr.write(
+    `pr-size: base ref "${BASE}" not found locally. Run \`git fetch origin\` (or pass --base <ref> / set PR_BASE).\n`,
+  );
+  process.exit(2);
+}
+
 // Changed file names
-const filesRaw = run('git', ['diff', 'origin/main...HEAD', '--name-only']);
+const filesRaw = run('git', ['diff', `${BASE}...HEAD`, '--name-only']);
 const files = filesRaw.trim().split('\n').filter(Boolean);
 
 // Line counts from numstat: added deleted filename
-const numstat = run('git', ['diff', 'origin/main...HEAD', '--numstat']);
+const numstat = run('git', ['diff', `${BASE}...HEAD`, '--numstat']);
 let insertions = 0;
 let deletions = 0;
 for (const line of numstat.trim().split('\n').filter(Boolean)) {
@@ -60,10 +86,10 @@ const subsystems = subsystemMap.size;
 // Commit count on this branch
 let commitCount = 0;
 try {
-  const log = run('git', ['rev-list', '--count', 'origin/main..HEAD']);
+  const log = run('git', ['rev-list', '--count', `${BASE}..HEAD`]);
   commitCount = Number(log.trim());
 } catch {
-  // ignore if no origin/main
+  // ignore if base ref is unavailable
 }
 
 type Level = 'green' | 'yellow' | 'red';
@@ -108,7 +134,7 @@ function row(label: string, val: number, lvl: Level, thresholds: { yellow: numbe
 }
 
 process.stdout.write(
-  `\n${C.bold}PR Size Report${C.reset}  ${C.dim}(${commitCount} commit(s) ahead of origin/main)${C.reset}\n`,
+  `\n${C.bold}PR Size Report${C.reset}  ${C.dim}(${commitCount} commit(s) ahead of ${BASE})${C.reset}\n`,
 );
 process.stdout.write(`${'─'.repeat(60)}\n`);
 row('Files changed:', files.length, fileLevel, THRESHOLDS.files);
