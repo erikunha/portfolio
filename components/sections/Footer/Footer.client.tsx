@@ -199,7 +199,7 @@ export function Footer() {
             <header className="text-primary-500 font-bold text-xs tracking-[0.18em] mb-3 flex items-baseline gap-1.5 max-[768px]:tracking-[0.16em]">
               <span className="text-primary-500">{'▌'}</span>SESSION_REPORT
             </header>
-            <div className="grid grid-cols-[130px_1fr] gap-3 text-sm max-md:text-xs leading-[1.95] max-md:leading-[1.5] items-center max-[900px]:grid-cols-[110px_1fr] max-[768px]:grid-cols-[100px_1fr] max-[768px]:gap-x-2.5 max-[768px]:gap-y-0.5 max-[560px]:grid-cols-[92px_1fr] max-[560px]:gap-x-2">
+            <div className="grid grid-cols-[130px_1fr] gap-x-3 gap-y-1 text-sm max-md:text-xs leading-[1.95] max-md:leading-[1.5] items-center max-[900px]:grid-cols-[110px_1fr] max-[768px]:grid-cols-[100px_1fr] max-[768px]:gap-x-2.5 max-[768px]:gap-y-0.5 max-[560px]:grid-cols-[92px_1fr] max-[560px]:gap-x-2">
               <span className="text-primary-400 tracking-[0.04em]">user</span>
               <span className="text-tertiary-50 tabular-nums">erik@portfolio</span>
               <span className="text-primary-400 tracking-[0.04em]">uptime</span>
