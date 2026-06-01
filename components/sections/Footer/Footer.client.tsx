@@ -333,7 +333,7 @@ export function Footer() {
           {dmesgLines.map((line, i) => (
             <li
               key={line.off}
-              className="dmesg-line grid grid-cols-[92px_1fr_auto] gap-x-[14px] items-baseline text-tertiary-50 max-[900px]:grid-cols-[72px_1fr_auto] max-[900px]:gap-x-2.5 max-[900px]:text-sm max-[768px]:grid-cols-[60px_1fr_auto] max-[768px]:gap-x-1.5 max-md:text-[11px]"
+              className="dmesg-line grid grid-cols-[92px_1fr_auto] gap-x-[14px] items-baseline text-tertiary-50 max-[900px]:grid-cols-[72px_1fr_auto] max-[900px]:gap-x-2.5 max-[900px]:text-sm max-[768px]:grid-cols-[64px_1fr_auto] max-[768px]:gap-x-1.5 max-md:text-xs"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <span className="text-primary-400 tabular-nums whitespace-nowrap">{dmesgTs[i]}</span>
@@ -343,7 +343,7 @@ export function Footer() {
                 {line.suffix}
               </span>
               {line.ok && (
-                <span className="text-primary-500 font-bold tracking-[0.12em] text-xs max-md:text-[11px]">
+                <span className="text-primary-500 font-bold tracking-[0.12em] text-xs max-md:text-xs">
                   OK
                 </span>
               )}
@@ -359,7 +359,7 @@ export function Footer() {
 
         {/* Halt plate + hint — halt-booted / halt-plate / halt-hint in components.css */}
         <div
-          className={`mt-6 flex items-center flex-wrap gap-x-4 gap-y-2.5 max-md:flex-col max-md:items-start${booted ? ' halt-booted' : ''}`}
+          className={`mt-6 flex items-start md:items-center flex-wrap gap-x-4 gap-y-2.5 max-md:flex-col${booted ? ' halt-booted' : ''}`}
         >
           <span className="halt-plate inline-block shrink-0 bg-primary-500 text-black font-bold text-sm max-md:text-xs tracking-[0.16em] px-3 py-[5px] leading-none whitespace-nowrap">
             [SYSTEM HALTED]

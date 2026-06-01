@@ -323,14 +323,16 @@ export function GuitarMobile() {
             className="bg-black px-[13px] pt-[11px] pb-[13px]"
             data-testid={`stat-mobile-${stat.label}`}
           >
-            <div className="text-xs text-primary-400 tracking-[0.04em] mb-1">
+            <div className="text-xs max-md:text-[10px] text-primary-400 tracking-[0.04em] mb-1">
               {'// '}
               {stat.label}
             </div>
-            <div className="font-bold text-primary-500 text-xs max-md:text-sm leading-[1.4]">
+            <div className="font-bold text-primary-500 text-xs max-md:text-[12px] leading-[1.4]">
               {stat.value}
             </div>
-            <div className="text-xs text-tertiary-50 leading-[1.4]">{stat.sub}</div>
+            <div className="text-xs max-md:text-[10px] text-tertiary-50 leading-[1.4]">
+              {stat.sub}
+            </div>
           </div>
         ))}
       </div>

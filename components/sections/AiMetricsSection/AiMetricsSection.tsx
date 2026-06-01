@@ -96,7 +96,7 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
           </div>
         </TerminalPanel>
       </div>
-      <div className="flex justify-between items-center mt-[18px] pt-3 border-t border-dashed border-primary-quiet text-primary-400 text-xs tracking-[0.06em] max-[768px]:flex-col max-[768px]:items-start max-[768px]:gap-1.5 max-[768px]:text-[11px]">
+      <div className="flex justify-between items-center mt-[18px] pt-3 border-t border-dashed border-primary-quiet text-primary-400 text-xs tracking-[0.06em] max-[768px]:flex-col max-[768px]:items-start max-[768px]:gap-1.5 max-[768px]:text-[10px]">
         <span>
           <span className="text-primary-500 mr-1.5">{'>'}</span>
           SOURCE: scripts/ask-eval.ts · ask:eval:latest
