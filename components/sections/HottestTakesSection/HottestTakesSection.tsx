@@ -31,7 +31,7 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
                 </span>
                 {t.thesis}
               </p>
-              <p className="text-tertiary-50 text-sm leading-[1.65] m-0 max-w-[740px] max-md:text-xs">
+              <p className="text-tertiary-50 text-xs md:text-[13px] leading-[1.65] m-0 max-w-[740px]">
                 {t.body}
               </p>
             </div>

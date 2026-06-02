@@ -33,7 +33,10 @@ export function Hero() {
           <p className="text-tertiary-50 text-sm leading-[1.55] mb-2">{heroTagline}</p>
           <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-sm tracking-[0.08em] mb-3.5">
             <span>
-              LOC: <b className="text-primary-500 font-bold">Brazil</b>
+              LOC:{' '}
+              <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
+                Brazil
+              </b>
             </span>
             <span>
               NOW: <b className="text-primary-500 font-bold">Betsson</b>
@@ -73,7 +76,7 @@ export function Hero() {
           Hidden on desktop via hero-mobile CSS class (min-width: 769px).
           No id needed here — anchor target #bio is on the desktop section. */}
       <section
-        className="hero-mobile relative border border-primary-subtle overflow-hidden mb-10 bg-transparent mt-2 hero-boot-text"
+        className="hero-mobile relative border border-primary-subtle overflow-hidden mb-10 bg-transparent mt-2"
         data-testid="hero-mobile"
       >
         <div className="relative z-[1] p-4 pb-[18px]">
@@ -88,7 +91,10 @@ export function Hero() {
           <p className="text-tertiary-50 text-xs leading-[1.55] mb-2">{heroTagline}</p>
           <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-xs tracking-[0.08em] mb-3.5">
             <span>
-              LOC: <b className="text-primary-500 font-bold">Brazil</b>
+              LOC:{' '}
+              <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
+                Brazil
+              </b>
             </span>
             <span>
               NOW: <b className="text-primary-500 font-bold">Betsson</b>

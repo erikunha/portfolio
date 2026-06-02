@@ -98,7 +98,7 @@ export function DesktopTopbar() {
             className={cn(
               'border border-primary-500 text-primary-500 px-3 py-1.5 tracking-[0.08em] text-xs inline-block whitespace-nowrap',
               'transition-[box-shadow,background] duration-200 ease-out',
-              'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet',
+              'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:no-underline',
               'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
             )}
             href="/erik-cunha-cv.pdf"
@@ -110,7 +110,7 @@ export function DesktopTopbar() {
             className={cn(
               'bg-primary-500 text-black font-bold tracking-[0.08em] px-[14px] py-1.5 text-[12px] border border-primary-500',
               'transition-[box-shadow] duration-200 ease-out',
-              'hover:shadow-[0_0_12px_var(--color-primary-500)]',
+              'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:no-underline',
               'inline-flex items-center whitespace-nowrap',
               'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
             )}

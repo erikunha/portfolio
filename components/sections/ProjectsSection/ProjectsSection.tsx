@@ -20,7 +20,7 @@ function ProjectsDesktop() {
         <li
           key={p.name}
           className={[
-            'project-card relative border border-primary-subtle p-5 md:p-5',
+            'project-card relative border border-primary-subtle p-5 md:p-5 flex flex-col',
             'transition-[border-color,box-shadow] duration-200',
             'hover:border-primary-500 hover:shadow-[0_0_16px_var(--color-glow-18)]',
             'motion-reduce:transition-none',
@@ -39,11 +39,11 @@ function ProjectsDesktop() {
             {p.name}
           </h3>
           <p className="project-desc text-tertiary-50 text-xs md:text-sm mb-4">{p.description}</p>
-          <dl className="grid gap-1 text-xs md:text-sm m-0">
+          <dl className="grid gap-1 text-xs md:text-sm m-0 mt-auto">
             {p.stats.map((s) => (
               <div key={s.label} className="flex justify-between gap-2">
-                <dt className="text-primary-400">{s.label}:</dt>
-                <dd className="m-0 text-secondary-200">{s.value}</dd>
+                <dt className="text-secondary-200">{s.label}:</dt>
+                <dd className="m-0 text-primary-400">{s.value}</dd>
               </div>
             ))}
           </dl>
@@ -79,8 +79,8 @@ function ProjectsMobile() {
           <div className="grid gap-[3px] text-xs">
             {p.mobileMeta.map((m) => (
               <div key={m.label} className="flex justify-between gap-2">
-                <span className="text-primary-400 shrink-0">{m.label}</span>
-                <span className="text-secondary-200 text-right">{m.value}</span>
+                <span className="text-secondary-200 shrink-0">{m.label}</span>
+                <span className="text-primary-400 text-right">{m.value}</span>
               </div>
             ))}
           </div>

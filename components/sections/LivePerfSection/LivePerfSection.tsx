@@ -33,7 +33,7 @@ function PerfBody({ scores, strategy }: { scores: LighthouseScores; strategy: St
       <div className="grid grid-cols-2 min-[901px]:grid-cols-4 gap-[10px] md:gap-[18px]">
         {cells.map((s) => (
           <div key={s.label} className="text-left">
-            <div className="text-tertiary-50 text-xs md:text-xs tracking-[0.16em] md:tracking-[0.14em]">
+            <div className="text-tertiary-50 text-[13px] font-bold tracking-[0.16em] md:tracking-[0.14em]">
               {s.label}
             </div>
             <div className="text-primary-500 font-bold text-[24px] md:text-[32px] leading-none my-[6px] md:my-2 tracking-[0.01em]">
@@ -73,7 +73,7 @@ function StrategyFallback({ strategy }: { strategy: string }) {
       <div className="grid grid-cols-2 min-[901px]:grid-cols-4 gap-[10px] md:gap-[18px]">
         {['PERFORMANCE', 'ACCESSIBILITY', 'BEST PRACTICES', 'SEO'].map((label) => (
           <div key={label} className="text-left">
-            <div className="text-tertiary-50 text-xs md:text-xs tracking-[0.16em] md:tracking-[0.14em]">
+            <div className="text-tertiary-50 text-[13px] font-bold tracking-[0.16em] md:tracking-[0.14em]">
               {label}
             </div>
             <div className="text-primary-500 font-bold text-[24px] md:text-[32px] leading-none my-[6px] md:my-2 tracking-[0.01em]">
