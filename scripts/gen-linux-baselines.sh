@@ -22,7 +22,15 @@ PW_VERSION="$(node -e "console.log(require('playwright/package.json').version)")
 IMAGE="mcr.microsoft.com/playwright:v${PW_VERSION}-noble"
 
 echo "[gen-linux-baselines] image: ${IMAGE}"
-docker run --rm -v "$PWD":/work -w /work "${IMAGE}" bash -euo pipefail -c '
+# Bind-mount the repo so regenerated baselines land back on the host, BUT mask
+# node_modules and .next with container-only anonymous volumes so the Linux
+# `pnpm install`/`pnpm build` never overwrite the host's (darwin) node_modules
+# or build output. Only the snapshot PNGs under tests/ are written through.
+docker run --rm \
+  -v "$PWD":/work \
+  -v /work/node_modules \
+  -v /work/.next \
+  -w /work "${IMAGE}" bash -euo pipefail -c '
   corepack enable
   pnpm install --frozen-lockfile
   pnpm build
