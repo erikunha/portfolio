@@ -16,7 +16,7 @@ export function SysHealthSection({ defer }: { defer?: boolean } = {}) {
       <div className="grid grid-cols-4 gap-[18px] max-[900px]:grid-cols-2 max-[900px]:gap-3">
         {sysStats.map((s) => (
           <TerminalPanel key={s.label} className="p-[18px] pb-5">
-            <div className="text-primary-400 text-sm max-md:text-xs tracking-[0.16em]">
+            <div className="text-secondary-200 text-sm max-md:text-xs tracking-[0.16em]">
               {s.label}
             </div>
             <div className="text-primary-500 text-2xl font-bold my-2 mb-[14px] tracking-[0.02em] max-[900px]:text-xl max-md:text-base">
