@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import SHELL_RESPONSES from '@/content/shell-commands';
+import { shellChrome } from '@/content/terminal-chrome';
 import { WindowChrome } from '@/design-system';
 import { readMotion } from '@/lib/motion';
 import { parseStreamChunk } from '@/lib/stream-protocol';
@@ -336,11 +337,11 @@ export function InteractiveShell() {
       <div className="flex items-center gap-[10px] px-[14px] py-2 border-b border-[var(--color-primary-subtle)] text-primary-400 text-xs tracking-[0.14em]">
         <WindowChrome size={10} />
         {isMobile ? (
-          <span className="ml-auto max-md:text-[10px]">ZSH</span>
+          <span className="ml-auto max-md:text-[10px]">{shellChrome.mobileLabel}</span>
         ) : (
           <>
-            <span>erik@portfolio · /bin/sh</span>
-            <span className="ml-auto">SESSION_ID: 0xDEADBEEF</span>
+            <span>{shellChrome.promptLabel}</span>
+            <span className="ml-auto">{shellChrome.rightTag}</span>
           </>
         )}
       </div>

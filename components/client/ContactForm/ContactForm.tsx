@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { contactChrome } from '@/content/terminal-chrome';
 import { WindowChrome } from '@/design-system';
 import { Field } from '@/design-system/components/Field';
 
@@ -16,8 +17,8 @@ function ContactShell({ children }: { children: React.ReactNode }) {
     <div className="contact-shell bg-[var(--color-secondary-900)] font-mono -m-[14px] min-[769px]:-m-[18px]">
       <div className="flex items-center gap-[10px] px-[14px] py-2 border-b border-[var(--color-primary-subtle)] text-primary-400 text-xs tracking-[0.14em]">
         <WindowChrome size={10} />
-        <span className="max-md:hidden">erik@portfolio · contact</span>
-        <span className="ml-auto max-md:text-[10px]">SECURE_CHANNEL</span>
+        <span className="max-md:hidden">{contactChrome.promptLabel}</span>
+        <span className="ml-auto max-md:text-[10px]">{contactChrome.rightTag}</span>
       </div>
       <div className="px-4 py-[14px]">{children}</div>
     </div>

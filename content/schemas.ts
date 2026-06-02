@@ -198,6 +198,15 @@ export const ShellResponseSchema = z.object({
 });
 export const ShellCommandsSchema = z.array(ShellResponseSchema).min(1);
 
+// Terminal-window chrome labels (header prompt + right-side tag) shared by the
+// interactive shell and the contact form's ContactShell.
+export const TerminalChromeSchema = z.object({
+  promptLabel: z.string().min(1),
+  rightTag: z.string().min(1),
+  mobileLabel: z.string().min(1).optional(),
+});
+export type TerminalChrome = z.infer<typeof TerminalChromeSchema>;
+
 // ReadmeSection — prose copy extracted from JSX
 export const ReadmeCopySchema = z.object({
   desktopH1: z.string().min(1),
