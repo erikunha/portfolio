@@ -8,11 +8,12 @@ type Status = 'idle' | 'submitting' | 'success' | 'error';
 
 // Wraps the contact form in the same terminal-window chrome as the interactive
 // shell (WindowChrome header + full-bleed near-black surface). Layout/structure
-// reuse only — this is a plain form, not the AI shell. The -m-[14px] cancels the
-// Module's content padding so the surface bleeds to the panel edge like the shell.
+// reuse only — this is a plain form, not the AI shell. The negative margin cancels
+// the Module's content padding (14px mobile / 18px desktop, variant=green adds a
+// tint + border) so the surface bleeds to the panel edge like the shell.
 function ContactShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="contact-shell bg-[var(--color-secondary-900)] font-mono -m-[14px]">
+    <div className="contact-shell bg-[var(--color-secondary-900)] font-mono -m-[14px] min-[769px]:-m-[18px]">
       <div className="flex items-center gap-[10px] px-[14px] py-2 border-b border-[var(--color-primary-subtle)] text-primary-400 text-xs tracking-[0.14em]">
         <WindowChrome size={10} />
         <span className="max-md:hidden">erik@portfolio · contact</span>

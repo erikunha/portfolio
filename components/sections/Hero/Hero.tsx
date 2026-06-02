@@ -34,7 +34,7 @@ export function Hero() {
           <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-sm tracking-[0.08em] mb-3.5">
             <span>
               LOC:{' '}
-              <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
+              <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
                 Brazil
               </b>
             </span>
@@ -92,7 +92,7 @@ export function Hero() {
           <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-xs tracking-[0.08em] mb-3.5">
             <span>
               LOC:{' '}
-              <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
+              <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
                 Brazil
               </b>
             </span>
