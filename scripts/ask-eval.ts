@@ -528,15 +528,19 @@ async function main(): Promise<void> {
   // it and the failure is inspectable.
   writeFileSync(RESULT_FILE, `${JSON.stringify(aggregate, null, 2)}\n`);
 
-  // Publish the aggregate to Redis. Best-effort: a Redis failure must not
-  // mask the eval verdict — the gate decision below is what blocks/passes.
-  try {
-    await getRedis().set(REDIS_RESULT_KEY, JSON.stringify(aggregate));
-    console.log(`\npublished aggregate → redis ${REDIS_RESULT_KEY}`);
-  } catch (err) {
-    console.error(
-      `\nredis publish failed (non-fatal): ${err instanceof Error ? err.message : err}`,
-    );
+  // Publish the aggregate to Redis only when credentials are present.
+  // Skipped entirely when UPSTASH_REDIS_REST_URL is absent — consistent with
+  // the REQUIREMENTS note and the header comment. A failure must not mask the
+  // eval verdict; the gate decision below is what blocks/passes CI.
+  if (process.env.UPSTASH_REDIS_REST_URL) {
+    try {
+      await getRedis().set(REDIS_RESULT_KEY, JSON.stringify(aggregate));
+      console.log(`\npublished aggregate → redis ${REDIS_RESULT_KEY}`);
+    } catch (err) {
+      console.error(
+        `\nredis publish failed (non-fatal): ${err instanceof Error ? err.message : err}`,
+      );
+    }
   }
 
   console.log('\nask-eval summary');
