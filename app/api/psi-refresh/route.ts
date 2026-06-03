@@ -32,21 +32,31 @@ export async function GET(req: NextRequest): Promise<Response> {
 
     log.error('psi-refresh failed', { errors });
 
-    try {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      await resend.emails.send({
-        from: 'alerts@erikunha.dev',
-        to: 'erikhunha@gmail.com',
-        subject: '[portfolio] psi-refresh cron failed',
-        text: `One or more PSI refreshes failed.\n\nErrors: ${errors}\nTimestamp: ${new Date().toISOString()}`,
-      });
-    } catch (alertErr) {
-      // Alert delivery failure must not mask the original error or change the response.
-      log.error('psi-refresh alert email failed to send', { err: alertErr });
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      log.error('psi-refresh: RESEND_API_KEY not set, skipping alert');
+    } else {
+      try {
+        const resend = new Resend(apiKey);
+        await resend.emails.send({
+          from: 'alerts@erikunha.dev',
+          to: 'erikhunha@gmail.com',
+          subject: '[portfolio] psi-refresh cron failed',
+          text: `One or more PSI refreshes failed.\n\nErrors: ${errors}\nTimestamp: ${new Date().toISOString()}`,
+        });
+      } catch (alertErr) {
+        // Alert delivery failure must not mask the original error or change the response.
+        log.error('psi-refresh alert email failed to send', { err: alertErr });
+      }
     }
   } else {
     // Both succeeded — record the timestamp so /api/healthz can report freshness.
-    await getRedis().set('meta:psi-last-run', new Date().toISOString());
+    try {
+      await getRedis().set('meta:psi-last-run', new Date().toISOString());
+    } catch (redisErr) {
+      // WHY: Redis write failure must not corrupt cron return code; PSI data is already stored.
+      log.error('psi-refresh: failed to write meta:psi-last-run', { err: redisErr });
+    }
   }
 
   log.info('psi-refresh completed', { durationMs: result.durationMs, anyFailed });

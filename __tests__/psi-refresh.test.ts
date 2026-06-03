@@ -85,6 +85,47 @@ describe('GET /api/psi-refresh', () => {
     expect(call.to).toBe('erikhunha@gmail.com');
   });
 
+  it('returns 200 and logs error when Redis write throws on success path', async () => {
+    redisMockSet.mockRejectedValueOnce(new Error('Redis connection reset'));
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    vi.mocked(refreshScores).mockResolvedValue({
+      performance: 95,
+      accessibility: 100,
+      bestPractices: 95,
+      seo: 100,
+      fetchedAt: new Date().toISOString(),
+    });
+    const { log } = await import('@/lib/log');
+
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    const res = await GET(makeRequest());
+
+    expect(res.status).toBe(200);
+    expect(vi.mocked(log.error)).toHaveBeenCalledWith(
+      'psi-refresh: failed to write meta:psi-last-run',
+      expect.objectContaining({ err: expect.any(Error) }),
+    );
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  it('skips alert and logs error when RESEND_API_KEY is not set', async () => {
+    vi.unstubAllEnvs();
+    vi.stubEnv('CRON_SECRET', 'test-cron-secret');
+    // RESEND_API_KEY intentionally not set
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    vi.mocked(refreshScores).mockRejectedValue(new Error('PSI API timeout'));
+    const { log } = await import('@/lib/log');
+
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    const res = await GET(makeRequest());
+
+    expect(res.status).toBe(500);
+    expect(sendMock).not.toHaveBeenCalled();
+    expect(vi.mocked(log.error)).toHaveBeenCalledWith(
+      'psi-refresh: RESEND_API_KEY not set, skipping alert',
+    );
+  });
+
   it('returns 401 if Authorization header is missing', async () => {
     const { GET } = await import('@/app/api/psi-refresh/route');
     const req = new NextRequest('http://localhost/api/psi-refresh', { method: 'GET' });
