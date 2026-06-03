@@ -160,14 +160,6 @@
     transform: translate(-2px, 1px);
   }
 
-  /* ── Boot text container — phosphor text-shadow ──────────────────────────── */
-
-  .hero-boot-text {
-    text-shadow:
-      0 0 4px #000,
-      0 0 8px #000;
-  }
-
   /* ── Boot line token classes ─────────────────────────────────────────────── */
 
   .hero-boot-line {

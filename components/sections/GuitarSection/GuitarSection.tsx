@@ -12,7 +12,10 @@ type Influence = GuitarRig['influences'][number];
 
 function SignalBars({ filled, total }: { filled: number; total: number }) {
   const bars = Array.from({ length: total }, (_, i) => ({
-    cls: cn('w-[7px] h-[10px] shrink-0 bg-primary-500', i >= filled && 'opacity-[0.22]'),
+    cls: cn(
+      'w-[7px] h-[10px] md:w-[9px] md:h-[13px] shrink-0 bg-primary-500',
+      i >= filled && 'opacity-[0.22]',
+    ),
   }));
   return (
     <div role="img" className="flex gap-[2px] mt-auto" aria-label={`${filled} of ${total}`}>
@@ -45,10 +48,10 @@ function FxGrid({ blocks }: { blocks: Block[] }) {
         <div
           key={b.name}
           className={cn(
-            'py-[5px] text-xs text-center tracking-[0.1em]',
+            'py-[5px] text-[13px] text-center tracking-[0.1em]',
             b.active
               ? [
-                  'border border-primary-500 text-primary-500 relative',
+                  'border border-primary-500 text-primary-500 relative font-bold',
                   'bg-[color-mix(in_srgb,var(--color-primary-500)_8%,transparent)]',
                 ].join(' ')
               : 'border border-[var(--color-primary-quiet)] text-primary-400 bg-black/40',
@@ -124,7 +127,9 @@ function InfluencesList({
             {inf.active ? '▶ ' : ''}
             {String(inf.rank).padStart(2, '0')}
           </span>
-          <span className="font-mono">{inf.name}</span>
+          <span className={cn('font-mono md:text-[13px]', inf.active && 'md:text-sm')}>
+            {inf.name}
+          </span>
           <InfluenceBars filled={inf.strength} />
         </div>
       ))}
@@ -183,7 +188,7 @@ export function GuitarDesktop() {
     >
       {/* Signal chain panel */}
       <div className="border border-[var(--color-primary-border)] bg-black/35 p-[14px]">
-        <div className="flex justify-between text-xs text-primary-400 tracking-[0.16em] mb-3">
+        <div className="flex justify-between text-xs text-primary-400 tracking-[0.16em] mb-3 font-bold">
           <span>
             <span className="text-primary-500" aria-hidden="true">
               ●
@@ -218,7 +223,7 @@ export function GuitarDesktop() {
                   {node.role}
                 </div>
                 <div className="font-bold text-sm text-primary-500 leading-[1.2]">{node.name}</div>
-                <div className="text-xs text-tertiary-50 opacity-85">{node.subtitle}</div>
+                <div className="text-[13px] text-tertiary-50 opacity-85">{node.subtitle}</div>
                 {node.role === 'FX' ? (
                   <FxGrid blocks={node.blocks} />
                 ) : (
@@ -257,7 +262,7 @@ export function GuitarDesktop() {
               {stat.label}
             </div>
             <div className="font-bold text-primary-500 text-sm leading-[1.4]">{stat.value}</div>
-            <div className="text-xs text-tertiary-50 leading-[1.4]">{stat.sub}</div>
+            <div className="text-sm text-tertiary-50 leading-[1.4]">{stat.sub}</div>
           </div>
         ))}
       </div>

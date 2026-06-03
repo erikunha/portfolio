@@ -52,46 +52,46 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
       {/* 4-col desktop, 2-col at ≤900px */}
       <div className="grid grid-cols-4 gap-[14px] max-[900px]:grid-cols-2 max-[900px]:gap-3">
         <TerminalPanel className="p-4 pb-[18px] flex flex-col gap-2" data-metric>
-          <div className="text-primary-400 text-xs max-md:text-[10px] tracking-[0.16em]">
+          <div className="text-tertiary-50 text-xs max-md:text-[10px] tracking-[0.16em]">
             EVAL PASS-RATE
           </div>
           <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
             {pct(metrics.evalPassRate)}
           </div>
-          <div className="text-primary-400 text-sm max-md:text-xs leading-[1.5] mt-auto">
+          <div className="text-secondary-200 text-sm max-md:text-xs leading-[1.5] mt-auto">
             correctness · factual + edge corpus
           </div>
         </TerminalPanel>
         <TerminalPanel className="p-4 pb-[18px] flex flex-col gap-2" data-metric>
-          <div className="text-primary-400 text-xs max-md:text-[10px] tracking-[0.16em]">
+          <div className="text-tertiary-50 text-xs max-md:text-[10px] tracking-[0.16em]">
             JAILBREAK RESIST
           </div>
           <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
             {pct(metrics.jailbreakResistance)}
           </div>
-          <div className="text-primary-400 text-sm max-md:text-xs leading-[1.5] mt-auto">
+          <div className="text-secondary-200 text-sm max-md:text-xs leading-[1.5] mt-auto">
             prompt-injection refusal rate
           </div>
         </TerminalPanel>
         <TerminalPanel className="p-4 pb-[18px] flex flex-col gap-2" data-metric>
-          <div className="text-primary-400 text-xs max-md:text-[10px] tracking-[0.16em]">
+          <div className="text-tertiary-50 text-xs max-md:text-[10px] tracking-[0.16em]">
             P95 LATENCY
           </div>
           <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
             {ms(metrics.p95LatencyMs)}
           </div>
-          <div className="text-primary-400 text-sm max-md:text-xs leading-[1.5] mt-auto">
+          <div className="text-secondary-200 text-sm max-md:text-xs leading-[1.5] mt-auto">
             end-to-end · slowest 5% of answers
           </div>
         </TerminalPanel>
         <TerminalPanel className="p-4 pb-[18px] flex flex-col gap-2" data-metric>
-          <div className="text-primary-400 text-xs max-md:text-[10px] tracking-[0.16em]">
+          <div className="text-tertiary-50 text-xs max-md:text-[10px] tracking-[0.16em]">
             COST / ANSWER
           </div>
           <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
             {usd(metrics.costPerAnswer)}
           </div>
-          <div className="text-primary-400 text-sm max-md:text-xs leading-[1.5] mt-auto">
+          <div className="text-secondary-200 text-sm max-md:text-xs leading-[1.5] mt-auto">
             production inference · feature model only
           </div>
         </TerminalPanel>
