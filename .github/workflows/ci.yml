@@ -416,7 +416,12 @@ jobs:
           }
       - name: Run functional e2e (tests/e2e specs)
         if: matrix.project != 'chromium-components'
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/
+        # WHY: explicit paths exclude design-system-components.spec.ts (visual-only, darwin baselines only)
+        run: |
+          pnpm playwright test --project=${{ matrix.project }} \
+            tests/e2e/cross-cutting.spec.ts \
+            tests/e2e/observability-smoke.spec.ts \
+            tests/e2e/design-system-pages.spec.ts
       - name: Run functional e2e (co-located component specs)
         if: matrix.project == 'chromium-components'
         run: pnpm playwright test --project=${{ matrix.project }}
