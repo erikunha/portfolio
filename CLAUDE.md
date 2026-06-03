@@ -203,22 +203,9 @@ i18n · light theme · blog/MDX engine · analytics beyond Vercel Web Analytics 
 
 ## Emergency Rollback
 
-Fast path (30s — no code change needed):
-```
-vercel ls                              # find the prior deployment URL
-vercel promote <prior-deployment-url> # promote it to production
-```
-
-Slow path (5 min — commits a revert):
-```
-git revert HEAD
-git push
-```
-
-Verify the correct version is live:
-```
-curl https://erikunha.dev/api/healthz | jq .sha
-```
+Fast (30s): `vercel ls` → `vercel promote <url>` — no code change.
+Slow (5m): `git revert HEAD && git push`.
+Verify: `curl https://erikunha.dev/api/healthz | jq .sha`
 
 ## PR merge gate
 
