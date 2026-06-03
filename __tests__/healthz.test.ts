@@ -38,6 +38,19 @@ describe('GET /api/healthz', () => {
     expect(body.psiLastRun).toBe(FRESH_TIMESTAMP);
   });
 
+  it('returns 503 with status degraded when psiLastRun is an invalid (NaN) timestamp', async () => {
+    vi.stubEnv('VERCEL_GIT_COMMIT_SHA', 'abc1234');
+    redisMockGet.mockResolvedValue('not-a-date');
+
+    const { GET } = await import('@/app/api/healthz/route');
+    const res = await GET();
+
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as { status: string; sha: string; psiLastRun: string | null };
+    expect(body.status).toBe('degraded');
+    expect(body.psiLastRun).toBe('not-a-date');
+  });
+
   it('returns 503 with status degraded when psiLastRun is stale (older than 25h)', async () => {
     vi.stubEnv('VERCEL_GIT_COMMIT_SHA', 'abc1234');
     redisMockGet.mockResolvedValue(STALE_TIMESTAMP);

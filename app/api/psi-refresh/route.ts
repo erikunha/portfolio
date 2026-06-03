@@ -69,7 +69,12 @@ export async function GET(req: NextRequest): Promise<Response> {
       await getRedis().set('meta:psi-last-run', new Date().toISOString());
     } catch (redisErr) {
       // WHY: Redis write failure must not corrupt cron return code; PSI data is already stored.
-      log.error('psi-refresh: failed to write meta:psi-last-run', { err: redisErr });
+      // WHY: healthz depends on this key to report freshness. A write failure
+      // here means healthz will report degraded/503 until the next successful
+      // cron run — the cron dashboard will show 200 with no obvious correlation.
+      log.error('psi-refresh: failed to write meta:psi-last-run — healthz will report degraded', {
+        err: redisErr,
+      });
     }
   }
 

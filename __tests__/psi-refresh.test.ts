@@ -41,8 +41,9 @@ function makeRequest(): NextRequest {
 describe('GET /api/psi-refresh', () => {
   beforeEach(async () => {
     vi.resetModules();
-    redisMockSet.mockReset().mockResolvedValue('OK');
-    sendMock.mockReset().mockResolvedValue({ data: { id: 'email-id' }, error: null });
+    vi.clearAllMocks();
+    redisMockSet.mockResolvedValue('OK');
+    sendMock.mockResolvedValue({ data: { id: 'email-id' }, error: null });
     vi.stubEnv('CRON_SECRET', 'test-cron-secret');
     vi.stubEnv('RESEND_API_KEY', 're_test_key');
   });
@@ -110,7 +111,7 @@ describe('GET /api/psi-refresh', () => {
 
     expect(res.status).toBe(200);
     expect(vi.mocked(log.error)).toHaveBeenCalledWith(
-      'psi-refresh: failed to write meta:psi-last-run',
+      'psi-refresh: failed to write meta:psi-last-run — healthz will report degraded',
       expect.objectContaining({ err: expect.any(Error) }),
     );
     expect(sendMock).not.toHaveBeenCalled();
