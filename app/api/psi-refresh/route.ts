@@ -1,6 +1,8 @@
 import type { NextRequest } from 'next/server';
+import { Resend } from 'resend';
 import { refreshScores } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
+import { getRedis } from '@/lib/rate-limit';
 
 export async function GET(req: NextRequest): Promise<Response> {
   const cronSecret = process.env.CRON_SECRET;
@@ -20,14 +22,33 @@ export async function GET(req: NextRequest): Promise<Response> {
     durationMs: Date.now() - t0,
   };
 
-  if (desktopResult.status === 'rejected') {
-    log.error('psi-refresh desktop failed', { err: desktopResult.reason });
-  }
-  if (mobileResult.status === 'rejected') {
-    log.error('psi-refresh mobile failed', { err: mobileResult.reason });
+  const anyFailed = desktopResult.status === 'rejected' || mobileResult.status === 'rejected';
+
+  if (anyFailed) {
+    const errors = [desktopResult, mobileResult]
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .map((r) => (r.reason instanceof Error ? r.reason.message : String(r.reason)))
+      .join('; ');
+
+    log.error('psi-refresh failed', { errors });
+
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: 'alerts@erikunha.dev',
+        to: 'erikhunha@gmail.com',
+        subject: '[portfolio] psi-refresh cron failed',
+        text: `One or more PSI refreshes failed.\n\nErrors: ${errors}\nTimestamp: ${new Date().toISOString()}`,
+      });
+    } catch (alertErr) {
+      // Alert delivery failure must not mask the original error or change the response.
+      log.error('psi-refresh alert email failed to send', { err: alertErr });
+    }
+  } else {
+    // Both succeeded — record the timestamp so /api/healthz can report freshness.
+    await getRedis().set('meta:psi-last-run', new Date().toISOString());
   }
 
-  const anyFailed = desktopResult.status === 'rejected' || mobileResult.status === 'rejected';
   log.info('psi-refresh completed', { durationMs: result.durationMs, anyFailed });
   // WHY: non-2xx signals Vercel Cron to retry and surface the failure in the dashboard.
   return Response.json(result, { status: anyFailed ? 500 : 200 });
