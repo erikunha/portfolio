@@ -67,17 +67,17 @@ export function ManPageDesktop() {
         {' --seniority STAFF --domain FRONTEND --ft\n       '}
         <span className="text-primary-400">{'$'}</span>{' '}
         <span className="text-primary-500 font-bold">{manPage.name}</span>
-        {' --track LEAD --domain AI-TOOLING --stack "Angular, LLM, RAG" --ft\n       '}
+        {
+          ' --track LEAD --domain AI-TOOLING --stack "React, Node.js, TypeScript, agents, skills, mcps, spec-driven" --ft\n       '
+        }
         <span className="text-primary-400">{'$'}</span>{' '}
         <span className="text-primary-500 font-bold">{manPage.name}</span>
         {' --seniority PRINCIPAL --track LEAD --region WORLDWIDE --relocation\n       '}
         <span className="text-primary-400">{'$'}</span>{' '}
         <span className="text-primary-500 font-bold">{manPage.name}</span>
-        {' --contract --regulated --stack "Angular, React, TypeScript"\n\n'}
+        {' --contract --stack "React, Next.js, Angular, Node.js, TypeScript, AWS"\n\n'}
         <span className="text-primary-500 font-bold tracking-[0.08em]">{'KNOWN BUGS'}</span>
-        {`\n       - Occasionally rewrites a working component for clarity.
-       - Will not stop talking about bundle size.
-       - Sometimes ships the test before the feature.\n\n`}
+        {`\n${manPage.knownBugs.map((b) => `       - ${b}`).join('\n')}\n\n`}
         <span className="text-primary-500 font-bold tracking-[0.08em]">{'AUTHOR'}</span>
         {'\n       Written by Erik Henrique Alves Cunha.\n       Report bugs to: '}
         <span className="text-primary-500 font-bold">{'erikhenriquealvescunha@gmail.com'}</span>

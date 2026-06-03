@@ -51,7 +51,7 @@ export function ManPageMobile() {
           <span className="text-primary-400">$</span>{' '}
           <span className="text-primary-500 font-bold">{manPage.name}</span>
           {
-            ' --track LEAD --domain AI-TOOLING --stack "LLMs, RAG, AI Agents, Harness, and GenAI with Spec-Driven flow" --ft'
+            ' --track LEAD --domain AI-TOOLING --stack "React, Node.js, TypeScript, agents, skills, mcps, spec-driven" --ft'
           }
         </span>
         <span className="block text-tertiary-50 text-xs whitespace-pre-wrap break-all">
