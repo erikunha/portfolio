@@ -82,7 +82,7 @@ describe('GET /api/psi-refresh', () => {
     expect(sendMock).toHaveBeenCalledOnce();
     const call = (sendMock.mock.calls[0] as unknown as [{ subject: string; to: string }])?.[0];
     expect(call.subject).toContain('psi-refresh');
-    expect(call.to).toBe('erikhunha@gmail.com');
+    expect(call.to).toBe('erikhenriquealvescunha@gmail.com');
   });
 
   it('returns 200 and logs error when Redis write throws on success path', async () => {

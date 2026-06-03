@@ -11,8 +11,11 @@ export async function GET(): Promise<Response> {
 
   try {
     psiLastRun = await getRedis().get<string>('meta:psi-last-run');
-    if (psiLastRun && Date.now() - new Date(psiLastRun).getTime() > PSI_STALE_MS) {
-      status = 'degraded';
+    if (psiLastRun) {
+      const ts = new Date(psiLastRun).getTime();
+      if (Number.isNaN(ts) || Date.now() - ts > PSI_STALE_MS) {
+        status = 'degraded';
+      }
     }
   } catch {
     status = 'degraded';

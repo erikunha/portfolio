@@ -40,7 +40,7 @@ export async function GET(req: NextRequest): Promise<Response> {
         const resend = new Resend(apiKey);
         await resend.emails.send({
           from: 'alerts@erikunha.dev',
-          to: 'erikhunha@gmail.com',
+          to: 'erikhenriquealvescunha@gmail.com',
           subject: '[portfolio] psi-refresh cron failed',
           text: `One or more PSI refreshes failed.\n\nErrors: ${errors}\nTimestamp: ${new Date().toISOString()}`,
         });

@@ -34,7 +34,7 @@ jobs:
 
       - name: Homepage responds with 200
         run: |
-          http_code=$(curl --fail --max-time 30 --silent \
+          http_code=$(curl --max-time 30 --silent \
             --output /dev/null \
             --write-out "%{http_code}" \
             https://erikunha.dev)
