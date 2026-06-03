@@ -23,5 +23,12 @@ export async function GET(): Promise<Response> {
     status = 'degraded';
   }
 
-  return Response.json({ status, sha, psiLastRun }, { status: status === 'ok' ? 200 : 503 });
+  return Response.json(
+    { status, sha, psiLastRun },
+    {
+      status: status === 'ok' ? 200 : 503,
+      // WHY: monitoring endpoint must never be cached; a stale response is a false health signal.
+      headers: { 'Cache-Control': 'no-store' },
+    },
+  );
 }

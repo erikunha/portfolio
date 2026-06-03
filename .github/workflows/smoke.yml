@@ -28,7 +28,7 @@ jobs:
           DEPLOY_URL: ${{ github.event.deployment_status.target_url }}
         run: |
           case "$DEPLOY_URL" in
-            https://*.vercel.app|https://erikunha.dev*) ;;
+            https://*.vercel.app|https://erikunha.dev) ;;
             *) echo "ERROR: unexpected target_url: $DEPLOY_URL"; exit 1;;
           esac
           http_code=$(curl --max-time 30 --silent \

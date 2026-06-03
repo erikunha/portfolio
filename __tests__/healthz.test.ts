@@ -31,6 +31,7 @@ describe('GET /api/healthz', () => {
     const res = await GET();
 
     expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
     const body = (await res.json()) as { status: string; sha: string; psiLastRun: string | null };
     expect(body.status).toBe('ok');
     expect(body.sha).toBe('abc1234');

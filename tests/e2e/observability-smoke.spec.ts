@@ -87,5 +87,6 @@ test.describe('observability smoke', () => {
     expect(['ok', 'degraded']).toContain(body.status);
     expect(typeof body.sha).toBe('string');
     expect(body.sha.length).toBeGreaterThan(0);
+    expect(body.psiLastRun === null || typeof body.psiLastRun === 'string').toBe(true);
   });
 });
