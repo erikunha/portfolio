@@ -399,6 +399,8 @@ jobs:
           name: next-build
           path: .next/
       - name: Start preview server
+        # WHY: matrix.project values are workflow-defined literals — never PR-controlled input.
+        # Keeping them literal prevents shell-injection via ${{ matrix.project }} expansion.
         run: pnpm start > /tmp/server-${{ matrix.project || 'perf' }}.log 2>&1 &
         # DEPLOY_SALT is load-bearing: without it, lib/ip-hash.ts resolveSalt()
         # takes the production Upstash path (CI has no Redis creds) and throws,

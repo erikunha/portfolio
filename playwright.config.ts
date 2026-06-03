@@ -43,6 +43,8 @@ export default defineConfig({
       testDir: '.',
       testMatch: /\/(components|design-system\/components|app)\/.*\.e2e\.ts$/,
     },
+    // WHY: mobile/webkit component variants are local-only — not in the CI matrix.
+    // Add to e2e-functional matrix when responsive component bugs become a gated concern.
     {
       name: 'chromium-mobile-components',
       use: { ...devices['iPhone SE'], defaultBrowserType: 'chromium' },
