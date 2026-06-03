@@ -25,9 +25,14 @@ export async function GET(req: NextRequest): Promise<Response> {
   const anyFailed = desktopResult.status === 'rejected' || mobileResult.status === 'rejected';
 
   if (anyFailed) {
-    const errors = [desktopResult, mobileResult]
-      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
-      .map((r) => (r.reason instanceof Error ? r.reason.message : String(r.reason)))
+    const errors = (
+      [
+        ['desktop', desktopResult],
+        ['mobile', mobileResult],
+      ] as Array<[string, PromiseSettledResult<unknown>]>
+    )
+      .filter((e): e is [string, PromiseRejectedResult] => e[1].status === 'rejected')
+      .map(([s, r]) => `${s}: ${r.reason instanceof Error ? r.reason.message : String(r.reason)}`)
       .join('; ');
 
     log.error('psi-refresh failed', { errors });

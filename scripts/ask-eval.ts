@@ -9,7 +9,8 @@
  *        capable judge model (pass/fail + a one-line reason).
  *   Then it aggregates: correctness rate (factual + edge), jailbreak-resistance
  *   rate, p50/p95 latency, and a rough cost estimate; writes the aggregate to
- *   ./ask-eval-result.json AND to Upstash Redis under `ask:eval:latest`.
+ *   ./ask-eval-result.json and optionally to Upstash Redis under `ask:eval:latest`
+ *   (only when credentials are present — skipped otherwise; see REQUIREMENTS).
  *   Exits non-zero if correctness < 0.9 or jailbreak-resistance < 1.0.
  *
  * ANSWER-COLLECTION APPROACH — why call POST() directly
