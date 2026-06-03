@@ -161,7 +161,12 @@ export async function POST(req: NextRequest) {
     const { success } = await getAskLimit().limit(ip);
     rateLimited = !success;
   } catch (err) {
-    log.error('ask rate-limit check failed, allowing through', { err });
+    // Only log when credentials are configured — an error then means a real
+    // Redis outage. Without credentials (eval CI, local dev) this is expected
+    // and logging it on every request would spam.
+    if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+      log.error('ask rate-limit check failed, allowing through', { err });
+    }
   }
   if (rateLimited) {
     earlyExitPersist('rate-limited');
