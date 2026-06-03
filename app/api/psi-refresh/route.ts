@@ -38,12 +38,18 @@ export async function GET(req: NextRequest): Promise<Response> {
     } else {
       try {
         const resend = new Resend(apiKey);
-        await resend.emails.send({
+        const sendPromise = resend.emails.send({
           from: 'alerts@erikunha.dev',
           to: 'erikhenriquealvescunha@gmail.com',
           subject: '[portfolio] psi-refresh cron failed',
           text: `One or more PSI refreshes failed.\n\nErrors: ${errors}\nTimestamp: ${new Date().toISOString()}`,
         });
+        // WHY: Resend SDK lacks native AbortSignal; race a 10s timer to avoid
+        // blocking the cron response if the alert API hangs.
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('resend alert timeout (10s)')), 10_000),
+        );
+        await Promise.race([sendPromise, timeoutPromise]);
       } catch (alertErr) {
         // Alert delivery failure must not mask the original error or change the response.
         log.error('psi-refresh alert email failed to send', { err: alertErr });

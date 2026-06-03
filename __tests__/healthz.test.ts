@@ -50,18 +50,18 @@ describe('GET /api/healthz', () => {
     expect(body.psiLastRun).toBe(STALE_TIMESTAMP);
   });
 
-  it('returns 200 with status ok and sha=local when psiLastRun is null (first run)', async () => {
+  it('returns 503 with status degraded when psiLastRun is null (key not yet written)', async () => {
     vi.stubEnv('VERCEL_GIT_COMMIT_SHA', '');
     redisMockGet.mockResolvedValue(null);
 
     const { GET } = await import('@/app/api/healthz/route');
     const res = await GET();
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
     const body = (await res.json()) as { status: string; sha: string; psiLastRun: string | null };
     expect(body.sha).toBe('local');
     expect(body.psiLastRun).toBeNull();
-    expect(body.status).toBe('ok');
+    expect(body.status).toBe('degraded');
   });
 
   it('returns 503 with status degraded when Upstash throws', async () => {

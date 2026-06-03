@@ -11,7 +11,9 @@ export async function GET(): Promise<Response> {
 
   try {
     psiLastRun = await getRedis().get<string>('meta:psi-last-run');
-    if (psiLastRun) {
+    if (!psiLastRun) {
+      status = 'degraded';
+    } else {
       const ts = new Date(psiLastRun).getTime();
       if (Number.isNaN(ts) || Date.now() - ts > PSI_STALE_MS) {
         status = 'degraded';
