@@ -1,4 +1,4 @@
-// tests/e2e/visual.spec.ts
+// tests/visual/visual.spec.ts
 //
 // Phase 1 visual regression: hero above-the-fold + contact section.
 // Phase 3 expansion: shell idle + shell mid-stream + hottest takes.
@@ -7,9 +7,9 @@
 // the Playwright-default sibling directory per spec file). Second+ runs diff
 // against the baseline. CI enforces maxDiffPixelRatio=0.01.
 
-import { expect, test } from './_helpers/fixtures';
-import { stripVolatileChrome } from './_helpers/mask-volatile';
-import { snapshotLocator } from './_helpers/snapshot';
+import { expect, test } from '../e2e/_helpers/fixtures';
+import { stripVolatileChrome } from '../e2e/_helpers/mask-volatile';
+import { snapshotLocator } from '../e2e/_helpers/snapshot';
 
 // Bump the per-test timeout above the snapshot's stability timeout (30s in
 // snapshot.ts). Default test timeout is 30s, so a 30s snapshot stability
