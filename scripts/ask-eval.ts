@@ -528,11 +528,10 @@ async function main(): Promise<void> {
   // it and the failure is inspectable.
   writeFileSync(RESULT_FILE, `${JSON.stringify(aggregate, null, 2)}\n`);
 
-  // Publish the aggregate to Redis only when credentials are present.
-  // Skipped entirely when UPSTASH_REDIS_REST_URL is absent — consistent with
-  // the REQUIREMENTS note and the header comment. A failure must not mask the
-  // eval verdict; the gate decision below is what blocks/passes CI.
-  if (process.env.UPSTASH_REDIS_REST_URL) {
+  // Publish the aggregate to Redis only when both credentials are present.
+  // Redis.fromEnv() requires URL + token; guarding on both avoids a noisy
+  // non-fatal error on partial configuration and matches the header comment.
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
     try {
       await getRedis().set(REDIS_RESULT_KEY, JSON.stringify(aggregate));
       console.log(`\npublished aggregate → redis ${REDIS_RESULT_KEY}`);

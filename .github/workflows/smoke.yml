@@ -27,6 +27,7 @@ jobs:
         env:
           DEPLOY_URL: ${{ github.event.deployment_status.target_url }}
         run: |
+          DEPLOY_URL="${DEPLOY_URL%/}"
           case "$DEPLOY_URL" in
             https://*.vercel.app|https://erikunha.dev) ;;
             *) echo "ERROR: unexpected target_url: $DEPLOY_URL"; exit 1;;
