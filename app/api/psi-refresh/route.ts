@@ -46,7 +46,7 @@ export async function GET(req: NextRequest): Promise<Response> {
         });
         // WHY: Resend SDK lacks native AbortSignal; race a 10s timer to avoid
         // blocking the cron response if the alert API hangs.
-        let timerId: ReturnType<typeof setTimeout>;
+        let timerId: ReturnType<typeof setTimeout> | undefined;
         const timeoutPromise = new Promise<never>((_, reject) => {
           timerId = setTimeout(() => reject(new Error('resend alert timeout (10s)')), 10_000);
         });
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest): Promise<Response> {
             log.error('psi-refresh alert email API error', { err: sendError });
           }
         } finally {
-          clearTimeout(timerId!);
+          clearTimeout(timerId);
         }
       } catch (alertErr) {
         // Alert delivery failure must not mask the original error or change the response.
