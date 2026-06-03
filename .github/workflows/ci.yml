@@ -347,12 +347,17 @@ jobs:
         run: pnpm playwright install --with-deps chromium
 
       - name: Start preview server
-        run: pnpm start &
+        run: pnpm start > /tmp/server-perf.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
 
       - name: Wait for server
-        run: npx wait-on http://localhost:3000 --timeout 30000
+        run: |
+          npx wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-perf.log
+            exit 1
+          }
 
       - name: Lighthouse CI (desktop)
         run: pnpm lhci
@@ -394,14 +399,19 @@ jobs:
           name: next-build
           path: .next/
       - name: Start preview server
-        run: pnpm start &
+        run: pnpm start > /tmp/server-${{ matrix.project || 'perf' }}.log 2>&1 &
         # DEPLOY_SALT is load-bearing: without it, lib/ip-hash.ts resolveSalt()
         # takes the production Upstash path (CI has no Redis creds) and throws,
         # so every validated /api/* request 500s via hashIp() in lib/server/route.ts.
         env:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
-        run: npx wait-on http://localhost:3000 --timeout 30000
+        run: |
+          npx wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-${{ matrix.project || 'perf' }}.log
+            exit 1
+          }
       - name: Run functional e2e (tests/e2e specs)
         if: matrix.project != 'chromium-components'
         run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/cross-cutting.spec.ts tests/e2e/observability-smoke.spec.ts
@@ -528,11 +538,16 @@ jobs:
           name: next-build
           path: .next/
       - name: Start preview server
-        run: pnpm start &
+        run: pnpm start > /tmp/server-${{ matrix.project || 'perf' }}.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
-        run: npx wait-on http://localhost:3000 --timeout 30000
+        run: |
+          npx wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-${{ matrix.project || 'perf' }}.log
+            exit 1
+          }
       - if: inputs.update_visual_baselines != 'true'
         name: Run visual regression
         run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts
@@ -586,11 +601,16 @@ jobs:
           name: next-build
           path: .next/
       - name: Start preview server
-        run: pnpm start &
+        run: pnpm start > /tmp/server-${{ matrix.project || 'perf' }}.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
-        run: npx wait-on http://localhost:3000 --timeout 30000
+        run: |
+          npx wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-${{ matrix.project || 'perf' }}.log
+            exit 1
+          }
       - if: inputs.update_visual_baselines != 'true'
         name: Run visual regression
         run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts
