@@ -6,10 +6,6 @@ vi.mock('@/lib/rate-limit', () => ({
   getRedis: vi.fn(() => ({ get: redisMockGet })),
 }));
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
-
 const FRESH_TIMESTAMP = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1h ago
 const STALE_TIMESTAMP = new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(); // 26h ago
 
