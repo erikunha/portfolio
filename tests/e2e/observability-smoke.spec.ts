@@ -77,4 +77,13 @@ test.describe('observability smoke', () => {
     const body = await res.json();
     expect(body).toMatchObject({ ok: false, error: { code: 'validation_failed' } });
   });
+
+  test('GET /api/healthz returns 200 with status ok', async ({ request }) => {
+    const res = await request.get('/api/healthz');
+    expect(res.status()).toBe(200);
+    const body = (await res.json()) as { status: string; sha: string; psiLastRun: string | null };
+    expect(body.status).toBe('ok');
+    expect(typeof body.sha).toBe('string');
+    expect(body.sha.length).toBeGreaterThan(0);
+  });
 });
