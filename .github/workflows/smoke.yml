@@ -1,0 +1,44 @@
+name: Post-Deploy Smoke Test
+
+# Fires when Vercel updates a GitHub Deployment status.
+# Vercel registers GitHub Deployments on every push; state=success means
+# the build and CDN promotion completed. We filter to Production only.
+on:
+  deployment_status:
+
+jobs:
+  smoke:
+    if: >
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: read
+    timeout-minutes: 5
+
+    steps:
+      - name: Health check — /api/healthz returns 200
+        run: |
+          response=$(curl --fail --max-time 30 --silent \
+            --write-out "\n%{http_code}" \
+            https://erikunha.dev/api/healthz)
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | head -1)
+          echo "Status: $http_code"
+          echo "Body: $body"
+          if [ "$http_code" != "200" ]; then
+            echo "ERROR: /api/healthz returned $http_code"
+            exit 1
+          fi
+
+      - name: Homepage responds with 200
+        run: |
+          http_code=$(curl --fail --max-time 30 --silent \
+            --output /dev/null \
+            --write-out "%{http_code}" \
+            https://erikunha.dev)
+          echo "Homepage status: $http_code"
+          if [ "$http_code" != "200" ]; then
+            echo "ERROR: homepage returned $http_code"
+            exit 1
+          fi
