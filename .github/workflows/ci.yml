@@ -353,7 +353,7 @@ jobs:
 
       - name: Wait for server
         run: |
-          npx wait-on http://localhost:3000 --timeout 30000 || {
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
             echo "Server failed to start. Log output:"
             cat /tmp/server-perf.log
             exit 1
@@ -409,7 +409,7 @@ jobs:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
         run: |
-          npx wait-on http://localhost:3000 --timeout 30000 || {
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
             echo "Server failed to start. Log output:"
             cat /tmp/server-${{ matrix.project }}.log
             exit 1
@@ -550,7 +550,7 @@ jobs:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
         run: |
-          npx wait-on http://localhost:3000 --timeout 30000 || {
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
             echo "Server failed to start. Log output:"
             cat /tmp/server-${{ matrix.project }}.log
             exit 1
@@ -613,7 +613,7 @@ jobs:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
         run: |
-          npx wait-on http://localhost:3000 --timeout 30000 || {
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
             echo "Server failed to start. Log output:"
             cat /tmp/server-${{ matrix.project }}.log
             exit 1
@@ -691,6 +691,7 @@ jobs:
       - name: Lighthouse against Vercel preview
         if: steps.vercel-url.outputs.url != ''
         continue-on-error: true
-        run: pnpm exec lhci autorun --collect.url="${{ steps.vercel-url.outputs.url }}" --collect.numberOfRuns=1
         env:
+          PREVIEW_URL: ${{ steps.vercel-url.outputs.url }}
           LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url }}
+        run: pnpm exec lhci autorun --collect.url="$PREVIEW_URL" --collect.numberOfRuns=1
