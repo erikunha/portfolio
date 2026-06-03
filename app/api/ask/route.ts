@@ -153,9 +153,22 @@ export async function POST(req: NextRequest) {
       status,
     });
 
-  // Per-IP rate limit
-  const { success } = await getAskLimit().limit(ip);
-  if (!success) {
+  // Per-IP rate limit. WHY try/catch: Redis.fromEnv() throws when env vars are
+  // absent (eval CI, local dev without Upstash). Fail-open is correct — same
+  // posture as reserveBudget/settleBudget/checkIdenticalQuestion.
+  let rateLimited = false;
+  try {
+    const { success } = await getAskLimit().limit(ip);
+    rateLimited = !success;
+  } catch (err) {
+    // Only log when credentials are configured — an error then means a real
+    // Redis outage. Without credentials (eval CI, local dev) this is expected
+    // and logging it on every request would spam.
+    if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+      log.error('ask rate-limit check failed, allowing through', { err });
+    }
+  }
+  if (rateLimited) {
     earlyExitPersist('rate-limited');
     return Response.json({ error: 'rate limit exceeded — try again in an hour' }, { status: 429 });
   }

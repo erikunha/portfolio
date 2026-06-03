@@ -1,0 +1,57 @@
+name: Post-Deploy Smoke Test
+
+# Fires when Vercel updates a GitHub Deployment status.
+# Vercel registers GitHub Deployments on every push; state=success means
+# the build and CDN promotion completed. We filter to Production only.
+on:
+  deployment_status:
+
+jobs:
+  smoke:
+    if: >
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: read
+    timeout-minutes: 5
+
+    steps:
+      - name: Health check — /api/healthz is reachable (200 ok or 503 degraded)
+        # WHY target_url: probes the specific deployment artifact, not the CDN
+        # edge which may still serve the previous version during propagation.
+        # WHY env: keeps target_url as a shell variable — ${{ }} inline would
+        # substitute the raw value into the script body (injection risk).
+        # WHY accept 503: healthz returns 503 when the PSI cron is stale —
+        # a monitoring concern, not a deploy failure.
+        env:
+          DEPLOY_URL: ${{ github.event.deployment_status.target_url }}
+        run: |
+          DEPLOY_URL="${DEPLOY_URL%/}"
+          case "$DEPLOY_URL" in
+            https://*.vercel.app|https://erikunha.dev) ;;
+            *) echo "ERROR: unexpected target_url: $DEPLOY_URL"; exit 1;;
+          esac
+          http_code=$(curl --max-time 30 --silent \
+            --output /dev/null \
+            --write-out "%{http_code}" \
+            "${DEPLOY_URL}/api/healthz")
+          echo "Health check status: $http_code (deployment: $DEPLOY_URL)"
+          if [ "$http_code" != "200" ] && [ "$http_code" != "503" ]; then
+            echo "ERROR: /api/healthz returned $http_code (expected 200 or 503)"
+            exit 1
+          fi
+
+      - name: Homepage responds with 200
+        # WHY canonical URL: verifies the production domain and CDN edge
+        # correctly promote the new deployment — separate from the artifact check.
+        run: |
+          http_code=$(curl --max-time 30 --silent \
+            --output /dev/null \
+            --write-out "%{http_code}" \
+            https://erikunha.dev)
+          echo "Homepage status: $http_code"
+          if [ "$http_code" != "200" ]; then
+            echo "ERROR: homepage returned $http_code"
+            exit 1
+          fi

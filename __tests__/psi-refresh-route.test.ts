@@ -9,12 +9,29 @@ const mockLogInfo = vi.fn();
 const mockLogError = vi.fn();
 vi.mock('@/lib/log', () => ({ log: { info: mockLogInfo, error: mockLogError } }));
 
+const mockRedisSet = vi.fn(async () => 'OK');
+vi.mock('@/lib/rate-limit', () => ({
+  getRedis: vi.fn(() => ({ set: mockRedisSet })),
+}));
+
+// Resend must use `function` (not arrow) so `new Resend(...)` in the route works.
+const mockSendEmail = vi.fn(async () => ({ data: { id: 'x' }, error: null }));
+vi.mock('resend', () => ({
+  // biome-ignore lint/complexity/useArrowFunction: `function` required — arrow fns cannot be used with `new` in jsdom/vitest; the route calls `new Resend(key)`.
+  Resend: vi.fn(function () {
+    return { emails: { send: mockSendEmail } };
+  }),
+}));
+
 afterEach(() => {
   vi.resetModules();
   mockRefreshScores.mockReset();
   mockLogInfo.mockReset();
   mockLogError.mockReset();
+  mockRedisSet.mockReset().mockResolvedValue('OK');
+  mockSendEmail.mockReset().mockResolvedValue({ data: { id: 'x' }, error: null });
   delete process.env.CRON_SECRET;
+  delete process.env.RESEND_API_KEY;
 });
 
 function makeRequest(authHeader?: string) {
@@ -85,6 +102,7 @@ describe('GET /api/psi-refresh — success', () => {
 
   it('returns 500 with null for a failed strategy while the other succeeds', async () => {
     process.env.CRON_SECRET = 'secret123';
+    process.env.RESEND_API_KEY = 're_test';
     mockRefreshScores
       .mockResolvedValueOnce(DESKTOP_SCORES)
       .mockRejectedValueOnce(new Error('mobile PSI failed'));
@@ -99,6 +117,7 @@ describe('GET /api/psi-refresh — success', () => {
 
   it('returns 500 when both strategies fail', async () => {
     process.env.CRON_SECRET = 'secret123';
+    process.env.RESEND_API_KEY = 're_test';
     mockRefreshScores
       .mockRejectedValueOnce(new Error('desktop PSI failed'))
       .mockRejectedValueOnce(new Error('mobile PSI failed'));
@@ -112,14 +131,15 @@ describe('GET /api/psi-refresh — success', () => {
 
   it('logs an error when a strategy fails', async () => {
     process.env.CRON_SECRET = 'secret123';
+    process.env.RESEND_API_KEY = 're_test';
     mockRefreshScores
       .mockResolvedValueOnce(DESKTOP_SCORES)
       .mockRejectedValueOnce(new Error('mobile PSI failed'));
     const { GET } = await import('@/app/api/psi-refresh/route');
     await GET(makeRequest('Bearer secret123') as never);
     expect(mockLogError).toHaveBeenCalledWith(
-      'psi-refresh mobile failed',
-      expect.objectContaining({ err: expect.any(Error) }),
+      'psi-refresh failed',
+      expect.objectContaining({ errors: expect.stringContaining('mobile PSI failed') }),
     );
   });
 
@@ -136,14 +156,15 @@ describe('GET /api/psi-refresh — success', () => {
 
   it('logs an error when desktop strategy fails', async () => {
     process.env.CRON_SECRET = 'secret123';
+    process.env.RESEND_API_KEY = 're_test';
     mockRefreshScores
       .mockRejectedValueOnce(new Error('desktop PSI failed'))
       .mockResolvedValueOnce(MOBILE_SCORES);
     const { GET } = await import('@/app/api/psi-refresh/route');
     await GET(makeRequest('Bearer secret123') as never);
     expect(mockLogError).toHaveBeenCalledWith(
-      'psi-refresh desktop failed',
-      expect.objectContaining({ err: expect.any(Error) }),
+      'psi-refresh failed',
+      expect.objectContaining({ errors: expect.stringContaining('desktop PSI failed') }),
     );
   });
 });

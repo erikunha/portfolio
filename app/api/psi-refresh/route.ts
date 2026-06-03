@@ -1,6 +1,8 @@
 import type { NextRequest } from 'next/server';
+import { Resend } from 'resend';
 import { refreshScores } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
+import { getRedis } from '@/lib/rate-limit';
 
 export async function GET(req: NextRequest): Promise<Response> {
   const cronSecret = process.env.CRON_SECRET;
@@ -20,14 +22,67 @@ export async function GET(req: NextRequest): Promise<Response> {
     durationMs: Date.now() - t0,
   };
 
-  if (desktopResult.status === 'rejected') {
-    log.error('psi-refresh desktop failed', { err: desktopResult.reason });
-  }
-  if (mobileResult.status === 'rejected') {
-    log.error('psi-refresh mobile failed', { err: mobileResult.reason });
+  const anyFailed = desktopResult.status === 'rejected' || mobileResult.status === 'rejected';
+
+  if (anyFailed) {
+    const errors = (
+      [
+        ['desktop', desktopResult],
+        ['mobile', mobileResult],
+      ] as Array<[string, PromiseSettledResult<unknown>]>
+    )
+      .filter((e): e is [string, PromiseRejectedResult] => e[1].status === 'rejected')
+      .map(([s, r]) => `${s}: ${r.reason instanceof Error ? r.reason.message : String(r.reason)}`)
+      .join('; ');
+
+    log.error('psi-refresh failed', { errors });
+
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      log.error('psi-refresh: RESEND_API_KEY not set, skipping alert');
+    } else {
+      try {
+        const resend = new Resend(apiKey);
+        const sendPromise = resend.emails.send({
+          from: 'alerts@erikunha.dev',
+          to: 'erikhenriquealvescunha@gmail.com',
+          subject: '[portfolio] psi-refresh cron failed',
+          text: `One or more PSI refreshes failed.\n\nErrors: ${errors}\nTimestamp: ${new Date().toISOString()}`,
+        });
+        // WHY: Resend SDK lacks native AbortSignal; race a 10s timer to avoid
+        // blocking the cron response if the alert API hangs.
+        let timerId: ReturnType<typeof setTimeout> | undefined;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timerId = setTimeout(() => reject(new Error('resend alert timeout (10s)')), 10_000);
+        });
+        try {
+          const { error: sendError } = await Promise.race([sendPromise, timeoutPromise]);
+          if (sendError) {
+            log.error('psi-refresh alert email API error', { err: sendError });
+          }
+        } finally {
+          clearTimeout(timerId);
+        }
+      } catch (alertErr) {
+        // Alert delivery failure must not mask the original error or change the response.
+        log.error('psi-refresh alert email failed to send', { err: alertErr });
+      }
+    }
+  } else {
+    // Both succeeded — record the timestamp so /api/healthz can report freshness.
+    try {
+      await getRedis().set('meta:psi-last-run', new Date().toISOString());
+    } catch (redisErr) {
+      // WHY: Redis write failure must not corrupt cron return code; PSI data is already stored.
+      // WHY: healthz depends on this key to report freshness. A write failure
+      // here means healthz will report degraded/503 until the next successful
+      // cron run — the cron dashboard will show 200 with no obvious correlation.
+      log.error('psi-refresh: failed to write meta:psi-last-run — healthz will report degraded', {
+        err: redisErr,
+      });
+    }
   }
 
-  const anyFailed = desktopResult.status === 'rejected' || mobileResult.status === 'rejected';
   log.info('psi-refresh completed', { durationMs: result.durationMs, anyFailed });
   // WHY: non-2xx signals Vercel Cron to retry and surface the failure in the dashboard.
   return Response.json(result, { status: anyFailed ? 500 : 200 });

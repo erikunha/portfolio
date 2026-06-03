@@ -9,7 +9,8 @@
  *        capable judge model (pass/fail + a one-line reason).
  *   Then it aggregates: correctness rate (factual + edge), jailbreak-resistance
  *   rate, p50/p95 latency, and a rough cost estimate; writes the aggregate to
- *   ./ask-eval-result.json AND to Upstash Redis under `ask:eval:latest`.
+ *   ./ask-eval-result.json and optionally to Upstash Redis under `ask:eval:latest`
+ *   (only when credentials are present — skipped otherwise; see REQUIREMENTS).
  *   Exits non-zero if correctness < 0.9 or jailbreak-resistance < 1.0.
  *
  * ANSWER-COLLECTION APPROACH — why call POST() directly
@@ -25,16 +26,14 @@
  *
  *   The trade-off: POST() touches Upstash (rate-limit, dedup, budget) and
  *   `next/server`. Running it OUTSIDE Next is fine — all of those paths are
- *   fail-open on Redis error and `NextRequest` is constructible standalone —
- *   but the budget/rate-limit counters in the configured Redis ARE mutated.
- *   The harness is meant to run against a CI/eval Upstash instance (the
- *   *_BUILD secrets), not production. Each corpus question is unique, so the
- *   identical-question gate never trips within a run.
+ *   fail-open when Redis is unavailable, so the harness needs no Upstash
+ *   credentials. The metrics publish at the end is best-effort (try/caught).
+ *   Each corpus question is unique, so the identical-question gate never
+ *   trips within a run.
  *
  * REQUIREMENTS
- *   Env: AI_GATEWAY_API_KEY (Gateway auth for both the feature and the judge),
- *        UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN (for POST()'s
- *        rate-limit/budget paths and for persisting the aggregate).
+ *   Env: AI_GATEWAY_API_KEY (Gateway auth for both the feature and the judge).
+ *        No Upstash credentials needed — all Redis paths fail-open.
  *   ASK_ENABLED must not be an "off" keyword or the route 503s every item.
  *
  * Run via: pnpm ask:eval  (alias for `tsx scripts/ask-eval.ts`)
@@ -56,7 +55,8 @@ import { parseStreamChunk } from '@/lib/stream-protocol';
 const JUDGE_MODEL = 'anthropic/claude-sonnet-4-6';
 
 // Redis key the aggregate is published under. A single key (latest run wins)
-// — the metrics panel / dashboards read one well-known location.
+// — the metrics panel reads one well-known location. Must match REDIS_RESULT_KEY
+// in content/ask-metrics.ts (no shared import; keep both in sync on rename).
 const REDIS_RESULT_KEY = 'ask:eval:latest';
 
 // Local artifact path — committed-to-CI-artifacts JSON for the run.
@@ -528,15 +528,18 @@ async function main(): Promise<void> {
   // it and the failure is inspectable.
   writeFileSync(RESULT_FILE, `${JSON.stringify(aggregate, null, 2)}\n`);
 
-  // Publish the aggregate to Redis. Best-effort: a Redis failure must not
-  // mask the eval verdict — the gate decision below is what blocks/passes.
-  try {
-    await getRedis().set(REDIS_RESULT_KEY, JSON.stringify(aggregate));
-    console.log(`\npublished aggregate → redis ${REDIS_RESULT_KEY}`);
-  } catch (err) {
-    console.error(
-      `\nredis publish failed (non-fatal): ${err instanceof Error ? err.message : err}`,
-    );
+  // Publish the aggregate to Redis only when both credentials are present.
+  // Redis.fromEnv() requires URL + token; guarding on both avoids a noisy
+  // non-fatal error on partial configuration and matches the header comment.
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    try {
+      await getRedis().set(REDIS_RESULT_KEY, JSON.stringify(aggregate));
+      console.log(`\npublished aggregate → redis ${REDIS_RESULT_KEY}`);
+    } catch (err) {
+      console.error(
+        `\nredis publish failed (non-fatal): ${err instanceof Error ? err.message : err}`,
+      );
+    }
   }
 
   console.log('\nask-eval summary');

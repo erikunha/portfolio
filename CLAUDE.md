@@ -201,6 +201,12 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 
 i18n · light theme · blog/MDX engine · analytics beyond Vercel Web Analytics + Speed Insights · auth/accounts/comments · CMS
 
+## Emergency Rollback
+
+Fast (30s): `vercel ls` → `vercel promote <url>` — no code change.
+Slow (5m): `git revert HEAD && git push`.
+Verify: `curl https://erikunha.dev/api/healthz | jq .sha`
+
 ## PR merge gate
 
 1. **AI agents may not call `gh pr merge` without Copilot review.** Repo owner may merge directly. Agents: `pnpm ready-to-merge <pr>` must pass; wait if Copilot unavailable — do not self-authorize.
