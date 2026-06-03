@@ -414,7 +414,7 @@ jobs:
           }
       - name: Run functional e2e (tests/e2e specs)
         if: matrix.project != 'chromium-components'
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/cross-cutting.spec.ts tests/e2e/observability-smoke.spec.ts
+        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/
       - name: Run functional e2e (co-located component specs)
         if: matrix.project == 'chromium-components'
         run: pnpm playwright test --project=${{ matrix.project }}
@@ -550,16 +550,16 @@ jobs:
           }
       - if: inputs.update_visual_baselines != 'true'
         name: Run visual regression
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts
       - if: inputs.update_visual_baselines == 'true'
         name: Regenerate visual baselines (workflow_dispatch only)
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts --update-snapshots
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts --update-snapshots
       - if: inputs.update_visual_baselines == 'true'
         name: Upload regenerated visual baselines
         uses: actions/upload-artifact@v7
         with:
           name: visual-baselines-${{ matrix.project }}
-          path: tests/e2e/visual.spec.ts-snapshots/
+          path: tests/visual/visual.spec.ts-snapshots/
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
@@ -613,16 +613,16 @@ jobs:
           }
       - if: inputs.update_visual_baselines != 'true'
         name: Run visual regression
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts
       - if: inputs.update_visual_baselines == 'true'
         name: Regenerate visual baselines (workflow_dispatch only)
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts --update-snapshots
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts --update-snapshots
       - if: inputs.update_visual_baselines == 'true'
         name: Upload regenerated visual baselines
         uses: actions/upload-artifact@v7
         with:
           name: visual-baselines-${{ matrix.project }}
-          path: tests/e2e/visual.spec.ts-snapshots/
+          path: tests/visual/visual.spec.ts-snapshots/
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
