@@ -49,7 +49,10 @@ export async function GET(req: NextRequest): Promise<Response> {
         const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('resend alert timeout (10s)')), 10_000),
         );
-        await Promise.race([sendPromise, timeoutPromise]);
+        const { error: sendError } = await Promise.race([sendPromise, timeoutPromise]);
+        if (sendError) {
+          log.error('psi-refresh alert email API error', { err: sendError });
+        }
       } catch (alertErr) {
         // Alert delivery failure must not mask the original error or change the response.
         log.error('psi-refresh alert email failed to send', { err: alertErr });

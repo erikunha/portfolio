@@ -2,7 +2,15 @@ import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const redisMockSet = vi.fn(async () => 'OK');
-const sendMock = vi.fn(async () => ({ data: { id: 'email-id' }, error: null }));
+const sendMock = vi.fn(
+  async (): Promise<{
+    data: { id: string } | null;
+    error: { message: string; name: string } | null;
+  }> => ({
+    data: { id: 'email-id' },
+    error: null,
+  }),
+);
 
 vi.mock('@/lib/lighthouse-scores', () => ({
   refreshScores: vi.fn(),
@@ -123,6 +131,26 @@ describe('GET /api/psi-refresh', () => {
     expect(sendMock).not.toHaveBeenCalled();
     expect(vi.mocked(log.error)).toHaveBeenCalledWith(
       'psi-refresh: RESEND_API_KEY not set, skipping alert',
+    );
+  });
+
+  it('logs API error when resend.emails.send returns { error }', async () => {
+    sendMock.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'invalid_api_key', name: 'validation_error' },
+    });
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    vi.mocked(refreshScores).mockRejectedValue(new Error('PSI timeout'));
+    const { log } = await import('@/lib/log');
+
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    const res = await GET(makeRequest());
+
+    expect(res.status).toBe(500);
+    expect(sendMock).toHaveBeenCalledOnce();
+    expect(vi.mocked(log.error)).toHaveBeenCalledWith(
+      'psi-refresh alert email API error',
+      expect.objectContaining({ err: expect.objectContaining({ message: 'invalid_api_key' }) }),
     );
   });
 
