@@ -19,8 +19,8 @@ export const manPage: ManPage = ManPageSchema.parse({
     { flag: '--hire', desc: 'Initiates handshake. See CONTACT.' },
   ],
   knownBugs: [
-    'Occasionally rewrites a working component for clarity.',
-    'Will not stop talking about bundle size.',
-    'Sometimes ships the test before the feature.',
+    'Has more side-project ideas than free weekends.',
+    'Falls down a documentation rabbit hole most days.',
+    'Gets quietly nerd-sniped by an interesting problem.',
   ],
 });

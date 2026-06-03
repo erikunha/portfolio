@@ -133,7 +133,7 @@ function InfluencesList({
           <InfluenceBars filled={inf.strength} />
         </div>
       ))}
-      <div className="mt-3 pt-[10px] border-t border-dashed border-[var(--color-primary-quiet)] text-xs max-md:text-[10px] text-primary-400">
+      <div className="mt-3 pt-[10px] border-t border-dashed border-[var(--color-primary-quiet)] text-[10px] md:text-[13px] text-primary-400">
         <strong className="text-primary-500 font-bold">now obsessing:</strong> {nowObsessing}
       </div>
     </div>
