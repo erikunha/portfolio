@@ -57,7 +57,7 @@ jobs:
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
 
       - name: Install
@@ -121,7 +121,7 @@ jobs:
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
 
       - name: Install
@@ -146,7 +146,7 @@ jobs:
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
 
       - name: Install
@@ -262,7 +262,7 @@ jobs:
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
 
       - name: Install
@@ -323,7 +323,7 @@ jobs:
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
 
       - name: Install
@@ -381,7 +381,7 @@ jobs:
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Cache Playwright browsers
@@ -401,7 +401,7 @@ jobs:
       - name: Start preview server
         # WHY: matrix.project values are workflow-defined literals — never PR-controlled input.
         # Keeping them literal prevents shell-injection via ${{ matrix.project }} expansion.
-        run: pnpm start > /tmp/server-${{ matrix.project || 'perf' }}.log 2>&1 &
+        run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
         # DEPLOY_SALT is load-bearing: without it, lib/ip-hash.ts resolveSalt()
         # takes the production Upstash path (CI has no Redis creds) and throws,
         # so every validated /api/* request 500s via hashIp() in lib/server/route.ts.
@@ -411,7 +411,7 @@ jobs:
         run: |
           npx wait-on http://localhost:3000 --timeout 30000 || {
             echo "Server failed to start. Log output:"
-            cat /tmp/server-${{ matrix.project || 'perf' }}.log
+            cat /tmp/server-${{ matrix.project }}.log
             exit 1
           }
       - name: Run functional e2e (tests/e2e specs)
@@ -489,7 +489,7 @@ jobs:
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
@@ -522,7 +522,7 @@ jobs:
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Cache Playwright browsers
@@ -540,14 +540,14 @@ jobs:
           name: next-build
           path: .next/
       - name: Start preview server
-        run: pnpm start > /tmp/server-${{ matrix.project || 'perf' }}.log 2>&1 &
+        run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
         run: |
           npx wait-on http://localhost:3000 --timeout 30000 || {
             echo "Server failed to start. Log output:"
-            cat /tmp/server-${{ matrix.project || 'perf' }}.log
+            cat /tmp/server-${{ matrix.project }}.log
             exit 1
           }
       - if: inputs.update_visual_baselines != 'true'
@@ -585,7 +585,7 @@ jobs:
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Cache Playwright browsers
@@ -603,14 +603,14 @@ jobs:
           name: next-build
           path: .next/
       - name: Start preview server
-        run: pnpm start > /tmp/server-${{ matrix.project || 'perf' }}.log 2>&1 &
+        run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
         run: |
           npx wait-on http://localhost:3000 --timeout 30000 || {
             echo "Server failed to start. Log output:"
-            cat /tmp/server-${{ matrix.project || 'perf' }}.log
+            cat /tmp/server-${{ matrix.project }}.log
             exit 1
           }
       - if: inputs.update_visual_baselines != 'true'
@@ -646,7 +646,7 @@ jobs:
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
 
       - name: Install
