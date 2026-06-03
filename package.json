@@ -47,7 +47,6 @@
     "ci": "pnpm verify && pnpm build && pnpm bundle-check",
     "ci:local": "pnpm verify",
     "gates:runtime": "tsx scripts/gates-runtime.ts",
-    "baselines:linux": "bash scripts/gen-linux-baselines.sh",
     "prepare": "husky || true",
     "postinstall": "node scripts/strip-next-polyfills.mjs",
     "changelog:sync": "tsx scripts/sync-changelog.ts"
