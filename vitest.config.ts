@@ -11,6 +11,7 @@ export default defineConfig({
       '**/node_modules/**',
       '**/tests/a11y/**',
       '**/tests/e2e/**',
+      '**/tests/visual/**',
       '**/.claude/**',
       '**/.worktrees/**',
     ],

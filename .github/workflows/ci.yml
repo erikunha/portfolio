@@ -49,15 +49,15 @@ jobs:
       group: quality-fast-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
 
       - name: Install
@@ -115,13 +115,13 @@ jobs:
       group: typecheck-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
 
       - name: Install
@@ -140,13 +140,13 @@ jobs:
       group: test-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
 
       - name: Install
@@ -159,7 +159,7 @@ jobs:
         run: pnpm test:coverage
 
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: coverage-report
@@ -171,7 +171,7 @@ jobs:
         # Mirrors the same guard used in the ai-eval job.
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         continue-on-error: true
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const fs = require('fs');
@@ -237,9 +237,9 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-      - uses: actions/dependency-review-action@v5
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
           deny-licenses: GPL-3.0, AGPL-3.0, GPL-2.0
@@ -256,20 +256,20 @@ jobs:
       group: build-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
 
       - name: Install
         run: pnpm install --frozen-lockfile
 
       - name: Cache Next.js build
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: .next/cache
           key: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('app/**', 'components/**', 'lib/**', 'design-system/**') }}
@@ -293,7 +293,7 @@ jobs:
         run: node scripts/check-bundle-size.mjs --max-client-kb=220
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: next-build
           path: .next/
@@ -302,7 +302,7 @@ jobs:
 
       - name: Attest build provenance
         if: github.ref == 'refs/heads/main'
-        uses: actions/attest-build-provenance@v4
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
         with:
           subject-path: .next/
 
@@ -317,26 +317,26 @@ jobs:
     env:
       LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
 
       - name: Install
         run: pnpm install --frozen-lockfile
 
       - name: Download build artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: next-build
           path: .next/
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
@@ -347,12 +347,17 @@ jobs:
         run: pnpm playwright install --with-deps chromium
 
       - name: Start preview server
-        run: pnpm start &
+        run: pnpm start > /tmp/server-perf.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
 
       - name: Wait for server
-        run: npx wait-on http://localhost:3000 --timeout 30000
+        run: |
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-perf.log
+            exit 1
+          }
 
       - name: Lighthouse CI (desktop)
         run: pnpm lhci
@@ -372,15 +377,15 @@ jobs:
       matrix:
         project: [chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components]
     steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Cache Playwright browsers
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ hashFiles('pnpm-lock.yaml') }}
@@ -389,26 +394,36 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm playwright install --with-deps ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
       - name: Download build artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: next-build
           path: .next/
       - name: Start preview server
-        run: pnpm start &
+        # WHY: matrix.project values are workflow-defined literals — never PR-controlled input.
+        # Keeping them literal prevents shell-injection via ${{ matrix.project }} expansion.
+        run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
         # DEPLOY_SALT is load-bearing: without it, lib/ip-hash.ts resolveSalt()
         # takes the production Upstash path (CI has no Redis creds) and throws,
         # so every validated /api/* request 500s via hashIp() in lib/server/route.ts.
         env:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
-        run: npx wait-on http://localhost:3000 --timeout 30000
+        run: |
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-${{ matrix.project }}.log
+            exit 1
+          }
       - name: Run functional e2e (tests/e2e specs)
         if: matrix.project != 'chromium-components'
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/cross-cutting.spec.ts tests/e2e/observability-smoke.spec.ts
+        # WHY: design-system-components.spec.ts is excluded via testIgnore in
+        # playwright.config.ts (darwin-only visual baselines). Auto-discovery here
+        # so new functional specs are picked up without a ci.yml edit.
+        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/
       - name: Run functional e2e (co-located component specs)
         if: matrix.project == 'chromium-components'
         run: pnpm playwright test --project=${{ matrix.project }}
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
           name: playwright-report-${{ matrix.project }}
@@ -421,7 +436,7 @@ jobs:
       ai: ${{ steps.check.outputs.ai }}
       app: ${{ steps.check.outputs.app }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
       - name: Detect changed file categories
@@ -473,11 +488,11 @@ jobs:
     # skipped (path-filtered) jobs are allowed — only failure/cancelled blocks.
     needs: [detect-changes, quality-fast, typecheck, test, build, e2e-functional, performance, e2e-visual-chromium]
     steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
@@ -487,7 +502,7 @@ jobs:
           AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY_BUILD }}
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: ask-eval-result
@@ -506,15 +521,15 @@ jobs:
       matrix:
         project: [chromium, chromium-mobile]
     steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Cache Playwright browsers
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
@@ -523,29 +538,34 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm playwright install --with-deps chromium
       - name: Download build artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: next-build
           path: .next/
       - name: Start preview server
-        run: pnpm start &
+        run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
-        run: npx wait-on http://localhost:3000 --timeout 30000
+        run: |
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-${{ matrix.project }}.log
+            exit 1
+          }
       - if: inputs.update_visual_baselines != 'true'
         name: Run visual regression
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts
       - if: inputs.update_visual_baselines == 'true'
         name: Regenerate visual baselines (workflow_dispatch only)
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts --update-snapshots
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts --update-snapshots
       - if: inputs.update_visual_baselines == 'true'
         name: Upload regenerated visual baselines
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: visual-baselines-${{ matrix.project }}
-          path: tests/e2e/visual.spec.ts-snapshots/
-      - uses: actions/upload-artifact@v7
+          path: tests/visual/visual.spec.ts-snapshots/
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
           name: visual-report-${{ matrix.project }}
@@ -564,15 +584,15 @@ jobs:
       matrix:
         project: [webkit-desktop, webkit-mobile]
     steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Cache Playwright browsers
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-webkit-${{ hashFiles('pnpm-lock.yaml') }}
@@ -581,29 +601,34 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm playwright install --with-deps webkit
       - name: Download build artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: next-build
           path: .next/
       - name: Start preview server
-        run: pnpm start &
+        run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
-        run: npx wait-on http://localhost:3000 --timeout 30000
+        run: |
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-${{ matrix.project }}.log
+            exit 1
+          }
       - if: inputs.update_visual_baselines != 'true'
         name: Run visual regression
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts
       - if: inputs.update_visual_baselines == 'true'
         name: Regenerate visual baselines (workflow_dispatch only)
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/visual.spec.ts --update-snapshots
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts --update-snapshots
       - if: inputs.update_visual_baselines == 'true'
         name: Upload regenerated visual baselines
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: visual-baselines-${{ matrix.project }}
-          path: tests/e2e/visual.spec.ts-snapshots/
-      - uses: actions/upload-artifact@v7
+          path: tests/visual/visual.spec.ts-snapshots/
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
           name: visual-report-${{ matrix.project }}
@@ -618,13 +643,13 @@ jobs:
       deployments: read
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: pnpm
 
       - name: Install
@@ -632,7 +657,7 @@ jobs:
 
       - name: Wait for Vercel preview deployment
         id: vercel-url
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const sha = context.payload.pull_request.head.sha;
@@ -664,6 +689,7 @@ jobs:
       - name: Lighthouse against Vercel preview
         if: steps.vercel-url.outputs.url != ''
         continue-on-error: true
-        run: pnpm exec lhci autorun --collect.url="${{ steps.vercel-url.outputs.url }}" --collect.numberOfRuns=1
         env:
+          PREVIEW_URL: ${{ steps.vercel-url.outputs.url }}
           LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url }}
+        run: pnpm exec lhci autorun --collect.url="$PREVIEW_URL" --collect.numberOfRuns=1
