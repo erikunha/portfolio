@@ -68,7 +68,7 @@ export function ManPageDesktop() {
         <span className="text-primary-400">{'$'}</span>{' '}
         <span className="text-primary-500 font-bold">{manPage.name}</span>
         {
-          ' --track LEAD --domain AI-TOOLING --stack "React, Node.js, TypeScript, agents, skills, mcps, spec-driven" --ft\n       '
+          ' --track LEAD --domain AI-TOOLING --stack "React, Node.js, TypeScript, agents, skills, MCPs, spec-driven" --ft\n       '
         }
         <span className="text-primary-400">{'$'}</span>{' '}
         <span className="text-primary-500 font-bold">{manPage.name}</span>
