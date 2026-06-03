@@ -54,7 +54,8 @@ import { parseStreamChunk } from '@/lib/stream-protocol';
 const JUDGE_MODEL = 'anthropic/claude-sonnet-4-6';
 
 // Redis key the aggregate is published under. A single key (latest run wins)
-// — the metrics panel / dashboards read one well-known location.
+// — the metrics panel reads one well-known location. Must match REDIS_RESULT_KEY
+// in content/ask-metrics.ts (no shared import; keep both in sync on rename).
 const REDIS_RESULT_KEY = 'ask:eval:latest';
 
 // Local artifact path — committed-to-CI-artifacts JSON for the run.

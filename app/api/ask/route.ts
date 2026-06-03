@@ -160,8 +160,8 @@ export async function POST(req: NextRequest) {
   try {
     const { success } = await getAskLimit().limit(ip);
     rateLimited = !success;
-  } catch {
-    // Redis unavailable — allow through, consistent with all other Redis paths.
+  } catch (err) {
+    log.error('ask rate-limit check failed, allowing through', { err });
   }
   if (rateLimited) {
     earlyExitPersist('rate-limited');
