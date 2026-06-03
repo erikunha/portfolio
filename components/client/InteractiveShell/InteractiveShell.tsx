@@ -337,7 +337,9 @@ export function InteractiveShell() {
       <div className="flex items-center gap-[10px] px-[14px] py-2 border-b border-[var(--color-primary-subtle)] text-primary-400 text-xs tracking-[0.14em]">
         <WindowChrome size={10} />
         {isMobile ? (
-          <span className="ml-auto max-md:text-[10px]">{shellChrome.mobileLabel}</span>
+          <span className="ml-auto max-md:text-[10px]">
+            {shellChrome.mobileLabel ?? shellChrome.rightTag}
+          </span>
         ) : (
           <>
             <span>{shellChrome.promptLabel}</span>

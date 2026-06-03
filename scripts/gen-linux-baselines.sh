@@ -27,6 +27,8 @@ echo "[gen-linux-baselines] image: ${IMAGE}"
 # `pnpm install`/`pnpm build` never overwrite the host's (darwin) node_modules
 # or build output. Only the snapshot PNGs under tests/ are written through.
 docker run --rm \
+  --user "$(id -u):$(id -g)" \
+  -e HOME=/tmp \
   -v "$PWD":/work \
   -v /work/node_modules \
   -v /work/.next \
