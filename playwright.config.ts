@@ -19,10 +19,10 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } },
-      // WHY: design-system-components has toHaveScreenshot assertions with darwin-only
-      // baselines — running on Ubuntu CI fails with "missing snapshot". Remove this
-      // ignore once linux baselines are added (move spec to tests/visual/ at that point).
-      testIgnore: /design-system-components\.spec\.ts/,
+      // WHY: CI only — design-system-components has darwin-only baselines; Ubuntu CI
+      // would fail with "missing snapshot". Local runs (including baseline regen) are
+      // unaffected. Remove once linux baselines are added.
+      testIgnore: process.env.CI ? /design-system-components\.spec\.ts/ : [],
     },
     {
       name: 'chromium-mobile',
