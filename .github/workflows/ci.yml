@@ -416,12 +416,10 @@ jobs:
           }
       - name: Run functional e2e (tests/e2e specs)
         if: matrix.project != 'chromium-components'
-        # WHY: explicit paths exclude design-system-components.spec.ts (visual-only, darwin baselines only)
-        run: |
-          pnpm playwright test --project=${{ matrix.project }} \
-            tests/e2e/cross-cutting.spec.ts \
-            tests/e2e/observability-smoke.spec.ts \
-            tests/e2e/design-system-pages.spec.ts
+        # WHY: design-system-components.spec.ts is excluded via testIgnore in
+        # playwright.config.ts (darwin-only visual baselines). Auto-discovery here
+        # so new functional specs are picked up without a ci.yml edit.
+        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/
       - name: Run functional e2e (co-located component specs)
         if: matrix.project == 'chromium-components'
         run: pnpm playwright test --project=${{ matrix.project }}
