@@ -5,7 +5,7 @@
 // bundle no longer pulls Zod's Function-constructor codegen path (which would
 // otherwise trigger CSP eval violations under script-src 'strict-dynamic').
 //
-// scripts/validate-content.mjs imports this file via tsx in a child process,
+// scripts/validate-content.ts imports this file via tsx in a child process,
 // so it never enters the app's static module graph.
 
 import { z } from 'zod';

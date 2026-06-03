@@ -37,7 +37,7 @@ docker run --rm \
   pnpm install --frozen-lockfile
   pnpm build
   DEPLOY_SALT=ci-build-salt pnpm start &
-  npx wait-on http://localhost:3000 --timeout 60000
+  npx --yes wait-on http://localhost:3000 --timeout 60000
   pnpm playwright test tests/e2e/visual.spec.ts --update-snapshots
 '
 echo "[gen-linux-baselines] done. Inspect + commit the changed *-linux.png:"
