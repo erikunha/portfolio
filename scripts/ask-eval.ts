@@ -25,16 +25,14 @@
  *
  *   The trade-off: POST() touches Upstash (rate-limit, dedup, budget) and
  *   `next/server`. Running it OUTSIDE Next is fine — all of those paths are
- *   fail-open on Redis error and `NextRequest` is constructible standalone —
- *   but the budget/rate-limit counters in the configured Redis ARE mutated.
- *   The harness is meant to run against a CI/eval Upstash instance (the
- *   *_BUILD secrets), not production. Each corpus question is unique, so the
- *   identical-question gate never trips within a run.
+ *   fail-open when Redis is unavailable, so the harness needs no Upstash
+ *   credentials. The metrics publish at the end is best-effort (try/caught).
+ *   Each corpus question is unique, so the identical-question gate never
+ *   trips within a run.
  *
  * REQUIREMENTS
- *   Env: AI_GATEWAY_API_KEY (Gateway auth for both the feature and the judge),
- *        UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN (for POST()'s
- *        rate-limit/budget paths and for persisting the aggregate).
+ *   Env: AI_GATEWAY_API_KEY (Gateway auth for both the feature and the judge).
+ *        No Upstash credentials needed — all Redis paths fail-open.
  *   ASK_ENABLED must not be an "off" keyword or the route 503s every item.
  *
  * Run via: pnpm ask:eval  (alias for `tsx scripts/ask-eval.ts`)

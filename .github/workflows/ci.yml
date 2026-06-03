@@ -492,11 +492,11 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: AI eval suite
+        # No Upstash credentials: the route's rate-limit/budget/dedup paths are
+        # all fail-open when Redis is unavailable. Metrics publish is best-effort.
         run: pnpm ask:eval
         env:
           AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY_BUILD }}
-          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_EVAL }}
-          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_EVAL }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
