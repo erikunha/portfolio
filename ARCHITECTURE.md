@@ -142,87 +142,100 @@ RSC + selective islands is harder to debug than full-CSR (smaller stack traces, 
 
 ## 4. Directory layout
 
+Every path below is a full repo-relative path and is verified to exist by
+`scripts/check-doc-drift.mjs` (a CI gate): rename or delete one of these and the
+build fails until this tree is corrected. The block is bounded by the
+`doc-drift` markers; one path per line, `#` annotations are ignored by the gate.
+
+<!-- doc-drift:start -->
 ```
-app/
-  layout.tsx                  # font, theme tokens, JSON-LD, metadata
-  page.tsx                    # single-page composition (RSC)
-  not-found.tsx               # Matrix-themed 404
-  robots.ts, sitemap.ts       # SEO basics
-  llms.txt/route.ts           # AI-agent manifest
-  api/
-    ask/route.ts              # Edge: LLM streaming
-    contact/route.ts          # Node: contact (uses Resend)
-    lighthouse/route.ts       # Edge: reads PSI cache from KV
-    erik.json/route.ts        # static profile, cached
-  contact/action.ts           # Server Action for the form
+app/layout.tsx                       # fonts, theme tokens, JSON-LD, metadata
+app/page.tsx                         # single-page composition (RSC)
+app/not-found.tsx                    # Matrix-themed 404
+app/sitemap.ts                       # SEO sitemap (robots.txt is static, in public/)
+app/css/                             # global styles — Tailwind v4 via PostCSS
+app/design-system/                   # /design-system docs surface (MDX + token gallery)
+app/api/ask/route.ts                 # Edge: LLM streaming
+app/api/contact/route.ts             # Node: contact (uses Resend)
+app/api/lighthouse/route.ts          # Edge: reads PSI cache from KV
+app/api/erik.json/route.ts           # static profile, cached
+app/api/healthz/route.ts             # liveness + dependency probe
+app/api/csp-report/route.ts          # CSP violation sink
+app/api/log/route.ts                 # client error-bridge sink
+app/api/psi-refresh/route.ts         # cron: refresh PSI cache
+app/api/[transport]/route.ts         # MCP transport (agent surface)
 
-components/
-  terminal/                   # Card, Prompt, GitLog, Tile, ManPage
-  sections/                   # HeroBoot, ProjectsGrid, PerfReceipts,
-                              # VisaTable, GuitarRig, Unknowns, etc.
-  client/                     # *.client.tsx — ONLY interactivity
-    matrix-dialog.client.tsx
-    shell.client.tsx
-    contact-form.client.tsx
-    typewriter-observer.client.tsx
-    motion-indicator.client.tsx
-  ui/                         # Button, Input, Field (minimal)
+components/sections/                  # RSC sections: Hero, HottestTakes, GuitarSection, …
+components/client/                    # co-located islands — ONLY interactivity
+components/client/InteractiveShell/   # streaming shell island
+components/client/ContactForm/        # contact form island
+components/client/HeroBootAnimation/  # boot typewriter island
+components/client/RoleTyper/          # reveal-on-scroll typer
+components/client/ToTopButton/        # motion-aware scroll-to-top
+components/AppShell/                   # window chrome / module-open dispatch
+components/ErrorBoundary/              # client error boundary
+components/HeroStats/                  # hero stat tiles
+components/Icons/                      # inline SVG icon set
+components/responsive/                 # viewport-variant helpers
 
-content/
-  bio.ts                      # README content
-  projects.ts                 # 6 project tiles
-  employers.ts                # git log entries
-  perf-receipts.ts            # 8 tiles
-  npm-stack.ts                # 12 tiles
-  hottest-takes.ts            # 8 defended opinions
-  responsibilities.ts         # permissions matrix
-  guitar-rig.ts               # gear sheet
-  unknowns.ts                 # 5+4 items
-  visa.ts                     # jurisdiction table
-  community.ts                # devopsdays
-  man-page.ts                 # MAN ERIK content
-  social.ts                   # github / linkedin / email / site
-  zod-schemas.ts              # validation, build-time
+content/readme.ts                     # README/bio content
+content/projects.ts                   # project tiles
+content/employers.ts                  # git log entries
+content/perf-receipts.ts              # perf tiles
+content/npm-stack.ts                  # stack tiles
+content/hottest-takes.ts              # defended opinions
+content/responsibilities.ts           # permissions matrix
+content/guitar-rig.ts                 # gear sheet
+content/unknowns.ts                   # unknowns items
+content/visa.ts                       # jurisdiction table
+content/community.ts                  # devopsdays
+content/now.ts                        # ~/.now
+content/credentials.ts                # ~/.credentials
+content/man-page.ts                   # MAN ERIK content
+content/social.ts                     # github / linkedin / email / site
+content/schemas.ts                    # Zod validation schemas, build-time
 
-lib/
-  agent/                       # agent-readiness helpers (MCP handler)
-  ask/                         # system prompt builder, streaming, anti-abuse
-  mdx/                         # MDX remark/recma plugins for /design-system docs
-  server/                      # server-only utilities
-  ask-log.ts                   # KV interaction log per /api/ask request
-  boot-animation.ts            # boot sequence data
-  breakpoint.ts                # viewport breakpoint constants
-  contact-validation.ts        # honeypot check (Zod shape validation lives in the route)
-  error-bridge.client.ts       # window error → /api/log bridge
-  events.ts                    # typed dispatchModuleOpen helper
-  hiring-profile.ts            # HiringProfile reader for /api/erik.json
-  ip-hash.ts                   # IP → SHA-256 for rate-limit keys
-  lighthouse-scores.ts         # PSI API fetcher (cached daily)
-  log.ts                       # pino wrapper (text dev / JSON prod)
-  motion.ts                    # readMotion / applyMotion (body data-attr)
-  rate-limit.ts                # Upstash sliding-window + budget reserve/settle
-  stream-protocol.ts           # NUL-byte error sentinel + parseStreamChunk buffer parser
-  ua.ts                        # UA-based device detection (headers())
-  use-breakpoint.client.tsx    # useBreakpoint hook (client-only)
+lib/agent/                            # agent-readiness helpers (MCP tools)
+lib/ask/                              # system prompt builder, model const, anti-abuse
+lib/mdx/                              # MDX remark/recma plugins for /design-system docs
+lib/server/                           # server-only utilities (route-handler factory)
+lib/env.ts                            # typed, format-validating env accessor
+lib/ask-log.ts                        # KV interaction log per /api/ask request
+lib/boot-animation.ts                 # boot sequence data
+lib/breakpoint.ts                     # viewport breakpoint constants
+lib/contact-validation.ts             # honeypot check (Zod shape lives in the route)
+lib/error-bridge.client.ts            # window error → /api/log bridge
+lib/events.ts                         # typed dispatchModuleOpen helper
+lib/hiring-profile.ts                 # HiringProfile reader for /api/erik.json
+lib/ip-hash.ts                        # IP → SHA-256 for rate-limit keys
+lib/lighthouse-scores.ts              # PSI API fetcher (cached daily)
+lib/log.ts                            # pino wrapper (text dev / JSON prod)
+lib/motion.ts                         # readMotion / applyMotion (body data-attr)
+lib/rate-limit.ts                     # Upstash sliding-window + budget reserve/settle
+lib/stream-protocol.ts                # NUL-byte error sentinel + parseStreamChunk
+lib/ua.ts                             # UA-based device detection (headers())
+lib/cn.ts                             # className join helper
 
-app/css/                      # global styles — Tailwind v4 via PostCSS
-  theme.css                   # @theme { brand palette, glow stops, typography vars }
-  base.css                    # @layer base { resets, focus-visible, body, skip-to-content }
-  components.css              # @layer components { CRT, animations, @keyframes, complex patterns }
-app/globals.css               # entry: @import "tailwindcss" + theme/base/components
+app/css/theme.css                     # @theme { palette, glow stops, typography vars }
+app/css/base.css                      # @layer base { resets, focus-visible, skip-to-content }
+app/css/components.css                # @layer components { CRT, animations, @keyframes }
+app/globals.css                       # entry: @import "tailwindcss" + theme/base/components
 
-public/
-  og/                         # fallback OG images
-  fonts/                      # JetBrains Mono self-hosted
+public/fonts/                         # JetBrains Mono self-hosted
+public/images/                        # OG + static images
+public/robots.txt                     # static robots
+public/llms.txt                       # AI-agent manifest
 
-tests/
-  e2e/                        # Playwright: contact happy + spam path
-  unit/                       # Vitest: zod schemas, rate-limit logic
+tests/e2e/                            # Playwright: functional + smoke user journeys
+tests/a11y/                           # axe-core accessibility scan
+tests/visual/                         # visual-regression snapshots
+tests/mocks/                          # shared test mocks
 
-ARCHITECTURE.md               # this doc
-DECISIONS.md                  # ADR-lite, running log
-README.md                     # repo onboarding
+ARCHITECTURE.md                       # this doc
+DECISIONS.md                          # ADR-lite, running log
+README.md                             # repo onboarding
 ```
+<!-- doc-drift:end -->
 
 ---
 

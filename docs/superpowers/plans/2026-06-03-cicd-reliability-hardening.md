@@ -1,5 +1,7 @@
 # CI/CD Reliability Hardening Implementation Plan
 
+> **STATUS: SHIPPED (2026-06-04).** Phase 1 merged as **PR #86** (`0f8b307`); Phase 2 merged as **PR #87** (`20b1586`). The workstream-level completion record is the **Self-Review Checklist** at the bottom of this plan — every item is `[x]` and confirmed against disk (healthz route, smoke workflow, `.nvmrc`, SHA-pinned actions, `tests/visual/`). The granular `- [ ]` step boxes below were the TDD execution-tracking checklist during implementation and are left as the historical step record; they are NOT an open-work indicator. Read the Self-Review Checklist for status.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Address all Critical/High/Medium findings from the Staff+ DevOps audit: production healthz endpoint, post-deploy smoke test, rollback runbook, PSI cron alerting, ai-eval Upstash isolation, and CI hardening (server crash logging, E2E auto-discovery, SHA-pinned actions, .nvmrc).
