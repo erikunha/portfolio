@@ -29,8 +29,10 @@ const MANAGED = [
 
 beforeEach(() => {
   vi.resetModules();
-  // Clean slate: force every managed var absent so each test controls its own.
-  for (const key of MANAGED) vi.stubEnv(key, undefined as unknown as string);
+  // Clean slate: force every managed var to "unset". Stub to '' (not a cast to
+  // undefined) — lib/env.ts coerces '' → undefined, matching the repo's "X=
+  // means unset" convention, so each test starts from a known-absent baseline.
+  for (const key of MANAGED) vi.stubEnv(key, '');
 });
 
 afterEach(() => {

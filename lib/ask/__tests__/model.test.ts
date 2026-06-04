@@ -82,7 +82,8 @@ beforeEach(() => {
     'CRON_SECRET',
     'DEPLOY_SALT',
   ]) {
-    vi.stubEnv(key, undefined as unknown as string);
+    // '' reads as "unset" (lib/env.ts coerces '' → undefined); type-safe, no cast.
+    vi.stubEnv(key, '');
   }
   vi.stubEnv('ASK_ENABLED', 'true');
 });
