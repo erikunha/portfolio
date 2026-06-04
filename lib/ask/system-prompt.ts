@@ -24,6 +24,7 @@ import { perfReceipts } from '@/content/perf-receipts';
 import { projects } from '@/content/projects';
 import { unknowns } from '@/content/unknowns';
 import { visaRows } from '@/content/visa';
+import { sha256Hex } from '@/lib/ask/prompt-version';
 
 const NARRATIVE = `You are an AI proxy on Erik Cunha's portfolio site (erikunha.dev). Answer questions about Erik concisely and accurately.
 
@@ -154,6 +155,18 @@ ${formatUnknowns()}`;
  * length-based properties without unwrapping the Anthropic message shape.
  */
 export const SYSTEM_TEXT: string = `${NARRATIVE}\n\n${LIVE_DATA}`;
+
+/**
+ * Derived prompt identity: the first 12 hex chars of SHA-256(SYSTEM_TEXT),
+ * computed once at module load. Because it is a content hash of the EXACT bytes
+ * the model receives, it cannot drift from the live prompt: change any content
+ * module (perf-receipts, projects, visa, unknowns) or the narrative, and the
+ * version moves automatically. Logged per request and stamped into the
+ * `ask:eval:latest` aggregate so a stored eval result names the prompt revision
+ * it graded — no `git blame` across five files. 12 chars (48 bits) is ample to
+ * distinguish revisions of a single prompt while staying log-line compact.
+ */
+export const PROMPT_VERSION: string = sha256Hex(SYSTEM_TEXT).slice(0, 12);
 
 /**
  * Anthropic-shaped system prompt with `cache_control: ephemeral` set.
