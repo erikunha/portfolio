@@ -11,7 +11,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ASK_MODEL } from '@/lib/ask/model';
 
 const mockStreamText = vi.fn();
@@ -70,7 +70,25 @@ async function drain(res: Response): Promise<void> {
 beforeEach(() => {
   vi.resetModules();
   mockStreamText.mockReset().mockReturnValue(makeStreamTextResult());
+  // Hermetic: importing the route loads lib/env.ts, which validates managed
+  // vars at module load (e.g. UPSTASH_REDIS_REST_URL format). Clear them so a
+  // stray/malformed ambient value can't fail this test for unrelated reasons.
+  for (const key of [
+    'UPSTASH_REDIS_REST_URL',
+    'UPSTASH_REDIS_REST_TOKEN',
+    'AI_GATEWAY_API_KEY',
+    'RESEND_API_KEY',
+    'PSI_API_KEY',
+    'CRON_SECRET',
+    'DEPLOY_SALT',
+  ]) {
+    vi.stubEnv(key, undefined as unknown as string);
+  }
   vi.stubEnv('ASK_ENABLED', 'true');
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe('ASK_MODEL — single source of truth', () => {
