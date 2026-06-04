@@ -33,6 +33,24 @@ if [ "$STAMPED_SHA" != "$HEAD_SHA" ]; then
 fi
 echo "[pre-push] Review stamp valid ($HEAD_SHA)"
 
+# API-edit security backstop (WS4): the DURABLE, syntax-independent gate. The
+# in-session PreToolUse push guard matches the `git push` command string, which
+# global-option forms (`git -C . push`) can evade. This check runs at the one
+# chokepoint git guarantees regardless of how push was invoked: if the marker is
+# non-empty, an API-surface edit has not been cleared by a post-edit
+# security-auditor run (review-stamp clears it only with correct ordering). Block.
+API_MARKER=".claude/.api-edit-pending"
+if [ -s "$API_MARKER" ]; then
+  echo ""
+  echo "BLOCKED: unaudited API-surface edit pending ($API_MARKER non-empty)."
+  echo "  An edit to app/api/**, lib/rate-limit.ts, or proxy.ts has not been"
+  echo "  covered by a security-auditor dispatch since the edit."
+  echo "  Dispatch security-auditor, run the full battery, then: pnpm review:stamp"
+  echo "  (review:stamp clears this marker once an audit post-dates the edit.)"
+  sed 's/^/    /' "$API_MARKER"
+  exit 1
+fi
+
 # Two-tier hook strategy (audit Standard 9): heavy gates run ONCE before
 # push instead of once per commit. Same safety net as the prior per-commit
 # chain (typecheck + validate-content + client-naming + tests) at a fraction

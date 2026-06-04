@@ -3,11 +3,54 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  agentDispatchedAfter,
   agentsDispatchedSince,
+  containsInToolResultSince,
   containsSince,
   lastUserCommitMarker,
   readTranscript,
 } from '../../scripts/lib/transcript.mjs';
+
+/** Agent-dispatch record at a given ISO timestamp. */
+function agentAt(subagentType: string, iso: string) {
+  return {
+    type: 'assistant',
+    timestamp: iso,
+    message: {
+      content: [{ type: 'tool_use', name: 'Agent', input: { subagent_type: subagentType } }],
+    },
+  };
+}
+
+describe('agentDispatchedAfter (ordering)', () => {
+  it('is true only when the dispatch timestamp is strictly after the boundary', () => {
+    const records = [agentAt('security-auditor', '2026-06-04T10:00:00Z')];
+    expect(agentDispatchedAfter(records, 'security-auditor', '2026-06-04T09:00:00Z')).toBe(true);
+    expect(agentDispatchedAfter(records, 'security-auditor', '2026-06-04T11:00:00Z')).toBe(false);
+  });
+  it('ignores a different agent and an unparseable boundary', () => {
+    const records = [agentAt('performance-engineer', '2026-06-04T10:00:00Z')];
+    expect(agentDispatchedAfter(records, 'security-auditor', '2026-06-04T09:00:00Z')).toBe(false);
+    expect(agentDispatchedAfter(records, 'performance-engineer', 'not-a-date')).toBe(false);
+  });
+});
+
+describe('containsInToolResultSince (anti-spoof)', () => {
+  const passInToolResult = {
+    type: 'user',
+    message: { content: [{ type: 'tool_result', content: 'report\nGATE_RESULT: PASS\n' }] },
+  };
+  const passInProse = {
+    type: 'assistant',
+    message: { content: [{ type: 'text', text: 'the gate needs GATE_RESULT: PASS' }] },
+  };
+  it('matches the sentinel inside a tool_result block', () => {
+    expect(containsInToolResultSince([passInToolResult], 'GATE_RESULT: PASS', -1)).toBe(true);
+  });
+  it('does NOT match the sentinel quoted in plain prose (spoof attempt)', () => {
+    expect(containsInToolResultSince([passInProse], 'GATE_RESULT: PASS', -1)).toBe(false);
+  });
+});
 
 /**
  * Build a JSONL transcript file from an array of records and return its path.

@@ -29,7 +29,10 @@ PASSED=$(node -e "
 import('./scripts/lib/transcript.mjs').then(m => {
   const recs = m.readTranscript(process.argv[1]);
   const ran = m.agentsDispatchedSince(recs, -1).includes('architect-reviewer');
-  const pass = m.containsSince(recs, 'GATE_RESULT: PASS', -1);
+  // Require GATE_RESULT: PASS inside a tool_result block (the architect's
+  // returned report), not anywhere in conversation prose, so quoting the
+  // sentinel cannot spoof a FAILed review into a pass.
+  const pass = m.containsInToolResultSince(recs, 'GATE_RESULT: PASS', -1);
   process.stdout.write(ran && pass ? 'yes' : 'no');
 }).catch(() => process.stdout.write('no'));
 " "$TRANSCRIPT" 2>/dev/null || echo "no")

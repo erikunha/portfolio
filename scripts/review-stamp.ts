@@ -21,10 +21,15 @@
 // rare parallel-session misresolve.
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { agentsDispatchedSince, lastUserCommitMarker, readTranscript } from './lib/transcript.mjs';
+import {
+  agentDispatchedAfter,
+  agentsDispatchedSince,
+  lastUserCommitMarker,
+  readTranscript,
+} from './lib/transcript.mjs';
 
 /**
  * The five-agent review battery as ROLES, each satisfied by ANY of its accepted
@@ -163,10 +168,19 @@ function main(): void {
   const headSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   writeFileSync('.review-passed', headSha);
 
-  // The battery includes security-auditor; a passing stamp confirms it ran this
-  // cycle, so clear the API-edit marker to prevent the push guard double-blocking.
+  // Clear the API-edit marker ONLY if security-auditor was dispatched AFTER the
+  // most recent marker entry (ordering): a stale pre-edit audit must not clear a
+  // later edit. The durable .husky/pre-push gate blocks on ANY non-empty marker,
+  // so incorrectly clearing it here would silently defeat that gate — hence the
+  // strict timestamp check rather than "security-auditor ran at some point."
   const apiMarker = join('.claude', '.api-edit-pending');
-  if (existsSync(apiMarker)) rmSync(apiMarker, { force: true });
+  if (existsSync(apiMarker)) {
+    const lines = readFileSync(apiMarker, 'utf8').trim().split('\n').filter(Boolean);
+    const latestTs = lines.at(-1)?.split('\t')[0] ?? '';
+    if (latestTs && agentDispatchedAfter(records, 'security-auditor', latestTs)) {
+      rmSync(apiMarker, { force: true });
+    }
+  }
 
   console.log(
     `✓ review:stamp written (${headSha}) — all five battery agents dispatched this cycle.`,

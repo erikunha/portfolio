@@ -142,3 +142,63 @@ export function containsSince(records, needle, boundaryIndex) {
   }
   return false;
 }
+
+/**
+ * Whether `needle` appears inside a tool_result content block (the shape a
+ * dispatched subagent's returned report takes) STRICTLY AFTER the boundary.
+ * Tighter than `containsSince`: it ignores the string appearing in the
+ * operator's own prose / instruction quotes, so an architect-reviewer that
+ * returned FAIL cannot be spoofed into a PASS by the literal `GATE_RESULT: PASS`
+ * showing up elsewhere in the conversation. Scans `tool_result` items and any
+ * record whose serialized `type` is `tool_result`.
+ *
+ * @param {Array<Record<string, unknown>>} records
+ * @param {string} needle
+ * @param {number} boundaryIndex
+ * @returns {boolean}
+ */
+export function containsInToolResultSince(records, needle, boundaryIndex) {
+  for (let index = 0; index < records.length; index++) {
+    if (index <= boundaryIndex) continue;
+    const record = records[index];
+    const message =
+      record && typeof record === 'object' ? /** @type {any} */ (record).message : undefined;
+    const content = message && typeof message === 'object' ? message.content : undefined;
+    if (!Array.isArray(content)) continue;
+    for (const item of content) {
+      if (item && typeof item === 'object' && item.type === 'tool_result') {
+        if (JSON.stringify(item).includes(needle)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Whether an Agent dispatch of `subagentType` occurs in a record whose ISO
+ * `timestamp` is strictly greater than `afterIso`. Used to enforce ORDERING:
+ * a security-auditor dispatch only counts if it happened AFTER the most recent
+ * API-edit marker entry (otherwise a stale pre-edit audit would falsely clear
+ * the marker). Records without a parseable timestamp are ignored (conservative:
+ * an unstamped dispatch cannot prove it ran after the edit).
+ *
+ * @param {Array<Record<string, unknown>>} records
+ * @param {string} subagentType
+ * @param {string} afterIso ISO-8601 timestamp; the dispatch must be strictly after it
+ * @returns {boolean}
+ */
+export function agentDispatchedAfter(records, subagentType, afterIso) {
+  const afterMs = Date.parse(afterIso);
+  if (Number.isNaN(afterMs)) return false;
+  for (const record of records) {
+    const ts = record && typeof record === 'object' ? /** @type {any} */ (record).timestamp : null;
+    const tsMs = typeof ts === 'string' ? Date.parse(ts) : Number.NaN;
+    if (Number.isNaN(tsMs) || tsMs <= afterMs) continue;
+    for (const tu of toolUses(record)) {
+      if (tu.name !== 'Agent') continue;
+      const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
+      if (input.subagent_type === subagentType) return true;
+    }
+  }
+  return false;
+}

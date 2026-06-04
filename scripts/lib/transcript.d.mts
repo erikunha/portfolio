@@ -16,3 +16,15 @@ export function containsSince(
   needle: string,
   boundaryIndex: number,
 ): boolean;
+
+export function containsInToolResultSince(
+  records: TranscriptRecord[],
+  needle: string,
+  boundaryIndex: number,
+): boolean;
+
+export function agentDispatchedAfter(
+  records: TranscriptRecord[],
+  subagentType: string,
+  afterIso: string,
+): boolean;
