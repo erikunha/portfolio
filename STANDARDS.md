@@ -281,7 +281,13 @@ off-keyword and asserts the dependencies that should *not* run were not
 called); the SYSTEM prompt is held by `__tests__/system-prompt.test.ts` (asserts
 no phone-number pattern, asserts the 1024-token cache threshold still clears).
 The "no dead CSP directive" and "PII minimization" rules are also enforced by
-PR review and the `security-auditor` dispatch on any `app/api/` change.
+PR review and the `security-auditor` dispatch on any `app/api/` change. That
+dispatch is itself mechanically gated: `.claude/hooks/api-edit-marker.sh`
+(PostToolUse) records a marker when `app/api/**`, `lib/rate-limit.ts`, or
+`proxy.ts` is edited, and `.claude/hooks/api-security-push-guard.sh` (PreToolUse
+Bash) blocks the next `git push` (`exit 2`) until the transcript shows a
+`security-auditor` dispatch following that marker. Boundary: the gate proves the
+auditor was *dispatched* after the edit, not that its findings were resolved.
 
 ---
 
