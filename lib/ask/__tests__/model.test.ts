@@ -111,9 +111,16 @@ describe('ASK_MODEL — single source of truth', () => {
     // behavioral-test-allow: WS1 no-drift invariant — the model literal must
     // exist in a single source file so route.ts and the eval harness import it.
     const files = ['app/api/ask/route.ts', 'scripts/ask-eval.ts', 'lib/ask/model.ts'];
-    const literal = `'${ASK_MODEL}'`;
+    // Match the literal in ANY quote style (' " `) so a re-introduced literal
+    // can't bypass the no-drift guard by switching quotes. Scan code only —
+    // strip comments first so a documentation mention (e.g. a backtick code-span
+    // referencing the model in a comment) is not a false positive.
+    const stripComments = (s: string): string =>
+      s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    const escaped = ASK_MODEL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const literalRe = new RegExp(`['"\`]${escaped}['"\`]`);
     const hits = files.filter((f) =>
-      readFileSync(join(process.cwd(), f), 'utf8').includes(literal),
+      literalRe.test(stripComments(readFileSync(join(process.cwd(), f), 'utf8'))),
     );
     expect(hits).toEqual(['lib/ask/model.ts']);
   });
