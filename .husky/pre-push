@@ -39,3 +39,26 @@ echo "[pre-push] Review stamp valid ($HEAD_SHA)"
 # of the per-commit DX tax. `pnpm verify` is the manual equivalent.
 echo "[pre-push] Running verify chain (typecheck + validate-content + client-naming + tests)..."
 pnpm verify
+
+# Runtime gates for non-docs pushes (WS4). CLAUDE.md requires `pnpm gates:runtime`
+# (build + LHCI + axe + E2E) before any push touching non-docs files; the prior
+# hook ran `verify` only, leaving this honor-system. Now enforced. Docs-only
+# pushes skip; SKIP_RUNTIME_GATES=1 bypasses deliberately (loudly logged).
+RANGE_BASE=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "origin/main")
+CHANGED=$(git diff --name-only "$RANGE_BASE"..HEAD 2>/dev/null || git diff --name-only origin/main..HEAD 2>/dev/null || echo "")
+NON_DOCS=$(printf '%s\n' "$CHANGED" | grep -vE '(\.md$|^content/|^docs/)' | grep -v '^$' || true)
+if [ -n "${SKIP_RUNTIME_GATES:-}" ]; then
+  echo ""
+  echo "########################################################################"
+  echo "# [pre-push] SKIP_RUNTIME_GATES=1 set — gates:runtime DELIBERATELY SKIPPED."
+  echo "# This bypass is logged. CI still runs the runtime gates as required jobs."
+  echo "########################################################################"
+  echo ""
+elif [ -z "$NON_DOCS" ]; then
+  echo "[pre-push] Docs-only push — skipping gates:runtime (verify already ran)."
+else
+  echo "[pre-push] Non-docs change — running gates:runtime..."
+  printf '%s\n' "$NON_DOCS" | sed 's/^/  changed: /'
+  echo "[pre-push] Bypass deliberately with: SKIP_RUNTIME_GATES=1 git push ..."
+  if [ -d ".next" ]; then pnpm gates:runtime --skip-build; else pnpm gates:runtime; fi
+fi

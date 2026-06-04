@@ -30,6 +30,19 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/bash-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/api-security-push-guard.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/architect-gate.sh"
           }
         ]
       }
@@ -45,6 +58,10 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/css-token-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/api-edit-marker.sh"
           }
         ]
       }

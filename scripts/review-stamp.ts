@@ -26,14 +26,25 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { agentsDispatchedSince, lastUserCommitMarker, readTranscript } from './lib/transcript.mjs';
 
-/** The five-agent review battery, as their captured `subagent_type` strings. */
-export const BATTERY = [
-  'pr-review-toolkit:review-pr',
-  'accessibility-tester',
-  'security-auditor',
-  'performance-engineer',
-  'dependency-manager',
-] as const;
+/**
+ * The five-agent review battery as ROLES, each satisfied by ANY of its accepted
+ * `subagent_type` strings. The strings were captured from real session
+ * transcripts (2026-06-04). The code-review role is dispatched as EITHER the
+ * orchestrator skill's agent (`pr-review-toolkit:review-pr`) OR the reviewer
+ * agent directly (`pr-review-toolkit:code-reviewer`) — both appear live, so the
+ * role accepts either; pinning a single string here over-blocks the real
+ * workflow (the bug this role model fixes).
+ */
+export const BATTERY_ROLES: ReadonlyArray<{ role: string; accepts: readonly string[] }> = [
+  {
+    role: 'code-review',
+    accepts: ['pr-review-toolkit:review-pr', 'pr-review-toolkit:code-reviewer'],
+  },
+  { role: 'accessibility', accepts: ['accessibility-tester'] },
+  { role: 'security', accepts: ['security-auditor'] },
+  { role: 'performance', accepts: ['performance-engineer'] },
+  { role: 'dependencies', accepts: ['dependency-manager'] },
+];
 
 type TranscriptRecord = Record<string, unknown>;
 
@@ -47,9 +58,10 @@ export interface StampDecision {
  * Pure decision: given the transcript records (already resolved + parsed) and
  * whether resolution succeeded, decide whether to write the stamp.
  *
- * - transcriptResolved === false  -> refuse, report the whole battery missing
+ * - transcriptResolved === false  -> refuse, report every role missing
  *   (fail-closed; the caller could not even find the transcript).
- * - else scope to dispatches AFTER the last commit and require the full battery.
+ * - else scope to dispatches AFTER the last commit and require every role to be
+ *   satisfied by at least one of its accepted subagent_type strings.
  */
 export function decideStamp(args: {
   records: TranscriptRecord[];
@@ -58,45 +70,76 @@ export function decideStamp(args: {
   if (!args.transcriptResolved) {
     return {
       write: false,
-      missing: [...BATTERY],
+      missing: BATTERY_ROLES.map((r) => r.role),
       reason:
         'Could not resolve the session transcript (fail-closed). Set REVIEW_STAMP_TRANSCRIPT=<abs path> to point at it.',
     };
   }
   const boundary = lastUserCommitMarker(args.records);
   const dispatched = new Set<string>(agentsDispatchedSince(args.records, boundary));
-  const missing = BATTERY.filter((agent) => !dispatched.has(agent));
+  const missing = BATTERY_ROLES.filter(
+    (r) => !r.accepts.some((agent) => dispatched.has(agent)),
+  ).map((r) => r.role);
   if (missing.length > 0) {
     return {
       write: false,
       missing,
-      reason: `Review battery incomplete since last commit. Missing: ${missing.join(', ')}.`,
+      reason: `Review battery incomplete since last commit. Missing role(s): ${missing.join(', ')}.`,
     };
   }
-  return { write: true, missing: [], reason: 'All five battery agents dispatched this cycle.' };
+  return { write: true, missing: [], reason: 'All five battery roles dispatched this cycle.' };
 }
 
 /**
- * Resolve the newest session transcript for the current working directory.
- * Heuristic: ~/.claude/projects/<cwd-with-slashes-as-dashes>/<newest>.jsonl by
- * mtime. Honors REVIEW_STAMP_TRANSCRIPT for an explicit override. Returns null
+ * Candidate Claude project dirs to search for the session transcript, in
+ * priority order. The slug is the absolute path with `/` -> `-`.
+ *
+ * WORKTREE CAVEAT (verified live 2026-06-04): when the session runs in a git
+ * worktree, Claude Code stores the MAIN session transcript under the BASE repo
+ * slug (`-...-erik-portifolio/<uuid>.jsonl`), NOT the worktree slug — the
+ * worktree-slug dir holds only a `<uuid>/subagents/` subtree. Deriving the slug
+ * from cwd alone (the worktree) finds nothing and fails closed forever. So we
+ * also derive the main-repo root from the common git dir and search its slug.
+ */
+function candidateProjectDirs(): string[] {
+  const slugDir = (abs: string): string =>
+    join(homedir(), '.claude', 'projects', abs.replace(/\//g, '-'));
+  const dirs = [slugDir(process.cwd())];
+  try {
+    const gitCommonDir = execFileSync(
+      'git',
+      ['rev-parse', '--path-format=absolute', '--git-common-dir'],
+      { encoding: 'utf8' },
+    ).trim();
+    // <mainRepoRoot>/.git -> <mainRepoRoot>; only adds a distinct base slug
+    // when cwd is a worktree (otherwise it equals the cwd slug, deduped below).
+    const mainRoot = gitCommonDir.replace(/\/\.git\/?$/, '');
+    if (mainRoot) dirs.push(slugDir(mainRoot));
+  } catch {
+    // No git / not resolvable: the cwd slug stands alone.
+  }
+  return [...new Set(dirs)];
+}
+
+/**
+ * Resolve the newest session transcript. Honors REVIEW_STAMP_TRANSCRIPT for an
+ * explicit override. Searches each candidate project dir (cwd slug + base-repo
+ * slug for worktrees) for the newest top-level `*.jsonl` by mtime. Returns null
  * when nothing can be resolved (caller fails closed).
  */
 function resolveTranscriptPath(): string | null {
   const override = process.env.REVIEW_STAMP_TRANSCRIPT;
   if (override) return existsSync(override) ? override : null;
 
-  const cwd = process.cwd();
-  const slug = cwd.replace(/\//g, '-');
-  const projectDir = join(homedir(), '.claude', 'projects', slug);
-  if (!existsSync(projectDir)) return null;
-
   let newest: { path: string; mtimeMs: number } | null = null;
-  for (const entry of readdirSync(projectDir)) {
-    if (!entry.endsWith('.jsonl')) continue;
-    const full = join(projectDir, entry);
-    const { mtimeMs } = statSync(full);
-    if (!newest || mtimeMs > newest.mtimeMs) newest = { path: full, mtimeMs };
+  for (const projectDir of candidateProjectDirs()) {
+    if (!existsSync(projectDir)) continue;
+    for (const entry of readdirSync(projectDir)) {
+      if (!entry.endsWith('.jsonl')) continue;
+      const full = join(projectDir, entry);
+      const { mtimeMs } = statSync(full);
+      if (!newest || mtimeMs > newest.mtimeMs) newest = { path: full, mtimeMs };
+    }
   }
   return newest ? newest.path : null;
 }
