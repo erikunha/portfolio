@@ -2,7 +2,8 @@ import { streamText } from 'ai';
 import type { NextRequest } from 'next/server';
 import { INJECTION_RE } from '@/lib/ask/injection';
 import { ASK_MODEL } from '@/lib/ask/model';
-import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
+import { createStreamGuard, validateAnswer } from '@/lib/ask/output-guard';
+import { PROMPT_VERSION, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log';
 import { env } from '@/lib/env';
 import { hashIp } from '@/lib/ip-hash';
@@ -138,7 +139,7 @@ export async function POST(req: NextRequest) {
   const startedAt = Date.now();
   const ip = getClientIp(req);
   const ipHash = await hashIp(ip);
-  log.info('ask request received', { requestId, ipHash });
+  log.info('ask request received', { requestId, ipHash, promptVersion: PROMPT_VERSION });
 
   const earlyExitPersist = (status: AskInteractionStatus): void =>
     void persistAskInteraction({
@@ -251,6 +252,11 @@ export async function POST(req: NextRequest) {
     model: ASK_MODEL,
     maxOutputTokens: MAX_OUTPUT_TOKENS,
     abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    // Emit OpenTelemetry spans the Vercel AI Gateway dashboard consumes for
+    // token/latency/spend visibility. This is the live-telemetry half of WS2;
+    // it no-ops if the gateway has no span collector wired, so there is no
+    // hot-path risk. The Langfuse span processor (env-flagged) is WS5.
+    experimental_telemetry: { isEnabled: true },
     messages: [
       {
         role: 'system',
@@ -300,6 +306,12 @@ export async function POST(req: NextRequest) {
   let collectedAnswerText = '';
   let status: AskInteractionStatus = 'completed';
 
+  // Layer-1 egress guard: one instance per request, state is instance-local.
+  // It inspects each delta BEFORE enqueue and trips on a system-prompt-leak
+  // marker (cross-chunk-boundary safe) or a wire-byte runaway. A violation
+  // routes to the SAME sentinel abort path the watchdog uses — no new plumbing.
+  const guard = createStreamGuard();
+
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
       // Race each iterator step against a mid-stream deadline. A bare
@@ -333,6 +345,22 @@ export async function POST(req: NextRequest) {
           }
           if (next.done) break;
           const text = next.value;
+          // LAYER 1: inspect the delta BEFORE enqueuing it. On a violation the
+          // offending chunk is NOT enqueued: we write the sentinel and break to
+          // the shared finally (close + iterator.return + settleAndPersist),
+          // the identical exit the watchdog catch takes. The post-marker text
+          // therefore never reaches the wire.
+          const verdict = guard.inspect(text);
+          if (!verdict.ok) {
+            status = 'errored';
+            log.info('ask output-guard layer-1 abort', {
+              requestId,
+              reason: verdict.reason,
+              promptVersion: PROMPT_VERSION,
+            });
+            controller.enqueue(enc.encode(`${STREAM_ERR_SENTINEL}output guard: ${verdict.reason}`));
+            break;
+          }
           controller.enqueue(enc.encode(text));
           if (collectedAnswerText.length < 1000) {
             // Slice the delta to only the remaining budget before concat so
@@ -449,6 +477,19 @@ export async function POST(req: NextRequest) {
     // `meta` leaves cacheRead = cacheCreation = 0, so this is just `inputTokens`
     // — the refund stays correct whenever real `usage` is known.
     const totalBilledInput = inputTokens + cacheReadTokens + cacheCreationTokens;
+    // LAYER 2: post-hoc audit of the full buffered answer. Layer 1 already
+    // aborted egregious cases mid-stream; this is the defense-in-depth record
+    // and the regression-signal feed. Pure + fail-open — it never throws into
+    // the response path (and the whole settle is try/caught upstream anyway).
+    // A non-clean verdict on an answer Layer 1 let through is a Layer-1-miss
+    // alarm. It is logged and persisted on the interaction record.
+    const guardVerdict = validateAnswer(collectedAnswerText, status);
+    log.info('ask output-guard', {
+      requestId,
+      clean: guardVerdict.clean,
+      findings: guardVerdict.findings,
+      promptVersion: PROMPT_VERSION,
+    });
     log.info('ask completed', {
       requestId,
       inputTokens,
@@ -458,6 +499,7 @@ export async function POST(req: NextRequest) {
       cacheHitRate: totalBilledInput > 0 ? cacheReadTokens / totalBilledInput : 0,
       usageResolved,
       metaResolved,
+      promptVersion: PROMPT_VERSION,
     });
     // Refund the unused portion of the reservation. Gated on `usage` ALONE:
     // skipped only when real usage could not be resolved (a stalled stream
@@ -479,6 +521,7 @@ export async function POST(req: NextRequest) {
       outputTokens,
       durationMs: Date.now() - startedAt,
       status,
+      guard: guardVerdict,
     });
   }
 

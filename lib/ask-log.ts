@@ -9,6 +9,7 @@
 
 import 'server-only';
 
+import type { PostHocVerdict } from '@/lib/ask/output-guard';
 import { log } from '@/lib/log';
 import { getRedis } from '@/lib/rate-limit';
 
@@ -31,6 +32,10 @@ export type AskInteraction = {
   outputTokens: number;
   durationMs: number;
   status: AskInteractionStatus;
+  // WS2: Layer-2 egress-guard verdict over the buffered answer. Optional and
+  // additive — older records (and early-exit persists) omit it. Carried into
+  // the 90-day KV audit so a flagged answer is auditable from the record alone.
+  guard?: PostHocVerdict;
 };
 
 export async function persistAskInteraction(interaction: AskInteraction): Promise<void> {
