@@ -92,6 +92,9 @@ jobs:
       - name: Component docs coverage
         run: pnpm check:component-docs
 
+      - name: Doc-drift gate (ARCHITECTURE.md tree vs disk)
+        run: pnpm check:doc-drift
+
       - name: Contrast check
         run: pnpm lint:contrast
 
