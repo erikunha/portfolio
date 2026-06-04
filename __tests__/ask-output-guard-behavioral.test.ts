@@ -83,7 +83,9 @@ function makeRequest(question: string): NextRequest {
 
 describe('/api/ask behavioral — Layer-1 egress guard aborts a cross-chunk leak', () => {
   beforeEach(() => {
-    process.env.ASK_ENABLED = 'true';
+    // Use stubEnv so the suite's vi.unstubAllEnvs() cleanup actually reverts it
+    // (a direct process.env assignment leaks across tests / makes them ordered).
+    vi.stubEnv('ASK_ENABLED', 'true');
     vi.resetModules();
     mockStreamText.mockReset();
   });

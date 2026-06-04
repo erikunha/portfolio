@@ -181,8 +181,14 @@ export function createStreamGuard(): StreamGuard {
     inspect(chunk: string): GuardVerdict {
       try {
         // Count raw chunk.length, NOT haystack length, so the carried window is
-        // never double-counted against the cap.
+        // never double-counted against the cap. Check the runaway cap FIRST —
+        // before any per-chunk normalization/scan — so a pathologically large
+        // delta or a looping upstream is short-circuited WITHOUT building a
+        // chunk-sized normalized buffer, keeping the guard allocation-bounded.
         length += chunk.length;
+        if (length > MAX_ANSWER_CHARS) {
+          return { ok: false, reason: 'length' };
+        }
 
         const normChunk = normalizeStep(chunk);
         if (normChunk.length > 0) {
@@ -193,10 +199,6 @@ export function createStreamGuard(): StreamGuard {
           // Carry the last WINDOW normalized chars so a marker straddling the
           // next seam is reconstructable. Bounded, not O(answer length).
           window = haystack.slice(-WINDOW);
-        }
-
-        if (length > MAX_ANSWER_CHARS) {
-          return { ok: false, reason: 'length' };
         }
         return { ok: true };
       } catch {
