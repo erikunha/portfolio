@@ -60,9 +60,12 @@ export const LEAK_MARKERS: readonly string[] = [
 ];
 
 /**
- * Wire-byte runaway backstop, independent of the route's MAX_OUTPUT_TOKENS
- * cap. A model emitting many short tokens could approach the token cap with an
- * over-length char count, or a malformed gateway stream could loop. 4000 chars
+ * Character-count runaway backstop, independent of the route's MAX_OUTPUT_TOKENS
+ * cap. Measured in JS string length (UTF-16 code units via `chunk.length`), NOT
+ * UTF-8 bytes — this is a coarse runaway/abuse guard, not a precise byte budget,
+ * so code-unit counting is sufficient and avoids per-chunk Buffer allocation. A
+ * model emitting many short tokens could approach the token cap with an
+ * over-length character count, or a malformed gateway stream could loop. 4000
  * sits far above a normal answer (the prompt instructs "under 200 words" —
  * roughly 1100-1400 chars), so this is a runaway guard, not a content rule.
  * Enforced by Layer 1 against the un-truncated stream length. If legitimate

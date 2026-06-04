@@ -12,6 +12,11 @@
 // async-at-module-load hazard that `crypto.subtle.digest` (Promise-returning)
 // would introduce. No new dependency: hashing uses the platform crypto.
 
+// node:crypto must never reach a client/edge bundle; server-only makes Next.js
+// fail fast if a client component imports this helper (directly or transitively).
+// The eval harness + unit tests alias server-only to an empty mock, so the
+// Node/tsx paths that legitimately import it are unaffected.
+import 'server-only';
 import { createHash } from 'node:crypto';
 
 /**

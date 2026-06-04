@@ -317,8 +317,9 @@ export async function POST(req: NextRequest) {
 
   // Layer-1 egress guard: one instance per request, state is instance-local.
   // It inspects each delta BEFORE enqueue and trips on a system-prompt-leak
-  // marker (cross-chunk-boundary safe) or a wire-byte runaway. A violation
-  // routes to the SAME sentinel abort path the watchdog uses — no new plumbing.
+  // marker (cross-chunk-boundary safe) or a character-count runaway (UTF-16
+  // code units, not bytes — see MAX_ANSWER_CHARS). A violation routes to the
+  // SAME sentinel abort path the watchdog uses — no new plumbing.
   const guard = createStreamGuard();
 
   const readable = new ReadableStream<Uint8Array>({

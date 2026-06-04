@@ -34,7 +34,11 @@ export type AskInteraction = {
   status: AskInteractionStatus;
   // WS2: Layer-2 egress-guard verdict over the buffered answer. Optional and
   // additive — older records (and early-exit persists) omit it. Carried into
-  // the 90-day KV audit so a flagged answer is auditable from the record alone.
+  // the 90-day KV audit as a Layer-2 signal. NOTE: this is NOT a complete leak
+  // ledger — a Layer-1 abort deliberately does not buffer the offending chunk,
+  // so a guard-aborted request can persist a `clean` Layer-2 verdict; the
+  // Layer-1 reason lives in the `ask output-guard layer-1 abort` log line, not
+  // here. Read this field as "Layer-2 post-hoc scan result," not "all leaks."
   guard?: PostHocVerdict;
 };
 
