@@ -11,6 +11,7 @@ import { Resend } from 'resend';
 import { z } from 'zod';
 
 import { isHoneypotTripped } from '@/lib/contact-validation';
+import { env } from '@/lib/env';
 import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
 import { getContactLimit, getRedis } from '@/lib/rate-limit';
@@ -39,7 +40,7 @@ const ContactSchema = z.object({
 
 let _resend: Resend | undefined;
 function getResend(): Resend {
-  const key = process.env.RESEND_API_KEY;
+  const key = env.RESEND_API_KEY;
   if (!key) throw new Error('RESEND_API_KEY is not set');
   _resend ??= new Resend(key);
   return _resend;

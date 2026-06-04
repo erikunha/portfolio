@@ -15,23 +15,59 @@
  * applied to Turbopack dev builds anyway — this postinstall script is the sole
  * mechanism stripping polyfills from webpack production builds. See DECISIONS.md.
  *
- * Safe to re-run: writes a fixed string, idempotent.
+ * Hardening (WS1, 2026-06-04): the prior version exited 0 silently when the
+ * target was missing. If a Next upgrade reorganizes the polyfill path, that
+ * silent no-op lets the Lighthouse penalty return with NO signal. This version
+ * fails loudly (non-zero exit) on an absent or unexpectedly-shaped target, and
+ * stays idempotent on re-install. Order matters: the idempotency check runs
+ * BEFORE the shape assert, because an already-stripped file is tiny (73 bytes)
+ * and would otherwise trip the size guard on every subsequent install.
  */
 
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const target = resolve('node_modules/next/dist/build/polyfills/polyfill-module.js');
 
+// Sentinel = the first bytes this script writes; used for idempotency detection.
+const SENTINEL = '// Stripped by scripts/strip-next-polyfills.mjs';
+// WHY these thresholds: the real unstripped bundle is a ~14 KiB core-js build;
+// the stripped form is 73 bytes. A 1 KiB floor cleanly separates the two. The
+// `Object.defineProperty` token is the fundamental primitive every core-js
+// polyfill uses (verified present in the sibling `polyfill-nomodule.js` bundle),
+// so its absence means Next reshaped the bundle and the strip must be re-checked
+// rather than blindly applied. A false-positive block here is a loud, one-line
+// fix (update the assertion); a false-negative silent skip is the bug WS1 closes.
+const MIN_SIZE_BYTES = 1024;
+const KNOWN_TOKEN = 'Object.defineProperty';
+
 if (!existsSync(target)) {
-  console.log('[strip-polyfills] polyfill-module.js not found — skipping');
+  console.error(
+    `[strip-polyfills] polyfill-module.js not found at ${target}. ` +
+      'Next.js may have reorganized the polyfill path — re-check the target ' +
+      'before relying on the Lighthouse Best-Practices score.',
+  );
+  process.exit(1);
+}
+
+const current = readFileSync(target, 'utf8');
+
+// Idempotency FIRST (before the shape assert): a second install sees the tiny
+// already-stripped file, which would otherwise fail the MIN_SIZE_BYTES guard.
+if (current.startsWith(SENTINEL)) {
+  console.log('[strip-polyfills] already stripped — skipping');
   process.exit(0);
 }
 
-writeFileSync(
-  target,
-  '// Stripped by scripts/strip-next-polyfills.mjs — modern browsers only\n',
-  'utf8',
-);
+if (current.length < MIN_SIZE_BYTES || !current.includes(KNOWN_TOKEN)) {
+  console.error(
+    `[strip-polyfills] unexpected shape at ${target} ` +
+      `(size ${current.length}B, token "${KNOWN_TOKEN}" ${
+        current.includes(KNOWN_TOKEN) ? 'present' : 'absent'
+      }). Next.js likely changed the polyfill bundle — re-verify before stripping.`,
+  );
+  process.exit(1);
+}
 
+writeFileSync(target, `${SENTINEL} — modern browsers only\n`, 'utf8');
 console.log('[strip-polyfills] Next.js polyfill bundle cleared');

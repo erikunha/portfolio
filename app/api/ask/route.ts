@@ -1,8 +1,10 @@
 import { streamText } from 'ai';
 import type { NextRequest } from 'next/server';
 import { INJECTION_RE } from '@/lib/ask/injection';
+import { ASK_MODEL } from '@/lib/ask/model';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log';
+import { env } from '@/lib/env';
 import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
 import {
@@ -37,15 +39,13 @@ import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 // MID_STREAM_TIMEOUT_MS watchdog in the ReadableStream consumer below.
 const REQUEST_TIMEOUT_MS = 30_000;
 
-// Gateway model string. Plain `provider/model` form routes through the AI
-// Gateway without wiring `@ai-sdk/anthropic` directly — the Vercel-preferred
-// shape, and it still carries `providerOptions.anthropic.cacheControl`.
-const GATEWAY_MODEL = 'anthropic/claude-haiku-4-5';
+// Gateway model string: the single source of truth lives in `lib/ask/model.ts`
+// so the eval harness grades the exact model the route ships.
 
 // Module-eval log: wrapped in try/catch so logger init failures (e.g. pino
 // transport thread failing to start) never block the cold-start path.
 try {
-  log.info('kill-switch on cold start', { askEnabled: process.env.ASK_ENABLED ?? 'unset' });
+  log.info('kill-switch on cold start', { askEnabled: env.ASK_ENABLED ?? 'unset' });
 } catch {
   // Logger init failed; do not block cold-start path.
   console.error('[ask] logger unavailable on cold start');
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
   // Asymmetry is intentional: a typo during a billing/abuse emergency must STILL
   // disable the route. The cost of "stays on accidentally" during a cost incident
   // is exactly what this switch exists to prevent.
-  const askFlag = (process.env.ASK_ENABLED ?? '').trim().toLowerCase();
+  const askFlag = (env.ASK_ENABLED ?? '').trim().toLowerCase();
   if (OFF_KEYWORDS.has(askFlag)) {
     return Response.json(
       { error: 'temporarily unavailable — email erikhenriquealvescunha@gmail.com directly' },
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
     // Only log when credentials are configured — an error then means a real
     // Redis outage. Without credentials (eval CI, local dev) this is expected
     // and logging it on every request would spam.
-    if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) {
       log.error('ask rate-limit check failed, allowing through', { err });
     }
   }
@@ -248,7 +248,7 @@ export async function POST(req: NextRequest) {
   // retries is safe and matches the pre-Gateway `@anthropic-ai/sdk` config.
   // Do NOT pin it to 0: that removes the transient-failure cushion.
   const result = streamText({
-    model: GATEWAY_MODEL,
+    model: ASK_MODEL,
     maxOutputTokens: MAX_OUTPUT_TOKENS,
     abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     messages: [
