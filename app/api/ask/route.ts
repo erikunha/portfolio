@@ -256,7 +256,16 @@ export async function POST(req: NextRequest) {
     // token/latency/spend visibility. This is the live-telemetry half of WS2;
     // it no-ops if the gateway has no span collector wired, so there is no
     // hot-path risk. The Langfuse span processor (env-flagged) is WS5.
-    experimental_telemetry: { isEnabled: true },
+    //
+    // recordInputs/recordOutputs are OFF: the AI SDK defaults BOTH to true,
+    // which would write the raw visitor question (potential PII) and the answer
+    // into ai.prompt.messages / ai.response.text span attributes — bypassing
+    // the hashed-IP, truncated privacy posture of the KV log the moment any
+    // collector (WS5 Langfuse, or the Gateway's own) attaches. Token/latency/
+    // spend metrics are recorded regardless of these flags, so we keep the
+    // observability value without the message bodies. Answer capture for eval,
+    // if ever wanted, goes behind the WS5 env flag with a DECISIONS.md entry.
+    experimental_telemetry: { isEnabled: true, recordInputs: false, recordOutputs: false },
     messages: [
       {
         role: 'system',

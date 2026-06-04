@@ -119,6 +119,34 @@ describe('Layer 1: createStreamGuard — leak detection', () => {
     if (!verdict.ok) expect(verdict.reason).toBe('leak');
   });
 
+  it('catches a reflowed leak SPLIT across a chunk seam (reflow x seam)', () => {
+    // The hard case: whitespace-reflow inflates a marker's raw footprint beyond
+    // the longest-marker length AND a chunk seam lands inside the inflated run.
+    // A raw-byte carry would miss this; the normalized-window carry must not.
+    for (const marker of LEAK_MARKERS) {
+      const reflowed = marker.replace(/ /g, '\n        '); // heavy whitespace inflation
+      for (const k of [3, Math.floor(reflowed.length / 2), reflowed.length - 3]) {
+        const guard = createStreamGuard();
+        const a = guard.inspect(reflowed.slice(0, k));
+        const b = guard.inspect(reflowed.slice(k));
+        const tripped = !a.ok || !b.ok;
+        expect(tripped, `reflow x seam must trip for "${marker}" split@${k}`).toBe(true);
+      }
+    }
+  });
+
+  it('catches a leak padded with zero-width characters (ZWSP/BOM)', () => {
+    // Zero-width chars survive a \s test; the guard strips them by code point so
+    // a marker with one spliced between letters still matches the literal.
+    const marker = LEAK_MARKERS[0] ?? '';
+    const zwsp = String.fromCharCode(0x200b);
+    const padded = [...marker].join(zwsp); // ZWSP between every character
+    const guard = createStreamGuard();
+    const verdict = guard.inspect(`leak: ${padded}`);
+    expect(verdict.ok).toBe(false);
+    if (!verdict.ok) expect(verdict.reason).toBe('leak');
+  });
+
   it('is case-insensitive', () => {
     const marker = LEAK_MARKERS[0] ?? '';
     const guard = createStreamGuard();
@@ -211,11 +239,14 @@ describe('Layer 2: validateAnswer — post-hoc full-answer audit', () => {
     expect(verdict.findings.some((f) => f.kind === 'empty')).toBe(false);
   });
 
-  it('flags an over-length buffered answer', () => {
+  it('does NOT length-check at Layer 2 (wire-length is a Layer-1-only concern)', () => {
+    // The buffer Layer 2 sees is deliberately capped by the route, so a length
+    // finding here could never observe a real over-length answer. Confirm an
+    // over-length-but-clean answer yields no length finding (Layer 1 owns it).
     const answer = 'b'.repeat(MAX_ANSWER_CHARS + 1);
     const verdict = validateAnswer(answer, 'completed');
-    expect(verdict.clean).toBe(false);
-    expect(verdict.findings.some((f) => f.kind === 'length')).toBe(true);
+    expect(verdict.clean).toBe(true);
+    expect(verdict.findings).toEqual([]);
   });
 
   it('fails open (clean, no throw) when given a non-string answer', () => {
