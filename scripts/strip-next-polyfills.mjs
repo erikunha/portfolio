@@ -59,10 +59,13 @@ if (current.startsWith(SENTINEL)) {
   process.exit(0);
 }
 
-if (current.length < MIN_SIZE_BYTES || !current.includes(KNOWN_TOKEN)) {
+// Byte length, not String.length (UTF-16 units), so the threshold matches the
+// "bytes" the message reports even if the bundle ever carries non-ASCII.
+const sizeBytes = Buffer.byteLength(current, 'utf8');
+if (sizeBytes < MIN_SIZE_BYTES || !current.includes(KNOWN_TOKEN)) {
   console.error(
     `[strip-polyfills] unexpected shape at ${target} ` +
-      `(size ${current.length}B, token "${KNOWN_TOKEN}" ${
+      `(size ${sizeBytes}B, token "${KNOWN_TOKEN}" ${
         current.includes(KNOWN_TOKEN) ? 'present' : 'absent'
       }). Next.js likely changed the polyfill bundle — re-verify before stripping.`,
   );

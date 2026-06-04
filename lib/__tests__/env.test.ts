@@ -109,7 +109,12 @@ describe('lib/env.ts — boot-time config integrity', () => {
       if (file.endsWith(`${join('lib', 'env.ts')}`)) continue; // the schema module itself
       const src = readFileSync(file, 'utf8');
       for (const key of MANAGED) {
-        if (src.includes(`process.env.${key}`)) offenders.push(`${file} → process.env.${key}`);
+        // Cover dot- AND bracket-access (process.env.KEY / process.env['KEY'] /
+        // process.env["KEY"]) so a bracket read can't silently bypass the guard.
+        const forms = [`process.env.${key}`, `process.env['${key}']`, `process.env["${key}"]`];
+        if (forms.some((form) => src.includes(form))) {
+          offenders.push(`${file} → process.env.${key}`);
+        }
       }
     }
     expect(offenders, `stray managed process.env reads:\n${offenders.join('\n')}`).toEqual([]);
