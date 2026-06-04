@@ -92,8 +92,10 @@ describe('lib/env.ts — boot-time config integrity', () => {
   it('is the only place managed vars are read from process.env (no stray reads)', () => {
     // behavioral-test-allow: WS1 env-centralization invariant — scan app/ + lib/.
     // Scope is runtime code only. scripts/ (ask-eval.ts, gates-runtime.ts) is
-    // intentionally excluded: lib/env.ts is `server-only` and cannot be imported
-    // by the standalone tsx harnesses, which keep their own direct reads.
+    // intentionally excluded: those standalone tsx harnesses run outside the
+    // Next.js runtime and keep their own direct process.env reads by design.
+    // (They CAN import lib/env.ts — scripts/tsconfig.eval.json aliases
+    // `server-only` — so the exclusion is a scope choice, not an import limit.)
     const roots = ['app', 'lib'];
     const walk = (dir: string): string[] =>
       readdirSync(dir, { withFileTypes: true }).flatMap((e) => {

@@ -11,9 +11,10 @@
 //       boot throw makes the ask route fail to import, so fail-open never runs.
 //     - RESEND_API_KEY is used behind lazy `if (!key) throw` in contact/psi —
 //       a shared boot throw would crash the ask route on a missing email secret.
-//   So this module fails fast at load ONLY on a PRESENT-but-malformed value
-//   (wrong format / empty), naming the offender. Use sites keep their own lazy
-//   throws (and the fail-open wrappers in lib/rate-limit.ts stay).
+//   So this module fails fast at load ONLY on a present, NON-empty, wrong-format
+//   value (e.g. a non-URL Upstash URL), naming the offender. An empty string is
+//   coerced to `undefined` (treated as absent) and never throws. Use sites keep
+//   their own lazy throws (and the fail-open wrappers in lib/rate-limit.ts stay).
 //
 //   ASK_ENABLED and DEPLOY_SALT carry NO default: unset resolves to `undefined`
 //   so the kill switch stays live and ip-hash auto-generates the salt in prod.
