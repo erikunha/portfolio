@@ -5,7 +5,7 @@
 // between call sites (security-adjacent — diverging copies hide subtle bugs).
 //
 // Salt resolution (lazy, on first hashIp call):
-//   1. process.env.DEPLOY_SALT — explicit operator-set value
+//   1. env.DEPLOY_SALT (lib/env.ts) — explicit operator-set value
 //   2. Upstash KV `meta:deploy-salt` — auto-generated on first deploy,
 //      persisted with SETNX so concurrent cold-starts converge on one value
 //   3. 'portfolio' literal — non-production fallback only
@@ -17,6 +17,7 @@
 
 import 'server-only';
 
+import { env } from '@/lib/env';
 import { getRedis } from '@/lib/rate-limit';
 
 const SALT_KEY = 'meta:deploy-salt';
@@ -27,7 +28,7 @@ let resolvePromise: Promise<string> | null = null;
 
 async function resolveSalt(): Promise<string> {
   // Explicit env wins.
-  const envSalt = process.env.DEPLOY_SALT;
+  const envSalt = env.DEPLOY_SALT;
   if (envSalt) return envSalt;
 
   // Non-production: literal fallback for local dev + tests.
@@ -61,7 +62,7 @@ async function resolveSalt(): Promise<string> {
   // honestly rather than silently fall back to a known constant.
   throw new Error(
     'DEPLOY_SALT auto-resolution failed: Upstash did not persist the salt. ' +
-      'Set process.env.DEPLOY_SALT manually as an escape hatch.',
+      'Set the DEPLOY_SALT environment variable manually as an escape hatch.',
   );
 }
 

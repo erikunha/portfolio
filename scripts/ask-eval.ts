@@ -45,6 +45,7 @@ import { generateText } from 'ai';
 import { NextRequest } from 'next/server';
 import { POST } from '@/app/api/ask/route';
 import { ASK_EVAL_CORPUS, type AskEvalItem } from '@/content/ask-eval-corpus';
+import { ASK_MODEL } from '@/lib/ask/model';
 import { getRedis } from '@/lib/rate-limit';
 import { parseStreamChunk } from '@/lib/stream-protocol';
 
@@ -497,7 +498,7 @@ async function main(): Promise<void> {
 
   const aggregate: Aggregate = {
     ts: new Date().toISOString(),
-    featureModel: 'anthropic/claude-haiku-4-5',
+    featureModel: ASK_MODEL,
     judgeModel: JUDGE_MODEL,
     total: graded.length,
     errored: erroredCount,

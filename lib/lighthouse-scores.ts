@@ -1,3 +1,4 @@
+import { env } from '@/lib/env';
 import { log } from '@/lib/log';
 import { getRedis } from './rate-limit';
 
@@ -25,7 +26,7 @@ const CACHE_KEY = (strategy: Strategy) => `lh:scores:${strategy}`;
 export const LIGHTHOUSE_TTL_S = 90_000; // 25 h — survives a missed cron run
 
 async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<LighthouseScores> {
-  const apiKey = process.env.PSI_API_KEY;
+  const apiKey = env.PSI_API_KEY;
   if (!apiKey) throw new Error('PSI_API_KEY is not set');
 
   const psiUrl =

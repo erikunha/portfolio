@@ -1,11 +1,12 @@
 import type { NextRequest } from 'next/server';
 import { Resend } from 'resend';
+import { env } from '@/lib/env';
 import { refreshScores } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
 import { getRedis } from '@/lib/rate-limit';
 
 export async function GET(req: NextRequest): Promise<Response> {
-  const cronSecret = process.env.CRON_SECRET;
+  const cronSecret = env.CRON_SECRET;
   if (!cronSecret || req.headers.get('authorization') !== `Bearer ${cronSecret}`) {
     return new Response('Unauthorized', { status: 401 });
   }
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 
     log.error('psi-refresh failed', { errors });
 
-    const apiKey = process.env.RESEND_API_KEY;
+    const apiKey = env.RESEND_API_KEY;
     if (!apiKey) {
       log.error('psi-refresh: RESEND_API_KEY not set, skipping alert');
     } else {
