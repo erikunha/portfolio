@@ -37,7 +37,7 @@
 | `pnpm ready-to-merge [<pr>]` | Before the repo owner runs `gh pr merge` — runs ci:local + branch-protection + Copilot review + resolved threads + pr-metrics |
 | `pnpm pr-metrics [<pr>]` | During or after PR review — reports Copilot cycle count, size, days open |
 | `pnpm changelog:sync` | After any commit with scope `(design-system)` — regenerates `app/design-system/changelog/page.mdx` from full git history |
-| `pnpm ask:eval` | When maintaining the AI eval harness (corpus/calibration/runner changes) — calibration → corpus → gate, writes `ask:eval:latest`. See `.claude/skills/ai-eval-update` |
+| `pnpm ask:eval` | When maintaining the AI eval harness (corpus/calibration/runner changes) — calibration → corpus → gate, always writes `ask-eval-result.json`; writes `ask:eval:latest` to Upstash Redis only when `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` are set. See `.claude/skills/ai-eval-update` |
 
 ## Engineering context
 
