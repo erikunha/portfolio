@@ -431,4 +431,55 @@ test.describe('cross-cutting', () => {
       'compiled CSS bundle must contain a .mx-chain-mobile::after { display: none } rule',
     ).toBe(true);
   });
+
+  test('7 — mono font ships font-display:swap and preloads (first-paint render guarantee)', async ({
+    page,
+  }) => {
+    await installMockBackend(page, { log: 'accept', forget: 'happy' });
+    await page.goto('/');
+    await page.evaluate(() => document.fonts.ready);
+
+    // Regression guard. The prior value was font-display:'optional', which gives
+    // a ~100ms block period and NO swap period: on a cold cache the woff2 misses
+    // that window, so the browser commits to the fallback for the entire pageview
+    // and never swaps the real font in — the custom font only appeared after a
+    // reload cached it. 'swap' renders the fallback immediately then swaps to the
+    // real font whenever it loads, so the first visit always shows the custom
+    // font. next/font's metric-matched fallback keeps the swap reflow inside the
+    // CLS budget (verified by LHCI). next/font registers the self-hosted faces
+    // plus "<family> Fallback" faces; assert against the real faces only.
+    const monoDisplays = await page.evaluate(() =>
+      Array.from(document.fonts)
+        .filter((f) => {
+          // WebKit serializes multi-word font-family names WITH surrounding
+          // quotes (e.g. '"mono Fallback"'); Chromium reports them bare. Strip
+          // any surrounding quotes before matching so the next/font metric-
+          // fallback face is excluded on every engine — otherwise its legitimate
+          // font-display:auto leaks past a bare endsWith(' Fallback') check on
+          // WebKit and fails the assertion.
+          const family = f.family.replace(/^["']|["']$/g, '');
+          return /mono/i.test(family) && !/ Fallback$/.test(family);
+        })
+        .map((f) => f.display),
+    );
+    expect(monoDisplays.length, 'self-hosted mono faces must be registered').toBeGreaterThan(0);
+    expect(
+      monoDisplays,
+      `every mono face must use font-display:swap, got ${JSON.stringify(monoDisplays)}`,
+    ).toEqual(monoDisplays.map(() => 'swap'));
+
+    // Hardening guard. The mono weights must ship as <link rel=preload as=font>
+    // so the fetch starts during HTML parse rather than at first CSS-driven
+    // layout — this is what shrinks the swap/FOUT window to near-zero. A dropped
+    // preload (e.g. a next/font config regression) lengthens the fallback flash.
+    const fontPreloads = await page.evaluate(() =>
+      Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="preload"][as="font"]')).map(
+        (l) => l.href,
+      ),
+    );
+    expect(
+      fontPreloads.filter((h) => /\.woff2(\?|$)/.test(h)),
+      `expected >=1 woff2 font preload in <head>, got ${JSON.stringify(fontPreloads)}`,
+    ).not.toEqual([]);
+  });
 });
