@@ -46,6 +46,7 @@ import { NextRequest } from 'next/server';
 import { POST } from '@/app/api/ask/route';
 import { ASK_EVAL_CORPUS, type AskEvalItem } from '@/content/ask-eval-corpus';
 import { ASK_MODEL } from '@/lib/ask/model';
+import { PROMPT_VERSION } from '@/lib/ask/system-prompt';
 import { getRedis } from '@/lib/rate-limit';
 import { parseStreamChunk } from '@/lib/stream-protocol';
 
@@ -125,6 +126,10 @@ type GradedItem = {
 type Aggregate = {
   ts: string;
   featureModel: string;
+  // WS2: the derived content hash of the exact SYSTEM_TEXT the feature ran
+  // with. Stamps each stored eval result with the prompt revision it graded,
+  // so a result can be correlated to its prompt without git-blaming five files.
+  promptVersion: string;
   judgeModel: string;
   total: number;
   // Items the harness could not exercise (non-2xx that is not a legit
@@ -499,6 +504,7 @@ async function main(): Promise<void> {
   const aggregate: Aggregate = {
     ts: new Date().toISOString(),
     featureModel: ASK_MODEL,
+    promptVersion: PROMPT_VERSION,
     judgeModel: JUDGE_MODEL,
     total: graded.length,
     errored: erroredCount,
