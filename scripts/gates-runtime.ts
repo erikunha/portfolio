@@ -119,7 +119,8 @@ function spawnGate(
       output += d.toString();
     });
     child.on('error', (err) => {
-      gateChildren.splice(gateChildren.indexOf(child), 1);
+      const ei = gateChildren.indexOf(child);
+      if (ei !== -1) gateChildren.splice(ei, 1);
       resolve({
         label,
         advisory: isAdvisory,
@@ -129,7 +130,8 @@ function spawnGate(
       });
     });
     child.on('close', (code) => {
-      gateChildren.splice(gateChildren.indexOf(child), 1);
+      const ci = gateChildren.indexOf(child);
+      if (ci !== -1) gateChildren.splice(ci, 1);
       resolve({
         label,
         advisory: isAdvisory,
