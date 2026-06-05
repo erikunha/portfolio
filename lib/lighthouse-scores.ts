@@ -25,6 +25,15 @@ export const LIGHTHOUSE_FALLBACK: LighthouseScores = {
 const CACHE_KEY = (strategy: Strategy) => `lh:scores:${strategy}`;
 export const LIGHTHOUSE_TTL_S = 90_000; // 25 h — survives a missed cron run
 
+// WHY: PSI runs a full Lighthouse audit server-side — a fresh run routinely takes
+// 15–40s. The cron (forceRefresh) must budget for that or it aborts every run and the
+// freshness key is never written, so /api/healthz reports degraded forever. The request
+// path keeps a short budget so a cache-miss page render falls back to cached/'—' scores
+// fast and never blocks LCP. The cron's longer budget is covered by maxDuration=60 on
+// app/api/psi-refresh/route.ts.
+export const PSI_REFRESH_TIMEOUT_MS = 45_000; // cron path (forceRefresh)
+export const PSI_REQUEST_TIMEOUT_MS = 8_000; // request path (page render)
+
 async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<LighthouseScores> {
   const apiKey = env.PSI_API_KEY;
   if (!apiKey) throw new Error('PSI_API_KEY is not set');
@@ -43,7 +52,7 @@ async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<
 
   const res = await fetch(psiUrl, {
     ...fetchCache,
-    signal: AbortSignal.timeout(8_000),
+    signal: AbortSignal.timeout(forceRefresh ? PSI_REFRESH_TIMEOUT_MS : PSI_REQUEST_TIMEOUT_MS),
     headers: { Referer: 'https://www.erikunha.dev/' },
   });
   if (!res.ok) {

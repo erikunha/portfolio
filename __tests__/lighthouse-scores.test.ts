@@ -224,3 +224,43 @@ describe('refreshScores', () => {
     await expect(refreshScores('desktop')).rejects.toThrow('Redis write failed');
   });
 });
+
+describe('PSI fetch timeout — differentiated by path', () => {
+  // WHY: fetchAndCache is shared by the cron (forceRefresh) and organic page
+  // renders (getScores). PSI runs a full Lighthouse audit server-side (~15–40s),
+  // so the cron needs a long budget to ever succeed; the request path must keep a
+  // short budget so a cache-miss page render falls back fast and never blocks LCP.
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('refreshScores (cron path) uses the long PSI timeout so real audits complete', async () => {
+    process.env.PSI_API_KEY = 'test-key';
+    mockSet.mockResolvedValue('OK');
+    mockFetch.mockResolvedValue(makePsiResponse(0.98));
+    const timeoutSpy = vi.spyOn(AbortSignal, 'timeout');
+    const { refreshScores, PSI_REFRESH_TIMEOUT_MS } = await import('@/lib/lighthouse-scores');
+    await refreshScores('desktop');
+    expect(timeoutSpy).toHaveBeenCalledWith(PSI_REFRESH_TIMEOUT_MS);
+    expect(PSI_REFRESH_TIMEOUT_MS).toBeGreaterThanOrEqual(45_000);
+  });
+
+  it('getScores cache-miss (request path) keeps the short timeout to protect LCP', async () => {
+    mockGet.mockResolvedValue(null);
+    process.env.PSI_API_KEY = 'test-key';
+    mockSet.mockResolvedValue('OK');
+    mockFetch.mockResolvedValue(makePsiResponse(0.99));
+    const timeoutSpy = vi.spyOn(AbortSignal, 'timeout');
+    const { getScores, PSI_REQUEST_TIMEOUT_MS } = await import('@/lib/lighthouse-scores');
+    await getScores('desktop');
+    expect(timeoutSpy).toHaveBeenCalledWith(PSI_REQUEST_TIMEOUT_MS);
+    expect(PSI_REQUEST_TIMEOUT_MS).toBeLessThanOrEqual(8_000);
+  });
+
+  it('the cron timeout is strictly longer than the request timeout', async () => {
+    const { PSI_REFRESH_TIMEOUT_MS, PSI_REQUEST_TIMEOUT_MS } = await import(
+      '@/lib/lighthouse-scores'
+    );
+    expect(PSI_REFRESH_TIMEOUT_MS).toBeGreaterThan(PSI_REQUEST_TIMEOUT_MS);
+  });
+});

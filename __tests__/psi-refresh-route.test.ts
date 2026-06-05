@@ -168,3 +168,12 @@ describe('GET /api/psi-refresh — success', () => {
     );
   });
 });
+
+describe('GET /api/psi-refresh — function config', () => {
+  it('sets maxDuration high enough for the parallel PSI audits to complete', async () => {
+    // WHY: a fresh PSI run takes 15–40s; without a raised maxDuration the function is
+    // killed before PSI returns and the freshness key is never written (healthz degraded).
+    const route = await import('@/app/api/psi-refresh/route');
+    expect(route.maxDuration).toBeGreaterThanOrEqual(60);
+  });
+});
