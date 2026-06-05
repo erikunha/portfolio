@@ -171,7 +171,7 @@ download step, project-specific PNG copy step, inspect-before-commit rule, and t
 
 For `ai-eval-update`: confirm the skill is internally consistent with the WS2/WS3 design
 and references real paths (`scripts/ask-eval.ts`, `content/ask-eval-corpus.ts`,
-`content/ask-eval-corpus.ts`, Upstash Redis key `ask:eval:latest`).
+`content/ask-eval-calibration.ts`, Upstash Redis key `ask:eval:latest`).
 
 ## Acceptance criteria
 
