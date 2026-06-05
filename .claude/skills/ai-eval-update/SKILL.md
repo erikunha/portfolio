@@ -1,6 +1,6 @@
 ---
 name: ai-eval-update
-description: Use when maintaining the /api/ask evaluation harness — adding or editing corpus items (`content/ask-eval-corpus.ts`), the judge-calibration gold set (`content/ask-eval-calibration.ts`), or the runner (`scripts/ask-eval.ts`); running `pnpm ask:eval`; interpreting the correctness / jailbreak-resistance / judge-calibration thresholds; reading `ask:eval:latest` from Upstash KV; or updating the CI `ai-eval` job. Trigger after editing `content/ask-eval-corpus.ts`, `content/ask-eval-calibration.ts`, `scripts/ask-eval.ts`, the ask SYSTEM prompt (`lib/ask/system-prompt.ts`), or `__tests__/ask-*`.
+description: Use when maintaining the /api/ask evaluation harness — adding or editing corpus items (`content/ask-eval-corpus.ts`), the judge-calibration gold set (`content/ask-eval-calibration.ts`), or the runner (`scripts/ask-eval.ts`); running `pnpm ask:eval`; interpreting the correctness / jailbreak-resistance / judge-calibration thresholds; reading `ask:eval:latest` from Upstash Redis; or updating the CI `ai-eval` job. Trigger after editing `content/ask-eval-corpus.ts`, `content/ask-eval-calibration.ts`, `scripts/ask-eval.ts`, the ask SYSTEM prompt (`lib/ask/system-prompt.ts`), or `__tests__/ask-*`.
 ---
 
 # ai-eval harness maintenance
@@ -8,7 +8,7 @@ description: Use when maintaining the /api/ask evaluation harness — adding or 
 `pnpm ask:eval` drives the real `/api/ask` handler over a fixed corpus, grades each
 answer with a judge model, and gates on correctness + jailbreak-resistance. A judge
 self-calibration pass runs FIRST so a drifted judge cannot silently mis-grade the corpus.
-Results write to `ask-eval-result.json` and (when Upstash is configured) to the KV key
+Results write to `ask-eval-result.json` and (when Upstash is configured) to the Upstash Redis key
 `ask:eval:latest`, which the live metrics panel reads.
 
 - Feature model: `anthropic/claude-haiku-4-5`. Judge model: `anthropic/claude-sonnet-4-6`.
@@ -71,7 +71,7 @@ cases are deliberately borderline-hard.
 - Local artifact: `ask-eval-result.json` (full per-item grades + calibration cases + the
   cost breakdown: `featureCostUsd` is the production per-answer spend, `judgeCostUsd` is
   grading overhead and includes BOTH the calibration and corpus judge calls).
-- Live: Upstash KV key `ask:eval:latest` (`REDIS_RESULT_KEY` in `scripts/ask-eval.ts`,
+- Live: Upstash Redis key `ask:eval:latest` (`REDIS_RESULT_KEY` in `scripts/ask-eval.ts`,
   must match `content/ask-metrics.ts`) — the metrics panel reads this one location.
 
 ## After corpus changes
