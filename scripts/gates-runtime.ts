@@ -7,16 +7,24 @@
 // Gates (in order):
 //   1. Build          — pnpm build (skip with --skip-build if .next/ is fresh)
 //   2. Server start   — pnpm start on :3000 with DEPLOY_SALT
-//   3. LHCI desktop   — 1 run on localhost:3000, thresholds from lighthouserc.json
-//   4. LHCI mobile    — 1 run on localhost:3000, thresholds from lighthouserc.mobile.json
-//   5. axe-core       — playwright tests/a11y --project=chromium
-//   6. E2E functional — cross-cutting + observability-smoke, chromium only
+//   3. LHCI desktop   — ADVISORY (median of 3 runs), thresholds from lighthouserc.json
+//   4. LHCI mobile    — ADVISORY (median of 3 runs), thresholds from lighthouserc.mobile.json
+//   5. axe-core       — playwright tests/a11y --project=chromium (blocking)
+//   6. E2E functional — cross-cutting + observability-smoke, chromium only (blocking)
+//
+// LHCI is ADVISORY locally, AUTHORITATIVE in CI:
+//   `throttlingMethod: simulate` + 4x CPU models throttled timing from the HOST trace, so
+//   mobile perf scores are not portable — a loaded dev laptop false-fails at ~0.6 while
+//   CI's controlled runner passes >=0.9 on the identical config. Blocking the push on that
+//   trains SKIP_RUNTIME_GATES bypasses. CI's `performance` job is the real blocking gate
+//   (same thresholds, median of 3); locally we print the numbers as signal only.
 //
 // Skipped locally (CI handles):
 //   - Visual regression (Linux Chromium baselines; use playwright MCP for manual check)
 //   - AI eval (requires live API keys + Upstash)
 //   - WebKit matrix (non-deterministic pixel rendering; not a required gate)
-//   - LHCI multi-URL (6 URLs × 3 runs in CI; lean 1 URL × 1 run locally)
+//   - LHCI multi-URL (6 URLs in CI; lean to 1 URL locally). Run count stays at the
+//     config's 3 (median) for honest local numbers.
 //
 // Usage:
 //   pnpm gates:runtime              — full run including build
@@ -46,6 +54,10 @@ log(`\n${C.bold}[gates:runtime] Server-dependent quality gates${C.reset}\n`);
 
 let server: ChildProcess | null = null;
 let exitCode = 0;
+// Tracks advisory (non-blocking) gate failures separately from exitCode, so the final
+// summary can stay honest: a green "all passed" line must not hide an LHCI advisory miss
+// (which may be a real local breakage — lhci missing / config error — not just a threshold).
+let advisoryFailed = false;
 
 function cleanup() {
   if (server) {
@@ -89,6 +101,37 @@ function gate(
   }
 }
 
+// Advisory gate: runs and prints results, but does NOT block the push on failure.
+// WHY: LHCI uses `throttlingMethod: simulate` + 4x CPU multiplier, which models the
+// throttled timing from the HOST's observed trace — so mobile perf scores are not
+// portable across machines (a dev laptop under load false-fails at ~0.6 while CI's
+// controlled runner passes ≥0.9 on the identical config + thresholds). Enforcing a
+// CI-calibrated absolute threshold on arbitrary local hardware trains gate bypasses.
+// The authoritative perf gate is CI's `performance` job (blocking, same thresholds,
+// median of 3). Locally we surface the numbers as advisory signal only.
+function advisory(
+  label: string,
+  file: string,
+  args: string[],
+  env?: Record<string, string | undefined>,
+) {
+  try {
+    run(label, file, args, env);
+  } catch (err) {
+    // run() throws on a non-zero LHCI exit (assertion miss) OR a genuine failure
+    // (lhci crash, missing config, command-not-found). Echo the underlying message so
+    // a real breakage is distinguishable from a perf/threshold miss — both stay advisory.
+    const msg = err instanceof Error ? err.message : String(err);
+    advisoryFailed = true;
+    process.stderr.write(
+      `${C.yellow}  ⚠ ${label} did not pass locally — ADVISORY, not blocking.${C.reset}\n` +
+        `${C.dim}    ${msg}\n` +
+        '    Simulate-throttled LHCI is host-dependent and not portable; the authoritative\n' +
+        `    perf gate runs on CI's controlled hardware (blocking, identical thresholds).${C.reset}\n`,
+    );
+  }
+}
+
 // ── Gate 1: Build ─────────────────────────────────────────────────────────────
 
 if (SKIP_BUILD) {
@@ -109,7 +152,7 @@ if (SKIP_BUILD) {
   });
 }
 
-// ── Start server ──────────────────────────────────────────────────────────────
+// ── Gate 2: Start server ──────────────────────────────────────────────────────
 
 step('Starting production server');
 server = spawn('pnpm', ['start'], {
@@ -130,36 +173,36 @@ run('Wait for server', 'npx', [
   '30000',
 ]);
 
-// ── Gate 2: Lighthouse desktop ────────────────────────────────────────────────
+// ── Gate 3: Lighthouse desktop ────────────────────────────────────────────────
 
-gate('Lighthouse CI — desktop', 'pnpm', [
+advisory('Lighthouse CI — desktop', 'pnpm', [
   'exec',
   'lhci',
   'autorun',
   `--collect.url=http://localhost:${PORT}`,
-  '--collect.numberOfRuns=1',
+  // numberOfRuns inherited from lighthouserc.json (3) — median smooths host-load variance
   '--upload.target=filesystem',
   '--upload.outputDir=.lhci-local/desktop',
 ]);
 
-// ── Gate 3: Lighthouse mobile ─────────────────────────────────────────────────
+// ── Gate 4: Lighthouse mobile ─────────────────────────────────────────────────
 
-gate('Lighthouse CI — mobile', 'pnpm', [
+advisory('Lighthouse CI — mobile', 'pnpm', [
   'exec',
   'lhci',
   'autorun',
   '--config=lighthouserc.mobile.json',
   `--collect.url=http://localhost:${PORT}`,
-  '--collect.numberOfRuns=1',
+  // numberOfRuns inherited from lighthouserc.mobile.json (3) — median smooths host-load variance
   '--upload.target=filesystem',
   '--upload.outputDir=.lhci-local/mobile',
 ]);
 
-// ── Gate 4: axe-core a11y ─────────────────────────────────────────────────────
+// ── Gate 5: axe-core a11y ─────────────────────────────────────────────────────
 
 gate('axe-core a11y scan', 'pnpm', ['playwright', 'test', 'tests/a11y', '--project=chromium']);
 
-// ── Gate 5: E2E functional ────────────────────────────────────────────────────
+// ── Gate 6: E2E functional ────────────────────────────────────────────────────
 
 gate('E2E functional — chromium', 'pnpm', [
   'playwright',
@@ -174,7 +217,14 @@ gate('E2E functional — chromium', 'pnpm', [
 cleanup();
 
 if (exitCode === 0) {
-  log(`\n${C.green}${C.bold}[gates:runtime] All runtime gates passed.${C.reset}\n`);
+  if (advisoryFailed) {
+    log(
+      `\n${C.green}${C.bold}[gates:runtime] All blocking runtime gates passed.${C.reset} ` +
+        `${C.yellow}LHCI advisory did not pass locally (see ⚠ above) — CI's perf gate is authoritative.${C.reset}\n`,
+    );
+  } else {
+    log(`\n${C.green}${C.bold}[gates:runtime] All runtime gates passed.${C.reset}\n`);
+  }
 } else {
   process.stderr.write(
     `\n${C.red}${C.bold}[gates:runtime] One or more runtime gates failed. Fix before pushing.${C.reset}\n\n`,
