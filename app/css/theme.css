@@ -109,7 +109,13 @@
   --color-glow-55: rgba(0, 255, 65, 0.55);
   --color-glow-60: rgba(0, 255, 65, 0.6);
 
-  /* ── Typography ─────────────────────────────────────────────────────────── */
-  --font-mono: "JetBrains Mono", monospace;
-  --font-display: "Geist Black", sans-serif;
+  /* ── Typography ─────────────────────────────────────────────────────────────
+     Wired to the next/font self-hosted faces via their *-src variables
+     (app/layout.tsx). The next/font face is named after the variable, not the
+     human family name, so referencing --font-*-src here (not a literal
+     "JetBrains Mono"/"Geist Black") is the ONLY correct binding — and it makes
+     the custom font independent of CSS cascade order. The trailing generic is
+     the graceful-degradation fallback if the woff2 ever fails to load. */
+  --font-mono: var(--font-mono-src), monospace;
+  --font-display: var(--font-display-src), sans-serif;
 }
