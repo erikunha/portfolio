@@ -37,9 +37,9 @@ disclosure at under 200 lines. `CLAUDE.md` retains standing facts, high-frequenc
 and one-line pointer stubs so the relocated rules remain discoverable. No behavioral rule
 is lost; only the token cost of always loading infrequently-used procedure is eliminated.
 
-Target: reduce `CLAUDE.md` from 240 lines to approximately 205 lines (a reduction of
-roughly 35 lines, equivalent to removing about 800 words of dense procedural prose from
-the always-loaded context).
+Target: reduce `CLAUDE.md` from 240 lines to at most 233 lines (a reduction of roughly
+7+ lines; the original ~205 proxy was arithmetically unreachable — the extracted blocks are
+very long single lines, so word-count reduction far exceeds line-count reduction).
 
 ## Coordination note
 
@@ -54,9 +54,9 @@ This dependency is hard: do not implement WS7 while WS4 is still open.
 
 | CLAUDE.md section | Location (lines) | Approx. lines | Destination skill | Skill trigger description | Stub that stays in CLAUDE.md |
 |---|---|---|---|---|---|
-| PR merge gate (10-item numbered list) | 210-221 | 13 | `.claude/skills/pr-merge-gate/SKILL.md` | Use when about to merge a PR: running `pnpm ready-to-merge`, resolving Copilot threads, rebasing, or executing `gh pr merge`. Covers all 10 pre-merge checks including Copilot auth gate, resolve-thread requirement, rebase rule, and playwright visual check. | "See `.claude/skills/pr-merge-gate` for the full 10-point gate. Run `pnpm ready-to-merge <pr>` first; the skill details each step." |
+| PR merge gate (10-item numbered list) | 210-221 | 13 | `.claude/skills/pr-merge-gate/SKILL.md` | Use when about to merge a PR: running `pnpm ready-to-merge`, resolving Copilot threads, rebasing, or executing `gh pr merge`. Covers all 10 pre-merge checks including Copilot auth gate, resolve-thread requirement, rebase rule, and playwright visual check. | "See `.claude/skills/pr-merge-gate` for the full 10-point gate. Rebase first (unless dependabot or already-reviewed exception), then run `pnpm ready-to-merge <pr>`; the skill details each step." |
 | Visual baseline regen procedure (2 dense bullets in Working Agreement) | 187-188 | 2 (but ~600 words) | `.claude/skills/visual-baseline-regen/SKILL.md` | Use when any push touches a visual-regression baseline: deciding whether a change affects a baseline, regenerating on darwin with `--update-snapshots`, dispatching the `update_visual_baselines` CI workflow for linux, downloading artifacts, committing both platform PNGs together. | "Visual baseline regen: see `.claude/skills/visual-baseline-regen`. Trigger: any push after a CSS, layout, or rendering change." |
-| ai-eval update flow (currently implicit; to be formalized in WS2/WS3) | N/A (new, no current CLAUDE.md lines) | 0 existing lines | `.claude/skills/ai-eval-update/SKILL.md` | Use when updating the ask:eval harness: adding corpus entries, running `pnpm ask:eval`, interpreting pass/fail thresholds, reading `ask:eval:latest` from Upstash KV, and updating the CI `ai-eval` job after WS2/WS3 land. | "ai-eval update flow: see `.claude/skills/ai-eval-update`. Trigger: after editing `content/ask-eval-corpus.ts`, `scripts/ask-eval.ts`, or SYSTEM_TEXT." |
+| ai-eval update flow (currently implicit; to be formalized in WS2/WS3) | N/A (new, no current CLAUDE.md lines) | 0 existing lines | `.claude/skills/ai-eval-update/SKILL.md` | Use when updating the ask:eval harness: adding corpus entries, running `pnpm ask:eval`, interpreting pass/fail thresholds, reading `ask:eval:latest` from Upstash Redis (written only when Upstash env vars are set), and updating the CI `ai-eval` job after WS2/WS3 land. | "ai-eval update flow: see `.claude/skills/ai-eval-update`. Trigger: after editing `content/ask-eval-corpus.ts`, `content/ask-eval-calibration.ts`, `scripts/ask-eval.ts`, or `lib/ask/system-prompt.ts`." |
 
 Note: the Copilot review loop (item 8 inside the PR merge gate) is contained within the
 pr-merge-gate extraction. No separate extraction is needed. It travels with the gate.
@@ -95,14 +95,14 @@ pr-merge-gate extraction. No separate extraction is needed. It travels with the 
 | Path | Purpose |
 |---|---|
 | `.claude/skills/pr-merge-gate/SKILL.md` | Full 10-point pre-merge gate procedure including Copilot auth gate, unresolved-thread check, self-resolve detection via `scripts/check-pr-comments.ts`, branch protection rule, rebase rule (with dependabot and already-reviewed exceptions), and playwright local visual check. Under 200 lines. |
-| `.claude/skills/visual-baseline-regen/SKILL.md` | Full visual baseline regen procedure: how to assess baseline impact before any push, darwin regen path (`pnpm build` to prod server, `--update-snapshots`), linux regen path (`gh workflow run "CI" -f update_visual_baselines=true --ref <branch>`, artifact download, copy each project's `-linux.png`), commit discipline (both platforms in the same commit), inspect-before-commit rule. References `tests/visual/visual.spec.ts` for the list of captured sections. Under 200 lines. |
-| `.claude/skills/ai-eval-update/SKILL.md` | Procedure for maintaining the ask:eval harness post-WS2/WS3: when to add corpus entries (`content/ask-eval-corpus.ts`), running `pnpm ask:eval`, interpreting the correctness and jailbreak-resistance thresholds, reading `ask:eval:latest` from Upstash KV, the judge-calibration gate added in WS3, and when to re-request CI after corpus changes. Under 200 lines. |
+| `.claude/skills/visual-baseline-regen/SKILL.md` | Full visual baseline regen procedure: how to assess baseline impact before any push, darwin regen path (`pnpm build` to prod server, `--update-snapshots`), linux regen path (`gh workflow run "CI" -f update_visual_baselines=true --ref <branch>`, artifact download, copy each project's `-linux.png`), commit discipline (both platforms in the same commit), inspect-before-commit rule. Covers two specs: `tests/visual/visual.spec.ts` (CI-gated page sections; requires darwin + linux regen) and `tests/e2e/design-system-components.spec.ts` (DS component baselines; darwin-only, ignored on Ubuntu). Under 200 lines. |
+| `.claude/skills/ai-eval-update/SKILL.md` | Procedure for maintaining the ask:eval harness post-WS2/WS3: when to add corpus entries (`content/ask-eval-corpus.ts`) or calibration gold-set cases (`content/ask-eval-calibration.ts`), running `pnpm ask:eval`, interpreting the correctness and jailbreak-resistance thresholds, reading `ask:eval:latest` from Upstash Redis (conditional on env vars), the judge-calibration gate added in WS3, re-labeling triggers (SYSTEM prompt changes, answer-length cap changes, factual source changes), and when to re-request CI after corpus changes. Under 200 lines. |
 
 ### Modified files
 
 | Path | Change |
 |---|---|
-| `CLAUDE.md` | Replace the 13-line PR merge gate section with a 2-line stub pointer. Replace the 2 dense visual-baseline regen bullets (lines 187-188) with 2 compressed one-line triggers each pointing to the skill. Add a one-line stub for ai-eval-update in the Working Agreement near the `pnpm ask:eval` command entry. Net reduction: approximately 35 lines (from 240 to ~205). |
+| `CLAUDE.md` | Replace the 13-line PR merge gate section with a 2-line stub pointer. Replace the 2 dense visual-baseline regen bullets (lines 187-188) with 2 compressed one-line triggers each pointing to the skill. Add a one-line stub for ai-eval-update in the Working Agreement near the `pnpm ask:eval` command entry. Net reduction: at most 233 lines (from 240; the ~205 proxy in the original spec was arithmetically unreachable). |
 
 ## Error handling / risk
 
@@ -155,9 +155,10 @@ are NOT extracted; they must remain inline.
 
 **Line count gate:**
 
-After editing `CLAUDE.md`, run `wc -l CLAUDE.md` and confirm the result is at or below 205.
-If it is above, the stubs are not compressed enough or additional non-procedure lines should
-be reviewed.
+After editing `CLAUDE.md`, run `wc -l CLAUDE.md` and confirm the result is at or below 233.
+(The original 205 target was arithmetically unreachable — see Acceptance criteria #1 note.)
+If it is above 233, the stubs are not compressed enough or additional non-procedure lines
+should be reviewed.
 
 **Content completeness check on skills:**
 
@@ -170,11 +171,17 @@ download step, project-specific PNG copy step, inspect-before-commit rule, and t
 
 For `ai-eval-update`: confirm the skill is internally consistent with the WS2/WS3 design
 and references real paths (`scripts/ask-eval.ts`, `content/ask-eval-corpus.ts`,
-`content/ask-eval-corpus.ts`, `ask:eval:latest` KV key).
+`content/ask-eval-calibration.ts`, Upstash Redis key `ask:eval:latest`).
 
 ## Acceptance criteria
 
-1. `wc -l CLAUDE.md` returns at most 205 (target reduction: ~35 lines from 240).
+1. `wc -l CLAUDE.md` returns at most 233 (from 240). NOTE (architect-gate correction,
+   2026-06-05): the original 205 target was arithmetically unreachable — the merge-gate
+   items and baseline bullets are very long SINGLE lines, so removing ~720 dense words
+   only removes ~8 physical lines. The line count was a proxy; the real, achieved win is
+   ~720 words of infrequently-used procedure removed from always-loaded context. Do not
+   pad extractions to hit an arbitrary line number — that risks demoting an always-on
+   rule (the primary WS7 risk).
 2. Each of the three new `SKILL.md` files exists at the specified paths, is under 200 lines,
    and has valid YAML frontmatter with a `name` and `description` field.
 3. The `description` field of each skill is a complete, accurate activation trigger that
@@ -187,7 +194,7 @@ and references real paths (`scripts/ask-eval.ts`, `content/ask-eval-corpus.ts`,
    completion, quality gate fix discipline, four-conditions-before-done) remain inline in
    `CLAUDE.md` unchanged.
 7. The ai-eval-update skill is consistent with the WS2/WS3 design: it references
-   `scripts/ask-eval.ts`, `content/ask-eval-corpus.ts`, the Upstash KV key `ask:eval:latest`,
+   `scripts/ask-eval.ts`, `content/ask-eval-corpus.ts`, the Upstash Redis key `ask:eval:latest`,
    and the judge-calibration gate.
 8. `pnpm ci:local` passes (this is a docs-only change; no runtime gate required).
 
@@ -233,17 +240,15 @@ keep the inline stub as a two-line trigger, not just a pointer.
   must stay inline as a one-line rule; only the full procedure for when the answer is YES
   belongs in the skill.
 
-### Open question: WS4 gate language
+### Open question: WS4 gate language — RESOLVED (2026-06-05)
 
-WS4 may reword or remove items from the PR merge gate if it finds they are honor-system and
-cannot be backed by artifacts. The WS7 implementer must read the post-WS4 CLAUDE.md before
-authoring the pr-merge-gate skill body. If WS4 removes gate item N, the skill must not
-re-add it as if it were a real mechanical gate. Accuracy over completeness.
+WS4 (#94) is merged. The pr-merge-gate skill was authored against the post-WS4 CLAUDE.md
+(quoting current text by content, not pre-WS4 wording or line numbers). All 10 gate items
+survived WS4 intact, so the skill maps 1:1 to the current section.
 
 ### Open question: ai-eval-update skill timing
 
-The ai-eval-update skill is only fully authorable after WS2 and WS3 have shipped their
-eval changes. WS7 can create a skeleton skill that covers the pre-WS2 state and add a
-clearly marked section for post-WS2/WS3 additions. The implementer should note this
-explicitly in the skill with a `<!-- TODO: expand after WS2/WS3 merge -->` comment so the
-gap is visible and not silently incomplete.
+RESOLVED (2026-06-05): WS2 (#91) and WS3 (#95) are merged. The ai-eval-update skill is
+fully authored against current main — no skeleton, no `TODO: expand` comment. It documents
+the live calibration gate, the correctness/jailbreak/calibration thresholds, the
+Upstash Redis key `ask:eval:latest`, and the corpus + gold-set files as they exist on main.
