@@ -49,6 +49,20 @@ const EnvSchema = z.object({
   // Privacy salt: unset/empty must stay undefined so prod auto-generates via
   // Upstash. No default; never the 'portfolio' dev fallback (lives in ip-hash).
   DEPLOY_SALT: optional(z.string()),
+  // Langfuse AI-trace exporter (WS5) — OFF BY DEFAULT. The span processor in
+  // lib/telemetry/langfuse.ts activates ONLY on the exact string 'true'; any
+  // other value (unset, '', '1', 'TRUE') leaves it inert. Routed through this
+  // schema so the langfuse module reads managed env via the one audited seam
+  // (lib/env.ts) rather than a stray process.env read — the WS1 invariant. The
+  // parse is a single safeParse at module load, so adding these costs nothing
+  // when the flag is off; the heavy OTel/Langfuse imports stay behind the flag.
+  LANGFUSE_ENABLED: optional(z.string()),
+  LANGFUSE_SECRET_KEY: optional(z.string()),
+  LANGFUSE_PUBLIC_KEY: optional(z.string()),
+  // Optional self-hosted endpoint; defaults to Langfuse Cloud when unset. Typed
+  // as a URL so a present-but-malformed base URL fails fast at boot (matching
+  // the UPSTASH_REDIS_REST_URL precedent), not silently at exporter init.
+  LANGFUSE_BASEURL: optional(z.url()),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

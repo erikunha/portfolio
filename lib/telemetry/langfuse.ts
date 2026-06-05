@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { env } from '@/lib/env';
 import { log } from '@/lib/log';
 
 // Flag-gated Langfuse span processor (WS5).
@@ -8,8 +9,15 @@ import { log } from '@/lib/log';
 // `LANGFUSE_ENABLED=true`. When the flag is absent or any value other than the
 // exact string 'true', this module imports NOTHING from langfuse-vercel or
 // @vercel/otel, opens NO socket, and adds ZERO latency to the request path. The
-// guard is a single synchronous `process.env` read; the heavy OTel + Langfuse
-// machinery loads only behind it via dynamic `import()`.
+// guard is a single synchronous read of the already-parsed `env` accessor
+// (lib/env.ts); the heavy OTel + Langfuse machinery loads only behind it via
+// dynamic `import()`.
+//
+// Env access: LANGFUSE_* is read through the centralized `env` seam (lib/env.ts),
+// not raw `process.env` — the WS1 invariant that every managed var flows through
+// one audited, format-validating accessor. lib/env.ts parses once at module load
+// (frozen), so this adds no per-request cost and pulls in no heavy dependency;
+// the inert contract above is unaffected.
 //
 // Why a strict `=== 'true'` check (not a truthiness or keyword set): the OFF
 // posture is the default for prod, so the gate must FAIL CLOSED. Any ambiguous
@@ -29,7 +37,7 @@ import { log } from '@/lib/log';
 // condition, not an error.
 
 function isEnabled(): boolean {
-  return process.env.LANGFUSE_ENABLED === 'true';
+  return env.LANGFUSE_ENABLED === 'true';
 }
 
 /**
@@ -59,11 +67,9 @@ export async function registerLangfuseProcessor(): Promise<void> {
       publicKey?: string;
       baseUrl?: string;
     } = {};
-    if (process.env.LANGFUSE_SECRET_KEY)
-      exporterOptions.secretKey = process.env.LANGFUSE_SECRET_KEY;
-    if (process.env.LANGFUSE_PUBLIC_KEY)
-      exporterOptions.publicKey = process.env.LANGFUSE_PUBLIC_KEY;
-    if (process.env.LANGFUSE_BASEURL) exporterOptions.baseUrl = process.env.LANGFUSE_BASEURL;
+    if (env.LANGFUSE_SECRET_KEY) exporterOptions.secretKey = env.LANGFUSE_SECRET_KEY;
+    if (env.LANGFUSE_PUBLIC_KEY) exporterOptions.publicKey = env.LANGFUSE_PUBLIC_KEY;
+    if (env.LANGFUSE_BASEURL) exporterOptions.baseUrl = env.LANGFUSE_BASEURL;
 
     const traceExporter = new LangfuseExporter(exporterOptions);
 

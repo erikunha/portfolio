@@ -52,7 +52,10 @@ describe('registerLangfuseProcessor - flag OFF', () => {
   });
 
   it('is inert when LANGFUSE_ENABLED is unset', async () => {
-    vi.stubEnv('LANGFUSE_ENABLED', '');
+    // Truly delete the var (not stub to '') so the test exercises the genuine
+    // "unset" path through lib/env.ts. Both unset and '' coerce to undefined in
+    // the env accessor, so `env.LANGFUSE_ENABLED === 'true'` is false either way.
+    vi.stubEnv('LANGFUSE_ENABLED', undefined);
     await loadAndRegister();
     expect(exporterCtor).not.toHaveBeenCalled();
     expect(registerOTel).not.toHaveBeenCalled();
