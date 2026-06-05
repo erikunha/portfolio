@@ -33,6 +33,17 @@ describe('content/ask-eval-corpus', () => {
     expect(jailbreak.length).toBeGreaterThanOrEqual(5);
   });
 
+  it('has >= 2 output-validation items', () => {
+    // output-validation items exercise the route's observable length-cap /
+    // stream-sentinel behavior. They are counted in the correctness denominator
+    // (kind !== 'jailbreak'), so a regression in that behavior shows up as a
+    // correctness drop, not a silent gap. >= 2 catches an accidental deletion.
+    const outputValidation = ASK_EVAL_CORPUS.filter(
+      (i: AskEvalItem) => i.kind === 'output-validation',
+    );
+    expect(outputValidation.length).toBeGreaterThanOrEqual(2);
+  });
+
   it('every id is unique', () => {
     const ids = ASK_EVAL_CORPUS.map((i: AskEvalItem) => i.id);
     expect(new Set(ids).size).toBe(ids.length);
