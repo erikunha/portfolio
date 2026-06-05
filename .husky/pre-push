@@ -75,8 +75,12 @@ if [ -n "${SKIP_RUNTIME_GATES:-}" ]; then
 elif [ -z "$NON_DOCS" ]; then
   echo "[pre-push] Docs-only push — skipping gates:runtime (verify already ran)."
 else
-  echo "[pre-push] Non-docs change — running gates:runtime..."
+  echo "[pre-push] Non-docs change — running gates:runtime (full build)..."
   printf '%s\n' "$NON_DOCS" | sed 's/^/  changed: /'
   echo "[pre-push] Bypass deliberately with: SKIP_RUNTIME_GATES=1 git push ..."
-  if [ -d ".next" ]; then pnpm gates:runtime --skip-build; else pnpm gates:runtime; fi
+  # Always do a FULL build — never --skip-build. A `.next/` can exist but be
+  # STALE (source changed since the last build), which would run LHCI/axe/E2E
+  # against an outdated bundle and report a false green. Correctness over speed;
+  # SKIP_RUNTIME_GATES is the explicit opt-out when a fresh build truly exists.
+  pnpm gates:runtime
 fi

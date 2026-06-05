@@ -25,12 +25,7 @@ import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync 
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  agentDispatchedAfter,
-  agentsDispatchedSince,
-  lastUserCommitMarker,
-  readTranscript,
-} from './lib/transcript.mjs';
+import { agentDispatchedAfter, readTranscript } from './lib/transcript.mjs';
 
 /**
  * The five-agent review battery as ROLES, each satisfied by ANY of its accepted
@@ -61,17 +56,25 @@ export interface StampDecision {
 }
 
 /**
- * Pure decision: given the transcript records (already resolved + parsed) and
- * whether resolution succeeded, decide whether to write the stamp.
+ * Pure decision: given the transcript records, whether resolution succeeded, and
+ * the HEAD commit's ISO timestamp, decide whether to write the stamp.
  *
  * - transcriptResolved === false  -> refuse, report every role missing
  *   (fail-closed; the caller could not even find the transcript).
- * - else scope to dispatches AFTER the last commit and require every role to be
- *   satisfied by at least one of its accepted subagent_type strings.
+ * - else require every role to be satisfied by at least one accepted
+ *   subagent_type dispatched STRICTLY AFTER the HEAD commit time.
+ *
+ * The boundary is the GIT HEAD commit timestamp, NOT a transcript-only commit
+ * marker: a commit made outside this Claude session (terminal / GUI / a prior
+ * session) leaves no marker in the transcript, which would make a marker-index
+ * boundary collapse to "whole session" and let a STALE prior-cycle review
+ * satisfy the battery for a brand-new commit. Keying on the commit's own
+ * timestamp closes that — only agents dispatched after HEAD was authored count.
  */
 export function decideStamp(args: {
   records: TranscriptRecord[];
   transcriptResolved: boolean;
+  headCommitIso: string;
 }): StampDecision {
   if (!args.transcriptResolved) {
     return {
@@ -81,19 +84,18 @@ export function decideStamp(args: {
         'Could not resolve the session transcript (fail-closed). Set REVIEW_STAMP_TRANSCRIPT=<abs path> to point at it.',
     };
   }
-  const boundary = lastUserCommitMarker(args.records);
-  const dispatched = new Set<string>(agentsDispatchedSince(args.records, boundary));
   const missing = BATTERY_ROLES.filter(
-    (r) => !r.accepts.some((agent) => dispatched.has(agent)),
+    (r) =>
+      !r.accepts.some((agent) => agentDispatchedAfter(args.records, agent, args.headCommitIso)),
   ).map((r) => r.role);
   if (missing.length > 0) {
     return {
       write: false,
       missing,
-      reason: `Review battery incomplete since last commit. Missing role(s): ${missing.join(', ')}.`,
+      reason: `Review battery incomplete since the HEAD commit. Missing role(s): ${missing.join(', ')}.`,
     };
   }
-  return { write: true, missing: [], reason: 'All five battery roles dispatched this cycle.' };
+  return { write: true, missing: [], reason: 'All five battery roles dispatched after HEAD.' };
 }
 
 /**
@@ -155,7 +157,13 @@ function main(): void {
   const transcriptResolved = transcriptPath !== null;
   const records: TranscriptRecord[] = transcriptPath ? readTranscript(transcriptPath) : [];
 
-  const decision = decideStamp({ records, transcriptResolved });
+  // The HEAD commit's committer-date (ISO) is the battery boundary — authoritative
+  // even for commits made outside this session (no transcript marker needed).
+  const headCommitIso = execFileSync('git', ['log', '-1', '--format=%cI'], {
+    encoding: 'utf8',
+  }).trim();
+
+  const decision = decideStamp({ records, transcriptResolved, headCommitIso });
 
   if (!decision.write) {
     console.error('✗ review:stamp REFUSED — stamp not written.');
