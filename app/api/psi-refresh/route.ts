@@ -5,6 +5,14 @@ import { refreshScores } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
 import { getRedis } from '@/lib/rate-limit';
 
+// WHY: this cron fires two PSI audits in parallel; each can take 15–40s (see
+// PSI_REFRESH_TIMEOUT_MS=45s in lib/lighthouse-scores.ts). The default function budget
+// would kill the invocation before PSI returns, so the freshness key is never written
+// and /api/healthz stays degraded. 60s is the Hobby-plan ceiling; the worst case —
+// both PSI fetches at 45s (parallel, so ~45s wall) + the 5s failure-path Resend alert —
+// lands ~51s, leaving headroom to return the structured response before a force-kill.
+export const maxDuration = 60;
+
 export async function GET(req: NextRequest): Promise<Response> {
   const cronSecret = env.CRON_SECRET;
   if (!cronSecret || req.headers.get('authorization') !== `Bearer ${cronSecret}`) {
@@ -50,11 +58,14 @@ export async function GET(req: NextRequest): Promise<Response> {
           subject: '[portfolio] psi-refresh cron failed',
           text: `One or more PSI refreshes failed.\n\nErrors: ${errors}\nTimestamp: ${new Date().toISOString()}`,
         });
-        // WHY: Resend SDK lacks native AbortSignal; race a 10s timer to avoid
-        // blocking the cron response if the alert API hangs.
+        // WHY: Resend SDK lacks native AbortSignal; race a 5s timer to avoid
+        // blocking the cron response if the alert API hangs. 5s (not 10s) keeps the
+        // worst-case wall time — two PSI fetches at 45s + this alert on the failure
+        // path — safely under maxDuration=60 so the structured 500 still returns
+        // before Vercel force-kills the function. The alert is best-effort.
         let timerId: ReturnType<typeof setTimeout> | undefined;
         const timeoutPromise = new Promise<never>((_, reject) => {
-          timerId = setTimeout(() => reject(new Error('resend alert timeout (10s)')), 10_000);
+          timerId = setTimeout(() => reject(new Error('resend alert timeout (5s)')), 5_000);
         });
         try {
           const { error: sendError } = await Promise.race([sendPromise, timeoutPromise]);
