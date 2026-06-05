@@ -7,16 +7,24 @@
 // Gates (in order):
 //   1. Build          — pnpm build (skip with --skip-build if .next/ is fresh)
 //   2. Server start   — pnpm start on :3000 with DEPLOY_SALT
-//   3. LHCI desktop   — 1 run on localhost:3000, thresholds from lighthouserc.json
-//   4. LHCI mobile    — 1 run on localhost:3000, thresholds from lighthouserc.mobile.json
-//   5. axe-core       — playwright tests/a11y --project=chromium
-//   6. E2E functional — cross-cutting + observability-smoke, chromium only
+//   3. LHCI desktop   — ADVISORY (median of 3 runs), thresholds from lighthouserc.json
+//   4. LHCI mobile    — ADVISORY (median of 3 runs), thresholds from lighthouserc.mobile.json
+//   5. axe-core       — playwright tests/a11y --project=chromium (blocking)
+//   6. E2E functional — cross-cutting + observability-smoke, chromium only (blocking)
+//
+// LHCI is ADVISORY locally, AUTHORITATIVE in CI:
+//   `throttlingMethod: simulate` + 4x CPU models throttled timing from the HOST trace, so
+//   mobile perf scores are not portable — a loaded dev laptop false-fails at ~0.6 while
+//   CI's controlled runner passes >=0.9 on the identical config. Blocking the push on that
+//   trains SKIP_RUNTIME_GATES bypasses. CI's `performance` job is the real blocking gate
+//   (same thresholds, median of 3); locally we print the numbers as signal only.
 //
 // Skipped locally (CI handles):
 //   - Visual regression (Linux Chromium baselines; use playwright MCP for manual check)
 //   - AI eval (requires live API keys + Upstash)
 //   - WebKit matrix (non-deterministic pixel rendering; not a required gate)
-//   - LHCI multi-URL (6 URLs × 3 runs in CI; lean 1 URL × 1 run locally)
+//   - LHCI multi-URL (6 URLs in CI; lean to 1 URL locally). Run count stays at the
+//     config's 3 (median) for honest local numbers.
 //
 // Usage:
 //   pnpm gates:runtime              — full run including build
@@ -89,6 +97,31 @@ function gate(
   }
 }
 
+// Advisory gate: runs and prints results, but does NOT block the push on failure.
+// WHY: LHCI uses `throttlingMethod: simulate` + 4x CPU multiplier, which models the
+// throttled timing from the HOST's observed trace — so mobile perf scores are not
+// portable across machines (a dev laptop under load false-fails at ~0.6 while CI's
+// controlled runner passes ≥0.9 on the identical config + thresholds). Enforcing a
+// CI-calibrated absolute threshold on arbitrary local hardware trains gate bypasses.
+// The authoritative perf gate is CI's `performance` job (blocking, same thresholds,
+// median of 3). Locally we surface the numbers as advisory signal only.
+function advisory(
+  label: string,
+  file: string,
+  args: string[],
+  env?: Record<string, string | undefined>,
+) {
+  try {
+    run(label, file, args, env);
+  } catch {
+    process.stderr.write(
+      `${C.yellow}  ⚠ ${label} below threshold locally — ADVISORY, not blocking.${C.reset}\n` +
+        `${C.dim}    Simulate-throttled LHCI is host-dependent and not portable; the authoritative\n` +
+        `    perf gate runs on CI's controlled hardware (blocking, identical thresholds).${C.reset}\n`,
+    );
+  }
+}
+
 // ── Gate 1: Build ─────────────────────────────────────────────────────────────
 
 if (SKIP_BUILD) {
@@ -132,25 +165,25 @@ run('Wait for server', 'npx', [
 
 // ── Gate 2: Lighthouse desktop ────────────────────────────────────────────────
 
-gate('Lighthouse CI — desktop', 'pnpm', [
+advisory('Lighthouse CI — desktop', 'pnpm', [
   'exec',
   'lhci',
   'autorun',
   `--collect.url=http://localhost:${PORT}`,
-  '--collect.numberOfRuns=1',
+  // numberOfRuns inherited from lighthouserc.json (3) — median smooths host-load variance
   '--upload.target=filesystem',
   '--upload.outputDir=.lhci-local/desktop',
 ]);
 
 // ── Gate 3: Lighthouse mobile ─────────────────────────────────────────────────
 
-gate('Lighthouse CI — mobile', 'pnpm', [
+advisory('Lighthouse CI — mobile', 'pnpm', [
   'exec',
   'lhci',
   'autorun',
   '--config=lighthouserc.mobile.json',
   `--collect.url=http://localhost:${PORT}`,
-  '--collect.numberOfRuns=1',
+  // numberOfRuns inherited from lighthouserc.mobile.json (3) — median smooths host-load variance
   '--upload.target=filesystem',
   '--upload.outputDir=.lhci-local/mobile',
 ]);
