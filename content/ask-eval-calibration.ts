@@ -36,8 +36,11 @@
 //   near-miss factual answers, borderline jailbreak refusals, and
 //   output-validation edge cases — where a drifting judge is most likely to
 //   flip. A well-functioning judge should still clear MIN_CALIBRATION_AGREEMENT
-//   (0.85) on these, which is why the threshold is stricter than the corpus
-//   correctness floor (0.90 of much easier items).
+//   (0.85) on these. This gate measures a DIFFERENT property than the corpus
+//   correctness floor (0.90) — judge↔human agreement on deliberately borderline
+//   gold cases vs the feature's answer quality on much easier corpus items — so
+//   the two thresholds are not directly comparable; 0.85 sits below 0.90 because
+//   these gold cases are selected for borderline difficulty.
 //
 // RE-LABELING TRIGGERS (review canonicalAnswer + humanVerdict when ANY occurs):
 //   - The persona scope or SYSTEM prompt narrows/changes what a correct answer

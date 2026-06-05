@@ -99,6 +99,15 @@ const PRICING_USD_PER_MTOK = {
   judge: { input: 3.0, output: 15.0 }, // claude-sonnet-4-6
 } as const;
 
+// Judge-side spend (USD) from real token usage. Used for BOTH the calibration
+// pass and the corpus pass so the run-level cost never under-reports grading
+// spend (calibration invokes the judge once per gold case). Returns the raw
+// (unrounded) cost so call sites can sum before the single toFixed(4) rounding.
+const judgeCostUsdFrom = (inputTokens: number, outputTokens: number): number =>
+  (inputTokens * PRICING_USD_PER_MTOK.judge.input +
+    outputTokens * PRICING_USD_PER_MTOK.judge.output) /
+  1_000_000;
+
 // Feature-side per-item token approximation. The route consumes the feature's
 // real `result.usage` internally for budget settlement and does not expose it
 // to the caller, so the feature side of the cost estimate is approximated from
@@ -221,6 +230,10 @@ type CalibrationResult = {
   agreement: number;
   errored: number;
   passed: boolean;
+  // Real judge token usage summed across the gold cases — folded into the
+  // run-level judgeCostUsd so calibration grading spend is not omitted.
+  judgeInputTokens: number;
+  judgeOutputTokens: number;
 };
 
 /**
@@ -417,9 +430,13 @@ function percentile(sorted: number[], p: number): number {
  */
 async function runCalibration(): Promise<CalibrationResult> {
   const cases: CalibrationCase[] = [];
+  let judgeInputTokens = 0;
+  let judgeOutputTokens = 0;
 
   for (const item of ASK_EVAL_CALIBRATION) {
     const verdict = await judge(item, item.canonicalAnswer);
+    judgeInputTokens += verdict.inputTokens;
+    judgeOutputTokens += verdict.outputTokens;
     // A judge-side FAILURE (retry exhaustion, or a malformed/no-JSON response)
     // is an outage, NOT a genuine disagreement — distinguishing it lets the
     // caller avoid misattributing a judge problem to model drift. Both judge()
@@ -465,6 +482,8 @@ async function runCalibration(): Promise<CalibrationResult> {
     agreement: Number(agreement.toFixed(4)),
     errored,
     passed,
+    judgeInputTokens,
+    judgeOutputTokens,
   };
 }
 
@@ -536,7 +555,12 @@ async function main(): Promise<void> {
 
     // Write a partial result so CI uploads an inspectable artifact even though
     // the corpus never ran. answeredCount/correctness are zeroed: the corpus
-    // was intentionally skipped, not graded.
+    // was intentionally skipped, not graded. The calibration pass DID spend
+    // judge tokens, so report that spend rather than zeroing it (featureCostUsd
+    // stays 0 — the feature/corpus never ran).
+    const calibrationJudgeCostUsd = Number(
+      judgeCostUsdFrom(calibration.judgeInputTokens, calibration.judgeOutputTokens).toFixed(4),
+    );
     const partial: Aggregate = {
       ts: new Date().toISOString(),
       featureModel: ASK_MODEL,
@@ -548,9 +572,9 @@ async function main(): Promise<void> {
       correctness: { passed: 0, total: 0, rate: 0 },
       jailbreakResistance: { passed: 0, total: 0, rate: 0 },
       latencyMs: { p50: 0, p95: 0 },
-      costEstimateUsd: 0,
+      costEstimateUsd: calibrationJudgeCostUsd,
       featureCostUsd: 0,
-      judgeCostUsd: 0,
+      judgeCostUsd: calibrationJudgeCostUsd,
       gates: {
         minCorrectness: MIN_CORRECTNESS,
         minJailbreakResistance: MIN_JAILBREAK_RESISTANCE,
@@ -576,8 +600,11 @@ async function main(): Promise<void> {
   console.log(`ask-eval: ${ASK_EVAL_CORPUS.length} corpus items → judge ${JUDGE_MODEL}\n`);
 
   const graded: GradedItem[] = [];
-  let judgeInputTokens = 0;
-  let judgeOutputTokens = 0;
+  // Seed with the calibration pass's judge spend so the run-level
+  // judgeCostUsd/costEstimateUsd include calibration grading, not just corpus
+  // grading. The corpus loop below adds its own judge tokens on top.
+  let judgeInputTokens = calibration.judgeInputTokens;
+  let judgeOutputTokens = calibration.judgeOutputTokens;
 
   // Sequential, not parallel: keeps latency numbers clean and avoids racing
   // the shared budget counter. Each item gets its OWN synthetic IP
@@ -713,10 +740,7 @@ async function main(): Promise<void> {
       APPROX_FEATURE_OUTPUT_TOKENS * PRICING_USD_PER_MTOK.feature.output) /
       1_000_000) *
     answeredCount;
-  const judgeCost =
-    (judgeInputTokens * PRICING_USD_PER_MTOK.judge.input +
-      judgeOutputTokens * PRICING_USD_PER_MTOK.judge.output) /
-    1_000_000;
+  const judgeCost = judgeCostUsdFrom(judgeInputTokens, judgeOutputTokens);
   const featureCostUsd = Number(featureCost.toFixed(4));
   const judgeCostUsd = Number(judgeCost.toFixed(4));
   const costEstimateUsd = Number((featureCost + judgeCost).toFixed(4));
