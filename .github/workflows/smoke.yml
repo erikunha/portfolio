@@ -96,11 +96,14 @@ jobs:
           headers=""
           while [ "$attempt" -lt "$max_attempts" ]; do
             attempt=$((attempt + 1))
-            # -L follows the apex->www redirect to the canonical 200.
-            # -D - dumps response headers; on a redirect chain curl prints headers
-            # for EACH hop, so we keep only the final 200 block by taking the last
-            # occurrence of each header (tac | first-match) below.
-            headers=$(curl --max-time 30 --silent --location \
+            # Fetch the CANONICAL host DIRECTLY with NO -L. www returns 200 with
+            # no redirect, so the dumped headers are exactly the final 200's own —
+            # never a redirect hop's. This is the WS0 lesson applied correctly:
+            # following -L would combine the apex 308 (redirect-layer HSTS only)
+            # with the 200, and a header-presence grep would pass on the 308's
+            # weak HSTS, masking a real header regression. If the canonical host
+            # ever returns a 3xx, final_code != 200 fails loudly below (correct).
+            headers=$(curl --max-time 30 --silent \
               --head \
               --write-out "HTTP_FINAL:%{http_code}\n" \
               "${CANONICAL_HOST}/" || true)

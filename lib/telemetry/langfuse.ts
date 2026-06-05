@@ -72,7 +72,11 @@ export async function registerLangfuseProcessor(): Promise<void> {
     log.info('langfuse span processor registered');
   } catch (err) {
     // A Langfuse init failure must never crash cold start. Log and continue -
-    // the hot path is unaffected because the processor is optional.
-    log.warn('langfuse span processor registration failed, continuing without it', { err });
+    // the hot path is unaffected because the processor is optional. Log only the
+    // error MESSAGE (not the full serialized error) so an upstream library error
+    // object can never surface a credential into the logs.
+    log.warn('langfuse span processor registration failed, continuing without it', {
+      errMessage: err instanceof Error ? err.message : String(err),
+    });
   }
 }
