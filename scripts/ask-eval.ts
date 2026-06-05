@@ -523,6 +523,7 @@ async function main(): Promise<void> {
     const partial: Aggregate = {
       ts: new Date().toISOString(),
       featureModel: ASK_MODEL,
+      promptVersion: PROMPT_VERSION,
       judgeModel: JUDGE_MODEL,
       total: 0,
       errored: 0,
