@@ -39,8 +39,13 @@ open the PR. If the decision is not locked, hold the PR — do not open a half-g
 Regenerate against a production server locally, then update snapshots:
 
     pnpm build
-    # serve the prod build, then:
+    DEPLOY_SALT=test pnpm start &
+    # wait for server at localhost:3000, then:
     pnpm test:e2e --project=<visual-project> --update-snapshots
+
+`DEPLOY_SALT=test` prevents prod-mode salt resolution from hitting Upstash Redis
+(see `lib/ip-hash.ts`). Use `pnpm start`, not `pnpm dev` — baselines must match
+the production build.
 
 This writes the `*-darwin.png` baselines.
 
