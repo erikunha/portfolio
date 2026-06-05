@@ -6,9 +6,13 @@ description: Use when about to merge a pull request — before running `pnpm rea
 # PR merge gate (10 points)
 
 These are merge-time procedures, not standing rules — they fire only when a PR is
-about to be merged. Run `pnpm ready-to-merge <pr>` first (point 6); it mechanically
-checks most of the gate. Then work through the rest. AI agents must NOT call
-`gh pr merge` until every applicable point passes.
+about to be merged. Order matters: **rebase first** (point 10, unless it is a
+dependabot branch or the already-reviewed exception applies), THEN run
+`pnpm ready-to-merge <pr>` (point 6) so its checks run on the post-rebase HEAD —
+running `ready-to-merge` before a rebase wastes the run and a rebase changes HEAD,
+invalidating the Copilot/readiness checks. Then work through the rest. AI agents must
+NOT call `gh pr merge` until every applicable point passes. (The Quick sequence below
+has the canonical ordering.)
 
 ## The 10 points
 

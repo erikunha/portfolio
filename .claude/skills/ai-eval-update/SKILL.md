@@ -11,7 +11,7 @@ self-calibration pass runs FIRST so a drifted judge cannot silently mis-grade th
 Results write to `ask-eval-result.json` and (when Upstash is configured) to the KV key
 `ask:eval:latest`, which the live metrics panel reads.
 
-- Feature model: `anthropic/claude-haiku-4-5`. Judge model: `claude-sonnet-4-6`.
+- Feature model: `anthropic/claude-haiku-4-5`. Judge model: `anthropic/claude-sonnet-4-6`.
 - Requires `AI_GATEWAY_API_KEY`. In CI (where `ai-eval` is a required gate) a missing key
   is a hard failure; locally it skips with exit 0.
 
@@ -19,9 +19,14 @@ Results write to `ask-eval-result.json` and (when Upstash is configured) to the 
 
     pnpm ask:eval          # calibration → corpus → grade → gate; writes ask-eval-result.json
 
-The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered: it fires when the
-PR touches `content/ask-eval-corpus.ts`, `content/ask-eval-calibration.ts`,
-`scripts/ask-eval.ts`, or `__tests__/ask-*`. The job has a 15-minute timeout; a ~12-minute
+The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the
+`detect-changes` job: it fires for ANY AI-relevant change, not just the eval files —
+the current filter covers `app/api/ask/`, `lib/ask/`, `lib/ask-log.ts`, `lib/ip-hash.ts`,
+`lib/stream-protocol.ts`, `lib/rate-limit.ts`, `lib/agent/`, `lib/hiring-profile.ts`,
+`content/ask-eval-corpus.ts`, `content/ask-eval-calibration.ts`, `content/perf-receipts.ts`,
+`content/projects.ts`, `content/unknowns.ts`, `content/visa.ts`, `scripts/ask-eval.ts`, and
+`__tests__/ask-*`. Treat `.github/workflows/ci.yml` `detect-changes` as the source of truth
+for the exact set. The job has a 15-minute timeout; a ~12-minute
 run is normal, so a single slow Gateway run can hit the limit and report `cancelled` —
 re-run just that job (it is transient, not a quality failure) rather than bumping the
 timeout on a one-off.

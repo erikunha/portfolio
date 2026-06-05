@@ -1,6 +1,6 @@
 ---
 name: visual-baseline-regen
-description: Use when a push or PR may touch a visual-regression baseline — any CSS, layout, typography, spacing, or rendering change to a section captured in `tests/visual/visual.spec.ts` (hero, contact, shell, hottest-takes, DS components). Covers assessing baseline impact before a push, the darwin regen path (`--update-snapshots` against a prod server), the linux regen path (the `update_visual_baselines` CI dispatch + artifact download + per-project PNG copy), committing both platforms in one commit, the batch-to-one-push cost rule, and the inspect-before-commit rule.
+description: Use when a push or PR may touch a Playwright screenshot baseline — any CSS, layout, typography, spacing, or rendering change. Page sections (hero, contact, shell, hottest-takes) are captured in `tests/visual/visual.spec.ts`; design-system component baselines live in `tests/e2e/design-system-components.spec.ts`. Covers assessing baseline impact before a push, the darwin regen path (`--update-snapshots` against a prod server), the linux regen path (the `update_visual_baselines` CI dispatch + artifact download + per-project PNG copy), committing both platforms in one commit, the batch-to-one-push cost rule, and the inspect-before-commit rule.
 ---
 
 # Visual baseline regeneration
@@ -12,9 +12,10 @@ procedure once the answer is YES.
 
 ## Step 0 — assess impact BEFORE every push (always)
 
-Before any push, decide whether the change touches a visual-regression baseline — a
-section captured in `tests/visual/visual.spec.ts` (hero, contact, shell, hottest-takes,
-DS components). **State the assessment explicitly.**
+Before any push, decide whether the change touches a Playwright screenshot baseline — a
+page section captured in `tests/visual/visual.spec.ts` (hero, contact, shell,
+hottest-takes) OR a design-system component captured in
+`tests/e2e/design-system-components.spec.ts`. **State the assessment explicitly.**
 
 - **NO** baseline affected (e.g. a string moved to content with identical rendering):
   say so and push once. Done.
@@ -70,6 +71,8 @@ run is green. Do not push the code first and let CI fail.
 
 ## Related
 
-- `tests/visual/visual.spec.ts` — the authoritative list of captured sections.
+- `tests/visual/visual.spec.ts` — captured page sections (hero, contact, shell,
+  hottest-takes). `tests/e2e/design-system-components.spec.ts` — design-system component
+  baselines. Both are screenshot baselines that a visual change can invalidate.
 - The runtime/perf (LHCI) and review-battery gates that also run before a push stay
   inline in CLAUDE.md; this skill is only the baseline-regen mechanics.
