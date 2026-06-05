@@ -45,6 +45,9 @@ tsconfig.tsbuildinfo
 # review stamp — local signal that review agents passed for HEAD
 .review-passed
 
+# WS4 API-edit security gate — session-local marker of unaudited API edits
+.claude/.api-edit-pending
+
 # git worktrees (superpowers using-git-worktrees skill creates these here)
 .worktrees/
 

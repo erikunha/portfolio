@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# PreToolUse hook for the Skill tool (WS4 architect-before-writing-plans gate).
+# Blocks superpowers:writing-plans unless the transcript shows an
+# architect-reviewer dispatch that emitted GATE_RESULT: PASS this session.
+# Fail-open for any other skill; fail-closed for writing-plans w/o PASS evidence.
+INPUT=$(cat)
+SKILL=$(printf '%s' "$INPUT" | python3 -c "
+import json,sys
+try:
+  d=json.load(sys.stdin)
+  print(d.get('tool_input',{}).get('skill','') or d.get('skill',''))
+except Exception: print('')
+" 2>/dev/null || echo "")
+TRANSCRIPT=$(printf '%s' "$INPUT" | python3 -c "
+import json,sys
+try: print(json.load(sys.stdin).get('transcript_path',''))
+except Exception: print('')
+" 2>/dev/null || echo "")
+
+# Only gate writing-plans; every other skill passes immediately.
+[ "$SKILL" = "superpowers:writing-plans" ] || exit 0
+
+if [ -z "$TRANSCRIPT" ] || [ ! -r "$TRANSCRIPT" ]; then
+  printf '[BLOCKED] writing-plans requires a prior architect-reviewer PASS; transcript unreadable (fail-closed).\n' >&2
+  printf 'Dispatch architect-reviewer first (must return GATE_RESULT: PASS).\n' >&2
+  exit 2
+fi
+# Resolve the repo root so the helper import is cwd-INDEPENDENT (a relative
+# ./scripts/... import fails if the hook runs from a subdirectory, which would
+# make PASSED='no' and block writing-plans unconditionally).
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+PASSED=$(node -e "
+const { pathToFileURL } = require('node:url');
+import(pathToFileURL(process.argv[1] + '/scripts/lib/transcript.mjs').href).then(m => {
+  const recs = m.readTranscript(process.argv[2]);
+  // Require GATE_RESULT: PASS inside the architect-reviewer's OWN result block
+  // (correlated by tool_use id), so neither prose quoting the sentinel NOR an
+  // unrelated tool_result (e.g. Bash stdout printing it) can spoof the gate.
+  const ok = m.agentResultContains(recs, 'architect-reviewer', 'GATE_RESULT: PASS');
+  process.stdout.write(ok ? 'yes' : 'no');
+}).catch(() => process.stdout.write('no'));
+" "$ROOT" "$TRANSCRIPT" 2>/dev/null || echo "no")
+if [ "$PASSED" = "yes" ]; then exit 0; fi
+printf '[BLOCKED] writing-plans blocked — no architect-reviewer GATE_RESULT: PASS this session.\n' >&2
+printf 'Dispatch architect-reviewer against the spec first; it must return GATE_RESULT: PASS.\n' >&2
+exit 2
