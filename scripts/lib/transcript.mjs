@@ -125,6 +125,28 @@ export function agentsDispatchedSince(records, boundaryIndex) {
 }
 
 /**
+ * Index of the LAST Agent dispatch of `subagentType`, or -1 if none. Used to
+ * scope a follow-on check (e.g. a GATE_RESULT: PASS tool_result) to records
+ * AFTER the dispatch, so an unrelated tool_result carrying the sentinel before
+ * the architect even ran cannot satisfy the gate.
+ *
+ * @param {Array<Record<string, unknown>>} records
+ * @param {string} subagentType
+ * @returns {number}
+ */
+export function lastDispatchIndex(records, subagentType) {
+  let idx = -1;
+  records.forEach((record, index) => {
+    for (const tu of toolUses(record)) {
+      if (tu.name !== 'Agent') continue;
+      const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
+      if (input.subagent_type === subagentType) idx = index;
+    }
+  });
+  return idx;
+}
+
+/**
  * Whether `needle` appears anywhere in the serialized content of any record
  * STRICTLY AFTER the boundary index. Used to detect the architect-reviewer
  * `GATE_RESULT: PASS` sentinel, which lands in a nested tool_result text block

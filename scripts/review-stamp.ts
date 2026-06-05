@@ -23,7 +23,8 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   agentDispatchedAfter,
   agentsDispatchedSince,
@@ -188,7 +189,12 @@ function main(): void {
   console.log('  Note: this proves DISPATCH, not that findings were fixed. That is on you.');
 }
 
-// Run only as a CLI, not when imported by tests. import.meta.url vs argv[1].
+// Run only as a CLI, not when imported by tests. Compare absolute filesystem
+// paths: `tsx scripts/review-stamp.ts` passes a RELATIVE argv[1], so a naive
+// `file://${argv[1]}` string compare would be false and main() would silently
+// not run. resolve() makes argv[1] absolute; fileURLToPath() normalizes the
+// module URL — both become the same absolute path on a direct invocation.
 const invokedDirectly =
-  typeof process.argv[1] === 'string' && import.meta.url === `file://${process.argv[1]}`;
+  typeof process.argv[1] === 'string' &&
+  resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (invokedDirectly) main();

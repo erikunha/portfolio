@@ -6,7 +6,11 @@
 INPUT=$(cat)
 CMD=$(printf '%s' "$INPUT" | python3 -c "
 import json,sys
-try: print(json.load(sys.stdin).get('tool_input',{}).get('command','') or json.load(sys.stdin).get('command',''))
+# Load stdin ONCE (a second json.load on consumed stdin would throw, silently
+# emptying CMD and skipping the gate). tool_input.command is the real field.
+try:
+  d=json.load(sys.stdin)
+  print(d.get('tool_input',{}).get('command','') or d.get('command',''))
 except Exception: print('')
 " 2>/dev/null || echo "")
 TRANSCRIPT=$(printf '%s' "$INPUT" | python3 -c "

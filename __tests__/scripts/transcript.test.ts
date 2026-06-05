@@ -7,9 +7,39 @@ import {
   agentsDispatchedSince,
   containsInToolResultSince,
   containsSince,
+  lastDispatchIndex,
   lastUserCommitMarker,
   readTranscript,
 } from '../../scripts/lib/transcript.mjs';
+
+describe('lastDispatchIndex + after-dispatch PASS scoping (anti-spoof)', () => {
+  const architect = {
+    type: 'assistant',
+    message: {
+      content: [
+        { type: 'tool_use', name: 'Agent', input: { subagent_type: 'architect-reviewer' } },
+      ],
+    },
+  };
+  const passResult = {
+    type: 'user',
+    message: { content: [{ type: 'tool_result', content: 'GATE_RESULT: PASS' }] },
+  };
+  it('returns the index of the last matching Agent dispatch, -1 if none', () => {
+    expect(lastDispatchIndex([architect], 'architect-reviewer')).toBe(0);
+    expect(lastDispatchIndex([passResult], 'architect-reviewer')).toBe(-1);
+  });
+  it('a PASS tool_result BEFORE the architect dispatch does NOT satisfy the scoped check', () => {
+    const records = [passResult, architect]; // PASS at 0, architect at 1
+    const idx = lastDispatchIndex(records, 'architect-reviewer');
+    expect(containsInToolResultSince(records, 'GATE_RESULT: PASS', idx)).toBe(false);
+  });
+  it('a PASS tool_result AFTER the architect dispatch satisfies it', () => {
+    const records = [architect, passResult]; // architect at 0, PASS at 1
+    const idx = lastDispatchIndex(records, 'architect-reviewer');
+    expect(containsInToolResultSince(records, 'GATE_RESULT: PASS', idx)).toBe(true);
+  });
+});
 
 /** Agent-dispatch record at a given ISO timestamp. */
 function agentAt(subagentType: string, iso: string) {
