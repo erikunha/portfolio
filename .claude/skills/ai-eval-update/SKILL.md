@@ -17,7 +17,10 @@ Results write to `ask-eval-result.json` and (when Upstash is configured) to the 
 
 ## Run it
 
-    pnpm ask:eval          # calibration → corpus → grade → gate; writes ask-eval-result.json
+    pnpm ask:eval          # calibration → corpus → grade → gate
+                           # always writes ask-eval-result.json
+                           # writes ask:eval:latest to Upstash Redis only when
+                           # UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN are set
 
 The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the
 `detect-changes` job: it fires for ANY AI-relevant change, not just the eval files —

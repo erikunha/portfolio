@@ -40,12 +40,18 @@ Regenerate against a production server locally, then update snapshots:
 
     pnpm build
     DEPLOY_SALT=test pnpm start &
-    # wait for server at localhost:3000, then:
-    pnpm test:e2e --project=<visual-project> --update-snapshots
+    # wait for server at localhost:3000, then run ONLY the spec being regenerated:
+
+    # for visual.spec.ts baselines:
+    pnpm test:e2e --project=<visual-project> tests/visual/visual.spec.ts --update-snapshots
+
+    # for design-system-components.spec.ts baselines:
+    pnpm test:e2e --project=<visual-project> tests/e2e/design-system-components.spec.ts --update-snapshots
 
 `DEPLOY_SALT=test` prevents prod-mode salt resolution from hitting Upstash Redis
 (see `lib/ip-hash.ts`). Use `pnpm start`, not `pnpm dev` — baselines must match
-the production build.
+the production build. Scope the command to the specific spec to avoid regenerating
+unrelated baselines.
 
 This writes the `*-darwin.png` baselines.
 
