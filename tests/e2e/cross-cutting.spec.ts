@@ -482,4 +482,28 @@ test.describe('cross-cutting', () => {
       `expected >=1 woff2 font preload in <head>, got ${JSON.stringify(fontPreloads)}`,
     ).not.toEqual([]);
   });
+
+  test('8 — body resolves to the self-hosted mono family, not bare monospace (cascade guard)', async ({
+    page,
+  }) => {
+    // Guards the theme.css → next/font wiring. --font-mono is defined ONCE, as
+    // `var(--font-mono-src), monospace`, where --font-mono-src is set by
+    // next/font to its self-hosted face ("mono"). If a future change reintroduced
+    // a second --font-mono definition (e.g. a hardcoded "JetBrains Mono" that is
+    // not a loaded @font-face) and it won the cascade, body would silently
+    // resolve to system monospace on every load. This asserts the FIRST family in
+    // the resolved stack is the self-hosted face and that it is actually loaded.
+    await installMockBackend(page, { log: 'accept', forget: 'happy' });
+    await page.goto('/');
+    await page.evaluate(() => document.fonts.ready);
+    const resolved = await page.evaluate(() => ({
+      bodyFontFamily: getComputedStyle(document.body).fontFamily,
+      realMonoUsable: document.fonts.check('16px mono'),
+    }));
+    expect(resolved.realMonoUsable, 'self-hosted mono face must be loaded').toBe(true);
+    expect(
+      resolved.bodyFontFamily,
+      `body must resolve to the next/font "mono" face first, got ${resolved.bodyFontFamily}`,
+    ).toMatch(/^["']?mono["']?\s*(,|$)/);
+  });
 });

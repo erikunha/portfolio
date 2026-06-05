@@ -106,8 +106,9 @@ their values straight from `theme.css`.
 
 Applied with Tailwind `text-*` utilities; arbitrary values (`text-[32px]`) are
 used where a heading needs a specific size. Headings use the `--font-display`
-(Geist Black) face; everything else is `--font-mono` (JetBrains Mono) — both
-defined in `theme.css`.
+(Inter 900) face; everything else is `--font-mono` (JetBrains Mono). Both are
+self-hosted via `next/font/local` (exposed as `--font-*-src`) and surfaced as
+Tailwind tokens in `theme.css`.
 
 | Utility | Size |
 |---|---|

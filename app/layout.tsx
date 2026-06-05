@@ -12,14 +12,18 @@ const mono = localFont({
     { path: '../public/fonts/jetbrains-mono-500.woff2', weight: '500', style: 'normal' },
     { path: '../public/fonts/jetbrains-mono-700.woff2', weight: '700', style: 'normal' },
   ],
-  variable: '--font-mono',
+  // Distinct *-src variable, referenced by the Tailwind @theme `--font-mono`
+  // token (app/css/theme.css). Single source of truth: consumers read
+  // `--font-mono`, which is wired to this face — not dependent on next/font
+  // winning a cascade race against a hardcoded family name.
+  variable: '--font-mono-src',
   display: 'swap',
   preload: true,
 });
 
 const display = localFont({
   src: [{ path: '../public/fonts/inter-900.woff2', weight: '900', style: 'normal' }],
-  variable: '--font-display',
+  variable: '--font-display-src',
   display: 'swap',
   preload: false,
 });
