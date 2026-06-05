@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # PreToolUse hook for Bash (WS4 API-edit security gate, part 2).
 # Blocks `git push` while .claude/.api-edit-pending is non-empty UNLESS the
-# transcript shows a security-auditor dispatch this session.
+# transcript shows a security-auditor dispatch STRICTLY AFTER the most recent
+# marker entry's timestamp (ordering — a stale pre-edit audit must NOT clear a
+# later edit).
 # Fail-closed: a present marker + unreadable transcript blocks (exit 2).
 INPUT=$(cat)
 CMD=$(printf '%s' "$INPUT" | python3 -c "
