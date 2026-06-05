@@ -32,19 +32,35 @@ jobs:
       - name: Health check - deployment artifact /api/healthz (200 ok or 503 degraded)
         # WHY target_url: probes the specific deployment artifact, not the CDN
         # edge which may still serve the previous version during propagation.
-        # WHY env: keeps target_url as a shell variable - ${{ }} inline would
-        # substitute the raw value into the script body (injection risk).
+        # WHY env: keeps target_url + secret as shell variables - ${{ }} inline
+        # would substitute the raw value into the script body (injection risk).
         # WHY accept 503: healthz returns 503 when the PSI cron is stale -
         # a monitoring concern, not a deploy failure.
+        # WHY the bypass header: the *.vercel.app deployment artifact is behind
+        # Vercel Deployment Protection (responds 401 with a _vercel_sso_nonce
+        # cookie), so probing it directly requires the "Protection Bypass for
+        # Automation" secret sent as x-vercel-protection-bypass. Without the
+        # secret the artifact is unreachable to CI, so this probe is SKIPPED
+        # (loudly) rather than failing the deploy - the canonical-host healthz
+        # step below still gates real production health. With the secret set, a
+        # 401 becomes a genuine failure (bad/rotated secret).
         env:
           DEPLOY_URL: ${{ github.event.deployment_status.target_url }}
+          BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           DEPLOY_URL="${DEPLOY_URL%/}"
           case "$DEPLOY_URL" in
             https://*.vercel.app|https://erikunha.dev|https://www.erikunha.dev) ;;
             *) echo "ERROR: unexpected target_url: $DEPLOY_URL"; exit 1;;
           esac
+          if [ -z "$BYPASS" ]; then
+            echo "WARNING: VERCEL_AUTOMATION_BYPASS_SECRET is unset - the *.vercel.app artifact is gated by Vercel Deployment Protection (401)."
+            echo "Skipping the artifact probe; the canonical /api/healthz step below still gates production health."
+            echo "Provision the secret (Vercel > Settings > Deployment Protection > Protection Bypass for Automation) to re-enable direct artifact probing."
+            exit 0
+          fi
           http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --silent \
+            --header "x-vercel-protection-bypass: $BYPASS" \
             --output /dev/null \
             --write-out "%{http_code}" \
             "${DEPLOY_URL}/api/healthz")
