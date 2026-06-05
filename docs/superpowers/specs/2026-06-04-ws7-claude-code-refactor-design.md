@@ -37,9 +37,9 @@ disclosure at under 200 lines. `CLAUDE.md` retains standing facts, high-frequenc
 and one-line pointer stubs so the relocated rules remain discoverable. No behavioral rule
 is lost; only the token cost of always loading infrequently-used procedure is eliminated.
 
-Target: reduce `CLAUDE.md` from 240 lines to approximately 205 lines (a reduction of
-roughly 35 lines, equivalent to removing about 800 words of dense procedural prose from
-the always-loaded context).
+Target: reduce `CLAUDE.md` from 240 lines to at most 233 lines (a reduction of roughly
+7+ lines; the original ~205 proxy was arithmetically unreachable — the extracted blocks are
+very long single lines, so word-count reduction far exceeds line-count reduction).
 
 ## Coordination note
 
@@ -102,7 +102,7 @@ pr-merge-gate extraction. No separate extraction is needed. It travels with the 
 
 | Path | Change |
 |---|---|
-| `CLAUDE.md` | Replace the 13-line PR merge gate section with a 2-line stub pointer. Replace the 2 dense visual-baseline regen bullets (lines 187-188) with 2 compressed one-line triggers each pointing to the skill. Add a one-line stub for ai-eval-update in the Working Agreement near the `pnpm ask:eval` command entry. Net reduction: approximately 35 lines (from 240 to ~205). |
+| `CLAUDE.md` | Replace the 13-line PR merge gate section with a 2-line stub pointer. Replace the 2 dense visual-baseline regen bullets (lines 187-188) with 2 compressed one-line triggers each pointing to the skill. Add a one-line stub for ai-eval-update in the Working Agreement near the `pnpm ask:eval` command entry. Net reduction: at most 233 lines (from 240; the ~205 proxy in the original spec was arithmetically unreachable). |
 
 ## Error handling / risk
 
