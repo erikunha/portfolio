@@ -460,7 +460,7 @@ jobs:
             content/ask-eval-corpus.ts content/ask-eval-calibration.ts \
             content/perf-receipts.ts \
             content/projects.ts content/unknowns.ts content/visa.ts \
-            scripts/ask-eval.ts __tests__/)
+            scripts/ask-eval.ts '__tests__/ask-*')
           [[ -n "$ai_changed" ]] \
             && echo "ai=true" >> "$GITHUB_OUTPUT" \
             || echo "ai=false" >> "$GITHUB_OUTPUT"

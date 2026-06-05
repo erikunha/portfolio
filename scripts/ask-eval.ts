@@ -185,6 +185,8 @@ type Aggregate = {
   //   minAgreement — the gate threshold (MIN_CALIBRATION_AGREEMENT).
   //   errored      — gold cases where the judge call itself failed (distinct
   //                  from a genuine disagreement — an outage, not drift).
+  //   cases        — per-gold-case outcomes, so the uploaded artifact records
+  //                  WHICH cases disagreed (drift) vs. errored (outage).
   calibration: {
     total: number;
     agreed: number;
@@ -192,6 +194,7 @@ type Aggregate = {
     passed: boolean;
     minAgreement: number;
     errored: number;
+    cases: CalibrationCase[];
   };
   items: GradedItem[];
 };
@@ -415,10 +418,13 @@ async function runCalibration(): Promise<CalibrationResult> {
 
   for (const item of ASK_EVAL_CALIBRATION) {
     const verdict = await judge(item, item.canonicalAnswer);
-    // The judge() retry-exhaustion path stamps this exact prefix into `reason`;
-    // distinguishing an API failure from a genuine disagreement lets the caller
-    // avoid misattributing an outage to model drift.
-    const errored = verdict.reason.startsWith('judge errored after');
+    // A judge-side FAILURE (retry exhaustion, or a malformed/no-JSON response)
+    // is an outage, NOT a genuine disagreement — distinguishing it lets the
+    // caller avoid misattributing a judge problem to model drift. Both judge()
+    // failure reasons count: the retry-exhaustion prefix and the no-JSON reason.
+    const errored =
+      verdict.reason.startsWith('judge errored after') ||
+      verdict.reason === 'judge returned no JSON';
     const agreed = !errored && verdict.pass === item.humanVerdict;
     cases.push({
       id: item.id,
@@ -546,6 +552,7 @@ async function main(): Promise<void> {
         passed: false,
         minAgreement: MIN_CALIBRATION_AGREEMENT,
         errored: calibration.errored,
+        cases: calibration.cases,
       },
       items: [],
     };
@@ -744,6 +751,7 @@ async function main(): Promise<void> {
       passed: calibration.passed,
       minAgreement: MIN_CALIBRATION_AGREEMENT,
       errored: calibration.errored,
+      cases: calibration.cases,
     },
     items: graded,
   };
