@@ -7,10 +7,11 @@
 // Gates (in order):
 //   1. Build          — pnpm build (skip with --skip-build if .next/ is fresh)
 //   2. Server start   — pnpm start on :3000 with DEPLOY_SALT
-//   3. LHCI desktop   — ADVISORY (median of 3 runs), thresholds from lighthouserc.json
-//   4. LHCI mobile    — ADVISORY (median of 3 runs), thresholds from lighthouserc.mobile.json
-//   5. axe-core       — playwright tests/a11y --project=chromium (blocking)
-//   6. E2E functional — cross-cutting + observability-smoke, chromium only (blocking)
+//   3-6. Parallel     — LHCI desktop (advisory), LHCI mobile (advisory),
+//                        axe-core (blocking), E2E functional (blocking)
+//
+// Gates 3-6 run concurrently via child_process.spawn (not execFileSync which
+// blocks the event loop). Wall-clock: max of the 4 (~90s) instead of sum (~5-6 min).
 //
 // LHCI is ADVISORY locally, AUTHORITATIVE in CI:
 //   `throttlingMethod: simulate` + 4x CPU models throttled timing from the HOST trace, so
@@ -87,49 +88,52 @@ function run(
   pass(label);
 }
 
-function gate(
-  label: string,
-  file: string,
-  args: string[],
-  env?: Record<string, string | undefined>,
-) {
-  try {
-    run(label, file, args, env);
-  } catch {
-    process.stderr.write(`${C.red}  ✗ ${label} failed${C.reset}\n`);
-    exitCode = 1;
-  }
+interface GateResult {
+  label: string;
+  advisory: boolean;
+  passed: boolean;
+  durationMs: number;
+  output: string;
 }
 
-// Advisory gate: runs and prints results, but does NOT block the push on failure.
-// WHY: LHCI uses `throttlingMethod: simulate` + 4x CPU multiplier, which models the
-// throttled timing from the HOST's observed trace — so mobile perf scores are not
-// portable across machines (a dev laptop under load false-fails at ~0.6 while CI's
-// controlled runner passes ≥0.9 on the identical config + thresholds). Enforcing a
-// CI-calibrated absolute threshold on arbitrary local hardware trains gate bypasses.
-// The authoritative perf gate is CI's `performance` job (blocking, same thresholds,
-// median of 3). Locally we surface the numbers as advisory signal only.
-function advisory(
+function spawnGate(
   label: string,
+  isAdvisory: boolean,
   file: string,
   args: string[],
-  env?: Record<string, string | undefined>,
-) {
-  try {
-    run(label, file, args, env);
-  } catch (err) {
-    // run() throws on a non-zero LHCI exit (assertion miss) OR a genuine failure
-    // (lhci crash, missing config, command-not-found). Echo the underlying message so
-    // a real breakage is distinguishable from a perf/threshold miss — both stay advisory.
-    const msg = err instanceof Error ? err.message : String(err);
-    advisoryFailed = true;
-    process.stderr.write(
-      `${C.yellow}  ⚠ ${label} did not pass locally — ADVISORY, not blocking.${C.reset}\n` +
-        `${C.dim}    ${msg}\n` +
-        '    Simulate-throttled LHCI is host-dependent and not portable; the authoritative\n' +
-        `    perf gate runs on CI's controlled hardware (blocking, identical thresholds).${C.reset}\n`,
-    );
-  }
+): Promise<GateResult> {
+  const start = Date.now();
+  return new Promise((resolve) => {
+    let output = '';
+    const child = spawn(file, args, {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: process.env,
+    });
+    child.stdout.on('data', (d: Buffer) => {
+      output += d.toString();
+    });
+    child.stderr.on('data', (d: Buffer) => {
+      output += d.toString();
+    });
+    child.on('error', (err) => {
+      resolve({
+        label,
+        advisory: isAdvisory,
+        passed: false,
+        durationMs: Date.now() - start,
+        output: err.message,
+      });
+    });
+    child.on('close', (code) => {
+      resolve({
+        label,
+        advisory: isAdvisory,
+        passed: code === 0,
+        durationMs: Date.now() - start,
+        output,
+      });
+    });
+  });
 }
 
 // ── Gate 1: Build ─────────────────────────────────────────────────────────────
@@ -173,44 +177,89 @@ run('Wait for server', 'npx', [
   '30000',
 ]);
 
-// ── Gate 3: Lighthouse desktop ────────────────────────────────────────────────
+// ── Gates 3-6: Post-build gates (parallel) ────────────────────────────────────
+// These 4 gates have no data dependency on each other. Running them sequentially
+// via execFileSync wastes ~4-5 min of wall-clock time. spawn-based parallel runner
+// reduces wall-clock to the max of the 4 (~90s).
 
-advisory('Lighthouse CI — desktop', 'pnpm', [
-  'exec',
-  'lhci',
-  'autorun',
-  `--collect.url=http://localhost:${PORT}`,
-  // numberOfRuns inherited from lighthouserc.json (3) — median smooths host-load variance
-  '--upload.target=filesystem',
-  '--upload.outputDir=.lhci-local/desktop',
-]);
+step('Running post-build gates in parallel');
 
-// ── Gate 4: Lighthouse mobile ─────────────────────────────────────────────────
+const gatePromises = [
+  spawnGate('Lighthouse CI — desktop', true, 'pnpm', [
+    'exec',
+    'lhci',
+    'autorun',
+    `--collect.url=http://localhost:${PORT}`,
+    // numberOfRuns inherited from lighthouserc.json (3) — median smooths host-load variance
+    '--upload.target=filesystem',
+    '--upload.outputDir=.lhci-local/desktop',
+  ]),
+  spawnGate('Lighthouse CI — mobile', true, 'pnpm', [
+    'exec',
+    'lhci',
+    'autorun',
+    '--config=lighthouserc.mobile.json',
+    `--collect.url=http://localhost:${PORT}`,
+    // numberOfRuns inherited from lighthouserc.mobile.json (3) — median smooths host-load variance
+    '--upload.target=filesystem',
+    '--upload.outputDir=.lhci-local/mobile',
+  ]),
+  spawnGate('axe-core a11y scan', false, 'pnpm', [
+    'playwright',
+    'test',
+    'tests/a11y',
+    '--project=chromium',
+  ]),
+  spawnGate('E2E functional — chromium', false, 'pnpm', [
+    'playwright',
+    'test',
+    '--project=chromium',
+    'tests/e2e/cross-cutting.spec.ts',
+    'tests/e2e/observability-smoke.spec.ts',
+  ]),
+];
 
-advisory('Lighthouse CI — mobile', 'pnpm', [
-  'exec',
-  'lhci',
-  'autorun',
-  '--config=lighthouserc.mobile.json',
-  `--collect.url=http://localhost:${PORT}`,
-  // numberOfRuns inherited from lighthouserc.mobile.json (3) — median smooths host-load variance
-  '--upload.target=filesystem',
-  '--upload.outputDir=.lhci-local/mobile',
-]);
+const timeoutPromise = new Promise<never>((_, reject) =>
+  setTimeout(() => reject(new Error('gates:runtime exceeded 300s wall-clock limit')), 300_000),
+);
 
-// ── Gate 5: axe-core a11y ─────────────────────────────────────────────────────
+let results: PromiseSettledResult<GateResult>[];
+try {
+  results = (await Promise.race([
+    Promise.allSettled(gatePromises),
+    timeoutPromise,
+  ])) as PromiseSettledResult<GateResult>[];
+} catch (err) {
+  process.stderr.write(
+    `${C.red}${C.bold}[gates:runtime] ${err instanceof Error ? err.message : String(err)}${C.reset}\n`,
+  );
+  cleanup();
+  process.exit(1);
+}
 
-gate('axe-core a11y scan', 'pnpm', ['playwright', 'test', 'tests/a11y', '--project=chromium']);
+// Print all buffered output first (deferred to avoid interleaving during parallel run)
+for (const r of results) {
+  if (r.status === 'fulfilled' && r.value.output.trim()) {
+    process.stdout.write(r.value.output);
+  }
+}
 
-// ── Gate 6: E2E functional ────────────────────────────────────────────────────
-
-gate('E2E functional — chromium', 'pnpm', [
-  'playwright',
-  'test',
-  '--project=chromium',
-  'tests/e2e/cross-cutting.spec.ts',
-  'tests/e2e/observability-smoke.spec.ts',
-]);
+// Print result summary
+log(`\n${C.bold}[gates:runtime] Post-build gate results:${C.reset}`);
+for (const r of results) {
+  if (r.status !== 'fulfilled') continue;
+  const { label, advisory: isAdvisory, passed, durationMs } = r.value;
+  const icon = passed ? `${C.green}  ✓` : `${C.red}  ✗`;
+  const tag = isAdvisory ? '(advisory)' : '(blocking)';
+  log(`${icon}${C.reset} ${label.padEnd(35)} ${tag.padEnd(12)} ${(durationMs / 1000).toFixed(1)}s`);
+  if (!passed) {
+    if (isAdvisory) {
+      advisoryFailed = true;
+    } else {
+      exitCode = 1;
+    }
+  }
+}
 
 // ── Teardown ──────────────────────────────────────────────────────────────────
 
@@ -220,7 +269,7 @@ if (exitCode === 0) {
   if (advisoryFailed) {
     log(
       `\n${C.green}${C.bold}[gates:runtime] All blocking runtime gates passed.${C.reset} ` +
-        `${C.yellow}LHCI advisory did not pass locally (see ⚠ above) — CI's perf gate is authoritative.${C.reset}\n`,
+        `${C.yellow}LHCI advisory did not pass locally (see above) — CI's perf gate is authoritative.${C.reset}\n`,
     );
   } else {
     log(`\n${C.green}${C.bold}[gates:runtime] All runtime gates passed.${C.reset}\n`);
