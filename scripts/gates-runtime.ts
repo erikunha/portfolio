@@ -53,6 +53,7 @@ const skipStep = (s: string) => log(`${C.yellow}  – ${s}${C.reset}`);
 log(`\n${C.bold}[gates:runtime] Server-dependent quality gates${C.reset}\n`);
 
 let server: ChildProcess | null = null;
+const gateChildren: ChildProcess[] = [];
 let exitCode = 0;
 // Tracks advisory (non-blocking) gate failures separately from exitCode, so the final
 // summary can stay honest: a green "all passed" line must not hide an LHCI advisory miss
@@ -60,6 +61,8 @@ let exitCode = 0;
 let advisoryFailed = false;
 
 function cleanup() {
+  for (const child of gateChildren) child.kill('SIGTERM');
+  gateChildren.length = 0;
   if (server) {
     server.kill('SIGTERM');
     server = null;
@@ -108,6 +111,7 @@ function spawnGate(
       stdio: ['ignore', 'pipe', 'pipe'],
       env: process.env,
     });
+    gateChildren.push(child);
     child.stdout.on('data', (d: Buffer) => {
       output += d.toString();
     });
@@ -115,6 +119,7 @@ function spawnGate(
       output += d.toString();
     });
     child.on('error', (err) => {
+      gateChildren.splice(gateChildren.indexOf(child), 1);
       resolve({
         label,
         advisory: isAdvisory,
@@ -124,6 +129,7 @@ function spawnGate(
       });
     });
     child.on('close', (code) => {
+      gateChildren.splice(gateChildren.indexOf(child), 1);
       resolve({
         label,
         advisory: isAdvisory,
@@ -208,6 +214,7 @@ const gatePromises = [
     'test',
     'tests/a11y',
     '--project=chromium',
+    '--output=.playwright-results/axe',
   ]),
   spawnGate('E2E functional — chromium', false, 'pnpm', [
     'playwright',
@@ -215,6 +222,7 @@ const gatePromises = [
     '--project=chromium',
     'tests/e2e/cross-cutting.spec.ts',
     'tests/e2e/observability-smoke.spec.ts',
+    '--output=.playwright-results/e2e',
   ]),
 ];
 
