@@ -32,19 +32,57 @@ jobs:
       - name: Health check - deployment artifact /api/healthz (200 ok or 503 degraded)
         # WHY target_url: probes the specific deployment artifact, not the CDN
         # edge which may still serve the previous version during propagation.
-        # WHY env: keeps target_url as a shell variable - ${{ }} inline would
-        # substitute the raw value into the script body (injection risk).
+        # WHY env: keeps target_url + secret as shell variables - ${{ }} inline
+        # would substitute the raw value into the script body (injection risk).
         # WHY accept 503: healthz returns 503 when the PSI cron is stale -
         # a monitoring concern, not a deploy failure.
+        # WHY the bypass header: ONLY the *.vercel.app deployment artifact is
+        # behind Vercel Deployment Protection (responds 401 with a
+        # _vercel_sso_nonce cookie), so probing it requires the "Protection
+        # Bypass for Automation" secret sent as x-vercel-protection-bypass.
+        # Canonical hosts (erikunha.dev / www) are public and are probed
+        # DIRECTLY - no bypass header, no skip. For the protected artifact:
+        # without the secret it is unreachable to CI, so the probe is SKIPPED
+        # (loudly) rather than failing the deploy - the canonical-host healthz
+        # step below still gates real production health; with the secret set, a
+        # 401 becomes a genuine failure (bad/rotated secret).
+        # NEVER add `set -x` to this step: it would trace-print the curl line
+        # with the expanded $BYPASS secret into the public CI log.
         env:
           DEPLOY_URL: ${{ github.event.deployment_status.target_url }}
+          BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           DEPLOY_URL="${DEPLOY_URL%/}"
+          # Anchor matching to a bare https host. The case globs below use `*`,
+          # which spans `/` - so without this a forged target_url like
+          # `https://evil.com/x.vercel.app` would match `https://*.vercel.app`
+          # and leak the bypass secret to evil.com. Reject anything where the
+          # post-scheme remainder is not a plain hostname (no path, userinfo,
+          # port, query, or scheme mismatch).
+          host_only="${DEPLOY_URL#https://}"
+          case "$host_only" in
+            "$DEPLOY_URL"|*[!a-zA-Z0-9.-]*)
+              echo "ERROR: target_url is not a bare https host: $DEPLOY_URL"; exit 1;;
+          esac
+          header_args=()
           case "$DEPLOY_URL" in
-            https://*.vercel.app|https://erikunha.dev|https://www.erikunha.dev) ;;
+            https://*.vercel.app)
+              # Protected artifact: the bypass secret is required.
+              if [ -z "$BYPASS" ]; then
+                echo "WARNING: VERCEL_AUTOMATION_BYPASS_SECRET is unset - the *.vercel.app artifact is gated by Vercel Deployment Protection (401)."
+                echo "Skipping the artifact probe; the canonical /api/healthz step below still gates production health."
+                echo "Provision the secret (Vercel > Settings > Deployment Protection > Protection Bypass for Automation) to re-enable direct artifact probing."
+                exit 0
+              fi
+              header_args=(--header "x-vercel-protection-bypass: $BYPASS")
+              ;;
+            https://erikunha.dev|https://www.erikunha.dev)
+              # Public canonical host: probe directly, no bypass needed.
+              ;;
             *) echo "ERROR: unexpected target_url: $DEPLOY_URL"; exit 1;;
           esac
           http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --silent \
+            "${header_args[@]}" \
             --output /dev/null \
             --write-out "%{http_code}" \
             "${DEPLOY_URL}/api/healthz")
