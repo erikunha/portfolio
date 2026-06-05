@@ -13,16 +13,19 @@ except Exception:
 " 2>/dev/null || echo "")
 if printf '%s' "$FILE" | grep -qE 'app/api/|lib/rate-limit\.ts$|(^|/)proxy\.ts$'; then
   HEAD_SHA=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
-  # WHY second-granularity (not ms): the ordering check (agentDispatchedAfter) is
-  # STRICTLY after, so a security-auditor dispatch in the SAME wall-clock second
-  # as this edit is treated as NOT-after and will NOT clear the marker. That is
-  # the SAFE direction (over-block: re-dispatch or the audit genuinely post-dates
-  # by >=1s in any real edit-then-audit flow). Do NOT "upgrade" to ms precision
-  # without re-checking that the dangerous direction (pre-edit audit clearing a
-  # later edit) stays prevented.
-  TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-  mkdir -p .claude 2>/dev/null
-  printf '%s\t%s\t%s\n' "$TS" "$HEAD_SHA" "$FILE" >> .claude/.api-edit-pending 2>/dev/null || true
+  # MILLISECOND-precision ISO timestamp (same shape as transcript record times),
+  # so the strictly-after ordering check (agentDispatchedAfter) compares exactly.
+  # A SECOND-floored time (`date +%S`) rounds the EDIT time DOWN, so a
+  # security-auditor dispatch earlier in the SAME second would compare as "after"
+  # the marker and FALSELY clear it (the dangerous direction). node's toISOString
+  # is portable where `date` ms-formatting (`%N`) is not (BSD/macOS).
+  TS=$(node -e 'process.stdout.write(new Date().toISOString())' 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%S.000Z)
+  # Write to a $ROOT-anchored path so the marker is cwd-independent — the
+  # push-guard reads the same absolute path (a cwd-relative marker would be
+  # invisible to a hook running from a subdirectory).
+  ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+  mkdir -p "$ROOT/.claude" 2>/dev/null
+  printf '%s\t%s\t%s\n' "$TS" "$HEAD_SHA" "$FILE" >> "$ROOT/.claude/.api-edit-pending" 2>/dev/null || true
   printf '[api-edit-marker] Recorded API-surface edit: %s\n' "$FILE"
   printf 'Dispatch security-auditor before pushing. The push guard will block until you do.\n'
 fi

@@ -25,9 +25,14 @@ if [ -z "$TRANSCRIPT" ] || [ ! -r "$TRANSCRIPT" ]; then
   printf 'Dispatch architect-reviewer first (must return GATE_RESULT: PASS).\n' >&2
   exit 2
 fi
+# Resolve the repo root so the helper import is cwd-INDEPENDENT (a relative
+# ./scripts/... import fails if the hook runs from a subdirectory, which would
+# make PASSED='no' and block writing-plans unconditionally).
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 PASSED=$(node -e "
-import('./scripts/lib/transcript.mjs').then(m => {
-  const recs = m.readTranscript(process.argv[1]);
+const { pathToFileURL } = require('node:url');
+import(pathToFileURL(process.argv[1] + '/scripts/lib/transcript.mjs').href).then(m => {
+  const recs = m.readTranscript(process.argv[2]);
   // Require GATE_RESULT: PASS inside a tool_result block (the architect's
   // returned report) that appears AFTER the architect-reviewer dispatch — so
   // neither prose quoting the sentinel NOR an unrelated earlier tool_result can
@@ -36,7 +41,7 @@ import('./scripts/lib/transcript.mjs').then(m => {
   const ok = idx >= 0 && m.containsInToolResultSince(recs, 'GATE_RESULT: PASS', idx);
   process.stdout.write(ok ? 'yes' : 'no');
 }).catch(() => process.stdout.write('no'));
-" "$TRANSCRIPT" 2>/dev/null || echo "no")
+" "$ROOT" "$TRANSCRIPT" 2>/dev/null || echo "no")
 if [ "$PASSED" = "yes" ]; then exit 0; fi
 printf '[BLOCKED] writing-plans blocked — no architect-reviewer GATE_RESULT: PASS this session.\n' >&2
 printf 'Dispatch architect-reviewer against the spec first; it must return GATE_RESULT: PASS.\n' >&2

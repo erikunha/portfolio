@@ -21,14 +21,22 @@ try: print(json.load(sys.stdin).get('transcript_path',''))
 except Exception: print('')
 " 2>/dev/null || echo "")
 
-# Only act on a real git push; ignore everything else. Match `git` and `push`
-# non-adjacently so global-option forms (`git -C . push`, `git -c k=v push`) are
-# still caught. This in-session guard is best-effort (variable/eval indirection
-# can still evade); the DURABLE backstop is the .husky/pre-push marker gate,
-# which fires at the one chokepoint git guarantees runs regardless of syntax.
-printf '%s' "$CMD" | grep -qE '\bgit\b.*\bpush\b' || exit 0
+# Only act on a real git push; ignore everything else. Require both `git` and
+# `push` as whitespace/edge-delimited TOKENS (so global-option forms like
+# `git -C . push` are caught, but `digit`/`pushd` are not). POSIX ERE token
+# boundaries `(^|[[:space:]])X([[:space:]]|$)` — NOT `\b`, which is non-portable
+# (BSD/POSIX grep may treat `\b` as a literal `b` and silently never match).
+# This in-session guard is best-effort (variable/eval indirection can still
+# evade); the DURABLE backstop is the .husky/pre-push marker gate.
+printf '%s' "$CMD" | grep -qE '(^|[[:space:]])git([[:space:]]|$)' \
+  && printf '%s' "$CMD" | grep -qE '(^|[[:space:]])push([[:space:]]|$)' || exit 0
+# Resolve the repo root so BOTH the marker path and the helper import are
+# cwd-INDEPENDENT (a relative path fails if the hook runs from a subdirectory:
+# the marker would not be found -> false allow; the import would fail -> false
+# block). The marker is written to the same $ROOT path by api-edit-marker.sh.
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 # No marker / empty marker => nothing pending, allow.
-MARKER=".claude/.api-edit-pending"
+MARKER="$ROOT/.claude/.api-edit-pending"
 [ -s "$MARKER" ] || exit 0
 
 # Marker present: require a security-auditor dispatch AFTER the most recent
@@ -42,12 +50,13 @@ if [ -z "$TRANSCRIPT" ] || [ ! -r "$TRANSCRIPT" ]; then
 fi
 MARKER_TS=$(tail -n 1 "$MARKER" | cut -f1)
 AUDITED=$(node -e "
-import('./scripts/lib/transcript.mjs').then(m => {
-  const recs = m.readTranscript(process.argv[1]);
-  const ran = m.agentDispatchedAfter(recs, 'security-auditor', process.argv[2]);
+const { pathToFileURL } = require('node:url');
+import(pathToFileURL(process.argv[1] + '/scripts/lib/transcript.mjs').href).then(m => {
+  const recs = m.readTranscript(process.argv[2]);
+  const ran = m.agentDispatchedAfter(recs, 'security-auditor', process.argv[3]);
   process.stdout.write(ran ? 'yes' : 'no');
 }).catch(() => process.stdout.write('no'));
-" "$TRANSCRIPT" "$MARKER_TS" 2>/dev/null || echo "no")
+" "$ROOT" "$TRANSCRIPT" "$MARKER_TS" 2>/dev/null || echo "no")
 if [ "$AUDITED" = "yes" ]; then
   rm -f "$MARKER"   # verified audit clears the marker so it never blocks forever
   exit 0

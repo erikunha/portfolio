@@ -56,7 +56,10 @@ fi
 # chain (typecheck + validate-content + client-naming + tests) at a fraction
 # of the per-commit DX tax. `pnpm verify` is the manual equivalent.
 echo "[pre-push] Running verify chain (typecheck + validate-content + client-naming + tests)..."
-pnpm verify
+# Fail-fast: a verify failure MUST abort the push. Without `|| exit 1` the script
+# would continue into the runtime-gates block below and the final exit code could
+# reset to 0, letting a broken lint/typecheck/test chain push anyway.
+pnpm verify || exit 1
 
 # Runtime gates for non-docs pushes (WS4). CLAUDE.md requires `pnpm gates:runtime`
 # (build + LHCI + axe + E2E) before any push touching non-docs files; the prior
