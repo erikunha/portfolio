@@ -54,6 +54,10 @@ log(`\n${C.bold}[gates:runtime] Server-dependent quality gates${C.reset}\n`);
 
 let server: ChildProcess | null = null;
 let exitCode = 0;
+// Tracks advisory (non-blocking) gate failures separately from exitCode, so the final
+// summary can stay honest: a green "all passed" line must not hide an LHCI advisory miss
+// (which may be a real local breakage — lhci missing / config error — not just a threshold).
+let advisoryFailed = false;
 
 function cleanup() {
   if (server) {
@@ -118,6 +122,7 @@ function advisory(
     // (lhci crash, missing config, command-not-found). Echo the underlying message so
     // a real breakage is distinguishable from a perf/threshold miss — both stay advisory.
     const msg = err instanceof Error ? err.message : String(err);
+    advisoryFailed = true;
     process.stderr.write(
       `${C.yellow}  ⚠ ${label} did not pass locally — ADVISORY, not blocking.${C.reset}\n` +
         `${C.dim}    ${msg}\n` +
@@ -212,7 +217,14 @@ gate('E2E functional — chromium', 'pnpm', [
 cleanup();
 
 if (exitCode === 0) {
-  log(`\n${C.green}${C.bold}[gates:runtime] All runtime gates passed.${C.reset}\n`);
+  if (advisoryFailed) {
+    log(
+      `\n${C.green}${C.bold}[gates:runtime] All blocking runtime gates passed.${C.reset} ` +
+        `${C.yellow}LHCI advisory did not pass locally (see ⚠ above) — CI's perf gate is authoritative.${C.reset}\n`,
+    );
+  } else {
+    log(`\n${C.green}${C.bold}[gates:runtime] All runtime gates passed.${C.reset}\n`);
+  }
 } else {
   process.stderr.write(
     `\n${C.red}${C.bold}[gates:runtime] One or more runtime gates failed. Fix before pushing.${C.reset}\n\n`,
