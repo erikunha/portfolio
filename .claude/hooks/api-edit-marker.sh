@@ -13,6 +13,13 @@ except Exception:
 " 2>/dev/null || echo "")
 if printf '%s' "$FILE" | grep -qE 'app/api/|lib/rate-limit\.ts$|(^|/)proxy\.ts$'; then
   HEAD_SHA=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+  # WHY second-granularity (not ms): the ordering check (agentDispatchedAfter) is
+  # STRICTLY after, so a security-auditor dispatch in the SAME wall-clock second
+  # as this edit is treated as NOT-after and will NOT clear the marker. That is
+  # the SAFE direction (over-block: re-dispatch or the audit genuinely post-dates
+  # by >=1s in any real edit-then-audit flow). Do NOT "upgrade" to ms precision
+  # without re-checking that the dangerous direction (pre-edit audit clearing a
+  # later edit) stays prevented.
   TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   mkdir -p .claude 2>/dev/null
   printf '%s\t%s\t%s\n' "$TS" "$HEAD_SHA" "$FILE" >> .claude/.api-edit-pending 2>/dev/null || true

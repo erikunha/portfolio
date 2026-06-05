@@ -149,8 +149,8 @@ export function containsSince(records, needle, boundaryIndex) {
  * Tighter than `containsSince`: it ignores the string appearing in the
  * operator's own prose / instruction quotes, so an architect-reviewer that
  * returned FAIL cannot be spoofed into a PASS by the literal `GATE_RESULT: PASS`
- * showing up elsewhere in the conversation. Scans `tool_result` items and any
- * record whose serialized `type` is `tool_result`.
+ * showing up elsewhere in the conversation. Scans `message.content[]` items
+ * whose `type` is `tool_result` (the shape a subagent's returned report takes).
  *
  * @param {Array<Record<string, unknown>>} records
  * @param {string} needle
