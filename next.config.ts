@@ -35,7 +35,9 @@ const nextConfig: NextConfig = {
   // (no follow) to assert 200/503 and fail loudly on any 3xx. See WS5 spec +
   // DECISIONS.md. NOTE: if the 308 originated from a Vercel project-level
   // Trailing Slash setting (Settings > General), that dashboard toggle overrides
-  // this config and must be cleared too; verify with the live curl below.
+  // this config and must be cleared too. Verify against the CANONICAL host with
+  // no redirect-follow (the WS0 lesson: -L would mask the apex 308):
+  //   curl -sI https://www.erikunha.dev/api/healthz   # expect HTTP/2 200 (or 503 degraded), never 3xx
   trailingSlash: false,
   headers: async () => [
     {
