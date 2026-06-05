@@ -1,6 +1,6 @@
 ---
 name: pr-merge-gate
-description: Use when about to merge a pull request — before running `pnpm ready-to-merge`, resolving Copilot/reviewer threads, rebasing, or executing `gh pr merge`. Covers the full 10-point pre-merge gate: Copilot auth requirement, GitHub resolve-thread ground truth, RESOLVE-or-ESCALATE discipline, in-session reviewer findings, self-resolve detection, the `pnpm ready-to-merge` mechanical command, branch-protection invariant, the Copilot re-request loop, the local Playwright visual check, and the rebase rule with its dependabot and already-reviewed exceptions. Do NOT auto-activate for ordinary pushes — only at merge time.
+description: Use when about to merge a pull request — before running `pnpm ready-to-merge`, resolving Copilot/reviewer threads, or rebasing. The bash-guard blocks `gh pr merge` for AI agents (exit 2); the repo owner executes the final merge in an external terminal once all gates pass. Covers the full 10-point pre-merge gate: Copilot review requirement, GitHub resolve-thread ground truth, RESOLVE-or-ESCALATE discipline, in-session reviewer findings, self-resolve detection, the `pnpm ready-to-merge` mechanical command, branch-protection invariant, the Copilot re-request loop, the local Playwright visual check, and the rebase rule with its dependabot and already-reviewed exceptions. Do NOT auto-activate for ordinary pushes — only at merge time.
 ---
 
 # PR merge gate (10 points)
@@ -10,18 +10,19 @@ about to be merged. Order matters: **rebase first** (point 10, unless it is a
 dependabot branch or the already-reviewed exception applies), THEN run
 `pnpm ready-to-merge <pr>` (point 6) so its checks run on the post-rebase HEAD —
 running `ready-to-merge` before a rebase wastes the run and a rebase changes HEAD,
-invalidating the Copilot/readiness checks. Then work through the rest. AI agents must
-NOT call `gh pr merge` until every applicable point passes. (The Quick sequence below
-has the canonical ordering.)
+invalidating the Copilot/readiness checks. Then work through the rest. The bash-guard blocks `gh pr merge` in agent sessions (exit 2). Once all points pass,
+the repo owner executes the final merge in an external terminal or via the GitHub UI.
+(The Quick sequence below has the canonical ordering.)
 
 ## The 10 points
 
-1. **Copilot review required for agent merges.** AI agents may not call `gh pr merge`
-   without a Copilot review on the latest HEAD. The repo owner may merge directly.
-   Agents: `pnpm ready-to-merge <pr>` must pass; if Copilot is unavailable, WAIT — do
-   not self-authorize, do not `--admin` override. (Branch protection mechanically
-   blocks `gh pr merge` with "base branch policy prohibits" until Copilot has reviewed
-   the current HEAD; a new commit after Copilot's review re-blocks until it re-reviews.)
+1. **Copilot review required; repo owner executes the final merge.** The bash-guard
+   blocks `gh pr merge` in agent sessions (exit 2) — the repo owner runs the final
+   merge command in an external terminal or via the GitHub UI. `pnpm ready-to-merge <pr>`
+   must pass first; if Copilot is unavailable, WAIT — do not self-authorize, do not
+   `--admin` override. (Branch protection mechanically blocks `gh pr merge` with "base
+   branch policy prohibits" until Copilot has reviewed the current HEAD; a new commit
+   after Copilot's review re-blocks until it re-reviews.)
 
 2. **GitHub resolve-thread is ground truth.** No merge while any
    `PullRequestReviewThread` is `isResolved: false` (`required_conversation_resolution`
@@ -69,10 +70,10 @@ has the canonical ordering.)
 
 10. **Rebase before merge (non-dependabot only).** `git fetch && git rebase origin/main`.
     Skip `dependabot/*` branches. **Exception:** when the user says "merge"/"ship" on a
-    PR that already passed the full review battery and CI, execute `gh pr merge`
-    immediately, no rebase — rebasing would change HEAD, invalidate the review stamp, and
-    trigger the pre-push hook needlessly. See `DECISIONS.md` for why this is a local gate
-    only.
+    PR that already passed the full review battery and CI, the repo owner executes
+    `gh pr merge` immediately in an external terminal — no rebase (rebasing would change
+    HEAD, invalidate the review stamp, and trigger the pre-push hook needlessly). See
+    `DECISIONS.md` for why this is a local gate only.
 
 ## Quick sequence
 
@@ -82,8 +83,9 @@ has the canonical ordering.)
 3. Confirm 0 unresolved review threads (point 2) and every thread RESOLVED/ESCALATED
    (point 3).
 4. Local Playwright visual check on changed sections (point 9).
-5. `gh pr merge <pr> --squash --delete-branch` — only after 1-4 pass and Copilot has
-   reviewed the current HEAD (point 1).
+5. Repo owner runs `gh pr merge <pr> --squash --delete-branch` in an external terminal
+   — only after 1-4 pass and Copilot has reviewed the current HEAD (point 1). The
+   bash-guard blocks direct `gh pr merge` calls in agent sessions (exit 2).
 
 ## Related
 

@@ -34,7 +34,7 @@
 | `pnpm pr-size [--base <ref>]` | After every commit block and before opening a PR — decides whether to split. Sizes vs the base branch; for a sub-PR into an integration branch set `PR_BASE=origin/feat/<feature>` (or `--base`) so it reads as its own small diff |
 | `pnpm ready-for-pr` | Before `gh pr create` — runs ci:local + pr-size + gates:runtime, prints next-step checklist |
 | `pnpm validate-pr-body [<pr>]` | After `gh pr create` — exits 1 if any template section is missing or empty; must pass before requesting review |
-| `pnpm ready-to-merge [<pr>]` | Before `gh pr merge` — runs ci:local + branch-protection + Copilot review + resolved threads + pr-metrics |
+| `pnpm ready-to-merge [<pr>]` | Before the repo owner runs `gh pr merge` — runs ci:local + branch-protection + Copilot review + resolved threads + pr-metrics |
 | `pnpm pr-metrics [<pr>]` | During or after PR review — reports Copilot cycle count, size, days open |
 | `pnpm changelog:sync` | After any commit with scope `(design-system)` — regenerates `app/design-system/changelog/page.mdx` from full git history |
 | `pnpm ask:eval` | When maintaining the AI eval harness (corpus/calibration/runner changes) — calibration → corpus → gate, writes `ask:eval:latest`. See `.claude/skills/ai-eval-update` |
@@ -210,7 +210,7 @@ Verify: `curl https://erikunha.dev/api/healthz | jq .sha`
 
 ## PR merge gate
 
-When about to merge a PR, invoke `.claude/skills/pr-merge-gate`: rebase first (non-dependabot, unless the already-reviewed exception applies), THEN run `pnpm ready-to-merge <pr>` so the readiness checks run on the post-rebase HEAD. The skill covers the full 10-point gate: Copilot-review requirement (mechanical, branch-protection), resolve-thread ground truth, RESOLVE-or-ESCALATE with SHA-cited replies, in-session reviewer findings, self-resolve detection, the `ready-to-merge` command, branch-protection invariant, the Copilot re-request loop, the local Playwright visual check, and the rebase rule (with its dependabot + already-reviewed exceptions). AI agents must not call `gh pr merge` until every applicable point passes, and must never `--admin` self-authorize — escalate to the owner instead.
+When about to merge a PR, invoke `.claude/skills/pr-merge-gate`: rebase first (non-dependabot, unless the already-reviewed exception applies), THEN run `pnpm ready-to-merge <pr>` so the readiness checks run on the post-rebase HEAD. The skill covers the full 10-point gate: Copilot-review requirement (mechanical, branch-protection), resolve-thread ground truth, RESOLVE-or-ESCALATE with SHA-cited replies, in-session reviewer findings, self-resolve detection, the `ready-to-merge` command, branch-protection invariant, the Copilot re-request loop, the local Playwright visual check, and the rebase rule (with its dependabot + already-reviewed exceptions). AI agents must never call `gh pr merge` — the bash-guard blocks it (exit 2). Once all gate points pass, the repo owner executes the final merge command in an external terminal or via the GitHub UI.
 
 ## Things that have been considered and rejected
 
