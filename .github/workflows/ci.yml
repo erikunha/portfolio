@@ -457,9 +457,10 @@ jobs:
           ai_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
             app/api/ask/ lib/ask/ lib/ask-log.ts lib/ip-hash.ts \
             lib/stream-protocol.ts lib/rate-limit.ts lib/agent/ lib/hiring-profile.ts \
-            content/ask-eval-corpus.ts content/perf-receipts.ts \
+            content/ask-eval-corpus.ts content/ask-eval-calibration.ts \
+            content/perf-receipts.ts \
             content/projects.ts content/unknowns.ts content/visa.ts \
-            scripts/ask-eval.ts)
+            scripts/ask-eval.ts '__tests__/ask-*')
           [[ -n "$ai_changed" ]] \
             && echo "ai=true" >> "$GITHUB_OUTPUT" \
             || echo "ai=false" >> "$GITHUB_OUTPUT"
