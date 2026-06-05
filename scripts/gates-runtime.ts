@@ -113,10 +113,15 @@ function advisory(
 ) {
   try {
     run(label, file, args, env);
-  } catch {
+  } catch (err) {
+    // run() throws on a non-zero LHCI exit (assertion miss) OR a genuine failure
+    // (lhci crash, missing config, command-not-found). Echo the underlying message so
+    // a real breakage is distinguishable from a perf/threshold miss — both stay advisory.
+    const msg = err instanceof Error ? err.message : String(err);
     process.stderr.write(
-      `${C.yellow}  ⚠ ${label} below threshold locally — ADVISORY, not blocking.${C.reset}\n` +
-        `${C.dim}    Simulate-throttled LHCI is host-dependent and not portable; the authoritative\n` +
+      `${C.yellow}  ⚠ ${label} did not pass locally — ADVISORY, not blocking.${C.reset}\n` +
+        `${C.dim}    ${msg}\n` +
+        '    Simulate-throttled LHCI is host-dependent and not portable; the authoritative\n' +
         `    perf gate runs on CI's controlled hardware (blocking, identical thresholds).${C.reset}\n`,
     );
   }
@@ -142,7 +147,7 @@ if (SKIP_BUILD) {
   });
 }
 
-// ── Start server ──────────────────────────────────────────────────────────────
+// ── Gate 2: Start server ──────────────────────────────────────────────────────
 
 step('Starting production server');
 server = spawn('pnpm', ['start'], {
@@ -163,7 +168,7 @@ run('Wait for server', 'npx', [
   '30000',
 ]);
 
-// ── Gate 2: Lighthouse desktop ────────────────────────────────────────────────
+// ── Gate 3: Lighthouse desktop ────────────────────────────────────────────────
 
 advisory('Lighthouse CI — desktop', 'pnpm', [
   'exec',
@@ -175,7 +180,7 @@ advisory('Lighthouse CI — desktop', 'pnpm', [
   '--upload.outputDir=.lhci-local/desktop',
 ]);
 
-// ── Gate 3: Lighthouse mobile ─────────────────────────────────────────────────
+// ── Gate 4: Lighthouse mobile ─────────────────────────────────────────────────
 
 advisory('Lighthouse CI — mobile', 'pnpm', [
   'exec',
@@ -188,11 +193,11 @@ advisory('Lighthouse CI — mobile', 'pnpm', [
   '--upload.outputDir=.lhci-local/mobile',
 ]);
 
-// ── Gate 4: axe-core a11y ─────────────────────────────────────────────────────
+// ── Gate 5: axe-core a11y ─────────────────────────────────────────────────────
 
 gate('axe-core a11y scan', 'pnpm', ['playwright', 'test', 'tests/a11y', '--project=chromium']);
 
-// ── Gate 5: E2E functional ────────────────────────────────────────────────────
+// ── Gate 6: E2E functional ────────────────────────────────────────────────────
 
 gate('E2E functional — chromium', 'pnpm', [
   'playwright',
