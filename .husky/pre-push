@@ -68,7 +68,17 @@ pnpm verify || exit 1
 # hook ran `verify` only, leaving this honor-system. Now enforced. Docs-only
 # pushes skip; SKIP_RUNTIME_GATES=1 bypasses deliberately (loudly logged).
 RANGE_BASE=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "origin/main")
-CHANGED=$(git diff --name-only "$RANGE_BASE"..HEAD 2>/dev/null || git diff --name-only origin/main..HEAD 2>/dev/null || echo "")
+# Compute the changed-file set. FAIL-CLOSED if the diff can't be computed
+# (missing refs, unusual remote, detached HEAD): an empty result must NOT be
+# mistaken for "docs-only" and skip the runtime gates. On failure we substitute
+# a sentinel that lands in NON_DOCS, forcing gates:runtime to run.
+if CHANGED=$(git diff --name-only "$RANGE_BASE"..HEAD 2>/dev/null) \
+  || CHANGED=$(git diff --name-only origin/main..HEAD 2>/dev/null); then
+  :
+else
+  echo "[pre-push] WARNING: could not compute changed files — running gates:runtime (fail-closed)."
+  CHANGED="__diff-unavailable__"
+fi
 NON_DOCS=$(printf '%s\n' "$CHANGED" | grep -vE '(\.md$|^content/|^docs/)' | grep -v '^$' || true)
 if [ -n "${SKIP_RUNTIME_GATES:-}" ]; then
   echo ""
