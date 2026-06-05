@@ -180,7 +180,7 @@ type Aggregate = {
   // reliability against the human-labeled gold set, not just the corpus grades.
   //   total        — gold cases run.
   //   agreed       — gold cases where the judge verdict matched humanVerdict.
-  //   agreement    — agreed / total, 4 decimal places.
+  //   agreement    — agreed / total, rounded to 4 decimal places.
   //   passed       — agreement >= minAgreement AND not too many judge errors.
   //   minAgreement — the gate threshold (MIN_CALIBRATION_AGREEMENT).
   //   errored      — gold cases where the judge call itself failed (distinct
@@ -445,7 +445,16 @@ async function runCalibration(): Promise<CalibrationResult> {
   const agreed = cases.filter((c) => c.agreed).length;
   const errored = cases.filter((c) => c.errored).length;
   const agreement = total > 0 ? agreed / total : 0;
-  const passed = agreement >= MIN_CALIBRATION_AGREEMENT;
+  // `passed` honors BOTH documented conditions: sufficient agreement AND not a
+  // judge-outage. Errored cases already count as disagreements (fail-closed),
+  // so an outage drags agreement below the threshold on its own — but ANDing the
+  // outage check in explicitly keeps `calibration.passed` matching its doc
+  // semantics independent of that coupling, and makes the field self-describing
+  // for the result-JSON consumer (main()'s outage messaging recomputes the same
+  // fraction from the exposed errored/total, so the two can never diverge).
+  const errorFraction = total > 0 ? errored / total : 0;
+  const calibrationOutage = errorFraction > CALIBRATION_ERROR_FRACTION_LIMIT;
+  const passed = agreement >= MIN_CALIBRATION_AGREEMENT && !calibrationOutage;
 
   return {
     cases,
