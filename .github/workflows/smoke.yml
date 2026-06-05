@@ -9,9 +9,12 @@ on:
 # Canonical production host. The custom domain serves a 308 redirect on the
 # APEX (erikunha.dev -> www.erikunha.dev); the apex 308 carries ONLY the
 # redirect-layer HSTS header, NOT the application security headers. Header and
-# routing assertions MUST therefore run against the canonical www 200 (or follow
-# the redirect with -L), never the apex 308 - curling the apex directly is the
-# exact false-positive that the dissolved WS0 audit produced. See WS5 spec.
+# healthz assertions MUST therefore run against the canonical www 200 DIRECTLY
+# (no -L), never the apex 308 and never a followed redirect - asserting headers
+# across -L would FALSE-POSITIVE on the 308's weak HSTS, the exact error that
+# produced the dissolved WS0 CRITICAL. (The one homepage step that DOES use -L
+# deliberately curls the APEX to verify the redirect path; see its comment.)
+# See WS5 spec.
 env:
   CANONICAL_HOST: https://www.erikunha.dev
 
@@ -77,11 +80,12 @@ jobs:
           fi
 
       - name: Security headers present on canonical 200 (salvaged WS0 header smoke)
-        # WHY -L on the canonical host: the apex 308 carries only redirect-layer
-        # HSTS, so asserting headers on the apex 308 is a FALSE POSITIVE (the
-        # exact error that produced the dissolved WS0 CRITICAL). Following the
-        # redirect (-L) to the www 200 reads the real application headers set by
-        # next.config.ts (static headers) + proxy.ts (CSP + Reporting-Endpoints).
+        # WHY canonical host with NO -L: the apex 308 carries only redirect-layer
+        # HSTS, so asserting headers across a followed redirect would FALSE-POSITIVE
+        # on the 308's weak header (the exact error that produced the dissolved WS0
+        # CRITICAL). Fetching the canonical www 200 DIRECTLY (no -L) reads exactly
+        # the application headers set by next.config.ts (static) + proxy.ts (CSP +
+        # Reporting-Endpoints) — never a redirect hop's. A 3xx fails (final != 200).
         # WHY bounded retry: a fresh deploy can lag at the CDN edge for a few
         # seconds; retry the whole HEAD fetch up to 5 times with a 3s backoff
         # before failing, so a propagation race does not flake the smoke.
@@ -134,18 +138,22 @@ jobs:
           fi
           echo "All 7 security headers present on $CANONICAL_HOST 200."
 
-      - name: Homepage responds with 200
-        # WHY canonical URL with -L: verifies the production domain and CDN edge
-        # correctly promote the new deployment, following the apex->www redirect
-        # to the canonical 200 - separate from the artifact check above.
+      - name: Homepage promotes via apex->www to 200
+        # WHY the APEX with -L: this is the one step that intentionally exercises
+        # the redirect PATH — curling the apex (erikunha.dev) and following -L
+        # through the 308 to the canonical www 200 verifies the production domain
+        # + CDN promote the new deployment end to end. (The header/healthz smokes
+        # above deliberately do NOT follow redirects; this one deliberately does,
+        # against the apex, so -L is meaningful here and a no-op nowhere.)
         run: |
+          apex="${CANONICAL_HOST/www./}"
           http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --silent \
             --location \
             --output /dev/null \
             --write-out "%{http_code}" \
-            "${CANONICAL_HOST}/")
-          echo "Homepage status: $http_code"
+            "${apex}/")
+          echo "Homepage (apex->www) status: $http_code"
           if [ "$http_code" != "200" ]; then
-            echo "ERROR: homepage returned $http_code"
+            echo "ERROR: homepage returned $http_code (apex->www promotion failed)"
             exit 1
           fi
