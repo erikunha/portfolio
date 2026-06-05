@@ -155,9 +155,10 @@ are NOT extracted; they must remain inline.
 
 **Line count gate:**
 
-After editing `CLAUDE.md`, run `wc -l CLAUDE.md` and confirm the result is at or below 205.
-If it is above, the stubs are not compressed enough or additional non-procedure lines should
-be reviewed.
+After editing `CLAUDE.md`, run `wc -l CLAUDE.md` and confirm the result is at or below 233.
+(The original 205 target was arithmetically unreachable — see Acceptance criteria #1 note.)
+If it is above 233, the stubs are not compressed enough or additional non-procedure lines
+should be reviewed.
 
 **Content completeness check on skills:**
 
@@ -170,7 +171,7 @@ download step, project-specific PNG copy step, inspect-before-commit rule, and t
 
 For `ai-eval-update`: confirm the skill is internally consistent with the WS2/WS3 design
 and references real paths (`scripts/ask-eval.ts`, `content/ask-eval-corpus.ts`,
-`content/ask-eval-corpus.ts`, `ask:eval:latest` KV key).
+`content/ask-eval-corpus.ts`, Upstash Redis key `ask:eval:latest`).
 
 ## Acceptance criteria
 
@@ -193,7 +194,7 @@ and references real paths (`scripts/ask-eval.ts`, `content/ask-eval-corpus.ts`,
    completion, quality gate fix discipline, four-conditions-before-done) remain inline in
    `CLAUDE.md` unchanged.
 7. The ai-eval-update skill is consistent with the WS2/WS3 design: it references
-   `scripts/ask-eval.ts`, `content/ask-eval-corpus.ts`, the Upstash KV key `ask:eval:latest`,
+   `scripts/ask-eval.ts`, `content/ask-eval-corpus.ts`, the Upstash Redis key `ask:eval:latest`,
    and the judge-calibration gate.
 8. `pnpm ci:local` passes (this is a docs-only change; no runtime gate required).
 
@@ -250,4 +251,4 @@ survived WS4 intact, so the skill maps 1:1 to the current section.
 RESOLVED (2026-06-05): WS2 (#91) and WS3 (#95) are merged. The ai-eval-update skill is
 fully authored against current main — no skeleton, no `TODO: expand` comment. It documents
 the live calibration gate, the correctness/jailbreak/calibration thresholds, the
-`ask:eval:latest` KV key, and the corpus + gold-set files as they exist on main.
+Upstash Redis key `ask:eval:latest`, and the corpus + gold-set files as they exist on main.
