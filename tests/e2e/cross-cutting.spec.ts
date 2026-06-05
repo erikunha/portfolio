@@ -472,14 +472,18 @@ test.describe('cross-cutting', () => {
     // so the fetch starts during HTML parse rather than at first CSS-driven
     // layout — this is what shrinks the swap/FOUT window to near-zero. A dropped
     // preload (e.g. a next/font config regression) lengthens the fallback flash.
+    // Match the JetBrains Mono face SPECIFICALLY (next/font emits the source
+    // filename into the hashed asset, e.g. `jetbrains_mono_400-s.p.<hash>.woff2`):
+    // a bare `*.woff2` check would stay green if the mono preload regressed while
+    // some other font started preloading, asserting a proxy, not the invariant.
     const fontPreloads = await page.evaluate(() =>
       Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="preload"][as="font"]')).map(
         (l) => l.href,
       ),
     );
     expect(
-      fontPreloads.filter((h) => /\.woff2(\?|$)/.test(h)),
-      `expected >=1 woff2 font preload in <head>, got ${JSON.stringify(fontPreloads)}`,
+      fontPreloads.filter((h) => /jetbrains[-_]mono.*\.woff2(\?|$)/i.test(h)),
+      `expected >=1 JetBrains Mono woff2 preload in <head>, got ${JSON.stringify(fontPreloads)}`,
     ).not.toEqual([]);
   });
 
