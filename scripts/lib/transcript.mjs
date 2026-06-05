@@ -197,6 +197,52 @@ export function containsInToolResultSince(records, needle, boundaryIndex) {
 }
 
 /**
+ * Whether the `subagentType` agent's OWN returned report contains `needle`.
+ * Correlates by tool_use id: finds the last Agent dispatch of `subagentType`,
+ * takes its tool_use `id`, then checks the matching `tool_result` (the block
+ * whose `tool_use_id` equals that id) for the needle. This is tighter than
+ * "any tool_result after the dispatch" — a `tool_result` from an UNRELATED tool
+ * (e.g. Bash stdout that happens to print `GATE_RESULT: PASS`) cannot spoof the
+ * gate, because only the architect's own result block is inspected.
+ *
+ * @param {Array<Record<string, unknown>>} records
+ * @param {string} subagentType
+ * @param {string} needle
+ * @returns {boolean}
+ */
+export function agentResultContains(records, subagentType, needle) {
+  let toolUseId = null;
+  for (const record of records) {
+    for (const tu of toolUses(record)) {
+      if (tu.name !== 'Agent') continue;
+      const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
+      if (input.subagent_type === subagentType && typeof tu.id === 'string') {
+        toolUseId = tu.id; // last dispatch wins
+      }
+    }
+  }
+  if (!toolUseId) return false;
+  for (const record of records) {
+    const message =
+      record && typeof record === 'object' ? /** @type {any} */ (record).message : undefined;
+    const content = message && typeof message === 'object' ? message.content : undefined;
+    if (!Array.isArray(content)) continue;
+    for (const item of content) {
+      if (
+        item &&
+        typeof item === 'object' &&
+        item.type === 'tool_result' &&
+        item.tool_use_id === toolUseId &&
+        JSON.stringify(item).includes(needle)
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
  * Whether an Agent dispatch of `subagentType` occurs in a record whose ISO
  * `timestamp` is strictly greater than `afterIso`. Used to enforce ORDERING:
  * a security-auditor dispatch only counts if it happened AFTER the most recent

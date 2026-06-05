@@ -33,12 +33,10 @@ PASSED=$(node -e "
 const { pathToFileURL } = require('node:url');
 import(pathToFileURL(process.argv[1] + '/scripts/lib/transcript.mjs').href).then(m => {
   const recs = m.readTranscript(process.argv[2]);
-  // Require GATE_RESULT: PASS inside a tool_result block (the architect's
-  // returned report) that appears AFTER the architect-reviewer dispatch — so
-  // neither prose quoting the sentinel NOR an unrelated earlier tool_result can
-  // spoof a FAILed/absent review into a pass.
-  const idx = m.lastDispatchIndex(recs, 'architect-reviewer');
-  const ok = idx >= 0 && m.containsInToolResultSince(recs, 'GATE_RESULT: PASS', idx);
+  // Require GATE_RESULT: PASS inside the architect-reviewer's OWN result block
+  // (correlated by tool_use id), so neither prose quoting the sentinel NOR an
+  // unrelated tool_result (e.g. Bash stdout printing it) can spoof the gate.
+  const ok = m.agentResultContains(recs, 'architect-reviewer', 'GATE_RESULT: PASS');
   process.stdout.write(ok ? 'yes' : 'no');
 }).catch(() => process.stdout.write('no'));
 " "$ROOT" "$TRANSCRIPT" 2>/dev/null || echo "no")

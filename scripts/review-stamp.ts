@@ -182,7 +182,13 @@ function main(): void {
   // later edit. The durable .husky/pre-push gate blocks on ANY non-empty marker,
   // so incorrectly clearing it here would silently defeat that gate — hence the
   // strict timestamp check rather than "security-auditor ran at some point."
-  const apiMarker = join('.claude', '.api-edit-pending');
+  // $ROOT-anchored to match the writer (api-edit-marker.sh) + the hook gates —
+  // a cwd-relative path would leave a stale marker if review:stamp ran from a
+  // subdirectory (git works from any subdir, so --show-toplevel is robust).
+  const repoRoot = execFileSync('git', ['rev-parse', '--show-toplevel'], {
+    encoding: 'utf8',
+  }).trim();
+  const apiMarker = join(repoRoot, '.claude', '.api-edit-pending');
   if (existsSync(apiMarker)) {
     const lines = readFileSync(apiMarker, 'utf8').trim().split('\n').filter(Boolean);
     const latestTs = lines.at(-1)?.split('\t')[0] ?? '';

@@ -30,3 +30,9 @@ export function agentDispatchedAfter(
   subagentType: string,
   afterIso: string,
 ): boolean;
+
+export function agentResultContains(
+  records: TranscriptRecord[],
+  subagentType: string,
+  needle: string,
+): boolean;
