@@ -25,6 +25,10 @@ const MANAGED = [
   'CRON_SECRET',
   'ASK_ENABLED',
   'DEPLOY_SALT',
+  'LANGFUSE_ENABLED',
+  'LANGFUSE_SECRET_KEY',
+  'LANGFUSE_PUBLIC_KEY',
+  'LANGFUSE_BASEURL',
 ] as const;
 
 beforeEach(() => {

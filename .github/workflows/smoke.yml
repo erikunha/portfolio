@@ -6,6 +6,18 @@ name: Post-Deploy Smoke Test
 on:
   deployment_status:
 
+# Canonical production host. The custom domain serves a 308 redirect on the
+# APEX (erikunha.dev -> www.erikunha.dev); the apex 308 carries ONLY the
+# redirect-layer HSTS header, NOT the application security headers. Header and
+# healthz assertions MUST therefore run against the canonical www 200 DIRECTLY
+# (no -L), never the apex 308 and never a followed redirect - asserting headers
+# across -L would FALSE-POSITIVE on the 308's weak HSTS, the exact error that
+# produced the dissolved WS0 CRITICAL. (The one homepage step that DOES use -L
+# deliberately curls the APEX to verify the redirect path; see its comment.)
+# See WS5 spec.
+env:
+  CANONICAL_HOST: https://www.erikunha.dev
+
 jobs:
   smoke:
     if: >
@@ -17,41 +29,131 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: Health check — /api/healthz is reachable (200 ok or 503 degraded)
+      - name: Health check - deployment artifact /api/healthz (200 ok or 503 degraded)
         # WHY target_url: probes the specific deployment artifact, not the CDN
         # edge which may still serve the previous version during propagation.
-        # WHY env: keeps target_url as a shell variable — ${{ }} inline would
+        # WHY env: keeps target_url as a shell variable - ${{ }} inline would
         # substitute the raw value into the script body (injection risk).
-        # WHY accept 503: healthz returns 503 when the PSI cron is stale —
+        # WHY accept 503: healthz returns 503 when the PSI cron is stale -
         # a monitoring concern, not a deploy failure.
         env:
           DEPLOY_URL: ${{ github.event.deployment_status.target_url }}
         run: |
           DEPLOY_URL="${DEPLOY_URL%/}"
           case "$DEPLOY_URL" in
-            https://*.vercel.app|https://erikunha.dev) ;;
+            https://*.vercel.app|https://erikunha.dev|https://www.erikunha.dev) ;;
             *) echo "ERROR: unexpected target_url: $DEPLOY_URL"; exit 1;;
           esac
-          http_code=$(curl --max-time 30 --silent \
+          http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --silent \
             --output /dev/null \
             --write-out "%{http_code}" \
             "${DEPLOY_URL}/api/healthz")
-          echo "Health check status: $http_code (deployment: $DEPLOY_URL)"
+          echo "Artifact health check status: $http_code (deployment: $DEPLOY_URL)"
           if [ "$http_code" != "200" ] && [ "$http_code" != "503" ]; then
-            echo "ERROR: /api/healthz returned $http_code (expected 200 or 503)"
+            echo "ERROR: artifact /api/healthz returned $http_code (expected 200 or 503)"
             exit 1
           fi
 
-      - name: Homepage responds with 200
-        # WHY canonical URL: verifies the production domain and CDN edge
-        # correctly promote the new deployment — separate from the artifact check.
+      - name: Health check - canonical /api/healthz never 308 (200 ok or 503 degraded)
+        # WHY canonical, no-follow: the artifact *.vercel.app URL can bypass the
+        # custom-domain routing layer that injected the historical 308 on
+        # /api/healthz. This step exercises the FULL canonical routing path and
+        # uses HEAD (-I) WITHOUT -L so a 308 surfaces as a hard failure instead
+        # of being silently followed to a 404. This is the class of regression
+        # the WS5 audit found: the unit test passed; the live route 308'd.
+        # WHY --retry on connection error only: tolerates serverless cold-start
+        # connection blips, NOT bad HTTP codes - a 308 still fails immediately.
         run: |
-          http_code=$(curl --max-time 30 --silent \
+          http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --silent \
+            --head \
             --output /dev/null \
             --write-out "%{http_code}" \
-            https://erikunha.dev)
-          echo "Homepage status: $http_code"
+            "${CANONICAL_HOST}/api/healthz")
+          echo "Canonical health check status: $http_code ($CANONICAL_HOST/api/healthz)"
+          if [ "$http_code" = "308" ] || [ "$http_code" = "301" ] || [ "$http_code" = "302" ]; then
+            echo "ERROR: /api/healthz redirected ($http_code) - trailing-slash/canonical regression"
+            exit 1
+          fi
+          if [ "$http_code" != "200" ] && [ "$http_code" != "503" ]; then
+            echo "ERROR: canonical /api/healthz returned $http_code (expected 200 or 503)"
+            exit 1
+          fi
+
+      - name: Security headers present on canonical 200 (salvaged WS0 header smoke)
+        # WHY canonical host with NO -L: the apex 308 carries only redirect-layer
+        # HSTS, so asserting headers across a followed redirect would FALSE-POSITIVE
+        # on the 308's weak header (the exact error that produced the dissolved WS0
+        # CRITICAL). Fetching the canonical www 200 DIRECTLY (no -L) reads exactly
+        # the application headers set by next.config.ts (static) + proxy.ts (CSP +
+        # Reporting-Endpoints) — never a redirect hop's. A 3xx fails (final != 200).
+        # WHY bounded retry: a fresh deploy can lag at the CDN edge for a few
+        # seconds; retry the whole HEAD fetch up to 5 times with a 3s backoff
+        # before failing, so a propagation race does not flake the smoke.
+        # The 7 asserted headers are the project's security contract:
+        #   Content-Security-Policy, X-Frame-Options, X-Content-Type-Options,
+        #   Referrer-Policy, Permissions-Policy, Reporting-Endpoints,
+        #   Strict-Transport-Security.
+        run: |
+          REQUIRED_HEADERS="content-security-policy x-frame-options x-content-type-options referrer-policy permissions-policy reporting-endpoints strict-transport-security"
+          attempt=0
+          max_attempts=5
+          headers=""
+          while [ "$attempt" -lt "$max_attempts" ]; do
+            attempt=$((attempt + 1))
+            # Fetch the CANONICAL host DIRECTLY with NO -L. www returns 200 with
+            # no redirect, so the dumped headers are exactly the final 200's own —
+            # never a redirect hop's. This is the WS0 lesson applied correctly:
+            # following -L would combine the apex 308 (redirect-layer HSTS only)
+            # with the 200, and a header-presence grep would pass on the 308's
+            # weak HSTS, masking a real header regression. If the canonical host
+            # ever returns a 3xx, final_code != 200 fails loudly below (correct).
+            headers=$(curl --max-time 30 --silent \
+              --head \
+              --write-out "HTTP_FINAL:%{http_code}\n" \
+              "${CANONICAL_HOST}/" || true)
+            final_code=$(printf '%s\n' "$headers" | grep '^HTTP_FINAL:' | tail -n1 | cut -d: -f2)
+            if [ "$final_code" = "200" ]; then
+              break
+            fi
+            echo "Attempt $attempt: canonical homepage not yet 200 (got '${final_code:-none}'), retrying in 3s..."
+            sleep 3
+          done
+          if [ "$final_code" != "200" ]; then
+            echo "ERROR: canonical homepage did not reach 200 after $max_attempts attempts (last: '${final_code:-none}')"
+            exit 1
+          fi
+          # Lower-case the header dump once; curl emits header names case-insensitively.
+          lc_headers=$(printf '%s\n' "$headers" | tr '[:upper:]' '[:lower:]')
+          missing=""
+          for h in $REQUIRED_HEADERS; do
+            if ! printf '%s\n' "$lc_headers" | grep -q "^${h}:"; then
+              missing="$missing $h"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "ERROR: missing security header(s) on canonical 200:$missing"
+            echo "--- response headers (lower-cased) ---"
+            printf '%s\n' "$lc_headers"
+            exit 1
+          fi
+          echo "All 7 security headers present on $CANONICAL_HOST 200."
+
+      - name: Homepage promotes via apex->www to 200
+        # WHY the APEX with -L: this is the one step that intentionally exercises
+        # the redirect PATH — curling the apex (erikunha.dev) and following -L
+        # through the 308 to the canonical www 200 verifies the production domain
+        # + CDN promote the new deployment end to end. (The header/healthz smokes
+        # above deliberately do NOT follow redirects; this one deliberately does,
+        # against the apex, so -L is meaningful here and a no-op nowhere.)
+        run: |
+          apex="${CANONICAL_HOST/www./}"
+          http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --silent \
+            --location \
+            --output /dev/null \
+            --write-out "%{http_code}" \
+            "${apex}/")
+          echo "Homepage (apex->www) status: $http_code"
           if [ "$http_code" != "200" ]; then
-            echo "ERROR: homepage returned $http_code"
+            echo "ERROR: homepage returned $http_code (apex->www promotion failed)"
             exit 1
           fi
