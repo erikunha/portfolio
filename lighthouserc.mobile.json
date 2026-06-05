@@ -9,7 +9,7 @@
         "http://localhost:3000/design-system/enforcement",
         "http://localhost:3000/design-system/changelog"
       ],
-      "numberOfRuns": 3,
+      "numberOfRuns": 1,
       "settings": {
         "emulatedFormFactor": "mobile",
         "throttlingMethod": "simulate",

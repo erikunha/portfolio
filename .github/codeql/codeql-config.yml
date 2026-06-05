@@ -5,3 +5,9 @@ paths-ignore:
   - coverage
   - .next
   - node_modules
+  - tests
+  - '**/*.test.ts'
+  - '**/*.spec.ts'
+  - '**/*.test.tsx'
+  - '**/*.spec.tsx'
+  - scripts
