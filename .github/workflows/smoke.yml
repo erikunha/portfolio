@@ -232,7 +232,7 @@ jobs:
         # re-enable ASK or remove this probe step before deploying. This is intentional
         # — a disabled route is a smoke failure for operator awareness.
         run: |
-          http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --silent \
+          http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --retry-all-errors --show-error --silent \
             --request POST \
             --header "Content-Type: application/json" \
             --data '{}' \
@@ -256,7 +256,7 @@ jobs:
         # A real contact form submission is NOT sent — validation rejects before Resend.
         # RESEND_API_KEY is not needed for this probe — it is not accessed.
         run: |
-          http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --silent \
+          http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --retry-all-errors --show-error --silent \
             --request POST \
             --header "Content-Type: application/json" \
             --data '{}' \
@@ -284,7 +284,7 @@ jobs:
         env:
           JOB_STATUS: ${{ job.status }}
         run: |
-          sha=$(curl --max-time 15 --silent \
+          sha=$(curl --max-time 15 --silent --show-error \
             "${CANONICAL_HOST}/api/healthz" \
             | node -e "
               let d='';
