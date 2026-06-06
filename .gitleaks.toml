@@ -1,0 +1,17 @@
+title = "gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Fake GitHub tokens used as test fixtures in sanitize-secrets tests"
+paths = [
+  '''__tests__/scripts/sanitize-secrets.test.ts''',
+  '''__tests__/color-swatch.test.tsx''',
+]
+
+[[allowlists]]
+description = "CSS design token names (secondary-NNN) in design-system docs"
+paths = [
+  '''app/design-system/tokens/page.mdx''',
+]

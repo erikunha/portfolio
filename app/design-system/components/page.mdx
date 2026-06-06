@@ -1,0 +1,174 @@
+export const metadata = {
+  title: 'Components — Design System — erikunha.dev',
+  description: '9 primitive components for erikunha.dev (7 RSC, Field and CopyButton are client)',
+};
+
+import { Field } from '../../../design-system/components/Field';
+import { WindowChrome } from '../../../design-system/components/WindowChrome/WindowChrome';
+
+# COMPONENTS
+
+7 of 9 primitives are React Server Components. `Field` and `CopyButton` are client components (`'use client'`) — all others ship zero client JavaScript.
+
+<ComponentNav />
+
+## Button
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `variant` | `'primary' \| 'secondary'` | `'primary'` | no |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | no |
+| `as` | `'button' \| 'a'` | `'button'` | no |
+
+<Preview id="button">
+  <Button variant="primary" as="a" href="#">EXEC_HIRE</Button>
+  <Button variant="secondary" as="a" href="#">DOWNLOAD_CV</Button>
+  <Button variant="primary" size="sm" as="a" href="#">SM</Button>
+  <Button variant="secondary" size="lg" as="a" href="#">LG</Button>
+</Preview>
+
+**Accessibility:** 44px touch target on md size. `focus-visible` outline using `--color-primary-500`. Disabled anchors use `aria-disabled="true"` (anchors can't be natively disabled).
+
+## Field
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `name` | `string` | — | yes |
+| `label` | `string` | — | yes |
+| `type` | `string` | `'text'` | no |
+| `multiline` | `boolean` | `false` | no |
+| `rows` | `number` | `3` | no |
+| `error` | `string` | — | no |
+
+<Preview id="field">
+  <Field name="email" label="$ email:" type="email" />
+  <Field name="msg" label="$ message:" multiline rows={3} />
+  <Field name="broken" label="$ broken:" error="Required field" />
+</Preview>
+
+**Accessibility:** Label always rendered and programmatically associated. `aria-describedby` points to error text. `aria-invalid="true"` set on error state.
+
+## Badge
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `variant` | `'default' \| 'dot'` | `'default'` | no |
+| `size` | `'sm' \| 'md'` | `'md'` | no |
+
+<Preview id="badge">
+  <Badge variant="dot">OPEN_TO_WORK</Badge>
+  <Badge variant="default">AVAILABLE</Badge>
+  <Badge size="sm">SMALL</Badge>
+</Preview>
+
+**Accessibility:** Dot is `aria-hidden`. Pulse animation suppressed under `prefers-reduced-motion`.
+
+## TerminalPanel
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `borderStyle` | `'solid' \| 'dashed'` | `'solid'` | no |
+| `as` | `'div' \| 'section' \| 'article'` | `'div'` | no |
+| `header` | `ReactNode` | — | no |
+
+<Preview id="terminal-panel">
+  <TerminalPanel header="[ STATUS ]">Content here.</TerminalPanel>
+  <TerminalPanel borderStyle="dashed">Dashed panel.</TerminalPanel>
+</Preview>
+
+## WindowChrome
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `size` | `number` | `10` | no |
+| `className` | `string` | — | no |
+| `style` | `CSSProperties` | — | no |
+
+<Preview id="window-chrome">
+  <WindowChrome />
+  <WindowChrome size={12} />
+  <WindowChrome size={9} />
+</Preview>
+
+Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RSC. Dots are `aria-hidden="true"` — purely decorative, no focus management. The `size` prop sets dot diameter in px; pass it explicitly for context-aware sizing (9px mobile title bar, 10px shell, 12px desktop topbar).
+
+## StatTile
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `value` | `string` | — | yes |
+| `label` | `string` | — | yes |
+| `variant` | `'default' \| 'compact'` | `'default'` | no |
+
+<Preview id="stat-tile">
+  <StatTile value="99" label="LH_SCORE" />
+  <StatTile value="5+" label="YRS_EXP" />
+  <StatTile value="1.2s" label="LCP" variant="compact" />
+</Preview>
+
+**Accessibility:** Rendered as `<dl><dt>{label}</dt><dd>{value}</dd></dl>` — screen readers announce "label: value".
+
+## CmdLine
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `command` | `string` | — | yes |
+| `user` | `string` | `'erikunha@dev'` | no |
+| `prompt` | `string` | `'$'` | no |
+| `output` | `ReactNode` | — | no |
+
+<Preview id="cmd-line">
+  <CmdLine command="cat README.md" />
+  <CmdLine user="root@prod" prompt="#" command="whoami" output={<span>root</span>} />
+</Preview>
+
+## KbdKey
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `size` | `'sm' \| 'md'` | `'md'` | no |
+
+<Preview id="kbd-key">
+  <KbdKey>Ctrl</KbdKey>
+  <KbdKey>+</KbdKey>
+  <KbdKey>K</KbdKey>
+  <KbdKey size="sm">Enter</KbdKey>
+</Preview>
+
+**Accessibility:** Uses semantic `<kbd>` element.
+
+## CopyButton
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `text` | `string` | — | yes |
+
+<Preview id="copybutton">
+  <CopyButton text="pnpm install @/design-system" />
+</Preview>
+
+**Behavior:** Copies `text` to clipboard on click. Label changes from `COPY` to `COPIED` for 1.5s. Falls back silently if clipboard API is unavailable.
+
+---
+
+## Composition Patterns
+
+### Stat grid using StatTile
+
+Four `StatTile` components in a CSS grid. The grid layout stays in the consumer — primitives don't embed layout opinions.
+
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--color-primary-subtle)', marginBottom: '16px', marginLeft: '-24px', marginRight: '-24px' }}>
+  <StatTile value="99" label="LH_SCORE" />
+  <StatTile value="5+" label="YRS_EXP" />
+  <StatTile value="1.2s" label="LCP" />
+  <StatTile value="0" label="CLS" />
+</div>
+
+```tsx
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--color-primary-subtle)' }}>
+  <StatTile value="99" label="LH_SCORE" />
+  <StatTile value="5+" label="YRS_EXP" />
+  <StatTile value="1.2s" label="LCP" />
+  <StatTile value="0" label="CLS" />
+</div>
+```

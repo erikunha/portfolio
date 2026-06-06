@@ -1,0 +1,62 @@
+import path from 'node:path';
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    reporters: process.env.GITHUB_ACTIONS ? ['github-actions', 'verbose'] : ['verbose'],
+    environment: 'jsdom',
+    globals: false,
+    setupFiles: ['./tests/mocks/rtl-setup.ts'],
+    exclude: [
+      '**/node_modules/**',
+      '**/tests/a11y/**',
+      '**/tests/e2e/**',
+      '**/tests/visual/**',
+      '**/.claude/**',
+      '**/.worktrees/**',
+    ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'html'],
+      // Enforce 80% lines coverage — exits with code 1 if not met.
+      thresholds: {
+        lines: 80,
+        branches: 70,
+        functions: 80,
+        statements: 80,
+      },
+      include: [
+        'lib/**',
+        'components/**',
+        'app/**',
+        'design-system/components/**',
+        'design-system/lib/**',
+      ],
+      exclude: [
+        '**/node_modules/**',
+        '**/__tests__/**',
+        '**/tests/**',
+        '**/content/**',
+        '**/*.test.*',
+        '**/*.spec.*',
+        '**/index.ts', // barrel re-exports — no logic to cover
+        '**/*.e2e.ts', // Playwright specs — not executed in Vitest/jsdom
+        '**/*.module.css', // CSS modules transform to JS objects in jsdom; no logic to cover
+        '**/*.mjs', // remark/recma plugins — not unit tested
+      ],
+      reportsDirectory: 'coverage',
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, '.'),
+      // 'server-only' is a Next.js bundler signal — its package.json maps the
+      // 'react-server' export condition to a throwing stub. Outside Next
+      // (vitest's vite transformer), the resolver can't find a default entry
+      // and import-analysis fails. Map it to an empty module so any
+      // server-only-guarded library file (lib/ip-hash.ts, lib/ask/system-
+      // prompt.ts, etc.) can be imported under test without per-test mocks.
+      'server-only': path.resolve(__dirname, 'tests/mocks/server-only.ts'),
+    },
+  },
+});

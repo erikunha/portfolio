@@ -1,0 +1,61 @@
+# deps
+/node_modules
+
+# next
+/.next/
+/out/
+
+# production
+/build
+
+# env files
+.env
+.env*.local
+!.env.example
+
+# vercel
+.vercel
+
+# testing
+/coverage
+/coverage-report
+/test-results
+/playwright-report
+
+# local build artifact (next-build/ used by gates:runtime --skip-build)
+/next-build
+
+# lighthouse ci artifact reports
+/.lighthouseci/
+
+# local gates-runtime LHCI filesystem output
+/.lhci-local/
+
+# ai-eval harness output (scripts/ask-eval.ts)
+/ask-eval-result.json
+
+# local claude settings
+.claude/settings.local.json
+
+# playwright mcp session logs
+.playwright-mcp/
+
+tsconfig.tsbuildinfo
+
+# review stamp — local signal that review agents passed for HEAD
+.review-passed
+
+# WS4 API-edit security gate — session-local marker of unaudited API edits
+.claude/.api-edit-pending
+
+# git worktrees (superpowers using-git-worktrees skill creates these here)
+.worktrees/
+
+# visual brainstorming companion mockups
+.superpowers/
+
+# os
+.DS_Store
+
+# git worktree symlinks (.claude/worktrees/ — created by superpowers using-git-worktrees)
+.claude/worktrees/

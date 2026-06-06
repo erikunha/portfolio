@@ -1,0 +1,7 @@
+# Two-tier hook strategy — DX is measured in seconds per commit. Pre-commit
+# runs ONLY sub-second gates so per-commit tax stays low during normal
+# iteration. The heavy gates (typecheck, validate-content, tests,
+# client-naming) live in pre-push instead — they fire once before the push,
+# not once per commit. Manual pre-PR command: `pnpm verify`.
+
+pnpm check

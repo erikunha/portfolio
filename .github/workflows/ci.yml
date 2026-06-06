@@ -1,0 +1,694 @@
+name: CI
+
+# Required jobs for branch protection: quality-fast, typecheck, test, build, performance,
+# e2e-functional, e2e-visual-chromium, ai-eval.
+# e2e-visual-webkit is intentionally NOT required (webkit pixel rendering variance).
+# vercel-preview is intentionally NOT required (informational only).
+# Manual step: add "CodeQL / Analyze (javascript-typescript)" to required checks in GitHub Settings.
+#
+# Path-filter strategy (detect-changes job):
+#   ai=true   → app/api/ask/, lib/ask/, lib/ask-log.ts, lib/ip-hash.ts, lib/agent/,
+#               lib/hiring-profile.ts, lib/stream-protocol.ts, lib/rate-limit.ts,
+#               content/ask-eval-corpus.ts, content/perf-receipts.ts,
+#               content/projects.ts, content/unknowns.ts, content/visa.ts,
+#               scripts/ask-eval.ts
+#               Gates: ai-eval (also gates on e2e-functional to avoid credit waste)
+#   app=true  → app/, components/, design-system/, lib/, content/, public/, next.config.ts,
+#               .github/workflows/ (workflow changes exercise CI itself)
+#               Gates: performance, e2e-visual-chromium, e2e-visual-webkit
+# Skipped required checks are treated as satisfied by GitHub branch protection.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      update_visual_baselines:
+        description: 'Regenerate Linux visual baselines and upload them as an artifact (download + commit to refresh baselines).'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+
+# Top-level cancel-in-progress is false: a push to main must not cancel the
+# slower visual/e2e jobs still running from the previous commit.
+# Fast jobs (quality-fast, typecheck, test, build) use per-job concurrency groups instead.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  quality-fast:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    timeout-minutes: 8
+    concurrency:
+      group: quality-fast-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint branch name
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          echo "$BRANCH" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot|design-system)/.+$|^main$' \
+            || (echo "Invalid branch name: $BRANCH" && exit 1)
+
+      - name: Lint commit messages
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+      - name: Biome check
+        run: pnpm biome ci .
+
+      - name: Validate content
+        run: pnpm validate-content
+
+      - name: Client-naming gate
+        run: pnpm check:client-naming
+
+      - name: Dependency-pinning gate
+        run: pnpm check:dep-pinning
+
+      - name: Harness size gate
+        run: node scripts/check-harness-size.mjs
+
+      - name: Component docs coverage
+        run: pnpm check:component-docs
+
+      - name: Doc-drift gate (ARCHITECTURE.md tree vs disk)
+        run: pnpm check:doc-drift
+
+      - name: Contrast check
+        run: pnpm lint:contrast
+
+      - name: Package age check (supply-chain, info-only)
+        # --warn-only: exits 0 always. Blocking a push for a freshly-released dep
+        # is too aggressive for solo development. Warnings are visible in CI logs.
+        run: node scripts/check-pkg-age.mjs --warn-only
+
+      - name: PR comment merge gate
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm tsx scripts/check-pr-comments.ts ${{ github.event.pull_request.number }}
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    concurrency:
+      group: typecheck-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm tsc --noEmit
+
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    timeout-minutes: 8
+    concurrency:
+      group: test-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Dependency vulnerability audit
+        run: pnpm audit --audit-level=moderate
+
+      - name: Unit tests
+        run: pnpm test:coverage
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+      - name: Post coverage comment
+        # Skip on fork PRs: GITHUB_TOKEN write permission is not granted to forks.
+        # Mirrors the same guard used in the ai-eval job.
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            if (!fs.existsSync('coverage/coverage-summary.json')) {
+              core.warning('coverage/coverage-summary.json not found — skipping coverage comment. Did pnpm test:coverage complete?');
+              return;
+            }
+            let summary;
+            try {
+              summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+            } catch (err) {
+              core.warning(`Failed to parse coverage-summary.json: ${err.message}`);
+              return;
+            }
+            const t = summary.total;
+            if (!t || typeof t.lines?.pct !== 'number') {
+              core.warning('coverage-summary.json is missing expected "total" fields. Skipping coverage comment.');
+              return;
+            }
+            const pct = (n) => `${n.pct.toFixed(1)}%`;
+            const marker = '<!-- coverage-bot -->';
+            const body = [
+              marker,
+              '## Coverage',
+              '| Metric | Coverage | Threshold |',
+              '|---|---|---|',
+              `| Lines | ${pct(t.lines)} | 80% |`,
+              `| Functions | ${pct(t.functions)} | -- |`,
+              `| Branches | ${pct(t.branches)} | -- |`,
+              `| Statements | ${pct(t.statements)} | -- |`,
+            ].join('\n');
+            try {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                per_page: 100,
+              });
+              const existing = comments.find(c => c.body?.includes(marker) && c.user?.type === 'Bot');
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body,
+                });
+              }
+            } catch (err) {
+              core.warning(`Failed to post coverage comment (GitHub API error): ${err.message}. Coverage data is available in the uploaded artifact.`);
+            }
+
+  dependency-review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-3.0, AGPL-3.0, GPL-2.0
+
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    timeout-minutes: 12
+    needs: [quality-fast, typecheck, test]
+    concurrency:
+      group: build-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Next.js build
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('app/**', 'components/**', 'lib/**', 'design-system/**') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            nextjs-${{ runner.os }}-
+
+      - name: Build
+        run: pnpm build
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
+          DEPLOY_SALT: ci-build-salt
+
+      - name: Bundle size gate
+        # Gates total client-chunk gzipped size. Per-route First Load JS is not
+        # extractable from the Turbopack manifest; the 43KB island target is
+        # tracked via `pnpm bundle:analyze`, not gated here.
+        run: node scripts/check-bundle-size.mjs --max-client-kb=220
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: next-build
+          path: .next/
+          retention-days: 1
+          include-hidden-files: true
+
+      - name: Attest build provenance
+        if: github.ref == 'refs/heads/main'
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-path: .next/
+
+  performance:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 12
+    # Skip on PRs that touch only scripts/docs/CI — LHCI only matters for app code changes.
+    if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
+    needs: [build, detect-changes]
+    env:
+      LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: next-build
+          path: .next/
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-chromium-
+
+      - name: Install Playwright Chromium (for axe-core scan)
+        run: pnpm playwright install --with-deps chromium
+
+      - name: Start preview server
+        run: pnpm start > /tmp/server-perf.log 2>&1 &
+        env:
+          DEPLOY_SALT: ci-build-salt
+
+      - name: Wait for server
+        run: |
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-perf.log
+            exit 1
+          }
+
+      - name: Lighthouse CI (desktop)
+        run: pnpm lhci
+
+      - name: Lighthouse CI (mobile)
+        run: pnpm lhci:mobile
+
+      - name: axe-core a11y scan
+        run: pnpm playwright test tests/a11y
+
+  e2e-functional:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components]
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Cache Playwright browsers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-
+      - name: Install Playwright browsers
+        run: pnpm playwright install --with-deps ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
+      - name: Download build artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: next-build
+          path: .next/
+      - name: Start preview server
+        # WHY: matrix.project values are workflow-defined literals — never PR-controlled input.
+        # Keeping them literal prevents shell-injection via ${{ matrix.project }} expansion.
+        run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
+        # DEPLOY_SALT is load-bearing: without it, lib/ip-hash.ts resolveSalt()
+        # takes the production Upstash path (CI has no Redis creds) and throws,
+        # so every validated /api/* request 500s via hashIp() in lib/server/route.ts.
+        env:
+          DEPLOY_SALT: ci-build-salt
+      - name: Wait for server
+        run: |
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-${{ matrix.project }}.log
+            exit 1
+          }
+      - name: Run functional e2e (tests/e2e specs)
+        if: matrix.project != 'chromium-components'
+        # WHY: design-system-components.spec.ts is excluded via testIgnore in
+        # playwright.config.ts (darwin-only visual baselines). Auto-discovery here
+        # so new functional specs are picked up without a ci.yml edit.
+        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/
+      - name: Run functional e2e (co-located component specs)
+        if: matrix.project == 'chromium-components'
+        run: pnpm playwright test --project=${{ matrix.project }}
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: test-results/
+
+  detect-changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      ai: ${{ steps.check.outputs.ai }}
+      app: ${{ steps.check.outputs.app }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+      - name: Detect changed file categories
+        id: check
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [[ "$EVENT_NAME" != "pull_request" ]]; then
+            echo "ai=true" >> "$GITHUB_OUTPUT"
+            echo "app=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          ai_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
+            app/api/ask/ lib/ask/ lib/ask-log.ts lib/ip-hash.ts \
+            lib/stream-protocol.ts lib/rate-limit.ts lib/agent/ lib/hiring-profile.ts \
+            content/ask-eval-corpus.ts content/ask-eval-calibration.ts \
+            content/perf-receipts.ts \
+            content/projects.ts content/unknowns.ts content/visa.ts \
+            scripts/ask-eval.ts '__tests__/ask-*')
+          [[ -n "$ai_changed" ]] \
+            && echo "ai=true" >> "$GITHUB_OUTPUT" \
+            || echo "ai=false" >> "$GITHUB_OUTPUT"
+          app_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
+            app/ components/ design-system/ lib/ content/ public/ next.config.ts \
+            .github/workflows/)
+          [[ -n "$app_changed" ]] \
+            && echo "app=true" >> "$GITHUB_OUTPUT" \
+            || echo "app=false" >> "$GITHUB_OUTPUT"
+
+  ai-eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Skip on fork PRs: repository secrets are not available to forks.
+    # Skip when no AI-relevant files changed: GitHub treats skipped required checks as satisfied.
+    if: |
+      always()
+      && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+      && needs.detect-changes.outputs.ai == 'true'
+      && !contains(needs.*.result, 'failure')
+      && !contains(needs.*.result, 'cancelled')
+    # Run last: avoids burning AI Gateway credits when any required gate already fails.
+    # always() lets GitHub evaluate the condition even when upstream jobs fail.
+    # skipped (path-filtered) jobs are allowed — only failure/cancelled blocks.
+    needs: [detect-changes, quality-fast, typecheck, test, build, e2e-functional, performance, e2e-visual-chromium]
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: AI eval suite
+        # No Upstash credentials: the route's rate-limit/budget/dedup paths are
+        # all fail-open when Redis is unavailable. Metrics publish is best-effort.
+        run: pnpm ask:eval
+        env:
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY_BUILD }}
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: ask-eval-result
+          path: ask-eval-result.json
+
+  e2e-visual-chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # REQUIRED: Linux Chromium rendering is deterministic — pixel-diff comparisons
+    # are stable enough to gate on. Baselines are refreshed via workflow_dispatch.
+    # Skip on PRs that touch only scripts/docs/CI — visual diffs only matter for app code.
+    if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
+    needs: [build, detect-changes]
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, chromium-mobile]
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Cache Playwright browsers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-chromium-
+      - name: Install Playwright browsers
+        run: pnpm playwright install --with-deps chromium
+      - name: Download build artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: next-build
+          path: .next/
+      - name: Start preview server
+        run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
+        env:
+          DEPLOY_SALT: ci-build-salt
+      - name: Wait for server
+        run: |
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-${{ matrix.project }}.log
+            exit 1
+          }
+      - if: inputs.update_visual_baselines != 'true'
+        name: Run visual regression
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts
+      - if: inputs.update_visual_baselines == 'true'
+        name: Regenerate visual baselines (workflow_dispatch only)
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts --update-snapshots
+      - if: inputs.update_visual_baselines == 'true'
+        name: Upload regenerated visual baselines
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: visual-baselines-${{ matrix.project }}
+          path: tests/visual/visual.spec.ts-snapshots/
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: visual-report-${{ matrix.project }}
+          path: test-results/
+
+  e2e-visual-webkit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Non-required: webkit pixel rendering differs from Chromium baselines and
+    # from local macOS Safari. Regressions are reviewed via the uploaded artifact.
+    # Skip on PRs that touch only scripts/docs/CI.
+    if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
+    needs: [build, detect-changes]
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [webkit-desktop, webkit-mobile]
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Cache Playwright browsers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-webkit-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-webkit-
+      - name: Install Playwright browsers
+        run: pnpm playwright install --with-deps webkit
+      - name: Download build artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: next-build
+          path: .next/
+      - name: Start preview server
+        run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
+        env:
+          DEPLOY_SALT: ci-build-salt
+      - name: Wait for server
+        run: |
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-${{ matrix.project }}.log
+            exit 1
+          }
+      - if: inputs.update_visual_baselines != 'true'
+        name: Run visual regression
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts
+      - if: inputs.update_visual_baselines == 'true'
+        name: Regenerate visual baselines (workflow_dispatch only)
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts --update-snapshots
+      - if: inputs.update_visual_baselines == 'true'
+        name: Upload regenerated visual baselines
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: visual-baselines-${{ matrix.project }}
+          path: tests/visual/visual.spec.ts-snapshots/
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: visual-report-${{ matrix.project }}
+          path: test-results/
+
+  vercel-preview:
+    runs-on: ubuntu-latest
+    # Non-required: Lighthouse against the Vercel preview URL. Informational only.
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      deployments: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Wait for Vercel preview deployment
+        id: vercel-url
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const sha = context.payload.pull_request.head.sha;
+            const maxAttempts = 36;
+            for (let i = 0; i < maxAttempts; i++) {
+              const { data: deployments } = await github.rest.repos.listDeployments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                sha,
+                per_page: 10,
+              });
+              for (const dep of deployments) {
+                const { data: statuses } = await github.rest.repos.listDeploymentStatuses({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  deployment_id: dep.id,
+                  per_page: 1,
+                });
+                if (statuses[0]?.state === 'success' && statuses[0]?.target_url) {
+                  core.setOutput('url', statuses[0].target_url);
+                  return statuses[0].target_url;
+                }
+              }
+              if (i < maxAttempts - 1) await new Promise(r => setTimeout(r, 10000));
+            }
+            core.warning('Vercel preview URL not found within 6 minutes. Skipping Lighthouse.');
+            core.setOutput('url', '');
+
+      - name: Lighthouse against Vercel preview
+        if: steps.vercel-url.outputs.url != ''
+        continue-on-error: true
+        env:
+          PREVIEW_URL: ${{ steps.vercel-url.outputs.url }}
+          LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url }}
+        run: pnpm exec lhci autorun --collect.url="$PREVIEW_URL" --collect.numberOfRuns=1

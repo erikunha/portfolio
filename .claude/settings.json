@@ -1,0 +1,70 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(superpowers:brainstorming)",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:verification-before-completion)",
+      "Skill(superpowers:systematic-debugging)",
+      "Skill(superpowers:test-driven-development)",
+      "Skill(superpowers:using-git-worktrees)",
+      "Skill(superpowers:finishing-a-development-branch)",
+      "Skill(commit-commands:commit)",
+      "Skill(commit-commands:commit-push-pr)",
+      "Skill(code-review:code-review)",
+      "Skill(pr-review-toolkit:review-pr)",
+      "Skill(security-review)",
+      "Skill(react-best-practices)",
+      "Skill(vercel:nextjs)",
+      "Skill(vercel:vercel-functions)",
+      "Skill(web-design-guidelines)",
+      "Skill(thinking-*)"
+    ],
+    "deny": ["Bash(fallow fix:*)", "Bash(npx fallow fix:*)", "Bash(npx fallow@2.85.0 fix:*)"],
+    "defaultMode": "acceptEdits"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/bash-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/api-security-push-guard.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/architect-gate.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/section-order-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/css-token-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/api-edit-marker.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

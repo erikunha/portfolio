@@ -1,0 +1,7 @@
+name: CodeQL config
+
+paths-ignore:
+  - design-system/dist
+  - coverage
+  - .next
+  - node_modules

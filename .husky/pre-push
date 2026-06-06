@@ -1,0 +1,101 @@
+# Branch-name guard: every branch follows `<type>/<description>` from the
+# commitlint scope set, or is `main`.
+branch=$(git rev-parse --abbrev-ref HEAD)
+echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot|design-system)/.+$|^main$' \
+  || { echo "Error: invalid branch name '$branch'. Use <type>/<description> or main."; exit 1; }
+
+# Review stamp gate: every push requires prior dispatch of the full agent
+# review battery (pr-review-toolkit, security-auditor, accessibility-tester,
+# performance-engineer, dependency-manager). After all agents pass:
+#   pnpm review:stamp   → writes HEAD SHA to .review-passed
+# A new commit clears the stamp (post-commit hook), requiring a fresh review.
+STAMP_FILE=".review-passed"
+HEAD_SHA=$(git rev-parse HEAD)
+if [ ! -f "$STAMP_FILE" ]; then
+  echo ""
+  echo "BLOCKED: no review stamp found."
+  echo "  1. Run review agents: pr-review-toolkit, security-auditor,"
+  echo "     accessibility-tester, performance-engineer, dependency-manager"
+  echo "  2. Fix all Critical/Important findings"
+  echo "  3. Run: pnpm review:stamp"
+  echo ""
+  exit 1
+fi
+STAMPED_SHA=$(cat "$STAMP_FILE")
+if [ "$STAMPED_SHA" != "$HEAD_SHA" ]; then
+  echo ""
+  echo "BLOCKED: review stamp is stale."
+  echo "  Stamped: $STAMPED_SHA"
+  echo "  HEAD:    $HEAD_SHA"
+  echo "  Re-run review agents for new commits, then: pnpm review:stamp"
+  echo ""
+  exit 1
+fi
+echo "[pre-push] Review stamp valid ($HEAD_SHA)"
+
+# API-edit security backstop (WS4): the DURABLE, syntax-independent gate. The
+# in-session PreToolUse push guard matches the `git push` command string, which
+# global-option forms (`git -C . push`) can evade. This check runs at the one
+# chokepoint git guarantees regardless of how push was invoked: if the marker is
+# non-empty, an API-surface edit has not been cleared by a post-edit
+# security-auditor run (review-stamp clears it only with correct ordering). Block.
+# $ROOT-anchored to match the writer (api-edit-marker.sh) and the push guard —
+# a cwd-relative read would miss the marker if the hook ran from a subdirectory.
+API_MARKER="$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/.api-edit-pending"
+if [ -s "$API_MARKER" ]; then
+  echo ""
+  echo "BLOCKED: unaudited API-surface edit pending ($API_MARKER non-empty)."
+  echo "  An edit to app/api/**, lib/rate-limit.ts, or proxy.ts has not been"
+  echo "  covered by a security-auditor dispatch since the edit."
+  echo "  Dispatch security-auditor, run the full battery, then: pnpm review:stamp"
+  echo "  (review:stamp clears this marker once an audit post-dates the edit.)"
+  sed 's/^/    /' "$API_MARKER"
+  exit 1
+fi
+
+# Two-tier hook strategy (audit Standard 9): heavy gates run ONCE before
+# push instead of once per commit. Same safety net as the prior per-commit
+# chain (typecheck + validate-content + client-naming + tests) at a fraction
+# of the per-commit DX tax. `pnpm verify` is the manual equivalent.
+echo "[pre-push] Running verify chain (typecheck + validate-content + client-naming + tests)..."
+# Fail-fast: a verify failure MUST abort the push. Without `|| exit 1` the script
+# would continue into the runtime-gates block below and the final exit code could
+# reset to 0, letting a broken lint/typecheck/test chain push anyway.
+pnpm verify || exit 1
+
+# Runtime gates for non-docs pushes (WS4). CLAUDE.md requires `pnpm gates:runtime`
+# (build + LHCI + axe + E2E) before any push touching non-docs files; the prior
+# hook ran `verify` only, leaving this honor-system. Now enforced. Docs-only
+# pushes skip; SKIP_RUNTIME_GATES=1 bypasses deliberately (loudly logged).
+RANGE_BASE=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "origin/main")
+# Compute the changed-file set. FAIL-CLOSED if the diff can't be computed
+# (missing refs, unusual remote, detached HEAD): an empty result must NOT be
+# mistaken for "docs-only" and skip the runtime gates. On failure we substitute
+# a sentinel that lands in NON_DOCS, forcing gates:runtime to run.
+if CHANGED=$(git diff --name-only "$RANGE_BASE"..HEAD 2>/dev/null) \
+  || CHANGED=$(git diff --name-only origin/main..HEAD 2>/dev/null); then
+  :
+else
+  echo "[pre-push] WARNING: could not compute changed files — running gates:runtime (fail-closed)."
+  CHANGED="__diff-unavailable__"
+fi
+NON_DOCS=$(printf '%s\n' "$CHANGED" | grep -vE '(\.md$|^content/|^docs/)' | grep -v '^$' || true)
+if [ -n "${SKIP_RUNTIME_GATES:-}" ]; then
+  echo ""
+  echo "########################################################################"
+  echo "# [pre-push] SKIP_RUNTIME_GATES=1 set — gates:runtime DELIBERATELY SKIPPED."
+  echo "# This bypass is logged. CI still runs the runtime gates as required jobs."
+  echo "########################################################################"
+  echo ""
+elif [ -z "$NON_DOCS" ]; then
+  echo "[pre-push] Docs-only push — skipping gates:runtime (verify already ran)."
+else
+  echo "[pre-push] Non-docs change — running gates:runtime (full build)..."
+  printf '%s\n' "$NON_DOCS" | sed 's/^/  changed: /'
+  echo "[pre-push] Bypass deliberately with: SKIP_RUNTIME_GATES=1 git push ..."
+  # Always do a FULL build — never --skip-build. A `.next/` can exist but be
+  # STALE (source changed since the last build), which would run LHCI/axe/E2E
+  # against an outdated bundle and report a false green. Correctness over speed;
+  # SKIP_RUNTIME_GATES is the explicit opt-out when a fresh build truly exists.
+  pnpm gates:runtime
+fi

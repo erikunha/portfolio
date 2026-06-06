@@ -1,0 +1,37 @@
+export const metadata = {
+  title: 'Design System — erikunha.dev',
+  description: 'Two-tier token pipeline, 8 primitive components, and enforcement docs for erikunha.dev',
+  robots: 'index, follow',
+};
+
+# DESIGN SYSTEM
+
+<div style={{marginBottom:'12px'}}>
+  <Badge variant="dot">LIVE</Badge>
+</div>
+
+A published design system for erikunha.dev — positioned at `/design-system` as part of the Staff/Principal frontend hiring artifact.
+
+<div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',border:'1px solid var(--color-primary-subtle)',marginBottom:'24px',marginLeft:'-24px',marginRight:'-24px'}}>
+  <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="8" label="PRIMITIVES" /></div>
+  <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="6" label="RSC" /></div>
+  <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="100" label="A11Y" /></div>
+  <StatTile value="0" label="CLIENT_KB" />
+</div>
+
+<CmdLine command="import { Button, Badge, Field, StatTile } from '@/design-system'" />
+
+## Sections
+
+- [Tokens](/design-system/tokens) — Color palette, type scale, spacing, motion, layers
+- [Components](/design-system/components) — 8 primitive components with live previews and source
+- [Enforcement](/design-system/enforcement) — Lint rules, CI gates, contributing guide
+- [Changelog](/design-system/changelog) — Token and component change log
+
+## Principles
+
+**Utilities over raw values.** Components reference Tailwind utilities backed by the `@theme` palette (`text-primary-500`, `border-primary-subtle`), never raw hex. The single `@theme` block in `theme.css` is the one place a colour changes.
+
+**RSC by default.** 6 of 8 primitives are React Server Components — zero client JavaScript. `Field` and `CopyButton` require `'use client'` for controlled input state and clipboard access respectively.
+
+**Enforced, not documented.** The contrast gate, axe-core a11y scan, and Lighthouse (a11y = 100) run in CI. The rules don't rely on developer discipline.

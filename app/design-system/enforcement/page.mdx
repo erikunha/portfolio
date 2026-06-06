@@ -1,0 +1,56 @@
+export const metadata = {
+  title: 'Enforcement — Design System — erikunha.dev',
+  description: 'The CI gates that hold the design system to its contract',
+};
+
+# ENFORCEMENT
+
+These rules are gates, not documentation — they run in CI and block the merge.
+
+## Tokens
+
+`app/css/theme.css` (`@theme`) is the single source of truth for brand colour.
+Tailwind generates the `--color-*` custom properties and the matching utilities
+from it; the token swatches on the [Tokens](/design-system/tokens) page read the
+same file.
+
+| Gate | Command | Checks |
+|---|---|---|
+| Contrast | `pnpm lint:contrast` | Parses `--color-*` from `theme.css`; fails if any documented pair misses WCAG AA |
+
+Type, spacing, motion, and z-index use Tailwind's standard scale (plus arbitrary
+values where required). There is no hand-maintained token layer for them — nothing
+to drift, nothing to lint.
+
+## Styling
+
+Components are styled with Tailwind utilities. There are no CSS Modules: the
+`.module.css` files were removed in the Tailwind v4 migration (see `DECISIONS.md`),
+and Lightning CSS handles nesting and autoprefixing natively.
+
+## Components
+
+| Gate | Command | Checks |
+|---|---|---|
+| Component docs | `pnpm check:component-docs` | Every exported primitive has a `## Name` section in `components/page.mdx` |
+| Visual regression | `tests/e2e/design-system-components.spec.ts` | Linux Chromium pixel baselines per primitive |
+| A11y | `pnpm playwright test tests/a11y` | axe-core scan, zero violations |
+
+## Cross-cutting
+
+| Gate | Command |
+|---|---|
+| Lint + format | `pnpm biome ci .` |
+| Types | `pnpm typecheck` |
+| Content schema | `pnpm validate-content` |
+| Client/RSC naming | `pnpm check:client-naming` |
+| Dependency pinning | `pnpm check:dep-pinning` |
+| Bundle size | `node scripts/check-bundle-size.mjs` |
+| Lighthouse (a11y = 100) | `pnpm lhci` · `pnpm lhci:mobile` |
+
+## Adding a New Component
+
+1. Create `design-system/components/NewComponent/` with `.tsx`, `.test.tsx`, and `index.ts` — styled with Tailwind utilities, no `.module.css`.
+2. Export it from `design-system/index.ts`.
+3. Add a `## NewComponent` heading in `app/design-system/components/page.mdx` — `check:component-docs` fails if it is missing.
+4. Add a Playwright visual baseline in `tests/e2e/design-system-components.spec.ts`.

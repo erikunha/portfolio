@@ -1,0 +1,293 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   BASE — @layer base
+   Element resets and document-level defaults. Colours and fonts come from the
+   @theme tokens in theme.css (--color-* / --font-*); type, spacing, and z-index
+   use Tailwind's standard scale, applied here as resolved literals.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    /* offset anchor scroll for sticky topbar on desktop */
+    scroll-padding-top: 52px;
+    /* prevent iOS Safari auto-zoom on rotate; consistent tab width in <pre> */
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+  }
+
+  /* Media + embeds default to block to kill inline baseline gap, and never
+     overflow their container. */
+  img,
+  svg,
+  video,
+  canvas,
+  audio,
+  iframe,
+  embed,
+  object {
+    display: block;
+    vertical-align: middle;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Form controls inherit typography from <body> rather than UA defaults. */
+  input,
+  textarea,
+  select,
+  optgroup {
+    font: inherit;
+    color: inherit;
+    margin: 0;
+  }
+
+  /* Lists used as semantic containers (not bullet lists). */
+  ul,
+  ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--color-secondary-950);
+    color: var(--color-tertiary-50);
+    font-family: var(--font-mono);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  @media (max-width: 768px) {
+    html {
+      scroll-padding-top: 76px; /* statusbar ~28px + window-chrome ~44px + buffer */
+    }
+  }
+
+  ::selection {
+    background: var(--color-primary-500);
+    color: var(--color-secondary-950);
+  }
+
+  a {
+    color: var(--color-primary-500);
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  a:focus-visible {
+    text-decoration: underline;
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  .skip-to-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 9999;
+    padding: 8px 16px;
+    background: var(--color-primary-500);
+    color: #000;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    clip-path: inset(50%);
+    overflow: hidden;
+    transition: clip-path 0.1s;
+  }
+  .skip-to-content:focus {
+    clip-path: inset(0);
+    overflow: visible;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skip-to-content {
+      transition: none;
+    }
+  }
+
+  button {
+    font-family: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid var(--color-primary-border);
+    cursor: pointer;
+  }
+
+  pre,
+  code {
+    font-family: var(--font-mono);
+    white-space: pre;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--color-primary-500);
+    margin: 0 0 8px 0;
+    text-shadow: 0 0 2px var(--color-glow-30);
+  }
+
+  h1 {
+    font-size: 48px; /* DsFontSizeHeadingLg */
+    font-family: var(--font-display);
+    font-weight: 900;
+  }
+
+  @media (max-width: 768px) {
+    /* 2xs/xs are intentional CRT metadata sizes — 10px labels/status text.
+       sm (12px) is the smallest size for any prose the user reads. */
+    h1 {
+      font-size: 32px; /* DsFontSizeHeadingMd — mobile override */
+    }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .not-found {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: var(--color-secondary-950);
+    color: var(--color-tertiary-50);
+    font-family: var(--font-mono);
+    position: relative;
+  }
+
+  /* ─── Global responsive token overrides (migrated from _responsive.css) ───────
+     Scoped to 769px–900px so the ≤768px :root block above takes precedence at
+     mobile widths. Using a min-width lower bound prevents the cascade from
+     overriding the more-specific 768px values at narrower viewports. */
+  @media (min-width: 769px) and (max-width: 900px) {
+    body {
+      font-size: 14px; /* DsFontSizeBody */
+    }
+  }
+
+  /* ─── Viewport-scoped visibility utilities (migrated from _responsive.css) ─────
+     AppShell renders both viewport variants of the nav chrome; CSS picks which is
+     visible at the 768px breakpoint. Global because AppShell sets these as plain
+     string classNames. */
+  .mobile-only {
+    display: none;
+  }
+  @media (max-width: 768px) {
+    .desktop-only {
+      display: none;
+    }
+    .mobile-only {
+      display: contents;
+    }
+  }
+
+  /* ─── Mobile section order (migrated from AppShell.module.css) ──────────────
+     Cross-cutting layout rules targeting global DOM ids (set by Module.tsx via
+     the section `id` prop). The .page flex column makes `order` effective. */
+  @media (max-width: 768px) {
+    #sec-readme {
+      order: 1;
+    }
+    #sec-shell {
+      order: 2;
+    }
+    #sec-ai-metrics {
+      order: 3;
+    }
+    #sec-man-page {
+      order: 4;
+    }
+    #sec-now {
+      order: 5;
+    }
+    #sec-projects {
+      order: 6;
+    }
+    #sec-git-log {
+      order: 7;
+    }
+    #sec-npm-stack {
+      order: 8;
+    }
+    #sec-sys-health {
+      order: 9;
+    }
+    #sec-live-perf {
+      order: 10;
+    }
+    #sec-perf-receipts {
+      order: 11;
+    }
+    #sec-guitar {
+      order: 12;
+    }
+    #sec-daw-mixer {
+      order: 13;
+    }
+    #sec-visa {
+      order: 14;
+    }
+    #sec-credentials {
+      order: 15;
+    }
+    #sec-community {
+      order: 16;
+    }
+    #sec-hottest-takes {
+      order: 17;
+    }
+    #sec-responsibilities {
+      order: 18;
+    }
+    #sec-unknowns {
+      order: 19;
+    }
+    #sec-contact {
+      order: 20;
+    }
+
+    /* Clear space for the fixed mobile dock at the bottom of the viewport. */
+    body {
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    }
+  }
+}
