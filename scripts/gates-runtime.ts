@@ -207,19 +207,21 @@ run('Wait for server', 'npx', [
 
 step('Running post-build gates in parallel');
 
-const gatePromises = [
-  spawnGate('Lighthouse CI — desktop', true, 'pnpm', [
-    'exec',
-    'lhci',
-    'autorun',
-    `--collect.url=http://localhost:${PORT}`,
-    // numberOfRuns inherited from lighthouserc.json (3) — median smooths host-load variance
-    // collect.outputDir must be distinct from the mobile gate's dir — both run concurrently
-    // and default to .lighthouseci/, which would cause assertion-results.json to race/overwrite.
-    '--collect.outputDir=.lhci-local/desktop',
-    '--upload.target=filesystem',
-    '--upload.outputDir=.lhci-local/desktop',
-  ]),
+// LHCI anchors .lighthouseci/ to process.cwd() with no CLI flag to relocate it
+// (`--collect.outputDir` does not exist on the collect command and is silently discarded).
+// Concurrent desktop+mobile runs race in collect/assert on that shared directory.
+// Chain mobile off desktop so they run sequentially without blocking the parallel
+// axe/E2E gates, which have no shared state with each other or with LHCI.
+const lhciDesktopPromise = spawnGate('Lighthouse CI — desktop', true, 'pnpm', [
+  'exec',
+  'lhci',
+  'autorun',
+  `--collect.url=http://localhost:${PORT}`,
+  // numberOfRuns inherited from lighthouserc.json (3) — median smooths host-load variance
+  '--upload.target=filesystem',
+  '--upload.outputDir=.lhci-local/desktop',
+]);
+const lhciMobilePromise = lhciDesktopPromise.then(() =>
   spawnGate('Lighthouse CI — mobile', true, 'pnpm', [
     'exec',
     'lhci',
@@ -227,11 +229,14 @@ const gatePromises = [
     '--config=lighthouserc.mobile.json',
     `--collect.url=http://localhost:${PORT}`,
     // numberOfRuns inherited from lighthouserc.mobile.json (3) — median smooths host-load variance
-    // collect.outputDir must be distinct from the desktop gate's dir (see above).
-    '--collect.outputDir=.lhci-local/mobile',
     '--upload.target=filesystem',
     '--upload.outputDir=.lhci-local/mobile',
   ]),
+);
+
+const gatePromises = [
+  lhciDesktopPromise,
+  lhciMobilePromise,
   spawnGate('axe-core a11y scan', false, 'pnpm', [
     'playwright',
     'test',
