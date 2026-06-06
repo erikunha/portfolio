@@ -63,7 +63,9 @@ let exitCode = 0;
 let advisoryFailed = false;
 
 function cleanup() {
-  for (const child of gateChildren) {
+  // splice(0) atomically drains gateChildren and returns a snapshot, so concurrent
+  // close/error handlers that splice the live array cannot cause the loop to skip entries.
+  for (const child of gateChildren.splice(0)) {
     if (child.pid != null) {
       // Kill the whole process group so grandchildren (e.g. Playwright-spawned Chromium)
       // are reaped too. Falls back to direct SIGTERM if the group kill fails (e.g. if the
@@ -77,7 +79,6 @@ function cleanup() {
       child.kill('SIGTERM');
     }
   }
-  gateChildren.length = 0;
   if (server) {
     server.kill('SIGTERM');
     server = null;
