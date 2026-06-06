@@ -214,6 +214,9 @@ const gatePromises = [
     'autorun',
     `--collect.url=http://localhost:${PORT}`,
     // numberOfRuns inherited from lighthouserc.json (3) — median smooths host-load variance
+    // collect.outputDir must be distinct from the mobile gate's dir — both run concurrently
+    // and default to .lighthouseci/, which would cause assertion-results.json to race/overwrite.
+    '--collect.outputDir=.lhci-local/desktop',
     '--upload.target=filesystem',
     '--upload.outputDir=.lhci-local/desktop',
   ]),
@@ -224,6 +227,8 @@ const gatePromises = [
     '--config=lighthouserc.mobile.json',
     `--collect.url=http://localhost:${PORT}`,
     // numberOfRuns inherited from lighthouserc.mobile.json (3) — median smooths host-load variance
+    // collect.outputDir must be distinct from the desktop gate's dir (see above).
+    '--collect.outputDir=.lhci-local/mobile',
     '--upload.target=filesystem',
     '--upload.outputDir=.lhci-local/mobile',
   ]),

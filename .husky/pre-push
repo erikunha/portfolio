@@ -58,7 +58,7 @@ fi
 # chain (typecheck + validate-content + client-naming + tests) at a fraction
 # of the per-commit DX tax. `pnpm verify` is the manual equivalent.
 echo "[pre-push] Running verify chain (typecheck + validate-content + client-naming + tests)..."
-# Fail-fast: a verify failure MUST abort the push. Without `|| exit 1` the script
-# would continue and the final exit code could reset to 0, letting a broken
-# lint/typecheck/test chain push anyway.
+# Fail-fast defensive guard: `|| exit 1` ensures a non-zero exit from `pnpm verify`
+# is always propagated. Without it, future steps added below this line could reset
+# the exit code to 0, silently letting a broken verify chain push.
 pnpm verify || exit 1
