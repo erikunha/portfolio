@@ -101,9 +101,9 @@ jobs:
         # the WS5 audit found: the unit test passed; the live route 308'd.
         # WHY --retry on connection error only: tolerates serverless cold-start
         # connection blips, NOT bad HTTP codes - a 308 still fails immediately.
-        # WHY 503 exits 0: a 503 healthz is a monitoring degradation (Redis down),
-        # not a deploy failure. The site is live; only the Redis dependency is
-        # degraded. We send an alert email instead of failing the smoke run.
+        # WHY 503 exits 0: a 503 healthz is a monitoring degradation (Redis
+        # unavailable OR PSI data stale), not a deploy failure. The site is live;
+        # only the monitoring dependency is degraded. We send an alert email instead of failing the smoke run.
         # NEVER add set -x to this step: it handles RESEND_API_KEY and tracing
         # would print the secret to the public CI log.
         env:
@@ -219,9 +219,9 @@ jobs:
           fi
 
       - name: API smoke - /api/ask (route alive, returns non-5xx)
-        # WHY POST with empty body: a GET/HEAD on a POST-only route returns 405, not
-        # useful for liveness. An empty POST hits the validation layer and returns 400
-        # (invalid request schema) — confirms the route is alive, validating, and not
+        # WHY POST with empty JSON object: a GET/HEAD on a POST-only route returns 405,
+        # not useful for liveness. An empty JSON object POST hits the validation layer
+        # and returns 400 (invalid request schema) — confirms the route is alive, validating, and not
         # erroring at 500. The probe NEVER sends a real question to the AI Gateway
         # (validation rejects before reaching the AI call).
         # WHY no auth bypass header: /api/ask is served on the canonical public domain,
@@ -249,9 +249,9 @@ jobs:
           echo "OK: /api/ask responded with $http_code (route alive, validation or rate-limit active)"
 
       - name: API smoke - /api/contact (route alive, returns non-5xx)
-        # WHY POST with empty body: /api/contact uses defineHandler + Zod schema.
-        # An empty POST returns 400 (validation failure on required fields: name, email,
-        # message). This confirms the route is alive and not erroring at 500.
+        # WHY POST with empty JSON object: /api/contact uses defineHandler + Zod schema.
+        # An empty JSON object POST returns 400 (validation failure on required fields:
+        # name, email, message). This confirms the route is alive and not erroring at 500.
         # A real contact form submission is NOT sent — validation rejects before Resend.
         # RESEND_API_KEY is not needed for this probe — it is not accessed.
         run: |
