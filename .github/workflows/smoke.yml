@@ -265,7 +265,7 @@ jobs:
           echo "API smoke /api/contact status: $http_code"
           # WHY 400/429 exactly: POST {} hits Zod validation (400) on required fields
           # name/email/message, or rate-limit (429). 404 = route missing (routing regression);
-          # 200 = schema accepted empty body (wrong); 503 = kill-switch.
+          # 200 = schema accepted empty body (wrong); 503 = unexpected server error (no kill-switch on contact).
           if [ "$http_code" != "400" ] && [ "$http_code" != "429" ]; then
             echo "ERROR: /api/contact returned $http_code (expected 400 validation rejection or 429 rate-limit)"
             exit 1
@@ -290,7 +290,7 @@ jobs:
               process.stdin.on('data',c=>d+=c);
               process.stdin.on('end',()=>{
                 try { process.stdout.write(JSON.parse(d).sha ?? 'unknown'); }
-                catch { process.stdout.write('parse-error'); }
+                catch { process.stdout.write('unavailable'); }
               });
             " 2>/dev/null || echo "unavailable")
           if [ "$JOB_STATUS" = "success" ]; then
