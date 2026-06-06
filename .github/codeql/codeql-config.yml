@@ -10,4 +10,3 @@ paths-ignore:
   - '**/*.spec.ts'
   - '**/*.test.tsx'
   - '**/*.spec.tsx'
-  - scripts

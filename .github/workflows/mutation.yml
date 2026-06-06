@@ -81,7 +81,7 @@ jobs:
                 'Download the \`mutation-report\` artifact for the full HTML report.' + infraNote,
               ].join('\n');
               fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines + '\n');
-            " 2>/dev/null || echo "## Stryker Mutation Score: could not parse report" >> "$GITHUB_STEP_SUMMARY"
+            " || echo "## Stryker Mutation Score: could not parse report" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "## Stryker Mutation Score: report not generated" >> "$GITHUB_STEP_SUMMARY"
           fi
