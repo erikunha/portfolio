@@ -218,7 +218,7 @@ jobs:
             exit 1
           fi
 
-      - name: API smoke - /api/ask (route alive, returns non-5xx)
+      - name: API smoke - /api/ask (expects 400 validation or 429 rate-limit)
         # WHY POST with empty JSON object: a GET/HEAD on a POST-only route returns 405,
         # not useful for liveness. An empty JSON object POST hits the validation layer
         # and returns 400 (invalid request schema) — confirms the route is alive, validating, and not
@@ -248,7 +248,7 @@ jobs:
           fi
           echo "OK: /api/ask responded with $http_code (route alive, validation or rate-limit active)"
 
-      - name: API smoke - /api/contact (route alive, returns non-5xx)
+      - name: API smoke - /api/contact (expects 400 validation or 429 rate-limit)
         # WHY POST with empty JSON object: /api/contact uses defineHandler + Zod schema.
         # An empty JSON object POST returns 400 (validation failure on required fields:
         # name, email, message). This confirms the route is alive and not erroring at 500.
