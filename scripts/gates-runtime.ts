@@ -73,10 +73,18 @@ function cleanup() {
       try {
         process.kill(-child.pid, 'SIGTERM');
       } catch {
-        child.kill('SIGTERM');
+        try {
+          child.kill('SIGTERM');
+        } catch {
+          // Process already exited; nothing to kill.
+        }
       }
     } else {
-      child.kill('SIGTERM');
+      try {
+        child.kill('SIGTERM');
+      } catch {
+        // Process already exited; nothing to kill.
+      }
     }
   }
   if (server) {
