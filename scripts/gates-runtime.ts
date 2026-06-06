@@ -202,10 +202,9 @@ run('Wait for server', 'npx', [
   '30000',
 ]);
 
-// ── Gates 3-6: Post-build gates (parallel) ────────────────────────────────────
-// These 4 gates have no data dependency on each other. Running them sequentially
-// via execFileSync wastes ~4-5 min of wall-clock time. spawn-based parallel runner
-// reduces wall-clock to the max of the 4 (~90s).
+// ── Gates 3-6: Post-build gates ───────────────────────────────────────────────
+// LHCI desktop+mobile run sequentially (chained Promises, see below). axe and E2E
+// run in parallel — they have no shared state. Wall-clock: max(LHCI-serial, axe, E2E).
 
 step('Running post-build gates in parallel');
 
