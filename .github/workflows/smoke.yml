@@ -126,13 +126,14 @@ jobs:
           if [ "$http_code" = "503" ]; then
             echo "WARNING: healthz returned 503 (degraded) — Redis or PSI data may be unavailable. Sending alert."
             if [ -n "$RESEND_API_KEY" ]; then
-              curl --max-time 15 --silent --fail-with-body \
+              resend_resp=$(curl --max-time 15 --silent --fail-with-body \
                 --request POST \
                 --url "https://api.resend.com/emails" \
                 --header "Authorization: Bearer $RESEND_API_KEY" \
                 --header "Content-Type: application/json" \
                 --data "{\"from\":\"monitor@erikunha.dev\",\"to\":[\"erikhenriquealvescunha@gmail.com\"],\"subject\":\"[erikunha.dev] healthz 503 — degraded state post-deploy\",\"text\":\"Post-deploy smoke detected healthz 503 at ${CANONICAL_HOST}/api/healthz. Possible causes: (1) Upstash Redis unavailable — rate-limiting fails open, budget enforcement fails open; (2) PSI data stale — PageSpeed cache miss. Check Upstash dashboard and /api/healthz response body for the specific degraded field. This is not a deploy failure - the site is serving. It is a monitoring degradation.\"}" \
-                || echo "WARNING: could not send alert email (Resend returned error or call failed)"
+                --write-out '\nHTTP %{http_code}') \
+                || echo "WARNING: could not send alert email (Resend error: ${resend_resp})"
             else
               echo "WARNING: RESEND_API_KEY not set — cannot send alert email. Check repo secrets."
             fi
@@ -277,6 +278,10 @@ jobs:
         # useful for post-incident correlation ("what was live when the smoke failed?").
         # WHY node not jq: node is always available on ubuntu-latest; avoids a
         # dependency check. Graceful fallback: sha=unavailable if curl fails entirely.
+        # WHY JOB_STATUS env: heading reflects actual outcome — "Verified" only when
+        # all prior steps passed; failure/degradation gets an honest label instead.
+        env:
+          JOB_STATUS: ${{ job.status }}
         run: |
           sha=$(curl --max-time 15 --silent \
             "${CANONICAL_HOST}/api/healthz" \
@@ -288,8 +293,13 @@ jobs:
                 catch { process.stdout.write('parse-error'); }
               });
             " 2>/dev/null || echo "unavailable")
+          if [ "$JOB_STATUS" = "success" ]; then
+            heading="## Production Deploy Verified"
+          else
+            heading="## Production Deploy SHA (smoke had failures or degradation)"
+          fi
           {
-            echo "## Production Deploy Verified"
+            echo "$heading"
             echo ""
             echo "**SHA:** \`${sha}\`"
             echo "**Host:** ${CANONICAL_HOST}"
