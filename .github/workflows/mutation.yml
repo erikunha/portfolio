@@ -60,10 +60,17 @@ jobs:
               const killedOrTimeout = mutants.filter(m => m.status === 'Killed' || m.status === 'Timeout').length;
               const survived = mutants.filter(m => m.status === 'Survived').length;
               const noCoverage = mutants.filter(m => m.status === 'NoCoverage').length;
+              // RuntimeError/CompileError excluded from score per Stryker convention:
+              // these indicate infrastructure issues, not test-suite effectiveness.
+              const runtimeError = mutants.filter(m => m.status === 'RuntimeError').length;
+              const compileError = mutants.filter(m => m.status === 'CompileError').length;
               const total = killedOrTimeout + survived + noCoverage;
               const score = total > 0 ? (killedOrTimeout / total * 100).toFixed(1) : 'N/A';
               const high = (r.thresholds || {}).high || 80;
               const low = (r.thresholds || {}).low || 65;
+              const infraNote = (runtimeError + compileError) > 0
+                ? '\n\n> ' + (runtimeError + compileError) + ' mutant(s) excluded from score (RuntimeError: ' + runtimeError + ', CompileError: ' + compileError + ') — infrastructure issues, not test-effectiveness signal.'
+                : '';
               const lines = [
                 '## Stryker Mutation Score',
                 '',
@@ -71,7 +78,7 @@ jobs:
                 '',
                 '**Thresholds:** high: ' + high + '%, low: ' + low + '%',
                 '',
-                'Download the \`mutation-report\` artifact for the full HTML report.',
+                'Download the \`mutation-report\` artifact for the full HTML report.' + infraNote,
               ].join('\n');
               fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines + '\n');
             " 2>/dev/null || echo "## Stryker Mutation Score: could not parse report" >> "$GITHUB_STEP_SUMMARY"
