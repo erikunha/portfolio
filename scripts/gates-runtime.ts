@@ -7,11 +7,13 @@
 // Gates (in order):
 //   1. Build          — pnpm build (skip with --skip-build if .next/ is fresh)
 //   2. Server start   — pnpm start on :3000 with DEPLOY_SALT
-//   3-6. Parallel     — LHCI desktop (advisory), LHCI mobile (advisory),
-//                        axe-core (blocking), E2E functional (blocking)
+//   3-4. Sequential   — LHCI desktop (advisory), then LHCI mobile (advisory)
+//   5-6. Parallel     — axe-core (blocking), E2E functional (blocking)
 //
-// Gates 3-6 run concurrently via child_process.spawn (not execFileSync which
-// blocks the event loop). Wall-clock: max of the 4 (~90s) instead of sum (~5-6 min).
+// LHCI desktop+mobile run sequentially (chained Promises) because LHCI anchors
+// .lighthouseci/ to process.cwd() with no CLI override — concurrent runs race in
+// collect/assert on that shared directory. axe and E2E have no shared state and
+// run in parallel. Wall-clock: max(LHCI-desktop+LHCI-mobile, axe, E2E) (~2-3 min).
 //
 // LHCI is ADVISORY locally, AUTHORITATIVE in CI:
 //   `throttlingMethod: simulate` + 4x CPU models throttled timing from the HOST trace, so
