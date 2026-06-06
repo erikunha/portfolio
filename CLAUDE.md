@@ -68,6 +68,7 @@ This codebase is a **reference system** — every architectural decision, perf b
 | Accessibility | After adding/editing interactive or semantic elements | `accessibility-tester` |
 | Performance | After changes that could affect LCP/INP/CLS | `performance-engineer` |
 | Bundle growth | After adding a new dependency | `dependency-manager` |
+| Next.js patterns | After implementing new API routes, server actions, or app router layouts | `nextjs-developer` |
 
 ## Skill dispatch
 
