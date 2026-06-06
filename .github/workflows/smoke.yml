@@ -124,15 +124,15 @@ jobs:
             exit 1
           fi
           if [ "$http_code" = "503" ]; then
-            echo "WARNING: healthz returned 503 (degraded) — Redis may be unavailable. Sending alert."
+            echo "WARNING: healthz returned 503 (degraded) — Redis or PSI data may be unavailable. Sending alert."
             if [ -n "$RESEND_API_KEY" ]; then
-              curl --max-time 15 --silent \
+              curl --max-time 15 --silent --fail-with-body \
                 --request POST \
                 --url "https://api.resend.com/emails" \
                 --header "Authorization: Bearer $RESEND_API_KEY" \
                 --header "Content-Type: application/json" \
-                --data "{\"from\":\"monitor@erikunha.dev\",\"to\":[\"erikhunha@gmail.com\"],\"subject\":\"[erikunha.dev] healthz 503 — Redis degraded post-deploy\",\"text\":\"Post-deploy smoke detected healthz 503 at ${CANONICAL_HOST}/api/healthz. Possible cause: Upstash Redis unavailable. Consequences: rate-limiting fails open, budget enforcement fails open, PSI cron writes fail. Check Upstash dashboard. If Redis is healthy, check UPSTASH_REDIS_REST_URL env var in Vercel. This is not a deploy failure - the site is serving. It is a monitoring degradation.\"}" \
-                || echo "WARNING: could not send alert email (Resend call failed)"
+                --data "{\"from\":\"monitor@erikunha.dev\",\"to\":[\"erikhenriquealvescunha@gmail.com\"],\"subject\":\"[erikunha.dev] healthz 503 — degraded state post-deploy\",\"text\":\"Post-deploy smoke detected healthz 503 at ${CANONICAL_HOST}/api/healthz. Possible causes: (1) Upstash Redis unavailable — rate-limiting fails open, budget enforcement fails open; (2) PSI data stale — PageSpeed cache miss. Check Upstash dashboard and /api/healthz response body for the specific degraded field. This is not a deploy failure - the site is serving. It is a monitoring degradation.\"}" \
+                || echo "WARNING: could not send alert email (Resend returned error or call failed)"
             else
               echo "WARNING: RESEND_API_KEY not set — cannot send alert email. Check repo secrets."
             fi
@@ -238,11 +238,14 @@ jobs:
             --write-out "%{http_code}" \
             "${CANONICAL_HOST}/api/ask")
           echo "API smoke /api/ask status: $http_code"
-          if [ "$http_code" -ge 500 ] 2>/dev/null; then
-            echo "ERROR: /api/ask returned $http_code (5xx = route error, not validation rejection)"
+          # WHY 400/429 exactly: POST {} hits Zod validation (400) or rate-limit (429).
+          # 404 = route missing (routing regression); 200 = schema accepted empty body (wrong);
+          # 503 = kill-switch intentionally deployed (intentional exit 1 — expected behavior).
+          if [ "$http_code" != "400" ] && [ "$http_code" != "429" ]; then
+            echo "ERROR: /api/ask returned $http_code (expected 400 validation rejection or 429 rate-limit)"
             exit 1
           fi
-          echo "OK: /api/ask responded with $http_code (non-5xx confirms route is alive)"
+          echo "OK: /api/ask responded with $http_code (route alive, validation or rate-limit active)"
 
       - name: API smoke - /api/contact (route alive, returns non-5xx)
         # WHY POST with empty body: /api/contact uses defineHandler + Zod schema.
@@ -259,11 +262,14 @@ jobs:
             --write-out "%{http_code}" \
             "${CANONICAL_HOST}/api/contact")
           echo "API smoke /api/contact status: $http_code"
-          if [ "$http_code" -ge 500 ] 2>/dev/null; then
-            echo "ERROR: /api/contact returned $http_code (5xx = route error, not validation rejection)"
+          # WHY 400/429 exactly: POST {} hits Zod validation (400) on required fields
+          # name/email/message, or rate-limit (429). 404 = route missing (routing regression);
+          # 200 = schema accepted empty body (wrong); 503 = kill-switch.
+          if [ "$http_code" != "400" ] && [ "$http_code" != "429" ]; then
+            echo "ERROR: /api/contact returned $http_code (expected 400 validation rejection or 429 rate-limit)"
             exit 1
           fi
-          echo "OK: /api/contact responded with $http_code (non-5xx confirms route is alive)"
+          echo "OK: /api/contact responded with $http_code (route alive, validation or rate-limit active)"
 
       - name: Record deployed SHA in job summary
         if: always()
