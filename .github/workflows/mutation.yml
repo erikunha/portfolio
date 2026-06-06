@@ -66,8 +66,8 @@ jobs:
               const compileError = mutants.filter(m => m.status === 'CompileError').length;
               const total = killedOrTimeout + survived + noCoverage;
               const score = total > 0 ? (killedOrTimeout / total * 100).toFixed(1) : 'N/A';
-              const high = (r.thresholds || {}).high || 80;
-              const low = (r.thresholds || {}).low || 65;
+              const high = (r.thresholds ?? {}).high ?? 80;
+              const low = (r.thresholds ?? {}).low ?? 65;
               const infraNote = (runtimeError + compileError) > 0
                 ? '\n\n> ' + (runtimeError + compileError) + ' mutant(s) excluded from score (RuntimeError: ' + runtimeError + ', CompileError: ' + compileError + ') — infrastructure issues, not test-effectiveness signal.'
                 : '';
