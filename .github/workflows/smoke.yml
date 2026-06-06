@@ -126,7 +126,7 @@ jobs:
           if [ "$http_code" = "503" ]; then
             echo "WARNING: healthz returned 503 (degraded) — Redis or PSI data may be unavailable. Sending alert."
             if [ -n "$RESEND_API_KEY" ]; then
-              resend_resp=$(curl --max-time 15 --silent --fail-with-body \
+              resend_resp=$(curl --max-time 15 --silent --show-error --fail-with-body \
                 --request POST \
                 --url "https://api.resend.com/emails" \
                 --header "Authorization: Bearer $RESEND_API_KEY" \
