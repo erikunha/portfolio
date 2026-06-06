@@ -2,7 +2,7 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
-## 2026-06-06 — CI/CD Group D: deferred research — Argos visual CI, build cache, Playwright workers, Copilot bot probe
+## 2026-06-06 — CI/CD Group D: deferred research — Argos visual CI, build cache, Playwright workers, Copilot bot login
 
 - **2026-06-06** · **D1 — Argos CI visual regression (DEFERRED — research-first).** Current approach: two-platform Playwright screenshot baselines (`darwin` local, `linux` CI), stored in-repo, regenerated manually before pushes that touch visual code. The hypothesis is that Argos eliminates the per-push regen ceremony by diff-ing against a cloud-stored baseline. Decisive criterion before adopting: a local macOS dev run against an existing Argos build must produce zero spurious diffs on an untouched branch (the current tooling fails this — layout micro-shifts between darwin and linux snapshots are the reason two-platform baselines exist). Prerequisites: create an Argos account, install `@argos-ci/playwright`, integrate into `tests/visual/visual.spec.ts`, and run back-to-back macOS runs against a stable baseline. If zero spurious diffs: migrate to Argos and retire the in-repo PNG baselines. If spurious diffs persist: reject and document threshold. No implementation until the decisive criterion is confirmed. _Reversible: no change to make yet — this is the research gate._
 
