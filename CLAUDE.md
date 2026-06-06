@@ -84,6 +84,8 @@ Invoke the named skill inline (not as a subagent) before the described action. P
 | After editing `next.config.ts`, `.env.example`, or Vercel config | `vercel:nextjs` |
 | After editing `app/api/`, `lib/server/route.ts`, `lib/rate-limit.ts`, or `proxy.ts` | `vercel:vercel-functions` |
 | Before any UI code review (alongside `ui-ux-tester` dispatch) | `web-design-guidelines` |
+| After `writing-plans` produces output for tasks with >5 steps | `thinking-pre-mortem` — run on the plan tasks themselves, not the feature |
+| After dispatching the full 5-agent battery, before `pnpm review:stamp` | `battery-synthesis` |
 
 ## Stack (locked)
 
