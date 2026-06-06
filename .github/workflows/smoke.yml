@@ -226,10 +226,10 @@ jobs:
         # (validation rejects before reaching the AI call).
         # WHY no auth bypass header: /api/ask is served on the canonical public domain,
         # not the protected *.vercel.app artifact — no bypass needed.
-        # KNOWN FAILURE MODE: when ASK_ENABLED=off, the route returns 503, which IS
-        # >= 500 and WILL exit 1. A kill-switch deployment must either re-enable ASK
-        # or remove this probe step before deploying. This is intentional — a disabled
-        # route is a smoke failure for operator awareness.
+        # KNOWN FAILURE MODE: when ASK_ENABLED=off, the route returns 503, which is
+        # neither 400 nor 429, and WILL exit 1. A kill-switch deployment must either
+        # re-enable ASK or remove this probe step before deploying. This is intentional
+        # — a disabled route is a smoke failure for operator awareness.
         run: |
           http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --silent \
             --request POST \
@@ -292,7 +292,7 @@ jobs:
                 try { process.stdout.write(JSON.parse(d).sha ?? 'unknown'); }
                 catch { process.stdout.write('unavailable'); }
               });
-            " 2>/dev/null || echo "unavailable")
+            " 2>/dev/null) || sha="unavailable"
           if [ "$JOB_STATUS" = "success" ]; then
             heading="## Production Deploy Verified"
           else
