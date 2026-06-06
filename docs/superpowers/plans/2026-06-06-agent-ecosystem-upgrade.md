@@ -4,7 +4,7 @@
 > (recommended) or `superpowers:executing-plans` to implement this plan task-by-task.
 > Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Archive 23 irrelevant global skills, add 4 CLAUDE.md dispatch rules, create the
+**Goal:** Archive 22 irrelevant global skills, add 4 CLAUDE.md dispatch rules, create the
 `battery-synthesis` skill, and update the architect-gate status from "convention pending"
 to "confirmed enforced."
 
@@ -25,36 +25,40 @@ for final gate.
 | B | `CLAUDE.md` | Modify — add 4 rows to dispatch/spot-check tables + update architect-gate text |
 | C | `.claude/skills/battery-synthesis/SKILL.md` | Create — new project-level skill |
 | E | `CLAUDE.md` | Modify — same file as Track B (done together) |
-| A | `~/.claude/skills-archived/` | Create dir + move 23 files (global, outside repo) |
+| A | `~/.claude/skills-archived/` | Create dir + move 22 files (global, outside repo) |
 | A | `~/.claude/hookify.brainstorming-before-commit.local.md` | Delete (global) |
 | A | `~/.claude/hookify.commit-skill-reminder.local.md` | Delete (global) |
 | A | `~/.claude/hookify.pre-push-review.local.md` | Delete (global) |
-| — | `docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md` | Commit updated spec |
+| — | `docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md` | Verify spec is committed (already at `e484a67`) |
 
 ---
 
-## Task 1: Commit the updated design spec
+## Task 1: Verify design spec revision is committed on the branch
 
 **Files:**
-- Commit: `docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md`
-  (already updated in working tree with architect-reviewer round-2 fixes)
+- Read: `docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md` (already committed as `e484a67`)
 
-- [ ] **Step 1: Verify the spec update is in the working tree**
+No commit needed — the round-2 revision was already committed before this plan was written.
 
-```bash
-git diff docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md | head -5
-```
-
-Expected: shows diff lines (the file was updated after the first commit).
-
-- [ ] **Step 2: Stage and commit**
+- [ ] **Step 1: Confirm both spec commits are in git history**
 
 ```bash
-git add docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md
-git commit -m "docs(claude): revise ecosystem upgrade spec — architect-reviewer round-2 pass"
+git log --oneline -- docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md
 ```
 
-Expected: `[feat/agent-ecosystem-upgrade <sha>] docs(claude): revise ecosystem upgrade spec`
+Expected: two commits:
+```
+e484a67 docs(claude): revise ecosystem upgrade spec — architect-reviewer round-2 pass
+4b692de docs(claude): add agent ecosystem upgrade design spec
+```
+
+- [ ] **Step 2: Confirm working tree is clean for this file**
+
+```bash
+git diff docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md
+```
+
+Expected: no output (file is committed, not modified). If there is output, stage and commit before proceeding to Task 2.
 
 ---
 
@@ -289,7 +293,7 @@ Critical → Important → Advisory.
 ### Critical
 | Issue | File(s) | Agent(s) | Action |
 |---|---|---|---|
-| Missing rate-limit on /api/log | app/api/log/route.ts | security-auditor | Add `applyRateLimit()` call before handler logic |
+| Missing rate-limit on /api/example | app/api/example/route.ts | security-auditor | Add `applyRateLimit()` call before handler logic |
 
 ### Important
 | Issue | File(s) | Agent(s) | Action | Note |
@@ -354,13 +358,14 @@ affect any of these gates. If any gate fails, it is unrelated to this PR's chang
 git log main..HEAD --oneline
 ```
 
-Expected: 4 commits visible:
+Expected: 7 commits visible:
 ```
 <sha> feat(claude): add battery-synthesis skill for 5-agent battery output unification
 <sha> chore(claude): update architect-gate status to confirmed-enforced (2026-06-06)
 <sha> chore(claude): add plan red-team and battery-synthesis dispatch rules
 <sha> chore(claude): add nextjs-developer to spot-check dispatch table
 <sha> docs(claude): revise ecosystem upgrade spec — architect-reviewer round-2 pass
+<sha> docs(claude): add agent ecosystem upgrade implementation plan
 <sha> docs(claude): add agent ecosystem upgrade design spec
 ```
 
@@ -381,7 +386,7 @@ by moving back: `mv ~/.claude/skills-archived/<skill> ~/.claude/skills/<skill>`.
 mkdir -p ~/.claude/skills-archived
 ```
 
-- [ ] **Step 2: Archive all 21 Angular skills**
+- [ ] **Step 2: Archive all 20 Angular skills**
 
 ```bash
 for skill in \
@@ -430,7 +435,7 @@ Expected: no output.
 ls ~/.claude/skills-archived/ | wc -l
 ```
 
-Expected: 23 (21 Angular + 2 dead).
+Expected: 22 (20 Angular + 2 dead).
 
 ---
 
@@ -490,13 +495,13 @@ ls ~/.claude/skills/ | grep angular
 
 Expected: no output.
 
-- [ ] **Step 2: Archive exists with 23 files**
+- [ ] **Step 2: Archive exists with 22 files**
 
 ```bash
 ls ~/.claude/skills-archived/ | wc -l
 ```
 
-Expected: `23`
+Expected: `22`
 
 - [ ] **Step 3: Hookify WARNs deleted**
 
@@ -563,7 +568,7 @@ Expected: no errors.
 | battery-synthesis SKILL.md created | Task 5 |
 | pnpm ci:local verification | Task 6 |
 | All success criteria verified | Task 9 |
-| Updated spec committed | Task 1 |
+| Spec revision verified as committed (e484a67) | Task 1 |
 
 No spec requirements without a task.
 

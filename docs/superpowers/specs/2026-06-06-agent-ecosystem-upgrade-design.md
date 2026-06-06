@@ -40,7 +40,7 @@ or documentation-only.
 
 ## Track A — Global Archive of Irrelevant Skills
 
-**What:** Archive 23 global skill files by moving them to `~/.claude/skills-archived/`
+**What:** Archive 22 global skill files by moving them to `~/.claude/skills-archived/`
 rather than deleting. Fully reversible by moving back.
 
 **Justification scope:** These skills are irrelevant to *this project's* Next.js/React stack.
@@ -51,9 +51,9 @@ if another Angular project needs them.
 
 **Reversibility:** Move files back from `~/.claude/skills-archived/` — no reinstall needed.
 
-### Skills archived (23 files)
+### Skills archived (22 files)
 
-21 Angular skills:
+20 Angular skills:
 `angular-best-practices`, `angular-best-practices-material`, `angular-best-practices-ngrx`,
 `angular-best-practices-primeng`, `angular-best-practices-signalstore`,
 `angular-best-practices-spartan`, `angular-best-practices-tanstack`,
@@ -205,7 +205,7 @@ enforcement status.
 1. **Track B** — CLAUDE.md updates (project-level, committed to branch, reviewable)
 2. **Track C** — battery-synthesis skill file (project-level, committed to branch)
 3. **Track E** — architect-gate documentation update in CLAUDE.md (project-level)
-4. **Track A** — global archive of 23 skills + deletion of 3 hookify WARNs (global,
+4. **Track A** — global archive of 22 skills + deletion of 3 hookify WARNs (global,
    after branch work is committed; archive is reversible)
 
 ---
@@ -213,7 +213,7 @@ enforcement status.
 ## Success Criteria
 
 - `ls ~/.claude/skills/ | grep angular` returns nothing
-- `ls ~/.claude/skills-archived/ | grep angular` returns 21 files (archive exists)
+- `ls ~/.claude/skills-archived/ | grep angular` returns 20 files (archive exists)
 - `ls ~/.claude/ | grep hookify` returns exactly 2 files (block-git-add-all, stop-without-review)
 - `.claude/skills/battery-synthesis/SKILL.md` exists with correct output format
 - CLAUDE.md contains `nextjs-developer` in spot-check table
