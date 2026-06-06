@@ -109,7 +109,7 @@ Uses existing `thinking-pre-mortem` skill. No new skill needed.
 | After dispatching full 5-agent battery, before `pnpm review:stamp` | `battery-synthesis` skill |
 ```
 
-### Rule 4 — Architect-gate confirmed (documentation update)
+### Architect-gate documentation update (not a new dispatch rule)
 
 Update the CLAUDE.md note that reads "Convention pending live proof" to:
 "Confirmed working 2026-06-06: Skill matcher fired exit-2, blocked writing-plans without

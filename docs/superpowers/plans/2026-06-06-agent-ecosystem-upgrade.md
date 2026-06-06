@@ -4,7 +4,7 @@
 > (recommended) or `superpowers:executing-plans` to implement this plan task-by-task.
 > Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Archive 22 irrelevant global skills, add 4 CLAUDE.md dispatch rules, create the
+**Goal:** Archive 22 irrelevant global skills, add 3 dispatch-table rows + 1 architect-gate text update to CLAUDE.md, create the
 `battery-synthesis` skill, and update the architect-gate status from "convention pending"
 to "confirmed enforced."
 
@@ -22,7 +22,7 @@ for final gate.
 
 | Track | File | Action |
 |---|---|---|
-| B | `CLAUDE.md` | Modify — add 4 rows to dispatch/spot-check tables + update architect-gate text |
+| B | `CLAUDE.md` | Modify — add 3 rows to dispatch/spot-check tables + update architect-gate text |
 | C | `.claude/skills/battery-synthesis/SKILL.md` | Create — new project-level skill |
 | E | `CLAUDE.md` | Modify — same file as Track B (done together) |
 | A | `~/.claude/skills-archived/` | Create dir + move 22 files (global, outside repo) |
@@ -352,22 +352,21 @@ Expected: all checks pass (Biome, typecheck, validate-content, client-naming, de
 harness-size, section-order, doc-drift, tests). CLAUDE.md and skill file changes do not
 affect any of these gates. If any gate fails, it is unrelated to this PR's changes.
 
-- [ ] **Step 2: Confirm git log shows clean commits on the branch**
+- [ ] **Step 2: Confirm all 4 implementation commits are on the branch**
 
 ```bash
-git log main..HEAD --oneline
+git log main..HEAD --oneline | grep -E "battery-synthesis skill|architect-gate status|plan red-team|nextjs-developer"
 ```
 
-Expected: 7 commits visible:
+Expected: exactly 4 lines:
 ```
 <sha> feat(claude): add battery-synthesis skill for 5-agent battery output unification
 <sha> chore(claude): update architect-gate status to confirmed-enforced (2026-06-06)
 <sha> chore(claude): add plan red-team and battery-synthesis dispatch rules
 <sha> chore(claude): add nextjs-developer to spot-check dispatch table
-<sha> docs(claude): revise ecosystem upgrade spec — architect-reviewer round-2 pass
-<sha> docs(claude): add agent ecosystem upgrade implementation plan
-<sha> docs(claude): add agent ecosystem upgrade design spec
 ```
+
+Note: The branch will also contain doc/spec/fix commits from the planning phase — these are expected and do not affect this gate.
 
 ---
 
@@ -559,7 +558,7 @@ Expected: no errors.
 
 | Spec requirement | Task covering it |
 |---|---|
-| Archive 23 skills to ~/.claude/skills-archived/ | Task 7 |
+| Archive 22 skills to ~/.claude/skills-archived/ | Task 7 |
 | Delete 3 hookify WARN files | Task 8 |
 | nextjs-developer spot-check rule | Task 2 |
 | Plan red-team dispatch rule (>5-step plans → thinking-pre-mortem) | Task 3 |
