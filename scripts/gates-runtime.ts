@@ -61,7 +61,20 @@ let exitCode = 0;
 let advisoryFailed = false;
 
 function cleanup() {
-  for (const child of gateChildren) child.kill('SIGTERM');
+  for (const child of gateChildren) {
+    if (child.pid != null) {
+      // Kill the whole process group so grandchildren (e.g. Playwright-spawned Chromium)
+      // are reaped too. Falls back to direct SIGTERM if the group kill fails (e.g. if the
+      // process already exited).
+      try {
+        process.kill(-child.pid, 'SIGTERM');
+      } catch {
+        child.kill('SIGTERM');
+      }
+    } else {
+      child.kill('SIGTERM');
+    }
+  }
   gateChildren.length = 0;
   if (server) {
     server.kill('SIGTERM');
@@ -107,9 +120,12 @@ function spawnGate(
   const start = Date.now();
   return new Promise((resolve) => {
     let output = '';
+    // detached: true puts each gate in its own process group so cleanup() can
+    // kill the whole tree (pnpm -> Playwright -> Chromium) via process.kill(-pid).
     const child = spawn(file, args, {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: process.env,
+      detached: true,
     });
     gateChildren.push(child);
     child.stdout.on('data', (d: Buffer) => {
