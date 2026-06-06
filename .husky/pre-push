@@ -8,7 +8,7 @@ echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|sty
 # review battery (pr-review-toolkit, security-auditor, accessibility-tester,
 # performance-engineer, dependency-manager). After all agents pass:
 #   pnpm review:stamp   → writes HEAD SHA to .review-passed
-# A new commit clears the stamp (post-commit hook), requiring a fresh review.
+# A new commit invalidates the stamp via SHA mismatch (line 25 below), requiring a fresh review.
 STAMP_FILE=".review-passed"
 HEAD_SHA=$(git rev-parse HEAD)
 if [ ! -f "$STAMP_FILE" ]; then
