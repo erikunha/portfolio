@@ -88,7 +88,11 @@ function cleanup() {
     }
   }
   if (server) {
-    server.kill('SIGTERM');
+    try {
+      server.kill('SIGTERM');
+    } catch {
+      // Process already exited; nothing to kill.
+    }
     server = null;
   }
 }
