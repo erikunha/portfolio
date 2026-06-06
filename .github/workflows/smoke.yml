@@ -99,8 +99,9 @@ jobs:
         # uses HEAD (-I) WITHOUT -L so a 308 surfaces as a hard failure instead
         # of being silently followed to a 404. This is the class of regression
         # the WS5 audit found: the unit test passed; the live route 308'd.
-        # WHY --retry on connection error only: tolerates serverless cold-start
-        # connection blips, NOT bad HTTP codes - a 308 still fails immediately.
+        # WHY --retry: tolerates serverless cold-start connection blips and
+        # transient HTTP errors (408/429/500/502/503/504). Does NOT retry 3xx codes -
+        # a 308 still fails immediately (not in curl's retry-eligible set).
         # WHY 503 exits 0: a 503 healthz is a monitoring degradation (Redis
         # unavailable OR PSI data stale), not a deploy failure; the site is live.
         # An alert email is sent instead of failing the smoke run.
