@@ -97,7 +97,7 @@ Previously available but never dispatched. Directly relevant to this codebase.
 ### Rule 2 — Plan red-team
 
 ```
-| After `writing-plans` produces output for tasks with >5 steps | `thinking-pre-mortem` on the plan (not the feature — the *plan tasks*) |
+| After `superpowers:writing-plans` produces output for tasks with >5 steps | `thinking-pre-mortem` on the plan (not the feature — the *plan tasks*) |
 ```
 
 Uses existing `thinking-pre-mortem` skill. No new skill needed.

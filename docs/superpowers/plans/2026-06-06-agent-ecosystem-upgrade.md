@@ -1,7 +1,7 @@
 # Agent Ecosystem Upgrade — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development`
-> (recommended) or `superpowers:executing-plans` to implement this plan task-by-task.
+> **For agentic workers:** Use `superpowers:subagent-driven-development`
+> or `superpowers:executing-plans` to implement this plan task-by-task.
 > Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Archive 22 irrelevant global skills, add 1 Spot-check agents row + 2 Skill dispatch rows + 1 architect-gate text update to CLAUDE.md, create the
@@ -135,7 +135,7 @@ Replace with:
 
 ```
 | Before any UI code review (alongside `ui-ux-tester` dispatch) | `web-design-guidelines` |
-| After `writing-plans` produces output for tasks with >5 steps | `thinking-pre-mortem` — run on the plan tasks themselves, not the feature |
+| After `superpowers:writing-plans` produces output for tasks with >5 steps | `thinking-pre-mortem` — run on the plan tasks themselves, not the feature |
 | After dispatching the full 5-agent battery, before `pnpm review:stamp` | `battery-synthesis` |
 ```
 
@@ -181,7 +181,7 @@ table under `## Project agent dispatch`):
 Replace with:
 
 ```
-**Confirmed enforced (2026-06-06):** Skill matcher fired exit-2 and blocked `writing-plans` in a live session without a prior GATE_RESULT: PASS. Boundary: session-scoped PASS, not per-spec identity
+**Confirmed enforced (2026-06-06):** Skill matcher fired exit-2 and blocked `superpowers:writing-plans` in a live session without a prior GATE_RESULT: PASS. Boundary: session-scoped PASS, not per-spec identity
 ```
 
 - [ ] **Step 3: Update second occurrence (in the "## When in doubt" section)**
@@ -195,7 +195,7 @@ Find this exact text in `CLAUDE.md`:
 Replace with:
 
 ```
-**Confirmed enforced (2026-06-06):** Skill matcher fired exit-2 and blocked `writing-plans` in a live session without a prior GATE_RESULT: PASS. Boundaries: session-scoped PASS, not per-spec identity (spec identity is not a structured transcript field).
+**Confirmed enforced (2026-06-06):** Skill matcher fired exit-2 and blocked `superpowers:writing-plans` in a live session without a prior GATE_RESULT: PASS. Boundaries: session-scoped PASS, not per-spec identity (spec identity is not a structured transcript field).
 ```
 
 - [ ] **Step 4: Verify no "Convention pending" text remains**
@@ -340,7 +340,7 @@ git commit -m "feat(claude): add battery-synthesis skill for 5-agent battery out
 - [ ] **Step 1: Run the full local CI chain**
 
 ```bash
-pnpm ci:local 2>&1 | tail -20
+pnpm ci:local
 ```
 
 Expected: all checks pass (Biome, typecheck, validate-content, client-naming, dep-pinning,
@@ -540,7 +540,7 @@ Expected: no output.
 - [ ] **Step 8: ci:local passes**
 
 ```bash
-pnpm ci:local 2>&1 | tail -5
+pnpm ci:local
 ```
 
 Expected: no errors.
