@@ -264,7 +264,7 @@ Read all 5 reports from the current context in order. Do NOT re-dispatch agents.
 - Agent name
 
 **Step 2 — Deduplicate.** When two or more agents flag the same file + issue class
-(e.g., both `pr-review-toolkit` and `accessibility-tester` flag a missing `aria-label`
+(e.g., both `pr-review-toolkit:review-pr` and `accessibility-tester` flag a missing `aria-label`
 on the same button):
 - Merge into one row
 - List all agent names in the Agent(s) column separated by ` + `
@@ -303,8 +303,7 @@ Critical → Important → Advisory.
 
 ### Conflicts requiring resolution before acting
 - [perf] Add `<link rel="preload">` for JetBrains Mono ↔ [a11y] Avoid CLS from font
-  swap — pick one approach before addressing either row. Options: (a) preload + `font-display:
-  block` to eliminate swap; (b) keep `font-display: swap` and accept first-paint penalty.
+  swap — pick one approach before addressing either row. Options: (a) preload + `font-display: block` to eliminate swap; (b) keep `font-display: swap` and accept first-paint penalty.
 ~~~
 
 ## After synthesis
