@@ -84,7 +84,7 @@ subsequent reversible action.
 
 ## Track B — CLAUDE.md Dispatch Additions
 
-**What:** Three new dispatch rules added to the Skill dispatch table in project `CLAUDE.md`.
+**What:** Two new rules added to the Skill dispatch table + one to the Spot-check agents table in project `CLAUDE.md`.
 
 ### Rule 1 — nextjs-developer activation
 
@@ -212,7 +212,7 @@ enforcement status.
 ## Success Criteria
 
 - `ls ~/.claude/skills/ | grep angular` returns nothing
-- `ls ~/.claude/skills-archived/ | grep angular` returns 20 files (archive exists)
+- `ls ~/.claude/skills-archived/ | grep -cE "^angular-"` returns 20 (archive exists)
 - `ls ~/.claude/ | grep hookify` returns exactly 2 files (block-git-add-all, stop-without-review)
 - `.claude/skills/battery-synthesis/SKILL.md` exists with correct output format
 - CLAUDE.md contains `nextjs-developer` in spot-check table

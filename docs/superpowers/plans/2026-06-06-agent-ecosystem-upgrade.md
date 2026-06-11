@@ -4,7 +4,7 @@
 > (recommended) or `superpowers:executing-plans` to implement this plan task-by-task.
 > Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Archive 22 irrelevant global skills, add 3 dispatch-table rows + 1 architect-gate text update to CLAUDE.md, create the
+**Goal:** Archive 22 irrelevant global skills, add 1 Spot-check agents row + 2 Skill dispatch rows + 1 architect-gate text update to CLAUDE.md, create the
 `battery-synthesis` skill, and update the architect-gate status from "convention pending"
 to "confirmed enforced."
 
@@ -101,7 +101,7 @@ Expected: one match — the new table row.
 
 ```bash
 git add CLAUDE.md
-git commit -m "chore(claude): add nextjs-developer to spot-check dispatch table"
+git commit -m "chore(claude): add nextjs-developer to spot-check agents table"
 ```
 
 Expected: commit succeeds, pre-commit hooks pass.
@@ -358,7 +358,7 @@ Expected: exactly 4 lines:
 <sha> feat(claude): add battery-synthesis skill for 5-agent battery output unification
 <sha> chore(claude): update architect-gate status to confirmed-enforced (2026-06-06)
 <sha> chore(claude): add plan red-team and battery-synthesis dispatch rules
-<sha> chore(claude): add nextjs-developer to spot-check dispatch table
+<sha> chore(claude): add nextjs-developer to spot-check agents table
 ```
 
 Note: The branch will also contain doc/spec/fix commits from the planning phase — these are expected and do not affect this gate.
