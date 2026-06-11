@@ -294,12 +294,12 @@ Critical → Important → Advisory.
 ### Important
 | Issue | File(s) | Agent(s) | Action | Note |
 |---|---|---|---|---|
-| Missing aria-label on close button | components/client/Dialog.client.tsx | pr-review + a11y | Add aria-label="Close dialog" | Overlapping — one fix resolves both |
+| Missing aria-label on close button | components/client/Dialog.client.tsx | pr-review-toolkit:review-pr + accessibility-tester | Add aria-label="Close dialog" | Overlapping — one fix resolves both |
 
 ### Advisory
 | Issue | File(s) | Agent(s) | Action |
 |---|---|---|---|
-| Unused import `clsx` | components/sections/Hero.tsx | pr-review | Remove import |
+| Unused import `clsx` | components/sections/Hero.tsx | pr-review-toolkit:review-pr | Remove import |
 
 ### Conflicts requiring resolution before acting
 - [perf] Add `<link rel="preload">` for JetBrains Mono ↔ [a11y] Avoid CLS from font
