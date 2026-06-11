@@ -69,7 +69,7 @@ Expected: no output (file is committed, not modified). If there is output, stage
 grep -n "nextjs-developer" CLAUDE.md
 ```
 
-Expected: no output (the agent is not yet in the dispatch table).
+Expected: no output (the agent is not yet in the spot-check agents table).
 
 - [ ] **Step 2: Find the spot-check agents table and add the new row**
 
@@ -116,7 +116,7 @@ Expected: commit succeeds, pre-commit hooks pass.
 - [ ] **Step 1: Verify neither rule exists yet**
 
 ```bash
-grep -n "battery-synthesis\|thinking-pre-mortem — run on" CLAUDE.md
+grep -En "battery-synthesis|thinking-pre-mortem — run on" CLAUDE.md
 ```
 
 Expected: no output.
@@ -142,7 +142,7 @@ Replace with:
 - [ ] **Step 3: Verify both rows were added**
 
 ```bash
-grep -n "battery-synthesis\|thinking-pre-mortem — run on" CLAUDE.md
+grep -En "battery-synthesis|thinking-pre-mortem — run on" CLAUDE.md
 ```
 
 Expected: two matches.
@@ -303,7 +303,7 @@ Critical → Important → Advisory.
 
 ### Conflicts requiring resolution before acting
 - [perf] Add `<link rel="preload">` for JetBrains Mono ↔ [a11y] Avoid CLS from font
-  swap — pick one approach before addressing either row. Options: (a) preload + `font-display: block` to eliminate swap; (b) keep `font-display: swap` and accept first-paint penalty.
+  swap — pick one approach before addressing either row. Options: (a) preload + `font-display: block` to eliminate swap; (b) keep `font-display: swap` and accept potential CLS from the font swap.
 ~~~
 
 ## After synthesis
@@ -426,7 +426,7 @@ Expected: no output.
 - [ ] **Step 5: Verify archived skills exist**
 
 ```bash
-ls ~/.claude/skills-archived/ | wc -l
+ls ~/.claude/skills-archived/ | grep -Ec "^angular-|^linting-neostandard-eslint9$|^deploy-to-vercel$"
 ```
 
 Expected: 22 (20 Angular + 2 dead).
@@ -492,7 +492,7 @@ Expected: no output.
 - [ ] **Step 2: Archive exists with 22 files**
 
 ```bash
-ls ~/.claude/skills-archived/ | wc -l
+ls ~/.claude/skills-archived/ | grep -Ec "^angular-|^linting-neostandard-eslint9$|^deploy-to-vercel$"
 ```
 
 Expected: `22`
@@ -524,7 +524,7 @@ Expected: 1 match — the spot-check table row.
 - [ ] **Step 6: battery-synthesis and plan red-team in CLAUDE.md**
 
 ```bash
-grep "battery-synthesis\|thinking-pre-mortem — run on" CLAUDE.md
+grep -E "battery-synthesis|thinking-pre-mortem — run on" CLAUDE.md
 ```
 
 Expected: 2 matches.

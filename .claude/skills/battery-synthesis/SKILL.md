@@ -64,7 +64,7 @@ Critical → Important → Advisory.
 
 ### Conflicts requiring resolution before acting
 - [perf] Add `<link rel="preload">` for JetBrains Mono vs [a11y] Avoid CLS from font
-  swap — pick one approach before addressing either row. Options: (a) preload + `font-display: block` to eliminate swap; (b) keep `font-display: swap` and accept first-paint penalty.
+  swap — pick one approach before addressing either row. Options: (a) preload + `font-display: block` to eliminate swap; (b) keep `font-display: swap` and accept potential CLS from the font swap.
 ~~~
 
 ## After synthesis
