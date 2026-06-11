@@ -104,7 +104,7 @@ git add CLAUDE.md
 git commit -m "chore(claude): add nextjs-developer to spot-check dispatch table"
 ```
 
-Expected: commit succeeds, Biome pre-commit passes (Biome does not lint .md files).
+Expected: commit succeeds, pre-commit hooks pass.
 
 ---
 
@@ -345,8 +345,8 @@ pnpm ci:local 2>&1 | tail -20
 ```
 
 Expected: all checks pass (Biome, typecheck, validate-content, client-naming, dep-pinning,
-harness-size, section-order, doc-drift, tests). CLAUDE.md and skill file changes do not
-affect any of these gates. If any gate fails, it is unrelated to this PR's changes.
+harness-size, section-order, doc-drift, tests). CLAUDE.md and skill file changes are
+unlikely to affect these gates; if a gate fails, investigate before assuming it is unrelated.
 
 - [ ] **Step 2: Confirm all 4 implementation commits are on the branch**
 

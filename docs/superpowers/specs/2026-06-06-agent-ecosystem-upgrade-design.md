@@ -150,12 +150,12 @@ The 5 battery reports are already in the main Claude context. No file reads need
 ### Important
 | Issue | File(s) | Agent(s) | Action | Note |
 |---|---|---|---|---|
-| ... | ... | pr-review + a11y | ... | Overlapping — one fix resolves both |
+| ... | ... | pr-review-toolkit:review-pr + accessibility-tester | ... | Overlapping — one fix resolves both |
 
 ### Advisory
 | Issue | File(s) | Agent(s) | Action |
 |---|---|---|---|
-| ... | ... | perf-engineer | ... | |
+| ... | ... | performance-engineer | ... |
 
 ### Conflicts requiring resolution before acting
 - [perf] Add font preload vs [a11y] Avoid layout shift from font loading — pick one
