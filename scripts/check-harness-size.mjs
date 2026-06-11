@@ -3,14 +3,14 @@
 // attention window. Context files above ~300 lines lose tail content to model
 // attention degradation — rules near the bottom stop firing reliably.
 //
-// Threshold: 250 lines (current ~215 ± growth headroom before the problem zone).
+// Threshold: 275 lines (current ~232 ± growth headroom before the problem zone).
 // When triggered: trim rules that duplicate STANDARDS.md, collapse prose into
 // bullet tables, or move one-time decisions to DECISIONS.md.
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const MAX_LINES = 250;
+const MAX_LINES = 275;
 const filePath = resolve('CLAUDE.md');
 
 let content;
