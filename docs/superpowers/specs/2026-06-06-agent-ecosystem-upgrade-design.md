@@ -17,9 +17,8 @@ tracks:
 - **Track B** (CLAUDE.md dispatch additions) → unchanged
 - **Track C** (battery-synthesis skill) → enforcement language corrected
 - **Track D** (was: fix learning-loop watch-queue.md) → **dropped**: watch-queue.md exists
-  at the correct Jobattle path (`/Users/erikhenriquealvescunha/Desktop/Projects/jobattle/lessons/watch-queue.md`);
-  the stop hook (`session_learning.py`) is correctly configured; audit finding was based on
-  searching the wrong project scope.
+  at the correct Jobattle project path; the stop hook (`session_learning.py`) is correctly
+  configured; audit finding was based on searching the wrong project scope.
 - **Track E** (architect-gate verification) → **confirmed working this session**: the Skill
   matcher fired and blocked `writing-plans` (exit 2) when no prior architect-reviewer PASS
   existed. No fallback hook needed. CLAUDE.md "convention pending" note will be updated.

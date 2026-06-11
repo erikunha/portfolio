@@ -29,28 +29,24 @@ for final gate.
 | A | `~/.claude/hookify.brainstorming-before-commit.local.md` | Delete (global) |
 | A | `~/.claude/hookify.commit-skill-reminder.local.md` | Delete (global) |
 | A | `~/.claude/hookify.pre-push-review.local.md` | Delete (global) |
-| — | `docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md` | Verify spec is committed (already at `e484a67`) |
+| — | `docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md` | Verify spec is committed on the branch |
 
 ---
 
 ## Task 1: Verify design spec revision is committed on the branch
 
 **Files:**
-- Read: `docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md` (already committed as `e484a67`)
+- Read: `docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md`
 
 No commit needed — the round-2 revision was already committed before this plan was written.
 
-- [ ] **Step 1: Confirm both spec commits are in git history**
+- [ ] **Step 1: Confirm the spec is in git history**
 
 ```bash
 git log --oneline -- docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md
 ```
 
-Expected: two commits:
-```
-e484a67 docs(claude): revise ecosystem upgrade spec — architect-reviewer round-2 pass
-4b692de docs(claude): add agent ecosystem upgrade design spec
-```
+Expected: at least two commits (initial add + architect-reviewer round-2 revision).
 
 - [ ] **Step 2: Confirm working tree is clean for this file**
 

@@ -25,7 +25,7 @@ Read all 5 reports from the current context in order. Do NOT re-dispatch agents.
 - Agent name
 
 **Step 2 — Deduplicate.** When two or more agents flag the same file + issue class
-(e.g., both `pr-review-toolkit` and `accessibility-tester` flag a missing `aria-label`
+(e.g., both `pr-review-toolkit:review-pr` and `accessibility-tester` flag a missing `aria-label`
 on the same button):
 - Merge into one row
 - List all agent names in the Agent(s) column separated by ` + `
@@ -55,12 +55,12 @@ Critical → Important → Advisory.
 ### Important
 | Issue | File(s) | Agent(s) | Action | Note |
 |---|---|---|---|---|
-| Missing aria-label on close button | components/client/Dialog.client.tsx | pr-review + a11y | Add aria-label="Close dialog" | Overlapping — one fix resolves both |
+| Missing aria-label on close button | components/client/Dialog.client.tsx | pr-review-toolkit:review-pr + accessibility-tester | Add aria-label="Close dialog" | Overlapping — one fix resolves both |
 
 ### Advisory
 | Issue | File(s) | Agent(s) | Action |
 |---|---|---|---|
-| Unused import `clsx` | components/sections/Hero.tsx | pr-review | Remove import |
+| Unused import `clsx` | components/sections/Hero.tsx | pr-review-toolkit:review-pr | Remove import |
 
 ### Conflicts requiring resolution before acting
 - [perf] Add `<link rel="preload">` for JetBrains Mono vs [a11y] Avoid CLS from font
