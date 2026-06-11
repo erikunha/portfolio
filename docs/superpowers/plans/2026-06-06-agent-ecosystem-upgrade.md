@@ -46,7 +46,7 @@ No commit needed — the round-2 revision was already committed before this plan
 git log --oneline -- docs/superpowers/specs/2026-06-06-agent-ecosystem-upgrade-design.md
 ```
 
-Expected: at least two commits (initial add + architect-reviewer round-2 revision).
+Expected: the spec file appears in git log (at least one commit on this branch).
 
 - [ ] **Step 2: Confirm working tree is clean for this file**
 
@@ -563,7 +563,7 @@ Expected: no errors.
 | battery-synthesis SKILL.md created | Task 5 |
 | pnpm ci:local verification | Task 6 |
 | All success criteria verified | Task 9 |
-| Spec revision verified as committed (e484a67) | Task 1 |
+| Spec revision verified as committed | Task 1 |
 
 No spec requirements without a task.
 
