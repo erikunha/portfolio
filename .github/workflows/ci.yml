@@ -170,11 +170,11 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
-          if git diff --name-only "$BASE...$HEAD" -- pnpm-lock.yaml | grep -q .; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
+          changed=true
+          if git diff --quiet "$BASE...$HEAD" -- pnpm-lock.yaml 2>/dev/null; then
+            changed=false
           fi
+          echo "changed=${changed}" >> "$GITHUB_OUTPUT"
 
       - name: Dependency vulnerability audit
         if: github.event_name != 'pull_request' || steps.lockfile-diff.outputs.changed == 'true'
