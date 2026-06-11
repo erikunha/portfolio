@@ -74,7 +74,7 @@ jobs:
               const lines = [
                 '## Stryker Mutation Score',
                 '',
-                '**Score:** ' + score + '%',
+                '**Score:** ' + (score === 'N/A' ? score : score + '%'),
                 '',
                 '**Thresholds:** high: ' + high + '%, low: ' + low + '%',
                 '',

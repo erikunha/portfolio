@@ -7,8 +7,8 @@
 // Gates (in order):
 //   1. Build          — pnpm build (skip with --skip-build if .next/ is fresh)
 //   2. Server start   — pnpm start on :3000 with DEPLOY_SALT
-//   3. LHCI desktop   — ADVISORY (median-run of 2), thresholds from lighthouserc.json
-//   4. LHCI mobile    — ADVISORY (median-run of 2), thresholds from lighthouserc.mobile.json
+//   3. LHCI desktop   — ADVISORY (2 runs, representative-run selection), thresholds from lighthouserc.json
+//   4. LHCI mobile    — ADVISORY (2 runs, representative-run selection), thresholds from lighthouserc.mobile.json
 //   5. axe-core       — playwright tests/a11y --project=chromium (blocking)
 //   6. E2E functional — cross-cutting + observability-smoke, chromium only (blocking)
 //
@@ -180,7 +180,7 @@ advisory('Lighthouse CI — desktop', 'pnpm', [
   'lhci',
   'autorun',
   `--collect.url=http://localhost:${PORT}`,
-  // numberOfRuns inherited from lighthouserc.json (2) — median-run selection reduces single-spike variance
+  // numberOfRuns inherited from lighthouserc.json (2) — representative-run selection reduces single-spike variance
   '--upload.target=filesystem',
   '--upload.outputDir=.lhci-local/desktop',
 ]);
@@ -193,7 +193,7 @@ advisory('Lighthouse CI — mobile', 'pnpm', [
   'autorun',
   '--config=lighthouserc.mobile.json',
   `--collect.url=http://localhost:${PORT}`,
-  // numberOfRuns inherited from lighthouserc.mobile.json (2) — median-run selection reduces single-spike variance
+  // numberOfRuns inherited from lighthouserc.mobile.json (2) — representative-run selection reduces single-spike variance
   '--upload.target=filesystem',
   '--upload.outputDir=.lhci-local/mobile',
 ]);
