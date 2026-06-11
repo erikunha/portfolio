@@ -2,7 +2,7 @@ name: CI
 
 # Required jobs for branch protection: quality-fast, typecheck, test, build, performance,
 # e2e-functional, e2e-visual-chromium, ai-eval.
-# Manual step: add "CodeQL / Analyze (javascript-typescript)" to required checks in GitHub Settings.
+# Optional: add "CodeQL / Analyze (javascript-typescript)" to required checks in GitHub Settings to enforce it as a branch-protection gate (non-blocking by default).
 #
 # Path-filter strategy (detect-changes job):
 #   ai=true   → app/api/ask/, lib/ask/, lib/ask-log.ts, lib/ip-hash.ts, lib/agent/,
