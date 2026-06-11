@@ -7,8 +7,8 @@
 // Gates (in order):
 //   1. Build          — pnpm build (skip with --skip-build if .next/ is fresh)
 //   2. Server start   — pnpm start on :3000 with DEPLOY_SALT
-//   3. LHCI desktop   — ADVISORY (median of 3 runs), thresholds from lighthouserc.json
-//   4. LHCI mobile    — ADVISORY (median of 3 runs), thresholds from lighthouserc.mobile.json
+//   3. LHCI desktop   — ADVISORY (median-run of 2), thresholds from lighthouserc.json
+//   4. LHCI mobile    — ADVISORY (median-run of 2), thresholds from lighthouserc.mobile.json
 //   5. axe-core       — playwright tests/a11y --project=chromium (blocking)
 //   6. E2E functional — cross-cutting + observability-smoke, chromium only (blocking)
 //
@@ -17,14 +17,14 @@
 //   mobile perf scores are not portable — a loaded dev laptop false-fails at ~0.6 while
 //   CI's controlled runner passes >=0.9 on the identical config. Blocking the push on that
 //   trains SKIP_RUNTIME_GATES bypasses. CI's `performance` job is the real blocking gate
-//   (same thresholds, median of 3); locally we print the numbers as signal only.
+//   (same thresholds, representative of 2); locally we print the numbers as signal only.
 //
 // Skipped locally (CI handles):
 //   - Visual regression (Linux Chromium baselines; use playwright MCP for manual check)
 //   - AI eval (requires live API keys + Upstash)
 //   - WebKit matrix (non-deterministic pixel rendering; not a required gate)
 //   - LHCI multi-URL (6 URLs in CI; lean to 1 URL locally). Run count stays at the
-//     config's 3 (median) for honest local numbers.
+//     config's 2 (representative-run) for honest local numbers.
 //
 // Usage:
 //   pnpm gates:runtime              — full run including build
@@ -108,7 +108,7 @@ function gate(
 // controlled runner passes ≥0.9 on the identical config + thresholds). Enforcing a
 // CI-calibrated absolute threshold on arbitrary local hardware trains gate bypasses.
 // The authoritative perf gate is CI's `performance` job (blocking, same thresholds,
-// median of 3). Locally we surface the numbers as advisory signal only.
+// representative of 2). Locally we surface the numbers as advisory signal only.
 function advisory(
   label: string,
   file: string,
@@ -180,7 +180,7 @@ advisory('Lighthouse CI — desktop', 'pnpm', [
   'lhci',
   'autorun',
   `--collect.url=http://localhost:${PORT}`,
-  // numberOfRuns inherited from lighthouserc.json (3) — median smooths host-load variance
+  // numberOfRuns inherited from lighthouserc.json (2) — median-run selection reduces single-spike variance
   '--upload.target=filesystem',
   '--upload.outputDir=.lhci-local/desktop',
 ]);
@@ -193,7 +193,7 @@ advisory('Lighthouse CI — mobile', 'pnpm', [
   'autorun',
   '--config=lighthouserc.mobile.json',
   `--collect.url=http://localhost:${PORT}`,
-  // numberOfRuns inherited from lighthouserc.mobile.json (3) — median smooths host-load variance
+  // numberOfRuns inherited from lighthouserc.mobile.json (2) — median-run selection reduces single-spike variance
   '--upload.target=filesystem',
   '--upload.outputDir=.lhci-local/mobile',
 ]);

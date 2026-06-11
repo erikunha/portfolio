@@ -46,3 +46,42 @@ jobs:
             mutation-report.html
             mutation-report.json
           retention-days: 30
+
+      - name: Post mutation score to job summary
+        if: always()
+        run: |
+          if [ -f mutation-report.json ]; then
+            node -e "
+              const fs = require('fs');
+              const r = JSON.parse(fs.readFileSync('mutation-report.json', 'utf8'));
+              // Stryker JSON uses mutation-testing-report-schema (no top-level mutationScore field).
+              // Score = (killed+timeout) / (killed+timeout+survived+noCoverage).
+              const mutants = Object.values(r.files || {}).flatMap(f => f.mutants || []);
+              const killedOrTimeout = mutants.filter(m => m.status === 'Killed' || m.status === 'Timeout').length;
+              const survived = mutants.filter(m => m.status === 'Survived').length;
+              const noCoverage = mutants.filter(m => m.status === 'NoCoverage').length;
+              // RuntimeError/CompileError excluded from score per Stryker convention:
+              // these indicate infrastructure issues, not test-suite effectiveness.
+              const runtimeError = mutants.filter(m => m.status === 'RuntimeError').length;
+              const compileError = mutants.filter(m => m.status === 'CompileError').length;
+              const total = killedOrTimeout + survived + noCoverage;
+              const score = total > 0 ? (killedOrTimeout / total * 100).toFixed(1) : 'N/A';
+              const high = (r.thresholds ?? {}).high ?? 80;
+              const low = (r.thresholds ?? {}).low ?? 65;
+              const infraNote = (runtimeError + compileError) > 0
+                ? '\n\n> ' + (runtimeError + compileError) + ' mutant(s) excluded from score (RuntimeError: ' + runtimeError + ', CompileError: ' + compileError + ') — infrastructure issues, not test-effectiveness signal.'
+                : '';
+              const lines = [
+                '## Stryker Mutation Score',
+                '',
+                '**Score:** ' + score + '%',
+                '',
+                '**Thresholds:** high: ' + high + '%, low: ' + low + '%',
+                '',
+                'Download the \`mutation-report\` artifact for the full HTML report.' + infraNote,
+              ].join('\n');
+              fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines + '\n');
+            " || echo "## Stryker Mutation Score: could not parse report" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Stryker Mutation Score: report not generated" >> "$GITHUB_STEP_SUMMARY"
+          fi
