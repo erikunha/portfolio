@@ -20,7 +20,7 @@ tracks:
   at the correct Jobattle project path; the stop hook (`session_learning.py`) is correctly
   configured; audit finding was based on searching the wrong project scope.
 - **Track E** (architect-gate verification) → **confirmed working this session**: the Skill
-  matcher fired and blocked `writing-plans` (exit 2) when no prior architect-reviewer PASS
+  matcher fired and blocked `superpowers:writing-plans` (exit 2) when no prior architect-reviewer PASS
   existed. No fallback hook needed. CLAUDE.md "convention pending" note will be updated.
 
 Context preloading already works — the `remember` plugin (v0.7.3) loads `.remember/` at
@@ -111,7 +111,7 @@ Uses existing `thinking-pre-mortem` skill. No new skill needed.
 ### Architect-gate documentation update (not a new dispatch rule)
 
 Update the CLAUDE.md note that reads "Convention pending live proof" to:
-"Confirmed working 2026-06-06: Skill matcher fired exit-2, blocked writing-plans without
+"Confirmed working 2026-06-06: Skill matcher fired exit-2, blocked `superpowers:writing-plans` without
 architect-reviewer PASS. No fallback hook needed."
 
 ---
@@ -164,7 +164,7 @@ The 5 battery reports are already in the main Claude context. No file reads need
 
 ### Deduplication logic
 
-When two agents flag the same file + issue type (e.g., both pr-review and a11y flag
+When two agents flag the same file + issue type (e.g., both `pr-review-toolkit:review-pr` and `accessibility-tester` flag
 missing `aria-label` on the same button), merge into one row; list both agents in the
 Agent(s) column; note "Overlapping — one fix resolves both."
 
@@ -180,7 +180,7 @@ stamp mechanically; they inform the main Claude's decision before stamp.
 
 **What:** Update CLAUDE.md to record that the Skill matcher was live-confirmed.
 
-**Finding:** `architect-gate.sh` was invoked this session when `writing-plans` was called
+**Finding:** `architect-gate.sh` was invoked this session when `superpowers:writing-plans` was called
 without a prior architect-reviewer PASS. The hook fired exit 2 and blocked the skill.
 The "convention pending live proof" caveat in CLAUDE.md is now resolved.
 
