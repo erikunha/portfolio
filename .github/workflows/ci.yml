@@ -269,6 +269,26 @@ jobs:
           fail-on-severity: high
           deny-licenses: GPL-3.0, AGPL-3.0, GPL-2.0
 
+  copilot-review-request:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    permissions:
+      contents: read
+      pull-requests: write
+    timeout-minutes: 2
+    steps:
+      - name: Request Copilot review
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            await github.rest.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              reviewers: ['copilot-pull-request-reviewer'],
+            });
+            core.info('Copilot review requested on PR #' + context.issue.number);
+
   build:
     runs-on: ubuntu-latest
     permissions:
