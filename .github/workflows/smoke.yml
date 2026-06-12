@@ -289,29 +289,40 @@ jobs:
         # useful for post-incident correlation ("what was live when the smoke failed?").
         # WHY node not jq: node is always available on ubuntu-latest; avoids a
         # dependency check. Graceful fallback: sha=unavailable if curl fails entirely.
-        # WHY JOB_STATUS env: heading reflects actual outcome — "Verified" only when
-        # all prior steps passed; failure/degradation gets an honest label instead.
+        # WHY two-signal heading: job.status alone cannot distinguish a clean deploy
+        # from a degraded one (503 is intentionally non-failing). The healthz .status
+        # field provides the second signal — "Verified" only when both are clean.
         env:
           JOB_STATUS: ${{ job.status }}
         run: |
-          sha=$(curl --max-time 15 --silent --show-error \
-            "${CANONICAL_HOST}/api/healthz" \
-            | node -e "
-              let d='';
-              process.stdin.on('data',c=>d+=c);
-              process.stdin.on('end',()=>{
-                try { process.stdout.write(JSON.parse(d).sha ?? 'unavailable'); }
-                catch { process.stdout.write('unavailable'); }
-              });
-            ") || sha="unavailable"
+          healthz_resp=$(curl --max-time 15 --silent --show-error \
+            "${CANONICAL_HOST}/api/healthz") || true
+          sha=$(printf '%s' "$healthz_resp" | node -e "
+            let d='';
+            process.stdin.on('data',c=>d+=c);
+            process.stdin.on('end',()=>{
+              try { process.stdout.write(JSON.parse(d).sha ?? 'unavailable'); }
+              catch { process.stdout.write('unavailable'); }
+            });
+          ") || sha="unavailable"
+          healthz_ok=$(printf '%s' "$healthz_resp" | node -e "
+            let d='';
+            process.stdin.on('data',c=>d+=c);
+            process.stdin.on('end',()=>{
+              try { process.stdout.write(JSON.parse(d).status === 'ok' ? 'true' : 'false'); }
+              catch { process.stdout.write('false'); }
+            });
+          ") || healthz_ok="false"
           # WHY hex guard: sha is written to GITHUB_STEP_SUMMARY (Markdown). Validate
           # it is a git SHA before embedding to prevent Markdown injection if the
           # healthz .sha field were ever tampered with.
           [[ "$sha" =~ ^[0-9a-f]{7,40}$ ]] || sha="unavailable"
-          if [ "$JOB_STATUS" = "success" ]; then
+          if [ "$JOB_STATUS" = "success" ] && [ "$healthz_ok" = "true" ]; then
             heading="## Production Deploy Verified"
+          elif [ "$JOB_STATUS" = "success" ]; then
+            heading="## Production Deploy Verified (monitoring degraded — healthz 503)"
           else
-            heading="## Production Deploy SHA (smoke had failures or degradation)"
+            heading="## Production Deploy SHA (smoke had failures)"
           fi
           {
             echo "$heading"
