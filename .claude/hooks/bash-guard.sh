@@ -98,10 +98,10 @@ if printf '%s' "$FALLOW_CMD" | grep -qE '(^|[[:space:]&|;/])fallow[[:space:]@]';
   # binary that DECISIONS.md explicitly marks as "unauditable via static review".
   # Both forms are intentional defense-in-depth — removing either narrows coverage.
   # Bare-token form uses leading [[:space:]=] (catches alias=-value like -f=review-github)
-  # and trailing [[:space:],] (catches comma-joined reporters like review-github,sarif;
-  # path args /some/review-github-actions/ end in / or - which do not match; FALLOW_CMD
-  # trailing space (line 69) ensures the last token is always space-terminated).
-  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply|--save-|--sarif-file|--ci[[:space:]=]|--format[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)|[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)[[:space:],]'; then
+  # and trailing [^[:alnum:]-] (any non-word, non-hyphen char: space, comma, colon, etc.;
+  # path args /some/review-github-actions/ end in - which is excluded; FALLOW_CMD trailing
+  # space (line 69) ensures the last token always terminates with a non-alnum-hyphen char).
+  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply|--save-|--sarif-file|--ci[[:space:]=]|--format[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)|[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)[^[:alnum:]-]'; then
     printf '[BLOCKED] fallow write/cloud/CI/GitHub+GitLab-posting flag detected (e.g. --sarif-file, --save-*, --ci, --format review-github) — read-only audit only.\n'
     exit 2
   fi
