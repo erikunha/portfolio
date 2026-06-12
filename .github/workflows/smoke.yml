@@ -300,7 +300,7 @@ jobs:
                 try { process.stdout.write(JSON.parse(d).sha ?? 'unavailable'); }
                 catch { process.stdout.write('unavailable'); }
               });
-            " 2>/dev/null) || sha="unavailable"
+            ") || sha="unavailable"
           # WHY hex guard: sha is written to GITHUB_STEP_SUMMARY (Markdown). Validate
           # it is a git SHA before embedding to prevent Markdown injection if the
           # healthz .sha field were ever tampered with.
