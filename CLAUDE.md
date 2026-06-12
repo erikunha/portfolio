@@ -57,7 +57,7 @@ This codebase is a **reference system** — every architectural decision, perf b
 | Gate | Trigger | Agent |
 |---|---|---|
 | Before opening any PR | After all milestone commits, before `gh pr create` | `pr-review-toolkit:review-pr` — address all Critical/Important before opening (convention: opening the PR is not mechanically blocked) |
-| Before writing plans | Before invoking `writing-plans` on any spec | `architect-reviewer` — `.claude/hooks/architect-gate.sh` (PreToolUse `Skill`) is WIRED to block `superpowers:writing-plans` unless the transcript shows an `architect-reviewer` `GATE_RESULT: PASS` (in a tool_result) this session. **Convention pending live proof:** the script's exit-2 logic is verified, but whether a PreToolUse `Skill` matcher actually intercepts + blocks is NOT yet live-confirmed (needs a session reload). Treat as convention until a live Skill-matcher block is observed; then promote to "enforced". Boundary: session-scoped PASS, not per-spec identity |
+| Before writing plans | Before invoking `superpowers:writing-plans` on any spec | `architect-reviewer` — `.claude/hooks/architect-gate.sh` (PreToolUse `Skill`) is WIRED to block `superpowers:writing-plans` unless the transcript shows an `architect-reviewer` `GATE_RESULT: PASS` (in a tool_result) this session. **Confirmed enforced (2026-06-06):** Skill matcher fired exit-2 and blocked `superpowers:writing-plans` in a live session without a prior `GATE_RESULT: PASS`. Boundary: session-scoped PASS, not per-spec identity |
 | After API changes | After editing `app/api/`, `lib/rate-limit.ts`, or `proxy.ts` | `security-auditor` — **enforced** by `.claude/hooks/api-edit-marker.sh` (PostToolUse records the edit) + `.claude/hooks/api-security-push-guard.sh` (PreToolUse blocks the next `git push` until a `security-auditor` dispatch follows the marker). Boundary: dispatch-scoped, blocks push not the edit |
 
 **Spot-check agents** — invoke when the concern is the primary risk in the current change:
@@ -68,6 +68,7 @@ This codebase is a **reference system** — every architectural decision, perf b
 | Accessibility | After adding/editing interactive or semantic elements | `accessibility-tester` |
 | Performance | After changes that could affect LCP/INP/CLS | `performance-engineer` |
 | Bundle growth | After adding a new dependency | `dependency-manager` |
+| Next.js patterns | After implementing new API routes, server actions, or app router layouts | `nextjs-developer` |
 
 ## Skill dispatch
 
@@ -76,13 +77,15 @@ Invoke the named skill inline (not as a subagent) before the described action. P
 | Trigger | Skill |
 |---|---|
 | **Before writing any new file, API handler, or complex logic block** | **`thinking-inversion` — what specifically makes this fail? answers become test cases** |
-| **Before `writing-plans` on any spec** | **`thinking-inversion` — enumerate the class-of-bugs the implementation introduces; each becomes an explicit plan task, not a Copilot finding** |
+| **Before `superpowers:writing-plans` on any spec** | **`thinking-inversion` — enumerate the class-of-bugs the implementation introduces; each becomes an explicit plan task, not a Copilot finding** |
 | **Before implementing any new file, function, or script** | **`superpowers:test-driven-development` — tests first, always; implementation satisfies them** |
 | Before implementing any component (in `components/` or `design-system/`) | Run DS component pre-mortem: (1) which attrs does the consumer control? (`id`, `className`, `aria-*`) — passthrough, never override; (2) any `outline: none` on `:focus` must be `:focus-visible`; (3) `querySelector` returns `null` not `undefined` — use `.not.toBeNull()`; (4) can this component be rendered twice? hardcoded `id` breaks the second instance |
 | After creating a new component or adding significant client-side state/effects | `react-best-practices` |
 | After editing `next.config.ts`, `.env.example`, or Vercel config | `vercel:nextjs` |
 | After editing `app/api/`, `lib/server/route.ts`, `lib/rate-limit.ts`, or `proxy.ts` | `vercel:vercel-functions` |
 | Before any UI code review (alongside `ui-ux-tester` dispatch) | `web-design-guidelines` |
+| After `superpowers:writing-plans` produces output for tasks with >5 steps | `thinking-pre-mortem` — run on the plan tasks themselves, not the feature |
+| After dispatching the full 5-agent battery, before `pnpm review:stamp` | `battery-synthesis` |
 
 ## Stack (locked)
 
@@ -190,7 +193,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **Fill the PR template when creating PRs — hard gate.** Before writing a PR body: `cat .github/pull_request_template.md`, then fill EVERY section (Summary, Type of change, Test plan, Visual changes, Checklist). Never write a custom body from scratch — always start from the template structure. After `gh pr create`, run `pnpm validate-pr-body <pr>` immediately; it exits 1 if any section is missing or empty. Do not proceed to reviewer request until it passes.
 - **Playwright MCP visual check before writing or changing tests.** After implementing any section or component (or after changes that affect rendering), run `pnpm dev` and use the Playwright MCP tool to visually inspect desktop (1280×720) + mobile (375×812) BEFORE touching test files. Tests must assert observable, verified behavior — not assumed behavior. If the visual check reveals something unexpected, fix it first. Only then write or update tests. This also applies before the pre-merge Playwright check (see `.claude/skills/pr-merge-gate`).
 - **The review should be boring.** If `pr-review-toolkit:review-pr` or Copilot finds real bugs, the pre-implementation discipline failed. `thinking-inversion` before writing and TDD during implementation are the actual defences — not the review. Multi-round Copilot cycles mean the writing process needs fixing.
-- **Every plan must include a failure-mode checklist.** Run `thinking-inversion` before `writing-plans` on any task. Each bug class becomes an explicit plan task — not a Copilot finding after the fact.
+- **Every plan must include a failure-mode checklist.** Run `thinking-inversion` before `superpowers:writing-plans` on any task. Each bug class becomes an explicit plan task — not a Copilot finding after the fact.
 - **When dispatching implementer subagents, always include in the prompt:** "Use `git add -u` or `git add <specific files>` — never `git add .`, `git add -A`, or `git add --all`. Stage only the files you created or modified in this task."
 - **File-move tasks must include a consumer-scan step.** Before writing plan tasks for any `git mv` operation, grep for all callers of the files being moved (`grep -r 'OldPath' --include='*.ts' --include='*.tsx'`) and include path-update tasks for every match including test files. Stale path comments (`// components/OldPath.tsx`) in moved files are a separate required fix step.
 - **Verification before any completion claim.** Before reporting done, fixing, or passing: run `pnpm typecheck && pnpm test --run && pnpm build`, read the output, cite the result. "Should pass" is not evidence. Invoke `superpowers:verification-before-completion` if rationalizing.
@@ -229,4 +232,4 @@ Before proposing any of these, check `DECISIONS.md` to see the reasoning that ex
 - Read `ARCHITECTURE.md` §16 ("What I'd revisit as the system grows") before proposing infrastructure changes.
 - Read `LAUNCH.md` PR-by-PR order before suggesting we skip ahead.
 - If the request seems to conflict with a budget or gate, surface the conflict before complying.
-- Before invoking `writing-plans`, dispatch `architect-reviewer` against the spec. It runs the four-gate spec-gate protocol and must return `GATE_RESULT: PASS` before `writing-plans` proceeds. `.claude/hooks/architect-gate.sh` (PreToolUse `Skill` matcher) is WIRED to block (`exit 2`) the `superpowers:writing-plans` invocation unless the transcript shows an `architect-reviewer` `GATE_RESULT: PASS` (scoped to a tool_result block, so prose quoting the sentinel cannot spoof it) this session. **Convention pending live proof:** the script's exit-2 logic is verified by direct invocation, but whether a PreToolUse `Skill` matcher actually fires + blocks is not yet live-confirmed (the existing hooks only prove the `Bash` matcher; a `Skill`-matcher block needs a session reload to observe). Per "no claim outlives its enforcement," treat this as convention until a live `Skill`-matcher block is observed, then promote to enforced. Boundaries: session-scoped PASS, not per-spec identity (spec identity is not a structured transcript field).
+- Before invoking `superpowers:writing-plans`, dispatch `architect-reviewer` against the spec. It runs the four-gate spec-gate protocol and must return `GATE_RESULT: PASS` before `superpowers:writing-plans` proceeds. `.claude/hooks/architect-gate.sh` (PreToolUse `Skill` matcher) is WIRED to block (`exit 2`) the `superpowers:writing-plans` invocation unless the transcript shows an `architect-reviewer` `GATE_RESULT: PASS` (scoped to a tool_result block, so prose quoting the sentinel cannot spoof it) this session. **Confirmed enforced (2026-06-06):** Skill matcher fired exit-2 and blocked `superpowers:writing-plans` in a live session without a prior `GATE_RESULT: PASS`. Boundaries: session-scoped PASS, not per-spec identity (spec identity is not a structured transcript field).
