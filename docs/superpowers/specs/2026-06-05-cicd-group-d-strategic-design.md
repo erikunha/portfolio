@@ -9,7 +9,7 @@
 
 ## Overview
 
-These 4 items require vendor evaluation, configuration research, or spec audit work before
+These 3 items require vendor evaluation, configuration research, or spec audit work before
 implementation. This document captures the design questions for each. Implementation PRs will
 follow after each sub-item's research is complete and an ADR is written.
 
@@ -194,90 +194,6 @@ mode and why.
 
 ---
 
-## D4 — CI-Integrated Copilot Review Request
-
-### Problem
-
-The current review stamp proves that the 5-agent battery was DISPATCHED in the local Claude Code
-session. It cannot prove dispatch for commits made outside Claude Code (terminal, GUI, other tools).
-The review evidence exists only in the local session transcript — it's not visible in the GitHub
-PR timeline.
-
-GitHub Copilot already auto-triggers on PR open (confirmed via the existing `feedback_copilot_review_process`
-memory and CLAUDE.md Copilot loop). However, the trigger is passive — Copilot reviews appear
-inconsistently and the workflow depends on the developer manually checking for Copilot threads.
-
-### Design
-
-Add a CI step that programmatically requests a Copilot review on every PR open/sync, making the
-Copilot review reliable and traceable in the CI timeline rather than passive.
-
-**Architecture:**
-
-```yaml
-copilot-review-request:
-  runs-on: ubuntu-latest
-  if: github.event_name == 'pull_request' && github.event.action == 'opened'
-  permissions:
-    contents: read
-    pull-requests: write
-  timeout-minutes: 2
-  steps:
-    - name: Request Copilot review
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-      with:
-        script: |
-          await github.rest.pulls.requestReviewers({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            pull_number: context.issue.number,
-            reviewers: ['copilot-pull-request-reviewer[bot]'],
-          });
-          core.info('Copilot review requested on PR #' + context.issue.number);
-```
-
-**Why `action == 'opened'` only:** Re-requesting Copilot on every synchronize event creates
-noise (duplicate review requests on every push). The existing CLAUDE.md discipline handles
-re-requests manually after Copilot-thread fixes — that's the correct signal-to-noise ratio.
-This step ensures Copilot is ALWAYS requested on open, not just when it happens to auto-trigger.
-
-**No new secrets required:** Uses `GITHUB_TOKEN` via `actions/github-script` with
-`pull-requests: write` permission. Already available in all workflow jobs.
-
-**Copilot reviewer identity (UNVERIFIED — must be task zero in the plan):**
-`copilot-pull-request-reviewer[bot]` is the display form. The GitHub `requestReviewers` API
-accepts the *login* form, which is likely `Copilot` or `copilot-pull-request-reviewer` without
-the `[bot]` suffix. Passing `[bot]` suffix to the API commonly returns 422. The plan's first
-task must be a live API probe:
-```bash
-gh api repos/{owner}/{repo}/pulls/{pr}/requested_reviewers \
-  --method POST \
-  --field 'reviewers[]=Copilot'
-```
-If this 422s, try `copilot-pull-request-reviewer`. Document the correct login in the ADR.
-Fallback if API request fails: document as manual process (open PR → GitHub auto-triggers
-Copilot — the passive trigger already exists, the CI step just makes it reliable).
-
-**Relationship to existing loop:** This step replaces the manual "check if Copilot triggered"
-step from the CLAUDE.md loop. The developer loop becomes:
-1. Push → CI runs → `copilot-review-request` fires → Copilot review guaranteed within ~2 min
-2. Developer checks Copilot threads (they exist; no "did it trigger?" ambiguity)
-3. Fix threads → push → re-request manually per `feedback_copilot_rerequest_discipline`
-
-**Open questions for ADR:**
-- Does `copilot-pull-request-reviewer[bot]` accept reviewer requests from `GITHUB_TOKEN`?
-  Alternative: use `gh copilot suggest` CLI if the API call fails.
-- Should this be a required status check? Recommendation: no — Copilot may be slow or
-  unavailable; blocking merges on a third-party AI tool's uptime is fragile.
-
-### ADR Template
-
-Write DECISIONS.md entry covering: the request-on-open trigger, the re-request discipline
-(manual, not automated), required-vs-informational decision, and the GitHub API reviewer
-identity confirmation.
-
----
-
 ## Implementation Timeline
 
 | Sub-item | Effort estimate | Prerequisite |
@@ -288,8 +204,6 @@ identity confirmation.
 | D2 (build cache fix PR) | 1-2 hours | Audit shows gap |
 | D3 (spec audit) | 1-2 hours | None |
 | D3 (workers PR) | 1-2 hours | Audit clean |
-| D4 (Copilot review request design) | 1 hour (ADR + API verification) | None |
-| D4 (Copilot review request PR) | 1-2 hours | API call confirmed working |
 
 ---
 
@@ -298,4 +212,3 @@ identity confirmation.
 - D1: committed PNGs removed from repo; visual regression caught by Argos in next CSS PR
 - D2: `build` CI job shows "Cache hit" in >50% of PRs that don't touch app source files
 - D3: e2e-functional legs complete in <10 min with no new test failures
-- D4: Copilot review appears on every PR within 2 min of open; no "did it trigger?" ambiguity

@@ -2,8 +2,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-06-05-cicd-group-d-strategic-design.md`
 **Branch:** Per sub-item (see below)
-**Goal:** Research, evaluate, and decide on 4 strategic improvements: external visual testing (Argos CI), Vercel build cache audit, Playwright workers go/no-go, and CI-integrated Copilot review request.
-**Prerequisite:** Groups A, B, C merged and validated before beginning D2. D1, D3, D4 can begin immediately.
+**Goal:** Research, evaluate, and decide on 3 strategic improvements: external visual testing (Argos CI), Vercel build cache audit, and Playwright workers go/no-go.
+**Prerequisite:** Groups A, B, C merged and validated before beginning D2. D1, D3 can begin immediately.
 **Effort:** Research tasks first (ADR-locked), then implementation PRs only if go-decision is confirmed.
 
 ---
@@ -23,7 +23,6 @@ No implementation code is written before the ADR is written and the go-decision 
 | D1 — Argos CI evaluation | `ci/argos-eval` | None |
 | D2 — Build cache audit | `ci/build-cache-audit` | Group A merged (LHCI timing changes affect baseline) |
 | D3 — Playwright workers | `ci/playwright-workers` | None |
-| D4 — Copilot review request | `ci/copilot-review` | None |
 
 ---
 
@@ -242,93 +241,6 @@ No implementation code is written before the ADR is written and the go-decision 
 
 ---
 
-## D4 — CI-Integrated Copilot Review Request
-
-**Problem being solved:** Copilot auto-triggers on PR open inconsistently. The developer manually checks whether Copilot triggered. A CI step that programmatically requests a Copilot review on PR open makes the trigger reliable and traceable.
-
-**Task zero:** Verify the correct GitHub API reviewer identity before writing any CI YAML. The `[bot]` suffix is a display form — the API login may differ.
-
-### D4.1 — Verify Copilot reviewer identity (task zero)
-
-- [ ] **Create branch:**
-  ```bash
-  git checkout main && git pull origin main
-  git checkout -b ci/copilot-review
-  ```
-
-- [ ] **Open a test PR** (or use any open PR):
-  ```bash
-  gh pr list --state open | head -3
-  ```
-
-- [ ] **Probe the API with `Copilot` login:**
-  ```bash
-  gh api repos/erikhunha/erik-portifolio/pulls/<pr_number>/requested_reviewers \
-    --method POST \
-    --field 'reviewers[]=Copilot'
-  ```
-  Expected outcomes:
-  - **200/201:** `Copilot` is the correct login — use this in the CI YAML.
-  - **422:** Try `copilot-pull-request-reviewer`:
-    ```bash
-    gh api repos/erikhunha/erik-portifolio/pulls/<pr_number>/requested_reviewers \
-      --method POST \
-      --field 'reviewers[]=copilot-pull-request-reviewer'
-    ```
-  - **422 again:** The API-based reviewer request may not be available for Copilot. Document as a known limitation; the passive auto-trigger is the fallback.
-
-- [ ] **Record the correct login** (or the failure mode) before proceeding. Do not guess — a wrong login creates a 422 error on every PR open.
-
-### D4.2 — Write CI job (only if API call succeeded)
-
-- [ ] **If API call succeeded:** Edit `.github/workflows/ci.yml` — add this new job:
-
-  ```yaml
-  copilot-review-request:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.action == 'opened'
-    permissions:
-      contents: read
-      pull-requests: write
-    timeout-minutes: 2
-    steps:
-      - name: Request Copilot review
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          script: |
-            await github.rest.pulls.requestReviewers({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-              reviewers: ['<confirmed-login-from-D4.1>'],
-            });
-            core.info('Copilot review requested on PR #' + context.issue.number);
-  ```
-
-  Replace `<confirmed-login-from-D4.1>` with the confirmed login (e.g., `Copilot` or `copilot-pull-request-reviewer`).
-
-  **Design decisions:**
-  - `action == 'opened'` only (not `synchronize`): re-requesting on every push creates noise. The existing `feedback_copilot_rerequest_discipline` memory governs re-requests manually.
-  - Non-required status check: this job must NOT be added to branch protection required checks — Copilot availability is a third-party dependency.
-  - No new secrets: uses `GITHUB_TOKEN` with `pull-requests: write` permission.
-
-- [ ] **If API call failed (422 on both logins):** document in DECISIONS.md and close the branch. The passive auto-trigger (Copilot triggers on PR open automatically) is the fallback. No CI YAML change needed.
-
-### D4.3 — Verify on a real PR
-
-- [ ] **Open a new test PR** after merging the `copilot-review-request` job.
-- [ ] **Confirm:** within ~2 min of PR open, Copilot review appears automatically without manual intervention.
-- [ ] **Confirm:** the `copilot-review-request` CI job appears in the Actions tab for the PR.
-
-### D4.4 — ADR
-
-- [ ] **Write DECISIONS.md entry:**
-  ```
-  2026-06-05 — CI-integrated Copilot review request (ci/copilot-review). API probe result: [Copilot / copilot-pull-request-reviewer / 422-both]. Decision: [implemented / fallback-to-passive]. Job fires on action=opened only (not synchronize — re-request discipline is manual per memory). Non-required status check. Reversibility: delete the copilot-review-request job from ci.yml.
-  ```
-
----
-
 ## Group D Summary Checklist
 
 | Sub-item | Research done | ADR written | Go-decision | Implementation PR |
@@ -336,7 +248,6 @@ No implementation code is written before the ADR is written and the go-decision 
 | D1 — Argos CI | [ ] | [ ] | [ ] | [ ] |
 | D2 — Build cache audit | [ ] | [ ] | [ ] | [ ] |
 | D3 — Playwright workers | [ ] | [ ] | [ ] | [ ] |
-| D4 — Copilot review | [ ] | [ ] | [ ] | [ ] |
 
 **Rule:** No implementation PR is opened until the ADR is written and the go-decision is confirmed. The research tasks are the deliverable for this cycle.
 
@@ -350,5 +261,3 @@ No implementation code is written before the ADR is written and the go-decision 
 | D1: Free tier (5000 screenshots/month) exceeded | 250 CI runs/month coverage. Monitor Argos dashboard. |
 | D2: warm-cache always misses | Investigate cache key construction; consider lockfile-hash-only key |
 | D3: parallel Playwright tests flake on shared state | Audit finds state; add `test.describe.configure({ mode: 'serial' })` or keep workers: 1 |
-| D4: API returns 422 on both login attempts | Fallback: passive auto-trigger (already works). Document in ADR. |
-| D4: Copilot requests on `synchronize` event (regression) | Job only fires on `action == 'opened'` — synchronize events don't match the condition |
