@@ -7,10 +7,13 @@
 // Gates (in order):
 //   1. Build          — pnpm build (skip with --skip-build if .next/ is fresh)
 //   2. Server start   — pnpm start on :3000 with DEPLOY_SALT
-//   3. LHCI desktop   — ADVISORY (2 runs, representative-run selection), thresholds from lighthouserc.json
-//   4. LHCI mobile    — ADVISORY (2 runs, representative-run selection), thresholds from lighthouserc.mobile.json
-//   5. axe-core       — playwright tests/a11y --project=chromium (blocking)
-//   6. E2E functional — cross-cutting + observability-smoke, chromium only (blocking)
+//   3-4. Sequential   — LHCI desktop (advisory), then LHCI mobile (advisory)
+//   5-6. Parallel     — axe-core (blocking), E2E functional (blocking)
+//
+// LHCI desktop+mobile run sequentially (chained Promises) because LHCI anchors
+// .lighthouseci/ to process.cwd() with no CLI override — concurrent runs race in
+// collect/assert on that shared directory. axe and E2E have no shared state and
+// run in parallel. Wall-clock: max(LHCI-desktop+LHCI-mobile, axe, E2E) (~2-3 min).
 //
 // LHCI is ADVISORY locally, AUTHORITATIVE in CI:
 //   `throttlingMethod: simulate` + 4x CPU models throttled timing from the HOST trace, so
@@ -39,7 +42,6 @@ const PORT = 3000;
 const C = {
   reset: '\x1b[0m',
   bold: '\x1b[1m',
-  dim: '\x1b[2m',
   red: '\x1b[31m',
   green: '\x1b[32m',
   yellow: '\x1b[33m',
@@ -53,6 +55,7 @@ const skipStep = (s: string) => log(`${C.yellow}  – ${s}${C.reset}`);
 log(`\n${C.bold}[gates:runtime] Server-dependent quality gates${C.reset}\n`);
 
 let server: ChildProcess | null = null;
+const gateChildren: ChildProcess[] = [];
 let exitCode = 0;
 // Tracks advisory (non-blocking) gate failures separately from exitCode, so the final
 // summary can stay honest: a green "all passed" line must not hide an LHCI advisory miss
@@ -60,8 +63,36 @@ let exitCode = 0;
 let advisoryFailed = false;
 
 function cleanup() {
+  // splice(0) atomically drains gateChildren and returns a snapshot, so concurrent
+  // close/error handlers that splice the live array cannot cause the loop to skip entries.
+  for (const child of gateChildren.splice(0)) {
+    if (child.pid != null) {
+      // Kill the whole process group so grandchildren (e.g. Playwright-spawned Chromium)
+      // are reaped too. Falls back to direct SIGTERM if the group kill fails (e.g. if the
+      // process already exited).
+      try {
+        process.kill(-child.pid, 'SIGTERM');
+      } catch {
+        try {
+          child.kill('SIGTERM');
+        } catch {
+          // Process already exited; nothing to kill.
+        }
+      }
+    } else {
+      try {
+        child.kill('SIGTERM');
+      } catch {
+        // Process already exited; nothing to kill.
+      }
+    }
+  }
   if (server) {
-    server.kill('SIGTERM');
+    try {
+      server.kill('SIGTERM');
+    } catch {
+      // Process already exited; nothing to kill.
+    }
     server = null;
   }
 }
@@ -87,49 +118,62 @@ function run(
   pass(label);
 }
 
-function gate(
-  label: string,
-  file: string,
-  args: string[],
-  env?: Record<string, string | undefined>,
-) {
-  try {
-    run(label, file, args, env);
-  } catch {
-    process.stderr.write(`${C.red}  ✗ ${label} failed${C.reset}\n`);
-    exitCode = 1;
-  }
+interface GateResult {
+  label: string;
+  advisory: boolean;
+  passed: boolean;
+  durationMs: number;
+  output: string;
 }
 
-// Advisory gate: runs and prints results, but does NOT block the push on failure.
-// WHY: LHCI uses `throttlingMethod: simulate` + 4x CPU multiplier, which models the
-// throttled timing from the HOST's observed trace — so mobile perf scores are not
-// portable across machines (a dev laptop under load false-fails at ~0.6 while CI's
-// controlled runner passes ≥0.9 on the identical config + thresholds). Enforcing a
-// CI-calibrated absolute threshold on arbitrary local hardware trains gate bypasses.
-// The authoritative perf gate is CI's `performance` job (blocking, same thresholds,
-// representative of 2). Locally we surface the numbers as advisory signal only.
-function advisory(
+function spawnGate(
   label: string,
+  isAdvisory: boolean,
   file: string,
   args: string[],
   env?: Record<string, string | undefined>,
-) {
-  try {
-    run(label, file, args, env);
-  } catch (err) {
-    // run() throws on a non-zero LHCI exit (assertion miss) OR a genuine failure
-    // (lhci crash, missing config, command-not-found). Echo the underlying message so
-    // a real breakage is distinguishable from a perf/threshold miss — both stay advisory.
-    const msg = err instanceof Error ? err.message : String(err);
-    advisoryFailed = true;
-    process.stderr.write(
-      `${C.yellow}  ⚠ ${label} did not pass locally — ADVISORY, not blocking.${C.reset}\n` +
-        `${C.dim}    ${msg}\n` +
-        '    Simulate-throttled LHCI is host-dependent and not portable; the authoritative\n' +
-        `    perf gate runs on CI's controlled hardware (blocking, identical thresholds).${C.reset}\n`,
-    );
-  }
+): Promise<GateResult> {
+  const start = Date.now();
+  return new Promise((resolve) => {
+    const chunks: Buffer[] = [];
+    // detached: true puts each gate in its own process group so cleanup() can
+    // kill the whole tree (pnpm -> Playwright -> Chromium) via process.kill(-pid).
+    const child = spawn(file, args, {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: env ? { ...process.env, ...env } : process.env,
+      detached: true,
+    });
+    gateChildren.push(child);
+    log(`  → ${label}`);
+    child.stdout.on('data', (d: Buffer) => {
+      chunks.push(d);
+    });
+    child.stderr.on('data', (d: Buffer) => {
+      chunks.push(d);
+    });
+    child.on('error', (err) => {
+      const ei = gateChildren.indexOf(child);
+      if (ei !== -1) gateChildren.splice(ei, 1);
+      resolve({
+        label,
+        advisory: isAdvisory,
+        passed: false,
+        durationMs: Date.now() - start,
+        output: err.message,
+      });
+    });
+    child.on('close', (code) => {
+      const ci = gateChildren.indexOf(child);
+      if (ci !== -1) gateChildren.splice(ci, 1);
+      resolve({
+        label,
+        advisory: isAdvisory,
+        passed: code === 0,
+        durationMs: Date.now() - start,
+        output: Buffer.concat(chunks).toString(),
+      });
+    });
+  });
 }
 
 // ── Gate 1: Build ─────────────────────────────────────────────────────────────
@@ -173,9 +217,18 @@ run('Wait for server', 'npx', [
   '30000',
 ]);
 
-// ── Gate 3: Lighthouse desktop ────────────────────────────────────────────────
+// ── Gates 3-6: Post-build gates ───────────────────────────────────────────────
+// LHCI desktop+mobile run sequentially (chained Promises, see below). axe and E2E
+// run in parallel — they have no shared state. Wall-clock: max(LHCI-serial, axe, E2E).
 
-advisory('Lighthouse CI — desktop', 'pnpm', [
+step('Running post-build gates in parallel');
+
+// LHCI anchors .lighthouseci/ to process.cwd() with no CLI flag to relocate it
+// (`--collect.outputDir` does not exist on the collect command and is silently discarded).
+// Concurrent desktop+mobile runs race in collect/assert on that shared directory.
+// Chain mobile off desktop so they run sequentially without blocking the parallel
+// axe/E2E gates, which have no shared state with each other or with LHCI.
+const lhciDesktopPromise = spawnGate('Lighthouse CI — desktop', true, 'pnpm', [
   'exec',
   'lhci',
   'autorun',
@@ -184,33 +237,88 @@ advisory('Lighthouse CI — desktop', 'pnpm', [
   '--upload.target=filesystem',
   '--upload.outputDir=.lhci-local/desktop',
 ]);
+const lhciMobilePromise = lhciDesktopPromise.then(() =>
+  spawnGate('Lighthouse CI — mobile', true, 'pnpm', [
+    'exec',
+    'lhci',
+    'autorun',
+    '--config=lighthouserc.mobile.json',
+    `--collect.url=http://localhost:${PORT}`,
+    // numberOfRuns inherited from lighthouserc.mobile.json (2) — representative-run selection reduces single-spike variance
+    '--upload.target=filesystem',
+    '--upload.outputDir=.lhci-local/mobile',
+  ]),
+);
 
-// ── Gate 4: Lighthouse mobile ─────────────────────────────────────────────────
+const gatePromises = [
+  lhciDesktopPromise,
+  lhciMobilePromise,
+  spawnGate('axe-core a11y scan', false, 'pnpm', [
+    'playwright',
+    'test',
+    'tests/a11y',
+    '--project=chromium',
+    '--output=.playwright-results/axe',
+  ]),
+  spawnGate('E2E functional — chromium', false, 'pnpm', [
+    'playwright',
+    'test',
+    '--project=chromium',
+    'tests/e2e/cross-cutting.spec.ts',
+    'tests/e2e/observability-smoke.spec.ts',
+    '--output=.playwright-results/e2e',
+  ]),
+];
 
-advisory('Lighthouse CI — mobile', 'pnpm', [
-  'exec',
-  'lhci',
-  'autorun',
-  '--config=lighthouserc.mobile.json',
-  `--collect.url=http://localhost:${PORT}`,
-  // numberOfRuns inherited from lighthouserc.mobile.json (2) — representative-run selection reduces single-spike variance
-  '--upload.target=filesystem',
-  '--upload.outputDir=.lhci-local/mobile',
-]);
+const timeoutPromise = new Promise<never>((_, reject) =>
+  setTimeout(() => reject(new Error('gates:runtime exceeded 300s wall-clock limit')), 300_000),
+);
 
-// ── Gate 5: axe-core a11y ─────────────────────────────────────────────────────
+let results: PromiseSettledResult<GateResult>[];
+try {
+  results = (await Promise.race([
+    Promise.allSettled(gatePromises),
+    timeoutPromise,
+  ])) as PromiseSettledResult<GateResult>[];
+} catch (err) {
+  process.stderr.write(
+    `${C.red}${C.bold}[gates:runtime] ${err instanceof Error ? err.message : String(err)}${C.reset}\n`,
+  );
+  cleanup();
+  process.exit(1);
+}
 
-gate('axe-core a11y scan', 'pnpm', ['playwright', 'test', 'tests/a11y', '--project=chromium']);
+// Print all buffered output first (deferred to avoid interleaving during parallel run)
+for (const r of results) {
+  if (r.status === 'fulfilled' && r.value.output.trim()) {
+    process.stdout.write(r.value.output);
+  } else if (r.status === 'rejected') {
+    process.stderr.write(`${C.red}[gates:runtime] Gate crashed: ${r.reason}${C.reset}\n`);
+  }
+}
 
-// ── Gate 6: E2E functional ────────────────────────────────────────────────────
-
-gate('E2E functional — chromium', 'pnpm', [
-  'playwright',
-  'test',
-  '--project=chromium',
-  'tests/e2e/cross-cutting.spec.ts',
-  'tests/e2e/observability-smoke.spec.ts',
-]);
+// Print result summary
+log(`\n${C.bold}[gates:runtime] Post-build gate results:${C.reset}`);
+for (const r of results) {
+  if (r.status === 'rejected') {
+    process.stderr.write(
+      `${C.red}  ✗${C.reset} [gate crashed]                      (blocking)   — ${String(r.reason)}\n`,
+    );
+    exitCode = 1;
+    continue;
+  }
+  const { label, advisory: isAdvisory, passed, durationMs } = r.value;
+  const icon = passed ? `${C.green}  ✓` : `${C.red}  ✗`;
+  const tag = isAdvisory ? '(advisory)' : '(blocking)';
+  log(`${icon}${C.reset} ${label.padEnd(35)} ${tag.padEnd(12)} ${(durationMs / 1000).toFixed(1)}s`);
+  if (!passed) {
+    if (isAdvisory) {
+      advisoryFailed = true;
+    } else {
+      exitCode = 1;
+    }
+  }
+}
 
 // ── Teardown ──────────────────────────────────────────────────────────────────
 
@@ -220,7 +328,7 @@ if (exitCode === 0) {
   if (advisoryFailed) {
     log(
       `\n${C.green}${C.bold}[gates:runtime] All blocking runtime gates passed.${C.reset} ` +
-        `${C.yellow}LHCI advisory did not pass locally (see ⚠ above) — CI's perf gate is authoritative.${C.reset}\n`,
+        `${C.yellow}LHCI advisory did not pass locally (see above) — CI's perf gate is authoritative.${C.reset}\n`,
     );
   } else {
     log(`\n${C.green}${C.bold}[gates:runtime] All runtime gates passed.${C.reset}\n`);
