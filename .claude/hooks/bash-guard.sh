@@ -96,13 +96,16 @@ if printf '%s' "$FALLOW_CMD" | grep -qE '(^|[[:space:]&|;/])fallow[[:space:]@]';
   # (-f, --reporter, etc.) that could select the same posting output from an opaque
   # binary that DECISIONS.md explicitly marks as "unauditable via static review".
   # Both forms are intentional defense-in-depth — removing either narrows coverage.
-  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply|--save-|--sarif-file|--ci[[:space:]=]|--format[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)|(review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)'; then
+  # Bare-token form uses [[:space:]] boundaries so path args (/some/review-github/)
+  # are not false-positives; FALLOW_CMD has a trailing space so end-of-cmd is safe.
+  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply|--save-|--sarif-file|--ci[[:space:]=]|--format[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)|[[:space:]](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)[[:space:]]'; then
     printf '[BLOCKED] fallow write/cloud/CI/GitHub+GitLab-posting flag detected (e.g. --sarif-file, --save-*, --ci, --format review-github) — read-only audit only.\n'
     exit 2
   fi
-  # D. Fail-closed allow-list: the WHOLE command must be exactly the pinned npx
-  #    form with a read-only subcommand. Rejects unpinned, global, wrong-version,
-  #    pnpm dlx/bunx/yarn dlx, path forms, and every write subcommand.
+  # D. Subcommand allow-list: the command must start with the pinned npx form and
+  #    include a read-only subcommand (prefix-anchored, not end-anchored — flags
+  #    after the subcommand are governed by section C above). Rejects unpinned,
+  #    global, wrong-version, pnpm dlx/bunx/yarn dlx, and write subcommands.
   if ! printf '%s' "$FALLOW_CMD" | grep -qE "^[[:space:]]*npx[[:space:]]+(--yes[[:space:]]+|-y[[:space:]]+)?fallow@${FALLOW_PIN_RE}[[:space:]]+(audit|dead-code|dupes|health|flags|list|workspaces|explain|config|schema)[[:space:]]"; then
     printf '[BLOCKED] fallow must be exactly: npx fallow@%s <read-only subcommand>\n' "$FALLOW_PIN"
     printf 'Allowed: audit dead-code dupes health flags list workspaces explain config schema.\n'
