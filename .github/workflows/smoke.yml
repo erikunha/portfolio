@@ -128,7 +128,7 @@ jobs:
             exit 1
           fi
           if [ "$http_code" = "503" ]; then
-            echo "WARNING: healthz returned 503 (degraded) — Redis or PSI data may be unavailable. Sending alert."
+            echo "WARNING: healthz returned 503 (degraded) — Redis or PSI data may be unavailable."
             healthz_body=$(curl --max-time 15 --silent --show-error \
               "${CANONICAL_HOST}/api/healthz" 2>&1 || echo "(body unavailable)")
             echo "Healthz 503 body: ${healthz_body}"
@@ -137,6 +137,7 @@ jobs:
             # If deploy cadence increases, add a Resend suppression window or a Redis-backed
             # last-alerted timestamp check here.
             if [ -n "$RESEND_API_KEY" ]; then
+              echo "Sending alert email via Resend."
               resend_resp=$(curl --max-time 15 --silent --show-error --fail-with-body \
                 --request POST \
                 --url "https://api.resend.com/emails" \
