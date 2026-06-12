@@ -110,7 +110,7 @@ jobs:
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: |
-          http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --silent \
+          http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --silent --show-error \
             --head \
             --output /dev/null \
             --write-out "%{http_code}" \
@@ -126,6 +126,9 @@ jobs:
           fi
           if [ "$http_code" = "503" ]; then
             echo "WARNING: healthz returned 503 (degraded) — Redis or PSI data may be unavailable. Sending alert."
+            healthz_body=$(curl --max-time 15 --silent --show-error \
+              "${CANONICAL_HOST}/api/healthz" 2>&1 || echo "(body unavailable)")
+            echo "Healthz 503 body: ${healthz_body}"
             # WHY no flood suppression: deploys are infrequent enough that one alert per
             # deploy during a sustained outage is acceptable operator signal, not inbox noise.
             # If deploy cadence increases, add a Resend suppression window or a Redis-backed
