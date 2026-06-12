@@ -31,8 +31,8 @@
         "largest-contentful-paint": ["error", { "maxNumericValue": 1800 }],
         "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05 }],
         "total-blocking-time": ["error", { "maxNumericValue": 200 }],
-        "interaction-to-next-paint": "off",
-        "server-response-time": ["warn", { "maxNumericValue": 800 }],
+        "interaction-to-next-paint": ["warn", { "maxNumericValue": 200 }],
+        "server-response-time": ["error", { "maxNumericValue": 800 }],
         "interactive": ["error", { "maxNumericValue": 2500 }],
 
         "uses-text-compression": "error",
