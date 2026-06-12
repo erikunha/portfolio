@@ -6,7 +6,7 @@ echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|sty
 
 # Review stamp gate: every push requires prior dispatch of the full agent
 # review battery (pr-review-toolkit, security-auditor, accessibility-tester,
-# performance-engineer, dependency-manager). After all agents pass:
+# performance-engineer, dependency-manager). After dispatching all 5 agents:
 #   pnpm review:stamp   → writes HEAD SHA to .review-passed
 # A new commit invalidates the stamp via SHA mismatch (line 25 below), requiring a fresh review.
 STAMP_FILE=".review-passed"
