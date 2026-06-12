@@ -97,7 +97,7 @@ Previously available but never dispatched. Directly relevant to this codebase.
 ### Rule 2 — Plan red-team
 
 ```
-| After `superpowers:writing-plans` produces output for tasks with >5 steps | `thinking-pre-mortem` on the plan (not the feature — the *plan tasks*) |
+| After `superpowers:writing-plans` produces output for tasks with >5 steps | `thinking-pre-mortem` — run on the plan tasks themselves, not the feature |
 ```
 
 Uses existing `thinking-pre-mortem` skill. No new skill needed.
@@ -105,7 +105,7 @@ Uses existing `thinking-pre-mortem` skill. No new skill needed.
 ### Rule 3 — Battery synthesis
 
 ```
-| After dispatching full 5-agent battery, before `pnpm review:stamp` | `battery-synthesis` |
+| After dispatching the full 5-agent battery, before `pnpm review:stamp` | `battery-synthesis` |
 ```
 
 ### Architect-gate documentation update (not a new dispatch rule)
