@@ -99,11 +99,11 @@ jobs:
         # uses HEAD (-I) WITHOUT -L so a 308 surfaces as a hard failure instead
         # of being silently followed to a 404. This is the class of regression
         # the WS5 audit found: the unit test passed; the live route 308'd.
-        # WHY --retry: retries transient transport failures — connection refused
-        # (extended by --retry-connrefused) and timeouts (exit 28). Without
-        # --fail, curl exits 0 on any HTTP response so 429/5xx are NOT retried;
-        # DNS failures also require --retry-all-errors. HTTP codes are caught
-        # by explicit exit-code checks below.
+        # WHY --retry: retries connection-refused from serverless cold starts
+        # (extended by --retry-connrefused). Without --fail, curl exits 0 on
+        # any HTTP response so 429/5xx are NOT retried; DNS failures also
+        # require --retry-all-errors. HTTP codes are caught by explicit
+        # exit-code checks below.
         # WHY 503 exits 0: a 503 healthz is a monitoring degradation (Redis
         # unavailable OR PSI data stale), not a deploy failure; the site is live.
         # An alert email is attempted when RESEND_API_KEY is set.
