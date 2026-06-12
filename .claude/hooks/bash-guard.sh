@@ -92,7 +92,7 @@ if printf '%s' "$FALLOW_CMD" | grep -qE '(^|[[:space:]&|;/])fallow[[:space:]@]';
   # forward-compatible prefix; --ci is anchored so it does not match --circular-deps.
   # This is a deny-list (the subcommand gate D is the allow-list); new fallow flags
   # are covered by the re-audit-on-bump protocol in DECISIONS.md.
-  # NB on the posting-format tokens below: --format[[:space:]=](...) catches the
+  # NB on the posting-format tokens below: --format[[:space:]=](...)[^[:alnum:]-] catches the
   # canonical --format flag; the bare-token alternatives catch any short/alias flag
   # (-f, --reporter, etc.) that could select the same posting output from an opaque
   # binary that DECISIONS.md explicitly marks as "unauditable via static review".
@@ -103,7 +103,7 @@ if printf '%s' "$FALLOW_CMD" | grep -qE '(^|[[:space:]&|;/])fallow[[:space:]@]';
   # trailing - (excluded from the class); (2) path args /some/review-github-actions/ are
   # excluded by the leading boundary (/ before the token is not [[:space:]=]). FALLOW_CMD
   # trailing space (line 69) ensures the last token terminates with a non-alnum-hyphen char.
-  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply|--save-|--sarif-file|--ci[[:space:]=]|--format[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)|[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)[^[:alnum:]-]'; then
+  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply|--save-|--sarif-file|--ci[[:space:]=]|--format[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)[^[:alnum:]-]|[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)[^[:alnum:]-]'; then
     printf '[BLOCKED] fallow write/cloud/CI/GitHub+GitLab-posting flag detected (e.g. --sarif-file, --save-*, --ci, --format review-github) — read-only audit only.\n'
     exit 2
   fi
