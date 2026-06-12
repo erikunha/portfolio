@@ -236,7 +236,7 @@ jobs:
         # re-enable ASK or remove this probe step before deploying. This is intentional
         # — a disabled route is a smoke failure for operator awareness.
         run: |
-          http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --show-error --silent \
+          http_code=$(curl --max-time 30 --show-error --silent \
             --request POST \
             --header "Content-Type: application/json" \
             --data '{}' \
@@ -260,7 +260,7 @@ jobs:
         # A real contact form submission is NOT sent — validation rejects before Resend.
         # RESEND_API_KEY is not needed for this probe — it is not accessed.
         run: |
-          http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --show-error --silent \
+          http_code=$(curl --max-time 30 --show-error --silent \
             --request POST \
             --header "Content-Type: application/json" \
             --data '{}' \
