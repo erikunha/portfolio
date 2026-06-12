@@ -144,6 +144,7 @@ function spawnGate(
       detached: true,
     });
     gateChildren.push(child);
+    log(`  → ${label}`);
     child.stdout.on('data', (d: Buffer) => {
       chunks.push(d);
     });
@@ -291,13 +292,21 @@ try {
 for (const r of results) {
   if (r.status === 'fulfilled' && r.value.output.trim()) {
     process.stdout.write(r.value.output);
+  } else if (r.status === 'rejected') {
+    process.stderr.write(`${C.red}[gates:runtime] Gate crashed: ${r.reason}${C.reset}\n`);
   }
 }
 
 // Print result summary
 log(`\n${C.bold}[gates:runtime] Post-build gate results:${C.reset}`);
 for (const r of results) {
-  if (r.status !== 'fulfilled') continue;
+  if (r.status === 'rejected') {
+    process.stderr.write(
+      `${C.red}  ✗${C.reset} [gate crashed]                      (blocking)   — ${String(r.reason)}\n`,
+    );
+    exitCode = 1;
+    continue;
+  }
   const { label, advisory: isAdvisory, passed, durationMs } = r.value;
   const icon = passed ? `${C.green}  ✓` : `${C.red}  ✗`;
   const tag = isAdvisory ? '(advisory)' : '(blocking)';
