@@ -89,7 +89,7 @@ subsequent reversible action.
 ### Rule 1 — nextjs-developer activation
 
 ```
-| After implementing new API routes, server actions, or app router layouts | `nextjs-developer` |
+| Next.js patterns | After implementing new API routes, server actions, or app router layouts | `nextjs-developer` |
 ```
 
 Previously available but never dispatched. Directly relevant to this codebase.
@@ -105,14 +105,14 @@ Uses existing `thinking-pre-mortem` skill. No new skill needed.
 ### Rule 3 — Battery synthesis
 
 ```
-| After dispatching full 5-agent battery, before `pnpm review:stamp` | `battery-synthesis` skill |
+| After dispatching full 5-agent battery, before `pnpm review:stamp` | `battery-synthesis` |
 ```
 
 ### Architect-gate documentation update (not a new dispatch rule)
 
 Update the CLAUDE.md note that reads "Convention pending live proof" to:
-"Confirmed working 2026-06-06: Skill matcher fired exit-2, blocked `superpowers:writing-plans` without
-architect-reviewer PASS. No fallback hook needed."
+"Confirmed enforced (2026-06-06): Skill matcher fired exit-2 and blocked `superpowers:writing-plans`
+in a live session without a prior `GATE_RESULT: PASS`. Boundary: session-scoped PASS, not per-spec identity."
 
 ---
 
