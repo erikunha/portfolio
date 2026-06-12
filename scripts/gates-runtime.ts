@@ -131,6 +131,7 @@ function spawnGate(
   isAdvisory: boolean,
   file: string,
   args: string[],
+  env?: Record<string, string | undefined>,
 ): Promise<GateResult> {
   const start = Date.now();
   return new Promise((resolve) => {
@@ -139,7 +140,7 @@ function spawnGate(
     // kill the whole tree (pnpm -> Playwright -> Chromium) via process.kill(-pid).
     const child = spawn(file, args, {
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: process.env,
+      env: env ? { ...process.env, ...env } : process.env,
       detached: true,
     });
     gateChildren.push(child);

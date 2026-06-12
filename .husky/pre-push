@@ -57,7 +57,7 @@ fi
 # push instead of once per commit. Same safety net as the prior per-commit
 # chain (typecheck + validate-content + client-naming + tests) at a fraction
 # of the per-commit DX tax. `pnpm verify` is the manual equivalent.
-echo "[pre-push] Running verify chain (typecheck + validate-content + client-naming + tests)..."
+echo "[pre-push] Running verify chain (pnpm verify)..."
 # Fail-fast defensive guard: `|| exit 1` ensures a non-zero exit from `pnpm verify`
 # is always propagated. Without it, future steps added below this line could reset
 # the exit code to 0, silently letting a broken verify chain push.
