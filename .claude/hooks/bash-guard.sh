@@ -60,7 +60,8 @@ fi
 # and any shell chaining/substitution. WHY: npx has no lockfile protection and
 # fix mutates source; this is the mechanical gate (PreToolUse exit 2), not the
 # SKILL.md prose. The allow-list is fail-closed — unrecognized shapes are denied,
-# so new fallow subcommands/flags are blocked until reviewed. PIN drives the regex.
+# so new fallow subcommands are blocked until reviewed; flags use the section C
+# deny-list (new flags pass unless explicitly blocked). PIN drives the regex.
 # Residual limit: a renamed/copied binary (cp .../fallow /tmp/f && /tmp/f fix) has
 # no `fallow` token and cannot be name-matched — see DECISIONS.md.
 FALLOW_PIN='2.95.0'
