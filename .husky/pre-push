@@ -39,7 +39,7 @@ echo "[pre-push] Review stamp valid ($HEAD_SHA)"
 # chokepoint git guarantees regardless of how push was invoked: if the marker is
 # non-empty, an API-surface edit has not been cleared by a post-edit
 # security-auditor run (review-stamp clears it only with correct ordering). Block.
-# $ROOT-anchored to match the writer (api-edit-marker.sh) and the push guard —
+# $ROOT-anchored to match the writer (api-edit-marker.sh) and the push guard;
 # a cwd-relative read would miss the marker if the hook ran from a subdirectory.
 API_MARKER="$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/.api-edit-pending"
 if [ -s "$API_MARKER" ]; then
