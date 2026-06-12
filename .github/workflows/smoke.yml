@@ -297,7 +297,7 @@ jobs:
               let d='';
               process.stdin.on('data',c=>d+=c);
               process.stdin.on('end',()=>{
-                try { process.stdout.write(JSON.parse(d).sha ?? 'unknown'); }
+                try { process.stdout.write(JSON.parse(d).sha ?? 'unavailable'); }
                 catch { process.stdout.write('unavailable'); }
               });
             " 2>/dev/null) || sha="unavailable"
