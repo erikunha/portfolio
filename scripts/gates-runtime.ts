@@ -135,7 +135,7 @@ function spawnGate(
 ): Promise<GateResult> {
   const start = Date.now();
   return new Promise((resolve) => {
-    let output = '';
+    const chunks: Buffer[] = [];
     // detached: true puts each gate in its own process group so cleanup() can
     // kill the whole tree (pnpm -> Playwright -> Chromium) via process.kill(-pid).
     const child = spawn(file, args, {
@@ -145,10 +145,10 @@ function spawnGate(
     });
     gateChildren.push(child);
     child.stdout.on('data', (d: Buffer) => {
-      output += d.toString();
+      chunks.push(d);
     });
     child.stderr.on('data', (d: Buffer) => {
-      output += d.toString();
+      chunks.push(d);
     });
     child.on('error', (err) => {
       const ei = gateChildren.indexOf(child);
@@ -169,7 +169,7 @@ function spawnGate(
         advisory: isAdvisory,
         passed: code === 0,
         durationMs: Date.now() - start,
-        output,
+        output: Buffer.concat(chunks).toString(),
       });
     });
   });
