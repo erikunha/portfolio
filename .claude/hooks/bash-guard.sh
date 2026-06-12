@@ -63,7 +63,7 @@ fi
 # so new fallow subcommands/flags are blocked until reviewed. PIN drives the regex.
 # Residual limit: a renamed/copied binary (cp .../fallow /tmp/f && /tmp/f fix) has
 # no `fallow` token and cannot be name-matched — see DECISIONS.md.
-FALLOW_PIN='2.85.0'
+FALLOW_PIN='2.95.0'
 FALLOW_PIN_RE=$(printf '%s' "$FALLOW_PIN" | sed 's/\./\\./g')
 # Normalize whitespace and append a trailing space so end-of-token == a space.
 FALLOW_CMD=$(printf '%s ' "$CMD" | tr '\n\t' '  ')
@@ -91,8 +91,8 @@ if printf '%s' "$FALLOW_CMD" | grep -qE '(^|[[:space:]&|;/])fallow[[:space:]@]';
   # forward-compatible prefix; --ci is anchored so it does not match --circular-deps.
   # This is a deny-list (the subcommand gate D is the allow-list); new fallow flags
   # are covered by the re-audit-on-bump protocol in DECISIONS.md.
-  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply|--save-|--sarif-file|--ci[[:space:]=]'; then
-    printf '[BLOCKED] fallow write/cloud/CI flag detected (e.g. --sarif-file, --save-*, --ci) — read-only audit only.\n'
+  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply|--save-|--sarif-file|--ci[[:space:]=]|review-github|pr-comment-github|review-gitlab|pr-comment-gitlab'; then
+    printf '[BLOCKED] fallow write/cloud/CI/GitHub-posting flag detected (e.g. --sarif-file, --save-*, --ci, --format review-github) — read-only audit only.\n'
     exit 2
   fi
   # D. Fail-closed allow-list: the WHOLE command must be exactly the pinned npx

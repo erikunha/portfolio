@@ -15,12 +15,12 @@ gates (Biome, `check-dep-pinning`, `check-bundle-size`) do not cover. Use it as 
 Always invoke through the pinned form. `.claude/hooks/bash-guard.sh` blocks every
 other form (unpinned, global, or a write/runtime subcommand):
 
-    npx fallow@2.85.0 audit        # changed-files review: dead code + complexity + dupes
-    npx fallow@2.85.0 dead-code    # unused code, dependency hygiene, architecture cycles
-    npx fallow@2.85.0 dupes        # copy-paste + structural duplication
-    npx fallow@2.85.0 health       # complexity, maintainability, hotspots
-    npx fallow@2.85.0 flags        # feature-flag usage patterns
-    npx fallow@2.85.0 list         # discovered files, entry points, boundaries (inspection)
+    npx fallow@2.95.0 audit        # changed-files review: dead code + complexity + dupes
+    npx fallow@2.95.0 dead-code    # unused code, dependency hygiene, architecture cycles
+    npx fallow@2.95.0 dupes        # copy-paste + structural duplication
+    npx fallow@2.95.0 health       # complexity, maintainability, hotspots
+    npx fallow@2.95.0 flags        # feature-flag usage patterns
+    npx fallow@2.95.0 list         # discovered files, entry points, boundaries (inspection)
 
 ## Hard rules
 
