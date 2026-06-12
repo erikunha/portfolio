@@ -242,7 +242,7 @@ const lhciMobilePromise = lhciDesktopPromise.then(() =>
     'autorun',
     '--config=lighthouserc.mobile.json',
     `--collect.url=http://localhost:${PORT}`,
-    // numberOfRuns inherited from lighthouserc.mobile.json (3) — median smooths host-load variance
+    // numberOfRuns inherited from lighthouserc.mobile.json (2) — representative-run selection reduces single-spike variance
     '--upload.target=filesystem',
     '--upload.outputDir=.lhci-local/mobile',
   ]),
