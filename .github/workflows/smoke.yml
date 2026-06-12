@@ -249,7 +249,7 @@ jobs:
             --write-out "%{http_code}" \
             "${CANONICAL_HOST}/api/ask")
           echo "API smoke /api/ask status: $http_code"
-          # WHY 400/429 exactly: POST {} hits Zod validation (400) or rate-limit (429).
+          # WHY 400/429 exactly: POST {} hits manual validation (400) or rate-limit (429).
           # 404 = route missing (routing regression); 200 = schema accepted empty body (wrong);
           # 503 = kill-switch intentionally deployed (intentional exit 1 — expected behavior).
           if [ "$http_code" != "400" ] && [ "$http_code" != "429" ]; then
