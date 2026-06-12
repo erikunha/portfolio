@@ -98,9 +98,11 @@ if printf '%s' "$FALLOW_CMD" | grep -qE '(^|[[:space:]&|;/])fallow[[:space:]@]';
   # binary that DECISIONS.md explicitly marks as "unauditable via static review".
   # Both forms are intentional defense-in-depth — removing either narrows coverage.
   # Bare-token form uses leading [[:space:]=] (catches alias=-value like -f=review-github)
-  # and trailing [^[:alnum:]-] (any non-word, non-hyphen char: space, comma, colon, etc.;
-  # path args /some/review-github-actions/ end in - which is excluded; FALLOW_CMD trailing
-  # space (line 69) ensures the last token always terminates with a non-alnum-hyphen char).
+  # and trailing [^[:alnum:]-] (any non-word, non-hyphen char: space, comma, colon, etc.).
+  # Two protection layers: (1) suffix tokens like review-github-actions are excluded by the
+  # trailing - (excluded from the class); (2) path args /some/review-github-actions/ are
+  # excluded by the leading boundary (/ before the token is not [[:space:]=]). FALLOW_CMD
+  # trailing space (line 69) ensures the last token terminates with a non-alnum-hyphen char.
   if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply|--save-|--sarif-file|--ci[[:space:]=]|--format[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)|[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)[^[:alnum:]-]'; then
     printf '[BLOCKED] fallow write/cloud/CI/GitHub+GitLab-posting flag detected (e.g. --sarif-file, --save-*, --ci, --format review-github) — read-only audit only.\n'
     exit 2
