@@ -181,7 +181,7 @@ table under `## Project agent dispatch`):
 Replace with:
 
 ```
-**Confirmed enforced (2026-06-06):** Skill matcher fired exit-2 and blocked `superpowers:writing-plans` in a live session without a prior GATE_RESULT: PASS. Boundary: session-scoped PASS, not per-spec identity
+**Confirmed enforced (2026-06-06):** Skill matcher fired exit-2 and blocked `superpowers:writing-plans` in a live session without a prior `GATE_RESULT: PASS`. Boundary: session-scoped PASS, not per-spec identity
 ```
 
 - [ ] **Step 3: Update second occurrence (in the "## When in doubt" section)**
@@ -195,7 +195,7 @@ Find this exact text in `CLAUDE.md`:
 Replace with:
 
 ```
-**Confirmed enforced (2026-06-06):** Skill matcher fired exit-2 and blocked `superpowers:writing-plans` in a live session without a prior GATE_RESULT: PASS. Boundaries: session-scoped PASS, not per-spec identity (spec identity is not a structured transcript field).
+**Confirmed enforced (2026-06-06):** Skill matcher fired exit-2 and blocked `superpowers:writing-plans` in a live session without a prior `GATE_RESULT: PASS`. Boundaries: session-scoped PASS, not per-spec identity (spec identity is not a structured transcript field).
 ```
 
 - [ ] **Step 4: Verify no "Convention pending" text remains**
@@ -302,7 +302,7 @@ Critical → Important → Advisory.
 | Unused import `clsx` | components/sections/Hero.tsx | pr-review-toolkit:review-pr | Remove import |
 
 ### Conflicts requiring resolution before acting
-- [perf] Add `<link rel="preload">` for JetBrains Mono ↔ [a11y] Avoid CLS from font
+- [perf] Add `<link rel="preload">` for JetBrains Mono vs [a11y] Avoid CLS from font
   swap — pick one approach before addressing either row. Options: (a) preload + `font-display: block` to eliminate swap; (b) keep `font-display: swap` and accept potential CLS from the font swap.
 ~~~
 
