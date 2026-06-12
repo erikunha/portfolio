@@ -60,10 +60,11 @@ fi
 # and any shell chaining/substitution. WHY: npx has no lockfile protection and
 # fix mutates source; this is the mechanical gate (PreToolUse exit 2), not the
 # SKILL.md prose. The allow-list is fail-closed — unrecognized shapes are denied,
-# so new fallow subcommands/flags are blocked until reviewed. PIN drives the regex.
+# so new fallow subcommands are blocked until reviewed; flags use the section C
+# deny-list (new flags pass unless explicitly blocked). PIN drives the regex.
 # Residual limit: a renamed/copied binary (cp .../fallow /tmp/f && /tmp/f fix) has
 # no `fallow` token and cannot be name-matched — see DECISIONS.md.
-FALLOW_PIN='2.85.0'
+FALLOW_PIN='2.95.0'
 FALLOW_PIN_RE=$(printf '%s' "$FALLOW_PIN" | sed 's/\./\\./g')
 # Normalize whitespace and append a trailing space so end-of-token == a space.
 FALLOW_CMD=$(printf '%s ' "$CMD" | tr '\n\t' '  ')
@@ -91,13 +92,25 @@ if printf '%s' "$FALLOW_CMD" | grep -qE '(^|[[:space:]&|;/])fallow[[:space:]@]';
   # forward-compatible prefix; --ci is anchored so it does not match --circular-deps.
   # This is a deny-list (the subcommand gate D is the allow-list); new fallow flags
   # are covered by the re-audit-on-bump protocol in DECISIONS.md.
-  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply|--save-|--sarif-file|--ci[[:space:]=]'; then
-    printf '[BLOCKED] fallow write/cloud/CI flag detected (e.g. --sarif-file, --save-*, --ci) — read-only audit only.\n'
+  # NB on the posting-format tokens below: --format[[:space:]=](...)[^[:alnum:]-] catches the
+  # canonical --format flag; the bare-token alternatives catch any short/alias flag
+  # (-f, --reporter, etc.) that could select the same posting output from an opaque
+  # binary that DECISIONS.md explicitly marks as "unauditable via static review".
+  # Both forms are intentional defense-in-depth — removing either narrows coverage.
+  # Bare-token form uses leading [[:space:]=] (catches alias=-value like -f=review-github)
+  # and trailing [^[:alnum:]-] (any non-word, non-hyphen char: space, comma, colon, etc.).
+  # Two protection layers: (1) suffix tokens like review-github-actions are excluded by the
+  # trailing - (excluded from the class); (2) path args /some/review-github-actions/ are
+  # excluded by the leading boundary (/ before the token is not [[:space:]=]). FALLOW_CMD
+  # trailing space (line 69) ensures the last token terminates with a non-alnum-hyphen char.
+  if printf '%s' "$FALLOW_CMD" | grep -qE -- '--fix|--upload|--cloud|--runtime|--remote|--comment|--review|--write|--apply|--save-|--sarif-file|--ci[[:space:]=]|--format[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)[^[:alnum:]-]|[[:space:]=](review-github|pr-comment-github|review-gitlab|pr-comment-gitlab)[^[:alnum:]-]'; then
+    printf '[BLOCKED] fallow write/cloud/CI/GitHub+GitLab-posting flag detected (e.g. --sarif-file, --save-*, --ci, --format review-github) — read-only audit only.\n'
     exit 2
   fi
-  # D. Fail-closed allow-list: the WHOLE command must be exactly the pinned npx
-  #    form with a read-only subcommand. Rejects unpinned, global, wrong-version,
-  #    pnpm dlx/bunx/yarn dlx, path forms, and every write subcommand.
+  # D. Subcommand allow-list: the command must start with the pinned npx form and
+  #    include a read-only subcommand (prefix-anchored, not end-anchored — flags
+  #    after the subcommand are governed by section C above). Rejects unpinned,
+  #    global, wrong-version, pnpm dlx/bunx/yarn dlx, and write subcommands.
   if ! printf '%s' "$FALLOW_CMD" | grep -qE "^[[:space:]]*npx[[:space:]]+(--yes[[:space:]]+|-y[[:space:]]+)?fallow@${FALLOW_PIN_RE}[[:space:]]+(audit|dead-code|dupes|health|flags|list|workspaces|explain|config|schema)[[:space:]]"; then
     printf '[BLOCKED] fallow must be exactly: npx fallow@%s <read-only subcommand>\n' "$FALLOW_PIN"
     printf 'Allowed: audit dead-code dupes health flags list workspaces explain config schema.\n'
