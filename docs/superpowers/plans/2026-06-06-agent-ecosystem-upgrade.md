@@ -5,8 +5,9 @@
 > Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Archive 22 irrelevant global skills, add 1 Spot-check agents row + 2 Skill dispatch rows + 1 architect-gate text update to CLAUDE.md, create the
-`battery-synthesis` skill, and update the architect-gate status from "convention pending"
-to "confirmed enforced."
+`battery-synthesis` skill, update the architect-gate status from "convention pending"
+to "confirmed enforced," and normalize all `writing-plans` references in CLAUDE.md to
+the fully-qualified `superpowers:writing-plans` identifier.
 
 **Architecture:** Four independent tracks. Tracks B, C, and E are project-level changes
 committed to `feat/agent-ecosystem-upgrade` and land in the PR. Track A is a global
@@ -22,7 +23,7 @@ for final gate.
 
 | Track | File | Action |
 |---|---|---|
-| B | `CLAUDE.md` | Modify — add 3 rows to dispatch/spot-check tables + update architect-gate text |
+| B | `CLAUDE.md` | Modify — add 3 rows to dispatch/spot-check tables + update architect-gate text + normalize all `writing-plans` refs to `superpowers:writing-plans` |
 | C | `.claude/skills/battery-synthesis/SKILL.md` | Create — new project-level skill |
 | E | `CLAUDE.md` | Modify — same file as Track B (done together) |
 | A | `~/.claude/skills-archived/` | Create dir + move 22 files (global, outside repo) |
