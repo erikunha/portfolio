@@ -202,7 +202,7 @@ content/credentials.ts                # ~/.credentials
 content/man-page.ts                   # MAN ERIK content
 content/social.ts                     # github / linkedin / email / site
 content/schemas.ts                    # Zod validation schemas, build-time
-content/ask-eval-corpus.ts            # ask eval Q+A corpus (factual, edge, jailbreak)
+content/ask-eval-corpus.ts            # ask eval Q+A corpus (factual, edge, jailbreak, output-validation)
 
 lib/agent/                            # agent-readiness helpers (MCP tools)
 lib/ask/                              # system prompt builder, model const, anti-abuse
