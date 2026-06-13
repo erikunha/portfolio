@@ -4,7 +4,7 @@ import { manPage } from '@/content/man-page';
 // when ManPageContent detects a non-mobile UA via getIsMobile().
 export function ManPageDesktop() {
   return (
-    <div className="overflow-x-auto block">
+    <div className="overflow-x-auto block" data-testid="manpage-desktop">
       <pre className="m-0 font-mono text-sm max-md:text-xs leading-[1.65] text-tertiary-50 whitespace-pre">
         <span className="text-primary-500 font-bold tracking-[0.04em]">
           {`${manPage.name.toUpperCase()}(1)                    User Commands                    ${manPage.name.toUpperCase()}(1)`}
