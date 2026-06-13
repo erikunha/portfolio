@@ -1,4 +1,10 @@
+import ArgosReporter from '@argos-ci/playwright/reporter';
+import type { ReporterDescription } from 'playwright/test';
 import { defineConfig, devices } from 'playwright/test';
+
+// Playwright's ReporterDescription only allows strings as the first tuple element,
+// but it accepts class constructors at runtime. Cast to satisfy the strict type.
+const argosEntry = [[ArgosReporter]] as unknown as ReporterDescription[];
 
 export default defineConfig({
   testDir: './tests',
@@ -6,7 +12,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 2 : 1,
-  reporter: process.env.GITHUB_ACTIONS ? [['github'], ['list']] : 'list',
+  reporter: [
+    ...(process.env.GITHUB_ACTIONS ? ([['github'], ['list']] as const) : ([['list']] as const)),
+    ...(process.env.ARGOS_TOKEN ? argosEntry : []),
+  ],
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',

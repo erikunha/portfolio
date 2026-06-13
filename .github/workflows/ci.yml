@@ -591,9 +591,13 @@ jobs:
       - if: inputs.update_visual_baselines != 'true'
         name: Run visual regression
         run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts
+        env:
+          ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
       - if: inputs.update_visual_baselines == 'true'
         name: Regenerate visual baselines (workflow_dispatch only)
         run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts --update-snapshots
+        env:
+          ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
       - if: inputs.update_visual_baselines == 'true'
         name: Upload regenerated visual baselines
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
