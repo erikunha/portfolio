@@ -21,6 +21,7 @@
 /coverage-report
 /test-results
 /playwright-report
+/.playwright-results/
 
 # local build artifact (next-build/ used by gates:runtime --skip-build)
 /next-build

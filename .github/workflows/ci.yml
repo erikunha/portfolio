@@ -491,7 +491,7 @@ jobs:
             || echo "ai=false" >> "$GITHUB_OUTPUT"
           app_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
             app/ components/ design-system/ lib/ content/ public/ next.config.ts \
-            .github/workflows/)
+            .github/workflows/ lighthouserc.json lighthouserc.mobile.json)
           [[ -n "$app_changed" ]] \
             && echo "app=true" >> "$GITHUB_OUTPUT" \
             || echo "app=false" >> "$GITHUB_OUTPUT"
