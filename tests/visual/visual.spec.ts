@@ -7,9 +7,10 @@
 // the Playwright-default sibling directory per spec file). Second+ runs diff
 // against the baseline. CI enforces maxDiffPixelRatio=0.01.
 
+import { argosScreenshot } from '@argos-ci/playwright';
 import { expect, test } from '../e2e/_helpers/fixtures';
 import { stripVolatileChrome } from '../e2e/_helpers/mask-volatile';
-import { snapshotLocator } from '../e2e/_helpers/snapshot';
+import { revealDeferredContent, snapshotLocator } from '../e2e/_helpers/snapshot';
 
 // Bump the per-test timeout above the snapshot's stability timeout (30s in
 // snapshot.ts). Default test timeout is 30s, so a 30s snapshot stability
@@ -55,6 +56,10 @@ test.describe('visual regression', () => {
     // inset:-50%), so Playwright's mask would paint the whole capture #FF00FF.
     // DOM removal is the only reliable strip; product behavior is untouched.
     await stripVolatileChrome(mockedPage);
+    if (process.env.ARGOS_TOKEN) {
+      await revealDeferredContent(mockedPage);
+      await argosScreenshot(mockedPage, 'hero-above-fold', { element: heroSection });
+    }
     await snapshotLocator(mockedPage, heroSection, 'hero-above-fold.png');
   });
 
@@ -67,6 +72,10 @@ test.describe('visual regression', () => {
     // Strip volatile chrome (canvas + CRT overlays). See test 1 for why
     // masking the CRT layers is insufficient.
     await stripVolatileChrome(mockedPage);
+    if (process.env.ARGOS_TOKEN) {
+      await revealDeferredContent(mockedPage);
+      await argosScreenshot(mockedPage, 'contact-section', { element: contactSection });
+    }
     // maxDiffPixels disables the ratio gate (snapshotLocator AND logic) and sets
     // an absolute budget. 3000px absorbs the 1px sub-pixel height oscillation
     // (486↔487px) on Chromium mobile without masking real layout regressions.
@@ -100,6 +109,10 @@ test.describe('visual regression', () => {
       if (ph) (ph as HTMLElement).style.visibility = 'hidden';
     });
     await stripVolatileChrome(mockedPage);
+    if (process.env.ARGOS_TOKEN) {
+      await revealDeferredContent(mockedPage);
+      await argosScreenshot(mockedPage, 'shell-idle', { element: shellSection });
+    }
     await snapshotLocator(mockedPage, shellSection, 'shell-idle.png');
   });
 
@@ -163,6 +176,10 @@ test.describe('visual regression', () => {
       if (ph) (ph as HTMLElement).style.visibility = 'hidden';
     });
     await stripVolatileChrome(mockedPage);
+    if (process.env.ARGOS_TOKEN) {
+      await revealDeferredContent(mockedPage);
+      await argosScreenshot(mockedPage, 'shell-mid-stream', { element: shellSection });
+    }
     await snapshotLocator(mockedPage, shellSection, 'shell-mid-stream.png');
   });
 
@@ -190,6 +207,10 @@ test.describe('visual regression', () => {
     });
     await mockedPage.evaluate(() => document.fonts.ready);
     await stripVolatileChrome(mockedPage);
+    if (process.env.ARGOS_TOKEN) {
+      await revealDeferredContent(mockedPage);
+      await argosScreenshot(mockedPage, 'hottest-takes-section', { element: hottest });
+    }
     await snapshotLocator(mockedPage, hottest, 'hottest-takes-section.png');
   });
 });

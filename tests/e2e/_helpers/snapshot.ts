@@ -29,7 +29,7 @@ const SNAPSHOT_TIMEOUT_MS = 30_000;
 // 'visible' only disables render-skipping; on-screen rendering is identical.
 // Also removes <nextjs-portal> (dev cache/build indicator) which appears
 // non-deterministically and would cause baseline drift if left in the DOM.
-async function revealDeferredContent(page: Page): Promise<void> {
+export async function revealDeferredContent(page: Page): Promise<void> {
   await page.evaluate(() => {
     for (const el of document.querySelectorAll('[data-cv-defer]')) {
       (el as HTMLElement).style.setProperty('content-visibility', 'visible');
