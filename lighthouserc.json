@@ -32,7 +32,7 @@
         "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05 }],
         "total-blocking-time": ["error", { "maxNumericValue": 200 }],
         "interaction-to-next-paint": "off",
-        "server-response-time": ["warn", { "maxNumericValue": 800 }],
+        "server-response-time": ["error", { "maxNumericValue": 800 }],
         "interactive": ["error", { "maxNumericValue": 2500 }],
 
         "uses-text-compression": "error",

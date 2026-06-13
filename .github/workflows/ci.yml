@@ -12,8 +12,16 @@ name: CI
 #               scripts/ask-eval.ts
 #               Gates: ai-eval (also gates on e2e-functional to avoid credit waste)
 #   app=true  → app/, components/, design-system/, lib/, content/, public/, next.config.ts,
-#               .github/workflows/ (workflow changes exercise CI itself)
-#               Gates: performance, e2e-visual-chromium
+#               .github/workflows/ (workflow changes exercise CI itself),
+#               lighthouserc.json, lighthouserc.mobile.json (LHCI threshold config),
+#               scripts/check-bundle-size.mjs (perf budget threshold config),
+#               playwright.config.ts (axe-core + E2E runner config),
+#               package.json, pnpm-lock.yaml (dep changes must exercise perf + e2e gates)
+#               Gates: performance, e2e-functional, e2e-visual-chromium
+#   NOTE: package.json/pnpm-lock.yaml intentionally excluded from ai=true to avoid
+#         burning AI Gateway credits on every lockfile churn. Trade-off: dep bumps to
+#         AI-path packages (ai SDK, zod, @upstash/ratelimit) skip ai-eval. The
+#         dependency-review gate (vuln/license scan) covers dep-change security.
 # Skipped required checks are treated as satisfied by GitHub branch protection.
 
 on:
@@ -399,7 +407,8 @@ jobs:
   e2e-functional:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: build
+    if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
+    needs: [build, detect-changes]
     strategy:
       fail-fast: false
       matrix:
@@ -491,7 +500,9 @@ jobs:
             || echo "ai=false" >> "$GITHUB_OUTPUT"
           app_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
             app/ components/ design-system/ lib/ content/ public/ next.config.ts \
-            .github/workflows/)
+            .github/workflows/ lighthouserc.json lighthouserc.mobile.json \
+            scripts/check-bundle-size.mjs playwright.config.ts \
+            package.json pnpm-lock.yaml)
           [[ -n "$app_changed" ]] \
             && echo "app=true" >> "$GITHUB_OUTPUT" \
             || echo "app=false" >> "$GITHUB_OUTPUT"

@@ -17,6 +17,7 @@
       "!.claude/worktrees",
       "!.worktrees",
       "!.lighthouseci",
+      "!.playwright-results",
       "!app/globals.css",
       "!next-env.d.ts"
     ]
