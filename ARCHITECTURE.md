@@ -525,6 +525,7 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 ### Pre-push (Husky)
 - Branch-name guard: blocks direct pushes to `main` (all changes must go through a PR)
 - Review stamp check: `.review-passed` must match HEAD SHA — written by `pnpm review:stamp` after the 5-agent battery is dispatched
+- `pnpm verify` — full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + harness-size + section-order + doc-drift + unit tests (811)
 
 ### CI (GitHub Actions, per PR)
 1. Install + cache (pnpm + `.next/cache` + tsbuildinfo)
