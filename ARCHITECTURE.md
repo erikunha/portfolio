@@ -537,7 +537,7 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 5. Build
 6. Bundle size gate (`scripts/check-bundle-size.mjs`)
 7. Lighthouse CI desktop + mobile (against PR preview; TTFB + perf + a11y + SEO + BP gates)
-8. Playwright E2E — 4-project matrix: chromium/webkit × desktop/mobile
+8. Playwright E2E — 5-project matrix: chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components (co-located component specs)
 9. Playwright visual regression — Argos CI (`@argos-ci/playwright`): uploads screenshots to Argos on every push; Argos compares against the main branch baseline and posts a PR status check (CI-only mode — Linux runner vs Linux baseline, zero cross-platform drift)
 10. axe-core a11y scan
 11. Ask eval harness (`ai-eval` job, required gate; path-filtered to AI-relevant changes via `detect-changes`)
