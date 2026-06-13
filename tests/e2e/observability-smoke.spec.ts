@@ -1,6 +1,12 @@
 // tests/e2e/observability-smoke.spec.ts
 // Smokes the Phase 3 endpoints end-to-end against the CI preview server.
 // Spec ref: docs/superpowers/specs/2026-05-18-production-observability-design.md §8 criterion 8.
+//
+// Agent surface tests (agent.json + /api/mcp) are co-located here because they
+// share the same "real server, real HTTP" posture — no in-process imports, just
+// fetch-style assertions against the running server. The unit-level assertions
+// (tool registration, tool call behaviour, basePath regression guard) live in
+// __tests__/agent-surfaces.test.ts.
 
 import { expect, test } from '@playwright/test';
 
@@ -88,5 +94,63 @@ test.describe('observability smoke', () => {
     expect(typeof body.sha).toBe('string');
     expect(body.sha.length).toBeGreaterThan(0);
     expect(body.psiLastRun === null || typeof body.psiLastRun === 'string').toBe(true);
+  });
+
+  test('GET /.well-known/agent.json returns a valid capability manifest', async ({ request }) => {
+    const res = await request.get('/.well-known/agent.json');
+    expect(res.status()).toBe(200);
+    expect(res.headers()['content-type']).toMatch(/application\/json/);
+    const body = (await res.json()) as {
+      mcp?: { transport?: string; url?: string; tools?: string[] };
+      endpoints?: Array<{ url?: string }>;
+    };
+    // MCP capability declared as streamable-http — verified by unit test too;
+    // this smoke ensures Next.js actually serves the static file.
+    expect(body.mcp?.transport).toBe('streamable-http');
+    expect(body.mcp?.url).toMatch(/\/api\/mcp$/);
+    expect(body.mcp?.tools).toContain('get_profile');
+    expect(body.mcp?.tools).toContain('ask_erik');
+    // At least one endpoint referencing /api/ask so AI agents can discover the Q&A surface.
+    expect(body.endpoints?.some((e) => e.url?.includes('/api/ask'))).toBe(true);
+  });
+
+  test('POST /api/mcp initialize returns a valid MCP SSE response', async ({ request }) => {
+    // mcp-handler's streamable-HTTP transport requires both application/json and
+    // text/event-stream in Accept (per MCP spec); omitting either returns 406.
+    const res = await request.post('/api/mcp', {
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+      },
+      data: {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-06-18',
+          capabilities: {},
+          clientInfo: { name: 'smoke-test', version: '1.0.0' },
+        },
+      },
+    });
+    expect(res.status()).toBe(200);
+    // The transport always answers with SSE, even for single request-response pairs.
+    expect(res.headers()['content-type']).toMatch(/text\/event-stream/);
+    // Extract the JSON-RPC response from the first SSE data line.
+    const body = await res.text();
+    const dataLine = body.split('\n').find((line) => line.startsWith('data:'));
+    expect(dataLine).toBeTruthy();
+    const message = JSON.parse(dataLine!.slice('data:'.length).trim()) as {
+      jsonrpc?: string;
+      result?: {
+        serverInfo?: { name?: string };
+        capabilities?: Record<string, unknown>;
+      };
+      error?: unknown;
+    };
+    expect(message.jsonrpc).toBe('2.0');
+    expect(message.error).toBeUndefined();
+    expect(message.result?.serverInfo?.name).toBeTruthy();
+    expect(message.result?.capabilities).toHaveProperty('tools');
   });
 });
