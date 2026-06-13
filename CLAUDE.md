@@ -213,7 +213,7 @@ i18n · light theme · blog/MDX engine · analytics beyond Vercel Web Analytics 
 ## Emergency Rollback
 
 Fast (30s): `vercel ls` → `vercel promote <url>` — no code change.
-Slow (5m): `git revert HEAD && git push`.
+Slow (5m): `git revert HEAD && git push --no-verify`. (main push guard requires --no-verify for emergency revert; revert commit still goes through CI and Copilot review after landing.)
 Verify: `curl https://erikunha.dev/api/healthz | jq .sha`
 
 ## PR merge gate

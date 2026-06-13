@@ -3,6 +3,21 @@
 # the review stamp. Three commits (464d7fc, fa8dee5, 17d70fe) violated this
 # rule in June 2026 by landing on main without a PR. Emergency rollback that
 # requires code: use `git push --no-verify` explicitly (documented escape hatch).
+#
+# Two-layer check:
+# 1. stdin refspec: catches `git push origin feat/x:main` and HEAD:main pushes
+#    where the local branch name is not "main" but the remote target is.
+# 2. local branch name: defence-in-depth for tooling that does not provide stdin.
+while IFS=' ' read -r _local_ref _local_sha remote_ref _remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo ""
+    echo "BLOCKED: direct push to main (remote ref: $remote_ref)."
+    echo "  All changes must go through a feature branch and PR."
+    echo "  Emergency code rollback only: git push --no-verify"
+    echo ""
+    exit 1
+  fi
+done
 branch=$(git rev-parse --abbrev-ref HEAD)
 if [ "$branch" = "main" ]; then
   echo ""
