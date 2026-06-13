@@ -6,10 +6,12 @@ on:
 
 jobs:
   copilot-review:
-    # Non-fork PRs only — fork PRs don't have access to secrets and the
-    # reviewer assignment would fail silently or with a misleading error.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # Non-fork PRs only; skip drafts (ready_for_review will re-trigger when promoted).
+    if: >
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     permissions:
       pull-requests: write
     steps:
