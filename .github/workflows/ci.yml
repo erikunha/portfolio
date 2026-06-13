@@ -496,7 +496,8 @@ jobs:
           app_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
             app/ components/ design-system/ lib/ content/ public/ next.config.ts \
             .github/workflows/ lighthouserc.json lighthouserc.mobile.json \
-            scripts/check-bundle-size.mjs playwright.config.ts)
+            scripts/check-bundle-size.mjs playwright.config.ts \
+            package.json pnpm-lock.yaml)
           [[ -n "$app_changed" ]] \
             && echo "app=true" >> "$GITHUB_OUTPUT" \
             || echo "app=false" >> "$GITHUB_OUTPUT"
