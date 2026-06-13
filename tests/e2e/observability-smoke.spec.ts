@@ -139,8 +139,9 @@ test.describe('observability smoke', () => {
     // Extract the JSON-RPC response from the first SSE data line.
     const body = await res.text();
     const dataLine = body.split('\n').find((line) => line.startsWith('data:'));
-    expect(dataLine).toBeTruthy();
-    const message = JSON.parse(dataLine!.slice('data:'.length).trim()) as {
+    if (!dataLine)
+      throw new Error(`no SSE data: line in /api/mcp response: ${JSON.stringify(body)}`);
+    const message = JSON.parse(dataLine.slice('data:'.length).trim()) as {
       jsonrpc?: string;
       result?: {
         serverInfo?: { name?: string };
