@@ -178,6 +178,14 @@ test.describe('visual regression', () => {
     await stripVolatileChrome(mockedPage);
     if (process.env.ARGOS_TOKEN) {
       await revealDeferredContent(mockedPage);
+      // The mock stream never closes (intentional — captures mid-stream state).
+      // argosScreenshot's waitForReadiness blocks on aria-busy='true' indefinitely.
+      // Clear the attribute before capture; visual state is unchanged.
+      await mockedPage.evaluate(() => {
+        for (const el of document.querySelectorAll('[aria-busy="true"]')) {
+          el.removeAttribute('aria-busy');
+        }
+      });
       await argosScreenshot(mockedPage, 'shell-mid-stream', { element: shellSection });
     }
     await snapshotLocator(mockedPage, shellSection, 'shell-mid-stream.png');
