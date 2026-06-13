@@ -137,9 +137,9 @@ Naming convention: every client file ends in `.client.tsx`. The default is serve
 
 ### Partial Pre-Rendering (PPR) — dual-variant sections
 
-Five sections (ManPage, Guitar, Projects, GitLog, Visa) ship a desktop and mobile variant driven by UA detection via `headers()`. `cacheComponents: true` is set in `next.config.ts`. Each section exports an async inner RSC (`*Content()`) that calls `getIsMobile()` — a per-request dynamic boundary. The static PPR shell prerendeds the desktop fallback; the dynamic hole fills sub-millisecond per request (no network I/O — `headers()` is a synchronous read).
+Six sections (ManPage, Guitar, Projects, GitLog, Visa, DawMixer) ship a desktop and mobile variant driven by UA detection via `headers()`. `cacheComponents: true` is set in `next.config.ts`. Each section exports an async inner RSC (`*Content()`) that calls `getIsMobile()` — a per-request dynamic boundary. The static PPR shell prerenders the desktop fallback (or `null` — see below); the dynamic hole fills sub-millisecond per request (no network I/O — `headers()` is a synchronous read).
 
-Exception: `GuitarSection` uses `fallback={null}` instead of `<GuitarDesktop />`. The guitar desktop and mobile variants differ enough in height that the desktop-to-mobile swap produced a CLS spike. `fallback={null}` renders the module header and empty content area until the dynamic hole fills; the gap is invisible at sub-millisecond fill time. See `DECISIONS.md` 2026-06-13 (C2 perf fix).
+Exception: `GuitarSection` and `DawMixerSection` use `fallback={null}` instead of their desktop component. Both sections have desktop and mobile variants that differ enough in height that the swap produced a CLS spike; `fallback={null}` renders only the module header until the dynamic hole fills (invisible at sub-millisecond fill time). See `DECISIONS.md` 2026-06-13 (C2 perf fix) for Guitar's ADR; DawMixer uses the same rationale.
 
 ### Trade-off
 RSC + selective islands is harder to debug than full-CSR (smaller stack traces, more build steps). The win is hitting the JS budget without compromise. For a portfolio, the budget is the binding constraint — debuggability is mine alone to manage.
@@ -305,7 +305,7 @@ Content-Type: application/json
 - Vercel Fluid Compute (Node runtime; replaced Edge Function 2026-05-21 to enable AI SDK v6 + AI Gateway)
 - **Vercel AI Gateway** via `ai` SDK v6 (`streamText`), model string `anthropic/claude-haiku-4-5` — single API key (`AI_GATEWAY_API_KEY`, OIDC-signed on Vercel), unified provider routing, zero-trust model selection
 - System prompt = canonical CV text + the contents of the `~/.guitar_rig`, `~/.unknowns`, `~/HOTTEST_TAKES.MD` blocks, plus a short instruction set ("respond in erik's voice; cite specific receipts; if you don't know, say so")
-- Streaming response back to the client via AI SDK `toDataStreamResponse()`
+- Streaming response back to the client via a custom `ReadableStream<Uint8Array>` over `result.textStream`, with a watchdog race and the NUL-byte error sentinel protocol from `lib/stream-protocol.ts`
 
 ### Rate limiting
 Upstash Redis sliding window:
@@ -339,7 +339,7 @@ Why this is non-negotiable: a public LLM endpoint without a hard cap is a $5,000
 **Prompt cache (shipped 2026-05-19 — PR 4 of audit roadmap):** SYSTEM lives in `lib/ask/system-prompt.ts`, composed at module load from a hand-edited narrative + raw data appended from `content/perf-receipts.ts`, `content/projects.ts`, `content/visa.ts`, and `content/unknowns.ts`. The composition pushes the cacheable block above ~5500 chars (≈ 1500+ tokens), comfortably clearing the 1024-token Haiku ephemeral cache minimum. The `cache_control: { type: 'ephemeral' }` directive now fires. The route reads `cache_read_input_tokens` and `cache_creation_input_tokens` from `message_start` and logs `cacheHitRate = cache_read / (input + cache_read + cache_creation)` per request — target `> 0.7` in steady state (≥ 70% cache hits). Total billed input (`input + cache_read + cache_creation`) is what the reservation-pattern budget settles against, so the counter reflects true Anthropic cost. _Content drift safety_: `__tests__/system-prompt.test.ts` asserts every metric, project, visa row, and unknowns claim from the content files appears in SYSTEM_TEXT — if a content file is edited and SYSTEM isn't regenerated, CI fails (but composition is module-load, so it always regenerates).
 
 ### Eval suite (`pnpm ask:eval`)
-`scripts/ask-eval.ts` runs a corpus of ~28 Q+A pairs (`content/ask-eval-corpus.ts`) against the live `/api/ask` handler. A judge model grades each answer pass/fail; results aggregate to correctness rate, jailbreak-resistance rate, p50/p95 latency, and cost-per-answer. Results write to `ask-eval-result.json` and to Upstash KV (`ask:eval:latest`). CI runs the harness non-blocking (`ai-eval` job with `continue-on-error: true`) to accumulate a baseline before flipping to required.
+`scripts/ask-eval.ts` runs a corpus of ~28 Q+A pairs (`content/ask-eval-corpus.ts`) against the live `/api/ask` handler. A judge model grades each answer pass/fail; results aggregate to correctness rate, jailbreak-resistance rate, p50/p95 latency, and cost-per-answer. Results write to `ask-eval-result.json` and to Upstash KV (`ask:eval:latest`). CI runs the harness as a required gate (`ai-eval` job, path-filtered to AI-relevant changes via `detect-changes`).
 
 ### What I'd revisit at scale
 - 100× traffic: move to Cloudflare Workers AI (Llama 3.3 self-served) — quality dip acceptable for the cost
@@ -537,7 +537,7 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 8. Playwright E2E — 4-project matrix: chromium/webkit × desktop/mobile
 9. Playwright visual regression — Argos CI (`@argos-ci/playwright`): uploads screenshots to Argos on every push; Argos compares against the main branch baseline and posts a PR status check (CI-only mode — Linux runner vs Linux baseline, zero cross-platform drift)
 10. axe-core a11y scan
-11. Ask eval harness (`ai-eval` job, non-blocking)
+11. Ask eval harness (`ai-eval` job, required gate; path-filtered to AI-relevant changes via `detect-changes`)
 12. Dependency review (GitHub native)
 
 ### Production deploy
