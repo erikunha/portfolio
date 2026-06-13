@@ -30,6 +30,7 @@ vi.mock('next/headers', () => ({
 
 import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
+import { ManPageSection } from '@/components/sections/ManPageSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { VisaSection } from '@/components/sections/VisaSection';
 
@@ -49,9 +50,9 @@ describe('responsive section viewport variants', () => {
   });
 
   it('GuitarSection static render does not emit mobile markup', () => {
-    // Suspense fallback is null (C2 perf fix: desktop fallback caused CLS on mobile).
-    // Production Next.js resolves GuitarContent async server-side; the fallback
-    // is never seen by real users. Static render emits the section shell only.
+    // Suspense fallback is null — C2 perf fix (see DECISIONS.md 2026-06-13).
+    // Desktop fallback caused CLS on mobile; production Next.js resolves
+    // GuitarContent server-side so the null fallback is never seen by real users.
     const html = renderToStaticMarkup(createElement(GuitarSection));
     expect(html).not.toContain('data-testid="guitar-mobile"');
   });
@@ -60,5 +61,11 @@ describe('responsive section viewport variants', () => {
     const html = renderToStaticMarkup(createElement(VisaSection));
     expect(html).toContain('data-testid="visa-desktop"');
     expect(html).not.toContain('data-testid="visa-mobile"');
+  });
+
+  it('ManPageSection emits exactly the desktop variant (no mobile markup)', () => {
+    const html = renderToStaticMarkup(createElement(ManPageSection));
+    expect(html).toContain('data-testid="manpage-desktop"');
+    expect(html).not.toContain('data-testid="manpage-mobile"');
   });
 });

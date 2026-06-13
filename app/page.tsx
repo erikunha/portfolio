@@ -10,8 +10,10 @@
 // the resolved grid height via min-height to prevent CLS. Five dual-variant
 // sections (ManPage, Guitar, Projects, GitLog, Visa) each wrap an async inner
 // RSC inside <Suspense>; the inner RSC calls getIsMobile() → headers(), which
-// makes those subtrees dynamic. Only the Suspense fallback (desktop variant)
-// is prerendered — the actual content streams on mobile UA resolution. Hero
+// makes those subtrees dynamic. Only the Suspense fallback is prerendered —
+// desktop variant for ManPage/GitLog/Visa/Projects; null for Guitar (C2 ADR
+// 2026-06-13: desktop fallback causes CLS on mobile for that section). The
+// actual content streams on mobile UA resolution. Hero
 // sits outside any Suspense boundary so LCP is never gated on dynamic
 // resolution.
 
