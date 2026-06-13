@@ -12,8 +12,11 @@ name: CI
 #               scripts/ask-eval.ts
 #               Gates: ai-eval (also gates on e2e-functional to avoid credit waste)
 #   app=true  → app/, components/, design-system/, lib/, content/, public/, next.config.ts,
-#               .github/workflows/ (workflow changes exercise CI itself)
-#               Gates: performance, e2e-visual-chromium
+#               .github/workflows/ (workflow changes exercise CI itself),
+#               lighthouserc.json, lighthouserc.mobile.json (LHCI threshold config),
+#               scripts/check-bundle-size.mjs (perf budget threshold config),
+#               playwright.config.ts (axe-core + E2E runner config)
+#               Gates: performance, e2e-functional, e2e-visual-chromium
 # Skipped required checks are treated as satisfied by GitHub branch protection.
 
 on:
@@ -491,7 +494,8 @@ jobs:
             || echo "ai=false" >> "$GITHUB_OUTPUT"
           app_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
             app/ components/ design-system/ lib/ content/ public/ next.config.ts \
-            .github/workflows/ lighthouserc.json lighthouserc.mobile.json)
+            .github/workflows/ lighthouserc.json lighthouserc.mobile.json \
+            scripts/check-bundle-size.mjs playwright.config.ts)
           [[ -n "$app_changed" ]] \
             && echo "app=true" >> "$GITHUB_OUTPUT" \
             || echo "app=false" >> "$GITHUB_OUTPUT"
