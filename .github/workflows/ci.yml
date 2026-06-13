@@ -402,7 +402,8 @@ jobs:
   e2e-functional:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: build
+    if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
+    needs: [build, detect-changes]
     strategy:
       fail-fast: false
       matrix:
