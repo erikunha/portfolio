@@ -10,7 +10,7 @@
 import { argosScreenshot } from '@argos-ci/playwright';
 import { expect, test } from '../e2e/_helpers/fixtures';
 import { stripVolatileChrome } from '../e2e/_helpers/mask-volatile';
-import { snapshotLocator } from '../e2e/_helpers/snapshot';
+import { revealDeferredContent, snapshotLocator } from '../e2e/_helpers/snapshot';
 
 // Bump the per-test timeout above the snapshot's stability timeout (30s in
 // snapshot.ts). Default test timeout is 30s, so a 30s snapshot stability
@@ -57,6 +57,7 @@ test.describe('visual regression', () => {
     // DOM removal is the only reliable strip; product behavior is untouched.
     await stripVolatileChrome(mockedPage);
     if (process.env.ARGOS_TOKEN) {
+      await revealDeferredContent(mockedPage);
       await argosScreenshot(mockedPage, 'hero-above-fold', { element: heroSection });
     }
     await snapshotLocator(mockedPage, heroSection, 'hero-above-fold.png');
@@ -72,6 +73,7 @@ test.describe('visual regression', () => {
     // masking the CRT layers is insufficient.
     await stripVolatileChrome(mockedPage);
     if (process.env.ARGOS_TOKEN) {
+      await revealDeferredContent(mockedPage);
       await argosScreenshot(mockedPage, 'contact-section', { element: contactSection });
     }
     // maxDiffPixels disables the ratio gate (snapshotLocator AND logic) and sets
@@ -108,6 +110,7 @@ test.describe('visual regression', () => {
     });
     await stripVolatileChrome(mockedPage);
     if (process.env.ARGOS_TOKEN) {
+      await revealDeferredContent(mockedPage);
       await argosScreenshot(mockedPage, 'shell-idle', { element: shellSection });
     }
     await snapshotLocator(mockedPage, shellSection, 'shell-idle.png');
@@ -174,6 +177,7 @@ test.describe('visual regression', () => {
     });
     await stripVolatileChrome(mockedPage);
     if (process.env.ARGOS_TOKEN) {
+      await revealDeferredContent(mockedPage);
       await argosScreenshot(mockedPage, 'shell-mid-stream', { element: shellSection });
     }
     await snapshotLocator(mockedPage, shellSection, 'shell-mid-stream.png');
@@ -204,6 +208,7 @@ test.describe('visual regression', () => {
     await mockedPage.evaluate(() => document.fonts.ready);
     await stripVolatileChrome(mockedPage);
     if (process.env.ARGOS_TOKEN) {
+      await revealDeferredContent(mockedPage);
       await argosScreenshot(mockedPage, 'hottest-takes-section', { element: hottest });
     }
     await snapshotLocator(mockedPage, hottest, 'hottest-takes-section.png');
