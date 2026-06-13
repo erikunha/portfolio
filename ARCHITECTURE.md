@@ -520,9 +520,9 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 - Conventional commits enforced via commitlint
 - Squash-merge to main
 
-### Pre-commit (Husky)
-- Biome check (sub-second — only gate that runs per commit)
-- Commitlint (scope required; enforces conventional commits)
+### Per-commit hooks (Husky)
+- **pre-commit:** Biome check (sub-second — only gate in this hook)
+- **commit-msg:** Commitlint (scope required; enforces conventional commits)
 
 ### Pre-push (Husky)
 - Branch-name guard: blocks direct pushes to `main` (all changes must go through a PR)
