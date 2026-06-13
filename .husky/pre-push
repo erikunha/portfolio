@@ -1,8 +1,22 @@
-# Branch-name guard: every branch follows `<type>/<description>` from the
-# commitlint scope set, or is `main`.
+# Direct-to-main guard: all changes must go through a feature branch + PR.
+# WHY: direct main pushes bypass Copilot review, the 5-agent battery, and
+# the review stamp. Three commits (464d7fc, fa8dee5, 17d70fe) violated this
+# rule in June 2026 by landing on main without a PR. Emergency rollback that
+# requires code: use `git push --no-verify` explicitly (documented escape hatch).
 branch=$(git rev-parse --abbrev-ref HEAD)
-echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot|design-system)/.+$|^main$' \
-  || { echo "Error: invalid branch name '$branch'. Use <type>/<description> or main."; exit 1; }
+if [ "$branch" = "main" ]; then
+  echo ""
+  echo "BLOCKED: direct pushes to main are not allowed."
+  echo "  All changes must go through a feature branch and PR."
+  echo "  Emergency code rollback only: git push --no-verify"
+  echo ""
+  exit 1
+fi
+
+# Branch-name guard: every branch follows `<type>/<description>` from the
+# commitlint scope set.
+echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot|design-system)/.+$' \
+  || { echo "Error: invalid branch name '$branch'. Use <type>/<description>."; exit 1; }
 
 # Review stamp gate: every push requires prior dispatch of the full agent
 # review battery (pr-review-toolkit, security-auditor, accessibility-tester,
