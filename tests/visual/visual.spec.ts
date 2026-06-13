@@ -56,10 +56,10 @@ test.describe('visual regression', () => {
     // inset:-50%), so Playwright's mask would paint the whole capture #FF00FF.
     // DOM removal is the only reliable strip; product behavior is untouched.
     await stripVolatileChrome(mockedPage);
-    await snapshotLocator(mockedPage, heroSection, 'hero-above-fold.png');
     if (process.env.ARGOS_TOKEN) {
       await argosScreenshot(mockedPage, 'hero-above-fold', { element: heroSection });
     }
+    await snapshotLocator(mockedPage, heroSection, 'hero-above-fold.png');
   });
 
   test('2 — contact section matches baseline', async ({ mockedPage }) => {
@@ -71,15 +71,15 @@ test.describe('visual regression', () => {
     // Strip volatile chrome (canvas + CRT overlays). See test 1 for why
     // masking the CRT layers is insufficient.
     await stripVolatileChrome(mockedPage);
+    if (process.env.ARGOS_TOKEN) {
+      await argosScreenshot(mockedPage, 'contact-section', { element: contactSection });
+    }
     // maxDiffPixels disables the ratio gate (snapshotLocator AND logic) and sets
     // an absolute budget. 3000px absorbs the 1px sub-pixel height oscillation
     // (486↔487px) on Chromium mobile without masking real layout regressions.
     await snapshotLocator(mockedPage, contactSection, 'contact-section.png', {
       maxDiffPixels: 3000,
     });
-    if (process.env.ARGOS_TOKEN) {
-      await argosScreenshot(mockedPage, 'contact-section', { element: contactSection });
-    }
   });
 
   test('3 — shell + ask form (idle) matches baseline', async ({ mockedPage }) => {
@@ -107,10 +107,10 @@ test.describe('visual regression', () => {
       if (ph) (ph as HTMLElement).style.visibility = 'hidden';
     });
     await stripVolatileChrome(mockedPage);
-    await snapshotLocator(mockedPage, shellSection, 'shell-idle.png');
     if (process.env.ARGOS_TOKEN) {
       await argosScreenshot(mockedPage, 'shell-idle', { element: shellSection });
     }
+    await snapshotLocator(mockedPage, shellSection, 'shell-idle.png');
   });
 
   test('4 — shell + ask form (mid-stream) matches baseline', async ({ mockedPage }) => {
@@ -173,10 +173,10 @@ test.describe('visual regression', () => {
       if (ph) (ph as HTMLElement).style.visibility = 'hidden';
     });
     await stripVolatileChrome(mockedPage);
-    await snapshotLocator(mockedPage, shellSection, 'shell-mid-stream.png');
     if (process.env.ARGOS_TOKEN) {
       await argosScreenshot(mockedPage, 'shell-mid-stream', { element: shellSection });
     }
+    await snapshotLocator(mockedPage, shellSection, 'shell-mid-stream.png');
   });
 
   test('5 — hottest takes section matches baseline', async ({ mockedPage }) => {
@@ -203,9 +203,9 @@ test.describe('visual regression', () => {
     });
     await mockedPage.evaluate(() => document.fonts.ready);
     await stripVolatileChrome(mockedPage);
-    await snapshotLocator(mockedPage, hottest, 'hottest-takes-section.png');
     if (process.env.ARGOS_TOKEN) {
       await argosScreenshot(mockedPage, 'hottest-takes-section', { element: hottest });
     }
+    await snapshotLocator(mockedPage, hottest, 'hottest-takes-section.png');
   });
 });
