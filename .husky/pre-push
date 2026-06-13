@@ -21,7 +21,7 @@ done
 branch=$(git rev-parse --abbrev-ref HEAD)
 if [ "$branch" = "main" ]; then
   echo ""
-  echo "BLOCKED: direct pushes to main are not allowed."
+  echo "BLOCKED: pushing while on the local main branch is not allowed."
   echo "  All changes must go through a feature branch and PR."
   echo "  Emergency code rollback only: git push --no-verify"
   echo ""
