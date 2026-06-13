@@ -15,8 +15,13 @@ name: CI
 #               .github/workflows/ (workflow changes exercise CI itself),
 #               lighthouserc.json, lighthouserc.mobile.json (LHCI threshold config),
 #               scripts/check-bundle-size.mjs (perf budget threshold config),
-#               playwright.config.ts (axe-core + E2E runner config)
+#               playwright.config.ts (axe-core + E2E runner config),
+#               package.json, pnpm-lock.yaml (dep changes must exercise perf + e2e gates)
 #               Gates: performance, e2e-functional, e2e-visual-chromium
+#   NOTE: package.json/pnpm-lock.yaml intentionally excluded from ai=true to avoid
+#         burning AI Gateway credits on every lockfile churn. Trade-off: dep bumps to
+#         AI-path packages (ai SDK, zod, @upstash/ratelimit) skip ai-eval. The
+#         dependency-review gate (vuln/license scan) covers dep-change security.
 # Skipped required checks are treated as satisfied by GitHub branch protection.
 
 on:
