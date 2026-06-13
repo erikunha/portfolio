@@ -139,7 +139,9 @@ Naming convention: every client file ends in `.client.tsx`. The default is serve
 
 Six sections (ManPage, Guitar, Projects, GitLog, Visa, DawMixer) ship a desktop and mobile variant driven by UA detection via `headers()`. `cacheComponents: true` is set in `next.config.ts`. Each section exports an async inner RSC (`*Content()`) that calls `getIsMobile()` — a per-request dynamic boundary. The static PPR shell prerenders the desktop fallback (or `null` — see below); the dynamic hole fills sub-millisecond per request (no network I/O — `headers()` is a synchronous read).
 
-Exception: `GuitarSection` and `DawMixerSection` use `fallback={null}` instead of their desktop component. Both sections have desktop and mobile variants that differ enough in height that the swap produced a CLS spike; `fallback={null}` renders only the module header until the dynamic hole fills (invisible at sub-millisecond fill time). See `DECISIONS.md` 2026-06-13 (C2 perf fix) for Guitar's ADR; DawMixer uses the same rationale.
+Two exceptions use `fallback={null}` instead of their desktop component, for different reasons:
+- `GuitarSection`: desktop and mobile variants differ enough in height that the swap produced a CLS spike. `fallback={null}` renders only the module header until the dynamic hole fills. See `DECISIONS.md` 2026-06-13 (C2 perf fix).
+- `DawMixerSection`: the desktop variant is a `next/dynamic` lazy-loaded client component — it cannot serve as a static Suspense fallback (it is itself dynamically loaded). `fallback={null}` renders only the section shell.
 
 ### Trade-off
 RSC + selective islands is harder to debug than full-CSR (smaller stack traces, more build steps). The win is hitting the JS budget without compromise. For a portfolio, the budget is the binding constraint — debuggability is mine alone to manage.
