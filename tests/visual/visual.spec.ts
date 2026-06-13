@@ -7,6 +7,7 @@
 // the Playwright-default sibling directory per spec file). Second+ runs diff
 // against the baseline. CI enforces maxDiffPixelRatio=0.01.
 
+import { argosScreenshot } from '@argos-ci/playwright';
 import { expect, test } from '../e2e/_helpers/fixtures';
 import { stripVolatileChrome } from '../e2e/_helpers/mask-volatile';
 import { snapshotLocator } from '../e2e/_helpers/snapshot';
@@ -56,6 +57,9 @@ test.describe('visual regression', () => {
     // DOM removal is the only reliable strip; product behavior is untouched.
     await stripVolatileChrome(mockedPage);
     await snapshotLocator(mockedPage, heroSection, 'hero-above-fold.png');
+    if (process.env.ARGOS_TOKEN) {
+      await argosScreenshot(mockedPage, 'hero-above-fold', { element: heroSection });
+    }
   });
 
   test('2 — contact section matches baseline', async ({ mockedPage }) => {
@@ -73,6 +77,9 @@ test.describe('visual regression', () => {
     await snapshotLocator(mockedPage, contactSection, 'contact-section.png', {
       maxDiffPixels: 3000,
     });
+    if (process.env.ARGOS_TOKEN) {
+      await argosScreenshot(mockedPage, 'contact-section', { element: contactSection });
+    }
   });
 
   test('3 — shell + ask form (idle) matches baseline', async ({ mockedPage }) => {
@@ -101,6 +108,9 @@ test.describe('visual regression', () => {
     });
     await stripVolatileChrome(mockedPage);
     await snapshotLocator(mockedPage, shellSection, 'shell-idle.png');
+    if (process.env.ARGOS_TOKEN) {
+      await argosScreenshot(mockedPage, 'shell-idle', { element: shellSection });
+    }
   });
 
   test('4 — shell + ask form (mid-stream) matches baseline', async ({ mockedPage }) => {
@@ -164,6 +174,9 @@ test.describe('visual regression', () => {
     });
     await stripVolatileChrome(mockedPage);
     await snapshotLocator(mockedPage, shellSection, 'shell-mid-stream.png');
+    if (process.env.ARGOS_TOKEN) {
+      await argosScreenshot(mockedPage, 'shell-mid-stream', { element: shellSection });
+    }
   });
 
   test('5 — hottest takes section matches baseline', async ({ mockedPage }) => {
@@ -191,5 +204,8 @@ test.describe('visual regression', () => {
     await mockedPage.evaluate(() => document.fonts.ready);
     await stripVolatileChrome(mockedPage);
     await snapshotLocator(mockedPage, hottest, 'hottest-takes-section.png');
+    if (process.env.ARGOS_TOKEN) {
+      await argosScreenshot(mockedPage, 'hottest-takes-section', { element: hottest });
+    }
   });
 });
