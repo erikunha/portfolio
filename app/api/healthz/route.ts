@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { log } from '@/lib/log';
 import { getClientIp, getHealthzLimit, getRedis } from '@/lib/rate-limit';
 
 // WHY: PSI cron runs daily; 25h window allows for schedule drift before marking stale.
@@ -23,8 +24,8 @@ export async function GET(req: NextRequest): Promise<Response> {
         headers: { 'Cache-Control': 'no-store', 'Retry-After': '60' },
       });
     }
-  } catch {
-    // fail-open: a rate-limit outage must not take down the health endpoint
+  } catch (err) {
+    log.warn('healthz rate-limit unavailable, allowing request', { err });
   }
 
   let psiLastRun: string | null = null;
