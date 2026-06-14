@@ -230,6 +230,7 @@ Before proposing any of these, check `DECISIONS.md` to see the reasoning that ex
 - `STANDARDS.md` — canonical engineering bar; domain chapters, each naming its enforcement mechanism
 - `ARCHITECTURE.md` — system design, deep dive, trade-offs
 - `DECISIONS.md` — running ADR log
+
 ## When in doubt
 
 - Read `ARCHITECTURE.md` §16 ("What I'd revisit as the system grows") before proposing infrastructure changes.
