@@ -66,7 +66,7 @@ Only personally-verified findings appear below. The stale findings are explicitl
 - **Schemas:** loose `.string()` without `.min(1)` on user-facing content fields — `content/schemas.ts`.
 - **Correctness:** `getRedis()` singleton initialization is non-atomic — `lib/rate-limit.ts`.
 - **Duplication:** `GitLogSection` has two near-identical render functions; `ManPageSection` entangles desktop and mobile markup in one file.
-- **Docs drift:** `CLAUDE.md` project header says `erikunha.com.br`; code ships `erikunha.dev` (layout `metadataBase`, `sitemap.ts`, `robots.txt`, SYSTEM prompt). `public/llms.txt` and several docs also carry `.com.br`. ADR SHA-reference hygiene in `DECISIONS.md` is inconsistent (post-2026-05-18 entries often omit SHAs). `LAUNCH.md` Day-1 scaffold commands still install Tailwind (removed 2026-05-18). `HANDOFF.md` likely stale.
+- **Docs drift:** `CLAUDE.md` project header says `erikunha.com.br`; code ships `erikunha.dev` (layout `metadataBase`, `sitemap.ts`, `robots.txt`, SYSTEM prompt). `public/llms.txt` and several docs also carry `.com.br`. ADR SHA-reference hygiene in `DECISIONS.md` is inconsistent (post-2026-05-18 entries often omit SHAs). `HANDOFF.md` likely stale.
 - **API surface:** `/api/erik.json` returns bare JSON, outside the `defineHandler` envelope and without `X-Request-Id`.
 
 ### Tier 3 — low
@@ -281,7 +281,7 @@ Modify:
   `ARCHITECTURE.md`, and any other `.com.br` strings outside historical ADR text.
 - ADR hygiene pass on `DECISIONS.md` — add SHAs to recent entries where recoverable; add an ADR
   entry for the standards supersession and for the D1/D2/D3 decisions.
-- Retire or update stale doc content: `LAUNCH.md` Day-1 Tailwind scaffold commands; `HANDOFF.md`;
+- Retire or update stale doc content: `HANDOFF.md`;
   `docs/audit-2025-05.md` (mark superseded).
 - `/api/erik.json` — bring it into the `defineHandler` envelope, or add `X-Request-Id` and a
   one-line documented exemption explaining why the SEO route stays bare JSON.
