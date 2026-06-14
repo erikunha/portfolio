@@ -37,6 +37,19 @@ export function getContactLimit(): Ratelimit {
   return _contactLimit;
 }
 
+let _healthzLimit: Ratelimit | undefined;
+
+export function getHealthzLimit(): Ratelimit {
+  if (!_healthzLimit) {
+    _healthzLimit = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(120, '1 m'),
+      prefix: 'rl:healthz',
+    });
+  }
+  return _healthzLimit;
+}
+
 let _errorLogLimit: Ratelimit | undefined;
 
 export function getErrorLogLimit(): Ratelimit {

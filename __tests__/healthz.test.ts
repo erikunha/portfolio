@@ -1,18 +1,30 @@
+import type { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const redisMockGet = vi.fn();
+const limitMock = vi.fn();
+const getClientIpMock = vi.fn(() => '1.2.3.4');
 
 vi.mock('@/lib/rate-limit', () => ({
   getRedis: vi.fn(() => ({ get: redisMockGet })),
+  getHealthzLimit: vi.fn(() => ({ limit: limitMock })),
+  getClientIp: getClientIpMock,
 }));
 
 const FRESH_TIMESTAMP = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1h ago
 const STALE_TIMESTAMP = new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(); // 26h ago
 
+function makeMockRequest(): NextRequest {
+  return new Request('http://localhost/api/healthz') as unknown as NextRequest;
+}
+
 describe('GET /api/healthz', () => {
   beforeEach(() => {
     vi.resetModules();
     redisMockGet.mockReset();
+    limitMock.mockReset();
+    limitMock.mockResolvedValue({ success: true }); // default: allow
+    getClientIpMock.mockReturnValue('1.2.3.4');
   });
 
   afterEach(() => {
@@ -24,7 +36,7 @@ describe('GET /api/healthz', () => {
     redisMockGet.mockResolvedValue(FRESH_TIMESTAMP);
 
     const { GET } = await import('@/app/api/healthz/route');
-    const res = await GET();
+    const res = await GET(makeMockRequest());
 
     expect(res.status).toBe(200);
     expect(res.headers.get('Cache-Control')).toBe('no-store');
@@ -39,7 +51,7 @@ describe('GET /api/healthz', () => {
     redisMockGet.mockResolvedValue('not-a-date');
 
     const { GET } = await import('@/app/api/healthz/route');
-    const res = await GET();
+    const res = await GET(makeMockRequest());
 
     expect(res.status).toBe(503);
     const body = (await res.json()) as { status: string; sha: string; psiLastRun: string | null };
@@ -52,7 +64,7 @@ describe('GET /api/healthz', () => {
     redisMockGet.mockResolvedValue(STALE_TIMESTAMP);
 
     const { GET } = await import('@/app/api/healthz/route');
-    const res = await GET();
+    const res = await GET(makeMockRequest());
 
     expect(res.status).toBe(503);
     const body = (await res.json()) as { status: string; sha: string; psiLastRun: string | null };
@@ -65,7 +77,7 @@ describe('GET /api/healthz', () => {
     redisMockGet.mockResolvedValue(null);
 
     const { GET } = await import('@/app/api/healthz/route');
-    const res = await GET();
+    const res = await GET(makeMockRequest());
 
     expect(res.status).toBe(503);
     const body = (await res.json()) as { status: string; sha: string; psiLastRun: string | null };
@@ -79,11 +91,51 @@ describe('GET /api/healthz', () => {
     redisMockGet.mockRejectedValue(new Error('connection refused'));
 
     const { GET } = await import('@/app/api/healthz/route');
-    const res = await GET();
+    const res = await GET(makeMockRequest());
 
     expect(res.status).toBe(503);
     const body = (await res.json()) as { status: string; sha: string; psiLastRun: null };
     expect(body.status).toBe('degraded');
     expect(body.psiLastRun).toBeNull();
+  });
+
+  it('returns 429 with Retry-After header when rate limit is exceeded', async () => {
+    vi.stubEnv('VERCEL_GIT_COMMIT_SHA', 'abc1234');
+    limitMock.mockResolvedValue({ success: false });
+
+    const { GET } = await import('@/app/api/healthz/route');
+    const res = await GET(makeMockRequest());
+
+    expect(res.status).toBe(429);
+    expect(res.headers.get('Retry-After')).toBe('60');
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    expect(redisMockGet).not.toHaveBeenCalled();
+  });
+
+  it('allows request and returns health status when rate limiter throws (fail-open)', async () => {
+    vi.stubEnv('VERCEL_GIT_COMMIT_SHA', 'abc1234');
+    limitMock.mockRejectedValue(new Error('Redis down'));
+    redisMockGet.mockResolvedValue(FRESH_TIMESTAMP);
+
+    const { GET } = await import('@/app/api/healthz/route');
+    const res = await GET(makeMockRequest());
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { status: string };
+    expect(body.status).toBe('ok');
+  });
+
+  it('reads psiLastRun from in-process cache on second request within TTL', async () => {
+    vi.stubEnv('VERCEL_GIT_COMMIT_SHA', 'abc1234');
+    redisMockGet.mockResolvedValue(FRESH_TIMESTAMP);
+
+    const { GET } = await import('@/app/api/healthz/route');
+    // First call — cold cache, hits Redis
+    await GET(makeMockRequest());
+    // Second call — warm cache, must NOT hit Redis again
+    const res = await GET(makeMockRequest());
+
+    expect(res.status).toBe(200);
+    expect(redisMockGet).toHaveBeenCalledTimes(1);
   });
 });
