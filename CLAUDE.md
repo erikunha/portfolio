@@ -100,7 +100,7 @@ Invoke the named skill inline (not as a subagent) before the described action. P
 - axe-core a11y CI gate
 - Lighthouse CI gates
 
-See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running ADR log, `LAUNCH.md` for the day-by-day implementation playbook.
+See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running ADR log.
 
 ## Performance budgets (non-negotiable)
 
@@ -230,11 +230,8 @@ Before proposing any of these, check `DECISIONS.md` to see the reasoning that ex
 - `STANDARDS.md` — canonical engineering bar; domain chapters, each naming its enforcement mechanism
 - `ARCHITECTURE.md` — system design, deep dive, trade-offs
 - `DECISIONS.md` — running ADR log
-- `LAUNCH.md` — historical launch playbook (superseded by `STANDARDS.md` + `ARCHITECTURE.md`)
-
 ## When in doubt
 
 - Read `ARCHITECTURE.md` §16 ("What I'd revisit as the system grows") before proposing infrastructure changes.
-- Read `LAUNCH.md` PR-by-PR order before suggesting we skip ahead.
 - If the request seems to conflict with a budget or gate, surface the conflict before complying.
 - Before invoking `superpowers:writing-plans`, dispatch `architect-reviewer` against the spec. It runs the four-gate spec-gate protocol and must return `GATE_RESULT: PASS` before `superpowers:writing-plans` proceeds. `.claude/hooks/architect-gate.sh` (PreToolUse `Skill` matcher) is WIRED to block (`exit 2`) the `superpowers:writing-plans` invocation unless the transcript shows an `architect-reviewer` `GATE_RESULT: PASS` (scoped to a tool_result block, so prose quoting the sentinel cannot spoof it) this session. **Confirmed enforced (2026-06-06):** Skill matcher fired exit-2 and blocked `superpowers:writing-plans` in a live session without a prior `GATE_RESULT: PASS`. Boundaries: session-scoped PASS, not per-spec identity (spec identity is not a structured transcript field).
