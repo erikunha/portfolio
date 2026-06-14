@@ -642,7 +642,6 @@ git add \
   CLAUDE.md \
   DECISIONS.md \
   HANDOFF.md \
-  LAUNCH.md \
   .husky/ \
   .github/
 ```

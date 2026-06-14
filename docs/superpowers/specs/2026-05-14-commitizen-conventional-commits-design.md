@@ -32,7 +32,7 @@ pnpm create next-app@latest . \
   --typescript --eslint=false --tailwind --src-dir=false \
   --app --turbopack --import-alias="@/*" --use-pnpm
 
-# 4. Install all deps (see LAUNCH.md Day 1 for full list)
+# 4. Install all deps
 
 # 5. Apply commitizen tooling (this spec)
 
@@ -181,7 +181,7 @@ Invalid (rejected at `pre-push` and CI):
 | `.husky/commit-msg` | Create |
 | `.husky/pre-push` | Create |
 | `scaffold/package.json.recommended` | Update — add scripts, config, devDeps, prepare |
-| `.github/workflows/ci.yml` | Create (or update when CI workflow is written in LAUNCH Day 1) |
+| `.github/workflows/ci.yml` | Create (or update if CI workflow already exists) |
 
 ---
 

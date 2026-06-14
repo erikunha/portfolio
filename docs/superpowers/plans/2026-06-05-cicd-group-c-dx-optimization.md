@@ -291,7 +291,7 @@ After replacing gates 3-6, the `advisory()` and `gate()` helper functions are no
   ```
   Record every file and line number. Each reference must be updated or removed in this PR. STANDARDS.md Chapter 10 ("doc claims must match live code") is a PR-review enforced property.
 
-  Expected files to update: `.husky/pre-push`, `CLAUDE.md`. Check for references in `STANDARDS.md`, `ARCHITECTURE.md`, `LAUNCH.md`, `DECISIONS.md`, and any `.md` in `.claude/`.
+  Expected files to update: `.husky/pre-push`, `CLAUDE.md`. Check for references in `STANDARDS.md`, `ARCHITECTURE.md`, `DECISIONS.md`, and any `.md` in `.claude/`.
 
 ### C3.2 — Edit .husky/pre-push
 

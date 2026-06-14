@@ -245,11 +245,11 @@ Branch: `docs/p4-a11y-docs` off the post-P3 `main`. Last by design — docs now 
 
 ## Task 4.2 — Documentation
 
-**Files:** `ARCHITECTURE.md`, `README.md`, `LAUNCH.md`, `docs/audit/2026-05-19-principal-audit.md`, `docs/audit-2025-05.md`, `DECISIONS.md`
+**Files:** `ARCHITECTURE.md`, `README.md`, `docs/audit/2026-05-19-principal-audit.md`, `docs/audit-2025-05.md`, `DECISIONS.md`
 
 - [ ] **ARCHITECTURE.md:** fix the `lib/` layout section to match the actual flat structure; remove the stale "PR 5 / PR 6 pending" preamble references; reconcile the client-island budget table with reality (43KB is a tracked target, not gated); update §7 to surface the contact-form progressive-enhancement caveat in the section body, not a footnote.
 - [ ] **README.md:** trim from ~743 lines to ~150 — quickstart + stack summary + links to `ARCHITECTURE.md`/`STANDARDS.md`; move deep design content into `ARCHITECTURE.md` where it isn't already there.
-- [ ] **Historical docs:** ensure `LAUNCH.md` and both `docs/audit*` files carry a consistent HISTORICAL/SUPERSEDED banner.
+- [ ] **Historical docs:** ensure both `docs/audit*` files carry a consistent HISTORICAL/SUPERSEDED banner.
 - [ ] **DECISIONS.md:** confirm every P1–P4 decision (the two spikes, the polyfill re-eval, the merge-gate decision, the PPR rework) has an ADR entry with a date + reversibility note.
 - [ ] Verify: `pnpm verify` green; spot-check doc claims against code. Commit.
 

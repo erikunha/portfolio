@@ -166,8 +166,7 @@ Lands last so the docs describe the post-P1–P3 system.
   (pre-open above-the-fold modules or add an expand-all control); fix the `<360px` status-badge
   wrap; align `opengraph-image.tsx` colors to the design tokens.
 - **4b — Documentation.** Fix the `ARCHITECTURE.md` `lib/` layout drift and remove the stale
-  "PR 5 / PR 6 pending" references; banner the historical docs (`LAUNCH.md`, the two audit
-  docs) consistently; trim `README.md` from 743 lines to ~150 (quickstart + stack + links),
+  "PR 5 / PR 6 pending" references; banner the historical audit docs consistently; trim `README.md` from 743 lines to ~150 (quickstart + stack + links),
   moving deep design into `ARCHITECTURE.md`; surface the contact-form progressive-enhancement
   caveat properly; add `DECISIONS.md` ADR entries for every phase's decisions.
 

@@ -1469,17 +1469,14 @@ each naming its enforcement mechanism. It supersedes the prior inline
 
 **Files:**
 - Modify: `DECISIONS.md`
-- Modify: `LAUNCH.md`
 - Modify: `HANDOFF.md`
 - Modify: `docs/audit-2025-05.md`
 
 - [ ] **Step 1: `DECISIONS.md`** — add a new ADR entry: standards superseded by `STANDARDS.md`; record D1/D2/D3 from the spec; reference the SHAs of the CG commits. Add SHAs to recent entries where recoverable via `git log`.
 
-- [ ] **Step 2: `LAUNCH.md`** — the Day-1 scaffold commands still install Tailwind. Either correct them to the hand-rolled-CSS reality or add a prominent banner that the playbook is historical and `STANDARDS.md` + `ARCHITECTURE.md` are authoritative.
+- [ ] **Step 2: `HANDOFF.md`** — review; if stale, update or mark superseded.
 
-- [ ] **Step 3: `HANDOFF.md`** — review; if stale, update or mark superseded.
-
-- [ ] **Step 4: `docs/audit-2025-05.md`** and `docs/audit/2026-05-19-principal-audit.md` — add a one-line header marking them historical, superseded by `STANDARDS.md` and this program's spec.
+- [ ] **Step 3: `docs/audit-2025-05.md`** and `docs/audit/2026-05-19-principal-audit.md` — add a one-line header marking them historical, superseded by `STANDARDS.md` and this program's spec.
 
 ### Task 9.5 — `/api/erik.json` envelope decision
 
@@ -1497,7 +1494,7 @@ each naming its enforcement mechanism. It supersedes the prior inline
 - [ ] **Step 2:** Run the full gate: `pnpm ci`.
 
 ```bash
-git add STANDARDS.md CLAUDE.md DECISIONS.md LAUNCH.md HANDOFF.md docs/ public/llms.txt app/api/erik.json/route.ts ARCHITECTURE.md
+git add STANDARDS.md CLAUDE.md DECISIONS.md HANDOFF.md docs/ public/llms.txt app/api/erik.json/route.ts ARCHITECTURE.md
 git commit -m "docs(standards): add STANDARDS.md, rewire CLAUDE.md, fix domain + ADR drift"
 ```
 
