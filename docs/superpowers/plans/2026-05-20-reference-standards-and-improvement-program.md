@@ -1476,7 +1476,7 @@ each naming its enforcement mechanism. It supersedes the prior inline
 
 - [ ] **Step 2: `HANDOFF.md`** — review; if stale, update or mark superseded.
 
-- [ ] **Step 4: `docs/audit-2025-05.md`** and `docs/audit/2026-05-19-principal-audit.md` — add a one-line header marking them historical, superseded by `STANDARDS.md` and this program's spec.
+- [ ] **Step 3: `docs/audit-2025-05.md`** and `docs/audit/2026-05-19-principal-audit.md` — add a one-line header marking them historical, superseded by `STANDARDS.md` and this program's spec.
 
 ### Task 9.5 — `/api/erik.json` envelope decision
 
