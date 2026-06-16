@@ -96,6 +96,10 @@ export async function GET(req: NextRequest): Promise<Response> {
   }
 
   log.info('psi-refresh completed', { durationMs: result.durationMs, anyFailed });
-  // WHY: non-2xx signals Vercel Cron to retry and surface the failure in the dashboard.
+  // WHY: non-2xx surfaces the failure in the Vercel Cron dashboard and triggers the
+  // alert email. Vercel Cron does NOT auto-retry on failure; it only re-fires at the
+  // next scheduled tick. The schedule runs twice daily (0 3,15) so a single transient
+  // mobile timeout self-heals within ~12h, well inside the 25h PSI_STALE_MS window in
+  // app/api/healthz/route.ts, instead of leaving /api/healthz degraded for a full day.
   return Response.json(result, { status: anyFailed ? 500 : 200 });
 }
