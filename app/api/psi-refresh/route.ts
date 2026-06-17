@@ -32,6 +32,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   };
 
   const anyFailed = desktopResult.status === 'rejected' || mobileResult.status === 'rejected';
+  const anySucceeded = desktopResult.status === 'fulfilled' || mobileResult.status === 'fulfilled';
 
   if (anyFailed) {
     const errors = (
@@ -80,8 +81,16 @@ export async function GET(req: NextRequest): Promise<Response> {
         log.error('psi-refresh alert email failed to send', { err: alertErr });
       }
     }
-  } else {
-    // Both succeeded — record the timestamp so /api/healthz can report freshness.
+  }
+
+  if (anySucceeded) {
+    // WHY: record freshness when AT LEAST ONE strategy succeeded, not only on full
+    // success. The Hobby plan caps the cron at once/day (a more frequent schedule fails
+    // deployment), so gating the key on both-success meant a single transient mobile
+    // timeout left /api/healthz degraded for ~a full day. A partial failure still returns
+    // 500 and alerts (above), so the failure stays visible; per-strategy scores still
+    // degrade independently via the lh:scores:* cache TTL. Total failure skips this block
+    // (anySucceeded === false) so a genuine outage still degrades healthz.
     try {
       await getRedis().set('meta:psi-last-run', new Date().toISOString());
     } catch (redisErr) {
@@ -96,6 +105,11 @@ export async function GET(req: NextRequest): Promise<Response> {
   }
 
   log.info('psi-refresh completed', { durationMs: result.durationMs, anyFailed });
-  // WHY: non-2xx signals Vercel Cron to retry and surface the failure in the dashboard.
+  // WHY: non-2xx surfaces the failure in the Vercel Cron dashboard and triggers the
+  // alert email. Vercel Cron does NOT auto-retry on failure; it only re-fires at the
+  // next scheduled tick, and the Hobby plan caps the cron at once per day (a more
+  // frequent schedule fails deployment). The freshness key is written on partial success
+  // (see above), so a single transient mobile timeout still returns 500 + alerts here
+  // but no longer degrades /api/healthz; only a total failure does.
   return Response.json(result, { status: anyFailed ? 500 : 200 });
 }

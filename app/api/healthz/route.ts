@@ -2,7 +2,9 @@ import type { NextRequest } from 'next/server';
 import { log } from '@/lib/log';
 import { getClientIp, getHealthzLimit, getRedis } from '@/lib/rate-limit';
 
-// WHY: PSI cron runs daily; 25h window allows for schedule drift before marking stale.
+// WHY: PSI cron runs daily (vercel.json: 0 3); the Hobby plan caps crons at once per
+// day, so 25h is the tightest window that still tolerates schedule drift (Hobby cron
+// timing is ±59 min) before marking stale.
 const PSI_STALE_MS = 25 * 60 * 60 * 1000;
 const PSI_CACHE_TTL_MS = 5_000;
 

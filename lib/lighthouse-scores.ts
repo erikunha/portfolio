@@ -85,7 +85,9 @@ async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<
   };
 
   if (forceRefresh) {
-    // WHY: cron path — write is the deliverable; failure must surface so Vercel retries.
+    // WHY: cron path, write is the deliverable; a throw rejects this strategy so the
+    // route returns 500 and alerts. Vercel Cron does not auto-retry; recovery is the
+    // next daily tick (see app/api/psi-refresh/route.ts).
     await getRedis()
       .set(CACHE_KEY(strategy), scores, { ex: LIGHTHOUSE_TTL_S })
       .catch((err) => {

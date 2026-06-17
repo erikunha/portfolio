@@ -70,7 +70,12 @@ describe('GET /api/psi-refresh', () => {
     expect(sendMock).not.toHaveBeenCalled();
   });
 
-  it('does NOT write meta:psi-last-run and sends Resend alert on partial failure', async () => {
+  // WHY: partial failure (one strategy succeeded) writes the freshness key so a single
+  // transient mobile timeout does not flip /api/healthz to degraded. The 500 + alert still
+  // fire so the failure is visible. Total failure (below) is the only case that withholds
+  // the key. The Hobby plan caps the cron at once/day, so without this a single transient
+  // timeout would leave healthz degraded for ~a full day.
+  it('writes meta:psi-last-run AND sends Resend alert on partial failure (one strategy succeeded)', async () => {
     const { refreshScores } = await import('@/lib/lighthouse-scores');
     const mockRefresh = vi.mocked(refreshScores);
     mockRefresh
@@ -87,11 +92,26 @@ describe('GET /api/psi-refresh', () => {
     const res = await GET(makeRequest());
 
     expect(res.status).toBe(500);
-    expect(redisMockSet).not.toHaveBeenCalled();
+    expect(redisMockSet).toHaveBeenCalledWith('meta:psi-last-run', expect.any(String));
     expect(sendMock).toHaveBeenCalledOnce();
     const call = (sendMock.mock.calls[0] as unknown as [{ subject: string; to: string }])?.[0];
     expect(call.subject).toContain('psi-refresh');
     expect(call.to).toBe('erikhenriquealvescunha@gmail.com');
+  });
+
+  it('does NOT write meta:psi-last-run on total failure (both strategies fail)', async () => {
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    const mockRefresh = vi.mocked(refreshScores);
+    mockRefresh
+      .mockRejectedValueOnce(new Error('desktop PSI timeout'))
+      .mockRejectedValueOnce(new Error('mobile PSI timeout'));
+
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    const res = await GET(makeRequest());
+
+    expect(res.status).toBe(500);
+    expect(redisMockSet).not.toHaveBeenCalled();
+    expect(sendMock).toHaveBeenCalledOnce();
   });
 
   it('returns 200 and logs error when Redis write throws on success path', async () => {

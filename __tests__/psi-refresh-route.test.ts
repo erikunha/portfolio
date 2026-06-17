@@ -108,7 +108,8 @@ describe('GET /api/psi-refresh — success', () => {
       .mockRejectedValueOnce(new Error('mobile PSI failed'));
     const { GET } = await import('@/app/api/psi-refresh/route');
     const res = await GET(makeRequest('Bearer secret123') as never);
-    // WHY: 500 so Vercel Cron retries and surfaces the failure in the dashboard.
+    // WHY: 500 surfaces the failure in the Vercel Cron dashboard and triggers the alert.
+    // (Vercel Cron does not auto-retry; recovery is the next daily run.)
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.desktop).toEqual(DESKTOP_SCORES);
