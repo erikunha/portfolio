@@ -63,9 +63,10 @@ function main(): void {
 
   const records = readTranscript(path);
   console.log(`  records parsed: ${records.length}`);
-  console.log(`  HEAD commit time: ${headCommitIso()}`);
+  const headIso = headCommitIso();
+  console.log(`  HEAD commit time: ${headIso}`);
   console.log('  battery roles detected after HEAD:');
-  for (const { role, detected } of summarizeRoles(records, headCommitIso())) {
+  for (const { role, detected } of summarizeRoles(records, headIso)) {
     console.log(`    ${detected ? '✓' : '✗'} ${role}`);
   }
 }

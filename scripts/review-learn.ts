@@ -75,13 +75,23 @@ export function selectNewProposals(
   return proposals.filter((p) => !existingInbox.includes(p.id)).slice(0, cap);
 }
 
-function readArchive(path = ARCHIVE_PATH): ArchivedFinding[] {
+export function readArchive(path = ARCHIVE_PATH): ArchivedFinding[] {
   if (!existsSync(path)) return [];
   const out: ArchivedFinding[] = [];
   for (const line of readFileSync(path, 'utf8').split('\n')) {
     const trimmed = line.trim();
     if (trimmed === '') continue;
-    const parsed = ArchivedFindingSchema.safeParse(JSON.parse(trimmed));
+    // Tolerant: skip malformed lines (partial writes, truncation, concurrent
+    // appends) — same posture as readTranscript. Zod safeParse guards SHAPE, not
+    // JSON syntax, so an unparseable line must be caught here or it crashes
+    // readArchive and the SessionEnd hook that calls it.
+    let raw: unknown;
+    try {
+      raw = JSON.parse(trimmed);
+    } catch {
+      continue;
+    }
+    const parsed = ArchivedFindingSchema.safeParse(raw);
     if (parsed.success) out.push(parsed.data);
   }
   return out;

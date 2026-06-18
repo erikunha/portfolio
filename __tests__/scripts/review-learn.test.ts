@@ -1,8 +1,12 @@
+import { rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   type ArchivedFinding,
   type GateProposal,
   proposeGates,
+  readArchive,
   selectNewProposals,
 } from '@/scripts/review-learn';
 
@@ -74,5 +78,25 @@ describe('selectNewProposals (auto-trigger dedup + cap)', () => {
 
   it('returns all (up to cap) when the inbox is empty', () => {
     expect(selectNewProposals([p('a'), p('b')], '', 5).map((x) => x.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('readArchive (tolerant JSONL parsing)', () => {
+  it('skips a malformed JSON line instead of throwing, keeping valid records', () => {
+    const valid = JSON.stringify(rec({ id: 'ok' }));
+    const file = join(tmpdir(), `review-learn-archive-${process.pid}.jsonl`);
+    // valid record, a syntactically-broken line, a blank line, a shape-invalid line.
+    writeFileSync(file, `${valid}\n{ not json\n\n${JSON.stringify({ foo: 1 })}\n`);
+    try {
+      const out = readArchive(file);
+      expect(out).toHaveLength(1);
+      expect(out[0]?.id).toBe('ok');
+    } finally {
+      rmSync(file, { force: true });
+    }
+  });
+
+  it('returns [] for a non-existent archive path', () => {
+    expect(readArchive(join(tmpdir(), `review-learn-missing-${process.pid}.jsonl`))).toEqual([]);
   });
 });

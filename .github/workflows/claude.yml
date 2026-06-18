@@ -43,6 +43,9 @@ jobs:
       contains(github.event.comment.body, '@claude') &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: ubuntu-latest
+    # Cap a hung or looping Claude Code run; without this the job inherits the
+    # 6-hour default, the runaway-billing risk the write-scoped token amplifies.
+    timeout-minutes: 20
     steps:
       - uses: anthropics/claude-code-action@806af32823ef69c8ef357086c573a902af641307 # v1
         with:
