@@ -83,7 +83,6 @@ Prioritized by onboarding value. These would complete the knowledge base; they'r
 | P1 | **ADR cross-link index** | map code areas → relevant `DECISIONS.md` entries, so "why is this like this" is one hop from the file. |
 | P1 | **Contributing guide** | the commit/scope/PR/review-battery workflow as a standalone CONTRIBUTING.md (currently spread across `CLAUDE.md`). |
 | P1 | **AI Engineering guide** | deepen doc 06 into a standalone playbook for the eval harness + prompt-version + the guards (for anyone touching `/api/ask`). |
-| P2 | **Mermaid diagram collection** | consolidate every diagram in this `/docs` set into one browsable file for architecture reviews. |
 | P2 | **Frontend playbook** | the island/RSC decision tree, the INP rules, the CSS-token rules as a how-to. |
 | P3 | **Accessibility & performance handbooks** | expand doc 08's two halves into standalone, testable checklists. |
 
