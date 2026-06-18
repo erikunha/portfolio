@@ -37,11 +37,15 @@ describe('decideStamp', () => {
     expect(d.missing).toEqual([]);
   });
 
-  it('satisfies the code-review role via EITHER accepted subagent_type variant', () => {
+  it.each([
+    'pr-review-toolkit:review-pr',
+    'pr-review-toolkit:code-reviewer',
+    'code-reviewer',
+  ])('satisfies the code-review role via the %s subagent_type variant', (variant) => {
     const others = BATTERY_ROLES.filter((r) => r.role !== 'code-review').map((r) =>
       agent(r.accepts[0] ?? r.role, AFTER),
     );
-    const withVariant = [...others, agent('pr-review-toolkit:code-reviewer', AFTER)];
+    const withVariant = [...others, agent(variant, AFTER)];
     const d = decideStamp({
       records: withVariant,
       transcriptResolved: true,

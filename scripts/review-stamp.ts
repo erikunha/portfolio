@@ -45,16 +45,19 @@ import {
 /**
  * The five-agent review battery as ROLES, each satisfied by ANY of its accepted
  * `subagent_type` strings. The strings were captured from real session
- * transcripts (2026-06-04). The code-review role is dispatched as EITHER the
+ * transcripts (2026-06-04). The code-review role is dispatched as the
  * orchestrator skill's agent (`pr-review-toolkit:review-pr`) OR the reviewer
- * agent directly (`pr-review-toolkit:code-reviewer`) — both appear live, so the
- * role accepts either; pinning a single string here over-blocks the real
- * workflow (the bug this role model fixes).
+ * agent directly. The reviewer agent appears BOTH plugin-prefixed
+ * (`pr-review-toolkit:code-reviewer`) and bare (`code-reviewer`) depending on how
+ * the session's agent registry namespaces plugin agents — some sessions expose
+ * only the bare name. All three are the same review role, so the role accepts any
+ * of them; pinning a single string over-blocks the real workflow (the bug this
+ * role model fixes).
  */
 export const BATTERY_ROLES: ReadonlyArray<{ role: string; accepts: readonly string[] }> = [
   {
     role: 'code-review',
-    accepts: ['pr-review-toolkit:review-pr', 'pr-review-toolkit:code-reviewer'],
+    accepts: ['pr-review-toolkit:review-pr', 'pr-review-toolkit:code-reviewer', 'code-reviewer'],
   },
   { role: 'accessibility', accepts: ['accessibility-tester'] },
   { role: 'security', accepts: ['security-auditor'] },
