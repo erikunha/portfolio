@@ -18,12 +18,19 @@ on:
   pull_request_review_comment:
     types: [created]
 
-# One run per comment thread; a new mention supersedes an in-flight run.
-# run_id fallback keeps the group unique for any future trigger that populates
-# neither issue.number nor pull_request.number (today both wired triggers set one).
+# One run per comment thread. cancel-in-progress is FALSE on purpose: the action
+# posts its own "working..." progress comment via its app token, which (unlike the
+# default GITHUB_TOKEN) is NOT recursion-guarded, so it fires a fresh issue_comment
+# event and a second run in this same group. With cancel-in-progress: true that
+# self-triggered run (which then skips on the author_association guard) CANCELLED
+# the run that was mid-review, so @claude could never finish — verified live:
+# run 27790106599 (the review) was cancelled 11s after the bot's comment spawned
+# run 27790115441 (the skip). Queuing the skip-run instead of cancelling lets the
+# review complete. run_id fallback keeps the group unique for any future trigger
+# that populates neither issue.number nor pull_request.number.
 concurrency:
   group: claude-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   # id-token: write is REQUIRED by claude-code-action: it mints its GitHub App
