@@ -1,0 +1,208 @@
+# claude-review: on-demand inline code review, the @claude analogue of Copilot.
+#
+# PURPOSE: a fallback reviewer for when Copilot is off / errored / out of quota.
+# Comment `/claude-review` on a PR and Claude leaves line-anchored review threads
+# (like Copilot), plus one thorough top-level review. It is INTENTIONALLY
+# on-demand (not a pull_request auto-trigger) so it does not double-review every PR
+# alongside Copilot. You invoke it only when you want it.
+#
+# Distinct from claude.yml: that workflow answers general `@claude` mentions
+# (conversational). This one is the `/claude-review` slash command. The triggers do
+# not collide: `/claude-review` contains no `@claude`, so claude.yml stays inert.
+#
+# All four bring-up requirements are present from the start (lesson from the
+# claude.yml saga): id-token (OIDC auth), a checkout step (so the action can diff
+# the PR branch), cancel-in-progress: false (the action's own comment must not
+# self-cancel the run), and SHA-pinned actions.
+name: Claude Review
+
+on:
+  issue_comment:
+    types: [created]
+
+# cancel-in-progress: false (defensive, matching claude.yml): the action posts its
+# review/summary via its app token, which is NOT recursion-guarded like the default
+# GITHUB_TOKEN and can re-trigger this workflow; never let a self-triggered run
+# cancel an in-flight review.
+concurrency:
+  group: claude-review-${{ github.event.issue.number || github.run_id }}
+  cancel-in-progress: false
+
+# Least-privilege: contents READ (the reviewer reads code, never pushes commits),
+# pull-requests write (to create the review + inline threads), id-token write
+# (OIDC auth), actions read (read CI results to factor into the review).
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+  actions: read
+
+jobs:
+  review:
+    # Authorization guard (not mere execution gating): the comment is on a PR, uses
+    # the /claude-review command, AND the commenter is trusted. Without the
+    # author_association check a drive-by commenter could spend the OAuth token.
+    if: >-
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/claude-review') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # Gives the action a configured git repo + authenticated remote to fetch and
+      # diff the PR branch (omitting this fails on git fetch / git hash-object).
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 1
+      - uses: anthropics/claude-code-action@806af32823ef69c8ef357086c573a902af641307 # v1
+        with:
+          # Claude Max subscription token (no per-use API billing).
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # NO track_progress: claude-code-action only supports it on
+          # pull_request/issues events, not issue_comment; setting it here hard-errors
+          # every run. The review and inline threads still post normally without it.
+          prompt: |
+            Perform the final pre-merge technical review of this pull request. You run
+            autonomously inside a GitHub Action. Scope: review the CHANGES IN THIS PR,
+            using the rest of the codebase only as context to judge them correctly. Do
+            not review or report pre-existing problems outside this PR's diff. Your
+            objective is a review trustworthy enough that the team can merge on it
+            without a second human pass: maximize real engineering signal and minimize
+            noise. You are not a linter. Comment only where a change introduces a
+            genuine risk, and prefer a short, honest approval over invented nits. Hold
+            the bar of code that must run in production for years and be copied verbatim
+            by other teams.
+
+            ## 1. Discover the repository before reviewing
+
+            This is a production reference codebase whose stated bar is "architecture
+            is the artifact"; its conventions are documented and often diverge from
+            generic React / Next.js advice. Using your Read / Grep / Glob tools, read
+            the canonical sources relevant to the changed files BEFORE forming opinions:
+            - CLAUDE.md (root and any nested) for project rules, the performance
+              budgets table, the rendering model, and content/aesthetic constraints.
+            - STANDARDS.md for the engineering bar (one chapter per domain, each naming
+              its mechanical gate).
+            - ARCHITECTURE.md and DECISIONS.md for system design and the ADR log.
+            - .claude/rules/*.md for path-scoped rules (e.g. api-boundary.md for
+              app/api/**).
+            - content/*.ts with content/schemas.ts, and the tests next to each changed
+              file.
+            Read the CURRENT files; do not recite facts or budget numbers from memory
+            (stale facts are this repo's most common defect). Follow repository
+            conventions over generic best practice unless a convention causes a
+            correctness, security, accessibility, or performance defect.
+
+            ## 2. Review the PR's changes, in context
+
+            Review against the PR's HEAD, not an older snapshot (re-flagging issues
+            already fixed in a later commit is the top noise complaint here). For every
+            changed file: read the surrounding code, understand how the feature works
+            today, grep for sibling implementations the change must stay consistent
+            with, and read the affected tests and CI results. Never review a diff in
+            isolation. Understand why the change exists, whether it solves the right
+            problem, and its long-term maintenance cost. The codebase is context for
+            judging the change; the review's subject is what this PR adds, modifies, or
+            removes, not pre-existing code it merely sits beside.
+
+            ## 3. Where defects actually occur in this repo (weight attention here)
+
+            Empirically, the real defects that reach review here cluster below, and a
+            generic reviewer misses most of them. Prioritize in this order:
+
+            1. Doc / comment / ADR / PR-description drift, the highest-frequency real
+               defect: a code comment, JSDoc, a DECISIONS.md or ARCHITECTURE.md claim,
+               or the PR description that contradicts what the code now does. Flag every
+               place prose and code disagree, and where the PR description no longer
+               matches the diff.
+            2. CI / shell-script and Git-hook robustness (.github/workflows, .husky,
+               scripts/): curl retry/timeout budgets that can exceed the job timeout;
+               --silent without --show-error (or 2>/dev/null defeating it); fail-OPEN
+               where a security / audit / lockfile gate must fail CLOSED; non-portable
+               grep (\b on BSD); cwd-relative paths or helper imports that break under
+               git -C or a subdirectory; entrypoint checks (import.meta.url vs argv[1])
+               that silently no-op.
+            3. Edge / server boot and runtime guards: runtime checks like
+               NEXT_RUNTIME === 'nodejs' that skip when the var is undefined (prefer
+               !== 'edge'); missing import 'server-only' on server-only modules; NaN or
+               a bad timestamp treated as a healthy / false-green state; an uncleared
+               setTimeout keeping a serverless invocation alive.
+            4. Test rigor: assertions weaker than the invariant they claim to protect (a
+               guard that matches only the single-quote form, or dot-access but not
+               process.env['KEY'] bracket access); and env-stub leakage across Vitest
+               files (vi.stubEnv with no afterEach / unstubAllEnvs). New behavior must
+               carry behavioral regression protection.
+            5. Security / validation edges: prefix/glob host allowlists that match
+               victim.dev.evil.com; reading a stream twice so a parse-fallback skips a
+               gate; match logic so broad it accepts unintended producers; plus the
+               standard XSS / unsafe HTML / authorization / input-validation /
+               secret-exposure checks.
+            6. Repo-convention correctness: user-facing copy inlined in .tsx instead of
+               content/*.ts; managed env read via process.env.* instead of the
+               lib/env.ts accessor; a "use client" / *.client.tsx island not justified
+               by real interactivity (RSC drift); scope creep the PR description does
+               not own.
+
+            Specific recurring signatures to check by name: character-count vs
+            byte-count confusion (UTF-16 .length used where bytes are meant); fail-open
+            where fail-closed is required; the env-stub-leak and swallowed-curl-
+            diagnostics patterns above.
+
+            ## 4. Standard dimensions (still review, lower base rate)
+
+            Correctness and logic (edge cases, races, stale closures, lifecycle, async,
+            hydration); architecture (module and component boundaries, state ownership,
+            dependency direction, abstraction quality, consistency with existing
+            patterns); performance against the repo's CI-enforced budgets in CLAUDE.md
+            (do not regress LCP/INP/CLS, the client-JS and per-route budgets, or the
+            Lighthouse thresholds; respect RSC-first, client-islands-by-exception, and
+            the Matrix-loop useRef.textContent vs streaming-through-React distinction);
+            accessibility to WCAG 2.1 AA (semantics, :focus-visible focus management,
+            the two-token palette where --signal must never style body text, motion
+            gated behind prefers-reduced-motion); the API boundary (defineHandler order
+            rate-limit then parse then validate then handle, the response envelope,
+            fail-open rate-limiting with the budget cap failing closed); and whether the
+            change requires a documentation update.
+
+            ## 5. Do not comment on (already gated, or proven noise)
+
+            CI and the pre-commit hook already enforce these; commenting on them is
+            false-positive noise: formatting, Biome lint, import ordering, TypeScript
+            errors, naming preferences, subjective style, contrast ratios, bundle size,
+            Lighthouse scores, dependency pinning, client-file naming, section order,
+            doc-drift file lists, raw-hex / CSS-token rules, and axe-detectable a11y
+            violations. Also suppress: acronym / capitalization nits, micro-performance
+            on cold one-shot script paths, defensive fallbacks on schema fields that are
+            effectively always present, and typo-only nits in non-shipped files. If a
+            section is well implemented, say nothing about it.
+
+            ## 6. When to comment, and how
+
+            Leave an INLINE comment, anchored to a line this PR changed, ONLY for: a
+            concrete bug or production risk, an architectural regression, a measurable
+            performance or accessibility regression, a security issue, a maintainability
+            problem that will cost real future time, or missing regression protection.
+            Each inline comment states, in two or three sentences: why it matters and
+            its impact, a severity, and a concise suggested fix. Do not manufacture
+            feedback; a clean PR deserves a short approval, not invented nits.
+
+            Severity model:
+            - Critical: a correctness, security, or data-loss bug, or a budget/gate
+              regression that will ship broken. Blocks merge.
+            - Important: a real defect or architectural regression that should be fixed
+              before merge but is not a ship-stopper.
+            - Advisory: a worthwhile improvement the author may reasonably defer.
+
+            ## 7. Output: exactly one top-level review
+
+            Post one review containing: Executive Summary (what the PR does and your
+            confidence); Strengths (brief, only if genuine); Critical Issues; Important
+            Issues; Advisory Improvements; and a Merge Recommendation, exactly one of:
+            ✅ Approve   🟡 Approve with Minor Changes   🟠 Request Changes   🔴 Reject
+            If the PR is production-ready, state that plainly. Anchor every claim to
+            file:line, and only to lines within this PR's diff.
+          # Tools: file reading (Read/Grep/Glob) so the review uses full repo context
+          # per the prompt; the inline-comment tool (what makes this Copilot-like); and
+          # read-only gh access to the diff/PR plus a comment fallback for the summary.
+          claude_args: >-
+            --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*)"
