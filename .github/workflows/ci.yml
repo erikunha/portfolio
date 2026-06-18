@@ -599,9 +599,14 @@ jobs:
         run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts
         env:
           ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
-          # WHY: without a shared nonce, each matrix job creates a separate Argos build.
-          # The PR check then compares the mobile build (4 screenshots, hero skipped)
-          # against the desktop reference (5 screenshots) → spurious "4 added, 5 removed".
+          # WHY: the two visual matrix jobs (chromium desktop = 5 shots; chromium-mobile
+          # = 4, hero skipped) must MERGE into one Argos build. That needs all three vars:
+          # ARGOS_PARALLEL=true activates parallel mode (without it the nonce/total are
+          # ignored), the nonce groups the jobs, and the total tells Argos how many uploads
+          # to wait for. Missing the enable flag let each job upload a SEPARATE build, so
+          # whichever finished last set the commit status — mobile last produced the
+          # spurious "4 added, 5 removed" (4-shot mobile set vs the 5-shot desktop baseline).
+          ARGOS_PARALLEL: true
           ARGOS_PARALLEL_NONCE: ${{ github.run_id }}-${{ github.run_attempt }}
           ARGOS_PARALLEL_TOTAL: ${{ strategy.job-total }}
       - if: inputs.update_visual_baselines == 'true'
@@ -609,6 +614,7 @@ jobs:
         run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts --update-snapshots
         env:
           ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
+          ARGOS_PARALLEL: true
           ARGOS_PARALLEL_NONCE: ${{ github.run_id }}-${{ github.run_attempt }}
           ARGOS_PARALLEL_TOTAL: ${{ strategy.job-total }}
       - if: inputs.update_visual_baselines == 'true'

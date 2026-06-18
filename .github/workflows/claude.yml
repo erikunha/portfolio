@@ -26,6 +26,11 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
+  # id-token: write is REQUIRED by claude-code-action: it mints its GitHub App
+  # token via OIDC (setupGitHubToken -> getOidcToken). Without it the action fails
+  # fast with "Could not fetch an OIDC token". The other three scopes let it
+  # comment and push; id-token is for auth, not repo access.
+  id-token: write
   contents: write
   pull-requests: write
   issues: write
