@@ -32,20 +32,20 @@
   .signal-glow {
     text-shadow:
       0 0 8px var(--color-glow-45),
-      0 0 4px #000;
+      0 0 4px var(--color-secondary-950);
   }
 
   .signal-glow-strong {
     text-shadow:
       0 0 6px var(--color-glow-60),
-      0 0 4px #000;
+      0 0 4px var(--color-secondary-950);
   }
 
   /* ── Sysfail plate / emergency overlay ─────────────────────────────────── */
 
   .sysfail-plate {
     background: var(--color-primary-500);
-    color: #000;
+    color: var(--color-secondary-950);
     font-family: var(--font-mono);
     font-weight: 700;
     font-size: 24px;
@@ -438,7 +438,7 @@
     top: 4px;
     bottom: 4px;
     width: 1px;
-    background: #000;
+    background: var(--color-secondary-950);
     transform: translateX(-50%);
   }
 
@@ -644,7 +644,7 @@
     height: 22px;
     background: var(--color-primary-500);
     box-shadow: 0 0 8px var(--color-primary-500);
-    border: 1px solid #000;
+    border: 1px solid var(--color-secondary-950);
     cursor: ew-resize;
   }
 
@@ -655,7 +655,7 @@
     top: 3px;
     bottom: 3px;
     width: 1px;
-    background: #000;
+    background: var(--color-secondary-950);
     transform: translateX(-50%);
   }
 

@@ -21,25 +21,43 @@
 // rare parallel-session misresolve.
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import {
+  appendFileSync,
+  existsSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { agentDispatchedAfter, readTranscript } from './lib/transcript.mjs';
+import {
+  ARCHIVE_PATH,
+  archiveRecords,
+  blockingFindings,
+  invalidResolutions,
+  readLedger,
+} from './review-findings';
 
 /**
  * The five-agent review battery as ROLES, each satisfied by ANY of its accepted
  * `subagent_type` strings. The strings were captured from real session
- * transcripts (2026-06-04). The code-review role is dispatched as EITHER the
+ * transcripts (2026-06-04). The code-review role is dispatched as the
  * orchestrator skill's agent (`pr-review-toolkit:review-pr`) OR the reviewer
- * agent directly (`pr-review-toolkit:code-reviewer`) — both appear live, so the
- * role accepts either; pinning a single string here over-blocks the real
- * workflow (the bug this role model fixes).
+ * agent directly. The reviewer agent appears BOTH plugin-prefixed
+ * (`pr-review-toolkit:code-reviewer`) and bare (`code-reviewer`) depending on how
+ * the session's agent registry namespaces plugin agents — some sessions expose
+ * only the bare name. All three are the same review role, so the role accepts any
+ * of them; pinning a single string over-blocks the real workflow (the bug this
+ * role model fixes).
  */
 export const BATTERY_ROLES: ReadonlyArray<{ role: string; accepts: readonly string[] }> = [
   {
     role: 'code-review',
-    accepts: ['pr-review-toolkit:review-pr', 'pr-review-toolkit:code-reviewer'],
+    accepts: ['pr-review-toolkit:review-pr', 'pr-review-toolkit:code-reviewer', 'code-reviewer'],
   },
   { role: 'accessibility', accepts: ['accessibility-tester'] },
   { role: 'security', accepts: ['security-auditor'] },
@@ -75,6 +93,9 @@ export function decideStamp(args: {
   records: TranscriptRecord[];
   transcriptResolved: boolean;
   headCommitIso: string;
+  // Verification-loop gate. Supplied by main() from the .review-findings.json
+  // ledger; omitted by the pure-dispatch unit tests (the gate is then skipped).
+  findings?: { present: boolean; blocking: string[]; invalid: string[] };
 }): StampDecision {
   if (!args.transcriptResolved) {
     return {
@@ -95,7 +116,38 @@ export function decideStamp(args: {
       reason: `Review battery incomplete since the HEAD commit. Missing role(s): ${missing.join(', ')}.`,
     };
   }
-  return { write: true, missing: [], reason: 'All five battery roles dispatched after HEAD.' };
+  // Dispatch satisfied. Now the verification loop: a recorded Critical/Important
+  // finding may not remain open, and every resolution must cite a reason. This
+  // is what turns the stamp from "review happened" into "findings resolved".
+  if (args.findings) {
+    if (!args.findings.present) {
+      return {
+        write: false,
+        missing: [],
+        reason:
+          'No findings ledger (.review-findings.json). Run battery-synthesis to record the cycle findings, then stamp.',
+      };
+    }
+    if (args.findings.invalid.length > 0) {
+      return {
+        write: false,
+        missing: [],
+        reason: `Resolved/justified finding(s) missing a reason: ${args.findings.invalid.join(', ')}.`,
+      };
+    }
+    if (args.findings.blocking.length > 0) {
+      return {
+        write: false,
+        missing: [],
+        reason: `Open Critical/Important finding(s) block the stamp: ${args.findings.blocking.join(', ')}.`,
+      };
+    }
+  }
+  return {
+    write: true,
+    missing: [],
+    reason: 'All five battery roles dispatched after HEAD; findings resolved or justified.',
+  };
 }
 
 /**
@@ -109,7 +161,7 @@ export function decideStamp(args: {
  * from cwd alone (the worktree) finds nothing and fails closed forever. So we
  * also derive the main-repo root from the common git dir and search its slug.
  */
-function candidateProjectDirs(): string[] {
+export function candidateProjectDirs(): string[] {
   const slugDir = (abs: string): string =>
     join(homedir(), '.claude', 'projects', abs.replace(/\//g, '-'));
   const dirs = [slugDir(process.cwd())];
@@ -135,7 +187,7 @@ function candidateProjectDirs(): string[] {
  * slug for worktrees) for the newest top-level `*.jsonl` by mtime. Returns null
  * when nothing can be resolved (caller fails closed).
  */
-function resolveTranscriptPath(): string | null {
+export function resolveTranscriptPath(): string | null {
   const override = process.env.REVIEW_STAMP_TRANSCRIPT;
   if (override) return existsSync(override) ? override : null;
 
@@ -163,7 +215,14 @@ function main(): void {
     encoding: 'utf8',
   }).trim();
 
-  const decision = decideStamp({ records, transcriptResolved, headCommitIso });
+  const ledger = readLedger();
+  const findings = {
+    present: ledger !== null,
+    blocking: ledger ? blockingFindings(ledger).map((f) => `${f.id} ${f.title}`) : [],
+    invalid: ledger ? invalidResolutions(ledger).map((f) => `${f.id} ${f.title}`) : [],
+  };
+
+  const decision = decideStamp({ records, transcriptResolved, headCommitIso, findings });
 
   if (!decision.write) {
     console.error('✗ review:stamp REFUSED — stamp not written.');
@@ -197,10 +256,18 @@ function main(): void {
     }
   }
 
+  // Append the resolved ledger to the append-only archive (learning-loop data
+  // foundation). The gate above guaranteed every Critical/Important finding is
+  // resolved or justified, so the archive records what was found and how it was
+  // closed. This only captures data; nothing here proposes a gate.
+  if (ledger && ledger.length > 0) {
+    appendFileSync(ARCHIVE_PATH, archiveRecords(ledger, headSha, headCommitIso));
+  }
+
   console.log(
-    `✓ review:stamp written (${headSha}) — all five battery agents dispatched this cycle.`,
+    `✓ review:stamp written (${headSha}); battery dispatched and findings resolved this cycle.`,
   );
-  console.log('  Note: this proves DISPATCH, not that findings were fixed. That is on you.');
+  console.log('  Boundary: the stamp cannot know about a finding you never recorded.');
 }
 
 // Run only as a CLI, not when imported by tests. Compare absolute filesystem

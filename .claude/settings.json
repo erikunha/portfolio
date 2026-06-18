@@ -65,6 +65,16 @@
           }
         ]
       }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/learning-loop.sh"
+          }
+        ]
+      }
     ]
   }
 }

@@ -1,0 +1,53 @@
+# claude-code-action — PILOT (ecosystem-benchmark P1).
+#
+# Opt-in second AI reviewer/implementer: acts only when a human writes "@claude"
+# in an issue or PR comment. It SUPPLEMENTS, never replaces, the local 5-agent
+# review battery and the Copilot convergence loop. Inert until BOTH conditions
+# hold: someone mentions @claude AND the CLAUDE_CODE_OAUTH_TOKEN repo secret is set
+# (it is: a Max-subscription token from `claude setup-token`, no per-use billing).
+#
+# Before relying on it: run one pilot and measure its signal-to-noise before
+# trusting its findings (the research is clear that AI review is triage, not a
+# guarantee). The action is SHA-pinned below (dependabot tracks github-actions).
+# Any change @claude pushes still goes through branch protection + Copilot review.
+name: Claude Code
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+# One run per comment thread; a new mention supersedes an in-flight run.
+# run_id fallback keeps the group unique for any future trigger that populates
+# neither issue.number nor pull_request.number (today both wired triggers set one).
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  claude:
+    # Two-part authorization guard, NOT just execution gating:
+    #   1. the comment mentions @claude, AND
+    #   2. the commenter is trusted (repo owner / member / collaborator).
+    # Without the association check, any drive-by commenter on a public PR could
+    # invoke a token holding contents/PR/issues:write. The job permissions below
+    # are write-scoped because the action pushes commits and comments, so the
+    # trigger must be authorization-gated, not merely @claude-gated.
+    if: >-
+      contains(github.event.comment.body, '@claude') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    # Cap a hung or looping Claude Code run; without this the job inherits the
+    # 6-hour default, the runaway-billing risk the write-scoped token amplifies.
+    timeout-minutes: 20
+    steps:
+      - uses: anthropics/claude-code-action@806af32823ef69c8ef357086c573a902af641307 # v1
+        with:
+          # Authenticated via Claude Max subscription token (no per-use API billing).
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

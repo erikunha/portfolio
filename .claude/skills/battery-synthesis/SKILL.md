@@ -1,3 +1,8 @@
+---
+name: battery-synthesis
+description: Use after all 5 review-battery agents (pr-review-toolkit:review-pr, accessibility-tester, security-auditor, performance-engineer, dependency-manager) have returned and before running `pnpm review:stamp`. Unifies their reports into one deduplicated, severity-ranked action table so nothing is double-counted or missed before the stamp decision. Not a gate; a DX aid where the fix responsibility stays with the main agent.
+---
+
 # Battery Synthesis
 
 A DX aid for unifying the output of the 5-agent review battery into a single,
@@ -67,10 +72,24 @@ Critical → Important → Advisory.
   swap — pick one approach before addressing either row. Options: (a) preload + `font-display: block` to eliminate swap; (b) keep `font-display: swap` and accept potential CLS from the font swap.
 ~~~
 
-## After synthesis
+## After synthesis — record the findings ledger (verification loop)
 
-- Address all Critical and Important rows before calling `pnpm review:stamp`.
-- Advisory rows are optional; note any you skip.
-- Resolve all Conflicts explicitly — pick the approach, document the choice, then act.
-- The table does not mechanically block stamp. It informs your decision.
+The table now feeds a mechanical gate. `pnpm review:stamp` REFUSES to stamp
+while any Critical/Important finding is `open`, so the stamp proves resolution,
+not just dispatch. Record the cycle:
+
+1. Start a clean ledger: `pnpm review:findings clear`
+2. For every Critical and Important row: `pnpm review:findings add <critical|important> <source-agent> "<issue title>"`
+3. As you fix each, cite the fix commit: `pnpm review:findings resolve <id> <sha>`
+4. If a finding is intentionally not fixed, justify it (a non-empty reason is
+   required; reference a DECISIONS.md entry where applicable):
+   `pnpm review:findings justify <id> "<reason>"`
+5. `pnpm review:findings check` must pass before `pnpm review:stamp`.
+
+Anti-theater rule: the agent that verifies a `resolve` should not be the one
+that wrote the fix. Re-dispatch the relevant battery agent against the fix
+before resolving its finding.
+
+- Advisory rows are optional; note any you skip (they do not enter the ledger).
+- Resolve all Conflicts explicitly: pick the approach, document the choice, then act.
 - If a conflict cannot be resolved without user input, escalate before stamping.
