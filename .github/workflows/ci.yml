@@ -478,6 +478,7 @@ jobs:
     outputs:
       ai: ${{ steps.check.outputs.ai }}
       app: ${{ steps.check.outputs.app }}
+      ui: ${{ steps.check.outputs.ui }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
@@ -492,6 +493,7 @@ jobs:
           if [[ "$EVENT_NAME" != "pull_request" ]]; then
             echo "ai=true" >> "$GITHUB_OUTPUT"
             echo "app=true" >> "$GITHUB_OUTPUT"
+            echo "ui=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           ai_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
@@ -512,6 +514,18 @@ jobs:
           [[ -n "$app_changed" ]] \
             && echo "app=true" >> "$GITHUB_OUTPUT" \
             || echo "app=false" >> "$GITHUB_OUTPUT"
+          # `ui` = files that can change RENDERED output; gates the visual / Argos job
+          # only. Deliberately a SUBSET of `app`: it drops .github/workflows/,
+          # lighthouserc*, and the bundle-size script, which belong in `app` (they
+          # affect the build / e2e / perf gates) but cannot change a single rendered
+          # pixel. Gating Argos on `app` made workflow-only PRs run the visual suite
+          # and report spurious "N added" diffs against the baseline.
+          ui_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
+            app/ components/ design-system/ lib/ content/ public/ \
+            next.config.ts playwright.config.ts package.json pnpm-lock.yaml)
+          [[ -n "$ui_changed" ]] \
+            && echo "ui=true" >> "$GITHUB_OUTPUT" \
+            || echo "ui=false" >> "$GITHUB_OUTPUT"
 
   ai-eval:
     runs-on: ubuntu-latest
@@ -554,8 +568,10 @@ jobs:
     timeout-minutes: 15
     # REQUIRED: Linux Chromium rendering is deterministic — pixel-diff comparisons
     # are stable enough to gate on. Baselines are refreshed via workflow_dispatch.
-    # Skip on PRs that touch only scripts/docs/CI — visual diffs only matter for app code.
-    if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
+    # Skip on PRs that touch only scripts/docs/CI: visual diffs only matter for code
+    # that can change rendered output. Gated on `ui` (not `app`) so a workflow-only
+    # PR does not run the visual suite and report spurious Argos "N added" diffs.
+    if: github.event_name != 'pull_request' || needs.detect-changes.outputs.ui == 'true'
     needs: [build, detect-changes]
     strategy:
       fail-fast: false
