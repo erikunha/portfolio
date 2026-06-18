@@ -101,8 +101,14 @@ jobs:
       - name: Doc-drift gate (ARCHITECTURE.md tree vs disk)
         run: pnpm check:doc-drift
 
+      - name: Gate-health meta-gate (hook/script references resolve)
+        run: pnpm check:gate-health
+
       - name: Contrast check
         run: pnpm lint:contrast
+
+      - name: CSS tokens (no raw hex outside theme.css)
+        run: pnpm lint:css-tokens
 
       - name: Package age check (supply-chain, info-only)
         # --warn-only: exits 0 always. Blocking a push for a freshly-released dep

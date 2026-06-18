@@ -106,8 +106,8 @@
     flex-direction: column;
     justify-content: flex-end;
     text-shadow:
-      0 0 4px #000,
-      0 0 8px #000;
+      0 0 4px var(--color-secondary-950),
+      0 0 8px var(--color-secondary-950);
   }
 
   /* ── Hero dialog typewriter line (desktop) ───────────────────────────────── */
@@ -175,7 +175,7 @@
     font-weight: 700;
     text-shadow:
       0 0 6px var(--color-glow-60),
-      0 0 4px #000;
+      0 0 4px var(--color-secondary-950);
   }
 
   .hero-boot-welcome {
@@ -200,7 +200,7 @@
     color: var(--color-primary-500);
     text-shadow:
       0 0 8px var(--color-glow-40),
-      0 0 4px #000;
+      0 0 4px var(--color-secondary-950);
   }
 
   /* ── Sysfail overlay — fixed position, fade in/out ───────────────────────── */

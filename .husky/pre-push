@@ -4,11 +4,19 @@
 # rule in June 2026 by landing on main without a PR. Emergency rollback that
 # requires code: use `git push --no-verify` explicitly (documented escape hatch).
 #
-# Two-layer check:
-# 1. stdin refspec: catches `git push origin feat/x:main` and HEAD:main pushes
-#    where the local branch name is not "main" but the remote target is.
-# 2. local branch name: defence-in-depth for tooling that does not provide stdin.
-while IFS=' ' read -r _local_ref _local_sha remote_ref _remote_sha; do
+# Layered check, precise-predicate first:
+# 1. stdin refspec (authoritative): block any ref whose remote target is
+#    refs/heads/main; catches `git push origin feat/x:main` and HEAD:main.
+# 2. branch-name fallback: ONLY when git supplied no stdin refspec (non-standard
+#    tooling). Gating it this way avoids blocking legitimate non-main pushes and
+#    branch deletions made while standing on main.
+ZERO="0000000000000000000000000000000000000000"
+saw_refspec=0
+all_deletions=1
+while IFS=' ' read -r local_ref local_sha remote_ref _remote_sha; do
+  saw_refspec=1
+  # Block any direct create/update/delete of main. Deleting main is worse than
+  # updating it, so match on the remote ref regardless of operation.
   if [ "$remote_ref" = "refs/heads/main" ]; then
     echo ""
     echo "BLOCKED: direct push to main (remote ref: $remote_ref)."
@@ -17,21 +25,43 @@ while IFS=' ' read -r _local_ref _local_sha remote_ref _remote_sha; do
     echo ""
     exit 1
   fi
+  # A deletion sends an all-zero local sha (or the literal local ref "(delete)").
+  if [ "$local_sha" != "$ZERO" ] && [ "$local_ref" != "(delete)" ]; then
+    all_deletions=0
+  fi
 done
+
 branch=$(git rev-parse --abbrev-ref HEAD)
-if [ "$branch" = "main" ]; then
+
+# Fallback ONLY when git provided no refspec on stdin (non-standard tooling):
+# we cannot inspect the remote target, so block pushes from local main.
+# WHY gated on saw_refspec: git's pre-push hook DOES emit refspecs for normal
+# pushes and deletions, making the precise per-ref check above authoritative.
+# Firing it unconditionally was an over-broad predicate — it blocked legitimate
+# non-main pushes and branch deletions made while on main (a real false positive
+# on 2026-06-17 that forced a --no-verify bypass and erodes the guard's authority).
+if [ "$saw_refspec" = "0" ] && [ "$branch" = "main" ]; then
   echo ""
-  echo "BLOCKED: pushing while on the local main branch is not allowed."
+  echo "BLOCKED: pushing from local main with no refspec on stdin."
   echo "  All changes must go through a feature branch and PR."
   echo "  Emergency code rollback only: git push --no-verify"
   echo ""
   exit 1
 fi
 
-# Branch-name guard: every branch follows `<type>/<description>` from the
-# commitlint scope set.
-echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot|design-system)/.+$' \
-  || { echo "Error: invalid branch name '$branch'. Use <type>/<description>."; exit 1; }
+# Deletion-only pushes ship no reviewable code: skip the branch-name, review
+# stamp, and verify gates, which all assume new commits are reaching the remote.
+if [ "$saw_refspec" = "1" ] && [ "$all_deletions" = "1" ]; then
+  echo "[pre-push] Deletion-only push; name/stamp/verify gates not applicable."
+  exit 0
+fi
+
+# Branch-name guard: main is exempt (you do not develop on it); every other
+# branch follows `<type>/<description>` from the commitlint scope set.
+if [ "$branch" != "main" ]; then
+  echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot|design-system)/.+$' \
+    || { echo "Error: invalid branch name '$branch'. Use <type>/<description>."; exit 1; }
+fi
 
 # Review stamp gate: every push requires prior dispatch of the full agent
 # review battery (pr-review-toolkit, security-auditor, accessibility-tester,

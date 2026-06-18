@@ -111,7 +111,7 @@
     z-index: 9999;
     padding: 8px 16px;
     background: var(--color-primary-500);
-    color: #000;
+    color: var(--color-secondary-950);
     font-family: var(--font-mono);
     font-size: 16px;
     font-weight: 700;
