@@ -349,6 +349,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # LHCI posts a "Lighthouse CI" commit status linking to the report it
+      # uploads to temporary-public-storage. The basic-token path (not the LHCI
+      # GitHub App) sets a commit status directly via the GitHub API, which needs
+      # statuses: write. The budgets themselves are still enforced by the LHCI
+      # assertions regardless of whether the status posts.
+      statuses: write
     timeout-minutes: 20
     concurrency:
       group: perf-${{ github.ref }}
@@ -358,6 +364,18 @@ jobs:
     needs: [build, detect-changes]
     env:
       LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
+      # The built-in Actions token (no extra secret). LHCI uses LHCI_GITHUB_TOKEN
+      # for the basic GitHub-status path; on fork PRs this token is read-only so
+      # LHCI just warns and skips the status (it never fails the build on a
+      # status-post error). For the richer per-category checks, swap to the LHCI
+      # GitHub App's LHCI_GITHUB_APP_TOKEN secret instead.
+      LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # On pull_request the runner checks out the ephemeral MERGE commit, so LHCI
+      # would post its lhci/url/* statuses there — invisible on the PR. Pin the
+      # build's current hash to the PR HEAD so the statuses (and their report
+      # links) land on the PR commit; on push events this falls back to the
+      # pushed SHA, which already matches the checked-out HEAD.
+      LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
