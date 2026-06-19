@@ -1,11 +1,15 @@
 // lib/eval/types.ts
 //
-// Shared eval result + judge types for the eval cores. Both the /api/ask
-// quality-eval harness (scripts/ask-eval.ts) and the agent/prompt-eval harness
-// (scripts/agent-eval.ts) grade answers through ONE extracted judge() and gate
-// that judge with ONE calibration shape — these schemas are that shared
-// contract. Keeping them here (validated by Zod at the boundary) means a
-// malformed calibration result fails at parse, not deep inside a CI run after
+// Shared eval result + judge types. The /api/ask quality-eval harness
+// (scripts/ask-eval.ts) already grades answers through the ONE extracted
+// judge() (lib/eval/judge.ts), the load-bearing "one judge prompt" invariant.
+// These calibration schemas define the judge-calibration CONTRACT that the
+// agent/prompt-eval harness (scripts/agent-eval.ts, added in unit C-b) will
+// consume. ask-eval.ts still uses its own local CalibrationResult type for now
+// (it carries an extra `kind` field), so unifying the two calibration shapes
+// onto these schemas is a deliberate follow-up; the shared judge() already
+// guarantees the one-judge-prompt property. Validated by Zod at the boundary so
+// a malformed calibration result fails at parse, not deep inside a CI run after
 // spending Gateway tokens.
 
 import { z } from 'zod';

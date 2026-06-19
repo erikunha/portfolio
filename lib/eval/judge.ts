@@ -26,8 +26,10 @@ export const JUDGE_SYSTEM =
   'Respond with a single minified JSON object and nothing else: ' +
   '{"pass": boolean, "reason": "<=20 words"}.';
 
-// The judge only reads id/question/kind/expect — the common subset shared by
-// both corpus items and calibration gold cases, so a single judge() serves both.
+// The minimal shape the judge reads: id/question/kind/expect. ask-eval's corpus
+// items and calibration gold cases already match it; the agent-eval harness
+// (C-b) adapts its differently-named case fields onto this shape before calling
+// judge(), so one judge() serves every caller.
 export type JudgeItem = { id: string; question: string; kind: string; expect: string };
 
 /**
