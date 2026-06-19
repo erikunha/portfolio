@@ -520,10 +520,24 @@ jobs:
           # affect the build / e2e / perf gates) but cannot change a single rendered
           # pixel. Gating Argos on `app` made workflow-only PRs run the visual suite
           # and report spurious "N added" diffs against the baseline.
+          # package.json is EXCLUDED from the plain path list: a script-only edit
+          # (e.g. adding a `scripts` entry) cannot change a rendered pixel, yet would
+          # trip the visual suite and report spurious Argos diffs. Most rendering-
+          # affecting dependency changes go through pnpm-lock.yaml (kept below). But
+          # two package.json regions can change emitted CSS/JS WITHOUT a lockfile diff:
+          # `browserslist` (build target) and the `pnpm` block (`overrides` pins
+          # transitive versions). Compare ONLY those fields SEMANTICALLY with jq (a
+          # line-grep misses array-element edits like "chrome >= 93" -> ">= 95", whose
+          # changed line does not contain the key name); re-arm `ui` only when they
+          # differ. jq is preinstalled on GitHub hosted runners.
           ui_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
             app/ components/ design-system/ lib/ content/ public/ \
-            next.config.ts playwright.config.ts package.json pnpm-lock.yaml)
-          [[ -n "$ui_changed" ]] \
+            next.config.ts playwright.config.ts pnpm-lock.yaml)
+          base_render=$(git show "$BASE_SHA:package.json" 2>/dev/null | jq -cS '{browserslist,pnpm}' 2>/dev/null || echo null)
+          head_render=$(git show "$HEAD_SHA:package.json" 2>/dev/null | jq -cS '{browserslist,pnpm}' 2>/dev/null || echo null)
+          ui_pkg_changed=""
+          if [[ "$base_render" != "$head_render" ]]; then ui_pkg_changed=1; fi
+          [[ -n "$ui_changed" || -n "$ui_pkg_changed" ]] \
             && echo "ui=true" >> "$GITHUB_OUTPUT" \
             || echo "ui=false" >> "$GITHUB_OUTPUT"
 
@@ -644,4 +658,64 @@ jobs:
         with:
           name: visual-report-${{ matrix.project }}
           path: test-results/
+
+  semgrep:
+    name: Semgrep (static analysis, non-blocking)
+    runs-on: ubuntu-latest
+    # Non-blocking: report-only until the false-positive-rate baseline is recorded
+    # in DECISIONS.md (see ADR). Promotion to blocking is a separate change.
+    continue-on-error: true
+    permissions:
+      security-events: write   # required to upload SARIF to the code-scanning tab
+      contents: read
+    timeout-minutes: 10
+    concurrency:
+      group: semgrep-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+
+      - name: Install Semgrep (exact-pinned) and resolve its path
+        # The wrapper invokes semgrep by name, but pip's console-script bin dir
+        # is NOT reliably on the Node child process's PATH on hosted runners, and
+        # `python -m semgrep` is not a supported entrypoint (semgrep ships a
+        # console script only). Resolve the absolute console-script path from the
+        # active interpreter and hand it to the wrapper via SEMGREP_BIN, so the
+        # invocation is PATH-independent. The trailing --version fails the step
+        # early with a clear signal if resolution is wrong.
+        run: |
+          # WHY setuptools<81: semgrep 1.97.0 imports pkg_resources at runtime,
+          # which setuptools >=81 removed (ModuleNotFoundError: No module named
+          # 'pkg_resources'). Pin setuptools <81 to keep pkg_resources available.
+          # External-dep incompatibility, not our code; verified locally — 80.10.2
+          # imports OK, 82.0.1 raises. See DECISIONS.md.
+          pip install "setuptools<81" semgrep==1.97.0
+          SEMGREP_BIN=$(python -c "import os,sysconfig,site,shutil; c=[os.path.join(sysconfig.get_path('scripts'),'semgrep'),os.path.join(site.getuserbase(),'bin','semgrep')]; w=shutil.which('semgrep'); c=c+[w] if w else c; print(next((p for p in c if os.path.exists(p)),''))")
+          test -n "$SEMGREP_BIN" || { echo '::error::semgrep console script not found after install'; exit 1; }
+          echo "SEMGREP_BIN=$SEMGREP_BIN" >> "$GITHUB_ENV"
+          "$SEMGREP_BIN" --version
+
+      - name: Run Semgrep (SARIF, report-only)
+        # Omit --error so semgrep exits 0 on findings and the step writes SARIF
+        # reliably (continue-on-error is a JOB-level soft-success flag; it does
+        # NOT suppress step exit codes). When promoting to blocking: remove
+        # continue-on-error AND add --error here together, so semgrep exits 1 on
+        # findings and the step (and job) actually fail.
+        run: node scripts/run-semgrep.mjs --sarif semgrep.sarif
+
+      - name: Upload SARIF to code-scanning
+        # Guard on the file existing, not just always(): if the scan step never
+        # wrote SARIF (e.g. semgrep failed to run), uploading a missing path
+        # fails with a confusing second error that masks the real cause. This
+        # makes "no findings file" a clean skip and keeps the failure signal on
+        # the scan step itself.
+        if: always() && hashFiles('semgrep.sarif') != ''
+        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
 
