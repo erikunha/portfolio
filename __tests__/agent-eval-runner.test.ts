@@ -36,6 +36,10 @@ const caseStats: CaseStats[] = [
   },
 ];
 
+// Fixed timestamp injected into buildAggregate (now pure) so the `ts` field is
+// asserted exactly, not just typeof-checked.
+const TS = '2026-06-19T12:00:00.000Z';
+
 describe('scripts/agent-eval buildAggregate', () => {
   it('exposes the pinned distinct Redis key and the tiered models', () => {
     expect(AGENT_EVAL_REDIS_KEY).toBe('agent-eval:latest');
@@ -46,13 +50,14 @@ describe('scripts/agent-eval buildAggregate', () => {
 
   it('assembles the full aggregate shape', () => {
     const agg = buildAggregate({
+      ts: TS,
       runs: 3,
       calibration: calibration(true),
       caseStats,
       costEstimateUsd: 0.42,
       withinBudget: true,
     });
-    expect(typeof agg.ts).toBe('string');
+    expect(agg.ts).toBe(TS); // injected verbatim — buildAggregate is now pure
     expect(agg.targetModelMechanical).toBe(MODELS.mechanical);
     expect(agg.targetModelJudgment).toBe(MODELS.judgment);
     expect(agg.judgeModel).toBe(MODELS.judge);
@@ -67,6 +72,7 @@ describe('scripts/agent-eval buildAggregate', () => {
 
   it('gate.passed is true only when calibration passed AND within budget', () => {
     const ok = buildAggregate({
+      ts: TS,
       runs: 3,
       calibration: calibration(true),
       caseStats,
@@ -76,6 +82,7 @@ describe('scripts/agent-eval buildAggregate', () => {
     expect(ok.gate).toEqual({ calibrationPassed: true, withinBudget: true, passed: true });
 
     const calFail = buildAggregate({
+      ts: TS,
       runs: 3,
       calibration: calibration(false),
       caseStats,
@@ -86,6 +93,7 @@ describe('scripts/agent-eval buildAggregate', () => {
     expect(calFail.gate.calibrationPassed).toBe(false);
 
     const overBudget = buildAggregate({
+      ts: TS,
       runs: 3,
       calibration: calibration(true),
       caseStats,

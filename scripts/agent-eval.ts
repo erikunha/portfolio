@@ -97,9 +97,12 @@ export type AgentEvalAggregate = {
  * Pure aggregate assembler. Folds the calibration result, per-case Monte-Carlo
  * stats, the cost estimate, and the budget verdict into the published shape and
  * computes the run-level gate: the run PASSES only when calibration passed AND
- * the projection was within budget.
+ * the projection was within budget. `ts` is injected by the caller (not read
+ * from the clock here) so this stays pure and unit-testable against an exact
+ * timestamp.
  */
 export function buildAggregate(args: {
+  ts: string;
   runs: number;
   calibration: CalibrationResult;
   caseStats: CaseStats[];
@@ -108,7 +111,7 @@ export function buildAggregate(args: {
 }): AgentEvalAggregate {
   const calibrationPassed = args.calibration.passed;
   return {
-    ts: new Date().toISOString(),
+    ts: args.ts,
     targetModelMechanical: MODELS.mechanical,
     targetModelJudgment: MODELS.judgment,
     judgeModel: MODELS.judge,
@@ -150,6 +153,9 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
+  // Single run timestamp, read from the clock once here (the only impure read)
+  // and injected into every buildAggregate() call so the assembler stays pure.
+  const ts = new Date().toISOString();
   const runs = resolveRuns(process.env.EVAL_RUNS);
   const cases = await loadCases();
 
@@ -174,6 +180,7 @@ async function main(): Promise<void> {
       judgeCostUsdFrom(calibration.judgeInputTokens, calibration.judgeOutputTokens).toFixed(4),
     );
     const partial = buildAggregate({
+      ts,
       runs,
       calibration,
       caseStats: [],
@@ -214,6 +221,7 @@ async function main(): Promise<void> {
   const budget = assertWithinBudget({ projectedUsd, doubled: false });
   if (!budget.ok) {
     const aborted = buildAggregate({
+      ts,
       runs,
       calibration,
       caseStats: [],
@@ -256,6 +264,7 @@ async function main(): Promise<void> {
   }
 
   const aggregate = buildAggregate({
+    ts,
     runs,
     calibration,
     caseStats,

@@ -34,7 +34,6 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
-  vi.useRealTimers();
 });
 
 describe('agent-eval integration (SDK mocked, no real Gateway call)', () => {

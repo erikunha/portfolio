@@ -54,7 +54,6 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
-  vi.useRealTimers();
 });
 
 describe('lib/eval/grade gradeRun', () => {

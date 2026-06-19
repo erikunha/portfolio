@@ -25,7 +25,6 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
-  vi.useRealTimers();
 });
 
 describe('lib/eval/run-target runTarget', () => {
@@ -40,6 +39,10 @@ describe('lib/eval/run-target runTarget', () => {
     expect(arg.model).toBe('anthropic/claude-haiku-4-5');
     expect(arg.system).toBe(testCase.target.systemText);
     expect(arg.prompt).toBe(testCase.prompt);
+    // Bounded, deterministic invocation: caps per-run spend (cost projection
+    // holds) and removes sampling noise from the measured prompt-adherence.
+    expect(arg.maxOutputTokens).toBe(512);
+    expect(arg.temperature).toBe(0);
     expect(r.errored).toBe(false);
     expect(r.output).toBe('git add lib/foo.ts');
     expect(r.inputTokens).toBe(120);
