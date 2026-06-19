@@ -3,14 +3,19 @@ import { describe, expect, it } from 'vitest';
 
 const ci = readFileSync(`${process.cwd()}/.github/workflows/ci.yml`, 'utf8');
 
-// Extract the path list of a `<var>=$(git diff ... )` assignment in detect-changes.
-// The first ')' after the assignment closes the command substitution; none of the
-// paths or the `"$BASE_SHA...$HEAD_SHA"` range contain a ')'.
+// Extract the full `<var>=$(git diff ... )` assignment in detect-changes. Balances
+// parens from the opening `$(` so `:(exclude)<path>` pathspecs (which contain their
+// own parens) don't truncate the slice at the wrong ')'.
 function gitDiffPaths(varName: string): string {
   const start = ci.indexOf(`${varName}=$(git diff`);
   if (start === -1) throw new Error(`${varName} assignment not found in ci.yml`);
-  const end = ci.indexOf(')', start);
-  return ci.slice(start, end);
+  let depth = 0;
+  let i = ci.indexOf('$(', start) + 1; // index of the opening '('
+  for (; i < ci.length; i++) {
+    if (ci[i] === '(') depth++;
+    else if (ci[i] === ')' && --depth === 0) break;
+  }
+  return ci.slice(start, i);
 }
 
 describe('ci.yml detect-changes `ui` filter (visual / Argos gate)', () => {
@@ -30,6 +35,17 @@ describe('ci.yml detect-changes `ui` filter (visual / Argos gate)', () => {
 
   it('keeps package.json in the broader `app` filter (build/e2e/perf still gate on it)', () => {
     expect(app).toMatch(/\bpackage\.json\b/);
+  });
+
+  it('excludes lib/eval and lib tests from the ui filter (harness/tests never render)', () => {
+    // lib/ is gated (it holds render-affecting runtime code), but lib/eval/ is
+    // eval-harness code and lib/__tests__/ is unit tests — neither changes a pixel,
+    // yet both would otherwise trip the visual suite + spurious Argos on every
+    // agent-eval sub-PR. They are carved out via :(exclude) pathspecs.
+    expect(ui).toMatch(/:\(exclude\)lib\/eval\/\*\*/);
+    expect(ui).toMatch(/:\(exclude\)lib\/__tests__\/\*\*/);
+    // The carve-out is surgical: lib/ itself stays in the gated list.
+    expect(ui).toMatch(/\blib\/\s/);
   });
 
   it('re-arms `ui` via a semantic jq compare of package.json render fields', () => {

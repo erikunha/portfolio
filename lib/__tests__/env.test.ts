@@ -108,6 +108,14 @@ describe('lib/env.ts — boot-time config integrity', () => {
         const full = join(dir, e.name);
         if (e.isDirectory()) {
           if (e.name === 'node_modules' || e.name === '__tests__') return [];
+          // lib/eval/ is eval-harness code: it is imported ONLY by the standalone
+          // tsx harness scripts/ask-eval.ts (and scripts/agent-eval.ts, added in
+          // unit C-b), never by the Next.js runtime (no app/ module imports it).
+          // It runs outside the
+          // runtime boundary and keeps its own direct process.env presence guards
+          // by design — the SAME rationale that excludes scripts/ above. Scoping
+          // this invariant to runtime code, not harness code, keeps it precise.
+          if (full.endsWith(join('lib', 'eval'))) return [];
           return walk(full);
         }
         return /\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name) ? [full] : [];
