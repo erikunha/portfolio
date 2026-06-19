@@ -57,11 +57,14 @@ jobs:
       - name: Acknowledge the review request
         env:
           GH_TOKEN: ${{ github.token }}
+          # GH_REPO + --repo: this step runs BEFORE checkout, so gh cannot infer the
+          # repo from a .git dir ("fatal: not a git repository"); name it explicitly.
+          GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.issue.number }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           printf "Claude Code is working…\n\nI'll analyze this and get back to you.\n\n[View job run](%s)\n" "$RUN_URL" \
-            | gh pr comment "$PR_NUMBER" --body-file -
+            | gh pr comment "$PR_NUMBER" --repo "$GH_REPO" --body-file -
       # Gives the action a configured git repo + authenticated remote to fetch and
       # diff the PR branch (omitting this fails on git fetch / git hash-object).
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -241,10 +244,11 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.issue.number }}
         run: |
           if [ -s /tmp/claude-review.md ]; then
-            gh pr comment "$PR_NUMBER" --body-file /tmp/claude-review.md
+            gh pr comment "$PR_NUMBER" --repo "$GH_REPO" --body-file /tmp/claude-review.md
           else
             echo "No /tmp/claude-review.md was produced; nothing to publish."
           fi
