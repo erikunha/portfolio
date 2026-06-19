@@ -169,6 +169,11 @@ export async function runAbArms(
       for (let i = 0; i < opts.runs; i++) {
         const target = await runTarget(armCase, { model });
         if (target.errored) {
+          // Surface the failure detail (as the single-arm loop does) so an arm
+          // error is diagnosable, not silently counted as a fail.
+          console.log(
+            `  ERROR (A/B) [${c.tier}] ${c.id} run ${i + 1}/${opts.runs} — ${target.detail}`,
+          );
           runResults.push(false);
           continue;
         }

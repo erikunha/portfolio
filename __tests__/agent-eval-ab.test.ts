@@ -11,7 +11,7 @@
 // projection that fits under the doubled cap but would bust the single cap is
 // allowed in --ab mode and rejected without it.
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockGenerateText } = vi.hoisted(() => ({ mockGenerateText: vi.fn() }));
 vi.mock('ai', () => ({ generateText: mockGenerateText }));
@@ -26,11 +26,10 @@ function reply(text: string) {
 }
 
 beforeEach(() => {
+  // The `ai` module mock (vi.mock above) persists across tests; mockReset clears
+  // its impl/calls between tests. vi.restoreAllMocks() would NOT undo a module
+  // mock, so there is deliberately no afterEach here.
   mockGenerateText.mockReset();
-});
-
-afterEach(() => {
-  vi.restoreAllMocks();
 });
 
 describe('agent-eval --ab (SDK mocked, no real Gateway call)', () => {
@@ -77,9 +76,10 @@ describe('agent-eval --ab (SDK mocked, no real Gateway call)', () => {
     const r = assertWithinBudget({ projectedUsd: overDoubled, doubled: true });
     expect(r.ok).toBe(false);
     if (!r.ok) {
-      // Match the dollar-prefixed cap ("$4"), not the bare "4" which a larger
-      // figure like "$40" would also satisfy.
-      expect(r.reason).toContain(`$${MAX_JOB_COST_USD * 2}`);
+      // Assert the CAP clause specifically ("cap of $4"). A bare "$4" would also
+      // be satisfied by the projection "$4.01" in the same string, so it would
+      // never actually test the cap value.
+      expect(r.reason).toContain(`cap of $${MAX_JOB_COST_USD * 2}`);
     }
   });
 });
