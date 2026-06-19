@@ -49,17 +49,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      # Immediate feedback, the way @claude tag mode does it: post a "working" comment
+      # before the review starts. Deterministic (a workflow step, not the model, which
+      # cannot post early enough), authored by github-actions via the workflow token. The
+      # body contains no /claude-review token, and GITHUB_TOKEN-authored comments do not
+      # re-trigger workflows, so this never re-fires this workflow.
+      - name: Acknowledge the review request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          printf "Claude Code is working…\n\nI'll analyze this and get back to you.\n\n[View job run](%s)\n" "$RUN_URL" \
+            | gh pr comment "$PR_NUMBER" --body-file -
       # Gives the action a configured git repo + authenticated remote to fetch and
       # diff the PR branch (omitting this fails on git fetch / git hash-object).
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 1
       - uses: anthropics/claude-code-action@806af32823ef69c8ef357086c573a902af641307 # v1
-        # PR_NUMBER is exported to the action (and the model's shell) so the prompt's
-        # `gh pr comment "$PR_NUMBER"` publish step has a real value; on issue_comment
-        # the PR number is github.event.issue.number, not auto-exported otherwise.
-        env:
-          PR_NUMBER: ${{ github.event.issue.number }}
         with:
           # Claude Max subscription token (no per-use API billing).
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -198,37 +206,45 @@ jobs:
               before merge but is not a ship-stopper.
             - Advisory: a worthwhile improvement the author may reasonably defer.
 
-            ## 7. Publish your review yourself
+            ## 7. How to publish your review
 
-            This action runs in automation mode and does NOT post your output for you:
-            producing text alone publishes nothing. You MUST publish with your tools,
-            targeting this PR (you know its number from the context; it is also in the
-            $PR_NUMBER environment variable):
+            Your reply text is NOT posted to the PR. Publish via these two channels only:
 
-            1. FIRST, post a one-line acknowledgement so the author sees the review has
-               started:
-               gh pr comment "$PR_NUMBER" --body "Reviewing this PR; findings to follow."
-            2. Post each inline finding with the create_inline_comment tool, anchored to
-               a line this PR changed.
-            3. Post exactly ONE top-level review as a PR comment with
-               gh pr comment "$PR_NUMBER" --body "...". Wrap the markdown body in a
-               single-quoted heredoc via command substitution so backticks, quotes, and
-               newlines survive, for example:
-               gh pr comment "$PR_NUMBER" --body "$(cat <<'REVIEW'
-               <your markdown summary here>
-               REVIEW
-               )"
+            - INLINE findings: use the create_inline_comment tool, one call per finding,
+              each anchored to a specific line this PR changed (these are the Copilot-style
+              review threads on the code). Use them for every concrete issue.
+            - TOP-LEVEL summary: use the Write tool to save your single markdown summary to
+              exactly the path /tmp/claude-review.md. Do NOT post the summary yourself with
+              gh or any shell command (those are blocked by the tool allowlist); a workflow
+              step publishes that file for you as one PR comment. ALWAYS write this file,
+              even for a clean approval, or no summary is posted.
 
-            If you call none of these tools, nothing is posted. The top-level summary
-            contains: Executive Summary (what the PR does and your confidence); Strengths
-            (brief, only if genuine); Critical Issues; Important Issues; Advisory
-            Improvements; and a Merge Recommendation, exactly one of:
+            The /tmp/claude-review.md summary contains: Executive Summary (what the PR does
+            and your confidence); Strengths (brief, only if genuine); Critical Issues;
+            Important Issues; Advisory Improvements; and a Merge Recommendation, exactly one
+            of:
             ✅ Approve   🟡 Approve with Minor Changes   🟠 Request Changes   🔴 Reject
-            State production-readiness plainly. Anchor every claim to file:line, and only
-            to lines this PR changed.
-          # Tools: file reading (Read/Grep/Glob) so the review uses full repo context
-          # per the prompt; the inline-comment tool (what makes this Copilot-like); and
-          # gh pr (diff/view to read the change, comment to PUBLISH the ack + summary,
-          # since automation mode does not auto-post the model's output).
+            State production-readiness plainly. Anchor every claim to file:line, and only to
+            lines this PR changed.
+          # Tools: Read/Grep/Glob for repo context; gh pr diff/view to read the change;
+          # the inline-comment tool for line-anchored Copilot-style threads; and Write so
+          # the model saves its top-level summary to /tmp/claude-review.md (the Publish
+          # step below posts it). The model does NOT post via shell: command-substitution
+          # / heredoc forms are blocked by the Bash allowlist (they caused permission
+          # denials and an empty review), so the top-level post is a deterministic step.
           claude_args: >-
-            --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*)"
+            --allowedTools "Read,Grep,Glob,Write,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*)"
+      # Publish the model's top-level summary. Deterministic because automation mode does
+      # not auto-post and the model's own shell posting is blocked by the tool allowlist.
+      # always(): still publish the summary even if the action step reports non-success.
+      - name: Publish the review summary
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          if [ -s /tmp/claude-review.md ]; then
+            gh pr comment "$PR_NUMBER" --body-file /tmp/claude-review.md
+          else
+            echo "No /tmp/claude-review.md was produced; nothing to publish."
+          fi
