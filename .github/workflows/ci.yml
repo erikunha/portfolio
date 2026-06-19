@@ -669,12 +669,20 @@ jobs:
         run: pip install semgrep==1.97.0
 
       - name: Run Semgrep (SARIF, report-only)
-        # Do NOT pass --error here: continue-on-error already neutralizes exit codes,
-        # and we want SARIF written regardless so findings reach code-scanning.
+        # Omit --error so semgrep exits 0 on findings and the step writes SARIF
+        # reliably (continue-on-error is a JOB-level soft-success flag; it does
+        # NOT suppress step exit codes). When promoting to blocking: remove
+        # continue-on-error AND add --error here together, so semgrep exits 1 on
+        # findings and the step (and job) actually fail.
         run: node scripts/run-semgrep.mjs --sarif semgrep.sarif
 
       - name: Upload SARIF to code-scanning
-        if: always()
+        # Guard on the file existing, not just always(): if the scan step never
+        # wrote SARIF (e.g. semgrep failed to run), uploading a missing path
+        # fails with a confusing second error that masks the real cause. This
+        # makes "no findings file" a clean skip and keeps the failure signal on
+        # the scan step itself.
+        if: always() && hashFiles('semgrep.sarif') != ''
         uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
         with:
           sarif_file: semgrep.sarif

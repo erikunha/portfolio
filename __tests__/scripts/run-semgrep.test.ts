@@ -1,5 +1,12 @@
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -37,6 +44,63 @@ describe('run-semgrep wrapper', () => {
     });
     expect(r.status).toBe(2);
     expect(r.stderr).toMatch(/semgrep.*not.*found|install/i);
+  });
+
+  it('exits 2 when --sarif is passed with no path argument', () => {
+    // A fat-fingered `--sarif` with no following path must abort loudly, not
+    // silently drop the SARIF flags and run a plain scan with no output file.
+    const r = run(['--sarif']);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/--sarif requires a path/i);
+  });
+
+  it('honors SEMGREP_BIN exactly (no fallback) and splices well-formed scan args', () => {
+    // Point the wrapper at a stub "semgrep" that records the argv it is invoked
+    // with. This exercises resolveRunner + the runner.slice(1) splice + the full
+    // config/flag assembly WITHOUT semgrep installed, so it runs everywhere
+    // (incl. the CI `test` job, which the runIf(semgrepInstalled) fixture tests
+    // never reach). Also proves an explicit SEMGREP_BIN is honored with no
+    // fallback to `python -m semgrep`.
+    const dir = mkdtempSync(join(tmpdir(), 'semgrep-stub-'));
+    tmpDirs.push(dir);
+    const out = join(dir, 'argv.json');
+    const stub = join(dir, 'fake-semgrep.mjs');
+    writeFileSync(
+      stub,
+      `#!/usr/bin/env node
+import { writeFileSync } from 'node:fs';
+const a = process.argv.slice(2);
+if (a.includes('--version')) { console.log('1.97.0'); process.exit(0); }
+writeFileSync(process.env.STUB_OUT, JSON.stringify(a));
+process.exit(0);
+`,
+      { mode: 0o755 },
+    );
+    const r = spawnSync(
+      'node',
+      ['scripts/run-semgrep.mjs', '--sarif', join(dir, 'o.sarif'), 'lib'],
+      {
+        encoding: 'utf8',
+        env: { ...process.env, SEMGREP_BIN: stub, STUB_OUT: out },
+      },
+    );
+    expect(r.status).toBe(0);
+    const argv = JSON.parse(readFileSync(out, 'utf8')) as string[];
+    expect(argv[0]).toBe('scan');
+    expect(argv).toEqual(
+      expect.arrayContaining([
+        '--config',
+        '.semgrep',
+        'p/typescript',
+        'p/react',
+        'p/nextjs',
+        '--sarif',
+        '--output',
+        '--metrics',
+        'off',
+      ]),
+    );
+    expect(argv[argv.length - 1]).toBe('lib'); // scan path passed through
   });
 
   it.runIf(semgrepInstalled)('flags the vulnerable fixture and writes well-formed SARIF', () => {

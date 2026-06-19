@@ -5,7 +5,17 @@
 // registry packs (p/typescript, p/react, p/nextjs) fetch registry-latest (drift documented in the ADR).
 import { spawnSync } from 'node:child_process';
 
-const SEMGREP_BIN = process.env.SEMGREP_BIN ?? 'semgrep';
+// Candidate invocations, probed in order. An explicit SEMGREP_BIN override is
+// honored exactly (no fallback — a wrong override should fail loudly, not get
+// silently swapped). Otherwise we try the bare console script first, then the
+// `python -m semgrep` module form: pip installs semgrep into the active
+// interpreter's site-packages even when its console-script bin dir is NOT on
+// PATH (the classic hosted-runner case that broke the CI `semgrep` job), and
+// the module form resolves through the interpreter, bypassing PATH entirely.
+const SEMGREP_BIN = process.env.SEMGREP_BIN;
+const RUNNER_CANDIDATES = SEMGREP_BIN
+  ? [[SEMGREP_BIN]]
+  : [['semgrep'], ['python3', '-m', 'semgrep'], ['python', '-m', 'semgrep']];
 const DEFAULT_PATHS = ['app', 'lib', 'components', 'scripts'];
 
 // The Semgrep CLI has no registry-pack version-pinning syntax, so these fetch
@@ -18,25 +28,39 @@ function parseArgs(argv) {
   const args = { sarif: null, error: false, paths: [] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === '--sarif') args.sarif = argv[++i];
-    else if (a === '--error') args.error = true;
+    if (a === '--sarif') {
+      args.sarif = argv[++i];
+      // Reject undefined (flag was last) AND '' (empty path): both would later
+      // be falsy at the `args.sarif ?` guard and silently drop the SARIF flags.
+      if (!args.sarif) {
+        console.error('[run-semgrep] --sarif requires a path argument');
+        process.exit(2);
+      }
+    } else if (a === '--error') args.error = true;
     else args.paths.push(a);
   }
   if (args.paths.length === 0) args.paths = DEFAULT_PATHS;
   return args;
 }
 
-function semgrepAvailable() {
-  const probe = spawnSync(SEMGREP_BIN, ['--version'], { stdio: 'ignore' });
-  return probe.status === 0;
+// Probe each candidate with `--version`; return the first that exits 0 (e.g.
+// ['semgrep'] or ['python3', '-m', 'semgrep']). null means none resolved.
+function resolveRunner() {
+  for (const cmd of RUNNER_CANDIDATES) {
+    const probe = spawnSync(cmd[0], [...cmd.slice(1), '--version'], { stdio: 'ignore' });
+    if (probe.status === 0) return cmd;
+  }
+  return null;
 }
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
 
-  if (!semgrepAvailable()) {
+  const runner = resolveRunner();
+  if (!runner) {
+    const tried = RUNNER_CANDIDATES.map((c) => c.join(' ')).join('", "');
     console.error(
-      `[run-semgrep] semgrep binary not found (tried "${SEMGREP_BIN}"). ` +
+      `[run-semgrep] semgrep not found (tried "${tried}"). ` +
         'Install with: pip install semgrep==1.97.0 — or rely on CI (authoritative).',
     );
     process.exit(2);
@@ -49,6 +73,7 @@ function main() {
   ];
 
   const cliArgs = [
+    ...runner.slice(1),
     'scan',
     ...configFlags,
     ...(args.error ? ['--error'] : []),
@@ -58,7 +83,7 @@ function main() {
     ...args.paths,
   ];
 
-  const res = spawnSync(SEMGREP_BIN, cliArgs, { stdio: 'inherit' });
+  const res = spawnSync(runner[0], cliArgs, { stdio: 'inherit' });
   if (res.error) {
     console.error(`[run-semgrep] exec failed: ${res.error.message}`);
     process.exit(2);

@@ -39,4 +39,10 @@ describe('ci.yml semgrep job invariants', () => {
     expect(uses.length).toBeGreaterThan(0);
     for (const u of uses) expect(u).toMatch(/@[0-9a-f]{40}$/);
   });
+
+  it('guards SARIF upload on the file existing (no misleading second failure)', () => {
+    // always() alone uploads even when the scan never wrote SARIF, producing a
+    // confusing "Path does not exist" error that masks the real cause.
+    expect(job).toMatch(/if:\s*always\(\)\s*&&\s*hashFiles\('semgrep\.sarif'\)\s*!=\s*''/);
+  });
 });

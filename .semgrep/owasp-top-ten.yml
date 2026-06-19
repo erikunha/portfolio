@@ -9,10 +9,12 @@ rules:
       argv array, or validate/escape the input. OWASP A03:2021 Injection.
     mode: taint
     # WHY: $REQ is intentionally broad for the pilot — it treats every expression
-    # as a taint source, so this fires on any exec($CMD) where $CMD is non-constant
-    # rather than tracing a real request flow. The pilot errs toward catching more.
-    # Before the promotion-to-blocking gate, tighten this to real input sources
-    # (req.query, process.argv, route params) to reduce false positives.
+    # as a taint source (constants included; the pattern does not exclude them),
+    # so this fires on any exec($CMD, ...) call regardless of whether $CMD is a
+    # constant or a runtime value, rather than tracing a real request flow. The
+    # pilot errs toward catching more. Before the promotion-to-blocking gate,
+    # tighten this to real input sources (req.query, process.argv, route params)
+    # to reduce false positives.
     pattern-sources:
       - pattern: $REQ
     pattern-sinks:
