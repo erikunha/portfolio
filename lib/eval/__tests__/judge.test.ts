@@ -25,6 +25,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.useRealTimers(); // safe no-op unless a test opted into fake timers
 });
 
 describe('lib/eval/judge', () => {
@@ -65,8 +66,13 @@ describe('lib/eval/judge', () => {
   });
 
   it('fails closed with the retry-exhaustion prefix after all attempts throw', async () => {
+    // Fake timers so the retry loop's 1s + 2s exponential backoff resolves
+    // instantly instead of costing 3 real seconds of wall-clock per run.
+    vi.useFakeTimers();
     mockGenerateText.mockRejectedValue(new Error('network blip'));
-    const v = await judge(item, 'an answer', { model: 'm' });
+    const vPromise = judge(item, 'an answer', { model: 'm' });
+    await vi.runAllTimersAsync(); // drive both backoffs + flush microtasks
+    const v = await vPromise;
     expect(v.pass).toBe(false);
     expect(v.reason.startsWith(`judge errored after ${MAX_JUDGE_RETRIES + 1} attempts`)).toBe(true);
     // 1 initial + MAX_JUDGE_RETRIES retries
