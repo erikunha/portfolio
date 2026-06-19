@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-06-19 — Dependency audit: override undici ^7.28.0 + js-yaml ^4.2.0
+
+- **2026-06-19** — **pnpm.overrides: undici ^7.28.0** (GHSA-vmh5-mc38-953g, GHSA-vxpw-j846-p89q, GHSA-hm92-r4w5-c3mj, GHSA-pr7r-676h-xcf6, GHSA-p88m-4jfj-68fv) + **js-yaml ^4.2.0** (GHSA-h67p-54hq-rp68). Root cause: `pnpm audit --audit-level=moderate` flagged undici 7.27.2 (transitive via jsdom, dev-only) with 3 HIGH + 2 MODERATE advisories, and js-yaml 3.14.2 (transitive via @lhci/utils) with 1 MODERATE advisory. **Decision:** both dependencies are overridable without API breakage — undici ^7.28.0 is a patch/minor-range bump within the 7.x major (jsdom is compatible), and js-yaml 3.14.2 → 4.2.0 is a major bump but @lhci/utils accepts js-yaml 4.x (it does not use the removed safeLoad API; verified by running `pnpm exec lhci --version` and `pnpm exec commitlint --version` post-override). js-yaml override eliminates the GHSA (⟵ @lhci/utils previously pinned to 3.14.2 for unrelated reasons, now patched); no lhci functionality lost. Commit `pnpm install` locks the overridden versions. **Audit result post-override:** `pnpm audit --audit-level=moderate` → exit 0 ("No known vulnerabilities found"). Typecheck + dep-pinning tests remain green. _Reversible: remove both overrides from pnpm.overrides block._
+
 ## 2026-06-19 — Static analysis: Semgrep CLI in CI (non-blocking)
 
 - **2026-06-19** — **Semgrep CLI wired as a CI security-measuring layer** (`feat/platform-gaps-2026-semgrep`). Adds a `semgrep` job to `ci.yml`, a `scripts/run-semgrep.mjs` wrapper, a `pnpm lint:semgrep` script, and the Trail of Bits `semgrep` skill at `.claude/skills/semgrep/`. Rationale: the platform asserts "security is implicit on every change" but nothing *measured* it per-diff; the 5-agent battery *reasons about* vulnerabilities, Semgrep *measures* them (taint/injection, secrets) deterministically with no hallucination. Complement, not replacement — no battery change. **Pin:** `semgrep==1.97.0` (exact, mirroring `--frozen-lockfile`); the GitHub action and `upload-sarif` are SHA-pinned like every other action.
