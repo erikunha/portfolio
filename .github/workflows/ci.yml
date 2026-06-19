@@ -520,10 +520,24 @@ jobs:
           # affect the build / e2e / perf gates) but cannot change a single rendered
           # pixel. Gating Argos on `app` made workflow-only PRs run the visual suite
           # and report spurious "N added" diffs against the baseline.
+          # package.json is EXCLUDED from the plain path list: a script-only edit
+          # (e.g. adding a `scripts` entry) cannot change a rendered pixel, yet would
+          # trip the visual suite and report spurious Argos diffs. Most rendering-
+          # affecting dependency changes go through pnpm-lock.yaml (kept below). But
+          # two package.json regions can change emitted CSS/JS WITHOUT a lockfile diff:
+          # `browserslist` (build target) and the `pnpm` block (`overrides` pins
+          # transitive versions). Compare ONLY those fields SEMANTICALLY with jq (a
+          # line-grep misses array-element edits like "chrome >= 93" -> ">= 95", whose
+          # changed line does not contain the key name); re-arm `ui` only when they
+          # differ. jq is preinstalled on GitHub hosted runners.
           ui_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
             app/ components/ design-system/ lib/ content/ public/ \
-            next.config.ts playwright.config.ts package.json pnpm-lock.yaml)
-          [[ -n "$ui_changed" ]] \
+            next.config.ts playwright.config.ts pnpm-lock.yaml)
+          base_render=$(git show "$BASE_SHA:package.json" 2>/dev/null | jq -cS '{browserslist,pnpm}' 2>/dev/null || echo null)
+          head_render=$(git show "$HEAD_SHA:package.json" 2>/dev/null | jq -cS '{browserslist,pnpm}' 2>/dev/null || echo null)
+          ui_pkg_changed=""
+          if [[ "$base_render" != "$head_render" ]]; then ui_pkg_changed=1; fi
+          [[ -n "$ui_changed" || -n "$ui_pkg_changed" ]] \
             && echo "ui=true" >> "$GITHUB_OUTPUT" \
             || echo "ui=false" >> "$GITHUB_OUTPUT"
 
