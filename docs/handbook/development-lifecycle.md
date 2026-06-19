@@ -19,7 +19,7 @@ flowchart TD
     battery --> push["git push (pre-push gate chain)"]
     push --> readypr["pnpm ready-for-pr (ci:local + pr-size + gates:runtime)"]
     readypr --> pr["gh pr create (fill template)"]
-    pr --> conv["Copilot convergence loop (rebase, push, resolve threads)"]
+    pr --> conv["Review convergence loop (rebase, push, resolve threads)"]
     conv --> readymerge["pnpm ready-to-merge (gates)"]
     readymerge --> merge["owner squash-merges (#NNN)"]
     merge --> deploy["Vercel deploy"]
@@ -55,7 +55,7 @@ Before every push (and whenever coding work stops), the 5-agent review battery r
 ### 8. Pre-PR -> open PR
 `pnpm ready-for-pr` runs `ci:local` + `pr-size` + `gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). `pr-size` recommends splitting if the diff is too large. Then `gh pr create` fills the PR template (every section must be non-empty, enforced by `validate-pr-body`).
 
-### 9. Copilot convergence loop
+### 9. Review convergence loop
 On the open PR, the `review-convergence` skill drives review to green: rebase before every push, verify the pushed SHA landed, re-request the reviewer(s) (claude[bot] and/or Copilot) after each push, reply-before-resolve on every thread. See [review-merge-release](./review-merge-release.md).
 
 ### 10. Pre-merge gates -> merge
@@ -78,7 +78,7 @@ flowchart LR
         g8["ci:local"] --> g9["bundle-check"] --> g10["pr-size"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["review-pr"]
     end
     subgraph open["post-open"]
-        g13["validate-pr-body"] --> g14["Copilot convergence"]
+        g13["validate-pr-body"] --> g14["Review convergence"]
     end
     subgraph premerge["ready-to-merge"]
         g15["ci:local"] --> g16["branch-protection"] --> g17["Copilot approval"] --> g18["resolved threads"]

@@ -1,6 +1,6 @@
 # Review, Merge & Release
 
-> The gate chain from commit to production, the code-review process, the Copilot convergence loop, and release/rollback. For the CI job graph, see [`/docs/07-workflows`](../07-workflows.md); this doc is the process and the ordering.
+> The gate chain from commit to production, the code-review process, the Review convergence loop, and release/rollback. For the CI job graph, see [`/docs/07-workflows`](../07-workflows.md); this doc is the process and the ordering.
 
 ## The full gate chain (commit -> production)
 
@@ -20,7 +20,7 @@ flowchart TD
     r3 --> r4["ready-for-pr: gates:runtime (LHCI+axe+E2E)"]
     r4 --> r5["review-pr against the diff"]
     r5 --> o1["open PR: validate-pr-body"]
-    o1 --> o2["Copilot convergence loop"]
+    o1 --> o2["Review convergence loop"]
     o2 --> m1["ready-to-merge: ci:local"]
     m1 --> m2["ready-to-merge: branch-protection"]
     m2 --> m3["ready-to-merge: Copilot approval"]
@@ -46,7 +46,7 @@ Review is **mechanical and multi-perspective**. Five fresh-context agents review
 
 **Two triggers:** before any `git push`, and whenever coding work stops. The battery prompts are scoped to the commit type, so a docs-only commit's agents skip the test suite (the stamp counts dispatch, not depth).
 
-## Copilot convergence loop
+## Review convergence loop
 
 An AI reviewer (claude[bot] via /claude-review and/or GitHub Copilot) reviews the open PR. The `review-convergence` skill drives it to green:
 
@@ -54,7 +54,7 @@ An AI reviewer (claude[bot] via /claude-review and/or GitHub Copilot) reviews th
 sequenceDiagram
     participant D as Developer/Agent
     participant GH as GitHub (PR)
-    participant CP as Copilot reviewer
+    participant CP as AI reviewer
     D->>GH: rebase on main, push
     D->>GH: verify head.sha == local HEAD
     D->>CP: re-request review
@@ -64,11 +64,10 @@ sequenceDiagram
         D->>GH: push fix
         D->>GH: reply citing the fix SHA, THEN resolve
     end
-    D->>GH: re-run PR-comment gate if timing race
     D->>D: ready-to-merge passes -> tell owner
 ```
 
-Hard rules (each learned from a real failure): rebase before *every* push; the reply must cite a SHA that is actually on the remote (so reply-after-push-verify); never resolve a thread silently (a thread with one comment is a process failure); if the PR-comment gate fails on a timing race, re-run the workflow rather than pushing a no-op commit.
+Hard rules (each learned from a real failure): rebase before *every* push; the reply must cite a SHA that is actually on the remote (so reply-after-push-verify); never resolve a thread silently (a thread with one comment is a process failure). Separately, the **PR-comment CI gate** can fail on a timing race (the gate ran before the latest review threads landed); when it does, re-run that workflow rather than pushing a no-op commit. This is a property of the CI gate, not a step the `review-convergence` skill drives.
 
 ## Pre-merge gates (`pnpm ready-to-merge`)
 
