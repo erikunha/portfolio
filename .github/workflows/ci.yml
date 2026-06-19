@@ -370,6 +370,12 @@ jobs:
       # status-post error). For the richer per-category checks, swap to the LHCI
       # GitHub App's LHCI_GITHUB_APP_TOKEN secret instead.
       LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # On pull_request the runner checks out the ephemeral MERGE commit, so LHCI
+      # would post its lhci/url/* statuses there — invisible on the PR. Pin the
+      # build's current hash to the PR HEAD so the statuses (and their report
+      # links) land on the PR commit; on push events this falls back to the
+      # pushed SHA, which already matches the checked-out HEAD.
+      LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
