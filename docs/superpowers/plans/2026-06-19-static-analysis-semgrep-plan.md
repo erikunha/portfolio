@@ -459,9 +459,17 @@ Adds a SHA-pinned `semgrep` job to `ci.yml`: installs the exact-pinned Semgrep, 
 
   // Bound the slice to the semgrep job block ONLY (up to the next top-level job
   // key), so a later job's `continue-on-error: true` cannot satisfy an assertion.
-  const semgrepStart = ci.indexOf("\n  semgrep:");
-  const nextJob = ci.indexOf("\n  ", semgrepStart + 10);
-  const job = ci.slice(semgrepStart, nextJob > semgrepStart ? nextJob : undefined);
+  // Match a 2-space-indented sibling key via /\n {2}\S/ — NOT indexOf("\n  "),
+  // which also matches 4-space-indented body lines (it is a substring of "\n    ")
+  // and would collapse the slice to just the heading.
+  const semgrepHeading = "\n  semgrep:";
+  const semgrepStart = ci.indexOf(semgrepHeading);
+  const rest = ci.slice(semgrepStart + semgrepHeading.length);
+  const nextJobRel = rest.search(/\n {2}\S/);
+  const job =
+    nextJobRel === -1
+      ? ci.slice(semgrepStart)
+      : ci.slice(semgrepStart, semgrepStart + semgrepHeading.length + nextJobRel);
 
   describe("ci.yml semgrep job invariants", () => {
     it("defines a semgrep job", () => {
