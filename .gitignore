@@ -69,3 +69,6 @@ tsconfig.tsbuildinfo
 
 # session-owned lock file — machine-generated runtime state, not source
 .claude/scheduled_tasks.lock
+
+# Semgrep local SARIF output
+semgrep.sarif
