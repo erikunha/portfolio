@@ -96,11 +96,11 @@ Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, week
 ```
 commit (scope blocks) -> pnpm pr-size -> (battery + review:findings + review:stamp before push)
   -> pnpm ready-for-pr (ci:local + pr-size + gates:runtime) -> gh pr create (fill the template)
-  -> Copilot convergence loop (rebase, push, re-request, resolve threads) -> pnpm ready-to-merge
+  -> Review convergence loop (rebase, push, re-request, resolve threads) -> pnpm ready-to-merge
   -> repo owner runs gh pr merge (AI agents are blocked from merging)
 ```
 
-Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to avoid the bloated-PR failure mode. See `CLAUDE.md` "Working agreement" and the `copilot-convergence` / `pr-merge-gate` skills.
+Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to avoid the bloated-PR failure mode. See `CLAUDE.md` "Working agreement" and the `review-convergence` / `pr-merge-gate` skills.
 
 ## Releases & deployment
 

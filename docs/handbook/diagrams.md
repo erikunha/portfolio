@@ -14,7 +14,7 @@ flowchart TD
     plan --> branch["feature branch"] --> tdd["TDD implement"]
     tdd --> battery["review battery + stamp"]
     battery --> push["pre-push gates"] --> pr["PR"]
-    pr --> conv["Copilot convergence"] --> merge["owner squash-merge"]
+    pr --> conv["Review convergence"] --> merge["owner squash-merge"]
     merge --> deploy["deploy"] --> smoke["smoke test"] --> adr["ADR + handoff"]
     adr --> idea
 ```

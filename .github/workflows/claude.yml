@@ -2,7 +2,7 @@
 #
 # Opt-in second AI reviewer/implementer: acts only when a human writes "@claude"
 # in an issue or PR comment. It SUPPLEMENTS, never replaces, the local 5-agent
-# review battery and the Copilot convergence loop. Inert until BOTH conditions
+# review battery and the review-convergence loop. Inert until BOTH conditions
 # hold: someone mentions @claude AND the CLAUDE_CODE_OAUTH_TOKEN repo secret is set
 # (it is: a Max-subscription token from `claude setup-token`, no per-use billing).
 #

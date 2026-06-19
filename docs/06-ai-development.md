@@ -32,7 +32,7 @@ flowchart TB
 - **`CLAUDE.md` (project root)** - always loaded, kept under the 275-line cap enforced by `check:harness-size` (Anthropic guidance: <200 lines for adherence). It is an **index + always-true facts**, not procedures.
 - **`~/.claude/CLAUDE.md` (user, not in repo)** - the operator's global reasoning/skill-dispatch protocol.
 - **`.claude/rules/*.md`** - path-scoped rules with `paths:` frontmatter that load **only when the agent reads matching files**. Today: `api-boundary.md` (scopes `app/api/** | lib/rate-limit.ts | lib/server/** | proxy.ts`). This is the mechanism for keeping `CLAUDE.md` small (the "slot-routing" rule: gate > skill > memory > prose).
-- **`.claude/skills/*`** - load-on-demand procedures: `copilot-convergence` (driving a PR to green), `pr-merge-gate`, `visual-baseline-regen`, `ai-eval-update`, `battery-synthesis`, `fallow-audit`.
+- **`.claude/skills/*`** - load-on-demand procedures: `review-convergence` (driving a PR's AI review to green), `pr-merge-gate`, `visual-baseline-regen`, `ai-eval-update`, `battery-synthesis`, `fallow-audit`.
 - **Auto memory** - `~/.claude/projects/<slug>/memory/MEMORY.md` (first 200 lines loaded each session); holds learned preferences and feedback.
 
 ## Enforcement layer (hooks)
