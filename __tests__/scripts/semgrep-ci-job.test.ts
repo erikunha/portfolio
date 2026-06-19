@@ -34,6 +34,12 @@ describe('ci.yml semgrep job invariants', () => {
     expect(job).toMatch(/pip install[^\n]*semgrep==1\.97\.0/);
   });
 
+  it('pins setuptools <81 so semgrep can import pkg_resources', () => {
+    // semgrep 1.97.0 imports pkg_resources at runtime; setuptools >=81 removed
+    // it. Without this pin the job fails with ModuleNotFoundError at --version.
+    expect(job).toMatch(/pip install[^\n]*["']setuptools<81["'][^\n]*semgrep==1\.97\.0/);
+  });
+
   it('resolves SEMGREP_BIN to an absolute path (PATH-independent invocation)', () => {
     // pip's console-script bin dir is not reliably on the Node child's PATH on
     // hosted runners, and `python -m semgrep` is not a valid entrypoint; the

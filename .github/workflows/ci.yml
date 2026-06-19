@@ -674,7 +674,12 @@ jobs:
         # invocation is PATH-independent. The trailing --version fails the step
         # early with a clear signal if resolution is wrong.
         run: |
-          pip install semgrep==1.97.0
+          # WHY setuptools<81: semgrep 1.97.0 imports pkg_resources at runtime,
+          # which setuptools >=81 removed (ModuleNotFoundError: No module named
+          # 'pkg_resources'). Pin setuptools <81 to keep pkg_resources available.
+          # External-dep incompatibility, not our code; verified locally — 80.10.2
+          # imports OK, 82.0.1 raises. See DECISIONS.md.
+          pip install "setuptools<81" semgrep==1.97.0
           SEMGREP_BIN=$(python -c "import os,sysconfig,site,shutil; c=[os.path.join(sysconfig.get_path('scripts'),'semgrep'),os.path.join(site.getuserbase(),'bin','semgrep')]; w=shutil.which('semgrep'); c=c+[w] if w else c; print(next((p for p in c if os.path.exists(p)),''))")
           test -n "$SEMGREP_BIN" || { echo '::error::semgrep console script not found after install'; exit 1; }
           echo "SEMGREP_BIN=$SEMGREP_BIN" >> "$GITHUB_ENV"
