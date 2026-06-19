@@ -48,7 +48,7 @@ Review is **mechanical and multi-perspective**. Five fresh-context agents review
 
 ## Copilot convergence loop
 
-A second reviewer (GitHub Copilot) reviews the open PR. The `copilot-convergence` skill drives it to green:
+An AI reviewer (claude[bot] via /claude-review and/or GitHub Copilot) reviews the open PR. The `review-convergence` skill drives it to green:
 
 ```mermaid
 sequenceDiagram

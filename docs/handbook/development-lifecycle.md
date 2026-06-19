@@ -56,7 +56,7 @@ Before every push (and whenever coding work stops), the 5-agent review battery r
 `pnpm ready-for-pr` runs `ci:local` + `pr-size` + `gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). `pr-size` recommends splitting if the diff is too large. Then `gh pr create` fills the PR template (every section must be non-empty, enforced by `validate-pr-body`).
 
 ### 9. Copilot convergence loop
-On the open PR, the `copilot-convergence` skill drives review to green: rebase before every push, verify the pushed SHA landed, re-request Copilot after each push, reply-before-resolve on every thread. See [review-merge-release](./review-merge-release.md).
+On the open PR, the `review-convergence` skill drives review to green: rebase before every push, verify the pushed SHA landed, re-request the reviewer(s) (claude[bot] and/or Copilot) after each push, reply-before-resolve on every thread. See [review-merge-release](./review-merge-release.md).
 
 ### 10. Pre-merge gates -> merge
 `pnpm ready-to-merge` runs `ci:local` + branch-protection check + Copilot-approval check + resolved-threads check + PR metrics. **AI agents are blocked from `gh pr merge`** (bash-guard exit 2); the repo owner runs the final squash-merge. History shows squash-merge exclusively (zero merge commits), each commit tagged `(#NNN)`.

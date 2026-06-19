@@ -100,7 +100,7 @@ commit (scope blocks) -> pnpm pr-size -> (battery + review:findings + review:sta
   -> repo owner runs gh pr merge (AI agents are blocked from merging)
 ```
 
-Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to avoid the bloated-PR failure mode. See `CLAUDE.md` "Working agreement" and the `copilot-convergence` / `pr-merge-gate` skills.
+Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to avoid the bloated-PR failure mode. See `CLAUDE.md` "Working agreement" and the `review-convergence` / `pr-merge-gate` skills.
 
 ## Releases & deployment
 

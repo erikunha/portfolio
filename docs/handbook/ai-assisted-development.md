@@ -26,7 +26,7 @@ sequenceDiagram
     C->>G: git push (pre-push gate chain blocks if not stamped)
     C->>CI: open PR; Copilot reviews
     CI-->>C: review threads
-    C->>C: copilot-convergence loop -> green
+    C->>C: review-convergence loop -> green
     H->>CI: owner squash-merges (AI is blocked from merge)
     C->>G: SessionEnd -> learning-loop proposes new gates
 ```
