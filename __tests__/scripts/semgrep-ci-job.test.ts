@@ -34,6 +34,14 @@ describe('ci.yml semgrep job invariants', () => {
     expect(job).toMatch(/pip install[^\n]*semgrep==1\.97\.0/);
   });
 
+  it('resolves SEMGREP_BIN to an absolute path (PATH-independent invocation)', () => {
+    // pip's console-script bin dir is not reliably on the Node child's PATH on
+    // hosted runners, and `python -m semgrep` is not a valid entrypoint; the
+    // install step must export an absolute SEMGREP_BIN the wrapper uses directly.
+    expect(job).toMatch(/echo "SEMGREP_BIN=\$SEMGREP_BIN" >> "\$GITHUB_ENV"/);
+    expect(job).toMatch(/sysconfig\.get_path\('scripts'\)/);
+  });
+
   it('SHA-pins every action in the semgrep job (no bare @vN tags)', () => {
     const uses = [...job.matchAll(/uses:\s*([^\s]+)/g)].map((m) => m[1]);
     expect(uses.length).toBeGreaterThan(0);

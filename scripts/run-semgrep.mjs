@@ -5,17 +5,15 @@
 // registry packs (p/typescript, p/react, p/nextjs) fetch registry-latest (drift documented in the ADR).
 import { spawnSync } from 'node:child_process';
 
-// Candidate invocations, probed in order. An explicit SEMGREP_BIN override is
-// honored exactly (no fallback — a wrong override should fail loudly, not get
-// silently swapped). Otherwise we try the bare console script first, then the
-// `python -m semgrep` module form: pip installs semgrep into the active
-// interpreter's site-packages even when its console-script bin dir is NOT on
-// PATH (the classic hosted-runner case that broke the CI `semgrep` job), and
-// the module form resolves through the interpreter, bypassing PATH entirely.
+// An explicit SEMGREP_BIN — which CI sets to semgrep's absolute console-script
+// path (see the `semgrep` job in ci.yml) — is honored exactly: no fallback, so
+// a wrong override fails loudly rather than being silently swapped. Without it
+// we probe the bare `semgrep` console script, the local-dev case where pip put
+// it on PATH. There is deliberately NO `python -m semgrep` fallback: semgrep
+// ships a console script only (no __main__), so the module form is not a valid
+// invocation — CI relies on the absolute SEMGREP_BIN path instead.
 const SEMGREP_BIN = process.env.SEMGREP_BIN;
-const RUNNER_CANDIDATES = SEMGREP_BIN
-  ? [[SEMGREP_BIN]]
-  : [['semgrep'], ['python3', '-m', 'semgrep'], ['python', '-m', 'semgrep']];
+const RUNNER_CANDIDATES = SEMGREP_BIN ? [[SEMGREP_BIN]] : [['semgrep']];
 const DEFAULT_PATHS = ['app', 'lib', 'components', 'scripts'];
 
 // The Semgrep CLI has no registry-pack version-pinning syntax, so these fetch

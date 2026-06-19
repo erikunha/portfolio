@@ -665,8 +665,20 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Semgrep (exact-pinned)
-        run: pip install semgrep==1.97.0
+      - name: Install Semgrep (exact-pinned) and resolve its path
+        # The wrapper invokes semgrep by name, but pip's console-script bin dir
+        # is NOT reliably on the Node child process's PATH on hosted runners, and
+        # `python -m semgrep` is not a supported entrypoint (semgrep ships a
+        # console script only). Resolve the absolute console-script path from the
+        # active interpreter and hand it to the wrapper via SEMGREP_BIN, so the
+        # invocation is PATH-independent. The trailing --version fails the step
+        # early with a clear signal if resolution is wrong.
+        run: |
+          pip install semgrep==1.97.0
+          SEMGREP_BIN=$(python -c "import os,sysconfig,site,shutil; c=[os.path.join(sysconfig.get_path('scripts'),'semgrep'),os.path.join(site.getuserbase(),'bin','semgrep')]; w=shutil.which('semgrep'); c=c+[w] if w else c; print(next((p for p in c if os.path.exists(p)),''))")
+          test -n "$SEMGREP_BIN" || { echo '::error::semgrep console script not found after install'; exit 1; }
+          echo "SEMGREP_BIN=$SEMGREP_BIN" >> "$GITHUB_ENV"
+          "$SEMGREP_BIN" --version
 
       - name: Run Semgrep (SARIF, report-only)
         # Omit --error so semgrep exits 0 on findings and the step writes SARIF
