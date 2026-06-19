@@ -78,11 +78,19 @@ if [ "$before" != "$after" ]; then pass "format: messy reformatted"; else fail "
 assert_eq "format: messy now idempotent" "$after" "$(cat "$t")"
 rm -f "$t"
 
-# 2. out-of-order imports are organized (assist runs -> next/server sorts before zod is moot;
-#    assert the file changed AND zod import still present).
+# 2. out-of-order imports are ORGANIZED (assist reorders). The fixture lists zod
+#    BEFORE next/server; organize-imports must alphabetize module specifiers so
+#    next/server sorts first. Asserting only "file changed" is too weak — a
+#    quote-only normalization (double->single) would satisfy it without exercising
+#    the reorder invariant. Capture the FIRST import's module before vs after and
+#    assert the order actually flipped (next/server now leads, zod no longer leads).
+before_first=$(grep -E '^import ' "$FIXDIR/unordered-imports.ts" | head -1)
 t=$(run_format unordered-imports.ts)
 after=$(cat "$t")
-if [ "$(cat "$FIXDIR/unordered-imports.ts")" != "$after" ]; then pass "format: imports organized"; else fail "format: imports not organized"; fi
+after_first=$(grep -E '^import ' "$t" | head -1)
+assert_contains "format: fixture starts with zod (pre-organize)" "$before_first" "from \"zod\""
+assert_contains "format: first import is now next/server (reordered)" "$after_first" "from 'next/server'"
+assert_not_contains "format: zod no longer leads (reordered)" "$after_first" "from 'zod'"
 assert_contains "format: zod import retained" "$after" "from 'zod'"
 rm -f "$t"
 
