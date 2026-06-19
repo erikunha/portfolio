@@ -53,7 +53,14 @@ describe('agent-eval.yml — non-blocking scheduled workflow', () => {
     // `on:` would also run build/test/perf/e2e/ai-eval weekly — the paid ai-eval
     // job burns Gateway credits — since those jobs run on any non-pull_request
     // event. This is the regression guard for that second-order effect.
-    const onBlock = ci.slice(ci.indexOf('\non:'), ci.indexOf('\nconcurrency:'));
+    // Bound the on: block to the next TOP-LEVEL line (a column-0 key or comment),
+    // not a hardcoded `concurrency:` — so the slice can't silently shrink if the
+    // file is reordered. on:'s own entries are all indented, so the first
+    // column-0 line after it ends the block.
+    const onStart = ci.indexOf('\non:');
+    const onRel = ci.slice(onStart + 1).search(/\n\S/);
+    const onBlock = onRel === -1 ? ci.slice(onStart) : ci.slice(onStart, onStart + 1 + onRel);
+    expect(onBlock).toMatch(/\n {2}workflow_dispatch:/); // sanity: slice captured the real block
     expect(onBlock).not.toMatch(/\n {2}schedule:/);
     expect(ci).not.toMatch(/^\s{2}agent-eval:/m);
   });
