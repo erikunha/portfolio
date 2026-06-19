@@ -1,7 +1,7 @@
 # Production Observability via Sentry (Unit G) — Design Spec
 
 - **Date:** 2026-06-18 (rev. 2026-06-19 — addresses architect-reviewer FAIL)
-- **Status:** Draft (rev.2) — pending architect-reviewer re-gate. **Reverses a prior ADR — see §2.**
+- **Status:** Approved (rev.2, architect-reviewer PASS 2026-06-19) — plan written. **Reverses a prior ADR — see §2.**
 - **Branch:** `feat/platform-gaps-2026-sentry` (sub-PR into `feat/platform-gaps-2026`)
 - **Author:** Erik Cunha
 

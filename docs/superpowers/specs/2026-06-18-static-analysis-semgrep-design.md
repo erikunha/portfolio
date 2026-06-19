@@ -1,7 +1,7 @@
 # Static Analysis (Unit B) — Design Spec
 
 - **Date:** 2026-06-18
-- **Status:** Draft — pending architect-reviewer gate
+- **Status:** Approved (architect-reviewer PASS 2026-06-19) — plan written
 - **Branch:** `feat/platform-gaps-2026-semgrep` (sub-PR into `feat/platform-gaps-2026`)
 - **Author:** Erik Cunha
 

@@ -1,7 +1,7 @@
 # Mutation Testing (Unit E) — Reconcile & Verify Spec
 
 - **Date:** 2026-06-18 (rev. 2026-06-19 — reframed: the capability already exists)
-- **Status:** Draft (rev.2) — **discovery: already implemented at repo init (`ffa7009`)**
+- **Status:** Approved (reconcile/verify reframe, architect-reviewer PASS 2026-06-19) — plan written
 - **Branch:** `feat/platform-gaps-2026-mutation` (sub-PR into `feat/platform-gaps-2026`)
 - **Author:** Erik Cunha
 

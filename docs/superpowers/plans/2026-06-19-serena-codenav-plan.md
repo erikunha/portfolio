@@ -183,7 +183,7 @@ This is the verification heart of Unit S. The agent prompt and MCP config are no
 Launch Serena exactly as `/.mcp.json` will, and confirm it boots without error (the invalid flag values from earlier spec revisions would fail here silently — a clean start is the signal the flags are real):
 
 ```bash
-cd /Users/erikhenriquealvescunha/Desktop/Projects/portfolio
+cd "$(git rev-parse --show-toplevel)"
 timeout 90 uvx --from git+https://github.com/oraios/serena@dd7eb6d72ae179aa940e50cd6276ec5646f306f8 \
   serena start-mcp-server --context claude-code --project "$PWD" --mode planning 2>&1 | head -40
 ```

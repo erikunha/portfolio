@@ -1,7 +1,7 @@
 # Fast-Feedback Hooks (Unit A) — Design Spec
 
 - **Date:** 2026-06-18
-- **Status:** Approved (brainstorming) — pending architect-reviewer gate before writing-plans
+- **Status:** Approved (brainstorming + architect-reviewer PASS 2026-06-19) — plan written
 - **Branch:** `feat/platform-gaps-2026-hooks` (sub-PR into integration branch `feat/platform-gaps-2026`)
 - **Author:** Erik Cunha
 

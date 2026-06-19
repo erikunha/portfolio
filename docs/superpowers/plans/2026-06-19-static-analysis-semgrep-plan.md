@@ -6,6 +6,14 @@
 **Branch:** `feat/platform-gaps-2026-semgrep` (sub-PR into `feat/platform-gaps-2026`)
 **Date:** 2026-06-19
 
+## Clarifications resolved
+
+> Dogfooding the Unit F `clarify` convention — open questions the design closed, recorded so the plan carries no live contradiction.
+
+- **Fixture token shape = `sk_test_`.** GitHub push-protection blocks live Stripe keys (`sk_live_`) at the `git push` layer but does NOT block test keys, so the `sk_test_…` shape is safe to embed in both this plan doc and the `tests/fixtures/semgrep/vulnerable.ts` fixture.
+- **The vendored secrets rule matches `sk_(live|test)_`** so it catches BOTH a real `sk_live_` leak (the production threat) AND the `sk_test_` fixture token (proving the rule fires in CI).
+- **This plan doc embeds NO literal live-key token** (`sk_live_` followed by 24+ alphanumerics) — only the regex pattern and the `sk_test_PLACEHOLDER…` placeholder — because push-protection would otherwise block the plan's own commit.
+
 ## Goal
 
 Wire **Semgrep CLI** into CI as a deterministic security-measuring layer (taint tracking, injection detection, secrets scanning) that complements — never replaces — the 5-agent review battery. Ship the Trail of Bits `semgrep` skill into `.claude/skills/semgrep/` as the agent interface. The CLI-in-CI is the leverage; the skill is the interface. Semgrep MCP and CodeQL variant analysis are explicitly deferred (CodeQL is already wired at `.github/workflows/codeql.yml`).
@@ -73,12 +81,12 @@ Establishes the ground truth the wrapper will be tested against: one file that M
       // injection sink: user input flows into a child_process exec
       expect(src).toMatch(/exec\(/);
       // hardcoded secret marker the secrets ruleset keys on
-      expect(src).toMatch(/sk_live_/);
+      expect(src).toMatch(/sk_test_/);
     });
 
     it("clean fixture has no injection sink and no hardcoded secret", () => {
       const src = readFileSync(`${root}/tests/fixtures/semgrep/clean.ts`, "utf8");
-      expect(src).not.toMatch(/sk_live_/);
+      expect(src).not.toMatch(/sk_test_/);
       expect(src).not.toMatch(/exec\(/);
     });
 
@@ -120,7 +128,7 @@ Establishes the ground truth the wrapper will be tested against: one file that M
   }
   ```
 
-  > **GitHub native secret-scanning blocks pushes independently of `.semgrepignore`.** Push-protection runs at the `git push` layer, scans every pushed commit, and does NOT read `.semgrepignore` or honor a `gitleaks:allow` marker (that file/marker only scope the Semgrep/gitleaks CLIs). Two consequences: (1) **this plan doc must not embed a literal `sk_live_` + 24-alphanumerics token** — hence the `sk_test_PLACEHOLDER…` above — or the plan's own commit is blocked (this actually happened during the planning PR: a realistic fixture token in this doc was rejected by push-protection). (2) **At implementation, the `tests/fixtures/semgrep/vulnerable.ts` token must use a shape Semgrep's secrets rule flags but push-protection does NOT block** — prefer Stripe's TEST prefix `sk_test_…` (GitHub blocks live `sk_live_`, not test keys) or a custom synthetic secret targeted by a repo-local Semgrep rule. Verify the chosen token against push-protection BEFORE committing the fixture. The B1 fixture-shape test should assert the secrets rule fires on whatever token shape is chosen (not hard-code `/sk_live_/`).
+  > **GitHub native secret-scanning blocks pushes independently of `.semgrepignore`.** Push-protection runs at the `git push` layer, scans every pushed commit, and does NOT read `.semgrepignore` or honor a `gitleaks:allow` marker (that file/marker only scope the Semgrep/gitleaks CLIs). Resolved (see `## Clarifications resolved`): the fixture token shape is `sk_test_` — GitHub push-protection does NOT block test keys, so both this plan doc and the `tests/fixtures/semgrep/vulnerable.ts` fixture can carry it safely; the vendored secrets rule keys on `sk_(live|test)_` so it still catches a real `sk_live_` leak (the production threat) as well as the fixture. The B1 fixture-shape test asserts on `/sk_test_/` accordingly. This plan doc embeds NO literal live-key token (`sk_live_` + 24 alphanumerics), because push-protection would block the plan's own commit (this happened during the planning PR: a realistic fixture token in this doc was rejected). Verify the chosen token against push-protection BEFORE committing the fixture.
 
 - [ ] **Create `tests/fixtures/semgrep/clean.ts`** — the safe equivalent that must produce zero findings:
 
@@ -176,11 +184,12 @@ Establishes the ground truth the wrapper will be tested against: one file that M
   ```yaml
   # Vendored from Semgrep registry p/secrets @ 2026-06-19, content-pinned.
   rules:
-    - id: hardcoded-stripe-live-key
+    - id: hardcoded-stripe-secret-key
       languages: [typescript, javascript]
       severity: ERROR
-      message: Hardcoded Stripe live secret key. Move to an environment variable.
-      pattern-regex: sk_live_[A-Za-z0-9]{24,}
+      message: Hardcoded Stripe secret key. Move to an environment variable.
+      # Matches BOTH live keys (the production threat) and the sk_test_ fixture token.
+      pattern-regex: sk_(live|test)_[A-Za-z0-9]{24,}
       metadata:
         category: security
         cwe: "CWE-798: Use of Hard-coded Credentials"
@@ -448,27 +457,30 @@ Adds a SHA-pinned `semgrep` job to `ci.yml`: installs the exact-pinned Semgrep, 
 
   const ci = readFileSync(`${process.cwd()}/.github/workflows/ci.yml`, "utf8");
 
+  // Bound the slice to the semgrep job block ONLY (up to the next top-level job
+  // key), so a later job's `continue-on-error: true` cannot satisfy an assertion.
+  const semgrepStart = ci.indexOf("\n  semgrep:");
+  const nextJob = ci.indexOf("\n  ", semgrepStart + 10);
+  const job = ci.slice(semgrepStart, nextJob > semgrepStart ? nextJob : undefined);
+
   describe("ci.yml semgrep job invariants", () => {
     it("defines a semgrep job", () => {
       expect(ci).toMatch(/^\s{2}semgrep:/m);
     });
 
     it("ships non-blocking (continue-on-error) until the FP baseline is recorded", () => {
-      const job = ci.slice(ci.indexOf("\n  semgrep:"));
       expect(job).toMatch(/continue-on-error:\s*true/);
     });
 
     it("grants security-events: write to upload SARIF", () => {
-      const job = ci.slice(ci.indexOf("\n  semgrep:"));
       expect(job).toMatch(/security-events:\s*write/);
     });
 
     it("pins the Semgrep version exactly", () => {
-      expect(ci).toMatch(/pip install[^\n]*semgrep==1\.97\.0/);
+      expect(job).toMatch(/pip install[^\n]*semgrep==1\.97\.0/);
     });
 
     it("SHA-pins every action in the semgrep job (no bare @vN tags)", () => {
-      const job = ci.slice(ci.indexOf("\n  semgrep:"));
       const uses = [...job.matchAll(/uses:\s*([^\s]+)/g)].map((m) => m[1]);
       expect(uses.length).toBeGreaterThan(0);
       for (const u of uses) expect(u).toMatch(/@[0-9a-f]{40}$/);

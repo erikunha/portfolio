@@ -1,7 +1,7 @@
 # Semantic Code-Nav + Vetted Agent (Unit D) — Design Spec
 
 - **Date:** 2026-06-18 (rev. 2026-06-19 — addresses architect-reviewer FAIL)
-- **Status:** Draft (rev.2) — pending architect-reviewer re-gate
+- **Status:** Approved (rev.3, architect-reviewer PASS 2026-06-19) — plan written
 - **Branch:** `feat/platform-gaps-2026-codenav` (sub-PR into `feat/platform-gaps-2026`)
 - **Author:** Erik Cunha
 
