@@ -13,6 +13,13 @@ const job =
   nextJobRel === -1 ? ci.slice(start) : ci.slice(start, start + heading.length + nextJobRel);
 
 describe('ci.yml performance job — LHCI GitHub status', () => {
+  it('defines a performance job', () => {
+    // Guards the slice: if the job is renamed/removed, this fails loudly instead
+    // of the other assertions passing vacuously against an empty/wrong block.
+    expect(ci).toMatch(/^\s{2}performance:/m);
+    expect(job).not.toBe('');
+  });
+
   it('grants statuses: write so LHCI can post the Lighthouse CI commit status', () => {
     expect(job).toMatch(/statuses:\s*write/);
   });
