@@ -115,6 +115,17 @@ assert_contains "ctx: additionalContext key"  "$out" '"additionalContext"'
 assert_contains "ctx: marker line"            "$out" '[session-context]'
 assert_contains "ctx: branch field"           "$out" 'branch:'
 assert_contains "ctx: uncommitted field"      "$out" 'uncommitted:'
+# uncommitted value is a single clean integer on ONE line: `uncommitted: <N> files`
+# with no embedded newline between the count and `files` (regression guard for the
+# `grep -c .` double-print on a clean tree, which emitted `uncommitted: 0\n0 files`).
+UNCOMMITTED_LINE=$(printf '%s' "$out" \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['hookSpecificOutput']['additionalContext'])" 2>/dev/null \
+  | grep '^uncommitted:')
+if printf '%s' "$UNCOMMITTED_LINE" | grep -Eq '^uncommitted: [0-9]+ files$'; then
+  pass "ctx: uncommitted is single-line integer"
+else
+  fail "ctx: uncommitted is single-line integer (got [$UNCOMMITTED_LINE])"
+fi
 # Valid single-line JSON object (python parses it).
 if printf '%s' "$out" | python3 -c "import json,sys; json.load(sys.stdin)" 2>/dev/null; then
   pass "ctx: valid JSON"
