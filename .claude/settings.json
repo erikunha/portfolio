@@ -62,6 +62,20 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/api-edit-marker.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/biome-format.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-context.sh"
           }
         ]
       }
