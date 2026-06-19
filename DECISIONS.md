@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-06-19 — Fast-feedback hooks (Unit A)
+
+- **2026-06-19 — Fast-feedback hooks (Unit A).** Added two non-blocking local-session hooks: `biome-format.sh` (PostToolUse `Edit|Write`) runs `biome check --write --linter-enabled=false` on edited source files (format + import-organization only — linter off so it never deletes an in-progress import); `session-context.sh` (SessionStart) injects branch / ahead-behind / uncommitted / open-PR / CI state as `additionalContext`, `gh` bounded by `timeout 5` with a git-only fallback. Both `exit 0` always. Closes the one "fast-feedback" axis the 2026 ecosystem benchmark flagged as thin. **Reversible:** delete the two `.claude/hooks/*.sh` files and their `settings.json` entries; no CI change, no data migration, no external dependency.
+
 ## 2026-06-19 — Review-harness: claude[bot] inline review + review-convergence rename
 
 - **2026-06-19** · **copilot-convergence generalized + slimmed to review-convergence.** Reviews now come from claude[bot] (/claude-review) and Copilot intermittently, so the skill is reviewer-agnostic; kept rebase-before-push, reply-with-fix-SHA-before-resolve, push-SHA verify; removed the Copilot-only PR-comment-gate timing-race step from the skill and relocated it to `docs/handbook/review-merge-release.md` as a property of the PR-comment CI gate. _Reversible: git mv back + restore the step in the skill + revert the addition in `docs/handbook/review-merge-release.md`._
