@@ -49,7 +49,7 @@ flowchart TB
     end
     subgraph knowledge["Knowledge layer"]
         specs["docs/superpowers/specs + plans"]
-        adr["DECISIONS.md (75 ADRs)"]
+        adr["DECISIONS.md (~190 ADRs)"]
         mem[".remember/ + auto memory"]
     end
     dev --> claude
@@ -65,7 +65,7 @@ flowchart TB
 
 - **Spec-driven and gate-heavy.** Work flows spec -> architect-review gate -> plan -> implement, and passes ~18 gates between "code written" and "merged" (see [review-merge-release](./review-merge-release.md)).
 - **AI is a first-class participant, but bounded.** Claude Code writes, tests, and reviews; mechanical hooks (exit 2) and a transcript-verified review battery keep it honest. AI agents are explicitly blocked from merging.
-- **Every decision is reversible and recorded.** 75 ADRs in `DECISIONS.md`, each with a "Reversible: ..." note. Failed attempts are recorded, not deleted.
+- **Every decision is reversible and recorded.** ~190 ADRs in `DECISIONS.md`, each with a "Reversible: ..." note. Failed attempts are recorded, not deleted.
 - **The development platform itself is engineered and self-healing.** A meta-gate detects dead gates; a verification loop proves findings are resolved; a learning loop proposes new gates from recurring findings. See [engineering-audit](./engineering-audit.md).
 
 ## How to read this if you're new

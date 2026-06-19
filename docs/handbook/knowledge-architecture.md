@@ -7,7 +7,7 @@
 ```mermaid
 flowchart TD
     subgraph intent["Intent / why"]
-        adr["DECISIONS.md (75 ADRs, reversibility-tracked)"]
+        adr["DECISIONS.md (~190 ADRs, reversibility-tracked)"]
         std["STANDARDS.md (12 chapters, each names its enforcement)"]
         arch["ARCHITECTURE.md (the design narrative)"]
     end

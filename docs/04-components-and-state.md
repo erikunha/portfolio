@@ -40,7 +40,7 @@ flowchart TD
 
 ### CRT overlay layering
 
-`CRTOverlay.client.tsx` renders 6 fixed, `aria-hidden`, `pointer-events:none` overlay divs, z-stacked in `crt.css`: vignette (1) · scanlines (2) · RGB sub-pixel mask (3) · noise + flicker (4) · scan beam (5). `MatrixRain` sits at z-0, `<main>` at z-10. All of it disables under `prefers-reduced-motion: reduce` **and** `body[data-motion="reduce"]`, and freezes during the system-failure overlay (`html.sysfail-on`).
+`CRTOverlay.client.tsx` renders 6 fixed, `aria-hidden`, `pointer-events:none` overlay divs, z-stacked in `crt.css`: vignette (1) · scanlines (2) · RGB sub-pixel mask (3) · noise (4) · flicker (5) · scan beam (6). `MatrixRain` sits at z-0, `<main>` at z-10. All of it disables under `prefers-reduced-motion: reduce` **and** `body[data-motion="reduce"]`, and freezes during the system-failure overlay (`html.sysfail-on`).
 
 ## The design system
 
@@ -75,7 +75,7 @@ Import order (`app/globals.css`): `tailwindcss` → `theme.css` → `base.css` �
 
 ## State architecture
 
-This is a near-static site; the state model is intentionally tiny. Three mechanisms, in order of how much you'll touch them:
+This is a near-static site; the state model is intentionally tiny. Four mechanisms, in order of how much you'll touch them:
 
 ```mermaid
 flowchart TD
