@@ -14,6 +14,7 @@
 | Client JS total (all islands) | < 43KB | < 43KB |
 | Lighthouse Perf | ≥ 95 | ≥ 90 |
 | Lighthouse A11y | = 100 | = 100 |
+| Lighthouse Best Practices | ≥ 95 | ≥ 95 |
 | Lighthouse SEO | = 100 | = 100 |
 
 Enforced by LHCI (`lighthouserc.json` + `.mobile.json`) and `bundle-check` (≤220KB gzipped client chunks). **Never disable a gate to merge** - the only acceptable response to a red gate is to reduce the measured property or fix a genuinely-miswritten assertion.
