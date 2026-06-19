@@ -62,8 +62,10 @@ jobs:
           GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.issue.number }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          # Our own copy of the spark icon (committed at .github/assets), served from main.
+          ICON_URL: ${{ github.server_url }}/${{ github.repository }}/raw/main/.github/assets/claude-working.gif
         run: |
-          printf "Claude Code is working…\n\nI'll analyze this and get back to you.\n\n[View job run](%s)\n" "$RUN_URL" \
+          printf 'Claude Code is working… <img src="%s" width="14" height="14" style="vertical-align:middle;margin-left:4px" />\n\nI'\''ll analyze this and get back to you.\n\n[View job run](%s)\n' "$ICON_URL" "$RUN_URL" \
             | gh pr comment "$PR_NUMBER" --repo "$GH_REPO" --body-file -
       # Gives the action a configured git repo + authenticated remote to fetch and
       # diff the PR branch (omitting this fails on git fetch / git hash-object).
@@ -71,6 +73,12 @@ jobs:
         with:
           fetch-depth: 1
       - uses: anthropics/claude-code-action@806af32823ef69c8ef357086c573a902af641307 # v1
+        # PR_NUMBER lets the prompt target the exact PR via gh pr diff "$PR_NUMBER". On
+        # issue_comment the checkout is the BASE branch (main), not the PR head, so without
+        # an explicit PR number the model reviews the wrong changes (it reviewed the latest
+        # merge to main instead of the requested PR).
+        env:
+          PR_NUMBER: ${{ github.event.issue.number }}
         with:
           # Claude Max subscription token (no per-use API billing).
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -110,6 +118,13 @@ jobs:
             correctness, security, accessibility, or performance defect.
 
             ## 2. Review the PR's changes, in context
+
+            FIRST get this PR's actual changes: run `gh pr diff "$PR_NUMBER"`. The working
+            tree checked out here is the BASE branch (main), NOT this PR's head, so the
+            change under review comes only from gh (gh pr diff / gh pr view "$PR_NUMBER").
+            Use Read / Grep / Glob on the working tree for base-branch context only, never
+            as the change being reviewed. Review exactly the diff gh pr diff returns; if it
+            is empty, say so rather than reviewing unrelated code.
 
             Review against the PR's HEAD, not an older snapshot (re-flagging issues
             already fixed in a later commit is the top noise complaint here). For every
@@ -209,26 +224,24 @@ jobs:
               before merge but is not a ship-stopper.
             - Advisory: a worthwhile improvement the author may reasonably defer.
 
-            ## 7. How to publish your review
+            ## 7. How to publish your review (inline-first, like Copilot)
 
-            Your reply text is NOT posted to the PR. Publish via these two channels only:
+            Your review IS the set of inline comments on the code. Your reply text is NOT
+            posted, so:
 
-            - INLINE findings: use the create_inline_comment tool, one call per finding,
-              each anchored to a specific line this PR changed (these are the Copilot-style
-              review threads on the code). Use them for every concrete issue.
-            - TOP-LEVEL summary: use the Write tool to save your single markdown summary to
-              exactly the path /tmp/claude-review.md. Do NOT post the summary yourself with
-              gh or any shell command (those are blocked by the tool allowlist); a workflow
-              step publishes that file for you as one PR comment. ALWAYS write this file,
-              even for a clean approval, or no summary is posted.
+            - PRIMARY OUTPUT: for EVERY finding, call the create_inline_comment tool once,
+              anchored to the specific changed line it concerns. The substance lives here,
+              on the line: what is wrong, why it matters, the severity, and a concise fix.
+              Do NOT roll findings up into a prose report instead of commenting on lines.
+              This is the whole point: line-anchored threads, not a summary.
+            - Then write a SHORT overall note to /tmp/claude-review.md with the Write tool:
+              at most two or three sentences of overall assessment, ending with the merge
+              recommendation line. Do NOT restate the inline findings and do NOT write long
+              Executive Summary / Strengths / Advisory sections. If the PR is clean, this
+              file is a one-line approval. A workflow step posts this file.
 
-            The /tmp/claude-review.md summary contains: Executive Summary (what the PR does
-            and your confidence); Strengths (brief, only if genuine); Critical Issues;
-            Important Issues; Advisory Improvements; and a Merge Recommendation, exactly one
-            of:
+            Merge recommendation, exactly one, as the final line of the note:
             ✅ Approve   🟡 Approve with Minor Changes   🟠 Request Changes   🔴 Reject
-            State production-readiness plainly. Anchor every claim to file:line, and only to
-            lines this PR changed.
           # Tools: Read/Grep/Glob for repo context; gh pr diff/view to read the change;
           # the inline-comment tool for line-anchored Copilot-style threads; and Write so
           # the model saves its top-level summary to /tmp/claude-review.md (the Publish
