@@ -1,0 +1,20 @@
+# Vendored from Semgrep registry p/owasp-top-ten @ 2026-06-19, content-pinned.
+# Source of truth is THIS file — registry-side changes do not affect CI.
+rules:
+  - id: child-process-shell-injection
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: >-
+      Untrusted input flows into a shell command (exec). Use execFile with an
+      argv array, or validate/escape the input. OWASP A03:2021 Injection.
+    mode: taint
+    pattern-sources:
+      - pattern: $REQ
+    pattern-sinks:
+      - patterns:
+          - pattern: exec($CMD, ...)
+          - focus-metavariable: $CMD
+    metadata:
+      category: security
+      owasp: "A03:2021 - Injection"
+      cwe: "CWE-78: OS Command Injection"
