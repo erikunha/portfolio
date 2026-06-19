@@ -2,13 +2,15 @@
 // Semgrep invocation wrapper. CI is authoritative; local use is optional.
 // Semgrep is pinned to ==1.97.0 (see .github/workflows/ci.yml `semgrep` job
 // and the ADR in DECISIONS.md). Vendored rules in .semgrep/ are content-pinned;
-// registry packs (p/typescript, p/react, p/nextjs) are tag-pinned (drift documented in the ADR).
+// registry packs (p/typescript, p/react, p/nextjs) fetch registry-latest (drift documented in the ADR).
 import { spawnSync } from 'node:child_process';
 
 const SEMGREP_BIN = process.env.SEMGREP_BIN ?? 'semgrep';
 const DEFAULT_PATHS = ['app', 'lib', 'components', 'scripts'];
 
-// Registry packs are TAG-pinned (mutable). Vendored .semgrep/ rules are CONTENT-pinned.
+// The Semgrep CLI has no registry-pack version-pinning syntax, so these fetch
+// registry-LATEST (mutable; rules may drift between runs). Drift is accepted per
+// the ADR; the security-critical rules are vendored + content-pinned in .semgrep/.
 const REGISTRY_CONFIGS = ['p/typescript', 'p/react', 'p/nextjs'];
 const VENDORED_CONFIG = '.semgrep'; // directory of content-pinned rule files
 
@@ -56,7 +58,7 @@ function main() {
     ...args.paths,
   ];
 
-  const res = spawnSync(SEMGREP_BIN, cliArgs, { stdio: 'inherit', encoding: 'utf8' });
+  const res = spawnSync(SEMGREP_BIN, cliArgs, { stdio: 'inherit' });
   if (res.error) {
     console.error(`[run-semgrep] exec failed: ${res.error.message}`);
     process.exit(2);

@@ -8,6 +8,11 @@ rules:
       Untrusted input flows into a shell command (exec). Use execFile with an
       argv array, or validate/escape the input. OWASP A03:2021 Injection.
     mode: taint
+    # WHY: $REQ is intentionally broad for the pilot — it treats every expression
+    # as a taint source, so this fires on any exec($CMD) where $CMD is non-constant
+    # rather than tracing a real request flow. The pilot errs toward catching more.
+    # Before the promotion-to-blocking gate, tighten this to real input sources
+    # (req.query, process.argv, route params) to reduce false positives.
     pattern-sources:
       - pattern: $REQ
     pattern-sinks:

@@ -27,8 +27,11 @@ If Semgrep is not installed, the wrapper exits 2 with an install hint; defer to 
 - **Vendored, content-pinned** (`.semgrep/owasp-top-ten.yml`, `.semgrep/secrets.yml`)
   — the security-load-bearing rules. Edit these files to change behavior; they are
   the source of truth, immune to registry-side drift.
-- **Tag-pinned registry packs** (`p/typescript`, `p/react`, `p/nextjs`) — framework
-  lint, lower stakes. These tags are mutable; findings may drift (documented in the ADR).
+- **Registry-latest packs** (`p/typescript`, `p/react`, `p/nextjs`) — framework
+  lint, lower stakes. The Semgrep CLI has no pack version-pinning syntax, so these
+  fetch the latest registry rules (mutable); findings may drift between runs. Drift
+  is accepted for the framework packs (documented in the ADR), which is why the
+  security-load-bearing rules are instead vendored + content-pinned in `.semgrep/`.
 
 ## Interpreting SARIF
 
