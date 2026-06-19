@@ -16,7 +16,7 @@ AI agents never do (bash-guard blocks it).
    push without exception. Resolve conflicts before continuing.
 1. **Push, then verify it landed.** `gh api repos/erikunha/portfolio/pulls/<N> --jq '.head.sha'`
    must equal `git rev-parse HEAD`. If not, re-push before continuing.
-2. **Re-request the reviewer(s) after every successful push** (whichever you use):
+2. **Re-request the reviewer(s) after every successful push** (re-request all active reviewers — Copilot approval is still required by `pnpm ready-to-merge` regardless of whether claude[bot] reviewed):
    - **claude[bot]:** post a `/claude-review` comment (`gh pr comment <N> --body /claude-review`).
    - **Copilot:** REST `POST .../pulls/<N>/requested_reviewers` with
      `copilot-pull-request-reviewer[bot]` (`gh pr edit --add-reviewer` silently
@@ -37,7 +37,8 @@ AI agents never do (bash-guard blocks it).
    silent resolve; add the missing reply (GitHub MCP `add_reply_to_pull_request_comment`,
    not `gh api .../replies`, which 404s on resolved threads).
 8. Repeat 4-7 until CI is green AND 0 unresolved threads AND `pnpm ready-to-merge`
-   exits OK. Only then tell the repo owner to run `gh pr merge`.
+   exits OK (it gates on a **Copilot** approval, so Copilot must review even when
+   claude[bot] has already approved). Only then tell the repo owner to run `gh pr merge`.
 
 ## Post-merge transition (automatic, no user prompt)
 
