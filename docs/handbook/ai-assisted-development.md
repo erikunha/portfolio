@@ -10,7 +10,7 @@ sequenceDiagram
     participant C as Claude Code (main loop)
     participant A as Subagents (battery, architect)
     participant G as Mechanical gates (hooks/scripts)
-    participant CI as CI + Copilot
+    participant CI as CI + claude-review
 
     H->>C: intent ("build X" / "fix Y")
     C->>C: superpowers:brainstorming (intent + approach)
@@ -24,7 +24,7 @@ sequenceDiagram
     C->>C: battery-synthesis -> record in ledger -> resolve/justify
     C->>G: review:stamp (refuses unless dispatched + resolved)
     C->>G: git push (pre-push gate chain blocks if not stamped)
-    C->>CI: open PR; Copilot reviews
+    C->>CI: open PR; claude-review reviews
     CI-->>C: review threads
     C->>C: review-convergence loop -> green
     H->>CI: owner squash-merges (AI is blocked from merge)
@@ -109,7 +109,7 @@ At session end, `learning-loop.sh` runs `review:learn --auto`, which reads the a
 
 ## 6. The CI-side AI reviewer
 
-`.github/workflows/claude.yml` adds a second AI reviewer in CI: `claude-code-action` (SHA-pinned) runs only when a human writes `@claude` on a PR/issue, authenticated by a Max-subscription token. It supplements the local battery and Copilot, never replaces them.
+`.github/workflows/claude.yml` adds a second AI reviewer in CI: `claude-code-action` (SHA-pinned) runs only when a human writes `@claude` on a PR/issue, authenticated by a Max-subscription token. It supplements the local battery and the automated `/claude-review` (claude[bot]) PR reviewer, never replaces them. (`/claude-review` is the sole automated AI PR reviewer and its Approve verdict is the merge reviewer-gate; GitHub Copilot review was dropped as of 2026-06-20.)
 
 ## Prompt architecture (the shapes of AI work)
 

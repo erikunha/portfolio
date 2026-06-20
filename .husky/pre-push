@@ -1,5 +1,5 @@
 # Direct-to-main guard: all changes must go through a feature branch + PR.
-# WHY: direct main pushes bypass Copilot review, the 5-agent battery, and
+# WHY: direct main pushes bypass claude-review, the 5-agent battery, and
 # the review stamp. Three commits (464d7fc, fa8dee5, 17d70fe) violated this
 # rule in June 2026 by landing on main without a PR. Emergency rollback that
 # requires code: use `git push --no-verify` explicitly (documented escape hatch).

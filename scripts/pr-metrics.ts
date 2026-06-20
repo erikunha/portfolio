@@ -2,11 +2,12 @@
 // Usage: pnpm pr-metrics [pr-number]
 //
 // Reports AI workflow quality metrics for a PR:
-//   - Copilot review cycle count (re-requests = pre-implementation discipline signal)
+//   - claude-review cycle count (number of /claude-review triggers = pre-
+//     implementation discipline signal)
 //   - PR size (additions + deletions)
 //   - Days open
 //
-// More than 2 Copilot cycles is the signal that thinking-inversion or TDD
+// More than 2 claude-review cycles is the signal that thinking-inversion or TDD
 // failed upstream — bugs reached review that should have been caught earlier.
 //
 // Called by ready-for-pr.ts as an informational panel (no exit 1 on its own).
@@ -17,7 +18,8 @@ import { promisify } from 'node:util';
 
 const execFileP = promisify(execFile);
 
-const COPILOT_LOGIN = 'copilot-pull-request-reviewer';
+// A claude-review cycle = one `/claude-review` trigger comment on the PR.
+const CLAUDE_REVIEW_TRIGGER = /\/claude-review\b/;
 
 interface PrJson {
   number: number;
@@ -27,10 +29,8 @@ interface PrJson {
   title: string;
 }
 
-interface TimelineEvent {
-  event: string;
-  requested_reviewer?: { login: string };
-  created_at: string;
+interface IssueComment {
+  body: string;
 }
 
 async function resolvePrNumber(passed: string | undefined): Promise<number> {
@@ -63,17 +63,15 @@ async function run() {
   );
   const pr = JSON.parse(prOut) as PrJson;
 
-  const { stdout: eventsOut } = await execFileP(
+  const { stdout: commentsOut } = await execFileP(
     'gh',
-    ['api', `repos/${repo}/issues/${prNumber}/timeline`, '--paginate'],
-    { encoding: 'utf8' },
+    ['api', `repos/${repo}/issues/${prNumber}/comments`, '--paginate'],
+    { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 },
   );
-  const events = JSON.parse(eventsOut) as TimelineEvent[];
+  const comments = JSON.parse(commentsOut) as IssueComment[];
 
-  const copilotRequests = events.filter(
-    (e) => e.event === 'review_requested' && e.requested_reviewer?.login === COPILOT_LOGIN,
-  );
-  const cycleCount = copilotRequests.length;
+  const claudeReviewTriggers = comments.filter((c) => CLAUDE_REVIEW_TRIGGER.test(c.body));
+  const cycleCount = claudeReviewTriggers.length;
 
   const daysOpen = Math.floor(
     (Date.now() - new Date(pr.createdAt).getTime()) / (1000 * 60 * 60 * 24),
@@ -104,11 +102,11 @@ async function run() {
           ? `${C.yellow}2 (one re-request)${C.reset}`
           : `${C.yellow}${cycleCount} (${cycleCount - 1} re-request(s))${C.reset}`;
 
-  process.stdout.write(`  Copilot cycles: ${cycleLabel}\n`);
+  process.stdout.write(`  claude-review cycles: ${cycleLabel}\n`);
 
   if (cycleCount > 2) {
     process.stdout.write(
-      `\n  ${C.yellow}⚠ ${cycleCount} Copilot cycles — more than 2 cycles signals that thinking-inversion\n` +
+      `\n  ${C.yellow}⚠ ${cycleCount} claude-review cycles — more than 2 cycles signals that thinking-inversion\n` +
         `    or TDD failed upstream. Bugs reached review that should have been caught earlier.${C.reset}\n`,
     );
   }

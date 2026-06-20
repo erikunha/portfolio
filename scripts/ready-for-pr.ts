@@ -122,5 +122,5 @@ process.stdout.write(
   `${C.dim}  4. pnpm validate-pr-body <pr> — gate: fails if any template section is empty${C.reset}\n`,
 );
 process.stdout.write(
-  `${C.dim}  5. gh pr edit <pr> --add-reviewer copilot-pull-request-reviewer${C.reset}\n\n`,
+  `${C.dim}  5. gh pr comment <pr> --body /claude-review — request the claude-review${C.reset}\n\n`,
 );

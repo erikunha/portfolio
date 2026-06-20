@@ -38,7 +38,7 @@ fi
 if printf '%s' "$CMD" | grep -qE 'gh pr merge'; then
   printf '[BLOCKED] gh pr merge called directly.\n'
   printf 'AI agents must run: pnpm ready-to-merge [pr-number]\n'
-  printf 'This enforces: ci:local + branch-protection + Copilot review gate + resolved threads.\n'
+  printf 'This enforces: ci:local + branch-protection + claude-review gate + resolved threads.\n'
   printf 'The repo owner may run gh pr merge directly in an external terminal to bypass.\n'
   exit 2
 fi

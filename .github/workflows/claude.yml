@@ -9,7 +9,7 @@
 # Before relying on it: run one pilot and measure its signal-to-noise before
 # trusting its findings (the research is clear that AI review is triage, not a
 # guarantee). The action is SHA-pinned below (dependabot tracks github-actions).
-# Any change @claude pushes still goes through branch protection + Copilot review.
+# Any change @claude pushes still goes through branch protection + claude-review.
 name: Claude Code
 
 on:

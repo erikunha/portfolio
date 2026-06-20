@@ -56,10 +56,10 @@ Before every push (and whenever coding work stops), the 5-agent review battery r
 `pnpm ready-for-pr` runs `ci:local` + `pr-size` + `gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). `pr-size` recommends splitting if the diff is too large. Then `gh pr create` fills the PR template (every section must be non-empty, enforced by `validate-pr-body`).
 
 ### 9. Review convergence loop
-On the open PR, the `review-convergence` skill drives review to green: rebase before every push, verify the pushed SHA landed, re-request the reviewer(s) (claude[bot] and/or Copilot) after each push, reply-before-resolve on every thread. See [review-merge-release](./review-merge-release.md).
+On the open PR, the `review-convergence` skill drives review to green: rebase before every push, verify the pushed SHA landed, re-request the reviewer (`/claude-review`, claude[bot]) after each push, reply-before-resolve on every thread. See [review-merge-release](./review-merge-release.md).
 
 ### 10. Pre-merge gates -> merge
-`pnpm ready-to-merge` runs `ci:local` + branch-protection check + Copilot-approval check + resolved-threads check + PR metrics. **AI agents are blocked from `gh pr merge`** (bash-guard exit 2); the repo owner runs the final squash-merge. History shows squash-merge exclusively (zero merge commits), each commit tagged `(#NNN)`.
+`pnpm ready-to-merge` runs `ci:local` + branch-protection check + claude-review-approval check (`scripts/check-claude-approval.ts` / `pnpm claude-gate`, requiring the latest `/claude-review` overview verdict to be Approve on HEAD) + resolved-threads check + PR metrics. **AI agents are blocked from `gh pr merge`** (bash-guard exit 2); the repo owner runs the final squash-merge. History shows squash-merge exclusively (zero merge commits), each commit tagged `(#NNN)`.
 
 ### 11. Deploy -> smoke -> record
 Vercel deploys on merge to `main`. The `smoke.yml` workflow verifies the production deployment (healthz, 7 security headers, apex->www redirect, `/api/ask` + `/api/contact` liveness) and emails on a 503. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note), and session state is handed off via `.remember/`.
@@ -81,7 +81,7 @@ flowchart LR
         g13["validate-pr-body"] --> g14["Review convergence"]
     end
     subgraph premerge["ready-to-merge"]
-        g15["ci:local"] --> g16["branch-protection"] --> g17["Copilot approval"] --> g18["resolved threads"]
+        g15["ci:local"] --> g16["branch-protection"] --> g17["claude-review Approve"] --> g18["resolved threads"]
     end
     commit --> prepush --> prepr --> open --> premerge --> merge["owner squash-merge"]
 ```

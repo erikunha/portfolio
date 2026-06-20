@@ -9,8 +9,8 @@ Skills are load-on-demand procedures. They activate by their `description` front
 | Skill | Trigger | What it does |
 |---|---|---|
 | **battery-synthesis** | After the 5-agent battery returns, before `review:stamp` | Dedups + severity-ranks the five reports into one action table and records each Critical/Important into the findings ledger. A DX aid, not a gate. |
-| **review-convergence** | Converging an open PR's AI review to green | The loop: rebase before every push, verify the pushed SHA, re-request the reviewer(s) (claude[bot] and/or Copilot) after each push, reply-before-resolve, the automatic post-merge transition. Not for the final merge. |
-| **pr-merge-gate** | About to merge a PR | The 10-point pre-merge gate (Copilot review, resolve-thread ground truth, branch-protection, `ready-to-merge`, the local Playwright visual check, the rebase rule). The owner runs the final merge; agents are blocked. |
+| **review-convergence** | Converging an open PR's AI review to green | The loop: rebase before every push, verify the pushed SHA, re-request the reviewer (`/claude-review`, claude[bot]) after each push, reply-before-resolve, the automatic post-merge transition. Not for the final merge. |
+| **pr-merge-gate** | About to merge a PR | The 9-point pre-merge gate (claude-review Approve, resolve-thread ground truth, branch-protection, `ready-to-merge`, the local Playwright visual check, the rebase rule). The owner runs the final merge; agents are blocked. |
 | **visual-baseline-regen** | A change may touch a Playwright screenshot baseline (CSS/layout/typography) | The baseline regen procedure: darwin `--update-snapshots`, the linux CI-dispatch artifact path, inspect-before-commit, batch-to-one-push. Distinguishes the CI-gated page-section spec from the darwin-only DS-component spec. |
 | **ai-eval-update** | Editing the `/api/ask` eval corpus/calibration/runner or the ask system prompt | Drives `pnpm ask:eval` (judge self-calibration first, then corpus). Gates correctness + jailbreak-resistance; writes `ask-eval-result.json` and Upstash `ask:eval:latest`. Feature model Haiku, judge model Sonnet. |
 | **fallow-audit** | Only on explicit request ("run a fallow audit") | Read-only architecture/dead-code audit via the pinned `npx fallow@2.95.0`. Will not auto-activate on generic "clean up the code". |
@@ -22,7 +22,7 @@ Skills are load-on-demand procedures. They activate by their `description` front
 | **/commit** | `commit-commands:commit` | Conventional commit with a mandatory feature-area scope |
 | **/ready-for-pr** | `pnpm ready-for-pr` -> `review-pr` -> fix -> `gh pr create` | Pre-PR gate sequence |
 | **/merge** `[pr]` | `pnpm ready-to-merge`, then owner merges externally | Pre-merge gate chain |
-| **/pr-metrics** `[pr]` | `pnpm pr-metrics` | Copilot cycle count, size, days open |
+| **/pr-metrics** `[pr]` | `pnpm pr-metrics` | `/claude-review` cycle count, size, days open |
 
 ## Hooks (`.claude/hooks/` + `settings.json` wiring)
 
