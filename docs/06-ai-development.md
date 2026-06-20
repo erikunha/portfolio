@@ -104,7 +104,7 @@ Context7 is the one repo-configured MCP; the GitHub/Vercel/Chrome ones are plugi
 
 ## The CI-side AI reviewer
 
-`.github/workflows/claude.yml` is an **opt-in pilot**: `claude-code-action` (SHA-pinned) runs only when a human writes `@claude` in a PR/issue comment, authenticated via a Max-subscription `CLAUDE_CODE_OAUTH_TOKEN`. It supplements, never replaces, the local 5-agent battery and the Copilot review.
+`.github/workflows/claude.yml` is an **opt-in pilot**: `claude-code-action` (SHA-pinned) runs only when a human writes `@claude` in a PR/issue comment, authenticated via a Max-subscription `CLAUDE_CODE_OAUTH_TOKEN`. It supplements, never replaces, the local 5-agent battery and the automated `/claude-review` (the sole AI PR reviewer as of 2026-06-20; Copilot was dropped).
 
 ## Where to read more
 

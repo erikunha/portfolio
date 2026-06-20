@@ -35,7 +35,7 @@ flowchart TB
     subgraph people["Human + AI"]
         dev["Developer (single, owner)"]
         claude["Claude Code agents"]
-        copilot["GitHub Copilot reviewer"]
+        claudereview["claude-review reviewer (/claude-review, claude[bot])"]
     end
     subgraph context["Context layer"]
         cl["CLAUDE.md + .claude/rules/* + skills + memory"]
@@ -56,7 +56,7 @@ flowchart TB
     claude --> context
     context --> enforce
     claude --> enforce
-    copilot --> enforce
+    claudereview --> enforce
     enforce --> knowledge
     knowledge --> context
 ```

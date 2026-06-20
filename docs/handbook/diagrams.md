@@ -28,7 +28,7 @@ flowchart LR
     b --> pp["pre-push: main-guard · branch-name · stamp · API-audit · verify"]
     pp --> rfp["ready-for-pr: ci:local · bundle · pr-size · runtime · review-pr"]
     rfp --> o["open: validate-body · convergence"]
-    o --> rtm["ready-to-merge: ci · protection · copilot · threads"]
+    o --> rtm["ready-to-merge: ci · protection · claude-review · threads"]
     rtm --> m["squash-merge"] --> d["deploy + smoke"]
 ```
 
@@ -40,7 +40,7 @@ sequenceDiagram
     participant C as Claude Code
     participant A as Subagents
     participant G as Gates
-    participant CI as CI + Copilot
+    participant CI as CI + claude-review
     H->>C: intent
     C->>A: architect-reviewer (spec gate)
     A-->>G: GATE_RESULT: PASS
@@ -48,7 +48,7 @@ sequenceDiagram
     C->>A: 5-agent review battery
     A-->>C: findings -> ledger -> resolve
     C->>G: review:stamp (verify) -> push
-    C->>CI: PR; Copilot review
+    C->>CI: PR; claude-review review
     C->>C: convergence -> green
     H->>CI: owner squash-merges
     C->>G: SessionEnd -> learning-loop

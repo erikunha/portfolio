@@ -23,7 +23,7 @@ flowchart TD
     o1 --> o2["Review convergence loop"]
     o2 --> m1["ready-to-merge: ci:local"]
     m1 --> m2["ready-to-merge: branch-protection"]
-    m2 --> m3["ready-to-merge: Copilot approval"]
+    m2 --> m3["ready-to-merge: claude-review Approve"]
     m3 --> m4["ready-to-merge: resolved threads"]
     m4 --> merge["owner: squash-merge (#NNN)"]
     merge --> deploy["Vercel deploy"]
@@ -48,7 +48,7 @@ Review is **mechanical and multi-perspective**. Five fresh-context agents review
 
 ## Review convergence loop
 
-An AI reviewer (claude[bot] via /claude-review and/or GitHub Copilot) reviews the open PR. The `review-convergence` skill drives it to green:
+The AI reviewer (claude[bot] via /claude-review) reviews the open PR. The `review-convergence` skill drives it to green:
 
 ```mermaid
 sequenceDiagram
@@ -71,7 +71,7 @@ Hard rules (each learned from a real failure): rebase before *every* push; the r
 
 ## Pre-merge gates (`pnpm ready-to-merge`)
 
-In order: `ci:local` -> `check-branch-protection main` (run locally because the CI token cannot read the protection endpoint) -> `check-copilot-approval` (a review from `copilot-pull-request-reviewer[bot]` is required) -> `check-pr-comments` (GraphQL: all threads `isResolved`, flags `suspicious_self_resolve`) -> `pr-metrics` (informational: Copilot cycle count, size, days open).
+In order: `ci:local` -> `check-branch-protection main` (run locally because the CI token cannot read the protection endpoint) -> `check-claude-approval` (the latest `/claude-review` verdict must be Approve, on the current head) -> `check-pr-comments` (GraphQL: all threads `isResolved`, flags `suspicious_self_resolve`) -> `pr-metrics` (informational: review-cycle count, size, days open).
 
 **AI agents are blocked from `gh pr merge`** by `bash-guard.sh` (exit 2). The repo owner runs the final squash-merge once all gates pass. The branch-protection invariant means all changes go through a PR; direct pushes to `main` are blocked at the pre-push hook.
 
@@ -95,7 +95,7 @@ flowchart LR
     slow --> verify
 ```
 
-Fast rollback is a Vercel promote (no code change). Slow rollback is a revert; the `--no-verify` is the documented escape hatch for the main-push guard (the revert still goes through CI after landing, but has no PR/Copilot review, which is the accepted emergency tradeoff).
+Fast rollback is a Vercel promote (no code change). Slow rollback is a revert; the `--no-verify` is the documented escape hatch for the main-push guard (the revert still goes through CI after landing, but has no PR/claude-review, which is the accepted emergency tradeoff).
 
 ## What this buys
 

@@ -29,7 +29,7 @@ flowchart LR
     commit --> battery["run the 5-agent battery"] --> ledger["review:findings clear; resolve any"]
     ledger --> stamp["review:stamp"] --> push["push (passes pre-push)"]
     push --> pr["ready-for-pr; gh pr create (fill template)"]
-    pr --> conv["converge Copilot"] --> ready["ready-to-merge"] --> owner["owner merges"]
+    pr --> conv["converge claude-review"] --> ready["ready-to-merge"] --> owner["owner merges"]
     owner --> adr["add an ADR"]
 ```
 

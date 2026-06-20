@@ -42,13 +42,14 @@ try {
   process.exit(1);
 }
 
-// Copilot review gate — AI agents only. The repo owner may skip by calling
-// gh pr merge directly without running this script.
-const copilotArgs = ['tsx', 'scripts/check-copilot-approval.ts', ...(prNumber ? [prNumber] : [])];
+// claude-review gate — AI agents only. The repo owner may skip by calling
+// gh pr merge directly without running this script. Requires the latest
+// /claude-review verdict to be Approve, on the current head (not stale).
+const claudeArgs = ['tsx', 'scripts/check-claude-approval.ts', ...(prNumber ? [prNumber] : [])];
 try {
-  execFileSync('pnpm', copilotArgs, { stdio: 'inherit' });
+  execFileSync('pnpm', claudeArgs, { stdio: 'inherit' });
 } catch {
-  process.stderr.write('\n[ready-to-merge] Copilot review gate failed. See message above.\n');
+  process.stderr.write('\n[ready-to-merge] claude-review gate failed. See message above.\n');
   process.exit(1);
 }
 

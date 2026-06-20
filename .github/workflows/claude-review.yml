@@ -3,7 +3,8 @@
 # Comment `/claude-review` on a PR and Claude posts a real GitHub review the way
 # the @claude mention does: the "Claude Code is working…" acknowledgement, a pull
 # request overview, AND inline line-anchored review threads on the code, ALL authored
-# by claude[bot]. A fallback reviewer for when Copilot is off / errored / out of quota.
+# by claude[bot]. As of 2026-06-20 this is the SOLE AI PR reviewer (Copilot dropped);
+# the ready-to-merge claude-gate requires its overview verdict to be Approve on HEAD.
 #
 # This runs the action in TAG MODE (a custom trigger_phrase, no `prompt` input), so
 # the action does the posting under its own GitHub App identity (claude[bot]). That is
