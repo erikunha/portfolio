@@ -3,14 +3,19 @@ import { describe, expect, it } from 'vitest';
 
 const ci = readFileSync(`${process.cwd()}/.github/workflows/ci.yml`, 'utf8');
 
-// Extract the path list of a `<var>=$(git diff ... )` assignment in detect-changes.
-// The first ')' after the assignment closes the command substitution; none of the
-// paths or the `"$BASE_SHA...$HEAD_SHA"` range contain a ')'.
+// Extract the full `<var>=$(git diff ... )` assignment in detect-changes. Balances
+// parens from the opening `$(` so `:(exclude)<path>` pathspecs (which contain their
+// own parens) don't truncate the slice at the wrong ')'.
 function gitDiffPaths(varName: string): string {
   const start = ci.indexOf(`${varName}=$(git diff`);
   if (start === -1) throw new Error(`${varName} assignment not found in ci.yml`);
-  const end = ci.indexOf(')', start);
-  return ci.slice(start, end);
+  let depth = 0;
+  let i = ci.indexOf('$(', start) + 1; // index of the opening '('
+  for (; i < ci.length; i++) {
+    if (ci[i] === '(') depth++;
+    else if (ci[i] === ')' && --depth === 0) break;
+  }
+  return ci.slice(start, i);
 }
 
 describe('ci.yml detect-changes `ui` filter (visual / Argos gate)', () => {
@@ -32,11 +37,40 @@ describe('ci.yml detect-changes `ui` filter (visual / Argos gate)', () => {
     expect(app).toMatch(/\bpackage\.json\b/);
   });
 
+  it('excludes lib/eval and lib tests from the ui filter (harness/tests never render)', () => {
+    // lib/ is gated (it holds render-affecting runtime code), but lib/eval/ is
+    // eval-harness code and lib/__tests__/ is unit tests — neither changes a pixel,
+    // yet both would otherwise trip the visual suite + spurious Argos on every
+    // agent-eval sub-PR. They are carved out via :(exclude) pathspecs.
+    expect(ui).toMatch(/:\(exclude\)lib\/eval\/\*\*/);
+    expect(ui).toMatch(/:\(exclude\)lib\/__tests__\/\*\*/);
+    // The carve-out is surgical: lib/ itself stays in the gated list.
+    expect(ui).toMatch(/\blib\/\s/);
+  });
+
   it('re-arms `ui` via a semantic jq compare of package.json render fields', () => {
     // Structural: the gate compares ONLY {browserslist, pnpm} with jq (not a line-
     // grep, which misses array-element edits) and ORs the result into the decision.
     expect(ci).toMatch(/jq -cS '\{browserslist,pnpm\}'/);
     expect(ci).toMatch(/-n "\$ui_changed" \|\| -n "\$ui_pkg_changed"/);
+  });
+});
+
+describe('ci.yml detect-changes `ai` filter (ask-eval calibration/corpus gate)', () => {
+  const ai = gitDiffPaths('ai_changed');
+
+  it('watches lib/eval/ so a change to the shared judge core triggers the ai gate', () => {
+    // judge()/JUDGE_SYSTEM + the calibration runner were extracted out of
+    // scripts/ask-eval.ts into lib/eval/. ask-eval.ts now IMPORTS them, so a PR
+    // that edits only lib/eval/judge.ts (e.g. the judge prompt or retry logic)
+    // changes the graded behavior. Without lib/eval/ in this pathspec that PR
+    // sets ai=false and the calibration+corpus gate skips — a judge regression
+    // would ship unguarded.
+    expect(ai).toMatch(/\blib\/eval\//);
+  });
+
+  it('still watches scripts/ask-eval.ts (the gate entrypoint)', () => {
+    expect(ai).toMatch(/\bscripts\/ask-eval\.ts\b/);
   });
 });
 

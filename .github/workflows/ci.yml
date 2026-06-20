@@ -7,6 +7,8 @@ name: CI
 # Path-filter strategy (detect-changes job):
 #   ai=true   → app/api/ask/, lib/ask/, lib/ask-log.ts, lib/ip-hash.ts, lib/agent/,
 #               lib/hiring-profile.ts, lib/stream-protocol.ts, lib/rate-limit.ts,
+#               lib/eval/ (shared judge()/JUDGE_SYSTEM + calibration runner that
+#               scripts/ask-eval.ts imports — a judge change must trigger the gate),
 #               content/ask-eval-corpus.ts, content/perf-receipts.ts,
 #               content/projects.ts, content/unknowns.ts, content/visa.ts,
 #               scripts/ask-eval.ts
@@ -517,6 +519,7 @@ jobs:
           ai_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
             app/api/ask/ lib/ask/ lib/ask-log.ts lib/ip-hash.ts \
             lib/stream-protocol.ts lib/rate-limit.ts lib/agent/ lib/hiring-profile.ts \
+            lib/eval/ \
             content/ask-eval-corpus.ts content/ask-eval-calibration.ts \
             content/perf-receipts.ts \
             content/projects.ts content/unknowns.ts content/visa.ts \
@@ -548,9 +551,15 @@ jobs:
           # line-grep misses array-element edits like "chrome >= 93" -> ">= 95", whose
           # changed line does not contain the key name); re-arm `ui` only when they
           # differ. jq is preinstalled on GitHub hosted runners.
+          # lib/eval/ (eval-harness code, never in the Next runtime) and
+          # lib/__tests__/ (lib unit tests) are EXCLUDED via :(exclude) pathspecs:
+          # neither can change a rendered pixel, but both live under lib/ and would
+          # otherwise trip the visual suite + spurious Argos diffs (e.g. every
+          # agent-eval sub-PR touches lib/eval/). lib runtime source stays gated.
           ui_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
             app/ components/ design-system/ lib/ content/ public/ \
-            next.config.ts playwright.config.ts pnpm-lock.yaml)
+            next.config.ts playwright.config.ts pnpm-lock.yaml \
+            ':(exclude)lib/eval/**' ':(exclude)lib/__tests__/**')
           base_render=$(git show "$BASE_SHA:package.json" 2>/dev/null | jq -cS '{browserslist,pnpm}' 2>/dev/null || echo null)
           head_render=$(git show "$HEAD_SHA:package.json" 2>/dev/null | jq -cS '{browserslist,pnpm}' 2>/dev/null || echo null)
           ui_pkg_changed=""

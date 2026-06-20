@@ -39,6 +39,7 @@
 | `pnpm pr-metrics [<pr>]` | During or after PR review — reports Copilot cycle count, size, days open |
 | `pnpm changelog:sync` | After any commit with scope `(design-system)` — regenerates `app/design-system/changelog/page.mdx` from full git history |
 | `pnpm ask:eval` | When maintaining the AI eval harness (corpus/calibration/runner changes) — calibration → corpus → gate, always writes `ask-eval-result.json`; writes `ask:eval:latest` to Upstash Redis only when `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` are set. See `.claude/skills/ai-eval-update` |
+| `pnpm eval:agents` | When maintaining the agent/prompt eval harness (`evals/agents/`, `scripts/agent-eval.ts`). Monte-Carlo prompt-regression over the PLATFORM's own rules (distinct from `ask:eval`, which evals the `/api/ask` PRODUCT): calibration → corpus N runs → pass@k / pass^k / variance; `--ab` adds a control-vs-treatment delta. Writes `agent-eval-result.json`; publishes `agent-eval:latest` only when Upstash env is set. Non-blocking CI (weekly `schedule` + `workflow_dispatch`). |
 
 ## Engineering context
 
