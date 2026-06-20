@@ -13,7 +13,7 @@
 // load-bearing "one judge prompt" invariant is already held by the shared
 // judge() both runners call.
 
-import { judge } from '@/lib/eval/judge';
+import { JUDGE_ERROR_REASON_PREFIX, JUDGE_NO_JSON_REASON, judge } from '@/lib/eval/judge';
 import type { CalibrationCase, CalibrationResult } from '@/lib/eval/types';
 
 // Minimum judge↔human agreement on the gold set. Below this the judge has
@@ -26,10 +26,11 @@ export const MIN_CALIBRATION_AGREEMENT = 0.85;
 export const CALIBRATION_ERROR_FRACTION_LIMIT = 0.5;
 
 // A judge-side FAILURE (retry exhaustion or a malformed/no-JSON response) is an
-// outage, NOT a genuine disagreement. Both judge() failure reasons are detected
-// from the verdict reason: the retry-exhaustion prefix and the no-JSON reason.
+// outage, NOT a genuine disagreement. The two failure reasons are imported from
+// judge.ts (the single source of truth), so a rename there cannot silently
+// desync this outage-vs-drift classifier.
 function isJudgeError(reason: string): boolean {
-  return reason.startsWith('judge errored after') || reason === 'judge returned no JSON';
+  return reason.startsWith(JUDGE_ERROR_REASON_PREFIX) || reason === JUDGE_NO_JSON_REASON;
 }
 
 export type CalibrationGoldCase = {

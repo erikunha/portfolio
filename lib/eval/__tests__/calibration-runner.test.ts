@@ -13,7 +13,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { JudgeVerdict } from '@/lib/eval/types';
 
 const { mockJudge } = vi.hoisted(() => ({ mockJudge: vi.fn() }));
-vi.mock('@/lib/eval/judge', () => ({ judge: mockJudge }));
+// Override only judge(); spread the original so the REAL error-reason constants
+// (JUDGE_ERROR_REASON_PREFIX / JUDGE_NO_JSON_REASON) pass through — isJudgeError
+// imports them, and re-hardcoding them in the mock would defeat the single source.
+vi.mock('@/lib/eval/judge', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/eval/judge')>()),
+  judge: mockJudge,
+}));
 
 import {
   CALIBRATION_ERROR_FRACTION_LIMIT,

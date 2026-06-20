@@ -15,7 +15,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const { mockGenerateText } = vi.hoisted(() => ({ mockGenerateText: vi.fn() }));
 vi.mock('ai', () => ({ generateText: mockGenerateText }));
 
-import { JUDGE_SYSTEM, judge, MAX_JUDGE_RETRIES } from '@/lib/eval/judge';
+import {
+  JUDGE_ERROR_REASON_PREFIX,
+  JUDGE_NO_JSON_REASON,
+  JUDGE_SYSTEM,
+  judge,
+  MAX_JUDGE_RETRIES,
+} from '@/lib/eval/judge';
 
 const item = { id: 'q1', question: 'Q?', kind: 'factual', expect: 'must convey X' };
 
@@ -62,7 +68,7 @@ describe('lib/eval/judge', () => {
     });
     const v = await judge(item, 'an answer', { model: 'm' });
     expect(v.pass).toBe(false);
-    expect(v.reason).toBe('judge returned no JSON');
+    expect(v.reason).toBe(JUDGE_NO_JSON_REASON); // ties judge() output to the shared constant
   });
 
   it('fails closed with the retry-exhaustion prefix after all attempts throw', async () => {
@@ -74,7 +80,9 @@ describe('lib/eval/judge', () => {
     await vi.runAllTimersAsync(); // drive both backoffs + flush microtasks
     const v = await vPromise;
     expect(v.pass).toBe(false);
-    expect(v.reason.startsWith(`judge errored after ${MAX_JUDGE_RETRIES + 1} attempts`)).toBe(true);
+    expect(
+      v.reason.startsWith(`${JUDGE_ERROR_REASON_PREFIX} ${MAX_JUDGE_RETRIES + 1} attempts`),
+    ).toBe(true);
     // 1 initial + MAX_JUDGE_RETRIES retries
     expect(mockGenerateText).toHaveBeenCalledTimes(MAX_JUDGE_RETRIES + 1);
   });

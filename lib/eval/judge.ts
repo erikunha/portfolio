@@ -17,6 +17,13 @@ import type { JudgeVerdict } from '@/lib/eval/types';
 // conservative grading semantics are preserved; we only reduce flake rate.
 export const MAX_JUDGE_RETRIES = 2;
 
+// The two reason strings judge() emits on a JUDGE-SIDE failure (vs a genuine
+// disagreement). Exported as the SINGLE SOURCE OF TRUTH so calibration runners
+// classify an outage by importing these, never by re-hardcoding the literals —
+// a rename here then can't silently desync an outage-vs-drift classifier.
+export const JUDGE_NO_JSON_REASON = 'judge returned no JSON';
+export const JUDGE_ERROR_REASON_PREFIX = 'judge errored after';
+
 export const JUDGE_SYSTEM =
   "You are a strict evaluation judge for an AI feature on a software engineer's " +
   "portfolio site. You are given a QUESTION, the feature's ANSWER, and a " +
@@ -68,8 +75,7 @@ export async function judge(
       // The model is asked for bare JSON, but defensively extract the first
       // {...} span in case it wraps the object in prose or a code fence.
       const match = text.match(/\{[\s\S]*\}/);
-      if (!match)
-        return { pass: false, reason: 'judge returned no JSON', inputTokens, outputTokens };
+      if (!match) return { pass: false, reason: JUDGE_NO_JSON_REASON, inputTokens, outputTokens };
       const parsed = JSON.parse(match[0]) as { pass?: unknown; reason?: unknown };
       return {
         pass: parsed.pass === true,
@@ -86,7 +92,7 @@ export async function judge(
       const msg = err instanceof Error ? err.message : String(err);
       return {
         pass: false,
-        reason: `judge errored after ${MAX_JUDGE_RETRIES + 1} attempts: ${msg}`,
+        reason: `${JUDGE_ERROR_REASON_PREFIX} ${MAX_JUDGE_RETRIES + 1} attempts: ${msg}`,
         inputTokens: 0,
         outputTokens: 0,
       };

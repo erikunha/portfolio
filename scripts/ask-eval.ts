@@ -53,7 +53,7 @@ import {
   judgeCostUsdFrom,
   PRICING_USD_PER_MTOK,
 } from '@/lib/eval/cost';
-import { judge } from '@/lib/eval/judge';
+import { JUDGE_ERROR_REASON_PREFIX, JUDGE_NO_JSON_REASON, judge } from '@/lib/eval/judge';
 import { percentile } from '@/lib/eval/percentile';
 import { publishAggregate } from '@/lib/eval/redis-publish';
 import { parseStreamChunk } from '@/lib/stream-protocol';
@@ -339,11 +339,12 @@ async function runCalibration(): Promise<CalibrationResult> {
     judgeOutputTokens += verdict.outputTokens;
     // A judge-side FAILURE (retry exhaustion, or a malformed/no-JSON response)
     // is an outage, NOT a genuine disagreement — distinguishing it lets the
-    // caller avoid misattributing a judge problem to model drift. Both judge()
-    // failure reasons count: the retry-exhaustion prefix and the no-JSON reason.
+    // caller avoid misattributing a judge problem to model drift. The two
+    // failure reasons are imported from judge.ts (single source of truth) so a
+    // rename there cannot silently desync this classifier.
     const errored =
-      verdict.reason.startsWith('judge errored after') ||
-      verdict.reason === 'judge returned no JSON';
+      verdict.reason.startsWith(JUDGE_ERROR_REASON_PREFIX) ||
+      verdict.reason === JUDGE_NO_JSON_REASON;
     const agreed = !errored && verdict.pass === item.humanVerdict;
     cases.push({
       id: item.id,

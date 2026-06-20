@@ -1,7 +1,9 @@
 // evals/agents/__tests__/corpus.test.ts
-// Structural test for the seeded agent-eval corpus. Imports the three CASE.ts
-// modules directly (the loader is C-a.9) and asserts the corpus invariants the
-// Monte-Carlo runner depends on: unique ids; at least one code grader; at least
+// Structural test for the seeded agent-eval corpus. Imports the three single-arm
+// seed CASE.ts modules directly (the loader is C-a.9; the A/B-variant
+// ab-rule-loadbearing case added in C-c is covered by ab-variant.test.ts) and
+// asserts the corpus invariants the Monte-Carlo runner depends on: unique ids;
+// at least one code grader; at least
 // one knownHard case (anti-saturation — the eval must not saturate at 100% and
 // stop discriminating); and both tiers represented (mechanical → haiku,
 // judgment → sonnet model assignment).
