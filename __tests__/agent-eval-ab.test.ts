@@ -47,8 +47,12 @@ describe('agent-eval --ab (SDK mocked, no real Gateway call)', () => {
       return reply(i === 0 ? 'git add lib/eval/ab.ts' : 'git add -A');
     });
 
-    const abCases = selectAbCases(await loadCases());
-    expect(abCases.length).toBeGreaterThan(0);
+    // Scope to the git-add A/B fixture this mock is written for: the mock routes by
+    // the git-add rule text and emits git-add responses, so it only grades that case.
+    // Other A/B cases in the corpus (e.g. ab-consumer-scan-ci-config) have different
+    // graders and must not be driven by this git-add mock.
+    const abCases = selectAbCases(await loadCases()).filter((c) => c.id === 'ab-rule-loadbearing');
+    expect(abCases.length).toBe(1);
 
     const { control, treatment, ab } = await runAbArms(abCases, {
       runs: 5,
