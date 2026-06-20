@@ -72,3 +72,8 @@ tsconfig.tsbuildinfo
 
 # Semgrep local SARIF output
 semgrep.sarif
+
+# Stryker mutation testing output — transient sandbox + generated reports
+.stryker-tmp/
+mutation-report.html
+mutation-report.json
