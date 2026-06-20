@@ -9,7 +9,6 @@ export default {
     // bugs here are security/correctness issues, not just UI regressions.
     'app/api/**/*.ts',
     'lib/**/*.ts',
-    'scripts/**/*.ts',
     // Exclude test files, type-only files, and generated output.
     '!**/*.test.*',
     '!**/*.spec.*',
