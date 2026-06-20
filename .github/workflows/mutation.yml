@@ -1,8 +1,12 @@
 name: Mutation Testing
 
 # Stryker mutation testing — weekly signal on test suite sensitivity.
-# NOT a PR gate: mutation testing is slow (~10-15 min) and its value is
-# trend tracking, not per-commit blocking. Results are uploaded as an artifact.
+# NOT a PR gate: a real run is slow. The WORKING runner executes the suite
+# against ~2000 mutants and takes far longer than the old "~10-15 min" estimate,
+# which was measured while the runner was silently crashing (loading no tests, so
+# it "finished" fast doing nothing). Its value is trend tracking, not per-commit
+# blocking. Results are uploaded as an artifact. timeout-minutes below is set
+# generously because this is a weekly, non-blocking job.
 #
 # Mutation score below 60% is a signal that tests are not sensitive to the
 # bugs they claim to cover. See STANDARDS.md Chapter 5 (Testing).
@@ -18,7 +22,10 @@ jobs:
   mutation:
     name: Stryker mutation score
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 30 min cancelled the working runner mid-run (the dead runner used to finish
+    # in ~7 min doing nothing). A real full-scope run needs much more headroom;
+    # 120 is a generous ceiling for a non-blocking weekly job (GitHub job max 360).
+    timeout-minutes: 120
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -56,7 +63,9 @@ jobs:
             const m = Object.values(r.files || {}).flatMap(f => f.mutants || []);
             const scoreable = m.filter(x => ['Killed', 'Timeout', 'Survived', 'NoCoverage'].includes(x.status)).length;
             if (scoreable === 0) {
-              console.error('::error::mutation-report.json has zero scoreable mutants — the runner did not execute any tests (infrastructure failure, not a low score).');
+              // ::error:: workflow commands must go to STDOUT — GitHub Actions
+              // does not parse them from stderr, so console.log (not console.error).
+              console.log('::error::mutation-report.json has zero scoreable mutants — the runner did not execute any tests (infrastructure failure, not a low score).');
               process.exit(1);
             }
             console.log('Runner healthy: ' + scoreable + ' scoreable mutant(s) produced.');
