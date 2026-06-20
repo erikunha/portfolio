@@ -1,8 +1,9 @@
 // evals/agents/__tests__/corpus.test.ts
 // Structural test for the agent-eval corpus. The `cases` array holds the single-arm
 // cases (the original seeds plus claude-review-request); A/B cases (ab-rule-loadbearing,
-// ab-consumer-scan-ci-config) are excluded by convention and exercised by
-// ab-variant.test.ts. It asserts the corpus invariants the
+// ab-consumer-scan-ci-config) are excluded by convention: structurally validated by
+// load.test.ts (which schema-parses every discovered case), with their assert
+// boundaries pinned by the PASS/FAIL boundary tests below. It asserts the corpus invariants the
 // Monte-Carlo runner depends on: unique ids; at least one code grader; at least
 // one knownHard case (anti-saturation, the eval must not saturate at 100% and
 // stop discriminating); and both tiers represented (mechanical -> haiku,
