@@ -42,3 +42,66 @@ export function assertExpectedFindings(results) {
   }
   return { ok: true };
 }
+
+import { spawnSync } from 'node:child_process';
+import { cpSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+const FIXTURE_DIR = 'tests/fixtures/semgrep';
+const VENDORED_CONFIG = '.semgrep';
+
+// Run Semgrep over scanDir with the vendored config only, JSON to stdout.
+// SEMGREP_BIN (set by CI to the absolute console-script path) is honored
+// exactly; otherwise probe the bare `semgrep` on PATH (local dev). No
+// `python -m semgrep` fallback: semgrep ships a console script only.
+function runSemgrepJson(scanDir) {
+  const cmd = process.env.SEMGREP_BIN || 'semgrep';
+  const res = spawnSync(
+    cmd,
+    ['scan', '--config', VENDORED_CONFIG, '--json', '--metrics', 'off', scanDir],
+    { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
+  );
+  if (res.error || res.status === null) {
+    return {
+      ok: false,
+      reason: `semgrep failed to run: ${res.error?.message ?? 'no exit status'}`,
+    };
+  }
+  try {
+    return { ok: true, json: JSON.parse(res.stdout) };
+  } catch (e) {
+    return {
+      ok: false,
+      reason: `unparseable semgrep JSON (stderr: ${res.stderr?.slice(0, 400) ?? ''}): ${e.message}`,
+    };
+  }
+}
+
+function main() {
+  const tmp = mkdtempSync(join(tmpdir(), 'semgrep-selftest-'));
+  try {
+    cpSync(join(FIXTURE_DIR, 'vulnerable.ts'), join(tmp, 'vulnerable.ts'));
+    cpSync(join(FIXTURE_DIR, 'clean.ts'), join(tmp, 'clean.ts'));
+
+    const scan = runSemgrepJson(tmp);
+    if (!scan.ok) {
+      console.error(`[check-semgrep-fixture] INFRA: ${scan.reason}`);
+      process.exit(2);
+    }
+    const verdict = assertExpectedFindings(scan.json.results ?? []);
+    if (!verdict.ok) {
+      console.error(`[check-semgrep-fixture] RULE REGRESSION: ${verdict.reason}`);
+      process.exit(1);
+    }
+    console.log(
+      '[check-semgrep-fixture] OK: vendored rules fire on vulnerable.ts; clean.ts is quiet.',
+    );
+    process.exit(0);
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+}
+
+// Run only when invoked directly, not when imported by the unit test.
+if (import.meta.url === `file://${process.argv[1]}`) main();
