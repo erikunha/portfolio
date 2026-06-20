@@ -5,7 +5,8 @@
 //
 // Verdict formats are taken from real claude-review overviews observed on this
 // repo's PRs (#152 "(head `sha`)", #153 "Reviewed at HEAD `sha`", #154
-// "Reviewed at head commit `sha`."), so the gate survives the format variance.
+// "Reviewed at head commit `sha`.", #155 "the committed HEAD (`sha`):"), so the
+// gate survives the format variance.
 
 import { describe, expect, it } from 'vitest';
 import {
@@ -94,7 +95,19 @@ describe('extractReviewedSha', () => {
     expect(extractReviewedSha(`This PR (head \`${sha}\`) does X.`)).toBe(sha);
   });
 
+  it('extracts from the "committed HEAD (`sha`):" form (separator between head and the backtick)', () => {
+    const sha = '3665027e14b928faa3dad325b202efc24077fc5b';
+    expect(extractReviewedSha(`...confirmed fixed in the committed HEAD (\`${sha}\`):`)).toBe(sha);
+  });
+
   it('returns null when no head SHA is present', () => {
     expect(extractReviewedSha('Approve. No commit reference here.')).toBeNull();
+  });
+
+  it('does not match a backticked SHA quoted far away from the head declaration', () => {
+    // "head" appears, but the only backticked SHA is in unrelated prose well past
+    // the proximity window, so it must NOT be treated as the reviewed head.
+    const body = 'The head of the list is fine; separately, an old run was at `deadbeef1234567`.';
+    expect(extractReviewedSha(body)).toBeNull();
   });
 });
