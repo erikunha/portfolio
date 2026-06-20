@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-06-20 - Spec `clarify` convention
+
+- **2026-06-20** · **`## Clarifications resolved` spec-template convention (handbook-routed, smallest platform-gaps unit).** Every spec now carries a `## Clarifications resolved` section listing the open design questions the brainstorming interview closed and their resolutions, in the form `<question> -> <resolution>`. Documented in `docs/handbook/knowledge-architecture.md`'s spec→plan pipeline section; several specs in this program already use the shape implicitly, so the convention names existing practice rather than adding ceremony. The failure mode it addresses: a spec that omits what the interview decided forces a reader (or the architect gate) to replay the interview to recover intent. **Deliberately scoped down from the rev.1 design:** the proposed `tasks` artifact was DROPPED because the plans in the plans directory already ARE stable-ID checkbox task lists mapping one-to-one to commits, so a separate artifact would duplicate and fragment the working single-plan pattern; and the convention was routed to the handbook rather than a `.claude/` skill or rule (a skill fires on action triggers, a rule needs a file-scope trigger, and this is a passive reference convention), adding zero `.claude/` surface and zero CLAUDE.md prose. _Reversible: revert the single `docs/handbook/knowledge-architecture.md` edit; no code, no production impact, no `.claude/` change._
+
 ## 2026-06-20 — claude-review is the sole AI PR reviewer (Copilot dropped)
 
 - **2026-06-20** — **GitHub Copilot review dropped; `/claude-review` (claude[bot]) is now the sole AI reviewer.** Copilot's bot errored GitHub-side across an entire working session while claude-review carried the real review load, so the user made claude-review the standing reviewer. The convergence loop re-requests only `/claude-review`; nothing requests `copilot-pull-request-reviewer` anymore. _Reversible: re-add a Copilot request step + restore the copilot-gate._
