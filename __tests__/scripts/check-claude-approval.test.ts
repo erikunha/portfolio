@@ -5,7 +5,8 @@
 //
 // Verdict formats are taken from real claude-review overviews observed on this
 // repo's PRs (#152 "(head `sha`)", #153 "Reviewed at HEAD `sha`", #154
-// "Reviewed at head commit `sha`."), so the gate survives the format variance.
+// "Reviewed at head commit `sha`.", #155 "the committed HEAD (`sha`):"), so the
+// gate survives the format variance.
 
 import { describe, expect, it } from 'vitest';
 import {
