@@ -42,7 +42,7 @@ One SHA-pinned `actions/cache` step, placed before "Run mutation tests":
 
 ```yaml
 - name: Cache Stryker incremental file
-  uses: actions/cache@<sha-pinned> # v4
+  uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
   with:
     path: .stryker-incremental.json
     key: stryker-incremental-${{ github.run_id }}
