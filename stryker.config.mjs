@@ -10,6 +10,14 @@ export default {
   // explicitly makes discovery deterministic under pnpm. See DECISIONS.md.
   plugins: ['@stryker-mutator/vitest-runner'],
   coverageAnalysis: 'perTest',
+  // Incremental mode: re-test only mutants in files changed since the last run,
+  // reusing cached statuses for the rest. The report stays complete (cached +
+  // fresh), so the score, the de-masking guard, and the trend signal are unchanged.
+  // incrementalFile is pinned to repo root (Stryker's default is
+  // reports/stryker-incremental.json) so the config, the actions/cache path, and
+  // .gitignore all reference the same file. CI caches it across weekly runs.
+  incremental: true,
+  incrementalFile: '.stryker-incremental.json',
   mutate: [
     // API routes and server logic are the highest-value mutation targets:
     // bugs here are security/correctness issues, not just UI regressions.

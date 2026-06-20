@@ -40,6 +40,21 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: Cache Stryker incremental file
+        # Evolving-cache pattern: the run_id key is unique so the primary key always
+        # misses, forcing the post-step to SAVE the updated file; restore-keys
+        # restores the most recent prior file. Not keyed on the lockfile on purpose:
+        # Stryker self-heals an incompatible incremental file by rebuilding (one full
+        # run), so binding the key to deps would force a needless full run on every
+        # Dependabot bump. A cache miss (first run, or 7-day eviction) is a correct
+        # full run that re-seeds the cache.
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: .stryker-incremental.json
+          key: stryker-incremental-${{ github.run_id }}
+          restore-keys: |
+            stryker-incremental-
+
       - name: Run mutation tests
         run: pnpm test:mutation
         continue-on-error: true

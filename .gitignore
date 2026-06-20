@@ -77,3 +77,4 @@ semgrep.sarif
 .stryker-tmp/
 mutation-report.html
 mutation-report.json
+.stryker-incremental.json
