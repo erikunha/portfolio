@@ -80,6 +80,28 @@ flowchart LR
 
 A spec is the approved "what and why" with explicit gaps to close. A plan is its 1:1 paired "how", decomposed into tasks and (for large work) sharded into sub-PR plans and workstreams. The architect gate sits between them, mechanically.
 
+### The `clarify` convention (spec template)
+
+Every spec carries a `## Clarifications resolved` section: the design questions the
+brainstorming interview opened and the resolution each one closed with. This names a
+shape several specs already use implicitly. It makes the spec self-contained (a reader
+sees what was decided and why, without replaying the interview) and gives the
+architect gate an explicit list to check the plan against. The section is a short
+list, one line per question, in the form `<open question> -> <resolution>`:
+
+```markdown
+## Clarifications resolved
+
+- Should the `tasks` artifact be a separate file? -> No; plans already carry
+  stable-ID checkbox tasks, so a separate artifact would duplicate them.
+- Where does the convention live? -> The handbook, not a skill or rule (it is a
+  passive reference convention, not an action trigger).
+```
+
+There is no separate `tasks` artifact: the plans in the plans directory already ARE
+discrete, stable-ID checkbox task lists that map one-to-one to commits, so the "how"
+decomposition the convention would otherwise add already exists in every plan.
+
 ## The memory system
 
 Two complementary mechanisms carry knowledge across the fresh-context boundary of each session:
