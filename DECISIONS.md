@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-06-19 — Mutation testing reconcile: scope narrowed to the API boundary
+
+- **2026-06-19** — **Stryker `mutate` scope narrowed to `app/api/**` + `lib/**`; `scripts/**` removed.** Mutation testing (already wired at `ffa7009`) exists to prove the test suite *catches regressions* at the highest-leverage surface: API routes and server logic, where a missed bug is a security/correctness defect rather than a UI regression. `scripts/**` is build/CI tooling — its failures surface directly in CI runs, so mutating it adds run time and maintenance drag (the precise failure mode the unit exists to avoid) for marginal signal. Narrowing aligns the config with the standing "highest-value mutation targets" comment already in `stryker.config.mjs`. _Reversible: re-add `'scripts/**/*.ts'` to the `mutate` array if scripts ever grow logic worth mutation-guarding._
+
 ## 2026-06-19 — Agent/prompt eval harness (platform self-eval, non-blocking)
 
 - **2026-06-19** — **Monte-Carlo prompt-regression harness for the platform's own prompts/rules** (`feat/platform-gaps-2026-agent-eval`). Adds `lib/eval/` (shared judge, percentile, cost, Redis-publish, Monte-Carlo, calibration, A/B, target-run, grading extracted from `scripts/ask-eval.ts`), the `evals/agents/` gold corpus, `scripts/agent-eval.ts`, and a `pnpm eval:agents` runner. Rationale: the platform asserts CLAUDE.md rules are load-bearing but nothing *measured* whether a rule actually moves an agent's success rate. This harness runs a rule/prompt against a gold corpus N times, grades each run (code assertions first, then one calibrated LLM-judge call), and reports pass@k / pass^k / variance, with an A/B (`--ab`) control-vs-treatment mode that quantifies whether pruning a rule degrades behavior. It evals the **platform's own prompts**, distinct from `ask:eval` which evals the **product** (`/api/ask`). Foundation: the `wshobson plugin-eval` Monte-Carlo pattern.
