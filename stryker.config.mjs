@@ -3,6 +3,12 @@
 export default {
   packageManager: 'pnpm',
   testRunner: 'vitest',
+  // WHY: Stryker's default plugin discovery glob ('@stryker-mutator/*') does not
+  // resolve the .pnpm-symlinked vitest-runner in its worker process, so the runner
+  // silently fails to load ("Cannot find TestRunner plugin vitest") and the weekly
+  // job produced zero signal (masked by continue-on-error). Naming the plugin
+  // explicitly makes discovery deterministic under pnpm. See DECISIONS.md.
+  plugins: ['@stryker-mutator/vitest-runner'],
   coverageAnalysis: 'perTest',
   mutate: [
     // API routes and server logic are the highest-value mutation targets:
