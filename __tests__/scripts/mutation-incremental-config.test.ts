@@ -29,7 +29,9 @@ describe('mutation.yml caches the incremental file', () => {
 
   it('caches the incremental file with the evolving-cache key pattern', () => {
     expect(wf).toContain('path: .stryker-incremental.json');
-    expect(wf).toContain('key: stryker-incremental-${{ github.run_id }}');
+    // Regex (not a string literal) so biome's noTemplateCurlyInString does not flag
+    // the literal GitHub Actions ${{ ... }} expression we are intentionally asserting.
+    expect(wf).toMatch(/key:\s*stryker-incremental-\$\{\{\s*github\.run_id\s*\}\}/);
     // restore-keys uses the bare prefix to restore the most recent prior file.
     expect(wf).toMatch(/restore-keys:\s*\|\s*\n\s*stryker-incremental-/);
   });
