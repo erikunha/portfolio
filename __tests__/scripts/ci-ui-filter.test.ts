@@ -56,6 +56,24 @@ describe('ci.yml detect-changes `ui` filter (visual / Argos gate)', () => {
   });
 });
 
+describe('ci.yml detect-changes `ai` filter (ask-eval calibration/corpus gate)', () => {
+  const ai = gitDiffPaths('ai_changed');
+
+  it('watches lib/eval/ so a change to the shared judge core triggers the ai gate', () => {
+    // judge()/JUDGE_SYSTEM + the calibration runner were extracted out of
+    // scripts/ask-eval.ts into lib/eval/. ask-eval.ts now IMPORTS them, so a PR
+    // that edits only lib/eval/judge.ts (e.g. the judge prompt or retry logic)
+    // changes the graded behavior. Without lib/eval/ in this pathspec that PR
+    // sets ai=false and the calibration+corpus gate skips — a judge regression
+    // would ship unguarded.
+    expect(ai).toMatch(/\blib\/eval\//);
+  });
+
+  it('still watches scripts/ask-eval.ts (the gate entrypoint)', () => {
+    expect(ai).toMatch(/\bscripts\/ask-eval\.ts\b/);
+  });
+});
+
 // Behavioral: prove the {browserslist, pnpm} projection the CI gate compares actually
 // discriminates a rendering-relevant edit from a scripts-only edit. This is the load-
 // bearing property — a line-grep failed exactly here (a browserslist array-element
