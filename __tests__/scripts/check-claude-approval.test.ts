@@ -8,7 +8,40 @@
 // "Reviewed at head commit `sha`."), so the gate survives the format variance.
 
 import { describe, expect, it } from 'vitest';
-import { extractReviewedSha, parseClaudeVerdict } from '@/scripts/check-claude-approval';
+import {
+  evaluateGate,
+  extractReviewedSha,
+  parseClaudeVerdict,
+} from '@/scripts/check-claude-approval';
+
+const HEAD = 'bb390ab172aee6735d4c5200a92be6513dbb8767';
+
+describe('evaluateGate (fail-closed merge decision)', () => {
+  it('passes only an Approve whose reviewed SHA is a prefix of HEAD', () => {
+    expect(evaluateGate('approve', HEAD, HEAD).ok).toBe(true);
+    expect(evaluateGate('approve', HEAD.slice(0, 7), HEAD).ok).toBe(true); // abbreviated SHA
+  });
+
+  it('FAILS an Approve that states no head SHA (cannot confirm it is on HEAD)', () => {
+    // The claude-review prompt requires the SHA in every overview; its absence
+    // means an in-progress/format-drift comment, not a confirmed Approve-on-HEAD.
+    const r = evaluateGate('approve', null, HEAD);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/no head SHA/i);
+  });
+
+  it('FAILS a stale Approve (reviewed SHA not a prefix of HEAD)', () => {
+    const r = evaluateGate('approve', 'deadbee', HEAD);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/STALE/);
+  });
+
+  it('FAILS reject, request-changes, and no-verdict', () => {
+    expect(evaluateGate('reject', HEAD, HEAD).ok).toBe(false);
+    expect(evaluateGate('request-changes', HEAD, HEAD).ok).toBe(false);
+    expect(evaluateGate('none', null, HEAD).ok).toBe(false);
+  });
+});
 
 describe('parseClaudeVerdict', () => {
   it('reads a plain Approve verdict', () => {

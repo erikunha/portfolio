@@ -40,6 +40,39 @@ export function extractReviewedSha(body: string): string | null {
   return sha ? sha.toLowerCase() : null;
 }
 
+export type GateResult = { ok: boolean; reason: string };
+
+// Pure gate decision. Fail-closed: only a bold Approve whose stated head SHA is a
+// prefix of the current HEAD passes. A MISSING SHA fails — the claude-review system
+// prompt requires the head SHA in every overview, so its absence means an
+// in-progress comment or a format drift, neither of which is a confirmed
+// Approve-on-HEAD. A visible block (re-run /claude-review) beats a silent pass.
+export function evaluateGate(
+  verdict: ClaudeVerdict,
+  reviewedSha: string | null,
+  headSha: string,
+): GateResult {
+  if (verdict === 'none') return { ok: false, reason: 'no verdict yet (review in progress?)' };
+  if (verdict === 'reject' || verdict === 'request-changes') {
+    return { ok: false, reason: `verdict is "${verdict}" — address findings and re-review` };
+  }
+  // verdict === 'approve'
+  if (!reviewedSha) {
+    return {
+      ok: false,
+      reason:
+        'approved, but the overview states no head SHA — cannot confirm the review is on HEAD',
+    };
+  }
+  if (!headSha.startsWith(reviewedSha)) {
+    return {
+      ok: false,
+      reason: `approved ${reviewedSha} but HEAD is ${headSha.slice(0, 12)} — STALE; re-run /claude-review`,
+    };
+  }
+  return { ok: true, reason: `verdict=approve on ${reviewedSha.slice(0, 12)}` };
+}
+
 async function run() {
   const prNumber = await resolvePrNumber(process.argv[2]);
 
@@ -73,28 +106,15 @@ async function run() {
     fail(prNumber, 'No claude-review found. Comment `/claude-review` on the PR and wait for it.');
   }
 
-  const verdict = parseClaudeVerdict(latest.body);
-  if (verdict === 'none') {
-    fail(prNumber, 'Latest claude-review has no verdict yet (review in progress?). Wait for it.');
+  const result = evaluateGate(
+    parseClaudeVerdict(latest.body),
+    extractReviewedSha(latest.body),
+    headSha,
+  );
+  if (!result.ok) {
+    fail(prNumber, `${result.reason}.`);
   }
-  if (verdict === 'reject' || verdict === 'request-changes') {
-    fail(prNumber, `Latest claude-review verdict is "${verdict}". Address findings and re-review.`);
-  }
-
-  // verdict === 'approve' — guard against a stale Approve on an older commit.
-  const reviewedSha = extractReviewedSha(latest.body);
-  if (reviewedSha && !headSha.startsWith(reviewedSha)) {
-    fail(
-      prNumber,
-      `claude-review approved ${reviewedSha} but HEAD is ${headSha.slice(0, 12)} — STALE. ` +
-        'Re-run `/claude-review` against the current head.',
-    );
-  }
-
-  const shaNote = reviewedSha
-    ? `on ${reviewedSha.slice(0, 12)}`
-    : '(reviewed SHA unverified — not stated in overview)';
-  process.stdout.write(`[claude-gate] OK (pr=${prNumber}, verdict=approve ${shaNote})\n`);
+  process.stdout.write(`[claude-gate] OK (pr=${prNumber}, ${result.reason})\n`);
 }
 
 function fail(prNumber: number, msg: string): never {

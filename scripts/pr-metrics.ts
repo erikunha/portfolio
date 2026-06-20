@@ -18,8 +18,11 @@ import { promisify } from 'node:util';
 
 const execFileP = promisify(execFile);
 
-// A claude-review cycle = one `/claude-review` trigger comment on the PR.
-const CLAUDE_REVIEW_TRIGGER = /\/claude-review\b/;
+// A claude-review cycle = one `/claude-review` trigger comment on the PR. Anchored
+// to a line that is ONLY the bare trigger (the form the GitHub Action requires), so
+// a prose comment that merely quotes the command (e.g. "run `... --body /claude-review`")
+// is not miscounted as a cycle — keeps the 1/2/>2 calibration one-trigger-per-cycle.
+const CLAUDE_REVIEW_TRIGGER = /^\s*\/claude-review\s*$/m;
 
 interface PrJson {
   number: number;
