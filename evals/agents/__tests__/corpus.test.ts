@@ -1,6 +1,8 @@
 // evals/agents/__tests__/corpus.test.ts
-// Structural test for the seeded agent-eval corpus. The `cases` array uses the
-// three single-arm seed CASE.ts modules to assert the corpus invariants the
+// Structural test for the agent-eval corpus. The `cases` array holds the single-arm
+// cases (the original seeds plus claude-review-request); A/B cases (ab-rule-loadbearing,
+// ab-consumer-scan-ci-config) are excluded by convention and exercised by
+// ab-variant.test.ts. It asserts the corpus invariants the
 // Monte-Carlo runner depends on: unique ids; at least one code grader; at least
 // one knownHard case (anti-saturation, the eval must not saturate at 100% and
 // stop discriminating); and both tiers represented (mechanical -> haiku,
@@ -19,7 +21,7 @@ import gitAddScoping from '@/evals/agents/git-add-scoping/CASE';
 import rulePruningKnownHard from '@/evals/agents/rule-pruning-knownhard/CASE';
 import { AgentEvalCaseSchema } from '@/evals/agents/schema';
 
-const cases = [gitAddScoping, architectGateRespect, rulePruningKnownHard];
+const cases = [gitAddScoping, architectGateRespect, rulePruningKnownHard, claudeReviewRequest];
 
 describe('evals/agents seeded corpus', () => {
   it('every case re-parses the schema', () => {
