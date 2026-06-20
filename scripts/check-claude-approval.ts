@@ -32,11 +32,14 @@ export function parseClaudeVerdict(body: string): ClaudeVerdict {
   return 'none';
 }
 
-// Extract the head SHA the review states it ran against. The overview format has
-// varied ("Reviewed at head commit `sha`.", "Reviewed at HEAD `sha`.",
-// "(head `sha`)"), so match a backticked 7-40 hex token right after "head".
+// Extract the head SHA the review states it ran against. The overview phrasing
+// varies a lot ("Reviewed at head commit `sha`.", "Reviewed at HEAD `sha`.",
+// "(head `sha`)", "the committed HEAD (`sha`):"), so match the first backticked
+// 7-40 hex token that appears within a short window after the word "head" — the
+// window absorbs separators like " commit ", " (", ": " without matching an
+// unrelated SHA quoted far away from the head declaration.
 export function extractReviewedSha(body: string): string | null {
-  const sha = body.match(/\bhead\b(?:\s+commit)?\s*`([0-9a-f]{7,40})`/i)?.[1];
+  const sha = body.match(/\bhead\b[^`\n]{0,24}`([0-9a-f]{7,40})`/i)?.[1];
   return sha ? sha.toLowerCase() : null;
 }
 
