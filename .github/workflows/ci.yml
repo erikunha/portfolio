@@ -106,6 +106,9 @@ jobs:
       - name: Gate-health meta-gate (hook/script references resolve)
         run: pnpm check:gate-health
 
+      - name: Detect-changes pathspec gate (no orphaned filters)
+        run: pnpm check:detect-changes-paths
+
       - name: Contrast check
         run: pnpm lint:contrast
 

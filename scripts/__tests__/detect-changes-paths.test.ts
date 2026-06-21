@@ -18,7 +18,7 @@ describe('detect-changes manifest', () => {
   });
 
   it('keeps ui a subset of app for the literal (non-exclude, non-pkg) entries', () => {
-    const literal = (xs: string[]) =>
+    const literal = (xs: readonly string[]) =>
       xs.filter((p) => !p.startsWith(':(exclude)') && p !== 'package.json');
     for (const p of literal(UI_PATHS)) expect(APP_PATHS).toContain(p);
   });
