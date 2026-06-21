@@ -4,25 +4,26 @@ name: CI
 # e2e-functional, e2e-visual-chromium, ai-eval.
 # Optional: add "CodeQL / Analyze (javascript-typescript)" to required checks in GitHub Settings to enforce it as a branch-protection gate (non-blocking by default).
 #
-# Path-filter strategy (detect-changes job):
-#   ai=true   → app/api/ask/, lib/ask/, lib/ask-log.ts, lib/ip-hash.ts, lib/agent/,
-#               lib/hiring-profile.ts, lib/stream-protocol.ts, lib/rate-limit.ts,
-#               lib/eval/ (shared judge()/JUDGE_SYSTEM + calibration runner that
-#               scripts/ask-eval.ts imports — a judge change must trigger the gate),
-#               content/ask-eval-corpus.ts, content/perf-receipts.ts,
-#               content/projects.ts, content/unknowns.ts, content/visa.ts,
-#               scripts/ask-eval.ts
-#               Gates: ai-eval (also gates on e2e-functional to avoid credit waste)
-#   app=true  → app/, components/, design-system/, lib/, content/, public/, next.config.ts,
-#               .github/workflows/ (workflow changes exercise CI itself),
-#               lighthouserc.json, lighthouserc.mobile.json (LHCI threshold config),
-#               scripts/check-bundle-size.mjs (perf budget threshold config),
-#               playwright.config.ts (axe-core + E2E runner config),
-#               package.json, pnpm-lock.yaml (dep changes must exercise perf + e2e gates)
-#               Gates: performance, e2e-functional, e2e-visual-chromium
-#   NOTE: package.json/pnpm-lock.yaml intentionally excluded from ai=true to avoid
-#         burning AI Gateway credits on every lockfile churn. Trade-off: dep bumps to
-#         AI-path packages (ai SDK, zod, @upstash/ratelimit) skip ai-eval. The
+# Path-filter strategy (detect-changes job): the WATCHED PATHSPECS are defined in
+# scripts/detect-changes-paths.mjs (AI_PATHS / APP_PATHS / UI_PATHS) - the single
+# source of truth, validated by `pnpm check:detect-changes-paths`. This comment
+# documents only the STRATEGY; it deliberately does not re-list the paths (a second
+# copy would drift - which is the whole reason the lists were hoisted to a manifest).
+#   ai=true   → the AI-eval surface: the ask route + its lib/ask, lib/agent, and
+#               lib/eval judge/calibration code, the eval corpus/calibration content,
+#               and scripts/ask-eval.ts. Gates: ai-eval (also gates e2e-functional to
+#               avoid credit waste).
+#   app=true  → anything that can affect the build / perf / e2e output: app,
+#               components, design-system, lib, content, public, the build/LHCI/E2E
+#               configs, and package.json / pnpm-lock. Gates: performance,
+#               e2e-functional, e2e-visual-chromium.
+#   ui=true   → a deliberate SUBSET of app that can change a rendered pixel (drops
+#               workflows, lighthouserc, the bundle-size script; excludes lib/eval and
+#               lib/__tests__; compares package.json browserslist/pnpm semantically).
+#               Gates: the visual / Argos job.
+#   NOTE: package.json / pnpm-lock.yaml are intentionally NOT in ai=true, to avoid
+#         burning AI Gateway credits on lockfile churn. Trade-off: dep bumps to
+#         AI-path packages (ai SDK, zod, @upstash/ratelimit) skip ai-eval; the
 #         dependency-review gate (vuln/license scan) covers dep-change security.
 # Skipped required checks are treated as satisfied by GitHub branch protection.
 
