@@ -13,6 +13,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const C = {
   reset: '\x1b[0m',
@@ -152,5 +153,6 @@ function main() {
   }
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`;
+const isMain =
+  typeof process.argv[1] === 'string' && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) main();

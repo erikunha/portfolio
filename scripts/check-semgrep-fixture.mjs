@@ -47,6 +47,7 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const FIXTURE_DIR = 'tests/fixtures/semgrep';
 const VENDORED_CONFIG = '.semgrep';
@@ -149,4 +150,5 @@ export function run({
 }
 
 // Run only when invoked directly, not when imported by the unit test.
-if (import.meta.url === `file://${process.argv[1]}`) run();
+if (typeof process.argv[1] === 'string' && import.meta.url === pathToFileURL(process.argv[1]).href)
+  run();

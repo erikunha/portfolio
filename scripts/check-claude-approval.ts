@@ -15,6 +15,7 @@
 // running this check. Only AI agents are bound by the rule.
 
 import { execFile } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 const execFileP = promisify(execFile);
@@ -136,7 +137,10 @@ async function resolvePrNumber(passed: string | undefined): Promise<number> {
 }
 
 // Only run the gate when invoked directly, not when imported by the unit test.
-if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
+if (
+  typeof process.argv[1] === 'string' &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   run().catch((err) => {
     process.stderr.write(`[claude-gate] ${err instanceof Error ? err.message : String(err)}\n`);
     process.exit(1);
