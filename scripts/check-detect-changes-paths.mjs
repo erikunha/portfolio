@@ -39,7 +39,12 @@ export function assertResolves(spec, deps = {}) {
   if (kind === 'glob') {
     return globMatches(spec, deps) ? { ok: true } : { ok: false, reason: 'glob matched no files' };
   }
-  // literal + exclude both require their base path to exist.
+  // literal + exclude both require their base path to exist. A stale exclude is
+  // harmless at runtime (it subtracts nothing the gate depends on), unlike a
+  // stale literal/glob which silently skips a gate - but we still validate it so
+  // a removed excluded dir forces a deliberate manifest edit rather than leaving
+  // a dead pathspec. WHY: the false-positive cost is one manual edit; it can
+  // never fail-open, which keeps the manifest honest at negligible risk.
   return existsSync(base) ? { ok: true } : { ok: false, reason: `${kind} path does not exist` };
 }
 
@@ -65,5 +70,18 @@ function main() {
   console.log(`[detect-changes-paths] OK: all ${specs.length} pathspecs resolve.`);
 }
 
-if (typeof process.argv[1] === 'string' && import.meta.url === pathToFileURL(process.argv[1]).href)
-  main();
+if (
+  typeof process.argv[1] === 'string' &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  // Map an unexpected fs throw (permissions, ENOTDIR) to exit 2 so the gate's
+  // taxonomy holds (2 = gate cannot run / infra), not node's default exit 1.
+  try {
+    main();
+  } catch (err) {
+    console.error(
+      `[detect-changes-paths] GATE ERROR: ${err instanceof Error ? err.message : String(err)}`,
+    );
+    process.exit(2);
+  }
+}

@@ -54,6 +54,14 @@ function diffNonEmpty(base, head, paths) {
 // so an absent field is `null` (matching jq), then canonicalizes. A missing or
 // unparseable package.json at the ref returns the literal 'null' (the shell's
 // `git show ... 2>/dev/null || echo null`).
+//
+// WHY this swallows the git error to 'null' (a deliberate fail-OPEN, unlike the
+// fail-CLOSED diffNonEmpty): this is exact parity with the replaced shell, and it
+// is what makes the legitimate "package.json added at HEAD, absent at BASE" case
+// (parity row 9) arm `ui` instead of throwing. The asymmetry is safe: `ui`
+// over-arms (runs the visual suite) on a render-slice anomaly and never under-arms,
+// and the `app` gate stays fail-closed via the literal diff. Do NOT "fix" this
+// into a throw - it would break the added-package.json case.
 function renderSlice(ref) {
   const res = spawnSync('git', ['show', `${ref}:package.json`], {
     encoding: 'utf8',
