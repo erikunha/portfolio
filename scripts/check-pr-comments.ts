@@ -1,5 +1,6 @@
 #!/usr/bin/env tsx
 import { execFile } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { sanitizeSecrets } from './lib/sanitize-secrets';
 
@@ -197,5 +198,6 @@ async function main() {
   }
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`;
+const isMain =
+  typeof process.argv[1] === 'string' && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) void main();
