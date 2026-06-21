@@ -28,3 +28,35 @@ describe('canonicalJSON', () => {
     );
   });
 });
+
+import { computeCategories } from '../detect-changes.mjs';
+
+describe('computeCategories', () => {
+  const S = (
+    o: Partial<Record<'aiChanged' | 'appChanged' | 'uiChanged' | 'pkgRenderChanged', boolean>>,
+  ) => ({
+    aiChanged: false,
+    appChanged: false,
+    uiChanged: false,
+    pkgRenderChanged: false,
+    ...o,
+  });
+
+  it('maps ai/app straight through and ui = uiChanged || pkgRenderChanged', () => {
+    expect(computeCategories(S({ aiChanged: true }))).toEqual({ ai: true, app: false, ui: false });
+    expect(computeCategories(S({ appChanged: true }))).toEqual({ ai: false, app: true, ui: false });
+    expect(computeCategories(S({ uiChanged: true }))).toEqual({ ai: false, app: false, ui: true });
+  });
+
+  it('re-arms ui from pkgRenderChanged alone (browserslist/pnpm bump, no other ui diff)', () => {
+    expect(computeCategories(S({ appChanged: true, pkgRenderChanged: true }))).toEqual({
+      ai: false,
+      app: true,
+      ui: true,
+    });
+  });
+
+  it('all-false yields all-false (docs-only PR)', () => {
+    expect(computeCategories(S({}))).toEqual({ ai: false, app: false, ui: false });
+  });
+});

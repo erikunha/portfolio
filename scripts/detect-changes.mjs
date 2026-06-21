@@ -17,3 +17,14 @@ export function canonicalJSON(value) {
   }
   return JSON.stringify(value === undefined ? null : value);
 }
+
+// Pure. Map the four change signals to the three category outputs. ai/app pass
+// straight through; ui re-arms when the package.json render slice changed even if
+// no literal ui path did (browserslist / pnpm.overrides).
+export function computeCategories({ aiChanged, appChanged, uiChanged, pkgRenderChanged }) {
+  return {
+    ai: aiChanged,
+    app: appChanged,
+    ui: uiChanged || pkgRenderChanged,
+  };
+}
