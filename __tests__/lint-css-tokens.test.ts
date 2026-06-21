@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findRawHex } from '../scripts/lint-css-tokens';
+import { assertScannable, findRawHex } from '../scripts/lint-css-tokens';
 
 describe('findRawHex', () => {
   it('flags a 3-digit hex literal with its line number', () => {
@@ -31,5 +31,23 @@ describe('findRawHex', () => {
       { line: 1, hex: '#000' },
       { line: 1, hex: '#000' },
     ]);
+  });
+});
+
+describe('assertScannable', () => {
+  it('is ok when the css dir exists and has scannable files', () => {
+    expect(assertScannable(true, ['base.css', 'components.css'])).toEqual({ ok: true });
+  });
+
+  it('fails when the css dir does not exist (gate would pass vacuously)', () => {
+    const v = assertScannable(false, []);
+    expect(v.ok).toBe(false);
+    expect(v.ok === false && v.reason).toContain('does not exist');
+  });
+
+  it('fails when the dir exists but has no .css files to scan', () => {
+    const v = assertScannable(true, []);
+    expect(v.ok).toBe(false);
+    expect(v.ok === false && v.reason).toContain('no .css files');
   });
 });

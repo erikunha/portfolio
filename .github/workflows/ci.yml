@@ -748,6 +748,22 @@ jobs:
         continue-on-error: true
         run: node scripts/run-semgrep.mjs --sarif semgrep.sarif
 
+      - name: Assert Semgrep produced a report
+        # The scan step above is continue-on-error so its FINDINGS stay
+        # non-blocking, but the scan RUNNING is required. If run-semgrep.mjs
+        # crashed before writing SARIF, the soft scan step and the
+        # file-existence-guarded upload step below both pass silently and the
+        # job goes green with zero semgrep signal (vacuous pass). Fail loudly
+        # here so "the real-tree scan did not run" is a job failure (infra),
+        # not a clean result. Findings stay non-blocking; only a no-output scan
+        # fails. `-s` requires the file to exist AND be non-empty (semgrep
+        # always writes a full SARIF structure even with zero findings).
+        run: |
+          if [ ! -s semgrep.sarif ]; then
+            echo '::error::Semgrep produced no SARIF (semgrep.sarif missing or empty); the real-tree scan did not run. This is an infra failure, not a findings result.'
+            exit 1
+          fi
+
       - name: Upload SARIF to code-scanning
         # Guard on the file existing, not just always(): if the scan step never
         # wrote SARIF (e.g. semgrep failed to run), uploading a missing path

@@ -42,12 +42,38 @@ export function findRawHex(css: string): HexHit[] {
   return out;
 }
 
+/**
+ * Gate-integrity check: the token-boundary lint must scan something. An empty
+ * file list (app/css/ missing or holding only theme.css) means zero violations
+ * for the wrong reason and the gate passes vacuously, so treat it as an infra
+ * failure rather than a clean pass.
+ */
+export function assertScannable(
+  dirExists: boolean,
+  files: string[],
+): { ok: true } | { ok: false; reason: string } {
+  if (!dirExists) return { ok: false, reason: 'app/css/ does not exist' };
+  if (files.length === 0) {
+    return { ok: false, reason: 'app/css/ has no .css files (besides theme.css) to scan' };
+  }
+  return { ok: true };
+}
+
 function main(): void {
   const root = process.cwd();
   const cssDir = join(root, 'app/css');
-  const files = existsSync(cssDir)
+  const dirExists = existsSync(cssDir);
+  const files = dirExists
     ? readdirSync(cssDir).filter((f) => f.endsWith('.css') && f !== 'theme.css')
     : [];
+
+  const scannable = assertScannable(dirExists, files);
+  if (!scannable.ok) {
+    console.error(
+      `[css-tokens] GATE ERROR: ${scannable.reason}; the token-boundary gate cannot run. Refusing to pass vacuously.`,
+    );
+    process.exit(2);
+  }
 
   const violations: string[] = [];
   for (const file of files) {
