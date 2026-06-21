@@ -113,8 +113,12 @@ jobs:
         run: pnpm lint:css-tokens
 
       - name: Package age check (supply-chain, info-only)
-        # --warn-only: exits 0 always. Blocking a push for a freshly-released dep
-        # is too aggressive for solo development. Warnings are visible in CI logs.
+        # --warn-only: exits 0 for age violations (blocking a push for a
+        # freshly-released dep is too aggressive for solo development; warnings
+        # are visible in CI logs). It still exits 2 on an infra failure (an
+        # empty or format-changed lockfile that matches 0 packages, or a
+        # missing/unreadable lockfile) regardless of --warn-only, so a blinded
+        # gate fails the job instead of passing vacuously.
         run: node scripts/check-pkg-age.mjs --warn-only
 
       - name: PR comment merge gate
@@ -747,6 +751,22 @@ jobs:
         # so semgrep exits 1 on findings and the step (and job) fail together.
         continue-on-error: true
         run: node scripts/run-semgrep.mjs --sarif semgrep.sarif
+
+      - name: Assert Semgrep produced a report
+        # The scan step above is continue-on-error so its FINDINGS stay
+        # non-blocking, but the scan RUNNING is required. If run-semgrep.mjs
+        # crashed before writing SARIF, the soft scan step and the
+        # file-existence-guarded upload step below both pass silently and the
+        # job goes green with zero semgrep signal (vacuous pass). Fail loudly
+        # here so "the real-tree scan did not run" is a job failure (infra),
+        # not a clean result. Findings stay non-blocking; only a no-output scan
+        # fails. `-s` requires the file to exist AND be non-empty (semgrep
+        # always writes a full SARIF structure even with zero findings).
+        run: |
+          if [ ! -s semgrep.sarif ]; then
+            echo '::error::Semgrep produced no SARIF (semgrep.sarif missing or empty); the real-tree scan did not run. This is an infra failure, not a findings result.'
+            exit 1
+          fi
 
       - name: Upload SARIF to code-scanning
         # Guard on the file existing, not just always(): if the scan step never
