@@ -60,3 +60,26 @@ describe('computeCategories', () => {
     expect(computeCategories(S({}))).toEqual({ ai: false, app: false, ui: false });
   });
 });
+
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+
+describe('runner main() via subprocess', () => {
+  // import.meta.url is unreliable in Vitest jsdom; use cwd-relative path instead.
+  const runner = resolve(process.cwd(), 'scripts/detect-changes.mjs');
+
+  it('non-PR event writes ai=true app=true ui=true and exits 0', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'dc-nonpr-'));
+    try {
+      const out = join(dir, 'gh_output');
+      execFileSync('node', [runner], {
+        env: { ...process.env, EVENT_NAME: 'push', GITHUB_OUTPUT: out },
+      });
+      expect(readFileSync(out, 'utf8')).toBe('ai=true\napp=true\nui=true\n');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
