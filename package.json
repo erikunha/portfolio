@@ -38,6 +38,7 @@
     "lint:contrast": "node scripts/contrast-check.mjs",
     "lint:css-tokens": "tsx scripts/lint-css-tokens.ts",
     "lint:semgrep": "node scripts/run-semgrep.mjs --error --sarif semgrep.sarif",
+    "lint:semgrep:selftest": "node scripts/check-semgrep-fixture.mjs",
     "pr:comments": "node scripts/inspect-pr-comments.mjs",
     "pr:gate": "tsx scripts/check-pr-comments.ts",
     "pr-size": "tsx scripts/pr-size.ts",

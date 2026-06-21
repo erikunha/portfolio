@@ -687,11 +687,13 @@ jobs:
           path: test-results/
 
   semgrep:
-    name: Semgrep (static analysis, non-blocking)
+    name: Semgrep (static analysis)
     runs-on: ubuntu-latest
-    # Non-blocking: report-only until the false-positive-rate baseline is recorded
-    # in DECISIONS.md (see ADR). Promotion to blocking is a separate change.
-    continue-on-error: true
+    # Split gating: the fixture self-test step below is BLOCKING (a broken
+    # vendored rule fails the job); the report-only scan step carries its own
+    # step-level continue-on-error so its FINDINGS stay non-blocking until the
+    # FP-rate baseline is recorded (see DECISIONS.md). Promotion of the scan to
+    # blocking on findings is a separate change.
     permissions:
       security-events: write   # required to upload SARIF to the code-scanning tab
       contents: read
@@ -726,12 +728,24 @@ jobs:
           echo "SEMGREP_BIN=$SEMGREP_BIN" >> "$GITHUB_ENV"
           "$SEMGREP_BIN" --version
 
+      - name: Self-test - vendored rules fire on the fixture
+        # Blocking (no continue-on-error). Proves the content-pinned .semgrep
+        # rules still fire: scans a temp copy of tests/fixtures/semgrep/{vulnerable,
+        # clean}.ts (temp because .semgrepignore excludes tests/fixtures/) with
+        # --config .semgrep ONLY, and fails the job if a vendored rule stopped
+        # firing. A clean tree makes the report-only scan below find nothing
+        # whether the rules work or not, so without this the gate is vestigial.
+        # Exit 1 = rule regression, exit 2 = infra (semgrep missing/crash). Uses
+        # the SEMGREP_BIN resolved by the install step above.
+        run: node scripts/check-semgrep-fixture.mjs
+
       - name: Run Semgrep (SARIF, report-only)
         # Omit --error so semgrep exits 0 on findings and the step writes SARIF
-        # reliably (continue-on-error is a JOB-level soft-success flag; it does
-        # NOT suppress step exit codes). When promoting to blocking: remove
-        # continue-on-error AND add --error here together, so semgrep exits 1 on
-        # findings and the step (and job) actually fail.
+        # reliably. Step-level continue-on-error keeps the real-tree scan's
+        # FINDINGS non-blocking (the self-test step above is what gates). When
+        # promoting to blocking: remove this continue-on-error AND add --error,
+        # so semgrep exits 1 on findings and the step (and job) fail together.
+        continue-on-error: true
         run: node scripts/run-semgrep.mjs --sarif semgrep.sarif
 
       - name: Upload SARIF to code-scanning
