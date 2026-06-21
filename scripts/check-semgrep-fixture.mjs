@@ -135,6 +135,13 @@ export function run({
     if (decision.code === 0) log(`[check-semgrep-fixture] OK: ${decision.message}`);
     else err(`[check-semgrep-fixture] ${decision.level}: ${decision.message}`);
     code = decision.code;
+  } catch (e) {
+    // A throw inside the try (e.g. a missing fixture file) is an environment
+    // failure, not a rule regression. Classify it as INFRA (exit 2) so the
+    // documented taxonomy (exit 1 = rule regression, exit 2 = infra) holds
+    // rather than the unhandled-throw default of exit 1.
+    err(`[check-semgrep-fixture] INFRA: ${e?.message ?? String(e)}`);
+    code = 2;
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }

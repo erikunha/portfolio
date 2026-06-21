@@ -135,4 +135,27 @@ describe('run', () => {
     expect(leaked).toEqual([]);
     expect(exited).toBe(2);
   });
+
+  it('classifies a thrown exception as INFRA (exit 2) and still removes its temp dir', () => {
+    const before = existing();
+    let exited: number | undefined;
+    let logged = '';
+    run({
+      runner: () => {
+        throw new Error('fixture missing');
+      },
+      exit: (c: number) => {
+        exited = c;
+      },
+      log: noop,
+      err: (m: string) => {
+        logged = m;
+      },
+    });
+    const leaked = [...existing()].filter((d) => !before.has(d));
+    expect(leaked).toEqual([]);
+    expect(exited).toBe(2);
+    expect(logged).toContain('INFRA');
+    expect(logged).toContain('fixture missing');
+  });
 });
