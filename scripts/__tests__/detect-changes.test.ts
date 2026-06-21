@@ -62,7 +62,7 @@ describe('computeCategories', () => {
 });
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -78,6 +78,36 @@ describe('runner main() via subprocess', () => {
         env: { ...process.env, EVENT_NAME: 'push', GITHUB_OUTPUT: out },
       });
       expect(readFileSync(out, 'utf8')).toBe('ai=true\napp=true\nui=true\n');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('fails closed on a git error: exits 1 and writes NO output (never a partial line)', () => {
+    // A PR event with an unresolvable BASE_SHA makes `git diff` error. The runner
+    // must exit non-zero with an EMPTY output file - a partial/empty `ai=` line
+    // read as falsy downstream would silently skip a required gate (fail-open).
+    const dir = mkdtempSync(join(tmpdir(), 'dc-failclosed-'));
+    try {
+      const out = join(dir, 'gh_output');
+      writeFileSync(out, '');
+      let code = 0;
+      try {
+        execFileSync('node', [runner], {
+          stdio: 'pipe',
+          env: {
+            ...process.env,
+            EVENT_NAME: 'pull_request',
+            BASE_SHA: '0000000000000000000000000000000000000000',
+            HEAD_SHA: '0000000000000000000000000000000000000000',
+            GITHUB_OUTPUT: out,
+          },
+        });
+      } catch (err) {
+        code = (err as { status?: number }).status ?? -1;
+      }
+      expect(code).toBe(1);
+      expect(readFileSync(out, 'utf8')).toBe('');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
