@@ -113,8 +113,12 @@ jobs:
         run: pnpm lint:css-tokens
 
       - name: Package age check (supply-chain, info-only)
-        # --warn-only: exits 0 always. Blocking a push for a freshly-released dep
-        # is too aggressive for solo development. Warnings are visible in CI logs.
+        # --warn-only: exits 0 for age violations (blocking a push for a
+        # freshly-released dep is too aggressive for solo development; warnings
+        # are visible in CI logs). It still exits 2 on an infra failure (an
+        # empty or format-changed lockfile that matches 0 packages, or a
+        # missing/unreadable lockfile) regardless of --warn-only, so a blinded
+        # gate fails the job instead of passing vacuously.
         run: node scripts/check-pkg-age.mjs --warn-only
 
       - name: PR comment merge gate

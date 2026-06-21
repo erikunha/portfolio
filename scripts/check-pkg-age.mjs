@@ -150,6 +150,8 @@ if (
 ) {
   main().catch((err) => {
     console.error(`[pkg-age] ${err instanceof Error ? err.message : String(err)}`);
-    process.exit(1);
+    // A missing or unreadable pnpm-lock.yaml is an infra failure (exit 2), not
+    // a version violation (exit 1), matching the gate's exit-code taxonomy.
+    process.exit(err?.code === 'ENOENT' || err?.code === 'EACCES' ? 2 : 1);
   });
 }
