@@ -4,25 +4,26 @@ name: CI
 # e2e-functional, e2e-visual-chromium, ai-eval.
 # Optional: add "CodeQL / Analyze (javascript-typescript)" to required checks in GitHub Settings to enforce it as a branch-protection gate (non-blocking by default).
 #
-# Path-filter strategy (detect-changes job):
-#   ai=true   → app/api/ask/, lib/ask/, lib/ask-log.ts, lib/ip-hash.ts, lib/agent/,
-#               lib/hiring-profile.ts, lib/stream-protocol.ts, lib/rate-limit.ts,
-#               lib/eval/ (shared judge()/JUDGE_SYSTEM + calibration runner that
-#               scripts/ask-eval.ts imports — a judge change must trigger the gate),
-#               content/ask-eval-corpus.ts, content/perf-receipts.ts,
-#               content/projects.ts, content/unknowns.ts, content/visa.ts,
-#               scripts/ask-eval.ts
-#               Gates: ai-eval (also gates on e2e-functional to avoid credit waste)
-#   app=true  → app/, components/, design-system/, lib/, content/, public/, next.config.ts,
-#               .github/workflows/ (workflow changes exercise CI itself),
-#               lighthouserc.json, lighthouserc.mobile.json (LHCI threshold config),
-#               scripts/check-bundle-size.mjs (perf budget threshold config),
-#               playwright.config.ts (axe-core + E2E runner config),
-#               package.json, pnpm-lock.yaml (dep changes must exercise perf + e2e gates)
-#               Gates: performance, e2e-functional, e2e-visual-chromium
-#   NOTE: package.json/pnpm-lock.yaml intentionally excluded from ai=true to avoid
-#         burning AI Gateway credits on every lockfile churn. Trade-off: dep bumps to
-#         AI-path packages (ai SDK, zod, @upstash/ratelimit) skip ai-eval. The
+# Path-filter strategy (detect-changes job): the WATCHED PATHSPECS are defined in
+# scripts/detect-changes-paths.mjs (AI_PATHS / APP_PATHS / UI_PATHS) - the single
+# source of truth, validated by `pnpm check:detect-changes-paths`. This comment
+# documents only the STRATEGY; it deliberately does not re-list the paths (a second
+# copy would drift - which is the whole reason the lists were hoisted to a manifest).
+#   ai=true   → the AI-eval surface: the ask route + its lib/ask, lib/agent, and
+#               lib/eval judge/calibration code, the eval corpus/calibration content,
+#               and scripts/ask-eval.ts. Gates: ai-eval (also gates e2e-functional to
+#               avoid credit waste).
+#   app=true  → anything that can affect the build / perf / e2e output: app,
+#               components, design-system, lib, content, public, the build/LHCI/E2E
+#               configs, and package.json / pnpm-lock. Gates: performance,
+#               e2e-functional, e2e-visual-chromium.
+#   ui=true   → a deliberate SUBSET of app that can change a rendered pixel (drops
+#               workflows, lighthouserc, the bundle-size script; excludes lib/eval and
+#               lib/__tests__; compares package.json browserslist/pnpm semantically).
+#               Gates: the visual / Argos job.
+#   NOTE: package.json / pnpm-lock.yaml are intentionally NOT in ai=true, to avoid
+#         burning AI Gateway credits on lockfile churn. Trade-off: dep bumps to
+#         AI-path packages (ai SDK, zod, @upstash/ratelimit) skip ai-eval; the
 #         dependency-review gate (vuln/license scan) covers dep-change security.
 # Skipped required checks are treated as satisfied by GitHub branch protection.
 
@@ -105,6 +106,9 @@ jobs:
 
       - name: Gate-health meta-gate (hook/script references resolve)
         run: pnpm check:gate-health
+
+      - name: Detect-changes pathspec gate (no orphaned filters)
+        run: pnpm check:detect-changes-paths
 
       - name: Contrast check
         run: pnpm lint:contrast
@@ -513,64 +517,10 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           EVENT_NAME: ${{ github.event_name }}
-        run: |
-          if [[ "$EVENT_NAME" != "pull_request" ]]; then
-            echo "ai=true" >> "$GITHUB_OUTPUT"
-            echo "app=true" >> "$GITHUB_OUTPUT"
-            echo "ui=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          ai_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
-            app/api/ask/ lib/ask/ lib/ask-log.ts lib/ip-hash.ts \
-            lib/stream-protocol.ts lib/rate-limit.ts lib/agent/ lib/hiring-profile.ts \
-            lib/eval/ \
-            content/ask-eval-corpus.ts content/ask-eval-calibration.ts \
-            content/perf-receipts.ts \
-            content/projects.ts content/unknowns.ts content/visa.ts \
-            scripts/ask-eval.ts '__tests__/ask-*')
-          [[ -n "$ai_changed" ]] \
-            && echo "ai=true" >> "$GITHUB_OUTPUT" \
-            || echo "ai=false" >> "$GITHUB_OUTPUT"
-          app_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
-            app/ components/ design-system/ lib/ content/ public/ next.config.ts \
-            .github/workflows/ lighthouserc.json lighthouserc.mobile.json \
-            scripts/check-bundle-size.mjs playwright.config.ts \
-            package.json pnpm-lock.yaml)
-          [[ -n "$app_changed" ]] \
-            && echo "app=true" >> "$GITHUB_OUTPUT" \
-            || echo "app=false" >> "$GITHUB_OUTPUT"
-          # `ui` = files that can change RENDERED output; gates the visual / Argos job
-          # only. Deliberately a SUBSET of `app`: it drops .github/workflows/,
-          # lighthouserc*, and the bundle-size script, which belong in `app` (they
-          # affect the build / e2e / perf gates) but cannot change a single rendered
-          # pixel. Gating Argos on `app` made workflow-only PRs run the visual suite
-          # and report spurious "N added" diffs against the baseline.
-          # package.json is EXCLUDED from the plain path list: a script-only edit
-          # (e.g. adding a `scripts` entry) cannot change a rendered pixel, yet would
-          # trip the visual suite and report spurious Argos diffs. Most rendering-
-          # affecting dependency changes go through pnpm-lock.yaml (kept below). But
-          # two package.json regions can change emitted CSS/JS WITHOUT a lockfile diff:
-          # `browserslist` (build target) and the `pnpm` block (`overrides` pins
-          # transitive versions). Compare ONLY those fields SEMANTICALLY with jq (a
-          # line-grep misses array-element edits like "chrome >= 93" -> ">= 95", whose
-          # changed line does not contain the key name); re-arm `ui` only when they
-          # differ. jq is preinstalled on GitHub hosted runners.
-          # lib/eval/ (eval-harness code, never in the Next runtime) and
-          # lib/__tests__/ (lib unit tests) are EXCLUDED via :(exclude) pathspecs:
-          # neither can change a rendered pixel, but both live under lib/ and would
-          # otherwise trip the visual suite + spurious Argos diffs (e.g. every
-          # agent-eval sub-PR touches lib/eval/). lib runtime source stays gated.
-          ui_changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- \
-            app/ components/ design-system/ lib/ content/ public/ \
-            next.config.ts playwright.config.ts pnpm-lock.yaml \
-            ':(exclude)lib/eval/**' ':(exclude)lib/__tests__/**')
-          base_render=$(git show "$BASE_SHA:package.json" 2>/dev/null | jq -cS '{browserslist,pnpm}' 2>/dev/null || echo null)
-          head_render=$(git show "$HEAD_SHA:package.json" 2>/dev/null | jq -cS '{browserslist,pnpm}' 2>/dev/null || echo null)
-          ui_pkg_changed=""
-          if [[ "$base_render" != "$head_render" ]]; then ui_pkg_changed=1; fi
-          [[ -n "$ui_changed" || -n "$ui_pkg_changed" ]] \
-            && echo "ui=true" >> "$GITHUB_OUTPUT" \
-            || echo "ui=false" >> "$GITHUB_OUTPUT"
+        # Pathspecs live in scripts/detect-changes-paths.mjs (single source of
+        # truth, validated by check:detect-changes-paths). The runner uses only
+        # node builtins, so ubuntu's preinstalled node runs it with no pnpm install.
+        run: node scripts/detect-changes.mjs
 
   ai-eval:
     runs-on: ubuntu-latest
