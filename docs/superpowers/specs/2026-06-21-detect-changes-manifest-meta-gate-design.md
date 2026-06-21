@@ -95,9 +95,16 @@ Replaces the inline shell. Plain node, no deps. Structure:
   package.json render-slice comparison. Trivial boolean mapping
   (`ui = uiChanged || pkgRenderChanged`), but isolating it makes the decision
   unit-testable without git.
-- **Pure helper** `canonicalJSON(value)` → a deterministic string with recursively
-  sorted object keys (the node equivalent of `jq -cS`). Used to compare the
-  `{ browserslist, pnpm }` slices of `package.json` between BASE and HEAD.
+- **Pure helper** `canonicalJSON(value)` → a deterministic, whitespace-free string
+  with recursively sorted **object** keys and **preserved array order** (the node
+  equivalent of `jq -cS`). Used to compare the `{ browserslist, pnpm }` slices of
+  `package.json` between BASE and HEAD. **Null-fill the projection before
+  canonicalizing:** build `{ browserslist: pkg.browserslist ?? null, pnpm: pkg.pnpm ?? null }`
+  so an absent field serializes as `null` (matching `jq '{browserslist,pnpm}'`,
+  which emits `null` for missing keys). A naive `JSON.stringify` of a destructured
+  object would OMIT an `undefined` field, producing `{}` instead of
+  `{"browserslist":null,...}` and a false `ui` decision. The omit-vs-null hazard is
+  an explicit test case.
 - **Thin `main()`** does the I/O:
   - If `process.env.EVENT_NAME !== 'pull_request'` → write `ai=true app=true ui=true`
     to `$GITHUB_OUTPUT`, return (the current non-PR shortcut).
@@ -135,8 +142,12 @@ exit 0 when all resolve.
   - `exclude` → `existsSync(base)` must be true (a stale exclude silently stops
     excluding, re-arming `ui` spuriously - lower severity, still a real drift, so
     validated).
-- `main()` iterates the union of the three arrays; collects all failures (does not
-  stop at the first) and prints each as `[detect-changes-paths] ORPHANED: <spec> (<reason>)`,
+- `main()` first asserts the deduplicated union of the three arrays is **non-empty**
+  as a RUNTIME guard (not test-only): an empty manifest must exit 2
+  (`[detect-changes-paths] GATE ERROR: manifest is empty; nothing to validate`),
+  never pass. This is the anti-vacuous discipline from #162 applied to the meta-gate
+  itself. It then iterates the union, collects ALL failures (does not stop at the
+  first) and prints each as `[detect-changes-paths] ORPHANED: <spec> (<reason>)`,
   then `process.exit(2)`. Glob matching uses node `fs` (e.g. a small `readdirSync`
   prefix match scoped to the glob's directory) - no third-party glob dep.
 
@@ -146,20 +157,28 @@ in `package.json` and folded into `ci:local`.
 
 ## Behavior preservation contract
 
-The new runner MUST produce identical `ai` / `app` / `ui` to the current shell for:
+The new runner MUST produce identical `ai` / `app` / `ui` to the current shell for
+the following >=11 scenarios. The table was extended (per the architect gate) to
+cover the cases where a shell-to-node port most easily diverges: mixed
+include+exclude, the `pnpm.overrides` render field, the `package.json`-absent null
+fallback, and an `app`-minus-`ui` member other than workflows.
 
-| Scenario | ai | app | ui |
-|---|---|---|---|
-| non-PR event (push / dispatch) | true | true | true |
-| content-only change (`content/projects.ts`) | true | true | true |
-| `app/` component change | false | true | true |
-| `.github/workflows/` only | false | true | false |
-| `lib/eval/`-only change | true | true | false (excluded) |
-| `package.json` `browserslist` bump (no lock diff) | false | true | true |
-| docs-only (`*.md`) | false | false | false |
+| # | Scenario | ai | app | ui | What it pins |
+|---|---|---|---|---|---|
+| 1 | non-PR event (push / dispatch) | true | true | true | the early-exit shortcut |
+| 2 | content-only (`content/projects.ts`) | true | true | true | content is in all three lists |
+| 3 | `app/` component change (`app/x.tsx`) | false | true | true | app-not-ai |
+| 4 | `.github/workflows/` only | false | true | false | `app`-superset member |
+| 5 | `lib/eval/`-only change | true | true | false | exclude **suppresses** `ui` |
+| 6 | mixed `lib/eval/` + `app/x.tsx` | true | true | true | exclude does NOT suppress when an included path also changed |
+| 7 | `package.json` `browserslist` bump (no lock diff) | false | true | true | `canonicalJSON` browserslist field |
+| 8 | `package.json` `pnpm.overrides` bump (no lock diff) | false | true | true | `canonicalJSON` pnpm field (array-element edit) |
+| 9 | `package.json` absent at BASE (newly added) | false | true | true | `null`-fallback does not throw |
+| 10 | `lighthouserc.json` only | false | true | false | `app`-minus-`ui` member beyond workflows |
+| 11 | docs-only (`*.md`) | false | false | false | nothing matches |
 
 A parity check (Unit 2 runner vs. a faithful reproduction of the old shell) over
-these scenarios is a mandatory pre-merge step, not just the unit tests.
+ALL of these scenarios is a mandatory pre-merge step, not just the unit tests.
 
 ## Error handling
 
