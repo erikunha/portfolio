@@ -9,12 +9,17 @@ const PSI_CONSEC_KEY = (s: Strategy) => `meta:psi-consec-failures:${s}`;
 const PSI_CONSEC_TTL_S = 604_800; // 7d GC backstop; reset-on-success is primary
 const PSI_ALERT_THRESHOLD = 3;
 
-// WHY: this cron fires two PSI audits in parallel; each can take 15–40s (see
-// PSI_REFRESH_TIMEOUT_MS=45s in lib/lighthouse-scores.ts). The default function budget
-// would kill the invocation before PSI returns, so the freshness key is never written
-// and /api/healthz stays degraded. 60s is the Hobby-plan ceiling; the worst case —
-// both PSI fetches at 45s (parallel, so ~45s wall) + the 5s failure-path Resend alert —
-// lands ~51s, leaving headroom to return the structured response before a force-kill.
+// WHY: desktop + mobile PSI audits run concurrently (Promise.allSettled), so
+// per-strategy budget — not their sum — is the wall-time unit. Each strategy
+// gets PSI_STRATEGY_BUDGET_MS=50s total, may retry once on transient 429/5xx
+// (PSI_MAX_ATTEMPTS=2, lib/lighthouse-scores.ts), with each attempt capped at
+// min(PSI_REFRESH_TIMEOUT_MS=45s, budget remaining) so no single attempt can
+// blow past the 50s ceiling. The retry-worth-it check (budget left >=
+// PSI_MIN_RETRY_BUDGET_MS=8s) runs BEFORE the PSI_RETRY_BACKOFF_MS=500ms(+jitter
+// up to 499ms) backoff, so the 2nd attempt can start with slightly under 8s —
+// the min(...) cap still bounds it correctly. Worst case: 50s (one strategy,
+// retried) + 5s failure-path Resend alert = 55s, leaving 5s headroom under the
+// 60s Hobby-plan ceiling before Vercel force-kills the invocation.
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest): Promise<Response> {
