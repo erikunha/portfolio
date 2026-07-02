@@ -54,9 +54,6 @@ function makeLeakSplitResult(prefix: string, marker: string, trailing: string) {
       },
     },
     usage: Promise.resolve({ inputTokens: 10, outputTokens: 20 }),
-    providerMetadata: Promise.resolve({
-      anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
-    }),
   };
 }
 
