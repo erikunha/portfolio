@@ -13,13 +13,21 @@ vi.stubGlobal('fetch', mockFetch);
 const mockLogError = vi.fn();
 vi.mock('@/lib/log', () => ({ log: { error: mockLogError, info: vi.fn() } }));
 
-afterEach(() => {
+afterEach(async () => {
   vi.resetModules();
   mockGet.mockReset();
   mockSet.mockReset();
   mockFetch.mockReset();
   mockLogError.mockReset();
   delete process.env.PSI_API_KEY;
+  // Guard: reset the module's clock test seam even if a test forgot to. This
+  // dynamic import loads (and freezes, via lib/env.ts) its own `env` snapshot
+  // off current process.env, so resetModules() again afterward is required —
+  // otherwise the next test's import would reuse this cached instance with a
+  // stale/deleted PSI_API_KEY baked in instead of re-parsing its own env.
+  const mod = await import('@/lib/lighthouse-scores').catch(() => null);
+  mod?.__setNowForTest?.(null);
+  vi.resetModules();
 });
 
 const CACHED_DESKTOP = {
@@ -278,5 +286,89 @@ describe('PSI fetch timeout — differentiated by path', () => {
       '@/lib/lighthouse-scores'
     );
     expect(PSI_REFRESH_TIMEOUT_MS).toBeGreaterThan(PSI_REQUEST_TIMEOUT_MS);
+  });
+});
+
+describe('refreshScores — cron retry', () => {
+  const okResp = () => makePsiResponse(0.99);
+  const errResp = (status: number) => ({ ok: false, status, text: async () => 'err' });
+
+  it('retries once on 500 then succeeds, writing the cache exactly once', async () => {
+    process.env.PSI_API_KEY = 'k';
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    mockFetch.mockResolvedValueOnce(errResp(500)).mockResolvedValueOnce(okResp());
+    mockSet.mockResolvedValue('OK');
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    const res = await refreshScores('mobile');
+    expect(res.performance).toBe(99);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockSet).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries on 429 then succeeds', async () => {
+    process.env.PSI_API_KEY = 'k';
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    mockFetch.mockResolvedValueOnce(errResp(429)).mockResolvedValueOnce(okResp());
+    mockSet.mockResolvedValue('OK'); // forceRefresh blocks on the cache write on success
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    await expect(refreshScores('desktop')).resolves.toBeTruthy();
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('does NOT retry on a timeout', async () => {
+    process.env.PSI_API_KEY = 'k';
+    mockFetch.mockRejectedValue(
+      Object.assign(new Error('The operation was aborted due to timeout'), {
+        name: 'TimeoutError',
+      }),
+    );
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    await expect(refreshScores('mobile')).rejects.toThrow(/aborted/);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT retry on a non-429 4xx', async () => {
+    process.env.PSI_API_KEY = 'k';
+    mockFetch.mockResolvedValue(errResp(403));
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    await expect(refreshScores('mobile')).rejects.toMatchObject({ status: 403 });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('exhausts retries on a persistent 500 (2 attempts, then throws)', async () => {
+    process.env.PSI_API_KEY = 'k';
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    mockFetch.mockResolvedValue(errResp(500));
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    await expect(refreshScores('mobile')).rejects.toMatchObject({ status: 500 });
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('skips the retry when the remaining budget is below the floor', async () => {
+    process.env.PSI_API_KEY = 'k';
+    const { refreshScores, __setNowForTest, PSI_STRATEGY_BUDGET_MS } = await import(
+      '@/lib/lighthouse-scores'
+    );
+    let t = 0;
+    // start=0; after the first attempt, jump elapsed past (budget - floor) so the retry is skipped.
+    __setNowForTest(() => {
+      const v = t;
+      t = PSI_STRATEGY_BUDGET_MS - 1_000; // second read: only 1s left (< 8s floor)
+      return v;
+    });
+    mockFetch.mockResolvedValue(errResp(500));
+    await expect(refreshScores('mobile')).rejects.toMatchObject({ status: 500 });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    __setNowForTest(null);
+  });
+
+  it('request path (getScores cache-miss) is single-shot — no retry on 500', async () => {
+    process.env.PSI_API_KEY = 'k';
+    mockGet.mockResolvedValue(null); // cache miss
+    mockFetch.mockResolvedValue(errResp(500));
+    const { getScores, LIGHTHOUSE_FALLBACK } = await import('@/lib/lighthouse-scores');
+    const res = await getScores('mobile');
+    expect(res).toEqual(LIGHTHOUSE_FALLBACK); // getScores swallows to fallback
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 });
