@@ -284,26 +284,41 @@ describe('PSI fetch timeout — differentiated by path', () => {
 describe('refreshScores — cron retry', () => {
   const okResp = () => makePsiResponse(0.99);
   const errResp = (status: number) => ({ ok: false, status, text: async () => 'err' });
+  // WHY: the retrying tests below use fake timers so the real PSI_RETRY_BACKOFF_MS
+  // (500ms) sleep between attempts costs ~0ms wall time instead of ~500ms each.
+  // We advance by exactly the backoff (600ms) — NOT vi.runAllTimersAsync() — so the
+  // per-attempt AbortSignal.timeout(45s) timer never fires and can't perturb the
+  // deadline-budget arithmetic under test. Restored to real timers after each test.
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+  const BACKOFF_ADVANCE_MS = 600; // > PSI_RETRY_BACKOFF_MS (500) + max jitter with Math.random→0
 
   it('retries once on 500 then succeeds, writing the cache exactly once', async () => {
+    vi.useFakeTimers();
     process.env.PSI_API_KEY = 'k';
     vi.spyOn(Math, 'random').mockReturnValue(0);
     mockFetch.mockResolvedValueOnce(errResp(500)).mockResolvedValueOnce(okResp());
     mockSet.mockResolvedValue('OK');
     const { refreshScores } = await import('@/lib/lighthouse-scores');
-    const res = await refreshScores('mobile');
+    const p = refreshScores('mobile');
+    await vi.advanceTimersByTimeAsync(BACKOFF_ADVANCE_MS); // flush the backoff between attempts
+    const res = await p;
     expect(res.performance).toBe(99);
     expect(mockFetch).toHaveBeenCalledTimes(2);
     expect(mockSet).toHaveBeenCalledTimes(1);
   });
 
   it('retries on 429 then succeeds', async () => {
+    vi.useFakeTimers();
     process.env.PSI_API_KEY = 'k';
     vi.spyOn(Math, 'random').mockReturnValue(0);
     mockFetch.mockResolvedValueOnce(errResp(429)).mockResolvedValueOnce(okResp());
     mockSet.mockResolvedValue('OK'); // forceRefresh blocks on the cache write on success
     const { refreshScores } = await import('@/lib/lighthouse-scores');
-    await expect(refreshScores('desktop')).resolves.toBeTruthy();
+    const p = refreshScores('desktop');
+    await vi.advanceTimersByTimeAsync(BACKOFF_ADVANCE_MS);
+    await expect(p).resolves.toBeTruthy();
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
@@ -328,11 +343,14 @@ describe('refreshScores — cron retry', () => {
   });
 
   it('exhausts retries on a persistent 500 (2 attempts, then throws)', async () => {
+    vi.useFakeTimers();
     process.env.PSI_API_KEY = 'k';
     vi.spyOn(Math, 'random').mockReturnValue(0);
     mockFetch.mockResolvedValue(errResp(500));
     const { refreshScores } = await import('@/lib/lighthouse-scores');
-    await expect(refreshScores('mobile')).rejects.toMatchObject({ status: 500 });
+    const assertion = expect(refreshScores('mobile')).rejects.toMatchObject({ status: 500 });
+    await vi.advanceTimersByTimeAsync(BACKOFF_ADVANCE_MS); // flush the one backoff between the 2 attempts
+    await assertion;
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 

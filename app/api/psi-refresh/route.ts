@@ -117,8 +117,9 @@ export async function GET(req: NextRequest): Promise<Response> {
         // blocking the cron response if the alert API hangs. 5s (not 10s) keeps the
         // worst-case wall time under maxDuration=60: ~50s per-strategy PSI budget
         // (concurrent, see the maxDuration comment) + the pre-alert Redis counter
-        // round-trips (up to 2 awaited calls per strategy, ~tens of ms, untimed —
-        // same fail-open posture as the meta:psi-last-run write) + this 5s alert
+        // round-trips (up to 1 awaited call per strategy — del(), or a single
+        // pipe.exec() bundling INCR+EXPIRE — so 2 total, ~tens of ms, untimed, same
+        // fail-open posture as the meta:psi-last-run write) + this 5s alert
         // race, so the structured 500 still returns before Vercel force-kills the
         // function. The alert is best-effort.
         let timerId: ReturnType<typeof setTimeout> | undefined;
