@@ -4,7 +4,11 @@
 // holds a copy, so there is nothing to drift against.
 
 // `ai` gates the ai-eval job (AI Gateway credits). package.json/pnpm-lock are
-// intentionally excluded (avoid burning credits on lockfile churn).
+// intentionally excluded from these PATHS (avoid burning credits on lockfile
+// churn) — BUT the runner (detect-changes.mjs) separately re-arms `ai` when the
+// `ai` package's MAJOR version changes (aiMajor slice), so a breaking SDK bump
+// cannot skip ai-eval the way dependabot #169's 6->7 bump did. Minor/patch `ai`
+// bumps stay cheap.
 export const AI_PATHS = [
   'app/api/ask/',
   'lib/ask/',

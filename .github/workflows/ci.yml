@@ -21,10 +21,13 @@ name: CI
 #               workflows, lighthouserc, the bundle-size script; excludes lib/eval and
 #               lib/__tests__; compares package.json browserslist/pnpm semantically).
 #               Gates: the visual / Argos job.
-#   NOTE: package.json / pnpm-lock.yaml are intentionally NOT in ai=true, to avoid
-#         burning AI Gateway credits on lockfile churn. Trade-off: dep bumps to
-#         AI-path packages (ai SDK, zod, @upstash/ratelimit) skip ai-eval; the
-#         dependency-review gate (vuln/license scan) covers dep-change security.
+#   NOTE: package.json / pnpm-lock.yaml are intentionally NOT in the ai=true PATHS,
+#         to avoid burning AI Gateway credits on lockfile churn — so minor/patch
+#         dep bumps to AI-path packages skip ai-eval (dependency-review covers their
+#         security). EXCEPTION: the runner re-arms ai=true when the `ai` package's
+#         MAJOR changes (aiMajor slice in detect-changes.mjs), so a breaking SDK
+#         bump runs ai-eval. This closes the gap where dependabot #169 bumped `ai`
+#         6->7 as a deps-only change and broke prod /api/ask unvalidated.
 # Skipped required checks are treated as satisfied by GitHub branch protection.
 
 on:

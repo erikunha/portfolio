@@ -23,15 +23,53 @@ export function canonicalJSON(value) {
   return JSON.stringify(value === undefined ? null : value);
 }
 
-// Pure. Map the four change signals to the three category outputs. ai/app pass
-// straight through; ui re-arms when the package.json render slice changed even if
-// no literal ui path did (browserslist / pnpm.overrides).
-export function computeCategories({ aiChanged, appChanged, uiChanged, pkgRenderChanged }) {
+// Pure. Map the change signals to the three category outputs. app passes straight
+// through; ui re-arms when the package.json render slice changed even if no literal
+// ui path did (browserslist / pnpm.overrides); ai re-arms when an AI-code path
+// changed OR the `ai` package's MAJOR version changed. The ai-major re-arm exists
+// because AI_PATHS deliberately excludes package.json (to avoid burning Gateway
+// credits on routine dep churn), which let dependabot #169 bump `ai` 6->7 as a
+// deps-only change and merge green while breaking prod /api/ask — a breaking SDK
+// major is exactly the change that MUST run ai-eval. Minor/patch bumps stay cheap.
+export function computeCategories({
+  aiChanged,
+  appChanged,
+  uiChanged,
+  pkgRenderChanged,
+  aiMajorChanged,
+}) {
   return {
-    ai: aiChanged,
+    ai: aiChanged || Boolean(aiMajorChanged),
     app: appChanged,
     ui: uiChanged || pkgRenderChanged,
   };
+}
+
+// Pure. Extract the MAJOR version of the `ai` dependency from a package.json
+// string. Returns the integer major, or `null` when `ai` is absent or its
+// specifier is unparseable (`workspace:*`, `latest`, a git URL, malformed JSON).
+// A `null` on one ref that differs from the other's number over-arms ai-eval —
+// fail-safe: never SKIP AI validation on a version-parse anomaly.
+export function aiMajor(pkgJsonString) {
+  try {
+    const pkg = JSON.parse(pkgJsonString);
+    // Precedence: pnpm.overrides FIRST. An override FORCES the resolved version
+    // regardless of the dependency specifier, so a PR adding
+    // `pnpm.overrides.ai: '7.0.0'` while leaving `dependencies.ai` at `^6` still
+    // ships v7 — and this repo uses overrides for esbuild/postcss/etc., so this
+    // is a live bypass path, not hypothetical. Reading deps first would miss it
+    // (the `^6` spec is still present). Then dependencies, then devDependencies.
+    const spec = pkg?.pnpm?.overrides?.ai ?? pkg?.dependencies?.ai ?? pkg?.devDependencies?.ai;
+    if (typeof spec !== 'string') return null;
+    // "first digit run" major: `^7.0.14` / `~6` / `>=7.0.0` / `npm:ai@7` → the
+    // leading major. A semver OR-combinator (`6.0.0 || 7.0.0`) would read only the
+    // first token; acceptable given the repo's single-caret pin style — revisit if
+    // that ever changes.
+    const major = Number.parseInt(spec.replace(/^\D+/, ''), 10);
+    return Number.isNaN(major) ? null : major;
+  } catch {
+    return null;
+  }
 }
 
 // True iff `git diff --name-only BASE...HEAD -- <paths>` lists any file. Throws on
@@ -76,6 +114,18 @@ function renderSlice(ref) {
   }
 }
 
+// The `ai` package major at a git ref (mirrors renderSlice). `null` on a git-read
+// error or an unparseable specifier — which, if it differs from the other ref,
+// over-arms ai-eval (fail-safe).
+function aiMajorAtRef(ref) {
+  const res = spawnSync('git', ['show', `${ref}:package.json`], {
+    encoding: 'utf8',
+    maxBuffer: 32 * 1024 * 1024,
+  });
+  if (res.error || res.status !== 0) return null;
+  return aiMajor(res.stdout);
+}
+
 function writeOutputs({ ai, app, ui }) {
   const file = process.env.GITHUB_OUTPUT;
   if (!file) throw new Error('GITHUB_OUTPUT is not set');
@@ -95,7 +145,10 @@ function main() {
   const appChanged = diffNonEmpty(base, head, APP_PATHS);
   const uiChanged = diffNonEmpty(base, head, UI_PATHS);
   const pkgRenderChanged = renderSlice(base) !== renderSlice(head);
-  writeOutputs(computeCategories({ aiChanged, appChanged, uiChanged, pkgRenderChanged }));
+  const aiMajorChanged = aiMajorAtRef(base) !== aiMajorAtRef(head);
+  writeOutputs(
+    computeCategories({ aiChanged, appChanged, uiChanged, pkgRenderChanged, aiMajorChanged }),
+  );
 }
 
 // Run only when invoked directly, not when imported by the unit test.
