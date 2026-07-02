@@ -29,16 +29,22 @@ describe('canonicalJSON', () => {
   });
 });
 
-import { computeCategories } from '../detect-changes.mjs';
+import { aiMajor, computeCategories } from '../detect-changes.mjs';
 
 describe('computeCategories', () => {
   const S = (
-    o: Partial<Record<'aiChanged' | 'appChanged' | 'uiChanged' | 'pkgRenderChanged', boolean>>,
+    o: Partial<
+      Record<
+        'aiChanged' | 'appChanged' | 'uiChanged' | 'pkgRenderChanged' | 'aiMajorChanged',
+        boolean
+      >
+    >,
   ) => ({
     aiChanged: false,
     appChanged: false,
     uiChanged: false,
     pkgRenderChanged: false,
+    aiMajorChanged: false,
     ...o,
   });
 
@@ -56,8 +62,72 @@ describe('computeCategories', () => {
     });
   });
 
+  it('re-arms ai from aiMajorChanged alone (a deps-only `ai` MAJOR bump — the #170 incident class)', () => {
+    // package.json bumping `ai` 6->7 sets no ai/app-code path, but is exactly the
+    // change that must run ai-eval. app is true because package.json is an app path.
+    expect(computeCategories(S({ appChanged: true, aiMajorChanged: true }))).toEqual({
+      ai: true,
+      app: true,
+      ui: false,
+    });
+  });
+
+  it('does NOT re-arm ai for a minor/patch `ai` bump (aiMajorChanged false — credits preserved)', () => {
+    expect(computeCategories(S({ appChanged: true, pkgRenderChanged: false }))).toEqual({
+      ai: false,
+      app: true,
+      ui: false,
+    });
+  });
+
   it('all-false yields all-false (docs-only PR)', () => {
     expect(computeCategories(S({}))).toEqual({ ai: false, app: false, ui: false });
+  });
+});
+
+describe('aiMajor (extract the `ai` dependency major from a package.json string)', () => {
+  const pkg = (aiSpec?: string, where: 'dependencies' | 'devDependencies' = 'dependencies') =>
+    JSON.stringify(aiSpec === undefined ? {} : { [where]: { ai: aiSpec } });
+
+  it('extracts the major from caret/tilde/range/exact specifiers', () => {
+    expect(aiMajor(pkg('^7.0.14'))).toBe(7);
+    expect(aiMajor(pkg('~6.0.208'))).toBe(6);
+    expect(aiMajor(pkg('>=7.0.0'))).toBe(7);
+    expect(aiMajor(pkg('6.0.208'))).toBe(6);
+  });
+
+  it('finds `ai` in devDependencies too', () => {
+    expect(aiMajor(pkg('^7.1.0', 'devDependencies'))).toBe(7);
+  });
+
+  it('returns null when `ai` is absent or the specifier is unparseable', () => {
+    expect(aiMajor(pkg(undefined))).toBeNull();
+    expect(aiMajor(pkg('workspace:*'))).toBeNull();
+    expect(aiMajor(pkg('latest'))).toBeNull();
+  });
+
+  it('returns null on malformed JSON (fail-safe: a null that differs from the other ref over-arms)', () => {
+    expect(aiMajor('{not json')).toBeNull();
+  });
+
+  it('a 6->7 change yields different majors (drives aiMajorChanged=true)', () => {
+    expect(aiMajor(pkg('^6.0.208'))).not.toBe(aiMajor(pkg('^7.0.14')));
+  });
+
+  it('honors pnpm.overrides.ai with PRECEDENCE (closes the override-bypass class)', () => {
+    // A PR that forces ai to v7 via pnpm.overrides while leaving dependencies.ai
+    // at ^6 still SHIPS v7 (overrides win at resolution). The override must take
+    // precedence over the declared range, else aiMajorChanged stays false and
+    // ai-eval is skipped — the exact incident class, via a mechanism this repo uses.
+    const withOverride = JSON.stringify({
+      dependencies: { ai: '^6.0.208' },
+      pnpm: { overrides: { ai: '7.0.0' } },
+    });
+    const noOverride = JSON.stringify({ dependencies: { ai: '^6.0.208' } });
+    expect(aiMajor(withOverride)).toBe(7); // override wins over the ^6 dep spec
+    expect(aiMajor(noOverride)).toBe(6);
+    // Adding the override alone (deps untouched) must re-arm.
+    expect(aiMajor(withOverride)).not.toBe(aiMajor(noOverride));
   });
 });
 
@@ -108,6 +178,48 @@ describe('runner main() via subprocess', () => {
       }
       expect(code).toBe(1);
       expect(readFileSync(out, 'utf8')).toBe('');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  // End-to-end proof of the #170 incident fix: a real repo whose ONLY diff is
+  // `ai` 6->7 in package.json (no ai/app CODE path) must set ai=true so ai-eval
+  // runs. This is exactly what dependabot #169 did while ai-eval wrongly skipped.
+  it('re-arms ai=true when a deps-only commit bumps the `ai` MAJOR (6->7)', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'dc-aimajor-'));
+    const git = (...args: string[]) =>
+      execFileSync('git', args, { cwd: dir, encoding: 'utf8' }).trim();
+    try {
+      git('init', '-b', 'main');
+      git('config', 'user.email', 't@t.dev');
+      git('config', 'user.name', 't');
+      writeFileSync(
+        join(dir, 'package.json'),
+        JSON.stringify({ dependencies: { ai: '^6.0.208' } }),
+      );
+      git('add', '-A');
+      git('commit', '-m', 'base');
+      const base = git('rev-parse', 'HEAD');
+      writeFileSync(join(dir, 'package.json'), JSON.stringify({ dependencies: { ai: '^7.0.14' } }));
+      git('add', '-A');
+      git('commit', '-m', 'bump ai 6->7');
+      const head = git('rev-parse', 'HEAD');
+
+      const out = join(dir, 'gh_output');
+      execFileSync('node', [runner], {
+        cwd: dir,
+        env: {
+          ...process.env,
+          EVENT_NAME: 'pull_request',
+          BASE_SHA: base,
+          HEAD_SHA: head,
+          GITHUB_OUTPUT: out,
+        },
+      });
+      // ai=true (major re-arm), app=true (package.json is an app path), ui=false
+      // (no browserslist/pnpm render-slice change).
+      expect(readFileSync(out, 'utf8')).toBe('ai=true\napp=true\nui=false\n');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

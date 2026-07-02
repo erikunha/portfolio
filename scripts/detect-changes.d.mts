@@ -5,6 +5,8 @@ export interface ChangeSignals {
   appChanged: boolean;
   uiChanged: boolean;
   pkgRenderChanged: boolean;
+  /** Optional: the runner always supplies it; `undefined` is treated as `false`. */
+  aiMajorChanged?: boolean;
 }
 export interface Categories {
   ai: boolean;
@@ -12,3 +14,4 @@ export interface Categories {
   ui: boolean;
 }
 export function computeCategories(signals: ChangeSignals): Categories;
+export function aiMajor(pkgJsonString: string): number | null;
