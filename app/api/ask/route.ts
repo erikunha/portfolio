@@ -111,17 +111,6 @@ const USAGE_TIMED_OUT = Symbol('usage-timeout');
 // directive below actually fires. See
 // docs/audit/2026-05-19-principal-audit.md Theme 7 + Debate 5.
 
-function isAnthropicCacheMeta(
-  v: unknown,
-): v is { cacheReadInputTokens?: number; cacheCreationInputTokens?: number } {
-  if (typeof v !== 'object' || v === null) return false;
-  const obj = v as Record<string, unknown>;
-  return (
-    (obj.cacheReadInputTokens === undefined || typeof obj.cacheReadInputTokens === 'number') &&
-    (obj.cacheCreationInputTokens === undefined || typeof obj.cacheCreationInputTokens === 'number')
-  );
-}
-
 export async function POST(req: NextRequest) {
   // Kill switch: any "off" keyword (case-insensitive, trimmed) disables the route.
   // Asymmetry is intentional: a typo during a billing/abuse emergency must STILL
@@ -266,6 +255,14 @@ export async function POST(req: NextRequest) {
     // observability value without the message bodies. Answer capture for eval,
     // if ever wanted, goes behind the WS5 env flag with a DECISIONS.md entry.
     experimental_telemetry: { isEnabled: true, recordInputs: false, recordOutputs: false },
+    // AI SDK 7 rejects `role: 'system'` entries in `messages` by default. We keep
+    // the system prompt in `messages` (not top-level `instructions`) so the
+    // `providerOptions.anthropic.cacheControl` ephemeral directive can attach to
+    // it for prompt caching. Opting in is safe here: SYSTEM_TEXT is trusted,
+    // server-side, and constant — never user-submitted (the visitor question is
+    // the separate user message), so the injection risk the SDK warns about does
+    // not apply. See DECISIONS.md (AI SDK v7 migration).
+    allowSystemInMessages: true,
     messages: [
       {
         role: 'system',
@@ -297,11 +294,6 @@ export async function POST(req: NextRequest) {
   const usageOrTimeout = Promise.resolve(result.usage).catch(
     (): typeof USAGE_TIMED_OUT => USAGE_TIMED_OUT,
   );
-  // `result.providerMetadata` rejection degrades to `undefined` — the cache
-  // breakdown is observability-only, so a meta-rejection must NOT block the
-  // refund. A missing `meta` is correctly treated as zero cache tokens.
-  const providerMetadataPromise = Promise.resolve(result.providerMetadata).catch(() => undefined);
-
   const enc = new TextEncoder();
   let inputTokens = 0;
   let outputTokens = 0;
@@ -449,33 +441,24 @@ export async function POST(req: NextRequest) {
     };
 
     const usage = await deadline(usageOrTimeout);
-    const meta = await deadline(providerMetadataPromise);
-    // The budget refund is gated on `usage` ALONE: `result.usage` and
-    // `result.providerMetadata` are two INDEPENDENT end-of-stream promises.
-    // Coupling the refund to both means a usage-resolved-but-metadata-timed-out
-    // request (a real success) would skip the refund and leak the full
-    // reservation as a phantom high-water mark. The cache breakdown from `meta`
-    // is observability-only and never gates settlement.
-    //
-    // `usage` is the USAGE_TIMED_OUT sentinel when the usage promise either
-    // timed out OR rejected (a rejection is mapped to the sentinel upstream).
-    // Either way real usage is unknown → `usageResolved` false → the refund is
-    // skipped and the reservation is held (fail-closed).
+    // The budget refund is gated on `usage`: it is the USAGE_TIMED_OUT sentinel
+    // when the usage promise either timed out OR rejected (a rejection is mapped
+    // to the sentinel upstream). Either way real usage is unknown → `usageResolved`
+    // false → the refund is skipped and the reservation is held (fail-closed).
     const usageResolved = usage !== USAGE_TIMED_OUT;
-    // `metaResolved` only annotates the log line — a missing/timed-out `meta`
-    // is treated as zero cache tokens, which is correct for the refund math.
-    const metaResolved = meta !== USAGE_TIMED_OUT;
 
     if (usage !== USAGE_TIMED_OUT) {
       inputTokens = usage?.inputTokens ?? 0;
       outputTokens = usage?.outputTokens ?? 0;
-    }
-    if (meta !== USAGE_TIMED_OUT) {
-      const anthropic = meta?.anthropic;
-      if (isAnthropicCacheMeta(anthropic)) {
-        cacheReadTokens = anthropic.cacheReadInputTokens ?? 0;
-        cacheCreationTokens = anthropic.cacheCreationInputTokens ?? 0;
-      }
+      // AI SDK 7 removed the Anthropic-specific `providerMetadata.anthropic`
+      // cache fields; the cache breakdown now lives on the standard, provider-
+      // agnostic `usage.inputTokenDetails`. `cacheReadTokens` = tokens served
+      // from cache; `cacheWriteTokens` = the one-time cache-creation cost. Both
+      // ride the SAME usage promise that gates the refund, so there is no longer
+      // a second independent metadata promise to time out — a missing detail
+      // simply reads as 0, which is correct for the refund math.
+      cacheReadTokens = usage?.inputTokenDetails?.cacheReadTokens ?? 0;
+      cacheCreationTokens = usage?.inputTokenDetails?.cacheWriteTokens ?? 0;
     }
 
     // Cache hit rate observability: cacheRead/input → 0 means cache cold
@@ -483,9 +466,8 @@ export async function POST(req: NextRequest) {
     // per request so the rate can be aggregated from Vercel runtime logs
     // without a separate metrics pipeline. Total input billing includes
     // ALL of input + cache_read + cache_creation against the budget so
-    // settleBudget reflects true Anthropic-billed cost. A missing/timed-out
-    // `meta` leaves cacheRead = cacheCreation = 0, so this is just `inputTokens`
-    // — the refund stays correct whenever real `usage` is known.
+    // settleBudget reflects true Anthropic-billed cost. Cache tokens are 0
+    // whenever `usage` is unknown, so this is just `inputTokens` then.
     const totalBilledInput = inputTokens + cacheReadTokens + cacheCreationTokens;
     // LAYER 2: post-hoc audit of the full buffered answer. Layer 1 already
     // aborted egregious cases mid-stream; this is the defense-in-depth record
@@ -508,7 +490,6 @@ export async function POST(req: NextRequest) {
       outputTokens,
       cacheHitRate: totalBilledInput > 0 ? cacheReadTokens / totalBilledInput : 0,
       usageResolved,
-      metaResolved,
       promptVersion: PROMPT_VERSION,
     });
     // Refund the unused portion of the reservation. Gated on `usage` ALONE:

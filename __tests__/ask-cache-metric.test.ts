@@ -134,8 +134,11 @@ function makeAnthropicSseStream(opts: {
   };
 }
 
-// AI SDK streamText result shape: textStream is AsyncIterable; usage and
-// providerMetadata are promises resolved at stream end.
+// AI SDK 7 streamText result shape: textStream is AsyncIterable; usage is a
+// promise resolved at stream end. The Anthropic cache breakdown now rides the
+// standard, provider-agnostic `usage.inputTokenDetails` (cacheReadTokens /
+// cacheWriteTokens) — the v6 `providerMetadata.anthropic.*` cache fields were
+// removed in v7.
 function makeStreamTextResult(opts: {
   inputTokens: number;
   cacheReadInputTokens: number;
@@ -152,11 +155,9 @@ function makeStreamTextResult(opts: {
     usage: Promise.resolve({
       inputTokens: opts.inputTokens,
       outputTokens: opts.outputTokens,
-    }),
-    providerMetadata: Promise.resolve({
-      anthropic: {
-        cacheReadInputTokens: opts.cacheReadInputTokens,
-        cacheCreationInputTokens: opts.cacheCreationInputTokens,
+      inputTokenDetails: {
+        cacheReadTokens: opts.cacheReadInputTokens,
+        cacheWriteTokens: opts.cacheCreationInputTokens,
       },
     }),
   };
@@ -352,12 +353,13 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
     expect(meta.usageResolved).toBe(false);
   });
 
-  // A REJECTED `result.providerMetadata` is observability-only: the cache
-  // breakdown degrades to zero, but the refund must STILL fire because real
-  // `usage` resolved. Only a `usage` rejection holds the reservation.
-  it('still refunds when providerMetadata rejects but usage resolves', async () => {
-    const rejectingMeta = Promise.reject(new Error('metadata unavailable'));
-    rejectingMeta.catch(() => undefined);
+  // The cache breakdown is observability-only: when `usage` resolves WITHOUT
+  // `inputTokenDetails` (the SDK/Gateway omitted the cache breakdown), the
+  // refund must STILL fire because real `usage` is known. Cache tokens degrade
+  // to zero. (In AI SDK 7 the cache breakdown rides `usage.inputTokenDetails`,
+  // not a separate provider-metadata promise, so a missing detail — not a
+  // separate rejection — is the degradation path.)
+  it('still refunds and reads zero cache when usage lacks inputTokenDetails', async () => {
     mockStreamText.mockReturnValue({
       textStream: {
         async *[Symbol.asyncIterator]() {
@@ -365,7 +367,6 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
         },
       },
       usage: Promise.resolve({ inputTokens: 300, outputTokens: 40 }),
-      providerMetadata: rejectingMeta,
     });
 
     const { POST } = await import('@/app/api/ask/route');
@@ -379,10 +380,6 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
     expect(firstCall?.[1]).toBe(300);
     expect(firstCall?.[2]).toBe(40);
 
-    // `usageResolved` is true (the refund fired). `metaResolved` only
-    // distinguishes a TIMED-OUT meta promise from a settled one — a rejected
-    // meta is caught to `undefined`, which is NOT the timeout sentinel, so
-    // `metaResolved` is true and the cache breakdown is read as zero.
     const completed = logInfoMock.mock.calls.find((c) => c[0] === 'ask completed');
     const meta = completed?.[1] as {
       usageResolved: boolean;
