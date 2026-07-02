@@ -156,6 +156,12 @@ describe('getScores — cache miss', () => {
 });
 
 describe('refreshScores', () => {
+  // Safe no-op for tests here that never enable fake timers; restores real timers
+  // for the retryable-5xx test below (which advances the backoff under fake timers).
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('fetches from PSI even when cache is warm', async () => {
     mockGet.mockResolvedValue(CACHED_DESKTOP);
     mockSet.mockResolvedValue('OK');
@@ -181,6 +187,10 @@ describe('refreshScores', () => {
   });
 
   it('throws when PSI returns non-OK status', async () => {
+    // 503 is retryable (5xx), so the cron path sleeps the backoff between attempts —
+    // fake timers keep this ~0ms instead of ~500ms real wall time.
+    vi.useFakeTimers();
+    vi.spyOn(Math, 'random').mockReturnValue(0);
     process.env.PSI_API_KEY = 'test-key';
     mockFetch.mockResolvedValue({
       ok: false,
@@ -188,7 +198,12 @@ describe('refreshScores', () => {
       text: async () => 'Service Unavailable',
     });
     const { refreshScores } = await import('@/lib/lighthouse-scores');
-    await expect(refreshScores('desktop')).rejects.toThrow('PSI API returned 503');
+    // Attach the rejection handler BEFORE advancing timers — the promise rejects
+    // DURING advanceTimersByTimeAsync, so a late handler triggers an unhandled
+    // rejection. Mirrors the correct pattern in the 'exhausts retries' test below.
+    const assertion = expect(refreshScores('desktop')).rejects.toThrow('PSI API returned 503');
+    await vi.advanceTimersByTimeAsync(600); // flush the one backoff between the 2 attempts
+    await assertion;
   });
 
   it('calls fetch with cache: no-store to bypass Next.js fetch cache', async () => {
@@ -226,7 +241,15 @@ describe('refreshScores', () => {
 });
 
 describe('refreshScores — error typing', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('throws with status + preserved message on a non-ok PSI response', async () => {
+    // 500 is retryable, so the cron path sleeps the backoff between attempts —
+    // fake timers keep this ~0ms instead of ~500ms real wall time.
+    vi.useFakeTimers();
+    vi.spyOn(Math, 'random').mockReturnValue(0);
     process.env.PSI_API_KEY = 'k';
     mockFetch.mockResolvedValue({
       ok: false,
@@ -234,10 +257,14 @@ describe('refreshScores — error typing', () => {
       text: async () => '{"error":{"code":500,"message":"Lighthouse returned error"}}',
     });
     const { refreshScores } = await import('@/lib/lighthouse-scores');
-    await expect(refreshScores('mobile')).rejects.toMatchObject({
+    // Attach the rejection handler BEFORE advancing timers (see the 503 test) so
+    // the promise rejecting mid-advance does not surface as an unhandled rejection.
+    const assertion = expect(refreshScores('mobile')).rejects.toMatchObject({
       status: 500,
       message: expect.stringContaining('PSI API returned 500 for strategy=mobile'),
     });
+    await vi.advanceTimersByTimeAsync(600); // flush the one backoff between the 2 attempts
+    await assertion;
   });
 });
 
