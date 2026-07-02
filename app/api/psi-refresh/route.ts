@@ -1,16 +1,25 @@
 import type { NextRequest } from 'next/server';
 import { Resend } from 'resend';
 import { env } from '@/lib/env';
-import { refreshScores } from '@/lib/lighthouse-scores';
+import { refreshScores, type Strategy } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
 import { getRedis } from '@/lib/rate-limit';
 
-// WHY: this cron fires two PSI audits in parallel; each can take 15–40s (see
-// PSI_REFRESH_TIMEOUT_MS=45s in lib/lighthouse-scores.ts). The default function budget
-// would kill the invocation before PSI returns, so the freshness key is never written
-// and /api/healthz stays degraded. 60s is the Hobby-plan ceiling; the worst case —
-// both PSI fetches at 45s (parallel, so ~45s wall) + the 5s failure-path Resend alert —
-// lands ~51s, leaving headroom to return the structured response before a force-kill.
+const PSI_CONSEC_KEY = (s: Strategy) => `meta:psi-consec-failures:${s}`;
+const PSI_CONSEC_TTL_S = 604_800; // 7d GC backstop; reset-on-success is primary
+const PSI_ALERT_THRESHOLD = 3;
+
+// WHY: desktop + mobile PSI audits run concurrently (Promise.allSettled), so
+// per-strategy budget — not their sum — is the wall-time unit. Each strategy
+// gets PSI_STRATEGY_BUDGET_MS=50s total, may retry once on transient 429/5xx
+// (PSI_MAX_ATTEMPTS=2, lib/lighthouse-scores.ts), with each attempt capped at
+// min(PSI_REFRESH_TIMEOUT_MS=45s, budget remaining) so no single attempt can
+// blow past the 50s ceiling. The retry-worth-it check (budget left >=
+// PSI_MIN_RETRY_BUDGET_MS=8s) runs BEFORE the PSI_RETRY_BACKOFF_MS=500ms(+jitter
+// up to 499ms) backoff, so the 2nd attempt can start with slightly under 8s —
+// the min(...) cap still bounds it correctly. Worst case: 50s (one strategy,
+// retried) + 5s failure-path Resend alert = 55s, leaving 5s headroom under the
+// 60s Hobby-plan ceiling before Vercel force-kills the invocation.
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest): Promise<Response> {
@@ -46,24 +55,73 @@ export async function GET(req: NextRequest): Promise<Response> {
       .join('; ');
 
     log.error('psi-refresh failed', { errors });
+  }
 
+  // WHY: a single transient 429/5xx no longer emails — only >= PSI_ALERT_THRESHOLD
+  // CONSECUTIVE failures for a given strategy do. The counter work is fail-quiet and
+  // independent of the meta:psi-last-run freshness write below: a Redis outage here
+  // must log + skip alerting, never mask the cron's response or block the freshness
+  // write that /api/healthz depends on.
+  const strategies: Array<['desktop' | 'mobile', PromiseSettledResult<unknown>]> = [
+    ['desktop', desktopResult],
+    ['mobile', mobileResult],
+  ];
+  const overThreshold: Array<{ strategy: string; count: number; error: string }> = [];
+  for (const [name, r] of strategies) {
+    // WHY: try/catch is PER STRATEGY, not around the whole loop. A Redis error on
+    // desktop must not skip mobile's counter update (else a desktop blip could bury
+    // a real mobile failure and delay its threshold alert by a day). Each strategy
+    // fails quiet independently.
+    try {
+      const key = PSI_CONSEC_KEY(name);
+      if (r.status === 'fulfilled') {
+        await getRedis().del(key);
+      } else {
+        const pipe = getRedis().pipeline();
+        pipe.incr(key);
+        pipe.expire(key, PSI_CONSEC_TTL_S);
+        const [count] = await pipe.exec<[number, number]>();
+        if (count >= PSI_ALERT_THRESHOLD) {
+          overThreshold.push({
+            strategy: name,
+            count,
+            error: r.reason instanceof Error ? r.reason.message : String(r.reason),
+          });
+        }
+      }
+    } catch (counterErr) {
+      log.error(
+        'psi-refresh: consecutive-failure counter update failed for a strategy — that strategy skipped this run',
+        { strategy: name, err: counterErr },
+      );
+    }
+  }
+
+  if (overThreshold.length > 0) {
     const apiKey = env.RESEND_API_KEY;
     if (!apiKey) {
       log.error('psi-refresh: RESEND_API_KEY not set, skipping alert');
     } else {
       try {
         const resend = new Resend(apiKey);
+        const alertText = overThreshold
+          .map((o) => `${o.strategy}: ${o.count} consecutive failures — ${o.error}`)
+          .join('\n');
         const sendPromise = resend.emails.send({
           from: 'alerts@erikunha.dev',
           to: 'erikhenriquealvescunha@gmail.com',
           subject: '[portfolio] psi-refresh cron failed',
-          text: `One or more PSI refreshes failed.\n\nErrors: ${errors}\nTimestamp: ${new Date().toISOString()}`,
+          text: `One or more PSI strategies have reached ${PSI_ALERT_THRESHOLD}+ consecutive failures.\n\n${alertText}\nTimestamp: ${new Date().toISOString()}`,
         });
         // WHY: Resend SDK lacks native AbortSignal; race a 5s timer to avoid
         // blocking the cron response if the alert API hangs. 5s (not 10s) keeps the
-        // worst-case wall time — two PSI fetches at 45s + this alert on the failure
-        // path — safely under maxDuration=60 so the structured 500 still returns
-        // before Vercel force-kills the function. The alert is best-effort.
+        // worst-case wall time under maxDuration=60: ~50s per-strategy PSI budget
+        // (concurrent, see the maxDuration comment) + the pre-alert Redis counter
+        // round-trips (up to 1 awaited call per strategy — del(), or a single
+        // pipe.exec() bundling INCR+EXPIRE — so 2 total, ~tens of ms, untimed, same
+        // fail-open posture as the meta:psi-last-run write) + this 5s alert
+        // race, so the structured 500 still returns before Vercel force-kills the
+        // function. The alert is best-effort.
         let timerId: ReturnType<typeof setTimeout> | undefined;
         const timeoutPromise = new Promise<never>((_, reject) => {
           timerId = setTimeout(() => reject(new Error('resend alert timeout (5s)')), 5_000);

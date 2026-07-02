@@ -2,6 +2,13 @@ import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const redisMockSet = vi.fn(async () => 'OK');
+const redisMockDel = vi.fn(async () => 1);
+const pipeExec = vi.fn(async () => [1, 1] as [number, number]); // [countAfterIncr, expireResult]
+const redisMockPipeline = vi.fn(() => ({
+  incr: vi.fn().mockReturnThis(),
+  expire: vi.fn().mockReturnThis(),
+  exec: pipeExec,
+}));
 const sendMock = vi.fn(
   async (): Promise<{
     data: { id: string } | null;
@@ -17,7 +24,7 @@ vi.mock('@/lib/lighthouse-scores', () => ({
 }));
 
 vi.mock('@/lib/rate-limit', () => ({
-  getRedis: vi.fn(() => ({ set: redisMockSet })),
+  getRedis: vi.fn(() => ({ set: redisMockSet, del: redisMockDel, pipeline: redisMockPipeline })),
 }));
 
 vi.mock('resend', () => ({
@@ -43,6 +50,8 @@ describe('GET /api/psi-refresh', () => {
     vi.resetModules();
     vi.clearAllMocks();
     redisMockSet.mockResolvedValue('OK');
+    redisMockDel.mockResolvedValue(1);
+    pipeExec.mockResolvedValue([1, 1]);
     sendMock.mockResolvedValue({ data: { id: 'email-id' }, error: null });
     vi.stubEnv('CRON_SECRET', 'test-cron-secret');
     vi.stubEnv('RESEND_API_KEY', 're_test_key');
@@ -71,11 +80,12 @@ describe('GET /api/psi-refresh', () => {
   });
 
   // WHY: partial failure (one strategy succeeded) writes the freshness key so a single
-  // transient mobile timeout does not flip /api/healthz to degraded. The 500 + alert still
-  // fire so the failure is visible. Total failure (below) is the only case that withholds
-  // the key. The Hobby plan caps the cron at once/day, so without this a single transient
-  // timeout would leave healthz degraded for ~a full day.
-  it('writes meta:psi-last-run AND sends Resend alert on partial failure (one strategy succeeded)', async () => {
+  // transient mobile timeout does not flip /api/healthz to degraded. Total failure (below)
+  // is the only case that withholds the key. The Hobby plan caps the cron at once/day, so
+  // without this a single transient timeout would leave healthz degraded for ~a full day.
+  // Under consecutive-failure gating (threshold 3), a 1st failure does NOT email — only the
+  // freshness write and 500 status carry the signal.
+  it('writes meta:psi-last-run but does NOT send a Resend alert on a 1st partial failure', async () => {
     const { refreshScores } = await import('@/lib/lighthouse-scores');
     const mockRefresh = vi.mocked(refreshScores);
     mockRefresh
@@ -87,31 +97,30 @@ describe('GET /api/psi-refresh', () => {
         fetchedAt: new Date().toISOString(),
       })
       .mockRejectedValueOnce(new Error('PSI API timeout'));
+    pipeExec.mockResolvedValue([1, 1]); // 1st consecutive failure — below threshold
 
     const { GET } = await import('@/app/api/psi-refresh/route');
     const res = await GET(makeRequest());
 
     expect(res.status).toBe(500);
     expect(redisMockSet).toHaveBeenCalledWith('meta:psi-last-run', expect.any(String));
-    expect(sendMock).toHaveBeenCalledOnce();
-    const call = (sendMock.mock.calls[0] as unknown as [{ subject: string; to: string }])?.[0];
-    expect(call.subject).toContain('psi-refresh');
-    expect(call.to).toBe('erikhenriquealvescunha@gmail.com');
+    expect(sendMock).not.toHaveBeenCalled();
   });
 
-  it('does NOT write meta:psi-last-run on total failure (both strategies fail)', async () => {
+  it('does NOT write meta:psi-last-run and does NOT alert on a 1st total failure (both strategies fail)', async () => {
     const { refreshScores } = await import('@/lib/lighthouse-scores');
     const mockRefresh = vi.mocked(refreshScores);
     mockRefresh
       .mockRejectedValueOnce(new Error('desktop PSI timeout'))
       .mockRejectedValueOnce(new Error('mobile PSI timeout'));
+    pipeExec.mockResolvedValue([1, 1]); // 1st consecutive failure for both — below threshold
 
     const { GET } = await import('@/app/api/psi-refresh/route');
     const res = await GET(makeRequest());
 
     expect(res.status).toBe(500);
     expect(redisMockSet).not.toHaveBeenCalled();
-    expect(sendMock).toHaveBeenCalledOnce();
+    expect(sendMock).not.toHaveBeenCalled();
   });
 
   it('returns 200 and logs error when Redis write throws on success path', async () => {
@@ -137,12 +146,13 @@ describe('GET /api/psi-refresh', () => {
     expect(sendMock).not.toHaveBeenCalled();
   });
 
-  it('skips alert and logs error when RESEND_API_KEY is not set', async () => {
+  it('skips alert and logs error when RESEND_API_KEY is not set (3rd consecutive failure)', async () => {
     vi.unstubAllEnvs();
     vi.stubEnv('CRON_SECRET', 'test-cron-secret');
     // RESEND_API_KEY intentionally not set
     const { refreshScores } = await import('@/lib/lighthouse-scores');
     vi.mocked(refreshScores).mockRejectedValue(new Error('PSI API timeout'));
+    pipeExec.mockResolvedValue([3, 1]); // over threshold — would alert if a key were configured
     const { log } = await import('@/lib/log');
 
     const { GET } = await import('@/app/api/psi-refresh/route');
@@ -155,13 +165,14 @@ describe('GET /api/psi-refresh', () => {
     );
   });
 
-  it('logs API error when resend.emails.send returns { error }', async () => {
+  it('logs API error when resend.emails.send returns { error } (3rd consecutive failure)', async () => {
     sendMock.mockResolvedValueOnce({
       data: null,
       error: { message: 'invalid_api_key', name: 'validation_error' },
     });
     const { refreshScores } = await import('@/lib/lighthouse-scores');
     vi.mocked(refreshScores).mockRejectedValue(new Error('PSI timeout'));
+    pipeExec.mockResolvedValue([3, 1]); // over threshold — triggers the alert send
     const { log } = await import('@/lib/log');
 
     const { GET } = await import('@/app/api/psi-refresh/route');
@@ -181,5 +192,82 @@ describe('GET /api/psi-refresh', () => {
     const res = await GET(req);
     expect(res.status).toBe(401);
     expect(redisMockSet).not.toHaveBeenCalled();
+  });
+
+  it('does NOT email on a single (1st) strategy failure', async () => {
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    vi.mocked(refreshScores).mockImplementation(async (s) => {
+      if (s === 'mobile') throw new Error('PSI API returned 500 for strategy=mobile: x');
+      return { performance: 99, accessibility: 100, bestPractices: 95, seo: 100, fetchedAt: 'now' };
+    });
+    pipeExec.mockResolvedValue([1, 1]); // 1st consecutive failure
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(500); // dashboard signal preserved
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  it('emails on the 3rd consecutive strategy failure', async () => {
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    vi.mocked(refreshScores).mockImplementation(async (s) => {
+      if (s === 'mobile') throw new Error('PSI API returned 500 for strategy=mobile: x');
+      return { performance: 99, accessibility: 100, bestPractices: 95, seo: 100, fetchedAt: 'now' };
+    });
+    pipeExec.mockResolvedValue([3, 1]); // 3rd consecutive failure
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    await GET(makeRequest());
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    const call = (sendMock.mock.calls[0] as unknown as [{ text: string }])?.[0];
+    expect(call.text).toContain('mobile');
+  });
+
+  it('resets (DEL) a strategy counter on its success and does not email', async () => {
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    vi.mocked(refreshScores).mockResolvedValue({
+      performance: 99,
+      accessibility: 100,
+      bestPractices: 95,
+      seo: 100,
+      fetchedAt: 'now',
+    });
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    expect(redisMockDel).toHaveBeenCalledWith('meta:psi-consec-failures:desktop');
+    expect(redisMockDel).toHaveBeenCalledWith('meta:psi-consec-failures:mobile');
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  it('still writes meta:psi-last-run and does not throw when the counter pipeline fails', async () => {
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    vi.mocked(refreshScores).mockImplementation(async (s) => {
+      if (s === 'mobile') throw new Error('boom');
+      return { performance: 99, accessibility: 100, bestPractices: 95, seo: 100, fetchedAt: 'now' };
+    });
+    pipeExec.mockRejectedValue(new Error('redis down'));
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(500);
+    expect(redisMockSet).toHaveBeenCalledWith('meta:psi-last-run', expect.any(String)); // freshness still written
+    expect(sendMock).not.toHaveBeenCalled(); // fail-quiet
+  });
+
+  it('a Redis error on the first strategy does NOT skip the second strategy (per-strategy try/catch)', async () => {
+    // desktop succeeds → del(desktop) throws; mobile is at its 3rd consecutive
+    // failure. With a per-strategy try/catch, the desktop del error must not bury
+    // mobile's counter update, so mobile still reaches threshold and alerts.
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    vi.mocked(refreshScores).mockImplementation(async (s) => {
+      if (s === 'mobile') throw new Error('PSI API returned 500 for strategy=mobile: x');
+      return { performance: 99, accessibility: 100, bestPractices: 95, seo: 100, fetchedAt: 'now' };
+    });
+    redisMockDel.mockRejectedValueOnce(new Error('redis blip on desktop del')); // desktop op throws
+    pipeExec.mockResolvedValue([3, 1]); // mobile: 3rd consecutive failure
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(500);
+    expect(sendMock).toHaveBeenCalledTimes(1); // mobile still alerted despite desktop del error
+    const call = (sendMock.mock.calls[0] as unknown as [{ text: string }])?.[0];
+    expect(call.text).toContain('mobile');
   });
 });

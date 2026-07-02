@@ -156,6 +156,12 @@ describe('getScores — cache miss', () => {
 });
 
 describe('refreshScores', () => {
+  // Safe no-op for tests here that never enable fake timers; restores real timers
+  // for the retryable-5xx test below (which advances the backoff under fake timers).
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('fetches from PSI even when cache is warm', async () => {
     mockGet.mockResolvedValue(CACHED_DESKTOP);
     mockSet.mockResolvedValue('OK');
@@ -181,6 +187,10 @@ describe('refreshScores', () => {
   });
 
   it('throws when PSI returns non-OK status', async () => {
+    // 503 is retryable (5xx), so the cron path sleeps the backoff between attempts —
+    // fake timers keep this ~0ms instead of ~500ms real wall time.
+    vi.useFakeTimers();
+    vi.spyOn(Math, 'random').mockReturnValue(0);
     process.env.PSI_API_KEY = 'test-key';
     mockFetch.mockResolvedValue({
       ok: false,
@@ -188,7 +198,12 @@ describe('refreshScores', () => {
       text: async () => 'Service Unavailable',
     });
     const { refreshScores } = await import('@/lib/lighthouse-scores');
-    await expect(refreshScores('desktop')).rejects.toThrow('PSI API returned 503');
+    // Attach the rejection handler BEFORE advancing timers — the promise rejects
+    // DURING advanceTimersByTimeAsync, so a late handler triggers an unhandled
+    // rejection. Mirrors the correct pattern in the 'exhausts retries' test below.
+    const assertion = expect(refreshScores('desktop')).rejects.toThrow('PSI API returned 503');
+    await vi.advanceTimersByTimeAsync(600); // flush the one backoff between the 2 attempts
+    await assertion;
   });
 
   it('calls fetch with cache: no-store to bypass Next.js fetch cache', async () => {
@@ -222,6 +237,34 @@ describe('refreshScores', () => {
     mockSet.mockRejectedValue(new Error('Redis write failed'));
     const { refreshScores } = await import('@/lib/lighthouse-scores');
     await expect(refreshScores('desktop')).rejects.toThrow('Redis write failed');
+  });
+});
+
+describe('refreshScores — error typing', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('throws with status + preserved message on a non-ok PSI response', async () => {
+    // 500 is retryable, so the cron path sleeps the backoff between attempts —
+    // fake timers keep this ~0ms instead of ~500ms real wall time.
+    vi.useFakeTimers();
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    process.env.PSI_API_KEY = 'k';
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: async () => '{"error":{"code":500,"message":"Lighthouse returned error"}}',
+    });
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    // Attach the rejection handler BEFORE advancing timers (see the 503 test) so
+    // the promise rejecting mid-advance does not surface as an unhandled rejection.
+    const assertion = expect(refreshScores('mobile')).rejects.toMatchObject({
+      status: 500,
+      message: expect.stringContaining('PSI API returned 500 for strategy=mobile'),
+    });
+    await vi.advanceTimersByTimeAsync(600); // flush the one backoff between the 2 attempts
+    await assertion;
   });
 });
 
@@ -262,5 +305,107 @@ describe('PSI fetch timeout — differentiated by path', () => {
       '@/lib/lighthouse-scores'
     );
     expect(PSI_REFRESH_TIMEOUT_MS).toBeGreaterThan(PSI_REQUEST_TIMEOUT_MS);
+  });
+});
+
+describe('refreshScores — cron retry', () => {
+  const okResp = () => makePsiResponse(0.99);
+  const errResp = (status: number) => ({ ok: false, status, text: async () => 'err' });
+  // WHY: the retrying tests below use fake timers so the real PSI_RETRY_BACKOFF_MS
+  // (500ms) sleep between attempts costs ~0ms wall time instead of ~500ms each.
+  // We advance by exactly the backoff (600ms) — NOT vi.runAllTimersAsync() — so the
+  // per-attempt AbortSignal.timeout(45s) timer never fires and can't perturb the
+  // deadline-budget arithmetic under test. Restored to real timers after each test.
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+  const BACKOFF_ADVANCE_MS = 600; // > PSI_RETRY_BACKOFF_MS (500) + max jitter with Math.random→0
+
+  it('retries once on 500 then succeeds, writing the cache exactly once', async () => {
+    vi.useFakeTimers();
+    process.env.PSI_API_KEY = 'k';
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    mockFetch.mockResolvedValueOnce(errResp(500)).mockResolvedValueOnce(okResp());
+    mockSet.mockResolvedValue('OK');
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    const p = refreshScores('mobile');
+    await vi.advanceTimersByTimeAsync(BACKOFF_ADVANCE_MS); // flush the backoff between attempts
+    const res = await p;
+    expect(res.performance).toBe(99);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockSet).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries on 429 then succeeds', async () => {
+    vi.useFakeTimers();
+    process.env.PSI_API_KEY = 'k';
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    mockFetch.mockResolvedValueOnce(errResp(429)).mockResolvedValueOnce(okResp());
+    mockSet.mockResolvedValue('OK'); // forceRefresh blocks on the cache write on success
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    const p = refreshScores('desktop');
+    await vi.advanceTimersByTimeAsync(BACKOFF_ADVANCE_MS);
+    await expect(p).resolves.toBeTruthy();
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('does NOT retry on a timeout', async () => {
+    process.env.PSI_API_KEY = 'k';
+    mockFetch.mockRejectedValue(
+      Object.assign(new Error('The operation was aborted due to timeout'), {
+        name: 'TimeoutError',
+      }),
+    );
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    await expect(refreshScores('mobile')).rejects.toThrow(/aborted/);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT retry on a non-429 4xx', async () => {
+    process.env.PSI_API_KEY = 'k';
+    mockFetch.mockResolvedValue(errResp(403));
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    await expect(refreshScores('mobile')).rejects.toMatchObject({ status: 403 });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('exhausts retries on a persistent 500 (2 attempts, then throws)', async () => {
+    vi.useFakeTimers();
+    process.env.PSI_API_KEY = 'k';
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    mockFetch.mockResolvedValue(errResp(500));
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    const assertion = expect(refreshScores('mobile')).rejects.toMatchObject({ status: 500 });
+    await vi.advanceTimersByTimeAsync(BACKOFF_ADVANCE_MS); // flush the one backoff between the 2 attempts
+    await assertion;
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('skips the retry when the remaining budget is below the floor', async () => {
+    process.env.PSI_API_KEY = 'k';
+    const { refreshScores, __setNowForTest, PSI_STRATEGY_BUDGET_MS } = await import(
+      '@/lib/lighthouse-scores'
+    );
+    let t = 0;
+    // start=0; after the first attempt, jump elapsed past (budget - floor) so the retry is skipped.
+    __setNowForTest(() => {
+      const v = t;
+      t = PSI_STRATEGY_BUDGET_MS - 1_000; // second read: only 1s left (< 8s floor)
+      return v;
+    });
+    mockFetch.mockResolvedValue(errResp(500));
+    await expect(refreshScores('mobile')).rejects.toMatchObject({ status: 500 });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    __setNowForTest(null);
+  });
+
+  it('request path (getScores cache-miss) is single-shot — no retry on 500', async () => {
+    process.env.PSI_API_KEY = 'k';
+    mockGet.mockResolvedValue(null); // cache miss
+    mockFetch.mockResolvedValue(errResp(500));
+    const { getScores, LIGHTHOUSE_FALLBACK } = await import('@/lib/lighthouse-scores');
+    const res = await getScores('mobile');
+    expect(res).toEqual(LIGHTHOUSE_FALLBACK); // getScores swallows to fallback
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 });

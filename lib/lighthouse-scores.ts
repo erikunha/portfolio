@@ -2,6 +2,18 @@ import { env } from '@/lib/env';
 import { log } from '@/lib/log';
 import { getRedis } from './rate-limit';
 
+/** PSI returned a non-2xx HTTP status. Carries `status` so the cron retry can
+ *  classify retryable (429/5xx) vs terminal (4xx) failures. */
+class PsiHttpError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'PsiHttpError';
+  }
+}
+
 export type Strategy = 'desktop' | 'mobile';
 
 export type LighthouseScores = {
@@ -34,7 +46,36 @@ export const LIGHTHOUSE_TTL_S = 90_000; // 25 h — survives a missed cron run
 export const PSI_REFRESH_TIMEOUT_MS = 45_000; // cron path (forceRefresh)
 export const PSI_REQUEST_TIMEOUT_MS = 8_000; // request path (page render)
 
-async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<LighthouseScores> {
+// WHY: Vercel Hobby caps a function at 60s. PSI_STRATEGY_BUDGET_MS reserves 10s
+// of that ceiling for the alert path + response so a retry attempt never runs
+// the route past its hard deadline. PSI_MIN_RETRY_BUDGET_MS is the floor below
+// which a retry attempt couldn't plausibly complete, so it's skipped in favor
+// of failing fast and recovering on the next daily cron tick.
+export const PSI_STRATEGY_BUDGET_MS = 50_000;
+export const PSI_MIN_RETRY_BUDGET_MS = 8_000;
+export const PSI_RETRY_BACKOFF_MS = 500;
+export const PSI_MAX_ATTEMPTS = 2;
+
+// Test seam: overridable monotonic clock so the deadline-budget path is
+// deterministically testable without fake timers. Production uses Date.now.
+let _now: () => number = () => Date.now();
+export function __setNowForTest(fn: (() => number) | null): void {
+  _now = fn ?? (() => Date.now());
+}
+
+function isRetryablePsiError(err: unknown): err is PsiHttpError {
+  return (
+    err instanceof PsiHttpError && (err.status === 429 || (err.status >= 500 && err.status <= 599))
+  );
+}
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+async function fetchScoresOnce(
+  strategy: Strategy,
+  timeoutMs: number,
+  forceRefresh: boolean,
+): Promise<LighthouseScores> {
   const apiKey = env.PSI_API_KEY;
   if (!apiKey) throw new Error('PSI_API_KEY is not set');
 
@@ -52,7 +93,7 @@ async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<
 
   const res = await fetch(psiUrl, {
     ...fetchCache,
-    signal: AbortSignal.timeout(forceRefresh ? PSI_REFRESH_TIMEOUT_MS : PSI_REQUEST_TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
     headers: { Referer: 'https://www.erikunha.dev/' },
   });
   if (!res.ok) {
@@ -62,7 +103,10 @@ async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<
     } catch {
       // ignore — error message already has status code
     }
-    throw new Error(`PSI API returned ${res.status} for strategy=${strategy}: ${body}`);
+    throw new PsiHttpError(
+      res.status,
+      `PSI API returned ${res.status} for strategy=${strategy}: ${body}`,
+    );
   }
 
   const data = (await res.json()) as {
@@ -102,6 +146,30 @@ async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<
   }
 
   return scores;
+}
+
+async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<LighthouseScores> {
+  if (!forceRefresh) {
+    return fetchScoresOnce(strategy, PSI_REQUEST_TIMEOUT_MS, false); // single-shot request/LCP path
+  }
+  const start = _now();
+  for (let attempt = 1; ; attempt++) {
+    const remaining = PSI_STRATEGY_BUDGET_MS - (_now() - start);
+    const perAttempt = Math.min(PSI_REFRESH_TIMEOUT_MS, Math.max(0, remaining));
+    try {
+      return await fetchScoresOnce(strategy, perAttempt, true);
+    } catch (err) {
+      const budgetLeft = PSI_STRATEGY_BUDGET_MS - (_now() - start);
+      if (
+        attempt >= PSI_MAX_ATTEMPTS ||
+        !isRetryablePsiError(err) ||
+        budgetLeft < PSI_MIN_RETRY_BUDGET_MS
+      ) {
+        throw err;
+      }
+      await sleep(PSI_RETRY_BACKOFF_MS + Math.floor(Math.random() * 500));
+    }
+  }
 }
 
 /**
