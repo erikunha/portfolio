@@ -225,6 +225,22 @@ describe('refreshScores', () => {
   });
 });
 
+describe('refreshScores — error typing', () => {
+  it('throws with status + preserved message on a non-ok PSI response', async () => {
+    process.env.PSI_API_KEY = 'k';
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: async () => '{"error":{"code":500,"message":"Lighthouse returned error"}}',
+    });
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    await expect(refreshScores('mobile')).rejects.toMatchObject({
+      status: 500,
+      message: expect.stringContaining('PSI API returned 500 for strategy=mobile'),
+    });
+  });
+});
+
 describe('PSI fetch timeout — differentiated by path', () => {
   // WHY: fetchAndCache is shared by the cron (forceRefresh) and organic page
   // renders (getScores). PSI runs a full Lighthouse audit server-side (~15–40s),

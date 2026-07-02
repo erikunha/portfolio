@@ -2,6 +2,18 @@ import { env } from '@/lib/env';
 import { log } from '@/lib/log';
 import { getRedis } from './rate-limit';
 
+/** PSI returned a non-2xx HTTP status. Carries `status` so the cron retry can
+ *  classify retryable (429/5xx) vs terminal (4xx) failures. */
+class PsiHttpError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'PsiHttpError';
+  }
+}
+
 export type Strategy = 'desktop' | 'mobile';
 
 export type LighthouseScores = {
@@ -62,7 +74,10 @@ async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<
     } catch {
       // ignore — error message already has status code
     }
-    throw new Error(`PSI API returned ${res.status} for strategy=${strategy}: ${body}`);
+    throw new PsiHttpError(
+      res.status,
+      `PSI API returned ${res.status} for strategy=${strategy}: ${body}`,
+    );
   }
 
   const data = (await res.json()) as {
