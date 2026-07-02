@@ -13,21 +13,13 @@ vi.stubGlobal('fetch', mockFetch);
 const mockLogError = vi.fn();
 vi.mock('@/lib/log', () => ({ log: { error: mockLogError, info: vi.fn() } }));
 
-afterEach(async () => {
+afterEach(() => {
   vi.resetModules();
   mockGet.mockReset();
   mockSet.mockReset();
   mockFetch.mockReset();
   mockLogError.mockReset();
   delete process.env.PSI_API_KEY;
-  // Guard: reset the module's clock test seam even if a test forgot to. This
-  // dynamic import loads (and freezes, via lib/env.ts) its own `env` snapshot
-  // off current process.env, so resetModules() again afterward is required —
-  // otherwise the next test's import would reuse this cached instance with a
-  // stale/deleted PSI_API_KEY baked in instead of re-parsing its own env.
-  const mod = await import('@/lib/lighthouse-scores').catch(() => null);
-  mod?.__setNowForTest?.(null);
-  vi.resetModules();
 });
 
 const CACHED_DESKTOP = {
