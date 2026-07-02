@@ -17,8 +17,8 @@ vi.mock('ai', () => ({
   streamText: mockStreamText,
 }));
 
-// AI SDK streamText result shape: textStream is AsyncIterable; usage and
-// providerMetadata are end-of-stream promises.
+// AI SDK streamText result shape: textStream is AsyncIterable; usage is an
+// end-of-stream promise.
 function makeStreamTextResult(text = 'ok') {
   return {
     textStream: {
@@ -27,9 +27,6 @@ function makeStreamTextResult(text = 'ok') {
       },
     },
     usage: Promise.resolve({ inputTokens: 10, outputTokens: 1 }),
-    providerMetadata: Promise.resolve({
-      anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
-    }),
   };
 }
 

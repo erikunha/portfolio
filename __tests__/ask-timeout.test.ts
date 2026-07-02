@@ -31,9 +31,6 @@ function makeOkResult(text = 'ok') {
       },
     },
     usage: Promise.resolve({ inputTokens: 10, outputTokens: 1 }),
-    providerMetadata: Promise.resolve({
-      anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
-    }),
   };
 }
 

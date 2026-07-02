@@ -60,8 +60,8 @@ vi.mock('@/lib/log', () => ({
 // streamText result whose textStream throws on the first iterator step —
 // simulates a stream-initiation failure (timeout / network error). The AI SDK
 // suppresses stream errors when `onError` is set (the route sets it), so
-// `usage` / `providerMetadata` still RESOLVE — to zeroed values on a failed
-// stream — rather than reject. The route's settlement path reads them after
+// `usage` still RESOLVES — to zeroed values on a failed
+// stream — rather than reject. The route's settlement path reads it after
 // the stream-error catch.
 function makeFailingResult(message: string) {
   const err = new Error(message);
@@ -76,15 +76,12 @@ function makeFailingResult(message: string) {
       },
     },
     usage: Promise.resolve({ inputTokens: 0, outputTokens: 0 }),
-    providerMetadata: Promise.resolve({
-      anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
-    }),
   };
 }
 
 // streamText result with a textStream that yields one chunk, then stalls
-// forever — simulates a connection that goes silent mid-stream. `usage` and
-// `providerMetadata` resolve to zeros so the post-stall settlement path
+// forever — simulates a connection that goes silent mid-stream. `usage`
+// resolves to zeros so the post-stall settlement path
 // completes without hanging on the watchdog-tripped error path.
 function makeStalledResult() {
   return {
@@ -106,9 +103,6 @@ function makeStalledResult() {
       },
     },
     usage: Promise.resolve({ inputTokens: 0, outputTokens: 0 }),
-    providerMetadata: Promise.resolve({
-      anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
-    }),
   };
 }
 
@@ -121,9 +115,6 @@ function makeOkResult(text = 'hello') {
       },
     },
     usage: Promise.resolve({ inputTokens: 10, outputTokens: 5 }),
-    providerMetadata: Promise.resolve({
-      anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
-    }),
   };
 }
 

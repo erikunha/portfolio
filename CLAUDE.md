@@ -94,7 +94,7 @@ Invoke the named skill inline (not as a subagent) before the described action. P
 - **CSS:** Tailwind v4 (`@tailwindcss/postcss`, theme in `app/css/theme.css`). Design tokens live in `app/css/theme.css` as CSS custom properties — no Style Dictionary pipeline, no CSS modules. PostCSS pipeline added back for Tailwind v4 via `@tailwindcss/postcss` — no other PostCSS plugins. See `DECISIONS.md` for the Tailwind v4 migration ADR (2026-05-31).
 - Vercel Edge end-to-end deployment
 - Upstash Redis for rate-limit + KV log
-- Vercel AI Gateway via the AI SDK v6 (`ai` package, `streamText`) with the model string `anthropic/claude-haiku-4-5` for `/api/ask`; ephemeral prompt cache preserved via `providerOptions.anthropic.cacheControl`. Needs `AI_GATEWAY_API_KEY` (OIDC token on Vercel). Migrated 2026-05-21 — see DECISIONS.md.
+- Vercel AI Gateway via the AI SDK v7 (`ai` package, `streamText`) with the model string `anthropic/claude-haiku-4-5` for `/api/ask`; ephemeral prompt cache preserved via `providerOptions.anthropic.cacheControl` on a system message (`allowSystemInMessages: true`); cache-token breakdown read from `usage.inputTokenDetails`. Needs `AI_GATEWAY_API_KEY` (OIDC token on Vercel). Migrated to the Gateway 2026-05-21; upgraded v6→v7 2026-07-02 — see DECISIONS.md.
 - Resend for contact form delivery
 - Playwright E2E: observability smoke (`tests/e2e/observability-smoke.spec.ts`), a11y scan (`tests/a11y/axe.spec.ts`), contact + ask user-journey tests, visual regression snapshots; 5-project matrix (chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components)
 - Vitest unit tests
