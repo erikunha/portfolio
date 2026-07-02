@@ -14,9 +14,10 @@
 //
 // Written FIRST (TDD): it pins the metric against the direct-SDK
 // implementation before the Vercel AI Gateway migration, and must stay
-// green after it. Whatever the upstream shape (SSE message_start vs the
-// AI SDK usage/providerMetadata promises), a cache-read of N tokens must
-// flow into totalBilledInput and produce a non-zero cacheHitRate.
+// green after it. Whatever the upstream shape (SSE message_start vs the AI
+// SDK `usage` promise, whose `inputTokenDetails` carries the cache breakdown
+// in v7), a cache-read of N tokens must flow into totalBilledInput and produce
+// a non-zero cacheHitRate.
 
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';

@@ -418,8 +418,8 @@ export async function POST(req: NextRequest) {
   // reservation), never rejecting the response. A missing cache breakdown
   // simply reads as zero tokens.
   //
-  // On a mid-stream STALL the upstream never finishes, so neither end-of-
-  // stream promise ever resolves. Both awaits are therefore bounded by a
+  // On a mid-stream STALL the upstream never finishes, so the end-of-stream
+  // usage promise never resolves. Its await is therefore bounded by a
   // short deadline: if usage cannot be resolved, settlement skips the budget
   // refund entirely — the reservation stays as the high-water mark, the
   // fail-closed posture for a cap when the true cost is unknown — and still
