@@ -251,4 +251,23 @@ describe('GET /api/psi-refresh', () => {
     expect(redisMockSet).toHaveBeenCalledWith('meta:psi-last-run', expect.any(String)); // freshness still written
     expect(sendMock).not.toHaveBeenCalled(); // fail-quiet
   });
+
+  it('a Redis error on the first strategy does NOT skip the second strategy (per-strategy try/catch)', async () => {
+    // desktop succeeds → del(desktop) throws; mobile is at its 3rd consecutive
+    // failure. With a per-strategy try/catch, the desktop del error must not bury
+    // mobile's counter update, so mobile still reaches threshold and alerts.
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    vi.mocked(refreshScores).mockImplementation(async (s) => {
+      if (s === 'mobile') throw new Error('PSI API returned 500 for strategy=mobile: x');
+      return { performance: 99, accessibility: 100, bestPractices: 95, seo: 100, fetchedAt: 'now' };
+    });
+    redisMockDel.mockRejectedValueOnce(new Error('redis blip on desktop del')); // desktop op throws
+    pipeExec.mockResolvedValue([3, 1]); // mobile: 3rd consecutive failure
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(500);
+    expect(sendMock).toHaveBeenCalledTimes(1); // mobile still alerted despite desktop del error
+    const call = (sendMock.mock.calls[0] as unknown as [{ text: string }])?.[0];
+    expect(call.text).toContain('mobile');
+  });
 });

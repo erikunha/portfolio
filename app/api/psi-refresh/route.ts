@@ -58,17 +58,21 @@ export async function GET(req: NextRequest): Promise<Response> {
   }
 
   // WHY: a single transient 429/5xx no longer emails — only >= PSI_ALERT_THRESHOLD
-  // CONSECUTIVE failures for a given strategy do. This block is isolated in its own
-  // try/catch, independent of the meta:psi-last-run freshness write below: a Redis
-  // outage here must fail quiet (log + skip alerting), never mask the cron's response
-  // or block the freshness write that /api/healthz depends on.
+  // CONSECUTIVE failures for a given strategy do. The counter work is fail-quiet and
+  // independent of the meta:psi-last-run freshness write below: a Redis outage here
+  // must log + skip alerting, never mask the cron's response or block the freshness
+  // write that /api/healthz depends on.
   const strategies: Array<['desktop' | 'mobile', PromiseSettledResult<unknown>]> = [
     ['desktop', desktopResult],
     ['mobile', mobileResult],
   ];
   const overThreshold: Array<{ strategy: string; count: number; error: string }> = [];
-  try {
-    for (const [name, r] of strategies) {
+  for (const [name, r] of strategies) {
+    // WHY: try/catch is PER STRATEGY, not around the whole loop. A Redis error on
+    // desktop must not skip mobile's counter update (else a desktop blip could bury
+    // a real mobile failure and delay its threshold alert by a day). Each strategy
+    // fails quiet independently.
+    try {
       const key = PSI_CONSEC_KEY(name);
       if (r.status === 'fulfilled') {
         await getRedis().del(key);
@@ -85,13 +89,12 @@ export async function GET(req: NextRequest): Promise<Response> {
           });
         }
       }
+    } catch (counterErr) {
+      log.error(
+        'psi-refresh: consecutive-failure counter update failed for a strategy — that strategy skipped this run',
+        { strategy: name, err: counterErr },
+      );
     }
-  } catch (counterErr) {
-    // Fail-quiet: counter/Redis failure must not throw or reintroduce email noise;
-    // /api/healthz already covers Redis-down via the freshness key below.
-    log.error('psi-refresh: consecutive-failure counter update failed — alert gating skipped', {
-      err: counterErr,
-    });
   }
 
   if (overThreshold.length > 0) {
@@ -112,9 +115,12 @@ export async function GET(req: NextRequest): Promise<Response> {
         });
         // WHY: Resend SDK lacks native AbortSignal; race a 5s timer to avoid
         // blocking the cron response if the alert API hangs. 5s (not 10s) keeps the
-        // worst-case wall time — two PSI fetches at 45s + this alert on the failure
-        // path — safely under maxDuration=60 so the structured 500 still returns
-        // before Vercel force-kills the function. The alert is best-effort.
+        // worst-case wall time under maxDuration=60: ~50s per-strategy PSI budget
+        // (concurrent, see the maxDuration comment) + the pre-alert Redis counter
+        // round-trips (up to 2 awaited calls per strategy, ~tens of ms, untimed —
+        // same fail-open posture as the meta:psi-last-run write) + this 5s alert
+        // race, so the structured 500 still returns before Vercel force-kills the
+        // function. The alert is best-effort.
         let timerId: ReturnType<typeof setTimeout> | undefined;
         const timeoutPromise = new Promise<never>((_, reject) => {
           timerId = setTimeout(() => reject(new Error('resend alert timeout (5s)')), 5_000);
