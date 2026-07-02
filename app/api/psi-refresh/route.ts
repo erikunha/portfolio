@@ -1,9 +1,13 @@
 import type { NextRequest } from 'next/server';
 import { Resend } from 'resend';
 import { env } from '@/lib/env';
-import { refreshScores } from '@/lib/lighthouse-scores';
+import { refreshScores, type Strategy } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
 import { getRedis } from '@/lib/rate-limit';
+
+const PSI_CONSEC_KEY = (s: Strategy) => `meta:psi-consec-failures:${s}`;
+const PSI_CONSEC_TTL_S = 604_800; // 7d GC backstop; reset-on-success is primary
+const PSI_ALERT_THRESHOLD = 3;
 
 // WHY: this cron fires two PSI audits in parallel; each can take 15–40s (see
 // PSI_REFRESH_TIMEOUT_MS=45s in lib/lighthouse-scores.ts). The default function budget
@@ -46,18 +50,60 @@ export async function GET(req: NextRequest): Promise<Response> {
       .join('; ');
 
     log.error('psi-refresh failed', { errors });
+  }
 
+  // WHY: a single transient 429/5xx no longer emails — only >= PSI_ALERT_THRESHOLD
+  // CONSECUTIVE failures for a given strategy do. This block is isolated in its own
+  // try/catch, independent of the meta:psi-last-run freshness write below: a Redis
+  // outage here must fail quiet (log + skip alerting), never mask the cron's response
+  // or block the freshness write that /api/healthz depends on.
+  const strategies: Array<['desktop' | 'mobile', PromiseSettledResult<unknown>]> = [
+    ['desktop', desktopResult],
+    ['mobile', mobileResult],
+  ];
+  const overThreshold: Array<{ strategy: string; count: number; error: string }> = [];
+  try {
+    for (const [name, r] of strategies) {
+      const key = PSI_CONSEC_KEY(name);
+      if (r.status === 'fulfilled') {
+        await getRedis().del(key);
+      } else {
+        const pipe = getRedis().pipeline();
+        pipe.incr(key);
+        pipe.expire(key, PSI_CONSEC_TTL_S);
+        const [count] = await pipe.exec<[number, number]>();
+        if (count >= PSI_ALERT_THRESHOLD) {
+          overThreshold.push({
+            strategy: name,
+            count,
+            error: r.reason instanceof Error ? r.reason.message : String(r.reason),
+          });
+        }
+      }
+    }
+  } catch (counterErr) {
+    // Fail-quiet: counter/Redis failure must not throw or reintroduce email noise;
+    // /api/healthz already covers Redis-down via the freshness key below.
+    log.error('psi-refresh: consecutive-failure counter update failed — alert gating skipped', {
+      err: counterErr,
+    });
+  }
+
+  if (overThreshold.length > 0) {
     const apiKey = env.RESEND_API_KEY;
     if (!apiKey) {
       log.error('psi-refresh: RESEND_API_KEY not set, skipping alert');
     } else {
       try {
         const resend = new Resend(apiKey);
+        const alertText = overThreshold
+          .map((o) => `${o.strategy}: ${o.count} consecutive failures — ${o.error}`)
+          .join('\n');
         const sendPromise = resend.emails.send({
           from: 'alerts@erikunha.dev',
           to: 'erikhenriquealvescunha@gmail.com',
           subject: '[portfolio] psi-refresh cron failed',
-          text: `One or more PSI refreshes failed.\n\nErrors: ${errors}\nTimestamp: ${new Date().toISOString()}`,
+          text: `One or more PSI strategies have reached ${PSI_ALERT_THRESHOLD}+ consecutive failures.\n\n${alertText}\nTimestamp: ${new Date().toISOString()}`,
         });
         // WHY: Resend SDK lacks native AbortSignal; race a 5s timer to avoid
         // blocking the cron response if the alert API hangs. 5s (not 10s) keeps the

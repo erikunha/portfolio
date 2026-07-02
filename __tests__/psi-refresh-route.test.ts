@@ -10,8 +10,15 @@ const mockLogError = vi.fn();
 vi.mock('@/lib/log', () => ({ log: { info: mockLogInfo, error: mockLogError } }));
 
 const mockRedisSet = vi.fn(async () => 'OK');
+const mockRedisDel = vi.fn(async () => 1);
+const mockPipeExec = vi.fn(async () => [1, 1] as [number, number]);
+const mockRedisPipeline = vi.fn(() => ({
+  incr: vi.fn().mockReturnThis(),
+  expire: vi.fn().mockReturnThis(),
+  exec: mockPipeExec,
+}));
 vi.mock('@/lib/rate-limit', () => ({
-  getRedis: vi.fn(() => ({ set: mockRedisSet })),
+  getRedis: vi.fn(() => ({ set: mockRedisSet, del: mockRedisDel, pipeline: mockRedisPipeline })),
 }));
 
 // Resend must use `function` (not arrow) so `new Resend(...)` in the route works.
@@ -29,6 +36,8 @@ afterEach(() => {
   mockLogInfo.mockReset();
   mockLogError.mockReset();
   mockRedisSet.mockReset().mockResolvedValue('OK');
+  mockRedisDel.mockReset().mockResolvedValue(1);
+  mockPipeExec.mockReset().mockResolvedValue([1, 1]);
   mockSendEmail.mockReset().mockResolvedValue({ data: { id: 'x' }, error: null });
   delete process.env.CRON_SECRET;
   delete process.env.RESEND_API_KEY;
