@@ -248,15 +248,27 @@ export function agentResultContains(records, subagentType, needle) {
     // (B) Async dispatch: the harness delivers the verdict as a task-notification
     // (a USER record with STRING content) that embeds `<tool-use-id>${id}</…>`
     // for the originating dispatch — the tool_use_id link is severed on the
-    // async path, so we re-correlate via that tag. Anti-spoof holds because the
-    // record must be user-role (an assistant cannot author a user record) AND
-    // must name THIS architect dispatch's tool-use-id, so neither prose nor an
-    // unrelated agent's notification qualifies.
+    // async path, so we re-correlate via that tag.
+    //
+    // Anti-spoof anchor is the HARNESS-ONLY `origin.kind === 'task-notification'`
+    // top-level field. `role === 'user'` + string content is NOT sufficient: a
+    // human-typed chat turn has that exact shape, so a user could paste a
+    // `<task-notification>` string carrying a real prior dispatch's tool-use-id
+    // + the sentinel and forge a PASS. `origin.kind` is stamped by the CLI from
+    // the input source (`human`/`typed` for chat input, `task-notification` for
+    // an agent-completion injection) and cannot be set from message content, so
+    // it is the structural marker only the harness's notification writer emits.
+    // If `origin` is absent (older/other harness), this fails CLOSED — the safe
+    // direction for a gate. See `scripts/review-stamp.ts` + `.claude/hooks/*`.
     const role = message && typeof message === 'object' ? message.role : undefined;
+    const origin =
+      record && typeof record === 'object' ? /** @type {any} */ (record).origin : undefined;
+    const isHarnessNotification =
+      origin && typeof origin === 'object' && origin.kind === 'task-notification';
     if (
       typeof content === 'string' &&
       role === 'user' &&
-      content.includes('<task-notification>') &&
+      isHarnessNotification &&
       content.includes(`<tool-use-id>${toolUseId}</tool-use-id>`) &&
       content.includes(needle)
     ) {
