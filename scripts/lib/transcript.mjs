@@ -226,17 +226,41 @@ export function agentResultContains(records, subagentType, needle) {
     const message =
       record && typeof record === 'object' ? /** @type {any} */ (record).message : undefined;
     const content = message && typeof message === 'object' ? message.content : undefined;
-    if (!Array.isArray(content)) continue;
-    for (const item of content) {
-      if (
-        item &&
-        typeof item === 'object' &&
-        item.type === 'tool_result' &&
-        item.tool_use_id === toolUseId &&
-        JSON.stringify(item).includes(needle)
-      ) {
-        return true;
+
+    // (A) Synchronous dispatch: the report is a tool_result content block
+    // correlated by tool_use_id. An unrelated tool_result (e.g. Bash stdout
+    // printing the sentinel) has a different tool_use_id and cannot spoof.
+    if (Array.isArray(content)) {
+      for (const item of content) {
+        if (
+          item &&
+          typeof item === 'object' &&
+          item.type === 'tool_result' &&
+          item.tool_use_id === toolUseId &&
+          JSON.stringify(item).includes(needle)
+        ) {
+          return true;
+        }
       }
+      continue;
+    }
+
+    // (B) Async dispatch: the harness delivers the verdict as a task-notification
+    // (a USER record with STRING content) that embeds `<tool-use-id>${id}</…>`
+    // for the originating dispatch — the tool_use_id link is severed on the
+    // async path, so we re-correlate via that tag. Anti-spoof holds because the
+    // record must be user-role (an assistant cannot author a user record) AND
+    // must name THIS architect dispatch's tool-use-id, so neither prose nor an
+    // unrelated agent's notification qualifies.
+    const role = message && typeof message === 'object' ? message.role : undefined;
+    if (
+      typeof content === 'string' &&
+      role === 'user' &&
+      content.includes('<task-notification>') &&
+      content.includes(`<tool-use-id>${toolUseId}</tool-use-id>`) &&
+      content.includes(needle)
+    ) {
+      return true;
     }
   }
   return false;
