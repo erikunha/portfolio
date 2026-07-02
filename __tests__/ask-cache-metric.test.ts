@@ -327,9 +327,6 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
         },
       },
       usage: rejectingUsage,
-      providerMetadata: Promise.resolve({
-        anthropic: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
-      }),
     });
 
     const { POST } = await import('@/app/api/ask/route');

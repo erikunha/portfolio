@@ -95,10 +95,11 @@ const MAX_OUTPUT_TOKENS = 512;
 // Haiku inter-token gaps are sub-second.
 const MID_STREAM_TIMEOUT_MS = 15_000;
 
-// End-of-stream usage-promise deadline. `result.usage` / `result.providerMetadata`
-// resolve in the same tick the stream closes on a healthy stream, so 1s is
-// ample headroom; the deadline only bites when a stalled stream leaves those
-// promises pending forever. Module-scoped alongside its timeout siblings.
+// End-of-stream usage-promise deadline. `result.usage` (which in AI SDK 7 also
+// carries the cache breakdown via `inputTokenDetails`) resolves in the same tick
+// the stream closes on a healthy stream, so 1s is ample headroom; the deadline
+// only bites when a stalled stream leaves that promise pending forever.
+// Module-scoped alongside its timeout siblings.
 const USAGE_RESOLVE_TIMEOUT_MS = 1_000;
 
 // Sentinel returned by the usage deadline race when a promise times out.
@@ -297,11 +298,11 @@ export async function POST(req: NextRequest) {
   const enc = new TextEncoder();
   let inputTokens = 0;
   let outputTokens = 0;
-  // The Gateway/AI-SDK reports cache_read_input_tokens and
-  // cache_creation_input_tokens via `providerMetadata.anthropic` (resolved at
-  // stream end). cache_read is what we save vs full input billing on a cache
-  // hit; cache_creation is the one-time write cost. Both are tracked for the
-  // cache hit-rate metric and logged for observability.
+  // The AI SDK reports the cache breakdown on `usage.inputTokenDetails`
+  // (resolved at stream end): `cacheReadTokens` is what we save vs full input
+  // billing on a cache hit; `cacheWriteTokens` is the one-time cache-creation
+  // cost. Both are tracked for the cache hit-rate metric and logged for
+  // observability.
   let cacheReadTokens = 0;
   let cacheCreationTokens = 0;
   let collectedAnswerText = '';
@@ -386,9 +387,10 @@ export async function POST(req: NextRequest) {
         // Optional-chained — a plain async generator may omit `return`.
         // Fire-and-forget: cleanup must never reject the response.
         void Promise.resolve(iterator.return?.()).catch(() => undefined);
-        // Awaited (not fire-and-forget): the AI SDK exposes token counts via
-        // end-of-stream promises (`result.usage` / `result.providerMetadata`)
-        // rather than a message_start SSE event, so settlement is now async.
+        // Awaited (not fire-and-forget): the AI SDK exposes token counts (and
+        // the cache breakdown, on `usage.inputTokenDetails`) via the
+        // end-of-stream `result.usage` promise rather than a message_start SSE
+        // event, so settlement is now async.
         // It runs after `controller.close()`, so the client is unaffected;
         // awaiting it here only defers when this `start()` promise settles,
         // and guarantees budget settlement + persistence actually complete
@@ -409,13 +411,12 @@ export async function POST(req: NextRequest) {
   // Resolve usage from the AI SDK's end-of-stream promises, then settle the
   // budget reservation and persist the interaction. Unlike the direct SDK
   // (usage on the message_start SSE event), the Gateway/AI SDK exposes token
-  // counts via `result.usage` and the cache breakdown via
-  // `result.providerMetadata.anthropic`, both settled once the stream
-  // finishes. `usageOrTimeout` / `providerMetadataPromise` are the pre-handled
-  // (.catch-attached) forms — a usage REJECTION resolves to the
-  // USAGE_TIMED_OUT sentinel (treated as "unavailable", holds the reservation);
-  // a metadata rejection degrades to `undefined` (zero cache tokens), never
-  // rejecting the response.
+  // counts AND the cache breakdown (`usage.inputTokenDetails`) on the single
+  // `result.usage` promise, settled once the stream finishes. `usageOrTimeout`
+  // is its pre-handled (.catch-attached) form — a usage REJECTION resolves to
+  // the USAGE_TIMED_OUT sentinel (treated as "unavailable", holds the
+  // reservation), never rejecting the response. A missing cache breakdown
+  // simply reads as zero tokens.
   //
   // On a mid-stream STALL the upstream never finishes, so neither end-of-
   // stream promise ever resolves. Both awaits are therefore bounded by a
