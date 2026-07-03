@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 1
-      - uses: anthropics/claude-code-action@806af32823ef69c8ef357086c573a902af641307 # v1
+      - uses: anthropics/claude-code-action@6c0083bb7289c31716797a039b6367b3079cc46e # v1
         with:
           # Claude Max subscription token. Tag mode posts as claude[bot] using the
           # action's GitHub App token, minted from this.

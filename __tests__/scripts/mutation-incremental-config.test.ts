@@ -24,7 +24,7 @@ describe('stryker incremental config', () => {
 
 describe('mutation.yml caches the incremental file', () => {
   it('has a SHA-pinned actions/cache step (existence guard for the asserts below)', () => {
-    expect(wf).toContain('actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5');
+    expect(wf).toContain('actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0');
   });
 
   it('caches the incremental file with the evolving-cache key pattern', () => {
@@ -37,7 +37,7 @@ describe('mutation.yml caches the incremental file', () => {
   });
 
   it('places the cache step before the mutation run (so the file is restored first)', () => {
-    const cacheIdx = wf.indexOf('actions/cache@27d5ce7f');
+    const cacheIdx = wf.indexOf('actions/cache@55cc8345');
     const runIdx = wf.indexOf('name: Run mutation tests');
     expect(cacheIdx).toBeGreaterThanOrEqual(0);
     expect(runIdx).toBeGreaterThan(cacheIdx);
