@@ -470,7 +470,7 @@ export function InteractiveShell() {
             <button
               key={cmd}
               type="button"
-              className="border border-[var(--color-primary-subtle)] text-primary-500 px-2 py-1 font-mono text-xs max-md:text-[10px] tracking-[0.1em] rounded-[2px] min-h-[28px] inline-flex items-center cursor-pointer bg-transparent active:bg-[var(--color-primary-quiet)]"
+              className="border border-[var(--color-primary-subtle)] text-primary-500 px-2 py-1 max-md:px-3 font-mono text-xs tracking-[0.1em] rounded-[2px] min-h-[28px] max-md:min-h-[40px] inline-flex items-center cursor-pointer bg-transparent active:bg-[var(--color-primary-quiet)]"
               data-cmd={cmd}
               disabled={busy}
             >
