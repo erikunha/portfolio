@@ -143,11 +143,11 @@ function InfluencesList({
 function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
   return (
     <div className="border border-primary-500 flex flex-col overflow-hidden">
-      <div className="flex justify-between px-[9px] py-[6px] text-xs text-primary-400 bg-black/60 tracking-[0.12em] border-b border-[var(--color-primary-quiet)]">
+      <div className="flex justify-between px-[9px] py-[6px] max-md:px-[7px] max-md:py-1 text-xs max-md:text-[10px] text-primary-400 bg-black/60 tracking-[0.12em] border-b border-[var(--color-primary-quiet)]">
         <span>{liveCam.status}</span>
         <span>{liveCam.cameraLabel}</span>
       </div>
-      <div className="guitar-content relative min-h-[200px] overflow-hidden flex-1 isolate">
+      <div className="guitar-content relative min-h-[200px] max-md:min-h-[140px] overflow-hidden flex-1 isolate">
         <Image
           src={liveCam.photo}
           alt="Erik playing guitar on stage, live show"
@@ -172,7 +172,7 @@ function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
           <i />
         </div>
       </div>
-      <div className="px-[9px] py-[6px] text-xs text-primary-400 bg-black/65 tracking-[0.12em] border-t border-[var(--color-primary-quiet)]">
+      <div className="px-[9px] py-[6px] max-md:px-[7px] max-md:py-1 text-xs max-md:text-[10px] text-primary-400 bg-black/65 tracking-[0.12em] border-t border-[var(--color-primary-quiet)]">
         {liveCam.caption}
       </div>
     </div>
