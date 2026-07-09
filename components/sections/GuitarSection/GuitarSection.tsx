@@ -29,7 +29,7 @@ function SignalBars({ filled, total }: { filled: number; total: number }) {
 
 function InfluenceBars({ filled }: { filled: number }) {
   const bars = Array.from({ length: 5 }, (_, i) => ({
-    cls: cn('block w-[6px] h-[10px] bg-primary-500', i >= filled && 'opacity-[0.22]'),
+    cls: cn('block w-[7px] h-[12px] bg-primary-500', i >= filled && 'opacity-[0.22]'),
   }));
   return (
     <span className="inline-flex gap-[2px]" aria-hidden="true">
@@ -106,7 +106,7 @@ function InfluencesList({
 }) {
   return (
     <div className="border border-[var(--color-primary-border)] bg-black/35 p-[14px]">
-      <div className="flex justify-between text-xs max-md:text-[10px] text-primary-400 tracking-[0.16em] mb-3">
+      <div className="flex justify-between text-xs text-primary-400 tracking-[0.16em] mb-3">
         <span>
           {'INFLUENCES.QUEUE · '}
           <span className="text-primary-500">{influences.length} LOADED</span>
@@ -118,16 +118,16 @@ function InfluencesList({
           key={inf.rank}
           className={cn(
             'grid grid-cols-[36px_1fr_auto] gap-[10px] items-center mb-[9px]',
-            'text-tertiary-50 text-xs max-md:text-[10px]',
+            'text-tertiary-50 text-xs',
             inf.active && 'text-primary-500 font-bold',
           )}
           data-active={inf.active || undefined}
         >
-          <span className="text-primary-400 text-xs max-md:text-[10px] tracking-[0.1em]">
+          <span className="text-primary-400 text-xs tracking-[0.1em]">
             {inf.active ? '▶ ' : ''}
             {String(inf.rank).padStart(2, '0')}
           </span>
-          <span className={cn('font-mono md:text-[13px]', inf.active && 'md:text-sm')}>
+          <span className={cn('font-mono md:text-sm', inf.active && 'md:text-[15px]')}>
             {inf.name}
           </span>
           <InfluenceBars filled={inf.strength} />
@@ -143,11 +143,11 @@ function InfluencesList({
 function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
   return (
     <div className="border border-primary-500 flex flex-col overflow-hidden">
-      <div className="flex justify-between px-[9px] py-[6px] text-xs text-primary-400 bg-black/60 tracking-[0.12em] border-b border-[var(--color-primary-quiet)]">
+      <div className="flex justify-between px-[9px] py-[6px] max-md:px-[7px] max-md:py-1 text-xs max-md:text-[10px] text-primary-400 bg-black/60 tracking-[0.12em] border-b border-[var(--color-primary-quiet)]">
         <span>{liveCam.status}</span>
         <span>{liveCam.cameraLabel}</span>
       </div>
-      <div className="guitar-content relative min-h-[200px] overflow-hidden flex-1 isolate">
+      <div className="guitar-content relative min-h-[200px] max-md:min-h-[140px] overflow-hidden flex-1 isolate">
         <Image
           src={liveCam.photo}
           alt="Erik playing guitar on stage, live show"
@@ -172,7 +172,7 @@ function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
           <i />
         </div>
       </div>
-      <div className="px-[9px] py-[6px] text-xs text-primary-400 bg-black/65 tracking-[0.12em] border-t border-[var(--color-primary-quiet)]">
+      <div className="px-[9px] py-[6px] max-md:px-[7px] max-md:py-1 text-xs max-md:text-[10px] text-primary-400 bg-black/65 tracking-[0.12em] border-t border-[var(--color-primary-quiet)]">
         {liveCam.caption}
       </div>
     </div>

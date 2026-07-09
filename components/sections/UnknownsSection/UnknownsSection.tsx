@@ -31,7 +31,7 @@ export function UnknownsSection({ defer }: { defer?: boolean } = {}) {
               {'\n\n'}
             </span>
           ))}
-          <span className="text-primary-500 font-bold text-xs md:text-[13px]">
+          <span className="text-primary-400 font-bold text-xs md:text-[13px]">
             {unknowns.footer}
           </span>
         </pre>

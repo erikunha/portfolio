@@ -38,8 +38,8 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
           </li>
         ))}
       </ol>
-      <div className="text-primary-500 font-bold text-xs tracking-[0.06em] mt-[14px] pt-3 border-t border-primary-quiet max-[768px]:text-xs">
-        <span className="text-primary-500 mr-1.5">{'>'}</span>
+      <div className="text-primary-400 font-bold text-xs tracking-[0.06em] mt-[14px] pt-3 border-t border-primary-quiet max-[768px]:text-xs">
+        <span className="text-primary-400 mr-1.5">{'>'}</span>
         {hottestTakesConfig.footer}
       </div>
     </Module>
