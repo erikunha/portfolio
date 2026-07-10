@@ -1,6 +1,10 @@
 import { cn } from '@/lib/cn';
 
-export type StatTileProps = { value: string; label: string; variant?: 'default' | 'compact' };
+export type StatTileProps = {
+  value: string;
+  label: string;
+  variant?: 'default' | 'compact' | 'display';
+};
 
 export function StatTile({ value, label, variant = 'default' }: StatTileProps) {
   return (
@@ -11,7 +15,15 @@ export function StatTile({ value, label, variant = 'default' }: StatTileProps) {
       <dd
         className={cn(
           'stat-tile-value order-first text-primary-500 font-bold tracking-[0.04em] font-mono leading-none m-0',
-          variant === 'compact' ? 'text-xs' : 'text-base max-md:text-xs',
+          // WHY three scales: default is consumed by the production Hero
+          // (components/HeroStats) whose composition was designed around 16px
+          // values — changing it would reflow the CI-gated hero baseline.
+          // `display` carries the app's big stat-strip scale (SYS_HEALTH:
+          // 24px desktop / 16px mobile) for standalone stat rows like the
+          // design-system overview tiles.
+          variant === 'compact' && 'text-xs',
+          variant === 'default' && 'text-base max-md:text-xs',
+          variant === 'display' && 'text-2xl max-md:text-base',
         )}
       >
         {value}

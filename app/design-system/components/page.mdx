@@ -98,10 +98,10 @@ Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RS
 |---|---|---|---|
 | `value` | `string` | — | yes |
 | `label` | `string` | — | yes |
-| `variant` | `'default' \| 'compact'` | `'default'` | no |
+| `variant` | `'default' \| 'compact' \| 'display'` | `'default'` | no |
 
 <Preview id="stat-tile">
-  <StatTile value="99" label="LH_SCORE" />
+  <StatTile value="99" label="LH_SCORE" variant="display" />
   <StatTile value="5+" label="YRS_EXP" />
   <StatTile value="1.2s" label="LCP" variant="compact" />
 </Preview>
@@ -158,17 +158,17 @@ Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RS
 Four `StatTile` components in a CSS grid. The grid layout stays in the consumer — primitives don't embed layout opinions.
 
 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--color-primary-subtle)', marginBottom: '16px', marginLeft: '-24px', marginRight: '-24px' }}>
-  <StatTile value="99" label="LH_SCORE" />
-  <StatTile value="5+" label="YRS_EXP" />
-  <StatTile value="1.2s" label="LCP" />
-  <StatTile value="0" label="CLS" />
+  <StatTile value="99" label="LH_SCORE" variant="display" />
+  <StatTile value="5+" label="YRS_EXP" variant="display" />
+  <StatTile value="1.2s" label="LCP" variant="display" />
+  <StatTile value="0" label="CLS" variant="display" />
 </div>
 
 ```tsx
 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--color-primary-subtle)' }}>
-  <StatTile value="99" label="LH_SCORE" />
-  <StatTile value="5+" label="YRS_EXP" />
-  <StatTile value="1.2s" label="LCP" />
-  <StatTile value="0" label="CLS" />
+  <StatTile value="99" label="LH_SCORE" variant="display" />
+  <StatTile value="5+" label="YRS_EXP" variant="display" />
+  <StatTile value="1.2s" label="LCP" variant="display" />
+  <StatTile value="0" label="CLS" variant="display" />
 </div>
 ```
