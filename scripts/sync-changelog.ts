@@ -1,7 +1,13 @@
 #!/usr/bin/env tsx
 import { execFileSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import {
+  type ChangelogGroups,
+  mergeChangelogGroups,
+  parseChangelogGroups,
+  renderChangelogGroups,
+} from './lib/changelog-merge';
 
 const ROOT = join(import.meta.dirname, '..');
 const CHANGELOG_PATH = join(ROOT, 'app/design-system/changelog/page.mdx');
@@ -15,16 +21,13 @@ const HEADER = `export const metadata = {
 
 `;
 
-type Entry = { type: string; description: string };
-type GroupedByDate = Map<string, Entry[]>;
-
-function parseCommits(): GroupedByDate {
+function parseCommits(): ChangelogGroups {
   const raw = execFileSync('git', ['log', '--format=%ad|%s', '--date=short', '--no-merges'], {
     cwd: ROOT,
     encoding: 'utf8',
   });
 
-  const groups: GroupedByDate = new Map();
+  const groups: ChangelogGroups = new Map();
 
   for (const line of raw.split('\n')) {
     const sep = line.indexOf('|');
@@ -45,20 +48,11 @@ function parseCommits(): GroupedByDate {
   return groups;
 }
 
-function renderGroups(groups: GroupedByDate): string {
-  const dates = [...groups.keys()].sort((a, b) => b.localeCompare(a));
-  return dates
-    .map((date) => {
-      const entries = groups.get(date) ?? [];
-      const items = entries
-        .map(({ type, description }) => `- **${type}:** ${description}`)
-        .join('\n');
-      return `## ${date}\n\n${items}`;
-    })
-    .join('\n\n');
-}
-
-const groups = parseCommits();
-const content = `${HEADER}${renderGroups(groups)}\n`;
+// WHY read-then-merge: squash merges erase old `type(design-system):` commit
+// subjects from history, so the existing file is part of the source of truth
+// (see scripts/lib/changelog-merge.ts). Regenerating from git alone wipes it.
+const existing = parseChangelogGroups(readFileSync(CHANGELOG_PATH, 'utf8'));
+const merged = mergeChangelogGroups(existing, parseCommits());
+const content = `${HEADER}${renderChangelogGroups(merged)}\n`;
 writeFileSync(CHANGELOG_PATH, content);
-console.log(`changelog: wrote ${groups.size} date group(s) to ${CHANGELOG_PATH}`);
+console.log(`changelog: wrote ${merged.size} date group(s) to ${CHANGELOG_PATH}`);
