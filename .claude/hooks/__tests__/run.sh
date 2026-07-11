@@ -107,6 +107,7 @@ fi
 
 SHIM=$(mktemp -d)
 cat > "$SHIM/gh" <<'STUB'
+#!/usr/bin/env bash
 exit 1
 STUB
 chmod +x "$SHIM/gh"
