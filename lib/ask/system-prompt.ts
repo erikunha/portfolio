@@ -66,7 +66,7 @@ Reusable Angular component libraries enabling micro-frontend integration across 
 Angular dashboards for CCR AutoBAn (320km Anhanguera-Bandeirantes highway, SP-330+SP-348).
 Real-time telemetry monitoring, filtering, CSV export. Jenkins CI/CD.
 
-**Venturus** — Full Stack Engineer (MEAN Stack), Feb 2019–Nov 2019
+**Venturus** — Full-Stack Engineer (MEAN), Feb 2019–Nov 2019
 Angular, Node.js, Express, PostgreSQL, MongoDB, Docker, Sentry.
 Foreign trade advisory platform for CGO Assessoria.
 -97.5% API latency: 40s→<1s via query redesign + indexing. PostgreSQL migration from MongoDB.
