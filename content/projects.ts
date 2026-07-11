@@ -3,12 +3,30 @@ import { type Project, ProjectSchema } from './schemas';
 
 export const projects: Project[] = z.array(ProjectSchema).parse([
   {
+    name: 'DATATABLE_PLATFORM',
+    mobileName: 'datatable_platform/',
+    description:
+      'Headless DataTable platform for Raylu’s AI deal-origination engine — versioned ViewState contract, URL-backed state, pluggable persistence for data-dense private-markets workflows.',
+    mobileDescription:
+      'Headless DataTable platform at Raylu.ai. Versioned ViewState contract, URL-backed state with codecs, pluggable view persistence. TanStack Table, React 19, Next 15.',
+    stats: [
+      { label: 'CONTRACT', value: 'VERSIONED VIEWSTATE' },
+      { label: 'STATE', value: 'URL-BACKED + CODECS' },
+      { label: 'STACK', value: 'REACT 19 / NEXT 15 / TANSTACK' },
+    ],
+    mobileMeta: [
+      { label: 'stack', value: 'react 19 · tanstack' },
+      { label: 'scale', value: 'multi-surface platform' },
+      { label: 'status', value: 'production' },
+    ],
+  },
+  {
     name: 'PAYMENT_ORCHESTRA',
     mobileName: 'payment_orchestra/',
     description:
       'PCI-DSS cashier platform — multi-brand deposit/withdraw orchestration across 15+ regulated markets.',
     mobileDescription:
-      'PCI-DSS cashier handling 40M+ transactions/yr at Betsson. Multi-currency settlement, regulator-grade audit trail, micro-frontends across Angular / React / Ember via Stencil.',
+      'PCI-DSS cashier that handled 40M+ transactions/yr at Betsson. Multi-currency settlement, regulator-grade audit trail, micro-frontends across Angular / React / Ember via Stencil.',
     stats: [
       { label: 'VOLUME', value: '40M+ TX / YR' },
       { label: 'REVENUE', value: '€1B+ / YR' },
