@@ -1,7 +1,3 @@
-// __tests__/matrix-rain-advanced.test.tsx
-// Behavioral tests for MatrixRain watchRef/IntersectionObserver path,
-// visibility change pause/resume, and sysfail:start/sysfail:end event handlers.
-
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
@@ -36,7 +32,6 @@ describe('MatrixRain — watchRef / IntersectionObserver path', () => {
     vi.stubGlobal(
       'requestAnimationFrame',
       vi.fn((_cb: FrameRequestCallback) => {
-        // Store callback but don't auto-fire; test controls frames
         return 1;
       }),
     );
@@ -61,7 +56,6 @@ describe('MatrixRain — watchRef / IntersectionObserver path', () => {
     const observeMock = vi.fn();
     const disconnectMock = vi.fn();
 
-    // Use a class-based constructor mock (arrow functions can't be used with `new`)
     class IOMock {
       static instance: IOMock;
       observe = observeMock;
@@ -73,17 +67,14 @@ describe('MatrixRain — watchRef / IntersectionObserver path', () => {
     }
     vi.stubGlobal('IntersectionObserver', IOMock);
 
-    // Use a plain ref-like object (React.RefObject shape)
     const watchTarget = document.createElement('div');
     document.body.appendChild(watchTarget);
     const watchRef = { current: watchTarget };
 
     mounted = await mountClient(createElement(MatrixRain, { watchRef }));
 
-    // IntersectionObserver should have been created and started observing
     expect(observeMock).toHaveBeenCalledWith(watchTarget);
 
-    // Simulate intersection: element enters viewport
     await act(async () => {
       observerCallback?.(
         [{ isIntersecting: true }] as IntersectionObserverEntry[],
@@ -91,7 +82,6 @@ describe('MatrixRain — watchRef / IntersectionObserver path', () => {
       );
     });
 
-    // requestAnimationFrame should be called to start the loop
     expect(requestAnimationFrame).toHaveBeenCalled();
 
     document.body.removeChild(watchTarget);
@@ -136,13 +126,10 @@ describe('MatrixRain — watchRef / IntersectionObserver path', () => {
       makeCtx() as unknown as CanvasRenderingContext2D,
     );
 
-    // watchRef.current = null: the condition `if (target && ...)` is false
-    // so it falls through to resume() immediately
     const watchRef = { current: null };
 
     mounted = await mountClient(createElement(MatrixRain, { watchRef }));
 
-    // Falls back to resume() immediately → requestAnimationFrame called
     expect(requestAnimationFrame).toHaveBeenCalled();
   });
 });
@@ -183,11 +170,9 @@ describe('MatrixRain — visibility change pause/resume', () => {
 
     mounted = await mountClient(createElement(MatrixRain));
 
-    // Simulate tab hidden
     Object.defineProperty(document, 'hidden', { value: true, configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
 
-    // cancelAnimationFrame should have been called (pause)
     expect(cancelAnimationFrame).toHaveBeenCalled();
 
     Object.defineProperty(document, 'hidden', { value: false, configurable: true });
@@ -203,17 +188,14 @@ describe('MatrixRain — visibility change pause/resume', () => {
 
     mounted = await mountClient(createElement(MatrixRain));
 
-    // Pause first
     Object.defineProperty(document, 'hidden', { value: true, configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
 
     const rafCountAfterPause = rafCallbacks.length;
 
-    // Then resume
     Object.defineProperty(document, 'hidden', { value: false, configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
 
-    // requestAnimationFrame should be called again after resume
     expect(rafCallbacks.length).toBeGreaterThan(rafCountAfterPause);
   });
 });
@@ -268,11 +250,9 @@ describe('MatrixRain — sysfail:start / sysfail:end events', () => {
 
     mounted = await mountClient(createElement(MatrixRain));
 
-    // Pause first
     window.dispatchEvent(new CustomEvent('sysfail:start'));
     const rafCountAfterPause = rafCallbacks.length;
 
-    // Resume
     window.dispatchEvent(new CustomEvent('sysfail:end'));
     expect(rafCallbacks.length).toBeGreaterThan(rafCountAfterPause);
   });
@@ -290,7 +270,6 @@ describe('MatrixRain — sysfail:start / sysfail:end events', () => {
 
     const rafCountAfterUnmount = rafCallbacks.length;
 
-    // After unmount, sysfail:end should NOT restart the loop
     window.dispatchEvent(new CustomEvent('sysfail:end'));
     expect(rafCallbacks.length).toBe(rafCountAfterUnmount);
   });

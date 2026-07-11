@@ -53,9 +53,8 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
     const newLevel = getLevelFromPointer(e.clientX);
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // setPointerCapture not supported; drag still works within element bounds
-    }
+      // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
+    } catch {}
     isDragging.current = true;
     if (newLevel !== null) applyLevel(newLevel);
   };

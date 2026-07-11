@@ -1,17 +1,4 @@
 #!/usr/bin/env tsx
-/**
- * Reads Lighthouse JSON reports from a directory (default: .lighthouseci),
- * selects the median LCP run, and prints a markdown block formatted for
- * Section 12 of docs/superpowers/specs/2026-05-19-mobile-lcp-strict-1800ms-campaign-design.md.
- *
- * Audit paths verified against actual LHR output 2026-05-19 (Lighthouse 12.x via @lhci/cli).
- * Note the nesting on `largest-contentful-paint-element`: details.items is a list of tables,
- * and the LCP node lives at items[0].items[0].node — two index levels, not one.
- *
- * Usage:
- *   pnpm tsx scripts/extract-lcp-discovery.ts            # reads .lighthouseci/
- *   pnpm tsx scripts/extract-lcp-discovery.ts <dir>      # reads <dir>/lhr-*.json
- */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 

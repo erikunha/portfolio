@@ -1,67 +1,22 @@
-// lib/env.ts
-// Single, typed, format-validating accessor for application-managed environment
-// variables. Hand-rolled with the already-pinned `zod` (no env-validation
-// dependency) — the pattern is the point.
-//
-// DESIGN (reconciled with the 2026-06-04 architect-gate correction):
-//   Every external SECRET is OPTIONAL. Absence MUST NOT throw at module load:
-//     - AI_GATEWAY_API_KEY is resolved by the AI SDK from the Vercel OIDC token
-//       and is intentionally unset on deploys — a boot throw blocks every build.
-//     - UPSTASH_* are read as presence guards behind a fail-open Redis path — a
-//       boot throw makes the ask route fail to import, so fail-open never runs.
-//     - RESEND_API_KEY is used behind lazy `if (!key) throw` in contact/psi —
-//       a shared boot throw would crash the ask route on a missing email secret.
-//   So this module fails fast at load ONLY on a present, NON-empty, wrong-format
-//   value (e.g. a non-URL Upstash URL), naming the offender. An empty string is
-//   coerced to `undefined` (treated as absent) and never throws. Use sites keep
-//   their own lazy throws (and the fail-open wrappers in lib/rate-limit.ts stay).
-//
-//   ASK_ENABLED and DEPLOY_SALT carry NO default: unset resolves to `undefined`
-//   so the kill switch stays live and ip-hash auto-generates the salt in prod.
-//   A default OFF keyword or 'portfolio' literal would silently break both.
-//
-// `import 'server-only'` precedes the parse so a stray client-bundle import
-// fails with the server-only error rather than an opaque schema error.
-
 import 'server-only';
 
 import { z } from 'zod';
 
-// In env-var land, `X=` (empty string) universally means "not set" — e.g.
-// `.env.local` ships `DEPLOY_SALT=` to signal "auto-generate via Upstash", and
-// lib/ip-hash treats a falsy salt as absent. Coerce empty → undefined BEFORE
-// validation so an empty value reads as ABSENT, not malformed. The remaining
-// fail-fast surface is a present, NON-empty, badly-FORMATTED value (e.g. a
-// non-URL Upstash URL), which throws at boot naming the offender.
 const optional = <T extends z.ZodTypeAny>(schema: T) =>
   z.preprocess((v) => (v === '' ? undefined : v), schema.optional());
 
 const EnvSchema = z.object({
-  // External secrets — optional; opaque, so only emptiness/presence matters.
   AI_GATEWAY_API_KEY: optional(z.string()),
   UPSTASH_REDIS_REST_URL: optional(z.url()),
   UPSTASH_REDIS_REST_TOKEN: optional(z.string()),
   RESEND_API_KEY: optional(z.string()),
   PSI_API_KEY: optional(z.string()),
   CRON_SECRET: optional(z.string()),
-  // Kill switch: unset/empty must resolve live. No default; never an OFF keyword.
   ASK_ENABLED: optional(z.string()),
-  // Privacy salt: unset/empty must stay undefined so prod auto-generates via
-  // Upstash. No default; never the 'portfolio' dev fallback (lives in ip-hash).
   DEPLOY_SALT: optional(z.string()),
-  // Langfuse AI-trace exporter (WS5) — OFF BY DEFAULT. The span processor in
-  // lib/telemetry/langfuse.ts activates ONLY on the exact string 'true'; any
-  // other value (unset, '', '1', 'TRUE') leaves it inert. Routed through this
-  // schema so the langfuse module reads managed env via the one audited seam
-  // (lib/env.ts) rather than a stray process.env read — the WS1 invariant. The
-  // parse is a single safeParse at module load, so adding these costs nothing
-  // when the flag is off; the heavy OTel/Langfuse imports stay behind the flag.
   LANGFUSE_ENABLED: optional(z.string()),
   LANGFUSE_SECRET_KEY: optional(z.string()),
   LANGFUSE_PUBLIC_KEY: optional(z.string()),
-  // Optional self-hosted endpoint; defaults to Langfuse Cloud when unset. Typed
-  // as a URL so a present-but-malformed base URL fails fast at boot (matching
-  // the UPSTASH_REDIS_REST_URL precedent), not silently at exporter init.
   LANGFUSE_BASEURL: optional(z.url()),
 });
 
@@ -82,7 +37,4 @@ function parseEnv(): Env {
   return result.data;
 }
 
-// Parsed once at module load — the fail-fast surface lives in the build log,
-// not in a request trace. Frozen so the parse-once / never-mutate invariant is
-// expressed in the value, not just intended.
 export const env: Readonly<Env> = Object.freeze(parseEnv());

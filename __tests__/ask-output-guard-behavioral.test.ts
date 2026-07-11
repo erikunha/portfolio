@@ -1,16 +1,3 @@
-// __tests__/ask-output-guard-behavioral.test.ts
-// WS2 behavioral test: a crafted system-prompt-leak answer — with the leak
-// marker SPLIT across two stream deltas — is aborted mid-stream by Layer 1.
-//
-// Asserts (acceptance criteria 1 + 8):
-//   - the client-visible buffer carries the safe prefix, then STREAM_ERR_SENTINEL;
-//   - the post-marker leak text is NEVER enqueued (absent from the buffer);
-//   - parseStreamChunk reads the result as { ok: false } (errored);
-//   - the shared finally still ran: settleBudget fired and the interaction was
-//     persisted with status 'errored', carrying the Layer-2 guard verdict.
-//
-// This EXERCISES the route (mocking only streamText), not source-grep.
-
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LEAK_MARKERS } from '@/lib/ask/output-guard';
@@ -42,8 +29,6 @@ vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-// A streamText result whose textStream yields a safe prefix, then a leak marker
-// split across two deltas, then post-marker text that must never reach the wire.
 function makeLeakSplitResult(prefix: string, marker: string, trailing: string) {
   const k = Math.max(1, Math.floor(marker.length / 2));
   const deltas = [prefix, marker.slice(0, k), marker.slice(k) + trailing];
@@ -80,8 +65,6 @@ function makeRequest(question: string): NextRequest {
 
 describe('/api/ask behavioral — Layer-1 egress guard aborts a cross-chunk leak', () => {
   beforeEach(() => {
-    // Use stubEnv so the suite's vi.unstubAllEnvs() cleanup actually reverts it
-    // (a direct process.env assignment leaks across tests / makes them ordered).
     vi.stubEnv('ASK_ENABLED', 'true');
     vi.resetModules();
     mockStreamText.mockReset();
@@ -108,31 +91,21 @@ describe('/api/ask behavioral — Layer-1 egress guard aborts a cross-chunk leak
     expect(res.status).toBe(200);
 
     const body = await readBody(res);
-    // settleAndPersist is awaited inside the stream's finally, which resolves
-    // the start() promise AFTER controller.close(); the reader can finish
-    // before settlement completes. Flush the microtask queue so the awaited
-    // settle/persist have run before asserting on their calls.
     await new Promise((r) => setTimeout(r, 0));
 
-    // The safe prefix reached the client.
     expect(body).toContain(prefix);
-    // The error sentinel was written (abort path).
     expect(body).toContain(STREAM_ERR_SENTINEL);
-    // The post-marker leak text was NEVER enqueued.
     expect(body).not.toContain(trailing.trim());
 
-    // parseStreamChunk reads it as an errored stream.
     const parsed = parseStreamChunk(body);
     expect(parsed.ok).toBe(false);
 
-    // The shared finally still ran: budget settled, interaction persisted errored.
     expect(settleBudgetMock).toHaveBeenCalled();
     expect(persistMock).toHaveBeenCalled();
     const persistArg = persistMock.mock.calls.at(-1)?.[0] as
       | { status: string; guard?: { clean: boolean } }
       | undefined;
     expect(persistArg?.status).toBe('errored');
-    // Layer-2 verdict is attached to the persisted record.
     expect(persistArg?.guard).toBeDefined();
   });
 });

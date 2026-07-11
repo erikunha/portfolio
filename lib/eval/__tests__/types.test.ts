@@ -1,11 +1,3 @@
-// lib/eval/__tests__/types.test.ts
-// Structural test for the shared eval result/judge Zod schemas (lib/eval/types.ts).
-//
-// These schemas are the load-time contract both eval harnesses (ask-eval and
-// the agent-eval harness) validate their calibration result against. The test
-// asserts a valid sample parses and an invalid one (agreement out of [0,1]) is
-// rejected — drift guard so a malformed shape fails here, not at harness runtime.
-
 import { describe, expect, it } from 'vitest';
 import { CalibrationCaseSchema, CalibrationResultSchema } from '@/lib/eval/types';
 

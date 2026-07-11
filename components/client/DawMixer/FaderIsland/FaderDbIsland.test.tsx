@@ -1,11 +1,8 @@
-// components/client/DawMixer/FaderIsland/FaderDbIsland.test.tsx
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
 import { mountClient } from '@/__tests__/helpers/render';
 import { FaderDbIsland, pctToDb } from './FaderDbIsland.client';
-
-// ── pctToDb unit tests ────────────────────────────────────────────────────────
 
 describe('pctToDb — formula', () => {
   it('returns "-∞" for 0%', () => {
@@ -32,7 +29,6 @@ describe('pctToDb — formula', () => {
   });
 
   it('all channels at same pct produce the same dB string', () => {
-    // consistent absolute scale: position → value, independent of channel
     expect(pctToDb(72)).toBe(pctToDb(72));
   });
 
@@ -48,8 +44,6 @@ describe('pctToDb — formula', () => {
     }
   });
 });
-
-// ── FaderDbIsland render tests ────────────────────────────────────────────────
 
 describe('FaderDbIsland — initial render', () => {
   it('shows pctToDb(initialPct) as the dB value, not a raw content string', () => {
@@ -81,8 +75,6 @@ describe('FaderDbIsland — initial render', () => {
     expect(doc.querySelector('[class*="lufs"]')).toBeNull();
   });
 });
-
-// ── FaderDbIsland interactive tests ──────────────────────────────────────────
 
 describe('FaderDbIsland — dB updates on fader interaction', () => {
   let unmount: (() => void) | undefined;
@@ -160,9 +152,6 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
   });
 
   it('aria-valuetext and dB span both update during pointer drag via ref mutation', async () => {
-    // Locks the INP-safe invariant: dB updates through ref.textContent (not setState)
-    // during pointermove. If this is ever driven by state instead, applyPct's DOM
-    // mutations would still update aria-valuetext but the ref path would break silently.
     const { container, unmount: u } = await mountClient(
       createElement(FaderDbIsland, { initialPct: 50, channelName: 'TEST' }),
     );
@@ -180,8 +169,6 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
   });
 
   it('dB span and aria-valuetext sync on pointerup even when last move and up differ', async () => {
-    // Regression guard: onPointerUp must call applyPct so the dB display
-    // and aria-valuetext stay in sync when pointer-up fires at a new x.
     const { container, unmount: u } = await mountClient(
       createElement(FaderDbIsland, { initialPct: 50, channelName: 'TEST' }),
     );
@@ -193,7 +180,6 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
     });
     slider.dispatchEvent(new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
     slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 60, bubbles: true }));
-    // Release at a different position than last move
     slider.dispatchEvent(new PointerEvent('pointerup', { clientX: 90, bubbles: true }));
 
     const dbSpan = container.querySelector('[class*="dbValue"]') as HTMLElement;

@@ -1,8 +1,3 @@
-// __tests__/breakpoint.test.ts
-// Behavioral tests for lib/breakpoint.ts.
-// Locks down: MOBILE_BREAKPOINT_PX value; detectMobileFromUA returns false for
-// null/undefined/desktop UAs and true for mobile UAs matching the regex.
-
 import { describe, expect, it } from 'vitest';
 import { detectMobileFromUA, MOBILE_BREAKPOINT_PX } from '@/lib/breakpoint';
 

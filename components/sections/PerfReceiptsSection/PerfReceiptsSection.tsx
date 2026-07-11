@@ -72,7 +72,6 @@ export function PerfReceiptsSection({ defer }: { defer?: boolean } = {}) {
       icon={<IconPerfReceipts />}
       defer={defer}
     >
-      {/* 4-col grid, 2-col on ≤900px. Hero spans 2 cols × 2 rows on desktop, 2 cols × 1 row on tablet. */}
       <ul className="perf-receipts-grid list-none m-0 p-0 grid grid-cols-2 min-[901px]:grid-cols-4 gap-2 md:gap-[14px]">
         <ReceiptCard {...hero} hero />
         {rest.map((r) => (

@@ -48,9 +48,6 @@ function parseCommits(): ChangelogGroups {
   return groups;
 }
 
-// WHY read-then-merge: squash merges erase old `type(design-system):` commit
-// subjects from history, so the existing file is part of the source of truth
-// (see scripts/lib/changelog-merge.ts). Regenerating from git alone wipes it.
 const existing = parseChangelogGroups(readFileSync(CHANGELOG_PATH, 'utf8'));
 const merged = mergeChangelogGroups(existing, parseCommits());
 const content = `${HEADER}${renderChangelogGroups(merged)}\n`;

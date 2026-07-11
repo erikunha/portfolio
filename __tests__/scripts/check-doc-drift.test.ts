@@ -4,27 +4,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-// WS6: scripts/check-doc-drift.mjs is the CI gate that keeps the ARCHITECTURE.md
-// directory tree honest — every path it references must exist on disk. The gate
-// is black-box tested (spawn the script, assert exit code + output), matching
-// the repo's behavioral-assertion standard (no source-grep, no internal import).
-//
-// Failure-mode coverage (thinking-inversion pass — each case is one bug class
-// the parser must not fall into):
-//  1. comment tokens after `#` must NOT be checked as paths
-//  2. pure-comment and blank lines are skipped
-//  3. trailing `,` / `/` on a token is normalized
-//  4. a MISSING marker fails loud (exit 1) — never a vacuous pass (the WS0
-//     false-green lesson: a gate that can't find its input must shout)
-//  5. fence lines (```) inside the marked region are ignored
-//  6. the live ARCHITECTURE.md has zero drift
-
 const SCRIPT = join(process.cwd(), 'scripts/check-doc-drift.mjs');
 
 const START = '<!-- doc-drift:start -->';
 const END = '<!-- doc-drift:end -->';
 
-/** Wrap tree lines in a fenced, marker-bounded block (the real doc shape). */
 function doc(lines: string[], { startMarker = START, endMarker = END } = {}): string {
   return [
     '# Architecture',
@@ -38,7 +22,6 @@ function doc(lines: string[], { startMarker = START, endMarker = END } = {}): st
   ].join('\n');
 }
 
-/** Materialize a temp repo, write the markdown, run the gate against it. */
 function runOn(markdown: string, files: string[] = []): { code: number; out: string } {
   const dir = mkdtempSync(join(tmpdir(), 'docdrift-'));
   for (const f of files) {
@@ -79,7 +62,6 @@ describe('check-doc-drift', () => {
   });
 
   it('ignores tokens that appear only in a # comment annotation', () => {
-    // The annotation mentions a path that does NOT exist; it must not be checked.
     const r = runOn(doc(['app/page.tsx  # see components/ghost.tsx for the island']), [
       'app/page.tsx',
     ]);
@@ -100,8 +82,6 @@ describe('check-doc-drift', () => {
   });
 
   it('fails loud when the start marker is absent (never a vacuous pass)', () => {
-    // No start marker: even though no bad paths exist, the gate must refuse to
-    // run rather than silently report success.
     const md = ['# Architecture', '```', 'app/ghost.tsx', '```', END].join('\n');
     const r = runOn(md, []);
     expect(r.code).toBe(1);
@@ -116,13 +96,11 @@ describe('check-doc-drift', () => {
   });
 
   it('ignores the ``` fence lines inside the marked region', () => {
-    // The fence lines themselves are not paths; only real entries are checked.
     const r = runOn(doc(['app/page.tsx']), ['app/page.tsx']);
     expect(r.code).toBe(0);
   });
 
   it('the live ARCHITECTURE.md references only paths that exist', () => {
-    // Default arg = ARCHITECTURE.md, resolved against repo root (vitest cwd).
     let code = 0;
     let out = '';
     try {

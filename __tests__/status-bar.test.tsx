@@ -1,8 +1,3 @@
-// __tests__/status-bar.test.tsx
-// Behavioral tests for components/responsive/StatusBar/StatusBar.client.tsx.
-// Locks down: renders device status element; renders carrier label; renders
-// battery indicator; clock effect starts on mount.
-
 import { createElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { flushMicrotasks, type MountedClient, mountClient } from './helpers/render';
@@ -45,10 +40,6 @@ describe('StatusBar', () => {
   it('sets a time string after mount effect fires', async () => {
     const container = await render();
     await flushMicrotasks();
-    // After mount, the clock effect calls setTime(fmtClock(new Date()))
-    // which sets a HH:MM string. The time span should now have content.
-    // The time value is a HH:MM string — assert the container has some time-like text
-    // (we can't assert exact value since it's real time, but we can assert non-empty)
     expect(container.textContent?.length).toBeGreaterThan(0);
   });
 });

@@ -1,14 +1,10 @@
-// __tests__/motion.test.ts
-// Unit tests for lib/motion.ts — single source of truth for body.dataset.motion.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// jsdom environment is set in vitest.config.ts
 import { applyMotion, readMotion } from '@/lib/motion';
 
 describe('readMotion', () => {
   beforeEach(() => {
     localStorage.clear();
-    // Default: no media query match (motion allowed)
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
       value: vi.fn().mockReturnValue({ matches: false }),
@@ -26,7 +22,6 @@ describe('readMotion', () => {
   });
 
   it('falls back to matchMedia when localStorage is empty', () => {
-    // matchMedia returns matches=false → reduced-motion not requested → motion on
     expect(readMotion()).toBe(true);
   });
 

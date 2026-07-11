@@ -46,9 +46,8 @@ export function FaderIsland({ initialPct, channelName, onPctChange, onAriaValueT
     const newPct = getPctFromPointer(e.clientX);
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // setPointerCapture not supported; drag works within element bounds
-    }
+      // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
+    } catch {}
     isDragging.current = true;
     if (newPct !== null) applyPct(newPct);
   };

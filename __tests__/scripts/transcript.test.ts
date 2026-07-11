@@ -55,9 +55,6 @@ describe('agentResultContains (tool_use_id anti-spoof)', () => {
     );
   });
 
-  // Async dispatch: the verdict is delivered as a harness task-notification
-  // (user record, STRING content) referencing the dispatch's <tool-use-id>, not
-  // as a tool_result content block correlated by tool_use_id.
   const archAsyncNotification = {
     type: 'user',
     origin: { kind: 'task-notification' },
@@ -90,10 +87,6 @@ describe('agentResultContains (tool_use_id anti-spoof)', () => {
       agentResultContains([dispatch, otherNotification], 'architect-reviewer', 'GATE_RESULT: PASS'),
     ).toBe(false);
   });
-  // The real threat the sync path was built to stop: a HUMAN-typed chat turn has
-  // the exact {type:'user', role:'user', string content} shape. Without the
-  // harness-only origin.kind anchor, pasting a task-notification string with a
-  // real prior dispatch id + sentinel would forge a PASS. Must be REJECTED.
   it('false when a HUMAN-typed user record carries the notification string (origin.kind human)', () => {
     const humanSpoof = {
       type: 'user',
@@ -155,18 +148,17 @@ describe('lastDispatchIndex + after-dispatch PASS scoping (anti-spoof)', () => {
     expect(lastDispatchIndex([passResult], 'architect-reviewer')).toBe(-1);
   });
   it('a PASS tool_result BEFORE the architect dispatch does NOT satisfy the scoped check', () => {
-    const records = [passResult, architect]; // PASS at 0, architect at 1
+    const records = [passResult, architect];
     const idx = lastDispatchIndex(records, 'architect-reviewer');
     expect(containsInToolResultSince(records, 'GATE_RESULT: PASS', idx)).toBe(false);
   });
   it('a PASS tool_result AFTER the architect dispatch satisfies it', () => {
-    const records = [architect, passResult]; // architect at 0, PASS at 1
+    const records = [architect, passResult];
     const idx = lastDispatchIndex(records, 'architect-reviewer');
     expect(containsInToolResultSince(records, 'GATE_RESULT: PASS', idx)).toBe(true);
   });
 });
 
-/** Agent-dispatch record at a given ISO timestamp. */
 function agentAt(subagentType: string, iso: string) {
   return {
     type: 'assistant',
@@ -207,11 +199,6 @@ describe('containsInToolResultSince (anti-spoof)', () => {
   });
 });
 
-/**
- * Build a JSONL transcript file from an array of records and return its path.
- * Records may be objects (serialized) or raw strings (written verbatim — used
- * to inject malformed lines).
- */
 function writeTranscript(lines: Array<object | string>): string {
   const dir = mkdtempSync(join(tmpdir(), 'transcript-'));
   const path = join(dir, 'session.jsonl');
@@ -220,7 +207,6 @@ function writeTranscript(lines: Array<object | string>): string {
   return path;
 }
 
-/** A Task/Agent dispatch record, shaped like a real transcript line. */
 function agentRecord(subagentType: string, timestamp: string) {
   return {
     type: 'assistant',
@@ -239,7 +225,6 @@ function agentRecord(subagentType: string, timestamp: string) {
   };
 }
 
-/** A Bash tool_use record running an arbitrary command. */
 function bashRecord(command: string, timestamp: string) {
   return {
     type: 'assistant',
@@ -271,7 +256,6 @@ describe('readTranscript', () => {
       { type: 'assistant', timestamp: '2026-06-04T00:00:02.000Z' },
     ]);
     const records = readTranscript(path);
-    // Two valid records; the malformed and blank lines are skipped.
     expect(records).toHaveLength(2);
   });
 
@@ -327,12 +311,11 @@ describe('agentsDispatchedSince', () => {
 
   it('honors the boundary index — ignores dispatches at or before it', () => {
     const records = [
-      agentRecord('security-auditor', '2026-06-04T00:00:00.000Z'), // index 0, pre-commit
-      bashRecord('git commit -m "x"', '2026-06-04T00:00:01.000Z'), // index 1 = boundary
-      agentRecord('performance-engineer', '2026-06-04T00:00:02.000Z'), // index 2, post-commit
+      agentRecord('security-auditor', '2026-06-04T00:00:00.000Z'),
+      bashRecord('git commit -m "x"', '2026-06-04T00:00:01.000Z'),
+      agentRecord('performance-engineer', '2026-06-04T00:00:02.000Z'),
     ];
     const set = agentsDispatchedSince(records, 1);
-    // Only the post-commit dispatch counts.
     expect(set).toContain('performance-engineer');
     expect(set).not.toContain('security-auditor');
   });
@@ -381,7 +364,6 @@ describe('containsSince', () => {
       },
       agentRecord('security-auditor', '2026-06-04T00:00:01.000Z'),
     ];
-    // Boundary at index 0 means "strictly after index 0".
     expect(containsSince(records, 'GATE_RESULT: PASS', 0)).toBe(false);
   });
 });

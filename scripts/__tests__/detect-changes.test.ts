@@ -18,7 +18,6 @@ describe('canonicalJSON', () => {
     expect(canonicalJSON({ browserslist: null, pnpm: null })).toBe(
       '{"browserslist":null,"pnpm":null}',
     );
-    // A naive JSON.stringify of { x: undefined } omits x; canonicalJSON must emit null.
     expect(canonicalJSON({ x: undefined })).toBe('{"x":null}');
   });
 
@@ -63,8 +62,6 @@ describe('computeCategories', () => {
   });
 
   it('re-arms ai from aiMajorChanged alone (a deps-only `ai` MAJOR bump — the #170 incident class)', () => {
-    // package.json bumping `ai` 6->7 sets no ai/app-code path, but is exactly the
-    // change that must run ai-eval. app is true because package.json is an app path.
     expect(computeCategories(S({ appChanged: true, aiMajorChanged: true }))).toEqual({
       ai: true,
       app: true,
@@ -115,18 +112,13 @@ describe('aiMajor (extract the `ai` dependency major from a package.json string)
   });
 
   it('honors pnpm.overrides.ai with PRECEDENCE (closes the override-bypass class)', () => {
-    // A PR that forces ai to v7 via pnpm.overrides while leaving dependencies.ai
-    // at ^6 still SHIPS v7 (overrides win at resolution). The override must take
-    // precedence over the declared range, else aiMajorChanged stays false and
-    // ai-eval is skipped — the exact incident class, via a mechanism this repo uses.
     const withOverride = JSON.stringify({
       dependencies: { ai: '^6.0.208' },
       pnpm: { overrides: { ai: '7.0.0' } },
     });
     const noOverride = JSON.stringify({ dependencies: { ai: '^6.0.208' } });
-    expect(aiMajor(withOverride)).toBe(7); // override wins over the ^6 dep spec
+    expect(aiMajor(withOverride)).toBe(7);
     expect(aiMajor(noOverride)).toBe(6);
-    // Adding the override alone (deps untouched) must re-arm.
     expect(aiMajor(withOverride)).not.toBe(aiMajor(noOverride));
   });
 });
@@ -137,7 +129,6 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 describe('runner main() via subprocess', () => {
-  // import.meta.url is unreliable in Vitest jsdom; use cwd-relative path instead.
   const runner = resolve(process.cwd(), 'scripts/detect-changes.mjs');
 
   it('non-PR event writes ai=true app=true ui=true and exits 0', () => {
@@ -154,9 +145,6 @@ describe('runner main() via subprocess', () => {
   });
 
   it('fails closed on a git error: exits 1 and writes NO output (never a partial line)', () => {
-    // A PR event with an unresolvable BASE_SHA makes `git diff` error. The runner
-    // must exit non-zero with an EMPTY output file - a partial/empty `ai=` line
-    // read as falsy downstream would silently skip a required gate (fail-open).
     const dir = mkdtempSync(join(tmpdir(), 'dc-failclosed-'));
     try {
       const out = join(dir, 'gh_output');
@@ -183,9 +171,6 @@ describe('runner main() via subprocess', () => {
     }
   });
 
-  // End-to-end proof of the #170 incident fix: a real repo whose ONLY diff is
-  // `ai` 6->7 in package.json (no ai/app CODE path) must set ai=true so ai-eval
-  // runs. This is exactly what dependabot #169 did while ai-eval wrongly skipped.
   it('re-arms ai=true when a deps-only commit bumps the `ai` MAJOR (6->7)', () => {
     const dir = mkdtempSync(join(tmpdir(), 'dc-aimajor-'));
     const git = (...args: string[]) =>
@@ -217,8 +202,6 @@ describe('runner main() via subprocess', () => {
           GITHUB_OUTPUT: out,
         },
       });
-      // ai=true (major re-arm), app=true (package.json is an app path), ui=false
-      // (no browserslist/pnpm render-slice change).
       expect(readFileSync(out, 'utf8')).toBe('ai=true\napp=true\nui=false\n');
     } finally {
       rmSync(dir, { recursive: true, force: true });

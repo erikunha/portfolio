@@ -1,9 +1,3 @@
-// __tests__/hero-system-failure.test.tsx
-// Behavioral tests for components/client/HeroSystemFailure/HeroSystemFailure.tsx.
-// Locks down: component mounts hidden by default; shows when 'hero:sysfail:show'
-// fires on window; hides again when 'hero:sysfail:hide' fires; cleans up listeners
-// on unmount.
-
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
@@ -11,9 +5,6 @@ import { type MountedClient, mountClient } from './helpers/render';
 vi.mock('@/lib/motion', () => ({
   readMotion: () => false,
 }));
-
-// Hero.module.css is imported inside HeroSystemFailure — Vite transforms CSS
-// modules to objects in jsdom so no manual mock needed.
 
 describe('HeroSystemFailure', () => {
   let mounted: MountedClient;
@@ -42,12 +33,8 @@ describe('HeroSystemFailure', () => {
 
   it('is hidden by default (visible state is false)', async () => {
     const container = await renderComponent();
-    // The outer div has aria-hidden="true" always (decorative overlay)
     const outer = container.querySelector('[aria-hidden="true"]') as HTMLElement | null;
     expect(outer).not.toBeNull();
-    // When not visible, the component renders without the `on` class modifier
-    // We cannot assert the exact hashed class name from CSS Modules, but we
-    // can confirm the component is present and its aria-hidden is set.
     expect(outer?.getAttribute('aria-hidden')).toBe('true');
   });
 
@@ -59,7 +46,6 @@ describe('HeroSystemFailure', () => {
       window.dispatchEvent(new Event('hero:sysfail:show'));
     });
 
-    // After show event, the rendered HTML should differ (class list changes)
     const after = container.innerHTML;
     expect(after).not.toBe(before);
   });
@@ -84,7 +70,6 @@ describe('HeroSystemFailure', () => {
     await renderComponent();
     mounted.unmount();
 
-    // Dispatching after unmount must not throw or cause React errors
     expect(() => {
       window.dispatchEvent(new Event('hero:sysfail:show'));
       window.dispatchEvent(new Event('hero:sysfail:hide'));

@@ -1,4 +1,3 @@
-// components/responsive/CRTOverlay/CRTOverlay.client.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -6,10 +5,6 @@ import { applyMotion, readMotion } from '@/lib/motion';
 
 export function CRTOverlay() {
   useEffect(() => {
-    // Keep in sync with OS-level prefers-reduced-motion changes (e.g. user
-    // switches system settings while the tab is open). Only react if the user
-    // hasn't explicitly toggled via DesktopTopbar (stored preference takes
-    // precedence — readMotion() already handles that priority).
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     const handler = () => applyMotion(readMotion());
     mq.addEventListener('change', handler);

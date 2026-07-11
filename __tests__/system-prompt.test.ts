@@ -1,19 +1,3 @@
-// __tests__/system-prompt.test.ts
-// Behavioral tests for lib/ask/system-prompt.ts.
-//
-// Two invariants:
-//
-//   1. SYSTEM_TEXT must be ≥ ~3500 characters → ≥ ~1024 tokens (English
-//      averages ~3.5 chars/token for the Anthropic tokenizer). If SYSTEM
-//      falls below the Haiku ephemeral cache minimum, the cache_control
-//      directive matches nothing and per-call input billing stays at
-//      full price.
-//
-//   2. SYSTEM must contain live data from content/*.ts so it drifts
-//      automatically when those files change. Each appended content
-//      file is asserted via a unique fingerprint that should survive
-//      cosmetic edits.
-
 import { describe, expect, it } from 'vitest';
 import { perfReceipts } from '@/content/perf-receipts';
 import { projects } from '@/content/projects';
@@ -21,10 +5,6 @@ import { unknowns } from '@/content/unknowns';
 import { visaRows } from '@/content/visa';
 import { SYSTEM, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
-// 3500 chars is a conservative proxy for 1024 tokens at the typical
-// 3.5-chars/token English ratio. The actual minimum Anthropic enforces is
-// 1024 tokens; this length check is the cheap CI-side guard that catches
-// regressions BEFORE a deploy makes the cache silently miss.
 const CACHE_ELIGIBILITY_MIN_CHARS = 3500;
 
 describe('lib/ask/system-prompt', () => {
@@ -47,11 +27,6 @@ describe('lib/ask/system-prompt', () => {
 
   describe('privacy', () => {
     it('does not embed a personal phone number in the SYSTEM prompt', () => {
-      // /api/ask's SYSTEM prompt is reachable on a publicly fetchable
-      // surface — a personal WhatsApp number must not be part of it.
-      // A phone number is a `+`-prefixed international number or a digit
-      // run of 9+ digits (the BR mobile shape). `YYYY-YYYY` date ranges
-      // and per-employer year spans in the résumé narrative are not.
       expect(SYSTEM_TEXT).not.toMatch(/\+\d[\d\s()-]{6,}\d/);
       expect(SYSTEM_TEXT).not.toMatch(/(?:\d[\s()-]?){9,}\d/);
       expect(SYSTEM_TEXT).not.toContain('99839-4086');

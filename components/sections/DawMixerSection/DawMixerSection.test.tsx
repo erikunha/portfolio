@@ -1,11 +1,7 @@
-// components/sections/DawMixerSection/DawMixerSection.test.tsx
-// RSC behavioral tests: renders first 2 channels on mobile, session header, client islands receive props.
-
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
-// Stub client islands with minimal HTML so RSC tests stay hermetic
 vi.mock('@/components/client/DawMixer/VuMeter/VuMeter.client', () => ({
   VuMeter: ({ channelName, initialLevel }: { channelName: string; initialLevel: number }) =>
     createElement('div', { 'data-testid': `vu-${channelName}`, 'data-level': initialLevel }),
@@ -125,22 +121,16 @@ describe('DawMixerSection — mobile', () => {
 
 describe('DawMixerSection — XSS safety (behavioral)', () => {
   it('ParsedText renders bold markers as <strong>, not raw HTML', async () => {
-    // Verifies the ** → <strong> transform works correctly and that no
-    // dangerouslySetInnerHTML path is taken (raw HTML would appear as literal
-    // text rather than structured DOM nodes).
     const doc = await renderDesktop();
-    // CH 02 desc has **the voice** — should be a <strong> node, not literal text
     const ch02 = doc.querySelector('[data-testid="channel-CH 02"]');
     const strong = ch02?.querySelector('strong');
     expect(strong).not.toBeNull();
     expect(strong?.textContent).toBe('the voice');
-    // The literal ** characters must NOT appear as text content
     expect(ch02?.textContent).not.toContain('**');
   });
 
   it('ParsedText renders plain text without extra wrappers', async () => {
     const doc = await renderDesktop();
-    // CH 01 desc has no ** markers — should render as plain text
     const ch01 = doc.querySelector('[data-testid="channel-CH 01"]');
     expect(ch01?.querySelector('strong')).toBeNull();
     expect(ch01?.textContent).toContain('Gretsch');

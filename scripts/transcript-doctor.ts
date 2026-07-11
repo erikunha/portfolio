@@ -1,15 +1,4 @@
 #!/usr/bin/env tsx
-// scripts/transcript-doctor.ts
-//
-// Diagnostic for the transcript-resolution SPOF. Three blocking gates
-// (review-stamp, api-security-push-guard, architect-gate) all fail CLOSED when
-// the session transcript cannot be resolved. That is the correct safety posture,
-// but a single brittle resolution can jam every push, and it has (the
-// "transcript misresolve" incident). This turns that jam from a debugging
-// session into a 5-second read: it reports which project dirs were searched,
-// which transcript was chosen, how many records it holds, and whether each
-// battery role is detected after HEAD, using the same inputs review-stamp uses.
-// Never blocks (exit 0).
 
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -23,7 +12,6 @@ export interface RoleStatus {
   detected: boolean;
 }
 
-/** Per-role detection after the HEAD commit, mirroring decideStamp's dispatch check. */
 export function summarizeRoles(
   records: Array<Record<string, unknown>>,
   headCommitIso: string,

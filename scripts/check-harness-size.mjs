@@ -1,11 +1,4 @@
 #!/usr/bin/env node
-// Checks that CLAUDE.md (project-level AI harness) stays within the effective
-// attention window. Context files above ~300 lines lose tail content to model
-// attention degradation — rules near the bottom stop firing reliably.
-//
-// Threshold: 275 lines (current ~232 ± growth headroom before the problem zone).
-// When triggered: trim rules that duplicate STANDARDS.md, collapse prose into
-// bullet tables, or move one-time decisions to DECISIONS.md.
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';

@@ -110,7 +110,6 @@ describe('RmsButtons — toggle interaction', () => {
       rBtn.click();
     });
     await flushMicrotasks();
-    // M was active and should remain so
     expect(mBtn.getAttribute('aria-pressed')).toBe('true');
   });
 });

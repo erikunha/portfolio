@@ -100,7 +100,6 @@ describe('KnobIsland — pointer drag behavior', () => {
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
 
     slider.dispatchEvent(new PointerEvent('pointerdown', { clientY: 100, bubbles: true }));
-    // drag up 50px → deltaY=50 → newAngle = -30 + 50*1.5 = 45
     slider.dispatchEvent(new PointerEvent('pointermove', { clientY: 50, bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBe(45);
     expect(slider.getAttribute('aria-valuetext')).toBe('+45 degrees');

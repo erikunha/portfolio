@@ -1,11 +1,4 @@
 #!/usr/bin/env node
-// scripts/check-dep-pinning.mjs
-//
-// CI gate for the Reproducibility standard: every dependency must be pinned
-// to a major-locked range. `latest`, `*`, `x`, bare tags, and unbounded
-// ranges are rejected. Caret (^), tilde (~), and exact versions pass.
-//
-// Usage: node scripts/check-dep-pinning.mjs [path/to/package.json]
 
 import { readFileSync } from 'node:fs';
 
@@ -13,8 +6,6 @@ const pkgPath = process.argv[2] ?? 'package.json';
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
 
 const BANNED = /^(latest|\*|x|next|canary|beta|alpha)$/i;
-// Accept: ^1.2.3  ~1.2.3  1.2.3 — caret, tilde, or exact only. An empty or
-// otherwise unbounded spec fails the ALLOWED test below and is reported too.
 const ALLOWED = /^(\^|~)?\d+\.\d+\.\d+/;
 
 const violations = [];

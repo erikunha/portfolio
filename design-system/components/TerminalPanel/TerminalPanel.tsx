@@ -4,8 +4,6 @@ import { cn } from '@/lib/cn';
 export type BorderStyle = 'solid' | 'dashed';
 export type AsElement = 'div' | 'section' | 'article';
 
-// Narrowing to div attrs is safe: div|section|article share the same HTML attribute set.
-// Consumers that need element-specific aria attributes can cast or use wrapper pattern.
 export type TerminalPanelProps = ComponentPropsWithoutRef<'div'> & {
   borderStyle?: BorderStyle;
   as?: AsElement;

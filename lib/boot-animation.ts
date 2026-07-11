@@ -1,13 +1,3 @@
-// lib/boot-animation.ts
-// Pure animation driver — no React dependency.
-// Extracted from HeroBootAnimation.tsx so it can be unit-tested and reused
-// without pulling in any client-island machinery.
-
-// ── Typed line-spec data ──────────────────────────────────────────────────────
-
-// Boot class keys — logical names resolved to scoped class strings at runtime.
-// HeroBootAnimation passes the CSS Module class map; boot-animation.ts stays
-// CSS-agnostic (no import of *.module.css from a pure lib file).
 export type BootClassKey =
   | 'bootOk'
   | 'bootEnc'
@@ -28,18 +18,18 @@ export type LinePart = string | Span;
 
 export const DESKTOP_LINE_SPECS: LinePart[][] = [
   ['[SYSTEM BOOT SEQUENCE INITIATED]'],
-  [' '], // non-breaking space: prevents HTML whitespace collapse in block spans
+  [' '],
   ['Initializing kernel modules... ', { cls: 'bootOk', text: 'OK' }],
   ['Mounting local filesystems... ', { cls: 'bootOk', text: 'OK' }],
   ['Starting network services... ', { cls: 'bootOk', text: 'OK' }],
   ['Loading security protocols... ', { cls: 'bootEnc', text: '[ENCRYPTED]' }],
   [{ cls: 'bootWelcome', text: 'Welcome to DEV_OS v2.0.4-stable [user: erik]' }],
-  [' '], // non-breaking space: prevents HTML whitespace collapse in block spans
+  [' '],
 ];
 
 export const MOBILE_LINE_SPECS: LinePart[][] = [
   ['[BOOT SEQUENCE INITIATED]'],
-  [' '], // non-breaking space: prevents HTML whitespace collapse in block spans
+  [' '],
   ['kernel modules... ', { cls: 'bootOk', text: 'OK' }],
   ['security... ', { cls: 'bootEnc', text: '[ENCRYPTED]' }],
   [{ cls: 'bootWelcome', text: 'DEV_OS v2.0.4 [user: erik]' }],
@@ -53,15 +43,11 @@ export const DESKTOP_DIALOG = [
 ];
 export const MOBILE_DIALOG = ['Wake up, Neo...', 'The Matrix has you...', 'Knock, knock, Neo...'];
 
-// Sysfail timing constants (Fix 4: replaces bare magic numbers)
-// Timeline: shake at 0ms -> shake-2 at 40ms -> clear at 80ms -> hide at 5000ms -> rain resumes at 5300ms
 const SYSFAIL_SHAKE_FRAME_1_MS = 40;
 const SYSFAIL_SHAKE_FRAME_2_MS = 80;
 const SYSFAIL_VISIBLE_MS = 5000;
 const SYSFAIL_FADE_TAIL_MS = 300;
 
-// Safe DOM builders (no innerHTML) — accept BootClasses so callers provide
-// scoped CSS Module class strings; the lib stays CSS-system-agnostic.
 export function buildLine(parts: LinePart[], cls: BootClasses): HTMLElement {
   const line = document.createElement('span');
   line.className = cls.bootLine;
@@ -78,8 +64,6 @@ export function buildLine(parts: LinePart[], cls: BootClasses): HTMLElement {
   }
   return line;
 }
-
-// buildBlankLine removed (Fix 5): call sites use buildLine(['\u00a0'], cls) directly.
 
 export function buildStaticCmdLine(cls: BootClasses): HTMLElement {
   return buildLine(
@@ -102,14 +86,12 @@ export function buildStaticDialogLine(text: string, cls: BootClasses): HTMLEleme
   );
 }
 
-// Boot animation (DOM mutations, no per-char useState — matches proto)
 export type BootCtrl = {
   cancel: () => void;
   pauseDialog: () => void;
   resumeDialog: () => void;
 };
 
-// Exported for unit-testing (sysfail-loop.test.ts). Not used by RSC consumers.
 export function runBoot(
   container: HTMLElement,
   specs: LinePart[][],
@@ -176,7 +158,6 @@ export function runBoot(
       if (cancelled) return;
       if (i >= cmdText.length) {
         cursor.remove();
-        // Fix 5: was buildBlankLine(). NBSP prevents whitespace collapse in block spans.
         container.appendChild(buildLine([' '], cls));
         later(startDialog, 350);
         return;
@@ -213,7 +194,6 @@ export function runBoot(
 
     function tick() {
       if (cancelled) return;
-      // Pause: store self as resume target and yield until resumeDialog() fires.
       if (dialogPaused) {
         dialogResumeFn = tick;
         return;
@@ -269,59 +249,34 @@ export function runBoot(
   };
 }
 
-// onFirstLoop builder (Fix 2: eliminates ctrl temporal dead zone)
-// The onFirstLoop callback must call ctrl.pauseDialog() / ctrl.resumeDialog(),
-// but it is passed as an argument to runBoot — which means ctrl is not yet
-// assigned when the closure is created.
-//
-// Fix: accept a ctrlRef (MutableRefObject<BootCtrl | null>) so the closure
-// looks up ctrlRef.current at invocation time (seconds later, always assigned)
-// rather than capturing a pre-assignment binding.
-//
-// cls: scoped shake/shake2 class names threaded in from HeroBootAnimation
-// so the lib stays CSS-system-agnostic.
-//
-// Used exclusively by HeroBootAnimation.tsx; kept here so it lives next to
-// runBoot and the sysfail timing constants it references.
 export function buildDesktopOnFirstLoop(
   el: HTMLElement,
   ctrlRef: { current: BootCtrl | null },
   cls: Pick<BootClasses, 'shake' | 'shake2'>,
 ): () => void {
   return () => {
-    // Find the parent <section> via DOM traversal — works since el is mounted
-    // inside the desktop hero left panel.
     const section = el.closest('section');
 
-    // Skip if hero is off-screen.
     if (section) {
       const r = section.getBoundingClientRect();
       if (r.bottom < 0 || r.top > window.innerHeight) return;
     }
 
-    // 1. Shake hero panel: shake at 0ms -> shake-2 at FRAME_1_MS -> clear at FRAME_2_MS
     if (section) {
       section.classList.add(cls.shake);
       setTimeout(() => section.classList.replace(cls.shake, cls.shake2), SYSFAIL_SHAKE_FRAME_1_MS);
       setTimeout(() => section.classList.remove(cls.shake, cls.shake2), SYSFAIL_SHAKE_FRAME_2_MS);
     }
 
-    // 2. Pause rain + CRT effects + dialog.
-    // ctrlRef.current is guaranteed assigned by invocation time (fires seconds after
-    // runBoot returns); looking it up here avoids the temporal dead zone.
     window.dispatchEvent(new CustomEvent('sysfail:start'));
     document.documentElement.classList.add('sysfail-on');
     ctrlRef.current?.pauseDialog();
 
-    // 3. Signal HeroSystemFailure to show the overlay via DOM event.
-    // HeroSystemFailure listens on 'hero:sysfail:show' and toggles state.
     window.dispatchEvent(new CustomEvent('hero:sysfail:show'));
 
-    // 4. After display hold: hide overlay, restore CRT, resume rain + dialog.
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('hero:sysfail:hide'));
       document.documentElement.classList.remove('sysfail-on');
-      // Wait for fade-out transition before resuming rain.
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('sysfail:end'));
         ctrlRef.current?.resumeDialog();

@@ -1,11 +1,3 @@
-// evals/agents/__tests__/corpus-schema.test.ts
-// Structural test for the agent-eval corpus case schema (evals/agents/schema.ts).
-// A case is the unit the Monte-Carlo runner loads N times: a task `prompt`, the
-// `target` prompt/rule under test, a `tier` (→ model assignment), a `grader`,
-// the `expect` criterion, and a `knownHard` anti-saturation flag. The code
-// grader's `assert` lives NEXT TO the case (not serializable into Zod), so the
-// code↔assert pairing is enforced by validateAgentEvalCase, not the bare schema.
-
 import { describe, expect, it } from 'vitest';
 import { AgentEvalCaseSchema, validateAgentEvalCase } from '@/evals/agents/schema';
 
@@ -43,9 +35,7 @@ describe('evals/agents/schema', () => {
   });
 
   it('validateAgentEvalCase rejects a code-grader case missing its assert', () => {
-    expect(() => validateAgentEvalCase(validCase /* grader:'code', no assert */)).toThrow(
-      /code grader/i,
-    );
+    expect(() => validateAgentEvalCase(validCase)).toThrow(/code grader/i);
   });
 
   it('validateAgentEvalCase accepts a code-grader case that supplies an assert', () => {

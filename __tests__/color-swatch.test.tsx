@@ -1,9 +1,3 @@
-// __tests__/color-swatch.test.tsx
-// Behavioral tests for app/design-system/_components/ColorSwatch/ColorSwatch.tsx.
-// ColorSwatch reads the @theme palette from app/css/theme.css (single source).
-// Locks down: renders --color-<token> name and resolved value; null for unknown
-// tokens; renders usage label when provided.
-
 import { createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';

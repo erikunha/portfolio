@@ -1,14 +1,3 @@
-// Single source of truth for the detect-changes job's git pathspecs. Plain node,
-// zero deps: the CI detect-changes job and the quality-fast meta-gate run it
-// without pnpm install. These lists live ONLY here; the ci.yml shell no longer
-// holds a copy, so there is nothing to drift against.
-
-// `ai` gates the ai-eval job (AI Gateway credits). package.json/pnpm-lock are
-// intentionally excluded from these PATHS (avoid burning credits on lockfile
-// churn) — BUT the runner (detect-changes.mjs) separately re-arms `ai` when the
-// `ai` package's MAJOR version changes (aiMajor slice), so a breaking SDK bump
-// cannot skip ai-eval the way dependabot #169's 6->7 bump did. Minor/patch `ai`
-// bumps stay cheap.
 export const AI_PATHS = [
   'app/api/ask/',
   'lib/ask/',
@@ -29,7 +18,6 @@ export const AI_PATHS = [
   '__tests__/ask-*',
 ];
 
-// `app` gates performance, e2e-functional, e2e-visual-chromium.
 export const APP_PATHS = [
   'app/',
   'components/',
@@ -47,14 +35,6 @@ export const APP_PATHS = [
   'pnpm-lock.yaml',
 ];
 
-// `ui` gates the visual/Argos job and is a deliberate SUBSET of app: it drops
-// .github/workflows/, lighthouserc*, and the bundle-size script (they affect
-// build/e2e/perf but cannot change a rendered pixel). package.json is NOT in this
-// literal list; the runner compares its { browserslist, pnpm } slices semantically
-// instead (a script-only package.json edit must not trip the visual suite, but a
-// browserslist or pnpm.overrides change can change emitted CSS/JS). lib/eval and
-// lib/__tests__ are excluded: never in the Next runtime, cannot change a pixel,
-// yet live under lib/ and would otherwise trip spurious Argos diffs.
 export const UI_PATHS = [
   'app/',
   'components/',

@@ -1,15 +1,3 @@
-// __tests__/redis-singleton.test.ts
-// Behavioral test: proves lib/lighthouse-scores.ts reads its cache
-// through the SHARED Redis singleton (getRedis from lib/rate-limit) rather
-// than instantiating its own client.
-//
-// Mechanism: we mock @/lib/rate-limit's getRedis to return a spy. If
-// getScores() routes its cache read through that singleton, the spy's .get
-// is observed. If a future refactor reintroduced a private `Redis.fromEnv()`
-// inside lighthouse-scores.ts, that private client would bypass this mock
-// entirely — the spy would never be called and the test fails. That is the
-// regression this test catches, expressed as observable behavior.
-
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const getMock = vi.fn();
@@ -33,17 +21,13 @@ describe('Redis singleton — lighthouse-scores reuses the shared client', () =>
   });
 
   it('getScores reads the cache via the shared getRedis() singleton', async () => {
-    getMock.mockResolvedValueOnce(null); // cache miss
-    // No PSI_API_KEY → getScores returns the fallback after the cache read.
+    getMock.mockResolvedValueOnce(null);
     const prevKey = process.env.PSI_API_KEY;
     process.env.PSI_API_KEY = undefined;
 
     const { getScores } = await import('@/lib/lighthouse-scores');
     await getScores();
 
-    // The shared singleton factory was consulted, and its client's `.get`
-    // was used for the cache read. A private Redis.fromEnv() inside
-    // lighthouse-scores.ts would never hit this mocked factory.
     expect(getRedisMock).toHaveBeenCalled();
     expect(getMock).toHaveBeenCalledWith('lh:scores:desktop');
 

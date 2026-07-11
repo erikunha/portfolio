@@ -1,9 +1,4 @@
-/* app/css/crt.css — @layer components: CRT overlay effect classes.
-   All CRT visual effects: vignette, scanlines, RGB mask, noise, flicker, scan beam. */
-
 @layer components {
-  /* ── CRT vignette ────────────────────────────────────────────────────────── */
-
   .crt-vignette {
     position: fixed;
     inset: 0;
@@ -13,8 +8,6 @@
       radial-gradient(ellipse at center, transparent 70%, rgba(0, 0, 0, 0.38) 100%);
     z-index: 1;
   }
-
-  /* ── CRT scanlines ───────────────────────────────────────────────────────── */
 
   .crt-scanlines {
     position: fixed;
@@ -31,8 +24,6 @@
     opacity: 0.3;
     z-index: 2;
   }
-
-  /* ── CRT RGB sub-pixel mask ─────────────────────────────────────────────── */
 
   .crt-mask {
     position: fixed;
@@ -51,8 +42,6 @@
     opacity: 0.18;
     z-index: 3;
   }
-
-  /* ── CRT noise / grain ───────────────────────────────────────────────────── */
 
   @keyframes crt-noise-shift {
     0% {
@@ -88,8 +77,6 @@
     z-index: 4;
   }
 
-  /* ── CRT flicker ─────────────────────────────────────────────────────────── */
-
   @keyframes crt-flicker {
     0%,
     100% {
@@ -109,8 +96,6 @@
     will-change: opacity;
     z-index: 4;
   }
-
-  /* ── CRT scan beam ───────────────────────────────────────────────────────── */
 
   @keyframes crt-scan-beam {
     0% {
@@ -135,8 +120,6 @@
     will-change: transform;
   }
 
-  /* ── CRT motion disable ─────────────────────────────────────────────────── */
-
   @media (prefers-reduced-motion: reduce) {
     .crt-flicker,
     .crt-scan-beam,
@@ -155,7 +138,6 @@
     will-change: auto;
   }
 
-  /* Freeze CRT during sysfail overlay */
   html.sysfail-on .crt-scan-beam,
   html.sysfail-on .crt-flicker,
   html.sysfail-on .crt-noise {

@@ -1,13 +1,7 @@
-// components/sections/GuitarSection/GuitarSection.test.tsx
-// Behavioral tests: renders signal chain, influences, stats, live cam.
-// Both desktop and mobile variants tested via the sub-components directly
-// (avoids getIsMobile() async UA branch in test env).
-
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
-// next/image in test env needs a minimal stub (no srcset resolution)
 vi.mock('next/image', () => ({
   default: ({ src, alt }: { src: string; alt: string }) => createElement('img', { src, alt }),
 }));

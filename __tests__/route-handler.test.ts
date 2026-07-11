@@ -1,9 +1,3 @@
-// __tests__/route-handler.test.ts
-// Behavioral test for the `defineHandler` primitive in lib/server/route.ts.
-// Verifies the standardized pre-flight (rate-limit → parse → validate →
-// handler) AND the standardized envelope ({ ok, requestId, data?/error })
-// AND the X-Request-Id header presence.
-
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
@@ -95,8 +89,6 @@ describe('lib/server/route — defineHandler', () => {
     expect(body.error.message).toBe('slow down');
     expect(res.headers.get('x-request-id')).toBe(body.requestId);
     expect(handlerSpy).not.toHaveBeenCalled();
-    // hashIp should NOT have been called — rate-limit is the first gate, and
-    // failed gates short-circuit before the per-request cost of IP hashing.
     expect(hashIpMock).not.toHaveBeenCalled();
   });
 

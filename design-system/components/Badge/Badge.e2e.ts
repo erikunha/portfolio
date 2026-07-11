@@ -12,16 +12,12 @@ test.describe('Badge — behavioral E2E', () => {
   test('dot badge text is visible to assistive technology', async ({ page }) => {
     await page.goto('/design-system/components');
     const preview = page.locator('#badge');
-    // The page also renders a <code> example containing "OPEN_TO_WORK"; scope to span elements only.
     await expect(preview.locator('span').getByText('OPEN_TO_WORK').first()).toBeVisible();
   });
 
   test('default variant renders without a dot span', async ({ page }) => {
     await page.goto('/design-system/components');
     const preview = page.locator('#badge');
-    // hasText matches transitively, so parent spans also pass the text filter.
-    // hasNot pins selection to the actual badge span, which has no aria-hidden
-    // dot child (unlike any ancestor wrapper that might also contain "AVAILABLE").
     const availableBadge = preview
       .locator('span')
       .filter({ hasText: /^AVAILABLE$/ })

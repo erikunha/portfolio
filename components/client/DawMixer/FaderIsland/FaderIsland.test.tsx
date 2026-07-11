@@ -1,4 +1,3 @@
-// components/client/DawMixer/FaderIsland.test.tsx
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';

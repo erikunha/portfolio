@@ -1,7 +1,5 @@
 import { expect, test } from '@playwright/test';
 
-// Hero tests cover desktop layout: hero-desktop and DesktopTopbar elements are
-// CSS display:none below 768px. Pin to desktop so they pass in mobile projects.
 test.use({ viewport: { width: 1280, height: 720 } });
 
 test.describe('Hero -- above the fold', () => {

@@ -1,7 +1,5 @@
 import { manPage } from '@/content/man-page';
 
-// Mobile man-page: semantic layout — avoids pre-wrap column fighting. Plain
-// RSC — rendered when ManPageContent detects a mobile UA via getIsMobile().
 export function ManPageMobile() {
   return (
     <div
@@ -9,7 +7,6 @@ export function ManPageMobile() {
       className="flex font-mono text-sm max-md:text-xs leading-[1.7] text-tertiary-50 flex-col gap-0.5"
       data-testid="manpage-mobile"
     >
-      {/* #sec-man-page-body min-height: 300px in components.css — preserves space while streaming */}
       <span className="text-primary-500 font-bold tracking-[0.04em] text-xs mb-2.5 break-all">
         {`${manPage.name.toUpperCase()}(1) - User Commands`}
       </span>

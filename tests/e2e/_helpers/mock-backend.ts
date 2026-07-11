@@ -1,17 +1,3 @@
-// tests/e2e/_helpers/mock-backend.ts
-//
-// Installs Playwright page.route() interceptors for all four /api/* routes.
-// Call installMockBackend(page, state) before page.goto('/') in any test that
-// exercises a form or API call.
-//
-// Throwing vs fail-silent (intentional asymmetry):
-//   - /api/ask + /api/contact throw when un-configured. These are user-facing
-//     critical paths — a missing mock indicates a real test bug, never a no-op.
-//   - /api/log + /api/log/forget default to success when un-configured. These
-//     are fire-and-forget observability endpoints designed to fail silently in
-//     production (per lib/log.ts); matching that posture in the mock prevents
-//     every UI test from having to wire `log: 'accept'` explicitly.
-
 import type { Page } from '@playwright/test';
 import { STREAM_ERR_SENTINEL } from '../../../lib/stream-protocol';
 
@@ -29,7 +15,6 @@ export type MockState = {
 };
 
 export async function installMockBackend(page: Page, state: MockState = {}): Promise<void> {
-  // --- /api/ask ---
   await page.route('**/api/ask', async (route) => {
     const s = state.ask;
 
@@ -65,7 +50,6 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
     }
 
     if (s === 'stream-error') {
-      // The real route streams a sentinel then closes.
       const body = `${STREAM_ERR_SENTINEL}upstream error`;
       await route.fulfill({
         status: 200,
@@ -77,7 +61,6 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
     }
 
     if (s === 'pre-stream-timeout') {
-      // Simulates SDK 30s timeout firing before the first SSE chunk.
       const body = `${STREAM_ERR_SENTINEL}Request Timeout`;
       await route.fulfill({
         status: 200,
@@ -89,7 +72,6 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
     }
 
     if (s === 'happy') {
-      // Stream a short canned answer with the real content-type.
       await route.fulfill({
         status: 200,
         contentType: 'text/plain; charset=utf-8',
@@ -102,12 +84,10 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
     throw new Error(`installMockBackend: no mock configured for ask state "${String(s)}"`);
   });
 
-  // --- /api/contact ---
   await page.route('**/api/contact', async (route) => {
     const s = state.contact;
 
     if (s === 'happy' || s === 'honeypot') {
-      // Both happy and honeypot return 200 ok (honeypot silently succeeds).
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -146,7 +126,6 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
     throw new Error(`installMockBackend: no mock configured for contact state "${String(s)}"`);
   });
 
-  // --- /api/log ---
   await page.route('**/api/log', async (route) => {
     const s = state.log;
 
@@ -165,18 +144,13 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       return;
     }
 
-    // Default: silently accept log calls so tests that don't care about logging
-    // still pass without configuring a log state.
     await route.fulfill({ status: 204 });
   });
 
-  // --- /api/log/forget ---
   await page.route('**/api/log/forget', async (route) => {
     const s = state.forget;
 
     if (s === 'happy' || s === 'not-found') {
-      // Real route returns { ok: true, requestId } — deleted count is
-      // intentionally absent to avoid leaking an existence oracle.
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -185,7 +159,6 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       return;
     }
 
-    // Default: return success shape so tests that don't configure forget still pass.
     await route.fulfill({
       status: 200,
       contentType: 'application/json',

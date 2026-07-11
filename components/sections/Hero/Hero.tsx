@@ -1,8 +1,3 @@
-// components/sections/Hero/Hero.tsx
-// RSC — no 'use client'. Static markup only. Client islands handle animations.
-// Both variants are server-rendered; CSS media query hides the non-matching one.
-// Spec: docs/superpowers/specs/2026-05-18-mobile-lcp-perf-fix-design.md §6.
-
 import { HeroStats } from '@/components/HeroStats';
 import { heroTagline } from '@/content/hero';
 import { Badge, Button } from '@/design-system';
@@ -12,9 +7,6 @@ import { HeroSystemFailure } from '../../client/HeroSystemFailure';
 export function Hero() {
   return (
     <>
-      {/* Desktop: two-column layout — boot animation left, bio panel right.
-          id="bio" is the anchor target used by DesktopTopbar nav links.
-          Hidden on mobile via max-md CSS (max-width: 768px). */}
       <section
         id="bio"
         className="hero-desktop relative border border-primary-subtle min-h-[640px] overflow-hidden mb-10 md:mb-[40px] bg-transparent transition-transform duration-100 ease-out motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none"
@@ -68,13 +60,9 @@ export function Hero() {
             </Button>
           </div>
         </aside>
-        {/* Sysfail overlay — mounted once, desktop-only (event-driven show/hide). */}
         <HeroSystemFailure />
       </section>
 
-      {/* Mobile: stacked layout — boot animation on top, bio below.
-          Hidden on desktop via hero-mobile CSS class (min-width: 769px).
-          No id needed here — anchor target #bio is on the desktop section. */}
       <section
         className="hero-mobile relative border border-primary-subtle overflow-hidden mb-10 bg-transparent mt-2"
         data-testid="hero-mobile"

@@ -1,9 +1,3 @@
-// __tests__/sitemap.test.ts
-// Behavioral tests for app/sitemap.ts.
-// Locks down: returns an array of sitemap entries; home URL is present;
-// design-system URLs are present; CONTENT_UPDATED_AT env var overrides
-// the home page lastModified date.
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('sitemap()', () => {
@@ -50,7 +44,6 @@ describe('sitemap()', () => {
     const { default: sitemap } = await import('@/app/sitemap');
     const entries = sitemap();
     const home = entries.find((e) => e.url === 'https://erikunha.dev');
-    // Default is 2026-05-22 when env var is falsy
     expect(home?.lastModified).toEqual(new Date('2026-05-22'));
   });
 });

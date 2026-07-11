@@ -1,4 +1,3 @@
-// components/client/DawMixer/VuMeter.test.tsx
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -51,25 +50,21 @@ describe('VuMeter — ARIA contract', () => {
 describe('VuMeter — segments', () => {
   it('renders the correct number of segments', () => {
     const doc = renderStatic({ ...defaults, segments: 14 });
-    // Each segment is a <span> child of the slider
     const slider = doc.querySelector('[role="slider"]');
     expect(slider?.querySelectorAll('span').length).toBe(14);
   });
 
   it('no red segments when clipping is false and level is high', () => {
-    // Even at level 95 with no clipping prop, no red segment class
     const doc = renderStatic({ ...defaults, initialLevel: 95, clipping: false });
     expect(doc.querySelector('[class*="vuSegRed"]')).toBeNull();
   });
 
   it('last 2 filled segments get red class when clipping=true and level fills both red-zone slots', () => {
-    // initialLevel:97 with segments:14 → filledCount=14, so both red-zone slots (12,13) are filled
     const doc = renderStatic({ ...defaults, initialLevel: 97, clipping: true });
     expect(doc.querySelectorAll('[class*="vuSegRed"]').length).toBe(2);
   });
 
   it('only filled red-zone segments get red class — unfilled slots stay empty', () => {
-    // initialLevel:93 with segments:14 → filledCount=13: slot 12 is red+filled, slot 13 is empty
     const doc = renderStatic({ ...defaults, initialLevel: 93, clipping: true });
     expect(doc.querySelectorAll('[class*="vuSegRed"]').length).toBe(1);
     expect(doc.querySelector('[class*="vuSegEmpty"]')).not.toBeNull();

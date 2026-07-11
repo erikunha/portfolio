@@ -1,8 +1,3 @@
-// __tests__/boot-animation.test.ts
-// Behavioral tests for boot-animation DOM builders.
-// Locks down: buildLine span structure; buildStaticCmdLine/buildStaticDialogLine
-// output; runBoot cancel stops further DOM mutation.
-
 import { describe, expect, it } from 'vitest';
 import {
   type BootClasses,
@@ -12,8 +7,6 @@ import {
   type LinePart,
 } from '@/lib/boot-animation';
 
-// Minimal BootClasses stub — real values would be CSS Module class strings.
-// Property list matches the actual BootClassKey union in lib/boot-animation.ts.
 const cls: BootClasses = {
   bootOk: 'ok',
   bootEnc: 'enc',

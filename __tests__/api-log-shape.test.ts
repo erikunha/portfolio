@@ -1,19 +1,6 @@
-// __tests__/api-log-shape.test.ts
-// Behavioral test: exercises the /api/log endpoint, lib/ip-hash, and the
-// client error bridge end-to-end, instead of grepping their source text.
-//
-//  - /api/log endpoint: POST a structured error, assert the KV write uses the
-//    `err:` key prefix + 30-day TTL, the success envelope, the smoke-prefix
-//    bypass, the personal-data-free record (no ipHash), and the
-//    storage-unavailable error path.
-//  - lib/ip-hash: hashIp produces a stable 16-char SHA-256-derived hex digest.
-//  - lib/error-bridge.client: an unhandled window error POSTs a structured
-//    payload to /api/log, and the dedup window suppresses replayed errors.
-
 import { NextRequest } from 'next/server';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// --- /api/log endpoint -------------------------------------------------------
 describe('/api/log endpoint', () => {
   const redisSetMock = vi.fn();
 
@@ -59,7 +46,7 @@ describe('/api/log endpoint', () => {
     expect(redisSetMock).toHaveBeenCalledOnce();
     const [key, , opts] = redisSetMock.mock.calls[0] ?? [];
     expect(String(key)).toMatch(/^err:/);
-    expect(opts).toEqual({ ex: 2_592_000 }); // 30 days
+    expect(opts).toEqual({ ex: 2_592_000 });
   });
 
   it('stores no ipHash in the err: record (personal-data-free design)', async () => {
@@ -82,7 +69,6 @@ describe('/api/log endpoint', () => {
 
   it('rejects a malformed payload with a 400 validation error', async () => {
     const { POST } = await import('@/app/api/log/route');
-    // `level` must be 'error' | 'warn'; 'debug' is invalid.
     const res = await POST(makeRequest({ level: 'debug', message: 'x' }));
     expect(res.status).toBe(400);
     const body = (await res.json()) as { ok: false; error: { code: string } };
@@ -100,7 +86,6 @@ describe('/api/log endpoint', () => {
   });
 });
 
-// --- lib/ip-hash -------------------------------------------------------------
 describe('lib/ip-hash', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -112,20 +97,12 @@ describe('lib/ip-hash', () => {
     const a2 = await hashIp('203.0.113.7');
     const b = await hashIp('198.51.100.1');
 
-    // Deterministic — same IP hashes identically (rate-limit accounting relies
-    // on this), and the digest is the documented 16-hex-char SHA-256 slice.
     expect(a1).toBe(a2);
     expect(a1).toMatch(/^[0-9a-f]{16}$/);
-    // Different IPs map to different hashes.
     expect(a1).not.toBe(b);
   });
 });
 
-// --- lib/error-bridge.client -------------------------------------------------
-// The bridge registers window listeners as a module side effect with no
-// teardown hook. Import it exactly ONCE for this block (no resetModules) so
-// only a single listener set is attached; each test uses a unique error
-// message so the per-module dedup Map never cross-contaminates tests.
 describe('client error bridge', () => {
   let bridge: typeof import('@/lib/error-bridge.client');
 
@@ -157,8 +134,6 @@ describe('client error bridge', () => {
     const fetchMock = vi.fn(async () => new Response(null, { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
 
-    // React's error replay fires the same error 2-3x in <50ms — only the
-    // first should be POSTed.
     const err = new Error('replayed-unique');
     window.dispatchEvent(new ErrorEvent('error', { message: 'replayed-unique', error: err }));
     window.dispatchEvent(new ErrorEvent('error', { message: 'replayed-unique', error: err }));

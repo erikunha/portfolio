@@ -1,14 +1,6 @@
-// evals/agents/__tests__/ab-variant.test.ts
-// Unit test for the A/B case-variant schema extension (evals/agents/schema.ts,
-// C-c.2). An A/B case carries optional `control.systemText` + `treatment.systemText`
-// variants on top of the base case. selectAbCases() filters a mixed corpus down
-// to only the cases that declare BOTH arms; a case missing the treatment (or
-// control) variant is excluded from --ab mode, never silently run single-armed.
-
 import { describe, expect, it } from 'vitest';
 import { AgentEvalCaseSchema, selectAbCases, validateAgentEvalCase } from '@/evals/agents/schema';
 
-// A base (non-A/B) case: no control/treatment variants.
 const baseCase = {
   id: 'plain',
   prompt: 'do a thing',
@@ -19,7 +11,6 @@ const baseCase = {
   knownHard: false,
 };
 
-// An A/B case: declares both arms.
 const abCase = {
   id: 'ab',
   prompt: 'do a thing',

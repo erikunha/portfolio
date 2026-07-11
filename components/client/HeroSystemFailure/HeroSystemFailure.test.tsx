@@ -1,4 +1,3 @@
-// components/client/HeroSystemFailure/HeroSystemFailure.test.tsx
 import { describe, expect, it, vi } from 'vitest';
 
 Object.defineProperty(window, 'matchMedia', {
@@ -10,8 +9,6 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
-// Minimal BootClasses fixture for unit tests — class names are arbitrary strings;
-// the test only verifies timing/firing behavior, not DOM class values.
 const testCls = {
   bootLine: 'bootLine',
   bootOk: 'bootOk',
@@ -28,7 +25,6 @@ const testCls = {
 
 describe('runBoot onFirstLoop', () => {
   it('fires exactly once across multiple dialog loops', async () => {
-    // runBoot extracted from HeroBootAnimation island to lib/boot-animation (pure, no React).
     const { runBoot } = await import('@/lib/boot-animation');
     const container = document.createElement('div');
     const calls: number[] = [];

@@ -32,7 +32,6 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
         node.textContent = `[${role.slice(0, charIdx)}]`;
         if (charIdx >= role.length) {
           phase = 'hold';
-          // Announce only the completed role, not each character
           if (liveRef.current) liveRef.current.textContent = role;
           timerId = setTimeout(tick, HOLD_MS);
         } else {

@@ -1,26 +1,4 @@
 #!/usr/bin/env node
-// scripts/inspect-pr-comments.mjs
-//
-// PR review surface harness. Fetches the comments on a GitHub PR — both
-// in-line review comments (per-file, per-line) and top-level issue
-// comments — and renders a structured markdown checklist sorted by file.
-//
-// Workflow:
-//   1. Run `pnpm pr:comments <PR-number>` to dump the review surface.
-//   2. For each unresolved thread, either:
-//        a) resolve it (fix the code, reply on the thread with the fix SHA
-//           + a 1-2 sentence rationale),
-//        b) escalate to the repo owner with a "Why not" analysis (why the
-//           comment is wrong, decline, or out of scope).
-//   3. Unaddressed comments block merge.
-//
-// Auth: uses `gh` CLI under the hood (must be authenticated).
-// Filters: drops common deployment-bot noise (Vercel status comments,
-// CI status updates) so the human signal-to-noise ratio is high.
-//
-// Usage:
-//   pnpm pr:comments 29
-//   pnpm pr:comments 29 > docs/reviews/PR-29.md   # capture to disk
 
 import { execFileSync } from 'node:child_process';
 
@@ -31,9 +9,6 @@ const BOT_AUTHORS_TO_SKIP = new Set([
   'github-actions[bot]',
 ]);
 
-// Phrases that mark a comment as deployment-status noise, even when the
-// author isn't on the skip list (Vercel's GitHub App posts under "vercel"
-// AND historically under a personal account in some configs).
 const NOISE_BODY_MARKERS = [/^\[vc\]: #/m, /Vercel for GitHub/i];
 
 function usage() {
@@ -43,13 +18,6 @@ function usage() {
 }
 
 function ghJson(endpoint) {
-  // `gh api --paginate --slurp` follows the `Link: rel="next"` header through
-  // every page AND merges the responses into a single JSON array on stdout.
-  // No textual `][` boundary splitting required, which closes the prior
-  // bug where comment bodies containing markdown reference-link syntax
-  // (`[label][ref]`) could split paginated output mid-string. The slurp
-  // flag has been in gh since v2.46 (early 2024); we already require gh
-  // for the script to function.
   const raw = execFileSync('gh', ['api', '--paginate', '--slurp', endpoint], {
     encoding: 'utf-8',
     maxBuffer: 32 * 1024 * 1024,
@@ -57,11 +25,6 @@ function ghJson(endpoint) {
   const trimmed = raw.trim();
   if (!trimmed) return [];
   const parsed = JSON.parse(trimmed);
-  // With --slurp, the shape is always an array. For single-page array
-  // endpoints (e.g. /comments) it's `[[item, item], [item]]` (one inner
-  // array per page) so flatten one level. For non-array endpoints
-  // (e.g. /pulls/N which returns an object), gh wraps the single object
-  // in an outer array of length 1 — caller treats that as the object.
   if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
     return parsed.flat();
   }
@@ -89,7 +52,6 @@ function detectRepo() {
     const remote = execFileSync('git', ['remote', 'get-url', 'origin'], {
       encoding: 'utf-8',
     }).trim();
-    // Supports git@github.com:owner/repo.git, https://github.com/owner/repo.git
     const m = remote.match(/[:/]([^/:]+)\/([^/]+?)(?:\.git)?$/);
     if (!m) return null;
     return `${m[1]}/${m[2]}`;
@@ -98,7 +60,6 @@ function detectRepo() {
   }
 }
 
-// --- CLI ---
 const args = process.argv.slice(2);
 let prNumber = null;
 let repo = null;
@@ -127,8 +88,6 @@ const pr = ghJson(`/repos/${repo}/pulls/${prNumber}`);
 const filteredReviews = reviewComments.filter((c) => !isNoise(c));
 const filteredIssues = issueComments.filter((c) => !isNoise(c));
 
-// Group inline review comments by file path.
-/** @type {Map<string, Array<typeof reviewComments[number]>>} */
 const byFile = new Map();
 for (const c of filteredReviews) {
   const file = c.path ?? '(unknown file)';
@@ -156,11 +115,6 @@ console.log('## Per-file inline review comments\n');
 if (sortedFiles.length === 0) {
   console.log('_(none)_\n');
 }
-// Sort by the SAME line value displayed (line ?? original_line) so outdated
-// review comments (where `line` is null but `original_line` is set) interleave
-// in source order with current comments rather than all sinking to the top
-// as line=0. `created_at` is the stable tiebreaker — preserves chronological
-// order when two comments target the same line.
 const lineKey = (c) => c.line ?? c.original_line ?? Number.MAX_SAFE_INTEGER;
 for (const file of sortedFiles) {
   const comments = byFile.get(file) ?? [];

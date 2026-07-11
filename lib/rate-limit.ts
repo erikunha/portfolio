@@ -8,8 +8,6 @@ let _contactLimit: Ratelimit | undefined;
 
 export function getRedis(): Redis {
   if (_redis) return _redis;
-  // Construct once. If construction throws, _redis stays undefined so the
-  // next call retries; the caller's try/catch keeps the request fail-open.
   const instance = Redis.fromEnv();
   _redis = instance;
   return instance;
@@ -76,24 +74,6 @@ export function getForgetLimit(): Ratelimit {
   return _forgetLimit;
 }
 
-// Proxy trust posture for getClientIp:
-//
-// Header precedence: x-forwarded-for → x-real-ip → 'unknown'.
-//
-// On Vercel, both headers are set authoritatively by Vercel's edge
-// infrastructure BEFORE the request reaches this function. Vercel strips
-// any client-injected values for these headers, so spoofing is not
-// possible in the Vercel deployment context. Index 0 of x-forwarded-for
-// is the real client IP because Vercel rewrites the entire header value,
-// guaranteeing all entries are Vercel-controlled and trustworthy.
-//
-// In local development (no proxy layer): neither header is set by the
-// Node server, so the function returns 'unknown'. Rate-limit and
-// identical-question gates are keyed to 'unknown' locally, meaning all
-// local requests share one bucket — acceptable for a single-developer
-// workflow. The MCP ask_erik tool also resolves to 'unknown' for the
-// same reason (synthetic Request, no proxy headers); see DECISIONS.md
-// 2026-05-21 "MCP ask_erik shares one global rate-limit bucket".
 export function getClientIp(req: import('next/server').NextRequest): string {
   return (
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
@@ -102,30 +82,9 @@ export function getClientIp(req: import('next/server').NextRequest): string {
   );
 }
 
-// Monthly token budget — 3,000,000 tokens ≈ $5 blended Haiku 4.5 pricing.
-// Blended rate: 77% input × $0.80/MTok + 23% output × $4.00/MTok ≈ $1.54/MTok.
-// reserveBudget() reserves RESERVED_INPUT_TOKENS (2,200) + maxOutputTokens (512) = ~2,700
-// tokens per request, so the cap allows ~1,100 requests before it exhausts.
-// Hard cap at 100%; warn at 80%.
 const MONTHLY_TOKEN_BUDGET = 3_000_000;
 const BUDGET_WINDOW_S = 60 * 60 * 24 * 32;
 
-// Reservation pattern constants. Worst-case input tokens cover:
-//   - SYSTEM prompt: ~1500 tokens cache-cold (SYSTEM_TEXT in
-//     lib/ask/system-prompt.ts is ~5500 chars ≈ 1500-1600 tokens).
-//   - Wrapped user question: max 500 chars of input + ~200 chars of
-//     <question> delimiter + re-anchor instruction ≈ 200 tokens.
-//   - Anthropic SDK framing overhead: ~100 tokens.
-// Total worst-case input ≈ 1800 tokens; reserve 2200 for a ~20% safety
-// buffer. If actual billed input > reserved, settleBudget() becomes a
-// no-op (the refund branch is `if (refund <= 0) return`) and the counter
-// undercounts, defeating the "never below actual usage" guarantee. With
-// 2200 tokens reserved against worst-case 1800 actual, there is always
-// positive headroom to refund — settleBudget never undercounts.
-//
-// Drift-protected by __tests__/budget-cap.test.ts. Update both when SYSTEM
-// size moves (also update lib/ask/system-prompt.ts CACHE_ELIGIBILITY_MIN_CHARS
-// if relevant).
 const RESERVED_INPUT_TOKENS = 2200;
 
 export function getBudgetKey(): string {
@@ -135,12 +94,6 @@ export function getBudgetKey(): string {
   return `ask:tokens:${yyyy}-${mm}`;
 }
 
-// Reserve worst-case (input + max_tokens) against the monthly counter BEFORE
-// the Anthropic call. If the reservation crosses the cap, refund and reject.
-// Returns `reserved` so settleBudget() can refund the unused portion after
-// the stream completes. Fail-open on Redis infra failure (same posture as
-// rate-limit) — operator must rely on the out-of-band Anthropic spend alert
-// when Upstash is degraded.
 export async function reserveBudget(
   maxOutputTokens: number,
 ): Promise<{ allowed: boolean; reserved: number; pct: number; budgetKey: string }> {
@@ -153,7 +106,6 @@ export async function reserveBudget(
     const [used] = await pipe.exec<[number, number]>();
     const pct = used / MONTHLY_TOKEN_BUDGET;
     if (pct > 1) {
-      // Reservation pushed us over — refund and reject.
       try {
         await getRedis().decrby(budgetKey, reserved);
       } catch (refundErr) {
@@ -169,10 +121,6 @@ export async function reserveBudget(
   }
 }
 
-// After the Anthropic stream ends (or errors), refund (reserved - actual).
-// budgetKey must be the same key returned by reserveBudget — callers must not
-// call getBudgetKey() independently, to avoid a month-boundary TOCTOU where
-// reserve and settle operate on different monthly keys.
 export async function settleBudget(
   reserved: number,
   actualInputTokens: number,
@@ -196,10 +144,6 @@ export async function settleBudget(
   }
 }
 
-// Identical-question gate. Stores ipHash + sha256(question) in Redis with a
-// 60s TTL using SET NX. If the key already exists, the same IP asked the
-// exact question within the last 60 seconds — reject. Fail-open on Redis
-// failure (same posture as rate-limit).
 export async function checkIdenticalQuestion(
   ipHash: string,
   question: string,

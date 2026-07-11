@@ -1,17 +1,4 @@
 #!/usr/bin/env tsx
-// Usage: pnpm ready-for-pr [--skip-runtime]
-//
-// Pre-PR gate: verifies the branch is clean and sized correctly before
-// `gh pr create`. Run this before opening any PR.
-//
-// Gates (in order):
-//   1. pnpm ci:local      — lint + typecheck + content validate + tests
-//   2. pnpm bundle-check  — gzipped chunk size gate
-//   3. pnpm pr-size       — branch complexity; exit 1 = red (split), 2 = blocked
-//   4. pnpm gates:runtime — build + server + LHCI + axe + E2E (skip with --skip-runtime)
-//
-// On pass: prints next-step reminder (visual check + auto-review).
-// On fail: exits 1 with clear message about which gate failed.
 
 import { execFileSync } from 'node:child_process';
 
@@ -28,7 +15,6 @@ const C = {
 
 process.stdout.write(`\n${C.bold}[ready-for-pr] Running pre-PR gates...${C.reset}\n\n`);
 
-// Gate 1: full local CI
 try {
   execFileSync('pnpm', ['ci:local'], { stdio: 'inherit' });
 } catch {
@@ -38,7 +24,6 @@ try {
   process.exit(1);
 }
 
-// Gate 2: bundle size
 try {
   execFileSync('pnpm', ['bundle-check'], { stdio: 'inherit' });
 } catch {
@@ -48,10 +33,6 @@ try {
   process.exit(1);
 }
 
-// Gate 3: PR size. Map pr-size's exit code exactly — 1 = red (split), 2 =
-// blocked (invalid --base / unfetched base ref) — and treat anything else
-// (signal kill, spawn error, unexpected code) as an unknown failure rather
-// than silently calling it "red".
 let sizeFail: 'red' | 'blocked' | 'error' | null = null;
 let sizeExit: number | undefined;
 try {
@@ -89,7 +70,6 @@ if (sizeFail === 'red') {
   process.exit(1);
 }
 
-// Gate 4: runtime gates (build + server + LHCI + axe + E2E)
 if (SKIP_RUNTIME) {
   process.stdout.write(`${C.yellow}[ready-for-pr] Gate 3 skipped (--skip-runtime).${C.reset}\n`);
 } else {

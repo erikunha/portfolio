@@ -1,6 +1,3 @@
-// content/schemas.ts
-// Runtime Zod schemas for all typed content modules.
-// Build fails if any content file violates its schema.
 import { z } from 'zod';
 
 export const SocialSchema = z.object({
@@ -12,7 +9,6 @@ export const SocialSchema = z.object({
   whatsapp: z.string().url(),
 });
 
-// ProjectsSection
 export const StatSchema = z.object({
   label: z.string().min(1),
   value: z.string().min(1),
@@ -27,7 +23,6 @@ export const ProjectSchema = z.object({
   perm: z.string().min(1).optional(),
 });
 
-// GitLogSection — the "blame" view of career history
 export const BlameEntrySchema = z.object({
   dates: z.string().min(1),
   company: z.string().min(1),
@@ -35,23 +30,20 @@ export const BlameEntrySchema = z.object({
   reason: z.string().min(1),
 });
 
-// PerfReceiptsSection
 export const PerfReceiptSchema = z.object({
   metric: z.string().min(1),
   delta: z.string().min(1),
   company: z.string().min(1),
   note: z.string().min(1),
-  mobileMetric: z.string().min(1).optional(), // abbreviated label for narrow viewports
-  desktopOnly: z.boolean().optional(), // hidden on mobile via CSS
+  mobileMetric: z.string().min(1).optional(),
+  desktopOnly: z.boolean().optional(),
 });
 
-// NpmStackSection — SVG path is inline, kept in data layer
 export const NpmTileSchema = z.object({
   label: z.string().min(1),
   path: z.string().min(1),
 });
 
-// HottestTakesSection
 export const HottestTakeSchema = z.object({
   num: z.string().min(1),
   category: z.string().min(1),
@@ -59,7 +51,6 @@ export const HottestTakeSchema = z.object({
   body: z.string().min(1),
 });
 
-// ResponsibilitiesSection
 export const ResponsibilitySchema = z.object({
   perms: z.string().regex(/^[-d][rwx-]{9}$/),
   user: z.string().min(1),
@@ -68,7 +59,6 @@ export const ResponsibilitySchema = z.object({
   highlight: z.boolean().default(false),
 });
 
-// GuitarSection v2 — signal chain + influences + stats + live cam
 const _signalNodeBase = { name: z.string().min(1), subtitle: z.string().min(1) };
 const _dotsNode = (role: 'INPUT' | 'AMP' | 'OUT') =>
   z.object({
@@ -102,9 +92,6 @@ export const StatCellSchema = z.object({
 });
 
 export const GuitarRigSchema = z.object({
-  // Tuple enforces exact role sequence: INPUT → FX → AMP → OUT.
-  // z.array().length(4) would allow any combination (e.g. two INPUT nodes), which
-  // would silently break the renderer and pass validate-content.
   signalChain: z.tuple([_dotsNode('INPUT'), _fxNode, _dotsNode('AMP'), _dotsNode('OUT')]),
   influences: z.array(InfluenceSchema).length(5),
   nowObsessing: z.string().min(1),
@@ -117,7 +104,6 @@ export const GuitarRigSchema = z.object({
   }),
 });
 
-// UnknownsSection
 export const UnknownItemSchema = z.object({
   claim: z.string().min(1),
   context: z.string().min(1),
@@ -128,7 +114,6 @@ export const UnknownsSchema = z.object({
   footer: z.string().min(1),
 });
 
-// VisaSection
 export const VisaRowSchema = z.object({
   jurisdiction: z.string().min(1),
   jurisdictionShort: z.string().min(1),
@@ -137,14 +122,12 @@ export const VisaRowSchema = z.object({
   evidence: z.string().min(1),
 });
 
-// CredentialsSection
 export const CredentialSchema = z.object({
   label: z.string().min(1),
   badge: z.string().min(1),
   evidence: z.string().min(1),
 });
 
-// CommunitySection
 export const CommunityEventSchema = z.object({
   name: z.string().min(1),
   year: z.number().int(),
@@ -153,7 +136,6 @@ export const CommunityEventSchema = z.object({
   statusLine: z.string().min(1),
 });
 
-// ManPageSection — text content extracted for type-safety
 export const ManPageSchema = z.object({
   name: z.string().min(1),
   tagline: z.string().min(1),
@@ -164,20 +146,17 @@ export const ManPageSchema = z.object({
   knownBugs: z.array(z.string().min(1)),
 });
 
-// NowSection
 export const NowRowSchema = z.object({
   k: z.string().min(1),
   v: z.string().min(1),
 });
 
-// SysHealthSection
 export const SysStatSchema = z.object({
   label: z.string().min(1),
   value: z.string().min(1),
   pct: z.string().regex(/^\d{1,3}%$/),
 });
 
-// GitLogSection
 export const GitCommitSchema = z.object({
   hash: z.string().min(1),
   deco: z.string().min(1),
@@ -190,7 +169,6 @@ export const GitCommitSchema = z.object({
   isRoot: z.boolean().optional(),
 });
 
-// InteractiveShell — local command responses
 export const ShellResponseSchema = z.object({
   commands: z.array(z.string().min(1)).min(1),
   kind: z.enum(['output', 'error']).default('output'),
@@ -198,8 +176,6 @@ export const ShellResponseSchema = z.object({
 });
 export const ShellCommandsSchema = z.array(ShellResponseSchema).min(1);
 
-// Terminal-window chrome labels (header prompt + right-side tag) shared by the
-// interactive shell and the contact form's ContactShell.
 export const TerminalChromeSchema = z.object({
   promptLabel: z.string().min(1),
   rightTag: z.string().min(1),
@@ -207,7 +183,6 @@ export const TerminalChromeSchema = z.object({
 });
 export type TerminalChrome = z.infer<typeof TerminalChromeSchema>;
 
-// ReadmeSection — prose copy extracted from JSX
 export const ReadmeCopySchema = z.object({
   desktopH1: z.string().min(1),
   desktopIntro: z.string().min(1),
@@ -217,7 +192,6 @@ export const ReadmeCopySchema = z.object({
 });
 export type ReadmeCopy = z.infer<typeof ReadmeCopySchema>;
 
-// Footer DMESG — structured so no JSX lives in content
 export const DmesgLineSchema = z.object({
   off: z.number(),
   prefix: z.string().min(1),
@@ -227,7 +201,6 @@ export const DmesgLineSchema = z.object({
 });
 export type DmesgLine = z.infer<typeof DmesgLineSchema>;
 
-// DawMixerSection
 const DawMixerPluginSchema = z.object({
   name: z.string().min(1),
   active: z.boolean(),
@@ -271,7 +244,6 @@ export const DawMixerSchema = z.object({
     }),
 });
 
-// Exported types
 export type Social = z.infer<typeof SocialSchema>;
 export type Project = z.infer<typeof ProjectSchema>;
 export type BlameEntry = z.infer<typeof BlameEntrySchema>;

@@ -1,14 +1,4 @@
 #!/usr/bin/env tsx
-// Usage: pnpm validate-pr-body [<pr-number>]
-//
-// Checks that a PR body fills every section from .github/pull_request_template.md.
-// A section is considered filled when:
-//   - its ## heading is present in the body, AND
-//   - at least one meaningful line follows before the next ## heading
-//     (HTML comments, unchecked checkboxes "- [ ] …", and bare "-" bullets
-//      are all treated as placeholders and do not count)
-//
-// Exits 0 on pass, 1 on any violation.
 
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -53,7 +43,6 @@ export function isSectionFilled(heading: string, body: string): boolean {
   const headingIdx = lines.findIndex((l) => l.trim() === `## ${heading}`);
   if (headingIdx === -1) return false;
 
-  // Collect lines until next ## heading
   const contentLines: string[] = [];
   for (let i = headingIdx + 1; i < lines.length; i++) {
     const line = lines[i] ?? '';
@@ -61,8 +50,6 @@ export function isSectionFilled(heading: string, body: string): boolean {
     contentLines.push(line);
   }
 
-  // Strip HTML comment blocks via a state machine — avoids regex-based
-  // replacement that CodeQL flags as "incomplete multi-character sanitization".
   const withoutComments: string[] = [];
   let inComment = false;
   for (const rawLine of contentLines) {
@@ -89,10 +76,7 @@ export function isSectionFilled(heading: string, body: string): boolean {
   const meaningful = withoutComments.filter((l) => {
     const t = l.trim();
     if (!t) return false;
-    // Any unchecked checkbox (with or without trailing text) is placeholder.
-    // Only a checked box "- [x]" or plain non-checkbox text counts as filled.
     if (/^-\s*\[\s*\]/.test(t)) return false;
-    // Bare bullet with no content is placeholder (e.g. lone "-" in Summary)
     if (/^-\s*$/.test(t)) return false;
     return true;
   });

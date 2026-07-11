@@ -1,15 +1,3 @@
-// lib/eval/__tests__/judge.test.ts
-// Behavioral test for the shared LLM-judge call (lib/eval/judge.ts), extracted
-// verbatim from scripts/ask-eval.ts. Mocks the `ai` SDK `generateText` and
-// asserts the judge's parse/retry/fail-closed semantics without any real
-// Gateway call:
-//   (a) bare-JSON verdict parses to {pass,reason}
-//   (b) prose-wrapped JSON is extracted via the first {...} span
-//   (c) a no-JSON response → {pass:false, reason:'judge returned no JSON'}
-//   (d) a thrown error after retries → pass:false with the retry-exhaustion
-//       reason prefix
-//   (e) token usage passes through
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockGenerateText } = vi.hoisted(() => ({ mockGenerateText: vi.fn() }));
@@ -31,7 +19,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
-  vi.useRealTimers(); // safe no-op unless a test opted into fake timers
+  vi.useRealTimers();
 });
 
 describe('lib/eval/judge', () => {
@@ -68,22 +56,19 @@ describe('lib/eval/judge', () => {
     });
     const v = await judge(item, 'an answer', { model: 'm' });
     expect(v.pass).toBe(false);
-    expect(v.reason).toBe(JUDGE_NO_JSON_REASON); // ties judge() output to the shared constant
+    expect(v.reason).toBe(JUDGE_NO_JSON_REASON);
   });
 
   it('fails closed with the retry-exhaustion prefix after all attempts throw', async () => {
-    // Fake timers so the retry loop's 1s + 2s exponential backoff resolves
-    // instantly instead of costing 3 real seconds of wall-clock per run.
     vi.useFakeTimers();
     mockGenerateText.mockRejectedValue(new Error('network blip'));
     const vPromise = judge(item, 'an answer', { model: 'm' });
-    await vi.runAllTimersAsync(); // drive both backoffs + flush microtasks
+    await vi.runAllTimersAsync();
     const v = await vPromise;
     expect(v.pass).toBe(false);
     expect(
       v.reason.startsWith(`${JUDGE_ERROR_REASON_PREFIX} ${MAX_JUDGE_RETRIES + 1} attempts`),
     ).toBe(true);
-    // 1 initial + MAX_JUDGE_RETRIES retries
     expect(mockGenerateText).toHaveBeenCalledTimes(MAX_JUDGE_RETRIES + 1);
   });
 

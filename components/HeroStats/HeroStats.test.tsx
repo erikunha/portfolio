@@ -16,13 +16,11 @@ describe('HeroStats', () => {
   });
 
   it('each item renders a value element', () => {
-    // StatTile renders value in <dd>
     const values = getDOM().querySelectorAll('[data-testid="hero-stats-item"] dd');
     expect(values).toHaveLength(heroStats.length);
   });
 
   it('each item renders a label element', () => {
-    // StatTile renders label in <dt>
     const labels = getDOM().querySelectorAll('[data-testid="hero-stats-item"] dt');
     expect(labels).toHaveLength(heroStats.length);
   });

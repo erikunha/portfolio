@@ -2,14 +2,6 @@
 
 import { useEffect, useState } from 'react';
 
-// The SYSTEM FAILURE headline overlay, extracted from Hero.tsx DesktopHero.
-// Listens for 'hero:sysfail:show' and 'hero:sysfail:hide' window events
-// dispatched by HeroBootAnimation when the first dialog loop completes.
-// The existing 'sysfail:start' / 'sysfail:end' events continue to handle
-// MatrixRain pause/resume (unchanged from original wiring).
-//
-// State-based visibility: visible prop toggles `hero-sysfail-on` class
-// (defined in app/css/components.css @layer components) onto the overlay.
 export function HeroSystemFailure() {
   const [visible, setVisible] = useState(false);
 

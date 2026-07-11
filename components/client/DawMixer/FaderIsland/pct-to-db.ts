@@ -1,5 +1,3 @@
-// Standard DAW channel fader: -∞ to +6 dB, unity (0 dB) at 75% of travel.
-// Below 75%: logarithmic taper. Above 75%: linear.
 export function pctToDb(pct: number): string {
   if (pct === 0) return '-∞';
   const n = pct / 100;

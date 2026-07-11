@@ -1,17 +1,3 @@
-/**
- * Build-time Zod content validation. Replaces the previous
- * `validate-content.mjs` that spawned 17 sequential `tsx` child processes
- * (~3.4s of pure Node startup overhead) with a single tsx run that does
- * `await import()` directly. Same per-file pass/fail reporting, fraction
- * of the wall-clock cost.
- *
- * Each `content/*.ts` calls `Schema.parse(...)` at module-evaluation time;
- * importing the file IS the validation. A failed `parse()` throws here and
- * the catch block records it as a failure for the named file.
- *
- * Run via: tsx scripts/validate-content.ts
- */
-
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -37,9 +23,6 @@ const CONTENT_FILES = [
   'content/hero.ts',
   'content/seo.ts',
   'content/daw-mixer.ts',
-  // Client-imported content (dmesg, shell-commands) is pure typed data with
-  // no Zod runtime to avoid CSP eval violations. Their schemas are validated
-  // via the standalone validator below, which is never imported by app code.
   'content/_validate-client-content.ts',
 ];
 

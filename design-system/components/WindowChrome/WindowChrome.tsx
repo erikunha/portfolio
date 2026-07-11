@@ -1,14 +1,7 @@
-// WindowChrome — pure RSC, NO 'use client'.
-// Renders the three macOS-style traffic-light dots (red/yellow/green).
-// Dots are purely decorative: aria-hidden="true", no focus management.
-// The size prop sets dot diameter in px (defaults to 10). Callers that need
-// a specific context size (9px mobile, 10px shell, 12px desktop) pass it
-// explicitly so the primitive stays context-aware without conditional logic.
 import type { ComponentPropsWithoutRef } from 'react';
 import { cn } from '@/lib/cn';
 
 export type WindowChromeProps = ComponentPropsWithoutRef<'div'> & {
-  /** Dot diameter in px. Defaults to 10. */
   size?: number;
 };
 

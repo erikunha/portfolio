@@ -21,8 +21,6 @@ describe('ContactForm accessibility', () => {
 
   it('exposes name, email, and message inputs in the tab sequence', async () => {
     const container = await renderForm();
-    // The three real fields are standard form controls — naturally focusable
-    // and in DOM/tab order. None carry a negative tabindex.
     const name = container.querySelector<HTMLInputElement>('input[autocomplete="name"]');
     const email = container.querySelector<HTMLInputElement>('input[type="email"]');
     const message = container.querySelector<HTMLTextAreaElement>('textarea');
@@ -31,12 +29,10 @@ describe('ContactForm accessibility', () => {
     expect(email).not.toBeNull();
     expect(message).not.toBeNull();
     for (const field of [name, email, message]) {
-      // A field is keyboard-reachable when it has no negative tabindex.
       const ti = field?.getAttribute('tabindex');
       expect(ti === null || Number(ti) >= 0).toBe(true);
     }
 
-    // Source order is name → email → message (the natural Tab progression).
     const focusables = Array.from(
       container.querySelectorAll<HTMLElement>('input:not([tabindex="-1"]), textarea'),
     );
@@ -49,7 +45,6 @@ describe('ContactForm accessibility', () => {
     const container = await renderForm();
     const honeypot = container.querySelector<HTMLInputElement>('[data-testid="contact-honeypot"]');
     expect(honeypot).not.toBeNull();
-    // A keyboard / screen-reader user must skip the honeypot entirely.
     expect(honeypot?.getAttribute('tabindex')).toBe('-1');
     expect(honeypot?.getAttribute('aria-hidden')).toBe('true');
   });
@@ -58,8 +53,6 @@ describe('ContactForm accessibility', () => {
     const container = await renderForm();
     const submit = container.querySelector<HTMLButtonElement>('button[type="submit"]');
     expect(submit).not.toBeNull();
-    // Native <button type=submit> is keyboard-operable by default — no
-    // negative tabindex, no role override needed.
     expect(submit?.getAttribute('tabindex')).not.toBe('-1');
   });
 
@@ -77,11 +70,8 @@ describe('ContactForm accessibility', () => {
 
     const container = await renderForm();
 
-    // No alert region while idle.
     expect(container.querySelector('[role="alert"]')).toBeNull();
 
-    // Submitting the form (the path a keyboard user triggers by pressing Enter
-    // in a field or activating the submit button) fires the request.
     const form = container.querySelector<HTMLFormElement>('form');
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
@@ -95,22 +85,11 @@ describe('ContactForm accessibility', () => {
       }),
     );
 
-    // The failure is announced through an assertive live region.
     const alert = container.querySelector('[role="alert"]');
     expect(alert).not.toBeNull();
     expect(alert?.textContent).toContain('server boom');
   });
 });
-
-// ─── contact form error region ────────────────────────────────────────────────
-// Behavioral test: renders the real ContactForm and asserts its error
-// region carries role="alert" through the committed DOM, instead of grepping
-// the component source for the string literal.
-//
-// The :focus-visible CSS rule is a build asset — jsdom does not evaluate the
-// :focus-visible pseudo-class or paint focus rings, so the shipped stylesheet
-// rule's presence is the strongest verifiable signal. That single read is
-// tagged behavioral-test-allow.
 
 describe('contact form error region', () => {
   let mounted: MountedClient;
@@ -121,7 +100,6 @@ describe('contact form error region', () => {
   });
 
   it('renders the error message in a role="alert" live region after a failed submit', async () => {
-    // Make the contact POST fail so the form enters its error state.
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(JSON.stringify({ error: 'boom' }), { status: 500 })),
@@ -130,7 +108,6 @@ describe('contact form error region', () => {
     mounted = await mountClient(createElement(ContactForm));
     const { container } = mounted;
 
-    // Idle state: no alert region present yet.
     expect(container.querySelector('[role="alert"]')).toBeNull();
 
     const form = container.querySelector<HTMLFormElement>('form');
@@ -140,14 +117,11 @@ describe('contact form error region', () => {
     });
     await flushMicrotasks();
 
-    // Error state: the error paragraph is announced via role="alert".
     const alert = container.querySelector('[role="alert"]');
     expect(alert).not.toBeNull();
     expect(alert?.textContent).toContain('boom');
   });
 });
-
-// ─── focus rings ─────────────────────────────────────────────────────────────
 
 describe('focus rings', () => {
   it('base.css ships a button:focus-visible rule', () => {
@@ -156,10 +130,6 @@ describe('focus rings', () => {
     expect(base).toMatch(/button:focus-visible/);
   });
 });
-
-// ─── /api/contact honeypot ───────────────────────────────────────────────────
-// Behavioral test: verifies /api/contact silently returns 200 when the
-// `field_company` honeypot is filled, WITHOUT touching KV or Resend.
 
 const redisSetMock = vi.fn();
 const resendSendMock = vi.fn();
@@ -209,14 +179,13 @@ describe('/api/contact honeypot', () => {
         name: 'Real Name',
         email: 'real@example.com',
         message: 'A perfectly long-enough legitimate-looking message',
-        field_company: 'Acme Co', // honeypot filled — bot signature
+        field_company: 'Acme Co',
       }),
     );
 
     expect(res.status).toBe(200);
     const body = (await res.json()) as { ok: boolean };
     expect(body.ok).toBe(true);
-    // The bot must observe no side effects to learn what tripped.
     expect(redisSetMock).not.toHaveBeenCalled();
     expect(resendSendMock).not.toHaveBeenCalled();
   });
@@ -231,7 +200,7 @@ describe('/api/contact honeypot', () => {
         name: 'Real Name',
         email: 'real@example.com',
         message: 'A perfectly long-enough legitimate message',
-        field_company: '', // empty — legit user
+        field_company: '',
       }),
     );
 
@@ -259,7 +228,7 @@ describe('/api/contact honeypot', () => {
 
   it('also trips when field_company is whitespace-only (defensive)', async () => {
     const { isHoneypotTripped } = await import('@/lib/contact-validation');
-    expect(isHoneypotTripped({ field_company: '   ' })).toBe(false); // trimmed empty
+    expect(isHoneypotTripped({ field_company: '   ' })).toBe(false);
     expect(isHoneypotTripped({ field_company: '\t\n' })).toBe(false);
     expect(isHoneypotTripped({ field_company: 'x' })).toBe(true);
     expect(isHoneypotTripped({})).toBe(false);
@@ -267,12 +236,6 @@ describe('/api/contact honeypot', () => {
     expect(isHoneypotTripped({ field_company: 0 as unknown })).toBe(false);
   });
 });
-
-// ─── /api/contact — rate-limit denial path ───────────────────────────────────
-// Behavioral test: the rate-limit factory is mocked to deny the request; the
-// POST handler must short-circuit with a 429, the standard error envelope
-// { ok: false, error: { code: 'rate_limited' } }, and an X-Request-Id header
-// — WITHOUT touching KV or Resend.
 
 const VALID_BODY = {
   name: 'Real Name',
@@ -320,8 +283,6 @@ describe('/api/contact — rate-limit denial path', () => {
     const { POST } = await import('@/app/api/contact/route');
     await POST(makeRequest(VALID_BODY));
 
-    // Rate-limit is the first gate — a denial must short-circuit before any
-    // downstream side effect (KV write, email send).
     expect(redisSetMock).not.toHaveBeenCalled();
     expect(resendSendMock).not.toHaveBeenCalled();
   });
@@ -340,10 +301,6 @@ describe('/api/contact — rate-limit denial path', () => {
     expect(redisSetMock).toHaveBeenCalledOnce();
   });
 });
-
-// ─── submitting state ─────────────────────────────────────────────────────────
-// Locks down: while a POST is in-flight the form is busy (aria-busy=true) and
-// the submit button is disabled so double-submits are impossible.
 
 describe('contact form — submitting state', () => {
   let mounted: MountedClient;
@@ -374,7 +331,6 @@ describe('contact form — submitting state', () => {
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
-    // Flush microtasks to ensure React state (aria-busy) has propagated to the DOM.
     await flushMicrotasks();
 
     expect(form?.getAttribute('aria-busy')).toBe('true');
@@ -386,8 +342,6 @@ describe('contact form — submitting state', () => {
     });
     await flushMicrotasks();
 
-    // After a successful response the form is replaced by the success UI —
-    // aria-busy and disabled are cleared because the form element unmounts.
     expect(container.querySelector('[data-testid="contact-success"]')).not.toBeNull();
     expect(container.querySelector('form')).toBeNull();
   });

@@ -1,20 +1,3 @@
-// __tests__/section-viewport-variants.test.ts
-// Regression guard (Testing standard): the PPR dual-variant sections must emit
-// exactly ONE viewport variant. With cacheComponents: true and Suspense-gated
-// async RSCs calling getIsMobile() → headers(), the static Suspense fallback
-// (desktop) renders synchronously; mobile content renders only when the async
-// RSC resolves server-side for a real request.
-//
-// Module is an async RSC wrapper the sync server renderer cannot resolve; it is
-// stubbed to a transparent passthrough so each section's own variant markup is
-// the only thing under test. Module's own behavior is covered by
-// content-visibility.test.ts.
-//
-// next/headers is mocked because getIsMobile() calls it — under test we return
-// an empty UA string, so isMobile resolves to false (desktop path). The
-// Suspense fallback (desktop) is what renderToStaticMarkup sees anyway, since
-// async RSCs are suspended and only the fallback is synchronously renderable.
-
 import type { ReactNode } from 'react';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -34,8 +17,6 @@ import { ManPageSection } from '@/components/sections/ManPageSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { VisaSection } from '@/components/sections/VisaSection';
 
-// createElement (not JSX) keeps this a `.test.ts` file so the no-source-grep
-// meta-check, which only walks `*.test.ts`, continues to cover it.
 describe('responsive section viewport variants', () => {
   it('ProjectsSection emits exactly the desktop variant (no mobile markup)', () => {
     const html = renderToStaticMarkup(createElement(ProjectsSection));
@@ -50,9 +31,6 @@ describe('responsive section viewport variants', () => {
   });
 
   it('GuitarSection static render does not emit mobile markup', () => {
-    // Suspense fallback is null — C2 perf fix (see DECISIONS.md 2026-06-13).
-    // Desktop fallback caused CLS on mobile; production Next.js resolves
-    // GuitarContent server-side so the null fallback is never seen by real users.
     const html = renderToStaticMarkup(createElement(GuitarSection));
     expect(html).not.toContain('data-testid="guitar-mobile"');
   });

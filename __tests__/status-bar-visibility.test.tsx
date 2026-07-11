@@ -1,8 +1,3 @@
-// __tests__/status-bar-visibility.test.tsx
-// Behavioral tests for StatusBar visibilitychange handler.
-// Lines 29-35 (onVisibility) are uncovered — exercises pause on hidden and
-// restart on visible.
-
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
@@ -19,7 +14,6 @@ describe('StatusBar — visibilitychange handler', () => {
     mounted?.unmount();
     vi.useRealTimers();
     vi.restoreAllMocks();
-    // Restore document.hidden to default
     Object.defineProperty(document, 'hidden', { value: false, configurable: true });
   });
 
@@ -45,7 +39,6 @@ describe('StatusBar — visibilitychange handler', () => {
     const setIntervalSpy = vi.spyOn(globalThis, 'setInterval');
     await render();
 
-    // First, hide the document to pause the clock
     Object.defineProperty(document, 'hidden', { value: true, configurable: true });
     await act(async () => {
       document.dispatchEvent(new Event('visibilitychange'));
@@ -53,13 +46,11 @@ describe('StatusBar — visibilitychange handler', () => {
 
     const callsAfterHide = setIntervalSpy.mock.calls.length;
 
-    // Now show — startClock() should schedule a new interval
     Object.defineProperty(document, 'hidden', { value: false, configurable: true });
     await act(async () => {
       document.dispatchEvent(new Event('visibilitychange'));
     });
 
-    // setInterval must have been called again to restart the clock.
     expect(setIntervalSpy.mock.calls.length).toBeGreaterThan(callsAfterHide);
   });
 
@@ -67,7 +58,6 @@ describe('StatusBar — visibilitychange handler', () => {
     await render();
     const clearSpy = vi.spyOn(globalThis, 'clearInterval');
 
-    // Fire hidden twice — second time the id should already be null
     Object.defineProperty(document, 'hidden', { value: true, configurable: true });
     await act(async () => {
       document.dispatchEvent(new Event('visibilitychange'));
@@ -79,7 +69,6 @@ describe('StatusBar — visibilitychange handler', () => {
       document.dispatchEvent(new Event('visibilitychange'));
     });
 
-    // Should not have called clearInterval again (id is null)
     expect(clearSpy.mock.calls.length).toBe(callsAfterFirstHide);
   });
 

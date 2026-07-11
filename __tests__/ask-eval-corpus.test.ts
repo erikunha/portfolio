@@ -1,20 +1,3 @@
-// __tests__/ask-eval-corpus.test.ts
-// Structural test for the /api/ask quality-eval corpus.
-//
-// The corpus is content (content/ask-eval-corpus.ts) — it is typed and
-// Zod-validated like every other module in content/. This test asserts the
-// load-time invariants the eval harness (scripts/ask-eval.ts) and the CI
-// `ai-eval` job depend on:
-//
-//   1. The exported array parses its own Zod schema (drift guard — a
-//      malformed item would otherwise fail only at harness runtime, in CI,
-//      after spending Gateway tokens).
-//   2. There are >= 20 non-jailbreak items (factual + edge) and >= 5
-//      jailbreak items — enough coverage that the correctness rate and the
-//      jailbreak-resistance rate are statistically meaningful, not anecdotal.
-//   3. Every `id` is unique — the harness keys results and the Redis
-//      aggregate by id; a collision would silently drop an eval row.
-
 import { describe, expect, it } from 'vitest';
 import { ASK_EVAL_CORPUS, AskEvalCorpusSchema, type AskEvalItem } from '@/content/ask-eval-corpus';
 
@@ -34,10 +17,6 @@ describe('content/ask-eval-corpus', () => {
   });
 
   it('has >= 2 output-validation items', () => {
-    // output-validation items exercise the route's observable length-cap /
-    // stream-sentinel behavior. They are counted in the correctness denominator
-    // (kind !== 'jailbreak'), so a regression in that behavior shows up as a
-    // correctness drop, not a silent gap. >= 2 catches an accidental deletion.
     const outputValidation = ASK_EVAL_CORPUS.filter(
       (i: AskEvalItem) => i.kind === 'output-validation',
     );

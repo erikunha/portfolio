@@ -1,15 +1,5 @@
 import { expect, test } from '@playwright/test';
 
-// navigator.clipboard.writeText throws DOMException in headless Chromium
-// (document not OS-focused). Override the getter on Navigator.prototype via
-// addInitScript so the mock is in place before any page script runs.
-//
-// Locator strategy: getByRole('button').filter({ hasText: /^(COPY|COPIED)$/ })
-// is stable through text-content changes because the regex matches both states.
-// getByRole('button', { name: 'COPY' }).first() re-evaluates lazily and shifts
-// to the NEXT button once the clicked one shows 'COPIED'. State-machine
-// coverage lives in CopyButton.test.tsx.
-
 test.describe('CopyButton — rendering', () => {
   test('COPY button is visible on the design-system components page', async ({ page }) => {
     await page.goto('/design-system/components');

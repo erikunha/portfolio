@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-// Verifies every component in design-system/components/ has a ## heading
-// in app/design-system/components/page.mdx.
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

@@ -1,9 +1,3 @@
-// __tests__/dock.test.tsx
-// Behavioral tests for components/responsive/Dock/Dock.client.tsx.
-// Locks down: all nav items render; onJump handler: hash hrefs prevent default
-// + scroll; external hrefs skip preventDefault; DETAILS target dispatches
-// module:open event; missing DOM target exits gracefully.
-
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
@@ -18,12 +12,10 @@ describe('Dock', () => {
     scrolledIntoView = null;
     moduleOpenEvents = [];
 
-    // Stub scrollIntoView — jsdom doesn't implement it.
     Element.prototype.scrollIntoView = vi.fn(function (this: Element) {
       scrolledIntoView = this;
     });
 
-    // Listen for module:open custom events dispatched by Dock.
     moduleOpenListener = (e: Event) => {
       moduleOpenEvents.push((e as CustomEvent<{ id: string }>).detail?.id ?? '');
     };
@@ -64,7 +56,6 @@ describe('Dock', () => {
   it('clicking a hash link prevents default and scrolls to target', async () => {
     const container = await render();
 
-    // Create a target section element in the document
     const targetSection = document.createElement('section');
     targetSection.id = 'sec-readme';
     document.body.appendChild(targetSection);
@@ -94,7 +85,6 @@ describe('Dock', () => {
   it('clicking a hash link whose target is a DETAILS element dispatches module:open', async () => {
     const container = await render();
 
-    // Create a <details> target
     const detailsEl = document.createElement('details');
     detailsEl.id = 'sec-shell';
     document.body.appendChild(detailsEl);
@@ -116,7 +106,6 @@ describe('Dock', () => {
   it('does not call scrollIntoView when the target element is missing from DOM', async () => {
     const container = await render();
 
-    // Ensure no element with id sec-readme exists
     document.getElementById('sec-readme')?.remove();
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));

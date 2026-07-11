@@ -1,9 +1,6 @@
 import { test } from '@playwright/test';
 import { snapshotLocator } from './_helpers/snapshot';
 
-// Visual baselines for each primitive component.
-// Rendered via the /design-system/components route (added in PR C).
-// Skipped dynamically when the route is not yet deployed — auto-enables in PR C.
 test.describe('design-system components (visual baselines)', () => {
   test.beforeEach(async ({ request }) => {
     const res = await request.get('/design-system/components');

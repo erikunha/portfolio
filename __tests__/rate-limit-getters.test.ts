@@ -1,7 +1,3 @@
-// __tests__/rate-limit-getters.test.ts
-// Behavioral tests for getClientIp and rate-limit singleton getters.
-// Locks down: header precedence for IP extraction; singleton identity across calls.
-
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

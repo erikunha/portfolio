@@ -1,24 +1,15 @@
-// lib/eval/__tests__/montecarlo.test.ts
-// Behavioral test for the Monte-Carlo per-case aggregation (lib/eval/montecarlo.ts).
-// aggregateCase turns a case's N boolean run-results into the discrimination
-// (passAtK = P(>=1 pass)) and consistency (passHatK = P(all pass)) metrics plus
-// the mean / variance / stddev of the pass indicator. Pure math, no I/O.
-
 import { describe, expect, it } from 'vitest';
 import { aggregateCase } from '@/lib/eval/montecarlo';
 
 describe('lib/eval/montecarlo aggregateCase', () => {
   it('computes pass@k, pass^k, mean, variance, stddev for a mixed run', () => {
-    // [true,true,true,false,true]: 4/5 pass.
     const s = aggregateCase('mixed', [true, true, true, false, true]);
     expect(s.id).toBe('mixed');
     expect(s.runs).toBe(5);
     expect(s.passes).toBe(4);
-    expect(s.passAtK).toBe(1.0); // >=1 pass
-    expect(s.passHatK).toBe(0.0); // not all pass
+    expect(s.passAtK).toBe(1.0);
+    expect(s.passHatK).toBe(0.0);
     expect(s.mean).toBeCloseTo(0.8, 10);
-    // population variance of [1,1,1,0,1] with mean 0.8:
-    //   E[x^2] = 0.8, mean^2 = 0.64 → variance = 0.16
     expect(s.variance).toBeCloseTo(0.16, 10);
     expect(s.stddev).toBeCloseTo(Math.sqrt(0.16), 10);
   });

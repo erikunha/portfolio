@@ -25,7 +25,6 @@ export function FaderDbIsland({ initialPct, channelName, footer }: FaderDbProps)
 
   return (
     <>
-      {/* colFader: fader track column — layout handled by parent grid */}
       <div className="p-0">
         <FaderIsland
           initialPct={initialPct}
@@ -34,7 +33,6 @@ export function FaderDbIsland({ initialPct, channelName, footer }: FaderDbProps)
           onAriaValueText={handleAriaValueText}
         />
       </div>
-      {/* colDb: dB display column */}
       <div className="flex flex-col items-end tabular-nums tracking-[0.04em] leading-[1.1] text-xs max-md:text-sm text-primary-400 text-right">
         <span ref={dbRef} className="dbValue">
           {pctToDb(initialPct)}

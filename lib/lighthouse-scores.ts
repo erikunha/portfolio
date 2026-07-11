@@ -2,8 +2,6 @@ import { env } from '@/lib/env';
 import { log } from '@/lib/log';
 import { getRedis } from './rate-limit';
 
-/** PSI returned a non-2xx HTTP status. Carries `status` so the cron retry can
- *  classify retryable (429/5xx) vs terminal (4xx) failures. */
 class PsiHttpError extends Error {
   constructor(
     readonly status: number,
@@ -35,29 +33,16 @@ export const LIGHTHOUSE_FALLBACK: LighthouseScores = {
 };
 
 const CACHE_KEY = (strategy: Strategy) => `lh:scores:${strategy}`;
-export const LIGHTHOUSE_TTL_S = 90_000; // 25 h — survives a missed cron run
+export const LIGHTHOUSE_TTL_S = 90_000;
 
-// WHY: PSI runs a full Lighthouse audit server-side — a fresh run routinely takes
-// 15–40s. The cron (forceRefresh) must budget for that or it aborts every run and the
-// freshness key is never written, so /api/healthz reports degraded forever. The request
-// path keeps a short budget so a cache-miss page render falls back to cached/'—' scores
-// fast and never blocks LCP. The cron's longer budget is covered by maxDuration=60 on
-// app/api/psi-refresh/route.ts.
-export const PSI_REFRESH_TIMEOUT_MS = 45_000; // cron path (forceRefresh)
-export const PSI_REQUEST_TIMEOUT_MS = 8_000; // request path (page render)
+export const PSI_REFRESH_TIMEOUT_MS = 45_000;
+export const PSI_REQUEST_TIMEOUT_MS = 8_000;
 
-// WHY: Vercel Hobby caps a function at 60s. PSI_STRATEGY_BUDGET_MS reserves 10s
-// of that ceiling for the alert path + response so a retry attempt never runs
-// the route past its hard deadline. PSI_MIN_RETRY_BUDGET_MS is the floor below
-// which a retry attempt couldn't plausibly complete, so it's skipped in favor
-// of failing fast and recovering on the next daily cron tick.
 export const PSI_STRATEGY_BUDGET_MS = 50_000;
 export const PSI_MIN_RETRY_BUDGET_MS = 8_000;
 export const PSI_RETRY_BACKOFF_MS = 500;
 export const PSI_MAX_ATTEMPTS = 2;
 
-// Test seam: overridable monotonic clock so the deadline-budget path is
-// deterministically testable without fake timers. Production uses Date.now.
 let _now: () => number = () => Date.now();
 export function __setNowForTest(fn: (() => number) | null): void {
   _now = fn ?? (() => Date.now());
@@ -86,7 +71,6 @@ async function fetchScoresOnce(
     `&key=${apiKey}` +
     '&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO';
 
-  // WHY: cron calls must bypass Next.js fetch cache to guarantee a live PSI network call.
   const fetchCache: RequestInit = forceRefresh
     ? { cache: 'no-store' }
     : { next: { revalidate: LIGHTHOUSE_TTL_S } };
@@ -100,9 +84,8 @@ async function fetchScoresOnce(
     let body = '(unreadable)';
     try {
       body = (await res.text()).slice(0, 500);
-    } catch {
-      // ignore — error message already has status code
-    }
+      // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
+    } catch {}
     throw new PsiHttpError(
       res.status,
       `PSI API returned ${res.status} for strategy=${strategy}: ${body}`,
@@ -129,9 +112,6 @@ async function fetchScoresOnce(
   };
 
   if (forceRefresh) {
-    // WHY: cron path, write is the deliverable; a throw rejects this strategy so the
-    // route returns 500 and alerts. Vercel Cron does not auto-retry; recovery is the
-    // next daily tick (see app/api/psi-refresh/route.ts).
     await getRedis()
       .set(CACHE_KEY(strategy), scores, { ex: LIGHTHOUSE_TTL_S })
       .catch((err) => {
@@ -139,7 +119,6 @@ async function fetchScoresOnce(
         throw err;
       });
   } else {
-    // Request path: fire-and-forget — don't block the response on cache write.
     getRedis()
       .set(CACHE_KEY(strategy), scores, { ex: LIGHTHOUSE_TTL_S })
       .catch((err) => log.error('Redis cache set failed', { err }));
@@ -150,7 +129,7 @@ async function fetchScoresOnce(
 
 async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<LighthouseScores> {
   if (!forceRefresh) {
-    return fetchScoresOnce(strategy, PSI_REQUEST_TIMEOUT_MS, false); // single-shot request/LCP path
+    return fetchScoresOnce(strategy, PSI_REQUEST_TIMEOUT_MS, false);
   }
   const start = _now();
   for (let attempt = 1; ; attempt++) {
@@ -172,10 +151,6 @@ async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<
   }
 }
 
-/**
- * Cache-first. Returns cached scores if available; fetches from PSI on miss.
- * Falls back to LIGHTHOUSE_FALLBACK on any error. Default strategy: desktop.
- */
 export async function getScores(strategy: Strategy = 'desktop'): Promise<LighthouseScores> {
   const cached = await getRedis()
     .get<LighthouseScores>(CACHE_KEY(strategy))
@@ -193,10 +168,6 @@ export async function getScores(strategy: Strategy = 'desktop'): Promise<Lightho
   }
 }
 
-/**
- * Always fetches from PSI and updates cache. Used by the cron handler.
- * Throws on PSI failure — caller handles per-strategy via Promise.allSettled.
- */
 export async function refreshScores(strategy: Strategy): Promise<LighthouseScores> {
   return fetchAndCache(strategy, true);
 }

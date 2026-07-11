@@ -84,9 +84,6 @@ export function Dock() {
     if (!target) return;
     const el = document.getElementById(target);
     if (!el) return;
-    // If the target is a <details> (Module) element it may be collapsed on
-    // mobile. Dispatch module:open so AppShell flips the open attribute.
-    // tagName check is class-name-agnostic — CSS Modules hashes class names.
     if (el.tagName === 'DETAILS') {
       dispatchModuleOpen(target);
     }

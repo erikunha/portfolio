@@ -1,23 +1,8 @@
 #!/usr/bin/env tsx
-/**
- * Bans raw hex color literals in global CSS outside app/css/theme.css.
- *
- * STANDARDS Ch.7: all brand colors live in app/css/theme.css under @theme as
- * the single source of truth; every other CSS file must reference a token via
- * `var(--color-...)`. A raw `#hex` elsewhere is palette drift.
- *
- * Replaces the pre-Tailwind-v4 lint-token-boundary / lint-no-magic-values pair
- * removed in the 2026-05-31 migration. The css-token-guard.sh hook kept
- * pointing at those deleted scripts and silently no-opped until the gate-health
- * meta-gate surfaced it (2026-06-17).
- *
- * Exit 1 (with file:line:hex list) on any violation; exit 0 when clean.
- */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Valid CSS hex color lengths only (3/4/6/8), bounded so #12345 is not a hit.
 const HEX = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})\b/g;
 
 export interface HexHit {
@@ -25,7 +10,6 @@ export interface HexHit {
   hex: string;
 }
 
-/** Blank out block-comment contents while preserving newlines (so line numbers hold). */
 function stripComments(css: string): string {
   return css.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
 }
@@ -42,12 +26,6 @@ export function findRawHex(css: string): HexHit[] {
   return out;
 }
 
-/**
- * Gate-integrity check: the token-boundary lint must scan something. An empty
- * file list (app/css/ missing or holding only theme.css) means zero violations
- * for the wrong reason and the gate passes vacuously, so treat it as an infra
- * failure rather than a clean pass.
- */
 export function assertScannable(
   dirExists: boolean,
   files: string[],

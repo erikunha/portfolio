@@ -1,10 +1,3 @@
-// __tests__/strip-next-polyfills.test.mjs
-// WS1: the polyfill-strip postinstall must FAIL LOUDLY when its target is
-// missing or unexpectedly shaped (a silent no-op let the Lighthouse Best-
-// Practices penalty silently return after a Next reorg), and must be
-// idempotent on re-install (the stripped file is tiny — the idempotency check
-// has to run BEFORE the size/shape assert, or a second install throws).
-
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -67,7 +60,6 @@ describe('strip-next-polyfills.mjs — hardened postinstall', () => {
     const full = writeTarget(stripped);
     const res = run();
     expect(res.status).toBe(0);
-    // Unchanged — the idempotency check ran before the size assert.
     expect(readFileSync(full, 'utf8')).toBe(stripped);
   });
 });

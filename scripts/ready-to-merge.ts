@@ -1,26 +1,4 @@
 #!/usr/bin/env tsx
-// Usage: pnpm ready-to-merge [pr-number]
-//
-// Pre-merge wrapper: runs the local CI chain (lint + typecheck + content
-// validate + client-naming + tests), the branch-protection gate, then the
-// PR comment gate. PR number is optional — when omitted, `check-pr-comments.ts`
-// infers it from the current branch via `gh pr view`.
-//
-//
-// Why the branch-protection check lives here and NOT in CI:
-//   The GitHub Actions GITHUB_TOKEN cannot read the
-//   `/branches/{branch}/protection` endpoint — it requires repo-admin token
-//   power (a PAT or GitHub App installation token), and `administration` is
-//   not even a grantable GITHUB_TOKEN permission. Run locally, `gh` carries
-//   the developer's own admin auth, so the check verifiably activates here.
-//   See DECISIONS.md (audit standard #4: no dead-code security theater).
-//
-// Why a wrapper script vs. a direct pnpm chain:
-//   pnpm ready-to-merge 42  →  pnpm interprets `42` as a pnpm flag, not a
-//   script arg. The standard pnpm workaround is `pnpm ready-to-merge -- 42`
-//   but that's a footgun: omitting `--` silently passes nothing through
-//   and check-pr-comments.ts auto-infers from branch (which may be the
-//   wrong PR). This wrapper makes positional args work natively.
 
 import { execFileSync } from 'node:child_process';
 
@@ -42,9 +20,6 @@ try {
   process.exit(1);
 }
 
-// claude-review gate — AI agents only. The repo owner may skip by calling
-// gh pr merge directly without running this script. Requires the latest
-// /claude-review verdict to be Approve, on the current head (not stale).
 const claudeArgs = ['tsx', 'scripts/check-claude-approval.ts', ...(prNumber ? [prNumber] : [])];
 try {
   execFileSync('pnpm', claudeArgs, { stdio: 'inherit' });
@@ -60,14 +35,11 @@ try {
   process.exit(1);
 }
 
-// PR metrics — informational, does not gate. Surfaces cycle count so multi-round
-// review cycles are visible at merge time as a signal about upstream process health.
 try {
   execFileSync('pnpm', ['tsx', 'scripts/pr-metrics.ts', ...(prNumber ? [prNumber] : [])], {
     stdio: 'inherit',
   });
-} catch {
-  // Non-fatal: gh may not be authenticated in some envs. Skip silently.
-}
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
+} catch {}
 
 process.stdout.write('\n[ready-to-merge] OK — safe to gh pr merge.\n');

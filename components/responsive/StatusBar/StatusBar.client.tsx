@@ -11,9 +11,6 @@ function fmtClock(d: Date) {
 }
 
 export function StatusBar() {
-  // Empty string on first render — dynamicIO prohibits new Date() during
-  // prerender outside a Suspense boundary. suppressHydrationWarning on the
-  // span handles the server/client mismatch. The clock starts in useEffect.
   const [time, setTime] = useState('');
 
   useEffect(() => {
@@ -56,7 +53,6 @@ export function StatusBar() {
         <span className="text-tertiary-50 opacity-85">DEV_OS</span>
       </div>
       <div className="inline-flex items-center gap-1.5" aria-hidden>
-        {/* Signal bars */}
         <span className="inline-flex items-end gap-0.5">
           <i className="block w-[3px] bg-primary-500" style={{ height: 4 }} />
           <i className="block w-[3px] bg-primary-500" style={{ height: 7 }} />

@@ -8,30 +8,16 @@ import { Module } from '../../responsive/Module';
 
 const COMMITS = gitLog;
 
-// Shared graph glyphs — hoisted to module scope so the desktop and mobile
-// renderers don't each rebuild identical nodes per call. The two renderers
-// stay separate: their layouts genuinely differ (mobile reformats the date
-// and splits the role line).
 const g = (s: string): ReactNode => <span className="text-primary-500">{s}</span>;
 const PIPE = g('|');
 const STAR = g('*');
 
-// The graph rail: a `*` for the commit node, then a `|` for every following
-// visual line. Rendered as an absolutely-positioned gutter clipped to the
-// commit block's height, so exactly one glyph lands on each line-height slot —
-// wrapped continuation lines included. This is the part that survives wrapping:
-// the rail is decoupled from the text flow instead of prefixing each row. 48
-// pipes covers the tallest commit; the remainder is clipped by overflow-hidden.
 const RAIL = `*\n${'|\n'.repeat(48)}`;
 
 function renderCommitMobile(c: GitCommit, key: string): ReactNode {
   const hashShort = c.hash.slice(0, 7);
-  // "Sat Mar 1 09:42:11 2025 +0100" → "Sat Mar 1 2025"
   const dp = c.date.split(' ');
   const dateShort = `${dp[0]} ${dp[1]} ${dp[2]} ${dp[4]}`;
-  // Author line omitted (every commit is Erik's career — pure noise on mobile).
-  // Content is one pre-wrap flow at the inherited fixed line-height so the rail
-  // overlay stays aligned to every line, wrapped or not.
   return (
     <li key={key} className="relative pl-[1.7ch] pb-5 last:pb-0">
       <span
@@ -40,10 +26,6 @@ function renderCommitMobile(c: GitCommit, key: string): ReactNode {
       >
         {RAIL}
       </span>
-      {/* WHY: the rail overlay aligns one glyph per line by sharing this block's
-          line-height. Do NOT set `leading-*` on any inner span — it desyncs the
-          rail from that line down (invisible to unit tests; caught only by visual
-          regression). Keep all content at the inherited text-[13px]/leading-[1.5]. */}
       <div className="whitespace-pre-wrap break-words">
         <span className="text-primary-400">{'commit '}</span>
         <span className="text-primary-400 opacity-70">{hashShort}</span>

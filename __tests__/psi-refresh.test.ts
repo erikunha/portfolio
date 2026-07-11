@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const redisMockSet = vi.fn(async () => 'OK');
 const redisMockDel = vi.fn(async () => 1);
-const pipeExec = vi.fn(async () => [1, 1] as [number, number]); // [countAfterIncr, expireResult]
+const pipeExec = vi.fn(async () => [1, 1] as [number, number]);
 const redisMockPipeline = vi.fn(() => ({
   incr: vi.fn().mockReturnThis(),
   expire: vi.fn().mockReturnThis(),
@@ -73,18 +73,11 @@ describe('GET /api/psi-refresh', () => {
 
     expect(res.status).toBe(200);
     expect(redisMockSet).toHaveBeenCalledWith('meta:psi-last-run', expect.any(String));
-    // Verify the written value is a valid ISO timestamp
     const writtenValue = (redisMockSet.mock.calls[0] as unknown as [string, string])?.[1];
     expect(() => new Date(writtenValue).toISOString()).not.toThrow();
     expect(sendMock).not.toHaveBeenCalled();
   });
 
-  // WHY: partial failure (one strategy succeeded) writes the freshness key so a single
-  // transient mobile timeout does not flip /api/healthz to degraded. Total failure (below)
-  // is the only case that withholds the key. The Hobby plan caps the cron at once/day, so
-  // without this a single transient timeout would leave healthz degraded for ~a full day.
-  // Under consecutive-failure gating (threshold 3), a 1st failure does NOT email — only the
-  // freshness write and 500 status carry the signal.
   it('writes meta:psi-last-run but does NOT send a Resend alert on a 1st partial failure', async () => {
     const { refreshScores } = await import('@/lib/lighthouse-scores');
     const mockRefresh = vi.mocked(refreshScores);
@@ -97,7 +90,7 @@ describe('GET /api/psi-refresh', () => {
         fetchedAt: new Date().toISOString(),
       })
       .mockRejectedValueOnce(new Error('PSI API timeout'));
-    pipeExec.mockResolvedValue([1, 1]); // 1st consecutive failure — below threshold
+    pipeExec.mockResolvedValue([1, 1]);
 
     const { GET } = await import('@/app/api/psi-refresh/route');
     const res = await GET(makeRequest());
@@ -113,7 +106,7 @@ describe('GET /api/psi-refresh', () => {
     mockRefresh
       .mockRejectedValueOnce(new Error('desktop PSI timeout'))
       .mockRejectedValueOnce(new Error('mobile PSI timeout'));
-    pipeExec.mockResolvedValue([1, 1]); // 1st consecutive failure for both — below threshold
+    pipeExec.mockResolvedValue([1, 1]);
 
     const { GET } = await import('@/app/api/psi-refresh/route');
     const res = await GET(makeRequest());
@@ -149,10 +142,9 @@ describe('GET /api/psi-refresh', () => {
   it('skips alert and logs error when RESEND_API_KEY is not set (3rd consecutive failure)', async () => {
     vi.unstubAllEnvs();
     vi.stubEnv('CRON_SECRET', 'test-cron-secret');
-    // RESEND_API_KEY intentionally not set
     const { refreshScores } = await import('@/lib/lighthouse-scores');
     vi.mocked(refreshScores).mockRejectedValue(new Error('PSI API timeout'));
-    pipeExec.mockResolvedValue([3, 1]); // over threshold — would alert if a key were configured
+    pipeExec.mockResolvedValue([3, 1]);
     const { log } = await import('@/lib/log');
 
     const { GET } = await import('@/app/api/psi-refresh/route');
@@ -172,7 +164,7 @@ describe('GET /api/psi-refresh', () => {
     });
     const { refreshScores } = await import('@/lib/lighthouse-scores');
     vi.mocked(refreshScores).mockRejectedValue(new Error('PSI timeout'));
-    pipeExec.mockResolvedValue([3, 1]); // over threshold — triggers the alert send
+    pipeExec.mockResolvedValue([3, 1]);
     const { log } = await import('@/lib/log');
 
     const { GET } = await import('@/app/api/psi-refresh/route');
@@ -200,10 +192,10 @@ describe('GET /api/psi-refresh', () => {
       if (s === 'mobile') throw new Error('PSI API returned 500 for strategy=mobile: x');
       return { performance: 99, accessibility: 100, bestPractices: 95, seo: 100, fetchedAt: 'now' };
     });
-    pipeExec.mockResolvedValue([1, 1]); // 1st consecutive failure
+    pipeExec.mockResolvedValue([1, 1]);
     const { GET } = await import('@/app/api/psi-refresh/route');
     const res = await GET(makeRequest());
-    expect(res.status).toBe(500); // dashboard signal preserved
+    expect(res.status).toBe(500);
     expect(sendMock).not.toHaveBeenCalled();
   });
 
@@ -213,7 +205,7 @@ describe('GET /api/psi-refresh', () => {
       if (s === 'mobile') throw new Error('PSI API returned 500 for strategy=mobile: x');
       return { performance: 99, accessibility: 100, bestPractices: 95, seo: 100, fetchedAt: 'now' };
     });
-    pipeExec.mockResolvedValue([3, 1]); // 3rd consecutive failure
+    pipeExec.mockResolvedValue([3, 1]);
     const { GET } = await import('@/app/api/psi-refresh/route');
     await GET(makeRequest());
     expect(sendMock).toHaveBeenCalledTimes(1);
@@ -248,25 +240,22 @@ describe('GET /api/psi-refresh', () => {
     const { GET } = await import('@/app/api/psi-refresh/route');
     const res = await GET(makeRequest());
     expect(res.status).toBe(500);
-    expect(redisMockSet).toHaveBeenCalledWith('meta:psi-last-run', expect.any(String)); // freshness still written
-    expect(sendMock).not.toHaveBeenCalled(); // fail-quiet
+    expect(redisMockSet).toHaveBeenCalledWith('meta:psi-last-run', expect.any(String));
+    expect(sendMock).not.toHaveBeenCalled();
   });
 
   it('a Redis error on the first strategy does NOT skip the second strategy (per-strategy try/catch)', async () => {
-    // desktop succeeds → del(desktop) throws; mobile is at its 3rd consecutive
-    // failure. With a per-strategy try/catch, the desktop del error must not bury
-    // mobile's counter update, so mobile still reaches threshold and alerts.
     const { refreshScores } = await import('@/lib/lighthouse-scores');
     vi.mocked(refreshScores).mockImplementation(async (s) => {
       if (s === 'mobile') throw new Error('PSI API returned 500 for strategy=mobile: x');
       return { performance: 99, accessibility: 100, bestPractices: 95, seo: 100, fetchedAt: 'now' };
     });
-    redisMockDel.mockRejectedValueOnce(new Error('redis blip on desktop del')); // desktop op throws
-    pipeExec.mockResolvedValue([3, 1]); // mobile: 3rd consecutive failure
+    redisMockDel.mockRejectedValueOnce(new Error('redis blip on desktop del'));
+    pipeExec.mockResolvedValue([3, 1]);
     const { GET } = await import('@/app/api/psi-refresh/route');
     const res = await GET(makeRequest());
     expect(res.status).toBe(500);
-    expect(sendMock).toHaveBeenCalledTimes(1); // mobile still alerted despite desktop del error
+    expect(sendMock).toHaveBeenCalledTimes(1);
     const call = (sendMock.mock.calls[0] as unknown as [{ text: string }])?.[0];
     expect(call.text).toContain('mobile');
   });

@@ -1,5 +1,3 @@
-# Vendored from Semgrep registry p/owasp-top-ten @ 2026-06-19, content-pinned.
-# Source of truth is THIS file — registry-side changes do not affect CI.
 rules:
   - id: child-process-shell-injection
     languages: [typescript, javascript]
@@ -8,13 +6,6 @@ rules:
       Untrusted input flows into a shell command (exec). Use execFile with an
       argv array, or validate/escape the input. OWASP A03:2021 Injection.
     mode: taint
-    # WHY: $REQ is intentionally broad for the pilot — it treats every expression
-    # as a taint source (constants included; the pattern does not exclude them),
-    # so this fires on any exec($CMD, ...) call regardless of whether $CMD is a
-    # constant or a runtime value, rather than tracing a real request flow. The
-    # pilot errs toward catching more. Before the promotion-to-blocking gate,
-    # tighten this to real input sources (req.query, process.argv, route params)
-    # to reduce false positives.
     pattern-sources:
       - pattern: $REQ
     pattern-sinks:

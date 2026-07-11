@@ -1,4 +1,3 @@
-// components/responsive/MobileTitleBar/MobileTitleBar.client.tsx
 'use client';
 
 import { WindowChrome } from '@/design-system';

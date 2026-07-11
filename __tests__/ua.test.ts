@@ -1,8 +1,3 @@
-// __tests__/ua.test.ts
-// Table-driven unit tests for getIsMobile(). next/headers is mocked per-test
-// via vi.mocked so each case controls the returned UA string independently.
-// server-only is globally aliased to an empty module in vitest.config.ts.
-
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/headers', () => ({
@@ -13,8 +8,6 @@ import { headers } from 'next/headers';
 import { getIsMobile } from '@/lib/ua';
 
 function mockUA(ua: string) {
-  // Cast through unknown — the full Headers interface is not needed under test;
-  // only the `get` method is exercised by getIsMobile().
   vi.mocked(headers).mockResolvedValue({ get: () => ua } as unknown as Awaited<
     ReturnType<typeof headers>
   >);
@@ -52,7 +45,6 @@ describe('getIsMobile()', () => {
   });
 
   it('returns false for an iPad in desktop mode (no "Mobile" token)', async () => {
-    // iPads in desktop mode omit the "Mobile" token; the regex should not match.
     mockUA(
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
     );

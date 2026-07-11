@@ -1,18 +1,4 @@
 #!/usr/bin/env tsx
-// Usage: pnpm tsx scripts/check-claude-approval.ts [pr-number]
-//
-// Called by ready-to-merge.ts — not run directly in CI.
-// Checks that the latest claude[bot] (/claude-review) overview verdict on the PR
-// is Approve, and that the review was run against the CURRENT head commit.
-// Exits 0 if approved-on-HEAD, 1 otherwise.
-//
-// Replaces the former Copilot gate (check-copilot-approval.ts): as of 2026-06-20
-// claude-review is the sole AI reviewer. This gate is stronger than the old one —
-// the old gate only checked that a Copilot review EXISTED; this one checks the
-// VERDICT and that it is not stale against a newer head.
-//
-// This is an AI agent harness tool. The repo owner may merge at any time without
-// running this check. Only AI agents are bound by the rule.
 
 import { execFile } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
@@ -23,9 +9,6 @@ const CLAUDE_LOGIN = 'claude[bot]';
 
 export type ClaudeVerdict = 'approve' | 'request-changes' | 'reject' | 'none';
 
-// Parse the bold verdict line from a claude-review overview comment. Only a BOLD
-// (`**…**`) verdict counts — prose mentioning "approve" must never be read as a
-// verdict. Checked reject → request-changes → approve so the most-blocking wins.
 export function parseClaudeVerdict(body: string): ClaudeVerdict {
   if (/\*\*[^*]*\breject\b[^*]*\*\*/i.test(body)) return 'reject';
   if (/\*\*[^*]*\brequest changes\b[^*]*\*\*/i.test(body)) return 'request-changes';
@@ -33,12 +16,6 @@ export function parseClaudeVerdict(body: string): ClaudeVerdict {
   return 'none';
 }
 
-// Extract the head SHA the review states it ran against. The overview phrasing
-// varies a lot ("Reviewed at head commit `sha`.", "Reviewed at HEAD `sha`.",
-// "(head `sha`)", "the committed HEAD (`sha`):"), so match the first backticked
-// 7-40 hex token that appears within a short window after the word "head" — the
-// window absorbs separators like " commit ", " (", ": " without matching an
-// unrelated SHA quoted far away from the head declaration.
 export function extractReviewedSha(body: string): string | null {
   const sha = body.match(/\bhead\b[^`\n]{0,24}`([0-9a-f]{7,40})`/i)?.[1];
   return sha ? sha.toLowerCase() : null;
@@ -46,11 +23,6 @@ export function extractReviewedSha(body: string): string | null {
 
 export type GateResult = { ok: boolean; reason: string };
 
-// Pure gate decision. Fail-closed: only a bold Approve whose stated head SHA is a
-// prefix of the current HEAD passes. A MISSING SHA fails — the claude-review system
-// prompt requires the head SHA in every overview, so its absence means an
-// in-progress comment or a format drift, neither of which is a confirmed
-// Approve-on-HEAD. A visible block (re-run /claude-review) beats a silent pass.
 export function evaluateGate(
   verdict: ClaudeVerdict,
   reviewedSha: string | null,
@@ -60,7 +32,6 @@ export function evaluateGate(
   if (verdict === 'reject' || verdict === 'request-changes') {
     return { ok: false, reason: `verdict is "${verdict}" — address findings and re-review` };
   }
-  // verdict === 'approve'
   if (!reviewedSha) {
     return {
       ok: false,
@@ -136,7 +107,6 @@ async function resolvePrNumber(passed: string | undefined): Promise<number> {
   return n;
 }
 
-// Only run the gate when invoked directly, not when imported by the unit test.
 if (
   typeof process.argv[1] === 'string' &&
   import.meta.url === pathToFileURL(process.argv[1]).href

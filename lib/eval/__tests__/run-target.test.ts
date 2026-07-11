@@ -1,12 +1,3 @@
-// lib/eval/__tests__/run-target.test.ts
-// Behavioral test for the single-run target invocation (lib/eval/run-target.ts).
-// Mocks the `ai` SDK generateText so NO Gateway call is made, and asserts:
-//   - runTarget composes systemText (system) + prompt and calls the SDK once
-//   - it returns { output, inputTokens, outputTokens, errored:false }
-//   - a thrown SDK error surfaces as { errored:true, detail } (never silently
-//     passes as a successful empty run)
-//   - missing usage falls back to 0 tokens
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockGenerateText } = vi.hoisted(() => ({ mockGenerateText: vi.fn() }));
@@ -39,8 +30,6 @@ describe('lib/eval/run-target runTarget', () => {
     expect(arg.model).toBe('anthropic/claude-haiku-4-5');
     expect(arg.system).toBe(testCase.target.systemText);
     expect(arg.prompt).toBe(testCase.prompt);
-    // Bounded, deterministic invocation: caps per-run spend (cost projection
-    // holds) and removes sampling noise from the measured prompt-adherence.
     expect(arg.maxOutputTokens).toBe(512);
     expect(arg.temperature).toBe(0);
     expect(r.errored).toBe(false);
@@ -62,7 +51,6 @@ describe('lib/eval/run-target runTarget', () => {
     const r = await runTarget(testCase, { model: 'm' });
     expect(r.errored).toBe(true);
     expect(r.detail).toContain('gateway 503');
-    // an errored run produces no usable output and contributes zero spend
     expect(r.output).toBe('');
     expect(r.inputTokens).toBe(0);
     expect(r.outputTokens).toBe(0);

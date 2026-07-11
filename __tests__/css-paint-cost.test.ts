@@ -1,14 +1,3 @@
-// __tests__/css-paint-cost.test.ts
-// Behavioral test: the shell command hint must not advertise an
-// `ask <question>` command — proven by rendering the real InteractiveShell
-// and inspecting its committed DOM.
-//
-// The paint-cost CSS rules (no text-shadow / no optimizeLegibility on body,
-// crt-flicker duration >= 3s) are build assets. jsdom does not evaluate
-// stylesheet paint properties or @keyframes timing, so the shipped
-// stylesheet's text is the strongest verifiable signal — those three reads
-// carry behavioral-test-allow tags.
-
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { createElement } from 'react';
@@ -45,8 +34,6 @@ describe('shell command hint', () => {
     mounted = await mountClient(createElement(InteractiveShell));
     const { container } = mounted;
 
-    // The desktop command hint is rendered; it must route free-form input to
-    // Claude implicitly, never advertise an explicit `ask <question>` verb.
     const hint = container.querySelector('[data-testid="shell-commands"]');
     expect(hint).not.toBeNull();
     expect(hint?.textContent ?? '').not.toContain('ask <question>');
@@ -57,8 +44,6 @@ describe('paint cost CSS (shipped build assets)', () => {
   it('the body rule carries no text-shadow and no optimizeLegibility', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate paint cost
     const base = readFileSync(path.resolve(__dirname, '../app/css/base.css'), 'utf-8');
-    // Leading \s* tolerates any indentation level; the @layer base wrapper was
-    // removed during the CSS Modules migration.
     const bodyBlock = base.match(/^\s*html,\s*\n\s*body\s*\{[^}]+\}/m)?.[0];
     expect(bodyBlock).toBeDefined();
     expect(bodyBlock).not.toContain('text-shadow');

@@ -11,8 +11,8 @@ vi.mock('@/lib/rate-limit', () => ({
   getClientIp: getClientIpMock,
 }));
 
-const FRESH_TIMESTAMP = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1h ago
-const STALE_TIMESTAMP = new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(); // 26h ago
+const FRESH_TIMESTAMP = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+const STALE_TIMESTAMP = new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString();
 
 function makeMockRequest(): NextRequest {
   return new Request('http://localhost/api/healthz') as unknown as NextRequest;
@@ -23,7 +23,7 @@ describe('GET /api/healthz', () => {
     vi.resetModules();
     redisMockGet.mockReset();
     limitMock.mockReset();
-    limitMock.mockResolvedValue({ success: true }); // default: allow
+    limitMock.mockResolvedValue({ success: true });
     getClientIpMock.mockReturnValue('1.2.3.4');
   });
 
@@ -130,9 +130,7 @@ describe('GET /api/healthz', () => {
     redisMockGet.mockResolvedValue(FRESH_TIMESTAMP);
 
     const { GET } = await import('@/app/api/healthz/route');
-    // First call — cold cache, hits Redis
     await GET(makeMockRequest());
-    // Second call — warm cache, must NOT hit Redis again
     const res = await GET(makeMockRequest());
 
     expect(res.status).toBe(200);

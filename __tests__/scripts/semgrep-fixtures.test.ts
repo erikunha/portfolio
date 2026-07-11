@@ -6,9 +6,7 @@ const root = process.cwd();
 describe('semgrep fixtures + vendored rules', () => {
   it('vulnerable fixture contains an injection sink and a hardcoded secret', () => {
     const src = readFileSync(`${root}/tests/fixtures/semgrep/vulnerable.ts`, 'utf8');
-    // injection sink: user input flows into a child_process exec
     expect(src).toMatch(/exec\(/);
-    // hardcoded secret marker the secrets ruleset keys on
     expect(src).toMatch(/sk_test_/);
   });
 

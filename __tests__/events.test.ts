@@ -1,8 +1,3 @@
-// __tests__/events.test.ts
-// Behavioral tests for lib/events.ts.
-// Locks down: dispatchModuleOpen fires the correct CustomEvent on window;
-// the SSR guard (typeof window === 'undefined') returns without throwing.
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { dispatchModuleOpen } from '@/lib/events';
 
@@ -43,7 +38,6 @@ describe('dispatchModuleOpen', () => {
 
   it('does not dispatch when window is undefined (SSR guard)', () => {
     const originalWindow = globalThis.window;
-    // Simulate SSR: remove window from global scope
     vi.stubGlobal('window', undefined);
     try {
       expect(() => dispatchModuleOpen('ssr')).not.toThrow();

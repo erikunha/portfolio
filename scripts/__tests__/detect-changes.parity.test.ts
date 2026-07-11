@@ -1,13 +1,9 @@
-// scripts/__tests__/detect-changes.parity.test.ts
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-// Use resolve(process.cwd(), ...) instead of new URL(...).pathname because Vitest's
-// import.meta.url resolves to the compiled output path, not the source tree, causing
-// the runner to be unfindable. process.cwd() is the repo root in Vitest's environment.
 const runner = resolve(process.cwd(), 'scripts/detect-changes.mjs');
 
 let repo: string;
@@ -18,7 +14,6 @@ const write = (rel: string, body: string) => {
   writeFileSync(abs, body);
 };
 
-// Seed the BASE tree, commit; apply `mutate`, commit HEAD; run the runner; parse.
 function runScenario(seed: () => void, mutate: () => void) {
   seed();
   git(['add', '-A']);

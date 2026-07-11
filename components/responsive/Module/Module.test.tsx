@@ -1,8 +1,3 @@
-// components/responsive/Module/Module.test.tsx
-// Behavioral tests for Module — pure Server Component.
-// Uses renderToStaticMarkup + DOMParser (same pattern as HeroStats.test.tsx)
-// to avoid jsdom hydration overhead for an RSC with no client effects.
-
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { Module } from './Module';

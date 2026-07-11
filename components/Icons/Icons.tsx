@@ -1,8 +1,3 @@
-// components/Icons/Icons.tsx
-// Inline SVG icons used in section headers. Paths lifted verbatim from
-// prototype/Portfolio.html. Each icon renders at 14×14 with a 1.4 stroke
-// in the signal colour via `currentColor`.
-
 import type { JSX } from 'react';
 
 type IconProps = JSX.IntrinsicElements['svg'];
@@ -18,7 +13,6 @@ const baseProps: IconProps = {
   focusable: false,
 };
 
-// CAT README.MD — file with 3 lines
 export function IconReadme() {
   return (
     <svg {...baseProps}>
@@ -29,7 +23,6 @@ export function IconReadme() {
   );
 }
 
-// MAN ERIK(1) — file with 3 lines (slightly different rows)
 export function IconManPage() {
   return (
     <svg {...baseProps}>
@@ -40,7 +33,6 @@ export function IconManPage() {
   );
 }
 
-// CAT ~/.NOW — clock
 export function IconNow() {
   return (
     <svg {...baseProps}>
@@ -50,7 +42,6 @@ export function IconNow() {
   );
 }
 
-// LS -LA ./PROJECTS — folder
 export function IconProjects() {
   return (
     <svg {...baseProps}>
@@ -59,7 +50,6 @@ export function IconProjects() {
   );
 }
 
-// GIT LOG — clock (mockup reuses the clock for the log timestamp framing)
 export function IconGitLog() {
   return (
     <svg {...baseProps}>
@@ -69,7 +59,6 @@ export function IconGitLog() {
   );
 }
 
-// NPM LIST --GLOBAL — list
 export function IconNpmStack() {
   return (
     <svg {...baseProps}>
@@ -78,7 +67,6 @@ export function IconNpmStack() {
   );
 }
 
-// SYS_HEALTH_MONITOR — heart
 export function IconSysHealth() {
   return (
     <svg {...baseProps}>
@@ -87,7 +75,6 @@ export function IconSysHealth() {
   );
 }
 
-// ./EXEC INTERACTIVE_SHELL — terminal window
 export function IconShell() {
   return (
     <svg {...baseProps}>
@@ -97,7 +84,6 @@ export function IconShell() {
   );
 }
 
-// LIVE_PERF.JSON — line chart
 export function IconLivePerf() {
   return (
     <svg {...baseProps}>
@@ -107,7 +93,6 @@ export function IconLivePerf() {
   );
 }
 
-// PERF_RECEIPTS — bar chart
 export function IconPerfReceipts() {
   return (
     <svg {...baseProps}>
@@ -116,7 +101,6 @@ export function IconPerfReceipts() {
   );
 }
 
-// CAT ~/.GUITAR_RIG — guitar pick / J-shape
 export function IconGuitar() {
   return (
     <svg {...baseProps}>
@@ -125,7 +109,6 @@ export function IconGuitar() {
   );
 }
 
-// CAT ~/.VISA — globe with meridians
 export function IconVisa() {
   return (
     <svg {...baseProps}>
@@ -135,7 +118,6 @@ export function IconVisa() {
   );
 }
 
-// CAT ~/.CREDENTIALS — wallet / card
 export function IconCredentials() {
   return (
     <svg {...baseProps}>
@@ -146,7 +128,6 @@ export function IconCredentials() {
   );
 }
 
-// CAT ~/.COMMUNITY — two figures
 export function IconCommunity() {
   return (
     <svg {...baseProps}>
@@ -158,7 +139,6 @@ export function IconCommunity() {
   );
 }
 
-// HOTTEST_TAKES — flame
 export function IconHottestTakes() {
   return (
     <svg {...baseProps}>
@@ -167,7 +147,6 @@ export function IconHottestTakes() {
   );
 }
 
-// LS -LA ~/RESPONSIBILITIES — padlock
 export function IconResponsibilities() {
   return (
     <svg {...baseProps}>
@@ -178,7 +157,6 @@ export function IconResponsibilities() {
   );
 }
 
-// CAT ~/.UNKNOWNS — question mark in circle
 export function IconUnknowns() {
   return (
     <svg {...baseProps}>
@@ -188,7 +166,6 @@ export function IconUnknowns() {
   );
 }
 
-// ASK_EVAL.JSON — gauge / checkmark dial
 export function IconAiMetrics() {
   return (
     <svg {...baseProps}>
@@ -199,7 +176,6 @@ export function IconAiMetrics() {
   );
 }
 
-// SUDO CONTACT --INIT — play triangle (filled)
 export function IconContact() {
   return (
     <svg
@@ -216,7 +192,6 @@ export function IconContact() {
   );
 }
 
-// ./MIX --LIVE — three fader bars at different heights
 export function IconMixer() {
   return (
     <svg {...baseProps}>

@@ -1,17 +1,4 @@
 #!/usr/bin/env tsx
-// scripts/review-learn.ts
-//
-// The learning step (M5), propose-only. Reads the append-only findings archive
-// (`.review-findings-archive.jsonl`, written by review:stamp) and surfaces
-// finding-classes that have RECURRED across multiple review cycles. A class that
-// keeps coming back is a candidate for a permanent gate/test so it stops being
-// found by hand.
-//
-// HARD BOUNDARY: this only PROPOSES. It never creates a gate, edits config, or
-// runs automatically. There is deliberately NO Stop hook wiring: an auto-gate-
-// proposing loop floods the platform with noisy gates (the monotonic-growth
-// disease the rule-hygiene protocol fights). A human reads the proposals and
-// decides. Advisory only; always exits 0.
 
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -33,11 +20,6 @@ export interface GateProposal {
   cycles: number;
 }
 
-/**
- * Group archived findings by their stable id and count the DISTINCT cycles each
- * appeared in. Any class recurring across >= minCycles cycles is proposed as a
- * gate candidate, most-recurrent first.
- */
 export function proposeGates(records: ArchivedFinding[], minCycles: number): GateProposal[] {
   const byId = new Map<string, { rec: ArchivedFinding; cycles: Set<string> }>();
   for (const r of records) {
@@ -58,15 +40,9 @@ export function proposeGates(records: ArchivedFinding[], minCycles: number): Gat
 }
 
 export const INBOX_PATH = '.review-learnings.md';
-// Auto-trigger guardrails (flood mitigation): a stricter evidence bar than the
-// manual default, and a hard cap on how many proposals one session can surface.
 export const AUTO_MIN_CYCLES = 3;
 export const AUTO_CAP = 3;
 
-/**
- * Of the proposals, the ones not already recorded in the inbox (dedup by id),
- * capped. Pure, so the SessionEnd auto-path is testable without a live session.
- */
 export function selectNewProposals(
   proposals: GateProposal[],
   existingInbox: string,
@@ -81,10 +57,6 @@ export function readArchive(path = ARCHIVE_PATH): ArchivedFinding[] {
   for (const line of readFileSync(path, 'utf8').split('\n')) {
     const trimmed = line.trim();
     if (trimmed === '') continue;
-    // Tolerant: skip malformed lines (partial writes, truncation, concurrent
-    // appends) — same posture as readTranscript. Zod safeParse guards SHAPE, not
-    // JSON syntax, so an unparseable line must be caught here or it crashes
-    // readArchive and the SessionEnd hook that calls it.
     let raw: unknown;
     try {
       raw = JSON.parse(trimmed);
@@ -97,19 +69,13 @@ export function readArchive(path = ARCHIVE_PATH): ArchivedFinding[] {
   return out;
 }
 
-/**
- * SessionEnd auto-path: append NEW high-evidence proposals to the inbox for the
- * human to review later. Silent unless it records something; never creates a
- * gate, never blocks (the hook exits 0 regardless). Flood-mitigated by design:
- * stricter threshold than manual, capped, append-only, human-gated.
- */
 function runAuto(): void {
   const records = readArchive();
-  if (records.length === 0) return; // no data yet -> silent
+  if (records.length === 0) return;
   const proposals = proposeGates(records, AUTO_MIN_CYCLES);
   const existing = existsSync(INBOX_PATH) ? readFileSync(INBOX_PATH, 'utf8') : '';
   const fresh = selectNewProposals(proposals, existing, AUTO_CAP);
-  if (fresh.length === 0) return; // nothing new -> silent
+  if (fresh.length === 0) return;
   const stamp = new Date().toISOString();
   const block = `\n## ${stamp} — recurring finding-classes (>= ${AUTO_MIN_CYCLES} cycles)\n${fresh
     .map(

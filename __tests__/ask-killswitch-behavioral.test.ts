@@ -1,18 +1,6 @@
-// __tests__/ask-killswitch-behavioral.test.ts
-// Behavioral replacement for the prior source-grep ask-killswitch.test.ts.
-//
-// Verifies the actual kill-switch contract by calling POST /api/ask with
-// each off-keyword AND asserts that the dependencies that SHOULD NOT have
-// been touched (rate-limit, Anthropic, persistence) were not called. The
-// prior source-grep version checked the symbol order by string index — it
-// would have passed even if the kill-switch code was dead-branched or
-// commented out.
-
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The route reaches Anthropic through the Vercel AI Gateway via the `ai`
-// package's `streamText`. `mockStreamText` is the upstream seam.
 const mockStreamText = vi.fn();
 const rateLimitMock = vi.fn(async () => ({ success: true }));
 const reserveBudgetMock = vi.fn(async () => ({
@@ -27,8 +15,6 @@ vi.mock('ai', () => ({
   streamText: mockStreamText,
 }));
 
-// AI SDK streamText result shape: textStream is AsyncIterable; usage is an
-// end-of-stream promise.
 function makeStreamTextResult(text = 'ok') {
   return {
     textStream: {
@@ -93,9 +79,6 @@ describe('/api/ask kill switch — behavioral (PR 7, replaces source-grep)', () 
       expect(res.status).toBe(503);
       const body = (await res.json()) as { error: string };
       expect(body.error.toLowerCase()).toContain('email erikhenriquealvescunha@gmail.com');
-      // Most important assertion: NONE of the downstream dependencies fired.
-      // The prior source-grep test could not catch a regression that
-      // moved the kill check to AFTER any of these.
       expect(rateLimitMock).not.toHaveBeenCalled();
       expect(reserveBudgetMock).not.toHaveBeenCalled();
       expect(mockStreamText).not.toHaveBeenCalled();
@@ -133,8 +116,6 @@ describe('/api/ask kill switch — behavioral (PR 7, replaces source-grep)', () 
     expect(reserveBudgetMock).toHaveBeenCalledOnce();
     expect(mockStreamText).toHaveBeenCalledOnce();
 
-    // Drain the stream so the persistAskInteraction promise in `finally`
-    // can settle without leaking microtasks.
     const reader = res.body?.getReader();
     if (reader) {
       while (true) {

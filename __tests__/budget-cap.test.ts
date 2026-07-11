@@ -1,21 +1,5 @@
-// __tests__/budget-cap.test.ts
-// Behavioral tests for the reservation-pattern monthly token budget cap.
-//
-// Reservation pattern (replaces the prior check-then-increment pattern that
-// could undercount on client disconnect):
-//   1. reserveBudget(maxOutputTokens) INCRBYs the counter by
-//      RESERVED_INPUT_TOKENS + maxOutputTokens BEFORE the Anthropic call.
-//   2. If the reservation crosses 100%, refund and reject.
-//   3. After the stream ends (success OR error), settleBudget(reserved, in, out)
-//      DECRBYs by (reserved - actual) to refund unused tokens.
-//
-// These are behavioral assertions against the rate-limit module — they exercise
-// the actual Redis pipeline contract, not source layout.
-
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// In-memory Redis stub. Holds a single counter so we can verify reserve/settle
-// arithmetic deterministically.
 const counter: { value: number } = { value: 0 };
 const decrbyMock = vi.fn(async (_key: string, n: number): Promise<number> => {
   counter.value -= n;
@@ -40,7 +24,6 @@ vi.mock('@upstash/redis', () => ({
   },
 }));
 
-// Skip the Upstash ratelimit wrapper — not exercised here.
 vi.mock('@upstash/ratelimit', () => {
   function Ratelimit() {
     return {};
@@ -49,7 +32,6 @@ vi.mock('@upstash/ratelimit', () => {
   return { Ratelimit };
 });
 
-// Quiet the logger.
 vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
@@ -60,10 +42,6 @@ describe('budget reservation pattern', () => {
     vi.clearAllMocks();
   });
 
-  // Reservation = RESERVED_INPUT_TOKENS (2200) + maxOutputTokens.
-  // SYSTEM is ~1500 tokens cache-cold. The reservation is 2200 so
-  // actual ≤ reserved holds AND settleBudget refunds a positive delta.
-  // See lib/rate-limit.ts file comment.
   const INPUT_RESERVATION = 2200;
 
   it('reserves RESERVED_INPUT_TOKENS + maxOutputTokens upfront and allows within cap', async () => {
@@ -75,14 +53,11 @@ describe('budget reservation pattern', () => {
   });
 
   it('rejects and refunds the reservation when it would cross the 3M cap', async () => {
-    // Place the counter 1k away from the cap so any reservation > 1k crosses.
     counter.value = 2_999_000;
     const { reserveBudget } = await import('@/lib/rate-limit');
     const result = await reserveBudget(512);
     expect(result.allowed).toBe(false);
     expect(result.reserved).toBe(0);
-    // The counter must be restored — fail-closed on the user side, but the
-    // counter accounting must not stay artificially inflated.
     expect(decrbyMock).toHaveBeenCalledWith(
       expect.stringMatching(/ask:tokens:/),
       INPUT_RESERVATION + 512,
@@ -94,16 +69,14 @@ describe('budget reservation pattern', () => {
     const result = await reserveBudget(512);
     const { reserved, budgetKey } = result;
     decrbyMock.mockClear();
-    await settleBudget(reserved, /*actualIn*/ 120, /*actualOut*/ 80, budgetKey);
+    await settleBudget(reserved, 120, 80, budgetKey);
     expect(decrbyMock).toHaveBeenCalledWith(expect.stringMatching(/ask:tokens:/), reserved - 200);
   });
 
   it('settleBudget is a no-op when actual >= reserved (defensive)', async () => {
     const { settleBudget } = await import('@/lib/rate-limit');
     decrbyMock.mockClear();
-    // Pass actuals that intentionally exceed an arbitrary reservation. The
-    // defensive branch (no negative refund) is what we're asserting.
-    await settleBudget(INPUT_RESERVATION + 512, /*in*/ 2500, /*out*/ 600, 'ask:tokens:test');
+    await settleBudget(INPUT_RESERVATION + 512, 2500, 600, 'ask:tokens:test');
     expect(decrbyMock).not.toHaveBeenCalled();
   });
 

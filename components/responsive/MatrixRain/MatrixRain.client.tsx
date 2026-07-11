@@ -22,7 +22,6 @@ type RainCfg = {
   tailFade?: string;
   className?: string;
   style?: React.CSSProperties;
-  /** if provided, rain only runs while this ref is intersecting */
   watchRef?: React.RefObject<HTMLElement | null>;
 };
 
@@ -38,10 +37,6 @@ export function MatrixRain({
 }: RainCfg) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Live tunables read by the rAF loop each frame. Holding them in a ref keeps
-  // the animation effect's dependency array structural (`[watchRef]` only), so
-  // an incidental prop change (e.g. a parent re-render passing a new color)
-  // updates the ref WITHOUT tearing down and restarting the loop.
   const tunablesRef = useRef<RainTunables>({
     fontSize,
     speed,
@@ -49,10 +44,6 @@ export function MatrixRain({
     bodyColor,
     tailFade,
   });
-  // Sync props → ref in a layout effect so this is an explicit side effect,
-  // not an accidental render-body mutation. No dep array: runs every render,
-  // matching the frequency of the old inline assignment, but fires before paint
-  // so the next rAF frame always sees current tunables.
   useLayoutEffect(() => {
     tunablesRef.current = { fontSize, speed, headColor, bodyColor, tailFade };
   });
@@ -74,7 +65,6 @@ export function MatrixRain({
     let running = true;
     let raf = 0;
     let last = 0;
-    // cached CSS dimensions — updated in resize(), used in frame() without layout query
     let w = 0;
     let h = 0;
 
@@ -146,9 +136,6 @@ export function MatrixRain({
       }
     }
 
-    // Tracks whether the watchRef element is currently in the viewport.
-    // onMotionChange checks this so re-enabling motion doesn't start the canvas
-    // loop while the element is off-screen (only matters when watchRef is set).
     let isIntersecting = false;
 
     const onMotionChange = (e: Event) => {
@@ -156,18 +143,15 @@ export function MatrixRain({
       if (!detail || typeof (detail as { on?: unknown }).on !== 'boolean') return;
       const on = (detail as { on: boolean }).on;
       if (on) {
-        // Resume only when IO-gating is satisfied — skip if off-screen.
         if (!watchRef || isIntersecting) resume();
       } else {
         pause();
-        // Clear to black so the frozen frame isn't visible against the background.
         ctxEl.fillStyle = '#000';
         ctxEl.fillRect(0, 0, w, h);
       }
     };
     window.addEventListener('motionchange', onMotionChange);
 
-    // Don't start the loop if motion is already disabled at mount.
     const motionOff = !readMotion();
 
     if (watchRef) {
@@ -193,13 +177,8 @@ export function MatrixRain({
           window.removeEventListener('motionchange', onMotionChange);
         };
       }
-      // fallback if no IO support — start immediately
       if (!motionOff) resume();
     } else {
-      // Defer the 22fps canvas loop until the browser is idle so it doesn't
-      // contend for main-thread time during LCP/TBT measurement on mobile.
-      // requestIdleCallback yields after LCP on real loads; setTimeout fallback
-      // for environments without it. Canvas already painted black via resize().
       type IdleWindow = Window & {
         requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
         cancelIdleCallback?: (handle: number) => void;
@@ -244,9 +223,6 @@ export function MatrixRain({
       window.removeEventListener('resize', debouncedResize);
       window.removeEventListener('motionchange', onMotionChange);
     };
-    // Only `watchRef` is structural — the visual tunables (fontSize, speed,
-    // colors, tailFade) are read from tunablesRef each frame, so changing them
-    // never re-runs this effect (no loop teardown/restart).
   }, [watchRef]);
 
   return (

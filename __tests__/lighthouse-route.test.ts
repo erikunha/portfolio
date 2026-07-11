@@ -1,9 +1,3 @@
-// __tests__/lighthouse-route.test.ts
-// Behavioral tests for app/api/lighthouse/route.ts.
-// Locks down: GET returns scores JSON with cache-control headers on success;
-// GET returns fallback with no-store when getScores throws;
-// cache-control is no-store when scores are fallback (isFallback check).
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const cachedScores = {
@@ -13,9 +7,6 @@ const cachedScores = {
   seo: 100,
   fetchedAt: '2026-01-01T00:00:00.000Z',
 };
-
-// LIGHTHOUSE_FALLBACK has fetchedAt = '—' (distinguishes fallback from real data).
-// We'll import LIGHTHOUSE_FALLBACK from the module so we get the canonical value.
 
 vi.mock('@/lib/lighthouse-scores', () => ({
   getScores: vi.fn(),

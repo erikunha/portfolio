@@ -1,10 +1,3 @@
-// __tests__/boot-animation-advanced.test.ts
-// Behavioral tests for advanced boot-animation paths:
-//   - runBoot cancel path: stops DOM mutation after cancel()
-//   - pauseDialog / resumeDialog: pauses and resumes typing tick
-//   - onFirstLoop callback fires after first complete dialog cycle
-//   - buildDesktopOnFirstLoop: fires sysfail events, pauses dialog, schedules resume
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type BootClasses,
@@ -53,14 +46,11 @@ describe('runBoot — cancel path', () => {
     const container = document.createElement('div');
     const ctrl = runBoot(container, [['boot line']], ['Wake up, Neo...'], cls, fastOpts);
 
-    // Let a small amount of time pass for the initial boot to begin
     await vi.advanceTimersByTimeAsync(20);
     const countAfterStart = container.childElementCount;
 
-    // Cancel — no more timers should fire
     ctrl.cancel();
 
-    // Advance a lot more time — nothing should append
     await vi.advanceTimersByTimeAsync(5000);
     expect(container.childElementCount).toBe(countAfterStart);
   });
@@ -69,10 +59,9 @@ describe('runBoot — cancel path', () => {
     const container = document.createElement('div');
     const ctrl = runBoot(container, [['line']], ['Neo...'], cls, {
       ...fastOpts,
-      startMs: 50, // delay start so we can cancel before first line
+      startMs: 50,
     });
 
-    // Cancel before startMs elapses — nothing should render at all
     ctrl.cancel();
     await vi.advanceTimersByTimeAsync(5000);
     expect(container.childElementCount).toBe(0);
@@ -93,19 +82,14 @@ describe('runBoot — pauseDialog / resumeDialog', () => {
     const container = document.createElement('div');
     const ctrl = runBoot(container, [['line']], ['Hello'], cls, fastOpts);
 
-    // Advance far enough for the animation to fully proceed
     await vi.advanceTimersByTimeAsync(600);
 
-    // pauseDialog sets the flag; should not throw
     expect(() => ctrl.pauseDialog()).not.toThrow();
 
-    // Advance while paused — no new timers should fire (dialogPaused=true)
     await vi.advanceTimersByTimeAsync(1000);
 
-    // resumeDialog clears the flag and calls dialogResumeFn if set
     expect(() => ctrl.resumeDialog()).not.toThrow();
 
-    // Continue advancing — animation resumes
     await vi.advanceTimersByTimeAsync(500);
 
     ctrl.cancel();
@@ -117,7 +101,6 @@ describe('runBoot — pauseDialog / resumeDialog', () => {
 
     await vi.advanceTimersByTimeAsync(100);
 
-    // Resume without prior pause — should not throw, dialogResumeFn is null
     expect(() => ctrl.resumeDialog()).not.toThrow();
 
     ctrl.cancel();
@@ -142,9 +125,6 @@ describe('runBoot — onFirstLoop callback', () => {
       onFirstLoop,
     });
 
-    // Drive enough time for both phrases to type/hold/back and cycle back to idx 0
-    // Each phrase: type (2-5 chars * 5ms) + hold (10ms) + back (same * 5ms) + inter (5ms)
-    // With 2 phrases and tiny times, 2000ms should be plenty
     await vi.advanceTimersByTimeAsync(2000);
 
     expect(onFirstLoop).toHaveBeenCalledTimes(1);
@@ -169,7 +149,6 @@ describe('buildDesktopOnFirstLoop', () => {
     section.appendChild(el);
     document.body.appendChild(section);
 
-    // Mock getBoundingClientRect so section is "in viewport"
     vi.spyOn(section, 'getBoundingClientRect').mockReturnValue({
       top: 100,
       bottom: 200,
@@ -233,16 +212,13 @@ describe('buildDesktopOnFirstLoop', () => {
     const fn = buildDesktopOnFirstLoop(el, ctrlRef, { shake: 'shake', shake2: 'shake2' });
     fn();
 
-    // Initially shake is added
     expect(section.classList.contains('shake')).toBe(true);
     expect(section.classList.contains('shake2')).toBe(false);
 
-    // After FRAME_1_MS (40ms): replace with shake2
     await vi.advanceTimersByTimeAsync(40);
     expect(section.classList.contains('shake')).toBe(false);
     expect(section.classList.contains('shake2')).toBe(true);
 
-    // After FRAME_2_MS (80ms): both removed
     await vi.advanceTimersByTimeAsync(40);
     expect(section.classList.contains('shake')).toBe(false);
     expect(section.classList.contains('shake2')).toBe(false);
@@ -258,7 +234,7 @@ describe('buildDesktopOnFirstLoop', () => {
 
     vi.spyOn(section, 'getBoundingClientRect').mockReturnValue({
       top: -200,
-      bottom: -100, // below 0 = off-screen above
+      bottom: -100,
       left: 0,
       right: 800,
       width: 800,
@@ -275,7 +251,6 @@ describe('buildDesktopOnFirstLoop', () => {
     const fn = buildDesktopOnFirstLoop(el, ctrlRef, { shake: 'shake', shake2: 'shake2' });
     fn();
 
-    // Off-screen: nothing should happen (early return after getBoundingClientRect check)
     expect(ctrlRef.current?.pauseDialog).not.toHaveBeenCalled();
 
     document.body.removeChild(section);
@@ -311,16 +286,13 @@ describe('buildDesktopOnFirstLoop', () => {
     const fn = buildDesktopOnFirstLoop(el, ctrlRef, { shake: 'shake', shake2: 'shake2' });
     fn();
 
-    // Before the hold period (5000ms), hide event should NOT have fired
     await vi.advanceTimersByTimeAsync(4999);
     expect(hideSpy).not.toHaveBeenCalled();
 
-    // After 5000ms: hero:sysfail:hide fires, sysfail-on removed
     await vi.advanceTimersByTimeAsync(1);
     expect(hideSpy).toHaveBeenCalledTimes(1);
     expect(document.documentElement.classList.contains('sysfail-on')).toBe(false);
 
-    // After additional fade tail (300ms): sysfail:end fires, resumeDialog called
     await vi.advanceTimersByTimeAsync(300);
     expect(endSpy).toHaveBeenCalledTimes(1);
     expect(ctrlRef.current?.resumeDialog).toHaveBeenCalledTimes(1);

@@ -16,9 +16,20 @@ describe('StatTile', () => {
   it('applies compact font size override when variant=compact', () => {
     const { container } = render(<StatTile value="1" label="x" variant="compact" />);
     const dd = container.querySelector('dd');
-    // compact applies text-xs; the base text-2xl is not applied (mutually exclusive conditional)
     expect(dd?.classList.contains('text-xs')).toBe(true);
     expect(dd?.classList.contains('text-2xl')).toBe(false);
+  });
+  it('default variant keeps the hero scale (text-base) — production Hero consumes it', () => {
+    const { container } = render(<StatTile value="1" label="x" />);
+    const dd = container.querySelector('dd');
+    expect(dd?.classList.contains('text-base')).toBe(true);
+    expect(dd?.classList.contains('text-2xl')).toBe(false);
+  });
+  it('display variant renders the value at the app stat-strip scale (text-2xl)', () => {
+    const { container } = render(<StatTile value="1" label="x" variant="display" />);
+    const dd = container.querySelector('dd');
+    expect(dd?.classList.contains('text-2xl')).toBe(true);
+    expect(dd?.classList.contains('max-md:text-base')).toBe(true);
   });
   it('does not apply an undefined default class when variant=default', () => {
     const { container } = render(<StatTile value="1" label="x" />);

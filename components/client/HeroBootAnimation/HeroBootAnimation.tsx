@@ -16,23 +16,10 @@ import {
 } from '@/lib/boot-animation';
 import { readMotion } from '@/lib/motion';
 
-// ── HeroBootAnimation island ──────────────────────────────────────────────────
-// Each variant mounts its own instance; only the one matching the viewport runs.
-// matchMedia is deterministic regardless of stylesheet load order — picked over
-// getComputedStyle to avoid the hydration race documented in spec §6.
-//
-// A MediaQueryList 'change' listener reacts to breakpoint crosses (device
-// rotation, devtools resize) and starts the newly-visible variant if it hasn't
-// already started. The hidden variant keeps running but is invisible — simpler
-// than cancelling and re-seeding state on hide.
-
 type Props = {
   variant: 'desktop' | 'mobile';
 };
 
-// BootClasses map: resolves logical keys to named @layer components class names.
-// Passed into boot-animation.ts so that lib stays CSS-system-agnostic.
-// Classes are defined in app/css/components.css under @layer components.
 const bootCls: BootClasses = {
   bootLine: 'hero-boot-line',
   bootOk: 'hero-boot-ok',
@@ -49,10 +36,6 @@ const bootCls: BootClasses = {
 
 export function HeroBootAnimation({ variant }: Props) {
   const bootRef = useRef<HTMLDivElement>(null);
-  // ctrlRef holds the BootCtrl returned by runBoot. Passed into
-  // buildDesktopOnFirstLoop so onFirstLoop accesses it at invocation time
-  // (seconds after runBoot assigns it) instead of capturing a pre-assignment
-  // binding — this eliminates the temporal dead zone (Fix 2).
   const ctrlRef = useRef<BootCtrl | null>(null);
 
   useEffect(() => {
@@ -62,13 +45,8 @@ export function HeroBootAnimation({ variant }: Props) {
     const isMobileVP = mql.matches;
     const shouldRun = variant === 'mobile' ? isMobileVP : !isMobileVP;
 
-    // started tracks whether this instance has already kicked off the animation.
-    // Prevents double-start if the matchMedia change handler fires after mount.
     let started = false;
 
-    // Lifted to effect scope so the cleanup return can removeEventListener with
-    // the same stable reference. Only registered for the desktop variant —
-    // mobile dialog is short enough that pausing isn't critical.
     const onVisibility = () => {
       if (document.hidden) ctrlRef.current?.pauseDialog();
       else ctrlRef.current?.resumeDialog();
@@ -87,7 +65,6 @@ export function HeroBootAnimation({ variant }: Props) {
       if (!readMotion()) {
         for (const s of specs) el.appendChild(buildLine(s, bootCls));
         el.appendChild(buildStaticCmdLine(bootCls));
-        // Fix 5: was buildBlankLine();   prevents HTML whitespace collapse
         el.appendChild(buildLine([' '], bootCls));
         el.appendChild(buildStaticDialogLine('The Matrix has you...', bootCls));
         return;
@@ -135,9 +112,6 @@ export function HeroBootAnimation({ variant }: Props) {
 
     if (shouldRun) startAnimation();
 
-    // React to viewport crosses (device rotation, devtools resize).
-    // If the user crosses 768px and this variant becomes visible, start the
-    // animation if it hasn't run yet.
     const onBreakpointChange = (e: MediaQueryListEvent) => {
       const nowMobile = e.matches;
       const nowShouldRun = variant === 'mobile' ? nowMobile : !nowMobile;

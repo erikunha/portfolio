@@ -1,10 +1,3 @@
-// scripts/__tests__/check-semgrep-fixture.test.ts
-// Unit tests for the Semgrep fixture self-test. The pure cores are tested
-// against canned payloads (no Semgrep invocation here); the real scan runs in
-// CI. Covers: assertExpectedFindings (both rules fire / single-rule break /
-// clean over-match), interpretSemgrepRun (run-failure, unparseable, semgrep
-// errors[] -> infra, healthy), decideExit (infra/regression/ok exit mapping),
-// and run() always removing its temp dir (process.exit must not skip cleanup).
 import { readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { describe, expect, it } from 'vitest';
@@ -19,7 +12,6 @@ import {
 const f = (path: string, check_id: string) => ({ path, check_id });
 const CMD = '.semgrep.owasp-top-ten.child-process-shell-injection';
 const SECRET = '.semgrep.secrets.hardcoded-stripe-secret-key';
-// A healthy scan: both vendored rules fire on vulnerable.ts, clean.ts quiet.
 const BOTH = [f('/t/vulnerable.ts', CMD), f('/t/vulnerable.ts', SECRET)];
 const noop = () => undefined;
 
@@ -64,8 +56,6 @@ describe('interpretSemgrepRun', () => {
   });
 
   it('reports infra (not a rule regression) when semgrep emits scan errors', () => {
-    // Semgrep can exit non-zero yet write valid JSON with a populated errors[]
-    // on a runtime failure. That must surface as INFRA, not RULE REGRESSION.
     const stdout = JSON.stringify({ results: [], errors: [{ message: 'parse failure' }] });
     const v = interpretSemgrepRun({ status: 2, stdout });
     expect(v.ok).toBe(false);

@@ -1,22 +1,8 @@
-// __tests__/browser-rum.test.ts
-// Behavioral test: verifies the Vercel RUM wiring by EXERCISING it.
-//
-//  - RootLayout is rendered with VERCEL=1 and VERCEL unset; the gated
-//    <Analytics/> + <SpeedInsights/> fragment must appear only on Vercel.
-//  - proxy() is invoked and the actual Content-Security-Policy header it
-//    emits must allow the two Vercel ingest origins in connect-src — without
-//    that, the RUM beacons are blocked at runtime.
-//
-// The package.json dependency assertion is a genuine config read (the only
-// behavior-free check here) and carries a behavioral-test-allow tag.
-
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { NextRequest } from 'next/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// Render Analytics/SpeedInsights as identifiable inert markers so the gated
-// fragment is observable in the rendered element tree.
 vi.mock('@vercel/analytics/next', () => ({
   Analytics: () => null,
 }));
@@ -24,20 +10,14 @@ vi.mock('@vercel/speed-insights/next', () => ({
   SpeedInsights: () => null,
 }));
 
-// next/font/local runs inside the Next build pipeline only — stub it so the
-// layout module can be imported under vitest.
 vi.mock('next/font/local', () => ({
   default: () => ({ variable: 'mock-font', className: 'mock-font', style: {} }),
 }));
 
-// next/script — render as a passthrough so RootLayout can construct.
 vi.mock('next/script', () => ({
   default: () => null,
 }));
 
-// Walk the rendered React element tree and collect the display names of every
-// component-type node. This surfaces the gated <Analytics/> / <SpeedInsights/>
-// without needing a full DOM render of the <html> document.
 function componentNames(node: unknown, acc: string[] = []): string[] {
   if (!node || typeof node !== 'object') return acc;
   if (Array.isArray(node)) {

@@ -1,6 +1,3 @@
-// __tests__/desktop-topbar-motion.test.tsx
-// Behavioral tests for DesktopTopbar toggleMotion (lines 18-20).
-
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
@@ -83,7 +80,6 @@ describe('DesktopTopbar — toggleMotion', () => {
       btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    // applyMotion called in useLayoutEffect (once on mount with true) + once on click (with false)
     expect(applyMotionMock).toHaveBeenLastCalledWith(false);
   });
 });

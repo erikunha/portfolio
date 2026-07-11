@@ -6,20 +6,9 @@ import { log } from '@/lib/log';
 import { getRedis } from '@/lib/rate-limit';
 
 const PSI_CONSEC_KEY = (s: Strategy) => `meta:psi-consec-failures:${s}`;
-const PSI_CONSEC_TTL_S = 604_800; // 7d GC backstop; reset-on-success is primary
+const PSI_CONSEC_TTL_S = 604_800;
 const PSI_ALERT_THRESHOLD = 3;
 
-// WHY: desktop + mobile PSI audits run concurrently (Promise.allSettled), so
-// per-strategy budget — not their sum — is the wall-time unit. Each strategy
-// gets PSI_STRATEGY_BUDGET_MS=50s total, may retry once on transient 429/5xx
-// (PSI_MAX_ATTEMPTS=2, lib/lighthouse-scores.ts), with each attempt capped at
-// min(PSI_REFRESH_TIMEOUT_MS=45s, budget remaining) so no single attempt can
-// blow past the 50s ceiling. The retry-worth-it check (budget left >=
-// PSI_MIN_RETRY_BUDGET_MS=8s) runs BEFORE the PSI_RETRY_BACKOFF_MS=500ms(+jitter
-// up to 499ms) backoff, so the 2nd attempt can start with slightly under 8s —
-// the min(...) cap still bounds it correctly. Worst case: 50s (one strategy,
-// retried) + 5s failure-path Resend alert = 55s, leaving 5s headroom under the
-// 60s Hobby-plan ceiling before Vercel force-kills the invocation.
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest): Promise<Response> {
@@ -57,21 +46,12 @@ export async function GET(req: NextRequest): Promise<Response> {
     log.error('psi-refresh failed', { errors });
   }
 
-  // WHY: a single transient 429/5xx no longer emails — only >= PSI_ALERT_THRESHOLD
-  // CONSECUTIVE failures for a given strategy do. The counter work is fail-quiet and
-  // independent of the meta:psi-last-run freshness write below: a Redis outage here
-  // must log + skip alerting, never mask the cron's response or block the freshness
-  // write that /api/healthz depends on.
   const strategies: Array<['desktop' | 'mobile', PromiseSettledResult<unknown>]> = [
     ['desktop', desktopResult],
     ['mobile', mobileResult],
   ];
   const overThreshold: Array<{ strategy: string; count: number; error: string }> = [];
   for (const [name, r] of strategies) {
-    // WHY: try/catch is PER STRATEGY, not around the whole loop. A Redis error on
-    // desktop must not skip mobile's counter update (else a desktop blip could bury
-    // a real mobile failure and delay its threshold alert by a day). Each strategy
-    // fails quiet independently.
     try {
       const key = PSI_CONSEC_KEY(name);
       if (r.status === 'fulfilled') {
@@ -113,15 +93,6 @@ export async function GET(req: NextRequest): Promise<Response> {
           subject: '[portfolio] psi-refresh cron failed',
           text: `One or more PSI strategies have reached ${PSI_ALERT_THRESHOLD}+ consecutive failures.\n\n${alertText}\nTimestamp: ${new Date().toISOString()}`,
         });
-        // WHY: Resend SDK lacks native AbortSignal; race a 5s timer to avoid
-        // blocking the cron response if the alert API hangs. 5s (not 10s) keeps the
-        // worst-case wall time under maxDuration=60: ~50s per-strategy PSI budget
-        // (concurrent, see the maxDuration comment) + the pre-alert Redis counter
-        // round-trips (up to 1 awaited call per strategy — del(), or a single
-        // pipe.exec() bundling INCR+EXPIRE — so 2 total, ~tens of ms, untimed, same
-        // fail-open posture as the meta:psi-last-run write) + this 5s alert
-        // race, so the structured 500 still returns before Vercel force-kills the
-        // function. The alert is best-effort.
         let timerId: ReturnType<typeof setTimeout> | undefined;
         const timeoutPromise = new Promise<never>((_, reject) => {
           timerId = setTimeout(() => reject(new Error('resend alert timeout (5s)')), 5_000);
@@ -135,27 +106,15 @@ export async function GET(req: NextRequest): Promise<Response> {
           clearTimeout(timerId);
         }
       } catch (alertErr) {
-        // Alert delivery failure must not mask the original error or change the response.
         log.error('psi-refresh alert email failed to send', { err: alertErr });
       }
     }
   }
 
   if (anySucceeded) {
-    // WHY: record freshness when AT LEAST ONE strategy succeeded, not only on full
-    // success. The Hobby plan caps the cron at once/day (a more frequent schedule fails
-    // deployment), so gating the key on both-success meant a single transient mobile
-    // timeout left /api/healthz degraded for ~a full day. A partial failure still returns
-    // 500 and alerts (above), so the failure stays visible; per-strategy scores still
-    // degrade independently via the lh:scores:* cache TTL. Total failure skips this block
-    // (anySucceeded === false) so a genuine outage still degrades healthz.
     try {
       await getRedis().set('meta:psi-last-run', new Date().toISOString());
     } catch (redisErr) {
-      // WHY: Redis write failure must not corrupt cron return code; PSI data is already stored.
-      // WHY: healthz depends on this key to report freshness. A write failure
-      // here means healthz will report degraded/503 until the next successful
-      // cron run — the cron dashboard will show 200 with no obvious correlation.
       log.error('psi-refresh: failed to write meta:psi-last-run — healthz will report degraded', {
         err: redisErr,
       });
@@ -163,11 +122,5 @@ export async function GET(req: NextRequest): Promise<Response> {
   }
 
   log.info('psi-refresh completed', { durationMs: result.durationMs, anyFailed });
-  // WHY: non-2xx surfaces the failure in the Vercel Cron dashboard and triggers the
-  // alert email. Vercel Cron does NOT auto-retry on failure; it only re-fires at the
-  // next scheduled tick, and the Hobby plan caps the cron at once per day (a more
-  // frequent schedule fails deployment). The freshness key is written on partial success
-  // (see above), so a single transient mobile timeout still returns 500 + alerts here
-  // but no longer degrades /api/healthz; only a total failure does.
   return Response.json(result, { status: anyFailed ? 500 : 200 });
 }
