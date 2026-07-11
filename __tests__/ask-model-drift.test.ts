@@ -1,5 +1,3 @@
-// readFileSync lines carry the behavioral-test-allow tag the meta source-grep
-
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';

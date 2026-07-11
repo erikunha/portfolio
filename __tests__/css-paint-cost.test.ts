@@ -1,5 +1,3 @@
-// carry behavioral-test-allow tags.
-
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { createElement } from 'react';

@@ -91,8 +91,6 @@ describe('ContactForm accessibility', () => {
   });
 });
 
-// tagged behavioral-test-allow.
-
 describe('contact form error region', () => {
   let mounted: MountedClient;
 

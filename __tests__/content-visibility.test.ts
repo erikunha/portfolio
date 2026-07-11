@@ -1,5 +1,3 @@
-// itself is a build asset; that single read carries a behavioral-test-allow
-
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';

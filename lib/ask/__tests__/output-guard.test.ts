@@ -164,7 +164,7 @@ describe('Layer 1: createStreamGuard — length cap', () => {
 describe('Layer 1: createStreamGuard — fail-open on internal error', () => {
   it('returns ok when given a non-string (guard bug must never block answers)', () => {
     const guard = createStreamGuard();
-    // @ts-expect-error — deliberately violating the string contract to trip the
+    // @ts-expect-error — deliberate string-contract violation; the guard must catch it and fail open
     const verdict = guard.inspect(null);
     expect(verdict.ok).toBe(true);
   });
@@ -205,7 +205,7 @@ describe('Layer 2: validateAnswer — post-hoc full-answer audit', () => {
   });
 
   it('fails open (clean, no throw) when given a non-string answer', () => {
-    // @ts-expect-error — contract violation; Layer 2 must not throw into the
+    // @ts-expect-error — contract violation; Layer 2 must not throw into the response path
     const verdict = validateAnswer(null, 'completed');
     expect(verdict.clean).toBe(true);
     expect(verdict.findings).toEqual([]);

@@ -1,5 +1,3 @@
-// read and carries a behavioral-test-allow tag.
-
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { NextRequest } from 'next/server';
