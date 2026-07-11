@@ -1,10 +1,6 @@
 import { z } from 'zod';
+import { NOW_CURRENTLY } from './now-currently';
 import { type NowRow, NowRowSchema } from './schemas';
-
-export const NOW_CURRENTLY = z
-  .string()
-  .min(1)
-  .parse('building the frontend platform for AI deal origination · Raylu.ai (private markets)');
 
 export const nowRows: NowRow[] = z.array(NowRowSchema).parse([
   { k: 'Currently', v: NOW_CURRENTLY },

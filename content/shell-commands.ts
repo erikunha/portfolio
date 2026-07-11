@@ -1,4 +1,4 @@
-import { NOW_CURRENTLY } from './now';
+import { NOW_CURRENTLY } from './now-currently';
 import type { ShellResponse } from './schemas';
 
 const SHELL_RESPONSES: ShellResponse[] = [
