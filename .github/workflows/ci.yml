@@ -563,6 +563,7 @@ jobs:
         quality-fast,
         typecheck,
         test,
+        dependency-review,
         build,
         performance,
         e2e-functional,

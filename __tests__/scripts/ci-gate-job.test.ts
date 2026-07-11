@@ -21,7 +21,7 @@ const needs = (needsMatch?.[1] ?? '')
   .map((s) => s.trim())
   .filter(Boolean);
 
-const SELF_REPORTING_JOBS = ['dependency-review', 'semgrep', 'ci-gate'];
+const SELF_REPORTING_JOBS = ['semgrep', 'ci-gate'];
 
 describe('ci.yml ci-gate fan-in invariants', () => {
   it('defines a ci-gate job', () => {
