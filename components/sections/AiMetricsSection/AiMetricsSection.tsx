@@ -42,7 +42,7 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
           <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
             {pct(metrics.evalPassRate)}
           </div>
-          <div className="text-primary-400 text-sm max-md:text-xs leading-[1.5] mt-auto">
+          <div className="text-primary-400 md:text-primary-500 text-sm max-md:text-xs leading-[1.5] mt-auto">
             correctness · factual + edge corpus
           </div>
         </TerminalPanel>
@@ -64,7 +64,7 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
           <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
             {ms(metrics.p95LatencyMs)}
           </div>
-          <div className="text-primary-400 text-sm max-md:text-xs leading-[1.5] mt-auto">
+          <div className="text-primary-400 md:text-primary-500 text-sm max-md:text-xs leading-[1.5] mt-auto">
             end-to-end · slowest 5% of answers
           </div>
         </TerminalPanel>
@@ -75,7 +75,7 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
           <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
             {usd(metrics.costPerAnswer)}
           </div>
-          <div className="text-primary-400 text-sm max-md:text-xs leading-[1.5] mt-auto">
+          <div className="text-primary-400 md:text-primary-500 text-sm max-md:text-xs leading-[1.5] mt-auto">
             production inference · feature model only
           </div>
         </TerminalPanel>
