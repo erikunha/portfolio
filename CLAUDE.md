@@ -182,6 +182,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 
 - Lead with the recommendation. For decisions: 2-3 options, trade-offs, failure modes, one discriminator, recommend one.
 - Show diffs and targeted snippets over full rewrites unless the change is pervasive.
+- No magic values (owner decision, 2026-07-11): never inline unexplained literals — extract them into named `const`s, enums, union types, or interfaces so the name carries the meaning. Applies to strings, numbers, and repeated shape discriminators alike.
 - No prose code comments — bare code policy (owner decision, 2026-07-10). The only comments allowed are machine directives: `biome-ignore`, `behavioral-test-allow`, `@ts-*`, shebangs, triple-slash references. Rationale, constraints, and history live in DECISIONS.md, commit messages, and docs — never in source.
 - Don't ask clarifying questions unless missing info would change the decision — assume reasonably, state in one line, proceed.
 - Flag flaws once. Don't repeat concerns.
