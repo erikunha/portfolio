@@ -25,14 +25,13 @@ Cloud: AWS (CodePipeline, CodeBuild, S3, CloudFront, EC2), Docker, NGINX, Jenkin
 AI: GitHub Copilot subagents (team tooling at Betsson), Claude API (this portfolio shell), LLM/RAG/GenAI features
 
 ## Current role
-Raylu.ai (New York, remote) — Senior Frontend Software Engineer, Jun 2026–present.
-AI deal-origination engine for private markets: deal sourcing, diligence, and founder outreach for PE/VC funds. 50+ funds; funds representing $500B+ AUM use the platform.
+Raylu.ai (New York, US — remote) — Senior Frontend Software Engineer, Jun 2026–present.
+AI-native deal-origination platform used by 45+ private-market investment funds representing $500B+ in AUM (deal sourcing, diligence, founder outreach for PE/VC).
 Stack: React 19, Next.js 15, TypeScript, TanStack Table/Query, Tailwind CSS, Storybook, Jest, React Testing Library, Playwright, Vite, GitHub Actions.
-- Building the frontend platform: reusable infrastructure, shared UI systems, and state architecture for data-intensive surfaces (market maps, target lists, diligence views)
-- Designed a headless DataTable platform: versioned ViewState contract, extensible rendering pipeline, reusable APIs across product surfaces
-- Architected deterministic URL-backed state: server hydration, shallow routing, namespaced serialization, backward-compatible codecs
-- Designed persistence for user-defined table views: immutable view identity separated from mutable runtime state, optimistic sync, pluggable storage
-- Established accessibility standards across the component platform: WAI-ARIA semantics, keyboard navigation, live regions, screen-reader behavior
+- Building the frontend platform: reusable infrastructure, shared UI systems, and state architecture for data-intensive investor workflows (market maps, target lists, diligence views)
+- Built a reusable headless DataTable feature on TanStack Table: versioned ViewState contract, URL-synced deterministic state with backward-compatible codecs, persistence separating immutable view identity from mutable runtime state; hierarchical grouping, expansion, pagination, filtering, sorting, column management; shareable, bookmarkable, refresh-safe views
+- Established accessibility standards across the platform's shared components: WAI-ARIA semantics, keyboard navigation, accessible naming, live regions, screen-reader behavior
+- Automated test coverage across serialization, state, rendering, accessibility, and interaction flows, including Storybook interaction testing
 - Standardized team practices: RFC-driven implementation, ADRs, contribution guidelines, PR conventions
 
 ## Employment history (newest first)

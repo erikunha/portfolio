@@ -16,7 +16,7 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
     ],
     mobileMeta: [
       { label: 'stack', value: 'react 19 · next 15 · ts' },
-      { label: 'scale', value: 'funds · $500B+ AUM' },
+      { label: 'scale', value: '45+ funds · $500B+ AUM' },
       { label: 'status', value: 'production' },
     ],
   },

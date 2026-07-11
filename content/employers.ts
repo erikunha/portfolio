@@ -7,7 +7,7 @@ export const employers: BlameEntry[] = z.array(BlameEntrySchema).parse([
     company: 'RAYLU.AI',
     role: 'Senior Frontend Engineer',
     reason:
-      'Frontend platform for the AI deal-origination engine — market maps, target lists, diligence surfaces for funds representing $500B+ AUM · shared UI systems + state architecture (versioned ViewState, URL-backed state) · RFC/ADR-driven delivery.',
+      'Frontend platform for the AI deal-origination engine — market maps, target lists, diligence surfaces for 45+ funds representing $500B+ AUM · shared UI systems + state architecture (versioned ViewState, URL-synced state) · RFC/ADR-driven delivery.',
   },
   {
     dates: '2025 → 2026',
