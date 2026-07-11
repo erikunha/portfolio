@@ -188,7 +188,6 @@ components/responsive/                 # viewport-variant helpers
 
 content/readme.ts                     # README/bio content
 content/projects.ts                   # project tiles
-content/employers.ts                  # git log entries
 content/perf-receipts.ts              # perf tiles
 content/npm-stack.ts                  # stack tiles
 content/hottest-takes.ts              # defended opinions

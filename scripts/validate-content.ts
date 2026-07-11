@@ -3,7 +3,6 @@ import { pathToFileURL } from 'node:url';
 
 const CONTENT_FILES = [
   'content/projects.ts',
-  'content/employers.ts',
   'content/perf-receipts.ts',
   'content/npm-stack.ts',
   'content/hottest-takes.ts',

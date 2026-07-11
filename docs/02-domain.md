@@ -36,7 +36,6 @@ Every section of the page is driven by a typed module in `content/`, and those t
 | `cat README.md` | Intro / positioning | `readme.ts` | `ReadmeCopy` |
 | `man erik(1)` | Capabilities + "known bugs" (honest weaknesses) | `man-page.ts` | `ManPage` |
 | `git log ~/career` | Career & life timeline | `git-log.ts` | `GitCommit[]` (`type: career｜life`) |
-| `git blame` view | Employment history with "reason for change" | `employers.ts` | `BlameEntry[]` |
 | `ls -la ./projects` | Projects | `projects.ts` | `Project[]` |
 | `perf_receipts` | Quantified impact claims | `perf-receipts.ts` | `PerfReceipt[]` + `heroStats: Stat[4]` |
 | `ls -l ~/responsibilities` | Scope, as Unix permission bits | `responsibilities.ts` | `Responsibility[]` (`perms` regex) |
