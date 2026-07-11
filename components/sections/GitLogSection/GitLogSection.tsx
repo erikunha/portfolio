@@ -39,7 +39,7 @@ function renderCommitMobile(c: GitCommit, key: string): ReactNode {
         {'\n'}
         <span className="text-tertiary-50 opacity-85">{c.role}</span>
         {'\n\n'}
-        <span className="text-primary-400">{c.body.join(' ')}</span>
+        <span className="text-primary-500">{c.body.join(' ')}</span>
       </div>
     </li>
   );
@@ -82,7 +82,7 @@ function renderCommit(c: GitCommit, key: string): ReactNode {
         {c.body.map((line) => (
           <span key={`${c.hash}-${line}`}>
             {'      '}
-            <span className="text-primary-400 md:text-primary-500">{line}</span>
+            <span className="text-primary-500">{line}</span>
             {'\n'}
           </span>
         ))}
@@ -126,7 +126,7 @@ function renderCommit(c: GitCommit, key: string): ReactNode {
         <span key={`${c.hash}-${line}`}>
           {PIPE}
           {'     '}
-          <span className="text-primary-400 md:text-primary-500">{line}</span>
+          <span className="text-primary-500">{line}</span>
           {'\n'}
         </span>
       ))}
