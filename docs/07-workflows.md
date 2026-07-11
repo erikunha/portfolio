@@ -69,7 +69,7 @@ flowchart LR
 
 ## CI/CD
 
-`.github/workflows/ci.yml` (the authoritative gate). A `detect-changes` job emits `app`/`ai` booleans so heavy jobs skip on docs-only PRs (GitHub treats skipped required checks as satisfied).
+`.github/workflows/ci.yml` (the authoritative gate). A `detect-changes` job emits `app`/`ai` booleans so heavy jobs skip on docs-only PRs (GitHub treats skipped required checks as satisfied). Matrix jobs skipped at job level report ONE unsuffixed check, so matrix-named required contexts (`e2e-functional (chromium)` etc.) hang forever on path-skipped PRs; required checks therefore point at always-reporting contexts and the conditional jobs are enforced through the `ci-gate` fan-in below.
 
 ```mermaid
 flowchart TD
@@ -85,7 +85,20 @@ flowchart TD
     b --> e2e["e2e-functional (5-project matrix, if app)"]
     b --> vis["e2e-visual-chromium (Argos, if app)"]
     b --> ev["ai-eval (if ai)"]
+    dc --> gate
+    qf --> gate
+    tc --> gate
+    t --> gate
+    dr --> gate
+    b --> gate
+    perf --> gate
+    e2e --> gate
+    vis --> gate
+    ev --> gate
+    gate["ci-gate: always-on fan-in — reds on any failed/cancelled upstream; skipped passes"]
 ```
+
+`ci-gate` runs with `if: always()`, needs every job above (`semgrep` stays outside — report-only by design), and is the terminal required status check. `__tests__/scripts/ci-gate-job.test.ts` asserts its `needs` list equals the full job set minus the self-reporting jobs, so adding a conditional job without fanning it in fails `pnpm test`.
 
 Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude.yml` (the `@claude` AI-reviewer pilot, doc 06).
 
