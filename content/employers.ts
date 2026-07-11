@@ -3,7 +3,14 @@ import { type BlameEntry, BlameEntrySchema } from './schemas';
 
 export const employers: BlameEntry[] = z.array(BlameEntrySchema).parse([
   {
-    dates: '2025 → present',
+    dates: '2026 → present',
+    company: 'RAYLU.AI',
+    role: 'Senior Frontend Engineer',
+    reason:
+      'Frontend platform for the AI deal-origination engine — private markets, funds representing $500B+ AUM · headless DataTable platform on TanStack Table · versioned ViewState + URL-backed state · pluggable view persistence · RFC/ADR-driven delivery.',
+  },
+  {
+    dates: '2025 → 2026',
     company: 'BETSSON GROUP',
     role: 'Senior Frontend Engineer',
     reason:

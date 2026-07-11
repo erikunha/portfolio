@@ -10,8 +10,8 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     company: 'RAYLU_AI',
     role: 'SR FRONTEND ENGINEER · Remote',
     body: [
-      'wanted platform ownership in AI-native B2B SaaS; building',
-      'a headless DataTable platform — versioned ViewState, URL-backed state.',
+      'wanted AI-native product scale; building the frontend platform',
+      'for private-markets deal origination — funds representing $500B+ AUM.',
     ],
   },
   {
