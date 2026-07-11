@@ -1,8 +1,5 @@
 import { readFileSync } from 'node:fs';
 
-const HARNESS_QUEUE_RECORD_TYPE = 'queue-operation';
-const HARNESS_NOTIFICATION_ORIGIN_KIND = 'task-notification';
-
 export function readTranscript(transcriptPath) {
   let raw;
   try {
@@ -96,7 +93,35 @@ export function containsInToolResultSince(records, needle, boundaryIndex) {
   return false;
 }
 
-export function agentResultContains(records, subagentType, needle) {
+const TASK_ID_RE = /<task-id>([a-z0-9]{6,})<\/task-id>/;
+const TOOL_USE_ID_TAG = (id) => `<tool-use-id>${id}</tool-use-id>`;
+const TASK_OUTPUT_FILE_RE = /<output-file>([^<]+)<\/output-file>/;
+
+function defaultReadTaskOutput(path) {
+  try {
+    return readFileSync(path, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+function notificationStrings(record) {
+  if (!record || typeof record !== 'object') return [];
+  const out = [];
+  if (typeof record.content === 'string') out.push(record.content);
+  const message = record.message;
+  if (message && typeof message === 'object' && typeof message.content === 'string') {
+    out.push(message.content);
+  }
+  const attachment = record.attachment;
+  if (attachment && typeof attachment === 'object' && typeof attachment.prompt === 'string') {
+    out.push(attachment.prompt);
+  }
+  return out;
+}
+
+export function agentResultContains(records, subagentType, needle, readTaskOutput) {
+  const readOutput = readTaskOutput ?? defaultReadTaskOutput;
   let toolUseId = null;
   for (const record of records) {
     for (const tu of toolUses(record)) {
@@ -109,17 +134,6 @@ export function agentResultContains(records, subagentType, needle) {
   }
   if (!toolUseId) return false;
   for (const record of records) {
-    if (
-      record &&
-      typeof record === 'object' &&
-      record.type === HARNESS_QUEUE_RECORD_TYPE &&
-      typeof record.content === 'string' &&
-      record.content.includes(`<tool-use-id>${toolUseId}</tool-use-id>`) &&
-      record.content.includes(needle)
-    ) {
-      return true;
-    }
-
     const message = record && typeof record === 'object' ? record.message : undefined;
     const content = message && typeof message === 'object' ? message.content : undefined;
 
@@ -135,21 +149,18 @@ export function agentResultContains(records, subagentType, needle) {
           return true;
         }
       }
-      continue;
     }
 
-    const role = message && typeof message === 'object' ? message.role : undefined;
-    const origin = record && typeof record === 'object' ? record.origin : undefined;
-    const isHarnessNotification =
-      origin && typeof origin === 'object' && origin.kind === HARNESS_NOTIFICATION_ORIGIN_KIND;
-    if (
-      typeof content === 'string' &&
-      role === 'user' &&
-      isHarnessNotification &&
-      content.includes(`<tool-use-id>${toolUseId}</tool-use-id>`) &&
-      content.includes(needle)
-    ) {
-      return true;
+    for (const s of notificationStrings(record)) {
+      if (!s.includes(TOOL_USE_ID_TAG(toolUseId))) continue;
+      const taskId = TASK_ID_RE.exec(s)?.[1];
+      const outputFile = TASK_OUTPUT_FILE_RE.exec(s)?.[1];
+      if (!taskId || !outputFile) continue;
+      if (!outputFile.endsWith(`/tasks/${taskId}.output`)) continue;
+      const fileContent = readOutput(outputFile);
+      if (typeof fileContent === 'string' && fileContent.includes(needle)) {
+        return true;
+      }
     }
   }
   return false;
