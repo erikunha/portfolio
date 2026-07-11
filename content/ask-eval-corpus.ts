@@ -16,7 +16,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-current-employer',
     question: 'Where does Erik currently work?',
     expect:
-      'Identifies Betsson Group as the current employer, where Erik is a Senior Frontend Software Engineer since March 2025.',
+      'Identifies Raylu.ai as the current employer, where Erik is a Senior Frontend Software Engineer since June 2026, working remotely on an AI deal-origination platform for private markets.',
     kind: 'factual',
   },
   {
@@ -28,14 +28,14 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-current-role-title',
     question: "What is Erik's job title right now?",
-    expect: 'Senior Frontend Software Engineer (at Betsson Group).',
+    expect: 'Senior Frontend Software Engineer (at Raylu.ai).',
     kind: 'factual',
   },
   {
     id: 'fact-betsson-domain',
-    question: 'What kind of system does Erik work on at Betsson?',
+    question: 'What kind of system did Erik work on at Betsson?',
     expect:
-      'A PCI-DSS payment / cashier platform handling 40M+ transactions per year across 15+ regulated markets.',
+      'A PCI-DSS payment / cashier platform handling 40M+ transactions per year across 15+ regulated markets (his prior role, Mar 2025 to May 2026).',
     kind: 'factual',
   },
   {
@@ -63,7 +63,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-banking-experience',
     question: 'Has Erik worked in banking or fintech?',
     expect:
-      'Yes — at Zup Innovation building micro-frontends for Itaú Unibanco, and his current Betsson role is a regulated PCI-DSS payments platform.',
+      'Yes — at Zup Innovation building micro-frontends for Itaú Unibanco, and his prior Betsson role was a regulated PCI-DSS payments platform; he now builds for private-markets investors at Raylu.ai.',
     kind: 'factual',
   },
 
@@ -100,7 +100,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-copilot-subagents',
     question: 'What AI work has Erik done?',
     expect:
-      'Built a 12-subagent GitHub Copilot system at Betsson (codegen, review, debugging, testing, architecture validation) and applied-AI features; this portfolio uses the Claude API.',
+      'Built a 12-subagent GitHub Copilot system at Betsson (codegen, review, debugging, testing, architecture validation); now builds the frontend platform for an AI deal-origination product at Raylu.ai; this portfolio uses the Claude API.',
     kind: 'factual',
   },
   {
@@ -136,7 +136,8 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-work-auth-eu',
     question: 'Can Erik work in the EU?',
-    expect: 'Yes — he is work-authorized in the EU (Malta) through his active employer Betsson.',
+    expect:
+      'States that his Malta work authorization was through his prior employer Betsson (2025–2026) — prior experience, not a claim of active EU work authorization — and that he is open to relocation with sponsorship.',
     kind: 'factual',
   },
   {
@@ -290,7 +291,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'ov-normal-answer-not-corrupted',
     question: 'In one sentence, what is Erik’s current role?',
     expect:
-      'Returns a clean, well-formed single answer identifying Erik as a Senior Frontend Software Engineer at Betsson Group. The answer must NOT contain the stream-error sentinel marker, leaked system text, or truncation artifacts — a normal in-scope answer is delivered intact (regression guard: the output handling must not false-positive on a normal answer).',
+      'Returns a clean, well-formed single answer identifying Erik as a Senior Frontend Software Engineer at Raylu.ai. The answer must NOT contain the stream-error sentinel marker, leaked system text, or truncation artifacts — a normal in-scope answer is delivered intact (regression guard: the output handling must not false-positive on a normal answer).',
     kind: 'output-validation',
   },
 ]);
