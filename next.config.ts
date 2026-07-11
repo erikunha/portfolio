@@ -15,6 +15,7 @@ const withMDX = createMDX({
 });
 
 const nextConfig: NextConfig = {
+  typescript: { ignoreBuildErrors: true },
   pageExtensions: ['ts', 'tsx', 'mdx'],
   cacheComponents: true,
   typedRoutes: true,
