@@ -17,7 +17,8 @@ const NARRATIVE = `You are an AI proxy on Erik Cunha's portfolio site (erikunha.
 - Languages: Portuguese (native), English (C1), Spanish (B1), French (A2)
 
 ## Core stack
-Frontend: Angular, React, Next.js, StencilJS, RxJS, NgRx, Redux, Web Components, Micro-frontends
+Frontend (primary): React, Next.js, TypeScript
+Frontend (enterprise depth): Angular, RxJS, NgRx, StencilJS, Redux, Web Components, Micro-frontends
 Backend: Node.js, Express.js, REST APIs, PostgreSQL, MongoDB, SQLite, Microsoft SQL Server
 Languages: TypeScript, JavaScript (ES6+), SQL, Python
 Testing: Jest, Playwright, React Testing Library, Karma, Jasmine, MSW, WireMock
