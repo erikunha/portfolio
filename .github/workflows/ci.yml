@@ -553,6 +553,42 @@ jobs:
           name: visual-report-${{ matrix.project }}
           path: test-results/
 
+  ci-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: always()
+    needs:
+      [
+        detect-changes,
+        quality-fast,
+        typecheck,
+        test,
+        dependency-review,
+        build,
+        performance,
+        e2e-functional,
+        e2e-visual-chromium,
+        ai-eval,
+      ]
+    steps:
+      - name: Gate on upstream job results
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: |
+          node -e '
+            const BAD_RESULTS = new Set(["failure", "cancelled"]);
+            const needs = JSON.parse(process.env.NEEDS_JSON);
+            const bad = Object.entries(needs).filter(([, n]) => BAD_RESULTS.has(n.result));
+            for (const [job, n] of Object.entries(needs)) {
+              console.log(`${job}: ${n.result}`);
+            }
+            if (bad.length > 0) {
+              console.error(`ci-gate: blocking on ${bad.map(([job]) => job).join(", ")}`);
+              process.exit(1);
+            }
+            console.log("ci-gate: all upstream jobs succeeded or were intentionally skipped");
+          '
+
   semgrep:
     name: Semgrep (static analysis)
     runs-on: ubuntu-latest
