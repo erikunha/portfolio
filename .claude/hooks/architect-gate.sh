@@ -25,13 +25,6 @@ PASSED=$(node -e "
 const { pathToFileURL } = require('node:url');
 import(pathToFileURL(process.argv[1] + '/scripts/lib/transcript.mjs').href).then(m => {
   const recs = m.readTranscript(process.argv[2]);
-  // Require GATE_RESULT: PASS inside the architect-reviewer's OWN result:
-  //  - sync dispatch: a tool_result block correlated by tool_use id, so an
-  //    unrelated tool_result (e.g. Bash stdout printing the sentinel) can't spoof;
-  //  - async dispatch: a harness task-notification (origin.kind='task-notification',
-  //    a CLI-stamped field a human cannot type from chat) naming this dispatch's
-  //    tool-use-id. A human-typed/pasted user turn (origin.kind='human') is rejected.
-  // See scripts/lib/transcript.mjs agentResultContains for the anti-spoof anchors.
   const ok = m.agentResultContains(recs, 'architect-reviewer', 'GATE_RESULT: PASS');
   process.stdout.write(ok ? 'yes' : 'no');
 }).catch(() => process.stdout.write('no'));

@@ -79,6 +79,21 @@ describe('agentResultContains (tool_use_id anti-spoof)', () => {
     expect(reader).toHaveBeenCalledWith(TASK_OUTPUT_PATH);
   });
 
+  it('true when the pointer arrives via an attachment record (queued_command prompt carrier)', () => {
+    const attachmentCarrier = {
+      type: 'attachment',
+      attachment: { type: 'queued_command', prompt: NOTIFICATION_CONTENT },
+    };
+    expect(
+      agentResultContains(
+        [dispatch, attachmentCarrier],
+        'architect-reviewer',
+        'GATE_RESULT: PASS',
+        passReader,
+      ),
+    ).toBe(true);
+  });
+
   it('true regardless of record kind carrying the pointer — the FILE is the evidence (typed paste of a real PASS pointer is not a forgery)', () => {
     const typedPointer = { type: 'user', message: { role: 'user', content: NOTIFICATION_CONTENT } };
     expect(
