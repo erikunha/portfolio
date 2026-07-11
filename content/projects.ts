@@ -3,20 +3,20 @@ import { type Project, ProjectSchema } from './schemas';
 
 export const projects: Project[] = z.array(ProjectSchema).parse([
   {
-    name: 'DATATABLE_PLATFORM',
-    mobileName: 'datatable_platform/',
+    name: 'ORIGINATION_PLATFORM_UI',
+    mobileName: 'origination_ui/',
     description:
-      'Headless DataTable platform for Raylu’s AI deal-origination engine — versioned ViewState contract, URL-backed state, pluggable persistence for data-dense private-markets workflows.',
+      'Frontend platform for Raylu’s AI deal-origination engine — shared UI systems and state architecture behind market maps, target lists, and diligence surfaces for private-markets funds.',
     mobileDescription:
-      'Headless DataTable platform at Raylu.ai. Versioned ViewState contract, URL-backed state with codecs, pluggable view persistence. TanStack Table, React 19, Next 15.',
+      'Frontend platform at Raylu.ai — market maps, target lists, diligence surfaces for private-markets funds. Shared UI systems, versioned ViewState, URL-backed state. React 19, Next 15, TanStack.',
     stats: [
-      { label: 'CONTRACT', value: 'VERSIONED VIEWSTATE' },
-      { label: 'STATE', value: 'URL-BACKED + CODECS' },
+      { label: 'SURFACES', value: 'MAPS / LISTS / DILIGENCE' },
+      { label: 'STATE', value: 'VERSIONED + URL-BACKED' },
       { label: 'STACK', value: 'REACT 19 / NEXT 15 / TANSTACK' },
     ],
     mobileMeta: [
       { label: 'stack', value: 'react 19 · tanstack' },
-      { label: 'scale', value: 'multi-surface platform' },
+      { label: 'scale', value: 'funds · $500B+ AUM' },
       { label: 'status', value: 'production' },
     ],
   },

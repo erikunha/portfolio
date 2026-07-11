@@ -4,9 +4,7 @@ import { type NowRow, NowRowSchema } from './schemas';
 export const NOW_CURRENTLY = z
   .string()
   .min(1)
-  .parse(
-    'shipping a headless DataTable platform · Raylu.ai (AI deal origination, private markets)',
-  );
+  .parse('building the frontend platform for AI deal origination · Raylu.ai (private markets)');
 
 export const nowRows: NowRow[] = z.array(NowRowSchema).parse([
   { k: 'Currently', v: NOW_CURRENTLY },

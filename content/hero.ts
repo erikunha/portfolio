@@ -9,4 +9,4 @@ export const heroTagline = z
 
 export const heroCurrentEmployer = z.string().min(1).parse('Raylu.ai');
 
-export const heroPlatformChip = z.string().min(1).parse('platform / headless DataTable');
+export const heroPlatformChip = z.string().min(1).parse('AI deal origination · private markets');
