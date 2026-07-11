@@ -53,7 +53,7 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
           <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
             {pct(metrics.jailbreakResistance)}
           </div>
-          <div className="text-primary-400 text-sm max-md:text-xs leading-[1.5] mt-auto">
+          <div className="text-primary-400 md:text-primary-500 text-sm max-md:text-xs leading-[1.5] mt-auto">
             prompt-injection refusal rate
           </div>
         </TerminalPanel>
