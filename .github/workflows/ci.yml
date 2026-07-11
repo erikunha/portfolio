@@ -582,7 +582,7 @@ jobs:
               console.log(`${job}: ${n.result}`);
             }
             if (bad.length > 0) {
-              console.error(`ci-gate: blocking — ${bad.map(([job]) => job).join(", ")}`);
+              console.error(`ci-gate: blocking on ${bad.map(([job]) => job).join(", ")}`);
               process.exit(1);
             }
             console.log("ci-gate: all upstream jobs succeeded or were intentionally skipped");
