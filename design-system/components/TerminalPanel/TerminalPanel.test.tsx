@@ -38,7 +38,6 @@ describe('TerminalPanel', () => {
     const { container: b } = render(<TerminalPanel>second</TerminalPanel>);
     const idA = a.firstElementChild?.id ?? '';
     const idB = b.firstElementChild?.id ?? '';
-    // Neither instance should have a hardcoded id
     expect(idA).toBe('');
     expect(idB).toBe('');
   });

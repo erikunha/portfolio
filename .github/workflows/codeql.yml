@@ -1,9 +1,5 @@
 name: CodeQL
 
-# SAST scan — catches security vulnerabilities in TypeScript/JavaScript source.
-# Non-blocking on PR (informational); findings surface as GitHub security alerts.
-# Weekly scan catches supply-chain regressions independent of PR activity.
-
 on:
   push:
     branches: [main]

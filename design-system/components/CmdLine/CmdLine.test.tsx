@@ -20,7 +20,6 @@ describe('CmdLine', () => {
   });
   it('does not render output wrapper when output is undefined', () => {
     const { container } = render(<CmdLine command="ls" />);
-    // Root div has exactly one child (the prompt row) when no output is provided
     expect(container.firstElementChild?.childElementCount).toBe(1);
   });
 });

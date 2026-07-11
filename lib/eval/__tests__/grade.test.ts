@@ -1,12 +1,3 @@
-// lib/eval/__tests__/grade.test.ts
-// Behavioral test for the grading dispatch (lib/eval/grade.ts). Mocks the shared
-// judge() so NO Gateway call is made, and asserts:
-//   - a grader:'code' case calls assert(output) and NEVER invokes the judge
-//     (judge call count 0); a true assert → pass:true, false → pass:false
-//   - a grader:'judge' case calls the shared judge with the case mapped onto the
-//     JudgeItem shape and the tiered judgeModel
-//   - a grader:'code' case with no assert throws a clear config error
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { JudgeVerdict } from '@/lib/eval/types';
 
@@ -26,8 +17,6 @@ function codeCase(assert?: (o: string) => boolean) {
     knownHard: false,
     dir: 'code-case',
   };
-  // Omit the `assert` key entirely when undefined: exactOptionalPropertyTypes
-  // rejects an explicit `assert: undefined` against the optional `assert?` field.
   return assert ? { ...base, assert } : base;
 }
 
@@ -62,7 +51,6 @@ describe('lib/eval/grade gradeRun', () => {
     const v = await gradeRun(c, 'git add lib/foo.ts', { judgeModel: 'jm' });
     expect(v.pass).toBe(true);
     expect(mockJudge).toHaveBeenCalledTimes(0);
-    // code grading is free: zero judge tokens
     expect(v.inputTokens).toBe(0);
     expect(v.outputTokens).toBe(0);
   });

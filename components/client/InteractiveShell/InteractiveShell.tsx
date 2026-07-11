@@ -131,24 +131,17 @@ function LoadingDots() {
 export function InteractiveShell() {
   const { isMobile } = useBreakpoint();
   const lineIdRef = useRef(0);
-  // Memoized for a STABLE identity — nextId appears in the dependency arrays
-  // of streamQuestion/runCommand below. The ref read is already stable.
   const nextId = useCallback(() => ++lineIdRef.current, []);
   const [history, setHistory] = useState<Line[]>(() => withIds(INITIAL_LINES, nextId));
   const [input, setInput] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const [busy, setBusy] = useState(false);
-  // The live streaming answer is its own state field, NOT an entry in
-  // `history`: a per-chunk update must re-render only the streaming <span>,
-  // never the whole feed. `null` means no stream in flight.
   const [streamingText, setStreamingText] = useState<string | null>(null);
   const feedRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const typingRef = useRef(false);
   const mountedRef = useRef(true);
-  // Pending requestAnimationFrame handle for the chunk-coalescing flush.
   const rafRef = useRef<number | null>(null);
-  // Pending setTimeout handle for the runWithEffect typing animation.
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     mountedRef.current = true;
@@ -166,9 +159,6 @@ export function InteractiveShell() {
     if (isMobile) setHistory(withIds(MOBILE_INITIAL, nextId));
   }, [isMobile, nextId]);
 
-  // Re-focus the input on desktop whenever a command finishes (busy: true → false).
-  // Skipped on mobile — programmatic focus pops the virtual keyboard after chip taps.
-  // wasBusyRef prevents firing on initial mount when busy is already false.
   const wasBusyRef = useRef(false);
   useEffect(() => {
     if (!isMobile && wasBusyRef.current && !busy) {
@@ -198,8 +188,6 @@ export function InteractiveShell() {
 
       const finalize = (finalText: string, errMsg?: string) => {
         clearRaf();
-        // Bail if the component unmounted mid-stream — the unmount effect has
-        // already cancelled the rAF; setState here would be a no-op warning.
         if (!mountedRef.current) return;
         setStreamingText(null);
         const lines: Line[] = [];
@@ -232,10 +220,6 @@ export function InteractiveShell() {
         let pending = '';
         let loadingCleared = false;
 
-        // Coalesce chunk-driven re-renders to at most one per animation frame:
-        // a fast token stream cannot trigger a render storm (INP guard). The
-        // streaming text lands in `streamingText` state — isolated from
-        // `history` — so the flush re-renders only the streaming <span>.
         const scheduleFlush = () => {
           if (rafRef.current !== null) return;
           rafRef.current = requestAnimationFrame(() => {
@@ -279,11 +263,9 @@ export function InteractiveShell() {
         return;
       }
 
-      // Strip optional "ask " prefix — treat as explicit AI query.
       const explicitQuestion = cmd.startsWith('ask ') ? cmd.slice(4).trim() : null;
 
       if (!explicitQuestion) {
-        // Check local commands first.
         const local = SHELL_RESPONSES.find((r) => r.commands.includes(cmd));
         if (local) {
           setHistory((h) => [...h, { id: nextId(), kind: local.kind, text: local.text }]);
@@ -292,7 +274,6 @@ export function InteractiveShell() {
         }
       }
 
-      // Known command not matched — route to Claude.
       await streamQuestion(explicitQuestion ?? cmd);
       setBusy(false);
     },

@@ -1,5 +1,3 @@
-// content/employers.ts
-// Career history — displayed in GitLogSection as a git blame / commit log.
 import { z } from 'zod';
 import { type BlameEntry, BlameEntrySchema } from './schemas';
 

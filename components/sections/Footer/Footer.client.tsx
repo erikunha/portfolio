@@ -26,11 +26,6 @@ export function Footer() {
   const [sectionsSeen, setSectionsSeen] = useState(0);
   const [totalSections, setTotalSections] = useState(0);
   const [commandsRun, setCommandsRun] = useState(0);
-  // The dmesg boot sequence is CSS-timed: a single `booted` flag flips the
-  // whole list from hidden to revealing. Each <li> staggers via its own
-  // `animation-delay` (see `.dmesg-line` / `.dmesg-booted` in components.css),
-  // and the halt plate uses the trailing delay. This collapses what used to be
-  // a ~8-call staggered setState storm into one state update.
   const [booted, setBooted] = useState(false);
   const [dmesgTs, setDmesgTs] = useState<string[]>(dmesgLines.map(() => ''));
   const footerRef = useRef<HTMLElement>(null);
@@ -122,7 +117,6 @@ export function Footer() {
           return `[${t}]`;
         });
         setDmesgTs(ts);
-        // One state flip — the staggered reveal is CSS-driven from here.
         setBooted(true);
       },
       { threshold: 0.1 },
@@ -158,7 +152,6 @@ export function Footer() {
         className="relative z-[1] max-w-[1200px] mx-auto px-[20px] font-mono"
         style={{ textShadow: '0 0 4px #000, 0 0 8px rgba(0,0,0,0.6)' }}
       >
-        {/* Banner */}
         <div className="flex items-baseline justify-between gap-6 flex-wrap mb-2 max-[768px]:flex-col max-[768px]:gap-1">
           <span
             className="text-primary-500 font-bold tracking-[0.06em] text-sm max-md:text-xs"
@@ -177,21 +170,17 @@ export function Footer() {
           </span>
         </div>
 
-        {/* Cmdline */}
         <div className="text-sm max-md:text-xs mb-[14px] text-tertiary-50">
           <span className="text-primary-400">{'erik@portfolio:~$'}</span>{' '}
           <span className="text-tertiary-50">{'shutdown -h now'}</span>
         </div>
 
-        {/* Rule */}
         <div
           className="border-t border-dashed border-primary-subtle mb-[22px]"
           aria-hidden="true"
         />
 
-        {/* Grid — 2 panels */}
         <div className="grid grid-cols-[1fr_1.15fr] gap-[18px] mb-[26px] max-[900px]:grid-cols-1">
-          {/* SESSION_REPORT panel */}
           <div
             className="border border-primary-subtle p-[14px_16px_16px] relative min-w-0 max-[768px]:p-[12px_14px_14px] max-[768px]:mb-2.5"
             style={{ background: 'linear-gradient(180deg, rgba(0,255,65,0.025), rgba(0,0,0,0))' }}
@@ -210,7 +199,6 @@ export function Footer() {
                 {isMobile ? 'scroll' : 'scroll depth'}
               </span>
               <span className="text-tertiary-50 tabular-nums">
-                {/* sp-bar in components.css */}
                 <span className="sp-bar">
                   <i style={{ width: `${scrollDepth}%` }} />
                 </span>
@@ -233,7 +221,6 @@ export function Footer() {
             </div>
           </div>
 
-          {/* NETSTAT panel */}
           <div
             className="border border-primary-subtle p-[14px_16px_16px] relative min-w-0 max-[768px]:p-[12px_14px_14px] max-[768px]:mb-2.5"
             style={{ background: 'linear-gradient(180deg, rgba(0,255,65,0.025), rgba(0,0,0,0))' }}
@@ -325,7 +312,6 @@ export function Footer() {
           </div>
         </div>
 
-        {/* dmesg list — dmesg-booted / dmesg-line in components.css */}
         <ul
           className={`list-none m-0 mb-6 p-0 text-sm leading-[1.85]${booted ? ' dmesg-booted' : ''}`}
           aria-label="kernel buffer tail"
@@ -357,7 +343,6 @@ export function Footer() {
           ))}
         </ul>
 
-        {/* Halt plate + hint — halt-booted / halt-plate / halt-hint in components.css */}
         <div
           className={`mt-6 flex items-start md:items-center flex-wrap gap-x-4 gap-y-2.5 max-md:flex-col${booted ? ' halt-booted' : ''}`}
         >
@@ -367,14 +352,12 @@ export function Footer() {
           <span className="halt-hint shrink-0 text-primary-400 text-xs max-md:text-[10px] tracking-[0.12em] whitespace-nowrap">
             {isMobile ? 'tap ' : 'press '}
             <button type="button" onClick={() => window.location.reload()}>
-              {/* kbd-key class in components.css */}
               <kbd className="kbd-key">R</kbd>
             </button>
             {' to reboot'}
           </span>
         </div>
 
-        {/* Copyright */}
         <div className="text-primary-400 text-sm max-md:text-xs mt-[22px] tracking-[0.04em] opacity-85">
           © 2026 erik cunha · this session ends here · the work doesn&apos;t.
         </div>

@@ -18,8 +18,6 @@ export function CopyButton({ text }: { text: string }) {
       setCopied(true);
       timerRef.current = setTimeout(() => setCopied(false), 1500);
     } catch (err) {
-      // Clipboard unavailable: insecure context or permission denied.
-      // DOMException is the only error writeText is specified to throw — re-throw anything else.
       if (!(err instanceof DOMException)) throw err;
     }
   }

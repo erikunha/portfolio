@@ -69,7 +69,6 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
   return (
     <div
       className={cn(
-        /* 8-column grid defined in components.css */
         'daw-channel-row',
         'border-b border-[var(--color-primary-quiet)] px-[18px] py-[14px] relative',
         ch.focused && [
@@ -85,7 +84,6 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
       data-channel={isMaster ? 'master' : undefined}
       data-testid={`channel-${ch.id}`}
     >
-      {/* ID column */}
       <div className="flex flex-col gap-1">
         <span
           className={cn(
@@ -112,7 +110,6 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
           />
         </div>
       </div>
-      {/* Track column */}
       <div className="flex flex-col gap-1 min-w-0">
         <span
           className={cn(
@@ -126,20 +123,16 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
           <ParsedText text={ch.desc} />
         </span>
       </div>
-      {/* I/O column (knobs) */}
       <div className="flex gap-[10px] items-center justify-center">
         <KnobIsland initialAngle={ch.knob1.angleDeg} label={ch.knob1.label} channelName={ch.name} />
         <KnobIsland initialAngle={ch.knob2.angleDeg} label={ch.knob2.label} channelName={ch.name} />
       </div>
-      {/* R/M/S column */}
       <div className="flex justify-center">
         <RmsButtons buttons={ch.buttons} initialActive={ch.activeButtons} channelName={ch.name} />
       </div>
-      {/* Plugin chain column */}
       <div className="min-w-0">
         <PluginChain plugins={ch.plugins} channelId={ch.id} />
       </div>
-      {/* Meter column */}
       <div className="p-0">
         <VuMeter
           segments={12}
@@ -148,7 +141,6 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
           channelName={ch.name}
         />
       </div>
-      {/* Fader + dB island (handles both fader column and dB column internally) */}
       <FaderDbIsland initialPct={ch.faderPct} channelName={ch.name} footer={ch.footer} />
     </div>
   );
@@ -175,7 +167,6 @@ function SessionHeaderDesktop({ mixer }: { mixer: DawMixer }) {
         <span className="text-primary-500">{mixer.status}</span>
       </span>
       <span className="inline-flex items-center gap-[14px] tabular-nums">
-        {/* Play triangle — complex border-trick, named class */}
         <span className="transport-play" aria-hidden="true" />
         <span className="text-primary-500 font-bold text-sm tracking-[0.06em]">
           {mixer.transportTime}

@@ -1,22 +1,3 @@
-// app/page.tsx — RSC composition root.
-// All section components are imported here (RSC context), so their code and
-// static data never ship to the client bundle. Only AppShell (nav/overlays)
-// and section components that are explicitly 'use client' end up in JS.
-//
-// PPR (cacheComponents: true in next.config.ts): The static shell (Hero,
-// ReadmeSection, ShellSection, AiMetricsSection, ProjectsSection) is cached
-// at the edge. AiMetricsSection is above the fold and wraps a Redis-bound
-// async RSC in <Suspense>; its fallback (single-line pending stub) reserves
-// the resolved grid height via min-height to prevent CLS. Five dual-variant
-// sections (ManPage, Guitar, Projects, GitLog, Visa) each wrap an async inner
-// RSC inside <Suspense>; the inner RSC calls getIsMobile() → headers(), which
-// makes those subtrees dynamic. Only the Suspense fallback is prerendered —
-// desktop variant for ManPage/GitLog/Visa/Projects; null for Guitar (C2 ADR
-// 2026-06-13: desktop fallback causes CLS on mobile for that section). The
-// actual content streams on mobile UA resolution. Hero
-// sits outside any Suspense boundary so LCP is never gated on dynamic
-// resolution.
-
 import { AppShell } from '@/components/AppShell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
@@ -55,7 +36,6 @@ export default function Home() {
           <ErrorBoundary>
             <Hero />
           </ErrorBoundary>
-          {/* Modules 1-4: above the fold — no deferral */}
           <ErrorBoundary>
             <ReadmeSection />
           </ErrorBoundary>
@@ -68,7 +48,6 @@ export default function Home() {
           <ErrorBoundary>
             <ProjectsSection />
           </ErrorBoundary>
-          {/* Modules 3+: below the fold — defer content-visibility */}
           <ErrorBoundary>
             <PerfReceiptsSection defer />
           </ErrorBoundary>

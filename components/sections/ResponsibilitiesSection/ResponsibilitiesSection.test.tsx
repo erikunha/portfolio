@@ -1,6 +1,3 @@
-// components/sections/ResponsibilitiesSection/ResponsibilitiesSection.test.tsx
-// Behavioral tests: renders responsibilities list, highlight attribute on critical items.
-
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';

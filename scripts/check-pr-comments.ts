@@ -177,9 +177,6 @@ async function main() {
       process.exit(1);
     }
     for (const w of result.warnings) {
-      // Workflow annotation when running in GitHub Actions so the warning
-      // surfaces inline on the PR rather than being buried in raw CI logs.
-      // GITHUB_ACTIONS is set to "true" in any actions runner.
       if (process.env.GITHUB_ACTIONS === 'true') {
         process.stderr.write(
           sanitizeSecrets(

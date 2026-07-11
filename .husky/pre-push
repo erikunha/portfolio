@@ -1,22 +1,8 @@
-# Direct-to-main guard: all changes must go through a feature branch + PR.
-# WHY: direct main pushes bypass claude-review, the 5-agent battery, and
-# the review stamp. Three commits (464d7fc, fa8dee5, 17d70fe) violated this
-# rule in June 2026 by landing on main without a PR. Emergency rollback that
-# requires code: use `git push --no-verify` explicitly (documented escape hatch).
-#
-# Layered check, precise-predicate first:
-# 1. stdin refspec (authoritative): block any ref whose remote target is
-#    refs/heads/main; catches `git push origin feat/x:main` and HEAD:main.
-# 2. branch-name fallback: ONLY when git supplied no stdin refspec (non-standard
-#    tooling). Gating it this way avoids blocking legitimate non-main pushes and
-#    branch deletions made while standing on main.
 ZERO="0000000000000000000000000000000000000000"
 saw_refspec=0
 all_deletions=1
 while IFS=' ' read -r local_ref local_sha remote_ref _remote_sha; do
   saw_refspec=1
-  # Block any direct create/update/delete of main. Deleting main is worse than
-  # updating it, so match on the remote ref regardless of operation.
   if [ "$remote_ref" = "refs/heads/main" ]; then
     echo ""
     echo "BLOCKED: direct push to main (remote ref: $remote_ref)."
@@ -25,7 +11,6 @@ while IFS=' ' read -r local_ref local_sha remote_ref _remote_sha; do
     echo ""
     exit 1
   fi
-  # A deletion sends an all-zero local sha (or the literal local ref "(delete)").
   if [ "$local_sha" != "$ZERO" ] && [ "$local_ref" != "(delete)" ]; then
     all_deletions=0
   fi
@@ -33,13 +18,6 @@ done
 
 branch=$(git rev-parse --abbrev-ref HEAD)
 
-# Fallback ONLY when git provided no refspec on stdin (non-standard tooling):
-# we cannot inspect the remote target, so block pushes from local main.
-# WHY gated on saw_refspec: git's pre-push hook DOES emit refspecs for normal
-# pushes and deletions, making the precise per-ref check above authoritative.
-# Firing it unconditionally was an over-broad predicate — it blocked legitimate
-# non-main pushes and branch deletions made while on main (a real false positive
-# on 2026-06-17 that forced a --no-verify bypass and erodes the guard's authority).
 if [ "$saw_refspec" = "0" ] && [ "$branch" = "main" ]; then
   echo ""
   echo "BLOCKED: pushing from local main with no refspec on stdin."
@@ -49,25 +27,16 @@ if [ "$saw_refspec" = "0" ] && [ "$branch" = "main" ]; then
   exit 1
 fi
 
-# Deletion-only pushes ship no reviewable code: skip the branch-name, review
-# stamp, and verify gates, which all assume new commits are reaching the remote.
 if [ "$saw_refspec" = "1" ] && [ "$all_deletions" = "1" ]; then
   echo "[pre-push] Deletion-only push; name/stamp/verify gates not applicable."
   exit 0
 fi
 
-# Branch-name guard: main is exempt (you do not develop on it); every other
-# branch follows `<type>/<description>` from the commitlint scope set.
 if [ "$branch" != "main" ]; then
   echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot|design-system)/.+$' \
     || { echo "Error: invalid branch name '$branch'. Use <type>/<description>."; exit 1; }
 fi
 
-# Review stamp gate: every push requires prior dispatch of the full agent
-# review battery (pr-review-toolkit, security-auditor, accessibility-tester,
-# performance-engineer, dependency-manager). After dispatching all 5 agents:
-#   pnpm review:stamp   → writes HEAD SHA to .review-passed
-# A new commit invalidates the stamp via SHA mismatch, requiring a fresh review.
 STAMP_FILE=".review-passed"
 HEAD_SHA=$(git rev-parse HEAD)
 if [ ! -f "$STAMP_FILE" ]; then
@@ -92,14 +61,6 @@ if [ "$STAMPED_SHA" != "$HEAD_SHA" ]; then
 fi
 echo "[pre-push] Review stamp valid ($HEAD_SHA)"
 
-# API-edit security backstop (WS4): the DURABLE, syntax-independent gate. The
-# in-session PreToolUse push guard matches the `git push` command string, which
-# global-option forms (`git -C . push`) can evade. This check runs at the one
-# chokepoint git guarantees regardless of how push was invoked: if the marker is
-# non-empty, an API-surface edit has not been cleared by a post-edit
-# security-auditor run (review-stamp clears it only with correct ordering). Block.
-# $ROOT-anchored to match the writer (api-edit-marker.sh) and the push guard;
-# a cwd-relative read would miss the marker if the hook ran from a subdirectory.
 API_MARKER="$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/.api-edit-pending"
 if [ -s "$API_MARKER" ]; then
   echo ""
@@ -112,12 +73,5 @@ if [ -s "$API_MARKER" ]; then
   exit 1
 fi
 
-# Two-tier hook strategy (audit Standard 9): heavy gates run ONCE before
-# push instead of once per commit. Same safety net as the prior per-commit
-# chain (typecheck + validate-content + client-naming + tests) at a fraction
-# of the per-commit DX tax. `pnpm verify` is the manual equivalent.
 echo "[pre-push] Running verify chain (pnpm verify)..."
-# Fail-fast defensive guard: `|| exit 1` ensures a non-zero exit from `pnpm verify`
-# is always propagated. Without it, future steps added below this line could reset
-# the exit code to 0, silently letting a broken verify chain push.
 pnpm verify || exit 1

@@ -5,7 +5,6 @@ export interface ChangeSignals {
   appChanged: boolean;
   uiChanged: boolean;
   pkgRenderChanged: boolean;
-  /** Optional: the runner always supplies it; `undefined` is treated as `false`. */
   aiMajorChanged?: boolean;
 }
 export interface Categories {

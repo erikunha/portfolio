@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# PreToolUse hook for the Skill tool (WS4 architect-before-writing-plans gate).
-# Blocks superpowers:writing-plans unless the transcript shows an
-# architect-reviewer dispatch that emitted GATE_RESULT: PASS this session.
-# Fail-open for any other skill; fail-closed for writing-plans w/o PASS evidence.
 INPUT=$(cat)
 SKILL=$(printf '%s' "$INPUT" | python3 -c "
 import json,sys
@@ -17,7 +13,6 @@ try: print(json.load(sys.stdin).get('transcript_path',''))
 except Exception: print('')
 " 2>/dev/null || echo "")
 
-# Only gate writing-plans; every other skill passes immediately.
 [ "$SKILL" = "superpowers:writing-plans" ] || exit 0
 
 if [ -z "$TRANSCRIPT" ] || [ ! -r "$TRANSCRIPT" ]; then
@@ -25,9 +20,6 @@ if [ -z "$TRANSCRIPT" ] || [ ! -r "$TRANSCRIPT" ]; then
   printf 'Dispatch architect-reviewer first (must return GATE_RESULT: PASS).\n' >&2
   exit 2
 fi
-# Resolve the repo root so the helper import is cwd-INDEPENDENT (a relative
-# ./scripts/... import fails if the hook runs from a subdirectory, which would
-# make PASSED='no' and block writing-plans unconditionally).
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 PASSED=$(node -e "
 const { pathToFileURL } = require('node:url');

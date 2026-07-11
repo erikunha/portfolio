@@ -1,24 +1,5 @@
 #!/usr/bin/env node
 
-// Fails the build if the total client-chunk gzipped size exceeds the budget.
-//
-// --max-client-kb : the FULL client-chunk total (gzipped). Under Next 16 +
-//                   Turbopack the Next/React framework (~185KB) is co-bundled
-//                   with application code into the same chunks, so this number
-//                   is framework-inclusive. It is the only honest measurement
-//                   this script can produce.
-//
-// Per-route First Load JS is intentionally NOT gated here: it is not
-// extractable from the Turbopack manifest. `.next/build-manifest.json`'s
-// `pages` map carries only the legacy empty `/_app: []` shape, there is no
-// `app-build-manifest.json`, and `app-path-routes-manifest.json` has no chunk
-// lists — a per-route check would silently measure /_app at 0KB.
-//
-// The 43KB app-island figure (client JS excluding framework bootstrap) is a
-// design target tracked via `pnpm bundle:analyze`, not gated here.
-//
-// Usage: node scripts/check-bundle-size.mjs --max-client-kb=220
-
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';

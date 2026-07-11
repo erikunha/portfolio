@@ -1,13 +1,3 @@
-// components/sections/AiMetricsSection/AiMetricsSection.tsx
-// Pure Server Component — no 'use client', no client JS. Surfaces the
-// /api/ask quality-eval metrics published by scripts/ask-eval.ts so a hiring
-// reviewer can SEE the AI feature is measured, not just claimed.
-//
-// getAskMetrics() reads Redis per-request under cacheComponents/dynamicIO.
-// The async RSC is wrapped in <Suspense> so the static PPR shell prerenders
-// without blocking on Redis. On a null result — key missing, Redis unreachable,
-// harness never run — the panel renders a minimal "pending" state.
-
 import { Suspense } from 'react';
 import type { AskMetrics } from '@/content/ask-metrics';
 import { getAskMetrics } from '@/content/ask-metrics';
@@ -17,11 +7,8 @@ import { Module } from '../../responsive/Module';
 
 const pct = (rate: number): string => `${Math.round(rate * 100)}%`;
 
-// Cost is a sub-cent figure; 4 decimal places keeps it readable without
-// rounding a real estimate down to "$0.00".
 const usd = (n: number): string => `$${n.toFixed(4)}`;
 
-// Latency reads as whole milliseconds — sub-ms precision is noise here.
 const ms = (n: number): string => `${Math.round(n)}ms`;
 
 function lastRunLabel(iso: string): string {
@@ -33,8 +20,6 @@ function lastRunLabel(iso: string): string {
 function AiMetricsPending() {
   return (
     <div className="font-mono">
-      {/* min-height reserves resolved-state height so the Suspense fallback does not cause a
-          layout shift when the 4-card grid streams in. Different heights for 4-col vs 2-col. */}
       <p className="text-primary-400 text-sm tracking-[0.04em] m-0 min-h-[160px] max-[900px]:min-h-[290px]">
         <span className="text-primary-500 mr-1.5">{'>'}</span>
         eval pending — run <code className="text-primary-500 font-mono">pnpm ask:eval</code> to
@@ -49,7 +34,6 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
 
   return (
     <div className="font-mono">
-      {/* 4-col desktop, 2-col at ≤900px */}
       <div className="grid grid-cols-4 gap-[14px] max-[900px]:grid-cols-2 max-[900px]:gap-3">
         <TerminalPanel className="p-4 pb-[18px] flex flex-col gap-2" data-metric>
           <div className="text-tertiary-50 text-xs max-md:text-[10px] tracking-[0.16em]">
@@ -109,8 +93,6 @@ function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
   );
 }
 
-// Exported for unit testing — the async inner RSC that fetches and renders data.
-// AiMetricsSection (the Suspense wrapper) is what page.tsx renders.
 export async function AiMetricsData() {
   const metrics = await getAskMetrics();
   return <AiMetricsBody metrics={metrics} />;

@@ -1,7 +1,3 @@
-// content/seo.ts
-// JSON-LD Person schema — sourced here, consumed by app/layout.tsx.
-// Full structural typing handled by TypeScript `as const`; Zod guards the key
-// user-facing identity fields at module load so pnpm validate-content catches drift.
 import { z } from 'zod';
 
 export const personSchema = {

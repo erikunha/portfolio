@@ -1,6 +1,5 @@
 import { getThemeColors } from '../../_lib/theme-tokens';
 
-// token is the @theme colour name without the --color- prefix (e.g. "signal").
 type Props = { token: string; usage?: string };
 
 export function ColorSwatch({ token, usage }: Props) {

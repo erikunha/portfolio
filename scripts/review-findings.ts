@@ -1,19 +1,4 @@
 #!/usr/bin/env tsx
-// scripts/review-findings.ts
-//
-// The verification-loop ledger. The review stamp proves the five-agent battery
-// was DISPATCHED; it never proved their Critical/Important findings were fixed.
-// This ledger closes that loop: battery-synthesis records each finding here, and
-// `review:stamp` REFUSES to stamp while any Critical/Important finding is still
-// `open`. A finding leaves `open` only by being `resolved` (cite the fix SHA) or
-// `justified` (cite a written reason / DECISIONS.md entry).
-//
-// HONEST BOUNDARY: this makes RESOLUTION mechanical, but recording findings is
-// still on the operator (battery-synthesis writes them). The honor-system
-// boundary shrinks from "fix the findings" to "record the findings" — smaller
-// and reviewable, since the ledger is visible. Anti-theater: a justified finding
-// must carry a non-empty reason, and resolutions should be re-checked by a
-// separate agent (process rule in CLAUDE.md), not the one that proposed the fix.
 
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -35,32 +20,23 @@ export const LedgerSchema = z.array(FindingSchema);
 
 export const LEDGER_PATH = '.review-findings.json';
 
-/** Critical/Important findings still `open` block the stamp. Minor never blocks. */
 export function blockingFindings(findings: Finding[]): Finding[] {
   return findings.filter(
     (f) => (f.severity === 'critical' || f.severity === 'important') && f.status === 'open',
   );
 }
 
-/** A resolved/justified finding must carry a non-empty reason or it is theater. */
 export function invalidResolutions(findings: Finding[]): Finding[] {
   return findings.filter((f) => f.status !== 'open' && (f.resolution ?? '').trim() === '');
 }
 
 export const ARCHIVE_PATH = '.review-findings-archive.jsonl';
 
-/**
- * Serialize a stamped cycle's findings as append-only JSONL, tagging each with
- * the cycle's HEAD SHA + commit time. This is the data foundation for a future
- * learning step (recurring finding-classes -> proposed gate). It only captures;
- * it never proposes. Returns '' for an empty ledger (nothing to append).
- */
 export function archiveRecords(findings: Finding[], cycleSha: string, cycleIso: string): string {
   if (findings.length === 0) return '';
   return `${findings.map((f) => JSON.stringify({ ...f, cycleSha, cycleIso })).join('\n')}\n`;
 }
 
-/** Stable id from the finding's identity, so re-recording the same issue dedups. */
 export function findingId(source: string, title: string): string {
   return createHash('sha256').update(`${source}::${title}`).digest('hex').slice(0, 8);
 }

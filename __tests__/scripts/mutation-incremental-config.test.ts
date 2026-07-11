@@ -1,8 +1,3 @@
-// __tests__/scripts/mutation-incremental-config.test.ts
-// Pins the incremental-cache optimization. The Stryker flags are read from the
-// PARSED config object (importing stryker.config.mjs), not a string grep, so a
-// commented-out line cannot pass. The workflow cache step is asserted against the
-// raw mutation.yml text (the established CI-config-test pattern, see ci-ui-filter).
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import strykerConfig from '@/stryker.config.mjs';
@@ -16,8 +11,6 @@ describe('stryker incremental config', () => {
   });
 
   it('pins incrementalFile to the repo-root path the cache + gitignore reference', () => {
-    // Stryker's default is reports/stryker-incremental.json; overriding it makes the
-    // config, the actions/cache path, and .gitignore all name the same file.
     expect(config.incrementalFile).toBe('.stryker-incremental.json');
   });
 });
@@ -29,10 +22,7 @@ describe('mutation.yml caches the incremental file', () => {
 
   it('caches the incremental file with the evolving-cache key pattern', () => {
     expect(wf).toContain('path: .stryker-incremental.json');
-    // Regex (not a string literal) so biome's noTemplateCurlyInString does not flag
-    // the literal GitHub Actions ${{ ... }} expression we are intentionally asserting.
     expect(wf).toMatch(/key:\s*stryker-incremental-\$\{\{\s*github\.run_id\s*\}\}/);
-    // restore-keys uses the bare prefix to restore the most recent prior file.
     expect(wf).toMatch(/restore-keys:\s*\|\s*\n\s*stryker-incremental-/);
   });
 

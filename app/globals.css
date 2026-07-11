@@ -1,4 +1,3 @@
-/* app/globals.css — entry point: Tailwind + brand theme + base resets + component classes */
 @import "tailwindcss";
 @import "./css/theme.css";
 @import "./css/base.css";

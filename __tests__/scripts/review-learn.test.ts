@@ -85,7 +85,6 @@ describe('readArchive (tolerant JSONL parsing)', () => {
   it('skips a malformed JSON line instead of throwing, keeping valid records', () => {
     const valid = JSON.stringify(rec({ id: 'ok' }));
     const file = join(tmpdir(), `review-learn-archive-${process.pid}.jsonl`);
-    // valid record, a syntactically-broken line, a blank line, a shape-invalid line.
     writeFileSync(file, `${valid}\n{ not json\n\n${JSON.stringify({ foo: 1 })}\n`);
     try {
       const out = readArchive(file);

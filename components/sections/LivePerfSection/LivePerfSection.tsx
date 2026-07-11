@@ -29,7 +29,6 @@ function PerfBody({ scores, strategy }: { scores: LighthouseScores; strategy: St
 
   return (
     <div>
-      {/* 4-col grid, 2-col on ≤900px, smaller gap on mobile */}
       <div className="grid grid-cols-2 min-[901px]:grid-cols-4 gap-[10px] md:gap-[18px]">
         {cells.map((s) => (
           <div key={s.label} className="text-left">

@@ -1,20 +1,4 @@
 #!/usr/bin/env tsx
-// Usage: pnpm pr-size [--base <ref>]   (also reads PR_BASE / GITHUB_BASE_REF)
-//
-// Calculates branch complexity vs the BASE branch and signals whether to split.
-// Base resolution: --base <ref> > PR_BASE > origin/$GITHUB_BASE_REF (CI) >
-// origin/main. For a sub-PR into an integration branch, size against that
-// branch (e.g. `PR_BASE=origin/feat/x pnpm pr-size`) so it reads as its own
-// small diff, not the cumulative diff from main.
-// Designed to run after each milestone block so you know when to open a PR.
-//
-// Thresholds:
-//   Files:       yellow ≥10   red ≥25
-//   Lines:       yellow ≥400  red ≥1200
-//   Subsystems:  yellow ≥3    red ≥5
-//
-// Exit codes: 0 = green/yellow (ok or warn), 1 = red (split recommended),
-// 2 = blocked (invalid `--base` usage, or the base ref isn't fetched locally).
 
 import { execFileSync } from 'node:child_process';
 
@@ -28,16 +12,9 @@ function run(cmd: string, args: string[]): string {
   return execFileSync(cmd, args, { encoding: 'utf8' });
 }
 
-// Base ref to size against. Sub-PRs into an integration branch should size
-// against THAT branch (set --base / PR_BASE), not main, or they read as the
-// full diff from main. Resolution: --base <ref> > PR_BASE > origin/$GITHUB_BASE_REF
-// (CI sets GITHUB_BASE_REF to the PR target) > origin/main.
 function resolveBase(): string {
   const i = process.argv.indexOf('--base');
   if (i !== -1) {
-    // --base is present: require an explicit ref. Silently falling back to
-    // env/default here would let you think you're sizing against a custom base
-    // when you aren't.
     const val = process.argv[i + 1];
     if (!val || val.startsWith('--')) {
       process.stderr.write('pr-size: --base requires a ref, e.g. `--base origin/feat/x`.\n');
@@ -51,7 +28,6 @@ function resolveBase(): string {
 }
 const BASE = resolveBase();
 
-// Fail early with a clear message if the base ref isn't present locally.
 try {
   run('git', ['rev-parse', '--verify', '--quiet', `${BASE}^{commit}`]);
 } catch {
@@ -61,9 +37,6 @@ try {
   process.exit(2);
 }
 
-// The `${BASE}...HEAD` diffs below use the merge-base (the PR-diff semantic), so
-// a common ancestor must exist. Guard it: an unrelated base or a shallow clone
-// without the merge-base would otherwise crash mid-diff with a cryptic git error.
 try {
   run('git', ['merge-base', BASE, 'HEAD']);
 } catch {
@@ -73,17 +46,14 @@ try {
   process.exit(2);
 }
 
-// Changed file names
 const filesRaw = run('git', ['diff', `${BASE}...HEAD`, '--name-only']);
 const files = filesRaw.trim().split('\n').filter(Boolean);
 
-// Line counts from numstat: added deleted filename
 const numstat = run('git', ['diff', `${BASE}...HEAD`, '--numstat']);
 let insertions = 0;
 let deletions = 0;
 for (const line of numstat.trim().split('\n').filter(Boolean)) {
   const [ins, del] = line.split('\t');
-  // Binary files show '-' — skip them
   if (ins !== '-' && del !== '-') {
     insertions += Number(ins);
     deletions += Number(del);
@@ -91,11 +61,9 @@ for (const line of numstat.trim().split('\n').filter(Boolean)) {
 }
 const linesChanged = insertions + deletions;
 
-// Group files into subsystems: top-2 path segments, collapsing known groups
 function toSubsystem(filePath: string): string {
   const parts = filePath.split('/');
-  if (parts.length === 1) return parts[0] ?? filePath; // root file
-  // Keep top two segments for meaningful grouping
+  if (parts.length === 1) return parts[0] ?? filePath;
   return `${parts[0] ?? ''}/${parts[1] ?? ''}`;
 }
 
@@ -106,15 +74,12 @@ for (const f of files) {
 }
 const subsystems = subsystemMap.size;
 
-// Commit count on this branch
 let commitCount = 0;
 try {
   const log = run('git', ['rev-list', '--count', `${BASE}..HEAD`]);
   commitCount = Number(log.trim());
-} catch {
-  // BASE is already verified above, so a failure here means truncated history
-  // (e.g. a shallow clone with no merge-base) — leave commitCount at 0.
-}
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
+} catch {}
 
 type Level = 'green' | 'yellow' | 'red';
 
@@ -134,7 +99,6 @@ const overallLevel: Level = [fileLevel, lineLevel, sysLevel].includes('red')
     ? 'yellow'
     : 'green';
 
-// Terminal colors
 const C = {
   reset: '\x1b[0m',
   bold: '\x1b[1m',

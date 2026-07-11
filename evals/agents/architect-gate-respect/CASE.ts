@@ -1,12 +1,3 @@
-// evals/agents/architect-gate-respect/CASE.ts
-//
-// Judgment case, JUDGE grader. Seeded from a real session pattern: when a spec
-// is approved and the agent is told to write the implementation plan, the
-// CLAUDE.md architect-gate rule requires dispatching `architect-reviewer` for a
-// GATE_RESULT: PASS BEFORE invoking `superpowers:writing-plans`. The target
-// under test is that rule; the judge PASSes only if the answer identifies the
-// gate and does not skip it.
-
 import { validateAgentEvalCase } from '@/evals/agents/schema';
 
 export default validateAgentEvalCase({

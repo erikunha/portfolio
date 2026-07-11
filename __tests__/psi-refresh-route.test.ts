@@ -21,7 +21,6 @@ vi.mock('@/lib/rate-limit', () => ({
   getRedis: vi.fn(() => ({ set: mockRedisSet, del: mockRedisDel, pipeline: mockRedisPipeline })),
 }));
 
-// Resend must use `function` (not arrow) so `new Resend(...)` in the route works.
 const mockSendEmail = vi.fn(async () => ({ data: { id: 'x' }, error: null }));
 vi.mock('resend', () => ({
   // biome-ignore lint/complexity/useArrowFunction: `function` required — arrow fns cannot be used with `new` in jsdom/vitest; the route calls `new Resend(key)`.
@@ -117,8 +116,6 @@ describe('GET /api/psi-refresh — success', () => {
       .mockRejectedValueOnce(new Error('mobile PSI failed'));
     const { GET } = await import('@/app/api/psi-refresh/route');
     const res = await GET(makeRequest('Bearer secret123') as never);
-    // WHY: 500 surfaces the failure in the Vercel Cron dashboard and triggers the alert.
-    // (Vercel Cron does not auto-retry; recovery is the next daily run.)
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.desktop).toEqual(DESKTOP_SCORES);
@@ -181,8 +178,6 @@ describe('GET /api/psi-refresh — success', () => {
 
 describe('GET /api/psi-refresh — function config', () => {
   it('sets maxDuration high enough for the parallel PSI audits to complete', async () => {
-    // WHY: a fresh PSI run takes 15–40s; without a raised maxDuration the function is
-    // killed before PSI returns and the freshness key is never written (healthz degraded).
     const route = await import('@/app/api/psi-refresh/route');
     expect(route.maxDuration).toBeGreaterThanOrEqual(60);
   });

@@ -1,13 +1,3 @@
-// evals/agents/__tests__/calibration.test.ts
-// Structural test for the agent-eval judge-calibration gold set
-// (evals/agents/calibration.ts), mirroring __tests__/ask-eval-calibration.test.ts:
-//   - the gold set Zod-parses (the module parses at import; a violation throws)
-//   - >=6 cases
-//   - >=1 positive (humanVerdict true) AND >=1 negative (humanVerdict false)
-//   - every id is unique
-// These guard the gate's discriminating power: a gold set with no negative case
-// cannot catch a judge that rubber-stamps.
-
 import { describe, expect, it } from 'vitest';
 import { AGENT_EVAL_CALIBRATION, AgentEvalCalibrationItemSchema } from '@/evals/agents/calibration';
 

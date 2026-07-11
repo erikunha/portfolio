@@ -13,7 +13,6 @@ describe('KbdKey', () => {
   });
   it('applies sm size padding', () => {
     const { container } = render(<KbdKey size="sm">Tab</KbdKey>);
-    // sm applies tighter padding class
     expect(container.firstElementChild?.classList.contains('px-1')).toBe(true);
   });
 });

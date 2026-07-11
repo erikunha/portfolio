@@ -1,8 +1,3 @@
-// components/sections/PerfReceiptsSection/PerfReceiptsSection.test.tsx
-// Behavioral tests: hero receipt carries data-featured attribute instead of a
-// concatenated CSS class — the attribute drives the Tailwind variant selector
-// via data-[featured]:... utility classes.
-
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -28,8 +23,6 @@ describe('PerfReceiptsSection — hero data-featured variant', () => {
 
   it('non-hero delta elements do not carry data-featured', async () => {
     const doc = await renderSection();
-    // Query delta elements specifically (not all paragraphs) to avoid matching
-    // company/note/metric <p> elements that are never delta candidates.
     const nonFeaturedDeltas = doc.querySelectorAll('[data-delta]:not([data-featured])');
     expect(nonFeaturedDeltas.length).toBeGreaterThan(0);
   });

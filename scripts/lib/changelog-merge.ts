@@ -1,20 +1,9 @@
-// scripts/lib/changelog-merge.ts
-//
-// Pure merge logic for the git-driven design-system changelog.
-// WHY union-merge instead of regenerate-from-git: PRs are squash-merged, so
-// the individual `type(design-system): subject` commits that produced older
-// changelog entries no longer exist in main's history (and GitHub's squash
-// bodies don't retain them either). A from-scratch regeneration silently
-// erases every entry older than the current branch — the existing file is
-// therefore part of the source of truth, and sync must be append-only.
-
 export type ChangelogEntry = { type: string; description: string };
 export type ChangelogGroups = Map<string, ChangelogEntry[]>;
 
 const DATE_HEADING = /^## (\d{4}-\d{2}-\d{2})\s*$/;
 const ENTRY_LINE = /^- \*\*(\w+):\*\* (.+)$/;
 
-/** Extract `## YYYY-MM-DD` groups and their `- **type:** description` entries. */
 export function parseChangelogGroups(mdx: string): ChangelogGroups {
   const groups: ChangelogGroups = new Map();
   let currentDate: string | null = null;
@@ -37,11 +26,6 @@ export function parseChangelogGroups(mdx: string): ChangelogGroups {
   return groups;
 }
 
-/**
- * Union of the existing file's groups and the git-derived groups.
- * Existing entries always survive; git entries append unless an identical
- * `type: description` already exists for that date (idempotent re-sync).
- */
 export function mergeChangelogGroups(
   existing: ChangelogGroups,
   fromGit: ChangelogGroups,
@@ -63,7 +47,6 @@ export function mergeChangelogGroups(
   return merged;
 }
 
-/** Render groups newest-date-first in the changelog's list format. */
 export function renderChangelogGroups(groups: ChangelogGroups): string {
   const dates = [...groups.keys()].sort((a, b) => b.localeCompare(a));
   return dates

@@ -1,13 +1,5 @@
 name: Agent Eval
 
-# Non-blocking platform-self-eval, isolated in its OWN workflow so the weekly
-# cron drives only this job. (Putting the schedule on ci.yml's top-level `on:`
-# would also fire the whole suite weekly, including the paid ai-eval job, since
-# the always-on jobs run on any non-pull_request event.) Distinct from ci.yml's
-# ai-eval job, which gates /api/ask (the PRODUCT): this evals the PLATFORM's own
-# prompts/rules via scripts/agent-eval.ts. It spends AI Gateway credits on a
-# Monte-Carlo run, so it runs ONLY on manual dispatch or the weekly schedule,
-# is not a required check, and gates nothing (it is in no other workflow's needs).
 on:
   workflow_dispatch:
   schedule:
@@ -34,9 +26,6 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Agent eval suite (Monte-Carlo prompt regression)
-        # No Upstash credentials needed: publishAggregate is env-gated and the
-        # local agent-eval-result.json is the artifact of record. Redis publish
-        # to agent-eval:latest happens only when the Upstash env is present.
         run: pnpm eval:agents
         env:
           AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY_BUILD }}

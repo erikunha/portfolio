@@ -19,8 +19,6 @@ const README_DESKTOP: ReadmeLine[] = [
     node: (
       <>
         {'Open to '}
-        {/* min-width reserves longest role label ([Principal] = 11 chars) to prevent
-            text reflow as roles cycle. Update if ROLES array in RoleTyper.tsx changes. */}
         <span className="inline-block min-w-[9em]">
           <RoleTyper className="bg-primary-500 text-secondary-950 px-1.5 py-px font-bold tracking-[0.04em]" />
         </span>
@@ -68,7 +66,6 @@ export function ReadmeSection() {
     <Module id="sec-readme" header="CAT README.MD" icon={<IconReadme />}>
       <ReadmeBlock lines={README_DESKTOP} />
 
-      {/* Hidden on mobile (max-[768px]:hidden) */}
       <div className="max-[768px]:hidden">
         <div className="mt-[22px] border-t border-dashed border-primary-quiet pt-[18px]">
           <div className="flex justify-between items-center text-primary-400 text-xs tracking-[0.14em] mb-2.5 font-mono">

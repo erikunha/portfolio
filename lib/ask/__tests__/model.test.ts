@@ -1,13 +1,3 @@
-// lib/ask/__tests__/model.test.ts
-// WS1: ASK_MODEL is the single source of truth for the /api/ask feature model.
-//
-// Two contracts:
-//  1. Behavioral — the value POST /api/ask passes to streamText IS ASK_MODEL.
-//     Catches route.ts drifting back to a local literal.
-//  2. No-drift — the raw model literal exists in exactly one source location
-//     (lib/ask/model.ts), so route.ts and the eval harness can never grade a
-//     different model than ships.
-
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { NextRequest } from 'next/server';
@@ -67,9 +57,6 @@ async function drain(res: Response): Promise<void> {
 beforeEach(() => {
   vi.resetModules();
   mockStreamText.mockReset().mockReturnValue(makeStreamTextResult());
-  // Hermetic: importing the route loads lib/env.ts, which validates managed
-  // vars at module load (e.g. UPSTASH_REDIS_REST_URL format). Clear them so a
-  // stray/malformed ambient value can't fail this test for unrelated reasons.
   for (const key of [
     'UPSTASH_REDIS_REST_URL',
     'UPSTASH_REDIS_REST_TOKEN',
@@ -79,7 +66,6 @@ beforeEach(() => {
     'CRON_SECRET',
     'DEPLOY_SALT',
   ]) {
-    // '' reads as "unset" (lib/env.ts coerces '' → undefined); type-safe, no cast.
     vi.stubEnv(key, '');
   }
   vi.stubEnv('ASK_ENABLED', 'true');
@@ -106,12 +92,7 @@ describe('ASK_MODEL — single source of truth', () => {
 
   it('the raw model literal lives in exactly one source location', () => {
     // behavioral-test-allow: WS1 no-drift invariant — the model literal must
-    // exist in a single source file so route.ts and the eval harness import it.
     const files = ['app/api/ask/route.ts', 'scripts/ask-eval.ts', 'lib/ask/model.ts'];
-    // Match the literal in ANY quote style (' " `) so a re-introduced literal
-    // can't bypass the no-drift guard by switching quotes. Scan code only —
-    // strip comments first so a documentation mention (e.g. a backtick code-span
-    // referencing the model in a comment) is not a false positive.
     const stripComments = (s: string): string =>
       s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
     const escaped = ASK_MODEL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

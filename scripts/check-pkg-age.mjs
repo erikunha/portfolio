@@ -1,32 +1,7 @@
-/**
- * Supply-chain age gate.
- *
- * Reads every resolved package+version from pnpm-lock.yaml and queries the
- * npm registry for its publish timestamp. Fails if any package version was
- * published within MIN_DAYS_OLD days (default 7).
- *
- * Why: newly published package versions are a common supply-chain attack
- * vector - attackers publish a malicious version and hope CI/developers
- * install it before it is flagged. Rejecting versions younger than 7 days
- * gives the community time to vet the release. Legitimate teams running
- * `pnpm up --latest` will hit this gate if a dep just released; fix by
- * pinning to the previous version temporarily or waiting.
- *
- * Usage: node scripts/check-pkg-age.mjs [--min-days N] [--warn-only]
- *   --min-days N   Minimum age in days (default: 7)
- *   --warn-only    Emit warnings but exit 0 (useful in PR preview CI)
- */
-
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-// Pure. Extract every resolved name@version from a pnpm-lock.yaml string.
-// pnpm lockfile v9 snapshot keys look like `  'name@version':`. pnpm-appended
-// peer-dep suffixes ("1.2.3(zod@4.4.3)" / "1.2.3_react@19") are stripped to the
-// bare version. Exported so the gate's parser is regression-testable: if a pnpm
-// upgrade changes the snapshot-key format, this returns an empty Map and the
-// caller fails loudly rather than passing the age gate vacuously.
 export function parseLockfilePackages(lockfileContent) {
   const pkgRe = /^ {2}'(@?[^@']+)@([^']+)':/gm;
   const packages = new Map();
@@ -58,11 +33,6 @@ async function main() {
   const lockfile = readFileSync(resolve('pnpm-lock.yaml'), 'utf8');
   const packages = parseLockfilePackages(lockfile);
 
-  // Gate-integrity check: matching zero packages means the lockfile is empty or
-  // its snapshot-key format changed (the regex is out of date), NOT that every
-  // dep is old enough. Exiting 0 here would pass the supply-chain gate
-  // vacuously, so fail as infra (exit 2) regardless of --warn-only: a blind gate
-  // is a worse outcome than a noisy one.
   if (packages.size === 0) {
     console.error(
       '[pkg-age] GATE ERROR: matched 0 packages in pnpm-lock.yaml. The lockfile is empty or its snapshot-key format changed; the age gate cannot run. Refusing to pass vacuously.',
@@ -78,7 +48,6 @@ async function main() {
   const tooNew = [];
   const fetchErrors = [];
 
-  // Batch in groups of 20 to avoid hammering the registry.
   const entries = [...packages.values()];
   const BATCH = 20;
 
@@ -91,9 +60,6 @@ async function main() {
             headers: { Accept: 'application/vnd.npm.install-v1+json' },
             signal: AbortSignal.timeout(8000),
           });
-          // 404/401 = private/scoped package not in public registry - skip silently.
-          // Any other non-OK (429, 5xx) is a registry reliability issue - record it
-          // so the run is noisy and doesn't silently pass too-new packages.
           if (!res.ok) {
             if (res.status === 404 || res.status === 401) return;
             fetchErrors.push(`  WARN ${name}@${version}: registry returned HTTP ${res.status}`);
@@ -101,15 +67,13 @@ async function main() {
           }
           const data = await res.json();
           const publishedAt = data.time?.[version];
-          if (!publishedAt) return; // version absent from registry time map - skip
+          if (!publishedAt) return;
           const ageMs = now - new Date(publishedAt).getTime();
           if (ageMs < MIN_AGE_MS) {
             const ageDays = (ageMs / (24 * 60 * 60 * 1000)).toFixed(1);
             tooNew.push({ name, version, ageDays, publishedAt });
           }
         } catch (err) {
-          // Network failures are non-fatal: the age gate must not block
-          // offline or air-gapped builds.
           const msg = err instanceof Error ? err.message : String(err);
           fetchErrors.push(`  SKIP ${name}@${version}: ${msg}`);
         }
@@ -143,15 +107,12 @@ async function main() {
   }
 }
 
-// Run only when invoked directly, not when imported by the unit test.
 if (
   typeof process.argv[1] === 'string' &&
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
   main().catch((err) => {
     console.error(`[pkg-age] ${err instanceof Error ? err.message : String(err)}`);
-    // A missing or unreadable pnpm-lock.yaml is an infra failure (exit 2), not
-    // a version violation (exit 1), matching the gate's exit-code taxonomy.
     process.exit(err?.code === 'ENOENT' || err?.code === 'EACCES' ? 2 : 1);
   });
 }

@@ -1,9 +1,3 @@
-// __tests__/agent-eval-runner.test.ts
-// Unit test for the runner's PURE aggregation (scripts/agent-eval.ts
-// buildAggregate). The main() I/O loop is exercised by the integration check
-// (C-b.8); here we assert only that buildAggregate assembles the
-// AgentEvalAggregate shape correctly and computes the gate from its inputs.
-
 import { describe, expect, it } from 'vitest';
 import type { CaseStats } from '@/lib/eval/montecarlo';
 import type { CalibrationResult } from '@/lib/eval/types';
@@ -36,8 +30,6 @@ const caseStats: CaseStats[] = [
   },
 ];
 
-// Fixed timestamp injected into buildAggregate (now pure) so the `ts` field is
-// asserted exactly, not just typeof-checked.
 const TS = '2026-06-19T12:00:00.000Z';
 
 describe('scripts/agent-eval buildAggregate', () => {
@@ -57,7 +49,7 @@ describe('scripts/agent-eval buildAggregate', () => {
       costEstimateUsd: 0.42,
       withinBudget: true,
     });
-    expect(agg.ts).toBe(TS); // injected verbatim — buildAggregate is now pure
+    expect(agg.ts).toBe(TS);
     expect(agg.targetModelMechanical).toBe(MODELS.mechanical);
     expect(agg.targetModelJudgment).toBe(MODELS.judgment);
     expect(agg.judgeModel).toBe(MODELS.judge);

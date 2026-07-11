@@ -1,18 +1,5 @@
 name: Mutation Testing
 
-# Stryker mutation testing — weekly signal on test suite sensitivity.
-# NOT a PR gate: a real run is slow. The WORKING runner executes the suite
-# against ~2000 mutants and takes far longer than the old "~10-15 min" estimate,
-# which was measured while the runner was silently crashing (loading no tests, so
-# it "finished" fast doing nothing). Its value is trend tracking, not per-commit
-# blocking. Results are uploaded as an artifact. timeout-minutes below is set
-# generously because this is a weekly, non-blocking job.
-#
-# Mutation score below 60% is a signal that tests are not sensitive to the
-# bugs they claim to cover. See STANDARDS.md Chapter 5 (Testing).
-#
-# Run manually: pnpm test:mutation
-
 on:
   schedule:
     - cron: '0 4 * * 0'  # Weekly Sunday 04:00 UTC
@@ -22,9 +9,6 @@ jobs:
   mutation:
     name: Stryker mutation score
     runs-on: ubuntu-latest
-    # 30 min cancelled the working runner mid-run (the dead runner used to finish
-    # in ~7 min doing nothing). A real full-scope run needs much more headroom;
-    # 120 is a generous ceiling for a non-blocking weekly job (GitHub job max 360).
     timeout-minutes: 120
 
     steps:
@@ -41,13 +25,6 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Cache Stryker incremental file
-        # Evolving-cache pattern: the run_id key is unique so the primary key always
-        # misses, forcing the post-step to SAVE the updated file; restore-keys
-        # restores the most recent prior file. Not keyed on the lockfile on purpose:
-        # Stryker self-heals an incompatible incremental file by rebuilding (one full
-        # run), so binding the key to deps would force a needless full run on every
-        # Dependabot bump. A cache miss (first run, or 7-day eviction) is a correct
-        # full run that re-seeds the cache.
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .stryker-incremental.json
@@ -60,14 +37,6 @@ jobs:
         continue-on-error: true
 
       - name: Guard — fail loudly if the runner did not actually run
-        # De-masking guard. `continue-on-error: true` on the step above keeps a
-        # genuine LOW mutation score non-blocking (its value is a weekly trend
-        # signal, not a per-commit gate). But that same flag silently masked a
-        # RUNNER CRASH (the vitest runner failing to load under pnpm) as
-        # job-success for weeks, producing zero signal. Distinguish the two: a
-        # real run always writes a report with scoreable mutants; a crash writes
-        # none. Fail the job ONLY in the crash case, so a dead runner can never
-        # hide again while a real low score still passes through non-blocking.
         run: |
           if [ ! -f mutation-report.json ]; then
             echo "::error::Stryker produced no mutation-report.json — the runner crashed (see the 'Run mutation tests' log). This is NOT a low score."

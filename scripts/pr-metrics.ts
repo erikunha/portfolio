@@ -1,27 +1,10 @@
 #!/usr/bin/env tsx
-// Usage: pnpm pr-metrics [pr-number]
-//
-// Reports AI workflow quality metrics for a PR:
-//   - claude-review cycle count (number of /claude-review triggers = pre-
-//     implementation discipline signal)
-//   - PR size (additions + deletions)
-//   - Days open
-//
-// More than 2 claude-review cycles is the signal that thinking-inversion or TDD
-// failed upstream — bugs reached review that should have been caught earlier.
-//
-// Called by ready-for-pr.ts as an informational panel (no exit 1 on its own).
-// Can also be run standalone: pnpm pr-metrics 52
 
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execFileP = promisify(execFile);
 
-// A claude-review cycle = one `/claude-review` trigger comment on the PR. Anchored
-// to a line that is ONLY the bare trigger (the form the GitHub Action requires), so
-// a prose comment that merely quotes the command (e.g. "run `... --body /claude-review`")
-// is not miscounted as a cycle — keeps the 1/2/>2 calibration one-trigger-per-cycle.
 const CLAUDE_REVIEW_TRIGGER = /^\s*\/claude-review\s*$/m;
 
 interface PrJson {

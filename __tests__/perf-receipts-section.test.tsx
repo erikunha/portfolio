@@ -1,9 +1,3 @@
-// __tests__/perf-receipts-section.test.tsx
-// Behavioral tests for components/sections/PerfReceiptsSection/PerfReceiptsSection.tsx.
-// Locks down: renders all receipts from the content array; hero card receives
-// the hero class modifier; ReceiptCard with mobileMetric renders both spans;
-// desktopOnly cards are rendered in the DOM (CSS controls visibility).
-
 import { type ComponentType, createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
@@ -61,9 +55,8 @@ describe('PerfReceiptsSection', () => {
   it('renders a receipt card that has mobileMetric with two metric spans', async () => {
     const container = await render();
     const { perfReceipts } = await import('@/content/perf-receipts');
-    // Find a receipt that has mobileMetric defined
     const mobileReceipt = perfReceipts.find((r) => r.mobileMetric != null);
-    if (!mobileReceipt) return; // skip if no such receipt in content
+    if (!mobileReceipt) return;
     expect(container.textContent).toContain(mobileReceipt.mobileMetric as string);
   });
 

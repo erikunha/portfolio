@@ -1,8 +1,3 @@
-// Type declarations for the .mjs transcript helper (allowJs is false in
-// tsconfig, so the .mjs has no inferred types). Keeps review-stamp.ts and the
-// unit tests fully typechecked without converting the helper to TypeScript
-// (the spec mandates scripts/lib/transcript.mjs).
-
 export type TranscriptRecord = Record<string, unknown>;
 
 export function readTranscript(transcriptPath: string): TranscriptRecord[];

@@ -28,7 +28,6 @@ describe('StatTile', () => {
   it('display variant renders the value at the app stat-strip scale (text-2xl)', () => {
     const { container } = render(<StatTile value="1" label="x" variant="display" />);
     const dd = container.querySelector('dd');
-    // value must dominate its label like the app's big stat tiles (SYS_HEALTH: 24px desktop / 16px mobile)
     expect(dd?.classList.contains('text-2xl')).toBe(true);
     expect(dd?.classList.contains('max-md:text-base')).toBe(true);
   });

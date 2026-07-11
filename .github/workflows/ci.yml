@@ -1,35 +1,5 @@
 name: CI
 
-# Required jobs for branch protection: quality-fast, typecheck, test, build, performance,
-# e2e-functional, e2e-visual-chromium, ai-eval.
-# Optional: add "CodeQL / Analyze (javascript-typescript)" to required checks in GitHub Settings to enforce it as a branch-protection gate (non-blocking by default).
-#
-# Path-filter strategy (detect-changes job): the WATCHED PATHSPECS are defined in
-# scripts/detect-changes-paths.mjs (AI_PATHS / APP_PATHS / UI_PATHS) - the single
-# source of truth, validated by `pnpm check:detect-changes-paths`. This comment
-# documents only the STRATEGY; it deliberately does not re-list the paths (a second
-# copy would drift - which is the whole reason the lists were hoisted to a manifest).
-#   ai=true   → the AI-eval surface: the ask route + its lib/ask, lib/agent, and
-#               lib/eval judge/calibration code, the eval corpus/calibration content,
-#               and scripts/ask-eval.ts. Gates: ai-eval (also gates e2e-functional to
-#               avoid credit waste).
-#   app=true  → anything that can affect the build / perf / e2e output: app,
-#               components, design-system, lib, content, public, the build/LHCI/E2E
-#               configs, and package.json / pnpm-lock. Gates: performance,
-#               e2e-functional, e2e-visual-chromium.
-#   ui=true   → a deliberate SUBSET of app that can change a rendered pixel (drops
-#               workflows, lighthouserc, the bundle-size script; excludes lib/eval and
-#               lib/__tests__; compares package.json browserslist/pnpm semantically).
-#               Gates: the visual / Argos job.
-#   NOTE: package.json / pnpm-lock.yaml are intentionally NOT in the ai=true PATHS,
-#         to avoid burning AI Gateway credits on lockfile churn — so minor/patch
-#         dep bumps to AI-path packages skip ai-eval (dependency-review covers their
-#         security). EXCEPTION: the runner re-arms ai=true when the `ai` package's
-#         MAJOR changes (aiMajor slice in detect-changes.mjs), so a breaking SDK
-#         bump runs ai-eval. This closes the gap where dependabot #169 bumped `ai`
-#         6->7 as a deps-only change and broke prod /api/ask unvalidated.
-# Skipped required checks are treated as satisfied by GitHub branch protection.
-
 on:
   pull_request:
   push:
@@ -43,9 +13,6 @@ on:
         type: choice
         options: ['false', 'true']
 
-# Top-level cancel-in-progress is false: a push to main must not cancel the
-# slower visual/e2e jobs still running from the previous commit.
-# Fast jobs (quality-fast, typecheck, test, build) use per-job concurrency groups instead.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
@@ -120,12 +87,6 @@ jobs:
         run: pnpm lint:css-tokens
 
       - name: Package age check (supply-chain, info-only)
-        # --warn-only: exits 0 for age violations (blocking a push for a
-        # freshly-released dep is too aggressive for solo development; warnings
-        # are visible in CI logs). It still exits 2 on an infra failure (an
-        # empty or format-changed lockfile that matches 0 packages, or a
-        # missing/unreadable lockfile) regardless of --warn-only, so a blinded
-        # gate fails the job instead of passing vacuously.
         run: node scripts/check-pkg-age.mjs --warn-only
 
       - name: PR comment merge gate
@@ -219,8 +180,6 @@ jobs:
           retention-days: 7
 
       - name: Post coverage comment
-        # Skip on fork PRs: GITHUB_TOKEN write permission is not granted to forks.
-        # Mirrors the same guard used in the ai-eval job.
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         continue-on-error: true
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -339,9 +298,6 @@ jobs:
           DEPLOY_SALT: ci-build-salt
 
       - name: Bundle size gate
-        # Gates total client-chunk gzipped size. Per-route First Load JS is not
-        # extractable from the Turbopack manifest; the 43KB island target is
-        # tracked via `pnpm bundle:analyze`, not gated here.
         run: node scripts/check-bundle-size.mjs --max-client-kb=220
 
       - name: Upload build artifact
@@ -362,32 +318,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      # LHCI posts a "Lighthouse CI" commit status linking to the report it
-      # uploads to temporary-public-storage. The basic-token path (not the LHCI
-      # GitHub App) sets a commit status directly via the GitHub API, which needs
-      # statuses: write. The budgets themselves are still enforced by the LHCI
-      # assertions regardless of whether the status posts.
       statuses: write
     timeout-minutes: 20
     concurrency:
       group: perf-${{ github.ref }}
       cancel-in-progress: true
-    # Skip on PRs that touch only scripts/docs/CI — LHCI only matters for app code changes.
     if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
     needs: [build, detect-changes]
     env:
       LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
-      # The built-in Actions token (no extra secret). LHCI uses LHCI_GITHUB_TOKEN
-      # for the basic GitHub-status path; on fork PRs this token is read-only so
-      # LHCI just warns and skips the status (it never fails the build on a
-      # status-post error). For the richer per-category checks, swap to the LHCI
-      # GitHub App's LHCI_GITHUB_APP_TOKEN secret instead.
       LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # On pull_request the runner checks out the ephemeral MERGE commit, so LHCI
-      # would post its lhci/url/* statuses there — invisible on the PR. Pin the
-      # build's current hash to the PR HEAD so the statuses (and their report
-      # links) land on the PR commit; on push events this falls back to the
-      # pushed SHA, which already matches the checked-out HEAD.
       LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -473,12 +413,7 @@ jobs:
           name: next-build
           path: .next/
       - name: Start preview server
-        # WHY: matrix.project values are workflow-defined literals — never PR-controlled input.
-        # Keeping them literal prevents shell-injection via ${{ matrix.project }} expansion.
         run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
-        # DEPLOY_SALT is load-bearing: without it, lib/ip-hash.ts resolveSalt()
-        # takes the production Upstash path (CI has no Redis creds) and throws,
-        # so every validated /api/* request 500s via hashIp() in lib/server/route.ts.
         env:
           DEPLOY_SALT: ci-build-salt
       - name: Wait for server
@@ -490,9 +425,6 @@ jobs:
           }
       - name: Run functional e2e (tests/e2e specs)
         if: matrix.project != 'chromium-components'
-        # WHY: design-system-components.spec.ts is excluded via testIgnore in
-        # playwright.config.ts (darwin-only visual baselines). Auto-discovery here
-        # so new functional specs are picked up without a ci.yml edit.
         run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/
       - name: Run functional e2e (co-located component specs)
         if: matrix.project == 'chromium-components'
@@ -520,25 +452,17 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           EVENT_NAME: ${{ github.event_name }}
-        # Pathspecs live in scripts/detect-changes-paths.mjs (single source of
-        # truth, validated by check:detect-changes-paths). The runner uses only
-        # node builtins, so ubuntu's preinstalled node runs it with no pnpm install.
         run: node scripts/detect-changes.mjs
 
   ai-eval:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Skip on fork PRs: repository secrets are not available to forks.
-    # Skip when no AI-relevant files changed: GitHub treats skipped required checks as satisfied.
     if: |
       always()
       && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
       && needs.detect-changes.outputs.ai == 'true'
       && !contains(needs.*.result, 'failure')
       && !contains(needs.*.result, 'cancelled')
-    # Run last: avoids burning AI Gateway credits when any required gate already fails.
-    # always() lets GitHub evaluate the condition even when upstream jobs fail.
-    # skipped (path-filtered) jobs are allowed — only failure/cancelled blocks.
     needs: [detect-changes, quality-fast, typecheck, test, build, e2e-functional, performance, e2e-visual-chromium]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -550,8 +474,6 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: AI eval suite
-        # No Upstash credentials: the route's rate-limit/budget/dedup paths are
-        # all fail-open when Redis is unavailable. Metrics publish is best-effort.
         run: pnpm ask:eval
         env:
           AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY_BUILD }}
@@ -564,11 +486,6 @@ jobs:
   e2e-visual-chromium:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # REQUIRED: Linux Chromium rendering is deterministic — pixel-diff comparisons
-    # are stable enough to gate on. Baselines are refreshed via workflow_dispatch.
-    # Skip on PRs that touch only scripts/docs/CI: visual diffs only matter for code
-    # that can change rendered output. Gated on `ui` (not `app`) so a workflow-only
-    # PR does not run the visual suite and report spurious Argos "N added" diffs.
     if: github.event_name != 'pull_request' || needs.detect-changes.outputs.ui == 'true'
     needs: [build, detect-changes]
     strategy:
@@ -613,13 +530,6 @@ jobs:
         run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts
         env:
           ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
-          # WHY: the two visual matrix jobs (chromium desktop = 5 shots; chromium-mobile
-          # = 4, hero skipped) must MERGE into one Argos build. That needs all three vars:
-          # ARGOS_PARALLEL=true activates parallel mode (without it the nonce/total are
-          # ignored), the nonce groups the jobs, and the total tells Argos how many uploads
-          # to wait for. Missing the enable flag let each job upload a SEPARATE build, so
-          # whichever finished last set the commit status — mobile last produced the
-          # spurious "4 added, 5 removed" (4-shot mobile set vs the 5-shot desktop baseline).
           ARGOS_PARALLEL: true
           ARGOS_PARALLEL_NONCE: ${{ github.run_id }}-${{ github.run_attempt }}
           ARGOS_PARALLEL_TOTAL: ${{ strategy.job-total }}
@@ -646,11 +556,6 @@ jobs:
   semgrep:
     name: Semgrep (static analysis)
     runs-on: ubuntu-latest
-    # Split gating: the fixture self-test step below is BLOCKING (a broken
-    # vendored rule fails the job); the report-only scan step carries its own
-    # step-level continue-on-error so its FINDINGS stay non-blocking until the
-    # FP-rate baseline is recorded (see DECISIONS.md). Promotion of the scan to
-    # blocking on findings is a separate change.
     permissions:
       security-events: write   # required to upload SARIF to the code-scanning tab
       contents: read
@@ -666,19 +571,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install Semgrep (exact-pinned) and resolve its path
-        # The wrapper invokes semgrep by name, but pip's console-script bin dir
-        # is NOT reliably on the Node child process's PATH on hosted runners, and
-        # `python -m semgrep` is not a supported entrypoint (semgrep ships a
-        # console script only). Resolve the absolute console-script path from the
-        # active interpreter and hand it to the wrapper via SEMGREP_BIN, so the
-        # invocation is PATH-independent. The trailing --version fails the step
-        # early with a clear signal if resolution is wrong.
         run: |
-          # WHY setuptools<81: semgrep 1.97.0 imports pkg_resources at runtime,
-          # which setuptools >=81 removed (ModuleNotFoundError: No module named
-          # 'pkg_resources'). Pin setuptools <81 to keep pkg_resources available.
-          # External-dep incompatibility, not our code; verified locally — 80.10.2
-          # imports OK, 82.0.1 raises. See DECISIONS.md.
           pip install "setuptools<81" semgrep==1.97.0
           SEMGREP_BIN=$(python -c "import os,sysconfig,site,shutil; c=[os.path.join(sysconfig.get_path('scripts'),'semgrep'),os.path.join(site.getuserbase(),'bin','semgrep')]; w=shutil.which('semgrep'); c=c+[w] if w else c; print(next((p for p in c if os.path.exists(p)),''))")
           test -n "$SEMGREP_BIN" || { echo '::error::semgrep console script not found after install'; exit 1; }
@@ -686,35 +579,13 @@ jobs:
           "$SEMGREP_BIN" --version
 
       - name: Self-test - vendored rules fire on the fixture
-        # Blocking (no continue-on-error). Proves the content-pinned .semgrep
-        # rules still fire: scans a temp copy of tests/fixtures/semgrep/{vulnerable,
-        # clean}.ts (temp because .semgrepignore excludes tests/fixtures/) with
-        # --config .semgrep ONLY, and fails the job if a vendored rule stopped
-        # firing. A clean tree makes the report-only scan below find nothing
-        # whether the rules work or not, so without this the gate is vestigial.
-        # Exit 1 = rule regression, exit 2 = infra (semgrep missing/crash). Uses
-        # the SEMGREP_BIN resolved by the install step above.
         run: node scripts/check-semgrep-fixture.mjs
 
       - name: Run Semgrep (SARIF, report-only)
-        # Omit --error so semgrep exits 0 on findings and the step writes SARIF
-        # reliably. Step-level continue-on-error keeps the real-tree scan's
-        # FINDINGS non-blocking (the self-test step above is what gates). When
-        # promoting to blocking: remove this continue-on-error AND add --error,
-        # so semgrep exits 1 on findings and the step (and job) fail together.
         continue-on-error: true
         run: node scripts/run-semgrep.mjs --sarif semgrep.sarif
 
       - name: Assert Semgrep produced a report
-        # The scan step above is continue-on-error so its FINDINGS stay
-        # non-blocking, but the scan RUNNING is required. If run-semgrep.mjs
-        # crashed before writing SARIF, the soft scan step and the
-        # file-existence-guarded upload step below both pass silently and the
-        # job goes green with zero semgrep signal (vacuous pass). Fail loudly
-        # here so "the real-tree scan did not run" is a job failure (infra),
-        # not a clean result. Findings stay non-blocking; only a no-output scan
-        # fails. `-s` requires the file to exist AND be non-empty (semgrep
-        # always writes a full SARIF structure even with zero findings).
         run: |
           if [ ! -s semgrep.sarif ]; then
             echo '::error::Semgrep produced no SARIF (semgrep.sarif missing or empty); the real-tree scan did not run. This is an infra failure, not a findings result.'
@@ -722,11 +593,6 @@ jobs:
           fi
 
       - name: Upload SARIF to code-scanning
-        # Guard on the file existing, not just always(): if the scan step never
-        # wrote SARIF (e.g. semgrep failed to run), uploading a missing path
-        # fails with a confusing second error that masks the real cause. This
-        # makes "no findings file" a clean skip and keeps the failure signal on
-        # the scan step itself.
         if: always() && hashFiles('semgrep.sarif') != ''
         uses: github/codeql-action/upload-sarif@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4.36.3
         with:

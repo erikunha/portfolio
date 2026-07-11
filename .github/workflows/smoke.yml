@@ -1,20 +1,8 @@
 name: Post-Deploy Smoke Test
 
-# Fires when Vercel updates a GitHub Deployment status.
-# Vercel registers GitHub Deployments on every push; state=success means
-# the build and CDN promotion completed. We filter to Production only.
 on:
   deployment_status:
 
-# Canonical production host. The custom domain serves a 308 redirect on the
-# APEX (erikunha.dev -> www.erikunha.dev); the apex 308 carries ONLY the
-# redirect-layer HSTS header, NOT the application security headers. Header and
-# healthz assertions MUST therefore run against the canonical www 200 DIRECTLY
-# (no -L), never the apex 308 and never a followed redirect - asserting headers
-# across -L would FALSE-POSITIVE on the 308's weak HSTS, the exact error that
-# produced the dissolved WS0 CRITICAL. (The one homepage step that DOES use -L
-# deliberately curls the APEX to verify the redirect path; see its comment.)
-# See WS5 spec.
 env:
   CANONICAL_HOST: https://www.erikunha.dev
 
@@ -30,35 +18,11 @@ jobs:
 
     steps:
       - name: Health check - deployment artifact /api/healthz (200 ok or 503 degraded)
-        # WHY target_url: probes the specific deployment artifact, not the CDN
-        # edge which may still serve the previous version during propagation.
-        # WHY env: keeps target_url + secret as shell variables - ${{ }} inline
-        # would substitute the raw value into the script body (injection risk).
-        # WHY accept 503: healthz returns 503 when the PSI cron is stale -
-        # a monitoring concern, not a deploy failure.
-        # WHY the bypass header: ONLY the *.vercel.app deployment artifact is
-        # behind Vercel Deployment Protection (responds 401 with a
-        # _vercel_sso_nonce cookie), so probing it requires the "Protection
-        # Bypass for Automation" secret sent as x-vercel-protection-bypass.
-        # Canonical hosts (erikunha.dev / www) are public and are probed
-        # DIRECTLY - no bypass header, no skip. For the protected artifact:
-        # without the secret it is unreachable to CI, so the probe is SKIPPED
-        # (loudly) rather than failing the deploy - the canonical-host healthz
-        # step below still gates real production health; with the secret set, a
-        # 401 becomes a genuine failure (bad/rotated secret).
-        # NEVER add `set -x` to this step: it would trace-print the curl line
-        # with the expanded $BYPASS secret into the public CI log.
         env:
           DEPLOY_URL: ${{ github.event.deployment_status.target_url }}
           BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           DEPLOY_URL="${DEPLOY_URL%/}"
-          # Anchor matching to a bare https host. The case globs below use `*`,
-          # which spans `/` - so without this a forged target_url like
-          # `https://evil.com/x.vercel.app` would match `https://*.vercel.app`
-          # and leak the bypass secret to evil.com. Reject anything where the
-          # post-scheme remainder is not a plain hostname (no path, userinfo,
-          # port, query, or scheme mismatch).
           host_only="${DEPLOY_URL#https://}"
           case "$host_only" in
             "$DEPLOY_URL"|*[!a-zA-Z0-9.-]*)
@@ -67,7 +31,6 @@ jobs:
           header_args=()
           case "$DEPLOY_URL" in
             https://*.vercel.app)
-              # Protected artifact: the bypass secret is required.
               if [ -z "$BYPASS" ]; then
                 echo "WARNING: VERCEL_AUTOMATION_BYPASS_SECRET is unset - the *.vercel.app artifact is gated by Vercel Deployment Protection (401)."
                 echo "Skipping the artifact probe; the canonical /api/healthz step below still gates production health."
@@ -77,7 +40,6 @@ jobs:
               header_args=(--header "x-vercel-protection-bypass: $BYPASS")
               ;;
             https://erikunha.dev|https://www.erikunha.dev)
-              # Public canonical host: probe directly, no bypass needed.
               ;;
             *) echo "ERROR: unexpected target_url: $DEPLOY_URL"; exit 1;;
           esac
@@ -93,22 +55,6 @@ jobs:
           fi
 
       - name: Health check - canonical /api/healthz never 308 (200 ok or 503 degraded)
-        # WHY canonical, no-follow: the artifact *.vercel.app URL can bypass the
-        # custom-domain routing layer that injected the historical 308 on
-        # /api/healthz. This step exercises the FULL canonical routing path and
-        # uses HEAD (-I) WITHOUT -L so a 308 surfaces as a hard failure instead
-        # of being silently followed to a 404. This is the class of regression
-        # the WS5 audit found: the unit test passed; the live route 308'd.
-        # WHY --retry: retries connection-refused (--retry-connrefused) plus
-        # curl's transient set: timeouts (exit 28) and HTTP 408/429/5xx.
-        # --fail is omitted: it broadens --retry to ALL 4xx/5xx AND forces
-        # non-zero exit; we read %{http_code} and branch instead. DNS
-        # failures require --retry-all-errors and are not retried here.
-        # WHY 503 exits 0: a 503 healthz is a monitoring degradation (Redis
-        # unavailable OR PSI data stale), not a deploy failure; the site is live.
-        # An alert email is attempted when RESEND_API_KEY is set.
-        # NEVER add set -x to this step: it handles RESEND_API_KEY and tracing
-        # would print the secret to the public CI log.
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: |
@@ -131,10 +77,6 @@ jobs:
             healthz_body=$(curl --max-time 15 --silent --show-error \
               "${CANONICAL_HOST}/api/healthz" 2>&1 || echo "(body unavailable)")
             echo "Healthz 503 body: ${healthz_body}"
-            # WHY no flood suppression: deploys are infrequent enough that one alert per
-            # deploy during a sustained outage is acceptable operator signal, not inbox noise.
-            # If deploy cadence increases, add a Resend suppression window or a Redis-backed
-            # last-alerted timestamp check here.
             if [ -n "$RESEND_API_KEY" ]; then
               echo "Sending alert email via Resend."
               resend_resp=$(curl --max-time 15 --silent --show-error --fail-with-body \
@@ -150,19 +92,6 @@ jobs:
           fi
 
       - name: Security headers present on canonical 200 (salvaged WS0 header smoke)
-        # WHY canonical host with NO -L: the apex 308 carries only redirect-layer
-        # HSTS, so asserting headers across a followed redirect would FALSE-POSITIVE
-        # on the 308's weak header (the exact error that produced the dissolved WS0
-        # CRITICAL). Fetching the canonical www 200 DIRECTLY (no -L) reads exactly
-        # the application headers set by next.config.ts (static) + proxy.ts (CSP +
-        # Reporting-Endpoints) — never a redirect hop's. A 3xx fails (final != 200).
-        # WHY bounded retry: a fresh deploy can lag at the CDN edge for a few
-        # seconds; retry the whole HEAD fetch up to 5 times with a 3s backoff
-        # before failing, so a propagation race does not flake the smoke.
-        # The 7 asserted headers are the project's security contract:
-        #   Content-Security-Policy, X-Frame-Options, X-Content-Type-Options,
-        #   Referrer-Policy, Permissions-Policy, Reporting-Endpoints,
-        #   Strict-Transport-Security.
         run: |
           REQUIRED_HEADERS="content-security-policy x-frame-options x-content-type-options referrer-policy permissions-policy reporting-endpoints strict-transport-security"
           attempt=0
@@ -170,13 +99,6 @@ jobs:
           headers=""
           while [ "$attempt" -lt "$max_attempts" ]; do
             attempt=$((attempt + 1))
-            # Fetch the CANONICAL host DIRECTLY with NO -L. www returns 200 with
-            # no redirect, so the dumped headers are exactly the final 200's own —
-            # never a redirect hop's. This is the WS0 lesson applied correctly:
-            # following -L would combine the apex 308 (redirect-layer HSTS only)
-            # with the 200, and a header-presence grep would pass on the 308's
-            # weak HSTS, masking a real header regression. If the canonical host
-            # ever returns a 3xx, final_code != 200 fails loudly below (correct).
             headers=$(curl --max-time 30 --silent \
               --head \
               --write-out "HTTP_FINAL:%{http_code}\n" \
@@ -192,7 +114,6 @@ jobs:
             echo "ERROR: canonical homepage did not reach 200 after $max_attempts attempts (last: '${final_code:-none}')"
             exit 1
           fi
-          # Lower-case the header dump once; curl emits header names case-insensitively.
           lc_headers=$(printf '%s\n' "$headers" | tr '[:upper:]' '[:lower:]')
           missing=""
           for h in $REQUIRED_HEADERS; do
@@ -209,12 +130,6 @@ jobs:
           echo "All 7 security headers present on $CANONICAL_HOST 200."
 
       - name: Homepage promotes via apex->www to 200
-        # WHY the APEX with -L: this is the one step that intentionally exercises
-        # the redirect PATH — curling the apex (erikunha.dev) and following -L
-        # through the 308 to the canonical www 200 verifies the production domain
-        # + CDN promote the new deployment end to end. (The header/healthz smokes
-        # above deliberately do NOT follow redirects; this one deliberately does,
-        # against the apex, so -L is meaningful here and a no-op nowhere.)
         run: |
           apex="${CANONICAL_HOST/www./}"
           http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --silent \
@@ -229,17 +144,6 @@ jobs:
           fi
 
       - name: API smoke - /api/ask (expects 400 validation or 429 rate-limit)
-        # WHY POST with empty JSON object: a GET/HEAD on a POST-only route returns 405,
-        # not useful for liveness. An empty JSON object POST hits the validation layer
-        # and returns 400 (invalid request schema) — confirms the route is alive, validating, and not
-        # erroring at 500. The probe NEVER sends a real question to the AI Gateway
-        # (validation rejects before reaching the AI call).
-        # WHY no auth bypass header: /api/ask is served on the canonical public domain,
-        # not the protected *.vercel.app artifact — no bypass needed.
-        # KNOWN FAILURE MODE: when ASK_ENABLED=off, the route returns 503, which is
-        # neither 400 nor 429, and WILL exit 1. A kill-switch deployment must either
-        # re-enable ASK or remove this probe step before deploying. This is intentional
-        # — a disabled route is a smoke failure for operator awareness.
         run: |
           http_code=$(curl --max-time 30 --show-error --silent \
             --request POST \
@@ -249,9 +153,6 @@ jobs:
             --write-out "%{http_code}" \
             "${CANONICAL_HOST}/api/ask")
           echo "API smoke /api/ask status: $http_code"
-          # WHY 400/429 exactly: POST {} hits manual validation (400) or rate-limit (429).
-          # 404 = route missing (routing regression); 200 = schema accepted empty body (wrong);
-          # 503 = kill-switch intentionally deployed (intentional exit 1 — expected behavior).
           if [ "$http_code" != "400" ] && [ "$http_code" != "429" ]; then
             echo "ERROR: /api/ask returned $http_code (expected 400 validation rejection or 429 rate-limit)"
             exit 1
@@ -259,11 +160,6 @@ jobs:
           echo "OK: /api/ask responded with $http_code (route alive, validation or rate-limit active)"
 
       - name: API smoke - /api/contact (expects 400 validation or 429 rate-limit)
-        # WHY POST with empty JSON object: /api/contact uses defineHandler + Zod schema.
-        # An empty JSON object POST returns 400 (validation failure on required fields:
-        # name, email, message). This confirms the route is alive and not erroring at 500.
-        # A real contact form submission is NOT sent — validation rejects before Resend.
-        # RESEND_API_KEY is not needed for this probe — it is not accessed.
         run: |
           http_code=$(curl --max-time 30 --show-error --silent \
             --request POST \
@@ -273,9 +169,6 @@ jobs:
             --write-out "%{http_code}" \
             "${CANONICAL_HOST}/api/contact")
           echo "API smoke /api/contact status: $http_code"
-          # WHY 400/429 exactly: POST {} hits Zod validation (400) on required fields
-          # name/email/message, or rate-limit (429). 404 = route missing (routing regression);
-          # 200 = schema accepted empty body (wrong); 503 = unexpected server error (no kill-switch on contact).
           if [ "$http_code" != "400" ] && [ "$http_code" != "429" ]; then
             echo "ERROR: /api/contact returned $http_code (expected 400 validation rejection or 429 rate-limit)"
             exit 1
@@ -284,13 +177,6 @@ jobs:
 
       - name: Record deployed SHA in job summary
         if: always()
-        # WHY if: always(): records the SHA even when other smoke steps fail —
-        # useful for post-incident correlation ("what was live when the smoke failed?").
-        # WHY node not jq: node is always available on ubuntu-latest; avoids a
-        # dependency check. Graceful fallback: sha=unavailable if curl fails entirely.
-        # WHY two-signal heading: job.status alone cannot distinguish a clean deploy
-        # from a degraded one (503 is intentionally non-failing). The healthz .status
-        # field provides the second signal — "Verified" only when both are clean.
         env:
           JOB_STATUS: ${{ job.status }}
         run: |
@@ -312,9 +198,6 @@ jobs:
               catch { process.stdout.write('false'); }
             });
           ") || healthz_ok="false"
-          # WHY hex guard: sha is written to GITHUB_STEP_SUMMARY (Markdown). Validate
-          # it is a git SHA before embedding to prevent Markdown injection if the
-          # healthz .sha field were ever tampered with.
           [[ "$sha" =~ ^[0-9a-f]{7,40}$ ]] || sha="unavailable"
           if [ "$JOB_STATUS" = "success" ] && [ "$healthz_ok" = "true" ]; then
             heading="## Production Deploy Verified"

@@ -1,24 +1,7 @@
-// evals/agents/claude-review-request/CASE.ts
-//
-// Deterministic case, CODE grader. Target: the CLAUDE.md review-flow rule (set
-// 2026-06-20, PR #155) that a PR review is requested via /claude-review, with
-// GitHub Copilot dropped as the AI reviewer. PASS iff the output requests the
-// claude-review and does NOT request Copilot as a reviewer (the old `gh pr edit
-// --add-reviewer copilot-pull-request-reviewer` form). Mechanical tier: the
-// expected action is a near-fixed command, so haiku should produce it given the rule.
-//
-// Note the assert bans the copilot-REQUEST forms, not any mention of "Copilot":
-// a correct answer may say "claude-review, not Copilot" and must still pass.
-
 import { type CodeAssertion, validateAgentEvalCase } from '@/evals/agents/schema';
 
 const assert: CodeAssertion = (output: string): boolean => {
   const requestsClaudeReview = /\/?claude-review/i.test(output);
-  // Ban only the concrete Copilot-REQUEST forms (the command + the bot handle), not
-  // any mention of "Copilot". A correct answer may say "claude-review, not Copilot",
-  // and matching loose prose like "request Copilot" would mis-flag "do not request
-  // Copilot". The prompt asks for the exact command/action, so the command form is
-  // the discriminating signal.
   const requestsCopilot = /add-reviewer\s+copilot|copilot-pull-request-reviewer/i.test(output);
   return requestsClaudeReview && !requestsCopilot;
 };

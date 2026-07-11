@@ -1,8 +1,3 @@
-// __tests__/component-nav.test.tsx
-// Behavioral tests for app/design-system/_components/ComponentNav/ComponentNav.tsx.
-// Locks down: renders a nav with accessible label; renders anchor links for
-// all components; links use hash fragments.
-
 import { createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';

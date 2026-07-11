@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { BATTERY_ROLES, decideStamp } from '@/scripts/review-stamp';
 
-// The battery boundary is the HEAD commit's ISO timestamp. Dispatches must be
-// STRICTLY AFTER it. Tests place agent records before/after a fixed HEAD time.
 const HEAD_ISO = '2026-06-04T12:00:00Z';
-const AFTER = '2026-06-04T12:00:01Z'; // after HEAD -> counts
-const BEFORE = '2026-06-04T11:59:59Z'; // before HEAD -> stale, does NOT count
+const AFTER = '2026-06-04T12:00:01Z';
+const BEFORE = '2026-06-04T11:59:59Z';
 
-/** Build an Agent-dispatch record for the given subagent_type at a timestamp. */
 function agent(subagentType: string, iso: string) {
   return {
     type: 'assistant',
@@ -19,7 +16,6 @@ function agent(subagentType: string, iso: string) {
   };
 }
 
-/** One dispatch per role at the given timestamp, using each role's first variant. */
 function batteryAt(iso: string) {
   return BATTERY_ROLES.map((r) => agent(r.accepts[0] ?? r.role, iso));
 }
@@ -71,8 +67,6 @@ describe('decideStamp', () => {
   });
 
   it('does NOT count dispatches from BEFORE HEAD (stale prior-cycle review)', () => {
-    // A full battery, but all dispatched BEFORE the HEAD commit — e.g. a commit
-    // made in the terminal after an earlier review. None may satisfy the battery.
     const d = decideStamp({
       records: batteryAt(BEFORE),
       transcriptResolved: true,
@@ -92,7 +86,6 @@ describe('decideStamp', () => {
       transcriptResolved: true,
       headCommitIso: HEAD_ISO,
     });
-    // Only the dependencies role was dispatched after HEAD; the other four are stale.
     expect(d.write).toBe(false);
     expect(d.missing.sort()).toEqual(ALL_ROLES.filter((r) => r !== 'dependencies').sort());
   });

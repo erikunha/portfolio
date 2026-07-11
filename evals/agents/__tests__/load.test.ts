@@ -1,9 +1,3 @@
-// evals/agents/__tests__/load.test.ts
-// Behavioral test for the agent-eval corpus loader (evals/agents/load.ts). The
-// loader discovers every evals/agents/<id>/CASE.ts, validates each against the
-// schema, and returns the array — each entry carrying its source `dir` and,
-// for code graders, its `assert`. The runner depends on these invariants.
-
 import { describe, expect, it } from 'vitest';
 import { loadCases } from '@/evals/agents/load';
 import { AgentEvalCaseSchema } from '@/evals/agents/schema';

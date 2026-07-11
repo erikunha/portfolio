@@ -1,9 +1,4 @@
-/* app/css/animations.css — @layer components: section/component @keyframes and animation classes.
-   Everything @keyframes-heavy that is NOT a CRT overlay effect. */
-
 @layer components {
-  /* ── Boot cursor ─────────────────────────────────────────────────────────── */
-
   @keyframes boot-blink {
     to {
       background: transparent;
@@ -28,8 +23,6 @@
   body[data-motion="reduce"] .boot-cursor {
     animation: none;
   }
-
-  /* ── Badge pulse ─────────────────────────────────────────────────────────── */
 
   @keyframes badge-pulse {
     0%,
@@ -61,11 +54,6 @@
     animation: none;
   }
 
-  /* ── Hero responsive visibility toggles ─────────────────────────────────
-     Both variants are server-rendered (RSC). CSS media query swaps visibility.
-     .hero-desktop is the two-column flex layout (flex declared here).
-     .hero-mobile is the stacked layout. */
-
   .hero-desktop {
     display: flex;
   }
@@ -89,8 +77,6 @@
     }
   }
 
-  /* ── Hero boot container (desktop) — absolute-positioned inside .left ─────── */
-
   .hero-boot-desktop {
     position: absolute;
     left: 24px;
@@ -110,8 +96,6 @@
       0 0 8px var(--color-secondary-950);
   }
 
-  /* ── Hero dialog typewriter line (desktop) ───────────────────────────────── */
-
   .hero-dialog-desktop {
     position: absolute;
     left: 24px;
@@ -124,23 +108,16 @@
     font-family: var(--font-mono);
   }
 
-  /* ── Hero boot container (mobile) ─────────────────────────────────────────── */
-
   .hero-boot-mobile {
     color: var(--color-tertiary-50);
     font-size: 12px;
     line-height: 1.65;
-    /* 8 lines × (12px × 1.65) ≈ 158px; fixed height reserves the full space
-       before the animation appends lines, preventing CLS on mobile.
-       Update if either token changes. */
+
     height: 165px;
     overflow: hidden;
     margin: 0 0 12px;
   }
 
-  /* ── Hero panel ─────────────────────────────────────────────────────────── */
-
-  /* Shake animation keyframes — used by boot animation's sysfail trigger. */
   @keyframes hero-shake-1 {
     to {
       transform: translate(2px, -2px);
@@ -159,8 +136,6 @@
   .hero-shake2 {
     transform: translate(-2px, 1px);
   }
-
-  /* ── Boot line token classes ─────────────────────────────────────────────── */
 
   .hero-boot-line {
     display: block;
@@ -203,8 +178,6 @@
       0 0 4px var(--color-secondary-950);
   }
 
-  /* ── Sysfail overlay — fixed position, fade in/out ───────────────────────── */
-
   .hero-sysfail {
     position: fixed;
     left: 50%;
@@ -232,10 +205,6 @@
     transition: none;
   }
 
-  /* ── Footer — dmesg reveal animation ─────────────────────────────────── */
-  /* Each dmesg line starts hidden; once `.dmesg-booted` is set the line plays
-     `dmesg-reveal` with a per-line `animation-delay` supplied inline. */
-
   @keyframes dmesg-reveal {
     from {
       opacity: 0;
@@ -255,9 +224,6 @@
   .dmesg-booted .dmesg-line {
     animation: dmesg-reveal 220ms ease both;
   }
-
-  /* ── Footer — halt plate reveal animation ────────────────────────────── */
-  /* Delayed past dmesg sequence (7 lines × 80ms + ~180ms gap ≈ 660ms) */
 
   @keyframes sd-halt-reveal {
     from {
@@ -300,7 +266,6 @@
     animation: sd-halt-hint-reveal 280ms ease 840ms both;
   }
 
-  /* Reduced motion: skip staggered reveal — render in final visible state immediately. */
   body[data-motion="reduce"] .dmesg-line,
   body[data-motion="reduce"] .dmesg-booted .dmesg-line,
   body[data-motion="reduce"] .halt-plate,
@@ -318,8 +283,6 @@
       0 0 18px var(--color-glow-45),
       0 0 40px var(--color-glow-15);
   }
-
-  /* ── SysHealthSection — animated progress bar pulse ────────────────────── */
 
   @keyframes barpulse {
     0%,
@@ -347,8 +310,6 @@
     animation: none;
     opacity: 0;
   }
-
-  /* ── LivePerfSection — live indicator dot ──────────────────────────────── */
 
   @keyframes live-blink {
     to {
@@ -386,8 +347,6 @@
     animation: none;
     opacity: 0;
   }
-
-  /* ── GuitarSection — scan beam animation ──────────────────────────────── */
 
   @keyframes guitar-scan-beam {
     from {

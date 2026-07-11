@@ -18,13 +18,10 @@ describe('collectScriptRefs', () => {
   });
 
   it('ignores non-script and non-code paths', () => {
-    // .txt is not code; foo.mjs is not under scripts/
     expect(collectScriptRefs('echo scripts/notes.txt; cat foo.mjs')).toEqual([]);
   });
 
   it('ignores script paths mentioned only in shell comments', () => {
-    // A history comment naming a deleted script must not count as a live ref,
-    // else the meta-gate false-positives on its own documentation.
     const hook =
       '# legacy: scripts/old-removed.mjs was deleted in the migration\nnode scripts/live.mjs';
     expect(collectScriptRefs(hook)).toEqual(['scripts/live.mjs']);

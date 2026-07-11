@@ -1,56 +1,27 @@
-// components/client/HeroBootAnimation/HeroBootAnimation.test.tsx
-//
-// Behavioral test for the "Rendering model" invariant:
-//
-//   The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT
-//   per-keystroke `useState`. Per-state re-renders tank INP.
-//
-// The previous version grepped lib/boot-animation.ts + HeroBootAnimation.tsx
-// for the string "useState". A grep proves nothing about runtime cost — a
-// refactor could keep the symbol absent yet still funnel updates through a
-// parent re-render. This rewrite exercises the actual loop:
-//
-//   1. runBoot is driven with fake timers; the typing loop must accumulate
-//      characters by MUTATING a node's textContent (the canonical pattern).
-//   2. HeroBootAnimation is rendered into a jsdom root with a render counter.
-//      The boot animation types dozens of characters; if any of that went
-//      through React state the component would re-render dozens of times.
-//      The assertion: render count stays bounded (effects/breakpoint only),
-//      far below the character count — proving the loop bypasses React.
-
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mountClient } from '@/__tests__/helpers/render';
 
 vi.mock('@/lib/motion', () => ({
-  readMotion: () => true, // motion ON => the animated typing loop runs
+  readMotion: () => true,
 }));
 
-// Class name constants — migrated from CSS Modules to @layer components named classes.
 const bootDesktopClass = 'hero-boot-desktop';
 const bootCmdClass = 'hero-boot-cmd';
 
-// Guards the height: 165px invariant in components.css (.hero-boot-mobile).
-// 8 lines × (12px font-size × line-height:1.65) ≈ 158px.
-// Fails early if MOBILE_LINE_SPECS grows or runBoot appends extra lines,
-// before overflow: hidden clips them silently.
 describe('mobile boot container: line-count → height invariant', () => {
   it('MOBILE_LINE_SPECS + cmd + blank + dialog = 8 lines; fits height: 165px', async () => {
     const { MOBILE_LINE_SPECS } = await import('@/lib/boot-animation');
-    // typeCmd: prompt line (1) + blank line after typing (1); startDialog: dialog line (1)
     const extraLines = 3;
     const totalLines = MOBILE_LINE_SPECS.length + extraLines;
-    const containerHeightPx = 165; // height: 165px in .hero-boot-mobile
-    const fontSizePx = 12; // font-size: 12px in .hero-boot-mobile
+    const containerHeightPx = 165;
+    const fontSizePx = 12;
     const lineHeight = 1.65;
     expect(totalLines).toBe(8);
     expect(Math.ceil(totalLines * fontSizePx * lineHeight)).toBeLessThanOrEqual(containerHeightPx);
   });
 });
 
-// Minimal BootClasses fixture for unit tests that call runBoot directly.
-// In production, HeroBootAnimation provides named @layer components class names.
-// For direct runBoot tests, we use simple string keys; DOM queries match.
 const testCls = {
   bootLine: 'bootLine',
   bootOk: 'bootOk',
@@ -92,17 +63,11 @@ describe('boot-animation: textContent-mutation invariant', () => {
       startMs: 5,
     });
 
-    // Advance enough fake time to reveal the line + type the command + begin
-    // the dialog typing loop.
     await vi.advanceTimersByTimeAsync(2000);
 
-    // The dialog phrase is typed one char at a time into a .bootMatrixOut
-    // span via textContent — assert that span exists and has accumulated text.
-    // testCls uses plain strings, so querySelector uses those directly.
     const out = container.querySelector('.bootMatrixOut');
     expect(out).not.toBeNull();
     expect((out?.textContent ?? '').length).toBeGreaterThan(0);
-    // The command line is also typed char-by-char into a .bootCmd span.
     const cmd = container.querySelector('.bootCmd');
     expect(cmd?.textContent).toBe('run bio.exe --verbose');
 
@@ -113,7 +78,6 @@ describe('boot-animation: textContent-mutation invariant', () => {
     const React = await import('react');
     const { HeroBootAnimation } = await import('./HeroBootAnimation');
 
-    // matchMedia must exist for the island's effect; desktop variant runs.
     vi.stubGlobal(
       'matchMedia',
       vi.fn(() => ({
@@ -127,33 +91,21 @@ describe('boot-animation: textContent-mutation invariant', () => {
       React.createElement(HeroBootAnimation, { variant: 'desktop' }),
     );
 
-    // The island's JSX is `<div ref={bootRef} className="hero-boot-desktop" />` — a
-    // single empty element. Use the named @layer components class for the query.
     const mount = container.querySelector(`.${bootDesktopClass}`);
     expect(mount).not.toBeNull();
     expect(mount?.childElementCount).toBe(0);
 
-    // Drive the full boot + several dialog-typing cycles. This types well over
-    // 50 characters across the command line + dialog phrases.
     await act(async () => {
       await vi.advanceTimersByTimeAsync(8000);
     });
 
-    // After the loop runs, the mount node has accumulated child <span>s —
-    // every one of them was appendChild()'d imperatively by the boot driver.
-    // If the typing went through React state/children instead, the per-char
-    // updates would reconcile through useState and tank INP. The pattern under
-    // test is exactly: useRef mount + imperative textContent mutation.
     expect(mount?.childElementCount ?? 0).toBeGreaterThan(0);
-    // bootCmd class: HeroBootAnimation passes bootCls which maps 'bootCmd' to 'hero-boot-cmd'.
     const cmd = mount?.querySelector(`.${bootCmdClass}`);
     expect(cmd?.textContent).toBe('run bio.exe --verbose');
 
-    // The typed command span carries a single text node mutated in place —
-    // not a list of per-character React-keyed nodes.
     expect(cmd?.childElementCount).toBe(0);
     expect(cmd?.childNodes.length).toBe(1);
-    expect(cmd?.childNodes[0]?.nodeType).toBe(3 /* TEXT_NODE */);
+    expect(cmd?.childNodes[0]?.nodeType).toBe(3);
 
     unmount();
   });

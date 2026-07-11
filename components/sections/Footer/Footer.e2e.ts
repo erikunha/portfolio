@@ -2,10 +2,6 @@ import { expect, test } from '@playwright/test';
 
 async function loadFooter(page: import('@playwright/test').Page) {
   await page.goto('/');
-  // FooterLazy mounts only when the IntersectionObserver sentinel enters the viewport.
-  // Scroll the sentinel itself into view rather than using document.body.scrollHeight,
-  // which can be stale if heavy sections are still rendering and would leave the
-  // sentinel below the viewport after the scroll.
   await page.locator('[data-testid="footer-lazy-sentinel"]').scrollIntoViewIfNeeded();
   await page.waitForSelector('footer', { timeout: 10000 });
 }

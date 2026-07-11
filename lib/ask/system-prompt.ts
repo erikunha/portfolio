@@ -1,23 +1,3 @@
-// lib/ask/system-prompt.ts
-//
-// Composed at module load: hand-edited narrative + live data sourced from
-// content/*.ts. Two purposes:
-//
-//   1. Single source of truth — the page and the LLM both read the same
-//      content modules. SYSTEM cannot drift from what visitors actually
-//      see in the Perf Receipts, Projects, Visa, and Unknowns sections.
-//
-//   2. Pushes SYSTEM above Anthropic Haiku's 1024-token ephemeral cache
-//      minimum. Without the live-data appendix, the cache_control
-//      directive matched a ~750-token hand-typed narrative — below the
-//      cache threshold — so the directive never fired and every request
-//      paid full input-token cost. See
-//      docs/audit/2026-05-19-principal-audit.md Theme 7 + Debate 5.
-//
-// Per the audit's Debate 5 verdict: hybrid — keep the hand-edited
-// narrative; append raw data from 2-3 content files; cache fires; drift
-// closes. The narrative voice stays editorial; the data stays sourced.
-
 import 'server-only';
 import type Anthropic from '@anthropic-ai/sdk';
 import { perfReceipts } from '@/content/perf-receipts';
@@ -149,38 +129,10 @@ ${formatVisa()}
 ## What I'm not pretending to know (single source of truth — content/unknowns.ts)
 ${formatUnknowns()}`;
 
-/**
- * The assembled SYSTEM text. Module-load composed; computed once per warm
- * worker instance. Exposed separately from SYSTEM so tests can assert
- * length-based properties without unwrapping the Anthropic message shape.
- */
 export const SYSTEM_TEXT: string = `${NARRATIVE}\n\n${LIVE_DATA}`;
 
-/**
- * Derived prompt identity: the first 12 hex chars of SHA-256(SYSTEM_TEXT),
- * computed once at module load. Because it is a content hash of the EXACT bytes
- * the model receives, it cannot drift from the live prompt: change any content
- * module (perf-receipts, projects, visa, unknowns) or the narrative, and the
- * version moves automatically. Logged per request and stamped into the
- * `ask:eval:latest` aggregate so a stored eval result names the prompt revision
- * it graded — no `git blame` across five files. 12 chars (48 bits) is ample to
- * distinguish revisions of a single prompt while staying log-line compact.
- */
 export const PROMPT_VERSION: string = sha256Hex(SYSTEM_TEXT).slice(0, 12);
 
-/**
- * Anthropic-shaped system prompt with `cache_control: ephemeral` set.
- * Haiku's ephemeral cache requires the cacheable block to be ≥ 1024 tokens
- * (≈ 3500-4000 chars for English text). SYSTEM_TEXT is sized to clear this
- * threshold with buffer; see `__tests__/system-prompt.test.ts` for the
- * length assertion.
- *
- * NOTE: the live `/api/ask` route consumes `SYSTEM_TEXT` directly (the AI
- * Gateway path carries `cacheControl` via `providerOptions`, not this shape).
- * `SYSTEM` is RETAINED for the documented PATH-B direct-`@anthropic-ai/sdk`
- * fallback (DECISIONS.md, 2026-05-21) and is asserted by
- * `__tests__/system-prompt.test.ts` — do not delete it.
- */
 export const SYSTEM: Anthropic.Messages.TextBlockParam[] = [
   {
     type: 'text',

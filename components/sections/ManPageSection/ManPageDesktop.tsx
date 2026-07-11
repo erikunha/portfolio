@@ -1,7 +1,5 @@
 import { manPage } from '@/content/man-page';
 
-// Desktop man-page: full pre with fixed-width columns. Plain RSC — rendered
-// when ManPageContent detects a non-mobile UA via getIsMobile().
 export function ManPageDesktop() {
   return (
     <div className="overflow-x-auto block" data-testid="manpage-desktop">

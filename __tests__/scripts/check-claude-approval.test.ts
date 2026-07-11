@@ -1,13 +1,3 @@
-// Behavioral test for the claude-review merge gate's pure parsing logic
-// (scripts/check-claude-approval.ts). The gh I/O orchestration in run() is not
-// unit-tested (it shells out, like the old copilot gate); what CAN break is the
-// verdict/SHA parsing of claude[bot]'s overview comment, so that is what we pin.
-//
-// Verdict formats are taken from real claude-review overviews observed on this
-// repo's PRs (#152 "(head `sha`)", #153 "Reviewed at HEAD `sha`", #154
-// "Reviewed at head commit `sha`.", #155 "the committed HEAD (`sha`):"), so the
-// gate survives the format variance.
-
 import { describe, expect, it } from 'vitest';
 import {
   evaluateGate,
@@ -20,12 +10,10 @@ const HEAD = 'bb390ab172aee6735d4c5200a92be6513dbb8767';
 describe('evaluateGate (fail-closed merge decision)', () => {
   it('passes only an Approve whose reviewed SHA is a prefix of HEAD', () => {
     expect(evaluateGate('approve', HEAD, HEAD).ok).toBe(true);
-    expect(evaluateGate('approve', HEAD.slice(0, 7), HEAD).ok).toBe(true); // abbreviated SHA
+    expect(evaluateGate('approve', HEAD.slice(0, 7), HEAD).ok).toBe(true);
   });
 
   it('FAILS an Approve that states no head SHA (cannot confirm it is on HEAD)', () => {
-    // The claude-review prompt requires the SHA in every overview; its absence
-    // means an in-progress/format-drift comment, not a confirmed Approve-on-HEAD.
     const r = evaluateGate('approve', null, HEAD);
     expect(r.ok).toBe(false);
     expect(r.reason).toMatch(/no head SHA/i);
@@ -105,8 +93,6 @@ describe('extractReviewedSha', () => {
   });
 
   it('does not match a backticked SHA quoted far away from the head declaration', () => {
-    // "head" appears, but the only backticked SHA is in unrelated prose well past
-    // the proximity window, so it must NOT be treated as the reviewed head.
     const body = 'The head of the list is fine; separately, an old run was at `deadbeef1234567`.';
     expect(extractReviewedSha(body)).toBeNull();
   });

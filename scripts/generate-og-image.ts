@@ -5,10 +5,6 @@ import path from 'node:path';
 import type { Browser } from 'playwright';
 import { chromium } from 'playwright';
 
-// Usage: pnpm generate:og
-// No dev server required — renders the OG design from inline HTML.
-// Output: public/og.png (1200x630 PNG)
-
 const fontsDir = path.resolve(process.cwd(), 'public/fonts');
 
 function fontBase64(file: string): string {

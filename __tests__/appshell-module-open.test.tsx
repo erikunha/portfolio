@@ -1,7 +1,3 @@
-// __tests__/appshell-module-open.test.tsx
-// Behavioral tests for AppShell's delegated 'module:open' event handler.
-// Lines 29-31 (handler body) are uncovered.
-
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
@@ -10,7 +6,6 @@ vi.mock('@/lib/use-breakpoint.client', () => ({
   useBreakpoint: () => ({ isMobile: false }),
 }));
 
-// Mock all child components to avoid rendering complexity
 vi.mock('@/components/responsive/MatrixRain', () => ({
   MatrixRain: () => null,
 }));
@@ -80,7 +75,6 @@ describe('AppShell — module:open delegated handler', () => {
       window.dispatchEvent(new CustomEvent('module:open', { detail: { id: 'not-a-details' } }));
     });
 
-    // No error thrown; div is not a details element — open property not set
     expect((div as unknown as HTMLDetailsElement).open).toBeUndefined();
 
     document.body.removeChild(div);

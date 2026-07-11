@@ -1,26 +1,8 @@
-// lib/eval/judge.ts
-//
-// The single shared LLM-judge call. Extracted verbatim from scripts/ask-eval.ts
-// so BOTH eval harnesses (ask-eval and the agent/prompt-eval harness) grade
-// against ONE judge prompt — the spec's "no JUDGE_SYSTEM duplication" invariant.
-// The ONLY change from the original is that the judge model is now a parameter
-// (opts.model) instead of a module constant, so each harness passes its own
-// (the model must be ≥ the one it grades). The retry + backoff + JSON-extraction
-// logic is identical.
-
 import { generateText } from 'ai';
 import type { JudgeVerdict } from '@/lib/eval/types';
 
-// Retry budget for transient judge API failures (network blips, 429, 503).
-// Attempts = 1 initial + MAX_JUDGE_RETRIES retries; backoff = 1s × 2^attempt.
-// A genuine judge failure after exhausting retries still counts as FAIL — the
-// conservative grading semantics are preserved; we only reduce flake rate.
 export const MAX_JUDGE_RETRIES = 2;
 
-// The two reason strings judge() emits on a JUDGE-SIDE failure (vs a genuine
-// disagreement). Exported as the SINGLE SOURCE OF TRUTH so calibration runners
-// classify an outage by importing these, never by re-hardcoding the literals —
-// a rename here then can't silently desync an outage-vs-drift classifier.
 export const JUDGE_NO_JSON_REASON = 'judge returned no JSON';
 export const JUDGE_ERROR_REASON_PREFIX = 'judge errored after';
 
@@ -33,17 +15,8 @@ export const JUDGE_SYSTEM =
   'Respond with a single minified JSON object and nothing else: ' +
   '{"pass": boolean, "reason": "<=20 words"}.';
 
-// The minimal shape the judge reads: id/question/kind/expect. ask-eval's corpus
-// items and calibration gold cases already match it; the agent-eval harness
-// (C-b) adapts its differently-named case fields onto this shape before calling
-// judge(), so one judge() serves every caller.
 export type JudgeItem = { id: string; question: string; kind: string; expect: string };
 
-/**
- * LLM-grades one answer. Returns pass/fail + a one-line reason. A grader
- * failure (network, unparseable JSON) is itself a FAIL with the reason
- * recorded — a run that cannot grade an item must not silently pass it.
- */
 export async function judge(
   item: JudgeItem,
   answer: string,
@@ -65,15 +38,11 @@ export async function judge(
         maxOutputTokens: 200,
         temperature: 0,
       });
-      // The Gateway may omit `usage`. Falling back to 0 silently zeroes this
-      // item's judge-side cost — warn so the cost estimate's drift is visible.
       if (!usage) {
         console.warn(`  warn: judge returned no usage for item "${item.id}" — cost underestimated`);
       }
       const inputTokens = usage?.inputTokens ?? 0;
       const outputTokens = usage?.outputTokens ?? 0;
-      // The model is asked for bare JSON, but defensively extract the first
-      // {...} span in case it wraps the object in prose or a code fence.
       const match = text.match(/\{[\s\S]*\}/);
       if (!match) return { pass: false, reason: JUDGE_NO_JSON_REASON, inputTokens, outputTokens };
       const parsed = JSON.parse(match[0]) as { pass?: unknown; reason?: unknown };
@@ -85,7 +54,6 @@ export async function judge(
       };
     } catch (err) {
       if (attempt < MAX_JUDGE_RETRIES) {
-        // Exponential backoff: 1s, 2s before retrying transient API errors.
         await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
         continue;
       }
@@ -98,6 +66,5 @@ export async function judge(
       };
     }
   }
-  // TypeScript requires an explicit return here; the loop above always returns.
   return { pass: false, reason: 'judge: unreachable', inputTokens: 0, outputTokens: 0 };
 }

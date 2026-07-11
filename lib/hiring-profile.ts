@@ -1,14 +1,3 @@
-// lib/hiring-profile.ts
-//
-// Single source of truth for the machine-readable hiring profile. Imported by
-// `app/api/erik.json/route.ts` (the GET document) AND by the MCP server's
-// `get_profile` tool (`lib/agent/mcp-tools.ts`) so the profile is defined once
-// and never drifts between the two agent-facing surfaces.
-//
-// The shape is a custom `HiringProfile` — the schema.org `Engineer` type does
-// not exist, and `Person` lacks the role-specific fields a recruiter's tooling
-// wants — so `@type` is a stable contract string both consumers assert on.
-
 import { z } from 'zod';
 
 const EmployerSchema = z.object({

@@ -28,15 +28,10 @@ export function BreakpointProvider({
     mqRef.current = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
   }
 
-  // subscribe must be stable — mqRef never changes after first mount
-  const subscribe = useCallback(
-    (cb: () => void) => {
-      mqRef.current?.addEventListener('change', cb);
-      return () => mqRef.current?.removeEventListener('change', cb);
-    },
-    // mqRef is a stable useRef, never recreated — empty deps is intentional
-    [],
-  );
+  const subscribe = useCallback((cb: () => void) => {
+    mqRef.current?.addEventListener('change', cb);
+    return () => mqRef.current?.removeEventListener('change', cb);
+  }, []);
 
   const isMobileFromMedia = useSyncExternalStore(
     subscribe,

@@ -57,15 +57,13 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
     dragStartAngle.current = liveAngle.current;
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // setPointerCapture not supported; drag works within element bounds
-    }
+      // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
+    } catch {}
     isDragging.current = true;
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging.current) return;
-    // Upward drag (negative deltaY) = increase angle
     const deltaY = dragStartY.current - e.clientY;
     const newAngle = clamp(dragStartAngle.current + deltaY * 1.5);
     updateNeedle(newAngle);

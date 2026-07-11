@@ -8,8 +8,6 @@ import { getIsMobile } from '@/lib/ua';
 import { IconMixer } from '../../Icons';
 import { Module } from '../../responsive/Module';
 
-// Desktop content (with interactive client islands) is code-split so its JS
-// chunk is excluded from the mobile bundle — mobile renders static components only.
 const DawMixerDesktopDynamic = dynamic(() =>
   import('./DawMixerDesktop').then((m) => m.DawMixerDesktop),
 );
@@ -62,9 +60,7 @@ function StaticMeter({
 
 function StaticFader({ pct }: { pct: number }) {
   return (
-    /* Track tick marks + glow background — complex pseudo-element, use named class */
     <div className="mx-fader" aria-hidden="true">
-      {/* Thumb — center-line scratch defined via named class pseudo-element */}
       <div
         className={cn(
           'absolute top-1/2 -translate-x-1/2 -translate-y-1/2',
@@ -82,7 +78,6 @@ function StaticFader({ pct }: { pct: number }) {
 function StaticKnob({ angleDeg, label }: { angleDeg: number; label: string }) {
   return (
     <div className="flex flex-row items-center gap-2 select-none">
-      {/* Dial — needle rotation via CSS custom property + named class pseudo-element */}
       <div
         className={cn(
           'w-[30px] h-[30px] border border-primary-500 rounded-full relative shrink-0',
@@ -106,11 +101,9 @@ function PluginChainMobile({
 }) {
   return (
     <div className="mx-chain-wrap mb-[2px]" aria-hidden="true">
-      {/* Title with trailing separator line — pseudo-element in components.css */}
       <div className="text-xs tracking-[0.18em] text-primary-400 uppercase mb-[5px] flex items-center gap-[6px] mx-chain-title">
         {'// signal flow'}
       </div>
-      {/* Chain line with decorators — complex pseudo-elements, named class */}
       <div className="mx-chain mx-chain-mobile">
         {plugins.map((p) => (
           <div
@@ -128,7 +121,6 @@ function PluginChainMobile({
             style={{ gridTemplateColumns: '14px minmax(90px, auto) 1fr' }}
             data-testid={`plugin-mobile-${channelId}-${p.name}`}
           >
-            {/* LED dot */}
             <span
               className={cn(
                 'w-[6px] h-[6px] rounded-full justify-self-center',
@@ -141,7 +133,6 @@ function PluginChainMobile({
             <span className="text-xs font-bold tracking-[0.08em] uppercase leading-none whitespace-nowrap">
               {p.name}
             </span>
-            {/* Amount bars */}
             <span
               className={cn('flex gap-[2px] items-end h-[7px]', !p.active && 'opacity-40')}
               aria-hidden="true"
@@ -232,7 +223,6 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
       data-channel={isMaster ? 'master' : undefined}
       data-testid={`channel-mobile-${ch.id}`}
     >
-      {/* head row: badge | name | dB */}
       <div
         className="grid items-center gap-[10px]"
         style={{ gridTemplateColumns: 'auto minmax(0,1fr) auto' }}
@@ -265,20 +255,17 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
           <span className="text-xs max-md:text-sm text-primary-400">dB</span>
         </div>
       </div>
-      {/* description */}
       <div
         className="text-primary-400 text-xs tracking-[0.02em] leading-[1.4]"
         data-testid="mx-ref"
       >
         <ParsedText text={ch.desc} />
       </div>
-      {/* meter + fader */}
       <div className="flex flex-col gap-2">
         <StaticMeter pct={ch.meterPct} segments={12} clipping={ch.meterClipping ?? false} />
         <StaticFader pct={ch.faderPct} />
       </div>
       <PluginChainMobile plugins={ch.plugins} channelId={ch.id} />
-      {/* knobs + buttons + clip bar */}
       <div className="flex flex-col gap-[14px] pt-[14px] border-t border-dashed border-[var(--color-primary-quiet)]">
         <div className="flex items-center justify-between gap-3">
           <div className="flex gap-[18px]">

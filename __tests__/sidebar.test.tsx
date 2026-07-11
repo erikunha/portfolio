@@ -1,13 +1,7 @@
-// __tests__/sidebar.test.tsx
-// Behavioral tests for app/design-system/_components/Sidebar.client.tsx.
-// Locks down: renders all nav links; active link gets aria-current="page";
-// HOME back-link is present; active check matches pathname exactly.
-
 import { createElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
 
-// usePathname must be mocked at file scope so Vite's static analysis picks it up.
 let mockPathname = '/design-system';
 
 vi.mock('next/navigation', () => ({

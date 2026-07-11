@@ -19,12 +19,10 @@ describe('Badge', () => {
   });
   it('applies sm size padding and font size', () => {
     const { container } = render(<Badge size="sm">Small</Badge>);
-    // sm applies smaller padding class
     expect(container.firstElementChild?.classList.contains('px-2')).toBe(true);
   });
   it('does not apply dot animation class to root span when variant=dot', () => {
     const { container } = render(<Badge variant="dot">Active</Badge>);
-    // The badge-dot class belongs to the inner dot span, not the root span
     expect(container.firstElementChild?.classList.contains('badge-dot')).toBe(false);
   });
 });

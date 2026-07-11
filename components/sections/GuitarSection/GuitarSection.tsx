@@ -155,19 +155,15 @@ function LiveCam({ liveCam }: { liveCam: GuitarRig['liveCam'] }) {
           className="object-cover grayscale contrast-[1.18] brightness-95"
           sizes="(max-width: 768px) min(100vw, 800px), 320px"
         />
-        {/* Green channel tint overlay */}
         <div
           className="absolute inset-0 bg-primary-500 mix-blend-multiply opacity-60 pointer-events-none"
           aria-hidden="true"
         />
-        {/* Scan lines */}
         <div
           className="absolute inset-0 bg-[repeating-linear-gradient(to_bottom,rgba(0,0,0,0.3)_0_1px,transparent_1px_3px)] pointer-events-none"
           aria-hidden="true"
         />
-        {/* Scan beam — animation defined in components.css */}
         <div className="guitar-scan-beam" aria-hidden="true" />
-        {/* Corner brackets — pseudo-element patterns defined in components.css */}
         <div className="cam-corners" aria-hidden="true">
           <i />
         </div>
@@ -186,7 +182,6 @@ export function GuitarDesktop() {
       className="flex flex-col gap-4 font-mono text-sm text-tertiary-50"
       data-testid="guitar-desktop"
     >
-      {/* Signal chain panel */}
       <div className="border border-[var(--color-primary-border)] bg-black/35 p-[14px]">
         <div className="flex justify-between text-xs text-primary-400 tracking-[0.16em] mb-3 font-bold">
           <span>
@@ -197,7 +192,6 @@ export function GuitarDesktop() {
           </span>
           <span>TAIL -F ~/.RIG</span>
         </div>
-        {/* 7-column grid: 4 nodes + 3 arrows */}
         <div
           className="grid items-stretch gap-[6px]"
           style={{ gridTemplateColumns: '1.05fr 26px 1.4fr 26px 1fr 26px 0.85fr' }}
@@ -244,12 +238,10 @@ export function GuitarDesktop() {
           })}
         </div>
       </div>
-      {/* Two-col: influences + live cam */}
       <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 320px' }}>
         <InfluencesList influences={influences} nowObsessing={nowObsessing} />
         <LiveCam liveCam={liveCam} />
       </div>
-      {/* Stats grid — gap-as-divider technique */}
       <div className="grid grid-cols-4 gap-px bg-[var(--color-primary-quiet)] border border-[var(--color-primary-quiet)]">
         {stats.map((stat) => (
           <div
@@ -320,7 +312,6 @@ export function GuitarMobile() {
       </div>
       <InfluencesList influences={influences} nowObsessing={nowObsessing} />
       <LiveCam liveCam={liveCam} />
-      {/* Stats grid — 2-col gap-as-divider on mobile */}
       <div className="grid grid-cols-2 gap-px bg-[var(--color-primary-quiet)] border border-[var(--color-primary-quiet)]">
         {stats.map((stat) => (
           <div

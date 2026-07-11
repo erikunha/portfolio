@@ -1,8 +1,3 @@
-// lib/eval/__tests__/cost.test.ts
-// Unit test for the eval cost model (lib/eval/cost.ts), extracted verbatim from
-// scripts/ask-eval.ts plus the new projected-cost estimator the agent-eval
-// cap-check consumes.
-
 import { describe, expect, it } from 'vitest';
 import { estimateJobCostUsd, judgeCostUsdFrom, PRICING_USD_PER_MTOK } from '@/lib/eval/cost';
 
@@ -21,8 +16,6 @@ describe('lib/eval/cost', () => {
   });
 
   it('estimateJobCostUsd projects cases × runs × (target + judge) spend', () => {
-    // 2 cases × 1 run; per run: target 1M in/1M out (feature: 1+5=6),
-    // judge 1M in/1M out (3+15=18) → 24/run → 48 total.
     const projected = estimateJobCostUsd({
       cases: 2,
       runs: 1,

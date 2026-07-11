@@ -1,20 +1,4 @@
 #!/usr/bin/env node
-// scripts/check-client-naming.mjs
-//
-// CI gate for audit Standard 2: every file with `'use client'` MUST be
-// either named `*.client.{tsx,ts}` OR live inside a directory named
-// `client/`. Both patterns make the RSC boundary visible from the file
-// tree without opening every file — the audit's "RSC drift visible in
-// code review" property.
-//
-// Runs in STRICT mode (default): exits 1 on any violation, blocking CI.
-// Set CHECK_CLIENT_NAMING_LENIENT=1 to downgrade to warn-only (returns 0
-// after listing violations) — for temporary use only when adding a new
-// 'use client' file before renaming. See
-// docs/audit/2026-05-19-principal-audit.md Theme 4 + Standard 2.
-//
-// Usage: pnpm check:client-naming
-// CI:    runs as part of `pnpm ci` post-lint, post-typecheck.
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
@@ -23,12 +7,9 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
-// Scan these directories; everything else (node_modules, .next, etc.) is
-// excluded by virtue of not being listed.
 const SCAN_DIRS = ['app', 'components', 'lib'];
 const SKIP_NAMES = new Set(['node_modules', '.next', '.git', 'dist', 'out', '.vercel']);
 
-/** @returns {string[]} */
 function walk(dir) {
   const out = [];
   for (const entry of readdirSync(dir)) {
@@ -49,15 +30,6 @@ function walk(dir) {
   return out;
 }
 
-/**
- * The first non-empty, non-comment line of a .ts(x) file must be
- * `'use client'` or `"use client"` (with optional semicolon). We detect by
- * reading just the first ~512 bytes and looking for the directive at the
- * top of the file (allowing leading shebang / comments / blank lines).
- *
- * @param {string} file
- * @returns {boolean}
- */
 function isUseClient(file) {
   let head;
   try {
@@ -65,7 +37,6 @@ function isUseClient(file) {
   } catch {
     return false;
   }
-  // Strip line comments + block comments + blank lines from the head.
   const stripped = head
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .split('\n')
@@ -75,15 +46,9 @@ function isUseClient(file) {
   return /^["']use client["'];?/.test(stripped);
 }
 
-/**
- * @param {string} file (absolute or repo-relative)
- * @returns {boolean}
- */
 function isCompliant(file) {
   const rel = path.relative(ROOT, file).replace(/\\/g, '/');
-  // Either: filename ends in `.client.tsx` or `.client.ts`.
   if (/\.client\.(tsx|ts)$/.test(rel)) return true;
-  // Or: path contains `/client/` directory segment.
   if (/(^|\/)client\//.test(rel)) return true;
   return false;
 }
@@ -103,9 +68,6 @@ for (const dir of SCAN_DIRS) {
   }
 }
 
-// Strict-by-default: exit 1 on any violation so CI red-lights the PR.
-// Set CHECK_CLIENT_NAMING_LENIENT=1 to downgrade to warn-only — temporary
-// escape hatch for incremental migrations only.
 const LENIENT = process.env.CHECK_CLIENT_NAMING_LENIENT === '1';
 if (violations.length === 0) {
   console.log(

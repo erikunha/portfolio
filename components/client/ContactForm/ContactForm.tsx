@@ -7,11 +7,6 @@ import { Field } from '@/design-system/components/Field';
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
-// Wraps the contact form in the same terminal-window chrome as the interactive
-// shell (WindowChrome header + full-bleed near-black surface). Layout/structure
-// reuse only — this is a plain form, not the AI shell. The negative margin cancels
-// the Module's content padding (14px mobile / 18px desktop, variant=green adds a
-// tint + border) so the surface bleeds to the panel edge like the shell.
 function ContactShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="contact-shell bg-[var(--color-secondary-900)] font-mono -m-[14px] min-[769px]:-m-[18px]">
@@ -29,10 +24,6 @@ export function ContactForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
-  // Honeypot: hidden off-screen input. A real user never sees or fills this,
-  // so the value stays ''. Naive bots that submit every visible field will
-  // set it — the server then silently returns a successful-looking 200.
-  // See docs/audit/2026-05-19-principal-audit.md Theme 1.4.
   const [honeypot, setHoneypot] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -77,12 +68,6 @@ export function ContactForm() {
         aria-busy={status === 'submitting'}
         data-testid="contact-form"
       >
-        {/* Honeypot field. Hidden off-screen with aria-hidden + tabindex=-1 so
-          keyboard + screen-reader users skip it entirely. The inline style is
-          deliberate (vs a class) to keep this single-purpose anti-spam input
-          encapsulated and not reliant on any external CSS rule a future
-          refactor could break. autoComplete=off + name=field_company match
-          the server-side check in lib/contact-validation.ts. */}
         <input
           type="text"
           name="field_company"

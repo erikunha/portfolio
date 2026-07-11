@@ -1,15 +1,11 @@
 'use client';
 
-// components/ErrorBoundary/ErrorBoundary.client.tsx
-// Wraps client islands so a single failure doesn't crash the entire page.
-
 import { Component, type ReactNode } from 'react';
 
 import { buildLogPayload } from '@/lib/error-bridge.client';
 
 interface Props {
   children: ReactNode;
-  /** Fallback shown when an error is caught. Defaults to nothing (silent). */
   fallback?: ReactNode;
 }
 
@@ -25,10 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, info: { componentStack?: string | null }) {
-    // Retain console.error for dev visibility (this client-side console.* is
-    // intentionally not migrated in Phase 2b per spec §6).
     console.error('[ErrorBoundary] client island crashed:', error, info.componentStack);
-    // Also POST to /api/log so it lands in Upstash for retrospective triage.
     if (typeof window !== 'undefined') {
       void fetch('/api/log', {
         method: 'POST',
@@ -40,9 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
           ),
         ),
         keepalive: true,
-      }).catch(() => {
-        // Intentional no-op.
-      });
+      }).catch(() => undefined);
     }
   }
 

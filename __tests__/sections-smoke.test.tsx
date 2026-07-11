@@ -1,8 +1,3 @@
-// __tests__/sections-smoke.test.tsx
-// Smoke render tests for section components with zero function coverage.
-// Locks down: each section renders without throwing; the Module header appears
-// in the summary element; meaningful first-piece of content data is present.
-
 import { type ComponentType, createElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
@@ -13,19 +8,14 @@ function firstOf<T>(arr: readonly T[]): T {
   return arr[0]!;
 }
 
-// ContactSection imports ContactFormLazy — stub it so no lazy/Suspense setup needed.
 vi.mock('@/components/client/ContactForm', () => ({
   ContactFormLazy: () => null,
 }));
 
-// ShellSection imports InteractiveShellLazy — same treatment.
 vi.mock('@/components/client/InteractiveShell', () => ({
   InteractiveShellLazy: () => null,
 }));
 
-// ---------------------------------------------------------------------------
-// CommunitySection
-// ---------------------------------------------------------------------------
 describe('CommunitySection', () => {
   let mounted: MountedClient;
 
@@ -61,9 +51,6 @@ describe('CommunitySection', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// ContactSection
-// ---------------------------------------------------------------------------
 describe('ContactSection', () => {
   let mounted: MountedClient;
 
@@ -91,9 +78,6 @@ describe('ContactSection', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// CredentialsSection
-// ---------------------------------------------------------------------------
 describe('CredentialsSection', () => {
   let mounted: MountedClient;
 
@@ -129,9 +113,6 @@ describe('CredentialsSection', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// HottestTakesSection
-// ---------------------------------------------------------------------------
 describe('HottestTakesSection', () => {
   let mounted: MountedClient;
 
@@ -173,9 +154,6 @@ describe('HottestTakesSection', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// NpmStackSection
-// ---------------------------------------------------------------------------
 describe('NpmStackSection', () => {
   let mounted: MountedClient;
 
@@ -211,9 +189,6 @@ describe('NpmStackSection', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// NowSection
-// ---------------------------------------------------------------------------
 describe('NowSection', () => {
   let mounted: MountedClient;
 
@@ -240,9 +215,6 @@ describe('NowSection', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// ResponsibilitiesSection
-// ---------------------------------------------------------------------------
 describe('ResponsibilitiesSection', () => {
   let mounted: MountedClient;
 
@@ -278,9 +250,6 @@ describe('ResponsibilitiesSection', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// ShellSection
-// ---------------------------------------------------------------------------
 describe('ShellSection', () => {
   let mounted: MountedClient;
 
@@ -306,9 +275,6 @@ describe('ShellSection', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// SysHealthSection
-// ---------------------------------------------------------------------------
 describe('SysHealthSection', () => {
   let mounted: MountedClient;
 
@@ -344,9 +310,6 @@ describe('SysHealthSection', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// UnknownsSection
-// ---------------------------------------------------------------------------
 describe('UnknownsSection', () => {
   let mounted: MountedClient;
 
@@ -382,9 +345,6 @@ describe('UnknownsSection', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// ManPageDesktop
-// ---------------------------------------------------------------------------
 describe('ManPageDesktop', () => {
   let mounted: MountedClient;
 

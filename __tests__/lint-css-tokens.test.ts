@@ -14,7 +14,6 @@ describe('findRawHex', () => {
   });
 
   it('ignores hex inside block comments (preserving line numbers)', () => {
-    // The #fff is in a comment; the real violation is on line 2.
     expect(findRawHex('/* swatch #fff */\ncolor: #abc;')).toEqual([{ line: 2, hex: '#abc' }]);
   });
 

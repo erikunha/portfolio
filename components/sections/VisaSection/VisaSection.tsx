@@ -39,7 +39,6 @@ function VisaMobile() {
   return (
     <div className="overflow-x-auto">
       <div data-testid="visa-mobile">
-        {/* Decorative rule — hidden on desktop, shown on mobile */}
         <div
           aria-hidden="true"
           className="text-primary-500 opacity-55 font-mono text-xs overflow-hidden whitespace-nowrap mb-[0.5em]"

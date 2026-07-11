@@ -1,4 +1,3 @@
-// content/shell-commands.ts
 import type { ShellResponse } from './schemas';
 
 const SHELL_RESPONSES: ShellResponse[] = [

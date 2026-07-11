@@ -1,13 +1,3 @@
-// __tests__/section-mobile-variants.test.ts
-// Exercises the mobile branch of each async *Content RSC. next/headers is
-// mocked to return a mobile UA so getIsMobile() resolves true. Each Content
-// function is awaited (it is already an async RSC, so awaiting it gives the
-// resolved ReactElement), then rendered with renderToStaticMarkup.
-//
-// Module is stubbed to a transparent passthrough — the same contract as the
-// desktop-variant test in section-viewport-variants.test.ts.
-// server-only is globally aliased to an empty module in vitest.config.ts.
-
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';

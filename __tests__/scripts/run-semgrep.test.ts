@@ -15,12 +15,6 @@ const semgrepInstalled = spawnSync('semgrep', ['--version']).status === 0;
 const run = (args: string[]) =>
   spawnSync('node', ['scripts/run-semgrep.mjs', ...args], { encoding: 'utf8' });
 
-// The real scan excludes tests/fixtures/ via .semgrepignore, so a scan that
-// targets the fixtures in-tree finds nothing. To exercise the vulnerable/clean
-// fixtures we COPY them into an OS temp dir OUTSIDE the repo, where the repo's
-// .semgrepignore does not apply, and point the wrapper at that dir. The wrapper
-// still resolves --config .semgrep relative to its own cwd (the repo root), so
-// the vendored rules load normally. Mirrors Unit A's /tmp temp-dir harness.
 const tmpDirs: string[] = [];
 function fixtureTempDir(...fixtures: string[]): string {
   const dir = mkdtempSync(join(tmpdir(), 'semgrep-fix-'));
@@ -37,7 +31,6 @@ afterAll(() => {
 
 describe('run-semgrep wrapper', () => {
   it('exits 2 with a clear message when semgrep is not installed', () => {
-    // Force the not-installed path via an env override the wrapper honors.
     const r = spawnSync('node', ['scripts/run-semgrep.mjs', '--sarif', '/tmp/x.sarif'], {
       encoding: 'utf8',
       env: { ...process.env, SEMGREP_BIN: 'definitely-not-a-real-binary-xyz' },
@@ -47,20 +40,12 @@ describe('run-semgrep wrapper', () => {
   });
 
   it('exits 2 when --sarif is passed with no path argument', () => {
-    // A fat-fingered `--sarif` with no following path must abort loudly, not
-    // silently drop the SARIF flags and run a plain scan with no output file.
     const r = run(['--sarif']);
     expect(r.status).toBe(2);
     expect(r.stderr).toMatch(/--sarif requires a path/i);
   });
 
   it('honors SEMGREP_BIN exactly (no fallback) and splices well-formed scan args', () => {
-    // Point the wrapper at a stub "semgrep" that records the argv it is invoked
-    // with. This exercises resolveRunner + the runner.slice(1) splice + the full
-    // config/flag assembly WITHOUT semgrep installed, so it runs everywhere
-    // (incl. the CI `test` job, which the runIf(semgrepInstalled) fixture tests
-    // never reach). Also proves an explicit SEMGREP_BIN is honored with no
-    // fallback to `python -m semgrep`.
     const dir = mkdtempSync(join(tmpdir(), 'semgrep-stub-'));
     tmpDirs.push(dir);
     const out = join(dir, 'argv.json');
@@ -100,17 +85,17 @@ process.exit(0);
         'off',
       ]),
     );
-    expect(argv[argv.length - 1]).toBe('lib'); // scan path passed through
+    expect(argv[argv.length - 1]).toBe('lib');
   });
 
   it.runIf(semgrepInstalled)('flags the vulnerable fixture and writes well-formed SARIF', () => {
     const dir = fixtureTempDir('vulnerable.ts');
     const sarif = join(dir, 'out.sarif');
     const r = run(['--error', '--sarif', sarif, dir]);
-    expect(r.status).toBe(1); // findings present under --error
+    expect(r.status).toBe(1);
     expect(existsSync(sarif)).toBe(true);
     const doc = JSON.parse(readFileSync(sarif, 'utf8'));
-    expect(doc.version).toBe('2.1.0'); // SARIF schema version
+    expect(doc.version).toBe('2.1.0');
     expect(Array.isArray(doc.runs)).toBe(true);
     const results = doc.runs.flatMap((x: { results?: unknown[] }) => x.results ?? []);
     expect(results.length).toBeGreaterThan(0);

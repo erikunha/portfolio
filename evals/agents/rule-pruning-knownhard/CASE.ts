@@ -1,16 +1,3 @@
-// evals/agents/rule-pruning-knownhard/CASE.ts
-//
-// knownHard:true, JUDGE grader (spec §4 anti-saturation). A deliberately
-// ambiguous rule-hygiene application the current platform prompt is known to
-// get wrong SOMETIMES: the rule-hygiene policy says prune prose already covered
-// by a gate/skill, but agents frequently rationalize keeping a "harmless"
-// readability rule. The correct answer is to PRUNE it (covered by the linter +
-// review battery, prose is the most expensive slot, unfired for 90 days).
-//
-// This case must NOT saturate at 100% across N runs — it is the discrimination
-// signal that proves the eval still distinguishes a well-applied rule from a
-// rubber-stamp. If it ever hits 100% consistently, re-seed a harder case.
-
 import { validateAgentEvalCase } from '@/evals/agents/schema';
 
 export default validateAgentEvalCase({

@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-// Verifies WCAG AA contrast. Parses color values from app/css/theme.css @theme block.
-// No hardcoded values — the @theme block is the single source of truth.
 
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -19,7 +17,6 @@ function parseThemeColors(css) {
 }
 
 function hexToRgb(hex) {
-  // Handle 8-digit hex (RGBA) by stripping alpha
   const h = hex.replace('#', '').slice(0, 6);
   const len = h.length === 3 ? 1 : 2;
   return [0, 1, 2].map((i) =>
@@ -28,9 +25,7 @@ function hexToRgb(hex) {
 }
 
 function parseColor(value) {
-  // Handle hex
   if (value.startsWith('#')) return hexToRgb(value);
-  // Handle rgba()
   const m = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
   if (m) return [Number(m[1]), Number(m[2]), Number(m[3])];
   return null;
@@ -61,7 +56,6 @@ function get(name) {
   return rgb;
 }
 
-// Pairs: [fg token name, bg token name, minRatio, label]
 const PAIRS = [
   ['primary-400', 'secondary-950', 4.5, 'muted text on base'],
   ['primary-300', 'secondary-950', 4.5, 'faint text on base'],

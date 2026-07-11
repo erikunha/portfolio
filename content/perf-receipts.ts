@@ -56,7 +56,6 @@ export const perfReceipts: PerfReceipt[] = z.array(PerfReceiptSchema).parse([
   },
 ]);
 
-// .length(4) enforced: CSS grid uses repeat(4,1fr) + nth-child border rules that break with any other count
 export const heroStats: Stat[] = z
   .array(StatSchema)
   .length(4)

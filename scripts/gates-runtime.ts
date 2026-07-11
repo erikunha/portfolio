@@ -1,37 +1,4 @@
 #!/usr/bin/env tsx
-// scripts/gates-runtime.ts
-//
-// Runs server-dependent quality gates locally — mirrors CI's performance and
-// e2e-functional jobs so regressions surface before push, not after.
-//
-// Gates (in order):
-//   1. Build          — pnpm build (skip with --skip-build if .next/ is fresh)
-//   2. Server start   — pnpm start on :3000 with DEPLOY_SALT
-//   3-4. Sequential   — LHCI desktop (advisory), then LHCI mobile (advisory)
-//   5-6. Parallel     — axe-core (blocking), E2E functional (blocking)
-//
-// LHCI desktop+mobile run sequentially (chained Promises) because LHCI anchors
-// .lighthouseci/ to process.cwd() with no CLI override — concurrent runs race in
-// collect/assert on that shared directory. axe and E2E have no shared state and
-// run in parallel. Wall-clock: max(LHCI-desktop+LHCI-mobile, axe, E2E) (~2-3 min).
-//
-// LHCI is ADVISORY locally, AUTHORITATIVE in CI:
-//   `throttlingMethod: simulate` + 4x CPU models throttled timing from the HOST trace, so
-//   mobile perf scores are not portable — a loaded dev laptop false-fails at ~0.6 while
-//   CI's controlled runner passes >=0.9 on the identical config. Blocking the push on that
-//   trains SKIP_RUNTIME_GATES bypasses. CI's `performance` job is the real blocking gate
-//   (same thresholds, representative of 2); locally we print the numbers as signal only.
-//
-// Skipped locally (CI handles):
-//   - Visual regression (Linux Chromium baselines; use playwright MCP for manual check)
-//   - AI eval (requires live API keys + Upstash)
-//   - WebKit matrix (non-deterministic pixel rendering; not a required gate)
-//   - LHCI multi-URL (6 URLs in CI; lean to 1 URL locally). Run count stays at the
-//     config's 2 (representative-run) for honest local numbers.
-//
-// Usage:
-//   pnpm gates:runtime              — full run including build
-//   pnpm gates:runtime --skip-build — reuse existing .next/ (must exist)
 
 import { type ChildProcess, execFileSync, spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -57,42 +24,31 @@ log(`\n${C.bold}[gates:runtime] Server-dependent quality gates${C.reset}\n`);
 let server: ChildProcess | null = null;
 const gateChildren: ChildProcess[] = [];
 let exitCode = 0;
-// Tracks advisory (non-blocking) gate failures separately from exitCode, so the final
-// summary can stay honest: a green "all passed" line must not hide an LHCI advisory miss
-// (which may be a real local breakage — lhci missing / config error — not just a threshold).
 let advisoryFailed = false;
 
 function cleanup() {
-  // splice(0) atomically drains gateChildren and returns a snapshot, so concurrent
-  // close/error handlers that splice the live array cannot cause the loop to skip entries.
   for (const child of gateChildren.splice(0)) {
     if (child.pid != null) {
-      // Kill the whole process group so grandchildren (e.g. Playwright-spawned Chromium)
-      // are reaped too. Falls back to direct SIGTERM if the group kill fails (e.g. if the
-      // process already exited).
       try {
         process.kill(-child.pid, 'SIGTERM');
       } catch {
         try {
           child.kill('SIGTERM');
-        } catch {
-          // Process already exited; nothing to kill.
-        }
+          // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
+        } catch {}
       }
     } else {
       try {
         child.kill('SIGTERM');
-      } catch {
-        // Process already exited; nothing to kill.
-      }
+        // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
+      } catch {}
     }
   }
   if (server) {
     try {
       server.kill('SIGTERM');
-    } catch {
-      // Process already exited; nothing to kill.
-    }
+      // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
+    } catch {}
     server = null;
   }
 }
@@ -136,8 +92,6 @@ function spawnGate(
   const start = Date.now();
   return new Promise((resolve) => {
     const chunks: Buffer[] = [];
-    // detached: true puts each gate in its own process group so cleanup() can
-    // kill the whole tree (pnpm -> Playwright -> Chromium) via process.kill(-pid).
     const child = spawn(file, args, {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: env ? { ...process.env, ...env } : process.env,
@@ -176,8 +130,6 @@ function spawnGate(
   });
 }
 
-// ── Gate 1: Build ─────────────────────────────────────────────────────────────
-
 if (SKIP_BUILD) {
   if (!existsSync('.next')) {
     process.stderr.write(
@@ -195,8 +147,6 @@ if (SKIP_BUILD) {
     RESEND_API_KEY: process.env.RESEND_API_KEY ?? '',
   });
 }
-
-// ── Gate 2: Start server ──────────────────────────────────────────────────────
 
 step('Starting production server');
 server = spawn('pnpm', ['start'], {
@@ -217,23 +167,13 @@ run('Wait for server', 'npx', [
   '30000',
 ]);
 
-// ── Gates 3-6: Post-build gates ───────────────────────────────────────────────
-// LHCI desktop+mobile run sequentially (chained Promises, see below). axe and E2E
-// run in parallel — they have no shared state. Wall-clock: max(LHCI-serial, axe, E2E).
-
 step('Running post-build gates in parallel');
 
-// LHCI anchors .lighthouseci/ to process.cwd() with no CLI flag to relocate it
-// (`--collect.outputDir` does not exist on the collect command and is silently discarded).
-// Concurrent desktop+mobile runs race in collect/assert on that shared directory.
-// Chain mobile off desktop so they run sequentially without blocking the parallel
-// axe/E2E gates, which have no shared state with each other or with LHCI.
 const lhciDesktopPromise = spawnGate('Lighthouse CI — desktop', true, 'pnpm', [
   'exec',
   'lhci',
   'autorun',
   `--collect.url=http://localhost:${PORT}`,
-  // numberOfRuns inherited from lighthouserc.json (2) — representative-run selection reduces single-spike variance
   '--upload.target=filesystem',
   '--upload.outputDir=.lhci-local/desktop',
 ]);
@@ -244,7 +184,6 @@ const lhciMobilePromise = lhciDesktopPromise.then(() =>
     'autorun',
     '--config=lighthouserc.mobile.json',
     `--collect.url=http://localhost:${PORT}`,
-    // numberOfRuns inherited from lighthouserc.mobile.json (2) — representative-run selection reduces single-spike variance
     '--upload.target=filesystem',
     '--upload.outputDir=.lhci-local/mobile',
   ]),
@@ -288,7 +227,6 @@ try {
   process.exit(1);
 }
 
-// Print all buffered output first (deferred to avoid interleaving during parallel run)
 for (const r of results) {
   if (r.status === 'fulfilled' && r.value.output.trim()) {
     process.stdout.write(r.value.output);
@@ -297,7 +235,6 @@ for (const r of results) {
   }
 }
 
-// Print result summary
 log(`\n${C.bold}[gates:runtime] Post-build gate results:${C.reset}`);
 for (const r of results) {
   if (r.status === 'rejected') {
@@ -319,8 +256,6 @@ for (const r of results) {
     }
   }
 }
-
-// ── Teardown ──────────────────────────────────────────────────────────────────
 
 cleanup();
 
