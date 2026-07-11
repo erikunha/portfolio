@@ -14,6 +14,20 @@ import {
 } from '../../scripts/lib/transcript.mjs';
 
 describe('agentResultContains (tool_use_id anti-spoof)', () => {
+  const DISPATCH_PROMPT =
+    'Run the four-gate spec-gate protocol against the career-sync spec and return GATE_RESULT.';
+  const SIBLING_PROMPT =
+    'Verification-only security review of the ci-gate fan-in commit; do not make commits.';
+  const taskOutputJsonl = (prompt: string, verdict: string) =>
+    [
+      JSON.stringify({ message: { role: 'user', content: prompt } }),
+      JSON.stringify({
+        message: {
+          role: 'assistant',
+          content: [{ type: 'text', text: `assessment done. ${verdict}` }],
+        },
+      }),
+    ].join('\n');
   const DISPATCH_TS = '2026-07-11T10:00:00Z';
   const AFTER_DISPATCH_MS = Date.parse('2026-07-11T10:03:00Z');
   const BEFORE_DISPATCH_MS = Date.parse('2026-07-11T09:00:00Z');
@@ -26,7 +40,7 @@ describe('agentResultContains (tool_use_id anti-spoof)', () => {
           type: 'tool_use',
           id: 'toolu_arch',
           name: 'Agent',
-          input: { subagent_type: 'architect-reviewer' },
+          input: { subagent_type: 'architect-reviewer', prompt: DISPATCH_PROMPT },
         },
       ],
     },
@@ -71,7 +85,7 @@ describe('agentResultContains (tool_use_id anti-spoof)', () => {
   const passReader = (path: string) =>
     path === TASK_OUTPUT_PATH
       ? {
-          content: 'architect says GATE_RESULT: PASS in its final message',
+          content: taskOutputJsonl(DISPATCH_PROMPT, 'GATE_RESULT: PASS'),
           mtimeMs: AFTER_DISPATCH_MS,
         }
       : null;
@@ -137,7 +151,10 @@ describe('agentResultContains (tool_use_id anti-spoof)', () => {
         [dispatch, queueNotification],
         'architect-reviewer',
         'GATE_RESULT: PASS',
-        () => ({ content: 'architect says GATE_RESULT: FAIL', mtimeMs: AFTER_DISPATCH_MS }),
+        () => ({
+          content: taskOutputJsonl(DISPATCH_PROMPT, 'GATE_RESULT: FAIL'),
+          mtimeMs: AFTER_DISPATCH_MS,
+        }),
         SESSION_ID,
       ),
     ).toBe(false);
@@ -273,7 +290,7 @@ describe('agentResultContains (tool_use_id anti-spoof)', () => {
     const staleFileReader = vi.fn((path: string) =>
       path === TASK_OUTPUT_PATH
         ? {
-            content: 'architect says GATE_RESULT: PASS in its final message',
+            content: taskOutputJsonl(DISPATCH_PROMPT, 'GATE_RESULT: PASS'),
             mtimeMs: BEFORE_DISPATCH_MS,
           }
         : null,
@@ -313,6 +330,51 @@ describe('agentResultContains (tool_use_id anti-spoof)', () => {
         'architect-reviewer',
         'GATE_RESULT: PASS',
         legacyReader,
+        SESSION_ID,
+      ),
+    ).toBe(false);
+  });
+
+  it("false when the pointer names a FRESHER SIBLING agent's task output that merely quotes the sentinel (provenance substitution)", () => {
+    const siblingReader = vi.fn((path: string) =>
+      path === TASK_OUTPUT_PATH
+        ? {
+            content: taskOutputJsonl(SIBLING_PROMPT, 'GATE_RESULT: PASS'),
+            mtimeMs: AFTER_DISPATCH_MS,
+          }
+        : null,
+    );
+    expect(
+      agentResultContains(
+        [dispatch, queueNotification],
+        'architect-reviewer',
+        'GATE_RESULT: PASS',
+        siblingReader,
+        SESSION_ID,
+      ),
+    ).toBe(false);
+  });
+
+  it('false when the governing dispatch carries no prompt to bind against (fail-closed)', () => {
+    const promptlessDispatch = {
+      ...dispatch,
+      message: {
+        content: [
+          {
+            type: 'tool_use',
+            id: 'toolu_arch',
+            name: 'Agent',
+            input: { subagent_type: 'architect-reviewer' },
+          },
+        ],
+      },
+    };
+    expect(
+      agentResultContains(
+        [promptlessDispatch, queueNotification],
+        'architect-reviewer',
+        'GATE_RESULT: PASS',
+        passReader,
         SESSION_ID,
       ),
     ).toBe(false);
