@@ -94,6 +94,7 @@ export function containsInToolResultSince(records, needle, boundaryIndex) {
 }
 
 const TASK_ID_RE = /<task-id>([a-z0-9]{6,})<\/task-id>/;
+const SESSION_ID_RE = /^[A-Za-z0-9-]{6,}$/;
 const TOOL_USE_ID_TAG = (id) => `<tool-use-id>${id}</tool-use-id>`;
 const TASK_OUTPUT_FILE_RE = /<output-file>([^<]+)<\/output-file>/;
 
@@ -120,8 +121,10 @@ function notificationStrings(record) {
   return out;
 }
 
-export function agentResultContains(records, subagentType, needle, readTaskOutput) {
+export function agentResultContains(records, subagentType, needle, readTaskOutput, sessionId) {
   const readOutput = readTaskOutput ?? defaultReadTaskOutput;
+  const sessionAnchor =
+    typeof sessionId === 'string' && SESSION_ID_RE.test(sessionId) ? sessionId : null;
   let toolUseId = null;
   for (const record of records) {
     for (const tu of toolUses(record)) {
@@ -156,7 +159,8 @@ export function agentResultContains(records, subagentType, needle, readTaskOutpu
       const taskId = TASK_ID_RE.exec(s)?.[1];
       const outputFile = TASK_OUTPUT_FILE_RE.exec(s)?.[1];
       if (!taskId || !outputFile) continue;
-      if (!outputFile.endsWith(`/tasks/${taskId}.output`)) continue;
+      if (!sessionAnchor) continue;
+      if (!outputFile.endsWith(`/${sessionAnchor}/tasks/${taskId}.output`)) continue;
       const fileContent = readOutput(outputFile);
       if (typeof fileContent === 'string' && fileContent.includes(needle)) {
         return true;

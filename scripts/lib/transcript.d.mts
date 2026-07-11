@@ -33,4 +33,5 @@ export function agentResultContains(
   subagentType: string,
   needle: string,
   readTaskOutput?: TaskOutputReader,
+  sessionId?: string,
 ): boolean;
