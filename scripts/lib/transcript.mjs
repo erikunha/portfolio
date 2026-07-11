@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 
 export function readTranscript(transcriptPath) {
   let raw;
@@ -97,10 +97,11 @@ const TASK_ID_RE = /<task-id>([a-z0-9]{6,})<\/task-id>/;
 const SESSION_ID_RE = /^[A-Za-z0-9-]{6,}$/;
 const TOOL_USE_ID_TAG = (id) => `<tool-use-id>${id}</tool-use-id>`;
 const TASK_OUTPUT_FILE_RE = /<output-file>([^<]+)<\/output-file>/;
+const TASK_OUTPUT_SUFFIX = (sessionId, taskId) => `/${sessionId}/tasks/${taskId}.output`;
 
 function defaultReadTaskOutput(path) {
   try {
-    return readFileSync(path, 'utf8');
+    return { content: readFileSync(path, 'utf8'), mtimeMs: statSync(path).mtimeMs };
   } catch {
     return null;
   }
@@ -126,12 +127,15 @@ export function agentResultContains(records, subagentType, needle, readTaskOutpu
   const sessionAnchor =
     typeof sessionId === 'string' && SESSION_ID_RE.test(sessionId) ? sessionId : null;
   let toolUseId = null;
+  let dispatchTsMs = Number.NaN;
   for (const record of records) {
     for (const tu of toolUses(record)) {
       if (tu.name !== 'Agent') continue;
       const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
       if (input.subagent_type === subagentType && typeof tu.id === 'string') {
         toolUseId = tu.id;
+        const ts = record.timestamp;
+        dispatchTsMs = typeof ts === 'string' ? Date.parse(ts) : Number.NaN;
       }
     }
   }
@@ -160,9 +164,17 @@ export function agentResultContains(records, subagentType, needle, readTaskOutpu
       const outputFile = TASK_OUTPUT_FILE_RE.exec(s)?.[1];
       if (!taskId || !outputFile) continue;
       if (!sessionAnchor) continue;
-      if (!outputFile.endsWith(`/${sessionAnchor}/tasks/${taskId}.output`)) continue;
-      const fileContent = readOutput(outputFile);
-      if (typeof fileContent === 'string' && fileContent.includes(needle)) {
+      if (Number.isNaN(dispatchTsMs)) continue;
+      if (!outputFile.endsWith(TASK_OUTPUT_SUFFIX(sessionAnchor, taskId))) continue;
+      const output = readOutput(outputFile);
+      if (
+        output &&
+        typeof output === 'object' &&
+        typeof output.content === 'string' &&
+        Number.isFinite(output.mtimeMs) &&
+        output.mtimeMs > dispatchTsMs &&
+        output.content.includes(needle)
+      ) {
         return true;
       }
     }

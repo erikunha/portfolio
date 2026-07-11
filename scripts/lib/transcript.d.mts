@@ -26,7 +26,9 @@ export function agentDispatchedAfter(
   afterIso: string,
 ): boolean;
 
-export type TaskOutputReader = (path: string) => string | null;
+export type TaskOutput = { content: string; mtimeMs: number };
+
+export type TaskOutputReader = (path: string) => TaskOutput | null;
 
 export function agentResultContains(
   records: TranscriptRecord[],
