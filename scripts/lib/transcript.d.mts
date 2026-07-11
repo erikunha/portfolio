@@ -26,8 +26,14 @@ export function agentDispatchedAfter(
   afterIso: string,
 ): boolean;
 
+export type TaskOutput = { content: string; mtimeMs: number };
+
+export type TaskOutputReader = (path: string) => TaskOutput | null;
+
 export function agentResultContains(
   records: TranscriptRecord[],
   subagentType: string,
   needle: string,
+  readTaskOutput?: TaskOutputReader,
+  sessionId?: string,
 ): boolean;
