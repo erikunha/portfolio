@@ -42,8 +42,8 @@ function ProjectsDesktop() {
           <dl className="grid gap-1 text-xs md:text-sm m-0 mt-auto">
             {p.stats.map((s) => (
               <div key={s.label} className="flex justify-between gap-2">
-                <dt className="text-secondary-200 md:text-primary-500">{s.label}:</dt>
-                <dd className="m-0 text-primary-400 md:text-primary-500">{s.value}</dd>
+                <dt className="text-primary-500">{s.label}:</dt>
+                <dd className="m-0 text-primary-500">{s.value}</dd>
               </div>
             ))}
           </dl>
@@ -79,8 +79,8 @@ function ProjectsMobile() {
           <div className="grid gap-[3px] text-xs">
             {p.mobileMeta.map((m) => (
               <div key={m.label} className="flex justify-between gap-2">
-                <span className="text-secondary-200 shrink-0">{m.label}</span>
-                <span className="text-primary-400 text-right">{m.value}</span>
+                <span className="text-primary-500 shrink-0">{m.label}</span>
+                <span className="text-primary-500 text-right">{m.value}</span>
               </div>
             ))}
           </div>
