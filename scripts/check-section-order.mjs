@@ -49,7 +49,7 @@ if (missing.length > 0) {
       ' { order: N; } inside the @media (max-width: 768px) block in app/css/base.css.',
   );
   console.error(
-    'If this section intentionally defaults to order:0, add it to KNOWN_UNORDERED in this script with a comment explaining why.',
+    'If this section intentionally defaults to order:0, add it to KNOWN_UNORDERED in this script and record why in DECISIONS.md.',
   );
   process.exit(1);
 }
