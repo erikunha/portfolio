@@ -8,7 +8,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/raylu',
     type: 'career',
     company: 'RAYLU_AI',
-    role: 'SR FRONTEND ENGINEER · Remote',
+    role: 'SR SOFTWARE ENGINEER · Remote',
     body: [
       'wanted AI-native product scale; building the frontend platform',
       'for private-markets deal origination — funds representing $500B+ AUM.',
@@ -21,7 +21,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/betsson',
     type: 'career',
     company: 'BETSSON_GROUP',
-    role: 'SR FRONTEND ENGINEER · Malta (EU)',
+    role: 'SR SOFTWARE ENGINEER · Malta (EU)',
     body: [
       'wanted regulated multi-market scale; got 40M+ tx/yr',
       'across 15+ jurisdictions on a PCI-DSS payment platform.',
@@ -60,7 +60,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/grupo-sbf',
     type: 'career',
     company: 'GRUPO_SBF (NIKE / CENTAURO)',
-    role: 'REACT DEVELOPER · São Paulo, BR (remote)',
+    role: 'REACT ENGINEER · São Paulo, BR (remote)',
     body: [
       'React at LATAM e-commerce scale (8M+ MAU); institutionalized',
       'experiment-driven dev (20+ A/B tests).',
@@ -96,7 +96,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/venturus',
     type: 'career',
     company: 'VENTURUS',
-    role: 'MEAN STACK ENGINEER · Campinas, BR',
+    role: 'FULL-STACK ENGINEER (MEAN) · Campinas, BR',
     body: [
       'cut teeth on backend; -97.5% API latency (40s → <1s);',
       'Mongo → Postgres migration with custom ETL.',

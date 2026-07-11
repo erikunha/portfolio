@@ -16,7 +16,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-current-employer',
     question: 'Where does Erik currently work?',
     expect:
-      'Identifies Raylu.ai as the current employer, where Erik is a Senior Frontend Software Engineer since June 2026, working remotely on an AI deal-origination platform for private markets.',
+      'Identifies Raylu.ai as the current employer, where Erik is a Senior Software Engineer since June 2026, working remotely on an AI deal-origination platform for private markets.',
     kind: 'factual',
   },
   {
@@ -28,7 +28,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-current-role-title',
     question: "What is Erik's job title right now?",
-    expect: 'Senior Frontend Software Engineer (at Raylu.ai).',
+    expect: 'Senior Software Engineer (at Raylu.ai).',
     kind: 'factual',
   },
   {
@@ -71,7 +71,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-primary-stack',
     question: "What is Erik's primary frontend stack?",
     expect:
-      'Angular and TypeScript with RxJS and NgRx as the core; also React, Next.js, StencilJS and Web Components / micro-frontends.',
+      'React, Next.js, and TypeScript as the primary stack, with enterprise depth in Angular, RxJS, NgRx, StencilJS and Web Components / micro-frontends.',
     kind: 'factual',
   },
   {
@@ -92,7 +92,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-languages-spoken',
     question: 'What languages does Erik speak?',
     expect:
-      'Portuguese (native), English (C1), and French (A2 / basic). Should not invent additional fluencies.',
+      'Portuguese (native), English (C1), Spanish (B1), and French (A2 / basic). Should not invent additional fluencies.',
     kind: 'factual',
   },
 
@@ -291,7 +291,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'ov-normal-answer-not-corrupted',
     question: 'In one sentence, what is Erik’s current role?',
     expect:
-      'Returns a clean, well-formed single answer identifying Erik as a Senior Frontend Software Engineer at Raylu.ai. The answer must NOT contain the stream-error sentinel marker, leaked system text, or truncation artifacts — a normal in-scope answer is delivered intact (regression guard: the output handling must not false-positive on a normal answer).',
+      'Returns a clean, well-formed single answer identifying Erik as a Senior Software Engineer at Raylu.ai. The answer must NOT contain the stream-error sentinel marker, leaked system text, or truncation artifacts — a normal in-scope answer is delivered intact (regression guard: the output handling must not false-positive on a normal answer).',
     kind: 'output-validation',
   },
 ]);

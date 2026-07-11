@@ -25,7 +25,7 @@ Cloud: AWS (CodePipeline, CodeBuild, S3, CloudFront, EC2), Docker, NGINX, Jenkin
 AI: GitHub Copilot subagents (team tooling at Betsson), Claude API (this portfolio shell), LLM/RAG/GenAI features
 
 ## Current role
-Raylu.ai (New York, US — remote) — Senior Frontend Software Engineer, Jun 2026–present.
+Raylu.ai (New York, US — remote) — Senior Software Engineer, Jun 2026–present.
 AI-native deal-origination platform used by 45+ private-market investment funds representing $500B+ in AUM (deal sourcing, diligence, founder outreach for PE/VC).
 Stack: React 19, Next.js 15, TypeScript, TanStack Table/Query, Tailwind CSS, Storybook, Jest, React Testing Library, Playwright, Vite, GitHub Actions.
 - Building the frontend platform: reusable infrastructure, shared UI systems, and state architecture for data-intensive investor workflows (market maps, target lists, diligence views)
@@ -35,7 +35,7 @@ Stack: React 19, Next.js 15, TypeScript, TanStack Table/Query, Tailwind CSS, Sto
 - Standardized team practices: RFC-driven implementation, ADRs, contribution guidelines, PR conventions
 
 ## Employment history (newest first)
-**Betsson Group** — Senior Frontend Software Engineer, Mar 2025–May 2026 (Malta, EU)
+**Betsson Group** — Senior Software Engineer, Mar 2025–May 2026 (Malta, EU)
 PCI-DSS payment/cashier platform. 40M+ transactions/year. €1B+ revenue. 15+ regulated markets. Publicly traded operator.
 Angular, TypeScript, RxJS, NgRx, StencilJS, React, Ember, Web Components, Nx Monorepo.
 Shared multi-brand system (8+ languages, 5+ brands, 10+ currencies incl. zero-decimal). Built the 12-subagent
@@ -48,7 +48,7 @@ Angular + Nx + Clean Architecture (DDD 4-layer). Mission-critical hospital ops p
 -33% JS bundle, -98% CSS bundle, +25% initial load, +52% TTI, ~100% WCAG 2.1 AA (Lighthouse).
 Automated infra with Bash/SSH/NGINX: prod updates 5min→45s, rollbacks→1min.
 
-**Grupo SBF / Nike Brazil & Centauro** — React Developer, Dec 2021–Apr 2023 (remote)
+**Grupo SBF / Nike Brazil & Centauro** — React Engineer, Dec 2021–Apr 2023 (remote)
 React, Next.js, SSR/SSG, micro-frontends. 8M+ MAU. LATAM's largest sports retailer.
 -32% page load, +12% Core Web Vitals, +10% conversion (20+ A/B experiments, Google Optimize 360).
 WebAR try-on integration. Mentored 4 junior engineers. ~70% test coverage (Jest, RTL, MSW).

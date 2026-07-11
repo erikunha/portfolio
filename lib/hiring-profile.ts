@@ -60,7 +60,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   seniority: ['senior', 'staff', 'principal'],
   yoe: 8,
 
-  stack_primary: ['Angular', 'React', 'Next.js', 'TypeScript', 'RxJS', 'NgRx'],
+  stack_primary: ['React', 'Next.js', 'TypeScript', 'Node.js', 'Angular', 'RxJS', 'NgRx'],
   stack_secondary: [
     'Node.js',
     'Express.js',
@@ -70,19 +70,28 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     'AWS',
     'GitHub Actions',
   ],
-  domains: ['fintech', 'PCI-DSS', 'healthcare', 'e-commerce', 'edtech', 'banking', 'highway-ops'],
+  domains: [
+    'AI deal origination / private markets',
+    'fintech',
+    'PCI-DSS',
+    'healthcare',
+    'e-commerce',
+    'edtech',
+    'banking',
+    'highway-ops',
+  ],
 
   employers: [
     {
       name: 'Raylu.ai',
-      role: 'Senior Frontend Software Engineer',
+      role: 'Senior Software Engineer',
       domain: 'AI deal origination / private markets',
       current: true,
       dates: '2026–present',
     },
     {
       name: 'Betsson Group',
-      role: 'Senior Frontend Software Engineer',
+      role: 'Senior Software Engineer',
       domain: 'fintech/PCI-DSS',
       dates: '2025–2026',
     },
@@ -94,7 +103,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     },
     {
       name: 'Grupo SBF (Nike Brazil/Centauro)',
-      role: 'React Developer',
+      role: 'React Engineer',
       domain: 'e-commerce',
       dates: '2021–2023',
     },
@@ -118,7 +127,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     },
     {
       name: 'Venturus',
-      role: 'Full Stack Engineer (MEAN Stack)',
+      role: 'Full-Stack Engineer (MEAN)',
       domain: 'engineering/foreign-trade',
       dates: '2019',
     },
@@ -155,7 +164,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   },
 
   work_auth: {
-    EU_Malta: 'authorized',
+    EU_Malta: 'prior experience (Betsson, 2025–2026)',
     Canada: 'co-op graduate',
     Brazil: 'citizen',
     worldwide: 'open to relocation',
@@ -190,7 +199,8 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   languages: [
     { code: 'pt', level: 'native' },
     { code: 'en', level: 'C1' },
+    { code: 'es', level: 'B1' },
     { code: 'fr', level: 'A2' },
   ],
-  last_updated: '2026-05-15',
+  last_updated: '2026-07-11',
 });

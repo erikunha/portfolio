@@ -80,7 +80,7 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
     description:
       'GitHub Copilot 12-subagent system — codegen, review, debugging, arch validation. Path-scoped instructions + prompt workflows, shipped team-wide at Betsson.',
     mobileDescription:
-      "Copilot 12-subagent system at Betsson — code review, doc-gen, spec-to-PR. -40% onboarding via 35-page arch knowledge system. Built and maintains the agents. Also uses Claude API for personal tooling (this portfolio's shell).",
+      "Copilot 12-subagent system at Betsson — code review, doc-gen, spec-to-PR. -40% onboarding via 35-page arch knowledge system. Built the agents and shipped them team-wide. Also uses Claude API for personal tooling (this portfolio's shell).",
     stats: [
       { label: 'SUBAGENTS', value: '12 + ORCHESTRATOR' },
       { label: 'SCOPE', value: 'TEAM-WIDE' },
