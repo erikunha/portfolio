@@ -2,8 +2,21 @@ import { type GitCommit, GitCommitSchema } from './schemas';
 
 export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
   {
+    hash: 'b2e6a19f4c8d3057e1a9b6c2d8f40e73a5c1908d',
+    deco: '(HEAD -> main, tag: v9.0, origin/main)',
+    date: 'Mon Jun 8 09:15:00 2026 -0300',
+    branch: 'career/raylu',
+    type: 'career',
+    company: 'RAYLU_AI',
+    role: 'SR FRONTEND ENGINEER · Remote',
+    body: [
+      'wanted platform ownership in AI-native B2B SaaS; building',
+      'a headless DataTable platform — versioned ViewState, URL-backed state.',
+    ],
+  },
+  {
     hash: '7f3a2bc09f8e1d4c2b6a5d3e8c1f2a7b9d4e6c0a',
-    deco: '(HEAD -> main, tag: v8.0, origin/main)',
+    deco: '(tag: v8.0)',
     date: 'Sat Mar 1 09:42:11 2025 +0100',
     branch: 'career/betsson',
     type: 'career',
