@@ -1,3 +1,4 @@
+import { NOW_CURRENTLY } from './now';
 import type { ShellResponse } from './schemas';
 
 const SHELL_RESPONSES: ShellResponse[] = [
@@ -29,7 +30,7 @@ const SHELL_RESPONSES: ShellResponse[] = [
   {
     commands: ['cat ~/.now'],
     kind: 'output',
-    text: 'shipping multi-currency settlement · Betsson cashier (PCI-DSS)',
+    text: NOW_CURRENTLY,
   },
   {
     commands: ['contact', 'hire'],
