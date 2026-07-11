@@ -1,5 +1,8 @@
 import { readFileSync } from 'node:fs';
 
+const HARNESS_QUEUE_RECORD_TYPE = 'queue-operation';
+const HARNESS_NOTIFICATION_ORIGIN_KIND = 'task-notification';
+
 export function readTranscript(transcriptPath) {
   let raw;
   try {
@@ -106,6 +109,17 @@ export function agentResultContains(records, subagentType, needle) {
   }
   if (!toolUseId) return false;
   for (const record of records) {
+    if (
+      record &&
+      typeof record === 'object' &&
+      record.type === HARNESS_QUEUE_RECORD_TYPE &&
+      typeof record.content === 'string' &&
+      record.content.includes(`<tool-use-id>${toolUseId}</tool-use-id>`) &&
+      record.content.includes(needle)
+    ) {
+      return true;
+    }
+
     const message = record && typeof record === 'object' ? record.message : undefined;
     const content = message && typeof message === 'object' ? message.content : undefined;
 
@@ -127,7 +141,7 @@ export function agentResultContains(records, subagentType, needle) {
     const role = message && typeof message === 'object' ? message.role : undefined;
     const origin = record && typeof record === 'object' ? record.origin : undefined;
     const isHarnessNotification =
-      origin && typeof origin === 'object' && origin.kind === 'task-notification';
+      origin && typeof origin === 'object' && origin.kind === HARNESS_NOTIFICATION_ORIGIN_KIND;
     if (
       typeof content === 'string' &&
       role === 'user' &&
