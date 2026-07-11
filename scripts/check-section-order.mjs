@@ -32,10 +32,8 @@ for (const file of tsxFiles) {
 }
 
 const baseCss = readFileSync(resolve(root, 'app/css/base.css'), 'utf8');
-const sectionOrderComment = baseCss.indexOf('Mobile section order');
-const sectionOrderRegion = sectionOrderComment >= 0 ? baseCss.substring(sectionOrderComment) : '';
 const orderedIds = new Set(
-  [...sectionOrderRegion.matchAll(/#(sec-[^{\s]+)\s*\{/g)].map((m) => m[1]),
+  [...baseCss.matchAll(/#(sec-[^{\s,]+)[^{}]*\{[^{}]*\border:\s*-?\d+/g)].map((m) => m[1]),
 );
 
 const missing = [...sectionIds].filter((id) => !orderedIds.has(id) && !KNOWN_UNORDERED.has(id));
