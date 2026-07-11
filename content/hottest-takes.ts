@@ -18,7 +18,7 @@ export const hottestTakes: HottestTake[] = z.array(HottestTakeSchema).parse([
     num: '03.',
     category: 'TEST',
     thesis: 'The testing pyramid is wrong for B2C frontends.',
-    body: 'Inverted pyramid — heavy E2E, lean units, near-zero shallow snapshots — wins when UX is the product. Unit tests catch refactors; E2E catches what the customer actually sees. On the cashier, a single Playwright trace replaces 40 brittle component tests and tells me whether revenue is at risk.',
+    body: 'Inverted pyramid — heavy E2E, lean units, near-zero shallow snapshots — wins when UX is the product. Unit tests catch refactors; E2E catches what the customer actually sees. On the Betsson cashier, a single Playwright trace replaced 40 brittle component tests and told me whether revenue was at risk.',
   },
   {
     num: '04.',
@@ -43,7 +43,7 @@ export const hottestTakes: HottestTake[] = z.array(HottestTakeSchema).parse([
     num: '07.',
     category: 'DS',
     thesis: 'Framework-agnostic design systems lose unless the contract is shipping, not theory.',
-    body: `Web Components only pay off when you have >1 framework consuming them in production. Otherwise you bought distribution overhead to solve a problem you don't have. Stencil at Betsson works because Angular, React, and Ember are all actually downstream — not because someone read a blog post.`,
+    body: `Web Components only pay off when you have >1 framework consuming them in production. Otherwise you bought distribution overhead to solve a problem you don't have. Stencil at Betsson worked because Angular, React, and Ember were all actually downstream — not because someone read a blog post.`,
   },
   {
     num: '08.',
@@ -55,7 +55,7 @@ export const hottestTakes: HottestTake[] = z.array(HottestTakeSchema).parse([
     num: '09.',
     category: 'AI',
     thesis: 'Spec-first is the only disciplined way to ship with LLMs and agents.',
-    body: 'Vibe-coding generates output nobody can review. Spec-driven development inverts it: write the contract, expected behavior, and failure modes first — then the agent implements against a legible target. The spec is the review artifact, not the generated code. That is how I run the 12-agent Copilot system at Betsson: every agent gates on a written spec before touching a file. Without the spec, you have a black box you cannot audit, cannot roll back, and cannot hand off.',
+    body: 'Vibe-coding generates output nobody can review. Spec-driven development inverts it: write the contract, expected behavior, and failure modes first — then the agent implements against a legible target. The spec is the review artifact, not the generated code. That is how I ran the 12-agent Copilot system at Betsson: every agent gated on a written spec before touching a file. Without the spec, you have a black box you cannot audit, cannot roll back, and cannot hand off.',
   },
 ]);
 
