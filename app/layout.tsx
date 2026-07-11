@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     'PCI-DSS',
     'Healthcare',
     'E-commerce',
-    'iGaming',
+    'B2B SaaS',
   ],
   authors: [{ name: 'Erik Henrique Alves Cunha', url: 'https://erikunha.dev' }],
   creator: 'Erik Henrique Alves Cunha',

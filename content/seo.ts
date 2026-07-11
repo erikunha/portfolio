@@ -13,7 +13,7 @@ export const personSchema = {
     { '@type': 'Language', name: 'Portuguese', alternateName: 'Native' },
     { '@type': 'Language', name: 'English', alternateName: 'C1' },
     { '@type': 'Language', name: 'French', alternateName: 'A2' },
-    { '@type': 'Language', name: 'Spanish', alternateName: 'A2' },
+    { '@type': 'Language', name: 'Spanish', alternateName: 'B1' },
   ],
   nationality: { '@type': 'Country', name: 'Brazil' },
   address: {
@@ -25,11 +25,11 @@ export const personSchema = {
   sameAs: ['https://linkedin.com/in/erikunha', 'https://github.com/erikunha'],
   worksFor: {
     '@type': 'Organization',
-    name: 'Betsson Group',
-    url: 'https://www.betssongroup.com',
+    name: 'Raylu.ai',
+    url: 'https://raylu.ai',
   },
   description:
-    'Full-Stack Engineer with 8+ years specializing in Applied AI systems and high-scale production architecture. Currently shipping LLM, RAG, and multi-agent features at Betsson Group (PCI-DSS, €1B+ ARR, 40M+ transactions/yr). Impact across e-commerce (8M+ MAU), banking (70M+ customers), and healthcare. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI. Staff/Principal-track, targeting AI-forward product companies worldwide.',
+    'Full-Stack Engineer with 8+ years specializing in Applied AI systems and high-scale production architecture. Currently building the frontend platform for Raylu.ai — the AI deal-origination engine for private markets. Prior: PCI-DSS payments at Betsson Group (€1B+ ARR, 40M+ transactions/yr). Impact across e-commerce (8M+ MAU), banking (70M+ customers), and healthcare. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI. Staff/Principal-track, targeting AI-forward product companies worldwide.',
   knowsAbout: [
     'LLM Engineering',
     'Retrieval-Augmented Generation (RAG)',
@@ -82,7 +82,8 @@ export const personSchema = {
     'PCI-DSS Systems',
     'Financial Technology',
     'Healthcare Technology',
-    'iGaming',
+    'Private Markets Technology',
+    'B2B SaaS',
     'Banking Technology',
     'E-commerce Platforms',
     'EdTech',
@@ -150,7 +151,7 @@ export const personSchema = {
       employmentType: 'FULL_TIME',
       jobLocationType: 'TELECOMMUTE',
       description:
-        'Targeting Applied AI engineering roles (Senior, Staff, or Principal IC) at AI-forward product companies. Currently based in Brazil (UTC-3), working remotely for an EU-regulated company. Open to fully remote worldwide or relocation with visa sponsorship. 8+ years across regulated industries. WES-verified credentials, English C1.',
+        'Targeting Applied AI engineering roles (Senior, Staff, or Principal IC) at AI-forward product companies. Currently based in Brazil (UTC-3), working remotely for a New York AI startup company. Open to fully remote worldwide or relocation with visa sponsorship. 8+ years across regulated industries. WES-verified credentials, English C1.',
     },
   },
 } as const;

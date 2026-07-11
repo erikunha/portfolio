@@ -74,11 +74,17 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
 
   employers: [
     {
+      name: 'Raylu.ai',
+      role: 'Senior Frontend Software Engineer',
+      domain: 'AI deal origination / private markets',
+      current: true,
+      dates: '2026–present',
+    },
+    {
       name: 'Betsson Group',
       role: 'Senior Frontend Software Engineer',
       domain: 'fintech/PCI-DSS',
-      current: true,
-      dates: '2025–present',
+      dates: '2025–2026',
     },
     {
       name: 'Canon Medical Systems Brazil',

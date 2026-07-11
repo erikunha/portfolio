@@ -8,14 +8,14 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
     description:
       'Frontend platform for Raylu’s AI deal-origination engine — shared UI systems and state architecture behind market maps, target lists, and diligence surfaces for private-markets funds.',
     mobileDescription:
-      'Frontend platform at Raylu.ai — market maps, target lists, diligence surfaces for private-markets funds. Shared UI systems, versioned ViewState, URL-backed state. React 19, Next 15, TanStack.',
+      'Frontend platform at Raylu.ai — market maps, target lists, diligence surfaces for private-markets funds. Shared UI systems, versioned ViewState, URL-backed state. React 19, Next 15, TypeScript.',
     stats: [
       { label: 'SURFACES', value: 'MAPS / LISTS / DILIGENCE' },
       { label: 'STATE', value: 'VERSIONED + URL-BACKED' },
-      { label: 'STACK', value: 'REACT 19 / NEXT 15 / TANSTACK' },
+      { label: 'STACK', value: 'REACT 19 / NEXT 15 / TS' },
     ],
     mobileMeta: [
-      { label: 'stack', value: 'react 19 · tanstack' },
+      { label: 'stack', value: 'react 19 · next 15 · ts' },
       { label: 'scale', value: 'funds · $500B+ AUM' },
       { label: 'status', value: 'production' },
     ],
