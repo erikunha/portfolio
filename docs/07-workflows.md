@@ -16,7 +16,7 @@
 | `pnpm build` | production build (PPR) |
 | `pnpm start` | serve the production build |
 | `pnpm check` / `pnpm check:fix` | Biome lint + format |
-| `pnpm typecheck` | `tsc --noEmit` (strict) |
+| `pnpm typecheck` | `tsgo --noEmit` (strict, TypeScript native compiler) |
 
 > **Gotcha:** `pnpm build` rewrites `next-env.d.ts`'s route-types import to the prod path; `pnpm dev` rewrites it back. A stray `M next-env.d.ts` after a local prod build is expected - `git checkout next-env.d.ts` reverts it.
 

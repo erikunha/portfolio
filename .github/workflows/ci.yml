@@ -125,7 +125,7 @@ jobs:
             tsbuildinfo-${{ runner.os }}-
 
       - name: Type check
-        run: pnpm tsc --noEmit
+        run: pnpm typecheck
 
   test:
     runs-on: ubuntu-latest
