@@ -93,7 +93,7 @@ const DISCLOSURE_PATTERNS: Array<{ name: string; pattern: RegExp; cssOnly?: true
   { name: 'HTMLDetailsElement', pattern: /HTMLDetailsElement/ },
   { name: '::details-content', pattern: /::details-content/ },
   { name: '[open] attribute selector', pattern: /\[open\]/, cssOnly: true },
-  { name: "'[open]' selector string", pattern: /['"`][^'"`]*\[open\]/ },
+  { name: "'[open]' selector string", pattern: /['"`][^'"`\n]*\[open\]/ },
   { name: "createElement('details')", pattern: /createElement\(\s*['"`]details['"`]/i },
 ];
 
