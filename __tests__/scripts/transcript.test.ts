@@ -6,9 +6,6 @@ import {
   agentDispatchedAfter,
   agentResultContains,
   agentsDispatchedSince,
-  containsInToolResultSince,
-  containsSince,
-  lastDispatchIndex,
   lastUserCommitMarker,
   readTranscript,
 } from '../../scripts/lib/transcript.mjs';
@@ -574,35 +571,6 @@ describe('agentResultContains (tool_use_id anti-spoof)', () => {
   });
 });
 
-describe('lastDispatchIndex + after-dispatch PASS scoping (anti-spoof)', () => {
-  const architect = {
-    type: 'assistant',
-    message: {
-      content: [
-        { type: 'tool_use', name: 'Agent', input: { subagent_type: 'architect-reviewer' } },
-      ],
-    },
-  };
-  const passResult = {
-    type: 'user',
-    message: { content: [{ type: 'tool_result', content: 'GATE_RESULT: PASS' }] },
-  };
-  it('returns the index of the last matching Agent dispatch, -1 if none', () => {
-    expect(lastDispatchIndex([architect], 'architect-reviewer')).toBe(0);
-    expect(lastDispatchIndex([passResult], 'architect-reviewer')).toBe(-1);
-  });
-  it('a PASS tool_result BEFORE the architect dispatch does NOT satisfy the scoped check', () => {
-    const records = [passResult, architect];
-    const idx = lastDispatchIndex(records, 'architect-reviewer');
-    expect(containsInToolResultSince(records, 'GATE_RESULT: PASS', idx)).toBe(false);
-  });
-  it('a PASS tool_result AFTER the architect dispatch satisfies it', () => {
-    const records = [architect, passResult];
-    const idx = lastDispatchIndex(records, 'architect-reviewer');
-    expect(containsInToolResultSince(records, 'GATE_RESULT: PASS', idx)).toBe(true);
-  });
-});
-
 function agentAt(subagentType: string, iso: string) {
   return {
     type: 'assistant',
@@ -623,23 +591,6 @@ describe('agentDispatchedAfter (ordering)', () => {
     const records = [agentAt('performance-engineer', '2026-06-04T10:00:00Z')];
     expect(agentDispatchedAfter(records, 'security-auditor', '2026-06-04T09:00:00Z')).toBe(false);
     expect(agentDispatchedAfter(records, 'performance-engineer', 'not-a-date')).toBe(false);
-  });
-});
-
-describe('containsInToolResultSince (anti-spoof)', () => {
-  const passInToolResult = {
-    type: 'user',
-    message: { content: [{ type: 'tool_result', content: 'report\nGATE_RESULT: PASS\n' }] },
-  };
-  const passInProse = {
-    type: 'assistant',
-    message: { content: [{ type: 'text', text: 'the gate needs GATE_RESULT: PASS' }] },
-  };
-  it('matches the sentinel inside a tool_result block', () => {
-    expect(containsInToolResultSince([passInToolResult], 'GATE_RESULT: PASS', -1)).toBe(true);
-  });
-  it('does NOT match the sentinel quoted in plain prose (spoof attempt)', () => {
-    expect(containsInToolResultSince([passInProse], 'GATE_RESULT: PASS', -1)).toBe(false);
   });
 });
 
@@ -775,39 +726,5 @@ describe('agentsDispatchedSince', () => {
     const records = battery.map((a, i) => agentRecord(a, `2026-06-04T00:00:0${i}.000Z`));
     const set = agentsDispatchedSince(records, -1);
     for (const a of battery) expect(set).toContain(a);
-  });
-});
-
-describe('containsSince', () => {
-  it('finds a needle string in record content after the boundary', () => {
-    const records = [
-      agentRecord('architect-reviewer', '2026-06-04T00:00:00.000Z'),
-      {
-        type: 'user',
-        timestamp: '2026-06-04T00:00:01.000Z',
-        message: {
-          role: 'user',
-          content: [
-            {
-              type: 'tool_result',
-              content: [{ type: 'text', text: 'report...\nGATE_RESULT: PASS\n' }],
-            },
-          ],
-        },
-      },
-    ];
-    expect(containsSince(records, 'GATE_RESULT: PASS', -1)).toBe(true);
-  });
-
-  it('returns false when the needle only appears at or before the boundary', () => {
-    const records = [
-      {
-        type: 'user',
-        timestamp: '2026-06-04T00:00:00.000Z',
-        message: { role: 'user', content: 'GATE_RESULT: PASS' },
-      },
-      agentRecord('security-auditor', '2026-06-04T00:00:01.000Z'),
-    ];
-    expect(containsSince(records, 'GATE_RESULT: PASS', 0)).toBe(false);
   });
 });

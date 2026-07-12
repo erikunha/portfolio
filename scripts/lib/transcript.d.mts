@@ -6,20 +6,6 @@ export function lastUserCommitMarker(records: TranscriptRecord[]): number;
 
 export function agentsDispatchedSince(records: TranscriptRecord[], boundaryIndex: number): string[];
 
-export function lastDispatchIndex(records: TranscriptRecord[], subagentType: string): number;
-
-export function containsSince(
-  records: TranscriptRecord[],
-  needle: string,
-  boundaryIndex: number,
-): boolean;
-
-export function containsInToolResultSince(
-  records: TranscriptRecord[],
-  needle: string,
-  boundaryIndex: number,
-): boolean;
-
 export function agentDispatchedAfter(
   records: TranscriptRecord[],
   subagentType: string,

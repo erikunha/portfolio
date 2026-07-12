@@ -57,42 +57,6 @@ export function agentsDispatchedSince(records, boundaryIndex) {
   return [...seen];
 }
 
-export function lastDispatchIndex(records, subagentType) {
-  let idx = -1;
-  records.forEach((record, index) => {
-    for (const tu of toolUses(record)) {
-      if (tu.name !== AGENT_TOOL_NAME) continue;
-      const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
-      if (input.subagent_type === subagentType) idx = index;
-    }
-  });
-  return idx;
-}
-
-export function containsSince(records, needle, boundaryIndex) {
-  for (let index = 0; index < records.length; index++) {
-    if (index <= boundaryIndex) continue;
-    if (JSON.stringify(records[index]).includes(needle)) return true;
-  }
-  return false;
-}
-
-export function containsInToolResultSince(records, needle, boundaryIndex) {
-  for (let index = 0; index < records.length; index++) {
-    if (index <= boundaryIndex) continue;
-    const record = records[index];
-    const message = record && typeof record === 'object' ? record.message : undefined;
-    const content = message && typeof message === 'object' ? message.content : undefined;
-    if (!Array.isArray(content)) continue;
-    for (const item of content) {
-      if (item && typeof item === 'object' && item.type === TOOL_RESULT_TYPE) {
-        if (JSON.stringify(item).includes(needle)) return true;
-      }
-    }
-  }
-  return false;
-}
-
 const TASK_ID_RE = /<task-id>([a-z0-9]{6,})<\/task-id>/;
 const SESSION_ID_RE = /^[A-Za-z0-9-]{6,}$/;
 const TOOL_USE_ID_TAG = (id) => `<tool-use-id>${id}</tool-use-id>`;
