@@ -1,6 +1,6 @@
 # Erik Cunha — Staff Full-Stack Engineer · Applied AI
 
-> Full-Stack Software Engineer with 8+ years shipping production AI systems
+> Full-Stack Engineer with 8+ years shipping production AI systems
 > and high-scale frontend architecture. Currently building LLM, RAG, and
 > multi-agent features at Betsson Group (PCI-DSS, €1B+ ARR, 40M+ tx/yr,
 > EU-regulated). Impact at scale: 8M+ MAU e-commerce (Nike Brazil), 70M+
@@ -17,7 +17,7 @@
 - Relocation: Open, requires visa sponsorship
 - Target role: Senior / Staff / Principal IC — Applied AI & Full-Stack
 - Work authorization: Brazilian national. WES-verified academic credentials. English C1.
-- Contact: erikhenriquealvescunha@gmail.com | +5519998394086
+- Contact: erikhenriquealvescunha@gmail.com | +5519997049125
 
 ## AI Engineering
 

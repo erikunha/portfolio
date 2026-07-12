@@ -6,5 +6,5 @@ export const social: Social = SocialSchema.parse({
   email: 'erikhenriquealvescunha@gmail.com',
   site: 'https://erikunha.dev',
   handle: 'erikunha',
-  whatsapp: 'https://wa.me/5519998394086',
+  whatsapp: 'https://wa.me/5519997049125',
 });
