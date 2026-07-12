@@ -65,6 +65,8 @@ describe('Dock', () => {
       },
     });
 
+    const focusSpy = vi.spyOn(targetSection, 'focus');
+
     await act(async () => {
       homeLink?.dispatchEvent(event);
     });
@@ -72,6 +74,7 @@ describe('Dock', () => {
     expect(defaultPrevented).toBe(true);
     expect(scrolledIntoView).toBe(targetSection);
     expect(document.activeElement).toBe(targetSection);
+    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
   });
 
   it('does not move focus when the target element is not focusable', async () => {
