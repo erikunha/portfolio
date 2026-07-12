@@ -1,7 +1,5 @@
 'use client';
 
-import { dispatchModuleOpen } from '@/lib/events';
-
 type DockItem = {
   label: string;
   href: string;
@@ -84,9 +82,6 @@ export function Dock() {
     if (!target) return;
     const el = document.getElementById(target);
     if (!el) return;
-    if (el.tagName === 'DETAILS') {
-      dispatchModuleOpen(target);
-    }
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 

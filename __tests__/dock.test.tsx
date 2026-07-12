@@ -5,26 +5,17 @@ import { type MountedClient, mountClient } from './helpers/render';
 describe('Dock', () => {
   let mounted: MountedClient;
   let scrolledIntoView: Element | null = null;
-  let moduleOpenEvents: string[] = [];
-  let moduleOpenListener: (e: Event) => void;
 
   beforeEach(() => {
     scrolledIntoView = null;
-    moduleOpenEvents = [];
 
     Element.prototype.scrollIntoView = vi.fn(function (this: Element) {
       scrolledIntoView = this;
     });
-
-    moduleOpenListener = (e: Event) => {
-      moduleOpenEvents.push((e as CustomEvent<{ id: string }>).detail?.id ?? '');
-    };
-    window.addEventListener('module:open', moduleOpenListener);
   });
 
   afterEach(() => {
     mounted?.unmount();
-    window.removeEventListener('module:open', moduleOpenListener);
     vi.restoreAllMocks();
   });
 
@@ -80,27 +71,6 @@ describe('Dock', () => {
     expect(scrolledIntoView).toBe(targetSection);
 
     document.body.removeChild(targetSection);
-  });
-
-  it('clicking a hash link whose target is a DETAILS element dispatches module:open', async () => {
-    const container = await render();
-
-    const detailsEl = document.createElement('details');
-    detailsEl.id = 'sec-shell';
-    document.body.appendChild(detailsEl);
-
-    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));
-    const shellLink = links.find((a) => a.getAttribute('href') === '#sec-shell');
-    expect(shellLink).not.toBeNull();
-
-    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
-    await act(async () => {
-      shellLink?.dispatchEvent(event);
-    });
-
-    expect(moduleOpenEvents).toContain('sec-shell');
-
-    document.body.removeChild(detailsEl);
   });
 
   it('does not call scrollIntoView when the target element is missing from DOM', async () => {
