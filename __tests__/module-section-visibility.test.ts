@@ -69,14 +69,16 @@ describe('module-body-content: section-body collapse trap (details -> section re
 });
 
 const DISCLOSURE_SCAN_ROOT_DIRS = ['components', 'app', 'lib', 'design-system'];
-const DISCLOSURE_SCAN_EXTENSIONS = new Set(['.ts', '.tsx', '.css']);
-const DISCLOSURE_SCAN_SKIP_DIRS = new Set(['node_modules', '.next']);
+const DISCLOSURE_SCAN_EXTENSIONS = new Set(['.ts', '.tsx', '.css', '.mdx']);
+const DISCLOSURE_SCAN_SKIP_DIRS = new Set(['node_modules', '.next', '__tests__']);
+const TEST_FILE = /\.test\.[cm]?[jt]sx?$/;
 
 function collectDisclosureScanFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     if (DISCLOSURE_SCAN_SKIP_DIRS.has(entry.name)) return [];
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) return collectDisclosureScanFiles(fullPath);
+    if (TEST_FILE.test(entry.name)) return [];
     return DISCLOSURE_SCAN_EXTENSIONS.has(path.extname(entry.name)) ? [fullPath] : [];
   });
 }
@@ -101,8 +103,8 @@ describe('disclosure machinery: <details>/<summary> never returns to shipped sou
     );
     const violations: string[] = [];
     for (const file of files) {
-      // behavioral-test-allow: walks shipped source to enforce the disclosure-removal ADR; no
-      // compiler or lint rule bans a removed HTML element from silently being reintroduced
+      // behavioral-test-allow: no compiler or lint rule bans a deleted HTML element from
+      // silently returning to shipped source
       const contents = readFileSync(file, 'utf-8');
       const isCss = path.extname(file) === CSS_EXTENSION;
       for (const { name, pattern, cssOnly } of DISCLOSURE_PATTERNS) {
