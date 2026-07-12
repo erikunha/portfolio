@@ -10,8 +10,19 @@ const REPO_ROOT = path.resolve(__dirname, '..');
 const read = (relativePath: string) => readFileSync(path.join(REPO_ROOT, relativePath), 'utf-8');
 
 // content/perf-receipts.ts is the authoritative source for every performance number
-// (CLAUDE.md: "cite the receipts — they are the authoritative source"). Every assertion below
-// asks the same question of a different surface: does it agree with the receipt?
+// (CLAUDE.md: "cite the receipts — they are the authoritative source").
+//
+// WHAT THIS HOLDS, precisely, because the scope is not what you would assume:
+//   - The sweep catches an OPPOSITE SIGN only. It does NOT catch magnitude drift in prose:
+//     changing "-25% initial load" to "-2.5%" in the system prompt passes. Do not "fix" that by
+//     comparing magnitudes near a keyword — that was built and measured, and it produces 24 false
+//     positives on currently-correct content, because a dense list ("-33% JS, -98% CSS, -52% TTI")
+//     puts every metric's keyword within a window of every OTHER metric's number.
+//   - Magnitude IS held where an explicit field mapping exists: HIRING_PROFILE_RECEIPT_FIELDS and
+//     PROJECT_STAT_METRICS. Prose has no such mapping, so prose gets the sign check only.
+// The narrative in system-prompt.ts hand-duplicates numbers that LIVE_DATA already generates from
+// perfReceipts. That duplication is what let "+25% initial load" ship. The sign half is now gated;
+// the magnitude half of the narrative is not.
 const receiptFor = (metric: string) => {
   const receipt = perfReceipts.find((r) => r.metric === metric);
   if (!receipt) throw new Error(`no perf receipt for ${metric}`);
@@ -28,10 +39,14 @@ const METRIC_KEYWORDS: Record<string, RegExp> = {
   BUNDLE_CSS: /css/i,
   TTI: /\bTTI\b|time.to.interactive/i,
   BUNDLE_JS: /\bJS\b|javascript/i,
-  PAGE_LOAD: /page.load/i,
-  INITIAL_LOAD: /initial.load/i,
+  PAGE_LOAD: /page[\s-]*load/i,
+  // the owner's own phrasing is "Initial load TIME dropped about 25%", and a bare /initial.load/
+  // matches neither that nor "initial page load" — the two ways this is actually written
+  INITIAL_LOAD: /initial[\s-]*(page[\s-]*)?load|load[\s-]*time/i,
   CONVERSION: /conversion/i,
-  DESKTOP_BUILD: /build/i,
+  // NOT /build/i: that matches "building the frontend platform", which appears in llms.txt and the
+  // system prompt, so a legitimate "+40%" anywhere near it would red as a spurious contradiction
+  DESKTOP_BUILD: /desktop[\s-]*build|build[\s-]*time/i,
   ONBOARDING_TIME: /onboarding/i,
 };
 
@@ -124,7 +139,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
     expect(
       contradictions,
-      `a surface states the opposite sign of an authoritative receipt. Not hypothetical: TTI shipped as -52% in perf-receipts.ts and seo.ts while projects.ts, hiring-profile.ts, the /api/ask system prompt AND the eval corpus all said +52% — so the AI answered the opposite sign from the JSON-LD on the same metric, and the eval graded it against the wrong one. A "gain" of -52% is also nonsense as English.\n\nIf this fired on a TRUE statement about a DIFFERENT metric that happens to share a number, the bug is the keyword, not your sentence — widen METRIC_KEYWORDS. Do not delete a true claim to make a test pass.`,
+      `a surface states the opposite sign of an authoritative receipt. Not hypothetical: TTI shipped as -52% in perf-receipts.ts and seo.ts while projects.ts, hiring-profile.ts, the /api/ask system prompt AND the eval corpus all said +52% — so the AI answered the opposite sign from the JSON-LD on the same metric, and the eval graded it against the wrong one. A "gain" of -52% is also nonsense as English.\n\nBEFORE you change any copy: this can still false-fire. It fires when the flipped number sits within ${PROXIMITY_CHARS} chars of the metric's keyword, so a TRUE sentence about a DIFFERENT metric that shares a magnitude AND sits in the same breath will trip it — e.g. "conversion work at Grupo SBF: bounce rate -10%" (CONVERSION is +10%). Proximity cannot disambiguate two metrics sharing a number inside one sentence. If that is what happened, do NOT delete the true claim and do NOT widen the keyword (it is already correct) — narrow the sentence, or add the other metric as its own receipt so it has a keyword of its own.`,
     ).toEqual([]);
   });
 
