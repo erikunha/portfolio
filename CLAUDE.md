@@ -152,6 +152,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **pnpm only.** `packageManager: pnpm@latest`. Don't use npm or yarn.
 - Every dep installed `@latest` at scaffold; `pnpm up --latest` for bumps.
 - `zod` is exact-pinned (`-E`) — its minor bumps break inference. Upgrade deliberately.
+- **Never `--latest` `typescript`** — held at 6.x because Stryker needs the TS JS API that TS7 removed (`--latest` rewrites an exact pin too, so pinning won't save you). Held by `__tests__/stryker-typescript-api.test.ts`. See DECISIONS.md 2026-07-12.
 - Caret semver in `package.json`; lockfile (`pnpm-lock.yaml`) is the source of truth.
 - CI runs `pnpm install --frozen-lockfile`.
 - Node 22+, pnpm 10+.
