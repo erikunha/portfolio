@@ -295,8 +295,12 @@ auditor was *dispatched* after the edit, not that its findings were resolved.
 
 **Rule.** Every file, function, and numeric budget named in `ARCHITECTURE.md`
 must be verifiable against the live code — a doc claim that no longer matches
-the codebase is a defect. ADR entries in `DECISIONS.md` cite the commit SHA they
-ship in, and carry a one-line reversibility note. There is one canonical
+the codebase is a defect. ADR entries in `DECISIONS.md` cite the **PR** they ship
+in (e.g. `PR #185`), and carry a one-line reversibility note. The repo
+squash-merges, so no per-commit SHA survives on `main` and pre-merge SHAs churn
+on every rebase — the PR number is the stable, auditable reference to the single
+squash commit the decision ships in. (Historical entries that predate this
+convention keep their commit-SHA citations.) There is one canonical
 production domain — `erikunha.dev` — used consistently across every
 current-state file; historical dated ADR text and superseded specs keep their
 original wording (they record history, and history is not edited). Superseded
@@ -305,14 +309,16 @@ documents carry a header banner pointing at what replaced them.
 **Rationale.** Documentation that drifts from code is worse than no
 documentation — a reader trusts it and is misled. A portfolio that is a hiring
 artifact cannot ship an `ARCHITECTURE.md` that describes a system that no longer
-exists. SHA-anchored ADRs make a decision auditable and a revert precise. One
+exists. PR-anchored ADRs make a decision auditable and a revert precise — the
+squash commit is one `git revert` away, and the PR number never goes stale under
+rebase or squash-merge the way a per-commit SHA does. One
 canonical domain removes the `erikunha.com.br` / `erikunha.dev` ambiguity the
 audit flagged (`robots.txt`, `sitemap.ts`, and `layout.tsx` `metadataBase` all
 ship `.dev`).
 
 **How it is held.** PR review against this chapter is the primary mechanism: the
 reviewer checks that doc claims still match code and that any new ADR cites its
-SHA and reversibility note. A doc-claim verifier script — a `scripts/audit/`
+PR and reversibility note. A doc-claim verifier script — a `scripts/audit/`
 tool that mechanically checks every file/function/budget named in
 `ARCHITECTURE.md` — is a documented *stretch goal*, not a shipped gate; this
 chapter states that plainly so the absence is not mistaken for a silent
