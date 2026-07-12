@@ -16,10 +16,14 @@ for (const { path, heading } of DS_ROUTES) {
   });
 }
 
-test('Preview component renders live and source toggle', async ({ page }) => {
+test('Preview renders the live component and its source without interaction', async ({ page }) => {
   await page.goto('/design-system/components');
   const preview = page.getByTestId('ds-preview').first();
   await expect(preview).toBeVisible();
-  const summary = page.getByText('VIEW SOURCE').first();
-  await expect(summary).toBeVisible();
+
+  const source = preview.locator('pre').first();
+  await expect(source).toBeVisible();
+  await expect(source).toHaveAttribute('tabindex', '0');
+
+  expect(await page.locator('details').count()).toBe(0);
 });
