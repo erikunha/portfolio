@@ -1,8 +1,7 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { heroTagline } from '@/content/hero';
-import { manPage } from '@/content/man-page';
 import { personSchema } from '@/content/seo';
 import { social } from '@/content/social';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
@@ -15,36 +14,39 @@ vi.mock('next/font/local', () => ({
 const CANONICAL_TITLE = 'Senior Full-Stack Engineer';
 const RETIRED_TITLE = 'Full-Stack Software Engineer';
 
-const llmsTxt = readFileSync(path.resolve(__dirname, '../public/llms.txt'), 'utf-8');
-const agentManifest = readFileSync(
-  path.resolve(__dirname, '../public/.well-known/agent.json'),
-  'utf-8',
-);
+const REPO_ROOT = path.resolve(__dirname, '..');
+const CONTENT_DIR = path.join(REPO_ROOT, 'content');
+
+const read = (relativePath: string) => readFileSync(path.join(REPO_ROOT, relativePath), 'utf-8');
+
+const llmsTxt = read('public/llms.txt');
 // behavioral-test-allow: the OG-image title is baked into an HTML template string inside the
 // generator script, so it is reachable only as source text — there is nothing to import
-const ogImageScript = readFileSync(
-  path.resolve(__dirname, '../scripts/generate-og-image.ts'),
-  'utf-8',
-);
+const ogImageScript = read('scripts/generate-og-image.ts');
+
+// Globbed, NOT hand-listed. A hand-maintained surface list leaked a survivor in three
+// consecutive review rounds (the OG card, then the rendered man page, then the shell's
+// whois response) because a new content file is only covered if someone remembers to add
+// it. Enumerating the directory makes coverage the default and forgetting impossible.
+const contentSurfaces: Array<[string, string]> = readdirSync(CONTENT_DIR)
+  .filter((file) => file.endsWith('.ts'))
+  .map((file) => [`content/${file}`, readFileSync(path.join(CONTENT_DIR, file), 'utf-8')]);
+
 const digitsOf = (value: string) => value.replace(/\D/g, '');
 
-let layoutTitle = '';
 let layoutMetadataText = '';
 
 beforeAll(async () => {
   const { metadata } = await import('@/app/layout');
-  layoutTitle = String(metadata.title);
-  // every metadata field a crawler or link-unfurler reads: title, description,
-  // openGraph.{title,description,images[].alt}, twitter.{title,description}
   layoutMetadataText = JSON.stringify(metadata);
 });
 
-describe('identity is consistent across every public surface', () => {
+describe('identity is consistent across every gated surface', () => {
   it('every title surface states the canonical title', () => {
     const surfaces: Array<[string, string]> = [
       ['content/hero.ts (heroTagline)', heroTagline],
       ['content/seo.ts (jobTitle)', personSchema.jobTitle],
-      ['app/layout.tsx (metadata.title)', layoutTitle],
+      ['app/layout.tsx (metadata.title)', String(JSON.parse(layoutMetadataText).title)],
       ['public/llms.txt', llmsTxt],
       ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
     ];
@@ -52,24 +54,19 @@ describe('identity is consistent across every public surface', () => {
 
     expect(
       drifted,
-      `these surfaces do not state the canonical title "${CANONICAL_TITLE}". Every surface a recruiter or crawler can land on must agree. These strings are Zod-validated for SHAPE (min length), never for VALUE, so nothing stopped them drifting apart — which is exactly how public/llms.txt ended up naming a stale employer while the JSON-LD named the current one.`,
+      `these surfaces do not state the canonical title "${CANONICAL_TITLE}". Every surface a recruiter or crawler lands on must agree. The content modules are Zod-validated for SHAPE (min length), never for VALUE, so nothing stopped them drifting apart — which is how public/llms.txt came to name a stale employer while the JSON-LD named the current one.`,
     ).toEqual([]);
   });
 
   it('no surface still carries the retired title', () => {
-    // whole-object surfaces, not cherry-picked fields: app/layout.tsx JSON.stringify's
-    // personSchema into the JSON-LD script, so EVERY field of it is public — checking
-    // jobTitle alone left seeks.itemOffered.title and knowsAbout silently unguarded
     const surfaces: Array<[string, string]> = [
-      ['content/hero.ts (heroTagline)', heroTagline],
-      ['content/man-page.ts (rendered on the page)', JSON.stringify(manPage)],
-      ['content/seo.ts (personSchema → JSON-LD)', JSON.stringify(personSchema)],
-      ['app/layout.tsx (all metadata: og + twitter + alt + description)', layoutMetadataText],
+      ...contentSurfaces,
+      ['app/layout.tsx (og + twitter + alt + description)', layoutMetadataText],
       ['lib/hiring-profile.ts (served at /api/erik.json)', JSON.stringify(HIRING_PROFILE)],
-      ['public/llms.txt', llmsTxt],
-      ['public/.well-known/agent.json', agentManifest],
-      ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
       ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
+      ['public/llms.txt', llmsTxt],
+      ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
+      ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
     ];
     const needle = RETIRED_TITLE.toLowerCase();
     const stale = surfaces
@@ -78,7 +75,7 @@ describe('identity is consistent across every public surface', () => {
 
     expect(
       stale,
-      `"${RETIRED_TITLE}" was retired in favour of "${CANONICAL_TITLE}" (owner decision). Matched case-INSENSITIVELY: content/man-page.ts carried the retired title in lowercase prose ("Senior full-stack software engineer") and a case-sensitive check walked straight past it, on the one surface a human actually reads. A half-normalized identity is the defect: it reads differently depending on where the reader lands.`,
+      `"${RETIRED_TITLE}" was retired in favour of "${CANONICAL_TITLE}" (owner decision). Matched case-INSENSITIVELY because content/man-page.ts carried it as lowercase prose and a case-sensitive check walked straight past it, on the one surface a human actually reads.\n\nNOT GATED HERE: public/erik-cunha-cv.pdf. Its text is in subset fonts with custom glyph encodings, so extracting it needs a real PDF parser (a dependency decision, not a test tweak). It is regenerated from the source .docx and verified by hand. If you change the title, regenerate the CV too — nothing here will catch it.`,
     ).toEqual([]);
   });
 
