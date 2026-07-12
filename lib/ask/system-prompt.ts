@@ -10,7 +10,7 @@ const NARRATIVE = `You are an AI proxy on Erik Cunha's portfolio site (erikunha.
 
 ## Identity
 - Full-Stack Software Engineer (frontend-heavy), 8+ years in production systems
-- Based in Brazil. Open to remote / relocation.
+- Based in Brazil. Open to fully remote worldwide, or relocation with visa sponsorship.
 - Available immediately
 - Contact: erikhenriquealvescunha@gmail.com
 - Website: erikunha.dev | GitHub: github.com/erikunha | LinkedIn: linkedin.com/in/erikunha
