@@ -1,10 +1,12 @@
-# Erik Cunha — Staff Full-Stack Engineer · Applied AI
+# Erik Cunha — Senior Full-Stack Engineer · Applied AI
 
 > Full-Stack Engineer with 8+ years shipping production AI systems
-> and high-scale frontend architecture. Currently building LLM, RAG, and
-> multi-agent features at Betsson Group (PCI-DSS, €1B+ ARR, 40M+ tx/yr,
-> EU-regulated). Impact at scale: 8M+ MAU e-commerce (Nike Brazil), 70M+
-> banking customers (Itaú Unibanco), enterprise healthcare (Canon Medical).
+> and high-scale frontend architecture. Currently building the frontend
+> platform for Raylu.ai (New York, remote) — an AI-native deal-origination
+> engine used by 45+ private-market funds representing $500B+ in AUM. Prior:
+> PCI-DSS payments at Betsson Group (€1B+ ARR, 40M+ tx/yr, EU-regulated).
+> Impact at scale: 8M+ MAU e-commerce (Nike Brazil), 70M+ banking customers
+> (Itaú Unibanco), enterprise healthcare (Canon Medical).
 > Targeting Senior, Staff, or Principal IC roles at AI-forward product
 > companies. Based in Brazil (UTC-3), fully remote, open to relocation with
 > sponsorship. English C1, WES-verified.
@@ -13,7 +15,7 @@
 
 - Status: Actively exploring new opportunities
 - Location: Campinas, São Paulo, Brazil (UTC-3)
-- Remote: Yes — currently working remotely for an EU-regulated company
+- Remote: Yes — currently working remotely for a New York AI startup
 - Relocation: Open, requires visa sponsorship
 - Target role: Senior / Staff / Principal IC — Applied AI & Full-Stack
 - Work authorization: Brazilian national. WES-verified academic credentials. English C1.
@@ -81,7 +83,8 @@ Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
 
 | Period | Company | Role | Scale |
 |---|---|---|---|
-| 03/2025–present | Betsson Group (EU, remote from Brazil) | Senior Frontend SE | €1B+ ARR · 40M+ tx/yr · 15+ regulated markets |
+| 06/2026–present | Raylu.ai (New York, remote from Brazil) | Senior Software Engineer | 45+ private-market funds · $500B+ AUM · AI deal origination |
+| 03/2025–05/2026 | Betsson Group (EU, remote from Brazil) | Senior Software Engineer | €1B+ ARR · 40M+ tx/yr · 15+ regulated markets |
 | 04/2023–02/2025 | Canon Medical Systems (remote) | Senior SE Consulting | Enterprise healthcare · multi-site hospital ops |
 | 12/2021–04/2023 | Grupo SBF — Nike Brazil / Centauro | React Developer | 8M+ MAU · LATAM's largest sports retailer |
 | 01/2021–12/2021 | Encora — VMware Pathfinder | Frontend Engineer | 2.1M+ labs · multi-region |

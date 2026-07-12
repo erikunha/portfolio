@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { perfReceipts } from '@/content/perf-receipts';
 import { projects } from '@/content/projects';
+import { personSchema } from '@/content/seo';
 import { unknowns } from '@/content/unknowns';
 import { visaRows } from '@/content/visa';
 import { SYSTEM, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
 const CACHE_ELIGIBILITY_MIN_CHARS = 3500;
+const COUNTRY_AND_AREA_CODE_LENGTH = 4;
+const PHONE_DIGITS = personSchema.telephone.replace(/\D/g, '');
+const PHONE_LOCAL_DIGITS = PHONE_DIGITS.slice(COUNTRY_AND_AREA_CODE_LENGTH);
 
 describe('lib/ask/system-prompt', () => {
   describe('cache eligibility', () => {
@@ -29,7 +33,14 @@ describe('lib/ask/system-prompt', () => {
     it('does not embed a personal phone number in the SYSTEM prompt', () => {
       expect(SYSTEM_TEXT).not.toMatch(/\+\d[\d\s()-]{6,}\d/);
       expect(SYSTEM_TEXT).not.toMatch(/(?:\d[\s()-]?){9,}\d/);
-      expect(SYSTEM_TEXT).not.toContain('99839-4086');
+
+      const separatorless = SYSTEM_TEXT.replace(/[\s()+.-]/g, '');
+      expect(
+        separatorless,
+        `the owner's real phone number must never appear in the SYSTEM prompt in ANY formatting. This is derived from personSchema.telephone rather than hardcoded: the previous guard pinned a literal ('99839-4086') that went stale the moment the number changed, and the two regexes above it do NOT match a dashed local form like 99704-9125 — so the live number was silently unguarded.`,
+      ).not.toContain(PHONE_DIGITS);
+      expect(separatorless).not.toContain(PHONE_LOCAL_DIGITS);
+
       expect(SYSTEM_TEXT).not.toMatch(/WhatsApp/i);
     });
   });
