@@ -75,7 +75,7 @@ describe('identity is consistent across every gated surface', () => {
 
     expect(
       stale,
-      `"${RETIRED_TITLE}" was retired in favour of "${CANONICAL_TITLE}" (owner decision). Matched case-INSENSITIVELY because content/man-page.ts carried it as lowercase prose and a case-sensitive check walked straight past it, on the one surface a human actually reads.\n\nNOT GATED HERE: public/erik-cunha-cv.pdf. Its text is in subset fonts with custom glyph encodings, so extracting it needs a real PDF parser (a dependency decision, not a test tweak). It is regenerated from the source .docx and verified by hand. If you change the title, regenerate the CV too — nothing here will catch it.`,
+      `"${RETIRED_TITLE}" was retired in favour of "${CANONICAL_TITLE}" (owner decision). Matched case-INSENSITIVELY because content/man-page.ts carried it as lowercase prose and a case-sensitive check walked straight past it, on the one surface a human actually reads.\n\nNOT GATED HERE — two committed binaries carry the title as PIXELS or subset-font glyphs, which no string assertion can read: public/erik-cunha-cv.pdf (regenerate from the source .docx) and public/og.png (regenerate via scripts/generate-og-image.ts). The OG *script* is gated above, but the shipped *card* is not — so a title change can green this test while every LinkedIn and Slack unfurl still shows the old one. If you change the title, regenerate BOTH artifacts; nothing here will catch it. Reading them needs a PDF/image parser, which is a dependency decision, not a test tweak.`,
     ).toEqual([]);
   });
 
