@@ -28,8 +28,9 @@ const ogImageScript = read('scripts/generate-og-image.ts');
 // consecutive review rounds (the OG card, then the rendered man page, then the shell's
 // whois response) because a new content file is only covered if someone remembers to add
 // it. Enumerating the directory makes coverage the default and forgetting impossible.
-const contentSurfaces: Array<[string, string]> = readdirSync(CONTENT_DIR)
-  .filter((file) => file.endsWith('.ts'))
+const contentSurfaces: Array<[string, string]> = readdirSync(CONTENT_DIR, { recursive: true })
+  .map(String)
+  .filter((file) => /\.tsx?$/.test(file))
   .map((file) => [`content/${file}`, readFileSync(path.join(CONTENT_DIR, file), 'utf-8')]);
 
 const digitsOf = (value: string) => value.replace(/\D/g, '');
