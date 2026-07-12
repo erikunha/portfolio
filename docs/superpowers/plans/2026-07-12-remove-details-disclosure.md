@@ -60,18 +60,15 @@ These id builders are the single source of truth for the `aria-labelledby` ↔ `
 
 ```ts
 export const MODULE_HEADER_ID_SUFFIX = 'header';
-export const MODULE_BODY_ID_SUFFIX = 'body';
 
 export type ModuleVariant = 'green';
 
 export function moduleHeaderId(id: string): string {
   return `${id}-${MODULE_HEADER_ID_SUFFIX}`;
 }
-
-export function moduleBodyId(id: string): string {
-  return `${id}-${MODULE_BODY_ID_SUFFIX}`;
-}
 ```
+
+There is deliberately no `moduleBodyId`. The old `<div className="module-body" id={`${id}-body`}>` wrapper is removed in Task 2: its class and id are referenced nowhere outside `Module.tsx`, and Task 3 deletes its only CSS rule (the rule was pure collapse scaffolding — grid rows, `contain`, and a Chrome-131 `min-height` override that existed solely for `::details-content`). Keeping it would ship a dead class and an unused id.
 
 - [ ] **Step 2: Create the Preview constants**
 
@@ -229,7 +226,7 @@ Replace `components/responsive/Module/Module.tsx` with:
 
 ```tsx
 import type { ReactNode } from 'react';
-import { type ModuleVariant, moduleBodyId, moduleHeaderId } from './module.constants';
+import { type ModuleVariant, moduleHeaderId } from './module.constants';
 
 export type ModuleProps = {
   id: string;
@@ -289,17 +286,15 @@ export function Module({
           <span className="md:hidden">{mobileHeader ?? header}</span>
         </h2>
       </header>
-      <div className="module-body" id={moduleBodyId(id)}>
-        <div className="module-body-content" data-variant={variant}>
-          {children}
-        </div>
+      <div className="module-body-content" data-variant={variant}>
+        {children}
       </div>
     </section>
   );
 }
 ```
 
-Note the three deletions: the ▸ chevron span, the `[list-style:none]` / `cursor-pointer` / `focus-visible:outline-*` summary classes, and the inner `<div className="min-h-0 overflow-hidden">` (pure collapse scaffolding — a permanent `overflow: hidden` would clip focus rings on the contact form inside).
+Note the four deletions: the ▸ chevron span; the `[list-style:none]` / `cursor-pointer` / `focus-visible:outline-*` summary classes; the inner `<div className="min-h-0 overflow-hidden">` (pure collapse scaffolding — a permanent `overflow: hidden` would clip focus rings on the contact form inside); and the `<div className="module-body" id={`${id}-body`}>` wrapper (its class and id are referenced nowhere else, and Task 3 deletes its only CSS rule). `.module-body-content` keeps the padding, border, and `data-variant`.
 
 - [ ] **Step 4: Run to verify it passes**
 
