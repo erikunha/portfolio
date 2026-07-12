@@ -1,12 +1,17 @@
-import ts from 'typescript';
+import { createRequire } from 'node:module';
 import { describe, expect, it } from 'vitest';
 
 const STRYKER_REQUIRED_TS_API = 'parseConfigFileTextToJson';
+const STRYKER_CORE = '@stryker-mutator/core';
+const TYPESCRIPT = 'typescript';
 
 describe('stryker typescript JS-API compatibility', () => {
-  it('resolves a typescript package exposing the config-parsing API stryker core calls', () => {
-    const api = (ts as unknown as Record<string, unknown>)[STRYKER_REQUIRED_TS_API];
+  it('resolves a typescript exposing the config-parsing API from stryker core own context', () => {
+    const requireFromRoot = createRequire(import.meta.url);
+    const requireFromStryker = createRequire(requireFromRoot.resolve(STRYKER_CORE));
 
-    expect(typeof api).toBe('function');
+    const ts = requireFromStryker(TYPESCRIPT) as Record<string, unknown>;
+
+    expect(typeof ts[STRYKER_REQUIRED_TS_API]).toBe('function');
   });
 });
