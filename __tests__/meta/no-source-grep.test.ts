@@ -12,6 +12,23 @@ const ALLOW_TAG = /behavioral-test-allow:/;
 
 const SKIP_DIRS = new Set(['node_modules', '.next', 'coverage', 'dist', '.claude']);
 const COMMENT_LINE = /^\s*(\/\/|\*|\/\*)/;
+const IMPORT_LINE = /^\s*import\b/;
+const CALL_LOOKAHEAD_LINES = 3;
+
+function parenBalance(line: string): number {
+  return (line.match(/\(/g) ?? []).length - (line.match(/\)/g) ?? []).length;
+}
+
+function callText(lines: string[], index: number): string {
+  let text = lines[index] ?? '';
+  let depth = parenBalance(text);
+  for (let i = index + 1; depth > 0 && i <= index + CALL_LOOKAHEAD_LINES; i++) {
+    const next = lines[i] ?? '';
+    text += ` ${next}`;
+    depth += parenBalance(next);
+  }
+  return text;
+}
 
 function isAllowTagged(lines: string[], index: number): boolean {
   if (ALLOW_TAG.test(lines[index] ?? '')) return true;
@@ -37,7 +54,8 @@ describe('meta: tests assert behavior, not source', () => {
       const lines = readFileSync(file, 'utf8').split('\n');
       lines.forEach((line, i) => {
         if (!SOURCE_HINT.test(line)) return;
-        if (!TARGETS_APP_SOURCE.test(line)) return;
+        if (IMPORT_LINE.test(line)) return;
+        if (!TARGETS_APP_SOURCE.test(callText(lines, i))) return;
         if (isAllowTagged(lines, i)) return;
         violations.push(`${file}:${i + 1}  ${line.trim()}`);
       });

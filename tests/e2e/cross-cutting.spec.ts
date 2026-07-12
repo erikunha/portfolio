@@ -4,6 +4,31 @@ import { installMockBackend } from './_helpers/mock-backend';
 const BASE_URL = 'http://localhost:3000';
 
 test.describe('cross-cutting', () => {
+  test('0 — below-fold sections actually resolve to content-visibility: auto', async ({ page }) => {
+    await installMockBackend(page, { log: 'accept', forget: 'happy' });
+    await page.goto('/');
+    await page.waitForSelector('section.module-deferred', { state: 'attached' });
+
+    const resolved = await page.evaluate(() => {
+      const deferred = Array.from(document.querySelectorAll('section.module-deferred'));
+      return {
+        count: deferred.length,
+        notAuto: deferred
+          .filter((el) => getComputedStyle(el).contentVisibility !== 'auto')
+          .map((el) => el.id),
+      };
+    });
+
+    expect(
+      resolved.count,
+      'no section resolved to .module-deferred — the Module `defer` prop stopped emitting the class, so below-fold deferral is off',
+    ).toBeGreaterThanOrEqual(14);
+    expect(
+      resolved.notAuto,
+      'these deferred sections did NOT compute to content-visibility: auto. A source-text test cannot catch this — the declaration can be present in components.css yet lose the cascade (a later same-specificity rule, a duplicate declaration inside the block, a higher-specificity `section.module-deferred`, an !important, a cross-file @layer, or an inline style). This asserts what the browser actually resolved.',
+    ).toEqual([]);
+  });
+
   test('1 — skip-to-content link is the first focusable element + targets #main-content', async ({
     page,
   }) => {

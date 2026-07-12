@@ -60,6 +60,21 @@ describe('content-visibility deferral', () => {
       'the `content-visibility: auto` declaration must live INSIDE the .module-deferred block. Asserting it exists somewhere in the file would still pass if a future edit moved it to an unrelated selector, silently dropping below-fold deferral (~840ms of mobile style+layout) with no test failure.',
     ).toContain('content-visibility: auto');
     expect(deferredBlock).toContain('contain-intrinsic-size');
+
+    const lastContentVisibility = (deferredBlock ?? '')
+      .match(/content-visibility:\s*([\w-]+)/g)
+      ?.at(-1);
+    expect(
+      lastContentVisibility,
+      'the LAST `content-visibility` declaration in the .module-deferred block must be `auto`. Presence is not enough: a second declaration later in the same block wins on last-declaration-wins and reverts deferral while `toContain` still passes.',
+    ).toBe('content-visibility: auto');
+
+    const compoundOverride = componentsCss.match(/[\w[\]="'-]+\.module-deferred(?![\w-])/);
+    expect(
+      compoundOverride,
+      'no other selector may compound onto `.module-deferred` (e.g. `section.module-deferred`). A compound raises specificity, wins the cascade regardless of source order, and is invisible to the exact-selector filter above — so it can revert deferral with this test green.',
+    ).toBeNull();
+
     expect(componentsCss).not.toMatch(/nth-of-type\(n\s*\+\s*\d+\)/);
   });
 });
