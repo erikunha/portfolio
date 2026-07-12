@@ -26,7 +26,6 @@ export function Module({
       tabIndex={-1}
       aria-labelledby={moduleHeaderId(id)}
       className={[
-        'module-root',
         'mb-[18px] md:mb-10',
         'border border-primary-subtle bg-[rgba(0,0,0,0.22)] md:bg-transparent overflow-hidden md:overflow-visible',
         'md:border-0',
