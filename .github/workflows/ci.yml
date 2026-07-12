@@ -535,7 +535,7 @@ jobs:
           ARGOS_PARALLEL_TOTAL: ${{ strategy.job-total }}
       - if: inputs.update_visual_baselines == 'true'
         name: Regenerate visual baselines (workflow_dispatch only)
-        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts --update-snapshots
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts --update-snapshots=all
         env:
           ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
           ARGOS_PARALLEL: true
