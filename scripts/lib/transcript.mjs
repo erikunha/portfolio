@@ -94,11 +94,11 @@ function verdictKeyOf(needle) {
   return lastSpace > 0 ? needle.slice(0, lastSpace + 1) : needle;
 }
 
-function lastVerdictLine(text, verdictKey, needle) {
+function lastVerdictLine(text, verdictKey) {
   let last = null;
   for (const raw of text.split('\n')) {
     const line = raw.trim();
-    if (line === needle || line.startsWith(verdictKey)) last = line;
+    if (line.startsWith(verdictKey)) last = line;
   }
   return last;
 }
@@ -133,7 +133,7 @@ function outputCorroborates(content, promptAnchor, needle) {
     for (const text of textBlocksOf(body)) {
       if (text.includes(promptAnchor)) carriesPrompt = true;
       if (message.role === ASSISTANT_ROLE) {
-        const verdict = lastVerdictLine(text, verdictKey, needle);
+        const verdict = lastVerdictLine(text, verdictKey);
         if (verdict !== null) lastVerdict = verdict;
       }
     }
@@ -195,7 +195,7 @@ export function agentResultContains(records, subagentType, needle, readTaskOutpu
           typeof item === 'object' &&
           item.type === TOOL_RESULT_TYPE &&
           item.tool_use_id === toolUseId &&
-          lastVerdictLine(toolResultText(item), verdictKeyOf(needle), needle) === needle
+          lastVerdictLine(toolResultText(item), verdictKeyOf(needle)) === needle
         ) {
           return true;
         }
