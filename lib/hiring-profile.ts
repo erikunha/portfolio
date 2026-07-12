@@ -60,8 +60,16 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   seniority: ['senior', 'staff', 'principal'],
   yoe: 8,
 
-  stack_primary: ['React', 'Next.js', 'TypeScript', 'Node.js', 'Angular', 'RxJS', 'NgRx'],
-  stack_secondary: ['Express.js', 'PostgreSQL', 'MongoDB', 'Docker', 'AWS', 'GitHub Actions'],
+  stack_primary: ['React', 'Next.js', 'TypeScript', 'Angular', 'RxJS', 'NgRx'],
+  stack_secondary: [
+    'Node.js',
+    'Express.js',
+    'PostgreSQL',
+    'MongoDB',
+    'Docker',
+    'AWS',
+    'GitHub Actions',
+  ],
   domains: [
     'AI deal origination / private markets',
     'fintech',
