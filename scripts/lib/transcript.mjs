@@ -24,7 +24,7 @@ function toolUses(record) {
   if (!message || typeof message !== 'object') return [];
   const content = message.content;
   if (!Array.isArray(content)) return [];
-  return content.filter((item) => item && typeof item === 'object' && item.type === 'tool_use');
+  return content.filter((item) => item && typeof item === 'object' && item.type === TOOL_USE_TYPE);
 }
 
 export function lastUserCommitMarker(records) {
@@ -33,10 +33,10 @@ export function lastUserCommitMarker(records) {
     for (const tu of toolUses(record)) {
       const name = tu.name;
       const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
-      if (name === 'Bash' && typeof input.command === 'string') {
+      if (name === BASH_TOOL_NAME && typeof input.command === 'string') {
         if (/\bgit\s+commit\b/.test(input.command)) marker = index;
       }
-      if (name === 'Skill' && input.skill === 'commit-commands:commit') {
+      if (name === SKILL_TOOL_NAME && input.skill === COMMIT_SKILL) {
         marker = index;
       }
     }
@@ -49,48 +49,12 @@ export function agentsDispatchedSince(records, boundaryIndex) {
   records.forEach((record, index) => {
     if (index <= boundaryIndex) return;
     for (const tu of toolUses(record)) {
-      if (tu.name !== 'Agent') continue;
+      if (tu.name !== AGENT_TOOL_NAME) continue;
       const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
       if (typeof input.subagent_type === 'string') seen.add(input.subagent_type);
     }
   });
   return [...seen];
-}
-
-export function lastDispatchIndex(records, subagentType) {
-  let idx = -1;
-  records.forEach((record, index) => {
-    for (const tu of toolUses(record)) {
-      if (tu.name !== 'Agent') continue;
-      const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
-      if (input.subagent_type === subagentType) idx = index;
-    }
-  });
-  return idx;
-}
-
-export function containsSince(records, needle, boundaryIndex) {
-  for (let index = 0; index < records.length; index++) {
-    if (index <= boundaryIndex) continue;
-    if (JSON.stringify(records[index]).includes(needle)) return true;
-  }
-  return false;
-}
-
-export function containsInToolResultSince(records, needle, boundaryIndex) {
-  for (let index = 0; index < records.length; index++) {
-    if (index <= boundaryIndex) continue;
-    const record = records[index];
-    const message = record && typeof record === 'object' ? record.message : undefined;
-    const content = message && typeof message === 'object' ? message.content : undefined;
-    if (!Array.isArray(content)) continue;
-    for (const item of content) {
-      if (item && typeof item === 'object' && item.type === 'tool_result') {
-        if (JSON.stringify(item).includes(needle)) return true;
-      }
-    }
-  }
-  return false;
 }
 
 const TASK_ID_RE = /<task-id>([a-z0-9]{6,})<\/task-id>/;
@@ -100,6 +64,13 @@ const TASK_OUTPUT_FILE_RE = /<output-file>([^<]+)<\/output-file>/;
 const TASK_OUTPUT_SUFFIX = (sessionId, taskId) => `/${sessionId}/tasks/${taskId}.output`;
 const PROMPT_BIND_CHARS = 200;
 const MIN_PROMPT_BIND_CHARS = 32;
+const ASSISTANT_ROLE = 'assistant';
+const TOOL_USE_TYPE = 'tool_use';
+const TOOL_RESULT_TYPE = 'tool_result';
+const AGENT_TOOL_NAME = 'Agent';
+const BASH_TOOL_NAME = 'Bash';
+const SKILL_TOOL_NAME = 'Skill';
+const COMMIT_SKILL = 'commit-commands:commit';
 
 function promptAnchorOf(prompt) {
   if (typeof prompt !== 'string') return null;
@@ -107,7 +78,43 @@ function promptAnchorOf(prompt) {
   return anchor.length >= MIN_PROMPT_BIND_CHARS ? anchor : null;
 }
 
-function outputCarriesPrompt(content, promptAnchor) {
+function textBlocksOf(body) {
+  if (!Array.isArray(body)) return [];
+  const texts = [];
+  for (const block of body) {
+    if (block && typeof block === 'object' && typeof block.text === 'string') {
+      texts.push(block.text);
+    }
+  }
+  return texts;
+}
+
+function verdictKeyOf(needle) {
+  const lastSpace = needle.lastIndexOf(' ');
+  return lastSpace > 0 ? needle.slice(0, lastSpace + 1) : needle;
+}
+
+function lastVerdictLine(text, verdictKey) {
+  let last = null;
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (line.startsWith(verdictKey)) last = line;
+  }
+  return last;
+}
+
+function toolResultText(item) {
+  const body = item.content;
+  if (typeof body === 'string') return body;
+  if (Array.isArray(body)) return textBlocksOf(body).join('\n');
+  return '';
+}
+
+function outputCorroborates(content, promptAnchor, needle) {
+  if (!content.includes(needle)) return false;
+  const verdictKey = verdictKeyOf(needle);
+  let carriesPrompt = false;
+  let lastVerdict = null;
   for (const line of content.split('\n')) {
     const trimmed = line.trim();
     if (trimmed === '') continue;
@@ -117,22 +124,21 @@ function outputCarriesPrompt(content, promptAnchor) {
       // biome-ignore lint/suspicious/noEmptyBlockStatements: tolerate non-JSON lines
     } catch {}
     const message = record && typeof record === 'object' ? record.message : undefined;
-    const body = message && typeof message === 'object' ? message.content : undefined;
-    if (typeof body === 'string' && body.includes(promptAnchor)) return true;
-    if (Array.isArray(body)) {
-      for (const block of body) {
-        if (
-          block &&
-          typeof block === 'object' &&
-          typeof block.text === 'string' &&
-          block.text.includes(promptAnchor)
-        ) {
-          return true;
-        }
+    if (!message || typeof message !== 'object') continue;
+    const body = message.content;
+    if (typeof body === 'string') {
+      if (body.includes(promptAnchor)) carriesPrompt = true;
+      continue;
+    }
+    for (const text of textBlocksOf(body)) {
+      if (text.includes(promptAnchor)) carriesPrompt = true;
+      if (message.role === ASSISTANT_ROLE) {
+        const verdict = lastVerdictLine(text, verdictKey);
+        if (verdict !== null) lastVerdict = verdict;
       }
     }
   }
-  return false;
+  return carriesPrompt && lastVerdict === needle;
 }
 
 function defaultReadTaskOutput(path) {
@@ -167,7 +173,7 @@ export function agentResultContains(records, subagentType, needle, readTaskOutpu
   let promptAnchor = null;
   for (const record of records) {
     for (const tu of toolUses(record)) {
-      if (tu.name !== 'Agent') continue;
+      if (tu.name !== AGENT_TOOL_NAME) continue;
       const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
       if (input.subagent_type === subagentType && typeof tu.id === 'string') {
         toolUseId = tu.id;
@@ -187,9 +193,9 @@ export function agentResultContains(records, subagentType, needle, readTaskOutpu
         if (
           item &&
           typeof item === 'object' &&
-          item.type === 'tool_result' &&
+          item.type === TOOL_RESULT_TYPE &&
           item.tool_use_id === toolUseId &&
-          JSON.stringify(item).includes(needle)
+          lastVerdictLine(toolResultText(item), verdictKeyOf(needle)) === needle
         ) {
           return true;
         }
@@ -212,8 +218,7 @@ export function agentResultContains(records, subagentType, needle, readTaskOutpu
         typeof output.content === 'string' &&
         Number.isFinite(output.mtimeMs) &&
         output.mtimeMs > dispatchTsMs &&
-        output.content.includes(needle) &&
-        outputCarriesPrompt(output.content, promptAnchor)
+        outputCorroborates(output.content, promptAnchor, needle)
       ) {
         return true;
       }
@@ -230,7 +235,7 @@ export function agentDispatchedAfter(records, subagentType, afterIso) {
     const tsMs = typeof ts === 'string' ? Date.parse(ts) : Number.NaN;
     if (Number.isNaN(tsMs) || tsMs <= afterMs) continue;
     for (const tu of toolUses(record)) {
-      if (tu.name !== 'Agent') continue;
+      if (tu.name !== AGENT_TOOL_NAME) continue;
       const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
       if (input.subagent_type === subagentType) return true;
     }
