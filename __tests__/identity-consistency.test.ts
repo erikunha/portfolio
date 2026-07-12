@@ -27,10 +27,13 @@ const ogImageScript = read('scripts/generate-og-image.ts');
 // Globbed, NOT hand-listed. A hand-maintained list leaked a survivor in three consecutive
 // review rounds, because a file is only covered if someone remembers to add it. Every
 // .ts/.tsx under content/ — at any depth — is now covered by default: that closes the
-// man-page and shell-whois leaks. It does NOT close the third one. The OG card lives in
-// scripts/generate-og-image.ts, and the non-content surfaces below (app/, lib/, public/,
-// scripts/) are STILL hand-listed — a seventh surface added there leaks exactly as the OG
-// card did. Forgetting is impossible under content/, and still possible outside it.
+// man-page and shell-whois leaks. It does NOT close the third. The OG card itself is
+// public/og.png — pixels, which no string assertion reads; only its title SOURCE
+// (scripts/generate-og-image.ts) is gated, and only because it is hand-listed below. The
+// non-content surfaces (app/, lib/, public/, scripts/) remain hand-listed, so a new one
+// added there leaks exactly as the OG card did. Forgetting is impossible under content/,
+// and still possible outside it. This test hunts ONE known-bad string; it is not a proof
+// that the surfaces agree.
 const contentSurfaces: Array<[string, string]> = readdirSync(CONTENT_DIR, { recursive: true })
   .map(String)
   .filter((file) => /\.tsx?$/.test(file))
