@@ -1,9 +1,35 @@
 import { expect, test } from '@playwright/test';
+import { DEFERRED_SECTION_COUNT } from '../../components/responsive/Module/module.constants';
 import { installMockBackend } from './_helpers/mock-backend';
 
 const BASE_URL = 'http://localhost:3000';
 
 test.describe('cross-cutting', () => {
+  test('0 — below-fold sections actually resolve to content-visibility: auto', async ({ page }) => {
+    await installMockBackend(page, { log: 'accept', forget: 'happy' });
+    await page.goto('/');
+    await page.waitForSelector('section.module-deferred', { state: 'attached' });
+
+    const resolved = await page.evaluate(() => {
+      const deferred = Array.from(document.querySelectorAll('section.module-deferred'));
+      return {
+        count: deferred.length,
+        notAuto: deferred
+          .filter((el) => getComputedStyle(el).contentVisibility !== 'auto')
+          .map((el) => el.id),
+      };
+    });
+
+    expect(
+      resolved.count,
+      `exactly ${DEFERRED_SECTION_COUNT} sections must carry .module-deferred. A >= floor let a silent drop of up to 2 sections pass: they render eagerly and forfeit their share of the ~840ms mobile style+layout deferral with every gate green. Zero means the \`defer\` prop stopped emitting the class entirely.`,
+    ).toBe(DEFERRED_SECTION_COUNT);
+    expect(
+      resolved.notAuto,
+      'these deferred sections did NOT compute to content-visibility: auto. A source-text test cannot catch this — the declaration can be present in components.css yet lose the cascade (a later same-specificity rule, a duplicate declaration inside the block, a higher-specificity `section.module-deferred`, an !important, a cross-file @layer, or an inline style). This asserts what the browser actually resolved.',
+    ).toEqual([]);
+  });
+
   test('1 — skip-to-content link is the first focusable element + targets #main-content', async ({
     page,
   }) => {

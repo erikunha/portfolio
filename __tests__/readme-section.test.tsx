@@ -22,8 +22,8 @@ describe('ReadmeSection', () => {
 
   it('renders the CAT README.MD module header', async () => {
     const container = await render();
-    const summary = container.querySelector('summary');
-    expect(summary?.textContent).toContain('CAT README.MD');
+    const heading = container.querySelector('h2');
+    expect(heading?.textContent).toContain('CAT README.MD');
   });
 
   it('renders a line gutter with sequential line numbers', async () => {

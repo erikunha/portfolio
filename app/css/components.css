@@ -55,86 +55,21 @@
     contain-intrinsic-size: auto 520px;
   }
 
-  .module-root::details-content {
-    display: block;
-    block-size: auto;
-    overflow: visible;
-    transition: none;
-    content-visibility: visible;
-  }
-
-  .module-body {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 300ms cubic-bezier(0.32, 0, 0.67, 0);
-    contain: layout style;
-    /* biome-ignore lint/complexity/noImportantStyles: Chrome 131 UA override */
-    min-height: 0 !important;
-  }
-
-  .module-root[open] .module-body {
-    grid-template-rows: 1fr;
-    transition: grid-template-rows 300ms cubic-bezier(0.33, 1, 0.68, 1);
-  }
-
-  .module-chevron {
-    color: var(--color-primary-500);
-    font-size: 24px;
-    flex-shrink: 0;
-    transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .module-root[open] .module-chevron {
-    transform: rotate(90deg);
-  }
-
   .module-body-content {
     padding: 14px;
     color: var(--color-tertiary-50);
     background: transparent;
-    opacity: 0;
-    transition: opacity 300ms cubic-bezier(0.32, 0, 0.67, 0);
   }
 
   @media (min-width: 769px) {
     .module-body-content {
       padding: 18px;
+      border: 1px solid var(--color-primary-subtle);
     }
   }
 
   .module-body-content[data-variant="green"] {
     background: var(--color-glow-05);
-  }
-
-  .module-root[open] .module-body-content {
-    opacity: 1;
-    transition: opacity 200ms ease-out 80ms;
-  }
-
-  @media (min-width: 769px) {
-    .module-root[open] .module-body-content {
-      border: 1px solid var(--color-primary-subtle);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .module-chevron,
-    .module-body,
-    .module-body-content {
-      transition: none;
-    }
-    .module-body-content {
-      opacity: 1;
-    }
-  }
-
-  body[data-motion="reduce"] .module-chevron,
-  body[data-motion="reduce"] .module-body,
-  body[data-motion="reduce"] .module-body-content {
-    transition: none;
-  }
-  body[data-motion="reduce"] .module-body-content {
-    opacity: 1;
   }
 
   .netstat-link {

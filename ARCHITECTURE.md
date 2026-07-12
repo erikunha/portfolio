@@ -213,7 +213,7 @@ lib/boot-animation.ts                 # boot sequence data
 lib/breakpoint.ts                     # viewport breakpoint constants
 lib/contact-validation.ts             # honeypot check (Zod shape lives in the route)
 lib/error-bridge.client.ts            # window error → /api/log bridge
-lib/events.ts                         # typed dispatchModuleOpen helper
+lib/events.ts                         # typed WindowEventMap: sysfail:start|end, shell-cmd-run, hero:sysfail:show|hide
 lib/hiring-profile.ts                 # HiringProfile reader for /api/erik.json
 lib/ip-hash.ts                        # IP → SHA-256 for rate-limit keys
 lib/lighthouse-scores.ts              # PSI API fetcher (cached daily)

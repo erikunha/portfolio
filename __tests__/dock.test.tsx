@@ -5,27 +5,19 @@ import { type MountedClient, mountClient } from './helpers/render';
 describe('Dock', () => {
   let mounted: MountedClient;
   let scrolledIntoView: Element | null = null;
-  let moduleOpenEvents: string[] = [];
-  let moduleOpenListener: (e: Event) => void;
 
   beforeEach(() => {
     scrolledIntoView = null;
-    moduleOpenEvents = [];
 
     Element.prototype.scrollIntoView = vi.fn(function (this: Element) {
       scrolledIntoView = this;
     });
-
-    moduleOpenListener = (e: Event) => {
-      moduleOpenEvents.push((e as CustomEvent<{ id: string }>).detail?.id ?? '');
-    };
-    window.addEventListener('module:open', moduleOpenListener);
   });
 
   afterEach(() => {
     mounted?.unmount();
-    window.removeEventListener('module:open', moduleOpenListener);
     vi.restoreAllMocks();
+    document.body.innerHTML = '';
   });
 
   async function render() {
@@ -58,6 +50,7 @@ describe('Dock', () => {
 
     const targetSection = document.createElement('section');
     targetSection.id = 'sec-readme';
+    targetSection.tabIndex = -1;
     document.body.appendChild(targetSection);
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));
@@ -72,35 +65,35 @@ describe('Dock', () => {
       },
     });
 
+    const focusSpy = vi.spyOn(targetSection, 'focus');
+
     await act(async () => {
       homeLink?.dispatchEvent(event);
     });
 
     expect(defaultPrevented).toBe(true);
     expect(scrolledIntoView).toBe(targetSection);
-
-    document.body.removeChild(targetSection);
+    expect(document.activeElement).toBe(targetSection);
+    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
   });
 
-  it('clicking a hash link whose target is a DETAILS element dispatches module:open', async () => {
+  it('does not move focus when the target element is not focusable', async () => {
     const container = await render();
 
-    const detailsEl = document.createElement('details');
-    detailsEl.id = 'sec-shell';
-    document.body.appendChild(detailsEl);
+    const targetSection = document.createElement('section');
+    targetSection.id = 'sec-readme';
+    document.body.appendChild(targetSection);
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));
-    const shellLink = links.find((a) => a.getAttribute('href') === '#sec-shell');
-    expect(shellLink).not.toBeNull();
+    const homeLink = links.find((a) => a.getAttribute('href') === '#sec-readme');
 
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
     await act(async () => {
-      shellLink?.dispatchEvent(event);
+      homeLink?.dispatchEvent(event);
     });
 
-    expect(moduleOpenEvents).toContain('sec-shell');
-
-    document.body.removeChild(detailsEl);
+    expect(scrolledIntoView).toBe(targetSection);
+    expect(document.activeElement).not.toBe(targetSection);
   });
 
   it('does not call scrollIntoView when the target element is missing from DOM', async () => {

@@ -115,12 +115,6 @@ test.describe('visual regression', () => {
   test('5 — hottest takes section matches baseline', async ({ mockedPage }) => {
     const hottest = mockedPage.locator('#sec-hottest-takes');
     await hottest.scrollIntoViewIfNeeded();
-    await mockedPage.evaluate(() => {
-      const el = document.getElementById('sec-hottest-takes');
-      if (el && el.tagName.toLowerCase() === 'details') {
-        (el as HTMLDetailsElement).open = true;
-      }
-    });
     await mockedPage.waitForSelector('#sec-hottest-takes [data-testid="hottest-takes-list"]', {
       state: 'visible',
     });

@@ -26,7 +26,7 @@ flowchart TD
     shell --> chrome["Chrome: MatrixRain · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["main#main-content"]
     main --> eb["ErrorBoundary (x20)"]
-    eb --> mod["Module (RSC wrapper: native details/summary)"]
+    eb --> mod["Module (RSC wrapper: section + header)"]
     mod --> sec["Section (RSC)"]
     sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · Field"]
     sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper"]
@@ -36,7 +36,7 @@ flowchart TD
 
 ### The `Module` wrapper
 
-`components/responsive/Module/Module.tsx` (RSC) is the spine every section sits in. It renders a single native `<details open>` element (one per viewport, to stay within the DOM-size budget). Desktop CSS hides the chevron so it reads as a plain `<h2>`; mobile keeps the collapsible chrome. Props: `id`, `header`, `mobileHeader?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop drives `content-visibility` deferral.
+`components/responsive/Module/Module.tsx` (RSC) is the spine every section sits in. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. Props: `id`, `header`, `mobileHeader?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. See DECISIONS.md 2026-07-12 for why the disclosure was removed.
 
 ### CRT overlay layering
 
@@ -89,15 +89,14 @@ flowchart TD
         motion --> r1["readers: MatrixRain · RoleTyper · HeroBootAnimation · InteractiveShell"]
     end
     subgraph bus["3. Window CustomEvent bus (lib/events.ts)"]
-        ev["module:open · motionchange · shell-cmd-run · hero:sysfail:show|hide · sysfail:start|end"]
-        d["Dock"] -->|module:open| as["AppShell delegated listener -> flips details open"]
+        ev["motionchange · shell-cmd-run · hero:sysfail:show|hide · sysfail:start|end"]
     end
     subgraph local["4. Per-island local state"]
         li["each island owns useState/useRef; no sharing"]
     end
 ```
 
-**There is no global store, no `useReducer`, and no URL/`searchParams` state.** The only router read in the entire app is `usePathname()` in the design-system `Sidebar.client.tsx`. Cross-island coordination is done with window `CustomEvent`s, not shared React state - e.g. the mobile `Dock` dispatches `module:open` and a **single delegated listener** in `AppShell` flips the right `<details>` (replacing what would be 18 per-section listeners).
+**There is no global store, no `useReducer`, and no URL/`searchParams` state.** The only router read in the entire app is `usePathname()` in the design-system `Sidebar.client.tsx`. Cross-island coordination is done with window `CustomEvent`s, not shared React state - e.g. `InteractiveShell` dispatches `shell-cmd-run` and `Footer` listens to increment a counter, with no shared parent state.
 
 ### Per-island state, and the two rendering disciplines
 

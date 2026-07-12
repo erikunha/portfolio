@@ -1,7 +1,7 @@
 'use client';
 
 import '@/lib/error-bridge.client';
-import { type ReactNode, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { ToTopButton } from '../client/ToTopButton';
 import { ErrorBoundary } from '../ErrorBoundary';
@@ -14,16 +14,6 @@ import { StatusBar } from '../responsive/StatusBar';
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { isMobile } = useBreakpoint();
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<{ id: string }>).detail;
-      const target = document.getElementById(detail.id);
-      if (target instanceof HTMLDetailsElement) target.open = true;
-    };
-    window.addEventListener('module:open', handler);
-    return () => window.removeEventListener('module:open', handler);
-  }, []);
 
   return (
     <>

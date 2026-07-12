@@ -11,6 +11,36 @@ const TARGETS_APP_SOURCE = /['"`](?:[^'"`]*\/)?(app|components|lib|scripts)\//;
 const ALLOW_TAG = /behavioral-test-allow:/;
 
 const SKIP_DIRS = new Set(['node_modules', '.next', 'coverage', 'dist', '.claude']);
+const COMMENT_LINE = /^\s*(\/\/|\*|\/\*)/;
+const IMPORT_LINE = /^\s*import\b/;
+const CALL_LOOKAHEAD_LINES = 3;
+
+const STRING_LITERAL = /(['"`])(?:\\.|(?!\1).)*?\1/g;
+const LINE_COMMENT = /\/\/.*$/;
+
+function parenBalance(line: string): number {
+  const code = line.replace(STRING_LITERAL, '').replace(LINE_COMMENT, '');
+  return (code.match(/\(/g) ?? []).length - (code.match(/\)/g) ?? []).length;
+}
+
+function callText(lines: string[], index: number): string {
+  let text = lines[index] ?? '';
+  let depth = parenBalance(text);
+  for (let i = index + 1; depth > 0 && i <= index + CALL_LOOKAHEAD_LINES; i++) {
+    const next = lines[i] ?? '';
+    text += ` ${next}`;
+    depth += parenBalance(next);
+  }
+  return text;
+}
+
+function isAllowTagged(lines: string[], index: number): boolean {
+  if (ALLOW_TAG.test(lines[index] ?? '')) return true;
+  for (let i = index - 1; i >= 0 && COMMENT_LINE.test(lines[i] ?? ''); i--) {
+    if (ALLOW_TAG.test(lines[i] ?? '')) return true;
+  }
+  return false;
+}
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((e) => {
@@ -28,8 +58,9 @@ describe('meta: tests assert behavior, not source', () => {
       const lines = readFileSync(file, 'utf8').split('\n');
       lines.forEach((line, i) => {
         if (!SOURCE_HINT.test(line)) return;
-        if (!TARGETS_APP_SOURCE.test(line)) return;
-        if (ALLOW_TAG.test(line) || ALLOW_TAG.test(lines[i - 1] ?? '')) return;
+        if (IMPORT_LINE.test(line)) return;
+        if (!TARGETS_APP_SOURCE.test(callText(lines, i))) return;
+        if (isAllowTagged(lines, i)) return;
         violations.push(`${file}:${i + 1}  ${line.trim()}`);
       });
     }

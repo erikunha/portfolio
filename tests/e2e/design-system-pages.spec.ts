@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { PREVIEW_SOURCE_ARIA_LABEL_FALLBACK } from '@/app/design-system/_components/preview.constants';
 
 const DS_ROUTES = [
   { path: '/design-system', heading: 'DESIGN SYSTEM' },
@@ -16,10 +17,22 @@ for (const { path, heading } of DS_ROUTES) {
   });
 }
 
-test('Preview component renders live and source toggle', async ({ page }) => {
+test('Preview renders the live component and its source without interaction', async ({ page }) => {
   await page.goto('/design-system/components');
   const preview = page.getByTestId('ds-preview').first();
   await expect(preview).toBeVisible();
-  const summary = page.getByText('VIEW SOURCE').first();
-  await expect(summary).toBeVisible();
+
+  const source = preview.locator('pre').first();
+  await expect(source).toBeVisible();
+  await expect(source).toHaveAttribute('tabindex', '0');
+
+  expect(await page.locator('details').count()).toBe(0);
+
+  const labels = await page
+    .locator('pre[role="group"]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('aria-label')));
+  expect(labels.length).toBeGreaterThan(0);
+  expect(new Set(labels).size).toBe(labels.length);
+  expect(labels).not.toContain(PREVIEW_SOURCE_ARIA_LABEL_FALLBACK);
+  expect(labels.every((label) => typeof label === 'string' && label.length > 0)).toBe(true);
 });

@@ -24,7 +24,6 @@
 - **The token budget fails *closed* in exactly one spot:** if `/api/ask` can't resolve token usage, it keeps the reservation (so a metering bug can't leak spend). Redis-down is fail-open; usage-unresolvable is fail-closed. Both are deliberate.
 - **`ASK_ENABLED` fails OFF; `LANGFUSE_ENABLED` fails OFF.** The kill switch must disable on a typo; the telemetry must stay inert unless the string is exactly `'true'`. Asymmetric by intent.
 - **`StatusBar` initializes its clock to `''` and uses `suppressHydrationWarning`.** A `new Date()` at render would be a dynamicIO prerender hazard; the empty initial avoids prerendering a timestamp.
-- **The mobile `Dock` doesn't call section components.** It dispatches a `module:open` window event; a *single* delegated listener in `AppShell` flips the right `<details>`. One listener, not 18.
 - **`next-env.d.ts` flips on a local prod build** (dev path ↔ prod path). A stray modified `next-env.d.ts` is a build artifact, not your change - `git checkout` it.
 - **The MCP `ask_erik` tool shares one global rate-limit bucket.** It re-invokes `/api/ask` in-process via a synthetic `Request` with no IP header, so `getClientIp` returns `'unknown'` and every MCP caller worldwide hits the same `rl:ask` bucket. Documented limitation in `lib/agent/mcp-tools.ts`.
 - **`/api/log/forget` never returns a deleted count**, and `/api/log` stores no IP. Both are anti-oracle / minimization choices, not omissions.
@@ -48,7 +47,6 @@
 - The fixed-opacity color stops (`-subtle`, `-border`, ...) are explicit hex, not `color-mix()`. That's a byte-identical / contrast-stable choice.
 - `design-system/lib/cx.ts` reimplements a 3-line classname joiner instead of importing `clsx`/`tailwind-merge` - a bundle-budget call. (`lib/cn.ts` uses `clsx` but deliberately *not* `tailwind-merge`, for the same reason.)
 - The DS docs `theme-tokens.ts` and the `contrast-check.mjs` gate parse `theme.css` with the *same regex* on purpose, so the docs and the gate can never disagree.
-- There's a `next-env.d.ts`-style "one details element per viewport" rule in `Module` - rendering both desktop and mobile chrome would double the DOM and blow the DOM-size budget.
 
 ## "Where is X?" quick index
 

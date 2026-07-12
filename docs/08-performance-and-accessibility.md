@@ -62,7 +62,7 @@ Target: **WCAG 2.1 AA, Lighthouse a11y = 100, zero axe violations** (all hard ga
 |---|---|
 | Color contrast | Two-token text discipline: `--color-signal` only for headings/large text; `--color-text-body` (~13:1) for body. `lint:contrast` parses `theme.css` and checks documented pairs against AA |
 | Motion | `prefers-reduced-motion: reduce` **and** a user `MOTION` toggle (`body[data-motion]`) both disable all CRT/JS animation; the toggle is an `aria-pressed` button in `DesktopTopbar` |
-| Semantics | sections are native `<details>`/`<summary>` (`Module`); stat tiles are `<dl>`; the Hero headline is a real heading |
+| Semantics | sections are `<section>` with an `<h2>`, named via `aria-labelledby` (`Module`); stat tiles are `<dl>`; the Hero headline is a real heading |
 | Keyboard | a skip-to-content link; `:focus-visible` rings in `base.css`; the DAW faders/knobs/VU meters are keyboard-operable (`aria-valuenow` updated on arrow keys) |
 | Live regions | `RoleTyper` announces only the *completed* role via an `sr-only` live region (not each keystroke); `ContactForm` errors use `role="alert"` |
 | Forms | `Field` synthesizes `aria-describedby` for errors; native validation (`required`, `type=email`, `minLength`) plus server re-validation |
