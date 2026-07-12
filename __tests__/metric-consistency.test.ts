@@ -10,9 +10,8 @@ const REPO_ROOT = path.resolve(__dirname, '..');
 const read = (relativePath: string) => readFileSync(path.join(REPO_ROOT, relativePath), 'utf-8');
 
 // content/perf-receipts.ts is the authoritative source for every performance number
-// (CLAUDE.md: "cite the receipts from the Performance receipts section — they are the
-// authoritative source"). Everything below asks the same question of a different surface:
-// does it agree with the receipt?
+// (CLAUDE.md: "cite the receipts — they are the authoritative source"). Every assertion below
+// asks the same question of a different surface: does it agree with the receipt?
 const receiptFor = (metric: string) => {
   const receipt = perfReceipts.find((r) => r.metric === metric);
   if (!receipt) throw new Error(`no perf receipt for ${metric}`);
@@ -22,23 +21,65 @@ const receiptFor = (metric: string) => {
 const flipSign = (delta: string) =>
   delta.startsWith('-') ? `+${delta.slice(1)}` : `-${delta.slice(1)}`;
 
-// Every surface that quotes a performance number in prose or structured data.
+// The word a surface uses when it is talking about this metric. The sign sweep only fires when
+// the flipped number sits NEXT TO one of these — see PROXIMITY_CHARS below for why.
+const METRIC_KEYWORDS: Record<string, RegExp> = {
+  API_LATENCY: /latency/i,
+  BUNDLE_CSS: /css/i,
+  TTI: /\bTTI\b|time.to.interactive/i,
+  BUNDLE_JS: /\bJS\b|javascript/i,
+  PAGE_LOAD: /page.load/i,
+  INITIAL_LOAD: /initial.load/i,
+  CONVERSION: /conversion/i,
+  DESKTOP_BUILD: /build/i,
+  ONBOARDING_TIME: /onboarding/i,
+};
+
+// A flipped number only contradicts a receipt if the sentence is ABOUT that metric. Banning the
+// digits outright is what a metric-blind sweep does, and it bites: CONVERSION is +10%, so a
+// global ban on "-10%" reds a true sentence like "bounce rate -10% after the redesign" — and the
+// failure message would then instruct the next engineer to delete a true statement. That is the
+// false-positive budget this repo refuses to spend. Requiring the metric's own keyword within
+// this window keeps every real contradiction (each one sits beside its metric name) and drops
+// the collisions on round numbers like 10% and 40%.
+const PROXIMITY_CHARS = 60;
+
+const nearKeyword = (text: string, needle: string, keyword: RegExp) => {
+  let from = 0;
+  for (;;) {
+    const at = text.indexOf(needle, from);
+    if (at === -1) return false;
+    const window = text.slice(
+      Math.max(0, at - PROXIMITY_CHARS),
+      at + needle.length + PROXIMITY_CHARS,
+    );
+    if (keyword.test(window)) return true;
+    from = at + needle.length;
+  }
+};
+
+// Every surface that quotes a performance number, in prose or structured data. perf-receipts.ts
+// sweeps ITSELF because it also exports `heroStats`, a hand-written literal that is NOT derived
+// from `perfReceipts` — so the authority file is not automatically self-consistent.
 const METRIC_SURFACES: Array<[string, string]> = [
+  ['content/perf-receipts.ts (heroStats)', read('content/perf-receipts.ts')],
   ['content/projects.ts', read('content/projects.ts')],
   ['content/seo.ts', read('content/seo.ts')],
+  ['content/git-log.ts', read('content/git-log.ts')],
+  ['content/sys-health.ts', read('content/sys-health.ts')],
+  ['content/hottest-takes.ts', read('content/hottest-takes.ts')],
+  ['content/man-page.ts', read('content/man-page.ts')],
   ['content/ask-eval-corpus.ts', read('content/ask-eval-corpus.ts')],
   ['content/ask-eval-calibration.ts', read('content/ask-eval-calibration.ts')],
-  ['content/man-page.ts', read('content/man-page.ts')],
-  ['lib/hiring-profile.ts', JSON.stringify(HIRING_PROFILE)],
-  ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
+  ['lib/hiring-profile.ts (served at /api/erik.json)', JSON.stringify(HIRING_PROFILE)],
+  ['lib/ask/system-prompt.ts (what the AI answers with)', SYSTEM_TEXT],
   ['public/llms.txt', read('public/llms.txt')],
 ];
 
 // hiring-profile.receipts field -> the receipt it must agree with. NOT `.metrics`:
-// HiringProfileSchema declares `receipts`, and .parse() STRIPS unknown keys — a field under
-// any other name would be silently dropped from /api/erik.json rather than served wrong.
-// Several carry a trailing gloss ("-97.5% (40s->1s, Venturus)"), so they are asserted as a
-// prefix, not an equality.
+// HiringProfileSchema declares `receipts`, and .parse() STRIPS unknown keys — a field under any
+// other name is silently dropped from /api/erik.json rather than served wrong. Several carry a
+// trailing gloss ("-97.5% (40s->1s, Venturus)"), so they are asserted as a prefix.
 const HIRING_PROFILE_RECEIPT_FIELDS: Array<[string, string]> = [
   ['tti_improvement', 'TTI'],
   ['page_load_reduction', 'PAGE_LOAD'],
@@ -57,19 +98,33 @@ const PROJECT_STAT_METRICS: Record<string, string> = {
 };
 
 describe('performance metrics agree with the authoritative receipts', () => {
-  it('no surface carries the OPPOSITE sign of a receipt', () => {
+  it('every receipt has a keyword, so no metric can be added and left unswept', () => {
+    const unmapped = perfReceipts
+      .map((receipt) => receipt.metric)
+      .filter((metric) => METRIC_KEYWORDS[metric] === undefined);
+
+    expect(
+      unmapped,
+      'a new receipt was added without a keyword in METRIC_KEYWORDS, so the sign sweep silently skips it. Coverage must be the default: add the keyword, do not delete this assertion.',
+    ).toEqual([]);
+  });
+
+  it('no surface states the OPPOSITE sign of a receipt', () => {
     const contradictions = METRIC_SURFACES.flatMap(([surface, text]) =>
       perfReceipts
-        .filter((receipt) => text.includes(flipSign(receipt.delta)))
+        .filter((receipt) => {
+          const keyword = METRIC_KEYWORDS[receipt.metric];
+          return keyword !== undefined && nearKeyword(text, flipSign(receipt.delta), keyword);
+        })
         .map(
           (receipt) =>
-            `${surface}: ${receipt.metric} is ${receipt.delta}, found ${flipSign(receipt.delta)}`,
+            `${surface}: ${receipt.metric} is ${receipt.delta}, but found ${flipSign(receipt.delta)} next to it`,
         ),
     );
 
     expect(
       contradictions,
-      `a surface states the opposite sign of an authoritative receipt. This is not hypothetical: TTI shipped as -52% in perf-receipts.ts and seo.ts while projects.ts, hiring-profile.ts, the /api/ask system prompt AND the eval corpus all said +52% — so the AI answered the opposite sign from the JSON-LD on the same metric, and the eval graded it against the wrong one. A "gain" of -52% is also nonsense as English. Fix the surface, not this test.`,
+      `a surface states the opposite sign of an authoritative receipt. Not hypothetical: TTI shipped as -52% in perf-receipts.ts and seo.ts while projects.ts, hiring-profile.ts, the /api/ask system prompt AND the eval corpus all said +52% — so the AI answered the opposite sign from the JSON-LD on the same metric, and the eval graded it against the wrong one. A "gain" of -52% is also nonsense as English.\n\nIf this fired on a TRUE statement about a DIFFERENT metric that happens to share a number, the bug is the keyword, not your sentence — widen METRIC_KEYWORDS. Do not delete a true claim to make a test pass.`,
     ).toEqual([]);
   });
 
@@ -84,7 +139,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
     expect(
       drifted,
-      'the machine-readable hiring profile must quote the same numbers as the receipts. It is the endpoint llms.txt advertises to crawlers, so a wrong number here is consumed by machines and never eyeballed. Note the assertion reads the PARSED object, not the source literal: HiringProfileSchema strips unknown keys, so a field that is renamed or moved out of `receipts` vanishes from /api/erik.json silently — `undefined` here means the field is not being served at all, which is a different bug from serving it wrong.',
+      'the machine-readable hiring profile must quote the same numbers as the receipts. It is the endpoint llms.txt advertises to crawlers, so a wrong number here is consumed by machines and never eyeballed. This reads the PARSED object, not the source literal: HiringProfileSchema strips unknown keys, so `undefined` means the field is not being SERVED AT ALL — a different bug from serving it wrong.',
     ).toEqual([]);
   });
 
