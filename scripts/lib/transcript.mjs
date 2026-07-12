@@ -125,10 +125,32 @@ function textBlocksOf(body) {
   return texts;
 }
 
+function verdictKeyOf(needle) {
+  const lastSpace = needle.lastIndexOf(' ');
+  return lastSpace > 0 ? needle.slice(0, lastSpace + 1) : needle;
+}
+
+function lastVerdictLine(text, verdictKey, needle) {
+  let last = null;
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (line === needle || line.startsWith(verdictKey)) last = line;
+  }
+  return last;
+}
+
+function toolResultText(item) {
+  const body = item.content;
+  if (typeof body === 'string') return body;
+  if (Array.isArray(body)) return textBlocksOf(body).join('\n');
+  return '';
+}
+
 function outputCorroborates(content, promptAnchor, needle) {
   if (!content.includes(needle)) return false;
+  const verdictKey = verdictKeyOf(needle);
   let carriesPrompt = false;
-  let verdictInAssistant = false;
+  let lastVerdict = null;
   for (const line of content.split('\n')) {
     const trimmed = line.trim();
     if (trimmed === '') continue;
@@ -146,11 +168,13 @@ function outputCorroborates(content, promptAnchor, needle) {
     }
     for (const text of textBlocksOf(body)) {
       if (text.includes(promptAnchor)) carriesPrompt = true;
-      if (message.role === ASSISTANT_ROLE && text.includes(needle)) verdictInAssistant = true;
+      if (message.role === ASSISTANT_ROLE) {
+        const verdict = lastVerdictLine(text, verdictKey, needle);
+        if (verdict !== null) lastVerdict = verdict;
+      }
     }
-    if (carriesPrompt && verdictInAssistant) return true;
   }
-  return carriesPrompt && verdictInAssistant;
+  return carriesPrompt && lastVerdict === needle;
 }
 
 function defaultReadTaskOutput(path) {
@@ -207,7 +231,7 @@ export function agentResultContains(records, subagentType, needle, readTaskOutpu
           typeof item === 'object' &&
           item.type === TOOL_RESULT_TYPE &&
           item.tool_use_id === toolUseId &&
-          JSON.stringify(item).includes(needle)
+          lastVerdictLine(toolResultText(item), verdictKeyOf(needle), needle) === needle
         ) {
           return true;
         }
