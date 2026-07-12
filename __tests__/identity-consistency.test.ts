@@ -24,16 +24,20 @@ const llmsTxt = read('public/llms.txt');
 // generator script, so it is reachable only as source text — there is nothing to import
 const ogImageScript = read('scripts/generate-og-image.ts');
 
-// Globbed, NOT hand-listed. A hand-maintained list leaked a survivor in three consecutive
-// review rounds, because a file is only covered if someone remembers to add it. Every
-// .ts/.tsx under content/ — at any depth — is now covered by default: that closes the
-// man-page and shell-whois leaks. It does NOT close the third. The OG card itself is
-// public/og.png — pixels, which no string assertion reads; only its title SOURCE
-// (scripts/generate-og-image.ts) is gated, and only because it is hand-listed below. The
-// non-content surfaces (app/, lib/, public/, scripts/) remain hand-listed, so a new one
-// added there leaks exactly as the OG card did. Forgetting is impossible under content/,
-// and still possible outside it. This test hunts ONE known-bad string; it is not a proof
-// that the surfaces agree.
+// Globbed, NOT hand-listed. The hand-maintained list was found INCOMPLETE in consecutive
+// review rounds — content/man-page.ts carried the retired title as lowercase prose, was on
+// nobody's list, and shipped it to the rendered page. A file is only covered if someone
+// remembers to add it, and memory is not a mechanism. Every .ts/.tsx under content/, at any
+// depth, is now covered by default.
+//
+// What this does NOT cover, stated so nobody trusts it further than it goes:
+//   - public/og.png and public/erik-cunha-cv.pdf are the shipped ARTIFACTS, and they carry
+//     the title as pixels and subset-font glyphs. No string assertion can read them. Only
+//     og.png's title SOURCE (scripts/generate-og-image.ts) is checked, and only because it
+//     is hand-listed below — so a new non-content surface is ungated exactly as og.png is.
+//   - It hunts ONE known-bad string. It is not a proof that the surfaces AGREE:
+//     content/shell-commands.ts answers `whois` with a third variant ("full-stack engineer",
+//     no "Senior") and nothing here objects.
 const contentSurfaces: Array<[string, string]> = readdirSync(CONTENT_DIR, { recursive: true })
   .map(String)
   .filter((file) => /\.tsx?$/.test(file))
