@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -65,5 +65,57 @@ describe('module-body-content: section-body collapse trap (details -> section re
         '[open]-qualified rule during the <details> era, making it the value most likely to be ' +
         'dropped by a future edit that touches this block.',
     ).toBe(true);
+  });
+});
+
+const DISCLOSURE_SCAN_ROOT_DIRS = ['components', 'app', 'lib', 'design-system'];
+const DISCLOSURE_SCAN_EXTENSIONS = new Set(['.ts', '.tsx', '.css']);
+const DISCLOSURE_SCAN_SKIP_DIRS = new Set(['node_modules', '.next']);
+
+function collectDisclosureScanFiles(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (DISCLOSURE_SCAN_SKIP_DIRS.has(entry.name)) return [];
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) return collectDisclosureScanFiles(fullPath);
+    return DISCLOSURE_SCAN_EXTENSIONS.has(path.extname(entry.name)) ? [fullPath] : [];
+  });
+}
+
+const DISCLOSURE_PATTERNS: Array<{ name: string; pattern: RegExp }> = [
+  { name: '<details', pattern: /<details[\s>]/i },
+  { name: '</details>', pattern: /<\/details>/i },
+  { name: '<summary', pattern: /<summary[\s>]/i },
+  { name: '</summary>', pattern: /<\/summary>/i },
+  { name: 'HTMLDetailsElement', pattern: /HTMLDetailsElement/ },
+  { name: '::details-content', pattern: /::details-content/ },
+  { name: '[open] attribute selector', pattern: /\[open\]/ },
+];
+
+describe('disclosure machinery: <details>/<summary> never returns to shipped source', () => {
+  it('finds none of details/summary/HTMLDetailsElement/::details-content/[open] under components, app, lib, design-system', () => {
+    const repoRoot = path.resolve(__dirname, '..');
+    const files = DISCLOSURE_SCAN_ROOT_DIRS.flatMap((dir) =>
+      collectDisclosureScanFiles(path.join(repoRoot, dir)),
+    );
+    const violations: string[] = [];
+    for (const file of files) {
+      // behavioral-test-allow: walks shipped source to enforce the disclosure-removal ADR; no
+      // compiler or lint rule bans a removed HTML element from silently being reintroduced
+      const contents = readFileSync(file, 'utf-8');
+      for (const { name, pattern } of DISCLOSURE_PATTERNS) {
+        if (pattern.test(contents)) {
+          violations.push(`${path.relative(repoRoot, file)}: ${name}`);
+        }
+      }
+    }
+    expect(
+      violations,
+      '<details>/<summary>/[open]/::details-content/HTMLDetailsElement was deliberately removed ' +
+        'from this codebase (owner decision, see DECISIONS.md) and must stay removed. ' +
+        'Reintroducing any of it lets a section collapse again - and any CSS still gated on an ' +
+        '[open] attribute selector silently does nothing on a plain <section> element, which is ' +
+        "how the whole site's content once got blanked with no build error and no console " +
+        `warning. Offending files:\n${violations.join('\n')}`,
+    ).toEqual([]);
   });
 });
