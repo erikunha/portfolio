@@ -100,6 +100,7 @@ const TASK_OUTPUT_FILE_RE = /<output-file>([^<]+)<\/output-file>/;
 const TASK_OUTPUT_SUFFIX = (sessionId, taskId) => `/${sessionId}/tasks/${taskId}.output`;
 const PROMPT_BIND_CHARS = 200;
 const MIN_PROMPT_BIND_CHARS = 32;
+const ASSISTANT_ROLE = 'assistant';
 
 function promptAnchorOf(prompt) {
   if (typeof prompt !== 'string') return null;
@@ -107,7 +108,21 @@ function promptAnchorOf(prompt) {
   return anchor.length >= MIN_PROMPT_BIND_CHARS ? anchor : null;
 }
 
-function outputCarriesPrompt(content, promptAnchor) {
+function textBlocksOf(body) {
+  if (!Array.isArray(body)) return [];
+  const texts = [];
+  for (const block of body) {
+    if (block && typeof block === 'object' && typeof block.text === 'string') {
+      texts.push(block.text);
+    }
+  }
+  return texts;
+}
+
+function outputCorroborates(content, promptAnchor, needle) {
+  if (!content.includes(needle)) return false;
+  let carriesPrompt = false;
+  let verdictInAssistant = false;
   for (const line of content.split('\n')) {
     const trimmed = line.trim();
     if (trimmed === '') continue;
@@ -117,22 +132,19 @@ function outputCarriesPrompt(content, promptAnchor) {
       // biome-ignore lint/suspicious/noEmptyBlockStatements: tolerate non-JSON lines
     } catch {}
     const message = record && typeof record === 'object' ? record.message : undefined;
-    const body = message && typeof message === 'object' ? message.content : undefined;
-    if (typeof body === 'string' && body.includes(promptAnchor)) return true;
-    if (Array.isArray(body)) {
-      for (const block of body) {
-        if (
-          block &&
-          typeof block === 'object' &&
-          typeof block.text === 'string' &&
-          block.text.includes(promptAnchor)
-        ) {
-          return true;
-        }
-      }
+    if (!message || typeof message !== 'object') continue;
+    const body = message.content;
+    if (typeof body === 'string') {
+      if (body.includes(promptAnchor)) carriesPrompt = true;
+      continue;
     }
+    for (const text of textBlocksOf(body)) {
+      if (text.includes(promptAnchor)) carriesPrompt = true;
+      if (message.role === ASSISTANT_ROLE && text.includes(needle)) verdictInAssistant = true;
+    }
+    if (carriesPrompt && verdictInAssistant) return true;
   }
-  return false;
+  return carriesPrompt && verdictInAssistant;
 }
 
 function defaultReadTaskOutput(path) {
@@ -212,8 +224,7 @@ export function agentResultContains(records, subagentType, needle, readTaskOutpu
         typeof output.content === 'string' &&
         Number.isFinite(output.mtimeMs) &&
         output.mtimeMs > dispatchTsMs &&
-        output.content.includes(needle) &&
-        outputCarriesPrompt(output.content, promptAnchor)
+        outputCorroborates(output.content, promptAnchor, needle)
       ) {
         return true;
       }

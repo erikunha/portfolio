@@ -15,7 +15,7 @@ import {
 
 describe('agentResultContains (tool_use_id anti-spoof)', () => {
   const DISPATCH_PROMPT =
-    'Run the four-gate spec-gate protocol against the career-sync spec and return GATE_RESULT.';
+    'Run the four-gate spec-gate protocol against the career-sync spec and return an explicit GATE_RESULT: PASS or GATE_RESULT: FAIL line.';
   const SIBLING_PROMPT =
     'Verification-only security review of the ci-gate fan-in commit; do not make commits.';
   const taskOutputJsonl = (prompt: string, verdict: string) =>
@@ -145,7 +145,7 @@ describe('agentResultContains (tool_use_id anti-spoof)', () => {
     ).toBe(false);
   });
 
-  it('false when the task output file exists but lacks the needle (real architect FAIL)', () => {
+  it('false when the architect returned FAIL even though the echoed prompt quotes the PASS sentinel (verdict lives in the assistant block, not the prompt echo)', () => {
     expect(
       agentResultContains(
         [dispatch, queueNotification],
@@ -155,6 +155,72 @@ describe('agentResultContains (tool_use_id anti-spoof)', () => {
           content: taskOutputJsonl(DISPATCH_PROMPT, 'GATE_RESULT: FAIL'),
           mtimeMs: AFTER_DISPATCH_MS,
         }),
+        SESSION_ID,
+      ),
+    ).toBe(false);
+  });
+
+  it('false when only the user prompt echo carries the needle and the assistant block never does (fail-open guard)', () => {
+    const promptEchoOnly = [
+      JSON.stringify({ message: { role: 'user', content: DISPATCH_PROMPT } }),
+      JSON.stringify({
+        message: { role: 'assistant', content: [{ type: 'text', text: 'assessment in progress' }] },
+      }),
+    ].join('\n');
+    expect(
+      agentResultContains(
+        [dispatch, queueNotification],
+        'architect-reviewer',
+        'GATE_RESULT: PASS',
+        () => ({ content: promptEchoOnly, mtimeMs: AFTER_DISPATCH_MS }),
+        SESSION_ID,
+      ),
+    ).toBe(false);
+  });
+
+  it('false when the PASS sentinel is only in a thinking block, not the final assistant text', () => {
+    const thinkingOnly = [
+      JSON.stringify({ message: { role: 'user', content: DISPATCH_PROMPT } }),
+      JSON.stringify({
+        message: {
+          role: 'assistant',
+          content: [
+            { type: 'thinking', thinking: 'I lean toward GATE_RESULT: PASS but need to check' },
+          ],
+        },
+      }),
+    ].join('\n');
+    expect(
+      agentResultContains(
+        [dispatch, queueNotification],
+        'architect-reviewer',
+        'GATE_RESULT: PASS',
+        () => ({ content: thinkingOnly, mtimeMs: AFTER_DISPATCH_MS }),
+        SESSION_ID,
+      ),
+    ).toBe(false);
+  });
+
+  it('false when a short dispatch prompt yields no bindable anchor (min-length guard, fail-closed)', () => {
+    const shortDispatch = {
+      ...dispatch,
+      message: {
+        content: [
+          {
+            type: 'tool_use',
+            id: 'toolu_arch',
+            name: 'Agent',
+            input: { subagent_type: 'architect-reviewer', prompt: 'redo it' },
+          },
+        ],
+      },
+    };
+    expect(
+      agentResultContains(
+        [shortDispatch, queueNotification],
+        'architect-reviewer',
+        'GATE_RESULT: PASS',
+        passReader,
         SESSION_ID,
       ),
     ).toBe(false);
