@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { PREVIEW_SOURCE_ARIA_LABEL_FALLBACK } from '@/app/design-system/_components/preview.constants';
 
 const DS_ROUTES = [
   { path: '/design-system', heading: 'DESIGN SYSTEM' },
@@ -32,4 +33,5 @@ test('Preview renders the live component and its source without interaction', as
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('aria-label')));
   expect(labels.length).toBeGreaterThan(0);
   expect(new Set(labels).size).toBe(labels.length);
+  expect(labels).not.toContain(PREVIEW_SOURCE_ARIA_LABEL_FALLBACK);
 });
