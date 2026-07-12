@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { TerminalPanel } from '@/design-system';
-import { PREVIEW_SOURCE_ARIA_LABEL, PREVIEW_SOURCE_LABEL } from './preview.constants';
+import { PREVIEW_SOURCE_LABEL, previewSourceAriaLabel } from './preview.constants';
 
 type PreviewProps = {
   id?: string;
@@ -23,7 +23,7 @@ export function Preview({ id, source, children }: PreviewProps) {
               // biome-ignore lint/a11y/noNoninteractiveTabindex: axe scrollable-region-focusable (WCAG 2.1.1) requires this overflow-x-auto pre to be keyboard-focusable
               tabIndex={0}
               role="group"
-              aria-label={PREVIEW_SOURCE_ARIA_LABEL}
+              aria-label={previewSourceAriaLabel(id)}
               className="m-0 px-6 py-4 overflow-x-auto font-mono text-xs text-tertiary-50 border-t border-dashed border-primary-border"
             >
               <code>{source}</code>

@@ -49,6 +49,7 @@ describe('Dock', () => {
 
     const targetSection = document.createElement('section');
     targetSection.id = 'sec-readme';
+    targetSection.tabIndex = -1;
     document.body.appendChild(targetSection);
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));
@@ -69,6 +70,28 @@ describe('Dock', () => {
 
     expect(defaultPrevented).toBe(true);
     expect(scrolledIntoView).toBe(targetSection);
+    expect(document.activeElement).toBe(targetSection);
+
+    document.body.removeChild(targetSection);
+  });
+
+  it('does not move focus when the target element is not focusable', async () => {
+    const container = await render();
+
+    const targetSection = document.createElement('section');
+    targetSection.id = 'sec-readme';
+    document.body.appendChild(targetSection);
+
+    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));
+    const homeLink = links.find((a) => a.getAttribute('href') === '#sec-readme');
+
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    await act(async () => {
+      homeLink?.dispatchEvent(event);
+    });
+
+    expect(scrolledIntoView).toBe(targetSection);
+    expect(document.activeElement).not.toBe(targetSection);
 
     document.body.removeChild(targetSection);
   });

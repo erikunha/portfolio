@@ -83,6 +83,7 @@ export function Dock() {
     const el = document.getElementById(target);
     if (!el) return;
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    el.focus({ preventScroll: true });
   };
 
   return (

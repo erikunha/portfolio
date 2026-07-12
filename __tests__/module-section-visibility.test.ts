@@ -6,15 +6,21 @@ import { describe, expect, it } from 'vitest';
 const componentsCss = readFileSync(path.resolve(__dirname, '../app/css/components.css'), 'utf-8');
 
 describe('module-body-content: section-body collapse trap (details -> section refactor)', () => {
-  it('never defaults .module-body-content to opacity: 0', () => {
-    const rule = componentsCss.match(/\.module-body-content\s*\{[^}]*\}/);
+  it('never defaults any .module-body-content rule block to opacity: 0', () => {
+    const rules = Array.from(componentsCss.matchAll(/\.module-body-content[^{]*\{[^}]*\}/g));
     expect(
-      rule && /opacity:\s*0(?![.\d])/.test(rule[0]),
-      'app/css/components.css: .module-body-content must never default to opacity: 0. ' +
+      rules.length > 0,
+      'app/css/components.css: expected to find at least one .module-body-content rule block.',
+    ).toBe(true);
+    const opacityZeroBlock = rules.find((match) => /opacity:\s*0(?![.\d])/.test(match[0]));
+    expect(
+      opacityZeroBlock,
+      'app/css/components.css: no .module-body-content rule block (base, media-query, or ' +
+        'variant-qualified) must ever default to opacity: 0. ' +
         'Section bodies are plain <section> elements now (no [open] toggle re-reveals them) ' +
-        '- a bare `opacity: 0` here makes every section body on the page permanently invisible, ' +
+        '- a bare `opacity: 0` on ANY of these blocks makes section bodies permanently invisible, ' +
         'with no build error and no console warning.',
-    ).toBe(false);
+    ).toBeUndefined();
   });
 
   it('contains no [open] attribute selector or ::details-content pseudo-element', () => {
