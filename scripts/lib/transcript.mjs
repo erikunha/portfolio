@@ -24,7 +24,7 @@ function toolUses(record) {
   if (!message || typeof message !== 'object') return [];
   const content = message.content;
   if (!Array.isArray(content)) return [];
-  return content.filter((item) => item && typeof item === 'object' && item.type === 'tool_use');
+  return content.filter((item) => item && typeof item === 'object' && item.type === TOOL_USE_TYPE);
 }
 
 export function lastUserCommitMarker(records) {
@@ -33,10 +33,10 @@ export function lastUserCommitMarker(records) {
     for (const tu of toolUses(record)) {
       const name = tu.name;
       const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
-      if (name === 'Bash' && typeof input.command === 'string') {
+      if (name === BASH_TOOL_NAME && typeof input.command === 'string') {
         if (/\bgit\s+commit\b/.test(input.command)) marker = index;
       }
-      if (name === 'Skill' && input.skill === 'commit-commands:commit') {
+      if (name === SKILL_TOOL_NAME && input.skill === COMMIT_SKILL) {
         marker = index;
       }
     }
@@ -49,7 +49,7 @@ export function agentsDispatchedSince(records, boundaryIndex) {
   records.forEach((record, index) => {
     if (index <= boundaryIndex) return;
     for (const tu of toolUses(record)) {
-      if (tu.name !== 'Agent') continue;
+      if (tu.name !== AGENT_TOOL_NAME) continue;
       const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
       if (typeof input.subagent_type === 'string') seen.add(input.subagent_type);
     }
@@ -61,7 +61,7 @@ export function lastDispatchIndex(records, subagentType) {
   let idx = -1;
   records.forEach((record, index) => {
     for (const tu of toolUses(record)) {
-      if (tu.name !== 'Agent') continue;
+      if (tu.name !== AGENT_TOOL_NAME) continue;
       const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
       if (input.subagent_type === subagentType) idx = index;
     }
@@ -85,7 +85,7 @@ export function containsInToolResultSince(records, needle, boundaryIndex) {
     const content = message && typeof message === 'object' ? message.content : undefined;
     if (!Array.isArray(content)) continue;
     for (const item of content) {
-      if (item && typeof item === 'object' && item.type === 'tool_result') {
+      if (item && typeof item === 'object' && item.type === TOOL_RESULT_TYPE) {
         if (JSON.stringify(item).includes(needle)) return true;
       }
     }
@@ -101,6 +101,12 @@ const TASK_OUTPUT_SUFFIX = (sessionId, taskId) => `/${sessionId}/tasks/${taskId}
 const PROMPT_BIND_CHARS = 200;
 const MIN_PROMPT_BIND_CHARS = 32;
 const ASSISTANT_ROLE = 'assistant';
+const TOOL_USE_TYPE = 'tool_use';
+const TOOL_RESULT_TYPE = 'tool_result';
+const AGENT_TOOL_NAME = 'Agent';
+const BASH_TOOL_NAME = 'Bash';
+const SKILL_TOOL_NAME = 'Skill';
+const COMMIT_SKILL = 'commit-commands:commit';
 
 function promptAnchorOf(prompt) {
   if (typeof prompt !== 'string') return null;
@@ -179,7 +185,7 @@ export function agentResultContains(records, subagentType, needle, readTaskOutpu
   let promptAnchor = null;
   for (const record of records) {
     for (const tu of toolUses(record)) {
-      if (tu.name !== 'Agent') continue;
+      if (tu.name !== AGENT_TOOL_NAME) continue;
       const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
       if (input.subagent_type === subagentType && typeof tu.id === 'string') {
         toolUseId = tu.id;
@@ -199,7 +205,7 @@ export function agentResultContains(records, subagentType, needle, readTaskOutpu
         if (
           item &&
           typeof item === 'object' &&
-          item.type === 'tool_result' &&
+          item.type === TOOL_RESULT_TYPE &&
           item.tool_use_id === toolUseId &&
           JSON.stringify(item).includes(needle)
         ) {
@@ -241,7 +247,7 @@ export function agentDispatchedAfter(records, subagentType, afterIso) {
     const tsMs = typeof ts === 'string' ? Date.parse(ts) : Number.NaN;
     if (Number.isNaN(tsMs) || tsMs <= afterMs) continue;
     for (const tu of toolUses(record)) {
-      if (tu.name !== 'Agent') continue;
+      if (tu.name !== AGENT_TOOL_NAME) continue;
       const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
       if (input.subagent_type === subagentType) return true;
     }
