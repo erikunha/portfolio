@@ -25,7 +25,12 @@ export const ProjectSchema = z.object({
 
 export const PerfReceiptSchema = z.object({
   metric: z.string().min(1),
-  delta: z.string().min(1),
+  delta: z
+    .string()
+    .regex(
+      /^[+-]\d/,
+      'a perf receipt delta must carry an explicit leading + or -. __tests__/metric-consistency.test.ts flips the sign to sweep every public surface for the opposite claim; an unsigned "10%" flips to "-0%", a string no surface contains, so the sweep for that metric degrades to a silent no-op instead of failing loudly.',
+    ),
   company: z.string().min(1),
   note: z.string().min(1),
   mobileMetric: z.string().min(1).optional(),

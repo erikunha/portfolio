@@ -24,20 +24,6 @@ const llmsTxt = read('public/llms.txt');
 // generator script, so it is reachable only as source text — there is nothing to import
 const ogImageScript = read('scripts/generate-og-image.ts');
 
-// Globbed, NOT hand-listed. The hand-maintained list was found INCOMPLETE in consecutive
-// review rounds — content/man-page.ts carried the retired title as lowercase prose, was on
-// nobody's list, and shipped it to the rendered page. A file is only covered if someone
-// remembers to add it, and memory is not a mechanism. Every .ts/.tsx under content/, at any
-// depth, is now covered by default.
-//
-// What this does NOT cover, stated so nobody trusts it further than it goes:
-//   - public/og.png and public/erik-cunha-cv.pdf are the shipped ARTIFACTS, and they carry
-//     the title as pixels and subset-font glyphs. No string assertion can read them. Only
-//     og.png's title SOURCE (scripts/generate-og-image.ts) is checked, and only because it
-//     is hand-listed below — so a new non-content surface is ungated exactly as og.png is.
-//   - It hunts ONE known-bad string. It is not a proof that the surfaces AGREE:
-//     content/shell-commands.ts answers `whois` with a third variant ("full-stack engineer",
-//     no "Senior") and nothing here objects.
 const contentSurfaces: Array<[string, string]> = readdirSync(CONTENT_DIR, { recursive: true })
   .map(String)
   .filter((file) => /\.tsx?$/.test(file))
@@ -86,7 +72,7 @@ describe('identity is consistent across every gated surface', () => {
 
     expect(
       stale,
-      `"${RETIRED_TITLE}" was retired in favour of "${CANONICAL_TITLE}" (owner decision). Matched case-INSENSITIVELY because content/man-page.ts carried it as lowercase prose and a case-sensitive check walked straight past it, on the one surface a human actually reads.\n\nNOT GATED HERE — two committed binaries carry the title as PIXELS or subset-font glyphs, which no string assertion can read: public/erik-cunha-cv.pdf (regenerate from the source .docx) and public/og.png (regenerate via scripts/generate-og-image.ts). The OG *script* is gated above, but the shipped *card* is not — so a title change can green this test while every LinkedIn and Slack unfurl still shows the old one. If you change the title, regenerate BOTH artifacts; nothing here will catch it. Reading them needs a PDF/image parser, which is a dependency decision, not a test tweak.`,
+      `"${RETIRED_TITLE}" was retired in favour of "${CANONICAL_TITLE}" (owner decision). Matched case-INSENSITIVELY because content/man-page.ts carried it as lowercase prose and a case-sensitive check walked straight past it, on the one surface a human actually reads. content/ is globbed, not hand-listed: man-page.ts was on nobody's hand-maintained list, which is how it shipped.\n\nSCOPE — this hunts ONE known-bad string; it is not a proof that the surfaces AGREE. content/shell-commands.ts answers \`whois\` with a third variant ("full-stack engineer", no "Senior") and nothing here objects.\n\nNOT GATED HERE — two committed binaries carry the title as PIXELS or subset-font glyphs, which no string assertion can read: public/erik-cunha-cv.pdf (regenerate from the source .docx) and public/og.png (regenerate via scripts/generate-og-image.ts). The OG *script* is gated above, but the shipped *card* is not — so a title change can green this test while every LinkedIn and Slack unfurl still shows the old one. If you change the title, regenerate BOTH artifacts; nothing here will catch it. Reading them needs a PDF/image parser, which is a dependency decision, not a test tweak.`,
     ).toEqual([]);
   });
 
