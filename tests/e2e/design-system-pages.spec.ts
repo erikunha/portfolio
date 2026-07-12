@@ -26,4 +26,10 @@ test('Preview renders the live component and its source without interaction', as
   await expect(source).toHaveAttribute('tabindex', '0');
 
   expect(await page.locator('details').count()).toBe(0);
+
+  const labels = await page
+    .locator('pre[role="group"]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('aria-label')));
+  expect(labels.length).toBeGreaterThan(0);
+  expect(new Set(labels).size).toBe(labels.length);
 });

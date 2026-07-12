@@ -17,6 +17,7 @@ describe('Dock', () => {
   afterEach(() => {
     mounted?.unmount();
     vi.restoreAllMocks();
+    document.body.innerHTML = '';
   });
 
   async function render() {
@@ -71,8 +72,6 @@ describe('Dock', () => {
     expect(defaultPrevented).toBe(true);
     expect(scrolledIntoView).toBe(targetSection);
     expect(document.activeElement).toBe(targetSection);
-
-    document.body.removeChild(targetSection);
   });
 
   it('does not move focus when the target element is not focusable', async () => {
@@ -92,8 +91,6 @@ describe('Dock', () => {
 
     expect(scrolledIntoView).toBe(targetSection);
     expect(document.activeElement).not.toBe(targetSection);
-
-    document.body.removeChild(targetSection);
   });
 
   it('does not call scrollIntoView when the target element is missing from DOM', async () => {

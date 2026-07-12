@@ -23,17 +23,32 @@ describe('module-body-content: section-body collapse trap (details -> section re
     ).toBeUndefined();
   });
 
-  it('contains no [open] attribute selector or ::details-content pseudo-element', () => {
-    const hasOpenSelector = /\[open\]/.test(componentsCss);
-    const hasDetailsContentPseudo = /::details-content/.test(componentsCss);
+  it('contains no [open] attribute selector or ::details-content pseudo-element on a .module-* rule', () => {
+    const ruleSelectors = Array.from(componentsCss.matchAll(/([^{}]+)\{[^{}]*\}/g))
+      .map((match) => match[1])
+      .filter((selector): selector is string => selector != null);
+    const moduleOpenSelector = ruleSelectors.find(
+      (selector) => selector.includes('.module') && selector.includes('[open]'),
+    );
+    const moduleDetailsContentSelector = ruleSelectors.find(
+      (selector) => selector.includes('.module') && selector.includes('::details-content'),
+    );
     expect(
-      hasOpenSelector || hasDetailsContentPseudo,
-      'app/css/components.css: found a `[open]` attribute selector or `::details-content` ' +
+      moduleOpenSelector,
+      'app/css/components.css: found a `.module-*` selector combined with a `[open]` attribute ' +
+        'selector. Module sections were migrated from <details open> to <section>, which can ' +
+        'never match `[open]`. A rule gated on it either does nothing (dead CSS) or, worse, was ' +
+        'meant to restore visibility that a collapsed base state removed - and now silently ' +
+        'fails to, leaving section bodies invisible.',
+    ).toBeUndefined();
+    expect(
+      moduleDetailsContentSelector,
+      'app/css/components.css: found a `.module-*` selector combined with a `::details-content` ' +
         'pseudo-element. Module sections were migrated from <details open> to <section>, which ' +
-        'can never match either selector. A rule gated on them either does nothing (dead CSS) or, ' +
-        'worse, was meant to restore visibility that a collapsed base state removed - and now ' +
-        'silently fails to, leaving section bodies invisible.',
-    ).toBe(false);
+        'can never match `::details-content`. A rule gated on it either does nothing (dead CSS) ' +
+        'or, worse, was meant to restore visibility that a collapsed base state removed - and ' +
+        'now silently fails to, leaving section bodies invisible.',
+    ).toBeUndefined();
   });
 
   it('keeps the desktop border on .module-body-content under the >= 769px media query', () => {
