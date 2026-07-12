@@ -47,8 +47,16 @@ describe('content-visibility deferral', () => {
       path.resolve(__dirname, '../app/css/components.css'),
       'utf-8',
     );
-    expect(componentsCss).toContain('.module-deferred');
-    expect(componentsCss).toContain('content-visibility: auto');
+    const deferredBlock = componentsCss.match(/\.module-deferred[^{]*\{([^}]*)\}/)?.[1];
+    expect(
+      deferredBlock,
+      'app/css/components.css must ship a `.module-deferred` rule — it is the only selector the Module `defer` prop can match.',
+    ).toBeDefined();
+    expect(
+      deferredBlock,
+      'the `content-visibility: auto` declaration must live INSIDE the .module-deferred block. Asserting it exists somewhere in the file would still pass if a future edit moved it to an unrelated selector, silently dropping below-fold deferral (~840ms of mobile style+layout) with no test failure.',
+    ).toContain('content-visibility: auto');
+    expect(deferredBlock).toContain('contain-intrinsic-size');
     expect(componentsCss).not.toMatch(/nth-of-type\(n\s*\+\s*\d+\)/);
   });
 });

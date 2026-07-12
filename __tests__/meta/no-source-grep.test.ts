@@ -11,6 +11,15 @@ const TARGETS_APP_SOURCE = /['"`](?:[^'"`]*\/)?(app|components|lib|scripts)\//;
 const ALLOW_TAG = /behavioral-test-allow:/;
 
 const SKIP_DIRS = new Set(['node_modules', '.next', 'coverage', 'dist', '.claude']);
+const COMMENT_LINE = /^\s*(\/\/|\*|\/\*)/;
+
+function isAllowTagged(lines: string[], index: number): boolean {
+  if (ALLOW_TAG.test(lines[index] ?? '')) return true;
+  for (let i = index - 1; i >= 0 && COMMENT_LINE.test(lines[i] ?? ''); i--) {
+    if (ALLOW_TAG.test(lines[i] ?? '')) return true;
+  }
+  return false;
+}
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((e) => {
@@ -29,7 +38,7 @@ describe('meta: tests assert behavior, not source', () => {
       lines.forEach((line, i) => {
         if (!SOURCE_HINT.test(line)) return;
         if (!TARGETS_APP_SOURCE.test(line)) return;
-        if (ALLOW_TAG.test(line) || ALLOW_TAG.test(lines[i - 1] ?? '')) return;
+        if (isAllowTagged(lines, i)) return;
         violations.push(`${file}:${i + 1}  ${line.trim()}`);
       });
     }

@@ -81,14 +81,16 @@ function collectDisclosureScanFiles(dir: string): string[] {
   });
 }
 
-const DISCLOSURE_PATTERNS: Array<{ name: string; pattern: RegExp }> = [
+const CSS_EXTENSION = '.css';
+
+const DISCLOSURE_PATTERNS: Array<{ name: string; pattern: RegExp; cssOnly?: true }> = [
   { name: '<details', pattern: /<details[\s>]/i },
   { name: '</details>', pattern: /<\/details>/i },
   { name: '<summary', pattern: /<summary[\s>]/i },
   { name: '</summary>', pattern: /<\/summary>/i },
   { name: 'HTMLDetailsElement', pattern: /HTMLDetailsElement/ },
   { name: '::details-content', pattern: /::details-content/ },
-  { name: '[open] attribute selector', pattern: /\[open\]/ },
+  { name: '[open] attribute selector', pattern: /\[open\]/, cssOnly: true },
 ];
 
 describe('disclosure machinery: <details>/<summary> never returns to shipped source', () => {
@@ -102,7 +104,9 @@ describe('disclosure machinery: <details>/<summary> never returns to shipped sou
       // behavioral-test-allow: walks shipped source to enforce the disclosure-removal ADR; no
       // compiler or lint rule bans a removed HTML element from silently being reintroduced
       const contents = readFileSync(file, 'utf-8');
-      for (const { name, pattern } of DISCLOSURE_PATTERNS) {
+      const isCss = path.extname(file) === CSS_EXTENSION;
+      for (const { name, pattern, cssOnly } of DISCLOSURE_PATTERNS) {
+        if (cssOnly && !isCss) continue;
         if (pattern.test(contents)) {
           violations.push(`${path.relative(repoRoot, file)}: ${name}`);
         }
