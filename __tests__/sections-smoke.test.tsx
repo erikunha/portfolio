@@ -35,8 +35,8 @@ describe('CommunitySection', () => {
 
   it('renders the CAT ~/.COMMUNITY module header', async () => {
     const container = await render();
-    const summary = container.querySelector('summary');
-    expect(summary?.textContent).toContain('CAT ~/.COMMUNITY');
+    const heading = container.querySelector('h2');
+    expect(heading?.textContent).toContain('CAT ~/.COMMUNITY');
   });
 
   it('renders community event content', async () => {
@@ -47,7 +47,7 @@ describe('CommunitySection', () => {
 
   it('renders without error with defer prop', async () => {
     const container = await render({ defer: true });
-    expect(container.querySelector('summary')).not.toBeNull();
+    expect(container.querySelector('h2')).not.toBeNull();
   });
 });
 
@@ -68,13 +68,13 @@ describe('ContactSection', () => {
 
   it('renders the SUDO CONTACT --INIT module header', async () => {
     const container = await render();
-    const summary = container.querySelector('summary');
-    expect(summary?.textContent).toContain('SUDO CONTACT --INIT');
+    const heading = container.querySelector('h2');
+    expect(heading?.textContent).toContain('SUDO CONTACT --INIT');
   });
 
   it('renders without error with defer prop', async () => {
     const container = await render({ defer: true });
-    expect(container.querySelector('summary')).not.toBeNull();
+    expect(container.querySelector('h2')).not.toBeNull();
   });
 });
 
@@ -97,8 +97,8 @@ describe('CredentialsSection', () => {
 
   it('renders the CAT ~/.CREDENTIALS module header', async () => {
     const container = await render();
-    const summary = container.querySelector('summary');
-    expect(summary?.textContent).toContain('CAT ~/.CREDENTIALS');
+    const heading = container.querySelector('h2');
+    expect(heading?.textContent).toContain('CAT ~/.CREDENTIALS');
   });
 
   it('renders at least one credential row', async () => {
@@ -109,7 +109,7 @@ describe('CredentialsSection', () => {
 
   it('renders without error with defer prop', async () => {
     const container = await render({ defer: true });
-    expect(container.querySelector('summary')).not.toBeNull();
+    expect(container.querySelector('h2')).not.toBeNull();
   });
 });
 
@@ -132,8 +132,8 @@ describe('HottestTakesSection', () => {
 
   it('renders the CAT ~/HOTTEST_TAKES.MD module header', async () => {
     const container = await render();
-    const summary = container.querySelector('summary');
-    expect(summary?.textContent).toContain('CAT ~/HOTTEST_TAKES.MD');
+    const heading = container.querySelector('h2');
+    expect(heading?.textContent).toContain('CAT ~/HOTTEST_TAKES.MD');
   });
 
   it('renders the hottest-takes list', async () => {
@@ -150,7 +150,7 @@ describe('HottestTakesSection', () => {
 
   it('renders without error with defer prop', async () => {
     const container = await render({ defer: true });
-    expect(container.querySelector('summary')).not.toBeNull();
+    expect(container.querySelector('h2')).not.toBeNull();
   });
 });
 
@@ -173,8 +173,8 @@ describe('NpmStackSection', () => {
 
   it('renders the NPM LIST --GLOBAL module header', async () => {
     const container = await render();
-    const summary = container.querySelector('summary');
-    expect(summary?.textContent).toContain('NPM LIST --GLOBAL');
+    const heading = container.querySelector('h2');
+    expect(heading?.textContent).toContain('NPM LIST --GLOBAL');
   });
 
   it('renders at least one npm stack item', async () => {
@@ -185,7 +185,7 @@ describe('NpmStackSection', () => {
 
   it('renders without error with defer prop', async () => {
     const container = await render({ defer: true });
-    expect(container.querySelector('summary')).not.toBeNull();
+    expect(container.querySelector('h2')).not.toBeNull();
   });
 });
 
@@ -204,8 +204,8 @@ describe('NowSection', () => {
 
   it('renders the CAT ~/.NOW module header', async () => {
     const container = await render();
-    const summary = container.querySelector('summary');
-    expect(summary?.textContent).toContain('CAT ~/.NOW');
+    const heading = container.querySelector('h2');
+    expect(heading?.textContent).toContain('CAT ~/.NOW');
   });
 
   it('renders at least one now row', async () => {
@@ -234,8 +234,8 @@ describe('ResponsibilitiesSection', () => {
 
   it('renders the LS -LA ~/RESPONSIBILITIES module header', async () => {
     const container = await render();
-    const summary = container.querySelector('summary');
-    expect(summary?.textContent).toContain('LS -LA ~/RESPONSIBILITIES');
+    const heading = container.querySelector('h2');
+    expect(heading?.textContent).toContain('LS -LA ~/RESPONSIBILITIES');
   });
 
   it('renders at least one responsibility entry', async () => {
@@ -246,7 +246,7 @@ describe('ResponsibilitiesSection', () => {
 
   it('renders without error with defer prop', async () => {
     const container = await render({ defer: true });
-    expect(container.querySelector('summary')).not.toBeNull();
+    expect(container.querySelector('h2')).not.toBeNull();
   });
 });
 
@@ -265,8 +265,8 @@ describe('ShellSection', () => {
 
   it('renders the ./EXEC INTERACTIVE_SHELL module header', async () => {
     const container = await render();
-    const summary = container.querySelector('summary');
-    expect(summary?.textContent).toContain('./EXEC INTERACTIVE_SHELL');
+    const heading = container.querySelector('h2');
+    expect(heading?.textContent).toContain('./EXEC INTERACTIVE_SHELL');
   });
 
   it('renders without throwing', async () => {
@@ -294,8 +294,8 @@ describe('SysHealthSection', () => {
 
   it('renders the SYS_HEALTH_MONITOR module header', async () => {
     const container = await render();
-    const summary = container.querySelector('summary');
-    expect(summary?.textContent).toContain('SYS_HEALTH_MONITOR');
+    const heading = container.querySelector('h2');
+    expect(heading?.textContent).toContain('SYS_HEALTH_MONITOR');
   });
 
   it('renders at least one sys health stat', async () => {
@@ -306,7 +306,7 @@ describe('SysHealthSection', () => {
 
   it('renders without error with defer prop', async () => {
     const container = await render({ defer: true });
-    expect(container.querySelector('summary')).not.toBeNull();
+    expect(container.querySelector('h2')).not.toBeNull();
   });
 });
 
@@ -329,8 +329,8 @@ describe('UnknownsSection', () => {
 
   it('renders the CAT ~/.UNKNOWNS module header', async () => {
     const container = await render();
-    const summary = container.querySelector('summary');
-    expect(summary?.textContent).toContain('CAT ~/.UNKNOWNS');
+    const heading = container.querySelector('h2');
+    expect(heading?.textContent).toContain('CAT ~/.UNKNOWNS');
   });
 
   it('renders learning items', async () => {
@@ -341,7 +341,7 @@ describe('UnknownsSection', () => {
 
   it('renders without error with defer prop', async () => {
     const container = await render({ defer: true });
-    expect(container.querySelector('summary')).not.toBeNull();
+    expect(container.querySelector('h2')).not.toBeNull();
   });
 });
 

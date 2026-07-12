@@ -21,8 +21,8 @@ describe('PerfReceiptsSection', () => {
 
   it('renders the section module with PERF_RECEIPTS header', async () => {
     const container = await render();
-    const summary = container.querySelector('summary');
-    expect(summary?.textContent).toContain('PERF_RECEIPTS');
+    const heading = container.querySelector('h2');
+    expect(heading?.textContent).toContain('PERF_RECEIPTS');
   });
 
   it('renders at least one list item (receipt card)', async () => {
