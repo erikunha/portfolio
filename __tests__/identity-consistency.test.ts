@@ -14,6 +14,16 @@ const CANONICAL_TITLE = 'Senior Full-Stack Engineer';
 const RETIRED_TITLE = 'Full-Stack Software Engineer';
 
 const llmsTxt = readFileSync(path.resolve(__dirname, '../public/llms.txt'), 'utf-8');
+const agentManifest = readFileSync(
+  path.resolve(__dirname, '../public/.well-known/agent.json'),
+  'utf-8',
+);
+// behavioral-test-allow: the OG-image title is baked into an HTML template string inside the
+// generator script, so it is reachable only as source text — there is nothing to import
+const ogImageScript = readFileSync(
+  path.resolve(__dirname, '../scripts/generate-og-image.ts'),
+  'utf-8',
+);
 const digitsOf = (value: string) => value.replace(/\D/g, '');
 
 let layoutTitle = '';
@@ -30,6 +40,7 @@ describe('identity is consistent across every public surface', () => {
       ['content/seo.ts (jobTitle)', personSchema.jobTitle],
       ['app/layout.tsx (metadata.title)', layoutTitle],
       ['public/llms.txt', llmsTxt],
+      ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
     ];
     const drifted = surfaces.filter(([, text]) => !text.includes(CANONICAL_TITLE)).map(([s]) => s);
 
@@ -46,6 +57,8 @@ describe('identity is consistent across every public surface', () => {
       ['content/seo.ts (hasOccupation.name)', personSchema.hasOccupation.name],
       ['app/layout.tsx (metadata.title)', layoutTitle],
       ['public/llms.txt', llmsTxt],
+      ['public/.well-known/agent.json', agentManifest],
+      ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
       ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
     ];
     const stale = surfaces.filter(([, text]) => text.includes(RETIRED_TITLE)).map(([s]) => s);
