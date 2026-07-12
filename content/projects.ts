@@ -3,12 +3,30 @@ import { type Project, ProjectSchema } from './schemas';
 
 export const projects: Project[] = z.array(ProjectSchema).parse([
   {
+    name: 'ORIGINATION_PLATFORM_UI',
+    mobileName: 'origination_ui/',
+    description:
+      'Frontend platform for Raylu’s AI deal-origination engine — shared UI systems and state architecture behind market maps, target lists, and diligence surfaces for private-markets funds.',
+    mobileDescription:
+      'Frontend platform at Raylu.ai — market maps, target lists, diligence surfaces for private-markets funds. Shared UI systems, versioned ViewState, URL-backed state. React 19, Next 15, TypeScript.',
+    stats: [
+      { label: 'SURFACES', value: 'MAPS / LISTS / DILIGENCE' },
+      { label: 'STATE', value: 'VERSIONED + URL-BACKED' },
+      { label: 'STACK', value: 'REACT 19 / NEXT 15 / TS' },
+    ],
+    mobileMeta: [
+      { label: 'stack', value: 'react 19 · next 15 · ts' },
+      { label: 'scale', value: '45+ funds · $500B+ AUM' },
+      { label: 'status', value: 'production' },
+    ],
+  },
+  {
     name: 'PAYMENT_ORCHESTRA',
     mobileName: 'payment_orchestra/',
     description:
       'PCI-DSS cashier platform — multi-brand deposit/withdraw orchestration across 15+ regulated markets.',
     mobileDescription:
-      'PCI-DSS cashier handling 40M+ transactions/yr at Betsson. Multi-currency settlement, regulator-grade audit trail, micro-frontends across Angular / React / Ember via Stencil.',
+      'PCI-DSS cashier that handled 40M+ transactions/yr at Betsson. Multi-currency settlement, regulator-grade audit trail, micro-frontends across Angular / React / Ember via Stencil.',
     stats: [
       { label: 'VOLUME', value: '40M+ TX / YR' },
       { label: 'REVENUE', value: '€1B+ / YR' },
@@ -62,7 +80,7 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
     description:
       'GitHub Copilot 12-subagent system — codegen, review, debugging, arch validation. Path-scoped instructions + prompt workflows, shipped team-wide at Betsson.',
     mobileDescription:
-      "Copilot 12-subagent system at Betsson — code review, doc-gen, spec-to-PR. -40% onboarding via 35-page arch knowledge system. Built and maintains the agents. Also uses Claude API for personal tooling (this portfolio's shell).",
+      "Copilot 12-subagent system at Betsson — code review, doc-gen, spec-to-PR. -40% onboarding via 35-page arch knowledge system. Built the agents and shipped them team-wide. Also uses Claude API for personal tooling (this portfolio's shell).",
     stats: [
       { label: 'SUBAGENTS', value: '12 + ORCHESTRATOR' },
       { label: 'SCOPE', value: 'TEAM-WIDE' },

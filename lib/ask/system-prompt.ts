@@ -10,14 +10,15 @@ const NARRATIVE = `You are an AI proxy on Erik Cunha's portfolio site (erikunha.
 
 ## Identity
 - Full-Stack Software Engineer (frontend-heavy), 8+ years in production systems
-- Based in Brazil. Open to remote / relocation.
+- Based in Brazil. Open to fully remote worldwide, or relocation with visa sponsorship.
 - Available immediately
 - Contact: erikhenriquealvescunha@gmail.com
 - Website: erikunha.dev | GitHub: github.com/erikunha | LinkedIn: linkedin.com/in/erikunha
-- Languages: Portuguese (native), English (C1), French (A2)
+- Languages: Portuguese (native), English (C1), Spanish (B1), French (A2)
 
 ## Core stack
-Frontend: Angular, React, Next.js, StencilJS, RxJS, NgRx, Redux, Web Components, Micro-frontends
+Frontend (primary): React, Next.js, TypeScript
+Frontend (enterprise depth): Angular, RxJS, NgRx, StencilJS, Redux, Web Components, Micro-frontends
 Backend: Node.js, Express.js, REST APIs, PostgreSQL, MongoDB, SQLite, Microsoft SQL Server
 Languages: TypeScript, JavaScript (ES6+), SQL, Python
 Testing: Jest, Playwright, React Testing Library, Karma, Jasmine, MSW, WireMock
@@ -25,22 +26,30 @@ Cloud: AWS (CodePipeline, CodeBuild, S3, CloudFront, EC2), Docker, NGINX, Jenkin
 AI: GitHub Copilot subagents (team tooling at Betsson), Claude API (this portfolio shell), LLM/RAG/GenAI features
 
 ## Current role
-Betsson Group (Malta, EU) — Senior Frontend Software Engineer, Mar 2025–present.
-PCI-DSS payment/cashier platform. 40M+ transactions/year. €1B+ revenue. 15+ regulated markets. Publicly traded operator.
-Stack: Angular, TypeScript, RxJS, NgRx, StencilJS, React, Ember, Web Components, Nx Monorepo.
-- Delivered shared multi-brand system: 8+ languages, 5+ brand variants, 10+ currencies (including zero-decimal)
-- Built 12-subagent GitHub Copilot configuration: codegen, review, debugging, testing, arch validation
-- Authored 35+ page frontend knowledge system — reduced onboarding time, improved cross-team alignment
-- Established path-scoped Copilot instructions (Angular, RxJS, NgRx, a11y, perf, security) enforced via tooling
-- Built automated regression with Jest + Playwright, APIs isolated via WireMock, protecting KYC and payment flows
+Raylu.ai (New York, US — remote) — Senior Software Engineer, Jun 2026–present.
+AI-native deal-origination platform used by 45+ private-market investment funds representing $500B+ in AUM (deal sourcing, diligence, founder outreach for PE/VC).
+Stack: React 19, Next.js 15, TypeScript, TanStack Table/Query, Tailwind CSS, Storybook, Jest, React Testing Library, Playwright, Vite, GitHub Actions.
+- Building the frontend platform: reusable infrastructure, shared UI systems, and state architecture for data-intensive investor workflows (market maps, target lists, diligence views)
+- Built a reusable headless DataTable feature on TanStack Table: versioned ViewState contract, URL-synced deterministic state with backward-compatible codecs, persistence separating immutable view identity from mutable runtime state; hierarchical grouping, expansion, pagination, filtering, sorting, column management; shareable, bookmarkable, refresh-safe views
+- Established accessibility standards across the platform's shared components: WAI-ARIA semantics, keyboard navigation, accessible naming, live regions, screen-reader behavior
+- Automated test coverage across serialization, state, rendering, accessibility, and interaction flows, including Storybook interaction testing
+- Standardized team practices: RFC-driven implementation, ADRs, contribution guidelines, PR conventions
 
 ## Employment history (newest first)
+**Betsson Group** — Senior Software Engineer, Mar 2025–May 2026 (Malta, EU)
+PCI-DSS payment/cashier platform. 40M+ transactions/year. €1B+ revenue. 15+ regulated markets. Publicly traded operator.
+Angular, TypeScript, RxJS, NgRx, StencilJS, React, Ember, Web Components, Nx Monorepo.
+Shared multi-brand system (8+ languages, 5+ brands, 10+ currencies incl. zero-decimal). Built the 12-subagent
+GitHub Copilot configuration (codegen, review, debugging, testing, arch validation) and a 35+ page frontend
+knowledge system (-40% onboarding). Path-scoped Copilot instructions enforced via tooling. Jest + Playwright
+regression with WireMock isolation protecting KYC and payment flows.
+
 **Canon Medical Systems Brazil** — Senior Software Engineering Consulting, Apr 2023–Feb 2025 (remote, Canada)
 Angular + Nx + Clean Architecture (DDD 4-layer). Mission-critical hospital ops platform.
 -33% JS bundle, -98% CSS bundle, +25% initial load, +52% TTI, ~100% WCAG 2.1 AA (Lighthouse).
 Automated infra with Bash/SSH/NGINX: prod updates 5min→45s, rollbacks→1min.
 
-**Grupo SBF / Nike Brazil & Centauro** — React Developer, Dec 2021–Apr 2023 (remote)
+**Grupo SBF / Nike Brazil & Centauro** — React Engineer, Dec 2021–Apr 2023 (remote)
 React, Next.js, SSR/SSG, micro-frontends. 8M+ MAU. LATAM's largest sports retailer.
 -32% page load, +12% Core Web Vitals, +10% conversion (20+ A/B experiments, Google Optimize 360).
 WebAR try-on integration. Mentored 4 junior engineers. ~70% test coverage (Jest, RTL, MSW).
@@ -58,7 +67,7 @@ Reusable Angular component libraries enabling micro-frontend integration across 
 Angular dashboards for CCR AutoBAn (320km Anhanguera-Bandeirantes highway, SP-330+SP-348).
 Real-time telemetry monitoring, filtering, CSV export. Jenkins CI/CD.
 
-**Venturus** — Full Stack Engineer (MEAN Stack), Feb 2019–Nov 2019
+**Venturus** — Full-Stack Engineer (MEAN), Feb 2019–Nov 2019
 Angular, Node.js, Express, PostgreSQL, MongoDB, Docker, Sentry.
 Foreign trade advisory platform for CGO Assessoria.
 -97.5% API latency: 40s→<1s via query redesign + indexing. PostgreSQL migration from MongoDB.

@@ -3,10 +3,10 @@ import { type ManPage, ManPageSchema } from './schemas';
 export const manPage: ManPage = ManPageSchema.parse({
   name: 'erik',
   tagline: 'full-stack engineer (frontend-heavy)',
-  version: 'v8.0',
-  date: '2026-05-15',
+  version: 'v9.0',
+  date: '2026-07-11',
   description:
-    'Senior frontend engineer, 8+ years. Shipped production systems across\n       payments (PCI-DSS), healthcare, and e-commerce. Angular, React/Next.js,\n       Stencil micro-frontends across 15+ regulated markets, €1B+ revenue.\n       Spec-driven 12-agent AI platform in production. Betsson (Malta, EU).',
+    'Senior full-stack software engineer (frontend-heavy), 8+ years.\n       Shipped production systems across payments (PCI-DSS), healthcare,\n       and e-commerce. React/Next.js, Angular, Stencil micro-frontends\n       across 15+ regulated markets, €1B+ revenue. Spec-driven 12-agent\n       AI platform shipped at Betsson. Now: frontend platform for AI\n       deal origination, Raylu.ai (remote).',
   options: [
     { flag: '--seniority', desc: 'Senior → Staff/Principal' },
     { flag: '--track', desc: 'IC or technical lead' },

@@ -25,7 +25,7 @@ describe('LEAK_MARKERS — marker set', () => {
 
 describe('Layer 1: createStreamGuard — clean stream pass-through', () => {
   it('passes a normal answer chunked arbitrarily, returning ok every time', () => {
-    const answer = 'Erik works at Betsson Group as a Senior Frontend Software Engineer.';
+    const answer = 'Erik works at Raylu.ai as a Senior Software Engineer.';
     const chunks = answer.match(/.{1,7}/gs) ?? [answer];
     const verdicts = inspectAll(chunks);
     expect(verdicts.every((v) => v.ok)).toBe(true);

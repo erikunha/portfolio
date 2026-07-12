@@ -2,13 +2,26 @@ import { type GitCommit, GitCommitSchema } from './schemas';
 
 export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
   {
+    hash: 'b2e6a19f4c8d3057e1a9b6c2d8f40e73a5c1908d',
+    deco: '(HEAD -> main, tag: v9.0, origin/main)',
+    date: 'Mon Jun 8 09:15:00 2026 -0300',
+    branch: 'career/raylu',
+    type: 'career',
+    company: 'RAYLU_AI',
+    role: 'SR SOFTWARE ENGINEER · New York, US (remote)',
+    body: [
+      'wanted AI-native product scale; building the frontend platform',
+      'for private-markets deal origination — funds representing $500B+ AUM.',
+    ],
+  },
+  {
     hash: '7f3a2bc09f8e1d4c2b6a5d3e8c1f2a7b9d4e6c0a',
-    deco: '(HEAD -> main, tag: v8.0, origin/main)',
+    deco: '(tag: v8.0)',
     date: 'Sat Mar 1 09:42:11 2025 +0100',
     branch: 'career/betsson',
     type: 'career',
     company: 'BETSSON_GROUP',
-    role: 'SR FRONTEND ENGINEER · Malta (EU)',
+    role: 'SR SOFTWARE ENGINEER · Malta (EU)',
     body: [
       'wanted regulated multi-market scale; got 40M+ tx/yr',
       'across 15+ jurisdictions on a PCI-DSS payment platform.',
@@ -47,7 +60,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/grupo-sbf',
     type: 'career',
     company: 'GRUPO_SBF (NIKE / CENTAURO)',
-    role: 'REACT DEVELOPER · São Paulo, BR (remote)',
+    role: 'REACT ENGINEER · São Paulo, BR (remote)',
     body: [
       'React at LATAM e-commerce scale (8M+ MAU); institutionalized',
       'experiment-driven dev (20+ A/B tests).',
@@ -83,7 +96,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/venturus',
     type: 'career',
     company: 'VENTURUS',
-    role: 'MEAN STACK ENGINEER · Campinas, BR',
+    role: 'FULL-STACK ENGINEER (MEAN) · Campinas, BR',
     body: [
       'cut teeth on backend; -97.5% API latency (40s → <1s);',
       'Mongo → Postgres migration with custom ETL.',

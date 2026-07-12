@@ -1,5 +1,5 @@
 import { HeroStats } from '@/components/HeroStats';
-import { heroTagline } from '@/content/hero';
+import { heroCurrentEmployer, heroPlatformChip, heroTagline } from '@/content/hero';
 import { Badge, Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
@@ -31,8 +31,9 @@ export function Hero() {
               </b>
             </span>
             <span>
-              NOW: <b className="text-primary-500 font-bold">Betsson</b>
+              NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
             </span>
+            <span>{heroPlatformChip}</span>
             <span>EN/PT/FR/ES</span>
           </p>
           <div className="self-start">
@@ -85,8 +86,9 @@ export function Hero() {
               </b>
             </span>
             <span>
-              NOW: <b className="text-primary-500 font-bold">Betsson</b>
+              NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
             </span>
+            <span>{heroPlatformChip}</span>
             <span>EN/PT/FR/ES</span>
           </p>
           <div className="self-start mb-3.5">

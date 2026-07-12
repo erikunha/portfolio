@@ -5,9 +5,9 @@ export const visaRows: VisaRow[] = z.array(VisaRowSchema).parse([
   {
     jurisdiction: 'EU (MALTA)',
     jurisdictionShort: 'EU (MT)',
-    status: 'WORK_AUTHORIZED',
-    statusShort: 'WORK_AUTHORIZED',
-    evidence: 'active employer (Betsson)',
+    status: 'PRIOR_EXPERIENCE',
+    statusShort: 'PRIOR_EXP',
+    evidence: 'prior employer (Betsson, 2025–2026)',
   },
   {
     jurisdiction: 'CA',

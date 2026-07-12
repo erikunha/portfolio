@@ -23,13 +23,6 @@ export const ProjectSchema = z.object({
   perm: z.string().min(1).optional(),
 });
 
-export const BlameEntrySchema = z.object({
-  dates: z.string().min(1),
-  company: z.string().min(1),
-  role: z.string().min(1),
-  reason: z.string().min(1),
-});
-
 export const PerfReceiptSchema = z.object({
   metric: z.string().min(1),
   delta: z.string().min(1),
@@ -246,7 +239,6 @@ export const DawMixerSchema = z.object({
 
 export type Social = z.infer<typeof SocialSchema>;
 export type Project = z.infer<typeof ProjectSchema>;
-export type BlameEntry = z.infer<typeof BlameEntrySchema>;
 export type PerfReceipt = z.infer<typeof PerfReceiptSchema>;
 export type NpmTile = z.infer<typeof NpmTileSchema>;
 export type HottestTake = z.infer<typeof HottestTakeSchema>;

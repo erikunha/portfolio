@@ -3,9 +3,9 @@ import { type ReadmeCopy, ReadmeCopySchema } from './schemas';
 export const readmeCopy: ReadmeCopy = ReadmeCopySchema.parse({
   desktopH1: '# Whoami',
   desktopIntro:
-    'Brazilian 8+ years building frontend systems for regulated, high-traffic platforms in fintech (PCI-DSS), healthcare, and global e-commerce.',
+    'Brazilian 8+ years building frontend systems for regulated, high-traffic platforms in fintech (PCI-DSS), healthcare, global e-commerce, and AI-native B2B SaaS.',
   desktopCoreStack: [
-    '- Angular · React · Next.js · TypeScript · RxJS · NgRx · Redux · Node.js · AWS ',
+    '- React · Next.js · TypeScript · Angular · RxJS · NgRx · Redux · Node.js · AWS ',
     '- Micro-frontends (MFE) · Nx monorepos ·  Web Core Vitals · Web Components · UX/UI · User Journeys',
   ],
   desktopPrinciples: [
