@@ -5,6 +5,7 @@ import { heroTagline } from '@/content/hero';
 import { personSchema } from '@/content/seo';
 import { social } from '@/content/social';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
+import { HIRING_PROFILE } from '@/lib/hiring-profile';
 
 vi.mock('next/font/local', () => ({
   default: () => ({ variable: '--font-mock', className: 'mock' }),
@@ -27,10 +28,14 @@ const ogImageScript = readFileSync(
 const digitsOf = (value: string) => value.replace(/\D/g, '');
 
 let layoutTitle = '';
+let layoutMetadataText = '';
 
 beforeAll(async () => {
   const { metadata } = await import('@/app/layout');
   layoutTitle = String(metadata.title);
+  // every metadata field a crawler or link-unfurler reads: title, description,
+  // openGraph.{title,description,images[].alt}, twitter.{title,description}
+  layoutMetadataText = JSON.stringify(metadata);
 });
 
 describe('identity is consistent across every public surface', () => {
@@ -55,7 +60,9 @@ describe('identity is consistent across every public surface', () => {
       ['content/hero.ts (heroTagline)', heroTagline],
       ['content/seo.ts (jobTitle)', personSchema.jobTitle],
       ['content/seo.ts (hasOccupation.name)', personSchema.hasOccupation.name],
-      ['app/layout.tsx (metadata.title)', layoutTitle],
+      ['content/seo.ts (description)', personSchema.description],
+      ['app/layout.tsx (all metadata: og + twitter + alt + description)', layoutMetadataText],
+      ['lib/hiring-profile.ts (served at /api/erik.json)', JSON.stringify(HIRING_PROFILE)],
       ['public/llms.txt', llmsTxt],
       ['public/.well-known/agent.json', agentManifest],
       ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
