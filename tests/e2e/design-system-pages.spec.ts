@@ -34,4 +34,5 @@ test('Preview renders the live component and its source without interaction', as
   expect(labels.length).toBeGreaterThan(0);
   expect(new Set(labels).size).toBe(labels.length);
   expect(labels).not.toContain(PREVIEW_SOURCE_ARIA_LABEL_FALLBACK);
+  expect(labels.every((label) => typeof label === 'string' && label.length > 0)).toBe(true);
 });
