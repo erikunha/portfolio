@@ -10,7 +10,12 @@ export type EvalResult =
   | { ok: true }
   | {
       ok: false;
-      code: 'conversation_resolution_off' | 'branch_unprotected' | 'gh_auth_missing' | 'unknown';
+      code:
+        | 'conversation_resolution_off'
+        | 'required_status_checks_unenforced'
+        | 'branch_unprotected'
+        | 'gh_auth_missing'
+        | 'unknown';
       message: string;
     };
 
@@ -39,7 +44,10 @@ export async function evaluateBranchProtection(opts: {
     return { ok: false, code: 'unknown', message: msg };
   }
 
-  let parsed: { required_conversation_resolution?: { enabled?: boolean } };
+  let parsed: {
+    required_conversation_resolution?: { enabled?: boolean };
+    required_status_checks?: { contexts?: string[]; checks?: { context?: string }[] };
+  };
   try {
     parsed = JSON.parse(raw);
   } catch (e) {
@@ -53,6 +61,55 @@ export async function evaluateBranchProtection(opts: {
       message:
         `required_conversation_resolution is not enabled on ${opts.branch}. ` +
         `Enable it: gh api -X PATCH repos/${opts.owner}/${opts.repo}/branches/${opts.branch}/protection/required_conversation_resolution -f enabled=true`,
+    };
+  }
+
+  const classic = parsed.required_status_checks;
+  const classicEnforced =
+    (classic?.contexts?.length ?? 0) > 0 || (classic?.checks?.length ?? 0) > 0;
+  if (classicEnforced) return { ok: true };
+
+  let rulesRaw: string;
+  try {
+    rulesRaw = await opts.ghExec([
+      'api',
+      `repos/${opts.owner}/${opts.repo}/rules/branches/${opts.branch}`,
+    ]);
+  } catch (e) {
+    return {
+      ok: false,
+      code: 'unknown',
+      message: `could not read applied rules for ${opts.branch} (failing closed): ${(e as Error).message}`,
+    };
+  }
+
+  let rules: { type?: string; parameters?: { required_status_checks?: unknown[] } }[];
+  try {
+    rules = JSON.parse(rulesRaw);
+  } catch (e) {
+    return {
+      ok: false,
+      code: 'unknown',
+      message: `non-JSON rules output (failing closed): ${(e as Error).message}`,
+    };
+  }
+
+  const rulesetEnforced =
+    Array.isArray(rules) &&
+    rules.some(
+      (r) =>
+        r.type === 'required_status_checks' &&
+        (r.parameters?.required_status_checks?.length ?? 0) > 0,
+    );
+  if (!rulesetEnforced) {
+    return {
+      ok: false,
+      code: 'required_status_checks_unenforced',
+      message:
+        `no required_status_checks apply to ${opts.branch} — neither classic protection nor any active ruleset targets it, ` +
+        'so a red-CI merge or direct push is not blocked server-side. ' +
+        `Fix: target the ruleset at the default branch, e.g. gh api -X PUT repos/${opts.owner}/${opts.repo}/rulesets/<id> ` +
+        `-f 'conditions[ref_name][include][]=~DEFAULT_BRANCH' -f 'conditions[ref_name][exclude][]='`,
     };
   }
 
@@ -87,7 +144,7 @@ async function main() {
       process.exit(1);
     }
     process.stdout.write(
-      `Branch protection OK (${branch}: required_conversation_resolution=true)\n`,
+      `Branch protection OK (${branch}: required_conversation_resolution=true, required_status_checks enforced)\n`,
     );
     process.exit(0);
   } catch (e) {
