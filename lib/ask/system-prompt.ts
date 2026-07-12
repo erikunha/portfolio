@@ -46,7 +46,7 @@ regression with WireMock isolation protecting KYC and payment flows.
 
 **Canon Medical Systems Brazil** — Senior Software Engineering Consulting, Apr 2023–Feb 2025 (remote, Canada)
 Angular + Nx + Clean Architecture (DDD 4-layer). Mission-critical hospital ops platform.
--33% JS bundle, -98% CSS bundle, +25% initial load, +52% TTI, ~100% WCAG 2.1 AA (Lighthouse).
+-33% JS bundle, -98% CSS bundle, +25% initial load, -52% TTI, ~100% WCAG 2.1 AA (Lighthouse).
 Automated infra with Bash/SSH/NGINX: prod updates 5min→45s, rollbacks→1min.
 
 **Grupo SBF / Nike Brazil & Centauro** — React Engineer, Dec 2021–Apr 2023 (remote)
