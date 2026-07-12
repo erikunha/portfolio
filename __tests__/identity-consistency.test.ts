@@ -24,10 +24,13 @@ const llmsTxt = read('public/llms.txt');
 // generator script, so it is reachable only as source text — there is nothing to import
 const ogImageScript = read('scripts/generate-og-image.ts');
 
-// Globbed, NOT hand-listed. A hand-maintained surface list leaked a survivor in three
-// consecutive review rounds (the OG card, then the rendered man page, then the shell's
-// whois response) because a new content file is only covered if someone remembers to add
-// it. Enumerating the directory makes coverage the default and forgetting impossible.
+// Globbed, NOT hand-listed. A hand-maintained list leaked a survivor in three consecutive
+// review rounds, because a file is only covered if someone remembers to add it. Every
+// .ts/.tsx under content/ — at any depth — is now covered by default: that closes the
+// man-page and shell-whois leaks. It does NOT close the third one. The OG card lives in
+// scripts/generate-og-image.ts, and the non-content surfaces below (app/, lib/, public/,
+// scripts/) are STILL hand-listed — a seventh surface added there leaks exactly as the OG
+// card did. Forgetting is impossible under content/, and still possible outside it.
 const contentSurfaces: Array<[string, string]> = readdirSync(CONTENT_DIR, { recursive: true })
   .map(String)
   .filter((file) => /\.tsx?$/.test(file))
