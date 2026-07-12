@@ -92,13 +92,27 @@ describe('Module', () => {
     expect(container.querySelector('[data-variant]')).toBeNull();
   });
 
-  it('adds data-cv-defer attribute when defer=true', () => {
+  it('adds data-cv-defer attribute and module-deferred class when defer=true', () => {
     const container = render(
       <Module id="sec-x" header="H" defer>
         body
       </Module>,
     );
 
-    expect(container.querySelector('section')?.getAttribute('data-cv-defer')).toBe('true');
+    const section = container.querySelector('section');
+    expect(section?.getAttribute('data-cv-defer')).toBe('true');
+    expect(section?.className).toContain('module-deferred');
+  });
+
+  it('omits data-cv-defer attribute and module-deferred class when defer is not set', () => {
+    const container = render(
+      <Module id="sec-x" header="H">
+        body
+      </Module>,
+    );
+
+    const section = container.querySelector('section');
+    expect(section?.getAttribute('data-cv-defer')).toBeNull();
+    expect(section?.className).not.toContain('module-deferred');
   });
 });
