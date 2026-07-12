@@ -47,7 +47,7 @@ describe('content-visibility deferral', () => {
       path.resolve(__dirname, '../app/css/components.css'),
       'utf-8',
     );
-    const deferredBlock = componentsCss.match(/\.module-deferred[^{]*\{([^}]*)\}/)?.[1];
+    const deferredBlock = componentsCss.match(/\.module-deferred(?![\w-])[^{]*\{([^}]*)\}/)?.[1];
     expect(
       deferredBlock,
       'app/css/components.css must ship a `.module-deferred` rule — it is the only selector the Module `defer` prop can match.',
