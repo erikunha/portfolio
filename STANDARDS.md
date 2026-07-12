@@ -171,7 +171,8 @@ where a minor bump would break a build-time invariant). Never `latest`, never
 a fresh install cannot resolve a new minor and break the `postinstall`
 polyfill-strip checksum. The lockfile (`pnpm-lock.yaml`) is the source of truth;
 CI installs with `--frozen-lockfile`. `zod` is exact-pinned — its minor bumps
-break type inference.
+break type inference. `typescript` is held on the 6.x line (Dependabot ignores its
+major) — Stryker consumes the TypeScript JS API that TS7 removed.
 
 **Rationale.** `latest` means a fresh `pnpm install` on a clean machine can jump
 a major version and silently change behavior; `--frozen-lockfile` only masks the
