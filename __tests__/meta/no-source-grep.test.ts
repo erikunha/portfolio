@@ -15,8 +15,12 @@ const COMMENT_LINE = /^\s*(\/\/|\*|\/\*)/;
 const IMPORT_LINE = /^\s*import\b/;
 const CALL_LOOKAHEAD_LINES = 3;
 
+const STRING_LITERAL = /(['"`])(?:\\.|(?!\1).)*?\1/g;
+const LINE_COMMENT = /\/\/.*$/;
+
 function parenBalance(line: string): number {
-  return (line.match(/\(/g) ?? []).length - (line.match(/\)/g) ?? []).length;
+  const code = line.replace(STRING_LITERAL, '').replace(LINE_COMMENT, '');
+  return (code.match(/\(/g) ?? []).length - (code.match(/\)/g) ?? []).length;
 }
 
 function callText(lines: string[], index: number): string {
