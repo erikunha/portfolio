@@ -15,9 +15,10 @@ const read = (relativePath: string) => readFileSync(path.join(REPO_ROOT, relativ
 // WHAT THIS HOLDS, precisely, because the scope is not what you would assume:
 //   - The sweep catches an OPPOSITE SIGN only. It does NOT catch magnitude drift in prose:
 //     changing "-25% initial load" to "-2.5%" in the system prompt passes. Do not "fix" that by
-//     comparing magnitudes near a keyword — that was built and measured, and it produces 24 false
-//     positives on currently-correct content, because a dense list ("-33% JS, -98% CSS, -52% TTI")
-//     puts every metric's keyword within a window of every OTHER metric's number.
+//     comparing magnitudes near a keyword — it was built twice and false-fired heavily on
+//     currently-correct content both times, because a dense list ("-33% JS, -98% CSS, -52% TTI")
+//     puts every metric's keyword inside the window of every OTHER metric's number. The count
+//     depends on the implementation and moves with any content edit, so it is not written here.
 //   - Magnitude IS held where an explicit field mapping exists: HIRING_PROFILE_RECEIPT_FIELDS and
 //     PROJECT_STAT_METRICS. Prose has no such mapping, so prose gets the sign check only.
 // The narrative in system-prompt.ts hand-duplicates numbers that LIVE_DATA already generates from
@@ -39,10 +40,12 @@ const METRIC_KEYWORDS: Record<string, RegExp> = {
   BUNDLE_CSS: /css/i,
   TTI: /\bTTI\b|time.to.interactive/i,
   BUNDLE_JS: /\bJS\b|javascript/i,
-  PAGE_LOAD: /page[\s-]*load/i,
-  // the owner's own phrasing is "Initial load TIME dropped about 25%", and a bare /initial.load/
-  // matches neither that nor "initial page load" — the two ways this is actually written
-  INITIAL_LOAD: /initial[\s-]*(page[\s-]*)?load|load[\s-]*time/i,
+  // "LOAD TIME" is PAGE_LOAD's own label (content/projects.ts, and PROJECT_STAT_METRICS below),
+  // so the phrase belongs HERE. Giving it to INITIAL_LOAD instead collides: a true, unrelated
+  // +25% beside the LOAD TIME tile then reds as a fake INITIAL_LOAD contradiction.
+  PAGE_LOAD: /page[\s-]*load|load[\s-]*time/i,
+  // /initial.load/ let "initial page load" escape — `.` matches ONE character and " page " is six.
+  INITIAL_LOAD: /initial[\s-]*(page[\s-]*)?load/i,
   CONVERSION: /conversion/i,
   // NOT /build/i: that matches "building the frontend platform", which appears in llms.txt and the
   // system prompt, so a legitimate "+40%" anywhere near it would red as a spurious contradiction
