@@ -72,7 +72,7 @@ export const PINS = [
     file: CI_YAML,
     pattern: /GITLEAKS_VERSION:\s*(\d+\.\d+\.\d+)/,
     latest: latestGitleaks,
-    bumpHint: `bump GITLEAKS_VERSION in ${CI_YAML}, then re-derive the sha256 in the checksum step`,
+    bumpHint: `bump GITLEAKS_VERSION in ${CI_YAML} (the install step derives the sha256 from the release checksums.txt automatically)`,
   },
   {
     name: 'semgrep',

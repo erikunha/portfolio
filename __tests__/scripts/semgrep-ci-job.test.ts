@@ -26,11 +26,11 @@ describe('ci.yml semgrep job invariants', () => {
   });
 
   it('pins the Semgrep version exactly', () => {
-    expect(job).toMatch(/pip install[^\n]*semgrep==1\.97\.0/);
+    expect(job).toMatch(/pip install[^\n]*semgrep==1\.169\.0/);
   });
 
   it('pins setuptools <81 so semgrep can import pkg_resources', () => {
-    expect(job).toMatch(/pip install[^\n]*["']setuptools<81["'][^\n]*semgrep==1\.97\.0/);
+    expect(job).toMatch(/pip install[^\n]*["']setuptools<81["'][^\n]*semgrep==1\.169\.0/);
   });
 
   it('resolves SEMGREP_BIN to an absolute path (PATH-independent invocation)', () => {

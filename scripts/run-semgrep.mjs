@@ -41,7 +41,7 @@ function main() {
     const tried = RUNNER_CANDIDATES.map((c) => c.join(' ')).join('", "');
     console.error(
       `[run-semgrep] semgrep not found (tried "${tried}"). ` +
-        'Install with: pip install semgrep==1.97.0 — or rely on CI (authoritative).',
+        'Install with: pip install semgrep==1.169.0 — or rely on CI (authoritative).',
     );
     process.exit(2);
   }

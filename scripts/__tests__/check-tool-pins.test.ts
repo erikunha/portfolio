@@ -41,7 +41,7 @@ describe('isBehind (numeric comparison, not lexical)', () => {
     expect(isBehind('2.0.0', '1.999.999')).toBe(false);
   });
 
-  it('the repo semgrep pin (1.97.0) is behind a far-newer PyPI release (1.169.0)', () => {
+  it('a minor tens-of-versions back is behind (the 1.97.0 -> 1.169.0 shape this check first caught)', () => {
     expect(isBehind('1.97.0', '1.169.0')).toBe(true);
   });
 });
