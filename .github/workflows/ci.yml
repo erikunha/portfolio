@@ -609,7 +609,7 @@ jobs:
 
       - name: Install Semgrep (exact-pinned) and resolve its path
         run: |
-          pip install "setuptools<81" semgrep==1.169.0
+          pip install semgrep==1.169.0
           SEMGREP_BIN=$(python -c "import os,sysconfig,site,shutil; c=[os.path.join(sysconfig.get_path('scripts'),'semgrep'),os.path.join(site.getuserbase(),'bin','semgrep')]; w=shutil.which('semgrep'); c=c+[w] if w else c; print(next((p for p in c if os.path.exists(p)),''))")
           test -n "$SEMGREP_BIN" || { echo '::error::semgrep console script not found after install'; exit 1; }
           echo "SEMGREP_BIN=$SEMGREP_BIN" >> "$GITHUB_ENV"

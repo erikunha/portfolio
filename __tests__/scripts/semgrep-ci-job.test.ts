@@ -29,8 +29,8 @@ describe('ci.yml semgrep job invariants', () => {
     expect(job).toMatch(/pip install[^\n]*semgrep==1\.169\.0/);
   });
 
-  it('pins setuptools <81 so semgrep can import pkg_resources', () => {
-    expect(job).toMatch(/pip install[^\n]*["']setuptools<81["'][^\n]*semgrep==1\.169\.0/);
+  it('installs semgrep with no setuptools constraint (1.169.0 dropped the pkg_resources import that needed it; the constraint only forced a pointless setuptools downgrade)', () => {
+    expect(job).not.toMatch(/setuptools/);
   });
 
   it('resolves SEMGREP_BIN to an absolute path (PATH-independent invocation)', () => {
