@@ -136,7 +136,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 | 8 — A11y | axe-core gate + Lighthouse =100; per-component behavioral a11y tests |
 | 9 — Security | Behavioral tests for CSP + kill switches (not source-grep); `security-auditor` on any `app/api/` change |
 | 10 — Docs | PR review: doc claims must match live code; ADRs cite SHA + reversibility note |
-| 11 — DX | pre-commit = Biome (<1s) + commitlint (scope required, error on missing); pre-push = full verify + branch-name `<type>/<description>` enforced; never disable a gate to merge |
+| 11 — DX | pre-commit = Biome (<1s) + `gitleaks git --staged` (~0.4s, fails closed if the binary is missing — `brew install gitleaks`) + commitlint (scope required, error on missing); pre-push = full verify + branch-name `<type>/<description>` enforced; never disable a gate to merge |
 | 12 — Design system | `lint:contrast` + component-docs CI gates |
 
 **Hook authoring:** `.claude/hooks/*` PreToolUse guards that must BLOCK a tool call exit with code **2** (exit 1 is a non-blocking warning — the command still runs). `bash-guard.sh` blocks (broad `git add`, npm/yarn, `gh pr merge`, force-push, fallow non-read-only) use `exit 2`; verify a guard blocks with a live test, not its printed `[BLOCKED]` message.

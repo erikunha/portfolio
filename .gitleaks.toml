@@ -3,15 +3,36 @@ title = "gitleaks configuration"
 [extend]
 useDefault = true
 
+# NO ALLOWLIST IN THIS FILE MAY USE `paths`. A `paths` entry exempts the file from EVERY
+# rule, which makes it a permanent secret-laundering path: a real credential committed there
+# would be invisible to the scanner forever. These three entries were `paths` until it was
+# measured -- sanitize-secrets.test.ts is a test ABOUT redacting real-shaped tokens, i.e. the
+# likeliest file in the repo for a real one to be pasted into, and it was exempt from
+# everything. Allowlist the VALUE, never the file. scripts/check-gitleaks-fixture.mjs fails
+# the build if a `paths` key reappears here.
 [[allowlists]]
-description = "Fake GitHub tokens used as test fixtures in sanitize-secrets tests"
-paths = [
-  '''__tests__/scripts/sanitize-secrets.test.ts''',
-  '''__tests__/color-swatch.test.tsx''',
-]
+description = "Fake GitHub tokens asserted by the sanitize-secrets tests (generic-api-key false positives)"
+regexes = ['''^gh[psour]_AbCdEf0123456789012345$''']
+
+# Both fixtures plant a fake-but-real-shaped secret on purpose, to prove their scanner FIRES.
+# These allowlists exempt the planted VALUE, not the file.
+#
+# Measured on gitleaks 8.30: ANY `paths` entry exempts the file from EVERY rule, and neither
+# `condition = "AND"` nor `matchCondition = "AND"` narrows that -- both still allowlist the
+# whole file. A path-scoped entry would therefore make these two fixtures permanent
+# secret-laundering paths: a REAL credential parked in one of them would be invisible to the
+# scanner forever. A `regexes`-only entry does not have that property, so any other secret in
+# the same file is still caught. Verified both ways in scripts/__tests__.
+#
+# The exempted values are fake and we own them, so exempting them repo-wide costs nothing.
+[[allowlists]]
+description = "Planted token proving gitleaks fires (scripts/check-gitleaks-fixture.mjs asserts it is detected)"
+regexes = ['''ghp_R2d2c3poAbCdEfGhIjKlMnOpQrStUvWx1234''']
 
 [[allowlists]]
-description = "CSS design token names (secondary-NNN) in design-system docs"
-paths = [
-  '''app/design-system/tokens/page.mdx''',
-]
+description = "Planted token proving semgrep fires (scripts/check-semgrep-fixture.mjs asserts hardcoded-stripe-secret-key)"
+regexes = ['''sk_test_51HxFakeFixtureTokenABCDEFGHIJ''']
+
+[[allowlists]]
+description = "CSS design token names (secondary-NNN), not secrets (generic-api-key false positives)"
+regexes = ['''^secondary-\d{2,3}$''']
