@@ -188,7 +188,7 @@ IF THIS FIRED ON A TRUE SENTENCE: it fires when the flipped number sits within $
 
     expect(
       orphaned,
-      'a stat label in PROJECT_STAT_METRICS matches no rendered tile, so it was renamed — and the tile it used to guard has silently LEFT the magnitude gate: an unmapped label is SKIPPED, not failed. These labels are display copy and they do move; this branch itself renamed "TTI GAIN" to "TTI". Re-point the key at the new label. Do NOT delete the entry, and do not "fix" this by deleting the assertion — the sign sweep still covers projects.ts, but magnitude is held ONLY here.',
+      'a stat label in PROJECT_STAT_METRICS matches no rendered tile, so it was renamed — and the tile it used to guard has silently LEFT the magnitude gate: an unmapped label is SKIPPED, not failed. These labels are display copy and they do move; this branch itself renamed "TTI GAIN" to "TTI". If the tile was RENAMED, re-point the key at the new label — deleting the entry there would drop a live tile out of the magnitude gate. Delete the entry ONLY if the tile is genuinely gone from the UI. Either way, do not "fix" this by deleting the assertion: the sign sweep still covers projects.ts, but magnitude is held ONLY here.',
     ).toEqual([]);
   });
 

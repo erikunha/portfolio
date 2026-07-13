@@ -4,7 +4,7 @@ import path from 'node:path';
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const CONTENT_DIR = path.join(REPO_ROOT, 'content');
 
-export const CONTENT_INFRA = /^(schemas|_.+)\.tsx?$/;
+const CONTENT_INFRA = /^(schemas|_.+)\.tsx?$/;
 
 export const isPublishedSurface = (file: string) => {
   const name = path.basename(file);
