@@ -73,15 +73,15 @@ function walk(dir: string): string[] {
 
 const READER_BODY = 300;
 const ARROW_READER = new RegExp(
-  `(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*(?:async\\s+)?(?:\\([^)]*\\)|[A-Za-z_$][\\w$]*)\\s*=>[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
+  `(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*(?::[^=]+)?=\\s*(?:async\\s+)?(?:\\([^)]*\\)|[A-Za-z_$][\\w$]*)\\s*=>[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
   'g',
 );
 const FUNCTION_READER = new RegExp(
-  `(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*(?:async\\s+)?function\\b[^{]*\\{[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()|function\\s+([A-Za-z_$][\\w$]*)\\s*\\([^)]*\\)[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
+  `(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*(?::[^=]+)?=\\s*(?:async\\s+)?function\\b[^{]*\\{[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()|function\\s+([A-Za-z_$][\\w$]*)\\s*\\([^)]*\\)[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
   'g',
 );
 const BOUND_READER =
-  /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:promisify\(\s*)?(?:fs\.)?(?:readFileSync|readFile)\b\s*(?![\w$(])/g;
+  /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::[^=]+)?=\s*(?:promisify\(\s*)?(?:[A-Za-z_$][\w$]*\.)*(?:readFileSync|readFile)\b\s*(?![\w$(])/g;
 
 const escapeForRegExp = (name: string) => name.replace(/[$\\^*+?.()|[\]{}]/g, '\\$&');
 
@@ -125,6 +125,10 @@ const READER_SHAPES: Array<[string, string, boolean]> = [
     true,
   ],
   ['promisified', 'const read = promisify(fs.readFile);', true],
+  ['non-fs namespace', 'const read = fsp.readFile;', true],
+  ['nested namespace', 'const read = fs.promises.readFile;', true],
+  ['type-annotated binding', 'const read: Reader = readFileSync;', true],
+  ['type-annotated arrow', 'const read: Reader = (p: string) => readFileSync(p);', true],
   [
     'result binding, not a reader',
     "const pkg = JSON.parse(readFileSync('package.json', 'utf8'));",
