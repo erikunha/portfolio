@@ -92,6 +92,17 @@ beforeAll(async () => {
 });
 
 describe('performance metrics agree with the authoritative receipts', () => {
+  it('every swept surface has content, so none can degrade to a silent no-op', () => {
+    const empty = METRIC_SURFACES()
+      .filter(([, text]) => text.trim().length === 0)
+      .map(([surface]) => surface);
+
+    expect(
+      empty,
+      'a surface swept for contradictions is EMPTY, so the sweep over it finds nothing and passes — a silent no-op, not a pass. `app/layout.tsx (metadata)` is the live risk: layoutMetadataText starts as "" and is filled in beforeAll, so if that import fails or app/layout ever exports {}, this gate quietly stops covering it and nothing says so. Fix the surface, not this assertion.',
+    ).toEqual([]);
+  });
+
   it('the surface predicate judges by BASENAME, so a nested module cannot escape the sweep', () => {
     const misjudged = (
       [
