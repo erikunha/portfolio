@@ -8,6 +8,7 @@ import {
   EXPECTED_RULES,
   interpretGitleaksRun,
   LEAKY_FIXTURE,
+  mayNameTheComment,
 } from '../check-gitleaks-fixture.mjs';
 
 const REAL_CONFIG = readFileSync(path.resolve(__dirname, '..', '..', '.gitleaks.toml'), 'utf-8');
@@ -161,6 +162,28 @@ describe('assertExpectedFindings (the bait must fire, the clean fixture must not
         { File: `/tmp/x/${CLEAN_FIXTURE}`, RuleID: ANY_EXPECTED_RULE },
       ]).ok,
       'A scanner that fires on code with no secret in it trains people to ignore it, and an ignored gate is a disabled gate.',
+    ).toBe(false);
+  });
+});
+
+describe('mayNameTheComment (only the machinery may spell the banned phrase, exactly)', () => {
+  it.each([
+    'scripts/check-gitleaks-fixture.mjs',
+    'scripts/gitleaks-staged.mjs',
+    'docs/superpowers/plans/2026-06-19-static-analysis-semgrep-plan.md',
+  ])('%s is allowed to name the phrase', (file) => {
+    expect(mayNameTheComment(file)).toBe(true);
+  });
+
+  it.each([
+    'scripts/gitleaks-staged.mjs.bak',
+    'scripts/gitleaks-staged.mjs~',
+    'scripts/check-gitleaks-fixture.mjs.orig',
+    'lib/somewhere.ts',
+  ])('%s is NOT allowed -- a prefix must not re-exempt a suffixed or unrelated file', (file) => {
+    expect(
+      mayNameTheComment(file),
+      `The two source files are matched EXACTLY. A startsWith prefix would let a committed backup (.bak/.orig/~) carry the ${SUPPRESSION_COMMENT} suppression comment past this gate -- the same "a prefix exempts more than intended" bypass this PR closed for .gitleaks.toml. Only the docs directory is a genuine prefix.`,
     ).toBe(false);
   });
 });

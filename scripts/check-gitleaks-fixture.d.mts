@@ -26,3 +26,5 @@ export declare function assertConfigShape(
   hasIgnoreFile: boolean,
   allowComments: string[],
 ): Verdict;
+
+export declare function mayNameTheComment(file: string): boolean;
