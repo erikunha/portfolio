@@ -32,10 +32,22 @@ export function readPin(fileText, pattern, name) {
   return match[1];
 }
 
+const GITHUB_HOST = 'api.github.com';
+
+// Authenticate the GitHub call when a token is available: the anonymous limit is 60 req/hr per IP,
+// and Actions runners share outbound IPs, so an unauthenticated call can 403 on a busy week and
+// red this job when nothing is actually behind -- a false positive that trains people to ignore
+// it. The token is scoped to the GitHub host ONLY; PyPI (and anything else) never receives it.
+export function buildHeaders(url, token) {
+  const headers = { 'User-Agent': 'erikunha-portfolio-pin-check', Accept: 'application/json' };
+  if (token !== undefined && token !== '' && new URL(url).host === GITHUB_HOST) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 async function fetchJson(url) {
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'erikunha-portfolio-pin-check', Accept: 'application/json' },
-  });
+  const res = await fetch(url, { headers: buildHeaders(url, process.env.GITHUB_TOKEN) });
   if (!res.ok) {
     throw new Error(`${url} returned HTTP ${res.status}`);
   }

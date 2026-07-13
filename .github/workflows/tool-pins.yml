@@ -27,4 +27,8 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Check gitleaks and semgrep pins against upstream
+        env:
+          # Authenticates the GitHub Releases call so a shared-runner-IP rate limit cannot
+          # produce a spurious red run. The token is contents:read only (see permissions above).
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/check-tool-pins.mjs

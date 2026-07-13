@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isBehind, parseVersion, readPin } from '../check-tool-pins.mjs';
+import { buildHeaders, isBehind, parseVersion, readPin } from '../check-tool-pins.mjs';
 
 describe('parseVersion', () => {
   it('parses a bare semver', () => {
@@ -64,5 +64,32 @@ describe('readPin (single source of truth: the pins live in ci.yml)', () => {
 
   it('throws when the pin cannot be found, rather than reporting a phantom version', () => {
     expect(() => readPin(CI, /NONEXISTENT==(\d+\.\d+\.\d+)/, 'ghost')).toThrow(/ghost/);
+  });
+});
+
+describe('buildHeaders (the token reaches GitHub and nothing else)', () => {
+  const GH = 'https://api.github.com/repos/gitleaks/gitleaks/releases/latest';
+  const PYPI = 'https://pypi.org/pypi/semgrep/json';
+  const TOKEN = 'ghs_secrettokenvalue';
+
+  it('sends Authorization to api.github.com when a token is set', () => {
+    expect(buildHeaders(GH, TOKEN).Authorization).toBe(`Bearer ${TOKEN}`);
+  });
+
+  it('NEVER sends Authorization to PyPI, even with a token set', () => {
+    expect(
+      buildHeaders(PYPI, TOKEN).Authorization,
+      'The GITHUB_TOKEN must be scoped to the GitHub host. Sending it to PyPI (or any non-GitHub URL) would leak the credential to a third party over the network.',
+    ).toBeUndefined();
+  });
+
+  it('sends no Authorization when no token is available (local runs, unauthenticated)', () => {
+    expect(buildHeaders(GH, undefined).Authorization).toBeUndefined();
+    expect(buildHeaders(GH, '').Authorization).toBeUndefined();
+  });
+
+  it('always sets a User-Agent (GitHub rejects requests without one)', () => {
+    expect(buildHeaders(GH, TOKEN)['User-Agent']).toBeTruthy();
+    expect(buildHeaders(PYPI, undefined)['User-Agent']).toBeTruthy();
   });
 });
