@@ -239,7 +239,7 @@ describe('assertConfigShape via TOML parse (residual neutering the regex denylis
   it('rejects a single-table [allowlists] hiding a paths key -- the confirmed fail-open bypass', () => {
     expect(
       shape(`${BASE}[allowlists]\npaths = ['''.*sanitize.*''']\n`).ok,
-      'CONFIRMED against gitleaks 8.30.0: [allowlists] written as a single table (plural name, object value) is HONORED -- its paths suppressed a real ghp_ token (0 findings, exit 0). The parse gives `allowlists` a non-array value; coercing that to "no allowlists" (Array.isArray ? x : []) skipped the paths key entirely, re-opening the exact laundering class this gate exists to close. The gate must fail closed on a non-array allowlists.',
+      'CONFIRMED against gitleaks 8.30: [allowlists] written as a single table (plural name, object value) is HONORED -- its paths suppressed a real ghp_ token (0 findings, exit 0). The parse gives `allowlists` a non-array value; coercing that to "no allowlists" (Array.isArray ? x : []) skipped the paths key entirely, re-opening the exact laundering class this gate exists to close. The gate must fail closed on a non-array allowlists.',
     ).toBe(false);
   });
 
