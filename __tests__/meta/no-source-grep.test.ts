@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const ROOT_DIR = process.cwd();
 const SOURCE_HINT = /readFileSync|readFile\(/;
-const TARGETS_APP_SOURCE = /['"`](?:[^'"`]*\/)?(app|components|lib|scripts)\//;
+const TARGETS_APP_SOURCE = /['"`](?:[^'"`]*\/)?(app|components|lib|scripts)(\/|['"`])/;
 const ALLOW_TAG = /behavioral-test-allow:/;
 
 const SKIP_DIRS = new Set([
@@ -18,9 +18,8 @@ const SKIP_DIRS = new Set([
   '.stryker-tmp',
   'playwright-report',
   'test-results',
-  'out',
-  'build',
 ]);
+const SKIP_ROOTS = new Set(['out', 'build']);
 const TEST_DIRS = new Set(['__tests__', 'tests']);
 const TEST_FILE = /\.(test|spec|e2e)\.[cm]?[jt]sx?$/;
 const ANY_SCRIPT = /\.[cm]?[jt]sx?$/;
@@ -65,6 +64,7 @@ const isTestCode = (full: string, entry: string) => {
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((e) => {
     if (SKIP_DIRS.has(e)) return [];
+    if (dir === ROOT_DIR && SKIP_ROOTS.has(e)) return [];
     const full = join(dir, e);
     if (statSync(full).isDirectory()) return walk(full);
     return isTestCode(full, e) ? [full] : [];
