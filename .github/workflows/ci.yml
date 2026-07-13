@@ -652,6 +652,16 @@ jobs:
         with:
           fetch-depth: 0   # gitleaks scans history, not just the tip
 
+      # The self-test below (check-gitleaks-fixture.mjs) imports smol-toml to parse .gitleaks.toml,
+      # so this job needs node_modules. Scoped to the self-test's dependency, not the scan: gitleaks
+      # scans git history, which node_modules (gitignored, untracked) does not touch.
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
       # Verified by CHECKSUM, not by asking the binary what it is: a tampered binary can
       # print any version string it likes. The repo SHA-pins its Actions and exact-pins
       # semgrep; a curl'd tarball has to clear the same bar.

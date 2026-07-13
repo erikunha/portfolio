@@ -30,32 +30,108 @@ export function interpretGitleaksRun(res) {
 }
 
 // The step-2 probe below proves the config still catches a github-pat. It CANNOT prove the
-// config is otherwise intact: `disabledRules`, a stopword, a regex allowlist scoped to another
-// credential class, or a `paths` entry scoped to a real repo path all leave the probe green
-// while gutting the scanner for the secrets this repo actually holds. Those are shape defects,
-// so they are checked as shape.
+// config is otherwise intact: `disabledRules`, a stopword, or a `paths` entry scoped to a real
+// repo path all leave the probe green while gutting the scanner, so they are checked as shape
+// below. One vector is caught by NEITHER mechanism and this gate does not claim to hold it: a
+// `regexes` allowlist scoped to a credential class the probe never tests (e.g. an AWS-key pattern)
+// is a permitted shape AND invisible to a github-pat-only probe. Closing it means widening the
+// probe to a second class -- tracked separately; see DECISIONS.md 2026-07-13.
+//
+// The shape is validated as an allow-schema over the PARSED TOML (not a denylist over the raw
+// text, which TOML's equivalent spellings defeat); see DECISIONS.md 2026-07-13.
+const ALLOWED_TOP_LEVEL = new Set(['title', 'extend', 'allowlists', 'allowlist']);
+const ALLOWED_EXTEND = new Set(['useDefault']);
+// Each permitted allowlist key with its required value type. Validating the VALUE, not just the key
+// name, stops a dangerous key hiding nested under an allowed one (e.g. `condition = { paths }`) and
+// removes any reliance on gitleaks erroring on a type it did not expect. condition/matchCondition
+// only combine regexes with paths, and paths is rejected, so they cannot neuter anything.
+const ALLOWLIST_KEY_TYPES = {
+  description: (value) => typeof value === 'string',
+  regexes: (value) => Array.isArray(value) && value.every((entry) => typeof entry === 'string'),
+  condition: (value) => typeof value === 'string',
+  matchCondition: (value) => typeof value === 'string',
+};
+const ALLOWED_ALLOWLIST = new Set(Object.keys(ALLOWLIST_KEY_TYPES));
+
+const isPlainObject = (value) =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+const firstUnknownKey = (obj, allowed) => Object.keys(obj).find((key) => !allowed.has(key));
+
 export function assertConfigShape(config, hasIgnoreFile, allowComments) {
-  if (!/useDefault\s*=\s*true/.test(config)) {
+  let parsed;
+  try {
+    parsed = parseToml(config);
+  } catch (error) {
+    const detail = error instanceof TomlError ? error.message : String(error);
+    return {
+      ok: false,
+      reason: `the gitleaks config is not parseable TOML (${detail}). An unreadable config is not a well-shaped one, so this fails closed -- unlike the text-regex check it replaced, which matched none of its patterns on garbage and reported it as clean.`,
+    };
+  }
+
+  const unknownTop = firstUnknownKey(parsed, ALLOWED_TOP_LEVEL);
+  if (unknownTop !== undefined) {
+    return {
+      ok: false,
+      reason: `the gitleaks config has an unrecognized top-level key \`${unknownTop}\`. Only ${[...ALLOWED_TOP_LEVEL].join(', ')} are permitted. A [[rules]] block, a top-level disabledRules list, or any future neutering key lands here and is rejected by default -- that is the allow-schema catching what a denylist could not.`,
+    };
+  }
+
+  const extend = parsed.extend;
+  if (extend === undefined || extend.useDefault !== true) {
     return {
       ok: false,
       reason:
-        'the gitleaks config does not set `useDefault = true`. Without the default ruleset there is almost nothing left to detect, and the probe below would still pass on whatever remains.',
+        'the gitleaks config does not set `[extend] useDefault = true`. Without the default ruleset there is almost nothing left to detect, and the probe below would still pass on whatever remains.',
     };
   }
-  if (/(?:^|[{,.])\s*(['"]?)disabledRules\1\s*=\s*\[\s*[^\]\s]/m.test(config)) {
+  const unknownExtend = firstUnknownKey(extend, ALLOWED_EXTEND);
+  if (unknownExtend !== undefined) {
+    return {
+      ok: false,
+      reason: `[extend] has an unrecognized key \`${unknownExtend}\`. Only \`useDefault\` is permitted: \`path\`/\`url\` layer in an external config whose disabling this gate never reads, and \`disabledRules\` silently drops rule classes the probe cannot see.`,
+    };
+  }
+
+  // [allowlist] (a single table) and [[allowlists]] (an array of tables) are both valid gitleaks.
+  // Fail CLOSED on any other shape: a present-but-non-array `allowlists` is the [allowlists]
+  // single-table spelling, which gitleaks HONORS (measured on 8.30, its paths suppressed a real
+  // secret) -- coercing it to "no allowlists" would skip validating a paths/stopwords key inside it.
+  if (parsed.allowlists !== undefined && !Array.isArray(parsed.allowlists)) {
     return {
       ok: false,
       reason:
-        'the gitleaks config disables rules. Disabling a rule class is invisible to the probe below, which only proves that ONE rule still fires. If a rule genuinely false-positives, allowlist the offending VALUE with a `regexes` entry instead.',
+        '`allowlists` is present but not an array of tables. gitleaks honors a single [allowlists] table, so skipping it would leave a paths/stopwords key inside it unvalidated -- fail closed. Use [[allowlists]].',
     };
   }
-  if (/(?:^|[{,.])\s*(['"]?)paths\1\s*=/m.test(config)) {
-    return {
-      ok: false,
-      reason:
-        'a gitleaks allowlist uses `paths`. Measured on 8.30: a `paths` entry exempts that file from EVERY rule, which makes it a permanent secret-laundering path — a real credential committed there would never be seen again. Allowlist the VALUE with `regexes` instead. This is not stylistic: three files in this repo were exempt from everything, including a test suite full of real-shaped tokens.',
-    };
+  if (parsed.allowlist !== undefined && !isPlainObject(parsed.allowlist)) {
+    return { ok: false, reason: '`allowlist` is present but is not a single [allowlist] table.' };
   }
+  const allowlists = [
+    ...(parsed.allowlists ?? []),
+    ...(parsed.allowlist !== undefined ? [parsed.allowlist] : []),
+  ];
+  for (const entry of allowlists) {
+    if (!isPlainObject(entry)) {
+      return { ok: false, reason: 'a gitleaks allowlist entry is not a table.' };
+    }
+    const unknownAllow = firstUnknownKey(entry, ALLOWED_ALLOWLIST);
+    if (unknownAllow !== undefined) {
+      return {
+        ok: false,
+        reason: `a gitleaks allowlist uses \`${unknownAllow}\`, which is not one of ${[...ALLOWED_ALLOWLIST].join(', ')}. The dangerous allowlist keys all land here: \`paths\` exempts a file from EVERY rule (a permanent secret-laundering path), \`stopwords\` drops findings by surrounding text, \`commits\` exempts commit SHAs, \`regexTarget\` widens what the regex matches. Allowlist the VALUE with \`regexes\` instead.`,
+      };
+    }
+    for (const [key, value] of Object.entries(entry)) {
+      if (!ALLOWLIST_KEY_TYPES[key](value)) {
+        return {
+          ok: false,
+          reason: `the gitleaks allowlist key \`${key}\` has the wrong value type. Value types are validated so a dangerous key cannot hide nested under an allowed one (e.g. \`condition = { paths }\`).`,
+        };
+      }
+    }
+  }
+
   if (hasIgnoreFile) {
     return {
       ok: false,
@@ -108,6 +184,7 @@ import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { parse as parseToml, TomlError } from 'smol-toml';
 
 const FIXTURE_DIR = 'tests/fixtures/gitleaks';
 const REPO_CONFIG = '.gitleaks.toml';

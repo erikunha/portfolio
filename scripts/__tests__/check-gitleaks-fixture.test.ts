@@ -97,23 +97,38 @@ describe('assertConfigShape (the config cannot be quietly gutted)', () => {
   });
 
   it.each([
-    ['quoted key', "\"paths\" = ['''.*''']"],
-    ['dotted key', "allowlist.paths = ['''.*''']"],
-  ])('rejects a %s `paths` allowlist -- valid TOML gitleaks honours, same laundering path', (_label, line) => {
+    ['bare key', 'paths'],
+    ['quoted key', '"paths"'],
+  ])('rejects a %s `paths` inside an allowlist -- the parse normalizes the spelling, the key is rejected', (_label, key) => {
     expect(
-      shape(`useDefault = true\n${line}\n`).ok,
-      'gitleaks treats a quoted or dotted key as equivalent to the bare key, so "paths" = / allowlist.paths = exempt the file exactly as `paths =` does. A line-anchored bare-key check misses them, and a path-scoped variant evades the probe too. The durable fix is to parse the TOML (task #25); this closes the common spellings.',
+      shape(
+        `title = "x"\n[extend]\nuseDefault = true\n[[allowlists]]\ndescription = "y"\n${key} = ['''.*''']\n`,
+      ).ok,
+      'A quoted key parses to the same object key as the bare key, so both are an unrecognized allowlist key and rejected. `paths` exempts the file from EVERY rule; a path-scoped entry evades the probe, so the shape check is what catches it. (The old fixtures put `useDefault` at top level, so they short-circuited on an unknown-top-level-key rejection and never reached this branch.)',
+    ).toBe(false);
+  });
+
+  it('rejects a dotted-key `allowlist.paths` (parses to the single [allowlist] table spelling)', () => {
+    expect(
+      shape(`title = "x"\n[extend]\nuseDefault = true\nallowlist.paths = ['''.*''']\n`).ok,
+      'A dotted key builds a single [allowlist] table carrying a `paths` key; the parse sees it exactly as [allowlist]\\npaths=, so the allow-schema rejects it. gitleaks honors this spelling to exempt a file from every rule.',
     ).toBe(false);
   });
 
   it.each([
-    ['bare', 'disabledRules = ["anthropic-api-key"]'],
-    ['quoted key', '"disabledRules" = ["anthropic-api-key"]'],
-    ['dotted key', 'extend.disabledRules = ["anthropic-api-key"]'],
-  ])('rejects %s disabled rules, which the probe cannot see', (_label, line) => {
+    [
+      'under [extend]',
+      'title = "x"\n[extend]\nuseDefault = true\ndisabledRules = ["anthropic-api-key"]\n',
+    ],
+    ['at top level', 'disabledRules = ["anthropic-api-key"]\n[extend]\nuseDefault = true\n'],
+    [
+      'dotted extend.disabledRules',
+      'extend.useDefault = true\nextend.disabledRules = ["anthropic-api-key"]\n',
+    ],
+  ])('rejects disabledRules %s, which the probe cannot see', (_label, config) => {
     expect(
-      shape(`useDefault = true\n${line}\n`).ok,
-      'The probe only proves ONE rule still fires. Disabling every OTHER class leaves the probe green while the scanner is dead for the credentials this repo actually holds. gitleaks treats quoted and dotted keys as equivalent to the bare key, so all three spellings must be rejected -- and the `paths` ban gets the same broadening, so this holds it too.',
+      shape(config).ok,
+      'The probe only proves ONE rule still fires. Disabling every OTHER class leaves the probe green while the scanner is dead for the credentials this repo actually holds. disabledRules is not permitted under [extend] or at top level, so every spelling that parses to it is rejected.',
     ).toBe(false);
   });
 
@@ -132,6 +147,114 @@ describe('assertConfigShape (the config cannot be quietly gutted)', () => {
     expect(
       shape(REAL_CONFIG, NO_IGNORE_FILE, ['lib/somewhere.ts']).ok,
       `The ${SUPPRESSION_COMMENT} comment makes gitleaks skip the line, with no record of why. It is the cheapest way to make this whole gate lie, and it is the first thing a blocked developer reaches for.\n\nNote this test does not spell that comment out literally: the gate greps the tree for it, and a test file naming it would red the gate on itself — which is exactly what happened, and what the CI job caught before the unit tests did.`,
+    ).toBe(false);
+  });
+});
+
+describe('assertConfigShape via TOML parse (residual neutering the regex denylist missed — #25)', () => {
+  const shape = (config: string) => assertConfigShape(config, NO_IGNORE_FILE, NO_ALLOW_COMMENTS);
+  const BASE = 'title = "x"\n[extend]\nuseDefault = true\n';
+
+  it('rejects a `stopwords` allowlist, which drops any finding whose context contains the word', () => {
+    expect(
+      shape(`${BASE}[[allowlists]]\ndescription = "y"\nstopwords = ["AKIA"]\n`).ok,
+      'A stopword silently drops every finding whose surrounding line contains it, neutering a whole credential class (here, AWS keys). The github-pat probe never exercises that class, so nothing else notices. Only an allow-schema that rejects every unknown allowlist key catches it — the regex denylist has no pattern for `stopwords`.',
+    ).toBe(false);
+  });
+
+  it('rejects a `commits` allowlist, which exempts specific commit SHAs from every rule', () => {
+    expect(
+      shape(
+        `${BASE}[[allowlists]]\ndescription = "y"\ncommits = ["deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"]\n`,
+      ).ok,
+      'A commits allowlist exempts named commits from detection entirely — a real secret introduced in that commit is invisible forever. The probe scans a freshly-assembled token, never a historical commit, so it cannot see this.',
+    ).toBe(false);
+  });
+
+  it('rejects a `regexTarget` allowlist, which widens what the allowlist regex matches against', () => {
+    expect(
+      shape(`${BASE}[[allowlists]]\ndescription = "y"\nregexes = ['''x''']\nregexTarget = "line"\n`)
+        .ok,
+      'regexTarget switches matching from the secret value to the whole line or match, turning a narrow `regexes` entry into a broad line-level exemption. It is not a key the denylist ever checked.',
+    ).toBe(false);
+  });
+
+  it('rejects a top-level [[rules]] block, which can add or reshape a rule', () => {
+    expect(
+      shape(`${BASE}[[rules]]\nid = "x"\nregex = '''x'''\n`).ok,
+      'A [[rules]] block lets the config define custom rules alongside the defaults; a permissive custom rule or a shadowed default weakens detection. The regex denylist never checked for it; the allow-schema rejects any top-level key that is not title/extend/allowlists.',
+    ).toBe(false);
+  });
+
+  it('rejects [extend].path, which layers in an external config that can disable rules', () => {
+    expect(
+      shape('title = "x"\n[extend]\nuseDefault = true\npath = "other.toml"\n').ok,
+      'extend.path pulls in another config whose disabledRules/allowlists this file never shows — the disabling lives in a file this gate does not read. Only `useDefault` is a permitted extend key.',
+    ).toBe(false);
+  });
+
+  it('rejects [extend].url, the remote variant of extend.path', () => {
+    expect(
+      shape('title = "x"\n[extend]\nuseDefault = true\nurl = "https://example.com/c.toml"\n').ok,
+    ).toBe(false);
+  });
+
+  it('rejects an unknown top-level key — fail-closed on anything outside the schema', () => {
+    expect(
+      shape(`${BASE}future_neuter = true\n`).ok,
+      'This is the whole point of an allow-schema over a denylist: a neutering key nobody has thought of yet is rejected by default because it is not on the allow-list, instead of slipping through until someone writes a pattern for it.',
+    ).toBe(false);
+  });
+
+  it('rejects an unknown key inside an allowlist — fail-closed at the allowlist level too', () => {
+    expect(
+      shape(`${BASE}[[allowlists]]\ndescription = "y"\nregexes = ['''x''']\nfuture_neuter = true\n`)
+        .ok,
+    ).toBe(false);
+  });
+
+  it('rejects a malformed TOML config rather than passing it as well-shaped', () => {
+    expect(
+      shape('this is [ not valid = toml').ok,
+      'The regex denylist silently passed unparseable config: none of its patterns matched, so it returned ok:true. A parse fails closed — an unreadable config is not a well-shaped one.',
+    ).toBe(false);
+  });
+
+  it('accepts a legitimate `condition` key on an allowlist (does not false-fail a valid config)', () => {
+    expect(
+      shape(`${BASE}[[allowlists]]\ndescription = "y"\nregexes = ['''x''']\ncondition = "OR"\n`).ok,
+      'condition/matchCondition only govern how regexes and paths combine; with paths independently rejected they cannot neuter anything, so the schema permits them rather than rejecting an otherwise-valid config.',
+    ).toBe(true);
+  });
+
+  it('accepts a legitimate `matchCondition` key (the other permitted combinator, must not false-fail)', () => {
+    expect(
+      shape(
+        `${BASE}[[allowlists]]\ndescription = "y"\nregexes = ['''x''']\nmatchCondition = "AND"\n`,
+      ).ok,
+      'matchCondition is in the allow-set alongside condition; without a positive test a future tightening that dropped it would silently start false-failing valid configs.',
+    ).toBe(true);
+  });
+
+  it('rejects a single-table [allowlists] hiding a paths key -- the confirmed fail-open bypass', () => {
+    expect(
+      shape(`${BASE}[allowlists]\npaths = ['''.*sanitize.*''']\n`).ok,
+      'CONFIRMED against gitleaks 8.30: [allowlists] written as a single table (plural name, object value) is HONORED -- its paths suppressed a real ghp_ token (0 findings, exit 0). The parse gives `allowlists` a non-array value; coercing that to "no allowlists" (Array.isArray ? x : []) skipped the paths key entirely, re-opening the exact laundering class this gate exists to close. The gate must fail closed on a non-array allowlists.',
+    ).toBe(false);
+  });
+
+  it('rejects a top-level `allowlists` that is an array of non-tables', () => {
+    expect(shape('title = "x"\nallowlists = ["x"]\n[extend]\nuseDefault = true\n').ok).toBe(false);
+  });
+
+  it('rejects a scalar top-level `allowlist` value (Object.keys(5) is [], which would fail open)', () => {
+    expect(shape('allowlist = 5\n[extend]\nuseDefault = true\n').ok).toBe(false);
+  });
+
+  it('rejects a dangerous key nested under an allowed one (condition = { paths })', () => {
+    expect(
+      shape(`${BASE}[[allowlists]]\ndescription = "y"\ncondition = { paths = ['''.*'''] }\n`).ok,
+      'A keys-only check sees only `condition` (allowed) and passes. Validating the VALUE type (condition must be a string) rejects a table smuggled under an allowed key, rather than leaning on gitleaks erroring on the type mismatch.',
     ).toBe(false);
   });
 });
