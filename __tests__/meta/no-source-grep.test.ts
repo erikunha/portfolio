@@ -71,13 +71,24 @@ function walk(dir: string): string[] {
   });
 }
 
+const READER_ALIAS = /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=.*?(?:readFileSync|readFile\()/;
+
+const readHintFor = (lines: string[]): RegExp => {
+  const aliases = lines
+    .map((line) => READER_ALIAS.exec(line)?.[1])
+    .filter((name): name is string => name !== undefined);
+  if (aliases.length === 0) return SOURCE_HINT;
+  return new RegExp(`${SOURCE_HINT.source}|\\b(?:${aliases.join('|')})\\(`);
+};
+
 describe('meta: tests assert behavior, not source', () => {
   it('no test reads application source for a structural assertion', () => {
     const violations: string[] = [];
     for (const file of walk(ROOT_DIR)) {
       const lines = readFileSync(file, 'utf8').split('\n');
+      const sourceHint = readHintFor(lines);
       lines.forEach((line, i) => {
-        if (!SOURCE_HINT.test(line)) return;
+        if (!sourceHint.test(line)) return;
         if (IMPORT_LINE.test(line)) return;
         if (!TARGETS_APP_SOURCE.test(callText(lines, i))) return;
         if (isAllowTagged(lines, i)) return;
