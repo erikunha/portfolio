@@ -1,11 +1,18 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  assertConfigShape,
   assertExpectedFindings,
   CLEAN_FIXTURE,
   EXPECTED_RULES,
   interpretGitleaksRun,
   LEAKY_FIXTURE,
 } from '../check-gitleaks-fixture.mjs';
+
+const REAL_CONFIG = readFileSync(path.resolve(__dirname, '..', '..', '.gitleaks.toml'), 'utf-8');
+const NO_IGNORE_FILE = false;
+const NO_ALLOW_COMMENTS: string[] = [];
 
 const NO_LEAKS = 0;
 const LEAKS_FOUND = 1;
@@ -30,21 +37,72 @@ describe('interpretGitleaksRun (the gate cannot read clean unless gitleaks reall
     ).toBe(false);
   });
 
-  it('gitleaks failing to spawn is a FAILURE', () => {
+  it('gitleaks failing to spawn is a FAILURE, and the reason names the cause', () => {
+    const verdict = run({ error: new Error('spawnSync gitleaks ENOENT'), status: null });
+    expect(verdict.ok, FAIL_CLOSED).toBe(false);
     expect(
-      run({ error: new Error('spawnSync gitleaks ENOENT'), status: null }).ok,
-      FAIL_CLOSED,
-    ).toBe(false);
+      verdict.reason,
+      'The reason is the only thing anyone reads when this reds in CI. Asserting only `ok` lets the did-not-run branch be deleted silently: the result then falls through to the unknown-exit-code branch, which is also ok:false, so no test notices — while the message degrades to "exited null", which names nothing.',
+    ).toContain('ENOENT');
   });
 
-  it('gitleaks killed by a signal is a FAILURE', () => {
-    expect(run({ status: null }).ok, FAIL_CLOSED).toBe(false);
+  it('gitleaks killed by a signal is a FAILURE, and the reason does not just say null', () => {
+    const verdict = run({ status: null });
+    expect(verdict.ok, FAIL_CLOSED).toBe(false);
+    expect(
+      verdict.reason,
+      'spawnSync reports status=null for BOTH a missing binary and a signal-killed child. A reason that renders "null" has told the reader nothing about which one happened.',
+    ).not.toContain('null');
   });
 
   it('an unknown exit code is a FAILURE, never silently treated as clean', () => {
     expect(
       run({ status: FATAL, stderr: 'fatal: config is invalid' }).ok,
       `${FAIL_CLOSED}\n\nExit ${FATAL} is neither ${NO_LEAKS} (clean) nor ${LEAKS_FOUND} (leaks found). A malformed .gitleaks.toml exits non-zero, and mapping that onto "clean" is exactly how a broken gate goes green.`,
+    ).toBe(false);
+  });
+});
+
+describe('assertConfigShape (the config cannot be quietly gutted)', () => {
+  const shape = (config: string, ignoreFile = NO_IGNORE_FILE, comments = NO_ALLOW_COMMENTS) =>
+    assertConfigShape(config, ignoreFile, comments);
+
+  it('the repo config as committed is accepted', () => {
+    expect(
+      shape(REAL_CONFIG).ok,
+      '.gitleaks.toml itself violates the shape this gate requires.',
+    ).toBe(true);
+  });
+
+  it('rejects a `paths` allowlist, because it exempts the file from EVERY rule', () => {
+    expect(
+      shape(`${REAL_CONFIG}\n[[allowlists]]\npaths = ['''.*''']\n`).ok,
+      `Measured on gitleaks 8.30: a "paths" entry exempts that file from every rule, making it a permanent secret-laundering path. Three files in this repo were exempt from everything — including a test suite full of real-shaped tokens — and the probe could not see it, because the probe scans a token in a temp dir that no repo path regex matches. This is the assertion that catches it.`,
+    ).toBe(false);
+  });
+
+  it('rejects disabled rules, which the probe cannot see', () => {
+    expect(
+      shape(`${REAL_CONFIG}\ndisabledRules = ["anthropic-api-key"]\n`).ok,
+      'The probe only proves ONE rule still fires. Disabling every OTHER class leaves the probe green while the scanner is dead for the credentials this repo actually holds.',
+    ).toBe(false);
+  });
+
+  it('rejects a config that drops the default ruleset', () => {
+    expect(shape(REAL_CONFIG.replace('useDefault = true', 'useDefault = false')).ok).toBe(false);
+  });
+
+  it('rejects a .gitleaksignore file', () => {
+    expect(
+      shape(REAL_CONFIG, true).ok,
+      'gitleaks silently skips every fingerprint listed in .gitleaksignore, and nothing else in this gate would notice.',
+    ).toBe(false);
+  });
+
+  it('rejects a gitleaks:allow suppression comment in the tree', () => {
+    expect(
+      shape(REAL_CONFIG, NO_IGNORE_FILE, ['lib/somewhere.ts']).ok,
+      'That comment makes gitleaks skip the line, with no record of why. It is the cheapest way to make this whole gate lie, and it is the first thing a blocked developer reaches for.',
     ).toBe(false);
   });
 });

@@ -20,3 +20,9 @@ export interface GitleaksFinding {
 
 export declare function interpretGitleaksRun(res: GitleaksRun): Verdict;
 export declare function assertExpectedFindings(findings: GitleaksFinding[]): Verdict;
+
+export declare function assertConfigShape(
+  config: string,
+  hasIgnoreFile: boolean,
+  allowComments: string[],
+): Verdict;

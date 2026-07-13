@@ -29,6 +29,49 @@ export function interpretGitleaksRun(res) {
   return { ok: true };
 }
 
+// The step-2 probe below proves the config still catches a github-pat. It CANNOT prove the
+// config is otherwise intact: `disabledRules`, a stopword, a regex allowlist scoped to another
+// credential class, or a `paths` entry scoped to a real repo path all leave the probe green
+// while gutting the scanner for the secrets this repo actually holds. Those are shape defects,
+// so they are checked as shape.
+export function assertConfigShape(config, hasIgnoreFile, allowComments) {
+  if (!/useDefault\s*=\s*true/.test(config)) {
+    return {
+      ok: false,
+      reason:
+        'the gitleaks config does not set `useDefault = true`. Without the default ruleset there is almost nothing left to detect, and the probe below would still pass on whatever remains.',
+    };
+  }
+  if (/^\s*disabledRules\s*=\s*\[\s*[^\]\s]/m.test(config)) {
+    return {
+      ok: false,
+      reason:
+        'the gitleaks config disables rules. Disabling a rule class is invisible to the probe below, which only proves that ONE rule still fires. If a rule genuinely false-positives, allowlist the offending VALUE with a `regexes` entry instead.',
+    };
+  }
+  if (/^\s*paths\s*=/m.test(config)) {
+    return {
+      ok: false,
+      reason:
+        'a gitleaks allowlist uses `paths`. Measured on 8.30: a `paths` entry exempts that file from EVERY rule, which makes it a permanent secret-laundering path — a real credential committed there would never be seen again. Allowlist the VALUE with `regexes` instead. This is not stylistic: three files in this repo were exempt from everything, including a test suite full of real-shaped tokens.',
+    };
+  }
+  if (hasIgnoreFile) {
+    return {
+      ok: false,
+      reason:
+        'a .gitleaksignore file exists. gitleaks silently skips every fingerprint listed there, and nothing else in this gate would notice. Fix the finding or allowlist the value in .gitleaks.toml, where the reason is reviewable.',
+    };
+  }
+  if (allowComments.length > 0) {
+    return {
+      ok: false,
+      reason: `"gitleaks:allow" appears in ${allowComments.join(', ')}. That comment makes gitleaks skip the line, with no record of why and nothing gating it. It is the cheapest way to make this whole gate lie. Allowlist the value in .gitleaks.toml instead.`,
+    };
+  }
+  return { ok: true };
+}
+
 export function assertExpectedFindings(findings) {
   const byFile = new Map();
   for (const finding of findings) {
@@ -100,7 +143,40 @@ function scan(dir, report, configPath) {
   return spawnSync(GITLEAKS_BIN, args, { encoding: 'utf8', env: scannerEnv() });
 }
 
+const GITLEAKS_IGNORE = '.gitleaksignore';
+const ALLOW_COMMENT = 'gitleaks:allow';
+
+// These files NAME the suppression comment in order to ban it or explain the ban. They do not
+// use it. Everything else that contains the string is suppressing a gitleaks finding, which is
+// what this refuses. Keep this list at three.
+const MAY_NAME_THE_COMMENT = [
+  'scripts/check-gitleaks-fixture.mjs',
+  'scripts/gitleaks-staged.mjs',
+  'docs/superpowers/plans/',
+];
+
+function trackedFilesContaining(needle) {
+  const listed = spawnSync('git', ['grep', '-l', '--fixed-strings', needle, '--', '.'], {
+    encoding: 'utf8',
+  });
+  return String(listed.stdout ?? '')
+    .split('\n')
+    .filter((file) => file !== '')
+    .filter((file) => !MAY_NAME_THE_COMMENT.some((allowed) => file.startsWith(allowed)));
+}
+
 function main() {
+  const shape = assertConfigShape(
+    readFileSync(REPO_CONFIG, 'utf8'),
+    existsSync(GITLEAKS_IGNORE),
+    trackedFilesContaining(ALLOW_COMMENT),
+  );
+  if (!shape.ok) {
+    console.error(`[check-gitleaks-fixture] ${shape.reason}`);
+    process.exitCode = 1;
+    return;
+  }
+
   const tmp = mkdtempSync(join(tmpdir(), 'gitleaks-fixture-'));
   try {
     cpSync(join(FIXTURE_DIR, LEAKY_FIXTURE), join(tmp, LEAKY_FIXTURE));

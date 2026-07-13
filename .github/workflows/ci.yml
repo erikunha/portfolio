@@ -657,6 +657,7 @@ jobs:
       # semgrep; a curl'd tarball has to clear the same bar.
       - name: Install gitleaks (checksum-verified, exact-pinned)
         run: |
+          set -euo pipefail   # explicit: the sha256sum -c below must abort the step, not just print
           base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
           tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           curl -sSfL -o "$tarball" "$base/$tarball"

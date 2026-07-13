@@ -31,8 +31,11 @@ if (res.status === LEAKS_FOUND) {
       '\nThe finding is above (values redacted). Once a secret reaches a commit it is in\n' +
       'git history, and pushing publishes it -- rotating the credential is then the only\n' +
       'real remedy. Unstage it, move the value to an env var, and commit again.\n' +
-      '\nIf it is a false positive, add a scoped allowlist to .gitleaks.toml -- a path\n' +
-      'entry, not a rule disable.\n',
+      '\nIf it is a false positive, add a `regexes` entry to .gitleaks.toml matching the\n' +
+      'exact VALUE. Never a `paths` entry: a paths entry exempts that whole file from\n' +
+      'every rule, so a real credential committed there later would never be seen. And\n' +
+      'never a "gitleaks:allow" comment or a .gitleaksignore -- both are unreviewable,\n' +
+      'and scripts/check-gitleaks-fixture.mjs fails the build if either appears.\n',
   );
   process.exit(1);
 }
