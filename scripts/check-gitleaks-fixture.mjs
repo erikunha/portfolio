@@ -42,14 +42,14 @@ export function assertConfigShape(config, hasIgnoreFile, allowComments) {
         'the gitleaks config does not set `useDefault = true`. Without the default ruleset there is almost nothing left to detect, and the probe below would still pass on whatever remains.',
     };
   }
-  if (/(?:^|[{,])\s*disabledRules\s*=\s*\[\s*[^\]\s]/m.test(config)) {
+  if (/(?:^|[{,.])\s*(['"]?)disabledRules\1\s*=\s*\[\s*[^\]\s]/m.test(config)) {
     return {
       ok: false,
       reason:
         'the gitleaks config disables rules. Disabling a rule class is invisible to the probe below, which only proves that ONE rule still fires. If a rule genuinely false-positives, allowlist the offending VALUE with a `regexes` entry instead.',
     };
   }
-  if (/(?:^|[{,])\s*paths\s*=/m.test(config)) {
+  if (/(?:^|[{,.])\s*(['"]?)paths\1\s*=/m.test(config)) {
     return {
       ok: false,
       reason:

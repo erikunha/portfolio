@@ -95,6 +95,16 @@ describe('assertConfigShape (the config cannot be quietly gutted)', () => {
     ).toBe(false);
   });
 
+  it.each([
+    ['quoted key', "\"paths\" = ['''.*''']"],
+    ['dotted key', "allowlist.paths = ['''.*''']"],
+  ])('rejects a %s `paths` allowlist -- valid TOML gitleaks honours, same laundering path', (_label, line) => {
+    expect(
+      shape(`useDefault = true\n${line}\n`).ok,
+      'gitleaks treats a quoted or dotted key as equivalent to the bare key, so "paths" = / allowlist.paths = exempt the file exactly as `paths =` does. A line-anchored bare-key check misses them, and a path-scoped variant evades the probe too. The durable fix is to parse the TOML (task #25); this closes the common spellings.',
+    ).toBe(false);
+  });
+
   it('rejects disabled rules, which the probe cannot see', () => {
     expect(
       shape(`${REAL_CONFIG}\ndisabledRules = ["anthropic-api-key"]\n`).ok,
