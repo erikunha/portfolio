@@ -3,11 +3,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { Hero } from './Hero';
 
-function renderHeroDom(): Document {
-  const html = renderToStaticMarkup(createElement(Hero));
-  return new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
-}
-
 const renderHero = () => renderToStaticMarkup(createElement(Hero));
 
 const desktopClass = 'hero-desktop';
@@ -17,27 +12,23 @@ const bootDesktopClass = 'hero-boot-desktop';
 const bootMobileClass = 'hero-boot-mobile';
 
 describe('Hero headings', () => {
-  it('renders an h1 element', () => {
-    const doc = renderHeroDom();
-    expect(doc.querySelectorAll('h1').length).toBeGreaterThan(0);
+  it('renders exactly one semantic h1 with the name', () => {
+    const html = renderHero();
+    const h1Count = (html.match(/<h1/g) ?? []).length;
+    expect(h1Count).toBe(1);
+    expect(html).toMatch(/<h1[^>]*class="[^"]*sr-only[^"]*"[^>]*>Erik Cunha<\/h1>/);
   });
 
-  it('the desktop h1 lives inside the bio panel', () => {
-    const doc = renderHeroDom();
-    const desktop = doc.querySelector(`.${desktopClass}`);
+  it('renders the visible name in each variant as an aria-hidden non-heading', () => {
+    const doc = new DOMParser().parseFromString(renderHero(), 'text/html');
+    const desktop = doc.querySelector(`.${desktopClass} .${bioClass} [data-testid="hero-name"]`);
+    const mobile = doc.querySelector(`.${mobileClass} [data-testid="hero-name"]`);
     expect(desktop).not.toBeNull();
-    const bioHeading = desktop?.querySelector(`.${bioClass} h1`);
-    expect(bioHeading).not.toBeNull();
-    expect(bioHeading?.textContent).toContain('Erik');
-  });
-
-  it('the mobile h1 lives inside the inner wrapper', () => {
-    const doc = renderHeroDom();
-    const mobile = doc.querySelector(`.${mobileClass}`);
     expect(mobile).not.toBeNull();
-    const innerHeading = mobile?.querySelector('h1');
-    expect(innerHeading).not.toBeNull();
-    expect(innerHeading?.textContent).toContain('Erik');
+    expect(desktop?.tagName.toLowerCase()).not.toBe('h1');
+    expect(mobile?.tagName.toLowerCase()).not.toBe('h1');
+    expect(desktop?.getAttribute('aria-hidden')).toBe('true');
+    expect(mobile?.getAttribute('aria-hidden')).toBe('true');
   });
 });
 
@@ -52,12 +43,6 @@ describe('Hero RSC conversion', () => {
     const html = renderHero();
     expect(html).toContain(desktopClass);
     expect(html).toContain(mobileClass);
-  });
-
-  it('emits an h1 in each variant', () => {
-    const html = renderHero();
-    const h1Count = (html.match(/<h1/g) ?? []).length;
-    expect(h1Count).toBe(2);
   });
 
   it('mounts the HeroBootAnimation client islands as descendants', () => {

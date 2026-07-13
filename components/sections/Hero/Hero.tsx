@@ -7,6 +7,7 @@ import { HeroSystemFailure } from '../../client/HeroSystemFailure';
 export function Hero() {
   return (
     <>
+      <h1 className="sr-only">Erik Cunha</h1>
       <section
         id="bio"
         className="hero-desktop relative border border-primary-subtle min-h-[640px] overflow-hidden mb-10 md:mb-[40px] bg-transparent transition-transform duration-100 ease-out motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none"
@@ -16,12 +17,13 @@ export function Hero() {
           <HeroBootAnimation variant="desktop" />
         </div>
         <aside className="hero-bio flex-1 border-l border-dashed border-primary-subtle flex flex-col justify-end px-6 py-8 gap-[10px]">
-          <h1
+          <p
             className="font-mono font-bold text-[32px] md:text-[48px] text-primary-500 m-0 mb-1 leading-[1.2]"
             data-testid="hero-name"
+            aria-hidden="true"
           >
             Erik Cunha
-          </h1>
+          </p>
           <p className="text-tertiary-50 text-sm leading-[1.55] mb-2">{heroTagline}</p>
           <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-sm tracking-[0.08em] mb-3.5">
             <span>
@@ -71,12 +73,13 @@ export function Hero() {
         <div className="relative z-[1] p-4 pb-[18px]">
           <HeroBootAnimation variant="mobile" />
 
-          <h1
+          <p
             className="font-mono font-bold text-[24px] text-primary-500 border-t border-dashed border-primary-quiet pt-3.5 mt-1.5 mb-0.5 leading-[1.55]"
             data-testid="hero-name"
+            aria-hidden="true"
           >
             Erik Cunha
-          </h1>
+          </p>
           <p className="text-tertiary-50 text-xs leading-[1.55] mb-2">{heroTagline}</p>
           <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-xs tracking-[0.08em] mb-3.5">
             <span>

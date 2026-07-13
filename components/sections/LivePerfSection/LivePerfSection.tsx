@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { SECTION_LABELS } from '@/content/section-labels';
 import {
   getScores,
   LIGHTHOUSE_FALLBACK,
@@ -123,6 +124,7 @@ export function LivePerfSection({ defer }: { defer?: boolean } = {}) {
       header="LIVE_PERF.JSON"
       variant="green"
       mobileHeader="LIVE_PERF · LIGHTHOUSE"
+      srLabel={SECTION_LABELS['sec-live-perf']}
       icon={<IconLivePerf />}
       defer={defer}
     >

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { gitLog } from '@/content/git-log';
 import type { GitCommit } from '@/content/schemas';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { getIsMobile } from '@/lib/ua';
 import { IconGitLog } from '../../Icons';
 import { Module } from '../../responsive/Module';
@@ -183,6 +184,7 @@ export function GitLogSection({ defer }: { defer?: boolean } = {}) {
       id="sec-git-log"
       header="GIT LOG ~/CAREER --PRETTY=FULLER --DECORATE --GRAPH"
       mobileHeader="GIT LOG --CAREER"
+      srLabel={SECTION_LABELS['sec-git-log']}
       icon={<IconGitLog />}
       defer={defer}
     >

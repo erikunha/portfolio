@@ -1,3 +1,4 @@
+import { SECTION_LABELS } from '@/content/section-labels';
 import { sysStats } from '@/content/sys-health';
 import { TerminalPanel } from '@/design-system';
 import { IconSysHealth } from '../../Icons';
@@ -8,6 +9,7 @@ export function SysHealthSection({ defer }: { defer?: boolean } = {}) {
     <Module
       id="sec-sys-health"
       header="SYS_HEALTH_MONITOR"
+      srLabel={SECTION_LABELS['sec-sys-health']}
       icon={<IconSysHealth />}
       defer={defer}
       variant="green"

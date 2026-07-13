@@ -1,7 +1,17 @@
-export const metadata = {
+import { dsPageMetadata } from '../_lib/page-metadata';
+import { Breadcrumb } from '../_components/Breadcrumb';
+
+export const metadata = dsPageMetadata({
+  slug: 'tokens',
   title: 'Tokens — Design System — erikunha.dev',
   description: 'Brand colour from @theme, plus the Tailwind scale used for type, spacing, motion, and layers',
-};
+});
+
+<Breadcrumb trail={[
+  { name: 'Home', path: '/' },
+  { name: 'Design System', path: '/design-system' },
+  { name: 'Tokens', path: '/design-system/tokens' },
+]} />
 
 # TOKENS
 

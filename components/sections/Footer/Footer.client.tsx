@@ -267,6 +267,16 @@ export function Footer() {
                 >
                   erikunha.dev
                 </a>
+                <span className="text-primary-400">tcp</span>
+                <span className="text-primary-500 font-bold flex items-center min-h-8">
+                  ESTABLISHED
+                </span>
+                <a
+                  href="/design-system"
+                  className="netstat-link flex items-center min-h-8 max-[768px]:overflow-hidden max-[768px]:text-ellipsis max-[768px]:whitespace-nowrap"
+                >
+                  ~/design_system
+                </a>
               </div>
             ) : (
               <pre className="m-0 font-mono text-sm leading-[1.95] text-tertiary-50 whitespace-pre overflow-x-auto max-[900px]:text-sm max-md:text-xs">
@@ -292,6 +302,13 @@ export function Footer() {
                     href: 'https://erikunha.dev',
                     label: 'erikunha.dev',
                     external: true,
+                  },
+                  {
+                    state: 'ESTABLISHED',
+                    cls: 'text-primary-500 font-bold',
+                    href: '/design-system',
+                    label: '~/design_system',
+                    external: false,
                   },
                 ].map((e) => (
                   <span key={e.href}>

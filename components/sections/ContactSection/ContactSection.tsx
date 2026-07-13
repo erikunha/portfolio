@@ -1,3 +1,4 @@
+import { SECTION_LABELS } from '@/content/section-labels';
 import { ContactFormLazy } from '../../client/ContactForm';
 import { ErrorBoundary } from '../../ErrorBoundary';
 import { IconContact } from '../../Icons';
@@ -9,6 +10,7 @@ export function ContactSection({ defer }: { defer?: boolean } = {}) {
       id="sec-contact"
       header="SUDO CONTACT --INIT"
       mobileHeader="CONTACT"
+      srLabel={SECTION_LABELS['sec-contact']}
       icon={<IconContact />}
       defer={defer}
       variant="green"

@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://erikunha.dev'),
   title: 'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
   description:
-    'Senior Full-Stack Engineer specializing in Frontend Architecture, Platform & AI Applied Engineering. UI/UX, Accessibility, Web Performance for High-Traffic Apps. React, Next.js, Angular, TypeScript, Node.js, AWS.',
+    'Senior Full-Stack Engineer — React, Next.js, Angular, TypeScript, Node.js. Frontend architecture, platform & applied-AI engineering for high-traffic apps.',
   keywords: [
     'Staff Engineer',
     'Principal Engineer',

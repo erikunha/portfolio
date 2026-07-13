@@ -1,10 +1,20 @@
-export const metadata = {
+import { dsPageMetadata } from '../_lib/page-metadata';
+import { Breadcrumb } from '../_components/Breadcrumb';
+
+export const metadata = dsPageMetadata({
+  slug: 'components',
   title: 'Components — Design System — erikunha.dev',
   description: '9 primitive components for erikunha.dev (7 RSC, Field and CopyButton are client)',
-};
+});
 
 import { Field } from '../../../design-system/components/Field';
 import { WindowChrome } from '../../../design-system/components/WindowChrome/WindowChrome';
+
+<Breadcrumb trail={[
+  { name: 'Home', path: '/' },
+  { name: 'Design System', path: '/design-system' },
+  { name: 'Components', path: '/design-system/components' },
+]} />
 
 # COMPONENTS
 

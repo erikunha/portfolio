@@ -1,5 +1,6 @@
 import { perfReceipts } from '@/content/perf-receipts';
 import type { PerfReceipt } from '@/content/schemas';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { cn } from '@/lib/cn';
 import { IconPerfReceipts } from '../../Icons';
 import { Module } from '../../responsive/Module';
@@ -69,6 +70,7 @@ export function PerfReceiptsSection({ defer }: { defer?: boolean } = {}) {
       header="PERF_RECEIPTS --HARD-NUMBERS"
       variant="green"
       mobileHeader="PERF_RECEIPTS"
+      srLabel={SECTION_LABELS['sec-perf-receipts']}
       icon={<IconPerfReceipts />}
       defer={defer}
     >

@@ -1,11 +1,18 @@
 import { communityEvent } from '@/content/community';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { IconCommunity } from '../../Icons';
 import { Module } from '../../responsive/Module';
 
 export function CommunitySection({ defer }: { defer?: boolean } = {}) {
   const e = communityEvent;
   return (
-    <Module id="sec-community" header="CAT ~/.COMMUNITY" icon={<IconCommunity />} defer={defer}>
+    <Module
+      id="sec-community"
+      header="CAT ~/.COMMUNITY"
+      srLabel={SECTION_LABELS['sec-community']}
+      icon={<IconCommunity />}
+      defer={defer}
+    >
       <div className="text-sm max-md:text-xs leading-[1.7]">
         <div className="text-primary-500 font-bold tracking-[0.06em] text-sm max-md:text-xs mb-3">
           {e.name} · {e.year} · {e.role}

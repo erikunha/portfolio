@@ -1,4 +1,5 @@
 import { responsibilities } from '@/content/responsibilities';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { IconResponsibilities } from '../../Icons';
 import { Module } from '../../responsive/Module';
 
@@ -7,6 +8,7 @@ export function ResponsibilitiesSection({ defer }: { defer?: boolean } = {}) {
     <Module
       id="sec-responsibilities"
       header="LS -LA ~/RESPONSIBILITIES"
+      srLabel={SECTION_LABELS['sec-responsibilities']}
       icon={<IconResponsibilities />}
       defer={defer}
     >

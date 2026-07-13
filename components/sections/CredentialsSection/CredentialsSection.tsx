@@ -1,4 +1,5 @@
 import { credentials } from '@/content/credentials';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { IconCredentials } from '../../Icons';
 import { Module } from '../../responsive/Module';
 
@@ -7,6 +8,7 @@ export function CredentialsSection({ defer }: { defer?: boolean } = {}) {
     <Module
       id="sec-credentials"
       header="CAT ~/.CREDENTIALS"
+      srLabel={SECTION_LABELS['sec-credentials']}
       icon={<IconCredentials />}
       defer={defer}
     >

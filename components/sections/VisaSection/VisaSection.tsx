@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { visaRows } from '@/content/visa';
 import { getIsMobile } from '@/lib/ua';
 import { IconVisa } from '../../Icons';
@@ -77,6 +78,7 @@ export function VisaSection({ defer }: { defer?: boolean } = {}) {
       id="sec-visa"
       header="CAT ~/.VISA"
       mobileHeader="CAT ~/.VISA"
+      srLabel={SECTION_LABELS['sec-visa']}
       icon={<IconVisa />}
       defer={defer}
     >
