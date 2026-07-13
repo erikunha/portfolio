@@ -14,6 +14,15 @@ export function dsPageMetadata({
     title,
     description,
     alternates: { canonical: path },
-    openGraph: { title, description, url: path, type: 'website' },
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: path,
+      title,
+      description,
+      siteName: 'erikunha.dev',
+      images: [{ url: '/og.png', width: 1200, height: 630, alt: title }],
+    },
+    twitter: { card: 'summary_large_image', title, description, images: ['/og.png'] },
   };
 }

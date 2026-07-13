@@ -21,6 +21,7 @@ const CONTENT_FILES = [
   'content/ask-eval-corpus.ts',
   'content/hero.ts',
   'content/seo.ts',
+  'content/section-labels.ts',
   'content/daw-mixer.ts',
   'content/_validate-client-content.ts',
 ];

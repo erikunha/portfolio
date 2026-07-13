@@ -32,4 +32,26 @@ describe('dsPageMetadata', () => {
     expect(String(m.alternates?.canonical)).not.toMatch(/^https?:/);
     expect(String((m.openGraph as { url?: string }).url)).not.toMatch(/^https?:/);
   });
+
+  it('re-specifies openGraph fields that Next would otherwise drop when the object is replaced', () => {
+    // Next merges metadata shallowly: setting `openGraph` REPLACES the root's, so siteName/locale/
+    // image must be restated here or the subpages silently lose them.
+    const og = dsPageMetadata({ slug: 'tokens', title: 'T', description: 'D' }).openGraph as {
+      siteName?: string;
+      locale?: string;
+      images?: { url: string; alt?: string }[];
+    };
+    expect(og.siteName).toBe('erikunha.dev');
+    expect(og.locale).toBe('en_US');
+    expect(og.images?.[0]?.url).toBe('/og.png');
+    expect(og.images?.[0]?.alt).toBe('T'); // per-page alt, not the homepage title
+  });
+
+  it('sets a per-page twitter card so subpages do NOT inherit the homepage twitter copy', () => {
+    const tw = dsPageMetadata({ slug: 'tokens', title: 'Tokens page', description: 'Token docs' })
+      .twitter as { card?: string; title?: string; description?: string };
+    expect(tw.card).toBe('summary_large_image');
+    expect(tw.title).toBe('Tokens page');
+    expect(tw.description).toBe('Token docs');
+  });
 });
