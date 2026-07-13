@@ -652,16 +652,30 @@ jobs:
         with:
           fetch-depth: 0   # gitleaks scans history, not just the tip
 
-      - name: Install gitleaks (exact-pinned)
+      # Verified by CHECKSUM, not by asking the binary what it is: a tampered binary can
+      # print any version string it likes. The repo SHA-pins its Actions and exact-pins
+      # semgrep; a curl'd tarball has to clear the same bar.
+      - name: Install gitleaks (checksum-verified, exact-pinned)
         run: |
-          curl -sSfL -o gitleaks.tar.gz \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          tar -xzf gitleaks.tar.gz gitleaks
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o "$tarball" "$base/$tarball"
+          curl -sSfL -o checksums.txt "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+
+          expected="$(awk -v f="$tarball" '$2 == f { print $1 }' checksums.txt)"
+          if [ -z "$expected" ]; then
+            echo "::error::no checksum for $tarball in the release checksums file. Refusing to install an unverified binary."
+            exit 1
+          fi
+          echo "${expected}  ${tarball}" | sha256sum -c -
+
+          tar -xzf "$tarball" gitleaks
           sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
-          rm -f gitleaks gitleaks.tar.gz
+          rm -f gitleaks "$tarball" checksums.txt
+
           installed="$(gitleaks version)"
           if [ "$installed" != "$GITLEAKS_VERSION" ]; then
-            echo "::error::gitleaks reports version '$installed', expected '$GITLEAKS_VERSION'. Refusing to scan with an unknown binary."
+            echo "::error::gitleaks reports version '$installed', expected '$GITLEAKS_VERSION'."
             exit 1
           fi
 
