@@ -14,6 +14,7 @@ const EMPTY_INIT_TEMPLATE = '--template=';
 const ENV_ALLOWLIST = ['PATH', 'TMPDIR'];
 const GIT_OK = 0;
 const GIT_PATH_IGNORED = 0;
+const GIT_PATH_NOT_IGNORED = 1;
 
 type Shape = 'symlink' | 'directory';
 
@@ -35,8 +36,15 @@ const hermeticEnv = (): NodeJS.ProcessEnv => {
 const git = (cwd: string, args: string[]) =>
   spawnSync('git', [...NO_GLOBAL_EXCLUDES, ...args], { cwd, env: hermeticEnv() });
 
-const isIgnored = (cwd: string, target: string) =>
-  git(cwd, ['check-ignore', '-q', '--', target]).status === GIT_PATH_IGNORED;
+const isIgnored = (cwd: string, target: string) => {
+  const { status, stderr } = git(cwd, ['check-ignore', '-q', '--', target]);
+  if (status !== GIT_PATH_IGNORED && status !== GIT_PATH_NOT_IGNORED) {
+    throw new Error(
+      `git check-ignore on "${target}" exited ${status}, which is neither ${GIT_PATH_IGNORED} (ignored) nor ${GIT_PATH_NOT_IGNORED} (not ignored): ${stderr}. Treating that as "not ignored" would red the assertion below and blame the .gitignore rule for what is actually a broken sandbox.`,
+    );
+  }
+  return status === GIT_PATH_IGNORED;
+};
 
 const sandboxes: Record<Shape, string> = { symlink: '', directory: '' };
 
@@ -81,7 +89,7 @@ describe('meta: .gitignore covers the paths the agent-worktree harness symlinks'
   it.each(HARNESS_SYMLINKS)('%s is ignored when materialised as a symlink', (name) => {
     expect(
       isIgnored(sandboxes.symlink, name),
-      `The harness symlinks "${name}" into every agent worktree, and this .gitignore does not ignore it.\n\nGit lstats a path and never follows the link, so a symlink is not a directory: a directory-only rule ("/${name}/", with a trailing slash) cannot match it. The worktree then carries a phantom "?? ${name}" that no rule covers and that a "git clean -fd" would delete, severing the link to the main tree. Write "/${name}" instead — slashless, root-anchored — which matches a real directory and a symlink alike.\n\nCompare against the other harness path here (${siblingsOf(name)}). If any of those is green while this is red, the difference is in this rule alone: either it grew a trailing slash, or it went missing.\n\nThis sandbox is deliberately hermetic, because a SECOND ignore source can mask a broken rule and turn this gate GREEN while the rule is still wrong -- the one outcome it exists to prevent. The child git therefore runs on an allowlisted environment (${childEnvKeys()}), so every variable that could point it at another ignore file is absent rather than out-ranked: GIT_DIR (a foreign .git/info/exclude), GIT_TEMPLATE_DIR (a seeded one), the GIT_CONFIG_KEY_n pairs, and HOME / XDG_CONFIG_HOME (~/.config/git/ignore). Each was measured: point any one of them at a file listing "${name}", and a NON-hermetic check reports a broken rule as ignored. core.excludesFile is still pinned to ${NULL_DEVICE} and the init template is empty, but nothing depends on those any more -- removal does not rely on git's config precedence staying what it is today.`,
+      `The harness symlinks "${name}" into every agent worktree, and this .gitignore does not ignore it.\n\nWrite "/${name}": root-anchored, no trailing slash. A trailing slash makes a rule directory-only, and git lstats a path without following the link, so "/${name}/" cannot match a symlink. The slashless form matches the symlink, the real directory, and the directory's contents -- the sibling case in this file asserts those last two, so check it before widening this rule.\n\nOther harness paths asserted here: ${siblingsOf(name)}.\n\nThe sandbox runs git on an allowlisted environment (${childEnvKeys()}), with an empty init template and core.excludesFile pinned to ${NULL_DEVICE}. That is not incidental: any ambient ignore source -- a foreign GIT_DIR's info/exclude, a seeded template, a user or system ignore file -- would be a SECOND place the path could get ignored, and this gate would then read GREEN while the rule under test is broken. If you relax the sandbox, this test can start passing for a reason that has nothing to do with .gitignore.`,
     ).toBe(true);
   });
 
