@@ -72,16 +72,20 @@ function walk(dir: string): string[] {
 }
 
 const READER_BODY = 300;
+const BINDING = '(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*(?::(?:[^=;\\n]|=>)*)?=\\s*';
+const NAMESPACE = '(?:[A-Za-z_$][\\w$]*\\.)*';
 const ARROW_READER = new RegExp(
-  `(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*(?::[^=]+)?=\\s*(?:async\\s+)?(?:\\([^)]*\\)|[A-Za-z_$][\\w$]*)\\s*=>[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
+  `${BINDING}(?:async\\s+)?(?:\\([^)]*\\)|[A-Za-z_$][\\w$]*)\\s*=>[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
   'g',
 );
 const FUNCTION_READER = new RegExp(
-  `(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*(?::[^=]+)?=\\s*(?:async\\s+)?function\\b[^{]*\\{[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()|function\\s+([A-Za-z_$][\\w$]*)\\s*\\([^)]*\\)[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
+  `${BINDING}(?:async\\s+)?function\\b[^{]*\\{[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()|function\\s+([A-Za-z_$][\\w$]*)\\s*\\([^)]*\\)[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
   'g',
 );
-const BOUND_READER =
-  /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::[^=]+)?=\s*(?:promisify\(\s*)?(?:[A-Za-z_$][\w$]*\.)*(?:readFileSync|readFile)\b\s*(?![\w$(])/g;
+const BOUND_READER = new RegExp(
+  `${BINDING}(?:promisify\\(\\s*)?${NAMESPACE}(?:readFileSync|readFile)\\b\\s*(?![\\w$(])`,
+  'g',
+);
 
 const escapeForRegExp = (name: string) => name.replace(/[$\\^*+?.()|[\]{}]/g, '\\$&');
 
@@ -106,45 +110,52 @@ const readHintFor = (source: string): RegExp => {
   return new RegExp(`${SOURCE_HINT.source}|(?<![\\w$])(?:${alternation})\\(`);
 };
 
-const READER_SHAPES: Array<[string, string, boolean]> = [
-  ['single-line arrow', "const read = (p: string) => readFileSync(join(R, p), 'utf-8');", true],
+const READER_SHAPES: Array<[string, string, string | null]> = [
+  ['single-line arrow', "const read = (p: string) => readFileSync(join(R, p), 'utf-8');", 'read'],
   [
     'arrow wrapped by the formatter',
     "const read = (relativePathToFile: string) =>\n  readFileSync(join(R, relativePathToFile), 'utf-8');",
-    true,
+    'read',
   ],
-  ['block-body arrow', 'const read = (p: string) => {\n  return readFileSync(p);\n};', true],
-  ['function declaration', 'function read(p: string) {\n  return readFileSync(p);\n}', true],
-  ['dollar-prefixed name', "const $read = (p: string) => readFileSync(p, 'utf-8');", true],
-  ['async arrow', 'const read = async (p: string) => readFile(p);', true],
-  ['bare rebind', 'const read = readFileSync;', true],
-  ['namespaced rebind', 'const read = fs.readFileSync;', true],
+  ['block-body arrow', 'const read = (p: string) => {\n  return readFileSync(p);\n};', 'read'],
+  ['function declaration', 'function read(p: string) {\n  return readFileSync(p);\n}', 'read'],
+  ['dollar-prefixed name', "const $read = (p: string) => readFileSync(p, 'utf-8');", '$read'],
+  ['async arrow', 'const read = async (p: string) => readFile(p);', 'read'],
+  ['bare rebind', 'const read = readFileSync;', 'read'],
+  ['namespaced rebind', 'const read = fs.readFileSync;', 'read'],
   [
     'anonymous function expression',
     'const read = function (p) {\n  return readFileSync(p);\n};',
-    true,
+    'read',
   ],
-  ['promisified', 'const read = promisify(fs.readFile);', true],
-  ['non-fs namespace', 'const read = fsp.readFile;', true],
-  ['nested namespace', 'const read = fs.promises.readFile;', true],
-  ['type-annotated binding', 'const read: Reader = readFileSync;', true],
-  ['type-annotated arrow', 'const read: Reader = (p: string) => readFileSync(p);', true],
+  ['promisified', 'const read = promisify(fs.readFile);', 'read'],
+  ['non-fs namespace', 'const read = fsp.readFile;', 'read'],
+  ['nested namespace', 'const read = fs.promises.readFile;', 'read'],
+  ['type-annotated binding', 'const read: Reader = readFileSync;', 'read'],
+  ['type-annotated arrow', 'const read: Reader = (p: string) => readFileSync(p);', 'read'],
+  ['function-type annotation', 'const read: (p: string) => string = readFileSync;', 'read'],
+  [
+    'annotated declaration above a reader (must not shadow it)',
+    'let cached: string | undefined;\nconst read = fs.readFileSync;',
+    'read',
+  ],
   [
     'result binding, not a reader',
     "const pkg = JSON.parse(readFileSync('package.json', 'utf8'));",
-    false,
+    null,
   ],
-  ['call result, not a reader', "const raw = readFileSync('package.json', 'utf8');", false],
+  ['call result, not a reader', "const raw = readFileSync('package.json', 'utf8');", null],
 ];
 
 describe('meta: the read detector itself', () => {
-  it.each(READER_SHAPES)('%s -> alias detected: %j', (_shape, source, shouldDetect) => {
-    const detected = readerAliasesIn(source).length > 0;
+  it.each(READER_SHAPES)('%s -> alias: %j', (_shape, source, expected) => {
+    const aliases = readerAliasesIn(source);
+    const detected = expected === null ? aliases.length === 0 : aliases.includes(expected);
 
     expect(
       detected,
       `readHintFor is the ONLY thing standing between this gate and a silent bypass, and its success looks exactly like its failure: a missed alias just leaves the suite green. So it is gated here, not by "the tree is clean".\n\nThe formatter-wrapped case is not hypothetical — the live helper lines are 97 chars against biome lineWidth 100, so ONE longer parameter name makes \`pnpm check:fix\` split the arrow, and a line-local detector stops seeing it. The dollar case is a silent fail-open too: \`$\` is a legal identifier char AND a regex end-anchor, so an unescaped \`$read\` compiles to a pattern that can never match.\n\nThe two false rows must NOT detect: they bind the RESULT of a read, not a reader. Registering them would add junk aliases and, on a name collision, someone would silence the gate with an allow-tag — re-decorating the tag this gate exists to keep load-bearing.\n\nThe rebind rows exist because requiring a FUNCTION initializer regressed them: a bare "const read = readFileSync" is the simplest alias there is, it was caught before that change, and it went green. A detector that only sees the shapes its author happened to think of is the same fail-open in a different coat.`,
-    ).toBe(shouldDetect);
+    ).toBe(true);
   });
 });
 
