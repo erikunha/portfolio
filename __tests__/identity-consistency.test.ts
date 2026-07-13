@@ -22,7 +22,7 @@ const read = (relativePath: string) => readFileSync(path.join(REPO_ROOT, relativ
 const llmsTxt = read('public/llms.txt');
 // behavioral-test-allow: the OG-image title is baked into an HTML template string inside the
 // generator script, so it is reachable only as source text — there is nothing to import
-const ogImageScript = read('scripts/generate-og-image.ts');
+const ogImageScript = readFileSync(path.join(REPO_ROOT, 'scripts/generate-og-image.ts'), 'utf-8');
 
 const contentSurfaces: Array<[string, string]> = readContentSurfaces();
 

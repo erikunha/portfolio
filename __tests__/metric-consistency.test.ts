@@ -56,7 +56,7 @@ const contentSurfaces: Array<[string, string]> = readContentSurfaces();
 
 // behavioral-test-allow: the OG card's numbers are baked into an HTML template string inside the
 // generator script, so they are reachable only as source text — there is nothing to import
-const ogImageScript = read('scripts/generate-og-image.ts');
+const ogImageScript = readFileSync(path.join(REPO_ROOT, 'scripts/generate-og-image.ts'), 'utf-8');
 
 let layoutMetadataText = '';
 

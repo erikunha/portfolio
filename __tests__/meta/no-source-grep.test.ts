@@ -15,9 +15,14 @@ const SKIP_DIRS = new Set([
   '.claude',
   '.git',
   '.worktrees',
+  '.stryker-tmp',
+  'playwright-report',
+  'test-results',
+  'out',
+  'build',
 ]);
 const TEST_DIRS = new Set(['__tests__', 'tests']);
-const TEST_FILE = /\.(test|spec)\.[cm]?[jt]sx?$/;
+const TEST_FILE = /\.(test|spec|e2e)\.[cm]?[jt]sx?$/;
 const ANY_SCRIPT = /\.[cm]?[jt]sx?$/;
 const TYPE_DECL = /\.d\.ts$/;
 const COMMENT_LINE = /^\s*(\/\/|\*|\/\*)/;
