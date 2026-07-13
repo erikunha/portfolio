@@ -71,22 +71,74 @@ function walk(dir: string): string[] {
   });
 }
 
-const READER_ALIAS = /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=.*?(?:readFileSync|readFile\()/;
+const READER_BODY = 300;
+const ARROW_READER = new RegExp(
+  `(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*(?:async\\s+)?(?:\\([^)]*\\)|[A-Za-z_$][\\w$]*)\\s*=>[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
+  'g',
+);
+const FUNCTION_READER = new RegExp(
+  `function\\s+([A-Za-z_$][\\w$]*)\\s*\\([^)]*\\)[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
+  'g',
+);
 
-const readHintFor = (lines: string[]): RegExp => {
-  const aliases = lines
-    .map((line) => READER_ALIAS.exec(line)?.[1])
-    .filter((name): name is string => name !== undefined);
-  if (aliases.length === 0) return SOURCE_HINT;
-  return new RegExp(`${SOURCE_HINT.source}|\\b(?:${aliases.join('|')})\\(`);
+const escapeForRegExp = (name: string) => name.replace(/[$\\^*+?.()|[\]{}]/g, '\\$&');
+
+const readerAliasesIn = (source: string): string[] => {
+  const names = new Set<string>();
+  for (const pattern of [ARROW_READER, FUNCTION_READER]) {
+    pattern.lastIndex = 0;
+    for (;;) {
+      const match = pattern.exec(source);
+      if (match?.[1] === undefined) break;
+      names.add(match[1]);
+    }
+  }
+  return [...names];
 };
+
+const readHintFor = (source: string): RegExp => {
+  const aliases = readerAliasesIn(source);
+  if (aliases.length === 0) return SOURCE_HINT;
+  const alternation = aliases.map(escapeForRegExp).join('|');
+  return new RegExp(`${SOURCE_HINT.source}|(?<![\\w$])(?:${alternation})\\(`);
+};
+
+const READER_SHAPES: Array<[string, string, boolean]> = [
+  ['single-line arrow', "const read = (p: string) => readFileSync(join(R, p), 'utf-8');", true],
+  [
+    'arrow wrapped by the formatter',
+    "const read = (relativePathToFile: string) =>\n  readFileSync(join(R, relativePathToFile), 'utf-8');",
+    true,
+  ],
+  ['block-body arrow', 'const read = (p: string) => {\n  return readFileSync(p);\n};', true],
+  ['function declaration', 'function read(p: string) {\n  return readFileSync(p);\n}', true],
+  ['dollar-prefixed name', "const $read = (p: string) => readFileSync(p, 'utf-8');", true],
+  ['async arrow', 'const read = async (p: string) => readFile(p);', true],
+  [
+    'result binding, not a reader',
+    "const pkg = JSON.parse(readFileSync('package.json', 'utf8'));",
+    false,
+  ],
+];
+
+describe('meta: the read detector itself', () => {
+  it.each(READER_SHAPES)('%s -> alias detected: %j', (_shape, source, shouldDetect) => {
+    const detected = readerAliasesIn(source).length > 0;
+
+    expect(
+      detected,
+      `readHintFor is the ONLY thing standing between this gate and a silent bypass, and its success looks exactly like its failure: a missed alias just leaves the suite green. So it is gated here, not by "the tree is clean".\n\nThe formatter-wrapped case is not hypothetical — the live helper lines are 97 chars against biome lineWidth 100, so ONE longer parameter name makes \`pnpm check:fix\` split the arrow, and a line-local detector stops seeing it. The dollar case is a silent fail-open too: \`$\` is a legal identifier char AND a regex end-anchor, so an unescaped \`$read\` compiles to a pattern that can never match.\n\nThe last row must NOT detect: it binds the RESULT of a read, not a reader. Registering it would add a junk alias and, on a name collision, someone would silence the gate with an allow-tag — re-decorating the tag this gate exists to keep load-bearing.`,
+    ).toBe(shouldDetect);
+  });
+});
 
 describe('meta: tests assert behavior, not source', () => {
   it('no test reads application source for a structural assertion', () => {
     const violations: string[] = [];
     for (const file of walk(ROOT_DIR)) {
-      const lines = readFileSync(file, 'utf8').split('\n');
-      const sourceHint = readHintFor(lines);
+      const source = readFileSync(file, 'utf8');
+      const lines = source.split('\n');
+      const sourceHint = readHintFor(source);
       lines.forEach((line, i) => {
         if (!sourceHint.test(line)) return;
         if (IMPORT_LINE.test(line)) return;
