@@ -105,12 +105,19 @@ async function main() {
   process.exitCode = 1;
 }
 
+// A GitHub Actions ::error:: annotation is line-delimited: a newline in the message would be
+// parsed as the start of a fresh workflow command. error.message can carry a raw upstream value
+// (parseVersion embeds the string it rejected), so collapse any CR/LF before emitting. Blast
+// radius is near-zero here (read-only token, no secrets, ref/version formats forbid newlines),
+// but the annotation should carry only what this script put there.
+const oneLine = (text) => String(text).replace(/[\r\n]+/g, ' ');
+
 if (
   typeof process.argv[1] === 'string' &&
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
   main().catch((error) => {
-    console.error(`::error::${error.message}`);
+    console.error(`::error::${oneLine(error.message)}`);
     process.exitCode = 1;
   });
 }
