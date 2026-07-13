@@ -51,8 +51,10 @@ const CONTENT_DIR = path.join(REPO_ROOT, 'content');
 
 const CONTENT_INFRA = /^(schemas|_.+)\.tsx?$/;
 
-const isPublishedSurface = (file: string) =>
-  /\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file) && !CONTENT_INFRA.test(file);
+const isPublishedSurface = (file: string) => {
+  const name = path.basename(file);
+  return /\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name) && !CONTENT_INFRA.test(name);
+};
 
 const contentSurfaces: Array<[string, string]> = readdirSync(CONTENT_DIR, { recursive: true })
   .map(String)
@@ -83,6 +85,26 @@ const PROJECT_STAT_METRICS: Record<string, string> = {
 };
 
 describe('performance metrics agree with the authoritative receipts', () => {
+  it('the surface predicate judges by BASENAME, so a nested module cannot escape the sweep', () => {
+    const misjudged = (
+      [
+        ['hero.ts', true],
+        ['nested/hero.ts', true],
+        ['_drafts/projects.ts', true],
+        ['schemas.ts', false],
+        ['nested/schemas.ts', false],
+        ['_validate-client-content.ts', false],
+        ['sub/_helper.ts', false],
+        ['schemas.test.ts', false],
+      ] as Array<[string, boolean]>
+    ).filter(([file, published]) => isPublishedSurface(file) !== published);
+
+    expect(
+      misjudged,
+      'CONTENT_INFRA must be tested against the BASENAME, never the path readdirSync returns. Matched against the full relative path, `_.+` greedily eats the directory separator: "_drafts/projects.ts" — real published content under an underscore-prefixed DIRECTORY — is then silently EXCLUDED from the sweep (a fail-open, the exact class this file exists to close), while genuine nested infra like "sub/_helper.ts" is swept. It is wrong in both directions at once.',
+    ).toEqual([]);
+  });
+
   it('the schema forbids any delta flipSign cannot flip into a searchable token', () => {
     const rejected = [
       '10%',
