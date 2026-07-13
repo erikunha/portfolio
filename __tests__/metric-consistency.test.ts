@@ -93,13 +93,14 @@ beforeAll(async () => {
 
 describe('performance metrics agree with the authoritative receipts', () => {
   it('every swept surface has content, so none can degrade to a silent no-op', () => {
+    const EMPTY_SERIALISATIONS = new Set(['', '{}', '[]', 'null', 'undefined']);
     const empty = METRIC_SURFACES()
-      .filter(([, text]) => text.trim().length === 0)
+      .filter(([, text]) => EMPTY_SERIALISATIONS.has(text.trim()))
       .map(([surface]) => surface);
 
     expect(
       empty,
-      'a surface swept for contradictions is EMPTY, so the sweep over it finds nothing and passes — a silent no-op, not a pass. `app/layout.tsx (metadata)` is the live risk: layoutMetadataText starts as "" and is filled in beforeAll, so if that import fails or app/layout ever exports {}, this gate quietly stops covering it and nothing says so. Fix the surface, not this assertion.',
+      'a surface swept for contradictions is EMPTY, so the sweep over it finds nothing and passes — a silent no-op, not a pass. `app/layout.tsx (metadata)` is the live risk: layoutMetadataText starts as "" and is filled in beforeAll. An empty OBJECT is the likelier regression than an empty string — a refactor to generateMetadata() leaving a stub makes JSON.stringify(metadata) return "{}", which is 2 chars, not 0 — so the check is against a set of empty SERIALISATIONS, not against length. Fix the surface, not this assertion.',
     ).toEqual([]);
   });
 
@@ -121,7 +122,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
     expect(
       misjudged,
-      'CONTENT_INFRA must be tested against the BASENAME, never the path readdirSync returns. Matched against the full relative path, `_.+` greedily eats the directory separator: "_drafts/projects.ts" — real published content under an underscore-prefixed DIRECTORY — is then silently EXCLUDED from the sweep (a fail-open, the exact class this file exists to close), while genuine nested infra like "sub/_helper.ts" is swept. It is wrong in both directions at once. The bare "_drafts" and "README.md" rows are the directory entry and the non-TS file that readdirSync also returns; dropping the extension check admits them and the sweep then tries to read a directory. This predicate is the SINGLE one both gates import (__tests__/helpers/content-surfaces.ts) — when it was duplicated per file, adding an exclusion to one copy diverged the two sweeps with both tables still green.',
+      'CONTENT_INFRA must be tested against the BASENAME, never the path readdirSync returns. Matched against the full relative path, `_.+` greedily eats the directory separator: "_drafts/projects.ts" — real published content under an underscore-prefixed DIRECTORY — is then silently EXCLUDED from the sweep (a fail-open, the exact class this file exists to close), while genuine nested infra like "sub/_helper.ts" is swept. It is wrong in both directions at once. The bare "_drafts" and "README.md" rows are the directory entry and the non-TS file that readdirSync also returns; dropping the extension check admits them and the sweep then tries to read a directory. Both gates go through ONE reader (readContentSurfaces in __tests__/helpers/content-surfaces.ts), which applies this ONE predicate — when it was duplicated per file, adding an exclusion to one copy diverged the two sweeps with both tables still green.',
     ).toEqual([]);
   });
 

@@ -77,20 +77,23 @@ const ARROW_READER = new RegExp(
   'g',
 );
 const FUNCTION_READER = new RegExp(
-  `function\\s+([A-Za-z_$][\\w$]*)\\s*\\([^)]*\\)[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
+  `(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*(?:async\\s+)?function\\b[^{]*\\{[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()|function\\s+([A-Za-z_$][\\w$]*)\\s*\\([^)]*\\)[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
   'g',
 );
+const BOUND_READER =
+  /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:promisify\(\s*)?(?:fs\.)?(?:readFileSync|readFile)\b\s*(?![\w$(])/g;
 
 const escapeForRegExp = (name: string) => name.replace(/[$\\^*+?.()|[\]{}]/g, '\\$&');
 
 const readerAliasesIn = (source: string): string[] => {
   const names = new Set<string>();
-  for (const pattern of [ARROW_READER, FUNCTION_READER]) {
+  for (const pattern of [ARROW_READER, FUNCTION_READER, BOUND_READER]) {
     pattern.lastIndex = 0;
     for (;;) {
       const match = pattern.exec(source);
-      if (match?.[1] === undefined) break;
-      names.add(match[1]);
+      if (match === null) break;
+      const name = match[1] ?? match[2];
+      if (name !== undefined) names.add(name);
     }
   }
   return [...names];
@@ -114,11 +117,20 @@ const READER_SHAPES: Array<[string, string, boolean]> = [
   ['function declaration', 'function read(p: string) {\n  return readFileSync(p);\n}', true],
   ['dollar-prefixed name', "const $read = (p: string) => readFileSync(p, 'utf-8');", true],
   ['async arrow', 'const read = async (p: string) => readFile(p);', true],
+  ['bare rebind', 'const read = readFileSync;', true],
+  ['namespaced rebind', 'const read = fs.readFileSync;', true],
+  [
+    'anonymous function expression',
+    'const read = function (p) {\n  return readFileSync(p);\n};',
+    true,
+  ],
+  ['promisified', 'const read = promisify(fs.readFile);', true],
   [
     'result binding, not a reader',
     "const pkg = JSON.parse(readFileSync('package.json', 'utf8'));",
     false,
   ],
+  ['call result, not a reader', "const raw = readFileSync('package.json', 'utf8');", false],
 ];
 
 describe('meta: the read detector itself', () => {
@@ -127,7 +139,7 @@ describe('meta: the read detector itself', () => {
 
     expect(
       detected,
-      `readHintFor is the ONLY thing standing between this gate and a silent bypass, and its success looks exactly like its failure: a missed alias just leaves the suite green. So it is gated here, not by "the tree is clean".\n\nThe formatter-wrapped case is not hypothetical — the live helper lines are 97 chars against biome lineWidth 100, so ONE longer parameter name makes \`pnpm check:fix\` split the arrow, and a line-local detector stops seeing it. The dollar case is a silent fail-open too: \`$\` is a legal identifier char AND a regex end-anchor, so an unescaped \`$read\` compiles to a pattern that can never match.\n\nThe last row must NOT detect: it binds the RESULT of a read, not a reader. Registering it would add a junk alias and, on a name collision, someone would silence the gate with an allow-tag — re-decorating the tag this gate exists to keep load-bearing.`,
+      `readHintFor is the ONLY thing standing between this gate and a silent bypass, and its success looks exactly like its failure: a missed alias just leaves the suite green. So it is gated here, not by "the tree is clean".\n\nThe formatter-wrapped case is not hypothetical — the live helper lines are 97 chars against biome lineWidth 100, so ONE longer parameter name makes \`pnpm check:fix\` split the arrow, and a line-local detector stops seeing it. The dollar case is a silent fail-open too: \`$\` is a legal identifier char AND a regex end-anchor, so an unescaped \`$read\` compiles to a pattern that can never match.\n\nThe two false rows must NOT detect: they bind the RESULT of a read, not a reader. Registering them would add junk aliases and, on a name collision, someone would silence the gate with an allow-tag — re-decorating the tag this gate exists to keep load-bearing.\n\nThe rebind rows exist because requiring a FUNCTION initializer regressed them: a bare "const read = readFileSync" is the simplest alias there is, it was caught before that change, and it went green. A detector that only sees the shapes its author happened to think of is the same fail-open in a different coat.`,
     ).toBe(shouldDetect);
   });
 });
