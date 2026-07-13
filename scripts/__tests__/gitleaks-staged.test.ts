@@ -7,14 +7,25 @@ const FAIL_CLOSED =
   'This runs on EVERY commit and is the only thing standing between a secret and git history. Once a secret is committed and pushed it is published, and rotation is the only remedy — so a branch here that lets the commit through is not a bug, it is the leak.';
 
 describe('decideStagedExit (the pre-commit gate cannot let a commit through unless gitleaks really scanned)', () => {
-  it('a clean staged tree is the ONLY case that lets the commit through', () => {
-    expect(decideStagedExit({ status: NO_LEAKS }).block).toBe(false);
+  // The literals, not the constants. Feeding NO_LEAKS/LEAKS_FOUND back in would make these
+  // tautological: swap the two constants and every test still passes, while in production
+  // gitleaks' real exit 1 ("secret found") would read as clean and the commit would ship the
+  // secret. The exit codes are a claim about an EXTERNAL tool, so a test that consumes the
+  // claim cannot verify it. (Test files are exempt from the no-magic-values rule, and here the
+  // literal IS the point.)
+  it('gitleaks exit 0 -- and only exit 0 -- lets the commit through', () => {
+    expect(decideStagedExit({ status: 0 }).block, FAIL_CLOSED).toBe(false);
+    expect(NO_LEAKS, 'NO_LEAKS must be the exit code gitleaks returns for a clean tree').toBe(0);
   });
 
-  it('a secret in the staged changes blocks the commit', () => {
-    const verdict = decideStagedExit({ status: LEAKS_FOUND });
+  it('gitleaks exit 1 (a secret in the staged changes) blocks the commit', () => {
+    const verdict = decideStagedExit({ status: 1 });
     expect(verdict.block, FAIL_CLOSED).toBe(true);
     expect(verdict.reason).toContain('the commit is blocked');
+    expect(
+      LEAKS_FOUND,
+      'LEAKS_FOUND must be the exit code gitleaks returns when it finds a secret. If this constant drifts, a real finding is read as clean and the commit ships the secret.',
+    ).toBe(1);
   });
 
   it('a missing gitleaks binary BLOCKS, and says how to install it', () => {
@@ -30,8 +41,13 @@ describe('decideStagedExit (the pre-commit gate cannot let a commit through unle
     expect(verdict.reason).toContain('ENOENT');
   });
 
-  it('gitleaks killed by a signal BLOCKS', () => {
-    expect(decideStagedExit({ status: null }).block, FAIL_CLOSED).toBe(true);
+  it('gitleaks killed by a signal BLOCKS, and still says how to install it', () => {
+    const verdict = decideStagedExit({ status: null });
+    expect(verdict.block, FAIL_CLOSED).toBe(true);
+    expect(
+      verdict.reason,
+      'Asserting only `block` lets the did-not-run branch be deleted: the result falls through to the unknown-exit-code branch, which also blocks, so no test notices — while the message degrades from "brew install gitleaks" to "exited null".',
+    ).toContain('brew install gitleaks');
   });
 
   it('an unknown exit code BLOCKS, never reads as clean', () => {

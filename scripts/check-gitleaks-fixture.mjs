@@ -42,14 +42,14 @@ export function assertConfigShape(config, hasIgnoreFile, allowComments) {
         'the gitleaks config does not set `useDefault = true`. Without the default ruleset there is almost nothing left to detect, and the probe below would still pass on whatever remains.',
     };
   }
-  if (/^\s*disabledRules\s*=\s*\[\s*[^\]\s]/m.test(config)) {
+  if (/(?:^|[{,])\s*disabledRules\s*=\s*\[\s*[^\]\s]/m.test(config)) {
     return {
       ok: false,
       reason:
         'the gitleaks config disables rules. Disabling a rule class is invisible to the probe below, which only proves that ONE rule still fires. If a rule genuinely false-positives, allowlist the offending VALUE with a `regexes` entry instead.',
     };
   }
-  if (/^\s*paths\s*=/m.test(config)) {
+  if (/(?:^|[{,])\s*paths\s*=/m.test(config)) {
     return {
       ok: false,
       reason:
@@ -155,10 +155,21 @@ const MAY_NAME_THE_COMMENT = [
   'docs/superpowers/plans/',
 ];
 
+const GREP_MATCHED = 0;
+const GREP_NO_MATCH = 1;
+
 function trackedFilesContaining(needle) {
   const listed = spawnSync('git', ['grep', '-l', '--fixed-strings', needle, '--', '.'], {
     encoding: 'utf8',
   });
+  // git grep exits 1 for "no match" and >=2 for an error, and BOTH produce empty stdout. Reading
+  // stdout alone makes a broken git indistinguishable from a clean tree -- the same fail-open
+  // this file exists to forbid, in the function that enforces the ban.
+  if (listed.status !== GREP_MATCHED && listed.status !== GREP_NO_MATCH) {
+    throw new Error(
+      `git grep could not scan the tree for suppression comments (exit ${listed.status}): ${String(listed.stderr ?? listed.error?.message).trim()}. Empty output from a FAILED grep looks exactly like a clean tree, so this refuses rather than reporting one.`,
+    );
+  }
   return String(listed.stdout ?? '')
     .split('\n')
     .filter((file) => file !== '')
@@ -242,4 +253,9 @@ function main() {
   }
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) main();
+if (
+  typeof process.argv[1] === 'string' &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  main();
+}

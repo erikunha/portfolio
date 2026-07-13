@@ -142,7 +142,7 @@ describe('meta: .gitignore covers the paths the agent-worktree harness symlinks'
   it.each(HARNESS_SYMLINKS)('%s is ignored when materialised as a symlink', (name) => {
     expect(
       isIgnored(sandboxes.symlink, name),
-      `The harness symlinks "${name}" into every agent worktree, and this .gitignore does not ignore it.\n\nWrite "/${name}", with no trailing slash. A trailing slash makes a rule directory-only, and git lstats a path without following the link, so a symlink is not a directory and a directory-only rule cannot match it.\n\nEvery rule shape, measured against git (this table is rendered from the same data the matrix in this file asserts, so it cannot drift from what git actually does):\n\n${shapeTable(name)}\n\nOther harness paths asserted here: ${siblingsOf(name)}.\n\nThe child git sees exactly these variables: ${childEnvKeys()}. Only ${ENV_ALLOWLIST.join(' and ')} are inherited from the parent; the rest are set here. That allowlist is the whole defence, and it works by ABSENCE: GIT_DIR (a foreign info/exclude), HOME and XDG_CONFIG_HOME (a user ignore file), GIT_TEMPLATE_DIR (a seeded one) and the GIT_CONFIG_* family are each a SECOND place "${name}" could get ignored, and any one of them would turn this gate GREEN while the rule under test is broken. Measured: leak any one of them into the child and a broken rule reads as ignored.\n\nThe empty init template and core.excludesFile=${NULL_DEVICE} are backstops, not load-bearing -- measured: with the allowlist alone and both of those removed, a broken rule still reds. Do not "simplify" the allowlist on the grounds that the pins cover it. They do not; it is the other way round.`,
+      `The harness symlinks "${name}" into every agent worktree, and this .gitignore does not ignore it.\n\nWrite "/${name}", with no trailing slash. A trailing slash makes a rule directory-only, and git lstats a path without following the link, so a symlink is not a directory and a directory-only rule cannot match it.\n\nEvery rule shape, measured against git (this table is rendered from the same data the matrix in this file asserts, so it cannot drift from what git actually does):\n\n${shapeTable(name)}\n\nOther harness paths asserted here: ${siblingsOf(name)}.\n\nThe child git sees exactly these variables: ${childEnvKeys()}. Only ${ENV_ALLOWLIST.join(' and ')} are inherited from the parent; the rest are set here, alongside an empty init template and core.excludesFile=${NULL_DEVICE}. Every one of those exists to stop a SECOND ignore source reaching git -- a foreign GIT_DIR's info/exclude, a user or system ignore file, a seeded template. If one did, this gate could read GREEN while the rule under test is broken, which is the one outcome it exists to prevent. Which specific guard closes which specific channel is not asserted anywhere, so this message does not claim it: treat the sandbox as one indivisible thing and do not relax any part of it without gating what you removed.`,
     ).toBe(true);
   });
 
@@ -212,7 +212,8 @@ const RULE_MATRIX: Array<[string, boolean, boolean, boolean, boolean]> = [
   [NEGATED, true, false, false, false],
 ];
 
-const asRuleFor = (rule: string, name: string) => rule.split(RULE).join(name).replace('\n', ' + ');
+const asRuleFor = (rule: string, name: string) =>
+  rule.split(RULE).join(name).split('\n').join(' + ');
 const verb = (ignored: boolean) => (ignored ? 'ignores' : 'MISSES');
 
 const shapeTable = (name: string) =>

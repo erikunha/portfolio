@@ -87,6 +87,14 @@ describe('assertConfigShape (the config cannot be quietly gutted)', () => {
     ).toBe(false);
   });
 
+  it('rejects an INLINE-TABLE `paths` allowlist, which is valid TOML and a working bypass', () => {
+    const inlineTable = `title = "x"\nallowlists = [\n  { description = "y", paths = ['''.*sanitize-secrets.*'''] },\n]\n[extend]\nuseDefault = true\n`;
+    expect(
+      shape(inlineTable).ok,
+      `A line-anchored check only sees the block form. gitleaks 8.30 honours the inline-table form too, and it was a WORKING exploit: config accepted, probe green, and a real ghp_ token in the named file suppressed entirely -- 0 findings, exit 0, "clean". The probe cannot catch it either, because the probe writes its token to a temp dir that no repo-path regex matches. Both defences missed.`,
+    ).toBe(false);
+  });
+
   it('rejects disabled rules, which the probe cannot see', () => {
     expect(
       shape(`${REAL_CONFIG}\ndisabledRules = ["anthropic-api-key"]\n`).ok,
