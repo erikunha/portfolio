@@ -6,11 +6,7 @@ export function Breadcrumb({ trail }: { trail: { name: string; path: string }[] 
       aria-label="Breadcrumb"
       className="font-mono text-[11px] tracking-[0.08em] text-primary-400 mb-6"
     >
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD is server-built from a typed trail, not user input
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema(trail)) }}
-      />
+      <script type="application/ld+json">{JSON.stringify(breadcrumbSchema(trail))}</script>
       <ol className="flex flex-wrap items-center gap-1.5 m-0 p-0 list-none">
         {trail.map((crumb, i) => {
           const isLast = i === trail.length - 1;
