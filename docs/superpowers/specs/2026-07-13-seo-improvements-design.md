@@ -4,6 +4,8 @@
 **Scope:** One PR. Correctness + accessibility hygiene surfaced by an external SEO audit, verified against the codebase.
 **Framing (honest):** The value here is *correctness* (stopping 5 real pages from self-reporting as homepage duplicates) and *accessibility*, with SEO benefit. It is not a ranking lever — a personal-brand site's traffic is direct/LinkedIn/referral, not organic search. Bundled as one PR at the owner's request; pr-size will read red by design (reviewed as one cohesive pass).
 
+> **Superseded where noted — DECISIONS.md (2026-07-13) + the shipped code govern.** This is the *pre-implementation* spec; review reversed the og:image call. The shipped `dsPageMetadata` re-specifies the FULL `openGraph` + `twitter` per route — `og:image` is KEPT (the branded `/og.png`), not dropped — because Next's shallow metadata merge would otherwise silently drop siteName/locale/image and leave the subpages inheriting the homepage's twitter card. Where this spec says otherwise, the code + DECISIONS.md are authoritative.
+
 ---
 
 ## Goal
@@ -30,7 +32,7 @@ Fix three classes of issue, each independently verified against the live code:
 - Exports `dsPageMetadata({ slug, title, description }): Metadata`.
 - Returns `{ title, description, alternates: { canonical: <path> }, openGraph: { title, description, url: <path>, type: 'website' } }` where `<path>` = `/design-system` for `slug: ''` else `/design-system/${slug}`.
 - Relative paths resolve against the root `metadataBase` (`https://erikunha.dev`) — no absolute URLs duplicated.
-- Rationale for a helper: Next.js merges metadata shallowly, and setting `openGraph` in a child *replaces* the parent's `openGraph` entirely (title/description/image lost). The helper re-specifies the og fields each subpage needs, keeping canonical + og:url per-route without silently dropping og metadata. (Image is inherited from root only where a child omits `openGraph`; since we set `openGraph`, we do not re-add the image — subpages are text docs, so `type: 'website'` with title/description/url is sufficient. Confirm in review that losing the inherited og:image on subpages is acceptable; if not, add `images` to the helper.)
+- Rationale for a helper: Next.js merges metadata shallowly, and setting `openGraph` in a child *replaces* the parent's `openGraph` entirely (title/description/image lost). The helper re-specifies the og fields each subpage needs, keeping canonical + og:url per-route without silently dropping og metadata. (Superseded — see the banner above: the shipped helper re-specifies the FULL `openGraph` + a per-route `twitter` card, including the branded `/og.png`, because the shallow replace would otherwise silently drop siteName/locale/image and the twitter card. The earlier "text docs, drop og:image" call was reversed in review; see DECISIONS.md.)
 
 **Modify:** the 5 MDX metadata exports to use the helper:
 - `app/design-system/page.mdx` → `export const metadata = dsPageMetadata({ slug: '', title: '…', description: '…' })`
@@ -98,7 +100,7 @@ Fix three classes of issue, each independently verified against the live code:
 
 ## Failure modes to convert into explicit plan tasks (thinking-inversion — run before writing-plans)
 
-1. Next.js `openGraph` child-replace drops og:image on subpages → helper must re-specify needed og fields (or accept image loss, documented).
+1. Next.js `openGraph`/`twitter` child-replace silently drops any field not restated (siteName/locale/image, the whole twitter card) → helper re-specifies the FULL og + twitter per route incl the branded `/og.png` (the earlier "accept image loss" option was reversed in review; see DECISIONS.md).
 2. sr-only `srLabel` inside `<h2>` changes the section accessible name → verify it reads sensibly ("Projects, ls -la ./projects"), not garbled; confirm axe stays 100.
 3. Hero `<h1>`→`<p>` visual drift (even 1px reflows the baseline) → inspect-before-commit; the sr-only h1 must not introduce layout (position:absolute).
 4. Footer internal link with `target="_blank"` would be wrong (same-site) → assert no `_blank`.
