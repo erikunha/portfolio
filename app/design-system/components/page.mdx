@@ -1,7 +1,10 @@
-export const metadata = {
+import { dsPageMetadata } from '../_lib/page-metadata';
+
+export const metadata = dsPageMetadata({
+  slug: 'components',
   title: 'Components — Design System — erikunha.dev',
   description: '9 primitive components for erikunha.dev (7 RSC, Field and CopyButton are client)',
-};
+});
 
 import { Field } from '../../../design-system/components/Field';
 import { WindowChrome } from '../../../design-system/components/WindowChrome/WindowChrome';
