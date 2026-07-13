@@ -36,14 +36,19 @@ const hermeticEnv = (): NodeJS.ProcessEnv => {
 const git = (cwd: string, args: string[]) =>
   spawnSync('git', [...NO_GLOBAL_EXCLUDES, ...args], { cwd, env: hermeticEnv() });
 
+const describeGitFailure = (result: ReturnType<typeof git>) =>
+  result.error !== undefined
+    ? `git could not be spawned at all: ${result.error.message}. The sandbox passes an allowlisted environment, so the usual cause is that git is not reachable via the allowlisted PATH.`
+    : `it exited ${result.status}: ${String(result.stderr).trim()}`;
+
 const isIgnored = (cwd: string, target: string) => {
-  const { status, stderr } = git(cwd, ['check-ignore', '-q', '--', target]);
-  if (status !== GIT_PATH_IGNORED && status !== GIT_PATH_NOT_IGNORED) {
+  const result = git(cwd, ['check-ignore', '-q', '--', target]);
+  if (result.status !== GIT_PATH_IGNORED && result.status !== GIT_PATH_NOT_IGNORED) {
     throw new Error(
-      `git check-ignore on "${target}" exited ${status}, which is neither ${GIT_PATH_IGNORED} (ignored) nor ${GIT_PATH_NOT_IGNORED} (not ignored): ${stderr}. Treating that as "not ignored" would red the assertion below and blame the .gitignore rule for what is actually a broken sandbox.`,
+      `git check-ignore on "${target}" answered neither ${GIT_PATH_IGNORED} (ignored) nor ${GIT_PATH_NOT_IGNORED} (not ignored): ${describeGitFailure(result)}. That is a broken sandbox, not a broken .gitignore rule. Reporting it as "not ignored" would red the assertion below and send you to edit a rule that is fine.`,
     );
   }
-  return status === GIT_PATH_IGNORED;
+  return result.status === GIT_PATH_IGNORED;
 };
 
 const sandboxes: Record<Shape, string> = { symlink: '', directory: '' };
@@ -55,7 +60,7 @@ const makeSandbox = (shape: Shape) => {
   const init = git(dir, ['init', '-q', EMPTY_INIT_TEMPLATE]);
   if (init.status !== GIT_OK) {
     throw new Error(
-      `git init failed in the ${shape} sandbox (exit ${init.status}): ${init.stderr}. Every case below would then red for that reason while blaming the .gitignore rule.`,
+      `git init failed in the ${shape} sandbox: ${describeGitFailure(init)}. Every case below would then red for that reason while blaming the .gitignore rule.`,
     );
   }
 
