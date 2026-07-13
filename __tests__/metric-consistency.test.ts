@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { perfReceipts } from '@/content/perf-receipts';
@@ -47,16 +47,15 @@ const nearKeyword = (text: string, needle: string, keyword: RegExp) => {
   }
 };
 
+const CONTENT_DIR = path.join(REPO_ROOT, 'content');
+
+const contentSurfaces: Array<[string, string]> = readdirSync(CONTENT_DIR, { recursive: true })
+  .map(String)
+  .filter((file) => /\.tsx?$/.test(file))
+  .map((file) => [`content/${file}`, readFileSync(path.join(CONTENT_DIR, file), 'utf-8')]);
+
 const METRIC_SURFACES: Array<[string, string]> = [
-  ['content/perf-receipts.ts (heroStats)', read('content/perf-receipts.ts')],
-  ['content/projects.ts', read('content/projects.ts')],
-  ['content/seo.ts', read('content/seo.ts')],
-  ['content/git-log.ts', read('content/git-log.ts')],
-  ['content/sys-health.ts', read('content/sys-health.ts')],
-  ['content/hottest-takes.ts', read('content/hottest-takes.ts')],
-  ['content/man-page.ts', read('content/man-page.ts')],
-  ['content/ask-eval-corpus.ts', read('content/ask-eval-corpus.ts')],
-  ['content/ask-eval-calibration.ts', read('content/ask-eval-calibration.ts')],
+  ...contentSurfaces,
   ['lib/hiring-profile.ts (served at /api/erik.json)', JSON.stringify(HIRING_PROFILE)],
   ['lib/ask/system-prompt.ts (what the AI answers with)', SYSTEM_TEXT],
   ['public/llms.txt', read('public/llms.txt')],
@@ -80,7 +79,15 @@ const PROJECT_STAT_METRICS: Record<string, string> = {
 
 describe('performance metrics agree with the authoritative receipts', () => {
   it('the schema forbids any delta flipSign cannot flip into a searchable token', () => {
-    const rejected = ['10%', '-40% build time', '-97.5% (40s→<1s, Venturus)', '-25'].filter(
+    const rejected = [
+      '10%',
+      '-40% build time',
+      '-97.5% (40s→<1s, Venturus)',
+      '-25',
+      'build time -40%',
+      ' -40%',
+      '−25%',
+    ].filter(
       (delta) =>
         PerfReceiptSchema.safeParse({
           metric: 'BUNDLE_JS',
@@ -92,15 +99,20 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
     expect(
       rejected,
-      'PerfReceiptSchema must reject every delta that is not a bare signed percentage. flipSign() flips the sign and the sweep searches each surface for that literal string, so an unsigned "10%" flips to "-0%" and a glossed "-40% build time" flips to "+40% build time" — strings no surface contains. The sweep for that metric then silently passes forever instead of failing: the exact fail-open class this file exists to close. Note the glossed form is not hypothetical — lib/hiring-profile.ts uses it one import away. Fix the schema (or move the gloss to `note`), not this test.',
+      'PerfReceiptSchema must reject every delta that is not a bare signed percentage. flipSign() flips the sign and the sweep searches each surface for that literal string, so the delta has to be a token a surface can literally contain. An unsigned "10%" flips to "-0%"; a trailing gloss "-40% build time" flips to "+40% build time"; a LEADING gloss "build time -40%" flips to "-uild time -40%" — all strings no surface holds, so the sweep for that metric silently passes forever instead of failing. Each listed case kills a different loosening of the regex: the leading-gloss cases exist because dropping only the `^` anchor lets them through while every other case here still reds. "−25%" uses U+2212, whose flip is the TRUE value "-25%" that every surface contains — that one would cause a false-positive storm, not a no-op. The glossed form is not hypothetical: lib/hiring-profile.ts uses it one import away. Fix the schema (or move the gloss to `note`), not this test.',
     ).toEqual([]);
   });
 
-  it('INITIAL_LOAD matches the phrasing PAGE_LOAD does not own', () => {
+  it('INITIAL_LOAD matches "initial page load" but never "load time"', () => {
     expect(
       METRIC_KEYWORDS.INITIAL_LOAD?.test('initial page load'),
-      'INITIAL_LOAD must still match "initial page load". A `.` matches ONE character and " page " is six, so the narrower /initial.load/ walks straight past it and that receipt goes unswept.',
+      'INITIAL_LOAD must match "initial page load". A `.` matches ONE character and " page " is six, so the narrower /initial.load/ walks straight past it and that receipt goes unswept.',
     ).toBe(true);
+
+    expect(
+      METRIC_KEYWORDS.INITIAL_LOAD?.test('load time'),
+      'INITIAL_LOAD must NOT match "load time" — that is PAGE_LOAD\'s own rendered tile label (content/projects.ts). Widening INITIAL_LOAD to claim it reds the real LOAD TIME tile as a fake contradiction, which is exactly the false positive a74ce37 fixed. This guards the upper bound; the assertion above guards the lower one.',
+    ).toBe(false);
   });
 
   it('every receipt has a keyword, so no metric can be added and left unswept', () => {
