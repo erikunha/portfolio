@@ -164,3 +164,18 @@ z.object({
   url: z.string().url(),
   email: z.string().email(),
 }).parse(personSchema);
+
+const SITE_ORIGIN = 'https://erikunha.dev';
+
+export function breadcrumbSchema(trail: { name: string; path: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: trail.map((crumb, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: crumb.name,
+      item: `${SITE_ORIGIN}${crumb.path}`,
+    })),
+  };
+}

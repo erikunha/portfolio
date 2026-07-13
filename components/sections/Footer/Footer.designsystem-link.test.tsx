@@ -19,18 +19,22 @@ class MockIntersectionObserver implements IntersectionObserver {
   }
 }
 
-beforeEach(() => {
-  vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
+function stubMatchMedia(matches: boolean) {
   vi.stubGlobal(
     'matchMedia',
     vi.fn(() => ({
-      matches: false,
+      matches,
       // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
       addEventListener: () => {},
       // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
       removeEventListener: () => {},
     })),
   );
+}
+
+beforeEach(() => {
+  vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
+  stubMatchMedia(false);
 });
 
 afterEach(() => {
@@ -38,12 +42,18 @@ afterEach(() => {
 });
 
 describe('Footer design-system link', () => {
-  it('links to /design-system as a same-site internal link (no target=_blank)', () => {
+  it.each([
+    ['desktop', false],
+    ['mobile', true],
+  ])('links to /design-system as a same-site internal link (no target=_blank) on %s', (_variant, initialIsMobile) => {
+    stubMatchMedia(initialIsMobile);
     const { container } = render(
-      <BreakpointProvider initialIsMobile={false}>
+      <BreakpointProvider initialIsMobile={initialIsMobile}>
         <Footer />
       </BreakpointProvider>,
     );
+    const pre = container.querySelector('pre');
+    expect(pre !== null).toBe(!initialIsMobile);
     const links = [...container.querySelectorAll('a[href="/design-system"]')];
     expect(links.length).toBeGreaterThan(0);
     for (const a of links) {
