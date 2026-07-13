@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Superseded where noted — DECISIONS.md (2026-07-13) and the shipped code are authoritative.** The code samples below are the *pre-implementation* plan; review refined two details: (1) the design-system `openGraph`/`twitter` metadata is FULLY re-specified per route — `og:image` is KEPT (the branded `/og.png`), not dropped, because Next's shallow metadata merge would otherwise silently drop siteName/locale/image and leave subpages inheriting the homepage's twitter card; (2) the breadcrumb JSON-LD uses a plain `<script>{JSON.stringify(...)}</script>` child (matching `app/layout.tsx`), not `dangerouslySetInnerHTML`. Where a sample differs from the shipped `dsPageMetadata`/`Breadcrumb`, the code + DECISIONS.md govern.
+
 **Goal:** Fix the `/design-system/*` canonical-to-homepage bug, collapse the duplicate hero `<h1>`, add screen-reader/crawler-readable topic labels to the terminal section headings, and make `/design-system` discoverable — one PR on branch `feat/seo-improvements`.
 
 **Architecture:** Metadata correctness via a small pure helper the MDX pages import; a single `sr-only` `<h1>` + `aria-hidden` visible variants for the hero; an optional `srLabel` sr-only span on the shared `Module` `<h2>` fed by a Zod-validated content map; a footer internal link; and a server-rendered breadcrumb (per-page crumb data, no client hook) with `BreadcrumbList` JSON-LD.
@@ -14,7 +16,7 @@
 - Homepage `metadata.description` ≤ 160 chars AND must contain the exact substring `Senior Full-Stack Engineer` (the `__tests__/identity-consistency.test.ts` gate). Do NOT change `metadata.title` (pinned by `og-metadata` + identity tests).
 - All new user-facing copy (section labels) lives in `content/*.ts`, Zod-validated at module load — never inlined in `.tsx`. (The existing inline visible headers are pre-existing and NOT migrated here.)
 - Canonical/og:url use RELATIVE paths resolved against the root `metadataBase` (`https://erikunha.dev`) — never duplicate absolute URLs.
-- Owner-settled: design-system subpages MAY lose the inherited `og:image` (text docs; the helper sets `openGraph` without `images`).
+- The helper re-specifies the FULL `openGraph` + `twitter` per route (type/locale/url/title/description/siteName + the branded `/og.png`, and a per-route twitter card) — Next merges metadata shallowly, so setting `openGraph`/`twitter` REPLACES the root's and any field not restated is silently dropped. (An earlier draft dropped `og:image` as an owner-settled "text docs" simplification; reversed in `aa4b2e6` — see DECISIONS.md.)
 - `sr-only` is the existing clip-based utility in `app/css/base.css` (crawlable; not `display:none`). Use it; do not create a new one.
 - No dependency added. Every unit independently revertible.
 - Visual baselines: hero change is expected pixel-identical (INSPECT before commit; regen only on a real diff). Footer change is expected to alter the footer baseline (regen darwin+linux per `.claude/skills/visual-baseline-regen`).
@@ -694,7 +696,7 @@ git commit -m "feat(seo): server-rendered breadcrumb + BreadcrumbList schema on 
 
 ## Failure-mode checklist (thinking-inversion — each is covered by a task/test above)
 
-1. Next.js `openGraph` child-replace drops og:image → helper sets `openGraph` deliberately; owner-settled; Task 1.
+1. Next.js `openGraph`/`twitter` child-replace silently drops any field not restated (siteName/locale/image, the whole twitter card) → helper re-specifies the FULL og + twitter per route incl the branded `/og.png`; Task 1 (refined in `aa4b2e6`, see DECISIONS.md).
 2. sr-only `srLabel` garbles the accessible name → Task 4 test asserts the sr-only span text; axe gate in final verification.
 3. Hero `<h1>`→`<p>` visual drift → Task 3 Step 5 inspect-before-commit + baseline.
 4. Footer link with `target="_blank"` → Task 5 test asserts no `_blank`.
