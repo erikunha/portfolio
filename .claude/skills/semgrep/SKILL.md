@@ -13,13 +13,13 @@ the code-scanning tab; this skill is the local/agent interface.
 
 ## Invocation — pinned only
 
-Semgrep is pinned to `1.97.0`. Run through the repo wrapper, never a bare global call:
+Semgrep is pinned to `1.169.0`. Run through the repo wrapper, never a bare global call:
 
     pnpm lint:semgrep                       # scan app/ lib/ components/ scripts/, write semgrep.sarif
     node scripts/run-semgrep.mjs <paths>    # scan specific paths
     node scripts/run-semgrep.mjs --error --sarif out.sarif <paths>
 
-Local install (optional — CI is authoritative): `pip install semgrep==1.97.0`.
+Local install (optional — CI is authoritative): `pip install semgrep==1.169.0`.
 If Semgrep is not installed, the wrapper exits 2 with an install hint; defer to CI.
 
 ## Rulesets
