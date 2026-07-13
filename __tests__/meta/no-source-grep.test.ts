@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const ROOT_DIR = process.cwd();
@@ -42,12 +42,19 @@ function isAllowTagged(lines: string[], index: number): boolean {
   return false;
 }
 
+const TESTS_ROOT = resolve(process.cwd(), '__tests__');
+
+const isTestCode = (full: string, entry: string) =>
+  full.startsWith(TESTS_ROOT)
+    ? /\.tsx?$/.test(entry) && !/\.d\.ts$/.test(entry)
+    : /\.test\.tsx?$/.test(entry);
+
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((e) => {
     if (SKIP_DIRS.has(e)) return [];
     const full = join(dir, e);
     if (statSync(full).isDirectory()) return walk(full);
-    return /\.test\.tsx?$/.test(e) ? [full] : [];
+    return isTestCode(full, e) ? [full] : [];
   });
 }
 
