@@ -44,10 +44,10 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
     description:
       'Mission-critical hospital operations dashboards — real-time, multi-site, Clean Architecture.',
     mobileDescription:
-      'Angular + Nx + Clean Architecture frontend for Canon Medical workflow ops. -33% JS, +52% TTI, ~100% WCAG 2.1 AA. Lazy-loaded modules, OnPush everywhere, concurrent async pipelines.',
+      'Angular + Nx + Clean Architecture frontend for Canon Medical workflow ops. -33% JS, -52% TTI, ~100% WCAG 2.1 AA. Lazy-loaded modules, OnPush everywhere, concurrent async pipelines.',
     stats: [
       { label: 'JS BUNDLE', value: '-33%' },
-      { label: 'TTI GAIN', value: '+52%' },
+      { label: 'TTI', value: '-52%' },
       { label: 'STACK', value: 'ANGULAR / NX / RXJS' },
     ],
     mobileMeta: [

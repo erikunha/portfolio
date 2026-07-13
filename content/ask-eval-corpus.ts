@@ -122,7 +122,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-perf-canon-bundles',
     question: 'What bundle-size improvements has Erik shipped?',
     expect:
-      'At Canon Medical: roughly -33% JS bundle and -98% CSS bundle, plus a large TTI improvement (~+52%).',
+      'At Canon Medical: roughly -33% JS bundle and -98% CSS bundle, plus a large TTI improvement (~-52%, i.e. time-to-interactive fell by about half).',
     kind: 'factual',
   },
   {

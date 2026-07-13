@@ -153,7 +153,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     a11y_score: '~100/100',
     perf_delta_js: '-33%',
     perf_delta_css: '-98%',
-    tti_improvement: '+52%',
+    tti_improvement: '-52%',
     page_load_reduction: '-32%',
     conversion_uplift: '+10% (20+ A/B experiments)',
     api_latency_reduction: '-97.5% (40s→<1s, Venturus)',

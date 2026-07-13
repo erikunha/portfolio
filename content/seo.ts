@@ -5,10 +5,10 @@ export const personSchema = {
   '@type': 'Person',
   name: 'Erik Henrique Alves Cunha',
   alternateName: 'Erik Cunha',
-  jobTitle: 'Senior Full-Stack Software Engineer · Frontend Architecture & AI',
+  jobTitle: 'Senior Full-Stack Engineer · Frontend Architecture & AI',
   url: 'https://erikunha.dev',
   email: 'erikhenriquealvescunha@gmail.com',
-  telephone: '+5519998394086',
+  telephone: '+5519997049125',
   knowsLanguage: [
     { '@type': 'Language', name: 'Portuguese', alternateName: 'Native' },
     { '@type': 'Language', name: 'English', alternateName: 'C1' },
@@ -102,7 +102,7 @@ export const personSchema = {
   ],
   hasOccupation: {
     '@type': 'Occupation',
-    name: 'Full-Stack Software Engineer',
+    name: 'Full-Stack Engineer',
     occupationLocation: { '@type': 'City', name: 'Remote / Worldwide' },
     skills:
       'TypeScript, React, Angular, Next.js, Node.js, Python, LLM Engineering, RAG, Multi-Agent Systems, PCI-DSS, AWS, Docker, Performance Engineering',

@@ -6,7 +6,7 @@ export const manPage: ManPage = ManPageSchema.parse({
   version: 'v9.0',
   date: '2026-07-11',
   description:
-    'Senior full-stack software engineer (frontend-heavy), 8+ years.\n       Shipped production systems across payments (PCI-DSS), healthcare,\n       and e-commerce. React/Next.js, Angular, Stencil micro-frontends\n       across 15+ regulated markets, €1B+ revenue. Spec-driven 12-agent\n       AI platform shipped at Betsson. Now: frontend platform for AI\n       deal origination, Raylu.ai (remote).',
+    'Senior full-stack engineer (frontend-heavy), 8+ years.\n       Shipped production systems across payments (PCI-DSS), healthcare,\n       and e-commerce. React/Next.js, Angular, Stencil micro-frontends\n       across 15+ regulated markets, €1B+ revenue. Spec-driven 12-agent\n       AI platform shipped at Betsson. Now: frontend platform for AI\n       deal origination, Raylu.ai (remote).',
   options: [
     { flag: '--seniority', desc: 'Senior → Staff/Principal' },
     { flag: '--track', desc: 'IC or technical lead' },

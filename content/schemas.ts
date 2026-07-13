@@ -25,7 +25,12 @@ export const ProjectSchema = z.object({
 
 export const PerfReceiptSchema = z.object({
   metric: z.string().min(1),
-  delta: z.string().min(1),
+  delta: z
+    .string()
+    .regex(
+      /^[+-]\d+(\.\d+)?%$/,
+      'a perf receipt delta must be a bare signed percentage and nothing else: "-52%", "+10%", "-97.5%". __tests__/metric-consistency.test.ts flips the sign and searches every public surface for the resulting string, so the delta has to be a token a surface can literally contain. A trailing gloss ("-40% build time") or a missing sign ("10%") flips to a string no surface holds — the sweep for that metric then silently passes forever instead of failing. Put the gloss in `note`. The sibling idiom lives one import away in lib/hiring-profile.ts ("-97.5% (40s→<1s, Venturus)"); that field is a plain string and is compared by prefix, this one is not.',
+    ),
   company: z.string().min(1),
   note: z.string().min(1),
   mobileMetric: z.string().min(1).optional(),

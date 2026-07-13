@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { perfReceipts } from '@/content/perf-receipts';
 import { projects } from '@/content/projects';
+import { personSchema } from '@/content/seo';
 import { unknowns } from '@/content/unknowns';
 import { visaRows } from '@/content/visa';
 import { SYSTEM, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
 const CACHE_ELIGIBILITY_MIN_CHARS = 3500;
+const COUNTRY_AND_AREA_CODE_LENGTH = 4;
+const PHONE_LOCAL_DIGITS = personSchema.telephone
+  .replace(/\D/g, '')
+  .slice(COUNTRY_AND_AREA_CODE_LENGTH);
 
 describe('lib/ask/system-prompt', () => {
   describe('cache eligibility', () => {
@@ -29,7 +34,13 @@ describe('lib/ask/system-prompt', () => {
     it('does not embed a personal phone number in the SYSTEM prompt', () => {
       expect(SYSTEM_TEXT).not.toMatch(/\+\d[\d\s()-]{6,}\d/);
       expect(SYSTEM_TEXT).not.toMatch(/(?:\d[\s()-]?){9,}\d/);
-      expect(SYSTEM_TEXT).not.toContain('99839-4086');
+
+      const digitsOnly = SYSTEM_TEXT.normalize('NFKC').replace(/[^\p{Nd}]/gu, '');
+      expect(
+        digitsOnly,
+        `the owner's real phone number must never appear in the SYSTEM prompt in ANY formatting. Two things this guard learned the hard way: (1) it used to pin a LITERAL ('99839-4086'), which went stale the moment the number changed and left the live one unguarded — it now derives from personSchema.telephone; (2) it used to strip a separator ALLOWLIST ([\\s()+.-]), which an en-dash or a zero-width space walked straight through. Deleting every non-digit after NFKC leaves no allowlist to go stale.`,
+      ).not.toContain(PHONE_LOCAL_DIGITS);
+
       expect(SYSTEM_TEXT).not.toMatch(/WhatsApp/i);
     });
   });

@@ -23,6 +23,12 @@ export const perfReceipts: PerfReceipt[] = z.array(PerfReceiptSchema).parse([
     note: 'concurrent async + OnPush.',
   },
   {
+    metric: 'INITIAL_LOAD',
+    delta: '-25%',
+    company: '@ CANON_MEDICAL',
+    note: 'lazy-loaded modules + route-level splitting.',
+  },
+  {
     metric: 'BUNDLE_JS',
     delta: '-33%',
     company: '@ CANON_MEDICAL',
