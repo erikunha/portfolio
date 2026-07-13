@@ -105,10 +105,14 @@ describe('assertConfigShape (the config cannot be quietly gutted)', () => {
     ).toBe(false);
   });
 
-  it('rejects disabled rules, which the probe cannot see', () => {
+  it.each([
+    ['bare', 'disabledRules = ["anthropic-api-key"]'],
+    ['quoted key', '"disabledRules" = ["anthropic-api-key"]'],
+    ['dotted key', 'extend.disabledRules = ["anthropic-api-key"]'],
+  ])('rejects %s disabled rules, which the probe cannot see', (_label, line) => {
     expect(
-      shape(`${REAL_CONFIG}\ndisabledRules = ["anthropic-api-key"]\n`).ok,
-      'The probe only proves ONE rule still fires. Disabling every OTHER class leaves the probe green while the scanner is dead for the credentials this repo actually holds.',
+      shape(`useDefault = true\n${line}\n`).ok,
+      'The probe only proves ONE rule still fires. Disabling every OTHER class leaves the probe green while the scanner is dead for the credentials this repo actually holds. gitleaks treats quoted and dotted keys as equivalent to the bare key, so all three spellings must be rejected -- and the `paths` ban gets the same broadening, so this holds it too.',
     ).toBe(false);
   });
 
