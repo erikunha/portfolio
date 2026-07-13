@@ -61,43 +61,105 @@ export function assertExpectedFindings(findings) {
 }
 
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const FIXTURE_DIR = 'tests/fixtures/gitleaks';
+const REPO_CONFIG = '.gitleaks.toml';
 const REPORT_FILE = 'gitleaks-fixture.json';
+const PROBE_FILE = 'config-probe.ts';
 const GITLEAKS_BIN = process.env.GITLEAKS_BIN ?? 'gitleaks';
+
+// Assembled at runtime so the literal never appears in this file — otherwise the repo scan
+// would flag this script. It is NOT the token .gitleaks.toml allowlists: the whole point of
+// the probe below is to scan a secret the repo config does not exempt.
+const PROBE_TOKEN = ['ghp', 'Pr0beNotAllowlisted0123456789abcdefg'].join('_');
+
+// GITLEAKS_CONFIG is honoured even with no --config flag, so the default-rules pass below
+// would silently become "whatever that env var points at". Strip it rather than assume.
+function scannerEnv() {
+  const env = { ...process.env };
+  delete env.GITLEAKS_CONFIG;
+  return env;
+}
+
+function scan(dir, report, configPath) {
+  const args = [
+    'dir',
+    dir,
+    '--no-banner',
+    '--redact',
+    '--report-format',
+    'json',
+    '--report-path',
+    report,
+  ];
+  if (configPath !== undefined) args.push('--config', configPath);
+  return spawnSync(GITLEAKS_BIN, args, { encoding: 'utf8', env: scannerEnv() });
+}
 
 function main() {
   const tmp = mkdtempSync(join(tmpdir(), 'gitleaks-fixture-'));
   try {
     cpSync(join(FIXTURE_DIR, LEAKY_FIXTURE), join(tmp, LEAKY_FIXTURE));
     cpSync(join(FIXTURE_DIR, CLEAN_FIXTURE), join(tmp, CLEAN_FIXTURE));
-    const report = join(tmp, REPORT_FILE);
 
-    const res = spawnSync(
-      GITLEAKS_BIN,
-      ['dir', tmp, '--no-banner', '--redact', '--report-format', 'json', '--report-path', report],
-      { encoding: 'utf8' },
-    );
-
-    const ran = interpretGitleaksRun(res);
+    // 1. The scanner fires at all. Scanned WITHOUT the repo config, so no allowlist here
+    //    can hide the bait from the one check that proves gitleaks works.
+    const defaultReport = join(tmp, REPORT_FILE);
+    const defaultRun = scan(tmp, defaultReport, undefined);
+    const ran = interpretGitleaksRun(defaultRun);
     if (!ran.ok) {
       console.error(`[check-gitleaks-fixture] ${ran.reason}`);
       process.exit(1);
     }
-
-    const findings = JSON.parse(readFileSync(report, 'utf8'));
-    const verdict = assertExpectedFindings(findings);
+    const verdict = assertExpectedFindings(JSON.parse(readFileSync(defaultReport, 'utf8')));
     if (!verdict.ok) {
       console.error(`[check-gitleaks-fixture] ${verdict.reason}`);
       process.exit(1);
     }
 
+    // 2. The REPO CONFIG still catches secrets. Step 1 cannot see this — it never loads
+    //    .gitleaks.toml — so an allowlist widened to `paths = ['''.*''']` would neuter the
+    //    real scan while step 1 stayed green and ci-gate went green with it. This scans a
+    //    DIFFERENT, non-exempt secret under the repo config. It must still fire.
+    const probeDir = mkdtempSync(join(tmpdir(), 'gitleaks-config-probe-'));
+    try {
+      writeFileSync(join(probeDir, PROBE_FILE), `export const t = '${PROBE_TOKEN}';\n`);
+      const probeReport = join(probeDir, REPORT_FILE);
+      const probeRun = scan(probeDir, probeReport, resolve(REPO_CONFIG));
+      const probeRan = interpretGitleaksRun(probeRun);
+      const neutered = `The repo config no longer detects a secret it is supposed to detect. An allowlist widened past the token it was written for — a "paths" entry (which exempts a file from EVERY rule), or an over-broad regex — disables the scanner for the REAL scan while the default-rules check above keeps passing. That is a green gate over no scanning at all.`;
+
+      if (!probeRan.ok) {
+        console.error(
+          `[check-gitleaks-fixture] under ${REPO_CONFIG}: ${probeRan.reason}\n\n${neutered}`,
+        );
+        process.exit(1);
+      }
+      if (!existsSync(probeReport)) {
+        console.error(
+          `[check-gitleaks-fixture] gitleaks reported leaks under ${REPO_CONFIG} but wrote no report to ${probeReport}.`,
+        );
+        process.exit(1);
+      }
+      const probeRules = JSON.parse(readFileSync(probeReport, 'utf8')).map((f) => String(f.RuleID));
+      for (const rule of EXPECTED_RULES) {
+        if (!probeRules.includes(rule)) {
+          console.error(
+            `[check-gitleaks-fixture] under ${REPO_CONFIG}, a non-allowlisted secret did NOT trigger "${rule}" (found: ${probeRules.join(', ') || 'none'}).\n\n${neutered}`,
+          );
+          process.exit(1);
+        }
+      }
+    } finally {
+      rmSync(probeDir, { recursive: true, force: true });
+    }
+
     console.log(
-      `[check-gitleaks-fixture] PASS — gitleaks fires on ${LEAKY_FIXTURE} (${EXPECTED_RULES.join(', ')}) and stays silent on ${CLEAN_FIXTURE}.`,
+      `[check-gitleaks-fixture] PASS — gitleaks fires on ${LEAKY_FIXTURE} (${EXPECTED_RULES.join(', ')}), stays silent on ${CLEAN_FIXTURE}, and ${REPO_CONFIG} still catches a secret it does not allowlist.`,
     );
   } finally {
     rmSync(tmp, { recursive: true, force: true });

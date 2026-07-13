@@ -61,7 +61,7 @@ const isIgnored = (cwd: string, target: string) => {
   const result = git(cwd, ['check-ignore', '-q', '--', target]);
   if (!gitAnswered(result)) {
     throw new Error(
-      `git check-ignore on "${target}" did not answer ${GIT_PATH_IGNORED} (ignored) or ${GIT_PATH_NOT_IGNORED} (not ignored): ${describeGitFailure(result)}. Nothing was learned about the .gitignore rule here, so do not go and edit it: reporting this as "not ignored" would red the assertion below and send you after a rule that may be fine.`,
+      `git check-ignore on "${target}" did not answer ${GIT_PATH_IGNORED} (ignored) or ${GIT_PATH_NOT_IGNORED} (not ignored): ${describeGitFailure(result)}. Nothing was learned about the .gitignore rule here, so do not go and edit it. This throws rather than returning a value because BOTH defaults are wrong: reported as "ignored" it would green a case that proves nothing, and reported as "not ignored" it would green the positive control, which expects exactly that.`,
     );
   }
   return result.status === GIT_PATH_IGNORED;
@@ -107,6 +107,7 @@ const siblingsOf = (name: string) => HARNESS_SYMLINKS.filter((other) => other !=
 const childEnvKeys = () => Object.keys(hermeticEnv()).sort().join(', ');
 
 const TRACKED_FILE = 'package.json';
+const SYMLINK_MODE = '120000';
 
 const gitResult = (over: Partial<GitResult>): GitResult => ({
   pid: 0,
@@ -162,6 +163,91 @@ describe('meta: .gitignore covers the paths the agent-worktree harness symlinks'
       isIgnored(sandboxes.symlink, TRACKED_FILE),
       `The sandbox reports "${TRACKED_FILE}" as ignored, which means it would report almost anything as ignored -- a .gitignore with a stray "*" does exactly that. Both cases above would then pass while proving nothing, because they only ever ask "is this path ignored?" and the answer had become yes for everything. This is the positive control: it is the assertion that keeps a green run meaningful.`,
     ).toBe(false);
+  });
+});
+
+const RULE = 'X';
+const NEGATED = `/${RULE}\n!/${RULE}/`;
+
+const makeRuleSandbox = (rule: string, shape: Shape) => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'gitignore-rule-'));
+  const init = git(dir, ['init', '-q', EMPTY_INIT_TEMPLATE]);
+  if (init.status !== GIT_OK) {
+    throw new Error(`git init failed in the rule sandbox: ${describeGitFailure(init)}.`);
+  }
+  writeFileSync(path.join(dir, '.gitignore'), `${rule}\n`);
+  if (shape === 'symlink') {
+    mkdirSync(path.join(dir, SYMLINK_TARGET));
+    symlinkSync(SYMLINK_TARGET, path.join(dir, RULE));
+  } else {
+    mkdirSync(path.join(dir, RULE));
+    writeFileSync(path.join(dir, RULE, SENTINEL_FILE), '');
+  }
+  return dir;
+};
+
+const withRuleSandbox = <T>(rule: string, shape: Shape, use: (dir: string) => T): T => {
+  const dir = makeRuleSandbox(rule, shape);
+  try {
+    return use(dir);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+};
+
+const RULE_MATRIX: Array<[string, boolean, boolean, boolean]> = [
+  [`/${RULE}`, true, true, true],
+  [`/${RULE}/`, false, true, true],
+  [`/${RULE}/**`, false, false, true],
+  [RULE, true, true, true],
+  [NEGATED, true, false, false],
+];
+
+describe('meta: the rule-shape claims the failure messages make are true', () => {
+  it.each(
+    RULE_MATRIX,
+  )('rule %j -> symlink=%s directory=%s contents=%s', (rule, symlinkIgnored, directoryIgnored, contentsIgnored) => {
+    const actual = {
+      symlink: withRuleSandbox(rule, 'symlink', (dir) => isIgnored(dir, RULE)),
+      directory: withRuleSandbox(rule, 'directory', (dir) => isIgnored(dir, RULE)),
+      contents: withRuleSandbox(rule, 'directory', (dir) =>
+        isIgnored(dir, `${RULE}/${SENTINEL_FILE}`),
+      ),
+    };
+
+    expect(
+      actual,
+      `The failure messages in this file tell an engineer, as fact, what each rule shape does: that "/X/" misses the symlink, that "/X/**" misses the symlink AND the directory, that an unanchored "X" satisfies everything, and that a rule can be PRESENT and still lose to a negation. Those sentences are the only thing a reader gets when this gate reds, and no assertion held them -- which is exactly how six false claims shipped in them. This is the table that holds them now. If it fails, a message is lying, or git changed.`,
+    ).toEqual({
+      symlink: symlinkIgnored,
+      directory: directoryIgnored,
+      contents: contentsIgnored,
+    });
+  });
+
+  it('a present rule can still lose to a negation, so "no rule matches" is the wrong diagnosis', () => {
+    const matchedBy = withRuleSandbox(NEGATED, 'directory', (dir) =>
+      String(git(dir, ['check-ignore', '-v', '--no-index', '--', RULE]).stdout),
+    );
+
+    expect(
+      matchedBy.includes(`!/${RULE}/`),
+      `Under "/${RULE}" followed by "!/${RULE}/", git must report the NEGATION as the matching line. The directory-case message tells the reader not to conclude the rule is missing, because a present rule can lose -- and this is the witness for that sentence. Got: ${JSON.stringify(matchedBy)}`,
+    ).toBe(true);
+  });
+
+  it('under "/X/**" the worktree symlink is stageable, which is why that shape is not harmless', () => {
+    const mode = withRuleSandbox(`/${RULE}/**`, 'symlink', (dir) => {
+      git(dir, ['add', '-A']);
+      return String(git(dir, ['ls-files', '-s', RULE]).stdout)
+        .trim()
+        .split(/\s+/)[0];
+    });
+
+    expect(
+      mode,
+      `Under "/${RULE}/**" the symlink is left unignored, so "git add" stages it as a symlink blob (mode 120000) holding an absolute path to one machine. The directory-case message says exactly that, and says the contents are still safe -- both halves have to be true, or the message is misdirecting whoever is reading it mid-failure. Got mode: ${JSON.stringify(mode)}`,
+    ).toBe(SYMLINK_MODE);
   });
 });
 

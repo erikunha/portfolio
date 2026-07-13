@@ -10,21 +10,24 @@ paths = [
   '''__tests__/color-swatch.test.tsx''',
 ]
 
-# Both fixtures plant a real-looking secret on purpose, to prove their scanner FIRES.
-# Each self-test copies its fixture OUT of the repo and scans it without this config,
-# so allowlisting here cannot weaken either gate -- but without it, the repo scan reds
-# on our own bait.
+# Both fixtures plant a fake-but-real-shaped secret on purpose, to prove their scanner FIRES.
+# These allowlists exempt the planted VALUE, not the file.
+#
+# Measured on gitleaks 8.30: ANY `paths` entry exempts the file from EVERY rule, and neither
+# `condition = "AND"` nor `matchCondition = "AND"` narrows that -- both still allowlist the
+# whole file. A path-scoped entry would therefore make these two fixtures permanent
+# secret-laundering paths: a REAL credential parked in one of them would be invisible to the
+# scanner forever. A `regexes`-only entry does not have that property, so any other secret in
+# the same file is still caught. Verified both ways in scripts/__tests__.
+#
+# The exempted values are fake and we own them, so exempting them repo-wide costs nothing.
 [[allowlists]]
-description = "Planted secret proving gitleaks fires (scripts/check-gitleaks-fixture.mjs asserts it is detected)"
-paths = [
-  '''tests/fixtures/gitleaks/leaky\.ts''',
-]
+description = "Planted token proving gitleaks fires (scripts/check-gitleaks-fixture.mjs asserts it is detected)"
+regexes = ['''ghp_R2d2c3poAbCdEfGhIjKlMnOpQrStUvWx1234''']
 
 [[allowlists]]
-description = "Planted secret proving semgrep fires (scripts/check-semgrep-fixture.mjs asserts hardcoded-stripe-secret-key)"
-paths = [
-  '''tests/fixtures/semgrep/vulnerable\.ts''',
-]
+description = "Planted token proving semgrep fires (scripts/check-semgrep-fixture.mjs asserts hardcoded-stripe-secret-key)"
+regexes = ['''sk_test_51HxFakeFixtureTokenABCDEFGHIJ''']
 
 [[allowlists]]
 description = "CSS design token names (secondary-NNN) in design-system docs"
