@@ -1,4 +1,5 @@
 import { npmStack } from '@/content/npm-stack';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { IconNpmStack } from '../../Icons';
 import { Module } from '../../responsive/Module';
 
@@ -7,6 +8,7 @@ export function NpmStackSection({ defer }: { defer?: boolean } = {}) {
     <Module
       id="sec-npm-stack"
       header="NPM LIST --GLOBAL"
+      srLabel={SECTION_LABELS['sec-npm-stack']}
       icon={<IconNpmStack />}
       defer={defer}
       variant="green"

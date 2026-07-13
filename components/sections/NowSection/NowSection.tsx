@@ -1,10 +1,17 @@
 import { nowRows } from '@/content/now';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { IconNow } from '../../Icons';
 import { Module } from '../../responsive/Module';
 
 export function NowSection({ defer }: { defer?: boolean } = {}) {
   return (
-    <Module id="sec-now" header="CAT ~/.NOW" icon={<IconNow />} defer={defer}>
+    <Module
+      id="sec-now"
+      header="CAT ~/.NOW"
+      srLabel={SECTION_LABELS['sec-now']}
+      icon={<IconNow />}
+      defer={defer}
+    >
       <div className="text-sm leading-[1.9] max-[768px]:text-xs">
         {nowRows.map((r) => (
           <div

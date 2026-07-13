@@ -1,4 +1,5 @@
 import { hottestTakes, hottestTakesConfig } from '@/content/hottest-takes';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { IconHottestTakes } from '../../Icons';
 import { Module } from '../../responsive/Module';
 
@@ -7,6 +8,7 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
     <Module
       id="sec-hottest-takes"
       header="CAT ~/HOTTEST_TAKES.MD"
+      srLabel={SECTION_LABELS['sec-hottest-takes']}
       icon={<IconHottestTakes />}
       defer={defer}
     >

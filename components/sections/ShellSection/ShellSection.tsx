@@ -1,3 +1,4 @@
+import { SECTION_LABELS } from '@/content/section-labels';
 import { InteractiveShellLazy } from '../../client/InteractiveShell';
 import { ErrorBoundary } from '../../ErrorBoundary';
 import { IconShell } from '../../Icons';
@@ -9,6 +10,7 @@ export function ShellSection() {
       id="sec-shell"
       header="./EXEC INTERACTIVE_SHELL"
       mobileHeader="/BIN/SH · INTERACTIVE"
+      srLabel={SECTION_LABELS['sec-shell']}
       icon={<IconShell />}
     >
       <ErrorBoundary>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { readmeCopy as c } from '@/content/readme';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { RoleTyper } from '../../client/RoleTyper';
 import { IconReadme } from '../../Icons';
 import { Module } from '../../responsive/Module';
@@ -63,7 +64,12 @@ function ReadmeBlock({ lines }: { lines: ReadmeLine[] }) {
 
 export function ReadmeSection() {
   return (
-    <Module id="sec-readme" header="CAT README.MD" icon={<IconReadme />}>
+    <Module
+      id="sec-readme"
+      header="CAT README.MD"
+      srLabel={SECTION_LABELS['sec-readme']}
+      icon={<IconReadme />}
+    >
       <ReadmeBlock lines={README_DESKTOP} />
 
       <div className="max-[768px]:hidden">

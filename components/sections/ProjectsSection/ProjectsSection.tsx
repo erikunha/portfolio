@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { projects } from '@/content/projects';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { getIsMobile } from '@/lib/ua';
 import { IconProjects } from '../../Icons';
 import { Module } from '../../responsive/Module';
@@ -102,6 +103,7 @@ export function ProjectsSection({ defer }: { defer?: boolean } = {}) {
       header="LS -LA ./PROJECTS"
       variant="green"
       mobileHeader="LS -LA ~/PROJECTS"
+      srLabel={SECTION_LABELS['sec-projects']}
       icon={<IconProjects />}
       defer={defer}
     >

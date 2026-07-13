@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import type { AskMetrics } from '@/content/ask-metrics';
 import { getAskMetrics } from '@/content/ask-metrics';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { TerminalPanel } from '@/design-system';
 import { IconAiMetrics } from '../../Icons';
 import { Module } from '../../responsive/Module';
@@ -105,6 +106,7 @@ export function AiMetricsSection({ defer }: { defer?: boolean } = {}) {
       header="ASK_EVAL.JSON --MEASURED"
       variant="green"
       mobileHeader="ASK_EVAL.JSON"
+      srLabel={SECTION_LABELS['sec-ai-metrics']}
       icon={<IconAiMetrics />}
       defer={defer}
     >

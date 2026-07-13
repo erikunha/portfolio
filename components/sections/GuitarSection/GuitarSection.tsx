@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { Suspense } from 'react';
 import { guitarRig } from '@/content/guitar-rig';
 import type { GuitarRig } from '@/content/schemas';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { cn } from '@/lib/cn';
 import { getIsMobile } from '@/lib/ua';
 import { IconGuitar } from '../../Icons';
@@ -346,6 +347,7 @@ export function GuitarSection({ defer }: { defer?: boolean } = {}) {
     <Module
       id="sec-guitar"
       header="CAT ~/.GUITAR_RIG"
+      srLabel={SECTION_LABELS['sec-guitar']}
       icon={<IconGuitar />}
       defer={defer}
       variant="green"

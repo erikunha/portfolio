@@ -3,6 +3,7 @@ import { type CSSProperties, Suspense } from 'react';
 import { pctToDb } from '@/components/client/DawMixer/FaderIsland/pct-to-db';
 import { dawMixer } from '@/content/daw-mixer';
 import type { DawMixerChannel } from '@/content/schemas';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { cn } from '@/lib/cn';
 import { getIsMobile } from '@/lib/ua';
 import { IconMixer } from '../../Icons';
@@ -354,6 +355,7 @@ export function DawMixerSection({ defer }: { defer?: boolean } = {}) {
     <Module
       id="sec-daw-mixer"
       header="./MIX --LIVE — DAW MIXER"
+      srLabel={SECTION_LABELS['sec-daw-mixer']}
       icon={<IconMixer />}
       defer={defer}
       variant="green"
