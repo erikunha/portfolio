@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { perfReceipts } from '@/content/perf-receipts';
@@ -6,6 +6,7 @@ import { projects } from '@/content/projects';
 import { PerfReceiptSchema } from '@/content/schemas';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
+import { isPublishedSurface, readContentSurfaces } from './helpers/content-surfaces';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const read = (relativePath: string) => readFileSync(path.join(REPO_ROOT, relativePath), 'utf-8');
@@ -47,19 +48,7 @@ const nearKeyword = (text: string, needle: string, keyword: RegExp) => {
   }
 };
 
-const CONTENT_DIR = path.join(REPO_ROOT, 'content');
-
-const CONTENT_INFRA = /^(schemas|_.+)\.tsx?$/;
-
-const isPublishedSurface = (file: string) => {
-  const name = path.basename(file);
-  return /\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name) && !CONTENT_INFRA.test(name);
-};
-
-const contentSurfaces: Array<[string, string]> = readdirSync(CONTENT_DIR, { recursive: true })
-  .map(String)
-  .filter(isPublishedSurface)
-  .map((file) => [`content/${file}`, readFileSync(path.join(CONTENT_DIR, file), 'utf-8')]);
+const contentSurfaces: Array<[string, string]> = readContentSurfaces();
 
 const METRIC_SURFACES: Array<[string, string]> = [
   ...contentSurfaces,
@@ -96,12 +85,14 @@ describe('performance metrics agree with the authoritative receipts', () => {
         ['_validate-client-content.ts', false],
         ['sub/_helper.ts', false],
         ['schemas.test.ts', false],
+        ['README.md', false],
+        ['_drafts', false],
       ] as Array<[string, boolean]>
     ).filter(([file, published]) => isPublishedSurface(file) !== published);
 
     expect(
       misjudged,
-      'CONTENT_INFRA must be tested against the BASENAME, never the path readdirSync returns. Matched against the full relative path, `_.+` greedily eats the directory separator: "_drafts/projects.ts" — real published content under an underscore-prefixed DIRECTORY — is then silently EXCLUDED from the sweep (a fail-open, the exact class this file exists to close), while genuine nested infra like "sub/_helper.ts" is swept. It is wrong in both directions at once.',
+      'CONTENT_INFRA must be tested against the BASENAME, never the path readdirSync returns. Matched against the full relative path, `_.+` greedily eats the directory separator: "_drafts/projects.ts" — real published content under an underscore-prefixed DIRECTORY — is then silently EXCLUDED from the sweep (a fail-open, the exact class this file exists to close), while genuine nested infra like "sub/_helper.ts" is swept. It is wrong in both directions at once. The bare "_drafts" and "README.md" rows are the directory entry and the non-TS file that readdirSync also returns; dropping the extension check admits them and the sweep then tries to read a directory. This predicate is the SINGLE one both gates import (__tests__/helpers/content-surfaces.ts) — when it was duplicated per file, adding an exclusion to one copy diverged the two sweeps with both tables still green.',
     ).toEqual([]);
   });
 
@@ -127,7 +118,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
     expect(
       rejected,
-      'PerfReceiptSchema must reject every delta that is not a bare signed percentage. flipSign() flips the sign and the sweep searches each surface for that literal string, so the delta has to be a token a surface can literally contain. An unsigned "10%" flips to "-0%"; a trailing gloss "-40% build time" flips to "+40% build time"; a LEADING gloss "build time -40%" flips to "-uild time -40%" — all strings no surface holds, so the sweep for that metric silently passes forever instead of failing. The load-bearing mutant killers are: " -40%" (the only case that dies both to a leading-whitespace loosening and to dropping the `^` anchor), "-40 %" (the only one that dies to a space-before-percent loosening), "10%" (optional sign), "-25" (optional `%`), and "−25%" (U+2212, whose flip is the TRUE value "-25%" that every surface contains — that one would cause a false-positive storm, not a no-op). The two gloss cases are DOMINATED as killers and are kept as documentation of the shapes a human actually types: "-40% build time", and "-97.5% (40s→<1s, Venturus)", which is the live idiom in lib/hiring-profile.ts one import away. Fix the schema (or move the gloss to `note`), not this test.',
+      'PerfReceiptSchema must reject every delta that is not a bare signed percentage. flipSign() flips the sign and the sweep searches each surface for that literal string, so the delta has to be a token a surface can literally contain. An unsigned "10%" flips to "-0%"; a trailing gloss "-40% build time" flips to "+40% build time"; a LEADING gloss "build time -40%" flips to "-uild time -40%" — all strings no surface holds, so the sweep for that metric silently passes forever instead of failing. DO NOT TRIM THIS LIST without recomputing the mutant kill-matrix; almost every case is the sole or joint guard of a distinct loosening. Sole killers: "10%" (optional sign), "-25" (optional `%`), "-40 %" (space before the `%`), " -40%" (leading whitespace). Joint-and-only killers: the two TRAILING glosses "-40% build time" and "-97.5% (40s→<1s, Venturus)" are the ONLY two cases that kill a dropped `$` anchor — delete both and the schema can drop `$`, accept a trailing gloss, and that metric silently stops being swept forever. Keep at least one; "-97.5% (…)" is the live idiom in lib/hiring-profile.ts one import away. "−25%" (U+2212) matters differently: its flip is the TRUE value "-25%" that every surface contains, so it would cause a false-positive storm rather than a no-op. The ONLY strictly dominated case is the LEADING gloss "build time -40%" (" -40%" kills everything it kills); it is kept purely as documentation of a shape a human types. Fix the schema (or move the gloss to `note`), not this test.',
     ).toEqual([]);
   });
 
@@ -187,6 +178,17 @@ IF THIS FIRED ON A TRUE SENTENCE: it fires when the flipped number sits within $
     expect(
       drifted,
       'the machine-readable hiring profile must quote the same numbers as the receipts. It is the endpoint llms.txt advertises to crawlers, so a wrong number here is consumed by machines and never eyeballed. This reads the PARSED object, not the source literal: HiringProfileSchema strips unknown keys, so `undefined` means the field is not being SERVED AT ALL — a different bug from serving it wrong, and one that renaming a field out of `receipts` causes silently.\n\nMatched as a PREFIX, deliberately: three served values carry a legitimate trailing gloss ("-97.5% (40s→<1s, Venturus)"). Do NOT "tighten" startsWith to === — it reds three true fields, and the tempting next step is deleting the glosses from /api/erik.json, which is real information a recruiter reads. The receipt is the prefix; the gloss is allowed to follow it.',
+    ).toEqual([]);
+  });
+
+  it('no PROJECT_STAT_METRICS key is orphaned, so a rename cannot drop a tile from the gate', () => {
+    const orphaned = Object.keys(PROJECT_STAT_METRICS).filter(
+      (label) => !projects.some((project) => project.stats.some((stat) => stat.label === label)),
+    );
+
+    expect(
+      orphaned,
+      'a stat label in PROJECT_STAT_METRICS matches no rendered tile, so it was renamed — and the tile it used to guard has silently LEFT the magnitude gate: an unmapped label is SKIPPED, not failed. These labels are display copy and they do move; this branch itself renamed "TTI GAIN" to "TTI". Re-point the key at the new label. Do NOT delete the entry, and do not "fix" this by deleting the assertion — the sign sweep still covers projects.ts, but magnitude is held ONLY here.',
     ).toEqual([]);
   });
 

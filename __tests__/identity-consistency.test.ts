@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { heroTagline } from '@/content/hero';
@@ -6,6 +6,7 @@ import { personSchema } from '@/content/seo';
 import { social } from '@/content/social';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
+import { readContentSurfaces } from './helpers/content-surfaces';
 
 vi.mock('next/font/local', () => ({
   default: () => ({ variable: '--font-mock', className: 'mock' }),
@@ -15,7 +16,6 @@ const CANONICAL_TITLE = 'Senior Full-Stack Engineer';
 const RETIRED_TITLE = 'Full-Stack Software Engineer';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
-const CONTENT_DIR = path.join(REPO_ROOT, 'content');
 
 const read = (relativePath: string) => readFileSync(path.join(REPO_ROOT, relativePath), 'utf-8');
 
@@ -24,17 +24,7 @@ const llmsTxt = read('public/llms.txt');
 // generator script, so it is reachable only as source text — there is nothing to import
 const ogImageScript = read('scripts/generate-og-image.ts');
 
-const CONTENT_INFRA = /^(schemas|_.+)\.tsx?$/;
-
-const isPublishedSurface = (file: string) => {
-  const name = path.basename(file);
-  return /\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name) && !CONTENT_INFRA.test(name);
-};
-
-const contentSurfaces: Array<[string, string]> = readdirSync(CONTENT_DIR, { recursive: true })
-  .map(String)
-  .filter(isPublishedSurface)
-  .map((file) => [`content/${file}`, readFileSync(path.join(CONTENT_DIR, file), 'utf-8')]);
+const contentSurfaces: Array<[string, string]> = readContentSurfaces();
 
 const digitsOf = (value: string) => value.replace(/\D/g, '');
 
@@ -46,25 +36,6 @@ beforeAll(async () => {
 });
 
 describe('identity is consistent across every gated surface', () => {
-  it('the surface predicate judges by BASENAME, so a nested module cannot escape the sweep', () => {
-    const misjudged = (
-      [
-        ['hero.ts', true],
-        ['nested/hero.ts', true],
-        ['_drafts/projects.ts', true],
-        ['schemas.ts', false],
-        ['_validate-client-content.ts', false],
-        ['sub/_helper.ts', false],
-        ['schemas.test.ts', false],
-      ] as Array<[string, boolean]>
-    ).filter(([file, published]) => isPublishedSurface(file) !== published);
-
-    expect(
-      misjudged,
-      'CONTENT_INFRA must be tested against the BASENAME, never the path readdirSync returns. Matched against the full relative path, `_.+` greedily eats the directory separator, so "_drafts/projects.ts" — real published content under an underscore-prefixed DIRECTORY — is silently EXCLUDED from the title sweep. That is how man-page.ts shipped a retired title in the first place: a file nobody remembered to cover. This predicate is duplicated in __tests__/metric-consistency.test.ts; both must hold it.',
-    ).toEqual([]);
-  });
-
   it('every title surface states the canonical title', () => {
     const surfaces: Array<[string, string]> = [
       ['content/hero.ts (heroTagline)', heroTagline],
