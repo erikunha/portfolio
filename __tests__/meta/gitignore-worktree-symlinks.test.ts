@@ -11,7 +11,7 @@ const SENTINEL_FILE = 'sentinel';
 const NULL_DEVICE = '/dev/null';
 const NO_GLOBAL_EXCLUDES = ['-c', `core.excludesFile=${NULL_DEVICE}`];
 const EMPTY_INIT_TEMPLATE = '--template=';
-const ENV_ALLOWLIST = ['PATH', 'HOME', 'TMPDIR'];
+const ENV_ALLOWLIST = ['PATH', 'TMPDIR'];
 const GIT_OK = 0;
 const GIT_PATH_IGNORED = 0;
 
@@ -22,6 +22,7 @@ const hermeticEnv = (): NodeJS.ProcessEnv => {
     NODE_ENV: process.env.NODE_ENV ?? 'test',
     GIT_CONFIG_GLOBAL: NULL_DEVICE,
     GIT_CONFIG_SYSTEM: NULL_DEVICE,
+    GIT_CONFIG_NOSYSTEM: '1',
     GIT_CONFIG_COUNT: '0',
   };
   for (const key of ENV_ALLOWLIST) {
@@ -79,7 +80,7 @@ describe('meta: .gitignore covers the paths the agent-worktree harness symlinks'
   it.each(HARNESS_SYMLINKS)('%s is ignored when materialised as a symlink', (name) => {
     expect(
       isIgnored(sandboxes.symlink, name),
-      `The harness symlinks "${name}" into every agent worktree, and this .gitignore does not ignore it.\n\nGit lstats a path and never follows the link, so a symlink is not a directory: a directory-only rule ("/${name}/", with a trailing slash) cannot match it. The worktree then carries a phantom "?? ${name}" that no rule covers and that a "git clean -fd" would delete, severing the link to the main tree. Write "/${name}" instead — slashless, root-anchored — which matches a real directory and a symlink alike.\n\nCompare against the other harness symlink (${siblingsOf(name)}). If that one is green and this is red, the difference is in this rule alone: either it grew a trailing slash, or it is missing entirely.\n\nThis sandbox is deliberately hermetic. The child git runs with an ALLOWLISTED environment (${ENV_ALLOWLIST.join(', ')}), with the global and system config files pointed at ${NULL_DEVICE}, with core.excludesFile pinned, and with an empty init template. Every one of those is a second ignore source that could mask a broken rule and turn this gate green while the rule is still wrong. GIT_DIR is the one that bites: git exports it into hook processes and this suite runs from pre-push, so an inherited GIT_DIR makes check-ignore read the REAL repo's .git/info/exclude instead of this sandbox's, and a developer who ever parked "${name}" there would never see this test fail. The allowlist drops it, rather than out-ranking it -- removal does not depend on git's config precedence staying what it is today.`,
+      `The harness symlinks "${name}" into every agent worktree, and this .gitignore does not ignore it.\n\nGit lstats a path and never follows the link, so a symlink is not a directory: a directory-only rule ("/${name}/", with a trailing slash) cannot match it. The worktree then carries a phantom "?? ${name}" that no rule covers and that a "git clean -fd" would delete, severing the link to the main tree. Write "/${name}" instead — slashless, root-anchored — which matches a real directory and a symlink alike.\n\nCompare against the other harness symlink (${siblingsOf(name)}). If that one is green and this is red, the difference is in this rule alone: either it grew a trailing slash, or it is missing entirely.\n\nThis sandbox is deliberately hermetic, and every ignore source it neutralises is one that could mask a broken rule and turn this gate GREEN while the rule is still wrong. The child git runs on an ALLOWLISTED environment (${ENV_ALLOWLIST.join(', ')}), so the variables that reach an ignore file are simply absent rather than out-ranked: GIT_DIR (git exports it into hook processes and this suite runs from pre-push, so an inherited GIT_DIR makes check-ignore read the REAL repo's .git/info/exclude), GIT_TEMPLATE_DIR, the GIT_CONFIG_KEY_n pairs, and HOME (without it git cannot resolve ~/.config/git/ignore at all). The init template is empty, and core.excludesFile is still pinned to ${NULL_DEVICE} as a backstop -- but nothing here depends on that pin, or on git's config precedence staying what it is today.`,
     ).toBe(true);
   });
 
