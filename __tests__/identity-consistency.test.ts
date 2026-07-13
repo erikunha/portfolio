@@ -24,9 +24,11 @@ const llmsTxt = read('public/llms.txt');
 // generator script, so it is reachable only as source text — there is nothing to import
 const ogImageScript = read('scripts/generate-og-image.ts');
 
+const isShippedContent = (file: string) => /\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file);
+
 const contentSurfaces: Array<[string, string]> = readdirSync(CONTENT_DIR, { recursive: true })
   .map(String)
-  .filter((file) => /\.tsx?$/.test(file))
+  .filter(isShippedContent)
   .map((file) => [`content/${file}`, readFileSync(path.join(CONTENT_DIR, file), 'utf-8')]);
 
 const digitsOf = (value: string) => value.replace(/\D/g, '');

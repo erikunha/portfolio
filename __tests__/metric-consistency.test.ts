@@ -49,9 +49,11 @@ const nearKeyword = (text: string, needle: string, keyword: RegExp) => {
 
 const CONTENT_DIR = path.join(REPO_ROOT, 'content');
 
+const isShippedContent = (file: string) => /\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file);
+
 const contentSurfaces: Array<[string, string]> = readdirSync(CONTENT_DIR, { recursive: true })
   .map(String)
-  .filter((file) => /\.tsx?$/.test(file))
+  .filter(isShippedContent)
   .map((file) => [`content/${file}`, readFileSync(path.join(CONTENT_DIR, file), 'utf-8')]);
 
 const METRIC_SURFACES: Array<[string, string]> = [
