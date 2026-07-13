@@ -43,7 +43,7 @@ const describeGitFailure = (result: GitResult) => {
   if (result.error !== undefined) {
     const spawned = `git could not be spawned: ${result.error.message}`;
     return result.error.message.includes(NOT_FOUND)
-      ? `${spawned} (the child gets an allowlisted PATH, and git is not reachable on it)`
+      ? `${spawned} (ENOENT means either git is not on the allowlisted PATH, or the sandbox directory is gone)`
       : spawned;
   }
   if (result.signal !== null) {
@@ -153,7 +153,7 @@ describe('meta: .gitignore covers the paths the agent-worktree harness symlinks'
 
     expect(
       directoryIgnored && contentsIgnored,
-      `The rule for "${name}" must keep ignoring the REAL ${name} directory and everything inside it. In the main tree ${name} is a real directory, not the symlink the sibling case covers. Measured here: directory ignored = ${directoryIgnored}, contents ignored = ${contentsIgnored}.\n\nIf BOTH are false, no rule matches ${name} at all and everything inside it becomes committable. That is the outcome this case exists to prevent, and it is the direction a well-meaning edit to the symlink case can silently break.\n\nIf only the directory is false, the rule matches below ${name} but not ${name} itself -- the "/${name}/**" shape. Nothing becomes committable then, because the contents are still ignored. But that shape does not match a symlink either, so the sibling case above is red too, and that is the one to fix.\n\nMeasured forms: "/${name}" satisfies this case and the symlink case; "/${name}/" misses the symlink; "/${name}/**" misses the symlink and this directory. An unanchored "${name}" satisfies all of them as well -- so nothing in this file holds the leading "/". The anchor is there to stop the rule matching a nested ${name} at any depth, and no test here asserts that.`,
+      `The rule for "${name}" must keep ignoring the REAL ${name} directory and everything inside it. In the main tree ${name} is a real directory, not the symlink the sibling case covers. Measured here: directory ignored = ${directoryIgnored}, contents ignored = ${contentsIgnored}.\n\nIf BOTH are false, nothing leaves ${name} ignored and everything inside it becomes committable. Do not read that as "the rule is missing" -- grep first, because a rule can be present and still lose: measured, "/${name}" followed by a negation "!/${name}/" re-includes the directory and stages its contents. Either way this is the outcome the case exists to prevent, and it is the direction a well-meaning edit to the symlink case can silently break.\n\nIf only the directory is false, the rule matches below ${name} but not ${name} itself -- the "/${name}/**" shape. Nothing under the real directory becomes committable then, because its contents are still ignored. The worktree symlink does, though: measured, "/${name}/**" leaves the symlink unignored and "git add" stages it as a symlink blob holding an absolute path to one machine. So the sibling case above is red too, and it is the one to fix.\n\nMeasured forms: "/${name}" satisfies this case and the symlink case; "/${name}/" misses the symlink; "/${name}/**" misses the symlink and this directory. An unanchored "${name}" satisfies all of them as well -- so nothing in this file holds the leading "/". The anchor is there to stop the rule matching a nested ${name} at any depth, and no test here asserts that.`,
     ).toBe(true);
   });
 

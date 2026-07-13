@@ -569,6 +569,7 @@ jobs:
         e2e-functional,
         e2e-visual-chromium,
         ai-eval,
+        gitleaks,
       ]
     steps:
       - name: Gate on upstream job results
@@ -634,4 +635,72 @@ jobs:
         with:
           sarif_file: semgrep.sarif
           category: semgrep
+
+  gitleaks:
+    name: Gitleaks (secret scan)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    concurrency:
+      group: gitleaks-${{ github.ref }}
+      cancel-in-progress: true
+    env:
+      GITLEAKS_VERSION: 8.30.0
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0   # gitleaks scans history, not just the tip
+
+      - name: Install gitleaks (exact-pinned)
+        run: |
+          curl -sSfL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
+          rm -f gitleaks gitleaks.tar.gz
+          installed="$(gitleaks version)"
+          if [ "$installed" != "$GITLEAKS_VERSION" ]; then
+            echo "::error::gitleaks reports version '$installed', expected '$GITLEAKS_VERSION'. Refusing to scan with an unknown binary."
+            exit 1
+          fi
+
+      # Proves the scanner FIRES. A secret scan that finds nothing is indistinguishable
+      # from a scanner that is silently broken, so this plants a real secret and fails
+      # the job unless gitleaks detects it (and stays silent on the clean fixture).
+      - name: Self-test - gitleaks fires on the fixture
+        run: node scripts/check-gitleaks-fixture.mjs
+
+      - name: Scan the repository and its history
+        run: |
+          set +e
+          gitleaks git . --no-banner --redact --config .gitleaks.toml \
+            --report-format sarif --report-path gitleaks.sarif
+          status=$?
+          set -e
+          echo "GITLEAKS_STATUS=$status" >> "$GITHUB_ENV"
+          if [ ! -s gitleaks.sarif ]; then
+            echo '::error::gitleaks produced no SARIF; the scan did not run. This is an infra failure, not a clean result -- do not read it as "no secrets".'
+            exit 1
+          fi
+
+      - name: Fail on findings
+        run: |
+          if [ "$GITLEAKS_STATUS" -eq 1 ]; then
+            echo '::error::gitleaks found a secret. Values are redacted in the log; see the SARIF artifact. Rotate the credential -- it is already in git history.'
+            exit 1
+          fi
+          if [ "$GITLEAKS_STATUS" -ne 0 ]; then
+            echo "::error::gitleaks exited $GITLEAKS_STATUS (neither 0=clean nor 1=leaks). Treating an unknown exit code as clean would be a fail-open."
+            exit 1
+          fi
+          echo 'gitleaks: clean'
+
+      - name: Upload SARIF artifact
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: gitleaks-sarif
+          path: gitleaks.sarif
+          retention-days: 7
 

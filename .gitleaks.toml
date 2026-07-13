@@ -10,6 +10,22 @@ paths = [
   '''__tests__/color-swatch.test.tsx''',
 ]
 
+# Both fixtures plant a real-looking secret on purpose, to prove their scanner FIRES.
+# Each self-test copies its fixture OUT of the repo and scans it without this config,
+# so allowlisting here cannot weaken either gate -- but without it, the repo scan reds
+# on our own bait.
+[[allowlists]]
+description = "Planted secret proving gitleaks fires (scripts/check-gitleaks-fixture.mjs asserts it is detected)"
+paths = [
+  '''tests/fixtures/gitleaks/leaky\.ts''',
+]
+
+[[allowlists]]
+description = "Planted secret proving semgrep fires (scripts/check-semgrep-fixture.mjs asserts hardcoded-stripe-secret-key)"
+paths = [
+  '''tests/fixtures/semgrep/vulnerable\.ts''',
+]
+
 [[allowlists]]
 description = "CSS design token names (secondary-NNN) in design-system docs"
 paths = [
