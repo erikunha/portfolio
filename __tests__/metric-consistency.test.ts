@@ -79,18 +79,28 @@ const PROJECT_STAT_METRICS: Record<string, string> = {
 };
 
 describe('performance metrics agree with the authoritative receipts', () => {
-  it('the schema forbids an unsigned delta, so the sign sweep cannot degrade to a no-op', () => {
-    const unsigned = PerfReceiptSchema.safeParse({
-      metric: 'BUNDLE_JS',
-      delta: '10%',
-      company: '@ ACME',
-      note: 'no leading sign.',
-    });
+  it('the schema forbids any delta flipSign cannot flip into a searchable token', () => {
+    const rejected = ['10%', '-40% build time', '-97.5% (40s→<1s, Venturus)', '-25'].filter(
+      (delta) =>
+        PerfReceiptSchema.safeParse({
+          metric: 'BUNDLE_JS',
+          delta,
+          company: '@ ACME',
+          note: 'x.',
+        }).success,
+    );
 
     expect(
-      unsigned.success,
-      'PerfReceiptSchema must reject a delta with no leading + or -. flipSign() turns "10%" into "-0%" — a string no surface contains — so the opposite-sign sweep for that metric silently passes forever instead of failing: the exact fail-open class this file exists to close. Fix the schema, not this test.',
-    ).toBe(false);
+      rejected,
+      'PerfReceiptSchema must reject every delta that is not a bare signed percentage. flipSign() flips the sign and the sweep searches each surface for that literal string, so an unsigned "10%" flips to "-0%" and a glossed "-40% build time" flips to "+40% build time" — strings no surface contains. The sweep for that metric then silently passes forever instead of failing: the exact fail-open class this file exists to close. Note the glossed form is not hypothetical — lib/hiring-profile.ts uses it one import away. Fix the schema (or move the gloss to `note`), not this test.',
+    ).toEqual([]);
+  });
+
+  it('INITIAL_LOAD matches the phrasing PAGE_LOAD does not own', () => {
+    expect(
+      METRIC_KEYWORDS.INITIAL_LOAD?.test('initial page load'),
+      'INITIAL_LOAD must still match "initial page load". A `.` matches ONE character and " page " is six, so the narrower /initial.load/ walks straight past it and that receipt goes unswept.',
+    ).toBe(true);
   });
 
   it('every receipt has a keyword, so no metric can be added and left unswept', () => {
@@ -121,8 +131,6 @@ describe('performance metrics agree with the authoritative receipts', () => {
       contradictions,
       `a surface states the opposite sign of an authoritative receipt (content/perf-receipts.ts). Not hypothetical: TTI shipped as -52% in perf-receipts.ts and seo.ts while projects.ts, hiring-profile.ts, the /api/ask system prompt AND the eval corpus all said +52% — so the AI answered the opposite sign from the JSON-LD on the same metric, and the eval graded it against the wrong one.
 
-SCOPE: opposite SIGN only. Magnitude drift in prose is NOT caught (-25% to -2.5% passes here); magnitude is held only where an explicit field mapping exists — HIRING_PROFILE_RECEIPT_FIELDS and PROJECT_STAT_METRICS below. DECISIONS.md (2026-07-12) records why prose magnitude is deliberately ungated.
-
 IF THIS FIRED ON A TRUE SENTENCE: it fires when the flipped number sits within ${PROXIMITY_CHARS} chars of the metric's keyword, so a TRUE claim about a DIFFERENT metric that shares a magnitude in the same breath trips it — "bounce rate -10%" beside CONVERSION (+10%). Proximity cannot disambiguate two metrics sharing a number inside one sentence. Do NOT delete the true claim, and do NOT widen a keyword: METRIC_KEYWORDS is already tuned against two live collisions — "load time" is PAGE_LOAD's own rendered tile label (handing it to INITIAL_LOAD reds the real LOAD TIME tile), and a bare /build/i matches "building the frontend platform" in llms.txt and the system prompt. Narrow the sentence, or give the other metric its own receipt so it gets a keyword of its own.`,
     ).toEqual([]);
   });
@@ -138,7 +146,7 @@ IF THIS FIRED ON A TRUE SENTENCE: it fires when the flipped number sits within $
 
     expect(
       drifted,
-      'the machine-readable hiring profile must quote the same numbers as the receipts. It is the endpoint llms.txt advertises to crawlers, so a wrong number here is consumed by machines and never eyeballed. This reads the PARSED object, not the source literal: HiringProfileSchema strips unknown keys, so `undefined` means the field is not being SERVED AT ALL — a different bug from serving it wrong, and one that renaming a field out of `receipts` causes silently.',
+      'the machine-readable hiring profile must quote the same numbers as the receipts. It is the endpoint llms.txt advertises to crawlers, so a wrong number here is consumed by machines and never eyeballed. This reads the PARSED object, not the source literal: HiringProfileSchema strips unknown keys, so `undefined` means the field is not being SERVED AT ALL — a different bug from serving it wrong, and one that renaming a field out of `receipts` causes silently.\n\nMatched as a PREFIX, deliberately: three served values carry a legitimate trailing gloss ("-97.5% (40s→<1s, Venturus)"). Do NOT "tighten" startsWith to === — it reds three true fields, and the tempting next step is deleting the glosses from /api/erik.json, which is real information a recruiter reads. The receipt is the prefix; the gloss is allowed to follow it.',
     ).toEqual([]);
   });
 
@@ -157,7 +165,7 @@ IF THIS FIRED ON A TRUE SENTENCE: it fires when the flipped number sits within $
 
     expect(
       drifted,
-      'a rendered stat tile disagrees with the receipt it quotes. The tile is what a visitor reads; the receipt is what the AI cites. They must be the same number. Unlike the prose sweep, this compares the value exactly — it catches magnitude drift, not just a flipped sign.',
+      'a rendered stat tile disagrees with the receipt it quotes. The tile is what a visitor reads; the receipt is what the AI cites. They must be the same number.',
     ).toEqual([]);
   });
 });
