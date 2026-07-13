@@ -96,6 +96,7 @@ const readerAliasesIn = (source: string): string[] => {
     for (;;) {
       const match = pattern.exec(source);
       if (match === null) break;
+      pattern.lastIndex = match.index + 1;
       const name = match[1] ?? match[2];
       if (name !== undefined) names.add(name);
     }
@@ -137,6 +138,11 @@ const READER_SHAPES: Array<[string, string, string | null]> = [
   [
     'annotated declaration above a reader (must not shadow it)',
     'let cached: string | undefined;\nconst read = fs.readFileSync;',
+    'read',
+  ],
+  [
+    'a preceding helper must not swallow the reader below it',
+    "const norm = (s: string) => s.trim();\nconst read = (p: string) => readFileSync(join(R, p), 'utf-8');",
     'read',
   ],
   [
