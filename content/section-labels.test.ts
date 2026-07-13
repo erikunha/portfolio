@@ -11,25 +11,30 @@ describe('SECTION_LABELS', () => {
     }
   });
 
-  it('every section that renders a Module has a SECTION_LABELS entry (fail-closed)', () => {
+  it('every Module rendered by a section has a SECTION_LABELS entry (fail-closed)', () => {
     const dir = join(process.cwd(), 'components/sections');
     const ids = new Set<string>();
     for (const entry of readdirSync(dir)) {
-      const file = join(dir, entry, `${entry}.tsx`);
-      let src = '';
+      const sectionDir = join(dir, entry);
+      let files: string[] = [];
       try {
-        // behavioral-test-allow: enumerates section ids to prove label coverage
-        src = readFileSync(file, 'utf8');
+        files = readdirSync(sectionDir).filter(
+          (f) => f.endsWith('.tsx') && !f.endsWith('.test.tsx'),
+        );
       } catch {
         continue;
       }
-      if (!/<Module\b/.test(src)) continue;
-      const m = src.match(/id="(sec-[^"]+)"/);
-      if (m?.[1]) ids.add(m[1]);
+      for (const file of files) {
+        // behavioral-test-allow: enumerates every Module id a section renders to prove label coverage
+        const src = readFileSync(join(sectionDir, file), 'utf8');
+        for (const m of src.matchAll(/<Module\b[\s\S]*?\bid="(sec-[^"]+)"/g)) {
+          if (m[1]) ids.add(m[1]);
+        }
+      }
     }
     for (const id of ids) {
       expect(SECTION_LABELS, `missing label for ${id}`).toHaveProperty(id);
     }
-    expect(ids.size).toBeGreaterThanOrEqual(18);
+    expect(ids.size).toBeGreaterThanOrEqual(20);
   });
 });

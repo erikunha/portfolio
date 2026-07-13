@@ -619,11 +619,7 @@ export function Breadcrumb({ trail }: { trail: { name: string; path: string }[] 
       aria-label="Breadcrumb"
       className="font-mono text-[11px] tracking-[0.08em] text-primary-400 mb-6"
     >
-      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD is server-built from a typed trail, not user input */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema(trail)) }}
-      />
+      <script type="application/ld+json">{JSON.stringify(breadcrumbSchema(trail))}</script>
       <ol className="flex flex-wrap items-center gap-1.5 m-0 p-0 list-none">
         {trail.map((crumb, i) => {
           const isLast = i === trail.length - 1;
@@ -648,7 +644,7 @@ export function Breadcrumb({ trail }: { trail: { name: string; path: string }[] 
 }
 ```
 
-> **Note on the JSON-LD:** rendering the script via `dangerouslySetInnerHTML` matches the repo's existing pattern (`app/layout.tsx` injects `personJsonLd` the same way). The trail is typed and server-built — not user input.
+> **Note on the JSON-LD:** rendered as a plain script child (`<script type="application/ld+json">{JSON.stringify(...)}</script>`), matching the repo's existing pattern — `app/layout.tsx` injects `personJsonLd` the same way, NOT via `dangerouslySetInnerHTML`. The trail is typed and server-built (compile-time literals), not user input; React 19 SSR emits the JSON unescaped, so a future consumer feeding DYNAMIC crumb data must escape `<` first. See DECISIONS.md 2026-07-13.
 
 - [ ] **Step 4: Run the Breadcrumb test** → PASS.
 

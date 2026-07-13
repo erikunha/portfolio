@@ -18,6 +18,20 @@ describe('Breadcrumb', () => {
     expect(nav?.querySelector('a[href="/design-system/tokens"]')).toBeNull();
   });
 
+  it('renders the final crumb as a non-link current-page marker on a 2-crumb section root', () => {
+    // The shape app/design-system/page.mdx actually passes: "Design System" is the FINAL crumb,
+    // so it must be aria-current + NOT a link (the 3-crumb TRAIL above only exercises it as a link).
+    const ROOT = [
+      { name: 'Home', path: '/' },
+      { name: 'Design System', path: '/design-system' },
+    ];
+    const { container } = render(<Breadcrumb trail={ROOT} />);
+    const nav = container.querySelector('nav[aria-label="Breadcrumb"]');
+    expect(nav?.querySelector('a[href="/"]')).not.toBeNull();
+    expect(nav?.querySelector('a[href="/design-system"]')).toBeNull();
+    expect(nav?.querySelector('[aria-current="page"]')?.textContent).toBe('Design System');
+  });
+
   it('emits BreadcrumbList JSON-LD matching the trail', () => {
     const { container } = render(<Breadcrumb trail={TRAIL} />);
     const script = container.querySelector('script[type="application/ld+json"]');
