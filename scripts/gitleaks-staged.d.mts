@@ -14,3 +14,4 @@ export interface StagedVerdict {
 }
 
 export declare function decideStagedExit(res: StagedRun): StagedVerdict;
+export declare const SCANNER_KILLED: string;

@@ -41,13 +41,18 @@ describe('decideStagedExit (the pre-commit gate cannot let a commit through unle
     expect(verdict.reason).toContain('ENOENT');
   });
 
-  it('gitleaks killed by a signal BLOCKS, and still says how to install it', () => {
+  it('gitleaks killed by a signal BLOCKS, and the reason names the kill -- not a missing binary', () => {
     const verdict = decideStagedExit({ status: null });
     expect(verdict.block, FAIL_CLOSED).toBe(true);
     expect(
       verdict.reason,
-      'Asserting only `block` lets the did-not-run branch be deleted: the result falls through to the unknown-exit-code branch, which also blocks, so no test notices — while the message degrades from "brew install gitleaks" to "exited null".',
-    ).toContain('brew install gitleaks');
+      'Asserting only `block` lets the did-not-run branch be deleted: the result falls through to the unknown-exit-code branch, which also blocks, so no test notices — while the message degrades to "exited null", which names nothing.',
+    ).toContain('killed');
+    expect(
+      verdict.reason,
+      'A killed scanner is not a missing one. Telling the developer to `brew install gitleaks` when the binary is installed and was OOM-killed sends them to fix the wrong thing — the same message-contradiction class this PR keeps closing.',
+    ).not.toContain('brew install');
+    expect(verdict.reason).not.toContain('null');
   });
 
   it('an unknown exit code BLOCKS, never reads as clean', () => {

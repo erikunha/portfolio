@@ -28,10 +28,19 @@ export const SECRET_STAGED = [
 // The exit-code decision, kept pure so it can be tested. It is the entire fail-closed defence
 // of the local gate, and it runs on every commit -- the sibling self-test script has its
 // equivalent tested exhaustively, and this one had nothing.
+export const SCANNER_KILLED = [
+  '\n[gitleaks] gitleaks was killed before it could answer; the commit is blocked.\n',
+  '\nThe binary is installed -- it started and died, so nothing was scanned. That is not a',
+  'clean tree, and this hook will not report one. Re-run the commit; if it keeps dying, check',
+  'for an OOM kill.\n',
+].join('\n');
+
 export function decideStagedExit(res) {
-  if (res.error !== undefined || res.status === null) {
-    const cause = res.error?.message ?? 'gitleaks was killed before it could answer';
-    return { block: true, reason: `${MISSING_BINARY}\n(${cause})\n` };
+  if (res.error !== undefined) {
+    return { block: true, reason: `${MISSING_BINARY}\n(${res.error.message})\n` };
+  }
+  if (res.status === null) {
+    return { block: true, reason: SCANNER_KILLED };
   }
   if (res.status === LEAKS_FOUND) {
     return { block: true, reason: SECRET_STAGED };
