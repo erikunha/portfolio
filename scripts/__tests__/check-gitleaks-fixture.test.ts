@@ -14,6 +14,12 @@ const REAL_CONFIG = readFileSync(path.resolve(__dirname, '..', '..', '.gitleaks.
 const NO_IGNORE_FILE = false;
 const NO_ALLOW_COMMENTS: string[] = [];
 
+// Assembled, never spelled out: the gate greps the tree for this literal, so a test file that
+// names it reds the gate on itself. That is not hypothetical -- it happened, and CI caught it
+// before these unit tests did, because they call assertConfigShape with synthetic arguments and
+// never exercise the real tree scan.
+const SUPPRESSION_COMMENT = ['gitleaks', 'allow'].join(':');
+
 const NO_LEAKS = 0;
 const LEAKS_FOUND = 1;
 const FATAL = 2;
@@ -99,10 +105,10 @@ describe('assertConfigShape (the config cannot be quietly gutted)', () => {
     ).toBe(false);
   });
 
-  it('rejects a gitleaks:allow suppression comment in the tree', () => {
+  it('rejects a suppression comment in the tree', () => {
     expect(
       shape(REAL_CONFIG, NO_IGNORE_FILE, ['lib/somewhere.ts']).ok,
-      'That comment makes gitleaks skip the line, with no record of why. It is the cheapest way to make this whole gate lie, and it is the first thing a blocked developer reaches for.',
+      `The ${SUPPRESSION_COMMENT} comment makes gitleaks skip the line, with no record of why. It is the cheapest way to make this whole gate lie, and it is the first thing a blocked developer reaches for.\n\nNote this test does not spell that comment out literally: the gate greps the tree for it, and a test file naming it would red the gate on itself — which is exactly what happened, and what the CI job caught before the unit tests did.`,
     ).toBe(false);
   });
 });
