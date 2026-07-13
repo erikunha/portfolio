@@ -1,12 +1,16 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { perfReceipts } from '@/content/perf-receipts';
 import { projects } from '@/content/projects';
 import { PerfReceiptSchema } from '@/content/schemas';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 import { isPublishedSurface, readContentSurfaces } from './helpers/content-surfaces';
+
+vi.mock('next/font/local', () => ({
+  default: () => ({ variable: '--font-mock', className: 'mock' }),
+}));
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const read = (relativePath: string) => readFileSync(path.join(REPO_ROOT, relativePath), 'utf-8');
@@ -50,11 +54,20 @@ const nearKeyword = (text: string, needle: string, keyword: RegExp) => {
 
 const contentSurfaces: Array<[string, string]> = readContentSurfaces();
 
-const METRIC_SURFACES: Array<[string, string]> = [
+// behavioral-test-allow: the OG card's numbers are baked into an HTML template string inside the
+// generator script, so they are reachable only as source text — there is nothing to import
+const ogImageScript = read('scripts/generate-og-image.ts');
+
+let layoutMetadataText = '';
+
+const METRIC_SURFACES = (): Array<[string, string]> => [
   ...contentSurfaces,
   ['lib/hiring-profile.ts (served at /api/erik.json)', JSON.stringify(HIRING_PROFILE)],
   ['lib/ask/system-prompt.ts (what the AI answers with)', SYSTEM_TEXT],
   ['public/llms.txt', read('public/llms.txt')],
+  ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
+  ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
+  ['app/layout.tsx (metadata)', layoutMetadataText],
 ];
 
 const HIRING_PROFILE_RECEIPT_FIELDS: Array<[string, string]> = [
@@ -72,6 +85,11 @@ const PROJECT_STAT_METRICS: Record<string, string> = {
   'JS BUNDLE': 'BUNDLE_JS',
   'LOAD TIME': 'PAGE_LOAD',
 };
+
+beforeAll(async () => {
+  const { metadata } = await import('@/app/layout');
+  layoutMetadataText = JSON.stringify(metadata);
+});
 
 describe('performance metrics agree with the authoritative receipts', () => {
   it('the surface predicate judges by BASENAME, so a nested module cannot escape the sweep', () => {
@@ -146,7 +164,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
   });
 
   it('no surface states the OPPOSITE sign of a receipt', () => {
-    const contradictions = METRIC_SURFACES.flatMap(([surface, text]) =>
+    const contradictions = METRIC_SURFACES().flatMap(([surface, text]) =>
       perfReceipts
         .filter((receipt) => {
           const keyword = METRIC_KEYWORDS[receipt.metric];

@@ -3,14 +3,23 @@ import { join, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const ROOT_DIR = process.cwd();
-const SCAN_DIRS = ['__tests__', 'components', 'lib', 'app', 'design-system'].map((d) =>
-  join(ROOT_DIR, d),
-);
 const SOURCE_HINT = /readFileSync|readFile\(/;
 const TARGETS_APP_SOURCE = /['"`](?:[^'"`]*\/)?(app|components|lib|scripts)\//;
 const ALLOW_TAG = /behavioral-test-allow:/;
 
-const SKIP_DIRS = new Set(['node_modules', '.next', 'coverage', 'dist', '.claude']);
+const SKIP_DIRS = new Set([
+  'node_modules',
+  '.next',
+  'coverage',
+  'dist',
+  '.claude',
+  '.git',
+  '.worktrees',
+]);
+const TEST_DIRS = new Set(['__tests__', 'tests']);
+const TEST_FILE = /\.(test|spec)\.[cm]?[jt]sx?$/;
+const ANY_SCRIPT = /\.[cm]?[jt]sx?$/;
+const TYPE_DECL = /\.d\.ts$/;
 const COMMENT_LINE = /^\s*(\/\/|\*|\/\*)/;
 const IMPORT_LINE = /^\s*import\b/;
 const CALL_LOOKAHEAD_LINES = 3;
@@ -42,10 +51,11 @@ function isAllowTagged(lines: string[], index: number): boolean {
   return false;
 }
 
-const isTestCode = (full: string, entry: string) =>
-  full.split(sep).includes('__tests__')
-    ? /\.[cm]?[jt]sx?$/.test(entry) && !/\.d\.ts$/.test(entry)
-    : /\.test\.tsx?$/.test(entry);
+const isTestCode = (full: string, entry: string) => {
+  if (TYPE_DECL.test(entry)) return false;
+  const insideTestDir = full.split(sep).some((segment) => TEST_DIRS.has(segment));
+  return insideTestDir ? ANY_SCRIPT.test(entry) : TEST_FILE.test(entry);
+};
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((e) => {
@@ -59,7 +69,7 @@ function walk(dir: string): string[] {
 describe('meta: tests assert behavior, not source', () => {
   it('no test reads application source for a structural assertion', () => {
     const violations: string[] = [];
-    for (const file of SCAN_DIRS.flatMap(walk)) {
+    for (const file of walk(ROOT_DIR)) {
       const lines = readFileSync(file, 'utf8').split('\n');
       lines.forEach((line, i) => {
         if (!SOURCE_HINT.test(line)) return;
