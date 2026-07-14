@@ -38,6 +38,6 @@ describe('Breadcrumb', () => {
     const data = JSON.parse(script?.textContent ?? '{}');
     expect(data['@type']).toBe('BreadcrumbList');
     expect(data.itemListElement).toHaveLength(3);
-    expect(data.itemListElement[2].item).toBe('https://erikunha.dev/design-system/tokens');
+    expect(data.itemListElement[2].item).toBe('https://www.erikunha.dev/design-system/tokens');
   });
 });

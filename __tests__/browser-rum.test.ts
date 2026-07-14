@@ -70,7 +70,7 @@ describe('browser RUM (Vercel Analytics + Speed Insights)', () => {
   it('proxy CSP connect-src allows the two Vercel ingest origins', async () => {
     vi.resetModules();
     const { proxy } = await import('@/proxy');
-    const res = proxy(new NextRequest('https://erikunha.dev/', { method: 'GET' }));
+    const res = proxy(new NextRequest('https://www.erikunha.dev/', { method: 'GET' }));
     const csp = res.headers.get('content-security-policy') ?? '';
     const connectSrc = csp.split(';').find((d) => d.trim().startsWith('connect-src')) ?? '';
     expect(connectSrc).toContain('https://vitals.vercel-insights.com');

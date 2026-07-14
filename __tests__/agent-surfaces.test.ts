@@ -46,7 +46,7 @@ describe('public/.well-known/agent.json', () => {
       mcp?: { transport?: string; url?: string };
     };
     expect(manifest.mcp?.transport).toBe('streamable-http');
-    expect(manifest.mcp?.url).toBe('https://erikunha.dev/api/mcp');
+    expect(manifest.mcp?.url).toBe('https://www.erikunha.dev/api/mcp');
   });
 });
 

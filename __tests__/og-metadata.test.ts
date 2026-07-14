@@ -7,7 +7,7 @@ vi.mock('next/font/local', () => ({
 describe('layout metadata og:image', () => {
   it('metadataBase is set to the canonical origin', async () => {
     const { metadata } = await import('@/app/layout');
-    expect(metadata.metadataBase?.toString()).toBe('https://erikunha.dev/');
+    expect(metadata.metadataBase?.toString()).toBe('https://www.erikunha.dev/');
   });
 
   it('page title matches the LinkedIn headline branding', async () => {

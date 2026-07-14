@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = 'https://erikunha.dev';
+  const base = 'https://www.erikunha.dev';
   const dsDate = new Date('2026-05-23');
 
   return [

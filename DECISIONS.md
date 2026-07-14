@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-07-13 - Canonical host moved apex → www to match the live redirect
+
+- **2026-07-13** · **Migrated the canonical host from `erikunha.dev` to `www.erikunha.dev` across all self-referential URLs.** After #198 shipped, the apex was found to 308-redirect to www (Vercel primary-domain setting) while every canonical/og:url/sitemap/JSON-LD still pointed at the apex — a canonical URL that itself redirects, which partly undoes #198's dedup fix (search engines see the preferred host disagree with the serving host). Changed `metadataBase`, root `openGraph.url`/`alternates.canonical`/authors url, `content/seo.ts` (`personSchema.url` + breadcrumb `SITE_ORIGIN`), `content/social.ts`, `lib/hiring-profile.ts`, `lib/agent/mcp-tools.ts`, `public/{robots.txt,llms.txt,.well-known/agent.json}`, the two Footer self-link `href`s, the README "Live" badge, and the gate tests that assert those URLs — every scheme-prefixed (`https://…`) self-referential URL on a served or crawled surface. The operational `curl https://erikunha.dev/api/healthz` runbook lines intentionally keep the apex: a one-shot health check follows the 308 transparently and is not a canonical surface. **Brand/identity strings stay bare `erikunha.dev`** — OG `siteName`, the page-`<title>` suffix, the MCP server `name`, and the `@erikunha.dev` emails are display labels, not hosts. Owner chose www-canonical over the zero-code alternative (flip the Vercel primary domain to apex so www→apex, keeping the existing apex refs). Reversible: revert the host strings AND flip the Vercel primary domain back to apex — both must agree or the redirect/canonical mismatch returns.
+
 ## 2026-07-13 - SEO + accessibility pass (canonical fix, single h1, sr-only headings, breadcrumb)
 
 - **2026-07-13** · **Fixed the `/design-system/*` canonical-to-homepage bug and added a11y/SEO heading semantics + breadcrumb discoverability (one PR).** External SEO audit findings, each verified against code before acting.

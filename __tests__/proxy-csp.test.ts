@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const makeRequest = (): NextRequest => new NextRequest('https://erikunha.dev/', { method: 'GET' });
+const makeRequest = (): NextRequest =>
+  new NextRequest('https://www.erikunha.dev/', { method: 'GET' });
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -86,7 +87,7 @@ describe('proxy CSP — nonce-less posture', () => {
     expect(csp).toContain('report-uri /api/csp-report');
     expect(csp).toContain('report-to csp-endpoint');
     expect(res.headers.get('reporting-endpoints')).toContain(
-      'csp-endpoint="https://erikunha.dev/api/csp-report"',
+      'csp-endpoint="https://www.erikunha.dev/api/csp-report"',
     );
   });
 });

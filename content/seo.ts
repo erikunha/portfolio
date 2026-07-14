@@ -6,7 +6,7 @@ export const personSchema = {
   name: 'Erik Henrique Alves Cunha',
   alternateName: 'Erik Cunha',
   jobTitle: 'Senior Full-Stack Engineer · Frontend Architecture & AI',
-  url: 'https://erikunha.dev',
+  url: 'https://www.erikunha.dev',
   email: 'erikhenriquealvescunha@gmail.com',
   telephone: '+5519997049125',
   knowsLanguage: [
@@ -165,7 +165,7 @@ z.object({
   email: z.string().email(),
 }).parse(personSchema);
 
-const SITE_ORIGIN = 'https://erikunha.dev';
+const SITE_ORIGIN = 'https://www.erikunha.dev';
 
 export function breadcrumbSchema(trail: { name: string; path: string }[]) {
   return {

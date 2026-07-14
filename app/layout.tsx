@@ -24,7 +24,7 @@ const display = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://erikunha.dev'),
+  metadataBase: new URL('https://www.erikunha.dev'),
   title: 'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
   description:
     'Senior Full-Stack Engineer — React, Next.js, Angular, TypeScript, Node.js. Frontend architecture, platform & applied-AI engineering for high-traffic apps.',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     'E-commerce',
     'B2B SaaS',
   ],
-  authors: [{ name: 'Erik Henrique Alves Cunha', url: 'https://erikunha.dev' }],
+  authors: [{ name: 'Erik Henrique Alves Cunha', url: 'https://www.erikunha.dev' }],
   creator: 'Erik Henrique Alves Cunha',
   icons: {
     icon: [
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://erikunha.dev',
+    url: 'https://www.erikunha.dev',
     title: 'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
     description:
       'Senior Full-Stack Engineer · Frontend Architecture · Platform & AI Applied Engineering · React · Next.js · Angular · TypeScript · Node.js · AWS',
@@ -90,7 +90,7 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
   },
   alternates: {
-    canonical: 'https://erikunha.dev',
+    canonical: 'https://www.erikunha.dev',
   },
 };
 

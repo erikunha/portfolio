@@ -2,7 +2,7 @@
 
 Single-page Next.js 16 portfolio deployed to Vercel Edge. RSC-first composition of ~18 sections with four client islands, a streaming LLM endpoint, a durable contact form, and a CI pipeline that enforces performance, accessibility, and bundle size as hard contracts.
 
-**Live:** [erikunha.dev](https://erikunha.dev)
+**Live:** [erikunha.dev](https://www.erikunha.dev)
 
 <p>
   <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000?logo=nextdotjs&logoColor=white" />

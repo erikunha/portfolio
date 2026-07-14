@@ -19,7 +19,7 @@ describe('sitemap()', () => {
   it('includes the home URL entry', async () => {
     const { default: sitemap } = await import('@/app/sitemap');
     const entries = sitemap();
-    const home = entries.find((e) => e.url === 'https://erikunha.dev');
+    const home = entries.find((e) => e.url === 'https://www.erikunha.dev');
     expect(home).toBeDefined();
     expect(home?.priority).toBe(1);
   });
@@ -35,7 +35,7 @@ describe('sitemap()', () => {
     vi.stubEnv('CONTENT_UPDATED_AT', '2026-03-15');
     const { default: sitemap } = await import('@/app/sitemap');
     const entries = sitemap();
-    const home = entries.find((e) => e.url === 'https://erikunha.dev');
+    const home = entries.find((e) => e.url === 'https://www.erikunha.dev');
     expect(home?.lastModified).toEqual(new Date('2026-03-15'));
   });
 
@@ -43,7 +43,7 @@ describe('sitemap()', () => {
     vi.stubEnv('CONTENT_UPDATED_AT', '');
     const { default: sitemap } = await import('@/app/sitemap');
     const entries = sitemap();
-    const home = entries.find((e) => e.url === 'https://erikunha.dev');
+    const home = entries.find((e) => e.url === 'https://www.erikunha.dev');
     expect(home?.lastModified).toEqual(new Date('2026-05-22'));
   });
 });
