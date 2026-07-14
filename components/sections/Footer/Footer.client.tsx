@@ -260,7 +260,7 @@ export function Footer() {
                   ESTABLISHED
                 </span>
                 <a
-                  href="https://erikunha.dev"
+                  href="https://www.erikunha.dev"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="netstat-link flex items-center min-h-8 max-[768px]:overflow-hidden max-[768px]:text-ellipsis max-[768px]:whitespace-nowrap"
@@ -299,7 +299,7 @@ export function Footer() {
                   {
                     state: 'ESTABLISHED',
                     cls: 'text-primary-500 font-bold',
-                    href: 'https://erikunha.dev',
+                    href: 'https://www.erikunha.dev',
                     label: 'erikunha.dev',
                     external: true,
                   },

@@ -302,9 +302,13 @@ squash-merges, so no per-commit SHA survives on `main` and pre-merge SHAs churn
 on every rebase — the PR number is the stable, auditable reference to the single
 squash commit the decision ships in. (Historical entries that predate this
 convention keep their commit-SHA citations.) There is one canonical
-production domain — `erikunha.dev` — used consistently across every
-current-state file; historical dated ADR text and superseded specs keep their
-original wording (they record history, and history is not edited). Superseded
+production host — `www.erikunha.dev` — used consistently for every
+scheme-prefixed self-referential URL (`metadataBase`, `robots.txt` `Sitemap`,
+`sitemap.ts` `base`, `og:url`, canonical, JSON-LD) because the apex
+308-redirects to it; the bare string `erikunha.dev` remains the brand/identity
+label (OG `siteName`, the page-`<title>` suffix, the MCP server `name`,
+`@erikunha.dev` emails). Historical dated ADR text and superseded specs keep
+their original wording (they record history, and history is not edited). Superseded
 documents carry a header banner pointing at what replaced them.
 
 **Rationale.** Documentation that drifts from code is worse than no
@@ -313,9 +317,9 @@ artifact cannot ship an `ARCHITECTURE.md` that describes a system that no longer
 exists. PR-anchored ADRs make a decision auditable and a revert precise — the
 squash commit is one `git revert` away, and the PR number never goes stale under
 rebase or squash-merge the way a per-commit SHA does. One
-canonical domain removes the `erikunha.com.br` / `erikunha.dev` ambiguity the
+canonical host removes the `erikunha.com.br` / `erikunha.dev` ambiguity the
 audit flagged (`robots.txt`, `sitemap.ts`, and `layout.tsx` `metadataBase` all
-ship `.dev`).
+ship `www.erikunha.dev`, matching the apex → www redirect).
 
 **How it is held.** PR review against this chapter is the primary mechanism: the
 reviewer checks that doc claims still match code and that any new ADR cites its

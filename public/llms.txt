@@ -128,11 +128,11 @@ Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
 
 ## Links
 
-- [Portfolio](https://erikunha.dev): Live site with streaming AI terminal,
+- [Portfolio](https://www.erikunha.dev): Live site with streaming AI terminal,
   performance receipts, and full project showcase
 - [GitHub](https://github.com/erikunha): Open source projects
 - [LinkedIn](https://linkedin.com/in/erikunha): Full professional history
-- [Hiring profile API](https://erikunha.dev/api/erik.json): Machine-readable
+- [Hiring profile API](https://www.erikunha.dev/api/erik.json): Machine-readable
   hiring profile (JSON)
 
 ## Design System

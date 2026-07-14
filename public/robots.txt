@@ -28,4 +28,4 @@ Allow: /
 User-agent: cohere-ai
 Allow: /
 
-Sitemap: https://erikunha.dev/sitemap.xml
+Sitemap: https://www.erikunha.dev/sitemap.xml

@@ -52,7 +52,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   '@type': 'HiringProfile',
   name: 'Erik Henrique Alves Cunha',
   alias: 'Erik Cunha',
-  url: 'https://erikunha.dev',
+  url: 'https://www.erikunha.dev',
   email: 'erikhenriquealvescunha@gmail.com',
   github: 'https://github.com/erikunha',
   linkedin: 'https://www.linkedin.com/in/erikunha/',

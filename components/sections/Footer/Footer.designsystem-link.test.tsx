@@ -60,4 +60,18 @@ describe('Footer design-system link', () => {
       expect(a.getAttribute('target')).not.toBe('_blank');
     }
   });
+
+  it.each([
+    ['desktop', false],
+    ['mobile', true],
+  ])('self-links to the site use the canonical www host, never the apex that 308-redirects on %s', (_variant, initialIsMobile) => {
+    stubMatchMedia(initialIsMobile);
+    const { container } = render(
+      <BreakpointProvider initialIsMobile={initialIsMobile}>
+        <Footer />
+      </BreakpointProvider>,
+    );
+    expect(container.querySelector('a[href="https://erikunha.dev"]')).toBeNull();
+    expect(container.querySelector('a[href="https://www.erikunha.dev"]')).not.toBeNull();
+  });
 });

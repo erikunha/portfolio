@@ -9,7 +9,7 @@ function textResult(text: string) {
 }
 
 async function runAsk(question: string): Promise<string> {
-  const req = new Request('https://erikunha.dev/api/ask', {
+  const req = new Request('https://www.erikunha.dev/api/ask', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question }),

@@ -13,8 +13,8 @@ describe('breadcrumbSchema', () => {
     };
     expect(s['@type']).toBe('BreadcrumbList');
     expect(s.itemListElement.map((e) => e.position)).toEqual([1, 2, 3]);
-    expect(s.itemListElement[2]?.item).toBe('https://erikunha.dev/design-system/tokens');
-    expect(s.itemListElement[0]?.item).toBe('https://erikunha.dev/');
-    for (const e of s.itemListElement) expect(e.item).toMatch(/^https:\/\/erikunha\.dev/);
+    expect(s.itemListElement[2]?.item).toBe('https://www.erikunha.dev/design-system/tokens');
+    expect(s.itemListElement[0]?.item).toBe('https://www.erikunha.dev/');
+    for (const e of s.itemListElement) expect(e.item).toMatch(/^https:\/\/www\.erikunha\.dev/);
   });
 });
