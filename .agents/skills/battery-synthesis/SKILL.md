@@ -2,6 +2,8 @@
 name: battery-synthesis
 description: Use after all 4 review-battery agents (pr-review-toolkit:review-pr, security-auditor, performance-engineer, dependency-auditor) have returned and before running `pnpm review:stamp`. Unifies their reports into one deduplicated, severity-ranked action table so nothing is double-counted or missed before the stamp decision. Not a gate; a DX aid where the fix responsibility stays with the main agent.
 ---
+> **Codex note:** hook activation is not configured in this repo, so every "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **hard rule to self-enforce**, not an automated gate.
+
 
 # Battery Synthesis
 
@@ -16,7 +18,7 @@ After all 4 battery agents have returned their reports and before `pnpm review:s
 Battery agents: `pr-review-toolkit:review-pr`,
 `security-auditor`, `performance-engineer`, `dependency-auditor`.
 
-Dispatch trigger in CLAUDE.md: "After dispatching the full 4-agent battery, before
+Dispatch trigger in AGENTS.md: "After dispatching the full 4-agent battery, before
 `pnpm review:stamp` → `battery-synthesis`"
 
 ## How to synthesize

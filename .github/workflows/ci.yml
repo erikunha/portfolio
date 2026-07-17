@@ -80,6 +80,9 @@ jobs:
       - name: Detect-changes pathspec gate (no orphaned filters)
         run: pnpm check:detect-changes-paths
 
+      - name: Codex mirror sync gate (.agents/.codex match .claude/, no dangling refs)
+        run: pnpm check:codex-sync
+
       - name: Contrast check
         run: pnpm lint:contrast
 
