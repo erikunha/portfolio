@@ -65,11 +65,13 @@ def brace_expand(word):
 
 
 def expand_words(words):
+    # Expand each word independently. If one word has more brace alternatives than
+    # the cap, keep it raw rather than dropping it (or, worse, the words after it) —
+    # a padded filler word must never strand the real argument that follows.
     out = []
     for w in words:
-        out.extend(brace_expand(w))
-        if len(out) > MAX_EXPANSIONS:
-            return out
+        exp = brace_expand(w)
+        out.extend(exp if len(exp) <= MAX_EXPANSIONS else [w])
     return out
 
 
@@ -99,9 +101,20 @@ def is_force_flag(a):
 
 
 def git_add_check(args):
-    # subcommand-position-tolerant: 'add' may sit behind global flags (git -C .)
-    if "add" in args and git_add_broad(args[args.index("add") + 1:]):
-        block(ADD_MSG)
+    # subcommand-position-tolerant ('add' may sit behind global flags: git -C .);
+    # 'stage' is git's built-in synonym for 'add'.
+    for sub in ("add", "stage"):
+        if sub in args and git_add_broad(args[args.index(sub) + 1:]):
+            block(ADD_MSG)
+
+
+def dash_c_index(args):
+    # index of a `-c` token or a bundled short-flag form (bash -lc, sh -ic) whose
+    # last char is c; the interpreter's script is the following word.
+    for i, a in enumerate(args):
+        if a == "-c" or re.fullmatch(r"-[A-Za-z]*c", a):
+            return i
+    return -1
 
 
 def gh_merge_check(args):
@@ -133,15 +146,15 @@ def coarse_scan(script):
 def interp_script(name, args):
     if name == "eval":
         return " ".join(args)
-    if name in SHELL_INTERP and "-c" in args:
-        j = args.index("-c")
-        if j + 1 < len(args):
+    if name in SHELL_INTERP:
+        j = dash_c_index(args)
+        if j >= 0 and j + 1 < len(args):
             return args[j + 1]
     return None
 
 
 def inspect(name, args, depth):
-    if name in ("npm", "yarn"):
+    if name in ("npm", "yarn", "yarnpkg"):
         block(NPM_MSG)
     if name == "gh":
         gh_merge_check(args)
@@ -153,11 +166,12 @@ def inspect(name, args, depth):
     if script is not None:
         reparse(script, depth)
     if name in OTHER_INTERP:
-        for flag in ("-c", "-e"):
-            if flag in args:
-                j = args.index(flag)
-                if j + 1 < len(args):
-                    coarse_scan(args[j + 1])
+        j = dash_c_index(args)
+        if j >= 0 and j + 1 < len(args):
+            coarse_scan(args[j + 1])
+        for i, a in enumerate(args):
+            if (a == "-e" or re.fullmatch(r"-[A-Za-z]*e", a)) and i + 1 < len(args):
+                coarse_scan(args[i + 1])
     if name == "find":
         for kw in ("-exec", "-execdir"):
             if kw in args:
@@ -177,7 +191,7 @@ def inspect_wrapper(args, depth):
     # a wrapper (env/sudo/...) execs another command bashlex parses as plain
     # word-args, not a nested node; scan those words by presence and re-parse any
     # interpreter payload they carry.
-    if "npm" in args or "yarn" in args:
+    if "npm" in args or "yarn" in args or "yarnpkg" in args:
         block(NPM_MSG)
     gh_merge_check(args)
     if "git" in args:
@@ -189,10 +203,11 @@ def inspect_wrapper(args, depth):
         if a == "eval":
             reparse(" ".join(args[i + 1:]), depth)
             break
-        if a in SHELL_INTERP and "-c" in args[i + 1:]:
-            j = args.index("-c", i + 1)
-            if j + 1 < len(args):
-                reparse(args[j + 1], depth)
+        if a in SHELL_INTERP:
+            sub = args[i + 1:]
+            j = dash_c_index(sub)
+            if j >= 0 and j + 1 < len(sub):
+                reparse(sub[j + 1], depth)
 
 
 def reparse(script, depth):

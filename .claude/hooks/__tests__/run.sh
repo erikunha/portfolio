@@ -264,6 +264,16 @@ assert_eq "bg: legit find -name allowed"       "0" "$(bg_exit 'find . -name npm-
 # oversized input skips the parser (size cap) and falls to the coarse fallback fast
 BG_BIG="echo $(head -c 150000 /dev/zero | tr '\0' x)"
 assert_eq "bg: oversized input -> no parse-hang" "0" "$(bg_exit "$BG_BIG")"
+# bundled interpreter flag (bash -lc), git 'stage' alias, yarnpkg binary, and a
+# padded-brace filler that must not strand the real dangerous argument
+assert_eq "bg: 'bash -lc npm' blocked"         "2" "$(bg_exit 'bash -lc "npm i"')"
+assert_eq "bg: 'sudo bash -ic npm' blocked"    "2" "$(bg_exit 'sudo bash -ic "npm i"')"
+assert_eq "bg: 'git stage -A' blocked"         "2" "$(bg_exit 'git stage -A')"
+assert_eq "bg: 'git stage .' blocked"          "2" "$(bg_exit 'git stage .')"
+assert_eq "bg: 'yarnpkg install' blocked"      "2" "$(bg_exit 'yarnpkg install')"
+assert_eq "bg: 'bash -lc echo' allowed"        "0" "$(bg_exit 'bash -lc "echo hi"')"
+BG_FILLER="git add {$(python3 -c "print(','.join('x%d'%i for i in range(80)))")} ."
+assert_eq "bg: filler-brace before '.' blocked" "2" "$(bg_exit "$BG_FILLER")"
 # command-position: a dangerous string only inside a quoted arg (commit message) must NOT block (finding 13)
 assert_eq "bg: 'gh pr merge' in commit msg allowed"  "0" "$(bg_exit 'git commit -m "docs: explain the gh pr merge guard"')"
 assert_eq "bg: 'git add -A' in commit msg allowed"   "0" "$(bg_exit 'git commit -m "chore: forbid git add -A"')"
