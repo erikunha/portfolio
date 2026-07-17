@@ -84,31 +84,31 @@ describe('breaking changes survive the parse/render round-trip', () => {
     const groups = new Map([
       [
         '2026-07-16',
-        [{ type: 'feat', description: 'remove the Breadcrumb feature', breaking: true }],
+        [{ type: 'feat', description: 'drop the legacy token alias', breaking: true }],
       ],
     ]);
-    expect(renderChangelogGroups(groups)).toContain('- **feat!:** remove the Breadcrumb feature');
+    expect(renderChangelogGroups(groups)).toContain('- **feat!:** drop the legacy token alias');
   });
 
   it('parses a rendered breaking entry back, marker intact', () => {
-    const mdx = '# CHANGELOG\n\n## 2026-07-16\n\n- **feat!:** remove the Breadcrumb feature\n';
+    const mdx = '# CHANGELOG\n\n## 2026-07-16\n\n- **feat!:** drop the legacy token alias\n';
     expect(
       parseChangelogGroups(mdx).get('2026-07-16'),
       'render and parse must agree on the ! marker. They are separate regexes over the same line, so a fix to one that misses the other silently drops every breaking entry on the next sync: it fails to parse back out of the file, and re-appears only while its commit is still in git history.',
-    ).toEqual([{ type: 'feat', description: 'remove the Breadcrumb feature', breaking: true }]);
+    ).toEqual([{ type: 'feat', description: 'drop the legacy token alias', breaking: true }]);
   });
 
   it('does not dedupe a breaking entry against its non-breaking twin', () => {
     const existing = new Map([
       [
         '2026-07-16',
-        [{ type: 'feat', description: 'remove the Breadcrumb feature', breaking: false }],
+        [{ type: 'feat', description: 'drop the legacy token alias', breaking: false }],
       ],
     ]);
     const fromGit = new Map([
       [
         '2026-07-16',
-        [{ type: 'feat', description: 'remove the Breadcrumb feature', breaking: true }],
+        [{ type: 'feat', description: 'drop the legacy token alias', breaking: true }],
       ],
     ]);
     expect(
