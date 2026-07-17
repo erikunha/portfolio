@@ -318,11 +318,13 @@ Upstash Redis sliding window:
 Same question text (hash) within 24h returns cached response. Reduces Anthropic spend on accidental refresh / share-link clicks. TTL 24h, evict on content deploy.
 
 ### Budget enforcement (the Principal-level move)
-Single hard counter in Redis: `ask:tokens:YYYY-MM`. Each completion increments via `INCRBY` with `tokens_in + tokens_out`. Monthly hard cap: 400,000 tokens (~$0.40 at Haiku pricing). Behavior:
-- 80% threshold: endpoint returns 503 with email fallback; no warning banner (conservative fail-closed)
-- Hard cap (100%): returns 503 with fallback message
-- Redis unavailable: fail-open (allow the request; durable rate-limit enforced on retry)
-- Prompt caching enabled on the system prompt via `cache_control: { type: 'ephemeral' }` (~93% token savings on cached context)
+Single hard counter in Redis: `ask:tokens:YYYY-MM` (32-day TTL, set `NX`). The counter is **reserved up front, then settled** — not incremented after the fact: `reserveBudget(MAX_OUTPUT_TOKENS)` does an `INCRBY` of `RESERVED_INPUT_TOKENS + maxOutputTokens` (2200 + 512 = 2712) *before* the model call, and `settleBudget()` refunds the unused difference afterwards. Reserving first is what makes the cap hold under concurrency; incrementing after the completion would let N in-flight requests all pass a check none of them had paid for yet. Monthly hard cap: `MONTHLY_TOKEN_BUDGET = 3_000_000` (≈$5 of Haiku). Behavior:
+- 80% threshold (`pct >= 0.8`): logs `budget approaching cap` and **allows the request**. This is a warning, not a gate — the endpoint does not 503 here.
+- Hard cap (`pct > 1`): refunds the reservation and returns `allowed: false`; the route returns 503 with a fallback message
+- Redis unavailable: fail-open (allow the request, `reserved: 0`; settlement is skipped and logged, so a Redis outage bypasses the cap for the duration by design — availability is chosen over the spend ceiling)
+- Prompt caching enabled via `providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }` on a system message (AI SDK v7 shape; the pre-v7 `cache_control` spelling no longer exists)
+
+Every number above is `lib/rate-limit.ts`'s to change — grep the constant rather than trusting this paragraph.
 
 Why this is non-negotiable: a public LLM endpoint without a hard cap is a $5,000 surprise waiting to happen. The graceful degradation is more credible than a 503 alone.
 
