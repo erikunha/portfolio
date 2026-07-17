@@ -2,7 +2,7 @@
 name: fallow-audit
 description: Run an on-demand, READ-ONLY architecture and dead-code audit of this TypeScript/JavaScript codebase using the pinned fallow CLI. Use ONLY when the user explicitly asks to "run a fallow audit", check circular dependencies, find architecture-boundary violations, or scan for unused exports/files. Do NOT auto-activate on generic "clean up the code" phrasing — Biome and the repo's dep/bundle gates cover that.
 ---
-> **Codex note:** mirror of a `.claude/` harness file. Any "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **Claude Code** control. Codex hook activation is not wired in this repo, so for Codex treat these as **hard rules to self-enforce**, not automated gates. See `AGENTS.md` / `DECISIONS.md`.
+> **Codex note:** hook activation is not configured in this repo, so every "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **hard rule to self-enforce**, not an automated gate.
 
 
 # fallow audit (read-only, on-demand)

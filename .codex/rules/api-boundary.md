@@ -5,7 +5,7 @@ paths:
   - "lib/server/**"
   - "proxy.ts"
 ---
-> **Codex note:** mirror of a `.claude/` harness file. Any "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **Claude Code** control. Codex hook activation is not wired in this repo, so for Codex treat these as **hard rules to self-enforce**, not automated gates. See `AGENTS.md` / `DECISIONS.md`.
+> **Codex note:** hook activation is not configured in this repo, so every "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **hard rule to self-enforce**, not an automated gate.
 
 
 # API & server boundary rules
@@ -29,7 +29,7 @@ context; this is the implementation guidance, not the enforcement.
 ## Security gate (hook-enforced)
 
 - Editing `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts` records a marker
-  (`.claude/.api-edit-pending`) via the PostToolUse `api-edit-marker.sh` hook.
+  (`.codex/.api-edit-pending`) via the PostToolUse `api-edit-marker.sh` hook.
   The next `git push` is blocked by `api-security-push-guard.sh` until a
   `security-auditor` agent is dispatched after that edit. Dispatch
   `security-auditor` as part of the change, not as an afterthought.

@@ -2,7 +2,7 @@
 name: battery-synthesis
 description: Use after all 4 review-battery agents (pr-review-toolkit:review-pr, security-auditor, performance-engineer, dependency-auditor) have returned and before running `pnpm review:stamp`. Unifies their reports into one deduplicated, severity-ranked action table so nothing is double-counted or missed before the stamp decision. Not a gate; a DX aid where the fix responsibility stays with the main agent.
 ---
-> **Codex note:** mirror of a `.claude/` harness file. Any "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **Claude Code** control. Codex hook activation is not wired in this repo, so for Codex treat these as **hard rules to self-enforce**, not automated gates. See `AGENTS.md` / `DECISIONS.md`.
+> **Codex note:** hook activation is not configured in this repo, so every "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **hard rule to self-enforce**, not an automated gate.
 
 
 # Battery Synthesis

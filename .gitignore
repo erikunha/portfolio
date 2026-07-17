@@ -57,6 +57,7 @@ tsconfig.tsbuildinfo
 
 # WS4 API-edit security gate — session-local marker of unaudited API edits
 .claude/.api-edit-pending
+.codex/.api-edit-pending
 
 # git worktrees (superpowers using-git-worktrees skill creates these here)
 .worktrees/

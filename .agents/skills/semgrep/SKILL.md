@@ -2,7 +2,7 @@
 name: semgrep
 description: Run the pinned Semgrep CLI to statically measure security issues (taint/injection, hardcoded secrets, OWASP Top Ten) on changed files, and interpret the SARIF output. Use ONLY when the user explicitly asks to "run semgrep", "static-analysis the diff", scan for injection/secrets, or interpret a Semgrep SARIF report. Do NOT auto-activate on generic "review my code" — the 4-agent battery and Biome cover that. CI is the authoritative gate; this skill is the local/agent interface.
 ---
-> **Codex note:** mirror of a `.claude/` harness file. Any "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **Claude Code** control. Codex hook activation is not wired in this repo, so for Codex treat these as **hard rules to self-enforce**, not automated gates. See `AGENTS.md` / `DECISIONS.md`.
+> **Codex note:** hook activation is not configured in this repo, so every "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **hard rule to self-enforce**, not an automated gate.
 
 
 # Semgrep (static analysis, on-demand)

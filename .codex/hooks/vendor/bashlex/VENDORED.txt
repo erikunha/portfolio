@@ -6,8 +6,8 @@ License: GPL-3.0-or-later (GPLv3+). See ./LICENSE (full GPLv3 text).
 COPYLEFT NOTICE
 bashlex is licensed GPLv3+. `.codex/hooks/bash-guard-detect.py` imports it, so
 that detector is a derivative work and is likewise GPLv3+. This is accepted
-deliberately: it is developer-harness tooling (a local Claude Code PreToolUse
-hook), not part of the shipped site or any distributed product, and this repo is
+deliberately: it is developer-harness tooling (a local PreToolUse hook), not part
+of the shipped site or any distributed product, and this repo is
 public so its source is available. The GPLv3 obligation is scoped to this
 vendored parser and the hook file that imports it; it does not relicense the rest
 of the repository.

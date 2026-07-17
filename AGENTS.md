@@ -1,5 +1,5 @@
 <!-- GENERATED — do not edit by hand. Regenerate with `pnpm sync:codex`. -->
-> **This file is a read-only mirror of `CLAUDE.md`**, derived by `scripts/sync-codex.mjs` (path rewrites only). The hooks and gates described below are wired for Claude Code via `.claude/settings.json`. **Codex hook activation is not yet configured**, so for Codex these are read-only guidance, not active gates. See `DECISIONS.md`.
+> **Generated harness file.** Hook activation is not configured in this repo, so every hook and gate described below is **guidance to self-enforce**, not an automated gate.
 
 # AGENTS.md
 

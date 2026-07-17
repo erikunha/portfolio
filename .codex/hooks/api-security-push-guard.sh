@@ -16,7 +16,7 @@ except Exception: print('')
 printf '%s' "$CMD" | grep -qE '(^|[[:space:]])git([[:space:]]|$)' \
   && printf '%s' "$CMD" | grep -qE '(^|[[:space:]])push([[:space:]]|$)' || exit 0
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-MARKER="$ROOT/.claude/.api-edit-pending"
+MARKER="$ROOT/.codex/.api-edit-pending"
 [ -s "$MARKER" ] || exit 0
 
 if [ -z "$TRANSCRIPT" ] || [ ! -r "$TRANSCRIPT" ]; then

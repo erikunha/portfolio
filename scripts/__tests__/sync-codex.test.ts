@@ -77,6 +77,13 @@ describe('referencedMirrorPaths — the dangling-ref surface the fail-open prede
   it('ignores unrelated .claude paths (they are correctly left alone, not mirror targets)', () => {
     expect(referencedMirrorPaths('.claude/settings.json and .claude/.review-passed')).toEqual([]);
   });
+
+  it('excludes runtime-state dotfiles (a hook creates .codex/.api-edit-pending; it is not mirror content)', () => {
+    expect(referencedMirrorPaths('writes to .codex/.api-edit-pending')).toEqual([]);
+    expect(referencedMirrorPaths('see .codex/rules/api-boundary.md')).toEqual([
+      '.codex/rules/api-boundary.md',
+    ]);
+  });
 });
 
 describe('insertNote — the Codex disclaimer must not break a skill frontmatter', () => {

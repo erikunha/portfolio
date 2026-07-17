@@ -42,6 +42,11 @@ const PATH_REWRITES = [
   [/\.claude\/hooks/g, CODEX_HOOKS],
   [/\.claude\/rules/g, '.codex/rules'],
   [/\.claude\/agents/g, '.codex/agents'],
+  // The api-edit marker is per-tree runtime state: a writer (api-edit-marker.sh) and a reader
+  // (api-security-push-guard.sh) hook, both mirrored, resolve it from the repo root. Rewriting
+  // both to `.codex/` keeps them consistent with each other AND keeps Codex marker state out of
+  // `.claude/` — a session only ever runs one agent's hooks, so they never need a shared file.
+  [/\.claude\/\.api-edit-pending/g, '.codex/.api-edit-pending'],
   // No leading \b: in a hook's `"...\nCLAUDE.md: ..."` message the `n` of the `\n` escape
   // sits against `CLAUDE`, so a leading boundary would skip exactly the hook prose this must fix.
   [/CLAUDE\.md\b/g, CODEX_INSTRUCTIONS],
@@ -76,10 +81,14 @@ export const findFiction = (text) => {
 
 // Literal repo-relative mirror paths a rewritten file points at. Each must exist in the
 // mirror, or the file references something that was never generated (the dangling-ref
-// class the fail-open predecessor could not see). Bounded to the two mirror roots.
+// class the fail-open predecessor could not see). Bounded to the two mirror roots. A
+// dot-prefixed basename (`.codex/.api-edit-pending`) is runtime STATE a hook creates, not
+// mirror content, so it is excluded — it is gitignored and absent at rest by design.
 export const referencedMirrorPaths = (text) => {
   const matches = text.match(/(?:\.agents|\.codex)\/[A-Za-z0-9_./-]+/g) ?? [];
-  return [...new Set(matches.map((m) => m.replace(/[.]+$/, '')))];
+  return [...new Set(matches.map((m) => m.replace(/[.]+$/, '')))].filter(
+    (p) => !path.basename(p).startsWith('.'),
+  );
 };
 
 // Sibling files a hook invokes by `$HOOK_DIR/NAME` (bash-guard.sh -> bash-guard-detect.py).
@@ -103,31 +112,30 @@ const walk = (dir) => {
 
 const toCodexHook = (from) => path.join(CODEX_HOOKS, path.relative(CLAUDE_HOOKS, from));
 
-// text = rewrite the five harness paths + assert no fiction; binary = byte-for-byte.
-// The hook SCRIPTS are text: their advisory messages say "CLAUDE.md" and must become
-// "AGENTS.md" for the Codex copy. The marker path `.claude/.api-edit-pending` matches no
-// rewrite rule, so it stays `.claude/`-rooted — correct, because the writer and reader
-// hooks resolve it via `git rev-parse` and must share one file. Only the VENDORED bashlex
-// parser is binary: it is upstream GPLv3 code, has no harness paths to rewrite, and is not
-// ours to edit even by a no-op pass.
-// AGENTS.md is content-mirrored, not activated. The body it inherits from CLAUDE.md
-// describes hooks as "WIRED"/"enforced" — true for Claude Code, which registers them via
-// `.claude/settings.json`. Codex has no equivalent registration in this repo, so for Codex
-// those guards are read-only guidance, not active gates. This banner says so at the top so
-// the mirror does not assert enforcement it cannot deliver. Prepended AFTER the rewrite, so
-// its literal `CLAUDE.md` survives (it is naming the source, not a path to remap).
+// text = rewrite the harness paths + assert no fiction; binary = byte-for-byte. The hook
+// SCRIPTS are text: their advisory messages and the api-edit marker path must be remapped for
+// the Codex copy (CLAUDE.md->AGENTS.md, `.claude/.api-edit-pending`->`.codex/...`). Only the
+// VENDORED bashlex parser is binary: it is upstream GPLv3 code, has no harness paths to
+// rewrite, and is not ours to edit even by a no-op pass.
+// AGENTS.md is content-mirrored, not activated: the body it inherits describes hooks as
+// "WIRED"/"enforced", which only holds where the hooks are registered — they are not, in this
+// repo, for the mirror's runtime. This banner says so at the top so the mirror does not assert
+// enforcement it cannot deliver. It is Codex-native (names no other agent): the mirror files
+// must not cross-reference — the only unavoidable non-Codex strings are repo-infra facts (the
+// review bot, the review command) that renaming would turn into fiction.
 const AGENTS_BANNER = `<!-- GENERATED — do not edit by hand. Regenerate with \`pnpm sync:codex\`. -->
-> **This file is a read-only mirror of \`CLAUDE.md\`**, derived by \`scripts/sync-codex.mjs\` (path rewrites only). The hooks and gates described below are wired for Claude Code via \`.claude/settings.json\`. **Codex hook activation is not yet configured**, so for Codex these are read-only guidance, not active gates. See \`DECISIONS.md\`.
+> **Generated harness file.** Hook activation is not configured in this repo, so every hook and gate described below is **guidance to self-enforce**, not an automated gate.
 
 `;
 
 // Skills and rules are loaded contextually — often WITHOUT AGENTS.md's banner in view —
 // yet they carry "the hook blocks", "enforced", "WIRED", "exit 2" claims (in the body AND in
-// a skill's frontmatter description) that are Claude-Code controls. Rather than rewrite each
-// phrasing, every mirrored skill/rule/agent gets this note reframing how to read ALL such
-// claims in the file. Inserted AFTER the note-target's frontmatter (see insertNote) so a
-// skill's `---name/description---` block stays parseable.
-const CODEX_NOTE = `> **Codex note:** mirror of a \`.claude/\` harness file. Any "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **Claude Code** control. Codex hook activation is not wired in this repo, so for Codex treat these as **hard rules to self-enforce**, not automated gates. See \`AGENTS.md\` / \`DECISIONS.md\`.
+// a skill's frontmatter description) that only hold where the hooks are registered. Rather than
+// rewrite each phrasing, every mirrored skill/rule/agent gets this note reframing how to read
+// ALL such claims in the file. Codex-native, like the banner (no cross-reference). Inserted
+// AFTER the note-target's frontmatter (see insertNote) so a skill's `---name/description---`
+// block stays parseable.
+const CODEX_NOTE = `> **Codex note:** hook activation is not configured in this repo, so every "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **hard rule to self-enforce**, not an automated gate.
 
 `;
 
