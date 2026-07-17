@@ -84,7 +84,7 @@ There is **no `use cache` / `cacheLife` / `cacheTag` / `unstable_cache` / `gener
 
 ```
 build time:  content/*.ts imported -> Zod parse (gate) -> typed data baked into RSC output
-             scripts/ask-eval.ts -> Redis ask:eval:latest -> content/ask-metrics.ts reads at build
+             scripts/ask-eval.ts -> Redis ask:eval:latest -> lib/ask-metrics.ts reads at build
 request:     proxy.ts headers -> static shell streamed -> getIsMobile() resolves per request
              -> dynamic section variants stream -> client hydrates islands
 ```

@@ -1,43 +1,32 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { listContentFiles } from './content-files.mjs';
 
-const CONTENT_FILES = [
-  'content/projects.ts',
-  'content/perf-receipts.ts',
-  'content/npm-stack.ts',
-  'content/hottest-takes.ts',
-  'content/responsibilities.ts',
-  'content/guitar-rig.ts',
-  'content/unknowns.ts',
-  'content/visa.ts',
-  'content/credentials.ts',
-  'content/community.ts',
-  'content/man-page.ts',
-  'content/now.ts',
-  'content/social.ts',
-  'content/git-log.ts',
-  'content/sys-health.ts',
-  'content/readme.ts',
-  'content/ask-eval-corpus.ts',
-  'content/hero.ts',
-  'content/seo.ts',
-  'content/section-labels.ts',
-  'content/daw-mixer.ts',
-  'content/_validate-client-content.ts',
-];
+const MIN_EXPECTED_CONTENT_FILES = 20;
 
-const root = path.resolve(process.cwd());
+const files = listContentFiles();
+
+if (files.length < MIN_EXPECTED_CONTENT_FILES) {
+  console.error(
+    `content validation: found only ${files.length} content modules, expected at least ${MIN_EXPECTED_CONTENT_FILES}.\n` +
+      'The glob has resolved to (almost) nothing, which means it is no longer looking where the content lives.\n' +
+      'A gate that validates zero files prints "0 passed, 0 failed" and exits 0 — the fail-open the hand-listed\n' +
+      'CONTENT_FILES array produced, rebuilt in a new shape. Refusing to pass.',
+  );
+  process.exit(1);
+}
+
 let passed = 0;
 let failed = 0;
 
-for (const file of CONTENT_FILES) {
-  const absUrl = pathToFileURL(path.join(root, file)).href;
+for (const file of files) {
+  const rel = path.relative(process.cwd(), file);
   try {
-    await import(absUrl);
-    console.log(`  ✓  ${file}`);
+    await import(pathToFileURL(file).href);
+    console.log(`  ✓  ${rel}`);
     passed++;
   } catch (err) {
-    console.error(`  ✗  ${file}`);
+    console.error(`  ✗  ${rel}`);
     const message = err instanceof Error ? err.message : String(err);
     console.error(`     ${message.split('\n').slice(0, 3).join('\n     ')}`);
     failed++;

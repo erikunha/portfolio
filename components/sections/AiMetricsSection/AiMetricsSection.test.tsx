@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const getAskMetricsMock = vi.fn();
-vi.mock('@/content/ask-metrics', () => ({
+vi.mock('@/lib/ask-metrics', () => ({
   getAskMetrics: getAskMetricsMock,
 }));
 

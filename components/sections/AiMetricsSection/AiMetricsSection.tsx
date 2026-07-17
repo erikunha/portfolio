@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
-import type { AskMetrics } from '@/content/ask-metrics';
-import { getAskMetrics } from '@/content/ask-metrics';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { TerminalPanel } from '@/design-system';
+import type { AskMetrics } from '@/lib/ask-metrics';
+import { getAskMetrics } from '@/lib/ask-metrics';
 import { IconAiMetrics } from '../../Icons';
 import { Module } from '../../responsive/Module';
 
