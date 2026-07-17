@@ -253,6 +253,17 @@ assert_eq "bg: 'git -C . status' allowed"      "0" "$(bg_exit 'git -C . status')
 # force-flag variants: =form and bundled short flags
 assert_eq "bg: --force-with-lease= main blocked" "2" "$(bg_exit 'git push --force-with-lease=origin/main origin')"
 assert_eq "bg: bundled -fu main blocked"       "2" "$(bg_exit 'git push -fu origin main')"
+# runtime-expansion forms a parser must expand: brace expansion, find -exec, here-string
+assert_eq "bg: brace {npm,i} blocked"          "2" "$(bg_exit '{npm,i}')"
+assert_eq "bg: git add brace {.,x} blocked"    "2" "$(bg_exit 'git add {.,x}')"
+assert_eq "bg: find -exec npm blocked"         "2" "$(bg_exit 'find . -exec npm i \;')"
+assert_eq "bg: here-string sh npm blocked"     "2" "$(bg_exit "sh <<< 'npm i'")"
+assert_eq "bg: backslash \\npm blocked"        "2" "$(bg_exit '\npm i')"
+assert_eq "bg: legit brace mkdir allowed"      "0" "$(bg_exit 'mkdir -p src/{a,b}')"
+assert_eq "bg: legit find -name allowed"       "0" "$(bg_exit 'find . -name npm-debug.log')"
+# oversized input skips the parser (size cap) and falls to the coarse fallback fast
+BG_BIG="echo $(head -c 150000 /dev/zero | tr '\0' x)"
+assert_eq "bg: oversized input -> no parse-hang" "0" "$(bg_exit "$BG_BIG")"
 # command-position: a dangerous string only inside a quoted arg (commit message) must NOT block (finding 13)
 assert_eq "bg: 'gh pr merge' in commit msg allowed"  "0" "$(bg_exit 'git commit -m "docs: explain the gh pr merge guard"')"
 assert_eq "bg: 'git add -A' in commit msg allowed"   "0" "$(bg_exit 'git commit -m "chore: forbid git add -A"')"

@@ -28,6 +28,8 @@ WRAPPERS = {
 SHELL_INTERP = {"bash", "sh", "zsh", "dash", "ksh", "ash", "mksh", "rbash"}
 OTHER_INTERP = {"python", "python3", "node", "nodejs", "perl", "ruby", "php"}
 MAX_DEPTH = 6
+MAX_CMD_LEN = 100_000
+_reparse_budget = [400]
 
 NPM_MSG = "[BLOCKED] npm/yarn detected. This project uses pnpm only.\nUse pnpm instead."
 MERGE_MSG = (
@@ -43,6 +45,32 @@ NEST_MSG = "[BLOCKED] Command nesting too deep to analyze safely."
 def block(msg):
     sys.stdout.write(msg + "\n")
     sys.exit(2)
+
+
+MAX_EXPANSIONS = 64
+
+
+def brace_expand(word):
+    # bashlex does not expand braces; a `{npm,i}` word runs `npm` at runtime.
+    m = re.search(r"\{([^{}]*,[^{}]*)\}", word)
+    if not m:
+        return [word]
+    pre, post = word[: m.start()], word[m.end():]
+    out = []
+    for alt in m.group(1).split(","):
+        out.extend(brace_expand(pre + alt + post))
+        if len(out) > MAX_EXPANSIONS:
+            break
+    return out
+
+
+def expand_words(words):
+    out = []
+    for w in words:
+        out.extend(brace_expand(w))
+        if len(out) > MAX_EXPANSIONS:
+            return out
+    return out
 
 
 def main_ref(tok):
@@ -130,6 +158,17 @@ def inspect(name, args, depth):
                 j = args.index(flag)
                 if j + 1 < len(args):
                     coarse_scan(args[j + 1])
+    if name == "find":
+        for kw in ("-exec", "-execdir"):
+            if kw in args:
+                j = args.index(kw)
+                sub = []
+                for a in args[j + 1:]:
+                    if a in (";", "+"):
+                        break
+                    sub.append(a)
+                if sub:
+                    inspect(sub[0], sub[1:], depth)
     if name in WRAPPERS:
         inspect_wrapper(args, depth)
 
@@ -157,8 +196,11 @@ def inspect_wrapper(args, depth):
 
 
 def reparse(script, depth):
-    if depth <= 0:
+    # bound both the nesting chain (depth) and total reparse work across the whole
+    # tree (budget), so a branching bash -c payload cannot blow up to O(branch^depth).
+    if depth <= 0 or _reparse_budget[0] <= 0:
         block(NEST_MSG)
+    _reparse_budget[0] -= 1
     if not script or not script.strip():
         return
     try:
@@ -177,10 +219,20 @@ if bashlex is not None:
             self.depth = depth
 
         def visitcommand(self, n, parts):
-            words = [p.word for p in parts if p.kind == "word"]
-            if not words:
-                return
-            inspect(words[0], words[1:], self.depth)
+            words = expand_words([p.word for p in parts if p.kind == "word"])
+            if words:
+                inspect(words[0], words[1:], self.depth)
+            # here-string / here-doc feeding a shell interpreter (no -c): the body
+            # is a redirect node, not a word, so re-parse it explicitly.
+            if words and words[0] in SHELL_INTERP and "-c" not in words:
+                for p in parts:
+                    if p.kind == "redirect" and str(p.type).startswith("<<"):
+                        body = getattr(getattr(p, "output", None), "word", None)
+                        if body is None:
+                            hd = getattr(p, "heredoc", None)
+                            body = getattr(hd, "value", None) or getattr(hd, "word", None)
+                        if body:
+                            reparse(body, self.depth)
 
 
 def main():
@@ -192,7 +244,7 @@ def main():
         cmd = ""
     if not cmd or not cmd.strip():
         sys.exit(3 if raw.strip() else 0)
-    if bashlex is None:
+    if bashlex is None or len(cmd) > MAX_CMD_LEN:
         sys.exit(3)
     try:
         trees = bashlex.parse(cmd)
