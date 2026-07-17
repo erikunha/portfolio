@@ -154,4 +154,45 @@ assert_eq "guard: session malformed-stdin exit 0" "0" "$?"
 ( cd "$REPO_ROOT" && printf '' | bash "$HOOKS/session-context.sh" ) >/dev/null 2>&1
 assert_eq "guard: session-context exit 0" "0" "$?"
 
+# --- bash-guard.sh block logic (the broadest blocking hook; previously untested) ---
+BG_HOOK="$HOOKS/bash-guard.sh"
+bg_exit() { # $1=command string -> exit code of bash-guard for a well-formed payload
+  python3 -c 'import json,sys; print(json.dumps({"command": sys.argv[1]}))' "$1" | bash "$BG_HOOK" >/dev/null 2>&1
+  echo $?
+}
+assert_eq "bg: broad 'git add -A' blocked" "2" "$(bg_exit 'git add -A')"
+assert_eq "bg: 'git add .' blocked"        "2" "$(bg_exit 'git add .')"
+assert_eq "bg: npm blocked"                 "2" "$(bg_exit 'npm install foo')"
+assert_eq "bg: 'gh pr merge' blocked"       "2" "$(bg_exit 'gh pr merge 42 --squash')"
+assert_eq "bg: force-push main blocked"     "2" "$(bg_exit 'git push --force origin main')"
+assert_eq "bg: safe 'git status' allowed"   "0" "$(bg_exit 'git status')"
+assert_eq "bg: 'git add -u' allowed"        "0" "$(bg_exit 'git add -u')"
+# fail-closed: a malformed (non-JSON) payload carrying a dangerous command must STILL block
+printf 'gh pr merge 42' | bash "$BG_HOOK" >/dev/null 2>&1
+assert_eq "bg: fail-closed on malformed payload (gh pr merge)" "2" "$?"
+printf 'git push --force origin main' | bash "$BG_HOOK" >/dev/null 2>&1
+assert_eq "bg: fail-closed on malformed payload (force-push main)" "2" "$?"
+# a malformed but safe payload must NOT block (no over-blocking of ordinary commands)
+printf 'just some prose with no dangerous command' | bash "$BG_HOOK" >/dev/null 2>&1
+assert_eq "bg: malformed safe payload allowed" "0" "$?"
+
+# --- api-edit-marker.sh block logic (isolated in a temp non-git dir; real marker untouched) ---
+AEM_HOOK="$HOOKS/api-edit-marker.sh"
+aem_marked() { # $1=file_path -> MARKED|NONE (marker written to an isolated temp ROOT)
+  local d; d=$(mktemp -d)
+  printf '{"tool_input":{"file_path":"%s"}}' "$1" | ( cd "$d" && bash "$AEM_HOOK" >/dev/null 2>&1 )
+  if [ -s "$d/.claude/.api-edit-pending" ]; then printf 'MARKED'; else printf 'NONE'; fi
+  rm -rf "$d"
+}
+assert_eq "aem: app/api path marked"  "MARKED" "$(aem_marked /repo/app/api/ask/route.ts)"
+assert_eq "aem: rate-limit.ts marked" "MARKED" "$(aem_marked /repo/lib/rate-limit.ts)"
+assert_eq "aem: proxy.ts marked"      "MARKED" "$(aem_marked /repo/proxy.ts)"
+assert_eq "aem: non-API not marked"   "NONE"   "$(aem_marked /repo/components/sections/Hero.tsx)"
+# fail-closed: a malformed payload mentioning an API path must STILL record a marker
+aem_d=$(mktemp -d)
+printf 'garbled non-json app/api/ask/route.ts payload' | ( cd "$aem_d" && bash "$AEM_HOOK" >/dev/null 2>&1 )
+if [ -s "$aem_d/.claude/.api-edit-pending" ]; then aem_fc=MARKED; else aem_fc=NONE; fi
+rm -rf "$aem_d"
+assert_eq "aem: fail-closed on malformed payload with API path" "MARKED" "$aem_fc"
+
 [ "$FAILED" -eq 0 ] && { printf '\nALL PASS\n'; exit 0; } || { printf '\nFAILURES\n'; exit 1; }

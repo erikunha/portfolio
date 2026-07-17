@@ -9,6 +9,15 @@ except Exception:
   print('')
 " 2>/dev/null || echo "")
 
+# Fail closed: if the command could not be extracted (malformed JSON payload or
+# python3 unavailable) but stdin was non-empty, scan the raw payload instead of
+# silently passing. The blocking patterns below must still fire for irreversible
+# ops (gh pr merge, force-push to main) that have no other mechanical gate. A raw
+# scan can only over-block a malformed payload (safe), never under-block a real one.
+if [ -z "$CMD" ] && [ -n "$INPUT" ]; then
+  CMD="$INPUT"
+fi
+
 if printf '%s' "$CMD" | grep -qE 'git\s+add\s+(-A\b|--all\b|\.\s*$|\.\s+)'; then
   printf '[BLOCKED] Broad git add detected.\n'
   printf 'CLAUDE.md: use git add -u or git add <specific files> only.\n'
