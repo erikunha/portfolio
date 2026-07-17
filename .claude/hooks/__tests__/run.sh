@@ -154,4 +154,180 @@ assert_eq "guard: session malformed-stdin exit 0" "0" "$?"
 ( cd "$REPO_ROOT" && printf '' | bash "$HOOKS/session-context.sh" ) >/dev/null 2>&1
 assert_eq "guard: session-context exit 0" "0" "$?"
 
+# --- bash-guard.sh block logic (the broadest blocking hook; previously untested) ---
+BG_HOOK="$HOOKS/bash-guard.sh"
+bg_exit() { # $1=command string -> exit code of bash-guard for a REAL PreToolUse payload
+  # The real Claude Code payload nests the command under tool_input — a flat
+  # {"command": ...} fixture would match a buggy top-level extraction and give
+  # false-green coverage. Use the wrapped shape so the parse-success path is
+  # actually exercised (and anchored patterns like ^npm and 'git add .$' are hit).
+  python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","tool_input":{"command": sys.argv[1]}}))' "$1" | bash "$BG_HOOK" >/dev/null 2>&1
+  echo $?
+}
+bg_exit_flat() { # $1=command -> exit for a top-level {"command":...} payload (the fallback branch)
+  python3 -c 'import json,sys; print(json.dumps({"command": sys.argv[1]}))' "$1" | bash "$BG_HOOK" >/dev/null 2>&1
+  echo $?
+}
+assert_eq "bg: broad 'git add -A' blocked"  "2" "$(bg_exit 'git add -A')"
+assert_eq "bg: bare 'git add .' blocked"    "2" "$(bg_exit 'git add .')"
+assert_eq "bg: npm blocked"                 "2" "$(bg_exit 'npm install foo')"
+assert_eq "bg: yarn blocked"                "2" "$(bg_exit 'yarn add foo')"
+assert_eq "bg: 'gh pr merge' blocked"       "2" "$(bg_exit 'gh pr merge 42 --squash')"
+assert_eq "bg: force-push main blocked"     "2" "$(bg_exit 'git push --force origin main')"
+assert_eq "bg: safe 'git status' allowed"   "0" "$(bg_exit 'git status')"
+assert_eq "bg: 'git add -u' allowed"        "0" "$(bg_exit 'git add -u')"
+# the top-level-command fallback branch (d.get('command')) must also block
+assert_eq "bg: top-level-command fallback blocks npm" "2" "$(bg_exit_flat 'npm install foo')"
+# fail-closed: a malformed (non-JSON) payload carrying a dangerous command must STILL block
+printf 'gh pr merge 42' | bash "$BG_HOOK" >/dev/null 2>&1
+assert_eq "bg: fail-closed on malformed payload (gh pr merge)" "2" "$?"
+printf 'git push --force origin main' | bash "$BG_HOOK" >/dev/null 2>&1
+assert_eq "bg: fail-closed on malformed payload (force-push main)" "2" "$?"
+# a malformed but safe payload must NOT block (no over-blocking of ordinary commands)
+printf 'just some prose with no dangerous command' | bash "$BG_HOOK" >/dev/null 2>&1
+assert_eq "bg: malformed safe payload allowed" "0" "$?"
+# tokenization: quote/whitespace/chaining evasions must NOT bypass the block (findings 14-17)
+assert_eq "bg: quoted 'gh \"pr\" merge' blocked"   "2" "$(bg_exit 'gh "pr" merge 42 --squash')"
+assert_eq "bg: double-space 'gh pr  merge' blocked" "2" "$(bg_exit 'gh pr  merge 42')"
+assert_eq "bg: quoted force-flag to main blocked"  "2" "$(bg_exit 'git push --"force" origin main')"
+assert_eq "bg: chained '&& npm' blocked"           "2" "$(bg_exit 'cd repo && npm install foo')"
+assert_eq "bg: chained '; yarn' blocked"           "2" "$(bg_exit 'echo hi ; yarn add foo')"
+assert_eq "bg: quoted 'git add \"-A\"' blocked"    "2" "$(bg_exit 'git add "-A"')"
+assert_eq "bg: quoted 'git add \".\"' blocked"     "2" "$(bg_exit 'git add "."')"
+# no-space operator chaining (shlex whitespace-split misses these without punctuation_chars)
+assert_eq "bg: no-space '&&npm' blocked"           "2" "$(bg_exit 'cd repo&&npm install foo')"
+assert_eq "bg: no-space ';yarn' blocked"           "2" "$(bg_exit 'git status;yarn add foo')"
+assert_eq "bg: no-space '&&force main' blocked"    "2" "$(bg_exit 'echo hi&&git push --force origin main')"
+assert_eq "bg: no-space '&&gh pr merge' blocked"   "2" "$(bg_exit 'echo hi&&gh pr merge 1')"
+# embedded-newline second command (shlex eats \n as whitespace)
+assert_eq "bg: newline npm blocked"                "2" "$(bg_exit "$(printf 'git status\nnpm install foo')")"
+assert_eq "bg: newline force-main blocked"         "2" "$(bg_exit "$(printf 'echo hi\ngit push --force origin main')")"
+# command-position wrappers (env/command/sudo/VAR=val) displace token 0
+assert_eq "bg: 'command npm' blocked"              "2" "$(bg_exit 'command npm install foo')"
+assert_eq "bg: 'env npm' blocked"                  "2" "$(bg_exit 'env npm install foo')"
+assert_eq "bg: 'sudo npm' blocked"                 "2" "$(bg_exit 'sudo npm install foo')"
+assert_eq "bg: 'env git force main' blocked"       "2" "$(bg_exit 'env git push --force origin main')"
+assert_eq "bg: 'FOO=bar npm' blocked"              "2" "$(bg_exit 'FOO=bar npm install foo')"
+# git add pathspec magic that stages the repo root
+assert_eq "bg: 'git add :/' blocked"               "2" "$(bg_exit 'git add :/')"
+assert_eq "bg: 'git add *' blocked"                "2" "$(bg_exit 'git add "*"')"
+# subshell inner command is still checked
+assert_eq "bg: subshell '\$(npm ...)' blocked"     "2" "$(bg_exit 'echo $(npm install foo)')"
+# a safely-chained pnpm command must NOT block
+assert_eq "bg: chained 'cd x && pnpm i' allowed"   "0" "$(bg_exit 'cd repo && pnpm install')"
+# a multi-line commit message whose BODY mentions guarded commands must NOT block
+# (newlines inside the quoted -m argument must not be treated as command separators)
+assert_eq "bg: multi-line commit body allowed" "0" "$(bg_exit "$(printf 'git commit -m "fix: guard\n\n- body mentions npm install and git add -A\n- and gh pr merge"')")"
+# bashlex-parsed classes a token heuristic could not reach (command substitution,
+# compound commands, redirections, wrapper option-args, refspecs) must block
+assert_eq "bg: backtick subst npm blocked"     "2" "$(bg_exit 'echo `npm install foo`')"
+assert_eq "bg: dollar-subst npm blocked"       "2" "$(bg_exit 'echo $(npm install foo)')"
+assert_eq "bg: brace-group npm blocked"        "2" "$(bg_exit '{ npm install foo; }')"
+assert_eq "bg: if-then npm blocked"            "2" "$(bg_exit 'if npm install foo; then :; fi')"
+assert_eq "bg: while npm blocked"              "2" "$(bg_exit 'while npm install foo; do :; done')"
+assert_eq "bg: env -u X npm blocked"           "2" "$(bg_exit 'env -u X npm install foo')"
+assert_eq "bg: sudo -u root npm blocked"       "2" "$(bg_exit 'sudo -u root npm install foo')"
+assert_eq "bg: redirect-first npm blocked"     "2" "$(bg_exit '>/tmp/x npm install foo')"
+assert_eq "bg: git add bundled -Av blocked"    "2" "$(bg_exit 'git add -Av')"
+assert_eq "bg: git add pathspec-file blocked"  "2" "$(bg_exit 'git add --pathspec-from-file=p.txt')"
+assert_eq "bg: +main refspec force blocked"    "2" "$(bg_exit 'git push origin +main')"
+assert_eq "bg: force-with-lease main blocked"  "2" "$(bg_exit 'git push --force-with-lease origin main')"
+# the parser distinguishes command from argument, so these must NOT block (no over-block)
+assert_eq "bg: 'grep npm' allowed"             "0" "$(bg_exit 'grep npm file.txt')"
+assert_eq "bg: 'cat npm-debug.log' allowed"    "0" "$(bg_exit 'cat npm-debug.log')"
+assert_eq "bg: 'git log --grep npm' allowed"   "0" "$(bg_exit 'git log --grep npm')"
+assert_eq "bg: push to maintain-branch allowed" "0" "$(bg_exit 'git push origin chore/maintain-docs')"
+# interpreter-with-literal-string: re-parse the -c/eval script so the inner command is caught
+assert_eq "bg: eval npm blocked"               "2" "$(bg_exit 'eval "npm i"')"
+assert_eq "bg: bash -c npm blocked"            "2" "$(bg_exit 'bash -c "npm install"')"
+assert_eq "bg: sh -c git-add blocked"          "2" "$(bg_exit 'sh -c "git add -A"')"
+assert_eq "bg: env bash -c npm blocked"        "2" "$(bg_exit 'env bash -c "npm i"')"
+assert_eq "bg: python os.system npm blocked"   "2" "$(bg_exit 'python3 -c "import os; os.system(\"npm i\")"')"
+assert_eq "bg: bash script file allowed"       "0" "$(bg_exit 'bash deploy.sh')"
+assert_eq "bg: bash -c echo allowed"           "0" "$(bg_exit 'bash -c "echo hi"')"
+# git/gh global flags before the subcommand must not displace the check
+assert_eq "bg: 'git -C . add -A' blocked"      "2" "$(bg_exit 'git -C . add -A')"
+assert_eq "bg: 'git --no-pager add -A' blocked" "2" "$(bg_exit 'git --no-pager add -A')"
+assert_eq "bg: 'gh --repo x pr merge' blocked" "2" "$(bg_exit 'gh --repo owner/repo pr merge 42')"
+assert_eq "bg: 'git -C . status' allowed"      "0" "$(bg_exit 'git -C . status')"
+# force-flag variants: =form and bundled short flags
+assert_eq "bg: --force-with-lease= main blocked" "2" "$(bg_exit 'git push --force-with-lease=origin/main origin')"
+assert_eq "bg: bundled -fu main blocked"       "2" "$(bg_exit 'git push -fu origin main')"
+# runtime-expansion forms a parser must expand: brace expansion, find -exec, here-string
+assert_eq "bg: brace {npm,i} blocked"          "2" "$(bg_exit '{npm,i}')"
+assert_eq "bg: git add brace {.,x} blocked"    "2" "$(bg_exit 'git add {.,x}')"
+assert_eq "bg: find -exec npm blocked"         "2" "$(bg_exit 'find . -exec npm i \;')"
+assert_eq "bg: here-string sh npm blocked"     "2" "$(bg_exit "sh <<< 'npm i'")"
+# the here-string branch must resolve the interpreter by basename + strip wrappers,
+# exactly as inspect() does -- else a path-prefixed or wrapped shell re-opens the bypass
+assert_eq "bg: here-string /bin/sh npm blocked" "2" "$(bg_exit "/bin/sh <<< 'npm i'")"
+assert_eq "bg: here-string sudo bash npm blkd"  "2" "$(bg_exit "sudo /usr/bin/bash <<< 'npm i'")"
+assert_eq "bg: here-string FOO=1 sh npm blocked" "2" "$(bg_exit "FOO=1 sh <<< 'npm i'")"
+assert_eq "bg: here-string sh echo allowed"     "0" "$(bg_exit "sh <<< 'echo hi'")"
+assert_eq "bg: here-string cat npm-word allowed" "0" "$(bg_exit "cat <<< 'npm is a word'")"
+assert_eq "bg: backslash \\npm blocked"        "2" "$(bg_exit '\npm i')"
+assert_eq "bg: legit brace mkdir allowed"      "0" "$(bg_exit 'mkdir -p src/{a,b}')"
+assert_eq "bg: legit find -name allowed"       "0" "$(bg_exit 'find . -name npm-debug.log')"
+# oversized input skips the parser (size cap) and falls to the coarse fallback fast
+BG_BIG="echo $(head -c 150000 /dev/zero | tr '\0' x)"
+assert_eq "bg: oversized input -> no parse-hang" "0" "$(bg_exit "$BG_BIG")"
+# many sibling interpreter invocations exhaust the shared reparse budget -> NEST block
+BG_WIDE="$(python3 -c "print(';'.join([\"bash -c 'true'\"]*500))")"
+assert_eq "bg: reparse-budget exhaustion blocks" "2" "$(bg_exit "$BG_WIDE")"
+# absolute/relative path to the binary must match on basename
+assert_eq "bg: '/usr/bin/npm' blocked"         "2" "$(bg_exit '/usr/bin/npm install')"
+assert_eq "bg: abs-path 'git add .' blocked"   "2" "$(bg_exit '/usr/bin/git add .')"
+assert_eq "bg: 'sudo /usr/bin/npm' blocked"    "2" "$(bg_exit 'sudo /usr/bin/npm install')"
+assert_eq "bg: './node_modules/.bin/npm' blk"  "2" "$(bg_exit './node_modules/.bin/npm install')"
+assert_eq "bg: '/usr/bin/echo' allowed"        "0" "$(bg_exit '/usr/bin/echo hi')"
+# bundled short flag before an attached interpreter script (python3 -Bc'...')
+assert_eq "bg: 'python3 -Bc npm' blocked"      "2" "$(bg_exit 'python3 -Bc'\''import os; os.system("npm i")'\''')"
+# bundled interpreter flag (bash -lc), git 'stage' alias, yarnpkg binary, and a
+# padded-brace filler that must not strand the real dangerous argument
+assert_eq "bg: 'bash -lc npm' blocked"         "2" "$(bg_exit 'bash -lc "npm i"')"
+assert_eq "bg: 'sudo bash -ic npm' blocked"    "2" "$(bg_exit 'sudo bash -ic "npm i"')"
+assert_eq "bg: 'git stage -A' blocked"         "2" "$(bg_exit 'git stage -A')"
+assert_eq "bg: 'git stage .' blocked"          "2" "$(bg_exit 'git stage .')"
+assert_eq "bg: 'yarnpkg install' blocked"      "2" "$(bg_exit 'yarnpkg install')"
+assert_eq "bg: 'bash -lc echo' allowed"        "0" "$(bg_exit 'bash -lc "echo hi"')"
+BG_FILLER="git add {$(python3 -c "print(','.join('x%d'%i for i in range(80)))")} ."
+assert_eq "bg: filler-brace before '.' blocked" "2" "$(bg_exit "$BG_FILLER")"
+# non-terminal -c in a bundled cluster (bash -cx) still takes the next word as script
+assert_eq "bg: 'bash -cx npm' blocked"         "2" "$(bg_exit 'bash -cx "npm i"')"
+assert_eq "bg: 'sh -cx git-add' blocked"       "2" "$(bg_exit 'sh -cx "git add -A"')"
+# attached interpreter flags (no space) for python/ruby, and php -r
+assert_eq "bg: python -c'...' attached blocked" "2" "$(bg_exit 'python3 -c'\''import os; os.system("npm i")'\''')"
+assert_eq "bg: php -r blocked"                 "2" "$(bg_exit 'php -r '\''system("npm i");'\''')"
+# git add trailing-slash form
+assert_eq "bg: 'git add ./' blocked"           "2" "$(bg_exit 'git add ./')"
+assert_eq "bg: 'git stage ./' blocked"         "2" "$(bg_exit 'git stage ./')"
+assert_eq "bg: 'git add src/' allowed"         "0" "$(bg_exit 'git add src/')"
+assert_eq "bg: 'git stash' allowed"            "0" "$(bg_exit 'git stash')"
+# command-position: a dangerous string only inside a quoted arg (commit message) must NOT block (finding 13)
+assert_eq "bg: 'gh pr merge' in commit msg allowed"  "0" "$(bg_exit 'git commit -m "docs: explain the gh pr merge guard"')"
+assert_eq "bg: 'git add -A' in commit msg allowed"   "0" "$(bg_exit 'git commit -m "chore: forbid git add -A"')"
+# specific (non-broad) forms stay allowed
+assert_eq "bg: 'git add <paths>' allowed"          "0" "$(bg_exit 'git add src/foo.ts src/bar.ts')"
+assert_eq "bg: 'git add .claude/agents/' allowed"  "0" "$(bg_exit 'git add .claude/agents/')"
+assert_eq "bg: force-push to non-main allowed"     "0" "$(bg_exit 'git push --force origin feature/x')"
+
+# --- api-edit-marker.sh block logic (isolated in a temp non-git dir; real marker untouched) ---
+AEM_HOOK="$HOOKS/api-edit-marker.sh"
+aem_marked() { # $1=file_path -> MARKED|NONE (marker written to an isolated temp ROOT)
+  local d; d=$(mktemp -d)
+  printf '{"tool_input":{"file_path":"%s"}}' "$1" | ( cd "$d" && bash "$AEM_HOOK" >/dev/null 2>&1 )
+  if [ -s "$d/.claude/.api-edit-pending" ]; then printf 'MARKED'; else printf 'NONE'; fi
+  rm -rf "$d"
+}
+assert_eq "aem: app/api path marked"  "MARKED" "$(aem_marked /repo/app/api/ask/route.ts)"
+assert_eq "aem: rate-limit.ts marked" "MARKED" "$(aem_marked /repo/lib/rate-limit.ts)"
+assert_eq "aem: proxy.ts marked"      "MARKED" "$(aem_marked /repo/proxy.ts)"
+assert_eq "aem: non-API not marked"   "NONE"   "$(aem_marked /repo/components/sections/Hero.tsx)"
+# fail-closed: a malformed payload mentioning an API path must STILL record a marker
+aem_d=$(mktemp -d)
+printf 'garbled non-json app/api/ask/route.ts payload' | ( cd "$aem_d" && bash "$AEM_HOOK" >/dev/null 2>&1 )
+if [ -s "$aem_d/.claude/.api-edit-pending" ]; then aem_fc=MARKED; else aem_fc=NONE; fi
+rm -rf "$aem_d"
+assert_eq "aem: fail-closed on malformed payload with API path" "MARKED" "$aem_fc"
+
 [ "$FAILED" -eq 0 ] && { printf '\nALL PASS\n'; exit 0; } || { printf '\nFAILURES\n'; exit 1; }

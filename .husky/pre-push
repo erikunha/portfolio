@@ -42,8 +42,8 @@ HEAD_SHA=$(git rev-parse HEAD)
 if [ ! -f "$STAMP_FILE" ]; then
   echo ""
   echo "BLOCKED: no review stamp found."
-  echo "  1. Dispatch all 5 review agents: pr-review-toolkit, security-auditor,"
-  echo "     accessibility-tester, performance-engineer, dependency-manager"
+  echo "  1. Dispatch all 4 review agents: pr-review-toolkit (code-reviewer),"
+  echo "     security-auditor, performance-engineer, dependency-auditor"
   echo "  2. Run: pnpm review:stamp  (immediately after dispatch; proves dispatch,"
   echo "     not completion; fix Critical/Important findings before your next push)"
   echo ""

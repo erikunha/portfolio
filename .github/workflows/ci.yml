@@ -89,6 +89,9 @@ jobs:
       - name: Package age check (supply-chain, info-only)
         run: node scripts/check-pkg-age.mjs --warn-only
 
+      - name: Hook guard tests (bash-guard block/allow/bypass/DoS)
+        run: pnpm test:hooks
+
       - name: PR comment merge gate
         if: github.event_name == 'pull_request'
         env:

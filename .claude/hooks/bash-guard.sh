@@ -1,41 +1,53 @@
 #!/usr/bin/env bash
 
 INPUT=$(cat)
+HOOK_DIR=$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || printf '.')
+
+# Detection is delegated to bash-guard-detect.py, which matches on shell tokens at
+# command position so a substring rewrite here would reintroduce the quote/chain
+# evasions and the commit-message false-block it exists to prevent.
+# Exit 2 = block (message on stdout), 0 = clean, 3 = unanalyzable -> coarse fallback.
+DET=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/bash-guard-detect.py" 2>/dev/null)
+DRC=$?
+if [ "$DRC" -eq 2 ]; then
+  printf '%s\n' "$DET"
+  exit 2
+fi
+
+# Command string for the fallow + warn checks (and the coarse fallback path).
 CMD=$(printf '%s' "$INPUT" | python3 -c "
 import json, sys
 try:
-  print(json.load(sys.stdin).get('command', ''))
+  d = json.load(sys.stdin)
+  print(d.get('tool_input', {}).get('command', '') or d.get('command', ''))
 except Exception:
   print('')
 " 2>/dev/null || echo "")
-
-if printf '%s' "$CMD" | grep -qE 'git\s+add\s+(-A\b|--all\b|\.\s*$|\.\s+)'; then
-  printf '[BLOCKED] Broad git add detected.\n'
-  printf 'CLAUDE.md: use git add -u or git add <specific files> only.\n'
-  printf 'git add . / -A / --all stages unintended files (screenshots, worktree artifacts).\n'
-  exit 2
+if [ -z "$CMD" ] && [ -n "$INPUT" ]; then
+  CMD="$INPUT"
 fi
 
-if printf '%s' "$CMD" | grep -qE '^\s*(npm|yarn)\s+'; then
-  SUBCMD=$(printf '%s' "$CMD" | sed -E 's/^[[:space:]]*(npm|yarn)[[:space:]]+//')
-  printf '[BLOCKED] npm/yarn detected. This project uses pnpm only.\n'
-  printf 'Use instead: pnpm %s\n' "$SUBCMD"
-  exit 2
-fi
-
-if printf '%s' "$CMD" | grep -qE 'gh pr merge'; then
-  printf '[BLOCKED] gh pr merge called directly.\n'
-  printf 'AI agents must run: pnpm ready-to-merge [pr-number]\n'
-  printf 'This enforces: ci:local + branch-protection + claude-review gate + resolved threads.\n'
-  printf 'The repo owner may run gh pr merge directly in an external terminal to bypass.\n'
-  exit 2
-fi
-
-if printf '%s' "$CMD" | grep -qP 'git push.*(--force|-f)\b.*\bmain\b|git push.*\bmain\b.*(--force|-f)\b' 2>/dev/null || \
-   printf '%s' "$CMD" | grep -E 'git push.*(--force|--force-with-lease).*main|git push.*main.*(--force|--force-with-lease)' > /dev/null 2>&1; then
-  printf '[BLOCKED] Force push to main is not allowed.\n'
-  printf 'Rebase the feature branch onto main and merge via PR instead.\n'
-  exit 2
+# Coarse fail-closed fallback for the four core blocks -- ONLY when the tokenized
+# detector could not run (DRC != 0/2: python3 missing or unparseable). In the normal
+# path (DRC==0) the detector already cleared the command, so these coarse substring
+# greps are skipped to avoid over-blocking a quoted argument.
+if [ "$DRC" -ne 0 ]; then
+  if printf '%s' "$CMD" | grep -qE '(^|[;&|]|[[:space:]])git[[:space:]]+(add|stage)[[:space:]]+(-A\b|--all\b|\./?(\s|$)|:/|\*)'; then
+    printf '[BLOCKED] Broad git add detected (coarse fallback; python3 unavailable).\n'
+    exit 2
+  fi
+  if printf '%s' "$CMD" | grep -qE '(^|[;&|]\s*|[[:space:]])(npm|yarn|yarnpkg)\s+'; then
+    printf '[BLOCKED] npm/yarn detected. This project uses pnpm only.\n'
+    exit 2
+  fi
+  if printf '%s' "$CMD" | grep -qE 'gh\s+pr\s+merge'; then
+    printf '[BLOCKED] gh pr merge called directly. Run: pnpm ready-to-merge [pr-number].\n'
+    exit 2
+  fi
+  if printf '%s' "$CMD" | grep -qE 'git push.*(--force|--force-with-lease|-f)( |$).*main|git push.*main.*(--force|--force-with-lease|-f)( |$)' 2>/dev/null; then
+    printf '[BLOCKED] Force push to main is not allowed.\n'
+    exit 2
+  fi
 fi
 
 FALLOW_PIN='2.95.0'
