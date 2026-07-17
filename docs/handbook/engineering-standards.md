@@ -8,7 +8,7 @@
 |---|---|---|
 | 1. Rendering & Architecture | RSC/SSG default; client code is the exception and named `*.client.tsx`; the Matrix loop uses `textContent` mutation, the shell streams through React | `check:client-naming`; behavioral tests |
 | 2. API & Server Boundary | `defineHandler` envelope; fixed `rate-limit -> parse -> validate -> handle` order | `defineHandler` + behavioral tests + e2e |
-| 3. Performance | LHCI budgets (perf >=95, LCP <1.8s, CLS <0.05, ...); gzipped chunks <=220KB | Lighthouse CI; `bundle-check` |
+| 3. Performance | LHCI budgets (perf >=95, LCP <1.8s, CLS <0.05, ...); per-route first-load <175KB (32.8KB app-owned) + gzipped chunks <=220KB | Lighthouse CI; `route-js-check` (primary per-route gate); `bundle-check` (global chunk sum) |
 | 4. Testing | behavioral assertions only; no source-grep tests | `no-source-grep.test.ts` |
 | 5. Dependencies | no `latest`/`*`/tags; frozen lockfile in CI | `check:dep-pinning`; `--frozen-lockfile` |
 | 6. Content & Type Safety | content is typed TS validated by Zod at build; no copy in JSX | `validate-content` |
@@ -35,7 +35,7 @@ These are not in a single chapter but are consistently enforced by practice and 
 
 ## Performance and accessibility as standing constraints
 
-Performance, accessibility, and security are explicitly "implicit on every change, not separate phases" (`CLAUDE.md`). In practice: a visual change regenerates baselines before a PR; a new interactive element passes the a11y tester; a change that could move a Core Web Vital gets a performance-engineer pass. The budgets are in [`/docs/08`](../08-performance-and-accessibility.md).
+Performance, accessibility, and security are explicitly "implicit on every change, not separate phases" (`CLAUDE.md`). In practice: a visual change regenerates baselines before a PR; a new interactive element passes the axe-core gate (`tests/a11y/axe.spec.ts`); a change that could move a Core Web Vital gets a performance-engineer pass. The budgets are in [`/docs/08`](../08-performance-and-accessibility.md).
 
 ## What "no enforcement" looks like
 

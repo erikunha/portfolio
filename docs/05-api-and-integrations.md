@@ -70,7 +70,7 @@ flowchart LR
 
 | Service | Env vars | Role | Failure mode |
 |---|---|---|---|
-| **Vercel AI Gateway** (`ai` SDK v6 `streamText`) | `AI_GATEWAY_API_KEY` or Vercel OIDC | `/api/ask` LLM; model string `anthropic/claude-haiku-4-5`; ephemeral cache via `providerOptions.anthropic.cacheControl`; `maxOutputTokens=512`; telemetry with `recordInputs/Outputs:false` | errors throw from `textStream` → sentinel; layered timeouts |
+| **Vercel AI Gateway** (`ai` SDK v7 `streamText`) | `AI_GATEWAY_API_KEY` or Vercel OIDC | `/api/ask` LLM; model string `anthropic/claude-haiku-4-5`; ephemeral cache via `providerOptions.anthropic.cacheControl`; `maxOutputTokens=512`; telemetry with `recordInputs/Outputs:false` | errors throw from `textStream` → sentinel; layered timeouts |
 | **Upstash Redis** | `UPSTASH_REDIS_REST_URL/TOKEN` (`Redis.fromEnv()`) | all stateful keys (rate-limit, budget, logs, dedup, salt, PSI freshness, LH cache) | **fail-open** everywhere; KV writes fail-quiet or 502/503 |
 | **Resend** | `RESEND_API_KEY` (lazy throw) | contact email; PSI cron failure alerts | 10s race; contact still 200 on send failure |
 | **Google PSI** | `PSI_API_KEY` | live Lighthouse scores for the perf section | 8s req timeout → fallback; 45s cron timeout |

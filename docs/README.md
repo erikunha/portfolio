@@ -6,7 +6,7 @@
 
 A single-page personal portfolio and **reference web system** for Erik Cunha, built as a deliberate engineering reference system. The product is not just the site you see; the **architecture, enforcement, and documentation are themselves the deliverable**. Every decision is meant to hold up as something another team could adopt verbatim.
 
-- **Stack:** Next.js 16 (App Router, `cacheComponents`/PPR) · React 19 · TypeScript strict · Tailwind v4 (`@theme`) · pnpm · Vercel Edge.
+- **Stack:** Next.js 16 (App Router, `cacheComponents`/PPR) · React 19 · TypeScript strict · Tailwind v4 (`@theme`) · pnpm · Vercel (Fluid Compute).
 - **Shape:** one page (`/`) composed of ~20 terminal-themed sections, plus a `/design-system/*` MDX docs surface and ~10 `/api/*` handlers (including an AI "ask Erik" endpoint and a read-only MCP server).
 - **Aesthetic:** Matrix/brutalist terminal - pure black, lime signal-green, JetBrains Mono, CRT overlays.
 

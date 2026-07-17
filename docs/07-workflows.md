@@ -117,7 +117,7 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 
 ## Releases & deployment
 
-- **Platform:** Vercel Edge end-to-end. Push to `main` (via PR) deploys.
+- **Platform:** Vercel (Fluid Compute, Node runtime) end-to-end. Push to `main` (via PR) deploys.
 - **Cron:** `vercel.json` runs `/api/psi-refresh` daily at `0 3 * * *` (Hobby = 1×/day).
 - **Post-deploy:** `smoke.yml` verifies the production deployment (healthz, headers, liveness) and emails on a 503.
 - **Emergency rollback:** fast = `vercel promote <previous-url>` (30s, no code); slow = `git revert HEAD && git push --no-verify` (the `--no-verify` is the documented escape hatch for the main-push guard). Verify with `curl https://erikunha.dev/api/healthz | jq .sha`.

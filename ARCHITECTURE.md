@@ -1,6 +1,6 @@
 # Portfolio Architecture — Staff/Principal Pass
 
-> Target stack: Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind CSS v4 via PostCSS · Vercel Edge · Biome · pnpm · Playwright E2E (contact, ask, a11y, visual)
+> Target stack: Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind CSS v4 via PostCSS · Vercel (Fluid Compute) · Biome · pnpm · Playwright E2E (contact, ask, a11y, visual)
 >
 > Author: Erik Henrique Alves Cunha
 > Last revised: 2026-06-13 (CI/CD hardening, Argos visual CI, PPR dual-variant, AI Gateway, eval suite)
@@ -15,12 +15,12 @@ This portfolio is itself a hiring artifact for Staff/Principal frontend + applie
 The Principal-level moves here are mostly **what we don't build**:
 - No CMS (single-author, content fits in typed TS files)
 - No multi-region (portfolio, not regulated infra)
-- No state management library (3 client islands total)
+- No state management library (client state confined to a few `*.client.tsx` islands)
 - No micro-frontends (one composition, no reuse pressure)
 - No GraphQL (REST + Server Actions, this isn't a federated graph)
 - No design system extraction (one page, no second consumer)
 
-What we build is small, opinionated, edge-deployed, and budget-enforced.
+What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ---
 
@@ -29,7 +29,7 @@ What we build is small, opinionated, edge-deployed, and budget-enforced.
 ### Functional
 - Static composition of ~18 content sections (hero, README, projects, git log, NPM, SYS_HEALTH, PERF_RECEIPTS, visa, community, HOTTEST_TAKES, RESPONSIBILITIES, guitar_rig, unknowns, contact, MAN ERIK, INTERACTIVE_SHELL, footer)
 - Hero: Matrix dialog loop + boot sequence (typewriter)
-- IntersectionObserver typewriter reveal on scroll for content blocks
+- Mount-driven role typewriter (RoleTyper); IntersectionObserver gates MatrixRain + lazy-mounts the footer (no scroll-reveal typewriter exists)
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
 - Contact form: real submission, delivery to inbox, durable log
 - Live Lighthouse score (PSI API, cached daily)
@@ -76,14 +76,14 @@ What we build is small, opinionated, edge-deployed, and budget-enforced.
 │       ▼                                                     │
 │   Vercel build ──── RSC compilation                        │
 │       │              static page emission                  │
-│       │              edge function bundling                │
+│       │              server function bundling              │
 │       │                                                     │
 │       ▼                                                     │
 │   Vercel Edge Network (global CDN)                         │
-│       ├── / (static HTML, ~80KB JS island)                 │
-│       ├── /api/ask        (Edge Function, streaming)       │
+│       ├── / (static HTML, ~173KB first-load)               │
+│       ├── /api/ask        (Fluid Compute, streaming)       │
 │       ├── /api/contact    (Server Action, Node)            │
-│       ├── /api/lighthouse (Edge, reads KV)                 │
+│       ├── /api/lighthouse (Node, reads KV)                 │
 │       ├── /erik.json      (static, cached)                 │
 │       ├── /llms.txt       (static)                         │
 │       └── /robots.txt + /sitemap.xml (static)              │
@@ -97,22 +97,22 @@ What we build is small, opinionated, edge-deployed, and budget-enforced.
 │   │ ─ psi cache    │  │              │  │              │  │
 │   └────────────────┘  └──────────────┘  └──────────────┘  │
 │                                                             │
-│   Lazy fill: first /api/lighthouse GET after 24h TTL        │
-│   refetches PSI → KV. (Cron is documented in §16 as the     │
-│   scale-time follow-up; not in scope today.)                │
+│   Daily cron: /api/psi-refresh at 03:00 UTC (vercel.json)   │
+│   refetches PSI -> KV; alerts via Resend on failure.        │
+│   Lazy-fill on 25h-stale read (lib/lighthouse-scores).      │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Why Vercel Edge end-to-end
+### Why Vercel end-to-end
 **Alternatives considered:**
 1. Cloudflare Pages + Workers — cheaper at scale, more setup
 2. Netlify + Functions — comparable to Vercel, less Next-native
 3. Self-hosted on VPS — full control, but ops overhead disqualifies
 
-**Discriminator:** Next.js 16 integration depth. Vercel ships Next features first; the OG image + Server Actions + Edge runtime story is more mature. For a single-author portfolio, the ops savings dwarf the per-request cost difference.
+**Discriminator:** Next.js 16 integration depth. Vercel ships Next features first; the OG image + Server Actions + Fluid Compute (Node) story is more mature. For a single-author portfolio, the ops savings dwarf the per-request cost difference.
 
-**Recommend:** Vercel Edge. Move to Cloudflare only if `ask` traffic 10× and inference cost becomes the binding constraint.
+**Recommend:** Vercel. Move to Cloudflare only if `ask` traffic 10× and inference cost becomes the binding constraint.
 
 ---
 
@@ -127,7 +127,7 @@ Every section that doesn't depend on per-visitor state is RSC + SSG. Output is H
 | Matrix dialog loop + boot typewriter | infinite animation w/ `useRef` mutation | ≤ 4KB |
 | INTERACTIVE_SHELL | input handling, streaming LLM response | ≤ 30KB |
 | Contact form | client-side `fetch` to `/api/contact`, optimistic UI | ≤ 6KB |
-| IntersectionObserver typewriter | reveal-on-scroll | ≤ 2KB |
+| Role typewriter (RoleTyper) | mount-driven `textContent` mutation | ≤ 2KB |
 | MOTION indicator | `matchMedia` listener | ≤ 1KB |
 | **Total client JS budget** | | **≤ 32.8KB app-owned** |
 
@@ -165,7 +165,7 @@ app/css/                             # global styles — Tailwind v4 via PostCSS
 app/design-system/                   # /design-system docs surface (MDX + token gallery)
 app/api/ask/route.ts                 # Fluid Compute: LLM streaming via AI Gateway
 app/api/contact/route.ts             # Node: contact (uses Resend)
-app/api/lighthouse/route.ts          # Edge: reads PSI cache from KV
+app/api/lighthouse/route.ts          # Node: reads PSI cache from KV
 app/api/erik.json/route.ts           # static profile, cached
 app/api/healthz/route.ts             # liveness + dependency probe
 app/api/csp-report/route.ts          # CSP violation sink
@@ -289,23 +289,27 @@ This is the single highest-risk piece of the site (cost, abuse, latency).
 ```
 POST /api/ask
 Content-Type: application/json
-{ "q": "string ≤ 500 chars" }
+{ "question": "string" }          # trimmed and sliced to 500 chars server-side
 
-→ 200 text/event-stream
-  data: { "type": "delta", "text": "..." }
-  data: { "type": "done", "tokens": 142 }
+→ 200 text/plain; charset=utf-8
+  streamed answer tokens (AI SDK stream, not SSE JSON deltas).
+  A mid-stream failure is signalled in-band by the \x00ERR: sentinel
+  (lib/stream-protocol.ts), not by a status code — the 200 has already begun.
 
-→ 429 application/json
-  { "error": "rate_limited", "retry_after": 3300 }
-
-→ 503 application/json
-  { "error": "budget_exhausted", "fallback": "email erik@erikunha.dev" }
+→ 400 application/json   { "error": "question is required" }
+                         { "error": "invalid request body" }
+                         { "error": "question rejected — try rephrasing without role tokens or instruction-override patterns" }   # injection guard
+→ 429 application/json   { "error": "rate limit exceeded — try again in an hour" }             # per-IP sliding window
+                         { "error": "identical question — wait 60 seconds before asking again" }   # dedup guard
+→ 503 application/json   { "error": "temporarily unavailable — email erikhenriquealvescunha@gmail.com directly" }   # kill switch (ASK_ENABLED off)
+                         { "error": "monthly budget exhausted — email erikhenriquealvescunha@gmail.com directly" }   # token cap hit
 ```
+(Verified against `app/api/ask/route.ts` + `lib/stream-protocol.ts` on 2026-07-17.)
 
 ### Stack
-- Vercel Fluid Compute (Node runtime; replaced Edge Function 2026-05-21 to enable AI SDK v6 + AI Gateway)
-- **Vercel AI Gateway** via `ai` SDK v6 (`streamText`), model string `anthropic/claude-haiku-4-5` — single API key (`AI_GATEWAY_API_KEY`, OIDC-signed on Vercel), unified provider routing, zero-trust model selection
-- System prompt = canonical CV text + the contents of the `~/.guitar_rig`, `~/.unknowns`, `~/HOTTEST_TAKES.MD` blocks, plus a short instruction set ("respond in erik's voice; cite specific receipts; if you don't know, say so")
+- Vercel Fluid Compute (Node runtime; replaced Edge Function 2026-05-21 to enable the AI SDK + AI Gateway)
+- **Vercel AI Gateway** via `ai` SDK v7 (`streamText`), model string `anthropic/claude-haiku-4-5` — single API key (`AI_GATEWAY_API_KEY`, OIDC-signed on Vercel), unified provider routing, zero-trust model selection
+- System prompt = a hand-edited narrative + raw data appended from `content/perf-receipts.ts`, `content/projects.ts`, `content/visa.ts`, and `content/unknowns.ts`, plus a short instruction set ("respond in erik's voice; cite specific receipts; if you don't know, say so")
 - Streaming response back to the client via a custom `ReadableStream<Uint8Array>` over `result.textStream`, with a watchdog race and the NUL-byte error sentinel protocol from `lib/stream-protocol.ts`
 
 ### Rate limiting
@@ -314,8 +318,8 @@ Upstash Redis sliding window:
 - IP hashed (SHA-256 + per-deployment salt) — never stored raw
 - No daily cap (budget cap is the primary spend control)
 
-### Caching
-Same question text (hash) within 24h returns cached response. Reduces Anthropic spend on accidental refresh / share-link clicks. TTL 24h, evict on content deploy.
+### Identical-question dedup
+The same question text (SHA-256) from the same IP hash within 60 seconds is blocked, not answered: `checkIdenticalQuestion` runs `SET ask:dedup:{ipHash}:{qHash} nx ex:60` and returns 429 ("wait 60 seconds") when the key already exists. It suppresses accidental double-submits and share-link refreshes without paying for a second model call — a dedup guard, not a response cache (no answer is stored). Fails open: a Redis error allows the request.
 
 ### Budget enforcement (the Principal-level move)
 Single hard counter in Redis: `ask:tokens:YYYY-MM` (32-day TTL, set `NX`). The counter is **reserved up front, then settled** — not incremented after the fact: `reserveBudget(MAX_OUTPUT_TOKENS)` does an `INCRBY` of `RESERVED_INPUT_TOKENS + maxOutputTokens` (2200 + 512 = 2712) *before* the model call, and `settleBudget()` refunds the unused difference afterwards. Reserving first is what makes the cap hold under concurrency; incrementing after the completion would let N in-flight requests all pass a check none of them had paid for yet. Monthly hard cap: `MONTHLY_TOKEN_BUDGET = 3_000_000`. **Exhausting it costs somewhere between $3 and $5.30 — the spread is the answer, and a single figure would be false precision** (derived 2026-07-17; Haiku 4.5 bills $1.00/MTok input and $5.00/MTok output).
@@ -340,7 +344,7 @@ Behavior:
 - Redis unavailable: fail-open (allow the request, `reserved: 0`; settlement is skipped and logged). **State the blast radius honestly: this is not just the cap.** The per-IP rate limiter (`getAskLimit`), the identical-question dedup (`checkIdenticalQuestion`), and `reserveBudget` all depend on the same Redis, and all three catch and allow — so one outage removes throttling, dedup, AND the spend ceiling in the same window, not merely an unmetered counter. What survives is Redis-independent: the 500-char question cap, the injection regex, `MAX_OUTPUT_TOKENS`, the streaming output guard (`lib/ask/output-guard.ts`), and both route timeouts. Read `app/api/ask/route.ts` for the current set rather than trusting a roster here — two revisions of this paragraph enumerated one and both were incomplete. **The category is what matters:** every one of those bounds a *single request* — its size, content, or duration — and **none bounds request volume**. The three that did (`getAskLimit`, `checkIdenticalQuestion`, `reserveBudget`) are the three that just failed open, and no platform rate limit, WAF, or bot check sits behind them (CAPTCHA is a deliberately rejected control — §15, "Trade-offs I'd flag").
 
 **The one volume control that survives is the kill switch, and it is a remedy rather than a bound:** `ASK_ENABLED` is an env var checked before any Redis call, so flipping it off 503s every request and takes volume to zero. During a Redis outage that is the only lever left — which makes it the outage runbook, not a background protection. This is a deliberate availability-over-spend trade, but a reader who assumes the 8/hr throttle still holds during an outage is wrong.
-- Prompt caching enabled via `providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }` on a system message (AI SDK v7 shape; the pre-v7 `cache_control` spelling no longer exists)
+- Prompt caching enabled via `providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }` on a system message (AI SDK v7 shape; the pre-v7 `cache_control` spelling survives only in the unused `SYSTEM` export that `__tests__/system-prompt.test.ts` reads, not in the live route path)
 
 Every number above is `lib/rate-limit.ts`'s to change — grep the constant rather than trusting this paragraph.
 
@@ -372,7 +376,7 @@ A single env var, `ASK_ENABLED`, gates the route. The check runs first in the PO
 
 The asymmetry is intentional: this is a kill switch, not a feature flag. During a billing or abuse incident, the operator is reaching for the off lever and may type any plausible off-keyword. False-positive disablement (typing `'no'` when meaning to enable) recovers in 60-90 seconds via env-var edit + redeploy. False-negative non-disablement during a cost emergency — what the alternative "typos default to enabled" semantics would produce — is exactly the failure mode the switch exists to prevent.
 
-A module-scope `console.info('[ask] kill-switch on cold start:', process.env.ASK_ENABLED ?? 'unset')` emits once per warm instance, providing deploy-time proof of the env-var value in Vercel runtime logs without inspecting the dashboard.
+A module-scope `log.info('kill-switch on cold start', { askEnabled: env.ASK_ENABLED ?? 'unset' })` — the structured logger reading the Zod `env` accessor, wrapped in a try/catch so a logger failure can't crash cold start — emits once per warm instance, providing deploy-time proof of the env-var value in Vercel runtime logs without inspecting the dashboard.
 
 History and rationale: see `DECISIONS.md` 2026-05-18.
 
@@ -387,7 +391,7 @@ History and rationale: see `DECISIONS.md` 2026-05-18.
 [client form]
     ↓ POST /api/contact (client-side fetch — no Server Action)
     ↓
-[rate limit: 1 / IP / 5min]  → 429 if exceeded
+[rate limit: 3 / IP / 10min]  → 429 if exceeded
     ↓
 [Zod validation via validateContact()]
     ↓
@@ -429,16 +433,7 @@ History: see `docs/audit/2026-05-19-principal-audit.md` Theme 1.4.
 The page MUST fail to merge if it regresses past the budgets. This is where the architecture becomes self-enforcing.
 
 ### GitHub Actions PR workflow
-```yaml
-- biome check  # lint + format
-- pnpm build
-- node scripts/check-bundle-size.mjs --max=120kb --route=/
-- lhci autorun --config=./lighthouserc.json
-   # gates: perf >= 95, a11y = 100, best-practices >= 95, seo = 100
-- pnpm test:unit  # zod schemas, server action logic
-- pnpm test:e2e   # Playwright on contact + ask
-- npx axe-core ./out/index.html
-```
+See §13 for a summary of the CI jobs. `.github/workflows/ci.yml` (plus `codeql.yml`) is the source of truth — an earlier hand-written YAML sketch here had drifted from it, so this points at the pipeline rather than restating it.
 
 Any failure blocks merge. No overrides except by branch protection bypass — and using that is itself a smell.
 
@@ -460,7 +455,7 @@ Implemented per Spec 2 (`docs/superpowers/specs/2026-05-18-production-observabil
 - Every server `console.*` call site in `lib/` + `app/api/` is migrated to `log.*`. `ErrorBoundary.client.tsx` retains `console.error` for DevTools visibility AND routes the same payload to `/api/log` via the shared `buildLogPayload` helper in `componentDidCatch` — intentional dual capture, not a contradiction. Both paths are always active; they are not alternatives.
 
 ### Client error capture
-- **`lib/error-bridge.ts`** registers `window.addEventListener('error')` + `unhandledrejection` at module scope (imported once from `AppShell.client.tsx`). Each capture POSTs to `/api/log` with `{level, message, stack, url, userAgent, ts}`. Dedup: 100ms tail-window keyed on `(message, stack)` — covers React's error replay (<50ms) without suppressing meaningful repeat-occurrence signal.
+- **`lib/error-bridge.client.ts`** registers `window.addEventListener('error')` + `unhandledrejection` at module scope (imported once from `AppShell.client.tsx`). Each capture POSTs to `/api/log` with `{level, message, stack, url, userAgent, ts}`. Dedup: 100ms tail-window keyed on `(message, stack)` — covers React's error replay (<50ms) without suppressing meaningful repeat-occurrence signal.
 - **`app/api/log/route.ts`** validates via zod, writes to Upstash KV `err:{yyyy-mm-dd}:{uuid}` with 30-day TTL. Rate-limited (10/IP/min) via `getErrorLogLimit()` to absorb runaway client error loops. The IP is used only for rate-limiting and discarded — `err:*` records store no `ipHash`, making them personal-data-free and outside the `/api/log/forget` erasure scope.
 
 ### `/api/ask` Q+A retention
@@ -519,11 +514,11 @@ Run axe-core in CI; fail builds on any new violation. Manual screen-reader pass 
 ## 12. Security posture
 
 Modest but professional:
-- CSP (with `connect-src 'self' api.anthropic.com` for streaming)
+- CSP `connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com` — the browser only calls same-origin `/api/ask`; the model call is server→AI Gateway, so no provider host is in the CSP (`proxy.ts`)
 - HSTS, X-Content-Type-Options, X-Frame-Options DENY
 - No third-party JS except self-hosted fonts (no Google Fonts CDN)
-- Anthropic API key in Vercel env vars, never client-side
-- IP hashing salt rotated per quarter (logs survive rotation, but de-anonymization beyond 90d becomes impractical)
+- `AI_GATEWAY_API_KEY` in Vercel env vars (OIDC token on Vercel), never client-side
+- IP hashing salt generated once at first deploy and persisted in Redis (`meta:deploy-salt`, `SET NX`, no TTL) — it is not rotated; rotating it would orphan every prior hash
 - No PII stored beyond the contact form payload (which the visitor explicitly submitted)
 
 securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; the page proves it).
@@ -546,13 +541,13 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 ### Pre-push (Husky)
 - Branch-name guard: blocks direct pushes to `main` (all changes must go through a PR)
 - Review stamp check: `.review-passed` must match HEAD SHA — written by `pnpm review:stamp` after the 4-agent battery is dispatched
-- `pnpm verify` — full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + harness-size + section-order + doc-drift + unit tests (811)
+- `pnpm verify` — full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + harness-size + section-order + doc-drift + gate-health + detect-changes-paths + css-tokens + unit tests
 
 ### CI (GitHub Actions, per PR)
 1. Install + cache (pnpm + `.next/cache` + tsbuildinfo)
 2. Biome check
 3. TypeScript strict check
-4. Unit tests (Vitest, 811 tests, workers: 2 in CI)
+4. Unit tests (Vitest)
 5. Build
 6. Bundle size gate (`scripts/check-bundle-size.mjs`)
 7. Lighthouse CI desktop + mobile (against PR preview; TTFB + perf + a11y + SEO + BP gates)
@@ -561,6 +556,7 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 10. axe-core a11y scan
 11. Ask eval harness (`ai-eval` job, required gate; path-filtered to AI-relevant changes via `detect-changes`)
 12. Dependency review (GitHub native)
+13. Security scans: Semgrep static analysis (`semgrep` job) + Gitleaks secret scan (`gitleaks` job); CodeQL runs as a separate workflow (`.github/workflows/codeql.yml`). Orchestration jobs (`detect-changes`, `ci-gate`, `quality-fast`) gate and fan out the above.
 
 ### Production deploy
 Vercel auto-deploys main. No manual gate. Lighthouse CI on production deploy as a tripwire — fails the deploy if regression detected.
@@ -588,7 +584,7 @@ Steady-state monthly:
 |---|---|---|
 | Vercel (Hobby or Pro) | Hobby | $0 |
 | Upstash Redis | Free (10k cmd/day) | $0 |
-| Anthropic API (`ask`) | pay-as-you-go | ~$0.50 if 30 prompts/day |
+| Anthropic via AI Gateway (`ask`) | pay-as-you-go, hard-capped (§6) | ~$0.50 (30 prompts/day) |
 | Resend | Free (3k/month) | $0 |
 | GitHub | public repo | $0 |
 | PSI API | free | $0 |
@@ -597,8 +593,8 @@ Steady-state monthly:
 | **Hard cap (Anthropic spend alert)** | | **$50/month** |
 
 Burst scenario (HN spike, 50k visits/day for 3 days):
-- Vercel bandwidth: still inside Hobby free tier (100GB) — page is ~80KB total
-- Anthropic: if 5% of visitors use `ask`, 1 query each → 7,500 queries × ~$0.0015 = ~$11. Cap holds.
+- Vercel bandwidth: still inside Hobby free tier (100GB) — `/` first-load ~173KB (30.8KB app-owned, under the 175KB gate)
+- Anthropic via AI Gateway: the monthly 3M-token cap bounds spend at $3–$5.30/mo regardless of volume (§6); the cap holds by construction.
 - Resend: spike doesn't affect the static page
 
 The architecture is designed so that an HN hug-of-death doesn't generate a surprise bill. That's the Principal move.
@@ -611,7 +607,7 @@ The architecture is designed so that an HN hug-of-death doesn't generate a surpr
 |---|---|---|
 | RSC-first with client islands | Slightly harder to debug streaming hydration | Only way to hold the per-route JS budget |
 | No CMS | Erik edits TS files to update content | Single author; CMS is YAGNI |
-| Vercel Edge end-to-end | Vendor lock-in to Vercel's RSC story | Portability cost < ops savings at this scale |
+| Vercel end-to-end (Fluid Compute) | Vendor lock-in to Vercel's RSC story | Portability cost < ops savings at this scale |
 | Anthropic API for `ask` | $50/mo cap if abuse spikes | Quality-to-cost ratio beats self-hosted at portfolio scale |
 | No CAPTCHA | Some spam will get through | UX tax of CAPTCHA > value of perfect spam filtering |
 | `claude-haiku-4-5` not Sonnet | Slightly lower quality answers | 10× cheaper; quality difference invisible for CV Q&A |
@@ -645,11 +641,11 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 
 3. **PR 3 — Static sections.** RSC composition of all 18 sections at final layout. Pure HTML output. Lighthouse pass at end of PR.
 
-4. **PR 4 — Client islands.** Matrix dialog loop, IntersectionObserver typewriter, MOTION indicator. Budget check.
+4. **PR 4 — Client islands.** Matrix dialog loop, role typewriter (RoleTyper), MOTION indicator. Budget check.
 
 5. **PR 5 — Contact path.** Server Action + Resend + KV log + honeypot + rate limit + a11y form. Playwright happy + spam-trap.
 
-6. **PR 6 — `ask` endpoint.** Edge function, Anthropic SDK, system prompt, rate limit, budget cap, streaming. Anti-abuse layer. Cost alert wired.
+6. **PR 6 — `ask` endpoint.** Fluid Compute function, AI Gateway via the AI SDK, system prompt, rate limit, budget cap, streaming. Anti-abuse layer. Cost alert wired.
 
 7. **PR 7 — OG + SEO.** Dynamic OG image (recruiter-safe), Person JSON-LD, /erik.json, /llms.txt, /sitemap.xml, /robots.txt.
 
@@ -661,7 +657,7 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 
 The Matrix dialog loop and CRT effects are the most novel piece of the page and also the most fragile under the perf budget. If the loop ships with a `useState` per-keystroke pattern (instead of `useRef.textContent` mutation), INP will degrade past 200ms and Lighthouse Performance will fall below 95.
 
-Mitigation: PR 4 includes an INP measurement test that fails the build if the loop causes a long task > 50ms. This is the only test that gates an animation pattern — but it's the right one to enforce.
+Mitigation: the loop uses `useRef.textContent` mutation rather than per-keystroke `useState`, enforced structurally by the boot-animation component test. The one runtime long-task/INP e2e guard (`tests/e2e/cross-cutting.spec.ts`) gates the interactive shell's keystroke commit (<50ms, no long task >100ms), not the boot loop itself — the boot loop is guarded at the pattern level, the shell at the runtime level.
 
 ---
 
