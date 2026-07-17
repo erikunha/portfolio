@@ -111,14 +111,16 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 | INP | < 200ms | < 200ms |
 | CLS | < 0.05 | < 0.05 |
 | TBT | < 200ms | < 400ms |
-| JS gzipped per route | < 120KB | < 120KB |
-| Client JS total (all islands combined) | < 43KB | < 43KB |
+| JS gzipped per route, total first-load | < 175KB | < 175KB |
+| JS gzipped, app-owned (every non-framework chunk, deduped) | < 43KB | < 43KB |
 | Lighthouse Performance | ≥ 95 | ≥ 90 |
 | Lighthouse Accessibility | = 100 | = 100 |
 | Lighthouse Best Practices | ≥ 95 | ≥ 95 |
 | Lighthouse SEO | = 100 | = 100 |
 
 CI enforces all of the above. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
+
+`pnpm route-js-check` holds both JS budgets (`scripts/check-route-js.mjs`); `pnpm bundle-check` is a separate global chunk-sum and is structurally blind to a per-route regression. The 175KB total is the **framework floor plus headroom, not an aspiration**: a bare hello-world Next 16 + React 19 app on this toolchain measures 142.2KB gzipped before any app code exists, and `/_not-found` — a route with zero app code — measures 148.9KB here. Any per-route total under ~149KB is unreachable by any amount of engineering. **The 43KB app-owned budget is the one your decisions actually move**; treat it as the real constraint. See `DECISIONS.md` 2026-07-14.
 
 ## Engineering standards
 
@@ -167,9 +169,9 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 ## Aesthetic constraints
 
 - Pure black background (`#000000`), lime signal-green (`#00FF41`) for accents.
-- Two-token palette: `--signal` for headings/accents/large text; `--fg` (#E6FFE6, ~13:1 contrast) for body. Never use `--signal` for paragraph text — it fails WCAG AA.
+- Two-token palette: `--color-primary-500` (#00FF41, the signal) for headings/accents/large text; `--color-tertiary-50` (#E6FFE6, ~13:1 contrast) for body. Never use the signal for paragraph text — it fails WCAG AA. Tailwind utilities: `text-primary-500` and `text-tertiary-50`.
 - JetBrains Mono everywhere (self-hosted via `next/font/local`, not Google CDN).
-- The "THE MATRIX HAS YOU." headline is a heavy geometric sans (Geist Black or similar). All other text is mono.
+- `h1` is the one exception: Inter 900, via `--font-display` (`app/css/base.css`). All other text is mono.
 - CRT effects (scanlines + RGB sub-pixel mask + grain + scan beam + flicker + phosphor text-shadow) at dialed-back opacity. All disabled under `prefers-reduced-motion: reduce`.
 - 1px borders only, sharp corners (no rounded radius > 2px).
 

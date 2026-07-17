@@ -131,7 +131,7 @@ Every section that doesn't depend on per-visitor state is RSC + SSG. Output is H
 | MOTION indicator | `matchMedia` listener | ≤ 1KB |
 | **Total client JS budget** | | **≤ 43KB** |
 
-> The 43 KB app-island total is a tracked design target, not a per-PR CI gate. `pnpm bundle-check` gates the combined client chunks (framework-inclusive); the 43 KB figure is monitored via `pnpm bundle:analyze`. Individual island budgets are aspirational guidelines.
+> The 43 KB app-owned total is a per-PR CI gate as of 2026-07-14: `pnpm route-js-check` (`scripts/check-route-js.mjs`) fails a route whose first-load JS minus the measured framework floor exceeds it, alongside a 175 KB per-route total. `pnpm bundle-check` separately gates the combined client chunks (framework-inclusive) and is structurally blind per-route. Individual island budgets remain aspirational guidelines.
 
 Naming convention: every client file ends in `.client.tsx`. The default is server; client is the exception, named explicitly. Forces RSC drift to be visible in code review.
 
@@ -485,7 +485,7 @@ WCAG 2.1 AA at minimum. Specific risks for THIS aesthetic:
 
 | Risk | Mitigation |
 |---|---|
-| Lime-green-on-black at body sizes fails contrast | Use a two-token palette: `--signal` (#00FF41) for accents/headings/large text; `--fg` (#E6FFE6, ~13:1 contrast) for body. Never use `--signal` for paragraph text. |
+| Lime-green-on-black at body sizes fails contrast | Use a two-token palette: `--color-primary-500` (#00FF41) for accents/headings/large text; `--color-tertiary-50` (#E6FFE6, ~13:1 contrast) for body. Never use the signal green for paragraph text. |
 | Muted parentheticals in `~/.unknowns` and `~/.guitar_rig` | Bump muted color from typical 60% opacity to a fully resolved hex that hits 4.5:1 (e.g., `#5AE07B`) — or set those lines to 14px to qualify as Large Text (3:1 threshold). |
 | Matrix dialog loop is exhausting | `prefers-reduced-motion: reduce` disables loop, renders static `> The Matrix has you...`. Plus: MOTION badge in top bar becomes click-toggle for users on the borderline. |
 | Form labels invisible (terminal-styled prompts) | Real `<label for="...">` paired with each input. Terminal prompt is decoration. |
