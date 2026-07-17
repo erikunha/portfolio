@@ -6,6 +6,9 @@ of every command node, including those inside substitutions, compound commands,
 pipelines and redirections. A quoted argument (a commit-message body) is never a
 command node, so it never matches. Exit codes bash-guard.sh depends on:
 2 = block (reason on stdout), 0 = clean, 3 = could not parse -> coarse fallback.
+
+GPLv3+: imports the vendored GPLv3 bashlex, so this file is likewise GPLv3+.
+See vendor/bashlex/VENDORED.txt.
 """
 import json
 import os
@@ -22,25 +25,19 @@ WRAPPERS = {
     "env", "command", "sudo", "doas", "nice", "time", "nohup", "xargs",
     "builtin", "exec", "stdbuf", "setsid", "timeout",
 }
-FORCE_FLAGS = {"--force", "-f", "--force-with-lease"}
+SHELL_INTERP = {"bash", "sh", "zsh", "dash", "ksh", "ash", "mksh", "rbash"}
+OTHER_INTERP = {"python", "python3", "node", "nodejs", "perl", "ruby", "php"}
+MAX_DEPTH = 6
 
-NPM_MSG = (
-    "[BLOCKED] npm/yarn detected. This project uses pnpm only.\n"
-    "Use pnpm instead."
-)
+NPM_MSG = "[BLOCKED] npm/yarn detected. This project uses pnpm only.\nUse pnpm instead."
 MERGE_MSG = (
     "[BLOCKED] gh pr merge called directly.\n"
     "AI agents must run: pnpm ready-to-merge [pr-number]\n"
     "The repo owner may run gh pr merge directly in an external terminal to bypass."
 )
-ADD_MSG = (
-    "[BLOCKED] Broad git add detected.\n"
-    "CLAUDE.md: use git add -u or git add <specific files> only."
-)
-PUSH_MSG = (
-    "[BLOCKED] Force push to main is not allowed.\n"
-    "Rebase the feature branch onto main and merge via PR instead."
-)
+ADD_MSG = "[BLOCKED] Broad git add detected.\nCLAUDE.md: use git add -u or git add <specific files> only."
+PUSH_MSG = "[BLOCKED] Force push to main is not allowed.\nRebase the feature branch onto main and merge via PR instead."
+NEST_MSG = "[BLOCKED] Command nesting too deep to analyze safely."
 
 
 def block(msg):
@@ -65,51 +62,125 @@ def git_add_broad(operands):
     return False
 
 
+def is_force_flag(a):
+    if a in ("--force", "-f", "--force-with-lease"):
+        return True
+    if a.startswith("--force-with-lease") or a.startswith("--force="):
+        return True
+    return bool(re.fullmatch(r"-[A-Za-z]*f[A-Za-z]*", a)) and not a.startswith("--")
+
+
+def git_add_check(args):
+    # subcommand-position-tolerant: 'add' may sit behind global flags (git -C .)
+    if "add" in args and git_add_broad(args[args.index("add") + 1:]):
+        block(ADD_MSG)
+
+
+def gh_merge_check(args):
+    for i in range(len(args) - 1):
+        if args[i] == "pr" and args[i + 1] == "merge":
+            block(MERGE_MSG)
+
+
 def is_force_push(args):
     if "push" not in args:
         return False
-    forced = any(f in args for f in FORCE_FLAGS) or any(a.startswith("+") and main_ref(a) for a in args)
+    forced = any(is_force_flag(a) for a in args) or any(a.startswith("+") and main_ref(a) for a in args)
     return forced and any(main_ref(a) for a in args)
 
 
-def inspect(name, args):
-    if name in ("npm", "yarn"):
+def coarse_scan(script):
+    # non-shell interpreter (-c/-e) payload: cannot bash-parse another language,
+    # so substring-scan for the guarded commands. Over-blocks are acceptable here.
+    if re.search(r"\b(npm|yarn)\b", script):
         block(NPM_MSG)
-    if name == "gh" and len(args) >= 2 and args[0] == "pr" and args[1] == "merge":
+    if re.search(r"\bgh\b[^\n]*\bpr\b[^\n]*\bmerge\b", script):
         block(MERGE_MSG)
-    if name == "git" and args and args[0] == "add" and git_add_broad(args[1:]):
+    if re.search(r"\bgit\b[^\n]*\badd\b[^\n]*(-A\b|--all\b|(^|\s)\.(\s|$)|:/|\*)", script):
         block(ADD_MSG)
-    if name == "git" and is_force_push(args):
+    if re.search(r"\bgit\b[^\n]*\bpush\b[^\n]*(--force|-f\b)[^\n]*\bmain\b", script):
         block(PUSH_MSG)
 
 
-def inspect_wrapper(args):
-    # A wrapper (env/sudo/...) execs another command that bashlex parses as plain
-    # word-args, not a nested command node; scan those words by presence.
+def interp_script(name, args):
+    if name == "eval":
+        return " ".join(args)
+    if name in SHELL_INTERP and "-c" in args:
+        j = args.index("-c")
+        if j + 1 < len(args):
+            return args[j + 1]
+    return None
+
+
+def inspect(name, args, depth):
+    if name in ("npm", "yarn"):
+        block(NPM_MSG)
+    if name == "gh":
+        gh_merge_check(args)
+    if name == "git":
+        git_add_check(args)
+        if is_force_push(args):
+            block(PUSH_MSG)
+    script = interp_script(name, args)
+    if script is not None:
+        reparse(script, depth)
+    if name in OTHER_INTERP:
+        for flag in ("-c", "-e"):
+            if flag in args:
+                j = args.index(flag)
+                if j + 1 < len(args):
+                    coarse_scan(args[j + 1])
+    if name in WRAPPERS:
+        inspect_wrapper(args, depth)
+
+
+def inspect_wrapper(args, depth):
+    # a wrapper (env/sudo/...) execs another command bashlex parses as plain
+    # word-args, not a nested node; scan those words by presence and re-parse any
+    # interpreter payload they carry.
     if "npm" in args or "yarn" in args:
         block(NPM_MSG)
-    for i in range(len(args) - 2):
-        if args[i] == "gh" and args[i + 1] == "pr" and args[i + 2] == "merge":
-            block(MERGE_MSG)
+    gh_merge_check(args)
     if "git" in args:
         rest = args[args.index("git") + 1:]
-        if rest and rest[0] == "add" and git_add_broad(rest[1:]):
-            block(ADD_MSG)
+        git_add_check(rest)
         if is_force_push(rest):
             block(PUSH_MSG)
+    for i, a in enumerate(args):
+        if a == "eval":
+            reparse(" ".join(args[i + 1:]), depth)
+            break
+        if a in SHELL_INTERP and "-c" in args[i + 1:]:
+            j = args.index("-c", i + 1)
+            if j + 1 < len(args):
+                reparse(args[j + 1], depth)
+
+
+def reparse(script, depth):
+    if depth <= 0:
+        block(NEST_MSG)
+    if not script or not script.strip():
+        return
+    try:
+        trees = bashlex.parse(script)
+    except Exception:
+        block(NEST_MSG)
+    v = Visitor(depth - 1)
+    for t in trees:
+        v.visit(t)
 
 
 if bashlex is not None:
 
     class Visitor(bashlex.ast.nodevisitor):
+        def __init__(self, depth=MAX_DEPTH):
+            self.depth = depth
+
         def visitcommand(self, n, parts):
             words = [p.word for p in parts if p.kind == "word"]
             if not words:
                 return
-            name, args = words[0], words[1:]
-            inspect(name, args)
-            if name in WRAPPERS:
-                inspect_wrapper(args)
+            inspect(words[0], words[1:], self.depth)
 
 
 def main():

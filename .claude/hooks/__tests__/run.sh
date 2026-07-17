@@ -237,6 +237,22 @@ assert_eq "bg: 'grep npm' allowed"             "0" "$(bg_exit 'grep npm file.txt
 assert_eq "bg: 'cat npm-debug.log' allowed"    "0" "$(bg_exit 'cat npm-debug.log')"
 assert_eq "bg: 'git log --grep npm' allowed"   "0" "$(bg_exit 'git log --grep npm')"
 assert_eq "bg: push to maintain-branch allowed" "0" "$(bg_exit 'git push origin chore/maintain-docs')"
+# interpreter-with-literal-string: re-parse the -c/eval script so the inner command is caught
+assert_eq "bg: eval npm blocked"               "2" "$(bg_exit 'eval "npm i"')"
+assert_eq "bg: bash -c npm blocked"            "2" "$(bg_exit 'bash -c "npm install"')"
+assert_eq "bg: sh -c git-add blocked"          "2" "$(bg_exit 'sh -c "git add -A"')"
+assert_eq "bg: env bash -c npm blocked"        "2" "$(bg_exit 'env bash -c "npm i"')"
+assert_eq "bg: python os.system npm blocked"   "2" "$(bg_exit 'python3 -c "import os; os.system(\"npm i\")"')"
+assert_eq "bg: bash script file allowed"       "0" "$(bg_exit 'bash deploy.sh')"
+assert_eq "bg: bash -c echo allowed"           "0" "$(bg_exit 'bash -c "echo hi"')"
+# git/gh global flags before the subcommand must not displace the check
+assert_eq "bg: 'git -C . add -A' blocked"      "2" "$(bg_exit 'git -C . add -A')"
+assert_eq "bg: 'git --no-pager add -A' blocked" "2" "$(bg_exit 'git --no-pager add -A')"
+assert_eq "bg: 'gh --repo x pr merge' blocked" "2" "$(bg_exit 'gh --repo owner/repo pr merge 42')"
+assert_eq "bg: 'git -C . status' allowed"      "0" "$(bg_exit 'git -C . status')"
+# force-flag variants: =form and bundled short flags
+assert_eq "bg: --force-with-lease= main blocked" "2" "$(bg_exit 'git push --force-with-lease=origin/main origin')"
+assert_eq "bg: bundled -fu main blocked"       "2" "$(bg_exit 'git push -fu origin main')"
 # command-position: a dangerous string only inside a quoted arg (commit message) must NOT block (finding 13)
 assert_eq "bg: 'gh pr merge' in commit msg allowed"  "0" "$(bg_exit 'git commit -m "docs: explain the gh pr merge guard"')"
 assert_eq "bg: 'git add -A' in commit msg allowed"   "0" "$(bg_exit 'git commit -m "chore: forbid git add -A"')"

@@ -1,4 +1,15 @@
-Vendored bashlex 0.18 (MIT), https://github.com/idank/bashlex
+Vendored: bashlex 0.18
+Upstream: https://github.com/idank/bashlex
 Obtained via: pip download bashlex==0.18 --no-deps
-Used by bash-guard-detect.py for robust shell command extraction.
+License: GPL-3.0-or-later (GPLv3+). See ./LICENSE (full GPLv3 text).
+
+COPYLEFT NOTICE
+bashlex is licensed GPLv3+. `.claude/hooks/bash-guard-detect.py` imports it, so
+that detector is a derivative work and is likewise GPLv3+. This is accepted
+deliberately: it is developer-harness tooling (a local Claude Code PreToolUse
+hook), not part of the shipped site or any distributed product, and this repo is
+public so its source is available. The GPLv3 obligation is scoped to this
+vendored parser and the hook file that imports it; it does not relicense the rest
+of the repository.
+
 Dependency-free on Python >= 3.4.
