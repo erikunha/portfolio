@@ -1,24 +1,46 @@
 #!/usr/bin/env python3
-"""Command-position block detector for bash-guard.sh.
+"""Command block detector for bash-guard.sh.
 
-Matches on shell tokens at command position, not raw substrings: a substring
-rewrite would both miss quote/whitespace/chain/wrapper evasions and false-block
-a dangerous string that appears only inside a quoted argument (a commit message).
-
-Exit codes (the contract bash-guard.sh depends on): 2 = block (reason on stdout),
-0 = analyzed and clean, 3 = could not analyze -> caller runs a coarse fallback.
+Parses the shell command with the vendored bashlex parser and inspects the name
+of every command node, including those inside substitutions, compound commands,
+pipelines and redirections. A quoted argument (a commit-message body) is never a
+command node, so it never matches. Exit codes bash-guard.sh depends on:
+2 = block (reason on stdout), 0 = clean, 3 = could not parse -> coarse fallback.
 """
 import json
-import shlex
+import os
+import re
 import sys
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor"))
+try:
+    import bashlex
+except Exception:
+    bashlex = None
+
 WRAPPERS = {
-    "env", "command", "sudo", "nice", "time", "nohup", "xargs",
-    "builtin", "exec", "then", "do", "else", "stdbuf", "setsid",
+    "env", "command", "sudo", "doas", "nice", "time", "nohup", "xargs",
+    "builtin", "exec", "stdbuf", "setsid", "timeout",
 }
-GIT_ADD_BROAD = {"-A", "--all", ".", ":/", "*"}
 FORCE_FLAGS = {"--force", "-f", "--force-with-lease"}
-PUNCT = ";&|<>()"
+
+NPM_MSG = (
+    "[BLOCKED] npm/yarn detected. This project uses pnpm only.\n"
+    "Use pnpm instead."
+)
+MERGE_MSG = (
+    "[BLOCKED] gh pr merge called directly.\n"
+    "AI agents must run: pnpm ready-to-merge [pr-number]\n"
+    "The repo owner may run gh pr merge directly in an external terminal to bypass."
+)
+ADD_MSG = (
+    "[BLOCKED] Broad git add detected.\n"
+    "CLAUDE.md: use git add -u or git add <specific files> only."
+)
+PUSH_MSG = (
+    "[BLOCKED] Force push to main is not allowed.\n"
+    "Rebase the feature branch onto main and merge via PR instead."
+)
 
 
 def block(msg):
@@ -26,83 +48,68 @@ def block(msg):
     sys.exit(2)
 
 
-def is_op(tok):
-    return tok != "" and all(c in PUNCT for c in tok)
+def main_ref(tok):
+    return tok == "main" or "refs/heads/main" in tok or bool(re.search(r"(^|[:/+])main$", tok))
 
 
-def normalize_newlines(s):
-    """Turn UNQUOTED newlines into ';' so newline-separated commands segment,
-    while newlines inside a quoted argument (a multi-line commit message) stay
-    part of that argument. A backslash escapes the next char outside single
-    quotes (covers backslash-newline line continuations too)."""
-    out = []
-    quote = None
-    esc = False
-    for ch in s:
-        if esc:
-            out.append(ch)
-            esc = False
-            continue
-        if quote != "'" and ch == "\\":
-            out.append(ch)
-            esc = True
-            continue
-        if quote:
-            out.append(ch)
-            if ch == quote:
-                quote = None
-            continue
-        if ch in ("'", '"'):
-            quote = ch
-            out.append(ch)
-        elif ch == "\n":
-            out.append(";")
-        else:
-            out.append(ch)
-    return "".join(out)
+def git_add_broad(operands):
+    for a in operands:
+        if a in ("-A", "--all", ".", ":/", "*"):
+            return True
+        if a.startswith(":") or a == "*":
+            return True
+        if re.fullmatch(r"-[A-Za-z]*A[A-Za-z]*", a):
+            return True
+        if a.startswith("--pathspec-from-file"):
+            return True
+    return False
 
 
-def strip_prefix(seg):
-    """Drop leading VAR=val assignments and command wrappers (env/command/...)."""
-    i = 0
-    while i < len(seg):
-        t = seg[i]
-        if t in WRAPPERS or ("=" in t and t.split("=", 1)[0].isidentifier()):
-            i += 1
-        else:
-            break
-    return seg[i:]
+def is_force_push(args):
+    if "push" not in args:
+        return False
+    forced = any(f in args for f in FORCE_FLAGS) or any(a.startswith("+") and main_ref(a) for a in args)
+    return forced and any(main_ref(a) for a in args)
 
 
-def check(seg):
-    s = strip_prefix(seg)
-    if not s:
-        return
-    if len(s) >= 2 and s[0] == "git" and s[1] == "add":
-        for a in s[2:]:
-            if a in GIT_ADD_BROAD or a.startswith(":") or a == "*":
-                block(
-                    "[BLOCKED] Broad git add detected.\n"
-                    "CLAUDE.md: use git add -u or git add <specific files> only.\n"
-                    "git add . / -A / --all / :/ / * stages unintended files "
-                    "(screenshots, worktree artifacts)."
-                )
-    if s[0] in ("npm", "yarn"):
-        block(
-            "[BLOCKED] npm/yarn detected. This project uses pnpm only.\n"
-            "Use instead: pnpm " + " ".join(s[1:])
-        )
-    if len(s) >= 3 and s[0] == "gh" and s[1] == "pr" and s[2] == "merge":
-        block(
-            "[BLOCKED] gh pr merge called directly.\n"
-            "AI agents must run: pnpm ready-to-merge [pr-number]\n"
-            "The repo owner may run gh pr merge directly in an external terminal to bypass."
-        )
-    if s[0] == "git" and "push" in s and any(f in s for f in FORCE_FLAGS) and any("main" in t for t in s):
-        block(
-            "[BLOCKED] Force push to main is not allowed.\n"
-            "Rebase the feature branch onto main and merge via PR instead."
-        )
+def inspect(name, args):
+    if name in ("npm", "yarn"):
+        block(NPM_MSG)
+    if name == "gh" and len(args) >= 2 and args[0] == "pr" and args[1] == "merge":
+        block(MERGE_MSG)
+    if name == "git" and args and args[0] == "add" and git_add_broad(args[1:]):
+        block(ADD_MSG)
+    if name == "git" and is_force_push(args):
+        block(PUSH_MSG)
+
+
+def inspect_wrapper(args):
+    # A wrapper (env/sudo/...) execs another command that bashlex parses as plain
+    # word-args, not a nested command node; scan those words by presence.
+    if "npm" in args or "yarn" in args:
+        block(NPM_MSG)
+    for i in range(len(args) - 2):
+        if args[i] == "gh" and args[i + 1] == "pr" and args[i + 2] == "merge":
+            block(MERGE_MSG)
+    if "git" in args:
+        rest = args[args.index("git") + 1:]
+        if rest and rest[0] == "add" and git_add_broad(rest[1:]):
+            block(ADD_MSG)
+        if is_force_push(rest):
+            block(PUSH_MSG)
+
+
+if bashlex is not None:
+
+    class Visitor(bashlex.ast.nodevisitor):
+        def visitcommand(self, n, parts):
+            words = [p.word for p in parts if p.kind == "word"]
+            if not words:
+                return
+            name, args = words[0], words[1:]
+            inspect(name, args)
+            if name in WRAPPERS:
+                inspect_wrapper(args)
 
 
 def main():
@@ -113,27 +120,16 @@ def main():
     except Exception:
         cmd = ""
     if not cmd or not cmd.strip():
-        # No command to analyze. If stdin carried something we could not parse,
-        # signal the caller to run its coarse fail-closed fallback.
         sys.exit(3 if raw.strip() else 0)
-
-    try:
-        lex = shlex.shlex(normalize_newlines(cmd), posix=True, punctuation_chars=PUNCT)
-        lex.whitespace_split = True
-        toks = list(lex)
-    except ValueError:
+    if bashlex is None:
         sys.exit(3)
-
-    seg = []
-    for t in toks:
-        if is_op(t):
-            if seg:
-                check(seg)
-                seg = []
-        else:
-            seg.append(t)
-    if seg:
-        check(seg)
+    try:
+        trees = bashlex.parse(cmd)
+    except Exception:
+        sys.exit(3)
+    visitor = Visitor()
+    for tree in trees:
+        visitor.visit(tree)
     sys.exit(0)
 
 

@@ -218,6 +218,25 @@ assert_eq "bg: chained 'cd x && pnpm i' allowed"   "0" "$(bg_exit 'cd repo && pn
 # a multi-line commit message whose BODY mentions guarded commands must NOT block
 # (newlines inside the quoted -m argument must not be treated as command separators)
 assert_eq "bg: multi-line commit body allowed" "0" "$(bg_exit "$(printf 'git commit -m "fix: guard\n\n- body mentions npm install and git add -A\n- and gh pr merge"')")"
+# bashlex-parsed classes a token heuristic could not reach (command substitution,
+# compound commands, redirections, wrapper option-args, refspecs) must block
+assert_eq "bg: backtick subst npm blocked"     "2" "$(bg_exit 'echo `npm install foo`')"
+assert_eq "bg: dollar-subst npm blocked"       "2" "$(bg_exit 'echo $(npm install foo)')"
+assert_eq "bg: brace-group npm blocked"        "2" "$(bg_exit '{ npm install foo; }')"
+assert_eq "bg: if-then npm blocked"            "2" "$(bg_exit 'if npm install foo; then :; fi')"
+assert_eq "bg: while npm blocked"              "2" "$(bg_exit 'while npm install foo; do :; done')"
+assert_eq "bg: env -u X npm blocked"           "2" "$(bg_exit 'env -u X npm install foo')"
+assert_eq "bg: sudo -u root npm blocked"       "2" "$(bg_exit 'sudo -u root npm install foo')"
+assert_eq "bg: redirect-first npm blocked"     "2" "$(bg_exit '>/tmp/x npm install foo')"
+assert_eq "bg: git add bundled -Av blocked"    "2" "$(bg_exit 'git add -Av')"
+assert_eq "bg: git add pathspec-file blocked"  "2" "$(bg_exit 'git add --pathspec-from-file=p.txt')"
+assert_eq "bg: +main refspec force blocked"    "2" "$(bg_exit 'git push origin +main')"
+assert_eq "bg: force-with-lease main blocked"  "2" "$(bg_exit 'git push --force-with-lease origin main')"
+# the parser distinguishes command from argument, so these must NOT block (no over-block)
+assert_eq "bg: 'grep npm' allowed"             "0" "$(bg_exit 'grep npm file.txt')"
+assert_eq "bg: 'cat npm-debug.log' allowed"    "0" "$(bg_exit 'cat npm-debug.log')"
+assert_eq "bg: 'git log --grep npm' allowed"   "0" "$(bg_exit 'git log --grep npm')"
+assert_eq "bg: push to maintain-branch allowed" "0" "$(bg_exit 'git push origin chore/maintain-docs')"
 # command-position: a dangerous string only inside a quoted arg (commit message) must NOT block (finding 13)
 assert_eq "bg: 'gh pr merge' in commit msg allowed"  "0" "$(bg_exit 'git commit -m "docs: explain the gh pr merge guard"')"
 assert_eq "bg: 'git add -A' in commit msg allowed"   "0" "$(bg_exit 'git commit -m "chore: forbid git add -A"')"

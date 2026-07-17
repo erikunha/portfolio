@@ -86,3 +86,7 @@ semgrep.sarif
 mutation-report.html
 mutation-report.json
 .stryker-incremental.json
+
+# Vendored Python bytecode
+__pycache__/
+*.pyc

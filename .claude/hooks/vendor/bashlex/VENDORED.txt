@@ -1,0 +1,4 @@
+Vendored bashlex 0.18 (MIT), https://github.com/idank/bashlex
+Obtained via: pip download bashlex==0.18 --no-deps
+Used by bash-guard-detect.py for robust shell command extraction.
+Dependency-free on Python >= 3.4.
