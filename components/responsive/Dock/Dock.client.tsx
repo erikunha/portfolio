@@ -10,7 +10,7 @@ type DockItem = {
 const ITEMS: DockItem[] = [
   {
     label: 'HOME',
-    href: '#sec-readme',
+    href: '/#sec-readme',
     target: 'sec-readme',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -21,7 +21,7 @@ const ITEMS: DockItem[] = [
   },
   {
     label: 'WORK',
-    href: '#sec-projects',
+    href: '/#sec-projects',
     target: 'sec-projects',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -31,7 +31,7 @@ const ITEMS: DockItem[] = [
   },
   {
     label: 'PERF',
-    href: '#sec-perf-receipts',
+    href: '/#sec-perf-receipts',
     target: 'sec-perf-receipts',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -42,7 +42,7 @@ const ITEMS: DockItem[] = [
   },
   {
     label: 'SHELL',
-    href: '#sec-shell',
+    href: '/#sec-shell',
     target: 'sec-shell',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -53,7 +53,7 @@ const ITEMS: DockItem[] = [
   },
   {
     label: 'HIRE',
-    href: '#sec-contact',
+    href: '/#sec-contact',
     target: 'sec-contact',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -76,12 +76,11 @@ const ITEMS: DockItem[] = [
 ];
 
 export function Dock() {
-  const onJump = (href: string, target?: string) => (e: React.MouseEvent) => {
-    if (!href.startsWith('#')) return;
-    e.preventDefault();
+  const onJump = (target?: string) => (e: React.MouseEvent) => {
     if (!target) return;
     const el = document.getElementById(target);
     if (!el) return;
+    e.preventDefault();
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     el.focus({ preventScroll: true });
   };
@@ -95,7 +94,7 @@ export function Dock() {
         <a
           key={it.href}
           href={it.href}
-          onClick={onJump(it.href, it.target)}
+          onClick={onJump(it.target)}
           className="flex flex-col items-center justify-center gap-[3px] py-1.5 px-1 text-primary-400 text-xs tracking-[0.1em] uppercase min-h-12 rounded-[4px] active:bg-primary-faint [&_svg]:w-[18px] [&_svg]:h-[18px] [&_svg]:stroke-current [&_svg]:fill-none [&_svg]:[stroke-width:1.6]"
         >
           {it.icon}

@@ -54,7 +54,7 @@ describe('Dock', () => {
     document.body.appendChild(targetSection);
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));
-    const homeLink = links.find((a) => a.getAttribute('href') === '#sec-readme');
+    const homeLink = links.find((a) => a.getAttribute('href') === '/#sec-readme');
     expect(homeLink).not.toBeNull();
 
     let defaultPrevented = false;
@@ -85,7 +85,7 @@ describe('Dock', () => {
     document.body.appendChild(targetSection);
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));
-    const homeLink = links.find((a) => a.getAttribute('href') === '#sec-readme');
+    const homeLink = links.find((a) => a.getAttribute('href') === '/#sec-readme');
 
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
     await act(async () => {
@@ -102,7 +102,7 @@ describe('Dock', () => {
     document.getElementById('sec-readme')?.remove();
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));
-    const homeLink = links.find((a) => a.getAttribute('href') === '#sec-readme');
+    const homeLink = links.find((a) => a.getAttribute('href') === '/#sec-readme');
 
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
     await act(async () => {

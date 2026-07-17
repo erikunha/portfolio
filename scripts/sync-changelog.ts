@@ -13,7 +13,7 @@ const ROOT = join(import.meta.dirname, '..');
 const CHANGELOG_PATH = join(ROOT, 'app/design-system/changelog/page.mdx');
 
 const HEADER = `import { dsPageMetadata } from '../_lib/page-metadata';
-import { Breadcrumb } from '../_components/Breadcrumb';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 export const metadata = dsPageMetadata({
   slug: 'changelog',

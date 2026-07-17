@@ -43,25 +43,25 @@ export function DesktopTopbar() {
         >
           <a
             className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
-            href="#sec-projects"
+            href="/#sec-projects"
           >
             01_WORK
           </a>
           <a
             className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
-            href="#sec-perf-receipts"
+            href="/#sec-perf-receipts"
           >
             02_IMPACT
           </a>
           <a
             className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
-            href="#sec-npm-stack"
+            href="/#sec-npm-stack"
           >
             03_DEPS
           </a>
           <a
             className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
-            href="#sec-contact"
+            href="/#sec-contact"
           >
             04_CONTACT
           </a>
