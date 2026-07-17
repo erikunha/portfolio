@@ -2,6 +2,8 @@
 name: pr-merge-gate
 description: Use when about to merge a pull request — before running `pnpm ready-to-merge`, resolving claude-review/reviewer threads, or rebasing. The bash-guard blocks `gh pr merge` for AI agents (exit 2); the repo owner executes the final merge in an external terminal once all gates pass. Covers the full 9-point pre-merge gate: claude-review Approve requirement, GitHub resolve-thread ground truth, RESOLVE-or-ESCALATE discipline, in-session reviewer findings, self-resolve detection, the `pnpm ready-to-merge` mechanical command, branch-protection invariant, the local Playwright visual check, and the rebase rule with its dependabot and already-reviewed exceptions. Do NOT auto-activate for ordinary pushes — only at merge time.
 ---
+> **Codex note:** mirror of a `.claude/` harness file. Any "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **Claude Code** control. Codex hook activation is not wired in this repo, so for Codex treat these as **hard rules to self-enforce**, not automated gates. See `AGENTS.md` / `DECISIONS.md`.
+
 
 # PR merge gate (9 points)
 

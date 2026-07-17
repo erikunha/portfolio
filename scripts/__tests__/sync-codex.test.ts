@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import {
   findFiction,
+  insertNote,
   referencedHookSiblings,
   referencedMirrorPaths,
   rewriteText,
@@ -75,6 +76,24 @@ describe('referencedMirrorPaths — the dangling-ref surface the fail-open prede
 
   it('ignores unrelated .claude paths (they are correctly left alone, not mirror targets)', () => {
     expect(referencedMirrorPaths('.claude/settings.json and .claude/.review-passed')).toEqual([]);
+  });
+});
+
+describe('insertNote — the Codex disclaimer must not break a skill frontmatter', () => {
+  const NOTE = '> Codex note.\n\n';
+
+  it('inserts AFTER frontmatter so the ---name/description--- block stays the first bytes', () => {
+    const skill = '---\nname: x\ndescription: the hook blocks it (exit 2)\n---\n# Body\n';
+    const out = insertNote(skill, NOTE);
+    expect(out.startsWith('---\nname: x\ndescription: the hook blocks it (exit 2)\n---\n')).toBe(
+      true,
+    );
+    expect(out).toContain(`---\n${NOTE}`);
+    expect(out.endsWith('# Body\n')).toBe(true);
+  });
+
+  it('prepends when there is no frontmatter', () => {
+    expect(insertNote('# Rule\nbody\n', NOTE)).toBe(`${NOTE}# Rule\nbody\n`);
   });
 });
 

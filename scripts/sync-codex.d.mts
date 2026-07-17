@@ -2,6 +2,7 @@ export declare function rewriteText(source: string): string;
 export declare function findFiction(text: string): string | null;
 export declare function referencedMirrorPaths(text: string): string[];
 export declare function referencedHookSiblings(text: string): string[];
+export declare function insertNote(text: string, note: string): string;
 
 export interface UnresolvedRefsInput {
   to: string;

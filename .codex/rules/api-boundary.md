@@ -5,6 +5,8 @@ paths:
   - "lib/server/**"
   - "proxy.ts"
 ---
+> **Codex note:** mirror of a `.claude/` harness file. Any "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **Claude Code** control. Codex hook activation is not wired in this repo, so for Codex treat these as **hard rules to self-enforce**, not automated gates. See `AGENTS.md` / `DECISIONS.md`.
+
 
 # API & server boundary rules
 

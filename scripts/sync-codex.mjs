@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {
+  chmodSync,
   copyFileSync,
   existsSync,
   mkdirSync,
@@ -120,20 +121,47 @@ const AGENTS_BANNER = `<!-- GENERATED — do not edit by hand. Regenerate with \
 
 `;
 
-const isVendored = (from) => from.includes(`${path.sep}vendor${path.sep}`);
+// Skills and rules are loaded contextually — often WITHOUT AGENTS.md's banner in view —
+// yet they carry "the hook blocks", "enforced", "WIRED", "exit 2" claims (in the body AND in
+// a skill's frontmatter description) that are Claude-Code controls. Rather than rewrite each
+// phrasing, every mirrored skill/rule/agent gets this note reframing how to read ALL such
+// claims in the file. Inserted AFTER the note-target's frontmatter (see insertNote) so a
+// skill's `---name/description---` block stays parseable.
+const CODEX_NOTE = `> **Codex note:** mirror of a \`.claude/\` harness file. Any "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **Claude Code** control. Codex hook activation is not wired in this repo, so for Codex treat these as **hard rules to self-enforce**, not automated gates. See \`AGENTS.md\` / \`DECISIONS.md\`.
+
+`;
+
+// Insert after YAML frontmatter (`---\n...\n---\n`) if present, else at the very top. A skill's
+// frontmatter must remain the first bytes of the file to stay discoverable.
+export const insertNote = (text, note) => {
+  const fm = text.match(/^---\n[\s\S]*?\n---\n/);
+  return fm ? fm[0] + note + text.slice(fm[0].length) : note + text;
+};
+
+// The vendored bashlex parser + its upstream LICENSE are byte-copied: upstream GPLv3 code we do
+// not edit. VENDORED.txt is the EXCEPTION — a repo-authored notice describing THIS vendoring
+// instance, so it is text-rewritten to point at the `.codex/` detector it actually sits beside.
+const isVendored = (from) =>
+  from.includes(`${path.sep}vendor${path.sep}`) && !from.endsWith('VENDORED.txt');
 
 export const collectSources = () => {
   const sources = [];
   for (const skill of readdirSync(CLAUDE_SKILLS)) {
     const from = path.join(CLAUDE_SKILLS, skill, SKILL_FILE);
     if (existsSync(from))
-      sources.push({ from, to: path.join('.agents/skills', skill, SKILL_FILE), mode: 'text' });
+      sources.push({
+        from,
+        to: path.join('.agents/skills', skill, SKILL_FILE),
+        mode: 'text',
+        note: CODEX_NOTE,
+      });
   }
   for (const rule of readdirSync(CLAUDE_RULES)) {
     sources.push({
       from: path.join(CLAUDE_RULES, rule),
       to: path.join('.codex/rules', rule),
       mode: 'text',
+      note: CODEX_NOTE,
     });
   }
   for (const agent of readdirSync(CLAUDE_AGENTS)) {
@@ -141,6 +169,7 @@ export const collectSources = () => {
       from: path.join(CLAUDE_AGENTS, agent),
       to: path.join('.codex/agents', agent),
       mode: 'text',
+      note: CODEX_NOTE,
     });
   }
   for (const from of walk(CLAUDE_HOOKS)) {
@@ -205,16 +234,21 @@ export const run = ({ check }) => {
   let drifted = 0;
   const targets = [];
 
-  for (const { from, to, mode, prepend } of sources) {
+  for (const { from, to, mode, prepend, note } of sources) {
     targets.push(to);
     if (mode === 'text') {
-      const next = (prepend ?? '') + renderText(from, to);
+      const body = renderText(from, to);
+      const next = prepend ? prepend + body : note ? insertNote(body, note) : body;
       const current = existsSync(to) ? readFileSync(to, 'utf-8') : null;
       if (current === next) continue;
       drifted++;
       if (!check) {
         mkdirSync(path.dirname(to), { recursive: true });
         writeFileSync(to, next);
+        // writeFileSync only sets mode on CREATE (default non-executable); a first-time mirror
+        // of a new executable hook would land non-executable and --check (content-only) would
+        // not catch it. Copy the source bit like the binary branch's copyFileSync does.
+        chmodSync(to, statSync(from).mode);
       }
     } else {
       const bytes = readFileSync(from);
