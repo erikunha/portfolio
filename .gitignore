@@ -61,6 +61,14 @@ tsconfig.tsbuildinfo
 # git worktrees (superpowers using-git-worktrees skill creates these here)
 .worktrees/
 
+# superpowers scratch — sdd progress ledger, review packages, archived patches.
+# The subagent-driven-development skill treats this as git-ignored scratch and
+# warns `git clean -fdx` destroys it; never tracked, absent from origin/main.
+# No trailing slash: that makes a rule directory-only, so it misses a symlink of
+# the same name — why /.next dropped its slash in 60b19c2. Proven by RULE_MATRIX
+# in __tests__/meta/gitignore-worktree-symlinks.test.ts.
+.superpowers
+
 # os
 .DS_Store
 
