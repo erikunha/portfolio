@@ -91,7 +91,7 @@ Invoke the named skill inline (not as a subagent) before the described action. P
 
 - Next.js 16 App Router · React 19 · TypeScript strict · Biome · pnpm
 - **CSS:** Tailwind v4 (`@tailwindcss/postcss`, theme in `app/css/theme.css`). Design tokens live in `app/css/theme.css` as CSS custom properties — no Style Dictionary pipeline, no CSS modules. PostCSS pipeline added back for Tailwind v4 via `@tailwindcss/postcss` — no other PostCSS plugins. See `DECISIONS.md` for the Tailwind v4 migration ADR (2026-05-31).
-- Vercel Edge end-to-end deployment
+- Vercel (Fluid Compute, Node runtime) end-to-end deployment
 - Upstash Redis for rate-limit + KV log
 - Vercel AI Gateway via the AI SDK v7 (`ai` package, `streamText`) with the model string `anthropic/claude-haiku-4-5` for `/api/ask`; ephemeral prompt cache preserved via `providerOptions.anthropic.cacheControl` on a system message (`allowSystemInMessages: true`); cache-token breakdown read from `usage.inputTokenDetails`. Needs `AI_GATEWAY_API_KEY` (OIDC token on Vercel). Migrated to the Gateway 2026-05-21; upgraded v6→v7 2026-07-02 — see DECISIONS.md.
 - Resend for contact form delivery
@@ -161,7 +161,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 ## Rendering model
 
 - **Default: React Server Components, SSG at build time.** Zero JS shipped for static sections.
-- **Client islands by exception:** Matrix dialog loop, INTERACTIVE_SHELL, contact form, IntersectionObserver typewriter, MOTION indicator.
+- **Client islands by exception:** Matrix dialog loop, INTERACTIVE_SHELL, contact form, role typewriter (RoleTyper, mount-driven), MOTION indicator.
 - All client files named `*.client.tsx`. RSC drift must be visible in PR review.
 - **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** Per-state re-renders tank INP. The interactive shell's streaming answer, by contrast, renders *through* React (rAF-coalesced state) — see `STANDARDS.md` Chapter 1; enforced by `components/client/InteractiveShell/InteractiveShell.test.tsx`.
 
