@@ -41,7 +41,7 @@ The whole platform is tuned for one developer plus AI agents. Some gates assume 
 - **Risk if the team grows:** these would need rework (shared memory, CI-side protection checks, real CODEOWNERS). Not debt today, but a known scaling edge.
 
 ### A5 - AI-platform saturation is asserted, not continuously re-checked (Low)
-`discovery-ledger.md` records a one-time evaluation of ~2,090 tools concluding the harness is saturated. That conclusion ages; new high-value skills/MCPs appear. There is no recurring re-evaluation.
+A one-time evaluation of the tool ecosystem (recorded in `discovery-ledger.md`, now a local-only/gitignored workflow artifact) concluded the harness is saturated. That conclusion ages; new high-value skills/MCPs appear. There is no recurring re-evaluation.
 - **Fix option:** a periodic (quarterly) ecosystem re-scan, time-boxed.
 
 ## Technical-debt register (platform)
