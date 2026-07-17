@@ -78,8 +78,12 @@ describe('referencedMirrorPaths — the dangling-ref surface the fail-open prede
     expect(referencedMirrorPaths('.claude/settings.json and .claude/.review-passed')).toEqual([]);
   });
 
-  it('excludes runtime-state dotfiles (a hook creates .codex/.api-edit-pending; it is not mirror content)', () => {
+  it('excludes the named runtime-state marker but stays fail-closed on any other dotfile', () => {
     expect(referencedMirrorPaths('writes to .codex/.api-edit-pending')).toEqual([]);
+    // a DIFFERENT dotfile is still caught (the exemption is a named set, not "any dotfile")
+    expect(referencedMirrorPaths('reads .codex/.some-other-state')).toEqual([
+      '.codex/.some-other-state',
+    ]);
     expect(referencedMirrorPaths('see .codex/rules/api-boundary.md')).toEqual([
       '.codex/rules/api-boundary.md',
     ]);

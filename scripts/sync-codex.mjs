@@ -42,10 +42,16 @@ const PATH_REWRITES = [
   [/\.claude\/hooks/g, CODEX_HOOKS],
   [/\.claude\/rules/g, '.codex/rules'],
   [/\.claude\/agents/g, '.codex/agents'],
-  // The api-edit marker is per-tree runtime state: a writer (api-edit-marker.sh) and a reader
-  // (api-security-push-guard.sh) hook, both mirrored, resolve it from the repo root. Rewriting
-  // both to `.codex/` keeps them consistent with each other AND keeps Codex marker state out of
-  // `.claude/` — a session only ever runs one agent's hooks, so they never need a shared file.
+  // The api-edit marker is per-tree runtime state under the repo root: a writer
+  // (api-edit-marker.sh — which `mkdir -p`s the dir AND appends the file) and a reader
+  // (api-security-push-guard.sh), both mirrored. Rewrite the whole `$ROOT/.claude` prefix (the
+  // marker's parent dir AND the marker path) to `$ROOT/.codex` so the hooks create and use the
+  // Codex-tree dir, stay consistent with each other, and keep no `.claude/` reference — a
+  // session only ever runs one agent's hooks, so they never need a shared file.
+  [/\$ROOT\/\.claude\b/g, '$ROOT/.codex'],
+  // Prose references to the same marker without the `$ROOT/` prefix (e.g. a rule naming the
+  // path). Only the full marker path is safe to rewrite; a bare `.claude` would mis-route
+  // `.claude/skills` (which goes to `.agents/`), which is why these two rules are specific.
   [/\.claude\/\.api-edit-pending/g, '.codex/.api-edit-pending'],
   // No leading \b: in a hook's `"...\nCLAUDE.md: ..."` message the `n` of the `\n` escape
   // sits against `CLAUDE`, so a leading boundary would skip exactly the hook prose this must fix.
@@ -79,15 +85,19 @@ export const findFiction = (text) => {
   return null;
 };
 
+// Runtime STATE a hook creates at runtime (gitignored, absent at rest) — not mirror content,
+// so a reference to one is not a dangling mirror ref. Named + narrow so the fail-closed check
+// still catches any OTHER missing dotfile reference; widen this set deliberately, not by pattern.
+const RUNTIME_STATE = new Set(['.api-edit-pending']);
+
 // Literal repo-relative mirror paths a rewritten file points at. Each must exist in the
 // mirror, or the file references something that was never generated (the dangling-ref
-// class the fail-open predecessor could not see). Bounded to the two mirror roots. A
-// dot-prefixed basename (`.codex/.api-edit-pending`) is runtime STATE a hook creates, not
-// mirror content, so it is excluded — it is gitignored and absent at rest by design.
+// class the fail-open predecessor could not see). Bounded to the two mirror roots; runtime
+// state (RUNTIME_STATE) is excluded because it is created at runtime, not generated here.
 export const referencedMirrorPaths = (text) => {
   const matches = text.match(/(?:\.agents|\.codex)\/[A-Za-z0-9_./-]+/g) ?? [];
   return [...new Set(matches.map((m) => m.replace(/[.]+$/, '')))].filter(
-    (p) => !path.basename(p).startsWith('.'),
+    (p) => !RUNTIME_STATE.has(path.basename(p)),
   );
 };
 

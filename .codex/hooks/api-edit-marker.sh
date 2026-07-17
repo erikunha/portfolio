@@ -24,7 +24,7 @@ if [ -n "$API_HIT" ]; then
   HEAD_SHA=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
   TS=$(node -e 'process.stdout.write(new Date().toISOString())' 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%S.000Z)
   ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-  mkdir -p "$ROOT/.claude" 2>/dev/null
+  mkdir -p "$ROOT/.codex" 2>/dev/null
   printf '%s\t%s\t%s\n' "$TS" "$HEAD_SHA" "$API_HIT" >> "$ROOT/.codex/.api-edit-pending" 2>/dev/null || true
   printf '[api-edit-marker] Recorded API-surface edit: %s\n' "$API_HIT"
   printf 'Dispatch security-auditor before pushing. The push guard will block until you do.\n'

@@ -7,7 +7,7 @@ description: Use after all 4 review-battery agents (pr-review-toolkit:review-pr,
 
 A DX aid for unifying the output of the 4-agent review battery into a single,
 deduplicated, prioritized action table. Not a gate — the stamp decision and
-the responsibility for fixing findings remain with the main Claude.
+the responsibility for fixing findings remain with the main agent.
 
 ## When to use
 
