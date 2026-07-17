@@ -5,23 +5,23 @@ description: Use after all 4 review-battery agents (pr-review-toolkit:review-pr,
 
 # Battery Synthesis
 
-A DX aid for unifying the output of the 5-agent review battery into a single,
+A DX aid for unifying the output of the 4-agent review battery into a single,
 deduplicated, prioritized action table. Not a gate — the stamp decision and
 the responsibility for fixing findings remain with the main Claude.
 
 ## When to use
 
-After all 5 battery agents have returned their reports and before `pnpm review:stamp`.
+After all 4 battery agents have returned their reports and before `pnpm review:stamp`.
 
 Battery agents: `pr-review-toolkit:review-pr`,
 `security-auditor`, `performance-engineer`, `dependency-auditor`.
 
-Dispatch trigger in CLAUDE.md: "After dispatching the full 5-agent battery, before
+Dispatch trigger in CLAUDE.md: "After dispatching the full 4-agent battery, before
 `pnpm review:stamp` → `battery-synthesis`"
 
 ## How to synthesize
 
-Read all 5 reports from the current context in order. Do NOT re-dispatch agents.
+Read all 4 reports from the current context in order. Do NOT re-dispatch agents.
 
 **Step 1 — Extract findings.** For each report, collect every finding:
 - Severity as the agent stated it (Critical / Important / Advisory or equivalent)

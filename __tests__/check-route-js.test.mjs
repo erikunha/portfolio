@@ -74,16 +74,20 @@ describe('check-route-js.mjs', () => {
     expect(res.status).toBe(0);
   });
 
-  it('fails a SINGLE route that busts the app-owned budget — the intersection definition reported 0.0 KB and OK here', () => {
+  it('fails a SINGLE route that busts the budget — the intersection definition reported 0.0 KB and OK here', () => {
     const framework = writeChunk('framework.js', 143);
     const island = writeChunk('island.js', 50);
     writeManifest([{ route: '/', firstLoadChunkPaths: [framework, island] }]);
     const res = run();
     expect(
       res.status,
-      'with one route, defining framework as "chunks every route shares" makes the whole bundle framework, app-owned computes to 0, and the gate prints OK over an unmeasured budget. App-owned must be measured against the framework floor constant, not against sibling routes.',
+      'with one route, defining framework as "chunks every route shares" makes the whole bundle framework, app-owned computes to 0, and the gate prints OK over an unmeasured budget. The floor must be a measured constant, not an intersection of sibling routes.',
     ).not.toBe(0);
-    expect(res.stderr).toMatch(/app-owned JS/i);
+    expect(res.stderr).toMatch(/over the 175 KB budget/i);
+    expect(
+      res.stderr,
+      'a failure must name the app-owned share, since that is the part the reader can act on',
+    ).toMatch(/app-owned/i);
   });
 
   it('counts a chunk shared by EVERY route as app-owned, not framework', () => {
@@ -96,9 +100,21 @@ describe('check-route-js.mjs', () => {
     const res = run();
     expect(
       res.status,
-      'a client island moved into app/layout.tsx lands on every route. Classifying "on every route" as framework would exempt it from the app-owned budget — the exact code the budget exists to constrain.',
+      'a client island moved into app/layout.tsx lands on every route. Classifying "on every route" as framework would exempt it from the budget — the exact code the budget exists to constrain.',
     ).not.toBe(0);
-    expect(res.stderr).toMatch(/app-owned JS/i);
+    expect(res.stderr).toMatch(/over the 175 KB budget/i);
+  });
+
+  it('fails in the band where a 43 KB app-owned threshold would NOT have fired — proving 43 never bound', () => {
+    const framework = writeChunk('framework.js', 143);
+    const app = writeChunk('app.js', 37);
+    writeManifest([{ route: '/', firstLoadChunkPaths: [framework, app] }]);
+    const res = run();
+    expect(
+      res.status,
+      'total is ~180 KB, so app-owned is ~38 KB — UNDER a 43 KB app-owned threshold, yet the route must still fail. app-owned = total minus a constant, so a 43 KB app-owned check could only fire above 142.2 + 43 = 185.2, which the 175 KB total already caught. Two thresholds on one axis is one threshold: the real app-owned ceiling is 175 - 142.2 = 32.8. This is the band the original two-threshold design never tested, and the reason app-owned is now reported rather than asserted.',
+    ).not.toBe(0);
+    expect(res.stderr).toMatch(/over the 175 KB budget/i);
   });
 
   it('fails loudly when the framework-floor constant is stale rather than inflating app-owned', () => {

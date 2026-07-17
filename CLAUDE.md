@@ -30,7 +30,7 @@
 
 | Command | When the AI runs it |
 |---|---|
-| `pnpm review:stamp` | After ALL 5 review agents are dispatched AND the findings ledger is resolved. `scripts/review-stamp.ts` **refuses to write** `.review-passed` unless (a) the transcript shows all five battery agents dispatched since the last commit AND (b) `.review-findings.json` has no `open` Critical/Important finding (each `resolved` with a SHA or `justified` with a reason). Pre-push hook blocks until the stamp matches HEAD. Now proves dispatch AND resolution |
+| `pnpm review:stamp` | After ALL 4 review agents are dispatched AND the findings ledger is resolved. `scripts/review-stamp.ts` **refuses to write** `.review-passed` unless (a) the transcript shows all four battery agents dispatched since the last commit AND (b) `.review-findings.json` has no `open` Critical/Important finding (each `resolved` with a SHA or `justified` with a reason). Pre-push hook blocks until the stamp matches HEAD. Now proves dispatch AND resolution |
 | `pnpm review:findings` | Verification-loop ledger CLI (`add`/`resolve`/`justify`/`check`/`list`/`clear`). `battery-synthesis` records each Critical/Important finding; `check` and `review:stamp` refuse while any is `open`. See `.claude/skills/battery-synthesis` |
 | `pnpm pr-size [--base <ref>]` | After every commit block and before opening a PR — decides whether to split. Sizes vs the base branch; for a sub-PR into an integration branch set `PR_BASE=origin/feat/<feature>` (or `--base`) so it reads as its own small diff |
 | `pnpm ready-for-pr` | Before `gh pr create` — runs ci:local + pr-size + gates:runtime, prints next-step checklist |
@@ -111,7 +111,7 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 | CLS | < 0.05 | < 0.05 |
 | TBT | < 200ms | < 400ms |
 | JS gzipped per route, total first-load | < 175KB | < 175KB |
-| JS gzipped, app-owned (every non-framework chunk, deduped) | < 43KB | < 43KB |
+| JS gzipped, app-owned (total minus the measured framework floor) | < 32.8KB | < 32.8KB |
 | Lighthouse Performance | ≥ 95 | ≥ 90 |
 | Lighthouse Accessibility | = 100 | = 100 |
 | Lighthouse Best Practices | ≥ 95 | ≥ 95 |
@@ -119,7 +119,7 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 
 CI enforces all of the above. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
 
-`pnpm route-js-check` holds both JS budgets (`scripts/check-route-js.mjs`); `pnpm bundle-check` is a separate global chunk-sum and is structurally blind to a per-route regression. The 175KB total is the **framework floor plus headroom, not an aspiration**: a bare hello-world Next 16 + React 19 app on this toolchain measures 142.2KB gzipped before any app code exists, and `/_not-found` — a route with zero app code — measures 148.9KB here. Any per-route total under ~149KB is unreachable by any amount of engineering. **The 43KB app-owned budget is the one your decisions actually move**; treat it as the real constraint. See `DECISIONS.md` 2026-07-14.
+`pnpm route-js-check` (`scripts/check-route-js.mjs`) asserts the 175KB per-route total and REPORTS the app-owned split; `pnpm bundle-check` is a separate global chunk-sum, structurally blind to a per-route regression. The 175KB is the **framework floor plus headroom, not an aspiration**: a bare hello-world Next 16 + React 19 app on this toolchain measures 142.2KB gzipped before any app code exists, and `/_not-found` — a route with zero app code — measures 148.9KB here. Any per-route total under ~149KB is unreachable by any amount of engineering. **The app-owned row is the one your decisions move, and it is 175 − 142.2 = 32.8KB.** There is exactly ONE gate, because app-owned is total minus a constant: a separate app-owned threshold would be a second threshold on the same axis and could never fire on its own. See `DECISIONS.md` 2026-07-14.
 
 ## Engineering standards
 

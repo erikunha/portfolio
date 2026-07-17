@@ -2,8 +2,12 @@ import { existsSync, readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 
 const MAX_ROUTE_TOTAL_KB = 175;
-const MAX_APP_OWNED_KB = 43;
 
+// app-owned is REPORTED, never asserted. total - FRAMEWORK_FLOOR_KB is an affine transform of
+// total by a constant, so an app-owned threshold is a second threshold on the SAME axis: it could
+// only fire above FRAMEWORK_FLOOR_KB + itself, which MAX_ROUTE_TOTAL_KB already caught. Asserting
+// both printed a 43 KB budget that no input could ever trip while the real ceiling was
+// 175 - 142.2 = 32.8. One quantity, one gate.
 const FRAMEWORK_FLOOR_KB = 142.2;
 const FRAMEWORK_FLOOR_TOLERANCE_KB = 2;
 
@@ -65,9 +69,11 @@ console.log('');
 
 const failures = [];
 
+const appHeadroomKb = (MAX_ROUTE_TOTAL_KB - FRAMEWORK_FLOOR_KB).toFixed(1);
+
 for (const { route, total } of routes) {
   const appOwned = total - FRAMEWORK_FLOOR_KB;
-  const over = total > MAX_ROUTE_TOTAL_KB || appOwned > MAX_APP_OWNED_KB;
+  const over = total > MAX_ROUTE_TOTAL_KB;
   console.log(
     `${(over ? 'FAIL' : 'ok').padEnd(5)} ${route.padEnd(28)} ${total.toFixed(1).padStart(6)} KB total  (${appOwned.toFixed(1)} KB app-owned)`,
   );
@@ -76,31 +82,26 @@ for (const { route, total } of routes) {
 
 if (failures.length === 0) {
   console.log(
-    `\nOK  every route under ${MAX_ROUTE_TOTAL_KB} KB total and ${MAX_APP_OWNED_KB} KB app-owned`,
+    `\nOK  every route under ${MAX_ROUTE_TOTAL_KB} KB total (${appHeadroomKb} KB of app-owned headroom above the floor)`,
   );
   process.exit(0);
 }
 
 const lines = [''];
 for (const { route, total, appOwned } of failures) {
-  if (total > MAX_ROUTE_TOTAL_KB) {
-    lines.push(
-      `FAIL: ${route} ships ${total.toFixed(1)} KB total, over the ${MAX_ROUTE_TOTAL_KB} KB budget.`,
-    );
-  }
-  if (appOwned > MAX_APP_OWNED_KB) {
-    lines.push(
-      `FAIL: ${route} ships ${appOwned.toFixed(1)} KB of app-owned JS, over the ${MAX_APP_OWNED_KB} KB budget.`,
-    );
-  }
+  lines.push(
+    `FAIL: ${route} ships ${total.toFixed(1)} KB total, over the ${MAX_ROUTE_TOTAL_KB} KB budget.`,
+    `      ${FRAMEWORK_FLOOR_KB} KB of that is the framework floor you do not control; ${appOwned.toFixed(1)} KB is app-owned,`,
+    `      against ${appHeadroomKb} KB of headroom. Cut app-owned JS — the floor is not yours to shrink.`,
+  );
 }
 lines.push(
   '',
-  'check-bundle-size.mjs cannot catch either: it sums every chunk in .next/static/chunks globally, so a route',
+  'check-bundle-size.mjs cannot catch this: it sums every chunk in .next/static/chunks globally, so a route',
   'reusing chunks that already exist for / adds ~0 new bytes and that gate stays green regardless.',
   '',
-  `App-owned is total minus the measured ${FRAMEWORK_FLOOR_KB} KB framework floor — NOT "the chunks this route does not`,
-  'share with its siblings". That definition classifies a client island in app/layout.tsx as framework, because every',
-  'route loads it, and silently exempts the exact code this budget exists to constrain.',
+  `The ${MAX_ROUTE_TOTAL_KB} KB total is the ONLY assertion here. App-owned is reported, never gated: it is`,
+  'total minus a constant, so an app-owned threshold would be a second threshold on the same axis and could',
+  `never fire on its own. If a route is over, ${appHeadroomKb} KB is the app-owned budget that actually binds.`,
 );
 fail(lines.join('\n'));

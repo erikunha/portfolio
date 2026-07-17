@@ -92,7 +92,7 @@ export function decideStamp(args: {
   return {
     write: true,
     missing: [],
-    reason: 'All five battery roles dispatched after HEAD; findings resolved or justified.',
+    reason: 'Every battery role dispatched after HEAD; findings resolved or justified.',
   };
 }
 
