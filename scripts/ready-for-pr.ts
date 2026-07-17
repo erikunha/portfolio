@@ -33,6 +33,15 @@ try {
   process.exit(1);
 }
 
+try {
+  execFileSync('pnpm', ['route-js-check'], { stdio: 'inherit' });
+} catch {
+  process.stderr.write(
+    `\n${C.red}[ready-for-pr] FAIL${C.reset} — route-js-check failed. A route is over its total or app-owned JS budget.\n`,
+  );
+  process.exit(1);
+}
+
 let sizeFail: 'red' | 'blocked' | 'error' | null = null;
 let sizeExit: number | undefined;
 try {

@@ -15,7 +15,7 @@ flowchart TD
     branch --> tdd["TDD implementation (tests first)"]
     tdd --> commit["commit (scope blocks): type(scope): subject"]
     commit --> hooks["per-commit hooks: Biome + commitlint"]
-    hooks --> battery["5-agent review battery + findings ledger + review:stamp"]
+    hooks --> battery["4-agent review battery + findings ledger + review:stamp"]
     battery --> push["git push (pre-push gate chain)"]
     push --> readypr["pnpm ready-for-pr (ci:local + pr-size + gates:runtime)"]
     readypr --> pr["gh pr create (fill template)"]
@@ -50,7 +50,7 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 - **`commit-msg`**: commitlint. Conventional Commits with a **mandatory scope** (`scope-empty: [2, 'never']`) drawn from an **open set** (`scope-enum: [0]`). Scopes are feature-area names (`ci`, `dx`, `observability`, `healthz`, `ppr`, `arch`, ...), not technical categories.
 
 ### 7. Pre-push: the review battery + the gate chain
-Before every push (and whenever coding work stops), the 5-agent review battery runs, findings are recorded and resolved, and `review:stamp` is written. The `.husky/pre-push` hook then blocks the push unless: it does not target `main`, the branch name is valid, the review stamp matches HEAD, no unaudited API edit is pending, and `pnpm verify` passes. See [review-merge-release](./review-merge-release.md) for the full chain.
+Before every push (and whenever coding work stops), the 4-agent review battery runs, findings are recorded and resolved, and `review:stamp` is written. The `.husky/pre-push` hook then blocks the push unless: it does not target `main`, the branch name is valid, the review stamp matches HEAD, no unaudited API edit is pending, and `pnpm verify` passes. See [review-merge-release](./review-merge-release.md) for the full chain.
 
 ### 8. Pre-PR -> open PR
 `pnpm ready-for-pr` runs `ci:local` + `pr-size` + `gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). `pr-size` recommends splitting if the diff is too large. Then `gh pr create` fills the PR template (every section must be non-empty, enforced by `validate-pr-body`).

@@ -1,8 +1,5 @@
-import withBundleAnalyzer from '@next/bundle-analyzer';
 import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
-
-const analyze = withBundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
 
 const withMDX = createMDX({
   options: {
@@ -37,4 +34,4 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default analyze(withMDX(nextConfig));
+export default withMDX(nextConfig);

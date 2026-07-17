@@ -44,7 +44,7 @@ What we build is small, opinionated, edge-deployed, and budget-enforced.
 | LCP | < 1.8s on 4G |
 | INP | < 200ms |
 | CLS | < 0.05 |
-| JS gzipped (landing route) | < 120KB |
+| JS gzipped (per route, first-load total) | < 175KB |
 | Lighthouse Performance | ≥ 95 |
 | Lighthouse Accessibility | = 100 |
 | Lighthouse Best Practices | ≥ 95 |
@@ -129,9 +129,9 @@ Every section that doesn't depend on per-visitor state is RSC + SSG. Output is H
 | Contact form | client-side `fetch` to `/api/contact`, optimistic UI | ≤ 6KB |
 | IntersectionObserver typewriter | reveal-on-scroll | ≤ 2KB |
 | MOTION indicator | `matchMedia` listener | ≤ 1KB |
-| **Total client JS budget** | | **≤ 43KB** |
+| **Total client JS budget** | | **≤ 32.8KB app-owned** |
 
-> The 43 KB app-island total is a tracked design target, not a per-PR CI gate. `pnpm bundle-check` gates the combined client chunks (framework-inclusive); the 43 KB figure is monitored via `pnpm bundle:analyze`. Individual island budgets are aspirational guidelines.
+> There is exactly ONE per-route gate: `pnpm route-js-check` (`scripts/check-route-js.mjs`) fails a route whose first-load JS exceeds **175 KB total**. App-owned JS is *reported*, never asserted — it is the total minus a measured constant (the 142.2 KB framework floor), so a second threshold on it could never fire on its own. The app-owned figure your decisions actually move is 175 − 142.2 = **32.8 KB**. `pnpm bundle-check` separately gates the combined client chunks (framework-inclusive) and is structurally blind per-route. Individual island budgets remain aspirational guidelines. See `DECISIONS.md` 2026-07-14 and 2026-07-16.
 
 Naming convention: every client file ends in `.client.tsx`. The default is server; client is the exception, named explicitly. Forces RSC drift to be visible in code review.
 
@@ -318,11 +318,31 @@ Upstash Redis sliding window:
 Same question text (hash) within 24h returns cached response. Reduces Anthropic spend on accidental refresh / share-link clicks. TTL 24h, evict on content deploy.
 
 ### Budget enforcement (the Principal-level move)
-Single hard counter in Redis: `ask:tokens:YYYY-MM`. Each completion increments via `INCRBY` with `tokens_in + tokens_out`. Monthly hard cap: 400,000 tokens (~$0.40 at Haiku pricing). Behavior:
-- 80% threshold: endpoint returns 503 with email fallback; no warning banner (conservative fail-closed)
-- Hard cap (100%): returns 503 with fallback message
-- Redis unavailable: fail-open (allow the request; durable rate-limit enforced on retry)
-- Prompt caching enabled on the system prompt via `cache_control: { type: 'ephemeral' }` (~93% token savings on cached context)
+Single hard counter in Redis: `ask:tokens:YYYY-MM` (32-day TTL, set `NX`). The counter is **reserved up front, then settled** — not incremented after the fact: `reserveBudget(MAX_OUTPUT_TOKENS)` does an `INCRBY` of `RESERVED_INPUT_TOKENS + maxOutputTokens` (2200 + 512 = 2712) *before* the model call, and `settleBudget()` refunds the unused difference afterwards. Reserving first is what makes the cap hold under concurrency; incrementing after the completion would let N in-flight requests all pass a check none of them had paid for yet. Monthly hard cap: `MONTHLY_TOKEN_BUDGET = 3_000_000`. **Exhausting it costs somewhere between $3 and $5.30 — the spread is the answer, and a single figure would be false precision** (derived 2026-07-17; Haiku 4.5 bills $1.00/MTok input and $5.00/MTok output).
+
+The mix is the whole point, because 3M tokens is $3.00 if all input and $15.00 if all output. The **ceiling** assumes every request burns its full 2712-token reservation (2200 input + 512 output): ~1106 requests, ~2.43M input + ~0.57M output, ≈$5.3. The **floor** is $3.00, approached as real completions shrink. Real spend sits in between, nearer the floor, for two independent reasons. **Which one dominates is unmeasured — do not rank them without production data:**
+
+1. `settleBudget` refunds `reserved − (actualInput + actualOutput)`. `MAX_OUTPUT_TOKENS` is a cap most answers never reach, so short completions both cost less and free budget for more requests. Since output bills at 5× input, the realized counted mix skews further toward input than 2200:512, dragging blended $/token toward the floor.
+2. Ephemeral caching, but **only in dollars** — `settleBudget` is fed `inputTokens + cacheReadTokens + cacheCreationTokens`, so cached reads consume the *token* budget at full weight while billing at ~0.1×. The ceiling is cache-agnostic; the dollar figure is not.
+
+Their relative size depends on two things, and **the two are not equally unknown**:
+
+- **Completion-length distribution — recorded, never aggregated.** `persistAskInteraction` writes `outputTokens` per request to `ask:log:{date}:{requestId}` with a 90-day TTL, so this half is answerable today by scanning those keys. Nothing does.
+- **Cache-hit rate — not recorded at all.** It is computed per request but only reaches `log.info('ask completed')`; it is never passed to `persistAskInteraction`, so it is not durably queryable. Answering this half needs instrumentation, not a query. (The ephemeral TTL is 5 minutes with no explicit `ttl` set, so hit rate tracks request inter-arrival time — which nothing measures either.)
+
+Either can be the larger lever: dropping average output 512→150 saves ~$1.50, while lifting cache hits 0→90% saves ~$1.97. Both are full-scale deltas from the same $5.27 ceiling, so they are comparable, and they establish only that the levers are the same order of magnitude — not which one wins here. **Measure before optimizing either.**
+
+**Do not quote this to the cent.** Two defensible methods disagree there — 1106 whole requests gives $5.26, a proportional split of the full 3M gives $5.27 — and both are noise against a range that spans two dollars. The load-bearing facts are the pricing basis, the reservation constants, and the direction; the cents are not.
+
+Behavior:
+- 80% threshold (`pct >= 0.8`): logs `budget approaching cap` and **allows the request**. This is a warning, not a gate — the endpoint does not 503 here.
+- Hard cap (`pct > 1`): refunds the reservation and returns `allowed: false`; the route returns 503 with a fallback message
+- Redis unavailable: fail-open (allow the request, `reserved: 0`; settlement is skipped and logged). **State the blast radius honestly: this is not just the cap.** The per-IP rate limiter (`getAskLimit`), the identical-question dedup (`checkIdenticalQuestion`), and `reserveBudget` all depend on the same Redis, and all three catch and allow — so one outage removes throttling, dedup, AND the spend ceiling in the same window, not merely an unmetered counter. What survives is Redis-independent: the 500-char question cap, the injection regex, `MAX_OUTPUT_TOKENS`, the streaming output guard (`lib/ask/output-guard.ts`), and both route timeouts. Read `app/api/ask/route.ts` for the current set rather than trusting a roster here — two revisions of this paragraph enumerated one and both were incomplete. **The category is what matters:** every one of those bounds a *single request* — its size, content, or duration — and **none bounds request volume**. The three that did (`getAskLimit`, `checkIdenticalQuestion`, `reserveBudget`) are the three that just failed open, and no platform rate limit, WAF, or bot check sits behind them (CAPTCHA is a deliberately rejected control — §15, "Trade-offs I'd flag").
+
+**The one volume control that survives is the kill switch, and it is a remedy rather than a bound:** `ASK_ENABLED` is an env var checked before any Redis call, so flipping it off 503s every request and takes volume to zero. During a Redis outage that is the only lever left — which makes it the outage runbook, not a background protection. This is a deliberate availability-over-spend trade, but a reader who assumes the 8/hr throttle still holds during an outage is wrong.
+- Prompt caching enabled via `providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }` on a system message (AI SDK v7 shape; the pre-v7 `cache_control` spelling no longer exists)
+
+Every number above is `lib/rate-limit.ts`'s to change — grep the constant rather than trusting this paragraph.
 
 Why this is non-negotiable: a public LLM endpoint without a hard cap is a $5,000 surprise waiting to happen. The graceful degradation is more credible than a 503 alone.
 
@@ -485,7 +505,7 @@ WCAG 2.1 AA at minimum. Specific risks for THIS aesthetic:
 
 | Risk | Mitigation |
 |---|---|
-| Lime-green-on-black at body sizes fails contrast | Use a two-token palette: `--signal` (#00FF41) for accents/headings/large text; `--fg` (#E6FFE6, ~13:1 contrast) for body. Never use `--signal` for paragraph text. |
+| Lime-green-on-black at body sizes fails contrast | Use a two-token palette: `--color-primary-500` (#00FF41) for accents/headings/large text; `--color-tertiary-50` (#E6FFE6, ~13:1 contrast) for body. Never use the signal green for paragraph text. |
 | Muted parentheticals in `~/.unknowns` and `~/.guitar_rig` | Bump muted color from typical 60% opacity to a fully resolved hex that hits 4.5:1 (e.g., `#5AE07B`) — or set those lines to 14px to qualify as Large Text (3:1 threshold). |
 | Matrix dialog loop is exhausting | `prefers-reduced-motion: reduce` disables loop, renders static `> The Matrix has you...`. Plus: MOTION badge in top bar becomes click-toggle for users on the borderline. |
 | Form labels invisible (terminal-styled prompts) | Real `<label for="...">` paired with each input. Terminal prompt is decoration. |
@@ -525,7 +545,7 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 
 ### Pre-push (Husky)
 - Branch-name guard: blocks direct pushes to `main` (all changes must go through a PR)
-- Review stamp check: `.review-passed` must match HEAD SHA — written by `pnpm review:stamp` after the 5-agent battery is dispatched
+- Review stamp check: `.review-passed` must match HEAD SHA — written by `pnpm review:stamp` after the 4-agent battery is dispatched
 - `pnpm verify` — full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + harness-size + section-order + doc-drift + unit tests (811)
 
 ### CI (GitHub Actions, per PR)
@@ -589,7 +609,7 @@ The architecture is designed so that an HN hug-of-death doesn't generate a surpr
 
 | Decision | What we give up | Why it's still right |
 |---|---|---|
-| RSC-first with client islands | Slightly harder to debug streaming hydration | Only way to hit 120KB JS budget |
+| RSC-first with client islands | Slightly harder to debug streaming hydration | Only way to hold the per-route JS budget |
 | No CMS | Erik edits TS files to update content | Single author; CMS is YAGNI |
 | Vercel Edge end-to-end | Vendor lock-in to Vercel's RSC story | Portability cost < ops savings at this scale |
 | Anthropic API for `ask` | $50/mo cap if abuse spikes | Quality-to-cost ratio beats self-hosted at portfolio scale |

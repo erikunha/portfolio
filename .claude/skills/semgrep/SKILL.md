@@ -1,6 +1,6 @@
 ---
 name: semgrep
-description: Run the pinned Semgrep CLI to statically measure security issues (taint/injection, hardcoded secrets, OWASP Top Ten) on changed files, and interpret the SARIF output. Use ONLY when the user explicitly asks to "run semgrep", "static-analysis the diff", scan for injection/secrets, or interpret a Semgrep SARIF report. Do NOT auto-activate on generic "review my code" — the 5-agent battery and Biome cover that. CI is the authoritative gate; this skill is the local/agent interface.
+description: Run the pinned Semgrep CLI to statically measure security issues (taint/injection, hardcoded secrets, OWASP Top Ten) on changed files, and interpret the SARIF output. Use ONLY when the user explicitly asks to "run semgrep", "static-analysis the diff", scan for injection/secrets, or interpret a Semgrep SARIF report. Do NOT auto-activate on generic "review my code" — the 4-agent battery and Biome cover that. CI is the authoritative gate; this skill is the local/agent interface.
 ---
 
 # Semgrep (static analysis, on-demand)

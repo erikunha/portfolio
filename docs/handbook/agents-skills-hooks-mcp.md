@@ -8,7 +8,7 @@ Skills are load-on-demand procedures. They activate by their `description` front
 
 | Skill | Trigger | What it does |
 |---|---|---|
-| **battery-synthesis** | After the 5-agent battery returns, before `review:stamp` | Dedups + severity-ranks the five reports into one action table and records each Critical/Important into the findings ledger. A DX aid, not a gate. |
+| **battery-synthesis** | After the 4-agent battery returns, before `review:stamp` | Dedups + severity-ranks the four reports into one action table and records each Critical/Important into the findings ledger. A DX aid, not a gate. |
 | **review-convergence** | Converging an open PR's AI review to green | The loop: rebase before every push, verify the pushed SHA, re-request the reviewer (`/claude-review`, claude[bot]) after each push, reply-before-resolve, the automatic post-merge transition. Not for the final merge. |
 | **pr-merge-gate** | About to merge a PR | The 9-point pre-merge gate (claude-review Approve, resolve-thread ground truth, branch-protection, `ready-to-merge`, the local Playwright visual check, the rebase rule). The owner runs the final merge; agents are blocked. |
 | **visual-baseline-regen** | A change may touch a Playwright screenshot baseline (CSS/layout/typography) | The baseline regen procedure: darwin `--update-snapshots`, the linux CI-dispatch artifact path, inspect-before-commit, batch-to-one-push. Distinguishes the CI-gated page-section spec from the darwin-only DS-component spec. |
@@ -104,7 +104,7 @@ The scripts that implement the loop, in dispatch -> resolution -> archive -> lea
 
 ```mermaid
 flowchart LR
-    battery["5-agent battery"] --> bs["battery-synthesis"]
+    battery["4-agent battery"] --> bs["battery-synthesis"]
     bs --> rf["review-findings.ts (ledger: add/resolve/justify)"]
     rf --> rs["review-stamp.ts (verify dispatch + resolution -> .review-passed)"]
     rs --> arch["append .review-findings-archive.jsonl"]

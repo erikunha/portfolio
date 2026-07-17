@@ -36,7 +36,7 @@ A good first PR (touches the common path, low blast radius):
 
 1. **Edit a section's copy** - change a line in a `content/*.ts` module. `pnpm validate-content` proves the schema still holds. Add a `*.test.tsx` assertion if the shape changed.
 2. **Or add a design-system component variant** - follow `Foo/Foo.tsx` + `Foo/index.ts`, co-locate a test, document it (`check:component-docs`), and run `pnpm dev` to eyeball it.
-3. Commit with a conventional scope (`feat(content): ...`). Run `pnpm ready-for-pr`. Note that pushing triggers the **review battery + findings ledger + stamp** flow (doc 06) - for a real branch you'd run the 5-agent battery, record/resolve findings, then `pnpm review:stamp`.
+3. Commit with a conventional scope (`feat(content): ...`). Run `pnpm ready-for-pr`. Note that pushing triggers the **review battery + findings ledger + stamp** flow (doc 06) - for a real branch you'd run the 4-agent battery, record/resolve findings, then `pnpm review:stamp`.
 
 > If your change touches `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts`, the push is blocked until a `security-auditor` agent runs (`.claude/rules/api-boundary.md`). That's expected.
 

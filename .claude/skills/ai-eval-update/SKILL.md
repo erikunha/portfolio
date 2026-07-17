@@ -75,7 +75,7 @@ cases are deliberately borderline-hard.
   cost breakdown: `featureCostUsd` is the production per-answer spend, `judgeCostUsd` is
   grading overhead and includes BOTH the calibration and corpus judge calls).
 - Live: Upstash Redis key `ask:eval:latest` (`REDIS_RESULT_KEY` in `scripts/ask-eval.ts`,
-  must match `content/ask-metrics.ts`) — the metrics panel reads this one location.
+  must match `lib/ask-metrics.ts`) — the metrics panel reads this one location.
 
 ## After corpus changes
 

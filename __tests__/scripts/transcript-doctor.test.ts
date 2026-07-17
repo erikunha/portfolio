@@ -28,10 +28,11 @@ describe('summarizeRoles', () => {
     expect(status.find((s) => s.role === 'security')?.detected).toBe(false);
   });
 
-  it('reports all five battery roles', () => {
+  it('reports every battery role, so a role cannot vanish from the doctor silently', () => {
     const status = summarizeRoles([], HEAD);
-    expect(status.map((s) => s.role).sort()).toEqual(
-      ['accessibility', 'code-review', 'dependencies', 'performance', 'security'].sort(),
-    );
+    expect(
+      status.map((s) => s.role).sort(),
+      'the doctor must report exactly the roles review-stamp.ts requires. The accessibility role was dropped on 2026-07-16 because accessibility-tester no longer exists in any registry, which made the stamp unsatisfiable and blocked every push (see DECISIONS.md). If that agent returns, add the role back HERE and in BATTERY_ROLES together — a doctor that reports a role the stamp does not check, or vice versa, is worse than either.',
+    ).toEqual(['code-review', 'dependencies', 'performance', 'security'].sort());
   });
 });

@@ -1,5 +1,6 @@
 import { AppShell } from '@/components/AppShell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { PageMain } from '@/components/PageMain';
 import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { CommunitySection } from '@/components/sections/CommunitySection';
 import { ContactSection } from '@/components/sections/ContactSection';
@@ -28,11 +29,7 @@ export default function Home() {
   return (
     <BreakpointProvider initialIsMobile={false}>
       <AppShell>
-        <main
-          className="flex flex-col relative z-10 max-w-[1200px] mx-auto px-6 pt-[60px] max-[900px]:px-[18px] max-[900px]:pt-5 max-md:px-6 max-md:pt-3.5"
-          id="main-content"
-          tabIndex={-1}
-        >
+        <PageMain>
           <ErrorBoundary>
             <Hero />
           </ErrorBoundary>
@@ -96,7 +93,7 @@ export default function Home() {
           <ErrorBoundary>
             <ContactSection defer />
           </ErrorBoundary>
-        </main>
+        </PageMain>
         <ErrorBoundary>
           <FooterLazy />
         </ErrorBoundary>

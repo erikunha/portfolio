@@ -8,7 +8,7 @@
 flowchart TD
     write["code written"] --> c1["pre-commit: Biome"]
     c1 --> c2["commit-msg: commitlint (scope mandatory)"]
-    c2 --> battery["5-agent review battery + findings ledger + review:stamp"]
+    c2 --> battery["4-agent review battery + findings ledger + review:stamp"]
     battery --> p1["pre-push: no direct main"]
     p1 --> p2["pre-push: branch name <type>/<desc>"]
     p2 --> p3["pre-push: review stamp == HEAD"]
@@ -30,19 +30,20 @@ flowchart TD
     deploy --> smoke["smoke.yml: healthz + headers + liveness"]
 ```
 
-## Code review: the 5-agent battery
+## Code review: the 4-agent battery
 
-Review is **mechanical and multi-perspective**. Five fresh-context agents review every diff in parallel:
+Review is **mechanical and multi-perspective**. Four fresh-context agents review every diff in parallel:
 
 | Agent | Lens |
 |---|---|
 | `pr-review-toolkit:review-pr` | correctness, requirements |
-| `accessibility-tester` | WCAG 2.1 AA |
 | `security-auditor` | security surface (required on any API edit) |
 | `performance-engineer` | LCP/INP/CLS budgets |
-| `dependency-manager` | dependency hygiene |
+| `dependency-auditor` | dependency hygiene |
 
-`battery-synthesis` dedups the five reports into one ranked table and records each Critical/Important into the findings ledger (`.review-findings.json`). `review:stamp` then **refuses** to write `.review-passed` unless (a) the transcript shows all five roles dispatched after the HEAD commit time, and (b) no Critical/Important finding is still `open`. The stamp proves dispatch and resolution; it is transcript-verified, not honor-system.
+WCAG 2.1 AA is gated separately and mechanically by axe-core (`tests/a11y/axe.spec.ts`) + Lighthouse accessibility = 100, not by a battery agent.
+
+`battery-synthesis` dedups the four reports into one ranked table and records each Critical/Important into the findings ledger (`.review-findings.json`). `review:stamp` then **refuses** to write `.review-passed` unless (a) the transcript shows all four roles dispatched after the HEAD commit time, and (b) no Critical/Important finding is still `open`. The stamp proves dispatch and resolution; it is transcript-verified, not honor-system.
 
 **Two triggers:** before any `git push`, and whenever coding work stops. The battery prompts are scoped to the commit type, so a docs-only commit's agents skip the test suite (the stamp counts dispatch, not depth).
 

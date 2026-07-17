@@ -47,4 +47,22 @@ describe('skip-to-content link', () => {
     const firstLink = container.querySelector('a');
     expect(firstLink?.classList.contains('skip-to-content')).toBe(true);
   });
+
+  it("AppShell's skip link href resolves to PageMain's rendered id (skip-link contract)", async () => {
+    const { AppShell } = await import('@/components/AppShell');
+    const { PageMain } = await import('@/components/PageMain');
+    mounted = await mountClient(
+      createElement(AppShell, null, createElement(PageMain, null, 'content')),
+    );
+    const container = mounted.container;
+
+    const skip = container.querySelector<HTMLAnchorElement>('a.skip-to-content');
+    const href = skip?.getAttribute('href') ?? '';
+    const target = href ? container.querySelector(href) : null;
+    expect(
+      target,
+      "AppShell's skip link href and PageMain's id must agree — a mismatch silently breaks the keyboard skip link with no other gate catching it",
+    ).not.toBeNull();
+    expect(target?.tagName).toBe('MAIN');
+  });
 });

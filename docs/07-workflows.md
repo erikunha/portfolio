@@ -129,7 +129,7 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 | `/api/healthz` 503 | `meta:psi-last-run` missing/stale (>25h) - the PSI cron failed; check `/api/psi-refresh` |
 | `/api/ask` returns 503 | `ASK_ENABLED` off, or monthly token budget exhausted (`ask:tokens:{month}`) |
 | `/api/ask` stream cuts off | mid-stream 15s watchdog, or Layer-1 egress guard fired (`STREAM_ERR_SENTINEL`) |
-| Push blocked, "no review stamp" | run the 5-agent battery + `review:findings` + `review:stamp` |
+| Push blocked, "no review stamp" | run the 4-agent battery + `review:findings` + `review:stamp` |
 | Push blocked, "unaudited API edit" | you edited `app/api/**`/`rate-limit.ts`/`proxy.ts`; dispatch `security-auditor` |
 | A hook seems dead | `pnpm check:gate-health` |
 | Transcript-gate jammed | `pnpm transcript:doctor` |

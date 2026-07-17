@@ -2,17 +2,17 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **Superseded where noted — DECISIONS.md (2026-07-13) and the shipped code are authoritative.** The code samples below are the *pre-implementation* plan; review refined two details: (1) the design-system `openGraph`/`twitter` metadata is FULLY re-specified per route — `og:image` is KEPT (the branded `/og.png`), not dropped, because Next's shallow metadata merge would otherwise silently drop siteName/locale/image and leave subpages inheriting the homepage's twitter card; (2) the breadcrumb JSON-LD uses a plain `<script>{JSON.stringify(...)}</script>` child (matching `app/layout.tsx`), not `dangerouslySetInnerHTML`. Where a sample differs from the shipped `dsPageMetadata`/`Breadcrumb`, the code + DECISIONS.md govern.
+> **Superseded where noted — DECISIONS.md (2026-07-13) and the shipped code are authoritative.** The code samples below are the *pre-implementation* plan; review refined two details: (1) the design-system `openGraph`/`twitter` metadata is FULLY re-specified per route — `og:image` is KEPT (the branded `/og.png`), not dropped, because Next's shallow metadata merge would otherwise silently drop siteName/locale/image and leave subpages inheriting the homepage's twitter card; (2) the page-nav JSON-LD uses a plain `<script>{JSON.stringify(...)}</script>` child (matching `app/layout.tsx`), not `dangerouslySetInnerHTML`. Where a sample differs from the shipped `dsPageMetadata`, the code + DECISIONS.md govern. **The page-nav trail this plan built was removed on 2026-07-16 (see DECISIONS.md); its tasks are dropped from this plan and the remaining five units are what shipped and survive.**
 
 **Goal:** Fix the `/design-system/*` canonical-to-homepage bug, collapse the duplicate hero `<h1>`, add screen-reader/crawler-readable topic labels to the terminal section headings, and make `/design-system` discoverable — one PR on branch `feat/seo-improvements`.
 
-**Architecture:** Metadata correctness via a small pure helper the MDX pages import; a single `sr-only` `<h1>` + `aria-hidden` visible variants for the hero; an optional `srLabel` sr-only span on the shared `Module` `<h2>` fed by a Zod-validated content map; a footer internal link; and a server-rendered breadcrumb (per-page crumb data, no client hook) with `BreadcrumbList` JSON-LD.
+**Architecture:** Metadata correctness via a small pure helper the MDX pages import; a single `sr-only` `<h1>` + `aria-hidden` visible variants for the hero; an optional `srLabel` sr-only span on the shared `Module` `<h2>` fed by a Zod-validated content map; and a footer internal link.
 
 **Tech Stack:** Next.js 16 App Router (RSC default), TypeScript strict, Tailwind v4, Vitest, MDX metadata exports, zod.
 
 ## Global Constraints
 
-- RSC by default. **No new client island.** The breadcrumb MUST be server-rendered from per-page crumb data — NO `usePathname`/`useSelectedLayoutSegment`/`use client` (adds an island, risks the 43KB client-JS budget).
+- RSC by default. **No new client island.** Any new page-level UI MUST be server-rendered from per-page data — NO `usePathname`/`useSelectedLayoutSegment`/`use client` (adds an island, spends app-owned client JS).
 - Homepage `metadata.description` ≤ 160 chars AND must contain the exact substring `Senior Full-Stack Engineer` (the `__tests__/identity-consistency.test.ts` gate). Do NOT change `metadata.title` (pinned by `og-metadata` + identity tests).
 - All new user-facing copy (section labels) lives in `content/*.ts`, Zod-validated at module load — never inlined in `.tsx`. (The existing inline visible headers are pre-existing and NOT migrated here.)
 - Canonical/og:url use RELATIVE paths resolved against the root `metadataBase` (`https://erikunha.dev`) — never duplicate absolute URLs.
@@ -21,7 +21,7 @@
 - No dependency added. Every unit independently revertible.
 - Visual baselines: hero change is expected pixel-identical (INSPECT before commit; regen only on a real diff). Footer change is expected to alter the footer baseline (regen darwin+linux per `.claude/skills/visual-baseline-regen`).
 - Final review battery MUST include `accessibility-tester` + `performance-engineer` (heading/aria + Lighthouse-SEO/a11y surface).
-- Dropped from the original spec (YAGNI, stated in the PR body): the sitemap `lastmod` change (already per-group; distinct per-page dates would be fabricated) and the separate contextual in-content link (no natural anchor; footer + topbar + breadcrumb cover internal linking).
+- Dropped from the original spec (YAGNI, stated in the PR body): the sitemap `lastmod` change (already per-group; distinct per-page dates would be fabricated) and the separate contextual in-content link (no natural anchor; footer + topbar cover internal linking).
 
 ---
 
@@ -499,195 +499,10 @@ git add components/sections/Footer/Footer.client.tsx components/sections/Footer/
 git commit -m "feat(seo): footer internal link to /design-system (mobile-reachable)"
 ```
 
-### Task 6: `breadcrumbSchema` builder in `content/seo.ts`
-
-**Files:**
-- Modify: `content/seo.ts` (add export + Zod guard, next to `personSchema`)
-- Create: `content/seo.breadcrumb.test.ts`
-
-**Interfaces:**
-- Produces: `breadcrumbSchema(trail: { name: string; path: string }[]): object` — a `BreadcrumbList` JSON-LD with `itemListElement[i] = { '@type': 'ListItem', position: i+1, name, item: 'https://erikunha.dev' + path }`.
-
-- [ ] **Step 1: Write the failing test** — `content/seo.breadcrumb.test.ts`:
-
-```ts
-import { describe, expect, it } from 'vitest';
-import { breadcrumbSchema } from './seo';
-
-describe('breadcrumbSchema', () => {
-  it('builds a BreadcrumbList with 1-based positions and absolute item URLs on the canonical host', () => {
-    const s = breadcrumbSchema([
-      { name: 'Home', path: '/' },
-      { name: 'Design System', path: '/design-system' },
-      { name: 'Tokens', path: '/design-system/tokens' },
-    ]) as {
-      '@type': string;
-      itemListElement: { position: number; name: string; item: string }[];
-    };
-    expect(s['@type']).toBe('BreadcrumbList');
-    expect(s.itemListElement.map((e) => e.position)).toEqual([1, 2, 3]);
-    expect(s.itemListElement[2].item).toBe('https://erikunha.dev/design-system/tokens');
-    expect(s.itemListElement[0].item).toBe('https://erikunha.dev/');
-    for (const e of s.itemListElement) expect(e.item).toMatch(/^https:\/\/erikunha\.dev/);
-  });
-});
-```
-
-- [ ] **Step 2: Run to verify it fails** → FAIL (`breadcrumbSchema` not exported).
-
-- [ ] **Step 3: Implement in `content/seo.ts`** (add below `personSchema`, before or after its Zod guard):
-
-```ts
-const SITE_ORIGIN = 'https://erikunha.dev';
-
-export function breadcrumbSchema(trail: { name: string; path: string }[]) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: trail.map((crumb, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name: crumb.name,
-      item: `${SITE_ORIGIN}${crumb.path}`,
-    })),
-  };
-}
-```
-
-- [ ] **Step 4: Run the test** → PASS.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add content/seo.ts content/seo.breadcrumb.test.ts
-git commit -m "feat(seo): BreadcrumbList JSON-LD builder"
-```
-
-### Task 7: Server-rendered breadcrumb + JSON-LD on the design-system pages
-
-**Files:**
-- Create: `app/design-system/_components/Breadcrumb.tsx` (SERVER component — no `'use client'`)
-- Create: `app/design-system/_components/Breadcrumb.test.tsx`
-- Modify: the 5 `app/design-system/**/page.mdx` to render `<Breadcrumb trail={...} />` at the top of the page body (per-page crumb data — NO client hook)
-
-**Interfaces:**
-- Consumes: `breadcrumbSchema` from `@/content/seo`.
-- Produces: `Breadcrumb({ trail }: { trail: { name: string; path: string }[] })` — renders a `<nav aria-label="Breadcrumb">` + the JSON-LD script.
-
-- [ ] **Step 1: Write the failing test** — `app/design-system/_components/Breadcrumb.test.tsx`:
-
-```tsx
-import { render } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { Breadcrumb } from './Breadcrumb';
-
-const TRAIL = [
-  { name: 'Home', path: '/' },
-  { name: 'Design System', path: '/design-system' },
-  { name: 'Tokens', path: '/design-system/tokens' },
-];
-
-describe('Breadcrumb', () => {
-  it('renders a labelled breadcrumb nav with a link per non-final crumb', () => {
-    const { container } = render(<Breadcrumb trail={TRAIL} />);
-    const nav = container.querySelector('nav[aria-label="Breadcrumb"]');
-    expect(nav).not.toBeNull();
-    expect(nav?.querySelector('a[href="/design-system"]')).not.toBeNull();
-    // final crumb is current page: not a link
-    expect(nav?.querySelector('a[href="/design-system/tokens"]')).toBeNull();
-  });
-
-  it('emits BreadcrumbList JSON-LD matching the trail', () => {
-    const { container } = render(<Breadcrumb trail={TRAIL} />);
-    const script = container.querySelector('script[type="application/ld+json"]');
-    const data = JSON.parse(script?.textContent ?? '{}');
-    expect(data['@type']).toBe('BreadcrumbList');
-    expect(data.itemListElement).toHaveLength(3);
-    expect(data.itemListElement[2].item).toBe('https://erikunha.dev/design-system/tokens');
-  });
-});
-```
-
-- [ ] **Step 2: Run to verify it fails** → FAIL (module missing).
-
-- [ ] **Step 3: Implement `app/design-system/_components/Breadcrumb.tsx`** (server component; terminal-styled):
-
-```tsx
-import { breadcrumbSchema } from '@/content/seo';
-
-export function Breadcrumb({ trail }: { trail: { name: string; path: string }[] }) {
-  return (
-    <nav
-      aria-label="Breadcrumb"
-      className="font-mono text-[11px] tracking-[0.08em] text-primary-400 mb-6"
-    >
-      <script type="application/ld+json">{JSON.stringify(breadcrumbSchema(trail))}</script>
-      <ol className="flex flex-wrap items-center gap-1.5 m-0 p-0 list-none">
-        {trail.map((crumb, i) => {
-          const isLast = i === trail.length - 1;
-          return (
-            <li key={crumb.path} className="flex items-center gap-1.5">
-              {i > 0 ? <span aria-hidden className="text-primary-subtle">/</span> : null}
-              {isLast ? (
-                <span aria-current="page" className="text-primary-500">
-                  {crumb.name}
-                </span>
-              ) : (
-                <a href={crumb.path} className="hover:text-primary-500">
-                  {crumb.name}
-                </a>
-              )}
-            </li>
-          );
-        })}
-      </ol>
-    </nav>
-  );
-}
-```
-
-> **Note on the JSON-LD:** rendered as a plain script child (`<script type="application/ld+json">{JSON.stringify(...)}</script>`), matching the repo's existing pattern — `app/layout.tsx` injects `personJsonLd` the same way, NOT via `dangerouslySetInnerHTML`. The trail is typed and server-built (compile-time literals), not user input; React 19 SSR emits the JSON unescaped, so a future consumer feeding DYNAMIC crumb data must escape `<` first. See DECISIONS.md 2026-07-13.
-
-- [ ] **Step 4: Run the Breadcrumb test** → PASS.
-
-- [ ] **Step 5: Render it in each page.mdx** at the very top of the page body (after the `export const metadata`), passing the per-page trail. Example `app/design-system/tokens/page.mdx`:
-
-```mdx
-import { dsPageMetadata } from '../_lib/page-metadata';
-import { Breadcrumb } from '../_components/Breadcrumb';
-
-export const metadata = dsPageMetadata({ slug: 'tokens', title: '…', description: '…' });
-
-<Breadcrumb trail={[
-  { name: 'Home', path: '/' },
-  { name: 'Design System', path: '/design-system' },
-  { name: 'Tokens', path: '/design-system/tokens' },
-]} />
-
-{/* existing MDX content follows */}
-```
-
-For the section root `app/design-system/page.mdx`, the trail is just `[{Home,/},{Design System,/design-system}]` (2 crumbs; "Design System" is the current page → not a link). For the four children, 3 crumbs each with the child as the final non-link crumb. Use the correct import depth (`./_components` for the root page, `../_components` for children).
-
-- [ ] **Step 6: Build + a11y + visual check.**
-
-Run: `pnpm build 2>&1 | grep -E 'design-system|error' | head` → succeeds.
-Run the axe a11y check against `/design-system/tokens` (`pnpm test:e2e --project=chromium tests/a11y/axe.spec.ts` if it covers ds routes, else a Playwright MCP axe pass) → 0 violations.
-Playwright MCP: screenshot `/design-system/tokens` desktop + mobile → the breadcrumb renders above the content in the terminal style. (Design-system component baselines are darwin-only per `design-system-components.spec.ts`; if that spec captures these pages, regen darwin only.)
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add app/design-system/_components/Breadcrumb.tsx app/design-system/_components/Breadcrumb.test.tsx app/design-system/page.mdx app/design-system/tokens/page.mdx app/design-system/components/page.mdx app/design-system/enforcement/page.mdx app/design-system/changelog/page.mdx
-git commit -m "feat(seo): server-rendered breadcrumb + BreadcrumbList schema on design-system"
-```
-
----
-
 ## Final verification (before opening the PR)
 
 - [ ] `pnpm ci:local` passes (lint + type + content + client-naming + harness-size + tests).
-- [ ] `pnpm build` succeeds; confirm NO new `*.client.tsx` was introduced (Breadcrumb is server) — `check-client-naming` stays green.
+- [ ] `pnpm build` succeeds; confirm NO new `*.client.tsx` was introduced — `check-client-naming` stays green.
 - [ ] `pnpm bundle-check` — client-JS budget unchanged (no island added).
 - [ ] Runtime gates: `pnpm gates:runtime` (build + LHCI desktop/mobile + axe + e2e) — Lighthouse SEO=100, A11y=100 must hold.
 - [ ] Visual baselines committed for any section that actually changed (footer expected; hero only if a real diff appeared).
@@ -702,5 +517,3 @@ git commit -m "feat(seo): server-rendered breadcrumb + BreadcrumbList schema on 
 4. Footer link with `target="_blank"` → Task 5 test asserts no `_blank`.
 5. Description trim drops the identity substring → Task 2 test asserts length AND substring; identity gate re-run.
 6. `SECTION_LABELS` missing a section id → Task 4 Step 8 fail-closed guard.
-7. Breadcrumb JSON-LD host must match canonical → Task 6 test asserts `https://erikunha.dev` absolute items.
-8. Breadcrumb becomes a client island → Global Constraint + Task 7 is a server component with per-page trail data (no `usePathname`), verified by `check-client-naming` in final verification.

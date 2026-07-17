@@ -53,7 +53,7 @@ Upstash sliding-window factories (lazy singletons over `Redis.fromEnv()`):
 
 `getClientIp` precedence: `x-forwarded-for[0]` → `x-real-ip` → `'unknown'` (local dev keys everything to `'unknown'`).
 
-**Token budget (the `/api/ask` cost cap):** `MONTHLY_TOKEN_BUDGET = 3,000,000` (≈$5 of Haiku), key `ask:tokens:{yyyy-mm}` (32-day window). `reserveBudget(maxOutput)` reserves `~2700` tokens up front (`INCRBY` + `EXPIRE NX`); rejects if over budget, warns at ≥80%, fail-open on Redis. `settleBudget(...)` refunds the unused reservation in `finally`. `checkIdenticalQuestion(ipHash, q)` is a 60s `SET NX EX` dedup. All fail-open.
+**Token budget (the `/api/ask` cost cap):** `MONTHLY_TOKEN_BUDGET = 3,000,000` ($3–$5.30 to exhaust, depending on the realized input:output mix — derivation and pricing basis in `ARCHITECTURE.md`, "Budget enforcement". A single dollar figure here would be false precision), key `ask:tokens:{yyyy-mm}` (32-day window). `reserveBudget(maxOutput)` reserves `~2700` tokens up front (`INCRBY` + `EXPIRE NX`); rejects if over budget, warns at ≥80%, fail-open on Redis. `settleBudget(...)` refunds the unused reservation in `finally`. `checkIdenticalQuestion(ipHash, q)` is a 60s `SET NX EX` dedup. All fail-open.
 
 ## Integrations
 

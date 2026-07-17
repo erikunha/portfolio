@@ -20,7 +20,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   6. Run the review battery, resolve findings, `review:stamp`, push.
   7. `pnpm ready-for-pr`, open the PR, converge `/claude-review`, `ready-to-merge`, owner merges.
   8. Add an ADR to `DECISIONS.md` with a reversibility note.
-- **AI:** brainstorming, architect review, planning, TDD implementation, the 5-agent battery.
+- **AI:** brainstorming, architect review, planning, TDD implementation, the 4-agent battery.
 - **Output:** a squash-merged PR `(#NNN)` + an ADR.
 
 ## Fixing a bug
@@ -71,7 +71,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 
 - **Entry:** a new interactive/semantic element, or an axe failure.
 - **Steps:**
-  1. `accessibility-tester` agent (or `chrome-devtools-mcp` a11y debugging).
+  1. `chrome-devtools-mcp` a11y debugging, or check the axe-core gate (`tests/a11y/axe.spec.ts`).
   2. Fix to WCAG 2.1 AA; the axe gate must stay at zero violations and Lighthouse a11y = 100.
   3. Add a per-component behavioral a11y test.
 - **Output:** an a11y-clean PR. See [`/docs/08`](../08-performance-and-accessibility.md).

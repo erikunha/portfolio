@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { inheritedEnvWithIsolatedGit } from '../../__tests__/helpers/hermetic-git';
 import { canonicalJSON } from '../detect-changes.mjs';
 
 describe('canonicalJSON', () => {
@@ -174,7 +175,11 @@ describe('runner main() via subprocess', () => {
   it('re-arms ai=true when a deps-only commit bumps the `ai` MAJOR (6->7)', () => {
     const dir = mkdtempSync(join(tmpdir(), 'dc-aimajor-'));
     const git = (...args: string[]) =>
-      execFileSync('git', args, { cwd: dir, encoding: 'utf8' }).trim();
+      execFileSync('git', args, {
+        cwd: dir,
+        encoding: 'utf8',
+        env: inheritedEnvWithIsolatedGit(),
+      }).trim();
     try {
       git('init', '-b', 'main');
       git('config', 'user.email', 't@t.dev');
@@ -194,13 +199,12 @@ describe('runner main() via subprocess', () => {
       const out = join(dir, 'gh_output');
       execFileSync('node', [runner], {
         cwd: dir,
-        env: {
-          ...process.env,
+        env: inheritedEnvWithIsolatedGit({
           EVENT_NAME: 'pull_request',
           BASE_SHA: base,
           HEAD_SHA: head,
           GITHUB_OUTPUT: out,
-        },
+        }),
       });
       expect(readFileSync(out, 'utf8')).toBe('ai=true\napp=true\nui=false\n');
     } finally {

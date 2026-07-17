@@ -14,7 +14,7 @@ Fix three classes of issue, each independently verified against the live code:
 
 1. **Metadata correctness** — every `/design-system/*` route currently inherits the root's absolute `alternates.canonical = https://erikunha.dev` and `openGraph.url = https://erikunha.dev`, so all five subpages self-report the homepage as their canonical. Also: homepage meta description is 212 chars (truncates before the tech-stack keywords), and `sitemap.ts` emits one build-date `lastmod` for all URLs.
 2. **Semantic headings** — two `<h1>` elements (both "Erik Cunha", desktop+mobile hero variants), and the ~20 section `<h2>` headings are raw shell commands ("LS -LA ./PROJECTS") that carry no descriptive keyword/topic signal for crawlers or screen readers (each section's `aria-labelledby` accessible name is the raw command).
-3. **Discoverability** — `/design-system` (5 pages of real content, in the sitemap) has no footer/in-content link from the homepage; it is only linked from the desktop topbar (`hidden xl:inline`), so mobile/tablet crawlers and users can't reach it. No `BreadcrumbList` schema or breadcrumb UI on the hierarchy.
+3. **Discoverability** — `/design-system` (5 pages of real content, in the sitemap) has no footer/in-content link from the homepage; it is only linked from the desktop topbar (`hidden xl:inline`), so mobile/tablet crawlers and users can't reach it. No hierarchy schema or nav trail on the subpages.
 
 ## Non-goals (explicitly rejected — conflict with locked constraints)
 
@@ -81,21 +81,13 @@ Fix three classes of issue, each independently verified against the live code:
 
 **Modify:** one contextual in-content link — `components/sections/CredentialsSection` or `ResponsibilitiesSection` (whichever already references design-system rigor / the token pipeline in its copy) gets one inline `<a href="/design-system">` on a relevant phrase. Body-content internal links pass more equity than a footer link. Exact anchor chosen in the plan after reading the section copy.
 
-**New:** `breadcrumbSchema` in `content/seo.ts` — a `BreadcrumbList` JSON-LD builder.
-- Export `export function breadcrumbSchema(trail: {name: string, path: string}[]) {…}` returning a `@type: BreadcrumbList` object with `itemListElement` (position, name, item=absolute URL from `https://erikunha.dev` + path). Zod-guard the shape like `personSchema`.
-- The design-system pages inject it; the homepage does not (single-level).
-
-**New:** breadcrumb UI + schema injection on `app/design-system/layout.tsx` (currently exports no metadata and is a plain wrapper):
-- A small server component `app/design-system/_components/Breadcrumb.tsx` rendering a `<nav aria-label="Breadcrumb"><ol>…</ol></nav>` trail (Home → Design System → <page>), styled to the terminal aesthetic (e.g. `~ / design-system / tokens`).
-- The layout injects `<script type="application/ld+json">{JSON.stringify(breadcrumbSchema(trail))}</script>`. Trail derived from the route segment (layout can read the child segment via `params`/segment, or each page passes its crumb — decide in plan; simplest is a per-page crumb prop or a segment map).
-
 ---
 
 ## Testing (TDD, per unit)
 
 - **Unit 1:** behavioral test that `dsPageMetadata({slug:'tokens',…}).alternates.canonical === '/design-system/tokens'` and `.openGraph.url === '/design-system/tokens'`; a test that the homepage `metadata.description.length <= 160` AND contains `Senior Full-Stack Engineer` (extends `identity-consistency`); sitemap test that each URL has a distinct/expected `lastmod`.
 - **Unit 2:** Hero test updated (one h1, two aria-hidden p); a Module test that `srLabel` renders an `.sr-only` span inside the `<h2>` and that the section's accessible name includes the label; a content-guard test that every section id in the rendered tree has a `SECTION_LABELS` entry.
-- **Unit 3:** footer test asserting an internal `a[href="/design-system"]` with no `target="_blank"`; a `breadcrumbSchema` unit test (positions 1..n, absolute item URLs, Zod valid); a design-system layout test that the breadcrumb `<nav aria-label="Breadcrumb">` and the JSON-LD script render.
+- **Unit 3:** footer test asserting an internal `a[href="/design-system"]` with no `target="_blank"`.
 - **Gates:** axe-core (a11y) must stay 100; Lighthouse SEO stays 100; `identity-consistency` + `og-metadata` tests must pass (the description change touches the former). Visual baselines: hero (expected no-op, verify) + footer (expected change, regen).
 
 ## Failure modes to convert into explicit plan tasks (thinking-inversion — run before writing-plans)
@@ -106,8 +98,6 @@ Fix three classes of issue, each independently verified against the live code:
 4. Footer internal link with `target="_blank"` would be wrong (same-site) → assert no `_blank`.
 5. Description trim drops `Senior Full-Stack Engineer` → identity gate reds; keep the substring, test length AND substring.
 6. `SECTION_LABELS` missing a section id → the content-guard test must fail closed (enumerate rendered ids).
-7. Breadcrumb JSON-LD absolute URLs must match canonical host exactly (`https://erikunha.dev/...`) or it self-contradicts the canonical.
-8. Two JSON-LD scripts in `<head>` (person + breadcrumb) — confirm both valid, no duplicate `@context` issues; breadcrumb only on design-system routes, not the homepage.
 
 ## Reversibility
 

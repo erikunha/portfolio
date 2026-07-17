@@ -165,17 +165,12 @@ z.object({
   email: z.string().email(),
 }).parse(personSchema);
 
-const SITE_ORIGIN = 'https://www.erikunha.dev';
+export const SITE_NAME = 'erikunha.dev';
+export const OG_LOCALE = 'en_US';
+export const OG_IMAGE_PATH = '/og.png';
+const OG_IMAGE_WIDTH = 1200;
+const OG_IMAGE_HEIGHT = 630;
 
-export function breadcrumbSchema(trail: { name: string; path: string }[]) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: trail.map((crumb, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name: crumb.name,
-      item: `${SITE_ORIGIN}${crumb.path}`,
-    })),
-  };
+export function ogImage(alt: string) {
+  return { url: OG_IMAGE_PATH, width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, alt };
 }

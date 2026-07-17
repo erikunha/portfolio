@@ -45,7 +45,7 @@ sequenceDiagram
     C->>A: architect-reviewer (spec gate)
     A-->>G: GATE_RESULT: PASS
     C->>C: plan + TDD implement
-    C->>A: 5-agent review battery
+    C->>A: 4-agent review battery
     A-->>C: findings -> ledger -> resolve
     C->>G: review:stamp (verify) -> push
     C->>CI: PR; claude-review review
@@ -72,8 +72,8 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    diff --> b1["review-pr"] & b2["accessibility-tester"] & b3["security-auditor"] & b4["performance-engineer"] & b5["dependency-manager"]
-    b1 & b2 & b3 & b4 & b5 --> s["battery-synthesis"]
+    diff --> b1["review-pr"] & b2["security-auditor"] & b3["performance-engineer"] & b4["dependency-auditor"]
+    b1 & b2 & b3 & b4 --> s["battery-synthesis"]
     s --> l[".review-findings.json"]
     l --> st["review:stamp (dispatch + resolution, transcript-verified)"]
     st --> ar[".review-findings-archive.jsonl"]

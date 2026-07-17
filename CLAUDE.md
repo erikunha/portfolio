@@ -30,7 +30,7 @@
 
 | Command | When the AI runs it |
 |---|---|
-| `pnpm review:stamp` | After ALL 5 review agents are dispatched AND the findings ledger is resolved. `scripts/review-stamp.ts` **refuses to write** `.review-passed` unless (a) the transcript shows all five battery agents dispatched since the last commit AND (b) `.review-findings.json` has no `open` Critical/Important finding (each `resolved` with a SHA or `justified` with a reason). Pre-push hook blocks until the stamp matches HEAD. Now proves dispatch AND resolution |
+| `pnpm review:stamp` | After ALL 4 review agents are dispatched AND the findings ledger is resolved. `scripts/review-stamp.ts` **refuses to write** `.review-passed` unless (a) the transcript shows all four battery agents dispatched since the last commit AND (b) `.review-findings.json` has no `open` Critical/Important finding (each `resolved` with a SHA or `justified` with a reason). Pre-push hook blocks until the stamp matches HEAD. Now proves dispatch AND resolution |
 | `pnpm review:findings` | Verification-loop ledger CLI (`add`/`resolve`/`justify`/`check`/`list`/`clear`). `battery-synthesis` records each Critical/Important finding; `check` and `review:stamp` refuse while any is `open`. See `.claude/skills/battery-synthesis` |
 | `pnpm pr-size [--base <ref>]` | After every commit block and before opening a PR — decides whether to split. Sizes vs the base branch; for a sub-PR into an integration branch set `PR_BASE=origin/feat/<feature>` (or `--base`) so it reads as its own small diff |
 | `pnpm ready-for-pr` | Before `gh pr create` — runs ci:local + pr-size + gates:runtime, prints next-step checklist |
@@ -67,9 +67,8 @@ This codebase is a **reference system** — every architectural decision, perf b
 | Concern | Trigger | Agent |
 |---|---|---|
 | Visual correctness | After CSS, layout, or responsive changes | `ui-ux-tester` |
-| Accessibility | After adding/editing interactive or semantic elements | `accessibility-tester` |
 | Performance | After changes that could affect LCP/INP/CLS | `performance-engineer` |
-| Bundle growth | After adding a new dependency | `dependency-manager` |
+| Bundle growth | After adding a new dependency | `dependency-auditor` |
 | Next.js patterns | After implementing new API routes, server actions, or app router layouts | `nextjs-developer` |
 
 ## Skill dispatch
@@ -86,7 +85,7 @@ Invoke the named skill inline (not as a subagent) before the described action. P
 | After editing `next.config.ts`, `.env.example`, or Vercel config | `vercel:nextjs` |
 | Before any UI code review (alongside `ui-ux-tester` dispatch) | `web-design-guidelines` |
 | After `superpowers:writing-plans` produces output for tasks with >5 steps | `thinking-pre-mortem` — run on the plan tasks themselves, not the feature |
-| After dispatching the full 5-agent battery, before `pnpm review:stamp` | `battery-synthesis` |
+| After dispatching the full 4-agent battery, before `pnpm review:stamp` | `battery-synthesis` |
 
 ## Stack (locked)
 
@@ -111,14 +110,16 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 | INP | < 200ms | < 200ms |
 | CLS | < 0.05 | < 0.05 |
 | TBT | < 200ms | < 400ms |
-| JS gzipped per route | < 120KB | < 120KB |
-| Client JS total (all islands combined) | < 43KB | < 43KB |
+| JS gzipped per route, total first-load | < 175KB | < 175KB |
+| JS gzipped, app-owned (total minus the measured framework floor) | < 32.8KB | < 32.8KB |
 | Lighthouse Performance | ≥ 95 | ≥ 90 |
 | Lighthouse Accessibility | = 100 | = 100 |
 | Lighthouse Best Practices | ≥ 95 | ≥ 95 |
 | Lighthouse SEO | = 100 | = 100 |
 
 CI enforces all of the above. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
+
+`pnpm route-js-check` (`scripts/check-route-js.mjs`) asserts the 175KB per-route total and REPORTS the app-owned split; `pnpm bundle-check` is a separate global chunk-sum, structurally blind to a per-route regression. The 175KB is the **framework floor plus headroom, not an aspiration**: a bare hello-world Next 16 + React 19 app on this toolchain measures 142.2KB gzipped before any app code exists, and `/_not-found` — a route with zero app code — measures 148.9KB here. Any per-route total under ~149KB is unreachable by any amount of engineering. **The app-owned row is the one your decisions move, and it is 175 − 142.2 = 32.8KB.** There is exactly ONE gate, because app-owned is total minus a constant: a separate app-owned threshold would be a second threshold on the same axis and could never fire on its own. See `DECISIONS.md` 2026-07-14.
 
 ## Engineering standards
 
@@ -167,9 +168,9 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 ## Aesthetic constraints
 
 - Pure black background (`#000000`), lime signal-green (`#00FF41`) for accents.
-- Two-token palette: `--signal` for headings/accents/large text; `--fg` (#E6FFE6, ~13:1 contrast) for body. Never use `--signal` for paragraph text — it fails WCAG AA.
+- Two-token palette: `--color-primary-500` (#00FF41, the signal) for headings/accents/large text; `--color-tertiary-50` (#E6FFE6, ~13:1 contrast) for body. Never use the signal for paragraph text — it fails WCAG AA. Tailwind utilities: `text-primary-500` and `text-tertiary-50`.
 - JetBrains Mono everywhere (self-hosted via `next/font/local`, not Google CDN).
-- The "THE MATRIX HAS YOU." headline is a heavy geometric sans (Geist Black or similar). All other text is mono.
+- `h1` is the one exception: Inter 900, via `--font-display` (`app/css/base.css`). All other text is mono.
 - CRT effects (scanlines + RGB sub-pixel mask + grain + scan beam + flicker + phosphor text-shadow) at dialed-back opacity. All disabled under `prefers-reduced-motion: reduce`.
 - 1px borders only, sharp corners (no rounded radius > 2px).
 
@@ -198,7 +199,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **Process feedback mid-workflow is a hard stop.** Pause immediately, incorporate into CLAUDE.md and/or memory, confirm with the user, then resume.
 - **Commit in scope blocks; merge by milestone.** Work accumulates in commits grouped by concern — one logical unit per commit (a component, a fix, a config change). After each block, run `pnpm pr-size`. When `pr-size` hits yellow AND the block is a natural milestone, open a PR. Do not accumulate past red. If mid-milestone the branch hits red, split at the last clean commit boundary and open what's done.
 - **Large multi-part feature? Integration branch + sub-PRs.** When a feature is too big for one reasonable PR (the failure mode that bloated PR #81), branch an integration branch off main (`feat/<feature>`), then open small sub-PRs from `feat/<feature>-<part>` branches **into the integration branch** — each a reviewable milestone. Size sub-PRs against the integration branch, not main: `PR_BASE=origin/feat/<feature> pnpm pr-size` (`pr-size` resolves `--base` > `PR_BASE` > `origin/$GITHUB_BASE_REF` > `origin/main`; CI auto-uses the PR's base via `GITHUB_BASE_REF`). When the feature is complete, open the `feat/<feature>` → main PR; it will be large by design (pr-size red is expected) — note in the body that it was reviewed incrementally via the sub-PRs, which satisfies the "known issues require justification" rule. For a standalone change, skip the integration branch and open a normal small PR straight to main per the milestone rule above.
-- **Run the full 5-agent review battery at two triggers, mechanically enforced.** Trigger A: before any `git push`. Trigger B: whenever coding work stops (task done, branch finishing, session ending on a feature), no user prompt needed. Both run the same process. (1) Check what changed (`git diff`, `git status`). (2) Dispatch ALL 5 agents in parallel (`pr-review-toolkit:review-pr`, `accessibility-tester`, `security-auditor`, `performance-engineer`, `dependency-manager`), scoped to the actual change: the stamp counts DISPATCH not DEPTH, so running 810 tests for a docs-only commit wastes 10+ minutes. Prompt scoping by commit type: **docs-only** (*.md, DECISIONS.md) tell agents "read `git diff HEAD~1..HEAD` to confirm docs-only, verify accuracy, do NOT run test suite or build"; **config-only** (LHCI, CI yml, biome.json) "verify logic of changed config only, no test suite"; **deps-only** (package.json, pnpm-lock.yaml) security-auditor runs `pnpm audit --audit-level=high`, dependency-manager `--audit-level=moderate` only, all told "do NOT run `pnpm test`/`build`/`ci:local`, do NOT make additional commits"; **code commits** (app/, lib/, components/) may run targeted tests for the changed area only. Always include "Do NOT make any additional commits, this is a verification-only run." (3) Run `pnpm review:stamp` immediately after dispatch, without blocking on agent completion. (4) Fix findings: any arriving before your push, fix first; at PR-open and when declaring done, fix ALL Critical/Important regardless of timing; findings arriving after a push go to the next review convergence loop iteration. Never skip because you are confident. **Enforced:** `scripts/review-stamp.ts` refuses to write `.review-passed` unless the transcript shows all five `subagent_type` dispatches after the HEAD commit's timestamp (fail-closed: an unresolvable transcript also refuses; override with `REVIEW_STAMP_TRANSCRIPT=<abs path>`). The boundary is the git commit time, not a transcript marker, so a commit made outside the session (terminal/GUI) cannot be stamped by a stale prior-cycle review. The stamp also refuses while any Critical/Important finding in `.review-findings.json` is `open` (record via `battery-synthesis` / `pnpm review:findings`); the residual honor-system boundary is RECORDING findings honestly, since the stamp cannot know about a finding you never recorded. `.husky/pre-push` blocks unless the stamp matches HEAD; a new commit after stamping forces a re-stamp. Skipping an agent simply fails the stamp (all five roles required); the *justification* for a skip is honor-system. Applies to all feature branches; direct pushes to main are blocked by the pre-push hook, so all changes go through a PR.
+- **Run the full 4-agent review battery at two triggers, mechanically enforced.** Trigger A: before any `git push`. Trigger B: whenever coding work stops (task done, branch finishing, session ending on a feature), no user prompt needed. Both run the same process. (1) Check what changed (`git diff`, `git status`). (2) Dispatch ALL 4 agents in parallel (`pr-review-toolkit:review-pr`, `security-auditor`, `performance-engineer`, `dependency-auditor`), scoped to the actual change: the stamp counts DISPATCH not DEPTH, so running 810 tests for a docs-only commit wastes 10+ minutes. Prompt scoping by commit type: **docs-only** (*.md, DECISIONS.md) tell agents "read `git diff HEAD~1..HEAD` to confirm docs-only, verify accuracy, do NOT run test suite or build"; **config-only** (LHCI, CI yml, biome.json) "verify logic of changed config only, no test suite"; **deps-only** (package.json, pnpm-lock.yaml) security-auditor runs `pnpm audit --audit-level=high`, dependency-auditor `--audit-level=moderate` only, all told "do NOT run `pnpm test`/`build`/`ci:local`, do NOT make additional commits"; **code commits** (app/, lib/, components/) may run targeted tests for the changed area only. Always include "Do NOT make any additional commits, this is a verification-only run." (3) Run `pnpm review:stamp` immediately after dispatch, without blocking on agent completion. (4) Fix findings: any arriving before your push, fix first; at PR-open and when declaring done, fix ALL Critical/Important regardless of timing; findings arriving after a push go to the next review convergence loop iteration. Never skip because you are confident. **Enforced:** `scripts/review-stamp.ts` refuses to write `.review-passed` unless the transcript shows all four `subagent_type` dispatches after the HEAD commit's timestamp (fail-closed: an unresolvable transcript also refuses; override with `REVIEW_STAMP_TRANSCRIPT=<abs path>`). The boundary is the git commit time, not a transcript marker, so a commit made outside the session (terminal/GUI) cannot be stamped by a stale prior-cycle review. The stamp also refuses while any Critical/Important finding in `.review-findings.json` is `open` (record via `battery-synthesis` / `pnpm review:findings`); the residual honor-system boundary is RECORDING findings honestly, since the stamp cannot know about a finding you never recorded. `.husky/pre-push` blocks unless the stamp matches HEAD; a new commit after stamping forces a re-stamp. Skipping an agent simply fails the stamp (all four roles required); the *justification* for a skip is honor-system. Applies to all feature branches; direct pushes to main are blocked by the pre-push hook, so all changes go through a PR.
 - **Runtime gates before opening a PR — manual, not enforced by pre-push.**
   Run `pnpm ready-for-pr` (which includes `gates:runtime`) for non-docs changes.
   CI remains the authoritative gate. The pre-push hook no longer runs `gates:runtime`
