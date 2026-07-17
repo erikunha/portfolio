@@ -293,7 +293,6 @@ describe('mayNameTheComment (only the machinery may spell the banned phrase, exa
   it.each([
     'scripts/check-gitleaks-fixture.mjs',
     'scripts/gitleaks-staged.mjs',
-    'docs/superpowers/plans/2026-06-19-static-analysis-semgrep-plan.md',
   ])('%s is allowed to name the phrase', (file) => {
     expect(mayNameTheComment(file)).toBe(true);
   });
@@ -306,7 +305,7 @@ describe('mayNameTheComment (only the machinery may spell the banned phrase, exa
   ])('%s is NOT allowed -- a prefix must not re-exempt a suffixed or unrelated file', (file) => {
     expect(
       mayNameTheComment(file),
-      `The two source files are matched EXACTLY. A startsWith prefix would let a committed backup (.bak/.orig/~) carry the ${SUPPRESSION_COMMENT} suppression comment past this gate -- the same "a prefix exempts more than intended" bypass this PR closed for .gitleaks.toml. Only the docs directory is a genuine prefix.`,
+      `The source files are matched EXACTLY. A startsWith prefix would let a committed backup (.bak/.orig/~) carry the ${SUPPRESSION_COMMENT} suppression comment past this gate -- the same "a prefix exempts more than intended" bypass this PR closed for .gitleaks.toml.`,
     ).toBe(false);
   });
 });

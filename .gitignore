@@ -69,6 +69,12 @@ tsconfig.tsbuildinfo
 # in __tests__/meta/gitignore-worktree-symlinks.test.ts.
 .superpowers
 
+# superpowers spec/plan output — brainstorming writes specs here, writing-plans writes
+# plans here. Pre-decision workflow artifacts, not the reference system's tracked surface;
+# the durable "why" lives in DECISIONS.md / ARCHITECTURE.md. Local-only, like .superpowers.
+# No trailing slash, same symlink reason as above.
+docs/superpowers
+
 # os
 .DS_Store
 

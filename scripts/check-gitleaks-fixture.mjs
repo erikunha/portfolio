@@ -227,22 +227,17 @@ const ALLOW_COMMENT = 'gitleaks:allow';
 // use it. Everything else that contains the string is suppressing a gitleaks finding, which is
 // what this refuses.
 //
-// The two source files are matched EXACTLY, not by prefix. A prefix would re-exempt any file
-// whose name merely starts with one of them -- e.g. a committed `scripts/gitleaks-staged.mjs.bak`
-// or `.orig` -- letting it carry `gitleaks:allow` unnoticed. That is the same "a prefix exempts
-// more than intended" bypass this PR closed for .gitleaks.toml's allowlists; it must not come
-// back through this list. Only the docs directory is a genuine prefix.
+// Matched EXACTLY, not by prefix. A prefix would re-exempt any file whose name merely starts
+// with one of them -- e.g. a committed `scripts/gitleaks-staged.mjs.bak` or `.orig` -- letting
+// it carry `gitleaks:allow` unnoticed. That is the same "a prefix exempts more than intended"
+// bypass closed for .gitleaks.toml's allowlists; it must not come back through this list.
 const MAY_NAME_THE_COMMENT_FILES = [
   'scripts/check-gitleaks-fixture.mjs',
   'scripts/gitleaks-staged.mjs',
 ];
-const MAY_NAME_THE_COMMENT_DIRS = ['docs/superpowers/plans/'];
 
 export function mayNameTheComment(file) {
-  return (
-    MAY_NAME_THE_COMMENT_FILES.includes(file) ||
-    MAY_NAME_THE_COMMENT_DIRS.some((dir) => file.startsWith(dir))
-  );
+  return MAY_NAME_THE_COMMENT_FILES.includes(file);
 }
 
 const GREP_MATCHED = 0;

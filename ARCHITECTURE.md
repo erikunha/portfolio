@@ -444,7 +444,7 @@ Vercel Speed Insights (built-in, free) collects CWV from real visitors. Weekly c
 
 ## 9. Observability strategy
 
-Implemented per Spec 2 (`docs/superpowers/specs/2026-05-18-production-observability-design.md`):
+Implemented per the production-observability design:
 
 ### Real-user telemetry
 - **Vercel Web Analytics** + **Vercel Speed Insights** mounted in `app/layout.tsx`. Real-user pageview counts + LCP/INP/CLS land in the Vercel dashboards. Expected coverage 70-85% of visits (ad-blockers block the two ingest origins; never claim 100% population coverage in the hiring pitch).

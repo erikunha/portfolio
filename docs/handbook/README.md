@@ -48,7 +48,7 @@ flowchart TB
         ci["GitHub Actions: ci/codeql/smoke/claude"]
     end
     subgraph knowledge["Knowledge layer"]
-        specs["docs/superpowers/specs + plans"]
+        specs["docs/superpowers/specs + plans (local-only)"]
         adr["DECISIONS.md (~240 ADRs)"]
         mem[".remember/ + auto memory"]
     end
