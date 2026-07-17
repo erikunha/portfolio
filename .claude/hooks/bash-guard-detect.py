@@ -219,6 +219,19 @@ def inspect_wrapper(args, depth):
                 reparse(sub[j + 1], depth)
 
 
+def effective_program(words):
+    # the real program a command runs, after skipping leading wrapper words
+    # (env/sudo/...) and VAR=val assignments. Matches how inspect_wrapper resolves
+    # the target, so a here-doc/here-string body feeding `/bin/sh`, `sudo bash`, or
+    # `VAR=1 sh` is recognized as shell input the same way inspect() basenames names.
+    for w in words:
+        b = os.path.basename(w)
+        if b in WRAPPERS or re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", w):
+            continue
+        return b
+    return None
+
+
 def reparse(script, depth):
     # bound both the nesting chain (depth) and total reparse work across the whole
     # tree (budget), so a branching bash -c payload cannot blow up to O(branch^depth).
@@ -248,7 +261,7 @@ if bashlex is not None:
                 inspect(words[0], words[1:], self.depth)
             # here-string / here-doc feeding a shell interpreter (no -c): the body
             # is a redirect node, not a word, so re-parse it explicitly.
-            if words and words[0] in SHELL_INTERP and "-c" not in words:
+            if words and effective_program(words) in SHELL_INTERP and "-c" not in words:
                 for p in parts:
                     if p.kind == "redirect" and str(p.type).startswith("<<"):
                         body = getattr(getattr(p, "output", None), "word", None)

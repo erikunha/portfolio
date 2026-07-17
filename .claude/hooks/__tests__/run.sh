@@ -258,6 +258,13 @@ assert_eq "bg: brace {npm,i} blocked"          "2" "$(bg_exit '{npm,i}')"
 assert_eq "bg: git add brace {.,x} blocked"    "2" "$(bg_exit 'git add {.,x}')"
 assert_eq "bg: find -exec npm blocked"         "2" "$(bg_exit 'find . -exec npm i \;')"
 assert_eq "bg: here-string sh npm blocked"     "2" "$(bg_exit "sh <<< 'npm i'")"
+# the here-string branch must resolve the interpreter by basename + strip wrappers,
+# exactly as inspect() does -- else a path-prefixed or wrapped shell re-opens the bypass
+assert_eq "bg: here-string /bin/sh npm blocked" "2" "$(bg_exit "/bin/sh <<< 'npm i'")"
+assert_eq "bg: here-string sudo bash npm blkd"  "2" "$(bg_exit "sudo /usr/bin/bash <<< 'npm i'")"
+assert_eq "bg: here-string FOO=1 sh npm blocked" "2" "$(bg_exit "FOO=1 sh <<< 'npm i'")"
+assert_eq "bg: here-string sh echo allowed"     "0" "$(bg_exit "sh <<< 'echo hi'")"
+assert_eq "bg: here-string cat npm-word allowed" "0" "$(bg_exit "cat <<< 'npm is a word'")"
 assert_eq "bg: backslash \\npm blocked"        "2" "$(bg_exit '\npm i')"
 assert_eq "bg: legit brace mkdir allowed"      "0" "$(bg_exit 'mkdir -p src/{a,b}')"
 assert_eq "bg: legit find -name allowed"       "0" "$(bg_exit 'find . -name npm-debug.log')"
