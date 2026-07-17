@@ -38,14 +38,14 @@ function parseCommits(): ChangelogGroups {
     const date = line.slice(0, sep);
     const subject = line.slice(sep + 1);
 
-    const match = subject.match(/^(\w+)\(design-system\):\s+(.+)$/);
+    const match = subject.match(/^(\w+)\(design-system\)(!)?:\s+(.+)$/);
     if (!match) continue;
 
     const type = match[1];
-    const description = match[2];
+    const description = match[3];
     if (!type || !description) continue;
     if (!groups.has(date)) groups.set(date, []);
-    groups.get(date)?.push({ type, description });
+    groups.get(date)?.push({ type, description, breaking: match[2] === '!' });
   }
 
   return groups;
