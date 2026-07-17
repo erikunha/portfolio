@@ -94,7 +94,7 @@ There is no explicit model-routing or runtime-routing layer today: routing is by
 | # | Finding | Category | Reversible? | Proposed fix |
 |---|---|---|---|---|
 | 1 | `.claude/agents/` untracked, sole registration, backs architect-gate | correctness | yes | `git add .claude/agents/` + commit |
-| 2 | `bash-guard.sh` fails open on parse failure (disables merge/force-push blocks) | security | yes | fail-closed (or loud-warn) on the irreversible checks when `CMD` unparseable |
+| 2 | `bash-guard.sh` fails open. Root cause (found during the fix's review): it extracted the command from the top-level `command` key, but the real PreToolUse payload nests it under `tool_input.command` — so `CMD` was empty on *every* real invocation, making the guard a silent no-op in production (bare `npm`/`git add .`/`yarn` unblocked). Fixed here: read `tool_input.command` (matching sibling hooks) + fail-closed raw-scan fallback + real-payload-shape regression tests | security | yes | done (see `fix(hooks)` commits) |
 | 3 | `api-edit-marker.sh` fails open (can disable security-audit gate) | security | yes | fail-closed/warn on parse failure |
 | 4 | `.husky/pre-push:44-45` names 2 dead agents (`accessibility-tester`, `dependency-manager`) | doc-drift | yes | replace with the 4-role list from `architect-reviewer.md:338` |
 | 5 | Upstash MCP write-scope claim unverified | security | yes | verify, or swap to a db-scoped read-only REST token (decision B) |

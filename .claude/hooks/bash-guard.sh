@@ -4,7 +4,8 @@ INPUT=$(cat)
 CMD=$(printf '%s' "$INPUT" | python3 -c "
 import json, sys
 try:
-  print(json.load(sys.stdin).get('command', ''))
+  d = json.load(sys.stdin)
+  print(d.get('tool_input', {}).get('command', '') or d.get('command', ''))
 except Exception:
   print('')
 " 2>/dev/null || echo "")

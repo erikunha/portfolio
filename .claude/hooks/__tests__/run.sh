@@ -156,17 +156,28 @@ assert_eq "guard: session-context exit 0" "0" "$?"
 
 # --- bash-guard.sh block logic (the broadest blocking hook; previously untested) ---
 BG_HOOK="$HOOKS/bash-guard.sh"
-bg_exit() { # $1=command string -> exit code of bash-guard for a well-formed payload
+bg_exit() { # $1=command string -> exit code of bash-guard for a REAL PreToolUse payload
+  # The real Claude Code payload nests the command under tool_input — a flat
+  # {"command": ...} fixture would match a buggy top-level extraction and give
+  # false-green coverage. Use the wrapped shape so the parse-success path is
+  # actually exercised (and anchored patterns like ^npm and 'git add .$' are hit).
+  python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","tool_input":{"command": sys.argv[1]}}))' "$1" | bash "$BG_HOOK" >/dev/null 2>&1
+  echo $?
+}
+bg_exit_flat() { # $1=command -> exit for a top-level {"command":...} payload (the fallback branch)
   python3 -c 'import json,sys; print(json.dumps({"command": sys.argv[1]}))' "$1" | bash "$BG_HOOK" >/dev/null 2>&1
   echo $?
 }
-assert_eq "bg: broad 'git add -A' blocked" "2" "$(bg_exit 'git add -A')"
-assert_eq "bg: 'git add .' blocked"        "2" "$(bg_exit 'git add .')"
+assert_eq "bg: broad 'git add -A' blocked"  "2" "$(bg_exit 'git add -A')"
+assert_eq "bg: bare 'git add .' blocked"    "2" "$(bg_exit 'git add .')"
 assert_eq "bg: npm blocked"                 "2" "$(bg_exit 'npm install foo')"
+assert_eq "bg: yarn blocked"                "2" "$(bg_exit 'yarn add foo')"
 assert_eq "bg: 'gh pr merge' blocked"       "2" "$(bg_exit 'gh pr merge 42 --squash')"
 assert_eq "bg: force-push main blocked"     "2" "$(bg_exit 'git push --force origin main')"
 assert_eq "bg: safe 'git status' allowed"   "0" "$(bg_exit 'git status')"
 assert_eq "bg: 'git add -u' allowed"        "0" "$(bg_exit 'git add -u')"
+# the top-level-command fallback branch (d.get('command')) must also block
+assert_eq "bg: top-level-command fallback blocks npm" "2" "$(bg_exit_flat 'npm install foo')"
 # fail-closed: a malformed (non-JSON) payload carrying a dangerous command must STILL block
 printf 'gh pr merge 42' | bash "$BG_HOOK" >/dev/null 2>&1
 assert_eq "bg: fail-closed on malformed payload (gh pr merge)" "2" "$?"
