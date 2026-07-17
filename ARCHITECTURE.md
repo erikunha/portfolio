@@ -44,7 +44,7 @@ What we build is small, opinionated, edge-deployed, and budget-enforced.
 | LCP | < 1.8s on 4G |
 | INP | < 200ms |
 | CLS | < 0.05 |
-| JS gzipped (landing route) | < 120KB |
+| JS gzipped (per route, first-load total) | < 175KB |
 | Lighthouse Performance | ≥ 95 |
 | Lighthouse Accessibility | = 100 |
 | Lighthouse Best Practices | ≥ 95 |
@@ -129,9 +129,9 @@ Every section that doesn't depend on per-visitor state is RSC + SSG. Output is H
 | Contact form | client-side `fetch` to `/api/contact`, optimistic UI | ≤ 6KB |
 | IntersectionObserver typewriter | reveal-on-scroll | ≤ 2KB |
 | MOTION indicator | `matchMedia` listener | ≤ 1KB |
-| **Total client JS budget** | | **≤ 43KB** |
+| **Total client JS budget** | | **≤ 32.8KB app-owned** |
 
-> The 43 KB app-owned total is a per-PR CI gate as of 2026-07-14: `pnpm route-js-check` (`scripts/check-route-js.mjs`) fails a route whose first-load JS minus the measured framework floor exceeds it, alongside a 175 KB per-route total. `pnpm bundle-check` separately gates the combined client chunks (framework-inclusive) and is structurally blind per-route. Individual island budgets remain aspirational guidelines.
+> There is exactly ONE per-route gate: `pnpm route-js-check` (`scripts/check-route-js.mjs`) fails a route whose first-load JS exceeds **175 KB total**. App-owned JS is *reported*, never asserted — it is the total minus a measured constant (the 142.2 KB framework floor), so a second threshold on it could never fire on its own. The app-owned figure your decisions actually move is 175 − 142.2 = **32.8 KB**. `pnpm bundle-check` separately gates the combined client chunks (framework-inclusive) and is structurally blind per-route. Individual island budgets remain aspirational guidelines. See `DECISIONS.md` 2026-07-14 and 2026-07-16.
 
 Naming convention: every client file ends in `.client.tsx`. The default is server; client is the exception, named explicitly. Forces RSC drift to be visible in code review.
 
@@ -525,7 +525,7 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 
 ### Pre-push (Husky)
 - Branch-name guard: blocks direct pushes to `main` (all changes must go through a PR)
-- Review stamp check: `.review-passed` must match HEAD SHA — written by `pnpm review:stamp` after the 5-agent battery is dispatched
+- Review stamp check: `.review-passed` must match HEAD SHA — written by `pnpm review:stamp` after the 4-agent battery is dispatched
 - `pnpm verify` — full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + harness-size + section-order + doc-drift + unit tests (811)
 
 ### CI (GitHub Actions, per PR)
@@ -589,7 +589,7 @@ The architecture is designed so that an HN hug-of-death doesn't generate a surpr
 
 | Decision | What we give up | Why it's still right |
 |---|---|---|
-| RSC-first with client islands | Slightly harder to debug streaming hydration | Only way to hit 120KB JS budget |
+| RSC-first with client islands | Slightly harder to debug streaming hydration | Only way to hold the per-route JS budget |
 | No CMS | Erik edits TS files to update content | Single author; CMS is YAGNI |
 | Vercel Edge end-to-end | Vendor lock-in to Vercel's RSC story | Portability cost < ops savings at this scale |
 | Anthropic API for `ask` | $50/mo cap if abuse spikes | Quality-to-cost ratio beats self-hosted at portfolio scale |
