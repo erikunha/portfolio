@@ -1,6 +1,6 @@
 ---
 name: battery-synthesis
-description: Use after all 5 review-battery agents (pr-review-toolkit:review-pr, accessibility-tester, security-auditor, performance-engineer, dependency-manager) have returned and before running `pnpm review:stamp`. Unifies their reports into one deduplicated, severity-ranked action table so nothing is double-counted or missed before the stamp decision. Not a gate; a DX aid where the fix responsibility stays with the main agent.
+description: Use after all 4 review-battery agents (pr-review-toolkit:review-pr, security-auditor, performance-engineer, dependency-auditor) have returned and before running `pnpm review:stamp`. Unifies their reports into one deduplicated, severity-ranked action table so nothing is double-counted or missed before the stamp decision. Not a gate; a DX aid where the fix responsibility stays with the main agent.
 ---
 
 # Battery Synthesis
@@ -13,8 +13,8 @@ the responsibility for fixing findings remain with the main Claude.
 
 After all 5 battery agents have returned their reports and before `pnpm review:stamp`.
 
-Battery agents: `pr-review-toolkit:review-pr`, `accessibility-tester`,
-`security-auditor`, `performance-engineer`, `dependency-manager`.
+Battery agents: `pr-review-toolkit:review-pr`,
+`security-auditor`, `performance-engineer`, `dependency-auditor`.
 
 Dispatch trigger in CLAUDE.md: "After dispatching the full 5-agent battery, before
 `pnpm review:stamp` → `battery-synthesis`"
@@ -30,7 +30,7 @@ Read all 5 reports from the current context in order. Do NOT re-dispatch agents.
 - Agent name
 
 **Step 2 — Deduplicate.** When two or more agents flag the same file + issue class
-(e.g., both `pr-review-toolkit:review-pr` and `accessibility-tester` flag a missing `aria-label`
+(e.g., both `pr-review-toolkit:review-pr` and `security-auditor` flag the same unvalidated input
 on the same button):
 - Merge into one row
 - List all agent names in the Agent(s) column separated by ` + `
@@ -39,7 +39,7 @@ on the same button):
 
 **Step 3 — Detect conflicts.** When one agent recommends action X and another recommends
 action Y that contradicts X on the same element or file (e.g., `performance-engineer`
-says "add preload for this font" and `accessibility-tester` says "avoid layout shift from
+says "add preload for this font" and `pr-review-toolkit:review-pr` says "avoid layout shift from
 this font loading"), do NOT merge them. Surface them in the Conflicts section instead.
 
 **Step 4 — Classify.** Sort all deduplicated findings by severity:
@@ -60,7 +60,7 @@ Critical → Important → Advisory.
 ### Important
 | Issue | File(s) | Agent(s) | Action | Note |
 |---|---|---|---|---|
-| Missing aria-label on close button | components/client/Dialog.client.tsx | pr-review-toolkit:review-pr + accessibility-tester | Add aria-label="Close dialog" | Overlapping — one fix resolves both |
+| Missing aria-label on close button | components/client/Dialog.client.tsx | pr-review-toolkit:review-pr + performance-engineer | Add aria-label="Close dialog" | Overlapping — one fix resolves both |
 
 ### Advisory
 | Issue | File(s) | Agent(s) | Action |

@@ -56,15 +56,13 @@
     "review:learn": "tsx scripts/review-learn.ts",
     "transcript:doctor": "tsx scripts/transcript-doctor.ts",
     "test:mutation": "stryker run",
-    "verify": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm check:client-naming && pnpm check:dep-pinning && pnpm check:harness-size && pnpm check:section-order && pnpm check:doc-drift && pnpm check:gate-health && pnpm check:detect-changes-paths && pnpm lint:css-tokens && pnpm check:codex-sync && pnpm test",
+    "verify": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm check:client-naming && pnpm check:dep-pinning && pnpm check:harness-size && pnpm check:section-order && pnpm check:doc-drift && pnpm check:gate-health && pnpm check:detect-changes-paths && pnpm lint:css-tokens && pnpm test",
     "ci": "pnpm verify && pnpm build && pnpm bundle-check && pnpm route-js-check",
     "ci:local": "pnpm verify",
     "gates:runtime": "tsx scripts/gates-runtime.ts",
     "prepare": "husky || true",
     "postinstall": "node scripts/strip-next-polyfills.mjs",
-    "changelog:sync": "tsx scripts/sync-changelog.ts",
-    "sync:codex": "node scripts/sync-codex.mjs",
-    "check:codex-sync": "node scripts/sync-codex.mjs --check"
+    "changelog:sync": "tsx scripts/sync-changelog.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

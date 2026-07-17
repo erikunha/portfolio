@@ -27,10 +27,9 @@ export const BATTERY_ROLES: ReadonlyArray<{ role: string; accepts: readonly stri
     role: 'code-review',
     accepts: ['pr-review-toolkit:review-pr', 'pr-review-toolkit:code-reviewer', 'code-reviewer'],
   },
-  { role: 'accessibility', accepts: ['accessibility-tester'] },
   { role: 'security', accepts: ['security-auditor'] },
   { role: 'performance', accepts: ['performance-engineer'] },
-  { role: 'dependencies', accepts: ['dependency-manager'] },
+  { role: 'dependencies', accepts: ['dependency-auditor', 'dependency-manager'] },
 ];
 
 type TranscriptRecord = Record<string, unknown>;
