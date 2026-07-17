@@ -105,14 +105,14 @@ describe('check-route-js.mjs', () => {
     expect(res.stderr).toMatch(/over the 175 KB budget/i);
   });
 
-  it('fails in the band where a 43 KB app-owned threshold would NOT have fired — proving 43 never bound', () => {
+  it('fails a route in the 175-185.2 KB band, where the retired app-owned threshold would not have fired', () => {
     const framework = writeChunk('framework.js', 143);
     const app = writeChunk('app.js', 37);
     writeManifest([{ route: '/', firstLoadChunkPaths: [framework, app] }]);
     const res = run();
     expect(
       res.status,
-      'total is ~180 KB, so app-owned is ~38 KB — UNDER a 43 KB app-owned threshold, yet the route must still fail. app-owned = total minus a constant, so a 43 KB app-owned check could only fire above 142.2 + 43 = 185.2, which the 175 KB total already caught. Two thresholds on one axis is one threshold: the real app-owned ceiling is 175 - 142.2 = 32.8. This is the band the original two-threshold design never tested, and the reason app-owned is now reported rather than asserted.',
+      'This fixture measures 184.1 KB total / 41.9 KB app-owned (the chunk writer rounds gzipped size up to the next 4 KB, so the nominal 143+37 lands higher). That is inside the disagreement band 175 < total < 185.2 and UNDER the retired 43 KB app-owned threshold, yet the route must still fail on the 175 KB total. NOTE what this does and does not hold: it pins that the band fails, so relaxing the total to 185 to "restore" the two-gate design breaks here. It does NOT prove a second app-owned threshold is absent — re-adding `|| appOwned > 43` leaves this exit code and stderr byte-identical, because app-owned = total - 142.2 makes that branch unreachable dead code for every input. Absence of dead code is not behaviorally testable; see DECISIONS.md 2026-07-14.',
     ).not.toBe(0);
     expect(res.stderr).toMatch(/over the 175 KB budget/i);
   });
@@ -123,6 +123,11 @@ describe('check-route-js.mjs', () => {
     const res = run();
     expect(res.status).not.toBe(0);
     expect(res.stderr).toMatch(/stale/i);
+    expect(
+      res.stderr,
+      'The stale-floor message must quote the derived headroom (175 - 142.2 = 32.8), not a hardcoded budget. This assertion exists because the message outlived the gate it described: it kept telling the reader to re-measure against a "43 KB budget" for a whole review cycle after that threshold was deleted, and the /stale/i match above sailed straight over it.',
+    ).toMatch(/32\.8 KB of app-owned headroom/);
+    expect(res.stderr).not.toMatch(/43 KB/);
   });
 
   it('fails a route over the total budget', () => {

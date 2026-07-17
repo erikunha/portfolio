@@ -3,11 +3,6 @@ import { gzipSync } from 'node:zlib';
 
 const MAX_ROUTE_TOTAL_KB = 175;
 
-// app-owned is REPORTED, never asserted. total - FRAMEWORK_FLOOR_KB is an affine transform of
-// total by a constant, so an app-owned threshold is a second threshold on the SAME axis: it could
-// only fire above FRAMEWORK_FLOOR_KB + itself, which MAX_ROUTE_TOTAL_KB already caught. Asserting
-// both printed a 43 KB budget that no input could ever trip while the real ceiling was
-// 175 - 142.2 = 32.8. One quantity, one gate.
 const FRAMEWORK_FLOOR_KB = 142.2;
 const FRAMEWORK_FLOOR_TOLERANCE_KB = 2;
 
@@ -57,8 +52,9 @@ if (lightest < FRAMEWORK_FLOOR_KB - FRAMEWORK_FLOOR_TOLERANCE_KB) {
   fail(
     `The lightest route ships ${lightest.toFixed(1)} KB, below the ${FRAMEWORK_FLOOR_KB} KB framework floor this gate subtracts.\n` +
       'FRAMEWORK_FLOOR_KB is stale: Next or React got smaller, so every app-owned figure this gate prints is inflated\n' +
-      'and the 43 KB budget is being read against the wrong baseline. Re-measure it (build a bare hello-world app on the\n' +
-      'current Next + React and take its shared first-load JS) rather than lowering the constant to whatever passes.',
+      `and the ${(MAX_ROUTE_TOTAL_KB - FRAMEWORK_FLOOR_KB).toFixed(1)} KB of app-owned headroom is being read against the wrong baseline. Re-measure it (build a bare\n` +
+      'hello-world app on the current Next + React and take its shared first-load JS) rather than lowering the constant\n' +
+      'to whatever passes.',
   );
 }
 
