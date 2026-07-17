@@ -7,13 +7,13 @@
 ```mermaid
 flowchart TD
     subgraph intent["Intent / why"]
-        adr["DECISIONS.md (~190 ADRs, reversibility-tracked)"]
+        adr["DECISIONS.md (~240 ADRs, reversibility-tracked)"]
         std["STANDARDS.md (12 chapters, each names its enforcement)"]
         arch["ARCHITECTURE.md (the design narrative)"]
     end
     subgraph plan["Planning / what & how"]
         specs["docs/superpowers/specs/ (~48 approved specs)"]
-        plans["docs/superpowers/plans/ (~52 task breakdowns)"]
+        plans["docs/superpowers/plans/ (~73 task breakdowns)"]
         ledger["docs/superpowers/discovery-ledger.md (~2090 tools evaluated)"]
         audit["docs/audit/ (principal audit)"]
     end
@@ -107,7 +107,7 @@ decomposition the convention would otherwise add already exists in every plan.
 Two complementary mechanisms carry knowledge across the fresh-context boundary of each session:
 
 - **Auto memory** (`~/.claude/projects/<slug>/memory/`): `MEMORY.md` is an index (first 200 lines loaded each session) pointing at one-fact-per-file notes typed `user` / `feedback` / `project` / `reference` (and `dead-end`, established this year). Feedback memories carry a "Why" and a "How to apply".
-- **`.remember/`**: in-flight session handoff. `now.md` (current state), `recent.md` (rolling log + reusable "Identity Candidates" patterns), `archive.md`, per-day `today-*.md`, and auto-save logs. Handoff is automatic via the SessionEnd/autonomous-save hooks, not manual.
+- **`.remember/`**: in-flight session handoff. `now.md` (current state), `recent.md` (rolling log + reusable "Identity Candidates" patterns), `archive.md`, per-day `today-*.md`, and auto-save logs. Handoff is written by the `remember` skill (invoked at session close), not by a hook.
 
 ## Documentation standards
 

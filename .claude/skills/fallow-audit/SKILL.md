@@ -49,7 +49,7 @@ manually verify it is not one of:
   `loading.tsx`.
 - A `content/*.ts` module consumed only at build time by Zod validation.
 - A barrel/re-export, a dynamic `import()` target, or a value referenced only in JSX.
-- A token/type consumed by the Style Dictionary pipeline or CSS.
+- A token consumed only via `app/css/theme.css` `@theme` custom properties (no Style Dictionary pipeline exists).
 
 Report findings to the user as a list with `file:line` and a recommendation. Apply
 deletions only after the user confirms each one. Never batch-delete from a fallow

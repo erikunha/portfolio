@@ -36,6 +36,8 @@ Skills are load-on-demand procedures. They activate by their `description` front
 | **api-edit-marker.sh** | PostToolUse | Edit\|Write | records an edit to `app/api/**`/`rate-limit.ts`/`proxy.ts` into the pending marker | never (`exit 0`) |
 | **css-token-guard.sh** | PostToolUse | Edit\|Write | runs the css-tokens lint on CSS edits (catches raw hex at edit time) | advisory (`exit 0`) |
 | **section-order-guard.sh** | PostToolUse | Edit\|Write | warns if a section lacks a mobile flex-order rule | advisory (`exit 0`) |
+| **biome-format.sh** | PostToolUse | Edit\|Write | runs Biome format+fix on the edited file | never (`exit 0`) |
+| **session-context.sh** | SessionStart | (none) | prints branch, uncommitted files, and last-commit context at session start | never (`exit 0`) |
 | **learning-loop.sh** | SessionEnd | (none) | runs `review:learn --auto`; appends recurring-finding proposals to the inbox | never (`exit 0`) |
 
 ### Hook lifecycle (when each fires)
@@ -50,13 +52,13 @@ flowchart TD
     pre1 -->|exit 0| run["tool runs"]
     pre2 -->|exit 0| run
     run --> post{Edit or Write?}
-    post -->|yes| post1["PostToolUse: api-edit-marker + css-token-guard + section-order-guard"]
+    post -->|yes| post1["PostToolUse: api-edit-marker + css-token-guard + section-order-guard + biome-format"]
     post -->|no| done["continue"]
     post1 --> done
     done --> sessionend["...SessionEnd: learning-loop"]
 ```
 
-Note: only four hook *events* are used (PreToolUse on Bash and Skill, PostToolUse on Edit|Write, SessionEnd). No `PreCompact` or `Notification` hooks.
+Note: four hook *events* are used (PreToolUse on Bash and Skill, PostToolUse on Edit|Write, SessionStart, SessionEnd). No `PreCompact` or `Notification` hooks.
 
 ## Git hooks (`.husky/`)
 

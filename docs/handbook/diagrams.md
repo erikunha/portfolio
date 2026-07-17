@@ -64,7 +64,7 @@ flowchart TD
     pre2 -->|exit 2| x2["BLOCKED"]
     pre1 -->|exit 0| run["tool runs"]
     pre2 -->|exit 0| run
-    run -->|Edit/Write| post["PostToolUse: api-edit-marker · css-token-guard · section-order-guard"]
+    run -->|Edit/Write| post["PostToolUse: api-edit-marker · css-token-guard · section-order-guard · biome-format"]
     post --> se["...SessionEnd: learning-loop"]
 ```
 
