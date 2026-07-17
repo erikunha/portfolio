@@ -194,6 +194,30 @@ assert_eq "bg: chained '&& npm' blocked"           "2" "$(bg_exit 'cd repo && np
 assert_eq "bg: chained '; yarn' blocked"           "2" "$(bg_exit 'echo hi ; yarn add foo')"
 assert_eq "bg: quoted 'git add \"-A\"' blocked"    "2" "$(bg_exit 'git add "-A"')"
 assert_eq "bg: quoted 'git add \".\"' blocked"     "2" "$(bg_exit 'git add "."')"
+# no-space operator chaining (shlex whitespace-split misses these without punctuation_chars)
+assert_eq "bg: no-space '&&npm' blocked"           "2" "$(bg_exit 'cd repo&&npm install foo')"
+assert_eq "bg: no-space ';yarn' blocked"           "2" "$(bg_exit 'git status;yarn add foo')"
+assert_eq "bg: no-space '&&force main' blocked"    "2" "$(bg_exit 'echo hi&&git push --force origin main')"
+assert_eq "bg: no-space '&&gh pr merge' blocked"   "2" "$(bg_exit 'echo hi&&gh pr merge 1')"
+# embedded-newline second command (shlex eats \n as whitespace)
+assert_eq "bg: newline npm blocked"                "2" "$(bg_exit "$(printf 'git status\nnpm install foo')")"
+assert_eq "bg: newline force-main blocked"         "2" "$(bg_exit "$(printf 'echo hi\ngit push --force origin main')")"
+# command-position wrappers (env/command/sudo/VAR=val) displace token 0
+assert_eq "bg: 'command npm' blocked"              "2" "$(bg_exit 'command npm install foo')"
+assert_eq "bg: 'env npm' blocked"                  "2" "$(bg_exit 'env npm install foo')"
+assert_eq "bg: 'sudo npm' blocked"                 "2" "$(bg_exit 'sudo npm install foo')"
+assert_eq "bg: 'env git force main' blocked"       "2" "$(bg_exit 'env git push --force origin main')"
+assert_eq "bg: 'FOO=bar npm' blocked"              "2" "$(bg_exit 'FOO=bar npm install foo')"
+# git add pathspec magic that stages the repo root
+assert_eq "bg: 'git add :/' blocked"               "2" "$(bg_exit 'git add :/')"
+assert_eq "bg: 'git add *' blocked"                "2" "$(bg_exit 'git add "*"')"
+# subshell inner command is still checked
+assert_eq "bg: subshell '\$(npm ...)' blocked"     "2" "$(bg_exit 'echo $(npm install foo)')"
+# a safely-chained pnpm command must NOT block
+assert_eq "bg: chained 'cd x && pnpm i' allowed"   "0" "$(bg_exit 'cd repo && pnpm install')"
+# a multi-line commit message whose BODY mentions guarded commands must NOT block
+# (newlines inside the quoted -m argument must not be treated as command separators)
+assert_eq "bg: multi-line commit body allowed" "0" "$(bg_exit "$(printf 'git commit -m "fix: guard\n\n- body mentions npm install and git add -A\n- and gh pr merge"')")"
 # command-position: a dangerous string only inside a quoted arg (commit message) must NOT block (finding 13)
 assert_eq "bg: 'gh pr merge' in commit msg allowed"  "0" "$(bg_exit 'git commit -m "docs: explain the gh pr merge guard"')"
 assert_eq "bg: 'git add -A' in commit msg allowed"   "0" "$(bg_exit 'git commit -m "chore: forbid git add -A"')"

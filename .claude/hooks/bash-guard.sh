@@ -1,55 +1,15 @@
 #!/usr/bin/env bash
 
 INPUT=$(cat)
+HOOK_DIR=$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || printf '.')
 
-# Primary block detection: shlex-tokenized and command-position aware. Matching on
-# tokens (not raw substrings) resists the quote / whitespace / chaining evasions a
-# grep misses -- gh "pr" merge, git push --"force" origin main, cd x && npm i,
-# git add "-A" -- AND it will not false-positive on a dangerous string that appears
-# only inside a quoted argument such as a commit message body. See docs/harness-audit.md
-# findings 13-17. Exit 2 = block (message on stdout), 0 = analyzed-and-clean,
-# 3 = could not analyze (python3 missing / unbalanced quotes) -> coarse fallback below.
-DET=$(printf '%s' "$INPUT" | python3 -c "
-import json, sys, shlex
-raw = sys.stdin.read()
-try:
-    d = json.loads(raw)
-    cmd = d.get('tool_input', {}).get('command', '') or d.get('command', '')
-except Exception:
-    cmd = ''
-if not cmd or not cmd.strip():
-    sys.exit(3 if raw.strip() else 0)
-try:
-    toks = shlex.split(cmd, posix=True)
-except ValueError:
-    sys.exit(3)
-OPS = {'&&', '||', '|', '|&', '&', ';', '\n'}
-segs, cur = [], []
-for t in toks:
-    if t in OPS:
-        if cur:
-            segs.append(cur); cur = []
-    else:
-        cur.append(t)
-if cur:
-    segs.append(cur)
-GA = {'-A', '--all', '.'}
-FF = {'--force', '-f', '--force-with-lease'}
-def block(m):
-    sys.stdout.write(m + '\n'); sys.exit(2)
-for s in segs:
-    if not s:
-        continue
-    if len(s) >= 2 and s[0] == 'git' and s[1] == 'add' and any(a in GA for a in s[2:]):
-        block('[BLOCKED] Broad git add detected.\nCLAUDE.md: use git add -u or git add <specific files> only.\ngit add . / -A / --all stages unintended files (screenshots, worktree artifacts).')
-    if s[0] in ('npm', 'yarn'):
-        block('[BLOCKED] npm/yarn detected. This project uses pnpm only.\nUse instead: pnpm ' + ' '.join(s[1:]))
-    if len(s) >= 3 and s[0] == 'gh' and s[1] == 'pr' and s[2] == 'merge':
-        block('[BLOCKED] gh pr merge called directly.\nAI agents must run: pnpm ready-to-merge [pr-number]\nThe repo owner may run gh pr merge directly in an external terminal to bypass.')
-    if s[0] == 'git' and 'push' in s and any(f in s for f in FF) and any('main' in t for t in s):
-        block('[BLOCKED] Force push to main is not allowed.\nRebase the feature branch onto main and merge via PR instead.')
-sys.exit(0)
-" 2>/dev/null)
+# Primary block detection: shlex-tokenized, command-position aware. See
+# bash-guard-detect.py and docs/harness-audit.md findings 13-17. It resists the
+# quote / whitespace / no-space-chain / wrapper / subshell / newline evasions a
+# raw grep misses, and will not false-block a dangerous string that appears only
+# inside a quoted argument (a commit message). Exit 2 = block (message on stdout),
+# 0 = analyzed-and-clean, 3 = could not analyze -> coarse fail-closed fallback below.
+DET=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/bash-guard-detect.py" 2>/dev/null)
 DRC=$?
 if [ "$DRC" -eq 2 ]; then
   printf '%s\n' "$DET"
@@ -74,15 +34,15 @@ fi
 # path (DRC==0) the detector already cleared the command, so these coarse substring
 # greps are skipped to avoid over-blocking a quoted argument.
 if [ "$DRC" -ne 0 ]; then
-  if printf '%s' "$CMD" | grep -qE 'git\s+add\s+(-A\b|--all\b|\.\s*$|\.\s+)'; then
+  if printf '%s' "$CMD" | grep -qE '(^|[;&|]|[[:space:]])git[[:space:]]+add[[:space:]]+(-A\b|--all\b|\.\s*$|\.\s+|:/|\*)'; then
     printf '[BLOCKED] Broad git add detected (coarse fallback; python3 unavailable).\n'
     exit 2
   fi
-  if printf '%s' "$CMD" | grep -qE '(^|[;&|]\s*)(npm|yarn)\s+'; then
+  if printf '%s' "$CMD" | grep -qE '(^|[;&|]\s*|[[:space:]])(npm|yarn)\s+'; then
     printf '[BLOCKED] npm/yarn detected. This project uses pnpm only.\n'
     exit 2
   fi
-  if printf '%s' "$CMD" | grep -qE 'gh pr merge'; then
+  if printf '%s' "$CMD" | grep -qE 'gh\s+pr\s+merge'; then
     printf '[BLOCKED] gh pr merge called directly. Run: pnpm ready-to-merge [pr-number].\n'
     exit 2
   fi
