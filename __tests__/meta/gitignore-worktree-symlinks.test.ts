@@ -3,15 +3,13 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSyn
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { ENV_ALLOWLIST, hermeticEnv, NULL_DEVICE } from '../helpers/hermetic-git';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const HARNESS_SYMLINKS = ['.next', 'node_modules'];
 const SYMLINK_TARGET = 'target';
 const SENTINEL_FILE = 'sentinel';
-const NULL_DEVICE = '/dev/null';
-const NO_GLOBAL_EXCLUDES = ['-c', `core.excludesFile=${NULL_DEVICE}`];
 const EMPTY_INIT_TEMPLATE = '--template=';
-const ENV_ALLOWLIST = ['PATH', 'TMPDIR'];
 const GIT_OK = 0;
 const GIT_PATH_IGNORED = 0;
 const GIT_PATH_NOT_IGNORED = 1;
@@ -19,23 +17,7 @@ const GIT_PATH_NOT_IGNORED = 1;
 type Shape = 'symlink' | 'directory';
 type GitResult = SpawnSyncReturns<Buffer>;
 
-const hermeticEnv = (): NodeJS.ProcessEnv => {
-  const env: NodeJS.ProcessEnv = {
-    NODE_ENV: 'test',
-    GIT_CONFIG_GLOBAL: NULL_DEVICE,
-    GIT_CONFIG_SYSTEM: NULL_DEVICE,
-    GIT_CONFIG_NOSYSTEM: '1',
-    GIT_CONFIG_COUNT: '0',
-  };
-  for (const key of ENV_ALLOWLIST) {
-    const value = process.env[key];
-    if (value !== undefined) env[key] = value;
-  }
-  return env;
-};
-
-const git = (cwd: string, args: string[]) =>
-  spawnSync('git', [...NO_GLOBAL_EXCLUDES, ...args], { cwd, env: hermeticEnv() });
+const git = (cwd: string, args: string[]) => spawnSync('git', args, { cwd, env: hermeticEnv() });
 
 const NOT_FOUND = 'ENOENT';
 
@@ -142,7 +124,7 @@ describe('meta: .gitignore covers the paths the agent-worktree harness symlinks'
   it.each(HARNESS_SYMLINKS)('%s is ignored when materialised as a symlink', (name) => {
     expect(
       isIgnored(sandboxes.symlink, name),
-      `The harness symlinks "${name}" into every agent worktree, and this .gitignore does not ignore it.\n\nWrite "/${name}", with no trailing slash. A trailing slash makes a rule directory-only, and git lstats a path without following the link, so a symlink is not a directory and a directory-only rule cannot match it.\n\nEvery rule shape, measured against git (this table is rendered from the same data the matrix in this file asserts, so it cannot drift from what git actually does):\n\n${shapeTable(name)}\n\nOther harness paths asserted here: ${siblingsOf(name)}.\n\nThe child git sees exactly these variables: ${childEnvKeys()}. Only ${ENV_ALLOWLIST.join(' and ')} are inherited from the parent; the rest are set here, alongside an empty init template and core.excludesFile=${NULL_DEVICE}. Every one of those exists to stop a SECOND ignore source reaching git -- a foreign GIT_DIR's info/exclude, a user or system ignore file, a seeded template. If one did, this gate could read GREEN while the rule under test is broken, which is the one outcome it exists to prevent. Which specific guard closes which specific channel is not asserted anywhere, so this message does not claim it: treat the sandbox as one indivisible thing and do not relax any part of it without gating what you removed.`,
+      `The harness symlinks "${name}" into every agent worktree, and this .gitignore does not ignore it.\n\nWrite "/${name}", with no trailing slash. A trailing slash makes a rule directory-only, and git lstats a path without following the link, so a symlink is not a directory and a directory-only rule cannot match it.\n\nEvery rule shape, measured against git (this table is rendered from the same data the matrix in this file asserts, so it cannot drift from what git actually does):\n\n${shapeTable(name)}\n\nOther harness paths asserted here: ${siblingsOf(name)}.\n\nThe child git sees exactly these variables: ${childEnvKeys()}. Only ${ENV_ALLOWLIST.join(' and ')} are inherited from the parent; the rest come from GIT_CONFIG_ISOLATION in __tests__/helpers/hermetic-git.ts (which pins core.excludesFile=${NULL_DEVICE} via GIT_CONFIG_KEY_0, because GIT_CONFIG_GLOBAL=${NULL_DEVICE} does NOT disable ~/.config/git/ignore -- that path is a hardcoded fallback, not a config value), alongside an empty init template set here. Every one of those exists to stop a SECOND ignore source reaching git -- a foreign GIT_DIR's info/exclude, a user or system ignore file, a seeded template. If one did, this gate could read GREEN while the rule under test is broken, which is the one outcome it exists to prevent. Which specific guard closes which specific channel is not asserted anywhere, so this message does not claim it: treat the sandbox as one indivisible thing and do not relax any part of it without gating what you removed.`,
     ).toBe(true);
   });
 

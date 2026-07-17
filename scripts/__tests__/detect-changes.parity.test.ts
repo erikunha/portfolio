@@ -3,11 +3,17 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { inheritedEnvWithIsolatedGit } from '../../__tests__/helpers/hermetic-git';
 
 const runner = resolve(process.cwd(), 'scripts/detect-changes.mjs');
 
 let repo: string;
-const git = (args: string[]) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' });
+const git = (args: string[]) =>
+  execFileSync('git', args, {
+    cwd: repo,
+    encoding: 'utf8',
+    env: inheritedEnvWithIsolatedGit(),
+  });
 const write = (rel: string, body: string) => {
   const abs = join(repo, rel);
   mkdirSync(dirname(abs), { recursive: true });
@@ -27,13 +33,12 @@ function runScenario(seed: () => void, mutate: () => void) {
   writeFileSync(out, '');
   execFileSync('node', [runner], {
     cwd: repo,
-    env: {
-      ...process.env,
+    env: inheritedEnvWithIsolatedGit({
       EVENT_NAME: 'pull_request',
       BASE_SHA: base,
       HEAD_SHA: head,
       GITHUB_OUTPUT: out,
-    },
+    }),
   });
   const text = readFileSync(out, 'utf8');
   const get = (k: string) =>
