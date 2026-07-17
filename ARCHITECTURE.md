@@ -298,7 +298,9 @@ Content-Type: application/json
 
 → 400 application/json   { "error": "question is required" }
                          { "error": "invalid request body" }
-→ 429 application/json   { "error": "rate limit exceeded — try again in an hour" }
+                         { "error": "question rejected — try rephrasing without role tokens or instruction-override patterns" }   # injection guard
+→ 429 application/json   { "error": "rate limit exceeded — try again in an hour" }             # per-IP sliding window
+                         { "error": "identical question — wait 60 seconds before asking again" }   # dedup guard
 → 503 application/json   { "error": "temporarily unavailable — email erikhenriquealvescunha@gmail.com directly" }   # kill switch (ASK_ENABLED off)
                          { "error": "monthly budget exhausted — email erikhenriquealvescunha@gmail.com directly" }   # token cap hit
 ```
