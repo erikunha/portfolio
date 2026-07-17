@@ -309,7 +309,7 @@ Content-Type: application/json
 ### Stack
 - Vercel Fluid Compute (Node runtime; replaced Edge Function 2026-05-21 to enable the AI SDK + AI Gateway)
 - **Vercel AI Gateway** via `ai` SDK v7 (`streamText`), model string `anthropic/claude-haiku-4-5` — single API key (`AI_GATEWAY_API_KEY`, OIDC-signed on Vercel), unified provider routing, zero-trust model selection
-- System prompt = canonical CV text + the contents of the `~/.guitar_rig`, `~/.unknowns`, `~/HOTTEST_TAKES.MD` blocks, plus a short instruction set ("respond in erik's voice; cite specific receipts; if you don't know, say so")
+- System prompt = a hand-edited narrative + raw data appended from `content/perf-receipts.ts`, `content/projects.ts`, `content/visa.ts`, and `content/unknowns.ts`, plus a short instruction set ("respond in erik's voice; cite specific receipts; if you don't know, say so")
 - Streaming response back to the client via a custom `ReadableStream<Uint8Array>` over `result.textStream`, with a watchdog race and the NUL-byte error sentinel protocol from `lib/stream-protocol.ts`
 
 ### Rate limiting
@@ -318,8 +318,8 @@ Upstash Redis sliding window:
 - IP hashed (SHA-256 + per-deployment salt) — never stored raw
 - No daily cap (budget cap is the primary spend control)
 
-### Caching
-Same question text (hash) within 24h returns cached response. Reduces Anthropic spend on accidental refresh / share-link clicks. TTL 24h, evict on content deploy.
+### Identical-question dedup
+The same question text (SHA-256) from the same IP hash within 60 seconds is blocked, not answered: `checkIdenticalQuestion` runs `SET ask:dedup:{ipHash}:{qHash} nx ex:60` and returns 429 ("wait 60 seconds") when the key already exists. It suppresses accidental double-submits and share-link refreshes without paying for a second model call — a dedup guard, not a response cache (no answer is stored). Fails open: a Redis error allows the request.
 
 ### Budget enforcement (the Principal-level move)
 Single hard counter in Redis: `ask:tokens:YYYY-MM` (32-day TTL, set `NX`). The counter is **reserved up front, then settled** — not incremented after the fact: `reserveBudget(MAX_OUTPUT_TOKENS)` does an `INCRBY` of `RESERVED_INPUT_TOKENS + maxOutputTokens` (2200 + 512 = 2712) *before* the model call, and `settleBudget()` refunds the unused difference afterwards. Reserving first is what makes the cap hold under concurrency; incrementing after the completion would let N in-flight requests all pass a check none of them had paid for yet. Monthly hard cap: `MONTHLY_TOKEN_BUDGET = 3_000_000`. **Exhausting it costs somewhere between $3 and $5.30 — the spread is the answer, and a single figure would be false precision** (derived 2026-07-17; Haiku 4.5 bills $1.00/MTok input and $5.00/MTok output).
@@ -344,7 +344,7 @@ Behavior:
 - Redis unavailable: fail-open (allow the request, `reserved: 0`; settlement is skipped and logged). **State the blast radius honestly: this is not just the cap.** The per-IP rate limiter (`getAskLimit`), the identical-question dedup (`checkIdenticalQuestion`), and `reserveBudget` all depend on the same Redis, and all three catch and allow — so one outage removes throttling, dedup, AND the spend ceiling in the same window, not merely an unmetered counter. What survives is Redis-independent: the 500-char question cap, the injection regex, `MAX_OUTPUT_TOKENS`, the streaming output guard (`lib/ask/output-guard.ts`), and both route timeouts. Read `app/api/ask/route.ts` for the current set rather than trusting a roster here — two revisions of this paragraph enumerated one and both were incomplete. **The category is what matters:** every one of those bounds a *single request* — its size, content, or duration — and **none bounds request volume**. The three that did (`getAskLimit`, `checkIdenticalQuestion`, `reserveBudget`) are the three that just failed open, and no platform rate limit, WAF, or bot check sits behind them (CAPTCHA is a deliberately rejected control — §15, "Trade-offs I'd flag").
 
 **The one volume control that survives is the kill switch, and it is a remedy rather than a bound:** `ASK_ENABLED` is an env var checked before any Redis call, so flipping it off 503s every request and takes volume to zero. During a Redis outage that is the only lever left — which makes it the outage runbook, not a background protection. This is a deliberate availability-over-spend trade, but a reader who assumes the 8/hr throttle still holds during an outage is wrong.
-- Prompt caching enabled via `providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }` on a system message (AI SDK v7 shape; the pre-v7 `cache_control` spelling no longer exists)
+- Prompt caching enabled via `providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }` on a system message (AI SDK v7 shape; the pre-v7 `cache_control` spelling survives only in the unused `SYSTEM` export that `__tests__/system-prompt.test.ts` reads, not in the live route path)
 
 Every number above is `lib/rate-limit.ts`'s to change — grep the constant rather than trusting this paragraph.
 
@@ -391,7 +391,7 @@ History and rationale: see `DECISIONS.md` 2026-05-18.
 [client form]
     ↓ POST /api/contact (client-side fetch — no Server Action)
     ↓
-[rate limit: 1 / IP / 5min]  → 429 if exceeded
+[rate limit: 3 / IP / 10min]  → 429 if exceeded
     ↓
 [Zod validation via validateContact()]
     ↓
@@ -433,16 +433,7 @@ History: see `docs/audit/2026-05-19-principal-audit.md` Theme 1.4.
 The page MUST fail to merge if it regresses past the budgets. This is where the architecture becomes self-enforcing.
 
 ### GitHub Actions PR workflow
-```yaml
-- biome check  # lint + format
-- pnpm build
-- node scripts/check-bundle-size.mjs --max=120kb --route=/
-- lhci autorun --config=./lighthouserc.json
-   # gates: perf >= 95, a11y = 100, best-practices >= 95, seo = 100
-- pnpm test:unit  # zod schemas, server action logic
-- pnpm test:e2e   # Playwright on contact + ask
-- npx axe-core ./out/index.html
-```
+See §13 for the authoritative CI job list, derived from `.github/workflows/ci.yml`. (An earlier hand-written YAML sketch here had drifted from the real pipeline — the pipeline itself is the source of truth.)
 
 Any failure blocks merge. No overrides except by branch protection bypass — and using that is itself a smell.
 
@@ -464,7 +455,7 @@ Implemented per Spec 2 (`docs/superpowers/specs/2026-05-18-production-observabil
 - Every server `console.*` call site in `lib/` + `app/api/` is migrated to `log.*`. `ErrorBoundary.client.tsx` retains `console.error` for DevTools visibility AND routes the same payload to `/api/log` via the shared `buildLogPayload` helper in `componentDidCatch` — intentional dual capture, not a contradiction. Both paths are always active; they are not alternatives.
 
 ### Client error capture
-- **`lib/error-bridge.ts`** registers `window.addEventListener('error')` + `unhandledrejection` at module scope (imported once from `AppShell.client.tsx`). Each capture POSTs to `/api/log` with `{level, message, stack, url, userAgent, ts}`. Dedup: 100ms tail-window keyed on `(message, stack)` — covers React's error replay (<50ms) without suppressing meaningful repeat-occurrence signal.
+- **`lib/error-bridge.client.ts`** registers `window.addEventListener('error')` + `unhandledrejection` at module scope (imported once from `AppShell.client.tsx`). Each capture POSTs to `/api/log` with `{level, message, stack, url, userAgent, ts}`. Dedup: 100ms tail-window keyed on `(message, stack)` — covers React's error replay (<50ms) without suppressing meaningful repeat-occurrence signal.
 - **`app/api/log/route.ts`** validates via zod, writes to Upstash KV `err:{yyyy-mm-dd}:{uuid}` with 30-day TTL. Rate-limited (10/IP/min) via `getErrorLogLimit()` to absorb runaway client error loops. The IP is used only for rate-limiting and discarded — `err:*` records store no `ipHash`, making them personal-data-free and outside the `/api/log/forget` erasure scope.
 
 ### `/api/ask` Q+A retention
@@ -550,13 +541,13 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 ### Pre-push (Husky)
 - Branch-name guard: blocks direct pushes to `main` (all changes must go through a PR)
 - Review stamp check: `.review-passed` must match HEAD SHA — written by `pnpm review:stamp` after the 4-agent battery is dispatched
-- `pnpm verify` — full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + harness-size + section-order + doc-drift + unit tests (811)
+- `pnpm verify` — full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + harness-size + section-order + doc-drift + gate-health + detect-changes-paths + css-tokens + unit tests
 
 ### CI (GitHub Actions, per PR)
 1. Install + cache (pnpm + `.next/cache` + tsbuildinfo)
 2. Biome check
 3. TypeScript strict check
-4. Unit tests (Vitest, 811 tests, workers: 2 in CI)
+4. Unit tests (Vitest)
 5. Build
 6. Bundle size gate (`scripts/check-bundle-size.mjs`)
 7. Lighthouse CI desktop + mobile (against PR preview; TTFB + perf + a11y + SEO + BP gates)
@@ -665,7 +656,7 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 
 The Matrix dialog loop and CRT effects are the most novel piece of the page and also the most fragile under the perf budget. If the loop ships with a `useState` per-keystroke pattern (instead of `useRef.textContent` mutation), INP will degrade past 200ms and Lighthouse Performance will fall below 95.
 
-Mitigation: PR 4 includes an INP measurement test that fails the build if the loop causes a long task > 50ms. This is the only test that gates an animation pattern — but it's the right one to enforce.
+Mitigation: the loop uses `useRef.textContent` mutation rather than per-keystroke `useState`, enforced structurally by the boot-animation component test. The one runtime long-task/INP e2e guard (`tests/e2e/cross-cutting.spec.ts`) gates the interactive shell's keystroke commit (<50ms, no long task >100ms), not the boot loop itself — the boot loop is guarded at the pattern level, the shell at the runtime level.
 
 ---
 
