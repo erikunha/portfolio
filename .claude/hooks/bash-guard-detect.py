@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
-"""Command-position-aware block detector for bash-guard.sh.
+"""Command-position block detector for bash-guard.sh.
 
-Reads the PreToolUse JSON payload on stdin, extracts the Bash command, and
-decides whether it must be blocked. Matching is on shell TOKENS at command
-position (not raw substrings) so it resists quote / whitespace / no-space-chain
-/ wrapper / subshell evasions AND does not false-block a dangerous string that
-appears only inside a quoted argument such as a commit message body.
+Matches on shell tokens at command position, not raw substrings: a substring
+rewrite would both miss quote/whitespace/chain/wrapper evasions and false-block
+a dangerous string that appears only inside a quoted argument (a commit message).
 
-Exit codes: 2 = block (reason on stdout), 0 = analyzed and clean,
-3 = could not analyze (parse failure / unbalanced quotes) -> caller runs a
-coarse fail-closed fallback.
+Exit codes (the contract bash-guard.sh depends on): 2 = block (reason on stdout),
+0 = analyzed and clean, 3 = could not analyze -> caller runs a coarse fallback.
 """
 import json
 import shlex

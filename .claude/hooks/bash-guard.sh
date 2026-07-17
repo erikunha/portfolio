@@ -3,12 +3,10 @@
 INPUT=$(cat)
 HOOK_DIR=$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || printf '.')
 
-# Primary block detection: shlex-tokenized, command-position aware. See
-# bash-guard-detect.py and docs/harness-audit.md findings 13-17. It resists the
-# quote / whitespace / no-space-chain / wrapper / subshell / newline evasions a
-# raw grep misses, and will not false-block a dangerous string that appears only
-# inside a quoted argument (a commit message). Exit 2 = block (message on stdout),
-# 0 = analyzed-and-clean, 3 = could not analyze -> coarse fail-closed fallback below.
+# Detection is delegated to bash-guard-detect.py, which matches on shell tokens at
+# command position so a substring rewrite here would reintroduce the quote/chain
+# evasions and the commit-message false-block it exists to prevent.
+# Exit 2 = block (message on stdout), 0 = clean, 3 = unanalyzable -> coarse fallback.
 DET=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/bash-guard-detect.py" 2>/dev/null)
 DRC=$?
 if [ "$DRC" -eq 2 ]; then
