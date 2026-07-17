@@ -167,6 +167,16 @@ z.object({
 
 const SITE_ORIGIN = 'https://www.erikunha.dev';
 
+export const SITE_NAME = 'erikunha.dev';
+export const OG_LOCALE = 'en_US';
+export const OG_IMAGE_PATH = '/og.png';
+const OG_IMAGE_WIDTH = 1200;
+const OG_IMAGE_HEIGHT = 630;
+
+export function ogImage(alt: string) {
+  return { url: OG_IMAGE_PATH, width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, alt };
+}
+
 export function breadcrumbSchema(trail: { name: string; path: string }[]) {
   return {
     '@context': 'https://schema.org',

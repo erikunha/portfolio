@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { OG_IMAGE_PATH, OG_LOCALE, ogImage, SITE_NAME } from '@/content/seo';
 
 export function dsPageMetadata({
   slug,
@@ -16,13 +17,13 @@ export function dsPageMetadata({
     alternates: { canonical: path },
     openGraph: {
       type: 'website',
-      locale: 'en_US',
+      locale: OG_LOCALE,
       url: path,
       title,
       description,
-      siteName: 'erikunha.dev',
-      images: [{ url: '/og.png', width: 1200, height: 630, alt: title }],
+      siteName: SITE_NAME,
+      images: [ogImage(title)],
     },
-    twitter: { card: 'summary_large_image', title, description, images: ['/og.png'] },
+    twitter: { card: 'summary_large_image', title, description, images: [OG_IMAGE_PATH] },
   };
 }
