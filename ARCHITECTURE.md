@@ -433,7 +433,7 @@ History: see `docs/audit/2026-05-19-principal-audit.md` Theme 1.4.
 The page MUST fail to merge if it regresses past the budgets. This is where the architecture becomes self-enforcing.
 
 ### GitHub Actions PR workflow
-See §13 for the authoritative CI job list, derived from `.github/workflows/ci.yml`. (An earlier hand-written YAML sketch here had drifted from the real pipeline — the pipeline itself is the source of truth.)
+See §13 for a summary of the CI jobs. `.github/workflows/ci.yml` (plus `codeql.yml`) is the source of truth — an earlier hand-written YAML sketch here had drifted from it, so this points at the pipeline rather than restating it.
 
 Any failure blocks merge. No overrides except by branch protection bypass — and using that is itself a smell.
 
@@ -556,6 +556,7 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 10. axe-core a11y scan
 11. Ask eval harness (`ai-eval` job, required gate; path-filtered to AI-relevant changes via `detect-changes`)
 12. Dependency review (GitHub native)
+13. Security scans: Semgrep static analysis (`semgrep` job) + Gitleaks secret scan (`gitleaks` job); CodeQL runs as a separate workflow (`.github/workflows/codeql.yml`). Orchestration jobs (`detect-changes`, `ci-gate`, `quality-fast`) gate and fan out the above.
 
 ### Production deploy
 Vercel auto-deploys main. No manual gate. Lighthouse CI on production deploy as a tripwire — fails the deploy if regression detected.
