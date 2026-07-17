@@ -19,7 +19,7 @@ sequenceDiagram
     C->>C: writing-plans + thinking-inversion (failure modes -> tasks)
     C->>C: TDD implement (tests first)
     C->>G: edits trigger PostToolUse hooks (markers, lints)
-    C->>A: 5-agent review battery (parallel)
+    C->>A: 4-agent review battery (parallel)
     A-->>C: findings
     C->>C: battery-synthesis -> record in ledger -> resolve/justify
     C->>G: review:stamp (refuses unless dispatched + resolved)
@@ -70,27 +70,28 @@ Every substantive change runs the same disciplined loop, enforced by mandated sk
 | Anticipate failure | thinking-inversion, pre-mortem | convention + plan tasks |
 | Implement | test-driven-development | convention |
 | Self-verify | verification-before-completion | convention + `pnpm verify` |
-| Review | 5-agent battery | `review:stamp` (transcript-verified) |
+| Review | 4-agent battery | `review:stamp` (transcript-verified) |
 | Resolve | findings ledger | stamp refuses while findings open |
 | Record | DECISIONS.md ADR | PR template checklist |
 
 ## 3. The review battery (how AI reviews AI)
 
-Before every push, five specialized agents review the diff in parallel, each a fresh-context reviewer that sees the change but not the reasoning that produced it:
+Before every push, four specialized agents review the diff in parallel, each a fresh-context reviewer that sees the change but not the reasoning that produced it:
 
 ```mermaid
 flowchart LR
     diff["diff"] --> b1["pr-review-toolkit:review-pr (correctness)"]
-    diff --> b2["accessibility-tester (a11y)"]
-    diff --> b3["security-auditor (security)"]
-    diff --> b4["performance-engineer (perf)"]
-    diff --> b5["dependency-manager (deps)"]
-    b1 & b2 & b3 & b4 & b5 --> synth["battery-synthesis: dedup + rank"]
+    diff --> b2["security-auditor (security)"]
+    diff --> b3["performance-engineer (perf)"]
+    diff --> b4["dependency-auditor (deps)"]
+    b1 & b2 & b3 & b4 --> synth["battery-synthesis: dedup + rank"]
     synth --> ledger[".review-findings.json"]
     ledger --> stamp["review:stamp"]
 ```
 
-The stamp is **transcript-verified**: `scripts/review-stamp.ts` reads the session JSONL and refuses to write `.review-passed` unless all five `subagent_type` roles were dispatched strictly after the HEAD commit timestamp, and the findings ledger has no open Critical/Important finding. This converts "I reviewed it" from an honor-system claim into a mechanical fact. The residual honor-system boundary is small and visible: *recording* a finding (the stamp cannot know about a finding nobody recorded).
+WCAG 2.1 AA is gated separately and mechanically by axe-core + Lighthouse accessibility = 100, not by a battery agent.
+
+The stamp is **transcript-verified**: `scripts/review-stamp.ts` reads the session JSONL and refuses to write `.review-passed` unless all four `subagent_type` roles were dispatched strictly after the HEAD commit timestamp, and the findings ledger has no open Critical/Important finding. This converts "I reviewed it" from an honor-system claim into a mechanical fact. The residual honor-system boundary is small and visible: *recording* a finding (the stamp cannot know about a finding nobody recorded).
 
 ## 4. How AI is kept honest (the enforcement contract)
 

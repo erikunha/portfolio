@@ -4,7 +4,7 @@
 
 ## The 30-second model
 
-You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> 5-agent review -> ~18 gates -> squash-merge -> ADR. The gates are mechanical and will block you; that is the point, and it is how you move fast safely.
+You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> 4-agent review -> ~18 gates -> squash-merge -> ADR. The gates are mechanical and will block you; that is the point, and it is how you move fast safely.
 
 ## Day 1 - understand the flow before you touch it
 
@@ -17,7 +17,7 @@ You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy p
 
 1. `pnpm install && pnpm dev`. Then `pnpm verify` once. Read what each gate checks ([engineering-standards](./engineering-standards.md)).
 2. Read [`/docs/09-hidden-knowledge`](../09-hidden-knowledge.md) (the conventions that will trip you).
-3. Understand the **first-push gotcha** before you hit it: the review stamp requires a findings ledger, so your first push flow is: run the 5-agent battery, `pnpm review:findings clear` (then record/resolve any findings), `pnpm review:stamp`, push. Without the `clear`, the pre-push hook blocks with "no findings ledger."
+3. Understand the **first-push gotcha** before you hit it: the review stamp requires a findings ledger, so your first push flow is: run the 4-agent battery, `pnpm review:findings clear` (then record/resolve any findings), `pnpm review:stamp`, push. Without the `clear`, the pre-push hook blocks with "no findings ledger."
 
 ## Day 3 - make a change through the full pipeline
 
@@ -26,7 +26,7 @@ Pick a small change (a content edit or a design-system variant per the [workflow
 ```mermaid
 flowchart LR
     edit["edit"] --> tdd["add/adjust a test"] --> commit["commit (scope!)"]
-    commit --> battery["run the 5-agent battery"] --> ledger["review:findings clear; resolve any"]
+    commit --> battery["run the 4-agent battery"] --> ledger["review:findings clear; resolve any"]
     ledger --> stamp["review:stamp"] --> push["push (passes pre-push)"]
     push --> pr["ready-for-pr; gh pr create (fill template)"]
     pr --> conv["converge claude-review"] --> ready["ready-to-merge"] --> owner["owner merges"]

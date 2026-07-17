@@ -19,7 +19,7 @@ flowchart TB
         gates["scripts/check-*.ts (CI + verify chain)"]
     end
     subgraph loop["Review / verification / learning loop"]
-        battery["5-agent review battery"]
+        battery["4-agent review battery"]
         stamp["review:stamp (.review-passed)"]
         ledger["review:findings (.review-findings.json)"]
         learn["review:learn (learning loop)"]
@@ -55,22 +55,22 @@ Git hooks (`.husky/`): `pre-commit` = Biome; `commit-msg` = commitlint; `pre-pus
 
 ## The review / verification loop
 
-Before every push (and whenever coding work stops), the agent runs a **5-agent review battery** in parallel - `pr-review-toolkit:review-pr`, `accessibility-tester`, `security-auditor`, `performance-engineer`, `dependency-manager` - scoped to the actual diff.
+Before every push (and whenever coding work stops), the agent runs a **4-agent review battery** in parallel - `pr-review-toolkit:review-pr`, `security-auditor`, `performance-engineer`, `dependency-auditor` - scoped to the actual diff. WCAG 2.1 AA is gated separately and mechanically by axe-core + Lighthouse accessibility = 100, not by a battery agent.
 
 ```mermaid
 flowchart LR
-    change["diff"] --> battery["dispatch 5 agents (parallel)"]
+    change["diff"] --> battery["dispatch 4 agents (parallel)"]
     battery --> synth["battery-synthesis: dedup -> ledger"]
     synth --> ledger[".review-findings.json<br/>each Critical/Important: open -> resolved|justified"]
     ledger --> stamp["review:stamp"]
-    stamp -->|refuses unless| cond["(a) transcript shows all 5 dispatched after HEAD commit time<br/>AND (b) no open Critical/Important finding"]
+    stamp -->|refuses unless| cond["(a) transcript shows all 4 dispatched after HEAD commit time<br/>AND (b) no open Critical/Important finding"]
     cond --> passed[".review-passed = HEAD SHA"]
     passed --> push["pre-push hook allows push"]
 ```
 
 Two enforcement boundaries, both mechanical:
 
-1. **Dispatch** - `scripts/review-stamp.ts` reads the session transcript and refuses to write `.review-passed` unless all five agent roles were dispatched *after* the HEAD commit's timestamp (fail-closed; the boundary is git commit time, so a commit made outside the session can't be stamped by a stale review).
+1. **Dispatch** - `scripts/review-stamp.ts` reads the session transcript and refuses to write `.review-passed` unless all four agent roles were dispatched *after* the HEAD commit's timestamp (fail-closed; the boundary is git commit time, so a commit made outside the session can't be stamped by a stale review).
 2. **Resolution (the verification loop)** - the stamp *also* refuses while any Critical/Important finding in `.review-findings.json` is `open`. Findings are recorded via `pnpm review:findings` (`add`/`resolve`/`justify`/`check`/`clear`); a `resolve` cites a fix SHA, a `justify` cites a reason. This turns the stamp from "review happened" into "findings were resolved."
 
 The residual honor-system boundary is *recording* findings (the stamp can't know about a finding you never recorded). The `transcript:doctor` (`scripts/transcript-doctor.ts`) diagnoses the fail-closed transcript-resolution path (a shared SPOF) in seconds.
@@ -104,7 +104,7 @@ Context7 is the one repo-configured MCP; the GitHub/Vercel/Chrome ones are plugi
 
 ## The CI-side AI reviewer
 
-`.github/workflows/claude.yml` is an **opt-in pilot**: `claude-code-action` (SHA-pinned) runs only when a human writes `@claude` in a PR/issue comment, authenticated via a Max-subscription `CLAUDE_CODE_OAUTH_TOKEN`. It supplements, never replaces, the local 5-agent battery and the automated `/claude-review` (the sole AI PR reviewer as of 2026-06-20; Copilot was dropped).
+`.github/workflows/claude.yml` is an **opt-in pilot**: `claude-code-action` (SHA-pinned) runs only when a human writes `@claude` in a PR/issue comment, authenticated via a Max-subscription `CLAUDE_CODE_OAUTH_TOKEN`. It supplements, never replaces, the local 4-agent battery and the automated `/claude-review` (the sole AI PR reviewer as of 2026-06-20; Copilot was dropped).
 
 ## Where to read more
 
