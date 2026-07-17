@@ -264,6 +264,9 @@ assert_eq "bg: legit find -name allowed"       "0" "$(bg_exit 'find . -name npm-
 # oversized input skips the parser (size cap) and falls to the coarse fallback fast
 BG_BIG="echo $(head -c 150000 /dev/zero | tr '\0' x)"
 assert_eq "bg: oversized input -> no parse-hang" "0" "$(bg_exit "$BG_BIG")"
+# many sibling interpreter invocations exhaust the shared reparse budget -> NEST block
+BG_WIDE="$(python3 -c "print(';'.join([\"bash -c 'true'\"]*500))")"
+assert_eq "bg: reparse-budget exhaustion blocks" "2" "$(bg_exit "$BG_WIDE")"
 # bundled interpreter flag (bash -lc), git 'stage' alias, yarnpkg binary, and a
 # padded-brace filler that must not strand the real dangerous argument
 assert_eq "bg: 'bash -lc npm' blocked"         "2" "$(bg_exit 'bash -lc "npm i"')"
