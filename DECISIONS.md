@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-07-16 - Superseded: D2's `pnpm bundle:analyze` no longer exists
+
+- **2026-07-16** · **The 2026-05-21 "D2" entry below says the 43KB app-island figure is "a documented design target tracked via `pnpm bundle:analyze` (`@next/bundle-analyzer`), not a gated number."** Both halves are now false: the command is deleted (it was a webpack plugin against a Turbopack build and emitted nothing — see the 2026-07-14 entry), and the per-route figure IS gated, by `pnpm route-js-check`. D2 is dated history and is **left exactly as written** per this log's own convention; this entry supersedes it. Recorded because a future reader following D2 literally would run a command that does not exist. _Reversible: n/a — this is a pointer, not a decision._
+
 ## 2026-07-16 - Breadcrumb removed from the design-system pages
 
 - **2026-07-16** · **Owner decision: delete the Breadcrumb feature outright** — the component, its render on all five `/design-system/*` pages, the `<Breadcrumb>` block the changelog generator emitted, `breadcrumbSchema` in `content/seo.ts`, and the now-orphaned `SITE_ORIGIN` its removal stranded. This **supersedes the Breadcrumb bullet in the 2026-07-13 (#198) entry below**, which describes it as shipped; that entry is dated history and is left as written. **What this costs, stated plainly because it was argued and overruled:** the `BreadcrumbList` JSON-LD is gone, so the design-system subpages lose their trail in search results — a rich-result feature #198 added deliberately — and the `<nav aria-label="Breadcrumb">` landmark is gone with it. Verified after removal: `pnpm changelog:sync` regenerates the changelog with zero Breadcrumb references (the generator emitted the import as a string, so a missed edit there would have resurrected the component on the next sync), build exits 0, 170 test files pass. _Reversible: restore from `/tmp/breadcrumb-backup/` or `git revert`; the component, `breadcrumbSchema`, and the generator HEADER must come back together, and `SITE_ORIGIN` with them._
