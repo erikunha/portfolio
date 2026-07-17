@@ -274,6 +274,17 @@ assert_eq "bg: 'yarnpkg install' blocked"      "2" "$(bg_exit 'yarnpkg install')
 assert_eq "bg: 'bash -lc echo' allowed"        "0" "$(bg_exit 'bash -lc "echo hi"')"
 BG_FILLER="git add {$(python3 -c "print(','.join('x%d'%i for i in range(80)))")} ."
 assert_eq "bg: filler-brace before '.' blocked" "2" "$(bg_exit "$BG_FILLER")"
+# non-terminal -c in a bundled cluster (bash -cx) still takes the next word as script
+assert_eq "bg: 'bash -cx npm' blocked"         "2" "$(bg_exit 'bash -cx "npm i"')"
+assert_eq "bg: 'sh -cx git-add' blocked"       "2" "$(bg_exit 'sh -cx "git add -A"')"
+# attached interpreter flags (no space) for python/ruby, and php -r
+assert_eq "bg: python -c'...' attached blocked" "2" "$(bg_exit 'python3 -c'\''import os; os.system("npm i")'\''')"
+assert_eq "bg: php -r blocked"                 "2" "$(bg_exit 'php -r '\''system("npm i");'\''')"
+# git add trailing-slash form
+assert_eq "bg: 'git add ./' blocked"           "2" "$(bg_exit 'git add ./')"
+assert_eq "bg: 'git stage ./' blocked"         "2" "$(bg_exit 'git stage ./')"
+assert_eq "bg: 'git add src/' allowed"         "0" "$(bg_exit 'git add src/')"
+assert_eq "bg: 'git stash' allowed"            "0" "$(bg_exit 'git stash')"
 # command-position: a dangerous string only inside a quoted arg (commit message) must NOT block (finding 13)
 assert_eq "bg: 'gh pr merge' in commit msg allowed"  "0" "$(bg_exit 'git commit -m "docs: explain the gh pr merge guard"')"
 assert_eq "bg: 'git add -A' in commit msg allowed"   "0" "$(bg_exit 'git commit -m "chore: forbid git add -A"')"

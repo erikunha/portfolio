@@ -81,9 +81,10 @@ def main_ref(tok):
 
 def git_add_broad(operands):
     for a in operands:
-        if a in ("-A", "--all", ".", ":/", "*"):
+        norm = a.rstrip("/")  # ./ , .// , :/ collapse to their broad form
+        if norm in ("-A", "--all", ".", ":/", ":", "*"):
             return True
-        if a.startswith(":") or a == "*":
+        if norm.startswith(":") or norm == "*":
             return True
         if re.fullmatch(r"-[A-Za-z]*A[A-Za-z]*", a):
             return True
@@ -109,10 +110,10 @@ def git_add_check(args):
 
 
 def dash_c_index(args):
-    # index of a `-c` token or a bundled short-flag form (bash -lc, sh -ic) whose
-    # last char is c; the interpreter's script is the following word.
+    # index of a `-c` token or a bundled short-flag cluster containing c anywhere
+    # (bash -lc, -cx, -xc all take the following word as the -c script).
     for i, a in enumerate(args):
-        if a == "-c" or re.fullmatch(r"-[A-Za-z]*c", a):
+        if a == "-c" or re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", a):
             return i
     return -1
 
@@ -166,12 +167,14 @@ def inspect(name, args, depth):
     if script is not None:
         reparse(script, depth)
     if name in OTHER_INTERP:
-        j = dash_c_index(args)
-        if j >= 0 and j + 1 < len(args):
-            coarse_scan(args[j + 1])
+        # -c (python/ruby/node), -e (node/perl/ruby), -r (php) carry inline code,
+        # in spaced (`-c 'x'`), bundled (`-Bc 'x'`) and attached (`-c'x'`) forms.
         for i, a in enumerate(args):
-            if (a == "-e" or re.fullmatch(r"-[A-Za-z]*e", a)) and i + 1 < len(args):
-                coarse_scan(args[i + 1])
+            if len(a) > 2 and a[:2] in ("-c", "-e", "-r"):
+                coarse_scan(a[2:])
+            elif a in ("-c", "-e", "-r") or re.fullmatch(r"-[A-Za-z]*[cer]", a):
+                if i + 1 < len(args):
+                    coarse_scan(args[i + 1])
     if name == "find":
         for kw in ("-exec", "-execdir"):
             if kw in args:

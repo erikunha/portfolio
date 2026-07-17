@@ -32,7 +32,7 @@ fi
 # path (DRC==0) the detector already cleared the command, so these coarse substring
 # greps are skipped to avoid over-blocking a quoted argument.
 if [ "$DRC" -ne 0 ]; then
-  if printf '%s' "$CMD" | grep -qE '(^|[;&|]|[[:space:]])git[[:space:]]+(add|stage)[[:space:]]+(-A\b|--all\b|\.\s*$|\.\s+|:/|\*)'; then
+  if printf '%s' "$CMD" | grep -qE '(^|[;&|]|[[:space:]])git[[:space:]]+(add|stage)[[:space:]]+(-A\b|--all\b|\./?(\s|$)|:/|\*)'; then
     printf '[BLOCKED] Broad git add detected (coarse fallback; python3 unavailable).\n'
     exit 2
   fi
