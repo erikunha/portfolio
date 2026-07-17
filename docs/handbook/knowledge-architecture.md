@@ -107,7 +107,7 @@ decomposition the convention would otherwise add already exists in every plan.
 Two complementary mechanisms carry knowledge across the fresh-context boundary of each session:
 
 - **Auto memory** (`~/.claude/projects/<slug>/memory/`): `MEMORY.md` is an index (first 200 lines loaded each session) pointing at one-fact-per-file notes typed `user` / `feedback` / `project` / `reference` (and `dead-end`, established this year). Feedback memories carry a "Why" and a "How to apply".
-- **`.remember/`**: in-flight session handoff. `now.md` (current state), `recent.md` (rolling log + reusable "Identity Candidates" patterns), `archive.md`, per-day `today-*.md`, and auto-save logs. Handoff is written by the `remember` skill (invoked at session close), not by a hook.
+- **`.remember/`**: in-flight session handoff. `now.md` (current state), `recent.md` (rolling log + reusable "Identity Candidates" patterns), `archive.md`, per-day `today-*.md`, and auto-save logs. It is maintained by a user-global (`~/.claude`) mechanism outside this repo's tracked harness — no in-repo skill, hook, or `settings.json` entry writes it (the `SessionEnd` hook here runs only `learning-loop.sh`), so the repository neither instruments nor gates it.
 
 ## Documentation standards
 
