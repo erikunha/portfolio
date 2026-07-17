@@ -155,27 +155,31 @@ def interp_script(name, args):
 
 
 def inspect(name, args, depth):
-    if name in ("npm", "yarn", "yarnpkg"):
+    # match on the basename so /usr/bin/npm, /opt/homebrew/bin/git, ./node_modules/.bin/…
+    # and other path-prefixed spellings of the same binary are still caught.
+    base = os.path.basename(name)
+    if base in ("npm", "yarn", "yarnpkg"):
         block(NPM_MSG)
-    if name == "gh":
+    if base == "gh":
         gh_merge_check(args)
-    if name == "git":
+    if base == "git":
         git_add_check(args)
         if is_force_push(args):
             block(PUSH_MSG)
-    script = interp_script(name, args)
+    script = interp_script(base, args)
     if script is not None:
         reparse(script, depth)
-    if name in OTHER_INTERP:
+    if base in OTHER_INTERP:
         # -c (python/ruby/node), -e (node/perl/ruby), -r (php) carry inline code,
-        # in spaced (`-c 'x'`), bundled (`-Bc 'x'`) and attached (`-c'x'`) forms.
+        # in spaced (`-c 'x'`), bundled (`-Bc 'x'`) and attached (`-Bc'x'`) forms.
         for i, a in enumerate(args):
-            if len(a) > 2 and a[:2] in ("-c", "-e", "-r"):
-                coarse_scan(a[2:])
-            elif a in ("-c", "-e", "-r") or re.fullmatch(r"-[A-Za-z]*[cer]", a):
-                if i + 1 < len(args):
+            m = re.match(r"-[A-Za-z]*?[cer](.*)", a)
+            if m:
+                if m.group(1):
+                    coarse_scan(m.group(1))
+                elif i + 1 < len(args):
                     coarse_scan(args[i + 1])
-    if name == "find":
+    if base == "find":
         for kw in ("-exec", "-execdir"):
             if kw in args:
                 j = args.index(kw)
@@ -186,7 +190,7 @@ def inspect(name, args, depth):
                     sub.append(a)
                 if sub:
                     inspect(sub[0], sub[1:], depth)
-    if name in WRAPPERS:
+    if base in WRAPPERS:
         inspect_wrapper(args, depth)
 
 
@@ -194,19 +198,21 @@ def inspect_wrapper(args, depth):
     # a wrapper (env/sudo/...) execs another command bashlex parses as plain
     # word-args, not a nested node; scan those words by presence and re-parse any
     # interpreter payload they carry.
-    if "npm" in args or "yarn" in args or "yarnpkg" in args:
+    bases = [os.path.basename(a) for a in args]
+    if "npm" in bases or "yarn" in bases or "yarnpkg" in bases:
         block(NPM_MSG)
     gh_merge_check(args)
-    if "git" in args:
-        rest = args[args.index("git") + 1:]
+    if "git" in bases:
+        rest = args[bases.index("git") + 1:]
         git_add_check(rest)
         if is_force_push(rest):
             block(PUSH_MSG)
     for i, a in enumerate(args):
-        if a == "eval":
+        b = os.path.basename(a)
+        if b == "eval":
             reparse(" ".join(args[i + 1:]), depth)
             break
-        if a in SHELL_INTERP:
+        if b in SHELL_INTERP:
             sub = args[i + 1:]
             j = dash_c_index(sub)
             if j >= 0 and j + 1 < len(sub):

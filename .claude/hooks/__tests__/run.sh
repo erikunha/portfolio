@@ -267,6 +267,14 @@ assert_eq "bg: oversized input -> no parse-hang" "0" "$(bg_exit "$BG_BIG")"
 # many sibling interpreter invocations exhaust the shared reparse budget -> NEST block
 BG_WIDE="$(python3 -c "print(';'.join([\"bash -c 'true'\"]*500))")"
 assert_eq "bg: reparse-budget exhaustion blocks" "2" "$(bg_exit "$BG_WIDE")"
+# absolute/relative path to the binary must match on basename
+assert_eq "bg: '/usr/bin/npm' blocked"         "2" "$(bg_exit '/usr/bin/npm install')"
+assert_eq "bg: abs-path 'git add .' blocked"   "2" "$(bg_exit '/usr/bin/git add .')"
+assert_eq "bg: 'sudo /usr/bin/npm' blocked"    "2" "$(bg_exit 'sudo /usr/bin/npm install')"
+assert_eq "bg: './node_modules/.bin/npm' blk"  "2" "$(bg_exit './node_modules/.bin/npm install')"
+assert_eq "bg: '/usr/bin/echo' allowed"        "0" "$(bg_exit '/usr/bin/echo hi')"
+# bundled short flag before an attached interpreter script (python3 -Bc'...')
+assert_eq "bg: 'python3 -Bc npm' blocked"      "2" "$(bg_exit 'python3 -Bc'\''import os; os.system("npm i")'\''')"
 # bundled interpreter flag (bash -lc), git 'stage' alias, yarnpkg binary, and a
 # padded-brace filler that must not strand the real dangerous argument
 assert_eq "bg: 'bash -lc npm' blocked"         "2" "$(bg_exit 'bash -lc "npm i"')"
