@@ -13,7 +13,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Entry:** an idea or requirement.
 - **Steps:**
   1. `superpowers:brainstorming` to lock intent and approach.
-  2. Write a spec in `docs/superpowers/specs/` (Context, Gaps to Close, Changes). Get it to `Status: Approved`.
+  2. Write a spec in `docs/superpowers/specs/` (local-only, gitignored; Context, Gaps to Close, Changes). Get it to `Status: Approved`.
   3. Dispatch `architect-reviewer`; it must return `GATE_RESULT: PASS` (the architect-gate hook blocks `writing-plans` otherwise).
   4. `superpowers:writing-plans` + `thinking-inversion` to decompose into tasks (shard into sub-PRs if large).
   5. Branch `feat/<description>`. Implement test-first.

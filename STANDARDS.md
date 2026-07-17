@@ -383,9 +383,7 @@ branch protection) is the human-in-the-loop backstop.
 This document supersedes the inline "Reference standards (post-audit
 2026-05-19)" list formerly in `CLAUDE.md`. It was produced as deliverable 1 of
 the Reference Standards & Improvement Program — see
-`docs/superpowers/specs/2026-05-20-reference-standards-and-improvement-program-design.md`
-for the design rationale and `DECISIONS.md` for the ADR entry recording the
-supersession. Every gate named in Chapters 1–11 was verified present in the
+`DECISIONS.md` for the ADR entry recording the supersession. Every gate named in Chapters 1–11 was verified present in the
 repository at the time of writing; a citation to a gate that does not exist is
 itself a violation of Chapter 10. Chapter 12 is explicitly forward-declared
 (gates land in PRs A–E of the design system tokenized spec) and is exempt from
