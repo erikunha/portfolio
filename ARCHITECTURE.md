@@ -99,7 +99,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 │                                                             │
 │   Daily cron: /api/psi-refresh at 03:00 UTC (vercel.json)   │
 │   refetches PSI -> KV; alerts via Resend on failure.        │
-│   Lazy-fill fallback on 24h-stale read (lib/psi).           │
+│   Lazy-fill on 25h-stale read (lib/lighthouse-scores).      │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -376,7 +376,7 @@ A single env var, `ASK_ENABLED`, gates the route. The check runs first in the PO
 
 The asymmetry is intentional: this is a kill switch, not a feature flag. During a billing or abuse incident, the operator is reaching for the off lever and may type any plausible off-keyword. False-positive disablement (typing `'no'` when meaning to enable) recovers in 60-90 seconds via env-var edit + redeploy. False-negative non-disablement during a cost emergency — what the alternative "typos default to enabled" semantics would produce — is exactly the failure mode the switch exists to prevent.
 
-A module-scope `console.info('[ask] kill-switch on cold start:', process.env.ASK_ENABLED ?? 'unset')` emits once per warm instance, providing deploy-time proof of the env-var value in Vercel runtime logs without inspecting the dashboard.
+A module-scope `log.info('kill-switch on cold start', { askEnabled: env.ASK_ENABLED ?? 'unset' })` — the structured logger reading the Zod `env` accessor, wrapped in a try/catch so a logger failure can't crash cold start — emits once per warm instance, providing deploy-time proof of the env-var value in Vercel runtime logs without inspecting the dashboard.
 
 History and rationale: see `DECISIONS.md` 2026-05-18.
 
@@ -592,7 +592,7 @@ Steady-state monthly:
 |---|---|---|
 | Vercel (Hobby or Pro) | Hobby | $0 |
 | Upstash Redis | Free (10k cmd/day) | $0 |
-| Anthropic via AI Gateway (`ask`) | pay-as-you-go, hard-capped | $3–$5.30/mo at the 3M-token cap (§6) |
+| Anthropic via AI Gateway (`ask`) | pay-as-you-go, hard-capped (§6) | ~$0.50 (30 prompts/day) |
 | Resend | Free (3k/month) | $0 |
 | GitHub | public repo | $0 |
 | PSI API | free | $0 |
