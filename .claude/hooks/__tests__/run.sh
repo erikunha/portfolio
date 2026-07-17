@@ -186,6 +186,21 @@ assert_eq "bg: fail-closed on malformed payload (force-push main)" "2" "$?"
 # a malformed but safe payload must NOT block (no over-blocking of ordinary commands)
 printf 'just some prose with no dangerous command' | bash "$BG_HOOK" >/dev/null 2>&1
 assert_eq "bg: malformed safe payload allowed" "0" "$?"
+# tokenization: quote/whitespace/chaining evasions must NOT bypass the block (findings 14-17)
+assert_eq "bg: quoted 'gh \"pr\" merge' blocked"   "2" "$(bg_exit 'gh "pr" merge 42 --squash')"
+assert_eq "bg: double-space 'gh pr  merge' blocked" "2" "$(bg_exit 'gh pr  merge 42')"
+assert_eq "bg: quoted force-flag to main blocked"  "2" "$(bg_exit 'git push --"force" origin main')"
+assert_eq "bg: chained '&& npm' blocked"           "2" "$(bg_exit 'cd repo && npm install foo')"
+assert_eq "bg: chained '; yarn' blocked"           "2" "$(bg_exit 'echo hi ; yarn add foo')"
+assert_eq "bg: quoted 'git add \"-A\"' blocked"    "2" "$(bg_exit 'git add "-A"')"
+assert_eq "bg: quoted 'git add \".\"' blocked"     "2" "$(bg_exit 'git add "."')"
+# command-position: a dangerous string only inside a quoted arg (commit message) must NOT block (finding 13)
+assert_eq "bg: 'gh pr merge' in commit msg allowed"  "0" "$(bg_exit 'git commit -m "docs: explain the gh pr merge guard"')"
+assert_eq "bg: 'git add -A' in commit msg allowed"   "0" "$(bg_exit 'git commit -m "chore: forbid git add -A"')"
+# specific (non-broad) forms stay allowed
+assert_eq "bg: 'git add <paths>' allowed"          "0" "$(bg_exit 'git add src/foo.ts src/bar.ts')"
+assert_eq "bg: 'git add .claude/agents/' allowed"  "0" "$(bg_exit 'git add .claude/agents/')"
+assert_eq "bg: force-push to non-main allowed"     "0" "$(bg_exit 'git push --force origin feature/x')"
 
 # --- api-edit-marker.sh block logic (isolated in a temp non-git dir; real marker untouched) ---
 AEM_HOOK="$HOOKS/api-edit-marker.sh"
