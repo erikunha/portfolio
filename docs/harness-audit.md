@@ -105,6 +105,7 @@ There is no explicit model-routing or runtime-routing layer today: routing is by
 | 10 | `merge.md` duplicates `pr-merge-gate` Quick sequence | simplification | yes | replace with a pointer |
 | 11 | `review-learn.ts` proposals accumulate (77-90 cycles), no consumption | process | yes | add escalation threshold or schedule manual triage |
 | 12 | Duplicated "gate-hygiene" rule in project+global CLAUDE.md | simplification | yes | low priority; cut the abstract sentence from one side |
+| 13 | `bash-guard.sh` matches dangerous strings (`gh pr merge`) anywhere in the command, including inside a commit-message argument, so a commit whose prose mentions the command is falsely blocked (hit live during this audit) | false-positive | yes | strip the quoted `-m` argument (or match at command position) before the dangerous-string greps; Phase C |
 
 ## Decisions required (owner)
 
