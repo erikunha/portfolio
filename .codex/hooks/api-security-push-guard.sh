@@ -23,8 +23,9 @@ else
   # word boundaries are unreachable there (\ngit, push\", "git) and every
   # normalization pass so far has left another adjacency open. Containment has
   # no boundary to get wrong, and over-blocking is the safe direction here.
-  printf '%s' "$INPUT" | grep -qF 'git' \
-    && printf '%s' "$INPUT" | grep -qF 'push' || exit 0
+  HAY=$(printf '%s' "$INPUT" | sed 's/"transcript_path"[^,}]*//g; s/"cwd"[^,}]*//g')
+  printf '%s' "$HAY" | grep -qF 'git' \
+    && printf '%s' "$HAY" | grep -qF 'push' || exit 0
 fi
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 MARKER="$ROOT/.codex/.api-edit-pending"

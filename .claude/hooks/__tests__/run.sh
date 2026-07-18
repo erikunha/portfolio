@@ -509,10 +509,24 @@ assert_eq "asg: push blocks when python3 is unusable" "2" "$asg_nopy_code"
 assert_contains "asg: block names the manual clear no dispatch can substitute for" "$asg_nopy" "rm "
 rm -rf "$d"
 
+ASG_TOKEN_PATH='/Users/x/git/push-service/t.jsonl'
+
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload 'rm .claude/.api-edit-pending' "$d/t.jsonl" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
-assert_eq "asg: the documented escape is itself never blocked" "0" "$?"
+(asg_payload 'rm .claude/.api-edit-pending' "$ASG_TOKEN_PATH" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: the documented escape survives a transcript_path carrying both tokens" "0" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload 'ls -la' "$ASG_TOKEN_PATH" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: unrelated command survives a transcript_path carrying both tokens" "0" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"git push origin main"},"transcript_path":"%s"' "$ASG_TOKEN_PATH" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: a real push still blocks once path tokens are excluded" "2" "$?"
 rm -rf "$d"
 rm -rf "$PYSHIM"
 
