@@ -17,7 +17,10 @@
       "Skill(vercel:nextjs)",
       "Skill(vercel:vercel-functions)",
       "Skill(web-design-guidelines)",
-      "Skill(thinking-*)"
+      "Skill(thinking-*)",
+      "Edit(.claude/hooks/**)",
+      "Write(.claude/hooks/**)",
+      "Read(.claude/hooks/**)"
     ],
     "deny": ["Bash(fallow fix:*)", "Bash(npx fallow fix:*)", "Bash(npx fallow@2.95.0 fix:*)"],
     "defaultMode": "acceptEdits"
