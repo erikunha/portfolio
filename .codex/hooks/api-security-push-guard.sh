@@ -7,21 +7,20 @@ try:
   print(d.get('tool_input',{}).get('command','') or d.get('command',''))
 except Exception: print('')
 " 2>/dev/null || echo "")
-# Same raw-payload fallback as bash-guard.sh: a malformed payload still
-# carrying a git-push token must not silently fail open. JSON punctuation is
-# normalized to spaces because in JSON-shaped text the token sits against a
-# quote ("git), which the whitespace-boundary push regex below cannot match.
-if [ -z "$CMD" ] && [ -n "$INPUT" ]; then
-  CMD=$(printf '%s' "$INPUT" | tr '":;&|(){}' ' ')
-fi
 TRANSCRIPT=$(printf '%s' "$INPUT" | python3 -c "
 import json,sys
 try: print(json.load(sys.stdin).get('transcript_path',''))
 except Exception: print('')
 " 2>/dev/null || echo "")
 
-printf '%s' "$CMD" | grep -qE '(^|[[:space:]])git([[:space:]]|$)' \
-  && printf '%s' "$CMD" | grep -qE '(^|[[:space:]])push([[:space:]]|$)' || exit 0
+if [ -n "$CMD" ]; then
+  printf '%s' "$CMD" | grep -qE '(^|[[:space:];&|(])git([[:space:];&|)]|$)' \
+    && printf '%s' "$CMD" | grep -qE '(^|[[:space:];&|(])push([[:space:];&|)]|$)' || exit 0
+else
+  HAY=$(printf '%s' "$INPUT" | sed 's/"transcript_path"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"cwd"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"description"[[:space:]]*:[[:space:]]*"[^"]*"//g')
+  printf '%s' "$HAY" | grep -qF 'git' \
+    && printf '%s' "$HAY" | grep -qF 'push' || exit 0
+fi
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 MARKER="$ROOT/.codex/.api-edit-pending"
 [ -s "$MARKER" ] || exit 0
@@ -30,6 +29,8 @@ if [ -z "$TRANSCRIPT" ] || [ ! -r "$TRANSCRIPT" ]; then
   printf '[BLOCKED] Unaudited API edit pending and transcript unreadable (fail-closed).\n' >&2
   printf 'Pending:\n' >&2; cat "$MARKER" >&2
   printf 'Dispatch security-auditor, then retry the push.\n' >&2
+  printf 'If the transcript stays unreadable (python3 or node unavailable), no dispatch\n' >&2
+  printf 'can clear this: audit the files above by hand, then rm %s\n' "$MARKER" >&2
   exit 2
 fi
 MARKER_TS=$(tail -n 1 "$MARKER" | cut -f1)

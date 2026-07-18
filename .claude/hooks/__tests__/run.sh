@@ -466,8 +466,139 @@ rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"cd /r &&\\ngit push origin main"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: escape sequence before the git token fails closed" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{\\"command\\":\\"git push\\"}' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: double-encoded payload with escape after the push token fails closed" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"ls -la"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: malformed payload for an unrelated command stays allowed (no hard-lock)" "0" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
 (printf 'garbled not json, nothing relevant here' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
 assert_eq "asg: malformed payload with no token allowed" "0" "$?"
 rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"git status"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: containment needs BOTH tokens — git alone must not hard-lock" "0" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"npm run push-notes"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: containment needs BOTH tokens — push alone must not hard-lock" "0" "$?"
+rm -rf "$d"
+
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"rm .claude/.api-edit-pending","description":"clear the marker so git push can proceed"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: a prose description must not lock out the escape it describes" "0" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload 'ls -la' "$d/gitrepos/push-notes/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: benign command is not matched by tokens in transcript_path" "0" "$?"
+rm -rf "$d"
+
+PYSHIM=$(mktemp -d)
+cat > "$PYSHIM/python3" <<'STUB'
+#!/usr/bin/env bash
+exit 1
+STUB
+chmod +x "$PYSHIM/python3"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+asg_nopy=$( (asg_payload 'git push origin main' "$d/t.jsonl" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) 2>&1 )
+asg_nopy_code=$?
+assert_eq "asg: push blocks when python3 is unusable" "2" "$asg_nopy_code"
+assert_contains "asg: block names the manual clear no dispatch can substitute for" "$asg_nopy" "rm "
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload 'cd repo&&git push origin main' "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: a shell operator is a token boundary, not just whitespace" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload 'git commit -m "add pushups"' "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: widening the boundary must not start matching push inside a word" "0" "$?"
+rm -rf "$d"
+
+# every character in the boundary class is load-bearing: one fixture per position,
+# because a class is only as good as the character a mutant can delete unnoticed.
+for asg_op in 'a;git push' 'a|git push' '(git push)' 'git push;a' 'git push&&a' 'git push|a' 'cd repo && git push origin main'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_op" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: operator boundary pinned for [$asg_op]" "2" "$?"
+  rm -rf "$d"
+done
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"cwd":"x\\", command git push, "y":"end"}' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: an odd trailing backslash must not let the strip eat a real push" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"rm .claude/.api-edit-pending","description":"say \\"ok\\" git push can proceed"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: an escaped quote leaves a token tail — accepted over-block, never a bypass" "2" "$?"
+rm -rf "$d"
+
+ASG_TOKEN_PATH='/Users/x/git/push-service/t.jsonl'
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload 'rm .claude/.api-edit-pending' "$ASG_TOKEN_PATH" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: the documented escape survives a transcript_path carrying both tokens" "0" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload 'ls -la' "$ASG_TOKEN_PATH" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: unrelated command survives a transcript_path carrying both tokens" "0" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"git push origin main"},"transcript_path":"%s"' "$ASG_TOKEN_PATH" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: a real push still blocks once path tokens are excluded" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"transcript_path":"/t.jsonl","cwd":"/repo""tool_input":{"command":"git push origin main"}}' | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: a path field missing its trailing comma cannot swallow the command" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"cwd":"/repo","transcript_path":"/t.jsonl""tool_input":{"command":"git push origin main"}}' | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: same bleed via transcript_path ahead of the command" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"cwd":"%s","tool_input":{"command":"ls -la"},"transcript_path":"/t.jsonl"' "/Users/x/git/push-service" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: cwd is excluded too — it is the likelier token-bearing path" "0" "$?"
+rm -rf "$d"
+rm -rf "$PYSHIM"
 
 [ "$FAILED" -eq 0 ] && { printf '\nALL PASS\n'; exit 0; } || { printf '\nFAILURES\n'; exit 1; }
