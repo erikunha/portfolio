@@ -13,10 +13,12 @@ try: print(json.load(sys.stdin).get('transcript_path',''))
 except Exception: print('')
 " 2>/dev/null || echo "")
 
+MATCHED_BY_CONTAINMENT=""
 if [ -n "$CMD" ]; then
   printf '%s' "$CMD" | grep -qE '(^|[[:space:]])git([[:space:]]|$)' \
     && printf '%s' "$CMD" | grep -qE '(^|[[:space:]])push([[:space:]]|$)' || exit 0
 else
+  MATCHED_BY_CONTAINMENT="yes"
   # Extraction failed, so the raw payload is JSON text, not a command line:
   # word boundaries are unreachable there (\ngit, push\", "git) and every
   # normalization pass so far has left another adjacency open. Containment has
@@ -32,6 +34,8 @@ if [ -z "$TRANSCRIPT" ] || [ ! -r "$TRANSCRIPT" ]; then
   printf '[BLOCKED] Unaudited API edit pending and transcript unreadable (fail-closed).\n' >&2
   printf 'Pending:\n' >&2; cat "$MARKER" >&2
   printf 'Dispatch security-auditor, then retry the push.\n' >&2
+  printf 'If the transcript stays unreadable (python3 or node unavailable), no dispatch\n' >&2
+  printf 'can clear this: audit the files above by hand, then rm %s\n' "$MARKER" >&2
   exit 2
 fi
 MARKER_TS=$(tail -n 1 "$MARKER" | cut -f1)
@@ -47,7 +51,11 @@ if [ "$AUDITED" = "yes" ]; then
   rm -f "$MARKER"   # verified audit clears the marker so it never blocks forever
   exit 0
 fi
-printf '[BLOCKED] git push blocked — unaudited API-surface edit(s) pending:\n' >&2
+if [ -n "$MATCHED_BY_CONTAINMENT" ]; then
+  printf '[BLOCKED] Payload unparseable and mentions git/push — blocking conservatively.\n' >&2
+else
+  printf '[BLOCKED] git push blocked — unaudited API-surface edit(s) pending:\n' >&2
+fi
 cat "$MARKER" >&2
 printf 'Dispatch security-auditor (CLAUDE.md Ch.9), then retry the push.\n' >&2
 exit 2
