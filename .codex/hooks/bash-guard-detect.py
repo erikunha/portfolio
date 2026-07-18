@@ -42,7 +42,15 @@ PUSH_MSG = "[BLOCKED] Force push to main is not allowed.\nRebase the feature bra
 NEST_MSG = "[BLOCKED] Command nesting too deep to analyze safely."
 
 
+EMIT_MODE = False
+EMITTED = []
+
+
 def block(msg):
+    # In --emit-commands the caller asked what the shell WOULD run, not for a
+    # verdict, so the block rules must observe without terminating the walk.
+    if EMIT_MODE:
+        return
     sys.stdout.write(msg + "\n")
     sys.exit(2)
 
@@ -158,6 +166,8 @@ def inspect(name, args, depth):
     # match on the basename so /usr/bin/npm, /opt/homebrew/bin/git, ./node_modules/.bin/…
     # and other path-prefixed spellings of the same binary are still caught.
     base = os.path.basename(name)
+    if EMIT_MODE:
+        EMITTED.append([base] + list(args))
     if base in ("npm", "yarn", "yarnpkg"):
         block(NPM_MSG)
     if base == "gh":
@@ -273,6 +283,8 @@ if bashlex is not None:
 
 
 def main():
+    global EMIT_MODE
+    EMIT_MODE = "--emit-commands" in sys.argv[1:]
     raw = sys.stdin.read()
     try:
         d = json.loads(raw)
@@ -290,6 +302,9 @@ def main():
     visitor = Visitor()
     for tree in trees:
         visitor.visit(tree)
+    if EMIT_MODE:
+        for words in EMITTED:
+            sys.stdout.write("\t".join(words) + "\n")
     sys.exit(0)
 
 

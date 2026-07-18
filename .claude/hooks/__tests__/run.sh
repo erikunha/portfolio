@@ -550,6 +550,26 @@ for asg_op in 'a;git push' 'a|git push' '(git push)' 'git push;a' 'git push&&a' 
   rm -rf "$d"
 done
 
+# The class a boundary heuristic cannot reach: the token is only `git` after the
+# shell dequotes/resolves it, so detection has to happen at command position.
+for asg_evade in '/usr/bin/git push origin main' 'bash -c "git push origin main"' "sh -c 'git push'" 'g\it push origin main' '`git push`' '$(git push origin main)' 'git subtree push --prefix=x origin main'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_evade" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: command-position detection blocks [$asg_evade]" "2" "$?"
+  rm -rf "$d"
+done
+
+# The opposite direction the same tokenizer must fix: `push` appearing as an
+# operand of a non-push subcommand is not a push.
+for asg_ok in 'git log --grep push' 'git log --oneline | grep push' 'git commit -m "explain the git push guard"' 'git rev-parse HEAD; echo push' 'npm install && git log --grep push' 'git stash push'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: not a push, must not block [$asg_ok]" "0" "$?"
+  rm -rf "$d"
+done
+
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
 (printf '{"cwd":"x\\", command git push, "y":"end"}' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 INPUT=$(cat)
+HOOK_DIR=$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || printf '.')
 CMD=$(printf '%s' "$INPUT" | python3 -c "
 import json,sys
 try:
@@ -13,7 +14,26 @@ try: print(json.load(sys.stdin).get('transcript_path',''))
 except Exception: print('')
 " 2>/dev/null || echo "")
 
-if [ -n "$CMD" ]; then
+DET=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/bash-guard-detect.py" --emit-commands 2>/dev/null)
+if [ $? -eq 0 ] && [ -n "$CMD" ]; then
+  printf '%s\n' "$DET" | awk -F'\t' '
+    $1 == "git" {
+      skip = 0
+      for (i = 2; i <= NF; i++) {
+        a = $i
+        if (skip) { skip = 0; continue }
+        if (a ~ /^-/) {
+          if (a == "-c" || a == "-C" || a == "--git-dir" || a == "--work-tree" \
+              || a == "--namespace" || a == "--exec-path" || a == "--config-env") skip = 1
+          continue
+        }
+        if (a == "push") { found = 1; break }
+        if (a == "subtree") continue
+        break
+      }
+    }
+    END { exit found ? 0 : 1 }' || exit 0
+elif [ -n "$CMD" ]; then
   printf '%s' "$CMD" | grep -qE '(^|[[:space:];&|(])git([[:space:];&|)]|$)' \
     && printf '%s' "$CMD" | grep -qE '(^|[[:space:];&|(])push([[:space:];&|)]|$)' || exit 0
 else
