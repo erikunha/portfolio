@@ -330,4 +330,129 @@ if [ -s "$aem_d/.claude/.api-edit-pending" ]; then aem_fc=MARKED; else aem_fc=NO
 rm -rf "$aem_d"
 assert_eq "aem: fail-closed on malformed payload with API path" "MARKED" "$aem_fc"
 
+# --- architect-gate.sh block logic (writing-plans PreToolUse Skill matcher) ---
+AG_HOOK="$HOOKS/architect-gate.sh"
+ag_payload() { # $1=skill $2=transcript-path -> JSON PreToolUse payload for the Skill matcher
+  python3 -c 'import json,sys; print(json.dumps({"tool_name":"Skill","tool_input":{"skill": sys.argv[1]}, "transcript_path": sys.argv[2]}))' "$1" "$2"
+}
+
+(cd "$REPO_ROOT" && ag_payload 'superpowers:brainstorming' "$FIXDIR/ag-nonexistent-$$.jsonl" | bash "$AG_HOOK") >/dev/null 2>&1
+assert_eq "ag: non-matching skill allowed" "0" "$?"
+
+AG_T_NONE="$FIXDIR/ag-none-$$.jsonl"
+printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"text","text":"no agent dispatch here"}]}}' > "$AG_T_NONE"
+out=$(cd "$REPO_ROOT" && ag_payload 'superpowers:writing-plans' "$AG_T_NONE" | bash "$AG_HOOK" 2>&1)
+ec=$?
+assert_eq "ag: block when transcript has no architect-reviewer dispatch" "2" "$ec"
+assert_contains "ag: block message names the missing PASS" "$out" "no architect-reviewer GATE_RESULT: PASS"
+rm -f "$AG_T_NONE"
+
+AG_T_FAIL="$FIXDIR/ag-fail-$$.jsonl"
+{
+  printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_ag_fail","name":"Agent","input":{"subagent_type":"architect-reviewer","prompt":"Review the spec."}}]}}'
+  printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_ag_fail","content":"Spec has gaps.\nGATE_RESULT: FAIL"}]}}'
+} > "$AG_T_FAIL"
+(cd "$REPO_ROOT" && ag_payload 'superpowers:writing-plans' "$AG_T_FAIL" | bash "$AG_HOOK") >/dev/null 2>&1
+assert_eq "ag: block when architect-reviewer returned GATE_RESULT: FAIL" "2" "$?"
+rm -f "$AG_T_FAIL"
+
+AG_T_WRONG_AGENT="$FIXDIR/ag-wrong-agent-$$.jsonl"
+{
+  printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_ag_wrong","name":"Agent","input":{"subagent_type":"code-reviewer","prompt":"Review the code."}}]}}'
+  printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_ag_wrong","content":"Looks fine.\nGATE_RESULT: PASS"}]}}'
+} > "$AG_T_WRONG_AGENT"
+(cd "$REPO_ROOT" && ag_payload 'superpowers:writing-plans' "$AG_T_WRONG_AGENT" | bash "$AG_HOOK") >/dev/null 2>&1
+assert_eq "ag: block when PASS came from a non-architect-reviewer agent" "2" "$?"
+rm -f "$AG_T_WRONG_AGENT"
+
+AG_T_PASS="$FIXDIR/ag-pass-$$.jsonl"
+{
+  printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_ag_pass","name":"Agent","input":{"subagent_type":"architect-reviewer","prompt":"Review the spec against the four-gate protocol."}}]}}'
+  printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_ag_pass","content":"Spec reviewed end to end.\nGATE_RESULT: PASS"}]}}'
+} > "$AG_T_PASS"
+(cd "$REPO_ROOT" && ag_payload 'superpowers:writing-plans' "$AG_T_PASS" | bash "$AG_HOOK") >/dev/null 2>&1
+assert_eq "ag: allow when architect-reviewer returned GATE_RESULT: PASS" "0" "$?"
+rm -f "$AG_T_PASS"
+
+out=$(cd "$REPO_ROOT" && ag_payload 'superpowers:writing-plans' "$FIXDIR/ag-missing-$$.jsonl" | bash "$AG_HOOK" 2>&1)
+ec=$?
+assert_eq "ag: fail-closed on unreadable transcript path" "2" "$ec"
+assert_contains "ag: fail-closed message cites unreadable transcript" "$out" "transcript unreadable (fail-closed)"
+
+(cd "$REPO_ROOT" && ag_payload 'superpowers:writing-plans' '' | bash "$AG_HOOK") >/dev/null 2>&1
+assert_eq "ag: fail-closed on empty transcript_path" "2" "$?"
+
+(printf 'superpowers:writing-plans embedded in unparseable json' | ( cd "$REPO_ROOT" && bash "$AG_HOOK" )) >/dev/null 2>&1
+assert_eq "ag: malformed payload allowed (fail-open concern, see report)" "0" "$?"
+
+# --- api-security-push-guard.sh block logic (git push PreToolUse Bash matcher) ---
+ASG_HOOK="$HOOKS/api-security-push-guard.sh"
+asg_payload() { # $1=command $2=transcript-path -> JSON PreToolUse payload for the Bash matcher
+  python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","tool_input":{"command": sys.argv[1]},"transcript_path": sys.argv[2]}))' "$1" "$2"
+}
+asg_mkroot() { # -> isolated non-git dir seeded with a transcript.mjs copy so the hook's own node parser resolves
+  local d; d=$(mktemp -d)
+  mkdir -p "$d/scripts/lib" "$d/.claude"
+  cp "$REPO_ROOT/scripts/lib/transcript.mjs" "$d/scripts/lib/transcript.mjs"
+  printf '%s' "$d"
+}
+
+d=$(asg_mkroot)
+(asg_payload 'git status' '' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: non-push command allowed" "0" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+(asg_payload 'git push origin main' '' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: push allowed with no marker pending" "0" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+ASG_T_NONE="$FIXDIR/asg-none-$$.jsonl"
+printf '%s\n' '{"timestamp":"2020-01-01T00:00:01.000Z","message":{"role":"assistant","content":[{"type":"text","text":"no dispatch"}]}}' > "$ASG_T_NONE"
+out=$(asg_payload 'git push origin main' "$ASG_T_NONE" | ( cd "$d" && bash "$ASG_HOOK" ) 2>&1)
+ec=$?
+assert_eq "asg: block when marker pending and no security-auditor dispatch" "2" "$ec"
+assert_contains "asg: block message cites unaudited edit" "$out" "unaudited API-surface edit"
+rm -rf "$d"; rm -f "$ASG_T_NONE"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+ASG_T_STALE="$FIXDIR/asg-stale-$$.jsonl"
+printf '%s\n' '{"timestamp":"2019-01-01T00:00:00.000Z","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_asg_stale","name":"Agent","input":{"subagent_type":"security-auditor","prompt":"stale audit predating the marker"}}]}}' > "$ASG_T_STALE"
+(asg_payload 'git push origin main' "$ASG_T_STALE" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: block when security-auditor dispatch predates the marker" "2" "$?"
+rm -rf "$d"; rm -f "$ASG_T_STALE"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+ASG_T_PASS="$FIXDIR/asg-pass-$$.jsonl"
+printf '%s\n' '{"timestamp":"2020-01-01T00:05:00.000Z","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_asg_pass","name":"Agent","input":{"subagent_type":"security-auditor","prompt":"Audit the API-surface change."}}]}}' > "$ASG_T_PASS"
+(asg_payload 'git push origin main' "$ASG_T_PASS" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: allow when security-auditor dispatched after the marker" "0" "$?"
+if [ -e "$d/.claude/.api-edit-pending" ]; then asg_marker_state=EXISTS; else asg_marker_state=CLEARED; fi
+assert_eq "asg: marker cleared after a verified audit" "CLEARED" "$asg_marker_state"
+rm -rf "$d"; rm -f "$ASG_T_PASS"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+out=$(asg_payload 'git push origin main' "$d/does-not-exist-$$.jsonl" | ( cd "$d" && bash "$ASG_HOOK" ) 2>&1)
+ec=$?
+assert_eq "asg: fail-closed on unreadable transcript with marker pending" "2" "$ec"
+assert_contains "asg: fail-closed message cites unreadable transcript" "$out" "transcript unreadable (fail-closed)"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload 'git push origin main' '' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: fail-closed on empty transcript_path with marker pending" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf 'garbled not json git push origin main' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: malformed payload allowed despite marker+push text (fail-open concern, see report)" "0" "$?"
+rm -rf "$d"
+
 [ "$FAILED" -eq 0 ] && { printf '\nALL PASS\n'; exit 0; } || { printf '\nFAILURES\n'; exit 1; }
