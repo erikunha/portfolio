@@ -603,6 +603,57 @@ for asg_flag in 'git -C /tmp push' 'git -c a=b push' 'git --git-dir=x push' 'git
   rm -rf "$d"
 done
 
+# "walked it, found no push" and "could not see through this" must not be the
+# same answer: each of these hides the push behind a construct the walk cannot
+# resolve, and each blocked before the tokenizer replaced the coarse regex.
+for asg_opaque in '`echo git push origin main`' \
+                  'eval "$(echo git push origin main)"' \
+                  'echo "git push origin main" | bash' \
+                  'bash <(echo "git push origin main")' \
+                  'G=git; $G push origin main'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_opaque" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: opaque construct is undecidable, not clean [$asg_opaque]" "2" "$?"
+  rm -rf "$d"
+done
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload "bash -c \"bash -c 'bash -c \\\"git push origin main\\\"'\"" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: nested bash -c inside MAX_DEPTH still blocks" "2" "$?"
+rm -rf "$d"
+
+# An operand the shell has not expanded yet cannot be compared to "push", and a
+# git record stripped of its operands is a mis-parse — neither is "not a push".
+for asg_unres in 'git $(echo push) origin main' \
+                 'git `echo push` origin main' \
+                 'P=push; git $P origin main' \
+                 'echo push | xargs git'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_unres" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: unresolved subcommand is undecidable [$asg_unres]" "2" "$?"
+  rm -rf "$d"
+done
+
+for asg_unres_ok in 'git log --grep $PATTERN' 'git commit -m "msg $VAR"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_unres_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: an expansion past a settled subcommand is still allowed [$asg_unres_ok]" "0" "$?"
+  rm -rf "$d"
+done
+
+# Bound exhaustion must report undecidable, not clean: MAX_DEPTH is 6.
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+asg_deep='git push origin main'
+for _ in 1 2 3 4 5 6 7 8; do asg_deep="bash -c \"$asg_deep\""; done
+(asg_payload "$asg_deep" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: nesting past MAX_DEPTH is undecidable, not clean" "2" "$?"
+rm -rf "$d"
+
 # A detector that cannot decide must not read as "looked, found no push".
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"

@@ -20,6 +20,7 @@ except Exception: print('')
 DET=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/bash-guard-detect.py" --emit-commands 2>/dev/null)
 if [ $? -eq 0 ] && [ -n "$CMD" ]; then
   printf '%s\n' "$DET" | awk -F'\t' '
+    $1 == "git" && NF == 1 { found = 1 }
     $1 == "git" {
       skip = 0
       for (i = 2; i <= NF; i++) {
@@ -30,6 +31,7 @@ if [ $? -eq 0 ] && [ -n "$CMD" ]; then
               || a == "--namespace" || a == "--exec-path" || a == "--config-env") skip = 1
           continue
         }
+        if (a ~ /[$`]/) { found = 1; break }
         if (a == "push") { found = 1; break }
         if (a == "subtree") continue
         break
