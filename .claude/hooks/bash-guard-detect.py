@@ -44,6 +44,7 @@ NEST_MSG = "[BLOCKED] Command nesting too deep to analyze safely."
 
 EMIT_MODE = False
 EMITTED = []
+EMIT_PROGRAMS = ("git",)
 
 
 def block(msg):
@@ -209,6 +210,14 @@ def inspect_wrapper(args, depth):
     # word-args, not a nested node; scan those words by presence and re-parse any
     # interpreter payload they carry.
     bases = [os.path.basename(a) for a in args]
+    if EMIT_MODE:
+        # resolved by presence, not position: effective_program() cannot skip a
+        # wrapper's own option arguments (`env -i`, `timeout 5`), so it would
+        # return those instead of the program they wrap.
+        for i, b in enumerate(bases):
+            if b in EMIT_PROGRAMS:
+                EMITTED.append([b] + list(args[i + 1:]))
+                break
     if "npm" in bases or "yarn" in bases or "yarnpkg" in bases:
         block(NPM_MSG)
     gh_merge_check(args)
@@ -247,6 +256,9 @@ def reparse(script, depth):
     # tree (budget), so a branching bash -c payload cannot blow up to O(branch^depth).
     if depth <= 0 or _reparse_budget[0] <= 0:
         block(NEST_MSG)
+        # block() is inert under --emit-commands, so without this the bounds stop
+        # binding and the walk recurses anyway.
+        return
     _reparse_budget[0] -= 1
     if not script or not script.strip():
         return
@@ -254,6 +266,10 @@ def reparse(script, depth):
         trees = bashlex.parse(script)
     except Exception:
         block(NEST_MSG)
+        # emit mode cannot analyse this payload, and an inert block() would fall
+        # through to an unbound `trees`. Exit 3 so the caller treats the whole run
+        # as undecidable rather than as "looked, found no push".
+        sys.exit(3)
     v = Visitor(depth - 1)
     for t in trees:
         v.visit(t)
@@ -274,12 +290,20 @@ if bashlex is not None:
             if words and effective_program(words) in SHELL_INTERP and "-c" not in words:
                 for p in parts:
                     if p.kind == "redirect" and str(p.type).startswith("<<"):
-                        body = getattr(getattr(p, "output", None), "word", None)
+                        # a here-DOC carries the body on .heredoc; .output.word is
+                        # only the delimiter, and reading it first re-parses "EOF".
+                        # A here-STRING has no .heredoc, and there .output.word is
+                        # the body.
+                        hd = getattr(p, "heredoc", None)
+                        body = getattr(hd, "value", None) or getattr(hd, "word", None)
                         if body is None:
-                            hd = getattr(p, "heredoc", None)
-                            body = getattr(hd, "value", None) or getattr(hd, "word", None)
+                            body = getattr(getattr(p, "output", None), "word", None)
                         if body:
                             reparse(body, self.depth)
+                        elif EMIT_MODE:
+                            # bashlex hands back the delimiter, not the body, so the
+                            # payload is unreadable here. Undecidable, not push-free.
+                            sys.exit(3)
 
 
 def main():

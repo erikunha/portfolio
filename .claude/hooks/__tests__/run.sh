@@ -570,6 +570,65 @@ for asg_ok in 'git log --grep push' 'git log --oneline | grep push' 'git commit 
   rm -rf "$d"
 done
 
+# A wrapper resolves the program by presence, on a code path that does not call
+# inspect(); every one of these blocked before the tokenizer and must still.
+for asg_wrap in 'env git push' 'env -i git push origin main' 'env GIT_TRACE=1 git push' 'sudo git push' \
+                'sudo -u me git push' 'doas git push' 'command git push' 'xargs git push' \
+                'echo main | xargs -I{} git push origin {}' 'timeout 60 git push' 'nice git push' \
+                'nohup git push' 'setsid git push' 'stdbuf -o0 git push' 'exec git push' 'builtin git push'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_wrap" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: wrapper-resolved push blocks [$asg_wrap]" "2" "$?"
+  rm -rf "$d"
+done
+
+for asg_wrap_ok in 'env git status' 'sudo git log --grep push' 'timeout 5 npm run push-notes' 'sudo grep git file'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_wrap_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: wrapper without a push stays allowed [$asg_wrap_ok]" "0" "$?"
+  rm -rf "$d"
+done
+
+# git's value-taking global flags: the skip list must not mistake a flag's operand
+# for the subcommand, and must not let one hide the subcommand behind it.
+for asg_flag in 'git -C /tmp push' 'git -c a=b push' 'git --git-dir=x push' 'git --git-dir /x push' 'git --work-tree /t push' \
+                'git --exec-path /e push' 'git --namespace n push' 'git --config-env=k=V push' \
+                'git --config-env k=V push'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_flag" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: global flag does not hide the subcommand [$asg_flag]" "2" "$?"
+  rm -rf "$d"
+done
+
+# A detector that cannot decide must not read as "looked, found no push".
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload "$(printf 'sh <<EOF\ngit push origin main\nEOF')" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: a heredoc body feeding a shell is not a blind spot" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload "bash -c 'echo ((' ; /usr/bin/git push origin main" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: an unparseable inner payload must not unlock an evasive push" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload "$(python3 -c "print('/usr/bin/git push origin main #'+'x'*100001)")" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: a command past MAX_CMD_LEN must not unlock an evasive push" "2" "$?"
+rm -rf "$d"
+
+# The detector must report undecidable, not crash: an inert block() used to fall
+# through to an unbound `trees` and exit 1 by traceback.
+det_bad='bash -c "echo (("'
+det_rc=$(python3 -c 'import json,sys; print(json.dumps({"tool_input":{"command": sys.argv[1]}}))' "$det_bad" \
+  | python3 "$HOOKS/bash-guard-detect.py" --emit-commands >/dev/null 2>&1; echo $?)
+assert_eq "det: unparseable inner payload exits 3 (undecidable), not 1 (crash)" "3" "$det_rc"
+
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
 (printf '{"cwd":"x\\", command git push, "y":"end"}' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1

@@ -36,9 +36,6 @@ if [ $? -eq 0 ] && [ -n "$CMD" ]; then
       }
     }
     END { exit found ? 0 : 1 }' || exit 0
-elif [ -n "$CMD" ]; then
-  printf '%s' "$CMD" | grep -qE '(^|[[:space:];&|(])git([[:space:];&|)]|$)' \
-    && printf '%s' "$CMD" | grep -qE '(^|[[:space:];&|(])push([[:space:];&|)]|$)' || exit 0
 else
   HAY=$(printf '%s' "$INPUT" | sed 's/"transcript_path"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"cwd"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"description"[[:space:]]*:[[:space:]]*"[^"]*"//g')
   printf '%s' "$HAY" | grep -qF 'git' \
