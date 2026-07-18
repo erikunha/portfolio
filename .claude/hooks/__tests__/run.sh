@@ -528,6 +528,24 @@ printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api
 (printf '{"tool_input":{"command":"git push origin main"},"transcript_path":"%s"' "$ASG_TOKEN_PATH" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
 assert_eq "asg: a real push still blocks once path tokens are excluded" "2" "$?"
 rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"transcript_path":"/t.jsonl","cwd":"/repo""tool_input":{"command":"git push origin main"}}' | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: a path field missing its trailing comma cannot swallow the command" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"cwd":"/repo","transcript_path":"/t.jsonl""tool_input":{"command":"git push origin main"}}' | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: same bleed via transcript_path ahead of the command" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"cwd":"%s","tool_input":{"command":"ls -la"},"transcript_path":"/t.jsonl"' "/Users/x/git/push-service" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: cwd is excluded too — it is the likelier token-bearing path" "0" "$?"
+rm -rf "$d"
 rm -rf "$PYSHIM"
 
 [ "$FAILED" -eq 0 ] && { printf '\nALL PASS\n'; exit 0; } || { printf '\nFAILURES\n'; exit 1; }

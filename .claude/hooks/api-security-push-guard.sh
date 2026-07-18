@@ -23,7 +23,7 @@ else
   # word boundaries are unreachable there (\ngit, push\", "git) and every
   # normalization pass so far has left another adjacency open. Containment has
   # no boundary to get wrong, and over-blocking is the safe direction here.
-  HAY=$(printf '%s' "$INPUT" | sed 's/"transcript_path"[^,}]*//g; s/"cwd"[^,}]*//g')
+  HAY=$(printf '%s' "$INPUT" | sed 's/"transcript_path"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"cwd"[[:space:]]*:[[:space:]]*"[^"]*"//g')
   printf '%s' "$HAY" | grep -qF 'git' \
     && printf '%s' "$HAY" | grep -qF 'push' || exit 0
 fi
