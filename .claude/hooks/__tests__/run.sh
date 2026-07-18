@@ -500,12 +500,6 @@ printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api
 assert_eq "asg: containment needs BOTH tokens — push alone must not hard-lock" "0" "$?"
 rm -rf "$d"
 
-d=$(asg_mkroot)
-printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-: > "$d/t.jsonl"
-asg_cont=$( (printf '{"tool_name":"Bash","tool_input":{"command":""},"note":"git push","transcript_path":"%s/t.jsonl"}' "$d" | ( cd "$d" && bash "$ASG_HOOK" )) 2>&1 )
-assert_contains "asg: the containment block says which path blocked" "$asg_cont" "unparseable"
-rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
@@ -545,6 +539,16 @@ printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api
 (asg_payload 'git commit -m "add pushups"' "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
 assert_eq "asg: widening the boundary must not start matching push inside a word" "0" "$?"
 rm -rf "$d"
+
+# every character in the boundary class is load-bearing: one fixture per position,
+# because a class is only as good as the character a mutant can delete unnoticed.
+for asg_op in 'a;git push' 'a|git push' '(git push)' 'git push;a' 'git push&&a' 'git push|a'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_op" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: operator boundary pinned for [$asg_op]" "2" "$?"
+  rm -rf "$d"
+done
 
 ASG_TOKEN_PATH='/Users/x/git/push-service/t.jsonl'
 
