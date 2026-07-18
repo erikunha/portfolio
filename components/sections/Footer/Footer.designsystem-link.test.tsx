@@ -45,33 +45,39 @@ describe('Footer design-system link', () => {
   it.each([
     ['desktop', false],
     ['mobile', true],
-  ])('links to /design-system as a same-site internal link (no target=_blank) on %s', (_variant, initialIsMobile) => {
-    stubMatchMedia(initialIsMobile);
-    const { container } = render(
-      <BreakpointProvider initialIsMobile={initialIsMobile}>
-        <Footer />
-      </BreakpointProvider>,
-    );
-    const pre = container.querySelector('pre');
-    expect(pre !== null).toBe(!initialIsMobile);
-    const links = [...container.querySelectorAll('a[href="/design-system"]')];
-    expect(links.length).toBeGreaterThan(0);
-    for (const a of links) {
-      expect(a.getAttribute('target')).not.toBe('_blank');
-    }
-  });
+  ])(
+    'links to /design-system as a same-site internal link (no target=_blank) on %s',
+    (_variant, initialIsMobile) => {
+      stubMatchMedia(initialIsMobile);
+      const { container } = render(
+        <BreakpointProvider initialIsMobile={initialIsMobile}>
+          <Footer />
+        </BreakpointProvider>,
+      );
+      const pre = container.querySelector('pre');
+      expect(pre !== null).toBe(!initialIsMobile);
+      const links = [...container.querySelectorAll('a[href="/design-system"]')];
+      expect(links.length).toBeGreaterThan(0);
+      for (const a of links) {
+        expect(a.getAttribute('target')).not.toBe('_blank');
+      }
+    },
+  );
 
   it.each([
     ['desktop', false],
     ['mobile', true],
-  ])('self-links to the site use the canonical www host, never the apex that 308-redirects on %s', (_variant, initialIsMobile) => {
-    stubMatchMedia(initialIsMobile);
-    const { container } = render(
-      <BreakpointProvider initialIsMobile={initialIsMobile}>
-        <Footer />
-      </BreakpointProvider>,
-    );
-    expect(container.querySelector('a[href="https://erikunha.dev"]')).toBeNull();
-    expect(container.querySelector('a[href="https://www.erikunha.dev"]')).not.toBeNull();
-  });
+  ])(
+    'self-links to the site use the canonical www host, never the apex that 308-redirects on %s',
+    (_variant, initialIsMobile) => {
+      stubMatchMedia(initialIsMobile);
+      const { container } = render(
+        <BreakpointProvider initialIsMobile={initialIsMobile}>
+          <Footer />
+        </BreakpointProvider>,
+      );
+      expect(container.querySelector('a[href="https://erikunha.dev"]')).toBeNull();
+      expect(container.querySelector('a[href="https://www.erikunha.dev"]')).not.toBeNull();
+    },
+  );
 });
