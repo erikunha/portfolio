@@ -7,21 +7,23 @@ try:
   print(d.get('tool_input',{}).get('command','') or d.get('command',''))
 except Exception: print('')
 " 2>/dev/null || echo "")
-# Same raw-payload fallback as bash-guard.sh: a malformed payload still
-# carrying a git-push token must not silently fail open. JSON punctuation is
-# normalized to spaces because in JSON-shaped text the token sits against a
-# quote ("git), which the whitespace-boundary push regex below cannot match.
-if [ -z "$CMD" ] && [ -n "$INPUT" ]; then
-  CMD=$(printf '%s' "$INPUT" | tr '":;&|(){}' ' ')
-fi
 TRANSCRIPT=$(printf '%s' "$INPUT" | python3 -c "
 import json,sys
 try: print(json.load(sys.stdin).get('transcript_path',''))
 except Exception: print('')
 " 2>/dev/null || echo "")
 
-printf '%s' "$CMD" | grep -qE '(^|[[:space:]])git([[:space:]]|$)' \
-  && printf '%s' "$CMD" | grep -qE '(^|[[:space:]])push([[:space:]]|$)' || exit 0
+if [ -n "$CMD" ]; then
+  printf '%s' "$CMD" | grep -qE '(^|[[:space:]])git([[:space:]]|$)' \
+    && printf '%s' "$CMD" | grep -qE '(^|[[:space:]])push([[:space:]]|$)' || exit 0
+else
+  # Extraction failed, so the raw payload is JSON text, not a command line:
+  # word boundaries are unreachable there (\ngit, push\", "git) and every
+  # normalization pass so far has left another adjacency open. Containment has
+  # no boundary to get wrong, and over-blocking is the safe direction here.
+  printf '%s' "$INPUT" | grep -qF 'git' \
+    && printf '%s' "$INPUT" | grep -qF 'push' || exit 0
+fi
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 MARKER="$ROOT/.codex/.api-edit-pending"
 [ -s "$MARKER" ] || exit 0

@@ -466,6 +466,24 @@ rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"cd /r &&\\ngit push origin main"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: escape sequence before the git token fails closed" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{\\"command\\":\\"git push\\"}' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: double-encoded payload with escape after the push token fails closed" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"ls -la"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: malformed payload for an unrelated command stays allowed (no hard-lock)" "0" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
 (printf 'garbled not json, nothing relevant here' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
 assert_eq "asg: malformed payload with no token allowed" "0" "$?"
 rm -rf "$d"
