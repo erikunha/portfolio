@@ -28,12 +28,18 @@ if [ $? -eq 0 ] && [ -n "$CMD" ]; then
         a = $i
         if (skip) {
           skip = 0
-          if (a ~ /[$`]/ || a ~ /^alias\./) { found = 1; break }
+          if (cfg) {
+            key = a
+            sub(/=.*/, "", key)
+            if (a ~ /^alias\./ || key ~ /[$`]/) { found = 1; break }
+          }
+          cfg = 0
           continue
         }
         if (a ~ /^-/) {
-          if (a == "-c" || a == "-C" || a == "--git-dir" || a == "--work-tree" \
-              || a == "--namespace" || a == "--exec-path" || a == "--config-env" \
+          if (a == "-c" || a == "--config-env") { skip = 1; cfg = 1 }
+          else if (a == "-C" || a == "--git-dir" || a == "--work-tree" \
+              || a == "--namespace" || a == "--exec-path" \
               || a == "--super-prefix") skip = 1
           if (a ~ /alias\./) { found = 1; break }
           continue

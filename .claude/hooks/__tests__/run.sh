@@ -731,6 +731,36 @@ rm -rf "$d"
 
 # The detector must report undecidable, not crash: an inert block() used to fall
 # through to an unbound `trees` and exit 1 by traceback.
+# The reparse budget is what makes the depth/budget branch reachable: filler
+# reparses exhaust it, and the push after them is only seen if exhaustion reports
+# undecidable rather than clean.
+det_budget=$(python3 -c "print(';'.join([\"bash -c 'true'\"]*401) + \"; bash -c 'git push origin main'\")")
+det_budget_rc=$(python3 -c 'import json,sys; print(json.dumps({"tool_input":{"command": sys.argv[1]}}))' "$det_budget" \
+  | python3 "$HOOKS/bash-guard-detect.py" --emit-commands >/dev/null 2>&1; echo $?)
+assert_eq "det: reparse-budget exhaustion exits 3 (undecidable), not 0" "3" "$det_budget_rc"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload "$det_budget" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: a push after budget exhaustion still blocks" "2" "$?"
+rm -rf "$d"
+
+# A config VALUE is only dangerous where it can name an alias; a path value cannot
+# turn a subcommand into a push, and blocking it trains bypass.
+for asg_cfg_ok in 'git -C $DIR status' 'git -c user.name=$N commit -m x' 'git -c core.pager=$PAGER log' 'git --git-dir=$D log'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_cfg_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: an opaque value in a non-config slot must not over-block [$asg_cfg_ok]" "0" "$?"
+  rm -rf "$d"
+done
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload 'git -c $CFG' "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: an opaque config KEY can name an alias, so it blocks" "2" "$?"
+rm -rf "$d"
+
 det_bad='bash -c "echo (("'
 det_rc=$(python3 -c 'import json,sys; print(json.dumps({"tool_input":{"command": sys.argv[1]}}))' "$det_bad" \
   | python3 "$HOOKS/bash-guard-detect.py" --emit-commands >/dev/null 2>&1; echo $?)
