@@ -10,10 +10,17 @@ updates:
         patterns:
           - '*'
     ignore:
+      # zod is exact-pinned; its minor bumps break type inference, so those are upgraded
+      # deliberately, not by an auto-PR. Patches (safe, where security/bugfixes land) are
+      # ALLOWED so they surface as CI-gated PRs; a patch that regressed inference would fail
+      # CI and be caught. Ignoring major+minor (not patch) is the point — the previous config
+      # ignored patch and let majors through, suppressing security patches and auto-opening
+      # the most breaking bump.
       - dependency-name: zod
         update-types:
+          - version-update:semver-major
           - version-update:semver-minor
-          - version-update:semver-patch
+      # typescript is held at 6.x (Stryker needs the TS6 JS API that TS7 removed); ignore majors.
       - dependency-name: typescript
         update-types:
           - version-update:semver-major
