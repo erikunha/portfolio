@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 INPUT=$(cat)
 HOOK_DIR=$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || printf '.')
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+MARKER="$ROOT/.codex/.api-edit-pending"
+[ -s "$MARKER" ] || exit 0
 CMD=$(printf '%s' "$INPUT" | python3 -c "
 import json,sys
 try:
@@ -41,9 +44,6 @@ else
   printf '%s' "$HAY" | grep -qF 'git' \
     && printf '%s' "$HAY" | grep -qF 'push' || exit 0
 fi
-ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-MARKER="$ROOT/.codex/.api-edit-pending"
-[ -s "$MARKER" ] || exit 0
 
 if [ -z "$TRANSCRIPT" ] || [ ! -r "$TRANSCRIPT" ]; then
   printf '[BLOCKED] Unaudited API edit pending and transcript unreadable (fail-closed).\n' >&2
