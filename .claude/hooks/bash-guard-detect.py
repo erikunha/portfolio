@@ -23,7 +23,8 @@ except Exception:
 
 WRAPPERS = {
     "env", "command", "sudo", "doas", "nice", "time", "nohup", "xargs",
-    "builtin", "exec", "stdbuf", "setsid", "timeout",
+    "builtin", "exec", "stdbuf", "setsid", "timeout", "script", "flock",
+    "watch", "parallel", "ionice", "chrt",
 }
 SHELL_INTERP = {"bash", "sh", "zsh", "dash", "ksh", "ash", "mksh", "rbash"}
 OTHER_INTERP = {"python", "python3", "node", "nodejs", "perl", "ruby", "php"}
@@ -179,12 +180,18 @@ def inspect(name, args, depth):
     script = interp_script(base, args)
     if script is not None:
         reparse(script, depth)
+    if base == "xargs" and EMIT_MODE and any(
+        a == "-I" or a.startswith("-I") or a.startswith("--replace") for a in args
+    ):
+        sys.exit(3)
     if base in OTHER_INTERP:
         # -c (python/ruby/node), -e (node/perl/ruby), -r (php) carry inline code,
         # in spaced (`-c 'x'`), bundled (`-Bc 'x'`) and attached (`-Bc'x'`) forms.
         for i, a in enumerate(args):
             m = re.match(r"-[A-Za-z]*?[cer](.*)", a)
             if m:
+                if EMIT_MODE:
+                    sys.exit(3)
                 if m.group(1):
                     coarse_scan(m.group(1))
                 elif i + 1 < len(args):

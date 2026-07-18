@@ -20,15 +20,22 @@ except Exception: print('')
 DET=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/bash-guard-detect.py" --emit-commands 2>/dev/null)
 if [ $? -eq 0 ] && [ -n "$CMD" ]; then
   printf '%s\n' "$DET" | awk -F'\t' '
+    $1 == "git-push" { found = 1 }
     $1 == "git" && NF == 1 { found = 1 }
     $1 == "git" {
       skip = 0
       for (i = 2; i <= NF; i++) {
         a = $i
-        if (skip) { skip = 0; continue }
+        if (skip) {
+          skip = 0
+          if (a ~ /[$`]/ || a ~ /^alias\./) { found = 1; break }
+          continue
+        }
         if (a ~ /^-/) {
           if (a == "-c" || a == "-C" || a == "--git-dir" || a == "--work-tree" \
-              || a == "--namespace" || a == "--exec-path" || a == "--config-env") skip = 1
+              || a == "--namespace" || a == "--exec-path" || a == "--config-env" \
+              || a == "--super-prefix") skip = 1
+          if (a ~ /alias\./) { found = 1; break }
           continue
         }
         if (a ~ /[$`]/) { found = 1; break }
@@ -39,7 +46,7 @@ if [ $? -eq 0 ] && [ -n "$CMD" ]; then
     }
     END { exit found ? 0 : 1 }' || exit 0
 else
-  HAY=$(printf '%s' "$INPUT" | sed 's/"transcript_path"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"cwd"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"description"[[:space:]]*:[[:space:]]*"[^"]*"//g')
+  HAY=$(printf '%s' "$INPUT" | sed "s|$ROOT||g" | sed 's/"transcript_path"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"cwd"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"description"[[:space:]]*:[[:space:]]*"[^"]*"//g')
   printf '%s' "$HAY" | grep -qF 'git' \
     && printf '%s' "$HAY" | grep -qF 'push' || exit 0
 fi

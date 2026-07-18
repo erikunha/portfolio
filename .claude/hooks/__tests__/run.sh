@@ -654,6 +654,62 @@ for _ in 1 2 3 4 5 6 7 8; do asg_deep="bash -c \"$asg_deep\""; done
 assert_eq "asg: nesting past MAX_DEPTH is undecidable, not clean" "2" "$?"
 rm -rf "$d"
 
+# Inline code in a non-shell interpreter, an unexpanded flag VALUE, a git alias
+# configured to push, an xargs replacement string, and a value-taking global flag
+# outside the skip list: each hides the push somewhere the first-subcommand rule
+# does not look.
+for asg_hide in 'python3 -c "import os; os.system(\"git push\")"' \
+                'node -e "require(\"child_process\").execSync(\"git push\")"' \
+                'git -c $CFG' \
+                'git -c alias.z=push z origin main' \
+                'echo "git push" | xargs -I PLACE bash -c PLACE' \
+                'git --super-prefix x push'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_hide" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a push hidden past the subcommand still blocks [$asg_hide]" "2" "$?"
+  rm -rf "$d"
+done
+
+for asg_hide_ok in 'git log' 'git status' 'git commit -m x' 'python3 -c "print(1)"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_hide_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: widening the hidden-push net must not over-block [$asg_hide_ok]" "0" "$?"
+  rm -rf "$d"
+done
+
+# git ships dashed hardlinks (git-push) that perform the subcommand directly, and
+# exec wrappers outside the shell's own set still exec the real binary.
+for asg_alias in '/usr/libexec/git-core/git-push origin main' \
+                 'git --config-env=alias.z=Z z origin main' \
+                 'git -calias.z=push z origin main' \
+                 'git-push origin main' \
+                 'script -q /dev/null git push origin main' \
+                 'flock /tmp/l git push origin main'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_alias" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a push under another program name still blocks [$asg_alias]" "2" "$?"
+  rm -rf "$d"
+done
+
+# The guard prints an ABSOLUTE marker path, so a repo path holding both tokens
+# must not make containment block the escape the guard itself just recommended.
+PYSHIM2=$(mktemp -d)
+printf '#!/usr/bin/env bash\nexit 1\n' > "$PYSHIM2/python3"
+chmod +x "$PYSHIM2/python3"
+d=$(mktemp -d)/github-push-demo
+mkdir -p "$d/.claude"
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"rm %s/.claude/.api-edit-pending"},"transcript_path":"/n"}' "$d" \
+  | ( cd "$d" && PATH="$PYSHIM2:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: repo-path tokens must not trap the operator's escape" "0" "$?"
+(printf '{"tool_input":{"command":"git push origin main"},"transcript_path":"/n"}' \
+  | ( cd "$d" && PATH="$PYSHIM2:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: stripping the repo path must not unblock a real push" "2" "$?"
+rm -rf "$PYSHIM2"
+
 # A detector that cannot decide must not read as "looked, found no push".
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
