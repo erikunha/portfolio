@@ -542,7 +542,7 @@ rm -rf "$d"
 
 # every character in the boundary class is load-bearing: one fixture per position,
 # because a class is only as good as the character a mutant can delete unnoticed.
-for asg_op in 'a;git push' 'a|git push' '(git push)' 'git push;a' 'git push&&a' 'git push|a'; do
+for asg_op in 'a;git push' 'a|git push' '(git push)' 'git push;a' 'git push&&a' 'git push|a' 'cd repo && git push origin main'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
   (asg_payload "$asg_op" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1

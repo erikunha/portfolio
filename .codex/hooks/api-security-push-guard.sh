@@ -14,7 +14,7 @@ except Exception: print('')
 " 2>/dev/null || echo "")
 
 if [ -n "$CMD" ]; then
-  printf '%s' "$CMD" | grep -qE '(^|[;&|(])git([[:space:];&|)]|$)' \
+  printf '%s' "$CMD" | grep -qE '(^|[[:space:];&|(])git([[:space:];&|)]|$)' \
     && printf '%s' "$CMD" | grep -qE '(^|[[:space:];&|(])push([[:space:];&|)]|$)' || exit 0
 else
   # Extraction failed, so the raw payload is JSON text, not a command line:
