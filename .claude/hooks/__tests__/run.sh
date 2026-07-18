@@ -552,14 +552,14 @@ done
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"tool_input":{"command":"rm .claude/.api-edit-pending","description":"say \\"ok\\" git push can proceed"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
-assert_eq "asg: an escaped quote in a stripped field must not leave tokens behind" "0" "$?"
+(printf '{"cwd":"x\\", command git push, "y":"end"}' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: an odd trailing backslash must not let the strip eat a real push" "2" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"tool_input":{"command":"git push origin main","description":"say \\"ok\\" now"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
-assert_eq "asg: escape-aware stripping must not swallow a real push in command" "2" "$?"
+(printf '{"tool_input":{"command":"rm .claude/.api-edit-pending","description":"say \\"ok\\" git push can proceed"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: an escaped quote leaves a token tail — accepted over-block, never a bypass" "2" "$?"
 rm -rf "$d"
 
 ASG_TOKEN_PATH='/Users/x/git/push-service/t.jsonl'
