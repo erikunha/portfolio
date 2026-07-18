@@ -460,6 +460,12 @@ rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_name":"Bash","tool_input":{"command":"git push origin main"},"transcript_path":' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: truncated JSON payload with quoted git-push command fails closed" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
 (printf 'garbled not json, nothing relevant here' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
 assert_eq "asg: malformed payload with no token allowed" "0" "$?"
 rm -rf "$d"

@@ -8,9 +8,11 @@ try:
 except Exception: print('')
 " 2>/dev/null || echo "")
 # Same raw-payload fallback as bash-guard.sh: a malformed payload still
-# carrying a git-push token must not silently fail open.
+# carrying a git-push token must not silently fail open. JSON punctuation is
+# normalized to spaces because in JSON-shaped text the token sits against a
+# quote ("git), which the whitespace-boundary push regex below cannot match.
 if [ -z "$CMD" ] && [ -n "$INPUT" ]; then
-  CMD="$INPUT"
+  CMD=$(printf '%s' "$INPUT" | tr '":;&|(){}' ' ')
 fi
 TRANSCRIPT=$(printf '%s' "$INPUT" | python3 -c "
 import json,sys
