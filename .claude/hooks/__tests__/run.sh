@@ -490,6 +490,31 @@ rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"git status"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: containment needs BOTH tokens — git alone must not hard-lock" "0" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"npm run push-notes"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: containment needs BOTH tokens — push alone must not hard-lock" "0" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+: > "$d/t.jsonl"
+asg_cont=$( (printf '{"tool_name":"Bash","tool_input":{"command":""},"note":"git push","transcript_path":"%s/t.jsonl"}' "$d" | ( cd "$d" && bash "$ASG_HOOK" )) 2>&1 )
+assert_contains "asg: the containment block says which path blocked" "$asg_cont" "unparseable"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf '{"tool_input":{"command":"rm .claude/.api-edit-pending","description":"clear the marker so git push can proceed"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: a prose description must not lock out the escape it describes" "0" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
 (asg_payload 'ls -la' "$d/gitrepos/push-notes/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
 assert_eq "asg: benign command is not matched by tokens in transcript_path" "0" "$?"
 rm -rf "$d"
@@ -507,6 +532,18 @@ asg_nopy=$( (asg_payload 'git push origin main' "$d/t.jsonl" | ( cd "$d" && PATH
 asg_nopy_code=$?
 assert_eq "asg: push blocks when python3 is unusable" "2" "$asg_nopy_code"
 assert_contains "asg: block names the manual clear no dispatch can substitute for" "$asg_nopy" "rm "
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload 'cd repo&&git push origin main' "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: a shell operator is a token boundary, not just whitespace" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload 'git commit -m "add pushups"' "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: widening the boundary must not start matching push inside a word" "0" "$?"
 rm -rf "$d"
 
 ASG_TOKEN_PATH='/Users/x/git/push-service/t.jsonl'
