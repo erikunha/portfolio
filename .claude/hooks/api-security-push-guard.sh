@@ -60,7 +60,7 @@ import(pathToFileURL(process.argv[1] + '/scripts/lib/transcript.mjs').href).then
 }).catch(() => process.stdout.write('no'));
 " "$ROOT" "$TRANSCRIPT" "$MARKER_TS" 2>/dev/null || echo "no")
 if [ "$AUDITED" = "yes" ]; then
-  rm -f "$MARKER"   # verified audit clears the marker so it never blocks forever
+  rm -f "$MARKER"
   exit 0
 fi
 printf '[BLOCKED] git push blocked — unaudited API-surface edit(s) pending:\n' >&2
