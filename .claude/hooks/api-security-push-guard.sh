@@ -7,6 +7,11 @@ try:
   print(d.get('tool_input',{}).get('command','') or d.get('command',''))
 except Exception: print('')
 " 2>/dev/null || echo "")
+# Same raw-payload fallback as bash-guard.sh: a malformed payload still
+# carrying a git-push token must not silently fail open.
+if [ -z "$CMD" ] && [ -n "$INPUT" ]; then
+  CMD="$INPUT"
+fi
 TRANSCRIPT=$(printf '%s' "$INPUT" | python3 -c "
 import json,sys
 try: print(json.load(sys.stdin).get('transcript_path',''))

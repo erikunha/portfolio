@@ -383,7 +383,10 @@ assert_contains "ag: fail-closed message cites unreadable transcript" "$out" "tr
 assert_eq "ag: fail-closed on empty transcript_path" "2" "$?"
 
 (printf 'superpowers:writing-plans embedded in unparseable json' | ( cd "$REPO_ROOT" && bash "$AG_HOOK" )) >/dev/null 2>&1
-assert_eq "ag: malformed payload allowed (fail-open concern, see report)" "0" "$?"
+assert_eq "ag: malformed payload with writing-plans token fails closed" "2" "$?"
+
+(printf 'just some garbled non-json text with no skill token' | ( cd "$REPO_ROOT" && bash "$AG_HOOK" )) >/dev/null 2>&1
+assert_eq "ag: malformed payload with no token allowed" "0" "$?"
 
 # --- api-security-push-guard.sh block logic (git push PreToolUse Bash matcher) ---
 ASG_HOOK="$HOOKS/api-security-push-guard.sh"
@@ -452,7 +455,13 @@ rm -rf "$d"
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
 (printf 'garbled not json git push origin main' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
-assert_eq "asg: malformed payload allowed despite marker+push text (fail-open concern, see report)" "0" "$?"
+assert_eq "asg: malformed payload with git-push token fails closed" "2" "$?"
+rm -rf "$d"
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(printf 'garbled not json, nothing relevant here' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: malformed payload with no token allowed" "0" "$?"
 rm -rf "$d"
 
 [ "$FAILED" -eq 0 ] && { printf '\nALL PASS\n'; exit 0; } || { printf '\nFAILURES\n'; exit 1; }
