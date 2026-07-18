@@ -56,11 +56,15 @@ const PATH_REWRITES = [
   // No leading \b: in a hook's `"...\nCLAUDE.md: ..."` message the `n` of the `\n` escape
   // sits against `CLAUDE`, so a leading boundary would skip exactly the hook prose this must fix.
   [/CLAUDE\.md\b/g, CODEX_INSTRUCTIONS],
-  // The one non-path claim rewritten: CLAUDE.md's opening line says the file is auto-loaded by
-  // Claude Code, which is false for AGENTS.md — Codex auto-loads it instead. Every OTHER
-  // "Claude Code" is a genuine product fact (e.g. "Claude Code is available as a CLI") and is
-  // left alone; a blanket "Claude Code"->"Codex" is the naive-replace trap this design avoids.
+  // Two non-path claims are rewritten here, everything else in PATH_REWRITES is a path.
+  // CLAUDE.md's opening line says the file is auto-loaded by Claude Code, which is false for
+  // AGENTS.md — Codex auto-loads it instead. The other rewrites a live-fire evidence citation
+  // that would otherwise read as a factual override of the AGENTS_BANNER/CODEX_NOTE disclaimer
+  // sitting above it. Every OTHER "Claude Code" is a genuine product fact (e.g. "Claude Code is
+  // available as a CLI") and is left alone; a blanket "Claude Code"->"Codex" is the naive-replace
+  // trap this design avoids.
   [/Auto-loaded by Claude Code/g, 'Auto-loaded by Codex'],
+  [/\*\*Confirmed enforced \(/g, '**Confirmed enforced where hooks are registered ('],
 ];
 
 // If a sync writes one of these, a path rewrite has leaked into a repo fact and the mirror
@@ -133,7 +137,7 @@ const toCodexHook = (from) => path.join(CODEX_HOOKS, path.relative(CLAUDE_HOOKS,
 // enforcement it cannot deliver. It is Codex-native (names no other agent): the mirror files
 // must not cross-reference — the only unavoidable non-Codex strings are repo-infra facts (the
 // review bot, the review command) that renaming would turn into fiction.
-const AGENTS_BANNER = `<!-- GENERATED — do not edit by hand. Regenerate with \`pnpm sync:codex\`. -->
+export const AGENTS_BANNER = `<!-- GENERATED — do not edit by hand. Regenerate with \`pnpm sync:codex\`. -->
 > **Generated harness file.** Hook activation is not configured in this repo, so every hook and gate described below is **guidance to self-enforce**, not an automated gate.
 
 `;
@@ -145,7 +149,7 @@ const AGENTS_BANNER = `<!-- GENERATED — do not edit by hand. Regenerate with \
 // ALL such claims in the file. Codex-native, like the banner (no cross-reference). Inserted
 // AFTER the note-target's frontmatter (see insertNote) so a skill's `---name/description---`
 // block stays parseable.
-const CODEX_NOTE = `> **Codex note:** hook activation is not configured in this repo, so every "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **hard rule to self-enforce**, not an automated gate.
+export const CODEX_NOTE = `> **Codex note:** hook activation is not configured in this repo, so every "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **hard rule to self-enforce**, not an automated gate.
 
 `;
 
@@ -154,6 +158,16 @@ const CODEX_NOTE = `> **Codex note:** hook activation is not configured in this 
 export const insertNote = (text, note) => {
   const fm = text.match(/^---\n[\s\S]*?\n---\n/);
   return fm ? fm[0] + note + text.slice(fm[0].length) : note + text;
+};
+
+const ENFORCEMENT_CLAIM_TOKENS = /\b(WIRED|Confirmed enforced|exit 2)\b/g;
+// Coupled to the literal "to self-enforce" phrase inside AGENTS_BANNER and CODEX_NOTE above.
+const SELF_ENFORCE_DISCLAIMER = 'to self-enforce';
+
+export const undisclaimedEnforcementClaims = (text) => {
+  if (text.includes(SELF_ENFORCE_DISCLAIMER)) return null;
+  const matches = text.match(ENFORCEMENT_CLAIM_TOKENS);
+  return matches ? [...new Set(matches)] : null;
 };
 
 // The vendored bashlex parser + its upstream LICENSE are byte-copied: upstream GPLv3 code we do
@@ -247,6 +261,17 @@ const findIncompleteness = (targets) => {
   return problems;
 };
 
+const findUndisclaimedClaims = (targets) => {
+  const problems = [];
+  for (const to of targets) {
+    if (!to.endsWith('.md')) continue;
+    const text = readFileSync(to, 'utf-8');
+    const claims = undisclaimedEnforcementClaims(text);
+    if (claims) problems.push(`${to} -> undisclaimed ${claims.join(', ')}`);
+  }
+  return problems;
+};
+
 export const run = ({ check }) => {
   const sources = collectSources();
   let drifted = 0;
@@ -293,6 +318,12 @@ export const run = ({ check }) => {
         '\nMirror is incomplete (a reference points at a file that was never generated):',
       );
       for (const p of problems) console.error(`  ${p}`);
+      process.exit(1);
+    }
+    const claimProblems = findUndisclaimedClaims(targets);
+    if (claimProblems.length > 0) {
+      console.error('\nMirror asserts hook enforcement without the self-enforce disclaimer:');
+      for (const p of claimProblems) console.error(`  ${p}`);
       process.exit(1);
     }
     console.log('OK  .agents/ and .codex/ match .claude/ and reference nothing missing');
