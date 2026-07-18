@@ -33,22 +33,21 @@ describe('decideStamp', () => {
     expect(d.missing).toEqual([]);
   });
 
-  it.each([
-    'pr-review-toolkit:review-pr',
-    'pr-review-toolkit:code-reviewer',
-    'code-reviewer',
-  ])('satisfies the code-review role via the %s subagent_type variant', (variant) => {
-    const others = BATTERY_ROLES.filter((r) => r.role !== 'code-review').map((r) =>
-      agent(r.accepts[0] ?? r.role, AFTER),
-    );
-    const withVariant = [...others, agent(variant, AFTER)];
-    const d = decideStamp({
-      records: withVariant,
-      transcriptResolved: true,
-      headCommitIso: HEAD_ISO,
-    });
-    expect(d.write, JSON.stringify(d)).toBe(true);
-  });
+  it.each(['pr-review-toolkit:review-pr', 'pr-review-toolkit:code-reviewer', 'code-reviewer'])(
+    'satisfies the code-review role via the %s subagent_type variant',
+    (variant) => {
+      const others = BATTERY_ROLES.filter((r) => r.role !== 'code-review').map((r) =>
+        agent(r.accepts[0] ?? r.role, AFTER),
+      );
+      const withVariant = [...others, agent(variant, AFTER)];
+      const d = decideStamp({
+        records: withVariant,
+        transcriptResolved: true,
+        headCommitIso: HEAD_ISO,
+      });
+      expect(d.write, JSON.stringify(d)).toBe(true);
+    },
+  );
 
   it('refuses and names the missing ROLE when only four of five ran', () => {
     const present = BATTERY_ROLES.filter((r) => r.role !== 'dependencies').map((r) =>

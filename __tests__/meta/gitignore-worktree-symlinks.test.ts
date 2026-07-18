@@ -128,17 +128,18 @@ describe('meta: .gitignore covers the paths the agent-worktree harness symlinks'
     ).toBe(true);
   });
 
-  it.each(
-    HARNESS_SYMLINKS,
-  )('%s and its contents stay ignored when it is a real directory', (name) => {
-    const directoryIgnored = isIgnored(sandboxes.directory, name);
-    const contentsIgnored = isIgnored(sandboxes.directory, `${name}/${SENTINEL_FILE}`);
+  it.each(HARNESS_SYMLINKS)(
+    '%s and its contents stay ignored when it is a real directory',
+    (name) => {
+      const directoryIgnored = isIgnored(sandboxes.directory, name);
+      const contentsIgnored = isIgnored(sandboxes.directory, `${name}/${SENTINEL_FILE}`);
 
-    expect(
-      directoryIgnored && contentsIgnored,
-      `The rule for "${name}" must keep ignoring the REAL ${name} directory and everything inside it. In the main tree ${name} is a real directory, not the symlink the sibling case covers. Measured here: directory ignored = ${directoryIgnored}, contents ignored = ${contentsIgnored}.\n\nIf BOTH are false, nothing leaves ${name} ignored and everything inside it becomes committable. Do not read that as "the rule is missing" -- grep first, because a rule can be present and still lose: measured, "/${name}" followed by a negation "!/${name}/" re-includes the directory and stages its contents. Either way this is the outcome the case exists to prevent, and it is the direction a well-meaning edit to the symlink case can silently break.\n\nIf only the directory is false, the rule matches below ${name} but not ${name} itself -- the "/${name}/**" shape. Nothing under the real directory becomes committable then, because its contents are still ignored. The worktree symlink does, though: measured, "/${name}/**" leaves the symlink unignored and "git add" stages it as a symlink blob holding an absolute path to one machine. So the sibling case above is red too, and it is the one to fix.\n\nEvery rule shape, measured against git (rendered from the same data the matrix in this file asserts, so it cannot drift):\n\n${shapeTable(name)}\n\nNote what that table says about the leading "/": an unanchored "${name}" satisfies this case and the symlink case too. The anchor is not what those cases hold. It is there to stop the rule matching a nested ${name} at any depth, which is the only column that tells the two apart.`,
-    ).toBe(true);
-  });
+      expect(
+        directoryIgnored && contentsIgnored,
+        `The rule for "${name}" must keep ignoring the REAL ${name} directory and everything inside it. In the main tree ${name} is a real directory, not the symlink the sibling case covers. Measured here: directory ignored = ${directoryIgnored}, contents ignored = ${contentsIgnored}.\n\nIf BOTH are false, nothing leaves ${name} ignored and everything inside it becomes committable. Do not read that as "the rule is missing" -- grep first, because a rule can be present and still lose: measured, "/${name}" followed by a negation "!/${name}/" re-includes the directory and stages its contents. Either way this is the outcome the case exists to prevent, and it is the direction a well-meaning edit to the symlink case can silently break.\n\nIf only the directory is false, the rule matches below ${name} but not ${name} itself -- the "/${name}/**" shape. Nothing under the real directory becomes committable then, because its contents are still ignored. The worktree symlink does, though: measured, "/${name}/**" leaves the symlink unignored and "git add" stages it as a symlink blob holding an absolute path to one machine. So the sibling case above is red too, and it is the one to fix.\n\nEvery rule shape, measured against git (rendered from the same data the matrix in this file asserts, so it cannot drift):\n\n${shapeTable(name)}\n\nNote what that table says about the leading "/": an unanchored "${name}" satisfies this case and the symlink case too. The anchor is not what those cases hold. It is there to stop the rule matching a nested ${name} at any depth, which is the only column that tells the two apart.`,
+      ).toBe(true);
+    },
+  );
 
   it('a tracked file is NOT ignored, so the sandbox can still tell the cases apart', () => {
     expect(
@@ -205,28 +206,29 @@ const shapeTable = (name: string) =>
   ).join('\n');
 
 describe('meta: the rule-shape claims the failure messages make are true', () => {
-  it.each(
-    RULE_MATRIX,
-  )('rule %j -> symlink=%s directory=%s contents=%s nested=%s', (rule, symlinkIgnored, directoryIgnored, contentsIgnored, nestedIgnored) => {
-    const actual = {
-      symlink: withRuleSandbox(rule, 'symlink', (dir) => isIgnored(dir, RULE)),
-      directory: withRuleSandbox(rule, 'directory', (dir) => isIgnored(dir, RULE)),
-      contents: withRuleSandbox(rule, 'directory', (dir) =>
-        isIgnored(dir, `${RULE}/${SENTINEL_FILE}`),
-      ),
-      nested: withRuleSandbox(rule, 'nested', (dir) => isIgnored(dir, `${NESTED_DIR}/${RULE}`)),
-    };
+  it.each(RULE_MATRIX)(
+    'rule %j -> symlink=%s directory=%s contents=%s nested=%s',
+    (rule, symlinkIgnored, directoryIgnored, contentsIgnored, nestedIgnored) => {
+      const actual = {
+        symlink: withRuleSandbox(rule, 'symlink', (dir) => isIgnored(dir, RULE)),
+        directory: withRuleSandbox(rule, 'directory', (dir) => isIgnored(dir, RULE)),
+        contents: withRuleSandbox(rule, 'directory', (dir) =>
+          isIgnored(dir, `${RULE}/${SENTINEL_FILE}`),
+        ),
+        nested: withRuleSandbox(rule, 'nested', (dir) => isIgnored(dir, `${NESTED_DIR}/${RULE}`)),
+      };
 
-    expect(
-      actual,
-      'RULE_MATRIX no longer matches what git does. This table is not documentation: the failure messages in this file are RENDERED from it, so an engineer reading a red test is reading these exact values. Six false claims shipped in those messages while the suite stayed green, precisely because the prose was a second, hand-written copy of this data. There is one copy now -- which means a wrong row here becomes a wrong sentence there. If this fails, either git changed, or a row was edited without measuring it.',
-    ).toEqual({
-      symlink: symlinkIgnored,
-      directory: directoryIgnored,
-      contents: contentsIgnored,
-      nested: nestedIgnored,
-    });
-  });
+      expect(
+        actual,
+        'RULE_MATRIX no longer matches what git does. This table is not documentation: the failure messages in this file are RENDERED from it, so an engineer reading a red test is reading these exact values. Six false claims shipped in those messages while the suite stayed green, precisely because the prose was a second, hand-written copy of this data. There is one copy now -- which means a wrong row here becomes a wrong sentence there. If this fails, either git changed, or a row was edited without measuring it.',
+      ).toEqual({
+        symlink: symlinkIgnored,
+        directory: directoryIgnored,
+        contents: contentsIgnored,
+        nested: nestedIgnored,
+      });
+    },
+  );
 
   it('a present rule can still lose to a negation, so "no rule matches" is the wrong diagnosis', () => {
     const matchedBy = withRuleSandbox(NEGATED, 'directory', (dir) =>

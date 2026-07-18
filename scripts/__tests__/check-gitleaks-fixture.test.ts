@@ -99,14 +99,17 @@ describe('assertConfigShape (the config cannot be quietly gutted)', () => {
   it.each([
     ['bare key', 'paths'],
     ['quoted key', '"paths"'],
-  ])('rejects a %s `paths` inside an allowlist -- the parse normalizes the spelling, the key is rejected', (_label, key) => {
-    expect(
-      shape(
-        `title = "x"\n[extend]\nuseDefault = true\n[[allowlists]]\ndescription = "y"\n${key} = ['''.*''']\n`,
-      ).ok,
-      'A quoted key parses to the same object key as the bare key, so both are an unrecognized allowlist key and rejected. `paths` exempts the file from EVERY rule; a path-scoped entry evades the probe, so the shape check is what catches it. (The old fixtures put `useDefault` at top level, so they short-circuited on an unknown-top-level-key rejection and never reached this branch.)',
-    ).toBe(false);
-  });
+  ])(
+    'rejects a %s `paths` inside an allowlist -- the parse normalizes the spelling, the key is rejected',
+    (_label, key) => {
+      expect(
+        shape(
+          `title = "x"\n[extend]\nuseDefault = true\n[[allowlists]]\ndescription = "y"\n${key} = ['''.*''']\n`,
+        ).ok,
+        'A quoted key parses to the same object key as the bare key, so both are an unrecognized allowlist key and rejected. `paths` exempts the file from EVERY rule; a path-scoped entry evades the probe, so the shape check is what catches it. (The old fixtures put `useDefault` at top level, so they short-circuited on an unknown-top-level-key rejection and never reached this branch.)',
+      ).toBe(false);
+    },
+  );
 
   it('rejects a dotted-key `allowlist.paths` (parses to the single [allowlist] table spelling)', () => {
     expect(
@@ -290,12 +293,12 @@ describe('assertExpectedFindings (the bait must fire, the clean fixture must not
 });
 
 describe('mayNameTheComment (only the machinery may spell the banned phrase, exactly)', () => {
-  it.each([
-    'scripts/check-gitleaks-fixture.mjs',
-    'scripts/gitleaks-staged.mjs',
-  ])('%s is allowed to name the phrase', (file) => {
-    expect(mayNameTheComment(file)).toBe(true);
-  });
+  it.each(['scripts/check-gitleaks-fixture.mjs', 'scripts/gitleaks-staged.mjs'])(
+    '%s is allowed to name the phrase',
+    (file) => {
+      expect(mayNameTheComment(file)).toBe(true);
+    },
+  );
 
   it.each([
     'scripts/gitleaks-staged.mjs.bak',
