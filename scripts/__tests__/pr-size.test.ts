@@ -6,9 +6,14 @@ describe('toSubsystem — a subsystem is a directory, not a file', () => {
     for (const f of ['package.json', 'pnpm-lock.yaml', 'DECISIONS.md', 'README.md', '.gitignore']) {
       expect(toSubsystem(f)).toBe('(root)');
     }
-    // the defect this fixes: 5 root files must count as ONE subsystem, not five
     const roots = ['package.json', 'pnpm-lock.yaml', 'DECISIONS.md', 'README.md', '.gitignore'];
-    expect(new Set(roots.map(toSubsystem)).size).toBe(1);
+    expect(
+      new Set(roots.map(toSubsystem)).size,
+      'Root-level files must collapse to ONE (root) subsystem. The regression this guards: ' +
+        'counting each root file as its own subsystem made a routine dep bump (package.json + ' +
+        'lockfile) plus DECISIONS.md and a config file reach the red threshold of 5, ' +
+        'false-reporting SPLIT RECOMMENDED on breadth the PR did not have.',
+    ).toBe(1);
   });
 
   it('counts a file one level deep as its directory, not the file', () => {
