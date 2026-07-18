@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 
 import { execFileSync } from 'node:child_process';
+import { toSubsystem } from './pr-size-lib';
 
 const THRESHOLDS = {
   files: { yellow: 10, red: 25 },
@@ -60,12 +61,6 @@ for (const line of numstat.trim().split('\n').filter(Boolean)) {
   }
 }
 const linesChanged = insertions + deletions;
-
-function toSubsystem(filePath: string): string {
-  const parts = filePath.split('/');
-  if (parts.length === 1) return parts[0] ?? filePath;
-  return `${parts[0] ?? ''}/${parts[1] ?? ''}`;
-}
 
 const subsystemMap = new Map<string, number>();
 for (const f of files) {
