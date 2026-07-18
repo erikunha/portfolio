@@ -1,11 +1,14 @@
 import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import {
+  AGENTS_BANNER,
+  CODEX_NOTE,
   findFiction,
   insertNote,
   referencedHookSiblings,
   referencedMirrorPaths,
   rewriteText,
+  undisclaimedEnforcementClaims,
   unresolvedRefs,
 } from '../sync-codex.mjs';
 
@@ -45,6 +48,16 @@ describe('rewriteText — only the five harness paths are agent-specific', () =>
     expect(rewriteText('Claude Code is available as a CLI')).toBe(
       'Claude Code is available as a CLI',
     );
+  });
+
+  it('scopes the live-fire "Confirmed enforced" citation to where hooks are registered', () => {
+    expect(rewriteText('**Confirmed enforced (2026-06-06):**')).toBe(
+      '**Confirmed enforced where hooks are registered (2026-06-06):**',
+    );
+  });
+
+  it('leaves text without the "Confirmed enforced" phrase unchanged', () => {
+    expect(rewriteText('no enforcement claim here')).toBe('no enforcement claim here');
   });
 });
 
@@ -87,6 +100,48 @@ describe('referencedMirrorPaths — the dangling-ref surface the fail-open prede
     expect(referencedMirrorPaths('see .codex/rules/api-boundary.md')).toEqual([
       '.codex/rules/api-boundary.md',
     ]);
+  });
+});
+
+describe('undisclaimedEnforcementClaims — a generated .md must not assert enforcement it cannot deliver', () => {
+  const FAILURE_MESSAGE =
+    'a generated doc asserting hook enforcement without the self-enforce disclaimer lies to the mirror runtime — see sync-codex CODEX_NOTE design';
+
+  it(FAILURE_MESSAGE, () => {
+    expect(undisclaimedEnforcementClaims('this hook is WIRED to block the tool call')).toEqual([
+      'WIRED',
+    ]);
+  });
+
+  it(`detects "exit 2" without a disclaimer — ${FAILURE_MESSAGE}`, () => {
+    expect(undisclaimedEnforcementClaims('the guard uses exit 2 to block')).toEqual(['exit 2']);
+  });
+
+  it(`detects "Confirmed enforced" without a disclaimer — ${FAILURE_MESSAGE}`, () => {
+    expect(undisclaimedEnforcementClaims('**Confirmed enforced (2026-06-06):** it fired')).toEqual([
+      'Confirmed enforced',
+    ]);
+  });
+
+  it('dedupes a token repeated in one body', () => {
+    expect(undisclaimedEnforcementClaims('WIRED here and WIRED there and exit 2 as well')).toEqual([
+      'WIRED',
+      'exit 2',
+    ]);
+  });
+
+  it(`passes once the CODEX_NOTE disclaimer is present — ${FAILURE_MESSAGE}`, () => {
+    const body = `${CODEX_NOTE}this hook is WIRED to block the tool call`;
+    expect(undisclaimedEnforcementClaims(body)).toBeNull();
+  });
+
+  it(`passes "exit 2" once the AGENTS_BANNER disclaimer is present — ${FAILURE_MESSAGE}`, () => {
+    const body = `${AGENTS_BANNER}the guard uses exit 2 to block`;
+    expect(undisclaimedEnforcementClaims(body)).toBeNull();
+  });
+
+  it('passes a body with none of the enforcement tokens, disclaimer or not', () => {
+    expect(undisclaimedEnforcementClaims('just some ordinary prose')).toBeNull();
   });
 });
 
