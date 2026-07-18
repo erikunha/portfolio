@@ -7,6 +7,11 @@ try:
   print(d.get('tool_input',{}).get('skill','') or d.get('skill',''))
 except Exception: print('')
 " 2>/dev/null || echo "")
+# Same raw-payload fallback as bash-guard.sh / api-edit-marker.sh: a malformed
+# payload still carrying the token must not silently fail open.
+if [ -z "$SKILL" ] && [ -n "$INPUT" ]; then
+  printf '%s' "$INPUT" | grep -qF 'superpowers:writing-plans' && SKILL='superpowers:writing-plans'
+fi
 TRANSCRIPT=$(printf '%s' "$INPUT" | python3 -c "
 import json,sys
 try: print(json.load(sys.stdin).get('transcript_path',''))
