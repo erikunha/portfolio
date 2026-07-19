@@ -336,12 +336,12 @@ ag_payload() { # $1=skill $2=transcript-path -> JSON PreToolUse payload for the 
   python3 -c 'import json,sys; print(json.dumps({"tool_name":"Skill","tool_input":{"skill": sys.argv[1]}, "transcript_path": sys.argv[2]}))' "$1" "$2"
 }
 
-(cd "$REPO_ROOT" && ag_payload 'superpowers:brainstorming' "$FIXDIR/ag-nonexistent-$$.jsonl" | bash "$AG_HOOK") >/dev/null 2>&1
+(cd "$REPO_ROOT" && ag_payload 'speckit-specify' "$FIXDIR/ag-nonexistent-$$.jsonl" | bash "$AG_HOOK") >/dev/null 2>&1
 assert_eq "ag: non-matching skill allowed" "0" "$?"
 
 AG_T_NONE="$FIXDIR/ag-none-$$.jsonl"
 printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"text","text":"no agent dispatch here"}]}}' > "$AG_T_NONE"
-out=$(cd "$REPO_ROOT" && ag_payload 'superpowers:writing-plans' "$AG_T_NONE" | bash "$AG_HOOK" 2>&1)
+out=$(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$AG_T_NONE" | bash "$AG_HOOK" 2>&1)
 ec=$?
 assert_eq "ag: block when transcript has no architect-reviewer dispatch" "2" "$ec"
 assert_contains "ag: block message names the missing PASS" "$out" "no architect-reviewer GATE_RESULT: PASS"
@@ -352,7 +352,7 @@ AG_T_FAIL="$FIXDIR/ag-fail-$$.jsonl"
   printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_ag_fail","name":"Agent","input":{"subagent_type":"architect-reviewer","prompt":"Review the spec."}}]}}'
   printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_ag_fail","content":"Spec has gaps.\nGATE_RESULT: FAIL"}]}}'
 } > "$AG_T_FAIL"
-(cd "$REPO_ROOT" && ag_payload 'superpowers:writing-plans' "$AG_T_FAIL" | bash "$AG_HOOK") >/dev/null 2>&1
+(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$AG_T_FAIL" | bash "$AG_HOOK") >/dev/null 2>&1
 assert_eq "ag: block when architect-reviewer returned GATE_RESULT: FAIL" "2" "$?"
 rm -f "$AG_T_FAIL"
 
@@ -361,7 +361,7 @@ AG_T_WRONG_AGENT="$FIXDIR/ag-wrong-agent-$$.jsonl"
   printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_ag_wrong","name":"Agent","input":{"subagent_type":"code-reviewer","prompt":"Review the code."}}]}}'
   printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_ag_wrong","content":"Looks fine.\nGATE_RESULT: PASS"}]}}'
 } > "$AG_T_WRONG_AGENT"
-(cd "$REPO_ROOT" && ag_payload 'superpowers:writing-plans' "$AG_T_WRONG_AGENT" | bash "$AG_HOOK") >/dev/null 2>&1
+(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$AG_T_WRONG_AGENT" | bash "$AG_HOOK") >/dev/null 2>&1
 assert_eq "ag: block when PASS came from a non-architect-reviewer agent" "2" "$?"
 rm -f "$AG_T_WRONG_AGENT"
 
@@ -370,19 +370,19 @@ AG_T_PASS="$FIXDIR/ag-pass-$$.jsonl"
   printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_ag_pass","name":"Agent","input":{"subagent_type":"architect-reviewer","prompt":"Review the spec against the four-gate protocol."}}]}}'
   printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_ag_pass","content":"Spec reviewed end to end.\nGATE_RESULT: PASS"}]}}'
 } > "$AG_T_PASS"
-(cd "$REPO_ROOT" && ag_payload 'superpowers:writing-plans' "$AG_T_PASS" | bash "$AG_HOOK") >/dev/null 2>&1
+(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$AG_T_PASS" | bash "$AG_HOOK") >/dev/null 2>&1
 assert_eq "ag: allow when architect-reviewer returned GATE_RESULT: PASS" "0" "$?"
 rm -f "$AG_T_PASS"
 
-out=$(cd "$REPO_ROOT" && ag_payload 'superpowers:writing-plans' "$FIXDIR/ag-missing-$$.jsonl" | bash "$AG_HOOK" 2>&1)
+out=$(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$FIXDIR/ag-missing-$$.jsonl" | bash "$AG_HOOK" 2>&1)
 ec=$?
 assert_eq "ag: fail-closed on unreadable transcript path" "2" "$ec"
 assert_contains "ag: fail-closed message cites unreadable transcript" "$out" "transcript unreadable (fail-closed)"
 
-(cd "$REPO_ROOT" && ag_payload 'superpowers:writing-plans' '' | bash "$AG_HOOK") >/dev/null 2>&1
+(cd "$REPO_ROOT" && ag_payload 'speckit-plan' '' | bash "$AG_HOOK") >/dev/null 2>&1
 assert_eq "ag: fail-closed on empty transcript_path" "2" "$?"
 
-(printf 'superpowers:writing-plans embedded in unparseable json' | ( cd "$REPO_ROOT" && bash "$AG_HOOK" )) >/dev/null 2>&1
+(printf 'speckit-plan embedded in unparseable json' | ( cd "$REPO_ROOT" && bash "$AG_HOOK" )) >/dev/null 2>&1
 assert_eq "ag: malformed payload with writing-plans token fails closed" "2" "$?"
 
 (printf 'just some garbled non-json text with no skill token' | ( cd "$REPO_ROOT" && bash "$AG_HOOK" )) >/dev/null 2>&1
@@ -390,6 +390,13 @@ assert_eq "ag: malformed payload with no token allowed" "0" "$?"
 
 # --- api-security-push-guard.sh block logic (git push PreToolUse Bash matcher) ---
 ASG_HOOK="$HOOKS/api-security-push-guard.sh"
+# Every hook invocation is time-bounded. An adversarial fixture that makes the
+# guard non-terminating must FAIL the suite, not wedge it — measuring elapsed
+# time after an unbounded call cannot do that, because the call never returns.
+# timeout(1) is absent on darwin, so perl's alarm is the portable bound; it
+# exits 142 on expiry, which is not 2 and therefore fails any assertion.
+ASG_HOOK_TIMEOUT_S=20
+asg_hook() { perl -e 'alarm shift; exec @ARGV' "$ASG_HOOK_TIMEOUT_S" bash "$ASG_HOOK"; }
 asg_payload() { # $1=command $2=transcript-path -> JSON PreToolUse payload for the Bash matcher
   python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","tool_input":{"command": sys.argv[1]},"transcript_path": sys.argv[2]}))' "$1" "$2"
 }
@@ -401,12 +408,12 @@ asg_mkroot() { # -> isolated non-git dir seeded with a transcript.mjs copy so th
 }
 
 d=$(asg_mkroot)
-(asg_payload 'git status' '' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload 'git status' '' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: non-push command allowed" "0" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
-(asg_payload 'git push origin main' '' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload 'git push origin main' '' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: push allowed with no marker pending" "0" "$?"
 rm -rf "$d"
 
@@ -414,7 +421,7 @@ d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
 ASG_T_NONE="$FIXDIR/asg-none-$$.jsonl"
 printf '%s\n' '{"timestamp":"2020-01-01T00:00:01.000Z","message":{"role":"assistant","content":[{"type":"text","text":"no dispatch"}]}}' > "$ASG_T_NONE"
-out=$(asg_payload 'git push origin main' "$ASG_T_NONE" | ( cd "$d" && bash "$ASG_HOOK" ) 2>&1)
+out=$(asg_payload 'git push origin main' "$ASG_T_NONE" | ( cd "$d" && asg_hook ) 2>&1)
 ec=$?
 assert_eq "asg: block when marker pending and no security-auditor dispatch" "2" "$ec"
 assert_contains "asg: block message cites unaudited edit" "$out" "unaudited API-surface edit"
@@ -424,7 +431,7 @@ d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
 ASG_T_STALE="$FIXDIR/asg-stale-$$.jsonl"
 printf '%s\n' '{"timestamp":"2019-01-01T00:00:00.000Z","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_asg_stale","name":"Agent","input":{"subagent_type":"security-auditor","prompt":"stale audit predating the marker"}}]}}' > "$ASG_T_STALE"
-(asg_payload 'git push origin main' "$ASG_T_STALE" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload 'git push origin main' "$ASG_T_STALE" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: block when security-auditor dispatch predates the marker" "2" "$?"
 rm -rf "$d"; rm -f "$ASG_T_STALE"
 
@@ -432,7 +439,7 @@ d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
 ASG_T_PASS="$FIXDIR/asg-pass-$$.jsonl"
 printf '%s\n' '{"timestamp":"2020-01-01T00:05:00.000Z","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_asg_pass","name":"Agent","input":{"subagent_type":"security-auditor","prompt":"Audit the API-surface change."}}]}}' > "$ASG_T_PASS"
-(asg_payload 'git push origin main' "$ASG_T_PASS" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload 'git push origin main' "$ASG_T_PASS" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: allow when security-auditor dispatched after the marker" "0" "$?"
 if [ -e "$d/.claude/.api-edit-pending" ]; then asg_marker_state=EXISTS; else asg_marker_state=CLEARED; fi
 assert_eq "asg: marker cleared after a verified audit" "CLEARED" "$asg_marker_state"
@@ -440,7 +447,7 @@ rm -rf "$d"; rm -f "$ASG_T_PASS"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-out=$(asg_payload 'git push origin main' "$d/does-not-exist-$$.jsonl" | ( cd "$d" && bash "$ASG_HOOK" ) 2>&1)
+out=$(asg_payload 'git push origin main' "$d/does-not-exist-$$.jsonl" | ( cd "$d" && asg_hook ) 2>&1)
 ec=$?
 assert_eq "asg: fail-closed on unreadable transcript with marker pending" "2" "$ec"
 assert_contains "asg: fail-closed message cites unreadable transcript" "$out" "transcript unreadable (fail-closed)"
@@ -448,68 +455,68 @@ rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload 'git push origin main' '' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload 'git push origin main' '' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: fail-closed on empty transcript_path with marker pending" "2" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf 'garbled not json git push origin main' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf 'garbled not json git push origin main' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: malformed payload with git-push token fails closed" "2" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"tool_name":"Bash","tool_input":{"command":"git push origin main"},"transcript_path":' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf '{"tool_name":"Bash","tool_input":{"command":"git push origin main"},"transcript_path":' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: truncated JSON payload with quoted git-push command fails closed" "2" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"tool_input":{"command":"cd /r &&\\ngit push origin main"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf '{"tool_input":{"command":"cd /r &&\\ngit push origin main"},"transcript' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: escape sequence before the git token fails closed" "2" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{\\"command\\":\\"git push\\"}' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf '{\\"command\\":\\"git push\\"}' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: double-encoded payload with escape after the push token fails closed" "2" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"tool_input":{"command":"ls -la"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf '{"tool_input":{"command":"ls -la"},"transcript' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: malformed payload for an unrelated command stays allowed (no hard-lock)" "0" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf 'garbled not json, nothing relevant here' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf 'garbled not json, nothing relevant here' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: malformed payload with no token allowed" "0" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"tool_input":{"command":"git status"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf '{"tool_input":{"command":"git status"},"transcript' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: containment needs BOTH tokens — git alone must not hard-lock" "0" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"tool_input":{"command":"npm run push-notes"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf '{"tool_input":{"command":"npm run push-notes"},"transcript' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: containment needs BOTH tokens — push alone must not hard-lock" "0" "$?"
 rm -rf "$d"
 
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"tool_input":{"command":"rm .claude/.api-edit-pending","description":"clear the marker so git push can proceed"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf '{"tool_input":{"command":"rm .claude/.api-edit-pending","description":"clear the marker so git push can proceed"},"transcript' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: a prose description must not lock out the escape it describes" "0" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload 'ls -la' "$d/gitrepos/push-notes/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload 'ls -la' "$d/gitrepos/push-notes/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: benign command is not matched by tokens in transcript_path" "0" "$?"
 rm -rf "$d"
 
@@ -522,7 +529,7 @@ chmod +x "$PYSHIM/python3"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-asg_nopy=$( (asg_payload 'git push origin main' "$d/t.jsonl" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) 2>&1 )
+asg_nopy=$( (asg_payload 'git push origin main' "$d/t.jsonl" | ( cd "$d" && PATH="$PYSHIM:$PATH" asg_hook )) 2>&1 )
 asg_nopy_code=$?
 assert_eq "asg: push blocks when python3 is unusable" "2" "$asg_nopy_code"
 assert_contains "asg: block names the manual clear no dispatch can substitute for" "$asg_nopy" "rm "
@@ -530,13 +537,13 @@ rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload 'cd repo&&git push origin main' "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload 'cd repo&&git push origin main' "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: a shell operator is a token boundary, not just whitespace" "2" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload 'git commit -m "add pushups"' "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload 'git commit -m "add pushups"' "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: widening the boundary must not start matching push inside a word" "0" "$?"
 rm -rf "$d"
 
@@ -545,7 +552,7 @@ rm -rf "$d"
 for asg_op in 'a;git push' 'a|git push' '(git push)' 'git push;a' 'git push&&a' 'git push|a' 'cd repo && git push origin main'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_op" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_op" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: operator boundary pinned for [$asg_op]" "2" "$?"
   rm -rf "$d"
 done
@@ -555,7 +562,7 @@ done
 for asg_evade in '/usr/bin/git push origin main' 'bash -c "git push origin main"' "sh -c 'git push'" 'g\it push origin main' '`git push`' '$(git push origin main)' 'git subtree push --prefix=x origin main'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_evade" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_evade" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: command-position detection blocks [$asg_evade]" "2" "$?"
   rm -rf "$d"
 done
@@ -565,7 +572,7 @@ done
 for asg_ok in 'git log --grep push' 'git log --oneline | grep push' 'git commit -m "explain the git push guard"' 'git rev-parse HEAD; echo push' 'npm install && git log --grep push' 'git stash push'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_ok" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: not a push, must not block [$asg_ok]" "0" "$?"
   rm -rf "$d"
 done
@@ -578,7 +585,7 @@ for asg_wrap in 'env git push' 'env -i git push origin main' 'env GIT_TRACE=1 gi
                 'nohup git push' 'setsid git push' 'stdbuf -o0 git push' 'exec git push' 'builtin git push'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_wrap" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_wrap" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: wrapper-resolved push blocks [$asg_wrap]" "2" "$?"
   rm -rf "$d"
 done
@@ -586,7 +593,7 @@ done
 for asg_wrap_ok in 'env git status' 'sudo git log --grep push' 'timeout 5 npm run push-notes' 'sudo grep git file'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_wrap_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_wrap_ok" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: wrapper without a push stays allowed [$asg_wrap_ok]" "0" "$?"
   rm -rf "$d"
 done
@@ -598,7 +605,7 @@ for asg_flag in 'git -C /tmp push' 'git -c a=b push' 'git --git-dir=x push' 'git
                 'git --config-env k=V push'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_flag" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_flag" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: global flag does not hide the subcommand [$asg_flag]" "2" "$?"
   rm -rf "$d"
 done
@@ -613,14 +620,14 @@ for asg_opaque in '`echo git push origin main`' \
                   'G=git; $G push origin main'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_opaque" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_opaque" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: opaque construct is undecidable, not clean [$asg_opaque]" "2" "$?"
   rm -rf "$d"
 done
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload "bash -c \"bash -c 'bash -c \\\"git push origin main\\\"'\"" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload "bash -c \"bash -c 'bash -c \\\"git push origin main\\\"'\"" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: nested bash -c inside MAX_DEPTH still blocks" "2" "$?"
 rm -rf "$d"
 
@@ -632,7 +639,7 @@ for asg_unres in 'git $(echo push) origin main' \
                  'echo push | xargs git'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_unres" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_unres" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: unresolved subcommand is undecidable [$asg_unres]" "2" "$?"
   rm -rf "$d"
 done
@@ -640,7 +647,7 @@ done
 for asg_unres_ok in 'git log --grep $PATTERN' 'git commit -m "msg $VAR"'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_unres_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_unres_ok" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: an expansion past a settled subcommand is still allowed [$asg_unres_ok]" "0" "$?"
   rm -rf "$d"
 done
@@ -650,7 +657,7 @@ d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
 asg_deep='git push origin main'
 for _ in 1 2 3 4 5 6 7 8; do asg_deep="bash -c \"$asg_deep\""; done
-(asg_payload "$asg_deep" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload "$asg_deep" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: nesting past MAX_DEPTH is undecidable, not clean" "2" "$?"
 rm -rf "$d"
 
@@ -666,7 +673,7 @@ for asg_hide in 'python3 -c "import os; os.system(\"git push\")"' \
                 'git --super-prefix x push'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_hide" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_hide" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a push hidden past the subcommand still blocks [$asg_hide]" "2" "$?"
   rm -rf "$d"
 done
@@ -674,7 +681,7 @@ done
 for asg_hide_ok in 'git log' 'git status' 'git commit -m x' 'git diff --stat'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_hide_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_hide_ok" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: widening the hidden-push net must not over-block [$asg_hide_ok]" "0" "$?"
   rm -rf "$d"
 done
@@ -689,7 +696,7 @@ for asg_alias in '/usr/libexec/git-core/git-push origin main' \
                  'flock /tmp/l git push origin main'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_alias" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_alias" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a push under another program name still blocks [$asg_alias]" "2" "$?"
   rm -rf "$d"
 done
@@ -703,29 +710,29 @@ d=$(mktemp -d)/github-push-demo
 mkdir -p "$d/.claude"
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
 (printf '{"tool_input":{"command":"rm %s/.claude/.api-edit-pending"},"transcript_path":"/n"}' "$d" \
-  | ( cd "$d" && PATH="$PYSHIM2:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+  | ( cd "$d" && PATH="$PYSHIM2:$PATH" asg_hook )) >/dev/null 2>&1
 assert_eq "asg: repo-path tokens must not trap the operator's escape" "0" "$?"
 (printf '{"tool_input":{"command":"git push origin main"},"transcript_path":"/n"}' \
-  | ( cd "$d" && PATH="$PYSHIM2:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+  | ( cd "$d" && PATH="$PYSHIM2:$PATH" asg_hook )) >/dev/null 2>&1
 assert_eq "asg: stripping the repo path must not unblock a real push" "2" "$?"
 rm -rf "$PYSHIM2"
 
 # A detector that cannot decide must not read as "looked, found no push".
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload "$(printf 'sh <<EOF\ngit push origin main\nEOF')" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload "$(printf 'sh <<EOF\ngit push origin main\nEOF')" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: a heredoc body feeding a shell is not a blind spot" "2" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload "bash -c 'echo ((' ; /usr/bin/git push origin main" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload "bash -c 'echo ((' ; /usr/bin/git push origin main" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: an unparseable inner payload must not unlock an evasive push" "2" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload "$(python3 -c "print('/usr/bin/git push origin main #'+'x'*100001)")" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload "$(python3 -c "print('/usr/bin/git push origin main #'+'x'*100001)")" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: a command past MAX_CMD_LEN must not unlock an evasive push" "2" "$?"
 rm -rf "$d"
 
@@ -741,7 +748,7 @@ assert_eq "det: reparse-budget exhaustion exits 3 (undecidable), not 0" "3" "$de
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload "$det_budget" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload "$det_budget" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: a push after budget exhaustion still blocks" "2" "$?"
 rm -rf "$d"
 
@@ -756,21 +763,21 @@ for asg_hooks in 'git -c core.hooksPath=/tmp/h commit -m wip' \
                  'git -ccore.hooksPath=/tmp/h commit -m x'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_hooks" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_hooks" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: disabling the git-level backstop blocks [$asg_hooks]" "2" "$?"
   rm -rf "$d"
 done
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload 'git commit -m "document core.hooksPath in the runbook"' "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload 'git commit -m "document core.hooksPath in the runbook"' "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: naming core.hooksPath in prose is not redirecting it" "0" "$?"
 rm -rf "$d"
 
 for asg_cfg_ok in 'git --namespace n status' 'PATH=/x:$PATH make build' 'env FOO=bar git status' 'git config --list'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_cfg_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_cfg_ok" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a non-config flag value must not over-block [$asg_cfg_ok]" "0" "$?"
   rm -rf "$d"
 done
@@ -796,7 +803,7 @@ for asg_noartifact in 'GIT_SSH_COMMAND="sh -c evil" git fetch origin' \
                       'git --super-prefix=/tmp/evil status'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_noartifact" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_noartifact" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: no-artifact execution vector blocks [$asg_noartifact]" "2" "$?"
   rm -rf "$d"
 done
@@ -815,7 +822,7 @@ for asg_execflag in 'git fetch --upload-pack="sh -c evil" .' \
                     'git clone --separate-git-dir=/tmp/evil . dst'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_execflag" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_execflag" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a post-subcommand exec flag blocks [$asg_execflag]" "2" "$?"
   rm -rf "$d"
 done
@@ -829,7 +836,7 @@ for asg_hardlink in 'sudo git-push origin main' \
                     'git-config core.hooksPath /tmp/h'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_hardlink" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_hardlink" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a dashed git hardlink blocks [$asg_hardlink]" "2" "$?"
   rm -rf "$d"
 done
@@ -839,7 +846,7 @@ for asg_wrapper in 'ionice -c3 git push' 'chrt -b 0 git push' 'watch git push' '
                    'script -q /dev/null git push' 'flock /tmp/l git push'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_wrapper" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_wrapper" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a wrapped push blocks under every WRAPPERS entry [$asg_wrapper]" "2" "$?"
   rm -rf "$d"
 done
@@ -853,7 +860,7 @@ for asg_cfgwrite in 'git config --unset core.hooksPath' \
                     'git config --add alias.z push'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_cfgwrite" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_cfgwrite" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a config write blocks whatever its spelling [$asg_cfgwrite]" "2" "$?"
   rm -rf "$d"
 done
@@ -865,7 +872,7 @@ for asg_indirect in 'export $A=1 $B=alias.z $C=push' \
                     'export $(printf GIT_CONFIG_COUNT)=1'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_indirect" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_indirect" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: an opaque assignment name is undecidable, not clean [$asg_indirect]" "2" "$?"
   rm -rf "$d"
 done
@@ -874,7 +881,7 @@ done
 for asg_source in 'source <(printf "git push\n")' '. <(printf "git push\n")'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_source" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_source" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a sourced script is undecidable, not clean [$asg_source]" "2" "$?"
   rm -rf "$d"
 done
@@ -890,7 +897,7 @@ for asg_execenv in 'EDITOR="git push origin main #" git commit --amend' \
                    'env EDITOR="sh -c evil" git commit'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_execenv" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_execenv" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: an execution-honoring env name blocks, GIT_ prefix or not [$asg_execenv]" "2" "$?"
   rm -rf "$d"
 done
@@ -901,7 +908,7 @@ for asg_trap in 'trap "git push origin main" DEBUG' \
                 'trap "git fetch --upload-pack=x ." ERR'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_trap" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_trap" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a trap body is reparsed, not recorded inert [$asg_trap]" "2" "$?"
   rm -rf "$d"
 done
@@ -914,7 +921,7 @@ for asg_undecidable in 'python3 -c "import os;os.system('"'"'gi'"'"'+'"'"'t push
                        'node -e "require(\"child_process\").exec(\"gi\"+\"t push\")"'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_undecidable" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_undecidable" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: an unreadable command is undecidable, never clean [$asg_undecidable]" "2" "$?"
   rm -rf "$d"
 done
@@ -956,7 +963,7 @@ for asg_abbrev in 'git ls-remote --upload-pa="sh -c evil" ../src' \
                   'git filter-branch --tree-filter "sh -c evil" HEAD'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_abbrev" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_abbrev" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: an abbreviated long option blocks like its full spelling [$asg_abbrev]" "2" "$?"
   rm -rf "$d"
 done
@@ -970,7 +977,7 @@ for asg_dashc_ok in 'git switch -c feat/x' \
                     'git show -c HEAD'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_dashc_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_dashc_ok" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a subcommand short option is not config injection [$asg_dashc_ok]" "0" "$?"
   rm -rf "$d"
 done
@@ -981,7 +988,7 @@ for asg_dashc_block in 'git -c core.hooksPath=/tmp/h commit -m x' \
                        'git -c alias.z=push z origin main'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_dashc_block" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_dashc_block" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a top-level -c is still config injection [$asg_dashc_block]" "2" "$?"
   rm -rf "$d"
 done
@@ -997,7 +1004,7 @@ for asg_wrapstrip in 'env python3 -c "import os;os.system(0)"' \
                      'env "BASH_FUNC_ls%%=() { git push origin main; }" bash -c ls'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_wrapstrip" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_wrapstrip" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a wrapper must not strip a rule the bare form has [$asg_wrapstrip]" "2" "$?"
   rm -rf "$d"
 done
@@ -1007,7 +1014,7 @@ for asg_shortabbrev in 'git ls-remote --up="sh -c evil" ../src' \
                        'git fetch --upl="sh -c evil" ../src'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_shortabbrev" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_shortabbrev" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: the shortest accepted abbreviation blocks too [$asg_shortabbrev]" "2" "$?"
   rm -rf "$d"
 done
@@ -1016,7 +1023,7 @@ done
 for asg_gitword_ok in 'rg git' 'echo git' 'which git' 'cat git' 'ls git-hooks'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_gitword_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_gitword_ok" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: git as an operand is not an invocation [$asg_gitword_ok]" "0" "$?"
   rm -rf "$d"
 done
@@ -1032,7 +1039,7 @@ for asg_cfglong in 'git clone --config core.hooksPath=/tmp/evil . dst' \
                    'git submodule add --config core.hooksPath=/tmp/evil url path'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_cfglong" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_cfglong" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: --config is the long form of -c and blocks like it [$asg_cfglong]" "2" "$?"
   rm -rf "$d"
 done
@@ -1051,7 +1058,7 @@ for asg_optarg in 'env -u HOME sh -c "git push origin main"' \
                   'env --split-string="git push origin main"'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_optarg" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_optarg" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a wrapper option argument must not derail resolution [$asg_optarg]" "2" "$?"
   rm -rf "$d"
 done
@@ -1061,7 +1068,7 @@ for asg_cfgread2 in 'git config get user.email' 'git config list' 'git config ge
                     'env -u HOME make build'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_cfgread2" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_cfgread2" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a config read stays a read [$asg_cfgread2]" "0" "$?"
   rm -rf "$d"
 done
@@ -1081,7 +1088,7 @@ for asg_unpinned in 'caffeinate git push origin main' \
                     'trap "-x; git push origin main" EXIT'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_unpinned" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_unpinned" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: property pinned by an assertion, not a commit message [$asg_unpinned]" "2" "$?"
   rm -rf "$d"
 done
@@ -1095,7 +1102,7 @@ for asg_shortest in 'git ls-remote --u="sh -c evil" ../src' \
                     'git clone --te=/tmp/evil . dst'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_shortest" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_shortest" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: the shortest spelling git accepts blocks too [$asg_shortest]" "2" "$?"
   rm -rf "$d"
 done
@@ -1108,7 +1115,7 @@ for asg_filterfp in 'git stash pop --index' \
                     'git checkout --theirs file'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_filterfp" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_filterfp" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a subcommand flag is not a filter-branch flag [$asg_filterfp]" "0" "$?"
   rm -rf "$d"
 done
@@ -1117,7 +1124,7 @@ for asg_filterreal in 'git filter-branch --tree-filter "sh -c evil" HEAD' \
                       'git filter-branch --index-filter "sh -c evil" HEAD'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_filterreal" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_filterreal" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: filter-branch's own filters still block [$asg_filterreal]" "2" "$?"
   rm -rf "$d"
 done
@@ -1129,7 +1136,7 @@ for asg_barefunc in 'BASH_FUNC_ls%%="() { git push origin main; }" bash -c ls' \
                     'BASH_FUNC_x%%="() { :; }" bash -c x'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_barefunc" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_barefunc" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: the bare spelling is never weaker than the wrapped one [$asg_barefunc]" "2" "$?"
   rm -rf "$d"
 done
@@ -1149,7 +1156,7 @@ for asg_operandshadow in 'env -u node bash <<< "git push origin main"' \
                          'sudo -u me bash'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_operandshadow" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_operandshadow" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: an operand must not shadow the program [$asg_operandshadow]" "2" "$?"
   rm -rf "$d"
 done
@@ -1165,7 +1172,7 @@ for asg_interpword_ok in 'grep -rn bash .claude/hooks/' \
                          'cat /etc/shells'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_interpword_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_interpword_ok" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: an interpreter name as an argument is not an invocation [$asg_interpword_ok]" "0" "$?"
   rm -rf "$d"
 done
@@ -1185,7 +1192,7 @@ for asg_boolflag in 'sudo -i bash <<< "git push origin main"' \
                     'setsid -f bash <<< "git push"'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_boolflag" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_boolflag" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a boolean wrapper flag must not consume the program [$asg_boolflag]" "2" "$?"
   rm -rf "$d"
 done
@@ -1198,7 +1205,7 @@ for asg_valueflag in 'env -u node bash <<< "git push"' \
                      'ionice -c 3 bash <<< "git push"'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_valueflag" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_valueflag" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a value-taking flag still resolves past its operand [$asg_valueflag]" "2" "$?"
   rm -rf "$d"
 done
@@ -1210,7 +1217,7 @@ for asg_wrapgrep_ok in 'stdbuf -oL grep bash file' \
                        'nice -n 10 grep -c sh CLAUDE.md'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_wrapgrep_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_wrapgrep_ok" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a wrapper must not resolve onto a shell-named argument [$asg_wrapgrep_ok]" "0" "$?"
   rm -rf "$d"
 done
@@ -1246,7 +1253,7 @@ for asg_tablegap in '/usr/bin/time -o /tmp/x bash <<< \"git push origin main\"' 
                     'env --no-such-flag val bash <<< \"git push origin main\"'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_tablegap" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_tablegap" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a flag-table gap must not open a wrapper [$asg_tablegap]" "2" "$?"
   rm -rf "$d"
 done
@@ -1261,7 +1268,7 @@ for asg_nonnumeric in 'env -u node bash <<< \"git push origin main\"' \
                       'stdbuf -o L bash <<< \"git push origin main\"'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_nonnumeric" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_nonnumeric" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a non-numeric operand actually exercises the flag table [$asg_nonnumeric]" "2" "$?"
   rm -rf "$d"
 done
@@ -1272,7 +1279,7 @@ for asg_attached_ok in 'stdbuf -oL grep bash file' \
                        'timeout 30 grep -rn bash docs/'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_attached_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_attached_ok" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: an attached short flag must not widen onto an argument [$asg_attached_ok]" "0" "$?"
   rm -rf "$d"
 done
@@ -1284,16 +1291,13 @@ done
 asg_dos="env -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 bash <<< \"git push origin main\""
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-asg_t0=$(date +%s)
-(asg_payload "$asg_dos" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+# Bound the CALL, not the elapsed time after it. Measuring afterwards cannot
+# fail on a hang — the budget-removed mutant never returns, so `date` is never
+# reached and the fail branch is unreachable. `timeout(1)` is absent on darwin,
+# so perl's alarm is the portable bound; it exits 142 on expiry, which is not 2.
+(asg_payload "$asg_dos" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 asg_rc=$?
-asg_t1=$(date +%s)
-assert_eq "asg: an exponential candidate payload still blocks" "2" "$asg_rc"
-if [ $((asg_t1 - asg_t0)) -lt 10 ]; then
-  pass "asg: ...and returns bounded, not in exponential time"
-else
-  fail "asg: exponential payload took $((asg_t1 - asg_t0))s — the candidate budget is not holding"
-fi
+assert_eq "asg: an exponential payload blocks within the bound, never hangs" "2" "$asg_rc"
 rm -rf "$d"
 
 # timeout takes 5, 1.5, 0.5s and 2h30m. Enumerating duration SHAPES loses the
@@ -1304,7 +1308,7 @@ for asg_duration in 'timeout 1.5 bash <<< \"git push origin main\"' \
                     'timeout 5 bash <<< \"git push origin main\"'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_duration" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_duration" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a duration operand must not end resolution [$asg_duration]" "2" "$?"
   rm -rf "$d"
 done
@@ -1314,12 +1318,12 @@ done
 # then place the shell where only a WIDENED candidate reaches it (`--zzz val
 # bash` resolves to `val` on the primary walk), and the payload walks through.
 # Exhaustion means the walk could not finish, which is undecidable.
-for asg_starve in 'sudo --zzz val bash <<< \"git push origin main\"' \
+for asg_widen_only in 'sudo --zzz val bash <<< \"git push origin main\"' \
                   'sudo -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 --zzz val bash <<< \"git push origin main\"'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_starve" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
-  assert_eq "asg: burning the candidate budget must not open a path" "2" "$?"
+  (asg_payload "$asg_widen_only" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
+  assert_eq "asg: an ambiguous flag must yield both readings [$asg_widen_only]" "2" "$?"
   rm -rf "$d"
 done
 
@@ -1331,7 +1335,7 @@ for asg_starve2 in 'env -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 
                    'env -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 true | bash <<< \"git push origin main\"'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_starve2" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_starve2" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a drained budget must not open the NEXT command" "2" "$?"
   rm -rf "$d"
 done
@@ -1340,7 +1344,7 @@ done
 for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_env_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_env_ok" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: a non-git assignment is not config injection [$asg_env_ok]" "0" "$?"
   rm -rf "$d"
 done
@@ -1355,7 +1359,7 @@ for asg_persist in 'git config core.hooksPath /tmp/h' \
                    'env GIT_CONFIG_KEY_0=alias.foo GIT_CONFIG_VALUE_0=push GIT_CONFIG_COUNT=1 git foo'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_persist" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_persist" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: persistent or redirected config blocks [$asg_persist]" "2" "$?"
   rm -rf "$d"
 done
@@ -1365,7 +1369,7 @@ for asg_cfgread in 'git config --get remote.origin.url' 'git config --list' 'git
                    'git -C /tmp/other status' 'git -C /tmp/other log --oneline'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_cfgread" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_cfgread" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: reading config stays allowed [$asg_cfgread]" "0" "$?"
   rm -rf "$d"
 done
@@ -1377,7 +1381,7 @@ for asg_cfginj in 'git -c $CFG' \
                   'GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/tmp/h GIT_CONFIG_COUNT=1 git commit -m wip'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_cfginj" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  (asg_payload "$asg_cfginj" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
   assert_eq "asg: config injection blocks while a marker pends [$asg_cfginj]" "2" "$?"
   rm -rf "$d"
 done
@@ -1389,13 +1393,13 @@ assert_eq "det: unparseable inner payload exits 3 (undecidable), not 1 (crash)" 
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"cwd":"x\\", command git push, "y":"end"}' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf '{"cwd":"x\\", command git push, "y":"end"}' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: an odd trailing backslash must not let the strip eat a real push" "2" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"tool_input":{"command":"rm .claude/.api-edit-pending","description":"say \\"ok\\" git push can proceed"},"transcript' | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf '{"tool_input":{"command":"rm .claude/.api-edit-pending","description":"say \\"ok\\" git push can proceed"},"transcript' | ( cd "$d" && asg_hook )) >/dev/null 2>&1
 assert_eq "asg: an escaped quote leaves a token tail — accepted over-block, never a bypass" "2" "$?"
 rm -rf "$d"
 
@@ -1403,37 +1407,37 @@ ASG_TOKEN_PATH='/Users/x/git/push-service/t.jsonl'
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload 'rm .claude/.api-edit-pending' "$ASG_TOKEN_PATH" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload 'rm .claude/.api-edit-pending' "$ASG_TOKEN_PATH" | ( cd "$d" && PATH="$PYSHIM:$PATH" asg_hook )) >/dev/null 2>&1
 assert_eq "asg: the documented escape survives a transcript_path carrying both tokens" "0" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload 'ls -la' "$ASG_TOKEN_PATH" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+(asg_payload 'ls -la' "$ASG_TOKEN_PATH" | ( cd "$d" && PATH="$PYSHIM:$PATH" asg_hook )) >/dev/null 2>&1
 assert_eq "asg: unrelated command survives a transcript_path carrying both tokens" "0" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"tool_input":{"command":"git push origin main"},"transcript_path":"%s"' "$ASG_TOKEN_PATH" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf '{"tool_input":{"command":"git push origin main"},"transcript_path":"%s"' "$ASG_TOKEN_PATH" | ( cd "$d" && PATH="$PYSHIM:$PATH" asg_hook )) >/dev/null 2>&1
 assert_eq "asg: a real push still blocks once path tokens are excluded" "2" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"transcript_path":"/t.jsonl","cwd":"/repo""tool_input":{"command":"git push origin main"}}' | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf '{"transcript_path":"/t.jsonl","cwd":"/repo""tool_input":{"command":"git push origin main"}}' | ( cd "$d" && PATH="$PYSHIM:$PATH" asg_hook )) >/dev/null 2>&1
 assert_eq "asg: a path field missing its trailing comma cannot swallow the command" "2" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"cwd":"/repo","transcript_path":"/t.jsonl""tool_input":{"command":"git push origin main"}}' | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf '{"cwd":"/repo","transcript_path":"/t.jsonl""tool_input":{"command":"git push origin main"}}' | ( cd "$d" && PATH="$PYSHIM:$PATH" asg_hook )) >/dev/null 2>&1
 assert_eq "asg: same bleed via transcript_path ahead of the command" "2" "$?"
 rm -rf "$d"
 
 d=$(asg_mkroot)
 printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(printf '{"cwd":"%s","tool_input":{"command":"ls -la"},"transcript_path":"/t.jsonl"' "/Users/x/git/push-service" | ( cd "$d" && PATH="$PYSHIM:$PATH" bash "$ASG_HOOK" )) >/dev/null 2>&1
+(printf '{"cwd":"%s","tool_input":{"command":"ls -la"},"transcript_path":"/t.jsonl"' "/Users/x/git/push-service" | ( cd "$d" && PATH="$PYSHIM:$PATH" asg_hook )) >/dev/null 2>&1
 assert_eq "asg: cwd is excluded too — it is the likelier token-bearing path" "0" "$?"
 rm -rf "$d"
 rm -rf "$PYSHIM"

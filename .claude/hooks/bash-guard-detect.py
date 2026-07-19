@@ -93,6 +93,28 @@ VALUE_FLAGS = {
 }
 ASSIGN_SHAPED = re.compile(r"^[A-Za-z_][^=]*=")
 ASSIGN_RECORD = "#assign"
+# bashlex's own node vocabulary. These are the highest-stakes literals in the
+# file: a typo yields an empty match, so the walk sees nothing and fails OPEN
+# with no error. Naming them means one spelling, checked once.
+NODE_WORD = "word"
+NODE_ASSIGNMENT = "assignment"
+NODE_REDIRECT = "redirect"
+HEREDOC_PREFIX = "<<"
+# programs and builtins the walk treats specially
+PKG_MANAGERS = ("npm", "yarn", "yarnpkg")
+SCRIPT_READERS = ("source", ".")
+DECLARE_BUILTINS = ("export", "declare", "typeset", "local", "readonly")
+PROG_GH, PROG_GIT, PROG_EVAL = "gh", "git", "eval"
+PROG_TRAP, PROG_FIND, PROG_XARGS = "trap", "find", "xargs"
+GH_MERGE_SUBCOMMAND = ("pr", "merge")
+FIND_EXEC_FLAGS = ("-exec", "-execdir")
+FIND_EXEC_TERMINATORS = (";", "+")
+# git policy vocabularies
+PROTECTED_BRANCH = "main"
+PROTECTED_REF = "refs/heads/main"
+FORCE_FLAGS = ("--force", "-f", "--force-with-lease")
+GIT_ADD_ALIASES = ("add", "stage")
+BROAD_ADD_PATHSPECS = ("-A", "--all", ".", ":/", ":", "*")
 
 
 def block(msg):
@@ -131,13 +153,13 @@ def expand_words(words):
 
 
 def main_ref(tok):
-    return tok == "main" or "refs/heads/main" in tok or bool(re.search(r"(^|[:/+])main$", tok))
+    return tok == PROTECTED_BRANCH or PROTECTED_REF in tok or bool(re.search(r"(^|[:/+])main$", tok))
 
 
 def git_add_broad(operands):
     for a in operands:
         norm = a.rstrip("/")  # ./ , .// , :/ collapse to their broad form
-        if norm in ("-A", "--all", ".", ":/", ":", "*"):
+        if norm in BROAD_ADD_PATHSPECS:
             return True
         if norm.startswith(":") or norm == "*":
             return True
@@ -149,7 +171,7 @@ def git_add_broad(operands):
 
 
 def is_force_flag(a):
-    if a in ("--force", "-f", "--force-with-lease"):
+    if a in FORCE_FLAGS:
         return True
     if a.startswith("--force-with-lease") or a.startswith("--force="):
         return True
@@ -159,7 +181,7 @@ def is_force_flag(a):
 def git_add_check(args):
     # subcommand-position-tolerant ('add' may sit behind global flags: git -C .);
     # 'stage' is git's built-in synonym for 'add'.
-    for sub in ("add", "stage"):
+    for sub in GIT_ADD_ALIASES:
         if sub in args and git_add_broad(args[args.index(sub) + 1:]):
             block(ADD_MSG)
 
@@ -175,7 +197,7 @@ def dash_c_index(args):
 
 def gh_merge_check(args):
     for i in range(len(args) - 1):
-        if args[i] == "pr" and args[i + 1] == "merge":
+        if (args[i], args[i + 1]) == GH_MERGE_SUBCOMMAND:
             block(MERGE_MSG)
 
 
@@ -200,7 +222,7 @@ def coarse_scan(script):
 
 
 def interp_script(name, args):
-    if name == "eval":
+    if name == PROG_EVAL:
         return " ".join(args)
     if name in SHELL_INTERP:
         j = dash_c_index(args)
@@ -225,30 +247,30 @@ def inspect(name, args, depth):
     base = os.path.basename(name)
     if EMIT_MODE:
         EMITTED.append([base] + list(args))
-    if base in ("npm", "yarn", "yarnpkg"):
+    if base in PKG_MANAGERS:
         block(NPM_MSG)
-    if base == "gh":
+    if base == PROG_GH:
         gh_merge_check(args)
-    if base == "git":
+    if base == PROG_GIT:
         git_add_check(args)
         if is_force_push(args):
             block(PUSH_MSG)
     script = interp_script(base, args)
     if script is not None:
         reparse(script, depth)
-    if EMIT_MODE and base in ("export", "declare", "typeset", "local", "readonly"):
+    if EMIT_MODE and base in DECLARE_BUILTINS:
         env_words = [a for a in args if is_config_assign(a)]
         if env_words:
             EMITTED.append([ASSIGN_RECORD] + env_words)
-    if base == "trap":
+    if base == PROG_TRAP:
         for a in args:
             if not TRAP_SIGNAL.match(a):
                 reparse(a, depth)
     if EMIT_MODE and ASSIGN_SHAPED.match(name) and is_config_assign(name):
         EMITTED.append([ASSIGN_RECORD, name])
-    if EMIT_MODE and base in ("source", "."):
+    if EMIT_MODE and base in SCRIPT_READERS:
         sys.exit(3)
-    if base == "xargs" and EMIT_MODE and any(
+    if base == PROG_XARGS and EMIT_MODE and any(
         a == "-I" or a.startswith("-I") or a.startswith("--replace") for a in args
     ):
         sys.exit(3)
@@ -264,13 +286,13 @@ def inspect(name, args, depth):
                     coarse_scan(m.group(1))
                 elif i + 1 < len(args):
                     coarse_scan(args[i + 1])
-    if base == "find":
-        for kw in ("-exec", "-execdir"):
+    if base == PROG_FIND:
+        for kw in FIND_EXEC_FLAGS:
             if kw in args:
                 j = args.index(kw)
                 sub = []
                 for a in args[j + 1:]:
-                    if a in (";", "+"):
+                    if a in FIND_EXEC_TERMINATORS:
                         break
                     sub.append(a)
                 if sub:
@@ -292,10 +314,10 @@ def inspect_wrapper(args, depth):
             if EMIT_GIT_PROGRAM.match(b):
                 EMITTED.append([b] + list(args[i + 1:]))
                 break
-    if "npm" in bases or "yarn" in bases or "yarnpkg" in bases:
+    if any(b in PKG_MANAGERS for b in bases):
         block(NPM_MSG)
     gh_merge_check(args)
-    if "git" in bases:
+    if PROG_GIT in bases:
         rest = args[bases.index("git") + 1:]
         git_add_check(rest)
         if is_force_push(rest):
@@ -306,7 +328,7 @@ def inspect_wrapper(args, depth):
             # env -S'...' / --split-string='...' glues a whole command to the flag
             reparse(SPLIT_STRING.sub("", a, count=1), depth)
             return
-        if b == "eval":
+        if b == PROG_EVAL:
             reparse(" ".join(args[i + 1:]), depth)
             return
         if b in SHELL_INTERP:
@@ -409,9 +431,9 @@ if bashlex is not None:
             self.depth = depth
 
         def visitcommand(self, n, parts):
-            words = expand_words([p.word for p in parts if p.kind == "word"])
+            words = expand_words([p.word for p in parts if p.kind == NODE_WORD])
             if EMIT_MODE:
-                assigns = [p.word for p in parts if p.kind == "assignment" and is_config_assign(p.word)]
+                assigns = [p.word for p in parts if p.kind == NODE_ASSIGNMENT and is_config_assign(p.word)]
                 if assigns:
                     EMITTED.append([ASSIGN_RECORD] + assigns)
             if words:
@@ -427,11 +449,11 @@ if bashlex is not None:
                     break
             if shell_i >= 0 and dash_c_index(words[shell_i + 1:]) < 0:
                 if EMIT_MODE and not any(
-                    p.kind == "redirect" and str(p.type).startswith("<<") for p in parts
+                    p.kind == NODE_REDIRECT and str(p.type).startswith(HEREDOC_PREFIX) for p in parts
                 ):
                     sys.exit(3)
                 for p in parts:
-                    if p.kind == "redirect" and str(p.type).startswith("<<"):
+                    if p.kind == NODE_REDIRECT and str(p.type).startswith(HEREDOC_PREFIX):
                         # bashlex puts a here-DOC body on .heredoc and only the
                         # delimiter on .output.word; a here-STRING has no .heredoc.
                         hd = getattr(p, "heredoc", None)
