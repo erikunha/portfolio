@@ -767,19 +767,30 @@ printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api
 assert_eq "asg: naming core.hooksPath in prose is not redirecting it" "0" "$?"
 rm -rf "$d"
 
-for asg_cfg_ok in 'git -C $DIR status' 'git -c user.name=$N commit -m x' 'git -c core.pager=$PAGER log' 'git --git-dir=$D log'; do
+for asg_cfg_ok in 'git -C $DIR status' 'git --git-dir=$D log' 'git --work-tree /t status' 'PATH=/x:$PATH make build'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
   (asg_payload "$asg_cfg_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
-  assert_eq "asg: an opaque value in a non-config slot must not over-block [$asg_cfg_ok]" "0" "$?"
+  assert_eq "asg: a non-config flag value must not over-block [$asg_cfg_ok]" "0" "$?"
   rm -rf "$d"
 done
 
-d=$(asg_mkroot)
-printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-(asg_payload 'git -c $CFG' "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
-assert_eq "asg: an opaque config KEY can name an alias, so it blocks" "2" "$?"
-rm -rf "$d"
+# git config carries several keys that execute code (alias.*, core.hooksPath,
+# core.sshCommand, credential.helper, include.path pulling in any of them), so
+# enumerating the dangerous ones is an open set. While a marker is pending, any
+# config injection blocks — including the env-var spelling, which bashlex parses
+# as assignment nodes that never reach the command's word list.
+for asg_cfginj in 'git -c $CFG' \
+                  'git -c user.name=x commit -m y' \
+                  'git -c include.path=/tmp/x.cfg commit -m wip' \
+                  'git -c core.sshCommand="sh -c x" fetch origin' \
+                  'GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/tmp/h GIT_CONFIG_COUNT=1 git commit -m wip'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_cfginj" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: config injection blocks while a marker pends [$asg_cfginj]" "2" "$?"
+  rm -rf "$d"
+done
 
 det_bad='bash -c "echo (("'
 det_rc=$(python3 -c 'import json,sys; print(json.dumps({"tool_input":{"command": sys.argv[1]}}))' "$det_bad" \

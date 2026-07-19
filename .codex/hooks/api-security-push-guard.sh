@@ -20,26 +20,18 @@ except Exception: print('')
 DET=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/bash-guard-detect.py" --emit-commands 2>/dev/null)
 if [ $? -eq 0 ] && [ -n "$CMD" ]; then
   printf '%s\n' "$DET" | awk -F'\t' '
+    $1 == "#assign" {
+      for (i = 2; i <= NF; i++) if ($i ~ /^GIT_CONFIG/) { found = 1; break }
+    }
     $1 == "git-push" { found = 1 }
     $1 == "git" && NF == 1 { found = 1 }
     $1 == "git" {
       skip = 0
-      cfg = 0
       for (i = 2; i <= NF; i++) {
         a = $i
-        if (skip) {
-          skip = 0
-          if (cfg) {
-            key = a
-            sub(/=.*/, "", key)
-            if (a ~ /^alias\./ || key ~ /[$`]/) { found = 1; break }
-            if (tolower(key) == "core.hookspath") { found = 1; break }
-          }
-          cfg = 0
-          continue
-        }
+        if (skip) { skip = 0; continue }
         if (a ~ /^-/) {
-          if (a == "-c" || a == "--config-env") { skip = 1; cfg = 1 }
+          if (a ~ /^-c/ || a ~ /^--config-env/) { found = 1; break }
           else if (a == "-C" || a == "--git-dir" || a == "--work-tree" \
               || a == "--namespace" || a == "--exec-path" \
               || a == "--super-prefix") skip = 1

@@ -47,6 +47,7 @@ EMIT_MODE = False
 EMITTED = []
 EMIT_PROGRAMS = ("git",)
 OPAQUE_WORD = re.compile(r"[$`]")
+ASSIGN_RECORD = "#assign"
 
 
 def block(msg):
@@ -281,6 +282,10 @@ if bashlex is not None:
 
         def visitcommand(self, n, parts):
             words = expand_words([p.word for p in parts if p.kind == "word"])
+            if EMIT_MODE:
+                assigns = [p.word for p in parts if p.kind == "assignment"]
+                if assigns:
+                    EMITTED.append([ASSIGN_RECORD] + assigns)
             if words:
                 if EMIT_MODE and OPAQUE_WORD.search(words[0]):
                     sys.exit(3)
