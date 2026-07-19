@@ -36,8 +36,10 @@ HOOK_TIMEOUT_S=20
 _run_bounded() {
   perl -e 'my $t = shift; my $p = fork(); die "fork: $!" unless defined $p;
     if ($p == 0) { setpgrp(0, 0); exec @ARGV; exit 127 }
-    $SIG{ALRM} = sub { kill("KILL", -$p); waitpid($p, 0); exit 142 };
-    alarm $t; waitpid($p, 0); alarm 0; exit($? >> 8);' "$HOOK_TIMEOUT_S" "$@"
+    setpgrp($p, $p);
+    $SIG{ALRM} = sub { kill("KILL", -$p) or kill("KILL", $p); waitpid($p, 0); exit 142 };
+    alarm $t; waitpid($p, 0); alarm 0;
+    exit($? & 127 ? 128 + ($? & 127) : $? >> 8);' "$HOOK_TIMEOUT_S" "$@"
 }
 run_hook() { _run_bounded bash "$@"; }
 run_py() { _run_bounded python3 "$@"; }
@@ -1461,9 +1463,12 @@ rm -rf "$PYSHIM"
 
 
 # --- self-check: the bound above must actually cover every invocation --------
-# A comment claiming coverage is worth nothing; this fails if one is missed.
+# A comment claiming coverage is worth nothing. This keys on the TARGET (any
+# line naming a hook path) rather than on driver spellings, so ${BRACE} forms,
+# unquoted paths, a renamed local and other interpreters cannot slip past it.
 unbounded=$(grep -vE '^[[:space:]]*#' "$0" \
-  | grep -cE '(^|[^_a-z])(bash|python3) "\$(HOOKS|[A-Z_]+_HOOK|hookcopy)' || true)
+  | grep -vE '(run_hook|run_py|_run_bounded)' \
+  | grep -cE '(^|[;&|(]|&&)[[:space:]]*((bash|sh|zsh|dash|ksh|python3?|node|perl)[[:space:]]+)?"?\$\{?(HOOKS/|[A-Z_]*_HOOK|hookcopy)' || true)
 assert_eq "meta: every hook invocation is time-bounded (no bare bash/python3 call)" "0" "$unbounded"
 
 [ "$FAILED" -eq 0 ] && { printf '\nALL PASS\n'; exit 0; } || { printf '\nFAILURES\n'; exit 1; }
