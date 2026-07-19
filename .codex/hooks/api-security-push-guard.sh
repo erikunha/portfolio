@@ -24,6 +24,7 @@ if [ $? -eq 0 ] && [ -n "$CMD" ]; then
     $1 == "git" && NF == 1 { found = 1 }
     $1 == "git" {
       skip = 0
+      cfg = 0
       for (i = 2; i <= NF; i++) {
         a = $i
         if (skip) {
@@ -32,6 +33,7 @@ if [ $? -eq 0 ] && [ -n "$CMD" ]; then
             key = a
             sub(/=.*/, "", key)
             if (a ~ /^alias\./ || key ~ /[$`]/) { found = 1; break }
+            if (tolower(key) == "core.hookspath") { found = 1; break }
           }
           cfg = 0
           continue
@@ -41,7 +43,7 @@ if [ $? -eq 0 ] && [ -n "$CMD" ]; then
           else if (a == "-C" || a == "--git-dir" || a == "--work-tree" \
               || a == "--namespace" || a == "--exec-path" \
               || a == "--super-prefix") skip = 1
-          if (a ~ /alias\./) { found = 1; break }
+          if (a ~ /alias\./ || tolower(a) ~ /core\.hookspath/) { found = 1; break }
           continue
         }
         if (a ~ /[$`]/) { found = 1; break }

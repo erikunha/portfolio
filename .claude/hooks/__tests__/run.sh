@@ -747,6 +747,26 @@ rm -rf "$d"
 
 # A config VALUE is only dangerous where it can name an alias; a path value cannot
 # turn a subcommand into a push, and blocking it trains bypass.
+# core.hooksPath redirection disables .husky/pre-push — the git-level marker check
+# that backstops every accepted residual — and git propagates -c to the hook's own
+# subprocesses via GIT_CONFIG_PARAMETERS, so the push it spawns skips it too.
+for asg_hooks in 'git -c core.hooksPath=/tmp/h commit -m wip' \
+                 'git -c core.hooksPath=/tmp/h merge feat' \
+                 'git --config-env=core.hooksPath=H rebase main' \
+                 'git -ccore.hooksPath=/tmp/h commit -m x'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_hooks" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: disabling the git-level backstop blocks [$asg_hooks]" "2" "$?"
+  rm -rf "$d"
+done
+
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload 'git commit -m "document core.hooksPath in the runbook"' "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+assert_eq "asg: naming core.hooksPath in prose is not redirecting it" "0" "$?"
+rm -rf "$d"
+
 for asg_cfg_ok in 'git -C $DIR status' 'git -c user.name=$N commit -m x' 'git -c core.pager=$PAGER log' 'git --git-dir=$D log'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
