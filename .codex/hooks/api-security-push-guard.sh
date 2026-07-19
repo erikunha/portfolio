@@ -24,7 +24,7 @@ if [ "$DET_RC" -eq 3 ] && [ -n "$CMD" ]; then
 elif [ "$DET_RC" -eq 0 ] && [ -n "$CMD" ]; then
   printf '%s\n' "$DET" | awk -F'\t' '
     BEGIN {
-      split("--upload-pack --receive-pack --exec --exec-path --extcmd --template --separate-git-dir --super-prefix --git-dir --work-tree --config-env --tree-filter --index-filter --commit-filter --env-filter --msg-filter --parent-filter --tag-name-filter", df, " ")
+      split("--upload-pack --receive-pack --exec --exec-path --extcmd --template --separate-git-dir --super-prefix --git-dir --work-tree --config --config-env --tree-filter --index-filter --commit-filter --env-filter --msg-filter --parent-filter --tag-name-filter", df, " ")
       split("--unset --unset-all --remove-section --rename-section --replace-all --add --edit", cw, " ")
     }
     function abbrev(tok, set,   name, i) {
