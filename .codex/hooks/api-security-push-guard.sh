@@ -21,28 +21,37 @@ DET=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/bash-guard-detect.py" --emit-com
 if [ $? -eq 0 ] && [ -n "$CMD" ]; then
   printf '%s\n' "$DET" | awk -F'\t' '
     $1 == "#assign" {
-      for (i = 2; i <= NF; i++) if ($i ~ /^GIT_/) { found = 1; break }
+      for (i = 2; i <= NF; i++) {
+        split($i, kv, "=")
+        if ($i ~ /^GIT_/ || kv[1] ~ /[$`]/) { found = 1; break }
+      }
     }
-    $1 == "git-push" { found = 1 }
+    $1 ~ /^git-/ { found = 1 }
     $1 == "git" && NF == 1 { found = 1 }
     $1 == "git" {
-      skip = 0
       for (i = 2; i <= NF; i++) {
+        a = $i
+        if (a ~ /^--upload-pack/ || a ~ /^--receive-pack/ || a ~ /^--exec/ ||
+            a ~ /^--extcmd/ || a ~ /^--template/ || a ~ /^--separate-git-dir/ ||
+            a ~ /^--super-prefix/ || a ~ /^--git-dir/ || a ~ /^--work-tree/ ||
+            a ~ /^-c/ || a ~ /^--config-env/) { found = 1; break }
+      }
+      skip = 0
+      for (i = 2; i <= NF && !found; i++) {
         a = $i
         if (skip) { skip = 0; continue }
         if (a ~ /^-/) {
-          if (a == "-c" || a ~ /^--config-env/) { found = 1; break }
-          else if (a ~ /^-C$/ || a ~ /^--git-dir/ || a ~ /^--work-tree/) { found = 1; break }
-          else if (a ~ /^--exec-path/ || a ~ /^--super-prefix/) { found = 1; break }
-          else if (a == "--namespace") skip = 1
-          if (a ~ /alias\./ || tolower(a) ~ /core\.hookspath/) { found = 1; break }
+          if (a == "-C" || a == "--namespace") skip = 1
           continue
         }
         if (a ~ /[$`]/) { found = 1; break }
         if (a == "push") { found = 1; break }
         if (a == "config") {
           operands = 0
-          for (j = i + 1; j <= NF; j++) if ($j !~ /^-/) operands++
+          for (j = i + 1; j <= NF; j++) {
+            if ($j ~ /^--(unset|remove-section|rename-section|replace-all|add|edit)/) found = 1
+            else if ($j !~ /^-/) operands++
+          }
           if (operands >= 2) found = 1
           break
         }
@@ -52,7 +61,7 @@ if [ $? -eq 0 ] && [ -n "$CMD" ]; then
     }
     END { exit found ? 0 : 1 }' || exit 0
 else
-  HAY=$(printf '%s' "$INPUT" | sed "s|$ROOT||g" | sed 's/"transcript_path"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"cwd"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"description"[[:space:]]*:[[:space:]]*"[^"]*"//g')
+  HAY=$(printf '%s' "${INPUT//$ROOT/}" | sed 's/"transcript_path"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"cwd"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"description"[[:space:]]*:[[:space:]]*"[^"]*"//g')
   printf '%s' "$HAY" | grep -qF 'git' \
     && printf '%s' "$HAY" | grep -qF 'push' || exit 0
 fi

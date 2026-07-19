@@ -801,6 +801,84 @@ for asg_noartifact in 'GIT_SSH_COMMAND="sh -c evil" git fetch origin' \
   rm -rf "$d"
 done
 
+# The exec flags live AFTER the subcommand, where an arg loop that stops at the
+# first non-flag word never looks. Each of these execs a named program against a
+# local remote: one Bash call, no file, no network.
+for asg_execflag in 'git fetch --upload-pack="sh -c evil" .' \
+                    'git ls-remote --upload-pack="sh -c evil" .' \
+                    'git pull --upload-pack="sh -c evil" .' \
+                    'git clone --upload-pack="sh -c evil" . dst' \
+                    'git push --receive-pack="sh -c evil" .' \
+                    'git archive --remote=. --exec="sh -c evil" HEAD' \
+                    'git difftool --no-index -y --extcmd="sh -c evil" a b' \
+                    'git init --template=/tmp/evil-template' \
+                    'git clone --separate-git-dir=/tmp/evil . dst'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_execflag" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a post-subcommand exec flag blocks [$asg_execflag]" "2" "$?"
+  rm -rf "$d"
+done
+
+# A dashed hardlink carries its subcommand in the program name, so no argument
+# scan can screen it. Under a wrapper the basename is the wrapper's, not git's.
+for asg_hardlink in 'sudo git-push origin main' \
+                    'env git-push origin main' \
+                    'nice git-push origin main' \
+                    'timeout 5 git-push origin main' \
+                    'git-config core.hooksPath /tmp/h'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_hardlink" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a dashed git hardlink blocks [$asg_hardlink]" "2" "$?"
+  rm -rf "$d"
+done
+
+# WRAPPERS entries that shipped without a case of their own.
+for asg_wrapper in 'ionice -c3 git push' 'chrt -b 0 git push' 'watch git push' 'parallel git push' \
+                   'script -q /dev/null git push' 'flock /tmp/l git push'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_wrapper" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a wrapped push blocks under every WRAPPERS entry [$asg_wrapper]" "2" "$?"
+  rm -rf "$d"
+done
+
+# --unset removes core.hooksPath, which disables husky exactly as redirection does.
+# Counting operands scores it as a read; it is a write.
+for asg_cfgwrite in 'git config --unset core.hooksPath' \
+                    'git config --unset-all core.hooksPath' \
+                    'git config --remove-section core' \
+                    'git config --replace-all alias.z push' \
+                    'git config --add alias.z push'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_cfgwrite" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a config write blocks whatever its spelling [$asg_cfgwrite]" "2" "$?"
+  rm -rf "$d"
+done
+
+# bash expands the NAME before export reads name=value, so the static token text
+# never starts with GIT_. Opacity is the answer, the same as in git's own args.
+for asg_indirect in 'export $A=1 $B=alias.z $C=push' \
+                    'declare $VAR=core.hooksPath' \
+                    'export $(printf GIT_CONFIG_COUNT)=1'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_indirect" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: an opaque assignment name is undecidable, not clean [$asg_indirect]" "2" "$?"
+  rm -rf "$d"
+done
+
+# source/. reads a script the walk never sees; that is undecidable, not clean.
+for asg_source in 'source <(printf "git push\n")' '. <(printf "git push\n")'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_source" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a sourced script is undecidable, not clean [$asg_source]" "2" "$?"
+  rm -rf "$d"
+done
+
 # Ordinary environment work is not git configuration.
 for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
   d=$(asg_mkroot)
@@ -816,7 +894,6 @@ for asg_persist in 'git config core.hooksPath /tmp/h' \
                    'git config --add alias.z push' \
                    'git --git-dir=/tmp/evil/.git status' \
                    'git --git-dir /tmp/evil/.git fetch' \
-                   'git -C /tmp/evil status' \
                    'git --work-tree=/tmp/evil status' \
                    'env GIT_CONFIG_KEY_0=alias.foo GIT_CONFIG_VALUE_0=push GIT_CONFIG_COUNT=1 git foo'; do
   d=$(asg_mkroot)
@@ -827,7 +904,8 @@ for asg_persist in 'git config core.hooksPath /tmp/h' \
 done
 
 # Reading config is not writing it.
-for asg_cfgread in 'git config --get remote.origin.url' 'git config --list' 'git config user.name' 'git config --unset core.hooksPath'; do
+for asg_cfgread in 'git config --get remote.origin.url' 'git config --list' 'git config user.name' \
+                   'git -C /tmp/other status' 'git -C /tmp/other log --oneline'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
   (asg_payload "$asg_cfgread" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1

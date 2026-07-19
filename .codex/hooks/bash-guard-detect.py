@@ -45,7 +45,7 @@ NEST_MSG = "[BLOCKED] Command nesting too deep to analyze safely."
 
 EMIT_MODE = False
 EMITTED = []
-EMIT_PROGRAMS = ("git",)
+EMIT_GIT_PROGRAM = re.compile(r"^git(-|$)")
 OPAQUE_WORD = re.compile(r"[$`]")
 ASSIGN_RECORD = "#assign"
 
@@ -182,9 +182,11 @@ def inspect(name, args, depth):
     if script is not None:
         reparse(script, depth)
     if EMIT_MODE and base in ("export", "declare", "typeset", "local", "readonly"):
-        env_words = [a for a in args if a.startswith("GIT_")]
+        env_words = [a for a in args if a.startswith("GIT_") or OPAQUE_WORD.search(a.split("=")[0])]
         if env_words:
             EMITTED.append([ASSIGN_RECORD] + env_words)
+    if EMIT_MODE and base in ("source", "."):
+        sys.exit(3)
     if base == "xargs" and EMIT_MODE and any(
         a == "-I" or a.startswith("-I") or a.startswith("--replace") for a in args
     ):
@@ -222,11 +224,11 @@ def inspect_wrapper(args, depth):
     # interpreter payload they carry.
     bases = [os.path.basename(a) for a in args]
     if EMIT_MODE:
-        env_assigns = [a for a in args if a.startswith("GIT_")]
+        env_assigns = [a for a in args if a.startswith("GIT_") or OPAQUE_WORD.search(a.split("=")[0])]
         if env_assigns:
             EMITTED.append([ASSIGN_RECORD] + env_assigns)
         for i, b in enumerate(bases):
-            if b in EMIT_PROGRAMS:
+            if EMIT_GIT_PROGRAM.match(b):
                 EMITTED.append([b] + list(args[i + 1:]))
                 break
     if "npm" in bases or "yarn" in bases or "yarnpkg" in bases:
