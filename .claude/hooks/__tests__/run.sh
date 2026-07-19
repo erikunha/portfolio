@@ -1419,6 +1419,58 @@ for asg_nestwrap in 'sudo env -S "git push origin main"' \
   rm -rf "$d"
 done
 
+# A word with no `=` is not an assignment. `is_config_assign` used to split on
+# `=`, get the whole word back as the "name", and then match a bare `$` in it —
+# so any wrapped command carrying a dollar sign in an argument emitted #assign
+# and blocked. Commit messages with prices are the common case.
+for asg_dollar_ok in 'sudo git commit -m "cost is $5 for the API key"' \
+                     'env git commit -m "price: $9.99"' \
+                     'sudo git log --grep "$HOME"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_dollar_ok" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
+  assert_eq "asg: a dollar sign in an argument is not an assignment [$asg_dollar_ok]" "0" "$?"
+  rm -rf "$d"
+done
+
+# ...while an assignment whose NAME is computed still blocks, which is the
+# property the opaque check exists for.
+for asg_dollar_block in 'export $A=1 $B=alias.z $C=push' \
+                        'declare $VAR=core.hooksPath'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_dollar_block" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
+  assert_eq "asg: an opaque assignment NAME still blocks [$asg_dollar_block]" "2" "$?"
+  rm -rf "$d"
+done
+
+# The wrapper payload/operand vectors, pinned. Review was right that the commit
+# claiming them had no assertion driving any of them through the hook.
+for asg_wrapperpayload in 'flock /tmp/l -c "git push origin main"' \
+                          'script -c "git push origin main" /dev/null' \
+                          'watch -n 1 "git push origin main"' \
+                          'parallel -S host bash -c "git push origin main"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_wrapperpayload" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
+  assert_eq "asg: a wrapper's own payload flag is reparsed [$asg_wrapperpayload]" "2" "$?"
+  rm -rf "$d"
+done
+
+# These are pinned on bash-guard.sh specifically. The push-guard fails closed on
+# exit 3 for the same inputs, so an asg assertion passes whether or not the
+# payload was ever read — which is how the operand branch shadowed the
+# interpreter branches while the suite stayed green.
+assert_eq "bg: watch bash -c reaches the payload" "2" "$(bg_exit "watch bash -c 'git push --force origin main'")"
+assert_eq "bg: parallel bash -c reaches the payload" "2" "$(bg_exit "parallel bash -c 'git push --force origin main'")"
+assert_eq "bg: watch sh -c reaches the payload" "2" "$(bg_exit "watch sh -c 'npm install'")"
+assert_eq "bg: parallel sh -c reaches the payload" "2" "$(bg_exit "parallel sh -c 'gh pr merge 1'")"
+assert_eq "bg: watch eval reaches the payload" "2" "$(bg_exit "watch eval 'git push --force origin main'")"
+assert_eq "bg: flock -c reaches the payload" "2" "$(bg_exit "flock /tmp/l -c 'git push --force origin main'")"
+assert_eq "bg: a watch operand that IS a shell string still reparses" "2" "$(bg_exit "watch -n 1 'git push --force origin main'")"
+assert_eq "bg: ordinary watch is untouched" "0" "$(bg_exit "watch -n 1 date")"
+assert_eq "bg: ordinary parallel is untouched" "0" "$(bg_exit "parallel echo ::: a b")"
+
 # Ordinary environment work is not git configuration.
 for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
   d=$(asg_mkroot)

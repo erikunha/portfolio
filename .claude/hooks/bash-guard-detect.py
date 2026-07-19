@@ -239,6 +239,8 @@ def interp_script(name, args):
 
 
 def is_config_assign(word):
+    if "=" not in word:
+        return False
     name = word.split("=")[0]
     return (
         word.startswith("GIT_")
@@ -341,14 +343,6 @@ def inspect_wrapper(args, depth, wrapper=None):
             if i + 1 < len(args):
                 reparse(args[i + 1], depth)
             return
-        if wrapper in SHELL_OPERAND_WRAPPERS:
-            if skip_operand:
-                skip_operand = False
-            elif a.startswith("-"):
-                skip_operand = a in VALUE_FLAGS.get(wrapper, ())
-            elif not WRAPPER_OPERAND.match(a):
-                reparse(a, depth)
-                return
         if wrapper == "env" and SPLIT_STRING.match(a):
             # env -S'...' glues the command to the flag; env -S '...' puts it in
             # the next word, where sub() leaves an empty string and reparse("")
@@ -370,6 +364,18 @@ def inspect_wrapper(args, depth, wrapper=None):
         if b in OTHER_INTERP:
             inspect(a, list(args[i + 1:]), depth)
             return
+        # watch/parallel run their first non-flag operand through a shell.
+        # This must come AFTER the interpreter branches: `watch bash -c '<x>'`
+        # has `bash` as that operand, and reparsing the bare word abandoned
+        # the scan before -c could be seen.
+        if wrapper in SHELL_OPERAND_WRAPPERS:
+            if skip_operand:
+                skip_operand = False
+            elif a.startswith("-"):
+                skip_operand = a in VALUE_FLAGS.get(wrapper, ())
+            elif not WRAPPER_OPERAND.match(a):
+                reparse(a, depth)
+                return
     for i, a in enumerate(args):
         if os.path.basename(a) in WRAPPERS or ASSIGN_WORD.match(a) or WRAPPER_OPERAND.match(a):
             continue
