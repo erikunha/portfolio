@@ -155,17 +155,27 @@ assert_eq "guard: session malformed-stdin exit 0" "0" "$?"
 assert_eq "guard: session-context exit 0" "0" "$?"
 
 # --- bash-guard.sh block logic (the broadest blocking hook; previously untested) ---
+# Every hook invocation in this file is time-bounded, through all three drivers.
+# An adversarial fixture that makes a guard non-terminating must FAIL the suite,
+# not wedge it — and measuring elapsed time after an unbounded call cannot do
+# that, because the call never returns. timeout(1) is absent on darwin, so
+# perl's alarm is the portable bound; it exits 142, which matches no assertion.
+# The budget-exhaustion fixtures (BG_WIDE, the 150KB input, the 600-pair
+# starvation cases) are exactly the ones that hang when their budget is mutated
+# away, so leaving any driver unbounded defeats the point.
+HOOK_TIMEOUT_S=20
+run_hook() { perl -e 'alarm shift; exec @ARGV' "$HOOK_TIMEOUT_S" bash "$@"; }
 BG_HOOK="$HOOKS/bash-guard.sh"
 bg_exit() { # $1=command string -> exit code of bash-guard for a REAL PreToolUse payload
   # The real Claude Code payload nests the command under tool_input — a flat
   # {"command": ...} fixture would match a buggy top-level extraction and give
   # false-green coverage. Use the wrapped shape so the parse-success path is
   # actually exercised (and anchored patterns like ^npm and 'git add .$' are hit).
-  python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","tool_input":{"command": sys.argv[1]}}))' "$1" | bash "$BG_HOOK" >/dev/null 2>&1
+  python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","tool_input":{"command": sys.argv[1]}}))' "$1" | run_hook "$BG_HOOK" >/dev/null 2>&1
   echo $?
 }
 bg_exit_flat() { # $1=command -> exit for a top-level {"command":...} payload (the fallback branch)
-  python3 -c 'import json,sys; print(json.dumps({"command": sys.argv[1]}))' "$1" | bash "$BG_HOOK" >/dev/null 2>&1
+  python3 -c 'import json,sys; print(json.dumps({"command": sys.argv[1]}))' "$1" | run_hook "$BG_HOOK" >/dev/null 2>&1
   echo $?
 }
 assert_eq "bg: broad 'git add -A' blocked"  "2" "$(bg_exit 'git add -A')"
@@ -179,12 +189,12 @@ assert_eq "bg: 'git add -u' allowed"        "0" "$(bg_exit 'git add -u')"
 # the top-level-command fallback branch (d.get('command')) must also block
 assert_eq "bg: top-level-command fallback blocks npm" "2" "$(bg_exit_flat 'npm install foo')"
 # fail-closed: a malformed (non-JSON) payload carrying a dangerous command must STILL block
-printf 'gh pr merge 42' | bash "$BG_HOOK" >/dev/null 2>&1
+printf 'gh pr merge 42' | run_hook "$BG_HOOK" >/dev/null 2>&1
 assert_eq "bg: fail-closed on malformed payload (gh pr merge)" "2" "$?"
-printf 'git push --force origin main' | bash "$BG_HOOK" >/dev/null 2>&1
+printf 'git push --force origin main' | run_hook "$BG_HOOK" >/dev/null 2>&1
 assert_eq "bg: fail-closed on malformed payload (force-push main)" "2" "$?"
 # a malformed but safe payload must NOT block (no over-blocking of ordinary commands)
-printf 'just some prose with no dangerous command' | bash "$BG_HOOK" >/dev/null 2>&1
+printf 'just some prose with no dangerous command' | run_hook "$BG_HOOK" >/dev/null 2>&1
 assert_eq "bg: malformed safe payload allowed" "0" "$?"
 # tokenization: quote/whitespace/chaining evasions must NOT bypass the block (findings 14-17)
 assert_eq "bg: quoted 'gh \"pr\" merge' blocked"   "2" "$(bg_exit 'gh "pr" merge 42 --squash')"
@@ -336,12 +346,12 @@ ag_payload() { # $1=skill $2=transcript-path -> JSON PreToolUse payload for the 
   python3 -c 'import json,sys; print(json.dumps({"tool_name":"Skill","tool_input":{"skill": sys.argv[1]}, "transcript_path": sys.argv[2]}))' "$1" "$2"
 }
 
-(cd "$REPO_ROOT" && ag_payload 'speckit-specify' "$FIXDIR/ag-nonexistent-$$.jsonl" | bash "$AG_HOOK") >/dev/null 2>&1
+(cd "$REPO_ROOT" && ag_payload 'speckit-specify' "$FIXDIR/ag-nonexistent-$$.jsonl" | run_hook "$AG_HOOK") >/dev/null 2>&1
 assert_eq "ag: non-matching skill allowed" "0" "$?"
 
 AG_T_NONE="$FIXDIR/ag-none-$$.jsonl"
 printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"text","text":"no agent dispatch here"}]}}' > "$AG_T_NONE"
-out=$(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$AG_T_NONE" | bash "$AG_HOOK" 2>&1)
+out=$(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$AG_T_NONE" | run_hook "$AG_HOOK" 2>&1)
 ec=$?
 assert_eq "ag: block when transcript has no architect-reviewer dispatch" "2" "$ec"
 assert_contains "ag: block message names the missing PASS" "$out" "no architect-reviewer GATE_RESULT: PASS"
@@ -352,7 +362,7 @@ AG_T_FAIL="$FIXDIR/ag-fail-$$.jsonl"
   printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_ag_fail","name":"Agent","input":{"subagent_type":"architect-reviewer","prompt":"Review the spec."}}]}}'
   printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_ag_fail","content":"Spec has gaps.\nGATE_RESULT: FAIL"}]}}'
 } > "$AG_T_FAIL"
-(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$AG_T_FAIL" | bash "$AG_HOOK") >/dev/null 2>&1
+(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$AG_T_FAIL" | run_hook "$AG_HOOK") >/dev/null 2>&1
 assert_eq "ag: block when architect-reviewer returned GATE_RESULT: FAIL" "2" "$?"
 rm -f "$AG_T_FAIL"
 
@@ -361,7 +371,7 @@ AG_T_WRONG_AGENT="$FIXDIR/ag-wrong-agent-$$.jsonl"
   printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_ag_wrong","name":"Agent","input":{"subagent_type":"code-reviewer","prompt":"Review the code."}}]}}'
   printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_ag_wrong","content":"Looks fine.\nGATE_RESULT: PASS"}]}}'
 } > "$AG_T_WRONG_AGENT"
-(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$AG_T_WRONG_AGENT" | bash "$AG_HOOK") >/dev/null 2>&1
+(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$AG_T_WRONG_AGENT" | run_hook "$AG_HOOK") >/dev/null 2>&1
 assert_eq "ag: block when PASS came from a non-architect-reviewer agent" "2" "$?"
 rm -f "$AG_T_WRONG_AGENT"
 
@@ -370,33 +380,27 @@ AG_T_PASS="$FIXDIR/ag-pass-$$.jsonl"
   printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_ag_pass","name":"Agent","input":{"subagent_type":"architect-reviewer","prompt":"Review the spec against the four-gate protocol."}}]}}'
   printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_ag_pass","content":"Spec reviewed end to end.\nGATE_RESULT: PASS"}]}}'
 } > "$AG_T_PASS"
-(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$AG_T_PASS" | bash "$AG_HOOK") >/dev/null 2>&1
+(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$AG_T_PASS" | run_hook "$AG_HOOK") >/dev/null 2>&1
 assert_eq "ag: allow when architect-reviewer returned GATE_RESULT: PASS" "0" "$?"
 rm -f "$AG_T_PASS"
 
-out=$(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$FIXDIR/ag-missing-$$.jsonl" | bash "$AG_HOOK" 2>&1)
+out=$(cd "$REPO_ROOT" && ag_payload 'speckit-plan' "$FIXDIR/ag-missing-$$.jsonl" | run_hook "$AG_HOOK" 2>&1)
 ec=$?
 assert_eq "ag: fail-closed on unreadable transcript path" "2" "$ec"
 assert_contains "ag: fail-closed message cites unreadable transcript" "$out" "transcript unreadable (fail-closed)"
 
-(cd "$REPO_ROOT" && ag_payload 'speckit-plan' '' | bash "$AG_HOOK") >/dev/null 2>&1
+(cd "$REPO_ROOT" && ag_payload 'speckit-plan' '' | run_hook "$AG_HOOK") >/dev/null 2>&1
 assert_eq "ag: fail-closed on empty transcript_path" "2" "$?"
 
-(printf 'speckit-plan embedded in unparseable json' | ( cd "$REPO_ROOT" && bash "$AG_HOOK" )) >/dev/null 2>&1
+(printf 'speckit-plan embedded in unparseable json' | ( cd "$REPO_ROOT" && run_hook "$AG_HOOK" )) >/dev/null 2>&1
 assert_eq "ag: malformed payload with writing-plans token fails closed" "2" "$?"
 
-(printf 'just some garbled non-json text with no skill token' | ( cd "$REPO_ROOT" && bash "$AG_HOOK" )) >/dev/null 2>&1
+(printf 'just some garbled non-json text with no skill token' | ( cd "$REPO_ROOT" && run_hook "$AG_HOOK" )) >/dev/null 2>&1
 assert_eq "ag: malformed payload with no token allowed" "0" "$?"
 
 # --- api-security-push-guard.sh block logic (git push PreToolUse Bash matcher) ---
 ASG_HOOK="$HOOKS/api-security-push-guard.sh"
-# Every hook invocation is time-bounded. An adversarial fixture that makes the
-# guard non-terminating must FAIL the suite, not wedge it — measuring elapsed
-# time after an unbounded call cannot do that, because the call never returns.
-# timeout(1) is absent on darwin, so perl's alarm is the portable bound; it
-# exits 142 on expiry, which is not 2 and therefore fails any assertion.
-ASG_HOOK_TIMEOUT_S=20
-asg_hook() { perl -e 'alarm shift; exec @ARGV' "$ASG_HOOK_TIMEOUT_S" bash "$ASG_HOOK"; }
+asg_hook() { run_hook "$ASG_HOOK"; }
 asg_payload() { # $1=command $2=transcript-path -> JSON PreToolUse payload for the Bash matcher
   python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","tool_input":{"command": sys.argv[1]},"transcript_path": sys.argv[2]}))' "$1" "$2"
 }
