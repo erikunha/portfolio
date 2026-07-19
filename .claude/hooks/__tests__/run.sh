@@ -1471,6 +1471,21 @@ assert_eq "bg: a watch operand that IS a shell string still reparses" "2" "$(bg_
 assert_eq "bg: ordinary watch is untouched" "0" "$(bg_exit "watch -n 1 date")"
 assert_eq "bg: ordinary parallel is untouched" "0" "$(bg_exit "parallel echo ::: a b")"
 
+# An opaque PROGRAM word is undecidable wherever it sits. visitcommand guards
+# words[0], but a wrapper displaces position 0. This used to be caught only as a
+# side effect of is_config_assign treating a word with no `=` as an assignment
+# name — so fixing that false positive silently removed it. Now held directly.
+for asg_opaqueprog in 'sudo $G origin main' \
+                      'env $CMD origin main' \
+                      'nice $CMD origin main' \
+                      'timeout 5 $CMD origin main'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_opaqueprog" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
+  assert_eq "asg: an opaque program word is undecidable behind a wrapper [$asg_opaqueprog]" "2" "$?"
+  rm -rf "$d"
+done
+
 # Ordinary environment work is not git configuration.
 for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
   d=$(asg_mkroot)

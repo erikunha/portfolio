@@ -254,6 +254,12 @@ def inspect(name, args, depth):
     # match on the basename so /usr/bin/npm, /opt/homebrew/bin/git, ./node_modules/.bin/…
     # and other path-prefixed spellings of the same binary are still caught.
     base = os.path.basename(name)
+    # An opaque PROGRAM word is undecidable wherever it sits. visitcommand
+    # guards words[0], but a wrapper displaces position 0 (`sudo $G origin
+    # main`), and that case used to be caught only as a side effect of
+    # is_config_assign treating a word with no `=` as an assignment name.
+    if EMIT_MODE and OPAQUE_WORD.search(base):
+        sys.exit(3)
     if EMIT_MODE:
         EMITTED.append([base] + list(args))
     if base in PKG_MANAGERS:
