@@ -1215,6 +1215,68 @@ for asg_wrapgrep_ok in 'stdbuf -oL grep bash file' \
   rm -rf "$d"
 done
 
+# Every wrapper needs a VALUE_FLAGS row. A missing row inherits the empty
+# default, which treats every flag as boolean and FAILS OPEN — `time` shipped
+# that way and reopened two spellings the previous commit blocked.
+bg_missing=$(python3 - <<'PYEOF'
+import re, pathlib
+src = pathlib.Path(".claude/hooks/bash-guard-detect.py").read_text()
+wrappers = set(re.findall(r'"([a-z]+)"', re.search(r"WRAPPERS = {(.*?)}", src, re.S).group(1)))
+keys = set(re.findall(r'^    "([a-z]+)":', re.search(r"VALUE_FLAGS = {(.*?)^}", src, re.S | re.M).group(1), re.M))
+print(",".join(sorted(wrappers - keys)))
+PYEOF
+)
+assert_eq "bg: every WRAPPERS entry has a VALUE_FLAGS row (missing rows fail open)" "" "$bg_missing"
+
+# The regression this commit repairs: each of these was blocked two commits ago
+# and opened by an incomplete flag table. The last two are flags no table can
+# contain, which is why an ambiguous flag now yields BOTH readings.
+for asg_tablegap in '/usr/bin/time -o /tmp/x bash <<< \"git push origin main\"' \
+                    '/usr/bin/time -f pct bash <<< \"git push origin main\"' \
+                    'env -P /usr/bin bash <<< \"git push origin main\"' \
+                    'sudo -D /tmp bash <<< \"git push origin main\"' \
+                    'sudo -h myhost bash <<< \"git push origin main\"' \
+                    'sudo -R /tmp bash <<< \"git push origin main\"' \
+                    'exec -a login bash <<< \"git push origin main\"' \
+                    'xcrun -sdk macosx bash <<< \"git push origin main\"' \
+                    'doas -a style bash <<< \"git push origin main\"' \
+                    'script -F pipe bash <<< \"git push origin main\"' \
+                    'watch -d bash <<< \"git push origin main\"' \
+                    'sudo --zzz-unknown val bash <<< \"git push origin main\"' \
+                    'env --no-such-flag val bash <<< \"git push origin main\"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_tablegap" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a flag-table gap must not open a wrapper [$asg_tablegap]" "2" "$?"
+  rm -rf "$d"
+done
+
+# These use NON-NUMERIC operands on purpose. The earlier `nice -n 10` and
+# `ionice -c 3` cases passed for the wrong reason: WRAPPER_OPERAND absorbs a
+# numeric operand, so they never consulted VALUE_FLAGS at all and stayed green
+# with the row deleted.
+for asg_nonnumeric in 'env -u node bash <<< \"git push origin main\"' \
+                      'timeout -s KILL 5 bash <<< \"git push origin main\"' \
+                      'nice --adjustment high bash <<< \"git push origin main\"' \
+                      'stdbuf -o L bash <<< \"git push origin main\"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_nonnumeric" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a non-numeric operand actually exercises the flag table [$asg_nonnumeric]" "2" "$?"
+  rm -rf "$d"
+done
+
+# An ATTACHED short flag already carries its value, so it must not widen the
+# candidate set onto a shell-named argument.
+for asg_attached_ok in 'stdbuf -oL grep bash file' \
+                       'timeout 30 grep -rn bash docs/'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_attached_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: an attached short flag must not widen onto an argument [$asg_attached_ok]" "0" "$?"
+  rm -rf "$d"
+done
+
 # Ordinary environment work is not git configuration.
 for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
   d=$(asg_mkroot)

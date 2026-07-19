@@ -64,9 +64,11 @@ SPLIT_STRING = re.compile(r"^(-S|--split-string=?)")
 # means different things per program (`sudo -n` is boolean, `nice -n` takes a
 # value), and skipping a boolean flag's successor skips the program itself.
 VALUE_FLAGS = {
-    "env": {"-u", "-C", "-S", "--unset", "--chdir", "--split-string"},
-    "sudo": {"-u", "-g", "-U", "-C", "-p", "-r", "-t", "-T", "--user", "--group"},
-    "doas": {"-u", "-C"},
+    "env": {"-u", "-C", "-S", "-P", "--unset", "--chdir", "--split-string"},
+    "sudo": {"-u", "-g", "-U", "-C", "-p", "-r", "-t", "-T", "-D", "-R", "-h",
+             "--user", "--group", "--chdir", "--chroot", "--host", "--prompt",
+             "--role", "--type", "--command-timeout", "--other-user"},
+    "doas": {"-u", "-C", "-a"},
     "timeout": {"-s", "-k", "--signal", "--kill-after"},
     "nice": {"-n", "--adjustment"},
     "ionice": {"-c", "-n", "-p", "--class", "--classdata", "--pid"},
@@ -76,17 +78,18 @@ VALUE_FLAGS = {
     "xargs": {"-n", "-P", "-a", "-d", "-s", "-I", "-E", "-L", "--max-args",
               "--max-procs", "--arg-file", "--delimiter", "--max-chars",
               "--replace", "--max-lines"},
-    "script": {"-c", "--command"},
-    "watch": {"-n", "-d", "--interval"},
+    "script": {"-F", "-t", "--flush", "--timing"},
+    "watch": {"-n", "--interval"},
     "parallel": {"-j", "-P", "--jobs"},
+    "time": {"-f", "-o", "--format", "--output"},
     "setsid": set(),
     "nohup": set(),
     "command": set(),
     "builtin": set(),
-    "exec": set(),
+    "exec": {"-a"},
     "caffeinate": {"-t", "-w"},
     "arch": {"-arch"},
-    "xcrun": {"--sdk", "--toolchain"},
+    "xcrun": {"-sdk", "-toolchain", "--sdk", "--toolchain"},
 }
 ASSIGN_SHAPED = re.compile(r"^[A-Za-z_][^=]*=")
 ASSIGN_RECORD = "#assign"
@@ -322,8 +325,13 @@ def inspect_wrapper(args, depth):
         break
 
 
-def resolve_program(words):
-    """Index of the word a wrapper chain actually execs, or -1."""
+def resolve_programs(words):
+    """Every index a wrapper chain could plausibly exec, nearest first.
+
+    The flag table is an allowlist that cannot be complete, and every gap in it
+    fails OPEN, so an ambiguous flag yields BOTH readings rather than a guess.
+    """
+    out = []
     i = 0
     wrapper = None
     while i < len(words):
@@ -337,23 +345,35 @@ def resolve_program(words):
             i += 1
             continue
         if w.startswith("-"):
-            takes_value = w in VALUE_FLAGS.get(wrapper, ())
-            i += 2 if takes_value else 1
+            if w in VALUE_FLAGS.get(wrapper, ()):
+                i += 2
+            elif (
+                (len(w) == 2 or (w.startswith("--") and "=" not in w))
+                and i + 1 < len(words)
+                and not words[i + 1].startswith("-")
+            ):
+                # unknown flag of a known wrapper: it either takes the next word
+                # or it does not, and guessing wrong loses either way. An
+                # ATTACHED short form (-oL) already carries its value, so it is
+                # not ambiguous and must not widen.
+                out.extend(j + i + 2 for j in resolve_programs(words[i + 2:]))
+                i += 1
+            else:
+                i += 1
             continue
         if WRAPPER_OPERAND.match(w):
-            i += 1
-            continue
-        return i
-    return -1
+            out.extend(j + i + 1 for j in resolve_programs(words[i + 1:]))
+            out.insert(0, i)
+            return sorted(set(out))
+        out.insert(0, i)
+        return sorted(set(out))
+    return sorted(set(out))
 
 
-def effective_program(words):
-    # the real program a command runs, after skipping leading wrapper words
-    # (env/sudo/...) and VAR=val assignments. Matches how inspect_wrapper resolves
-    # the target, so a here-doc/here-string body feeding `/bin/sh`, `sudo bash`, or
-    # `VAR=1 sh` is recognized as shell input the same way inspect() basenames names.
-    i = resolve_program(words)
-    return os.path.basename(words[i]) if i >= 0 else None
+def resolve_program(words):
+    """The nearest plausible program index, or -1."""
+    c = resolve_programs(words)
+    return c[0] if c else -1
 
 
 def reparse(script, depth):
@@ -393,12 +413,12 @@ if bashlex is not None:
                 inspect(words[0], words[1:], self.depth)
             # here-string / here-doc feeding a shell interpreter (no -c): the body
             # is a redirect node, not a word, so re-parse it explicitly.
-            prog_i = resolve_program(words)
-            if (
-                prog_i >= 0
-                and os.path.basename(words[prog_i]) in SHELL_INTERP
-                and "-c" not in words[prog_i + 1:]
-            ):
+            shell_i = -1
+            for c in resolve_programs(words):
+                if os.path.basename(words[c]) in SHELL_INTERP:
+                    shell_i = c
+                    break
+            if shell_i >= 0 and dash_c_index(words[shell_i + 1:]) < 0:
                 if EMIT_MODE and not any(
                     p.kind == "redirect" and str(p.type).startswith("<<") for p in parts
                 ):
