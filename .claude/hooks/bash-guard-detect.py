@@ -106,7 +106,7 @@ SCRIPT_READERS = ("source", ".")
 DECLARE_BUILTINS = ("export", "declare", "typeset", "local", "readonly")
 PROG_GH, PROG_GIT, PROG_EVAL = "gh", "git", "eval"
 PROG_TRAP, PROG_FIND, PROG_XARGS = "trap", "find", "xargs"
-GH_MERGE_SUBCOMMAND = ("pr", "merge")
+GH_MERGE_VERB, GH_MERGE_ACTION = "pr", "merge"
 FIND_EXEC_FLAGS = ("-exec", "-execdir")
 FIND_EXEC_TERMINATORS = (";", "+")
 # git policy vocabularies
@@ -197,7 +197,7 @@ def dash_c_index(args):
 
 def gh_merge_check(args):
     for i in range(len(args) - 1):
-        if (args[i], args[i + 1]) == GH_MERGE_SUBCOMMAND:
+        if args[i] == GH_MERGE_VERB and args[i + 1] == GH_MERGE_ACTION:
             block(MERGE_MSG)
 
 

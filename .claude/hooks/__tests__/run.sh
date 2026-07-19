@@ -19,6 +19,20 @@ assert_not_contains() { # name haystack needle
   case "$2" in *"$3"*) fail "$1 (unexpectedly found [$3])";; *) pass "$1";; esac
 }
 
+# Every hook invocation in this file is time-bounded, through all six drivers
+# (asg/bg/ag/biome/aem/sc). Scoping this to one driver, then to three, each
+# left the same hole one function over — the count is asserted below, not
+# claimed here, so it cannot drift silently again.
+# An adversarial fixture that makes a guard non-terminating must FAIL the suite,
+# not wedge it — and measuring elapsed time after an unbounded call cannot do
+# that, because the call never returns. timeout(1) is absent on darwin, so
+# perl's alarm is the portable bound; it exits 142, which matches no assertion.
+# The budget-exhaustion fixtures (BG_WIDE, the 150KB input, the 600-pair
+# starvation cases) are exactly the ones that hang when their budget is mutated
+# away, so leaving any driver unbounded defeats the point.
+HOOK_TIMEOUT_S=20
+run_hook() { perl -e 'alarm shift; exec @ARGV' "$HOOK_TIMEOUT_S" bash "$@"; }
+
 cat > "$FIXDIR/messy.ts" <<'EOF'
 export const greet=(name:string)=>{
 return  `hi ${name}`
@@ -46,7 +60,7 @@ BIOME_HOOK="$HOOKS/biome-format.sh"
 run_format() { # fixture-basename -> echoes the temp file path after the hook ran
   local tmp; tmp=$(mktemp "$FIXDIR/bf.XXXXXX").ts
   cp "$FIXDIR/$1" "$tmp"
-  printf '{"tool_input":{"file_path":"%s"}}' "$tmp" | bash "$BIOME_HOOK" >/dev/null 2>&1
+  printf '{"tool_input":{"file_path":"%s"}}' "$tmp" | run_hook "$BIOME_HOOK" >/dev/null 2>&1
   printf '%s' "$tmp"
 }
 
@@ -78,13 +92,13 @@ rm -f "$t"
 tmd=$(mktemp "$FIXDIR/bf.XXXXXX").md
 printf '# Title\n\n  badly   spaced markdown\n' > "$tmd"
 mdbefore=$(cat "$tmd")
-printf '{"tool_input":{"file_path":"%s"}}' "$tmd" | bash "$BIOME_HOOK" >/dev/null 2>&1
+printf '{"tool_input":{"file_path":"%s"}}' "$tmd" | run_hook "$BIOME_HOOK" >/dev/null 2>&1
 assert_eq "format: .md skipped (no write)" "$mdbefore" "$(cat "$tmd")"
 rm -f "$tmd"
 
 SC_HOOK="$HOOKS/session-context.sh"
 
-out=$(cd "$REPO_ROOT" && printf '' | bash "$SC_HOOK")
+out=$(cd "$REPO_ROOT" && printf '' | run_hook "$SC_HOOK")
 assert_contains "ctx: hookEventName envelope" "$out" '"hookEventName":"SessionStart"'
 assert_contains "ctx: hookSpecificOutput key" "$out" '"hookSpecificOutput"'
 assert_contains "ctx: additionalContext key"  "$out" '"additionalContext"'
@@ -111,14 +125,14 @@ cat > "$SHIM/gh" <<'STUB'
 exit 1
 STUB
 chmod +x "$SHIM/gh"
-out_fb=$(cd "$REPO_ROOT" && printf '' | PATH="$SHIM:$PATH" bash "$SC_HOOK")
+out_fb=$(cd "$REPO_ROOT" && printf '' | PATH="$SHIM:$PATH" run_hook "$SC_HOOK")
 assert_contains "ctx-fallback: still emits envelope" "$out_fb" '"hookEventName":"SessionStart"'
 assert_contains "ctx-fallback: branch retained"      "$out_fb" 'branch:'
 assert_not_contains "ctx-fallback: CI line omitted"  "$out_fb" 'last CI:'
 rm -rf "$SHIM"
 
 NOREPO=$(mktemp -d)
-out_nr=$(cd "$NOREPO" && printf '' | bash "$SC_HOOK")
+out_nr=$(cd "$NOREPO" && printf '' | run_hook "$SC_HOOK")
 assert_eq "ctx: empty outside repo" "" "$out_nr"
 rm -rf "$NOREPO"
 
@@ -155,16 +169,6 @@ assert_eq "guard: session malformed-stdin exit 0" "0" "$?"
 assert_eq "guard: session-context exit 0" "0" "$?"
 
 # --- bash-guard.sh block logic (the broadest blocking hook; previously untested) ---
-# Every hook invocation in this file is time-bounded, through all three drivers.
-# An adversarial fixture that makes a guard non-terminating must FAIL the suite,
-# not wedge it — and measuring elapsed time after an unbounded call cannot do
-# that, because the call never returns. timeout(1) is absent on darwin, so
-# perl's alarm is the portable bound; it exits 142, which matches no assertion.
-# The budget-exhaustion fixtures (BG_WIDE, the 150KB input, the 600-pair
-# starvation cases) are exactly the ones that hang when their budget is mutated
-# away, so leaving any driver unbounded defeats the point.
-HOOK_TIMEOUT_S=20
-run_hook() { perl -e 'alarm shift; exec @ARGV' "$HOOK_TIMEOUT_S" bash "$@"; }
 BG_HOOK="$HOOKS/bash-guard.sh"
 bg_exit() { # $1=command string -> exit code of bash-guard for a REAL PreToolUse payload
   # The real Claude Code payload nests the command under tool_input — a flat
@@ -325,7 +329,7 @@ assert_eq "bg: force-push to non-main allowed"     "0" "$(bg_exit 'git push --fo
 AEM_HOOK="$HOOKS/api-edit-marker.sh"
 aem_marked() { # $1=file_path -> MARKED|NONE (marker written to an isolated temp ROOT)
   local d; d=$(mktemp -d)
-  printf '{"tool_input":{"file_path":"%s"}}' "$1" | ( cd "$d" && bash "$AEM_HOOK" >/dev/null 2>&1 )
+  printf '{"tool_input":{"file_path":"%s"}}' "$1" | ( cd "$d" && run_hook "$AEM_HOOK" >/dev/null 2>&1 )
   if [ -s "$d/.claude/.api-edit-pending" ]; then printf 'MARKED'; else printf 'NONE'; fi
   rm -rf "$d"
 }
@@ -335,7 +339,7 @@ assert_eq "aem: proxy.ts marked"      "MARKED" "$(aem_marked /repo/proxy.ts)"
 assert_eq "aem: non-API not marked"   "NONE"   "$(aem_marked /repo/components/sections/Hero.tsx)"
 # fail-closed: a malformed payload mentioning an API path must STILL record a marker
 aem_d=$(mktemp -d)
-printf 'garbled non-json app/api/ask/route.ts payload' | ( cd "$aem_d" && bash "$AEM_HOOK" >/dev/null 2>&1 )
+printf 'garbled non-json app/api/ask/route.ts payload' | ( cd "$aem_d" && run_hook "$AEM_HOOK" >/dev/null 2>&1 )
 if [ -s "$aem_d/.claude/.api-edit-pending" ]; then aem_fc=MARKED; else aem_fc=NONE; fi
 rm -rf "$aem_d"
 assert_eq "aem: fail-closed on malformed payload with API path" "MARKED" "$aem_fc"
