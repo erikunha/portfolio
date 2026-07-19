@@ -539,8 +539,6 @@ if bashlex is not None:
                 if assigns:
                     EMITTED.append([ASSIGN_RECORD] + assigns)
             if words:
-                if EMIT_MODE and OPAQUE_WORD.search(words[0]):
-                    sys.exit(3)
                 inspect(words[0], words[1:], self.depth)
             # here-string / here-doc feeding a shell interpreter (no -c): the body
             # is a redirect node, not a word, so re-parse it explicitly.
