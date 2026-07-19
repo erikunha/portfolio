@@ -335,7 +335,8 @@ def resolve_programs(words):
     fails OPEN, so an ambiguous flag yields BOTH readings rather than a guess.
     """
     if _candidate_budget[0] <= 0:
-        return []
+        block(NEST_MSG)
+        sys.exit(3)
     _candidate_budget[0] -= 1
     out = []
     i = 0
