@@ -382,11 +382,14 @@ def inspect_wrapper(args, depth, wrapper=None):
             elif not WRAPPER_OPERAND.match(a):
                 reparse(a, depth)
                 return
-    for i, a in enumerate(args):
-        if os.path.basename(a) in WRAPPERS or ASSIGN_WORD.match(a) or WRAPPER_OPERAND.match(a):
-            continue
-        inspect(a, list(args[i + 1:]), depth)
-        break
+    chain = ([wrapper] if wrapper else []) + list(args)
+    offset = 1 if wrapper else 0
+    # every candidate, not just the nearest: `timeout 5 $CMD` yields both `5`
+    # and `$CMD`, and stopping at the first hides the opaque one behind it
+    for c in resolve_programs(chain):
+        i = c - offset
+        if 0 <= i < len(args):
+            inspect(args[i], list(args[i + 1:]), depth)
 
 
 _candidate_budget = [512]
