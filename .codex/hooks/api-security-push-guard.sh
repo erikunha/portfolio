@@ -24,13 +24,14 @@ if [ "$DET_RC" -eq 3 ] && [ -n "$CMD" ]; then
 elif [ "$DET_RC" -eq 0 ] && [ -n "$CMD" ]; then
   printf '%s\n' "$DET" | awk -F'\t' '
     BEGIN {
-      split("--upload-pack --receive-pack --exec --exec-path --extcmd --template --separate-git-dir --super-prefix --git-dir --work-tree --config --config-env --tree-filter --index-filter --commit-filter --env-filter --msg-filter --parent-filter --tag-name-filter", df, " ")
+      split("--upload-pack --receive-pack --exec --exec-path --extcmd --template --separate-git-dir --super-prefix --git-dir --work-tree --config --config-env", df, " ")
+      split("--tree-filter --index-filter --commit-filter --env-filter --msg-filter --parent-filter --tag-name-filter", ff, " ")
       split("--unset --unset-all --remove-section --rename-section --replace-all --add --edit", cw, " ")
     }
     function abbrev(tok, set,   name, i) {
       name = tok
       sub(/=.*/, "", name)
-      if (name !~ /^--/ || length(name) < 4) return 0
+      if (name !~ /^--/ || length(name) < 3) return 0
       for (i in set) if (index(set[i], name) == 1) return 1
       return 0
     }
@@ -40,9 +41,12 @@ elif [ "$DET_RC" -eq 0 ] && [ -n "$CMD" ]; then
       if ($g != "git" && $g !~ /^git-/) continue
       if (g == 1 && ($g ~ /^git-/ || g == NF)) { found = 1; break }
       if ($g ~ /^git-/) continue
+      isfilter = 0
+      for (i = g + 1; i <= NF; i++) if ($i == "filter-branch") { isfilter = 1; break }
       for (i = g + 1; i <= NF; i++) {
         a = $i
         if (abbrev(a, df)) { found = 1; break }
+        if (isfilter && abbrev(a, ff)) { found = 1; break }
       }
       skip = 0
       for (i = g + 1; i <= NF && !found; i++) {
@@ -57,6 +61,7 @@ elif [ "$DET_RC" -eq 0 ] && [ -n "$CMD" ]; then
         if (a == "push" || a == "send-pack" || a == "http-push") { found = 1; break }
         if (a == "config") {
           operands = 0
+          if ($(i + 1) == "get" || $(i + 1) == "list" || $(i + 1) == "getall") break
           for (j = i + 1; j <= NF; j++) {
             if (abbrev($j, cw)) found = 1
             else if ($j !~ /^-/) operands++

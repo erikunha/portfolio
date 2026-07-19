@@ -1053,6 +1053,103 @@ for asg_cfglong in 'git clone --config core.hooksPath=/tmp/evil . dst' \
   rm -rf "$d"
 done
 
+# A wrapper flag that takes a SEPARATE-WORD argument derails positional
+# resolution: `env -u HOME sh -c ...` skips -u, then treats HOME as the program
+# and stops before the interpreter rules ever run. Interpreters are screened by
+# PRESENCE now, the way the git check already was, so where resolution lands
+# stops mattering.
+for asg_optarg in 'env -u HOME sh -c "git push origin main"' \
+                  'sudo -u erik python3 -c "0"' \
+                  'timeout -s KILL 5 node -e "0"' \
+                  'flock /tmp/l sh -c "git push origin main"' \
+                  'xargs -n 1 sh -c "git push"' \
+                  'env -S"git push origin main"' \
+                  'env --split-string="git push origin main"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_optarg" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a wrapper option argument must not derail resolution [$asg_optarg]" "2" "$?"
+  rm -rf "$d"
+done
+
+# git's newer read spellings are reads; counting operands scored them as writes.
+for asg_cfgread2 in 'git config get user.email' 'git config list' 'git config getall alias.z' \
+                    'env -u HOME make build'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_cfgread2" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a config read stays a read [$asg_cfgread2]" "0" "$?"
+  rm -rf "$d"
+done
+
+# Eight properties shipped with no assertion and survived a reviewer's mutation
+# sweep. "Verified before fixing" in a commit body is not a gate.
+for asg_unpinned in 'caffeinate git push origin main' \
+                    'arch -arm64 git push origin main' \
+                    'xcrun git push origin main' \
+                    'fish -c "git push origin main"' \
+                    'csh -c "git push origin main"' \
+                    'git send-pack origin main' \
+                    'git http-push origin main' \
+                    'PAGER="sh -c evil" git log' \
+                    'LESSOPEN="|sh -c evil" git log' \
+                    'trap "SIGX; git push origin main" EXIT' \
+                    'trap "-x; git push origin main" EXIT'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_unpinned" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: property pinned by an assertion, not a commit message [$asg_unpinned]" "2" "$?"
+  rm -rf "$d"
+done
+
+# git enforces abbreviation UNIQUENESS itself; the minimum unambiguous length
+# varies per subcommand, so no length floor is sound. --u is unique for
+# ls-remote and executes.
+for asg_shortest in 'git ls-remote --u="sh -c evil" ../src' \
+                    'git archive --remote=. --e="sh -c evil" HEAD' \
+                    'git config --ed' \
+                    'git clone --te=/tmp/evil . dst'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_shortest" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: the shortest spelling git accepts blocks too [$asg_shortest]" "2" "$?"
+  rm -rf "$d"
+done
+
+# ...and --index is not --index-filter. filter-branch's options are options OF
+# filter-branch; screening them globally false-blocked routine stash work.
+for asg_filterfp in 'git stash pop --index' \
+                    'git stash apply --index' \
+                    'git apply --index patch.diff' \
+                    'git checkout --theirs file'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_filterfp" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a subcommand flag is not a filter-branch flag [$asg_filterfp]" "0" "$?"
+  rm -rf "$d"
+done
+
+for asg_filterreal in 'git filter-branch --tree-filter "sh -c evil" HEAD' \
+                      'git filter-branch --index-filter "sh -c evil" HEAD'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_filterreal" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: filter-branch's own filters still block [$asg_filterreal]" "2" "$?"
+  rm -rf "$d"
+done
+
+# bashlex will not classify a %%-bearing word as an assignment, so the BARE
+# spelling landed as a program name while the env-wrapped one blocked. The
+# wrapped form must never be the stronger one.
+for asg_barefunc in 'BASH_FUNC_ls%%="() { git push origin main; }" bash -c ls' \
+                    'BASH_FUNC_x%%="() { :; }" bash -c x'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_barefunc" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: the bare spelling is never weaker than the wrapped one [$asg_barefunc]" "2" "$?"
+  rm -rf "$d"
+done
+
 # Ordinary environment work is not git configuration.
 for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
   d=$(asg_mkroot)

@@ -59,6 +59,8 @@ TRAP_SIGNAL = re.compile(r"^(--?[A-Za-z]*|[0-9]+|SIG[A-Z0-9]+|EXIT|DEBUG|ERR|RET
 OPAQUE_WORD = re.compile(r"[$`]")
 ASSIGN_WORD = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 WRAPPER_OPERAND = re.compile(r"^(-|[0-9]+[a-z]?$)")
+SPLIT_STRING = re.compile(r"^(-S|--split-string=?)")
+ASSIGN_SHAPED = re.compile(r"^[A-Za-z_][^=]*=")
 ASSIGN_RECORD = "#assign"
 
 
@@ -211,6 +213,8 @@ def inspect(name, args, depth):
         for a in args:
             if not TRAP_SIGNAL.match(a):
                 reparse(a, depth)
+    if EMIT_MODE and ASSIGN_SHAPED.match(name) and is_config_assign(name):
+        EMITTED.append([ASSIGN_RECORD, name])
     if EMIT_MODE and base in ("source", "."):
         sys.exit(3)
     if base == "xargs" and EMIT_MODE and any(
@@ -267,16 +271,24 @@ def inspect_wrapper(args, depth):
             block(PUSH_MSG)
     for i, a in enumerate(args):
         b = os.path.basename(a)
+        if SPLIT_STRING.match(a):
+            # env -S'...' / --split-string='...' glues a whole command to the flag
+            reparse(SPLIT_STRING.sub("", a, count=1), depth)
+            return
         if b == "eval":
             reparse(" ".join(args[i + 1:]), depth)
-            break
+            return
         if b in SHELL_INTERP:
             sub = args[i + 1:]
             j = dash_c_index(sub)
             if j >= 0 and j + 1 < len(sub):
                 reparse(sub[j + 1], depth)
-            break
-        if b in WRAPPERS or ASSIGN_WORD.match(a) or WRAPPER_OPERAND.match(a):
+            return
+        if b in OTHER_INTERP:
+            inspect(a, list(args[i + 1:]), depth)
+            return
+    for i, a in enumerate(args):
+        if os.path.basename(a) in WRAPPERS or ASSIGN_WORD.match(a) or WRAPPER_OPERAND.match(a):
             continue
         inspect(a, list(args[i + 1:]), depth)
         break
