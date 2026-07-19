@@ -129,8 +129,10 @@ FIND_EXEC_TERMINATORS = (";", "+")
 PROTECTED_BRANCH = "main"
 PROTECTED_REF = f"refs/heads/{PROTECTED_BRANCH}"
 FORCE_LONG_FLAGS = ("--force", "--force-with-lease", "--force-if-includes")
-FORCE_SHORT_CLUSTER = re.compile(r"-[A-Za-z]*f[A-Za-z]*")
-# short flags whose VALUE may be attached (-odeploy), so the letters after them
+FORCE_SHORT_CLUSTER = re.compile(r"-[A-Za-z0-9]*f[A-Za-z0-9]*")
+# git bundles short booleans by CHARACTER, not by letter: -4/-6 (--ipv4/--ipv6)
+# are digits, so a cluster class of [A-Za-z] alone misses -d4 and -4f.
+# short flags whose VALUE may be attached (-odeploy), so the chars after them
 # are a value, not a cluster: --push-option's value must not read as -d
 GIT_PUSH_VALUE_SHORT_FLAGS = ("-o",)
 # git's parse-options accepts any UNAMBIGUOUS long-option prefix, so --mir runs
@@ -141,7 +143,7 @@ MIN_LONG_FLAG_ABBREV = 3
 MIRROR_FLAG = "--mirror"
 ALL_FLAG = "--all"
 DELETE_LONG_FLAG = "--delete"
-DELETE_SHORT_CLUSTER = re.compile(r"-[A-Za-z]*d[A-Za-z]*")
+DELETE_SHORT_CLUSTER = re.compile(r"-[A-Za-z0-9]*d[A-Za-z0-9]*")
 DELETE_REFSPEC = ":"
 # the --emit-commands wire format read by api-security-push-guard.sh's awk
 FIELD_SEP = "\t"
@@ -277,6 +279,32 @@ def is_force_push(args):
     return forced and (
         any(main_ref(a) for a in args) or any(long_flag(a, ALL_FLAG) for a in args)
     )
+
+
+def heredoc_bodies(parts):
+    for p in parts:
+        if p.kind != NODE_REDIRECT or not str(p.type).startswith(HEREDOC_PREFIX):
+            continue
+        # bashlex puts a here-DOC body on .heredoc and only the delimiter on
+        # .output.word; a here-STRING has no .heredoc.
+        hd = getattr(p, "heredoc", None)
+        body = getattr(hd, "value", None) or getattr(hd, "word", None)
+        if body is None:
+            body = getattr(getattr(p, "output", None), "word", None)
+        if body:
+            yield body
+
+
+def pipeline_feeds_shell(node):
+    words = expand_words(
+        [p.word for p in (getattr(node, "parts", []) or []) if p.kind == NODE_WORD]
+    )
+    if not words:
+        return False
+    for c in resolve_programs(words):
+        if os.path.basename(words[c]) in SHELL_INTERP:
+            return dash_c_index(words[c + 1:]) < 0
+    return False
 
 
 def unquote_heredoc_delims(script):
@@ -552,6 +580,16 @@ if bashlex is not None:
         def __init__(self, depth=MAX_DEPTH):
             self.depth = depth
 
+        def visitpipeline(self, n, parts):
+            # `cat <<EOF | sh` executes the body just as `sh <<EOF` does, but the
+            # heredoc hangs off `cat` and the shell is a SIBLING, so the
+            # same-node check in visitcommand never sees the pair.
+            if not any(pipeline_feeds_shell(p) for p in parts):
+                return
+            for p in parts:
+                for body in heredoc_bodies(getattr(p, "parts", []) or []):
+                    reparse(body, self.depth)
+
         def visitcommand(self, n, parts):
             words = expand_words([p.word for p in parts if p.kind == NODE_WORD])
             if EMIT_MODE:
@@ -572,18 +610,12 @@ if bashlex is not None:
                     p.kind == NODE_REDIRECT and str(p.type).startswith(HEREDOC_PREFIX) for p in parts
                 ):
                     sys.exit(3)
-                for p in parts:
-                    if p.kind == NODE_REDIRECT and str(p.type).startswith(HEREDOC_PREFIX):
-                        # bashlex puts a here-DOC body on .heredoc and only the
-                        # delimiter on .output.word; a here-STRING has no .heredoc.
-                        hd = getattr(p, "heredoc", None)
-                        body = getattr(hd, "value", None) or getattr(hd, "word", None)
-                        if body is None:
-                            body = getattr(getattr(p, "output", None), "word", None)
-                        if body:
-                            reparse(body, self.depth)
-                        elif EMIT_MODE:
-                            sys.exit(3)
+                saw_body = False
+                for body in heredoc_bodies(parts):
+                    saw_body = True
+                    reparse(body, self.depth)
+                if not saw_body and EMIT_MODE:
+                    sys.exit(3)
 
 
 def main():

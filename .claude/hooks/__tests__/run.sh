@@ -1492,6 +1492,19 @@ for bg_pushopt in 'git push -odeploy origin main' \
                   'git push -oskipFinal origin main'; do
   assert_eq "bg: --push-option's value may be ATTACHED, so the letters after -o are a VALUE, not a cluster — a value containing d must not read as --delete and one containing f must not read as --force [$bg_pushopt]" "0" "$(bg_exit "$bg_pushopt")"
 done
+for bg_digitbundle in 'git push -d4 origin main' \
+                      'git push -4d origin main' \
+                      'git push -d6 origin main' \
+                      'git push -6d origin main' \
+                      'git push -f4 origin main' \
+                      'git push -4f origin main' \
+                      'git push -f6 origin main'; do
+  assert_eq "bg: git bundles short booleans by CHARACTER, not by letter — -4/-6 (--ipv4/--ipv6) are digits, so a cluster class of [A-Za-z] alone missed every bundle pairing them with -d or -f [$bg_digitbundle]" "2" "$(bg_exit "$bg_digitbundle")"
+done
+
+assert_eq "bg: a digit flag with no destructive char in the cluster is ordinary" "0" "$(bg_exit 'git push -4 origin main')"
+assert_eq "bg: and the -o value guard still wins over the widened class" "0" "$(bg_exit 'git push -o4d origin main')"
+
 assert_eq "bg: a cluster NOT led by -o is still a cluster" "2" "$(bg_exit 'git push -do origin main')"
 assert_eq "bg: and the f cluster likewise" "2" "$(bg_exit 'git push -vf origin main')"
 
@@ -1501,6 +1514,20 @@ assert_eq "bg: and the f cluster likewise" "2" "$(bg_exit 'git push -vf origin m
 for bg_heredocwrite in 'cat > /tmp/f' 'tee /tmp/f'; do
   assert_eq "bg: a quoted here-doc feeding a non-shell writes text and executes nothing — the delimiter is normalized so bashlex can parse it, rather than failing to the text scan [$bg_heredocwrite]" "0" "$(bg_exit "$(printf "%s <<'EOF'\ngit push --force origin main\nEOF" "$bg_heredocwrite")")"
 done
+# A heredoc PIPED into a shell executes exactly as a redirected one does, but the
+# heredoc hangs off the upstream command and the shell is a sibling, so the
+# same-node check never saw the pair. Normalizing the quoted delimiter moved this
+# spelling off the coarse text scan (which caught it by accident) onto the AST
+# path, where the blind spot lived — a false allow opened by closing a false block.
+for bg_pipedheredoc in 'sh' 'bash' 'zsh' 'sudo sh'; do
+  assert_eq "asg-class: a here-doc piped into a shell runs its body, and the shell being a PIPELINE SIBLING rather than the heredoc's own command must not hide it [| $bg_pipedheredoc]" "2" "$(bg_exit "$(printf "cat <<'EOF' | %s\ngit push --force origin main\nEOF" "$bg_pipedheredoc")")"
+done
+assert_eq "bg: the unquoted spelling of the same pipe — open even before the delimiter fix — is closed too" "2" "$(bg_exit "$(printf 'cat <<EOF | sh\ngit push --force origin main\nEOF')")"
+
+for bg_pipedinert in 'tee /tmp/f' 'grep x' 'wc -l'; do
+  assert_eq "bg: piping a here-doc into a NON-shell still executes nothing [| $bg_pipedinert]" "0" "$(bg_exit "$(printf "cat <<'EOF' | %s\ngit push --force origin main\nEOF" "$bg_pipedinert")")"
+done
+
 for bg_heredocrun in 'sh' 'bash'; do
   assert_eq "bg: a quoted here-doc feeding a SHELL still executes its body, and now blocks via the AST rather than by luck of a text match [$bg_heredocrun]" "2" "$(bg_exit "$(printf "%s <<'EOF'\ngit push --force origin main\nEOF" "$bg_heredocrun")")"
 done
