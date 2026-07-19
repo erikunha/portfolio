@@ -986,6 +986,41 @@ for asg_dashc_block in 'git -c core.hooksPath=/tmp/h commit -m x' \
   rm -rf "$d"
 done
 
+# A wrapper must not strip rules the bare spelling has. inspect_wrapper used to
+# re-implement a SUBSET of inspect, so `env python3 -c ...` skipped the
+# inline-interpreter rule that blocks the bare `python3 -c ...`.
+for asg_wrapstrip in 'env python3 -c "import os;os.system(0)"' \
+                     'sudo python3 -c "import os;os.system(0)"' \
+                     'timeout 60 node -e "0"' \
+                     'nice -n 10 node -e "0"' \
+                     'env -u git git push origin main' \
+                     'env "BASH_FUNC_ls%%=() { git push origin main; }" bash -c ls'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_wrapstrip" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a wrapper must not strip a rule the bare form has [$asg_wrapstrip]" "2" "$?"
+  rm -rf "$d"
+done
+
+# --up is unambiguous for ls-remote, so a 5-char floor let it through.
+for asg_shortabbrev in 'git ls-remote --up="sh -c evil" ../src' \
+                       'git fetch --upl="sh -c evil" ../src'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_shortabbrev" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: the shortest accepted abbreviation blocks too [$asg_shortabbrev]" "2" "$?"
+  rm -rf "$d"
+done
+
+# ...and a bare `git` that is an OPERAND is not an invocation.
+for asg_gitword_ok in 'rg git' 'echo git' 'which git' 'cat git' 'ls git-hooks'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_gitword_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: git as an operand is not an invocation [$asg_gitword_ok]" "0" "$?"
+  rm -rf "$d"
+done
+
 # Ordinary environment work is not git configuration.
 for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
   d=$(asg_mkroot)

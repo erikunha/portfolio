@@ -24,29 +24,22 @@ if [ "$DET_RC" -eq 3 ] && [ -n "$CMD" ]; then
 elif [ "$DET_RC" -eq 0 ] && [ -n "$CMD" ]; then
   printf '%s\n' "$DET" | awk -F'\t' '
     BEGIN {
-      split("EDITOR VISUAL SSH_ASKPASS BASH_ENV ENV PROMPT_COMMAND LD_PRELOAD DYLD_INSERT_LIBRARIES PAGER LESSOPEN", e, " ")
-      for (i in e) EXEC_ENV[e[i]] = 1
       split("--upload-pack --receive-pack --exec --exec-path --extcmd --template --separate-git-dir --super-prefix --git-dir --work-tree --config-env --tree-filter --index-filter --commit-filter --env-filter --msg-filter --parent-filter --tag-name-filter", df, " ")
       split("--unset --unset-all --remove-section --rename-section --replace-all --add --edit", cw, " ")
     }
     function abbrev(tok, set,   name, i) {
       name = tok
       sub(/=.*/, "", name)
-      if (length(name) < 5) return 0
+      if (name !~ /^--/ || length(name) < 4) return 0
       for (i in set) if (index(set[i], name) == 1) return 1
       return 0
     }
-    $1 == "#assign" {
-      for (i = 2; i <= NF; i++) {
-        split($i, kv, "=")
-        if ($i ~ /^GIT_/ || kv[1] ~ /[$`]/ || kv[1] in EXEC_ENV) { found = 1; break }
-      }
-    }
+    $1 == "#assign" { found = 1 }
     $1 != "#assign" {
-      g = 0
-      for (i = 1; i <= NF; i++) if ($i == "git" || $i ~ /^git-/) { g = i; break }
-      if (!g) next
-      if ($g ~ /^git-/ || g == NF) { found = 1; next }
+      for (g = 1; g <= NF && !found; g++) {
+      if ($g != "git" && $g !~ /^git-/) continue
+      if (g == 1 && ($g ~ /^git-/ || g == NF)) { found = 1; break }
+      if ($g ~ /^git-/) continue
       for (i = g + 1; i <= NF; i++) {
         a = $i
         if (abbrev(a, df)) { found = 1; break }
@@ -74,12 +67,15 @@ elif [ "$DET_RC" -eq 0 ] && [ -n "$CMD" ]; then
         if (a == "subtree" || a == "svn" || a == "p4") continue
         break
       }
+      }
     }
     END { exit found ? 0 : 1 }' || exit 0
-else
+elif [ "$DET_RC" -eq 4 ] || [ -z "$CMD" ]; then
   HAY=$(printf '%s' "${INPUT//$ROOT/}" | sed 's/"transcript_path"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"cwd"[[:space:]]*:[[:space:]]*"[^"]*"//g; s/"description"[[:space:]]*:[[:space:]]*"[^"]*"//g')
   printf '%s' "$HAY" | grep -qF 'git' \
     && printf '%s' "$HAY" | grep -qF 'push' || exit 0
+else
+  :
 fi
 
 if [ -z "$TRANSCRIPT" ] || [ ! -r "$TRANSCRIPT" ]; then

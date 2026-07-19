@@ -54,8 +54,11 @@ EXEC_ENV = (
     "PROMPT_COMMAND", "LD_PRELOAD", "DYLD_INSERT_LIBRARIES",
     "PAGER", "LESSOPEN",
 )
+EXEC_ENV_SHAPE = re.compile(r"^(BASH_FUNC_.*%%|LD_[A-Z_]+|DYLD_[A-Z_]+)$")
 TRAP_SIGNAL = re.compile(r"^(--?[A-Za-z]*|[0-9]+|SIG[A-Z0-9]+|EXIT|DEBUG|ERR|RETURN)$")
 OPAQUE_WORD = re.compile(r"[$`]")
+ASSIGN_WORD = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+WRAPPER_OPERAND = re.compile(r"^(-|[0-9]+[a-z]?$)")
 ASSIGN_RECORD = "#assign"
 
 
@@ -178,6 +181,7 @@ def is_config_assign(word):
     return (
         word.startswith("GIT_")
         or name in EXEC_ENV
+        or bool(EXEC_ENV_SHAPE.match(name))
         or bool(OPAQUE_WORD.search(name))
     )
 
@@ -271,6 +275,11 @@ def inspect_wrapper(args, depth):
             j = dash_c_index(sub)
             if j >= 0 and j + 1 < len(sub):
                 reparse(sub[j + 1], depth)
+            break
+        if b in WRAPPERS or ASSIGN_WORD.match(a) or WRAPPER_OPERAND.match(a):
+            continue
+        inspect(a, list(args[i + 1:]), depth)
+        break
 
 
 def effective_program(words):
@@ -280,7 +289,7 @@ def effective_program(words):
     # `VAR=1 sh` is recognized as shell input the same way inspect() basenames names.
     for w in words:
         b = os.path.basename(w)
-        if b in WRAPPERS or re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", w):
+        if b in WRAPPERS or ASSIGN_WORD.match(w) or WRAPPER_OPERAND.match(w):
             continue
         return b
     return None
@@ -314,7 +323,7 @@ if bashlex is not None:
         def visitcommand(self, n, parts):
             words = expand_words([p.word for p in parts if p.kind == "word"])
             if EMIT_MODE:
-                assigns = [p.word for p in parts if p.kind == "assignment"]
+                assigns = [p.word for p in parts if p.kind == "assignment" and is_config_assign(p.word)]
                 if assigns:
                     EMITTED.append([ASSIGN_RECORD] + assigns)
             if words:
@@ -362,8 +371,13 @@ def main():
     except Exception:
         sys.exit(3)
     visitor = Visitor()
-    for tree in trees:
-        visitor.visit(tree)
+    try:
+        for tree in trees:
+            visitor.visit(tree)
+    except SystemExit:
+        raise
+    except BaseException:
+        sys.exit(3)
     if EMIT_MODE:
         for words in EMITTED:
             sys.stdout.write("\t".join(words) + "\n")
