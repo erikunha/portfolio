@@ -1462,6 +1462,36 @@ done
 # exit 3 for the same inputs, so an asg assertion passes whether or not the
 # payload was ever read — which is how the operand branch shadowed the
 # interpreter branches while the suite stayed green.
+for asg_operandpayload in 'watch "2; git push origin main"' \
+                          'parallel "2; git push origin main"' \
+                          'watch "-x; git push origin main"' \
+                          'watch "0 && git push --force origin main"' \
+                          'parallel "9|git push origin main"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_operandpayload" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
+  assert_eq "asg: a watch/parallel shell payload is reparsed even when its first character is a digit or dash. WRAPPER_OPERAND (^[-0-9]) answers 'is this a flag or a number', which is NOT 'is this a shell string' — every prior assertion started with a letter, so the whole class stayed invisible [$asg_operandpayload]" "2" "$?"
+  rm -rf "$d"
+done
+
+assert_eq "bg: a bare numeric operand is still an operand, not a payload" "0" "$(bg_exit 'watch -n 1 date')"
+assert_eq "bg: parallel's numeric arg list is still allowed" "0" "$(bg_exit 'parallel echo ::: 1 2 3')"
+
+for bg_abbrev in 'git push --mir origin' \
+                 'git push --mirr origin' \
+                 'git push --del origin main' \
+                 'git push --delet origin main' \
+                 'git push -dq origin main' \
+                 'git push -qd origin main' \
+                 'git push --force --all origin' \
+                 'git push -f --all origin' \
+                 'git push --all --force origin'; do
+  assert_eq "bg: git accepts any unambiguous long-option PREFIX and bundles short options, so matching a destructive flag by string equality matches one spelling of many — --del and -dq really do delete remote main, and a forced --all overwrites it with no ref operand to match on [$bg_abbrev]" "2" "$(bg_exit "$bg_abbrev")"
+done
+
+assert_eq "bg: an unforced --all is an ordinary push of every branch — non-ff is rejected by the remote, so it must not block" "0" "$(bg_exit 'git push --all origin')"
+assert_eq "bg: --dry-run is not a --delete prefix and must not block" "0" "$(bg_exit 'git push --dry-run origin main')"
+
 for bg_destructive in 'git push --mirror origin' \
                       'git push --no-verify --mirror origin' \
                       'git push --delete origin main' \
@@ -1479,6 +1509,18 @@ y" push origin main' "$(printf 'git -C "x\ty" push origin main')"; do
   assert_eq "asg: a word carrying the emit format's own tab/newline separator must not split one DET record into two, which would leave 'git' and 'push' in different awk records and let the push through with a marker pending. Assert on the push-guard, never bg_exit: bash-guard allows a plain push by design, so a bg_exit assertion passes at exit 0 whether or not the record split" "2" "$?"
   rm -rf "$d"
 done
+
+# Encoding, not refusal. Exiting 3 on any separator-bearing word blocked
+# `git commit -m "<multi-line body>"` while a marker pended — printing "git push
+# blocked" on a commit, for the multi-line body CLAUDE.md REQUIRES on exactly the
+# commits that set that marker, whose printed escape is removing the marker.
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+(asg_payload 'git commit -m "feat(api): thing
+
+Body explaining the causal chain."' "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
+assert_eq "asg: a multi-line commit body must not be blocked while a marker pends — the guard must encode the separator, never refuse on it, or it denies the workflow the repo mandates and teaches marker removal as the escape" "0" "$?"
+rm -rf "$d"
 
 assert_eq "bg: deleting a NON-main branch is ordinary work — the predicate must key on the ref, not on the deletion" "0" "$(bg_exit 'git push --delete origin feat/x')"
 assert_eq "bg: a feature-branch deletion refspec is allowed for the same reason" "0" "$(bg_exit 'git push origin :feat/x')"

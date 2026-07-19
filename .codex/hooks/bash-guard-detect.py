@@ -59,6 +59,9 @@ TRAP_SIGNAL = re.compile(r"^(--?[A-Za-z]*|[0-9]+|SIG[A-Z0-9]+|EXIT|DEBUG|ERR|RET
 OPAQUE_WORD = re.compile(r"[$`]")
 ASSIGN_WORD = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 WRAPPER_OPERAND = re.compile(r"^[-0-9]")
+# WRAPPER_OPERAND answers "is this a flag or a numeric argument", which is a
+# different question from "is this a shell string": `watch '2; <cmd>'` is both.
+SHELL_PAYLOAD_SHAPE = re.compile(r"[\s;&|<>()`$]")
 SPLIT_STRING = re.compile(r"^(-S|--split-string=?)")
 # flags whose value IS a shell command, keyed by wrapper
 PAYLOAD_FLAGS = {
@@ -120,14 +123,21 @@ FIND_EXEC_TERMINATORS = (";", "+")
 PROTECTED_BRANCH = "main"
 PROTECTED_REF = f"refs/heads/{PROTECTED_BRANCH}"
 FORCE_FLAGS = ("--force", "-f", "--force-with-lease")
-# --mirror always includes refs/heads/main, so it needs no ref operand to
-# be destructive; --delete/-d and a `:ref` refspec DELETE the remote branch.
+# git's parse-options accepts any UNAMBIGUOUS long-option prefix, so --mir runs
+# --mirror and --del runs --delete; short options bundle, so -dq is -d. 3 is the
+# shortest prefix honoured — shorter over-blocks, which is the safe direction.
+MIN_LONG_FLAG_ABBREV = 3
+# --mirror and --all name refs/heads/main WITHOUT a ref operand to match on
 MIRROR_FLAG = "--mirror"
+ALL_FLAG = "--all"
+DELETE_LONG_FLAG = "--delete"
+DELETE_SHORT_CLUSTER = re.compile(r"-[A-Za-z]*d[A-Za-z]*")
+DELETE_REFSPEC = ":"
 # the --emit-commands wire format read by api-security-push-guard.sh's awk
 FIELD_SEP = "\t"
 RECORD_SEP = "\n"
-DELETE_FLAGS = ("--delete", "-d")
-DELETE_REFSPEC = ":"
+ESCAPE_CHAR = "%"
+WORD_ESCAPES = ((ESCAPE_CHAR, "%25"), (FIELD_SEP, "%09"), (RECORD_SEP, "%0A"))
 GIT_ADD_ALIASES = ("add", "stage")
 BROAD_ADD_PATHSPECS = ("-A", "--all", ".", ":/", ":", "*")
 
@@ -216,8 +226,19 @@ def gh_merge_check(args):
             block(MERGE_MSG)
 
 
+def long_flag(a, full):
+    name = a.split("=")[0]
+    return (
+        name.startswith("--")
+        and len(name) >= MIN_LONG_FLAG_ABBREV
+        and full.startswith(name)
+    )
+
+
 def is_destructive_flag(a):
-    return a in DELETE_FLAGS
+    if long_flag(a, DELETE_LONG_FLAG):
+        return True
+    return bool(DELETE_SHORT_CLUSTER.fullmatch(a)) and not a.startswith("--")
 
 
 def is_delete_refspec(a):
@@ -227,7 +248,7 @@ def is_delete_refspec(a):
 def is_force_push(args):
     if "push" not in args:
         return False
-    if MIRROR_FLAG in args:
+    if any(long_flag(a, MIRROR_FLAG) for a in args):
         return True
     forced = (
         any(is_force_flag(a) for a in args)
@@ -235,7 +256,11 @@ def is_force_push(args):
         or any(is_destructive_flag(a) for a in args)
         or any(is_delete_refspec(a) for a in args)
     )
-    return forced and any(main_ref(a) for a in args)
+    # --all names every branch, main included, so a forced --all needs no ref
+    # operand for the same reason --mirror does not
+    return forced and (
+        any(main_ref(a) for a in args) or any(long_flag(a, ALL_FLAG) for a in args)
+    )
 
 
 def coarse_scan(script):
@@ -259,6 +284,12 @@ def interp_script(name, args):
         if j >= 0 and j + 1 < len(args):
             return args[j + 1]
     return None
+
+
+def encode_word(word):
+    for raw, escaped in WORD_ESCAPES:
+        word = word.replace(raw, escaped)
+    return word
 
 
 def is_config_assign(word):
@@ -398,6 +429,9 @@ def inspect_wrapper(args, depth, wrapper=None):
         # has `bash` as that operand, and reparsing the bare word abandoned
         # the scan before -c could be seen.
         if wrapper in SHELL_OPERAND_WRAPPERS:
+            if SHELL_PAYLOAD_SHAPE.search(a):
+                reparse(a, depth)
+                return
             if skip_operand:
                 skip_operand = False
             elif a.startswith("-"):
@@ -563,10 +597,7 @@ def main():
         sys.exit(3)
     if EMIT_MODE:
         for words in EMITTED:
-            if any(RECORD_SEP in w or FIELD_SEP in w for w in words):
-                sys.exit(3)
-        for words in EMITTED:
-            sys.stdout.write(FIELD_SEP.join(words) + RECORD_SEP)
+            sys.stdout.write(FIELD_SEP.join(encode_word(w) for w in words) + RECORD_SEP)
     sys.exit(0)
 
 
