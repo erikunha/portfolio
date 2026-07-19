@@ -1486,7 +1486,24 @@ for bg_forceabbrev in 'git push --force-w origin main' \
   assert_eq "bg: the FORCE family needs the same prefix matching as delete/mirror/all — d916e44 converted those three by MIRRORING is_force_flag's structure while is_force_flag was itself the broken instance, so --force-w (an unambiguous prefix of --force-with-lease) and --force-if-includes walked past [$bg_forceabbrev]" "2" "$(bg_exit "$bg_forceabbrev")"
 done
 
-assert_eq "bg: --push-option's value may be ATTACHED, so the letters after -o are a value and must not read as a -d cluster" "0" "$(bg_exit 'git push -odeploy origin main')"
+for bg_pushopt in 'git push -odeploy origin main' \
+                  'git push -ofeature origin main' \
+                  'git push -ofoo origin main' \
+                  'git push -oskipFinal origin main'; do
+  assert_eq "bg: --push-option's value may be ATTACHED, so the letters after -o are a VALUE, not a cluster — a value containing d must not read as --delete and one containing f must not read as --force [$bg_pushopt]" "0" "$(bg_exit "$bg_pushopt")"
+done
+assert_eq "bg: a cluster NOT led by -o is still a cluster" "2" "$(bg_exit 'git push -do origin main')"
+assert_eq "bg: and the f cluster likewise" "2" "$(bg_exit 'git push -vf origin main')"
+
+# bashlex raises ParsingError on a QUOTED here-doc delimiter, so the whole
+# command used to fall to the coarse TEXT scan — blocking any body that merely
+# MENTIONED a guarded command. Writing a file is not running it.
+for bg_heredocwrite in 'cat > /tmp/f' 'tee /tmp/f'; do
+  assert_eq "bg: a quoted here-doc feeding a non-shell writes text and executes nothing — the delimiter is normalized so bashlex can parse it, rather than failing to the text scan [$bg_heredocwrite]" "0" "$(bg_exit "$(printf "%s <<'EOF'\ngit push --force origin main\nEOF" "$bg_heredocwrite")")"
+done
+for bg_heredocrun in 'sh' 'bash'; do
+  assert_eq "bg: a quoted here-doc feeding a SHELL still executes its body, and now blocks via the AST rather than by luck of a text match [$bg_heredocrun]" "2" "$(bg_exit "$(printf "%s <<'EOF'\ngit push --force origin main\nEOF" "$bg_heredocrun")")"
+done
 assert_eq "bg: the spaced form of the same flag was already correct" "0" "$(bg_exit 'git push -o deploy origin main')"
 
 # DELIBERATE ALLOW, not a gap. Review round 4 called a ref-less forced push a

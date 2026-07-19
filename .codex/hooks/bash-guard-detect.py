@@ -110,6 +110,12 @@ NODE_WORD = "word"
 NODE_ASSIGNMENT = "assignment"
 NODE_REDIRECT = "redirect"
 HEREDOC_PREFIX = "<<"
+# bashlex cannot parse a QUOTED here-doc delimiter (`<<'EOF'`) — it raises
+# ParsingError, so the whole command fell to the coarse text scan and any body
+# mentioning a blocked command blocked, however inert. Quoting only suppresses
+# expansion inside the body; the command structure is identical, so stripping the
+# quotes to parse is safe and strictly widens what the AST can see.
+HEREDOC_QUOTED_DELIM = re.compile(r"(<<-?\s*)(['\"])([A-Za-z_][A-Za-z0-9_]*)\2")
 # programs and builtins the walk treats specially
 PKG_MANAGERS = ("npm", "yarn", "yarnpkg")
 SCRIPT_READERS = ("source", ".")
@@ -202,6 +208,8 @@ def git_add_broad(operands):
 def is_force_flag(a):
     if any(long_flag(a, f) for f in FORCE_LONG_FLAGS):
         return True
+    if attached_value_flag(a):
+        return False
     return bool(FORCE_SHORT_CLUSTER.fullmatch(a)) and not a.startswith("--")
 
 
@@ -269,6 +277,10 @@ def is_force_push(args):
     return forced and (
         any(main_ref(a) for a in args) or any(long_flag(a, ALL_FLAG) for a in args)
     )
+
+
+def unquote_heredoc_delims(script):
+    return HEREDOC_QUOTED_DELIM.sub(lambda m: m.group(1) + m.group(3), script)
 
 
 def coarse_scan(script):
@@ -525,7 +537,7 @@ def reparse(script, depth):
     if not script or not script.strip():
         return
     try:
-        trees = bashlex.parse(script)
+        trees = bashlex.parse(unquote_heredoc_delims(script))
     except Exception:
         block(NEST_MSG)
         sys.exit(3)
@@ -590,7 +602,7 @@ def main():
     if len(cmd) > MAX_CMD_LEN:
         sys.exit(3)
     try:
-        trees = bashlex.parse(cmd)
+        trees = bashlex.parse(unquote_heredoc_delims(cmd))
     except Exception:
         sys.exit(3)
     visitor = Visitor()
