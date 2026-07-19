@@ -1491,11 +1491,15 @@ rm -rf "$PYSHIM"
 
 # --- self-check: the bound above must actually cover every invocation --------
 # A comment claiming coverage is worth nothing. This keys on the TARGET (any
-# line naming a hook path) rather than on driver spellings, so ${BRACE} forms,
-# unquoted paths, a renamed local and other interpreters cannot slip past it.
+# line naming a hook path) rather than on shell command position, which is an
+# unbounded set — an earlier cut anchored on it and silently lost `if`, `while`,
+# `FOO=1 `, `exec`, `time`, backticks and `{`. The verbs that take a hook path as
+# DATA are few and stable, so they are excluded by name instead.
 unbounded=$(grep -vE '^[[:space:]]*#' "$0" \
   | grep -vE '(run_hook|run_py|_run_bounded)' \
-  | grep -cE '(^|[;&|(]|&&)[[:space:]]*((bash|sh|zsh|dash|ksh|python3?|node|perl)[[:space:]]+)?"?\$\{?(HOOKS/|[A-Z_]*_HOOK|hookcopy)' || true)
+  | grep -vE '^[[:space:]]*(cp|mv|cat|rm|chmod|diff|dirname|printf|echo|grep|sed|ln|mkdir|touch)[[:space:]]' \
+  | grep -vE '^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*="?\$\{?(HOOKS|[A-Z_]*_HOOK)' \
+  | grep -cE '\$\{?(HOOKS[}/]|[A-Z_]*_HOOK|hookcopy)' || true)
 assert_eq "meta: every hook invocation is time-bounded (no bare bash/python3 call)" "0" "$unbounded"
 
 [ "$FAILED" -eq 0 ] && { printf '\nALL PASS\n'; exit 0; } || { printf '\nFAILURES\n'; exit 1; }

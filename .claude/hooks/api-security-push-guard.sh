@@ -45,7 +45,7 @@ elif [ "$DET_RC" -eq 0 ] && [ -n "$CMD" ]; then
       for (i = g + 1; i <= NF; i++) if ($i == "filter-branch") { isfilter = 1; break }
       for (i = g + 1; i <= NF; i++) {
         a = $i
-        if (abbrev(a, df)) { found = 1; break }
+        if (a == "-x" || a == "-u" || abbrev(a, df)) { found = 1; break }
         if (isfilter && abbrev(a, ff)) { found = 1; break }
       }
       skip = 0

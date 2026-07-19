@@ -60,6 +60,13 @@ OPAQUE_WORD = re.compile(r"[$`]")
 ASSIGN_WORD = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 WRAPPER_OPERAND = re.compile(r"^[-0-9]")
 SPLIT_STRING = re.compile(r"^(-S|--split-string=?)")
+# flags whose value IS a shell command, keyed by wrapper
+PAYLOAD_FLAGS = {
+    "flock": {"-c", "--command"},
+    "script": {"-c", "--command"},
+}
+# wrappers whose first non-flag OPERAND is a shell string, not a program
+SHELL_OPERAND_WRAPPERS = {"watch", "parallel"}
 # Flags whose VALUE is a separate word, keyed by wrapper: the same short flag
 # means different things per program (`sudo -n` is boolean, `nice -n` takes a
 # value), and skipping a boolean flag's successor skips the program itself.
@@ -80,7 +87,7 @@ VALUE_FLAGS = {
               "--replace", "--max-lines"},
     "script": {"-F", "-t", "--flush", "--timing"},
     "watch": {"-n", "--interval"},
-    "parallel": {"-j", "-P", "--jobs"},
+    "parallel": {"-j", "-P", "--jobs", "-S", "--sshlogin", "--slf"},
     "time": {"-f", "-o", "--format", "--output"},
     "setsid": set(),
     "nohup": set(),
@@ -298,10 +305,11 @@ def inspect(name, args, depth):
                 if sub:
                     inspect(sub[0], sub[1:], depth)
     if base in WRAPPERS:
-        inspect_wrapper(args, depth)
+        inspect_wrapper(args, depth, base)
 
 
-def inspect_wrapper(args, depth):
+def inspect_wrapper(args, depth, wrapper=None):
+    skip_operand = False
     # a wrapper (env/sudo/...) execs another command bashlex parses as plain
     # word-args, not a nested node; scan those words by presence and re-parse any
     # interpreter payload they carry.
@@ -324,7 +332,19 @@ def inspect_wrapper(args, depth):
             block(PUSH_MSG)
     for i, a in enumerate(args):
         b = os.path.basename(a)
-        if SPLIT_STRING.match(a):
+        if wrapper in PAYLOAD_FLAGS and a in PAYLOAD_FLAGS[wrapper]:
+            if i + 1 < len(args):
+                reparse(args[i + 1], depth)
+            return
+        if wrapper in SHELL_OPERAND_WRAPPERS:
+            if skip_operand:
+                skip_operand = False
+            elif a.startswith("-"):
+                skip_operand = a in VALUE_FLAGS.get(wrapper, ())
+            elif not WRAPPER_OPERAND.match(a):
+                reparse(a, depth)
+                return
+        if wrapper == "env" and SPLIT_STRING.match(a):
             # env -S'...' glues the command to the flag; env -S '...' puts it in
             # the next word, where sub() leaves an empty string and reparse("")
             # is a no-op that used to abandon the whole scan
