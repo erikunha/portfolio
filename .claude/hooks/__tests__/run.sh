@@ -1449,7 +1449,8 @@ done
 for asg_wrapperpayload in 'flock /tmp/l -c "git push origin main"' \
                           'script -c "git push origin main" /dev/null' \
                           'watch -n 1 "git push origin main"' \
-                          'parallel -S host bash -c "git push origin main"'; do
+                          'parallel -S host bash -c "git push origin main"' \
+                          'sudo -S bash -c "git push --force origin main"'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
   (asg_payload "$asg_wrapperpayload" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
@@ -1461,6 +1462,27 @@ done
 # exit 3 for the same inputs, so an asg assertion passes whether or not the
 # payload was ever read — which is how the operand branch shadowed the
 # interpreter branches while the suite stayed green.
+for bg_destructive in 'git push --mirror origin' \
+                      'git push --no-verify --mirror origin' \
+                      'git push --delete origin main' \
+                      'git push -d origin main' \
+                      'git push origin :main' \
+                      'git push --no-verify origin :main'; do
+  assert_eq "bg: a push destroys remote main without --force too: --mirror overwrites every ref (so it carries no ref operand to match on), and --delete/-d/':ref' delete the branch outright. is_force_push matched only the force spellings, so every one of these reached exit 0, and --no-verify skips .husky/pre-push, the only ref-level backstop [$bg_destructive]" "2" "$(bg_exit "$bg_destructive")"
+done
+
+for asg_sep in 'git -C "x
+y" push origin main' "$(printf 'git -C "x\ty" push origin main')"; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_sep" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
+  assert_eq "asg: a word carrying the emit format's own tab/newline separator must not split one DET record into two, which would leave 'git' and 'push' in different awk records and let the push through with a marker pending. Assert on the push-guard, never bg_exit: bash-guard allows a plain push by design, so a bg_exit assertion passes at exit 0 whether or not the record split" "2" "$?"
+  rm -rf "$d"
+done
+
+assert_eq "bg: deleting a NON-main branch is ordinary work — the predicate must key on the ref, not on the deletion" "0" "$(bg_exit 'git push --delete origin feat/x')"
+assert_eq "bg: a feature-branch deletion refspec is allowed for the same reason" "0" "$(bg_exit 'git push origin :feat/x')"
+
 assert_eq "bg: watch bash -c reaches the payload" "2" "$(bg_exit "watch bash -c 'git push --force origin main'")"
 assert_eq "bg: parallel bash -c reaches the payload" "2" "$(bg_exit "parallel bash -c 'git push --force origin main'")"
 assert_eq "bg: watch sh -c reaches the payload" "2" "$(bg_exit "watch sh -c 'npm install'")"

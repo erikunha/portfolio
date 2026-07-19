@@ -42,7 +42,7 @@ MERGE_MSG = (
     "The repo owner may run gh pr merge directly in an external terminal to bypass."
 )
 ADD_MSG = "[BLOCKED] Broad git add detected.\nAGENTS.md: use git add -u or git add <specific files> only."
-PUSH_MSG = "[BLOCKED] Force push to main is not allowed.\nRebase the feature branch onto main and merge via PR instead."
+PUSH_MSG = "[BLOCKED] Destructive push to main is not allowed (force, --mirror, --delete, or a :ref deletion).\nRebase the feature branch onto main and merge via PR instead."
 NEST_MSG = "[BLOCKED] Command nesting too deep to analyze safely."
 
 
@@ -120,6 +120,14 @@ FIND_EXEC_TERMINATORS = (";", "+")
 PROTECTED_BRANCH = "main"
 PROTECTED_REF = f"refs/heads/{PROTECTED_BRANCH}"
 FORCE_FLAGS = ("--force", "-f", "--force-with-lease")
+# --mirror always includes refs/heads/main, so it needs no ref operand to
+# be destructive; --delete/-d and a `:ref` refspec DELETE the remote branch.
+MIRROR_FLAG = "--mirror"
+# the --emit-commands wire format read by api-security-push-guard.sh's awk
+FIELD_SEP = "\t"
+RECORD_SEP = "\n"
+DELETE_FLAGS = ("--delete", "-d")
+DELETE_REFSPEC = ":"
 GIT_ADD_ALIASES = ("add", "stage")
 BROAD_ADD_PATHSPECS = ("-A", "--all", ".", ":/", ":", "*")
 
@@ -208,10 +216,25 @@ def gh_merge_check(args):
             block(MERGE_MSG)
 
 
+def is_destructive_flag(a):
+    return a in DELETE_FLAGS
+
+
+def is_delete_refspec(a):
+    return a.startswith(DELETE_REFSPEC) and main_ref(a)
+
+
 def is_force_push(args):
     if "push" not in args:
         return False
-    forced = any(is_force_flag(a) for a in args) or any(a.startswith("+") and main_ref(a) for a in args)
+    if MIRROR_FLAG in args:
+        return True
+    forced = (
+        any(is_force_flag(a) for a in args)
+        or any(a.startswith("+") and main_ref(a) for a in args)
+        or any(is_destructive_flag(a) for a in args)
+        or any(is_delete_refspec(a) for a in args)
+    )
     return forced and any(main_ref(a) for a in args)
 
 
@@ -540,7 +563,10 @@ def main():
         sys.exit(3)
     if EMIT_MODE:
         for words in EMITTED:
-            sys.stdout.write("\t".join(words) + "\n")
+            if any(RECORD_SEP in w or FIELD_SEP in w for w in words):
+                sys.exit(3)
+        for words in EMITTED:
+            sys.stdout.write(FIELD_SEP.join(words) + RECORD_SEP)
     sys.exit(0)
 
 
