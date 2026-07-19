@@ -24,9 +24,12 @@ except Exception:
 WRAPPERS = {
     "env", "command", "sudo", "doas", "nice", "time", "nohup", "xargs",
     "builtin", "exec", "stdbuf", "setsid", "timeout", "script", "flock",
-    "watch", "parallel", "ionice", "chrt",
+    "watch", "parallel", "ionice", "chrt", "caffeinate", "arch", "xcrun",
 }
-SHELL_INTERP = {"bash", "sh", "zsh", "dash", "ksh", "ash", "mksh", "rbash"}
+SHELL_INTERP = {
+    "bash", "sh", "zsh", "dash", "ksh", "ash", "mksh", "rbash",
+    "fish", "csh", "tcsh",
+}
 OTHER_INTERP = {"python", "python3", "node", "nodejs", "perl", "ruby", "php"}
 MAX_DEPTH = 6
 MAX_CMD_LEN = 100_000
@@ -49,8 +52,9 @@ EMIT_GIT_PROGRAM = re.compile(r"^git(-|$)")
 EXEC_ENV = (
     "EDITOR", "VISUAL", "SSH_ASKPASS", "BASH_ENV", "ENV",
     "PROMPT_COMMAND", "LD_PRELOAD", "DYLD_INSERT_LIBRARIES",
+    "PAGER", "LESSOPEN",
 )
-TRAP_SIGNAL = re.compile(r"^(-|[0-9]+$|SIG|EXIT$|DEBUG$|ERR$|RETURN$)")
+TRAP_SIGNAL = re.compile(r"^(--?[A-Za-z]*|[0-9]+|SIG[A-Z0-9]+|EXIT|DEBUG|ERR|RETURN)$")
 OPAQUE_WORD = re.compile(r"[$`]")
 ASSIGN_RECORD = "#assign"
 
@@ -349,7 +353,9 @@ def main():
         cmd = ""
     if not cmd or not cmd.strip():
         sys.exit(3 if raw.strip() else 0)
-    if bashlex is None or len(cmd) > MAX_CMD_LEN:
+    if bashlex is None:
+        sys.exit(4)
+    if len(cmd) > MAX_CMD_LEN:
         sys.exit(3)
     try:
         trees = bashlex.parse(cmd)

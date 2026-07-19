@@ -24,8 +24,17 @@ if [ "$DET_RC" -eq 3 ] && [ -n "$CMD" ]; then
 elif [ "$DET_RC" -eq 0 ] && [ -n "$CMD" ]; then
   printf '%s\n' "$DET" | awk -F'\t' '
     BEGIN {
-      split("EDITOR VISUAL SSH_ASKPASS BASH_ENV ENV PROMPT_COMMAND LD_PRELOAD DYLD_INSERT_LIBRARIES", e, " ")
+      split("EDITOR VISUAL SSH_ASKPASS BASH_ENV ENV PROMPT_COMMAND LD_PRELOAD DYLD_INSERT_LIBRARIES PAGER LESSOPEN", e, " ")
       for (i in e) EXEC_ENV[e[i]] = 1
+      split("--upload-pack --receive-pack --exec --exec-path --extcmd --template --separate-git-dir --super-prefix --git-dir --work-tree --config-env --tree-filter --index-filter --commit-filter --env-filter --msg-filter --parent-filter --tag-name-filter", df, " ")
+      split("--unset --unset-all --remove-section --rename-section --replace-all --add --edit", cw, " ")
+    }
+    function abbrev(tok, set,   name, i) {
+      name = tok
+      sub(/=.*/, "", name)
+      if (length(name) < 5) return 0
+      for (i in set) if (index(set[i], name) == 1) return 1
+      return 0
     }
     $1 == "#assign" {
       for (i = 2; i <= NF; i++) {
@@ -33,36 +42,36 @@ elif [ "$DET_RC" -eq 0 ] && [ -n "$CMD" ]; then
         if ($i ~ /^GIT_/ || kv[1] ~ /[$`]/ || kv[1] in EXEC_ENV) { found = 1; break }
       }
     }
-    $1 ~ /^git-/ { found = 1 }
-    $1 == "git" && NF == 1 { found = 1 }
-    $1 == "git" {
-      for (i = 2; i <= NF; i++) {
+    $1 != "#assign" {
+      g = 0
+      for (i = 1; i <= NF; i++) if ($i == "git" || $i ~ /^git-/) { g = i; break }
+      if (!g) next
+      if ($g ~ /^git-/ || g == NF) { found = 1; next }
+      for (i = g + 1; i <= NF; i++) {
         a = $i
-        if (a ~ /^--upload-pack/ || a ~ /^--receive-pack/ || a ~ /^--exec/ ||
-            a ~ /^--extcmd/ || a ~ /^--template/ || a ~ /^--separate-git-dir/ ||
-            a ~ /^--super-prefix/ || a ~ /^--git-dir/ || a ~ /^--work-tree/ ||
-            a ~ /^-c/ || a ~ /^--config-env/) { found = 1; break }
+        if (abbrev(a, df)) { found = 1; break }
       }
       skip = 0
-      for (i = 2; i <= NF && !found; i++) {
+      for (i = g + 1; i <= NF && !found; i++) {
         a = $i
         if (skip) { skip = 0; continue }
         if (a ~ /^-/) {
+          if (a ~ /^-c/ || abbrev(a, df)) { found = 1; break }
           if (a == "-C" || a == "--namespace") skip = 1
           continue
         }
         if (a ~ /[$`]/) { found = 1; break }
-        if (a == "push") { found = 1; break }
+        if (a == "push" || a == "send-pack" || a == "http-push") { found = 1; break }
         if (a == "config") {
           operands = 0
           for (j = i + 1; j <= NF; j++) {
-            if ($j ~ /^--(unset|remove-section|rename-section|replace-all|add|edit)/) found = 1
+            if (abbrev($j, cw)) found = 1
             else if ($j !~ /^-/) operands++
           }
           if (operands >= 2) found = 1
           break
         }
-        if (a == "subtree") continue
+        if (a == "subtree" || a == "svn" || a == "p4") continue
         break
       }
     }

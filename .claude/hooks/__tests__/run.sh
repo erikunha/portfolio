@@ -919,6 +919,73 @@ for asg_undecidable in 'python3 -c "import os;os.system('"'"'gi'"'"'+'"'"'t push
   rm -rf "$d"
 done
 
+# Exit 3 (the walk read the command and could not decide) and "there is no walk"
+# are different verdicts. Conflating them made a missing vendor/bashlex block
+# EVERY command, including the documented rm-the-marker escape, which turns a
+# broken checkout into a session nothing can recover.
+asg_noparser() {
+  local d hookcopy rc
+  d=$(asg_mkroot)
+  mkdir -p "$d/hooks"
+  cp "$HOOKS/api-security-push-guard.sh" "$d/hooks/"
+  cp "$HOOKS/bash-guard-detect.py" "$d/hooks/"
+  # deliberately no vendor/ — bash-guard-detect.py cannot import bashlex here
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  hookcopy="$d/hooks/api-security-push-guard.sh"
+  (asg_payload "$1" "$d/t.jsonl" | ( cd "$d" && bash "$hookcopy" )) >/dev/null 2>&1
+  rc=$?
+  assert_eq "asg: parser absent — $2 [$1]" "$3" "$rc"
+  rm -rf "$d"
+}
+asg_noparser 'rm .claude/.api-edit-pending' 'the documented escape must survive' '0'
+asg_noparser 'rm -f .claude/.api-edit-pending' 'the documented escape must survive' '0'
+asg_noparser 'ls -la' 'ordinary work must survive' '0'
+asg_noparser 'git push origin main' 'containment still catches both tokens' '2'
+
+# git accepts any UNAMBIGUOUS PREFIX of a long option, so matching the full
+# spelling is the wrong direction. --remove-s deletes core.hooksPath exactly as
+# --remove-section does, and --unset survived only because --uns is ambiguous
+# with --unset-all, which is luck, not a predicate.
+for asg_abbrev in 'git ls-remote --upload-pa="sh -c evil" ../src' \
+                  'git fetch --upload-p="sh -c evil" ../src' \
+                  'git send-pack --receive-pa="sh -c evil" ../src' \
+                  'git send-pack --receive-pack="sh -c evil" ../src' \
+                  'git config --remove-s core' \
+                  'git config --unset-a core.hooksPath' \
+                  'git difftool --extc="sh -c evil" a b' \
+                  'git filter-branch --tree-filter "sh -c evil" HEAD'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_abbrev" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: an abbreviated long option blocks like its full spelling [$asg_abbrev]" "2" "$?"
+  rm -rf "$d"
+done
+
+# -c is a TOP-LEVEL config flag. Screening it record-wide blocked routine branch
+# creation, which is the shape that trains bypass on the guard you most need.
+for asg_dashc_ok in 'git switch -c feat/x' \
+                    'git commit -c HEAD' \
+                    'git branch -c old new' \
+                    'git checkout -b feat/y' \
+                    'git show -c HEAD'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_dashc_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a subcommand short option is not config injection [$asg_dashc_ok]" "0" "$?"
+  rm -rf "$d"
+done
+
+# ...but a TOP-LEVEL -c still is, in every spelling.
+for asg_dashc_block in 'git -c core.hooksPath=/tmp/h commit -m x' \
+                       'git -ccore.hooksPath=/tmp/h commit -m x' \
+                       'git -c alias.z=push z origin main'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_dashc_block" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a top-level -c is still config injection [$asg_dashc_block]" "2" "$?"
+  rm -rf "$d"
+done
+
 # Ordinary environment work is not git configuration.
 for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
   d=$(asg_mkroot)
