@@ -1037,22 +1037,6 @@ for asg_cfglong in 'git clone --config core.hooksPath=/tmp/evil . dst' \
   rm -rf "$d"
 done
 
-# clone/init document --config as the long form of -c. It blocked before this
-# test existed, but only as a string-prefix of --config-env, which is an
-# accident of spelling rather than a decision — and accidents do not survive
-# the next edit to the list.
-for asg_cfglong in 'git clone --config core.hooksPath=/tmp/evil . dst' \
-                   'git clone --config=core.hooksPath=/tmp/evil . dst' \
-                   'git init --config core.hooksPath=/tmp/evil' \
-                   'git clone --conf core.hooksPath=/tmp/evil . dst' \
-                   'git submodule add --config core.hooksPath=/tmp/evil url path'; do
-  d=$(asg_mkroot)
-  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
-  (asg_payload "$asg_cfglong" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
-  assert_eq "asg: --config is the long form of -c and blocks like it [$asg_cfglong]" "2" "$?"
-  rm -rf "$d"
-done
-
 # A wrapper flag that takes a SEPARATE-WORD argument derails positional
 # resolution: `env -u HOME sh -c ...` skips -u, then treats HOME as the program
 # and stops before the interpreter rules ever run. Interpreters are screened by
