@@ -1386,6 +1386,39 @@ for asg_fbsetup in 'git filter-branch --setup "git push origin main" -- HEAD' \
   rm -rf "$d"
 done
 
+# -u and -x are only --upload-pack / --exec for specific subcommands. Screening
+# them globally blocked `git add -u` — the staging spelling CLAUDE.md mandates —
+# and every marker-pending window is exactly when API work is happening.
+for asg_shortflag_ok in 'git add -u' 'git add -u lib/foo.ts' 'git diff -u' \
+                        'git log -u' 'git stash -u' 'git clean -x -n'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_shortflag_ok" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
+  assert_eq "asg: a short flag is not --exec outside its subcommand [$asg_shortflag_ok]" "0" "$?"
+  rm -rf "$d"
+done
+
+# ...but they ARE exec/upload-pack where git says they are.
+for asg_shortflag_block in 'git fetch -u ./up .' 'git rebase -x "git push" HEAD~1'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_shortflag_block" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
+  assert_eq "asg: -u/-x block in the subcommands that exec [$asg_shortflag_block]" "2" "$?"
+  rm -rf "$d"
+done
+
+# A nested wrapper rebinds the flag tables: -S is env's meaning, not sudo's.
+for asg_nestwrap in 'sudo env -S "git push origin main"' \
+                    'nice env -S "git push origin main"' \
+                    'watch bash -c "git push origin main"' \
+                    'parallel sh -c "git push origin main"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_nestwrap" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
+  assert_eq "asg: a nested wrapper rebinds the flag tables [$asg_nestwrap]" "2" "$?"
+  rm -rf "$d"
+done
+
 # Ordinary environment work is not git configuration.
 for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
   d=$(asg_mkroot)

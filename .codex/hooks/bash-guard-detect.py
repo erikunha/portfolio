@@ -332,6 +332,11 @@ def inspect_wrapper(args, depth, wrapper=None):
             block(PUSH_MSG)
     for i, a in enumerate(args):
         b = os.path.basename(a)
+        if b in WRAPPERS:
+            # a nested wrapper rebinds the tables: `sudo env -S ...` must read
+            # -S as env's, not sudo's
+            inspect_wrapper(list(args[i + 1:]), depth, b)
+            return
         if wrapper in PAYLOAD_FLAGS and a in PAYLOAD_FLAGS[wrapper]:
             if i + 1 < len(args):
                 reparse(args[i + 1], depth)

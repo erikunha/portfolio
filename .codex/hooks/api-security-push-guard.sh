@@ -43,9 +43,16 @@ elif [ "$DET_RC" -eq 0 ] && [ -n "$CMD" ]; then
       if ($g ~ /^git-/) continue
       isfilter = 0
       for (i = g + 1; i <= NF; i++) if ($i == "filter-branch") { isfilter = 1; break }
+      subcmd = ""
+      for (i = g + 1; i <= NF; i++) if ($i !~ /^-/) { subcmd = $i; break }
       for (i = g + 1; i <= NF; i++) {
         a = $i
-        if (a == "-x" || a == "-u" || abbrev(a, df)) { found = 1; break }
+        if (abbrev(a, df)) { found = 1; break }
+        # -u is --upload-pack only for the transports, -x is --exec only for
+        # rebase/difftool. Globally they are `git add -u`, `git diff -u`,
+        # `git log -u`, `git stash -u`, `git clean -x` — all routine.
+        if (a == "-u" && subcmd ~ /^(fetch|clone|pull|ls-remote|archive)$/) { found = 1; break }
+        if (a == "-x" && subcmd ~ /^(rebase|difftool|mergetool)$/) { found = 1; break }
         if (isfilter && abbrev(a, ff)) { found = 1; break }
       }
       skip = 0
