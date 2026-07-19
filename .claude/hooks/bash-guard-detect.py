@@ -58,7 +58,7 @@ EXEC_ENV_SHAPE = re.compile(r"^(BASH_FUNC_.*%%|LD_[A-Z_]+|DYLD_[A-Z_]+)$")
 TRAP_SIGNAL = re.compile(r"^(--?[A-Za-z]*|[0-9]+|SIG[A-Z0-9]+|EXIT|DEBUG|ERR|RETURN)$")
 OPAQUE_WORD = re.compile(r"[$`]")
 ASSIGN_WORD = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
-WRAPPER_OPERAND = re.compile(r"^(-|[0-9]+[a-z]?$)")
+WRAPPER_OPERAND = re.compile(r"^[-0-9]")
 SPLIT_STRING = re.compile(r"^(-S|--split-string=?)")
 # Flags whose VALUE is a separate word, keyed by wrapper: the same short flag
 # means different things per program (`sudo -n` is boolean, `nice -n` takes a
@@ -325,12 +325,18 @@ def inspect_wrapper(args, depth):
         break
 
 
+_candidate_budget = [512]
+
+
 def resolve_programs(words):
     """Every index a wrapper chain could plausibly exec, nearest first.
 
     The flag table is an allowlist that cannot be complete, and every gap in it
     fails OPEN, so an ambiguous flag yields BOTH readings rather than a guess.
     """
+    if _candidate_budget[0] <= 0:
+        return []
+    _candidate_budget[0] -= 1
     out = []
     i = 0
     wrapper = None

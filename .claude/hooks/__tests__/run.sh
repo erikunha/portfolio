@@ -1277,6 +1277,38 @@ for asg_attached_ok in 'stdbuf -oL grep bash file' \
   rm -rf "$d"
 done
 
+# The candidate widening is exponential in consecutive ambiguous flags —
+# 2^k, so a ~175-character command hangs the hook and MAX_CMD_LEN (100k) bounds
+# nothing, since the cost grows with the SHAPE of the input, not its length.
+# A budget bounds it the way reparse already bounds its own recursion.
+asg_dos="env -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 bash <<< \"git push origin main\""
+d=$(asg_mkroot)
+printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+asg_t0=$(date +%s)
+(asg_payload "$asg_dos" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+asg_rc=$?
+asg_t1=$(date +%s)
+assert_eq "asg: an exponential candidate payload still blocks" "2" "$asg_rc"
+if [ $((asg_t1 - asg_t0)) -lt 10 ]; then
+  pass "asg: ...and returns bounded, not in exponential time"
+else
+  fail "asg: exponential payload took $((asg_t1 - asg_t0))s — the candidate budget is not holding"
+fi
+rm -rf "$d"
+
+# timeout takes 5, 1.5, 0.5s and 2h30m. Enumerating duration SHAPES loses the
+# same way enumerating flags did, so any digit-leading token is an operand.
+for asg_duration in 'timeout 1.5 bash <<< \"git push origin main\"' \
+                    'timeout 0.5s bash <<< \"git push origin main\"' \
+                    'timeout 2h30m bash <<< \"git push origin main\"' \
+                    'timeout 5 bash <<< \"git push origin main\"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_duration" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a duration operand must not end resolution [$asg_duration]" "2" "$?"
+  rm -rf "$d"
+done
+
 # Ordinary environment work is not git configuration.
 for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
   d=$(asg_mkroot)
