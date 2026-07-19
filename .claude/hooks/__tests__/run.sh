@@ -1524,6 +1524,17 @@ for bg_pipedheredoc in 'sh' 'bash' 'zsh' 'sudo sh'; do
 done
 assert_eq "bg: the unquoted spelling of the same pipe — open even before the delimiter fix — is closed too" "2" "$(bg_exit "$(printf 'cat <<EOF | sh\ngit push --force origin main\nEOF')")"
 
+# A shell owning its OWN here-doc while mid-pipeline is reachable by BOTH
+# visitpipeline and visitcommand's self-check. Emitting the record twice is not a
+# bypass (the awk consumer is OR-semantics) but it double-charges the reparse
+# budget, so a crafted command reaches the nesting block ~2x sooner.
+det_dbl=$(printf "sh <<'EOF' | cat\ngit status\nEOF")
+det_dbl_n=$(python3 -c 'import json,sys; print(json.dumps({"tool_input":{"command": sys.argv[1]}}))' "$det_dbl" \
+  | run_py "$HOOKS/bash-guard-detect.py" --emit-commands 2>/dev/null | grep -c "^git")
+assert_eq "det: a here-doc owned by a mid-pipeline shell is reparsed ONCE — visitpipeline must skip the part visitcommand already covers" "1" "$det_dbl_n"
+
+assert_eq "bg: and that shape still blocks a destructive payload" "2" "$(bg_exit "$(printf "sh <<'EOF' | cat\ngit push --force origin main\nEOF")")"
+
 for bg_pipedinert in 'tee /tmp/f' 'grep x' 'wc -l'; do
   assert_eq "bg: piping a here-doc into a NON-shell still executes nothing [| $bg_pipedinert]" "0" "$(bg_exit "$(printf "cat <<'EOF' | %s\ngit push --force origin main\nEOF" "$bg_pipedinert")")"
 done

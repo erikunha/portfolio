@@ -587,6 +587,12 @@ if bashlex is not None:
             if not any(pipeline_feeds_shell(p) for p in parts):
                 return
             for p in parts:
+                # a shell owning its OWN here-doc is already covered by
+                # visitcommand, which the base visitor runs on every child after
+                # this; reparsing it here too would double-charge the budget and
+                # emit the record twice
+                if pipeline_feeds_shell(p):
+                    continue
                 for body in heredoc_bodies(getattr(p, "parts", []) or []):
                     reparse(body, self.depth)
 
