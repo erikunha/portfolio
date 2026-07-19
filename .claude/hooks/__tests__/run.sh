@@ -1359,6 +1359,33 @@ for asg_starve2 in 'env -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 -a A=1 
   rm -rf "$d"
 done
 
+# env -S takes the command ATTACHED or in the next word. Only the attached form
+# was covered, and the separated form did worse than miss: sub() left an empty
+# payload, reparse("") was a no-op, and the branch returned — abandoning the
+# whole wrapper scan.
+for asg_splitsep in 'env -S "git push origin main"' \
+                    'env --split-string "git push origin main"' \
+                    'env -S"git push origin main"' \
+                    'env --split-string="git push origin main"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_splitsep" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
+  assert_eq "asg: env -S blocks attached AND separated [$asg_splitsep]" "2" "$?"
+  rm -rf "$d"
+done
+
+# filter-branch --setup runs its argument through sh once before the loop, the
+# same execution class as the seven *-filter options the family already covers.
+for asg_fbsetup in 'git filter-branch --setup "git push origin main" -- HEAD' \
+                   'git filter-branch --setup "sh -c evil" HEAD' \
+                   'git filter-branch --setu "sh -c evil" HEAD'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_fbsetup" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1
+  assert_eq "asg: filter-branch --setup executes shell, so it blocks [$asg_fbsetup]" "2" "$?"
+  rm -rf "$d"
+done
+
 # Ordinary environment work is not git configuration.
 for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
   d=$(asg_mkroot)

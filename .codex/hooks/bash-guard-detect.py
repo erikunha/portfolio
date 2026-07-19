@@ -325,8 +325,13 @@ def inspect_wrapper(args, depth):
     for i, a in enumerate(args):
         b = os.path.basename(a)
         if SPLIT_STRING.match(a):
-            # env -S'...' / --split-string='...' glues a whole command to the flag
-            reparse(SPLIT_STRING.sub("", a, count=1), depth)
+            # env -S'...' glues the command to the flag; env -S '...' puts it in
+            # the next word, where sub() leaves an empty string and reparse("")
+            # is a no-op that used to abandon the whole scan
+            payload = SPLIT_STRING.sub("", a, count=1)
+            if not payload and i + 1 < len(args):
+                payload = args[i + 1]
+            reparse(payload, depth)
             return
         if b == PROG_EVAL:
             reparse(" ".join(args[i + 1:]), depth)
