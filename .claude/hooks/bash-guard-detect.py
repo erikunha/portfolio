@@ -122,7 +122,11 @@ FIND_EXEC_TERMINATORS = (";", "+")
 # git policy vocabularies
 PROTECTED_BRANCH = "main"
 PROTECTED_REF = f"refs/heads/{PROTECTED_BRANCH}"
-FORCE_FLAGS = ("--force", "-f", "--force-with-lease")
+FORCE_LONG_FLAGS = ("--force", "--force-with-lease", "--force-if-includes")
+FORCE_SHORT_CLUSTER = re.compile(r"-[A-Za-z]*f[A-Za-z]*")
+# short flags whose VALUE may be attached (-odeploy), so the letters after them
+# are a value, not a cluster: --push-option's value must not read as -d
+GIT_PUSH_VALUE_SHORT_FLAGS = ("-o",)
 # git's parse-options accepts any UNAMBIGUOUS long-option prefix, so --mir runs
 # --mirror and --del runs --delete; short options bundle, so -dq is -d. 3 is the
 # shortest prefix honoured — shorter over-blocks, which is the safe direction.
@@ -196,11 +200,9 @@ def git_add_broad(operands):
 
 
 def is_force_flag(a):
-    if a in FORCE_FLAGS:
+    if any(long_flag(a, f) for f in FORCE_LONG_FLAGS):
         return True
-    if a.startswith("--force-with-lease") or a.startswith("--force="):
-        return True
-    return bool(re.fullmatch(r"-[A-Za-z]*f[A-Za-z]*", a)) and not a.startswith("--")
+    return bool(FORCE_SHORT_CLUSTER.fullmatch(a)) and not a.startswith("--")
 
 
 def git_add_check(args):
@@ -235,9 +237,15 @@ def long_flag(a, full):
     )
 
 
+def attached_value_flag(a):
+    return any(a.startswith(f) and len(a) > len(f) for f in GIT_PUSH_VALUE_SHORT_FLAGS)
+
+
 def is_destructive_flag(a):
     if long_flag(a, DELETE_LONG_FLAG):
         return True
+    if attached_value_flag(a):
+        return False
     return bool(DELETE_SHORT_CLUSTER.fullmatch(a)) and not a.startswith("--")
 
 

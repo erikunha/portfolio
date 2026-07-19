@@ -1477,6 +1477,27 @@ done
 assert_eq "bg: a bare numeric operand is still an operand, not a payload" "0" "$(bg_exit 'watch -n 1 date')"
 assert_eq "bg: parallel's numeric arg list is still allowed" "0" "$(bg_exit 'parallel echo ::: 1 2 3')"
 
+for bg_forceabbrev in 'git push --force-w origin main' \
+                      'git push --force-wi origin main' \
+                      'git push --force-i origin main' \
+                      'git push --force-if-includes origin main' \
+                      'git push --force-w=main origin main' \
+                      'git push --force-w --all origin'; do
+  assert_eq "bg: the FORCE family needs the same prefix matching as delete/mirror/all — d916e44 converted those three by MIRRORING is_force_flag's structure while is_force_flag was itself the broken instance, so --force-w (an unambiguous prefix of --force-with-lease) and --force-if-includes walked past [$bg_forceabbrev]" "2" "$(bg_exit "$bg_forceabbrev")"
+done
+
+assert_eq "bg: --push-option's value may be ATTACHED, so the letters after -o are a value and must not read as a -d cluster" "0" "$(bg_exit 'git push -odeploy origin main')"
+assert_eq "bg: the spaced form of the same flag was already correct" "0" "$(bg_exit 'git push -o deploy origin main')"
+
+# DELIBERATE ALLOW, not a gap. Review round 4 called a ref-less forced push a
+# Critical; it is the recorded 2026-06-17 calibration (CLAUDE.md: key on "a ref
+# targets main", not "standing on main"). .husky/pre-push:21-23 covers it at the
+# ref level, where git's RESOLVED refspecs are visible. Blocking it here would
+# break this repo's own mandated flow — review-convergence rebases before every
+# push, which forces a force-push of the feature branch afterward.
+assert_eq "bg: a ref-less forced push stays allowed — force-pushing a feature branch after the mandated rebase is the normal path, and .husky/pre-push owns the standing-on-main case by resolved ref" "0" "$(bg_exit 'git push --force')"
+assert_eq "bg: same for the short spelling" "0" "$(bg_exit 'git push -f')"
+
 for bg_abbrev in 'git push --mir origin' \
                  'git push --mirr origin' \
                  'git push --del origin main' \
