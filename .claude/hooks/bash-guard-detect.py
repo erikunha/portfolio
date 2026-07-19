@@ -181,6 +181,10 @@ def inspect(name, args, depth):
     script = interp_script(base, args)
     if script is not None:
         reparse(script, depth)
+    if EMIT_MODE and base in ("export", "declare", "typeset", "local", "readonly"):
+        env_words = [a for a in args if a.startswith("GIT_")]
+        if env_words:
+            EMITTED.append([ASSIGN_RECORD] + env_words)
     if base == "xargs" and EMIT_MODE and any(
         a == "-I" or a.startswith("-I") or a.startswith("--replace") for a in args
     ):
@@ -218,6 +222,9 @@ def inspect_wrapper(args, depth):
     # interpreter payload they carry.
     bases = [os.path.basename(a) for a in args]
     if EMIT_MODE:
+        env_assigns = [a for a in args if a.startswith("GIT_")]
+        if env_assigns:
+            EMITTED.append([ASSIGN_RECORD] + env_assigns)
         for i, b in enumerate(bases):
             if b in EMIT_PROGRAMS:
                 EMITTED.append([b] + list(args[i + 1:]))

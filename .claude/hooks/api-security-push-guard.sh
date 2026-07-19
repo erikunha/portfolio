@@ -21,7 +21,7 @@ DET=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/bash-guard-detect.py" --emit-com
 if [ $? -eq 0 ] && [ -n "$CMD" ]; then
   printf '%s\n' "$DET" | awk -F'\t' '
     $1 == "#assign" {
-      for (i = 2; i <= NF; i++) if ($i ~ /^GIT_CONFIG/) { found = 1; break }
+      for (i = 2; i <= NF; i++) if ($i ~ /^GIT_/) { found = 1; break }
     }
     $1 == "git-push" { found = 1 }
     $1 == "git" && NF == 1 { found = 1 }
@@ -31,15 +31,21 @@ if [ $? -eq 0 ] && [ -n "$CMD" ]; then
         a = $i
         if (skip) { skip = 0; continue }
         if (a ~ /^-/) {
-          if (a ~ /^-c/ || a ~ /^--config-env/) { found = 1; break }
-          else if (a == "-C" || a == "--git-dir" || a == "--work-tree" \
-              || a == "--namespace" || a == "--exec-path" \
-              || a == "--super-prefix") skip = 1
+          if (a == "-c" || a ~ /^--config-env/) { found = 1; break }
+          else if (a ~ /^-C$/ || a ~ /^--git-dir/ || a ~ /^--work-tree/) { found = 1; break }
+          else if (a ~ /^--exec-path/ || a ~ /^--super-prefix/) { found = 1; break }
+          else if (a == "--namespace") skip = 1
           if (a ~ /alias\./ || tolower(a) ~ /core\.hookspath/) { found = 1; break }
           continue
         }
         if (a ~ /[$`]/) { found = 1; break }
         if (a == "push") { found = 1; break }
+        if (a == "config") {
+          operands = 0
+          for (j = i + 1; j <= NF; j++) if ($j !~ /^-/) operands++
+          if (operands >= 2) found = 1
+          break
+        }
         if (a == "subtree") continue
         break
       }

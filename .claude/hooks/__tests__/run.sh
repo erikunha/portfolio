@@ -767,7 +767,7 @@ printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api
 assert_eq "asg: naming core.hooksPath in prose is not redirecting it" "0" "$?"
 rm -rf "$d"
 
-for asg_cfg_ok in 'git -C $DIR status' 'git --git-dir=$D log' 'git --work-tree /t status' 'PATH=/x:$PATH make build'; do
+for asg_cfg_ok in 'git --namespace n status' 'PATH=/x:$PATH make build' 'env FOO=bar git status' 'git config --list'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
   (asg_payload "$asg_cfg_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
@@ -780,6 +780,61 @@ done
 # enumerating the dangerous ones is an open set. While a marker is pending, any
 # config injection blocks — including the env-var spelling, which bashlex parses
 # as assignment nodes that never reach the command's word list.
+# git config the SUBCOMMAND persists into every later command, so the follow-up
+# needs no suspicious flag at all; and --git-dir/-C/--work-tree point git at a
+# different repo whose .git/config an earlier, separately-innocuous write control.
+# The property, stated once: while a marker pends, a git invocation must not gain
+# configuration or execution it would not otherwise have. These are the NO-ARTIFACT
+# spellings — one Bash call, nothing written to disk, nothing else in the transcript.
+for asg_noartifact in 'GIT_SSH_COMMAND="sh -c evil" git fetch origin' \
+                      'GIT_EDITOR="sh -c evil" git commit' \
+                      'GIT_EXTERNAL_DIFF="sh -c evil" git diff' \
+                      'GIT_PAGER="sh -c evil" git log' \
+                      'GIT_ASKPASS="sh -c evil" git fetch' \
+                      'export GIT_CONFIG_KEY_0=alias.z GIT_CONFIG_VALUE_0=push GIT_CONFIG_COUNT=1' \
+                      'git --exec-path=/tmp/evil foo' \
+                      'git --super-prefix=/tmp/evil status'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_noartifact" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: no-artifact execution vector blocks [$asg_noartifact]" "2" "$?"
+  rm -rf "$d"
+done
+
+# Ordinary environment work is not git configuration.
+for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_env_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a non-git assignment is not config injection [$asg_env_ok]" "0" "$?"
+  rm -rf "$d"
+done
+
+for asg_persist in 'git config core.hooksPath /tmp/h' \
+                   'git config --local core.hooksPath /tmp/h' \
+                   'git config alias.z "push origin main"' \
+                   'git config --add alias.z push' \
+                   'git --git-dir=/tmp/evil/.git status' \
+                   'git --git-dir /tmp/evil/.git fetch' \
+                   'git -C /tmp/evil status' \
+                   'git --work-tree=/tmp/evil status' \
+                   'env GIT_CONFIG_KEY_0=alias.foo GIT_CONFIG_VALUE_0=push GIT_CONFIG_COUNT=1 git foo'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_persist" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: persistent or redirected config blocks [$asg_persist]" "2" "$?"
+  rm -rf "$d"
+done
+
+# Reading config is not writing it.
+for asg_cfgread in 'git config --get remote.origin.url' 'git config --list' 'git config user.name' 'git config --unset core.hooksPath'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_cfgread" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: reading config stays allowed [$asg_cfgread]" "0" "$?"
+  rm -rf "$d"
+done
+
 for asg_cfginj in 'git -c $CFG' \
                   'git -c user.name=x commit -m y' \
                   'git -c include.path=/tmp/x.cfg commit -m wip' \
