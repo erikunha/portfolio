@@ -1520,7 +1520,7 @@ done
 # spelling off the coarse text scan (which caught it by accident) onto the AST
 # path, where the blind spot lived — a false allow opened by closing a false block.
 for bg_pipedheredoc in 'sh' 'bash' 'zsh' 'sudo sh'; do
-  assert_eq "asg-class: a here-doc piped into a shell runs its body, and the shell being a PIPELINE SIBLING rather than the heredoc's own command must not hide it [| $bg_pipedheredoc]" "2" "$(bg_exit "$(printf "cat <<'EOF' | %s\ngit push --force origin main\nEOF" "$bg_pipedheredoc")")"
+  assert_eq "bg: a here-doc piped into a shell runs its body, and the shell being a PIPELINE SIBLING rather than the heredoc's own command must not hide it [| $bg_pipedheredoc]" "2" "$(bg_exit "$(printf "cat <<'EOF' | %s\ngit push --force origin main\nEOF" "$bg_pipedheredoc")")"
 done
 assert_eq "bg: the unquoted spelling of the same pipe — open even before the delimiter fix — is closed too" "2" "$(bg_exit "$(printf 'cat <<EOF | sh\ngit push --force origin main\nEOF')")"
 
@@ -1534,6 +1534,7 @@ det_dbl_n=$(python3 -c 'import json,sys; print(json.dumps({"tool_input":{"comman
 assert_eq "det: a here-doc owned by a mid-pipeline shell is reparsed ONCE — visitpipeline must skip the part visitcommand already covers" "1" "$det_dbl_n"
 
 assert_eq "bg: and that shape still blocks a destructive payload" "2" "$(bg_exit "$(printf "sh <<'EOF' | cat\ngit push --force origin main\nEOF")")"
+
 
 for bg_pipedinert in 'tee /tmp/f' 'grep x' 'wc -l'; do
   assert_eq "bg: piping a here-doc into a NON-shell still executes nothing [| $bg_pipedinert]" "0" "$(bg_exit "$(printf "cat <<'EOF' | %s\ngit push --force origin main\nEOF" "$bg_pipedinert")")"
