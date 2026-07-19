@@ -1478,7 +1478,9 @@ assert_eq "bg: ordinary parallel is untouched" "0" "$(bg_exit "parallel echo :::
 for asg_opaqueprog in 'sudo $G origin main' \
                       'env $CMD origin main' \
                       'nice $CMD origin main' \
-                      'timeout 5 $CMD origin main'; do
+                      'timeout 5 $CMD origin main' \
+                      'sudo $P/g origin main' \
+                      'env $D/x push'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
   (asg_payload "$asg_opaqueprog" "$d/t.jsonl" | ( cd "$d" && asg_hook )) >/dev/null 2>&1

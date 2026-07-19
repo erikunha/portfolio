@@ -258,7 +258,7 @@ def inspect(name, args, depth):
     # guards words[0], but a wrapper displaces position 0 (`sudo $G origin
     # main`), and that case used to be caught only as a side effect of
     # is_config_assign treating a word with no `=` as an assignment name.
-    if EMIT_MODE and OPAQUE_WORD.search(base):
+    if EMIT_MODE and OPAQUE_WORD.search(name):
         sys.exit(3)
     if EMIT_MODE:
         EMITTED.append([base] + list(args))
