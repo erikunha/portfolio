@@ -1134,6 +1134,42 @@ for asg_barefunc in 'BASH_FUNC_ls%%="() { git push origin main; }" bash -c ls' \
   rm -rf "$d"
 done
 
+# Resolution must be POSITIONAL, not by presence. Presence matching failed both
+# ways on one line: an interpreter NAME in an operand slot shadowed the real
+# shell that followed it, and an interpreter name as a plain argument blocked a
+# grep. `env -u` takes an attacker-chosen variable name, so the under-block had
+# no precondition at all — the previous fix closed every name EXCEPT the one an
+# attacker picks freely.
+for asg_operandshadow in 'env -u node bash <<< "git push origin main"' \
+                         'env -u python3 bash <<< "git push origin main"' \
+                         'env -u perl sh <<< "git push"' \
+                         'sudo -u ruby bash <<< "git push origin main"' \
+                         'env -u php bash <<< "git push"' \
+                         'env -u HOME bash <<< "git push origin main"' \
+                         'sudo -u me bash'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_operandshadow" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: an operand must not shadow the program [$asg_operandshadow]" "2" "$?"
+  rm -rf "$d"
+done
+
+# ...and the same rule the other way: an interpreter name that is only an
+# ARGUMENT is not an interpreter invocation. Grepping the hooks for `bash` is
+# the workflow on this very branch.
+for asg_interpword_ok in 'grep -rn bash .claude/hooks/' \
+                         'grep -rn sh scripts/' \
+                         'rg --files-with-matches bash .claude' \
+                         'ls -la /bin/bash' \
+                         'which bash' \
+                         'cat /etc/shells'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_interpword_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: an interpreter name as an argument is not an invocation [$asg_interpword_ok]" "0" "$?"
+  rm -rf "$d"
+done
+
 # Ordinary environment work is not git configuration.
 for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
   d=$(asg_mkroot)

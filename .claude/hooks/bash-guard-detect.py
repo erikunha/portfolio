@@ -261,14 +261,6 @@ def inspect_wrapper(args, depth):
             if EMIT_GIT_PROGRAM.match(b):
                 EMITTED.append([b] + list(args[i + 1:]))
                 break
-    target = 0
-    for i, a in enumerate(args):
-        if os.path.basename(a) in WRAPPERS or ASSIGN_WORD.match(a) or WRAPPER_OPERAND.match(a):
-            continue
-        target = i
-        break
-    bases = bases[target:]
-    args = list(args[target:])
     if "npm" in bases or "yarn" in bases or "yarnpkg" in bases:
         block(NPM_MSG)
     gh_merge_check(args)
@@ -291,8 +283,6 @@ def inspect_wrapper(args, depth):
             j = dash_c_index(sub)
             if j >= 0 and j + 1 < len(sub):
                 reparse(sub[j + 1], depth)
-            elif EMIT_MODE:
-                sys.exit(3)
             return
         if b in OTHER_INTERP:
             inspect(a, list(args[i + 1:]), depth)
@@ -304,21 +294,34 @@ def inspect_wrapper(args, depth):
         break
 
 
+def resolve_program(words):
+    """Index of the word a wrapper chain actually execs, or -1."""
+    i = 0
+    while i < len(words):
+        w = words[i]
+        b = os.path.basename(w)
+        if b in WRAPPERS or ASSIGN_WORD.match(w):
+            i += 1
+            continue
+        if w.startswith("-"):
+            # a flag may take the next word as its operand; skipping it can only
+            # move resolution forward, never onto an argument of the program
+            i += 2 if "=" not in w else 1
+            continue
+        if WRAPPER_OPERAND.match(w):
+            i += 1
+            continue
+        return i
+    return -1
+
+
 def effective_program(words):
     # the real program a command runs, after skipping leading wrapper words
     # (env/sudo/...) and VAR=val assignments. Matches how inspect_wrapper resolves
     # the target, so a here-doc/here-string body feeding `/bin/sh`, `sudo bash`, or
     # `VAR=1 sh` is recognized as shell input the same way inspect() basenames names.
-    for w in words:
-        b = os.path.basename(w)
-        if b in SHELL_INTERP or b in OTHER_INTERP:
-            return b
-    for w in words:
-        b = os.path.basename(w)
-        if b in WRAPPERS or ASSIGN_WORD.match(w) or WRAPPER_OPERAND.match(w):
-            continue
-        return b
-    return None
+    i = resolve_program(words)
+    return os.path.basename(words[i]) if i >= 0 else None
 
 
 def reparse(script, depth):
