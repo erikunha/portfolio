@@ -46,6 +46,11 @@ NEST_MSG = "[BLOCKED] Command nesting too deep to analyze safely."
 EMIT_MODE = False
 EMITTED = []
 EMIT_GIT_PROGRAM = re.compile(r"^git(-|$)")
+EXEC_ENV = (
+    "EDITOR", "VISUAL", "SSH_ASKPASS", "BASH_ENV", "ENV",
+    "PROMPT_COMMAND", "LD_PRELOAD", "DYLD_INSERT_LIBRARIES",
+)
+TRAP_SIGNAL = re.compile(r"^(-|[0-9]+$|SIG|EXIT$|DEBUG$|ERR$|RETURN$)")
 OPAQUE_WORD = re.compile(r"[$`]")
 ASSIGN_RECORD = "#assign"
 
@@ -164,6 +169,15 @@ def interp_script(name, args):
     return None
 
 
+def is_config_assign(word):
+    name = word.split("=")[0]
+    return (
+        word.startswith("GIT_")
+        or name in EXEC_ENV
+        or bool(OPAQUE_WORD.search(name))
+    )
+
+
 def inspect(name, args, depth):
     # match on the basename so /usr/bin/npm, /opt/homebrew/bin/git, ./node_modules/.bin/…
     # and other path-prefixed spellings of the same binary are still caught.
@@ -182,9 +196,13 @@ def inspect(name, args, depth):
     if script is not None:
         reparse(script, depth)
     if EMIT_MODE and base in ("export", "declare", "typeset", "local", "readonly"):
-        env_words = [a for a in args if a.startswith("GIT_") or OPAQUE_WORD.search(a.split("=")[0])]
+        env_words = [a for a in args if is_config_assign(a)]
         if env_words:
             EMITTED.append([ASSIGN_RECORD] + env_words)
+    if base == "trap":
+        for a in args:
+            if not TRAP_SIGNAL.match(a):
+                reparse(a, depth)
     if EMIT_MODE and base in ("source", "."):
         sys.exit(3)
     if base == "xargs" and EMIT_MODE and any(
@@ -224,7 +242,7 @@ def inspect_wrapper(args, depth):
     # interpreter payload they carry.
     bases = [os.path.basename(a) for a in args]
     if EMIT_MODE:
-        env_assigns = [a for a in args if a.startswith("GIT_") or OPAQUE_WORD.search(a.split("=")[0])]
+        env_assigns = [a for a in args if is_config_assign(a)]
         if env_assigns:
             EMITTED.append([ASSIGN_RECORD] + env_assigns)
         for i, b in enumerate(bases):

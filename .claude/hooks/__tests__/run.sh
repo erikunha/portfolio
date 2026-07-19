@@ -671,7 +671,7 @@ for asg_hide in 'python3 -c "import os; os.system(\"git push\")"' \
   rm -rf "$d"
 done
 
-for asg_hide_ok in 'git log' 'git status' 'git commit -m x' 'python3 -c "print(1)"'; do
+for asg_hide_ok in 'git log' 'git status' 'git commit -m x' 'git diff --stat'; do
   d=$(asg_mkroot)
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
   (asg_payload "$asg_hide_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
@@ -876,6 +876,46 @@ for asg_source in 'source <(printf "git push\n")' '. <(printf "git push\n")'; do
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
   (asg_payload "$asg_source" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
   assert_eq "asg: a sourced script is undecidable, not clean [$asg_source]" "2" "$?"
+  rm -rf "$d"
+done
+
+# git funnels the editor through `sh -c`, and EDITOR/VISUAL are the fallbacks it
+# consults when GIT_EDITOR is unset — a GIT_-prefix screen is the same
+# enumeration mistake one namespace over.
+for asg_execenv in 'EDITOR="git push origin main #" git commit --amend' \
+                   'VISUAL="sh -c evil" git commit' \
+                   'SSH_ASKPASS="sh -c evil" git fetch' \
+                   'BASH_ENV="/tmp/evil" bash -c :' \
+                   'export EDITOR="sh -c evil"' \
+                   'env EDITOR="sh -c evil" git commit'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_execenv" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: an execution-honoring env name blocks, GIT_ prefix or not [$asg_execenv]" "2" "$?"
+  rm -rf "$d"
+done
+
+# trap defers a shell string the walk must read, not record as an inert word.
+for asg_trap in 'trap "git push origin main" DEBUG' \
+                'trap "git push" EXIT' \
+                'trap "git fetch --upload-pack=x ." ERR'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_trap" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a trap body is reparsed, not recorded inert [$asg_trap]" "2" "$?"
+  rm -rf "$d"
+done
+
+# The detector reporting exit 3 means it could not read the command. Re-screening
+# that with a fixed-string grep is defeated by concatenation, which is why the
+# undecidable verdict now blocks instead of falling through to containment.
+for asg_undecidable in 'python3 -c "import os;os.system('"'"'gi'"'"'+'"'"'t push origin main'"'"')"' \
+                       'eval "$(printf '"'"'gi%st push'"'"' t)"' \
+                       'node -e "require(\"child_process\").exec(\"gi\"+\"t push\")"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_undecidable" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: an unreadable command is undecidable, never clean [$asg_undecidable]" "2" "$?"
   rm -rf "$d"
 done
 

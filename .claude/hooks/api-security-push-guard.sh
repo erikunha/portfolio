@@ -18,12 +18,19 @@ except Exception: print('')
 " 2>/dev/null || echo "")
 
 DET=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/bash-guard-detect.py" --emit-commands 2>/dev/null)
-if [ $? -eq 0 ] && [ -n "$CMD" ]; then
+DET_RC=$?
+if [ "$DET_RC" -eq 3 ] && [ -n "$CMD" ]; then
+  :
+elif [ "$DET_RC" -eq 0 ] && [ -n "$CMD" ]; then
   printf '%s\n' "$DET" | awk -F'\t' '
+    BEGIN {
+      split("EDITOR VISUAL SSH_ASKPASS BASH_ENV ENV PROMPT_COMMAND LD_PRELOAD DYLD_INSERT_LIBRARIES", e, " ")
+      for (i in e) EXEC_ENV[e[i]] = 1
+    }
     $1 == "#assign" {
       for (i = 2; i <= NF; i++) {
         split($i, kv, "=")
-        if ($i ~ /^GIT_/ || kv[1] ~ /[$`]/) { found = 1; break }
+        if ($i ~ /^GIT_/ || kv[1] ~ /[$`]/ || kv[1] in EXEC_ENV) { found = 1; break }
       }
     }
     $1 ~ /^git-/ { found = 1 }
