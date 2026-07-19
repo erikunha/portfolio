@@ -19,7 +19,7 @@ const files = execFileSync('git', ['ls-files', '*.md'], { encoding: 'utf8' })
   .split('\n')
   .filter(Boolean);
 
-const FENCE = /```[ \t]*mermaid[^\n]*\r?\n([\s\S]*?)```/g;
+const FENCE = /```[ \t]*mermaid(?=[ \t]|\r?\n)[^\n]*\r?\n([\s\S]*?)```/g;
 let total = 0;
 const failures = [];
 

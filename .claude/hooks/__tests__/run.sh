@@ -19,10 +19,12 @@ assert_not_contains() { # name haystack needle
   case "$2" in *"$3"*) fail "$1 (unexpectedly found [$3])";; *) pass "$1";; esac
 }
 
-# Every hook invocation in this file is time-bounded, through all six drivers
-# (asg/bg/ag/biome/aem/sc). Scoping this to one driver, then to three, each
-# left the same hole one function over — the count is asserted below, not
-# claimed here, so it cannot drift silently again.
+# Every hook invocation is bounded, and the bound kills the process GROUP.
+# alarm alone kills only the exec'd shell: a grandchild holds the pipe's write
+# end open, so a $( ) capture blocks past the bound — measured 300s against a
+# 3s bound. timeout(1) is absent on darwin, hence perl. Exit 142 on expiry
+# matches no assertion, so a wedge fails the suite instead of hanging it.
+# The self-check at the end of this file is what holds this claim.
 # An adversarial fixture that makes a guard non-terminating must FAIL the suite,
 # not wedge it — and measuring elapsed time after an unbounded call cannot do
 # that, because the call never returns. timeout(1) is absent on darwin, so
@@ -31,7 +33,14 @@ assert_not_contains() { # name haystack needle
 # starvation cases) are exactly the ones that hang when their budget is mutated
 # away, so leaving any driver unbounded defeats the point.
 HOOK_TIMEOUT_S=20
-run_hook() { perl -e 'alarm shift; exec @ARGV' "$HOOK_TIMEOUT_S" bash "$@"; }
+_run_bounded() {
+  perl -e 'my $t = shift; my $p = fork(); die "fork: $!" unless defined $p;
+    if ($p == 0) { setpgrp(0, 0); exec @ARGV; exit 127 }
+    $SIG{ALRM} = sub { kill("KILL", -$p); waitpid($p, 0); exit 142 };
+    alarm $t; waitpid($p, 0); alarm 0; exit($? >> 8);' "$HOOK_TIMEOUT_S" "$@"
+}
+run_hook() { _run_bounded bash "$@"; }
+run_py() { _run_bounded python3 "$@"; }
 
 cat > "$FIXDIR/messy.ts" <<'EOF'
 export const greet=(name:string)=>{
@@ -150,22 +159,22 @@ assert_contains "wiring: biome-format in PostToolUse" "$WIRING" "BIOME True"
 assert_contains "wiring: session-context in SessionStart" "$WIRING" "SESSION True"
 
 tmp=$(mktemp "$FIXDIR/bf.XXXXXX").ts; cp "$FIXDIR/messy.ts" "$tmp"; before=$(cat "$tmp")
-( cd "$(mktemp -d)" && printf '{"tool_input":{"file_path":"%s"}}' "$tmp" | bash "$HOOKS/biome-format.sh" ) >/dev/null 2>&1
+( cd "$(mktemp -d)" && printf '{"tool_input":{"file_path":"%s"}}' "$tmp" | run_hook "$HOOKS/biome-format.sh" ) >/dev/null 2>&1
 ec=$?
 assert_eq "guard: biome-missing exit 0" "0" "$ec"
 assert_eq "guard: biome-missing file untouched" "$before" "$(cat "$tmp")"
 rm -f "$tmp"
 
 gone="$FIXDIR/bf-gone-$$.ts"
-printf '{"tool_input":{"file_path":"%s"}}' "$gone" | bash "$HOOKS/biome-format.sh" >/dev/null 2>&1
+printf '{"tool_input":{"file_path":"%s"}}' "$gone" | run_hook "$HOOKS/biome-format.sh" >/dev/null 2>&1
 assert_eq "guard: missing-file exit 0" "0" "$?"
 
-printf 'not json at all' | bash "$HOOKS/biome-format.sh" >/dev/null 2>&1
+printf 'not json at all' | run_hook "$HOOKS/biome-format.sh" >/dev/null 2>&1
 assert_eq "guard: biome malformed-stdin exit 0" "0" "$?"
-printf 'not json at all' | bash "$HOOKS/session-context.sh" >/dev/null 2>&1
+printf 'not json at all' | run_hook "$HOOKS/session-context.sh" >/dev/null 2>&1
 assert_eq "guard: session malformed-stdin exit 0" "0" "$?"
 
-( cd "$REPO_ROOT" && printf '' | bash "$HOOKS/session-context.sh" ) >/dev/null 2>&1
+( cd "$REPO_ROOT" && printf '' | run_hook "$HOOKS/session-context.sh" ) >/dev/null 2>&1
 assert_eq "guard: session-context exit 0" "0" "$?"
 
 # --- bash-guard.sh block logic (the broadest blocking hook; previously untested) ---
@@ -751,7 +760,7 @@ rm -rf "$d"
 # undecidable rather than clean.
 det_budget=$(python3 -c "print(';'.join([\"bash -c 'true'\"]*401) + \"; bash -c 'git push origin main'\")")
 det_budget_rc=$(python3 -c 'import json,sys; print(json.dumps({"tool_input":{"command": sys.argv[1]}}))' "$det_budget" \
-  | python3 "$HOOKS/bash-guard-detect.py" --emit-commands >/dev/null 2>&1; echo $?)
+  | run_py "$HOOKS/bash-guard-detect.py" --emit-commands >/dev/null 2>&1; echo $?)
 assert_eq "det: reparse-budget exhaustion exits 3 (undecidable), not 0" "3" "$det_budget_rc"
 
 d=$(asg_mkroot)
@@ -947,7 +956,7 @@ asg_noparser() {
   # deliberately no vendor/ — bash-guard-detect.py cannot import bashlex here
   printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
   hookcopy="$d/hooks/api-security-push-guard.sh"
-  (asg_payload "$1" "$d/t.jsonl" | ( cd "$d" && bash "$hookcopy" )) >/dev/null 2>&1
+  (asg_payload "$1" "$d/t.jsonl" | ( cd "$d" && run_hook "$hookcopy" )) >/dev/null 2>&1
   rc=$?
   assert_eq "asg: parser absent — $2 [$1]" "$3" "$rc"
   rm -rf "$d"
@@ -1396,7 +1405,7 @@ done
 
 det_bad='bash -c "echo (("'
 det_rc=$(python3 -c 'import json,sys; print(json.dumps({"tool_input":{"command": sys.argv[1]}}))' "$det_bad" \
-  | python3 "$HOOKS/bash-guard-detect.py" --emit-commands >/dev/null 2>&1; echo $?)
+  | run_py "$HOOKS/bash-guard-detect.py" --emit-commands >/dev/null 2>&1; echo $?)
 assert_eq "det: unparseable inner payload exits 3 (undecidable), not 1 (crash)" "3" "$det_rc"
 
 d=$(asg_mkroot)
@@ -1449,5 +1458,12 @@ printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api
 assert_eq "asg: cwd is excluded too — it is the likelier token-bearing path" "0" "$?"
 rm -rf "$d"
 rm -rf "$PYSHIM"
+
+
+# --- self-check: the bound above must actually cover every invocation --------
+# A comment claiming coverage is worth nothing; this fails if one is missed.
+unbounded=$(grep -vE '^[[:space:]]*#' "$0" \
+  | grep -cE '(^|[^_a-z])(bash|python3) "\$(HOOKS|[A-Z_]+_HOOK|hookcopy)' || true)
+assert_eq "meta: every hook invocation is time-bounded (no bare bash/python3 call)" "0" "$unbounded"
 
 [ "$FAILED" -eq 0 ] && { printf '\nALL PASS\n'; exit 0; } || { printf '\nFAILURES\n'; exit 1; }

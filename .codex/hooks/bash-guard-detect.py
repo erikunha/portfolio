@@ -106,12 +106,12 @@ SCRIPT_READERS = ("source", ".")
 DECLARE_BUILTINS = ("export", "declare", "typeset", "local", "readonly")
 PROG_GH, PROG_GIT, PROG_EVAL = "gh", "git", "eval"
 PROG_TRAP, PROG_FIND, PROG_XARGS = "trap", "find", "xargs"
-GH_MERGE_VERB, GH_MERGE_ACTION = "pr", "merge"
+GH_PR_SUBCOMMAND, GH_MERGE_ACTION = "pr", "merge"
 FIND_EXEC_FLAGS = ("-exec", "-execdir")
 FIND_EXEC_TERMINATORS = (";", "+")
 # git policy vocabularies
 PROTECTED_BRANCH = "main"
-PROTECTED_REF = "refs/heads/main"
+PROTECTED_REF = f"refs/heads/{PROTECTED_BRANCH}"
 FORCE_FLAGS = ("--force", "-f", "--force-with-lease")
 GIT_ADD_ALIASES = ("add", "stage")
 BROAD_ADD_PATHSPECS = ("-A", "--all", ".", ":/", ":", "*")
@@ -197,7 +197,7 @@ def dash_c_index(args):
 
 def gh_merge_check(args):
     for i in range(len(args) - 1):
-        if args[i] == GH_MERGE_VERB and args[i + 1] == GH_MERGE_ACTION:
+        if args[i] == GH_PR_SUBCOMMAND and args[i + 1] == GH_MERGE_ACTION:
             block(MERGE_MSG)
 
 
@@ -318,7 +318,7 @@ def inspect_wrapper(args, depth):
         block(NPM_MSG)
     gh_merge_check(args)
     if PROG_GIT in bases:
-        rest = args[bases.index("git") + 1:]
+        rest = args[bases.index(PROG_GIT) + 1:]
         git_add_check(rest)
         if is_force_push(rest):
             block(PUSH_MSG)

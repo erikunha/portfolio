@@ -80,10 +80,12 @@ specs
 .agents/skills/speckit-*
 .codex/skills/speckit-*
 
-# legacy spec/plan output from the previous SDD tooling; the directory is
-# plans here. Pre-decision workflow artifacts, not the reference system's tracked surface;
-# retained in .gitignore so any stale local copy stays untracked.
-# No trailing slash, same symlink reason as above.
+# legacy spec/plan output from the previous SDD tooling. The rules stay even
+# though the tooling is gone: a stale local copy must not become stageable on a
+# branch whose whole subject is stopping a broad `git add` from sweeping files
+# nobody chose. No trailing slash, same symlink reason as above.
+docs/superpowers
+.superpowers
 
 # os
 .DS_Store
