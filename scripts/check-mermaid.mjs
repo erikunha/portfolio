@@ -19,7 +19,7 @@ const files = execFileSync('git', ['ls-files', '*.md'], { encoding: 'utf8' })
   .split('\n')
   .filter(Boolean);
 
-const FENCE = /```mermaid\n([\s\S]*?)```/g;
+const FENCE = /```[ \t]*mermaid[^\n]*\r?\n([\s\S]*?)```/g;
 let total = 0;
 const failures = [];
 
@@ -55,6 +55,13 @@ if (failures.length > 0) {
   }
   console.error('A diagram that does not parse renders as nothing at all.');
   console.error('Common cause: a ; or unquoted ( ) : , inside a node label or sequence message.\n');
+  process.exit(1);
+}
+
+if (total === 0) {
+  console.error('mermaid: found 0 diagrams — the file scan matched nothing.');
+  console.error('This gate passes vacuously when that happens, so it fails instead.');
+  console.error('Check the cwd is the repo root and that `git ls-files "*.md"` returns files.');
   process.exit(1);
 }
 
