@@ -60,6 +60,34 @@ OPAQUE_WORD = re.compile(r"[$`]")
 ASSIGN_WORD = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 WRAPPER_OPERAND = re.compile(r"^(-|[0-9]+[a-z]?$)")
 SPLIT_STRING = re.compile(r"^(-S|--split-string=?)")
+# Flags whose VALUE is a separate word, keyed by wrapper: the same short flag
+# means different things per program (`sudo -n` is boolean, `nice -n` takes a
+# value), and skipping a boolean flag's successor skips the program itself.
+VALUE_FLAGS = {
+    "env": {"-u", "-C", "-S", "--unset", "--chdir", "--split-string"},
+    "sudo": {"-u", "-g", "-U", "-C", "-p", "-r", "-t", "-T", "--user", "--group"},
+    "doas": {"-u", "-C"},
+    "timeout": {"-s", "-k", "--signal", "--kill-after"},
+    "nice": {"-n", "--adjustment"},
+    "ionice": {"-c", "-n", "-p", "--class", "--classdata", "--pid"},
+    "chrt": {"-p", "--pid"},
+    "stdbuf": {"-i", "-o", "-e", "--input", "--output", "--error"},
+    "flock": {"-w", "-E", "--wait", "--timeout", "--conflict-exit-code"},
+    "xargs": {"-n", "-P", "-a", "-d", "-s", "-I", "-E", "-L", "--max-args",
+              "--max-procs", "--arg-file", "--delimiter", "--max-chars",
+              "--replace", "--max-lines"},
+    "script": {"-c", "--command"},
+    "watch": {"-n", "-d", "--interval"},
+    "parallel": {"-j", "-P", "--jobs"},
+    "setsid": set(),
+    "nohup": set(),
+    "command": set(),
+    "builtin": set(),
+    "exec": set(),
+    "caffeinate": {"-t", "-w"},
+    "arch": {"-arch"},
+    "xcrun": {"--sdk", "--toolchain"},
+}
 ASSIGN_SHAPED = re.compile(r"^[A-Za-z_][^=]*=")
 ASSIGN_RECORD = "#assign"
 
@@ -297,16 +325,20 @@ def inspect_wrapper(args, depth):
 def resolve_program(words):
     """Index of the word a wrapper chain actually execs, or -1."""
     i = 0
+    wrapper = None
     while i < len(words):
         w = words[i]
         b = os.path.basename(w)
-        if b in WRAPPERS or ASSIGN_WORD.match(w):
+        if b in WRAPPERS:
+            wrapper = b
+            i += 1
+            continue
+        if ASSIGN_WORD.match(w):
             i += 1
             continue
         if w.startswith("-"):
-            # a flag may take the next word as its operand; skipping it can only
-            # move resolution forward, never onto an argument of the program
-            i += 2 if "=" not in w else 1
+            takes_value = w in VALUE_FLAGS.get(wrapper, ())
+            i += 2 if takes_value else 1
             continue
         if WRAPPER_OPERAND.match(w):
             i += 1
@@ -361,7 +393,12 @@ if bashlex is not None:
                 inspect(words[0], words[1:], self.depth)
             # here-string / here-doc feeding a shell interpreter (no -c): the body
             # is a redirect node, not a word, so re-parse it explicitly.
-            if words and effective_program(words) in SHELL_INTERP and "-c" not in words:
+            prog_i = resolve_program(words)
+            if (
+                prog_i >= 0
+                and os.path.basename(words[prog_i]) in SHELL_INTERP
+                and "-c" not in words[prog_i + 1:]
+            ):
                 if EMIT_MODE and not any(
                     p.kind == "redirect" and str(p.type).startswith("<<") for p in parts
                 ):

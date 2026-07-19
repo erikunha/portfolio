@@ -1170,6 +1170,51 @@ for asg_interpword_ok in 'grep -rn bash .claude/hooks/' \
   rm -rf "$d"
 done
 
+# Whether a flag consumes the next word is a property OF THE WRAPPER, not of the
+# flag: `sudo -n` is boolean while `nice -n` takes a value, and `sudo -i` is
+# boolean while `stdbuf -i` takes one. Assuming every flag takes an operand made
+# the resolver skip the PROGRAM, so every boolean-flag spelling walked through.
+for asg_boolflag in 'sudo -i bash <<< "git push origin main"' \
+                    'env -i bash <<< "git push origin main"' \
+                    'sudo -n bash <<< "git push"' \
+                    'stdbuf -oL bash <<< "git push"' \
+                    'nohup -- bash <<< "git push"' \
+                    'env -- bash <<< "git push"' \
+                    'sudo -- bash -c "git push"' \
+                    'timeout --preserve-status 5 bash <<< "git push"' \
+                    'setsid -f bash <<< "git push"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_boolflag" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a boolean wrapper flag must not consume the program [$asg_boolflag]" "2" "$?"
+  rm -rf "$d"
+done
+
+# ...and the value-taking spellings of the same wrappers still resolve past
+# their operand, which is the property the boolean fix must not break.
+for asg_valueflag in 'env -u node bash <<< "git push"' \
+                     'nice -n 10 bash <<< "git push"' \
+                     'timeout -s KILL 5 bash <<< "git push"' \
+                     'ionice -c 3 bash <<< "git push"'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_valueflag" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a value-taking flag still resolves past its operand [$asg_valueflag]" "2" "$?"
+  rm -rf "$d"
+done
+
+# A wrapper leading an ordinary command must not resolve onto a shell-named
+# ARGUMENT and report undecidable.
+for asg_wrapgrep_ok in 'stdbuf -oL grep bash file' \
+                       'timeout 30 grep -rn bash docs/' \
+                       'nice -n 10 grep -c sh CLAUDE.md'; do
+  d=$(asg_mkroot)
+  printf '2020-01-01T00:00:00.000Z\tabc123\tapp/api/route.ts\n' > "$d/.claude/.api-edit-pending"
+  (asg_payload "$asg_wrapgrep_ok" "$d/t.jsonl" | ( cd "$d" && bash "$ASG_HOOK" )) >/dev/null 2>&1
+  assert_eq "asg: a wrapper must not resolve onto a shell-named argument [$asg_wrapgrep_ok]" "0" "$?"
+  rm -rf "$d"
+done
+
 # Ordinary environment work is not git configuration.
 for asg_env_ok in 'PATH=/x:$PATH make build' 'NODE_ENV=production pnpm build' 'export NODE_ENV=production' 'FOO=bar git status'; do
   d=$(asg_mkroot)
