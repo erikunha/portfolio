@@ -6,11 +6,11 @@
 
 ```mermaid
 flowchart TD
-    idea["Idea / requirement"] --> brainstorm["Brainstorm (superpowers:brainstorming)"]
-    brainstorm --> spec["Spec: docs/superpowers/specs/YYYY-MM-DD-topic-design.md (local-only)<br/>Context · Gaps to Close · Changes · Status: Approved"]
+    idea["Idea / requirement"] --> brainstorm["Brainstorm (/speckit.specify)"]
+    brainstorm --> spec["Spec: specs/NNN-feature/spec.md (local-only)<br/>Context · Gaps to Close · Changes · Status: Approved"]
     spec --> agate{"architect-reviewer gate<br/>GATE_RESULT: PASS?"}
     agate -->|no| spec
-    agate -->|yes| plan["Plan: docs/superpowers/plans/YYYY-MM-DD-topic.md (local-only)<br/>decomposed tasks (often sharded into sub-PRs)"]
+    agate -->|yes| plan["Plan: specs/NNN-feature/plan.md (local-only)<br/>decomposed tasks (often sharded into sub-PRs)"]
     plan --> branch["feature branch: feat|fix|... /description"]
     branch --> tdd["TDD implementation (tests first)"]
     tdd --> commit["commit (scope blocks): type(scope): subject"]
@@ -31,19 +31,19 @@ flowchart TD
 ## Phase by phase
 
 ### 1. Idea -> Brainstorm
-Work starts with `superpowers:brainstorming` (mandated before any feature). The output is a shared understanding of intent, requirements, and the chosen approach, with failure modes considered up front (`thinking-pre-mortem`, `thinking-inversion`).
+Work starts with `/speckit.specify` (mandated before any feature). The output is a shared understanding of intent, requirements, and the chosen approach, with failure modes considered up front (`thinking-pre-mortem`, `thinking-inversion`).
 
 ### 2. Spec (the approved "what and why")
-A design spec lands in `docs/superpowers/specs/` as `YYYY-MM-DD-<topic>-design.md`. Structure: `# Title` -> `**Date** / **Status: Approved**` -> `## Context` -> `## Gaps to Close` (numbered) -> `## Changes` (per file). The spec is the contract; it enumerates the gaps it closes. Specs are local-only workflow artifacts (gitignored), not tracked in the repo.
+A design spec lands in `specs/NNN-feature/` as `YYYY-MM-DD-<topic>-design.md`. Structure: `# Title` -> `**Date** / **Status: Approved**` -> `## Context` -> `## Gaps to Close` (numbered) -> `## Changes` (per file). The spec is the contract; it enumerates the gaps it closes. Specs are local-only workflow artifacts (gitignored), not tracked in the repo.
 
 ### 3. The architect gate
-Before a plan can be written, `superpowers:writing-plans` is **mechanically blocked** by `.claude/hooks/architect-gate.sh` until an `architect-reviewer` agent has emitted `GATE_RESULT: PASS` in the session. This forces a spec to survive architectural scrutiny before any implementation planning. `thinking-inversion` runs here too, turning "what could go wrong" into explicit plan tasks.
+Before a plan can be written, `speckit-plan` is **mechanically blocked** by `.claude/hooks/architect-gate.sh` until an `architect-reviewer` agent has emitted `GATE_RESULT: PASS` in the session. This forces a spec to survive architectural scrutiny before any implementation planning. `thinking-inversion` runs here too, turning "what could go wrong" into explicit plan tasks.
 
 ### 4. Plan (the decomposed "how")
-An implementation plan lands in `docs/superpowers/plans/` (local-only, gitignored) paired 1:1 with its spec (same date-topic name). Plans are large and step-by-step (often 10KB to 90KB). Large programs are sharded: into sub-PR plans (`pr-a-...`, `pr-b-...`) and subdirectories, and into workstreams (`ws0`–`ws7`). This is the "integration branch + sub-PRs" pattern for anything too big for one reviewable PR.
+An implementation plan lands in `specs/NNN-feature/` (local-only, gitignored) paired 1:1 with its spec (same date-topic name). Plans are large and step-by-step (often 10KB to 90KB). Large programs are sharded: into sub-PR plans (`pr-a-...`, `pr-b-...`) and subdirectories, and into workstreams (`ws0`–`ws7`). This is the "integration branch + sub-PRs" pattern for anything too big for one reviewable PR.
 
 ### 5. Branch + TDD implementation
-A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-push`). Implementation is test-first (`superpowers:test-driven-development` is mandated before writing any new file/function/script). The agent works in scope blocks, one logical unit per commit.
+A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-push`). Implementation is test-first (`test-first discipline (CLAUDE.md skill dispatch)` is mandated before writing any new file/function/script). The agent works in scope blocks, one logical unit per commit.
 
 ### 6. Commit (per-commit gates)
 - **`pre-commit`**: Biome lint + format (sub-second).

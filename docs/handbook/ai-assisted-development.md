@@ -13,7 +13,7 @@ sequenceDiagram
     participant CI as CI + claude-review
 
     H->>C: intent ("build X" / "fix Y")
-    C->>C: superpowers:brainstorming (intent + approach)
+    C->>C: /speckit.specify (intent + approach)
     C->>A: architect-reviewer (spec gate)
     A-->>G: GATE_RESULT: PASS (unblocks writing-plans)
     C->>C: writing-plans + thinking-inversion (failure modes -> tasks)
@@ -24,7 +24,7 @@ sequenceDiagram
     C->>C: battery-synthesis -> record in ledger -> resolve/justify
     C->>G: review:stamp (refuses unless dispatched + resolved)
     C->>G: git push (pre-push gate chain blocks if not stamped)
-    C->>CI: open PR; claude-review reviews
+    C->>CI: open PR, claude-review reviews
     CI-->>C: review threads
     C->>C: review-convergence loop -> green
     H->>CI: owner squash-merges (AI is blocked from merge)
@@ -118,9 +118,9 @@ The repo encodes distinct prompt patterns for distinct SDLC stages:
 
 | Stage | Prompt shape | Where it lives |
 |---|---|---|
-| Specification | brainstorm -> spec with Context/Gaps/Changes | `superpowers:brainstorming`, the spec template |
+| Specification | brainstorm -> spec with Context/Gaps/Changes | `/speckit.specify`, the spec template |
 | Architecture review | four-gate spec-gate -> `GATE_RESULT: PASS/FAIL` | `architect-reviewer` agent |
-| Implementation | TDD: failing test first, smallest change | `superpowers:test-driven-development` |
+| Implementation | TDD: failing test first, smallest change | `test-first discipline (CLAUDE.md skill dispatch)` |
 | Review | scoped-by-commit-type battery prompts | `CLAUDE.md` working agreement |
 | Documentation | reverse-engineer from code, route don't duplicate | this `/docs` set's provenance |
 

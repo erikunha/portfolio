@@ -1,13 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "Skill(superpowers:brainstorming)",
-      "Skill(superpowers:writing-plans)",
-      "Skill(superpowers:verification-before-completion)",
-      "Skill(superpowers:systematic-debugging)",
-      "Skill(superpowers:test-driven-development)",
-      "Skill(superpowers:using-git-worktrees)",
-      "Skill(superpowers:finishing-a-development-branch)",
       "Skill(commit-commands:commit)",
       "Skill(commit-commands:commit-push-pr)",
       "Skill(code-review:code-review)",

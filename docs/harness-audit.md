@@ -79,7 +79,7 @@ Zero on `main`. Dormant mirror on two unpushed local branches. The mirror design
 user prompt
   -> instruction load: global CLAUDE.md + project CLAUDE.md + path-scoped .claude/rules/api-boundary.md (on app/api edits)
   -> session-context.sh injects branch/PR/CI state at SessionStart
-  -> skill dispatch: model-injected skill descriptions (no routing table); thinking-* + superpowers pre-gated in settings.allow
+  -> skill dispatch: model-injected skill descriptions (no routing table); thinking-* + speckit-* pre-gated in settings.allow
   -> agent dispatch: 7 local agent defs + plugin agents; model chosen per-call (now: reason about tier, per the PR #203 rule)
   -> hooks tighten at tool time: bash-guard/api-security-push-guard (PreToolUse Bash), architect-gate (PreToolUse Skill), api-edit-marker/biome-format/css-token/section-order (PostToolUse Edit|Write)
   -> review battery (4 agents) -> battery-synthesis -> review-findings ledger -> review-stamp (.review-passed = HEAD)

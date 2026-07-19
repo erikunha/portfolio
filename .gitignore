@@ -59,27 +59,36 @@ tsconfig.tsbuildinfo
 .claude/.api-edit-pending
 .codex/.api-edit-pending
 
-# git worktrees (superpowers using-git-worktrees skill creates these here)
+# git worktrees (isolated workspaces for parallel branch work)
 .worktrees/
 
-# superpowers scratch — sdd progress ledger, review packages, archived patches.
+# spec-driven-development scratch: progress ledger, review packages, archived patches.
 # The subagent-driven-development skill treats this as git-ignored scratch and
 # warns `git clean -fdx` destroys it; never tracked, absent from origin/main.
 # No trailing slash: that makes a rule directory-only, so it misses a symlink of
 # the same name — why /.next dropped its slash in 60b19c2. Proven by RULE_MATRIX
 # in __tests__/meta/gitignore-worktree-symlinks.test.ts.
-.superpowers
 
-# superpowers spec/plan output — brainstorming writes specs here, writing-plans writes
+# spec-kit, in full: the engine, the generated skills, and the feature output.
+# Personal dev flow, tracked nowhere: an installed tool, never a repo
+# artifact. Reinstall with `specify init --here --integration claude`
+# and `specify extension add bug`. The durable why lives in DECISIONS.md /
+# ARCHITECTURE.md, which is where this repo's own rule puts it.
+specs
+.specify
+.claude/skills/speckit-*
+.agents/skills/speckit-*
+.codex/skills/speckit-*
+
+# legacy spec/plan output from the previous SDD tooling; the directory is
 # plans here. Pre-decision workflow artifacts, not the reference system's tracked surface;
-# the durable "why" lives in DECISIONS.md / ARCHITECTURE.md. Local-only, like .superpowers.
+# retained in .gitignore so any stale local copy stays untracked.
 # No trailing slash, same symlink reason as above.
-docs/superpowers
 
 # os
 .DS_Store
 
-# git worktree symlinks (.claude/worktrees/ — created by superpowers using-git-worktrees)
+# git worktree symlinks (.claude/worktrees/)
 .claude/worktrees/
 
 # session-owned lock file — machine-generated runtime state, not source

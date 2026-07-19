@@ -111,7 +111,7 @@ sequenceDiagram
     R->>R: INJECTION_RE reject (400)
     R->>RL: checkIdenticalQuestion (60s dedup, 429)
     R->>RL: reserveBudget(512)  (monthly token cap, 503 if exhausted)
-    R->>R: mint 128-bit sentinel; wrap question as data-only
+    R->>R: mint 128-bit sentinel, wrap question as data-only
     R->>AI: streamText(model=ASK_MODEL, cacheControl: ephemeral)
     loop each delta (raced vs 15s watchdog)
         AI-->>R: text chunk
@@ -148,7 +148,7 @@ sequenceDiagram
     H->>H: honeypot field_company? -> jittered fake-200
     H->>KV: write contact:msg:* (durability-first)
     alt KV fails
-        KV-->>F: 502 storage_unavailable
+        H-->>F: 502 storage_unavailable
     else KV ok
         H->>RS: send email (10s race)
         Note over H,RS: Resend failure is logged but still returns 200<br/>(KV is the durable record)

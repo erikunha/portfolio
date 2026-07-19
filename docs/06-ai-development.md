@@ -43,7 +43,7 @@ The load-bearing principle: **CLAUDE.md is advisory; anything that must hold is 
 |---|---|---|
 | `bash-guard.sh` | PreToolUse(Bash) | blocks broad `git add`, npm/yarn, `gh pr merge`, force-push-to-main, unpinned `fallow` (`exit 2`) |
 | `api-security-push-guard.sh` | PreToolUse(Bash) | blocks `git push` while `.claude/.api-edit-pending` is non-empty (unaudited API edit) |
-| `architect-gate.sh` | PreToolUse(Skill) | blocks `superpowers:writing-plans` unless an `architect-reviewer` returned `GATE_RESULT: PASS` this session |
+| `architect-gate.sh` | PreToolUse(Skill) | blocks `speckit-plan` unless an `architect-reviewer` returned `GATE_RESULT: PASS` this session |
 | `api-edit-marker.sh` | PostToolUse(Edit/Write) | records an API-surface edit into the pending marker |
 | `css-token-guard.sh` | PostToolUse(Edit/Write) | runs the css-tokens lint on CSS edits (see note below) |
 | `section-order-guard.sh` | PostToolUse(Edit/Write) | warns if a section lacks a mobile flex-order rule |

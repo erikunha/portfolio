@@ -10,7 +10,7 @@ except Exception: print('')
 # Same raw-payload fallback as bash-guard.sh / api-edit-marker.sh: a malformed
 # payload still carrying the token must not silently fail open.
 if [ -z "$SKILL" ] && [ -n "$INPUT" ]; then
-  printf '%s' "$INPUT" | grep -qF 'superpowers:writing-plans' && SKILL='superpowers:writing-plans'
+  printf '%s' "$INPUT" | grep -qF 'speckit-plan' && SKILL='speckit-plan'
 fi
 TRANSCRIPT=$(printf '%s' "$INPUT" | python3 -c "
 import json,sys
@@ -18,10 +18,10 @@ try: print(json.load(sys.stdin).get('transcript_path',''))
 except Exception: print('')
 " 2>/dev/null || echo "")
 
-[ "$SKILL" = "superpowers:writing-plans" ] || exit 0
+[ "$SKILL" = "speckit-plan" ] || exit 0
 
 if [ -z "$TRANSCRIPT" ] || [ ! -r "$TRANSCRIPT" ]; then
-  printf '[BLOCKED] writing-plans requires a prior architect-reviewer PASS; transcript unreadable (fail-closed).\n' >&2
+  printf '[BLOCKED] speckit-plan requires a prior architect-reviewer PASS; transcript unreadable (fail-closed).\n' >&2
   printf 'Dispatch architect-reviewer first (must return GATE_RESULT: PASS).\n' >&2
   exit 2
 fi
@@ -37,6 +37,6 @@ import(pathToFileURL(process.argv[1] + '/scripts/lib/transcript.mjs').href).then
 }).catch(() => process.stdout.write('no'));
 " "$ROOT" "$TRANSCRIPT" "$SESSION_ID" 2>/dev/null || echo "no")
 if [ "$PASSED" = "yes" ]; then exit 0; fi
-printf '[BLOCKED] writing-plans blocked — no architect-reviewer GATE_RESULT: PASS this session.\n' >&2
+printf '[BLOCKED] speckit-plan blocked, no architect-reviewer GATE_RESULT: PASS this session.\n' >&2
 printf 'Dispatch architect-reviewer against the spec first; it must return GATE_RESULT: PASS.\n' >&2
 exit 2
