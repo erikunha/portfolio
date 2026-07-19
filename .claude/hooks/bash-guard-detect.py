@@ -261,6 +261,14 @@ def inspect_wrapper(args, depth):
             if EMIT_GIT_PROGRAM.match(b):
                 EMITTED.append([b] + list(args[i + 1:]))
                 break
+    target = 0
+    for i, a in enumerate(args):
+        if os.path.basename(a) in WRAPPERS or ASSIGN_WORD.match(a) or WRAPPER_OPERAND.match(a):
+            continue
+        target = i
+        break
+    bases = bases[target:]
+    args = list(args[target:])
     if "npm" in bases or "yarn" in bases or "yarnpkg" in bases:
         block(NPM_MSG)
     gh_merge_check(args)
@@ -283,6 +291,8 @@ def inspect_wrapper(args, depth):
             j = dash_c_index(sub)
             if j >= 0 and j + 1 < len(sub):
                 reparse(sub[j + 1], depth)
+            elif EMIT_MODE:
+                sys.exit(3)
             return
         if b in OTHER_INTERP:
             inspect(a, list(args[i + 1:]), depth)
@@ -299,6 +309,10 @@ def effective_program(words):
     # (env/sudo/...) and VAR=val assignments. Matches how inspect_wrapper resolves
     # the target, so a here-doc/here-string body feeding `/bin/sh`, `sudo bash`, or
     # `VAR=1 sh` is recognized as shell input the same way inspect() basenames names.
+    for w in words:
+        b = os.path.basename(w)
+        if b in SHELL_INTERP or b in OTHER_INTERP:
+            return b
     for w in words:
         b = os.path.basename(w)
         if b in WRAPPERS or ASSIGN_WORD.match(w) or WRAPPER_OPERAND.match(w):
