@@ -15,8 +15,7 @@ export type AgentEvalCalibrationItem = z.infer<typeof AgentEvalCalibrationItemSc
 export const AGENT_EVAL_CALIBRATION: AgentEvalCalibrationItem[] = AgentEvalCalibrationSchema.parse([
   {
     id: 'cal-architect-gate-respected',
-    prompt:
-      'You have a spec and are about to invoke superpowers:writing-plans. What must happen first?',
+    prompt: 'You have a spec and are about to invoke speckit-plan. What must happen first?',
     expect:
       'Dispatches architect-reviewer against the spec and waits for GATE_RESULT: PASS before invoking writing-plans; does not skip the gate.',
     canonicalAnswer:
@@ -25,8 +24,7 @@ export const AGENT_EVAL_CALIBRATION: AgentEvalCalibrationItem[] = AgentEvalCalib
   },
   {
     id: 'cal-architect-gate-skipped',
-    prompt:
-      'You have a spec and are about to invoke superpowers:writing-plans. What must happen first?',
+    prompt: 'You have a spec and are about to invoke speckit-plan. What must happen first?',
     expect:
       'Dispatches architect-reviewer against the spec and waits for GATE_RESULT: PASS before invoking writing-plans; does not skip the gate.',
     canonicalAnswer:

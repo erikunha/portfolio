@@ -23,9 +23,13 @@ except Exception:
 
 WRAPPERS = {
     "env", "command", "sudo", "doas", "nice", "time", "nohup", "xargs",
-    "builtin", "exec", "stdbuf", "setsid", "timeout",
+    "builtin", "exec", "stdbuf", "setsid", "timeout", "script", "flock",
+    "watch", "parallel", "ionice", "chrt", "caffeinate", "arch", "xcrun",
 }
-SHELL_INTERP = {"bash", "sh", "zsh", "dash", "ksh", "ash", "mksh", "rbash"}
+SHELL_INTERP = {
+    "bash", "sh", "zsh", "dash", "ksh", "ash", "mksh", "rbash",
+    "fish", "csh", "tcsh",
+}
 OTHER_INTERP = {"python", "python3", "node", "nodejs", "perl", "ruby", "php"}
 MAX_DEPTH = 6
 MAX_CMD_LEN = 100_000
@@ -38,11 +42,121 @@ MERGE_MSG = (
     "The repo owner may run gh pr merge directly in an external terminal to bypass."
 )
 ADD_MSG = "[BLOCKED] Broad git add detected.\nCLAUDE.md: use git add -u or git add <specific files> only."
-PUSH_MSG = "[BLOCKED] Force push to main is not allowed.\nRebase the feature branch onto main and merge via PR instead."
+PUSH_MSG = "[BLOCKED] Destructive push to main is not allowed (force, --mirror, --delete, or a :ref deletion).\nRebase the feature branch onto main and merge via PR instead."
 NEST_MSG = "[BLOCKED] Command nesting too deep to analyze safely."
 
 
+EMIT_MODE = False
+EMITTED = []
+EMIT_GIT_PROGRAM = re.compile(r"^git(-|$)")
+EXEC_ENV = (
+    "EDITOR", "VISUAL", "SSH_ASKPASS", "BASH_ENV", "ENV",
+    "PROMPT_COMMAND", "LD_PRELOAD", "DYLD_INSERT_LIBRARIES",
+    "PAGER", "LESSOPEN",
+)
+EXEC_ENV_SHAPE = re.compile(r"^(BASH_FUNC_.*%%|LD_[A-Z_]+|DYLD_[A-Z_]+)$")
+TRAP_SIGNAL = re.compile(r"^(--?[A-Za-z]*|[0-9]+|SIG[A-Z0-9]+|EXIT|DEBUG|ERR|RETURN)$")
+OPAQUE_WORD = re.compile(r"[$`]")
+ASSIGN_WORD = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+WRAPPER_OPERAND = re.compile(r"^[-0-9]")
+# WRAPPER_OPERAND answers "is this a flag or a numeric argument", which is a
+# different question from "is this a shell string": `watch '2; <cmd>'` is both.
+SHELL_PAYLOAD_SHAPE = re.compile(r"[\s;&|<>()`$]")
+SPLIT_STRING = re.compile(r"^(-S|--split-string=?)")
+# flags whose value IS a shell command, keyed by wrapper
+PAYLOAD_FLAGS = {
+    "flock": {"-c", "--command"},
+    "script": {"-c", "--command"},
+}
+# wrappers whose first non-flag OPERAND is a shell string, not a program
+SHELL_OPERAND_WRAPPERS = {"watch", "parallel"}
+# Flags whose VALUE is a separate word, keyed by wrapper: the same short flag
+# means different things per program (`sudo -n` is boolean, `nice -n` takes a
+# value), and skipping a boolean flag's successor skips the program itself.
+VALUE_FLAGS = {
+    "env": {"-u", "-C", "-S", "-P", "--unset", "--chdir", "--split-string"},
+    "sudo": {"-u", "-g", "-U", "-C", "-p", "-r", "-t", "-T", "-D", "-R", "-h",
+             "--user", "--group", "--chdir", "--chroot", "--host", "--prompt",
+             "--role", "--type", "--command-timeout", "--other-user"},
+    "doas": {"-u", "-C", "-a"},
+    "timeout": {"-s", "-k", "--signal", "--kill-after"},
+    "nice": {"-n", "--adjustment"},
+    "ionice": {"-c", "-n", "-p", "--class", "--classdata", "--pid"},
+    "chrt": {"-p", "--pid"},
+    "stdbuf": {"-i", "-o", "-e", "--input", "--output", "--error"},
+    "flock": {"-w", "-E", "--wait", "--timeout", "--conflict-exit-code"},
+    "xargs": {"-n", "-P", "-a", "-d", "-s", "-I", "-E", "-L", "--max-args",
+              "--max-procs", "--arg-file", "--delimiter", "--max-chars",
+              "--replace", "--max-lines"},
+    "script": {"-F", "-t", "--flush", "--timing"},
+    "watch": {"-n", "--interval"},
+    "parallel": {"-j", "-P", "--jobs", "-S", "--sshlogin", "--slf"},
+    "time": {"-f", "-o", "--format", "--output"},
+    "setsid": set(),
+    "nohup": set(),
+    "command": set(),
+    "builtin": set(),
+    "exec": {"-a"},
+    "caffeinate": {"-t", "-w"},
+    "arch": {"-arch"},
+    "xcrun": {"-sdk", "-toolchain", "--sdk", "--toolchain"},
+}
+ASSIGN_SHAPED = re.compile(r"^[A-Za-z_][^=]*=")
+ASSIGN_RECORD = "#assign"
+# bashlex's own node vocabulary. These are the highest-stakes literals in the
+# file: a typo yields an empty match, so the walk sees nothing and fails OPEN
+# with no error. Naming them means one spelling, checked once.
+NODE_WORD = "word"
+NODE_ASSIGNMENT = "assignment"
+NODE_REDIRECT = "redirect"
+HEREDOC_PREFIX = "<<"
+# bashlex cannot parse a QUOTED here-doc delimiter (`<<'EOF'`) — it raises
+# ParsingError, so the whole command fell to the coarse text scan and any body
+# mentioning a blocked command blocked, however inert. Quoting only suppresses
+# expansion inside the body; the command structure is identical, so stripping the
+# quotes to parse is safe and strictly widens what the AST can see.
+HEREDOC_QUOTED_DELIM = re.compile(r"(<<-?\s*)(['\"])([A-Za-z_][A-Za-z0-9_]*)\2")
+# programs and builtins the walk treats specially
+PKG_MANAGERS = ("npm", "yarn", "yarnpkg")
+SCRIPT_READERS = ("source", ".")
+DECLARE_BUILTINS = ("export", "declare", "typeset", "local", "readonly")
+PROG_GH, PROG_GIT, PROG_EVAL = "gh", "git", "eval"
+PROG_TRAP, PROG_FIND, PROG_XARGS = "trap", "find", "xargs"
+GH_PR_SUBCOMMAND, GH_MERGE_ACTION = "pr", "merge"
+FIND_EXEC_FLAGS = ("-exec", "-execdir")
+FIND_EXEC_TERMINATORS = (";", "+")
+# git policy vocabularies
+PROTECTED_BRANCH = "main"
+PROTECTED_REF = f"refs/heads/{PROTECTED_BRANCH}"
+FORCE_LONG_FLAGS = ("--force", "--force-with-lease", "--force-if-includes")
+FORCE_SHORT_CLUSTER = re.compile(r"-[A-Za-z0-9]*f[A-Za-z0-9]*")
+# git bundles short booleans by CHARACTER, not by letter: -4/-6 (--ipv4/--ipv6)
+# are digits, so a cluster class of [A-Za-z] alone misses -d4 and -4f.
+# short flags whose VALUE may be attached (-odeploy), so the chars after them
+# are a value, not a cluster: --push-option's value must not read as -d
+GIT_PUSH_VALUE_SHORT_FLAGS = ("-o",)
+# git's parse-options accepts any UNAMBIGUOUS long-option prefix, so --mir runs
+# --mirror and --del runs --delete; short options bundle, so -dq is -d. 3 is the
+# shortest prefix honoured — shorter over-blocks, which is the safe direction.
+MIN_LONG_FLAG_ABBREV = 3
+# --mirror and --all name refs/heads/main WITHOUT a ref operand to match on
+MIRROR_FLAG = "--mirror"
+ALL_FLAG = "--all"
+DELETE_LONG_FLAG = "--delete"
+DELETE_SHORT_CLUSTER = re.compile(r"-[A-Za-z0-9]*d[A-Za-z0-9]*")
+DELETE_REFSPEC = ":"
+# the --emit-commands wire format read by api-security-push-guard.sh's awk
+FIELD_SEP = "\t"
+RECORD_SEP = "\n"
+ESCAPE_CHAR = "%"
+WORD_ESCAPES = ((ESCAPE_CHAR, "%25"), (FIELD_SEP, "%09"), (RECORD_SEP, "%0A"))
+GIT_ADD_ALIASES = ("add", "stage")
+BROAD_ADD_PATHSPECS = ("-A", "--all", ".", ":/", ":", "*")
+
+
 def block(msg):
+    if EMIT_MODE:
+        return
     sys.stdout.write(msg + "\n")
     sys.exit(2)
 
@@ -76,13 +190,13 @@ def expand_words(words):
 
 
 def main_ref(tok):
-    return tok == "main" or "refs/heads/main" in tok or bool(re.search(r"(^|[:/+])main$", tok))
+    return tok == PROTECTED_BRANCH or PROTECTED_REF in tok or bool(re.search(r"(^|[:/+])main$", tok))
 
 
 def git_add_broad(operands):
     for a in operands:
         norm = a.rstrip("/")  # ./ , .// , :/ collapse to their broad form
-        if norm in ("-A", "--all", ".", ":/", ":", "*"):
+        if norm in BROAD_ADD_PATHSPECS:
             return True
         if norm.startswith(":") or norm == "*":
             return True
@@ -94,17 +208,17 @@ def git_add_broad(operands):
 
 
 def is_force_flag(a):
-    if a in ("--force", "-f", "--force-with-lease"):
+    if any(long_flag(a, f) for f in FORCE_LONG_FLAGS):
         return True
-    if a.startswith("--force-with-lease") or a.startswith("--force="):
-        return True
-    return bool(re.fullmatch(r"-[A-Za-z]*f[A-Za-z]*", a)) and not a.startswith("--")
+    if attached_value_flag(a):
+        return False
+    return bool(FORCE_SHORT_CLUSTER.fullmatch(a)) and not a.startswith("--")
 
 
 def git_add_check(args):
     # subcommand-position-tolerant ('add' may sit behind global flags: git -C .);
     # 'stage' is git's built-in synonym for 'add'.
-    for sub in ("add", "stage"):
+    for sub in GIT_ADD_ALIASES:
         if sub in args and git_add_broad(args[args.index(sub) + 1:]):
             block(ADD_MSG)
 
@@ -120,15 +234,81 @@ def dash_c_index(args):
 
 def gh_merge_check(args):
     for i in range(len(args) - 1):
-        if args[i] == "pr" and args[i + 1] == "merge":
+        if args[i] == GH_PR_SUBCOMMAND and args[i + 1] == GH_MERGE_ACTION:
             block(MERGE_MSG)
+
+
+def long_flag(a, full):
+    name = a.split("=")[0]
+    return (
+        name.startswith("--")
+        and len(name) >= MIN_LONG_FLAG_ABBREV
+        and full.startswith(name)
+    )
+
+
+def attached_value_flag(a):
+    return any(a.startswith(f) and len(a) > len(f) for f in GIT_PUSH_VALUE_SHORT_FLAGS)
+
+
+def is_destructive_flag(a):
+    if long_flag(a, DELETE_LONG_FLAG):
+        return True
+    if attached_value_flag(a):
+        return False
+    return bool(DELETE_SHORT_CLUSTER.fullmatch(a)) and not a.startswith("--")
+
+
+def is_delete_refspec(a):
+    return a.startswith(DELETE_REFSPEC) and main_ref(a)
 
 
 def is_force_push(args):
     if "push" not in args:
         return False
-    forced = any(is_force_flag(a) for a in args) or any(a.startswith("+") and main_ref(a) for a in args)
-    return forced and any(main_ref(a) for a in args)
+    if any(long_flag(a, MIRROR_FLAG) for a in args):
+        return True
+    forced = (
+        any(is_force_flag(a) for a in args)
+        or any(a.startswith("+") and main_ref(a) for a in args)
+        or any(is_destructive_flag(a) for a in args)
+        or any(is_delete_refspec(a) for a in args)
+    )
+    # --all names every branch, main included, so a forced --all needs no ref
+    # operand for the same reason --mirror does not
+    return forced and (
+        any(main_ref(a) for a in args) or any(long_flag(a, ALL_FLAG) for a in args)
+    )
+
+
+def heredoc_bodies(parts):
+    for p in parts:
+        if p.kind != NODE_REDIRECT or not str(p.type).startswith(HEREDOC_PREFIX):
+            continue
+        # bashlex puts a here-DOC body on .heredoc and only the delimiter on
+        # .output.word; a here-STRING has no .heredoc.
+        hd = getattr(p, "heredoc", None)
+        body = getattr(hd, "value", None) or getattr(hd, "word", None)
+        if body is None:
+            body = getattr(getattr(p, "output", None), "word", None)
+        if body:
+            yield body
+
+
+def pipeline_feeds_shell(node):
+    words = expand_words(
+        [p.word for p in (getattr(node, "parts", []) or []) if p.kind == NODE_WORD]
+    )
+    if not words:
+        return False
+    for c in resolve_programs(words):
+        if os.path.basename(words[c]) in SHELL_INTERP:
+            return dash_c_index(words[c + 1:]) < 0
+    return False
+
+
+def unquote_heredoc_delims(script):
+    return HEREDOC_QUOTED_DELIM.sub(lambda m: m.group(1) + m.group(3), script)
 
 
 def coarse_scan(script):
@@ -145,7 +325,7 @@ def coarse_scan(script):
 
 
 def interp_script(name, args):
-    if name == "eval":
+    if name == PROG_EVAL:
         return " ".join(args)
     if name in SHELL_INTERP:
         j = dash_c_index(args)
@@ -154,82 +334,225 @@ def interp_script(name, args):
     return None
 
 
+def encode_word(word):
+    for raw, escaped in WORD_ESCAPES:
+        word = word.replace(raw, escaped)
+    return word
+
+
+def is_config_assign(word):
+    if "=" not in word:
+        return False
+    name = word.split("=")[0]
+    return (
+        word.startswith("GIT_")
+        or name in EXEC_ENV
+        or bool(EXEC_ENV_SHAPE.match(name))
+        or bool(OPAQUE_WORD.search(name))
+    )
+
+
 def inspect(name, args, depth):
     # match on the basename so /usr/bin/npm, /opt/homebrew/bin/git, ./node_modules/.bin/…
     # and other path-prefixed spellings of the same binary are still caught.
     base = os.path.basename(name)
-    if base in ("npm", "yarn", "yarnpkg"):
+    # An opaque PROGRAM word is undecidable wherever it sits. visitcommand
+    # guards words[0], but a wrapper displaces position 0 (`sudo $G origin
+    # main`), and that case used to be caught only as a side effect of
+    # is_config_assign treating a word with no `=` as an assignment name.
+    if EMIT_MODE and OPAQUE_WORD.search(name):
+        sys.exit(3)
+    if EMIT_MODE:
+        EMITTED.append([base] + list(args))
+    if base in PKG_MANAGERS:
         block(NPM_MSG)
-    if base == "gh":
+    if base == PROG_GH:
         gh_merge_check(args)
-    if base == "git":
+    if base == PROG_GIT:
         git_add_check(args)
         if is_force_push(args):
             block(PUSH_MSG)
     script = interp_script(base, args)
     if script is not None:
         reparse(script, depth)
+    if EMIT_MODE and base in DECLARE_BUILTINS:
+        env_words = [a for a in args if is_config_assign(a)]
+        if env_words:
+            EMITTED.append([ASSIGN_RECORD] + env_words)
+    if base == PROG_TRAP:
+        for a in args:
+            if not TRAP_SIGNAL.match(a):
+                reparse(a, depth)
+    if EMIT_MODE and ASSIGN_SHAPED.match(name) and is_config_assign(name):
+        EMITTED.append([ASSIGN_RECORD, name])
+    if EMIT_MODE and base in SCRIPT_READERS:
+        sys.exit(3)
+    if base == PROG_XARGS and EMIT_MODE and any(
+        a == "-I" or a.startswith("-I") or a.startswith("--replace") for a in args
+    ):
+        sys.exit(3)
     if base in OTHER_INTERP:
         # -c (python/ruby/node), -e (node/perl/ruby), -r (php) carry inline code,
         # in spaced (`-c 'x'`), bundled (`-Bc 'x'`) and attached (`-Bc'x'`) forms.
         for i, a in enumerate(args):
             m = re.match(r"-[A-Za-z]*?[cer](.*)", a)
             if m:
+                if EMIT_MODE:
+                    sys.exit(3)
                 if m.group(1):
                     coarse_scan(m.group(1))
                 elif i + 1 < len(args):
                     coarse_scan(args[i + 1])
-    if base == "find":
-        for kw in ("-exec", "-execdir"):
+    if base == PROG_FIND:
+        for kw in FIND_EXEC_FLAGS:
             if kw in args:
                 j = args.index(kw)
                 sub = []
                 for a in args[j + 1:]:
-                    if a in (";", "+"):
+                    if a in FIND_EXEC_TERMINATORS:
                         break
                     sub.append(a)
                 if sub:
                     inspect(sub[0], sub[1:], depth)
     if base in WRAPPERS:
-        inspect_wrapper(args, depth)
+        inspect_wrapper(args, depth, base)
 
 
-def inspect_wrapper(args, depth):
+def inspect_wrapper(args, depth, wrapper=None):
+    skip_operand = False
     # a wrapper (env/sudo/...) execs another command bashlex parses as plain
     # word-args, not a nested node; scan those words by presence and re-parse any
     # interpreter payload they carry.
     bases = [os.path.basename(a) for a in args]
-    if "npm" in bases or "yarn" in bases or "yarnpkg" in bases:
+    if EMIT_MODE:
+        env_assigns = [a for a in args if is_config_assign(a)]
+        if env_assigns:
+            EMITTED.append([ASSIGN_RECORD] + env_assigns)
+        for i, b in enumerate(bases):
+            if EMIT_GIT_PROGRAM.match(b):
+                EMITTED.append([b] + list(args[i + 1:]))
+                break
+    if any(b in PKG_MANAGERS for b in bases):
         block(NPM_MSG)
     gh_merge_check(args)
-    if "git" in bases:
-        rest = args[bases.index("git") + 1:]
+    if PROG_GIT in bases:
+        rest = args[bases.index(PROG_GIT) + 1:]
         git_add_check(rest)
         if is_force_push(rest):
             block(PUSH_MSG)
     for i, a in enumerate(args):
         b = os.path.basename(a)
-        if b == "eval":
+        if b in WRAPPERS:
+            # a nested wrapper rebinds the tables: `sudo env -S ...` must read
+            # -S as env's, not sudo's
+            inspect_wrapper(list(args[i + 1:]), depth, b)
+            return
+        if wrapper in PAYLOAD_FLAGS and a in PAYLOAD_FLAGS[wrapper]:
+            if i + 1 < len(args):
+                reparse(args[i + 1], depth)
+            return
+        if wrapper == "env" and SPLIT_STRING.match(a):
+            # env -S'...' glues the command to the flag; env -S '...' puts it in
+            # the next word, where sub() leaves an empty string and reparse("")
+            # is a no-op that used to abandon the whole scan
+            payload = SPLIT_STRING.sub("", a, count=1)
+            if not payload and i + 1 < len(args):
+                payload = args[i + 1]
+            reparse(payload, depth)
+            return
+        if b == PROG_EVAL:
             reparse(" ".join(args[i + 1:]), depth)
-            break
+            return
         if b in SHELL_INTERP:
             sub = args[i + 1:]
             j = dash_c_index(sub)
             if j >= 0 and j + 1 < len(sub):
                 reparse(sub[j + 1], depth)
+            return
+        if b in OTHER_INTERP:
+            inspect(a, list(args[i + 1:]), depth)
+            return
+        # watch/parallel run their first non-flag operand through a shell.
+        # This must come AFTER the interpreter branches: `watch bash -c '<x>'`
+        # has `bash` as that operand, and reparsing the bare word abandoned
+        # the scan before -c could be seen.
+        if wrapper in SHELL_OPERAND_WRAPPERS:
+            if SHELL_PAYLOAD_SHAPE.search(a):
+                reparse(a, depth)
+                return
+            if skip_operand:
+                skip_operand = False
+            elif a.startswith("-"):
+                skip_operand = a in VALUE_FLAGS.get(wrapper, ())
+            elif not WRAPPER_OPERAND.match(a):
+                reparse(a, depth)
+                return
+    chain = ([wrapper] if wrapper else []) + list(args)
+    offset = 1 if wrapper else 0
+    # every candidate, not just the nearest: `timeout 5 $CMD` yields both `5`
+    # and `$CMD`, and stopping at the first hides the opaque one behind it
+    for c in resolve_programs(chain):
+        i = c - offset
+        if 0 <= i < len(args):
+            inspect(args[i], list(args[i + 1:]), depth)
 
 
-def effective_program(words):
-    # the real program a command runs, after skipping leading wrapper words
-    # (env/sudo/...) and VAR=val assignments. Matches how inspect_wrapper resolves
-    # the target, so a here-doc/here-string body feeding `/bin/sh`, `sudo bash`, or
-    # `VAR=1 sh` is recognized as shell input the same way inspect() basenames names.
-    for w in words:
+_candidate_budget = [512]
+
+
+def resolve_programs(words):
+    """Every index a wrapper chain could plausibly exec, nearest first.
+
+    The flag table is an allowlist that cannot be complete, and every gap in it
+    fails OPEN, so an ambiguous flag yields BOTH readings rather than a guess.
+    """
+    if _candidate_budget[0] <= 0:
+        block(NEST_MSG)
+        sys.exit(3)
+    _candidate_budget[0] -= 1
+    out = []
+    i = 0
+    wrapper = None
+    while i < len(words):
+        w = words[i]
         b = os.path.basename(w)
-        if b in WRAPPERS or re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", w):
+        if b in WRAPPERS:
+            wrapper = b
+            i += 1
             continue
-        return b
-    return None
+        if ASSIGN_WORD.match(w):
+            i += 1
+            continue
+        if w.startswith("-"):
+            if w in VALUE_FLAGS.get(wrapper, ()):
+                i += 2
+            elif (
+                (len(w) == 2 or (w.startswith("--") and "=" not in w))
+                and i + 1 < len(words)
+                and not words[i + 1].startswith("-")
+            ):
+                # unknown flag of a known wrapper: it either takes the next word
+                # or it does not, and guessing wrong loses either way. An
+                # ATTACHED short form (-oL) already carries its value, so it is
+                # not ambiguous and must not widen.
+                out.extend(j + i + 2 for j in resolve_programs(words[i + 2:]))
+                i += 1
+            else:
+                i += 1
+            continue
+        if WRAPPER_OPERAND.match(w):
+            out.extend(j + i + 1 for j in resolve_programs(words[i + 1:]))
+            out.insert(0, i)
+            return sorted(set(out))
+        out.insert(0, i)
+        return sorted(set(out))
+    return sorted(set(out))
+
+
+def resolve_program(words):
+    """The nearest plausible program index, or -1."""
+    c = resolve_programs(words)
+    return c[0] if c else -1
 
 
 def reparse(script, depth):
@@ -237,13 +560,15 @@ def reparse(script, depth):
     # tree (budget), so a branching bash -c payload cannot blow up to O(branch^depth).
     if depth <= 0 or _reparse_budget[0] <= 0:
         block(NEST_MSG)
+        sys.exit(3)
     _reparse_budget[0] -= 1
     if not script or not script.strip():
         return
     try:
-        trees = bashlex.parse(script)
+        trees = bashlex.parse(unquote_heredoc_delims(script))
     except Exception:
         block(NEST_MSG)
+        sys.exit(3)
     v = Visitor(depth - 1)
     for t in trees:
         v.visit(t)
@@ -255,24 +580,53 @@ if bashlex is not None:
         def __init__(self, depth=MAX_DEPTH):
             self.depth = depth
 
+        def visitpipeline(self, n, parts):
+            # `cat <<EOF | sh` executes the body just as `sh <<EOF` does, but the
+            # heredoc hangs off `cat` and the shell is a SIBLING, so the
+            # same-node check in visitcommand never sees the pair.
+            if not any(pipeline_feeds_shell(p) for p in parts):
+                return
+            for p in parts:
+                # a shell owning its OWN here-doc is already covered by
+                # visitcommand, which the base visitor runs on every child after
+                # this; reparsing it here too would double-charge the budget and
+                # emit the record twice
+                if pipeline_feeds_shell(p):
+                    continue
+                for body in heredoc_bodies(getattr(p, "parts", []) or []):
+                    reparse(body, self.depth)
+
         def visitcommand(self, n, parts):
-            words = expand_words([p.word for p in parts if p.kind == "word"])
+            words = expand_words([p.word for p in parts if p.kind == NODE_WORD])
+            if EMIT_MODE:
+                assigns = [p.word for p in parts if p.kind == NODE_ASSIGNMENT and is_config_assign(p.word)]
+                if assigns:
+                    EMITTED.append([ASSIGN_RECORD] + assigns)
             if words:
                 inspect(words[0], words[1:], self.depth)
             # here-string / here-doc feeding a shell interpreter (no -c): the body
             # is a redirect node, not a word, so re-parse it explicitly.
-            if words and effective_program(words) in SHELL_INTERP and "-c" not in words:
-                for p in parts:
-                    if p.kind == "redirect" and str(p.type).startswith("<<"):
-                        body = getattr(getattr(p, "output", None), "word", None)
-                        if body is None:
-                            hd = getattr(p, "heredoc", None)
-                            body = getattr(hd, "value", None) or getattr(hd, "word", None)
-                        if body:
-                            reparse(body, self.depth)
+            shell_i = -1
+            for c in resolve_programs(words):
+                if os.path.basename(words[c]) in SHELL_INTERP:
+                    shell_i = c
+                    break
+            if shell_i >= 0 and dash_c_index(words[shell_i + 1:]) < 0:
+                if EMIT_MODE and not any(
+                    p.kind == NODE_REDIRECT and str(p.type).startswith(HEREDOC_PREFIX) for p in parts
+                ):
+                    sys.exit(3)
+                saw_body = False
+                for body in heredoc_bodies(parts):
+                    saw_body = True
+                    reparse(body, self.depth)
+                if not saw_body and EMIT_MODE:
+                    sys.exit(3)
 
 
 def main():
+    global EMIT_MODE
+    EMIT_MODE = "--emit-commands" in sys.argv[1:]
     raw = sys.stdin.read()
     try:
         d = json.loads(raw)
@@ -281,15 +635,25 @@ def main():
         cmd = ""
     if not cmd or not cmd.strip():
         sys.exit(3 if raw.strip() else 0)
-    if bashlex is None or len(cmd) > MAX_CMD_LEN:
+    if bashlex is None:
+        sys.exit(4)
+    if len(cmd) > MAX_CMD_LEN:
         sys.exit(3)
     try:
-        trees = bashlex.parse(cmd)
+        trees = bashlex.parse(unquote_heredoc_delims(cmd))
     except Exception:
         sys.exit(3)
     visitor = Visitor()
-    for tree in trees:
-        visitor.visit(tree)
+    try:
+        for tree in trees:
+            visitor.visit(tree)
+    except SystemExit:
+        raise
+    except BaseException:
+        sys.exit(3)
+    if EMIT_MODE:
+        for words in EMITTED:
+            sys.stdout.write(FIELD_SEP.join(encode_word(w) for w in words) + RECORD_SEP)
     sys.exit(0)
 
 

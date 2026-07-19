@@ -12,10 +12,10 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 
 - **Entry:** an idea or requirement.
 - **Steps:**
-  1. `superpowers:brainstorming` to lock intent and approach.
-  2. Write a spec in `docs/superpowers/specs/` (local-only, gitignored; Context, Gaps to Close, Changes). Get it to `Status: Approved`.
+  1. `/speckit.specify` to lock intent and approach.
+  2. Write a spec in `specs/NNN-feature/` (local-only, gitignored; Context, Gaps to Close, Changes). Get it to `Status: Approved`.
   3. Dispatch `architect-reviewer`; it must return `GATE_RESULT: PASS` (the architect-gate hook blocks `writing-plans` otherwise).
-  4. `superpowers:writing-plans` + `thinking-inversion` to decompose into tasks (shard into sub-PRs if large).
+  4. `speckit-plan` + `thinking-inversion` to decompose into tasks (shard into sub-PRs if large).
   5. Branch `feat/<description>`. Implement test-first.
   6. Run the review battery, resolve findings, `review:stamp`, push.
   7. `pnpm ready-for-pr`, open the PR, converge `/claude-review`, `ready-to-merge`, owner merges.
@@ -27,7 +27,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 
 - **Entry:** a reproducible defect or a failing gate.
 - **Steps:**
-  1. `superpowers:systematic-debugging` (before proposing any fix).
+  1. `/speckit.bug.assess` (before proposing any fix).
   2. State the root cause in one sentence (the four-conditions rule: root cause, pattern scan, no deferred debt, measured property verified).
   3. Write a failing test that reproduces it (TDD).
   4. Make the smallest change that passes. Pattern-scan the codebase for the same class of bug.

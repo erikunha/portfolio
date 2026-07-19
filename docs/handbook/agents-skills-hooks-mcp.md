@@ -32,7 +32,7 @@ Skills are load-on-demand procedures. They activate by their `description` front
 |---|---|---|---|---|
 | **bash-guard.sh** | PreToolUse | Bash | blocks broad `git add`, npm/yarn, `gh pr merge`, force-push-to-main, unpinned `fallow` | `exit 2` |
 | **api-security-push-guard.sh** | PreToolUse | Bash | blocks `git push` while an unaudited API edit marker is pending (fail-closed on unreadable transcript) | `exit 2` |
-| **architect-gate.sh** | PreToolUse | Skill | blocks `superpowers:writing-plans` unless an `architect-reviewer` emitted `GATE_RESULT: PASS` this session | `exit 2` |
+| **architect-gate.sh** | PreToolUse | Skill | blocks `speckit-plan` unless an `architect-reviewer` emitted `GATE_RESULT: PASS` this session | `exit 2` |
 | **api-edit-marker.sh** | PostToolUse | Edit\|Write | records an edit to `app/api/**`/`rate-limit.ts`/`proxy.ts` into the pending marker | never (`exit 0`) |
 | **css-token-guard.sh** | PostToolUse | Edit\|Write | runs the css-tokens lint on CSS edits (catches raw hex at edit time) | advisory (`exit 0`) |
 | **section-order-guard.sh** | PostToolUse | Edit\|Write | warns if a section lacks a mobile flex-order rule | advisory (`exit 0`) |
@@ -76,7 +76,7 @@ Note: four hook *events* are used (PreToolUse on Bash and Skill, PostToolUse on 
 
 ## Permissions (`.claude/settings.json`)
 
-- **Allowed skills** (no prompt): the `superpowers:*` set (brainstorming, writing-plans, TDD, verification, debugging, worktrees, finishing-a-branch), `commit-commands:*`, `code-review:code-review`, `pr-review-toolkit:review-pr`, `security-review`, `react-best-practices`, `vercel:{nextjs,vercel-functions}`, `web-design-guidelines`, `thinking-*` (wildcard).
+- **Allowed skills** (no prompt): the `speckit-*` set (specify, clarify, plan, tasks, analyze, checklist, implement, converge, and the bug track), `commit-commands:*`, `code-review:code-review`, `pr-review-toolkit:review-pr`, `security-review`, `react-best-practices`, `vercel:{nextjs,vercel-functions}`, `web-design-guidelines`, `thinking-*` (wildcard).
 - **Denied Bash**: every `fallow fix` form (belt-and-suspenders over `bash-guard.sh`).
 - **defaultMode**: `acceptEdits`.
 

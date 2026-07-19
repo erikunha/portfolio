@@ -39,12 +39,21 @@ These were considered and are *not* recommended now, with reasons (the via-negat
 ## Sequencing
 
 ```mermaid
-flowchart LR
-    p0a["P0: harden transcript SPOF"] --> p0b["P0: first-push friction"]
-    p0b --> p0c["P0 docs: feature guide + troubleshooting"]
-    p0c --> p1["P1: naming gate · MCP rate-limit · ADR cross-link · CONTRIBUTING"]
-    p1 --> p2["P2: API gate de-dup · prompt library · incident guide"]
-    p2 --> p3["P3: ecosystem re-scan · frontend playbook"]
+timeline
+    title Roadmap sequencing (rank order, not dependency)
+    P0 : Harden transcript resolution (session-id pinning)
+       : Friendlier first-push (auto-seed the ledger)
+       : Per-section feature guide
+       : Troubleshooting runbook
+    P1 : Extend check:client-naming to components/client
+       : Per-caller rate-limit for MCP ask_erik
+       : ADR-to-code cross-link index
+       : CONTRIBUTING.md
+    P2 : Share the API gate sequence across ask + defineHandler
+       : Prompt library
+       : Incident response guide
+    P3 : Quarterly AI-ecosystem re-scan
+       : Frontend playbook
 ```
 
 Each item is independently shippable and reversible. None is required for the platform to function today; they are leverage, not fixes for a broken system.

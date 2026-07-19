@@ -26,7 +26,6 @@ The handbook routes to the other two rather than duplicating them.
 | [engineering-audit.md](./engineering-audit.md) | An evaluation of the platform's maturity, with a technical-debt register |
 | [onboarding.md](./onboarding.md) | Process onboarding: how to do the work, not just read the code |
 | [roadmap.md](./roadmap.md) | Future-state engineering platform, ranked by ROI |
-| [diagrams.md](./diagrams.md) | The complete Mermaid diagram collection |
 
 ## The platform in one picture
 
@@ -48,7 +47,7 @@ flowchart TB
         ci["GitHub Actions: ci/codeql/smoke/claude"]
     end
     subgraph knowledge["Knowledge layer"]
-        specs["docs/superpowers/specs + plans (local-only)"]
+        specs["specs/NNN-feature/ (local-only)"]
         adr["DECISIONS.md (~240 ADRs)"]
         mem[".remember/ + auto memory"]
     end

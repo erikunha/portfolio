@@ -12,8 +12,8 @@ flowchart TD
         arch["ARCHITECTURE.md (the design narrative)"]
     end
     subgraph plan["Planning / what & how"]
-        specs["docs/superpowers/specs/ (local-only, gitignored)"]
-        plans["docs/superpowers/plans/ (local-only, gitignored)"]
+        specs["specs/NNN-feature/ (local-only, gitignored)"]
+        plans["specs/NNN-feature/ (local-only, gitignored)"]
         audit["docs/audit/ (principal audit)"]
     end
     subgraph maps["Maps / reference"]
@@ -40,8 +40,8 @@ flowchart TD
 | Why a decision was made | `DECISIONS.md` | dated ADR bullet + reversibility note |
 | The engineering bar | `STANDARDS.md` | 12 chapters, each naming its enforcement gate |
 | The system's design | `ARCHITECTURE.md` | narrative + trade-offs |
-| What to build (approved) | `docs/superpowers/specs/` (local-only, gitignored) | Context / Gaps / Changes / Status |
-| How to build it (decomposed) | `docs/superpowers/plans/` (local-only, gitignored) | step-by-step tasks, sharded for sub-PRs |
+| What to build (approved) | `specs/NNN-feature/` (local-only, gitignored) | Context / Gaps / Changes / Status |
+| How to build it (decomposed) | `specs/NNN-feature/` (local-only, gitignored) | step-by-step tasks, sharded for sub-PRs |
 | The codebase map | `/docs/01-11` | reverse-engineered, diagram-first |
 | How engineering happens | `/docs/handbook/` | this set |
 | Agent behavior | `CLAUDE.md`, `.claude/rules/*`, skills | instructions + dispatch tables |
