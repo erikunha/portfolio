@@ -4,6 +4,18 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 HOOKS="$REPO_ROOT/.claude/hooks"
 FAILED=0
 
+# git EXPORTS its repo-local vars into hook environments and honours them over the
+# cwd, so a fixture that cds into a temp dir is NOT outside the repo when this
+# suite runs from a hook — as it does via .husky/pre-push. It hid as an
+# environment flake: the main worktree's GIT_DIR is the relative `.git`
+# (unresolvable from a temp dir, so the fixture passed by accident) while a linked
+# worktree's is absolute. `--local-env-vars` is git's own list for this exact case
+# (`git help githooks` prescribes this line) — a hand-written subset would be a
+# fourth thing to keep in sync. Cleared once rather than per invocation because the
+# environment is process-wide, not because it is faster — measured 97s vs 99s, which
+# is noise. REPO_ROOT above resolves first, so this cannot change it.
+unset $(git rev-parse --local-env-vars 2>/dev/null)
+
 FIXDIR=$(mktemp -d)
 trap 'rm -rf "$FIXDIR"' EXIT
 
@@ -144,7 +156,7 @@ rm -rf "$SHIM"
 
 NOREPO=$(mktemp -d)
 out_nr=$(cd "$NOREPO" && printf '' | run_hook "$SC_HOOK")
-assert_eq "ctx: empty outside repo" "" "$out_nr"
+assert_eq "ctx: outside a repo the hook emits nothing — run_hook clears GIT_DIR, without which a temp dir is still inside the repo git resolves to" "" "$out_nr"
 rm -rf "$NOREPO"
 
 WIRING=$(python3 -c "

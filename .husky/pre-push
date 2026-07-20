@@ -73,5 +73,17 @@ if [ -s "$API_MARKER" ]; then
   exit 1
 fi
 
+# git exports its repo-local vars into this hook and honours them over the cwd, so
+# every suite below inherits them. Tests that build a temp repo and commit in it
+# then operate on THIS repo: `scripts/__tests__/detect-changes.test.ts` writes the
+# real index with a temp dir as the work tree, staging every tracked file as
+# deleted (791 entries, measured), and its commit re-enters husky via the global
+# core.hooksPath and fails `pnpm check` where there is no package.json.
+# Cleared at this boundary because the whole chain below inherits one environment;
+# a per-suite fix has to be re-added by the next suite. Every gate above resolves
+# its own git state first, so this cannot affect them.
+# `--local-env-vars` is git's own list for this case (`git help githooks`).
+unset $(git rev-parse --local-env-vars 2>/dev/null)
+
 echo "[pre-push] Running verify chain (pnpm verify)..."
 pnpm verify || exit 1
