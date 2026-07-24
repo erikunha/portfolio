@@ -3,7 +3,7 @@ import { dsPageMetadata } from './_lib/page-metadata';
 export const metadata = dsPageMetadata({
   slug: '',
   title: 'Design System — erikunha.dev',
-  description: 'Two-tier token pipeline, 8 primitive components, and enforcement docs for erikunha.dev',
+  description: 'Two-tier token pipeline, 9 primitive components, and enforcement docs for erikunha.dev',
 });
 
 # DESIGN SYSTEM
@@ -15,8 +15,8 @@ export const metadata = dsPageMetadata({
 A published design system for erikunha.dev — positioned at `/design-system` as part of the Staff/Principal frontend hiring artifact.
 
 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',border:'1px solid var(--color-primary-subtle)',marginBottom:'24px',marginLeft:'-24px',marginRight:'-24px'}}>
-  <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="8" label="PRIMITIVES" variant="display" /></div>
-  <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="6" label="RSC" variant="display" /></div>
+  <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="9" label="PRIMITIVES" variant="display" /></div>
+  <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="7" label="RSC" variant="display" /></div>
   <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="100" label="A11Y" variant="display" /></div>
   <StatTile value="0" label="CLIENT_KB" variant="display" />
 </div>
@@ -26,7 +26,7 @@ A published design system for erikunha.dev — positioned at `/design-system` as
 ## Sections
 
 - [Tokens](/design-system/tokens) — Color palette, type scale, spacing, motion, layers
-- [Components](/design-system/components) — 8 primitive components with live previews and source
+- [Components](/design-system/components) — 9 primitive components with live previews and source
 - [Enforcement](/design-system/enforcement) — Lint rules, CI gates, contributing guide
 - [Changelog](/design-system/changelog) — Token and component change log
 
@@ -34,6 +34,6 @@ A published design system for erikunha.dev — positioned at `/design-system` as
 
 **Utilities over raw values.** Components reference Tailwind utilities backed by the `@theme` palette (`text-primary-500`, `border-primary-subtle`), never raw hex. The single `@theme` block in `theme.css` is the one place a colour changes.
 
-**RSC by default.** 6 of 8 primitives are React Server Components — zero client JavaScript. `Field` and `CopyButton` require `'use client'` for controlled input state and clipboard access respectively.
+**RSC by default.** 7 of 9 primitives are React Server Components — zero client JavaScript. `Field` and `CopyButton` require `'use client'` for controlled input state and clipboard access respectively.
 
 **Enforced, not documented.** The contrast gate, axe-core a11y scan, and Lighthouse (a11y = 100) run in CI. The rules don't rely on developer discipline.
