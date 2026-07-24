@@ -92,7 +92,7 @@ async function run() {
 
   if (cycleCount > 2) {
     process.stdout.write(
-      `\n  ${C.yellow}⚠ ${cycleCount} claude-review cycles — more than 2 cycles signals that thinking-inversion\n` +
+      `\n  ${C.yellow}⚠ ${cycleCount} claude-review cycles — more than 2 cycles signals that thinking-risk-premortem\n` +
         `    or TDD failed upstream. Bugs reached review that should have been caught earlier.${C.reset}\n`,
     );
   }
