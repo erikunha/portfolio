@@ -146,7 +146,7 @@ rm -rf "$SHIM"
 
 NOREPO=$(mktemp -d)
 out_nr=$(cd "$NOREPO" && printf '' | run_hook "$SC_HOOK")
-assert_eq "ctx: outside a repo the hook emits nothing — run_hook clears GIT_DIR, without which a temp dir is still inside the repo git resolves to" "" "$out_nr"
+assert_eq "ctx: outside a repo the hook emits nothing — the top-of-file unset clears GIT_DIR for every invocation below it, without which a temp dir still resolves inside this repo" "" "$out_nr"
 rm -rf "$NOREPO"
 
 WIRING=$(python3 -c "
