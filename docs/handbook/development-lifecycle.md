@@ -31,13 +31,13 @@ flowchart TD
 ## Phase by phase
 
 ### 1. Idea -> Brainstorm
-Work starts with `/speckit.specify` (mandated before any feature). The output is a shared understanding of intent, requirements, and the chosen approach, with failure modes considered up front (`thinking-pre-mortem`, `thinking-inversion`).
+Work starts with `/speckit.specify` (mandated before any feature). The output is a shared understanding of intent, requirements, and the chosen approach, with failure modes considered up front (`thinking-risk-premortem`).
 
 ### 2. Spec (the approved "what and why")
 A design spec lands in `specs/NNN-feature/` as `YYYY-MM-DD-<topic>-design.md`. Structure: `# Title` -> `**Date** / **Status: Approved**` -> `## Context` -> `## Gaps to Close` (numbered) -> `## Changes` (per file). The spec is the contract; it enumerates the gaps it closes. Specs are local-only workflow artifacts (gitignored), not tracked in the repo.
 
 ### 3. The architect gate
-Before a plan can be written, `speckit-plan` is **mechanically blocked** by `.claude/hooks/architect-gate.sh` until an `architect-reviewer` agent has emitted `GATE_RESULT: PASS` in the session. This forces a spec to survive architectural scrutiny before any implementation planning. `thinking-inversion` runs here too, turning "what could go wrong" into explicit plan tasks.
+Before a plan can be written, `speckit-plan` is **mechanically blocked** by `.claude/hooks/architect-gate.sh` until an `architect-reviewer` agent has emitted `GATE_RESULT: PASS` in the session. This forces a spec to survive architectural scrutiny before any implementation planning. `thinking-risk-premortem` runs here too, turning "what could go wrong" into explicit plan tasks.
 
 ### 4. Plan (the decomposed "how")
 An implementation plan lands in `specs/NNN-feature/` (local-only, gitignored) paired 1:1 with its spec (same date-topic name). Plans are large and step-by-step (often 10KB to 90KB). Large programs are sharded: into sub-PR plans (`pr-a-...`, `pr-b-...`) and subdirectories, and into workstreams (`ws0`–`ws7`). This is the "integration branch + sub-PRs" pattern for anything too big for one reviewable PR.

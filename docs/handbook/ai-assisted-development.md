@@ -16,7 +16,7 @@ sequenceDiagram
     C->>C: /speckit.specify (intent + approach)
     C->>A: architect-reviewer (spec gate)
     A-->>G: GATE_RESULT: PASS (unblocks writing-plans)
-    C->>C: writing-plans + thinking-inversion (failure modes -> tasks)
+    C->>C: writing-plans + thinking-risk-premortem (failure modes -> tasks)
     C->>C: TDD implement (tests first)
     C->>G: edits trigger PostToolUse hooks (markers, lints)
     C->>A: 4-agent review battery (parallel)
@@ -67,7 +67,7 @@ Every substantive change runs the same disciplined loop, enforced by mandated sk
 | Step | Mechanism | Enforced by |
 |---|---|---|
 | Explore + plan | brainstorming, writing-plans | architect-gate hook (blocks plans without PASS) |
-| Anticipate failure | thinking-inversion, pre-mortem | convention + plan tasks |
+| Anticipate failure | thinking-risk-premortem, pre-mortem | convention + plan tasks |
 | Implement | test-driven-development | convention |
 | Self-verify | verification-before-completion | convention + `pnpm verify` |
 | Review | 4-agent battery | `review:stamp` (transcript-verified) |
