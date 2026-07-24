@@ -55,7 +55,10 @@ describe('inheritedEnvWithIsolatedGit: git’s repo-local env cannot reach the c
 
   it('a leaked GIT_DIR does not make a temp repo write the repo it points at', () => {
     const decoy = mkdtempSync(join(tmpdir(), 'hermetic-decoy-'));
-    execFileSync('git', ['init', '-b', 'main', decoy], { encoding: 'utf8' });
+    execFileSync('git', ['init', '-b', 'main', decoy], {
+      encoding: 'utf8',
+      env: hermeticEnv(),
+    });
     exportVar('GIT_DIR', join(decoy, '.git'));
 
     const dir = mkdtempSync(join(tmpdir(), 'hermetic-'));
