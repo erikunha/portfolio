@@ -137,7 +137,7 @@ describe('runner main() via subprocess', () => {
     try {
       const out = join(dir, 'gh_output');
       execFileSync('node', [runner], {
-        env: { ...process.env, EVENT_NAME: 'push', GITHUB_OUTPUT: out },
+        env: inheritedEnvWithIsolatedGit({ EVENT_NAME: 'push', GITHUB_OUTPUT: out }),
       });
       expect(readFileSync(out, 'utf8')).toBe('ai=true\napp=true\nui=true\n');
     } finally {
@@ -154,13 +154,12 @@ describe('runner main() via subprocess', () => {
       try {
         execFileSync('node', [runner], {
           stdio: 'pipe',
-          env: {
-            ...process.env,
+          env: inheritedEnvWithIsolatedGit({
             EVENT_NAME: 'pull_request',
             BASE_SHA: '0000000000000000000000000000000000000000',
             HEAD_SHA: '0000000000000000000000000000000000000000',
             GITHUB_OUTPUT: out,
-          },
+          }),
         });
       } catch (err) {
         code = (err as { status?: number }).status ?? -1;

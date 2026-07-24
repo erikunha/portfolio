@@ -73,5 +73,7 @@ if [ -s "$API_MARKER" ]; then
   exit 1
 fi
 
+unset $(git rev-parse --local-env-vars 2>/dev/null)
+
 echo "[pre-push] Running verify chain (pnpm verify)..."
 pnpm verify || exit 1
