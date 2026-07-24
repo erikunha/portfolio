@@ -4,6 +4,8 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 HOOKS="$REPO_ROOT/.claude/hooks"
 FAILED=0
 
+unset $(git rev-parse --local-env-vars 2>/dev/null)
+
 FIXDIR=$(mktemp -d)
 trap 'rm -rf "$FIXDIR"' EXIT
 
@@ -144,7 +146,7 @@ rm -rf "$SHIM"
 
 NOREPO=$(mktemp -d)
 out_nr=$(cd "$NOREPO" && printf '' | run_hook "$SC_HOOK")
-assert_eq "ctx: empty outside repo" "" "$out_nr"
+assert_eq "ctx: outside a repo the hook emits nothing — the top-of-file unset clears GIT_DIR for every invocation below it, without which a temp dir still resolves inside this repo" "" "$out_nr"
 rm -rf "$NOREPO"
 
 WIRING=$(python3 -c "

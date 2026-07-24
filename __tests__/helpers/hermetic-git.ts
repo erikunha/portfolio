@@ -1,3 +1,5 @@
+import { execFileSync } from 'node:child_process';
+
 export const NULL_DEVICE = '/dev/null';
 
 export const ENV_ALLOWLIST = ['PATH', 'TMPDIR'];
@@ -20,11 +22,23 @@ export const hermeticEnv = (extra: Record<string, string> = {}): NodeJS.ProcessE
   return { ...env, ...extra } as NodeJS.ProcessEnv;
 };
 
+const REPO_LOCAL_ENV_VARS = execFileSync('git', ['rev-parse', '--local-env-vars'], {
+  encoding: 'utf8',
+})
+  .trim()
+  .split('\n');
+
+const withoutRepoIdentity = (env: NodeJS.ProcessEnv): NodeJS.ProcessEnv => {
+  const stripped = { ...env };
+  for (const key of REPO_LOCAL_ENV_VARS) delete stripped[key];
+  return stripped;
+};
+
 export const inheritedEnvWithIsolatedGit = (
   extra: Record<string, string> = {},
 ): NodeJS.ProcessEnv =>
   ({
-    ...process.env,
+    ...withoutRepoIdentity(process.env),
     ...GIT_CONFIG_ISOLATION,
     ...extra,
   }) as NodeJS.ProcessEnv;
