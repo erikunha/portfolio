@@ -458,8 +458,6 @@ assert_eq "ms: reading console output is not a UI review and passes through" "0"
   | run_hook "$MS_HOOK") >/dev/null 2>&1
 assert_eq "ms: a parsed unmandated skill is not blocked by a token in its args" "0" "$?"
 # grep -F is a substring match; browser_navigate is a prefix of browser_navigate_back.
-(cd "$REPO_ROOT" && ms_nav_payload 'mcp__plugin_playwright_playwright__browser_navigate_back' "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
-assert_eq "ms: browser_navigate_back is not swept up by the navigate mandate" "0" "$?"
 # browser_tabs takes a url, so it reaches a page without browser_navigate. Left
 # ungated it is a first-party bypass of the whole UI mandate.
 MS_TABS=mcp__plugin_playwright_playwright__browser_tabs
@@ -518,12 +516,26 @@ printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_use","name":"S
 assert_eq "ms: an unanchored non-assistant record does not satisfy the mandate" "2" "$?"
 rm -f "$MS_FORGED"
 
-# Reaching a page is an open set, so the observation sinks are gated too.
-for MS_SINK in mcp__plugin_playwright_playwright__browser_take_screenshot \
-               mcp__plugin_playwright_playwright__browser_snapshot; do
-  (cd "$REPO_ROOT" && ms_nav_payload "$MS_SINK" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
-  assert_eq "ms: $MS_SINK is gated (page reached by any route)" "2" "$?"
+# Neither reaching a page nor observing one is a closed set: evaluate and
+# run_code_unsafe return page content to the caller, so they are sinks too.
+# The NAMESPACE is the closed set; a tool added upstream is gated by default.
+for MS_SINK in browser_take_screenshot browser_snapshot browser_evaluate \
+               browser_run_code_unsafe browser_find browser_click browser_navigate_back; do
+  (cd "$REPO_ROOT" && ms_nav_payload "mcp__plugin_playwright_playwright__$MS_SINK" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
+  assert_eq "ms: $MS_SINK is gated by the namespace" "2" "$?"
 done
+# Carve-outs: cannot reach a page, cannot reveal what one renders.
+for MS_OK in browser_close browser_resize browser_handle_dialog \
+             browser_console_messages browser_network_requests; do
+  (cd "$REPO_ROOT" && ms_nav_payload "mcp__plugin_playwright_playwright__$MS_OK" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
+  assert_eq "ms: $MS_OK stays ungated" "0" "$?"
+done
+# The escape arm is what stops a \uXXXX payload decoding past the prefilter.
+MS_ESC="$FIXDIR/ms-esc-$$.json"
+python3 -c "open('$MS_ESC','w').write('{\"tool_name\":\"Skill\",\"tool_input\":{\"skill\":\"speckit\\\\u002dplan\"},\"transcript_path\":\"$MS_EMPTY\"}')"
+(cd "$REPO_ROOT" && run_hook "$MS_HOOK" < "$MS_ESC") >/dev/null 2>&1
+assert_eq "ms: a unicode-escaped mandated token does not slip past the prefilter" "2" "$?"
+rm -f "$MS_ESC"
 
 # One fabricated record must not self-pair. Results are read before the same
 # record's tool_uses register, so a pairing has to cross a record boundary.
@@ -545,10 +557,16 @@ for m in d['hooks']['PreToolUse']:
 ms_matches() { python3 -c "
 import re,sys
 print('yes' if re.search(sys.argv[1], sys.argv[2]) else 'no')" "$MS_MATCHER" "$1"; }
-for MS_T in browser_navigate browser_tabs browser_take_screenshot browser_snapshot; do
-  assert_eq "ms: matcher covers $MS_T" "yes" "$(ms_matches "mcp__plugin_playwright_playwright__$MS_T")"
+# The matcher is deliberately the bare namespace, with the carve-out living in
+# ONE place (the hook). A second copy in the matcher would be the drift class
+# these assertions exist to catch, and it would need negative lookahead whose
+# support in the runtime matcher engine is not something a test here can prove.
+for MS_T in browser_navigate browser_tabs browser_take_screenshot browser_snapshot \
+            browser_evaluate browser_run_code_unsafe browser_find browser_click \
+            browser_navigate_back browser_close browser_console_messages; do
+  assert_eq "ms: matcher reaches $MS_T" "yes" "$(ms_matches "mcp__plugin_playwright_playwright__$MS_T")"
 done
-assert_eq "ms: matcher excludes browser_navigate_back" "no" "$(ms_matches 'mcp__plugin_playwright_playwright__browser_navigate_back')"
+assert_eq "ms: matcher does not reach a non-browser MCP tool" "no" "$(ms_matches 'mcp__upstash__redis_database_run_redis_commands')"
 
 # Prose quoting a skill name must not satisfy a mandate; only a tool_use does.
 MS_PROSE="$FIXDIR/ms-prose-$$.jsonl"

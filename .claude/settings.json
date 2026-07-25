@@ -46,7 +46,7 @@
         ]
       },
       {
-        "matcher": "mcp__plugin_playwright_playwright__browser_(navigate|tabs|take_screenshot|snapshot)$",
+        "matcher": "mcp__plugin_playwright_playwright__browser_",
         "hooks": [
           {
             "type": "command",

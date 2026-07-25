@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 INPUT=$(cat)
 PW=mcp__plugin_playwright_playwright__browser
-NAV_TOOL="${PW}_navigate"
-TABS_TOOL="${PW}_tabs"
-SHOT_TOOL="${PW}_take_screenshot"
-SNAP_TOOL="${PW}_snapshot"
 
 # Prefilter before spawning an interpreter. This hook sits on the bare Skill
 # matcher, so the overwhelmingly common case mandates nothing, and paying a
@@ -14,7 +10,7 @@ SNAP_TOOL="${PW}_snapshot"
 # judged on its raw bytes: "-" decodes to a token this glob cannot see.
 case "$INPUT" in
   *'\u'*) ;;
-  *speckit-plan*|*"$NAV_TOOL"*|*"$TABS_TOOL"*|*"$SHOT_TOOL"*|*"$SNAP_TOOL"*) ;;
+  *speckit-plan*|*"$PW"_*) ;;
   *) exit 0 ;;
 esac
 
@@ -31,18 +27,20 @@ except Exception: print('- - -')
 " 2>/dev/null || echo "- - -")
 EOF
 
-# Each mandate binds a CLAUDE.md rule to the event that rule names. Reaching a
-# page is an OPEN set -- navigate, tabs, evaluate, run_code_unsafe, a click on a
-# link -- so enumerating entry points loses to drift as the MCP server grows.
-# Observation is the closed set and is what a UI review actually is, so the
-# screenshot and snapshot sinks are gated too: whatever route reached the page,
-# looking at it is what the mandate binds to.
+# Enumerating browser tools lost three times: navigate missed tabs, then
+# navigate+tabs missed evaluate and run_code_unsafe, which return page content
+# to the caller and are therefore sinks themselves. Neither "reaching a page"
+# nor "observing one" is a closed set, and the server resolves at @latest so
+# the surface can grow between runs. The NAMESPACE is the closed set: gate all
+# of it, and carve out only the tools that can neither reach a page nor reveal
+# what one renders. A tool added upstream is then gated by default.
+case "$TOOL" in
+  "$PW"_close|"$PW"_resize|"$PW"_handle_dialog|"$PW"_console_messages|"$PW"_network_request|"$PW"_network_requests)
+    exit 0 ;;
+esac
 case "$TOOL:$TARGET" in
-  Skill:speckit-plan)       REQUIRED=thinking-risk-premortem ;;
-  "$NAV_TOOL:$NAV_TOOL")    REQUIRED=web-design-guidelines ;;
-  "$TABS_TOOL:$TABS_TOOL")  REQUIRED=web-design-guidelines ;;
-  "$SHOT_TOOL:$SHOT_TOOL")  REQUIRED=web-design-guidelines ;;
-  "$SNAP_TOOL:$SNAP_TOOL")  REQUIRED=web-design-guidelines ;;
+  Skill:speckit-plan)  REQUIRED=thinking-risk-premortem ;;
+  "$PW"_*:*)           REQUIRED=web-design-guidelines ;;
   *:-)
     # Parse failure only. Reaching this from a well-formed payload would block
     # any call whose arguments merely mention a mandated token, and a gate that
@@ -51,7 +49,7 @@ case "$TOOL:$TARGET" in
     # unparseable: a stricter field pattern would fail open on exactly the
     # malformed input this arm exists to catch.
     if printf '%s' "$INPUT" | grep -qF 'speckit-plan'; then REQUIRED=thinking-risk-premortem
-    elif printf '%s' "$INPUT" | grep -qE "${NAV_TOOL}|${TABS_TOOL}|${SHOT_TOOL}|${SNAP_TOOL}"; then REQUIRED=web-design-guidelines
+    elif printf '%s' "$INPUT" | grep -qF "${PW}_"; then REQUIRED=web-design-guidelines
     else exit 0
     fi
     ;;
