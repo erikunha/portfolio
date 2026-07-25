@@ -46,7 +46,7 @@
         ]
       },
       {
-        "matcher": "mcp__plugin_playwright_playwright__browser_navigate",
+        "matcher": "mcp__plugin_playwright_playwright__browser_(navigate|tabs)$",
         "hooks": [
           {
             "type": "command",

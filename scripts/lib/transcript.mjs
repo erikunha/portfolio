@@ -44,12 +44,31 @@ export function lastUserCommitMarker(records) {
   return marker;
 }
 
-export function skillInvoked(records, skillName) {
+export function skillCompleted(records, skillName) {
+  if (typeof skillName !== 'string' || skillName === '') return false;
+  const pending = new Set();
   for (const record of records) {
-    for (const tu of toolUses(record)) {
-      if (tu.name !== SKILL_TOOL_NAME) continue;
-      const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
-      if (input.skill === skillName) return true;
+    if (record?.message?.role === ASSISTANT_ROLE) {
+      for (const tu of toolUses(record)) {
+        if (tu.name !== SKILL_TOOL_NAME) continue;
+        const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
+        if (input.skill === skillName && typeof tu.id === 'string') pending.add(tu.id);
+      }
+    }
+    const content = record?.message?.content;
+    if (!Array.isArray(content)) continue;
+    for (const item of content) {
+      if (!item || typeof item !== 'object' || item.type !== TOOL_RESULT_TYPE) continue;
+      if (!pending.has(item.tool_use_id)) continue;
+      // A blocked, denied, or interrupted call still leaves its tool_use behind.
+      // Pairing to a non-error result is what separates "the skill ran" from
+      // "the model asked for it", and one throwaway attempt must not unlock the
+      // mandate for the rest of the session.
+      if (item.is_error === true) {
+        pending.delete(item.tool_use_id);
+        continue;
+      }
+      return true;
     }
   }
   return false;
