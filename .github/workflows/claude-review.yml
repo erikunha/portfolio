@@ -7,14 +7,17 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency:
-  # One group per PR across both events, so any newer run supersedes the one in
-  # flight. Splitting by event name put a comment run and a push run in separate
-  # groups, which meant neither cancelled the other and both reviewed the same
-  # PR at once, racing to post the verdict the merge gate reads last. A review
-  # is only valid against the HEAD it read, so once HEAD moves the in-flight run
-  # is reviewing a stale commit and superseding it is the correct outcome.
+  # One group per PR across both events, so runs on a PR serialize rather than
+  # overlap. Cancellation is OFF: GitHub resolves concurrency at the RUN level,
+  # before a job's `if:` is evaluated, so an ordinary comment -- one that does
+  # not contain the trigger phrase and whose job is then skipped -- still enters
+  # this group. With cancellation on it killed the in-flight review and posted
+  # nothing in its place, leaving the PR with no verdict at all; observed on
+  # #221, where GitHub reported "Canceling since a higher priority waiting
+  # request for claude-review-221 exists". Queuing costs a duplicate review when
+  # a push lands mid-flight. No review is the worse failure, so this waits.
   group: claude-review-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read
