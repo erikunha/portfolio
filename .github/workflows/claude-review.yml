@@ -23,9 +23,11 @@ concurrency:
   # This predicate MUST stay identical to the job's `if:` below. Concurrency
   # cannot read `env` or a job output, so the duplication is forced by the
   # platform; `__tests__/scripts/claude-review-predicate.test.ts` is what keeps
-  # the two copies from drifting. Keep the `event_name == 'pull_request'` guard
-  # ahead of `draft == false`: GHA casts null to false, so unguarded it would
-  # evaluate true on a comment event.
+  # the two copies from drifting. `draft == false` must stay INSIDE the
+  # pull_request branch, never in the top-level disjunction: GHA casts null
+  # to false, so a top-level draft check is true on a comment event and would
+  # admit every comment. Membership in that branch is what matters, not
+  # position within it; `&&` is order-independent.
   group: >-
     ${{ ((github.event_name == 'pull_request' &&
     github.event.pull_request.draft == false &&
