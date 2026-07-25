@@ -28,10 +28,25 @@ function block(source: string, startKey: string, endKey: string): string {
 const groupFor = (predicate: string) =>
   `\${{ (${predicate}) && format('claude-review-{0}', github.event.pull_request.number || github.event.issue.number) || format('claude-review-noop-{0}', github.run_id) }}`;
 
+// Anchored to the `review` job rather than the first `if:` in the file. Without
+// this a decoy job above it can carry the matching predicate while `review.if`
+// is widened to `true`, and the gate stays green; an honest second job produces
+// a red whose cheapest remedies both unbind the gate permanently.
+const REVIEW_JOB = '\n  review:\n';
+
+function reviewJob(source: string): string {
+  const at = source.indexOf(REVIEW_JOB);
+  if (at === -1)
+    throw new Error(
+      'claude-review.yml: the `review:` job is gone or renamed; this gate no longer knows which predicate the concurrency group must mirror',
+    );
+  return source.slice(at);
+}
+
 describe('claude-review concurrency group mirrors the job condition', () => {
   const source = readFileSync(WORKFLOW, 'utf8');
   const group = block(source, 'group: >-', 'cancel-in-progress:');
-  const jobIf = block(source, 'if: >-', 'runs-on:');
+  const jobIf = block(reviewJob(source), 'if: >-', 'runs-on:');
 
   it('the group admits exactly what the job admits, and routes the rest away', () => {
     expect(
