@@ -530,10 +530,12 @@ for MS_SINK in browser_console_messages browser_network_requests browser_handle_
   (cd "$REPO_ROOT" && ms_nav_payload "mcp__plugin_playwright_playwright__$MS_SINK" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
   assert_eq "ms: $MS_SINK reveals page content and is gated" "2" "$?"
 done
-# The carve-out is only what returns nothing about a page.
-for MS_OK in browser_close browser_resize; do
-  (cd "$REPO_ROOT" && ms_nav_payload "mcp__plugin_playwright_playwright__$MS_OK" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
-  assert_eq "ms: $MS_OK stays ungated" "0" "$?"
+# No carve-out: every attempt to name a safe subset was wrong, and close/resize
+# rested on an unverified claim about upstream payloads. Gating the whole
+# namespace makes the rule true without depending on any such claim.
+for MS_SINK in browser_close browser_resize; do
+  (cd "$REPO_ROOT" && ms_nav_payload "mcp__plugin_playwright_playwright__$MS_SINK" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
+  assert_eq "ms: $MS_SINK is gated too, no unverified exceptions" "2" "$?"
 done
 # The escape arm is what stops a \uXXXX payload decoding past the prefilter.
 MS_ESC="$FIXDIR/ms-esc-$$.json"

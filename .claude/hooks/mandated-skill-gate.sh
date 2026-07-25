@@ -34,16 +34,13 @@ EOF
 # the surface can grow between runs. The NAMESPACE is the closed set: gate all
 # of it. A tool added upstream is then gated by default.
 #
-# The carve-out is only what returns nothing about a page: close reports
-# termination, resize reports a viewport size. console_messages and
-# network_requests were carved out once and put back -- both exist to surface
-# page-originated content (logged app state, response bodies), and the browser
-# context outlives a session, so a fresh transcript could read back a page it
-# never reached. handle_dialog stays gated because its result shape was not
-# verified, and an unverified tool belongs on the safe side of a gate.
-case "$TOOL" in
-  "$PW"_close|"$PW"_resize) exit 0 ;;
-esac
+# There is no carve-out. Every attempt to name a safe subset was wrong: first
+# console_messages and network_requests, which surface logged app state and
+# response bodies, then close and resize, whose payloads are asserted to reveal
+# nothing but are not verified by anything in this repo. The standard applied
+# to handle_dialog -- an unverified tool belongs on the safe side of a gate --
+# is the standard for all of them, and applying it uniformly means the rule
+# holds without depending on any claim about upstream response shapes.
 case "$TOOL:$TARGET" in
   Skill:speckit-plan)  REQUIRED=thinking-risk-premortem ;;
   "$PW"_*:*)           REQUIRED=web-design-guidelines ;;
