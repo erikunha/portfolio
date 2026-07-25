@@ -446,8 +446,10 @@ printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"text","text":"
 
 (cd "$REPO_ROOT" && ms_skill_payload 'speckit-specify' "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
 assert_eq "ms: unmandated skill passes through" "0" "$?"
-(cd "$REPO_ROOT" && ms_nav_payload 'mcp__plugin_playwright_playwright__browser_snapshot' "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
-assert_eq "ms: non-navigating browser tool passes through" "0" "$?"
+# A browser tool that neither reaches a page nor observes rendered UI is not a
+# visual review and stays ungated, or the mandate becomes a tax on E2E debugging.
+(cd "$REPO_ROOT" && ms_nav_payload 'mcp__plugin_playwright_playwright__browser_console_messages' "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: reading console output is not a UI review and passes through" "0" "$?"
 # The fallback grep must fire only when the target could not be parsed. A parsed,
 # unmandated payload that merely MENTIONS a mandated token is ordinary work:
 # blocking it is the false-positive class that trains bypass.
@@ -515,6 +517,38 @@ printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_use","name":"S
 (cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$MS_FORGED" | run_hook "$MS_HOOK") >/dev/null 2>&1
 assert_eq "ms: an unanchored non-assistant record does not satisfy the mandate" "2" "$?"
 rm -f "$MS_FORGED"
+
+# Reaching a page is an open set, so the observation sinks are gated too.
+for MS_SINK in mcp__plugin_playwright_playwright__browser_take_screenshot \
+               mcp__plugin_playwright_playwright__browser_snapshot; do
+  (cd "$REPO_ROOT" && ms_nav_payload "$MS_SINK" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
+  assert_eq "ms: $MS_SINK is gated (page reached by any route)" "2" "$?"
+done
+
+# One fabricated record must not self-pair. Results are read before the same
+# record's tool_uses register, so a pairing has to cross a record boundary.
+MS_SELFPAIR="$FIXDIR/ms-selfpair-$$.jsonl"
+printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"tool_use","id":"z","name":"Skill","input":{"skill":"thinking-risk-premortem"}},{"type":"tool_result","tool_use_id":"z","content":"ok"}]}}' > "$MS_SELFPAIR"
+(cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$MS_SELFPAIR" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: a single self-pairing record does not satisfy the mandate" "2" "$?"
+rm -f "$MS_SELFPAIR"
+
+# The matcher is half the gate: with the wrong one the hook is never invoked,
+# and every assertion here would still pass while the tool went ungated.
+MS_MATCHER=$(python3 -c "
+import json,sys
+d=json.load(open('$REPO_ROOT/.claude/settings.json'))
+for m in d['hooks']['PreToolUse']:
+    if 'mandated-skill-gate.sh' in json.dumps(m.get('hooks',[])) and m.get('matcher','')!='Skill':
+        print(m['matcher'])
+")
+ms_matches() { python3 -c "
+import re,sys
+print('yes' if re.search(sys.argv[1], sys.argv[2]) else 'no')" "$MS_MATCHER" "$1"; }
+for MS_T in browser_navigate browser_tabs browser_take_screenshot browser_snapshot; do
+  assert_eq "ms: matcher covers $MS_T" "yes" "$(ms_matches "mcp__plugin_playwright_playwright__$MS_T")"
+done
+assert_eq "ms: matcher excludes browser_navigate_back" "no" "$(ms_matches 'mcp__plugin_playwright_playwright__browser_navigate_back')"
 
 # Prose quoting a skill name must not satisfy a mandate; only a tool_use does.
 MS_PROSE="$FIXDIR/ms-prose-$$.jsonl"

@@ -1,15 +1,20 @@
 #!/usr/bin/env bash
 INPUT=$(cat)
-NAV_TOOL=mcp__plugin_playwright_playwright__browser_navigate
-TABS_TOOL=mcp__plugin_playwright_playwright__browser_tabs
+PW=mcp__plugin_playwright_playwright__browser
+NAV_TOOL="${PW}_navigate"
+TABS_TOOL="${PW}_tabs"
+SHOT_TOOL="${PW}_take_screenshot"
+SNAP_TOOL="${PW}_snapshot"
 
 # Prefilter before spawning an interpreter. This hook sits on the bare Skill
-# matcher, so the overwhelmingly common case is a call that mandates nothing;
-# paying a python3 start on every one of those is a tax on all Skill use. A
-# token absent from the raw payload cannot be the parsed target, so this can
-# only skip calls the case statement below would also have let through.
+# matcher, so the overwhelmingly common case mandates nothing, and paying a
+# python3 start on each of those taxes all Skill use. Skipping here is only
+# safe for payloads the case statement below would also pass, so a payload
+# carrying a JSON escape falls through to the real parse rather than being
+# judged on its raw bytes: "-" decodes to a token this glob cannot see.
 case "$INPUT" in
-  *speckit-plan*|*"$NAV_TOOL"*|*"$TABS_TOOL"*) ;;
+  *'\u'*) ;;
+  *speckit-plan*|*"$NAV_TOOL"*|*"$TABS_TOOL"*|*"$SHOT_TOOL"*|*"$SNAP_TOOL"*) ;;
   *) exit 0 ;;
 esac
 
@@ -26,14 +31,18 @@ except Exception: print('- - -')
 " 2>/dev/null || echo "- - -")
 EOF
 
-# Each mandate binds a CLAUDE.md rule to the one event that rule already names,
-# so the predicate is the rule itself rather than a proxy for it. browser_tabs
-# accepts a url, so gating navigation alone would leave a first-party bypass:
-# open the tab, screenshot it, never navigate.
+# Each mandate binds a CLAUDE.md rule to the event that rule names. Reaching a
+# page is an OPEN set -- navigate, tabs, evaluate, run_code_unsafe, a click on a
+# link -- so enumerating entry points loses to drift as the MCP server grows.
+# Observation is the closed set and is what a UI review actually is, so the
+# screenshot and snapshot sinks are gated too: whatever route reached the page,
+# looking at it is what the mandate binds to.
 case "$TOOL:$TARGET" in
   Skill:speckit-plan)       REQUIRED=thinking-risk-premortem ;;
   "$NAV_TOOL:$NAV_TOOL")    REQUIRED=web-design-guidelines ;;
   "$TABS_TOOL:$TABS_TOOL")  REQUIRED=web-design-guidelines ;;
+  "$SHOT_TOOL:$SHOT_TOOL")  REQUIRED=web-design-guidelines ;;
+  "$SNAP_TOOL:$SNAP_TOOL")  REQUIRED=web-design-guidelines ;;
   *:-)
     # Parse failure only. Reaching this from a well-formed payload would block
     # any call whose arguments merely mention a mandated token, and a gate that
@@ -42,8 +51,7 @@ case "$TOOL:$TARGET" in
     # unparseable: a stricter field pattern would fail open on exactly the
     # malformed input this arm exists to catch.
     if printf '%s' "$INPUT" | grep -qF 'speckit-plan'; then REQUIRED=thinking-risk-premortem
-    elif printf '%s' "$INPUT" | grep -qF "$NAV_TOOL"; then REQUIRED=web-design-guidelines
-    elif printf '%s' "$INPUT" | grep -qF "$TABS_TOOL"; then REQUIRED=web-design-guidelines
+    elif printf '%s' "$INPUT" | grep -qE "${NAV_TOOL}|${TABS_TOOL}|${SHOT_TOOL}|${SNAP_TOOL}"; then REQUIRED=web-design-guidelines
     else exit 0
     fi
     ;;
