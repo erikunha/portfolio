@@ -66,7 +66,7 @@ This codebase is a **reference system** — every architectural decision, perf b
 
 | Concern | Trigger | Agent |
 |---|---|---|
-| Visual correctness | After CSS, layout, or responsive changes | `ui-ux-tester` |
+| Visual correctness | After CSS, layout, or responsive changes | Playwright MCP visual check in the main thread (desktop 1280x720 + mobile 375x812), per the working-agreement rule below. There is no `ui-ux-tester` agent: the row named one for months that resolved only in an uninstalled marketplace, so the dispatch always failed |
 | Performance | After changes that could affect LCP/INP/CLS | `performance-engineer` |
 | Bundle growth | After adding a new dependency | `dependency-auditor` |
 | Next.js patterns | After implementing new API routes, server actions, or app router layouts | `nextjs-developer` |
@@ -78,12 +78,12 @@ Invoke the named skill inline (not as a subagent) before the described action. P
 | Trigger | Skill |
 |---|---|
 | **Before writing any new file, API handler, or complex logic block** | **`thinking-risk-premortem` — what specifically makes this fail? answers become test cases** |
-| **Before `speckit-plan` on any spec** | **`thinking-risk-premortem` — enumerate the class-of-bugs the implementation introduces; each becomes an explicit plan task, not a claude-review finding** |
+| **Before `speckit-plan` on any spec** | **`thinking-risk-premortem` — enumerate the class-of-bugs the implementation introduces; each becomes an explicit plan task, not a claude-review finding. ENFORCED at this trigger only: `.claude/hooks/mandated-skill-gate.sh` (PreToolUse `Skill`) blocks `speckit-plan` until a `thinking-risk-premortem` tool_use exists this session. The row above (write-time) stays prose — no mechanical event names it** |
 | **Before implementing any new file, function, or script** | **tests first, always; implementation satisfies them. No skill backs this now, it is the rule itself: write the failing test, watch it fail, then make it pass** |
 | Before implementing any component (in `components/` or `design-system/`) | Run DS component pre-mortem: (1) which attrs does the consumer control? (`id`, `className`, `aria-*`) — passthrough, never override; (2) any `outline: none` on `:focus` must be `:focus-visible`; (3) `querySelector` returns `null` not `undefined` — use `.not.toBeNull()`; (4) can this component be rendered twice? hardcoded `id` breaks the second instance |
 | After creating a new component or adding significant client-side state/effects | `react-best-practices` |
 | After editing `next.config.ts`, `.env.example`, or Vercel config | `vercel:nextjs` |
-| Before any UI code review (alongside `ui-ux-tester` dispatch) | `web-design-guidelines` |
+| Before any UI code review (the Playwright MCP visual check) | `web-design-guidelines` — ENFORCED: `.claude/hooks/mandated-skill-gate.sh` blocks `mcp__plugin_playwright_playwright__browser_navigate` until the skill has run this session. Anchored to navigation because that is the one mechanical event a visual check cannot skip; the other browser tools stay ungated so the block fires once per session, not per interaction |
 | After `speckit-plan` produces output for tasks with >5 steps | `thinking-risk-premortem` — run on the plan tasks themselves, not the feature |
 | After dispatching the full 4-agent battery, before `pnpm review:stamp` | `battery-synthesis` |
 
