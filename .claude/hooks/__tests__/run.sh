@@ -415,6 +415,175 @@ assert_eq "ag: malformed payload with writing-plans token fails closed" "2" "$?"
 (printf 'just some garbled non-json text with no skill token' | ( cd "$REPO_ROOT" && run_hook "$AG_HOOK" )) >/dev/null 2>&1
 assert_eq "ag: malformed payload with no token allowed" "0" "$?"
 
+# --- mandated-skill-gate.sh (CLAUDE.md skill mandates that never fired) ---
+# Measured 2026-07-25 over 4653 transcripts: thinking-risk-premortem and
+# web-design-guidelines are mandated in CLAUDE.md prose and had been invoked
+# zero times. Prose is the slot that failed. speckit-plan binds to one exact
+# event; the UI mandate binds to the whole Playwright browser namespace with no
+# exceptions, because every attempt to name a safe subset of it was wrong.
+MS_HOOK="$HOOKS/mandated-skill-gate.sh"
+ms_skill_payload() { # $1=skill $2=transcript -> PreToolUse Skill payload
+  python3 -c 'import json,sys; print(json.dumps({"tool_name":"Skill","tool_input":{"skill": sys.argv[1]}, "transcript_path": sys.argv[2]}))' "$1" "$2"
+}
+ms_nav_payload() { # $1=tool_name $2=transcript -> PreToolUse MCP browser payload
+  python3 -c 'import json,sys; print(json.dumps({"tool_name": sys.argv[1], "tool_input":{"url":"http://localhost:3000"}, "transcript_path": sys.argv[2]}))' "$1" "$2"
+}
+MS_NAV=mcp__plugin_playwright_playwright__browser_navigate
+ms_invoked() { # $1=skill-name -> a COMPLETED skill: tool_use plus its non-error result
+  python3 -c 'import json,sys; print(json.dumps({"message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_ms","name":"Skill","input":{"skill": sys.argv[1]}}]}}))' "$1"
+  printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_ms","content":"skill loaded"}]}}'
+}
+ms_emitted_only() { # $1=skill-name -> tool_use with NO result: the call never completed
+  python3 -c 'import json,sys; print(json.dumps({"message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_ms","name":"Skill","input":{"skill": sys.argv[1]}}]}}))' "$1"
+}
+ms_blocked() { # $1=skill-name -> tool_use whose result is an error (hook-blocked / denied)
+  python3 -c 'import json,sys; print(json.dumps({"message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_ms","name":"Skill","input":{"skill": sys.argv[1]}}]}}))' "$1"
+  printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_ms","is_error":true,"content":"[BLOCKED] denied"}]}}'
+}
+
+MS_EMPTY="$FIXDIR/ms-empty-$$.jsonl"
+printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"text","text":"nothing invoked"}]}}' > "$MS_EMPTY"
+
+(cd "$REPO_ROOT" && ms_skill_payload 'speckit-specify' "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: unmandated skill passes through" "0" "$?"
+# The fallback grep must fire only when the target could not be parsed. A parsed,
+# unmandated payload that merely MENTIONS a mandated token is ordinary work:
+# blocking it is the false-positive class that trains bypass.
+(cd "$REPO_ROOT" \
+  && python3 -c 'import json,sys; print(json.dumps({"tool_name":"Skill","tool_input":{"skill":"commit","args":"feat(hooks): gate speckit-plan on a premortem"},"transcript_path": sys.argv[1]}))' "$MS_EMPTY" \
+  | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: a parsed unmandated skill is not blocked by a token in its args" "0" "$?"
+MS_TABS=mcp__plugin_playwright_playwright__browser_tabs
+(cd "$REPO_ROOT" && ms_nav_payload "$MS_TABS" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: opening a tab at a url is gated like navigation" "2" "$?"
+(cd "$REPO_ROOT" \
+  && python3 -c 'import json,sys; print(json.dumps({"tool_name":"Agent","tool_input":{"subagent_type":"ui-ux-tester"},"transcript_path": sys.argv[1]}))' "$MS_EMPTY" \
+  | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: a ui-ux-tester dispatch is no longer a mandate trigger" "0" "$?"
+
+out=$(cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$MS_EMPTY" | run_hook "$MS_HOOK" 2>&1)
+assert_eq "ms: speckit-plan blocked without a premortem" "2" "$?"
+assert_contains "ms: block names the missing skill" "$out" "thinking-risk-premortem"
+
+out=$(cd "$REPO_ROOT" && ms_nav_payload "$MS_NAV" "$MS_EMPTY" | run_hook "$MS_HOOK" 2>&1)
+assert_eq "ms: browser navigation blocked without design guidelines" "2" "$?"
+assert_contains "ms: block names the missing UI skill" "$out" "web-design-guidelines"
+
+MS_PREMORTEM="$FIXDIR/ms-premortem-$$.jsonl"
+ms_invoked 'thinking-risk-premortem' > "$MS_PREMORTEM"
+(cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$MS_PREMORTEM" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: speckit-plan allowed after the premortem ran" "0" "$?"
+# A mandate must not be satisfiable by any other skill having run.
+(cd "$REPO_ROOT" && ms_nav_payload "$MS_NAV" "$MS_PREMORTEM" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: premortem does not satisfy the UI mandate" "2" "$?"
+rm -f "$MS_PREMORTEM"
+
+MS_UI="$FIXDIR/ms-ui-$$.jsonl"
+ms_invoked 'web-design-guidelines' > "$MS_UI"
+(cd "$REPO_ROOT" && ms_nav_payload "$MS_NAV" "$MS_UI" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: browser navigation allowed after design guidelines ran" "0" "$?"
+(cd "$REPO_ROOT" && ms_nav_payload "$MS_TABS" "$MS_UI" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: tab-open allowed after design guidelines ran" "0" "$?"
+rm -f "$MS_UI"
+
+# A mandate means the skill RAN. An emitted call that was blocked, denied, or
+# interrupted leaves its tool_use behind; accepting that record would let one
+# throwaway call unlock the mandate for the rest of the session.
+MS_EMIT="$FIXDIR/ms-emit-$$.jsonl"
+ms_emitted_only 'thinking-risk-premortem' > "$MS_EMIT"
+(cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$MS_EMIT" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: an emitted-but-unfinished skill call does not satisfy the mandate" "2" "$?"
+rm -f "$MS_EMIT"
+
+MS_BLOCKED="$FIXDIR/ms-blocked-$$.jsonl"
+ms_blocked 'thinking-risk-premortem' > "$MS_BLOCKED"
+(cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$MS_BLOCKED" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: a blocked skill call does not satisfy the mandate" "2" "$?"
+rm -f "$MS_BLOCKED"
+
+# Corroboration: the satisfying tool_use must come from the assistant and carry
+# an id that a result pairs with, so a hand-appended bare record is not enough.
+MS_FORGED="$FIXDIR/ms-forged-$$.jsonl"
+printf '%s\n' '{"message":{"role":"user","content":[{"type":"tool_use","name":"Skill","input":{"skill":"thinking-risk-premortem"}}]}}' > "$MS_FORGED"
+(cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$MS_FORGED" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: an unanchored non-assistant record does not satisfy the mandate" "2" "$?"
+rm -f "$MS_FORGED"
+
+# Neither reaching a page nor observing one is a closed set: evaluate and
+# run_code_unsafe return page content to the caller, so they are sinks too.
+# The NAMESPACE is the closed set; a tool added upstream is gated by default.
+for MS_SINK in browser_take_screenshot browser_snapshot browser_evaluate \
+               browser_run_code_unsafe browser_find browser_click browser_navigate_back; do
+  (cd "$REPO_ROOT" && ms_nav_payload "mcp__plugin_playwright_playwright__$MS_SINK" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
+  assert_eq "ms: $MS_SINK is gated by the namespace" "2" "$?"
+done
+# console_messages and network_requests are NOT carved out: both surface
+# page-originated content, and the browser context outlives a session, so a
+# fresh transcript could read back a page it never reached.
+for MS_SINK in browser_console_messages browser_network_requests browser_handle_dialog; do
+  (cd "$REPO_ROOT" && ms_nav_payload "mcp__plugin_playwright_playwright__$MS_SINK" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
+  assert_eq "ms: $MS_SINK reveals page content and is gated" "2" "$?"
+done
+# No carve-out: every attempt to name a safe subset was wrong, and close/resize
+# rested on an unverified claim about upstream payloads. Gating the whole
+# namespace makes the rule true without depending on any such claim.
+for MS_SINK in browser_close browser_resize; do
+  (cd "$REPO_ROOT" && ms_nav_payload "mcp__plugin_playwright_playwright__$MS_SINK" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
+  assert_eq "ms: $MS_SINK is gated too, no unverified exceptions" "2" "$?"
+done
+# The escape arm is what stops a \uXXXX payload decoding past the prefilter.
+MS_ESC="$FIXDIR/ms-esc-$$.json"
+python3 -c "open('$MS_ESC','w').write('{\"tool_name\":\"Skill\",\"tool_input\":{\"skill\":\"speckit\\\\u002dplan\"},\"transcript_path\":\"$MS_EMPTY\"}')"
+(cd "$REPO_ROOT" && run_hook "$MS_HOOK" < "$MS_ESC") >/dev/null 2>&1
+assert_eq "ms: a unicode-escaped mandated token does not slip past the prefilter" "2" "$?"
+rm -f "$MS_ESC"
+
+# One fabricated record must not self-pair. Results are read before the same
+# record's tool_uses register, so a pairing has to cross a record boundary.
+MS_SELFPAIR="$FIXDIR/ms-selfpair-$$.jsonl"
+printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"tool_use","id":"z","name":"Skill","input":{"skill":"thinking-risk-premortem"}},{"type":"tool_result","tool_use_id":"z","content":"ok"}]}}' > "$MS_SELFPAIR"
+(cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$MS_SELFPAIR" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: a single self-pairing record does not satisfy the mandate" "2" "$?"
+rm -f "$MS_SELFPAIR"
+
+# The matcher is half the gate: with the wrong one the hook is never invoked,
+# and every assertion here would still pass while the tool went ungated.
+MS_MATCHER=$(python3 -c "
+import json,sys
+d=json.load(open('$REPO_ROOT/.claude/settings.json'))
+for m in d['hooks']['PreToolUse']:
+    if 'mandated-skill-gate.sh' in json.dumps(m.get('hooks',[])) and m.get('matcher','')!='Skill':
+        print(m['matcher'])
+")
+ms_matches() { python3 -c "
+import re,sys
+print('yes' if re.search(sys.argv[1], sys.argv[2]) else 'no')" "$MS_MATCHER" "$1"; }
+# The matcher is deliberately the bare namespace, matching the hook's
+# unconditional gate. Enumerating tools in the matcher would be the drift class
+# these assertions exist to catch, and it would need negative lookahead whose
+# support in the runtime matcher engine is not something a test here can prove.
+for MS_T in browser_navigate browser_tabs browser_take_screenshot browser_snapshot \
+            browser_evaluate browser_run_code_unsafe browser_find browser_click \
+            browser_navigate_back browser_close browser_console_messages; do
+  assert_eq "ms: matcher reaches $MS_T" "yes" "$(ms_matches "mcp__plugin_playwright_playwright__$MS_T")"
+done
+assert_eq "ms: matcher does not reach a non-browser MCP tool" "no" "$(ms_matches 'mcp__upstash__redis_database_run_redis_commands')"
+
+# Prose quoting a skill name must not satisfy a mandate; only a tool_use does.
+MS_PROSE="$FIXDIR/ms-prose-$$.jsonl"
+printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"text","text":"I should run thinking-risk-premortem here."}]}}' > "$MS_PROSE"
+(cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$MS_PROSE" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: prose naming the skill does not satisfy the mandate" "2" "$?"
+rm -f "$MS_PROSE"
+
+out=$(cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$FIXDIR/ms-missing-$$.jsonl" | run_hook "$MS_HOOK" 2>&1)
+assert_eq "ms: fail-closed on unreadable transcript" "2" "$?"
+(printf 'garbled text naming no tool at all' | ( cd "$REPO_ROOT" && run_hook "$MS_HOOK" )) >/dev/null 2>&1
+assert_eq "ms: malformed payload with no mandated token allowed" "0" "$?"
+(printf 'unparseable %s payload' "$MS_NAV" | ( cd "$REPO_ROOT" && run_hook "$MS_HOOK" )) >/dev/null 2>&1
+assert_eq "ms: malformed payload with the navigation token fails closed" "2" "$?"
+rm -f "$MS_EMPTY"
+
 # --- api-security-push-guard.sh block logic (git push PreToolUse Bash matcher) ---
 ASG_HOOK="$HOOKS/api-security-push-guard.sh"
 asg_hook() { run_hook "$ASG_HOOK"; }

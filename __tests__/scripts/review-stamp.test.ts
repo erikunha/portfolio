@@ -33,7 +33,10 @@ describe('decideStamp', () => {
     expect(d.missing).toEqual([]);
   });
 
-  it.each(['pr-review-toolkit:review-pr', 'pr-review-toolkit:code-reviewer', 'code-reviewer'])(
+  // Derived from BATTERY_ROLES, never re-listed: a hardcoded copy drifts from
+  // the accept-list, and a variant here that no installed agent answers to is
+  // the dead-alias class __tests__/battery-roles-resolve.test.ts now guards.
+  it.each(BATTERY_ROLES.find((r) => r.role === 'code-review')?.accepts ?? [])(
     'satisfies the code-review role via the %s subagent_type variant',
     (variant) => {
       const others = BATTERY_ROLES.filter((r) => r.role !== 'code-review').map((r) =>
@@ -79,7 +82,8 @@ describe('decideStamp', () => {
     const stale = BATTERY_ROLES.filter((r) => r.role !== 'dependencies').map((r) =>
       agent(r.accepts[0] ?? r.role, BEFORE),
     );
-    const fresh = [agent('dependency-manager', AFTER)];
+    const depAccepts = BATTERY_ROLES.find((r) => r.role === 'dependencies')?.accepts ?? [];
+    const fresh = [agent(depAccepts[depAccepts.length - 1] ?? 'dependency-auditor', AFTER)];
     const d = decideStamp({
       records: [...stale, ...fresh],
       transcriptResolved: true,

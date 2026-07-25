@@ -25,11 +25,15 @@ import {
 export const BATTERY_ROLES: ReadonlyArray<{ role: string; accepts: readonly string[] }> = [
   {
     role: 'code-review',
-    accepts: ['pr-review-toolkit:review-pr', 'pr-review-toolkit:code-reviewer', 'code-reviewer'],
+    accepts: [
+      'pr-review-toolkit:review-pr',
+      'pr-review-toolkit:code-reviewer',
+      'feature-dev:code-reviewer',
+    ],
   },
   { role: 'security', accepts: ['security-auditor'] },
   { role: 'performance', accepts: ['performance-engineer'] },
-  { role: 'dependencies', accepts: ['dependency-auditor', 'dependency-manager'] },
+  { role: 'dependencies', accepts: ['dependency-auditor'] },
 ];
 
 type TranscriptRecord = Record<string, unknown>;
