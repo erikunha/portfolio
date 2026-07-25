@@ -7,17 +7,36 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency:
-  # One group per PR across both events, so runs on a PR serialize rather than
-  # overlap. Cancellation is OFF: GitHub resolves concurrency at the RUN level,
-  # before a job's `if:` is evaluated, so an ordinary comment -- one that does
-  # not contain the trigger phrase and whose job is then skipped -- still enters
-  # this group. With cancellation on it killed the in-flight review and posted
-  # nothing in its place, leaving the PR with no verdict at all; observed on
-  # #221, where GitHub reported "Canceling since a higher priority waiting
-  # request for claude-review-221 exists". Queuing costs a duplicate review when
-  # a push lands mid-flight. No review is the worse failure, so this waits.
-  group: claude-review-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: false
+  # Concurrency resolves at the RUN level, before a job's `if:` is evaluated, so
+  # a run that will be skipped still takes a slot in whatever group it names.
+  # Two earlier attempts got this wrong: sharing one group per PR let a
+  # phrase-free comment cancel a live review (#221, "Canceling since a higher
+  # priority waiting request for claude-review-221 exists"), and turning
+  # cancellation off only shielded a RUNNING victim, since a PENDING run is
+  # replaced regardless of that flag.
+  #
+  # So the group admits exactly what the job admits. Anything the job would skip
+  # gets an isolated per-run group it shares with nothing and can never displace
+  # a review. Cancellation is then correct again: a review is only valid against
+  # the HEAD it read, so a newer push should supersede it.
+  #
+  # This predicate MUST stay identical to the job's `if:` below. Concurrency
+  # cannot read `env` or a job output, so the duplication is forced by the
+  # platform; `__tests__/scripts/claude-review-predicate.test.ts` is what keeps
+  # the two copies from drifting. Keep the `event_name == 'pull_request'` guard
+  # ahead of `draft == false`: GHA casts null to false, so unguarded it would
+  # evaluate true on a comment event.
+  group: >-
+    ${{ ((github.event_name == 'pull_request' &&
+    github.event.pull_request.draft == false &&
+    github.event.pull_request.user.type != 'Bot') ||
+    (github.event_name == 'issue_comment' &&
+    github.event.issue.pull_request &&
+    contains(github.event.comment.body, '/claude-review') &&
+    contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))) &&
+    format('claude-review-{0}', github.event.pull_request.number || github.event.issue.number) ||
+    format('claude-review-noop-{0}', github.run_id) }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
