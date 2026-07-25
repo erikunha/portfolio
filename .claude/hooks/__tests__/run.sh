@@ -453,9 +453,6 @@ assert_eq "ms: unmandated skill passes through" "0" "$?"
   && python3 -c 'import json,sys; print(json.dumps({"tool_name":"Skill","tool_input":{"skill":"commit","args":"feat(hooks): gate speckit-plan on a premortem"},"transcript_path": sys.argv[1]}))' "$MS_EMPTY" \
   | run_hook "$MS_HOOK") >/dev/null 2>&1
 assert_eq "ms: a parsed unmandated skill is not blocked by a token in its args" "0" "$?"
-# grep -F is a substring match; browser_navigate is a prefix of browser_navigate_back.
-# browser_tabs takes a url, so it reaches a page without browser_navigate. Left
-# ungated it is a first-party bypass of the whole UI mandate.
 MS_TABS=mcp__plugin_playwright_playwright__browser_tabs
 (cd "$REPO_ROOT" && ms_nav_payload "$MS_TABS" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
 assert_eq "ms: opening a tab at a url is gated like navigation" "2" "$?"
