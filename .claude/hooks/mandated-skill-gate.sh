@@ -32,11 +32,17 @@ EOF
 # to the caller and are therefore sinks themselves. Neither "reaching a page"
 # nor "observing one" is a closed set, and the server resolves at @latest so
 # the surface can grow between runs. The NAMESPACE is the closed set: gate all
-# of it, and carve out only the tools that can neither reach a page nor reveal
-# what one renders. A tool added upstream is then gated by default.
+# of it. A tool added upstream is then gated by default.
+#
+# The carve-out is only what returns nothing about a page: close reports
+# termination, resize reports a viewport size. console_messages and
+# network_requests were carved out once and put back -- both exist to surface
+# page-originated content (logged app state, response bodies), and the browser
+# context outlives a session, so a fresh transcript could read back a page it
+# never reached. handle_dialog stays gated because its result shape was not
+# verified, and an unverified tool belongs on the safe side of a gate.
 case "$TOOL" in
-  "$PW"_close|"$PW"_resize|"$PW"_handle_dialog|"$PW"_console_messages|"$PW"_network_request|"$PW"_network_requests)
-    exit 0 ;;
+  "$PW"_close|"$PW"_resize) exit 0 ;;
 esac
 case "$TOOL:$TARGET" in
   Skill:speckit-plan)  REQUIRED=thinking-risk-premortem ;;

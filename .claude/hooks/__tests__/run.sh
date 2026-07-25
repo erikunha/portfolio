@@ -448,8 +448,7 @@ printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"text","text":"
 assert_eq "ms: unmandated skill passes through" "0" "$?"
 # A browser tool that neither reaches a page nor observes rendered UI is not a
 # visual review and stays ungated, or the mandate becomes a tax on E2E debugging.
-(cd "$REPO_ROOT" && ms_nav_payload 'mcp__plugin_playwright_playwright__browser_console_messages' "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
-assert_eq "ms: reading console output is not a UI review and passes through" "0" "$?"
+
 # The fallback grep must fire only when the target could not be parsed. A parsed,
 # unmandated payload that merely MENTIONS a mandated token is ordinary work:
 # blocking it is the false-positive class that trains bypass.
@@ -524,9 +523,15 @@ for MS_SINK in browser_take_screenshot browser_snapshot browser_evaluate \
   (cd "$REPO_ROOT" && ms_nav_payload "mcp__plugin_playwright_playwright__$MS_SINK" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
   assert_eq "ms: $MS_SINK is gated by the namespace" "2" "$?"
 done
-# Carve-outs: cannot reach a page, cannot reveal what one renders.
-for MS_OK in browser_close browser_resize browser_handle_dialog \
-             browser_console_messages browser_network_requests; do
+# console_messages and network_requests are NOT carved out: both surface
+# page-originated content, and the browser context outlives a session, so a
+# fresh transcript could read back a page it never reached.
+for MS_SINK in browser_console_messages browser_network_requests browser_handle_dialog; do
+  (cd "$REPO_ROOT" && ms_nav_payload "mcp__plugin_playwright_playwright__$MS_SINK" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
+  assert_eq "ms: $MS_SINK reveals page content and is gated" "2" "$?"
+done
+# The carve-out is only what returns nothing about a page.
+for MS_OK in browser_close browser_resize; do
   (cd "$REPO_ROOT" && ms_nav_payload "mcp__plugin_playwright_playwright__$MS_OK" "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
   assert_eq "ms: $MS_OK stays ungated" "0" "$?"
 done
