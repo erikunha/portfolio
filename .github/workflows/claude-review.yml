@@ -7,11 +7,14 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency:
-  # The event name is part of the key so an automatic run can only supersede
-  # another automatic run. cancel-in-progress is read from the ARRIVING run, so
-  # a shared key would let a push cancel a review you requested by comment.
-  group: claude-review-${{ github.event_name }}-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # One group per PR across both events, so any newer run supersedes the one in
+  # flight. Splitting by event name put a comment run and a push run in separate
+  # groups, which meant neither cancelled the other and both reviewed the same
+  # PR at once, racing to post the verdict the merge gate reads last. A review
+  # is only valid against the HEAD it read, so once HEAD moves the in-flight run
+  # is reviewing a stale commit and superseding it is the correct outcome.
+  group: claude-review-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
