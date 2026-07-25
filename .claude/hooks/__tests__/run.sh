@@ -415,6 +415,74 @@ assert_eq "ag: malformed payload with writing-plans token fails closed" "2" "$?"
 (printf 'just some garbled non-json text with no skill token' | ( cd "$REPO_ROOT" && run_hook "$AG_HOOK" )) >/dev/null 2>&1
 assert_eq "ag: malformed payload with no token allowed" "0" "$?"
 
+# --- mandated-skill-gate.sh (CLAUDE.md skill mandates that never fired) ---
+# Measured 2026-07-25 over 4653 transcripts: thinking-risk-premortem and
+# web-design-guidelines are mandated in CLAUDE.md prose and had been invoked
+# zero times. Prose is the slot that failed; these bind each mandate to the
+# one mechanical event CLAUDE.md already names, so the trigger is exact and
+# adds no new false-positive surface.
+MS_HOOK="$HOOKS/mandated-skill-gate.sh"
+ms_skill_payload() { # $1=skill $2=transcript -> PreToolUse Skill payload
+  python3 -c 'import json,sys; print(json.dumps({"tool_name":"Skill","tool_input":{"skill": sys.argv[1]}, "transcript_path": sys.argv[2]}))' "$1" "$2"
+}
+ms_nav_payload() { # $1=tool_name $2=transcript -> PreToolUse MCP browser payload
+  python3 -c 'import json,sys; print(json.dumps({"tool_name": sys.argv[1], "tool_input":{"url":"http://localhost:3000"}, "transcript_path": sys.argv[2]}))' "$1" "$2"
+}
+MS_NAV=mcp__plugin_playwright_playwright__browser_navigate
+ms_invoked() { # $1=skill-name -> transcript line showing that Skill tool_use
+  python3 -c 'import json,sys; print(json.dumps({"message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_ms","name":"Skill","input":{"skill": sys.argv[1]}}]}}))' "$1"
+}
+
+MS_EMPTY="$FIXDIR/ms-empty-$$.jsonl"
+printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"text","text":"nothing invoked"}]}}' > "$MS_EMPTY"
+
+(cd "$REPO_ROOT" && ms_skill_payload 'speckit-specify' "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: unmandated skill passes through" "0" "$?"
+(cd "$REPO_ROOT" && ms_nav_payload 'mcp__plugin_playwright_playwright__browser_snapshot' "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: non-navigating browser tool passes through" "0" "$?"
+(cd "$REPO_ROOT" \
+  && python3 -c 'import json,sys; print(json.dumps({"tool_name":"Agent","tool_input":{"subagent_type":"ui-ux-tester"},"transcript_path": sys.argv[1]}))' "$MS_EMPTY" \
+  | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: a ui-ux-tester dispatch is no longer a mandate trigger" "0" "$?"
+
+out=$(cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$MS_EMPTY" | run_hook "$MS_HOOK" 2>&1)
+assert_eq "ms: speckit-plan blocked without a premortem" "2" "$?"
+assert_contains "ms: block names the missing skill" "$out" "thinking-risk-premortem"
+
+out=$(cd "$REPO_ROOT" && ms_nav_payload "$MS_NAV" "$MS_EMPTY" | run_hook "$MS_HOOK" 2>&1)
+assert_eq "ms: browser navigation blocked without design guidelines" "2" "$?"
+assert_contains "ms: block names the missing UI skill" "$out" "web-design-guidelines"
+
+MS_PREMORTEM="$FIXDIR/ms-premortem-$$.jsonl"
+ms_invoked 'thinking-risk-premortem' > "$MS_PREMORTEM"
+(cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$MS_PREMORTEM" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: speckit-plan allowed after the premortem ran" "0" "$?"
+# A mandate must not be satisfiable by any other skill having run.
+(cd "$REPO_ROOT" && ms_nav_payload "$MS_NAV" "$MS_PREMORTEM" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: premortem does not satisfy the UI mandate" "2" "$?"
+rm -f "$MS_PREMORTEM"
+
+MS_UI="$FIXDIR/ms-ui-$$.jsonl"
+ms_invoked 'web-design-guidelines' > "$MS_UI"
+(cd "$REPO_ROOT" && ms_nav_payload "$MS_NAV" "$MS_UI" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: browser navigation allowed after design guidelines ran" "0" "$?"
+rm -f "$MS_UI"
+
+# Prose quoting a skill name must not satisfy a mandate; only a tool_use does.
+MS_PROSE="$FIXDIR/ms-prose-$$.jsonl"
+printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"text","text":"I should run thinking-risk-premortem here."}]}}' > "$MS_PROSE"
+(cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$MS_PROSE" | run_hook "$MS_HOOK") >/dev/null 2>&1
+assert_eq "ms: prose naming the skill does not satisfy the mandate" "2" "$?"
+rm -f "$MS_PROSE"
+
+out=$(cd "$REPO_ROOT" && ms_skill_payload 'speckit-plan' "$FIXDIR/ms-missing-$$.jsonl" | run_hook "$MS_HOOK" 2>&1)
+assert_eq "ms: fail-closed on unreadable transcript" "2" "$?"
+(printf 'garbled text naming no tool at all' | ( cd "$REPO_ROOT" && run_hook "$MS_HOOK" )) >/dev/null 2>&1
+assert_eq "ms: malformed payload with no mandated token allowed" "0" "$?"
+(printf 'unparseable %s payload' "$MS_NAV" | ( cd "$REPO_ROOT" && run_hook "$MS_HOOK" )) >/dev/null 2>&1
+assert_eq "ms: malformed payload with the navigation token fails closed" "2" "$?"
+rm -f "$MS_EMPTY"
+
 # --- api-security-push-guard.sh block logic (git push PreToolUse Bash matcher) ---
 ASG_HOOK="$HOOKS/api-security-push-guard.sh"
 asg_hook() { run_hook "$ASG_HOOK"; }

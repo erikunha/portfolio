@@ -38,6 +38,19 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/architect-gate.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/mandated-skill-gate.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__plugin_playwright_playwright__browser_navigate",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/mandated-skill-gate.sh"
           }
         ]
       }

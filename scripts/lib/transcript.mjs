@@ -44,6 +44,17 @@ export function lastUserCommitMarker(records) {
   return marker;
 }
 
+export function skillInvoked(records, skillName) {
+  for (const record of records) {
+    for (const tu of toolUses(record)) {
+      if (tu.name !== SKILL_TOOL_NAME) continue;
+      const input = tu.input && typeof tu.input === 'object' ? tu.input : {};
+      if (input.skill === skillName) return true;
+    }
+  }
+  return false;
+}
+
 export function agentsDispatchedSince(records, boundaryIndex) {
   const seen = new Set();
   records.forEach((record, index) => {
