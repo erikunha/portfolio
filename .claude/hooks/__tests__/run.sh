@@ -418,9 +418,9 @@ assert_eq "ag: malformed payload with no token allowed" "0" "$?"
 # --- mandated-skill-gate.sh (CLAUDE.md skill mandates that never fired) ---
 # Measured 2026-07-25 over 4653 transcripts: thinking-risk-premortem and
 # web-design-guidelines are mandated in CLAUDE.md prose and had been invoked
-# zero times. Prose is the slot that failed; these bind each mandate to the
-# one mechanical event CLAUDE.md already names, so the trigger is exact and
-# adds no new false-positive surface.
+# zero times. Prose is the slot that failed. speckit-plan binds to one exact
+# event; the UI mandate binds to the whole Playwright browser namespace with no
+# exceptions, because every attempt to name a safe subset of it was wrong.
 MS_HOOK="$HOOKS/mandated-skill-gate.sh"
 ms_skill_payload() { # $1=skill $2=transcript -> PreToolUse Skill payload
   python3 -c 'import json,sys; print(json.dumps({"tool_name":"Skill","tool_input":{"skill": sys.argv[1]}, "transcript_path": sys.argv[2]}))' "$1" "$2"
@@ -446,9 +446,6 @@ printf '%s\n' '{"message":{"role":"assistant","content":[{"type":"text","text":"
 
 (cd "$REPO_ROOT" && ms_skill_payload 'speckit-specify' "$MS_EMPTY" | run_hook "$MS_HOOK") >/dev/null 2>&1
 assert_eq "ms: unmandated skill passes through" "0" "$?"
-# A browser tool that neither reaches a page nor observes rendered UI is not a
-# visual review and stays ungated, or the mandate becomes a tax on E2E debugging.
-
 # The fallback grep must fire only when the target could not be parsed. A parsed,
 # unmandated payload that merely MENTIONS a mandated token is ordinary work:
 # blocking it is the false-positive class that trains bypass.
