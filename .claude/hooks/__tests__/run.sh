@@ -564,8 +564,8 @@ for m in d['hooks']['PreToolUse']:
 ms_matches() { python3 -c "
 import re,sys
 print('yes' if re.search(sys.argv[1], sys.argv[2]) else 'no')" "$MS_MATCHER" "$1"; }
-# The matcher is deliberately the bare namespace, with the carve-out living in
-# ONE place (the hook). A second copy in the matcher would be the drift class
+# The matcher is deliberately the bare namespace, matching the hook's
+# unconditional gate. Enumerating tools in the matcher would be the drift class
 # these assertions exist to catch, and it would need negative lookahead whose
 # support in the runtime matcher engine is not something a test here can prove.
 for MS_T in browser_navigate browser_tabs browser_take_screenshot browser_snapshot \
