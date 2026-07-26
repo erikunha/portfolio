@@ -107,23 +107,47 @@ describe('resolvesWith — host-independent, so CI actually pins the predicate',
   });
 });
 
-const PRE_PR_SURFACES = [
-  'scripts/ready-for-pr.ts',
-  '.claude/commands/ready-for-pr.md',
-  '.claude/hooks/bash-guard.sh',
-  'docs/handbook/agents-skills-hooks-mcp.md',
-  'docs/handbook/review-merge-release.md',
-  'docs/handbook/development-lifecycle.md',
-] as const;
+const AGENT_NAME = /(?:[\w-]+:)?(?:code-reviewer|review-pr|pr-test-analyzer)\b/g;
 
-const TOOLKIT_NAME = /pr-review-toolkit:[\w-]+/g;
+// Derived, never enumerated: a hand-listed set is the drift this gate exists to
+// stop, and the first version of it already both omitted two docs that name the
+// agents and listed one that names none.
+function proseSurfaces(): string[] {
+  const roots = ['docs', 'scripts', '.claude/commands', '.claude/hooks', '.claude/skills'];
+  const out: string[] = [];
+  const walk = (dir: string) => {
+    if (!existsSync(dir)) return;
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name);
+      // Fixtures name dead aliases on purpose — .claude/hooks/__tests__/run.sh
+      // feeds a bare code-reviewer through architect-gate precisely to prove a
+      // PASS from the wrong agent is rejected. Instructions do not live in test
+      // directories, so excluding them costs no coverage.
+      if (e.isDirectory()) {
+        if (e.name !== '__tests__' && e.name !== 'tests') walk(p);
+      } else if (/\.(md|ts|sh)$/.test(e.name) && AGENT_NAME.test(readFileSync(p, 'utf8')))
+        out.push(p);
+    }
+  };
+  for (const r of roots) walk(join(process.cwd(), r));
+  return out;
+}
 
 describe('prose that names the pre-PR review agent stays inside its accept-list', () => {
   const accepted = new Set(BATTERY_ROLES.flatMap((r) => r.accepts));
 
-  it.each(PRE_PR_SURFACES)('%s names only dispatchable agents', (rel) => {
-    const path = join(process.cwd(), rel);
-    const named = [...new Set(readFileSync(path, 'utf8').match(TOOLKIT_NAME) ?? [])];
+  const surfaces = proseSurfaces();
+
+  it('finds surfaces to check, rather than silently checking none', () => {
+    expect(
+      surfaces.length,
+      'No file under docs/, scripts/ or .claude/ names a review agent. Either the derivation broke — in which case this gate is checking nothing while reporting green — or every reference was removed, which would itself be the drift.',
+    ).toBeGreaterThan(3);
+  });
+
+  it.each(surfaces)('%s names only dispatchable agents', (path) => {
+    const rel = path.replace(`${process.cwd()}/`, '');
+    const named = [...new Set(readFileSync(path, 'utf8').match(AGENT_NAME) ?? [])];
     const undispatchable = named.filter((n) => !accepted.has(n));
     expect(
       undispatchable,

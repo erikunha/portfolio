@@ -70,7 +70,7 @@ Critical → Important → Advisory.
 ### Advisory
 | Issue | File(s) | Agent(s) | Action |
 |---|---|---|---|
-| ADR cites a line number in an append-only log | DECISIONS.md | documentation-engineer | Cite the entry by date and title; line numbers shift on every prepend |
+| Handbook still names a script the diff renamed | docs/handbook/example.md | documentation-engineer | Update the reference; the old name resolves to nothing |
 
 ### Conflicts requiring resolution before acting
 - [test-strength] "Assert the exit code, not the message" vs [gate-robustness] "The message is
