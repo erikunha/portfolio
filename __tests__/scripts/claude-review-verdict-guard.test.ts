@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -115,20 +116,34 @@ describe('the guard verdict pattern is never looser than the gate it protects', 
 });
 
 describe('the guard reds the job, and skips only what it provably cannot review', () => {
-  it('ends in a non-zero exit with no || true softening the test', () => {
+  it.each([
+    ['a body the gate reads as no verdict', '### Review\n- [x] Gather context', 1],
+    ['a body carrying a verdict', 'Reviewed head `abc1234`. **Approve**', 0],
+  ])('runs under bash and exits %s -> %d', (_label, body, expected) => {
     const script = guardScript();
-    const tail = script.slice(script.search(GREP));
+    const fragment = script.slice(script.search(GREP));
+    let status = 0;
+    try {
+      execFileSync('bash', ['-euo', 'pipefail', '-c', `fresh=$1\n${fragment}`, '_', body], {
+        stdio: 'pipe',
+      });
+    } catch (error) {
+      status = (error as { status?: number }).status ?? -1;
+    }
     expect(
-      /exit 1\s*$/.test(tail.trimEnd()),
-      'The guard must END by exiting non-zero when no verdict was found. Every other assertion here pins a value; this pins the branch that actually reds the job. Changing that final `exit 1` to `exit 0` leaves the jq filter, the grep pattern and both inner blocks matching, and a run that posted no verdict passes — the exact silent green this file exists to end.',
-    ).toBe(true);
+      status,
+      `The verdict branch is EXECUTED here rather than pattern-matched. Every structural assertion in this file has been bypassed at a coordinate it did not pin: a single \`!\` inverted the test with all sixteen green, and an unconditional \`exit 0\` inserted between the grep's fi and the FAIL branch left the guard incapable of failing while a trailing-position check still passed. Running it answers the only question that matters — given this body, does the script exit non-zero?\n\nbody: ${JSON.stringify(body)}`,
+    ).toBe(expected);
+  });
+
+  it('carries no || true and no continue-on-error, either of which unblocks the exit', () => {
     expect(
-      /\|\|\s*true/.test(script),
-      'A `|| true` anywhere in the guard defeats it: the grep can no longer fail the step, so the terminal exit is unreachable and every assertion above stays green.',
+      /\|\|\s*true/.test(guardScript()),
+      'A `|| true` in the guard stops the grep failing the step, so the terminal exit becomes unreachable.',
     ).toBe(false);
     expect(
       guardStep()['continue-on-error'] ?? false,
-      'continue-on-error on this step makes its exit 1 non-blocking, so the job goes green over a run that posted no verdict while every assertion in this file — including the one directly above, whose message claims to pin the branch that reds the job — still passes. The step object is parsed here precisely so this field is inspectable.',
+      'continue-on-error makes the step exit non-blocking, so the job goes green over a run that posted no verdict while every assertion here — including the executed one above, which measures the script in isolation and cannot see the step wrapper — still passes.',
     ).toBe(false);
   });
 
