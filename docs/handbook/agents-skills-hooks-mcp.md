@@ -40,6 +40,7 @@ Skills are load-on-demand procedures. They activate by their `description` front
 | **section-order-guard.sh** | PostToolUse | Edit\|Write | warns if a section lacks a mobile flex-order rule | advisory (`exit 0`) |
 | **biome-format.sh** | PostToolUse | Edit\|Write | runs Biome format (linter disabled: `check --write --linter-enabled=false`) on the edited file | never (`exit 0`) |
 | **session-context.sh** | SessionStart | (none) | prints branch, uncommitted files, and last-commit context at session start | never (`exit 0`) |
+| **review-converge-reminder.sh** | PostToolUse | `Bash` | after a `git push` on a branch with an open PR, runs `pnpm review:converge` and prints the loop's next action | never (`exit 0`) |
 | **learning-loop.sh** | SessionEnd | (none) | runs `review:learn --auto`; appends recurring-finding proposals to the inbox | never (`exit 0`) |
 
 ### Hook lifecycle (when each fires)
