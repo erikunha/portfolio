@@ -59,7 +59,7 @@ describe('decideStamp', () => {
     },
   );
 
-  it('refuses and names the missing ROLE when one of the four roles never ran', () => {
+  it('refuses and names the missing ROLE when one role never ran', () => {
     const present = BATTERY_ROLES.filter((r) => r.role !== 'test-strength').map((r) =>
       agent(r.accepts[0] ?? r.role, AFTER),
     );
@@ -89,14 +89,8 @@ describe('decideStamp', () => {
     const stale = BATTERY_ROLES.filter((r) => r.role !== 'test-strength').map((r) =>
       agent(r.accepts[0] ?? r.role, BEFORE),
     );
-    const testStrengthAccepts =
-      BATTERY_ROLES.find((r) => r.role === 'test-strength')?.accepts ?? [];
-    const fresh = [
-      agent(
-        testStrengthAccepts[testStrengthAccepts.length - 1] ?? 'pr-review-toolkit:pr-test-analyzer',
-        AFTER,
-      ),
-    ];
+    const testStrengthAccepts = roleAccepts('test-strength');
+    const fresh = [agent(testStrengthAccepts[testStrengthAccepts.length - 1] as string, AFTER)];
     const d = decideStamp({
       records: [...stale, ...fresh],
       transcriptResolved: true,

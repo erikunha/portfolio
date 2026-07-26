@@ -7,8 +7,15 @@ const SKILL = join(process.cwd(), '.claude', 'skills', 'review-battery', 'SKILL.
 
 const DISPATCH_LINE = /`subagent_type:\s*([^`]+)`/g;
 
+const CONDITIONAL_HEADING = '## Conditional reviewers';
+
+function standingRoleSection(source: string): string {
+  const cut = source.indexOf(CONDITIONAL_HEADING);
+  return cut === -1 ? source : source.slice(0, cut);
+}
+
 function dispatchedTypes(): string[] {
-  const source = readFileSync(SKILL, 'utf8');
+  const source = standingRoleSection(readFileSync(SKILL, 'utf8'));
   return [...source.matchAll(DISPATCH_LINE)].map((m) => (m[1] ?? '').trim()).filter(Boolean);
 }
 
@@ -16,13 +23,6 @@ const ACCEPTED = new Set(BATTERY_ROLES.flatMap((r) => r.accepts));
 
 describe('review-battery skill dispatches only what the stamp accepts', () => {
   const types = dispatchedTypes();
-
-  it('names at least one subagent_type per battery role', () => {
-    expect(
-      types.length,
-      `.claude/skills/review-battery/SKILL.md declares ${types.length} \`subagent_type:\` lines but BATTERY_ROLES has ${BATTERY_ROLES.length} roles. The skill is the operative dispatch instruction (CLAUDE.md routes the whole battery through it) and BATTERY_ROLES is the gate that scores it; a role with no dispatch line is a role nobody is told to run.`,
-    ).toBeGreaterThanOrEqual(BATTERY_ROLES.length);
-  });
 
   it.each(dispatchedTypes())('%s is an accepted subagent_type for some role', (type) => {
     expect(
@@ -37,7 +37,7 @@ describe('review-battery skill dispatches only what the stamp accepts', () => {
     );
     expect(
       covered.sort(),
-      'Every role in BATTERY_ROLES must have a dispatch line in the skill. A role the stamp requires but the skill never names is unreachable: the operator follows the skill, the stamp refuses, and the remediation text points back at the skill that omitted it.',
+      `Every role in BATTERY_ROLES must have a dispatch line above the "${CONDITIONAL_HEADING}" heading in .claude/skills/review-battery/SKILL.md. A role the stamp requires but the skill never names is unreachable: the operator follows the skill, the stamp refuses, and the hook's remediation text points back at the skill that omitted it.\n\nThis assertion also backstops the it.each above: with zero dispatch lines it.each registers no tests, and only this check goes red.\n\nfound: ${types.join(', ') || '(none)'}`,
     ).toEqual(BATTERY_ROLES.map((r) => r.role).sort());
   });
 });

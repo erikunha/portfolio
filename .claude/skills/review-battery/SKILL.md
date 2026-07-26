@@ -260,11 +260,13 @@ Three specific shapes, each a finding on its own:
   quirk pin, a constant-drift pin, or a public API contract. Rationale,
   mechanism narration, and process history in source are findings.
 
-Append-only history never drifts and is not a finding: dated DECISIONS.md
-entries, `docs/audit/**`, and `docs/harness-audit.md`. Everything else is
-current state and does drift — the numbered `docs/NN-*.md` pages and all of
-`docs/handbook/**` describe how the system works today and are rewritten when it
-changes. Do not exempt `docs/` wholesale.
+Append-only history never drifts and is not a finding. Decide by PREDICATE, not
+by a path list, because a list goes stale the first time a file is added: a
+file is history if it is a dated entry in an append-only log, or if its own
+heading declares it historical or superseded. Read the top of the file and let
+it tell you. Everything else is current state and does drift — including the
+numbered `docs/NN-*.md` pages and all of `docs/handbook/**`, which describe how
+the system works today. Never exempt `docs/` wholesale.
 
 Worked example of the judgment, from this repo's ledger:
   FOUND — "ADR claimed 'sweeps every public surface' but METRIC_SURFACES
