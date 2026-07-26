@@ -137,7 +137,7 @@ never as a prediction of what it would have returned.
 
 WRITE OWNERSHIP: read-only. This is a verification run.
 
-STOP CONDITIONS: return immediately with status: blocked, and no findings, if
+STOP CONDITIONS: return immediately with STATUS: blocked, and no findings, if
 the base ref does not resolve, the diff range is empty, or the range is
 obviously not the change you were told to review. Do not improvise a substitute
 range: a review of the wrong range that returns VERDICT: clean is worse than no
