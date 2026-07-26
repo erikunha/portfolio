@@ -55,7 +55,7 @@ Git hooks (`.husky/`): `pre-commit` = Biome; `commit-msg` = commitlint; `pre-pus
 
 ## The review / verification loop
 
-Before every push (and whenever coding work stops), the agent runs a **4-agent review battery** in parallel - `pr-review-toolkit:review-pr`, `security-auditor`, `performance-engineer`, `dependency-auditor` - scoped to the actual diff. WCAG 2.1 AA is gated separately and mechanically by axe-core + Lighthouse accessibility = 100, not by a battery agent.
+Before every push (and whenever coding work stops), the agent runs a **4-agent review battery** in parallel - `pr-review-toolkit:code-reviewer` (correctness), `documentation-engineer` (claim-drift), `security-auditor` (gate-robustness), `pr-review-toolkit:pr-test-analyzer` (test-strength) - scoped to the actual diff, all on Opus. The roles track the defect classes this repo actually produces, measured over 226 recorded cycles; `.claude/skills/review-battery` holds the prompts and the evidence. WCAG 2.1 AA is gated separately and mechanically by axe-core + Lighthouse accessibility = 100, not by a battery agent.
 
 ```mermaid
 flowchart LR

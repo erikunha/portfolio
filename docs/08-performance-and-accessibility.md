@@ -72,4 +72,4 @@ Per-component behavioral a11y tests live alongside components; the axe gate cove
 
 ## The performance/accessibility invariant
 
-From `CLAUDE.md`: *"Perf, a11y (WCAG 2.1 AA), and security are implicit on every change - not separate phases."* In practice this means a visual-affecting change must regenerate visual baselines before a PR, a new interactive element must pass the a11y tester, and any change that could move LCP/INP/CLS gets a `performance-engineer` pass. The gates make these non-optional.
+From `CLAUDE.md`: *"Perf, a11y (WCAG 2.1 AA), and security are implicit on every change - not separate phases."* In practice this means a visual-affecting change must regenerate visual baselines before a PR, a new interactive element must pass the a11y tester, and a change that trips an LCP/INP/CLS gate gets a `performance-engineer` pass. The gates make these non-optional.

@@ -63,8 +63,8 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   1. Measure first (`chrome-devtools-mcp` perf trace, or `gates:runtime` LHCI).
   2. Identify the bottleneck; form one hypothesis.
   3. Apply the smallest change; re-measure (cite before/after).
-  4. `performance-engineer` agent reviews; visual baselines regenerated if rendering changed.
-- **AI:** chrome-devtools MCP, performance-engineer.
+  4. `performance-engineer` reviews when a perf gate actually regressed; visual baselines regenerated if rendering changed.
+- **AI:** chrome-devtools MCP, performance-engineer (conditional, not a standing battery role).
 - **Output:** a `perf(scope): ...` PR with before/after numbers. See [`/docs/08`](../08-performance-and-accessibility.md).
 
 ## Accessibility audit

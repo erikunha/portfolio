@@ -36,10 +36,12 @@ Review is **mechanical and multi-perspective**. Four fresh-context agents review
 
 | Agent | Lens |
 |---|---|
-| `pr-review-toolkit:review-pr` | correctness, requirements |
-| `security-auditor` | security surface (required on any API edit) |
-| `performance-engineer` | LCP/INP/CLS budgets |
-| `dependency-auditor` | dependency hygiene |
+| `pr-review-toolkit:code-reviewer` | correctness — wrong result, crash, silent no-op (27% of findings) |
+| `documentation-engineer` | claim-drift — prose the diff just made false (35%) |
+| `security-auditor` | gate-robustness — a gate, hook, or script that fails open; plus the security surface, required on any API edit (22%) |
+| `pr-review-toolkit:pr-test-analyzer` | test-strength — a test asserting less than the invariant it names (12%) |
+
+All four run on Opus. Tier, not role, is the dominant lever on what a reviewer finds: in a controlled mutation eval (2026-07-25) Opus reviewers found 13/13 and 11/13 planted defects where Sonnet found 7/13 and 6/13 on the same prompts. Perf, dependency, and a11y reviewers are conditional rather than standing, because LHCI, `check-bundle-size.mjs`, `check-route-js.mjs`, `check-dep-pinning.mjs`, and axe-core already gate those properties.
 
 WCAG 2.1 AA is gated separately and mechanically by axe-core (`tests/a11y/axe.spec.ts`) + Lighthouse accessibility = 100, not by a battery agent.
 

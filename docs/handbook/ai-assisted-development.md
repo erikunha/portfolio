@@ -80,10 +80,10 @@ Before every push, four specialized agents review the diff in parallel, each a f
 
 ```mermaid
 flowchart LR
-    diff["diff"] --> b1["pr-review-toolkit:review-pr (correctness)"]
-    diff --> b2["security-auditor (security)"]
-    diff --> b3["performance-engineer (perf)"]
-    diff --> b4["dependency-auditor (deps)"]
+    diff["diff"] --> b1["pr-review-toolkit:code-reviewer (correctness)"]
+    diff --> b2["documentation-engineer (claim-drift)"]
+    diff --> b3["security-auditor (gate-robustness)"]
+    diff --> b4["pr-review-toolkit:pr-test-analyzer (test-strength)"]
     b1 & b2 & b3 & b4 --> synth["battery-synthesis: dedup + rank"]
     synth --> ledger[".review-findings.json"]
     ledger --> stamp["review:stamp"]

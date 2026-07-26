@@ -24,16 +24,16 @@ import {
 
 export const BATTERY_ROLES: ReadonlyArray<{ role: string; accepts: readonly string[] }> = [
   {
-    role: 'code-review',
+    role: 'correctness',
     accepts: [
       'pr-review-toolkit:review-pr',
       'pr-review-toolkit:code-reviewer',
       'feature-dev:code-reviewer',
     ],
   },
-  { role: 'security', accepts: ['security-auditor'] },
-  { role: 'performance', accepts: ['performance-engineer'] },
-  { role: 'dependencies', accepts: ['dependency-auditor'] },
+  { role: 'claim-drift', accepts: ['documentation-engineer'] },
+  { role: 'gate-robustness', accepts: ['security-auditor'] },
+  { role: 'test-strength', accepts: ['pr-review-toolkit:pr-test-analyzer'] },
 ];
 
 type TranscriptRecord = Record<string, unknown>;

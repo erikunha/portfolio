@@ -36,10 +36,10 @@ describe('decideStamp', () => {
   // Derived from BATTERY_ROLES, never re-listed: a hardcoded copy drifts from
   // the accept-list, and a variant here that no installed agent answers to is
   // the dead-alias class __tests__/battery-roles-resolve.test.ts now guards.
-  it.each(BATTERY_ROLES.find((r) => r.role === 'code-review')?.accepts ?? [])(
+  it.each(BATTERY_ROLES.find((r) => r.role === 'correctness')?.accepts ?? [])(
     'satisfies the code-review role via the %s subagent_type variant',
     (variant) => {
-      const others = BATTERY_ROLES.filter((r) => r.role !== 'code-review').map((r) =>
+      const others = BATTERY_ROLES.filter((r) => r.role !== 'correctness').map((r) =>
         agent(r.accepts[0] ?? r.role, AFTER),
       );
       const withVariant = [...others, agent(variant, AFTER)];
@@ -53,12 +53,12 @@ describe('decideStamp', () => {
   );
 
   it('refuses and names the missing ROLE when only four of five ran', () => {
-    const present = BATTERY_ROLES.filter((r) => r.role !== 'dependencies').map((r) =>
+    const present = BATTERY_ROLES.filter((r) => r.role !== 'test-strength').map((r) =>
       agent(r.accepts[0] ?? r.role, AFTER),
     );
     const d = decideStamp({ records: present, transcriptResolved: true, headCommitIso: HEAD_ISO });
     expect(d.write).toBe(false);
-    expect(d.missing).toEqual(['dependencies']);
+    expect(d.missing).toEqual(['test-strength']);
   });
 
   it('refuses fail-closed when the transcript could not be resolved', () => {
@@ -79,18 +79,24 @@ describe('decideStamp', () => {
   });
 
   it('mixes stale + fresh: only roles dispatched AFTER HEAD count', () => {
-    const stale = BATTERY_ROLES.filter((r) => r.role !== 'dependencies').map((r) =>
+    const stale = BATTERY_ROLES.filter((r) => r.role !== 'test-strength').map((r) =>
       agent(r.accepts[0] ?? r.role, BEFORE),
     );
-    const depAccepts = BATTERY_ROLES.find((r) => r.role === 'dependencies')?.accepts ?? [];
-    const fresh = [agent(depAccepts[depAccepts.length - 1] ?? 'dependency-auditor', AFTER)];
+    const testStrengthAccepts =
+      BATTERY_ROLES.find((r) => r.role === 'test-strength')?.accepts ?? [];
+    const fresh = [
+      agent(
+        testStrengthAccepts[testStrengthAccepts.length - 1] ?? 'pr-review-toolkit:pr-test-analyzer',
+        AFTER,
+      ),
+    ];
     const d = decideStamp({
       records: [...stale, ...fresh],
       transcriptResolved: true,
       headCommitIso: HEAD_ISO,
     });
     expect(d.write).toBe(false);
-    expect(d.missing.sort()).toEqual(ALL_ROLES.filter((r) => r !== 'dependencies').sort());
+    expect(d.missing.sort()).toEqual(ALL_ROLES.filter((r) => r !== 'test-strength').sort());
   });
 });
 
@@ -137,7 +143,7 @@ describe('decideStamp — verification-loop (findings) gate', () => {
   });
 
   it('still enforces dispatch first: an incomplete battery refuses regardless of findings', () => {
-    const fourOfFive = BATTERY_ROLES.filter((r) => r.role !== 'security').map((r) =>
+    const fourOfFive = BATTERY_ROLES.filter((r) => r.role !== 'gate-robustness').map((r) =>
       agent(r.accepts[0] ?? r.role, AFTER),
     );
     const d = decideStamp({
@@ -147,6 +153,6 @@ describe('decideStamp — verification-loop (findings) gate', () => {
       findings: { present: true, blocking: [], invalid: [] },
     });
     expect(d.write).toBe(false);
-    expect(d.missing).toEqual(['security']);
+    expect(d.missing).toEqual(['gate-robustness']);
   });
 });
