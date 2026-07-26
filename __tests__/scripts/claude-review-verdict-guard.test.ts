@@ -8,15 +8,11 @@ const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'claude-review.yml'
 
 const GUARD_STEP = 'Assert this run posted a verdict the merge gate can read';
 
-// Read the step as a parsed value, never by scanning the file. Seven successive
-// versions of this gate asserted substrings and every one was bypassed the same
-// way: an assertion pins one coordinate and the next unpinned one becomes the
-// next bypass. Twice the pinned string was satisfied by an echo standing in for
-// the predicate it was meant to hold. The sibling claude-review-predicate.test.ts
-// records four bypasses of this shape before it switched to a parser.
-function guardScript(): string {
+type Step = { name?: string; run?: string; 'continue-on-error'?: unknown };
+
+function guardStep(): Step {
   const doc = parse(readFileSync(WORKFLOW, 'utf8')) as {
-    jobs?: { review?: { steps?: Array<{ name?: string; run?: string }> } };
+    jobs?: { review?: { steps?: Step[] } };
   };
   const step = doc.jobs?.review?.steps?.find((s) => s.name === GUARD_STEP);
   if (typeof step?.run !== 'string') {
@@ -24,8 +20,10 @@ function guardScript(): string {
       `claude-review.yml has no step named "${GUARD_STEP}" carrying a run: script. That step is the only thing standing between "the action exited 0" and "a review actually happened": the pull_request path posted a track_progress checklist with no verdict on every auto-run and the check still read green. If it was renamed, rename GUARD_STEP with it; do not delete this test.`,
     );
   }
-  return step.run;
+  return step;
 }
+
+const guardScript = (): string => guardStep().run as string;
 
 function block(open: RegExp, what: string): string {
   const script = guardScript();
@@ -37,7 +35,7 @@ function block(open: RegExp, what: string): string {
 }
 
 const FETCH = /(\w+)=\$\(gh api[\s\S]*?--jq "((?:[^"\\]|\\.)*)"\s*\)/;
-const GREP = /printf '%s' "\$(\w+)"\s*\|\s*grep -qiE '([^']+)'/;
+const GREP = /\n\s*if printf '%s' "\$(\w+)"\s*\|\s*grep -qiE '([^']+)'; then/;
 
 describe('the guard fetches, filters and tests the same thing the merge gate reads', () => {
   it('greps the output of the filtered fetch, not some other fetch', () => {
@@ -57,7 +55,13 @@ describe('the guard fetches, filters and tests the same thing the merge gate rea
       filter,
       `The jq filter must restrict to ${CLAUDE_LOGIN} (imported from the gate, not mirrored), scope to this run via created_at, and take LAST.\n\nThe author and freshness predicates must be ONE composed expression: asserted separately, rewriting \`and\` to \`or\` leaves both substrings present and both assertions green while the freshness filter stops filtering.\n\n\`last\` matters because check-claude-approval.ts reads only claudeComments.at(-1). Reading the union goes green on a verdict in an older fresh comment while the gate, reading a newer progress comment, sees none — the same silent green one level up.`,
     ).toContain(`select(.user.login == \\"${CLAUDE_LOGIN}\\" and .created_at >= \\"$SINCE\\")`);
+    expect(filter).toContain('sort_by(.created_at)');
     expect(filter).toContain('last');
+    expect(
+      /gh api[^\n]*--paginate --slurp/.test(guardScript()),
+      'The fetch must pass --slurp. gh applies --jq PER PAGE under --paginate, so without it `last` yields one body per page and the grep sees their union — reintroducing the exact failure `last` was added to remove, invisibly, and only once a PR passes 30 comments. scripts/inspect-pr-comments.mjs already carries this workaround; the filter must also flatten with .[][] and sort explicitly rather than trusting API order, because the gate sorts.',
+    ).toBe(true);
+    expect(filter).toContain('.[][]');
   });
 });
 
@@ -79,6 +83,13 @@ const guardMatches = (body: string): boolean => {
 };
 
 describe('the guard verdict pattern is never looser than the gate it protects', () => {
+  it('keeps a non-empty agreement corpus, since it.each([]) registers nothing and still reports PASS', () => {
+    expect(
+      SINGLE_LINE_BODIES.length,
+      "Emptying this table removes every guard-vs-parser agreement case with no red: vitest reports PASS over zero registered tests. The file's central claim would then rest on two hand-written cases while the suite still read green.",
+    ).toBeGreaterThan(5);
+  });
+
   it.each(SINGLE_LINE_BODIES)('%j — on one line the two agree exactly', (body, expected) => {
     expect({ guard: guardMatches(body), parser: parseClaudeVerdict(body) !== 'none' }).toEqual({
       guard: expected,
@@ -114,6 +125,10 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     expect(
       /\|\|\s*true/.test(script),
       'A `|| true` anywhere in the guard defeats it: the grep can no longer fail the step, so the terminal exit is unreachable and every assertion above stays green.',
+    ).toBe(false);
+    expect(
+      guardStep()['continue-on-error'] ?? false,
+      'continue-on-error on this step makes its exit 1 non-blocking, so the job goes green over a run that posted no verdict while every assertion in this file — including the one directly above, whose message claims to pin the branch that reds the job — still passes. The step object is parsed here precisely so this field is inspectable.',
     ).toBe(false);
   });
 

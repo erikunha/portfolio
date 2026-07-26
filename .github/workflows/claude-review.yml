@@ -101,8 +101,10 @@ jobs:
       # a line break reds this guard while the merge gate reads approve. The guard
       # is therefore strictly NARROWER than the parser PATTERN-FOR-PATTERN. The
       # corpora must match too: the gate reads only the LATEST claude[bot] comment,
-      # so the filter takes `last`. Reading the union would go green on a verdict
-      # in an older fresh comment while the gate, reading a newer checklist, saw none.
+      # so the filter sorts and takes `last`. --slurp is load-bearing, not decoration:
+      # gh applies --jq PER PAGE under --paginate, so without it `last` yields one
+      # body per page and the guard greps their union — the very failure `last` was
+      # added to remove, reappearing only once a PR passes 30 comments.
       - name: Assert this run posted a verdict the merge gate can read
         if: always()
         env:
@@ -130,8 +132,8 @@ jobs:
             exit 0
           fi
 
-          fresh=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
-            --jq "[.[] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | last | .body")
+          fresh=$(gh api --paginate --slurp "repos/$REPO/issues/$PR/comments" \
+            --jq "[.[][] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | sort_by(.created_at) | last | .body")
 
           if printf '%s' "$fresh" | grep -qiE '\*\*[^*]*\b(approve|reject|request changes)\b[^*]*\*\*'; then
             echo "OK  this run posted a verdict."
