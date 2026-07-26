@@ -83,6 +83,10 @@ describe('the claude-review prompt instructs shapes the merge gate can parse', (
   it.each([
     [`Reviewed against commit \`${HEAD_SHA}\`.`, 'the word head never appears'],
     [`Reviewed at head commit ${HEAD_SHA}.`, 'the SHA carries no backticks'],
+    [
+      `Reviewed at the head commit of this pull request, \`${HEAD_SHA}\`.`,
+      'a realistically distant head mention, 30 characters, must not reach the SHA',
+    ],
   ])('the near-miss %s extracts no SHA (%s)', (body) => {
     expect(extractReviewedSha(body)).toBeNull();
   });
@@ -92,7 +96,7 @@ describe('the claude-review prompt instructs shapes the merge gate can parse', (
   });
 
   it('the prompt still instructs the backticked head-SHA shape', () => {
-    expect(systemPrompt()).toContain('Reviewed at head commit');
+    expect(systemPrompt()).toContain('Reviewed at head commit `<full 40-character sha>`');
   });
 
   it('the prompt states the gap bound the extractor actually enforces', () => {
