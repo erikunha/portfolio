@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -133,7 +133,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     const bin = mkdtempSync(join(tmpdir(), 'guard-gh-'));
     writeFileSync(
       join(bin, 'gh'),
-      `#!/usr/bin/env bash\nif [ "$1" = "api" ]; then printf '%s' ${JSON.stringify(body)}; else printf '%s\\n' ${JSON.stringify(changed)}; fi\n`,
+      '#!/usr/bin/env bash\nif [ "$1" = "api" ]; then printf \'%s\' "$GUARD_STUB_BODY"; else printf \'%s\\n\' "$GUARD_STUB_CHANGED"; fi\n',
     );
     chmodSync(join(bin, 'gh'), 0o755);
     try {
@@ -146,12 +146,16 @@ describe('the guard reds the job, and skips only what it provably cannot review'
           REPO: 'o/r',
           SINCE: since,
           GITHUB_EVENT_NAME: event,
+          GUARD_STUB_BODY: body,
+          GUARD_STUB_CHANGED: changed,
         },
       });
       return { status: 0, stderr: '' };
     } catch (error) {
       const e = error as { status?: number; stderr?: Buffer };
       return { status: e.status ?? -1, stderr: e.stderr?.toString() ?? '' };
+    } finally {
+      rmSync(bin, { recursive: true, force: true });
     }
   }
 
@@ -163,6 +167,11 @@ describe('the guard reds the job, and skips only what it provably cannot review'
       'the PR edits this workflow, which the action cannot review',
       { body: 'nothing', changed: '.github/workflows/claude-review.yml' },
       0,
+    ],
+    [
+      'a verdict wrapped across a newline, which the line-oriented grep must reject',
+      { body: '**Approve\nwith minor changes**' },
+      1,
     ],
     [
       'a comment-event run must still be asserted, never skipped',
