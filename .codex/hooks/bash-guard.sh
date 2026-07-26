@@ -119,7 +119,7 @@ fi
 if printf '%s' "$CMD" | grep -qE 'gh pr create'; then
   printf '[WARN] Before gh pr create, verify:\n'
   printf '  1. pnpm ready-for-pr passed (ci:local + pr-size + gates:runtime)\n'
-  printf '  2. pr-review-toolkit:review-pr ran — Critical/Important findings addressed\n'
+  printf '  2. pr-review-toolkit:code-reviewer dispatched — Critical/Important findings addressed\n'
   printf '  3. PR body written FROM the template (cat .github/pull_request_template.md first)\n'
   printf 'MANDATORY after creation: pnpm validate-pr-body <pr-number>\n'
   printf 'Do not request reviewer until validate-pr-body exits 0.\n'
