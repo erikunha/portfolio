@@ -1,10 +1,16 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   archiveRecords,
   blockingFindings,
   type Finding,
+  FindingSchema,
   findingId,
+  headSha,
   invalidResolutions,
+  UNRESOLVED_HEAD,
   withFinding,
   withStatus,
 } from '@/scripts/review-findings';
@@ -110,5 +116,32 @@ describe('archiveRecords', () => {
 
   it('terminates with a trailing newline so appends stay line-delimited', () => {
     expect(archiveRecords([f({})], 'sha', 'iso').endsWith('\n')).toBe(true);
+  });
+});
+
+describe('finding provenance', () => {
+  it('parses a finding recorded before provenance existed', () => {
+    const legacy = {
+      id: 'abc123',
+      severity: 'critical',
+      title: 'recorded before recordedAt existed',
+      source: 'code-reviewer',
+      status: 'open',
+    };
+    expect(() => FindingSchema.parse(legacy)).not.toThrow();
+    expect(FindingSchema.parse(legacy).recordedAt).toBeUndefined();
+  });
+
+  it('resolves a real short sha inside this repo', () => {
+    expect(headSha()).toMatch(/^[0-9a-f]{7,}$/);
+  });
+
+  it('records the sentinel, not a plausible-looking sha, when HEAD cannot be resolved', () => {
+    const outside = mkdtempSync(join(tmpdir(), 'no-git-'));
+    try {
+      expect(headSha(outside)).toBe(UNRESOLVED_HEAD);
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
   });
 });

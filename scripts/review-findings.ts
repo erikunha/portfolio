@@ -1,5 +1,6 @@
 #!/usr/bin/env tsx
 
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -14,11 +15,26 @@ export const FindingSchema = z.object({
   source: z.string().min(1),
   status: z.enum(['open', 'resolved', 'justified']),
   resolution: z.string().optional(),
+  recordedAt: z.string().optional(),
+  recordedAtHead: z.string().optional(),
 });
 export type Finding = z.infer<typeof FindingSchema>;
 export const LedgerSchema = z.array(FindingSchema);
 
 export const LEDGER_PATH = '.review-findings.json';
+
+export const UNRESOLVED_HEAD = 'unresolved';
+
+export function headSha(cwd: string = process.cwd()): string {
+  try {
+    return execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8', cwd }).trim();
+  } catch (error) {
+    console.error(
+      `[review-findings] could not resolve HEAD, recording "${UNRESOLVED_HEAD}": ${error}`,
+    );
+    return UNRESOLVED_HEAD;
+  }
+}
 
 export function blockingFindings(findings: Finding[]): Finding[] {
   return findings.filter(
@@ -94,6 +110,8 @@ function main(argv: string[]): void {
         source,
         title,
         status: 'open',
+        recordedAt: new Date().toISOString(),
+        recordedAtHead: headSha(),
       });
       writeLedger(withFinding(ledger, finding));
       console.log(`[review-findings] recorded ${finding.severity} ${finding.id}: ${finding.title}`);
