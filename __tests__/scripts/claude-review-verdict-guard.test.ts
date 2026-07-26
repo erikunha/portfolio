@@ -10,7 +10,7 @@ const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'claude-review.yml'
 
 const GUARD_STEP = 'Assert this run posted a verdict the merge gate can read';
 
-type Step = { name?: string; run?: string; 'continue-on-error'?: unknown };
+type Step = { name?: string; run?: string; if?: unknown; 'continue-on-error'?: unknown };
 
 function guardStep(): Step {
   const doc = parse(readFileSync(WORKFLOW, 'utf8')) as {
@@ -175,7 +175,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     expect(
       EXECUTED_CASES.length,
       'Emptying this table removes every execution-based assertion while vitest reports PASS over zero registered tests — the silent green the corpus check above exists to prevent.',
-    ).toBe(5);
+    ).toBeGreaterThanOrEqual(5);
   });
 
   it.each(EXECUTED_CASES)('runs the WHOLE guard under bash: %s', (_label, run, expected) => {
@@ -191,6 +191,10 @@ describe('the guard reds the job, and skips only what it provably cannot review'
       /\|\|\s*true/.test(guardScript()),
       'A `|| true` in the guard stops the grep failing the step, so the terminal exit becomes unreachable.',
     ).toBe(false);
+    expect(
+      guardStep().if,
+      "The step must run unconditionally. Replacing `if: always()` with any falsy expression — `github.event_name == 'issue_comment'` is the plausible edit for silencing it on the auto path — skips the step on the exact pull_request path that has never once posted a verdict, the job reports success, and every assertion in this file still passes. Same silent-green consequence as continue-on-error, one field over.",
+    ).toBe('always()');
     expect(
       guardStep()['continue-on-error'] ?? false,
       'continue-on-error makes the step exit non-blocking, so the job goes green over a run that posted no verdict while every assertion here — including the executed one above, which measures the script in isolation and cannot see the step wrapper — still passes.',
