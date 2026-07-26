@@ -1920,4 +1920,31 @@ unbounded=$(grep -vE '^[[:space:]]*#' "$0" \
   | grep -cE '\$\{?(HOOKS[}/]|[A-Z_]*_HOOK|hookcopy)' || true)
 assert_eq "meta: every hook invocation is time-bounded (no bare bash/python3 call)" "0" "$unbounded"
 
+
+# --- review-converge-reminder: the push predicate ------------------------------
+# Pins the LIVE awk in the hook, via its detect-only mode, rather than a copy in
+# this file that could drift. The two negatives are the regression: the first
+# version grepped `git` and `push` independently over the whole emitted record
+# set, so a commit message mentioning push fired the heartbeat and spent a gh
+# round-trip on it.
+rcr_payload() { printf '{"tool_input":{"command":%s}}' "$(printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')"; }
+rcr() { REVIEW_CONVERGE_DETECT_ONLY=1 run_hook "$HOOKS/review-converge-reminder.sh"; }
+
+for cmd in 'git push' 'git push origin main --force' 'git -C /tmp push' 'ls && git push' '/usr/bin/git push'; do
+  out=$(rcr_payload "$cmd" | rcr 2>/dev/null)
+  assert_contains "rcr: detects a real push [$cmd]" "$out" "DETECTED"
+done
+
+for cmd in 'git commit -m "push the fix"' 'grep -r "git push" .' 'echo push' 'ls -la' 'git log --oneline'; do
+  out=$(rcr_payload "$cmd" | rcr 2>/dev/null)
+  assert_not_contains "rcr: stays quiet on a non-push [$cmd]" "$out" "DETECTED"
+done
+
+rcr_ec=$(rcr_payload 'ls -la' | rcr >/dev/null 2>&1; printf '%s' "$?")
+assert_eq "rcr: advisory — a non-push exits 0" "0" "$rcr_ec"
+rcr_ec=$(rcr_payload 'git push' | rcr >/dev/null 2>&1; printf '%s' "$?")
+assert_eq "rcr: advisory — a detected push still exits 0" "0" "$rcr_ec"
+rcr_ec=$(printf 'not json at all' | rcr >/dev/null 2>&1; printf '%s' "$?")
+assert_eq "rcr: fail-quiet on unparsable input" "0" "$rcr_ec"
+
 [ "$FAILED" -eq 0 ] && { printf '\nALL PASS\n'; exit 0; } || { printf '\nFAILURES\n'; exit 1; }

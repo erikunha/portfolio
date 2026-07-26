@@ -36,6 +36,14 @@ printf '%s\n' "$DET" | awk -F'\t' '
   END { exit(found ? 0 : 1) }
 ' || exit 0
 
+# A real push and an undetected one both exit 0 silently, so the predicate above
+# is otherwise unobservable and untestable. This mode reports it and stops, so
+# the fixtures pin the live awk rather than a copy of it that can drift.
+if [ -n "${REVIEW_CONVERGE_DETECT_ONLY:-}" ]; then
+  printf 'DETECTED\n'
+  exit 0
+fi
+
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || exit 0
 [ -z "$BRANCH" ] && exit 0
 [ "$BRANCH" = "main" ] && exit 0
