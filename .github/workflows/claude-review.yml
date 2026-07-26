@@ -106,17 +106,35 @@ jobs:
           SINCE: ${{ steps.t0.outputs.at }}
         run: |
           set -euo pipefail
+
+          if [ -z "${SINCE:-}" ]; then
+            echo "FAIL: no review-start timestamp, so freshness cannot be established."
+            echo "  jq compares strings, and .created_at >= \"\" is true for every comment,"
+            echo "  so continuing here would silently accept a PREVIOUS run's verdict."
+            exit 1
+          fi
+
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ] \
+            && gh pr diff "$PR" --name-only | grep -qx '.github/workflows/claude-review.yml'; then
+            echo "SKIP  this PR edits claude-review.yml."
+            echo "  The action refuses to run when the workflow differs from the default"
+            echo "  branch, so the auto path cannot post a verdict here no matter what the"
+            echo "  PR does. Asserting one would be a red no amount of fixing can clear."
+            echo "  Use a /claude-review comment, which runs the default-branch copy."
+            exit 0
+          fi
+
           fresh=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
-            --jq --arg since "$SINCE" '.[] | select(.created_at >= $since) | .body')
+            --jq ".[] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\") | .body")
+
           if printf '%s' "$fresh" | grep -qiE '\*\*[^*]*\b(approve|reject|request changes)\b[^*]*\*\*'; then
             echo "OK  this run posted a verdict."
             exit 0
           fi
           echo "FAIL: claude-review posted no verdict on PR #$PR during this run."
-          echo "  The action exits 0 regardless, so without this step the check would"
-          echo "  read green while check-claude-approval.ts sees verdict=none and the"
-          echo "  merge gate stalls with no explanation."
+          echo "  The action exits 0 regardless, so without this step the check would read"
+          echo "  green while check-claude-approval.ts sees verdict=none and the merge gate"
+          echo "  stalls with no explanation."
           echo "  Known cause: tag mode returns a progress checklist instead of a review."
-          echo "  Workaround that is known to work: comment /claude-review, which runs"
-          echo "  the default-branch copy of this workflow and produces a real review."
+          echo "  Workaround: comment /claude-review, which runs the default-branch copy."
           exit 1
