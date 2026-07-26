@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
@@ -116,24 +117,73 @@ describe('the guard verdict pattern is never looser than the gate it protects', 
 });
 
 describe('the guard reds the job, and skips only what it provably cannot review', () => {
-  it.each([
-    ['a body the gate reads as no verdict', '### Review\n- [x] Gather context', 1],
-    ['a body carrying a verdict', 'Reviewed head `abc1234`. **Approve**', 0],
-  ])('runs under bash and exits %s -> %d', (_label, body, expected) => {
-    const script = guardScript();
-    const fragment = script.slice(script.search(GREP));
-    let status = 0;
+  type Run = {
+    body: string;
+    since?: string;
+    event?: string;
+    changed?: string;
+  };
+
+  function runGuard({
+    body,
+    since = '2026-01-01T00:00:00Z',
+    event = 'pull_request',
+    changed = 'README.md',
+  }: Run) {
+    const bin = mkdtempSync(join(tmpdir(), 'guard-gh-'));
+    writeFileSync(
+      join(bin, 'gh'),
+      `#!/usr/bin/env bash\nif [ "$1" = "api" ]; then printf '%s' ${JSON.stringify(body)}; else printf '%s\\n' ${JSON.stringify(changed)}; fi\n`,
+    );
+    chmodSync(join(bin, 'gh'), 0o755);
     try {
-      execFileSync('bash', ['-euo', 'pipefail', '-c', `fresh=$1\n${fragment}`, '_', body], {
+      execFileSync('bash', ['-c', guardScript()], {
         stdio: 'pipe',
+        env: {
+          ...process.env,
+          PATH: `${bin}:${process.env.PATH ?? ''}`,
+          PR: '227',
+          REPO: 'o/r',
+          SINCE: since,
+          GITHUB_EVENT_NAME: event,
+        },
       });
+      return { status: 0, stderr: '' };
     } catch (error) {
-      status = (error as { status?: number }).status ?? -1;
+      const e = error as { status?: number; stderr?: Buffer };
+      return { status: e.status ?? -1, stderr: e.stderr?.toString() ?? '' };
     }
+  }
+
+  const EXECUTED_CASES: ReadonlyArray<readonly [string, Run, number]> = [
+    ['no verdict in the fetched body', { body: '### Review\n- [x] Gather context' }, 1],
+    ['a verdict in the fetched body', { body: 'head `abc1234`. **Approve**' }, 0],
+    ['no review-start timestamp', { body: '**Approve**', since: '' }, 1],
+    [
+      'the PR edits this workflow, which the action cannot review',
+      { body: 'nothing', changed: '.github/workflows/claude-review.yml' },
+      0,
+    ],
+    [
+      'a comment-event run must still be asserted, never skipped',
+      { body: 'nothing', event: 'issue_comment', changed: '.github/workflows/claude-review.yml' },
+      1,
+    ],
+  ];
+
+  it('keeps every executed row, since it.each([]) registers nothing and still reports PASS', () => {
     expect(
-      status,
-      `The verdict branch is EXECUTED here rather than pattern-matched. Every structural assertion in this file has been bypassed at a coordinate it did not pin: a single \`!\` inverted the test with all sixteen green, and an unconditional \`exit 0\` inserted between the grep's fi and the FAIL branch left the guard incapable of failing while a trailing-position check still passed. Running it answers the only question that matters — given this body, does the script exit non-zero?\n\nbody: ${JSON.stringify(body)}`,
-    ).toBe(expected);
+      EXECUTED_CASES.length,
+      'Emptying this table removes every execution-based assertion while vitest reports PASS over zero registered tests — the silent green the corpus check above exists to prevent.',
+    ).toBe(5);
+  });
+
+  it.each(EXECUTED_CASES)('runs the WHOLE guard under bash: %s', (_label, run, expected) => {
+    const { status, stderr } = runGuard(run);
+    expect(
+      { status, unbound: /unbound variable/.test(stderr) },
+      `The ENTIRE run: script is executed here with gh stubbed on PATH, not a trailing slice of it.\n\nSlicing from the grep left everything before it unexecuted, so an \`exit 0\` placed after the fetch bypassed every assertion — the same class one level up. Executing the whole script is what removes it rather than moving it.\n\nEvery variable the script reads is stubbed, because an earlier version stubbed only \`fresh\` and \`set -u\` aborted on \`$PR\` three lines before the guard's own exit, making the row pass for the wrong reason. The unbound check is what keeps that visible.\n\nstderr: ${stderr.trim()}`,
+    ).toEqual({ status: expected, unbound: false });
   });
 
   it('carries no || true and no continue-on-error, either of which unblocks the exit', () => {
