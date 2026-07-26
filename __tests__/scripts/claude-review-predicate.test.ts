@@ -19,6 +19,18 @@ function workflow(): Record<string, unknown> {
   return doc;
 }
 
+// Collapse whitespace only OUTSIDE quoted literals. Between tokens it is
+// insignificant to the GHA expression parser; inside a literal it is not, and
+// flattening it would let `'/claude review'` and `'/claude  review'` compare
+// equal while admitting different runs. Odd indices are the quoted spans; GHA
+// escapes an inner quote as '', which this split handles.
+const collapse = (expr: string) =>
+  expr
+    .split(/('(?:[^']|'')*')/)
+    .map((part, i) => (i % 2 === 1 ? part : part.replace(/\s+/g, ' ')))
+    .join('')
+    .trim();
+
 function at(doc: unknown, path: readonly string[]): string {
   let node: unknown = doc;
   for (const key of path) {
@@ -32,7 +44,7 @@ function at(doc: unknown, path: readonly string[]): string {
   if (typeof node !== 'string' || node.trim() === '') {
     throw new Error(`claude-review.yml: ${path.join('.')} is absent or not a string`);
   }
-  return node.replace(/\s+/g, ' ').trim();
+  return collapse(node);
 }
 
 // The group is the job predicate wrapped in one paren layer, then routed to a
@@ -55,6 +67,10 @@ describe('claude-review concurrency group mirrors the review job condition', () 
   });
 
   it('superseding is on, so a review of a stale HEAD cannot outlive the push that replaced it', () => {
-    expect((doc.concurrency as Record<string, unknown>)['cancel-in-progress']).toBe(true);
+    const concurrency = doc.concurrency;
+    if (!concurrency || typeof concurrency !== 'object') {
+      throw new Error('claude-review.yml: the workflow-level `concurrency:` block is missing');
+    }
+    expect((concurrency as Record<string, unknown>)['cancel-in-progress']).toBe(true);
   });
 });
