@@ -111,6 +111,35 @@ jobs:
       # gh applies --jq PER PAGE under --paginate, so without it `last` yields one
       # body per page and the guard greps their union — the very failure `last` was
       # added to remove, reappearing only once a PR passes 30 comments.
+      # A cancelled run cannot finish its own progress comment, so the checklist
+      # it posted at job start is orphaned on the PR forever. That is not
+      # cosmetic: three of them accumulated on #229 and read as three live
+      # reviews. Cancellation is normal here — the concurrency group supersedes a
+      # review whose HEAD was replaced — so the litter is guaranteed, not rare.
+      #
+      # Marks rather than deletes: the run happened, and a reader tracing why a
+      # finding appeared against an older SHA needs to see that it was superseded
+      # rather than find a gap. `if: cancelled()` still runs on a graceful cancel.
+      - name: Mark this run's progress comment superseded if it was cancelled
+        if: cancelled()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+          REPO: ${{ github.repository }}
+          SINCE: ${{ steps.t0.outputs.at }}
+        run: |
+          set -uo pipefail
+          [ -z "${SINCE:-}" ] && exit 0
+
+          id=$(gh api --paginate --slurp "repos/$REPO/issues/$PR/comments" \
+            --jq "[.[][] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | sort_by(.created_at) | last | .id") || exit 0
+          [ -z "$id" ] || [ "$id" = "null" ] && exit 0
+
+          gh api -X PATCH "repos/$REPO/issues/comments/$id" \
+            -f body="_Superseded: this review was cancelled because a newer commit replaced the HEAD it was reading. Any finding it posted refers to that older SHA. See the review for the current head._" \
+            >/dev/null 2>&1 || true
+          echo "marked comment $id as superseded"
+
       - name: Assert this run posted a verdict the merge gate can read
         if: always()
         env:
