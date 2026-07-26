@@ -107,7 +107,7 @@ Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, week
 ## The PR lifecycle
 
 ```
-commit (scope blocks) -> pnpm pr-size -> (battery + review:findings + review:stamp before push)
+commit (scope blocks) -> pnpm pr-size -> (battery + review:findings + review:stamp before opening the PR)
   -> pnpm ready-for-pr (ci:local + pr-size + gates:runtime) -> gh pr create (fill the template)
   -> Review convergence loop (rebase, push, re-request, resolve threads) -> pnpm ready-to-merge
   -> repo owner runs gh pr merge (AI agents are blocked from merging)

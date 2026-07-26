@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 const execFileP = promisify(execFile);
-const CLAUDE_LOGIN = 'claude[bot]';
+export const CLAUDE_LOGIN = 'claude[bot]';
 
 export type ClaudeVerdict = 'approve' | 'request-changes' | 'reject' | 'none';
 

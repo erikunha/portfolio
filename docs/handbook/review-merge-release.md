@@ -18,7 +18,7 @@ flowchart TD
     r1 --> r2["ready-for-pr: bundle-check"]
     r2 --> r3["ready-for-pr: pr-size"]
     r3 --> r4["ready-for-pr: gates:runtime (LHCI+axe+E2E)"]
-    r4 --> r5["review-pr against the diff"]
+    r4 --> r5["pr-review-toolkit:code-reviewer against the diff"]
     r5 --> o1["open PR: validate-pr-body"]
     o1 --> o2["Review convergence loop"]
     o2 --> m1["ready-to-merge: ci:local"]
@@ -36,16 +36,18 @@ Review is **mechanical and multi-perspective**. Four fresh-context agents review
 
 | Agent | Lens |
 |---|---|
-| `pr-review-toolkit:review-pr` | correctness, requirements |
-| `security-auditor` | security surface (required on any API edit) |
-| `performance-engineer` | LCP/INP/CLS budgets |
-| `dependency-auditor` | dependency hygiene |
+| `pr-review-toolkit:code-reviewer` | correctness — wrong result, crash, silent no-op (27% of findings) |
+| `documentation-engineer` | claim-drift — prose the diff just made false (35%) |
+| `security-auditor` | gate-robustness — a gate, hook, or script that fails open; plus the security surface, required on any API edit (22%) |
+| `pr-review-toolkit:pr-test-analyzer` | test-strength — a test asserting less than the invariant it names (12%) |
+
+All four run on Opus. Tier, not role, is the dominant lever on what a reviewer finds: in a controlled mutation eval (2026-07-25) Opus reviewers found 13/13 and 11/13 planted defects where Sonnet found 7/13 and 6/13 on the same prompts. Perf, dependency, and a11y reviewers are conditional rather than standing, because LHCI, `check-bundle-size.mjs`, `check-route-js.mjs`, `check-dep-pinning.mjs`, and axe-core already gate those properties.
 
 WCAG 2.1 AA is gated separately and mechanically by axe-core (`tests/a11y/axe.spec.ts`) + Lighthouse accessibility = 100, not by a battery agent.
 
 `battery-synthesis` dedups the four reports into one ranked table and records each Critical/Important into the findings ledger (`.review-findings.json`). `review:stamp` then **refuses** to write `.review-passed` unless (a) the transcript shows all four roles dispatched after the HEAD commit time, and (b) no Critical/Important finding is still `open`. The stamp proves dispatch and resolution; it is transcript-verified, not honor-system.
 
-**Two triggers:** before any `git push`, and whenever coding work stops. The battery prompts are scoped to the commit type, so a docs-only commit's agents skip the test suite (the stamp counts dispatch, not depth).
+**Pre-PR gate:** the battery runs once before the PR is opened, never before every push — post-PR review is owned by claude-review. The battery prompts are scoped to the commit type, so a docs-only commit's agents skip the test suite (the stamp counts dispatch, not depth).
 
 ## Review convergence loop
 

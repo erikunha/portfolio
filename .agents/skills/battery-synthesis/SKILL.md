@@ -1,6 +1,6 @@
 ---
 name: battery-synthesis
-description: Use after all 4 review-battery agents (pr-review-toolkit:review-pr, security-auditor, performance-engineer, dependency-auditor) have returned and before running `pnpm review:stamp`. Unifies their reports into one deduplicated, severity-ranked action table so nothing is double-counted or missed before the stamp decision. Not a gate; a DX aid where the fix responsibility stays with the main agent.
+description: Use after all 4 review-battery agents (pr-review-toolkit:code-reviewer, documentation-engineer, security-auditor, pr-review-toolkit:pr-test-analyzer) have returned and before running `pnpm review:stamp`. Unifies their reports into one deduplicated, severity-ranked action table so nothing is double-counted or missed before the stamp decision. Not a gate; a DX aid where the fix responsibility stays with the main agent.
 ---
 > **Codex note:** hook activation is not configured in this repo, so every "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **hard rule to self-enforce**, not an automated gate.
 
@@ -15,8 +15,10 @@ the responsibility for fixing findings remain with the main agent.
 
 After all 4 battery agents have returned their reports and before `pnpm review:stamp`.
 
-Battery agents: `pr-review-toolkit:review-pr`,
-`security-auditor`, `performance-engineer`, `dependency-auditor`.
+Battery agents, one per role in `.agents/skills/review-battery`:
+`pr-review-toolkit:code-reviewer` (correctness), `documentation-engineer`
+(claim-drift), `security-auditor` (gate-robustness),
+`pr-review-toolkit:pr-test-analyzer` (test-strength).
 
 Dispatch trigger in AGENTS.md: "After dispatching the full 4-agent battery, before
 `pnpm review:stamp` → `battery-synthesis`"
@@ -32,7 +34,7 @@ Read all 4 reports from the current context in order. Do NOT re-dispatch agents.
 - Agent name
 
 **Step 2 — Deduplicate.** When two or more agents flag the same file + issue class
-(e.g., both `pr-review-toolkit:review-pr` and `security-auditor` flag the same unvalidated input
+(e.g., both `pr-review-toolkit:code-reviewer` and `security-auditor` flag the same unvalidated input
 on the same button):
 - Merge into one row
 - List all agent names in the Agent(s) column separated by ` + `
@@ -40,9 +42,10 @@ on the same button):
 - Use the highest severity across the duplicates
 
 **Step 3 — Detect conflicts.** When one agent recommends action X and another recommends
-action Y that contradicts X on the same element or file (e.g., `performance-engineer`
-says "add preload for this font" and `pr-review-toolkit:review-pr` says "avoid layout shift from
-this font loading"), do NOT merge them. Surface them in the Conflicts section instead.
+action Y that contradicts X on the same element or file (e.g., `security-auditor`
+says a hook must exit 2 to block while `pr-review-toolkit:code-reviewer` says the same hook
+must exit 0 so the surrounding chain continues), do NOT merge them. Surface them in the
+Conflicts section instead.
 
 **Step 4 — Classify.** Sort all deduplicated findings by severity:
 Critical → Important → Advisory.
@@ -57,21 +60,24 @@ Critical → Important → Advisory.
 ### Critical
 | Issue | File(s) | Agent(s) | Action |
 |---|---|---|---|
-| Missing rate-limit on /api/example | app/api/example/route.ts | security-auditor | Add `applyRateLimit()` call before handler logic |
+| Gate fails open: `cmd \| tail` swallows the exit code | scripts/check-example.sh | security-auditor | Add `set -o pipefail`, or capture the status before the pipe |
 
 ### Important
 | Issue | File(s) | Agent(s) | Action | Note |
 |---|---|---|---|---|
-| Missing aria-label on close button | components/client/Dialog.client.tsx | pr-review-toolkit:review-pr + performance-engineer | Add aria-label="Close dialog" | Overlapping — one fix resolves both |
+| Guard passes when the header is absent | lib/example.ts | pr-review-toolkit:code-reviewer + security-auditor | Return false on a missing header | Overlapping — correctness sees the fail-open branch, gate-robustness sees the same line as a control that never blocks |
 
 ### Advisory
 | Issue | File(s) | Agent(s) | Action |
 |---|---|---|---|
-| Unused import `clsx` | components/sections/Hero.tsx | pr-review-toolkit:review-pr | Remove import |
+| Handbook still names a script the diff renamed | docs/handbook/example.md | documentation-engineer | Update the reference; the old name resolves to nothing |
 
 ### Conflicts requiring resolution before acting
-- [perf] Add `<link rel="preload">` for JetBrains Mono vs [a11y] Avoid CLS from font
-  swap — pick one approach before addressing either row. Options: (a) preload + `font-display: block` to eliminate swap; (b) keep `font-display: swap` and accept potential CLS from the font swap.
+- [test-strength] "Assert the exit code, not the message" vs [gate-robustness] "The message is
+  the only thing a blocked operator reads" — both are about the same guard block and pull opposite
+  ways on what the test should pin. Pick one before acting. Options: (a) pin the exit code and let
+  the message drift, accepting that a wrong message misleads a blocked operator; (b) pin both, and
+  accept that a copy edit reds the suite.
 ~~~
 
 ## After synthesis — record the findings ledger (verification loop)

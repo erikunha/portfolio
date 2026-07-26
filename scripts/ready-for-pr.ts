@@ -101,7 +101,7 @@ process.stdout.write(
   `${C.dim}  1. Playwright visual check (desktop 1280×720 + mobile 375×812)${C.reset}\n`,
 );
 process.stdout.write(
-  `${C.dim}  2. Run pr-review-toolkit:review-pr skill — address Critical/Important findings${C.reset}\n`,
+  `${C.dim}  2. Dispatch pr-review-toolkit:code-reviewer — address Critical/Important findings${C.reset}\n`,
 );
 process.stdout.write(
   `${C.dim}  3. gh pr create — fill EVERY section from .github/pull_request_template.md${C.reset}\n`,

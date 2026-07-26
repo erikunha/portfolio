@@ -37,29 +37,40 @@ if [ "$branch" != "main" ]; then
     || { echo "Error: invalid branch name '$branch'. Use <type>/<description>."; exit 1; }
 fi
 
-STAMP_FILE=".review-passed"
 HEAD_SHA=$(git rev-parse HEAD)
-if [ ! -f "$STAMP_FILE" ]; then
-  echo ""
-  echo "BLOCKED: no review stamp found."
-  echo "  1. Dispatch all 4 review agents: pr-review-toolkit (code-reviewer),"
-  echo "     security-auditor, performance-engineer, dependency-auditor"
-  echo "  2. Run: pnpm review:stamp  (immediately after dispatch; proves dispatch,"
-  echo "     not completion; fix Critical/Important findings before your next push)"
-  echo ""
-  exit 1
+
+PR_OPEN=""
+if command -v gh >/dev/null 2>&1; then
+  PR_OPEN=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number // empty' 2>/dev/null || true)
 fi
-STAMPED_SHA=$(cat "$STAMP_FILE")
-if [ "$STAMPED_SHA" != "$HEAD_SHA" ]; then
-  echo ""
-  echo "BLOCKED: review stamp is stale."
-  echo "  Stamped: $STAMPED_SHA"
-  echo "  HEAD:    $HEAD_SHA"
-  echo "  Re-run review agents for new commits, then: pnpm review:stamp"
-  echo ""
-  exit 1
+
+if [ -n "$PR_OPEN" ]; then
+  echo "[pre-push] Open PR #$PR_OPEN for $branch: the review battery is a PRE-PR gate; post-PR review is owned by claude-review. Skipping the battery-stamp check. (pnpm verify still runs below.)"
+else
+  STAMP_FILE=".review-passed"
+  if [ ! -f "$STAMP_FILE" ]; then
+    echo ""
+    echo "BLOCKED: no review stamp found (pre-PR push)."
+    echo "  1. Dispatch every review role named in .claude/skills/review-battery"
+    echo "     (that file is pinned to BATTERY_ROLES by a test; this hook"
+    echo "     deliberately does not re-list the agent names)"
+    echo "  2. Run: pnpm review:stamp  (immediately after dispatch; proves dispatch,"
+    echo "     not completion; fix Critical/Important findings before your next push)"
+    echo ""
+    exit 1
+  fi
+  STAMPED_SHA=$(cat "$STAMP_FILE")
+  if [ "$STAMPED_SHA" != "$HEAD_SHA" ]; then
+    echo ""
+    echo "BLOCKED: review stamp is stale (pre-PR push)."
+    echo "  Stamped: $STAMPED_SHA"
+    echo "  HEAD:    $HEAD_SHA"
+    echo "  Re-run review agents for new commits, then: pnpm review:stamp"
+    echo ""
+    exit 1
+  fi
+  echo "[pre-push] Review stamp valid ($HEAD_SHA)"
 fi
-echo "[pre-push] Review stamp valid ($HEAD_SHA)"
 
 API_MARKER="$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/.api-edit-pending"
 if [ -s "$API_MARKER" ]; then

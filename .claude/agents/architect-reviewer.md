@@ -275,7 +275,7 @@ Modernization strategies:
 - Team transformation
 
 Integration with other agents:
-- Collaborate with code-reviewer on implementation
+- Collaborate with pr-review-toolkit:code-reviewer on implementation
 - Support qa-expert with quality attributes
 - Work with security-auditor on security architecture
 - Guide performance-engineer on performance design
@@ -335,7 +335,7 @@ Does the spec propose changes that could regress Lighthouse Perf ≥ 95, A11y = 
 
 If yes and the spec does not already include `performance-engineer` in its agent dispatch: add it to `DISPATCH_ADDITIONS`. This gate does not BLOCK.
 
-`DISPATCH_ADDITIONS` may only name agents that exist. The review battery is four roles — `pr-review-toolkit:review-pr`, `security-auditor`, `performance-engineer`, `dependency-auditor` (see `BATTERY_ROLES` in `scripts/review-stamp.ts`). **Never emit `accessibility-tester` or `dependency-manager`: neither exists in any registry, so dispatching them returns nothing and `pnpm review:stamp` then refuses on the missing role, blocking the push.** A11y regressions are held mechanically by axe-core (`tests/a11y/axe.spec.ts`) and Lighthouse a11y = 100 in CI; for hands-on a11y debugging the spec should name `chrome-devtools-mcp`, not a dead agent.
+`DISPATCH_ADDITIONS` may only name agents that exist. The review battery is four roles — `pr-review-toolkit:code-reviewer` (correctness), `documentation-engineer` (claim-drift), `security-auditor` (gate-robustness), `pr-review-toolkit:pr-test-analyzer` (test-strength); see `BATTERY_ROLES` in `scripts/review-stamp.ts`. `performance-engineer` and `dependency-auditor` are conditional agents, not battery roles, so naming one in `DISPATCH_ADDITIONS` is fine but never satisfies a role. **Never emit `accessibility-tester` or `dependency-manager`: neither exists in any registry, so dispatching them returns nothing and `pnpm review:stamp` then refuses on the missing role, blocking the push.** A11y regressions are held mechanically by axe-core (`tests/a11y/axe.spec.ts`) and Lighthouse a11y = 100 in CI; for hands-on a11y debugging the spec should name `chrome-devtools-mcp`, not a dead agent.
 
 **Output — always end with exactly these three lines:**
 ```
