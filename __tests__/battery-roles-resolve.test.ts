@@ -114,9 +114,34 @@ const AGENT_NAME_ONCE = new RegExp(AGENT_NAME_SOURCE);
 // Derived, never enumerated: a hand-listed set is the drift this gate exists to
 // stop, and the first version of it already both omitted two docs that name the
 // agents and listed one that names none.
+const PROSE_ROOTS = [
+  'docs',
+  'scripts',
+  '.claude/commands',
+  '.claude/hooks',
+  '.claude/skills',
+  '.claude/agents',
+];
+const SPINE_FILES = ['CLAUDE.md', 'AGENTS.md'];
+
+const DOCUMENTED_NON_DISPATCH: Record<string, readonly string[]> = {
+  'CLAUDE.md': ['pr-review-toolkit:review-pr', 'review-pr'],
+  'AGENTS.md': ['pr-review-toolkit:review-pr', 'review-pr'],
+};
+
+const ACCEPTED = new Set(BATTERY_ROLES.flatMap((r) => r.accepts));
+
+function undispatchableNames(rel: string, content: string): string[] {
+  const allowed = DOCUMENTED_NON_DISPATCH[rel] ?? [];
+  const named = [...new Set(content.match(AGENT_NAME) ?? [])];
+  return named.filter((n) => !ACCEPTED.has(n) && !allowed.includes(n));
+}
+
 function proseSurfaces(): string[] {
-  const roots = ['docs', 'scripts', '.claude/commands', '.claude/hooks', '.claude/skills'];
   const out: string[] = [];
+  const consider = (p: string) => {
+    if (/\.(md|ts|sh)$/.test(p) && AGENT_NAME_ONCE.test(readFileSync(p, 'utf8'))) out.push(p);
+  };
   const walk = (dir: string) => {
     if (!existsSync(dir)) return;
     for (const e of readdirSync(dir, { withFileTypes: true })) {
@@ -127,16 +152,19 @@ function proseSurfaces(): string[] {
       // directories, so excluding them costs no coverage.
       if (e.isDirectory()) {
         if (e.name !== '__tests__' && e.name !== 'tests') walk(p);
-      } else if (/\.(md|ts|sh)$/.test(e.name) && AGENT_NAME_ONCE.test(readFileSync(p, 'utf8')))
-        out.push(p);
+      } else consider(p);
     }
   };
-  for (const r of roots) walk(join(process.cwd(), r));
+  for (const r of PROSE_ROOTS) walk(join(process.cwd(), r));
+  for (const f of SPINE_FILES) {
+    const p = join(process.cwd(), f);
+    if (existsSync(p)) consider(p);
+  }
   return out;
 }
 
 describe('prose that names the pre-PR review agent stays inside its accept-list', () => {
-  const accepted = new Set(BATTERY_ROLES.flatMap((r) => r.accepts));
+  const accepted = ACCEPTED;
 
   const surfaces = proseSurfaces();
 
@@ -145,6 +173,42 @@ describe('prose that names the pre-PR review agent stays inside its accept-list'
       surfaces.length,
       'No file under docs/, scripts/ or .claude/ names a review agent. Either the derivation broke — in which case this gate is checking nothing while reporting green — or every reference was removed, which would itself be the drift.',
     ).toBeGreaterThan(3);
+  });
+
+  it('every declared scan root resolves on disk, so a renamed root fails loud not silent', () => {
+    const unresolved = [...PROSE_ROOTS, ...SPINE_FILES].filter(
+      (r) => !existsSync(join(process.cwd(), r)),
+    );
+    expect(
+      unresolved,
+      `A path in PROSE_ROOTS/SPINE_FILES no longer exists on disk. proseSurfaces() skips a missing root via its existsSync guard, so a dead alias reintroduced under a root that was renamed out from under this list passes green — the exact fail-open this gate exists to prevent, hidden because the surface count stays above the > 3 floor on the roots that remain. Update the path to match the rename.\n\nunresolved: ${unresolved.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('the documented-non-dispatch allowlist is scoped per file, not global', () => {
+    const instruction = 'dispatch review-pr for the correctness pass';
+    expect(
+      undispatchableNames('CLAUDE.md', instruction),
+      'review-pr is documented as non-dispatchable in the spine, so it is allowed there.',
+    ).toEqual([]);
+    expect(
+      undispatchableNames('docs/playbook.md', instruction),
+      'The same token in a non-spine surface must still fail. A global allowlist (Object.values(DOCUMENTED_NON_DISPATCH).flat()) would let a review-pr dispatch instruction in docs/ pass silently, reintroducing the dead-alias split.',
+    ).toEqual(['review-pr']);
+  });
+
+  it('scans the repo-root spine and agent definitions, not only operational surfaces', () => {
+    const rels = new Set(surfaces.map((p) => p.replace(`${process.cwd()}/`, '')));
+    const mustScan = ['CLAUDE.md', 'AGENTS.md'];
+    const missing = mustScan.filter((f) => !rels.has(f));
+    expect(
+      missing,
+      `The dead-alias incident this gate exists to prevent happened in CLAUDE.md and .claude/agents/architect-reviewer.md — the spine and agent-definition files, not the operational surfaces. A derivation that scans everything BUT them is fail-open exactly where it matters: a future edit reintroducing an undispatchable name in one of these alone would pass green. These roots must stay in PROSE_ROOTS/SPINE_FILES.\n\nnot scanned: ${missing.join(', ')}`,
+    ).toEqual([]);
+    expect(
+      [...rels].some((r) => r.startsWith('.claude/agents/')),
+      'No .claude/agents/*.md file is scanned, so an agent definition that names a dead alias — the exact architect-reviewer.md:338 incident — would not be caught.',
+    ).toBe(true);
   });
 
   it('scans membership statelessly and extracts globally', () => {
@@ -160,11 +224,13 @@ describe('prose that names the pre-PR review agent stays inside its accept-list'
 
   it.each(surfaces)('%s names only dispatchable agents', (path) => {
     const rel = path.replace(`${process.cwd()}/`, '');
-    const named = [...new Set(readFileSync(path, 'utf8').match(AGENT_NAME) ?? [])];
-    const undispatchable = named.filter((n) => !accepted.has(n));
+    const content = readFileSync(path, 'utf8');
+    const allowed = DOCUMENTED_NON_DISPATCH[rel] ?? [];
+    const named = [...new Set(content.match(AGENT_NAME) ?? [])];
+    const undispatchable = undispatchableNames(rel, content);
     expect(
       undispatchable,
-      `${rel} instructs an operator to use a pr-review-toolkit name that no BATTERY_ROLES accept-list contains, so following it produces a dispatch the stamp will not count and .husky/pre-push then blocks on guidance the repo itself gave.\n\nThis is not hypothetical. CLAUDE.md was corrected to pr-review-toolkit:code-reviewer while these operational surfaces kept saying review-pr, and it took an external reviewer to notice — a name is valid as a SLASH COMMAND while being undispatchable as a subagent_type, so nothing mechanical caught the split.\n\nIf a surface legitimately references a skill rather than an agent, exclude that file here with a reason rather than widening the accept-list, which is the fail-open direction.\n\nnamed: ${named.join(', ') || '(none)'}\naccepted: ${[...accepted].sort().join(', ')}`,
+      `${rel} instructs an operator to use a pr-review-toolkit name that no BATTERY_ROLES accept-list contains, so following it produces a dispatch the stamp will not count and .husky/pre-push then blocks on guidance the repo itself gave.\n\nThis is not hypothetical. CLAUDE.md was corrected to pr-review-toolkit:code-reviewer while these operational surfaces kept saying review-pr, and it took an external reviewer to notice — a name is valid as a SLASH COMMAND while being undispatchable as a subagent_type, so nothing mechanical caught the split.\n\nIf a surface legitimately references a name to DOCUMENT it as non-dispatchable (as CLAUDE.md/AGENTS.md do for review-pr), add it to DOCUMENTED_NON_DISPATCH for this file with a reason. Do NOT widen the accept-list, which is the fail-open direction. A name that a token scan cannot remove — because the file's job is to explain that name — is not mechanically distinguishable from the same name reintroduced as an instruction; that residual is why the allowlist is per-file and narrow, not global.\n\nnamed: ${named.join(', ') || '(none)'}\naccepted: ${[...accepted].sort().join(', ')}\nallowed here: ${allowed.join(', ') || '(none)'}`,
     ).toEqual([]);
   });
 });

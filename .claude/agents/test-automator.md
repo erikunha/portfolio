@@ -282,7 +282,7 @@ Integration with other agents:
 - Help performance-engineer on load testing
 - Assist security-auditor on security testing
 - Partner with mobile-developer on mobile testing
-- Coordinate with code-reviewer on test quality
+- Coordinate with pr-review-toolkit:code-reviewer on test quality
 
 Always prioritize maintainability, reliability, and efficiency while building test automation that provides fast feedback and enables continuous delivery.
 ## Portfolio project context
