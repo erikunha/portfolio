@@ -25,6 +25,20 @@ Dispatch trigger in CLAUDE.md: "After dispatching the full 4-agent battery, befo
 
 Read all 4 reports from the current context in order. Do NOT re-dispatch agents.
 
+**Step 0 — Read each report's `STATUS:` line before its findings.** A reviewer
+returning `STATUS: blocked` or `STATUS: partial` did not review the range, and
+its zero findings mean "could not look", not "looked and found nothing". Nothing
+downstream can tell those apart on its own: `review:findings check` filters on
+severity and `open`, and `review:stamp` counts `subagent_type` dispatches, so a
+blocked role leaves an empty ledger and stamps green.
+
+For every role whose status is not `completed`, record an `important` finding
+via `pnpm review:findings add important <role> "<role> returned STATUS: <status>
+— <what it could not cover>"` before synthesizing anything else. That keeps the
+ledger blocking until the role is re-dispatched or the gap is explicitly
+justified, which is the only mechanism here that stops a non-review from
+stamping.
+
 **Step 1 — Extract findings.** For each report, collect every finding:
 - Severity as the agent stated it (Critical / Important / Advisory or equivalent)
 - File path(s) affected
