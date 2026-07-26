@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -104,5 +104,30 @@ describe('resolvesWith — host-independent, so CI actually pins the predicate',
       resolvesWith('x', (path) => path === only, roots),
       `A bare-name accept resolved through ${label}. This branch serves documentation-engineer (claim-drift) and security-auditor (gate-robustness) — half the battery — and it executes NOWHERE on CI: neither has a definition under .claude/agents/, so canObserve() routes both to UNOBSERVABLE and every host-dependent assertion is skipped on a runner. These cases are the only thing pinning it, which is why widening the branch to a directory or to a commands/skills path must fail here rather than pass everywhere.`,
     ).toBe(false);
+  });
+});
+
+const PRE_PR_SURFACES = [
+  'scripts/ready-for-pr.ts',
+  '.claude/commands/ready-for-pr.md',
+  '.claude/hooks/bash-guard.sh',
+  'docs/handbook/agents-skills-hooks-mcp.md',
+  'docs/handbook/review-merge-release.md',
+  'docs/handbook/development-lifecycle.md',
+] as const;
+
+const TOOLKIT_NAME = /pr-review-toolkit:[\w-]+/g;
+
+describe('prose that names the pre-PR review agent stays inside its accept-list', () => {
+  const accepted = new Set(BATTERY_ROLES.flatMap((r) => r.accepts));
+
+  it.each(PRE_PR_SURFACES)('%s names only dispatchable agents', (rel) => {
+    const path = join(process.cwd(), rel);
+    const named = [...new Set(readFileSync(path, 'utf8').match(TOOLKIT_NAME) ?? [])];
+    const undispatchable = named.filter((n) => !accepted.has(n));
+    expect(
+      undispatchable,
+      `${rel} instructs an operator to use a pr-review-toolkit name that no BATTERY_ROLES accept-list contains, so following it produces a dispatch the stamp will not count and .husky/pre-push then blocks on guidance the repo itself gave.\n\nThis is not hypothetical. CLAUDE.md was corrected to pr-review-toolkit:code-reviewer while these operational surfaces kept saying review-pr, and it took an external reviewer to notice — a name is valid as a SLASH COMMAND while being undispatchable as a subagent_type, so nothing mechanical caught the split.\n\nIf a surface legitimately references a skill rather than an agent, exclude that file here with a reason rather than widening the accept-list, which is the fail-open direction.\n\nnamed: ${named.join(', ') || '(none)'}\naccepted: ${[...accepted].sort().join(', ')}`,
+    ).toEqual([]);
   });
 });
