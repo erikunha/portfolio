@@ -1,5 +1,6 @@
 #!/usr/bin/env tsx
 
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -14,11 +15,26 @@ export const FindingSchema = z.object({
   source: z.string().min(1),
   status: z.enum(['open', 'resolved', 'justified']),
   resolution: z.string().optional(),
+  // Provenance. Without it the ledger cannot say which review round produced a
+  // finding, so "does round N still pay for itself" stays a matter of opinion.
+  // Optional because the findings that predate this would have to be invented.
+  recordedAt: z.string().optional(),
+  recordedAtHead: z.string().optional(),
 });
 export type Finding = z.infer<typeof FindingSchema>;
 export const LedgerSchema = z.array(FindingSchema);
 
 export const LEDGER_PATH = '.review-findings.json';
+
+// A round is delimited by the commit it reviewed, so HEAD at record time is what
+// makes per-round counts derivable later.
+export function headSha(): string {
+  try {
+    return execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim();
+  } catch {
+    return 'unknown';
+  }
+}
 
 export function blockingFindings(findings: Finding[]): Finding[] {
   return findings.filter(
@@ -94,6 +110,8 @@ function main(argv: string[]): void {
         source,
         title,
         status: 'open',
+        recordedAt: new Date().toISOString(),
+        recordedAtHead: headSha(),
       });
       writeLedger(withFinding(ledger, finding));
       console.log(`[review-findings] recorded ${finding.severity} ${finding.id}: ${finding.title}`);
