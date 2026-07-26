@@ -108,6 +108,7 @@ const THREADS_QUERY = `query($owner:String!,$repo:String!,$pr:Int!){
     pullRequest(number:$pr){
       headRefOid
       reviewThreads(first:100){
+        pageInfo{ hasNextPage }
         nodes{
           id
           isResolved
@@ -124,6 +125,7 @@ type ThreadsEnvelope = {
       pullRequest?: {
         headRefOid?: string;
         reviewThreads?: {
+          pageInfo?: { hasNextPage?: boolean };
           nodes?: Array<{
             id: string;
             isResolved: boolean;
@@ -160,6 +162,12 @@ export async function fetchState(
   const pr = (JSON.parse(raw) as ThreadsEnvelope).data?.repository?.pullRequest;
   if (!pr?.headRefOid) throw new Error(`could not read PR #${prNumber} head SHA from GraphQL`);
 
+  if (pr.reviewThreads?.pageInfo?.hasNextPage) {
+    throw new Error(
+      `PR #${prNumber} has more than 100 review threads. Converging on a truncated set would report "resolved" while unresolved threads sit past the page boundary, so this refuses rather than guessing.`,
+    );
+  }
+
   const threads: ConvergeThread[] = (pr.reviewThreads?.nodes ?? []).map((n) => ({
     id: n.id,
     path: n.comments?.nodes?.[0]?.path ?? null,
@@ -174,11 +182,16 @@ export async function fetchState(
     `repos/${owner}/${repo}/issues/${prNumber}/comments`,
   ]);
   const pages = JSON.parse(commentsRaw) as Array<
-    Array<{ user?: { login?: string }; body?: string }>
+    Array<{ user?: { login?: string }; body?: string; created_at?: string }>
   >;
+  // Sorted by created_at rather than array position, matching how
+  // check-claude-approval.ts picks the latest. The merge gate reading a
+  // different comment than this loop is precisely the disagreement that sharing
+  // its parsers was supposed to rule out.
   const claudeBodies = pages
     .flat()
     .filter((c) => c.user?.login === CLAUDE_LOGIN)
+    .sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''))
     .map((c) => c.body ?? '');
 
   return {
@@ -190,7 +203,11 @@ export async function fetchState(
 }
 
 async function main(): Promise<void> {
-  const prRaw = await gh(['pr', 'view', '--json', 'number', '--jq', '.number']).catch(() => '');
+  // No .catch here on purpose: swallowing a gh failure returns the "no open PR"
+  // exit-0 path, and the hook that calls this has ALREADY confirmed a PR is open,
+  // so a rate limit or expired auth would print "converged" without reading a
+  // single thread — the skipped loop this exists to prevent.
+  const prRaw = await gh(['pr', 'view', '--json', 'number', '--jq', '.number']);
   const prNumber = Number(prRaw.trim());
   if (!Number.isInteger(prNumber) || prNumber <= 0) {
     process.stdout.write('[review-converge] no open PR for this branch — nothing to converge.\n');

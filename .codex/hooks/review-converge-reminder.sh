@@ -12,19 +12,17 @@
 # stopping anything, which trains the operator to ignore it.
 INPUT=$(cat)
 
-CMD=$(printf '%s' "$INPUT" | python3 -c "
-import json, sys
-try:
-  data = json.load(sys.stdin)
-  print(data.get('tool_input', {}).get('command', ''))
-except Exception:
-  print('')
-" 2>/dev/null || echo "")
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Fail quiet, not closed: a missed reminder costs one skipped nudge, while a
-# false one on every unrelated Bash call spends the budget that makes the real
-# one worth reading.
-printf '%s' "$CMD" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+push([[:space:]]|$)' || exit 0
+# Reuse the AST detector the push guard already uses rather than hand-rolling a
+# second, weaker predicate: a regex over the raw string misses `git -C <dir> push`
+# and `sh -c 'git push'`, and a missed push means the heartbeat silently never
+# fires for it. Fail quiet, not closed — a false nudge on every unrelated Bash
+# call spends the budget that makes the real one worth reading, and the merge is
+# gated regardless by `pnpm ready-to-merge`.
+DET=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/bash-guard-detect.py" --emit-commands 2>/dev/null) || exit 0
+printf '%s\n' "$DET" | grep -qE '(^|[[:space:]])push([[:space:]]|$)' || exit 0
+printf '%s\n' "$DET" | grep -qE '(^|[[:space:]/])git([[:space:]]|$)' || exit 0
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || exit 0
 [ -z "$BRANCH" ] && exit 0
@@ -33,10 +31,17 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || exit 0
 PR=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty' 2>/dev/null) || exit 0
 [ -z "$PR" ] && exit 0
 
-if OUT=$(pnpm review:converge 2>&1); then
-  printf '[review-converge] PR #%s is converged.\n' "$PR"
-  exit 0
-fi
+# Gate on the script's own sentinel, not merely on exit 0. review-converge exits
+# 0 on its "no open PR" path too, and this hook has ALREADY confirmed a PR is
+# open — so treating any zero exit as success would print "converged" for a
+# lookup that never read a thread.
+OUT=$(pnpm review:converge 2>&1)
+case "$OUT" in
+  *"[review-converge] OK"*)
+    printf '[review-converge] PR #%s is converged.\n' "$PR"
+    exit 0
+    ;;
+esac
 
 printf '\n%s\n' "$OUT" | grep -v '^>' | grep -v '^$'
 printf '[review-converge] The loop is not done. Run `pnpm review:converge` after each step.\n\n'

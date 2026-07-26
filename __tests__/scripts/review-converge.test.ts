@@ -51,6 +51,27 @@ describe('review-converge nextStep', () => {
     expect(step.threadIds).toEqual(['S']);
   });
 
+  it('converges on a thread that drew a follow-up beyond the reply', () => {
+    // Guards the high side of the boundary: with only 1-and-2 fixtures, `<`
+    // mutates to `!==` and every 3-comment thread is reported as a silent
+    // resolve forever, so the loop can never converge and the hook nags on
+    // every push.
+    const step = nextStep({ ...state(), threads: [thread({ commentCount: 3 })] });
+    expect(step.done).toBe(true);
+  });
+
+  it('refuses an approve whose SHA shares a prefix with HEAD and then diverges', () => {
+    // Guards against startsWith being weakened to a fixed-length prefix compare,
+    // which would read a stale approve as fresh.
+    const step = nextStep(
+      state({
+        latestVerdictBody: `**Verdict: Approve.** Reviewed at head commit \`${HEAD.slice(0, 8)}ffffffff\`.`,
+      }),
+    );
+    expect(step.done).toBe(false);
+    expect(step.reason).toMatch(/stale/);
+  });
+
   it(`treats ${MIN_COMMENTS_PER_RESOLVED_THREAD} comments as the minimum evidence of a reply`, () => {
     const below = nextStep({
       ...state(),

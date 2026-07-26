@@ -60,7 +60,7 @@ flowchart TD
     done --> sessionend["...SessionEnd: learning-loop"]
 ```
 
-Note: four hook *events* are used (PreToolUse on Bash, Skill, and the Playwright `browser_` namespace; PostToolUse on Edit|Write; SessionStart; SessionEnd). No `PreCompact` or `Notification` hooks.
+Note: four hook *events* are used (PreToolUse on Bash, Skill, and the Playwright `browser_` namespace; PostToolUse on Edit|Write and on Bash; SessionStart; SessionEnd). No `PreCompact` or `Notification` hooks.
 
 ## Git hooks (`.husky/`)
 
