@@ -107,7 +107,11 @@ describe('resolvesWith — host-independent, so CI actually pins the predicate',
   });
 });
 
-const AGENT_NAME_SOURCE = String.raw`(?:[\w-]+:)?(?:code-reviewer|review-pr|pr-test-analyzer)\b`;
+const ACCEPTED = new Set(BATTERY_ROLES.flatMap((r) => r.accepts));
+
+const ACCEPTED_FAMILIES = [...new Set([...ACCEPTED].map((a) => a.slice(a.lastIndexOf(':') + 1)))];
+const DEAD_ALIAS_WATCHLIST = ['review-pr', 'general-purpose'];
+const AGENT_NAME_SOURCE = String.raw`(?:[\w-]+:)?(?:${[...ACCEPTED_FAMILIES, ...DEAD_ALIAS_WATCHLIST].sort().join('|')})\b`;
 const AGENT_NAME = new RegExp(AGENT_NAME_SOURCE, 'g');
 const AGENT_NAME_ONCE = new RegExp(AGENT_NAME_SOURCE);
 
@@ -127,9 +131,8 @@ const SPINE_FILES = ['CLAUDE.md', 'AGENTS.md'];
 const DOCUMENTED_NON_DISPATCH: Record<string, readonly string[]> = {
   'CLAUDE.md': ['pr-review-toolkit:review-pr', 'review-pr'],
   'AGENTS.md': ['pr-review-toolkit:review-pr', 'review-pr'],
+  '.claude/skills/review-battery/SKILL.md': ['general-purpose'],
 };
-
-const ACCEPTED = new Set(BATTERY_ROLES.flatMap((r) => r.accepts));
 
 function undispatchableNames(rel: string, content: string): string[] {
   const allowed = DOCUMENTED_NON_DISPATCH[rel] ?? [];
@@ -209,6 +212,20 @@ describe('prose that names the pre-PR review agent stays inside its accept-list'
       [...rels].some((r) => r.startsWith('.claude/agents/')),
       'No .claude/agents/*.md file is scanned, so an agent definition that names a dead alias — the exact architect-reviewer.md:338 incident — would not be caught.',
     ).toBe(true);
+  });
+
+  it('the scan matches every role family and the dead-alias watchlist, not a hand-listed subset', () => {
+    const mustMatch = [
+      'documentation-engineer',
+      'security-auditor',
+      'general-purpose',
+      'review-pr',
+    ];
+    const missed = mustMatch.filter((n) => !AGENT_NAME_ONCE.test(n));
+    expect(
+      missed,
+      'AGENT_NAME_SOURCE once hand-listed only code-reviewer/review-pr/pr-test-analyzer, so a general-purpose dispatch instruction — the round-1 fail-open where the skill dispatched general-purpose for claim-drift while only documentation-engineer was accepted — passed the scan silently green. The scan must reach every BATTERY_ROLES family and the dead-alias watchlist; deriving AGENT_NAME_SOURCE from ACCEPTED is what keeps it from drifting back to a subset.',
+    ).toEqual([]);
   });
 
   it('scans membership statelessly and extracts globally', () => {
