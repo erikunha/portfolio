@@ -314,8 +314,7 @@ scheme-prefixed self-referential URL (`metadataBase`, `robots.txt` `Sitemap`,
 308-redirects to it; the bare string `erikunha.dev` remains the brand/identity
 label (OG `siteName`, the page-`<title>` suffix, the MCP server `name`,
 `@erikunha.dev` emails). Historical dated ADR text and superseded specs keep
-their original wording (they record history, and history is not edited). Superseded
-documents carry a header banner pointing at what replaced them.
+their original wording (they record history, and history is not edited).
 
 **Rationale.** Documentation that drifts from code is worse than no
 documentation — a reader trusts it and is misled. A portfolio that is a hiring
@@ -333,9 +332,7 @@ PR and reversibility note. A doc-claim verifier script — a `scripts/audit/`
 tool that mechanically checks every file/function/budget named in
 `ARCHITECTURE.md` — is a documented *stretch goal*, not a shipped gate; this
 chapter states that plainly so the absence is not mistaken for a silent
-aspiration. Superseded docs (`docs/audit-2025-05.md`,
-`docs/audit/2026-05-19-principal-audit.md`) carry an explicit historical
-banner.
+aspiration.
 
 ---
 

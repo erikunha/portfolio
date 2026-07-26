@@ -415,8 +415,6 @@ If Resend is down, the message is captured. If KV is down, we fail loud (502) so
 - No CAPTCHA (UX tax outweighs spam saved at this scale)
 - Honeypot field (`field_company` — hidden, off-screen) rendered by `ContactForm` with `aria-hidden="true" tabindex="-1" autocomplete="off"` and inline-styled to `left: -9999px; opacity: 0; pointer-events: none`. `isHoneypotTripped()` in `lib/contact-validation.ts` checks the server-side body before validation; if filled, the route logs `contact honeypot tripped`, waits a 50–150 ms random jitter to match real Resend round-trip timing, and returns `{ ok: true }` without touching KV or Resend — denying the bot any failure signal.
 
-History: see `docs/audit/2026-05-19-principal-audit.md` Theme 1.4.
-
 ### Accessibility
 - Real `<label for="...">` for each input
 - `aria-describedby` linking to inline error messages

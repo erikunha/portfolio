@@ -14,7 +14,6 @@ flowchart TD
     subgraph plan["Planning / what & how"]
         specs["specs/NNN-feature/ (local-only, gitignored)"]
         plans["specs/NNN-feature/ (local-only, gitignored)"]
-        audit["docs/audit/ (principal audit)"]
     end
     subgraph maps["Maps / reference"]
         kb["/docs/01-11 (architecture knowledge base)"]
