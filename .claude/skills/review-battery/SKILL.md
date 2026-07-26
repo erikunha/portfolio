@@ -176,11 +176,11 @@ is exactly why `WRITE OWNERSHIP` is stated in the prompt rather than left to the
 tool grant. Least privilege is not enforced by the dispatch here, so the
 instruction is the only thing holding it.
 
-`<BASE>` resolves the way `pnpm pr-size` already resolves it, and for the same
-reason: `--base` if given, else `PR_BASE`, else `origin/$GITHUB_BASE_REF`, else
-`origin/main`. On a sub-PR into an integration branch that is the integration
-branch, not main. Use the three-dot form so the range is merge-base to HEAD and
-an out-of-date branch does not read every upstream commit as part of this diff.
+`<BASE>` is the branch this work will merge into: `origin/$GITHUB_BASE_REF` when
+CI set it, otherwise `origin/main`. On a sub-PR into an integration branch that
+is the integration branch, not main. Use the three-dot form so the range is
+merge-base to HEAD and an out-of-date branch does not read every upstream commit
+as part of this diff.
 
 Why this block exists at all: without it the reviewer picks its own range, and
 the most available guess is `HEAD~1..HEAD`. On a six-commit branch that reviews

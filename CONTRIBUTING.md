@@ -51,7 +51,7 @@ Performance, accessibility (WCAG 2.1 AA), and security are treated as implicit o
 
 ## Opening a pull request
 
-1. Keep PRs small. Review quality drops sharply past a few hundred changed lines; the repo has a `pnpm pr-size` helper that flags when a branch should be split.
+1. Keep PRs small. Review quality drops sharply past a few hundred changed lines.
 2. Run `pnpm ci:local` (and `pnpm gates:runtime` for anything that affects the built site).
 3. Fill in **every** section of the PR template — do not write a body from scratch. `pnpm validate-pr-body <pr>` verifies the sections are filled.
 4. **Show your work.** A PR should evidence what it claims, not just assert it: paste command output, attach before/after screenshots or a recording for UI changes, note bundle-size and Core Web Vitals deltas for performance work, and link the CI run or Vercel preview. Reviewers should be able to validate without pulling the branch.

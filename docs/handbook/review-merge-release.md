@@ -16,7 +16,6 @@ flowchart TD
     p4 --> p5["pre-push: pnpm verify"]
     p5 --> r1["ready-for-pr: ci:local"]
     r1 --> r2["ready-for-pr: bundle-check"]
-    r2 --> r3["ready-for-pr: pr-size"]
     r3 --> r4["ready-for-pr: gates:runtime (LHCI+axe+E2E)"]
     r4 --> r5["pr-review-toolkit:code-reviewer against the diff"]
     r5 --> o1["open PR: validate-pr-body"]
@@ -80,7 +79,7 @@ In order: `ci:local` -> `check-branch-protection main` (run locally because the 
 
 ## PR sizing (avoid the bloated-PR failure mode)
 
-`pnpm pr-size` thresholds: files (yellow >=10, red >=25), lines (yellow >=400, red >=1200), subsystems (yellow >=3, red >=5). Red recommends splitting at the last clean commit. Large programs use an **integration branch + sub-PRs**: `feat/<feature>` off main, then `feat/<feature>-<part>` sub-PRs into it (sized against the integration branch via `PR_BASE`). This is the documented fix for the PR that once bloated past review.
+Large programs use an **integration branch + sub-PRs**: `feat/<feature>` off main, then `feat/<feature>-<part>` sub-PRs into it. This is the documented fix for the PR that once bloated past review.
 
 ## Release
 
