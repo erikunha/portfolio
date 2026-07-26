@@ -25,9 +25,9 @@ export const LEDGER_PATH = '.review-findings.json';
 
 export const UNRESOLVED_HEAD = 'unresolved';
 
-export function headSha(): string {
+export function headSha(cwd: string = process.cwd()): string {
   try {
-    return execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim();
+    return execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8', cwd }).trim();
   } catch (error) {
     console.error(
       `[review-findings] could not resolve HEAD, recording "${UNRESOLVED_HEAD}": ${error}`,
