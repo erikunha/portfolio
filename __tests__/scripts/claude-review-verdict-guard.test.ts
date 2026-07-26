@@ -148,6 +148,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
           GITHUB_EVENT_NAME: event,
           GUARD_STUB_BODY: body,
           GUARD_STUB_CHANGED: changed,
+          VERDICT_RETRY_SLEEP: '0',
         },
       });
       return { status: 0, stderr: '' };

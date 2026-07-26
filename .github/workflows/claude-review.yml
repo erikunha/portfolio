@@ -138,13 +138,21 @@ jobs:
             exit 0
           fi
 
-          fresh=$(gh api --paginate --slurp "repos/$REPO/issues/$PR/comments" \
-            --jq "[.[][] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | sort_by(.created_at) | last | .body")
+          # The action posts a progress comment at job start and EDITS the verdict
+          # into it at the end, so created_at selects the comment long before its
+          # body carries a verdict. Re-read rather than judging one snapshot: a
+          # single fetch raced the final edit by one second and failed a review
+          # that had posted a valid "**Verdict: Request changes.**".
+          for attempt in 1 2 3 4 5; do
+            fresh=$(gh api --paginate --slurp "repos/$REPO/issues/$PR/comments" \
+              --jq "[.[][] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | sort_by(.created_at) | last | .body")
 
-          if printf '%s' "$fresh" | grep -qiE '\*\*[^*]*\b(approve|reject|request changes)\b[^*]*\*\*'; then
-            echo "OK  this run posted a verdict."
-            exit 0
-          fi
+            if printf '%s' "$fresh" | grep -qiE '\*\*[^*]*\b(approve|reject|request changes)\b[^*]*\*\*'; then
+              echo "OK  this run posted a verdict (attempt $attempt)."
+              exit 0
+            fi
+            [ "$attempt" -lt 5 ] && sleep "${VERDICT_RETRY_SLEEP:-10}"
+          done
           echo "FAIL: claude-review posted no verdict on PR #$PR during this run."
           echo "  The action exits 0 regardless, so without this step the check would read"
           echo "  green while check-claude-approval.ts sees verdict=none and the merge gate"

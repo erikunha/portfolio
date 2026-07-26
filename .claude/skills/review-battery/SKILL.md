@@ -421,9 +421,9 @@ Work in this order:
    changed threshold, default, flag, command, or version, a deleted script, a
    changed behaviour, a measured number.
 2. For each fact, grep the whole tree for prose still asserting the old value:
-   CLAUDE.md, whose generated mirror AGENTS.md comes from `pnpm sync:codex` (so
-   any fix you propose for CLAUDE.md must say "and run `pnpm sync:codex`" —
-   editing one alone reds `check:codex-sync` inside `pnpm verify`), plus
+   CLAUDE.md and its generated mirror, which `pnpm sync:codex` regenerates (so
+   any fix you propose for the spine file must say "and run `pnpm sync:codex`" —
+   editing one copy alone reds `check:codex-sync` inside `pnpm verify`), plus
    STANDARDS.md, ARCHITECTURE.md, DECISIONS.md, README,
    docs/**, .claude/rules/**, .claude/skills/**, package.json scripts, and the
    diff's own commit messages and PR body.
