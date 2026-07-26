@@ -22,6 +22,16 @@ function batteryAt(iso: string) {
 
 const ALL_ROLES = BATTERY_ROLES.map((r) => r.role);
 
+function roleAccepts(role: string): readonly string[] {
+  const found = BATTERY_ROLES.find((r) => r.role === role);
+  if (!found) {
+    throw new Error(
+      `BATTERY_ROLES has no role "${role}". A silent [] here would make it.each register ZERO tests and the file would still pass — which is how a role rename loses its assertions without a single red run.`,
+    );
+  }
+  return found.accepts;
+}
+
 describe('decideStamp', () => {
   it('writes the stamp when every role was dispatched after HEAD', () => {
     const d = decideStamp({
@@ -33,11 +43,8 @@ describe('decideStamp', () => {
     expect(d.missing).toEqual([]);
   });
 
-  // Derived from BATTERY_ROLES, never re-listed: a hardcoded copy drifts from
-  // the accept-list, and a variant here that no installed agent answers to is
-  // the dead-alias class __tests__/battery-roles-resolve.test.ts now guards.
-  it.each(BATTERY_ROLES.find((r) => r.role === 'correctness')?.accepts ?? [])(
-    'satisfies the code-review role via the %s subagent_type variant',
+  it.each(roleAccepts('correctness'))(
+    'satisfies the correctness role via the %s subagent_type variant',
     (variant) => {
       const others = BATTERY_ROLES.filter((r) => r.role !== 'correctness').map((r) =>
         agent(r.accepts[0] ?? r.role, AFTER),
@@ -52,7 +59,7 @@ describe('decideStamp', () => {
     },
   );
 
-  it('refuses and names the missing ROLE when only four of five ran', () => {
+  it('refuses and names the missing ROLE when one of the four roles never ran', () => {
     const present = BATTERY_ROLES.filter((r) => r.role !== 'test-strength').map((r) =>
       agent(r.accepts[0] ?? r.role, AFTER),
     );
@@ -143,11 +150,11 @@ describe('decideStamp — verification-loop (findings) gate', () => {
   });
 
   it('still enforces dispatch first: an incomplete battery refuses regardless of findings', () => {
-    const fourOfFive = BATTERY_ROLES.filter((r) => r.role !== 'gate-robustness').map((r) =>
+    const allButOne = BATTERY_ROLES.filter((r) => r.role !== 'gate-robustness').map((r) =>
       agent(r.accepts[0] ?? r.role, AFTER),
     );
     const d = decideStamp({
-      records: fourOfFive,
+      records: allButOne,
       transcriptResolved: true,
       headCommitIso: HEAD_ISO,
       findings: { present: true, blocking: [], invalid: [] },

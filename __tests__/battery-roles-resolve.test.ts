@@ -30,12 +30,7 @@ function resolves(entry: string): boolean {
       existsSync(join(REPO_AGENTS, `${name}.md`)) || existsSync(join(HOME_AGENTS, `${name}.md`))
     );
   }
-  return pluginRoots(plugin).some(
-    (root) =>
-      existsSync(join(root, 'agents', `${name}.md`)) ||
-      existsSync(join(root, 'skills', name, 'SKILL.md')) ||
-      existsSync(join(root, 'commands', `${name}.md`)),
-  );
+  return pluginRoots(plugin).some((root) => existsSync(join(root, 'agents', `${name}.md`)));
 }
 
 const ENTRIES = BATTERY_ROLES.flatMap((r) => r.accepts.map((a) => [r.role, a] as const));

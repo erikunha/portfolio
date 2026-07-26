@@ -10,8 +10,10 @@ description: Use at the two battery triggers (before any git push, and whenever 
 Four reviewers, one contract. Dispatch all four in parallel, then run
 `battery-synthesis` over their reports and `pnpm review:stamp`.
 
-The roles are aimed at the defect distribution this repo actually produces,
-measured over 226 recorded review cycles / 236 non-minor findings:
+The roles are aimed at the defect distribution this repo actually produces.
+Measured 2026-07-25 over `.review-findings-archive.jsonl`, deduplicated by
+finding id: 226 cycles, 293 unique findings, 236 non-minor. The archive grows
+every cycle, so re-derive before citing:
 
 | class | share | owned by |
 |---|---|---|
@@ -19,7 +21,7 @@ measured over 226 recorded review cycles / 236 non-minor findings:
 | logic and correctness | 27% | correctness |
 | a gate, hook, workflow, or script that fails open | 22% | gate-robustness |
 | a test that asserts less than the invariant it names | 12% | test-strength |
-| security | 3% | conditional |
+| security | 3% | gate-robustness |
 | performance, a11y, dependencies | ~1% combined | CI gates, not agents |
 
 The bottom row is why perf, a11y, and dependency reviewers are conditional
@@ -221,10 +223,14 @@ value, an effect doing an event handler's job, an index used as a list key, a
 
 ## 2 — claim-drift
 
-`subagent_type: general-purpose` · model: **opus**. The largest single defect
+`subagent_type: documentation-engineer` · model: **opus**. The largest single defect
 class, and the one no named agent owned before this. It scored lowest in the
 eval above and that was a tier artifact, not a verdict on the role — it ran on
-sonnet while both opus reviewers found every claim-drift defect it did.
+sonnet while both opus reviewers found every claim-drift defect it did. The eval
+ran this role on `general-purpose`; the accept-list takes only
+`documentation-engineer`, because the stamp matches `subagent_type` alone and
+cannot see what an agent was asked to do, so accepting `general-purpose` would
+let any unrelated dispatch satisfy the role.
 
 ```
 You are the claim-drift reviewer. Every sentence in this repo that asserts
@@ -239,7 +245,7 @@ Work in this order:
    changed threshold, default, flag, command, or version, a deleted script, a
    changed behaviour, a measured number.
 2. For each fact, grep the whole tree for prose still asserting the old value:
-   AGENTS.md, AGENTS.md, STANDARDS.md, ARCHITECTURE.md, DECISIONS.md, README,
+   the harness spine file for your runtime, plus STANDARDS.md, ARCHITECTURE.md, DECISIONS.md, README,
    docs/**, .codex/rules/**, .agents/skills/**, package.json scripts, and the
    diff's own commit messages and PR body.
 3. Check the diff's OWN new prose against the code it ships with, including test
@@ -256,8 +262,11 @@ Three specific shapes, each a finding on its own:
   quirk pin, a constant-drift pin, or a public API contract. Rationale,
   mechanism narration, and process history in source are findings.
 
-Dated ADR entries and files under docs/ are append-only history and describe
-past states on purpose. They never drift; only current-state prose does.
+Append-only history never drifts and is not a finding: dated DECISIONS.md
+entries, `docs/audit/**`, and `docs/harness-audit.md`. Everything else is
+current state and does drift — the numbered `docs/NN-*.md` pages and all of
+`docs/handbook/**` describe how the system works today and are rewritten when it
+changes. Do not exempt `docs/` wholesale.
 
 Worked example of the judgment, from this repo's ledger:
   FOUND — "ADR claimed 'sweeps every public surface' but METRIC_SURFACES
@@ -366,8 +375,8 @@ so in its dispatch so it runs the input-to-sink trace as well.
 
 ## Scoping by commit type
 
-The stamp counts dispatch, not depth. Running 810 tests for a docs-only commit
-wastes ten minutes and proves nothing.
+The stamp counts dispatch, not depth. Running the whole suite for a docs-only
+commit costs many minutes and proves nothing.
 
 - **docs-only** — "read `git diff HEAD~1..HEAD` to confirm docs-only, verify
   accuracy against the code, do NOT run the test suite or build."

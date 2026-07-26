@@ -25,11 +25,7 @@ import {
 export const BATTERY_ROLES: ReadonlyArray<{ role: string; accepts: readonly string[] }> = [
   {
     role: 'correctness',
-    accepts: [
-      'pr-review-toolkit:review-pr',
-      'pr-review-toolkit:code-reviewer',
-      'feature-dev:code-reviewer',
-    ],
+    accepts: ['pr-review-toolkit:code-reviewer', 'feature-dev:code-reviewer'],
   },
   { role: 'claim-drift', accepts: ['documentation-engineer'] },
   { role: 'gate-robustness', accepts: ['security-auditor'] },
