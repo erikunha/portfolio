@@ -16,11 +16,25 @@ never do (bash-guard blocks it).
    push without exception. Resolve conflicts before continuing.
 1. **Push, then verify it landed.** `gh api repos/erikunha/portfolio/pulls/<N> --jq '.head.sha'`
    must equal `git rev-parse HEAD`. If not, re-push before continuing.
-2. **Re-request claude-review after every successful push.** Post a
-   `/claude-review` comment (`gh pr comment <N> --body /claude-review`). The
-   merge gate (`pnpm claude-gate` via `pnpm ready-to-merge`) requires the latest
-   `/claude-review` overview verdict to be **Approve** on the current HEAD, so a
-   re-review is needed after each push.
+2. **Do NOT re-request after a push — the push already triggers a review.**
+   The `pull_request` trigger fires on every `synchronize`, and the concurrency
+   group is per-PR with `cancel-in-progress: true`, so a `/claude-review` comment
+   posted seconds after a push CANCELS the auto-run that was already reviewing
+   that SHA. Both runs leave a "Claude Code is working…" comment, the cancelled
+   one may already have posted findings against the pre-push SHA, and the cycle
+   count doubles. Observed on #229: two `pull_request` runs cancelled, three
+   `issue_comment` runs skipped, and a finding posted quoting a comment the push
+   had just deleted.
+
+   Re-request ONLY when no review will otherwise run:
+   - the PR edits `.github/workflows/claude-review.yml` (the action refuses when
+     the workflow differs from the default branch, so the auto path cannot run)
+   - a completed run posted no parsable verdict
+   - the verdict on record is stale against a HEAD no run is currently reviewing
+
+   `pnpm review:converge` reports which of those applies; check it before
+   commenting rather than commenting by reflex.
+
 3. **Poll CI until green.**
 4. **Check for new threads** — claude[bot] inline comments via `gh api graphql`
    `reviewThreads(first:100)` and `gh api .../pulls/<N>/comments`.

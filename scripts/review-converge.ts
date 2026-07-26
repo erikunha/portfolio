@@ -80,8 +80,8 @@ export function nextStep(state: ConvergeState): ConvergeStep {
       action: 'request-review',
       reason:
         verdict === 'none'
-          ? 'No parsable verdict from claude[bot] on this PR. Comment /claude-review.'
-          : `Latest verdict is "${verdict}". Fix the findings, then comment /claude-review.`,
+          ? 'No parsable verdict from claude[bot] on this PR. If a review is already running for this HEAD, wait for it — a /claude-review comment cancels the in-flight auto-run. Comment only if no run will fire.'
+          : `Latest verdict is "${verdict}". Fix the findings and push; the push triggers the review on its own.`,
       threadIds: [],
     };
   }
@@ -90,7 +90,7 @@ export function nextStep(state: ConvergeState): ConvergeStep {
     return {
       done: false,
       action: 'request-review',
-      reason: `Approve is stale: reviewed ${reviewedSha ?? '(no SHA stated)'} but HEAD is ${state.headSha.slice(0, 12)}. Comment /claude-review.`,
+      reason: `Approve is stale: reviewed ${reviewedSha ?? '(no SHA stated)'} but HEAD is ${state.headSha.slice(0, 12)}. A push triggers a review on its own; comment /claude-review only if none will fire.`,
       threadIds: [],
     };
   }
