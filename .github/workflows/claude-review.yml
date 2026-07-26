@@ -96,7 +96,11 @@ jobs:
       # protects: parseClaudeVerdict in scripts/check-claude-approval.ts requires
       # the verdict word inside ** **, so an unbolded "approve" would satisfy a
       # naive grep while the gate still read none. The regex below is that
-      # parser's, kept deliberately identical.
+      # parser's regex, with one asymmetry that must stay visible: grep applies it
+      # PER LINE and JS [^*] matches a newline, so a bolded verdict wrapped across
+      # a line break reds this guard while the merge gate reads approve. The guard
+      # is therefore strictly NARROWER than the parser, never looser — a false red,
+      # not a false green.
       - name: Assert this run posted a verdict the merge gate can read
         if: always()
         env:

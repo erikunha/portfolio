@@ -5,20 +5,29 @@ import { CLAUDE_LOGIN, parseClaudeVerdict } from '@/scripts/check-claude-approva
 
 const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'claude-review.yml');
 
-const GUARD_LINE = /grep -qiE '([^']+)'/;
+const source = () => readFileSync(WORKFLOW, 'utf8');
 
-function guardPattern(): RegExp {
-  const source = readFileSync(WORKFLOW, 'utf8');
-  const raw = GUARD_LINE.exec(source)?.[1];
-  if (!raw) {
+const GUARD_LINE = /grep -qiE '([^']+)'/;
+const JQ_ARG = /--jq "((?:[^"\\]|\\.)*)"/;
+const EMPTY_SINCE_BLOCK = /if \[ -z "\$\{SINCE:-\}" \]; then([\s\S]*?)\n\s*fi/;
+const SKIP_BLOCK = /if \[ "\$GITHUB_EVENT_NAME" = "pull_request" \]([\s\S]*?)\n\s*fi/;
+
+function extract(pattern: RegExp, what: string): string {
+  const hit = pattern.exec(source())?.[1];
+  if (!hit) {
     throw new Error(
-      'claude-review.yml no longer contains a `grep -qiE \'…\'` verdict guard. That step is the only thing standing between "the action exited 0" and "a review actually happened" — the pull_request path posted a track_progress checklist with no verdict on every auto-run and the check still read green. If the guard moved, point this test at its new home; do not delete it.',
+      `claude-review.yml no longer contains ${what}. That guard is the only thing standing between "the action exited 0" and "a review actually happened": the pull_request path posted a track_progress checklist with no verdict on every auto-run and the check still read green. If it moved, point this test at its new home; do not delete it.`,
     );
   }
-  return new RegExp(raw.replace(/\\\\/g, '\\'), 'i');
+  return hit;
 }
 
-const CASES: ReadonlyArray<readonly [string, boolean]> = [
+const guardMatches = (body: string): boolean => {
+  const pattern = new RegExp(extract(GUARD_LINE, "a `grep -qiE '…'` verdict guard"), 'i');
+  return body.split('\n').some((line) => pattern.test(line));
+};
+
+const PARSER_SEES_VERDICT: ReadonlyArray<readonly [string, boolean]> = [
   ['**Approve**', true],
   ['Reviewed head `a97ed15`. Verdict: **Approve**', true],
   ['**Approve with minor changes**', true],
@@ -31,55 +40,63 @@ const CASES: ReadonlyArray<readonly [string, boolean]> = [
   ['', false],
 ];
 
-describe('the workflow verdict guard agrees with the gate it protects', () => {
-  const guard = guardPattern();
-
-  it.each(CASES)('%j — guard and parseClaudeVerdict reach the same answer', (body, expected) => {
-    const guardSaysVerdict = body.split('\n').some((line) => guard.test(line));
-    const parserSaysVerdict = parseClaudeVerdict(body) !== 'none';
+describe('the verdict guard is never looser than the gate it protects', () => {
+  it.each(PARSER_SEES_VERDICT)('%j — a guard match implies the gate sees a verdict', (body) => {
+    if (!guardMatches(body)) return;
     expect(
-      { guard: guardSaysVerdict, parser: parserSaysVerdict },
-      `The workflow guard and scripts/check-claude-approval.ts disagree about whether this body carries a verdict.\n\nA guard LOOSER than the parser is the dangerous direction: the job goes green having "seen a verdict" while the merge gate reads none, which is the silent-green failure the guard exists to end. A guard STRICTER reds a healthy review.\n\nThe verdict word must sit inside ** ** for the parser to see it, so the guard carries that same requirement. Change both together or neither.\n\nbody: ${JSON.stringify(body)}`,
-    ).toEqual({ guard: expected, parser: expected });
+      parseClaudeVerdict(body),
+      `The workflow guard matched this body but scripts/check-claude-approval.ts does not read a verdict from it.\n\nThat is the fail-open direction and the only one that matters: the job goes green having "seen a verdict" while the merge gate reads none, which is the silent-green failure the guard exists to end. The reverse (guard narrower than parser) is a false red — noisy, not dangerous.\n\nThe verdict word must sit inside ** ** for the parser to see it, so the guard carries that requirement too.\n\nbody: ${JSON.stringify(body)}`,
+    ).not.toBe('none');
   });
 
-  it('scopes to comments from this run, so a stale verdict cannot satisfy it', () => {
-    const source = readFileSync(WORKFLOW, 'utf8');
+  it.each(PARSER_SEES_VERDICT.filter(([body]) => !body.includes('\n')))(
+    '%j — on a single-line body the two agree exactly',
+    (body, expected) => {
+      expect({ guard: guardMatches(body), parser: parseClaudeVerdict(body) !== 'none' }).toEqual({
+        guard: expected,
+        parser: expected,
+      });
+    },
+  );
+
+  it('is narrower across a newline, because grep is line-oriented and the parser is not', () => {
+    const wrapped = '**Approve\nwith minor changes**';
     expect(
-      source.includes('.created_at >= \\"$SINCE\\"'),
-      'The guard must filter comments by created_at against a timestamp taken before the action runs. Without it, a push whose review posts nothing passes on the PREVIOUS head\'s verdict comment — the same stale-approval class check-claude-approval.ts guards with its head-SHA check.\n\nThe timestamp must be INLINED into the filter. An earlier version wrote `.created_at >= $since` with `gh api --jq --arg since`, and `gh api` has no --arg flag: --jq consumed "--arg" as the filter, gh got four positionals, and the step died before fetching anything. This assertion deliberately pins the inlined form, because pinning the $since form pins the broken one.',
-    ).toBe(true);
+      { guard: guardMatches(wrapped), parser: parseClaudeVerdict(wrapped) },
+      'This case exists to force the two models apart. JS `[^*]` matches a newline so the parser reads a verdict here; grep never matches across one so the guard does not. Modelling the guard with a whole-string RegExp hides that and overstates what the guard accepts. The divergence is fail-CLOSED — a review the merge gate would approve reds the job — so it is acceptable, but it must stay visible rather than be discovered live.',
+    ).toEqual({ guard: false, parser: 'approve' });
   });
 });
 
 describe('the guard does not fail open in the ways a naive version would', () => {
-  const workflow = () => readFileSync(WORKFLOW, 'utf8');
-
-  it('passes the jq filter as a single argument, not with gh-unsupported --arg', () => {
+  it('passes the jq filter as one argument, not with gh-unsupported --arg', () => {
     expect(
-      workflow().includes('--jq --arg'),
-      '`gh api` has no --arg flag. --jq consumes the NEXT TOKEN as its filter, so `--jq --arg since "$X" \'<filter>\'` makes the filter the literal string "--arg" and hands gh three stray positional args. Verified 2026-07-26: that form exits 1 while the same call without --arg exits 0. Under `set -e` the assignment dies and the step fails on EVERY run, including one whose review posted a perfect verdict.',
+      source().includes('--jq --arg'),
+      '`gh api` has no --arg flag. --jq consumes the NEXT TOKEN as its filter, so `--jq --arg since "$X" \'<filter>\'` makes the filter the literal string "--arg" and hands gh stray positionals. Verified 2026-07-26: that form exits 1 where the same call without it exits 0. Under `set -e` the assignment dies and the step fails on EVERY run, including one whose review posted a perfect verdict.',
     ).toBe(false);
   });
 
-  it('counts only comments authored by the login the merge gate reads', () => {
+  it('composes the author and freshness predicates with and, inside the live jq filter', () => {
     expect(
-      workflow().includes(`.user.login == \\"${CLAUDE_LOGIN}\\"`),
-      `The guard must restrict to ${CLAUDE_LOGIN}, which is imported from check-claude-approval.ts rather than mirrored, because that module filters on it before parsing. Without the author predicate, any human timeline comment containing a bolded "approve" satisfies the guard while the merge gate still reads none — a guard looser than the gate it protects, which is the precise failure it was written to prevent.`,
-    ).toBe(true);
+      extract(JQ_ARG, 'a `--jq "…"` filter argument'),
+      `The guard's jq select must be exactly this composed expression, and it is asserted against the EXTRACTED --jq argument rather than the whole file.\n\nTwo failures this shape prevents. Asserting the conjuncts separately does not hold the property: rewriting \`and\` to \`or\` leaves both substrings present and both assertions green while the freshness filter stops filtering, so a push whose review posts nothing passes on the previous head's verdict. And asserting over the whole file lets a predicate survive in a dead comment while the live filter loses it — this workflow already carries a long prose block naming created_at and parseClaudeVerdict.\n\nThe timestamp must stay INLINED: an earlier version paired \`.created_at >= $since\` with \`gh api --jq --arg since\`, which gh cannot parse, so pinning that spelling pinned the broken form.`,
+    ).toContain(`select(.user.login == \\"${CLAUDE_LOGIN}\\" and .created_at >= \\"$SINCE\\")`);
   });
 
-  it('fails closed when the review-start timestamp is missing', () => {
+  it('refuses, rather than degrades, when the review-start timestamp is missing', () => {
     expect(
-      workflow().includes('no review-start timestamp'),
-      'jq compares strings, so `.created_at >= ""` is true for every comment. If the timestamp step is skipped or renamed, an empty SINCE silently removes the run-scoping and a previous run\'s verdict passes. The guard must refuse before querying rather than degrade to accepting anything.',
-    ).toBe(true);
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: POSIX parameter expansion quoted from the shell under test, not a JS placeholder; the rule cannot tell them apart, and the exact syntax is what makes this message findable in the workflow.
+      extract(EMPTY_SINCE_BLOCK, 'an `if [ -z "${SINCE:-}" ]` guard'),
+      'The empty-SINCE block must exit non-zero. Pinning only its message is not pinning the property: flipping `exit 1` to `exit 0` leaves every string intact while execution falls through to an unscoped filter — jq compares strings, so `.created_at >= ""` is true for every comment and a previous run\'s verdict silently passes. The exit code IS the behaviour.',
+    ).toContain('exit 1');
   });
 
-  it('skips itself on PRs that edit this workflow, which the action cannot review', () => {
+  it('skips only the pull_request path it cannot review, never the comment path', () => {
+    const block = extract(SKIP_BLOCK, 'a workflow-editing skip keyed on $GITHUB_EVENT_NAME');
     expect(
-      workflow().includes('this PR edits claude-review.yml'),
-      'The action refuses to run when the workflow differs from the default branch, so the auto path cannot post a verdict on a workflow-editing PR no matter what that PR does. Asserting one produces a red that no amount of fixing can clear, which trains override — the false-positive budget CLAUDE.md sets. The guard must detect that case and skip with an explanation.',
-    ).toBe(true);
+      block,
+      "The skip must stay scoped to pull_request and must exit 0. Dropping the event conjunct makes it fire on issue_comment too, silently disabling the guard on the /claude-review path — the one path that CAN post a verdict on a workflow-editing PR, and the one this step's own FAIL message recommends as the workaround.",
+    ).toContain('exit 0');
+    expect(block).toContain('claude-review.yml');
   });
 });
