@@ -206,11 +206,24 @@ export async function fetchState(
 }
 
 async function main(): Promise<void> {
-  // No .catch here on purpose: swallowing a gh failure returns the "no open PR"
-  // exit-0 path, and the hook that calls this has ALREADY confirmed a PR is open,
-  // so a rate limit or expired auth would print "converged" without reading a
-  // single thread — the skipped loop this exists to prevent.
-  const prRaw = await realGh(['pr', 'view', '--json', 'number', '--jq', '.number']);
+  // A narrow catch, not a blanket one. `gh pr view` exits non-zero for the
+  // ordinary "this branch has no PR yet" state AND for auth/rate-limit failures,
+  // and the two must not collapse: swallowing both reports "nothing to converge"
+  // for a lookup that never ran, and the hook calls this only after confirming a
+  // PR IS open, so that reads as converged. Swallowing neither breaks the
+  // standalone run this command exists for. So: recognise no-PR, rethrow the rest.
+  let prRaw: string;
+  try {
+    prRaw = await realGh(['pr', 'view', '--json', 'number', '--jq', '.number']);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/no pull requests? found|no open pull requests?/i.test(msg)) {
+      process.stdout.write('[review-converge] no open PR for this branch — nothing to converge.\n');
+      return;
+    }
+    throw new Error(`could not determine whether this branch has an open PR: ${msg}`);
+  }
+
   const prNumber = Number(prRaw.trim());
   if (!Number.isInteger(prNumber) || prNumber <= 0) {
     process.stdout.write('[review-converge] no open PR for this branch — nothing to converge.\n');
