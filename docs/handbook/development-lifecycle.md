@@ -17,7 +17,7 @@ flowchart TD
     commit --> hooks["per-commit hooks: Biome + commitlint"]
     hooks --> battery["4-agent review battery + findings ledger + review:stamp"]
     battery --> push["git push (pre-push gate chain)"]
-    push --> readypr["pnpm ready-for-pr (ci:local + pr-size + gates:runtime)"]
+    push --> readypr["pnpm ready-for-pr (ci:local + gates:runtime)"]
     readypr --> pr["gh pr create (fill template)"]
     pr --> conv["Review convergence loop (rebase, push, resolve threads)"]
     conv --> readymerge["pnpm ready-to-merge (gates)"]
@@ -53,7 +53,7 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 Before opening the PR, the 4-agent review battery runs once, findings are recorded and resolved, and `review:stamp` is written; post-PR fix pushes are reviewed by claude-review, not the battery. On every push, the `.husky/pre-push` hook blocks unless: it does not target `main`, the branch name is valid, no unaudited API edit is pending, and `pnpm verify` passes — and, only when the branch has no open PR yet (the pre-PR push), the review stamp matches HEAD. See [review-merge-release](./review-merge-release.md) for the full chain.
 
 ### 8. Pre-PR -> open PR
-`pnpm ready-for-pr` runs `ci:local` + `pr-size` + `gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). `pr-size` recommends splitting if the diff is too large. Then `gh pr create` fills the PR template (every section must be non-empty, enforced by `validate-pr-body`).
+`pnpm ready-for-pr` runs `ci:local` + `gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Then `gh pr create` fills the PR template (every section must be non-empty, enforced by `validate-pr-body`).
 
 ### 9. Review convergence loop
 On the open PR, the `review-convergence` skill drives review to green: rebase before every push, verify the pushed SHA landed, re-request the reviewer (`/claude-review`, claude[bot]) after each push, reply-before-resolve on every thread. See [review-merge-release](./review-merge-release.md).
@@ -75,7 +75,7 @@ flowchart LR
         g3["no direct main"] --> g4["branch name"] --> g5["review stamp (pre-PR push only)"] --> g6["API-edit audit marker"] --> g7["pnpm verify"]
     end
     subgraph prepr["ready-for-pr"]
-        g8["ci:local"] --> g9["bundle-check"] --> g10["pr-size"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["pr-review-toolkit:code-reviewer"]
+        g8["ci:local"] --> g9["bundle-check"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["pr-review-toolkit:code-reviewer"]
     end
     subgraph open["post-open"]
         g13["validate-pr-body"] --> g14["Review convergence"]

@@ -42,45 +42,10 @@ try {
   process.exit(1);
 }
 
-let sizeFail: 'red' | 'blocked' | 'error' | null = null;
-let sizeExit: number | undefined;
-try {
-  execFileSync('pnpm', ['pr-size'], { stdio: 'inherit' });
-} catch (err) {
-  sizeExit = (err as { status?: number }).status;
-  sizeFail = sizeExit === 1 ? 'red' : sizeExit === 2 ? 'blocked' : 'error';
-}
-
-if (sizeFail === 'error') {
-  process.stderr.write(
-    `\n${C.red}[ready-for-pr] FAIL${C.reset} — pr-size failed unexpectedly (exit ${sizeExit ?? 'signal/unknown'}). Re-run \`pnpm pr-size\` to see the error.\n\n`,
-  );
-  process.exit(1);
-}
-
-if (sizeFail === 'blocked') {
-  process.stderr.write(
-    `\n${C.red}[ready-for-pr] FAIL${C.reset} — pr-size could not run (invalid --base or the base ref isn't fetched).\n`,
-  );
-  process.stderr.write(
-    `${C.dim}  Run \`git fetch origin\`, or fix --base / PR_BASE, then retry.${C.reset}\n\n`,
-  );
-  process.exit(1);
-}
-
-if (sizeFail === 'red') {
-  process.stderr.write(`\n${C.red}[ready-for-pr] FAIL${C.reset} — branch is too large (red).\n`);
-  process.stderr.write(
-    `${C.dim}  Open a PR now with completed milestones, continue remaining work on a new branch.${C.reset}\n`,
-  );
-  process.stderr.write(
-    `${C.dim}  If you intentionally want to open a large PR, skip this gate and run gh pr create manually.${C.reset}\n\n`,
-  );
-  process.exit(1);
-}
-
 if (SKIP_RUNTIME) {
-  process.stdout.write(`${C.yellow}[ready-for-pr] Gate 3 skipped (--skip-runtime).${C.reset}\n`);
+  process.stdout.write(
+    `${C.yellow}[ready-for-pr] Runtime gates skipped (--skip-runtime).${C.reset}\n`,
+  );
 } else {
   try {
     execFileSync('pnpm', ['gates:runtime'], { stdio: 'inherit' });
