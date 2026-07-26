@@ -99,8 +99,10 @@ jobs:
       # parser's regex, with one asymmetry that must stay visible: grep applies it
       # PER LINE and JS [^*] matches a newline, so a bolded verdict wrapped across
       # a line break reds this guard while the merge gate reads approve. The guard
-      # is therefore strictly NARROWER than the parser, never looser — a false red,
-      # not a false green.
+      # is therefore strictly NARROWER than the parser PATTERN-FOR-PATTERN. The
+      # corpora must match too: the gate reads only the LATEST claude[bot] comment,
+      # so the filter takes `last`. Reading the union would go green on a verdict
+      # in an older fresh comment while the gate, reading a newer checklist, saw none.
       - name: Assert this run posted a verdict the merge gate can read
         if: always()
         env:
@@ -129,7 +131,7 @@ jobs:
           fi
 
           fresh=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
-            --jq ".[] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\") | .body")
+            --jq "[.[] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | last | .body")
 
           if printf '%s' "$fresh" | grep -qiE '\*\*[^*]*\b(approve|reject|request changes)\b[^*]*\*\*'; then
             echo "OK  this run posted a verdict."
