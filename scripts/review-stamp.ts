@@ -43,7 +43,7 @@ export interface StampDecision {
 export function decideStamp(args: {
   records: TranscriptRecord[];
   transcriptResolved: boolean;
-  headCommitIso: string;
+  baseCommitIso: string;
   findings?: { present: boolean; blocking: string[]; invalid: string[] };
 }): StampDecision {
   if (!args.transcriptResolved) {
@@ -56,13 +56,13 @@ export function decideStamp(args: {
   }
   const missing = BATTERY_ROLES.filter(
     (r) =>
-      !r.accepts.some((agent) => agentDispatchedAfter(args.records, agent, args.headCommitIso)),
+      !r.accepts.some((agent) => agentDispatchedAfter(args.records, agent, args.baseCommitIso)),
   ).map((r) => r.role);
   if (missing.length > 0) {
     return {
       write: false,
       missing,
-      reason: `Review battery incomplete since the HEAD commit. Missing role(s): ${missing.join(', ')}.`,
+      reason: `Review battery incomplete for this branch. Missing role(s): ${missing.join(', ')}.`,
     };
   }
   if (args.findings) {
@@ -135,6 +135,21 @@ function main(): void {
   const transcriptResolved = transcriptPath !== null;
   const records: TranscriptRecord[] = transcriptPath ? readTranscript(transcriptPath) : [];
 
+  // Anchored to where the branch left its base, NOT to HEAD. Anchoring to HEAD
+  // asked "did the battery run after the last commit", which every fix commit
+  // falsifies — so fixing a finding invalidated the review that found it and
+  // demanded a fresh 4-agent battery per round, contradicting the run-it-ONCE
+  // rule. The property that actually matters is "the battery reviewed this
+  // branch's work and its findings are resolved": the first half is this anchor,
+  // the second is the ledger check below, which a fix commit satisfies rather
+  // than breaks.
+  const baseRef = process.env.REVIEW_STAMP_BASE ?? 'origin/main';
+  const baseSha = execFileSync('git', ['merge-base', baseRef, 'HEAD'], {
+    encoding: 'utf8',
+  }).trim();
+  const baseCommitIso = execFileSync('git', ['log', '-1', '--format=%cI', baseSha], {
+    encoding: 'utf8',
+  }).trim();
   const headCommitIso = execFileSync('git', ['log', '-1', '--format=%cI'], {
     encoding: 'utf8',
   }).trim();
@@ -146,7 +161,7 @@ function main(): void {
     invalid: ledger ? invalidResolutions(ledger).map((f) => `${f.id} ${f.title}`) : [],
   };
 
-  const decision = decideStamp({ records, transcriptResolved, headCommitIso, findings });
+  const decision = decideStamp({ records, transcriptResolved, baseCommitIso, findings });
 
   if (!decision.write) {
     console.error('✗ review:stamp REFUSED — stamp not written.');
