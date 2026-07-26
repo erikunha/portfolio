@@ -1,10 +1,16 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   archiveRecords,
   blockingFindings,
   type Finding,
+  FindingSchema,
   findingId,
+  headSha,
   invalidResolutions,
+  UNRESOLVED_HEAD,
   withFinding,
   withStatus,
 } from '@/scripts/review-findings';
@@ -110,5 +116,37 @@ describe('archiveRecords', () => {
 
   it('terminates with a trailing newline so appends stay line-delimited', () => {
     expect(archiveRecords([f({})], 'sha', 'iso').endsWith('\n')).toBe(true);
+  });
+});
+
+describe('finding provenance', () => {
+  it('parses a finding recorded before provenance existed', () => {
+    // 276 findings predate these fields. Backfilling would invent data, so the
+    // schema must accept their absence or the whole ledger stops loading.
+    const legacy = {
+      id: 'abc123',
+      severity: 'critical',
+      title: 'recorded before recordedAt existed',
+      source: 'code-reviewer',
+      status: 'open',
+    };
+    expect(() => FindingSchema.parse(legacy)).not.toThrow();
+    expect(FindingSchema.parse(legacy).recordedAt).toBeUndefined();
+  });
+
+  it('resolves a real short sha inside this repo', () => {
+    expect(headSha()).toMatch(/^[0-9a-f]{7,}$/);
+  });
+
+  it('records the sentinel, not a plausible-looking sha, when HEAD cannot be resolved', () => {
+    const cwd = process.cwd();
+    const outside = mkdtempSync(join(tmpdir(), 'no-git-'));
+    try {
+      process.chdir(outside);
+      expect(headSha()).toBe(UNRESOLVED_HEAD);
+    } finally {
+      process.chdir(cwd);
+      rmSync(outside, { recursive: true, force: true });
+    }
   });
 });

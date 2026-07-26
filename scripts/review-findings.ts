@@ -15,9 +15,6 @@ export const FindingSchema = z.object({
   source: z.string().min(1),
   status: z.enum(['open', 'resolved', 'justified']),
   resolution: z.string().optional(),
-  // Provenance. Without it the ledger cannot say which review round produced a
-  // finding, so "does round N still pay for itself" stays a matter of opinion.
-  // Optional because the findings that predate this would have to be invented.
   recordedAt: z.string().optional(),
   recordedAtHead: z.string().optional(),
 });
@@ -26,13 +23,16 @@ export const LedgerSchema = z.array(FindingSchema);
 
 export const LEDGER_PATH = '.review-findings.json';
 
-// A round is delimited by the commit it reviewed, so HEAD at record time is what
-// makes per-round counts derivable later.
+export const UNRESOLVED_HEAD = 'unresolved';
+
 export function headSha(): string {
   try {
     return execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim();
-  } catch {
-    return 'unknown';
+  } catch (error) {
+    console.error(
+      `[review-findings] could not resolve HEAD, recording "${UNRESOLVED_HEAD}": ${error}`,
+    );
+    return UNRESOLVED_HEAD;
   }
 }
 
