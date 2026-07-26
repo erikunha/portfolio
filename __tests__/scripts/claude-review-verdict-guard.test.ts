@@ -184,7 +184,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     expect(
       EXECUTED_CASES.length,
       'Emptying this table removes every execution-based assertion while vitest reports PASS over zero registered tests — the silent green the corpus check above exists to prevent.',
-    ).toBeGreaterThanOrEqual(5);
+    ).toBeGreaterThanOrEqual(6);
   });
 
   it.each(EXECUTED_CASES)('runs the WHOLE guard under bash: %s', (_label, run, expected) => {
