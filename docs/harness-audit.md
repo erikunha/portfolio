@@ -1,5 +1,7 @@
 # AI Engineering Harness Audit (2026-07-17)
 
+> **HISTORICAL — point-in-time audit, 2026-07-17.** Retained for the record; its findings describe the harness as it stood that day and are not maintained.
+>
 > Read-only investigation of this repo's Claude Code + Codex harness. Evidence-cited, produced by a four-agent parallel inventory (Claude instruction/agent/skill surface, hooks/permissions, Codex surface, MCP/scripts/eval). No harness behavior was changed to produce this report. Fixes are proposed, not yet applied, per the audit-first decision.
 
 ## Executive summary

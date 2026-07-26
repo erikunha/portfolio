@@ -76,16 +76,33 @@ describe('resolvesWith — host-independent, so CI actually pins the predicate',
   });
 
   it.each([
-    ['a skill', SKILL],
-    ['a command', COMMAND],
-  ])('rejects a plugin entry backed only by %s', (_label, only) => {
+    ['skill', SKILL],
+    ['command', COMMAND],
+  ])('rejects a plugin entry backed only by a %s', (label, only) => {
     expect(
       resolvesWith('p:x', (path) => path === only, roots),
-      `A ${_label} satisfied the accept-list. Neither is dispatchable as a subagent_type, so the Agent call errors — and agentDispatchedAfter pairs no result, meaning the failed dispatch still marks the role detected and review:stamp writes with that role unreviewed. pr-review-toolkit:review-pr entered the accept-list exactly this way. The suite above cannot catch a regression here: canObserve() filters every entry out when ~/.claude/agents and ~/.claude/plugins/marketplaces are absent, which is every CI runner, so this host-independent test is the only thing holding it there.`,
+      `A ${label} satisfied the accept-list. Neither is dispatchable as a subagent_type, so the Agent call errors — and agentDispatchedAfter pairs no result, meaning the failed dispatch still marks the role detected and review:stamp writes with that role unreviewed. pr-review-toolkit:review-pr entered the accept-list exactly this way. The suite above cannot catch a regression here: canObserve() filters every entry out when ~/.claude/agents and ~/.claude/plugins/marketplaces are absent, which is every CI runner, so this host-independent test is the only thing holding it there.`,
     ).toBe(false);
   });
 
   it('rejects a plugin entry with no backing file at all', () => {
     expect(resolvesWith('p:x', () => false, roots)).toBe(false);
+  });
+
+  const BARE_AGENT = join(HOME_AGENTS, 'x.md');
+
+  it('accepts a bare-name entry backed by an agent definition', () => {
+    expect(resolvesWith('x', (path) => path === BARE_AGENT, roots)).toBe(true);
+  });
+
+  it.each([
+    ['a directory rather than a file', HOME_AGENTS],
+    ['a home command', join(homedir(), '.claude', 'commands', 'x.md')],
+    ['a home skill', join(homedir(), '.claude', 'skills', 'x', 'SKILL.md')],
+  ])('rejects a bare-name entry backed only by %s', (label, only) => {
+    expect(
+      resolvesWith('x', (path) => path === only, roots),
+      `A bare-name accept resolved through ${label}. This branch serves documentation-engineer (claim-drift) and security-auditor (gate-robustness) — half the battery — and it executes NOWHERE on CI: neither has a definition under .claude/agents/, so canObserve() routes both to UNOBSERVABLE and every host-dependent assertion is skipped on a runner. These cases are the only thing pinning it, which is why widening the branch to a directory or to a commands/skills path must fail here rather than pass everywhere.`,
+    ).toBe(false);
   });
 });

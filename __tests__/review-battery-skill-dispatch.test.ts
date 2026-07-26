@@ -11,7 +11,12 @@ const CONDITIONAL_HEADING = '## Conditional reviewers';
 
 function standingRoleSection(source: string): string {
   const cut = source.indexOf(CONDITIONAL_HEADING);
-  return cut === -1 ? source : source.slice(0, cut);
+  if (cut === -1) {
+    throw new Error(
+      `.claude/skills/review-battery/SKILL.md no longer contains the heading "${CONDITIONAL_HEADING}", which this gate uses to separate standing roles from conditional ones. Falling back to scanning the whole file looks harmless because it only widens the scan — but a WIDER scan finds a standing role that was demoted below the heading, so coverage passes and the scoping is silently disabled. Verified 2026-07-26: renaming the heading and demoting security-auditor into that section left the suite green. Rename the constant with the heading, in the same commit.`,
+    );
+  }
+  return source.slice(0, cut);
 }
 
 function dispatchedTypes(): string[] {

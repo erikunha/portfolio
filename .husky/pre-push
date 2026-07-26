@@ -42,7 +42,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 if [ ! -f "$STAMP_FILE" ]; then
   echo ""
   echo "BLOCKED: no review stamp found."
-  echo "  1. Dispatch all 4 review roles named in .claude/skills/review-battery"
+  echo "  1. Dispatch every review role named in .claude/skills/review-battery"
   echo "     (that file is pinned to BATTERY_ROLES by a test; this hook"
   echo "     deliberately does not re-list the agent names)"
   echo "  2. Run: pnpm review:stamp  (immediately after dispatch; proves dispatch,"
