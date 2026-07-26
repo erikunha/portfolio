@@ -107,7 +107,9 @@ describe('resolvesWith — host-independent, so CI actually pins the predicate',
   });
 });
 
-const AGENT_NAME = /(?:[\w-]+:)?(?:code-reviewer|review-pr|pr-test-analyzer)\b/g;
+const AGENT_NAME_SOURCE = String.raw`(?:[\w-]+:)?(?:code-reviewer|review-pr|pr-test-analyzer)\b`;
+const AGENT_NAME = new RegExp(AGENT_NAME_SOURCE, 'g');
+const AGENT_NAME_ONCE = new RegExp(AGENT_NAME_SOURCE);
 
 // Derived, never enumerated: a hand-listed set is the drift this gate exists to
 // stop, and the first version of it already both omitted two docs that name the
@@ -125,7 +127,7 @@ function proseSurfaces(): string[] {
       // directories, so excluding them costs no coverage.
       if (e.isDirectory()) {
         if (e.name !== '__tests__' && e.name !== 'tests') walk(p);
-      } else if (/\.(md|ts|sh)$/.test(e.name) && AGENT_NAME.test(readFileSync(p, 'utf8')))
+      } else if (/\.(md|ts|sh)$/.test(e.name) && AGENT_NAME_ONCE.test(readFileSync(p, 'utf8')))
         out.push(p);
     }
   };
