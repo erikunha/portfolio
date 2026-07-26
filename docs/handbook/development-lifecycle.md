@@ -75,7 +75,7 @@ flowchart LR
         g3["no direct main"] --> g4["branch name"] --> g5["review stamp"] --> g6["API-edit audit marker"] --> g7["pnpm verify"]
     end
     subgraph prepr["ready-for-pr"]
-        g8["ci:local"] --> g9["bundle-check"] --> g10["pr-size"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["review-pr"]
+        g8["ci:local"] --> g9["bundle-check"] --> g10["pr-size"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["code-reviewer"]
     end
     subgraph open["post-open"]
         g13["validate-pr-body"] --> g14["Review convergence"]

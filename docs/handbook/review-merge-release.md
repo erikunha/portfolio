@@ -18,7 +18,7 @@ flowchart TD
     r1 --> r2["ready-for-pr: bundle-check"]
     r2 --> r3["ready-for-pr: pr-size"]
     r3 --> r4["ready-for-pr: gates:runtime (LHCI+axe+E2E)"]
-    r4 --> r5["review-pr against the diff"]
+    r4 --> r5["pr-review-toolkit:code-reviewer against the diff"]
     r5 --> o1["open PR: validate-pr-body"]
     o1 --> o2["Review convergence loop"]
     o2 --> m1["ready-to-merge: ci:local"]

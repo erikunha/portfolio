@@ -21,7 +21,7 @@ Skills are load-on-demand procedures. They activate by their `description` front
 | Command | Invokes | When |
 |---|---|---|
 | **/commit** | `commit-commands:commit` | Conventional commit with a mandatory feature-area scope |
-| **/ready-for-pr** | `pnpm ready-for-pr` -> `review-pr` -> fix -> `gh pr create` | Pre-PR gate sequence |
+| **/ready-for-pr** | `pnpm ready-for-pr` -> `pr-review-toolkit:code-reviewer` -> fix -> `gh pr create` | Pre-PR gate sequence |
 | **/merge** `[pr]` | `pnpm ready-to-merge`, then owner merges externally | Pre-merge gate chain |
 | **/pr-metrics** `[pr]` | `pnpm pr-metrics` | `/claude-review` cycle count, size, days open |
 
