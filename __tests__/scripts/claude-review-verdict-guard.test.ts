@@ -229,3 +229,18 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     expect(skip).toContain('exit 0');
   });
 });
+
+describe('the workflow grants the API scopes its own guard needs', () => {
+  const permissions = (): Record<string, unknown> => {
+    const doc = parse(readFileSync(WORKFLOW, 'utf8')) as { permissions?: Record<string, unknown> };
+    return doc.permissions ?? {};
+  };
+
+  it('declares issues when the guard reads the Issues API', () => {
+    const usesIssuesApi = /gh api[^\n]*\/issues\//.test(guardScript());
+    expect(
+      usesIssuesApi ? (permissions().issues ?? null) : 'n/a',
+      'The guard fetches PR conversation comments from repos/:owner/:repo/issues/:number/comments. That endpoint is gated by the `issues` permission, NOT by `pull-requests` — the sibling claude.yml declares `issues: write` for equivalent access.\n\nWithout it the call 403s, `set -e` aborts the assignment before any diagnostic prints, and the step reds on EVERY run: a permanent false red on the gate this workflow exists to add, indistinguishable in the log from a real missing verdict.\n\nThe executed rows cannot catch this. They stub `gh` on PATH, so no row ever exercises a real API permission — which is exactly why this assertion is structural and lives here.',
+    ).not.toBeNull();
+  });
+});

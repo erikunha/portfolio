@@ -43,6 +43,12 @@ concurrency:
 permissions:
   contents: read
   pull-requests: write
+  # The verdict guard reads PR conversation comments via the Issues API
+  # (repos/:o/:r/issues/:n/comments), which is gated by `issues`, NOT by
+  # `pull-requests`. Without it the call 403s, `set -e` aborts the assignment,
+  # and the step reds on every run — a permanent false red on the gate itself.
+  # Read-only: the guard never writes a comment.
+  issues: read
   id-token: write
   actions: read
 
