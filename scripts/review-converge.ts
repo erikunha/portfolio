@@ -137,15 +137,18 @@ type ThreadsEnvelope = {
   };
 };
 
-async function gh(args: string[]): Promise<string> {
+export type GhExec = (args: string[]) => Promise<string>;
+
+const realGh: GhExec = async (args) => {
   const { stdout } = await execFileP('gh', args, { maxBuffer: 20 * 1024 * 1024 });
   return stdout;
-}
+};
 
 export async function fetchState(
   owner: string,
   repo: string,
   prNumber: number,
+  gh: GhExec = realGh,
 ): Promise<ConvergeState> {
   const raw = await gh([
     'api',
@@ -207,14 +210,14 @@ async function main(): Promise<void> {
   // exit-0 path, and the hook that calls this has ALREADY confirmed a PR is open,
   // so a rate limit or expired auth would print "converged" without reading a
   // single thread — the skipped loop this exists to prevent.
-  const prRaw = await gh(['pr', 'view', '--json', 'number', '--jq', '.number']);
+  const prRaw = await realGh(['pr', 'view', '--json', 'number', '--jq', '.number']);
   const prNumber = Number(prRaw.trim());
   if (!Number.isInteger(prNumber) || prNumber <= 0) {
     process.stdout.write('[review-converge] no open PR for this branch — nothing to converge.\n');
     return;
   }
 
-  const repoRaw = await gh([
+  const repoRaw = await realGh([
     'repo',
     'view',
     '--json',
@@ -225,7 +228,7 @@ async function main(): Promise<void> {
   const [owner, repo] = repoRaw.trim().split('/');
   if (!owner || !repo) throw new Error(`could not resolve owner/repo, got "${repoRaw.trim()}"`);
 
-  const state = await fetchState(owner, repo, prNumber);
+  const state = await fetchState(owner, repo, prNumber, realGh);
   const step = nextStep(state);
 
   if (step.done) {

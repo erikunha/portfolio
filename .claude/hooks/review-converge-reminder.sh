@@ -20,9 +20,21 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # fires for it. Fail quiet, not closed — a false nudge on every unrelated Bash
 # call spends the budget that makes the real one worth reading, and the merge is
 # gated regardless by `pnpm ready-to-merge`.
+# Decide PER RECORD, never over the whole emitted set. --emit-commands writes one
+# tab-separated record per command with every argument as a field, so two
+# independent greps over the joined output fire on `git commit -m "push the fix"`
+# and on `grep -r "git push" .` — each false hit costs a gh round-trip and prints
+# the nudge this file's own budget argument says must stay scarce.
 DET=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/bash-guard-detect.py" --emit-commands 2>/dev/null) || exit 0
-printf '%s\n' "$DET" | grep -qE '(^|[[:space:]])push([[:space:]]|$)' || exit 0
-printf '%s\n' "$DET" | grep -qE '(^|[[:space:]/])git([[:space:]]|$)' || exit 0
+printf '%s\n' "$DET" | awk -F'\t' '
+  {
+    prog = $1
+    sub(/^.*\//, "", prog)
+    if (prog != "git") next
+    for (i = 2; i <= NF; i++) if ($i == "push") { found = 1; exit }
+  }
+  END { exit(found ? 0 : 1) }
+' || exit 0
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || exit 0
 [ -z "$BRANCH" ] && exit 0

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   type ConvergeState,
   type ConvergeThread,
+  fetchState,
   MIN_COMMENTS_PER_RESOLVED_THREAD,
   nextStep,
 } from '@/scripts/review-converge';
@@ -136,5 +137,98 @@ describe('review-converge nextStep', () => {
   it('converges on a PR that drew no review threads at all', () => {
     const step = nextStep(state({ threads: [] }));
     expect(step.done).toBe(true);
+  });
+});
+
+describe('review-converge fetchState', () => {
+  const HEAD_OID = 'aaaaaaaabbbbbbbbccccccccddddddddeeeeeeee';
+
+  function stubGh(over: { hasNextPage?: boolean; comments?: unknown[] } = {}) {
+    return async (args: string[]): Promise<string> => {
+      if (args[1] === 'graphql') {
+        return JSON.stringify({
+          data: {
+            repository: {
+              pullRequest: {
+                headRefOid: HEAD_OID,
+                reviewThreads: {
+                  pageInfo: { hasNextPage: over.hasNextPage ?? false },
+                  nodes: [
+                    {
+                      id: 'T1',
+                      isResolved: true,
+                      comments: { totalCount: 2, nodes: [{ path: 'lib/a.ts' }] },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        });
+      }
+      return JSON.stringify([over.comments ?? []]);
+    };
+  }
+
+  it('refuses to converge on a truncated thread page rather than reporting resolved', async () => {
+    await expect(fetchState('o', 'r', 1, stubGh({ hasNextPage: true }))).rejects.toThrow(
+      /more than 100 review threads/,
+    );
+  });
+
+  it('asks GraphQL for pageInfo, so the truncation guard has an input to read', async () => {
+    // The stub answers with pageInfo whatever the query says, so the throw test
+    // above stays green if `pageInfo{ hasNextPage }` is dropped from the query —
+    // it pins the stub, not the request. Assert the query itself: without this,
+    // a truncated thread set optional-chains to undefined and converges.
+    let sentQuery = '';
+    await fetchState('o', 'r', 1, async (args) => {
+      const q = args.find((a) => a.startsWith('query='));
+      if (q) sentQuery = q;
+      return stubGh()(args);
+    });
+    expect(sentQuery).toMatch(/pageInfo\s*\{\s*hasNextPage\s*\}/);
+  });
+
+  it('picks the latest claude comment by created_at, not by array position', async () => {
+    const state = await fetchState(
+      'o',
+      'r',
+      1,
+      stubGh({
+        comments: [
+          {
+            user: { login: 'claude[bot]' },
+            created_at: '2026-07-26T23:00:00Z',
+            body: `**Verdict: Approve.** Reviewed at head commit \`${HEAD_OID}\`.`,
+          },
+          {
+            user: { login: 'claude[bot]' },
+            created_at: '2026-07-26T22:00:00Z',
+            body: '**Verdict: Request changes.**',
+          },
+        ],
+      }),
+    );
+    // Newest is the approve even though it is not last in the array.
+    expect(nextStep(state).done).toBe(true);
+  });
+
+  it('ignores comments from anyone other than claude[bot]', async () => {
+    const state = await fetchState(
+      'o',
+      'r',
+      1,
+      stubGh({
+        comments: [
+          {
+            user: { login: 'someone' },
+            created_at: '2026-07-26T23:00:00Z',
+            body: `**Verdict: Approve.** Reviewed at head commit \`${HEAD_OID}\`.`,
+          },
+        ],
+      }),
+    );
+    expect(nextStep(state).action).toBe('request-review');
   });
 });

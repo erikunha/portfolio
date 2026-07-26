@@ -55,7 +55,10 @@ flowchart TD
     pre2 -->|exit 0| run
     run --> post{Edit or Write?}
     post -->|yes| post1["PostToolUse: api-edit-marker + css-token-guard + section-order-guard + biome-format"]
-    post -->|no| done["continue"]
+    post -->|no| bashq{Bash?}
+    bashq -->|yes| converge[review-converge-reminder.sh]
+    bashq -->|no| done
+    converge --> done["continue"]
     post1 --> done
     done --> sessionend["...SessionEnd: learning-loop"]
 ```
