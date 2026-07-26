@@ -49,8 +49,8 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 - **`pre-commit`**: Biome lint + format (sub-second).
 - **`commit-msg`**: commitlint. Conventional Commits with a **mandatory scope** (`scope-empty: [2, 'never']`) drawn from an **open set** (`scope-enum: [0]`). Scopes are feature-area names (`ci`, `dx`, `observability`, `healthz`, `ppr`, `arch`, ...), not technical categories.
 
-### 7. Pre-push: the review battery + the gate chain
-Before every push (and whenever coding work stops), the 4-agent review battery runs, findings are recorded and resolved, and `review:stamp` is written. The `.husky/pre-push` hook then blocks the push unless: it does not target `main`, the branch name is valid, the review stamp matches HEAD, no unaudited API edit is pending, and `pnpm verify` passes. See [review-merge-release](./review-merge-release.md) for the full chain.
+### 7. Pre-PR review battery, and the pre-push gate chain
+Before opening the PR, the 4-agent review battery runs once, findings are recorded and resolved, and `review:stamp` is written; post-PR fix pushes are reviewed by claude-review, not the battery. On every push, the `.husky/pre-push` hook blocks unless: it does not target `main`, the branch name is valid, no unaudited API edit is pending, and `pnpm verify` passes — and, only when the branch has no open PR yet (the pre-PR push), the review stamp matches HEAD. See [review-merge-release](./review-merge-release.md) for the full chain.
 
 ### 8. Pre-PR -> open PR
 `pnpm ready-for-pr` runs `ci:local` + `pr-size` + `gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). `pr-size` recommends splitting if the diff is too large. Then `gh pr create` fills the PR template (every section must be non-empty, enforced by `validate-pr-body`).
@@ -72,7 +72,7 @@ flowchart LR
         g1["Biome"] --> g2["commitlint"]
     end
     subgraph prepush["pre-push (blocks)"]
-        g3["no direct main"] --> g4["branch name"] --> g5["review stamp"] --> g6["API-edit audit marker"] --> g7["pnpm verify"]
+        g3["no direct main"] --> g4["branch name"] --> g5["review stamp (pre-PR push only)"] --> g6["API-edit audit marker"] --> g7["pnpm verify"]
     end
     subgraph prepr["ready-for-pr"]
         g8["ci:local"] --> g9["bundle-check"] --> g10["pr-size"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["pr-review-toolkit:code-reviewer"]

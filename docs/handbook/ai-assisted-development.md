@@ -76,7 +76,7 @@ Every substantive change runs the same disciplined loop, enforced by mandated sk
 
 ## 3. The review battery (how AI reviews AI)
 
-Before every push, four specialized agents review the diff in parallel, each a fresh-context reviewer that sees the change but not the reasoning that produced it:
+Before opening a PR, four specialized agents review the diff in parallel, each a fresh-context reviewer that sees the change but not the reasoning that produced it:
 
 ```mermaid
 flowchart LR

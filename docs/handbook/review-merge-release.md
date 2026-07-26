@@ -47,7 +47,7 @@ WCAG 2.1 AA is gated separately and mechanically by axe-core (`tests/a11y/axe.sp
 
 `battery-synthesis` dedups the four reports into one ranked table and records each Critical/Important into the findings ledger (`.review-findings.json`). `review:stamp` then **refuses** to write `.review-passed` unless (a) the transcript shows all four roles dispatched after the HEAD commit time, and (b) no Critical/Important finding is still `open`. The stamp proves dispatch and resolution; it is transcript-verified, not honor-system.
 
-**Two triggers:** before any `git push`, and whenever coding work stops. The battery prompts are scoped to the commit type, so a docs-only commit's agents skip the test suite (the stamp counts dispatch, not depth).
+**Pre-PR gate:** the battery runs once before the PR is opened, never before every push — post-PR review is owned by claude-review. The battery prompts are scoped to the commit type, so a docs-only commit's agents skip the test suite (the stamp counts dispatch, not depth).
 
 ## Review convergence loop
 

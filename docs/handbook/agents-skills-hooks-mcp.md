@@ -9,7 +9,7 @@ Skills are load-on-demand procedures. They activate by their `description` front
 | Skill | Trigger | What it does |
 |---|---|---|
 | **battery-synthesis** | After the 4-agent battery returns, before `review:stamp` | Dedups + severity-ranks the four reports into one action table and records each Critical/Important into the findings ledger. A DX aid, not a gate. |
-| **review-battery** | Before any `git push`; when coding work stops | Holds the four reviewer prompts, the assembly order, the finding contract, and the measured model routing. The dispatch table for the battery `review:stamp` scores. |
+| **review-battery** | Before opening a PR (pre-PR gate) | Holds the four reviewer prompts, the assembly order, the finding contract, and the measured model routing. The dispatch table for the battery `review:stamp` scores. |
 | **review-convergence** | Converging an open PR's AI review to green | The loop: rebase before every push, verify the pushed SHA, re-request the reviewer (`/claude-review`, claude[bot]) after each push, reply-before-resolve, the automatic post-merge transition. Not for the final merge. |
 | **pr-merge-gate** | About to merge a PR | The 9-point pre-merge gate (claude-review Approve, resolve-thread ground truth, branch-protection, `ready-to-merge`, the local Playwright visual check, the rebase rule). The owner runs the final merge; agents are blocked. |
 | **visual-baseline-regen** | A change may touch a Playwright screenshot baseline (CSS/layout/typography) | The baseline regen procedure: darwin `--update-snapshots`, the linux CI-dispatch artifact path, inspect-before-commit, batch-to-one-push. Distinguishes the CI-gated page-section spec from the darwin-only DS-component spec. |

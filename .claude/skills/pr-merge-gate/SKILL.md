@@ -86,5 +86,5 @@ the repo owner executes the final merge in an external terminal or via the GitHu
 
 - `pnpm ready-to-merge` and the `/claude-review` re-request also appear in CLAUDE.md's
   AI-agent command table.
-- The pre-push review battery + `pnpm review:stamp` (a different, every-push gate) stays
+- The pre-PR review battery + `pnpm review:stamp` (a different, pre-PR gate) stays
   inline in CLAUDE.md — it is not part of this merge-time gate.

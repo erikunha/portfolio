@@ -1,6 +1,6 @@
 ---
 name: review-battery
-description: Use at the two battery triggers (before any git push, and whenever coding work stops) to dispatch the local pre-push / pre-PR review battery. Holds the four reviewer prompts, the assembly order, and the finding contract that battery-synthesis and `pnpm review:findings add` consume. Not a gate; `pnpm review:stamp` is the gate.
+description: Use BEFORE opening a PR (the pre-PR review gate) to dispatch the local review battery — not before every push. Post-PR review is owned by claude-review, not this battery. Holds the four reviewer prompts, the assembly order, and the finding contract that battery-synthesis and `pnpm review:findings add` consume. Not a gate; `pnpm review:stamp` is the gate.
 ---
 
 # Local review battery

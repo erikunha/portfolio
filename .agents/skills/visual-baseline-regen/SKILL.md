@@ -98,5 +98,5 @@ run is green. Do not push the code first and let CI fail.
   hottest-takes); requires darwin + linux regen when changed.
 - `tests/e2e/design-system-components.spec.ts` — design-system component baselines;
   darwin-only (spec is ignored on Ubuntu in CI); requires only darwin regen when changed.
-- The runtime/perf (LHCI) and review-battery gates that also run before a push stay
+- The runtime/perf (LHCI) gate and the pre-PR review-battery gate stay
   inline in AGENTS.md; this skill is only the baseline-regen mechanics.
