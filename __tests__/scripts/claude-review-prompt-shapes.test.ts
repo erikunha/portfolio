@@ -9,6 +9,7 @@ import {
 } from '@/scripts/check-claude-approval';
 
 const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'claude-review.yml');
+const PROMPT_PATH_IN_REPO = '.github/claude-review-prompt.md';
 
 const HEAD_SHA = 'bb390ab1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7';
 
@@ -21,7 +22,7 @@ const EXPECTED_VERDICT = new Map([
 
 type Step = { with?: { claude_args?: unknown } };
 
-function systemPrompt(): string {
+function claudeArgs(): string {
   const doc = parse(readFileSync(WORKFLOW, 'utf8')) as {
     jobs?: { review?: { steps?: Step[] } };
   };
@@ -29,10 +30,19 @@ function systemPrompt(): string {
     ?.claude_args;
   if (typeof args !== 'string') {
     throw new Error(
-      'claude-review.yml has no step carrying a claude_args string. That string holds the reviewer system prompt, and this suite is the only gate binding the shapes it instructs to the parsers that read them. If the wiring moved, point this helper at the new location; do not delete this test.',
+      'claude-review.yml has no step carrying a claude_args string. That string is what wires the reviewer system prompt in, and this suite is the only gate binding the shapes that prompt instructs to the parsers that read them. If the wiring moved, point this helper at the new location; do not delete this test.',
     );
   }
   return args;
+}
+
+function systemPrompt(): string {
+  if (!claudeArgs().includes(`--append-system-prompt-file ${PROMPT_PATH_IN_REPO}`)) {
+    throw new Error(
+      `claude-review.yml no longer passes --append-system-prompt-file ${PROMPT_PATH_IN_REPO}. Without this check the suite keeps asserting against a file the workflow does not load, which stays green while the live reviewer runs with no prompt at all. Point PROMPT_PATH_IN_REPO at the path the workflow now names.`,
+    );
+  }
+  return readFileSync(join(process.cwd(), PROMPT_PATH_IN_REPO), 'utf8');
 }
 
 function instructedVerdictWords(): string[] {
