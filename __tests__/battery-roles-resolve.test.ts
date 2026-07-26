@@ -147,6 +147,17 @@ describe('prose that names the pre-PR review agent stays inside its accept-list'
     ).toBeGreaterThan(3);
   });
 
+  it('scans membership statelessly and extracts globally', () => {
+    expect(
+      AGENT_NAME_ONCE.global,
+      'walk() membership .test() must use a non-global regex: a /g .test() carries lastIndex across files and silently drops a drifting surface from the scan.',
+    ).toBe(false);
+    expect(
+      AGENT_NAME.global,
+      'the .match() extraction must be /g to enumerate every agent name on a surface, not only the first.',
+    ).toBe(true);
+  });
+
   it.each(surfaces)('%s names only dispatchable agents', (path) => {
     const rel = path.replace(`${process.cwd()}/`, '');
     const named = [...new Set(readFileSync(path, 'utf8').match(AGENT_NAME) ?? [])];
