@@ -215,10 +215,13 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ['no verdict in the fetched body', { body: '### Review\n- [x] Gather context' }, 1],
     ['a verdict in the fetched body', { body: 'head `abc1234`. **Approve**' }, 0],
     ['no review-start timestamp', { body: '**Approve**', since: '' }, 1],
+    // `changed` and `event` are dead inputs now — the guard reads neither — so
+    // this row proves only that an empty body reds. The "not skipped" property is
+    // held structurally below, by banning any early exit before the verdict test.
     [
-      'the PR edits this workflow, which the action cannot review',
-      { body: 'nothing', changed: '.github/workflows/claude-review.yml' },
-      0,
+      'a body with no verdict reds regardless of which files the PR touched',
+      { body: 'nothing' },
+      1,
     ],
     [
       'a verdict wrapped across a newline, which the line-oriented grep must reject',
@@ -269,16 +272,28 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ).toContain('exit 1');
   });
 
-  it('skips on BOTH the event and the file predicate, never on the echo alone', () => {
-    const skip = block(
-      /if \[ "\$GITHUB_EVENT_NAME" = "pull_request" \]/,
-      'a workflow-editing skip',
-    );
+  it('reaches the verdict test on every run: no early exit before the fetch', () => {
+    // The property is "nothing short-circuits before the verdict is tested", NOT
+    // "these two tokens are absent". Banning `GITHUB_EVENT_NAME` and `SKIP` left
+    // the identical carve-out reachable spelled any other way — keyed on
+    // `gh pr diff`, on `$GITHUB_EVENT_PATH`, or simply lowercase. Assert the
+    // structure instead: the only `exit 0` may be the one that follows a matched
+    // verdict.
+    const script = guardScript();
+    const fetchAt = script.indexOf('gh api');
+    expect(fetchAt, 'the guard no longer fetches comments').toBeGreaterThan(0);
+
+    const before = script.slice(0, fetchAt);
     expect(
-      skip,
-      'The skip must test the DIFF, not just the event. Asserting the string "claude-review.yml" was satisfied by the echo INSIDE the block, so deleting the whole `gh pr diff … | grep -qx …` conjunct ran green — the guard would then skip every pull_request run unconditionally while CI stayed green, which is the permanent silent green this workflow already paid for once.',
-    ).toContain("grep -qx '.github/workflows/claude-review.yml'");
-    expect(skip).toContain('exit 0');
+      /\bexit 0\b/.test(before),
+      `The guard exits 0 BEFORE it fetches anything. Under pull_request_target the base workflow always runs and the action never refuses, so every run can post a verdict — an early exit is a run that reviewed nothing reporting success, which is the silent green this step exists to end.\n\n${before.slice(-400)}`,
+    ).toBe(false);
+
+    const exits = script.match(/\bexit 0\b/g) ?? [];
+    expect(
+      exits.length,
+      'More than one `exit 0` in the guard. Exactly one is expected: the success path after a verdict matched.',
+    ).toBe(1);
   });
 });
 

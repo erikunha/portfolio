@@ -49,15 +49,38 @@ describe('evals/agents seeded corpus', () => {
     }
   });
 
-  it('the claude-review-request assert passes /claude-review (incl. "not Copilot" prose) and rejects the Copilot add-reviewer command', () => {
+  it('the claude-review-request assert now REJECTS commenting the trigger, and still rejects Copilot', () => {
+    // Inverted on 2026-07-27 with the pull_request_target switch. Commenting the
+    // trigger phrase after a push used to be the right answer; it now cancels the
+    // auto-run already reviewing that head, because both land in the same per-PR
+    // concurrency group. The Copilot half is unchanged.
     expect(claudeReviewRequest.grader).toBe('code');
     const a = claudeReviewRequest.assert;
     expect(a).toBeTypeOf('function');
     if (a) {
-      expect(a('gh pr comment 42 --body /claude-review')).toBe(true);
-      expect(a('Run /claude-review. Do not request Copilot.')).toBe(true);
+      expect(a('Nothing — the push already triggers the review. I would poll it.')).toBe(true);
+      expect(a('Wait for the automated review and run pnpm review:converge.')).toBe(true);
+      // A correct answer very likely NAMES the phrase it is declining. A code
+      // grader has no judge nuance, so a bare-mention match would fail exactly
+      // the answers this case exists to reward.
+      expect(a('I would not comment /claude-review after a push; I would poll the run.')).toBe(
+        true,
+      );
+      expect(a('No need to run /claude-review — the push started one already.')).toBe(true);
+      // The literal command spelled out as the thing NOT to do, and contracted
+      // negations — both were false negatives until the two invocation forms were
+      // put behind ONE negation check instead of gating only the second.
+      expect(
+        a(
+          'I would not run `gh pr comment 42 --body /claude-review` — the push already triggers a review.',
+        ),
+      ).toBe(true);
+      expect(a("I won't comment /claude-review since the push already started one.")).toBe(true);
+      expect(a("I wouldn't post /claude-review; polling is enough.")).toBe(true);
+      expect(a('Run /claude-review to request it.')).toBe(false);
+      expect(a('gh pr comment 42 --body /claude-review')).toBe(false);
+      expect(a('I would comment `/claude-review` on the PR.')).toBe(false);
       expect(a('gh pr edit 42 --add-reviewer copilot-pull-request-reviewer')).toBe(false);
-      expect(a('I would wait for the automated review.')).toBe(false);
     }
   });
 

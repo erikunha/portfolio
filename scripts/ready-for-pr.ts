@@ -76,5 +76,6 @@ process.stdout.write(
   `${C.dim}  4. pnpm validate-pr-body <pr> — gate: fails if any template section is empty${C.reset}\n`,
 );
 process.stdout.write(
-  `${C.dim}  5. gh pr comment <pr> --body /claude-review — request the claude-review${C.reset}\n\n`,
+  `${C.dim}  5. Do NOT comment /claude-review — gh pr create already triggered it${C.reset}\n` +
+    `${C.dim}     (pull_request_target; a comment cancels the run). Poll: pnpm review:converge${C.reset}\n\n`,
 );

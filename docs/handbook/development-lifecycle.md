@@ -56,7 +56,7 @@ Before opening the PR, the 4-agent review battery runs once, findings are record
 `pnpm ready-for-pr` runs `ci:local` + `gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Then `gh pr create` fills the PR template (every section must be non-empty, enforced by `validate-pr-body`).
 
 ### 9. Review convergence loop
-On the open PR, the `review-convergence` skill drives review to green: rebase before every push, verify the pushed SHA landed, re-request the reviewer (`/claude-review`, claude[bot]) after each push, reply-before-resolve on every thread. See [review-merge-release](./review-merge-release.md).
+On the open PR, the `review-convergence` skill drives review to green: rebase before every push, verify the pushed SHA landed, poll each review run to completion — the push already triggers claude[bot], and a `/claude-review` comment lands in the same concurrency group and cancels it, reply-before-resolve on every thread. See [review-merge-release](./review-merge-release.md).
 
 ### 10. Pre-merge gates -> merge
 `pnpm ready-to-merge` runs `ci:local` + branch-protection check + claude-review-approval check (`scripts/check-claude-approval.ts` / `pnpm claude-gate`, requiring the latest `/claude-review` overview verdict to be Approve on HEAD) + resolved-threads check + PR metrics. **AI agents are blocked from `gh pr merge`** (bash-guard exit 2); the repo owner runs the final squash-merge. History shows squash-merge exclusively (zero merge commits), each commit tagged `(#NNN)`.

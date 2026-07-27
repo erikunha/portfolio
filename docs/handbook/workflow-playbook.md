@@ -117,6 +117,6 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Steps:**
   1. `pnpm ready-for-pr`; `gh pr create` filling the template (every section non-empty).
   2. `pnpm validate-pr-body <pr>`.
-  3. Request the reviewer (`/claude-review`, claude[bot]); run the `review-convergence` loop (rebase before every push, verify the pushed SHA, reply-before-resolve on threads).
+  3. The reviewer (claude[bot]) runs automatically on open and on every push; run the `review-convergence` loop (rebase before every push, verify the pushed SHA, reply-before-resolve on threads).
   4. `pnpm ready-to-merge`; the owner squash-merges.
 - **Output:** a merged PR. See [review-merge-release](./review-merge-release.md).

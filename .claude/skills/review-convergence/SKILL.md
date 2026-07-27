@@ -1,6 +1,6 @@
 ---
 name: review-convergence
-description: Use when driving an open PR's claude-review (`/claude-review`, claude[bot]) to green — rebase before every push, reply citing the fix SHA before resolving any thread, verify the pushed SHA; re-request only when no auto-review will otherwise run. Not for the final merge (see pr-merge-gate).
+description: Use when driving an open PR's claude-review (`/claude-review`, claude[bot]) to green — rebase before every push, reply citing the fix SHA before resolving any thread, verify the pushed SHA; poll each review run to completion before assessing it; re-request only when no auto-review will otherwise run. Not for the final merge (see pr-merge-gate).
 ---
 
 # Review convergence loop
@@ -17,7 +17,7 @@ never do (bash-guard blocks it).
 1. **Push, then verify it landed.** `gh api repos/erikunha/portfolio/pulls/<N> --jq '.head.sha'`
    must equal `git rev-parse HEAD`. If not, re-push before continuing.
 2. **Do NOT re-request after a push — the push already triggers a review.**
-   The `pull_request` trigger fires on every `synchronize`, and the concurrency
+   The `pull_request_target` trigger fires on every `synchronize`, and the concurrency
    group is per-PR with `cancel-in-progress: true`, so a `/claude-review` comment
    posted seconds after a push CANCELS the auto-run that was already reviewing
    that SHA. Both runs leave a "Claude Code is working…" comment, the cancelled
@@ -27,18 +27,34 @@ never do (bash-guard blocks it).
    had just deleted.
 
    Re-request ONLY when no review will otherwise run:
-   - the PR edits `.github/workflows/claude-review.yml` (the action refuses when
-     the workflow differs from the default branch, so the auto path cannot run)
    - a completed run posted no parsable verdict
    - the verdict on record is stale against a HEAD no run is currently reviewing
 
-   `pnpm review:converge` reports which of those applies; check it before
-   commenting rather than commenting by reflex.
+   The workflow-edit exception is GONE: the trigger is `pull_request_target`, so
+   the base copy always runs and a PR editing the reviewer is reviewed like any
+   other. If you find yourself typing `/claude-review` on a workflow-editing PR,
+   the trigger regressed — check `on:` before typing it.
 
-3. **Poll CI until green.**
-4. **Check for new threads** — claude[bot] inline comments via `gh api graphql`
+   `pnpm review:converge` reports which case applies; check it before commenting
+   rather than commenting by reflex.
+
+3. **POLL THE RUN TO COMPLETION. Do not report back before it lands.**
+   `gh run watch <id> --exit-status`, or poll `gh run list --workflow=claude-review.yml`
+   until the run for THIS head is not `in_progress`. A review takes minutes;
+   reporting "the review is running" and stopping hands the polling to the human
+   and leaves the loop half-executed, which is how threads sit unanswered.
+
+   Then read the OUTCOME, never the job conclusion. A run reports `success` when
+   it posted nothing — a skip, a cancellation, or a guard carve-out all look
+   identical to a clean review from the outside. The honest checks are: did a
+   `claude[bot]` comment appear, and does `pnpm review:converge` say converged.
+   Three separate silent-greens on #228-#230 were each first misread as a pass
+   because the job was green.
+
+4. **Poll CI until green.**
+5. **Check for new threads** — claude[bot] inline comments via `gh api graphql`
    `reviewThreads(first:100)` and `gh api .../pulls/<N>/comments`.
-5. **EVERY comment goes in a review THREAD. Never a timeline comment.**
+6. **EVERY comment goes in a review THREAD. Never a timeline comment.**
    `gh pr comment <N>` posts an unanchored timeline comment (`#issuecomment-…`) —
    it is attached to no code, cannot be resolved, and never appears in
    `reviewThreads`, so it is invisible to the resolve-thread ground truth in
@@ -55,18 +71,18 @@ never do (bash-guard blocks it).
    - The ONLY acceptable timeline comment is the `/claude-review` re-request trigger
      itself (it is a command, not a comment).
 
-6. **Resolve each thread; never resolve silently** (a thread with 1 comment is a
+7. **Resolve each thread; never resolve silently** (a thread with 1 comment is a
    process failure):
    - **Real finding:** fix, commit, stamp, push, verify SHA, **reply citing the
      fix SHA**, resolve. The reply MUST come after push+verify so it cites the
      actual remote SHA.
    - **Stale / already-fixed:** reply citing the fix SHA and why it is stale,
      then resolve — before the next push.
-7. **Wait for claude-review to complete the new review.**
-8. **After any push, verify every thread has >= 2 comments.** `comments=1` is a
+8. **Wait for the new review to land — same polling discipline as step 3.**
+9. **After any push, verify every thread has >= 2 comments.** `comments=1` is a
    silent resolve; add the missing reply (GitHub MCP `add_reply_to_pull_request_comment`,
    not `gh api .../replies`, which 404s on resolved threads).
-9. Repeat 4-8 until CI is green AND 0 unresolved threads AND `pnpm ready-to-merge`
+10. Repeat 5-9 until CI is green AND 0 unresolved threads AND `pnpm ready-to-merge`
    exits OK (it gates on a claude[bot] **Approve** verdict that is non-stale —
    reviewed SHA == HEAD). Only then tell the repo owner to run `gh pr merge`.
 
