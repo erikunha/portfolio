@@ -111,7 +111,7 @@ flowchart TD
     shell --> motion["lib/motion.ts (DOM state)"]
 ```
 
-**No circular dependencies exist** in the application graph (the `fallow-audit` skill exists specifically to detect them). The clean direction is: `app → components → {content, design-system}` and `app/api → lib`, with `content` and `design-system` as terminal leaves.
+**No circular dependencies exist** in the application graph (verified on demand with the pinned `npx fallow@2.95.0`; the wrapper skill was removed 2026-07-27). The clean direction is: `app → components → {content, design-system}` and `app/api → lib`, with `content` and `design-system` as terminal leaves.
 
 ## Build system
 

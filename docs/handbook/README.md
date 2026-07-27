@@ -17,7 +17,7 @@ The handbook routes to the other two rather than duplicating them.
 | Doc | Covers |
 |---|---|
 | [development-lifecycle.md](./development-lifecycle.md) | The SDLC end to end: idea -> spec -> plan -> implement -> review -> merge -> release, with diagrams |
-| [ai-assisted-development.md](./ai-assisted-development.md) | How AI participates in the SDLC: context engineering, the review battery, sequence diagrams |
+| [ai-assisted-development.md](./ai-assisted-development.md) | How AI participates in the SDLC: context engineering, enforcement boundaries, sequence diagrams |
 | [agents-skills-hooks-mcp.md](./agents-skills-hooks-mcp.md) | Reference for every agent, skill, hook, rule, and MCP server, with the hook lifecycle and orchestration diagrams |
 | [workflow-playbook.md](./workflow-playbook.md) | Step-by-step runbooks: feature, bug fix, refactor, perf, a11y, ADR, PR, review |
 | [review-merge-release.md](./review-merge-release.md) | The gate chain from commit to production, the convergence loop, release and rollback |
@@ -34,14 +34,12 @@ flowchart TB
     subgraph people["Human + AI"]
         dev["Developer (single, owner)"]
         claude["Claude Code agents"]
-        claudereview["claude-review reviewer (/claude-review, claude[bot])"]
     end
     subgraph context["Context layer"]
         cl["CLAUDE.md + .claude/rules/* + skills + memory"]
         docs["STANDARDS.md · DECISIONS.md · /docs"]
     end
     subgraph enforce["Enforcement layer"]
-        hooks[".claude/hooks/* (exit 2 = block)"]
         husky[".husky/* git hooks"]
         gates["scripts/check-* + the verify chain"]
         ci["GitHub Actions: ci/codeql/smoke/claude"]
@@ -62,10 +60,10 @@ flowchart TB
 
 ## What makes this platform distinctive
 
-- **Spec-driven and gate-heavy.** Work flows spec -> architect-review gate -> plan -> implement, and passes ~18 gates between "code written" and "merged" (see [review-merge-release](./review-merge-release.md)).
-- **AI is a first-class participant, but bounded.** Claude Code writes, tests, and reviews; mechanical hooks (exit 2) and a transcript-verified review battery keep it honest. AI agents are explicitly blocked from merging.
+- **Spec-driven and gate-heavy.** Work flows spec -> architect-review gate -> plan -> implement, and passes the gate chain between "code written" and "merged" (see [review-merge-release](./review-merge-release.md)).
+- **AI is a first-class participant.** Claude Code writes, tests, and reviews. As of 2026-07-27 the bespoke enforcement layer that bounded it (agent-runtime hooks, the review battery, the transcript-verified stamp) is gone; the remaining bounds are git hooks and CI, which constrain the repository rather than the agent.
 - **Every decision is reversible and recorded.** ~240 ADRs in `DECISIONS.md`, each with a "Reversible: ..." note. Failed attempts are recorded, not deleted.
-- **The development platform itself is engineered and self-healing.** A meta-gate detects dead gates; a verification loop proves findings are resolved; a learning loop proposes new gates from recurring findings. See [engineering-audit](./engineering-audit.md).
+- **The development platform itself is engineered and self-healing.** A meta-gate detects dead gates; a verification loop proves findings are resolved. See [engineering-audit](./engineering-audit.md).
 
 ## How to read this if you're new
 

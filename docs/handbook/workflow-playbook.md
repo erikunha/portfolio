@@ -14,13 +14,13 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Steps:**
   1. `/speckit.specify` to lock intent and approach.
   2. Write a spec in `specs/NNN-feature/` (local-only, gitignored; Context, Gaps to Close, Changes). Get it to `Status: Approved`.
-  3. Dispatch `architect-reviewer`; it must return `GATE_RESULT: PASS` (the architect-gate hook blocks `writing-plans` otherwise).
+  3. Dispatch `architect-reviewer`; it must return `GATE_RESULT: PASS` (convention; the gating hook was removed 2026-07-27).
   4. `speckit-plan` + `thinking-risk-premortem` to decompose into tasks (shard into sub-PRs if large).
   5. Branch `feat/<description>`. Implement test-first.
-  6. Run the review battery, resolve findings, `review:stamp`, push.
-  7. `pnpm ready-for-pr`, open the PR, converge `/claude-review`, `ready-to-merge`, owner merges.
+  6. Self-review the diff (`pr-review-toolkit:code-reviewer`), fix what it finds, push.
+  7. `pnpm ci:local` + `gates:runtime`, open the PR, drive threads to resolved, `pnpm pr:gate`, owner merges.
   8. Add an ADR to `DECISIONS.md` with a reversibility note.
-- **AI:** brainstorming, architect review, planning, TDD implementation, the 4-agent battery.
+- **AI:** brainstorming, architect review, planning, TDD implementation, pre-PR self-review.
 - **Output:** a squash-merged PR `(#NNN)` + an ADR.
 
 ## Fixing a bug
@@ -83,14 +83,14 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   1. Decide baseline impact (YES/NO) before pushing.
   2. Use the Playwright MCP to inspect desktop (1280x720) and mobile (375x812) before touching tests.
   3. If baselines are affected, follow `visual-baseline-regen` (darwin regen + linux artifact path, inspect-before-commit, batch-to-one-push).
-  4. No raw hex outside `theme.css` (the css-token-guard hook catches it at edit time).
+  4. No raw hex outside `theme.css` (held by `pnpm lint:css-tokens` in `verify` and CI).
 - **Output:** a PR with regenerated Argos baselines if needed.
 
 ## Touching the `/api/ask` feature
 
 - **Entry:** a change to the ask route, prompt, guards, or eval.
 - **Steps:**
-  1. Editing `app/api/**`/`rate-limit.ts`/`proxy.ts` records an audit marker; you must dispatch `security-auditor` before the next push (the api-security-push-guard hook blocks otherwise).
+  1. Editing `app/api/**`/`rate-limit.ts`/`proxy.ts` means dispatching `security-auditor` before the next push. Convention only: the marker hook and the push guard that enforced it were removed 2026-07-27.
   2. If the prompt/corpus changed, run `pnpm ask:eval` (the `ai-eval-update` skill) - calibration then corpus must clear their thresholds.
   3. `vercel:vercel-functions` skill loads automatically (path-scoped rule).
 - **Output:** a PR with a security-auditor pass and a green eval.
@@ -113,10 +113,9 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 
 ## Opening and converging a PR
 
-- **Entry:** a stamped, ready branch.
+- **Entry:** a ready branch.
 - **Steps:**
-  1. `pnpm ready-for-pr`; `gh pr create` filling the template (every section non-empty).
-  2. `pnpm validate-pr-body <pr>`.
-  3. The reviewer (claude[bot]) runs automatically on open and on every push; run the `review-convergence` loop (rebase before every push, verify the pushed SHA, reply-before-resolve on threads).
-  4. `pnpm ready-to-merge`; the owner squash-merges.
+  1. `pnpm ci:local` + `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
+  2. There is no automated reviewer since 2026-07-27. Rebase before every push, verify the pushed SHA, reply citing the fix SHA before resolving a thread.
+  3. `pnpm pr:gate` passes; the owner squash-merges.
 - **Output:** a merged PR. See [review-merge-release](./review-merge-release.md).

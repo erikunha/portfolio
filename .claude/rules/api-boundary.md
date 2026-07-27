@@ -24,13 +24,13 @@ context; this is the implementation guidance, not the enforcement.
 - Rate limiting is Upstash sliding-window via `lib/rate-limit.ts` and is
   **fail-open** (Redis down must not 500 the user). Keep that property.
 
-## Security gate (hook-enforced)
+## Security review (convention)
 
-- Editing `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts` records a marker
-  (`.claude/.api-edit-pending`) via the PostToolUse `api-edit-marker.sh` hook.
-  The next `git push` is blocked by `api-security-push-guard.sh` until a
-  `security-auditor` agent is dispatched after that edit. Dispatch
-  `security-auditor` as part of the change, not as an afterthought.
+- Editing `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts` means dispatching a
+  `security-auditor` agent as part of the change, not as an afterthought.
+  Nothing enforces this: the PostToolUse marker and the push guard that blocked
+  an unaudited push were both removed on 2026-07-27. The hard gates on this
+  surface are the API behavioural tests, semgrep, and CodeQL.
 - CSP and `Reporting-Endpoints` headers come from **`proxy.ts`**, not
   `next.config.ts` (which sets the static headers: COOP, X-Frame-Options, HSTS,
   etc.). The CSP is asserted against the live host by the deploy smoke test, not

@@ -9,7 +9,7 @@
 - **No raw hex outside `app/css/theme.css`.** Use `var(--color-*)`. Enforced by `lint:css-tokens`. Complex CSS patterns become named classes in `components.css` `@layer components`; everything else is a Tailwind utility.
 - **Per-keystroke/per-pixel/per-frame updates must not re-render React.** Mutate `textContent`/`style`/`setAttribute` directly, or rAF-coalesce. This is the single most important runtime convention (it's a budget, not a preference).
 - **`CLAUDE.md` stays under 275 lines** (`check:harness-size`). New procedural rules go to a skill or a `.claude/rules/*` path-scoped file, not into `CLAUDE.md`.
-- **pnpm only.** `bash-guard.sh` blocks npm/yarn. Deps are pinned (no `latest`).
+- **pnpm only.** Deps are pinned (no `latest`).
 - **Commit scope is required** (`commitlint`), and `(design-system)`-scoped commits must regenerate the changelog (`pnpm changelog:sync`).
 
 ## Surprising behaviors (the "wait, what?" list)
@@ -62,4 +62,4 @@
 | motion state | `lib/motion.ts` + `body[data-motion]` (not React) |
 | cross-island events | `lib/events.ts` (window CustomEvents) |
 | why a decision was made | `DECISIONS.md` (search by date/topic) |
-| an enforcement rule | `STANDARDS.md` (chapter) + `.claude/hooks/*` + `scripts/check-*` |
+| an enforcement rule | `STANDARDS.md` (chapter) + `.husky/*` + `scripts/check-*` |

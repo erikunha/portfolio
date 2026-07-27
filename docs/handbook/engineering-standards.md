@@ -30,7 +30,7 @@ These are not in a single chapter but are consistently enforced by practice and 
 - **The four-conditions rule for any fix.** Root cause stated, pattern scan complete, no deferred debt, measured property verified (cite before/after).
 - **Smallest reasonable change.** Never rewrite a working implementation without explicit permission; never change unrelated code in the same commit.
 - **Reversibility.** Every architectural decision gets an ADR with a "how to undo" note.
-- **AI usage.** The agent must use the mandated skills (brainstorming before features, TDD before implementation, systematic-debugging on bugs, verification-before-completion before claiming done). The review battery runs once before opening a PR (post-PR review is owned by claude-review).
+- **AI usage.** The agent should use the mandated skills (brainstorming before features, TDD before implementation, systematic-debugging on bugs, verification-before-completion before claiming done). The review battery runs once before opening a PR (post-PR review is owned by claude-review).
 - **The gate is the spec.** A red gate is fixed by reducing the measured property, never by disabling the gate or lowering a threshold. Acceptable gate-config changes are limited to correcting a genuinely-miswritten assertion.
 
 ## Performance and accessibility as standing constraints

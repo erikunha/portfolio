@@ -228,7 +228,7 @@ job. The "no copy in `.tsx`" rule is held by PR review against this chapter.
 
 **Rationale.** Tailwind v4 eliminates the authoring friction of typing raw `@media (max-width: 768px)` literals at every responsive override site. `md:` and `lg:` prefixes encode the breakpoint contract directly in the markup, colocated with the layout intent. `@theme` is the superior reference-system artifact: it is the current industry standard for design tokens in Next.js projects, readable by any senior frontend reviewer, and enforced by the same single-source-of-truth discipline the old Style Dictionary provided — without the build pipeline. PostCSS returns to the stack exclusively as the `@tailwindcss/postcss` plugin; no other PostCSS transformations are applied.
 
-**How it is held.** `scripts/contrast-check.mjs` audits every documented text/surface pair against WCAG AA ratios; values are hardcoded from `@theme` (update both when the palette changes). Patterns that utilities cannot express become named classes in `@layer components` (`app/css/components.css`); CSS modules are rejected (see the exclusion list in `CLAUDE.md`). Visual regression (`tests/visual/visual.spec.ts`) catches any layout shift from CSS changes. A CSS or layout change is verified by the Playwright MCP visual check; `.claude/hooks/mandated-skill-gate.sh` gates the whole Playwright `browser_*` namespace on `web-design-guidelines` having completed first. There is no carve-out: every attempt to name a safe subset rested on an unverified claim about upstream response shapes, so the rule is uniform instead. ADR entries for CSS system changes live in `DECISIONS.md`.
+**How it is held.** `scripts/contrast-check.mjs` audits every documented text/surface pair against WCAG AA ratios; values are hardcoded from `@theme` (update both when the palette changes). Patterns that utilities cannot express become named classes in `@layer components` (`app/css/components.css`); CSS modules are rejected (see the exclusion list in `CLAUDE.md`). Visual regression (`tests/visual/visual.spec.ts`) catches any layout shift from CSS changes. A CSS or layout change is verified by the Playwright MCP visual check, preceded by `web-design-guidelines`. That ordering was mechanically gated until 2026-07-27; the gate was removed with the rest of the unproven harness machinery, so it is now convention held by `CLAUDE.md` alone. ADR entries for CSS system changes live in `DECISIONS.md`.
 
 **Co-authoring rule — where new CSS goes:** Tailwind utilities in JSX `className` handle all spacing, color, layout, typography, and responsive breakpoints. A named class in `@layer components` is required (not optional) when a pattern needs any of the following: `@keyframes` or `animation:`, pseudo-element overlays (`::before`/`::after`), `mix-blend-mode`, simultaneous coordination of 5+ CSS declarations on one element, or a CSS custom property local variable (`--var: value`). Everything else is a Tailwind utility. When in doubt: if it can be expressed as 1-4 utility classes, it stays in JSX. Files: `crt.css` for CRT overlay effects, `animations.css` for `@keyframes`-heavy section animations, `components.css` for everything else.
 
@@ -289,9 +289,7 @@ called); the SYSTEM prompt is held by `__tests__/system-prompt.test.ts` (asserts
 no phone-number pattern, asserts the 1024-token cache threshold still clears).
 The "no dead CSP directive" and "PII minimization" rules are also enforced by
 PR review and the `security-auditor` dispatch on any `app/api/` change. That
-dispatch is itself mechanically gated: `.claude/hooks/api-edit-marker.sh`
-(PostToolUse) records a marker when `app/api/**`, `lib/rate-limit.ts`, or
-`proxy.ts` is edited, and `.claude/hooks/api-security-push-guard.sh` (PreToolUse
+dispatch is a convention, not a gate: the PostToolUse marker and the pre-push guard that enforced it were removed 2026-07-27.
 Bash) blocks the next `git push` (`exit 2`) until the transcript shows a
 `security-auditor` dispatch following that marker. Boundary: the gate proves the
 auditor was *dispatched* after the edit, not that its findings were resolved.
@@ -360,7 +358,7 @@ runs the branch-name guard plus `pnpm verify`. `pnpm verify` is defined in
 check:client-naming + check:dep-pinning + test`). The "never disable a gate"
 rule is held by **culture** and by PR review — there is no meta-gate that can
 prevent a gate from being deleted, only the standard that says it must not be.
-The PR merge gate (`pnpm ready-to-merge`, GitHub `required_conversation_resolution`
+The PR merge gate (`pnpm pr:gate`, GitHub `required_conversation_resolution`
 branch protection) is the human-in-the-loop backstop.
 
 ---

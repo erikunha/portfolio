@@ -4,7 +4,7 @@
 
 ## Prerequisites
 
-- **Node 22+**, **pnpm 10+** (the repo is pnpm-only; `bash-guard.sh` blocks npm/yarn).
+- **Node 22+**, **pnpm 10+** (the repo is pnpm-only).
 - Install: `pnpm install` (CI uses `--frozen-lockfile`).
 - For full local runs you'll want the env vars in `.env.example` (Upstash, AI Gateway, Resend, PSI). Everything is **optional** and fails open, so the site runs without them - you just get fallbacks (no rate-limiting, a dash placeholder for Lighthouse scores, `/api/ask` needs the Gateway key).
 
@@ -26,11 +26,11 @@
 
 ```
 check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:dep-pinning
-  -> check:harness-size -> check:section-order -> check:doc-drift -> check:gate-health
+  -> check:harness-size -> check:section-order -> check:doc-drift
   -> lint:css-tokens -> test (Vitest)
 ```
 
-`pnpm ci:local` == `pnpm verify`. `pnpm ci` == `verify + build + bundle-check`. `pnpm ready-for-pr` adds `bundle-check` + `route-js-check` + `gates:runtime`.
+`pnpm ci:local` == `pnpm verify`. `pnpm ci` == `verify + build + bundle-check`. Before opening a PR, also run `pnpm bundle-check`, `pnpm route-js-check`, and `pnpm gates:runtime`.
 
 ### The gate scripts (what each protects)
 
@@ -42,7 +42,6 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 | `check:harness-size` | `CLAUDE.md` ≤ 275 lines |
 | `check:section-order` | every `sec-*` has a mobile flex-order rule |
 | `check:doc-drift` | `ARCHITECTURE.md` directory-tree paths exist on disk |
-| `check:gate-health` | every hook/settings-referenced script exists (meta-gate) |
 | `lint:css-tokens` | no raw hex outside `app/css/theme.css` |
 | `lint:contrast` | documented text/surface pairs meet WCAG AA |
 | `check:component-docs` | each DS component is documented |
@@ -107,13 +106,13 @@ Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, week
 ## The PR lifecycle
 
 ```
-commit (scope blocks) -> (battery + review:findings + review:stamp before opening the PR)
-  -> pnpm ready-for-pr (ci:local + gates:runtime) -> gh pr create (fill the template)
-  -> Review convergence loop (rebase, push, re-request, resolve threads) -> pnpm ready-to-merge
+commit (scope blocks) -> (self-review the diff before opening the PR)
+  -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
+  -> resolve every review thread (rebase before each push) -> pnpm pr:gate
   -> repo owner runs gh pr merge (AI agents are blocked from merging)
 ```
 
-Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to avoid the bloated-PR failure mode. See `CLAUDE.md` "Working agreement" and the `review-convergence` / `pr-merge-gate` skills.
+Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to avoid the bloated-PR failure mode. See `CLAUDE.md` "Working agreement".
 
 ## Releases & deployment
 
@@ -129,9 +128,6 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 | `/api/healthz` 503 | `meta:psi-last-run` missing/stale (>25h) - the PSI cron failed; check `/api/psi-refresh` |
 | `/api/ask` returns 503 | `ASK_ENABLED` off, or monthly token budget exhausted (`ask:tokens:{month}`) |
 | `/api/ask` stream cuts off | mid-stream 15s watchdog, or Layer-1 egress guard fired (`STREAM_ERR_SENTINEL`) |
-| Push blocked, "no review stamp" | run the 4-agent battery + `review:findings` + `review:stamp` |
 | Push blocked, "unaudited API edit" | you edited `app/api/**`/`rate-limit.ts`/`proxy.ts`; dispatch `security-auditor` |
-| A hook seems dead | `pnpm check:gate-health` |
-| Transcript-gate jammed | `pnpm transcript:doctor` |
 | CLS / visual regression | regenerate Argos baselines via the `visual-baseline-regen` skill |
 | Client error in prod | it was POSTed to `/api/log` (`err:{date}:{id}`, 30-day TTL) by `error-bridge.client.ts` |
