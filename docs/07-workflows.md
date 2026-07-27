@@ -30,7 +30,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
   -> lint:css-tokens -> test (Vitest)
 ```
 
-`pnpm ci:local` == `pnpm verify`. `pnpm ci` == `verify + build + bundle-check`. `pnpm gates:runtime` adds `bundle-check` + `route-js-check` + `gates:runtime`.
+`pnpm ci:local` == `pnpm verify`. `pnpm ci` == `verify + build + bundle-check`. Before opening a PR, also run `pnpm bundle-check`, `pnpm route-js-check`, and `pnpm gates:runtime`.
 
 ### The gate scripts (what each protects)
 
