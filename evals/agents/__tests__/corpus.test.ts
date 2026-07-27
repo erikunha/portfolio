@@ -60,6 +60,13 @@ describe('evals/agents seeded corpus', () => {
     if (a) {
       expect(a('Nothing — the push already triggers the review. I would poll it.')).toBe(true);
       expect(a('Wait for the automated review and run pnpm review:converge.')).toBe(true);
+      // A correct answer very likely NAMES the phrase it is declining. A code
+      // grader has no judge nuance, so a bare-mention match would fail exactly
+      // the answers this case exists to reward.
+      expect(a('I would not comment /claude-review after a push; I would poll the run.')).toBe(
+        true,
+      );
+      expect(a('No need to run /claude-review — the push started one already.')).toBe(true);
       expect(a('gh pr comment 42 --body /claude-review')).toBe(false);
       expect(a('I would comment `/claude-review` on the PR.')).toBe(false);
       expect(a('gh pr edit 42 --add-reviewer copilot-pull-request-reviewer')).toBe(false);
