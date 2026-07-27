@@ -11,6 +11,7 @@ import {
 const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'claude-review.yml');
 const PROMPT_PATH_IN_REPO = '.github/claude-review-prompt.md';
 const PR_HEAD_DIR = 'pr-head';
+const MATERIALISED_PROMPT = '/tmp/claude-review-prompt.md';
 
 const HEAD_SHA = 'bb390ab1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7';
 
@@ -38,17 +39,21 @@ function claudeArgs(): string {
 }
 
 function systemPrompt(): string {
-  // The prompt is trusted STRUCTURALLY now, not by a copy step. The workspace
-  // root is the base branch (the first checkout takes no `ref:`), so the prompt
-  // read from `.github/` there is the default-branch copy by construction, and
-  // the PR's files are confined to `pr-head/` behind `--add-dir`.
-  //
-  // Asserted here rather than only in the predicate suite because this is the
-  // link that makes the file below the one the reviewer actually runs on.
+  // Two independent properties, both required, and an earlier revision wrongly
+  // treated them as alternatives. The LAYOUT (base at root, PR head confined to
+  // pr-head/) is what stops untrusted content reaching the workspace root. The
+  // MATERIALISATION is what makes the prompt the DEFAULT branch's copy — the
+  // root is only the PR's base, and on a sub-PR into an integration branch those
+  // are different things.
   const yml = readFileSync(WORKFLOW, 'utf8');
-  if (!claudeArgs().includes(`--append-system-prompt-file ${PROMPT_PATH_IN_REPO}`)) {
+  if (!claudeArgs().includes(`--append-system-prompt-file ${MATERIALISED_PROMPT}`)) {
     throw new Error(
-      `claude-review.yml no longer passes --append-system-prompt-file ${PROMPT_PATH_IN_REPO}. Without this the suite asserts against a file the workflow does not load, which stays green while the live reviewer runs with no prompt at all.`,
+      `claude-review.yml no longer passes --append-system-prompt-file ${MATERIALISED_PROMPT}. Without this the suite asserts against a file the workflow does not load, which stays green while the live reviewer runs with no prompt at all.`,
+    );
+  }
+  if (!yml.includes(`git show "FETCH_HEAD:${PROMPT_PATH_IN_REPO}" > ${MATERIALISED_PROMPT}`)) {
+    throw new Error(
+      `claude-review.yml no longer materialises ${PROMPT_PATH_IN_REPO} from the DEFAULT branch. The workspace root is the PR's BASE, which is not the default branch on a sub-PR into an integration branch — so without this step that branch's prompt would review its own sub-PRs.`,
     );
   }
   if (!yml.includes(`--add-dir ${PR_HEAD_DIR}`)) {

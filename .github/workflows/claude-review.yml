@@ -109,6 +109,50 @@ jobs:
           path: pr-head
           fetch-depth: 1
 
+      # `pull_request_target` sets the root to the PR's BASE, which is NOT the
+      # default branch on a sub-PR into an integration branch — a flow CLAUDE.md
+      # documents. Once one sub-PR lands a prompt edit in `feat/x`, every later
+      # `feat/x-part` review would load the prompt that branch authored. The
+      # layout gives base; only this gives DEFAULT branch, so the two are
+      # orthogonal and an earlier revision was wrong to treat them as alternatives.
+      - name: Materialise the trusted reviewer prompt from the default branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin "$DEFAULT_BRANCH"
+          git show "FETCH_HEAD:.github/claude-review-prompt.md" > /tmp/claude-review-prompt.md
+          # A floor, not `test -s`: a truncated `git show` leaves a non-empty file
+          # that would silently run the reviewer on a fragment of its prompt.
+          bytes=$(wc -c < /tmp/claude-review-prompt.md)
+          if [ "$bytes" -lt 4000 ]; then
+            echo "prompt materialised at only ${bytes} bytes — expected the full reviewer prompt" >&2
+            exit 1
+          fi
+
+      # `--add-dir` mounts pr-head as project scope, so an instruction-shaped file
+      # the PR authored would arrive on the INSTRUCTION channel rather than the
+      # data channel. Prose in the prompt is not a mechanism; deleting the files is.
+      # The reviewer still sees every one of them in `gh pr diff`, which is where a
+      # change to them belongs under review.
+      - name: Strip instruction-shaped files from the mounted PR copy
+        run: |
+          set -euo pipefail
+          rm -rf \
+            pr-head/CLAUDE.md \
+            pr-head/AGENTS.md \
+            pr-head/.claude \
+            pr-head/.agents \
+            pr-head/.codex \
+            pr-head/.cursor \
+            pr-head/.github/copilot-instructions.md
+          for p in CLAUDE.md AGENTS.md .claude .agents .codex .cursor .github/copilot-instructions.md; do
+            if [ -e "pr-head/$p" ]; then
+              echo "pr-head/$p survived the strip — it would reach the reviewer as an instruction" >&2
+              exit 1
+            fi
+          done
+
       - name: Mark review start
         id: t0
         run: echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
@@ -128,7 +172,7 @@ jobs:
           claude_args: >-
             --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*)"
             --add-dir pr-head
-            --append-system-prompt-file .github/claude-review-prompt.md
+            --append-system-prompt-file /tmp/claude-review-prompt.md
 
       # A review that posts nothing still exits 0, so the check renders green and
       # check-claude-approval.ts reads verdict=none — indistinguishable from "ran

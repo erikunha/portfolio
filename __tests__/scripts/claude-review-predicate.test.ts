@@ -122,6 +122,52 @@ describe('pull_request_target is fenced to trusted authors on a public repo', ()
     ).toContain(`fromJSON('["OWNER","MEMBER","COLLABORATOR"]')`);
   });
 
+  it('instruction-shaped files are stripped from the mounted PR copy before the action runs', () => {
+    // `--add-dir pr-head` mounts PR-authored content as project scope, so a file
+    // the CLI reads as instructions — CLAUDE.md, AGENTS.md, .claude/** — would
+    // arrive on the INSTRUCTION channel rather than the data channel. Prose in
+    // the appended prompt is not a mechanism; deleting the files is. The reviewer
+    // still sees every one of them via `gh pr diff`, which is where a change to
+    // them belongs under review.
+    const steps = (
+      doc.jobs as {
+        review?: { steps?: Array<{ uses?: string; name?: string; run?: string }> };
+      }
+    )?.review?.steps;
+    if (!Array.isArray(steps))
+      throw new Error('claude-review.yml: jobs.review.steps is not an array');
+
+    const stripAt = steps.findIndex((st) =>
+      String(st.name ?? '').includes('Strip instruction-shaped'),
+    );
+    const actionAt = steps.findIndex((st) => String(st.uses ?? '').includes('claude-code-action'));
+    const headAt = steps.findIndex(
+      (st) => String(st.uses ?? '').includes('actions/checkout') && String(st.run ?? '') === '',
+    );
+    expect(
+      stripAt,
+      'the strip step is gone, so PR-authored instruction files reach the reviewer',
+    ).toBeGreaterThanOrEqual(0);
+    expect(
+      stripAt < actionAt,
+      `The strip runs AFTER the action (strip=${stripAt}, action=${actionAt}), so it removes nothing the reviewer had not already read.`,
+    ).toBe(true);
+    expect(headAt).toBeGreaterThanOrEqual(0);
+
+    const run = String(steps[stripAt]?.run ?? '');
+    for (const path of ['CLAUDE.md', 'AGENTS.md', '.claude', '.cursor']) {
+      expect(
+        run,
+        `The strip no longer removes pr-head/${path}, which the CLI would ingest as project instructions authored by the PR under review.`,
+      ).toContain(`pr-head/${path}`);
+    }
+    // It must VERIFY, not just rm: a typo'd path silently removes nothing.
+    expect(
+      /if \[ -e "pr-head\/\$p" \]/.test(run) && /exit 1/.test(run),
+      'The strip does not verify its own result. A mistyped path would delete nothing and the step would still succeed.',
+    ).toBe(true);
+  });
+
   it('no untrusted ref is checked out at the workspace root', () => {
     // The action's own docs/security.md: "Do not check out an untrusted ref into
     // the workspace root before this action." The first version of this workflow
