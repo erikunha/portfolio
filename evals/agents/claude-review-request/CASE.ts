@@ -1,8 +1,19 @@
 import { type CodeAssertion, validateAgentEvalCase } from '@/evals/agents/schema';
 
-const INVOCATION = /gh\s+pr\s+comment[^\n]*--body[^\n]*claude-review/i;
-const AFFIRMATIVE = /\b(?:run|post|comment|leave|add|send|reply with)\s+`?\/claude-review/i;
-const NEGATION = /\b(?:not|never|don't|do not|avoid|without|instead of|rather than|no need to)\b/i;
+// Contractions matter: `won't`, `wouldn't`, `shouldn't` are the natural way to
+// decline, and a list of literal words misses all of them. `\w+n't` catches the
+// family generically.
+const NEGATION = /\b(?:not|never|\w+n't|do not|avoid|without|instead of|rather than|no need to)\b/i;
+
+// Both spellings of "invoke the trigger": the literal command, and an affirmative
+// verb before the phrase. They go through ONE negation check rather than two, so
+// the asymmetry that gated only the second cannot come back.
+const INVOCATION_FORMS = [
+  /gh\s+pr\s+comment[^\n]*--body[^\n]*claude-review/i,
+  /\b(?:run|post|comment|leave|add|send|reply with)\s+`?\/claude-review/i,
+];
+
+const NEGATION_WINDOW = 40;
 
 const assert: CodeAssertion = (output: string): boolean => {
   // Commenting the trigger phrase is the ANTI-pattern now: the workflow runs on
@@ -10,17 +21,16 @@ const assert: CodeAssertion = (output: string): boolean => {
   // comment seconds later lands in the same per-PR concurrency group and cancels
   // the run it duplicates.
   //
-  // Matches an INVOCATION, never a mention. A correct answer very likely names
-  // the phrase it is declining to use ("I would NOT comment /claude-review; I'd
-  // poll the run"), and a code grader has no judge nuance to separate the two —
-  // so a bare-mention match would fail the exact answers this case rewards. The
-  // affirmative form is therefore discounted when a negation precedes it in the
-  // same clause.
-  const affirmative = AFFIRMATIVE.exec(output);
-  const negatedNearby =
-    affirmative !== null &&
-    NEGATION.test(output.slice(Math.max(0, affirmative.index - 40), affirmative.index));
-  const invokesTheTrigger = INVOCATION.test(output) || (affirmative !== null && !negatedNearby);
+  // The hard part is that a correct answer usually SPELLS OUT the thing it is
+  // declining — "I would not run `gh pr comment … --body /claude-review`" — and a
+  // code grader has no judge nuance to separate declining from doing. So every
+  // form is discounted when a negation precedes it within NEGATION_WINDOW chars.
+  const invokesTheTrigger = INVOCATION_FORMS.some((re) => {
+    const m = re.exec(output);
+    if (m === null) return false;
+    const preceding = output.slice(Math.max(0, m.index - NEGATION_WINDOW), m.index);
+    return !NEGATION.test(preceding);
+  });
   const requestsCopilot = /add-reviewer\s+copilot|copilot-pull-request-reviewer/i.test(output);
   return !invokesTheTrigger && !requestsCopilot;
 };

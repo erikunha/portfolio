@@ -67,6 +67,17 @@ describe('evals/agents seeded corpus', () => {
         true,
       );
       expect(a('No need to run /claude-review — the push started one already.')).toBe(true);
+      // The literal command spelled out as the thing NOT to do, and contracted
+      // negations — both were false negatives until the two invocation forms were
+      // put behind ONE negation check instead of gating only the second.
+      expect(
+        a(
+          'I would not run `gh pr comment 42 --body /claude-review` — the push already triggers a review.',
+        ),
+      ).toBe(true);
+      expect(a("I won't comment /claude-review since the push already started one.")).toBe(true);
+      expect(a("I wouldn't post /claude-review; polling is enough.")).toBe(true);
+      expect(a('Run /claude-review to request it.')).toBe(false);
       expect(a('gh pr comment 42 --body /claude-review')).toBe(false);
       expect(a('I would comment `/claude-review` on the PR.')).toBe(false);
       expect(a('gh pr edit 42 --add-reviewer copilot-pull-request-reviewer')).toBe(false);
