@@ -19,7 +19,7 @@ never do (bash-guard blocks it).
 1. **Push, then verify it landed.** `gh api repos/erikunha/portfolio/pulls/<N> --jq '.head.sha'`
    must equal `git rev-parse HEAD`. If not, re-push before continuing.
 2. **Do NOT re-request after a push — the push already triggers a review.**
-   The `pull_request_target` trigger fires on every `synchronize`, and the concurrency
+   The `pull_request` trigger fires on every `synchronize`, and the concurrency
    group is per-PR with `cancel-in-progress: true`, so a `/claude-review` comment
    posted seconds after a push CANCELS the auto-run that was already reviewing
    that SHA. Both runs leave a "Claude Code is working…" comment, the cancelled
@@ -32,10 +32,12 @@ never do (bash-guard blocks it).
    - a completed run posted no parsable verdict
    - the verdict on record is stale against a HEAD no run is currently reviewing
 
-   The workflow-edit exception is GONE: the trigger is `pull_request_target`, so
-   the base copy always runs and a PR editing the reviewer is reviewed like any
-   other. If you find yourself typing `/claude-review` on a workflow-editing PR,
-   the trigger regressed — check `on:` before typing it.
+   The workflow-edit exception is REAL and is the one case that needs a comment:
+   the trigger is `pull_request`, so GitHub loads the workflow from the PR head
+   and the action refuses on any PR editing `.github/workflows/claude-review.yml`.
+   No auto verdict can exist there. `pull_request_target` was tried on 2026-07-27
+   to remove this case and reverted the same day — upstream's token exchange 401s
+   on that event — so do not "fix" it by switching the trigger back.
 
    `pnpm review:converge` reports which case applies; check it before commenting
    rather than commenting by reflex.

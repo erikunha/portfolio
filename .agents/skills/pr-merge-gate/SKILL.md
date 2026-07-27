@@ -27,8 +27,9 @@ the repo owner executes the final merge in an external terminal or via the GitHu
    `--admin` override. (Branch protection also mechanically blocks `gh pr merge`
    until the current HEAD is reviewed; a new commit after the Approve re-blocks
    until claude-review re-reviews. A push re-reviews on its own —
-   the trigger is `pull_request_target`, so do NOT comment `/claude-review` after
-   one; it lands in the same concurrency group and cancels the run it duplicates.
+   the trigger is `pull_request`, so do NOT comment `/claude-review` after one
+   UNLESS the PR edits `.github/workflows/claude-review.yml`, where the action
+   refuses and a comment is the only path that works; it lands in the same concurrency group and cancels the run it duplicates.
    Re-request only when no run will fire at all: a completed run posted no
    parsable verdict, or the verdict is stale against a HEAD nothing is reviewing.)
 

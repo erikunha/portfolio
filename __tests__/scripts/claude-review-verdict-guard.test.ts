@@ -215,12 +215,22 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ['no verdict in the fetched body', { body: '### Review\n- [x] Gather context' }, 1],
     ['a verdict in the fetched body', { body: 'head `abc1234`. **Approve**' }, 0],
     ['no review-start timestamp', { body: '**Approve**', since: '' }, 1],
-    // `changed` and `event` are dead inputs now — the guard reads neither — so
-    // this row proves only that an empty body reds. The "not skipped" property is
-    // held structurally below, by banning any early exit before the verdict test.
+    ['a body with no verdict reds', { body: 'nothing' }, 1],
+    // The skip FIRING is an EXECUTED row, not a string match. Dropping
+    // `--name-only` from the `gh pr diff` capture leaves every text assertion
+    // green while `-x` stops matching any line, the skip never fires, and every
+    // PR editing this workflow reds with a failure no fix can clear.
     [
-      'a body with no verdict reds regardless of which files the PR touched',
-      { body: 'nothing' },
+      'a pull_request run whose diff touches this workflow is skipped, not red',
+      { body: 'nothing', event: 'pull_request', changed: '.github/workflows/claude-review.yml' },
+      0,
+    ],
+    // The SAME diff reached by comment must still be asserted: that path runs the
+    // default-branch copy, so it can and must post a verdict. Skipping it would
+    // strand workflow-editing PRs with no working path at all.
+    [
+      'the same diff reached by comment is asserted, never skipped',
+      { body: 'nothing', event: 'issue_comment', changed: '.github/workflows/claude-review.yml' },
       1,
     ],
     [
@@ -292,6 +302,20 @@ describe('the guard reds the job, and skips only what it provably cannot review'
       'The skip must test the DIFF, not just the event. Without the diff conjunct the guard skips every pull_request run, which is a permanent silent green.',
     ).toContain("grep -qx '.github/workflows/claude-review.yml'");
     expect(skip).toContain('exit 0');
+
+    // The file list must be CAPTURED, never piped straight into the condition.
+    // `grep -q` exits on its first match while `gh` is still writing, `gh` dies
+    // of SIGPIPE (141), and `pipefail` makes the pipeline status 141 — so the
+    // `if` is false and the skip is bypassed on exactly the PRs it exists for.
+    // Nondeterministic: it depends on write buffering.
+    expect(
+      /gh pr diff[^\n]*\|\s*grep/.test(guardScript()),
+      'The skip pipes `gh pr diff` straight into grep. Under `set -o pipefail` that races SIGPIPE and intermittently fails to skip, reding a workflow-editing PR with a failure no fix can clear. Capture the list first, then grep the variable.',
+    ).toBe(false);
+    expect(
+      skip,
+      'The skip no longer greps a captured file list, so nothing binds it to the diff.',
+    ).toMatch(/grep -qx '\.github\/workflows\/claude-review\.yml' <<</);
   });
 
   it('never skips a comment-triggered run, which can always post a verdict', () => {

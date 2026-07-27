@@ -83,10 +83,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      # PR head, not the base. Under pull_request_target the default ref is the
-      # BASE, which would make Read/Grep/Glob show pre-change content for exactly
-      # the files under review. The workspace is therefore UNTRUSTED, which is why
-      # the reviewer prompt below is not read from it.
       # Two checkouts, in this order, per the action's own docs/security.md:
       # "Do not check out an untrusted ref into the workspace root before this
       # action." The first version of this workflow did exactly that and the
@@ -111,7 +107,7 @@ jobs:
           fetch-depth: 1
 
       # The PR's files, in a SUBDIRECTORY, reachable only through --add-dir below.
-      # `refs/pull/N/head` resolves on both the pull_request_target and the
+      # `refs/pull/N/head` resolves on both the pull_request and the
       # issue_comment path, where no `pull_request.head.sha` exists.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -265,8 +261,15 @@ jobs:
           # never refuses; it is correctly back now. The `issue_comment` path is
           # deliberately NOT skipped: it runs the default-branch copy, so it can
           # and must post a verdict.
+          # Captured first, NOT piped into the condition. `grep -q` exits on its
+          # first match while `gh` is still writing, `gh` dies of SIGPIPE (141),
+          # and `pipefail` makes the pipeline status 141 — so the `if` is false
+          # and the skip is bypassed on exactly the PRs it exists for. This file
+          # sorts near the front of `--name-only`, so the match is early and the
+          # race is likely, but it depends on write buffering: nondeterministic.
+          changed_files=$(gh pr diff "$PR" --name-only)
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ] \
-            && gh pr diff "$PR" --name-only | grep -qx '.github/workflows/claude-review.yml'; then
+            && grep -qx '.github/workflows/claude-review.yml' <<<"$changed_files"; then
             echo "SKIP  this PR edits claude-review.yml."
             echo "  The action refuses when the workflow differs from the default branch,"
             echo "  so the auto path cannot post a verdict here no matter what the PR does."

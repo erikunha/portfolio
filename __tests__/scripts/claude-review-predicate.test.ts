@@ -105,11 +105,21 @@ describe('the auto path is fenced, and the workspace root holds base content', (
     // costs nothing, and because `pull_request_target` was tried once and may be
     // tried again if upstream starts accepting its OIDC token — at which point
     // the fence becomes the only thing between a fork PR and the repo token.
+    // The event is DERIVED from `on:`, never hardcoded and never inferred as
+    // "the branch that isn't issue_comment". Selecting by exclusion let `on:` and
+    // the `if:` drift apart: flip one to pull_request_target without the other
+    // and this file stays green while the auto job's `if:` never evaluates true
+    // and every PR silently goes unreviewed. The 2026-07-27 ADR records that the
+    // trigger may be revisited, so that edit is reachable, not hypothetical.
+    const triggers = Object.keys((doc.on ?? doc.true ?? {}) as Record<string, unknown>);
+    const autoEvent = triggers.find((t) => t !== 'issue_comment');
+    expect(autoEvent, 'claude-review.yml declares no non-comment trigger').toBeTruthy();
+
     const jobIf = collapse(String(at(doc, ['jobs', 'review', 'if'])));
-    const auto = splitTopLevelOr(jobIf).find((b) => !b.includes('issue_comment'));
+    const auto = splitTopLevelOr(jobIf).find((b) => b.includes(`'${autoEvent}'`));
     expect(
       auto,
-      `No top-level disjunct of the review job's \`if:\` covers the non-comment path.\n\nif: ${jobIf}`,
+      `No disjunct of the review job's \`if:\` names the trigger \`on:\` declares (${autoEvent}). The two have drifted, so the auto job never runs and every PR goes unreviewed with no error.\n\nif: ${jobIf}`,
     ).toBeTruthy();
     expect(
       auto,
@@ -211,11 +221,21 @@ describe('the auto path is fenced, and the workspace root holds base content', (
     // It must VERIFY with the SAME predicate that removed. An independently
     // enumerated verify drifts from the rm the first time either is edited, and
     // then passes while removing nothing.
-    const finds = run.match(/find pr-head/g) ?? [];
+    // Compared as SETS of -name tokens per find, not as tokens present anywhere
+    // in the step. Matching against the whole string let the verify `find` be
+    // narrowed to a single name while every token still appeared in the rm
+    // `find` — restoring exactly the rm/verify drift this is meant to forbid.
+    const findBlocks = run.split(/(?=find pr-head)/).filter((b) => b.startsWith('find pr-head'));
     expect(
-      finds.length,
-      'The strip does not re-run its own predicate to verify. A mistyped name would then delete nothing and the step would still succeed.',
-    ).toBeGreaterThanOrEqual(2);
+      findBlocks.length,
+      'The strip does not re-run its own predicate to verify. A mistyped name would delete nothing and the step would still succeed.',
+    ).toBe(2);
+    const nameSet = (block: string) =>
+      [...block.matchAll(/-name '([^']+)'/g)].map((m) => m[1]).sort();
+    expect(
+      nameSet(findBlocks[1] ?? ''),
+      'The verify `find` matches a different set of names than the removing `find`. They must be identical, or the verify passes while something survives.',
+    ).toEqual(nameSet(findBlocks[0] ?? ''));
     expect(
       /leftover/.test(run) && /exit 1/.test(run),
       'The strip does not fail when something survives it.',
