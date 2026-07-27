@@ -77,5 +77,5 @@ process.stdout.write(
 );
 process.stdout.write(
   `${C.dim}  5. Do NOT comment /claude-review — gh pr create already triggered it${C.reset}\n` +
-    `${C.dim}     (a comment cancels the run; except on a claude-review.yml edit). Poll: review:converge${C.reset}\n\n`,
+    `${C.dim}     (a comment cancels the run; except on a claude-review.yml edit). Poll: pnpm review:converge${C.reset}\n\n`,
 );

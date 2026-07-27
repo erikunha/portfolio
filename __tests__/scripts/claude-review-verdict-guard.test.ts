@@ -308,8 +308,14 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     // of SIGPIPE (141), and `pipefail` makes the pipeline status 141 — so the
     // `if` is false and the skip is bypassed on exactly the PRs it exists for.
     // Nondeterministic: it depends on write buffering.
+    // Continuations joined FIRST, exactly as the --slurp assertion above does.
+    // Without the join, reformatting `gh pr diff "$PR" --name-only \` with the
+    // `| grep` on the next line makes this regex stop at the newline and report
+    // "not piped" while the pipe — and the SIGPIPE race — is still there. That
+    // bypass has already been used once in this file.
+    const joined = guardScript().replace(/\\\n\s*/g, ' ');
     expect(
-      /gh pr diff[^\n]*\|\s*grep/.test(guardScript()),
+      /gh pr diff[^\n]*\|\s*grep/.test(joined),
       'The skip pipes `gh pr diff` straight into grep. Under `set -o pipefail` that races SIGPIPE and intermittently fails to skip, reding a workflow-editing PR with a failure no fix can clear. Capture the list first, then grep the variable.',
     ).toBe(false);
     expect(
