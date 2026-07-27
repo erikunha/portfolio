@@ -272,28 +272,41 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ).toContain('exit 1');
   });
 
-  it('reaches the verdict test on every run: no early exit before the fetch', () => {
-    // The property is "nothing short-circuits before the verdict is tested", NOT
-    // "these two tokens are absent". Banning `GITHUB_EVENT_NAME` and `SKIP` left
-    // the identical carve-out reachable spelled any other way — keyed on
-    // `gh pr diff`, on `$GITHUB_EVENT_PATH`, or simply lowercase. Assert the
-    // structure instead: the only `exit 0` may be the one that follows a matched
-    // verdict.
-    const script = guardScript();
-    const fetchAt = script.indexOf('gh api');
-    expect(fetchAt, 'the guard no longer fetches comments').toBeGreaterThan(0);
-
-    const before = script.slice(0, fetchAt);
+  it('skips on BOTH the event and the diff predicate, never on the echo alone', () => {
+    // The carve-out is back with the `pull_request` trigger: GitHub loads the
+    // workflow from the PR head, the action refuses on any PR editing this file,
+    // and no verdict can exist to assert — a red nothing could clear. It was
+    // correctly deleted while the trigger was `pull_request_target`, where the
+    // action never refuses.
+    //
+    // Asserting the string "claude-review.yml" alone is not enough: it is
+    // satisfied by the echo INSIDE the block, so deleting the whole
+    // `gh pr diff … | grep -qx …` conjunct ran green while the guard skipped
+    // every pull_request run unconditionally.
+    const skip = block(
+      /if \[ "\$GITHUB_EVENT_NAME" = "pull_request" \]/,
+      'a workflow-editing skip',
+    );
     expect(
-      /\bexit 0\b/.test(before),
-      `The guard exits 0 BEFORE it fetches anything. Under pull_request_target the base workflow always runs and the action never refuses, so every run can post a verdict — an early exit is a run that reviewed nothing reporting success, which is the silent green this step exists to end.\n\n${before.slice(-400)}`,
+      skip,
+      'The skip must test the DIFF, not just the event. Without the diff conjunct the guard skips every pull_request run, which is a permanent silent green.',
+    ).toContain("grep -qx '.github/workflows/claude-review.yml'");
+    expect(skip).toContain('exit 0');
+  });
+
+  it('never skips a comment-triggered run, which can always post a verdict', () => {
+    // The issue_comment path runs the DEFAULT-branch copy, so the action does not
+    // refuse there even when the PR edits this workflow — which is precisely why
+    // a comment is the documented escape hatch for those PRs. Skipping it would
+    // remove the only path that still works on them.
+    const skip = block(
+      /if \[ "\$GITHUB_EVENT_NAME" = "pull_request" \]/,
+      'a workflow-editing skip',
+    );
+    expect(
+      /issue_comment/.test(skip),
+      'The skip predicate now mentions issue_comment. That path can always post a verdict; skipping it strands workflow-editing PRs with no way to be reviewed at all.',
     ).toBe(false);
-
-    const exits = script.match(/\bexit 0\b/g) ?? [];
-    expect(
-      exits.length,
-      'More than one `exit 0` in the guard. Exactly one is expected: the success path after a verdict matched.',
-    ).toBe(1);
   });
 });
 

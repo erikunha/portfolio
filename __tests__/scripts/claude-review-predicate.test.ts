@@ -96,32 +96,70 @@ function splitTopLevelOr(expr: string): string[] {
   return out.filter(Boolean);
 }
 
-describe('pull_request_target is fenced to trusted authors on a public repo', () => {
+describe('the auto path is fenced, and the workspace root holds base content', () => {
   const doc = workflow();
 
   it('the auto path admits only OWNER, MEMBER or COLLABORATOR', () => {
-    // Asserted on the pull_request_target DISJUNCT IN ISOLATION. Scanning the
-    // whole `if:` is satisfied by the issue_comment branch, which has always
-    // carried author_association and all three role literals — so deleting the
-    // fence from the auto branch left every assertion green while any fork PR on
-    // this PUBLIC repo could run a job holding the repo token.
+    // Kept after the trigger reverted to `pull_request`, where forks get no
+    // secrets and the fence is no longer load-bearing. It is retained because it
+    // costs nothing, and because `pull_request_target` was tried once and may be
+    // tried again if upstream starts accepting its OIDC token — at which point
+    // the fence becomes the only thing between a fork PR and the repo token.
     const jobIf = collapse(String(at(doc, ['jobs', 'review', 'if'])));
-    const branches = splitTopLevelOr(jobIf);
-    const auto = branches.find((b) => b.includes('pull_request_target'));
+    const auto = splitTopLevelOr(jobIf).find((b) => !b.includes('issue_comment'));
     expect(
       auto,
-      `No top-level disjunct of the review job's \`if:\` mentions pull_request_target. If the trigger moved, re-derive this fence for it; do not delete it.\n\nif: ${jobIf}`,
+      `No top-level disjunct of the review job's \`if:\` covers the non-comment path.\n\nif: ${jobIf}`,
     ).toBeTruthy();
     expect(
       auto,
-      `The pull_request_target branch does not fence on github.event.pull_request.author_association. pull_request_target hands the job the repo token for FORK PRs, unlike pull_request which gives them nothing, and this repo is public.\n\nbranch: ${auto}`,
+      `The auto branch does not fence on github.event.pull_request.author_association.\n\nbranch: ${auto}`,
     ).toContain('github.event.pull_request.author_association');
     expect(
       auto,
-      `The auto branch's allow-list is not exactly OWNER/MEMBER/COLLABORATOR. Widening it (CONTRIBUTOR, say) admits anyone who has ever landed a commit.\n\nbranch: ${auto}`,
+      `The auto branch's allow-list is not exactly OWNER/MEMBER/COLLABORATOR.\n\nbranch: ${auto}`,
     ).toContain(`fromJSON('["OWNER","MEMBER","COLLABORATOR"]')`);
   });
 
+  it('the workspace root holds BASE content, and the PR head is confined to a subdirectory', () => {
+    // The whole trust model, and it is trigger-sensitive in a way that bites.
+    // Under `pull_request_target` the DEFAULT ref is the base, so omitting `ref:`
+    // was correct. Under `pull_request` the default is `refs/pull/N/merge` — PR
+    // code — so the root MUST pin the base explicitly or the model silently
+    // inverts and every convention file read from the root becomes the PR's.
+    const steps = (
+      doc.jobs as { review?: { steps?: Array<{ uses?: string; with?: Record<string, unknown> }> } }
+    )?.review?.steps;
+    if (!Array.isArray(steps))
+      throw new Error('claude-review.yml: jobs.review.steps is not an array');
+
+    const checkouts = steps.filter((st) => String(st.uses ?? '').includes('actions/checkout'));
+    expect(
+      checkouts.length,
+      'expected two checkouts: base at root, PR head in a subdirectory',
+    ).toBe(2);
+    const [root, head] = checkouts;
+
+    const rootRef = String(root?.with?.ref ?? '');
+    expect(
+      /base/.test(rootRef),
+      `The root checkout does not resolve to the PR base (ref: ${rootRef || '(none)'}). Under \`pull_request\` the default ref is the MERGE ref, which is PR-authored content — the root must name the base explicitly.`,
+    ).toBe(true);
+    expect(
+      /head\.sha|\/head/.test(rootRef),
+      `The root checkout resolves to the PR HEAD (${rootRef}). That puts untrusted content at the workspace root, which the action documents as unsafe and which makes the reviewer prompt PR-authored.`,
+    ).toBe(false);
+    expect(root?.with?.path, 'the root checkout must stay at the workspace root').toBeUndefined();
+
+    expect(
+      head?.with?.path,
+      'The second checkout has no `path:`, so it lands at the root and overwrites the base.',
+    ).toBe('pr-head');
+    expect(
+      String(head?.with?.ref),
+      'The second checkout no longer takes the PR head, so the reviewer cannot see the changed files.',
+    ).toContain('/head');
+  });
   it('instruction-shaped files are stripped from the mounted PR copy before the action runs', () => {
     // `--add-dir pr-head` mounts PR-authored content as project scope, so a file
     // the CLI reads as instructions — CLAUDE.md, AGENTS.md, .claude/** — would
@@ -166,52 +204,5 @@ describe('pull_request_target is fenced to trusted authors on a public repo', ()
       /if \[ -e "pr-head\/\$p" \]/.test(run) && /exit 1/.test(run),
       'The strip does not verify its own result. A mistyped path would delete nothing and the step would still succeed.',
     ).toBe(true);
-  });
-
-  it('no untrusted ref is checked out at the workspace root', () => {
-    // The action's own docs/security.md: "Do not check out an untrusted ref into
-    // the workspace root before this action." The first version of this workflow
-    // did, and the action died at `App token exchange failed: 401 Unauthorized -
-    // Invalid OIDC token` on every run — it expects a git repo at the root and
-    // restores project configuration from the base ref.
-    //
-    // This is also the whole trust model. Root = base, so the reviewer prompt and
-    // the convention files read from there cannot have been authored by the PR.
-    // Drop the `path:` from the second checkout and BOTH properties fall at once.
-    const steps = (
-      doc.jobs as { review?: { steps?: Array<{ uses?: string; with?: Record<string, unknown> }> } }
-    )?.review?.steps;
-    if (!Array.isArray(steps))
-      throw new Error('claude-review.yml: jobs.review.steps is not an array');
-
-    const checkouts = steps.filter((st) => String(st.uses ?? '').includes('actions/checkout'));
-    expect(
-      checkouts.length,
-      'expected two checkouts: base at root, PR head in a subdirectory',
-    ).toBe(2);
-
-    const [root, head] = checkouts;
-    expect(
-      root?.with?.ref,
-      `The FIRST checkout pins a ref, so the workspace root is no longer the base branch. That is the pattern the action documents as unsafe, and it is what makes .github/claude-review-prompt.md trustworthy — a PR could otherwise author the prompt its own reviewer runs on.\n\nref: ${String(root?.with?.ref)}`,
-    ).toBeUndefined();
-
-    expect(
-      head?.with?.path,
-      'The second checkout has no `path:`, so it lands at the workspace root and overwrites the base — untrusted content at the root, which is exactly the documented failure.',
-    ).toBe('pr-head');
-    expect(
-      String(head?.with?.ref),
-      'The second checkout no longer takes the PR head, so the reviewer has no access to the changed files at all.',
-    ).toContain('/head');
-
-    // Every checkout that names a ref must be confined to a subdirectory.
-    for (const c of checkouts) {
-      if (c.with?.ref === undefined) continue;
-      expect(
-        c.with?.path,
-        `A checkout pins ref ${String(c.with.ref)} with no path, so it lands at the root. Any ref-pinned checkout must go to a subdirectory.`,
-      ).toBeTruthy();
-    }
   });
 });
