@@ -6,7 +6,7 @@
 
 | Dimension | Maturity | Evidence |
 |---|---|---|
-| Process discipline | **High** | spec -> architect gate -> plan -> review battery -> a per-commit/pre-push/pre-PR/pre-merge gate chain; reversibility-tracked ADRs |
+| Process discipline | **High** | spec -> architect review -> plan -> self-review -> a per-commit/pre-push/CI gate chain; reversibility-tracked ADRs |
 | AI-assisted development | **High** | mechanical enforcement (exit 2 hooks), transcript-verified review, a self-healing meta-gate |
 | Verification | **High** | the stamp proves resolution not just dispatch; eval-gated AI feature |
 | Knowledge management | **High** | specs/plans/ADRs/memory all explicit; doc-drift gated |
@@ -19,21 +19,19 @@
 - **The verification loop.** Most teams gate on "review happened"; here the stamp gates on "findings resolved," recorded in a ledger. That is ahead of the field.
 - **Self-healing.** `check-gate-health` detects dead gates: a hook naming a script that no longer exists, a `settings.json` matcher naming a hook that no longer exists, and a hook file on disk that nothing wires.
 - **Reversibility as a first-class artifact.** ~240 ADRs each ending in "how to undo." This is what makes a solo + AI workflow safe at speed.
-- **Scoped cost.** The heavy review battery is scoped by commit type, so docs/config/deps commits do not pay the full price. The system is heavy where it matters and light where it does not.
 
 ## Findings (ranked by platform risk)
 
 ### A1 - Transcript resolution is a shared single point of failure (Medium)
-Three fail-closed gates (review-stamp, api-security-push-guard, architect-gate) all depend on `scripts/lib/transcript.mjs` resolving the session JSONL. It has jammed before (the documented "transcript misresolve" incident). All three fail closed, which is the correct safety posture, but it means one brittle dependency can block every push and every plan.
+The three fail-closed transcript gates (review-stamp, api-security-push-guard, architect-gate) and the shared `scripts/lib/transcript.mjs` they depended on were removed on 2026-07-27, and with them this whole class of jam.
 - **Mitigation in place:** `transcript-doctor.ts` diagnoses a jam in seconds; an env override (`REVIEW_STAMP_TRANSCRIPT`) exists.
 - **Residual risk:** the resolution still relies on slug/mtime heuristics. Hardening it to deterministic session-id pinning would remove the class.
 
 ### A2 - The review loop's recording boundary is honor-system (Low, by design)
-The stamp proves a recorded finding was resolved, but cannot know about a finding the agent never recorded. `battery-synthesis` is supposed to record every Critical/Important, but that step is not mechanically verified.
+The stamp and the findings ledger were removed on 2026-07-27. Pre-PR review is now unverified by construction: nothing records what was found, so nothing can check it was resolved.
 - **Status:** acknowledged in `DECISIONS.md`; the boundary is intentionally small and visible. Not "fixable" without a structured agent-output contract.
 
 ### A3 - Gate-heavy DX has one real friction point (Low-Medium)
-The verification loop now *requires* a findings ledger before the stamp will write, so even a clean branch needs a `pnpm review:findings clear` step before the first push. This is correct (it dogfoods the loop) but is a non-obvious gotcha that will trip a new contributor's first push.
 - **Fix option:** a friendlier pre-push message that detects "no ledger" and prints the one-line remedy; or auto-seed an empty ledger when the battery finds nothing.
 
 ### A4 - Single-contributor blind spots (Low, structural)

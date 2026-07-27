@@ -44,7 +44,7 @@ These live at the repo root and remain authoritative. This knowledge base **rout
 - **Content is typed data, validated at build.** Every section is driven by a `content/*.ts` module whose Zod schema parses at import time; `pnpm validate-content` fails the build on any violation. Copy never lives in JSX.
 - **The API layer is a disciplined BFF.** A `defineHandler` envelope enforces a fixed `rate-limit → parse → validate → handle` order; `/api/ask` is a bespoke streaming handler with a multi-layer security/budget pipeline. State lives in Upstash Redis; everything **fails open** so a Redis outage never 500s a user.
 - **State is deliberately minimal.** Exactly one React Context (breakpoint), no global store, no URL state. Motion preference lives in the DOM (`body[data-motion]`), and islands coordinate via window `CustomEvent`s, not shared React state.
-- **The development platform is itself engineered.** Mechanical gates (hooks that `exit 2`, a transcript-verified review battery, a findings ledger) enforce the standards. This is documented in doc 06 and is a first-class part of the system.
+- **The development platform is itself engineered.** Mechanical gates enforce the standards: git hooks at commit and push time, and a CI chain covering lint, types, content schemas, bundle size, performance, accessibility and security. The bespoke agent-runtime layer (hooks that `exit 2`, a transcript-verified review battery, a findings ledger) was removed on 2026-07-27; doc 06 records what that traded away.
 
 ## Repository map (top level)
 

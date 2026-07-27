@@ -289,9 +289,7 @@ called); the SYSTEM prompt is held by `__tests__/system-prompt.test.ts` (asserts
 no phone-number pattern, asserts the 1024-token cache threshold still clears).
 The "no dead CSP directive" and "PII minimization" rules are also enforced by
 PR review and the `security-auditor` dispatch on any `app/api/` change. That
-dispatch is itself mechanically gated: `.claude/hooks/api-edit-marker.sh`
-(PostToolUse) records a marker when `app/api/**`, `lib/rate-limit.ts`, or
-`proxy.ts` is edited, and `.claude/hooks/api-security-push-guard.sh` (PreToolUse
+dispatch is a convention, not a gate: the PostToolUse marker and the pre-push guard that enforced it were removed 2026-07-27.
 Bash) blocks the next `git push` (`exit 2`) until the transcript shows a
 `security-auditor` dispatch following that marker. Boundary: the gate proves the
 auditor was *dispatched* after the edit, not that its findings were resolved.
@@ -360,7 +358,7 @@ runs the branch-name guard plus `pnpm verify`. `pnpm verify` is defined in
 check:client-naming + check:dep-pinning + test`). The "never disable a gate"
 rule is held by **culture** and by PR review — there is no meta-gate that can
 prevent a gate from being deleted, only the standard that says it must not be.
-The PR merge gate (`pnpm claude-gate`, GitHub `required_conversation_resolution`
+The PR merge gate (`pnpm pr:gate`, GitHub `required_conversation_resolution`
 branch protection) is the human-in-the-loop backstop.
 
 ---

@@ -74,8 +74,6 @@ jobs:
       - name: Doc-drift gate (ARCHITECTURE.md tree vs disk)
         run: pnpm check:doc-drift
 
-      - name: Gate-health meta-gate (hook/script references resolve)
-        run: pnpm check:gate-health
 
       - name: Detect-changes pathspec gate (no orphaned filters)
         run: pnpm check:detect-changes-paths
@@ -90,8 +88,6 @@ jobs:
       - name: Package age check (supply-chain, info-only)
         run: node scripts/check-pkg-age.mjs --warn-only
 
-      - name: Hook guard tests (bash-guard block/allow/bypass/DoS)
-        run: pnpm test:hooks
 
       - name: PR comment merge gate
         if: github.event_name == 'pull_request'

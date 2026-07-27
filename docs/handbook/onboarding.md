@@ -17,7 +17,7 @@ You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy p
 
 1. `pnpm install && pnpm dev`. Then `pnpm verify` once. Read what each gate checks ([engineering-standards](./engineering-standards.md)).
 2. Read [`/docs/09-hidden-knowledge`](../09-hidden-knowledge.md) (the conventions that will trip you).
-3. Understand the **first-push gotcha** before you hit it: the review stamp requires a findings ledger, so your first push flow is: run the 4-agent battery, `pnpm review:findings clear` (then record/resolve any findings), `pnpm review:stamp`, push. Without the `clear`, the pre-push hook blocks with "no findings ledger."
+3. Your first push runs `.husky/pre-push`: it blocks a direct push to `main`, requires a `<type>/<description>` branch name, and runs the full `pnpm verify` chain. There is no review stamp and no findings ledger since 2026-07-27.
 
 ## Day 3 - make a change through the full pipeline
 
@@ -26,10 +26,9 @@ Pick a small change (a content edit or a design-system variant per the [workflow
 ```mermaid
 flowchart LR
     edit["edit"] --> tdd["add/adjust a test"] --> commit["commit (scope!)"]
-    commit --> battery["run the 4-agent battery"] --> ledger["review:findings clear; resolve any"]
-    ledger --> stamp["review:stamp"] --> push["push (passes pre-push)"]
+    commit --> battery["self-review the diff"] --> push["push (passes pre-push)"]
     push --> pr["ci:local + gates:runtime; gh pr create (fill template)"]
-    pr --> conv["converge claude-review"] --> ready["claude-gate + pr:gate"] --> owner["owner merges"]
+    pr --> conv["resolve every thread"] --> ready["pr:gate"] --> owner["owner merges"]
     owner --> adr["add an ADR"]
 ```
 
@@ -50,7 +49,7 @@ You have now exercised every gate. After this you know the platform.
 | Why is this like this? | `DECISIONS.md` (search by date/topic) |
 | What is the rule here? | `STANDARDS.md` chapter + the enforcing gate |
 | How do I do X workflow? | [workflow-playbook.md](./workflow-playbook.md) |
-| What does this gate want? | run it; read its output; or `pnpm transcript:doctor` / `check:gate-health` |
+| What does this gate want? | run it and read its output |
 | What is the agent allowed to do? | `CLAUDE.md` + `.claude/rules/*` + [agents-skills-hooks-mcp](./agents-skills-hooks-mcp.md) |
 | What was just being worked on? | `.remember/now.md` |
 
@@ -58,14 +57,10 @@ You have now exercised every gate. After this you know the platform.
 
 | Symptom | Remedy |
 |---|---|
-| Push blocked: "no review stamp" | run the battery, clear/resolve the ledger, `review:stamp` |
-| Push blocked: "no findings ledger" | `pnpm review:findings clear` (then record/resolve) |
 | Push blocked: "unaudited API edit" | dispatch `security-auditor` (you touched the API surface) |
 | `writing-plans` blocked | dispatch `architect-reviewer` first (needs `GATE_RESULT: PASS`) |
-| A hook seems to do nothing | `pnpm check:gate-health` |
-| The stamp/architect/api gate jams | `pnpm transcript:doctor` |
 | commit rejected | check the scope is present and the type is conventional |
 
 ## When you can independently contribute
 
-You are ready when you can, without help: take a requirement through a spec and the architect gate, implement it test-first, get a clean review battery, pass the gate chain, open and converge a PR, and record the ADR. The [workflow-playbook](./workflow-playbook.md) is your reference until that is muscle memory.
+You are ready when you can, without help: take a requirement through a spec and the architect gate, implement it test-first, get a clean self-review, pass the gate chain, open and converge a PR, and record the ADR. The [workflow-playbook](./workflow-playbook.md) is your reference until that is muscle memory.

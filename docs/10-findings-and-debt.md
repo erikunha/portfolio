@@ -7,7 +7,7 @@
 - **Default-RSC + content-as-typed-data.** The single highest-leverage decision: sections ship no JS, and copy can't drift from its schema. This is why the perf budgets are even attainable.
 - **The `defineHandler` ordering contract.** Rate-limit→parse→validate→handle as a *security property*, uniformly applied, with a fail-open posture and `X-Request-Id` on every response. Textbook BFF discipline.
 - **Eval-gated AI.** `/api/ask` is held to a calibrated LLM-judge bar with the corpus grounded in live content. Most teams don't eval their AI features at all.
-- **Mechanical enforcement over convention.** Hooks that `exit 2`, the transcript-verified review battery, the findings ledger, and `gate-health` (a meta-gate that detects dead gates). The platform measures real properties.
+- **Mechanical enforcement over convention** was the thesis until 2026-07-27, when the agent-runtime hooks, the review battery, the findings ledger and the `gate-health` meta-gate were all removed. What remains mechanical is git hooks and CI; what those gates held is now convention, and `CLAUDE.md` says so rather than claiming enforcement.
 - **Failure-mode literacy.** Almost every integration has a documented, intentional failure mode (fail-open Redis, budget fail-closed, kill-switch fails-off). This is rare and worth preserving.
 
 ## Findings (ranked by maintainer risk)
@@ -28,7 +28,7 @@ Streaming forced a bespoke handler, so the ask route hand-rolls the same gate ch
 - **Fix option:** extract the shared gate sequence into a helper both `defineHandler` and the ask route call, so the ordering lives in one place.
 
 ### F4 - Dead-hook class of rot (Mitigated, keep watching)
-`css-token-guard.sh` (removed 2026-07-27) once pointed at two scripts deleted in the Tailwind-v4 migration and silently no-opped for weeks. This is now caught by `check:gate-health`, but the underlying lesson generalizes: any gate that references a path can rot.
+`css-token-guard.sh` once pointed at two scripts deleted in the Tailwind-v4 migration and silently no-opped for weeks. It and the `gate-health` meta-gate that caught it were both removed on 2026-07-27; the CSS property it aimed at is held by `pnpm lint:css-tokens` in `verify` and CI.
 - **Status:** mitigated by the meta-gate. Keep `gate-health` in `verify` and CI; don't let it be skipped.
 
 ### F5 - PSI cron is single-shot on Vercel Hobby (Low, accepted)

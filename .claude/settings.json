@@ -10,61 +10,9 @@
       "Skill(vercel:nextjs)",
       "Skill(vercel:vercel-functions)",
       "Skill(web-design-guidelines)",
-      "Skill(thinking-*)",
-      "Edit(.claude/hooks/**)"
+      "Skill(thinking-*)"
     ],
     "deny": ["Bash(fallow fix:*)", "Bash(npx fallow fix:*)", "Bash(npx fallow@2.95.0 fix:*)"],
     "defaultMode": "acceptEdits"
-  },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/bash-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/api-security-push-guard.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Skill",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/architect-gate.sh"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/api-edit-marker.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/biome-format.sh"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/session-context.sh"
-          }
-        ]
-      }
-    ]
   }
 }

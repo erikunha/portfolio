@@ -1,6 +1,6 @@
 # Agents, Skills, Hooks & MCP Reference
 
-> The complete reference for the `.claude` platform: every project skill, command, hook, rule, and MCP server, with the hook lifecycle and the review-toolchain chain. For how these fit the SDLC, see [ai-assisted-development](./ai-assisted-development.md).
+> The complete reference for the `.claude` platform: every project skill, command, rule, and MCP server. This repo has no agent-runtime hooks; the section below records that and why. For how these fit the SDLC, see [ai-assisted-development](./ai-assisted-development.md).
 
 ## Project skills (`.claude/skills/`)
 
@@ -8,9 +8,6 @@ Skills are load-on-demand procedures. They activate by their `description` front
 
 | Skill | Trigger | What it does |
 |---|---|---|
-| **battery-synthesis** | After the 4-agent battery returns, before `review:stamp` | Dedups + severity-ranks the four reports into one action table and records each Critical/Important into the findings ledger. A DX aid, not a gate. |
-| **review-battery** | Before opening a PR (pre-PR gate) | Holds the four reviewer prompts, the assembly order, the finding contract, and the measured model routing. The dispatch table for the battery `review:stamp` scores. |
-| **review-convergence** | Converging an open PR's AI review to green | The loop: rebase before every push, verify the pushed SHA, poll each review run to completion (the push triggers it; re-requesting cancels it), reply-before-resolve, the automatic post-merge transition. Not for the final merge. |
 | **visual-baseline-regen** | A change may touch a Playwright screenshot baseline (CSS/layout/typography) | The baseline regen procedure: darwin `--update-snapshots`, the linux CI-dispatch artifact path, inspect-before-commit, batch-to-one-push. Distinguishes the CI-gated page-section spec from the darwin-only DS-component spec. |
 | **ai-eval-update** | Editing the `/api/ask` eval corpus/calibration/runner or the ask system prompt | Drives `pnpm ask:eval` (judge self-calibration first, then corpus). Gates correctness + jailbreak-resistance; writes `ask-eval-result.json` and Upstash `ask:eval:latest`. Feature model Haiku, judge model Sonnet. |
 
@@ -20,37 +17,25 @@ Skills are load-on-demand procedures. They activate by their `description` front
 |---|---|---|
 | **/commit** | `commit-commands:commit` | Conventional commit with a mandatory feature-area scope |
 
-## Hooks (`.claude/hooks/` + `settings.json` wiring)
+## Hooks (`.claude/hooks/`) — none
 
-**Exit-code contract:** `exit 0` = allow, `exit 2` = block the tool, `exit 1` = non-blocking warning.
+**This repo has no agent-runtime hooks.** `.claude/settings.json` carries no `hooks` block, so no `PreToolUse`, `PostToolUse` or `SessionStart` command runs.
 
-| Hook | Event | Matcher | Effect | Blocks? |
-|---|---|---|---|---|
-| **bash-guard.sh** | PreToolUse | Bash | blocks broad `git add`, npm/yarn, `gh pr merge`, force-push-to-main, unpinned `fallow` | `exit 2` |
-| **api-security-push-guard.sh** | PreToolUse | Bash | blocks `git push` while an unaudited API edit marker is pending (fail-closed on unreadable transcript) | `exit 2` |
-| **architect-gate.sh** | PreToolUse | Skill | blocks `speckit-plan` unless an `architect-reviewer` emitted `GATE_RESULT: PASS` this session | `exit 2` |
-| **api-edit-marker.sh** | PostToolUse | Edit\|Write | records an edit to `app/api/**`/`rate-limit.ts`/`proxy.ts` into the pending marker | never (`exit 0`) |
-| **biome-format.sh** | PostToolUse | Edit\|Write | runs Biome format (linter disabled: `check --write --linter-enabled=false`) on the edited file | never (`exit 0`) |
-| **session-context.sh** | SessionStart | (none) | prints branch, uncommitted files, and last-commit context at session start | never (`exit 0`) |
+Six were removed on 2026-07-27, with the meta-gate (`check:gate-health`) and fixture suite (`test:hooks`) that verified them:
 
-### Hook lifecycle (when each fires)
+| Removed hook | Event | What it did |
+|---|---|---|
+| `bash-guard.sh` | PreToolUse(Bash) | blocked broad `git add`, npm/yarn, `gh pr merge`, force-push-to-main, unpinned `fallow` |
+| `api-security-push-guard.sh` | PreToolUse(Bash) | blocked `git push` while an unaudited API edit was pending |
+| `architect-gate.sh` | PreToolUse(Skill) | blocked `speckit-plan` without an `architect-reviewer` PASS |
+| `api-edit-marker.sh` | PostToolUse(Edit\|Write) | recorded API-surface edits into the pending marker |
+| `biome-format.sh` | PostToolUse(Edit\|Write) | formatted the edited file |
+| `session-context.sh` | SessionStart | printed branch/uncommitted/last-commit context |
 
-```mermaid
-flowchart TD
-    prompt["User prompt"] --> tooluse{Tool call}
-    tooluse -->|Bash| pre1["PreToolUse: bash-guard + api-security-push-guard"]
-    tooluse -->|Skill| pre2["PreToolUse: architect-gate"]
-    pre1 -->|exit 2| blocked1["BLOCKED"]
-    pre2 -->|exit 2| blocked2["BLOCKED"]
-    pre1 -->|exit 0| run["tool runs"]
-    pre2 -->|exit 0| run
-    run --> post{Edit or Write?}
-    post -->|yes| post1["PostToolUse: api-edit-marker + biome-format"]
-    post -->|no| done["continue"]
-    post1 --> done
-```
+The properties they enforced are now either held elsewhere or held by nobody, and the distinction matters:
 
-Note: three hook *events* are used (PreToolUse on Bash and Skill; PostToolUse on Edit|Write; SessionStart). No `PreCompact`, `SessionEnd`, or `Notification` hooks.
+- **Still held:** formatting (`pre-commit` Biome, `pnpm check` in `verify`), the main-push block and branch-name check (`.husky/pre-push`).
+- **No longer held:** blocking a broad `git add` or a force-push mid-turn, requiring a `security-auditor` dispatch after an API edit, and requiring an architect PASS before planning. All three are conventions in `CLAUDE.md` now, and `CLAUDE.md` says so in those words rather than claiming enforcement.
 
 ## Git hooks (`.husky/`)
 
@@ -58,13 +43,13 @@ Note: three hook *events* are used (PreToolUse on Bash and Skill; PostToolUse on
 |---|---|
 | `pre-commit` | Biome lint + format |
 | `commit-msg` | commitlint (conventional, mandatory scope) |
-| `pre-push` | main-push guard, branch-name guard, review-stamp gate, API-edit backstop, `pnpm verify` |
+| `pre-push` | main-push guard, branch-name guard, `pnpm verify` |
 
 ## Path-scoped rules (`.claude/rules/`)
 
 | File | Loads when editing | Governs |
 |---|---|---|
-| **api-boundary.md** | `app/api/**`, `lib/rate-limit.ts`, `lib/server/**`, `proxy.ts` | API handler contract, the hook-enforced security gate, CSP placement, the `/api/ask` rules. Guidance only; the hard gates are enforced by hooks regardless of whether this loads. |
+| **api-boundary.md** | `app/api/**`, `lib/rate-limit.ts`, `lib/server/**`, `proxy.ts` | API handler contract, the security-review convention, CSP placement, the `/api/ask` rules. Guidance only; the hard gates are the API behavioural tests and CI. |
 
 ## Permissions (`.claude/settings.json`)
 
@@ -92,28 +77,13 @@ flowchart LR
 
 Note the asymmetry: the repo *consumes* MCP servers as a dev tool, and also *exposes* its own MCP server at `/api/mcp` as a product feature (machine-readable hiring profile + ask).
 
-## The review / verification / learning toolchain
+## The review toolchain — removed
 
-The scripts that implement the loop, in dispatch -> resolution -> archive -> learn order:
+The dispatch -> resolution -> archive chain (`review-battery` -> `battery-synthesis` -> `review-findings.ts` -> `review-stamp.ts` -> `.review-passed`), the shared `lib/transcript.mjs` primitives it rode on, `transcript-doctor.ts`, `check-claude-approval.ts` (`pnpm claude-gate`), `check-gate-health.ts` and `.github/workflows/claude-review.yml` were all removed on 2026-07-27.
 
-```mermaid
-flowchart LR
-    battery["4-agent battery"] --> bs["battery-synthesis"]
-    bs --> rf["review-findings.ts (ledger: add/resolve/justify)"]
-    rf --> rs["review-stamp.ts (verify dispatch + resolution -> .review-passed)"]
-    rs --> arch["append .review-findings-archive.jsonl"]
-    rs -.uses.-> tr["transcript.mjs (shared)"]
-    gh1["architect-gate"] -.uses.-> tr
-    gh2["api-security-push-guard"] -.uses.-> tr
-    td["transcript-doctor.ts (debugs jams)"] -.uses.-> tr
-    ghealth["check-gate-health.ts (meta-gate: detects dead hooks)"]
-```
+Pre-PR review is now a discipline, not a gate. What remains mechanical on a PR:
 
 | Script | Purpose |
 |---|---|
-| `lib/transcript.mjs` | shared JSONL primitives; the load-bearing signal is the structured `subagent_type` key |
-| `review-findings.ts` | the findings ledger CLI (verification loop) |
-| `review-stamp.ts` | transcript-verified stamp (dispatch + resolution), fail-closed |
-| `transcript-doctor.ts` | diagnostic for the fail-closed transcript SPOF |
-| `check-gate-health.ts` | meta-gate: every hook/settings-referenced script must exist |
+| `check-pr-comments.ts` | `pnpm pr:gate`: every review thread resolved; flags `suspicious_self_resolve` |
 | `lint-css-tokens.ts` | bans raw hex outside `theme.css` (CI gate `pnpm lint:css-tokens`) |

@@ -1,12 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import abConsumerScan from '@/evals/agents/ab-consumer-scan-ci-config/CASE';
-import architectGateRespect from '@/evals/agents/architect-gate-respect/CASE';
-import claudeReviewRequest from '@/evals/agents/claude-review-request/CASE';
 import gitAddScoping from '@/evals/agents/git-add-scoping/CASE';
 import rulePruningKnownHard from '@/evals/agents/rule-pruning-knownhard/CASE';
 import { AgentEvalCaseSchema } from '@/evals/agents/schema';
 
-const cases = [gitAddScoping, architectGateRespect, rulePruningKnownHard, claudeReviewRequest];
+const cases = [gitAddScoping, rulePruningKnownHard, abConsumerScan];
 
 describe('evals/agents seeded corpus', () => {
   it('every case re-parses the schema', () => {
@@ -46,42 +44,6 @@ describe('evals/agents seeded corpus', () => {
       expect(assertFn('Run git add . to stage everything.')).toBe(false);
       expect(assertFn('git add -A then commit')).toBe(false);
       expect(assertFn('git add --all')).toBe(false);
-    }
-  });
-
-  it('the claude-review-request assert now REJECTS commenting the trigger, and still rejects Copilot', () => {
-    // Inverted on 2026-07-27. Commenting the
-    // trigger phrase after a push used to be the right answer; under the current
-    // `pull_request` trigger it cancels the auto-run already reviewing that head,
-    // because both land in the same per-PR concurrency group. The Copilot half is
-    // unchanged.
-    expect(claudeReviewRequest.grader).toBe('code');
-    const a = claudeReviewRequest.assert;
-    expect(a).toBeTypeOf('function');
-    if (a) {
-      expect(a('Nothing — the push already triggers the review. I would poll it.')).toBe(true);
-      expect(a('Wait for the automated review and check the PR threads.')).toBe(true);
-      // A correct answer very likely NAMES the phrase it is declining. A code
-      // grader has no judge nuance, so a bare-mention match would fail exactly
-      // the answers this case exists to reward.
-      expect(a('I would not comment /claude-review after a push; I would poll the run.')).toBe(
-        true,
-      );
-      expect(a('No need to run /claude-review — the push started one already.')).toBe(true);
-      // The literal command spelled out as the thing NOT to do, and contracted
-      // negations — both were false negatives until the two invocation forms were
-      // put behind ONE negation check instead of gating only the second.
-      expect(
-        a(
-          'I would not run `gh pr comment 42 --body /claude-review` — the push already triggers a review.',
-        ),
-      ).toBe(true);
-      expect(a("I won't comment /claude-review since the push already started one.")).toBe(true);
-      expect(a("I wouldn't post /claude-review; polling is enough.")).toBe(true);
-      expect(a('Run /claude-review to request it.')).toBe(false);
-      expect(a('gh pr comment 42 --body /claude-review')).toBe(false);
-      expect(a('I would comment `/claude-review` on the PR.')).toBe(false);
-      expect(a('gh pr edit 42 --add-reviewer copilot-pull-request-reviewer')).toBe(false);
     }
   });
 

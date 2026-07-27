@@ -22,7 +22,7 @@ These complete the knowledge base. Several are enumerated in [`/docs/11` appendi
 | **P0** | Per-section feature guide | One page per section (content shape, variants, host islands, `sec-*` id). The single biggest onboarding gap; the sections are the most-edited surface |
 | **P0** | Troubleshooting runbook | Expand the symptom tables into per-incident runbooks (the 503 cascade, the stamp/push blocks, the cron) |
 | **P1** | ADR-to-code cross-link index | Map code areas to the relevant `DECISIONS.md` entry, so "why is this like this" is one hop from the file |
-| **P1** | CONTRIBUTING.md | The commit/scope/PR/review-battery workflow as a standalone front door (currently spread across `CLAUDE.md` and this handbook) |
+| **P1** | CONTRIBUTING.md | The commit/scope/PR/review workflow as a standalone front door (currently spread across `CLAUDE.md` and this handbook) |
 | **P2** | Prompt library | The reusable prompt shapes (spec, architect review, scoped-battery) as named, copy-pasteable templates |
 | **P2** | Incident response guide | What to do when production is degraded (the healthz 503 chain, the rollback playbook) as a standalone on-call doc |
 | **P3** | Frontend playbook | The island/RSC decision tree, the INP rules, the CSS-token rules as a how-to |

@@ -10,7 +10,7 @@ sequenceDiagram
     participant C as Claude Code (main loop)
     participant A as Subagents (battery, architect)
     participant G as Mechanical gates (hooks/scripts)
-    participant CI as CI + claude-review
+    participant CI as CI
 
     H->>C: intent ("build X" / "fix Y")
     C->>C: /speckit.specify (intent + approach)
@@ -19,14 +19,12 @@ sequenceDiagram
     C->>C: writing-plans + thinking-risk-premortem (failure modes -> tasks)
     C->>C: TDD implement (tests first)
     C->>G: edits trigger PostToolUse hooks (markers, lints)
-    C->>A: 4-agent review battery (parallel)
+    C->>C: self-review the diff (pr-review-toolkit:code-reviewer)
     A-->>C: findings
-    C->>C: battery-synthesis -> record in ledger -> resolve/justify
-    C->>G: review:stamp (refuses unless dispatched + resolved)
     C->>G: git push (pre-push gate chain blocks if not stamped)
-    C->>CI: open PR, claude-review reviews
+    C->>CI: open PR; CI runs lint/type/test/build/perf/a11y/security
     CI-->>C: review threads
-    C->>C: review-convergence loop -> green
+    C->>C: drive threads to resolved -> green
     H->>CI: owner squash-merges (AI is blocked from merge)
 ```
 
@@ -65,43 +63,31 @@ Every substantive change runs the same disciplined loop, enforced by mandated sk
 
 | Step | Mechanism | Enforced by |
 |---|---|---|
-| Explore + plan | brainstorming, writing-plans | architect-gate hook (blocks plans without PASS) |
+| Explore + plan | brainstorming, writing-plans | architect-reviewer PASS (convention since 2026-07-27) |
 | Anticipate failure | thinking-risk-premortem, pre-mortem | convention + plan tasks |
 | Implement | test-driven-development | convention |
 | Self-verify | verification-before-completion | convention + `pnpm verify` |
-| Review | 4-agent battery | `review:stamp` (transcript-verified) |
+| Review | pre-PR self-review | none (no gate since 2026-07-27) |
 | Resolve | findings ledger | stamp refuses while findings open |
 | Record | DECISIONS.md ADR | PR template checklist |
 
-## 3. The review battery (how AI reviews AI)
+## 3. Review — no battery, no AI reviewer
 
-Before opening a PR, four specialized agents review the diff in parallel, each a fresh-context reviewer that sees the change but not the reasoning that produced it:
+Both were removed on 2026-07-27: the 4-agent battery, `battery-synthesis`, the findings ledger (`review:findings`), the transcript-verified stamp (`review:stamp`), `.github/workflows/claude-review.yml` and `pnpm claude-gate`.
 
-```mermaid
-flowchart LR
-    diff["diff"] --> b1["pr-review-toolkit:code-reviewer (correctness)"]
-    diff --> b2["documentation-engineer (claim-drift)"]
-    diff --> b3["security-auditor (gate-robustness)"]
-    diff --> b4["pr-review-toolkit:pr-test-analyzer (test-strength)"]
-    b1 & b2 & b3 & b4 --> synth["battery-synthesis: dedup + rank"]
-    synth --> ledger[".review-findings.json"]
-    ledger --> stamp["review:stamp"]
-```
+Pre-PR review is now discipline: read the diff, run `pr-review-toolkit:code-reviewer` over it, fix what it finds. `pnpm pr:gate` still checks thread resolution on the PR.
 
-WCAG 2.1 AA is gated separately and mechanically by axe-core + Lighthouse accessibility = 100, not by a battery agent.
+## 4. Enforcement — git and CI only
 
-The stamp is **transcript-verified**: `scripts/review-stamp.ts` reads the session JSONL and refuses to write `.review-passed` unless all four `subagent_type` roles were dispatched strictly after the HEAD commit timestamp, and the findings ledger has no open Critical/Important finding. This converts "I reviewed it" from an honor-system claim into a mechanical fact. The residual honor-system boundary is small and visible: *recording* a finding (the stamp cannot know about a finding nobody recorded).
+**There are no `.claude/hooks/`.** Six PreToolUse/PostToolUse/SessionStart guards were removed on 2026-07-27, along with `check:gate-health` (the meta-gate that verified their wiring) and `scripts/lib/transcript.mjs` (the shared JSONL resolution all the fail-closed gates rode on).
 
-## 4. How AI is kept honest (the enforcement contract)
+What enforces anything now runs at commit, push or CI time:
 
-The load-bearing principle: **`CLAUDE.md` is advisory; anything that must hold is a hook.** Hooks use exit codes as a contract (`exit 2` blocks the tool, `exit 1` warns, `exit 0` allows):
+- `.husky/pre-commit`: Biome, `gitleaks --staged`, commitlint.
+- `.husky/pre-push`: main-push guard, branch-name guard, `pnpm verify`.
+- CI: the `verify` chain plus build, bundle-size, route-JS, Lighthouse, axe-core, Playwright, semgrep, gitleaks, CodeQL.
 
-- `bash-guard.sh` blocks dangerous Bash (broad `git add`, npm/yarn, `gh pr merge`, force-push-to-main).
-- `architect-gate.sh` blocks `writing-plans` without an architect PASS.
-- `api-security-push-guard.sh` blocks a push that carries an unaudited API edit.
-- `review-stamp` + `.husky/pre-push` block a push without a verified review.
-
-Three of these gates **fail closed** on transcript resolution (review-stamp, api-security-push-guard, architect-gate), all sharing `scripts/lib/transcript.mjs`; `transcript-doctor.ts` is their shared debugger.
+The honest consequence: nothing constrains an agent *mid-turn* any more. A broad `git add`, a force-push, an npm invocation, or an unaudited API edit are all conventions in `CLAUDE.md` rather than blocked actions.
 
 ## 5. The learning loop (AI improves the platform)
 
@@ -109,7 +95,7 @@ The session-end learning loop was removed on 2026-07-27: the hook, `scripts/revi
 
 ## 6. The CI-side AI reviewer
 
-`.github/workflows/claude.yml` adds a second AI reviewer in CI: `claude-code-action` (SHA-pinned) runs only when a human writes `@claude` on a PR/issue, authenticated by a Max-subscription token. It supplements the local battery and the automated `/claude-review` (claude[bot]) PR reviewer, never replaces them. (`/claude-review` is the sole automated AI PR reviewer and its Approve verdict is the merge reviewer-gate; GitHub Copilot review was dropped as of 2026-06-20.)
+`.github/workflows/claude.yml` remains an opt-in pilot: `claude-code-action` (SHA-pinned) runs only when a human writes `@claude` on a PR or issue. It is the only AI reviewer wired to this repo, and it is human-triggered.
 
 ## Prompt architecture (the shapes of AI work)
 

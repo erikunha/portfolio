@@ -8,7 +8,7 @@
 flowchart TD
     write["code written"] --> c1["pre-commit: Biome"]
     c1 --> c2["commit-msg: commitlint (scope mandatory)"]
-    c2 --> battery["4-agent review battery + findings ledger + review:stamp"]
+    c2 --> battery["self-review the diff (pr-review-toolkit:code-reviewer)"]
     battery --> p1["pre-push: no direct main"]
     p1 --> p2["pre-push: branch name <type>/<desc>"]
     p2 --> p3["pre-push: review stamp == HEAD"]
@@ -21,60 +21,26 @@ flowchart TD
     r5 --> o1["open PR: fill every template section"]
     o1 --> o2["Review convergence loop"]
     o2 --> m1["pre-merge: ci:local"]
-    m1 --> m3["pre-merge: claude-gate (Approve)"]
-    m3 --> m4["pre-merge: pr:gate (resolved threads)"]
+    m1 --> m3["pre-merge: pr:gate (threads)"]
+    m3 --> m4["owner squash-merge"]
     m4 --> merge["owner: squash-merge (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["smoke.yml: healthz + headers + liveness"]
 ```
 
-## Code review: the 4-agent battery
+## Code review
 
-Review is **mechanical and multi-perspective**. Four fresh-context agents review every diff in parallel:
+**There is no AI reviewer and no local review battery.** The 4-agent battery, its findings ledger, `review:stamp`, `.github/workflows/claude-review.yml` and `pnpm claude-gate` were all removed on 2026-07-27.
 
-| Agent | Lens |
-|---|---|
-| `pr-review-toolkit:code-reviewer` | correctness — wrong result, crash, silent no-op (27% of findings) |
-| `documentation-engineer` | claim-drift — prose the diff just made false (35%) |
-| `security-auditor` | gate-robustness — a gate, hook, or script that fails open; plus the security surface, required on any API edit (22%) |
-| `pr-review-toolkit:pr-test-analyzer` | test-strength — a test asserting less than the invariant it names (12%) |
+Pre-PR review is a discipline: read `git diff origin/main...HEAD` end to end, invoke `pr-review-toolkit:code-reviewer` against it, and fix every Critical/Important finding before `gh pr create`. Nothing gates this, so nothing will tell you it was skipped.
 
-All four run on Opus. Tier, not role, is the dominant lever on what a reviewer finds: in a controlled mutation eval (2026-07-25) Opus reviewers found 13/13 and 11/13 planted defects where Sonnet found 7/13 and 6/13 on the same prompts. Perf, dependency, and a11y reviewers are conditional rather than standing, because LHCI, `check-bundle-size.mjs`, `check-route-js.mjs`, `check-dep-pinning.mjs`, and axe-core already gate those properties.
+On the open PR, the habits that were learned from real failures still apply and are still worth keeping: rebase before *every* push; verify the pushed SHA actually landed on the remote before citing it; reply in a thread citing the fix SHA *before* resolving it; never resolve silently (a thread with one comment is a process gap); and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
 
-WCAG 2.1 AA is gated separately and mechanically by axe-core (`tests/a11y/axe.spec.ts`) + Lighthouse accessibility = 100, not by a battery agent.
+## Pre-merge gates (`pnpm pr:gate` + `pnpm ci:local`)
 
-`battery-synthesis` dedups the four reports into one ranked table and records each Critical/Important into the findings ledger (`.review-findings.json`). `review:stamp` then **refuses** to write `.review-passed` unless (a) the transcript shows all four roles dispatched after the HEAD commit time, and (b) no Critical/Important finding is still `open`. The stamp proves dispatch and resolution; it is transcript-verified, not honor-system.
+In order: `ci:local` -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL, all threads `isResolved`, flags `suspicious_self_resolve`). Branch protection is enforced by GitHub itself.
 
-**Pre-PR gate:** the battery runs once before the PR is opened, never before every push — post-PR review is owned by claude-review. The battery prompts are scoped to the commit type, so a docs-only commit's agents skip the test suite (the stamp counts dispatch, not depth).
-
-## Review convergence loop
-
-The AI reviewer (claude[bot] via /claude-review) reviews the open PR. The `review-convergence` skill drives it to green:
-
-```mermaid
-sequenceDiagram
-    participant D as Developer/Agent
-    participant GH as GitHub (PR)
-    participant CP as AI reviewer
-    D->>GH: rebase on main, push
-    D->>GH: verify head.sha == local HEAD
-    D->>CP: re-request review
-    CP-->>GH: review threads
-    loop each thread
-        D->>D: fix (real) or note (stale)
-        D->>GH: push fix
-        D->>GH: reply citing the fix SHA, THEN resolve
-    end
-    D->>D: claude-gate passes, threads resolved -> tell owner
-```
-
-Hard rules (each learned from a real failure): rebase before *every* push; the reply must cite a SHA that is actually on the remote (so reply-after-push-verify); never resolve a thread silently (a thread with one comment is a process failure). Separately, the **PR-comment CI gate** can fail on a timing race (the gate ran before the latest review threads landed); when it does, re-run that workflow rather than pushing a no-op commit. This is a property of the CI gate, not a step the `review-convergence` skill drives.
-
-## Pre-merge gates (`pnpm claude-gate` + `pnpm ci:local`)
-
-In order: `ci:local` -> `check-claude-approval` (`pnpm claude-gate`: the latest `/claude-review` verdict must be Approve, on the current head) -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL, all threads `isResolved`, flags `suspicious_self_resolve`). Branch protection is enforced by GitHub itself rather than re-checked locally.
-
-**AI agents are blocked from `gh pr merge`** by `bash-guard.sh` (exit 2). The repo owner runs the final squash-merge once all gates pass. The branch-protection invariant means all changes go through a PR; direct pushes to `main` are blocked at the pre-push hook.
+**AI agents must not run `gh pr merge`.** This is a convention now: the `bash-guard.sh` hook that blocked it with `exit 2` was removed on 2026-07-27. The repo owner runs the final squash-merge once all gates pass. The branch-protection invariant means all changes go through a PR; direct pushes to `main` are blocked at the pre-push hook.
 
 ## PR sizing (avoid the bloated-PR failure mode)
 

@@ -15,12 +15,12 @@ flowchart TD
     branch --> tdd["TDD implementation (tests first)"]
     tdd --> commit["commit (scope blocks): type(scope): subject"]
     commit --> hooks["per-commit hooks: Biome + commitlint"]
-    hooks --> battery["4-agent review battery + findings ledger + review:stamp"]
+    hooks --> battery["self-review the diff"]
     battery --> push["git push (pre-push gate chain)"]
     push --> readypr["pnpm ci:local + gates:runtime"]
     readypr --> pr["gh pr create (fill template)"]
     pr --> conv["Review convergence loop (rebase, push, resolve threads)"]
-    conv --> readymerge["pnpm claude-gate + pnpm pr:gate"]
+    conv --> readymerge["pnpm pr:gate"]
     readymerge --> merge["owner squash-merges (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["post-deploy smoke test"]
@@ -37,7 +37,7 @@ Work starts with `/speckit.specify` (mandated before any feature). The output is
 A design spec lands in `specs/NNN-feature/` as `YYYY-MM-DD-<topic>-design.md`. Structure: `# Title` -> `**Date** / **Status: Approved**` -> `## Context` -> `## Gaps to Close` (numbered) -> `## Changes` (per file). The spec is the contract; it enumerates the gaps it closes. Specs are local-only workflow artifacts (gitignored), not tracked in the repo.
 
 ### 3. The architect gate
-Before a plan can be written, `speckit-plan` is **mechanically blocked** by `.claude/hooks/architect-gate.sh` until an `architect-reviewer` agent has emitted `GATE_RESULT: PASS` in the session. This forces a spec to survive architectural scrutiny before any implementation planning. `thinking-risk-premortem` runs here too, turning "what could go wrong" into explicit plan tasks.
+Before a plan is written, an `architect-reviewer` agent runs the four-gate spec protocol and must return `GATE_RESULT: PASS`. This is a convention: the `architect-gate.sh` hook that blocked `speckit-plan` on it was removed on 2026-07-27.
 
 ### 4. Plan (the decomposed "how")
 An implementation plan lands in `specs/NNN-feature/` (local-only, gitignored) paired 1:1 with its spec (same date-topic name). Plans are large and step-by-step (often 10KB to 90KB). Large programs are sharded: into sub-PR plans (`pr-a-...`, `pr-b-...`) and subdirectories, and into workstreams (`ws0`–`ws7`). This is the "integration branch + sub-PRs" pattern for anything too big for one reviewable PR.
@@ -49,17 +49,17 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 - **`pre-commit`**: Biome lint + format (sub-second).
 - **`commit-msg`**: commitlint. Conventional Commits with a **mandatory scope** (`scope-empty: [2, 'never']`) drawn from an **open set** (`scope-enum: [0]`). Scopes are feature-area names (`ci`, `dx`, `observability`, `healthz`, `ppr`, `arch`, ...), not technical categories.
 
-### 7. Pre-PR review battery, and the pre-push gate chain
-Before opening the PR, the 4-agent review battery runs once, findings are recorded and resolved, and `review:stamp` is written; post-PR fix pushes are reviewed by claude-review, not the battery. On every push, the `.husky/pre-push` hook blocks unless: it does not target `main`, the branch name is valid, no unaudited API edit is pending, and `pnpm verify` passes — and, only when the branch has no open PR yet (the pre-PR push), the review stamp matches HEAD. See [review-merge-release](./review-merge-release.md) for the full chain.
+### 7. Pre-PR self-review, and the pre-push gate chain
+Before opening the PR, read the diff and run `pr-review-toolkit:code-reviewer` over it; there is no battery and no stamp since 2026-07-27. On every push, `.husky/pre-push` blocks unless it does not target `main`, the branch name is valid, and `pnpm verify` passes.
 
 ### 8. Pre-PR -> open PR
 Run `pnpm ci:local`, then `pnpm bundle-check` and `pnpm route-js-check`, then `pnpm gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
 
 ### 9. Review convergence loop
-On the open PR, the `review-convergence` skill drives review to green: rebase before every push, verify the pushed SHA landed, poll each review run to completion — the push already triggers claude[bot], and a `/claude-review` comment lands in the same concurrency group and cancels it, reply-before-resolve on every thread. See [review-merge-release](./review-merge-release.md).
+On the open PR, drive review to green by hand: rebase before every push, verify the pushed SHA landed, reply citing the fix SHA before resolving a thread. There is no AI reviewer since 2026-07-27.
 
 ### 10. Pre-merge gates -> merge
-`pnpm claude-gate` (`scripts/check-claude-approval.ts`) requires the latest `/claude-review` overview verdict to be Approve on the current head; every thread must additionally be resolved and carry a reply, which `check-pr-comments` (`pnpm pr:gate`) checks over GraphQL and additionally flags as `suspicious_self_resolve`. Run `pnpm ci:local` alongside both. Branch protection is enforced by GitHub itself. **AI agents are blocked from `gh pr merge`** (bash-guard exit 2); the repo owner runs the final squash-merge. History shows squash-merge exclusively (zero merge commits), each commit tagged `(#NNN)`.
+`pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires every review thread to be resolved and flags `suspicious_self_resolve`. Run `pnpm ci:local` alongside it.
 
 ### 11. Deploy -> smoke -> record
 Vercel deploys on merge to `main`. The `smoke.yml` workflow verifies the production deployment (healthz, 7 security headers, apex->www redirect, `/api/ask` + `/api/contact` liveness) and emails on a 503. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note), and session state is handed off via `.remember/`.
@@ -81,7 +81,7 @@ flowchart LR
         g13["Review convergence"]
     end
     subgraph premerge["pre-merge"]
-        g15["ci:local"] --> g17["claude-gate: Approve"] --> g18["pr:gate: resolved threads"]
+        g15["ci:local"] --> g18["pr:gate: resolved threads"]
     end
     commit --> prepush --> prepr --> open --> premerge --> merge["owner squash-merge"]
 ```

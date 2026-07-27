@@ -36,7 +36,7 @@ A good first PR (touches the common path, low blast radius):
 
 1. **Edit a section's copy** - change a line in a `content/*.ts` module. `pnpm validate-content` proves the schema still holds. Add a `*.test.tsx` assertion if the shape changed.
 2. **Or add a design-system component variant** - follow `Foo/Foo.tsx` + `Foo/index.ts`, co-locate a test, document it (`check:component-docs`), and run `pnpm dev` to eyeball it.
-3. Commit with a conventional scope (`feat(content): ...`). Run `pnpm ci:local` and `pnpm gates:runtime`. Note that pushing triggers the **review battery + findings ledger + stamp** flow (doc 06) - for a real branch you'd run the 4-agent battery, record/resolve findings, then `pnpm review:stamp`.
+3. Commit with a conventional scope (`feat(content): ...`). Run `pnpm ci:local` and `pnpm gates:runtime`. Note that pushing runs `.husky/pre-push`: main-push guard, branch-name guard, and the full `pnpm verify` chain.
 
 > If your change touches `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts`, the push is blocked until a `security-auditor` agent runs (`.claude/rules/api-boundary.md`). That's expected.
 
@@ -81,7 +81,7 @@ Prioritized by onboarding value. These would complete the knowledge base; they'r
 | P0 | **Per-section feature guide** | one page per section: content shape, desktop/mobile variants, host islands, the `sec-*` id. Closes the biggest red-team gap (doc 10). |
 | P0 | **Troubleshooting runbook** | expand doc 07's table into per-symptom runbooks (the 503 cascade, the stamp/push blocks, the cron). |
 | P1 | **ADR cross-link index** | map code areas → relevant `DECISIONS.md` entries, so "why is this like this" is one hop from the file. |
-| P1 | **Contributing guide** | the commit/scope/PR/review-battery workflow as a standalone CONTRIBUTING.md (currently spread across `CLAUDE.md`). |
+| P1 | **Contributing guide** | the commit/scope/PR/review workflow as a standalone CONTRIBUTING.md (currently spread across `CLAUDE.md`). |
 | P1 | **AI Engineering guide** | deepen doc 06 into a standalone playbook for the eval harness + prompt-version + the guards (for anyone touching `/api/ask`). |
 | P2 | **Frontend playbook** | the island/RSC decision tree, the INP rules, the CSS-token rules as a how-to. |
 | P3 | **Accessibility & performance handbooks** | expand doc 08's two halves into standalone, testable checklists. |
