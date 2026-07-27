@@ -222,7 +222,10 @@ describe('review-converge fetchState', () => {
           },
         });
       }
-      if (args[0] === 'pr' && args[1] === 'diff') return (over.changed ?? []).join('\n');
+      if (args[0] === 'pr' && args[1] === 'diff') {
+        if (over.diffFails) throw new Error('gh: API rate limit exceeded');
+        return (over.changed ?? []).join('\n');
+      }
       return JSON.stringify([over.comments ?? []]);
     };
   }
@@ -239,6 +242,19 @@ describe('review-converge fetchState', () => {
     expect(edits.editsReviewerWorkflow).toBe(true);
     const plain = await fetchState('o', 'r', 1, stubGh({ changed: ['README.md'] }));
     expect(plain.editsReviewerWorkflow).toBe(false);
+  });
+
+  it('throws when the diff read fails, rather than reading it as "does not edit"', async () => {
+    // The failure path of the try/catch that replaced a blanket `.catch(() => '')`.
+    // Untested, reverting to the blanket catch left every case green while a
+    // transient gh error silently produced editsReviewerWorkflow=false — the
+    // wrong-but-plausible value that resurrects the never-terminating advice.
+    await expect(fetchState('o', 'r', 1, stubGh({ diffFails: true }))).rejects.toThrow(
+      /could not read the changed files/,
+    );
+    await expect(fetchState('o', 'r', 1, stubGh({ diffFails: true }))).rejects.toThrow(
+      /rate limit exceeded/,
+    );
   });
 
   it('refuses to converge on a truncated thread page rather than reporting resolved', async () => {

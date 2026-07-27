@@ -146,6 +146,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     since?: string;
     event?: string;
     changed?: string;
+    diffFails?: boolean;
   };
 
   function runGuard({
@@ -153,6 +154,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     since = '2026-01-01T00:00:00Z',
     event = 'pull_request',
     changed = 'README.md',
+    diffFails = false,
   }: Run) {
     const bin = mkdtempSync(join(tmpdir(), 'guard-gh-'));
     writeFileSync(
@@ -176,6 +178,13 @@ describe('the guard reds the job, and skips only what it provably cannot review'
         '  esac',
         '  printf \'%s\' "$GUARD_STUB_PAGES"',
         'else',
+        '  # The diff read can FAIL. Its failure path is what stops a transient gh',
+        '  # error reading as "this PR does not edit the workflow", which would make',
+        '  # the guard assert a verdict that provably cannot exist.',
+        '  if [ -n "${GUARD_STUB_DIFF_FAILS:-}" ]; then',
+        '    echo "gh: API rate limit exceeded" >&2',
+        '    exit 1',
+        '  fi',
         '  printf \'%s\\n\' "$GUARD_STUB_CHANGED"',
         'fi',
         '',
@@ -199,6 +208,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
             [{ user: { login: 'claude[bot]' }, created_at: '2030-01-01T00:00:00Z', body }],
           ]),
           GUARD_STUB_CHANGED: changed,
+          ...(diffFails ? { GUARD_STUB_DIFF_FAILS: '1' } : {}),
           VERDICT_RETRY_SLEEP: '0',
         },
       });
@@ -232,6 +242,15 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     [
       'a pull_request run touching other files is asserted, never skipped',
       { body: 'nothing', event: 'pull_request', changed: 'README.md' },
+      1,
+    ],
+    // A failed diff read must not be SWALLOWED: defaulted to empty it silently
+    // decides "does not edit the workflow" and asserts a verdict that cannot
+    // exist. Exit code alone does not separate guarded from unguarded — both red
+    // under `set -e` — so the diagnostic is asserted separately below.
+    [
+      'a failed diff read reds rather than deciding the skip silently',
+      { body: 'head `abc1234`. **Approve**', event: 'pull_request', diffFails: true },
       1,
     ],
     [
@@ -281,6 +300,24 @@ describe('the guard reds the job, and skips only what it provably cannot review'
       block(/if \[ -z "\$\{SINCE:-\}" \]/, 'an empty-timestamp refusal'),
       'The empty-SINCE block must exit non-zero. jq compares strings, so `.created_at >= ""` is true for every comment: falling through silently removes the run-scoping and a previous run\'s verdict passes. The exit code IS the behaviour.',
     ).toContain('exit 1');
+  });
+
+  it('a failed diff read explains itself rather than aborting opaquely', () => {
+    // The exit CODE is identical guarded or unguarded — `set -e` reds either way
+    // — so a status assertion passes on both the ideal and the broken state,
+    // which is the trap this repo's own gate-robustness prompt names. The
+    // diagnostic is the only thing that separates them, and it is the difference
+    // between a maintainer knowing why the merge gate is blocked and not.
+    const { status, stderr } = runGuard({
+      body: 'head `abc1234`. **Approve**',
+      event: 'pull_request',
+      diffFails: true,
+    });
+    expect(status).not.toBe(0);
+    expect(
+      stderr,
+      'A failed `gh pr diff` aborts with no explanation. Guard the assignment and say what is unknown: whether this PR edits claude-review.yml decides if a missing verdict is expected or a real failure.',
+    ).toMatch(/could not read the changed files/);
   });
 
   it('skips on BOTH the event and the diff predicate, never on the echo alone', () => {
