@@ -199,7 +199,14 @@ describe('review-converge nextStep', () => {
 describe('review-converge fetchState', () => {
   const HEAD_OID = 'aaaaaaaabbbbbbbbccccccccddddddddeeeeeeee';
 
-  function stubGh(over: { hasNextPage?: boolean; comments?: unknown[]; changed?: string[] } = {}) {
+  function stubGh(
+    over: {
+      hasNextPage?: boolean;
+      comments?: unknown[];
+      changed?: string[];
+      diffFails?: boolean;
+    } = {},
+  ) {
     return async (args: string[]): Promise<string> => {
       if (args[1] === 'graphql') {
         return JSON.stringify({

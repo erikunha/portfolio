@@ -181,6 +181,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
         '  # The diff read can FAIL. Its failure path is what stops a transient gh',
         '  # error reading as "this PR does not edit the workflow", which would make',
         '  # the guard assert a verdict that provably cannot exist.',
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: bash parameter expansion inside a shell script being written to disk, not a JS template. Interpolating it would bake the value in at test-authoring time and the stub could never vary per case.
         '  if [ -n "${GUARD_STUB_DIFF_FAILS:-}" ]; then',
         '    echo "gh: API rate limit exceeded" >&2',
         '    exit 1',
