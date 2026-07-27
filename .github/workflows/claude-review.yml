@@ -84,36 +84,31 @@ jobs:
       # BASE, which would make Read/Grep/Glob show pre-change content for exactly
       # the files under review. The workspace is therefore UNTRUSTED, which is why
       # the reviewer prompt below is not read from it.
+      # Two checkouts, in this order, per the action's own docs/security.md:
+      # "Do not check out an untrusted ref into the workspace root before this
+      # action." The first version of this workflow did exactly that and the
+      # action died at `App token exchange failed: 401 Unauthorized - Invalid
+      # OIDC token` on every run — it expects a git repo at the root and restores
+      # project configuration from the base ref.
+      #
+      # It also makes the trust model structural instead of bolted on. The root
+      # is the BASE, so `.github/claude-review-prompt.md` read from there is the
+      # default-branch copy by construction: a PR cannot author the prompt its own
+      # reviewer runs on, which is what the earlier /tmp materialisation step
+      # existed to guarantee and no longer needs to.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # On issue_comment there is no pull_request payload, and `github.sha`
-          # is the DEFAULT BRANCH tip — checking that out would have the reviewer
-          # cite pre-change lines while `gh pr diff` showed the change. The PR ref
-          # resolves the head on both paths.
-          ref: refs/pull/${{ github.event.pull_request.number || github.event.issue.number }}/head
           fetch-depth: 1
 
-      # The prompt is materialised from the DEFAULT BRANCH into /tmp, outside the
-      # workspace a PR can write to. Without this the reviewer runs on a prompt the
-      # PR authored: the server-side check validates the WORKFLOW file, and the
-      # prompt stopped living there on 2026-07-26 — so a PR editing only
-      # .github/claude-review-prompt.md passes validation and could instruct its
-      # own reviewer to approve it. `git show` of a fetched ref cannot be
-      # influenced by the checked-out tree.
-      - name: Materialise the trusted reviewer prompt from the default branch
-        env:
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-        run: |
-          set -euo pipefail
-          git fetch --depth=1 origin "$DEFAULT_BRANCH"
-          git show "FETCH_HEAD:.github/claude-review-prompt.md" > /tmp/claude-review-prompt.md
-          # A floor, not `test -s`: a truncated `git show` leaves a non-empty file
-          # that would silently run the reviewer on a fragment of its prompt.
-          bytes=$(wc -c < /tmp/claude-review-prompt.md)
-          if [ "$bytes" -lt 4000 ]; then
-            echo "prompt materialised at only ${bytes} bytes — expected the full reviewer prompt" >&2
-            exit 1
-          fi
+      # The PR's files, in a SUBDIRECTORY, reachable only through --add-dir below.
+      # `refs/pull/N/head` resolves on both the pull_request_target and the
+      # issue_comment path, where no `pull_request.head.sha` exists.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number || github.event.issue.number }}/head
+          path: pr-head
+          fetch-depth: 1
+
       - name: Mark review start
         id: t0
         run: echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
@@ -132,7 +127,8 @@ jobs:
           prompt: "${{ github.event_name == 'pull_request_target' && format('REPO {0} — PR NUMBER {1} — You are performing a CODE REVIEW, not a task. Do not narrate progress and do not implement changes. Produce exactly two artifacts: one create_inline_comment tool call per finding, and then one overview comment ending in exactly one verdict line. Read the diff with gh pr diff. A run that posts no verdict line has failed.', github.repository, github.event.pull_request.number) || '' }}"
           claude_args: >-
             --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*)"
-            --append-system-prompt-file /tmp/claude-review-prompt.md
+            --add-dir pr-head
+            --append-system-prompt-file .github/claude-review-prompt.md
 
       # A review that posts nothing still exits 0, so the check renders green and
       # check-claude-approval.ts reads verdict=none — indistinguishable from "ran

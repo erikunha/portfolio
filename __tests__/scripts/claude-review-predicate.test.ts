@@ -5,9 +5,6 @@ import { parse } from 'yaml';
 
 const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'claude-review.yml');
 
-// biome-ignore lint/suspicious/noTemplateCurlyInString: a GitHub Actions expression matched as literal YAML text, not a JS template. Interpolating it would compare against the empty string, and the assertion would then pass on any workflow at all.
-const DEFAULT_BRANCH_BINDING = 'DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}';
-
 // Read as structured values, never by scanning text. Four successive versions of
 // this gate extracted with indexOf and each was bypassed the same way: an anchor
 // pins one coordinate (key present, which key, which job starts) and the next
@@ -125,51 +122,50 @@ describe('pull_request_target is fenced to trusted authors on a public repo', ()
     ).toContain(`fromJSON('["OWNER","MEMBER","COLLABORATOR"]')`);
   });
 
-  it('the reviewer prompt is never read from the checked-out workspace', () => {
-    // Under pull_request_target the workspace holds PR-authored content, and the
-    // server-side check validates only the WORKFLOW file — the prompt stopped
-    // living there on 2026-07-26. Three things must hold together; asserting the
-    // `git show` string alone was not enough, because retargeting the FETCH to
-    // the PR ref leaves that string untouched and makes the prompt PR-authored.
-    const yml = readFileSync(WORKFLOW, 'utf8');
-    const steps = (doc.jobs as { review?: { steps?: Array<Record<string, unknown>> } })?.review
-      ?.steps;
+  it('no untrusted ref is checked out at the workspace root', () => {
+    // The action's own docs/security.md: "Do not check out an untrusted ref into
+    // the workspace root before this action." The first version of this workflow
+    // did, and the action died at `App token exchange failed: 401 Unauthorized -
+    // Invalid OIDC token` on every run — it expects a git repo at the root and
+    // restores project configuration from the base ref.
+    //
+    // This is also the whole trust model. Root = base, so the reviewer prompt and
+    // the convention files read from there cannot have been authored by the PR.
+    // Drop the `path:` from the second checkout and BOTH properties fall at once.
+    const steps = (
+      doc.jobs as { review?: { steps?: Array<{ uses?: string; with?: Record<string, unknown> }> } }
+    )?.review?.steps;
     if (!Array.isArray(steps))
       throw new Error('claude-review.yml: jobs.review.steps is not an array');
 
-    const args = String(
-      (steps as Array<{ with?: { claude_args?: string } }>).find(
-        (st) => typeof st.with?.claude_args === 'string',
-      )?.with?.claude_args,
-    );
+    const checkouts = steps.filter((st) => String(st.uses ?? '').includes('actions/checkout'));
     expect(
-      /--append-system-prompt-file\s+\.github\//.test(args),
-      'The prompt is loaded straight from the workspace path. A PR can write anything into .github/ in its own head.',
-    ).toBe(false);
+      checkouts.length,
+      'expected two checkouts: base at root, PR head in a subdirectory',
+    ).toBe(2);
 
-    // 1. the fetch is pinned to the DEFAULT BRANCH, not to any PR-controlled ref
+    const [root, head] = checkouts;
     expect(
-      yml.includes('git fetch --depth=1 origin "$DEFAULT_BRANCH"') &&
-        yml.includes(DEFAULT_BRANCH_BINDING),
-      'The prompt fetch is no longer pinned to github.event.repository.default_branch. Retargeting it at the PR ref keeps the `git show` line intact while handing prompt authorship to the PR.',
-    ).toBe(true);
+      root?.with?.ref,
+      `The FIRST checkout pins a ref, so the workspace root is no longer the base branch. That is the pattern the action documents as unsafe, and it is what makes .github/claude-review-prompt.md trustworthy — a PR could otherwise author the prompt its own reviewer runs on.\n\nref: ${String(root?.with?.ref)}`,
+    ).toBeUndefined();
 
-    // 2. it is git show of that fetch, not a workspace read
     expect(
-      yml.includes('git show "FETCH_HEAD:.github/claude-review-prompt.md"'),
-      'The default-branch materialisation is gone, so whatever the prompt flag points at is no longer provably trusted.',
-    ).toBe(true);
+      head?.with?.path,
+      'The second checkout has no `path:`, so it lands at the workspace root and overwrites the base — untrusted content at the root, which is exactly the documented failure.',
+    ).toBe('pr-head');
+    expect(
+      String(head?.with?.ref),
+      'The second checkout no longer takes the PR head, so the reviewer has no access to the changed files at all.',
+    ).toContain('/head');
 
-    // 3. it happens BEFORE the action, or the action loads a stale or absent file
-    const materialiseAt = steps.findIndex((st) =>
-      String(st.name ?? '').includes('Materialise the trusted reviewer prompt'),
-    );
-    const actionAt = steps.findIndex((st) => String(st.uses ?? '').includes('claude-code-action'));
-    expect(materialiseAt, 'the materialise step is missing').toBeGreaterThanOrEqual(0);
-    expect(actionAt, 'the claude-code-action step is missing').toBeGreaterThanOrEqual(0);
-    expect(
-      materialiseAt < actionAt,
-      `The prompt is materialised AFTER the reviewer runs (materialise=${materialiseAt}, action=${actionAt}), so the action loads a stale or absent /tmp file while both string assertions above still pass.`,
-    ).toBe(true);
+    // Every checkout that names a ref must be confined to a subdirectory.
+    for (const c of checkouts) {
+      if (c.with?.ref === undefined) continue;
+      expect(
+        c.with?.path,
+        `A checkout pins ref ${String(c.with.ref)} with no path, so it lands at the root. Any ref-pinned checkout must go to a subdirectory.`,
+      ).toBeTruthy();
+    }
   });
 });
