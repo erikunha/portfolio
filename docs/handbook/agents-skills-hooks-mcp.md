@@ -19,8 +19,6 @@ Skills are load-on-demand procedures. They activate by their `description` front
 | Command | Invokes | When |
 |---|---|---|
 | **/commit** | `commit-commands:commit` | Conventional commit with a mandatory feature-area scope |
-| **/ready-for-pr** | `pnpm ready-for-pr` -> `pr-review-toolkit:code-reviewer` -> fix -> `gh pr create` | Pre-PR gate sequence |
-| **/merge** `[pr]` | `pnpm ready-to-merge`, then owner merges externally | Pre-merge gate chain |
 
 ## Hooks (`.claude/hooks/` + `settings.json` wiring)
 
@@ -52,7 +50,7 @@ flowchart TD
     post1 --> done
 ```
 
-Note: four hook *events* are used (PreToolUse on Bash, Skill, and the Playwright `browser_` namespace; PostToolUse on Edit|Write and on Bash; SessionStart; SessionEnd). No `PreCompact` or `Notification` hooks.
+Note: three hook *events* are used (PreToolUse on Bash and Skill; PostToolUse on Edit|Write; SessionStart). No `PreCompact`, `SessionEnd`, or `Notification` hooks.
 
 ## Git hooks (`.husky/`)
 

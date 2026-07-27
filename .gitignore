@@ -49,15 +49,14 @@ tsconfig.tsbuildinfo
 # review findings ledger — transient per-cycle verification-loop state
 .review-findings.json
 
-# review findings archive — append-only learning-loop data (machine-local)
+# review findings archive — append-only, written by review:findings (machine-local)
 .review-findings-archive.jsonl
 
-# learning-loop proposal inbox — SessionEnd hook appends here (machine-local)
+# leftover inbox from the learning loop deleted 2026-07-27 — no writer remains
 .review-learnings.md
 
 # WS4 API-edit security gate — session-local marker of unaudited API edits
 .claude/.api-edit-pending
-.codex/.api-edit-pending
 
 # git worktrees (isolated workspaces for parallel branch work)
 .worktrees/
@@ -77,8 +76,6 @@ tsconfig.tsbuildinfo
 specs
 .specify
 .claude/skills/speckit-*
-.agents/skills/speckit-*
-.codex/skills/speckit-*
 
 # legacy spec/plan output from the previous SDD tooling. The rules stay even
 # though the tooling is gone: a stale local copy must not become stageable on a

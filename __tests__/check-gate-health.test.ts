@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import {
   auditGates,
@@ -53,8 +54,8 @@ describe('auditGates', () => {
   it('flags a hook that references a missing script (the dead-hook class)', () => {
     const dead = auditGates({
       hookFiles: [{ name: '.claude/hooks/example-guard.sh', refs: ['scripts/does-not-exist.mjs'] }],
-      settingsRefs: [],
-      exists: () => false,
+      settingsRefs: ['.claude/hooks/example-guard.sh'],
+      exists: (rel) => rel !== 'scripts/does-not-exist.mjs',
     });
     expect(dead).toHaveLength(1);
     expect(dead[0]).toMatchObject({
@@ -77,10 +78,59 @@ describe('auditGates', () => {
 
   it('passes when every reference resolves', () => {
     const dead = auditGates({
-      hookFiles: [{ name: 'h', refs: ['scripts/ok.mjs'] }],
+      hookFiles: [{ name: '.claude/hooks/ok.sh', refs: ['scripts/ok.mjs'] }],
       settingsRefs: ['.claude/hooks/ok.sh'],
       exists: () => true,
     });
     expect(dead).toEqual([]);
+  });
+
+  it('flags a hook file on disk that no settings matcher wires (the inert-hook class)', () => {
+    const dead = auditGates({
+      hookFiles: [{ name: '.claude/hooks/orphan-guard.sh', refs: [] }],
+      settingsRefs: [],
+      exists: () => true,
+    });
+    expect(dead).toEqual([
+      {
+        source: '.claude/hooks/orphan-guard.sh',
+        ref: '.claude/settings.json',
+        kind: 'hook->unwired',
+      },
+    ]);
+  });
+
+  it('does not flag a hook invoked by a sibling hook rather than by settings', () => {
+    const dead = auditGates({
+      hookFiles: [
+        { name: '.claude/hooks/entry.sh', refs: [], hookRefs: ['.claude/hooks/helper.sh'] },
+        { name: '.claude/hooks/helper.sh', refs: [] },
+      ],
+      settingsRefs: ['.claude/hooks/entry.sh'],
+      exists: () => true,
+    });
+    expect(dead).toEqual([]);
+  });
+
+  it('flags every unwired hook rather than stopping at the first', () => {
+    const dead = auditGates({
+      hookFiles: [
+        { name: '.claude/hooks/a.sh', refs: [] },
+        { name: '.claude/hooks/b.sh', refs: [] },
+      ],
+      settingsRefs: [],
+      exists: () => true,
+    });
+    expect(dead.map((d) => d.source)).toEqual(['.claude/hooks/a.sh', '.claude/hooks/b.sh']);
+  });
+});
+
+describe('the gate against the committed harness', () => {
+  it('exits 0: every hook resolves and every hook file is wired', () => {
+    expect(() =>
+      execFileSync('node', ['--import', 'tsx', 'scripts/check-gate-health.ts'], {
+        encoding: 'utf-8',
+      }),
+    ).not.toThrow();
   });
 });

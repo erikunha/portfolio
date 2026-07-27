@@ -52,7 +52,7 @@ gate-robustness found the weak-test defects. A sonnet reviewer is not a
 specialist, it is a weaker generalist that finds roughly half.
 
 Role pays off only at the margin, and it does pay: gate-robustness alone caught
-a CLAUDE.md edit that reds `check:codex-sync`, and test-strength alone caught a
+a CLAUDE.md edit that broke a downstream gate, and test-strength alone caught a
 test whose title claimed "rejects every origin" while asserting one. Each role
 prompt bought at least one finding no other reviewer produced.
 
@@ -421,10 +421,7 @@ Work in this order:
    changed threshold, default, flag, command, or version, a deleted script, a
    changed behaviour, a measured number.
 2. For each fact, grep the whole tree for prose still asserting the old value:
-   CLAUDE.md and its generated mirror, which `pnpm sync:codex` regenerates (so
-   any fix you propose for the spine file must say "and run `pnpm sync:codex`" —
-   editing one copy alone reds `check:codex-sync` inside `pnpm verify`), plus
-   STANDARDS.md, ARCHITECTURE.md, DECISIONS.md, README,
+   CLAUDE.md, plus
    docs/**, .claude/rules/**, .claude/skills/**, package.json scripts, and the
    diff's own commit messages and PR body.
 3. Check the diff's OWN new prose against the code it ships with, including test
@@ -471,7 +468,7 @@ Worked example of the judgment, from this repo's ledger:
 ## 3 — gate-robustness
 
 `subagent_type: security-auditor` · model: **opus**. Highest scorer in the eval
-and the only reviewer to catch a `check:codex-sync` break. It already finds more
+and the only reviewer to catch a cross-surface gate break. It already finds more
 gate defects than security ones here, and dispatching it also satisfies the
 `api-security-push-guard.sh` hook on API edits. It is Read/Grep/Glob only, so it
 cannot execute: never ask it for an exit code, and tell it to say plainly what

@@ -126,11 +126,10 @@ const PROSE_ROOTS = [
   '.claude/skills',
   '.claude/agents',
 ];
-const SPINE_FILES = ['CLAUDE.md', 'AGENTS.md'];
+const SPINE_FILES = ['CLAUDE.md'];
 
 const DOCUMENTED_NON_DISPATCH: Record<string, readonly string[]> = {
   'CLAUDE.md': ['pr-review-toolkit:review-pr', 'review-pr'],
-  'AGENTS.md': ['pr-review-toolkit:review-pr', 'review-pr'],
   '.claude/skills/review-battery/SKILL.md': ['general-purpose'],
 };
 
@@ -202,7 +201,7 @@ describe('prose that names the pre-PR review agent stays inside its accept-list'
 
   it('scans the repo-root spine and agent definitions, not only operational surfaces', () => {
     const rels = new Set(surfaces.map((p) => p.replace(`${process.cwd()}/`, '')));
-    const mustScan = ['CLAUDE.md', 'AGENTS.md'];
+    const mustScan = ['CLAUDE.md'];
     const missing = mustScan.filter((f) => !rels.has(f));
     expect(
       missing,

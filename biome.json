@@ -25,9 +25,7 @@
       "!app/globals.css",
       "!next-env.d.ts",
       "!.specify",
-      "!.claude/skills/speckit-*",
-      "!.agents/skills/speckit-*",
-      "!.codex/skills/speckit-*"
+      "!.claude/skills/speckit-*"
     ]
   },
   "formatter": {

@@ -1,6 +1,6 @@
 # AI-Assisted Development
 
-> How AI participates in development. This repo treats Claude Code as a core engineering teammate, and the platform that governs it is itself engineered: a context layer, a mechanical enforcement layer, a review/verification loop, and a learning loop. This doc is the map.
+> How AI participates in development. This repo treats Claude Code as a core engineering teammate, and the platform that governs it is itself engineered: a context layer, a mechanical enforcement layer, and a review/verification loop. This doc is the map.
 
 ## The layers
 
@@ -18,7 +18,7 @@ flowchart TB
         husky[".husky/* git hooks (pre-commit, pre-push)"]
         gates["scripts/check-*.ts (CI + verify chain)"]
     end
-    subgraph loop["Review / verification / learning loop"]
+    subgraph loop["Review / verification loop"]
         battery["4-agent review battery"]
         stamp["review:stamp (.review-passed)"]
         ledger["review:findings (.review-findings.json)"]
@@ -66,23 +66,14 @@ flowchart LR
 
 Two enforcement boundaries, both mechanical:
 
-1. **Dispatch** - `scripts/review-stamp.ts` reads the session transcript and refuses to write `.review-passed` unless all four agent roles were dispatched *after* the HEAD commit's timestamp (fail-closed; the boundary is git commit time, so a commit made outside the session can't be stamped by a stale review).
+1. **Dispatch** - `scripts/review-stamp.ts` reads the session transcript and refuses to write `.review-passed` unless all four agent roles were dispatched *after* the branch's merge-base with `origin/main` (fail-closed; anchoring to HEAD instead made every fix commit invalidate the battery that found the thing being fixed).
 2. **Resolution (the verification loop)** - the stamp *also* refuses while any Critical/Important finding in `.review-findings.json` is `open`. Findings are recorded via `pnpm review:findings` (`add`/`resolve`/`justify`/`check`/`clear`); a `resolve` cites a fix SHA, a `justify` cites a reason. This turns the stamp from "review happened" into "findings were resolved."
 
 The residual honor-system boundary is *recording* findings (the stamp can't know about a finding you never recorded). The `transcript:doctor` (`scripts/transcript-doctor.ts`) diagnoses the fail-closed transcript-resolution path (a shared SPOF) in seconds.
 
 ## The learning loop
 
-Closes capture → analyze → surface, and **self-prunes**:
-
-```mermaid
-flowchart LR
-    stamp["review:stamp (success)"] --> arch["append resolved findings to<br/>.review-findings-archive.jsonl (cycleSha-tagged)"]
-    auto --> human["you read the inbox, decide, write a real gate"]
-    human --> prevent["the class is now mechanically prevented -> stops recurring -> loop drains"]
-```
-
-The auto-trigger is deliberately flood-mitigated: SessionEnd (not per-turn), evidence threshold ≥3 distinct cycles, capped at 3, append-only to a gitignored inbox, silent unless there is new signal, and it **never creates a gate** - a recurring finding is evidence, a gate is a human decision. (See `DECISIONS.md` 2026-06-18.)
+Removed 2026-07-27: the `SessionEnd` hook, `scripts/review-learn.ts` and the `review:learn` script all went with it. Recurring finding-classes are now noticed by reading `.review-findings-archive.jsonl` directly.
 
 ## MCP servers
 
@@ -104,4 +95,4 @@ Context7 is the one repo-configured MCP; the GitHub/Vercel/Chrome ones are plugi
 
 - `CLAUDE.md` → "Project agent dispatch", "Skill dispatch", "Working agreement" tables.
 - `STANDARDS.md` → each chapter names its enforcement mechanism.
-- `DECISIONS.md` 2026-06-17 / 2026-06-18 → the full ADRs for gate-health, the verification loop, the transcript doctor, the rule-hygiene protocol, and the learning loop.
+- `DECISIONS.md` 2026-06-17 / 2026-06-18 → the full ADRs for gate-health, the verification loop, the transcript doctor, and the rule-hygiene protocol.

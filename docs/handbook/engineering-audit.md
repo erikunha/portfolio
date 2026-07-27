@@ -7,7 +7,7 @@
 | Dimension | Maturity | Evidence |
 |---|---|---|
 | Process discipline | **High** | spec -> architect gate -> plan -> review battery -> ~18 gates; reversibility-tracked ADRs |
-| AI-assisted development | **High** | mechanical enforcement (exit 2 hooks), transcript-verified review, a self-healing meta-gate, a learning loop |
+| AI-assisted development | **High** | mechanical enforcement (exit 2 hooks), transcript-verified review, a self-healing meta-gate |
 | Verification | **High** | the stamp proves resolution not just dispatch; eval-gated AI feature |
 | Knowledge management | **High** | specs/plans/ADRs/memory all explicit; doc-drift gated |
 | Developer experience | **Medium-High** | gate-heavy (intentional) but scoped to stay cheap on trivial changes; one real friction point (below) |
@@ -17,7 +17,7 @@
 
 - **Mechanical enforcement over convention.** The platform does not trust the agent to "remember" the rules; it blocks with `exit 2` and verifies with transcript reads. This is the highest-leverage property of the whole system.
 - **The verification loop.** Most teams gate on "review happened"; here the stamp gates on "findings resolved," recorded in a ledger. That is ahead of the field.
-- **Self-healing.** `check-gate-health` detects dead gates (a gate that silently stopped working), and the learning loop proposes new gates from recurring findings. The enforcement layer maintains itself.
+- **Self-healing.** `check-gate-health` detects dead gates: a hook naming a script that no longer exists, a `settings.json` matcher naming a hook that no longer exists, and a hook file on disk that nothing wires.
 - **Reversibility as a first-class artifact.** ~240 ADRs each ending in "how to undo." This is what makes a solo + AI workflow safe at speed.
 - **Scoped cost.** The heavy review battery is scoped by commit type, so docs/config/deps commits do not pay the full price. The system is heavy where it matters and light where it does not.
 
