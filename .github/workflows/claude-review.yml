@@ -267,7 +267,18 @@ jobs:
           # and the skip is bypassed on exactly the PRs it exists for. This file
           # sorts near the front of `--name-only`, so the match is early and the
           # race is likely, but it depends on write buffering: nondeterministic.
-          changed_files=$(gh pr diff "$PR" --name-only)
+          # Guarded with a diagnostic, not left to `set -e`. An unguarded failure
+          # aborts the whole step with an opaque error even when the review already
+          # posted a valid verdict, blocking the merge gate with nothing to read.
+          # Not defaulted to empty either: that silently decides "does not edit the
+          # workflow", which is the skip decision this line exists to make.
+          if ! changed_files=$(gh pr diff "$PR" --name-only); then
+            echo "FAIL: could not read the changed files for PR #$PR." >&2
+            echo "  Whether this PR edits claude-review.yml is therefore unknown, and" >&2
+            echo "  that decides whether a missing verdict is expected or a real failure." >&2
+            echo "  Re-run the job; this is usually a transient gh/API error." >&2
+            exit 1
+          fi
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ] \
             && grep -qx '.github/workflows/claude-review.yml' <<<"$changed_files"; then
             echo "SKIP  this PR edits claude-review.yml."

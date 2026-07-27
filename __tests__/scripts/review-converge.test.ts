@@ -152,6 +152,33 @@ describe('review-converge nextStep', () => {
     expect(step.reason).not.toMatch(/the push triggers the review on its own/);
   });
 
+  it('a STALE approve on a reviewer-workflow PR also says only a comment can refresh it', () => {
+    // The stale-approve branch carries its own editsReviewerWorkflow ternary, and
+    // it had no coverage for the true case — collapsing it to always return the
+    // else message left every test green, because the only assertion on that
+    // branch matched `/stale/`, which lives in the unconditional prefix.
+    const step = nextStep(
+      state({
+        editsReviewerWorkflow: true,
+        latestVerdictBody: '**Verdict: Approve.** Reviewed at head commit `deadbeefdeadbeef`.',
+      }),
+    );
+    expect(step.done).toBe(false);
+    expect(step.reason).toMatch(/stale/);
+    expect(step.reason).toMatch(/only a \/claude-review comment can refresh it/);
+  });
+
+  it('a STALE approve on an ordinary PR says a push refreshes it', () => {
+    const step = nextStep(
+      state({
+        editsReviewerWorkflow: false,
+        latestVerdictBody: '**Verdict: Approve.** Reviewed at head commit `deadbeefdeadbeef`.',
+      }),
+    );
+    expect(step.reason).toMatch(/A push triggers a review on its own/);
+    expect(step.reason).not.toMatch(/only a \/claude-review comment can refresh it/);
+  });
+
   it('tells an ordinary PR the opposite: push, do not comment', () => {
     const step = nextStep(
       state({

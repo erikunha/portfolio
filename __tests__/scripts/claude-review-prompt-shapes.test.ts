@@ -132,7 +132,7 @@ describe('the claude-review prompt instructs shapes the merge gate can parse', (
     // Materialising the prompt from the default branch protects the PROMPT. It
     // does not protect the five convention files the prompt then tells the
     // reviewer to read and follow — CLAUDE.md, STANDARDS.md, ARCHITECTURE.md,
-    // DECISIONS.md and .claude/rules — which under pull_request_target are
+    // DECISIONS.md and .claude/rules — which under the PR-head checkout are
     // PR-authored. Without this boundary a PR can add a "convention" excusing
     // itself and the reviewer is instructed to obey it.
     const p = systemPrompt();
