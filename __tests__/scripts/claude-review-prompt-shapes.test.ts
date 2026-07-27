@@ -10,6 +10,7 @@ import {
 
 const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'claude-review.yml');
 const PROMPT_PATH_IN_REPO = '.github/claude-review-prompt.md';
+const MATERIALISED_PROMPT = '/tmp/claude-review-prompt.md';
 
 const HEAD_SHA = 'bb390ab1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7';
 
@@ -37,11 +38,28 @@ function claudeArgs(): string {
 }
 
 function systemPrompt(): string {
-  if (!claudeArgs().includes(`--append-system-prompt-file ${PROMPT_PATH_IN_REPO}`)) {
+  // The prompt reaches the reviewer through TWO links, and both are asserted,
+  // because either one breaking silently leaves the reviewer running with no
+  // prompt while this suite keeps passing against a file nothing loads.
+  //
+  // Link 1: a step materialises the repo file from the DEFAULT BRANCH into /tmp.
+  // Reading it from the workspace instead would let a PR author its own
+  // reviewer's prompt — the server-side check validates the workflow file, and
+  // the prompt has not lived there since 2026-07-26.
+  const yml = readFileSync(WORKFLOW, 'utf8');
+  if (!yml.includes(`git show "FETCH_HEAD:${PROMPT_PATH_IN_REPO}" > ${MATERIALISED_PROMPT}`)) {
     throw new Error(
-      `claude-review.yml no longer passes --append-system-prompt-file ${PROMPT_PATH_IN_REPO}. Without this check the suite keeps asserting against a file the workflow does not load, which stays green while the live reviewer runs with no prompt at all. Point PROMPT_PATH_IN_REPO at the path the workflow now names.`,
+      `claude-review.yml no longer materialises ${PROMPT_PATH_IN_REPO} from the default branch into ${MATERIALISED_PROMPT}. If it now reads the prompt out of the checked-out workspace, a PR can author the prompt its own reviewer runs on. Restore the git-show step, or update both constants together if the mechanism changed.`,
     );
   }
+
+  // Link 2: the action is actually pointed at the materialised copy.
+  if (!claudeArgs().includes(`--append-system-prompt-file ${MATERIALISED_PROMPT}`)) {
+    throw new Error(
+      `claude-review.yml no longer passes --append-system-prompt-file ${MATERIALISED_PROMPT}. Without this the suite asserts against a file the workflow does not load, which stays green while the live reviewer runs with no prompt at all.`,
+    );
+  }
+
   return readFileSync(join(process.cwd(), PROMPT_PATH_IN_REPO), 'utf8');
 }
 

@@ -74,3 +74,50 @@ describe('claude-review concurrency group mirrors the review job condition', () 
     expect((concurrency as Record<string, unknown>)['cancel-in-progress']).toBe(true);
   });
 });
+
+describe('pull_request_target is fenced to trusted authors on a public repo', () => {
+  const doc = workflow();
+
+  it('the auto path admits only OWNER, MEMBER or COLLABORATOR', () => {
+    // pull_request_target hands the job the repo token, INCLUDING for fork PRs —
+    // the difference from pull_request, where a fork gets no secrets at all. This
+    // repo is public, so without this gate any GitHub user could open a fork PR
+    // and have a token-bearing job run against content they control. The comment
+    // path has always carried the same fence; this asserts the auto path does too.
+    const jobIf = String(at(doc, ['jobs', 'review', 'if']));
+    expect(
+      jobIf.includes('pull_request_target'),
+      'The auto trigger is no longer pull_request_target. If it moved back to pull_request, every PR that edits this workflow becomes unreviewable again; if it moved to something else, re-derive this fence for that trigger.',
+    ).toBe(true);
+    expect(
+      /author_association/.test(jobIf),
+      `The pull_request_target branch no longer checks author_association. On a PUBLIC repo that lets an arbitrary fork PR run a job holding the repo token.\n\nif: ${jobIf}`,
+    ).toBe(true);
+    for (const role of ['OWNER', 'MEMBER', 'COLLABORATOR']) {
+      expect(jobIf, `the author fence dropped ${role}`).toContain(role);
+    }
+  });
+
+  it('the reviewer prompt is never read from the checked-out workspace', () => {
+    // Under pull_request_target the workspace holds PR-authored content. The
+    // server-side workflow check validates only the workflow file, and the prompt
+    // has not lived there since 2026-07-26 — so reading it from the workspace
+    // would let a PR write the prompt its own reviewer runs on.
+    const yml = readFileSync(WORKFLOW, 'utf8');
+    const steps = (doc.jobs as { review?: { steps?: Array<{ with?: { claude_args?: string } }> } })
+      ?.review?.steps;
+    if (!Array.isArray(steps))
+      throw new Error('claude-review.yml: jobs.review.steps is not an array');
+    const args = String(
+      steps.find((st) => typeof st.with?.claude_args === 'string')?.with?.claude_args,
+    );
+    expect(
+      /--append-system-prompt-file\s+\.github\//.test(args),
+      'The prompt is loaded straight from the workspace path. Materialise it from the default branch first; a PR can write anything into .github/ in its own head.',
+    ).toBe(false);
+    expect(
+      yml.includes('git show "FETCH_HEAD:.github/claude-review-prompt.md"'),
+      'The default-branch materialisation step is gone, so whatever the prompt flag points at is no longer provably trusted.',
+    ).toBe(true);
+  });
+});

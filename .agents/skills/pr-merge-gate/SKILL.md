@@ -26,9 +26,11 @@ the repo owner executes the final merge in an external terminal or via the GitHu
    verdict is not Approve or is stale, WAIT — do not self-authorize, do not
    `--admin` override. (Branch protection also mechanically blocks `gh pr merge`
    until the current HEAD is reviewed; a new commit after the Approve re-blocks
-   until claude-review re-reviews. Re-request with `gh pr comment <pr> --body /claude-review`
-   after any push that fixes a thread; do NOT re-request after self-found fixes —
-   CI failures, self-discovered bugs — that burns a review cycle with no new signal.)
+   until claude-review re-reviews. A push re-reviews on its own —
+   the trigger is `pull_request_target`, so do NOT comment `/claude-review` after
+   one; it lands in the same concurrency group and cancels the run it duplicates.
+   Re-request only when no run will fire at all: a completed run posted no
+   parsable verdict, or the verdict is stale against a HEAD nothing is reviewing.)
 
 2. **GitHub resolve-thread is ground truth.** No merge while any
    `PullRequestReviewThread` is `isResolved: false` (`required_conversation_resolution`

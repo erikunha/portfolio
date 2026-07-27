@@ -216,9 +216,9 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ['a verdict in the fetched body', { body: 'head `abc1234`. **Approve**' }, 0],
     ['no review-start timestamp', { body: '**Approve**', since: '' }, 1],
     [
-      'the PR edits this workflow, which the action cannot review',
+      'a workflow-editing PR is asserted like any other, never skipped',
       { body: 'nothing', changed: '.github/workflows/claude-review.yml' },
-      0,
+      1,
     ],
     [
       'a verdict wrapped across a newline, which the line-oriented grep must reject',
@@ -269,16 +269,22 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ).toContain('exit 1');
   });
 
-  it('skips on BOTH the event and the file predicate, never on the echo alone', () => {
-    const skip = block(
-      /if \[ "\$GITHUB_EVENT_NAME" = "pull_request" \]/,
-      'a workflow-editing skip',
-    );
+  it('carries no event-based skip: under pull_request_target every run is assertable', () => {
+    // The carve-out that used to live here skipped `pull_request` runs whose diff
+    // touched this workflow, because GitHub loaded the workflow from the PR head
+    // and the action refused, so no verdict could exist to assert. The trigger is
+    // now `pull_request_target`, which always runs the base copy — the action
+    // never refuses, and a surviving skip would hide a real no-verdict behind a
+    // green check. Reintroducing one must red here rather than pass quietly.
+    const script = guardScript();
     expect(
-      skip,
-      'The skip must test the DIFF, not just the event. Asserting the string "claude-review.yml" was satisfied by the echo INSIDE the block, so deleting the whole `gh pr diff … | grep -qx …` conjunct ran green — the guard would then skip every pull_request run unconditionally while CI stayed green, which is the permanent silent green this workflow already paid for once.',
-    ).toContain("grep -qx '.github/workflows/claude-review.yml'");
-    expect(skip).toContain('exit 0');
+      /GITHUB_EVENT_NAME/.test(script),
+      'The guard reintroduced an event-name branch. Under pull_request_target the auto path can always post a verdict, so any event-based skip is a silent green waiting to happen.',
+    ).toBe(false);
+    expect(
+      /SKIP\s/.test(script),
+      'The guard reintroduced a SKIP path. Every run this guard sees can now be asserted; a skip means a run that reviewed nothing reports success.',
+    ).toBe(false);
   });
 });
 
