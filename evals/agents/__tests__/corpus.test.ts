@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import abConsumerScan from '@/evals/agents/ab-consumer-scan-ci-config/CASE';
 import apiEditSecurityDispatch from '@/evals/agents/api-edit-security-dispatch/CASE';
+import architectReviewBeforePlan from '@/evals/agents/architect-review-before-plan/CASE';
 import gitAddScoping from '@/evals/agents/git-add-scoping/CASE';
 import noAgentMerge from '@/evals/agents/no-agent-merge/CASE';
 import pnpmOnly from '@/evals/agents/pnpm-only/CASE';
@@ -14,6 +15,7 @@ const cases = [
   pnpmOnly,
   noAgentMerge,
   apiEditSecurityDispatch,
+  architectReviewBeforePlan,
 ];
 
 describe('evals/agents seeded corpus', () => {
