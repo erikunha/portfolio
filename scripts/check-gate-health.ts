@@ -23,12 +23,19 @@ export interface HookFile {
   hookRefs?: string[];
 }
 
-export function collectScriptRefs(content: string): string[] {
-  const code = content
+function stripComments(content: string): string {
+  return content
     .split('\n')
     .map((line) => line.replace(/(?:^|\s)#.*$/, ''))
     .join('\n');
-  return [...new Set(code.match(SCRIPT_REF) ?? [])];
+}
+
+export function collectScriptRefs(content: string): string[] {
+  return [...new Set(stripComments(content).match(SCRIPT_REF) ?? [])];
+}
+
+export function collectHookRefs(content: string): string[] {
+  return [...new Set(stripComments(content).match(HOOK_REF) ?? [])];
 }
 
 export function collectSettingsHookPaths(settings: SettingsShape): string[] {
@@ -80,7 +87,7 @@ function main(): void {
           return {
             name: `.claude/hooks/${f}`,
             refs: collectScriptRefs(content),
-            hookRefs: [...new Set(content.match(HOOK_REF) ?? [])],
+            hookRefs: collectHookRefs(content),
           };
         })
     : [];

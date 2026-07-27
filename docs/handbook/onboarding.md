@@ -4,7 +4,7 @@
 
 ## The 30-second model
 
-You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> 4-agent review -> ~18 gates -> squash-merge -> ADR. The gates are mechanical and will block you; that is the point, and it is how you move fast safely.
+You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> 4-agent review -> the gate chain -> squash-merge -> ADR. The gates are mechanical and will block you; that is the point, and it is how you move fast safely.
 
 ## Day 1 - understand the flow before you touch it
 
@@ -29,7 +29,7 @@ flowchart LR
     commit --> battery["run the 4-agent battery"] --> ledger["review:findings clear; resolve any"]
     ledger --> stamp["review:stamp"] --> push["push (passes pre-push)"]
     push --> pr["ci:local + gates:runtime; gh pr create (fill template)"]
-    pr --> conv["converge claude-review"] --> ready["claude-gate"] --> owner["owner merges"]
+    pr --> conv["converge claude-review"] --> ready["claude-gate + pr:gate"] --> owner["owner merges"]
     owner --> adr["add an ADR"]
 ```
 

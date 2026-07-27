@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import {
   auditGates,
+  collectHookRefs,
   collectScriptRefs,
   collectSettingsHookPaths,
 } from '../scripts/check-gate-health';
@@ -98,6 +99,25 @@ describe('auditGates', () => {
         kind: 'hook->unwired',
       },
     ]);
+  });
+
+  it('a hook path in a shell COMMENT is not an invocation, so it cannot wire an orphan', () => {
+    const dead = auditGates({
+      hookFiles: [
+        {
+          name: '.claude/hooks/entry.sh',
+          refs: [],
+          hookRefs: collectHookRefs('# replaces .claude/hooks/helper.sh\n'),
+        },
+        { name: '.claude/hooks/helper.sh', refs: [] },
+      ],
+      settingsRefs: ['.claude/hooks/entry.sh'],
+      exists: () => true,
+    });
+    expect(
+      dead.map((d) => d.source),
+      'A commented-out mention satisfying the sibling exemption is the same fail-open this kind was added to close: the orphan reads as wired because prose named it.',
+    ).toEqual(['.claude/hooks/helper.sh']);
   });
 
   it('does not flag a hook invoked by a sibling hook rather than by settings', () => {

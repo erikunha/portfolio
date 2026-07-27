@@ -117,5 +117,5 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Steps:**
   1. `pnpm ci:local` + `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
   3. The reviewer (claude[bot]) runs automatically on open and on every push; run the `review-convergence` loop (rebase before every push, verify the pushed SHA, reply-before-resolve on threads).
-  4. `pnpm claude-gate` passes and every thread is resolved; the owner squash-merges.
+  4. `pnpm claude-gate` and `pnpm pr:gate` both pass; the owner squash-merges.
 - **Output:** a merged PR. See [review-merge-release](./review-merge-release.md).

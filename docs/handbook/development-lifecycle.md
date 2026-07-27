@@ -20,7 +20,7 @@ flowchart TD
     push --> readypr["pnpm ci:local + gates:runtime"]
     readypr --> pr["gh pr create (fill template)"]
     pr --> conv["Review convergence loop (rebase, push, resolve threads)"]
-    conv --> readymerge["pnpm claude-gate + resolved threads"]
+    conv --> readymerge["pnpm claude-gate + pnpm pr:gate"]
     readymerge --> merge["owner squash-merges (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["post-deploy smoke test"]
@@ -59,7 +59,7 @@ Run `pnpm ci:local`, then `pnpm bundle-check` and `pnpm route-js-check`, then `p
 On the open PR, the `review-convergence` skill drives review to green: rebase before every push, verify the pushed SHA landed, poll each review run to completion — the push already triggers claude[bot], and a `/claude-review` comment lands in the same concurrency group and cancels it, reply-before-resolve on every thread. See [review-merge-release](./review-merge-release.md).
 
 ### 10. Pre-merge gates -> merge
-`pnpm claude-gate` (`scripts/check-claude-approval.ts`) requires the latest `/claude-review` overview verdict to be Approve on the current head; every thread must additionally be resolved and carry a reply, read from `gh pr view <n> --json reviewThreads`. Run `pnpm ci:local` alongside both. Branch protection is enforced by GitHub itself. **AI agents are blocked from `gh pr merge`** (bash-guard exit 2); the repo owner runs the final squash-merge. History shows squash-merge exclusively (zero merge commits), each commit tagged `(#NNN)`.
+`pnpm claude-gate` (`scripts/check-claude-approval.ts`) requires the latest `/claude-review` overview verdict to be Approve on the current head; every thread must additionally be resolved and carry a reply, which `check-pr-comments` (`pnpm pr:gate`) checks over GraphQL and additionally flags as `suspicious_self_resolve`. Run `pnpm ci:local` alongside both. Branch protection is enforced by GitHub itself. **AI agents are blocked from `gh pr merge`** (bash-guard exit 2); the repo owner runs the final squash-merge. History shows squash-merge exclusively (zero merge commits), each commit tagged `(#NNN)`.
 
 ### 11. Deploy -> smoke -> record
 Vercel deploys on merge to `main`. The `smoke.yml` workflow verifies the production deployment (healthz, 7 security headers, apex->www redirect, `/api/ask` + `/api/contact` liveness) and emails on a 503. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note), and session state is handed off via `.remember/`.
@@ -81,7 +81,7 @@ flowchart LR
         g13["Review convergence"]
     end
     subgraph premerge["pre-merge"]
-        g15["ci:local"] --> g17["claude-review Approve"] --> g18["resolved threads"]
+        g15["ci:local"] --> g17["claude-gate: Approve"] --> g18["pr:gate: resolved threads"]
     end
     commit --> prepush --> prepr --> open --> premerge --> merge["owner squash-merge"]
 ```

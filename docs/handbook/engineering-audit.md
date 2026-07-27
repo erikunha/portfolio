@@ -6,7 +6,7 @@
 
 | Dimension | Maturity | Evidence |
 |---|---|---|
-| Process discipline | **High** | spec -> architect gate -> plan -> review battery -> ~18 gates; reversibility-tracked ADRs |
+| Process discipline | **High** | spec -> architect gate -> plan -> review battery -> a per-commit/pre-push/pre-PR/pre-merge gate chain; reversibility-tracked ADRs |
 | AI-assisted development | **High** | mechanical enforcement (exit 2 hooks), transcript-verified review, a self-healing meta-gate |
 | Verification | **High** | the stamp proves resolution not just dispatch; eval-gated AI feature |
 | Knowledge management | **High** | specs/plans/ADRs/memory all explicit; doc-drift gated |

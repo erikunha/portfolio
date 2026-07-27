@@ -21,8 +21,8 @@ flowchart TD
     r5 --> o1["open PR: fill every template section"]
     o1 --> o2["Review convergence loop"]
     o2 --> m1["pre-merge: ci:local"]
-    m1 --> m3["pre-merge: claude-review Approve"]
-    m3 --> m4["pre-merge: resolved threads"]
+    m1 --> m3["pre-merge: claude-gate (Approve)"]
+    m3 --> m4["pre-merge: pr:gate (resolved threads)"]
     m4 --> merge["owner: squash-merge (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["smoke.yml: healthz + headers + liveness"]
@@ -72,7 +72,7 @@ Hard rules (each learned from a real failure): rebase before *every* push; the r
 
 ## Pre-merge gates (`pnpm claude-gate` + `pnpm ci:local`)
 
-In order: `ci:local` -> `check-claude-approval` (`pnpm claude-gate`: the latest `/claude-review` verdict must be Approve, on the current head) -> every review thread resolved and carrying a reply (`gh pr view <n> --json reviewThreads`). Branch protection is enforced by GitHub itself rather than re-checked locally.
+In order: `ci:local` -> `check-claude-approval` (`pnpm claude-gate`: the latest `/claude-review` verdict must be Approve, on the current head) -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL, all threads `isResolved`, flags `suspicious_self_resolve`). Branch protection is enforced by GitHub itself rather than re-checked locally.
 
 **AI agents are blocked from `gh pr merge`** by `bash-guard.sh` (exit 2). The repo owner runs the final squash-merge once all gates pass. The branch-protection invariant means all changes go through a PR; direct pushes to `main` are blocked at the pre-push hook.
 

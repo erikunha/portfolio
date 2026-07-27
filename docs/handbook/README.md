@@ -62,7 +62,7 @@ flowchart TB
 
 ## What makes this platform distinctive
 
-- **Spec-driven and gate-heavy.** Work flows spec -> architect-review gate -> plan -> implement, and passes ~18 gates between "code written" and "merged" (see [review-merge-release](./review-merge-release.md)).
+- **Spec-driven and gate-heavy.** Work flows spec -> architect-review gate -> plan -> implement, and passes the gate chain between "code written" and "merged" (see [review-merge-release](./review-merge-release.md)).
 - **AI is a first-class participant, but bounded.** Claude Code writes, tests, and reviews; mechanical hooks (exit 2) and a transcript-verified review battery keep it honest. AI agents are explicitly blocked from merging.
 - **Every decision is reversible and recorded.** ~240 ADRs in `DECISIONS.md`, each with a "Reversible: ..." note. Failed attempts are recorded, not deleted.
 - **The development platform itself is engineered and self-healing.** A meta-gate detects dead gates; a verification loop proves findings are resolved. See [engineering-audit](./engineering-audit.md).

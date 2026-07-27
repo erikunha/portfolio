@@ -60,7 +60,7 @@ never do (bash-guard blocks it).
    `gh pr comment <N>` posts an unanchored timeline comment (`#issuecomment-…`) —
    it is attached to no code, cannot be resolved, and never appears in
    `reviewThreads`, so it is invisible to the resolve-thread ground truth in
-   `pnpm claude-gate`. Do not use it to report a finding, a fix, or a status.
+   `pnpm pr:gate`. Do not use it to report a finding, a fix, or a status.
    - **Finding already has a thread** (claude[bot] inline comment): reply in that
      thread — `gh api repos/erikunha/portfolio/pulls/<N>/comments/<comment_id>/replies -f body=…`
      (or GitHub MCP `add_reply_to_pull_request_comment`), then resolve.
@@ -84,7 +84,7 @@ never do (bash-guard blocks it).
 9. **After any push, verify every thread has >= 2 comments.** `comments=1` is a
    silent resolve; add the missing reply (GitHub MCP `add_reply_to_pull_request_comment`,
    not `gh api .../replies`, which 404s on resolved threads).
-10. Repeat 5-9 until CI is green AND 0 unresolved threads AND `pnpm claude-gate`
+10. Repeat 5-9 until CI is green AND `pnpm pr:gate` reports 0 unresolved threads AND `pnpm claude-gate`
    exits OK (it gates on a claude[bot] **Approve** verdict that is non-stale —
    reviewed SHA == HEAD). Only then tell the repo owner to run `gh pr merge`.
 
