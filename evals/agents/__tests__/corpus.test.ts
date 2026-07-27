@@ -50,10 +50,11 @@ describe('evals/agents seeded corpus', () => {
   });
 
   it('the claude-review-request assert now REJECTS commenting the trigger, and still rejects Copilot', () => {
-    // Inverted on 2026-07-27 with the pull_request_target switch. Commenting the
-    // trigger phrase after a push used to be the right answer; it now cancels the
-    // auto-run already reviewing that head, because both land in the same per-PR
-    // concurrency group. The Copilot half is unchanged.
+    // Inverted on 2026-07-27. Commenting the
+    // trigger phrase after a push used to be the right answer; under the current
+    // `pull_request` trigger it cancels the auto-run already reviewing that head,
+    // because both land in the same per-PR concurrency group. The Copilot half is
+    // unchanged.
     expect(claudeReviewRequest.grader).toBe('code');
     const a = claudeReviewRequest.assert;
     expect(a).toBeTypeOf('function');

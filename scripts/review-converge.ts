@@ -214,7 +214,19 @@ export async function fetchState(
     .sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''))
     .map((c) => c.body ?? '');
 
-  const changed = await gh(['pr', 'diff', String(prNumber), '--name-only']).catch(() => '');
+  // No blanket catch, for the same reason main() below does not have one: a
+  // swallowed failure here reads as "this PR does not edit the workflow", which
+  // sends the caller back to "push, it reviews itself" — the never-terminating
+  // advice editsReviewerWorkflow exists to prevent — with no sign the check
+  // failed. Wrong-but-plausible is the worst state for this flag.
+  let changed: string;
+  try {
+    changed = await gh(['pr', 'diff', String(prNumber), '--name-only']);
+  } catch (err) {
+    throw new Error(
+      `could not read the changed files for PR #${prNumber}, so whether it edits ${REVIEWER_WORKFLOW} is unknown: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
 
   return {
     prNumber,

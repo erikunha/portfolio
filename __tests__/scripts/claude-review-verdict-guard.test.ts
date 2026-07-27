@@ -225,12 +225,13 @@ describe('the guard reds the job, and skips only what it provably cannot review'
       { body: 'nothing', event: 'pull_request', changed: '.github/workflows/claude-review.yml' },
       0,
     ],
-    // The SAME diff reached by comment must still be asserted: that path runs the
-    // default-branch copy, so it can and must post a verdict. Skipping it would
-    // strand workflow-editing PRs with no working path at all.
+    // A pull_request run whose diff does NOT touch the workflow must be asserted
+    // like any other. Without this the skip's two conjuncts are only ever seen
+    // both-true or both-false, so collapsing them to the event alone — skipping
+    // every pull_request run — passes.
     [
-      'the same diff reached by comment is asserted, never skipped',
-      { body: 'nothing', event: 'issue_comment', changed: '.github/workflows/claude-review.yml' },
+      'a pull_request run touching other files is asserted, never skipped',
+      { body: 'nothing', event: 'pull_request', changed: 'README.md' },
       1,
     ],
     [
