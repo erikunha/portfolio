@@ -43,6 +43,27 @@ const FETCH = /(\w+)=\$\(gh api[\s\S]*?\|\s*jq -r "((?:[^"\\]|\\.)*)"\s*\)/;
 const GREP = /\n\s*if printf '%s' "\$(\w+)"\s*\|\s*grep -qiE '([^']+)'; then/;
 
 describe('the guard fetches, filters and tests the same thing the merge gate reads', () => {
+  it('no gh api fetch in this workflow passes a filter flag alongside --slurp', () => {
+    // gh refuses --slurp with --jq, -q, or --template. The stub encodes that, but
+    // only for the step it executes; this reads the WHOLE file, because the same
+    // invalid invocation shipped twice — once in the guard and once in the
+    // cancelled-run supersede step, which no test selects.
+    // Backslash-continuations are joined FIRST. Without that the scan sees only
+    // the first physical line of each fetch, and a `--jq` on the continuation
+    // line is invisible — which is exactly how the supersede step's copy of this
+    // bug survived the first version of this assertion.
+    const yml = readFileSync(WORKFLOW, 'utf8').replace(/\\\n\s*/g, ' ');
+    const fetches = yml.match(/gh api[^\n]*/g) ?? [];
+    expect(fetches.length).toBeGreaterThan(0);
+    for (const f of fetches) {
+      if (!f.includes('--slurp')) continue;
+      expect(
+        /--jq|(?:^|\s)-q(?:\s|$)|--template/.test(f),
+        `A gh api call combines --slurp with a filter flag. gh refuses that, writes to stderr and exits 1, so under set -euo pipefail the step dies at the assignment. Pipe into a real jq instead.\n\n${f}`,
+      ).toBe(false);
+    }
+  });
+
   it('greps the output of the filtered fetch, not some other fetch', () => {
     const fetch = FETCH.exec(guardScript());
     const grep = GREP.exec(guardScript());
@@ -136,7 +157,8 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     const bin = mkdtempSync(join(tmpdir(), 'guard-gh-'));
     writeFileSync(
       join(bin, 'gh'),
-      // The stub REJECTS `--slurp` together with `--jq`, exactly as real gh does
+      // The stub REJECTS `--slurp` together with ANY filter flag, which is gh's
+      // real predicate: --jq, its shorthand -q, and --template all trip it
       // ("the --slurp option is not supported with --jq or --template"). Without
       // this the stub answers any argument list, so the guard's fetch could be
       // malformed and every row still passed — which is how a broken `gh api`
@@ -147,7 +169,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
         'if [ "$1" = "api" ]; then',
         '  args="$*"',
         '  case "$args" in',
-        '    *--slurp*--jq*|*--jq*--slurp*)',
+        '    *--slurp*--jq*|*--jq*--slurp*|*--slurp*-q\\ *|*-q\\ *--slurp*|*--slurp*--template*|*--template*--slurp*)',
         '      echo "the \\`--slurp\\` option is not supported with \\`--jq\\` or \\`--template\\`" >&2',
         '      exit 1',
         '      ;;',

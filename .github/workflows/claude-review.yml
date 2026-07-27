@@ -108,9 +108,10 @@ jobs:
       # is therefore strictly NARROWER than the parser PATTERN-FOR-PATTERN. The
       # corpora must match too: the gate reads only the LATEST claude[bot] comment,
       # so the filter sorts and takes `last`. --slurp is load-bearing, not decoration:
-      # gh applies --jq PER PAGE under --paginate, so without it `last` yields one
-      # body per page and the guard greps their union — the very failure `last` was
-      # added to remove, reappearing only once a PR passes 30 comments.
+      # --slurp makes gh emit ONE array of pages instead of a filtered result per
+      # page, which is the shape the `.[][]` filter destructures; without it `last`
+      # yields one body per page and the guard greps their union — the very failure
+      # `last` was added to remove, reappearing only once a PR passes 30 comments.
       # A cancelled run cannot finish its own progress comment, so the checklist
       # it posted at job start is orphaned on the PR forever. That is not
       # cosmetic: three of them accumulated on #229 and read as three live
@@ -132,7 +133,7 @@ jobs:
           [ -z "${SINCE:-}" ] && exit 0
 
           id=$(gh api --paginate --slurp "repos/$REPO/issues/$PR/comments" \
-            --jq "[.[][] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | sort_by(.created_at) | last | .id") || exit 0
+            | jq -r "[.[][] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | sort_by(.created_at) | last | .id // empty") || exit 0
           [ -z "$id" ] || [ "$id" = "null" ] && exit 0
 
           gh api -X PATCH "repos/$REPO/issues/comments/$id" \
@@ -173,12 +174,14 @@ jobs:
           # single fetch raced the final edit by one second and failed a review
           # that had posted a valid "**Verdict: Request changes.**".
           for attempt in 1 2 3 4 5; do
-            # Piped to jq, NOT gh's --jq: gh rejects `--slurp` combined with
-            # `--jq` ("the --slurp option is not supported with --jq or
-            # --template") and prints usage, so the fetch returned help text and
-            # the guard red on every run that was not skipped. --slurp is still
-            # load-bearing — without it gh applies the filter per page and `last`
-            # yields one body per page — so the filter moves to a real jq instead.
+            # Piped to jq, NOT gh's --jq: gh REFUSES `--slurp` alongside any
+            # filter flag (`--jq`, `-q`, `--template`), writing the message to
+            # stderr and exiting 1 — so under `set -euo pipefail` the step aborted
+            # at this assignment and neither the retry loop nor the FAIL
+            # diagnostic below was ever reached. --slurp is still load-bearing:
+            # it makes gh emit ONE array of pages, which is the shape `.[][]`
+            # destructures; without it the filter sees each page separately and
+            # `last` yields one body per page. So the filter moves to a real jq.
             fresh=$(gh api --paginate --slurp "repos/$REPO/issues/$PR/comments" \
               | jq -r "[.[][] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | sort_by(.created_at) | last | .body // empty")
 
