@@ -1,6 +1,6 @@
 ---
 name: review-convergence
-description: Use when driving an open PR's claude-review (`/claude-review`, claude[bot]) to green — rebase before every push, reply citing the fix SHA before resolving any thread, verify the pushed SHA; poll each review run to completion before assessing it; re-request only when no auto-review will otherwise run. Not for the final merge, which is `pnpm ready-to-merge`.
+description: Use when driving an open PR's claude-review (`/claude-review`, claude[bot]) to green — rebase before every push, reply citing the fix SHA before resolving any thread, verify the pushed SHA; poll each review run to completion before assessing it; re-request only when no auto-review will otherwise run. Not for the final merge itself, which the repo owner runs once the loop is converged.
 ---
 
 # Review convergence loop
@@ -37,7 +37,7 @@ never do (bash-guard blocks it).
    to remove this case and reverted the same day — upstream's token exchange 401s
    on that event — so do not "fix" it by switching the trigger back.
 
-   `pnpm review:converge` reports which case applies; check it before commenting
+   `gh pr view <n> --json reviewThreads,statusCheckRollup` shows which case applies; check it before commenting
    rather than commenting by reflex.
 
 3. **POLL THE RUN TO COMPLETION. Do not report back before it lands.**
@@ -49,7 +49,7 @@ never do (bash-guard blocks it).
    Then read the OUTCOME, never the job conclusion. A run reports `success` when
    it posted nothing — a skip, a cancellation, or a guard carve-out all look
    identical to a clean review from the outside. The honest checks are: did a
-   `claude[bot]` comment appear, and does `pnpm review:converge` say converged.
+   `claude[bot]` comment appear, and does `pnpm claude-gate` pass on HEAD.
    Three separate silent-greens on #228-#230 were each first misread as a pass
    because the job was green.
 
@@ -60,7 +60,7 @@ never do (bash-guard blocks it).
    `gh pr comment <N>` posts an unanchored timeline comment (`#issuecomment-…`) —
    it is attached to no code, cannot be resolved, and never appears in
    `reviewThreads`, so it is invisible to the resolve-thread ground truth in
-   `pnpm ready-to-merge`. Do not use it to report a finding, a fix, or a status.
+   `pnpm claude-gate`. Do not use it to report a finding, a fix, or a status.
    - **Finding already has a thread** (claude[bot] inline comment): reply in that
      thread — `gh api repos/erikunha/portfolio/pulls/<N>/comments/<comment_id>/replies -f body=…`
      (or GitHub MCP `add_reply_to_pull_request_comment`), then resolve.
@@ -84,7 +84,7 @@ never do (bash-guard blocks it).
 9. **After any push, verify every thread has >= 2 comments.** `comments=1` is a
    silent resolve; add the missing reply (GitHub MCP `add_reply_to_pull_request_comment`,
    not `gh api .../replies`, which 404s on resolved threads).
-10. Repeat 5-9 until CI is green AND 0 unresolved threads AND `pnpm ready-to-merge`
+10. Repeat 5-9 until CI is green AND 0 unresolved threads AND `pnpm claude-gate`
    exits OK (it gates on a claude[bot] **Approve** verdict that is non-stale —
    reviewed SHA == HEAD). Only then tell the repo owner to run `gh pr merge`.
 

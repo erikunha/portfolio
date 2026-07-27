@@ -14,16 +14,15 @@ flowchart TD
     p2 --> p3["pre-push: review stamp == HEAD"]
     p3 --> p4["pre-push: no unaudited API edit"]
     p4 --> p5["pre-push: pnpm verify"]
-    p5 --> r1["ready-for-pr: ci:local"]
-    r1 --> r2["ready-for-pr: bundle-check"]
-    r2 --> r4["ready-for-pr: gates:runtime (LHCI+axe+E2E)"]
+    p5 --> r1["pre-PR: ci:local"]
+    r1 --> r2["pre-PR: bundle-check"]
+    r2 --> r4["pre-PR: gates:runtime (LHCI+axe+E2E)"]
     r4 --> r5["pr-review-toolkit:code-reviewer against the diff"]
-    r5 --> o1["open PR: validate-pr-body"]
+    r5 --> o1["open PR: fill every template section"]
     o1 --> o2["Review convergence loop"]
-    o2 --> m1["ready-to-merge: ci:local"]
-    m1 --> m2["ready-to-merge: branch-protection"]
-    m2 --> m3["ready-to-merge: claude-review Approve"]
-    m3 --> m4["ready-to-merge: resolved threads"]
+    o2 --> m1["pre-merge: ci:local"]
+    m1 --> m3["pre-merge: claude-review Approve"]
+    m3 --> m4["pre-merge: resolved threads"]
     m4 --> merge["owner: squash-merge (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["smoke.yml: healthz + headers + liveness"]
@@ -66,14 +65,14 @@ sequenceDiagram
         D->>GH: push fix
         D->>GH: reply citing the fix SHA, THEN resolve
     end
-    D->>D: ready-to-merge passes -> tell owner
+    D->>D: claude-gate passes, threads resolved -> tell owner
 ```
 
 Hard rules (each learned from a real failure): rebase before *every* push; the reply must cite a SHA that is actually on the remote (so reply-after-push-verify); never resolve a thread silently (a thread with one comment is a process failure). Separately, the **PR-comment CI gate** can fail on a timing race (the gate ran before the latest review threads landed); when it does, re-run that workflow rather than pushing a no-op commit. This is a property of the CI gate, not a step the `review-convergence` skill drives.
 
-## Pre-merge gates (`pnpm ready-to-merge`)
+## Pre-merge gates (`pnpm claude-gate` + `pnpm ci:local`)
 
-In order: `ci:local` -> `check-branch-protection main` (run locally because the CI token cannot read the protection endpoint) -> `check-claude-approval` (the latest `/claude-review` verdict must be Approve, on the current head) -> `check-pr-comments` (GraphQL: all threads `isResolved`, flags `suspicious_self_resolve`) -> `pr-metrics` (informational: review-cycle count, size, days open).
+In order: `ci:local` -> `check-claude-approval` (`pnpm claude-gate`: the latest `/claude-review` verdict must be Approve, on the current head) -> every review thread resolved and carrying a reply (`gh pr view <n> --json reviewThreads`). Branch protection is enforced by GitHub itself rather than re-checked locally.
 
 **AI agents are blocked from `gh pr merge`** by `bash-guard.sh` (exit 2). The repo owner runs the final squash-merge once all gates pass. The branch-protection invariant means all changes go through a PR; direct pushes to `main` are blocked at the pre-push hook.
 

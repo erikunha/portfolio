@@ -30,7 +30,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
   -> lint:css-tokens -> test (Vitest)
 ```
 
-`pnpm ci:local` == `pnpm verify`. `pnpm ci` == `verify + build + bundle-check`. `pnpm ready-for-pr` adds `bundle-check` + `route-js-check` + `gates:runtime`.
+`pnpm ci:local` == `pnpm verify`. `pnpm ci` == `verify + build + bundle-check`. `pnpm gates:runtime` adds `bundle-check` + `route-js-check` + `gates:runtime`.
 
 ### The gate scripts (what each protects)
 
@@ -108,8 +108,8 @@ Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, week
 
 ```
 commit (scope blocks) -> (battery + review:findings + review:stamp before opening the PR)
-  -> pnpm ready-for-pr (ci:local + gates:runtime) -> gh pr create (fill the template)
-  -> Review convergence loop (rebase, push, re-request, resolve threads) -> pnpm ready-to-merge
+  -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
+  -> Review convergence loop (rebase, push, re-request, resolve threads) -> pnpm claude-gate
   -> repo owner runs gh pr merge (AI agents are blocked from merging)
 ```
 

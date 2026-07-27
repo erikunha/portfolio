@@ -18,7 +18,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   4. `speckit-plan` + `thinking-risk-premortem` to decompose into tasks (shard into sub-PRs if large).
   5. Branch `feat/<description>`. Implement test-first.
   6. Run the review battery, resolve findings, `review:stamp`, push.
-  7. `pnpm ready-for-pr`, open the PR, converge `/claude-review`, `ready-to-merge`, owner merges.
+  7. `pnpm ci:local` + `gates:runtime`, open the PR, converge `/claude-review`, `claude-gate`, owner merges.
   8. Add an ADR to `DECISIONS.md` with a reversibility note.
 - **AI:** brainstorming, architect review, planning, TDD implementation, the 4-agent battery.
 - **Output:** a squash-merged PR `(#NNN)` + an ADR.
@@ -115,8 +115,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 
 - **Entry:** a stamped, ready branch.
 - **Steps:**
-  1. `pnpm ready-for-pr`; `gh pr create` filling the template (every section non-empty).
-  2. `pnpm validate-pr-body <pr>`.
+  1. `pnpm ci:local` + `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
   3. The reviewer (claude[bot]) runs automatically on open and on every push; run the `review-convergence` loop (rebase before every push, verify the pushed SHA, reply-before-resolve on threads).
-  4. `pnpm ready-to-merge`; the owner squash-merges.
+  4. `pnpm claude-gate` passes and every thread is resolved; the owner squash-merges.
 - **Output:** a merged PR. See [review-merge-release](./review-merge-release.md).

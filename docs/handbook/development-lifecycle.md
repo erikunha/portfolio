@@ -17,10 +17,10 @@ flowchart TD
     commit --> hooks["per-commit hooks: Biome + commitlint"]
     hooks --> battery["4-agent review battery + findings ledger + review:stamp"]
     battery --> push["git push (pre-push gate chain)"]
-    push --> readypr["pnpm ready-for-pr (ci:local + gates:runtime)"]
+    push --> readypr["pnpm ci:local + gates:runtime"]
     readypr --> pr["gh pr create (fill template)"]
     pr --> conv["Review convergence loop (rebase, push, resolve threads)"]
-    conv --> readymerge["pnpm ready-to-merge (gates)"]
+    conv --> readymerge["pnpm claude-gate + resolved threads"]
     readymerge --> merge["owner squash-merges (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["post-deploy smoke test"]
@@ -53,18 +53,18 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 Before opening the PR, the 4-agent review battery runs once, findings are recorded and resolved, and `review:stamp` is written; post-PR fix pushes are reviewed by claude-review, not the battery. On every push, the `.husky/pre-push` hook blocks unless: it does not target `main`, the branch name is valid, no unaudited API edit is pending, and `pnpm verify` passes — and, only when the branch has no open PR yet (the pre-PR push), the review stamp matches HEAD. See [review-merge-release](./review-merge-release.md) for the full chain.
 
 ### 8. Pre-PR -> open PR
-`pnpm ready-for-pr` runs `ci:local` + `gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Then `gh pr create` fills the PR template (every section must be non-empty, enforced by `validate-pr-body`).
+Run `pnpm ci:local`, then `pnpm bundle-check` and `pnpm route-js-check`, then `pnpm gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
 
 ### 9. Review convergence loop
 On the open PR, the `review-convergence` skill drives review to green: rebase before every push, verify the pushed SHA landed, poll each review run to completion — the push already triggers claude[bot], and a `/claude-review` comment lands in the same concurrency group and cancels it, reply-before-resolve on every thread. See [review-merge-release](./review-merge-release.md).
 
 ### 10. Pre-merge gates -> merge
-`pnpm ready-to-merge` runs `ci:local` + branch-protection check + claude-review-approval check (`scripts/check-claude-approval.ts` / `pnpm claude-gate`, requiring the latest `/claude-review` overview verdict to be Approve on HEAD) + resolved-threads check + PR metrics. **AI agents are blocked from `gh pr merge`** (bash-guard exit 2); the repo owner runs the final squash-merge. History shows squash-merge exclusively (zero merge commits), each commit tagged `(#NNN)`.
+`pnpm claude-gate` (`scripts/check-claude-approval.ts`) requires the latest `/claude-review` overview verdict to be Approve on the current head; every thread must additionally be resolved and carry a reply, read from `gh pr view <n> --json reviewThreads`. Run `pnpm ci:local` alongside both. Branch protection is enforced by GitHub itself. **AI agents are blocked from `gh pr merge`** (bash-guard exit 2); the repo owner runs the final squash-merge. History shows squash-merge exclusively (zero merge commits), each commit tagged `(#NNN)`.
 
 ### 11. Deploy -> smoke -> record
 Vercel deploys on merge to `main`. The `smoke.yml` workflow verifies the production deployment (healthz, 7 security headers, apex->www redirect, `/api/ask` + `/api/contact` liveness) and emails on a 503. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note), and session state is handed off via `.remember/`.
 
-## The gate count: ~18 between "written" and "merged"
+## The gate chain between "written" and "merged"
 
 ```mermaid
 flowchart LR
@@ -74,14 +74,14 @@ flowchart LR
     subgraph prepush["pre-push (blocks)"]
         g3["no direct main"] --> g4["branch name"] --> g5["review stamp (pre-PR push only)"] --> g6["API-edit audit marker"] --> g7["pnpm verify"]
     end
-    subgraph prepr["ready-for-pr"]
+    subgraph prepr["pre-PR (manual)"]
         g8["ci:local"] --> g9["bundle-check"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["pr-review-toolkit:code-reviewer"]
     end
     subgraph open["post-open"]
-        g13["validate-pr-body"] --> g14["Review convergence"]
+        g13["Review convergence"]
     end
-    subgraph premerge["ready-to-merge"]
-        g15["ci:local"] --> g16["branch-protection"] --> g17["claude-review Approve"] --> g18["resolved threads"]
+    subgraph premerge["pre-merge"]
+        g15["ci:local"] --> g17["claude-review Approve"] --> g18["resolved threads"]
     end
     commit --> prepush --> prepr --> open --> premerge --> merge["owner squash-merge"]
 ```

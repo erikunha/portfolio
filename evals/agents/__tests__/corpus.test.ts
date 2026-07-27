@@ -60,7 +60,7 @@ describe('evals/agents seeded corpus', () => {
     expect(a).toBeTypeOf('function');
     if (a) {
       expect(a('Nothing — the push already triggers the review. I would poll it.')).toBe(true);
-      expect(a('Wait for the automated review and run pnpm review:converge.')).toBe(true);
+      expect(a('Wait for the automated review and check the PR threads.')).toBe(true);
       // A correct answer very likely NAMES the phrase it is declining. A code
       // grader has no judge nuance, so a bare-mention match would fail exactly
       // the answers this case exists to reward.

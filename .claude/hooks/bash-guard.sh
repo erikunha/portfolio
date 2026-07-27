@@ -41,7 +41,7 @@ if [ "$DRC" -ne 0 ]; then
     exit 2
   fi
   if printf '%s' "$CMD" | grep -qE 'gh\s+pr\s+merge'; then
-    printf '[BLOCKED] gh pr merge called directly. Run: pnpm ready-to-merge [pr-number].\n'
+    printf '[BLOCKED] gh pr merge called directly. Check pnpm claude-gate, then the owner merges.\n'
     exit 2
   fi
   if printf '%s' "$CMD" | grep -qE 'git push.*(--force|--force-with-lease|-f)( |$).*main|git push.*main.*(--force|--force-with-lease|-f)( |$)' 2>/dev/null; then
@@ -118,11 +118,10 @@ fi
 
 if printf '%s' "$CMD" | grep -qE 'gh pr create'; then
   printf '[WARN] Before gh pr create, verify:\n'
-  printf '  1. pnpm ready-for-pr passed (ci:local + gates:runtime)\n'
+  printf '  1. pnpm ci:local and pnpm gates:runtime passed\n'
   printf '  2. pr-review-toolkit:code-reviewer dispatched — Critical/Important findings addressed\n'
   printf '  3. PR body written FROM the template (cat .github/pull_request_template.md first)\n'
-  printf 'MANDATORY after creation: pnpm validate-pr-body <pr-number>\n'
-  printf 'Do not request reviewer until validate-pr-body exits 0.\n'
+  printf 'Fill EVERY section of .github/pull_request_template.md before creating.\n'
 fi
 
 exit 0

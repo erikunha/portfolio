@@ -28,8 +28,8 @@ flowchart LR
     edit["edit"] --> tdd["add/adjust a test"] --> commit["commit (scope!)"]
     commit --> battery["run the 4-agent battery"] --> ledger["review:findings clear; resolve any"]
     ledger --> stamp["review:stamp"] --> push["push (passes pre-push)"]
-    push --> pr["ready-for-pr; gh pr create (fill template)"]
-    pr --> conv["converge claude-review"] --> ready["ready-to-merge"] --> owner["owner merges"]
+    push --> pr["ci:local + gates:runtime; gh pr create (fill template)"]
+    pr --> conv["converge claude-review"] --> ready["claude-gate"] --> owner["owner merges"]
     owner --> adr["add an ADR"]
 ```
 
