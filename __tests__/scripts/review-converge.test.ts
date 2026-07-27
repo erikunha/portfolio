@@ -5,6 +5,7 @@ import {
   fetchState,
   MIN_COMMENTS_PER_RESOLVED_THREAD,
   nextStep,
+  REVIEWER_WORKFLOW,
 } from '@/scripts/review-converge';
 
 const HEAD = '0ae2f0d7f85d0c8e4d1c574b913958ac6c66d3ba';
@@ -19,6 +20,7 @@ function state(over: Partial<ConvergeState> = {}): ConvergeState {
     headSha: HEAD,
     latestVerdictBody: `Reviewed at head commit \`${HEAD}\`.\n\n**Verdict: Approve.**`,
     threads: [thread()],
+    editsReviewerWorkflow: false,
     ...over,
   };
 }
@@ -134,6 +136,60 @@ describe('review-converge nextStep', () => {
     expect(step.done).toBe(true);
   });
 
+  it('tells a reviewer-workflow PR to comment, since its auto path cannot post', () => {
+    // The one case where /claude-review is required rather than harmful: GitHub
+    // loads a `pull_request` workflow from the PR head, the action refuses, and
+    // the guard skips — so the job goes green having reviewed nothing and
+    // "push, it reviews itself" is advice that never terminates.
+    const step = nextStep(
+      state({
+        editsReviewerWorkflow: true,
+        latestVerdictBody: `Reviewed at head commit \`${HEAD}\`.\n\n**Verdict: Request changes.**`,
+      }),
+    );
+    expect(step.action).toBe('request-review');
+    expect(step.reason).toMatch(/Comment \/claude-review/);
+    expect(step.reason).not.toMatch(/the push triggers the review on its own/);
+  });
+
+  it('a STALE approve on a reviewer-workflow PR also says only a comment can refresh it', () => {
+    // The stale-approve branch carries its own editsReviewerWorkflow ternary, and
+    // it had no coverage for the true case — collapsing it to always return the
+    // else message left every test green, because the only assertion on that
+    // branch matched `/stale/`, which lives in the unconditional prefix.
+    const step = nextStep(
+      state({
+        editsReviewerWorkflow: true,
+        latestVerdictBody: '**Verdict: Approve.** Reviewed at head commit `deadbeefdeadbeef`.',
+      }),
+    );
+    expect(step.done).toBe(false);
+    expect(step.reason).toMatch(/stale/);
+    expect(step.reason).toMatch(/only a \/claude-review comment can refresh it/);
+  });
+
+  it('a STALE approve on an ordinary PR says a push refreshes it', () => {
+    const step = nextStep(
+      state({
+        editsReviewerWorkflow: false,
+        latestVerdictBody: '**Verdict: Approve.** Reviewed at head commit `deadbeefdeadbeef`.',
+      }),
+    );
+    expect(step.reason).toMatch(/A push triggers a review on its own/);
+    expect(step.reason).not.toMatch(/only a \/claude-review comment can refresh it/);
+  });
+
+  it('tells an ordinary PR the opposite: push, do not comment', () => {
+    const step = nextStep(
+      state({
+        editsReviewerWorkflow: false,
+        latestVerdictBody: `Reviewed at head commit \`${HEAD}\`.\n\n**Verdict: Request changes.**`,
+      }),
+    );
+    expect(step.reason).toMatch(/the push triggers the review on its own/);
+    expect(step.reason).not.toMatch(/Comment \/claude-review/);
+  });
+
   it('converges on a PR that drew no review threads at all', () => {
     const step = nextStep(state({ threads: [] }));
     expect(step.done).toBe(true);
@@ -143,7 +199,14 @@ describe('review-converge nextStep', () => {
 describe('review-converge fetchState', () => {
   const HEAD_OID = 'aaaaaaaabbbbbbbbccccccccddddddddeeeeeeee';
 
-  function stubGh(over: { hasNextPage?: boolean; comments?: unknown[] } = {}) {
+  function stubGh(
+    over: {
+      hasNextPage?: boolean;
+      comments?: unknown[];
+      changed?: string[];
+      diffFails?: boolean;
+    } = {},
+  ) {
     return async (args: string[]): Promise<string> => {
       if (args[1] === 'graphql') {
         return JSON.stringify({
@@ -166,9 +229,40 @@ describe('review-converge fetchState', () => {
           },
         });
       }
+      if (args[0] === 'pr' && args[1] === 'diff') {
+        if (over.diffFails) throw new Error('gh: API rate limit exceeded');
+        return (over.changed ?? []).join('\n');
+      }
       return JSON.stringify([over.comments ?? []]);
     };
   }
+
+  it('detects a PR that changes the reviewer workflow, and one that does not', async () => {
+    // Read from `gh pr diff --name-only`, so the flag reflects the PR's real
+    // contents rather than anything the caller asserts about it.
+    const edits = await fetchState(
+      'o',
+      'r',
+      1,
+      stubGh({ changed: ['README.md', REVIEWER_WORKFLOW] }),
+    );
+    expect(edits.editsReviewerWorkflow).toBe(true);
+    const plain = await fetchState('o', 'r', 1, stubGh({ changed: ['README.md'] }));
+    expect(plain.editsReviewerWorkflow).toBe(false);
+  });
+
+  it('throws when the diff read fails, rather than reading it as "does not edit"', async () => {
+    // The failure path of the try/catch that replaced a blanket `.catch(() => '')`.
+    // Untested, reverting to the blanket catch left every case green while a
+    // transient gh error silently produced editsReviewerWorkflow=false — the
+    // wrong-but-plausible value that resurrects the never-terminating advice.
+    await expect(fetchState('o', 'r', 1, stubGh({ diffFails: true }))).rejects.toThrow(
+      /could not read the changed files/,
+    );
+    await expect(fetchState('o', 'r', 1, stubGh({ diffFails: true }))).rejects.toThrow(
+      /rate limit exceeded/,
+    );
+  });
 
   it('refuses to converge on a truncated thread page rather than reporting resolved', async () => {
     await expect(fetchState('o', 'r', 1, stubGh({ hasNextPage: true }))).rejects.toThrow(

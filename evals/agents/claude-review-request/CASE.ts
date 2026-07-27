@@ -17,7 +17,7 @@ const NEGATION_WINDOW = 40;
 
 const assert: CodeAssertion = (output: string): boolean => {
   // Commenting the trigger phrase is the ANTI-pattern now: the workflow runs on
-  // pull_request_target, so opening or pushing already starts a review, and a
+  // pull_request, so opening or pushing already starts a review, and a
   // comment seconds later lands in the same per-PR concurrency group and cancels
   // the run it duplicates.
   //
@@ -45,7 +45,7 @@ export default validateAgentEvalCase(
       name: 'CLAUDE.md:claude-review',
       systemText:
         'claude-review is the AI reviewer and it runs automatically: the workflow triggers on ' +
-        'pull_request_target, so opening a PR and every push start a review on their own. Do NOT ' +
+        'pull_request, so opening a PR and every push start a review on their own. Do NOT ' +
         'comment the trigger phrase after a push — the per-PR concurrency group cancels the ' +
         'in-flight run. Poll the run instead. GitHub Copilot was dropped, so never request it.',
     },

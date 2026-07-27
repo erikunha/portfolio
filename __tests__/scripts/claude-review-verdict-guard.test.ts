@@ -146,6 +146,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     since?: string;
     event?: string;
     changed?: string;
+    diffFails?: boolean;
   };
 
   function runGuard({
@@ -153,6 +154,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     since = '2026-01-01T00:00:00Z',
     event = 'pull_request',
     changed = 'README.md',
+    diffFails = false,
   }: Run) {
     const bin = mkdtempSync(join(tmpdir(), 'guard-gh-'));
     writeFileSync(
@@ -176,6 +178,14 @@ describe('the guard reds the job, and skips only what it provably cannot review'
         '  esac',
         '  printf \'%s\' "$GUARD_STUB_PAGES"',
         'else',
+        '  # The diff read can FAIL. Its failure path is what stops a transient gh',
+        '  # error reading as "this PR does not edit the workflow", which would make',
+        '  # the guard assert a verdict that provably cannot exist.',
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: bash parameter expansion inside a shell script being written to disk, not a JS template. Interpolating it would bake the value in at test-authoring time and the stub could never vary per case.
+        '  if [ -n "${GUARD_STUB_DIFF_FAILS:-}" ]; then',
+        '    echo "gh: API rate limit exceeded" >&2',
+        '    exit 1',
+        '  fi',
         '  printf \'%s\\n\' "$GUARD_STUB_CHANGED"',
         'fi',
         '',
@@ -199,6 +209,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
             [{ user: { login: 'claude[bot]' }, created_at: '2030-01-01T00:00:00Z', body }],
           ]),
           GUARD_STUB_CHANGED: changed,
+          ...(diffFails ? { GUARD_STUB_DIFF_FAILS: '1' } : {}),
           VERDICT_RETRY_SLEEP: '0',
         },
       });
@@ -215,12 +226,32 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ['no verdict in the fetched body', { body: '### Review\n- [x] Gather context' }, 1],
     ['a verdict in the fetched body', { body: 'head `abc1234`. **Approve**' }, 0],
     ['no review-start timestamp', { body: '**Approve**', since: '' }, 1],
-    // `changed` and `event` are dead inputs now — the guard reads neither — so
-    // this row proves only that an empty body reds. The "not skipped" property is
-    // held structurally below, by banning any early exit before the verdict test.
+    ['a body with no verdict reds', { body: 'nothing' }, 1],
+    // The skip FIRING is an EXECUTED row, not a string match. Dropping
+    // `--name-only` from the `gh pr diff` capture leaves every text assertion
+    // green while `-x` stops matching any line, the skip never fires, and every
+    // PR editing this workflow reds with a failure no fix can clear.
     [
-      'a body with no verdict reds regardless of which files the PR touched',
-      { body: 'nothing' },
+      'a pull_request run whose diff touches this workflow is skipped, not red',
+      { body: 'nothing', event: 'pull_request', changed: '.github/workflows/claude-review.yml' },
+      0,
+    ],
+    // A pull_request run whose diff does NOT touch the workflow must be asserted
+    // like any other. Without this the skip's two conjuncts are only ever seen
+    // both-true or both-false, so collapsing them to the event alone — skipping
+    // every pull_request run — passes.
+    [
+      'a pull_request run touching other files is asserted, never skipped',
+      { body: 'nothing', event: 'pull_request', changed: 'README.md' },
+      1,
+    ],
+    // A failed diff read must not be SWALLOWED: defaulted to empty it silently
+    // decides "does not edit the workflow" and asserts a verdict that cannot
+    // exist. Exit code alone does not separate guarded from unguarded — both red
+    // under `set -e` — so the diagnostic is asserted separately below.
+    [
+      'a failed diff read reds rather than deciding the skip silently',
+      { body: 'head `abc1234`. **Approve**', event: 'pull_request', diffFails: true },
       1,
     ],
     [
@@ -272,28 +303,79 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ).toContain('exit 1');
   });
 
-  it('reaches the verdict test on every run: no early exit before the fetch', () => {
-    // The property is "nothing short-circuits before the verdict is tested", NOT
-    // "these two tokens are absent". Banning `GITHUB_EVENT_NAME` and `SKIP` left
-    // the identical carve-out reachable spelled any other way — keyed on
-    // `gh pr diff`, on `$GITHUB_EVENT_PATH`, or simply lowercase. Assert the
-    // structure instead: the only `exit 0` may be the one that follows a matched
-    // verdict.
-    const script = guardScript();
-    const fetchAt = script.indexOf('gh api');
-    expect(fetchAt, 'the guard no longer fetches comments').toBeGreaterThan(0);
-
-    const before = script.slice(0, fetchAt);
+  it('a failed diff read explains itself rather than aborting opaquely', () => {
+    // The exit CODE is identical guarded or unguarded — `set -e` reds either way
+    // — so a status assertion passes on both the ideal and the broken state,
+    // which is the trap this repo's own gate-robustness prompt names. The
+    // diagnostic is the only thing that separates them, and it is the difference
+    // between a maintainer knowing why the merge gate is blocked and not.
+    const { status, stderr } = runGuard({
+      body: 'head `abc1234`. **Approve**',
+      event: 'pull_request',
+      diffFails: true,
+    });
+    expect(status).not.toBe(0);
     expect(
-      /\bexit 0\b/.test(before),
-      `The guard exits 0 BEFORE it fetches anything. Under pull_request_target the base workflow always runs and the action never refuses, so every run can post a verdict — an early exit is a run that reviewed nothing reporting success, which is the silent green this step exists to end.\n\n${before.slice(-400)}`,
+      stderr,
+      'A failed `gh pr diff` aborts with no explanation. Guard the assignment and say what is unknown: whether this PR edits claude-review.yml decides if a missing verdict is expected or a real failure.',
+    ).toMatch(/could not read the changed files/);
+  });
+
+  it('skips on BOTH the event and the diff predicate, never on the echo alone', () => {
+    // The carve-out is back with the `pull_request` trigger: GitHub loads the
+    // workflow from the PR head, the action refuses on any PR editing this file,
+    // and no verdict can exist to assert — a red nothing could clear. It was
+    // correctly deleted while the trigger was `pull_request_target`, where the
+    // action never refuses.
+    //
+    // Asserting the string "claude-review.yml" alone is not enough: it is
+    // satisfied by the echo INSIDE the block, so deleting the whole
+    // `gh pr diff … | grep -qx …` conjunct ran green while the guard skipped
+    // every pull_request run unconditionally.
+    const skip = block(
+      /if \[ "\$GITHUB_EVENT_NAME" = "pull_request" \]/,
+      'a workflow-editing skip',
+    );
+    expect(
+      skip,
+      'The skip must test the DIFF, not just the event. Without the diff conjunct the guard skips every pull_request run, which is a permanent silent green.',
+    ).toContain("grep -qx '.github/workflows/claude-review.yml'");
+    expect(skip).toContain('exit 0');
+
+    // The file list must be CAPTURED, never piped straight into the condition.
+    // `grep -q` exits on its first match while `gh` is still writing, `gh` dies
+    // of SIGPIPE (141), and `pipefail` makes the pipeline status 141 — so the
+    // `if` is false and the skip is bypassed on exactly the PRs it exists for.
+    // Nondeterministic: it depends on write buffering.
+    // Continuations joined FIRST, exactly as the --slurp assertion above does.
+    // Without the join, reformatting `gh pr diff "$PR" --name-only \` with the
+    // `| grep` on the next line makes this regex stop at the newline and report
+    // "not piped" while the pipe — and the SIGPIPE race — is still there. That
+    // bypass has already been used once in this file.
+    const joined = guardScript().replace(/\\\n\s*/g, ' ');
+    expect(
+      /gh pr diff[^\n]*\|\s*grep/.test(joined),
+      'The skip pipes `gh pr diff` straight into grep. Under `set -o pipefail` that races SIGPIPE and intermittently fails to skip, reding a workflow-editing PR with a failure no fix can clear. Capture the list first, then grep the variable.',
     ).toBe(false);
-
-    const exits = script.match(/\bexit 0\b/g) ?? [];
     expect(
-      exits.length,
-      'More than one `exit 0` in the guard. Exactly one is expected: the success path after a verdict matched.',
-    ).toBe(1);
+      skip,
+      'The skip no longer greps a captured file list, so nothing binds it to the diff.',
+    ).toMatch(/grep -qx '\.github\/workflows\/claude-review\.yml' <<</);
+  });
+
+  it('never skips a comment-triggered run, which can always post a verdict', () => {
+    // The issue_comment path runs the DEFAULT-branch copy, so the action does not
+    // refuse there even when the PR edits this workflow — which is precisely why
+    // a comment is the documented escape hatch for those PRs. Skipping it would
+    // remove the only path that still works on them.
+    const skip = block(
+      /if \[ "\$GITHUB_EVENT_NAME" = "pull_request" \]/,
+      'a workflow-editing skip',
+    );
+    expect(
+      /issue_comment/.test(skip),
+      'The skip predicate now mentions issue_comment. That path can always post a verdict; skipping it strands workflow-editing PRs with no way to be reviewed at all.',
+    ).toBe(false);
   });
 });
 

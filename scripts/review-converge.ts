@@ -20,11 +20,21 @@ export type ConvergeThread = {
   commentCount: number;
 };
 
+export const REVIEWER_WORKFLOW = '.github/workflows/claude-review.yml';
+
 export type ConvergeState = {
   prNumber: number;
   headSha: string;
   latestVerdictBody: string | null;
   threads: ConvergeThread[];
+  /**
+   * True when this PR changes the reviewer's own workflow. GitHub loads a
+   * `pull_request` workflow from the PR head, so the action refuses and the auto
+   * path can never post a verdict here — the guard skips and the job goes green
+   * having reviewed nothing. Telling the author to "push, it reviews itself" in
+   * that state is advice that never terminates.
+   */
+  editsReviewerWorkflow: boolean;
 };
 
 export type ConvergeAction =
@@ -75,13 +85,16 @@ export function nextStep(state: ConvergeState): ConvergeStep {
   const reviewedSha = state.latestVerdictBody ? extractReviewedSha(state.latestVerdictBody) : null;
 
   if (verdict !== 'approve') {
+    const selfEdit = state.editsReviewerWorkflow
+      ? ` This PR changes ${REVIEWER_WORKFLOW}, so the auto path CANNOT review it — the action refuses when the workflow differs from the default branch, and the guard skips. Comment /claude-review, which runs the default-branch copy. This is the one case where that comment is required.`
+      : '';
     return {
       done: false,
       action: 'request-review',
       reason:
         verdict === 'none'
-          ? 'No parsable verdict from claude[bot] on this PR. If a review is already running for this HEAD, wait for it — a /claude-review comment cancels the in-flight auto-run. Comment only if no run will fire.'
-          : `Latest verdict is "${verdict}". Fix the findings and push; the push triggers the review on its own.`,
+          ? `No parsable verdict from claude[bot] on this PR.${selfEdit || ' If a review is already running for this HEAD, wait for it — a /claude-review comment cancels the in-flight auto-run. Comment only if no run will fire.'}`
+          : `Latest verdict is "${verdict}".${selfEdit || ' Fix the findings and push; the push triggers the review on its own.'}`,
       threadIds: [],
     };
   }
@@ -90,7 +103,11 @@ export function nextStep(state: ConvergeState): ConvergeStep {
     return {
       done: false,
       action: 'request-review',
-      reason: `Approve is stale: reviewed ${reviewedSha ?? '(no SHA stated)'} but HEAD is ${state.headSha.slice(0, 12)}. A push triggers a review on its own; comment /claude-review only if none will fire.`,
+      reason: `Approve is stale: reviewed ${reviewedSha ?? '(no SHA stated)'} but HEAD is ${state.headSha.slice(0, 12)}.${
+        state.editsReviewerWorkflow
+          ? ` This PR changes ${REVIEWER_WORKFLOW}, so only a /claude-review comment can refresh it.`
+          : ' A push triggers a review on its own; comment /claude-review only if none will fire.'
+      }`,
       threadIds: [],
     };
   }
@@ -197,9 +214,27 @@ export async function fetchState(
     .sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''))
     .map((c) => c.body ?? '');
 
+  // No blanket catch, for the same reason main() below does not have one: a
+  // swallowed failure here reads as "this PR does not edit the workflow", which
+  // sends the caller back to "push, it reviews itself" — the never-terminating
+  // advice editsReviewerWorkflow exists to prevent — with no sign the check
+  // failed. Wrong-but-plausible is the worst state for this flag.
+  let changed: string;
+  try {
+    changed = await gh(['pr', 'diff', String(prNumber), '--name-only']);
+  } catch (err) {
+    throw new Error(
+      `could not read the changed files for PR #${prNumber}, so whether it edits ${REVIEWER_WORKFLOW} is unknown: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+
   return {
     prNumber,
     headSha: pr.headRefOid,
+    editsReviewerWorkflow: changed
+      .split('\n')
+      .map((l) => l.trim())
+      .includes(REVIEWER_WORKFLOW),
     latestVerdictBody: claudeBodies.length > 0 ? (claudeBodies.at(-1) ?? null) : null,
     threads,
   };
