@@ -28,7 +28,6 @@ sequenceDiagram
     CI-->>C: review threads
     C->>C: review-convergence loop -> green
     H->>CI: owner squash-merges (AI is blocked from merge)
-    C->>G: SessionEnd -> learning-loop proposes new gates
 ```
 
 ## 1. Context engineering (what the agent knows)
@@ -106,7 +105,7 @@ Three of these gates **fail closed** on transcript resolution (review-stamp, api
 
 ## 5. The learning loop (AI improves the platform)
 
-At session end, `learning-loop.sh` runs `review:learn --auto`, which reads the archive of resolved findings and proposes finding-classes that recur across multiple cycles as candidates for a permanent gate. It only proposes (capped, evidence-thresholded, append-only to a gitignored inbox); a human decides whether to codify each into a real gate. This closes the loop: recurring manual findings become permanent prevention, and the loop self-prunes. See [engineering-audit](./engineering-audit.md).
+The session-end learning loop was removed on 2026-07-27: the hook, `scripts/review-learn.ts` and the `review:learn` script all went. Recurring finding-classes are now noticed by reading `.review-findings-archive.jsonl` directly.
 
 ## 6. The CI-side AI reviewer
 

@@ -11,10 +11,8 @@ Skills are load-on-demand procedures. They activate by their `description` front
 | **battery-synthesis** | After the 4-agent battery returns, before `review:stamp` | Dedups + severity-ranks the four reports into one action table and records each Critical/Important into the findings ledger. A DX aid, not a gate. |
 | **review-battery** | Before opening a PR (pre-PR gate) | Holds the four reviewer prompts, the assembly order, the finding contract, and the measured model routing. The dispatch table for the battery `review:stamp` scores. |
 | **review-convergence** | Converging an open PR's AI review to green | The loop: rebase before every push, verify the pushed SHA, poll each review run to completion (the push triggers it; re-requesting cancels it), reply-before-resolve, the automatic post-merge transition. Not for the final merge. |
-| **pr-merge-gate** | About to merge a PR | The 9-point pre-merge gate (claude-review Approve, resolve-thread ground truth, branch-protection, `ready-to-merge`, the local Playwright visual check, the rebase rule). The owner runs the final merge; agents are blocked. |
 | **visual-baseline-regen** | A change may touch a Playwright screenshot baseline (CSS/layout/typography) | The baseline regen procedure: darwin `--update-snapshots`, the linux CI-dispatch artifact path, inspect-before-commit, batch-to-one-push. Distinguishes the CI-gated page-section spec from the darwin-only DS-component spec. |
 | **ai-eval-update** | Editing the `/api/ask` eval corpus/calibration/runner or the ask system prompt | Drives `pnpm ask:eval` (judge self-calibration first, then corpus). Gates correctness + jailbreak-resistance; writes `ask-eval-result.json` and Upstash `ask:eval:latest`. Feature model Haiku, judge model Sonnet. |
-| **fallow-audit** | Only on explicit request ("run a fallow audit") | Read-only architecture/dead-code audit via the pinned `npx fallow@2.95.0`. Will not auto-activate on generic "clean up the code". |
 
 ## Custom commands (`.claude/commands/`)
 
@@ -23,7 +21,6 @@ Skills are load-on-demand procedures. They activate by their `description` front
 | **/commit** | `commit-commands:commit` | Conventional commit with a mandatory feature-area scope |
 | **/ready-for-pr** | `pnpm ready-for-pr` -> `pr-review-toolkit:code-reviewer` -> fix -> `gh pr create` | Pre-PR gate sequence |
 | **/merge** `[pr]` | `pnpm ready-to-merge`, then owner merges externally | Pre-merge gate chain |
-| **/pr-metrics** `[pr]` | `pnpm pr-metrics` | `/claude-review` cycle count, size, days open |
 
 ## Hooks (`.claude/hooks/` + `settings.json` wiring)
 
@@ -34,14 +31,9 @@ Skills are load-on-demand procedures. They activate by their `description` front
 | **bash-guard.sh** | PreToolUse | Bash | blocks broad `git add`, npm/yarn, `gh pr merge`, force-push-to-main, unpinned `fallow` | `exit 2` |
 | **api-security-push-guard.sh** | PreToolUse | Bash | blocks `git push` while an unaudited API edit marker is pending (fail-closed on unreadable transcript) | `exit 2` |
 | **architect-gate.sh** | PreToolUse | Skill | blocks `speckit-plan` unless an `architect-reviewer` emitted `GATE_RESULT: PASS` this session | `exit 2` |
-| **mandated-skill-gate.sh** | PreToolUse | `Skill` + the Playwright `browser_` namespace | blocks `speckit-plan` until `thinking-risk-premortem` has COMPLETED this session, and blocks every `browser_*` tool until `web-design-guidelines` has run | `exit 2` |
 | **api-edit-marker.sh** | PostToolUse | Edit\|Write | records an edit to `app/api/**`/`rate-limit.ts`/`proxy.ts` into the pending marker | never (`exit 0`) |
-| **css-token-guard.sh** | PostToolUse | Edit\|Write | runs the css-tokens lint on CSS edits (catches raw hex at edit time) | advisory (`exit 0`) |
-| **section-order-guard.sh** | PostToolUse | Edit\|Write | warns if a section lacks a mobile flex-order rule | advisory (`exit 0`) |
 | **biome-format.sh** | PostToolUse | Edit\|Write | runs Biome format (linter disabled: `check --write --linter-enabled=false`) on the edited file | never (`exit 0`) |
 | **session-context.sh** | SessionStart | (none) | prints branch, uncommitted files, and last-commit context at session start | never (`exit 0`) |
-| **review-converge-reminder.sh** | PostToolUse | `Bash` | after a `git push` on a branch with an open PR, runs `pnpm review:converge` and prints the loop's next action | never (`exit 0`) |
-| **learning-loop.sh** | SessionEnd | (none) | runs `review:learn --auto`; appends recurring-finding proposals to the inbox | never (`exit 0`) |
 
 ### Hook lifecycle (when each fires)
 
@@ -49,19 +41,15 @@ Skills are load-on-demand procedures. They activate by their `description` front
 flowchart TD
     prompt["User prompt"] --> tooluse{Tool call}
     tooluse -->|Bash| pre1["PreToolUse: bash-guard + api-security-push-guard"]
-    tooluse -->|Skill| pre2["PreToolUse: architect-gate + mandated-skill-gate"]
+    tooluse -->|Skill| pre2["PreToolUse: architect-gate"]
     pre1 -->|exit 2| blocked1["BLOCKED"]
     pre2 -->|exit 2| blocked2["BLOCKED"]
     pre1 -->|exit 0| run["tool runs"]
     pre2 -->|exit 0| run
     run --> post{Edit or Write?}
-    post -->|yes| post1["PostToolUse: api-edit-marker + css-token-guard + section-order-guard + biome-format"]
-    post -->|no| bashq{Bash?}
-    bashq -->|yes| converge[review-converge-reminder.sh]
-    bashq -->|no| done
-    converge --> done["continue"]
+    post -->|yes| post1["PostToolUse: api-edit-marker + biome-format"]
+    post -->|no| done["continue"]
     post1 --> done
-    done --> sessionend["...SessionEnd: learning-loop"]
 ```
 
 Note: four hook *events* are used (PreToolUse on Bash, Skill, and the Playwright `browser_` namespace; PostToolUse on Edit|Write and on Bash; SessionStart; SessionEnd). No `PreCompact` or `Notification` hooks.
@@ -116,8 +104,6 @@ flowchart LR
     bs --> rf["review-findings.ts (ledger: add/resolve/justify)"]
     rf --> rs["review-stamp.ts (verify dispatch + resolution -> .review-passed)"]
     rs --> arch["append .review-findings-archive.jsonl"]
-    arch --> rl["review-learn.ts (propose recurring -> gate candidates)"]
-    rl --> inbox[".review-learnings.md (human reviews)"]
     rs -.uses.-> tr["transcript.mjs (shared)"]
     gh1["architect-gate"] -.uses.-> tr
     gh2["api-security-push-guard"] -.uses.-> tr
@@ -130,7 +116,6 @@ flowchart LR
 | `lib/transcript.mjs` | shared JSONL primitives; the load-bearing signal is the structured `subagent_type` key |
 | `review-findings.ts` | the findings ledger CLI (verification loop) |
 | `review-stamp.ts` | transcript-verified stamp (dispatch + resolution), fail-closed |
-| `review-learn.ts` | propose-only learning step (recurring findings -> gate candidates) |
 | `transcript-doctor.ts` | diagnostic for the fail-closed transcript SPOF |
 | `check-gate-health.ts` | meta-gate: every hook/settings-referenced script must exist |
-| `lint-css-tokens.ts` | bans raw hex outside `theme.css` (invoked by css-token-guard) |
+| `lint-css-tokens.ts` | bans raw hex outside `theme.css` (CI gate `pnpm lint:css-tokens`) |

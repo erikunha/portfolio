@@ -15,6 +15,11 @@ export interface UnresolvedRefsInput {
 }
 export declare function unresolvedRefs(input: UnresolvedRefsInput): string[];
 
+export declare function orphanedMirrorFiles(
+  targets: string[],
+  listMirror: () => string[],
+): string[];
+
 export interface MirrorSource {
   from: string;
   to: string;

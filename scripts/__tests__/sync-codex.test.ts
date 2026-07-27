@@ -5,6 +5,7 @@ import {
   CODEX_NOTE,
   findFiction,
   insertNote,
+  orphanedMirrorFiles,
   referencedHookSiblings,
   referencedMirrorPaths,
   rewriteText,
@@ -215,6 +216,30 @@ describe('unresolvedRefs — fail closed on a reference to a never-generated fil
 // The load-bearing behavior: --check must FAIL CLOSED on an incomplete mirror, not only on a
 // content diff. This runs the real gate against the working tree, so it doubles as proof the
 // committed mirror is both in-sync AND internally complete (every referenced file exists).
+describe('orphanedMirrorFiles — a mirror whose source was deleted', () => {
+  const targets = ['.codex/hooks/bash-guard.sh', '.agents/skills/review-battery/SKILL.md'];
+
+  it('names a mirrored hook whose .claude source no longer exists', () => {
+    // Codex wires hooks by listing .codex/hooks, so an orphan keeps executing there.
+    expect(
+      orphanedMirrorFiles(targets, () => [...targets, '.codex/hooks/learning-loop.sh']),
+    ).toEqual(['.codex/hooks/learning-loop.sh']);
+  });
+
+  it('is empty when every mirrored file still has a source', () => {
+    expect(orphanedMirrorFiles(targets, () => [...targets])).toEqual([]);
+  });
+
+  it('reports every orphan rather than stopping at the first', () => {
+    expect(
+      orphanedMirrorFiles(targets, () => [
+        '.codex/hooks/learning-loop.sh',
+        '.agents/skills/pr-merge-gate/SKILL.md',
+      ]),
+    ).toEqual(['.agents/skills/pr-merge-gate/SKILL.md', '.codex/hooks/learning-loop.sh']);
+  });
+});
+
 describe('the --check gate against the committed mirror', () => {
   it('exits 0: mirror is in sync and references nothing missing', () => {
     expect(() =>

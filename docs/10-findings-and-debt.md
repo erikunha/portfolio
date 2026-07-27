@@ -28,7 +28,7 @@ Streaming forced a bespoke handler, so the ask route hand-rolls the same gate ch
 - **Fix option:** extract the shared gate sequence into a helper both `defineHandler` and the ask route call, so the ordering lives in one place.
 
 ### F4 - Dead-hook class of rot (Mitigated, keep watching)
-`css-token-guard.sh` once pointed at two scripts deleted in the Tailwind-v4 migration and silently no-opped for weeks. This is now caught by `check:gate-health`, but the underlying lesson generalizes: any gate that references a path can rot.
+`css-token-guard.sh` (removed 2026-07-27) once pointed at two scripts deleted in the Tailwind-v4 migration and silently no-opped for weeks. This is now caught by `check:gate-health`, but the underlying lesson generalizes: any gate that references a path can rot.
 - **Status:** mitigated by the meta-gate. Keep `gate-health` in `verify` and CI; don't let it be skipped.
 
 ### F5 - PSI cron is single-shot on Vercel Hobby (Low, accepted)

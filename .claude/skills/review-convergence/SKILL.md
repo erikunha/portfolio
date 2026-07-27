@@ -1,6 +1,6 @@
 ---
 name: review-convergence
-description: Use when driving an open PR's claude-review (`/claude-review`, claude[bot]) to green — rebase before every push, reply citing the fix SHA before resolving any thread, verify the pushed SHA; poll each review run to completion before assessing it; re-request only when no auto-review will otherwise run. Not for the final merge (see pr-merge-gate).
+description: Use when driving an open PR's claude-review (`/claude-review`, claude[bot]) to green — rebase before every push, reply citing the fix SHA before resolving any thread, verify the pushed SHA; poll each review run to completion before assessing it; re-request only when no auto-review will otherwise run. Not for the final merge, which is `pnpm ready-to-merge`.
 ---
 
 # Review convergence loop
@@ -60,7 +60,7 @@ never do (bash-guard blocks it).
    `gh pr comment <N>` posts an unanchored timeline comment (`#issuecomment-…`) —
    it is attached to no code, cannot be resolved, and never appears in
    `reviewThreads`, so it is invisible to the resolve-thread ground truth in
-   `pr-merge-gate`. Do not use it to report a finding, a fix, or a status.
+   `pnpm ready-to-merge`. Do not use it to report a finding, a fix, or a status.
    - **Finding already has a thread** (claude[bot] inline comment): reply in that
      thread — `gh api repos/erikunha/portfolio/pulls/<N>/comments/<comment_id>/replies -f body=…`
      (or GitHub MCP `add_reply_to_pull_request_comment`), then resolve.

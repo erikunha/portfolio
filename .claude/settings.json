@@ -37,19 +37,6 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/architect-gate.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/mandated-skill-gate.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "mcp__plugin_playwright_playwright__browser_",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/mandated-skill-gate.sh"
           }
         ]
       }
@@ -60,28 +47,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/section-order-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/css-token-guard.sh"
-          },
-          {
-            "type": "command",
             "command": "bash .claude/hooks/api-edit-marker.sh"
           },
           {
             "type": "command",
             "command": "bash .claude/hooks/biome-format.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/review-converge-reminder.sh"
           }
         ]
       }
@@ -92,16 +62,6 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/session-context.sh"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/learning-loop.sh"
           }
         ]
       }

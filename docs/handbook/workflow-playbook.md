@@ -83,7 +83,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   1. Decide baseline impact (YES/NO) before pushing.
   2. Use the Playwright MCP to inspect desktop (1280x720) and mobile (375x812) before touching tests.
   3. If baselines are affected, follow `visual-baseline-regen` (darwin regen + linux artifact path, inspect-before-commit, batch-to-one-push).
-  4. No raw hex outside `theme.css` (the css-token-guard hook catches it at edit time).
+  4. No raw hex outside `theme.css` (held by `pnpm lint:css-tokens` in `verify` and CI).
 - **Output:** a PR with regenerated Argos baselines if needed.
 
 ## Touching the `/api/ask` feature

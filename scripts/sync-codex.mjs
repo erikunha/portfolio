@@ -6,6 +6,8 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  rmdirSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from 'node:fs';
@@ -113,6 +115,17 @@ export const referencedHookSiblings = (text) => {
   return [...new Set(matches.map((m) => m.replace('$HOOK_DIR/', '')))];
 };
 
+// Codex wires hooks by listing .codex/hooks, so a mirror left behind after its .claude/
+// source is deleted keeps executing there. Every other check here runs source -> mirror.
+const MIRROR_ROOTS = ['.agents/skills', CODEX_HOOKS, '.codex/rules', '.codex/agents'];
+
+export const orphanedMirrorFiles = (targets, listMirror) => {
+  const expected = new Set(targets);
+  return listMirror()
+    .filter((file) => !expected.has(file))
+    .sort();
+};
+
 const walk = (dir) => {
   const out = [];
   for (const entry of readdirSync(dir)) {
@@ -125,6 +138,17 @@ const walk = (dir) => {
 };
 
 const toCodexHook = (from) => path.join(CODEX_HOOKS, path.relative(CLAUDE_HOOKS, from));
+
+const listMirrorOnDisk = () => MIRROR_ROOTS.filter((root) => existsSync(root)).flatMap(walk);
+
+const pruneEmptyParents = (file) => {
+  let dir = path.dirname(file);
+  while (MIRROR_ROOTS.some((root) => dir.startsWith(root)) && !MIRROR_ROOTS.includes(dir)) {
+    if (readdirSync(dir).length > 0) return;
+    rmdirSync(dir);
+    dir = path.dirname(dir);
+  }
+};
 
 // text = rewrite the harness paths + assert no fiction; binary = byte-for-byte. The hook
 // SCRIPTS are text: their advisory messages and the api-edit marker path must be remapped for
@@ -305,11 +329,20 @@ export const run = ({ check }) => {
     console.log(`${check ? 'DRIFT' : 'sync '}  ${to}`);
   }
 
+  const orphans = orphanedMirrorFiles(targets, listMirrorOnDisk);
+
   // Completeness runs against on-disk state, so in --check mode it inspects the committed
   // mirror; drift is reported first because a re-sync is the fix for both.
   if (check) {
     if (drifted > 0) {
       console.error(`\n${drifted} file(s) drifted from .claude/. Run \`pnpm sync:codex\`.`);
+      process.exit(1);
+    }
+    if (orphans.length > 0) {
+      console.error(
+        '\nMirror holds file(s) whose .claude/ source was deleted. Run `pnpm sync:codex`:',
+      );
+      for (const orphan of orphans) console.error(`  ${orphan}`);
       process.exit(1);
     }
     const problems = findIncompleteness(targets);
@@ -329,7 +362,18 @@ export const run = ({ check }) => {
     console.log('OK  .agents/ and .codex/ match .claude/ and reference nothing missing');
     return;
   }
-  console.log(drifted === 0 ? 'OK  already in sync' : `\n${drifted} file(s) synced`);
+  for (const orphan of orphans) {
+    rmSync(orphan);
+    pruneEmptyParents(orphan);
+    console.log(`remove ${orphan}`);
+  }
+
+  const changed = drifted + orphans.length;
+  console.log(
+    changed === 0
+      ? 'OK  already in sync'
+      : `\n${drifted} file(s) synced, ${orphans.length} orphan(s) removed`,
+  );
 };
 
 if (

@@ -22,7 +22,6 @@ flowchart TB
         battery["4-agent review battery"]
         stamp["review:stamp (.review-passed)"]
         ledger["review:findings (.review-findings.json)"]
-        learn["review:learn (learning loop)"]
     end
     ctx --> enf --> loop
 ```
@@ -32,7 +31,7 @@ flowchart TB
 - **`CLAUDE.md` (project root)** - always loaded, kept under the 275-line cap enforced by `check:harness-size` (Anthropic guidance: <200 lines for adherence). It is an **index + always-true facts**, not procedures.
 - **`~/.claude/CLAUDE.md` (user, not in repo)** - the operator's global reasoning/skill-dispatch protocol.
 - **`.claude/rules/*.md`** - path-scoped rules with `paths:` frontmatter that load **only when the agent reads matching files**. Today: `api-boundary.md` (scopes `app/api/** | lib/rate-limit.ts | lib/server/** | proxy.ts`). This is the mechanism for keeping `CLAUDE.md` small (the "slot-routing" rule: gate > skill > memory > prose).
-- **`.claude/skills/*`** - load-on-demand procedures: `review-convergence` (driving a PR's AI review to green), `pr-merge-gate`, `visual-baseline-regen`, `ai-eval-update`, `battery-synthesis`, `fallow-audit`.
+- **`.claude/skills/*`** - load-on-demand procedures: `review-convergence` (driving a PR's AI review to green), `visual-baseline-regen`, `ai-eval-update`, `battery-synthesis`.
 - **Auto memory** - `~/.claude/projects/<slug>/memory/MEMORY.md` (first 200 lines loaded each session); holds learned preferences and feedback.
 
 ## Enforcement layer (hooks)
@@ -45,13 +44,10 @@ The load-bearing principle: **CLAUDE.md is advisory; anything that must hold is 
 | `api-security-push-guard.sh` | PreToolUse(Bash) | blocks `git push` while `.claude/.api-edit-pending` is non-empty (unaudited API edit) |
 | `architect-gate.sh` | PreToolUse(Skill) | blocks `speckit-plan` unless an `architect-reviewer` returned `GATE_RESULT: PASS` this session |
 | `api-edit-marker.sh` | PostToolUse(Edit/Write) | records an API-surface edit into the pending marker |
-| `css-token-guard.sh` | PostToolUse(Edit/Write) | runs the css-tokens lint on CSS edits (see note below) |
-| `section-order-guard.sh` | PostToolUse(Edit/Write) | warns if a section lacks a mobile flex-order rule |
-| `learning-loop.sh` | SessionEnd | runs `review:learn --auto` once per session (see learning loop) |
 
 Git hooks (`.husky/`): `pre-commit` = Biome; `commit-msg` = commitlint; `pre-push` = the heavy gate (main-push guard, branch-name, **review stamp**, API-edit backstop, `pnpm verify`).
 
-> **`gate-health` (`scripts/check-gate-health.ts`, in `verify` + CI)** is a meta-gate: it asserts every `scripts/*` path referenced by a hook and every hook wired in `settings.json` actually exists. It was added after `css-token-guard.sh` was discovered pointing at two scripts deleted in the Tailwind-v4 migration - a "dead hook" that never fired and never false-fired. The hook now points at `scripts/lint-css-tokens.ts` (bans raw hex outside `theme.css`).
+> **`gate-health` (`scripts/check-gate-health.ts`, in `verify` + CI)** is a meta-gate: it asserts every `scripts/*` path referenced by a hook and every hook wired in `settings.json` actually exists. It was added after `css-token-guard.sh` was discovered pointing at two scripts deleted in the Tailwind-v4 migration - a "dead hook" that never fired and never false-fired. That hook was removed on 2026-07-27; the property it aimed at is held by `pnpm lint:css-tokens` (bans raw hex outside `theme.css`), which runs in `verify` and CI rather than at edit time.
 
 ## The review / verification loop
 
@@ -82,8 +78,6 @@ Closes capture → analyze → surface, and **self-prunes**:
 ```mermaid
 flowchart LR
     stamp["review:stamp (success)"] --> arch["append resolved findings to<br/>.review-findings-archive.jsonl (cycleSha-tagged)"]
-    arch --> learn["review:learn: group by id, count distinct cycles"]
-    learn --> auto["SessionEnd hook: review:learn --auto<br/>>=3 cycles, cap 3, dedup -> .review-learnings.md"]
     auto --> human["you read the inbox, decide, write a real gate"]
     human --> prevent["the class is now mechanically prevented -> stops recurring -> loop drains"]
 ```

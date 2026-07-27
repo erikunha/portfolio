@@ -7,8 +7,8 @@ import {
 
 describe('collectScriptRefs', () => {
   it('extracts a $REPO_ROOT-anchored script reference', () => {
-    expect(collectScriptRefs('node "$REPO_ROOT/scripts/lint-token-boundary.mjs"')).toEqual([
-      'scripts/lint-token-boundary.mjs',
+    expect(collectScriptRefs('node "$REPO_ROOT/scripts/does-not-exist.mjs"')).toEqual([
+      'scripts/does-not-exist.mjs',
     ]);
   });
 
@@ -52,16 +52,14 @@ describe('collectSettingsHookPaths', () => {
 describe('auditGates', () => {
   it('flags a hook that references a missing script (the dead-hook class)', () => {
     const dead = auditGates({
-      hookFiles: [
-        { name: '.claude/hooks/css-token-guard.sh', refs: ['scripts/lint-token-boundary.mjs'] },
-      ],
+      hookFiles: [{ name: '.claude/hooks/example-guard.sh', refs: ['scripts/does-not-exist.mjs'] }],
       settingsRefs: [],
       exists: () => false,
     });
     expect(dead).toHaveLength(1);
     expect(dead[0]).toMatchObject({
-      source: '.claude/hooks/css-token-guard.sh',
-      ref: 'scripts/lint-token-boundary.mjs',
+      source: '.claude/hooks/example-guard.sh',
+      ref: 'scripts/does-not-exist.mjs',
       kind: 'hook->script',
     });
   });
