@@ -174,6 +174,13 @@ jobs:
           # single fetch raced the final edit by one second and failed a review
           # that had posted a valid "**Verdict: Request changes.**".
           for attempt in 1 2 3 4 5; do
+            # `|| fresh=""` contains a transient failure. Under `set -euo pipefail`
+            # any rate limit, 5xx, or network blip aborts the whole step on
+            # whichever attempt it lands, which defeats the retry loop and replaces
+            # the FAIL diagnostic with an opaque pipefail error — a false red on the
+            # merge gate over an Approve that was already posted. The retry only
+            # became reachable when the fetch below was fixed, so this was latent.
+            #
             # Piped to jq, NOT gh's --jq: gh REFUSES `--slurp` alongside any
             # filter flag (`--jq`, `-q`, `--template`), writing the message to
             # stderr and exiting 1 — so under `set -euo pipefail` the step aborted
@@ -183,7 +190,7 @@ jobs:
             # destructures; without it the filter sees each page separately and
             # `last` yields one body per page. So the filter moves to a real jq.
             fresh=$(gh api --paginate --slurp "repos/$REPO/issues/$PR/comments" \
-              | jq -r "[.[][] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | sort_by(.created_at) | last | .body // empty")
+              | jq -r "[.[][] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | sort_by(.created_at) | last | .body // empty") || fresh=""
 
             if printf '%s' "$fresh" | grep -qiE '\*\*[^*]*\b(approve|reject|request changes)\b[^*]*\*\*'; then
               echo "OK  this run posted a verdict (attempt $attempt)."
