@@ -116,6 +116,6 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Entry:** a ready branch.
 - **Steps:**
   1. `pnpm ci:local` + `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
-  2. There is no automated reviewer since 2026-07-27. Rebase before every push, verify the pushed SHA, reply citing the fix SHA before resolving a thread.
-  3. `pnpm pr:gate` passes; the owner squash-merges.
+  2. claude-review runs automatically on open and on every push and posts inline findings. Rebase before every push, verify the pushed SHA, reply citing the fix SHA before resolving a thread. Do not comment `/claude-review` after a push — it cancels the run the push already started.
+  3. `pnpm claude-gate` and `pnpm pr:gate` both pass; the owner squash-merges.
 - **Output:** a merged PR. See [review-merge-release](./review-merge-release.md).

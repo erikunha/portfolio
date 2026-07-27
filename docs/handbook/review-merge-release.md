@@ -21,8 +21,8 @@ flowchart TD
     r5 --> o1["open PR: fill every template section"]
     o1 --> o2["Review convergence loop"]
     o2 --> m1["pre-merge: ci:local"]
-    m1 --> m3["pre-merge: pr:gate (threads)"]
-    m3 --> m4["owner squash-merge"]
+    m1 --> m3["pre-merge: claude-gate (Approve)"]
+    m3 --> m4["pre-merge: pr:gate (threads)"]
     m4 --> merge["owner: squash-merge (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["smoke.yml: healthz + headers + liveness"]
@@ -30,15 +30,15 @@ flowchart TD
 
 ## Code review
 
-**There is no AI reviewer and no local review battery.** The 4-agent battery, its findings ledger, `review:stamp`, `.github/workflows/claude-review.yml` and `pnpm claude-gate` were all removed on 2026-07-27.
+**claude-review (claude[bot]) is the AI reviewer.** It runs automatically on PR open and on every push, posts one inline comment per finding anchored to a changed line, and closes with a `Verdict:` line that `pnpm claude-gate` parses fail-closed.
 
-Pre-PR review is a discipline: read `git diff origin/main...HEAD` end to end, invoke `pr-review-toolkit:code-reviewer` against it, and fix every Critical/Important finding before `gh pr create`. Nothing gates this, so nothing will tell you it was skipped.
+**The local 4-agent battery is not restored** — it, its findings ledger and `review:stamp` were removed on 2026-07-27 and stay removed. Pre-PR review is a discipline: read `git diff origin/main...HEAD` end to end, invoke `pr-review-toolkit:code-reviewer` against it, and fix every Critical/Important finding before `gh pr create`. Nothing gates that pre-PR pass, so nothing will tell you it was skipped.
 
 On the open PR, the habits that were learned from real failures still apply and are still worth keeping: rebase before *every* push; verify the pushed SHA actually landed on the remote before citing it; reply in a thread citing the fix SHA *before* resolving it; never resolve silently (a thread with one comment is a process gap); and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
 
-## Pre-merge gates (`pnpm pr:gate` + `pnpm ci:local`)
+## Pre-merge gates (`pnpm claude-gate` + `pnpm pr:gate` + `pnpm ci:local`)
 
-In order: `ci:local` -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL, all threads `isResolved`, flags `suspicious_self_resolve`). Branch protection is enforced by GitHub itself.
+In order: `ci:local` -> `check-claude-approval` (`pnpm claude-gate`: the latest claude-review verdict must be Approve, naming a head SHA that matches the current head — an Approve with no SHA, or a stale one, fails closed) -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL, all threads `isResolved`, flags `suspicious_self_resolve`). Branch protection is enforced by GitHub itself.
 
 **AI agents must not run `gh pr merge`.** This is a convention now: the `bash-guard.sh` hook that blocked it with `exit 2` was removed on 2026-07-27. The repo owner runs the final squash-merge once all gates pass. The branch-protection invariant means all changes go through a PR; direct pushes to `main` are blocked at the pre-push hook.
 

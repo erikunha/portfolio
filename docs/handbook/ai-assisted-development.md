@@ -23,6 +23,7 @@ sequenceDiagram
     A-->>C: findings
     C->>G: git push (pre-push gate chain blocks if not stamped)
     C->>CI: open PR; CI runs lint/type/test/build/perf/a11y/security
+    CI->>C: claude-review posts inline findings + Verdict
     CI-->>C: review threads
     C->>C: drive threads to resolved -> green
     H->>CI: owner squash-merges (AI is blocked from merge)
@@ -67,15 +68,15 @@ Every substantive change runs the same disciplined loop, enforced by mandated sk
 | Anticipate failure | thinking-risk-premortem, pre-mortem | convention + plan tasks |
 | Implement | test-driven-development | convention |
 | Self-verify | verification-before-completion | convention + `pnpm verify` |
-| Review | pre-PR self-review | none (no gate since 2026-07-27) |
+| Review | pre-PR self-review, then claude-review on the PR | `pnpm claude-gate` (fail-closed on a stale or SHA-less Approve) |
 | Resolve | findings ledger | stamp refuses while findings open |
 | Record | DECISIONS.md ADR | PR template checklist |
 
-## 3. Review — no battery, no AI reviewer
+## 3. Review — claude-review on the PR, self-review before it
 
-Both were removed on 2026-07-27: the 4-agent battery, `battery-synthesis`, the findings ledger (`review:findings`), the transcript-verified stamp (`review:stamp`), `.github/workflows/claude-review.yml` and `pnpm claude-gate`.
+**claude-review (claude[bot]) runs automatically** on every PR open and push, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line that `pnpm claude-gate` reads fail-closed.
 
-Pre-PR review is now discipline: read the diff, run `pr-review-toolkit:code-reviewer` over it, fix what it finds. `pnpm pr:gate` still checks thread resolution on the PR.
+**The local battery is not restored.** The 4-agent battery, `battery-synthesis`, the findings ledger and the transcript-verified stamp were removed on 2026-07-27 and stay removed. Pre-PR review is discipline: read the diff, run `pr-review-toolkit:code-reviewer` over it. `pnpm pr:gate` checks thread resolution.
 
 ## 4. Enforcement — git and CI only
 
