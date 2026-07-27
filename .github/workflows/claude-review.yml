@@ -86,7 +86,11 @@ jobs:
       # the reviewer prompt below is not read from it.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # On issue_comment there is no pull_request payload, and `github.sha`
+          # is the DEFAULT BRANCH tip — checking that out would have the reviewer
+          # cite pre-change lines while `gh pr diff` showed the change. The PR ref
+          # resolves the head on both paths.
+          ref: refs/pull/${{ github.event.pull_request.number || github.event.issue.number }}/head
           fetch-depth: 1
 
       # The prompt is materialised from the DEFAULT BRANCH into /tmp, outside the
@@ -97,15 +101,19 @@ jobs:
       # own reviewer to approve it. `git show` of a fetched ref cannot be
       # influenced by the checked-out tree.
       - name: Materialise the trusted reviewer prompt from the default branch
-        id: prompt
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
           git fetch --depth=1 origin "$DEFAULT_BRANCH"
           git show "FETCH_HEAD:.github/claude-review-prompt.md" > /tmp/claude-review-prompt.md
-          test -s /tmp/claude-review-prompt.md
-          echo "bytes=$(wc -c < /tmp/claude-review-prompt.md)" >> "$GITHUB_OUTPUT"
+          # A floor, not `test -s`: a truncated `git show` leaves a non-empty file
+          # that would silently run the reviewer on a fragment of its prompt.
+          bytes=$(wc -c < /tmp/claude-review-prompt.md)
+          if [ "$bytes" -lt 4000 ]; then
+            echo "prompt materialised at only ${bytes} bytes — expected the full reviewer prompt" >&2
+            exit 1
+          fi
       - name: Mark review start
         id: t0
         run: echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
@@ -238,5 +246,7 @@ jobs:
           echo "  green while check-claude-approval.ts sees verdict=none and the merge gate"
           echo "  stalls with no explanation."
           echo "  Known cause: tag mode returns a progress checklist instead of a review."
-          echo "  Workaround: comment /claude-review, which runs the default-branch copy."
+          echo "  Re-run the failed job. Do NOT comment /claude-review: both paths already"
+          echo "  run the default-branch copy, and the comment lands in this run's concurrency"
+          echo "  group and cancels whatever is in flight."
           exit 1

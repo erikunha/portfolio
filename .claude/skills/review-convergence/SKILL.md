@@ -17,7 +17,7 @@ never do (bash-guard blocks it).
 1. **Push, then verify it landed.** `gh api repos/erikunha/portfolio/pulls/<N> --jq '.head.sha'`
    must equal `git rev-parse HEAD`. If not, re-push before continuing.
 2. **Do NOT re-request after a push — the push already triggers a review.**
-   The `pull_request` trigger fires on every `synchronize`, and the concurrency
+   The `pull_request_target` trigger fires on every `synchronize`, and the concurrency
    group is per-PR with `cancel-in-progress: true`, so a `/claude-review` comment
    posted seconds after a push CANCELS the auto-run that was already reviewing
    that SHA. Both runs leave a "Claude Code is working…" comment, the cancelled

@@ -215,9 +215,12 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ['no verdict in the fetched body', { body: '### Review\n- [x] Gather context' }, 1],
     ['a verdict in the fetched body', { body: 'head `abc1234`. **Approve**' }, 0],
     ['no review-start timestamp', { body: '**Approve**', since: '' }, 1],
+    // `changed` and `event` are dead inputs now — the guard reads neither — so
+    // this row proves only that an empty body reds. The "not skipped" property is
+    // held structurally below, by banning any early exit before the verdict test.
     [
-      'a workflow-editing PR is asserted like any other, never skipped',
-      { body: 'nothing', changed: '.github/workflows/claude-review.yml' },
+      'a body with no verdict reds regardless of which files the PR touched',
+      { body: 'nothing' },
       1,
     ],
     [
@@ -269,22 +272,28 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ).toContain('exit 1');
   });
 
-  it('carries no event-based skip: under pull_request_target every run is assertable', () => {
-    // The carve-out that used to live here skipped `pull_request` runs whose diff
-    // touched this workflow, because GitHub loaded the workflow from the PR head
-    // and the action refused, so no verdict could exist to assert. The trigger is
-    // now `pull_request_target`, which always runs the base copy — the action
-    // never refuses, and a surviving skip would hide a real no-verdict behind a
-    // green check. Reintroducing one must red here rather than pass quietly.
+  it('reaches the verdict test on every run: no early exit before the fetch', () => {
+    // The property is "nothing short-circuits before the verdict is tested", NOT
+    // "these two tokens are absent". Banning `GITHUB_EVENT_NAME` and `SKIP` left
+    // the identical carve-out reachable spelled any other way — keyed on
+    // `gh pr diff`, on `$GITHUB_EVENT_PATH`, or simply lowercase. Assert the
+    // structure instead: the only `exit 0` may be the one that follows a matched
+    // verdict.
     const script = guardScript();
+    const fetchAt = script.indexOf('gh api');
+    expect(fetchAt, 'the guard no longer fetches comments').toBeGreaterThan(0);
+
+    const before = script.slice(0, fetchAt);
     expect(
-      /GITHUB_EVENT_NAME/.test(script),
-      'The guard reintroduced an event-name branch. Under pull_request_target the auto path can always post a verdict, so any event-based skip is a silent green waiting to happen.',
+      /\bexit 0\b/.test(before),
+      `The guard exits 0 BEFORE it fetches anything. Under pull_request_target the base workflow always runs and the action never refuses, so every run can post a verdict — an early exit is a run that reviewed nothing reporting success, which is the silent green this step exists to end.\n\n${before.slice(-400)}`,
     ).toBe(false);
+
+    const exits = script.match(/\bexit 0\b/g) ?? [];
     expect(
-      /SKIP\s/.test(script),
-      'The guard reintroduced a SKIP path. Every run this guard sees can now be asserted; a skip means a run that reviewed nothing reports success.',
-    ).toBe(false);
+      exits.length,
+      'More than one `exit 0` in the guard. Exactly one is expected: the success path after a verdict matched.',
+    ).toBe(1);
   });
 });
 

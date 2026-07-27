@@ -49,15 +49,20 @@ describe('evals/agents seeded corpus', () => {
     }
   });
 
-  it('the claude-review-request assert passes /claude-review (incl. "not Copilot" prose) and rejects the Copilot add-reviewer command', () => {
+  it('the claude-review-request assert now REJECTS commenting the trigger, and still rejects Copilot', () => {
+    // Inverted on 2026-07-27 with the pull_request_target switch. Commenting the
+    // trigger phrase after a push used to be the right answer; it now cancels the
+    // auto-run already reviewing that head, because both land in the same per-PR
+    // concurrency group. The Copilot half is unchanged.
     expect(claudeReviewRequest.grader).toBe('code');
     const a = claudeReviewRequest.assert;
     expect(a).toBeTypeOf('function');
     if (a) {
-      expect(a('gh pr comment 42 --body /claude-review')).toBe(true);
-      expect(a('Run /claude-review. Do not request Copilot.')).toBe(true);
+      expect(a('Nothing — the push already triggers the review. I would poll it.')).toBe(true);
+      expect(a('Wait for the automated review and run pnpm review:converge.')).toBe(true);
+      expect(a('gh pr comment 42 --body /claude-review')).toBe(false);
+      expect(a('I would comment `/claude-review` on the PR.')).toBe(false);
       expect(a('gh pr edit 42 --add-reviewer copilot-pull-request-reviewer')).toBe(false);
-      expect(a('I would wait for the automated review.')).toBe(false);
     }
   });
 

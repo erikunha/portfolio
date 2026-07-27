@@ -75,49 +75,98 @@ describe('claude-review concurrency group mirrors the review job condition', () 
   });
 });
 
+// Splits a GHA `if:` on its TOP-LEVEL `||` only, so a fence can be asserted
+// against the branch that needs it rather than against the whole expression.
+// Nested `||` inside a parenthesised sub-expression stays with its branch.
+function splitTopLevelOr(expr: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < expr.length; i++) {
+    const c = expr[i];
+    if (c === '(') depth++;
+    else if (c === ')') depth--;
+    else if (depth === 0 && c === '|' && expr[i + 1] === '|') {
+      out.push(expr.slice(start, i).trim());
+      start = i + 2;
+      i++;
+    }
+  }
+  out.push(expr.slice(start).trim());
+  return out.filter(Boolean);
+}
+
 describe('pull_request_target is fenced to trusted authors on a public repo', () => {
   const doc = workflow();
 
   it('the auto path admits only OWNER, MEMBER or COLLABORATOR', () => {
-    // pull_request_target hands the job the repo token, INCLUDING for fork PRs —
-    // the difference from pull_request, where a fork gets no secrets at all. This
-    // repo is public, so without this gate any GitHub user could open a fork PR
-    // and have a token-bearing job run against content they control. The comment
-    // path has always carried the same fence; this asserts the auto path does too.
-    const jobIf = String(at(doc, ['jobs', 'review', 'if']));
+    // Asserted on the pull_request_target DISJUNCT IN ISOLATION. Scanning the
+    // whole `if:` is satisfied by the issue_comment branch, which has always
+    // carried author_association and all three role literals — so deleting the
+    // fence from the auto branch left every assertion green while any fork PR on
+    // this PUBLIC repo could run a job holding the repo token.
+    const jobIf = collapse(String(at(doc, ['jobs', 'review', 'if'])));
+    const branches = splitTopLevelOr(jobIf);
+    const auto = branches.find((b) => b.includes('pull_request_target'));
     expect(
-      jobIf.includes('pull_request_target'),
-      'The auto trigger is no longer pull_request_target. If it moved back to pull_request, every PR that edits this workflow becomes unreviewable again; if it moved to something else, re-derive this fence for that trigger.',
-    ).toBe(true);
+      auto,
+      `No top-level disjunct of the review job's \`if:\` mentions pull_request_target. If the trigger moved, re-derive this fence for it; do not delete it.\n\nif: ${jobIf}`,
+    ).toBeTruthy();
     expect(
-      /author_association/.test(jobIf),
-      `The pull_request_target branch no longer checks author_association. On a PUBLIC repo that lets an arbitrary fork PR run a job holding the repo token.\n\nif: ${jobIf}`,
-    ).toBe(true);
-    for (const role of ['OWNER', 'MEMBER', 'COLLABORATOR']) {
-      expect(jobIf, `the author fence dropped ${role}`).toContain(role);
-    }
+      auto,
+      `The pull_request_target branch does not fence on github.event.pull_request.author_association. pull_request_target hands the job the repo token for FORK PRs, unlike pull_request which gives them nothing, and this repo is public.\n\nbranch: ${auto}`,
+    ).toContain('github.event.pull_request.author_association');
+    expect(
+      auto,
+      `The auto branch's allow-list is not exactly OWNER/MEMBER/COLLABORATOR. Widening it (CONTRIBUTOR, say) admits anyone who has ever landed a commit.\n\nbranch: ${auto}`,
+    ).toContain(`fromJSON('["OWNER","MEMBER","COLLABORATOR"]')`);
   });
 
   it('the reviewer prompt is never read from the checked-out workspace', () => {
-    // Under pull_request_target the workspace holds PR-authored content. The
-    // server-side workflow check validates only the workflow file, and the prompt
-    // has not lived there since 2026-07-26 — so reading it from the workspace
-    // would let a PR write the prompt its own reviewer runs on.
+    // Under pull_request_target the workspace holds PR-authored content, and the
+    // server-side check validates only the WORKFLOW file — the prompt stopped
+    // living there on 2026-07-26. Three things must hold together; asserting the
+    // `git show` string alone was not enough, because retargeting the FETCH to
+    // the PR ref leaves that string untouched and makes the prompt PR-authored.
     const yml = readFileSync(WORKFLOW, 'utf8');
-    const steps = (doc.jobs as { review?: { steps?: Array<{ with?: { claude_args?: string } }> } })
-      ?.review?.steps;
+    const steps = (doc.jobs as { review?: { steps?: Array<Record<string, unknown>> } })?.review
+      ?.steps;
     if (!Array.isArray(steps))
       throw new Error('claude-review.yml: jobs.review.steps is not an array');
+
     const args = String(
-      steps.find((st) => typeof st.with?.claude_args === 'string')?.with?.claude_args,
+      (steps as Array<{ with?: { claude_args?: string } }>).find(
+        (st) => typeof st.with?.claude_args === 'string',
+      )?.with?.claude_args,
     );
     expect(
       /--append-system-prompt-file\s+\.github\//.test(args),
-      'The prompt is loaded straight from the workspace path. Materialise it from the default branch first; a PR can write anything into .github/ in its own head.',
+      'The prompt is loaded straight from the workspace path. A PR can write anything into .github/ in its own head.',
     ).toBe(false);
+
+    // 1. the fetch is pinned to the DEFAULT BRANCH, not to any PR-controlled ref
+    expect(
+      yml.includes('git fetch --depth=1 origin "$DEFAULT_BRANCH"') &&
+        yml.includes('DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}'),
+      'The prompt fetch is no longer pinned to github.event.repository.default_branch. Retargeting it at the PR ref keeps the `git show` line intact while handing prompt authorship to the PR.',
+    ).toBe(true);
+
+    // 2. it is git show of that fetch, not a workspace read
     expect(
       yml.includes('git show "FETCH_HEAD:.github/claude-review-prompt.md"'),
-      'The default-branch materialisation step is gone, so whatever the prompt flag points at is no longer provably trusted.',
+      'The default-branch materialisation is gone, so whatever the prompt flag points at is no longer provably trusted.',
+    ).toBe(true);
+
+    // 3. it happens BEFORE the action, or the action loads a stale or absent file
+    const materialiseAt = steps.findIndex((st) =>
+      String(st.name ?? '').includes('Materialise the trusted reviewer prompt'),
+    );
+    const actionAt = steps.findIndex((st) => String(st.uses ?? '').includes('claude-code-action'));
+    expect(materialiseAt, 'the materialise step is missing').toBeGreaterThanOrEqual(0);
+    expect(actionAt, 'the claude-code-action step is missing').toBeGreaterThanOrEqual(0);
+    expect(
+      materialiseAt < actionAt,
+      `The prompt is materialised AFTER the reviewer runs (materialise=${materialiseAt}, action=${actionAt}), so the action loads a stale or absent /tmp file while both string assertions above still pass.`,
     ).toBe(true);
   });
 });
