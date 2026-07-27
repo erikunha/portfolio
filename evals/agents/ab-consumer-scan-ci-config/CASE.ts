@@ -1,9 +1,11 @@
+import { declinesWithin } from '@/evals/agents/negation';
 import { type CodeAssertion, validateAgentEvalCase } from '@/evals/agents/schema';
 
+const SCANS_CI_SURFACE =
+  /\.github\/workflows|detect-changes|path-?filter|\bci\.yml\b|\.husky|pathspec|allowlist|workflow file/i;
+
 const assert: CodeAssertion = (output: string): boolean =>
-  /\.github\/workflows|detect-changes|path-?filter|\bci\.yml\b|\.husky|pathspec|allowlist|workflow file/i.test(
-    output,
-  );
+  SCANS_CI_SURFACE.test(output) && !declinesWithin(output, new RegExp(SCANS_CI_SURFACE));
 
 const CONTROL_SYSTEM_TEXT =
   'Before writing plan tasks for any file move OR extraction (relocating code or a symbol ' +

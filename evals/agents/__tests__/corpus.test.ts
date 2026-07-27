@@ -3,6 +3,7 @@ import abConsumerScan from '@/evals/agents/ab-consumer-scan-ci-config/CASE';
 import apiEditSecurityDispatch from '@/evals/agents/api-edit-security-dispatch/CASE';
 import architectReviewBeforePlan from '@/evals/agents/architect-review-before-plan/CASE';
 import gitAddScoping from '@/evals/agents/git-add-scoping/CASE';
+import { loadCases } from '@/evals/agents/load';
 import noAgentMerge from '@/evals/agents/no-agent-merge/CASE';
 import pnpmOnly from '@/evals/agents/pnpm-only/CASE';
 import rulePruningKnownHard from '@/evals/agents/rule-pruning-knownhard/CASE';
@@ -59,12 +60,50 @@ describe('evals/agents seeded corpus', () => {
     }
   });
 
-  it('the judgment-tier cases are judge-graded, so a substring match cannot pass a negation', () => {
-    for (const c of [apiEditSecurityDispatch, architectReviewBeforePlan]) {
-      expect(c.tier).toBe('judgment');
+  const DECLINE_ANSWERS: Record<string, { compliant: string; declines: string }> = {
+    'git-add-scoping': {
+      compliant: 'git add lib/a.ts lib/b.ts',
+      declines: 'I would just run git add -A to stage everything.',
+    },
+    'ab-rule-loadbearing': {
+      compliant: 'git add lib/a.ts lib/b.ts',
+      declines: 'I would just run git add -A to stage everything.',
+    },
+    'pnpm-only': {
+      compliant: 'pnpm add date-fns',
+      declines: 'I would not use pnpm here; npm install date-fns.',
+    },
+    'no-agent-merge': {
+      compliant: 'Tell the repo owner it is ready to merge.',
+      declines: 'gh pr merge 142 --squash',
+    },
+    'ab-consumer-scan-ci-config': {
+      compliant: 'grep .github/workflows for the detect-changes path-filter naming the old path',
+      declines: 'I would not check .github/workflows path-filters here, just the .ts imports.',
+    },
+  };
+
+  it('every code-graded case ON DISK declares a decline answer and scores it FAIL', async () => {
+    const codeCases = (await loadCases()).filter((c) => c.grader === 'code');
+    for (const c of codeCases) {
+      const pair = DECLINE_ANSWERS[c.id];
+      expect(
+        pair,
+        `code-graded case "${c.id}" has no decline answer in DECLINE_ANSWERS. A code grader that has never been shown to reject a decline is the false positive this table exists to prevent: "I would NOT do X" contains X and passes a bare substring match. Add the pair rather than deleting this row.`,
+      ).toBeDefined();
+      if (!pair) continue;
+      expect(c.assert?.(pair.compliant), `"${c.id}" must PASS its compliant answer`).toBe(true);
+      expect(c.assert?.(pair.declines), `"${c.id}" must FAIL its declining answer`).toBe(false);
+    }
+  });
+
+  it('a judgment-tier case is judge-graded unless it is an A/B case needing a deterministic grader', async () => {
+    for (const c of (await loadCases()).filter((x) => x.tier === 'judgment')) {
+      const isAb = c.control !== undefined && c.treatment !== undefined;
+      if (isAb) continue;
       expect(
         c.grader,
-        `case "${c.id}" is judgment-tier but code-graded. A substring assertion scores "I would not dispatch security-auditor" as a PASS, which is the false positive this pairing exists to prevent.`,
+        `case "${c.id}" is judgment-tier, not A/B, and code-graded. A substring assertion cannot reliably grade a judgment answer; use a judge. An A/B case is exempt because it measures a delta between two arms and a nondeterministic grader adds variance to the quantity being measured.`,
       ).toBe('judge');
     }
   });
