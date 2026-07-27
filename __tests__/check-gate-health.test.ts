@@ -132,6 +132,38 @@ describe('auditGates', () => {
     expect(dead).toEqual([]);
   });
 
+  it('an unwired hook cannot vouch for the hook it invokes — both are flagged', () => {
+    const dead = auditGates({
+      hookFiles: [
+        {
+          name: '.claude/hooks/dead.sh',
+          refs: [],
+          hookRefs: ['.claude/hooks/reached-only-by-dead.sh'],
+        },
+        { name: '.claude/hooks/reached-only-by-dead.sh', refs: [] },
+      ],
+      settingsRefs: [],
+      exists: () => true,
+    });
+    expect(
+      dead.map((d) => d.source).sort(),
+      "Reachability must start at settings.json and follow hookRefs only through hooks already proven reachable. Unioning every hook's outbound refs lets a hook that never runs certify the one it calls.",
+    ).toEqual(['.claude/hooks/dead.sh', '.claude/hooks/reached-only-by-dead.sh']);
+  });
+
+  it('follows a wired hook through two hops of sibling invocation', () => {
+    const dead = auditGates({
+      hookFiles: [
+        { name: '.claude/hooks/entry.sh', refs: [], hookRefs: ['.claude/hooks/mid.sh'] },
+        { name: '.claude/hooks/mid.sh', refs: [], hookRefs: ['.claude/hooks/leaf.sh'] },
+        { name: '.claude/hooks/leaf.sh', refs: [] },
+      ],
+      settingsRefs: ['.claude/hooks/entry.sh'],
+      exists: () => true,
+    });
+    expect(dead).toEqual([]);
+  });
+
   it('flags every unwired hook rather than stopping at the first', () => {
     const dead = auditGates({
       hookFiles: [

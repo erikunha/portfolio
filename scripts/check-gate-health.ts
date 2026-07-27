@@ -67,9 +67,17 @@ export function auditGates(input: {
   for (const ref of settingsRefs) {
     if (!exists(ref)) dead.push({ source: '.claude/settings.json', ref, kind: 'settings->hook' });
   }
-  const wired = new Set([...settingsRefs, ...hookFiles.flatMap((f) => f.hookRefs ?? [])]);
+  const outbound = new Map(hookFiles.map((f) => [f.name, f.hookRefs ?? []]));
+  const reachable = new Set<string>();
+  const queue = [...settingsRefs];
+  while (queue.length > 0) {
+    const next = queue.shift() as string;
+    if (reachable.has(next)) continue;
+    reachable.add(next);
+    queue.push(...(outbound.get(next) ?? []));
+  }
   for (const { name } of hookFiles) {
-    if (!wired.has(name)) {
+    if (!reachable.has(name)) {
       dead.push({ source: name, ref: SETTINGS_PATH, kind: 'hook->unwired' });
     }
   }
