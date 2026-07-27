@@ -10,6 +10,7 @@ import {
 
 const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'claude-review.yml');
 const PROMPT_PATH_IN_REPO = '.github/claude-review-prompt.md';
+const PR_HEAD_DIR = 'pr-head';
 const MATERIALISED_PROMPT = '/tmp/claude-review-prompt.md';
 
 const HEAD_SHA = 'bb390ab1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7';
@@ -38,28 +39,28 @@ function claudeArgs(): string {
 }
 
 function systemPrompt(): string {
-  // The prompt reaches the reviewer through TWO links, and both are asserted,
-  // because either one breaking silently leaves the reviewer running with no
-  // prompt while this suite keeps passing against a file nothing loads.
-  //
-  // Link 1: a step materialises the repo file from the DEFAULT BRANCH into /tmp.
-  // Reading it from the workspace instead would let a PR author its own
-  // reviewer's prompt — the server-side check validates the workflow file, and
-  // the prompt has not lived there since 2026-07-26.
+  // Two independent properties, both required, and an earlier revision wrongly
+  // treated them as alternatives. The LAYOUT (base at root, PR head confined to
+  // pr-head/) is what stops untrusted content reaching the workspace root. The
+  // MATERIALISATION is what makes the prompt the DEFAULT branch's copy — the
+  // root is only the PR's base, and on a sub-PR into an integration branch those
+  // are different things.
   const yml = readFileSync(WORKFLOW, 'utf8');
-  if (!yml.includes(`git show "FETCH_HEAD:${PROMPT_PATH_IN_REPO}" > ${MATERIALISED_PROMPT}`)) {
-    throw new Error(
-      `claude-review.yml no longer materialises ${PROMPT_PATH_IN_REPO} from the default branch into ${MATERIALISED_PROMPT}. If it now reads the prompt out of the checked-out workspace, a PR can author the prompt its own reviewer runs on. Restore the git-show step, or update both constants together if the mechanism changed.`,
-    );
-  }
-
-  // Link 2: the action is actually pointed at the materialised copy.
   if (!claudeArgs().includes(`--append-system-prompt-file ${MATERIALISED_PROMPT}`)) {
     throw new Error(
       `claude-review.yml no longer passes --append-system-prompt-file ${MATERIALISED_PROMPT}. Without this the suite asserts against a file the workflow does not load, which stays green while the live reviewer runs with no prompt at all.`,
     );
   }
-
+  if (!yml.includes(`git show "FETCH_HEAD:${PROMPT_PATH_IN_REPO}" > ${MATERIALISED_PROMPT}`)) {
+    throw new Error(
+      `claude-review.yml no longer materialises ${PROMPT_PATH_IN_REPO} from the DEFAULT branch. The workspace root is the PR's BASE, which is not the default branch on a sub-PR into an integration branch — so without this step that branch's prompt would review its own sub-PRs.`,
+    );
+  }
+  if (!yml.includes(`--add-dir ${PR_HEAD_DIR}`)) {
+    throw new Error(
+      `claude-review.yml no longer passes --add-dir ${PR_HEAD_DIR}. The root checkout is the BASE, so without the PR's files mounted separately the reviewer reads pre-change content for every file it opens.`,
+    );
+  }
   return readFileSync(join(process.cwd(), PROMPT_PATH_IN_REPO), 'utf8');
 }
 
