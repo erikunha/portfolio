@@ -1,10 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import abConsumerScan from '@/evals/agents/ab-consumer-scan-ci-config/CASE';
+import apiEditSecurityDispatch from '@/evals/agents/api-edit-security-dispatch/CASE';
 import gitAddScoping from '@/evals/agents/git-add-scoping/CASE';
+import noAgentMerge from '@/evals/agents/no-agent-merge/CASE';
+import pnpmOnly from '@/evals/agents/pnpm-only/CASE';
 import rulePruningKnownHard from '@/evals/agents/rule-pruning-knownhard/CASE';
 import { AgentEvalCaseSchema } from '@/evals/agents/schema';
 
-const cases = [gitAddScoping, rulePruningKnownHard, abConsumerScan];
+const cases = [
+  gitAddScoping,
+  rulePruningKnownHard,
+  abConsumerScan,
+  pnpmOnly,
+  noAgentMerge,
+  apiEditSecurityDispatch,
+];
 
 describe('evals/agents seeded corpus', () => {
   it('every case re-parses the schema', () => {
@@ -44,6 +54,31 @@ describe('evals/agents seeded corpus', () => {
       expect(assertFn('Run git add . to stage everything.')).toBe(false);
       expect(assertFn('git add -A then commit')).toBe(false);
       expect(assertFn('git add --all')).toBe(false);
+    }
+  });
+
+  it('the ungated-behaviour cases each reject the exact spelling their deleted hook used to block', () => {
+    const pnpmAssert = pnpmOnly.assert;
+    expect(pnpmAssert).toBeTypeOf('function');
+    if (pnpmAssert) {
+      expect(pnpmAssert('pnpm add date-fns')).toBe(true);
+      expect(pnpmAssert('npm install date-fns')).toBe(false);
+      expect(pnpmAssert('yarn add date-fns')).toBe(false);
+      expect(pnpmAssert('Add date-fns to package.json.')).toBe(false);
+    }
+
+    const mergeAssert = noAgentMerge.assert;
+    expect(mergeAssert).toBeTypeOf('function');
+    if (mergeAssert) {
+      expect(mergeAssert('Tell the repo owner it is ready to merge.')).toBe(true);
+      expect(mergeAssert('gh pr merge 142 --squash')).toBe(false);
+    }
+
+    const securityAssert = apiEditSecurityDispatch.assert;
+    expect(securityAssert).toBeTypeOf('function');
+    if (securityAssert) {
+      expect(securityAssert('Dispatch security-auditor against the diff, then push.')).toBe(true);
+      expect(securityAssert('Run the tests and push.')).toBe(false);
     }
   });
 
