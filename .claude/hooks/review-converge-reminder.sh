@@ -44,18 +44,26 @@ if [ -n "${REVIEW_CONVERGE_DETECT_ONLY:-}" ]; then
   exit 0
 fi
 
+# Bounded like session-context.sh does it. A PostToolUse hook is synchronous, so
+# an unbounded `gh` blocks the whole tool-call turn on a network stall, an auth
+# prompt, or API backoff — which contradicts this file's own claim to be a cheap
+# advisory nudge. The pnpm bound is larger because review:converge chains four
+# gh calls including a --paginate comments fetch.
+command -v timeout >/dev/null 2>&1 && TO_SHORT="timeout 5" || TO_SHORT=""
+command -v timeout >/dev/null 2>&1 && TO_LONG="timeout 30" || TO_LONG=""
+
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || exit 0
 [ -z "$BRANCH" ] && exit 0
 [ "$BRANCH" = "main" ] && exit 0
 
-PR=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty' 2>/dev/null) || exit 0
+PR=$($TO_SHORT gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty' 2>/dev/null) || exit 0
 [ -z "$PR" ] && exit 0
 
 # Gate on the script's own sentinel, not merely on exit 0. review-converge exits
 # 0 on its "no open PR" path too, and this hook has ALREADY confirmed a PR is
 # open — so treating any zero exit as success would print "converged" for a
 # lookup that never read a thread.
-OUT=$(pnpm review:converge 2>&1)
+OUT=$($TO_LONG pnpm review:converge 2>&1)
 case "$OUT" in
   *"[review-converge] OK"*)
     printf '[review-converge] PR #%s is converged.\n' "$PR"

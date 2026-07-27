@@ -1,6 +1,6 @@
 ---
 name: review-convergence
-description: Use when driving an open PR's claude-review (`/claude-review`, claude[bot]) to green — rebase before every push, reply citing the fix SHA before resolving any thread, verify the pushed SHA, re-request the review. Not for the final merge (see pr-merge-gate).
+description: Use when driving an open PR's claude-review (`/claude-review`, claude[bot]) to green — rebase before every push, reply citing the fix SHA before resolving any thread, verify the pushed SHA; re-request only when no auto-review will otherwise run. Not for the final merge (see pr-merge-gate).
 ---
 
 # Review convergence loop

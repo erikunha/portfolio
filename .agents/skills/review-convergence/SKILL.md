@@ -1,6 +1,6 @@
 ---
 name: review-convergence
-description: Use when driving an open PR's claude-review (`/claude-review`, claude[bot]) to green — rebase before every push, reply citing the fix SHA before resolving any thread, verify the pushed SHA, re-request the review. Not for the final merge (see pr-merge-gate).
+description: Use when driving an open PR's claude-review (`/claude-review`, claude[bot]) to green — rebase before every push, reply citing the fix SHA before resolving any thread, verify the pushed SHA; re-request only when no auto-review will otherwise run. Not for the final merge (see pr-merge-gate).
 ---
 > **Codex note:** hook activation is not configured in this repo, so every "the hook blocks", "enforced", "WIRED", or "exit 2" claim here — including in this file's description — is a **hard rule to self-enforce**, not an automated gate.
 
