@@ -173,8 +173,14 @@ jobs:
           # single fetch raced the final edit by one second and failed a review
           # that had posted a valid "**Verdict: Request changes.**".
           for attempt in 1 2 3 4 5; do
+            # Piped to jq, NOT gh's --jq: gh rejects `--slurp` combined with
+            # `--jq` ("the --slurp option is not supported with --jq or
+            # --template") and prints usage, so the fetch returned help text and
+            # the guard red on every run that was not skipped. --slurp is still
+            # load-bearing — without it gh applies the filter per page and `last`
+            # yields one body per page — so the filter moves to a real jq instead.
             fresh=$(gh api --paginate --slurp "repos/$REPO/issues/$PR/comments" \
-              --jq "[.[][] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | sort_by(.created_at) | last | .body")
+              | jq -r "[.[][] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | sort_by(.created_at) | last | .body // empty")
 
             if printf '%s' "$fresh" | grep -qiE '\*\*[^*]*\b(approve|reject|request changes)\b[^*]*\*\*'; then
               echo "OK  this run posted a verdict (attempt $attempt)."

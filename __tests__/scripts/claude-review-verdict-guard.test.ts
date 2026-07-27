@@ -36,14 +36,17 @@ function block(open: RegExp, what: string): string {
   return end === -1 ? rest : rest.slice(0, end);
 }
 
-const FETCH = /(\w+)=\$\(gh api[\s\S]*?--jq "((?:[^"\\]|\\.)*)"\s*\)/;
+// Matches the fetch PIPED INTO jq, not gh's --jq. gh refuses `--slurp` with
+// `--jq` and prints usage, so the old shape could never have run; this regex
+// failing is the signal that someone reintroduced it.
+const FETCH = /(\w+)=\$\(gh api[\s\S]*?\|\s*jq -r "((?:[^"\\]|\\.)*)"\s*\)/;
 const GREP = /\n\s*if printf '%s' "\$(\w+)"\s*\|\s*grep -qiE '([^']+)'; then/;
 
 describe('the guard fetches, filters and tests the same thing the merge gate reads', () => {
   it('greps the output of the filtered fetch, not some other fetch', () => {
     const fetch = FETCH.exec(guardScript());
     const grep = GREP.exec(guardScript());
-    expect(fetch, 'no `<var>=$(gh api … --jq "…")` assignment in the guard').toBeTruthy();
+    expect(fetch, 'no `<var>=$(gh api … | jq -r "…")` assignment in the guard').toBeTruthy();
     expect(grep, 'no `printf | grep -qiE` verdict test in the guard').toBeTruthy();
     expect(
       grep?.[1],
@@ -133,7 +136,28 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     const bin = mkdtempSync(join(tmpdir(), 'guard-gh-'));
     writeFileSync(
       join(bin, 'gh'),
-      '#!/usr/bin/env bash\nif [ "$1" = "api" ]; then printf \'%s\' "$GUARD_STUB_BODY"; else printf \'%s\\n\' "$GUARD_STUB_CHANGED"; fi\n',
+      // The stub REJECTS `--slurp` together with `--jq`, exactly as real gh does
+      // ("the --slurp option is not supported with --jq or --template"). Without
+      // this the stub answers any argument list, so the guard's fetch could be
+      // malformed and every row still passed — which is how a broken `gh api`
+      // shipped and red every unskipped run. A stub that accepts what the real
+      // binary refuses pins its own behaviour, not the command under test.
+      [
+        '#!/usr/bin/env bash',
+        'if [ "$1" = "api" ]; then',
+        '  args="$*"',
+        '  case "$args" in',
+        '    *--slurp*--jq*|*--jq*--slurp*)',
+        '      echo "the \\`--slurp\\` option is not supported with \\`--jq\\` or \\`--template\\`" >&2',
+        '      exit 1',
+        '      ;;',
+        '  esac',
+        '  printf \'%s\' "$GUARD_STUB_PAGES"',
+        'else',
+        '  printf \'%s\\n\' "$GUARD_STUB_CHANGED"',
+        'fi',
+        '',
+      ].join('\n'),
     );
     chmodSync(join(bin, 'gh'), 0o755);
     try {
@@ -146,7 +170,12 @@ describe('the guard reds the job, and skips only what it provably cannot review'
           REPO: 'o/r',
           SINCE: since,
           GITHUB_EVENT_NAME: event,
-          GUARD_STUB_BODY: body,
+          // gh --paginate --slurp emits an array of pages; the guard pipes that
+          // into jq, so the stub must speak the same shape the real API does
+          // rather than a bare markdown body.
+          GUARD_STUB_PAGES: JSON.stringify([
+            [{ user: { login: 'claude[bot]' }, created_at: '2030-01-01T00:00:00Z', body }],
+          ]),
           GUARD_STUB_CHANGED: changed,
           VERDICT_RETRY_SLEEP: '0',
         },
