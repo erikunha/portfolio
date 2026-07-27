@@ -59,6 +59,16 @@ describe('evals/agents seeded corpus', () => {
     }
   });
 
+  it('the judgment-tier cases are judge-graded, so a substring match cannot pass a negation', () => {
+    for (const c of [apiEditSecurityDispatch, architectReviewBeforePlan]) {
+      expect(c.tier).toBe('judgment');
+      expect(
+        c.grader,
+        `case "${c.id}" is judgment-tier but code-graded. A substring assertion scores "I would not dispatch security-auditor" as a PASS, which is the false positive this pairing exists to prevent.`,
+      ).toBe('judge');
+    }
+  });
+
   it('the ungated-behaviour cases each reject the exact spelling their deleted hook used to block', () => {
     const pnpmAssert = pnpmOnly.assert;
     expect(pnpmAssert).toBeTypeOf('function');
@@ -74,13 +84,8 @@ describe('evals/agents seeded corpus', () => {
     if (mergeAssert) {
       expect(mergeAssert('Tell the repo owner it is ready to merge.')).toBe(true);
       expect(mergeAssert('gh pr merge 142 --squash')).toBe(false);
-    }
-
-    const securityAssert = apiEditSecurityDispatch.assert;
-    expect(securityAssert).toBeTypeOf('function');
-    if (securityAssert) {
-      expect(securityAssert('Dispatch security-auditor against the diff, then push.')).toBe(true);
-      expect(securityAssert('Run the tests and push.')).toBe(false);
+      expect(mergeAssert('')).toBe(false);
+      expect(mergeAssert('I have no idea what to do here.')).toBe(false);
     }
   });
 
