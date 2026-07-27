@@ -37,7 +37,7 @@ describe('decideStamp', () => {
     const d = decideStamp({
       records: batteryAt(AFTER),
       transcriptResolved: true,
-      headCommitIso: HEAD_ISO,
+      baseCommitIso: HEAD_ISO,
     });
     expect(d.write, JSON.stringify(d)).toBe(true);
     expect(d.missing).toEqual([]);
@@ -53,7 +53,7 @@ describe('decideStamp', () => {
       const d = decideStamp({
         records: withVariant,
         transcriptResolved: true,
-        headCommitIso: HEAD_ISO,
+        baseCommitIso: HEAD_ISO,
       });
       expect(d.write, JSON.stringify(d)).toBe(true);
     },
@@ -63,13 +63,13 @@ describe('decideStamp', () => {
     const present = BATTERY_ROLES.filter((r) => r.role !== 'test-strength').map((r) =>
       agent(r.accepts[0] ?? r.role, AFTER),
     );
-    const d = decideStamp({ records: present, transcriptResolved: true, headCommitIso: HEAD_ISO });
+    const d = decideStamp({ records: present, transcriptResolved: true, baseCommitIso: HEAD_ISO });
     expect(d.write).toBe(false);
     expect(d.missing).toEqual(['test-strength']);
   });
 
   it('refuses fail-closed when the transcript could not be resolved', () => {
-    const d = decideStamp({ records: [], transcriptResolved: false, headCommitIso: HEAD_ISO });
+    const d = decideStamp({ records: [], transcriptResolved: false, baseCommitIso: HEAD_ISO });
     expect(d.write).toBe(false);
     expect(d.missing).toEqual(ALL_ROLES);
     expect(d.reason).toMatch(/transcript/i);
@@ -79,7 +79,7 @@ describe('decideStamp', () => {
     const d = decideStamp({
       records: batteryAt(BEFORE),
       transcriptResolved: true,
-      headCommitIso: HEAD_ISO,
+      baseCommitIso: HEAD_ISO,
     });
     expect(d.write).toBe(false);
     expect(d.missing.sort()).toEqual([...ALL_ROLES].sort());
@@ -94,7 +94,7 @@ describe('decideStamp', () => {
     const d = decideStamp({
       records: [...stale, ...fresh],
       transcriptResolved: true,
-      headCommitIso: HEAD_ISO,
+      baseCommitIso: HEAD_ISO,
     });
     expect(d.write).toBe(false);
     expect(d.missing.sort()).toEqual(ALL_ROLES.filter((r) => r !== 'test-strength').sort());
@@ -105,7 +105,7 @@ describe('decideStamp — verification-loop (findings) gate', () => {
   const fullBattery = {
     records: batteryAt(AFTER),
     transcriptResolved: true,
-    headCommitIso: HEAD_ISO,
+    baseCommitIso: HEAD_ISO,
   };
 
   it('writes when the battery ran AND the ledger has no open/invalid findings', () => {
@@ -150,10 +150,51 @@ describe('decideStamp — verification-loop (findings) gate', () => {
     const d = decideStamp({
       records: allButOne,
       transcriptResolved: true,
-      headCommitIso: HEAD_ISO,
+      baseCommitIso: HEAD_ISO,
       findings: { present: true, blocking: [], invalid: [] },
     });
     expect(d.write).toBe(false);
     expect(d.missing).toEqual(['gate-robustness']);
+  });
+});
+
+describe('decideStamp anchors freshness to the branch base, not to HEAD', () => {
+  // The regression this pins: anchoring to HEAD meant every fix commit
+  // invalidated the battery that found the thing being fixed, so a branch could
+  // never converge without re-running all four agents per round — which
+  // contradicts CLAUDE.md's run-it-ONCE rule and cost 8 needless Opus dispatches
+  // on the branch that produced this test.
+  const BASE_ISO = '2026-07-26T10:00:00.000Z';
+  const clean = { present: true, blocking: [], invalid: [] };
+
+  it('accepts a battery dispatched mid-branch even though later fix commits exist', () => {
+    const d = decideStamp({
+      records: batteryAt('2026-07-26T11:00:00.000Z'),
+      transcriptResolved: true,
+      baseCommitIso: BASE_ISO,
+      findings: clean,
+    });
+    expect(d.write).toBe(true);
+  });
+
+  it('still refuses a battery that predates the branch entirely', () => {
+    const d = decideStamp({
+      records: batteryAt('2026-07-26T09:00:00.000Z'),
+      transcriptResolved: true,
+      baseCommitIso: BASE_ISO,
+      findings: clean,
+    });
+    expect(d.write).toBe(false);
+    expect(d.missing.length).toBe(BATTERY_ROLES.length);
+  });
+
+  it('still refuses while a blocking finding is open, whatever the anchor', () => {
+    const d = decideStamp({
+      records: batteryAt('2026-07-26T11:00:00.000Z'),
+      transcriptResolved: true,
+      baseCommitIso: BASE_ISO,
+      findings: { present: true, blocking: ['abc123 something real'], invalid: [] },
+    });
+    expect(d.write).toBe(false);
   });
 });

@@ -65,7 +65,8 @@
     "prepare": "husky || true",
     "postinstall": "node scripts/strip-next-polyfills.mjs",
     "changelog:sync": "tsx scripts/sync-changelog.ts",
-    "check:mermaid": "node scripts/check-mermaid.mjs"
+    "check:mermaid": "node scripts/check-mermaid.mjs",
+    "review:converge": "tsx scripts/review-converge.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
