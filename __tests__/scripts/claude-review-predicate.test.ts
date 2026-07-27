@@ -193,16 +193,32 @@ describe('the auto path is fenced, and the workspace root holds base content', (
     expect(headAt).toBeGreaterThanOrEqual(0);
 
     const run = String(steps[stripAt]?.run ?? '');
-    for (const path of ['CLAUDE.md', 'AGENTS.md', '.claude', '.cursor']) {
+
+    // Matched by NAME across the subtree, not by fixed root paths. A root-only
+    // strip left `pr-head/lib/CLAUDE.md` in place AND reported success, because
+    // its verify loop checked the same fixed paths the rm had listed.
+    expect(
+      /find pr-head/.test(run),
+      'The strip no longer walks the subtree. The CLI discovers CLAUDE.md and AGENTS.md in subdirectories, so a fixed-path strip misses `pr-head/lib/CLAUDE.md` entirely.',
+    ).toBe(true);
+    for (const name of ['CLAUDE.md', 'AGENTS.md', '.claude', '.cursor']) {
       expect(
         run,
-        `The strip no longer removes pr-head/${path}, which the CLI would ingest as project instructions authored by the PR under review.`,
-      ).toContain(`pr-head/${path}`);
+        `The strip no longer matches ${name}, which the CLI would ingest as project instructions authored by the PR under review.`,
+      ).toContain(`-name '${name}'`);
     }
-    // It must VERIFY, not just rm: a typo'd path silently removes nothing.
+
+    // It must VERIFY with the SAME predicate that removed. An independently
+    // enumerated verify drifts from the rm the first time either is edited, and
+    // then passes while removing nothing.
+    const finds = run.match(/find pr-head/g) ?? [];
     expect(
-      /if \[ -e "pr-head\/\$p" \]/.test(run) && /exit 1/.test(run),
-      'The strip does not verify its own result. A mistyped path would delete nothing and the step would still succeed.',
+      finds.length,
+      'The strip does not re-run its own predicate to verify. A mistyped name would then delete nothing and the step would still succeed.',
+    ).toBeGreaterThanOrEqual(2);
+    expect(
+      /leftover/.test(run) && /exit 1/.test(run),
+      'The strip does not fail when something survives it.',
     ).toBe(true);
   });
 });

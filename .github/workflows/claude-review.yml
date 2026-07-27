@@ -148,20 +148,30 @@ jobs:
       - name: Strip instruction-shaped files from the mounted PR copy
         run: |
           set -euo pipefail
-          rm -rf \
-            pr-head/CLAUDE.md \
-            pr-head/AGENTS.md \
-            pr-head/.claude \
-            pr-head/.agents \
-            pr-head/.codex \
-            pr-head/.cursor \
-            pr-head/.github/copilot-instructions.md
-          for p in CLAUDE.md AGENTS.md .claude .agents .codex .cursor .github/copilot-instructions.md; do
-            if [ -e "pr-head/$p" ]; then
-              echo "pr-head/$p survived the strip — it would reach the reviewer as an instruction" >&2
-              exit 1
-            fi
-          done
+
+          # Matched by NAME across the whole subtree, not at the root only. The
+          # CLI discovers CLAUDE.md and AGENTS.md in SUBDIRECTORIES too, so a PR
+          # adding `lib/CLAUDE.md` walked straight past a strip that listed seven
+          # fixed root paths — and past its own verification, which checked the
+          # same seven and reported success.
+          find pr-head \
+            \( -name 'CLAUDE.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \
+               -o -name '.claude' -o -name '.agents' -o -name '.codex' -o -name '.cursor' \) \
+            -prune -exec rm -rf {} +
+
+          # Verified with the SAME predicate that did the removing. A verify loop
+          # that enumerates paths independently drifts from the rm the moment one
+          # of them is edited, and then passes while removing nothing.
+          leftover=$(find pr-head \
+            \( -name 'CLAUDE.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \
+               -o -name '.claude' -o -name '.agents' -o -name '.codex' -o -name '.cursor' \) \
+            -print -quit)
+          if [ -n "$leftover" ]; then
+            echo "instruction-shaped path survived the strip: $leftover" >&2
+            echo "  --add-dir mounts pr-head as project scope, so it would reach the" >&2
+            echo "  reviewer on the instruction channel." >&2
+            exit 1
+          fi
 
       - name: Mark review start
         id: t0
@@ -190,13 +200,6 @@ jobs:
       # the pull_request path it was permanent: tag mode posted a track_progress
       # checklist with no verdict on every auto-run, so the merge gate never had
       # anything to read.
-      #
-      # The workflow-edit carve-out that used to sit here is GONE, deliberately.
-      # It existed because a `pull_request` run loads the workflow from the PR
-      # head, so the action refused on any PR editing this file and no verdict
-      # could exist to assert. Under `pull_request_target` the base copy always
-      # runs, the action never refuses, and a skip would now hide a real failure
-      # behind a green check — the exact silent-green this step was added to end.
       #
       # Two things this must NOT do. It must not accept a verdict from an EARLIER
       # run, or a push whose review posted nothing passes on the previous head's
