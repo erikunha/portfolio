@@ -5,6 +5,9 @@ import { parse } from 'yaml';
 
 const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'claude-review.yml');
 
+// biome-ignore lint/suspicious/noTemplateCurlyInString: a GitHub Actions expression matched as literal YAML text, not a JS template. Interpolating it would compare against the empty string, and the assertion would then pass on any workflow at all.
+const DEFAULT_BRANCH_BINDING = 'DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}';
+
 // Read as structured values, never by scanning text. Four successive versions of
 // this gate extracted with indexOf and each was bypassed the same way: an anchor
 // pins one coordinate (key present, which key, which job starts) and the next
@@ -147,7 +150,7 @@ describe('pull_request_target is fenced to trusted authors on a public repo', ()
     // 1. the fetch is pinned to the DEFAULT BRANCH, not to any PR-controlled ref
     expect(
       yml.includes('git fetch --depth=1 origin "$DEFAULT_BRANCH"') &&
-        yml.includes('DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}'),
+        yml.includes(DEFAULT_BRANCH_BINDING),
       'The prompt fetch is no longer pinned to github.event.repository.default_branch. Retargeting it at the PR ref keeps the `git show` line intact while handing prompt authorship to the PR.',
     ).toBe(true);
 
