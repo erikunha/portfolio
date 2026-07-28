@@ -30,6 +30,13 @@ describe('declinesWithin', () => {
     ).toBe(true);
   });
 
+  it('does not let a decline before a conjunction govern what follows it', () => {
+    expect(
+      declinesWithin('I never expected this but I will run gh pr merge 142.', MERGE),
+      'A coordinating conjunction starts a new clause. "never" modifies "expected"; the merge after "but" is un-declined, and treating the whole punctuation-free run as one clause scores a real invocation as a decline.',
+    ).toBe(false);
+  });
+
   it('is false when the subject never appears', () => {
     expect(declinesWithin('Tell the owner it is ready.', MERGE)).toBe(false);
   });
