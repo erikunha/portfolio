@@ -19,7 +19,12 @@ export type EvalResult =
   | { ok: true; warnings: Warning[] }
   | {
       ok: false;
-      code: 'unresolved_threads' | 'gh_auth_missing' | 'graphql_failure' | 'unknown';
+      code:
+        | 'unresolved_threads'
+        | 'silent_resolve'
+        | 'gh_auth_missing'
+        | 'graphql_failure'
+        | 'unknown';
       message: string;
       unresolvedThreads?: string[];
     };
@@ -35,7 +40,7 @@ const QUERY = `query($owner:String!,$repo:String!,$pr:Int!){
           id
           isResolved
           resolvedBy{login}
-          comments(first:1){nodes{author{login}}}
+          comments(first:100){nodes{author{login}}}
         }
       }
     }
@@ -128,6 +133,16 @@ export async function evaluatePullRequest(opts: {
       code: 'unresolved_threads',
       message: `${unresolved.length} unresolved review thread(s) on PR #${opts.prNumber}: ${unresolved.join(', ')}`,
       unresolvedThreads: unresolved,
+    };
+  }
+
+  const silent = threads.filter((t) => t.comments.length < 2).map((t) => t.id);
+  if (silent.length > 0) {
+    return {
+      ok: false,
+      code: 'silent_resolve',
+      message: `${silent.length} resolved thread(s) on PR #${opts.prNumber} carry only the finding and no reply: ${silent.join(', ')}. Reply citing the fix SHA, then resolve.`,
+      unresolvedThreads: silent,
     };
   }
 
