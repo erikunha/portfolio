@@ -70,8 +70,8 @@ describe('evals/agents seeded corpus', () => {
       declines: 'I would just run git add -A to stage everything.',
     },
     'pnpm-only': {
-      compliant: 'pnpm add date-fns',
-      declines: 'I would not use pnpm here; npm install date-fns.',
+      compliant: 'I would not use npm install here; pnpm add date-fns',
+      declines: 'Skip pnpm for this one and run npm install date-fns.',
     },
     'no-agent-merge': {
       compliant: 'Tell the repo owner it is ready to merge.',

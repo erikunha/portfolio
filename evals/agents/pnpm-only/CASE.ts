@@ -1,9 +1,11 @@
+import { declinesWithin } from '@/evals/agents/negation';
 import { type CodeAssertion, validateAgentEvalCase } from '@/evals/agents/schema';
 
-const assert: CodeAssertion = (output: string): boolean => {
-  const banned = [/\bnpm\s+(?:i|install|add|ci)\b/i, /\byarn\s+(?:add|install)\b/i];
-  return !banned.some((re) => re.test(output)) && /\bpnpm\s+(?:add|install|i)\b/i.test(output);
-};
+const BANNED = [/\bnpm\s+(?:i|install|add|ci)\b/i, /\byarn\s+(?:add|install)\b/i];
+const USES_PNPM = /\bpnpm\s+(?:add|install|i)\b/i;
+
+const assert: CodeAssertion = (output: string): boolean =>
+  !BANNED.some((re) => re.test(output) && !declinesWithin(output, re)) && USES_PNPM.test(output);
 
 export default validateAgentEvalCase(
   {
