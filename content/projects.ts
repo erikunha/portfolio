@@ -6,9 +6,9 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
     name: 'ORIGINATION_PLATFORM_UI',
     mobileName: 'origination_ui/',
     description:
-      'Frontend platform for Raylu’s AI deal-origination engine — shared UI systems and state architecture behind market maps, target lists, and diligence surfaces for private-markets funds.',
+      'Shared UI systems and state architecture for Raylu’s AI deal-origination product — built from zero, co-developed with a second engineer, behind the market maps, target lists, and diligence surfaces private-markets funds work in.',
     mobileDescription:
-      'Frontend platform at Raylu.ai — market maps, target lists, diligence surfaces for private-markets funds. Shared UI systems, versioned ViewState, URL-backed state. React 19, Next 15, TypeScript.',
+      'Shared UI systems and state architecture at Raylu.ai — built from zero, co-developed with a second engineer. Market maps, target lists, diligence surfaces. Versioned ViewState, URL-backed state. React 19, Next 15, TypeScript.',
     stats: [
       { label: 'SURFACES', value: 'MAPS / LISTS / DILIGENCE' },
       { label: 'STATE', value: 'VERSIONED + URL-BACKED' },

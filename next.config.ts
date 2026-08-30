@@ -16,6 +16,9 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   typedRoutes: true,
   trailingSlash: false,
+  images: {
+    remotePatterns: [{ protocol: 'https', hostname: 'i.ytimg.com', pathname: '/vi/**' }],
+  },
   headers: async () => [
     {
       source: '/(.*)',

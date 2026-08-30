@@ -84,7 +84,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   employers: [
     {
       name: 'Raylu.ai',
-      role: 'Senior Software Engineer',
+      role: 'Senior Software Engineer (contract, via Torc)',
       domain: 'AI deal origination / private markets',
       current: true,
       dates: '2026–present',

@@ -14,6 +14,7 @@ const EnvSchema = z.object({
   CRON_SECRET: optional(z.string()),
   ASK_ENABLED: optional(z.string()),
   DEPLOY_SALT: optional(z.string()),
+  YOUTUBE_API_KEY: optional(z.string()),
   LANGFUSE_ENABLED: optional(z.string()),
   LANGFUSE_SECRET_KEY: optional(z.string()),
   LANGFUSE_PUBLIC_KEY: optional(z.string()),

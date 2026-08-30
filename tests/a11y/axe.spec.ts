@@ -7,6 +7,8 @@ const DS_ROUTES = [
   '/design-system/components',
   '/design-system/enforcement',
   '/design-system/changelog',
+  '/links',
+  '/links/en',
 ];
 
 test.describe('axe-core a11y scan', () => {

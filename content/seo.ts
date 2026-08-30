@@ -29,7 +29,7 @@ export const personSchema = {
     url: 'https://raylu.ai',
   },
   description:
-    'Full-Stack Engineer with 8+ years specializing in Applied AI systems and high-scale production architecture. Currently building the frontend platform for Raylu.ai — the AI deal-origination engine for private markets. Prior: PCI-DSS payments at Betsson Group (€1B+ ARR, 40M+ transactions/yr). Impact across e-commerce (8M+ MAU), banking (70M+ customers), and healthcare. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI. Staff/Principal-track, targeting AI-forward product companies worldwide.',
+    'Full-Stack Engineer with 8+ years specializing in Applied AI systems and high-scale production architecture. Currently building shared UI systems and state architecture at Raylu.ai — the AI deal-origination product for private markets — on contract through Torc. Prior: PCI-DSS payments at Betsson Group (€1B+ ARR, 40M+ transactions/yr). Impact across e-commerce (8M+ MAU), banking (70M+ customers), and healthcare. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI. Staff/Principal-track, targeting AI-forward product companies worldwide.',
   knowsAbout: [
     'LLM Engineering',
     'Retrieval-Augmented Generation (RAG)',

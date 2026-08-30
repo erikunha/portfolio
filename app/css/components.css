@@ -609,4 +609,176 @@
   .guitar-content {
     container-type: size;
   }
+
+  @keyframes links-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .links-ticker-track {
+    display: block;
+    width: max-content;
+    white-space: nowrap;
+    animation: links-marquee 26s linear infinite;
+    will-change: transform;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .links-ticker-track {
+      animation: none;
+      width: 100%;
+      white-space: normal;
+    }
+  }
+  body[data-motion="reduce"] .links-ticker-track {
+    animation: none;
+    width: 100%;
+    white-space: normal;
+  }
+
+  @keyframes links-progress-fill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .links-progress {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    height: 2px;
+    background: var(--color-primary-500);
+    box-shadow: 0 0 10px var(--color-primary-500);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  .links-progress[data-running="true"] {
+    animation: links-progress-fill 300ms linear forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .links-progress[data-running="true"] {
+      animation: none;
+      transform: scaleX(1);
+    }
+  }
+
+  .links-avatar {
+    background-image: repeating-linear-gradient(
+      135deg,
+      var(--color-primary-quiet) 0 4px,
+      transparent 4px 8px
+    );
+  }
+
+  .links-channel-card {
+    background-image: linear-gradient(180deg, var(--color-primary-faint), var(--color-glow-03));
+  }
+
+  .links-shell {
+    max-width: 420px;
+    margin-inline: auto;
+    padding-block-end: 44px;
+  }
+
+  @media (min-width: 420px) {
+    .links-shell {
+      max-width: 480px;
+    }
+  }
+
+  @media (min-width: 900px) and (max-width: 1099px) {
+    .links-shell {
+      max-width: 560px;
+      padding-block-end: 72px;
+    }
+  }
+
+  @media (min-width: 1100px) {
+    .links-shell {
+      max-width: 1280px;
+      margin: 26px auto 40px;
+      padding-block-end: 0;
+      border: 1px solid var(--color-primary-border);
+      background: var(--color-glow-03);
+    }
+
+    .links-main-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      column-gap: 26px;
+    }
+
+    .links-chrome {
+      padding: 14px 26px;
+      border-block-end: 1px solid var(--color-primary-border);
+      background: var(--color-glow-05);
+    }
+
+    .links-identity {
+      grid-column: 1 / -1;
+      grid-row: 1;
+      padding: 14px 26px 0;
+    }
+
+    .links-identity-box {
+      display: grid;
+      grid-template-columns: minmax(320px, 1.2fr) 1fr;
+      gap: 26px;
+      align-items: center;
+      padding: 22px 26px;
+    }
+
+    .links-identity-meta {
+      margin: 0;
+      padding: 0 0 0 26px;
+      border-block-start: 0;
+      border-inline-start: 1px dashed var(--color-primary-border);
+      align-content: center;
+    }
+
+    .links-col {
+      padding: 24px 0 0;
+    }
+
+    .links-col[data-col="channel"] {
+      grid-column: 1;
+      grid-row: 2;
+      padding-inline-start: 26px;
+    }
+
+    .links-col[data-col="history"] {
+      grid-column: 2;
+      grid-row: 2;
+      padding-inline-end: 26px;
+    }
+
+    .links-col[data-col="playlists"] {
+      grid-column: 2;
+      grid-row: 3;
+      padding-inline-end: 26px;
+    }
+
+    .links-col[data-col="qr"] {
+      grid-column: 1;
+      grid-row: 3;
+      padding-inline-start: 26px;
+    }
+
+    .links-footer {
+      grid-column: 1 / -1;
+      grid-row: 4;
+      margin: 30px 26px 26px;
+    }
+  }
 }
