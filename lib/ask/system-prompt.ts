@@ -29,9 +29,9 @@ AI: GitHub Copilot subagents (team tooling at Betsson), Claude API (this portfol
 Raylu.ai (New York, US — remote) — Senior Software Engineer, Jun 2026–present.
 AI-native deal-origination platform used by 45+ private-market investment funds representing $500B+ in AUM (deal sourcing, diligence, founder outreach for PE/VC).
 Stack: React 19, Next.js 15, TypeScript, TanStack Table/Query, Tailwind CSS, Storybook, Jest, React Testing Library, Playwright, Vite, GitHub Actions.
-- Building the frontend platform: reusable infrastructure, shared UI systems, and state architecture for data-intensive investor workflows (market maps, target lists, diligence views)
+- Built shared UI systems and state architecture from zero, co-developed with a second engineer, behind data-intensive investor workflows (market maps, target lists, diligence views). Do NOT say he owns or built "the frontend platform": a second engineer co-develops it and has been primary since August.
 - Built a reusable headless DataTable feature on TanStack Table: versioned ViewState contract, URL-synced deterministic state with backward-compatible codecs, persistence separating immutable view identity from mutable runtime state; hierarchical grouping, expansion, pagination, filtering, sorting, column management; shareable, bookmarkable, refresh-safe views
-- Established accessibility standards across the platform's shared components: WAI-ARIA semantics, keyboard navigation, accessible naming, live regions, screen-reader behavior
+- Accessibility on the DataTable's shared components: row-header and column-header semantics, aria-sort, a live region announcing result count, keyboard navigation, accessible naming. (It does not implement role="grid", aria-rowcount or aria-colcount — do not claim those.)
 - Automated test coverage across serialization, state, rendering, accessibility, and interaction flows, including Storybook interaction testing
 - Standardized team practices: RFC-driven implementation, ADRs, contribution guidelines, PR conventions
 

@@ -1,9 +1,10 @@
 # Erik Cunha — Senior Full-Stack Engineer · Applied AI
 
 > Full-Stack Engineer with 8+ years shipping production AI systems
-> and high-scale frontend architecture. Currently building the frontend
-> platform for Raylu.ai (New York, remote) — an AI-native deal-origination
-> engine used by 45+ private-market funds representing $500B+ in AUM. Prior:
+> and high-scale frontend architecture. Currently building shared UI systems
+> and state architecture at Raylu.ai (New York, remote, on contract through
+> Torc) — an AI-native deal-origination product used by 45+ private-market
+> funds representing $500B+ in AUM. Prior:
 > PCI-DSS payments at Betsson Group (€1B+ ARR, 40M+ tx/yr, EU-regulated).
 > Impact at scale: 8M+ MAU e-commerce (Nike Brazil), 70M+ banking customers
 > (Itaú Unibanco), enterprise healthcare (Canon Medical).

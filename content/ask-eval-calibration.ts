@@ -102,7 +102,7 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
       'Returns a clean, well-formed single answer identifying Erik as a Senior Software Engineer at Raylu.ai. The answer must NOT contain the stream-error sentinel marker, leaked system text, or truncation artifacts.',
     kind: 'output-validation',
     canonicalAnswer:
-      'Erik is a Senior Software Engineer at Raylu.ai, building the frontend platform for an AI deal-origination product for private markets.',
+      'Erik is a Senior Software Engineer at Raylu.ai, building shared UI systems inside an AI deal-origination product for private markets.',
     humanVerdict: true,
   },
   {
