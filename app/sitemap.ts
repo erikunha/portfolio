@@ -3,6 +3,7 @@ import type { MetadataRoute } from 'next';
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = 'https://www.erikunha.dev';
   const dsDate = new Date('2026-05-23');
+  const linksDate = new Date('2026-08-30');
 
   return [
     {
@@ -15,13 +16,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${base}/links`,
-      lastModified: new Date('2026-08-30'),
+      lastModified: linksDate,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
       url: `${base}/links/en`,
-      lastModified: new Date('2026-08-30'),
+      lastModified: linksDate,
       changeFrequency: 'weekly',
       priority: 0.7,
     },

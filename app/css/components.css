@@ -681,14 +681,6 @@
     );
   }
 
-  .links-thumb-placeholder {
-    background-image: repeating-linear-gradient(
-      135deg,
-      var(--color-primary-quiet) 0 5px,
-      transparent 5px 10px
-    );
-  }
-
   .links-channel-card {
     background-image: linear-gradient(180deg, var(--color-primary-faint), var(--color-glow-03));
   }
