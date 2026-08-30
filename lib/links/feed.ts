@@ -1,12 +1,11 @@
 import 'server-only';
 
-import { cacheLife, cacheTag } from 'next/cache';
+import { cacheLife } from 'next/cache';
 import { linksContent } from '@/content/links';
 import { env } from '@/lib/env';
 import { type EnrichedVideo, parseFeed, parseIsoDuration } from '@/lib/links/youtube';
 import { log } from '@/lib/log';
 
-export const LINKS_FEED_TAG = 'links-feed';
 export const HISTORY_LENGTH = 5;
 export const FEED_LIMIT = HISTORY_LENGTH + 1;
 
@@ -118,7 +117,6 @@ async function fetchStats(channelId: string, apiKey: string): Promise<ChannelSta
 
 export async function getChannelFeed(): Promise<ChannelFeed> {
   'use cache';
-  cacheTag(LINKS_FEED_TAG);
   cacheLife({ stale: CACHE_STALE_S, revalidate: CACHE_REVALIDATE_S, expire: CACHE_EXPIRE_S });
 
   const channelId = linksContent.channel.id;

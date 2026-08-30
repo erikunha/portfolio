@@ -29,8 +29,6 @@ const NAMED_ENTITIES: Record<string, string> = {
   apos: "'",
 };
 
-const SECONDS_PER_MINUTE = 60;
-const MINUTES_PER_HOUR = 60;
 const PAD_WIDTH = 2;
 
 export function decodeXmlText(raw: string): string {
@@ -88,15 +86,4 @@ export function parseIsoDuration(iso: string): string | null {
 
   if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
   return `${m}:${pad(s)}`;
-}
-
-export function totalSeconds(iso: string): number | null {
-  const match = ISO_DURATION_RE.exec(iso);
-  if (!match) return null;
-  const [, hours, minutes, seconds] = match;
-  return (
-    Number(hours ?? 0) * MINUTES_PER_HOUR * SECONDS_PER_MINUTE +
-    Number(minutes ?? 0) * SECONDS_PER_MINUTE +
-    Number(seconds ?? 0)
-  );
 }
