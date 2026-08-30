@@ -88,6 +88,7 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     statusLabel: { pt: 'status', en: 'status' },
     channelHeading: { pt: 'o canal', en: 'the channel' },
     videosWord: { pt: 'vídeos', en: 'videos' },
+    viewsWord: { pt: 'visualizações', en: 'views' },
     latestHeading: { pt: 'últimos vídeos', en: 'latest videos' },
     historyCommand: 'history -5',
     seeAllVideos: { pt: 'ver todos os vídeos', en: 'see all videos' },

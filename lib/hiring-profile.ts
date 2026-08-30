@@ -109,7 +109,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     },
     {
       name: 'Encora Inc. (VMware Pathfinder)',
-      role: 'Frontend Engineer (Vue.js)',
+      role: 'Frontend Engineer',
       domain: 'consulting/enterprise',
       dates: '2021',
     },
@@ -140,7 +140,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     { name: 'MB Labs', role: 'Full Stack Developer', domain: 'hr-tech/chatbot', dates: '2018' },
     {
       name: 'Monde Sistemas',
-      role: 'Frontend Engineer',
+      role: 'Frontend Engineer (Vue.js)',
       domain: 'b2b-saas/travel',
       dates: '2017–2018',
     },

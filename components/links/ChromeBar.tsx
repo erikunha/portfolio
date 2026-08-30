@@ -29,10 +29,10 @@ export function ChromeBar({ locale }: { locale: LinksLocale }) {
               size="sm"
               variant={active ? 'primary' : 'secondary'}
               className="min-w-11 min-h-11"
-              aria-label={SWITCH_LABEL[candidate]}
               {...(active ? { 'aria-current': 'page' as const } : {})}
             >
               {candidate.toUpperCase()}
+              <span className="sr-only">&nbsp;{SWITCH_LABEL[candidate]}</span>
             </Button>
           );
         })}

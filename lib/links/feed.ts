@@ -25,7 +25,6 @@ export type ChannelStats = {
 };
 
 export type ChannelFeed = {
-  available: boolean;
   latest: EnrichedVideo | null;
   history: EnrichedVideo[];
   stats: ChannelStats;
@@ -35,7 +34,6 @@ export type ChannelFeed = {
 export const CHANNEL_URL = `https://www.youtube.com/${linksContent.channel.handle}`;
 
 export const EMPTY_FEED: ChannelFeed = {
-  available: false,
   latest: null,
   history: [],
   stats: {},
@@ -134,7 +132,6 @@ export async function getChannelFeed(): Promise<ChannelFeed> {
   const resolved = apiKey ? await enrich(videos, apiKey) : videos;
 
   return {
-    available: true,
     latest: resolved[0] ?? null,
     history: resolved.slice(0, HISTORY_LENGTH),
     stats,

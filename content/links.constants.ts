@@ -44,5 +44,3 @@ export type PillIcon = (typeof PILL_ICON)[keyof typeof PILL_ICON];
 export const UTM_SOURCE = 'bio';
 export const UTM_SOURCE_PARAM = 'utm_source';
 export const UTM_CONTENT_PARAM = 'utm_content';
-
-export const LINKS_CANONICAL_URL = 'https://www.erikunha.dev/links';

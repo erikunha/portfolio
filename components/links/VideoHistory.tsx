@@ -11,15 +11,17 @@ const THUMB_WIDTH = 64;
 const THUMB_HEIGHT = 36;
 const INDEX_PAD = 2;
 
-const VIEWS_WORD = 'views';
-
-function meta(video: ChannelFeed['history'][number], locale: LinksLocale): string {
+function meta(
+  video: ChannelFeed['history'][number],
+  locale: LinksLocale,
+  viewsWord: string,
+): string {
   const relative = formatRelative(new Date(video.publishedAt), locale);
   const parts = [
     video.duration,
     video.viewCount === undefined
       ? undefined
-      : `${new Intl.NumberFormat(LINKS_INTL_LOCALE[locale], { notation: 'compact', maximumFractionDigits: 1 }).format(video.viewCount)} ${VIEWS_WORD}`,
+      : `${new Intl.NumberFormat(LINKS_INTL_LOCALE[locale], { notation: 'compact', maximumFractionDigits: 1 }).format(video.viewCount)} ${viewsWord}`,
     relative ?? undefined,
   ];
   return parts.filter((part): part is string => part !== undefined).join(' · ');
@@ -65,7 +67,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
                   {video.title}
                 </span>
                 <span className="block text-tertiary-400 text-[10px] mt-0.5">
-                  {meta(video, locale)}
+                  {meta(video, locale, copy.viewsWord[locale])}
                 </span>
               </span>
               <span aria-hidden="true" className="text-primary-subtle text-xs">
