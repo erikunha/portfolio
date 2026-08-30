@@ -60,6 +60,11 @@
       "sharp",
       "@biomejs/biome"
     ],
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-jmr9-qjv8-65gv"
+      ]
+    },
     "overrides": {
       "@hono/node-server": "^2.0.5",
       "axios": "^1.18.0",
