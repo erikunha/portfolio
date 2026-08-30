@@ -3,11 +3,7 @@ import type { LinksLocale } from '@/content/links.constants';
 
 export function Ticker({ locale }: { locale: LinksLocale }) {
   const { upcoming } = linksContent;
-  const label =
-    locale === 'pt'
-      ? `próximo vídeo · ${upcoming.slot.pt} · ${upcoming.topic.pt}`
-      : `next video · ${upcoming.slot.en} · ${upcoming.topic.en}`;
-  const segment = `${label}  ///  `;
+  const segment = `${upcoming.label[locale]} · ${upcoming.slot[locale]} · ${upcoming.topic[locale]}  ///  `;
 
   return (
     <div className="border-b border-primary-border bg-[var(--color-glow-06)] overflow-hidden relative z-[11]">

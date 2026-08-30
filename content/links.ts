@@ -25,6 +25,7 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     name: 'Erik Na Gringa',
   },
   upcoming: {
+    label: { pt: 'próximo vídeo', en: 'next video' },
     topic: {
       pt: 'canal novo · AI engineering e carreira internacional para devs',
       en: 'new channel · AI engineering and going global as a dev',

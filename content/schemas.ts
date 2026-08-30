@@ -292,6 +292,7 @@ export const LinksPillSchema = z.object({
 });
 
 export const LinksUpcomingSchema = z.object({
+  label: LocalizedTextSchema,
   topic: LocalizedTextSchema,
   slot: LocalizedTextSchema,
 });
