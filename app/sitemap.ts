@@ -14,6 +14,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
+      url: `${base}/links`,
+      lastModified: new Date('2026-08-30'),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/links/en`,
+      lastModified: new Date('2026-08-30'),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
       url: `${base}/design-system`,
       lastModified: dsDate,
       changeFrequency: 'monthly',
