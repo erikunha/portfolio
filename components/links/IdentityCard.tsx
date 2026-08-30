@@ -1,6 +1,5 @@
 import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
-import { Badge } from '@/design-system';
 import { TaglineTyper } from './client/TaglineTyper.client';
 
 export function IdentityCard({ locale }: { locale: LinksLocale }) {
@@ -12,9 +11,10 @@ export function IdentityCard({ locale }: { locale: LinksLocale }) {
     {
       label: copy.statusLabel[locale],
       value: (
-        <Badge variant="dot" size="sm">
+        <span className="inline-flex items-center gap-[6px]">
+          <span className="badge-dot" aria-hidden="true" />
           {profile.status[locale]}
-        </Badge>
+        </span>
       ),
     },
   ];
