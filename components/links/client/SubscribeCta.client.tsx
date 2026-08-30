@@ -19,7 +19,7 @@ export type SubscribeCtaProps = {
   href: string;
   subscribeLabel: string;
   subscribedLabel: string;
-  utmContent: string;
+  outboundId: string;
   subscribedHref: string;
 };
 
@@ -28,6 +28,7 @@ export function SubscribeCta({
   subscribeLabel,
   subscribedLabel,
   subscribedHref,
+  outboundId,
 }: SubscribeCtaProps) {
   const [subscribed, setSubscribed] = useState(false);
 
@@ -52,6 +53,7 @@ export function SubscribeCta({
       size="lg"
       variant="primary"
       className="gap-[9px]"
+      data-outbound={outboundId}
       onClick={remember}
     >
       <IconYouTube size={17} />

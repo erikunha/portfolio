@@ -105,7 +105,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
             subscribedHref={withUtm(`${channelUrl}/videos`, 'inscrito-ver-videos')}
             subscribeLabel={copy.subscribe[locale]}
             subscribedLabel={copy.subscribedCta[locale]}
-            utmContent="inscrever"
+            outboundId="inscrever"
           />
           {latest !== null && (
             <Button

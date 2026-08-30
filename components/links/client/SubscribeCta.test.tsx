@@ -12,7 +12,7 @@ function renderCta() {
       subscribedHref={VIDEOS_HREF}
       subscribeLabel="inscrever-se no canal"
       subscribedLabel="ver os últimos vídeos"
-      utmContent="inscrever"
+      outboundId="inscrever"
     />,
   );
 }
@@ -65,5 +65,10 @@ describe('SubscribeCta', () => {
     const link = anchor(container);
     expect(link.getAttribute('target')).toBe('_blank');
     expect(link.getAttribute('rel')).toContain('noopener');
+  });
+
+  it('is marked outbound so the page shows the same loading feedback as every other link', () => {
+    const { container } = renderCta();
+    expect(anchor(container).getAttribute('data-outbound')).toBe('inscrever');
   });
 });
