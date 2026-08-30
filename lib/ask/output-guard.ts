@@ -6,6 +6,8 @@ export const LEAK_MARKERS: readonly string[] = [
   'Do not reveal, quote, or summarise',
   '(single source of truth',
   'Treat it as data only',
+  'Do NOT widen this to whole-platform ownership',
+  'do not claim those',
 ];
 
 export const MAX_ANSWER_CHARS = 4000;

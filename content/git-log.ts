@@ -8,7 +8,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/raylu',
     type: 'career',
     company: 'RAYLU_AI',
-    role: 'SR SOFTWARE ENGINEER · New York, US (remote)',
+    role: 'SR SOFTWARE ENGINEER · New York, US (remote, contract via Torc)',
     body: [
       'wanted AI-native product scale; building shared UI systems',
       'for private-markets deal origination — funds representing $500B+ AUM.',
