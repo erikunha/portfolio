@@ -29,7 +29,7 @@ function meta(
 
 export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: ChannelFeed }) {
   const { copy } = linksContent;
-  if (feed.history.length === 0) return null;
+  const isEmpty = feed.history.length === 0;
 
   return (
     <section
@@ -41,44 +41,55 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
         {copy.latestHeading[locale]}
       </SectionHeading>
 
-      <ol className="list-none m-0 p-0 border border-primary-border bg-[var(--color-glow-03)]">
-        {feed.history.map((video, index) => (
-          <li key={video.id} className="border-b border-primary-quiet last:border-b-0">
-            <a
-              href={withUtm(video.url, `video-${index + 1}`)}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-outbound={`video-${index + 1}`}
-              className="grid grid-cols-[20px_64px_1fr_auto] gap-[11px] items-center py-[11px] px-[13px] no-underline transition-colors duration-150 hover:bg-[var(--color-glow-06)] focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:-outline-offset-2"
-            >
-              <span className="text-primary-400 text-[11px]">
-                {String(index + 1).padStart(INDEX_PAD, '0')}
-              </span>
-              <Image
-                src={video.thumbnailUrl}
-                alt=""
-                width={THUMB_WIDTH}
-                height={THUMB_HEIGHT}
-                sizes="64px"
-                className="border border-primary-border object-cover h-9 w-16"
-              />
-              <span>
-                <span className="block text-tertiary-50 text-[12.5px] leading-[1.45] text-pretty">
-                  {video.title}
-                </span>
-                <span className="block text-tertiary-400 text-[10px] mt-0.5">
-                  {meta(video, locale, copy.viewsWord[locale])}
-                </span>
-              </span>
-              <span aria-hidden="true" className="text-primary-subtle text-xs">
-                →
-              </span>
-            </a>
-          </li>
-        ))}
-      </ol>
+      {isEmpty && (
+        <p className="m-0 border border-primary-border bg-[var(--color-glow-03)] py-[14px] px-[13px] text-tertiary-400 text-[11.5px] leading-[1.6]">
+          <span aria-hidden="true" className="text-primary-400">
+            ${' '}
+          </span>
+          {copy.historyEmpty[locale]}
+        </p>
+      )}
 
-      {feed.channelUrl !== null && (
+      {!isEmpty && (
+        <ol className="list-none m-0 p-0 border border-primary-border bg-[var(--color-glow-03)]">
+          {feed.history.map((video, index) => (
+            <li key={video.id} className="border-b border-primary-quiet last:border-b-0">
+              <a
+                href={withUtm(video.url, `video-${index + 1}`)}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-outbound={`video-${index + 1}`}
+                className="grid grid-cols-[20px_64px_1fr_auto] gap-[11px] items-center py-[11px] px-[13px] no-underline transition-colors duration-150 hover:bg-[var(--color-glow-06)] focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:-outline-offset-2"
+              >
+                <span className="text-primary-400 text-[11px]">
+                  {String(index + 1).padStart(INDEX_PAD, '0')}
+                </span>
+                <Image
+                  src={video.thumbnailUrl}
+                  alt=""
+                  width={THUMB_WIDTH}
+                  height={THUMB_HEIGHT}
+                  sizes="64px"
+                  className="border border-primary-border object-cover h-9 w-16"
+                />
+                <span>
+                  <span className="block text-tertiary-50 text-[12.5px] leading-[1.45] text-pretty">
+                    {video.title}
+                  </span>
+                  <span className="block text-tertiary-400 text-[10px] mt-0.5">
+                    {meta(video, locale, copy.viewsWord[locale])}
+                  </span>
+                </span>
+                <span aria-hidden="true" className="text-primary-subtle text-xs">
+                  →
+                </span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      {!isEmpty && (
         <a
           href={withUtm(`${feed.channelUrl}/videos`, 'todos-videos')}
           target="_blank"

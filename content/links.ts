@@ -92,6 +92,11 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     viewsWord: { pt: 'visualizações', en: 'views' },
     latestHeading: { pt: 'últimos vídeos', en: 'latest videos' },
     historyCommand: 'history -5',
+    thumbPlaceholder: { pt: 'primeiro vídeo · 16:9', en: 'first video · 16:9' },
+    historyEmpty: {
+      pt: 'nenhuma entrada ainda · o primeiro vídeo aparece aqui sozinho',
+      en: 'no entries yet · the first video lands here on its own',
+    },
     seeAllVideos: { pt: 'ver todos os vídeos', en: 'see all videos' },
     playlistsHeading: { pt: 'playlists', en: 'playlists' },
     qrHeading: { pt: 'levar a página com você', en: 'take this page with you' },

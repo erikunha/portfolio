@@ -681,6 +681,14 @@
     );
   }
 
+  .links-thumb-placeholder {
+    background-image: repeating-linear-gradient(
+      135deg,
+      var(--color-primary-quiet) 0 5px,
+      transparent 5px 10px
+    );
+  }
+
   .links-channel-card {
     background-image: linear-gradient(180deg, var(--color-primary-faint), var(--color-glow-03));
   }
@@ -716,6 +724,7 @@
     .links-main-grid {
       display: grid;
       grid-template-columns: 1.3fr 1fr;
+      grid-auto-flow: row dense;
       column-gap: 26px;
     }
 
@@ -727,7 +736,6 @@
 
     .links-identity {
       grid-column: 1 / -1;
-      grid-row: 1;
       padding: 14px 26px 0;
     }
 
@@ -753,31 +761,26 @@
 
     .links-col[data-col="channel"] {
       grid-column: 1;
-      grid-row: 2;
       padding-inline-start: 26px;
     }
 
     .links-col[data-col="history"] {
       grid-column: 2;
-      grid-row: 2;
       padding-inline-end: 26px;
     }
 
     .links-col[data-col="playlists"] {
       grid-column: 2;
-      grid-row: 3;
       padding-inline-end: 26px;
     }
 
     .links-col[data-col="qr"] {
       grid-column: 1;
-      grid-row: 3;
       padding-inline-start: 26px;
     }
 
     .links-footer {
       grid-column: 1 / -1;
-      grid-row: 4;
       margin: 30px 26px 26px;
     }
   }

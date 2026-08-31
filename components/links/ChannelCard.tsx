@@ -56,9 +56,17 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
         </div>
 
         {latest === null ? (
-          <p className="mt-3 mb-0 text-tertiary-400 text-[11.5px] leading-[1.6]">
-            {copy.feedUnavailable[locale]}
-          </p>
+          <div className="mt-3">
+            <div
+              aria-hidden="true"
+              className="links-thumb-placeholder h-[104px] lg:h-[280px] border border-primary-border grid place-items-center text-primary-400 text-[10px] tracking-[0.08em] uppercase"
+            >
+              {copy.thumbPlaceholder[locale]}
+            </div>
+            <p className="mt-[10px] mb-0 text-tertiary-400 text-[11.5px] leading-[1.6] text-pretty">
+              {copy.feedUnavailable[locale]}
+            </p>
+          </div>
         ) : (
           <a
             href={withUtm(latest.url, 'ultimo-video')}
