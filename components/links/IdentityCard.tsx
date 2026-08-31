@@ -3,7 +3,9 @@ import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
 import { TaglineTyper } from './client/TaglineTyper.client';
 
-const AVATAR_RENDERED_PX = 96;
+const AVATAR_MOBILE_PX = 56;
+const AVATAR_DESKTOP_PX = 96;
+const AVATAR_SIZES = `(min-width: 1024px) ${AVATAR_DESKTOP_PX}px, ${AVATAR_MOBILE_PX}px`;
 
 export function IdentityCard({ locale }: { locale: LinksLocale }) {
   const { profile, copy } = linksContent;
@@ -34,9 +36,9 @@ export function IdentityCard({ locale }: { locale: LinksLocale }) {
             <Image
               src={profile.avatar}
               alt=""
-              width={AVATAR_RENDERED_PX}
-              height={AVATAR_RENDERED_PX}
-              sizes="(min-width: 1024px) 96px, 56px"
+              width={AVATAR_DESKTOP_PX}
+              height={AVATAR_DESKTOP_PX}
+              sizes={AVATAR_SIZES}
               priority
               className="h-full w-full object-cover"
             />
