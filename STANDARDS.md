@@ -23,8 +23,9 @@ genuinely needs the client. Client islands exist by exception only — the Matri
 dialog loop, the interactive shell, the contact form, the IntersectionObserver
 typewriter, the motion indicator, the Matrix rain. Every file that carries
 `'use client'` is named `*.client.tsx` (or lives under a `/client/` directory);
-no `.client.tsx` file exports an `async function`. The root route is
-`force-static` unless an ADR in `DECISIONS.md` justifies going dynamic. The
+no `.client.tsx` file exports an `async function`. The root route's static shell
+is prerendered; the sections that read request headers are request-time holes
+inside it, and each one is a deliberate choice recorded in `DECISIONS.md`. The
 interactive shell's streaming answer renders *through* React — no out-of-tree
 DOM nodes, no `document.createElement` + `appendChild` into a React-owned feed,
 no per-chunk `textContent` mutation inside an `aria-live` region React controls.
@@ -44,8 +45,10 @@ animation frame — keeps the DOM React-owned and INP frame-bounded.
 exports `async function`. The streaming-through-React contract is held by the
 behavioral test `components/client/InteractiveShell/InteractiveShell.test.tsx`, which asserts
 every child of the shell feed is a React-owned node (`__reactFiber$` key
-present). `force-static` on the root route is held by PR review against this
-chapter.
+present). The root route's rendering mode is held by the build output itself: it
+reports `/` as Partial Prerender, and a section that started reading request
+data at the top level rather than inside a streaming boundary would move the
+whole route to on-demand rendering there.
 
 ---
 
