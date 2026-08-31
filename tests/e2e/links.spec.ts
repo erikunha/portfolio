@@ -42,24 +42,33 @@ test.describe('/links link-in-bio', () => {
     await expect(page.locator('canvas')).toHaveCount(0);
   });
 
-  test('keeps a textured frame where the face goes when the portrait fails to load', async ({
-    page,
-  }) => {
+  test('paints the hatch through the frame when the portrait fails to load', async ({ page }) => {
     await page.route('**/_next/image**', (route) => route.abort());
     await page.goto('/links');
 
     const frame = page.locator('.links-avatar');
-    await expect(frame).toBeVisible();
-    const box = await frame.boundingBox();
-    expect(
-      box?.width,
-      'the frame must hold its size, or the card reflows around a missing image',
-    ).toBeGreaterThan(0);
+    const img = page.locator('.links-avatar img');
 
+    // Guards the rest of the test: if the abort stops taking effect the portrait paints over
+    // the hatch, and every assertion below would pass for the wrong reason.
     await expect(
-      frame,
-      'the .links-avatar hatch is the fallback the frame degrades to when the portrait 404s, matching what .links-thumb-placeholder does for the video thumbnails. It renders only in this state, so deleting it as unreachable dead CSS leaves an empty box here.',
-    ).toHaveCSS('background-image', /repeating-linear-gradient/);
+      img,
+      'the optimizer request was meant to fail here; a loaded portrait makes this test vacuous',
+    ).toHaveJSProperty('naturalWidth', 0);
+
+    // Reading `background-image` off the span proves only that the declaration exists, which
+    // nothing disputes. Diffing the rendered pixels against the same frame with the hatch
+    // suppressed is what proves it actually paints in this state.
+    const painted = await frame.screenshot();
+    await page.addStyleTag({
+      content: '.links-avatar { background-image: none !important; }',
+    });
+    const suppressed = await frame.screenshot();
+
+    expect(
+      painted.equals(suppressed),
+      'the .links-avatar hatch is what the frame degrades to when the portrait 404s, the way .links-thumb-placeholder covers the video thumbnails. Identical pixels with and without it mean it contributes nothing and the frame is an empty box.',
+    ).toBe(false);
   });
 
   test('gives every interactive control a visible focus ring', async ({ page }) => {
