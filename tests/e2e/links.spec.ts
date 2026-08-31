@@ -42,6 +42,26 @@ test.describe('/links link-in-bio', () => {
     await expect(page.locator('canvas')).toHaveCount(0);
   });
 
+  test('keeps a textured frame where the face goes when the portrait fails to load', async ({
+    page,
+  }) => {
+    await page.route('**/_next/image**', (route) => route.abort());
+    await page.goto('/links');
+
+    const frame = page.locator('.links-avatar');
+    await expect(frame).toBeVisible();
+    const box = await frame.boundingBox();
+    expect(
+      box?.width,
+      'the frame must hold its size, or the card reflows around a missing image',
+    ).toBeGreaterThan(0);
+
+    await expect(
+      frame,
+      'the .links-avatar hatch is the fallback the frame degrades to when the portrait 404s, matching what .links-thumb-placeholder does for the video thumbnails. It renders only in this state, so deleting it as unreachable dead CSS leaves an empty box here.',
+    ).toHaveCSS('background-image', /repeating-linear-gradient/);
+  });
+
   test('gives every interactive control a visible focus ring', async ({ page }) => {
     await page.goto('/links');
     const controls = page.locator('a:visible, button:visible');
