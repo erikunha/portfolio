@@ -7,6 +7,7 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
   siteLabel: 'erikunha.dev',
   profile: {
     name: 'Erik Cunha',
+    avatar: '/images/erik-avatar.jpg',
     taglines: {
       pt: [
         'Senior Full-Stack Engineer',

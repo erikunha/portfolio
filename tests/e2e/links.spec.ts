@@ -42,6 +42,35 @@ test.describe('/links link-in-bio', () => {
     await expect(page.locator('canvas')).toHaveCount(0);
   });
 
+  test('paints the hatch through the frame when the portrait fails to load', async ({ page }) => {
+    await page.route('**/_next/image**', (route) => route.abort());
+    await page.goto('/links');
+
+    const frame = page.locator('.links-avatar');
+    const img = page.locator('.links-avatar img');
+
+    // Guards the rest of the test: if the abort stops taking effect the portrait paints over
+    // the hatch, and every assertion below would pass for the wrong reason.
+    await expect(
+      img,
+      'the optimizer request was meant to fail here; a loaded portrait makes this test vacuous',
+    ).toHaveJSProperty('naturalWidth', 0);
+
+    // Reading `background-image` off the span proves only that the declaration exists, which
+    // nothing disputes. Diffing the rendered pixels against the same frame with the hatch
+    // suppressed is what proves it actually paints in this state.
+    const painted = await frame.screenshot();
+    await page.addStyleTag({
+      content: '.links-avatar { background-image: none !important; }',
+    });
+    const suppressed = await frame.screenshot();
+
+    expect(
+      painted.equals(suppressed),
+      'the .links-avatar hatch is what the frame degrades to when the portrait 404s, the way .links-thumb-placeholder covers the video thumbnails. Identical pixels with and without it mean it contributes nothing and the frame is an empty box.',
+    ).toBe(false);
+  });
+
   test('gives every interactive control a visible focus ring', async ({ page }) => {
     await page.goto('/links');
     const controls = page.locator('a:visible, button:visible');

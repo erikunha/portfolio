@@ -681,6 +681,10 @@
     );
   }
 
+  .links-avatar img {
+    filter: grayscale(1) sepia(1) hue-rotate(62deg) saturate(1.6) brightness(0.55) contrast(1.25);
+  }
+
   .links-thumb-placeholder {
     background-image: repeating-linear-gradient(
       135deg,

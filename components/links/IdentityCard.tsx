@@ -1,6 +1,11 @@
+import Image from 'next/image';
 import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
 import { TaglineTyper } from './client/TaglineTyper.client';
+
+const AVATAR_MOBILE_PX = 56;
+const AVATAR_DESKTOP_PX = 96;
+const AVATAR_SIZES = `(min-width: 1024px) ${AVATAR_DESKTOP_PX}px, ${AVATAR_MOBILE_PX}px`;
 
 export function IdentityCard({ locale }: { locale: LinksLocale }) {
   const { profile, copy } = linksContent;
@@ -27,14 +32,16 @@ export function IdentityCard({ locale }: { locale: LinksLocale }) {
 
       <div className="links-identity-box border border-primary-border bg-[var(--color-glow-03)] p-[14px]">
         <div className="flex gap-3 items-center">
-          <span
-            aria-hidden="true"
-            className="links-avatar w-14 h-14 flex-[0_0_56px] border border-primary-subtle grid place-items-center text-primary-500 text-[9px] tracking-[0.06em] text-center leading-[1.3] lg:w-24 lg:h-24 lg:flex-[0_0_96px] lg:text-[11px]"
-          >
-            {profile.name
-              .split(' ')
-              .map((part) => part.charAt(0))
-              .join('')}
+          <span className="links-avatar w-14 h-14 flex-[0_0_56px] border border-primary-subtle overflow-hidden lg:w-24 lg:h-24 lg:flex-[0_0_96px]">
+            <Image
+              src={profile.avatar}
+              alt=""
+              width={AVATAR_DESKTOP_PX}
+              height={AVATAR_DESKTOP_PX}
+              sizes={AVATAR_SIZES}
+              priority
+              className="h-full w-full object-cover"
+            />
           </span>
           <div>
             <p className="signal-glow text-primary-500 font-bold text-lg tracking-[0.02em] m-0 lg:text-[30px]">
