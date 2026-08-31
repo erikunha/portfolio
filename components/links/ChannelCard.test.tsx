@@ -5,6 +5,7 @@ import type { ChannelFeed } from '@/lib/links/feed';
 import { ChannelCard } from './ChannelCard';
 
 vi.mock('next/image', () => ({
+  // biome-ignore lint/performance/noImgElement: this IS the jsdom stand-in for next/image, so there is no image pipeline to prefer and no LCP to guard.
   default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
 }));
 
