@@ -12,7 +12,6 @@
       "Skill(web-design-guidelines)",
       "Skill(thinking-*)"
     ],
-    "deny": ["Bash(fallow fix:*)", "Bash(npx fallow fix:*)", "Bash(npx fallow@2.95.0 fix:*)"],
-    "defaultMode": "acceptEdits"
+    "deny": ["Bash(fallow fix:*)", "Bash(npx fallow fix:*)", "Bash(npx fallow@2.95.0 fix:*)"]
   }
 }
