@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+
+const focusResult = (node: HTMLDivElement | null) => node?.focus();
+
 import { CONTACT_DELIVERY_CODE, contactContent } from '@/content/contact';
 import { contactChrome } from '@/content/terminal-chrome';
 import { WindowChrome } from '@/design-system';
@@ -84,7 +87,13 @@ export function ContactForm() {
   if (status === STATUS.SUCCESS) {
     return (
       <ContactShell>
-        <div className="contact-success" role="status" data-testid="contact-success">
+        <div
+          className="contact-success"
+          role="status"
+          data-testid="contact-success"
+          tabIndex={-1}
+          ref={focusResult}
+        >
           <p>{contactContent.success.title}</p>
           <p>{contactContent.success.message}</p>
         </div>
@@ -95,7 +104,13 @@ export function ContactForm() {
   if (status === STATUS.QUEUED) {
     return (
       <ContactShell>
-        <div className="contact-success" role="status" data-testid="contact-queued">
+        <div
+          className="contact-success"
+          role="status"
+          data-testid="contact-queued"
+          tabIndex={-1}
+          ref={focusResult}
+        >
           <p>{contactContent.queued.title}</p>
           <p>
             {contactContent.queued.message}{' '}

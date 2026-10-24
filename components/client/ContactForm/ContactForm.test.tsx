@@ -154,6 +154,20 @@ describe('contact form delivery states', () => {
     expect(success?.textContent).toContain('handshake initiated · expect reply within 48h');
   });
 
+  it.each([
+    [{ ok: true, requestId: 'request-id' }, 200, 'contact-success'],
+    [
+      { ok: false, requestId: 'request-id', error: { code: 'queued', message: 'Saved for retry' } },
+      202,
+      'contact-queued',
+    ],
+  ])('moves focus to the result once the form is replaced (%#)', async (body, status, testId) => {
+    const container = await submitResponse(body, status);
+    const result = container.querySelector(`[data-testid="${testId}"]`);
+    expect(result).not.toBeNull();
+    expect(document.activeElement).toBe(result);
+  });
+
   it('announces queued without success and offers the canonical LinkedIn link', async () => {
     const container = await submitResponse(
       { ok: false, requestId: 'request-id', error: { code: 'queued', message: 'Saved for retry' } },
