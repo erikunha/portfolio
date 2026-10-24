@@ -1,9 +1,14 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
+import { nowRows } from '@/content/now';
+import { projects } from '@/content/projects';
+import { readmeCopy } from '@/content/readme';
 import { personSchema } from '@/content/seo';
 import { social } from '@/content/social';
+import { visaRows } from '@/content/visa';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 import { readContentSurfaces } from './helpers/content-surfaces';
@@ -12,8 +17,8 @@ vi.mock('next/font/local', () => ({
   default: () => ({ variable: '--font-mock', className: 'mock' }),
 }));
 
-const CANONICAL_TITLE = 'Senior Full-Stack Engineer';
-const RETIRED_TITLE = 'Full-Stack Software Engineer';
+const CANONICAL_TITLE = 'Senior Software Engineer, Frontend & Product';
+const RETIRED_TITLE = 'Senior Full-Stack Engineer';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 
@@ -42,13 +47,18 @@ describe('identity is consistent across every gated surface', () => {
       ['content/seo.ts (jobTitle)', personSchema.jobTitle],
       ['app/layout.tsx (metadata.title)', String(JSON.parse(layoutMetadataText).title)],
       ['public/llms.txt', llmsTxt],
+      ['lib/hiring-profile.ts', JSON.stringify(HIRING_PROFILE)],
+      ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
+      ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
+      ['content/readme.ts', JSON.stringify(readmeCopy)],
+      ['content/now.ts', JSON.stringify(nowRows)],
       ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
     ];
     const drifted = surfaces.filter(([, text]) => !text.includes(CANONICAL_TITLE)).map(([s]) => s);
 
     expect(
       drifted,
-      `these surfaces do not state the canonical title "${CANONICAL_TITLE}". Every surface a recruiter or crawler lands on must agree. The content modules are Zod-validated for SHAPE (min length), never for VALUE, so nothing stopped them drifting apart — which is how public/llms.txt came to name a stale employer while the JSON-LD named the current one.`,
+      `Every title surface must state "${CANONICAL_TITLE}". Update the listed content or generator sources.`,
     ).toEqual([]);
   });
 
@@ -69,7 +79,7 @@ describe('identity is consistent across every gated surface', () => {
 
     expect(
       stale,
-      `"${RETIRED_TITLE}" was retired in favour of "${CANONICAL_TITLE}" (owner decision). Matched case-INSENSITIVELY because content/man-page.ts carried it as lowercase prose and a case-sensitive check walked straight past it, on the one surface a human actually reads. content/ is globbed, not hand-listed: man-page.ts was on nobody's hand-maintained list, which is how it shipped.\n\nNOT GATED HERE — two committed binaries carry the title as PIXELS or subset-font glyphs, which no string assertion can read: public/erik-cunha-cv.pdf (regenerate from the source .docx) and public/og.png (regenerate via scripts/generate-og-image.ts). The OG *script* is gated above, but the shipped *card* is not — so a title change can green this test while every LinkedIn and Slack unfurl still shows the old one. If you change the title, regenerate BOTH artifacts; nothing here will catch it. Reading them needs a PDF/image parser, which is a dependency decision, not a test tweak.`,
+      `These surfaces still publish "${RETIRED_TITLE}". Use "${CANONICAL_TITLE}" for current identity. Regenerate public/og.png and public/erik-cunha-cv.pdf separately; their rendered text is not checked here.`,
     ).toEqual([]);
   });
 
@@ -85,5 +95,196 @@ describe('identity is consistent across every gated surface', () => {
       llmsTxt.includes(personSchema.telephone),
       `public/llms.txt must publish the same number as the JSON-LD (${personSchema.telephone}). This is the surface built for crawlers and LLMs; a wrong number here is machine-readable and gets dialled.`,
     ).toBe(true);
+  });
+});
+
+describe('terminal redesign canonical facts', () => {
+  it('serves the same four authorization statuses without abbreviating mobile statuses', () => {
+    const expected = {
+      Brazil: 'CITIZEN',
+      EU_Malta: 'NEEDS_SPONSORSHIP',
+      Canada: 'NEEDS_SPONSORSHIP',
+      worldwide: 'OPEN_WITH_SPONSORSHIP',
+    };
+    expect(HIRING_PROFILE.work_auth).toEqual(expected);
+    const manifest = JSON.parse(read('public/.well-known/agent.json'));
+    expect(manifest.work_auth).toEqual(expected);
+    expect(visaRows.map((row) => [row.jurisdiction, row.status])).toEqual([
+      ['Brazil', 'CITIZEN'],
+      ['EU (Malta)', 'NEEDS_SPONSORSHIP'],
+      ['Canada', 'NEEDS_SPONSORSHIP'],
+      ['Worldwide', 'OPEN_WITH_SPONSORSHIP'],
+    ]);
+    for (const row of visaRows) {
+      expect(row.statusShort).toBe(row.status);
+      expect(SYSTEM_TEXT).toContain(`${row.jurisdiction}: ${row.status}`);
+      expect(llmsTxt).toContain(`${row.jurisdiction}: ${row.status}`);
+      expect(personSchema.description).toContain(`${row.jurisdiction}: ${row.status}`);
+      expect(JSON.parse(layoutMetadataText).other['work-authorization']).toContain(
+        `${row.jurisdiction}: ${row.status}`,
+      );
+      expect(JSON.stringify(readmeCopy)).toContain(`${row.jurisdiction}: ${row.status}`);
+      expect(JSON.stringify(nowRows)).toContain(`${row.jurisdiction}: ${row.status}`);
+    }
+    expect(visaRows[2]?.evidence).toBe(
+      'lived and worked in Vancouver, 2023-2025 · co-op diploma, CICCC',
+    );
+  });
+
+  it('publishes the resume location and immediate availability consistently', () => {
+    for (const text of [
+      JSON.stringify(HIRING_PROFILE),
+      SYSTEM_TEXT,
+      llmsTxt,
+      read('public/.well-known/agent.json'),
+      JSON.stringify(personSchema),
+      JSON.stringify(readmeCopy),
+      JSON.stringify(nowRows),
+      layoutMetadataText,
+    ]) {
+      expect(text).toContain('Brazil');
+      expect(text).toContain('UTC-3');
+      expect(text).toContain('available now');
+      expect(text).not.toContain('Campinas, São Paulo, Brazil');
+    }
+    expect(personSchema.address.addressLocality).toBe('Paulínia');
+  });
+
+  it('uses the canonical title in page and social metadata', () => {
+    const metadata = JSON.parse(layoutMetadataText);
+    for (const text of [
+      metadata.title,
+      metadata.description,
+      metadata.openGraph.title,
+      metadata.openGraph.description,
+      metadata.openGraph.images[0].alt,
+      metadata.twitter.title,
+      metadata.twitter.description,
+    ]) {
+      expect(text).toContain(CANONICAL_TITLE);
+    }
+  });
+
+  it('keeps nine employers with exact titles, month ranges and locations, and no education', () => {
+    expect(
+      gitLog.map((entry) => [
+        entry.company,
+        entry.role,
+        entry.startMonth,
+        entry.endMonth,
+        entry.location,
+        entry.workMode,
+      ]),
+    ).toEqual([
+      [
+        'Raylu',
+        'Senior Software Engineer, Frontend & Product (contract via Torc)',
+        '2026-06',
+        null,
+        'New York, US',
+        'remote',
+      ],
+      [
+        'Betsson Group',
+        'Senior Software Engineer, Frontend',
+        '2025-03',
+        '2026-05',
+        'Malta',
+        'hybrid',
+      ],
+      [
+        'Canon Medical Systems',
+        'Senior Software Engineer, Frontend (independent consultant)',
+        '2023-03',
+        '2025-03',
+        'Canada',
+        'remote',
+      ],
+      [
+        'Grupo SBF (Nike / Centauro)',
+        'Software Engineer, Frontend',
+        '2021-12',
+        '2023-03',
+        'São Paulo, Brazil',
+        'remote',
+      ],
+      [
+        'Encora (formerly Daitan)',
+        'Software Engineer, Frontend · assigned to VMware',
+        '2021-01',
+        '2021-12',
+        'Campinas, Brazil',
+        null,
+      ],
+      [
+        'ZUP Innovation (Itaú Unibanco)',
+        'Software Engineer, Frontend',
+        '2020-04',
+        '2021-01',
+        'Campinas, Brazil',
+        null,
+      ],
+      [
+        'Venturus',
+        'Full-Stack Software Engineer → Software Engineer, Frontend',
+        '2019-02',
+        '2020-04',
+        'Campinas, Brazil',
+        null,
+      ],
+      [
+        'MB Labs',
+        'Full-Stack Software Engineer → Software Engineer, Cross-Platform',
+        '2018-07',
+        '2019-02',
+        'Campinas, Brazil',
+        null,
+      ],
+      [
+        'Monde Sistemas',
+        'Software Engineer Intern, Frontend',
+        '2017-10',
+        '2018-05',
+        'Americana, Brazil',
+        null,
+      ],
+    ]);
+    expect(gitLog.every((entry) => entry.type === 'career')).toBe(true);
+    expect(gitLog.filter((entry) => entry.isRoot).map((entry) => entry.company)).toEqual([
+      'Monde Sistemas',
+    ]);
+    expect(HIRING_PROFILE.employers.map((entry) => entry.role)).toEqual(
+      gitLog.map((entry) => entry.role),
+    );
+    for (const entry of gitLog) {
+      expect(SYSTEM_TEXT).toContain(entry.role);
+      expect(SYSTEM_TEXT).toContain(entry.date);
+      expect(llmsTxt).toContain(entry.role);
+      expect(llmsTxt).toContain(entry.date);
+    }
+  });
+
+  it('publishes the service project and the resume-backed Raylu stack on desktop and mobile', () => {
+    expect(projects.every((project) => project.company.length > 0)).toBe(true);
+    const raylu = projects.find((project) => project.company === 'Raylu');
+    expect(JSON.stringify(raylu)).toContain('Next.js 14');
+    expect(JSON.stringify(raylu)).toContain('TypeScript 5');
+    expect(JSON.stringify(raylu)).not.toMatch(/Next(?:\.js)? 15|React 19/i);
+    const service = projects.find((project) => project.name === 'SERVICE_OPS_CONSOLE');
+    expect(service?.company).toBe('Canon Medical Systems');
+    expect(service?.mobileName).toBe('service_ops/');
+    for (const description of [service?.description, service?.mobileDescription]) {
+      expect(description).toContain('service orders');
+      expect(description).toContain('specialist schedules');
+      expect(description).toContain('field visits');
+    }
+    for (const text of [
+      JSON.stringify(projects),
+      SYSTEM_TEXT,
+      llmsTxt,
+      JSON.stringify(HIRING_PROFILE),
+    ]) {
+      expect(text).not.toContain('CARE_OPS_CONSOLE');
+    }
   });
 });

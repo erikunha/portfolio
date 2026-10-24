@@ -1,33 +1,43 @@
-import { z } from 'zod';
-import { type VisaRow, VisaRowSchema } from './schemas';
+import { type VisaRow, VisaRowSchema, WORK_AUTH_STATUS } from './schemas';
 
-export const visaRows: VisaRow[] = z.array(VisaRowSchema).parse([
+export const workAuthorization = {
+  Brazil: WORK_AUTH_STATUS.citizen,
+  EU_Malta: WORK_AUTH_STATUS.needsSponsorship,
+  Canada: WORK_AUTH_STATUS.needsSponsorship,
+  worldwide: WORK_AUTH_STATUS.openWithSponsorship,
+};
+
+export const visaRows: VisaRow[] = VisaRowSchema.array().parse([
   {
-    jurisdiction: 'EU (MALTA)',
-    jurisdictionShort: 'EU (MT)',
-    status: 'PRIOR_EXPERIENCE',
-    statusShort: 'PRIOR_EXP',
-    evidence: 'prior employer (Betsson, 2025–2026)',
-  },
-  {
-    jurisdiction: 'CA',
-    jurisdictionShort: 'CA',
-    status: 'CO_OP_GRADUATE',
-    statusShort: 'CO_OP_GRAD',
-    evidence: 'CICCC, Vancouver · 2023-2024',
-  },
-  {
-    jurisdiction: 'BR',
+    jurisdiction: 'Brazil',
     jurisdictionShort: 'BR',
-    status: 'CITIZEN',
-    statusShort: 'CITIZEN',
-    evidence: 'native',
+    status: workAuthorization.Brazil,
+    statusShort: workAuthorization.Brazil,
+    evidence: 'Brazilian citizen',
   },
   {
-    jurisdiction: 'WORLDWIDE',
+    jurisdiction: 'EU (Malta)',
+    jurisdictionShort: 'EU (MT)',
+    status: workAuthorization.EU_Malta,
+    statusShort: workAuthorization.EU_Malta,
+    evidence: 'worked in Malta via Betsson, 2025-2026',
+  },
+  {
+    jurisdiction: 'Canada',
+    jurisdictionShort: 'CA',
+    status: workAuthorization.Canada,
+    statusShort: workAuthorization.Canada,
+    evidence: 'lived and worked in Vancouver, 2023-2025 · co-op diploma, CICCC',
+  },
+  {
+    jurisdiction: 'Worldwide',
     jurisdictionShort: 'WORLD',
-    status: 'OPEN_TO_RELOCATION',
-    statusShort: 'OPEN_TO_RELOC',
-    evidence: 'considering opportunities',
+    status: workAuthorization.worldwide,
+    statusShort: workAuthorization.worldwide,
+    evidence: 'remote or relocation · available now',
   },
 ]);
+
+export const workAuthorizationSummary = visaRows
+  .map((row) => `${row.jurisdiction}: ${row.status}`)
+  .join(' · ');

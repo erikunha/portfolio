@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { profileLanguageLine } from '@/content/profile';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { visaRows } from '@/content/visa';
 import { getIsMobile } from '@/lib/ua';
@@ -30,7 +31,7 @@ function VisaDesktop() {
         ))}
       </pre>
       <div className="text-primary-400 text-xs mt-[14px] tracking-[0.04em]">
-        {'// PT (native) · EN (C1) · FR (A2) · ES (A2)'}
+        {profileLanguageLine}
       </div>
     </div>
   );
@@ -61,7 +62,7 @@ function VisaMobile() {
         </div>
       </div>
       <div className="text-primary-400 text-xs max-md:text-[10px] mt-[14px] tracking-[0.04em] whitespace-nowrap overflow-hidden">
-        {'// PT (native) · EN (C1) · FR (A2) · ES (A2)'}
+        {profileLanguageLine}
       </div>
     </div>
   );

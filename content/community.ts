@@ -9,5 +9,5 @@ export const communityEvent: CommunityEvent = CommunityEventSchema.parse({
     'ran the full speaker cycle: CFP launch → review → selection → program design → day-of → wrap.',
     'coordinated with speakers, sponsors, and co-organizers end-to-end.',
   ],
-  statusLine: 'open to CFP submissions for 2026 · open to volunteer / organizer roles.',
+  statusLine: 'open to CFP submissions for 2027 · open to volunteer / organizer roles.',
 });

@@ -1,5 +1,11 @@
 import { HeroStats } from '@/components/HeroStats';
-import { heroCurrentEmployer, heroPlatformChip, heroTagline } from '@/content/hero';
+import {
+  heroAuthorization,
+  heroCurrentEmployer,
+  heroPlatformChip,
+  heroTagline,
+} from '@/content/hero';
+import { profile, profileLanguageLine, profileLocation } from '@/content/profile';
 import { Badge, Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
@@ -7,7 +13,7 @@ import { HeroSystemFailure } from '../../client/HeroSystemFailure';
 export function Hero() {
   return (
     <>
-      <h1 className="sr-only">Erik Cunha</h1>
+      <h1 className="sr-only">{profile.displayName}</h1>
       <section
         id="bio"
         className="hero-desktop relative border border-primary-subtle min-h-[640px] overflow-hidden mb-10 md:mb-[40px] bg-transparent transition-transform duration-100 ease-out motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none"
@@ -22,24 +28,24 @@ export function Hero() {
             data-testid="hero-name"
             aria-hidden="true"
           >
-            Erik Cunha
+            {profile.displayName}
           </p>
           <p className="text-tertiary-50 text-sm leading-[1.55] mb-2">{heroTagline}</p>
           <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-sm tracking-[0.08em] mb-3.5">
             <span>
               LOC:{' '}
               <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
-                Brazil
+                {profileLocation}
               </b>
             </span>
             <span>
               NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
             </span>
             <span>{heroPlatformChip}</span>
-            <span>EN/PT/FR/ES</span>
+            <span>{profileLanguageLine}</span>
           </p>
           <div className="self-start">
-            <Badge variant="dot">OPEN_TO_RELOCATION · WORLDWIDE</Badge>
+            <Badge variant="dot">{heroAuthorization}</Badge>
           </div>
           <HeroStats />
           <div className="grid grid-cols-2 gap-3 mt-3 [text-shadow:none]" data-testid="hero-ctas">
@@ -78,24 +84,24 @@ export function Hero() {
             data-testid="hero-name"
             aria-hidden="true"
           >
-            Erik Cunha
+            {profile.displayName}
           </p>
           <p className="text-tertiary-50 text-xs leading-[1.55] mb-2">{heroTagline}</p>
           <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-xs tracking-[0.08em] mb-3.5">
             <span>
               LOC:{' '}
               <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
-                Brazil
+                {profileLocation}
               </b>
             </span>
             <span>
               NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
             </span>
             <span>{heroPlatformChip}</span>
-            <span>EN/PT/FR/ES</span>
+            <span>{profileLanguageLine}</span>
           </p>
           <div className="self-start mb-3.5">
-            <Badge variant="dot">OPEN_TO_RELOCATION · WORLDWIDE</Badge>
+            <Badge variant="dot">{heroAuthorization}</Badge>
           </div>
           <HeroStats />
           <div className="grid grid-cols-2 gap-3 mt-3 [text-shadow:none]" data-testid="hero-ctas">

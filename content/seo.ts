@@ -1,35 +1,35 @@
 import { z } from 'zod';
+import { profile, profileSummary } from './profile';
+import { workAuthorizationSummary } from './visa';
 
 export const personSchema = {
   '@context': 'https://schema.org',
   '@type': 'Person',
-  name: 'Erik Henrique Alves Cunha',
-  alternateName: 'Erik Cunha',
-  jobTitle: 'Senior Full-Stack Engineer · Frontend Architecture & AI',
+  name: profile.fullName,
+  alternateName: profile.displayName,
+  jobTitle: profile.title,
   url: 'https://www.erikunha.dev',
   email: 'erikhenriquealvescunha@gmail.com',
   telephone: '+5519997049125',
-  knowsLanguage: [
-    { '@type': 'Language', name: 'Portuguese', alternateName: 'Native' },
-    { '@type': 'Language', name: 'English', alternateName: 'C1' },
-    { '@type': 'Language', name: 'French', alternateName: 'A2' },
-    { '@type': 'Language', name: 'Spanish', alternateName: 'B1' },
-  ],
+  knowsLanguage: profile.languages.map((language) => ({
+    '@type': 'Language',
+    name: language.name,
+    alternateName: language.level,
+  })),
   nationality: { '@type': 'Country', name: 'Brazil' },
   address: {
     '@type': 'PostalAddress',
-    addressLocality: 'Campinas',
+    addressLocality: profile.city,
     addressRegion: 'São Paulo',
     addressCountry: 'BR',
   },
   sameAs: ['https://linkedin.com/in/erikunha', 'https://github.com/erikunha'],
   worksFor: {
     '@type': 'Organization',
-    name: 'Raylu.ai',
+    name: profile.currentEmployer.name,
     url: 'https://raylu.ai',
   },
-  description:
-    'Full-Stack Engineer with 8+ years specializing in Applied AI systems and high-scale production architecture. Currently building shared UI systems and state architecture at Raylu.ai — the AI deal-origination product for private markets — on contract through Torc. Prior: PCI-DSS payments at Betsson Group (€1B+ ARR, 40M+ transactions/yr). Impact across e-commerce (8M+ MAU), banking (70M+ customers), and healthcare. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI. Staff/Principal-track, targeting AI-forward product companies worldwide.',
+  description: `${profileSummary} ${workAuthorizationSummary}. 8+ years across regulated industries. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI.`,
   knowsAbout: [
     'LLM Engineering',
     'Retrieval-Augmented Generation (RAG)',
@@ -102,8 +102,8 @@ export const personSchema = {
   ],
   hasOccupation: {
     '@type': 'Occupation',
-    name: 'Full-Stack Engineer',
-    occupationLocation: { '@type': 'City', name: 'Remote / Worldwide' },
+    name: profile.title,
+    occupationLocation: { '@type': 'Country', name: profile.country },
     skills:
       'TypeScript, React, Angular, Next.js, Node.js, Python, LLM Engineering, RAG, Multi-Agent Systems, PCI-DSS, AWS, Docker, Performance Engineering',
     experienceRequirements: '8+ years',
@@ -127,7 +127,7 @@ export const personSchema = {
       credentialCategory: 'certification',
       recognizedBy: {
         '@type': 'Organization',
-        name: 'Alain Chautard — Google Developer Expert, Angular',
+        name: 'certificates.dev',
       },
     },
     {
@@ -141,17 +141,16 @@ export const personSchema = {
     '@type': 'Organization',
     name: 'DevOpsDays Campinas',
     description:
-      'Conference organizer — speaker sourcing, program curation, 10+ talks across DevOps, cloud, and platform engineering',
+      'Conference organizer: speaker sourcing, program curation, 10+ talks across DevOps, cloud, and platform engineering',
   },
   seeks: {
     '@type': 'Demand',
     itemOffered: {
       '@type': 'JobPosting',
-      title: 'Senior, Staff, or Principal Engineer — Applied AI Systems & Full-Stack',
+      title: profile.title,
       employmentType: 'FULL_TIME',
       jobLocationType: 'TELECOMMUTE',
-      description:
-        'Targeting Applied AI engineering roles (Senior, Staff, or Principal IC) at AI-forward product companies. Currently based in Brazil (UTC-3), working remotely for a New York AI startup company. Open to fully remote worldwide or relocation with visa sponsorship. 8+ years across regulated industries. WES-verified credentials, English C1.',
+      description: `${profileSummary} ${workAuthorizationSummary}. WES-verified credentials, English C1.`,
     },
   },
 } as const;

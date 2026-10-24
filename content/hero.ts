@@ -1,12 +1,8 @@
-import { z } from 'zod';
+import { profile } from './profile';
+import { workAuthorization } from './visa';
 
-export const heroTagline = z
-  .string()
-  .min(1)
-  .parse(
-    'Senior Full-Stack Engineer · Applied AI · React · Next.js · TypeScript · Angular · Node.js · AWS',
-  );
+export const heroTagline = `${profile.title} · ${profile.technologyLine}`;
+export const heroCurrentEmployer = profile.currentEmployer.name;
+export const heroPlatformChip = profile.currentEmployer.context;
 
-export const heroCurrentEmployer = z.string().min(1).parse('Raylu.ai');
-
-export const heroPlatformChip = z.string().min(1).parse('AI deal origination · private markets');
+export const heroAuthorization = `${workAuthorization.worldwide} · WORLDWIDE`;

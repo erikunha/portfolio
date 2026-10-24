@@ -1,8 +1,8 @@
 {
-  "$comment": "Bespoke manifest. The shape of this file (schemaVersion, endpoints, profiles, mcp) is custom to erikunha.dev — there is no published .well-known/agent.json standard it conforms to, so `schemaVersion` is a self-versioning date, not a reference to an external schema. Same posture as the custom `@type: HiringProfile` contract in lib/hiring-profile.ts.",
+  "$comment": "Bespoke manifest. The shape of this file (schemaVersion, endpoints, profiles, mcp) is custom to erikunha.dev. There is no published .well-known/agent.json standard it conforms to, so `schemaVersion` is a self-versioning date, not a reference to an external schema. Same posture as the custom `@type: HiringProfile` contract in lib/hiring-profile.ts.",
   "schemaVersion": "2026-05-21",
-  "name": "Erik Cunha — portfolio agent surface",
-  "description": "Machine-readable capability manifest for erikunha.dev, the portfolio of Erik Cunha (Staff/Principal Frontend + applied-AI engineer). Lists the endpoints an AI agent can use to read his hiring profile and ask questions about his experience.",
+  "name": "Erik Cunha · portfolio agent surface",
+  "description": "Machine-readable capability manifest for erikunha.dev, the portfolio of Erik Cunha, Senior Software Engineer, Frontend & Product. Brazil · UTC-3 · available now. Raylu: private-markets fintech · B2B SaaS. Lists endpoints for the hiring profile and experience questions.",
   "url": "https://www.erikunha.dev",
   "provider": {
     "name": "Erik Henrique Alves Cunha",
@@ -26,7 +26,9 @@
               "maxLength": 500
             }
           },
-          "required": ["question"]
+          "required": [
+            "question"
+          ]
         }
       },
       "output": {
@@ -44,7 +46,7 @@
   "profiles": [
     {
       "name": "erik.json",
-      "description": "Structured HiringProfile document — employers, stack, receipts, work authorization, availability.",
+      "description": "Structured HiringProfile document: employers, stack, receipts, work authorization, availability.",
       "url": "https://www.erikunha.dev/api/erik.json",
       "contentType": "application/json"
     },
@@ -60,6 +62,19 @@
     "description": "Read-only Model Context Protocol server. Exposes get_profile (returns the HiringProfile) and ask_erik (proxies a question through /api/ask).",
     "url": "https://www.erikunha.dev/api/mcp",
     "transport": "streamable-http",
-    "tools": ["get_profile", "ask_erik"]
+    "tools": [
+      "get_profile",
+      "ask_erik"
+    ]
+  },
+  "title": "Senior Software Engineer, Frontend & Product",
+  "location": "Brazil",
+  "timezone": "UTC-3",
+  "availability": "available now",
+  "work_auth": {
+    "Brazil": "CITIZEN",
+    "EU_Malta": "NEEDS_SPONSORSHIP",
+    "Canada": "NEEDS_SPONSORSHIP",
+    "worldwide": "OPEN_WITH_SPONSORSHIP"
   }
 }

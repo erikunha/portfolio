@@ -1,4 +1,9 @@
 import { z } from 'zod';
+import { credentials } from '@/content/credentials';
+import { education } from '@/content/education';
+import { gitLog } from '@/content/git-log';
+import { profile, profileLocation } from '@/content/profile';
+import { workAuthorization } from '@/content/visa';
 
 const EmployerSchema = z.object({
   name: z.string(),
@@ -17,6 +22,8 @@ export const HiringProfileSchema = z.object({
   '@type': z.literal('HiringProfile'),
   name: z.string(),
   alias: z.string(),
+  title: z.string(),
+  timezone: z.string(),
   url: z.string().url(),
   email: z.string().email(),
   github: z.string().url(),
@@ -50,8 +57,10 @@ export type HiringProfile = z.infer<typeof HiringProfileSchema>;
 
 export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   '@type': 'HiringProfile',
-  name: 'Erik Henrique Alves Cunha',
-  alias: 'Erik Cunha',
+  name: profile.fullName,
+  alias: profile.displayName,
+  title: profile.title,
+  timezone: profile.timezone,
   url: 'https://www.erikunha.dev',
   email: 'erikhenriquealvescunha@gmail.com',
   github: 'https://github.com/erikunha',
@@ -81,70 +90,13 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     'highway-ops',
   ],
 
-  employers: [
-    {
-      name: 'Raylu.ai',
-      role: 'Senior Software Engineer (contract, via Torc)',
-      domain: 'AI deal origination / private markets',
-      current: true,
-      dates: '2026–present',
-    },
-    {
-      name: 'Betsson Group',
-      role: 'Senior Software Engineer',
-      domain: 'fintech/PCI-DSS',
-      dates: '2025–2026',
-    },
-    {
-      name: 'Canon Medical Systems Brazil',
-      role: 'Senior Software Engineering Consulting',
-      domain: 'healthcare',
-      dates: '2023–2025',
-    },
-    {
-      name: 'Grupo SBF (Nike Brazil/Centauro)',
-      role: 'React Engineer',
-      domain: 'e-commerce',
-      dates: '2021–2023',
-    },
-    {
-      name: 'Encora Inc. (VMware Pathfinder)',
-      role: 'Frontend Engineer',
-      domain: 'consulting/enterprise',
-      dates: '2021',
-    },
-    {
-      name: 'Zup Innovation (Itaú Unibanco)',
-      role: 'Frontend Engineer',
-      domain: 'fintech/banking',
-      dates: '2020–2021',
-    },
-    {
-      name: 'Venturus',
-      role: 'Frontend Engineer',
-      domain: 'engineering/highway-ops',
-      dates: '2019–2020',
-    },
-    {
-      name: 'Venturus',
-      role: 'Full-Stack Engineer (MEAN)',
-      domain: 'engineering/foreign-trade',
-      dates: '2019',
-    },
-    {
-      name: 'MB Labs',
-      role: 'Mobile Developer',
-      domain: 'edtech/cross-platform',
-      dates: '2018–2019',
-    },
-    { name: 'MB Labs', role: 'Full Stack Developer', domain: 'hr-tech/chatbot', dates: '2018' },
-    {
-      name: 'Monde Sistemas',
-      role: 'Frontend Engineer (Vue.js)',
-      domain: 'b2b-saas/travel',
-      dates: '2017–2018',
-    },
-  ],
+  employers: gitLog.map((entry) => ({
+    name: entry.company,
+    role: entry.role,
+    domain: entry.domain,
+    current: entry.endMonth === null,
+    dates: entry.date,
+  })),
 
   receipts: {
     tx_volume_per_year: '40M+',
@@ -163,44 +115,19 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     copilot_subagents: '12-agent system (Betsson)',
   },
 
-  work_auth: {
-    EU_Malta: 'prior experience (Betsson, 2025–2026)',
-    Canada: 'co-op graduate',
-    Brazil: 'citizen',
-    worldwide: 'open to relocation',
-  },
-
-  education: [
-    {
-      institution: 'CICCC',
-      degree: 'Co-op Diploma, Web Development Specialist',
-      location: 'Vancouver, Canada',
-      years: '2023–2024',
-    },
-    {
-      institution: 'UNISAL',
-      degree: "Bachelor's, Information Systems",
-      location: 'Campinas, Brazil',
-      years: '2015–2020',
-    },
-  ],
-
-  certifications: [
-    'WES Verified International Academic Qualifications (2022)',
-    'IELTS General Training Band 6.5 — C1 Speaking and Listening (2023)',
-    'Angular Developer Certification — Alain Chautard, GDE (2024)',
-  ],
-
-  availability: 'immediate',
+  work_auth: workAuthorization,
+  education: education.map((entry) => ({
+    institution: entry.institution,
+    degree: entry.degree,
+    location: entry.studyMode ? `${entry.location} (${entry.studyMode})` : entry.location,
+    years: entry.period,
+  })),
+  certifications: credentials.map((entry) => `${entry.label} · ${entry.badge} · ${entry.evidence}`),
+  availability: profile.availability,
   notice_period_days: 0,
   open_to: ['full_time', 'contract', 'ic', 'tech_lead', 'staff', 'principal'],
-  location: 'Brazil (remote-first, relocation available)',
+  location: profileLocation,
 
-  languages: [
-    { code: 'pt', level: 'native' },
-    { code: 'en', level: 'C1' },
-    { code: 'es', level: 'B1' },
-    { code: 'fr', level: 'A2' },
-  ],
+  languages: profile.languages,
   last_updated: '2026-07-11',
 });

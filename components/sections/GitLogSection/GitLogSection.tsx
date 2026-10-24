@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Suspense } from 'react';
-import { gitLog } from '@/content/git-log';
+import { careerCommand, gitLog } from '@/content/git-log';
 import type { GitCommit } from '@/content/schemas';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { getIsMobile } from '@/lib/ua';
@@ -17,8 +17,6 @@ const RAIL = `*\n${'|\n'.repeat(48)}`;
 
 function renderCommitMobile(c: GitCommit, key: string): ReactNode {
   const hashShort = c.hash.slice(0, 7);
-  const dp = c.date.split(' ');
-  const dateShort = `${dp[0]} ${dp[1]} ${dp[2]} ${dp[4]}`;
   return (
     <li key={key} className="relative pl-[1.7ch] pb-5 last:pb-0">
       <span
@@ -32,13 +30,13 @@ function renderCommitMobile(c: GitCommit, key: string): ReactNode {
         <span className="text-primary-400 opacity-70">{hashShort}</span>
         {c.deco ? <span className="text-quinary-300">{` ${c.deco}`}</span> : null}
         {'\n'}
-        <span className="text-primary-400 opacity-75">{dateShort}</span>
+        <span className="text-primary-400 opacity-75">{c.date}</span>
         <span className="text-primary-400 opacity-40">{' · '}</span>
         <span className="text-quaternary-400">{c.branch}</span>
         {'\n\n'}
         <span className="font-bold text-primary-500">{`feat(${c.type}): ${c.company}`}</span>
         {'\n'}
-        <span className="text-tertiary-50 opacity-85">{c.role}</span>
+        <span className="text-tertiary-50 opacity-85">{`${c.role} · ${c.location}${c.workMode ? ` (${c.workMode})` : ''}`}</span>
         {'\n\n'}
         <span className="text-primary-500">{c.body.join(' ')}</span>
       </div>
@@ -76,7 +74,7 @@ function renderCommit(c: GitCommit, key: string): ReactNode {
           {'): '}
           <span className="text-primary-500 font-bold">{c.company}</span>
           {' · '}
-          {c.role}
+          {`${c.role} · ${c.location}${c.workMode ? ` (${c.workMode})` : ''}`}
         </span>
         {'\n'}
         {'\n'}
@@ -118,7 +116,7 @@ function renderCommit(c: GitCommit, key: string): ReactNode {
         {'): '}
         <span className="text-primary-500 font-bold">{c.company}</span>
         {' · '}
-        {c.role}
+        {`${c.role} · ${c.location}${c.workMode ? ` (${c.workMode})` : ''}`}
       </span>
       {'\n'}
       {PIPE}
@@ -145,7 +143,7 @@ function GitLogDesktop() {
     >
       <div className="text-primary-400 opacity-70 mb-3 tracking-[0.02em] text-sm max-md:text-[10px] whitespace-pre">
         <span className="text-primary-500 opacity-80 mr-1.5">erik@portfolio:~$</span>
-        {' git log --graph --pretty=fuller --decorate --since="2018-06-01" ~/career'}
+        {careerCommand}
       </div>
       <pre className="m-0 whitespace-pre text-tertiary-50">
         {COMMITS.map((c) => renderCommit(c, c.hash))}
