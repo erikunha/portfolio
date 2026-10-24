@@ -20,11 +20,11 @@ export const HEAD_SHA_GAP_MAX = 24;
 
 const REVIEWED_SHA = new RegExp(
   `\\bhead\\b[^\`\\n]{0,${HEAD_SHA_GAP_MAX}}\`([0-9a-f]{7,40})\``,
-  'i',
+  'gi',
 );
 
 export function extractReviewedSha(body: string): string | null {
-  const sha = body.match(REVIEWED_SHA)?.[1];
+  const sha = [...body.matchAll(REVIEWED_SHA)].at(-1)?.[1];
   return sha ? sha.toLowerCase() : null;
 }
 
