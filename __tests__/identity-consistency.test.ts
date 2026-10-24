@@ -50,6 +50,13 @@ describe('identity is consistent across every gated surface', () => {
     expect(manifest.work_auth).toEqual(HIRING_PROFILE.work_auth);
   });
 
+  it('keeps the zod-free shell copy equal to the canonical profile', async () => {
+    const { NOW_CURRENTLY, WHOIS_TITLE } = await import('@/content/now-currently');
+    const { profileSummary } = await import('@/content/profile');
+    expect(NOW_CURRENTLY).toBe(profileSummary);
+    expect(WHOIS_TITLE).toBe(profile.title);
+  });
+
   it('serves every profile language with its name, not stripped by the hiring schema', () => {
     expect(HIRING_PROFILE.languages).toEqual(profile.languages);
   });
