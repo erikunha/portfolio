@@ -1,5 +1,4 @@
-import { NOW_CURRENTLY } from './now-currently';
-import { profile } from './profile';
+import { NOW_CURRENTLY, WHOIS_TITLE } from './now-currently';
 import type { ShellResponse } from './schemas';
 
 const SHELL_RESPONSES: ShellResponse[] = [
@@ -11,7 +10,7 @@ const SHELL_RESPONSES: ShellResponse[] = [
   {
     commands: ['whois', 'whoami'],
     kind: 'output',
-    text: `erik — ${profile.title}`,
+    text: `erik — ${WHOIS_TITLE}`,
   },
   {
     commands: ['whois --recursive', 'whoami --recursive'],
