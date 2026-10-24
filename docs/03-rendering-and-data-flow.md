@@ -26,6 +26,7 @@ flowchart TD
       api7["GET /api/lighthouse"]
       api8["POST /api/log · POST /api/log/forget"]
       api9["POST /api/mcp (stateless Streamable HTTP; GET returns 405)"]
+      api10["GET /api/contact-retry (daily cron)"]
     end
     layout -.serves.-> api
 ```
@@ -45,7 +46,8 @@ flowchart TD
     appshell --> chrome["MatrixRain · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
     appshell --> main["main#main-content"]
     main --> secs["20x ErrorBoundary > Module(RSC) > Section(RSC)"]
-    main --> footer["FooterLazy (IntersectionObserver-gated)"]
+    main --> footer["Footer (RSC)"]
+    footer --> footerIslands["FooterLazy: session counters + halt/reboot island"]
 ```
 
 The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion')` / OS preference and sets `body[data-motion]` **before first paint**, off the hydration path, so CRT effects and the LCP element never flash or wait on JS.
@@ -77,7 +79,7 @@ flowchart LR
 
   `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: desktop variant for most; **`null` for Guitar** (a CLS fix, `DECISIONS.md` 2026-06-13); a reserved-height stub for `AiMetrics`.
 - **`defer` prop:** below-the-fold sections pass `defer` to `Module`, which applies CSS `content-visibility` (defers _render cost_, not JS).
-- **`next/dynamic` lazy JS (4 sites):** `ContactFormLazy`, `InteractiveShellLazy`, `FooterLazy` (IO-gated), `DawMixerSection`.
+- **`next/dynamic` lazy JS:** `ContactFormLazy`, `InteractiveShellLazy`, `DawMixerSection`. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy` loads only the session counters and halt/reboot island from `Footer.client`; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
 There is **no `use cache` / `cacheLife` / `cacheTag` / `unstable_cache` / `generateStaticParams`** anywhere - the staticness comes from PPR + the absence of dynamic APIs, not explicit caching.
 
@@ -151,13 +153,24 @@ sequenceDiagram
     alt KV fails
         H-->>F: 502 storage_unavailable
     else KV ok
-        H->>RS: send email (10s race)
-        Note over H,RS: Resend failure is logged but still returns 200<br/>(KV is the durable record)
-        H-->>F: 200 { ok: true, requestId }
+        H->>RS: sendContactMessage (10s race)
+        alt Resend accepts
+            H-->>F: 200 { ok: true, requestId }
+        else Resend error, timeout or missing key
+            H->>KV: enqueue id by receivedAt, attempts = 0
+            alt outbox saved
+                H-->>F: 202 { ok: false, requestId, error: { code: queued, message } }
+                F->>F: show saved, not delivered yet + LinkedIn link
+            else outbox write fails
+                H-->>F: 502 storage_unavailable
+            end
+        end
     end
 ```
 
 The **ordering is a security property**: rate-limit and validate _before_ the work, hash the IP and touch storage _only_ for requests that pass. Every response carries `X-Request-Id`. See doc 05 for the full `defineHandler` contract and the other routes.
+
+At 04:00 UTC daily (`0 4 * * *`), `/api/contact-retry` checks the `CRON_SECRET` bearer before reading pending ids in received-time order. Messages older than 7 days, or already at 3 retry attempts, leave the outbox. Each eligible message consumes an attempt before calling the same delivery function. Successful sends leave the outbox; failures remain pending. Audit messages retain their 90-day KV TTL. The response counts `sent`, `failed`, `expired` and `exhausted`. Contact logs carry only `requestId` and `msgId`.
 
 ## Request lifecycle summary (every request)
 

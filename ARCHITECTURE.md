@@ -30,9 +30,9 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 - Static composition of ~18 content sections (hero, README, projects, git log, NPM, SYS_HEALTH, PERF_RECEIPTS, visa, community, HOTTEST_TAKES, RESPONSIBILITIES, guitar_rig, unknowns, contact, MAN ERIK, INTERACTIVE_SHELL, footer)
 - Hero: Matrix dialog loop + boot sequence (typewriter)
-- Mount-driven role typewriter (RoleTyper); IntersectionObserver gates MatrixRain + lazy-mounts the footer (no scroll-reveal typewriter exists)
+- Mount-driven role typewriter (RoleTyper); IntersectionObserver gates MatrixRain; the footer is server-rendered, with client islands only for session counters and halt/reboot (no scroll-reveal typewriter exists)
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
-- Contact form: real submission, delivery to inbox, durable log
+- Contact form: durable submission, explicit delivered or queued feedback, daily bounded retry
 - Live Lighthouse score (PSI API, cached daily)
 - `MOTION` indicator tied to `prefers-reduced-motion`
 - Dynamic OG image (recruiter-safe, optional role-targeted variant)
@@ -85,7 +85,8 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 │   Vercel Edge Network (global CDN)                         │
 │       ├── / (static HTML, 161.8KB first-load)              │
 │       ├── /api/ask        (Fluid Compute, streaming)       │
-│       ├── /api/contact    (Server Action, Node)            │
+│       ├── /api/contact    (route handler, Node)            │
+│       ├── /api/contact-retry (daily cron, Node)            │
 │       ├── /api/lighthouse (Node, reads KV)                 │
 │       ├── /erik.json      (static, cached)                 │
 │       ├── /llms.txt       (static)                         │
@@ -102,6 +103,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 │                                                             │
 │   Daily cron: /api/psi-refresh at 03:00 UTC (vercel.json)   │
 │   refetches PSI -> KV; alerts via Resend on failure.        │
+│   Contact retry: /api/contact-retry at 04:00 UTC daily.    │
 │   Lazy-fill on 25h-stale read (lib/lighthouse-scores).      │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
@@ -171,7 +173,8 @@ app/sitemap.ts                       # SEO sitemap (robots.txt is static, in pub
 app/css/                             # global styles — Tailwind v4 via PostCSS
 app/design-system/                   # /design-system docs surface (MDX + token gallery)
 app/api/ask/route.ts                 # Fluid Compute: LLM streaming via AI Gateway
-app/api/contact/route.ts             # Node: contact (uses Resend)
+app/api/contact/route.ts             # Node: durable contact submission, 200 accepted or 202 queued
+app/api/contact-retry/route.ts       # cron: retry undelivered contact messages daily
 app/api/lighthouse/route.ts          # Node: reads PSI cache from KV
 app/api/erik.json/route.ts           # static profile, cached
 app/api/healthz/route.ts             # liveness + dependency probe
@@ -219,6 +222,8 @@ lib/ask-log.ts                        # KV interaction log per /api/ask request
 lib/boot-animation.ts                 # boot sequence data
 lib/breakpoint.ts                     # viewport breakpoint constants
 lib/contact-validation.ts             # honeypot check (Zod shape lives in the route)
+lib/contact-delivery.ts               # shared Resend configuration and 10s send timeout
+lib/contact-outbox.ts                 # ordered pending ids and retry attempt counters
 lib/error-bridge.client.ts            # window error → /api/log bridge
 lib/events.ts                         # typed WindowEventMap: sysfail:start|end, shell-cmd-run, hero:sysfail:show|hide
 lib/hiring-profile.ts                 # HiringProfile reader for /api/erik.json
@@ -423,20 +428,31 @@ History and rationale: see `DECISIONS.md` 2026-05-18.
     ↓
 [rate limit: 3 / IP / 10min]  → 429 if exceeded
     ↓
-[Zod validation via validateContact()]
+[Zod validation via ContactSchema.safeParse in defineHandler]
     ↓
 [honeypot check] → silent 200 if filled
     ↓
 [write to Upstash KV: contact:msg:{uuid}]  ← durable first
     ↓
-[Resend send] ← delivery second; failure is OK if KV write succeeded
+[sendContactMessage: Resend, 10s timeout]
     ↓
-[return success regardless if spam path]
+[accepted: 200 ok + requestId]
+[error/timeout/missing key: enqueue id by receivedAt, attempts = 0]
+    ↓
+[outbox saved: 202 queued + requestId; outbox unavailable: 502]
 ```
 
 ### Why KV before Resend
 
-If Resend is down, the message is captured. If KV is down, we fail loud (502) so the visitor knows. Durability beats delivery.
+If Resend is down, the message stays in KV and enters the pending outbox. The form reports saved but undelivered and links to LinkedIn for a faster reply. Only provider acceptance shows the existing success text. If KV is down, the route returns `502 storage_unavailable` and the form asks the visitor to try again. Structured API errors display `error.message`.
+
+### Daily retry
+
+`GET /api/contact-retry` requires the same `CRON_SECRET` bearer as `/api/psi-refresh`; missing or wrong authorization returns 401. Vercel Cron runs it at `0 4 * * *` (04:00 UTC daily, compatible with Hobby).
+
+`contact:outbox` is a Redis sorted set of message ids scored by `receivedAt`. `contact:outbox:attempts` stores retry counts. The cron removes entries older than 7 days or already at 3 attempts. Each eligible message consumes one attempt before the shared send function runs. Acceptance removes pending membership and its counter; failure keeps it pending. The response is `{sent, failed, expired, exhausted}`. Removal never deletes `contact:msg:{uuid}`, which retains its 90-day audit TTL.
+
+Both routes use `lib/contact-delivery.ts` for sender, recipient, subject and the 10s timeout. A message-id idempotency key accompanies every send. Contact logs carry only `requestId` and `msgId`, never provider error details, addresses or message bodies. Form copy and its Zod schema live in `content/contact.ts`, validated by `scripts/validate-content.ts`; the LinkedIn URL comes from `content/social-urls.ts`, the zod-free constant `content/social.ts` also uses.
 
 ### Anti-spam strategy
 
@@ -444,12 +460,12 @@ If Resend is down, the message is captured. If KV is down, we fail loud (502) so
 - Rate limit per IP (`lib/rate-limit.ts` — 3 / 10 min)
 - Min/max length on message (10 < x < 2000 chars)
 - No CAPTCHA (UX tax outweighs spam saved at this scale)
-- Honeypot field (`field_company` — hidden, off-screen) rendered by `ContactForm` with `aria-hidden="true" tabindex="-1" autocomplete="off"` and inline-styled to `left: -9999px; opacity: 0; pointer-events: none`. `isHoneypotTripped()` in `lib/contact-validation.ts` checks the server-side body before validation; if filled, the route logs `contact honeypot tripped`, waits a 50–150 ms random jitter to match real Resend round-trip timing, and returns `{ ok: true }` without touching KV or Resend — denying the bot any failure signal.
+- Honeypot field (`field_company`, hidden off-screen) rendered by `ContactForm` with `aria-hidden="true" tabindex="-1" autocomplete="off"` and inline-styled to `left: -9999px; opacity: 0; pointer-events: none`. After schema validation, `isHoneypotTripped()` checks the body. If filled, the route logs `contact honeypot tripped`, waits 50 to 150 ms of jitter and returns `{ ok: true, requestId }` without touching KV or Resend.
 
 ### Accessibility
 
 - Real `<label for="...">` for each input
-- `aria-describedby` linking to inline error messages
+- API errors use `role="alert"`; delivered and queued feedback use `role="status"`
 - The terminal-styled `user@terminal:~$ enter_name` is visual decoration, NOT the accessible name
 
 ### What I'd revisit at scale

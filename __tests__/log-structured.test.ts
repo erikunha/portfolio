@@ -122,7 +122,7 @@ describe('route integration — structured logging through the facade', () => {
   }
 
   it('/api/contact emits a structured log carrying requestId on the KV-failure path', async () => {
-    redisSetMock.mockRejectedValueOnce(new Error('KV down'));
+    redisSetMock.mockRejectedValueOnce(new Error('real@example.com: A private message'));
     const { POST } = await import('@/app/api/contact/route');
     await POST(
       makeRequest({
@@ -132,10 +132,12 @@ describe('route integration — structured logging through the facade', () => {
       }),
     );
 
-    expect(logErrorMock).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ requestId: expect.any(String) }),
-    );
+    expect(logErrorMock).toHaveBeenCalledWith(expect.any(String), {
+      requestId: expect.any(String),
+      msgId: expect.any(String),
+    });
+    expect(JSON.stringify(logErrorMock.mock.calls)).not.toContain('real@example.com');
+    expect(JSON.stringify(logErrorMock.mock.calls)).not.toContain('A private message');
   });
 
   it('/api/contact emits a structured honeypot log carrying requestId', async () => {

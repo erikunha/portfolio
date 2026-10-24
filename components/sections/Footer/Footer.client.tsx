@@ -1,384 +1,215 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { MatrixRain } from '@/components/responsive/MatrixRain';
-import { dmesgLines } from '@/content/dmesg';
-import { useBreakpoint } from '@/lib/use-breakpoint.client';
+import { type ReactNode, useCallback, useEffect, useRef } from 'react';
+import type { FooterContent } from '@/content/schemas';
 
-function pad(n: number) {
-  return String(n).padStart(2, '0');
+const EMPTY_SECTION_IDS: string[] = [];
+const SECOND_MS = 1000;
+const SECONDS_PER_MINUTE = 60;
+const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * SECONDS_PER_MINUTE;
+const CLOCK_DIGITS = 2;
+const CLOCK_ZERO = '0';
+const PERCENT = 100;
+const SECTION_THRESHOLD = 0.25;
+const COMMAND_EVENT = 'shell-cmd-run';
+const SCROLL_EVENT = 'scroll';
+const VISIBILITY_EVENT = 'visibilitychange';
+const EDITABLE_SELECTOR =
+  'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]';
+const HEADING_SELECTOR = 'main h1';
+const FOOTER_SELECTOR = 'footer';
+const KEYDOWN_EVENT = 'keydown';
+const SCROLL_BEHAVIOR = 'instant';
+const HOME_SELECTOR = '#main-content';
+const MOBILE_HERO_SELECTOR = '[data-testid="hero-mobile"]';
+const HOME_SECTION_ID = 'bio';
+const SESSION_FIELDS = {
+  uptime: '[data-sess="uptime"]',
+  depth: '[data-sess="depth"]',
+  seen: '[data-sess="seen"]',
+  commands: '[data-sess="commands"]',
+  meter: 'meter',
+} as const;
+
+function formatUptime(seconds: number) {
+  return [
+    Math.floor(seconds / SECONDS_PER_HOUR),
+    Math.floor((seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE),
+    seconds % SECONDS_PER_MINUTE,
+  ]
+    .map((part) => String(part).padStart(CLOCK_DIGITS, CLOCK_ZERO))
+    .join(':');
 }
 
-function fmtUptime(s: number) {
-  return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
-}
-
-function fmtClock(d: Date) {
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
-
-export function Footer() {
-  const { isMobile } = useBreakpoint();
-  const uptimeRef = useRef(Date.now());
-  const [uptime, setUptime] = useState('00:00:00');
-  const [time, setTime] = useState(() => fmtClock(new Date()));
-  const [scrollDepth, setScrollDepth] = useState(0);
-  const [sectionsSeen, setSectionsSeen] = useState(0);
-  const [totalSections, setTotalSections] = useState(0);
-  const [commandsRun, setCommandsRun] = useState(0);
-  const [booted, setBooted] = useState(false);
-  const [dmesgTs, setDmesgTs] = useState<string[]>(dmesgLines.map(() => ''));
-  const footerRef = useRef<HTMLElement>(null);
+export function SessionCounters({
+  children,
+  sectionIds = EMPTY_SECTION_IDS,
+}: {
+  children?: ReactNode;
+  sectionIds?: string[];
+}) {
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let id: ReturnType<typeof setInterval> | null = null;
-
-    function tick() {
-      const s = Math.floor((Date.now() - uptimeRef.current) / 1000);
-      setUptime(fmtUptime(s));
-      setTime(fmtClock(new Date()));
-    }
-
-    function startClock() {
-      id = setInterval(tick, 1000);
-    }
-
-    function onVisibility() {
-      if (document.hidden) {
-        if (id !== null) {
-          clearInterval(id);
-          id = null;
-        }
-      } else {
-        startClock();
-      }
-    }
-
-    startClock();
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => {
-      if (id !== null) clearInterval(id);
-      document.removeEventListener('visibilitychange', onVisibility);
+    const root = ref.current;
+    if (!root) return;
+    let commands = 0;
+    let depth = 0;
+    const seen = new Set<string>();
+    const fields = Object.fromEntries(
+      Object.entries(SESSION_FIELDS).map(([key, selector]) => [key, root.querySelector(selector)]),
+    );
+    const tick = () => {
+      if (fields.uptime)
+        fields.uptime.textContent = formatUptime(Math.floor(performance.now() / SECOND_MS));
     };
-  }, []);
-
-  useEffect(() => {
-    const inc = () => setCommandsRun((n) => n + 1);
-    window.addEventListener('shell-cmd-run', inc);
-    return () => window.removeEventListener('shell-cmd-run', inc);
-  }, []);
-
-  useEffect(() => {
-    const maxScroll = { v: 0 };
+    const onCommand = () => {
+      commands += 1;
+      if (fields.commands) fields.commands.textContent = String(commands);
+    };
     const onScroll = () => {
       const doc = document.documentElement;
       const total = doc.scrollHeight - doc.clientHeight;
-      if (total <= 0) return;
-      const pct = Math.min(100, Math.round((doc.scrollTop / total) * 100));
-      if (pct > maxScroll.v) {
-        maxScroll.v = pct;
-        setScrollDepth(pct);
+      const next = Math.max(
+        depth,
+        total > 0 ? Math.min(PERCENT, Math.round((window.scrollY / total) * PERCENT)) : 0,
+      );
+      if (next === depth) return;
+      depth = next;
+      if (fields.depth) fields.depth.textContent = `${depth}%`;
+      if (fields.meter instanceof HTMLMeterElement) fields.meter.value = depth;
+    };
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const onVisibility = () => {
+      clearInterval(interval);
+      if (!document.hidden) {
+        tick();
+        interval = setInterval(tick, SECOND_MS);
       }
     };
-    window.addEventListener('scroll', onScroll, { passive: true });
+    const observer =
+      typeof IntersectionObserver === 'undefined'
+        ? null
+        : new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                if (entry.isIntersecting) {
+                  const sectionId = entry.target.id || HOME_SECTION_ID;
+                  seen.add(sectionId);
+                }
+              }
+              if (fields.seen) fields.seen.textContent = String(seen.size);
+            },
+            { threshold: SECTION_THRESHOLD },
+          );
+    for (const id of sectionIds) {
+      const section = document.getElementById(id);
+      if (section) observer?.observe(section);
+    }
+    const mobileHero = document.querySelector(MOBILE_HERO_SELECTOR);
+    if (mobileHero) observer?.observe(mobileHero);
+    tick();
     onScroll();
-    return () => window.removeEventListener('scroll', onScroll);
+    onVisibility();
+    window.addEventListener(COMMAND_EVENT, onCommand);
+    window.addEventListener(SCROLL_EVENT, onScroll, { passive: true });
+    document.addEventListener(VISIBILITY_EVENT, onVisibility);
+    return () => {
+      clearInterval(interval);
+      observer?.disconnect();
+      window.removeEventListener(COMMAND_EVENT, onCommand);
+      window.removeEventListener(SCROLL_EVENT, onScroll);
+      document.removeEventListener(VISIBILITY_EVENT, onVisibility);
+    };
+  }, [sectionIds]);
+
+  return <div ref={ref}>{children}</div>;
+}
+
+export function HaltClock({ label }: { label: string }) {
+  const clock = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const now = new Date();
+    if (clock.current)
+      clock.current.textContent = [now.getHours(), now.getMinutes(), now.getSeconds()]
+        .map((part) => String(part).padStart(CLOCK_DIGITS, CLOCK_ZERO))
+        .join(':');
   }, []);
+  return (
+    <span className="footer-halted-at">
+      {label} <b ref={clock} data-sess="halt" data-volatile />
+    </span>
+  );
+}
+
+export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {
+  const status = useRef<HTMLParagraphElement>(null);
+  const announcementFrame = useRef<number | undefined>(undefined);
+  const link = useRef<HTMLAnchorElement>(null);
+  const reboot = useCallback((): boolean => {
+    const heading = document.querySelector<HTMLElement>(HEADING_SELECTOR);
+    if (!heading) return false;
+    heading.tabIndex = -1;
+    heading.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: SCROLL_BEHAVIOR });
+    if (status.current) status.current.textContent = '';
+    if (announcementFrame.current !== undefined) cancelAnimationFrame(announcementFrame.current);
+    announcementFrame.current = requestAnimationFrame(() => {
+      if (status.current) status.current.textContent = copy.announcement;
+    });
+    return true;
+  }, [copy.announcement]);
+
+  useEffect(
+    () => () => {
+      if (announcementFrame.current !== undefined) cancelAnimationFrame(announcementFrame.current);
+    },
+    [],
+  );
 
   useEffect(() => {
-    const sections = Array.from(document.querySelectorAll('main > section'));
-    setTotalSections(sections.length);
-    const seen = new Set<Element>();
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting && !seen.has(e.target)) {
-            seen.add(e.target);
-            setSectionsSeen(seen.size);
-          }
-        });
-      },
-      { threshold: 0.25 },
-    );
-    for (const s of sections) obs.observe(s);
-    return () => obs.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!footerRef.current) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry?.isIntersecting) return;
-        obs.disconnect();
-        const base = (Date.now() - uptimeRef.current) / 1000;
-        const ts = dmesgLines.map(({ off }) => {
-          const t = (base + off).toFixed(3).padStart(9, ' ');
-          return `[${t}]`;
-        });
-        setDmesgTs(ts);
-        setBooted(true);
-      },
-      { threshold: 0.1 },
-    );
-    obs.observe(footerRef.current);
-    return () => obs.disconnect();
-  }, []);
+    const scope = link.current?.closest(FOOTER_SELECTOR);
+    if (!scope) return;
+    const onKeyDown = (event: Event) => {
+      if (!(event instanceof KeyboardEvent)) return;
+      if (
+        event.defaultPrevented ||
+        event.repeat ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey
+      )
+        return;
+      if (event.target instanceof Element && event.target.closest(EDITABLE_SELECTOR)) return;
+      if (event.key.toLowerCase() !== copy.key.toLowerCase()) return;
+      if (reboot()) event.preventDefault();
+    };
+    scope.addEventListener(KEYDOWN_EVENT, onKeyDown);
+    return () => scope.removeEventListener(KEYDOWN_EVENT, onKeyDown);
+  }, [copy.key, reboot]);
 
   return (
-    <footer
-      className="site-footer border-t-0 pb-[20px] bg-transparent relative z-[1] overflow-hidden max-[900px]:pt-0 max-[900px]:pb-[calc(40px+env(safe-area-inset-bottom,0px))] max-[900px]:px-[20px] max-[768px]:py-7 max-[768px]:px-[20px]"
-      id="shutdown"
-      ref={footerRef}
-    >
-      <MatrixRain
-        fontSize={14}
-        speed={0.9}
-        headColor="#8FE0A0"
-        bodyColor="#1F8A3A"
-        tailFade="rgba(0,0,0,0.14)"
-        watchRef={footerRef}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          zIndex: 0,
-          opacity: 0.22,
-          maskImage: 'linear-gradient(180deg, transparent 0%, #000 18%, #000 100%)',
-          WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, #000 18%, #000 100%)',
+    <>
+      <a
+        className="footer-reboot"
+        href={HOME_SELECTOR}
+        aria-label={copy.label}
+        aria-keyshortcuts={copy.key}
+        ref={link}
+        onClick={(event) => {
+          if (reboot()) event.preventDefault();
         }}
-      />
-      <div
-        className="relative z-[1] max-w-[1200px] mx-auto px-[20px] font-mono"
-        style={{ textShadow: '0 0 4px #000, 0 0 8px rgba(0,0,0,0.6)' }}
       >
-        <div className="flex items-baseline justify-between gap-6 flex-wrap mb-2 max-[768px]:flex-col max-[768px]:gap-1">
-          <span
-            className="text-primary-500 font-bold tracking-[0.06em] text-sm max-md:text-xs"
-            style={{ textShadow: '0 0 8px rgba(0,255,65,0.35)' }}
-          >
-            [SYSTEM SHUTDOWN INITIATED]
-          </span>
-          <span className="text-primary-400 text-xs max-md:text-[10px] tracking-[0.14em] uppercase">
-            {'halted at '}
-            <b
-              suppressHydrationWarning
-              className="text-tertiary-50 font-bold ml-1.5 tracking-[0.04em] tabular-nums"
-            >
-              {time}
-            </b>
-          </span>
-        </div>
-
-        <div className="text-sm max-md:text-xs mb-[14px] text-tertiary-50">
-          <span className="text-primary-400">{'erik@portfolio:~$'}</span>{' '}
-          <span className="text-tertiary-50">{'shutdown -h now'}</span>
-        </div>
-
-        <div
-          className="border-t border-dashed border-primary-subtle mb-[22px]"
-          aria-hidden="true"
-        />
-
-        <div className="grid grid-cols-[1fr_1.15fr] gap-[18px] mb-[26px] max-[900px]:grid-cols-1">
-          <div
-            className="border border-primary-subtle p-[14px_16px_16px] relative min-w-0 max-[768px]:p-[12px_14px_14px] max-[768px]:mb-2.5"
-            style={{ background: 'linear-gradient(180deg, rgba(0,255,65,0.025), rgba(0,0,0,0))' }}
-          >
-            <header className="text-primary-500 font-bold text-xs tracking-[0.18em] mb-3 flex items-baseline gap-1.5 max-[768px]:tracking-[0.16em]">
-              <span className="text-primary-500">{'▌'}</span>SESSION_REPORT
-            </header>
-            <div className="grid grid-cols-[130px_1fr] gap-x-3 gap-y-1 text-sm max-md:text-xs leading-[1.95] max-md:leading-[1.5] items-center max-[900px]:grid-cols-[110px_1fr] max-[768px]:grid-cols-[100px_1fr] max-[768px]:gap-x-2.5 max-[768px]:gap-y-0.5 max-[560px]:grid-cols-[92px_1fr] max-[560px]:gap-x-2">
-              <span className="text-primary-400 tracking-[0.04em]">user</span>
-              <span className="text-tertiary-50 tabular-nums">erik@portfolio</span>
-              <span className="text-primary-400 tracking-[0.04em]">uptime</span>
-              <span className="text-tertiary-50 tabular-nums">
-                <b className="text-primary-500 font-bold tabular-nums">{uptime}</b>
-              </span>
-              <span className="text-primary-400 tracking-[0.04em]">
-                {isMobile ? 'scroll' : 'scroll depth'}
-              </span>
-              <span className="text-tertiary-50 tabular-nums">
-                <span className="sp-bar">
-                  <i style={{ width: `${scrollDepth}%` }} />
-                </span>
-                <b className="text-primary-500 font-bold tabular-nums">{scrollDepth}%</b>
-              </span>
-              <span className="text-primary-400 tracking-[0.04em]">
-                {isMobile ? 'sections' : 'sections seen'}
-              </span>
-              <span className="text-tertiary-50 tabular-nums">
-                <b className="text-primary-500 font-bold tabular-nums">{sectionsSeen}</b>
-                {' / '}
-                {totalSections}
-              </span>
-              <span className="text-primary-400 tracking-[0.04em]">
-                {isMobile ? 'commands' : 'commands run'}
-              </span>
-              <span className="text-tertiary-50 tabular-nums">
-                <b className="text-primary-500 font-bold tabular-nums">{commandsRun}</b>
-              </span>
-            </div>
-          </div>
-
-          <div
-            className="border border-primary-subtle p-[14px_16px_16px] relative min-w-0 max-[768px]:p-[12px_14px_14px] max-[768px]:mb-2.5"
-            style={{ background: 'linear-gradient(180deg, rgba(0,255,65,0.025), rgba(0,0,0,0))' }}
-          >
-            <header className="text-primary-500 font-bold text-xs tracking-[0.18em] mb-3 flex items-baseline gap-1.5">
-              <span className="text-primary-500">{'▌'}</span>NETSTAT -AN
-            </header>
-            {isMobile ? (
-              <div className="grid grid-cols-[28px_90px_minmax(0,1fr)] gap-x-[28px] items-center text-xs max-[768px]:grid-cols-[34px_74px_minmax(0,1fr)] max-[768px]:gap-x-1.5 max-[768px]:text-[11px]">
-                <span className="text-primary-400 tracking-[0.06em]">Proto</span>
-                <span className="text-primary-400 tracking-[0.06em]">State</span>
-                <span className="text-primary-400 tracking-[0.06em]">Endpoint</span>
-                <span className="text-primary-400">tcp</span>
-                <span className="text-primary-500 font-bold flex items-center min-h-8">
-                  ESTABLISHED
-                </span>
-                <a
-                  href="https://github.com/erikunha"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="netstat-link flex items-center min-h-8 max-[768px]:overflow-hidden max-[768px]:text-ellipsis max-[768px]:whitespace-nowrap"
-                >
-                  github.com/erikunha
-                </a>
-                <span className="text-primary-400">tcp</span>
-                <span className="text-quinary-300 font-bold flex items-center min-h-8">LISTEN</span>
-                <a
-                  href="https://linkedin.com/in/erikunha"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="netstat-link flex items-center min-h-8 max-[768px]:overflow-hidden max-[768px]:text-ellipsis max-[768px]:whitespace-nowrap"
-                >
-                  linkedin.com/in/erikunha
-                </a>
-                <span className="text-primary-400">tcp</span>
-                <span className="text-primary-500 font-bold flex items-center min-h-8">
-                  ESTABLISHED
-                </span>
-                <a
-                  href="https://www.erikunha.dev"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="netstat-link flex items-center min-h-8 max-[768px]:overflow-hidden max-[768px]:text-ellipsis max-[768px]:whitespace-nowrap"
-                >
-                  erikunha.dev
-                </a>
-                <span className="text-primary-400">tcp</span>
-                <span className="text-primary-500 font-bold flex items-center min-h-8">
-                  ESTABLISHED
-                </span>
-                <a
-                  href="/design-system"
-                  className="netstat-link flex items-center min-h-8 max-[768px]:overflow-hidden max-[768px]:text-ellipsis max-[768px]:whitespace-nowrap"
-                >
-                  ~/design_system
-                </a>
-              </div>
-            ) : (
-              <pre className="m-0 font-mono text-sm leading-[1.95] text-tertiary-50 whitespace-pre overflow-x-auto max-[900px]:text-sm max-md:text-xs">
-                <span className="text-primary-400">{'Proto  State        Endpoint'}</span>
-                {[
-                  {
-                    state: 'ESTABLISHED',
-                    cls: 'text-primary-500 font-bold',
-                    href: 'https://github.com/erikunha',
-                    label: 'github.com/erikunha',
-                    external: true,
-                  },
-                  {
-                    state: 'LISTEN',
-                    cls: 'text-quinary-300 font-bold',
-                    href: 'https://linkedin.com/in/erikunha',
-                    label: 'linkedin.com/in/erikunha',
-                    external: true,
-                  },
-                  {
-                    state: 'ESTABLISHED',
-                    cls: 'text-primary-500 font-bold',
-                    href: 'https://www.erikunha.dev',
-                    label: 'erikunha.dev',
-                    external: true,
-                  },
-                  {
-                    state: 'ESTABLISHED',
-                    cls: 'text-primary-500 font-bold',
-                    href: '/design-system',
-                    label: '~/design_system',
-                    external: false,
-                  },
-                ].map((e) => (
-                  <span key={e.href}>
-                    {'\ntcp    '}
-                    <span className={e.cls}>{e.state}</span>
-                    {' '.repeat(13 - e.state.length)}
-                    <a
-                      href={e.href}
-                      className="netstat-link"
-                      {...(e.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                    >
-                      {e.label}
-                    </a>
-                  </span>
-                ))}
-              </pre>
-            )}
-          </div>
-        </div>
-
-        <ul
-          className={`list-none m-0 mb-6 p-0 text-sm leading-[1.85]${booted ? ' dmesg-booted' : ''}`}
-          aria-label="kernel buffer tail"
-        >
-          {dmesgLines.map((line, i) => (
-            <li
-              key={line.off}
-              className="dmesg-line grid grid-cols-[92px_1fr_auto] gap-x-[14px] items-baseline text-tertiary-50 max-[900px]:grid-cols-[72px_1fr_auto] max-[900px]:gap-x-2.5 max-[900px]:text-sm max-[768px]:grid-cols-[64px_1fr_auto] max-[768px]:gap-x-1.5 max-md:text-xs"
-              style={{ animationDelay: `${i * 80}ms` }}
-            >
-              <span className="text-primary-400 tabular-nums whitespace-nowrap">{dmesgTs[i]}</span>
-              <span className="text-tertiary-50">
-                {line.prefix}
-                {line.bold && <b className="text-primary-500 font-bold">{line.bold}</b>}
-                {line.suffix}
-              </span>
-              {line.ok && (
-                <span className="text-primary-500 font-bold tracking-[0.12em] text-xs max-md:text-xs">
-                  OK
-                </span>
-              )}
-              {!line.ok && (
-                <span
-                  className="text-primary-500 font-bold tracking-[0.12em] text-xs"
-                  aria-hidden="true"
-                />
-              )}
-            </li>
-          ))}
-        </ul>
-
-        <div
-          className={`mt-6 flex items-start md:items-center flex-wrap gap-x-4 gap-y-2.5 max-md:flex-col${booted ? ' halt-booted' : ''}`}
-        >
-          <span className="halt-plate inline-block shrink-0 bg-primary-500 text-black font-bold text-sm max-md:text-xs tracking-[0.16em] px-3 py-[5px] leading-none whitespace-nowrap">
-            [SYSTEM HALTED]
-          </span>
-          <span className="halt-hint shrink-0 text-primary-400 text-xs max-md:text-[10px] tracking-[0.12em] whitespace-nowrap">
-            {isMobile ? 'tap ' : 'press '}
-            <button type="button" onClick={() => window.location.reload()}>
-              <kbd className="kbd-key">R</kbd>
-            </button>
-            {' to reboot'}
-          </span>
-        </div>
-
-        <div className="text-primary-400 text-sm max-md:text-xs mt-[22px] tracking-[0.04em] opacity-85">
-          © 2026 erik cunha · this session ends here · the work doesn&apos;t.
-        </div>
-      </div>
-    </footer>
+        {copy.before} <kbd>{copy.key}</kbd> {copy.after}
+      </a>
+      <p
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        ref={status}
+        data-testid="footer-reboot-status"
+      />
+    </>
   );
 }

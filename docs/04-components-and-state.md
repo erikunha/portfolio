@@ -13,7 +13,7 @@ Four directories, four roles. The directory tells you the layer:
 | `components/responsive/**`    | Viewport chrome       | Yes (except `Module`) | `MatrixRain`, `Dock`, `CRTOverlay`              |
 | `design-system/components/**` | Reusable primitives   | Mostly No (RSC)       | `Badge`, `Button`, `TerminalPanel`              |
 
-Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.client.tsx`; a plain `*.tsx` in `sections/` is RSC. Each component is a `Foo/Foo.tsx` + `Foo/index.ts` barrel, with co-located `*.test.tsx` (Vitest) and `*.e2e.ts` (Playwright). `*Lazy` files are `next/dynamic` wrappers.
+Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.client.tsx`; a plain `*.tsx` in `sections/` is RSC. Each component is a `Foo/Foo.tsx` + `Foo/index.ts` barrel, with co-located `*.test.tsx` (Vitest) and `*.e2e.ts` (Playwright). `*Lazy` files are `next/dynamic` wrappers, except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (the footer itself is an RSC, so there is nothing to split).
 
 > **Known convention drift (document, do not "fix" silently):** eight interactive files under `components/client/**` (e.g. `ContactForm.tsx`, `InteractiveShell.tsx`, `HeroBootAnimation.tsx`, `RoleTyper.tsx`, `ToTopButton.tsx`) carry `'use client'` but are **not** named `*.client.tsx`. The naming gate's scope evidently does not cover that directory. This is real today; see doc 09.
 
@@ -31,7 +31,9 @@ flowchart TD
     sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · Field"]
     sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper"]
     main --> hero["Hero (standalone client, NOT Module-wrapped)"]
-    main --> fl["FooterLazy -> Footer.client"]
+    main --> fl["Footer (RSC): cards, sitemap, shutdown log"]
+    fl --> fi["FooterLazy -> Footer.client: session counters + halt/reboot island"]
+    fl --> fc["CopyButton: netstat clipboard control"]
 ```
 
 ### The `Module` wrapper
@@ -96,7 +98,7 @@ flowchart TD
     end
 ```
 
-**There is no global store, no `useReducer`, and no URL/`searchParams` state.** The only router read in the entire app is `usePathname()` in the design-system `Sidebar.client.tsx`. Cross-island coordination is done with window `CustomEvent`s, not shared React state - e.g. `InteractiveShell` dispatches `shell-cmd-run` and `Footer` listens to increment a counter, with no shared parent state.
+**There is no global store, no `useReducer`, and no URL/`searchParams` state.** The only router read in the entire app is `usePathname()` in the design-system `Sidebar.client.tsx`. Cross-island coordination is done with window `CustomEvent`s, not shared React state - e.g. `InteractiveShell` dispatches `shell-cmd-run` and the `Footer.client` session counter listens to increment a counter, with no shared parent state.
 
 ### Per-island state, and the two rendering disciplines
 
@@ -106,4 +108,4 @@ Islands fall into two camps, and the split is a deliberate INP strategy:
 
 This is the single most important state convention in the repo (and is asserted by `InteractiveShell.test.tsx`): **per-keystroke / per-pixel / per-frame updates must not trigger React re-renders.** See `CLAUDE.md` "Rendering model" and doc 09.
 
-Other islands hold ordinary local state: `ContactForm` (controlled fields + a `idle→submitting→success｜error` status machine + honeypot), `ToTopButton` (`visible` on scroll>400), `StatusBar`/`Footer` (interval clocks with `visibilitychange` pause), `RmsButtons` (`Set<string>` toggle group), `CopyButton` (transient "COPIED").
+Other islands hold ordinary local state: `ContactForm` (controlled fields + a `idle→submitting→success｜error` status machine + honeypot), `ToTopButton` (`visible` on scroll>400), `StatusBar` and the `Footer.client` uptime counter (interval clocks with `visibilitychange` pause), the `Footer.client` halt clock (visitor time captured once after mount), `RmsButtons` (`Set<string>` toggle group), `CopyButton` (transient "COPIED").
