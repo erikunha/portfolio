@@ -8,7 +8,7 @@ description: Run the pinned Semgrep CLI to statically measure security issues (t
 
 Semgrep deterministically measures injection sinks, taint flows, and hardcoded
 secrets — the property the security-auditor agent _reasons about_ but cannot
-_measure_. It is a complement to the review battery, not a replacement. The CI
+_measure_. It is a complement to the `pr-review-orchestrator` review, not a replacement. The CI
 `semgrep` job (`.github/workflows/ci.yml`) is authoritative and uploads SARIF to
 the code-scanning tab; this skill is the local/agent interface.
 

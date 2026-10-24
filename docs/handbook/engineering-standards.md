@@ -38,4 +38,4 @@ Performance, accessibility, and security are explicitly "implicit on every chang
 
 ## What "no enforcement" looks like
 
-A few standards are honor-system by acknowledgment, and they are labeled as such rather than pretended to be enforced. The clearest example is the review loop's residual boundary: the stamp mechanically proves a finding was _resolved_, but _recording_ a finding honestly is still on the operator (the stamp cannot know about a finding nobody recorded). Naming these boundaries explicitly is itself a standard.
+A few standards are honor-system by acknowledgment, and they are labeled as such rather than pretended to be enforced. The clearest example is pre-PR review: nothing records what the local pass found, so nothing can check it was resolved. On the PR, `pnpm pr:gate` makes thread resolution mechanical. Naming these boundaries explicitly is itself a standard.

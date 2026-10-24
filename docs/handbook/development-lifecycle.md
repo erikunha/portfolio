@@ -15,8 +15,8 @@ flowchart TD
     branch --> tdd["TDD implementation (tests first)"]
     tdd --> commit["commit (scope blocks): type(scope): subject"]
     commit --> hooks["per-commit hooks: Biome + commitlint"]
-    hooks --> battery["self-review the diff"]
-    battery --> push["git push (pre-push gate chain)"]
+    hooks --> selfreview["self-review the diff"]
+    selfreview --> push["git push (pre-push gate chain)"]
     push --> readypr["pnpm ci:local + gates:runtime"]
     readypr --> pr["gh pr create (fill template)"]
     pr --> conv["Review convergence loop (rebase, push, resolve threads)"]
@@ -57,7 +57,7 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 
 ### 7. Pre-PR self-review, and the pre-push gate chain
 
-Before opening the PR, read the diff and run `pr-review-toolkit:code-reviewer` over it; there is no battery and no stamp since 2026-07-27. On every push, `.husky/pre-push` blocks unless it does not target `main`, the branch name is valid, and `pnpm verify` passes.
+Before opening the PR, read the diff and run the `pr-review-orchestrator` skill over it; there is no battery and no stamp since 2026-07-27. On every push, `.husky/pre-push` blocks unless it does not target `main`, the branch name is valid, and `pnpm verify` passes.
 
 ### 8. Pre-PR -> open PR
 
@@ -83,10 +83,10 @@ flowchart LR
         g1["Biome"] --> g2["commitlint"]
     end
     subgraph prepush["pre-push (blocks)"]
-        g3["no direct main"] --> g4["branch name"] --> g5["review stamp (pre-PR push only)"] --> g6["API-edit audit marker"] --> g7["pnpm verify"]
+        g3["no direct main"] --> g4["branch name"] --> g7["pnpm verify"]
     end
     subgraph prepr["pre-PR (manual)"]
-        g8["ci:local"] --> g9["bundle-check"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["pr-review-toolkit:code-reviewer"]
+        g8["ci:local"] --> g9["bundle-check"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["pr-review-orchestrator"]
     end
     subgraph open["post-open"]
         g13["Review convergence"]
@@ -105,4 +105,4 @@ flowchart LR
 
 ## Why the lifecycle is shaped this way
 
-The thesis (`DECISIONS.md` 2026-05-23) is that the engineering _is_ the product. So the lifecycle optimizes for **demonstrable rigor and reversibility** over raw velocity: a spec survives an architect gate, a plan decomposes it, mechanical gates prevent regressions, the review battery is verified by transcript (not honor system), and every decision is undoable. For a solo developer this is unusually heavy, and that is deliberate: the gates are the safety net that lets one person plus AI agents move fast without shipping unreviewable volume.
+The thesis (`DECISIONS.md` 2026-05-23) is that the engineering _is_ the product. So the lifecycle optimizes for **demonstrable rigor and reversibility** over raw velocity: a spec survives an architect gate, a plan decomposes it, mechanical gates prevent regressions, claude-review gates every PR head (`pnpm claude-gate`), and every decision is undoable. For a solo developer this is unusually heavy, and that is deliberate: the gates are the safety net that lets one person plus AI agents move fast without shipping unreviewable volume.

@@ -4,7 +4,7 @@
 
 ## The 30-second model
 
-You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> 4-agent review -> the gate chain -> squash-merge -> ADR. The gates are mechanical and will block you; that is the point, and it is how you move fast safely.
+You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> self-review (`pr-review-orchestrator`) -> the gate chain -> squash-merge -> ADR. The gates are mechanical and will block you; that is the point, and it is how you move fast safely.
 
 ## Day 1 - understand the flow before you touch it
 
@@ -26,7 +26,7 @@ Pick a small change (a content edit or a design-system variant per the [workflow
 ```mermaid
 flowchart LR
     edit["edit"] --> tdd["add/adjust a test"] --> commit["commit (scope!)"]
-    commit --> battery["self-review the diff"] --> push["push (passes pre-push)"]
+    commit --> selfreview["self-review the diff"] --> push["push (passes pre-push)"]
     push --> pr["ci:local + gates:runtime; gh pr create (fill template)"]
     pr --> conv["resolve every thread"] --> ready["pr:gate"] --> owner["owner merges"]
     owner --> adr["add an ADR"]
@@ -38,7 +38,7 @@ You have now exercised every gate. After this you know the platform.
 
 1. **Scope every commit.** `type(scope): subject`, scope mandatory, scope is the feature area. commitlint will reject you otherwise.
 2. **Branch as `<type>/<description>`.** The pre-push hook enforces it; never commit on `main`.
-3. **Run the battery before pushing**, and clear/record the findings ledger. The stamp is transcript-verified; you cannot fake it.
+3. **Review your diff before opening the PR** with the `pr-review-orchestrator` skill. No stamp or ledger gates the push; claude-review reviews the PR once it is open.
 4. **A red gate is fixed by fixing the property**, never by disabling the gate.
 5. **Record architectural decisions** in `DECISIONS.md` with a reversibility note.
 

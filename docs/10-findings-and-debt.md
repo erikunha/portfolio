@@ -43,7 +43,7 @@ Streaming forced a bespoke handler, so the ask route hand-rolls the same gate ch
 
 ### F6 - Honor-system residue in the review loop (Low, by design)
 
-The verification loop makes _resolution_ mechanical, but _recording_ a finding is still honor-system (the stamp can't know about a finding nobody recorded). Same for the "skip an agent" justification.
+Pre-PR review is honor-system: nothing records a local finding, so nothing checks it was resolved. On the PR, `pnpm pr:gate` makes thread resolution mechanical.
 - **Status:** acknowledged in `DECISIONS.md`; the boundary is intentionally small and visible. Not debt to "fix," but to be aware of.
 
 ## Technical-debt map

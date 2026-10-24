@@ -8,7 +8,7 @@
 sequenceDiagram
     participant H as Human (owner)
     participant C as Claude Code (main loop)
-    participant A as Subagents (battery, architect)
+    participant A as Subagents (review workers, architect)
     participant G as Mechanical gates (hooks/scripts)
     participant CI as CI
 
@@ -19,9 +19,9 @@ sequenceDiagram
     C->>C: writing-plans + thinking-risk-premortem (failure modes -> tasks)
     C->>C: TDD implement (tests first)
     C->>G: edits trigger PostToolUse hooks (markers, lints)
-    C->>C: self-review the diff (pr-review-toolkit:code-reviewer)
+    C->>C: self-review the diff (pr-review-orchestrator skill)
     A-->>C: findings
-    C->>G: git push (pre-push gate chain blocks if not stamped)
+    C->>G: git push (pre-push: main guard, branch name, pnpm verify)
     C->>CI: open PR; CI runs lint/type/test/build/perf/a11y/security
     CI->>C: claude-review posts inline findings + Verdict
     CI-->>C: review threads
@@ -69,14 +69,14 @@ Every substantive change runs the same disciplined loop, enforced by mandated sk
 | Implement          | test-driven-development                          | convention                                                      |
 | Self-verify        | verification-before-completion                   | convention + `pnpm verify`                                      |
 | Review             | pre-PR self-review, then claude-review on the PR | `pnpm claude-gate` (fail-closed on a stale or SHA-less Approve) |
-| Resolve            | findings ledger                                  | stamp refuses while findings open                               |
+| Resolve            | reply in each review thread, then resolve it     | `pnpm pr:gate` (fails `silent_resolve`)                         |
 | Record             | DECISIONS.md ADR                                 | PR template checklist                                           |
 
 ## 3. Review — claude-review on the PR, self-review before it
 
 **claude-review (claude[bot]) runs automatically** on every PR open and push, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line that `pnpm claude-gate` reads fail-closed.
 
-**The local battery is not restored.** The 4-agent battery, `battery-synthesis`, the findings ledger and the transcript-verified stamp were removed on 2026-07-27 and stay removed. Pre-PR review is discipline: read the diff, run `pr-review-toolkit:code-reviewer` over it. `pnpm pr:gate` checks thread resolution.
+**The local battery is not restored.** The 4-agent battery, `battery-synthesis`, the findings ledger and the transcript-verified stamp were removed on 2026-07-27 and stay removed. Pre-PR review is discipline: read the diff, run the `pr-review-orchestrator` skill over it. `pnpm pr:gate` checks thread resolution.
 
 ## 4. Enforcement — git and CI only
 
@@ -106,7 +106,7 @@ The repo encodes distinct prompt patterns for distinct SDLC stages:
 | Specification       | brainstorm -> spec with Context/Gaps/Changes      | `/speckit.specify`, the spec template              |
 | Architecture review | four-gate spec-gate -> `GATE_RESULT: PASS/FAIL`   | `architect-reviewer` agent                         |
 | Implementation      | TDD: failing test first, smallest change          | `test-first discipline (CLAUDE.md skill dispatch)` |
-| Review              | scoped-by-commit-type battery prompts             | `CLAUDE.md` working agreement                      |
+| Review              | `pr-review-orchestrator` skill, scoped by change  | `CLAUDE.md` working agreement                      |
 | Documentation       | reverse-engineer from code, route don't duplicate | this `/docs` set's provenance                      |
 
-The scoping rule for the battery is itself a prompt-engineering decision: a docs-only commit gets prompts that skip the test suite, because the stamp counts _dispatch_, not depth. This is how a heavy review process stays cheap on trivial changes.
+The review scopes itself to the change: a docs-only diff gets a review that skips the test suite. This keeps a heavy review process cheap on trivial changes.
