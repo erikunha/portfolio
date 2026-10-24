@@ -39,7 +39,7 @@ describe('Footer server output', () => {
       { label: 'DESIGN_SYSTEM', href: '/design-system' },
       { label: 'LINK_IN_BIO', href: '/links' },
       { label: 'github.com/erikunha', href: 'https://github.com/erikunha' },
-      { label: 'linkedin.com/in/erikunha', href: 'https://linkedin.com/in/erikunha' },
+      { label: 'linkedin.com/in/erikunha', href: 'https://www.linkedin.com/in/erikunha/' },
       { label: 'erikunha.dev', href: 'https://www.erikunha.dev' },
       { label: '~/design_system', href: '/design-system' },
     ]) {

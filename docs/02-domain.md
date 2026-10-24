@@ -51,7 +51,7 @@ Every section of the page is driven by a typed module in `content/`, and those t
 
 Supporting content (not sections): `social.ts` (links), `seo.ts` (JSON-LD `Person`), `dmesg.ts` + `shell-commands.ts` + `terminal-chrome.ts` (client-imported flavor data), and the AI-eval domain below.
 
-Contact copy lives in `content/contact.ts`, with its own Zod schema and a LinkedIn URL derived from `content/links.ts`.
+Contact copy lives in `content/contact.ts`, with its own Zod schema. Its LinkedIn URL comes from `content/social-urls.ts`, the zod-free constant `content/social.ts` also uses, so the client form stays free of Zod.
 
 ## Contact delivery
 

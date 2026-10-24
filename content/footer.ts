@@ -31,7 +31,7 @@ export const footerContent = FooterContentSchema.parse({
     {
       protocol: 'tcp',
       state: 'LISTEN',
-      href: 'https://linkedin.com/in/erikunha',
+      href: social.linkedin,
       label: 'linkedin.com/in/erikunha',
       external: true,
     },

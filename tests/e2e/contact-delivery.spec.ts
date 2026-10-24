@@ -6,7 +6,6 @@ for (const state of ['queued', 'happy'] as const) {
   test(`contact delivery: ${state}`, async ({ page }) => {
     await installMockBackend(page, { contact: state, log: 'accept' });
     await page.goto('/');
-    await page.screenshot();
     await page
       .getByRole('link', { name: /contact/i })
       .filter({ visible: true })
@@ -14,11 +13,9 @@ for (const state of ['queued', 'happy'] as const) {
       .click();
     const form = page.getByTestId('contact-form');
     await expect(form).toBeVisible();
-    await page.screenshot();
     await form.getByLabel('$ name:').fill('Test Visitor');
     await form.getByLabel('$ email:').fill('visitor@example.com');
     await form.getByLabel('$ message:').fill('A message submitted through the real contact form.');
-    await page.screenshot();
     await form.getByRole('button', { name: 'EXECUTE_SEND', exact: true }).click();
 
     if (state === 'queued') {
@@ -40,7 +37,6 @@ for (const state of ['queued', 'happy'] as const) {
       );
       await expect(page.getByTestId('contact-queued')).toHaveCount(0);
     }
-    await page.screenshot();
     await expect(form).toHaveCount(0);
   });
 }

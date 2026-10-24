@@ -1,7 +1,7 @@
 import type { ContactContent } from './contact';
+import { LINKEDIN_URL } from './social-urls';
 
 export const CONTACT_DELIVERY_CODE = { QUEUED: 'queued' } as const;
-const LINKEDIN_URL = 'https://www.linkedin.com/in/erikunha/';
 
 export const contactCopy: ContactContent = {
   success: {
