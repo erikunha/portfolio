@@ -9,13 +9,13 @@ each step maps to its CI substitute. The merge gate and output contract live in
 
 | Capability | In CI |
 |---|---|
-| Base checkout (trusted conventions, this skill) | repository root |
+| Base checkout (trusted conventions) | repository root |
+| This skill (trusted procedure) | `/tmp/review-skill`, materialised from the default branch (a sub-PR's base may be an integration branch that edited it) |
 | PR files (data under review) | `pr-head/`, instruction-shaped files stripped |
-| Installed dependencies | `pr-head/node_modules`, only when `package.json` or `pnpm-lock.yaml` changed, installed with `--ignore-scripts` (no package code ran) |
+| Installed dependencies | none: installing would run PR-controlled code (a `.pnpmfile.cjs` loads despite `--ignore-scripts`) in a job holding the reviewer's credentials |
 | Subagents | `Task`; each subagent gets the same read-only tools |
-| Gate results | `gh pr checks <n>` and `gh run view <id> --log-failed` (CI already runs typecheck, unit, e2e, visual, LHCI, route JS, audit, semgrep) |
-| Upstream docs and release notes | `WebFetch`, for the exact version in the lockfile |
-| Codex, MiMo, local build, browser, servers | not available |
+| Gate results | `/tmp/review-evidence/checks.txt` and `failed-run-<id>.log`, snapshotted by a workflow step before the review (the reviewer has no `gh run view`: a `--jq` filter could read its environment) |
+| Codex, MiMo, local build, browser, servers, network fetches | not available |
 
 ## Step mapping
 
@@ -25,9 +25,9 @@ each step maps to its CI substitute. The merge gate and output contract live in
 | Resolve target | `gh pr view <n> --json baseRefName,headRefOid,files`, `gh pr diff <n>` |
 | Domain matrix | same (`domains.md`) |
 | Cross-provider tracks | `Task` subagents, one falsifiable question each, launched in one message for independent domains. The reviewer is still one provider family; say so in the overview when the change is consequential and suggest the local orchestrator. |
-| Gates | read the check results; a failed or pending gate the change touches is evidence, a passed one is not proof of the journeys it does not exercise |
+| Gates | read the snapshot; a failed or pending gate the change touches is evidence, a passed one is not proof of the journeys it does not exercise, a check pending at snapshot time is a limit |
 | Local run and browser | not run: the e2e, visual and LHCI jobs are the runtime evidence; anything they do not cover stays a limit |
-| Dependency research | read `pr-head/node_modules/<pkg>` source and `package.json` peer ranges, plus release notes at the exact version via `WebFetch` |
+| Dependency research | manifest and lockfile diff; overrides checked against the dependent's range as the lockfile records it; whatever needs installed source or release notes is a named limit, settled by the local orchestrator |
 | Refute and challenge | re-read the decisive lines yourself; one extra `Task` challenger for each CRITICAL before posting |
 | Output | the inline-comment and verdict contract in the CI prompt, never the local draft format |
 

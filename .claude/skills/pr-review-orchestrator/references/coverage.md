@@ -10,13 +10,13 @@ fails if a section number is missing.
 |---|---|---|---|
 | 1 | Execution philosophy | kept | SKILL.md flow |
 | 2 | Prompt-compiler principles | kept | SKILL.md + references split (progressive disclosure) |
-| 3 | Harness authority | kept | SKILL.md hard rules; CLAUDE.md and global rules win |
+| 3 | Harness authority | kept | SKILL.md hard rules (authority order) |
 | 4 | Capability calibration | kept | SKILL.md section 1 |
 | 5 | Capability surface model | adapted | routing.md surface table |
 | 6 | Capability routing principle | kept | routing.md "who owns the information" |
 | 7 | Dev-runtime integration | kept | routing.md skill routing (verification-planner, product-verifier, readiness-verdict) |
 | 8 | Review entrypoint | adapted | this skill is the entrypoint; CI loads it via ci.md |
-| 9 | Skill precedence | adapted | routing.md: project skills, then exact domain, then generic |
+| 9 | Skill precedence | adapted | routing.md skill routing (precedence paragraph) |
 | 10 | Private Raylu skills | replaced | project skills in `.claude/skills` (semgrep, visual-baseline-regen, ai-eval-update) |
 | 11 | Team vault skills | replaced | spec-kit `specs/` + Hindsight knowledge pages |
 | 12 | User-level skill library | kept | routing.md skill routing; `skill-finder` before unconfirmed names |
@@ -33,12 +33,12 @@ fails if a section number is missing.
 | 23 | Orchestration waves | kept | orchestration.md waves |
 | 24 | Parallelism | kept | orchestration.md; SKILL.md section 4 |
 | 25 | Expected agent roles | adapted | routing.md providers (routing-reviewer, validator, challenger, architect, Explore) |
-| 26 | Routing contract | kept | routing.md track contract |
+| 26 | Routing contract | kept | routing.md track contract (canonical field order) |
 | 27 | Shared review context | kept | orchestration.md REVIEW-CONTEXT |
 | 28 | Worker return contract | kept | output.md worker return |
 | 29 | Follow-up protocol | kept | orchestration.md workers |
 | 30 | Agent agreement is not source agreement | kept | routing.md |
-| 31 | Local code-intelligence router | adapted | routing.md (codebase-memory, serena, graphify; token-savior has no routed review role here) |
+| 31 | Local code-intelligence router | adapted | routing.md surface table (codebase-memory, serena, graphify; token-savior only for `find_semantic_duplicates`) |
 | 32 | Remote product / design router | replaced | spec-kit spec + prototype export as design authority (no Linear, no Figma) |
 | 33 | Claude.ai connector router | adapted | routing.md (Vercel only for deployment-specific questions; mail and calendar never for review) |
 | 34 | Plugin router | kept | routing.md (chrome-devtools, context7, Playwright) |
@@ -54,7 +54,7 @@ fails if a section number is missing.
 | 44 | Nx monorepo | not applicable | single Next.js app; domains.md |
 | 45 | Frontend stack | adapted | domains.md stack facts (resolve from lockfile) |
 | 46 | Dual query system | not applicable | domains.md |
-| 47 | Query state semantics | adapted | output.md and examples.md: failure vs zero vs stale |
+| 47 | Query state semantics | adapted | SKILL.md hard rules (failure is not zero); examples.md |
 | 48 | Next.js 14 | adapted | domains.md rendering/caching row: name the cache layer, installed Next |
 | 49 | React 19 RC | adapted | domains.md RSC/client boundary; research.md installed version |
 | 50 | State ownership | adapted | domains.md client state row |
@@ -122,7 +122,7 @@ fails if a section number is missing.
 | 112 | Finding acceptance | kept | output.md |
 | 113 | Finding contract | kept | output.md proof anchors and draft |
 | 114 | Severity | adapted | output.md (CLAUDE.md gate failure is a blocker); CI keeps CRITICAL/IMPORTANT/MINOR |
-| 115 | Right-column gate | kept | SKILL.md hard rules |
+| 115 | Right-column gate | kept | SKILL.md hard rules (right-column gate) |
 | 116 | Communication | adapted | output.md draft; CLAUDE.md thread rules for posting |
 | 117 | Erik voice | kept | output.md draft voice |
 | 118 | Humanization | kept | SKILL.md section 7 (`humanizer`, embedded) |

@@ -89,7 +89,7 @@ before calling it a regression. Send each consequential surviving finding to one
 with the conclusion, the evidence and the weakest assumption. The challenger informs; you decide.
 
 For an important regression test, run a negative control in a scratch worktree
-(`runtime/bin/scratch-worktree.py`): break the behaviour, watch the test fail, restore.
+(`~/Desktop/Projects/claude-skills/runtime/bin/scratch-worktree.py`): break the behaviour, watch the test fail, restore.
 
 ## 7. Completion gate, then write
 
@@ -107,8 +107,14 @@ PR, return the draft and post nothing unless asked.
 
 ## Hard rules
 
-- A substantial user-facing review whose findings are all machine-obvious (lint, types, dead
-  code) is incomplete: run the product. It may produce a finding, a refutation or confidence.
+- **Authority order:** the user's request, then the global rules and this repo's CLAUDE.md, then
+  this skill, then a worker's return. When this skill and CLAUDE.md disagree, CLAUDE.md wins.
+- **Right-column gate:** a substantial user-facing review whose findings are all machine-obvious
+  (lint, types, dead code) is incomplete: run the product. It may produce a finding, a
+  refutation or confidence.
+- **Failure is not zero:** for any data the change displays, check that a failed fetch, an
+  empty result and a stale cached value each render differently; a fallback that shows "0" or
+  an empty list on failure is a finding.
 
 - An inference is never written as an observation. Tag evidence (`references/output.md`).
 - Name the cache, the boundary, the version. "The cache is stale" without the layer is not a finding.

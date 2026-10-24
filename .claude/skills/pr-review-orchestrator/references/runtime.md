@@ -3,7 +3,7 @@
 ## Local production run
 
 ```bash
-export PATH="$(fnm exec --using="$(cat .nvmrc)" -- dirname "$(which node)")":$PATH   # or the pinned Node bin
+fnm exec --using="$(cat .nvmrc)" -- pnpm <command>   # or put the pinned Node bin first on PATH
 pnpm build
 DEPLOY_SALT=test pnpm start          # port 3000; playwright.config.ts hard-codes this baseURL
 ```
@@ -23,7 +23,7 @@ DEPLOY_SALT=test pnpm start          # port 3000; playwright.config.ts hard-code
 | Unit | `pnpm test --run` (or targeted `pnpm exec vitest run <paths>`) |
 | Budgets | `pnpm build && node scripts/check-route-js.mjs`, `pnpm bundle-check` |
 | Runtime | `pnpm gates:runtime` (LHCI desktop + mobile, axe, functional e2e) |
-| Security | `pnpm audit --audit-level=moderate`, `node scripts/run-semgrep.mjs <changed paths>` |
+| Security | `pnpm audit --audit-level=moderate`, `node scripts/run-semgrep.mjs --error <changed paths>` |
 | Visual | `pnpm exec playwright test tests/visual --project=<p>` when a captured section changed |
 
 Report each as passed, failed or not run, with the command. Not run is never passed.
@@ -65,7 +65,7 @@ PID=$(lsof -tiTCP:3000 -sTCP:LISTEN); for t in $(seq 0 15 600); do ps -o pcpu=,r
 
 ## Negative control
 
-For an important regression test: `runtime/bin/scratch-worktree.py` makes a scratch checkout,
+For an important regression test: `~/Desktop/Projects/claude-skills/runtime/bin/scratch-worktree.py` makes a scratch checkout,
 reintroduce the defect there, run the test, confirm it fails, discard the scratch tree.
 
 ## Regression attribution

@@ -9,6 +9,7 @@
 | What exists, who depends on X | codebase-memory-mcp (confirm against source) |
 | Exact references, callers, safe rename | serena (activate the project first) |
 | Blast radius of a diff, hubs | graphify `affected`, `get_pr_impact` |
+| Duplicated logic the diff adds | token-savior `find_semantic_duplicates` (its one routed review check) |
 | Exact library docs for the installed version | context7, else `node_modules/<pkg>` source and CHANGELOG |
 | Rendered behaviour, focus, network, console | Playwright MCP for deterministic journeys; chrome-devtools for DOM, network, performance traces; claude-in-chrome for exploratory authenticated sessions |
 | Product intent | `specs/<feature>/spec.md`, `plan.md`, DECISIONS.md, PR body |
@@ -31,27 +32,38 @@ security, data integrity and challenges high. A missing tool is not fixed by a s
 
 ## Track contract (Claude subagent)
 
+`COMPLEXITY` and `SKILLS` go before the marker; the fields after it follow the canonical order
+of the global agent-routing rule, each at column 0, continuation lines indented.
+
 ```text
+COMPLEXITY: standard|hard
+SKILLS: <0 to 2 skills, e.g. senior-nextjs, a11y-audit>
 ROUTING-CONTRACT-V1
 TASK-ID: <pr>-<domain>
 OBJECTIVE: <one falsifiable review question>
 WHY-DELEGATE: <isolation or independence it buys>
 SCOPE: <exact files, commands, routes>
-OUT-OF-SCOPE: unrelated files are excluded; other tracks' questions
+OUT-OF-SCOPE: unrelated files are excluded; other tracks' questions; no file writes
 ACCEPTED-CONTEXT: <REVIEW-CONTEXT facts this track needs, nothing more>
+MODEL-ROUTE: <omit to take the agent default>
+TOOLS: Read, Grep, Glob, Bash for the VALIDATION commands only
 EVIDENCE: file:line, counts with denominators, commands with results
 VALIDATION: <exact commands, if any>
 DONE: question answered with evidence, or proven unanswerable
 STOP: return FOLLOW-UP instead of drifting into another domain
 RETURN:
   the worker return format in references/output.md
-COMPLEXITY: standard|hard
-SKILLS: <0 to 2 skills, e.g. senior-nextjs, a11y-audit>
 ```
 
-For Codex the same content goes in `objective` as prose.
+Review tracks are read-only, so `WRITE-OWNERSHIP` is omitted. For Codex the same content goes
+in `objective` as prose.
 
 ## Skill routing for tracks
+
+Precedence when two skills answer the same question: a project skill in `.claude/skills`
+(`semgrep`, `visual-baseline-regen`, `ai-eval-update`) wins, then the exact domain skill below,
+then a generic reviewer. A generic skill never overrides a project rule.
+
 
 Next/React boundary: `senior-nextjs`, `react-performance`. Tailwind: `tailwind-v4`.
 Accessibility: `a11y-audit`. Browser journeys: `playwright-pro`. API: `api-design-reviewer`,
