@@ -363,18 +363,19 @@ Behavior:
 
 Every number above is `lib/rate-limit.ts`'s to change — grep the constant rather than trusting this paragraph.
 
-Why this is non-negotiable: a public LLM endpoint without a hard cap is a $5,000 surprise waiting to happen. The graceful degradation is more credible than a 503 alone.
+Why this is non-negotiable: a public LLM endpoint without a hard cap is a $5,000 surprise waiting to happen.
 
 ### MCP request boundary
 
-`/api/mcp` uses a dedicated guard before the underlying MCP transport parses
-JSON-RPC. `MAX_MCP_BODY_BYTES` is 4096 bytes, enough for the 500-character
+`app/api/mcp/route.ts` wraps its POST in `withBodyLimit`
+(`lib/server/body-limit.ts`) before the MCP transport parses JSON-RPC. `MAX_MCP_BODY_BYTES` is 4096 bytes, enough for the 500-character
 `ask_erik` question with six-byte JSON escapes and the request envelope.
 An oversized `Content-Length` returns HTTP 413 without reading. The reader
 also counts actual bytes, cancels oversized streams, and rejects them before
 JSON parsing, even when the header is absent or understated. Accepted bodies
 retain the SDK protocol and Zod tool validation. Size errors use the shared
-JSON error envelope with `payload_too_large` and `X-Request-Id`.
+JSON error envelope with `payload_too_large` and `X-Request-Id`. A body stream
+that fails before it is fully read returns `invalid_body`, HTTP 400.
 
 ### Abuse mitigation
 

@@ -80,12 +80,13 @@ onto `defineHandler` — its response shape is intrinsically a token stream, not
 an envelope — but it still mints and exposes a request id.
 
 The MCP protocol at `/api/mcp` delegates JSON-RPC parsing and Zod tool
-validation to `mcp-handler`, outside `defineHandler`. Its transport guard
+validation to `mcp-handler`, outside `defineHandler`. `withBodyLimit`
 rejects bodies over `MAX_MCP_BODY_BYTES` (4096 bytes) with HTTP 413 before
 JSON parsing. It checks `Content-Length` before reading and counts streamed
 bytes regardless of the header. Reading stops and the stream is cancelled
 as soon as it exceeds the limit. The bound fits a 500-character `ask_erik`
-question, including six-byte JSON escapes and the JSON-RPC envelope.
+question, including six-byte JSON escapes and the JSON-RPC envelope. A body
+stream that fails mid-read returns `invalid_body`, HTTP 400.
 
 **Rationale.** One envelope means the client tells success from failure without
 per-route shape-switching, and every error is correlatable by `requestId`
