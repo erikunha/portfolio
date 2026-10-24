@@ -441,7 +441,7 @@ If Resend is down, the message stays in KV and enters the pending outbox. The fo
 
 `contact:outbox` is a Redis sorted set of message ids scored by `receivedAt`. `contact:outbox:attempts` stores retry counts. The cron removes entries older than 7 days or already at 3 attempts. Each eligible message consumes one attempt before the shared send function runs. Acceptance removes pending membership and its counter; failure keeps it pending. The response is `{sent, failed, expired, exhausted}`. Removal never deletes `contact:msg:{uuid}`, which retains its 90-day audit TTL.
 
-Both routes use `lib/contact-delivery.ts` for sender, recipient, subject and the 10s timeout. A message-id idempotency key accompanies every send. Contact logs carry only `requestId` and `msgId`, never provider error details, addresses or message bodies. Form copy and its Zod schema live in `content/contact.ts`, validated by `scripts/validate-content.ts`; the LinkedIn URL comes from `content/links.ts`.
+Both routes use `lib/contact-delivery.ts` for sender, recipient, subject and the 10s timeout. A message-id idempotency key accompanies every send. Contact logs carry only `requestId` and `msgId`, never provider error details, addresses or message bodies. Form copy and its Zod schema live in `content/contact.ts`, validated by `scripts/validate-content.ts`; the LinkedIn URL comes from `content/social-urls.ts`, the zod-free constant `content/social.ts` also uses.
 
 ### Anti-spam strategy
 

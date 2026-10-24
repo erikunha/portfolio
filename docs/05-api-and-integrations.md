@@ -23,7 +23,7 @@ export function defineHandler<TSchema extends ZodTypeAny>(
 
 **Envelope:** success `{ ok: true, requestId, data? }`; error `{ ok: false, requestId, error: { code, message, issues? } }`. Every response carries `X-Request-Id`. `ApiErrorCode ∈ { rate_limited, invalid_json, validation_failed, storage_unavailable }`.
 
-Contact delivery also uses `202 { ok: false, requestId, error: { code: 'queued', message } }`. The message is saved for retry, but Resend has not accepted delivery. `ContactForm` reads `error.message` and offers LinkedIn for a faster reply. Its copy and colocated Zod schema live in `content/contact.ts`; the LinkedIn URL comes from `content/links.ts`.
+Contact delivery also uses `202 { ok: false, requestId, error: { code: 'queued', message } }`. The message is saved for retry, but Resend has not accepted delivery. `ContactForm` reads `error.message` and offers LinkedIn for a faster reply. Its copy and colocated Zod schema live in `content/contact.ts`; the LinkedIn URL comes from `content/social-urls.ts`, the zod-free constant `content/social.ts` also uses.
 
 ## API route table
 
