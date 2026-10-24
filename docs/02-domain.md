@@ -51,6 +51,16 @@ Every section of the page is driven by a typed module in `content/`, and those t
 
 Supporting content (not sections): `social.ts` (links), `seo.ts` (JSON-LD `Person`), `dmesg.ts` + `shell-commands.ts` + `terminal-chrome.ts` (client-imported flavor data), and the AI-eval domain below.
 
+Contact copy lives in `content/contact.ts`, with its own Zod schema and a LinkedIn URL derived from `content/links.ts`.
+
+## Contact delivery
+
+A `ContactMessage` contains `name`, `email`, `message`, `receivedAt` and `ipHash`. It is stored at `contact:msg:{msgId}` for 90 days before delivery is attempted. A KV write failure returns `502 storage_unavailable` and requires resubmission.
+
+Resend acceptance returns 200. A provider error, timeout or missing key adds the id to `contact:outbox`, ordered by `receivedAt`, with a retry counter in `contact:outbox:attempts`. Only a successful outbox write returns `202 queued`. The visitor sees that the message is saved but undelivered, with a LinkedIn alternative. Other errors display the server's message string.
+
+The daily retry permits at most 3 additional delivery attempts within 7 days. Success, expiry and exhaustion remove pending membership and its counter while preserving the audit message. Logs contain request and message ids, never the contact payload.
+
 ## Domain entity model
 
 ```mermaid
@@ -80,7 +90,7 @@ erDiagram
 
 ## The AI sub-domain (`/api/ask` and its evaluation)
 
-This is the only "live" feature, and it has its own domain:
+The AI feature has its own domain:
 - **`AskInteraction`** (`lib/ask-log.ts`): a question→answer event, status ∈ {`completed`, `errored`, `rate-limited`, `dedup-rejected`, `budget-exhausted`}, persisted to Redis (`ask:log:{date}:{requestId}`, 90-day TTL, IP hashed, truncated).
 - **`AskEvalItem`** (`content/ask-eval-corpus.ts`): an evaluation case `{ id, question, expect, kind }`, `kind ∈ {factual, edge, jailbreak, output-validation}`. The `expect` is a natural-language criterion an LLM judge scores. Ground truth is pulled from the _live_ content modules, so content/persona drift becomes a failing eval.
 - **`AskEvalCalibrationItem`** (`content/ask-eval-calibration.ts`): a gold case with a `canonicalAnswer` + a human `humanVerdict`, used to **gate the judge itself** (judge-human agreement must clear 0.85 before any corpus tokens are spent).
@@ -89,4 +99,4 @@ This is the engine behind the `AiMetricsSection` ("ASK_EVAL.JSON --MEASURED"), w
 
 ## The 60-second introduction
 
-"It's a one-page terminal-themed portfolio that's secretly a reference-architecture showcase. The page is server-rendered and almost JS-free; every section is just typed data validated at build. There's one real backend feature - an 'ask Erik anything' LLM endpoint grounded in the site's own content and held to an eval bar - plus machine-readable profile endpoints for AI agents. The actual product being sold is the engineering: read `ARCHITECTURE.md` and `DECISIONS.md`, then this `/docs` folder."
+"It's a one-page terminal-themed portfolio that's also a reference-architecture showcase. The page is server-rendered and almost JS-free; every section uses typed data validated at build. The backend delivers contact messages with automatic retries, answers questions through a grounded LLM, and serves machine-readable profiles for AI agents. The engineering is part of the product: read `ARCHITECTURE.md` and `DECISIONS.md`, then this `/docs` folder."

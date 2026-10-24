@@ -26,6 +26,7 @@ flowchart TD
       api7["GET /api/lighthouse"]
       api8["POST /api/log · POST /api/log/forget"]
       api9["POST /api/mcp (stateless Streamable HTTP; GET returns 405)"]
+      api10["GET /api/contact-retry (daily cron)"]
     end
     layout -.serves.-> api
 ```
@@ -151,13 +152,24 @@ sequenceDiagram
     alt KV fails
         H-->>F: 502 storage_unavailable
     else KV ok
-        H->>RS: send email (10s race)
-        Note over H,RS: Resend failure is logged but still returns 200<br/>(KV is the durable record)
-        H-->>F: 200 { ok: true, requestId }
+        H->>RS: sendContactMessage (10s race)
+        alt Resend accepts
+            H-->>F: 200 { ok: true, requestId }
+        else Resend error, timeout or missing key
+            H->>KV: enqueue id by receivedAt, attempts = 0
+            alt outbox saved
+                H-->>F: 202 { ok: false, requestId, error: { code: queued, message } }
+                F->>F: show saved, not delivered yet + LinkedIn link
+            else outbox write fails
+                H-->>F: 502 storage_unavailable
+            end
+        end
     end
 ```
 
 The **ordering is a security property**: rate-limit and validate _before_ the work, hash the IP and touch storage _only_ for requests that pass. Every response carries `X-Request-Id`. See doc 05 for the full `defineHandler` contract and the other routes.
+
+At 04:00 UTC daily (`0 4 * * *`), `/api/contact-retry` checks the `CRON_SECRET` bearer before reading pending ids in received-time order. Messages older than 7 days, or already at 3 retry attempts, leave the outbox. Each eligible message consumes an attempt before calling the same delivery function. Successful sends leave the outbox; failures remain pending. Audit messages retain their 90-day KV TTL. The response counts `sent`, `failed`, `expired` and `exhausted`. Contact logs carry only `requestId` and `msgId`.
 
 ## Request lifecycle summary (every request)
 

@@ -1,11 +1,31 @@
 'use client';
 
 import { useState } from 'react';
+import { CONTACT_DELIVERY_CODE, contactContent } from '@/content/contact';
 import { contactChrome } from '@/content/terminal-chrome';
 import { WindowChrome } from '@/design-system';
 import { Field } from '@/design-system/components/Field';
 
-type Status = 'idle' | 'submitting' | 'success' | 'error';
+const STATUS = {
+  IDLE: 'idle',
+  SUBMITTING: 'submitting',
+  SUCCESS: 'success',
+  QUEUED: 'queued',
+  ERROR: 'error',
+} as const;
+type Status = (typeof STATUS)[keyof typeof STATUS];
+const CONTACT_ENDPOINT = '/api/contact';
+const QUEUED_STATUS = 202;
+const NAME_MIN_LENGTH = 2;
+const NAME_MAX_LENGTH = 80;
+const MESSAGE_MIN_LENGTH = 10;
+const MESSAGE_MAX_LENGTH = 2_000;
+const MESSAGE_ROWS = 5;
+
+interface ContactResponse {
+  ok?: boolean;
+  error?: string | { code?: string; message?: string };
+}
 
 function ContactShell({ children }: { children: React.ReactNode }) {
   return (
@@ -25,36 +45,62 @@ export function ContactForm() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [honeypot, setHoneypot] = useState('');
-  const [status, setStatus] = useState<Status>('idle');
+  const [status, setStatus] = useState<Status>(STATUS.IDLE);
   const [errorMsg, setErrorMsg] = useState('');
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setStatus('submitting');
+    setStatus(STATUS.SUBMITTING);
     setErrorMsg('');
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch(CONTACT_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, message, field_company: honeypot }),
       });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error ?? `HTTP ${res.status}`);
+      const data = (await res.json().catch(() => null)) as ContactResponse | null;
+      const apiError = data?.error;
+      if (
+        res.status === QUEUED_STATUS &&
+        typeof apiError === 'object' &&
+        apiError?.code === CONTACT_DELIVERY_CODE.QUEUED
+      ) {
+        setStatus(STATUS.QUEUED);
+        return;
       }
-      setStatus('success');
+      if (!res.ok || data?.ok === false || res.status === QUEUED_STATUS) {
+        const serverMessage = typeof apiError === 'string' ? apiError : apiError?.message;
+        throw new Error(
+          typeof serverMessage === 'string' ? serverMessage : contactContent.errors.requestFailed,
+        );
+      }
+      setStatus(STATUS.SUCCESS);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : String(err));
-      setStatus('error');
+      setStatus(STATUS.ERROR);
     }
   }
 
-  if (status === 'success') {
+  if (status === STATUS.SUCCESS) {
     return (
       <ContactShell>
         <div className="contact-success" role="status" data-testid="contact-success">
-          <p>EXECUTE_SEND :: SUCCESS</p>
-          <p>handshake initiated · expect reply within 48h</p>
+          <p>{contactContent.success.title}</p>
+          <p>{contactContent.success.message}</p>
+        </div>
+      </ContactShell>
+    );
+  }
+
+  if (status === STATUS.QUEUED) {
+    return (
+      <ContactShell>
+        <div className="contact-success" role="status" data-testid="contact-queued">
+          <p>{contactContent.queued.title}</p>
+          <p>
+            {contactContent.queued.message}{' '}
+            <a href={contactContent.queued.linkHref}>{contactContent.queued.linkLabel}</a>
+          </p>
         </div>
       </ContactShell>
     );
@@ -65,7 +111,7 @@ export function ContactForm() {
       <form
         onSubmit={submit}
         className="contact-form flex flex-col gap-[14px]"
-        aria-busy={status === 'submitting'}
+        aria-busy={status === STATUS.SUBMITTING}
         data-testid="contact-form"
       >
         <input
@@ -88,36 +134,36 @@ export function ContactForm() {
         />
         <Field
           name="name"
-          label="$ name:"
+          label={contactContent.form.nameLabel}
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          minLength={2}
-          maxLength={80}
+          minLength={NAME_MIN_LENGTH}
+          maxLength={NAME_MAX_LENGTH}
           autoComplete="name"
-          placeholder="[INPUT REQUIRED]"
+          placeholder={contactContent.form.requiredPlaceholder}
         />
         <Field
           name="email"
-          label="$ email:"
+          label={contactContent.form.emailLabel}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
-          placeholder="[INPUT REQUIRED]"
+          placeholder={contactContent.form.requiredPlaceholder}
         />
         <Field
           name="message"
-          label="$ message:"
+          label={contactContent.form.messageLabel}
           multiline
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           required
-          minLength={10}
-          maxLength={2000}
-          rows={5}
-          placeholder="[READY FOR DATA INPUT...]"
+          minLength={MESSAGE_MIN_LENGTH}
+          maxLength={MESSAGE_MAX_LENGTH}
+          rows={MESSAGE_ROWS}
+          placeholder={contactContent.form.messagePlaceholder}
         />
         <div
           className="flex items-center gap-3 flex-wrap mt-1 max-md:flex-col max-md:items-stretch"
@@ -125,18 +171,20 @@ export function ContactForm() {
         >
           <button
             type="submit"
-            disabled={status === 'submitting'}
+            disabled={status === STATUS.SUBMITTING}
             className="contact-send self-start max-md:self-auto max-md:w-full bg-primary-500 text-black border border-primary-500 px-[18px] py-[10px] font-bold text-xs tracking-[0.08em] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {status === 'submitting' ? 'TRANSMITTING...' : 'EXECUTE_SEND'}
+            {status === STATUS.SUBMITTING
+              ? contactContent.form.submitting
+              : contactContent.form.submit}
           </button>
           <p className="text-primary-400 text-xs opacity-85 m-0 md:text-xs">
-            waiting for manual override... _
+            {contactContent.form.waiting}
           </p>
         </div>
-        {status === 'error' && (
+        {status === STATUS.ERROR && (
           <p role="alert" className="text-senary-300 text-xs">
-            error: {errorMsg}
+            {contactContent.form.errorPrefix} {errorMsg}
           </p>
         )}
       </form>
