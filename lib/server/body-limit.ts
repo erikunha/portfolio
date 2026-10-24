@@ -3,7 +3,7 @@ import { err } from '@/lib/server/route';
 
 const CONTENT_LENGTH_HEADER = 'content-length';
 const HTTP_STATUS = { payloadTooLarge: 413, badRequest: 400 } as const;
-const ERROR_CODE = { payloadTooLarge: 'payload_too_large', invalidBody: 'invalid_json' } as const;
+const ERROR_CODE = { payloadTooLarge: 'payload_too_large', invalidBody: 'invalid_body' } as const;
 const ContentLengthSchema = z
   .string()
   .regex(/^\d+$/)
@@ -45,7 +45,7 @@ export function withBodyLimit(handler: Handler, maxBytes: number): Handler {
         requestId: crypto.randomUUID(),
         status: HTTP_STATUS.badRequest,
         code: ERROR_CODE.invalidBody,
-        message: 'invalid request body',
+        message: 'request body could not be read',
       });
     } finally {
       reader.releaseLock();

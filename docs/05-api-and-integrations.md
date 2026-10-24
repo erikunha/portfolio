@@ -46,7 +46,8 @@ count. An oversized stream is cancelled before JSON parsing. The limit fits
 the largest tool argument: a 500-character `ask_erik` question using six-byte
 JSON escapes, plus its JSON-RPC envelope. Accepted requests retain MCP
 responses; size rejections use the shared error envelope with
-`payload_too_large`, HTTP 413, and `X-Request-Id`.
+`payload_too_large`, HTTP 413, and `X-Request-Id`. A body stream that fails
+before it is fully read returns `invalid_body`, HTTP 400.
 
 ## Rate limits & token budget (`lib/rate-limit.ts`)
 

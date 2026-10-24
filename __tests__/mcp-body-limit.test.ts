@@ -89,6 +89,20 @@ describe('/api/mcp request body limit', () => {
     expect(cancel).toHaveBeenCalledOnce();
   });
 
+  it('reports a stream that fails mid-read as invalid_body, not invalid_json', async () => {
+    const body = new ReadableStream<Uint8Array>(
+      {
+        pull(controller) {
+          controller.error(new Error('connection reset'));
+        },
+      },
+      { highWaterMark: 0 },
+    );
+    const response = await POST(request(body));
+    expect(response.status).toBe(400);
+    expect((await response.json()).error.code).toBe('invalid_body');
+  });
+
   it('rejects oversized malformed JSON as too large before parsing', async () => {
     const response = await POST(request('{'.repeat(MAX_MCP_BODY_BYTES + 1)));
     expect(response.status).toBe(413);
