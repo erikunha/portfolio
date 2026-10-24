@@ -15,6 +15,7 @@ const EmployerSchema = z.object({
 
 const LanguageSchema = z.object({
   code: z.string(),
+  name: z.string(),
   level: z.string(),
 });
 
