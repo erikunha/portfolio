@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-10-24: MCP subscriptions are disabled
+
+- **2026-10-24** · **`/api/mcp` sets `maxSubscriptions` to the named constant `MCP_MAX_SUBSCRIPTIONS = 0`.** The tools never change, so subscriptions provide no useful notifications. The default permits 1024 long-lived SSE streams outside the shared rate limiter and token budget, consuming function time and delaying shutdown. mcp-handler 2.3.0 forwards zero unchanged to `@modelcontextprotocol/server` 2.4.0, which rejects `subscriptions/listen` before allocating an SSE stream with JSON-RPC error `-32603`, `Subscription limit reached`. _Reversible: remove the option to restore the SDK default; enabling subscriptions requires a bounded lifetime and abuse controls._
+
 ## 2026-10-23: the Node floor rises to 22.22.2
 
 - **2026-10-23** · **`engines.node` is `^22.22.2 || ^24.15.0 || >=26.0.0` and `.nvmrc` pins 22.23.4.** jsdom 30 declares exactly that range, and vitest 5 runs on it; the old `>=22.0.0` let a contributor on the previous `.nvmrc` (22.19) install a test stack that refuses their runtime. CI reads `.nvmrc`, so CI moves with it. _Reversible: pin jsdom 29 and restore `>=22.0.0`._
@@ -13,6 +17,10 @@ ADR-lite running log. One bullet per decision · date · reversibility note.
 ## 2026-10-23: the audit gate ignores nothing again
 
 - **2026-10-23** · **`pnpm.auditConfig.ignoreGhsas` is deleted: extract-zip is gone from the graph, so the 2026-08-30 ignore of `GHSA-jmr9-qjv8-65gv` has nothing left to cover.** `@puppeteer/browsers` 3 replaced extract-zip with modern-tar, and a `"@puppeteer/browsers": "^3.2.6"` override moves lighthouse's puppeteer-core onto it. The repository's Lighthouse config uses no puppeteer script; lhci runs Chrome through chrome-launcher, and lighthouse loads with the override in place. This also clears a second unpatched extract-zip advisory (`GHSA-7pqw-9j4j-h8q3`) that the 2026-08-30 entry would have had to re-argue. `__tests__/audit-ignore-scope.test.ts` now asserts an empty ignore list and no extract-zip snapshot in the lockfile. The same change floors `basic-ftp` (>=6.2.1) and `browserslist` (>=4.28.7), pins `vite` ^8.3.5 as a root dev dependency (vitest's peer was resolving 8.0.16), and points `chromium-bidi>zod` at ^4.6.7 (chromium-bidi is loaded only by puppeteer scripts, which this repository does not run). _Reversible: removing the overrides brings back the advisories and the red audit gate._
+
+- **2026-10-24** · **Retain `chromium-bidi>zod: ^4.6.7` with its incompatible invalid-input path confined to unused tooling.** Commit `d696c1b` introduces the override to clear the audit gate; removing it restores chromium-bidi 14.0.0's declared `zod: ^3.24.1` branch. Its protocol parser reads `parseResult.error.errors`, which Zod 4 removes, so invalid input throws a `TypeError` instead of `InvalidArgumentException`. This repository reaches chromium-bidi only through the development dependency chain `@lhci/cli > lighthouse > puppeteer-core`; neither Lighthouse config specifies a `puppeteerScript`, LHCI launches Chrome through chrome-launcher, and Playwright runs its own browser automation. No production route imports BiDi, and no configured test or audit run invokes its protocol parser. _Reversible: remove the override after the audit findings permit Zod 3, or upgrade chromium-bidi to a Zod 4-compatible parser before enabling Puppeteer BiDi._
+
+- **2026-10-24** · **Leave `proxy-agent` at 6.5.0 despite `@puppeteer/browsers` 3.2.6's optional `>=8.0.1` peer.** The `@puppeteer/browsers: ^3.2.6` override removes extract-zip from Lighthouse's development dependency chain. Its HTTP helper optionally imports `ProxyAgent` for browser downloads and falls back to Node agents if the import or construction fails. LHCI uses chrome-launcher without a Puppeteer script, and Playwright manages its own browsers, so this repository does not use that download path. A global proxy-agent override would also change LHCI's direct dependency for an unused optional integration. _Reversible: add a scoped compatible peer override and verify proxied downloads if Puppeteer-managed browser downloads become necessary._
 
 ## 2026-10-23: MCP moves to mcp-handler 2 at a fixed /api/mcp route
 
