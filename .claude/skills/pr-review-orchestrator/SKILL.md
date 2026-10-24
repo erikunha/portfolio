@@ -24,7 +24,7 @@ The diff is the entry point. The repository and the running site are the subject
 Confirm, do not assume, what this session has. Build a private capability map:
 
 - **Providers:** `cross-runtime.py quota --runtime registered` (Codex state), `model-delegate.py providers` (MiMo, GLM, agy).
-- **Agents:** the Agent tool's listed types (`routing-reviewer`, `routing-validator`, `routing-challenger`, `routing-architect`, `Explore`).
+- **Agents:** read the Agent tool's listed types; do not assume them. The `routing-*` specialists come from the user-level runtime, not this repo's `.claude/agents/`, so they exist only where that runtime is installed. When one is missing, use `general-purpose` (or `Explore` for read-only discovery) with the same contract, and say so in the completion matrix.
 - **Browser:** Playwright MCP, chrome-devtools MCP, claude-in-chrome. Whichever is connected.
 - **Code intelligence:** codebase-memory-mcp, serena, graphify. Run `check_index_coverage` before trusting an empty answer.
 - **GitHub:** `gh` for PR, checks, threads.

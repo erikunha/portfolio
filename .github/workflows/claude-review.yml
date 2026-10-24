@@ -204,8 +204,16 @@ jobs:
           fi
           rm -f "$OUT_DIR/checks.err" "$OUT_DIR/checks.json"
 
-          run_ids=$(gh run list --repo "$REPO" --commit "$head_sha" --status failure --limit 100 \
-            --json databaseId --jq '.[].databaseId')
+          run_ids=""
+          if ! run_ids=$(gh run list --repo "$REPO" --commit "$head_sha" --status failure --limit 100 \
+            --json databaseId --jq '.[].databaseId' 2> "$OUT_DIR/runs.err"); then
+            {
+              echo "UNAVAILABLE: gh run list failed; failed-run logs could not be read."
+              cat "$OUT_DIR/runs.err"
+            } > "$OUT_DIR/failed-runs-unavailable.txt"
+            run_ids=""
+          fi
+          rm -f "$OUT_DIR/runs.err"
           for run_id in $run_ids; do
             full="$OUT_DIR/.failed-run-${run_id}.full"
             gh run view "$run_id" --repo "$REPO" --log-failed > "$full" 2>&1 || true

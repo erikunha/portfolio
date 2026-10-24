@@ -227,6 +227,7 @@ describe('claude-review snapshot step', () => {
     checksOut?: string;
     checksErr?: string;
     logBytes?: number;
+    runListFails?: boolean;
   }) {
     const dir = mkdtempSync(join(tmpdir(), 'review-snapshot-'));
     const bin = join(dir, 'bin');
@@ -239,7 +240,7 @@ case "$1 $2" in
   "pr view") if [[ "$*" == *--jq* ]]; then echo abc123; else echo '{"headRefOid":"abc123"}'; fi ;;
   "pr diff") if [[ "$*" == *--name-only* ]]; then echo app/page.tsx; else echo "+line"; fi ;;
   "pr checks") printf '%s' "$CHECKS_OUT"; echo "$CHECKS_ERR" >&2; exit "$CHECKS_EXIT" ;;
-  "run list") echo 42 ;;
+  "run list") if [[ -n "$RUN_LIST_FAIL" ]]; then echo "HTTP 502" >&2; exit 1; fi; echo 42 ;;
   "run view") head -c "$LOG_BYTES" /dev/zero | tr '\\0' 'x' ;;
 esac
 `,
@@ -260,6 +261,7 @@ esac
         CHECKS_ERR: behaviour.checksErr ?? '',
         CHECKS_OUT: behaviour.checksOut ?? FAILED_CHECK,
         LOG_BYTES: String(behaviour.logBytes ?? 10),
+        RUN_LIST_FAIL: behaviour.runListFails ? '1' : '',
       },
     });
     const read = (name: string) => readArtifact(join(out, name));
@@ -305,5 +307,12 @@ esac
       'files.txt',
       'pr.json',
     ]);
+  });
+  it('marks failed-run logs UNAVAILABLE when gh run list fails, without aborting the job', () => {
+    const result = run({ checksExit: 0, runListFails: true });
+    expect(result.status).toBe(0);
+    expect(result.read('failed-runs-unavailable.txt')).toMatch(/^UNAVAILABLE: gh run list failed/);
+    expect(result.read('failed-runs-unavailable.txt')).toContain('HTTP 502');
+    expect(result.read('checks.txt')).toBe('fail\tFAILURE\tlint\tu\n');
   });
 });
