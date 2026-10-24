@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect, useRef } from 'react';
 import type { FooterContent } from '@/content/schemas';
 
+const EMPTY_SECTION_IDS: string[] = [];
 const SECOND_MS = 1000;
 const SECONDS_PER_MINUTE = 60;
 const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * SECONDS_PER_MINUTE;
@@ -40,10 +41,10 @@ function formatUptime(seconds: number) {
 
 export function SessionCounters({
   children,
-  sectionIds,
+  sectionIds = EMPTY_SECTION_IDS,
 }: {
-  children: ReactNode;
-  sectionIds: string[];
+  children?: ReactNode;
+  sectionIds?: string[];
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -119,6 +120,22 @@ export function SessionCounters({
   }, [sectionIds]);
 
   return <div ref={ref}>{children}</div>;
+}
+
+export function HaltClock({ label }: { label: string }) {
+  const clock = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const now = new Date();
+    if (clock.current)
+      clock.current.textContent = [now.getHours(), now.getMinutes(), now.getSeconds()]
+        .map((part) => String(part).padStart(CLOCK_DIGITS, CLOCK_ZERO))
+        .join(':');
+  }, []);
+  return (
+    <span className="footer-halted-at">
+      {label} <b ref={clock} data-sess="halt" data-volatile />
+    </span>
+  );
 }
 
 export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {

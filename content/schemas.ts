@@ -264,6 +264,7 @@ export const FooterContentSchema = z.object({
   }),
   user: z.string().min(1),
   netstatTitle: z.string().min(1),
+  copyLabel: z.string().min(1),
   connectionLabels: z.object({
     protocol: z.string().min(1),
     state: z.string().min(1),
@@ -289,6 +290,7 @@ export const FooterContentSchema = z.object({
     )
     .length(6),
   halted: z.string().min(1),
+  haltedAt: z.string().min(1),
   reboot: z.object({
     label: z.string().min(1),
     before: z.string().min(1),

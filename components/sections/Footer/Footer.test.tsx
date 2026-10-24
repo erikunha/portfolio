@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent, render, waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -25,6 +25,7 @@ describe('Footer server output', () => {
     expect(host.textContent).toContain('Power down.');
     expect(host.textContent).toContain('this session ends here');
     expect(host.querySelector('canvas')).toBeNull();
+    expect(host.querySelector('.footer-timestamp')?.textContent).toBe('[ 0.001]');
     for (const link of [
       { label: 'Home', href: '#main-content' },
       { label: 'About', href: '#sec-readme' },
@@ -65,10 +66,10 @@ describe('Footer server output', () => {
     for (const group of groups) {
       const links = group.querySelectorAll('ul > li > a');
       expect(links.length).toBeGreaterThan(0);
-      links.forEach((link, index) => {
+      links.forEach((link) => {
         const connector = link.querySelector('.tr');
         expect(connector?.getAttribute('aria-hidden')).toBe('true');
-        expect(connector?.textContent).toContain(index === links.length - 1 ? '└──' : '├──');
+        expect(connector?.textContent).toBe('');
       });
     }
     expect(host.querySelector('.footer-dmesg')?.getAttribute('aria-hidden')).toBe('true');
@@ -79,6 +80,30 @@ describe('Footer server output', () => {
 });
 
 describe('Footer live session', () => {
+  it('leaves the server clock empty and sets the visitor clock after hydration', () => {
+    expect(serverFooter().querySelector('[data-sess="halt"]')?.textContent).toBe('');
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 23, 14, 5, 9));
+    const mounted = render(<Footer />);
+    expect(mounted.container.querySelector('[data-sess="halt"]')?.textContent).toBe('14:05:09');
+  });
+
+  it('copies the visible netstat rows as plain text using the design-system control', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
+    const mounted = render(<Footer />);
+    fireEvent.click(mounted.getByRole('button', { name: 'Copy netstat rows' }));
+    await waitFor(() =>
+      expect(writeText).toHaveBeenCalledWith(
+        'tcp  ESTABLISHED  github.com/erikunha\n' +
+          'tcp  LISTEN  linkedin.com/in/erikunha\n' +
+          'tcp  ESTABLISHED  erikunha.dev\n' +
+          'tcp  ESTABLISHED  ~/design_system',
+      ),
+    );
+    expect(mounted.getByRole('button', { name: 'Copy netstat rows' }).textContent).toBe('COPIED');
+  });
+
   it('starts uptime at page navigation and counts commands before the footer is reached', () => {
     vi.useFakeTimers();
     vi.spyOn(performance, 'now').mockReturnValue(65_000);

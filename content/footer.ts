@@ -18,6 +18,7 @@ export const footerContent = FooterContentSchema.parse({
   },
   user: 'erik@portfolio',
   netstatTitle: 'NETSTAT -AN',
+  copyLabel: 'Copy netstat rows',
   connectionLabels: { protocol: 'Proto', state: 'State', endpoint: 'Endpoint' },
   connections: [
     {
@@ -92,6 +93,7 @@ export const footerContent = FooterContentSchema.parse({
     },
   ],
   halted: '[SYSTEM HALTED]',
+  haltedAt: 'HALTED AT',
   reboot: {
     label: 'Reboot to top',
     before: 'press',

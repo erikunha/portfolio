@@ -1,1 +1,3 @@
-export { Footer as FooterLazy } from './Footer';
+'use client';
+
+export { HaltClock, RebootControl, SessionCounters as FooterLazy } from './Footer.client';
