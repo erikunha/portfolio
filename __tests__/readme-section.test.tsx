@@ -1,11 +1,7 @@
 import { createElement } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { readmeCopy } from '@/content/readme';
 import { type MountedClient, mountClient } from './helpers/render';
-
-vi.mock('@/components/client/RoleTyper', () => ({
-  RoleTyper: ({ className }: { className?: string }) =>
-    createElement('span', { className }, '[Senior]'),
-}));
 
 describe('ReadmeSection', () => {
   let mounted: MountedClient;
@@ -14,37 +10,39 @@ describe('ReadmeSection', () => {
     mounted?.unmount();
   });
 
-  async function render() {
+  async function render(panel = false) {
     const { ReadmeSection } = await import('@/components/sections/ReadmeSection/ReadmeSection');
-    mounted = await mountClient(createElement(ReadmeSection));
+    mounted = await mountClient(createElement(ReadmeSection, { panel }));
     return mounted.container;
   }
 
-  it('renders the CAT README.MD module header', async () => {
+  it('renders the whoami header and intro', async () => {
     const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('CAT README.MD');
+    expect(container.querySelector('h2')?.textContent).toContain(readmeCopy.desktopH1);
+    expect(container.textContent).toContain(readmeCopy.desktopIntro);
   });
 
-  it('renders a line gutter with sequential line numbers', async () => {
+  it('renders every operating principle as a list item under its heading', async () => {
     const container = await render();
-    const text = container.textContent ?? '';
-    expect(text).toContain('1');
+    const items = [...container.querySelectorAll('li')].map((li) => li.textContent);
+    expect(container.textContent).toContain(readmeCopy.principlesHeading);
+    for (const principle of readmeCopy.desktopPrinciples) expect(items).toContain(principle);
   });
 
-  it('renders the GitHub link in the code sample block', async () => {
+  it('renders the current status with every detail', async () => {
     const container = await render();
-    const githubLink = container.querySelector<HTMLAnchorElement>('a[href*="github.com/erikunha"]');
-    expect(githubLink).not.toBeNull();
+    const items = [...container.querySelectorAll('li')].map((li) => li.textContent);
+    expect(container.textContent).toContain(readmeCopy.desktopStatusH2);
+    expect(container.textContent).toContain(readmeCopy.currentStatus);
+    for (const detail of readmeCopy.statusDetails) expect(items).toContain(detail);
   });
 
-  it('renders the withRetry code sample', async () => {
-    const container = await render();
-    expect(container.textContent).toContain('withRetry');
-  });
-
-  it('renders the RoleTyper inside the readme content', async () => {
-    const container = await render();
-    expect(container.textContent).toContain('[Senior]');
+  it('drops the standalone section label and icon when rendered as a panel', async () => {
+    const standalone = await render();
+    expect(standalone.querySelector('.sr-only')).not.toBeNull();
+    mounted.unmount();
+    const panel = await render(true);
+    expect(panel.querySelector('.sr-only')).toBeNull();
+    expect(panel.querySelector('svg')).toBeNull();
   });
 });

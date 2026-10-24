@@ -1,32 +1,99 @@
 import { expect, test } from '@playwright/test';
-import { heroAuthorization } from '@/content/hero';
+import { profile } from '@/content/profile';
+import { responsibilities } from '@/content/responsibilities';
 
-test.use({ viewport: { width: 1280, height: 720 } });
+const viewports = [
+  { width: 320, height: 700 },
+  { width: 360, height: 740 },
+  { width: 375, height: 667 },
+  { width: 390, height: 844 },
+  { width: 768, height: 1024 },
+];
+const dockSelector = 'nav.dock, [data-testid="mobile-dock"]';
+const minimumTargetHeight = 44;
+const minimumDesktopTextSize = 13;
 
-test.describe('Hero -- above the fold', () => {
-  test('renders h1 heading visible on load', async ({ page }) => {
+test.use({ hasTouch: true, reducedMotion: 'reduce' });
+
+for (const viewport of viewports) {
+  test(`Hero actions fit the first screen at ${viewport.width}x${viewport.height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
     await page.goto('/');
-    const h1 = page.locator('h1').first();
-    await expect(h1).toBeVisible();
-    await expect(h1).toContainText('Erik');
+    await page.evaluate(() => document.fonts.ready);
+    const hero = page.locator('#bio');
+    await expect(hero.getByRole('heading', { level: 1, name: profile.displayName })).toBeVisible();
+    await expect(hero.getByText(profile.title, { exact: true })).toBeVisible();
+    const dock = page.locator(dockSelector).filter({ visible: true }).first();
+    const dockBox = (await dock.count()) ? await dock.boundingBox() : null;
+    const bottom = dockBox?.y ?? viewport.height;
+    for (const link of await hero.getByRole('link').all()) {
+      await expect(link).toBeVisible();
+      const box = await link.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box?.y).toBeGreaterThanOrEqual(0);
+      expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(bottom);
+      expect(box?.height).toBeGreaterThanOrEqual(minimumTargetHeight);
+      expect(box?.x).toBeGreaterThanOrEqual(0);
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(viewport.width);
+    }
+    for (const action of profile.actions) {
+      await expect(hero.getByRole('link', { name: action.label })).toHaveAttribute(
+        'href',
+        action.href,
+      );
+    }
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
   });
+}
 
-  test('GitHub CTA link has correct href', async ({ page }) => {
-    await page.goto('/');
-    const githubLink = page.getByRole('link', { name: /github/i }).first();
-    await expect(githubLink).toHaveAttribute('href', 'https://github.com/erikunha');
-  });
-
-  test('LinkedIn CTA link has correct href', async ({ page }) => {
-    await page.goto('/');
-    const linkedinLink = page.locator('a[href="https://www.linkedin.com/in/erikunha/"]').first();
-    await expect(linkedinLink).toBeVisible();
-    await expect(linkedinLink).toHaveAttribute('href', 'https://www.linkedin.com/in/erikunha/');
-  });
-
-  test('availability badge is visible', async ({ page }) => {
-    await page.goto('/');
-    const badge = page.locator('[data-testid="hero-desktop"]').getByText(heroAuthorization);
-    await expect(badge).toBeVisible();
-  });
+test('About keeps complete responsibility names and retry code on a 390px screen', async ({
+  page,
+}) => {
+  const viewport = { width: 390, height: 844 };
+  await page.setViewportSize(viewport);
+  await page.goto('/');
+  await page.evaluate(() => document.fonts.ready);
+  const about = page.locator('#sec-about');
+  for (const row of responsibilities) {
+    const name = about.getByText(row.name, { exact: true });
+    await expect(name).toBeVisible();
+    const box = await name.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box?.x).toBeGreaterThanOrEqual(0);
+    expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(viewport.width);
+  }
+  const headings = about.getByRole('heading', { level: 3 });
+  const boxes = await Promise.all((await headings.all()).map((heading) => heading.boundingBox()));
+  expect(boxes.every((box) => box !== null)).toBe(true);
+  expect(boxes.map((box) => box?.y)).toEqual(
+    boxes.map((box) => box?.y).toSorted((left, right) => (left ?? 0) - (right ?? 0)),
+  );
+  await expect(about.getByRole('region', { name: 'README code' })).toBeVisible();
+  await expect(about.getByRole('region', { name: 'README code' })).toHaveAttribute('tabindex', '0');
 });
+
+for (const width of [768, 1280]) {
+  test(`Hero and About text stays at least 13px at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1024 });
+    await page.goto('/');
+    await page.evaluate(() => document.fonts.ready);
+    const sizes = await page.locator('#bio, #sec-about').evaluateAll((sections) =>
+      sections.flatMap((section) =>
+        Array.from(section.querySelectorAll('*'))
+          .filter(
+            (element) =>
+              element.getClientRects().length > 0 &&
+              !element.closest('[aria-hidden="true"]') &&
+              Array.from(element.childNodes).some(
+                (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
+              ),
+          )
+          .map((element) => Number.parseFloat(getComputedStyle(element).fontSize)),
+      ),
+    );
+    expect(sizes.length).toBeGreaterThan(0);
+    for (const size of sizes) expect(size).toBeGreaterThanOrEqual(minimumDesktopTextSize);
+  });
+}

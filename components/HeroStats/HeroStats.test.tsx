@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { heroStats } from '@/content/perf-receipts';
+import { heroStats } from '@/content/hero';
 import { HeroStats } from './HeroStats';
 
 function getDOM() {
@@ -18,6 +18,16 @@ describe('HeroStats', () => {
   it('each item renders a value element', () => {
     const values = getDOM().querySelectorAll('[data-testid="hero-stats-item"] dd');
     expect(values).toHaveLength(heroStats.length);
+  });
+
+  it('shows the four approved impact figures', () => {
+    const values = getDOM().querySelectorAll('[data-testid="hero-stats-item"] dd');
+    expect(Array.from(values, (value) => value.textContent)).toEqual([
+      '$500B+',
+      '8M+',
+      '40s→<1s',
+      '12-agent',
+    ]);
   });
 
   it('each item renders a label element', () => {

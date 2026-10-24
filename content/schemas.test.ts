@@ -259,3 +259,27 @@ describe('FooterContentSchema and shutdown content', () => {
     for (const value of invalid) expect(FooterContentSchema.safeParse(value).success).toBe(false);
   });
 });
+
+describe('About content schemas', () => {
+  it('rejects a stack group without a label or items', async () => {
+    const { StackGroupSchema } = await import('./schemas');
+    expect(StackGroupSchema.safeParse({ label: '', items: [] }).success).toBe(false);
+    expect(
+      StackGroupSchema.safeParse({ label: 'CORE', items: [{ label: 'REACT', path: 'M0 0' }] })
+        .success,
+    ).toBe(true);
+  });
+
+  it('rejects retry pseudocode without an accessible region name', async () => {
+    const { RetryCodeSchema } = await import('./schemas');
+    expect(
+      RetryCodeSchema.safeParse({
+        command: '$ cat retry.ts',
+        regionLabel: '',
+        source: 'retry()',
+        repoLabel: 'Repository',
+        repoHref: 'https://github.com/erikunha',
+      }).success,
+    ).toBe(false);
+  });
+});

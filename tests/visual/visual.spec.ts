@@ -6,6 +6,15 @@ import { revealDeferredContent, snapshotLocator } from '../e2e/_helpers/snapshot
 test.describe.configure({ timeout: 60_000 });
 
 test.describe('visual regression', () => {
+  test('about panels match baseline', async ({ mockedPage }) => {
+    const about = mockedPage.locator('#sec-about');
+    await about.scrollIntoViewIfNeeded();
+    await mockedPage.evaluate(() => document.fonts.ready);
+    await stripVolatileChrome(mockedPage);
+    if (process.env.ARGOS_TOKEN) await argosScreenshot(mockedPage, 'about', { element: about });
+    await snapshotLocator(mockedPage, about, 'about.png');
+  });
+
   test('1 — hero above-the-fold matches baseline', async ({ mockedPage }, testInfo) => {
     test.skip(
       testInfo.project.name === 'chromium-mobile',

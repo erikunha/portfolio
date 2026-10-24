@@ -43,6 +43,32 @@ export const NpmTileSchema = z.object({
   path: z.string().min(1),
 });
 
+export const StackGroupSchema = z.object({
+  label: z.string().min(1),
+  items: z.array(NpmTileSchema).min(1),
+});
+
+export const RetryCodeSchema = z.object({
+  command: z.string().min(1),
+  regionLabel: z.string().min(1),
+  source: z.string().min(1),
+  repoLabel: z.string().min(1),
+  repoHref: z.string().url(),
+});
+
+export const HeroContentSchema = z.object({
+  locationLabel: z.string().min(1),
+  employerLabel: z.string().min(1),
+  languagesLabel: z.string().min(1),
+  statsLabel: z.string().min(1),
+  stats: z.array(StatSchema).length(4),
+  hire: z.object({
+    label: z.string().min(1),
+    accessibleLabel: z.string().min(1),
+    href: z.string().url(),
+  }),
+});
+
 export const HottestTakeSchema = z.object({
   num: z.string().min(1),
   category: z.string().min(1),
@@ -241,9 +267,15 @@ export type TerminalChrome = z.infer<typeof TerminalChromeSchema>;
 export const ReadmeCopySchema = z.object({
   desktopH1: z.string().min(1),
   desktopIntro: z.string().min(1),
-  desktopCoreStack: z.array(z.string().min(1)).min(1),
+  aboutTitle: z.string().min(1),
+  principlesHeading: z.string().min(1),
+  responsibilitiesHeading: z.string().min(1),
+  responsibilitiesCommand: z.string().min(1),
+  responsibilitiesNote: z.string().min(1),
   desktopPrinciples: z.array(z.string().min(1)).min(1),
   desktopStatusH2: z.string().min(1),
+  currentStatus: z.string().min(1),
+  statusDetails: z.array(z.string().min(1)).min(1),
 });
 export type ReadmeCopy = z.infer<typeof ReadmeCopySchema>;
 

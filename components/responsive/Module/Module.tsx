@@ -3,9 +3,10 @@ import { type ModuleVariant, moduleHeaderId } from './module.constants';
 
 export type ModuleProps = {
   id: string;
+  panel?: boolean;
   header: string;
   mobileHeader?: string;
-  srLabel?: string;
+  srLabel?: string | undefined;
   icon?: ReactNode;
   defer?: boolean | undefined;
   variant?: ModuleVariant;
@@ -14,6 +15,7 @@ export type ModuleProps = {
 
 export function Module({
   id,
+  panel = false,
   header,
   mobileHeader,
   srLabel,
@@ -22,31 +24,44 @@ export function Module({
   variant,
   children,
 }: ModuleProps) {
+  const Heading = panel ? 'h3' : 'h2';
   return (
     <section
       id={id}
       tabIndex={-1}
       aria-labelledby={moduleHeaderId(id)}
-      className={[
-        'mb-[18px] md:mb-10',
-        'border border-primary-subtle bg-[rgba(0,0,0,0.22)] md:bg-transparent overflow-hidden md:overflow-visible',
-        'md:border-0',
-        defer ? 'module-deferred' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      className={
+        panel
+          ? 'about-panel'
+          : [
+              'mb-[18px] md:mb-10',
+              'border border-primary-subtle bg-[rgba(0,0,0,0.22)] md:bg-transparent overflow-hidden md:overflow-visible',
+              'md:border-0',
+              defer ? 'module-deferred' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')
+      }
       {...(defer ? { 'data-cv-defer': 'true' } : {})}
     >
       <header
-        className={[
-          'flex items-center gap-2 w-full',
-          'px-[14px] py-3 min-h-11 bg-glow-04 border-b border-primary-quiet',
-          'md:px-0 md:py-0 md:min-h-0 md:bg-transparent md:border-b-0 md:mb-2',
-        ].join(' ')}
+        className={
+          panel
+            ? 'about-panel-header'
+            : [
+                'flex items-center gap-2 w-full',
+                'px-[14px] py-3 min-h-11 bg-glow-04 border-b border-primary-quiet',
+                'md:px-0 md:py-0 md:min-h-0 md:bg-transparent md:border-b-0 md:mb-2',
+              ].join(' ')
+        }
       >
-        <h2
+        <Heading
           id={moduleHeaderId(id)}
-          className="flex-1 flex items-center gap-2 text-primary-500 font-mono text-xs max-md:text-[10px] md:text-[12px] font-medium tracking-[0.14em] md:tracking-[0.1em] uppercase m-0"
+          className={
+            panel
+              ? undefined
+              : 'flex-1 flex items-center gap-2 text-primary-500 font-mono text-xs max-md:text-[10px] md:text-xs font-medium tracking-[0.14em] md:tracking-[0.1em] uppercase m-0'
+          }
         >
           {srLabel ? <span className="sr-only">{srLabel}</span> : null}
           {icon ? (
@@ -57,11 +72,17 @@ export function Module({
               {icon}
             </span>
           ) : null}
-          <span className="hidden md:inline">{header}</span>
-          <span className="md:hidden">{mobileHeader ?? header}</span>
-        </h2>
+          {panel ? (
+            header
+          ) : (
+            <>
+              <span className="hidden md:inline">{header}</span>
+              <span className="md:hidden">{mobileHeader ?? header}</span>
+            </>
+          )}
+        </Heading>
       </header>
-      <div className="module-body-content" data-variant={variant}>
+      <div className={panel ? 'about-panel-body' : 'module-body-content'} data-variant={variant}>
         {children}
       </div>
     </section>

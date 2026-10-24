@@ -1,28 +1,26 @@
-import { nowRows } from '@/content/now';
+import { nowHeader, nowRows } from '@/content/now';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { IconNow } from '../../Icons';
 import { Module } from '../../responsive/Module';
 
-export function NowSection({ defer }: { defer?: boolean } = {}) {
+export function NowSection({ defer, panel = false }: { defer?: boolean; panel?: boolean } = {}) {
   return (
     <Module
       id="sec-now"
-      header="CAT ~/.NOW"
-      srLabel={SECTION_LABELS['sec-now']}
-      icon={<IconNow />}
+      header={nowHeader}
+      srLabel={panel ? undefined : SECTION_LABELS['sec-now']}
+      icon={panel ? undefined : <IconNow />}
       defer={defer}
+      panel={panel}
     >
-      <div className="text-sm leading-[1.9] max-[768px]:text-xs">
-        {nowRows.map((r) => (
-          <div
-            key={r.k}
-            className="grid grid-cols-[110px_1fr] gap-4 max-[900px]:grid-cols-[90px_1fr] max-[900px]:gap-2.5"
-          >
-            <span className="text-primary-500 tracking-[0.04em]">{r.k}</span>
-            <span className="text-tertiary-50">{r.v}</span>
+      <dl className="about-now">
+        {nowRows.map((row) => (
+          <div key={row.k}>
+            <dt>{row.k}</dt>
+            <dd>{row.v}</dd>
           </div>
         ))}
-      </div>
+      </dl>
     </Module>
   );
 }

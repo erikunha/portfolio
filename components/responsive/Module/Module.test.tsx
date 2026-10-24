@@ -116,3 +116,18 @@ describe('Module', () => {
     expect(section?.className).not.toContain('module-deferred');
   });
 });
+
+describe('Module panel', () => {
+  it('renders a nested panel with a level-three heading and preserves its anchor', () => {
+    const container = render(
+      <Module id="sec-nested" header="Panel title" panel>
+        Panel body
+      </Module>,
+    );
+    expect(container.querySelector('section#sec-nested h3')?.textContent).toContain('Panel title');
+    expect(container.querySelector('h2')).toBeNull();
+    expect(container.querySelector('section')?.getAttribute('aria-labelledby')).toBe(
+      moduleHeaderId('sec-nested'),
+    );
+  });
+});

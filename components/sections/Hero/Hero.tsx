@@ -1,131 +1,59 @@
 import { HeroStats } from '@/components/HeroStats';
-import {
-  heroAuthorization,
-  heroCurrentEmployer,
-  heroPlatformChip,
-  heroTagline,
-} from '@/content/hero';
+import { heroContent } from '@/content/hero';
 import { profile, profileLanguageLine, profileLocation } from '@/content/profile';
-import { Badge, Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
 
 export function Hero() {
   return (
-    <>
-      <h1 className="sr-only">{profile.displayName}</h1>
-      <section
-        id="bio"
-        className="hero-desktop relative border border-primary-subtle min-h-[640px] overflow-hidden mb-10 md:mb-[40px] bg-transparent transition-transform duration-100 ease-out motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none"
-        data-testid="hero-desktop"
-      >
-        <div className="flex-1 relative overflow-hidden">
-          <HeroBootAnimation variant="desktop" />
-        </div>
-        <aside className="hero-bio flex-1 border-l border-dashed border-primary-subtle flex flex-col justify-end px-6 py-8 gap-[10px]">
-          <p
-            className="font-mono font-bold text-[32px] md:text-[48px] text-primary-500 m-0 mb-1 leading-[1.2]"
-            data-testid="hero-name"
-            aria-hidden="true"
-          >
-            {profile.displayName}
-          </p>
-          <p className="text-tertiary-50 text-sm leading-[1.55] mb-2">{heroTagline}</p>
-          <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-sm tracking-[0.08em] mb-3.5">
-            <span>
-              LOC:{' '}
-              <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
-                {profileLocation}
-              </b>
-            </span>
-            <span>
-              NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
-            </span>
-            <span>{heroPlatformChip}</span>
-            <span>{profileLanguageLine}</span>
-          </p>
-          <div className="self-start">
-            <Badge variant="dot">{heroAuthorization}</Badge>
-          </div>
-          <HeroStats />
-          <div className="grid grid-cols-2 gap-3 mt-3 [text-shadow:none]" data-testid="hero-ctas">
-            <Button
-              as="a"
-              variant="primary"
-              href="https://www.linkedin.com/in/erikunha/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              EXEC HIRE
-            </Button>
-            <Button
-              as="a"
-              variant="secondary"
-              href="https://github.com/erikunha"
-              target="_blank"
-              rel="noreferrer"
-            >
-              GITHUB ↗
-            </Button>
-          </div>
-        </aside>
-        <HeroSystemFailure />
-      </section>
-
-      <section
-        className="hero-mobile relative border border-primary-subtle overflow-hidden mb-10 bg-transparent mt-2"
-        data-testid="hero-mobile"
-      >
-        <div className="relative z-[1] p-4 pb-[18px]">
+    <section
+      id="bio"
+      tabIndex={-1}
+      aria-labelledby="hero-name"
+      className="hero-identity"
+      data-testid="hero-desktop"
+    >
+      <div className="hero-identity-body">
+        <div className="hero-motion-mobile">
           <HeroBootAnimation variant="mobile" />
-
-          <p
-            className="font-mono font-bold text-[24px] text-primary-500 border-t border-dashed border-primary-quiet pt-3.5 mt-1.5 mb-0.5 leading-[1.55]"
-            data-testid="hero-name"
-            aria-hidden="true"
-          >
-            {profile.displayName}
-          </p>
-          <p className="text-tertiary-50 text-xs leading-[1.55] mb-2">{heroTagline}</p>
-          <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-xs tracking-[0.08em] mb-3.5">
-            <span>
-              LOC:{' '}
-              <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
-                {profileLocation}
-              </b>
-            </span>
-            <span>
-              NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
-            </span>
-            <span>{heroPlatformChip}</span>
-            <span>{profileLanguageLine}</span>
-          </p>
-          <div className="self-start mb-3.5">
-            <Badge variant="dot">{heroAuthorization}</Badge>
-          </div>
-          <HeroStats />
-          <div className="grid grid-cols-2 gap-3 mt-3 [text-shadow:none]" data-testid="hero-ctas">
-            <Button
-              as="a"
-              variant="primary"
-              href="https://www.linkedin.com/in/erikunha/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              EXEC HIRE
-            </Button>
-            <Button
-              as="a"
-              variant="secondary"
-              href="https://github.com/erikunha"
-              target="_blank"
-              rel="noreferrer"
-            >
-              GITHUB ↗
-            </Button>
-          </div>
         </div>
-      </section>
-    </>
+        <h1 id="hero-name" data-testid="hero-name">
+          {profile.displayName}
+        </h1>
+        <p className="hero-title">{profile.title}</p>
+        <p className="hero-technologies">{profile.technologyLine}</p>
+        <p className="hero-meta">
+          <span>{heroContent.locationLabel}</span> {profileLocation}
+        </p>
+        <p className="hero-meta">
+          <span>{heroContent.employerLabel}</span> <strong>{profile.currentEmployer.name}</strong>{' '}
+          {profile.currentEmployer.context}
+        </p>
+        <p className="hero-meta">
+          <span>{heroContent.languagesLabel}</span> {profileLanguageLine}
+        </p>
+        <HeroStats />
+        <div className="hero-actions" data-testid="hero-ctas">
+          <a
+            className="hero-hire"
+            href={heroContent.hire.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={heroContent.hire.accessibleLabel}
+          >
+            {heroContent.hire.label}
+          </a>
+          {profile.actions.map((action) => (
+            <a key={action.href} href={action.href}>
+              {action.label}
+            </a>
+          ))}
+        </div>
+      </div>
+      <div className="hero-motion-desktop">
+        <HeroBootAnimation variant="desktop" />
+      </div>
+      <HeroSystemFailure />
+    </section>
   );
 }
