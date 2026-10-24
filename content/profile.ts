@@ -30,14 +30,6 @@ export const profile: Profile = ProfileSchema.parse({
       label: 'GitHub ↗',
       href: 'https://github.com/erikunha',
     },
-    {
-      label: 'VIEW_CV',
-      href: '/cv',
-    },
-    {
-      label: '30S_SUMMARY',
-      href: '/summary',
-    },
   ],
 });
 

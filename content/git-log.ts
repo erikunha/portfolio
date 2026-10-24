@@ -136,7 +136,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     ],
   },
   {
-    hash: '0d1c2b3a4e5f67890123456789abcdef0123456789',
+    hash: '0d1c2b3a4e5f67890123456789abcdef01234567',
     deco: '(tag: v1.0, root-commit)',
     date: 'Oct 2017 - May 2018',
     branch: 'career/monde-sistemas',

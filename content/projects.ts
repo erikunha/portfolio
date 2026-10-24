@@ -9,7 +9,7 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
     description:
       'Shared UI systems and state architecture for Raylu’s AI deal-origination product, built from zero, co-developed with a second engineer, behind the market maps, target lists, and diligence surfaces private-markets funds work in.',
     mobileDescription:
-      'Shared UI systems and state architecture at Raylu.ai, built from zero, co-developed with a second engineer. Market maps, target lists, diligence surfaces. Versioned ViewState, URL-backed state. React, Next.js 14, TypeScript 5.',
+      'Shared UI systems and state architecture at Raylu, built from zero, co-developed with a second engineer. Market maps, target lists, diligence surfaces. Versioned ViewState, URL-backed state. React, Next.js 14, TypeScript 5.',
     stats: [
       { label: 'SURFACES', value: 'MAPS / LISTS / DILIGENCE' },
       { label: 'STATE', value: 'VERSIONED + URL-BACKED' },
