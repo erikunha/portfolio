@@ -30,6 +30,7 @@ export interface DefineHandlerOpts<TSchema extends ZodTypeAny> {
 export type ApiErrorCode =
   | 'rate_limited'
   | 'invalid_json'
+  | 'invalid_body'
   | 'validation_failed'
   | 'storage_unavailable';
 

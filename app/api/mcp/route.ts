@@ -1,5 +1,8 @@
 import { createMcpHandler } from 'mcp-handler';
 import { registerAgentTools } from '@/lib/agent/mcp-tools';
+import { withBodyLimit } from '@/lib/server/body-limit';
+
+const MAX_MCP_BODY_BYTES = 4096;
 
 export const maxDuration = 60;
 
@@ -18,4 +21,5 @@ const handler = createMcpHandler(
   },
 );
 
-export { handler as GET, handler as POST };
+export const POST = withBodyLimit(handler, MAX_MCP_BODY_BYTES);
+export { handler as GET };

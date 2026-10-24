@@ -63,9 +63,10 @@ an `X-Request-Id` header on every response. The processing order is fixed:
 business logic. Every outbound external call (Anthropic, Resend, Redis) carries
 an explicit timeout — including a mid-stream watchdog on `/api/ask`, not only a
 connection-initiation timeout. Fail-open versus fail-closed is a deliberate,
-documented choice per control: rate-limiting and the Redis singleton fail
-_open_ (a Redis outage must not take the site down); the budget cap fails
-_closed_ (cost safety is non-negotiable).
+documented choice per control: rate-limiting and identical-question dedup fail
+_open_. Budget reservation fails _closed_: a Redis error returns
+`allowed: false`, and `/api/ask` returns
+its existing HTTP 503 budget-rejection JSON without starting a model call.
 
 **Documented exemption.** `/api/erik.json` is intentionally _outside_ the
 envelope. It is a machine-readable resume _document_, not an _operation_ —
@@ -77,6 +78,15 @@ mint a build-time constant, and a constant request id is observability theater
 (see Ch. 9). The route file carries a comment recording this exemption. The streaming `/api/ask` route is likewise not refactored
 onto `defineHandler` — its response shape is intrinsically a token stream, not
 an envelope — but it still mints and exposes a request id.
+
+The MCP protocol at `/api/mcp` delegates JSON-RPC parsing and Zod tool
+validation to `mcp-handler`, outside `defineHandler`. `withBodyLimit`
+rejects bodies over `MAX_MCP_BODY_BYTES` (4096 bytes) with HTTP 413 before
+JSON parsing. It checks `Content-Length` before reading and counts streamed
+bytes regardless of the header. Reading stops and the stream is cancelled
+as soon as it exceeds the limit. The bound fits a 500-character `ask_erik`
+question, including six-byte JSON escapes and the JSON-RPC envelope. A body
+stream that fails mid-read returns `invalid_body`, HTTP 400.
 
 **Rationale.** One envelope means the client tells success from failure without
 per-route shape-switching, and every error is correlatable by `requestId`

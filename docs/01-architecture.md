@@ -4,7 +4,7 @@
 
 ## The one-paragraph mental model
 
-A request hits Vercel's edge, passes through `proxy.ts` (which stamps CSP + reporting headers), and is served by Next.js. The page `/` is **partially prerendered**: a static shell (the chrome + above-the-fold Hero) is delivered instantly, while a handful of sections that branch on viewport stream in per-request behind `<Suspense>`. Almost no application JavaScript ships - only a small set of **client islands** hydrate. All visible copy comes from **typed, build-validated `content/*.ts` modules**. A few `/api/*` handlers form a thin **BFF** over Upstash Redis, Resend, the Vercel AI Gateway, and Google PageSpeed Insights, with a uniform fail-open posture.
+A request hits Vercel's edge, passes through `proxy.ts` (which stamps CSP + reporting headers), and is served by Next.js. The page `/` is **partially prerendered**: a static shell (the chrome + above-the-fold Hero) is delivered instantly, while a handful of sections that branch on viewport stream in per-request behind `<Suspense>`. Almost no application JavaScript ships - only a small set of **client islands** hydrate. All visible copy comes from **typed, build-validated `content/*.ts` modules**. A few `/api/*` handlers form a thin **BFF** over Upstash Redis, Resend, the Vercel AI Gateway, and Google PageSpeed Insights, where rate limiting and dedup fail open and the `/api/ask` budget reservation fails closed with 503.
 
 ## Why this architecture exists
 

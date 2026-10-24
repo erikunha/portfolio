@@ -24,7 +24,8 @@ context; this is the implementation guidance, not the enforcement.
 - Read env only through the Zod accessor `lib/env.ts`. Never read
   `process.env.*` directly in a handler.
 - Rate limiting is Upstash sliding-window via `lib/rate-limit.ts` and is
-  **fail-open** (Redis down must not 500 the user). Keep that property.
+  **fail-open** (Redis down must not 500 the user). Keep that property. The
+  `/api/ask` budget reservation is the exception: it fails closed with 503.
 
 ## Security review (convention)
 

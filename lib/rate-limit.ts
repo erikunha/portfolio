@@ -116,8 +116,8 @@ export async function reserveBudget(
     if (pct >= 0.8) log.warn('budget approaching cap', { pct });
     return { allowed: true, reserved, pct, budgetKey };
   } catch (err) {
-    log.error('budget reservation failed, proceeding without cap', { err });
-    return { allowed: true, reserved: 0, pct: 0, budgetKey };
+    log.error('budget reservation failed, rejecting request', { err });
+    return { allowed: false, reserved: 0, pct: 0, budgetKey };
   }
 }
 
@@ -128,10 +128,7 @@ export async function settleBudget(
   budgetKey: string,
 ): Promise<void> {
   if (reserved <= 0) {
-    log.warn(
-      'budget settlement skipped — reserved=0 (Redis fail-open bypassed cap for this request)',
-      { budgetKey },
-    );
+    log.warn('budget settlement skipped: no positive reservation', { budgetKey });
     return;
   }
   const actual = actualInputTokens + actualOutputTokens;
