@@ -4,6 +4,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
 import { nowRows } from '@/content/now';
+import { profile } from '@/content/profile';
 import { projects } from '@/content/projects';
 import { readmeCopy } from '@/content/readme';
 import { personSchema } from '@/content/seo';
@@ -47,6 +48,10 @@ describe('identity is consistent across every gated surface', () => {
     expect(manifest.title).toBe(CANONICAL_TITLE);
     expect(manifest.availability).toBe(HIRING_PROFILE.availability);
     expect(manifest.work_auth).toEqual(HIRING_PROFILE.work_auth);
+  });
+
+  it('serves every profile language with its name, not stripped by the hiring schema', () => {
+    expect(HIRING_PROFILE.languages).toEqual(profile.languages);
   });
 
   it('every title surface states the canonical title', () => {
