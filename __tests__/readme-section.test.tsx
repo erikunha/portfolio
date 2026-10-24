@@ -1,4 +1,3 @@
-import { createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { readmeCopy } from '@/content/readme';
 import { type MountedClient, mountClient } from './helpers/render';
@@ -12,7 +11,7 @@ describe('ReadmeSection', () => {
 
   async function render(panel = false) {
     const { ReadmeSection } = await import('@/components/sections/ReadmeSection/ReadmeSection');
-    mounted = await mountClient(createElement(ReadmeSection, { panel }));
+    mounted = await mountClient(ReadmeSection({ panel }));
     return mounted.container;
   }
 
