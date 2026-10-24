@@ -27,14 +27,16 @@ describe('review orchestrator coverage map', () => {
   });
 
   it('uses only the declared statuses', () => {
-    const statuses = new Set(rows.map((row) => row[3].trim()));
+    const statuses = new Set(rows.map((row) => (row[3] ?? '').trim()));
     for (const status of statuses) {
       expect(['kept', 'adapted', 'replaced', 'not applicable']).toContain(status);
     }
   });
 
   it('points only at files that exist in the skill', () => {
-    const cited = new Set(rows.flatMap((row) => row[4].match(/[a-z-]+\.md|SKILL\.md/g) ?? []));
+    const cited = new Set(
+      rows.flatMap((row) => (row[4] ?? '').match(/[a-z-]+\.md|SKILL\.md/g) ?? []),
+    );
     for (const file of cited) {
       if (file === 'CLAUDE.md') continue;
       const path = file === 'SKILL.md' ? join(skillDir, file) : join(skillDir, 'references', file);
