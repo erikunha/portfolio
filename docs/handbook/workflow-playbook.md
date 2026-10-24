@@ -53,7 +53,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   1. Confirm behavior is covered by tests first (refactor preserves behavior).
   2. `refactoring-specialist` agent if the change is large.
   3. Smallest reasonable change; never rewrite an implementation without explicit permission.
-  4. Battery (the `pr-review-toolkit` reviewer checks for behavior drift) -> stamp -> push.
+  4. Battery (the `pr-review-orchestrator` skill checks for behavior drift) -> stamp -> push.
 - **Output:** a `refactor(scope): ...` PR (no behavior change).
 
 ## Performance optimization
