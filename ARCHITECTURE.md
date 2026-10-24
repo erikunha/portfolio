@@ -171,7 +171,7 @@ app/api/healthz/route.ts             # liveness + dependency probe
 app/api/csp-report/route.ts          # CSP violation sink
 app/api/log/route.ts                 # client error-bridge sink
 app/api/psi-refresh/route.ts         # cron: refresh PSI cache
-app/api/[transport]/route.ts         # MCP transport (agent surface)
+app/api/[transport]/route.ts         # MCP transport; POST bounded to 4096 bytes by lib/server/body-limit.ts
 
 components/sections/                  # RSC sections: Hero, HottestTakes, GuitarSection, …
 components/client/                    # co-located islands — ONLY interactivity
@@ -341,14 +341,24 @@ Either can be the larger lever: dropping average output 512→150 saves ~$1.50, 
 Behavior:
 - 80% threshold (`pct >= 0.8`): logs `budget approaching cap` and **allows the request**. This is a warning, not a gate — the endpoint does not 503 here.
 - Hard cap (`pct > 1`): refunds the reservation and returns `allowed: false`; the route returns 503 with a fallback message
-- Redis unavailable: fail-open (allow the request, `reserved: 0`; settlement is skipped and logged). **State the blast radius honestly: this is not just the cap.** The per-IP rate limiter (`getAskLimit`), the identical-question dedup (`checkIdenticalQuestion`), and `reserveBudget` all depend on the same Redis, and all three catch and allow — so one outage removes throttling, dedup, AND the spend ceiling in the same window, not merely an unmetered counter. What survives is Redis-independent: the 500-char question cap, the injection regex, `MAX_OUTPUT_TOKENS`, the streaming output guard (`lib/ask/output-guard.ts`), and both route timeouts. Read `app/api/ask/route.ts` for the current set rather than trusting a roster here — two revisions of this paragraph enumerated one and both were incomplete. **The category is what matters:** every one of those bounds a *single request* — its size, content, or duration — and **none bounds request volume**. The three that did (`getAskLimit`, `checkIdenticalQuestion`, `reserveBudget`) are the three that just failed open, and no platform rate limit, WAF, or bot check sits behind them (CAPTCHA is a deliberately rejected control — §15, "Trade-offs I'd flag").
-
-**The one volume control that survives is the kill switch, and it is a remedy rather than a bound:** `ASK_ENABLED` is an env var checked before any Redis call, so flipping it off 503s every request and takes volume to zero. During a Redis outage that is the only lever left — which makes it the outage runbook, not a background protection. This is a deliberate availability-over-spend trade, but a reader who assumes the 8/hr throttle still holds during an outage is wrong.
+- Redis unavailable: budget reservation fails closed (`allowed: false`, `reserved: 0`). `/api/ask` returns its existing HTTP 503 budget-rejection JSON before calling the model. Rate limiting and identical-question dedup still fail open, but a failed reservation prevents unmetered model calls. Settlement skips nonpositive reservations.
+- `ASK_ENABLED` remains a Redis-independent kill switch checked before rate limiting or budget reservation.
 - Prompt caching enabled via `providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }` on a system message (AI SDK v7 shape; the pre-v7 `cache_control` spelling survives only in the unused `SYSTEM` export that `__tests__/system-prompt.test.ts` reads, not in the live route path)
 
 Every number above is `lib/rate-limit.ts`'s to change — grep the constant rather than trusting this paragraph.
 
 Why this is non-negotiable: a public LLM endpoint without a hard cap is a $5,000 surprise waiting to happen. The graceful degradation is more credible than a 503 alone.
+
+### MCP request boundary
+
+`/api/mcp` uses a dedicated guard before the underlying MCP transport parses
+JSON-RPC. `MAX_MCP_BODY_BYTES` is 4096 bytes, enough for the 500-character
+`ask_erik` question with six-byte JSON escapes and the request envelope.
+An oversized `Content-Length` returns HTTP 413 without reading. The reader
+also counts actual bytes, cancels oversized streams, and rejects them before
+JSON parsing, even when the header is absent or understated. Accepted bodies
+retain the SDK protocol and Zod tool validation. Size errors use the shared
+JSON error envelope with `payload_too_large` and `X-Request-Id`.
 
 ### Abuse mitigation
 

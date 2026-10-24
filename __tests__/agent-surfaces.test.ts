@@ -142,7 +142,7 @@ async function readFirstSseMessage(res: Response): Promise<Record<string, unknow
   return JSON.parse(dataLine.slice('data:'.length).trim());
 }
 
-describe('MCP route handler — /api/[transport]/route.ts', () => {
+describe('MCP route handler app/api/[transport]/route.ts', () => {
   it('answers a JSON-RPC initialize POST at /api/mcp with a valid MCP result', async () => {
     const { POST } = await import('@/app/api/[transport]/route');
 

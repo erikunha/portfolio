@@ -4,7 +4,7 @@
 
 ## The `defineHandler` envelope (`lib/server/route.ts`)
 
-The shared API contract. Most routes are built on it; `/api/ask` (streaming) and `/api/erik.json` (a document, not an operation) are the deliberate exceptions.
+The shared API contract. Most routes are built on it; `/api/ask` (streaming), `/api/erik.json` (a document), and `/api/mcp` (JSON-RPC with SDK Zod validation) are deliberate exceptions.
 
 ```ts
 export function defineHandler<TSchema extends ZodTypeAny>(
@@ -28,7 +28,7 @@ export function defineHandler<TSchema extends ZodTypeAny>(
 
 | Route | Method | Built on | What it does | Auth/secret | Failure mode |
 |---|---|---|---|---|---|
-| `/api/ask` | POST | bespoke (streaming) | LLM "ask Erik", `text/plain` stream | AI Gateway key/OIDC; Upstash | fail-open Redis; mid-stream errors → `STREAM_ERR_SENTINEL`; 30s/15s/1s timeouts; budget fail-closed |
+| `/api/ask` | POST | bespoke (streaming) | LLM "ask Erik", `text/plain` stream | AI Gateway key/OIDC; Upstash | rate-limit and dedup fail-open; mid-stream errors → `STREAM_ERR_SENTINEL`; 30s/15s/1s timeouts; budget fail-closed |
 | `/api/contact` | POST | `defineHandler` | contact form → KV (durable) → Resend | `RESEND_API_KEY` | honeypot → fake-200; KV fail → 502; Resend fail → still 200 |
 | `/api/healthz` | GET | bespoke | health probe: SHA + PSI freshness | none | 200 fresh, **503 degraded** if `meta:psi-last-run` missing/stale(>25h); `no-store` |
 | `/api/psi-refresh` | GET (cron) | bespoke | daily PSI refresh, writes freshness key | **`CRON_SECRET`** Bearer | 401 on bad secret; partial-fail still writes key; no auto-retry (`0 3 * * *`) |
@@ -37,7 +37,16 @@ export function defineHandler<TSchema extends ZodTypeAny>(
 | `/api/lighthouse` | GET | bespoke | stored PSI metrics | `PSI_API_KEY` (in lib) | falls back to all-zero `LIGHTHOUSE_FALLBACK` |
 | `/api/log` | POST | `defineHandler` | client error capture → KV (30d TTL) | none | KV fail → 503; **no IP stored** (forget-exempt) |
 | `/api/log/forget` | POST | `defineHandler` | GDPR/LGPD erasure of ask logs by `requestId` | none | deletes across 90 days; **never returns count** (existence-oracle prevention) |
-| `/api/[transport]` | GET+POST | `mcp-handler` | read-only MCP server | none | `→ /api/mcp` (streamable-HTTP), `/api/sse`; `maxDuration=60`, Node runtime |
+| `/api/mcp` (and every path `/api/[transport]` serves) | GET+POST | `withBodyLimit` + `mcp-handler` | read-only MCP streamable-HTTP server | none | POST bodies over 4096 bytes return 413 before parsing; GET returns 405; `maxDuration=60`, Node runtime |
+
+`app/api/[transport]/route.ts` wraps its POST in `withBodyLimit` (`lib/server/body-limit.ts`), which checks the declared `Content-Length` and buffers at most
+`MAX_MCP_BODY_BYTES` (4096 bytes) before handing a bounded request to the
+transport. Missing, invalid, or understated lengths cannot bypass the byte
+count. An oversized stream is cancelled before JSON parsing. The limit fits
+the largest tool argument: a 500-character `ask_erik` question using six-byte
+JSON escapes, plus its JSON-RPC envelope. Accepted requests retain MCP
+responses; size rejections use the shared error envelope with
+`payload_too_large`, HTTP 413, and `X-Request-Id`.
 
 ## Rate limits & token budget (`lib/rate-limit.ts`)
 
@@ -53,7 +62,7 @@ Upstash sliding-window factories (lazy singletons over `Redis.fromEnv()`):
 
 `getClientIp` precedence: `x-forwarded-for[0]` → `x-real-ip` → `'unknown'` (local dev keys everything to `'unknown'`).
 
-**Token budget (the `/api/ask` cost cap):** `MONTHLY_TOKEN_BUDGET = 3,000,000` ($3–$5.30 to exhaust, depending on the realized input:output mix — derivation and pricing basis in `ARCHITECTURE.md`, "Budget enforcement". A single dollar figure here would be false precision), key `ask:tokens:{yyyy-mm}` (32-day window). `reserveBudget(maxOutput)` reserves `~2700` tokens up front (`INCRBY` + `EXPIRE NX`); rejects if over budget, warns at ≥80%, fail-open on Redis. `settleBudget(...)` refunds the unused reservation in `finally`. `checkIdenticalQuestion(ipHash, q)` is a 60s `SET NX EX` dedup. All fail-open.
+**Token budget (the `/api/ask` cost cap):** `MONTHLY_TOKEN_BUDGET = 3,000,000` ($3–$5.30 to exhaust, depending on the realized input:output mix — derivation and pricing basis in `ARCHITECTURE.md`, "Budget enforcement". A single dollar figure here would be false precision), key `ask:tokens:{yyyy-mm}` (32-day window). `reserveBudget(maxOutput)` reserves `~2700` tokens up front (`INCRBY` + `EXPIRE NX`); rejects if over budget or Redis fails, and warns at ≥80%. Both rejection cases return the existing `/api/ask` HTTP 503 `{ error: "monthly budget exhausted …" }` response before any model call. `settleBudget(...)` refunds the unused reservation in `finally`; no positive reservation means no settlement. `checkIdenticalQuestion(ipHash, q)` is a 60s `SET NX EX` dedup and remains fail-open, like rate limiting.
 
 ## Integrations
 
@@ -71,7 +80,7 @@ flowchart LR
 | Service | Env vars | Role | Failure mode |
 |---|---|---|---|
 | **Vercel AI Gateway** (`ai` SDK v7 `streamText`) | `AI_GATEWAY_API_KEY` or Vercel OIDC | `/api/ask` LLM; model string `anthropic/claude-haiku-4-5`; ephemeral cache via `providerOptions.anthropic.cacheControl`; `maxOutputTokens=512`; telemetry with `recordInputs/Outputs:false` | errors throw from `textStream` → sentinel; layered timeouts |
-| **Upstash Redis** | `UPSTASH_REDIS_REST_URL/TOKEN` (`Redis.fromEnv()`) | all stateful keys (rate-limit, budget, logs, dedup, salt, PSI freshness, LH cache) | **fail-open** everywhere; KV writes fail-quiet or 502/503 |
+| **Upstash Redis** | `UPSTASH_REDIS_REST_URL/TOKEN` (`Redis.fromEnv()`) | all stateful keys (rate-limit, budget, logs, dedup, salt, PSI freshness, LH cache) | rate limiting and dedup **fail-open**; budget reservation **fails closed** with 503; KV writes fail-quiet or 502/503 |
 | **Resend** | `RESEND_API_KEY` (lazy throw) | contact email; PSI cron failure alerts | 10s race; contact still 200 on send failure |
 | **Google PSI** | `PSI_API_KEY` | live Lighthouse scores for the perf section | 8s req timeout → fallback; 45s cron timeout |
 | **Langfuse** | `LANGFUSE_ENABLED` (exact `'true'`) + keys | flag-gated AI trace exporter (no message bodies) | inert unless `==='true'` (fail-closed); heavy imports behind dynamic `import()` |
