@@ -10,33 +10,34 @@
 
 **Development + CI gates** — automated; also runnable locally to match CI:
 
-| Command                           | Purpose                                                                                              |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `pnpm dev`                        | Development server                                                                                   |
-| `pnpm build`                      | Production build                                                                                     |
-| `pnpm test`                       | Vitest unit tests                                                                                    |
-| `pnpm test:e2e`                   | Playwright E2E — observability smoke, a11y scan, contact + ask user-journey tests, visual regression |
-| `pnpm check`                      | Biome lint + format check                                                                            |
-| `pnpm check:fix`                  | Biome auto-fix                                                                                       |
-| `pnpm typecheck`                  | TypeScript strict check                                                                              |
-| `pnpm lhci`                       | Lighthouse CI locally                                                                                |
-| `pnpm validate-content`           | Zod content schema validation                                                                        |
-| `pnpm ci:local`                   | Full local CI chain (lint + type + content + client-naming + harness-size + tests)                   |
-| `pnpm bundle-check`               | Bundle size gate                                                                                     |
-| `pnpm gates:runtime`              | Server-dependent gates: build + server + LHCI desktop + LHCI mobile + axe-core + E2E functional      |
-| `pnpm gates:runtime --skip-build` | Same as above but reuses existing `.next/` (must exist)                                              |
+| Command | Purpose |
+|---|---|
+| `pnpm dev` | Development server |
+| `pnpm build` | Production build |
+| `pnpm test` | Vitest unit tests |
+| `pnpm test:e2e` | Playwright E2E — observability smoke, a11y scan, contact + ask user-journey tests, visual regression |
+| `pnpm check` | Biome lint + format check |
+| `pnpm check:fix` | Biome auto-fix |
+| `pnpm typecheck` | TypeScript strict check |
+| `pnpm lhci` | Lighthouse CI locally |
+| `pnpm validate-content` | Zod content schema validation |
+| `pnpm ci:local` | Full local CI chain (lint + type + content + client-naming + harness-size + tests) |
+| `pnpm bundle-check` | Bundle size gate |
+| `pnpm gates:runtime` | Server-dependent gates: build + server + LHCI desktop + LHCI mobile + axe-core + E2E functional |
+| `pnpm gates:runtime --skip-build` | Same as above but reuses existing `.next/` (must exist) |
 
 **AI agent workflow** — the AI runs these consciously as part of its process; not automated:
 
-| Command               | When the AI runs it                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm changelog:sync` | After any commit with scope `(design-system)` — regenerates `app/design-system/changelog/page.mdx` from full git history                                                                                                                                                                                                                                                                                                                                                           |
-| `pnpm ask:eval`       | When maintaining the AI eval harness (corpus/calibration/runner changes) — calibration → corpus → gate, always writes `ask-eval-result.json`; writes `ask:eval:latest` to Upstash Redis only when `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` are set. See `.claude/skills/ai-eval-update`                                                                                                                                                                               |
-| `pnpm eval:agents`    | When maintaining the agent/prompt eval harness (`evals/agents/`, `scripts/agent-eval.ts`). Monte-Carlo prompt-regression over the PLATFORM's own rules (distinct from `ask:eval`, which evals the `/api/ask` PRODUCT): calibration → corpus N runs → pass@k / pass^k / variance; `--ab` adds a control-vs-treatment delta. Writes `agent-eval-result.json`; publishes `agent-eval:latest` only when Upstash env is set. Non-blocking CI (weekly `schedule` + `workflow_dispatch`). |
+| Command | When the AI runs it |
+|---|---|
+| `pnpm changelog:sync` | After any commit with scope `(design-system)` — regenerates `app/design-system/changelog/page.mdx` from full git history |
+| `pnpm ask:eval` | When maintaining the AI eval harness (corpus/calibration/runner changes) — calibration → corpus → gate, always writes `ask-eval-result.json`; writes `ask:eval:latest` to Upstash Redis only when `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` are set. See `.claude/skills/ai-eval-update` |
+| `pnpm eval:agents` | When maintaining the agent/prompt eval harness (`evals/agents/`, `scripts/agent-eval.ts`). Monte-Carlo prompt-regression over the PLATFORM's own rules (distinct from `ask:eval`, which evals the `/api/ask` PRODUCT): calibration → corpus N runs → pass@k / pass^k / variance; `--ab` adds a control-vs-treatment delta. Writes `agent-eval-result.json`; publishes `agent-eval:latest` only when Upstash env is set. Non-blocking CI (weekly `schedule` + `workflow_dispatch`). |
 
 ## Engineering context
 
 This codebase is a **reference system** — every architectural decision, perf budget, a11y guarantee, design token, CI gate, and lint rule must hold up as something another team could adopt verbatim. Architecture is the artifact. Scope decisions follow these rules:
+
 - Cross-cutting concerns over local optimization
 - Mechanism-level reasoning (cause → effect) — explain the why, not just the what
 - Surface trade-offs explicitly; give one recommendation per decision
@@ -48,34 +49,34 @@ This codebase is a **reference system** — every architectural decision, perf b
 
 **Hard gates** — these block the next step if skipped:
 
-| Gate                 | Trigger                                                      | Agent                                                                                                                                 |
-| -------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Before writing plans | Before invoking `speckit-plan` on any spec                   | `architect-reviewer` — convention, not enforced: the hook that blocked `speckit-plan` on a `GATE_RESULT: PASS` was removed 2026-07-27 |
-| After API changes    | After editing `app/api/`, `lib/rate-limit.ts`, or `proxy.ts` | `security-auditor` — convention, not enforced: the PostToolUse marker and the push guard were removed 2026-07-27                      |
+| Gate | Trigger | Agent |
+|---|---|---|
+| Before writing plans | Before invoking `speckit-plan` on any spec | `architect-reviewer` — convention, not enforced: the hook that blocked `speckit-plan` on a `GATE_RESULT: PASS` was removed 2026-07-27 |
+| After API changes | After editing `app/api/`, `lib/rate-limit.ts`, or `proxy.ts` | `security-auditor` — convention, not enforced: the PostToolUse marker and the push guard were removed 2026-07-27 |
 
 **Spot-check agents** — invoke when the concern is the primary risk in the current change:
 
-| Concern            | Trigger                                                                  | Agent                                                                                                                                                                                                                                                                    |
-| ------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Visual correctness | After CSS, layout, or responsive changes                                 | Playwright MCP visual check in the main thread (desktop 1280x720 + mobile 375x812), per the working-agreement rule below. There is no `ui-ux-tester` agent: the row named one for months that resolved only in an uninstalled marketplace, so the dispatch always failed |
-| Performance        | After changes that could affect LCP/INP/CLS                              | `performance-engineer`                                                                                                                                                                                                                                                   |
-| Bundle growth      | After adding a new dependency                                            | `dependency-auditor`                                                                                                                                                                                                                                                     |
-| Next.js patterns   | After implementing new API routes, server actions, or app router layouts | `nextjs-developer`                                                                                                                                                                                                                                                       |
+| Concern | Trigger | Agent |
+|---|---|---|
+| Visual correctness | After CSS, layout, or responsive changes | Playwright MCP visual check in the main thread (desktop 1280x720 + mobile 375x812), per the working-agreement rule below. There is no `ui-ux-tester` agent: the row named one for months that resolved only in an uninstalled marketplace, so the dispatch always failed |
+| Performance | After changes that could affect LCP/INP/CLS | `performance-engineer` |
+| Bundle growth | After adding a new dependency | `dependency-auditor` |
+| Next.js patterns | After implementing new API routes, server actions, or app router layouts | `nextjs-developer` |
 
 ## Skill dispatch
 
 Invoke the named skill inline (not as a subagent) before the described action. Project triggers below override global CLAUDE.md when both apply to the same action.
 
-| Trigger                                                                        | Skill                                                                                                                                                                                                                                                                                                                                                              |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Before writing any new file, API handler, or complex logic block**           | **`thinking-risk-premortem` — what specifically makes this fail? answers become test cases**                                                                                                                                                                                                                                                                       |
-| **Before `speckit-plan` on any spec**                                          | **`thinking-risk-premortem` — enumerate the class-of-bugs the implementation introduces; each becomes an explicit plan task, not a defect found after the fact. NOT mechanically enforced: the hook that blocked `speckit-plan` on it was removed 2026-07-27, so this is a convention again**                                                                      |
-| **Before implementing any new file, function, or script**                      | **tests first, always; implementation satisfies them. No skill backs this now, it is the rule itself: write the failing test, watch it fail, then make it pass**                                                                                                                                                                                                   |
-| Before implementing any component (in `components/` or `design-system/`)       | Run DS component pre-mortem: (1) which attrs does the consumer control? (`id`, `className`, `aria-*`) — passthrough, never override; (2) any `outline: none` on `:focus` must be `:focus-visible`; (3) `querySelector` returns `null` not `undefined` — use `.not.toBeNull()`; (4) can this component be rendered twice? hardcoded `id` breaks the second instance |
-| After creating a new component or adding significant client-side state/effects | `react-best-practices`                                                                                                                                                                                                                                                                                                                                             |
-| After editing `next.config.ts`, `.env.example`, or Vercel config               | `vercel:nextjs`                                                                                                                                                                                                                                                                                                                                                    |
-| Before any UI code review (the Playwright MCP visual check)                    | `web-design-guidelines` — NOT mechanically enforced: the hook that gated the Playwright `browser_*` namespace on it was removed 2026-07-27                                                                                                                                                                                                                         |
-| After `speckit-plan` produces output for tasks with >5 steps                   | `thinking-risk-premortem` — run on the plan tasks themselves, not the feature                                                                                                                                                                                                                                                                                      |
+| Trigger | Skill |
+|---|---|
+| **Before writing any new file, API handler, or complex logic block** | **`thinking-risk-premortem` — what specifically makes this fail? answers become test cases** |
+| **Before `speckit-plan` on any spec** | **`thinking-risk-premortem` — enumerate the class-of-bugs the implementation introduces; each becomes an explicit plan task, not a defect found after the fact. NOT mechanically enforced: the hook that blocked `speckit-plan` on it was removed 2026-07-27, so this is a convention again** |
+| **Before implementing any new file, function, or script** | **tests first, always; implementation satisfies them. No skill backs this now, it is the rule itself: write the failing test, watch it fail, then make it pass** |
+| Before implementing any component (in `components/` or `design-system/`) | Run DS component pre-mortem: (1) which attrs does the consumer control? (`id`, `className`, `aria-*`) — passthrough, never override; (2) any `outline: none` on `:focus` must be `:focus-visible`; (3) `querySelector` returns `null` not `undefined` — use `.not.toBeNull()`; (4) can this component be rendered twice? hardcoded `id` breaks the second instance |
+| After creating a new component or adding significant client-side state/effects | `react-best-practices` |
+| After editing `next.config.ts`, `.env.example`, or Vercel config | `vercel:nextjs` |
+| Before any UI code review (the Playwright MCP visual check) | `web-design-guidelines` — NOT mechanically enforced: the hook that gated the Playwright `browser_*` namespace on it was removed 2026-07-27 |
+| After `speckit-plan` produces output for tasks with >5 steps | `thinking-risk-premortem` — run on the plan tasks themselves, not the feature |
 
 ## Stack (locked)
 
@@ -94,18 +95,18 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 
 ## Performance budgets (non-negotiable)
 
-| Metric                                                           | Desktop   | Mobile    |
-| ---------------------------------------------------------------- | --------- | --------- |
-| LCP                                                              | < 1.8s    | < 3.5s    |
-| INP                                                              | < 200ms   | < 200ms   |
-| CLS                                                              | < 0.05    | < 0.05    |
-| TBT                                                              | < 200ms   | < 400ms   |
-| JS gzipped per route, total first-load                           | < 164.7KB | < 164.7KB |
-| JS gzipped, app-owned (total minus the measured framework floor) | < 32.8KB  | < 32.8KB  |
-| Lighthouse Performance                                           | ≥ 95      | ≥ 90      |
-| Lighthouse Accessibility                                         | = 100     | = 100     |
-| Lighthouse Best Practices                                        | ≥ 95      | ≥ 95      |
-| Lighthouse SEO                                                   | = 100     | = 100     |
+| Metric | Desktop | Mobile |
+|---|---|---|
+| LCP | < 1.8s | < 3.5s |
+| INP | < 200ms | < 200ms |
+| CLS | < 0.05 | < 0.05 |
+| TBT | < 200ms | < 400ms |
+| JS gzipped per route, total first-load | < 164.7KB | < 164.7KB |
+| JS gzipped, app-owned (total minus the measured framework floor) | < 32.8KB | < 32.8KB |
+| Lighthouse Performance | ≥ 95 | ≥ 90 |
+| Lighthouse Accessibility | = 100 | = 100 |
+| Lighthouse Best Practices | ≥ 95 | ≥ 95 |
+| Lighthouse SEO | = 100 | = 100 |
 
 CI enforces all of the above. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
 
@@ -115,20 +116,20 @@ CI enforces all of the above. **Never disable the gates to merge.** If a gate fa
 
 Full rationale in `STANDARDS.md`. Load that file when a chapter is directly relevant. One-line enforcement per chapter:
 
-| Chapter              | Mechanical gate / enforcement                                                                                                                                                                                                                                                    |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 — RSC/Architecture | `check-client-naming.mjs` — `*.client.tsx` naming + no `async function` export; streaming-through-React held by behavioral test                                                                                                                                                  |
-| 2 — API boundary     | `defineHandler` enforces envelope + rate-limit→parse→validate→handle; held by behavioral tests + e2e                                                                                                                                                                             |
-| 3 — Performance      | Lighthouse CI (perf ≥95, a11y =100, BP ≥95, SEO =100); `check-bundle-size.mjs` gates gzipped chunks                                                                                                                                                                              |
-| 4 — Testing          | `no-source-grep.test.ts` bans `readFileSync` without allow tag; behavioral assertions only                                                                                                                                                                                       |
-| 5 — Dependencies     | `check-dep-pinning.mjs` rejects `latest`/`*`; `--frozen-lockfile` in CI                                                                                                                                                                                                          |
-| 6 — Content          | `validate-content.ts` Zod schemas at build time; no copy inlined in `.tsx`                                                                                                                                                                                                       |
-| 7 — CSS/tokens       | `lint:contrast`; `@theme` tokens in `app/css/theme.css`, no raw hex; complex patterns as named classes in `@layer components` (`app/css/components.css`), no CSS modules                                                                                                         |
-| 8 — A11y             | axe-core gate + Lighthouse =100; per-component behavioral a11y tests                                                                                                                                                                                                             |
-| 9 — Security         | Behavioral tests for CSP + kill switches (not source-grep); `security-auditor` on any `app/api/` change                                                                                                                                                                          |
-| 10 — Docs            | PR review: doc claims must match live code; ADRs cite SHA + reversibility note                                                                                                                                                                                                   |
-| 11 — DX              | pre-commit = Biome (<1s) + `gitleaks git --staged` (~0.4s, fails closed if the binary is missing — `brew install gitleaks`) + commitlint (scope required, error on missing); pre-push = full verify + branch-name `<type>/<description>` enforced; never disable a gate to merge |
-| 12 — Design system   | `lint:contrast` + component-docs CI gates                                                                                                                                                                                                                                        |
+| Chapter | Mechanical gate / enforcement |
+|---|---|
+| 1 — RSC/Architecture | `check-client-naming.mjs` — `*.client.tsx` naming + no `async function` export; streaming-through-React held by behavioral test |
+| 2 — API boundary | `defineHandler` enforces envelope + rate-limit→parse→validate→handle; held by behavioral tests + e2e |
+| 3 — Performance | Lighthouse CI (perf ≥95, a11y =100, BP ≥95, SEO =100); `check-bundle-size.mjs` gates gzipped chunks |
+| 4 — Testing | `no-source-grep.test.ts` bans `readFileSync` without allow tag; behavioral assertions only |
+| 5 — Dependencies | `check-dep-pinning.mjs` rejects `latest`/`*`; `--frozen-lockfile` in CI |
+| 6 — Content | `validate-content.ts` Zod schemas at build time; no copy inlined in `.tsx` |
+| 7 — CSS/tokens | `lint:contrast`; `@theme` tokens in `app/css/theme.css`, no raw hex; complex patterns as named classes in `@layer components` (`app/css/components.css`), no CSS modules |
+| 8 — A11y | axe-core gate + Lighthouse =100; per-component behavioral a11y tests |
+| 9 — Security | Behavioral tests for CSP + kill switches (not source-grep); `security-auditor` on any `app/api/` change |
+| 10 — Docs | PR review: doc claims must match live code; ADRs cite SHA + reversibility note |
+| 11 — DX | pre-commit = Biome (<1s) + `gitleaks git --staged` (~0.4s, fails closed if the binary is missing — `brew install gitleaks`) + commitlint (scope required, error on missing); pre-push = full verify + branch-name `<type>/<description>` enforced; never disable a gate to merge |
+| 12 — Design system | `lint:contrast` + component-docs CI gates |
 
 **Rule hygiene (this file loads every session — fight monotonic growth):**
 - **Slot the rule cheaply.** Before adding any behavioral rule, pick the cheapest slot that still fires when needed: mechanical gate > on-demand skill > contextual memory > **prose here**. Prose is the most expensive slot (it taxes every session regardless of relevance) and the last resort — reserve it for behavior that must be salient on every turn. If a skill already fires in the rule's context, do not also write the prose.
@@ -144,14 +145,14 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **Never `--latest` `typescript`** — held at 6.x because Stryker needs the TS JS API that TS7 removed (`--latest` rewrites an exact pin too, so pinning won't save you). Held by `__tests__/stryker-typescript-api.test.ts`. See DECISIONS.md 2026-07-12.
 - Caret semver in `package.json`; lockfile (`pnpm-lock.yaml`) is the source of truth.
 - CI runs `pnpm install --frozen-lockfile`.
-- Node 22+, pnpm 10+.
+- Node 22.22.2+ (`.nvmrc` pins 22.23.4), pnpm 10+.
 
 ## Rendering model
 
 - **Default: React Server Components, SSG at build time.** Zero JS shipped for static sections.
 - **Client islands by exception:** Matrix dialog loop, INTERACTIVE_SHELL, contact form, role typewriter (RoleTyper, mount-driven), MOTION indicator.
 - All client files named `*.client.tsx`. RSC drift must be visible in PR review.
-- **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** Per-state re-renders tank INP. The interactive shell's streaming answer, by contrast, renders _through_ React (rAF-coalesced state) — see `STANDARDS.md` Chapter 1; enforced by `components/client/InteractiveShell/InteractiveShell.test.tsx`.
+- **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** Per-state re-renders tank INP. The interactive shell's streaming answer, by contrast, renders *through* React (rAF-coalesced state) — see `STANDARDS.md` Chapter 1; enforced by `components/client/InteractiveShell/InteractiveShell.test.tsx`.
 
 ## Aesthetic constraints
 
@@ -176,9 +177,9 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **Redundant commentary out; decisions in (owner rule, 2026-07-12). This governs every word generated — source comments, ADR bullets, docs, PR bodies.** One discriminator: **does a gate already state this?** (a gate = the compiler, a type, a test, a lint rule, a CI check.)
   - **Yes → it is redundant. Delete it.** Prose that restates a gate is a second copy of the truth, and it is the copy that drifts. Never narrate what the code does, where it came from, or why the next line is correct.
   - **No → it is a decision. Capture it once, in the cheapest durable slot.** A decision is what no gate can hold: a trade-off, a rejected alternative, a non-obvious cause, an external constraint. Slots: a `biome-ignore <rule>: <why the rule is wrong HERE>` reason · `DECISIONS.md` for architecture · the commit body for the causal chain · a **test's failure message** for the trap that test guards.
-  - **Source stays bare** (owner decision, 2026-07-10): the only comments are machine directives — `biome-ignore`, `behavioral-test-allow`, `@ts-*`, shebangs, triple-slash. A directive's reason _is_ a decision comment: it must say why the rule is wrong **here**, never what the code does.
-  - **A doc that restates a gate is worse than no doc** — it rots, and a rotted doc actively instructs the next engineer to undo the fix. Precedent (2026-07-12, PR #190): the disclosure ADR duplicated what six tests already enforced, and was factually **wrong six times in a single PR**; it was cut to point at the gates instead of restating them. (This bullet first cited two word counts for that cut. Both were wrong, and one went stale one commit later _inside the same branch_ — deleted, because a number no gate holds is the exact thing this rule says not to write.)
-  - **Delegating a claim to a gate is only honest if the gate holds it.** Before writing "held by X", break the property and watch X fail. Otherwise the rule just swaps a wrong claim for an unverified promise — and check the claim's _scope_, not only its existence: a gate that bans the tokens `<details>`/`<summary>` does not ban a `useState` + `<button>` re-implementation, so "nothing can collapse" is prose the gate never backed.
+  - **Source stays bare** (owner decision, 2026-07-10): the only comments are machine directives — `biome-ignore`, `behavioral-test-allow`, `@ts-*`, shebangs, triple-slash. A directive's reason *is* a decision comment: it must say why the rule is wrong **here**, never what the code does.
+  - **A doc that restates a gate is worse than no doc** — it rots, and a rotted doc actively instructs the next engineer to undo the fix. Precedent (2026-07-12, PR #190): the disclosure ADR duplicated what six tests already enforced, and was factually **wrong six times in a single PR**; it was cut to point at the gates instead of restating them. (This bullet first cited two word counts for that cut. Both were wrong, and one went stale one commit later *inside the same branch* — deleted, because a number no gate holds is the exact thing this rule says not to write.)
+  - **Delegating a claim to a gate is only honest if the gate holds it.** Before writing "held by X", break the property and watch X fail. Otherwise the rule just swaps a wrong claim for an unverified promise — and check the claim's *scope*, not only its existence: a gate that bans the tokens `<details>`/`<summary>` does not ban a `useState` + `<button>` re-implementation, so "nothing can collapse" is prose the gate never backed.
 - Don't ask clarifying questions unless missing info would change the decision — assume reasonably, state in one line, proceed.
 - Flag flaws once. Don't repeat concerns.
 - Skip disclaimers, boilerplate, "consult a professional" lines.
@@ -203,7 +204,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **The review should be boring.** If your own pre-PR read finds real bugs, the pre-implementation discipline failed. `thinking-risk-premortem` before writing and TDD during implementation are the actual defences, and with no reviewer behind them they are now the only ones.
 - **Every plan must include a failure-mode checklist.** Run `thinking-risk-premortem` before `speckit-plan` on any task. Each bug class becomes an explicit plan task — not a defect found after the fact.
 - **When dispatching ANY subagent — implementer or review-only — always include in the prompt:** "Use `git add -u` or `git add <specific files>` — never `git add .`, `-A`, or `--all`. **Write no git state except staging and committing inside the tree you were dispatched into — that exception is the only one.** No moving any HEAD or index (`checkout`, `switch`, `reset`, `restore`, `bisect`), no ref writes (`update-ref`, `branch -f`, `rebase`, `cherry-pick`, `am`), no `stash` (the stack is repo-wide), no `git config` writes. Read another revision with `git show <sha>:<path>` or your own `git worktree add`." Phrase it as that one exception, never as a verb list — a list will miss `update-ref` and `git config`, which need no verb any list names. **Review-only agents need this most:** "don't touch files" does not forbid moving HEAD. Dispatch reviewers with `isolation: "worktree"` where you can; it isolates HEAD and index but not refs, stash, or config.
-- **File-move AND extraction tasks must include a full consumer-scan step — code AND config.** This fires for any `git mv` and for any _extraction_ (relocating code or a symbol into a new module/path, even with no `git mv` — e.g. hoisting `judge()` out of `scripts/ask-eval.ts` into `lib/eval/`). Before writing plan tasks, grep for every reference to the old path or symbol across two surfaces: (1) **code callers** — `grep -r 'OldPath' --include='*.ts' --include='*.tsx'`; (2) **the gate/CI/config surface that hard-codes paths** — `.github/workflows/**` (detect-changes path-filters especially), `.husky/**`, `scripts/**`, and any allowlist/pathspec/glob. Include a path-update task for every match including test files. A CI path-filter or gate left pointing at the old location **fails open silently**: the gate evaluates to "unchanged", skips, and a regression ships unguarded — this is the exact class that leaked the `lib/eval/` ai-filter gap (a judge change set `ai=false` and skipped the calibration gate). Stale path comments (`// components/OldPath.tsx`) in moved files are a separate required fix step.
+- **File-move AND extraction tasks must include a full consumer-scan step — code AND config.** This fires for any `git mv` and for any *extraction* (relocating code or a symbol into a new module/path, even with no `git mv` — e.g. hoisting `judge()` out of `scripts/ask-eval.ts` into `lib/eval/`). Before writing plan tasks, grep for every reference to the old path or symbol across two surfaces: (1) **code callers** — `grep -r 'OldPath' --include='*.ts' --include='*.tsx'`; (2) **the gate/CI/config surface that hard-codes paths** — `.github/workflows/**` (detect-changes path-filters especially), `.husky/**`, `scripts/**`, and any allowlist/pathspec/glob. Include a path-update task for every match including test files. A CI path-filter or gate left pointing at the old location **fails open silently**: the gate evaluates to "unchanged", skips, and a regression ships unguarded — this is the exact class that leaked the `lib/eval/` ai-filter gap (a judge change set `ai=false` and skipped the calibration gate). Stale path comments (`// components/OldPath.tsx`) in moved files are a separate required fix step.
 - **Verification before any completion claim.** Before reporting done, fixing, or passing: run `pnpm typecheck && pnpm test --run && pnpm build`, read the output, cite the result. "Should pass" is not evidence. If you catch yourself reasoning about whether it passes instead of running it, that is the tell: run it.
 - **Re-run review after fixing findings.** After fixing any Critical or Important finding from a review agent, re-dispatch that same agent against the affected files before declaring the fix done. One-line fixes can skip this; any logic change cannot.
 - **Quality gates measure real properties — fix the property, not the gate.** When a gate fails (Lighthouse audit, Biome lint, bundle-size, a11y, security), the only acceptable response is to reduce the measured property or correct a genuinely misconfigured assertion. Unacceptable: set the audit to `"off"`, lower the threshold, add the rule to an ignore list, or wrap code to hide it from the checker. If a gate cannot be fixed in the current scope, escalate with root cause + options + minimum required change — do not merge with known suppression. Acceptable gate-config changes: fixing an assertion that fires on the ideal state (e.g., `maxNumericValue` on an audit that returns `null` when there are zero violations — the assertion was never testing what it claimed).

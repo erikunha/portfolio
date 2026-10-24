@@ -4,7 +4,7 @@
 
 ## Prerequisites
 
-- **Node 22+**, **pnpm 10+** (the repo is pnpm-only).
+- **Node 22.22.2+** (`.nvmrc` pins 22.23.4), **pnpm 10+** (the repo is pnpm-only).
 - Install: `pnpm install` (CI uses `--frozen-lockfile`).
 - For full local runs you'll want the env vars in `.env.example` (Upstash, AI Gateway, Resend, PSI). Everything is **optional** and fails open, so the site runs without them - you just get fallbacks (no rate-limiting, a dash placeholder for Lighthouse scores, `/api/ask` needs the Gateway key).
 
