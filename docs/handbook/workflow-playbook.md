@@ -4,7 +4,7 @@
 
 ## How to read a runbook
 
-Every runbook lists: **entry point** (what starts it), **steps**, **AI participation**, and **output**. The same spine recurs: brainstorm -> spec/plan (for non-trivial work) -> implement (TDD) -> review battery -> gates -> PR -> merge.
+Every runbook lists: **entry point** (what starts it), **steps**, **AI participation**, and **output**. The same spine recurs: brainstorm -> spec/plan (for non-trivial work) -> implement (TDD) -> review (`pr-review-orchestrator`) -> gates -> PR -> merge.
 
 ---
 
@@ -17,7 +17,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   3. Dispatch `architect-reviewer`; it must return `GATE_RESULT: PASS` (convention; the gating hook was removed 2026-07-27).
   4. `speckit-plan` + `thinking-risk-premortem` to decompose into tasks (shard into sub-PRs if large).
   5. Branch `feat/<description>`. Implement test-first.
-  6. Self-review the diff (`pr-review-toolkit:code-reviewer`), fix what it finds, push.
+  6. Self-review the diff (`pr-review-orchestrator` skill), fix what it finds, push.
   7. `pnpm ci:local` + `gates:runtime`, open the PR, drive threads to resolved, `pnpm pr:gate`, owner merges.
   8. Add an ADR to `DECISIONS.md` with a reversibility note.
 - **AI:** brainstorming, architect review, planning, TDD implementation, pre-PR self-review.
@@ -31,8 +31,8 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   2. State the root cause in one sentence (the four-conditions rule: root cause, pattern scan, no deferred debt, measured property verified).
   3. Write a failing test that reproduces it (TDD).
   4. Make the smallest change that passes. Pattern-scan the codebase for the same class of bug.
-  5. Battery -> stamp -> push -> PR. Cite the before/after measurement in the commit body.
-- **AI:** systematic-debugging, TDD, the battery.
+  5. Review the diff with the `pr-review-orchestrator` skill -> push -> PR. Cite the before/after measurement in the commit body.
+- **AI:** systematic-debugging, TDD, the `pr-review-orchestrator` review.
 - **Output:** a `fix(scope): ...` PR with a root-cause note.
 
 ## Architecture change
@@ -53,7 +53,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   1. Confirm behavior is covered by tests first (refactor preserves behavior).
   2. `refactoring-specialist` agent if the change is large.
   3. Smallest reasonable change; never rewrite an implementation without explicit permission.
-  4. Battery (the `pr-review-toolkit` reviewer checks for behavior drift) -> stamp -> push.
+  4. Review (the `pr-review-orchestrator` skill checks for behavior drift) -> push.
 - **Output:** a `refactor(scope): ...` PR (no behavior change).
 
 ## Performance optimization
@@ -64,7 +64,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   2. Identify the bottleneck; form one hypothesis.
   3. Apply the smallest change; re-measure (cite before/after).
   4. `performance-engineer` reviews when a perf gate actually regressed; visual baselines regenerated if rendering changed.
-- **AI:** chrome-devtools MCP, performance-engineer (conditional, not a standing battery role).
+- **AI:** chrome-devtools MCP, performance-engineer (conditional, not a standing review role).
 - **Output:** a `perf(scope): ...` PR with before/after numbers. See [`/docs/08`](../08-performance-and-accessibility.md).
 
 ## Accessibility audit
@@ -101,7 +101,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Steps:**
   1. Reverse-engineer from code; do not duplicate existing canonical docs - route to them.
   2. Keep `CLAUDE.md` under 275 lines; new procedures go to a skill or a path-scoped rule, not into `CLAUDE.md`.
-  3. Doc-only commits get a scoped battery (agents skip the test suite).
+  3. Doc-only commits get a scoped review that skips the test suite.
 - **Output:** docs under `/docs`, with provenance noted.
 
 ## Writing an ADR
