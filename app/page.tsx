@@ -37,7 +37,7 @@ export default function Home() {
             <AiMetricsSection />
           </ErrorBoundary>
           <ErrorBoundary>
-            <ProjectsSection />
+            <ProjectsSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <GitLogSection defer />

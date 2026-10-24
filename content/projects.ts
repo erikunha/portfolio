@@ -64,7 +64,7 @@ export const projects = z
       kind: KIND.CORPORATE,
       name: 'SERVICE_OPS_CONSOLE',
       description:
-        'Hospital equipment service platform: service orders, specialist scheduling, field visits, live updates. Clean Architecture.',
+        'Hospital equipment service platform: service orders, specialist schedules, field visits, live updates. Clean Architecture.',
       stack: ['ANGULAR', 'NX', 'RXJS'],
       stats: [
         {

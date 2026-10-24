@@ -130,7 +130,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
   SURFACES: COMPANY / PIPELINE / OUTREACH · STATE: VERSIONED + URL-BACKED · STACK: React / Next.js 14 / TypeScript 5
 - PAYMENT_ORCHESTRA (Betsson Group, corporate): PCI-DSS cashier platform: multi-brand deposit/withdraw orchestration across 15+ regulated jurisdictions.
   VOLUME: 40M+ TX / YR · REVENUE: €1.197B (GROUP) · STACK: ANGULAR / STENCIL / NGRX / NX
-- SERVICE_OPS_CONSOLE (Canon Medical Systems, corporate): Hospital equipment service platform: service orders, specialist scheduling, field visits, live updates. Clean Architecture.
+- SERVICE_OPS_CONSOLE (Canon Medical Systems, corporate): Hospital equipment service platform: service orders, specialist schedules, field visits, live updates. Clean Architecture.
   JS BUNDLE: -33% · TTI: -52% · STACK: ANGULAR / NX / RXJS
 - COMMERCE_EDGE (Grupo SBF (Nike / Centauro), corporate): Nike Brazil & Centauro storefronts: SSR/SSG/ISR, BFF gateway, shared Nx monorepo, 20+ A/B experiments.
   REACH: 8M+ MAU · LOAD TIME: -32% · STACK: NEXT.JS / REACT / TS

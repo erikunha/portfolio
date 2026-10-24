@@ -3,16 +3,19 @@ import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { DEFERRED_SECTION_COUNT } from '@/components/responsive/Module/module.constants';
+import { GitLogSection } from '@/components/sections/GitLogSection';
+import { ProjectsSection } from '@/components/sections/ProjectsSection';
 
-function countDeferredSections(node: unknown): number {
+function countDeferredSections(node: unknown, sectionType?: unknown): number {
   if (!node || typeof node !== 'object') return 0;
   if (Array.isArray(node)) {
-    return node.reduce<number>((sum, child) => sum + countDeferredSections(child), 0);
+    return node.reduce<number>((sum, child) => sum + countDeferredSections(child, sectionType), 0);
   }
-  const el = node as { props?: Record<string, unknown> };
+  const el = node as { type?: unknown; props?: Record<string, unknown> };
   let count = 0;
-  if (el.props && el.props.defer === true) count++;
-  if (el.props && 'children' in el.props) count += countDeferredSections(el.props.children);
+  if (el.props?.defer === true && (sectionType === undefined || el.type === sectionType)) count++;
+  if (el.props && 'children' in el.props)
+    count += countDeferredSections(el.props.children, sectionType);
   return count;
 }
 
@@ -41,8 +44,14 @@ describe('content-visibility deferral', () => {
     const deferredCount = countDeferredSections(tree);
     expect(
       deferredCount,
-      `app/page.tsx must pass \`defer\` to exactly ${DEFERRED_SECTION_COUNT} sections. This was a >= floor, which let a silent drop of up to 2 sections pass: they would render eagerly, forfeiting their share of the ~840ms mobile style+layout deferral, with every gate green. If you intentionally changed the deferred set, update DEFERRED_SECTION_COUNT — that edit is the decision, and it should be visible in review.`,
+      `app/page.tsx must defer exactly ${DEFERRED_SECTION_COUNT} sections. Credentials and community inherit Career deferral; attached receipts inherit Projects deferral. Both parent sections remain below the fold and must stay deferred.`,
     ).toBe(DEFERRED_SECTION_COUNT);
+    for (const section of [GitLogSection, ProjectsSection]) {
+      expect(
+        countDeferredSections(tree, section),
+        `${section.name} must remain deferred because its merged content is below the fold.`,
+      ).toBe(1);
+    }
   });
 
   it('components.css ships the .module-deferred content-visibility rule', () => {

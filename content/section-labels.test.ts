@@ -35,6 +35,9 @@ describe('SECTION_LABELS', () => {
     for (const id of ids) {
       expect(SECTION_LABELS, `missing label for ${id}`).toHaveProperty(id);
     }
-    expect(ids.size).toBeGreaterThanOrEqual(20);
+    expect(
+      ids.size,
+      'Career and attached project receipts use section elements instead of Modules; the remaining 18 Module IDs must all retain label coverage.',
+    ).toBeGreaterThanOrEqual(18);
   });
 });
