@@ -3,6 +3,7 @@ import { credentials } from '@/content/credentials';
 import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
 import { profile, profileLocation } from '@/content/profile';
+import { social } from '@/content/social';
 import { workAuthorization } from '@/content/visa';
 
 const EmployerSchema = z.object({
@@ -63,10 +64,10 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   alias: profile.displayName,
   title: profile.title,
   timezone: profile.timezone,
-  url: 'https://www.erikunha.dev',
-  email: 'erikhenriquealvescunha@gmail.com',
-  github: 'https://github.com/erikunha',
-  linkedin: 'https://www.linkedin.com/in/erikunha/',
+  url: social.site,
+  email: social.email,
+  github: social.github,
+  linkedin: social.linkedin,
 
   seniority: ['senior', 'staff', 'principal'],
   yoe: 8,

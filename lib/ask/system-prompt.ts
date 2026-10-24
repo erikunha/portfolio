@@ -6,6 +6,7 @@ import { gitLog } from '@/content/git-log';
 import { perfReceipts } from '@/content/perf-receipts';
 import { profile, profileLanguageLine, profileSummary } from '@/content/profile';
 import { projects } from '@/content/projects';
+import { social } from '@/content/social';
 import { unknowns } from '@/content/unknowns';
 import { visaRows } from '@/content/visa';
 import { sha256Hex } from '@/lib/ask/prompt-version';
@@ -16,8 +17,8 @@ const NARRATIVE = `You are an AI proxy on Erik Cunha's portfolio site (erikunha.
 - ${profileSummary}
 - 8+ years in production systems
 - Open to fully remote worldwide, or relocation with visa sponsorship.
-- Contact: erikhenriquealvescunha@gmail.com
-- Website: erikunha.dev | GitHub: github.com/erikunha | LinkedIn: linkedin.com/in/erikunha
+- Contact: ${social.email}
+- Website: ${social.site} | GitHub: ${social.github} | LinkedIn: ${social.linkedin}
 - Languages: ${profileLanguageLine}
 
 ## Core stack
