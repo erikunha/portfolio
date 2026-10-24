@@ -21,11 +21,7 @@ test.describe('Footer', () => {
     await tree.getByRole('link', { name: 'Projects', exact: true }).click();
     await expect(page).toHaveURL(/#sec-projects$/);
     await expect(page.locator('#sec-projects')).toBeInViewport();
-    await expect(tree.getByRole('link', { name: 'VIEW_CV' })).toHaveAttribute('href', '/cv');
-    await expect(tree.getByRole('link', { name: '30S_SUMMARY' })).toHaveAttribute(
-      'href',
-      '/summary',
-    );
+    await expect(tree.locator('a[href="/cv"], a[href="/summary"]')).toHaveCount(0);
     await expect(tree.getByRole('link', { name: 'Contact', exact: true })).toHaveAttribute(
       'href',
       '#sec-contact',
@@ -110,15 +106,17 @@ test.describe('Footer', () => {
     }
   });
 
-  test('mobile footer matches prototype height and netstat stays on one line', async ({ page }) => {
+  test('mobile footer keeps its measured height with a one-column site map and netstat on one line', async ({
+    page,
+  }) => {
     for (const width of [390, 1280]) {
       await page.setViewportSize({ width, height: width === 390 ? 844 : 720 });
       await loadFooter(page);
       await page.evaluate(() => document.fonts.ready);
       if (width === 390) {
         const footer = await page.locator('footer').boundingBox();
-        expect(footer?.height).toBeGreaterThanOrEqual(1682);
-        expect(footer?.height).toBeLessThanOrEqual(1722);
+        expect(footer?.height).toBeGreaterThanOrEqual(1905);
+        expect(footer?.height).toBeLessThanOrEqual(1945);
       }
       const cells = page.locator('.footer-netstat :is(th, td)');
       for (const cell of await cells.all()) {
@@ -137,8 +135,20 @@ test.describe('Footer', () => {
     }
   });
 
-  test('tree links have 44px targets and six desktop or two mobile columns', async ({ page }) => {
-    for (const width of [1280, 390]) {
+  test('netstat endpoints wrap instead of clipping at 320px', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await loadFooter(page);
+    for (const cell of await page.locator('.footer-netstat td:last-child').all()) {
+      const fit = await cell.evaluate((element) => element.scrollWidth <= element.clientWidth);
+      expect(fit).toBe(true);
+    }
+  });
+
+  test('tree links keep 44px targets in six desktop, three tablet and one mobile column', async ({
+    page,
+  }) => {
+    const expectedColumns: Record<number, number> = { 1280: 6, 768: 3, 390: 1, 320: 1 };
+    for (const width of [1280, 768, 390, 320]) {
       await page.setViewportSize({ width, height: 812 });
       await loadFooter(page);
       const tree = page.getByRole('navigation', { name: 'Site map' });
@@ -150,7 +160,7 @@ test.describe('Footer', () => {
       const columns = await tree
         .locator('.sm-groups')
         .evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length);
-      expect(columns).toBe(width === 1280 ? 6 : 2);
+      expect(columns).toBe(expectedColumns[width]);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         width,
       );
