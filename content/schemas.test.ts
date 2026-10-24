@@ -128,9 +128,7 @@ const profileFixture = {
     { code: 'pt', name: 'Portuguese', level: 'native' },
     { code: 'en', name: 'English', level: 'C1' },
   ],
-  actions: [
-    { label: 'GitHub ↗', href: 'https://github.com/erikunha' },
-  ],
+  actions: [{ label: 'GitHub ↗', href: 'https://github.com/erikunha' }],
 };
 
 const educationFixtures = [
