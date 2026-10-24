@@ -2,7 +2,10 @@ import { z } from 'zod';
 import { credentials } from '@/content/credentials';
 import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
+import { perfReceipts } from '@/content/perf-receipts';
 import { profile, profileLocation } from '@/content/profile';
+import { projects } from '@/content/projects';
+import { PerfReceiptSchema, ProjectSchema } from '@/content/schemas';
 import { workAuthorization } from '@/content/visa';
 
 const EmployerSchema = z.object({
@@ -35,6 +38,8 @@ export const HiringProfileSchema = z.object({
   domains: z.array(z.string()),
   employers: z.array(EmployerSchema),
   receipts: z.record(z.string(), z.string()),
+  projects: z.array(ProjectSchema),
+  performance_receipts: z.array(PerfReceiptSchema),
   work_auth: z.record(z.string(), z.string()),
   education: z.array(
     z.object({
@@ -100,7 +105,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
 
   receipts: {
     tx_volume_per_year: '40M+',
-    revenue_platform: '€1B+ ARR',
+    revenue_platform: '€1.197B group revenue (Betsson Group)',
     mau_peak: '8M+ (Grupo SBF)',
     a11y_score: '~100/100',
     perf_delta_js: '-33%',
@@ -114,6 +119,9 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     banking_customers: '70M+ (Itaú via Zup)',
     copilot_subagents: '12-agent system (Betsson)',
   },
+
+  projects,
+  performance_receipts: perfReceipts,
 
   work_auth: workAuthorization,
   education: education.map((entry) => ({

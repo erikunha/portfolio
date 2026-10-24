@@ -2061,3 +2061,217 @@
     }
   }
 }
+
+@layer components {
+  .projects-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--spacing-4) + var(--spacing-1));
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .project-card {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: calc(var(--spacing-4) + var(--spacing-1));
+    border: var(--border-width) solid var(--color-primary-subtle);
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
+    scroll-margin-top: var(--spacing-16);
+  }
+
+  .project-meta {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--spacing-3);
+    margin-bottom: var(--spacing-3);
+  }
+
+  .project-folder {
+    flex: none;
+    width: var(--spacing-target);
+    height: var(--spacing-8);
+    fill: var(--color-green);
+  }
+
+  .project-context {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--spacing-1) var(--spacing-2);
+    min-width: 0;
+    text-align: right;
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+  }
+
+  .project-co {
+    color: var(--color-primary-400);
+  }
+
+  .project-perm {
+    white-space: nowrap;
+  }
+
+  .project-name {
+    margin: var(--spacing-2) 0;
+    color: var(--color-green);
+    font-size: var(--text-base);
+    font-weight: 700;
+  }
+
+  .project-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--spacing-target);
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: var(--spacing-1);
+  }
+
+  .project-link:hover,
+  .project-receipt-company:hover {
+    color: var(--color-green);
+  }
+
+  .project-link:focus-visible,
+  .project-receipt-company:focus-visible {
+    outline: calc(2 * var(--border-width)) solid var(--color-green);
+    outline-offset: var(--spacing-1);
+  }
+
+  .project-desc {
+    margin: 0 0 var(--spacing-4);
+    line-height: 1.6;
+    color: var(--color-text);
+  }
+
+  .project-stats {
+    display: grid;
+    gap: var(--spacing-1);
+    margin: auto 0 0;
+    font-size: var(--text-sm);
+  }
+
+  .project-stats > div {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--spacing-2);
+    align-items: baseline;
+  }
+
+  .project-stats dt {
+    color: var(--color-green);
+  }
+
+  .project-stats dd {
+    margin: 0;
+    text-align: right;
+    color: var(--color-text);
+  }
+
+  .project-receipts {
+    margin-top: var(--spacing-6);
+    padding-top: var(--spacing-4);
+    border-top: var(--border-width) solid var(--color-primary-subtle);
+  }
+
+  .project-receipts-heading {
+    margin: 0 0 var(--spacing-3);
+    font-size: var(--text-sm);
+    color: var(--color-green);
+    overflow-wrap: anywhere;
+  }
+
+  .project-receipts-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .project-receipt {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--spacing-1) var(--spacing-3);
+    padding-block: var(--spacing-3);
+    border-top: var(--border-width) dashed var(--color-primary-subtle);
+    font-size: var(--text-xs);
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+  }
+
+  .project-receipt-metric {
+    color: var(--color-text-secondary);
+  }
+
+  .project-receipt-value {
+    color: var(--color-green);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .project-receipt-featured .project-receipt-value {
+    font-size: var(--text-xl);
+  }
+
+  .project-receipt-company,
+  .project-receipt-note {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .project-receipt-company {
+    color: var(--color-primary-400);
+  }
+
+  a.project-receipt-company {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--spacing-target);
+    text-decoration: underline;
+    text-underline-offset: var(--spacing-1);
+  }
+
+  .project-receipt-note {
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+  }
+
+  @media (min-width: 768px) {
+    .projects-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1279px) {
+    .project-card-last:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
+
+    .project-stats {
+      margin-top: 0;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .projects-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .project-receipt {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 3fr);
+      gap: var(--spacing-3);
+    }
+
+    .project-receipt-company,
+    .project-receipt-note {
+      grid-column: auto;
+    }
+  }
+}

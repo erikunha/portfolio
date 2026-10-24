@@ -13,30 +13,93 @@ export const StatSchema = z.object({
   label: z.string().min(1),
   value: z.string().min(1),
 });
-export const ProjectSchema = z.object({
-  company: z.string().min(1),
-  name: z.string().min(1),
-  mobileName: z.string().min(1),
-  description: z.string().min(1),
-  mobileDescription: z.string().min(1),
-  stats: z.array(StatSchema).min(1),
-  mobileMeta: z.array(StatSchema).min(1),
-  perm: z.string().min(1).optional(),
-});
+export const PROJECT_KIND = { CORPORATE: 'corporate', OSS: 'oss' } as const;
+export const PROJECT_ID = {
+  ORIGINATION: 'origination_ui',
+  PAYMENTS: 'payment_orchestra',
+  SERVICE: 'service_ops',
+  COMMERCE: 'commerce_edge',
+  AI_MESH: 'ai_agent_mesh',
+  EDTECH: 'edtech_omni',
+  GOOGLE_MAPS: 'react_google_maps_api',
+  PORTFOLIO: 'portfolio',
+  LAIBEMAGE: 'laibemage',
+} as const;
+export const PERF_METRIC = {
+  API_LATENCY: 'API_LATENCY',
+  BUNDLE_CSS: 'BUNDLE_CSS',
+  TTI: 'TTI',
+  INITIAL_LOAD: 'INITIAL_LOAD',
+  BUNDLE_JS: 'BUNDLE_JS',
+  PAGE_LOAD: 'PAGE_LOAD',
+  CONVERSION: 'CONVERSION',
+  DESKTOP_BUILD: 'DESKTOP_BUILD',
+  ONBOARDING_TIME: 'ONBOARDING_TIME',
+  LCP: 'LCP',
+} as const;
+export const RECEIPT_PLACEMENT = {
+  PROJECTS: 'projects',
+  CARD: 'card',
+  CONTEXT: 'context',
+} as const;
 
-export const PerfReceiptSchema = z.object({
-  metric: z.string().min(1),
-  delta: z
-    .string()
-    .regex(
-      /^[+-]\d+(\.\d+)?%$/,
-      'a perf receipt delta must be a bare signed percentage and nothing else: "-52%", "+10%", "-97.5%". __tests__/metric-consistency.test.ts flips the sign and searches every public surface for the resulting string, so the delta has to be a token a surface can literally contain. A trailing gloss ("-40% build time") or a missing sign ("10%") flips to a string no surface holds — the sweep for that metric then silently passes forever instead of failing. Put the gloss in `note`. The sibling idiom lives one import away in lib/hiring-profile.ts ("-97.5% (40s→<1s, Venturus)"); that field is a plain string and is compared by prefix, this one is not.',
-    ),
-  company: z.string().min(1),
-  note: z.string().min(1),
-  mobileMetric: z.string().min(1).optional(),
-  desktopOnly: z.boolean().optional(),
-});
+const ProjectIdSchema = z.enum(Object.values(PROJECT_ID));
+const PerfMetricSchema = z.enum(Object.values(PERF_METRIC));
+
+export const ProjectSchema = z
+  .object({
+    id: ProjectIdSchema,
+    company: z.string().trim().min(1),
+    kind: z.enum(Object.values(PROJECT_KIND)),
+    name: z.string().min(1),
+    description: z.string().min(1),
+    stack: z.array(z.string().min(1)).min(1),
+    stats: z.array(StatSchema.extend({ metric: PerfMetricSchema.optional() })).min(1),
+    order: z.number().int().positive(),
+    href: z.url({ protocol: /^https$/ }).optional(),
+    perm: z
+      .string()
+      .regex(/^[-d][rwx-]{9}$/)
+      .default('drwxr-xr-x'),
+  })
+  .refine((project) => project.kind !== PROJECT_KIND.OSS || project.href !== undefined, {
+    path: ['href'],
+    message: 'Open-source projects require an HTTPS link.',
+  })
+  .transform((project) => ({
+    ...project,
+    mobileName: `${project.id}/`,
+    mobileDescription: project.description,
+  }));
+
+export const PerfReceiptSchema = z
+  .object({
+    metric: PerfMetricSchema,
+    delta: z.string().regex(/^[+-]\d+(\.\d+)?%$/),
+    changePercent: z.number().finite(),
+    display: z.string().min(1),
+    company: z.string().min(1),
+    note: z.string().min(1),
+    source: z.string().min(1),
+    projectId: ProjectIdSchema.optional(),
+    placement: z.enum(Object.values(RECEIPT_PLACEMENT)),
+    before: z.number().positive().optional(),
+    after: z.number().nonnegative().optional(),
+    unit: z.string().min(1).optional(),
+    afterIsUpperBound: z.boolean().optional(),
+    mobileMetric: z.string().min(1).optional(),
+  })
+  .refine((receipt) => Number.parseFloat(receipt.delta) === receipt.changePercent, {
+    path: ['delta'],
+    message: 'The displayed delta must equal the canonical numeric percentage.',
+  })
+  .refine(
+    (receipt) =>
+      receipt.before === undefined
+        ? receipt.after === undefined && receipt.unit === undefined
+        : receipt.after !== undefined && receipt.unit !== undefined,
+    { path: ['before'], message: 'Before/after measurements require both values and a unit.' },
+  );
 
 export const NpmTileSchema = z.object({
   label: z.string().min(1),

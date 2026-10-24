@@ -76,5 +76,359 @@
     "EU_Malta": "NEEDS_SPONSORSHIP",
     "Canada": "NEEDS_SPONSORSHIP",
     "worldwide": "OPEN_WITH_SPONSORSHIP"
-  }
+  },
+  "projects": [
+    {
+      "id": "origination_ui",
+      "company": "Raylu",
+      "kind": "corporate",
+      "name": "ORIGINATION_PLATFORM_UI",
+      "description": "Investor workflow screens on Raylu's private-markets platform: company, pipeline, comparison, outreach. Shared table engine and URL-backed view state for funds holding $500B+ in assets.",
+      "stack": [
+        "React",
+        "Next.js 14",
+        "TypeScript 5"
+      ],
+      "stats": [
+        {
+          "label": "SURFACES",
+          "value": "COMPANY / PIPELINE / OUTREACH"
+        },
+        {
+          "label": "STATE",
+          "value": "VERSIONED + URL-BACKED"
+        }
+      ],
+      "order": 1,
+      "perm": "drwxr-xr-x"
+    },
+    {
+      "id": "payment_orchestra",
+      "company": "Betsson Group",
+      "kind": "corporate",
+      "name": "PAYMENT_ORCHESTRA",
+      "description": "PCI-DSS cashier platform: multi-brand deposit/withdraw orchestration across 15+ regulated jurisdictions.",
+      "stack": [
+        "ANGULAR",
+        "STENCIL",
+        "NGRX",
+        "NX"
+      ],
+      "stats": [
+        {
+          "label": "VOLUME",
+          "value": "40M+ TX / YR"
+        },
+        {
+          "label": "REVENUE",
+          "value": "€1.197B (GROUP)"
+        }
+      ],
+      "order": 2,
+      "perm": "drwxr-xr-x"
+    },
+    {
+      "id": "service_ops",
+      "company": "Canon Medical Systems",
+      "kind": "corporate",
+      "name": "SERVICE_OPS_CONSOLE",
+      "description": "Hospital equipment service platform: service orders, specialist scheduling, field visits, live updates. Clean Architecture.",
+      "stack": [
+        "ANGULAR",
+        "NX",
+        "RXJS"
+      ],
+      "stats": [
+        {
+          "label": "JS BUNDLE",
+          "value": "-33%",
+          "metric": "BUNDLE_JS"
+        },
+        {
+          "label": "TTI",
+          "value": "-52%",
+          "metric": "TTI"
+        }
+      ],
+      "order": 3,
+      "perm": "drwxr-xr-x"
+    },
+    {
+      "id": "commerce_edge",
+      "company": "Grupo SBF (Nike / Centauro)",
+      "kind": "corporate",
+      "name": "COMMERCE_EDGE",
+      "description": "Nike Brazil & Centauro storefronts: SSR/SSG/ISR, BFF gateway, shared Nx monorepo, 20+ A/B experiments.",
+      "stack": [
+        "NEXT.JS",
+        "REACT",
+        "TS"
+      ],
+      "stats": [
+        {
+          "label": "REACH",
+          "value": "8M+ MAU"
+        },
+        {
+          "label": "LOAD TIME",
+          "value": "-32%",
+          "metric": "PAGE_LOAD"
+        }
+      ],
+      "order": 4,
+      "perm": "drwxr-xr-x"
+    },
+    {
+      "id": "ai_agent_mesh",
+      "company": "Betsson Group",
+      "kind": "corporate",
+      "name": "AI_AGENT_MESH",
+      "description": "GitHub Copilot 12-agent engineering system: generation, review, debugging, testing, architecture validation. Every automated action reviewable. Adopted team-wide at Betsson.",
+      "stack": [
+        "GITHUB COPILOT"
+      ],
+      "stats": [
+        {
+          "label": "AGENTS",
+          "value": "12"
+        },
+        {
+          "label": "SCOPE",
+          "value": "TEAM-WIDE"
+        }
+      ],
+      "order": 5,
+      "perm": "-rwx------"
+    },
+    {
+      "id": "edtech_omni",
+      "company": "MB Labs",
+      "kind": "corporate",
+      "name": "EDTECH_OMNI",
+      "description": "Cross-platform EdTech app: one codebase, five OSes (Android / iOS / Win / macOS / Linux).",
+      "stack": [
+        "IONIC",
+        "ANGULAR",
+        "ELECTRON"
+      ],
+      "stats": [
+        {
+          "label": "SHARED",
+          "value": "~80% CODE"
+        },
+        {
+          "label": "DESKTOP BUILD",
+          "value": "-40%",
+          "metric": "DESKTOP_BUILD"
+        }
+      ],
+      "order": 6,
+      "perm": "drwxr-xr-x"
+    },
+    {
+      "id": "react_google_maps_api",
+      "company": "react-google-maps-api",
+      "kind": "oss",
+      "name": "REACT_GOOGLE_MAPS_API",
+      "description": "Fixed an infinite React re-render loop in the Directions API example. The loop cost the docs site 61K+ unwanted Google Maps API calls. Stable-callback fix, merged by the maintainer.",
+      "stack": [
+        "React",
+        "TypeScript",
+        "Google Maps API"
+      ],
+      "stats": [
+        {
+          "label": "LIBRARY",
+          "value": "~1.8M WEEKLY NPM DOWNLOADS"
+        },
+        {
+          "label": "ROOT CAUSE",
+          "value": "NEW CALLBACK IDENTITY EVERY RENDER"
+        },
+        {
+          "label": "STATUS",
+          "value": "MERGED"
+        }
+      ],
+      "order": 7,
+      "href": "https://github.com/JustFly1984/react-google-maps-api/pull/3266",
+      "perm": "drwxr-xr-x"
+    },
+    {
+      "id": "portfolio",
+      "company": "Erik Cunha",
+      "kind": "oss",
+      "name": "ERIKUNHA.DEV",
+      "description": "This portfolio. Next.js 16 App Router, React 19, RSC-first, a streaming Anthropic endpoint on the Vercel AI SDK, and a CI eval harness that decides if it ships.",
+      "stack": [
+        "Next.js 16",
+        "React 19",
+        "TypeScript",
+        "Vercel AI SDK"
+      ],
+      "stats": [
+        {
+          "label": "LCP BUDGET",
+          "value": "< 1.8s"
+        },
+        {
+          "label": "INP BUDGET",
+          "value": "< 200ms"
+        },
+        {
+          "label": "DECISION LOG",
+          "value": "130+ RECORDS"
+        }
+      ],
+      "order": 8,
+      "href": "https://github.com/erikunha/portfolio",
+      "perm": "drwxr-xr-x"
+    },
+    {
+      "id": "laibemage",
+      "company": "Erik Cunha",
+      "kind": "oss",
+      "name": "LAIBEMAGE",
+      "description": "Open-source TypeScript CLI (MIT) classifying images across seven LLM vision providers: self-elicited confidence, local-to-cloud escalation below 0.70, two-provider consensus, active-learning queue.",
+      "stack": [
+        "TypeScript",
+        "Node.js"
+      ],
+      "stats": [
+        {
+          "label": "PROVIDERS",
+          "value": "7"
+        },
+        {
+          "label": "CI",
+          "value": "8 WORKFLOWS"
+        },
+        {
+          "label": "GATE",
+          "value": "5% REGRESSION"
+        }
+      ],
+      "order": 9,
+      "href": "https://github.com/erikunha/LAIbemage",
+      "perm": "drwxr-xr-x"
+    }
+  ],
+  "performance_receipts": [
+    {
+      "metric": "API_LATENCY",
+      "delta": "-97.5%",
+      "changePercent": -97.5,
+      "display": "40s→<1s",
+      "company": "@ VENTURUS",
+      "note": "reporting API at a client platform. Query rewrite + PostgreSQL indexes.",
+      "source": "Resume performance evidence",
+      "placement": "projects",
+      "before": 40,
+      "after": 1,
+      "unit": "s",
+      "afterIsUpperBound": true
+    },
+    {
+      "metric": "BUNDLE_CSS",
+      "delta": "-98%",
+      "changePercent": -98,
+      "display": "-98%",
+      "company": "@ CANON_MEDICAL",
+      "note": "PrimeFlex utility refactor on the layout shell, plus lazy load.",
+      "source": "Resume performance evidence",
+      "projectId": "service_ops",
+      "placement": "projects"
+    },
+    {
+      "metric": "TTI",
+      "delta": "-52%",
+      "changePercent": -52,
+      "display": "-52%",
+      "company": "@ CANON_MEDICAL",
+      "note": "concurrent async + OnPush.",
+      "source": "Resume performance evidence",
+      "projectId": "service_ops",
+      "placement": "card"
+    },
+    {
+      "metric": "INITIAL_LOAD",
+      "delta": "-25%",
+      "changePercent": -25,
+      "display": "-25%",
+      "company": "@ CANON_MEDICAL",
+      "note": "Lazy-loaded modules and route-level code splitting.",
+      "source": "Resume performance evidence",
+      "projectId": "service_ops",
+      "placement": "projects"
+    },
+    {
+      "metric": "BUNDLE_JS",
+      "delta": "-33%",
+      "changePercent": -33,
+      "display": "-33%",
+      "company": "@ CANON_MEDICAL",
+      "note": "code splitting + dynamic imports.",
+      "source": "Resume performance evidence",
+      "projectId": "service_ops",
+      "placement": "card"
+    },
+    {
+      "metric": "PAGE_LOAD",
+      "delta": "-32%",
+      "changePercent": -32,
+      "display": "-32%",
+      "company": "@ GRUPO_SBF",
+      "note": "CWV optimization + image pipeline.",
+      "source": "Resume performance evidence",
+      "projectId": "commerce_edge",
+      "placement": "card"
+    },
+    {
+      "metric": "CONVERSION",
+      "delta": "+10%",
+      "changePercent": 10,
+      "display": "+10%",
+      "company": "@ GRUPO_SBF",
+      "note": "20+ A/B experiments.",
+      "source": "Resume performance evidence",
+      "projectId": "commerce_edge",
+      "placement": "projects"
+    },
+    {
+      "metric": "DESKTOP_BUILD",
+      "delta": "-40%",
+      "changePercent": -40,
+      "display": "-40%",
+      "company": "@ MB_LABS",
+      "note": "one Ionic + Angular + Electron codebase, ~80% shared across 5 OSes.",
+      "source": "Resume performance evidence",
+      "projectId": "edtech_omni",
+      "placement": "projects"
+    },
+    {
+      "metric": "ONBOARDING_TIME",
+      "delta": "-40%",
+      "changePercent": -40,
+      "display": "-40%",
+      "company": "@ BETSSON_GROUP",
+      "note": "35-page architecture knowledge system + diagrams.",
+      "source": "Resume performance evidence",
+      "projectId": "ai_agent_mesh",
+      "placement": "context"
+    },
+    {
+      "metric": "LCP",
+      "delta": "-48.6%",
+      "changePercent": -48.6,
+      "display": "2,544→1,308ms",
+      "company": "@ RAYLU",
+      "note": "one route, data-platform migration behind a production A/B.",
+      "source": "Raylu production A/B",
+      "projectId": "origination_ui",
+      "placement": "projects",
+      "before": 2544,
+      "after": 1308,
+      "unit": "ms"
+    }
+  ]
 }

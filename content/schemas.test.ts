@@ -1,5 +1,73 @@
 import { describe, expect, it } from 'vitest';
 
+const projectFixture = {
+  id: 'portfolio',
+  kind: 'oss',
+  name: 'ERIKUNHA.DEV',
+  company: 'Erik Cunha',
+  href: 'https://github.com/erikunha/portfolio',
+  description: 'This portfolio.',
+  stack: ['Next.js 16', 'React 19', 'TypeScript'],
+  stats: [{ label: 'LCP BUDGET', value: '< 1.8s' }],
+  order: 8,
+};
+
+const receiptFixture = {
+  metric: 'LCP',
+  delta: '-48.6%',
+  changePercent: -48.6,
+  before: 2544,
+  after: 1308,
+  unit: 'ms',
+  display: '2,544→1,308ms',
+  company: '@ RAYLU',
+  note: 'One route in a production A/B.',
+  source: 'Raylu production A/B',
+  projectId: 'origination_ui',
+  placement: 'projects',
+};
+
+describe('project cards and receipt content contracts', () => {
+  it('accepts a shared project summary without mobile-specific fields', async () => {
+    const { ProjectSchema } = await import('./schemas');
+    expect(ProjectSchema.safeParse(projectFixture).success).toBe(true);
+  });
+
+  it.each([
+    { company: '' },
+    { id: '' },
+    { kind: 'unknown' },
+    { href: undefined },
+    { href: 'javascript:alert(1)' },
+    { href: 'http://github.com/erikunha/portfolio' },
+    { stack: [] },
+    { order: 0 },
+    { stats: [{ label: 'TTI', value: '-52%', metric: 'unknown' }] },
+  ])('rejects invalid project content: %j', async (invalid) => {
+    const { ProjectSchema } = await import('./schemas');
+    expect(ProjectSchema.safeParse({ ...projectFixture, ...invalid }).success).toBe(false);
+  });
+
+  it('accepts before/after measurements and a signed canonical numeric delta', async () => {
+    const { PerfReceiptSchema } = await import('./schemas');
+    expect(PerfReceiptSchema.parse(receiptFixture)).toMatchObject(receiptFixture);
+  });
+
+  it.each([
+    { delta: '+48.6%' },
+    { changePercent: 48.6 },
+    { before: -2544 },
+    { after: undefined },
+    { unit: undefined },
+    { source: '' },
+    { projectId: 'missing-project' },
+    { placement: 'elsewhere' },
+  ])('rejects invalid receipt content: %j', async (invalid) => {
+    const { PerfReceiptSchema } = await import('./schemas');
+    expect(PerfReceiptSchema.safeParse({ ...receiptFixture, ...invalid }).success).toBe(false);
+  });
+});
+
 describe('GuitarRigSchema v2', () => {
   it('rejects old flat-fields shape', async () => {
     const { GuitarRigSchema } = await import('./schemas');

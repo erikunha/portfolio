@@ -26,7 +26,7 @@ Shipping production LLM, RAG, and multi-agent systems since 2024:
   ephemeral prompt caching, cost tracking, token budget management
 - Multi-agent orchestration: 12-agent GitHub Copilot system deployed to
   engineering team at Betsson Group: automating code generation, review,
-  debugging, testing, and architectural validation across a €1B+ ARR platform
+  debugging, testing, and architectural validation across a platform at Betsson Group (€1.197B group revenue)
 - Prompt engineering at production scale: structured output, tool use,
   function calling, context window management
 - RAG pipeline design, GenAI feature integration, AI evaluation loops
@@ -45,8 +45,8 @@ Streaming LLM · AI Evaluation · LLM Cost Optimization
 - -33% JavaScript bundle reduction (Canon Medical Systems)
 - -32% page load reduction (Nike Brazil / Centauro)
 - +10% conversion rate via 20+ A/B experiments (Nike Brazil)
-- -80% platform delivery cost: shared cross-platform codebase (MB Labs)
-- €1B+ ARR cashier platform (Betsson Group, 40M+ transactions/yr)
+- -40% desktop build time: ~80% shared code across five OSes (MB Labs)
+- €1.197B group revenue, cashier platform (Betsson Group, 40M+ transactions/yr)
 - 8M+ monthly active users (Nike Brazil + Centauro)
 - 70M+ customers served (Itaú Unibanco banking platform)
 - 12-agent AI system deployed to production engineering team
@@ -59,7 +59,7 @@ Function Calling · Context Window Management · LLM Cost Optimization · AI Eva
 
 Frontend: TypeScript (strict) · React 19 · React Server Components ·
 Next.js 16 (App Router) · Angular · RxJS · NgRx · Redux · StencilJS ·
-Web Components · Vue.js · Ionic · SSR/SSG · Micro-Frontend Architecture
+Web Components · Vue.js · Ionic · SSR/SSG/ISR · Micro-Frontend Architecture
 
 Backend & APIs: Node.js · Express.js · REST APIs · WebSocket (STOMP/SockJS) ·
 Python · Backend for Frontend (BFF)
@@ -92,10 +92,10 @@ Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
 
 ## Industries
 
-- iGaming / Regulated Markets: PCI-DSS, 15+ jurisdictions, €1B+ ARR
+- iGaming / Regulated Markets: PCI-DSS, 15+ jurisdictions, €1.197B group revenue
 - E-commerce: 8M+ MAU, multi-brand, LATAM
 - Banking / Fintech: 70M+ customers, digital banking
-- Healthcare: enterprise hospital operations, WCAG 2.1 AA
+- Healthcare: hospital equipment service operations, WCAG 2.1 AA
 - EdTech: 5-OS offline-first educational platform
 - HR-tech / Corporate Training: enterprise chatbot (Cia Hering, KPMG)
 - SaaS / CRM: travel agency management, 2,200+ clients
@@ -124,10 +124,39 @@ Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
   Curated 10+ talks across DevOps, cloud infrastructure, platform engineering and architecture.
 - open to CFP submissions for 2027 · open to volunteer / organizer roles.
 
-## Selected project context
+## Projects
 
-- ORIGINATION_PLATFORM_UI, Raylu: React, Next.js 14, TypeScript 5.
-- SERVICE_OPS_CONSOLE, Canon Medical Systems: hospital equipment service platform for service orders, specialist schedules and field visits.
+- ORIGINATION_PLATFORM_UI (Raylu, corporate): Investor workflow screens on Raylu's private-markets platform: company, pipeline, comparison, outreach. Shared table engine and URL-backed view state for funds holding $500B+ in assets.
+  SURFACES: COMPANY / PIPELINE / OUTREACH · STATE: VERSIONED + URL-BACKED · STACK: React / Next.js 14 / TypeScript 5
+- PAYMENT_ORCHESTRA (Betsson Group, corporate): PCI-DSS cashier platform: multi-brand deposit/withdraw orchestration across 15+ regulated jurisdictions.
+  VOLUME: 40M+ TX / YR · REVENUE: €1.197B (GROUP) · STACK: ANGULAR / STENCIL / NGRX / NX
+- SERVICE_OPS_CONSOLE (Canon Medical Systems, corporate): Hospital equipment service platform: service orders, specialist scheduling, field visits, live updates. Clean Architecture.
+  JS BUNDLE: -33% · TTI: -52% · STACK: ANGULAR / NX / RXJS
+- COMMERCE_EDGE (Grupo SBF (Nike / Centauro), corporate): Nike Brazil & Centauro storefronts: SSR/SSG/ISR, BFF gateway, shared Nx monorepo, 20+ A/B experiments.
+  REACH: 8M+ MAU · LOAD TIME: -32% · STACK: NEXT.JS / REACT / TS
+- AI_AGENT_MESH (Betsson Group, corporate): GitHub Copilot 12-agent engineering system: generation, review, debugging, testing, architecture validation. Every automated action reviewable. Adopted team-wide at Betsson.
+  AGENTS: 12 · SCOPE: TEAM-WIDE · STACK: GITHUB COPILOT
+- EDTECH_OMNI (MB Labs, corporate): Cross-platform EdTech app: one codebase, five OSes (Android / iOS / Win / macOS / Linux).
+  SHARED: ~80% CODE · DESKTOP BUILD: -40% · STACK: IONIC / ANGULAR / ELECTRON
+- REACT_GOOGLE_MAPS_API (react-google-maps-api, oss): Fixed an infinite React re-render loop in the Directions API example. The loop cost the docs site 61K+ unwanted Google Maps API calls. Stable-callback fix, merged by the maintainer.
+  LIBRARY: ~1.8M WEEKLY NPM DOWNLOADS · ROOT CAUSE: NEW CALLBACK IDENTITY EVERY RENDER · STATUS: MERGED · STACK: React / TypeScript / Google Maps API · https://github.com/JustFly1984/react-google-maps-api/pull/3266
+- ERIKUNHA.DEV (Erik Cunha, oss): This portfolio. Next.js 16 App Router, React 19, RSC-first, a streaming Anthropic endpoint on the Vercel AI SDK, and a CI eval harness that decides if it ships.
+  LCP BUDGET: < 1.8s · INP BUDGET: < 200ms · DECISION LOG: 130+ RECORDS · STACK: Next.js 16 / React 19 / TypeScript / Vercel AI SDK · https://github.com/erikunha/portfolio
+- LAIBEMAGE (Erik Cunha, oss): Open-source TypeScript CLI (MIT) classifying images across seven LLM vision providers: self-elicited confidence, local-to-cloud escalation below 0.70, two-provider consensus, active-learning queue.
+  PROVIDERS: 7 · CI: 8 WORKFLOWS · GATE: 5% REGRESSION · STACK: TypeScript / Node.js · https://github.com/erikunha/LAIbemage
+
+## Performance receipts
+
+- API_LATENCY -97.5% (40s→<1s) @ VENTURUS · reporting API at a client platform. Query rewrite + PostgreSQL indexes.
+- BUNDLE_CSS -98% (-98%) @ CANON_MEDICAL · PrimeFlex utility refactor on the layout shell, plus lazy load.
+- TTI -52% (-52%) @ CANON_MEDICAL · concurrent async + OnPush.
+- INITIAL_LOAD -25% (-25%) @ CANON_MEDICAL · Lazy-loaded modules and route-level code splitting.
+- BUNDLE_JS -33% (-33%) @ CANON_MEDICAL · code splitting + dynamic imports.
+- PAGE_LOAD -32% (-32%) @ GRUPO_SBF · CWV optimization + image pipeline.
+- CONVERSION +10% (+10%) @ GRUPO_SBF · 20+ A/B experiments.
+- DESKTOP_BUILD -40% (-40%) @ MB_LABS · one Ionic + Angular + Electron codebase, ~80% shared across 5 OSes.
+- ONBOARDING_TIME -40% (-40%) @ BETSSON_GROUP · 35-page architecture knowledge system + diagrams.
+- LCP -48.6% (2,544→1,308ms) @ RAYLU · one route, data-platform migration behind a production A/B.
 
 ## Links
 

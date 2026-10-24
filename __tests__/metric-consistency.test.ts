@@ -3,7 +3,7 @@ import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { perfReceipts } from '@/content/perf-receipts';
 import { projects } from '@/content/projects';
-import { PerfReceiptSchema } from '@/content/schemas';
+import { PerfReceiptSchema, ProjectSchema } from '@/content/schemas';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 import { isPublishedSurface, readContentSurfaces } from './helpers/content-surfaces';
@@ -34,6 +34,7 @@ const METRIC_KEYWORDS: Record<string, RegExp> = {
   CONVERSION: /conversion/i,
   DESKTOP_BUILD: /desktop[\s-]*build|build[\s-]*time/i,
   ONBOARDING_TIME: /onboarding/i,
+  LCP: /\bLCP\b|largest.contentful.paint/i,
 };
 
 const PROXIMITY_CHARS = 60;
@@ -84,6 +85,7 @@ const PROJECT_STAT_METRICS: Record<string, string> = {
   TTI: 'TTI',
   'JS BUNDLE': 'BUNDLE_JS',
   'LOAD TIME': 'PAGE_LOAD',
+  'DESKTOP BUILD': 'DESKTOP_BUILD',
 };
 
 beforeAll(async () => {
@@ -92,6 +94,32 @@ beforeAll(async () => {
 });
 
 describe('performance metrics agree with the authoritative receipts', () => {
+  it('publishes all project facts and figures together on every machine-readable surface', () => {
+    const manifest = JSON.parse(read('public/.well-known/agent.json'));
+    expect(HIRING_PROFILE.projects).toEqual(projects);
+    expect(ProjectSchema.array().parse(manifest.projects)).toEqual(projects);
+    const llms = read('public/llms.txt');
+    for (const project of projects) {
+      const facts = project.stats.map((stat) => `${stat.label}: ${stat.value}`).join(' · ');
+      const entry = `- ${project.name} (${project.company}, ${project.kind}): ${project.description}\n  ${facts} · STACK: ${project.stack.join(' / ')}${project.href ? ` · ${project.href}` : ''}`;
+      expect(SYSTEM_TEXT).toContain(entry);
+      expect(llms).toContain(entry);
+    }
+  });
+
+  it('keeps every receipt magnitude and before/after measurement consistent across machine-readable surfaces', () => {
+    const manifest = JSON.parse(read('public/.well-known/agent.json'));
+    expect(HIRING_PROFILE.performance_receipts).toEqual(perfReceipts);
+    expect(PerfReceiptSchema.array().parse(manifest.performance_receipts)).toEqual(perfReceipts);
+    for (const receipt of perfReceipts) {
+      const entry = `- ${receipt.metric} ${receipt.delta} (${receipt.display}) ${receipt.company} · ${receipt.note}`;
+      expect(SYSTEM_TEXT).toContain(entry);
+      expect(read('public/llms.txt')).toContain(entry);
+    }
+    expect(HIRING_PROFILE.receipts.revenue_platform).toBe('€1.197B group revenue (Betsson Group)');
+    expect(read('public/llms.txt')).not.toMatch(/€1B\+|\bARR\b|-80%|~90%/);
+  });
+
   it('every swept surface has content, so none can degrade to a silent no-op', () => {
     const EMPTY_SERIALISATIONS = new Set(['', '{}', '[]', 'null', 'undefined']);
     const empty = METRIC_SURFACES()
@@ -139,6 +167,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
     ].filter(
       (delta) =>
         PerfReceiptSchema.safeParse({
+          ...perfReceipts[0],
           metric: 'BUNDLE_JS',
           delta,
           company: '@ ACME',

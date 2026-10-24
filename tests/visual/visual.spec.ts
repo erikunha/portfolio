@@ -21,6 +21,19 @@ test.describe('visual regression', () => {
     await snapshotLocator(mockedPage, career, 'career.png');
   });
 
+  test('projects and attached receipts match baseline', async ({ mockedPage }) => {
+    const projects = mockedPage.locator('#sec-projects');
+    await projects.scrollIntoViewIfNeeded();
+    await mockedPage.evaluate(() => document.fonts.ready);
+    await expect(projects.locator('.projects-grid > li')).toHaveCount(9);
+    await expect(projects.locator('#sec-perf-receipts [data-receipt]')).toHaveCount(6);
+    await stripVolatileChrome(mockedPage);
+    if (process.env.ARGOS_TOKEN) {
+      await argosScreenshot(mockedPage, 'projects-and-receipts', { element: projects });
+    }
+    await snapshotLocator(mockedPage, projects, 'projects-and-receipts.png');
+  });
+
   test('about panels match baseline', async ({ mockedPage }) => {
     const about = mockedPage.locator('#sec-about');
     await about.scrollIntoViewIfNeeded();
