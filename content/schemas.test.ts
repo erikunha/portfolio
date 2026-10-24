@@ -244,6 +244,8 @@ describe('FooterContentSchema and shutdown content', () => {
     const invalid = [
       { ...footerContent, groups: [] },
       { ...footerContent, sessionTitle: '' },
+      { ...footerContent, copyLabel: '' },
+      { ...footerContent, haltedAt: '' },
       { ...footerContent, connections: [{ ...footerContent.connections[0], state: 'FAKE' }] },
       {
         ...footerContent,

@@ -78,6 +78,65 @@ test.describe('Footer', () => {
     await expect(status).toHaveText(/rebooted/i);
   });
 
+  test('COPY copies netstat rows and the R key has a 44px computed target', async ({
+    page,
+    context,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'chromium', 'Clipboard permissions require Chromium.');
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await loadFooter(page);
+    const netstat = page.locator('.footer-netstat');
+    const rows = await netstat.locator('tbody tr').allTextContents();
+    const expected = await netstat
+      .locator('tbody tr')
+      .evaluateAll((elements) =>
+        elements
+          .map((row) => [...row.querySelectorAll('td')].map((cell) => cell.textContent).join('  '))
+          .join('\n'),
+      );
+    expect(rows).toHaveLength(4);
+    const copy = page.getByRole('button', { name: 'Copy netstat rows' });
+    await copy.click();
+    await expect(copy).toHaveText('COPIED');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
+    for (const target of [copy, page.locator('.footer-reboot kbd')]) {
+      const size = await target.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return { width: Number.parseFloat(style.width), height: Number.parseFloat(style.height) };
+      });
+      expect(size.width).toBeGreaterThanOrEqual(44);
+      expect(size.height).toBeGreaterThanOrEqual(44);
+    }
+  });
+
+  test('mobile footer matches prototype height and netstat stays on one line', async ({ page }) => {
+    for (const width of [390, 1280]) {
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 720 });
+      await loadFooter(page);
+      await page.evaluate(() => document.fonts.ready);
+      if (width === 390) {
+        const footer = await page.locator('footer').boundingBox();
+        expect(footer?.height).toBeGreaterThanOrEqual(1682);
+        expect(footer?.height).toBeLessThanOrEqual(1722);
+      }
+      const cells = page.locator('.footer-netstat :is(th, td)');
+      for (const cell of await cells.all()) {
+        const metrics = await cell.evaluate((element) => {
+          const range = document.createRange();
+          range.selectNodeContents(element.firstElementChild ?? element);
+          return {
+            lines: range.getClientRects().length,
+            width: element.clientWidth,
+            contentWidth: element.scrollWidth,
+          };
+        });
+        expect(metrics.lines).toBe(1);
+        expect(metrics.contentWidth).toBeLessThanOrEqual(metrics.width);
+      }
+    }
+  });
+
   test('tree links have 44px targets and six desktop or two mobile columns', async ({ page }) => {
     for (const width of [1280, 390]) {
       await page.setViewportSize({ width, height: 812 });
