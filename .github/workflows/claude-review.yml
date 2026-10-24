@@ -81,7 +81,7 @@ jobs:
       contains(github.event.comment.body, '/claude-review') &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       # Two checkouts, in this order, per the action's own docs/security.md:
       # "Do not check out an untrusted ref into the workspace root before this
@@ -136,6 +136,39 @@ jobs:
             exit 1
           fi
 
+      # The review orchestrator's CI profile reads installed dependency source when a PR
+      # changes them. --ignore-scripts means no package code runs in a job that can mint an
+      # OIDC token; the install sits BEFORE the strip so instruction-shaped files shipped
+      # inside packages are removed with the rest.
+      - name: Detect dependency changes
+        id: deps
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          files=$(gh pr diff "$PR" --name-only --repo "${{ github.repository }}")
+          if grep -qxE 'package\.json|pnpm-lock\.yaml' <<<"$files"; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        if: steps.deps.outputs.changed == 'true'
+        with:
+          package_json_file: pr-head/package.json
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: steps.deps.outputs.changed == 'true'
+        with:
+          node-version-file: pr-head/.nvmrc
+
+      - name: Install the PR's dependencies without running package scripts
+        if: steps.deps.outputs.changed == 'true'
+        working-directory: pr-head
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
       # `--add-dir` mounts pr-head as project scope, so an instruction-shaped file
       # the PR authored would arrive on the INSTRUCTION channel rather than the
       # data channel. Prose in the prompt is not a mechanism; deleting the files is.
@@ -186,7 +219,7 @@ jobs:
           track_progress: ${{ github.event_name == 'pull_request' }}
           prompt: "${{ github.event_name == 'pull_request' && format('REPO {0} — PR NUMBER {1} — You are performing a CODE REVIEW, not a task. Do not narrate progress and do not implement changes. Produce exactly two artifacts: one create_inline_comment tool call per finding, and then one overview comment ending in exactly one verdict line. Read the diff with gh pr diff. A run that posts no verdict line has failed.', github.repository, github.event.pull_request.number) || '' }}"
           claude_args: >-
-            --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*)"
+            --allowedTools "Read,Grep,Glob,Task,WebFetch,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr checks:*),Bash(gh run view:*)"
             --add-dir pr-head
             --append-system-prompt-file /tmp/claude-review-prompt.md
 

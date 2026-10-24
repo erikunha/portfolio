@@ -19,7 +19,7 @@ sequenceDiagram
     C->>C: writing-plans + thinking-risk-premortem (failure modes -> tasks)
     C->>C: TDD implement (tests first)
     C->>G: edits trigger PostToolUse hooks (markers, lints)
-    C->>C: self-review the diff (pr-review-toolkit:code-reviewer)
+    C->>C: self-review the diff (pr-review-orchestrator skill)
     A-->>C: findings
     C->>G: git push (pre-push gate chain blocks if not stamped)
     C->>CI: open PR; CI runs lint/type/test/build/perf/a11y/security
@@ -76,7 +76,7 @@ Every substantive change runs the same disciplined loop, enforced by mandated sk
 
 **claude-review (claude[bot]) runs automatically** on every PR open and push, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line that `pnpm claude-gate` reads fail-closed.
 
-**The local battery is not restored.** The 4-agent battery, `battery-synthesis`, the findings ledger and the transcript-verified stamp were removed on 2026-07-27 and stay removed. Pre-PR review is discipline: read the diff, run `pr-review-toolkit:code-reviewer` over it. `pnpm pr:gate` checks thread resolution.
+**The local battery is not restored.** The 4-agent battery, `battery-synthesis`, the findings ledger and the transcript-verified stamp were removed on 2026-07-27 and stay removed. Pre-PR review is discipline: read the diff, run the `pr-review-orchestrator` skill over it. `pnpm pr:gate` checks thread resolution.
 
 ## 4. Enforcement — git and CI only
 

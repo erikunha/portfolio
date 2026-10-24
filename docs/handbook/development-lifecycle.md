@@ -50,7 +50,7 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 - **`commit-msg`**: commitlint. Conventional Commits with a **mandatory scope** (`scope-empty: [2, 'never']`) drawn from an **open set** (`scope-enum: [0]`). Scopes are feature-area names (`ci`, `dx`, `observability`, `healthz`, `ppr`, `arch`, ...), not technical categories.
 
 ### 7. Pre-PR self-review, and the pre-push gate chain
-Before opening the PR, read the diff and run `pr-review-toolkit:code-reviewer` over it; there is no battery and no stamp since 2026-07-27. On every push, `.husky/pre-push` blocks unless it does not target `main`, the branch name is valid, and `pnpm verify` passes.
+Before opening the PR, read the diff and run the `pr-review-orchestrator` skill over it; there is no battery and no stamp since 2026-07-27. On every push, `.husky/pre-push` blocks unless it does not target `main`, the branch name is valid, and `pnpm verify` passes.
 
 ### 8. Pre-PR -> open PR
 Run `pnpm ci:local`, then `pnpm bundle-check` and `pnpm route-js-check`, then `pnpm gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
@@ -75,7 +75,7 @@ flowchart LR
         g3["no direct main"] --> g4["branch name"] --> g5["review stamp (pre-PR push only)"] --> g6["API-edit audit marker"] --> g7["pnpm verify"]
     end
     subgraph prepr["pre-PR (manual)"]
-        g8["ci:local"] --> g9["bundle-check"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["pr-review-toolkit:code-reviewer"]
+        g8["ci:local"] --> g9["bundle-check"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["pr-review-orchestrator"]
     end
     subgraph open["post-open"]
         g13["Review convergence"]

@@ -275,7 +275,7 @@ Modernization strategies:
 - Team transformation
 
 Integration with other agents:
-- Collaborate with pr-review-toolkit:code-reviewer on implementation
+- Collaborate with the pr-review-orchestrator skill on implementation
 - Support qa-expert with quality attributes
 - Work with security-auditor on security architecture
 - Guide performance-engineer on performance design

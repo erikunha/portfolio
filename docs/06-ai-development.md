@@ -44,7 +44,7 @@ The trade this makes is explicit and worth naming: a git hook and a CI job const
 
 **claude-review is the AI reviewer on pull requests.** `.github/workflows/claude-review.yml` runs `claude-code-action` (SHA-pinned) on every PR open and push, appending `.github/claude-review-prompt.md` as a system prompt. That prompt requires one `create_inline_comment` call per finding, anchored to a line the PR changed, and a complete review in a single pass rather than only the most salient issue. It closes with a `Verdict:` line that `pnpm claude-gate` parses fail-closed — an Approve naming no head SHA, or naming a stale one, does not pass.
 
-**The local review battery is NOT restored.** The 4-agent battery, its findings ledger (`review:findings`) and the dispatch stamp (`review:stamp`) were removed on 2026-07-27 and stay removed. Pre-PR self-review is a discipline: read the diff, invoke `pr-review-toolkit:code-reviewer`, fix what it finds. `pnpm pr:gate` checks that every review thread is resolved and flags `suspicious_self_resolve`.
+**The local review battery is NOT restored.** The 4-agent battery, its findings ledger (`review:findings`) and the dispatch stamp (`review:stamp`) were removed on 2026-07-27 and stay removed. Pre-PR self-review is a discipline: read the diff, run the `pr-review-orchestrator` skill, fix what it finds. `pnpm pr:gate` checks that every review thread is resolved and flags `suspicious_self_resolve`.
 
 ## MCP servers
 

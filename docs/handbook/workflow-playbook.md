@@ -17,7 +17,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   3. Dispatch `architect-reviewer`; it must return `GATE_RESULT: PASS` (convention; the gating hook was removed 2026-07-27).
   4. `speckit-plan` + `thinking-risk-premortem` to decompose into tasks (shard into sub-PRs if large).
   5. Branch `feat/<description>`. Implement test-first.
-  6. Self-review the diff (`pr-review-toolkit:code-reviewer`), fix what it finds, push.
+  6. Self-review the diff (`pr-review-orchestrator` skill), fix what it finds, push.
   7. `pnpm ci:local` + `gates:runtime`, open the PR, drive threads to resolved, `pnpm pr:gate`, owner merges.
   8. Add an ADR to `DECISIONS.md` with a reversibility note.
 - **AI:** brainstorming, architect review, planning, TDD implementation, pre-PR self-review.
