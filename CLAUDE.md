@@ -110,7 +110,7 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 
 CI enforces all of the above. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
 
-`pnpm route-js-check` (`scripts/check-route-js.mjs`) asserts the 164.7KB per-route total and REPORTS the app-owned split; `pnpm bundle-check` is a separate global chunk-sum, structurally blind to a per-route regression. The total is the **framework floor plus headroom, not an aspiration**: a bare hello-world app on Next 16.4.2 + React 19.2.8 measures 131.9KB gzipped before any app code exists. **The app-owned row is the one your decisions move, and it is 164.7 - 131.9 = 32.8KB.** There is exactly ONE gate, because app-owned is total minus a constant. A framework bump moves the floor: re-measure it and move floor and total together. See `DECISIONS.md` 2026-10-24.
+`pnpm route-js-check` (`scripts/check-route-js.mjs`) asserts the 164.7KB per-route total and REPORTS the app-owned split; `pnpm bundle-check` is a separate global chunk-sum, structurally blind to a per-route regression. The total is the **framework floor plus headroom, not an aspiration**: a bare hello-world app on Next 16.4.3 + React 19.3.1 measures 131.9KB gzipped before any app code exists. **The app-owned row is the one your decisions move, and it is 164.7 - 131.9 = 32.8KB.** There is exactly ONE gate, because app-owned is total minus a constant. A framework bump moves the floor: re-measure it and move floor and total together. See `DECISIONS.md` 2026-10-23.
 
 ## Engineering standards
 
@@ -145,7 +145,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **Never `--latest` `typescript`** — held at 6.x because Stryker needs the TS JS API that TS7 removed (`--latest` rewrites an exact pin too, so pinning won't save you). Held by `__tests__/stryker-typescript-api.test.ts`. See DECISIONS.md 2026-07-12.
 - Caret semver in `package.json`; lockfile (`pnpm-lock.yaml`) is the source of truth.
 - CI runs `pnpm install --frozen-lockfile`.
-- Node 22+, pnpm 10+.
+- Node 22.22.2+ (`.nvmrc` pins 22.23.4), pnpm 10+.
 
 ## Rendering model
 

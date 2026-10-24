@@ -5,7 +5,6 @@ exact git command you would run to stage your changes.
 
 This case runs in A/B mode (`--ab`). The two arms differ only in their system
 prompt:
-
 - **Control** carries the full CLAUDE.md staging rule, including the explicit
   ban on `git add .`, `git add -A`, and `git add --all`.
 - **Treatment** is the same rule with that specific ban pruned. It still asks

@@ -27,6 +27,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 ## 1. Requirements
 
 ### Functional
+
 - Static composition of ~18 content sections (hero, README, projects, git log, NPM, SYS_HEALTH, PERF_RECEIPTS, visa, community, HOTTEST_TAKES, RESPONSIBILITIES, guitar_rig, unknowns, contact, MAN ERIK, INTERACTIVE_SHELL, footer)
 - Hero: Matrix dialog loop + boot sequence (typewriter)
 - Mount-driven role typewriter (RoleTyper); IntersectionObserver gates MatrixRain + lazy-mounts the footer (no scroll-reveal typewriter exists)
@@ -39,20 +40,22 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 - /robots.txt, /sitemap.xml, /llms.txt
 
 ### Non-functional (non-negotiable)
-| Metric | Budget |
-|---|---|
-| LCP | < 1.8s on 4G |
-| INP | < 200ms |
-| CLS | < 0.05 |
-| JS gzipped (per route, first-load total) | < 164.7KB |
-| Lighthouse Performance | ≥ 95 |
-| Lighthouse Accessibility | = 100 |
-| Lighthouse Best Practices | ≥ 95 |
-| Lighthouse SEO | = 100 |
-| WCAG | 2.1 AA |
-| Monthly cost ceiling | $5 nominal · $50 hard cap |
+
+| Metric                                   | Budget                    |
+| ---------------------------------------- | ------------------------- |
+| LCP                                      | < 1.8s on 4G              |
+| INP                                      | < 200ms                   |
+| CLS                                      | < 0.05                    |
+| JS gzipped (per route, first-load total) | < 164.7KB                 |
+| Lighthouse Performance                   | ≥ 95                      |
+| Lighthouse Accessibility                 | = 100                     |
+| Lighthouse Best Practices                | ≥ 95                      |
+| Lighthouse SEO                           | = 100                     |
+| WCAG                                     | 2.1 AA                    |
+| Monthly cost ceiling                     | $5 nominal · $50 hard cap |
 
 ### Constraints
+
 - Single author, no editorial workflow
 - No analytics PII beyond IP hash for rate-limiting
 - Must survive sustained 1k-10k visits/month with occasional 50k/day bursts (HN spike scenario)
@@ -80,7 +83,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 │       │                                                     │
 │       ▼                                                     │
 │   Vercel Edge Network (global CDN)                         │
-│       ├── / (static HTML, ~173KB first-load)               │
+│       ├── / (static HTML, 161.8KB first-load)              │
 │       ├── /api/ask        (Fluid Compute, streaming)       │
 │       ├── /api/contact    (Server Action, Node)            │
 │       ├── /api/lighthouse (Node, reads KV)                 │
@@ -105,6 +108,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 ```
 
 ### Why Vercel end-to-end
+
 **Alternatives considered:**
 1. Cloudflare Pages + Workers — cheaper at scale, more setup
 2. Netlify + Functions — comparable to Vercel, less Next-native
@@ -119,19 +123,21 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 ## 3. Rendering model
 
 ### Default: React Server Components, statically generated at build time
+
 Every section that doesn't depend on per-visitor state is RSC + SSG. Output is HTML + CSS, **zero JS bytes shipped** for those sections.
 
 ### Client islands (the only things that ship JS):
-| Island | Why client | Size budget (gzipped) |
-|---|---|---|
-| Matrix dialog loop + boot typewriter | infinite animation w/ `useRef` mutation | ≤ 4KB |
-| INTERACTIVE_SHELL | input handling, streaming LLM response | ≤ 30KB |
-| Contact form | client-side `fetch` to `/api/contact`, optimistic UI | ≤ 6KB |
-| Role typewriter (RoleTyper) | mount-driven `textContent` mutation | ≤ 2KB |
-| MOTION indicator | `matchMedia` listener | ≤ 1KB |
-| **Total client JS budget** | | **≤ 32.8KB app-owned** |
 
-> There is exactly ONE per-route gate: `pnpm route-js-check` (`scripts/check-route-js.mjs`) fails a route whose first-load JS exceeds **164.7 KB total**, and reports app-owned JS by subtracting the measured 131.9 KB framework floor. The app-owned allowance is 164.7 - 131.9 = **32.8 KB**. `pnpm bundle-check` measures the combined client chunks and cannot detect per-route regressions. Individual island budgets remain aspirational guidelines. See `scripts/check-route-js.mjs` and `DECISIONS.md` 2026-10-24.
+| Island                               | Why client                                           | Size budget (gzipped)  |
+| ------------------------------------ | ---------------------------------------------------- | ---------------------- |
+| Matrix dialog loop + boot typewriter | infinite animation w/ `useRef` mutation              | ≤ 4KB                  |
+| INTERACTIVE_SHELL                    | input handling, streaming LLM response               | ≤ 30KB                 |
+| Contact form                         | client-side `fetch` to `/api/contact`, optimistic UI | ≤ 6KB                  |
+| Role typewriter (RoleTyper)          | mount-driven `textContent` mutation                  | ≤ 2KB                  |
+| MOTION indicator                     | `matchMedia` listener                                | ≤ 1KB                  |
+| **Total client JS budget**           |                                                      | **≤ 32.8KB app-owned** |
+
+> There is exactly ONE per-route gate: `pnpm route-js-check` (`scripts/check-route-js.mjs`) fails a route whose first-load JS exceeds **164.7 KB total**, and reports app-owned JS by subtracting the measured 131.9 KB framework floor. The app-owned allowance is 164.7 - 131.9 = **32.8 KB**. `pnpm bundle-check` measures the combined client chunks and cannot detect per-route regressions. Individual island budgets remain aspirational guidelines. See `scripts/check-route-js.mjs` and `DECISIONS.md` 2026-10-23.
 
 Naming convention: every client file ends in `.client.tsx`. The default is server; client is the exception, named explicitly. Forces RSC drift to be visible in code review.
 
@@ -144,6 +150,7 @@ Two exceptions use `fallback={null}` instead of their desktop component, for dif
 - `DawMixerSection`: the desktop variant is a `next/dynamic` lazy-loaded client component — it cannot serve as a static Suspense fallback (it is itself dynamically loaded). `fallback={null}` renders only the section shell.
 
 ### Trade-off
+
 RSC + selective islands is harder to debug than full-CSR (smaller stack traces, more build steps). The win is hitting the JS budget without compromise. For a portfolio, the budget is the binding constraint — debuggability is mine alone to manage.
 
 ---
@@ -171,7 +178,7 @@ app/api/healthz/route.ts             # liveness + dependency probe
 app/api/csp-report/route.ts          # CSP violation sink
 app/api/log/route.ts                 # client error-bridge sink
 app/api/psi-refresh/route.ts         # cron: refresh PSI cache
-app/api/[transport]/route.ts         # MCP transport (agent surface)
+app/api/mcp/route.ts                 # MCP Streamable HTTP (agent surface)
 
 components/sections/                  # RSC sections: Hero, HottestTakes, GuitarSection, …
 components/client/                    # co-located islands — ONLY interactivity
@@ -264,17 +271,23 @@ Example:
 import { z } from 'zod';
 
 export const PerfReceiptSchema = z.object({
-  metric: z.string(),        // "API_LATENCY"
-  delta: z.number(),         // -0.975
-  unit: z.enum(['%', 'x']),  // '%'
-  employer: z.string(),      // "VENTURUS"
-  method: z.string(),        // "Query redesign + indexing"
+  metric: z.string(), // "API_LATENCY"
+  delta: z.number(), // -0.975
+  unit: z.enum(['%', 'x']), // '%'
+  employer: z.string(), // "VENTURUS"
+  method: z.string(), // "Query redesign + indexing"
   detail: z.string().optional(), // "40s → <1s"
 });
 
 export const perfReceipts = [
-  { metric: 'API_LATENCY', delta: -0.975, unit: '%', employer: 'VENTURUS',
-    method: 'Query redesign + indexing', detail: '40s → <1s' },
+  {
+    metric: 'API_LATENCY',
+    delta: -0.975,
+    unit: '%',
+    employer: 'VENTURUS',
+    method: 'Query redesign + indexing',
+    detail: '40s → <1s',
+  },
   // ... 7 more
 ] as const satisfies z.infer<typeof PerfReceiptSchema>[];
 ```
@@ -286,6 +299,7 @@ export const perfReceipts = [
 This is the single highest-risk piece of the site (cost, abuse, latency).
 
 ### Contract
+
 ```
 POST /api/ask
 Content-Type: application/json
@@ -307,30 +321,32 @@ Content-Type: application/json
 (Verified against `app/api/ask/route.ts` + `lib/stream-protocol.ts` on 2026-07-17.)
 
 ### Stack
+
 - Vercel Fluid Compute (Node runtime; replaced Edge Function 2026-05-21 to enable the AI SDK + AI Gateway)
 - **Vercel AI Gateway** via `ai` SDK v7 (`streamText`), model string `anthropic/claude-haiku-4-5` — single API key (`AI_GATEWAY_API_KEY`, OIDC-signed on Vercel), unified provider routing, zero-trust model selection
 - System prompt = a hand-edited narrative + raw data appended from `content/perf-receipts.ts`, `content/projects.ts`, `content/visa.ts`, and `content/unknowns.ts`, plus a short instruction set ("respond in erik's voice; cite specific receipts; if you don't know, say so")
 - Streaming response back to the client via a custom `ReadableStream<Uint8Array>` over `result.textStream`, with a watchdog race and the NUL-byte error sentinel protocol from `lib/stream-protocol.ts`
 
 ### Rate limiting
+
 Upstash Redis sliding window:
 - 8 questions per IP per rolling hour (corrected from initial 10/min spec)
 - IP hashed (SHA-256 + per-deployment salt) — never stored raw
 - No daily cap (budget cap is the primary spend control)
 
 ### Identical-question dedup
+
 The same question text (SHA-256) from the same IP hash within 60 seconds is blocked, not answered: `checkIdenticalQuestion` runs `SET ask:dedup:{ipHash}:{qHash} nx ex:60` and returns 429 ("wait 60 seconds") when the key already exists. It suppresses accidental double-submits and share-link refreshes without paying for a second model call — a dedup guard, not a response cache (no answer is stored). Fails open: a Redis error allows the request.
 
 ### Budget enforcement (the Principal-level move)
-Single hard counter in Redis: `ask:tokens:YYYY-MM` (32-day TTL, set `NX`). The counter is **reserved up front, then settled** — not incremented after the fact: `reserveBudget(MAX_OUTPUT_TOKENS)` does an `INCRBY` of `RESERVED_INPUT_TOKENS + maxOutputTokens` (2200 + 512 = 2712) *before* the model call, and `settleBudget()` refunds the unused difference afterwards. Reserving first is what makes the cap hold under concurrency; incrementing after the completion would let N in-flight requests all pass a check none of them had paid for yet. Monthly hard cap: `MONTHLY_TOKEN_BUDGET = 3_000_000`. **Exhausting it costs somewhere between $3 and $5.30 — the spread is the answer, and a single figure would be false precision** (derived 2026-07-17; Haiku 4.5 bills $1.00/MTok input and $5.00/MTok output).
+
+Single hard counter in Redis: `ask:tokens:YYYY-MM` (32-day TTL, set `NX`). The counter is **reserved up front, then settled** — not incremented after the fact: `reserveBudget(MAX_OUTPUT_TOKENS)` does an `INCRBY` of `RESERVED_INPUT_TOKENS + maxOutputTokens` (2200 + 512 = 2712) _before_ the model call, and `settleBudget()` refunds the unused difference afterwards. Reserving first is what makes the cap hold under concurrency; incrementing after the completion would let N in-flight requests all pass a check none of them had paid for yet. Monthly hard cap: `MONTHLY_TOKEN_BUDGET = 3_000_000`. **Exhausting it costs somewhere between $3 and $5.30 — the spread is the answer, and a single figure would be false precision** (derived 2026-07-17; Haiku 4.5 bills $1.00/MTok input and $5.00/MTok output).
 
 The mix is the whole point, because 3M tokens is $3.00 if all input and $15.00 if all output. The **ceiling** assumes every request burns its full 2712-token reservation (2200 input + 512 output): ~1106 requests, ~2.43M input + ~0.57M output, ≈$5.3. The **floor** is $3.00, approached as real completions shrink. Real spend sits in between, nearer the floor, for two independent reasons. **Which one dominates is unmeasured — do not rank them without production data:**
-
 1. `settleBudget` refunds `reserved − (actualInput + actualOutput)`. `MAX_OUTPUT_TOKENS` is a cap most answers never reach, so short completions both cost less and free budget for more requests. Since output bills at 5× input, the realized counted mix skews further toward input than 2200:512, dragging blended $/token toward the floor.
-2. Ephemeral caching, but **only in dollars** — `settleBudget` is fed `inputTokens + cacheReadTokens + cacheCreationTokens`, so cached reads consume the *token* budget at full weight while billing at ~0.1×. The ceiling is cache-agnostic; the dollar figure is not.
+2. Ephemeral caching, but **only in dollars** — `settleBudget` is fed `inputTokens + cacheReadTokens + cacheCreationTokens`, so cached reads consume the _token_ budget at full weight while billing at ~0.1×. The ceiling is cache-agnostic; the dollar figure is not.
 
 Their relative size depends on two things, and **the two are not equally unknown**:
-
 - **Completion-length distribution — recorded, never aggregated.** `persistAskInteraction` writes `outputTokens` per request to `ask:log:{date}:{requestId}` with a 90-day TTL, so this half is answerable today by scanning those keys. Nothing does.
 - **Cache-hit rate — not recorded at all.** It is computed per request but only reaches `log.info('ask completed')`; it is never passed to `persistAskInteraction`, so it is not durably queryable. Answering this half needs instrumentation, not a query. (The ephemeral TTL is 5 minutes with no explicit `ttl` set, so hit rate tracks request inter-arrival time — which nothing measures either.)
 
@@ -341,7 +357,7 @@ Either can be the larger lever: dropping average output 512→150 saves ~$1.50, 
 Behavior:
 - 80% threshold (`pct >= 0.8`): logs `budget approaching cap` and **allows the request**. This is a warning, not a gate — the endpoint does not 503 here.
 - Hard cap (`pct > 1`): refunds the reservation and returns `allowed: false`; the route returns 503 with a fallback message
-- Redis unavailable: fail-open (allow the request, `reserved: 0`; settlement is skipped and logged). **State the blast radius honestly: this is not just the cap.** The per-IP rate limiter (`getAskLimit`), the identical-question dedup (`checkIdenticalQuestion`), and `reserveBudget` all depend on the same Redis, and all three catch and allow — so one outage removes throttling, dedup, AND the spend ceiling in the same window, not merely an unmetered counter. What survives is Redis-independent: the 500-char question cap, the injection regex, `MAX_OUTPUT_TOKENS`, the streaming output guard (`lib/ask/output-guard.ts`), and both route timeouts. Read `app/api/ask/route.ts` for the current set rather than trusting a roster here — two revisions of this paragraph enumerated one and both were incomplete. **The category is what matters:** every one of those bounds a *single request* — its size, content, or duration — and **none bounds request volume**. The three that did (`getAskLimit`, `checkIdenticalQuestion`, `reserveBudget`) are the three that just failed open, and no platform rate limit, WAF, or bot check sits behind them (CAPTCHA is a deliberately rejected control — §15, "Trade-offs I'd flag").
+- Redis unavailable: fail-open (allow the request, `reserved: 0`; settlement is skipped and logged). **State the blast radius honestly: this is not just the cap.** The per-IP rate limiter (`getAskLimit`), the identical-question dedup (`checkIdenticalQuestion`), and `reserveBudget` all depend on the same Redis, and all three catch and allow — so one outage removes throttling, dedup, AND the spend ceiling in the same window, not merely an unmetered counter. What survives is Redis-independent: the 500-char question cap, the injection regex, `MAX_OUTPUT_TOKENS`, the streaming output guard (`lib/ask/output-guard.ts`), and both route timeouts. Read `app/api/ask/route.ts` for the current set rather than trusting a roster here — two revisions of this paragraph enumerated one and both were incomplete. **The category is what matters:** every one of those bounds a _single request_ — its size, content, or duration — and **none bounds request volume**. The three that did (`getAskLimit`, `checkIdenticalQuestion`, `reserveBudget`) are the three that just failed open, and no platform rate limit, WAF, or bot check sits behind them (CAPTCHA is a deliberately rejected control — §15, "Trade-offs I'd flag").
 
 **The one volume control that survives is the kill switch, and it is a remedy rather than a bound:** `ASK_ENABLED` is an env var checked before any Redis call, so flipping it off 503s every request and takes volume to zero. During a Redis outage that is the only lever left — which makes it the outage runbook, not a background protection. This is a deliberate availability-over-spend trade, but a reader who assumes the 8/hr throttle still holds during an outage is wrong.
 - Prompt caching enabled via `providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }` on a system message (AI SDK v7 shape; the pre-v7 `cache_control` spelling survives only in the unused `SYSTEM` export that `__tests__/system-prompt.test.ts` reads, not in the live route path)
@@ -364,9 +380,11 @@ Why this is non-negotiable: a public LLM endpoint without a hard cap is a $5,000
 **Prompt cache (shipped 2026-05-19 — PR 4 of audit roadmap):** SYSTEM lives in `lib/ask/system-prompt.ts`, composed at module load from a hand-edited narrative + raw data appended from `content/perf-receipts.ts`, `content/projects.ts`, `content/visa.ts`, and `content/unknowns.ts`. The composition pushes the cacheable block above ~5500 chars (≈ 1500+ tokens), comfortably clearing the 1024-token Haiku ephemeral cache minimum. The `cache_control: { type: 'ephemeral' }` directive now fires. The route reads `cache_read_input_tokens` and `cache_creation_input_tokens` from `message_start` and logs `cacheHitRate = cache_read / (input + cache_read + cache_creation)` per request — target `> 0.7` in steady state (≥ 70% cache hits). Total billed input (`input + cache_read + cache_creation`) is what the reservation-pattern budget settles against, so the counter reflects true Anthropic cost. _Content drift safety_: `__tests__/system-prompt.test.ts` asserts every metric, project, visa row, and unknowns claim from the content files appears in SYSTEM_TEXT — if a content file is edited and SYSTEM isn't regenerated, CI fails (but composition is module-load, so it always regenerates).
 
 ### Eval suite (`pnpm ask:eval`)
+
 `scripts/ask-eval.ts` runs a corpus of 39 Q+A pairs (`content/ask-eval-corpus.ts`) against the live `/api/ask` handler. A judge model grades each answer pass/fail; results aggregate to correctness rate, jailbreak-resistance rate, p50/p95 latency, and cost-per-answer. Results write to `ask-eval-result.json` and to Upstash KV (`ask:eval:latest`). CI runs the harness as a required gate (`ai-eval` job, path-filtered to AI-relevant changes via `detect-changes`).
 
 ### What I'd revisit at scale
+
 - 100× traffic: move to Cloudflare Workers AI (Llama 3.3 self-served) — quality dip acceptable for the cost
 - If `ask` becomes a real product: separate service, persistent conversation context, billing surface, evals
 
@@ -387,6 +405,7 @@ History and rationale: see `DECISIONS.md` 2026-05-18.
 > **Progressive enhancement caveat:** The contact form requires JavaScript — it uses a client `fetch` to `POST /api/contact`. A true Server Action path (`<form action={...}>`) would work without JS but is not currently implemented. This is a known trade-off; the form degrades to a non-functional state without JS rather than submitting natively.
 
 ### Submission path
+
 ```
 [client form]
     ↓ POST /api/contact (client-side fetch — no Server Action)
@@ -405,6 +424,7 @@ History and rationale: see `DECISIONS.md` 2026-05-18.
 ```
 
 ### Why KV before Resend
+
 If Resend is down, the message is captured. If KV is down, we fail loud (502) so the visitor knows. Durability beats delivery.
 
 ### Anti-spam strategy
@@ -416,11 +436,13 @@ If Resend is down, the message is captured. If KV is down, we fail loud (502) so
 - Honeypot field (`field_company` — hidden, off-screen) rendered by `ContactForm` with `aria-hidden="true" tabindex="-1" autocomplete="off"` and inline-styled to `left: -9999px; opacity: 0; pointer-events: none`. `isHoneypotTripped()` in `lib/contact-validation.ts` checks the server-side body before validation; if filled, the route logs `contact honeypot tripped`, waits a 50–150 ms random jitter to match real Resend round-trip timing, and returns `{ ok: true }` without touching KV or Resend — denying the bot any failure signal.
 
 ### Accessibility
+
 - Real `<label for="...">` for each input
 - `aria-describedby` linking to inline error messages
 - The terminal-styled `user@terminal:~$ enter_name` is visual decoration, NOT the accessible name
 
 ### What I'd revisit at scale
+
 - If spam volume rises: add Cloudflare Turnstile (invisible, ~0 UX cost)
 - If recruiters want richer fields: structured form (role, comp range, location), opens up a CRM ingestion path
 
@@ -431,11 +453,13 @@ If Resend is down, the message is captured. If KV is down, we fail loud (502) so
 The page MUST fail to merge if it regresses past the budgets. This is where the architecture becomes self-enforcing.
 
 ### GitHub Actions PR workflow
+
 See §13 for a summary of the CI jobs. `.github/workflows/ci.yml` (plus `codeql.yml`) is the source of truth — an earlier hand-written YAML sketch here had drifted from it, so this points at the pipeline rather than restating it.
 
 Any failure blocks merge. No overrides except by branch protection bypass — and using that is itself a smell.
 
 ### Real-user monitoring
+
 Vercel Speed Insights (built-in, free) collects CWV from real visitors. Weekly check; alert if p75 LCP > 1.8s for 7 days.
 
 ---
@@ -445,29 +469,35 @@ Vercel Speed Insights (built-in, free) collects CWV from real visitors. Weekly c
 Implemented per the production-observability design:
 
 ### Real-user telemetry
+
 - **Vercel Web Analytics** + **Vercel Speed Insights** mounted in `app/layout.tsx`. Real-user pageview counts + LCP/INP/CLS land in the Vercel dashboards. Expected coverage 70-85% of visits (ad-blockers block the two ingest origins; never claim 100% population coverage in the hiring pitch).
 - **CSP** widened in `proxy.ts` to allow `https://vitals.vercel-insights.com` (specific ingest origin, no wildcard) and `https://va.vercel-scripts.com`.
 
 ### Server-side structured logging
+
 - **`lib/log.ts`** wraps `pino` with a `{info, warn, error}` surface. Dev mode uses `pino-pretty` for human-readable output; production emits JSON lines for Vercel runtime-log parsing. Base fields auto-added: `{ts, level, env}`. Correlation IDs (`requestId`) are passed explicitly per-call via the second `ctx` argument — no AsyncLocalStorage / Edge-runtime opt-out (the trade-off was deliberate; cold-start cost would have stacked on top of the active LCP fight when Spec 2 landed).
 - Every server `console.*` call site in `lib/` + `app/api/` is migrated to `log.*`. `ErrorBoundary.client.tsx` retains `console.error` for DevTools visibility AND routes the same payload to `/api/log` via the shared `buildLogPayload` helper in `componentDidCatch` — intentional dual capture, not a contradiction. Both paths are always active; they are not alternatives.
 
 ### Client error capture
+
 - **`lib/error-bridge.client.ts`** registers `window.addEventListener('error')` + `unhandledrejection` at module scope (imported once from `AppShell.client.tsx`). Each capture POSTs to `/api/log` with `{level, message, stack, url, userAgent, ts}`. Dedup: 100ms tail-window keyed on `(message, stack)` — covers React's error replay (<50ms) without suppressing meaningful repeat-occurrence signal.
 - **`app/api/log/route.ts`** validates via zod, writes to Upstash KV `err:{yyyy-mm-dd}:{uuid}` with 30-day TTL. Rate-limited (10/IP/min) via `getErrorLogLimit()` to absorb runaway client error loops. The IP is used only for rate-limiting and discarded — `err:*` records store no `ipHash`, making them personal-data-free and outside the `/api/log/forget` erasure scope.
 
 ### `/api/ask` Q+A retention
+
 - **`lib/ask-log.ts`** persists every `/api/ask` interaction to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`. Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
 - **`X-Request-Id`** response header on `/api/ask` surfaces the requestId to the client for the GDPR/LGPD erasure flow.
 - **`app/api/log/forget/route.ts`** accepts POST `{requestId}` and idempotently DELETEs the matching record across the last 90 day-partitions. Rate-limited (5/IP/hour) via `getForgetLimit()`.
 
 ### Inspection surfaces
+
 - **Vercel dashboard** → Analytics + Speed Insights for real-user data.
 - **Vercel runtime logs** for the JSON-line `log.*` stream; filterable by `requestId`, `level`, or `env`.
 - **Upstash console** → Data Browser; `SCAN err:*` / `SCAN ask:log:*` for ad-hoc inspection.
 - **Source-map symbolication** for captured production errors: Vercel retains maps per deploy; operator runs `vercel inspect <deploy-url> --logs` or the dashboard's Source Maps tab. If this becomes recurring, a future spec adds an `/internal/symbolicate` route on demand.
 
 ### What I deliberately don't do
+
 - No Datadog / NewRelic / LaunchDarkly (overkill at this scale).
 - No Sentry — custom `/api/log` endpoint chosen instead for zero new SaaS vendor (see `DECISIONS.md` 2026-05-18).
 - No custom OpenTelemetry pipeline (no second consumer of the traces).
@@ -479,6 +509,7 @@ Implemented per the production-observability design:
 ## 10. SEO + AEO (the 2026 move)
 
 ### Traditional SEO
+
 - `<title>` per route, `<meta description>` populated from content
 - Person JSON-LD with sameAs links (github, linkedin, erikunha.dev)
 - og:image (recruiter-safe, dynamic), Twitter card variant
@@ -486,6 +517,7 @@ Implemented per the production-observability design:
 - /robots.txt allows everything (no need to hide anything from crawlers)
 
 ### Answer Engine Optimization (the new layer)
+
 - `/llms.txt` manifest — emerging standard for AI-readable site maps
 - `/api/erik.json` — machine-readable profile (HiringProfile custom type, no schema.org @context — `Engineer` is not a valid schema.org type). Cached 24h at edge. Returns a structured hiring profile document.
 - This is the Staff/Principal-2026 move: build for human readers AND for AI agents doing first-pass recruiter triage. Yes, AI agents are already doing this. Yes, most portfolios aren't ready.
@@ -496,14 +528,14 @@ Implemented per the production-observability design:
 
 WCAG 2.1 AA at minimum. Specific risks for THIS aesthetic:
 
-| Risk | Mitigation |
-|---|---|
-| Lime-green-on-black at body sizes fails contrast | Use a two-token palette: `--color-primary-500` (#00FF41) for accents/headings/large text; `--color-tertiary-50` (#E6FFE6, ~13:1 contrast) for body. Never use the signal green for paragraph text. |
-| Muted parentheticals in `~/.unknowns` and `~/.guitar_rig` | Bump muted color from typical 60% opacity to a fully resolved hex that hits 4.5:1 (e.g., `#5AE07B`) — or set those lines to 14px to qualify as Large Text (3:1 threshold). |
-| Matrix dialog loop is exhausting | `prefers-reduced-motion: reduce` disables loop, renders static `> The Matrix has you...`. Plus: MOTION badge in top bar becomes click-toggle for users on the borderline. |
-| Form labels invisible (terminal-styled prompts) | Real `<label for="...">` paired with each input. Terminal prompt is decoration. |
-| Heading hierarchy | Section headers are `<h2>`, not styled `<div>`s. Critical for screen-reader navigation. |
-| No skip-to-content link (WCAG 2.4.1 Level A) | Skip-to-content link added to AppShell as first focusable element, targets `#main-content` on the `<main>` element. |
+| Risk                                                      | Mitigation                                                                                                                                                                                         |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lime-green-on-black at body sizes fails contrast          | Use a two-token palette: `--color-primary-500` (#00FF41) for accents/headings/large text; `--color-tertiary-50` (#E6FFE6, ~13:1 contrast) for body. Never use the signal green for paragraph text. |
+| Muted parentheticals in `~/.unknowns` and `~/.guitar_rig` | Bump muted color from typical 60% opacity to a fully resolved hex that hits 4.5:1 (e.g., `#5AE07B`) — or set those lines to 14px to qualify as Large Text (3:1 threshold).                         |
+| Matrix dialog loop is exhausting                          | `prefers-reduced-motion: reduce` disables loop, renders static `> The Matrix has you...`. Plus: MOTION badge in top bar becomes click-toggle for users on the borderline.                          |
+| Form labels invisible (terminal-styled prompts)           | Real `<label for="...">` paired with each input. Terminal prompt is decoration.                                                                                                                    |
+| Heading hierarchy                                         | Section headers are `<h2>`, not styled `<div>`s. Critical for screen-reader navigation.                                                                                                            |
+| No skip-to-content link (WCAG 2.4.1 Level A)              | Skip-to-content link added to AppShell as first focusable element, targets `#main-content` on the `<main>` element.                                                                                |
 
 Run axe-core in CI; fail builds on any new violation. Manual screen-reader pass on the contact form path before launch.
 
@@ -526,6 +558,7 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 ## 13. Deployment + CI/CD
 
 ### Branch strategy
+
 - `main` → production
 - `feature/*` → PR → Vercel preview → merge to main
 - No `dev` branch; preview deploys are the staging environment
@@ -533,14 +566,17 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 - Squash-merge to main
 
 ### Per-commit hooks (Husky)
+
 - **pre-commit:** Biome check (sub-second — only gate in this hook)
 - **commit-msg:** Commitlint (scope required; enforces conventional commits)
 
 ### Pre-push (Husky)
+
 - Branch-name guard: blocks direct pushes to `main` (all changes must go through a PR)
 - `pnpm verify` — full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + harness-size + section-order + doc-drift + gate-health + detect-changes-paths + css-tokens + unit tests
 
 ### CI (GitHub Actions, per PR)
+
 1. Install + cache (pnpm + `.next/cache` + tsbuildinfo)
 2. Biome check
 3. TypeScript strict check
@@ -556,9 +592,11 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 13. Security scans: Semgrep static analysis (`semgrep` job) + Gitleaks secret scan (`gitleaks` job); CodeQL runs as a separate workflow (`.github/workflows/codeql.yml`). Orchestration jobs (`detect-changes`, `ci-gate`, `quality-fast`) gate and fan out the above.
 
 ### Production deploy
+
 Vercel auto-deploys main. No manual gate. Lighthouse CI on production deploy as a tripwire — fails the deploy if regression detected.
 
 ### Rollback
+
 Vercel "Promote to Production" of previous deployment. <60 seconds. No manual config needed.
 
 ### Claude harness configuration
@@ -577,20 +615,20 @@ Configuration history and rationale: see `DECISIONS.md` 2026-05-18 (permissions 
 ## 14. Cost model
 
 Steady-state monthly:
-| Service | Tier | Cost |
-|---|---|---|
-| Vercel (Hobby or Pro) | Hobby | $0 |
-| Upstash Redis | Free (10k cmd/day) | $0 |
-| Anthropic via AI Gateway (`ask`) | pay-as-you-go, hard-capped (§6) | ~$0.50 (30 prompts/day) |
-| Resend | Free (3k/month) | $0 |
-| GitHub | public repo | $0 |
-| PSI API | free | $0 |
-| Domain | erikunha.dev | ~$1/mo amortized |
-| **Total expected** | | **~$2/month** |
-| **Hard cap (Anthropic spend alert)** | | **$50/month** |
+| Service                              | Tier                            | Cost                    |
+| ------------------------------------ | ------------------------------- | ----------------------- |
+| Vercel (Hobby or Pro)                | Hobby                           | $0                      |
+| Upstash Redis                        | Free (10k cmd/day)              | $0                      |
+| Anthropic via AI Gateway (`ask`)     | pay-as-you-go, hard-capped (§6) | ~$0.50 (30 prompts/day) |
+| Resend                               | Free (3k/month)                 | $0                      |
+| GitHub                               | public repo                     | $0                      |
+| PSI API                              | free                            | $0                      |
+| Domain                               | erikunha.dev                    | ~$1/mo amortized        |
+| **Total expected**                   |                                 | **~$2/month**           |
+| **Hard cap (Anthropic spend alert)** |                                 | **$50/month**           |
 
 Burst scenario (HN spike, 50k visits/day for 3 days):
-- Vercel bandwidth: still inside Hobby free tier (100GB): `/` first-load 162.2 KB (30.3 KB app-owned, under the 164.7 KB gate)
+- Vercel bandwidth: still inside Hobby free tier (100GB): `/` first-load 161.8 KB (29.9 KB app-owned, under the 164.7 KB gate)
 - Anthropic via AI Gateway: the monthly 3M-token cap bounds spend at $3–$5.30/mo regardless of volume (§6); the cap holds by construction.
 - Resend: spike doesn't affect the static page
 
@@ -600,29 +638,29 @@ The architecture is designed so that an HN hug-of-death doesn't generate a surpr
 
 ## 15. Trade-offs I'd flag
 
-| Decision | What we give up | Why it's still right |
-|---|---|---|
-| RSC-first with client islands | Slightly harder to debug streaming hydration | Only way to hold the per-route JS budget |
-| No CMS | Erik edits TS files to update content | Single author; CMS is YAGNI |
-| Vercel end-to-end (Fluid Compute) | Vendor lock-in to Vercel's RSC story | Portability cost < ops savings at this scale |
-| Anthropic API for `ask` | $50/mo cap if abuse spikes | Quality-to-cost ratio beats self-hosted at portfolio scale |
-| No CAPTCHA | Some spam will get through | UX tax of CAPTCHA > value of perfect spam filtering |
-| `claude-haiku-4-5` not Sonnet | Slightly lower quality answers | 10× cheaper; quality difference invisible for CV Q&A |
-| Single-page composition | Long scroll, no per-section routing | Recruiters scan; engineers scroll. Both work on a single page. |
-| Synthetic git log entries (in the design content, not the deploy) | Stylized vs literal | Content choice, not architectural; the deployed git is real |
+| Decision                                                          | What we give up                              | Why it's still right                                           |
+| ----------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------- |
+| RSC-first with client islands                                     | Slightly harder to debug streaming hydration | Only way to hold the per-route JS budget                       |
+| No CMS                                                            | Erik edits TS files to update content        | Single author; CMS is YAGNI                                    |
+| Vercel end-to-end (Fluid Compute)                                 | Vendor lock-in to Vercel's RSC story         | Portability cost < ops savings at this scale                   |
+| Anthropic API for `ask`                                           | $50/mo cap if abuse spikes                   | Quality-to-cost ratio beats self-hosted at portfolio scale     |
+| No CAPTCHA                                                        | Some spam will get through                   | UX tax of CAPTCHA > value of perfect spam filtering            |
+| `claude-haiku-4-5` not Sonnet                                     | Slightly lower quality answers               | 10× cheaper; quality difference invisible for CV Q&A           |
+| Single-page composition                                           | Long scroll, no per-section routing          | Recruiters scan; engineers scroll. Both work on a single page. |
+| Synthetic git log entries (in the design content, not the deploy) | Stylized vs literal                          | Content choice, not architectural; the deployed git is real    |
 
 ---
 
 ## 16. What I'd revisit as the system grows
 
-| Threshold | Trigger | Move |
-|---|---|---|
-| 100k visits/month sustained | Vercel Hobby bandwidth pressure | Vercel Pro tier ($20/mo) |
-| 1M visits/month | Anthropic cost > $200/month | Migrate `ask` to Cloudflare Workers AI (Llama 3.3) |
-| Contact submissions > 100/month with > 30% spam | Spam fatigue | Add Cloudflare Turnstile |
-| Recruiter scraping pressure on `/api/erik.json` | Free-tier abuse | Soft auth (email-gated full profile) |
-| Erik starts writing publicly | Want to publish posts | Add MDX, RSS feed, then re-evaluate CMS need |
-| `ask` becomes a real product | Conversational depth, multi-turn | Extract to its own service, persistent conversation state, billing |
+| Threshold                                       | Trigger                          | Move                                                               |
+| ----------------------------------------------- | -------------------------------- | ------------------------------------------------------------------ |
+| 100k visits/month sustained                     | Vercel Hobby bandwidth pressure  | Vercel Pro tier ($20/mo)                                           |
+| 1M visits/month                                 | Anthropic cost > $200/month      | Migrate `ask` to Cloudflare Workers AI (Llama 3.3)                 |
+| Contact submissions > 100/month with > 30% spam | Spam fatigue                     | Add Cloudflare Turnstile                                           |
+| Recruiter scraping pressure on `/api/erik.json` | Free-tier abuse                  | Soft auth (email-gated full profile)                               |
+| Erik starts writing publicly                    | Want to publish posts            | Add MDX, RSS feed, then re-evaluate CMS need                       |
+| `ask` becomes a real product                    | Conversational depth, multi-turn | Extract to its own service, persistent conversation state, billing |
 
 The principal-level discipline: **none of this is built today.** YAGNI is the default; the table above is a contingency map, not a roadmap.
 
@@ -631,7 +669,6 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 ## 17. Implementation order (historical PR sequence)
 
 > All PRs below shipped as of 2026-05-19. This section is retained as a record of how the system was built. The authoritative current state is `ARCHITECTURE.md` (design) + `DECISIONS.md` (ADR log).
-
 1. **PR 1 — Foundation.** Next 15 scaffold, TS strict, hand-written global CSS with palette as CSS vars (Tailwind v4 was used as scaffold default then removed 2026-05-18, then re-adopted in full as of 2026-05-31 — PR #80; see DECISIONS.md), Biome, JetBrains Mono via next/font, Vercel preview wired, bundle-size CI check, axe-core CI check. Zero content.
 
 2. **PR 2 — Content layer.** All `content/*.ts` typed + Zod-validated. Build fails on invalid content. No visual yet.
@@ -672,4 +709,4 @@ That's the Staff/Principal hire. The portfolio is the proof.
 
 ---
 
-*— end of document —*
+_— end of document —_

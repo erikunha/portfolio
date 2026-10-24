@@ -10,7 +10,7 @@ Single-page Next.js 16 portfolio deployed to Vercel (Fluid Compute). RSC-first c
   <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" />
   <img alt="Vercel" src="https://img.shields.io/badge/Vercel-Fluid_Compute-000?logo=vercel&logoColor=white" />
   <img alt="pnpm 10" src="https://img.shields.io/badge/pnpm-10+-F69220?logo=pnpm&logoColor=white" />
-  <img alt="Node 22" src="https://img.shields.io/badge/Node-22+-417E38?logo=nodedotjs&logoColor=white" />
+  <img alt="Node 22" src="https://img.shields.io/badge/Node-22.22.2+-417E38?logo=nodedotjs&logoColor=white" />
   <img alt="Biome" src="https://img.shields.io/badge/Biome-lint%20%2B%20format-60A5FA?logo=biome&logoColor=white" />
   <img alt="Vitest" src="https://img.shields.io/badge/Vitest-unit-6E9F18?logo=vitest&logoColor=white" />
   <img alt="Playwright" src="https://img.shields.io/badge/Playwright-E2E%20%2B%20a11y-2EAD33?logo=playwright&logoColor=white" />
@@ -29,19 +29,19 @@ The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic 
 
 ## Stack
 
-| Technology | Purpose |
-|---|---|
-| Next.js 16 (App Router) | RSC-first static generation with selective client islands |
-| React 19 | Server components + streaming hydration |
-| TypeScript strict | `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` |
-| Vercel AI Gateway + Anthropic Haiku 4.5 | Streaming `/api/ask` with prompt caching and cost tracking |
-| Upstash Redis | Rate limiting, budget cap, KV interaction log |
-| Tailwind v4 (via PostCSS) | Utility-first styling; design tokens authored in `app/css/theme.css` under `@theme {}`. No CSS Modules, no Style Dictionary, no build-time token pipeline |
-| Design system (`/design-system`) | 8 RSC primitives (Badge, Button, CmdLine, Field, KbdKey, StatTile, TerminalPanel, WindowChrome), `@theme` tokens, live docs route |
-| Biome | Lint + format in a single Rust binary |
-| Vitest + Playwright | Unit (80% line coverage gate) + E2E + axe-core a11y CI suite |
-| Lighthouse CI | LCP, INP, CLS gated per PR |
-| pnpm 10+ / Node 22+ | Strict dependency resolution, content-addressed store |
+| Technology                              | Purpose                                                                                                                                                   |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Next.js 16 (App Router)                 | RSC-first static generation with selective client islands                                                                                                 |
+| React 19                                | Server components + streaming hydration                                                                                                                   |
+| TypeScript strict                       | `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`                                                                                                  |
+| Vercel AI Gateway + Anthropic Haiku 4.5 | Streaming `/api/ask` with prompt caching and cost tracking                                                                                                |
+| Upstash Redis                           | Rate limiting, budget cap, KV interaction log                                                                                                             |
+| Tailwind v4 (via PostCSS)               | Utility-first styling; design tokens authored in `app/css/theme.css` under `@theme {}`. No CSS Modules, no Style Dictionary, no build-time token pipeline |
+| Design system (`/design-system`)        | 8 RSC primitives (Badge, Button, CmdLine, Field, KbdKey, StatTile, TerminalPanel, WindowChrome), `@theme` tokens, live docs route                         |
+| Biome                                   | Lint + format in a single Rust binary                                                                                                                     |
+| Vitest + Playwright                     | Unit (80% line coverage gate) + E2E + axe-core a11y CI suite                                                                                              |
+| Lighthouse CI                           | LCP, INP, CLS gated per PR                                                                                                                                |
+| pnpm 10+ / Node 22.22.2+                | Strict dependency resolution, content-addressed store                                                                                                     |
 
 ---
 
@@ -64,12 +64,12 @@ The static page renders without environment variables. Runtime endpoints (`/api/
 
 ## Reference docs
 
-| Doc | What it covers |
-|---|---|
-| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | System design, component deep-dives, trade-offs, what to revisit |
-| [`STANDARDS.md`](./STANDARDS.md) | Engineering bar — 11 domain chapters, each with an enforcement mechanism |
-| [`DECISIONS.md`](./DECISIONS.md) | Running ADR log — why decisions were made and how to reverse them |
-| [`CLAUDE.md`](./CLAUDE.md) | AI assistant instructions (auto-loaded by Claude Code each session) |
+| Doc                                    | What it covers                                                           |
+| -------------------------------------- | ------------------------------------------------------------------------ |
+| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | System design, component deep-dives, trade-offs, what to revisit         |
+| [`STANDARDS.md`](./STANDARDS.md)       | Engineering bar — 11 domain chapters, each with an enforcement mechanism |
+| [`DECISIONS.md`](./DECISIONS.md)       | Running ADR log — why decisions were made and how to reverse them        |
+| [`CLAUDE.md`](./CLAUDE.md)             | AI assistant instructions (auto-loaded by Claude Code each session)      |
 
 ---
 

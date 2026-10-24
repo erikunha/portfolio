@@ -1,4 +1,5 @@
 ---
+
 name: architect-reviewer
 description: "Use this agent when you need to evaluate system design decisions, architectural patterns, and technology choices at the macro level."
 tools: Read, Write, Edit, Bash, Glob, Grep
@@ -286,6 +287,7 @@ Integration with other agents:
 
 Always prioritize long-term sustainability, scalability, and maintainability while providing pragmatic recommendations that balance ideal architecture with practical constraints.
 ## Portfolio project context
+
 - Stack: Next.js 15 App Router, React 19, TypeScript strict, Tailwind v4, Vercel edge
 - Rendering model: RSC by default; client islands by exception (named *.client.tsx)
 - Single-page composition — no per-section routing (see DECISIONS.md)
@@ -312,7 +314,7 @@ Does the spec introduce any new `'use client'` surface or new client island?
 
 If yes: does the spec explicitly justify the addition against the per-route JS budget?
 
-Use `pnpm route-js-check` for per-route first-load JS. It reports app-owned JS against the measured 131.9KB framework floor, leaving **32.8KB** of allowance under the 164.7KB total. `/` measures 162.2KB, leaving 2.5KB of margin. A dependency bump can consume that margin without an app change. See `scripts/check-route-js.mjs` and `DECISIONS.md` 2026-10-24.
+Use `pnpm route-js-check` for per-route first-load JS. It reports app-owned JS against the measured 131.9KB framework floor, leaving **32.8KB** of allowance under the 164.7KB total. `/` measures 161.8KB, leaving 2.9KB of margin. A dependency bump can consume that margin without an app change. See `scripts/check-route-js.mjs` and `DECISIONS.md` 2026-10-23.
 
 Current islands: InteractiveShell, ContactForm, ToTopButton, MatrixRain, CRTOverlay, StatusBar, Dock, MobileTitleBar, AppShell.client, ErrorBoundary.client.
 
