@@ -2,15 +2,19 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-10-23: the Node floor rises to 22.22.2
+
+- **2026-10-23** · **`engines.node` is `^22.22.2 || ^24.15.0 || >=26.0.0` and `.nvmrc` pins 22.23.4.** jsdom 30 declares exactly that range, and vitest 5 runs on it; the old `>=22.0.0` let a contributor on the previous `.nvmrc` (22.19) install a test stack that refuses their runtime. CI reads `.nvmrc`, so CI moves with it. _Reversible: pin jsdom 29 and restore `>=22.0.0`._
+
 ## 2026-10-23: framework floor re-measured at 131.9 KB; route total tightens to 164.7 KB
 
 - **2026-10-23** · A bare hello-world app (`app/layout.tsx` + `app/page.tsx`) on Next 16.4.3, React/React DOM 19.3.1 and TypeScript 6.0.3 measures 131.9 KB on `/` and `/_not-found`. Built with Node 22.23.4 and `next build` (default Turbopack), it uses the same method as `scripts/check-route-js.mjs`: sum `zlib.gzipSync` sizes of each route's `.js` `firstLoadChunkPaths` in `.next/diagnostics/route-bundle-stats.json`, divided by 1024. The measured floor falls from 142.2 KB, so the total becomes 164.7 KB to preserve the 32.8 KB app-owned allowance. Keeping 175 KB would widen that allowance by 10.3 KB without reducing app code. _Reversible: re-measure after a framework change and adjust the floor and total together, preserving the app-owned allowance._
 
-## 2026-10-23 — the audit gate ignores nothing again
+## 2026-10-23: the audit gate ignores nothing again
 
 - **2026-10-23** · **`pnpm.auditConfig.ignoreGhsas` is deleted: extract-zip is gone from the graph, so the 2026-08-30 ignore of `GHSA-jmr9-qjv8-65gv` has nothing left to cover.** `@puppeteer/browsers` 3 replaced extract-zip with modern-tar, and a `"@puppeteer/browsers": "^3.2.6"` override moves lighthouse's puppeteer-core onto it. The repository's Lighthouse config uses no puppeteer script; lhci runs Chrome through chrome-launcher, and lighthouse loads with the override in place. This also clears a second unpatched extract-zip advisory (`GHSA-7pqw-9j4j-h8q3`) that the 2026-08-30 entry would have had to re-argue. `__tests__/audit-ignore-scope.test.ts` now asserts an empty ignore list and no extract-zip snapshot in the lockfile. The same change floors `basic-ftp` (>=6.2.1) and `browserslist` (>=4.28.7), pins `vite` ^8.3.5 as a root dev dependency (vitest's peer was resolving 8.0.16), and points `chromium-bidi>zod` at ^4.6.7 (chromium-bidi is loaded only by puppeteer scripts, which this repository does not run). _Reversible: removing the overrides brings back the advisories and the red audit gate._
 
-## 2026-10-23 — MCP moves to mcp-handler 2 at a fixed /api/mcp route
+## 2026-10-23: MCP moves to mcp-handler 2 at a fixed /api/mcp route
 
 - **2026-10-23** · **The MCP server is served only at `/api/mcp`, on stateless Streamable HTTP, through mcp-handler 2 and `@modelcontextprotocol/server` 2.** mcp-handler 2 no longer filters the pathname, so the old `app/api/[transport]` dynamic segment would have answered MCP at any `/api/<anything>` path that no other route claims. A fixed route makes the served surface exactly the one `public/.well-known/agent.json` advertises. The legacy HTTP+SSE transport at `/api/sse` and Redis-backed MCP sessions are gone with v1; the route still accepts 2025 Streamable HTTP clients through the handler's stateless compatibility path, and `__tests__/agent-surfaces.test.ts` holds both the 2025 initialize handshake and the 2026 `server/discover` path. _Reversible: pinning mcp-handler 1 and the v1 SDK restores the dynamic route; any client that adopted the 2026 protocol in the meantime would lose `server/discover`._
 

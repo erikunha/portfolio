@@ -296,6 +296,6 @@ Always prioritize developer productivity, satisfaction, and efficiency while bui
 - Linter: Biome (not ESLint/Prettier) — `pnpm biome ci .` for CI, `pnpm check` for local
 - Type check: `pnpm tsc --noEmit` (alias: `pnpm typecheck`)
 - Content validation: `node scripts/validate-content.mjs` (alias: `pnpm validate-content`)
-- Node 22+, pnpm 10+ enforced in `package.json` engines field
+- Node 22.22.2+, pnpm 10+ enforced in `package.json` engines field
 - Desired new script: `"ci:local": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm test"`
 - RISK: standard — hook and CI config changes

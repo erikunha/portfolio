@@ -10,7 +10,7 @@ Single-page Next.js 16 portfolio deployed to Vercel (Fluid Compute). RSC-first c
   <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" />
   <img alt="Vercel" src="https://img.shields.io/badge/Vercel-Fluid_Compute-000?logo=vercel&logoColor=white" />
   <img alt="pnpm 10" src="https://img.shields.io/badge/pnpm-10+-F69220?logo=pnpm&logoColor=white" />
-  <img alt="Node 22" src="https://img.shields.io/badge/Node-22+-417E38?logo=nodedotjs&logoColor=white" />
+  <img alt="Node 22" src="https://img.shields.io/badge/Node-22.22.2+-417E38?logo=nodedotjs&logoColor=white" />
   <img alt="Biome" src="https://img.shields.io/badge/Biome-lint%20%2B%20format-60A5FA?logo=biome&logoColor=white" />
   <img alt="Vitest" src="https://img.shields.io/badge/Vitest-unit-6E9F18?logo=vitest&logoColor=white" />
   <img alt="Playwright" src="https://img.shields.io/badge/Playwright-E2E%20%2B%20a11y-2EAD33?logo=playwright&logoColor=white" />
@@ -41,7 +41,7 @@ The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic 
 | Biome                                   | Lint + format in a single Rust binary                                                                                                                     |
 | Vitest + Playwright                     | Unit (80% line coverage gate) + E2E + axe-core a11y CI suite                                                                                              |
 | Lighthouse CI                           | LCP, INP, CLS gated per PR                                                                                                                                |
-| pnpm 10+ / Node 22+                     | Strict dependency resolution, content-addressed store                                                                                                     |
+| pnpm 10+ / Node 22.22.2+                | Strict dependency resolution, content-addressed store                                                                                                     |
 
 ---
 
