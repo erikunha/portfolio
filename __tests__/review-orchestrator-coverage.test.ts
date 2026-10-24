@@ -180,6 +180,7 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
     const denied = claudeArgs.match(/--disallowedTools "([^"]+)"/)?.[1]?.split(',') ?? [];
     for (const builtIn of [
       'general-purpose',
+      'claude',
       'Explore',
       'Plan',
       'statusline-setup',
