@@ -322,7 +322,7 @@ If no justification present: set `GATE_RESULT: BLOCK`, `BLOCKED_BY: Gate 2 — n
 Does the spec touch `app/api/ask/`, `lib/rate-limit.ts`, or `app/api/contact/route.ts`?
 
 If yes, verify the spec preserves all of. **Grep for the named symbol — do not trust a line number, and re-read the current value rather than the one quoted here:**
-- Token cap: `MONTHLY_TOKEN_BUDGET` in `lib/rate-limit.ts` (3,000,000 tokens/month as of 2026-07-16), warn at 80% (`pct >= 0.8`), block at 100% (`pct > 1`), fail-open on Redis errors
+- Token cap: `MONTHLY_TOKEN_BUDGET` in `lib/rate-limit.ts` (3,000,000 tokens/month as of 2026-07-16), warn at 80% (`pct >= 0.8`), block at 100% (`pct > 1`), fail-closed on Redis errors
 - Ask rate-limit: `slidingWindow(8, '1 h')` in `lib/rate-limit.ts`
 - Contact rate-limit: `slidingWindow(3, '10 m')` in `lib/rate-limit.ts`
 - Contact IP hashing: `hashIp()` from `lib/ip-hash.ts` (SHA-256 + `DEPLOY_SALT`) before the durable KV write in `app/api/contact/route.ts`
