@@ -178,7 +178,7 @@ app/api/healthz/route.ts             # liveness + dependency probe
 app/api/csp-report/route.ts          # CSP violation sink
 app/api/log/route.ts                 # client error-bridge sink
 app/api/psi-refresh/route.ts         # cron: refresh PSI cache
-app/api/[transport]/route.ts         # MCP transport (agent surface)
+app/api/mcp/route.ts                 # MCP Streamable HTTP (agent surface)
 
 components/sections/                  # RSC sections: Hero, HottestTakes, GuitarSection, …
 components/client/                    # co-located islands — ONLY interactivity

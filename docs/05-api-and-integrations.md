@@ -25,18 +25,20 @@ export function defineHandler<TSchema extends ZodTypeAny>(
 
 ## API route table
 
-| Route              | Method     | Built on            | What it does                                 | Auth/secret                  | Failure mode                                                                                        |
-| ------------------ | ---------- | ------------------- | -------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------- |
-| `/api/ask`         | POST       | bespoke (streaming) | LLM "ask Erik", `text/plain` stream          | AI Gateway key/OIDC; Upstash | fail-open Redis; mid-stream errors → `STREAM_ERR_SENTINEL`; 30s/15s/1s timeouts; budget fail-closed |
-| `/api/contact`     | POST       | `defineHandler`     | contact form → KV (durable) → Resend         | `RESEND_API_KEY`             | honeypot → fake-200; KV fail → 502; Resend fail → still 200                                         |
-| `/api/healthz`     | GET        | bespoke             | health probe: SHA + PSI freshness            | none                         | 200 fresh, **503 degraded** if `meta:psi-last-run` missing/stale(>25h); `no-store`                  |
-| `/api/psi-refresh` | GET (cron) | bespoke             | daily PSI refresh, writes freshness key      | **`CRON_SECRET`** Bearer     | 401 on bad secret; partial-fail still writes key; no auto-retry (`0 3 * * *`)                       |
-| `/api/csp-report`  | POST       | none                | CSP violation sink                           | none                         | returns 204, body unread                                                                            |
-| `/api/erik.json`   | GET        | exempt              | machine-readable hiring profile              | none                         | static-cached `public, max-age=86400`                                                               |
-| `/api/lighthouse`  | GET        | bespoke             | stored PSI metrics                           | `PSI_API_KEY` (in lib)       | falls back to all-zero `LIGHTHOUSE_FALLBACK`                                                        |
-| `/api/log`         | POST       | `defineHandler`     | client error capture → KV (30d TTL)          | none                         | KV fail → 503; **no IP stored** (forget-exempt)                                                     |
-| `/api/log/forget`  | POST       | `defineHandler`     | GDPR/LGPD erasure of ask logs by `requestId` | none                         | deletes across 90 days; **never returns count** (existence-oracle prevention)                       |
-| `/api/[transport]` | GET+POST   | `mcp-handler`       | read-only MCP server                         | none                         | `→ /api/mcp` (streamable-HTTP), `/api/sse`; `maxDuration=60`, Node runtime                          |
+| Route              | Method     | Built on            | What it does                                        | Auth/secret                  | Failure mode                                                                                        |
+| ------------------ | ---------- | ------------------- | --------------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------- |
+| `/api/ask`         | POST       | bespoke (streaming) | LLM "ask Erik", `text/plain` stream                 | AI Gateway key/OIDC; Upstash | fail-open Redis; mid-stream errors → `STREAM_ERR_SENTINEL`; 30s/15s/1s timeouts; budget fail-closed |
+| `/api/contact`     | POST       | `defineHandler`     | contact form → KV (durable) → Resend                | `RESEND_API_KEY`             | honeypot → fake-200; KV fail → 502; Resend fail → still 200                                         |
+| `/api/healthz`     | GET        | bespoke             | health probe: SHA + PSI freshness                   | none                         | 200 fresh, **503 degraded** if `meta:psi-last-run` missing/stale(>25h); `no-store`                  |
+| `/api/psi-refresh` | GET (cron) | bespoke             | daily PSI refresh, writes freshness key             | **`CRON_SECRET`** Bearer     | 401 on bad secret; partial-fail still writes key; no auto-retry (`0 3 * * *`)                       |
+| `/api/csp-report`  | POST       | none                | CSP violation sink                                  | none                         | returns 204, body unread                                                                            |
+| `/api/erik.json`   | GET        | exempt              | machine-readable hiring profile                     | none                         | static-cached `public, max-age=86400`                                                               |
+| `/api/lighthouse`  | GET        | bespoke             | stored PSI metrics                                  | `PSI_API_KEY` (in lib)       | falls back to all-zero `LIGHTHOUSE_FALLBACK`                                                        |
+| `/api/log`         | POST       | `defineHandler`     | client error capture → KV (30d TTL)                 | none                         | KV fail → 503; **no IP stored** (forget-exempt)                                                     |
+| `/api/log/forget`  | POST       | `defineHandler`     | GDPR/LGPD erasure of ask logs by `requestId`        | none                         | deletes across 90 days; **never returns count** (existence-oracle prevention)                       |
+| `/api/mcp`         | POST       | `mcp-handler`       | read-only MCP server over stateless Streamable HTTP | none                         | GET returns 405; `maxDuration=60`, Node runtime                                                     |
+
+`/api/mcp` serves the 2026-07-28 protocol with `server/discover` and a per-request `_meta` envelope. The same route supports 2025 Streamable HTTP clients through stateless compatibility handling. Responses can use JSON or SSE framing. The legacy HTTP+SSE transport and Redis-backed MCP sessions are unsupported. Upstash still provides application rate limiting and token budgets.
 
 ## Rate limits & token budget (`lib/rate-limit.ts`)
 

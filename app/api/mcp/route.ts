@@ -1,6 +1,8 @@
 import { createMcpHandler } from 'mcp-handler';
 import { registerAgentTools } from '@/lib/agent/mcp-tools';
 
+export const maxDuration = 60;
+
 const handler = createMcpHandler(
   (server) => {
     registerAgentTools(server);
@@ -10,10 +12,6 @@ const handler = createMcpHandler(
       name: 'erikunha.dev',
       version: '1.0.0',
     },
-  },
-  {
-    basePath: '/api',
-    maxDuration: 60,
   },
 );
 

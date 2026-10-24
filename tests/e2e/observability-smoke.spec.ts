@@ -1,6 +1,18 @@
-import { expect, test } from '@playwright/test';
+import { type APIResponse, expect, test } from '@playwright/test';
 
 const SYNTHETIC_REQUEST_ID = '00000000-0000-4000-8000-000000000000';
+
+async function readMcpMessage(res: APIResponse): Promise<Record<string, unknown>> {
+  const contentType = res.headers()['content-type'] ?? '';
+  expect(contentType).toMatch(/application\/json|text\/event-stream/);
+  if (contentType.includes('application/json')) return res.json();
+  const body = await res.text();
+  const dataLine = body
+    .split('\n')
+    .find((line) => line.startsWith('data:') && line.slice('data:'.length).trim());
+  if (!dataLine) throw new Error(`no SSE data: line in /api/mcp response: ${JSON.stringify(body)}`);
+  return JSON.parse(dataLine.slice('data:'.length).trim());
+}
 
 test.describe('observability smoke', () => {
   test('/api/log accepts a structured error payload (unified envelope)', async ({ request }) => {
@@ -89,7 +101,7 @@ test.describe('observability smoke', () => {
     expect(body.endpoints?.some((e) => e.url?.includes('/api/ask'))).toBe(true);
   });
 
-  test('POST /api/mcp initialize returns a valid MCP SSE response', async ({ request }) => {
+  test('POST /api/mcp initialize returns a valid MCP JSON or SSE response', async ({ request }) => {
     const res = await request.post('/api/mcp', {
       headers: {
         'Content-Type': 'application/json',
@@ -107,12 +119,7 @@ test.describe('observability smoke', () => {
       },
     });
     expect(res.status()).toBe(200);
-    expect(res.headers()['content-type']).toMatch(/text\/event-stream/);
-    const body = await res.text();
-    const dataLine = body.split('\n').find((line) => line.startsWith('data:'));
-    if (!dataLine)
-      throw new Error(`no SSE data: line in /api/mcp response: ${JSON.stringify(body)}`);
-    const message = JSON.parse(dataLine.slice('data:'.length).trim()) as {
+    const message = (await readMcpMessage(res)) as {
       jsonrpc?: string;
       result?: {
         serverInfo?: { name?: string };
