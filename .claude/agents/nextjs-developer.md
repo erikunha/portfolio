@@ -1,4 +1,5 @@
 ---
+
 name: nextjs-developer
 description: "Use this agent when building production Next.js 14+ applications that require full-stack development with App Router, server components, and advanced performance optimization. Invoke when you need to architect or implement complete Next.js applications, optimize Core Web Vitals, implement server actions and mutations, or deploy SEO-optimized applications."
 tools: Read, Write, Edit, Bash, Glob, Grep
@@ -286,10 +287,11 @@ Integration with other agents:
 
 Always prioritize performance, SEO, and developer experience while building Next.js applications that load instantly and rank well in search engines.
 ## Portfolio project context
+
 - Next.js 15 with Turbopack dev (`next dev --turbopack`)
 - RSC-first: default to server components; add 'use client' only when state/effects/browser APIs required
 - Client files must be named *.client.tsx — never add 'use client' to a non-.client file
-- Client JS budget: ONE gate — per-route first-load total < 175KB gzipped (`pnpm route-js-check`). App-owned JS (total minus the measured 142.2KB framework floor = 32.8KB of headroom) is reported, never asserted. `/` is ~173KB today, so real margin is ~2KB.
+- Client JS budget: see `scripts/check-route-js.mjs` (`pnpm route-js-check`). The measured 131.9KB framework floor leaves 32.8KB of app-owned allowance under the 164.7KB total. `/` measures 161.8KB, leaving 2.9KB of margin.
 - Existing client islands: InteractiveShell, ContactForm, ToTopButton, MatrixRain, CRTOverlay, StatusBar, Dock, MobileTitleBar, AppShell.client, ErrorBoundary.client
 - Performance gates: LCP < 1.8s, INP < 200ms, CLS < 0.05, Lighthouse Perf ≥ 95
 - Deployment: Vercel edge, Node 22, pnpm 10

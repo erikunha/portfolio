@@ -33,12 +33,11 @@ flowchart TB
 The load-bearing principle used to be **CLAUDE.md is advisory; anything that must hold is a hook.** The second half of that is no longer true here: **this repo has no `.claude/hooks/` and no `PreToolUse`/`PostToolUse` wiring in `settings.json`.** Six guards were removed on 2026-07-27 - `bash-guard` (broad `git add`, npm/yarn, `gh pr merge`, force-push-to-main), `api-security-push-guard`, `architect-gate`, `api-edit-marker`, `biome-format` and `session-context` - together with the meta-gate that checked they were wired.
 
 What survives is everything that does not depend on the agent runtime:
-
 - **`.husky/`**: `pre-commit` = Biome + `gitleaks --staged` + commitlint; `pre-push` = main-push guard, branch-name check, and the full `pnpm verify` chain.
 - **`scripts/check-*`**: the `verify` chain and CI - client-naming, dep-pinning, harness-size, section-order, doc-drift, detect-changes-paths, css-tokens, contrast, bundle-size, route-JS.
 - **CI**: Lighthouse, axe-core, Playwright, semgrep, gitleaks, CodeQL.
 
-The trade this makes is explicit and worth naming: a git hook and a CI job constrain *the repository*, while a `PreToolUse` hook constrained *the agent mid-turn*. Nothing now blocks an agent from running a destructive command; the guard rails are at commit, push and CI time only.
+The trade this makes is explicit and worth naming: a git hook and a CI job constrain _the repository_, while a `PreToolUse` hook constrained _the agent mid-turn_. Nothing now blocks an agent from running a destructive command; the guard rails are at commit, push and CI time only.
 
 ## Review
 
@@ -48,15 +47,15 @@ The trade this makes is explicit and worth naming: a git hook and a CI job const
 
 ## MCP servers
 
-| Server | Scope | Role |
-|---|---|---|
-| GitHub (`github` plugin) | user/plugin | PR/issue/CI access |
-| Vercel (`vercel` plugin) | user/plugin | deployments, logs, doc search |
-| Chrome DevTools (Google) | user/plugin | perf tracing / LCP debugging |
-| **Context7** (Upstash) | **project `.mcp.json`** | version-correct Next 16 / React 19 / AI SDK docs (read-only) |
-| Upstash | project `.mcp.json` | read-only Redis state inspection (scoped read-only key) |
+| Server                   | Scope                   | Role                                                         |
+| ------------------------ | ----------------------- | ------------------------------------------------------------ |
+| GitHub (`github` plugin) | user/plugin             | PR/issue/CI access                                           |
+| Vercel (`vercel` plugin) | user/plugin             | deployments, logs, doc search                                |
+| Chrome DevTools (Google) | user/plugin             | perf tracing / LCP debugging                                 |
+| **Context7** (Upstash)   | **project `.mcp.json`** | version-correct Next 16 / React 19 / AI SDK docs (read-only) |
+| Upstash                  | project `.mcp.json`     | read-only Redis state inspection (scoped read-only key)      |
 
-Context7 is the one repo-configured MCP; the GitHub/Vercel/Chrome ones are plugin-provided (the correct scope). The repo also *exposes* a read-only MCP server of its own at `/api/mcp` (a product feature, not a dev tool).
+Context7 is the one repo-configured MCP; the GitHub/Vercel/Chrome ones are plugin-provided (the correct scope). The repo also _exposes_ a read-only MCP server of its own at `/api/mcp` (a product feature, not a dev tool).
 
 ## Where to read more
 

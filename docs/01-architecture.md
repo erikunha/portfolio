@@ -56,7 +56,6 @@ flowchart TB
 ```
 
 **Layer ownership boundaries (who may import whom):**
-
 - `content/*` is a **leaf**: pure data + Zod, imported by sections (RSC) and, for the three client-safe modules, by islands. It never imports `lib` or `components`.
 - `design-system/*` primitives are **leaves**: no app imports, only React + `cx`. The app depends on the design system, never the reverse.
 - `lib/*` is the server/BFF core. `lib/*.client.tsx` and a few browser utilities are the exception (client-side), clearly suffixed.
@@ -122,13 +121,13 @@ flowchart TD
 
 ## Key load-bearing files (read these first)
 
-| File | Why it matters |
-|---|---|
-| `app/page.tsx` | The composition root; shows the RSC/PPR posture for the whole site |
-| `app/layout.tsx` | Fonts, JSON-LD, the pre-paint motion bootstrap, Vercel RUM gating |
-| `next.config.ts` + `proxy.ts` | The two-place header split (static vs per-request CSP), PPR, MDX |
-| `lib/server/route.ts` | The `defineHandler` envelope - the API contract |
-| `lib/rate-limit.ts` | Redis access, the sliding-window + token-budget + dedup primitives |
-| `lib/ask/system-prompt.ts` | How the AI persona is composed from live content (drift-proof) |
-| `content/schemas.ts` | The domain schema registry |
-| `components/responsive/Module/Module.tsx` | The RSC section wrapper every section uses |
+| File                                      | Why it matters                                                     |
+| ----------------------------------------- | ------------------------------------------------------------------ |
+| `app/page.tsx`                            | The composition root; shows the RSC/PPR posture for the whole site |
+| `app/layout.tsx`                          | Fonts, JSON-LD, the pre-paint motion bootstrap, Vercel RUM gating  |
+| `next.config.ts` + `proxy.ts`             | The two-place header split (static vs per-request CSP), PPR, MDX   |
+| `lib/server/route.ts`                     | The `defineHandler` envelope - the API contract                    |
+| `lib/rate-limit.ts`                       | Redis access, the sliding-window + token-budget + dedup primitives |
+| `lib/ask/system-prompt.ts`                | How the AI persona is composed from live content (drift-proof)     |
+| `content/schemas.ts`                      | The domain schema registry                                         |
+| `components/responsive/Module/Module.tsx` | The RSC section wrapper every section uses                         |

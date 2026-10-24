@@ -4,19 +4,19 @@
 
 ## Prerequisites
 
-- **Node 22+**, **pnpm 10+** (the repo is pnpm-only).
+- **Node 22.22.2+** (`.nvmrc` pins 22.23.4), **pnpm 10+** (the repo is pnpm-only).
 - Install: `pnpm install` (CI uses `--frozen-lockfile`).
 - For full local runs you'll want the env vars in `.env.example` (Upstash, AI Gateway, Resend, PSI). Everything is **optional** and fails open, so the site runs without them - you just get fallbacks (no rate-limiting, a dash placeholder for Lighthouse scores, `/api/ask` needs the Gateway key).
 
 ## Local development
 
-| Command | Purpose |
-|---|---|
-| `pnpm dev` | Turbopack dev server |
-| `pnpm build` | production build (PPR) |
-| `pnpm start` | serve the production build |
-| `pnpm check` / `pnpm check:fix` | Biome lint + format |
-| `pnpm typecheck` | `tsgo --noEmit` (strict, TypeScript native compiler) |
+| Command                         | Purpose                                              |
+| ------------------------------- | ---------------------------------------------------- |
+| `pnpm dev`                      | Turbopack dev server                                 |
+| `pnpm build`                    | production build (PPR)                               |
+| `pnpm start`                    | serve the production build                           |
+| `pnpm check` / `pnpm check:fix` | Biome lint + format                                  |
+| `pnpm typecheck`                | `tsgo --noEmit` (strict, TypeScript native compiler) |
 
 > **Gotcha:** `pnpm build` rewrites `next-env.d.ts`'s route-types import to the prod path; `pnpm dev` rewrites it back. A stray `M next-env.d.ts` after a local prod build is expected - `git checkout next-env.d.ts` reverts it.
 
@@ -34,19 +34,19 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 
 ### The gate scripts (what each protects)
 
-| Script | Enforces |
-|---|---|
-| `validate-content` | every `content/*.ts` Zod schema parses (build gate) |
-| `check:client-naming` | `'use client'` files are `*.client.tsx` |
-| `check:dep-pinning` | no `latest`/`*`/tag deps |
-| `check:harness-size` | `CLAUDE.md` ≤ 275 lines |
-| `check:section-order` | every `sec-*` has a mobile flex-order rule |
-| `check:doc-drift` | `ARCHITECTURE.md` directory-tree paths exist on disk |
-| `lint:css-tokens` | no raw hex outside `app/css/theme.css` |
-| `lint:contrast` | documented text/surface pairs meet WCAG AA |
-| `check:component-docs` | each DS component is documented |
-| `check:pkg-age` | supply-chain: flags <7-day-old package versions |
-| `bundle-check` | gzipped client chunks ≤ 220KB |
+| Script                 | Enforces                                             |
+| ---------------------- | ---------------------------------------------------- |
+| `validate-content`     | every `content/*.ts` Zod schema parses (build gate)  |
+| `check:client-naming`  | `'use client'` files are `*.client.tsx`              |
+| `check:dep-pinning`    | no `latest`/`*`/tag deps                             |
+| `check:harness-size`   | `CLAUDE.md` ≤ 275 lines                              |
+| `check:section-order`  | every `sec-*` has a mobile flex-order rule           |
+| `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk |
+| `lint:css-tokens`      | no raw hex outside `app/css/theme.css`               |
+| `lint:contrast`        | documented text/surface pairs meet WCAG AA           |
+| `check:component-docs` | each DS component is documented                      |
+| `check:pkg-age`        | supply-chain: flags <7-day-old package versions      |
+| `bundle-check`         | gzipped client chunks ≤ 220KB                        |
 
 ## Testing
 
@@ -123,11 +123,11 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 
 ## Debugging
 
-| Symptom | Where to look |
-|---|---|
-| `/api/healthz` 503 | `meta:psi-last-run` missing/stale (>25h) - the PSI cron failed; check `/api/psi-refresh` |
-| `/api/ask` returns 503 | `ASK_ENABLED` off, or monthly token budget exhausted (`ask:tokens:{month}`) |
-| `/api/ask` stream cuts off | mid-stream 15s watchdog, or Layer-1 egress guard fired (`STREAM_ERR_SENTINEL`) |
-| Push blocked, "unaudited API edit" | you edited `app/api/**`/`rate-limit.ts`/`proxy.ts`; dispatch `security-auditor` |
-| CLS / visual regression | regenerate Argos baselines via the `visual-baseline-regen` skill |
-| Client error in prod | it was POSTed to `/api/log` (`err:{date}:{id}`, 30-day TTL) by `error-bridge.client.ts` |
+| Symptom                            | Where to look                                                                            |
+| ---------------------------------- | ---------------------------------------------------------------------------------------- |
+| `/api/healthz` 503                 | `meta:psi-last-run` missing/stale (>25h) - the PSI cron failed; check `/api/psi-refresh` |
+| `/api/ask` returns 503             | `ASK_ENABLED` off, or monthly token budget exhausted (`ask:tokens:{month}`)              |
+| `/api/ask` stream cuts off         | mid-stream 15s watchdog, or Layer-1 egress guard fired (`STREAM_ERR_SENTINEL`)           |
+| Push blocked, "unaudited API edit" | you edited `app/api/**`/`rate-limit.ts`/`proxy.ts`; dispatch `security-auditor`          |
+| CLS / visual regression            | regenerate Argos baselines via the `visual-baseline-regen` skill                         |
+| Client error in prod               | it was POSTed to `/api/log` (`err:{date}:{id}`, 30-day TTL) by `error-bridge.client.ts`  |

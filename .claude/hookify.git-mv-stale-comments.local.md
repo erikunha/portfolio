@@ -1,4 +1,5 @@
 ---
+
 name: git-mv-stale-comments
 enabled: true
 event: bash
