@@ -1,4 +1,32 @@
 @theme {
+  --color-text: #e6ffe6;
+  --color-text-secondary: #a1b3a1;
+  --color-green: #00ff41;
+
+  --text-min: 0.75rem;
+  --text-xs: max(0.75rem, var(--text-min));
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-5xl: 3rem;
+  --text-7xl: 4rem;
+
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-target: 2.75rem;
+  --border-width: 1px;
+  --radius-none: 0;
+  --radius-control: 2px;
+
   --color-primary-50: #eafff0;
   --color-primary-100: #c4ffd8;
   --color-primary-200: #8ff2b2;
@@ -88,4 +116,12 @@
 
   --font-mono: var(--font-mono-src), monospace;
   --font-display: var(--font-display-src), sans-serif;
+}
+
+@layer base {
+  @media (min-width: 768px) {
+    :root {
+      --text-min: 0.8125rem;
+    }
+  }
 }

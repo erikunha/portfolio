@@ -57,6 +57,11 @@ function get(name) {
 }
 
 const PAIRS = [
+  ['text', 'secondary-950', 4.5, 'semantic body text on base'],
+  ['text', 'secondary-900', 4.5, 'semantic body text on shell'],
+  ['text-secondary', 'secondary-950', 4.5, 'semantic secondary text on base'],
+  ['text-secondary', 'secondary-900', 4.5, 'semantic secondary text on shell'],
+  ['green', 'secondary-950', 3.0, 'semantic signal on base (large text)'],
   ['primary-400', 'secondary-950', 4.5, 'muted text on base'],
   ['primary-300', 'secondary-950', 4.5, 'faint text on base'],
   ['secondary-200', 'secondary-950', 4.5, 'secondary-200 meta/label text on base'],

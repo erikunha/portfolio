@@ -5,7 +5,7 @@ export const credentials: Credential[] = z.array(CredentialSchema).parse([
   {
     label: 'ANGULAR_DEV',
     badge: 'CERTIFIED',
-    evidence: 'Alain Chautard (GDE Angular) · 2024',
+    evidence: 'certificates.dev · 2024',
   },
   {
     label: 'ENGLISH',

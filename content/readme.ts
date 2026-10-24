@@ -1,9 +1,10 @@
+import { profileSummary } from './profile';
 import { type ReadmeCopy, ReadmeCopySchema } from './schemas';
+import { workAuthorizationProse } from './visa';
 
 export const readmeCopy: ReadmeCopy = ReadmeCopySchema.parse({
   desktopH1: '# Whoami',
-  desktopIntro:
-    'Brazilian 8+ years building frontend systems for regulated, high-traffic platforms in fintech (PCI-DSS), healthcare, global e-commerce, and AI-native B2B SaaS.',
+  desktopIntro: `${profileSummary} 8+ years building frontend systems for regulated, high-traffic platforms in fintech (PCI-DSS), healthcare, global e-commerce, and AI-native B2B SaaS. ${workAuthorizationProse}.`,
   desktopCoreStack: [
     '- React · Next.js · TypeScript · Angular · RxJS · NgRx · Redux · Node.js · AWS ',
     '- Micro-frontends (MFE) · Nx monorepos ·  Web Core Vitals · Web Components · UX/UI · User Journeys',

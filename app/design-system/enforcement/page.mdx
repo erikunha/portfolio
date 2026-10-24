@@ -21,9 +21,12 @@ same file.
 |---|---|---|
 | Contrast | `pnpm lint:contrast` | Parses `--color-*` from `theme.css`; fails if any documented pair misses WCAG AA |
 
-Type, spacing, motion, and z-index use Tailwind's standard scale (plus arbitrary
-values where required). There is no hand-maintained token layer for them — nothing
-to drift, nothing to lint.
+Type and spacing are a maintained token layer in `app/css/theme.css`: a type scale
+from `--text-xs` to `--text-7xl` with a `--text-min` floor that rises from 12px to
+13px at 768px and up, spacing steps `--spacing-1` to `--spacing-16`, and a 44px
+`--spacing-target` for interactive targets. `lint:contrast` checks the color pairs;
+the unit tests in `app/design-system/_lib/theme-tokens.test.ts` pin the scale. Motion
+and z-index use Tailwind's standard scale.
 
 ## Styling
 

@@ -14,6 +14,7 @@ export const StatSchema = z.object({
   value: z.string().min(1),
 });
 export const ProjectSchema = z.object({
+  company: z.string().min(1),
   name: z.string().min(1),
   mobileName: z.string().min(1),
   description: z.string().min(1),
@@ -112,11 +113,17 @@ export const UnknownsSchema = z.object({
   footer: z.string().min(1),
 });
 
+export const WORK_AUTH_STATUS = {
+  citizen: 'CITIZEN',
+  needsSponsorship: 'NEEDS_SPONSORSHIP',
+  openWithSponsorship: 'OPEN_WITH_SPONSORSHIP',
+} as const;
+
 export const VisaRowSchema = z.object({
   jurisdiction: z.string().min(1),
   jurisdictionShort: z.string().min(1),
-  status: z.string().min(1),
-  statusShort: z.string().min(1),
+  status: z.enum(WORK_AUTH_STATUS),
+  statusShort: z.enum(WORK_AUTH_STATUS),
   evidence: z.string().min(1),
 });
 
@@ -131,6 +138,9 @@ export const CommunityEventSchema = z.object({
   year: z.number().int(),
   role: z.string().min(1),
   bullets: z.array(z.string().min(1)).min(1),
+  links: z.array(z.object({ label: z.string().min(1), href: z.url() })).min(1),
+  refsLabel: z.string().min(1),
+  newTabLabel: z.string().min(1),
   statusLine: z.string().min(1),
 });
 
@@ -155,17 +165,67 @@ export const SysStatSchema = z.object({
   pct: z.string().regex(/^\d{1,3}%$/),
 });
 
-export const GitCommitSchema = z.object({
-  hash: z.string().min(1),
-  deco: z.string().min(1),
-  date: z.string().min(1),
-  branch: z.string().min(1),
-  type: z.enum(['career', 'life']),
-  company: z.string().min(1),
-  role: z.string().min(1),
-  body: z.array(z.string().min(1)),
-  isRoot: z.boolean().optional(),
+const MonthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
+
+export const ProfileSchema = z.object({
+  fullName: z.string().min(1),
+  displayName: z.string().min(1),
+  title: z.string().min(1),
+  technologyLine: z.string().min(1),
+  country: z.string().min(1),
+  city: z.string().min(1),
+  timezone: z.string().min(1),
+  availability: z.string().min(1),
+  currentEmployer: z.object({ name: z.string().min(1), context: z.string().min(1) }),
+  languages: z
+    .array(z.object({ code: z.string().min(1), name: z.string().min(1), level: z.string().min(1) }))
+    .min(1),
+  actions: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        href: z.union([z.string().url().startsWith('https://'), z.string().regex(/^\/(?!\/)\S*$/)]),
+      }),
+    )
+    .min(1),
 });
+
+export const EducationSchema = z
+  .object({
+    id: z.string().min(1),
+    degree: z.string().min(1),
+    institution: z.string().min(1),
+    location: z.string().min(1),
+    studyMode: z.string().min(1).nullable(),
+    startYear: z.number().int().nullable(),
+    endYear: z.number().int(),
+    expectedCompletion: MonthSchema.nullable(),
+    period: z.string().min(1),
+  })
+  .refine((entry) => entry.startYear === null || entry.startYear <= entry.endYear, {
+    message: 'Education must end on or after its start year',
+  });
+
+export const GitCommitSchema = z
+  .object({
+    startMonth: MonthSchema,
+    endMonth: MonthSchema.nullable(),
+    location: z.string().min(1),
+    workMode: z.enum(['remote', 'hybrid', 'on-site']).nullable(),
+    domain: z.string().min(1),
+    hash: z.string().min(1),
+    deco: z.string().min(1),
+    date: z.string().min(1),
+    branch: z.string().min(1),
+    type: z.enum(['career', 'life']),
+    company: z.string().min(1),
+    role: z.string().min(1),
+    body: z.array(z.string().min(1)),
+    isRoot: z.boolean().optional(),
+  })
+  .refine((entry) => entry.endMonth === null || entry.startMonth <= entry.endMonth, {
+    message: 'Employment must end on or after its start month',
+  });
 
 export const ShellResponseSchema = z.object({
   commands: z.array(z.string().min(1)).min(1),
@@ -198,6 +258,10 @@ export const DmesgLineSchema = z.object({
   ok: z.boolean(),
 });
 export type DmesgLine = z.infer<typeof DmesgLineSchema>;
+
+export const CopyFeedbackSchema = z.object({ label: z.string().min(1), message: z.string() });
+export type CopyFeedback = z.infer<typeof CopyFeedbackSchema>;
+export type CopyFeedbackState = 'idle' | 'success' | 'failure' | 'unavailable';
 
 const DawMixerPluginSchema = z.object({
   name: z.string().min(1),
@@ -370,3 +434,6 @@ export type LinksPlaylist = z.infer<typeof LinksPlaylistSchema>;
 export type LinksPill = z.infer<typeof LinksPillSchema>;
 export type LinksCopy = z.infer<typeof LinksCopySchema>;
 export type LinksContent = z.infer<typeof LinksContentSchema>;
+
+export type Profile = z.infer<typeof ProfileSchema>;
+export type Education = z.infer<typeof EducationSchema>;
