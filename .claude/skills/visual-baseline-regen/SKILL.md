@@ -1,4 +1,5 @@
 ---
+
 name: visual-baseline-regen
 description: Use when a push or PR may touch a Playwright screenshot baseline — any CSS, layout, typography, spacing, or rendering change. Page sections (hero, contact, shell, hottest-takes) are captured in `tests/visual/visual.spec.ts` and are CI-gated per-platform (darwin + linux). Design-system component baselines live in `tests/e2e/design-system-components.spec.ts` and are darwin-only (the spec is ignored in CI on Ubuntu). Covers assessing baseline impact before a push, the darwin regen path (`--update-snapshots` against a prod server), the linux regen path for `visual.spec.ts` baselines only (the `update_visual_baselines` CI dispatch + artifact download + per-project PNG copy), committing both platforms in one commit, the batch-to-one-push cost rule, and the inspect-before-commit rule.
 ---
@@ -6,7 +7,6 @@ description: Use when a push or PR may touch a Playwright screenshot baseline �
 # Visual baseline regeneration
 
 Two specs capture screenshot baselines with different CI treatment:
-
 - **`tests/visual/visual.spec.ts`** (page sections: hero, contact, shell, hottest-takes) —
   CI-gated, per-platform (darwin + linux). A stale baseline fails the E2E visual project
   in CI. Requires full darwin + linux regen (Steps 1-3 below).
@@ -20,7 +20,6 @@ CLAUDE.md); this skill is the full procedure once the answer is YES.
 ## Step 0 — assess impact BEFORE every push (always)
 
 Before any push, decide whether the change touches a baseline. **State the assessment explicitly.**
-
 - **NO** baseline affected (e.g. a string moved to content with identical rendering):
   say so and push once. Done.
 - **YES — `visual.spec.ts` baseline affected:** regenerate and commit baselines for BOTH

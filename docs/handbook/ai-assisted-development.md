@@ -62,15 +62,15 @@ flowchart TD
 
 Every substantive change runs the same disciplined loop, enforced by mandated skills and mechanical gates:
 
-| Step | Mechanism | Enforced by |
-|---|---|---|
-| Explore + plan | brainstorming, writing-plans | architect-reviewer PASS (convention since 2026-07-27) |
-| Anticipate failure | thinking-risk-premortem, pre-mortem | convention + plan tasks |
-| Implement | test-driven-development | convention |
-| Self-verify | verification-before-completion | convention + `pnpm verify` |
-| Review | pre-PR self-review, then claude-review on the PR | `pnpm claude-gate` (fail-closed on a stale or SHA-less Approve) |
-| Resolve | findings ledger | stamp refuses while findings open |
-| Record | DECISIONS.md ADR | PR template checklist |
+| Step               | Mechanism                                        | Enforced by                                                     |
+| ------------------ | ------------------------------------------------ | --------------------------------------------------------------- |
+| Explore + plan     | brainstorming, writing-plans                     | architect-reviewer PASS (convention since 2026-07-27)           |
+| Anticipate failure | thinking-risk-premortem, pre-mortem              | convention + plan tasks                                         |
+| Implement          | test-driven-development                          | convention                                                      |
+| Self-verify        | verification-before-completion                   | convention + `pnpm verify`                                      |
+| Review             | pre-PR self-review, then claude-review on the PR | `pnpm claude-gate` (fail-closed on a stale or SHA-less Approve) |
+| Resolve            | findings ledger                                  | stamp refuses while findings open                               |
+| Record             | DECISIONS.md ADR                                 | PR template checklist                                           |
 
 ## 3. Review — claude-review on the PR, self-review before it
 
@@ -83,12 +83,11 @@ Every substantive change runs the same disciplined loop, enforced by mandated sk
 **There are no `.claude/hooks/`.** Six PreToolUse/PostToolUse/SessionStart guards were removed on 2026-07-27, along with `check:gate-health` (the meta-gate that verified their wiring) and `scripts/lib/transcript.mjs` (the shared JSONL resolution all the fail-closed gates rode on).
 
 What enforces anything now runs at commit, push or CI time:
-
 - `.husky/pre-commit`: Biome, `gitleaks --staged`, commitlint.
 - `.husky/pre-push`: main-push guard, branch-name guard, `pnpm verify`.
 - CI: the `verify` chain plus build, bundle-size, route-JS, Lighthouse, axe-core, Playwright, semgrep, gitleaks, CodeQL.
 
-The honest consequence: nothing constrains an agent *mid-turn* any more. A broad `git add`, a force-push, an npm invocation, or an unaudited API edit are all conventions in `CLAUDE.md` rather than blocked actions.
+The honest consequence: nothing constrains an agent _mid-turn_ any more. A broad `git add`, a force-push, an npm invocation, or an unaudited API edit are all conventions in `CLAUDE.md` rather than blocked actions.
 
 ## 5. The learning loop (AI improves the platform)
 
@@ -102,12 +101,12 @@ The session-end learning loop was removed on 2026-07-27: the hook, `scripts/revi
 
 The repo encodes distinct prompt patterns for distinct SDLC stages:
 
-| Stage | Prompt shape | Where it lives |
-|---|---|---|
-| Specification | brainstorm -> spec with Context/Gaps/Changes | `/speckit.specify`, the spec template |
-| Architecture review | four-gate spec-gate -> `GATE_RESULT: PASS/FAIL` | `architect-reviewer` agent |
-| Implementation | TDD: failing test first, smallest change | `test-first discipline (CLAUDE.md skill dispatch)` |
-| Review | scoped-by-commit-type battery prompts | `CLAUDE.md` working agreement |
-| Documentation | reverse-engineer from code, route don't duplicate | this `/docs` set's provenance |
+| Stage               | Prompt shape                                      | Where it lives                                     |
+| ------------------- | ------------------------------------------------- | -------------------------------------------------- |
+| Specification       | brainstorm -> spec with Context/Gaps/Changes      | `/speckit.specify`, the spec template              |
+| Architecture review | four-gate spec-gate -> `GATE_RESULT: PASS/FAIL`   | `architect-reviewer` agent                         |
+| Implementation      | TDD: failing test first, smallest change          | `test-first discipline (CLAUDE.md skill dispatch)` |
+| Review              | scoped-by-commit-type battery prompts             | `CLAUDE.md` working agreement                      |
+| Documentation       | reverse-engineer from code, route don't duplicate | this `/docs` set's provenance                      |
 
-The scoping rule for the battery is itself a prompt-engineering decision: a docs-only commit gets prompts that skip the test suite, because the stamp counts *dispatch*, not depth. This is how a heavy review process stays cheap on trivial changes.
+The scoping rule for the battery is itself a prompt-engineering decision: a docs-only commit gets prompts that skip the test suite, because the stamp counts _dispatch_, not depth. This is how a heavy review process stays cheap on trivial changes.
