@@ -7,8 +7,16 @@ const redis = {
   get: vi.fn(),
   hget: vi.fn(),
   hincrby: vi.fn(),
+  eval: vi.fn(),
 };
 vi.mock('@/lib/rate-limit', () => ({ getRedis: () => redis }));
+
+const guardedIncrement = `
+if redis.call('ZSCORE', KEYS[1], ARGV[1]) == false then
+  return nil
+end
+return redis.call('HINCRBY', KEYS[2], ARGV[1], ARGV[2])
+`;
 
 describe('contact outbox', () => {
   beforeEach(() => {
@@ -50,11 +58,27 @@ describe('contact outbox', () => {
 
   it('defaults a missing retry counter to zero and increments atomically', async () => {
     redis.hget.mockResolvedValueOnce(null);
-    redis.hincrby.mockResolvedValueOnce(1);
+    redis.eval.mockResolvedValueOnce(1);
     const { getContactAttempts, incrementContactAttempts } = await import('@/lib/contact-outbox');
     expect(await getContactAttempts('message-id')).toBe(0);
     expect(await incrementContactAttempts('message-id')).toBe(1);
-    expect(redis.hincrby).toHaveBeenCalledWith('contact:outbox:attempts', 'message-id', 1);
+    expect(redis.eval).toHaveBeenCalledWith(
+      guardedIncrement,
+      ['contact:outbox', 'contact:outbox:attempts'],
+      ['message-id', 1],
+    );
+  });
+
+  it('does not recreate attempt fields for an id already removed by another run', async () => {
+    redis.eval.mockResolvedValueOnce(null);
+    const { incrementContactAttempts } = await import('@/lib/contact-outbox');
+    expect(await incrementContactAttempts('removed-id')).toBeNull();
+    expect(redis.hincrby).not.toHaveBeenCalled();
+    expect(redis.eval).toHaveBeenCalledWith(
+      guardedIncrement,
+      ['contact:outbox', 'contact:outbox:attempts'],
+      ['removed-id', 1],
+    );
   });
 
   it('removes only pending membership and attempt count, preserving the audit message', async () => {

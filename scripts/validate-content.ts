@@ -1,11 +1,8 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { ContactContentSchema, contactContent } from '../content/contact';
 import { listContentFiles } from './content-files.mjs';
 
 const MIN_EXPECTED_CONTENT_FILES = 20;
-
-ContactContentSchema.parse(contactContent);
 
 const files = listContentFiles();
 

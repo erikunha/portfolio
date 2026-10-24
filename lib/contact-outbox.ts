@@ -8,6 +8,12 @@ const FIRST_PENDING_INDEX = 0;
 const LAST_PENDING_INDEX = -1;
 const INITIAL_ATTEMPTS = 0;
 const ATTEMPT_INCREMENT = 1;
+const INCREMENT_PENDING_ATTEMPTS = `
+if redis.call('ZSCORE', KEYS[1], ARGV[1]) == false then
+  return nil
+end
+return redis.call('HINCRBY', KEYS[2], ARGV[1], ARGV[2])
+`;
 
 export const CONTACT_MESSAGE_TTL_SECONDS = 60 * 60 * 24 * 90;
 export const CONTACT_MAX_RETRY_ATTEMPTS = 3;
@@ -42,8 +48,12 @@ export async function getContactAttempts(msgId: string): Promise<number> {
   return (await getRedis().hget<number>(ATTEMPTS_KEY, msgId)) ?? INITIAL_ATTEMPTS;
 }
 
-export function incrementContactAttempts(msgId: string): Promise<number> {
-  return getRedis().hincrby(ATTEMPTS_KEY, msgId, ATTEMPT_INCREMENT);
+export function incrementContactAttempts(msgId: string): Promise<number | null> {
+  return getRedis().eval<[string, number], number | null>(
+    INCREMENT_PENDING_ATTEMPTS,
+    [OUTBOX_KEY, ATTEMPTS_KEY],
+    [msgId, ATTEMPT_INCREMENT],
+  );
 }
 
 export async function removePendingContact(msgId: string): Promise<void> {

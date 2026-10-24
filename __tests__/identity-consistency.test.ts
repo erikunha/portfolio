@@ -1,8 +1,10 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { contactContent } from '@/content/contact';
 import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
+import { linksContent } from '@/content/links';
 import { nowRows } from '@/content/now';
 import { projects } from '@/content/projects';
 import { readmeCopy } from '@/content/readme';
@@ -47,6 +49,12 @@ describe('identity is consistent across every gated surface', () => {
     expect(manifest.title).toBe(CANONICAL_TITLE);
     expect(manifest.availability).toBe(HIRING_PROFILE.availability);
     expect(manifest.work_auth).toEqual(HIRING_PROFILE.work_auth);
+  });
+
+  it('keeps the queued contact LinkedIn URL consistent with the links page', () => {
+    const linkedin = linksContent.pills.find((pill) => pill.id === 'linkedin');
+    expect(linkedin?.href).toBeTruthy();
+    expect(contactContent.queued.linkHref).toBe(linkedin?.href);
   });
 
   it('every title surface states the canonical title', () => {

@@ -4,8 +4,21 @@ import { NextRequest } from 'next/server';
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
-import { linksContent } from '@/content/links';
 import { ContactForm } from './ContactForm';
+
+vi.mock('@/content/links', () => ({}));
+
+it('exports only plain contact data without runtime Zod or links content', async () => {
+  vi.resetModules();
+  vi.doMock('zod', () => ({}));
+  try {
+    const exported = { ...(await import('@/content/contact')) };
+    expect(JSON.parse(JSON.stringify(exported))).toEqual(exported);
+  } finally {
+    vi.doUnmock('zod');
+    vi.resetModules();
+  }
+});
 
 describe('ContactForm accessibility', () => {
   let mounted: MountedClient;
@@ -167,9 +180,7 @@ describe('contact form delivery states', () => {
     expect(queued?.textContent).toContain('for a faster reply use LinkedIn');
     const link = queued?.querySelector('a');
     expect(link?.textContent).toBe('LinkedIn');
-    expect(link?.getAttribute('href')).toBe(
-      linksContent.pills.find((pill) => pill.id === 'linkedin')?.href,
-    );
+    expect(link?.getAttribute('href')).toBe('https://www.linkedin.com/in/erikunha/');
     expect(container.querySelector('form')).toBeNull();
   });
 

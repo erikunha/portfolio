@@ -1,40 +1,29 @@
-import { z } from 'zod';
-import { linksContent } from './links';
-
-const LINKEDIN_PILL_ID = 'linkedin';
+export interface ContactContent {
+  success: { title: string; message: string };
+  queued: { title: string; message: string; linkLabel: string; linkHref: string };
+  form: {
+    nameLabel: string;
+    emailLabel: string;
+    messageLabel: string;
+    requiredPlaceholder: string;
+    messagePlaceholder: string;
+    submit: string;
+    submitting: string;
+    waiting: string;
+    errorPrefix: string;
+  };
+  errors: {
+    storageUnavailable: string;
+    retryUnavailable: string;
+    rateLimited: string;
+    requestFailed: string;
+  };
+}
 
 export const CONTACT_DELIVERY_CODE = { QUEUED: 'queued' } as const;
+const CONTACT_LINKEDIN_URL = 'https://www.linkedin.com/in/erikunha/';
 
-export const ContactContentSchema = z.object({
-  success: z.object({ title: z.string().min(1), message: z.string().min(1) }),
-  queued: z.object({
-    title: z.string().min(1),
-    message: z.string().min(1),
-    linkLabel: z.string().min(1),
-    linkHref: z.url(),
-  }),
-  form: z.object({
-    nameLabel: z.string().min(1),
-    emailLabel: z.string().min(1),
-    messageLabel: z.string().min(1),
-    requiredPlaceholder: z.string().min(1),
-    messagePlaceholder: z.string().min(1),
-    submit: z.string().min(1),
-    submitting: z.string().min(1),
-    waiting: z.string().min(1),
-    errorPrefix: z.string().min(1),
-  }),
-  errors: z.object({
-    storageUnavailable: z.string().min(1),
-    retryUnavailable: z.string().min(1),
-    rateLimited: z.string().min(1),
-    requestFailed: z.string().min(1),
-  }),
-});
-
-export type ContactContent = z.infer<typeof ContactContentSchema>;
-
-export const contactContent: ContactContent = ContactContentSchema.parse({
+export const contactContent: ContactContent = {
   success: {
     title: 'EXECUTE_SEND :: SUCCESS',
     message: 'handshake initiated · expect reply within 48h',
@@ -43,7 +32,7 @@ export const contactContent: ContactContent = ContactContentSchema.parse({
     title: 'EXECUTE_SEND :: QUEUED',
     message: 'saved, not delivered yet; delivery is retried automatically; for a faster reply use',
     linkLabel: 'LinkedIn',
-    linkHref: linksContent.pills.find((pill) => pill.id === LINKEDIN_PILL_ID)?.href,
+    linkHref: CONTACT_LINKEDIN_URL,
   },
   form: {
     nameLabel: '$ name:',
@@ -62,4 +51,10 @@ export const contactContent: ContactContent = ContactContentSchema.parse({
     rateLimited: 'too many requests, try again in 10 minutes',
     requestFailed: 'message could not be sent, try again',
   },
-});
+};
+
+export const contactRetryAlertContent = {
+  subject: '[portfolio] contact retry messages dropped',
+  message:
+    'Contact messages were removed from the delivery outbox without provider acceptance. Audit records remain available in Redis.',
+};
