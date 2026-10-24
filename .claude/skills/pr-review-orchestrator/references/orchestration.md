@@ -2,14 +2,14 @@
 
 ## Waves
 
-| Wave | Who | What |
-|---|---|---|
-| 0 Bootstrap | main thread | repo rules, exact target and base, objective, acceptance criteria, changed files, stack fingerprint from the lockfile, risk, capability map. Output: REVIEW-CONTEXT. |
-| 1 Breadth | parallel tracks | one track per MATERIAL domain, launched together in one message |
-| 2 Depth | parallel tracks | launched only from concrete wave 1 triggers (FOLLOW-UP items): exact-version research, idempotency, base comparison, a performance hypothesis, a security path |
-| 3 Validation + product | validators in parallel; main thread for the browser, design comparison and cross-source reconciliation | gates, local production run, journeys |
-| 4 Challenge | one challenger per consequential surviving finding | strongest counterexample, weakest assumption, cheapest discriminating check |
-| 5 Synthesis | main thread | dedupe, attribute, rank, completion matrix, write |
+| Wave                   | Who                                                                                                    | What                                                                                                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 Bootstrap            | main thread                                                                                            | repo rules, exact target and base, objective, acceptance criteria, changed files, stack fingerprint from the lockfile, risk, capability map. Output: REVIEW-CONTEXT. |
+| 1 Breadth              | parallel tracks                                                                                        | one track per MATERIAL domain, launched together in one message                                                                                                      |
+| 2 Depth                | parallel tracks                                                                                        | launched only from concrete wave 1 triggers (FOLLOW-UP items): exact-version research, idempotency, base comparison, a performance hypothesis, a security path       |
+| 3 Validation + product | validators in parallel; main thread for the browser, design comparison and cross-source reconciliation | gates, local production run, journeys                                                                                                                                |
+| 4 Challenge            | one challenger per consequential surviving finding                                                     | strongest counterexample, weakest assumption, cheapest discriminating check                                                                                          |
+| 5 Synthesis            | main thread                                                                                            | dedupe, attribute, rank, completion matrix, write                                                                                                                    |
 
 Waves 1 and 3 can overlap: start the build and the gates while wave 1 tracks run.
 

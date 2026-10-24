@@ -17,14 +17,14 @@ DEPLOY_SALT=test pnpm start          # port 3000; playwright.config.ts hard-code
 
 ## Gates (split into parallel validators)
 
-| Group | Commands |
-|---|---|
-| Static | `pnpm check`, `pnpm typecheck`, `pnpm validate-content`, `pnpm check:client-naming`, `pnpm check:doc-drift`, `pnpm lint:css-tokens` |
-| Unit | `pnpm test --run` (or targeted `pnpm exec vitest run <paths>`) |
-| Budgets | `pnpm build && node scripts/check-route-js.mjs`, `pnpm bundle-check` |
-| Runtime | `pnpm gates:runtime` (LHCI desktop + mobile, axe, functional e2e) |
-| Security | `pnpm audit --audit-level=moderate`, `node scripts/run-semgrep.mjs --error <changed paths>` |
-| Visual | `pnpm exec playwright test tests/visual --project=<p>` when a captured section changed |
+| Group    | Commands                                                                                                                            |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Static   | `pnpm check`, `pnpm typecheck`, `pnpm validate-content`, `pnpm check:client-naming`, `pnpm check:doc-drift`, `pnpm lint:css-tokens` |
+| Unit     | `pnpm test --run` (or targeted `pnpm exec vitest run <paths>`)                                                                      |
+| Budgets  | `pnpm build && node scripts/check-route-js.mjs`, `pnpm bundle-check`                                                                |
+| Runtime  | `pnpm gates:runtime` (LHCI desktop + mobile, axe, functional e2e)                                                                   |
+| Security | `pnpm audit --audit-level=moderate`, `node scripts/run-semgrep.mjs --error <changed paths>`                                         |
+| Visual   | `pnpm exec playwright test tests/visual --project=<p>` when a captured section changed                                              |
 
 Report each as passed, failed or not run, with the command. Not run is never passed.
 

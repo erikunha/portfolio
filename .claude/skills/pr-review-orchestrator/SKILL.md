@@ -1,4 +1,5 @@
 ---
+
 name: pr-review-orchestrator
 description: Evidence-first engineering review of a pull request or branch in this repo. Orchestrates bounded investigations across providers (Codex, MiMo, Claude subagents), deterministic gates, a local production run with real browser input, exact-version research, refutation and challenge, then returns a short review draft. Use when asked to review a PR, a sub-PR before merge, or "is this ready to merge". Do not use for a one-line change (read it and run its test) or for writing code.
 ---
@@ -22,7 +23,6 @@ The diff is the entry point. The repository and the running site are the subject
 ## 1. Calibrate (minutes, not a report)
 
 Confirm, do not assume, what this session has. Build a private capability map:
-
 - **Providers:** `cross-runtime.py quota --runtime registered` (Codex state), `model-delegate.py providers` (MiMo, GLM, agy).
 - **Agents:** read the Agent tool's listed types; do not assume them. The `routing-*` specialists come from the user-level runtime, not this repo's `.claude/agents/`, so they exist only where that runtime is installed. When one is missing, use `general-purpose` (or `Explore` for read-only discovery) with the same contract, and say so in the completion matrix. In CI those built-ins are denied; dispatch `review-worker` instead (ci.md).
 - **Browser:** Playwright MCP, chrome-devtools MCP, claude-in-chrome. Whichever is connected.
