@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockStreamText = vi.fn();
+const outboxExecMock = vi.fn(async () => [1, 1]);
 
 vi.mock('ai', () => ({
   streamText: mockStreamText,
@@ -22,7 +23,10 @@ vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
   getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
   getContactLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-  getRedis: vi.fn(() => ({ set: vi.fn(async () => 'OK') })),
+  getRedis: vi.fn(() => ({
+    set: vi.fn(async () => 'OK'),
+    multi: () => ({ hset: vi.fn(), zadd: vi.fn(), exec: outboxExecMock }),
+  })),
   reserveBudget: vi.fn(async () => ({
     allowed: true,
     reserved: 1512,
@@ -120,6 +124,7 @@ describe('/api/contact — Resend send 10s timeout', () => {
     process.env.RESEND_API_KEY = 'fake-key-for-tests';
     resendSendMock.mockReset();
     logErrorMock.mockReset();
+    outboxExecMock.mockClear();
     vi.resetModules();
   });
 
@@ -143,13 +148,13 @@ describe('/api/contact — Resend send 10s timeout', () => {
     await vi.advanceTimersByTimeAsync(10_000);
     const res = await resPromise;
 
-    expect(res.status).toBe(200);
-    const body = (await res.json()) as { ok: boolean };
-    expect(body.ok).toBe(true);
+    expect(res.status).toBe(202);
+    expect(await res.json()).toMatchObject({ ok: false, error: { code: 'queued' } });
+    expect(outboxExecMock).toHaveBeenCalledOnce();
 
     expect(logErrorMock).toHaveBeenCalledWith(
-      'Resend unavailable',
-      expect.objectContaining({ reason: expect.stringMatching(/timeout/i) }),
+      'contact delivery unavailable',
+      expect.objectContaining({ requestId: expect.any(String), msgId: expect.any(String) }),
     );
   });
 });

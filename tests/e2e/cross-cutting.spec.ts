@@ -359,3 +359,20 @@ test.describe('cross-cutting', () => {
     ).toMatch(/^["']?mono["']?\s*(,|$)/);
   });
 });
+
+test('footer is server-rendered and boot output is decorative under reduced motion', async ({
+  page,
+}) => {
+  await installMockBackend(page, { log: 'accept', forget: 'happy' });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await expect(page.locator('.hero-boot-desktop')).toHaveAttribute('aria-hidden', 'true');
+  await expect(page.locator('.hero-boot-mobile')).toHaveAttribute('aria-hidden', 'true');
+  const footer = page.locator('footer');
+  await footer.scrollIntoViewIfNeeded();
+  await expect(footer.getByRole('navigation', { name: 'Site map' })).toBeVisible();
+  await expect(footer.locator('canvas')).toHaveCount(0);
+  await expect(footer.locator('.footer-dmesg')).toHaveAttribute('aria-hidden', 'true');
+  await footer.getByRole('link', { name: 'press R to reboot, back to top' }).click();
+  await expect(page.locator('h1')).toBeFocused();
+});

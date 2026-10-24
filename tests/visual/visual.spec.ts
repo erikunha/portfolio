@@ -126,4 +126,16 @@ test.describe('visual regression', () => {
     }
     await snapshotLocator(mockedPage, hottest, 'hottest-takes-section.png');
   });
+
+  test('footer matches baseline', async ({ mockedPage }) => {
+    const footer = mockedPage.locator('footer');
+    await footer.scrollIntoViewIfNeeded();
+    await mockedPage.evaluate(() => document.fonts.ready);
+    await stripVolatileChrome(mockedPage);
+    if (process.env.ARGOS_TOKEN) {
+      await revealDeferredContent(mockedPage);
+      await argosScreenshot(mockedPage, 'footer', { element: footer });
+    }
+    await snapshotLocator(mockedPage, footer, 'footer.png');
+  });
 });

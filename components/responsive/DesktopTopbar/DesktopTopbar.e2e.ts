@@ -11,7 +11,9 @@ test.describe('DesktopTopbar — navigation', () => {
 
   test('design system link navigates to /design-system', async ({ page }) => {
     await page.goto('/');
-    const dsLink = page.getByRole('link', { name: 'DESIGN_SYSTEM' });
+    const dsLink = page
+      .getByRole('navigation', { name: 'Site navigation' })
+      .getByRole('link', { name: 'DESIGN_SYSTEM' });
     await dsLink.click();
     await expect(page).toHaveURL('/design-system');
   });

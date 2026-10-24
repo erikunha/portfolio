@@ -9,7 +9,7 @@ export type MockState = {
     | 'budget-exhausted'
     | 'stream-error'
     | 'pre-stream-timeout';
-  contact?: 'happy' | 'validation-error' | 'rate-limit' | 'server-error' | 'honeypot';
+  contact?: 'happy' | 'queued' | 'validation-error' | 'rate-limit' | 'server-error' | 'honeypot';
   log?: 'accept' | 'rate-limit' | 'storage-unavailable';
   forget?: 'happy' | 'not-found';
 };
@@ -91,7 +91,24 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ ok: true }),
+        body: JSON.stringify({ ok: true, requestId: 'contact-test-request-id' }),
+      });
+      return;
+    }
+
+    if (s === 'queued') {
+      await route.fulfill({
+        status: 202,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: false,
+          requestId: 'contact-test-request-id',
+          error: {
+            code: 'queued',
+            message:
+              'saved, not delivered yet; delivery is retried automatically; for a faster reply use LinkedIn',
+          },
+        }),
       });
       return;
     }
@@ -100,7 +117,11 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 400,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'name is required' }),
+        body: JSON.stringify({
+          ok: false,
+          requestId: 'contact-test-request-id',
+          error: { code: 'validation_failed', message: 'name is required' },
+        }),
       });
       return;
     }
@@ -109,7 +130,11 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 429,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'too many requests — try again in 10 minutes' }),
+        body: JSON.stringify({
+          ok: false,
+          requestId: 'contact-test-request-id',
+          error: { code: 'rate_limited', message: 'too many requests, try again in 10 minutes' },
+        }),
       });
       return;
     }
@@ -118,7 +143,11 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 502,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'storage unavailable — try again' }),
+        body: JSON.stringify({
+          ok: false,
+          requestId: 'contact-test-request-id',
+          error: { code: 'storage_unavailable', message: 'storage unavailable, try again' },
+        }),
       });
       return;
     }

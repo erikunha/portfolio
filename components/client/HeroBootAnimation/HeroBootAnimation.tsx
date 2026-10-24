@@ -131,6 +131,7 @@ export function HeroBootAnimation({ variant }: Props) {
   return (
     <div
       ref={bootRef}
+      aria-hidden="true"
       className={variant === 'desktop' ? 'hero-boot-desktop' : 'hero-boot-mobile'}
     />
   );

@@ -3,7 +3,9 @@ import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
 import { communityEvent } from '@/content/community';
+import { contactCopy } from '@/content/contact-copy';
 import { education } from '@/content/education';
+import { footerContent } from '@/content/footer';
 import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
 import { nowRows } from '@/content/now';
@@ -45,6 +47,13 @@ beforeAll(async () => {
 });
 
 describe('identity is consistent across every gated surface', () => {
+  it('points every LinkedIn link at the canonical social.linkedin', () => {
+    expect(contactCopy.queued.linkHref).toBe(social.linkedin);
+    const linkedinRows = JSON.stringify(footerContent).match(/https?:[^"]*linkedin[^"]*/g) ?? [];
+    expect(linkedinRows.length).toBeGreaterThan(0);
+    for (const href of linkedinRows) expect(href).toBe(social.linkedin);
+  });
+
   it('derives JSON-LD sameAs, llms.txt links and profile actions from social', () => {
     expect(personSchema.sameAs).toEqual([social.linkedin, social.github]);
     expect(llmsTxt).toContain(`(${social.linkedin})`);

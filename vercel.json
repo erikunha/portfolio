@@ -3,6 +3,10 @@
     {
       "path": "/api/psi-refresh",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/contact-retry",
+      "schedule": "0 4 * * *"
     }
   ]
 }

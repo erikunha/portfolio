@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mountClient } from '@/__tests__/helpers/render';
 
 vi.mock('@/lib/motion', () => ({
-  readMotion: () => true,
+  readMotion: vi.fn(() => true),
 }));
 
 const bootDesktopClass = 'hero-boot-desktop';
@@ -93,6 +93,7 @@ describe('boot-animation: textContent-mutation invariant', () => {
 
     const mount = container.querySelector(`.${bootDesktopClass}`);
     expect(mount).not.toBeNull();
+    expect(mount?.getAttribute('aria-hidden')).toBe('true');
     expect(mount?.childElementCount).toBe(0);
 
     await act(async () => {
@@ -108,5 +109,42 @@ describe('boot-animation: textContent-mutation invariant', () => {
     expect(cmd?.childNodes[0]?.nodeType).toBe(3);
 
     unmount();
+  });
+});
+
+describe('decorative boot output', () => {
+  it.each(['desktop', 'mobile'] as const)(
+    'hides the %s boot output from assistive technology',
+    async (variant) => {
+      const { renderToStaticMarkup } = await import('react-dom/server');
+      const { HeroBootAnimation } = await import('./HeroBootAnimation');
+      const html = renderToStaticMarkup(<HeroBootAnimation variant={variant} />);
+      const host = document.createElement('div');
+      host.innerHTML = html;
+      expect(host.firstElementChild?.getAttribute('aria-hidden')).toBe('true');
+    },
+  );
+
+  it('keeps reduced-motion output static without starting animation timers', async () => {
+    const { readMotion } = await import('@/lib/motion');
+    vi.mocked(readMotion).mockReturnValue(false);
+    vi.stubGlobal('matchMedia', () => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    vi.useFakeTimers();
+    const { HeroBootAnimation } = await import('./HeroBootAnimation');
+    const mounted = await mountClient(<HeroBootAnimation variant="desktop" />);
+    const before = mounted.container.textContent;
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
+    expect(mounted.container.textContent).toBe(before);
+    expect(vi.getTimerCount()).toBe(0);
+    mounted.unmount();
+    vi.useRealTimers();
+    vi.mocked(readMotion).mockReturnValue(true);
+    vi.unstubAllGlobals();
   });
 });
