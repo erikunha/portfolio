@@ -34,18 +34,18 @@ flowchart TD
 
 ## Where each kind of knowledge lives
 
-| Knowledge | Lives in | Format |
-|---|---|---|
-| Why a decision was made | `DECISIONS.md` | dated ADR bullet + reversibility note |
-| The engineering bar | `STANDARDS.md` | 12 chapters, each naming its enforcement gate |
-| The system's design | `ARCHITECTURE.md` | narrative + trade-offs |
-| What to build (approved) | `specs/NNN-feature/` (local-only, gitignored) | Context / Gaps / Changes / Status |
-| How to build it (decomposed) | `specs/NNN-feature/` (local-only, gitignored) | step-by-step tasks, sharded for sub-PRs |
-| The codebase map | `/docs/01-11` | reverse-engineered, diagram-first |
-| How engineering happens | `/docs/handbook/` | this set |
-| Agent behavior | `CLAUDE.md`, `.claude/rules/*`, skills | instructions + dispatch tables |
-| Learned preferences | `MEMORY.md` + `feedback_*.md` | one fact per file, recalled by relevance |
-| Session continuity | `.remember/` | timestamped handoff blocks |
+| Knowledge                    | Lives in                                      | Format                                        |
+| ---------------------------- | --------------------------------------------- | --------------------------------------------- |
+| Why a decision was made      | `DECISIONS.md`                                | dated ADR bullet + reversibility note         |
+| The engineering bar          | `STANDARDS.md`                                | 12 chapters, each naming its enforcement gate |
+| The system's design          | `ARCHITECTURE.md`                             | narrative + trade-offs                        |
+| What to build (approved)     | `specs/NNN-feature/` (local-only, gitignored) | Context / Gaps / Changes / Status             |
+| How to build it (decomposed) | `specs/NNN-feature/` (local-only, gitignored) | step-by-step tasks, sharded for sub-PRs       |
+| The codebase map             | `/docs/01-11`                                 | reverse-engineered, diagram-first             |
+| How engineering happens      | `/docs/handbook/`                             | this set                                      |
+| Agent behavior               | `CLAUDE.md`, `.claude/rules/*`, skills        | instructions + dispatch tables                |
+| Learned preferences          | `MEMORY.md` + `feedback_*.md`                 | one fact per file, recalled by relevance      |
+| Session continuity           | `.remember/`                                  | timestamped handoff blocks                    |
 
 ## The ADR convention (load-bearing)
 
@@ -103,14 +103,12 @@ decomposition the convention would otherwise add already exists in every plan.
 ## The memory system
 
 Two complementary mechanisms carry knowledge across the fresh-context boundary of each session:
-
 - **Auto memory** (`~/.claude/projects/<slug>/memory/`): `MEMORY.md` is an index (first 200 lines loaded each session) pointing at one-fact-per-file notes typed `user` / `feedback` / `project` / `reference` (and `dead-end`, established this year). Feedback memories carry a "Why" and a "How to apply".
 - **`.remember/`**: in-flight session handoff. `now.md` (current state), `recent.md` (rolling log + reusable "Identity Candidates" patterns), `archive.md`, per-day `today-*.md`, and auto-save logs. It is maintained by a user-global (`~/.claude`) mechanism outside this repo's tracked harness — no in-repo skill, hook, or `settings.json` entry writes it (there is no `SessionEnd` hook here since 2026-07-27), so the repository neither instruments nor gates it.
 
 ## Documentation standards
 
 Inferred from how the docs are actually written and maintained:
-
 1. **Reverse-engineer from code; route, do not duplicate.** New docs cite the code and link to canonical docs rather than copying them. Where a doc and the code disagree, the code wins and the doc is a bug.
 2. **Diagram-first.** Mermaid for any flow, hierarchy, or sequence (committable directly).
 3. **`CLAUDE.md` is capped** at 275 lines (`check:harness-size`). Procedures move to skills or path-scoped rules; the slot-routing rule (gate > skill > rule > memory > prose) decides where any new instruction goes.

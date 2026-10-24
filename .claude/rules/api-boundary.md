@@ -1,9 +1,11 @@
 ---
+
 paths:
-  - "app/api/**"
-  - "lib/rate-limit.ts"
-  - "lib/server/**"
-  - "proxy.ts"
+- "app/api/**"
+- "lib/rate-limit.ts"
+- "lib/server/**"
+- "proxy.ts"
+
 ---
 
 # API & server boundary rules

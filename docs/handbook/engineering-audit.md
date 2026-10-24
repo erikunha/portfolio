@@ -1,17 +1,17 @@
 # Engineering Audit
 
-> An evaluation of the engineering *platform* (the process, the AI-assisted development maturity, the developer experience), distinct from the codebase findings in [`/docs/10`](../10-findings-and-debt.md). This evaluates how engineering happens, not what the code looks like. Severity is the maintainer's risk lens.
+> An evaluation of the engineering _platform_ (the process, the AI-assisted development maturity, the developer experience), distinct from the codebase findings in [`/docs/10`](../10-findings-and-debt.md). This evaluates how engineering happens, not what the code looks like. Severity is the maintainer's risk lens.
 
 ## Scorecard
 
-| Dimension | Maturity | Evidence |
-|---|---|---|
-| Process discipline | **High** | spec -> architect review -> plan -> self-review -> a per-commit/pre-push/CI gate chain; reversibility-tracked ADRs |
-| AI-assisted development | **High** | mechanical enforcement (exit 2 hooks), transcript-verified review, a self-healing meta-gate |
-| Verification | **High** | the stamp proves resolution not just dispatch; eval-gated AI feature |
-| Knowledge management | **High** | specs/plans/ADRs/memory all explicit; doc-drift gated |
-| Developer experience | **Medium-High** | gate-heavy (intentional) but scoped to stay cheap on trivial changes; one real friction point (below) |
-| Resilience of the platform itself | **Medium** | a shared transcript SPOF; mitigated by a doctor + fail-closed posture |
+| Dimension                         | Maturity        | Evidence                                                                                                           |
+| --------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Process discipline                | **High**        | spec -> architect review -> plan -> self-review -> a per-commit/pre-push/CI gate chain; reversibility-tracked ADRs |
+| AI-assisted development           | **High**        | mechanical enforcement (exit 2 hooks), transcript-verified review, a self-healing meta-gate                        |
+| Verification                      | **High**        | the stamp proves resolution not just dispatch; eval-gated AI feature                                               |
+| Knowledge management              | **High**        | specs/plans/ADRs/memory all explicit; doc-drift gated                                                              |
+| Developer experience              | **Medium-High** | gate-heavy (intentional) but scoped to stay cheap on trivial changes; one real friction point (below)              |
+| Resilience of the platform itself | **Medium**      | a shared transcript SPOF; mitigated by a doctor + fail-closed posture                                              |
 
 ## What is genuinely strong (keep)
 
@@ -23,22 +23,27 @@
 ## Findings (ranked by platform risk)
 
 ### A1 - Transcript resolution is a shared single point of failure (Medium)
+
 The three fail-closed transcript gates (review-stamp, api-security-push-guard, architect-gate) and the shared `scripts/lib/transcript.mjs` they depended on were removed on 2026-07-27, and with them this whole class of jam.
 - **Mitigation in place:** `transcript-doctor.ts` diagnoses a jam in seconds; an env override (`REVIEW_STAMP_TRANSCRIPT`) exists.
 - **Residual risk:** the resolution still relies on slug/mtime heuristics. Hardening it to deterministic session-id pinning would remove the class.
 
 ### A2 - The review loop's recording boundary is honor-system (Low, by design)
+
 The stamp and the findings ledger were removed on 2026-07-27. Pre-PR review is now unverified by construction: nothing records what was found, so nothing can check it was resolved.
 - **Status:** acknowledged in `DECISIONS.md`; the boundary is intentionally small and visible. Not "fixable" without a structured agent-output contract.
 
 ### A3 - Gate-heavy DX has one real friction point (Low-Medium)
+
 - **Fix option:** a friendlier pre-push message that detects "no ledger" and prints the one-line remedy; or auto-seed an empty ledger when the battery finds nothing.
 
 ### A4 - Single-contributor blind spots (Low, structural)
+
 The whole platform is tuned for one developer plus AI agents. Some gates assume that shape: the local branch-protection check exists because the CI token cannot read the endpoint; "ownership" is by subsystem, not person; the memory/`.remember` system is machine-local.
 - **Risk if the team grows:** these would need rework (shared memory, CI-side protection checks, real CODEOWNERS). Not debt today, but a known scaling edge.
 
 ### A5 - AI-platform saturation is asserted, not continuously re-checked (Low)
+
 A one-time evaluation of the tool ecosystem (recorded in `discovery-ledger.md`, now a local-only/gitignored workflow artifact) concluded the harness is saturated. That conclusion ages; new high-value skills/MCPs appear. There is no recurring re-evaluation.
 - **Fix option:** a periodic (quarterly) ecosystem re-scan, time-boxed.
 

@@ -1,4 +1,5 @@
 ---
+
 name: ai-engineer
 description: "Use this agent when architecting, implementing, or optimizing end-to-end AI systems—from model selection and training pipelines to production deployment and monitoring."
 tools: Read, Write, Edit, Bash, Glob, Grep
@@ -286,6 +287,7 @@ Integration with other agents:
 
 Always prioritize accuracy, efficiency, and ethical considerations while building AI systems that deliver real value and maintain trust through transparency and reliability.
 ## Portfolio project context
+
 - AI endpoint: `app/api/ask/route.ts`
 - SDK: the `ai` package (AI SDK v7, `streamText`) through the Vercel AI Gateway — NOT `@anthropic-ai/sdk` directly. That package is still a dependency for other callers, but `/api/ask` does not use it. Needs `AI_GATEWAY_API_KEY` (OIDC token on Vercel).
 - Model: `ASK_MODEL` in `lib/ask/model.ts` (`anthropic/claude-haiku-4-5` — a Gateway model string, not a pinned dated ID) — do not change the model constant without explicit human authorization
