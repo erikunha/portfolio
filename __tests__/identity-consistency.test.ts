@@ -71,6 +71,18 @@ describe('identity is consistent across every gated surface', () => {
     expect(JSON.stringify(gitLog)).not.toContain('90%');
   });
 
+  it('hands the ask prompt and the hiring profile the canonical contact links', () => {
+    for (const link of [social.github, social.linkedin, social.email, social.site]) {
+      expect(SYSTEM_TEXT).toContain(link);
+    }
+    expect(HIRING_PROFILE).toMatchObject({
+      url: social.site,
+      email: social.email,
+      github: social.github,
+      linkedin: social.linkedin,
+    });
+  });
+
   it('feeds every project company and expected completion to a consumer', () => {
     for (const project of projects) expect(SYSTEM_TEXT).toContain(project.company);
     expect(HIRING_PROFILE.education.map((entry) => entry.expected_completion)).toEqual(
