@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-10-23 — MCP moves to mcp-handler 2 at a fixed /api/mcp route
+
+- **2026-10-23** · **The MCP server is served only at `/api/mcp`, on stateless Streamable HTTP, through mcp-handler 2 and `@modelcontextprotocol/server` 2.** mcp-handler 2 no longer filters the pathname, so the old `app/api/[transport]` dynamic segment would have answered MCP at any `/api/<anything>` path that no other route claims. A fixed route makes the served surface exactly the one `public/.well-known/agent.json` advertises. The legacy HTTP+SSE transport at `/api/sse` and Redis-backed MCP sessions are gone with v1; the route still accepts 2025 Streamable HTTP clients through the handler's stateless compatibility path, and `__tests__/agent-surfaces.test.ts` holds both the 2025 initialize handshake and the 2026 `server/discover` path. _Reversible: pinning mcp-handler 1 and the v1 SDK restores the dynamic route; any client that adopted the 2026 protocol in the meantime would lose `server/discover`._
+
 ## 2026-08-30 — site-wide pt-BR/EN is in scope, and the shape it has to take
 
 - **2026-08-30** · **Site-wide bilingual pt-BR/EN is now in scope, as the exception `CLAUDE.md`'s "Out of scope (unless asked)" list provides for.** The list reads "unless asked" and this was asked for directly. The scope is a translation of one site into two languages, not an i18n framework: no translation library, no message catalogue, no request-time language negotiation, no request-intercepting middleware. A page's language is determined by its address alone, so two visitors opening the same address see the same language regardless of browser or history. This extends the 2026-08-30 `/links` decision below from one page to the site, and inherits every refusal that decision made. _Reversible: the second language is additive; deleting the second locale's routes and content restores a single-language site. The address scheme is the part that is not cheaply reversible once external links accrue against it, which is why the bare address is pinned in the next bullet._
