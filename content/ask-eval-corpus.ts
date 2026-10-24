@@ -91,8 +91,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-languages-spoken',
     question: 'What languages does Erik speak?',
-    expect:
-      'Portuguese (native), English (C1), Spanish (B1), and French (A2 / basic). Should not invent additional fluencies.',
+    expect: 'Portuguese (native) and English (C1). Should not invent additional fluencies.',
     kind: 'factual',
   },
 
