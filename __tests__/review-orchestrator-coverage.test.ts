@@ -145,13 +145,20 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
       'WebFetch',
       'Read(**/.git/**)',
       'Read(//proc/**)',
-      'Read(~/**)',
+      'Read(~/.ssh/**)',
+      'Read(~/.gitconfig)',
+      'Read(~/.git-credentials)',
+      'Read(~/.config/**)',
     ]) {
       expect(denied, `${tool} must be denied; deny rules override tag mode's additions`).toContain(
         tool,
       );
     }
     expect(denied.some((tool) => tool.endsWith('/scripts/git-push.sh:*)'))).toBe(true);
+    expect(
+      denied,
+      'the workspace lives under /home/runner/work, so a blanket home denial blocks the source under review',
+    ).not.toContain('Read(~/**)');
   });
 
   it('keeps no git credentials in either checkout', () => {

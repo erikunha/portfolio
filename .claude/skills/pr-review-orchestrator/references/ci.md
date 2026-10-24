@@ -15,7 +15,7 @@ each step maps to its CI substitute. The merge gate and output contract live in
 | Installed dependencies | none: installing would run PR-controlled code (a `.pnpmfile.cjs` loads despite `--ignore-scripts`) in a job holding the reviewer's credentials |
 | Subagents | `Task`; subagents inherit the same allow and deny rules |
 | PR metadata, diff and gate results | `/tmp/review-evidence/pr.json`, `diff.patch`, `files.txt`, `checks.txt` (starts with `UNAVAILABLE` when no valid check list came back) and `failed-run-<id>.log`, written by `scripts/claude-review-snapshot.sh` before the review; the reviewer has no `gh` command that takes `--jq`, which could read its environment |
-| Tools | `Read`, `Grep`, `Glob`, `Task` and the inline-comment tool. Denied, which overrides what tag mode adds: edits, every `Bash` command including the action's git and push-wrapper tools, web tools, and reads of `.git/`, `/proc`, the home directory and the runner temp directory. No `gh` command and no network fetch is granted |
+| Tools | `Read`, `Grep`, `Glob`, `Task` and the inline-comment tool. Denied, which overrides what tag mode adds: edits, every `Bash` command including the action's git and push-wrapper tools, web tools, and reads of `.git/`, `/proc`, credential and config files in the home directory (not the home directory itself, which holds the workspace) and the runner temp directory. No `gh` command and no network fetch is granted |
 | Codex, MiMo, local build, browser, servers | not available |
 
 ## Step mapping
