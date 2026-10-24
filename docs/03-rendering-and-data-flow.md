@@ -129,7 +129,7 @@ sequenceDiagram
 
 **Client-side rendering nuance (verified in code):** the streamed text lands in an *isolated* `streamingText` state and is flushed at most once per animation frame (`requestAnimationFrame`), so a per-chunk update re-renders only one `<span>`, never the whole feed. This is the opposite of the Hero boot loop, which mutates `textContent` directly with no React state (see doc 04). Both are deliberate INP guards.
 
-**Server timeouts (defense in depth):** 30s whole-request `AbortSignal`, 15s mid-stream watchdog, 1s usage-resolve. The token budget is held **fail-closed** if usage can't be resolved (so a metering bug can't leak spend), while Redis itself is **fail-open** (an outage never blocks an answer).
+**Server timeouts (defense in depth):** 30s whole-request `AbortSignal`, 15s mid-stream watchdog, 1s usage-resolve. The token budget is held **fail-closed** if usage can't be resolved (so a metering bug can't leak spend), while the rate limiters and dedup are **fail-open**. The one exception is the budget reservation: if Redis fails there, `/api/ask` returns 503 rather than answer without a spend cap.
 
 ## End-to-end data flow #3 - `/api/contact` (the write path via `defineHandler`)
 
@@ -167,5 +167,5 @@ flowchart LR
     n --> route{route type}
     route -->|page| ppr["PPR: static shell + streamed dynamic sections"]
     route -->|api| handler["defineHandler or bespoke streaming handler"]
-    handler --> failopen["fail-open Redis posture; X-Request-Id on every response"]
+    handler --> failopen["rate limits fail open, budget reservation fails closed; X-Request-Id on every response"]
 ```
