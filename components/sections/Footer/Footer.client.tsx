@@ -17,6 +17,8 @@ const VISIBILITY_EVENT = 'visibilitychange';
 const EDITABLE_SELECTOR =
   'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]';
 const HEADING_SELECTOR = 'main h1';
+const FOOTER_SELECTOR = 'footer';
+const KEYDOWN_EVENT = 'keydown';
 const SCROLL_BEHAVIOR = 'instant';
 const HOME_SELECTOR = '#main-content';
 const MOBILE_HERO_SELECTOR = '[data-testid="hero-mobile"]';
@@ -68,10 +70,12 @@ export function SessionCounters({
     const onScroll = () => {
       const doc = document.documentElement;
       const total = doc.scrollHeight - doc.clientHeight;
-      depth = Math.max(
+      const next = Math.max(
         depth,
         total > 0 ? Math.min(PERCENT, Math.round((window.scrollY / total) * PERCENT)) : 0,
       );
+      if (next === depth) return;
+      depth = next;
       if (fields.depth) fields.depth.textContent = `${depth}%`;
       if (fields.meter instanceof HTMLMeterElement) fields.meter.value = depth;
     };
@@ -141,9 +145,10 @@ export function HaltClock({ label }: { label: string }) {
 export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {
   const status = useRef<HTMLParagraphElement>(null);
   const announcementFrame = useRef<number | undefined>(undefined);
-  function reboot() {
+  const link = useRef<HTMLAnchorElement>(null);
+  function reboot(): boolean {
     const heading = document.querySelector<HTMLElement>(HEADING_SELECTOR);
-    if (!heading) return;
+    if (!heading) return false;
     heading.tabIndex = -1;
     heading.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: SCROLL_BEHAVIOR });
@@ -152,6 +157,7 @@ export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {
     announcementFrame.current = requestAnimationFrame(() => {
       if (status.current) status.current.textContent = copy.announcement;
     });
+    return true;
   }
 
   useEffect(
@@ -161,6 +167,28 @@ export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {
     [],
   );
 
+  useEffect(() => {
+    const scope = link.current?.closest(FOOTER_SELECTOR);
+    if (!scope) return;
+    const onKeyDown = (event: Event) => {
+      if (!(event instanceof KeyboardEvent)) return;
+      if (
+        event.defaultPrevented ||
+        event.repeat ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey
+      )
+        return;
+      if (event.target instanceof Element && event.target.closest(EDITABLE_SELECTOR)) return;
+      if (event.key.toLowerCase() !== copy.key.toLowerCase()) return;
+      if (reboot()) event.preventDefault();
+    };
+    scope.addEventListener(KEYDOWN_EVENT, onKeyDown);
+    return () => scope.removeEventListener(KEYDOWN_EVENT, onKeyDown);
+  });
+
   return (
     <>
       <a
@@ -168,24 +196,9 @@ export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {
         href={HOME_SELECTOR}
         aria-label={copy.label}
         aria-keyshortcuts={copy.key}
-        onKeyDown={(event) => {
-          if (
-            event.defaultPrevented ||
-            event.repeat ||
-            event.altKey ||
-            event.ctrlKey ||
-            event.metaKey ||
-            event.shiftKey
-          )
-            return;
-          if (event.target instanceof Element && event.target.closest(EDITABLE_SELECTOR)) return;
-          if (event.key.toLowerCase() !== copy.key.toLowerCase()) return;
-          event.preventDefault();
-          reboot();
-        }}
+        ref={link}
         onClick={(event) => {
-          event.preventDefault();
-          reboot();
+          if (reboot()) event.preventDefault();
         }}
       >
         {copy.before} <kbd>{copy.key}</kbd> {copy.after}

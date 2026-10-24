@@ -184,6 +184,23 @@ describe('Footer reboot controls', () => {
     fireEvent.keyDown(rebootLink, { key: 'r' });
     expect(document.activeElement).toBe(heading);
     expect(scrollTo).toHaveBeenCalledTimes(2);
+    const treeLink = mounted.getByRole('link', { name: 'Projects' });
+    treeLink.focus();
+    fireEvent.keyDown(treeLink, { key: 'r' });
+    expect(document.activeElement).toBe(heading);
+    expect(scrollTo).toHaveBeenCalledTimes(3);
+  });
+
+  it('lets the reboot link navigate natively when the page has no heading to focus', () => {
+    vi.stubGlobal('IntersectionObserver', undefined);
+    const mounted = render(<Footer />);
+    const rebootLink = mounted.getByRole('link', { name: 'Reboot to top' });
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+    rebootLink.dispatchEvent(click);
+    expect(click.defaultPrevented).toBe(false);
+    const key = new KeyboardEvent('keydown', { key: 'r', bubbles: true, cancelable: true });
+    rebootLink.dispatchEvent(key);
+    expect(key.defaultPrevented).toBe(false);
   });
 
   it('tracks the nine logical sections once and keeps maximum scroll depth', () => {
