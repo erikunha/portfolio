@@ -155,3 +155,5 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
 
 export const careerCommand =
   ' git log --graph --pretty=fuller --decorate --since="2017-10-01" ~/career';
+
+export const careerScrollLabel = 'Career history, scrollable';
