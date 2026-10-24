@@ -117,11 +117,15 @@ Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
 
 - Portuguese: native
 - English: C1
+- Spanish: B1
+- French: A2
 
 ## Community
 
-- DevOpsDays Campinas 2024: organizer
-  Curated 10+ talks across DevOps, cloud infrastructure, platform engineering and architecture.
+- DevOpsDays Campinas 2024: organizer (https://devopsdays.org/events/2024-campinas/welcome/)
+  Curated 8 talks across DevOps, platform engineering, MLOps and FinOps.
+  Program: https://devopsdays.org/events/2024-campinas/program/
+  Organizers: https://devopsdays.org/events/2024-campinas/contact/
 - open to CFP submissions for 2027 · open to volunteer / organizer roles.
 
 ## Selected project context

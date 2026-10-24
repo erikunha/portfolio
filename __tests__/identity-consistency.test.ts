@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
+import { communityEvent } from '@/content/community';
 import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
@@ -44,6 +45,15 @@ beforeAll(async () => {
 });
 
 describe('identity is consistent across every gated surface', () => {
+  it('points JSON-LD and llms.txt at the same community event and facts', () => {
+    const [eventLink] = communityEvent.links;
+    expect(personSchema.memberOf.url).toBe(eventLink?.href);
+    expect(llmsTxt).toContain(eventLink?.href);
+    expect(llmsTxt).toContain('8 talks');
+    expect(llmsTxt).not.toContain('10+ talks');
+    for (const language of profile.languages) expect(llmsTxt).toContain(language.name);
+  });
+
   it('carries every resume language, and the hero shows only the working ones', () => {
     expect(profile.languages.map((language) => `${language.code}:${language.level}`)).toEqual([
       'pt:native',
