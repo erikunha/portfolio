@@ -44,7 +44,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 | LCP | < 1.8s on 4G |
 | INP | < 200ms |
 | CLS | < 0.05 |
-| JS gzipped (per route, first-load total) | < 175KB |
+| JS gzipped (per route, first-load total) | < 164.7KB |
 | Lighthouse Performance | ≥ 95 |
 | Lighthouse Accessibility | = 100 |
 | Lighthouse Best Practices | ≥ 95 |
@@ -131,7 +131,7 @@ Every section that doesn't depend on per-visitor state is RSC + SSG. Output is H
 | MOTION indicator | `matchMedia` listener | ≤ 1KB |
 | **Total client JS budget** | | **≤ 32.8KB app-owned** |
 
-> There is exactly ONE per-route gate: `pnpm route-js-check` (`scripts/check-route-js.mjs`) fails a route whose first-load JS exceeds **175 KB total**. App-owned JS is *reported*, never asserted — it is the total minus a measured constant (the 142.2 KB framework floor), so a second threshold on it could never fire on its own. The app-owned figure your decisions actually move is 175 − 142.2 = **32.8 KB**. `pnpm bundle-check` separately gates the combined client chunks (framework-inclusive) and is structurally blind per-route. Individual island budgets remain aspirational guidelines. See `DECISIONS.md` 2026-07-14 and 2026-07-16.
+> There is exactly ONE per-route gate: `pnpm route-js-check` (`scripts/check-route-js.mjs`) fails a route whose first-load JS exceeds **164.7 KB total**, and reports app-owned JS by subtracting the measured 131.9 KB framework floor. The app-owned allowance is 164.7 - 131.9 = **32.8 KB**. `pnpm bundle-check` measures the combined client chunks and cannot detect per-route regressions. Individual island budgets remain aspirational guidelines. See `scripts/check-route-js.mjs` and `DECISIONS.md` 2026-10-24.
 
 Naming convention: every client file ends in `.client.tsx`. The default is server; client is the exception, named explicitly. Forces RSC drift to be visible in code review.
 
@@ -590,7 +590,7 @@ Steady-state monthly:
 | **Hard cap (Anthropic spend alert)** | | **$50/month** |
 
 Burst scenario (HN spike, 50k visits/day for 3 days):
-- Vercel bandwidth: still inside Hobby free tier (100GB) — `/` first-load ~173KB (30.8KB app-owned, under the 175KB gate)
+- Vercel bandwidth: still inside Hobby free tier (100GB): `/` first-load 162.2 KB (30.3 KB app-owned, under the 164.7 KB gate)
 - Anthropic via AI Gateway: the monthly 3M-token cap bounds spend at $3–$5.30/mo regardless of volume (§6); the cap holds by construction.
 - Resend: spike doesn't affect the static page
 

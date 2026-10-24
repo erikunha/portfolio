@@ -101,7 +101,7 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 | INP | < 200ms | < 200ms |
 | CLS | < 0.05 | < 0.05 |
 | TBT | < 200ms | < 400ms |
-| JS gzipped per route, total first-load | < 175KB | < 175KB |
+| JS gzipped per route, total first-load | < 164.7KB | < 164.7KB |
 | JS gzipped, app-owned (total minus the measured framework floor) | < 32.8KB | < 32.8KB |
 | Lighthouse Performance | ≥ 95 | ≥ 90 |
 | Lighthouse Accessibility | = 100 | = 100 |
@@ -110,7 +110,7 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 
 CI enforces all of the above. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
 
-`pnpm route-js-check` (`scripts/check-route-js.mjs`) asserts the 175KB per-route total and REPORTS the app-owned split; `pnpm bundle-check` is a separate global chunk-sum, structurally blind to a per-route regression. The 175KB is the **framework floor plus headroom, not an aspiration**: a bare hello-world Next 16 + React 19 app on this toolchain measures 142.2KB gzipped before any app code exists, and `/_not-found` — a route with zero app code — measures 148.9KB here. Any per-route total under ~149KB is unreachable by any amount of engineering. **The app-owned row is the one your decisions move, and it is 175 − 142.2 = 32.8KB.** There is exactly ONE gate, because app-owned is total minus a constant: a separate app-owned threshold would be a second threshold on the same axis and could never fire on its own. See `DECISIONS.md` 2026-07-14.
+`pnpm route-js-check` (`scripts/check-route-js.mjs`) asserts the 164.7KB per-route total and REPORTS the app-owned split; `pnpm bundle-check` is a separate global chunk-sum, structurally blind to a per-route regression. The total is the **framework floor plus headroom, not an aspiration**: a bare hello-world app on Next 16.4.2 + React 19.2.8 measures 131.9KB gzipped before any app code exists. **The app-owned row is the one your decisions move, and it is 164.7 - 131.9 = 32.8KB.** There is exactly ONE gate, because app-owned is total minus a constant. A framework bump moves the floor: re-measure it and move floor and total together. See `DECISIONS.md` 2026-10-24.
 
 ## Engineering standards
 

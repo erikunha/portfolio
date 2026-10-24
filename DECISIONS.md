@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-10-24: framework floor re-measured at 131.9 KB; route total tightens to 164.7 KB
+
+- **2026-10-24** · Next 16.4.2 shrank the shared framework JS, so the lightest route (138.2 KB) fell below the 142.2 KB floor and `route-js-check` refused to report. A bare hello-world app (`app/layout.tsx` + `app/page.tsx`) on Next 16.4.2, React/React DOM 19.2.8 and TypeScript 6.0.3 measures 131.9 KB on `/` and `/_not-found`, built with Node 22.23.4 and `next build`, summed the way `scripts/check-route-js.mjs` sums `firstLoadChunkPaths`. The total becomes 164.7 KB to keep the 32.8 KB app-owned allowance; keeping 175 KB would widen it by 10.3 KB without removing any app code. `/` measures 162.2 KB (30.3 KB app-owned). _Reversible: re-measure after a framework change and move floor and total together._
+
 ## 2026-08-30 — site-wide pt-BR/EN is in scope, and the shape it has to take
 
 - **2026-08-30** · **Site-wide bilingual pt-BR/EN is now in scope, as the exception `CLAUDE.md`'s "Out of scope (unless asked)" list provides for.** The list reads "unless asked" and this was asked for directly. The scope is a translation of one site into two languages, not an i18n framework: no translation library, no message catalogue, no request-time language negotiation, no request-intercepting middleware. A page's language is determined by its address alone, so two visitors opening the same address see the same language regardless of browser or history. This extends the 2026-08-30 `/links` decision below from one page to the site, and inherits every refusal that decision made. _Reversible: the second language is additive; deleting the second locale's routes and content restores a single-language site. The address scheme is the part that is not cheaply reversible once external links accrue against it, which is why the bare address is pinned in the next bullet._

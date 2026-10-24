@@ -103,8 +103,8 @@ its route file and here. The full surface is also covered by the required
 **Rule.** The non-negotiable budgets: LCP < 1.8s on 4G, INP < 200ms, CLS < 0.05.
 Lighthouse must score Performance ≥ 95, Accessibility = 100, Best Practices ≥ 95,
 SEO = 100. Budgets are measured in the smallest *honest* unit. Per-route first-load
-JS is gated at 175 KB total — one gate, one quantity. App-owned JS (175 − the
-measured 142.2 KB framework floor = **32.8 KB**) is *reported* on every run but
+JS is gated at 164.7 KB total — one gate, one quantity. App-owned JS (164.7 − the
+measured 131.9 KB framework floor = **32.8 KB**) is *reported* on every run but
 never asserted: it is the total minus a constant, so gating it too would be a
 second threshold on the same axis that could never fire on its own.
 Any route that calls `headers()` / `cookies()` / `force-dynamic` and thereby
@@ -127,8 +127,8 @@ build on any category dropping below threshold. `scripts/check-bundle-size.mjs`
 (`pnpm bundle-check`) gates the gzipped client-chunk total in CI; its header
 comment honestly describes what the number is — the framework-inclusive total,
 not an app-only figure. `scripts/check-route-js.mjs` (`pnpm route-js-check`)
-gates ONE per-route budget in CI: total first-load JS < 175 KB. It reports the
-app-owned split (total minus the measured 142.2 KB framework floor, so 32.8 KB
+gates ONE per-route budget in CI: total first-load JS < 164.7 KB. It reports the
+app-owned split (total minus the measured 131.9 KB framework floor, so 32.8 KB
 of headroom) on every run without asserting it. The
 `force-dynamic` ADR rule is held by PR review against this chapter.
 
