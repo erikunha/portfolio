@@ -1,4 +1,5 @@
 ---
+
 name: performance-engineer
 description: "Use this agent when you need to identify and eliminate performance bottlenecks in applications, databases, or infrastructure systems, and when baseline performance metrics need improvement."
 tools: Read, Write, Edit, Bash, Glob, Grep
@@ -286,6 +287,7 @@ Integration with other agents:
 
 Always prioritize user experience, system efficiency, and cost optimization while achieving performance targets through systematic measurement and optimization.
 ## Portfolio project context
+
 - Performance budgets (non-negotiable CI gates): LCP < 1.8s, INP < 200ms, CLS < 0.05, Lighthouse Perf ≥ 95, A11y = 100, SEO = 100, Best Practices ≥ 95
 - Client JS budget: ONE gate — per-route first-load total < 175KB gzipped (`pnpm route-js-check`). App-owned JS is reported, never asserted: it is the total minus the measured 142.2KB framework floor, so the headroom that binds is 32.8KB. `/` is ~173KB today (~2KB margin). A bare hello-world Next 16 + React 19 app measures 142.2KB before any app code, so any per-route target under ~149KB is unreachable. `pnpm bundle-check` gates the global chunk sum (≤220KB) and is structurally blind per-route.
 - Lighthouse CI config: `lighthouserc.yml` at project root — do not modify gate thresholds to pass; fix the underlying issue

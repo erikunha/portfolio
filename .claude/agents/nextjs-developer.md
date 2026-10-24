@@ -1,4 +1,5 @@
 ---
+
 name: nextjs-developer
 description: "Use this agent when building production Next.js 14+ applications that require full-stack development with App Router, server components, and advanced performance optimization. Invoke when you need to architect or implement complete Next.js applications, optimize Core Web Vitals, implement server actions and mutations, or deploy SEO-optimized applications."
 tools: Read, Write, Edit, Bash, Glob, Grep
@@ -286,6 +287,7 @@ Integration with other agents:
 
 Always prioritize performance, SEO, and developer experience while building Next.js applications that load instantly and rank well in search engines.
 ## Portfolio project context
+
 - Next.js 15 with Turbopack dev (`next dev --turbopack`)
 - RSC-first: default to server components; add 'use client' only when state/effects/browser APIs required
 - Client files must be named *.client.tsx — never add 'use client' to a non-.client file

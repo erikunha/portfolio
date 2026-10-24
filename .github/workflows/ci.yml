@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       update_visual_baselines:
-        description: 'Regenerate Linux visual baselines and upload them as an artifact (download + commit to refresh baselines).'
+        description: "Regenerate Linux visual baselines and upload them as an artifact (download + commit to refresh baselines)."
         required: false
-        default: 'false'
+        default: "false"
         type: choice
-        options: ['false', 'true']
+        options: ["false", "true"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -36,7 +36,7 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install
@@ -74,10 +74,8 @@ jobs:
       - name: Doc-drift gate (ARCHITECTURE.md tree vs disk)
         run: pnpm check:doc-drift
 
-
       - name: Detect-changes pathspec gate (no orphaned filters)
         run: pnpm check:detect-changes-paths
-
 
       - name: Contrast check
         run: pnpm lint:contrast
@@ -87,7 +85,6 @@ jobs:
 
       - name: Package age check (supply-chain, info-only)
         run: node scripts/check-pkg-age.mjs --warn-only
-
 
       - name: PR comment merge gate
         if: github.event_name == 'pull_request'
@@ -110,7 +107,7 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install
@@ -145,7 +142,7 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install
@@ -273,7 +270,7 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install
@@ -339,7 +336,7 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install
@@ -398,7 +395,7 @@ jobs:
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Cache Playwright browsers
@@ -466,13 +463,23 @@ jobs:
       && needs.detect-changes.outputs.ai == 'true'
       && !contains(needs.*.result, 'failure')
       && !contains(needs.*.result, 'cancelled')
-    needs: [detect-changes, quality-fast, typecheck, test, build, e2e-functional, performance, e2e-visual-chromium]
+    needs:
+      [
+        detect-changes,
+        quality-fast,
+        typecheck,
+        test,
+        build,
+        e2e-functional,
+        performance,
+        e2e-visual-chromium,
+      ]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
@@ -500,7 +507,7 @@ jobs:
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Cache Playwright browsers
@@ -597,7 +604,7 @@ jobs:
     name: Semgrep (static analysis)
     runs-on: ubuntu-latest
     permissions:
-      security-events: write   # required to upload SARIF to the code-scanning tab
+      security-events: write # required to upload SARIF to the code-scanning tab
       contents: read
     timeout-minutes: 10
     concurrency:
@@ -608,7 +615,7 @@ jobs:
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install Semgrep (exact-pinned) and resolve its path
         run: |
@@ -653,7 +660,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0   # gitleaks scans history, not just the tip
+          fetch-depth: 0 # gitleaks scans history, not just the tip
 
       # The self-test below (check-gitleaks-fixture.mjs) imports smol-toml to parse .gitleaks.toml,
       # so this job needs node_modules. Scoped to the self-test's dependency, not the scan: gitleaks
@@ -661,7 +668,7 @@ jobs:
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
@@ -731,4 +738,3 @@ jobs:
           name: gitleaks-sarif
           path: gitleaks.sarif
           retention-days: 7
-

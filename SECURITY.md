@@ -9,7 +9,6 @@ This is a single, continuously deployed web application. Only the current `main`
 **Please do not open a public issue for security problems.**
 
 Report privately by either:
-
 - **GitHub Security Advisories** — open a private advisory via the repository's **Security → Report a vulnerability** tab (preferred), or
 - **Email** — erikhenriquealvescunha@gmail.com with `SECURITY` in the subject.
 
@@ -26,7 +25,6 @@ Out of scope: findings that require a compromised maintainer machine or account,
 ## Security posture
 
 The repository defends in depth, and most of these are enforced in CI on every change:
-
 - **Secret scanning** — a checksum-pinned `gitleaks` runs as a pre-commit hook and in CI; a fixture test proves the scanner actually fires.
 - **Static analysis** — Semgrep and GitHub CodeQL run in CI.
 - **Dependency review** — a dependency-review gate runs on pull requests; dependencies are exact- or caret-pinned and installed with a frozen lockfile in CI.
