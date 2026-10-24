@@ -170,6 +170,38 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
     ).not.toContain('Read(~/**)');
   });
 
+  it('keeps the inline-comment tool out of every subagent the reviewer can dispatch', () => {
+    const denied = claudeArgs.match(/--disallowedTools "([^"]+)"/)?.[1]?.split(',') ?? [];
+    for (const builtIn of [
+      'general-purpose',
+      'Explore',
+      'Plan',
+      'statusline-setup',
+      'claude-code-guide',
+    ]) {
+      expect(
+        denied,
+        `built-in ${builtIn} inherits every tool, including create_inline_comment`,
+      ).toContain(`Task(${builtIn})`);
+    }
+    const agentsDir = join(root, '.claude/agents');
+    for (const file of readdirSync(agentsDir).filter((name) => name.endsWith('.md'))) {
+      const tools = readArtifact(join(agentsDir, file)).match(/^tools:\s*(.+)$/m)?.[1];
+      expect(
+        tools,
+        `${file} must declare tools, or it inherits create_inline_comment`,
+      ).toBeDefined();
+      expect(tools).not.toContain('mcp__github_inline_comment');
+    }
+    const worker = readArtifact(join(agentsDir, 'review-worker.md'));
+    expect(
+      worker
+        .match(/^tools:\s*(.+)$/m)?.[1]
+        ?.split(/,\s*/)
+        .sort(),
+    ).toEqual(['Glob', 'Grep', 'Read']);
+  });
+
   it('keeps no git credentials in either checkout', () => {
     const checkouts = steps.filter((step) => step.uses?.startsWith('actions/checkout'));
     expect(checkouts).toHaveLength(2);
@@ -228,6 +260,8 @@ describe('claude-review snapshot step', () => {
     checksErr?: string;
     logBytes?: number;
     runListFails?: boolean;
+    prViewFails?: boolean;
+    prDiffFails?: boolean;
   }) {
     const dir = mkdtempSync(join(tmpdir(), 'review-snapshot-'));
     const bin = join(dir, 'bin');
@@ -237,10 +271,10 @@ describe('claude-review snapshot step', () => {
       join(bin, 'gh'),
       `#!/usr/bin/env bash
 case "$1 $2" in
-  "pr view") if [[ "$*" == *--jq* ]]; then echo abc123; else echo '{"headRefOid":"abc123"}'; fi ;;
-  "pr diff") if [[ "$*" == *--name-only* ]]; then echo app/page.tsx; else echo "+line"; fi ;;
+  "pr view") if [[ -n "$PR_VIEW_FAIL" ]]; then echo "HTTP 429" >&2; exit 1; fi; echo '{"headRefOid":"abc123"}' ;;
+  "pr diff") if [[ -n "$PR_DIFF_FAIL" ]]; then echo "HTTP 504" >&2; exit 1; fi; if [[ "$*" == *--name-only* ]]; then echo app/page.tsx; else echo "+line"; fi ;;
   "pr checks") printf '%s' "$CHECKS_OUT"; echo "$CHECKS_ERR" >&2; exit "$CHECKS_EXIT" ;;
-  "run list") if [[ -n "$RUN_LIST_FAIL" ]]; then echo "HTTP 502" >&2; exit 1; fi; echo 42 ;;
+  "run list") if [[ -n "$RUN_LIST_FAIL" ]]; then echo "HTTP 502" >&2; exit 1; fi; [[ "$*" == *"--commit abc123"* ]] || exit 3; echo 42 ;;
   "run view") head -c "$LOG_BYTES" /dev/zero | tr '\\0' 'x' ;;
 esac
 `,
@@ -262,6 +296,8 @@ esac
         CHECKS_OUT: behaviour.checksOut ?? FAILED_CHECK,
         LOG_BYTES: String(behaviour.logBytes ?? 10),
         RUN_LIST_FAIL: behaviour.runListFails ? '1' : '',
+        PR_VIEW_FAIL: behaviour.prViewFails ? '1' : '',
+        PR_DIFF_FAIL: behaviour.prDiffFails ? '1' : '',
       },
     });
     const read = (name: string) => readArtifact(join(out, name));
@@ -314,5 +350,25 @@ esac
     expect(result.read('failed-runs-unavailable.txt')).toMatch(/^UNAVAILABLE: gh run list failed/);
     expect(result.read('failed-runs-unavailable.txt')).toContain('HTTP 502');
     expect(result.read('checks.txt')).toBe('fail\tFAILURE\tlint\tu\n');
+  });
+
+  it('marks PR metadata UNAVAILABLE when gh pr view fails, and skips the run lookup it feeds', () => {
+    const result = run({ checksExit: 1, prViewFails: true });
+    expect(result.status).toBe(0);
+    expect(result.files()).not.toContain('pr.json');
+    expect(result.read('pr-unavailable.txt')).toMatch(/^UNAVAILABLE: gh pr view failed/);
+    expect(result.read('pr-unavailable.txt')).toContain('HTTP 429');
+    expect(result.read('failed-runs-unavailable.txt')).toMatch(/^UNAVAILABLE: no head SHA/);
+    expect(result.read('diff.patch')).toBe('+line\n');
+  });
+
+  it('marks the diff UNAVAILABLE when gh pr diff fails, without aborting the job', () => {
+    const result = run({ checksExit: 0, prDiffFails: true });
+    expect(result.status).toBe(0);
+    expect(result.files()).not.toContain('diff.patch');
+    expect(result.files()).not.toContain('files.txt');
+    expect(result.read('diff-unavailable.txt')).toMatch(/^UNAVAILABLE: gh pr diff failed/);
+    expect(result.read('diff-unavailable.txt')).toContain('HTTP 504');
+    expect(result.read('pr.json')).toContain('abc123');
   });
 });

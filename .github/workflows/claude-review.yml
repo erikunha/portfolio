@@ -176,12 +176,28 @@ jobs:
 
           mkdir -p "$OUT_DIR"
 
-          gh pr view "$PR" --repo "$REPO" --json number,headRefOid,baseRefName,headRefName,title \
-            > "$OUT_DIR/pr.json"
-          head_sha=$(gh pr view "$PR" --repo "$REPO" --json headRefOid --jq .headRefOid)
+          head_sha=""
+          if gh pr view "$PR" --repo "$REPO" --json number,headRefOid,baseRefName,headRefName,title \
+            > "$OUT_DIR/pr.json" 2> "$OUT_DIR/pr.err"; then
+            head_sha=$(jq -r '.headRefOid // empty' "$OUT_DIR/pr.json")
+          else
+            {
+              echo "UNAVAILABLE: gh pr view failed; PR metadata and the head SHA could not be read."
+              cat "$OUT_DIR/pr.err"
+            } > "$OUT_DIR/pr-unavailable.txt"
+            rm -f "$OUT_DIR/pr.json"
+          fi
+          rm -f "$OUT_DIR/pr.err"
 
-          gh pr diff "$PR" --repo "$REPO" > "$OUT_DIR/diff.patch"
-          gh pr diff "$PR" --repo "$REPO" --name-only > "$OUT_DIR/files.txt"
+          if ! { gh pr diff "$PR" --repo "$REPO" > "$OUT_DIR/diff.patch" \
+            && gh pr diff "$PR" --repo "$REPO" --name-only > "$OUT_DIR/files.txt"; } 2> "$OUT_DIR/diff.err"; then
+            {
+              echo "UNAVAILABLE: gh pr diff failed; the diff and changed paths could not be read."
+              cat "$OUT_DIR/diff.err"
+            } > "$OUT_DIR/diff-unavailable.txt"
+            rm -f "$OUT_DIR/diff.patch" "$OUT_DIR/files.txt"
+          fi
+          rm -f "$OUT_DIR/diff.err"
 
           checks_status=0
           gh pr checks "$PR" --repo "$REPO" --json name,state,bucket,link \
@@ -205,7 +221,10 @@ jobs:
           rm -f "$OUT_DIR/checks.err" "$OUT_DIR/checks.json"
 
           run_ids=""
-          if ! run_ids=$(gh run list --repo "$REPO" --commit "$head_sha" --status failure --limit 100 \
+          if [ -z "$head_sha" ]; then
+            echo "UNAVAILABLE: no head SHA, so failed-run logs were not looked up." \
+              > "$OUT_DIR/failed-runs-unavailable.txt"
+          elif ! run_ids=$(gh run list --repo "$REPO" --commit "$head_sha" --status failure --limit 100 \
             --json databaseId --jq '.[].databaseId' 2> "$OUT_DIR/runs.err"); then
             {
               echo "UNAVAILABLE: gh run list failed; failed-run logs could not be read."
@@ -272,7 +291,7 @@ jobs:
           prompt: "${{ github.event_name == 'pull_request' && format('REPO {0} — PR NUMBER {1} — You are performing a CODE REVIEW, not a task. Do not narrate progress and do not implement changes. Produce exactly two artifacts: one create_inline_comment tool call per finding, and then one overview comment ending in exactly one verdict line. Read the diff from /tmp/review-evidence/diff.patch and the changed paths from /tmp/review-evidence/files.txt. A run that posts no verdict line has failed.', github.repository, github.event.pull_request.number) || '' }}"
           claude_args: >-
             --allowedTools "Read,Grep,Glob,Task,mcp__github_inline_comment__create_inline_comment"
-            --disallowedTools "Edit,MultiEdit,Write,NotebookEdit,WebFetch,WebSearch,Bash,Bash(git add:*),Bash(git commit:*),Bash(git rm:*),Bash(/home/runner/work/_actions/anthropics/claude-code-action/be7b93b1907a4abad570368f3c74b6fe3807510b/scripts/git-push.sh:*),mcp__github_file_ops__commit_files,mcp__github_file_ops__delete_files,Read(**/.git/**),Read(//proc/**),Read(~/.ssh/**),Read(~/.gitconfig),Read(~/.git-credentials),Read(~/.config/**),Read(~/.npmrc),Read(~/.docker/**),Read(~/.claude/**),Read(//home/runner/work/_temp/**)"
+            --disallowedTools "Edit,MultiEdit,Write,NotebookEdit,WebFetch,WebSearch,Task(general-purpose),Task(Explore),Task(Plan),Task(statusline-setup),Task(claude-code-guide),Bash,Bash(git add:*),Bash(git commit:*),Bash(git rm:*),Bash(/home/runner/work/_actions/anthropics/claude-code-action/be7b93b1907a4abad570368f3c74b6fe3807510b/scripts/git-push.sh:*),mcp__github_file_ops__commit_files,mcp__github_file_ops__delete_files,Read(**/.git/**),Read(//proc/**),Read(~/.ssh/**),Read(~/.gitconfig),Read(~/.git-credentials),Read(~/.config/**),Read(~/.npmrc),Read(~/.docker/**),Read(~/.claude/**),Read(//home/runner/work/_temp/**)"
             --add-dir pr-head
             --add-dir /tmp/review-skill
             --add-dir /tmp/review-evidence
