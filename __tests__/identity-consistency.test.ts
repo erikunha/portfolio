@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
+import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
 import { nowRows } from '@/content/now';
@@ -42,6 +44,22 @@ beforeAll(async () => {
 });
 
 describe('identity is consistent across every gated surface', () => {
+  it('expects the eval to answer with exactly the profile languages', () => {
+    const item = ASK_EVAL_CORPUS.find((entry) => entry.id === 'fact-languages-spoken');
+    for (const language of profile.languages) expect(item?.expect).toContain(language.name);
+    const others = ['Spanish', 'French', 'German', 'Italian', 'Japanese', 'Mandarin'].filter(
+      (name) => !profile.languages.some((language) => language.name === name),
+    );
+    for (const name of others) expect(item?.expect).not.toContain(name);
+  });
+
+  it('lists every education institution in the Person JSON-LD alumniOf', () => {
+    const names = personSchema.alumniOf.map((entry) => entry.name);
+    for (const entry of education) {
+      expect(names.some((name) => name.includes(entry.institution))).toBe(true);
+    }
+  });
+
   it('agent.json structured fields equal the hiring profile, not just mention it', () => {
     const manifest = JSON.parse(read('public/.well-known/agent.json')) as Record<string, unknown>;
     expect(manifest.title).toBe(HIRING_PROFILE.title);
