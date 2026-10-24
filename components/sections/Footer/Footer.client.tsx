@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef } from 'react';
 import type { FooterContent } from '@/content/schemas';
 
 const EMPTY_SECTION_IDS: string[] = [];
@@ -146,7 +146,7 @@ export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {
   const status = useRef<HTMLParagraphElement>(null);
   const announcementFrame = useRef<number | undefined>(undefined);
   const link = useRef<HTMLAnchorElement>(null);
-  function reboot(): boolean {
+  const reboot = useCallback((): boolean => {
     const heading = document.querySelector<HTMLElement>(HEADING_SELECTOR);
     if (!heading) return false;
     heading.tabIndex = -1;
@@ -158,7 +158,7 @@ export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {
       if (status.current) status.current.textContent = copy.announcement;
     });
     return true;
-  }
+  }, [copy.announcement]);
 
   useEffect(
     () => () => {
@@ -187,7 +187,7 @@ export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {
     };
     scope.addEventListener(KEYDOWN_EVENT, onKeyDown);
     return () => scope.removeEventListener(KEYDOWN_EVENT, onKeyDown);
-  });
+  }, [copy.key, reboot]);
 
   return (
     <>
