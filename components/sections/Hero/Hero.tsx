@@ -5,7 +5,7 @@ import {
   heroPlatformChip,
   heroTagline,
 } from '@/content/hero';
-import { profile, profileLanguageLine, profileLocation } from '@/content/profile';
+import { profile, profileLocation, profileWorkingLanguageLine } from '@/content/profile';
 import { Badge, Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
@@ -42,7 +42,7 @@ export function Hero() {
               NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
             </span>
             <span>{heroPlatformChip}</span>
-            <span>{profileLanguageLine}</span>
+            <span>{profileWorkingLanguageLine}</span>
           </p>
           <div className="self-start">
             <Badge variant="dot">{heroAuthorization}</Badge>
@@ -98,7 +98,7 @@ export function Hero() {
               NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
             </span>
             <span>{heroPlatformChip}</span>
-            <span>{profileLanguageLine}</span>
+            <span>{profileWorkingLanguageLine}</span>
           </p>
           <div className="self-start mb-3.5">
             <Badge variant="dot">{heroAuthorization}</Badge>

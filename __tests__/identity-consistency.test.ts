@@ -2,11 +2,12 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
+import { communityEvent } from '@/content/community';
 import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
 import { nowRows } from '@/content/now';
-import { profile } from '@/content/profile';
+import { profile, profileLanguageLine, profileWorkingLanguageLine } from '@/content/profile';
 import { projects } from '@/content/projects';
 import { readmeCopy } from '@/content/readme';
 import { personSchema } from '@/content/seo';
@@ -44,8 +45,29 @@ beforeAll(async () => {
 });
 
 describe('identity is consistent across every gated surface', () => {
+  it('points JSON-LD and llms.txt at the same community event and facts', () => {
+    const [eventLink] = communityEvent.links;
+    expect(personSchema.memberOf.url).toBe(eventLink?.href);
+    expect(llmsTxt).toContain(eventLink?.href);
+    expect(llmsTxt).toContain('8 talks');
+    expect(llmsTxt).not.toContain('10+ talks');
+    for (const language of profile.languages) expect(llmsTxt).toContain(language.name);
+  });
+
+  it('carries every resume language, and the hero shows only the working ones', () => {
+    expect(profile.languages.map((language) => `${language.code}:${language.level}`)).toEqual([
+      'pt:native',
+      'en:C1',
+      'es:B1',
+      'fr:A2',
+    ]);
+    expect(profileLanguageLine).toBe('PT native · EN C1 · ES B1 · FR A2');
+    expect(profileWorkingLanguageLine).toBe('PT native · EN C1');
+  });
+
   it('expects the eval to answer with exactly the profile languages', () => {
     const item = ASK_EVAL_CORPUS.find((entry) => entry.id === 'fact-languages-spoken');
+    expect(profile.languages.length).toBeGreaterThan(0);
     for (const language of profile.languages) expect(item?.expect).toContain(language.name);
     const others = ['Spanish', 'French', 'German', 'Italian', 'Japanese', 'Mandarin'].filter(
       (name) => !profile.languages.some((language) => language.name === name),
@@ -57,6 +79,9 @@ describe('identity is consistent across every gated surface', () => {
     const names = personSchema.alumniOf.map((entry) => entry.name);
     for (const entry of education) {
       expect(names.some((name) => name.includes(entry.institution))).toBe(true);
+    }
+    for (const name of names) {
+      expect(education.some((entry) => name.includes(entry.institution))).toBe(true);
     }
   });
 

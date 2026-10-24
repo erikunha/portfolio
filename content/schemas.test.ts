@@ -127,6 +127,8 @@ const profileFixture = {
   languages: [
     { code: 'pt', name: 'Portuguese', level: 'native' },
     { code: 'en', name: 'English', level: 'C1' },
+    { code: 'es', name: 'Spanish', level: 'B1' },
+    { code: 'fr', name: 'French', level: 'A2' },
   ],
   actions: [{ label: 'GitHub ↗', href: 'https://github.com/erikunha' }],
 };

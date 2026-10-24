@@ -138,6 +138,9 @@ export const CommunityEventSchema = z.object({
   year: z.number().int(),
   role: z.string().min(1),
   bullets: z.array(z.string().min(1)).min(1),
+  links: z.array(z.object({ label: z.string().min(1), href: z.url() })).min(1),
+  refsLabel: z.string().min(1),
+  newTabLabel: z.string().min(1),
   statusLine: z.string().min(1),
 });
 
