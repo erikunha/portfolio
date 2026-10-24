@@ -147,27 +147,18 @@ jobs:
           test -s /tmp/review-skill/SKILL.md
           test -s /tmp/review-skill/references/ci.md
 
-      # Gate results are snapshotted here with the workflow token instead of granting
-      # the reviewer `gh run view`/`gh pr checks`: a `--jq` filter can read the process
-      # environment, and the reviewer's environment holds its OAuth token. No PR code
-      # runs in this job, so dependency source is not installed; ci.md says what that
-      # leaves to the local orchestrator.
-      - name: Snapshot CI gate results for the reviewer
+      # PR metadata and gate results are snapshotted here with the workflow token, so
+      # the reviewer holds no `gh` command that takes `--jq`: a jq filter can read the
+      # process environment, and the reviewer's environment holds its OAuth token. No
+      # PR code runs in this job, so dependency source is not installed; ci.md says
+      # what that leaves to the local orchestrator.
+      - name: Snapshot PR metadata and CI gate results for the reviewer
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number || github.event.issue.number }}
-          MAX_LOG_BYTES: 60000
-        run: |
-          set -uo pipefail
-          mkdir -p /tmp/review-evidence
-          gh pr checks "$PR" --repo "${{ github.repository }}" > /tmp/review-evidence/checks.txt 2>&1 || true
-          head_sha=$(gh pr view "$PR" --repo "${{ github.repository }}" --json headRefOid --jq .headRefOid)
-          gh run list --repo "${{ github.repository }}" --commit "$head_sha" --status failure \
-            --json databaseId --jq '.[].databaseId' | while read -r run_id; do
-            gh run view "$run_id" --repo "${{ github.repository }}" --log-failed 2>&1 \
-              | head -c "$MAX_LOG_BYTES" > "/tmp/review-evidence/failed-run-${run_id}.log"
-          done
-          ls -la /tmp/review-evidence
+          OUT_DIR: /tmp/review-evidence
+        run: bash scripts/claude-review-snapshot.sh
 
       # `--add-dir` mounts pr-head as project scope, so an instruction-shaped file
       # the PR authored would arrive on the INSTRUCTION channel rather than the
@@ -219,7 +210,7 @@ jobs:
           track_progress: ${{ github.event_name == 'pull_request' }}
           prompt: "${{ github.event_name == 'pull_request' && format('REPO {0} — PR NUMBER {1} — You are performing a CODE REVIEW, not a task. Do not narrate progress and do not implement changes. Produce exactly two artifacts: one create_inline_comment tool call per finding, and then one overview comment ending in exactly one verdict line. Read the diff with gh pr diff. A run that posts no verdict line has failed.', github.repository, github.event.pull_request.number) || '' }}"
           claude_args: >-
-            --allowedTools "Read,Grep,Glob,Task,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*)"
+            --allowedTools "Read,Grep,Glob,Task,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*)"
             --add-dir pr-head
             --add-dir /tmp/review-skill
             --add-dir /tmp/review-evidence

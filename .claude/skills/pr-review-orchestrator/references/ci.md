@@ -14,7 +14,7 @@ each step maps to its CI substitute. The merge gate and output contract live in
 | PR files (data under review) | `pr-head/`, instruction-shaped files stripped |
 | Installed dependencies | none: installing would run PR-controlled code (a `.pnpmfile.cjs` loads despite `--ignore-scripts`) in a job holding the reviewer's credentials |
 | Subagents | `Task`; each subagent gets the same read-only tools |
-| Gate results | `/tmp/review-evidence/checks.txt` and `failed-run-<id>.log`, snapshotted by a workflow step before the review (the reviewer has no `gh run view`: a `--jq` filter could read its environment) |
+| PR metadata and gate results | `/tmp/review-evidence/pr.json`, `checks.txt` (starts with `UNAVAILABLE` when they could not be read) and `failed-run-<id>.log`, written by `scripts/claude-review-snapshot.sh` before the review; the reviewer has no `gh` command that takes `--jq`, which could read its environment |
 | Codex, MiMo, local build, browser, servers, network fetches | not available |
 
 ## Step mapping
@@ -22,7 +22,7 @@ each step maps to its CI substitute. The merge gate and output contract live in
 | Local step | CI substitute |
 |---|---|
 | Calibrate | fixed: the table above |
-| Resolve target | `gh pr view <n> --json baseRefName,headRefOid,files`, `gh pr diff <n>` |
+| Resolve target | `/tmp/review-evidence/pr.json`, `gh pr diff <n>` and `gh pr diff <n> --name-only` |
 | Domain matrix | same (`domains.md`) |
 | Cross-provider tracks | `Task` subagents, one falsifiable question each, launched in one message for independent domains. The reviewer is still one provider family; say so in the overview when the change is consequential and suggest the local orchestrator. |
 | Gates | read the snapshot; a failed or pending gate the change touches is evidence, a passed one is not proof of the journeys it does not exercise, a check pending at snapshot time is a limit |
