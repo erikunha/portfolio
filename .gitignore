@@ -99,3 +99,4 @@ mutation-report.json
 # Vendored Python bytecode
 __pycache__/
 *.pyc
+.vitest/
