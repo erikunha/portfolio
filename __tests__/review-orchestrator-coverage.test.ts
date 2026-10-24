@@ -12,12 +12,21 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
-// behavioral-test-allow: the artifacts under test ARE the review skill's markdown, the CI reviewer
-// prompt and its workflow. Their property (every source section mapped to a real file, CI wired to
-// a trusted copy of the skill) has no runtime surface other than these files.
 const root = join(__dirname, '..');
 const skillDir = join(root, '.claude/skills/pr-review-orchestrator');
-const coverage = readFileSync(join(skillDir, 'references/coverage.md'), 'utf8');
+
+function readArtifact(path: string): string {
+  // behavioral-test-allow: the artifacts under test ARE the review skill's markdown, the CI reviewer
+  // prompt and its workflow; their property has no runtime surface other than these files.
+  return readFileSync(path, 'utf8');
+}
+
+const coverage = readArtifact(join(skillDir, 'references/coverage.md'));
+const workflowSteps = (
+  parse(readArtifact(join(root, '.github/workflows/claude-review.yml'))) as {
+    jobs: { review: { steps: Array<{ name?: string; run?: string }> } };
+  }
+).jobs.review.steps;
 const SOURCE_SECTION_COUNT = 134;
 const STATUSES = ['kept', 'adapted', 'replaced', 'not applicable'];
 
@@ -85,7 +94,7 @@ describe('review orchestrator coverage map', () => {
       const row = rows.find((candidate) => candidate.section === Number(section));
       const file = row?.target.match(/\b(?:SKILL|[a-z-]+)\.md\b/)?.[0] ?? '';
       expect(
-        existsSync(skillPath(file)) && readFileSync(skillPath(file), 'utf8').includes(anchor),
+        existsSync(skillPath(file)) && readArtifact(skillPath(file)).includes(anchor),
         `coverage row ${section} cites ${file}, which must still contain "${anchor}"`,
       ).toBe(true);
     }
@@ -101,7 +110,7 @@ describe('review orchestrator coverage map', () => {
 });
 
 describe('CI reviewer runs a trusted copy of the orchestrator', () => {
-  const prompt = readFileSync(join(root, '.github/claude-review-prompt.md'), 'utf8');
+  const prompt = readArtifact(join(root, '.github/claude-review-prompt.md'));
   type Step = {
     name?: string;
     if?: string;
@@ -109,9 +118,9 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
     uses?: string;
     with?: { claude_args?: string };
   };
-  const workflow = parse(
-    readFileSync(join(root, '.github/workflows/claude-review.yml'), 'utf8'),
-  ) as { jobs: { review: { steps: Step[] } } };
+  const workflow = parse(readArtifact(join(root, '.github/workflows/claude-review.yml'))) as {
+    jobs: { review: { steps: Step[] } };
+  };
   const steps = workflow.jobs.review.steps;
   const claudeArgs =
     steps.find((step) => step.uses?.startsWith('anthropics/claude-code-action'))?.with
@@ -193,7 +202,7 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
   });
 
   it('snapshots PR metadata and gate results unconditionally before the review', () => {
-    const snapshot = indexOfStep(/^bash scripts\/claude-review-snapshot\.sh$/);
+    const snapshot = steps.findIndex((step) => step.name?.startsWith('Snapshot PR metadata'));
     const review = steps.findIndex((step) =>
       step.uses?.startsWith('anthropics/claude-code-action'),
     );
@@ -207,8 +216,9 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
   });
 });
 
-describe('claude-review snapshot script', () => {
-  const script = join(root, 'scripts/claude-review-snapshot.sh');
+describe('claude-review snapshot step', () => {
+  const snapshotRun =
+    workflowSteps.find((step) => step.name?.startsWith('Snapshot PR metadata'))?.run ?? '';
 
   const FAILED_CHECK = '[{"name":"lint","state":"FAILURE","bucket":"fail","link":"u"}]';
 
@@ -235,7 +245,9 @@ esac
 `,
     );
     chmodSync(join(bin, 'gh'), 0o755);
-    const result = spawnSync('bash', [script], {
+    const script = join(dir, 'snapshot.sh');
+    writeFileSync(script, snapshotRun);
+    const result = spawnSync('bash', ['-e', script], {
       encoding: 'utf8',
       env: {
         ...process.env,
@@ -250,7 +262,7 @@ esac
         LOG_BYTES: String(behaviour.logBytes ?? 10),
       },
     });
-    const read = (name: string) => readFileSync(join(out, name), 'utf8');
+    const read = (name: string) => readArtifact(join(out, name));
     return { status: result.status, read, files: () => readdirSync(out).sort() };
   }
 
