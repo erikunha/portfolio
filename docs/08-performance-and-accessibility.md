@@ -4,20 +4,20 @@
 
 ## Performance budgets (non-negotiable, CI-enforced)
 
-| Metric                                                           | Desktop  | Mobile   |
-| ---------------------------------------------------------------- | -------- | -------- |
-| LCP                                                              | < 1.8s   | < 3.5s   |
-| INP                                                              | < 200ms  | < 200ms  |
-| CLS                                                              | < 0.05   | < 0.05   |
-| TBT                                                              | < 200ms  | < 400ms  |
-| JS gzipped / route, first-load total                             | < 175KB  | < 175KB  |
-| JS gzipped, app-owned (total minus the measured framework floor) | < 32.8KB | < 32.8KB |
-| Lighthouse Perf                                                  | ≥ 95     | ≥ 90     |
-| Lighthouse A11y                                                  | = 100    | = 100    |
-| Lighthouse Best Practices                                        | ≥ 95     | ≥ 95     |
-| Lighthouse SEO                                                   | = 100    | = 100    |
+| Metric                                                           | Desktop   | Mobile    |
+| ---------------------------------------------------------------- | --------- | --------- |
+| LCP                                                              | < 1.8s    | < 3.5s    |
+| INP                                                              | < 200ms   | < 200ms   |
+| CLS                                                              | < 0.05    | < 0.05    |
+| TBT                                                              | < 200ms   | < 400ms   |
+| JS gzipped / route, first-load total                             | < 164.7KB | < 164.7KB |
+| JS gzipped, app-owned (total minus the measured framework floor) | < 32.8KB  | < 32.8KB  |
+| Lighthouse Perf                                                  | ≥ 95      | ≥ 90      |
+| Lighthouse A11y                                                  | = 100     | = 100     |
+| Lighthouse Best Practices                                        | ≥ 95      | ≥ 95      |
+| Lighthouse SEO                                                   | = 100     | = 100     |
 
-Enforced by LHCI (`lighthouserc.json` + `.mobile.json`), `route-js-check` (per-route first-load total), and `bundle-check` (≤220KB gzipped client chunks, summed globally and therefore blind per-route). The 175KB per-route total is the ONLY assertion `route-js-check` makes: the app-owned row is that total minus a measured constant (the 142.2KB framework floor), so it is reported on every run but never gated — a threshold on it could never fire on its own. 175 is the framework floor plus headroom, not an aspiration: a bare hello-world Next 16 + React 19 app measures 142.2KB before any app code exists. **Never disable a gate to merge** - the only acceptable response to a red gate is to reduce the measured property or fix a genuinely-miswritten assertion.
+See `lighthouserc.json` + `.mobile.json`, `scripts/check-route-js.mjs`, and `scripts/check-bundle-size.mjs` for enforcement. The app-owned row reports total JS minus the measured 131.9KB framework floor. A bare hello-world Next 16.4.3 + React 19.3.1 app measures that floor before app code. The 164.7KB total preserves 32.8KB of app-owned allowance. `bundle-check` measures chunks globally and cannot detect per-route regressions.
 
 ## How LCP < 1.8s is achieved
 
