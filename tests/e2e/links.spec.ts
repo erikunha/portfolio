@@ -86,7 +86,7 @@ test.describe('/links link-in-bio', () => {
       });
       expect(
         width,
-        `control ${i} (${(await control.innerText()).trim().slice(0, 30)})`,
+        `control ${i} (${((await control.textContent()) ?? '').trim().slice(0, 30)})`,
       ).toBeGreaterThanOrEqual(2);
     }
   });

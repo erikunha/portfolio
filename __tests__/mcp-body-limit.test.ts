@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it, vi } from 'vitest';
-import { POST } from '@/app/api/[transport]/route';
+import { POST } from '@/app/api/mcp/route';
 
 vi.mock('@/app/api/ask/route', () => ({
   POST: vi.fn(async () => new Response('answer')),
@@ -128,15 +128,5 @@ describe('/api/mcp request body limit', () => {
     const response = await POST(request(body));
     expect(response.status).toBe(200);
     expect(await response.text()).toContain('answer');
-  });
-  it('bounds every transport path the catch-all route serves, not only /api/mcp', async () => {
-    for (const path of ['/api/sse', '/api/message']) {
-      const oversized = new Request(`https://www.erikunha.dev${path}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: 'x'.repeat(MAX_MCP_BODY_BYTES + 1),
-      });
-      expect((await POST(oversized)).status).toBe(413);
-    }
   });
 });
