@@ -13,16 +13,17 @@ each step maps to its CI substitute. The merge gate and output contract live in
 | This skill (trusted procedure) | `/tmp/review-skill`, materialised from the default branch (a sub-PR's base may be an integration branch that edited it) |
 | PR files (data under review) | `pr-head/`, instruction-shaped files stripped |
 | Installed dependencies | none: installing would run PR-controlled code (a `.pnpmfile.cjs` loads despite `--ignore-scripts`) in a job holding the reviewer's credentials |
-| Subagents | `Task`; each subagent gets the same read-only tools |
-| PR metadata and gate results | `/tmp/review-evidence/pr.json`, `checks.txt` (starts with `UNAVAILABLE` when they could not be read) and `failed-run-<id>.log`, written by `scripts/claude-review-snapshot.sh` before the review; the reviewer has no `gh` command that takes `--jq`, which could read its environment |
-| Codex, MiMo, local build, browser, servers, network fetches | not available |
+| Subagents | `Task`; subagents inherit the same allow and deny rules |
+| PR metadata, diff and gate results | `/tmp/review-evidence/pr.json`, `diff.patch`, `files.txt`, `checks.txt` (starts with `UNAVAILABLE` when no valid check list came back) and `failed-run-<id>.log`, written by `scripts/claude-review-snapshot.sh` before the review; the reviewer has no `gh` command that takes `--jq`, which could read its environment |
+| Tools | `Read`, `Grep`, `Glob`, `Task` and the inline-comment tool. Denied, which overrides what tag mode adds: edits, every `Bash` command including the action's git and push-wrapper tools, web tools, and reads of `.git/`, `/proc`, the home directory and the runner temp directory. No `gh` command and no network fetch is granted |
+| Codex, MiMo, local build, browser, servers | not available |
 
 ## Step mapping
 
 | Local step | CI substitute |
 |---|---|
 | Calibrate | fixed: the table above |
-| Resolve target | `/tmp/review-evidence/pr.json`, `gh pr diff <n>` and `gh pr diff <n> --name-only` |
+| Resolve target | `/tmp/review-evidence/pr.json`, `diff.patch` and `files.txt` |
 | Domain matrix | same (`domains.md`) |
 | Cross-provider tracks | `Task` subagents, one falsifiable question each, launched in one message for independent domains. The reviewer is still one provider family; say so in the overview when the change is consequential and suggest the local orchestrator. |
 | Gates | read the snapshot; a failed or pending gate the change touches is evidence, a passed one is not proof of the journeys it does not exercise, a check pending at snapshot time is a limit |

@@ -127,15 +127,41 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
 
   it('grants the reviewer exactly the read-only tool set', () => {
     expect([...allowedTools].sort()).toEqual(
-      [
-        'Bash(gh pr diff:*)',
-        'Glob',
-        'Grep',
-        'Read',
-        'Task',
-        'mcp__github_inline_comment__create_inline_comment',
-      ].sort(),
+      ['Glob', 'Grep', 'Read', 'Task', 'mcp__github_inline_comment__create_inline_comment'].sort(),
     );
+  });
+
+  it('denies the write, shell, web and credential-read tools the action adds in tag mode', () => {
+    const denied = claudeArgs.match(/--disallowedTools "([^"]+)"/)?.[1]?.split(',') ?? [];
+    for (const tool of [
+      'Edit',
+      'MultiEdit',
+      'Write',
+      'Bash',
+      'Bash(git add:*)',
+      'Bash(git commit:*)',
+      'Bash(git rm:*)',
+      'mcp__github_file_ops__commit_files',
+      'WebFetch',
+      'Read(**/.git/**)',
+      'Read(//proc/**)',
+      'Read(~/**)',
+    ]) {
+      expect(denied, `${tool} must be denied; deny rules override tag mode's additions`).toContain(
+        tool,
+      );
+    }
+    expect(denied.some((tool) => tool.endsWith('/scripts/git-push.sh:*)'))).toBe(true);
+  });
+
+  it('keeps no git credentials in either checkout', () => {
+    const checkouts = steps.filter((step) => step.uses?.startsWith('actions/checkout'));
+    expect(checkouts).toHaveLength(2);
+    for (const checkout of checkouts) {
+      expect((checkout.with as Record<string, unknown> | undefined)?.['persist-credentials']).toBe(
+        false,
+      );
+    }
   });
 
   it('extracts the skill from a default-branch fetch that runs before it, unconditionally', () => {
@@ -169,13 +195,22 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
     expect(steps[snapshot]?.if).toBeUndefined();
     expect(claudeArgs).toContain('--add-dir /tmp/review-evidence');
     expect(prompt).toContain('/tmp/review-evidence/pr.json');
+    expect(prompt).toContain('/tmp/review-evidence/diff.patch');
+    expect(prompt).not.toMatch(/gh pr (diff|view|checks)/);
   });
 });
 
 describe('claude-review snapshot script', () => {
   const script = join(root, 'scripts/claude-review-snapshot.sh');
 
-  function run(behaviour: { checksExit: number; checksErr?: string; logBytes?: number }) {
+  const FAILED_CHECK = '[{"name":"lint","state":"FAILURE","bucket":"fail","link":"u"}]';
+
+  function run(behaviour: {
+    checksExit: number;
+    checksOut?: string;
+    checksErr?: string;
+    logBytes?: number;
+  }) {
     const dir = mkdtempSync(join(tmpdir(), 'review-snapshot-'));
     const bin = join(dir, 'bin');
     const out = join(dir, 'out');
@@ -185,7 +220,8 @@ describe('claude-review snapshot script', () => {
       `#!/usr/bin/env bash
 case "$1 $2" in
   "pr view") if [[ "$*" == *--jq* ]]; then echo abc123; else echo '{"headRefOid":"abc123"}'; fi ;;
-  "pr checks") echo "lint pass"; echo "$CHECKS_ERR" >&2; exit "$CHECKS_EXIT" ;;
+  "pr diff") if [[ "$*" == *--name-only* ]]; then echo app/page.tsx; else echo "+line"; fi ;;
+  "pr checks") printf '%s' "$CHECKS_OUT"; echo "$CHECKS_ERR" >&2; exit "$CHECKS_EXIT" ;;
   "run list") echo 42 ;;
   "run view") head -c "$LOG_BYTES" /dev/zero | tr '\\0' 'x' ;;
 esac
@@ -203,6 +239,7 @@ esac
         MAX_LOG_BYTES: '1000',
         CHECKS_EXIT: String(behaviour.checksExit),
         CHECKS_ERR: behaviour.checksErr ?? '',
+        CHECKS_OUT: behaviour.checksOut ?? FAILED_CHECK,
         LOG_BYTES: String(behaviour.logBytes ?? 10),
       },
     });
@@ -214,21 +251,40 @@ esac
     for (const checksExit of [0, 1, 8]) {
       const result = run({ checksExit });
       expect(result.status).toBe(0);
-      expect(result.read('checks.txt')).toBe('lint pass\n');
+      expect(result.read('checks.txt')).toBe('fail\tFAILURE\tlint\tu\n');
     }
   });
 
-  it('marks unreadable check results UNAVAILABLE instead of passing error text as results', () => {
-    const result = run({ checksExit: 4, checksErr: 'HTTP 503' });
-    expect(result.status).toBe(0);
-    expect(result.read('checks.txt')).toMatch(/^UNAVAILABLE: gh pr checks exited 4/);
-    expect(result.read('checks.txt')).toContain('HTTP 503');
+  it('marks an API error UNAVAILABLE even when gh exits 1 like a failed check', () => {
+    for (const [checksExit, checksOut] of [
+      [1, ''],
+      [1, 'not json'],
+      [4, ''],
+      [0, '[]'],
+    ] as const) {
+      const result = run({ checksExit, checksOut, checksErr: 'HTTP 503' });
+      expect(result.status).toBe(0);
+      expect(result.read('checks.txt')).toMatch(/^UNAVAILABLE: gh pr checks exited \d/);
+      expect(result.read('checks.txt')).toContain('HTTP 503');
+    }
+  });
+
+  it('snapshots the diff and changed paths for the reviewer', () => {
+    const result = run({ checksExit: 0 });
+    expect(result.read('diff.patch')).toBe('+line\n');
+    expect(result.read('files.txt')).toBe('app/page.tsx\n');
   });
 
   it('truncates a large failed log without failing the step, leaving no full copy behind', () => {
     const result = run({ checksExit: 1, logBytes: 5_000_000 });
     expect(result.status).toBe(0);
     expect(result.read('failed-run-42.log')).toHaveLength(1000);
-    expect(result.files()).toEqual(['checks.txt', 'failed-run-42.log', 'pr.json']);
+    expect(result.files()).toEqual([
+      'checks.txt',
+      'diff.patch',
+      'failed-run-42.log',
+      'files.txt',
+      'pr.json',
+    ]);
   });
 });

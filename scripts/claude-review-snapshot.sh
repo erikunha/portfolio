@@ -14,18 +14,29 @@ gh pr view "$PR" --repo "$REPO" --json number,headRefOid,baseRefName,headRefName
   > "$OUT_DIR/pr.json"
 head_sha=$(gh pr view "$PR" --repo "$REPO" --json headRefOid --jq .headRefOid)
 
+gh pr diff "$PR" --repo "$REPO" > "$OUT_DIR/diff.patch"
+gh pr diff "$PR" --repo "$REPO" --name-only > "$OUT_DIR/files.txt"
+
 checks_status=0
-gh pr checks "$PR" --repo "$REPO" > "$OUT_DIR/checks.txt" 2> "$OUT_DIR/checks.err" || checks_status=$?
+gh pr checks "$PR" --repo "$REPO" --json name,state,bucket,link \
+  > "$OUT_DIR/checks.json" 2> "$OUT_DIR/checks.err" || checks_status=$?
+checks_valid=false
 case "$checks_status" in
-  0 | "$GH_PR_CHECKS_FAILED" | "$GH_PR_CHECKS_PENDING") rm -f "$OUT_DIR/checks.err" ;;
-  *)
-    {
-      echo "UNAVAILABLE: gh pr checks exited $checks_status; check results could not be read."
-      cat "$OUT_DIR/checks.err"
-    } > "$OUT_DIR/checks.txt"
-    rm -f "$OUT_DIR/checks.err"
+  0 | "$GH_PR_CHECKS_FAILED" | "$GH_PR_CHECKS_PENDING")
+    if jq -e 'type == "array" and length > 0' "$OUT_DIR/checks.json" > /dev/null 2>&1; then
+      checks_valid=true
+    fi
     ;;
 esac
+if [ "$checks_valid" = true ]; then
+  jq -r '.[] | [.bucket, .state, .name, .link] | @tsv' "$OUT_DIR/checks.json" > "$OUT_DIR/checks.txt"
+else
+  {
+    echo "UNAVAILABLE: gh pr checks exited $checks_status without a readable check list."
+    cat "$OUT_DIR/checks.err"
+  } > "$OUT_DIR/checks.txt"
+fi
+rm -f "$OUT_DIR/checks.err" "$OUT_DIR/checks.json"
 
 run_ids=$(gh run list --repo "$REPO" --commit "$head_sha" --status failure --limit 100 \
   --json databaseId --jq '.[].databaseId')
