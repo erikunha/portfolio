@@ -1,6 +1,6 @@
 # Rendering & Data Flow
 
-> Routing tree, the RSC/PPR rendering pipeline, and end-to-end data flows with sequence diagrams. This is the doc that explains *how a request becomes pixels* and *how a user action becomes a persisted effect*.
+> Routing tree, the RSC/PPR rendering pipeline, and end-to-end data flows with sequence diagrams. This is the doc that explains _how a request becomes pixels_ and _how a user action becomes a persisted effect_.
 
 ## Routing tree
 
@@ -67,15 +67,16 @@ flowchart LR
 ```
 
 **Static vs dynamic, concretely:**
-
-- **Static (prerendered):** the whole `AppShell` chrome, `Hero` (deliberately *outside* any `<Suspense>` so LCP never waits), `Readme`, `Shell`, and section fallbacks.
+- **Static (prerendered):** the whole `AppShell` chrome, `Hero` (deliberately _outside_ any `<Suspense>` so LCP never waits), `Readme`, `Shell`, and section fallbacks.
 - **Dynamic-via-`<Suspense>`:** `ManPage`, `GitLog`, `Visa`, `Projects`, `Guitar`, `LivePerf`, `DawMixer`, and `AiMetrics`. These wrap an inner async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`), which marks the subtree dynamic. Only the Suspense fallback is prerendered; the real variant streams in.
 - **The dual-variant pattern** (e.g. `ManPageSection.tsx`):
+
   ```
   <Module><Suspense fallback={<Desktop/>}><AsyncInner/></Suspense></Module>
   ```
+
   `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: desktop variant for most; **`null` for Guitar** (a CLS fix, `DECISIONS.md` 2026-06-13); a reserved-height stub for `AiMetrics`.
-- **`defer` prop:** below-the-fold sections pass `defer` to `Module`, which applies CSS `content-visibility` (defers *render cost*, not JS).
+- **`defer` prop:** below-the-fold sections pass `defer` to `Module`, which applies CSS `content-visibility` (defers _render cost_, not JS).
 - **`next/dynamic` lazy JS (4 sites):** `ContactFormLazy`, `InteractiveShellLazy`, `FooterLazy` (IO-gated), `DawMixerSection`.
 
 There is **no `use cache` / `cacheLife` / `cacheTag` / `unstable_cache` / `generateStaticParams`** anywhere - the staticness comes from PPR + the absence of dynamic APIs, not explicit caching.
@@ -127,7 +128,7 @@ sequenceDiagram
     U->>U: finalize() -> commit answer (or error line) into history
 ```
 
-**Client-side rendering nuance (verified in code):** the streamed text lands in an *isolated* `streamingText` state and is flushed at most once per animation frame (`requestAnimationFrame`), so a per-chunk update re-renders only one `<span>`, never the whole feed. This is the opposite of the Hero boot loop, which mutates `textContent` directly with no React state (see doc 04). Both are deliberate INP guards.
+**Client-side rendering nuance (verified in code):** the streamed text lands in an _isolated_ `streamingText` state and is flushed at most once per animation frame (`requestAnimationFrame`), so a per-chunk update re-renders only one `<span>`, never the whole feed. This is the opposite of the Hero boot loop, which mutates `textContent` directly with no React state (see doc 04). Both are deliberate INP guards.
 
 **Server timeouts (defense in depth):** 30s whole-request `AbortSignal`, 15s mid-stream watchdog, 1s usage-resolve. The token budget is held **fail-closed** if usage can't be resolved (so a metering bug can't leak spend), while Redis itself is **fail-open** (an outage never blocks an answer).
 
@@ -156,7 +157,7 @@ sequenceDiagram
     end
 ```
 
-The **ordering is a security property**: rate-limit and validate *before* the work, hash the IP and touch storage *only* for requests that pass. Every response carries `X-Request-Id`. See doc 05 for the full `defineHandler` contract and the other routes.
+The **ordering is a security property**: rate-limit and validate _before_ the work, hash the IP and touch storage _only_ for requests that pass. Every response carries `X-Request-Id`. See doc 05 for the full `defineHandler` contract and the other routes.
 
 ## Request lifecycle summary (every request)
 

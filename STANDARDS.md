@@ -26,12 +26,12 @@ typewriter, the motion indicator, the Matrix rain. Every file that carries
 no `.client.tsx` file exports an `async function`. The root route's static shell
 is prerendered; the sections that read request headers are request-time holes
 inside it, and each one is a deliberate choice recorded in `DECISIONS.md`. The
-interactive shell's streaming answer renders *through* React — no out-of-tree
+interactive shell's streaming answer renders _through_ React — no out-of-tree
 DOM nodes, no `document.createElement` + `appendChild` into a React-owned feed,
 no per-chunk `textContent` mutation inside an `aria-live` region React controls.
 
 **Rationale.** RSC-default is the single largest lever on the JS budget: static
-sections cost nothing on the wire. The client boundary must be *visible* in
+sections cost nothing on the wire. The client boundary must be _visible_ in
 review — a `.client.tsx` rename forces the author to acknowledge they are
 shipping JavaScript. Out-of-tree DOM mutation inside a React-owned subtree is a
 reconciliation hazard: React can clobber the manually-inserted node on its next
@@ -64,11 +64,11 @@ business logic. Every outbound external call (Anthropic, Resend, Redis) carries
 an explicit timeout — including a mid-stream watchdog on `/api/ask`, not only a
 connection-initiation timeout. Fail-open versus fail-closed is a deliberate,
 documented choice per control: rate-limiting and the Redis singleton fail
-*open* (a Redis outage must not take the site down); the budget cap fails
-*closed* (cost safety is non-negotiable).
+_open_ (a Redis outage must not take the site down); the budget cap fails
+_closed_ (cost safety is non-negotiable).
 
-**Documented exemption.** `/api/erik.json` is intentionally *outside* the
-envelope. It is a machine-readable resume *document*, not an *operation* —
+**Documented exemption.** `/api/erik.json` is intentionally _outside_ the
+envelope. It is a machine-readable resume _document_, not an _operation_ —
 agent crawlers and recruiters fetch it expecting a plain JSON profile, and
 wrapping it in `{ ok, requestId, data }` would break those consumers. It
 therefore stays bare JSON. Being `force-static`, it has no per-request
@@ -81,7 +81,7 @@ an envelope — but it still mints and exposes a request id.
 **Rationale.** One envelope means the client tells success from failure without
 per-route shape-switching, and every error is correlatable by `requestId`
 across logs and the GDPR erasure flow. The fixed order means a jailbreak or
-abuse attempt is rejected *before* it consumes quota or reaches an upstream. An
+abuse attempt is rejected _before_ it consumes quota or reaches an upstream. An
 explicit timeout on every external call means a hung dependency degrades to a
 structured error instead of an open connection.
 
@@ -102,9 +102,9 @@ its route file and here. The full surface is also covered by the required
 
 **Rule.** The non-negotiable budgets: LCP < 1.8s on 4G, INP < 200ms, CLS < 0.05.
 Lighthouse must score Performance ≥ 95, Accessibility = 100, Best Practices ≥ 95,
-SEO = 100. Budgets are measured in the smallest *honest* unit. Per-route first-load
+SEO = 100. Budgets are measured in the smallest _honest_ unit. Per-route first-load
 JS is gated at 175 KB total — one gate, one quantity. App-owned JS (175 − the
-measured 142.2 KB framework floor = **32.8 KB**) is *reported* on every run but
+measured 142.2 KB framework floor = **32.8 KB**) is _reported_ on every run but
 never asserted: it is the total minus a constant, so gating it too would be a
 second threshold on the same axis that could never fire on its own.
 Any route that calls `headers()` / `cookies()` / `force-dynamic` and thereby
@@ -114,8 +114,8 @@ justifying the cost.
 **Rationale.** A portfolio that is itself a Staff/Principal hiring artifact must
 demonstrate the budgets it claims to enforce. The honesty clause matters: a
 bundle gate set to a framework-inclusive number while a comment claims it
-measures app-only JS is *theater* — it passes while telling a falsehood. The
-same failure has a subtler form: a *second* gate on a quantity derived from the
+measures app-only JS is _theater_ — it passes while telling a falsehood. The
+same failure has a subtler form: a _second_ gate on a quantity derived from the
 first by subtracting a constant. It prints a budget, it never fires, and the
 printed number is not the ceiling that binds. The gate asserts one quantity it
 can measure truthfully (per-route first-load total) and reports the app-owned
@@ -136,25 +136,25 @@ of headroom) on every run without asserting it. The
 
 ## 4. Testing
 
-**Rule.** Tests assert *behavior*, not *source*. A test must exercise observable
+**Rule.** Tests assert _behavior_, not _source_. A test must exercise observable
 output — render the component and inspect the DOM, call the handler and inspect
 the response, trigger the side effect and assert it happened. Reading
 application source under `app/`, `components/`, `lib/`, or `scripts/` with
 `readFileSync` to make a structural assertion (`.toContain`, `.toMatch` on file
 text) is banned. The one permitted exception is a `readFileSync` carrying an
 explicit `// behavioral-test-allow: <reason>` tag — used where the file itself
-*is* the artifact under test and the unit layer has no behavioral substitute: a
+_is_ the artifact under test and the unit layer has no behavioral substitute: a
 config/manifest read (e.g. asserting an installed dependency version from
 `package.json`), or a built CSS asset whose effect (`content-visibility`,
 `@keyframes`, `:focus-visible`) jsdom cannot evaluate. The tag forces the reason
 to be stated and reviewed; an untagged source read fails the gate. Every API route, every kill switch, and every interactive client component
-has a behavioral test. The functional cross-browser e2e specs are a *required*
+has a behavioral test. The functional cross-browser e2e specs are a _required_
 CI job; no test is deleted without a behavioral replacement.
 
 **Rationale.** A source-grep test gives false confidence: it passes if the
 matched symbol appears in a comment or a dead branch, and it fails on an
-innocuous rename even when behavior is unchanged. It tests the *shape of the
-text*, not the *correctness of the program*. Behavioral tests fail when, and
+innocuous rename even when behavior is unchanged. It tests the _shape of the
+text_, not the _correctness of the program_. Behavioral tests fail when, and
 only when, the guarantee actually regresses.
 
 **How it is held.** Mechanical gate: the meta-check
@@ -189,7 +189,7 @@ drift until the lockfile is regenerated. Major-locking every dependency makes
 the build reproducible across machines and across time — a property a Staff-bar
 artifact must demonstrate, not merely claim. The tilde on `next` exists because
 `scripts/strip-next-polyfills.mjs` verifies a checksum of a Next-internal file
-and fails *loud* on mismatch; a caret range could float `next` onto a new minor
+and fails _loud_ on mismatch; a caret range could float `next` onto a new minor
 and trip that guard on an otherwise-clean install.
 
 **How it is held.** Mechanical gate: `scripts/check-dep-pinning.mjs`
@@ -204,7 +204,7 @@ of the install itself is held by `pnpm install --frozen-lockfile` in CI.
 
 **Rule.** All user-facing content lives in `content/*.ts` as typed TypeScript
 modules, validated by Zod schemas (`content/schemas.ts`) at build time — the
-build fails on any schema violation. Schemas are *tight*: every user-facing
+build fails on any schema violation. Schemas are _tight_: every user-facing
 label, heading, and text field is `.min(1)` (an empty string is a content
 defect, and a defect must fail the build, not render blank); closed-set fields
 use enums over free strings; URL and email fields use `.url()` / `.email()`. No
@@ -267,17 +267,17 @@ inside `pnpm test`. `prefers-reduced-motion` coverage is exercised by the
 
 **Rule.** No dead-code security theater: every CSP directive has a real
 consumer or is deleted; every cache directive verifiably activates; every kill
-switch has a *behavioral* test, not a source-grep. PII is minimized — no
+switch has a _behavioral_ test, not a source-grep. PII is minimized — no
 personal phone number, no private contact channel, in any machine-fetchable
 surface. The `/api/ask` SYSTEM prompt and the public `erik.json` profile carry
 email only. Prompt-injection defense is layered: a per-request 128-bit sentinel
 wrapper is the primary guard, `INJECTION_RE` (covering role tokens, override
 phrases, and `<|...|>` ChatML-style delimiters) is defense-in-depth, and the
 `<question>` delimiter wrapping tells the model the input is data. The Anthropic
-budget cap fails *closed*.
+budget cap fails _closed_.
 
 **Rationale.** A CSP directive with no consumer, or a kill switch verified only
-by grepping its symbol name, is *theater* — it looks like a control and
+by grepping its symbol name, is _theater_ — it looks like a control and
 enforces nothing. A control is real only when a behavioral test proves it
 activates. PII minimization matters because `/api/ask` and `/api/erik.json` are
 deliberately public and crawlable; a phone number baked into the SYSTEM prompt
@@ -287,7 +287,7 @@ is a privacy leak on a fetchable surface.
 `__tests__/proxy-csp.test.ts` (asserts the header is present and shaped
 correctly on responses); the `/api/ask` kill switch is held by
 `__tests__/ask-killswitch-behavioral.test.ts` (calls the route with each
-off-keyword and asserts the dependencies that should *not* run were not
+off-keyword and asserts the dependencies that should _not_ run were not
 called); the SYSTEM prompt is held by `__tests__/system-prompt.test.ts` (asserts
 no phone-number pattern, asserts the 1024-token cache threshold still clears).
 The "no dead CSP directive" and "PII minimization" rules are also enforced by
@@ -295,7 +295,7 @@ PR review and the `security-auditor` dispatch on any `app/api/` change. That
 dispatch is a convention, not a gate: the PostToolUse marker and the pre-push guard that enforced it were removed 2026-07-27.
 Bash) blocks the next `git push` (`exit 2`) until the transcript shows a
 `security-auditor` dispatch following that marker. Boundary: the gate proves the
-auditor was *dispatched* after the edit, not that its findings were resolved.
+auditor was _dispatched_ after the edit, not that its findings were resolved.
 
 ---
 
@@ -331,7 +331,7 @@ ship `www.erikunha.dev`, matching the apex → www redirect).
 reviewer checks that doc claims still match code and that any new ADR cites its
 PR and reversibility note. A doc-claim verifier script — a `scripts/audit/`
 tool that mechanically checks every file/function/budget named in
-`ARCHITECTURE.md` — is a documented *stretch goal*, not a shipped gate; this
+`ARCHITECTURE.md` — is a documented _stretch goal_, not a shipped gate; this
 chapter states that plainly so the absence is not mistaken for a silent
 aspiration.
 

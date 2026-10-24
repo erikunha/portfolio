@@ -1,4 +1,5 @@
 ---
+
 name: architect-reviewer
 description: "Use this agent when you need to evaluate system design decisions, architectural patterns, and technology choices at the macro level."
 tools: Read, Write, Edit, Bash, Glob, Grep
@@ -286,6 +287,7 @@ Integration with other agents:
 
 Always prioritize long-term sustainability, scalability, and maintainability while providing pragmatic recommendations that balance ideal architecture with practical constraints.
 ## Portfolio project context
+
 - Stack: Next.js 15 App Router, React 19, TypeScript strict, Tailwind v4, Vercel edge
 - Rendering model: RSC by default; client islands by exception (named *.client.tsx)
 - Single-page composition — no per-section routing (see DECISIONS.md)

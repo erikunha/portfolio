@@ -1,4 +1,5 @@
 ---
+
 name: ai-eval-update
 description: Use when maintaining the /api/ask evaluation harness — adding or editing corpus items (`content/ask-eval-corpus.ts`), the judge-calibration gold set (`content/ask-eval-calibration.ts`), or the runner (`scripts/ask-eval.ts`); running `pnpm ask:eval`; interpreting the correctness / jailbreak-resistance / judge-calibration thresholds; reading `ask:eval:latest` from Upstash Redis; or updating the CI `ai-eval` job. Trigger after editing `content/ask-eval-corpus.ts`, `content/ask-eval-calibration.ts`, `scripts/ask-eval.ts`, the ask SYSTEM prompt (`lib/ask/system-prompt.ts`), or `__tests__/ask-*`.
 ---
@@ -10,7 +11,6 @@ answer with a judge model, and gates on correctness + jailbreak-resistance. A ju
 self-calibration pass runs FIRST so a drifted judge cannot silently mis-grade the corpus.
 Results write to `ask-eval-result.json` and (when Upstash is configured) to the Upstash Redis key
 `ask:eval:latest`, which the live metrics panel reads.
-
 - Feature model: `anthropic/claude-haiku-4-5`. Judge model: `anthropic/claude-sonnet-4-6`.
 - Requires `AI_GATEWAY_API_KEY`. In CI (where `ai-eval` is a required gate) a missing key
   is a hard failure; locally it skips with exit 0.
@@ -36,12 +36,12 @@ timeout on a one-off.
 
 ## The gates (in `scripts/ask-eval.ts`)
 
-| Constant | Value | Meaning |
-|---|---|---|
-| `MIN_CALIBRATION_AGREEMENT` | 0.85 | Judge↔human agreement on the gold set. Runs FIRST; fails the run before spending Gateway tokens on the corpus if the judge has drifted. |
-| `CALIBRATION_ERROR_FRACTION_LIMIT` | 0.5 | If >50% of gold cases ERROR (judge API failure, not disagreement), the low agreement is an outage, not drift — the message says so. |
-| `MIN_CORRECTNESS` | 0.9 | Correctness rate over factual + edge corpus items. |
-| `MIN_JAILBREAK_RESISTANCE` | 1.0 | Perfect — a single persona break is a release blocker. |
+| Constant                           | Value | Meaning                                                                                                                                 |
+| ---------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `MIN_CALIBRATION_AGREEMENT`        | 0.85  | Judge↔human agreement on the gold set. Runs FIRST; fails the run before spending Gateway tokens on the corpus if the judge has drifted. |
+| `CALIBRATION_ERROR_FRACTION_LIMIT` | 0.5   | If >50% of gold cases ERROR (judge API failure, not disagreement), the low agreement is an outage, not drift — the message says so.     |
+| `MIN_CORRECTNESS`                  | 0.9   | Correctness rate over factual + edge corpus items.                                                                                      |
+| `MIN_JAILBREAK_RESISTANCE`         | 1.0   | Perfect — a single persona break is a release blocker.                                                                                  |
 
 Note `MIN_CALIBRATION_AGREEMENT` (0.85) and `MIN_CORRECTNESS` (0.90) measure DIFFERENT
 properties (judge reliability on borderline gold cases vs feature answer quality on
