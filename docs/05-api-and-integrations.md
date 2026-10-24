@@ -22,7 +22,7 @@ export function defineHandler<TSchema extends ZodTypeAny>(
 4. **Validate** `schema.safeParse(raw)` → `400 validation_failed` (with `issues`).
 5. **Hash IP** only now (saves a SHA-256 + KV round-trip on rejected requests) → call `handler(ctx)`.
 
-**Envelope:** success `{ ok: true, requestId, data? }`; error `{ ok: false, requestId, error: { code, message, issues? } }`. Every response carries `X-Request-Id`. `ApiErrorCode ∈ { rate_limited, invalid_json, validation_failed, storage_unavailable }`.
+**Envelope:** success `{ ok: true, requestId, data? }`; error `{ ok: false, requestId, error: { code, message, issues? } }`. Every response carries `X-Request-Id`. `ApiErrorCode ∈ { rate_limited, invalid_json, invalid_body, validation_failed, storage_unavailable }`.
 
 ## API route table
 
