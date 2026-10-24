@@ -36,7 +36,7 @@ export function defineHandler<TSchema extends ZodTypeAny>(
 | `/api/lighthouse`  | GET        | bespoke             | stored PSI metrics                                  | `PSI_API_KEY` (in lib)       | falls back to all-zero `LIGHTHOUSE_FALLBACK`                                                        |
 | `/api/log`         | POST       | `defineHandler`     | client error capture → KV (30d TTL)                 | none                         | KV fail → 503; **no IP stored** (forget-exempt)                                                     |
 | `/api/log/forget`  | POST       | `defineHandler`     | GDPR/LGPD erasure of ask logs by `requestId`        | none                         | deletes across 90 days; **never returns count** (existence-oracle prevention)                       |
-| `/api/mcp`         | POST       | `mcp-handler`       | read-only MCP server over stateless Streamable HTTP | none                         | GET returns 405; `maxDuration=60`, Node runtime                                                     |
+| `/api/mcp`         | POST       | `mcp-handler`       | read-only MCP server over stateless Streamable HTTP | none                         | Subscriptions disabled; GET returns 405; `maxDuration=60`, Node runtime                             |
 
 `/api/mcp` serves the 2026-07-28 protocol with `server/discover` and a per-request `_meta` envelope. The same route supports 2025 Streamable HTTP clients through stateless compatibility handling. Responses can use JSON or SSE framing. The legacy HTTP+SSE transport and Redis-backed MCP sessions are unsupported. Upstash still provides application rate limiting and token budgets.
 

@@ -255,6 +255,34 @@ describe('MCP route handler at /api/mcp', () => {
     expect(message.error).toBeUndefined();
   });
 
+  it('rejects modern subscriptions/listen with a complete JSON error instead of an open SSE stream', async () => {
+    const res = await postModernMcpMessage('subscriptions/listen', {
+      notifications: { toolsListChanged: true },
+    });
+
+    try {
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-type')).toContain('application/json');
+      const reader = res.body?.getReader();
+      expect(reader).toBeDefined();
+      try {
+        const chunk = await reader?.read();
+        expect(chunk?.done).toBe(false);
+        expect(JSON.parse(new TextDecoder().decode(chunk?.value))).toEqual({
+          jsonrpc: '2.0',
+          id: 1,
+          error: { code: -32603, message: 'Subscription limit reached' },
+        });
+        expect(await reader?.read()).toEqual({ done: true, value: undefined });
+      } finally {
+        await reader?.cancel();
+        reader?.releaseLock();
+      }
+    } finally {
+      if (!res.bodyUsed) await res.body?.cancel();
+    }
+  });
+
   it('lists both tools and their object schemas through the modern route', async () => {
     const res = await postModernMcpMessage('tools/list');
     expect(res.status).toBe(200);
