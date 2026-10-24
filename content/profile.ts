@@ -24,6 +24,16 @@ export const profile: Profile = ProfileSchema.parse({
       name: 'English',
       level: 'C1',
     },
+    {
+      code: 'es',
+      name: 'Spanish',
+      level: 'B1',
+    },
+    {
+      code: 'fr',
+      name: 'French',
+      level: 'A2',
+    },
   ],
   actions: [
     {
@@ -34,9 +44,14 @@ export const profile: Profile = ProfileSchema.parse({
 });
 
 export const profileLocation = `${profile.country} · ${profile.timezone} · ${profile.availability}`;
-export const profileLanguageLine = profile.languages
-  .map((language) => `${language.code.toUpperCase()} ${language.level}`)
-  .join(' · ');
+const WORKING_LANGUAGE_LEVELS: readonly string[] = ['native', 'C2', 'C1'];
+const languageLine = (languages: typeof profile.languages) =>
+  languages.map((language) => `${language.code.toUpperCase()} ${language.level}`).join(' · ');
+
+export const profileLanguageLine = languageLine(profile.languages);
+export const profileWorkingLanguageLine = languageLine(
+  profile.languages.filter((language) => WORKING_LANGUAGE_LEVELS.includes(language.level)),
+);
 export const profileSummary = `${profile.title}. ${profileLocation}. ${profile.currentEmployer.name}: ${profile.currentEmployer.context}.`;
 export const profilePageTitle = `${profile.displayName} · ${profile.title}`;
 export const profileMetaDescription = `${profile.title}. ${profileLocation}. ${profile.technologyLine}.`;

@@ -6,7 +6,7 @@ import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
 import { nowRows } from '@/content/now';
-import { profile } from '@/content/profile';
+import { profile, profileLanguageLine, profileWorkingLanguageLine } from '@/content/profile';
 import { projects } from '@/content/projects';
 import { readmeCopy } from '@/content/readme';
 import { personSchema } from '@/content/seo';
@@ -44,8 +44,20 @@ beforeAll(async () => {
 });
 
 describe('identity is consistent across every gated surface', () => {
+  it('carries every resume language, and the hero shows only the working ones', () => {
+    expect(profile.languages.map((language) => `${language.code}:${language.level}`)).toEqual([
+      'pt:native',
+      'en:C1',
+      'es:B1',
+      'fr:A2',
+    ]);
+    expect(profileLanguageLine).toBe('PT native · EN C1 · ES B1 · FR A2');
+    expect(profileWorkingLanguageLine).toBe('PT native · EN C1');
+  });
+
   it('expects the eval to answer with exactly the profile languages', () => {
     const item = ASK_EVAL_CORPUS.find((entry) => entry.id === 'fact-languages-spoken');
+    expect(profile.languages.length).toBeGreaterThan(0);
     for (const language of profile.languages) expect(item?.expect).toContain(language.name);
     const others = ['Spanish', 'French', 'German', 'Italian', 'Japanese', 'Mandarin'].filter(
       (name) => !profile.languages.some((language) => language.name === name),
