@@ -54,8 +54,20 @@ describe('identity is consistent across every gated surface', () => {
     for (const href of linkedinRows) expect(href).toBe(social.linkedin);
   });
 
+  it('derives JSON-LD sameAs, llms.txt links and profile actions from social', () => {
+    expect(personSchema.sameAs).toEqual([social.linkedin, social.github]);
+    expect(llmsTxt).toContain(`(${social.linkedin})`);
+    expect(llmsTxt).toContain(`(${social.github})`);
+    expect(profile.actions[0]?.href).toBe(social.github);
+  });
+
   it('writes work authorization as prose in search descriptions, never as raw status tokens', () => {
-    const descriptions = [personSchema.description, personSchema.seeks.itemOffered.description];
+    const descriptions = [
+      personSchema.description,
+      personSchema.seeks.itemOffered.description,
+      readmeCopy.desktopIntro,
+      JSON.stringify(nowRows),
+    ];
     for (const text of descriptions) {
       expect(text).not.toMatch(/CITIZEN|NEEDS_SPONSORSHIP|OPEN_WITH_SPONSORSHIP/);
       expect(text).toContain('Brazil: citizen');
@@ -215,8 +227,6 @@ describe('terminal redesign canonical facts', () => {
       expect(JSON.parse(layoutMetadataText).other['work-authorization']).toContain(
         `${row.jurisdiction}: ${row.status}`,
       );
-      expect(JSON.stringify(readmeCopy)).toContain(`${row.jurisdiction}: ${row.status}`);
-      expect(JSON.stringify(nowRows)).toContain(`${row.jurisdiction}: ${row.status}`);
     }
     expect(visaRows[2]?.evidence).toBe(
       'lived and worked in Vancouver, 2023-2025 · co-op diploma, CICCC',

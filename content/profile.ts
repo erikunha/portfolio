@@ -1,4 +1,5 @@
 import { type Profile, ProfileSchema } from './schemas';
+import { social } from './social';
 
 export const profile: Profile = ProfileSchema.parse({
   fullName: 'Erik Henrique Alves Cunha',
@@ -38,7 +39,7 @@ export const profile: Profile = ProfileSchema.parse({
   actions: [
     {
       label: 'GitHub ↗',
-      href: 'https://github.com/erikunha',
+      href: social.github,
     },
   ],
 });
