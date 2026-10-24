@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { communityEvent } from './community';
 import { profile, profileSummary } from './profile';
+import { social } from './social';
 import { workAuthorizationProse } from './visa';
 
 export const personSchema = {
@@ -24,7 +25,7 @@ export const personSchema = {
     addressRegion: 'São Paulo',
     addressCountry: 'BR',
   },
-  sameAs: ['https://linkedin.com/in/erikunha', 'https://github.com/erikunha'],
+  sameAs: [social.linkedin, social.github],
   worksFor: {
     '@type': 'Organization',
     name: profile.currentEmployer.name,
