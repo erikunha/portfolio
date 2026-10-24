@@ -21,7 +21,7 @@ sequenceDiagram
     C->>G: edits trigger PostToolUse hooks (markers, lints)
     C->>C: self-review the diff (pr-review-orchestrator skill)
     A-->>C: findings
-    C->>G: git push (pre-push gate chain blocks if not stamped)
+    C->>G: git push (pre-push: main guard, branch name, pnpm verify)
     C->>CI: open PR; CI runs lint/type/test/build/perf/a11y/security
     CI->>C: claude-review posts inline findings + Verdict
     CI-->>C: review threads

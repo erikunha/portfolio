@@ -4,7 +4,7 @@
 
 ## The 30-second model
 
-You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> 4-agent review -> the gate chain -> squash-merge -> ADR. The gates are mechanical and will block you; that is the point, and it is how you move fast safely.
+You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> self-review (`pr-review-orchestrator`) -> the gate chain -> squash-merge -> ADR. The gates are mechanical and will block you; that is the point, and it is how you move fast safely.
 
 ## Day 1 - understand the flow before you touch it
 

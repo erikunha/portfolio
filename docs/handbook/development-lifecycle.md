@@ -83,7 +83,7 @@ flowchart LR
         g1["Biome"] --> g2["commitlint"]
     end
     subgraph prepush["pre-push (blocks)"]
-        g3["no direct main"] --> g4["branch name"] --> g5["review stamp (pre-PR push only)"] --> g6["API-edit audit marker"] --> g7["pnpm verify"]
+        g3["no direct main"] --> g4["branch name"] --> g7["pnpm verify"]
     end
     subgraph prepr["pre-PR (manual)"]
         g8["ci:local"] --> g9["bundle-check"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["pr-review-orchestrator"]

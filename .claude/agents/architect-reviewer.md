@@ -337,7 +337,7 @@ Does the spec propose changes that could regress Lighthouse Perf ≥ 95, A11y = 
 
 If yes and the spec does not already include `performance-engineer` in its agent dispatch: add it to `DISPATCH_ADDITIONS`. This gate does not BLOCK.
 
-`DISPATCH_ADDITIONS` may only name agents that exist and are dispatchable as a `subagent_type`. Note that `pr-review-toolkit:review-pr` is a slash command, not an agent.
+`DISPATCH_ADDITIONS` may only name agents that exist and are dispatchable as a `subagent_type`. Skills and slash commands (such as `pr-review-orchestrator`) are not agents.
 
 **Output — always end with exactly these three lines:**
 ```

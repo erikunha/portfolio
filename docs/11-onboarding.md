@@ -77,7 +77,7 @@ Prioritized by onboarding value. These would complete the knowledge base; they'r
 | Priority | Doc                                       | Why                                                                                                                                   |
 | -------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | P0       | **Per-section feature guide**             | one page per section: content shape, desktop/mobile variants, host islands, the `sec-*` id. Closes the biggest red-team gap (doc 10). |
-| P0       | **Troubleshooting runbook**               | expand doc 07's table into per-symptom runbooks (the 503 cascade, the stamp/push blocks, the cron).                                   |
+| P0       | **Troubleshooting runbook**               | expand doc 07's table into per-symptom runbooks (the 503 cascade, the pre-push blocks, the cron).                                     |
 | P1       | **ADR cross-link index**                  | map code areas → relevant `DECISIONS.md` entries, so "why is this like this" is one hop from the file.                                |
 | P1       | **Contributing guide**                    | the commit/scope/PR/review workflow as a standalone CONTRIBUTING.md (currently spread across `CLAUDE.md`).                            |
 | P1       | **AI Engineering guide**                  | deepen doc 06 into a standalone playbook for the eval harness + prompt-version + the guards (for anyone touching `/api/ask`).         |
