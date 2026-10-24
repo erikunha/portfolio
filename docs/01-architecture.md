@@ -4,7 +4,7 @@
 
 ## The one-paragraph mental model
 
-A request hits Vercel's edge, passes through `proxy.ts` (which stamps CSP + reporting headers), and is served by Next.js. The page `/` is **partially prerendered**: a static shell (the chrome + above-the-fold Hero) is delivered instantly, while a handful of sections that branch on viewport stream in per-request behind `<Suspense>`. Almost no application JavaScript ships - only a small set of **client islands** hydrate. All visible copy comes from **typed, build-validated `content/*.ts` modules**. A few `/api/*` handlers form a thin **BFF** over Upstash Redis, Resend, the Vercel AI Gateway, and Google PageSpeed Insights, with a uniform fail-open posture.
+A request hits Vercel's edge, passes through `proxy.ts` (which stamps CSP + reporting headers), and is served by Next.js. The page `/` is **partially prerendered**: a static shell (the chrome + above-the-fold Hero) is delivered instantly, while a handful of sections that branch on viewport stream in per-request behind `<Suspense>`. Almost no application JavaScript ships - only a small set of **client islands** hydrate. All visible copy comes from **typed, build-validated `content/*.ts` modules**. A few `/api/*` handlers form a thin **BFF** over Upstash Redis, Resend, the Vercel AI Gateway, and Google PageSpeed Insights. Rate limits fail open; contact storage fails closed. Stored messages remain queued when delivery fails.
 
 ## Why this architecture exists
 
@@ -31,7 +31,7 @@ flowchart TB
     subgraph bff["BFF / Server (lib + app/api)"]
         api["app/api/**<br/>route handlers"]
         handler["lib/server/route.ts<br/>defineHandler envelope"]
-        libcore["lib/rate-limit · lib/env · lib/ask/** · lib/ask-log · lib/lighthouse-scores"]
+        libcore["lib/rate-limit · lib/env · lib/ask/** · lib/ask-log · lib/lighthouse-scores · lib/contact-delivery · lib/contact-outbox"]
     end
     subgraph ext["External services"]
         redis[("Upstash Redis")]
@@ -97,10 +97,16 @@ flowchart TD
     sectionN --> content["content/* (typed data)"]
     sectionN --> dsprim["design-system/* primitives"]
     sectionN -. hosts .-> island["client islands<br/>InteractiveShell · ContactForm · DawMixer*"]
-    content --> schemas["content/schemas.ts (Zod)"]
+    content --> schemas["Zod schemas: content/schemas.ts + contact.ts"]
     island -->|HTTP| apiask["app/api/ask"]
     island -->|HTTP| apicontact["app/api/contact"]
     apicontact --> defh["lib/server/route.ts defineHandler"]
+    apicontact --> delivery["lib/contact-delivery"]
+    apicontact --> outbox["lib/contact-outbox"]
+    retry["app/api/contact-retry (daily cron)"] --> delivery
+    retry --> outbox
+    outbox --> redis
+    delivery --> resend["Resend"]
     apiask --> rl["lib/rate-limit"]
     apiask --> askmod["lib/ask/{model,system-prompt,injection,output-guard}"]
     defh --> rl
@@ -111,6 +117,8 @@ flowchart TD
 ```
 
 **No circular dependencies exist** in the application graph (verified on demand with the pinned `npx fallow@2.95.0`; the wrapper skill was removed 2026-07-27). The clean direction is: `app → components → {content, design-system}` and `app/api → lib`, with `content` and `design-system` as terminal leaves.
+
+Contact submission persists a 90-day KV audit record before calling the shared delivery function. Only Resend acceptance returns 200. Provider failure or timeout returns `202 queued` after adding the id and retry counter to Redis. `ContactForm` distinguishes queued from delivered and reads structured error messages. A `CRON_SECRET` bearer protects the daily 04:00 UTC retry, limited to 3 retries within 7 days. Removing an outbox entry leaves the audit record intact; contact logs contain only request and message ids.
 
 ## Build system
 

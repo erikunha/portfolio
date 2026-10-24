@@ -1,6 +1,7 @@
 # DECISIONS
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
+- **2026-10-24** · Contact submission returns 200 only when Resend accepts delivery. Provider errors and 10s timeouts return `202 queued` after durable outbox persistence, with a LinkedIn alternative. A daily 04:00 UTC cron retries at most 3 times within 7 days, preserving the 90-day KV audit record after success, expiry or exhaustion. Hobby cron frequency requires a daily schedule. Both routes share send configuration and a message-id idempotency key; logs retain only request and message ids. _Reversible: revert the delivery routes, form states and cron entry together; existing KV audit messages remain available._
 
 ## 2026-10-24: MCP subscriptions are disabled
 

@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
+import { linksContent } from '@/content/links';
 import { ContactForm } from './ContactForm';
 
 describe('ContactForm accessibility', () => {
@@ -121,6 +122,74 @@ describe('contact form error region', () => {
     expect(alert).not.toBeNull();
     expect(alert?.textContent).toContain('boom');
   });
+});
+
+describe('contact form delivery states', () => {
+  let mounted: MountedClient;
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.unstubAllGlobals();
+  });
+
+  async function submitResponse(body: unknown, status: number) {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json(body, { status })),
+    );
+    mounted = await mountClient(createElement(ContactForm));
+    const form = mounted.container.querySelector('form');
+    await act(async () => {
+      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    await flushMicrotasks();
+    return mounted.container;
+  }
+
+  it('keeps the delivered success copy and test id', async () => {
+    const container = await submitResponse({ ok: true, requestId: 'request-id' }, 200);
+    const success = container.querySelector('[data-testid="contact-success"]');
+    expect(success?.getAttribute('role')).toBe('status');
+    expect(success?.textContent).toContain('EXECUTE_SEND :: SUCCESS');
+    expect(success?.textContent).toContain('handshake initiated · expect reply within 48h');
+  });
+
+  it('announces queued without success and offers the canonical LinkedIn link', async () => {
+    const container = await submitResponse(
+      { ok: false, requestId: 'request-id', error: { code: 'queued', message: 'Saved for retry' } },
+      202,
+    );
+    expect(container.querySelector('[data-testid="contact-success"]')).toBeNull();
+    const queued = container.querySelector('[data-testid="contact-queued"]');
+    expect(queued?.getAttribute('role')).toBe('status');
+    expect(queued?.textContent).toContain('saved, not delivered yet');
+    expect(queued?.textContent).toContain('delivery is retried automatically');
+    expect(queued?.textContent).toContain('for a faster reply use LinkedIn');
+    const link = queued?.querySelector('a');
+    expect(link?.textContent).toBe('LinkedIn');
+    expect(link?.getAttribute('href')).toBe(
+      linksContent.pills.find((pill) => pill.id === 'linkedin')?.href,
+    );
+    expect(container.querySelector('form')).toBeNull();
+  });
+
+  it.each([
+    [400, 'validation_failed', 'request validation failed'],
+    [429, 'rate_limited', 'too many requests, try again in 10 minutes'],
+    [502, 'storage_unavailable', 'storage unavailable, try again'],
+  ])(
+    'displays the server message from an object error envelope (%s)',
+    async (status, code, message) => {
+      const container = await submitResponse(
+        { ok: false, requestId: 'request-id', error: { code, message } },
+        status,
+      );
+      const alert = container.querySelector('[role="alert"]');
+      expect(alert?.textContent).toContain(message);
+      expect(alert?.textContent).not.toContain('[object Object]');
+      expect(container.querySelector('form')).not.toBeNull();
+    },
+  );
 });
 
 describe('focus rings', () => {
