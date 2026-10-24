@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Suspense } from 'react';
-import { careerCommand, gitLog } from '@/content/git-log';
+import { careerCommand, careerScrollLabel, gitLog } from '@/content/git-log';
 import type { GitCommit } from '@/content/schemas';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { getIsMobile } from '@/lib/ua';
@@ -137,10 +137,12 @@ function renderCommit(c: GitCommit, key: string): ReactNode {
 
 function GitLogDesktop() {
   return (
-    <section
+    // biome-ignore lint/a11y/useSemanticElements: fieldset groups form controls; this is a scroll container, and ARIA forbids naming a role-less div
+    <div
       className="font-mono text-sm max-md:text-[10px] leading-[1.55] overflow-x-auto focus-visible:outline-1 focus-visible:outline-primary-500"
       data-testid="career-desktop"
-      aria-label={SECTION_LABELS['sec-git-log']}
+      role="group"
+      aria-label={careerScrollLabel}
       // biome-ignore lint/a11y/noNoninteractiveTabindex: a horizontally scrollable region must be keyboard-focusable so arrow keys can scroll it (WCAG 2.1.1, axe scrollable-region-focusable)
       tabIndex={0}
     >
@@ -156,7 +158,7 @@ function GitLogDesktop() {
         <span style={{ color: 'var(--color-primary-500)' }}>q</span>
         {' to return to portfolio'}
       </div>
-    </section>
+    </div>
   );
 }
 
