@@ -136,7 +136,13 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
 
   it('grants the reviewer exactly the read-only tool set', () => {
     expect([...allowedTools].sort()).toEqual(
-      ['Glob', 'Grep', 'Read', 'Task', 'mcp__github_inline_comment__create_inline_comment'].sort(),
+      [
+        'Glob',
+        'Grep',
+        'Read',
+        'Task(review-worker)',
+        'mcp__github_inline_comment__create_inline_comment',
+      ].sort(),
     );
   });
 
@@ -362,13 +368,9 @@ esac
     expect(result.read('diff.patch')).toBe('+line\n');
   });
 
-  it('marks the diff UNAVAILABLE when gh pr diff fails, without aborting the job', () => {
+  it('stops the job when gh pr diff fails, since a review with no diff could only approve blind', () => {
     const result = run({ checksExit: 0, prDiffFails: true });
-    expect(result.status).toBe(0);
-    expect(result.files()).not.toContain('diff.patch');
-    expect(result.files()).not.toContain('files.txt');
-    expect(result.read('diff-unavailable.txt')).toMatch(/^UNAVAILABLE: gh pr diff failed/);
-    expect(result.read('diff-unavailable.txt')).toContain('HTTP 504');
-    expect(result.read('pr.json')).toContain('abc123');
+    expect(result.status).not.toBe(0);
+    expect(result.files()).not.toContain('checks.txt');
   });
 });
