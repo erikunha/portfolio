@@ -13,8 +13,12 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 const semgrepInstalled = spawnSync('semgrep', ['--version']).status === 0;
 const REAL_SCAN_TIMEOUT_MS = 60_000;
+const SPAWN_GRACE_MS = 5_000;
 const run = (args: string[]) =>
-  spawnSync('node', ['scripts/run-semgrep.mjs', ...args], { encoding: 'utf8' });
+  spawnSync('node', ['scripts/run-semgrep.mjs', ...args], {
+    encoding: 'utf8',
+    timeout: REAL_SCAN_TIMEOUT_MS - SPAWN_GRACE_MS,
+  });
 
 const tmpDirs: string[] = [];
 function fixtureTempDir(...fixtures: string[]): string {

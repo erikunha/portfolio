@@ -81,7 +81,7 @@ jobs:
       contains(github.event.comment.body, '/claude-review') &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       # Two checkouts, in this order, per the action's own docs/security.md:
       # "Do not check out an untrusted ref into the workspace root before this
@@ -105,6 +105,7 @@ jobs:
           # why the earlier revision could leave it off; that is not true here.
           ref: ${{ github.event.pull_request.base.sha || github.sha }}
           fetch-depth: 1
+          persist-credentials: false
 
       # The PR's files, in a SUBDIRECTORY, reachable only through --add-dir below.
       # `refs/pull/N/head` resolves on both the pull_request and the
@@ -114,6 +115,7 @@ jobs:
           ref: refs/pull/${{ github.event.pull_request.number || github.event.issue.number }}/head
           path: pr-head
           fetch-depth: 1
+          persist-credentials: false
 
       # `pull_request_target` sets the root to the PR's BASE, which is NOT the
       # default branch on a sub-PR into an integration branch — a flow CLAUDE.md
@@ -135,6 +137,109 @@ jobs:
             echo "prompt materialised at only ${bytes} bytes — expected the full reviewer prompt" >&2
             exit 1
           fi
+
+      # The review orchestrator's procedure is read from the DEFAULT branch for the same
+      # reason as the prompt above: on a sub-PR the base is an integration branch whose
+      # copy that branch authored. It lands outside pr-head, so the strip never sees it.
+      - name: Materialise the trusted review orchestrator from the default branch
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/review-skill
+          if ! git cat-file -e FETCH_HEAD:.claude/skills/pr-review-orchestrator/SKILL.md 2>/dev/null; then
+            echo "::notice::the default branch has no review orchestrator yet; the reviewer runs without it"
+            exit 0
+          fi
+          git archive FETCH_HEAD:.claude/skills/pr-review-orchestrator | tar -x -C /tmp/review-skill
+          test -s /tmp/review-skill/SKILL.md
+          test -s /tmp/review-skill/references/ci.md
+
+      # PR metadata and gate results are snapshotted here with the workflow token, so
+      # the reviewer holds no `gh` command that takes `--jq`: a jq filter can read the
+      # process environment, and the reviewer's environment holds its OAuth token. No
+      # PR code runs in this job, so dependency source is not installed; ci.md says
+      # what that leaves to the local orchestrator.
+      - name: Snapshot PR metadata and CI gate results for the reviewer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+          OUT_DIR: /tmp/review-evidence
+        run: |
+          set -euo pipefail
+
+          : "${REPO:?REPO is required}"
+          : "${PR:?PR is required}"
+          : "${OUT_DIR:?OUT_DIR is required}"
+          MAX_LOG_BYTES="${MAX_LOG_BYTES:-60000}"
+          GH_PR_CHECKS_FAILED=1
+          GH_PR_CHECKS_PENDING=8
+
+          mkdir -p "$OUT_DIR"
+
+          head_sha=""
+          if gh pr view "$PR" --repo "$REPO" --json number,headRefOid,baseRefName,headRefName,title \
+            > "$OUT_DIR/pr.json" 2> "$OUT_DIR/pr.err"; then
+            head_sha=$(jq -r '.headRefOid // empty' "$OUT_DIR/pr.json" 2> /dev/null || true)
+            if [ -z "$head_sha" ]; then
+              echo "UNAVAILABLE: pr.json has no readable headRefOid." > "$OUT_DIR/pr-unavailable.txt"
+            fi
+          else
+            {
+              echo "UNAVAILABLE: gh pr view failed; PR metadata and the head SHA could not be read."
+              cat "$OUT_DIR/pr.err"
+            } > "$OUT_DIR/pr-unavailable.txt"
+            rm -f "$OUT_DIR/pr.json"
+          fi
+          rm -f "$OUT_DIR/pr.err"
+
+          if ! { gh pr diff "$PR" --repo "$REPO" > "$OUT_DIR/diff.patch" \
+            && gh pr diff "$PR" --repo "$REPO" --name-only > "$OUT_DIR/files.txt"; } 2> "$OUT_DIR/diff.err"; then
+            echo "::error::gh pr diff failed; there is nothing to review, so the job stops instead of approving blind."
+            cat "$OUT_DIR/diff.err" >&2
+            exit 1
+          fi
+          rm -f "$OUT_DIR/diff.err"
+
+          checks_status=0
+          gh pr checks "$PR" --repo "$REPO" --json name,state,bucket,link \
+            > "$OUT_DIR/checks.json" 2> "$OUT_DIR/checks.err" || checks_status=$?
+          checks_valid=false
+          case "$checks_status" in
+            0 | "$GH_PR_CHECKS_FAILED" | "$GH_PR_CHECKS_PENDING")
+              if jq -e 'type == "array" and length > 0' "$OUT_DIR/checks.json" > /dev/null 2>&1; then
+                checks_valid=true
+              fi
+              ;;
+          esac
+          if [ "$checks_valid" = true ]; then
+            jq -r '.[] | [.bucket, .state, .name, .link] | @tsv' "$OUT_DIR/checks.json" > "$OUT_DIR/checks.txt"
+          else
+            {
+              echo "UNAVAILABLE: gh pr checks exited $checks_status without a readable check list."
+              cat "$OUT_DIR/checks.err"
+            } > "$OUT_DIR/checks.txt"
+          fi
+          rm -f "$OUT_DIR/checks.err" "$OUT_DIR/checks.json"
+
+          run_ids=""
+          if [ -z "$head_sha" ]; then
+            echo "UNAVAILABLE: no head SHA, so failed-run logs were not looked up." \
+              > "$OUT_DIR/failed-runs-unavailable.txt"
+          elif ! run_ids=$(gh run list --repo "$REPO" --commit "$head_sha" --status failure --limit 100 \
+            --json databaseId --jq '.[].databaseId' 2> "$OUT_DIR/runs.err"); then
+            {
+              echo "UNAVAILABLE: gh run list failed; failed-run logs could not be read."
+              cat "$OUT_DIR/runs.err"
+            } > "$OUT_DIR/failed-runs-unavailable.txt"
+            run_ids=""
+          fi
+          rm -f "$OUT_DIR/runs.err"
+          for run_id in $run_ids; do
+            full="$OUT_DIR/.failed-run-${run_id}.full"
+            gh run view "$run_id" --repo "$REPO" --log-failed > "$full" 2>&1 || true
+            head -c "$MAX_LOG_BYTES" "$full" > "$OUT_DIR/failed-run-${run_id}.log"
+            rm -f "$full"
+          done
 
       # `--add-dir` mounts pr-head as project scope, so an instruction-shaped file
       # the PR authored would arrive on the INSTRUCTION channel rather than the
@@ -184,10 +289,13 @@ jobs:
           # nothing, and returns before any review runs. Either one alone exits
           # green having posted nothing.
           track_progress: ${{ github.event_name == 'pull_request' }}
-          prompt: "${{ github.event_name == 'pull_request' && format('REPO {0} — PR NUMBER {1} — You are performing a CODE REVIEW, not a task. Do not narrate progress and do not implement changes. Produce exactly two artifacts: one create_inline_comment tool call per finding, and then one overview comment ending in exactly one verdict line. Read the diff with gh pr diff. A run that posts no verdict line has failed.', github.repository, github.event.pull_request.number) || '' }}"
+          prompt: "${{ github.event_name == 'pull_request' && format('REPO {0} — PR NUMBER {1} — You are performing a CODE REVIEW, not a task. Do not narrate progress and do not implement changes. Produce exactly two artifacts: one create_inline_comment tool call per finding, and then one overview comment ending in exactly one verdict line. Read the diff from /tmp/review-evidence/diff.patch and the changed paths from /tmp/review-evidence/files.txt. A run that posts no verdict line has failed.', github.repository, github.event.pull_request.number) || '' }}"
           claude_args: >-
-            --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*)"
+            --allowedTools "Read,Grep,Glob,Task(review-worker),mcp__github_inline_comment__create_inline_comment"
+            --disallowedTools "Edit,MultiEdit,Write,NotebookEdit,WebFetch,WebSearch,Task(general-purpose),Task(claude),Task(Explore),Task(Plan),Task(statusline-setup),Task(claude-code-guide),Bash,Bash(git add:*),Bash(git commit:*),Bash(git rm:*),Bash(/home/runner/work/_actions/anthropics/claude-code-action/be7b93b1907a4abad570368f3c74b6fe3807510b/scripts/git-push.sh:*),mcp__github_file_ops__commit_files,mcp__github_file_ops__delete_files,Read(**/.git/**),Read(//proc/**),Read(~/.ssh/**),Read(~/.gitconfig),Read(~/.git-credentials),Read(~/.config/**),Read(~/.npmrc),Read(~/.docker/**),Read(~/.claude/**),Read(//home/runner/work/_temp/**)"
             --add-dir pr-head
+            --add-dir /tmp/review-skill
+            --add-dir /tmp/review-evidence
             --append-system-prompt-file /tmp/claude-review-prompt.md
 
       # A review that posts nothing still exits 0, so the check renders green and
