@@ -99,6 +99,18 @@ describe('AiMetricsSection — lastRunLabel NaN guard branch', () => {
   });
 });
 
+function MatrixRainStub({ fontSize, speed }: { fontSize: number; speed: number }) {
+  return createElement('div', { 'data-font-size': fontSize, 'data-speed': speed });
+}
+
+function NullStub() {
+  return null;
+}
+
+function PassThroughStub({ children }: { children: React.ReactNode }) {
+  return children;
+}
+
 describe('AppShell — isMobile=true prop branches', () => {
   let mounted: MountedClient;
 
@@ -108,17 +120,16 @@ describe('AppShell — isMobile=true prop branches', () => {
       useBreakpoint: () => ({ isMobile: true }),
     }));
     vi.doMock('@/components/responsive/MatrixRain', () => ({
-      MatrixRain: ({ fontSize, speed }: { fontSize: number; speed: number }) =>
-        createElement('div', { 'data-font-size': fontSize, 'data-speed': speed }),
+      MatrixRain: MatrixRainStub,
     }));
-    vi.doMock('@/components/responsive/CRTOverlay', () => ({ CRTOverlay: () => null }));
-    vi.doMock('@/components/responsive/DesktopTopbar', () => ({ DesktopTopbar: () => null }));
-    vi.doMock('@/components/responsive/StatusBar', () => ({ StatusBar: () => null }));
-    vi.doMock('@/components/responsive/MobileTitleBar', () => ({ MobileTitleBar: () => null }));
-    vi.doMock('@/components/responsive/Dock', () => ({ Dock: () => null }));
-    vi.doMock('@/components/client/ToTopButton', () => ({ ToTopButton: () => null }));
+    vi.doMock('@/components/responsive/CRTOverlay', () => ({ CRTOverlay: NullStub }));
+    vi.doMock('@/components/responsive/DesktopTopbar', () => ({ DesktopTopbar: NullStub }));
+    vi.doMock('@/components/responsive/StatusBar', () => ({ StatusBar: NullStub }));
+    vi.doMock('@/components/responsive/MobileTitleBar', () => ({ MobileTitleBar: NullStub }));
+    vi.doMock('@/components/responsive/Dock', () => ({ Dock: NullStub }));
+    vi.doMock('@/components/client/ToTopButton', () => ({ ToTopButton: NullStub }));
     vi.doMock('@/components/ErrorBoundary', () => ({
-      ErrorBoundary: ({ children }: { children: React.ReactNode }) => children,
+      ErrorBoundary: PassThroughStub,
     }));
   });
 

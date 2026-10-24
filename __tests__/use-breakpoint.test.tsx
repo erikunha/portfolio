@@ -20,6 +20,22 @@ function stubMatchMedia(matches: boolean) {
   return mql;
 }
 
+let captured: { isMobile: boolean } | undefined;
+
+function resetCapture() {
+  captured = undefined;
+}
+
+function Consumer() {
+  captured = useBreakpoint();
+  return createElement('span', null, null);
+}
+
+function ThrowingConsumer() {
+  const ctx = useBreakpoint();
+  return createElement('span', null, String(ctx.isMobile));
+}
+
 describe('BreakpointProvider', () => {
   beforeEach(() => {
     stubMatchMedia(false);
@@ -43,12 +59,7 @@ describe('BreakpointProvider', () => {
   });
 
   it('provides isMobile=false when initialIsMobile is false', async () => {
-    let captured: { isMobile: boolean } | undefined;
-
-    function Consumer() {
-      captured = useBreakpoint();
-      return createElement('span', null, null);
-    }
+    resetCapture();
 
     type BP = ComponentType<{ initialIsMobile: boolean }>;
     const { unmount } = await mountClient(
@@ -62,12 +73,7 @@ describe('BreakpointProvider', () => {
 
   it('provides isMobile=true when initialIsMobile is true and matchMedia reports mobile', async () => {
     stubMatchMedia(true);
-    let captured: { isMobile: boolean } | undefined;
-
-    function Consumer() {
-      captured = useBreakpoint();
-      return createElement('span', null, null);
-    }
+    resetCapture();
 
     type BP = ComponentType<{ initialIsMobile: boolean }>;
     const { unmount } = await mountClient(
@@ -90,11 +96,6 @@ describe('useBreakpoint — outside provider', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     let thrownMessage = '';
-
-    function ThrowingConsumer() {
-      const ctx = useBreakpoint();
-      return createElement('span', null, String(ctx.isMobile));
-    }
 
     try {
       await mountClient(createElement(ThrowingConsumer));

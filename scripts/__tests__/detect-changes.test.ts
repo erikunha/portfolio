@@ -32,7 +32,7 @@ describe('canonicalJSON', () => {
 import { aiMajor, computeCategories } from '../detect-changes.mjs';
 
 describe('computeCategories', () => {
-  const S = (
+  const signals = (
     o: Partial<
       Record<
         'aiChanged' | 'appChanged' | 'uiChanged' | 'pkgRenderChanged' | 'aiMajorChanged',
@@ -49,13 +49,25 @@ describe('computeCategories', () => {
   });
 
   it('maps ai/app straight through and ui = uiChanged || pkgRenderChanged', () => {
-    expect(computeCategories(S({ aiChanged: true }))).toEqual({ ai: true, app: false, ui: false });
-    expect(computeCategories(S({ appChanged: true }))).toEqual({ ai: false, app: true, ui: false });
-    expect(computeCategories(S({ uiChanged: true }))).toEqual({ ai: false, app: false, ui: true });
+    expect(computeCategories(signals({ aiChanged: true }))).toEqual({
+      ai: true,
+      app: false,
+      ui: false,
+    });
+    expect(computeCategories(signals({ appChanged: true }))).toEqual({
+      ai: false,
+      app: true,
+      ui: false,
+    });
+    expect(computeCategories(signals({ uiChanged: true }))).toEqual({
+      ai: false,
+      app: false,
+      ui: true,
+    });
   });
 
   it('re-arms ui from pkgRenderChanged alone (browserslist/pnpm bump, no other ui diff)', () => {
-    expect(computeCategories(S({ appChanged: true, pkgRenderChanged: true }))).toEqual({
+    expect(computeCategories(signals({ appChanged: true, pkgRenderChanged: true }))).toEqual({
       ai: false,
       app: true,
       ui: true,
@@ -63,7 +75,7 @@ describe('computeCategories', () => {
   });
 
   it('re-arms ai from aiMajorChanged alone (a deps-only `ai` MAJOR bump — the #170 incident class)', () => {
-    expect(computeCategories(S({ appChanged: true, aiMajorChanged: true }))).toEqual({
+    expect(computeCategories(signals({ appChanged: true, aiMajorChanged: true }))).toEqual({
       ai: true,
       app: true,
       ui: false,
@@ -71,7 +83,7 @@ describe('computeCategories', () => {
   });
 
   it('does NOT re-arm ai for a minor/patch `ai` bump (aiMajorChanged false — credits preserved)', () => {
-    expect(computeCategories(S({ appChanged: true, pkgRenderChanged: false }))).toEqual({
+    expect(computeCategories(signals({ appChanged: true, pkgRenderChanged: false }))).toEqual({
       ai: false,
       app: true,
       ui: false,
@@ -79,7 +91,7 @@ describe('computeCategories', () => {
   });
 
   it('all-false yields all-false (docs-only PR)', () => {
-    expect(computeCategories(S({}))).toEqual({ ai: false, app: false, ui: false });
+    expect(computeCategories(signals({}))).toEqual({ ai: false, app: false, ui: false });
   });
 });
 
