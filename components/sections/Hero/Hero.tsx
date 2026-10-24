@@ -1,6 +1,6 @@
 import { HeroStats } from '@/components/HeroStats';
-import { heroContent } from '@/content/hero';
-import { profile, profileLanguageLine, profileLocation } from '@/content/profile';
+import { heroAuthorization, heroContent, heroTagline } from '@/content/hero';
+import { profile, profileLanguageLine } from '@/content/profile';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
 
@@ -20,17 +20,25 @@ export function Hero() {
         <h1 id="hero-name" data-testid="hero-name">
           {profile.displayName}
         </h1>
-        <p className="hero-title">{profile.title}</p>
-        <p className="hero-technologies">{profile.technologyLine}</p>
+        <p className="hero-title">{heroTagline}</p>
         <p className="hero-meta">
-          <span>{heroContent.locationLabel}</span> {profileLocation}
+          <span>
+            {heroContent.locationLabel} <strong className="hero-country">{profile.country}</strong>
+          </span>
+          <span>
+            {profile.timezone} · {profile.availability}
+          </span>
+          <span>
+            {heroContent.employerLabel} <strong>{profile.currentEmployer.name}</strong>
+          </span>
+          <span>{profile.currentEmployer.context}</span>
+          <span>
+            {heroContent.languagesLabel} {profileLanguageLine}
+          </span>
         </p>
-        <p className="hero-meta">
-          <span>{heroContent.employerLabel}</span> <strong>{profile.currentEmployer.name}</strong>{' '}
-          {profile.currentEmployer.context}
-        </p>
-        <p className="hero-meta">
-          <span>{heroContent.languagesLabel}</span> {profileLanguageLine}
+        <p className="hero-relocation">
+          <span className="badge-dot" aria-hidden="true" />
+          {heroAuthorization}
         </p>
         <HeroStats />
         <div className="hero-actions" data-testid="hero-ctas">
@@ -44,7 +52,11 @@ export function Hero() {
             {heroContent.hire.label}
           </a>
           {profile.actions.map((action) => (
-            <a key={action.href} href={action.href}>
+            <a
+              key={action.href}
+              href={action.href}
+              className={action.mobileOnly ? 'hero-action-mobile' : undefined}
+            >
               {action.label}
             </a>
           ))}

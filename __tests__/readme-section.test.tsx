@@ -32,7 +32,9 @@ describe('ReadmeSection', () => {
     const container = await render();
     const items = [...container.querySelectorAll('li')].map((li) => li.textContent);
     expect(container.textContent).toContain(readmeCopy.desktopStatusH2);
-    expect(container.textContent).toContain(readmeCopy.currentStatus);
+    expect(container.textContent).toContain(
+      `${readmeCopy.currentStatus.prefix}[${readmeCopy.currentStatus.role}]${readmeCopy.currentStatus.suffix}`,
+    );
     for (const detail of readmeCopy.statusDetails) expect(items).toContain(detail);
   });
 

@@ -73,7 +73,12 @@ export function Module({
             </span>
           ) : null}
           {panel ? (
-            header
+            <>
+              <span className="about-panel-marker" aria-hidden="true">
+                ▌
+              </span>
+              {header}
+            </>
           ) : (
             <>
               <span className="hidden md:inline">{header}</span>

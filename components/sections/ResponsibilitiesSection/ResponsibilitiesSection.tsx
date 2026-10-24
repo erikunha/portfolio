@@ -21,16 +21,14 @@ export function ResponsibilitiesSection({
       panel={panel}
     >
       <p className="about-command">
-        {readmeCopy.responsibilitiesCommand}
-        <br />
-        {readmeCopy.responsibilitiesNote}
+        {readmeCopy.responsibilitiesCommand} {readmeCopy.responsibilitiesNote}
       </p>
       <ul className="about-responsibilities">
         {responsibilities.map((row) => (
           <li key={row.name}>
             <span className="responsibility-permissions">{row.perms}</span>
-            <span>{row.user}</span>
-            <span>{row.group}</span>
+            <span className="responsibility-owner">{row.user}</span>
+            <span className="responsibility-group">{row.group}</span>
             <span
               className="responsibility-name"
               data-file

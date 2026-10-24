@@ -66,8 +66,6 @@ describe('identity is consistent across every gated surface', () => {
       ['lib/hiring-profile.ts', JSON.stringify(HIRING_PROFILE)],
       ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
       ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
-      ['content/readme.ts', JSON.stringify(readmeCopy)],
-      ['content/now.ts', JSON.stringify(nowRows)],
       ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
     ];
     const drifted = surfaces.filter(([, text]) => !text.includes(CANONICAL_TITLE)).map(([s]) => s);
@@ -115,6 +113,14 @@ describe('identity is consistent across every gated surface', () => {
 });
 
 describe('terminal redesign canonical facts', () => {
+  it('keeps About focused on experience and current work without authorization enums', () => {
+    expect(readmeCopy.desktopIntro).toMatch(/^8\+ years building production web software/);
+    expect(nowRows[0]?.v).toBe(
+      'building the investor workflow frontend at Raylu · private-markets fintech',
+    );
+    expect(JSON.stringify([readmeCopy, nowRows])).not.toContain('NEEDS_SPONSORSHIP');
+  });
+
   it('serves the same four authorization statuses without abbreviating mobile statuses', () => {
     const expected = {
       Brazil: 'CITIZEN',
@@ -139,8 +145,6 @@ describe('terminal redesign canonical facts', () => {
       expect(JSON.parse(layoutMetadataText).other['work-authorization']).toContain(
         `${row.jurisdiction}: ${row.status}`,
       );
-      expect(JSON.stringify(readmeCopy)).toContain(`${row.jurisdiction}: ${row.status}`);
-      expect(JSON.stringify(nowRows)).toContain(`${row.jurisdiction}: ${row.status}`);
     }
     expect(visaRows[2]?.evidence).toBe(
       'lived and worked in Vancouver, 2023-2025 · co-op diploma, CICCC',
@@ -154,8 +158,6 @@ describe('terminal redesign canonical facts', () => {
       llmsTxt,
       read('public/.well-known/agent.json'),
       JSON.stringify(personSchema),
-      JSON.stringify(readmeCopy),
-      JSON.stringify(nowRows),
       layoutMetadataText,
     ]) {
       expect(text).toContain('Brazil');

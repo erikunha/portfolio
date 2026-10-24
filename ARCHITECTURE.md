@@ -30,7 +30,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 - Static composition of ~18 content sections (hero, README, projects, git log, NPM, SYS_HEALTH, PERF_RECEIPTS, visa, community, HOTTEST_TAKES, RESPONSIBILITIES, guitar_rig, unknowns, contact, MAN ERIK, INTERACTIVE_SHELL, footer)
 - Hero: Matrix dialog loop + boot sequence (typewriter)
-- Mount-driven role typewriter (RoleTyper); IntersectionObserver gates MatrixRain + lazy-mounts the footer (no scroll-reveal typewriter exists)
+- Static highlighted Senior status in About; IntersectionObserver gates MatrixRain and lazy-mounts the footer
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
 - Contact form: durable submission, explicit delivered or queued feedback, daily bounded retry
 - Live Lighthouse score (PSI API, cached daily)
@@ -135,7 +135,6 @@ Every section that doesn't depend on per-visitor state is RSC + SSG. Output is H
 | Matrix dialog loop + boot typewriter | infinite animation w/ `useRef` mutation              | ≤ 4KB                  |
 | INTERACTIVE_SHELL                    | input handling, streaming LLM response               | ≤ 30KB                 |
 | Contact form                         | client-side `fetch` to `/api/contact`, optimistic UI | ≤ 6KB                  |
-| Role typewriter (RoleTyper)          | mount-driven `textContent` mutation                  | ≤ 2KB                  |
 | MOTION indicator                     | `matchMedia` listener                                | ≤ 1KB                  |
 | **Total client JS budget**           |                                                      | **≤ 32.8KB app-owned** |
 
@@ -188,7 +187,6 @@ components/client/                    # co-located islands — ONLY interactivit
 components/client/InteractiveShell/   # streaming shell island
 components/client/ContactForm/        # contact form island
 components/client/HeroBootAnimation/  # boot typewriter island
-components/client/RoleTyper/          # reveal-on-scroll typer
 components/client/ToTopButton/        # motion-aware scroll-to-top
 components/AppShell/                   # window chrome / module-open dispatch
 components/ErrorBoundary/              # client error boundary
@@ -691,7 +689,7 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 
 3. **PR 3 — Static sections.** RSC composition of all 18 sections at final layout. Pure HTML output. Lighthouse pass at end of PR.
 
-4. **PR 4 — Client islands.** Matrix dialog loop, role typewriter (RoleTyper), MOTION indicator. Budget check.
+4. **PR 4 — Client islands.** Matrix dialog loop, Hero boot animation, COPY controls, MOTION indicator. Budget check.
 
 5. **PR 5 — Contact path.** Server Action + Resend + KV log + honeypot + rate limit + a11y form. Playwright happy + spam-trap.
 

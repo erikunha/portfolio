@@ -1,13 +1,26 @@
+import { z } from 'zod';
 import { profile } from './profile';
-import { HeroContentSchema } from './schemas';
+import { StatSchema } from './schemas';
 import { social } from './social';
-import { workAuthorization } from './visa';
 
 export const heroTagline = `${profile.title} · ${profile.technologyLine}`;
 export const heroCurrentEmployer = profile.currentEmployer.name;
 export const heroPlatformChip = profile.currentEmployer.context;
 
-export const heroAuthorization = `${workAuthorization.worldwide} · WORLDWIDE`;
+export const heroAuthorization = 'OPEN_TO_RELOCATION · WORLDWIDE';
+
+export const HeroContentSchema = z.object({
+  locationLabel: z.string().min(1),
+  employerLabel: z.string().min(1),
+  languagesLabel: z.string().min(1),
+  statsLabel: z.string().min(1),
+  stats: z.array(StatSchema).length(4),
+  hire: z.object({
+    label: z.string().min(1),
+    accessibleLabel: z.string().min(1),
+    href: z.string().url(),
+  }),
+});
 
 export const heroContent = HeroContentSchema.parse({
   locationLabel: 'LOC:',

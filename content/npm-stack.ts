@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { StackGroupSchema } from './schemas';
+import { NpmTileSchema } from './schemas';
+
+export const StackGroupSchema = z.object({
+  label: z.string().min(1),
+  items: z.array(NpmTileSchema).min(1),
+});
 
 export const stackGroups = z.array(StackGroupSchema).parse([
   {

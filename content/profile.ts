@@ -27,11 +27,12 @@ export const profile: Profile = ProfileSchema.parse({
   ],
   actions: [
     {
-      label: 'GitHub ↗',
+      label: 'GITHUB ↗',
       href: 'https://github.com/erikunha',
     },
     {
       label: 'VIEW_CV',
+      mobileOnly: true,
       href: '/cv',
     },
     {

@@ -1,7 +1,7 @@
 import { within } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { profile, profileLanguageLine, profileLocation } from '@/content/profile';
+import { profile, profileLanguageLine } from '@/content/profile';
 import { Hero } from './Hero';
 
 function renderHero() {
@@ -24,12 +24,25 @@ describe('Hero identity', () => {
     for (const text of [
       profile.title,
       profile.technologyLine,
-      profileLocation,
+      profile.country,
+      `${profile.timezone} · ${profile.availability}`,
       profile.currentEmployer.context,
       profileLanguageLine,
     ]) {
       expect(getByText(text, { exact: false })).toBeDefined();
     }
+  });
+
+  it('renders the Brazil location as a filled chip and the relocation status with a decorative dot', () => {
+    const { getByText } = renderHero();
+    expect(getByText(profile.country).className).toBe('hero-country');
+    const badge = getByText('OPEN_TO_RELOCATION · WORLDWIDE');
+    expect(badge.querySelector('[aria-hidden="true"]')).not.toBeNull();
+  });
+
+  it('renders the title and technology line in one paragraph', () => {
+    const { getByText } = renderHero();
+    expect(getByText(`${profile.title} · ${profile.technologyLine}`).tagName).toBe('P');
   });
 
   it('renders every canonical action with its destination without JavaScript', () => {

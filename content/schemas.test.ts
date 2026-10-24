@@ -129,8 +129,8 @@ const profileFixture = {
     { code: 'en', name: 'English', level: 'C1' },
   ],
   actions: [
-    { label: 'GitHub ↗', href: 'https://github.com/erikunha' },
-    { label: 'VIEW_CV', href: '/cv' },
+    { label: 'GITHUB ↗', href: 'https://github.com/erikunha' },
+    { label: 'VIEW_CV', href: '/cv', mobileOnly: true },
     { label: '30S_SUMMARY', href: '/summary' },
   ],
 };
@@ -261,8 +261,12 @@ describe('FooterContentSchema and shutdown content', () => {
 });
 
 describe('About content schemas', () => {
+  it('preserves retry source through syntax tokenization', async () => {
+    const { retryCode, retryTokens } = await import('./readme');
+    expect(retryTokens.map((token) => token.text).join('')).toBe(retryCode.source);
+  });
   it('rejects a stack group without a label or items', async () => {
-    const { StackGroupSchema } = await import('./schemas');
+    const { StackGroupSchema } = await import('./npm-stack');
     expect(StackGroupSchema.safeParse({ label: '', items: [] }).success).toBe(false);
     expect(
       StackGroupSchema.safeParse({ label: 'CORE', items: [{ label: 'REACT', path: 'M0 0' }] })
@@ -271,7 +275,7 @@ describe('About content schemas', () => {
   });
 
   it('rejects retry pseudocode without an accessible region name', async () => {
-    const { RetryCodeSchema } = await import('./schemas');
+    const { RetryCodeSchema } = await import('./readme');
     expect(
       RetryCodeSchema.safeParse({
         command: '$ cat retry.ts',

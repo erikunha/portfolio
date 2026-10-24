@@ -126,6 +126,9 @@ describe('Module panel', () => {
     );
     expect(container.querySelector('section#sec-nested h3')?.textContent).toContain('Panel title');
     expect(container.querySelector('h2')).toBeNull();
+    expect(container.querySelector('.about-panel-marker')?.getAttribute('aria-hidden')).toBe(
+      'true',
+    );
     expect(container.querySelector('section')?.getAttribute('aria-labelledby')).toBe(
       moduleHeaderId('sec-nested'),
     );
