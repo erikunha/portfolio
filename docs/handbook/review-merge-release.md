@@ -8,8 +8,8 @@
 flowchart TD
     write["code written"] --> c1["pre-commit: Biome"]
     c1 --> c2["commit-msg: commitlint (scope mandatory)"]
-    c2 --> battery["self-review the diff (pr-review-orchestrator skill)"]
-    battery --> p1["pre-push: no direct main"]
+    c2 --> selfreview["self-review the diff (pr-review-orchestrator skill)"]
+    selfreview --> p1["pre-push: no direct main"]
     p1 --> p2["pre-push: branch name <type>/<desc>"]
     p2 --> p3["pre-push: review stamp == HEAD"]
     p3 --> p4["pre-push: no unaudited API edit"]

@@ -15,8 +15,8 @@ flowchart TD
     branch --> tdd["TDD implementation (tests first)"]
     tdd --> commit["commit (scope blocks): type(scope): subject"]
     commit --> hooks["per-commit hooks: Biome + commitlint"]
-    hooks --> battery["self-review the diff"]
-    battery --> push["git push (pre-push gate chain)"]
+    hooks --> selfreview["self-review the diff"]
+    selfreview --> push["git push (pre-push gate chain)"]
     push --> readypr["pnpm ci:local + gates:runtime"]
     readypr --> pr["gh pr create (fill template)"]
     pr --> conv["Review convergence loop (rebase, push, resolve threads)"]
@@ -105,4 +105,4 @@ flowchart LR
 
 ## Why the lifecycle is shaped this way
 
-The thesis (`DECISIONS.md` 2026-05-23) is that the engineering _is_ the product. So the lifecycle optimizes for **demonstrable rigor and reversibility** over raw velocity: a spec survives an architect gate, a plan decomposes it, mechanical gates prevent regressions, the review battery is verified by transcript (not honor system), and every decision is undoable. For a solo developer this is unusually heavy, and that is deliberate: the gates are the safety net that lets one person plus AI agents move fast without shipping unreviewable volume.
+The thesis (`DECISIONS.md` 2026-05-23) is that the engineering _is_ the product. So the lifecycle optimizes for **demonstrable rigor and reversibility** over raw velocity: a spec survives an architect gate, a plan decomposes it, mechanical gates prevent regressions, claude-review gates every PR head (`pnpm claude-gate`), and every decision is undoable. For a solo developer this is unusually heavy, and that is deliberate: the gates are the safety net that lets one person plus AI agents move fast without shipping unreviewable volume.

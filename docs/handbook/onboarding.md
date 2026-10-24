@@ -26,7 +26,7 @@ Pick a small change (a content edit or a design-system variant per the [workflow
 ```mermaid
 flowchart LR
     edit["edit"] --> tdd["add/adjust a test"] --> commit["commit (scope!)"]
-    commit --> battery["self-review the diff"] --> push["push (passes pre-push)"]
+    commit --> selfreview["self-review the diff"] --> push["push (passes pre-push)"]
     push --> pr["ci:local + gates:runtime; gh pr create (fill template)"]
     pr --> conv["resolve every thread"] --> ready["pr:gate"] --> owner["owner merges"]
     owner --> adr["add an ADR"]
