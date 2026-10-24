@@ -4,7 +4,9 @@ async function loadFooter(page: import('@playwright/test').Page) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   await page.locator('footer').scrollIntoViewIfNeeded();
-  await expect(page.locator('footer').getByRole('link', { name: 'Reboot to top' })).toBeVisible();
+  await expect(
+    page.locator('footer').getByRole('link', { name: 'press R to reboot, back to top' }),
+  ).toBeVisible();
 }
 
 test.describe('Footer', () => {
@@ -45,7 +47,7 @@ test.describe('Footer', () => {
     await expect(commands).toHaveText('1');
     await page.locator('footer').scrollIntoViewIfNeeded();
     const navigationStart = await page.evaluate(() => performance.timeOrigin);
-    await page.getByRole('link', { name: 'Reboot to top' }).click();
+    await page.getByRole('link', { name: 'press R to reboot, back to top' }).click();
     await expect(page.locator('h1')).toBeFocused();
     await expect(page.locator('[data-testid="footer-reboot-status"]')).toHaveText(/rebooted/i);
     expect(await page.evaluate(() => performance.timeOrigin)).toBe(navigationStart);
@@ -64,7 +66,7 @@ test.describe('Footer', () => {
     await expect(input).toHaveValue('r');
     await expect(input).toBeFocused();
     await expect(status).toBeEmpty();
-    await page.getByRole('link', { name: 'Reboot to top' }).focus();
+    await page.getByRole('link', { name: 'press R to reboot, back to top' }).focus();
     for (const key of ['Shift+r', 'Alt+r', 'Control+Alt+r', 'Meta+Alt+r']) {
       await page.keyboard.press(key);
       await expect(status).toBeEmpty();

@@ -71,9 +71,18 @@ describe('Footer server output', () => {
       });
     }
     expect(host.querySelector('.footer-dmesg')?.getAttribute('aria-hidden')).toBe('true');
-    expect(host.querySelector('a[aria-label="Reboot to top"]')?.getAttribute('href')).toBe(
-      '#main-content',
-    );
+    expect(
+      host.querySelector('a[aria-label="press R to reboot, back to top"]')?.getAttribute('href'),
+    ).toBe('#main-content');
+  });
+
+  it('keeps the visible reboot text inside the accessible name (WCAG 2.5.3 label in name)', () => {
+    const host = render(<Footer />).container;
+    const link = host.querySelector('.footer-reboot');
+    const visible = (link?.textContent ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const name = (link?.getAttribute('aria-label') ?? '').toLowerCase();
+    expect(visible).toBe('press r to reboot');
+    expect(name.startsWith(visible)).toBe(true);
   });
 });
 
@@ -163,7 +172,7 @@ describe('Footer reboot controls', () => {
       { shiftKey: true },
       { repeat: true },
     ]) {
-      fireEvent.keyDown(mounted.getByRole('link', { name: 'Reboot to top' }), {
+      fireEvent.keyDown(mounted.getByRole('link', { name: 'press R to reboot, back to top' }), {
         key: 'r',
         ...guard,
       });
@@ -171,13 +180,13 @@ describe('Footer reboot controls', () => {
     }
     fireEvent(window, new CustomEvent('shell-cmd-run'));
     expect(mounted.container.querySelector('[data-sess="commands"]')?.textContent).toBe('1');
-    fireEvent.click(mounted.getByRole('link', { name: 'Reboot to top' }));
+    fireEvent.click(mounted.getByRole('link', { name: 'press R to reboot, back to top' }));
     expect(document.activeElement).toBe(heading);
     expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'instant' });
     expect(status.getAttribute('aria-live')).toBe('polite');
     expect(status.textContent).toContain('Session rebooted');
     expect(mounted.container.querySelector('[data-sess="commands"]')?.textContent).toBe('1');
-    const rebootLink = mounted.getByRole('link', { name: 'Reboot to top' });
+    const rebootLink = mounted.getByRole('link', { name: 'press R to reboot, back to top' });
     rebootLink.focus();
     fireEvent.keyDown(rebootLink, { key: 'r' });
     expect(document.activeElement).toBe(heading);
@@ -192,7 +201,7 @@ describe('Footer reboot controls', () => {
   it('lets the reboot link navigate natively when the page has no heading to focus', () => {
     vi.stubGlobal('IntersectionObserver', undefined);
     const mounted = render(<Footer />);
-    const rebootLink = mounted.getByRole('link', { name: 'Reboot to top' });
+    const rebootLink = mounted.getByRole('link', { name: 'press R to reboot, back to top' });
     const click = new MouseEvent('click', { bubbles: true, cancelable: true });
     rebootLink.dispatchEvent(click);
     expect(click.defaultPrevented).toBe(false);

@@ -93,7 +93,7 @@ export const footerContent = FooterContentSchema.parse({
   halted: '[SYSTEM HALTED]',
   haltedAt: 'HALTED AT',
   reboot: {
-    label: 'Reboot to top',
+    label: 'press R to reboot, back to top',
     before: 'press',
     key: 'R',
     after: 'to reboot',
