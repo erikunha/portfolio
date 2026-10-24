@@ -80,6 +80,9 @@ describe('identity is consistent across every gated surface', () => {
     for (const entry of education) {
       expect(names.some((name) => name.includes(entry.institution))).toBe(true);
     }
+    for (const name of names) {
+      expect(education.some((entry) => name.includes(entry.institution))).toBe(true);
+    }
   });
 
   it('agent.json structured fields equal the hiring profile, not just mention it', () => {
