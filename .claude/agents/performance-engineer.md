@@ -287,7 +287,7 @@ Integration with other agents:
 Always prioritize user experience, system efficiency, and cost optimization while achieving performance targets through systematic measurement and optimization.
 ## Portfolio project context
 - Performance budgets (non-negotiable CI gates): LCP < 1.8s, INP < 200ms, CLS < 0.05, Lighthouse Perf ≥ 95, A11y = 100, SEO = 100, Best Practices ≥ 95
-- Client JS budget: see `scripts/check-route-js.mjs` (`pnpm route-js-check`). App-owned JS is reported as total minus the measured 131.9KB framework floor, leaving 32.8KB of allowance under the 164.7KB total. `/` measures 161.8KB, leaving 2.9KB of margin. A bare hello-world Next 16.4.3 + React 19.3.1 app measures 131.9KB. `pnpm bundle-check` measures the global chunk sum and cannot detect per-route regressions.
+- Client JS budget: see `scripts/check-route-js.mjs` (`pnpm route-js-check`). App-owned JS is reported as total minus the measured 131.9KB framework floor, leaving 32.8KB of allowance under the 164.7KB total. `/` measures 162.2KB, leaving 2.5KB of margin. A bare hello-world Next 16.4.2 + React 19.2.8 app measures 131.9KB. `pnpm bundle-check` measures the global chunk sum and cannot detect per-route regressions.
 - Lighthouse CI config: `lighthouserc.yml` at project root — do not modify gate thresholds to pass; fix the underlying issue
 - Key client islands to watch: InteractiveShell, MatrixRain, CRTOverlay — these are the highest-JS cost paths
 - Matrix dialog loop must use `useRef.textContent` mutation, NOT per-keystroke `useState` (Vitest test enforces this)

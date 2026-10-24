@@ -312,7 +312,7 @@ Does the spec introduce any new `'use client'` surface or new client island?
 
 If yes: does the spec explicitly justify the addition against the per-route JS budget?
 
-Use `pnpm route-js-check` for per-route first-load JS. It reports app-owned JS against the measured 131.9KB framework floor, leaving **32.8KB** of allowance under the 164.7KB total. `/` measures 161.8KB, leaving 2.9KB of margin. A dependency bump can consume that margin without an app change. See `scripts/check-route-js.mjs` and `DECISIONS.md` 2026-10-23.
+Use `pnpm route-js-check` for per-route first-load JS. It reports app-owned JS against the measured 131.9KB framework floor, leaving **32.8KB** of allowance under the 164.7KB total. `/` measures 162.2KB, leaving 2.5KB of margin. A dependency bump can consume that margin without an app change. See `scripts/check-route-js.mjs` and `DECISIONS.md` 2026-10-24.
 
 Current islands: InteractiveShell, ContactForm, ToTopButton, MatrixRain, CRTOverlay, StatusBar, Dock, MobileTitleBar, AppShell.client, ErrorBoundary.client.
 
