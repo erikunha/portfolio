@@ -35,7 +35,7 @@ type Row = { section: number; status: string; target: string };
 function parseRows(markdown: string): Row[] {
   return markdown
     .split('\n')
-    .map((line) => line.match(/^\| (\d+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \|$/))
+    .map((line) => line.match(/^\|\s*(\d+)\s*\|([^|]+)\|([^|]+)\|([^|]+)\|$/))
     .filter((match): match is RegExpMatchArray => match !== null)
     .map((match) => ({
       section: Number(match[1]),
