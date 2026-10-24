@@ -109,4 +109,4 @@ The repo encodes distinct prompt patterns for distinct SDLC stages:
 | Review              | scoped-by-commit-type battery prompts             | `CLAUDE.md` working agreement                      |
 | Documentation       | reverse-engineer from code, route don't duplicate | this `/docs` set's provenance                      |
 
-The scoping rule for the battery is itself a prompt-engineering decision: a docs-only commit gets prompts that skip the test suite, because the stamp counts _dispatch_, not depth. This is how a heavy review process stays cheap on trivial changes.
+The review scopes itself to the change: a docs-only diff gets a review that skips the test suite. This keeps a heavy review process cheap on trivial changes.

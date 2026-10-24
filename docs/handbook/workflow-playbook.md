@@ -4,7 +4,7 @@
 
 ## How to read a runbook
 
-Every runbook lists: **entry point** (what starts it), **steps**, **AI participation**, and **output**. The same spine recurs: brainstorm -> spec/plan (for non-trivial work) -> implement (TDD) -> review battery -> gates -> PR -> merge.
+Every runbook lists: **entry point** (what starts it), **steps**, **AI participation**, and **output**. The same spine recurs: brainstorm -> spec/plan (for non-trivial work) -> implement (TDD) -> review (`pr-review-orchestrator`) -> gates -> PR -> merge.
 
 ---
 
@@ -32,7 +32,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   3. Write a failing test that reproduces it (TDD).
   4. Make the smallest change that passes. Pattern-scan the codebase for the same class of bug.
   5. Review the diff with the `pr-review-orchestrator` skill -> push -> PR. Cite the before/after measurement in the commit body.
-- **AI:** systematic-debugging, TDD, the battery.
+- **AI:** systematic-debugging, TDD, the `pr-review-orchestrator` review.
 - **Output:** a `fix(scope): ...` PR with a root-cause note.
 
 ## Architecture change
@@ -64,7 +64,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   2. Identify the bottleneck; form one hypothesis.
   3. Apply the smallest change; re-measure (cite before/after).
   4. `performance-engineer` reviews when a perf gate actually regressed; visual baselines regenerated if rendering changed.
-- **AI:** chrome-devtools MCP, performance-engineer (conditional, not a standing battery role).
+- **AI:** chrome-devtools MCP, performance-engineer (conditional, not a standing review role).
 - **Output:** a `perf(scope): ...` PR with before/after numbers. See [`/docs/08`](../08-performance-and-accessibility.md).
 
 ## Accessibility audit
@@ -101,7 +101,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Steps:**
   1. Reverse-engineer from code; do not duplicate existing canonical docs - route to them.
   2. Keep `CLAUDE.md` under 275 lines; new procedures go to a skill or a path-scoped rule, not into `CLAUDE.md`.
-  3. Doc-only commits get a scoped battery (agents skip the test suite).
+  3. Doc-only commits get a scoped review that skips the test suite.
 - **Output:** docs under `/docs`, with provenance noted.
 
 ## Writing an ADR

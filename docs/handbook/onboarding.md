@@ -38,7 +38,7 @@ You have now exercised every gate. After this you know the platform.
 
 1. **Scope every commit.** `type(scope): subject`, scope mandatory, scope is the feature area. commitlint will reject you otherwise.
 2. **Branch as `<type>/<description>`.** The pre-push hook enforces it; never commit on `main`.
-3. **Run the battery before pushing**, and clear/record the findings ledger. The stamp is transcript-verified; you cannot fake it.
+3. **Review your diff before opening the PR** with the `pr-review-orchestrator` skill. No stamp or ledger gates the push; claude-review reviews the PR once it is open.
 4. **A red gate is fixed by fixing the property**, never by disabling the gate.
 5. **Record architectural decisions** in `DECISIONS.md` with a reversibility note.
 
