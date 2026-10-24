@@ -31,7 +31,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   2. State the root cause in one sentence (the four-conditions rule: root cause, pattern scan, no deferred debt, measured property verified).
   3. Write a failing test that reproduces it (TDD).
   4. Make the smallest change that passes. Pattern-scan the codebase for the same class of bug.
-  5. Battery -> stamp -> push -> PR. Cite the before/after measurement in the commit body.
+  5. Review the diff with the `pr-review-orchestrator` skill -> push -> PR. Cite the before/after measurement in the commit body.
 - **AI:** systematic-debugging, TDD, the battery.
 - **Output:** a `fix(scope): ...` PR with a root-cause note.
 
@@ -53,7 +53,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   1. Confirm behavior is covered by tests first (refactor preserves behavior).
   2. `refactoring-specialist` agent if the change is large.
   3. Smallest reasonable change; never rewrite an implementation without explicit permission.
-  4. Battery (the `pr-review-orchestrator` skill checks for behavior drift) -> stamp -> push.
+  4. Review (the `pr-review-orchestrator` skill checks for behavior drift) -> push.
 - **Output:** a `refactor(scope): ...` PR (no behavior change).
 
 ## Performance optimization

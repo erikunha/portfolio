@@ -601,7 +601,7 @@ Vercel "Promote to Production" of previous deployment. <60 seconds. No manual co
 
 ### Claude harness configuration
 
-The repo ships a project-level Claude Code permissions baseline in `.claude/settings.json` (committed) — `defaultMode: "acceptEdits"` plus the minimum skill allowlist mandated by CLAUDE.md's dispatch matrix. Per-machine additions live in `.claude/settings.local.json` (gitignored). The effective merged allowlist is inspectable via:
+The repo ships a project-level Claude Code permissions baseline in `.claude/settings.json` (committed): the minimum skill allowlist, with no `defaultMode` (the user-level settings decide it), mandated by CLAUDE.md's dispatch matrix. Per-machine additions live in `.claude/settings.local.json` (gitignored). The effective merged allowlist is inspectable via:
 
 ```bash
 jq -s '(.[0].permissions.allow + (.[1].permissions.allow // [])) | unique' \
