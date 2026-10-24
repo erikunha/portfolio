@@ -13,6 +13,32 @@ describe('StatTile', () => {
     expect(children[0]?.tagName).toBe('DT');
     expect(children[1]?.tagName).toBe('DD');
   });
+  it('uses semantic secondary text without reducing label opacity', () => {
+    render(<StatTile value="99%" label="uptime" />);
+    const term = screen.getByRole('term');
+    expect(term.classList.contains('text-text-secondary')).toBe(true);
+    expect([...term.classList].some((name) => name.startsWith('opacity-'))).toBe(false);
+  });
+  it('passes consumer attributes to each independent description list', () => {
+    const { container } = render(
+      <>
+        <StatTile
+          value="99%"
+          label="uptime"
+          id="uptime"
+          className="consumer"
+          aria-label="Availability"
+        />
+        <StatTile value="1s" label="latency" id="latency" aria-label="Response time" />
+      </>,
+    );
+    const lists = container.querySelectorAll('dl');
+    expect(lists[0]?.id).toBe('uptime');
+    expect(lists[0]?.getAttribute('aria-label')).toBe('Availability');
+    expect(lists[0]?.classList.contains('consumer')).toBe(true);
+    expect(lists[1]?.id).toBe('latency');
+    expect(lists[1]?.getAttribute('aria-label')).toBe('Response time');
+  });
   it('applies compact font size override when variant=compact', () => {
     const { container } = render(<StatTile value="1" label="x" variant="compact" />);
     const dd = container.querySelector('dd');
