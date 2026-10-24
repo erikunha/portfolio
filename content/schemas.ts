@@ -256,6 +256,10 @@ export const DmesgLineSchema = z.object({
 });
 export type DmesgLine = z.infer<typeof DmesgLineSchema>;
 
+export const CopyFeedbackSchema = z.object({ label: z.string().min(1), message: z.string() });
+export type CopyFeedback = z.infer<typeof CopyFeedbackSchema>;
+export type CopyFeedbackState = 'idle' | 'success' | 'failure' | 'unavailable';
+
 const DawMixerPluginSchema = z.object({
   name: z.string().min(1),
   active: z.boolean(),

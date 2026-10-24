@@ -41,6 +41,14 @@ beforeAll(async () => {
 });
 
 describe('identity is consistent across every gated surface', () => {
+  it('agent.json structured fields equal the hiring profile, not just mention it', () => {
+    const manifest = JSON.parse(read('public/.well-known/agent.json')) as Record<string, unknown>;
+    expect(manifest.title).toBe(HIRING_PROFILE.title);
+    expect(manifest.title).toBe(CANONICAL_TITLE);
+    expect(manifest.availability).toBe(HIRING_PROFILE.availability);
+    expect(manifest.work_auth).toEqual(HIRING_PROFILE.work_auth);
+  });
+
   it('every title surface states the canonical title', () => {
     const surfaces: Array<[string, string]> = [
       ['content/hero.ts (heroTagline)', heroTagline],

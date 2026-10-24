@@ -1,19 +1,11 @@
 'use client';
 import { type ButtonHTMLAttributes, useEffect, useRef, useState } from 'react';
+import { copyFeedback as COPY_FEEDBACK } from '@/content/copy-button';
+import type { CopyFeedback } from '@/content/schemas';
 import { cn } from '@/lib/cn';
 
-const COPY_FEEDBACK = {
-  idle: { label: 'COPY', message: '' },
-  success: { label: 'COPIED', message: 'Copied to clipboard.' },
-  failure: { label: 'COPY FAILED', message: 'Copy failed. Select and copy the text manually.' },
-  unavailable: {
-    label: 'COPY UNAVAILABLE',
-    message: 'Clipboard unavailable. Select and copy the text manually.',
-  },
-} as const;
 const COPY_FEEDBACK_DURATION_MS = 1500;
 
-type CopyFeedback = (typeof COPY_FEEDBACK)[keyof typeof COPY_FEEDBACK];
 type CopyButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & { text: string };
 
 export function CopyButton({
