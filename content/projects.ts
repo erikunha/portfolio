@@ -107,7 +107,7 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
     mobileDescription:
       'Cross-platform EdTech. One codebase, five OSes. Ionic + Angular + Electron.',
     stats: [
-      { label: 'REUSE', value: '~90% LOGIC' },
+      { label: 'REUSE', value: '~80% CODE' },
       { label: 'COST', value: '-80% VS NATIVE' },
       { label: 'STACK', value: 'IONIC / ANGULAR / ELECTRON' },
     ],

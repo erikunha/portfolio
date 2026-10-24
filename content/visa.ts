@@ -38,6 +38,16 @@ export const visaRows: VisaRow[] = VisaRowSchema.array().parse([
   },
 ]);
 
+const WORK_AUTH_STATUS_PROSE: Record<(typeof visaRows)[number]['status'], string> = {
+  CITIZEN: 'citizen',
+  NEEDS_SPONSORSHIP: 'needs sponsorship',
+  OPEN_WITH_SPONSORSHIP: 'open with sponsorship',
+};
+
 export const workAuthorizationSummary = visaRows
   .map((row) => `${row.jurisdiction}: ${row.status}`)
+  .join(' · ');
+
+export const workAuthorizationProse = visaRows
+  .map((row) => `${row.jurisdiction}: ${WORK_AUTH_STATUS_PROSE[row.status]}`)
   .join(' · ');

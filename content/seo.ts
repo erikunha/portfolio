@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { communityEvent } from './community';
 import { profile, profileSummary } from './profile';
-import { workAuthorizationSummary } from './visa';
+import { workAuthorizationProse } from './visa';
 
 export const personSchema = {
   '@context': 'https://schema.org',
@@ -30,7 +30,7 @@ export const personSchema = {
     name: profile.currentEmployer.name,
     url: 'https://raylu.ai',
   },
-  description: `${profileSummary} ${workAuthorizationSummary}. 8+ years across regulated industries. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI.`,
+  description: `${profileSummary} ${workAuthorizationProse}. 8+ years across regulated industries. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI.`,
   knowsAbout: [
     'LLM Engineering',
     'Retrieval-Augmented Generation (RAG)',
@@ -157,7 +157,7 @@ export const personSchema = {
       title: profile.title,
       employmentType: 'FULL_TIME',
       jobLocationType: 'TELECOMMUTE',
-      description: `${profileSummary} ${workAuthorizationSummary}. WES-verified credentials, English C1.`,
+      description: `${profileSummary} ${workAuthorizationProse}. WES-verified credentials, English C1.`,
     },
   },
 } as const;

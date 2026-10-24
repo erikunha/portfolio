@@ -62,7 +62,7 @@ function formatProjects(): string {
   return projects
     .map((p) => {
       const stats = p.stats.map((s) => `${s.label}: ${s.value}`).join(' · ');
-      return `- ${p.name}: ${p.description}\n  ${stats}`;
+      return `- ${p.name} (${p.company}): ${p.description}\n  ${stats}`;
     })
     .join('\n');
 }
