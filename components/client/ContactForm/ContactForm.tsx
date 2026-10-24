@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 const focusResult = (node: HTMLDivElement | null) => node?.focus();
 
-import { CONTACT_DELIVERY_CODE, contactContent } from '@/content/contact';
+import { CONTACT_DELIVERY_CODE, contactCopy as contactContent } from '@/content/contact-copy';
 import { contactChrome } from '@/content/terminal-chrome';
 import { WindowChrome } from '@/design-system';
 import { Field } from '@/design-system/components/Field';
