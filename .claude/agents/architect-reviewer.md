@@ -314,7 +314,7 @@ Does the spec introduce any new `'use client'` surface or new client island?
 
 If yes: does the spec explicitly justify the addition against the per-route JS budget?
 
-There is ONE gate: per-route first-load total < 175KB (`pnpm route-js-check`). App-owned JS is REPORTED, never asserted — it is the total minus the measured 142.2KB framework floor, so the headroom a new island actually spends against is **32.8KB**. Do not cite a gated app-owned threshold; there is none. `/` measures ~173KB today, so real margin is ~2KB and a routine react/react-dom bump can consume it with zero app change. See `DECISIONS.md` 2026-07-14 and 2026-07-16.
+Use `pnpm route-js-check` for per-route first-load JS. It reports app-owned JS against the measured 131.9KB framework floor, leaving **32.8KB** of allowance under the 164.7KB total. `/` measures 161.8KB, leaving 2.9KB of margin. A dependency bump can consume that margin without an app change. See `scripts/check-route-js.mjs` and `DECISIONS.md` 2026-10-23.
 
 Current islands: InteractiveShell, ContactForm, ToTopButton, MatrixRain, CRTOverlay, StatusBar, Dock, MobileTitleBar, AppShell.client, ErrorBoundary.client.
 
@@ -333,7 +333,7 @@ If yes, verify the spec preserves all of. **Grep for the named symbol — do not
 If any constraint is not clearly preserved: set `GATE_RESULT: BLOCK`, `BLOCKED_BY: Gate 3 — <specific constraint>`.
 
 **Gate 4 — CI gate regression risk**
-Does the spec propose changes that could regress Lighthouse Perf ≥ 95, A11y = 100, SEO = 100, Best Practices ≥ 95, or the 175KB per-route first-load JS budget?
+Does the spec propose changes that could regress Lighthouse Perf ≥ 95, A11y = 100, SEO = 100, Best Practices ≥ 95, or the 164.7KB per-route first-load JS budget?
 
 If yes and the spec does not already include `performance-engineer` in its agent dispatch: add it to `DISPATCH_ADDITIONS`. This gate does not BLOCK.
 
