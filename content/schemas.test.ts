@@ -224,3 +224,32 @@ describe('canonical profile and education', () => {
       expect(GitCommitSchema.safeParse(invalid).success).toBe(false);
   });
 });
+
+describe('FooterContentSchema and shutdown content', () => {
+  it('validates the shipped footer and every decorative shutdown line', async () => {
+    const { FooterContentSchema, DmesgLineSchema } = await import('./schemas');
+    const { footerContent } = await import('./footer');
+    const { dmesgLines } = await import('./dmesg');
+    expect(FooterContentSchema.safeParse(footerContent).success).toBe(true);
+    for (const line of dmesgLines) expect(DmesgLineSchema.safeParse(line).success).toBe(true);
+  });
+
+  it('rejects missing groups, empty labels, unsafe links and unknown connection states', async () => {
+    const { FooterContentSchema } = await import('./schemas');
+    const { footerContent } = await import('./footer');
+    const invalid = [
+      { ...footerContent, groups: [] },
+      { ...footerContent, sessionTitle: '' },
+      { ...footerContent, connections: [{ ...footerContent.connections[0], state: 'FAKE' }] },
+      {
+        ...footerContent,
+        groups: footerContent.groups.map((group, index) =>
+          index === 0
+            ? { ...group, links: [{ label: 'unsafe', href: 'javascript:alert(1)' }] }
+            : group,
+        ),
+      },
+    ];
+    for (const value of invalid) expect(FooterContentSchema.safeParse(value).success).toBe(false);
+  });
+});
