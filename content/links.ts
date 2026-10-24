@@ -10,13 +10,17 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     avatar: '/images/erik-avatar.jpg',
     taglines: {
       pt: [
-        'Senior Full-Stack Engineer',
+        'Senior Software Engineer, Frontend & Product',
         'AI Engineering na prática',
         'Carreira internacional para devs',
       ],
-      en: ['Senior Full-Stack Engineer', 'AI engineering, hands-on', 'Going global as a dev'],
+      en: [
+        'Senior Software Engineer, Frontend & Product',
+        'AI engineering, hands-on',
+        'Going global as a dev',
+      ],
     },
-    host: { pt: 'Nova York, US · remoto', en: 'New York, US · remote' },
+    host: { pt: 'Brasil · remoto (Raylu, Nova York)', en: 'Brazil · remote (Raylu, New York)' },
     stack: 'React · Next · Node · Claude/Codex',
     status: { pt: 'primeiros vídeos chegando', en: 'first videos landing soon' },
   },
@@ -129,8 +133,8 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
       en: 'Erik Cunha — AI engineering and going global as a dev',
     },
     description: {
-      pt: 'Senior Full-Stack Engineer em Nova York (remoto). Um vídeo novo toda semana no canal Erik na Gringa.',
-      en: 'Senior Full-Stack Engineer in New York (remote). A new video every week on the Erik na Gringa channel.',
+      pt: 'Senior Software Engineer, Frontend & Product, no Brasil e remoto. Um vídeo novo toda semana no canal Erik na Gringa.',
+      en: 'Senior Software Engineer, Frontend & Product, Brazil-based and remote. A new video every week on the Erik na Gringa channel.',
     },
   },
 });

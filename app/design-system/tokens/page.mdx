@@ -2,33 +2,39 @@ import { dsPageMetadata } from '../_lib/page-metadata';
 
 export const metadata = dsPageMetadata({
   slug: 'tokens',
-  title: 'Tokens — Design System — erikunha.dev',
-  description: 'Brand colour from @theme, plus the Tailwind scale used for type, spacing, motion, and layers',
+  title: 'Tokens · Design System · erikunha.dev',
+  description: 'Semantic colour, responsive type, spacing and border tokens from the terminal theme',
 });
 
 # TOKENS
 
-Brand **colour** is the only hand-authored token layer. It lives in
-`app/css/theme.css` (`@theme`), and Tailwind generates the `--color-*` custom
-properties plus the matching utilities (`text-primary-500`, `border-primary-subtle`).
-The swatches below are read directly from `theme.css` — one source, no drift.
-
-Type, spacing, motion, and z-index use Tailwind's standard scale (with arbitrary
-values where the design needs a specific number). They are not tokenised
-separately, so the tables below document the scale as it is used.
+Colour, type, spacing and border tokens live in `app/css/theme.css`.
+Tailwind's `@theme` generates utilities from these custom properties. Swatches
+read their values directly from that file.
 
 ## Color
 
-Six ordinal families, each a 50–900 ramp defined in `@theme`. Swatches read
-their values straight from `theme.css`.
+Use semantic roles for text and emphasis. The ordinal families remain available
+for surfaces, syntax accents and existing consumers.
+
+### Semantic roles
+
+<ColorSwatch token="text" usage="Body text on the page and terminal surfaces" />
+<ColorSwatch token="text-secondary" usage="Labels, captions and secondary text at full opacity" />
+<ColorSwatch token="green" usage="Headings, accents and interactive elements" />
+
+The page background is `secondary-950`. Body text uses `text` (the same mint
+as `tertiary-50`); signal emphasis uses `green` (the same green as `primary-500`).
+Use `text-secondary` for new secondary text instead of `primary-300`,
+`primary-400` or `tertiary-400`. Those shades remain available for existing consumers.
 
 ### primary · green (the brand)
 
 <ColorSwatch token="primary-50" />
 <ColorSwatch token="primary-100" />
 <ColorSwatch token="primary-200" />
-<ColorSwatch token="primary-300" usage="Annotations, gutters" />
-<ColorSwatch token="primary-400" usage="Secondary text, labels" />
+<ColorSwatch token="primary-300" usage="Existing annotations; use text-secondary for new text" />
+<ColorSwatch token="primary-400" usage="Existing labels; use text-secondary for new text" />
 <ColorSwatch token="primary-500" usage="Headings, accents, interactive elements" />
 <ColorSwatch token="primary-600" />
 <ColorSwatch token="primary-700" />
@@ -107,37 +113,56 @@ their values straight from `theme.css`.
 
 ## Type Scale
 
-Applied with Tailwind `text-*` utilities; arbitrary values (`text-[32px]`) are
-used where a heading needs a specific size. Headings use the `--font-display`
-(Inter 900) face; everything else is `--font-mono` (JetBrains Mono). Both are
-self-hosted via `next/font/local` (exposed as `--font-*-src`) and surfaced as
-Tailwind tokens in `theme.css`.
+Only `h1` uses `--font-display`, Inter at weight 900. Body text, controls and
+all other headings use `--font-mono`, JetBrains Mono. Both stacks reference
+the existing `next/font/local` variables.
 
-| Utility | Size |
-|---|---|
-| `text-xs` | 0.75rem / 12px |
-| `text-sm` | 0.875rem / 14px |
-| `text-base` | 1rem / 16px |
-| `text-lg` | 1.125rem / 18px |
-| `text-xl` | 1.25rem / 20px |
-| `text-2xl` | 1.5rem / 24px |
-| `text-3xl` | 1.875rem / 30px |
+| Token | Utility | Size |
+|---|---|---|
+| `--text-xs` | `text-xs` | 12px below 768px; at least 13px from 768px |
+| `--text-sm` | `text-sm` | 14px |
+| `--text-base` | `text-base` | 16px |
+| `--text-lg` | `text-lg` | 18px |
+| `--text-xl` | `text-xl` | 20px |
+| `--text-2xl` | `text-2xl` | 24px |
+| `--text-3xl` | `text-3xl` | 32px |
+| `--text-5xl` | `text-5xl` | 48px |
+| `--text-7xl` | `text-7xl` | 64px |
+
+`--text-min` rises from 12px to 13px at 768px. `--text-xs` uses that floor.
+Use these tokens for small text; fixed pixel utilities do not inherit the floor.
+Sizes use rem units so they follow the reader's default font size.
+
+The base `h1` is 32px, rising to 48px at 1280px. `h2` is 20px, rising to
+24px at 768px. `h3` is 16px. Consumers can select larger steps for display text.
 
 ## Spacing
 
-Tailwind's 4px scale, applied with padding / margin / gap utilities. Step N =
-N × 0.25rem.
-
-| Step | rem | px |
+| Token | Utility step | Size |
 |---|---|---|
-| `1` | 0.25rem | 4px |
-| `2` | 0.5rem | 8px |
-| `3` | 0.75rem | 12px |
-| `4` | 1rem | 16px |
-| `6` | 1.5rem | 24px |
-| `8` | 2rem | 32px |
-| `12` | 3rem | 48px |
-| `16` | 4rem | 64px |
+| `--spacing-1` | `1` | 4px |
+| `--spacing-2` | `2` | 8px |
+| `--spacing-3` | `3` | 12px |
+| `--spacing-4` | `4` | 16px |
+| `--spacing-6` | `6` | 24px |
+| `--spacing-8` | `8` | 32px |
+| `--spacing-12` | `12` | 48px |
+| `--spacing-16` | `16` | 64px |
+| `--spacing-target` | `target` | 44px minimum control width and height |
+
+Small and medium Buttons have a 44px minimum height. Small Buttons use 10px
+horizontal padding; medium and large Buttons use 14px. Large Buttons have a
+52px minimum height. CopyButton has a 44px minimum width and height in every state.
+
+## Borders
+
+| Token | Value | Usage |
+|---|---|---|
+| `--border-width` | 1px | Borders and dividers |
+| `--radius-none` | 0 | Sharp controls |
+| `--radius-control` | 2px | Maximum control radius |
+
+Keyboard focus uses `:focus-visible`, with a 2px signal outline and 2px offset.
 
 ## Motion
 
@@ -149,11 +174,11 @@ Durations are applied with Tailwind `duration-*` utilities, easing with
 | `duration-[80ms]` | 80ms | micro transitions (hover, press) |
 | `duration-100` | 100ms | fast UI feedback |
 | `duration-200` | 200ms | standard transitions |
-| `ease-out` | — | the one shared easing curve |
+| `ease-out` | Shared | the one shared easing curve |
 
 ## Layers
 
-z-index is applied with Tailwind `z-[N]` utilities — there is no CSS-var token
+z-index is applied with Tailwind `z-[N]` utilities, there is no CSS-var token
 layer. The cross-cutting contract:
 
 | Layer | z-index | Usage |
@@ -163,5 +188,5 @@ layer. The cross-cutting contract:
 | mobile dock | `z-[120]` | bottom navigation dock |
 | skip link | `9999` | skip-to-content link, always on top |
 
-Component-local stacking (CRT effect layers 1–5) is intentionally not part of the
+Component-local stacking (CRT effect layers 1 to 5) is intentionally not part of the
 contract.

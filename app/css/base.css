@@ -51,9 +51,9 @@
     margin: 0;
     padding: 0;
     background: var(--color-secondary-950);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-family: var(--font-mono);
-    font-size: 16px;
+    font-size: var(--text-base);
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
@@ -144,14 +144,29 @@
   }
 
   h1 {
-    font-size: 48px;
+    font-size: var(--text-3xl);
     font-family: var(--font-display);
     font-weight: 900;
+    line-height: 1.05;
   }
 
-  @media (max-width: 768px) {
+  h2 {
+    font-size: var(--text-xl);
+  }
+
+  h3 {
+    font-size: var(--text-base);
+  }
+
+  @media (min-width: 768px) {
+    h2 {
+      font-size: var(--text-2xl);
+    }
+  }
+
+  @media (min-width: 1280px) {
     h1 {
-      font-size: 32px;
+      font-size: var(--text-5xl);
     }
   }
 

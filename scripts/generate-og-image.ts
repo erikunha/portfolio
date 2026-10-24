@@ -121,7 +121,7 @@ function buildHtml(): string {
   <div class="top">
     <div class="domain">erikunha.dev</div>
     <div class="name">ERIK CUNHA</div>
-    <div class="title">Senior Full-Stack Engineer</div>
+    <div class="title">Senior Software Engineer, Frontend & Product</div>
     <div class="subtitle">Frontend Architecture &bull; Platform &amp; AI Applied Engineering</div>
     <div class="subtitle" style="margin-top:4px;">UI/UX &bull; Accessibility &bull; Web Performance for High-Traffic Apps</div>
   </div>

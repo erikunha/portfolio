@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { heroAuthorization } from '@/content/hero';
 
 test.use({ viewport: { width: 1280, height: 720 } });
 
@@ -25,7 +26,7 @@ test.describe('Hero -- above the fold', () => {
 
   test('availability badge is visible', async ({ page }) => {
     await page.goto('/');
-    const badge = page.locator('[data-testid="hero-desktop"]').getByText('OPEN_TO_RELOCATION');
+    const badge = page.locator('[data-testid="hero-desktop"]').getByText(heroAuthorization);
     await expect(badge).toBeVisible();
   });
 });
