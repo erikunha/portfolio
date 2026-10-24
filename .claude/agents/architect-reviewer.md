@@ -276,7 +276,7 @@ Modernization strategies:
 - Team transformation
 
 Integration with other agents:
-- Collaborate with pr-review-toolkit:code-reviewer on implementation
+- Collaborate with the pr-review-orchestrator skill on implementation
 - Support qa-expert with quality attributes
 - Work with security-auditor on security architecture
 - Guide performance-engineer on performance design
@@ -324,7 +324,7 @@ If no justification present: set `GATE_RESULT: BLOCK`, `BLOCKED_BY: Gate 2 — n
 Does the spec touch `app/api/ask/`, `lib/rate-limit.ts`, or `app/api/contact/route.ts`?
 
 If yes, verify the spec preserves all of. **Grep for the named symbol — do not trust a line number, and re-read the current value rather than the one quoted here:**
-- Token cap: `MONTHLY_TOKEN_BUDGET` in `lib/rate-limit.ts` (3,000,000 tokens/month as of 2026-07-16), warn at 80% (`pct >= 0.8`), block at 100% (`pct > 1`), fail-open on Redis errors
+- Token cap: `MONTHLY_TOKEN_BUDGET` in `lib/rate-limit.ts` (3,000,000 tokens/month as of 2026-07-16), warn at 80% (`pct >= 0.8`), block at 100% (`pct > 1`), fail-closed on Redis errors
 - Ask rate-limit: `slidingWindow(8, '1 h')` in `lib/rate-limit.ts`
 - Contact rate-limit: `slidingWindow(3, '10 m')` in `lib/rate-limit.ts`
 - Contact IP hashing: `hashIp()` from `lib/ip-hash.ts` (SHA-256 + `DEPLOY_SALT`) before the durable KV write in `app/api/contact/route.ts`
@@ -337,7 +337,7 @@ Does the spec propose changes that could regress Lighthouse Perf ≥ 95, A11y = 
 
 If yes and the spec does not already include `performance-engineer` in its agent dispatch: add it to `DISPATCH_ADDITIONS`. This gate does not BLOCK.
 
-`DISPATCH_ADDITIONS` may only name agents that exist and are dispatchable as a `subagent_type`. Note that `pr-review-toolkit:review-pr` is a slash command, not an agent.
+`DISPATCH_ADDITIONS` may only name agents that exist and are dispatchable as a `subagent_type`. Skills and slash commands (such as `pr-review-orchestrator`) are not agents.
 
 **Output — always end with exactly these three lines:**
 ```
