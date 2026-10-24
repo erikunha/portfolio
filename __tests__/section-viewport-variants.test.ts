@@ -24,10 +24,13 @@ describe('responsive section viewport variants', () => {
     expect(html).not.toContain('data-testid="proj-mobile"');
   });
 
-  it('GitLogSection emits exactly the desktop variant (no mobile markup)', () => {
+  it('GitLogSection emits one semantic employment list at every viewport', () => {
     const html = renderToStaticMarkup(createElement(GitLogSection));
-    expect(html).toContain('career-desktop');
-    expect(html).not.toContain('career-mobile');
+    const document = new DOMParser().parseFromString(html, 'text/html');
+    const lists = document.querySelectorAll('ol[aria-label="Employment history"]');
+    expect(lists).toHaveLength(1);
+    expect(lists[0]?.children).toHaveLength(9);
+    expect(document.querySelectorAll('#sec-education')).toHaveLength(1);
   });
 
   it('GuitarSection static render does not emit mobile markup', () => {

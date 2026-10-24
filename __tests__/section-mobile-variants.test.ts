@@ -34,11 +34,16 @@ describe('responsive section mobile variants', () => {
     expect(html).not.toContain('data-testid="proj-desktop"');
   });
 
-  it('GitLogContent emits the mobile variant when UA is mobile', async () => {
+  it('GitLogContent keeps all nine full employment records when UA is mobile', async () => {
     const el = await GitLogContent();
     const html = renderToStaticMarkup(el);
-    expect(html).toContain('career-mobile');
-    expect(html).not.toContain('career-desktop');
+    const document = new DOMParser().parseFromString(html, 'text/html');
+    expect(document.querySelector('ol')?.children).toHaveLength(9);
+    expect(document.body.textContent).toContain(
+      'Senior Software Engineer, Frontend & Product (contract via Torc)',
+    );
+    expect(document.body.textContent).toContain('Jun 2026 - Present');
+    expect(document.body.textContent).toContain('Monde Sistemas');
   });
 
   it('VisaContent emits the mobile variant when UA is mobile', async () => {

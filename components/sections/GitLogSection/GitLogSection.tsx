@@ -1,197 +1,81 @@
-import type { ReactNode } from 'react';
-import { Suspense } from 'react';
-import { careerCommand, gitLog } from '@/content/git-log';
-import type { GitCommit } from '@/content/schemas';
-import { SECTION_LABELS } from '@/content/section-labels';
-import { getIsMobile } from '@/lib/ua';
-import { IconGitLog } from '../../Icons';
-import { Module } from '../../responsive/Module';
+import { careerCommand, careerCvHref, gitLog } from '@/content/git-log';
+import { moduleHeaderId } from '../../responsive/Module/module.constants';
+import { CommunitySection } from '../CommunitySection';
+import { CredentialsSection } from '../CredentialsSection';
+import { EducationSection } from '../EducationSection';
 
-const COMMITS = gitLog;
+const HASH_LENGTH = 7;
+const EMPLOYMENT_RANGE_SEPARATOR = ' - ';
 
-const g = (s: string): ReactNode => <span className="text-primary-500">{s}</span>;
-const PIPE = g('|');
-const STAR = g('*');
-
-const RAIL = `*\n${'|\n'.repeat(48)}`;
-
-function renderCommitMobile(c: GitCommit, key: string): ReactNode {
-  const hashShort = c.hash.slice(0, 7);
+export function GitLogContent() {
   return (
-    <li key={key} className="relative pl-[1.7ch] pb-5 last:pb-0">
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 left-0 w-[1ch] overflow-hidden whitespace-pre text-primary-500 select-none"
-      >
-        {RAIL}
-      </span>
-      <div className="whitespace-pre-wrap break-words">
-        <span className="text-primary-400">{'commit '}</span>
-        <span className="text-primary-400 opacity-70">{hashShort}</span>
-        {c.deco ? <span className="text-quinary-300">{` ${c.deco}`}</span> : null}
-        {'\n'}
-        <span className="text-primary-400 opacity-75">{c.date}</span>
-        <span className="text-primary-400 opacity-40">{' · '}</span>
-        <span className="text-quaternary-400">{c.branch}</span>
-        {'\n\n'}
-        <span className="font-bold text-primary-500">{`feat(${c.type}): ${c.company}`}</span>
-        {'\n'}
-        <span className="text-tertiary-50 opacity-85">{`${c.role} · ${c.location}${c.workMode ? ` (${c.workMode})` : ''}`}</span>
-        {'\n\n'}
-        <span className="text-primary-500">{c.body.join(' ')}</span>
-      </div>
-    </li>
+    <>
+      <p className="career-command" aria-hidden="true">
+        <span>erik@portfolio:~$</span> {careerCommand}
+      </p>
+      <ol className="career-log" aria-label="Employment history">
+        {gitLog.map((commit) => {
+          const [startLabel, endLabel] = commit.date.split(EMPLOYMENT_RANGE_SEPARATOR);
+          return (
+            <li key={commit.hash} className="career-commit">
+              <span className="career-graph" aria-hidden="true">
+                <span className="career-star">*</span>
+                <span className="career-rail">|</span>
+              </span>
+              <div className="career-commit-heading">
+                <span className="career-hash" aria-hidden="true">
+                  {commit.hash.slice(0, HASH_LENGTH)}{' '}
+                </span>
+                <span className="career-refs" aria-hidden="true">
+                  {commit.deco}{' '}
+                </span>
+                <h3 className="career-company">{commit.company}</h3>{' '}
+                <span className="career-role">{commit.role}</span>{' '}
+                <span className="career-location">
+                  {commit.location}
+                  {commit.workMode ? ` (${commit.workMode})` : ''}
+                </span>{' '}
+                <span className="career-period">
+                  <time dateTime={commit.startMonth}>{startLabel}</time>
+                  {EMPLOYMENT_RANGE_SEPARATOR}
+                  {commit.endMonth ? <time dateTime={commit.endMonth}>{endLabel}</time> : endLabel}
+                </span>
+              </div>
+              <p className="career-description">{commit.body.join(' ')}</p>
+            </li>
+          );
+        })}
+      </ol>
+    </>
   );
 }
 
-function renderCommit(c: GitCommit, key: string): ReactNode {
-  if (c.isRoot) {
-    return (
-      <span key={key}>
-        {STAR} <span className="text-primary-400">commit</span>{' '}
-        <span className="text-primary-400 opacity-85">{c.hash}</span>{' '}
-        <span className="text-quinary-300">{c.deco}</span>
-        {'\n'}
-        {'  '}
-        <span className="text-primary-400">Author: </span>{' '}
-        <span className="text-tertiary-50 opacity-85">
-          {'Erik Henrique Alves Cunha <erik@erikunha.dev>'}
-        </span>
-        {'\n'}
-        {'  '}
-        <span className="text-primary-400">AuthorDate:</span>{' '}
-        <span className="text-tertiary-50 opacity-85">{c.date}</span>
-        {'\n'}
-        {'  '}
-        <span className="text-primary-400">Branch: </span>{' '}
-        <span className="text-quaternary-400">{c.branch}</span>
-        {'\n'}
-        {'\n'}
-        {'      '}
-        <span className="text-primary-500 font-bold">
-          {'feat('}
-          {c.type}
-          {'): '}
-          <span className="text-primary-500 font-bold">{c.company}</span>
-          {' · '}
-          {`${c.role} · ${c.location}${c.workMode ? ` (${c.workMode})` : ''}`}
-        </span>
-        {'\n'}
-        {'\n'}
-        {c.body.map((line) => (
-          <span key={`${c.hash}-${line}`}>
-            {'      '}
-            <span className="text-primary-500">{line}</span>
-            {'\n'}
-          </span>
-        ))}
-      </span>
-    );
-  }
-
-  return (
-    <span key={key}>
-      {STAR} <span className="text-primary-400">commit</span>{' '}
-      <span className="text-primary-400 opacity-85">{c.hash}</span>{' '}
-      <span className="text-quinary-300">{c.deco}</span>
-      {'\n'}
-      {PIPE} <span className="text-primary-400">Author: </span>{' '}
-      <span className="text-tertiary-50 opacity-85">
-        {'Erik Henrique Alves Cunha <erik@erikunha.dev>'}
-      </span>
-      {'\n'}
-      {PIPE} <span className="text-primary-400">AuthorDate:</span>{' '}
-      <span className="text-tertiary-50 opacity-85">{c.date}</span>
-      {'\n'}
-      {PIPE} <span className="text-primary-400">Branch: </span>{' '}
-      <span className="text-quaternary-400">{c.branch}</span>
-      {'\n'}
-      {PIPE}
-      {'\n'}
-      {PIPE}
-      {'     '}
-      <span className="text-primary-500 font-bold">
-        {'feat('}
-        {c.type}
-        {'): '}
-        <span className="text-primary-500 font-bold">{c.company}</span>
-        {' · '}
-        {`${c.role} · ${c.location}${c.workMode ? ` (${c.workMode})` : ''}`}
-      </span>
-      {'\n'}
-      {PIPE}
-      {'\n'}
-      {c.body.map((line) => (
-        <span key={`${c.hash}-${line}`}>
-          {PIPE}
-          {'     '}
-          <span className="text-primary-500">{line}</span>
-          {'\n'}
-        </span>
-      ))}
-      {PIPE}
-      {'\n'}
-    </span>
-  );
-}
-
-function GitLogDesktop() {
+export function GitLogSection({ defer = false }: { defer?: boolean } = {}) {
   return (
     <section
-      className="font-mono text-sm max-md:text-[10px] leading-[1.55] overflow-x-auto focus-visible:outline-1 focus-visible:outline-primary-500"
-      data-testid="career-desktop"
-      aria-label={SECTION_LABELS['sec-git-log']}
-      // biome-ignore lint/a11y/noNoninteractiveTabindex: a horizontally scrollable region must be keyboard-focusable so arrow keys can scroll it (WCAG 2.1.1, axe scrollable-region-focusable)
-      tabIndex={0}
+      id="sec-git-log"
+      aria-labelledby="sec-git-log-header"
+      tabIndex={-1}
+      className={`career-section${defer ? ' module-deferred' : ''}`}
+      {...(defer ? { 'data-cv-defer': 'true' } : {})}
     >
-      <div className="text-primary-400 opacity-70 mb-3 tracking-[0.02em] text-sm max-md:text-[10px] whitespace-pre">
-        <span className="text-primary-500 opacity-80 mr-1.5">erik@portfolio:~$</span>
-        {careerCommand}
-      </div>
-      <pre className="m-0 whitespace-pre text-tertiary-50">
-        {COMMITS.map((c) => renderCommit(c, c.hash))}
-      </pre>
-      <div className="text-primary-400 opacity-70 mt-[14px] text-sm max-md:text-[10px] tracking-[0.04em]">
-        {'(END) — press '}
-        <span style={{ color: 'var(--color-primary-500)' }}>q</span>
-        {' to return to portfolio'}
+      <h2 id={moduleHeaderId('sec-git-log')} className="career-title">
+        Career
+        <span className="career-title-command" aria-hidden="true">
+          GIT LOG --ONELINE --DECORATE --GRAPH
+        </span>
+      </h2>
+      <div className="career-body">
+        <GitLogContent />
+        <div className="career-groups">
+          <CredentialsSection embedded />
+          <EducationSection />
+          <CommunitySection embedded />
+        </div>
+        <a href={careerCvHref} className="career-cv-link">
+          View CV
+        </a>
       </div>
     </section>
-  );
-}
-
-function GitLogMobile() {
-  return (
-    <div className="font-mono text-[13px] leading-[1.5] break-words" data-testid="career-mobile">
-      <div className="text-primary-400 opacity-70 mb-4 tracking-[0.02em] whitespace-nowrap overflow-hidden text-ellipsis">
-        <span className="text-primary-500 opacity-80 mr-1.5">erik@portfolio:~$</span>
-        {' git log --career --graph'}
-      </div>
-      <ul className="m-0 p-0 list-none text-tertiary-50">
-        {COMMITS.map((c) => renderCommitMobile(c, `m-${c.hash}`))}
-      </ul>
-    </div>
-  );
-}
-
-export async function GitLogContent() {
-  const isMobile = await getIsMobile();
-  return isMobile ? <GitLogMobile /> : <GitLogDesktop />;
-}
-
-export function GitLogSection({ defer }: { defer?: boolean } = {}) {
-  return (
-    <Module
-      id="sec-git-log"
-      header="GIT LOG ~/CAREER --PRETTY=FULLER --DECORATE --GRAPH"
-      mobileHeader="GIT LOG --CAREER"
-      srLabel={SECTION_LABELS['sec-git-log']}
-      icon={<IconGitLog />}
-      defer={defer}
-    >
-      <Suspense fallback={<GitLogDesktop />}>
-        <GitLogContent />
-      </Suspense>
-    </Module>
   );
 }

@@ -6,6 +6,21 @@ import { revealDeferredContent, snapshotLocator } from '../e2e/_helpers/snapshot
 test.describe.configure({ timeout: 60_000 });
 
 test.describe('visual regression', () => {
+  test('career git log and credential groups match baseline', async ({ mockedPage }) => {
+    const career = mockedPage.locator('#sec-git-log');
+    await career.scrollIntoViewIfNeeded();
+    await mockedPage.evaluate(() => document.fonts.ready);
+    await expect(
+      career.getByRole('list', { name: 'Employment history' }).getByRole('listitem'),
+    ).toHaveCount(9);
+    await expect(career.getByRole('heading', { name: 'Education', exact: true })).toBeVisible();
+    await stripVolatileChrome(mockedPage);
+    if (process.env.ARGOS_TOKEN) {
+      await argosScreenshot(mockedPage, 'career', { element: career });
+    }
+    await snapshotLocator(mockedPage, career, 'career.png');
+  });
+
   test('about panels match baseline', async ({ mockedPage }) => {
     const about = mockedPage.locator('#sec-about');
     await about.scrollIntoViewIfNeeded();

@@ -153,5 +153,6 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
   },
 ]);
 
-export const careerCommand =
-  ' git log --graph --pretty=fuller --decorate --since="2017-10-01" ~/career';
+export const careerCommand = 'git log --oneline --decorate --graph ~/career';
+
+export const careerCvHref = '/erik-cunha-cv.pdf';
