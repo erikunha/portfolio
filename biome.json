@@ -25,7 +25,8 @@
       "!app/globals.css",
       "!next-env.d.ts",
       "!.specify",
-      "!.claude/skills/speckit-*"
+      "!.claude/skills/speckit-*",
+      "!pnpm-lock.yaml"
     ]
   },
   "formatter": {
