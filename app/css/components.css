@@ -820,8 +820,8 @@
     --footer-max-width: 75rem;
     --footer-card-ratio: 1.15fr;
     --footer-tree-indent: 4ch;
-    --footer-protocol-width: 7ch;
-    --footer-state-width: 13ch;
+    --footer-protocol-width: 6ch;
+    --footer-state-width: 12ch;
     --footer-line-height: 1.5;
     --footer-session-leading: 1.95;
     --footer-dmesg-leading: calc(var(--spacing-4) + var(--spacing-1));
