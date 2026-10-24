@@ -145,6 +145,10 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/review-skill
+          if ! git cat-file -e FETCH_HEAD:.claude/skills/pr-review-orchestrator/SKILL.md 2>/dev/null; then
+            echo "::notice::the default branch has no review orchestrator yet; the reviewer runs without it"
+            exit 0
+          fi
           git archive FETCH_HEAD:.claude/skills/pr-review-orchestrator | tar -x -C /tmp/review-skill
           test -s /tmp/review-skill/SKILL.md
           test -s /tmp/review-skill/references/ci.md
