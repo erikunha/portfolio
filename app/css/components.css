@@ -1126,7 +1126,18 @@
 
   .sitemap a {
     position: relative;
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
+    color: var(--color-primary-700);
+  }
+
+  .sitemap a:hover {
+    color: var(--color-green);
+  }
+
+  @media (pointer: fine) {
+    .sitemap a {
+      min-height: var(--spacing-target-compact);
+    }
   }
 
   .sitemap .tr {

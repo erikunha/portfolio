@@ -109,10 +109,16 @@ test.describe('Footer', () => {
   });
 
   test('mobile footer keeps its measured height with a one-column site map and netstat on one line', async ({
-    page,
+    browser,
   }) => {
     for (const width of [390, 1280]) {
-      await page.setViewportSize({ width, height: width === 390 ? 844 : 720 });
+      const isPhone = width === 390;
+      const context = await browser.newContext({
+        viewport: { width, height: isPhone ? 844 : 720 },
+        hasTouch: isPhone,
+        isMobile: isPhone,
+      });
+      const page = await context.newPage();
       await loadFooter(page);
       await page.evaluate(() => document.fonts.ready);
       if (width === 390) {
@@ -134,6 +140,7 @@ test.describe('Footer', () => {
         expect(metrics.lines).toBe(1);
         expect(metrics.contentWidth).toBeLessThanOrEqual(metrics.width);
       }
+      await context.close();
     }
   });
 
@@ -146,7 +153,7 @@ test.describe('Footer', () => {
     }
   });
 
-  test('tree links keep 44px targets in six desktop, three tablet and one mobile column', async ({
+  test('tree links are compact under a mouse in six desktop, three tablet and one mobile column', async ({
     page,
   }) => {
     const expectedColumns: Record<number, number> = { 1280: 6, 768: 3, 390: 1, 320: 1 };
@@ -155,8 +162,19 @@ test.describe('Footer', () => {
       await loadFooter(page);
       const tree = page.getByRole('navigation', { name: 'Site map' });
       for (const link of await tree.getByRole('link').all()) {
+        await expect(link).toHaveCSS('color', 'rgb(30, 155, 50)');
+        const sizes = await link.evaluate((element) => ({
+          link: Number.parseFloat(getComputedStyle(element).fontSize),
+          title: Number.parseFloat(
+            getComputedStyle(element.closest('nav')?.querySelector('.sm-title') ?? element)
+              .fontSize,
+          ),
+        }));
+        expect(sizes.link).toBe(sizes.title);
+        expect(sizes.link).toBeLessThan(14);
         const box = await link.boundingBox();
-        expect(box?.height).toBeGreaterThanOrEqual(44);
+        expect(box?.height).toBeGreaterThanOrEqual(24);
+        expect(box?.height).toBeLessThanOrEqual(32);
         expect(box?.width).toBeGreaterThanOrEqual(44);
       }
       const columns = await tree
@@ -167,5 +185,23 @@ test.describe('Footer', () => {
         width,
       );
     }
+  });
+  test('tree links keep 44px touch targets under a coarse pointer', async ({ browser }) => {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+      isMobile: true,
+    });
+    const page = await context.newPage();
+    await loadFooter(page);
+    expect(await page.evaluate(() => matchMedia('(pointer: coarse)').matches)).toBe(true);
+    for (const link of await page
+      .getByRole('navigation', { name: 'Site map' })
+      .getByRole('link')
+      .all()) {
+      const box = await link.boundingBox();
+      expect(box?.height).toBeGreaterThanOrEqual(44);
+    }
+    await context.close();
   });
 });
