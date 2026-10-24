@@ -66,7 +66,8 @@ for (const outcome of ['rejected', 'unavailable'] as const) {
     }, outcome);
     await page.goto('/design-system/components');
     const preview = page.locator('#copybutton');
-    const button = preview.getByRole('button', { name: 'COPY', exact: true });
+    const button = preview.getByRole('button');
+    await expect(button).toHaveText('COPY');
     await button.click();
     await expect(button).toHaveText(outcome === 'rejected' ? 'COPY FAILED' : 'COPY UNAVAILABLE');
     await expect(preview.getByRole('status')).toContainText('Select and copy the text manually.');

@@ -137,9 +137,12 @@ function renderCommit(c: GitCommit, key: string): ReactNode {
 
 function GitLogDesktop() {
   return (
-    <div
-      className="font-mono text-sm max-md:text-[10px] leading-[1.55] overflow-x-auto"
+    <section
+      className="font-mono text-sm max-md:text-[10px] leading-[1.55] overflow-x-auto focus-visible:outline-1 focus-visible:outline-primary-500"
       data-testid="career-desktop"
+      aria-label={SECTION_LABELS['sec-git-log']}
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: a horizontally scrollable region must be keyboard-focusable so arrow keys can scroll it (WCAG 2.1.1, axe scrollable-region-focusable)
+      tabIndex={0}
     >
       <div className="text-primary-400 opacity-70 mb-3 tracking-[0.02em] text-sm max-md:text-[10px] whitespace-pre">
         <span className="text-primary-500 opacity-80 mr-1.5">erik@portfolio:~$</span>
@@ -153,7 +156,7 @@ function GitLogDesktop() {
         <span style={{ color: 'var(--color-primary-500)' }}>q</span>
         {' to return to portfolio'}
       </div>
-    </div>
+    </section>
   );
 }
 
