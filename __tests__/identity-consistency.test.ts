@@ -45,6 +45,27 @@ beforeAll(async () => {
 });
 
 describe('identity is consistent across every gated surface', () => {
+  it('writes work authorization as prose in search descriptions, never as raw status tokens', () => {
+    const descriptions = [personSchema.description, personSchema.seeks.itemOffered.description];
+    for (const text of descriptions) {
+      expect(text).not.toMatch(/CITIZEN|NEEDS_SPONSORSHIP|OPEN_WITH_SPONSORSHIP/);
+      expect(text).toContain('Brazil: citizen');
+    }
+  });
+
+  it('states the cross-platform code reuse the resume gives, on both surfaces', () => {
+    const edtech = projects.find((project) => project.name === 'EDTECH_OMNI');
+    expect(edtech?.stats.find((stat) => stat.label === 'REUSE')?.value).toContain('80%');
+    expect(JSON.stringify(gitLog)).not.toContain('90%');
+  });
+
+  it('feeds every project company and expected completion to a consumer', () => {
+    for (const project of projects) expect(SYSTEM_TEXT).toContain(project.company);
+    expect(HIRING_PROFILE.education.map((entry) => entry.expected_completion)).toEqual(
+      education.map((entry) => entry.expectedCompletion),
+    );
+  });
+
   it('points JSON-LD and llms.txt at the same community event and facts', () => {
     const [eventLink] = communityEvent.links;
     expect(personSchema.memberOf.url).toBe(eventLink?.href);
@@ -182,7 +203,6 @@ describe('terminal redesign canonical facts', () => {
       expect(row.statusShort).toBe(row.status);
       expect(SYSTEM_TEXT).toContain(`${row.jurisdiction}: ${row.status}`);
       expect(llmsTxt).toContain(`${row.jurisdiction}: ${row.status}`);
-      expect(personSchema.description).toContain(`${row.jurisdiction}: ${row.status}`);
       expect(JSON.parse(layoutMetadataText).other['work-authorization']).toContain(
         `${row.jurisdiction}: ${row.status}`,
       );
