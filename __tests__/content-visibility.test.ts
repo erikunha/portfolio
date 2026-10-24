@@ -16,6 +16,8 @@ function countDeferredSections(node: unknown): number {
   return count;
 }
 
+const PAGE_GRAPH_IMPORT_TIMEOUT_MS = 30_000;
+
 describe('content-visibility deferral', () => {
   it('Module renders data-cv-defer attribute only when defer is set', async () => {
     const { Module } = await import('@/components/responsive/Module');
@@ -35,15 +37,19 @@ describe('content-visibility deferral', () => {
     expect(renderToStaticMarkup(eagerEl)).not.toContain('data-cv-defer');
   });
 
-  it('app/page.tsx defers exactly the below-fold section set', async () => {
-    const { default: Home } = await import('@/app/page');
-    const tree = Home();
-    const deferredCount = countDeferredSections(tree);
-    expect(
-      deferredCount,
-      `app/page.tsx must pass \`defer\` to exactly ${DEFERRED_SECTION_COUNT} sections. This was a >= floor, which let a silent drop of up to 2 sections pass: they would render eagerly, forfeiting their share of the ~840ms mobile style+layout deferral, with every gate green. If you intentionally changed the deferred set, update DEFERRED_SECTION_COUNT — that edit is the decision, and it should be visible in review.`,
-    ).toBe(DEFERRED_SECTION_COUNT);
-  });
+  it(
+    'app/page.tsx defers exactly the below-fold section set',
+    async () => {
+      const { default: Home } = await import('@/app/page');
+      const tree = Home();
+      const deferredCount = countDeferredSections(tree);
+      expect(
+        deferredCount,
+        `app/page.tsx must pass \`defer\` to exactly ${DEFERRED_SECTION_COUNT} sections. This was a >= floor, which let a silent drop of up to 2 sections pass: they would render eagerly, forfeiting their share of the ~840ms mobile style+layout deferral, with every gate green. If you intentionally changed the deferred set, update DEFERRED_SECTION_COUNT — that edit is the decision, and it should be visible in review.`,
+      ).toBe(DEFERRED_SECTION_COUNT);
+    },
+    PAGE_GRAPH_IMPORT_TIMEOUT_MS,
+  );
 
   it('components.css ships the .module-deferred content-visibility rule', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate content-visibility
