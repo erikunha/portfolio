@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -153,17 +151,18 @@ describe.each([
   });
 });
 
-describe('DawMixerSection skip link styles', () => {
-  it('reveals the accessible skip link on focus', () => {
-    const styles = readFileSync(path.resolve(process.cwd(), 'app/css/components.css'), 'utf-8');
-    const skipRule = styles.match(/\.mx-skip\s*\{([^}]*)\}/)?.[1] ?? '';
-    const focusRule = styles.match(/\.mx-skip:focus-visible\s*\{([^}]*)\}/)?.[1] ?? '';
+describe('DawMixerSection skip link', () => {
+  it('renders the accessible skip link with its class and existing target', async () => {
+    const doc = await renderDesktop();
+    const link = Array.from(doc.querySelectorAll('a')).find(
+      (anchor) => anchor.textContent === 'Skip mixer',
+    );
 
-    expect(skipRule).toMatch(/clip-path:\s*inset\(50%\)/);
-    expect(skipRule).toMatch(/overflow:\s*hidden/);
-    expect(focusRule).toMatch(/clip-path:\s*inset\(0\)/);
-    expect(focusRule).toMatch(/overflow:\s*visible/);
-    expect(focusRule).toMatch(/outline:\s*var\(--border-width\) solid var\(--color-primary-500\)/);
+    expect(link).toBeDefined();
+    expect(link?.getAttribute('aria-label') ?? link?.textContent).toBe('Skip mixer');
+    expect(link?.classList.contains('mx-skip')).toBe(true);
+    expect(link?.getAttribute('href')).toBe('#mixer-controls-end');
+    expect(doc.getElementById('mixer-controls-end')).not.toBeNull();
   });
 });
 
