@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ErrorChrome, ErrorHeading } from '@/components/ErrorBoundary/ErrorBoundary.client';
+import { ErrorChrome, ErrorHeading } from '@/components/ErrorPages/ErrorPages.client';
 import { errorsContent } from '@/content/errors';
 import { Button, CmdLine, TerminalPanel } from '@/design-system';
 

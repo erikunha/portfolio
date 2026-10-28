@@ -374,6 +374,11 @@ export const ErrorsContentSchema = z.object({
   noscript: z.object({ text: z.string().min(1) }),
 });
 export type ErrorsContent = z.infer<typeof ErrorsContentSchema>;
+export const ErrorsClientContentSchema = ErrorsContentSchema.pick({
+  chrome: true,
+  serverError: true,
+});
+export type ErrorsClientContent = z.infer<typeof ErrorsClientContentSchema>;
 
 export const DmesgLineSchema = z.object({
   off: z.number(),

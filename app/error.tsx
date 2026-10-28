@@ -1,3 +1,3 @@
 'use client';
 
-export { RouteErrorPage as default } from '@/components/ErrorBoundary/ErrorBoundary.client';
+export { RouteErrorPage as default } from '@/components/ErrorPages/ErrorPages.client';

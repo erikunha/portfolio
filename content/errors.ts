@@ -1,19 +1,8 @@
-import { ErrorsContentSchema } from './schemas';
+import { errorsClientContent } from './errors-client';
+import type { ErrorsContent } from './schemas';
 
-export const errorsContent = ErrorsContentSchema.parse({
-  chrome: {
-    brand: 'erik_cunha.sh',
-    brandHref: '/',
-    navLabel: 'Site navigation',
-    skipLabel: 'Skip to main content',
-    nav: [
-      { label: 'WORK', href: '/#sec-projects' },
-      { label: 'CAREER', href: '/#sec-git-log' },
-      { label: 'CONTACT', href: '/#sec-contact' },
-      { label: 'LINKS', href: '/links' },
-      { label: 'DESIGN_SYSTEM', href: '/design-system' },
-    ],
-  },
+export const errorsContent: ErrorsContent = {
+  ...errorsClientContent,
   notFound: {
     metaTitle: '404 · erikunha.dev',
     code: '404',
@@ -30,17 +19,7 @@ export const errorsContent = ErrorsContentSchema.parse({
     ],
     home: { label: 'Go home', href: '/' },
   },
-  serverError: {
-    code: '500',
-    message: 'Something broke on our side. Try again in a minute.',
-    retryLabel: 'Try again',
-    home: { label: 'Go home', href: '/' },
-    refLabel: 'ref:',
-    copyLabel: 'COPY',
-    copyAriaLabel: 'Copy reference id',
-    copiedAnnouncement: 'Reference id copied',
-  },
   noscript: {
     text: 'This site works best with JavaScript. Content below is complete; the shell and the contact form need it.',
   },
-});
+};

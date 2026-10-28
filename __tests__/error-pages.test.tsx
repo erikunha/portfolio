@@ -2,7 +2,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import NotFound, { metadata } from '@/app/not-found';
-import { GlobalErrorPage, RouteErrorPage } from '@/components/ErrorBoundary/ErrorBoundary.client';
+import { RouteErrorPage } from '@/components/ErrorPages/ErrorPages.client';
+import { GlobalErrorPage } from '@/components/ErrorPages/GlobalErrorPage.client';
 import { errorsContent } from '@/content/errors';
 import { ErrorsContentSchema } from '@/content/schemas';
 

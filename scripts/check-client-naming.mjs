@@ -8,6 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
 const SCAN_DIRS = ['app', 'components', 'lib'];
+const NEXT_CLIENT_CONVENTION_FILES = /^app\/(.+\/)?(global-)?error\.tsx$/;
 const SKIP_NAMES = new Set(['node_modules', '.next', '.git', 'dist', 'out', '.vercel']);
 
 function walk(dir) {
@@ -50,6 +51,7 @@ function isCompliant(file) {
   const rel = path.relative(ROOT, file).replace(/\\/g, '/');
   if (/\.client\.(tsx|ts)$/.test(rel)) return true;
   if (/(^|\/)client\//.test(rel)) return true;
+  if (NEXT_CLIENT_CONVENTION_FILES.test(rel)) return true;
   return false;
 }
 

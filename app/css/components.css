@@ -1722,6 +1722,24 @@
     gap: var(--spacing-2);
   }
 
+  .err-action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--spacing-target);
+    padding: 0 var(--spacing-4);
+    border: var(--border-width) solid var(--color-primary-500);
+    background: transparent;
+    color: var(--color-primary-500);
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .err-action:focus-visible {
+    outline: calc(var(--border-width) * 2) solid var(--color-primary-500);
+    outline-offset: var(--spacing-1);
+  }
+
   .err-ref {
     display: flex;
     flex-wrap: wrap;
