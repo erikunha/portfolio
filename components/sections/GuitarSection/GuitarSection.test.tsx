@@ -1,4 +1,3 @@
-import { within } from '@testing-library/dom';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -39,10 +38,10 @@ describe('GuitarSection presentation', () => {
       const displayed = doc.querySelector(`[data-testid="signal-node-${node.role}"]`);
       expect(displayed).not.toBeNull();
       if (!displayed) throw new Error(`Missing signal node ${node.role}`);
-      const bars = within(displayed as HTMLElement).getByRole('img', {
-        name: expectedNames[index],
-      });
-      expect(bars.classList.contains('guitar-bars')).toBe(true);
+      const bars = displayed.querySelector('.guitar-bars[role="img"]');
+      if (!bars) throw new Error(`Missing named bars for ${node.role}`);
+      expect(bars.getAttribute('aria-label')).toBe(expectedNames[index]);
+      expect(bars.getAttribute('aria-hidden')).toBeNull();
       expect(bars.querySelectorAll('.guitar-bar')).toHaveLength(8);
       expect(bars.querySelectorAll('[data-filled="true"]')).toHaveLength(node.strengthDots);
     }
