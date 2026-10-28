@@ -137,7 +137,7 @@
     height: calc(var(--spacing-4) + var(--border-width) * 2);
     stroke: currentColor;
     fill: none;
-    stroke-width: 1.4;
+    stroke-width: var(--stroke-width-icon);
   }
 
   .career-header-command,
