@@ -69,6 +69,15 @@ cases are deliberately borderline-hard.
   (`app/api/ask/route.ts`) — can stale an output-validation gold case.
 - A factual ground-truth source changes (e.g. `lib/hiring-profile.ts`).
 
+## Budget
+
+`/api/ask` reserves tokens before every model call and fails closed when the reservation
+store errors. `main()` in `scripts/ask-eval.ts` installs `createEvalBudgetStore(ASK_EVAL_CORPUS.length)`
+through `setBudgetStore`, so the run uses an in-memory counter sized to one reservation per
+corpus item. It needs no Redis credentials and never spends the production monthly counter.
+Adding a request per item (retries, extra turns) means raising that size.
+`__tests__/ask-eval-budget.test.ts` fails if the route's reservation outgrows the store.
+
 ## Reading results
 
 - Local artifact: `ask-eval-result.json` (full per-item grades + calibration cases + the
