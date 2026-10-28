@@ -1,4 +1,6 @@
 import { createElement } from 'react';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -148,6 +150,20 @@ describe.each([
     expect(
       (region?.compareDocumentPosition(target as Node) ?? 0) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+});
+
+describe('DawMixerSection skip link styles', () => {
+  it('reveals the accessible skip link on focus', () => {
+    const styles = readFileSync(path.resolve(process.cwd(), 'app/css/components.css'), 'utf-8');
+    const skipRule = styles.match(/\.mx-skip\s*\{([^}]*)\}/)?.[1] ?? '';
+    const focusRule = styles.match(/\.mx-skip:focus-visible\s*\{([^}]*)\}/)?.[1] ?? '';
+
+    expect(skipRule).toMatch(/clip-path:\s*inset\(50%\)/);
+    expect(skipRule).toMatch(/overflow:\s*hidden/);
+    expect(focusRule).toMatch(/clip-path:\s*inset\(0\)/);
+    expect(focusRule).toMatch(/overflow:\s*visible/);
+    expect(focusRule).toMatch(/outline:\s*var\(--border-width\) solid var\(--color-primary-500\)/);
   });
 });
 

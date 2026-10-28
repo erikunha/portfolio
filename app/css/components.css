@@ -268,6 +268,8 @@
     margin-inline: var(--spacing-4);
     color: var(--color-text-secondary);
     text-decoration: underline;
+    clip-path: inset(50%);
+    overflow: hidden;
   }
 
   .mx-scroll {
@@ -281,6 +283,8 @@
   }
 
   .mx-skip:focus-visible {
+    clip-path: inset(0);
+    overflow: visible;
     outline: var(--border-width) solid var(--color-primary-500);
     outline-offset: var(--border-width);
   }
