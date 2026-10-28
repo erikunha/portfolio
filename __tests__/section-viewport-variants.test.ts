@@ -28,14 +28,14 @@ describe('responsive section viewport variants', () => {
 
   it('GitLogSection emits exactly the desktop variant (no mobile markup)', () => {
     const html = renderToStaticMarkup(createElement(GitLogSection));
-    expect(html).toContain('career-desktop');
+    expect(html).toContain('career-log');
     expect(html).not.toContain('career-mobile');
   });
 
   it('GitLogSection scroll container is not a second region named like its module', () => {
     const host = document.createElement('div');
     host.innerHTML = renderToStaticMarkup(createElement(GitLogSection));
-    const scroller = host.querySelector('[data-testid="career-desktop"]');
+    const scroller = host.querySelector('[data-testid="career-log"]');
     expect(scroller?.tagName).toBe('DIV');
     expect(scroller?.getAttribute('role')).toBe('group');
     expect(scroller?.getAttribute('tabindex')).toBe('0');

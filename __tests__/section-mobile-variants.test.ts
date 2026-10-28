@@ -34,10 +34,10 @@ describe('responsive section mobile variants', () => {
     expect(html).not.toContain('data-testid="proj-desktop"');
   });
 
-  it('GitLogContent emits the mobile variant when UA is mobile', async () => {
-    const el = await GitLogContent();
-    const html = renderToStaticMarkup(el);
-    expect(html).toContain('career-mobile');
+  it('GitLogContent renders one responsive log regardless of UA', () => {
+    const html = renderToStaticMarkup(GitLogContent());
+    expect(html).toContain('data-testid="career-log"');
+    expect(html).not.toContain('career-mobile');
     expect(html).not.toContain('career-desktop');
   });
 

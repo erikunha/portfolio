@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { type Credential, CredentialSchema } from './schemas';
+import { communityEvent } from './community';
+import { CareerCredentialsSchema, type Credential, CredentialSchema } from './schemas';
 
 export const credentials: Credential[] = z.array(CredentialSchema).parse([
   {
@@ -18,3 +19,25 @@ export const credentials: Credential[] = z.array(CredentialSchema).parse([
     evidence: 'World Education Services · 2022',
   },
 ]);
+
+export const careerCredentials = CareerCredentialsSchema.parse({
+  prompt: '$',
+  statusMarker: '>',
+  certifications: {
+    label: 'Certifications',
+    command: "git tag --list 'cert/*'",
+    prefix: 'cert/',
+  },
+  education: {
+    label: 'Education',
+    command: "git tag --list 'edu/*'",
+    prefix: 'edu/',
+  },
+  community: {
+    label: 'Community',
+    command: "git tag --list 'community/*'",
+    heading: `community/${communityEvent.name} · ${communityEvent.year} · ${communityEvent.role}`,
+    bullets: communityEvent.bullets,
+    status: `status: ${communityEvent.statusLine}`,
+  },
+});

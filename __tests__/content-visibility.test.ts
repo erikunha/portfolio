@@ -45,7 +45,7 @@ describe('content-visibility deferral', () => {
       const deferredCount = countDeferredSections(tree);
       expect(
         deferredCount,
-        `app/page.tsx must pass \`defer\` to exactly ${DEFERRED_SECTION_COUNT} sections. This was a >= floor, which let a silent drop of up to 2 sections pass: they would render eagerly, forfeiting their share of the ~840ms mobile style+layout deferral, with every gate green. If you intentionally changed the deferred set, update DEFERRED_SECTION_COUNT — that edit is the decision, and it should be visible in review.`,
+        `app/page.tsx must pass \`defer\` to exactly ${DEFERRED_SECTION_COUNT} sections. Credentials and community share Career's deferred section. Update DEFERRED_SECTION_COUNT only when the deferred section set intentionally changes.`,
       ).toBe(DEFERRED_SECTION_COUNT);
     },
     PAGE_GRAPH_IMPORT_TIMEOUT_MS,
