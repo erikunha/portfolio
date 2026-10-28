@@ -14,7 +14,8 @@
 
 ### F1 - `*.client.tsx` naming convention is partially unenforced (Low, real today)
 
-Eight interactive files under `components/client/**` (`ContactForm.tsx`, `InteractiveShell.tsx`, `HeroBootAnimation.tsx`, `HeroSystemFailure.tsx`, `RoleTyper.tsx`, `ToTopButton.tsx`, plus the two `*Lazy.tsx` wrappers) carry `'use client'` but are not named `*.client.tsx`, yet the RSC-drift convention claims that naming is the signal. So `check:client-naming` either doesn't scan `components/client/**` or treats the directory as an allowlist.
+Seven interactive files under `components/client/**` (`ContactForm.tsx`, `InteractiveShell.tsx`, `HeroBootAnimation.tsx`, `HeroSystemFailure.tsx`, `ToTopButton.tsx`, plus the two `*Lazy.tsx` wrappers) carry `'use client'` but are not named `*.client.tsx`, yet the RSC-drift convention claims that naming is the signal. So `check:client-naming` either doesn't scan `components/client/**` or treats the directory as an allowlist.
+The Hero identity line and About Senior status are server-rendered text and add no client naming debt.
 - **Risk:** the "name tells you the boundary" invariant has a blind spot; a reviewer scanning by filename could miss a client component.
 - **Fix options:** (a) rename to `*.client.tsx` (and update imports/tests), or (b) document `components/client/**` as an explicit directory-based exception in `STANDARDS.md` Ch.1 and assert it in the gate. Pick one; right now it's ambiguous.
 

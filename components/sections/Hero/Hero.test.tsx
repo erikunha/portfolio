@@ -17,7 +17,11 @@ describe('Hero identity and static actions', () => {
       expect(name?.hasAttribute('aria-hidden')).toBe(false);
       expect(name?.classList.contains('sr-only')).toBe(false);
       expect(name?.tagName).toBe('H1');
-      expect(hero.textContent).toContain('Senior Software Engineer, Frontend & Product');
+      const title = hero.querySelector('.hero-stack');
+      expect(title?.textContent).toBe(
+        'Senior Software Engineer, Frontend & Product · React · Next.js · TypeScript · Angular · Node.js · AWS',
+      );
+      expect(title?.closest('[aria-hidden="true"], [aria-live], [role="status"]')).toBeNull();
       expect(hero.textContent).toContain('React · Next.js · TypeScript · Angular · Node.js · AWS');
       expect(hero.textContent).toContain('Brazil');
       expect(hero.textContent).toContain('UTC-3 · available now');
