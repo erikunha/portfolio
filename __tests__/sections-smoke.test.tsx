@@ -1,4 +1,5 @@
 import { type ComponentType, createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
 
@@ -15,41 +16,6 @@ vi.mock('@/components/client/ContactForm', () => ({
 vi.mock('@/components/client/InteractiveShell', () => ({
   InteractiveShellLazy: () => null,
 }));
-
-describe('CommunitySection', () => {
-  let mounted: MountedClient;
-
-  afterEach(() => {
-    mounted?.unmount();
-  });
-
-  async function render(props: { defer?: boolean } = {}) {
-    const { CommunitySection } = await import(
-      '@/components/sections/CommunitySection/CommunitySection'
-    );
-    mounted = await mountClient(
-      createElement(CommunitySection as ComponentType<{ defer?: boolean }>, props),
-    );
-    return mounted.container;
-  }
-
-  it('renders the CAT ~/.COMMUNITY module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('CAT ~/.COMMUNITY');
-  });
-
-  it('renders community event content', async () => {
-    const container = await render();
-    const { communityEvent } = await import('@/content/community');
-    expect(container.textContent).toContain(communityEvent.name);
-  });
-
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
-  });
-});
 
 describe('ContactSection', () => {
   let mounted: MountedClient;
@@ -85,20 +51,32 @@ describe('CredentialsSection', () => {
     mounted?.unmount();
   });
 
-  async function render(props: { defer?: boolean } = {}) {
+  async function render() {
     const { CredentialsSection } = await import(
       '@/components/sections/CredentialsSection/CredentialsSection'
     );
-    mounted = await mountClient(
-      createElement(CredentialsSection as ComponentType<{ defer?: boolean }>, props),
-    );
+    mounted = await mountClient(createElement(CredentialsSection));
     return mounted.container;
   }
 
-  it('renders the CAT ~/.CREDENTIALS module header', async () => {
+  it('renders named certification, education and community groups under Career', async () => {
     const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('CAT ~/.CREDENTIALS');
+    const { careerCredentials } = await import('@/content/credentials');
+    const groups = [...container.querySelectorAll('[role="group"]')];
+    const headings = [...container.querySelectorAll('h3')];
+    const expectedGroups = [
+      careerCredentials.certifications,
+      careerCredentials.education,
+      careerCredentials.community,
+    ];
+    expect(groups).toHaveLength(expectedGroups.length);
+    expectedGroups.forEach((group, index) => {
+      const heading = headings[index];
+      expect(heading?.textContent).toContain(group.label);
+      expect(heading?.textContent).toContain(group.command);
+      expect(groups[index]?.getAttribute('aria-labelledby')).toBe(heading?.id);
+    });
+    expect(container.querySelector('h2')).toBeNull();
   });
 
   it('renders at least one credential row', async () => {
@@ -107,9 +85,19 @@ describe('CredentialsSection', () => {
     expect(container.textContent).toContain(firstOf(credentials).label);
   });
 
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
+  it('inherits deferral from Career while retaining credential and community anchors', async () => {
+    const { GitLogSection } = await import('@/components/sections/GitLogSection');
+    const container = document.createElement('div');
+    container.innerHTML = renderToStaticMarkup(<GitLogSection defer />);
+    const career = container.querySelector('#sec-git-log');
+    expect(career?.querySelector('h2')?.textContent).toContain('Career');
+    expect(career?.classList.contains('module-deferred')).toBe(true);
+    expect(career?.getAttribute('data-cv-defer')).toBe('true');
+    expect(container.querySelectorAll('[data-cv-defer]')).toHaveLength(1);
+    const credentials = career?.querySelector('#sec-credentials');
+    expect(credentials).not.toBeNull();
+    expect(credentials?.querySelectorAll('[role="group"]')).toHaveLength(3);
+    expect(credentials?.querySelector('#sec-community')).not.toBeNull();
   });
 });
 
