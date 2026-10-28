@@ -28,14 +28,12 @@ describe('SECTION_LABELS', () => {
         // behavioral-test-allow: enumerates every Module id a section renders to prove label coverage
         const src = readFileSync(join(sectionDir, file), 'utf8');
         const namedIds = new Map(
-          Array.from(
-            src.matchAll(/const\s+(\w+)\s*=\s*['"](sec-[^'"]+)['"]/g),
-            (match) => [match[1], match[2]],
-          ),
+          Array.from(src.matchAll(/const\s+(\w+)\s*=\s*['"](sec-[^'"]+)['"]/g), (match) => [
+            match[1],
+            match[2],
+          ]),
         );
-        for (const m of src.matchAll(
-          /<Module\b[\s\S]*?\bid=(?:"(sec-[^"]+)"|\{(\w+)\})/g,
-        )) {
+        for (const m of src.matchAll(/<Module\b[\s\S]*?\bid=(?:"(sec-[^"]+)"|\{(\w+)\})/g)) {
           const id = m[1] ?? namedIds.get(m[2]);
           expect(id, `unresolved Module id in ${file}`).toBeDefined();
           if (id) ids.add(id);
