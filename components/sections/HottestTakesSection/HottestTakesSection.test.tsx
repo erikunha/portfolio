@@ -15,18 +15,16 @@ function renderOpinions() {
 }
 
 describe('home opinions', () => {
-  it('shows a separate Opinions label without changing the heading accessible name', () => {
+  it('shows a visible Opinions name outside the decorative icon box', () => {
     const { container } = render(<HottestTakesSection defer />);
     const heading = getByRole(container, 'heading', {
       level: 2,
       name: 'OpinionsCAT ~/HOTTEST_TAKES.MDCAT ~/HOTTEST_TAKES.MD',
     });
-    const visibleLabel = Array.from(heading.querySelectorAll('span')).find(
-      (span) => span.textContent === 'Opinions' && !span.classList.contains('sr-only'),
-    );
-    expect(visibleLabel).toBeDefined();
-    expect(visibleLabel?.closest('[aria-hidden="true"]')).not.toBeNull();
-    expect(heading.querySelector('.sr-only')?.textContent).toBe('Opinions');
+    const visibleLabel = heading.querySelector('.module-name');
+    expect(visibleLabel?.textContent).toBe('Opinions');
+    expect(visibleLabel?.closest('[aria-hidden="true"]')).toBeNull();
+    expect(heading.querySelector('.sr-only')).toBeNull();
   });
 
   it('keeps component rules from targeting the screen-reader-only utility', () => {

@@ -4,17 +4,14 @@
     font-weight: 700;
   }
 
-  #sec-hottest-takes > header h2 > span[aria-hidden] {
-    width: auto;
-    gap: var(--spacing-2);
-  }
-
-  .opinions-heading {
+  .module-name {
     white-space: nowrap;
   }
 
   #sec-hottest-takes > header h2 > span:last-child,
   #sec-hottest-takes > header h2 > span:nth-last-child(2) {
+    min-width: 0;
+    overflow-wrap: anywhere;
     font-size: var(--text-sm);
     color: var(--color-text-secondary);
     margin-left: auto;
