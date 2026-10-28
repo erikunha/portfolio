@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { careerCopy } from '../../content/git-log';
+import { heroStats } from '../../content/perf-receipts';
 import { profile } from '../../content/profile';
 import { READING_PATHS, readingViews } from '../../content/reading-views';
 import { installMockBackend } from './_helpers/mock-backend';
@@ -40,7 +41,7 @@ test.describe('reading views', () => {
   test('/summary renders stats, projects and a print button', async ({ page }) => {
     await page.goto(READING_PATHS.summary);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(profile.displayName);
-    await expect(page.locator('.reading-stats .stat-tile')).toHaveCount(4);
+    await expect(page.locator('.reading-stats .stat-tile')).toHaveCount(heroStats.length);
     await expect(page.locator('.reading-projects > li')).toHaveCount(
       readingViews.summary.projectNames.length,
     );

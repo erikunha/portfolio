@@ -159,10 +159,14 @@ export default function CvPage() {
         <Section name="community" heading={cv.headings.community}>
           <article className="reading-entry">
             <h3>
-              <a href={cvDocument.community.href} target="_blank" rel={shared.newTabRel}>
-                {cvDocument.community.heading}
-                <span className="sr-only"> {shared.newTabHint}</span>
-              </a>
+              {cvDocument.community.href ? (
+                <a href={cvDocument.community.href} target="_blank" rel={shared.newTabRel}>
+                  {cvDocument.community.heading}
+                  <span className="sr-only"> {shared.newTabHint}</span>
+                </a>
+              ) : (
+                cvDocument.community.heading
+              )}
             </h3>
             <ul>
               {cvDocument.community.bullets.map((bullet) => (

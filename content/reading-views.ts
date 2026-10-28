@@ -6,7 +6,12 @@ import { heroStats } from './perf-receipts';
 import { profile, profileLocation, profileSummary } from './profile';
 import { projects } from './projects';
 import { readmeCopy } from './readme';
-import { ReadingViewsSchema } from './schemas';
+import {
+  CvDocumentSchema,
+  CvJsonLdSchema,
+  ReadingViewsSchema,
+  SummaryDocumentSchema,
+} from './schemas';
 import { social } from './social';
 import { visaRows, workAuthorizationProse } from './visa';
 
@@ -138,12 +143,21 @@ const labelOf = (key: string): string => {
   return label;
 };
 
-const cvSummary = readmeCopy.desktopIntro
-  .replace(profileSummary, '')
-  .replace(`${workAuthorizationProse}.`, '')
-  .trim();
+export const withoutFragment = (source: string, fragment: string): string => {
+  if (!source.includes(fragment)) {
+    throw new Error(
+      `reading views: expected fragment missing from the README intro: "${fragment}"`,
+    );
+  }
+  return source.replace(fragment, '');
+};
 
-export const cvDocument = {
+const cvSummary = withoutFragment(
+  withoutFragment(readmeCopy.desktopIntro, profileSummary),
+  `${workAuthorizationProse}.`,
+).trim();
+
+export const cvDocument = CvDocumentSchema.parse({
   name: profile.displayName,
   role: profile.title,
   location: profileLocation,
@@ -180,7 +194,7 @@ export const cvDocument = {
     heading: [spaced(communityEvent.name), communityEvent.year, communityEvent.role].join(
       STACK_SEPARATOR,
     ),
-    href: communityEvent.links[0]?.href ?? '',
+    href: communityEvent.links[0]?.href,
     bullets: communityEvent.bullets.map(toSentence),
     status: toSentence(communityEvent.statusLine),
   },
@@ -198,7 +212,7 @@ export const cvDocument = {
     .map((language) => `${language.code.toUpperCase()} (${language.level})`)
     .join(STACK_SEPARATOR),
   email: social.email,
-};
+});
 
 const summaryProjects = readingViews.summary.projectNames.map((name) => {
   const project = projects.find((entry) => entry.name === name);
@@ -207,7 +221,7 @@ const summaryProjects = readingViews.summary.projectNames.map((name) => {
   return { name, label: stat.label, value: stat.value, description: project.description };
 });
 
-export const summaryDocument = {
+export const summaryDocument = SummaryDocumentSchema.parse({
   name: profile.displayName,
   tagline: profile.title,
   technologyLine: profile.technologyLine,
@@ -221,11 +235,11 @@ export const summaryDocument = {
   authorization: visaRows,
   languages: cvDocument.languages,
   email: social.email,
-};
+});
 
 const PROFILE_PAGE_TYPE = 'ProfilePage';
 
-export const cvJsonLd = {
+export const cvJsonLd = CvJsonLdSchema.parse({
   '@context': 'https://schema.org',
   '@type': PROFILE_PAGE_TYPE,
   url: `${social.site}${READING_PATHS.cv}`,
@@ -237,4 +251,4 @@ export const cvJsonLd = {
     url: social.site,
     sameAs: [social.linkedin, social.github],
   },
-};
+});

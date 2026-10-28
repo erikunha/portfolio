@@ -584,3 +584,86 @@ export const ReadingViewsSchema = z.object({
 });
 
 export type ReadingViews = z.infer<typeof ReadingViewsSchema>;
+
+const ReadingRowSchema = z.object({
+  key: ReadingTextSchema,
+  label: ReadingTextSchema,
+  value: ReadingTextSchema,
+});
+
+export const CvDocumentSchema = z.object({
+  name: ReadingTextSchema,
+  role: ReadingTextSchema,
+  location: ReadingTextSchema,
+  links: z
+    .array(z.object({ label: ReadingTextSchema, href: ReadingTextSchema, external: z.boolean() }))
+    .min(1),
+  summary: ReadingTextSchema,
+  experience: z
+    .array(
+      z.object({
+        key: ReadingTextSchema,
+        company: ReadingTextSchema,
+        meta: ReadingTextSchema,
+        bullets: z.array(ReadingTextSchema).min(1),
+      }),
+    )
+    .min(1),
+  skills: z.array(ReadingTextSchema).min(1),
+  certifications: z.array(ReadingRowSchema),
+  community: z.object({
+    heading: ReadingTextSchema,
+    href: z.url().optional(),
+    bullets: z.array(ReadingTextSchema),
+    status: ReadingTextSchema,
+  }),
+  education: z.array(ReadingRowSchema),
+  authorization: z.array(ReadingRowSchema).min(1),
+  languages: ReadingTextSchema,
+  email: ReadingTextSchema,
+});
+
+export const SummaryDocumentSchema = z.object({
+  name: ReadingTextSchema,
+  tagline: ReadingTextSchema,
+  technologyLine: ReadingTextSchema,
+  context: ReadingTextSchema,
+  stats: z.array(z.object({ value: ReadingTextSchema, label: ReadingTextSchema })).min(1),
+  projects: z
+    .array(
+      z.object({
+        name: ReadingTextSchema,
+        label: ReadingTextSchema,
+        value: ReadingTextSchema,
+        description: ReadingTextSchema,
+      }),
+    )
+    .min(1),
+  authorization: z
+    .array(
+      z
+        .object({
+          jurisdiction: ReadingTextSchema,
+          status: ReadingTextSchema,
+          evidence: ReadingTextSchema,
+        })
+        .passthrough(),
+    )
+    .min(1),
+  languages: ReadingTextSchema,
+  email: ReadingTextSchema,
+});
+
+export const CvJsonLdSchema = z.object({
+  '@context': z.literal('https://schema.org'),
+  '@type': z.literal('ProfilePage'),
+  url: z.url(),
+  name: ReadingTextSchema,
+  mainEntity: z.object({
+    '@type': z.literal('Person'),
+    name: ReadingTextSchema,
+    jobTitle: ReadingTextSchema,
+    url: z.url(),
+    sameAs: z.array(z.url()).min(1),
+  }),
+});

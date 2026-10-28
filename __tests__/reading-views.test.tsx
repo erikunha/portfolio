@@ -13,6 +13,7 @@ import {
   readingViews,
   summaryDocument,
   toSentence,
+  withoutFragment,
 } from '@/content/reading-views';
 import { social } from '@/content/social';
 import { visaRows, workAuthorizationProse } from '@/content/visa';
@@ -34,6 +35,16 @@ describe('toSentence', () => {
 
   it('rewrites a known resume fragment into a full sentence', () => {
     expect(toSentence('Angular 17 to 19')).toBe('Upgraded the platform from Angular 17 to 19.');
+  });
+});
+
+describe('withoutFragment', () => {
+  it('removes the fragment from the source', () => {
+    expect(withoutFragment('keep this drop', ' drop')).toBe('keep this');
+  });
+
+  it('throws when the fragment has drifted out of the source', () => {
+    expect(() => withoutFragment('keep this', 'gone')).toThrow(/expected fragment missing/);
   });
 });
 
@@ -136,8 +147,10 @@ describe('summary reading view', () => {
     expect(host.querySelector('h1')?.textContent).toBe(profile.displayName);
   });
 
-  it('shows the four hero numbers with their labels', () => {
-    const tiles = host.querySelectorAll('[aria-label="Key numbers"] .stat-tile');
+  it('shows every hero number with their labels', () => {
+    const tiles = host.querySelectorAll(
+      `[aria-label="${readingViews.summary.statsLabel}"] .stat-tile`,
+    );
     expect(tiles).toHaveLength(heroStats.length);
     heroStats.forEach((stat, index) => {
       expect(tiles[index]?.textContent).toContain(stat.value);
@@ -183,6 +196,19 @@ describe('summary reading view', () => {
 });
 
 describe('reading view content', () => {
+  it('renders the community heading as plain text when it has no link', () => {
+    const { href: _omit, ...community } = cvDocument.community;
+    const original = cvDocument.community;
+    Object.assign(cvDocument, { community });
+    const host = render(CvPage);
+    Object.assign(cvDocument, { community: original });
+    const heading = Array.from(host.querySelectorAll('h3')).find(
+      (node) => node.textContent === community.heading,
+    );
+    expect(heading).toBeDefined();
+    expect(heading?.querySelector('a')).toBeNull();
+  });
+
   it('points the Career CV link at the CV view', () => {
     expect(READING_PATHS.cv).toBe('/cv');
   });

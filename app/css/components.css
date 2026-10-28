@@ -1863,8 +1863,7 @@
 
     .reading-view .skip-to-content,
     .reading-bar,
-    .reading-actions,
-    .reading-view .copy-btn {
+    .reading-actions {
       display: none;
     }
 

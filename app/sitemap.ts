@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { READING_PATHS } from '@/content/reading-views';
+import { social } from '@/content/social';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = 'https://www.erikunha.dev';
+  const base = social.site;
   const dsDate = new Date('2026-05-23');
   const linksDate = new Date('2026-08-30');
   const readingDate = new Date('2026-10-28');
