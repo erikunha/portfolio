@@ -10,6 +10,8 @@ const KNOWN_UNORDERED = new Set([
   'sec-ai-metrics',
   'sec-live-perf',
   'sec-perf-receipts',
+  'sec-credentials',
+  'sec-community',
 ]);
 
 function collectTsx(dir) {

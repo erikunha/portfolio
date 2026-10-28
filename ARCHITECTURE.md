@@ -28,7 +28,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Functional
 
-- Static composition of ~18 content sections (hero, README, projects, git log, NPM, SYS_HEALTH, PERF_RECEIPTS, visa, community, HOTTEST_TAKES, RESPONSIBILITIES, guitar_rig, unknowns, contact, MAN ERIK, INTERACTIVE_SHELL, footer)
+- Static composition of ~18 content sections (hero, README, projects, Career with certification, education and community tags, NPM, SYS_HEALTH, PERF_RECEIPTS, visa, HOTTEST_TAKES, RESPONSIBILITIES, guitar_rig, unknowns, contact, MAN ERIK, INTERACTIVE_SHELL, footer)
 - Hero: Matrix dialog loop + boot sequence (typewriter)
 - Mount-driven role typewriter (RoleTyper); IntersectionObserver gates MatrixRain; the footer is server-rendered, with client islands only for session counters and halt/reboot (no scroll-reveal typewriter exists)
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
@@ -145,7 +145,7 @@ Naming convention: every client file ends in `.client.tsx`. The default is serve
 
 ### Partial Prerendering (PPR)
 
-Five sections (ManPage, Guitar, GitLog, Visa, DawMixer) select desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, their Suspense fallbacks enter the static shell and the selected variants stream per request.
+Four sections (ManPage, Guitar, Visa, DawMixer) select desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, their Suspense fallbacks enter the static shell and the selected variants stream per request.
 
 Projects renders one static RSC tree at every viewport. Its nine cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
 
@@ -154,6 +154,11 @@ Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. AS
 Two exceptions use `fallback={null}` instead of their desktop component, for different reasons:
 - `GuitarSection`: desktop and mobile variants differ enough in height that the swap produced a CLS spike. `fallback={null}` renders only the module header until the dynamic hole fills. See `DECISIONS.md` 2026-06-13 (C2 perf fix).
 - `DawMixerSection`: the desktop variant is a `next/dynamic` lazy-loaded client component: it cannot serve as a static Suspense fallback (it is itself dynamically loaded). `fallback={null}` renders only the section shell.
+
+Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
+Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one static section.
+`sec-credentials` and `sec-community` are nested in-page anchors, excluded from mobile section ordering.
+Community event and reference links use the validated labels and URLs in `content/community.ts`.
 
 ### Trade-off
 
@@ -210,9 +215,10 @@ content/responsibilities.ts           # permissions matrix
 content/guitar-rig.ts                 # gear sheet
 content/unknowns.ts                   # unknowns items
 content/visa.ts                       # jurisdiction table
-content/community.ts                  # devopsdays
+content/community.ts                  # community/* tags and event references inside Career
 content/now.ts                        # ~/.now
-content/credentials.ts                # ~/.credentials
+content/credentials.ts                # cert/* tags and Career tag-group copy
+content/education.ts                  # edu/* tags inside Career
 content/man-page.ts                   # MAN ERIK content
 content/social.ts                     # github / linkedin / email / site
 content/schemas.ts                    # Zod validation schemas, build-time
