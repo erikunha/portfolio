@@ -7,16 +7,13 @@ import {
   mountClient,
 } from '@/__tests__/helpers/render';
 
+const mobileViewport = vi.hoisted(() => ({ value: false }));
 vi.mock('@/lib/use-breakpoint.client', () => ({
-  useBreakpoint: () => ({ isMobile: false }),
+  useBreakpoint: () => ({ isMobile: mobileViewport.value }),
 }));
 
 vi.mock('@/lib/motion', () => ({
   readMotion: () => false,
-}));
-
-vi.mock('@/content/shell-commands', () => ({
-  default: [],
 }));
 
 function streamingResponse(chunks: string[]): Response {
@@ -41,15 +38,17 @@ function isReactOwned(node: Element): boolean {
   return Object.keys(node).some((k) => k.startsWith('__reactFiber$'));
 }
 
-function submitQuestion(container: HTMLElement, question: string): Promise<void> {
+async function submitQuestion(container: HTMLElement, question: string): Promise<void> {
   const input = container.querySelector<HTMLInputElement>('input[aria-label="shell command"]');
   const form = container.querySelector<HTMLFormElement>('form');
   expect(input).not.toBeNull();
   expect(form).not.toBeNull();
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-  return act(async () => {
+  await act(async () => {
     if (input && setter) setter.call(input, question);
     input?.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await act(async () => {
     form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   });
 }
@@ -64,6 +63,7 @@ describe('InteractiveShell streaming behavior', () => {
   afterEach(() => {
     mounted?.unmount();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('renders the answer progressively as the /api/ask stream arrives', async () => {
@@ -107,7 +107,7 @@ describe('InteractiveShell streaming behavior', () => {
     expect(feed?.textContent).toContain('Hello world');
   });
 
-  it('renders streamed text into a React-owned feed node — no out-of-tree DOM', async () => {
+  it('renders streamed text into a React-owned feed node without out-of-tree DOM', async () => {
     const { InteractiveShell } = await import('./InteractiveShell');
 
     const fetchMock = vi.fn(async () => streamingResponse(['Hello ', 'from ', 'Claude']));
@@ -178,6 +178,7 @@ describe('shell feed accessibility', () => {
   afterEach(() => {
     mounted?.unmount();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   async function renderShell(): Promise<HTMLElement> {
@@ -237,7 +238,7 @@ describe('shell feed accessibility', () => {
   });
 });
 
-describe('InteractiveShell — multi-turn history', () => {
+describe('InteractiveShell multi-turn history', () => {
   let mounted: MountedClient;
 
   beforeEach(() => {
@@ -247,6 +248,7 @@ describe('InteractiveShell — multi-turn history', () => {
   afterEach(() => {
     mounted?.unmount();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('appends the second answer below the first in the log feed', async () => {
@@ -288,5 +290,348 @@ describe('InteractiveShell — multi-turn history', () => {
     const firstIdx = text.indexOf('First answer.');
     const secondIdx = text.indexOf('Second answer.');
     expect(firstIdx).toBeLessThan(secondIdx);
+  });
+});
+
+function shellInput(container: HTMLElement): HTMLInputElement {
+  const input = container.querySelector<HTMLInputElement>('input[aria-label="shell command"]');
+  expect(input).not.toBeNull();
+  return input as HTMLInputElement;
+}
+
+function buttonWithText(container: HTMLElement, text: string): HTMLButtonElement {
+  const button = Array.from(container.querySelectorAll('button')).find((b) => b.textContent === text);
+  expect(button).toBeDefined();
+  return button as HTMLButtonElement;
+}
+
+async function press(element: HTMLElement, key: string, options: KeyboardEventInit = {}) {
+  await act(async () => {
+    element.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, ...options }));
+  });
+}
+
+async function typeDraft(input: HTMLInputElement, text: string) {
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, text);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+}
+
+describe('InteractiveShell r106 controls', () => {
+  let mounted: MountedClient;
+
+  beforeEach(() => {
+    vi.resetModules();
+    mobileViewport.value = false;
+  });
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  async function renderShell() {
+    const { InteractiveShell } = await import('./InteractiveShell');
+    mounted = await mountClient(createElement(InteractiveShell));
+    return mounted.container;
+  }
+
+  it.each([false, true])('stops thinking and returns focus, mobile=%s', async (mobile) => {
+    mobileViewport.value = mobile;
+    let signal: AbortSignal | undefined;
+    let resolveFetch: (response: Response) => void = () => undefined;
+    vi.stubGlobal('fetch', vi.fn((_url, init: RequestInit) => {
+      signal = init.signal as AbortSignal;
+      return new Promise<Response>((resolve) => {
+        resolveFetch = resolve;
+      });
+    }));
+    const container = await renderShell();
+    shellInput(container).focus();
+    await submitQuestion(container, 'question to restore');
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('thinking');
+    const stop = buttonWithText(container, '[STOP]');
+    await act(async () => {
+      stop.focus();
+      stop.click();
+    });
+    expect(signal?.aborted).toBe(true);
+    expect(shellInput(container).value).toBe('question to restore');
+    expect(document.activeElement).toBe(shellInput(container));
+    expect(container.querySelector('[role="log"]')?.getAttribute('aria-busy')).toBe('false');
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('stopped before');
+    expect(container.querySelector('[data-testid="shell-reference"]')).toBeNull();
+    await act(async () => {
+      resolveFetch(streamingResponse(['late answer']));
+    });
+    expect(container.textContent).not.toContain('late answer');
+  });
+
+  it('stops a live stream, keeps partial text and the real reference, and ignores queued frames', async () => {
+    let signal: AbortSignal | undefined;
+    const cancel = vi.fn();
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('Partial answer'));
+      },
+      cancel,
+    });
+    vi.stubGlobal('fetch', vi.fn(async (_url, init: RequestInit) => {
+      signal = init.signal as AbortSignal;
+      return new Response(body, { headers: { 'X-Request-Id': 'real-request-42' } });
+    }));
+    const container = await renderShell();
+    await submitQuestion(container, 'stream a response');
+    await flushFrames();
+    expect(container.querySelector('[role="log"]')?.textContent).toContain('Partial answer');
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('answer started');
+    await act(async () => {
+      buttonWithText(container, '[STOP]').click();
+    });
+    await flushFrames();
+    expect(signal?.aborted).toBe(true);
+    expect(cancel).toHaveBeenCalledOnce();
+    expect(container.querySelector('[role="log"]')?.textContent).toContain('Partial answer');
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('incomplete');
+    expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain('real-request-42');
+    expect(container.querySelector('[data-testid="shell-line-loading"]')).toBeNull();
+  });
+
+  it('keeps drafts usable while guarding duplicate submits and shortcut activation', async () => {
+    const fetchMock = vi.fn(() => new Promise<Response>(() => undefined));
+    vi.stubGlobal('fetch', fetchMock);
+    const container = await renderShell();
+    await submitQuestion(container, 'first question');
+    expect(shellInput(container).disabled).toBe(false);
+    await submitQuestion(container, 'draft follow-up');
+    await act(async () => {
+      buttonWithText(container, 'whois').click();
+    });
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(shellInput(container).value).toBe('draft follow-up');
+    await act(async () => {
+      buttonWithText(container, '[STOP]').click();
+    });
+    expect(shellInput(container).value).toBe('draft follow-up');
+  });
+
+  it('uses the real 429 error without inventing a retry duration, then runs local commands', async () => {
+    const fetchMock = vi.fn(async () => Response.json(
+      { error: 'rate limit exceeded, try again in an hour' },
+      { status: 429, headers: { 'X-Request-Id': 'limited-request' } },
+    ));
+    vi.stubGlobal('fetch', fetchMock);
+    const container = await renderShell();
+    await submitQuestion(container, 'limited question');
+    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('try again in an hour');
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('try again in an hour');
+    expect(shellInput(container).value).toBe('limited question');
+    expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain('limited-request');
+    await submitQuestion(container, 'help');
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(container.querySelector('[role="log"]')?.textContent).toContain('commands:');
+  });
+
+  it('reports an offline failure, restores the question and leaves local commands usable', async () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    vi.stubGlobal('fetch', fetchMock);
+    const container = await renderShell();
+    shellInput(container).focus();
+    await submitQuestion(container, 'offline question');
+    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('offline');
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('offline');
+    expect(shellInput(container).value).toBe('offline question');
+    expect(document.activeElement).toBe(shellInput(container));
+    expect(container.querySelector('[data-testid="shell-reference"]')).toBeNull();
+    await submitQuestion(container, 'whois');
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(container.querySelector('[role="log"]')?.textContent).toContain('erik');
+  });
+
+  it('aborts a hung request after the named timeout and allows retry', async () => {
+    const { SHELL_LIMITS } = await import('@/content/shell-ui');
+    let signal: AbortSignal | undefined;
+    vi.stubGlobal('fetch', vi.fn((_url, init: RequestInit) => {
+      signal = init.signal as AbortSignal;
+      return new Promise<Response>(() => undefined);
+    }));
+    const container = await renderShell();
+    vi.useFakeTimers();
+    await submitQuestion(container, 'slow question');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(SHELL_LIMITS.requestTimeoutMs);
+    });
+    expect(signal?.aborted).toBe(true);
+    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('timed out');
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('timed out');
+    expect(shellInput(container).value).toBe('slow question');
+    expect(container.querySelector('[role="log"]')?.getAttribute('aria-busy')).toBe('false');
+    vi.stubGlobal('fetch', vi.fn(async () => streamingResponse(['retry worked'])));
+    await submitQuestion(container, 'retry');
+    expect(container.querySelector('[role="log"]')?.textContent).toContain('retry worked');
+  });
+
+  it.each([
+    ['stream failure', () => streamingResponse(['Partial\x00ERR:upstream error'])],
+    ['empty body', () => new Response(null)],
+    ['HTTP failure', () => new Response('not json', { status: 503 })],
+  ] as const)('reports %s and never reports answer complete', async (_name, response) => {
+    vi.stubGlobal('fetch', vi.fn(async () => response()));
+    const container = await renderShell();
+    await submitQuestion(container, 'a question');
+    expect(container.querySelector('[data-kind="error"]')).not.toBeNull();
+    expect(container.querySelector('[role="status"]')?.textContent).not.toContain('answer complete');
+    expect(container.querySelector('[role="log"]')?.getAttribute('aria-busy')).toBe('false');
+  });
+
+  it('copies the actual header value and shows a failed copy with a retry', async () => {
+    const writeText = vi.fn().mockRejectedValueOnce(new Error('denied')).mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { clipboard: { writeText }, onLine: true });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('answer', {
+      headers: { 'X-Request-Id': 'server-reference-123' },
+    })));
+    const container = await renderShell();
+    await submitQuestion(container, 'reference please');
+    await act(async () => {
+      buttonWithText(container, 'COPY').click();
+    });
+    expect(writeText).toHaveBeenCalledWith('server-reference-123');
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('Copy failed');
+    await act(async () => {
+      buttonWithText(container, 'COPY FAILED').click();
+    });
+    expect(writeText).toHaveBeenCalledTimes(2);
+    expect(buttonWithText(container, 'COPIED')).toBeDefined();
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('Reference copied');
+  });
+
+  it('shows a copy failure when the clipboard API is unavailable', async () => {
+    vi.stubGlobal('navigator', { onLine: true });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('answer', {
+      headers: { 'X-Request-Id': 'manual-copy-reference' },
+    })));
+    const container = await renderShell();
+    await submitQuestion(container, 'copy without clipboard');
+    await act(async () => {
+      buttonWithText(container, 'COPY').click();
+    });
+    expect(buttonWithText(container, 'COPY FAILED')).toBeDefined();
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('manually');
+    expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain('manual-copy-reference');
+  });
+
+  it.each([false, true])('returns focus on completion, mobile=%s', async (mobile) => {
+    mobileViewport.value = mobile;
+    let complete: () => void = () => undefined;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        complete = () => controller.close();
+      },
+    });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(body)));
+    const container = await renderShell();
+    await submitQuestion(container, 'focus on completion');
+    buttonWithText(container, '[STOP]').focus();
+    await act(async () => {
+      complete();
+    });
+    expect(document.activeElement).toBe(shellInput(container));
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('answer complete');
+  });
+
+  it('does not fabricate a reference when the response has no header', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => streamingResponse(['answer'])));
+    const container = await renderShell();
+    await submitQuestion(container, 'without a reference');
+    expect(container.querySelector('[data-testid="shell-reference"]')).toBeNull();
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('answer complete');
+  });
+
+  it('recalls commands with arrows and restores the unsent draft without intercepting modifiers', async () => {
+    const container = await renderShell();
+    await submitQuestion(container, 'help');
+    await submitQuestion(container, 'whois');
+    const input = shellInput(container);
+    await typeDraft(input, 'unsent draft');
+    await press(input, 'ArrowUp', { ctrlKey: true });
+    expect(input.value).toBe('unsent draft');
+    await press(input, 'ArrowUp');
+    expect(input.value).toBe('whois');
+    await press(input, 'ArrowUp');
+    expect(input.value).toBe('help');
+    await press(input, 'ArrowDown');
+    expect(input.value).toBe('whois');
+    await press(input, 'ArrowDown');
+    expect(input.value).toBe('unsent draft');
+  });
+
+  it.each([false, true])('provides one toolbar tab stop, wraparound, Home/End and focus return, mobile=%s', async (mobile) => {
+    mobileViewport.value = mobile;
+    const container = await renderShell();
+    const toolbar = container.querySelector('[role="toolbar"]') as HTMLElement;
+    const buttons = Array.from(toolbar.querySelectorAll('button'));
+    expect(buttons.filter((button) => button.tabIndex === 0)).toHaveLength(1);
+    const first = buttons[0] as HTMLButtonElement;
+    first.focus();
+    await press(first, 'ArrowLeft');
+    expect(document.activeElement).toBe(buttons.at(-1));
+    await press(buttons.at(-1) as HTMLElement, 'ArrowRight');
+    expect(document.activeElement).toBe(buttons[0]);
+    await press(first, 'End');
+    expect(document.activeElement).toBe(buttons.at(-1));
+    await press(buttons.at(-1) as HTMLElement, 'Home');
+    expect(document.activeElement).toBe(buttons[0]);
+    await act(async () => {
+      first.click();
+    });
+    expect(document.activeElement).toBe(shellInput(container));
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('Command complete');
+  });
+
+  it('caps rendered lines and command recall, and announces clear', async () => {
+    const { SHELL_LIMITS } = await import('@/content/shell-ui');
+    const container = await renderShell();
+    await submitQuestion(container, 'whois');
+    for (let index = 0; index < SHELL_LIMITS.commandHistory; index++) {
+      await submitQuestion(container, 'help');
+    }
+    for (let index = 0; index <= SHELL_LIMITS.commandHistory; index++) {
+      await press(shellInput(container), 'ArrowUp');
+    }
+    expect(shellInput(container).value).toBe('help');
+    expect(container.querySelector('[role="log"]')?.children.length).toBeLessThanOrEqual(50);
+    await submitQuestion(container, 'clear');
+    expect(container.querySelector('[role="log"]')?.children.length).toBe(1);
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('log cleared');
+  });
+
+  it('aborts the request and cancels its reader when unmounted', async () => {
+    let signal: AbortSignal | undefined;
+    const cancel = vi.fn();
+    vi.stubGlobal('fetch', vi.fn(async (_url, init: RequestInit) => {
+      signal = init.signal as AbortSignal;
+      return new Response(new ReadableStream({ cancel }));
+    }));
+    const container = await renderShell();
+    await submitQuestion(container, 'pending');
+    mounted.unmount();
+    mounted = undefined as unknown as MountedClient;
+    expect(signal?.aborted).toBe(true);
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+
+  it('describes the input with the accuracy notice and validates all shell UI copy with Zod', async () => {
+    const { shellUi } = await import('@/content/shell-ui');
+    const { ShellUiSchema } = await import('@/content/schemas');
+    expect(ShellUiSchema.safeParse(shellUi).success).toBe(true);
+    expect(ShellUiSchema.safeParse({ ...shellUi, stop: '' }).success).toBe(false);
+    const container = await renderShell();
+    const noticeId = shellInput(container).getAttribute('aria-describedby');
+    const notice = Array.from(container.querySelectorAll('[id]')).find((node) => node.id === noticeId);
+    expect(notice?.textContent).toContain('can be wrong');
   });
 });

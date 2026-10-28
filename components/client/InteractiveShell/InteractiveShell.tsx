@@ -1,465 +1,591 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import SHELL_RESPONSES from '@/content/shell-commands';
+import { SHELL_LIMITS, ShellCommand, ShellLineKind, shellUi } from '@/content/shell-ui';
 import { shellChrome } from '@/content/terminal-chrome';
 import { WindowChrome } from '@/design-system';
 import { readMotion } from '@/lib/motion';
 import { parseStreamChunk } from '@/lib/stream-protocol';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 
-type Line = { id: number; kind: 'prompt' | 'output' | 'error' | 'info' | 'loading'; text: string };
+type LineKind = (typeof ShellLineKind)[keyof typeof ShellLineKind];
+type Line = { id: number; kind: LineKind; text: string; ai?: boolean };
+type ActiveRequest = { stop: () => void; dispose: () => void };
 
-const KIND_CLASS: Record<Line['kind'], string> = {
-  prompt: 'text-primary-500',
-  output: 'text-tertiary-50 opacity-[0.95]',
-  error: 'text-senary-300',
-  info: 'text-primary-400',
-  loading: 'text-primary-500 opacity-50',
+const KIND_CLASS: Record<LineKind, string> = {
+  [ShellLineKind.Prompt]: 'shell-line-prompt',
+  [ShellLineKind.Output]: 'shell-line-output',
+  [ShellLineKind.Error]: 'shell-line-error',
+  [ShellLineKind.Info]: 'shell-line-info',
+  [ShellLineKind.Loading]: 'shell-line-loading',
+  [ShellLineKind.Reference]: 'shell-line-reference',
 };
+const Key = {
+  Up: 'ArrowUp',
+  Down: 'ArrowDown',
+  Left: 'ArrowLeft',
+  Right: 'ArrowRight',
+  Home: 'Home',
+  End: 'End',
+} as const;
+const CopyState = { Idle: 'idle', Pending: 'pending', Copied: 'copied', Failed: 'failed' } as const;
+const PlaceholderPhase = { Type: 'type', Hold: 'hold', Back: 'back' } as const;
+const ASK_ENDPOINT = '/api/ask';
+const SHELL_COMMAND_EVENT = 'shell-cmd-run';
+const RATE_LIMIT_STATUS = 429;
+const TIMEOUT_ERROR_NAME = 'TimeoutError';
+const WINDOW_DOT_SIZE = 10;
 
-const INITIAL_LINES: Omit<Line, 'id'>[] = [
-  {
-    kind: 'info',
-    text: 'Connected. Type help to list commands, or ask me anything about Erik.',
-  },
-];
-
-const MOBILE_INITIAL: Omit<Line, 'id'>[] = [
-  { kind: 'info', text: 'welcome. type help, tap a chip, or ask me anything.' },
-];
-
-const COMMANDS: { label: string; cmd: string }[] = [
-  { label: 'help', cmd: 'help' },
-  { label: 'whois', cmd: 'whois' },
-  { label: 'ls', cmd: 'ls' },
-  { label: 'cat skills.md', cmd: 'cat skills.md' },
-  { label: 'cat ~/.now', cmd: 'cat ~/.now' },
-  { label: 'contact', cmd: 'contact' },
-  { label: 'face', cmd: 'face' },
-  { label: 'hire', cmd: 'hire' },
-  { label: 'clear', cmd: 'clear' },
-];
-
-function withIds(lines: Omit<Line, 'id'>[], nextId: () => number): Line[] {
-  return lines.map((l) => ({ ...l, id: nextId() }));
+function bounded(lines: Line[]): Line[] {
+  return lines.slice(-SHELL_LIMITS.logEntries);
 }
-
-const PLACEHOLDER_SUGGESTIONS = [
-  'help',
-  'whois',
-  'cat skills.md',
-  'cat ~/.now',
-  'what are your strongest projects?',
-  'open to relocation?',
-  'hire',
-];
 
 function AnimatedPlaceholder() {
   const textRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    const el = textRef.current;
-    if (!el) return;
-    const node = el;
+    const node = textRef.current;
+    if (!node) return;
     if (!readMotion()) {
-      node.textContent = 'type a command or ask anything…';
+      node.textContent = shellUi.placeholder;
       return;
     }
-    let cancelled = false;
-    let idx = 0;
-    let charIdx = 0;
-    let phase: 'type' | 'hold' | 'back' = 'type';
-
+    let index = 0;
+    let character = 0;
+    let phase: (typeof PlaceholderPhase)[keyof typeof PlaceholderPhase] = PlaceholderPhase.Type;
+    let timer: ReturnType<typeof setTimeout>;
     function tick() {
-      if (cancelled) return;
-      const suggestion = PLACEHOLDER_SUGGESTIONS[idx % PLACEHOLDER_SUGGESTIONS.length] ?? '';
-      if (phase === 'type') {
-        node.textContent = suggestion.slice(0, ++charIdx);
-        if (charIdx >= suggestion.length) {
-          phase = 'hold';
-          setTimeout(tick, 1800);
-        } else setTimeout(tick, 60);
-      } else if (phase === 'hold') {
-        phase = 'back';
-        setTimeout(tick, 40);
+      if (!node) return;
+      const suggestion = shellUi.suggestions[index % shellUi.suggestions.length] ?? '';
+      if (phase === PlaceholderPhase.Type) {
+        node.textContent = suggestion.slice(0, ++character);
+        if (character >= suggestion.length) phase = PlaceholderPhase.Hold;
+        timer = setTimeout(
+          tick,
+          phase === PlaceholderPhase.Hold
+            ? SHELL_LIMITS.placeholderHoldMs
+            : SHELL_LIMITS.placeholderTypeMs,
+        );
+      } else if (phase === PlaceholderPhase.Hold) {
+        phase = PlaceholderPhase.Back;
+        timer = setTimeout(tick, SHELL_LIMITS.placeholderBackMs);
       } else {
-        node.textContent = suggestion.slice(0, --charIdx);
-        if (charIdx <= 0) {
-          idx++;
-          charIdx = 0;
-          phase = 'type';
-          setTimeout(tick, 300);
-        } else setTimeout(tick, 30);
+        node.textContent = suggestion.slice(0, --character);
+        if (character <= 0) {
+          index++;
+          phase = PlaceholderPhase.Type;
+        }
+        timer = setTimeout(
+          tick,
+          character <= 0 ? SHELL_LIMITS.placeholderPauseMs : SHELL_LIMITS.placeholderBackMs,
+        );
       }
     }
     tick();
-    return () => {
-      cancelled = true;
-    };
+    return () => clearTimeout(timer);
   }, []);
   return (
-    <span
-      className="absolute left-0 top-1/2 -translate-y-1/2 text-primary-400 opacity-60 pointer-events-none font-inherit text-[14px] whitespace-nowrap overflow-hidden inline-flex items-center"
-      aria-hidden="true"
-      data-testid="shell-placeholder"
-    >
+    <span className="shell-placeholder" aria-hidden="true" data-testid="shell-placeholder">
       <span ref={textRef} />
       <span className="shell-cursor" data-testid="shell-cursor" />
     </span>
   );
 }
 
-const DOT_FRAMES = ['...', '..', '.', '..'] as const;
-
-function LoadingDots() {
-  const [frame, setFrame] = useState(0);
+function ResponseReference({
+  requestId,
+  announce,
+}: {
+  requestId: string;
+  announce: (text: string) => void;
+}) {
+  const [state, setState] = useState<(typeof CopyState)[keyof typeof CopyState]>(CopyState.Idle);
+  const mounted = useRef(true);
+  const copying = useRef(false);
   useEffect(() => {
-    const id = setInterval(() => setFrame((f) => (f + 1) % DOT_FRAMES.length), 380);
-    return () => clearInterval(id);
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
   }, []);
+  async function copy() {
+    if (copying.current) return;
+    copying.current = true;
+    setState(CopyState.Pending);
+    try {
+      await navigator.clipboard.writeText(requestId);
+      if (!mounted.current) return;
+      setState(CopyState.Copied);
+      announce(shellUi.copiedAnnouncement);
+    } catch {
+      if (!mounted.current) return;
+      setState(CopyState.Failed);
+      announce(shellUi.copyFailedAnnouncement);
+    } finally {
+      copying.current = false;
+    }
+  }
+  const label =
+    state === CopyState.Copied
+      ? shellUi.copied
+      : state === CopyState.Failed
+        ? shellUi.copyFailed
+        : shellUi.copy;
   return (
-    <span
-      className="m-0 block whitespace-pre-wrap break-words text-primary-500 opacity-50"
-      aria-hidden="true"
-      data-testid="shell-line-loading"
-    >
-      {DOT_FRAMES[frame]}
+    <span className="shell-reference" data-testid="shell-reference">
+      <span>
+        {shellUi.referencePrefix} <code>{requestId}</code>
+      </span>
+      <button
+        type="button"
+        className="shell-control"
+        aria-label={`${shellUi.copyLabel} ${requestId}`}
+        aria-disabled={state === CopyState.Pending}
+        onClick={copy}
+      >
+        {label}
+      </button>
     </span>
   );
 }
 
 export function InteractiveShell() {
   const { isMobile } = useBreakpoint();
-  const lineIdRef = useRef(0);
-  const nextId = useCallback(() => ++lineIdRef.current, []);
-  const [history, setHistory] = useState<Line[]>(() => withIds(INITIAL_LINES, nextId));
+  const accuracyId = useId();
+  const lineId = useRef(0);
+  const nextId = useCallback(() => ++lineId.current, []);
+  const initialLines = useCallback(
+    (): Line[] => [
+      {
+        id: nextId(),
+        kind: ShellLineKind.Info,
+        text: isMobile ? shellUi.mobileWelcome : shellUi.welcome,
+      },
+    ],
+    [isMobile, nextId],
+  );
+  const [history, setHistory] = useState<Line[]>(initialLines);
   const [input, setInput] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const [busy, setBusy] = useState(false);
   const [streamingText, setStreamingText] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState({ id: 0, text: '' });
+  const [toolbarIndex, setToolbarIndex] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const typingRef = useRef(false);
+  const toolbarButtons = useRef<(HTMLButtonElement | null)[]>([]);
+  const activeRequest = useRef<ActiveRequest | null>(null);
   const mountedRef = useRef(true);
   const rafRef = useRef<number | null>(null);
-  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const commands = useRef<string[]>([]);
+  const historyIndex = useRef(0);
+  const draft = useRef('');
+  const initializedRef = useRef(false);
+
+  const announce = useCallback((text: string) => {
+    setAnnouncement((previous) => ({ id: previous.id + 1, text }));
+  }, []);
+  const focusInput = useCallback(() => inputRef.current?.focus({ preventScroll: true }), []);
+  const clearFrame = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-      if (typingTimerRef.current !== null) clearTimeout(typingTimerRef.current);
+      activeRequest.current?.dispose();
+      activeRequest.current = null;
+      clearFrame();
     };
-  }, []);
-  const initializedRef = useRef(false);
+  }, [clearFrame]);
 
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
-    if (isMobile) setHistory(withIds(MOBILE_INITIAL, nextId));
-  }, [isMobile, nextId]);
+    if (isMobile) setHistory(initialLines());
+  }, [isMobile, initialLines]);
 
-  const wasBusyRef = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: history and streamingText trigger scroll on the stable feed ref
   useEffect(() => {
-    if (!isMobile && wasBusyRef.current && !busy) {
-      inputRef.current?.focus();
-    }
-    wasBusyRef.current = busy;
-  }, [busy, isMobile]);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: history + streamingText trigger scroll; feedRef is a stable ref
-  useEffect(() => {
-    if (feedRef.current) {
-      feedRef.current.scrollTop = feedRef.current.scrollHeight;
-    }
+    if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
   }, [history, streamingText]);
 
   const streamQuestion = useCallback(
-    async (question: string) => {
+    async (question: string, command: string) => {
+      const controller = new AbortController();
       const loadingId = nextId();
-      setHistory((h) => [...h, { id: loadingId, kind: 'loading', text: '' }]);
+      let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+      let requestId: string | null = null;
+      let accumulated = '';
+      let receivedText = false;
+      let settled = false;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      setBusy(true);
+      setHistory((lines) =>
+        bounded([...lines, { id: loadingId, kind: ShellLineKind.Loading, text: '' }]),
+      );
+      announce(shellUi.thinking);
 
-      const clearRaf = () => {
-        if (rafRef.current !== null) {
-          cancelAnimationFrame(rafRef.current);
-          rafRef.current = null;
-        }
-      };
-
-      const finalize = (finalText: string, errMsg?: string) => {
-        clearRaf();
+      function releaseTransport() {
+        controller.abort();
+        void reader?.cancel().catch(() => undefined);
+      }
+      function finish(text: string, message?: string, error = false) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        clearFrame();
         if (!mountedRef.current) return;
-        setStreamingText(null);
+        activeRequest.current = null;
         const lines: Line[] = [];
-        if (finalText) lines.push({ id: nextId(), kind: 'output', text: finalText });
-        if (errMsg) lines.push({ id: nextId(), kind: 'error', text: `error: ${errMsg}` });
-        if (!finalText && !errMsg)
-          lines.push({ id: nextId(), kind: 'output', text: '(empty response)' });
-        setHistory((h) => [...h.filter((l) => l.id !== loadingId), ...lines]);
+        if (text) lines.push({ id: nextId(), kind: ShellLineKind.Output, text, ai: true });
+        if (message) {
+          lines.push({
+            id: nextId(),
+            kind: error ? ShellLineKind.Error : ShellLineKind.Info,
+            text: error ? `${shellUi.errorPrefix} ${message}` : message,
+          });
+        }
+        if (!text && !message) {
+          lines.push({ id: nextId(), kind: ShellLineKind.Output, text: shellUi.empty });
+        }
+        if (requestId) lines.push({ id: nextId(), kind: ShellLineKind.Reference, text: requestId });
+        setHistory((previous) =>
+          bounded([...previous.filter((line) => line.id !== loadingId), ...lines]),
+        );
+        setStreamingText(null);
+        setBusy(false);
+        if (error || (message && !text)) setInput((value) => value || command);
+        announce(message ?? shellUi.complete);
+        if (rootRef.current?.contains(document.activeElement)) focusInput();
+      }
+      function interrupt(message: string, error = false) {
+        const text = parseStreamChunk(accumulated).displayText;
+        finish(text, message, error);
+        releaseTransport();
+      }
+      activeRequest.current = {
+        stop: () =>
+          interrupt(
+            parseStreamChunk(accumulated).displayText ? shellUi.stoppedPartial : shellUi.stoppedBefore,
+          ),
+        dispose: () => {
+          settled = true;
+          clearTimeout(timer);
+          releaseTransport();
+        },
       };
+      timer = setTimeout(() => interrupt(shellUi.timeout, true), SHELL_LIMITS.requestTimeoutMs);
 
       try {
-        const res = await fetch('/api/ask', {
+        const response = await fetch(ASK_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question }),
+          signal: controller.signal,
         });
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          finalize('', data?.error ?? `HTTP ${res.status}`);
+        if (settled) {
+          void response.body?.cancel().catch(() => undefined);
           return;
         }
-        if (!res.body) {
-          finalize('', 'response body unavailable');
+        requestId = response.headers.get(shellUi.requestIdHeader);
+        if (!response.ok) {
+          const data = (await response.json().catch(() => null)) as {
+            error?: string | { message?: string };
+          } | null;
+          const detail = typeof data?.error === 'string' ? data.error : data?.error?.message;
+          const message = detail || `${shellUi.httpErrorPrefix} ${response.status}`;
+          finish(
+            '',
+            response.status === RATE_LIMIT_STATUS ? `${message}. ${shellUi.localAvailable}` : message,
+            true,
+          );
           return;
         }
-
-        const reader = res.body.getReader();
-        const dec = new TextDecoder();
-        let accumulated = '';
-        let pending = '';
-        let loadingCleared = false;
-
-        const scheduleFlush = () => {
-          if (rafRef.current !== null) return;
-          rafRef.current = requestAnimationFrame(() => {
-            rafRef.current = null;
-            if (!loadingCleared) {
-              setHistory((h) => h.filter((l) => l.id !== loadingId));
-              loadingCleared = true;
-            }
-            setStreamingText(pending);
-          });
-        };
-
-        while (true) {
+        if (!response.body) {
+          finish('', shellUi.bodyUnavailable, true);
+          return;
+        }
+        reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        while (!settled) {
           const { done, value } = await reader.read();
-          if (done) break;
-          accumulated += dec.decode(value, { stream: true });
-          const { displayText } = parseStreamChunk(accumulated);
-          pending = displayText;
-          if (pending) scheduleFlush();
+          if (settled) return;
+          accumulated += done ? decoder.decode() : decoder.decode(value, { stream: true });
+          const parsed = parseStreamChunk(accumulated);
+          if (done) {
+            finish(parsed.displayText, parsed.ok ? undefined : parsed.errorMessage, !parsed.ok);
+            return;
+          }
+          if (parsed.displayText) {
+            if (!receivedText) {
+              receivedText = true;
+              setHistory((lines) => lines.filter((line) => line.id !== loadingId));
+              announce(shellUi.started);
+            }
+            if (rafRef.current === null) {
+              rafRef.current = requestAnimationFrame(() => {
+                rafRef.current = null;
+                if (!settled && mountedRef.current) {
+                  setStreamingText(parseStreamChunk(accumulated).displayText);
+                }
+              });
+            }
+          }
         }
-
-        const chunkFinal = parseStreamChunk(accumulated);
-        finalize(chunkFinal.displayText, chunkFinal.ok ? undefined : chunkFinal.errorMessage);
-      } catch (err) {
-        finalize('', err instanceof Error ? err.message : String(err));
+      } catch (error) {
+        if (settled) return;
+        const message = !navigator.onLine
+          ? shellUi.offline
+          : error instanceof Error && error.name === TIMEOUT_ERROR_NAME
+            ? shellUi.timeout
+            : error instanceof TypeError
+              ? shellUi.networkError
+              : error instanceof Error
+                ? error.message
+                : String(error);
+        finish(parseStreamChunk(accumulated).displayText, message, true);
+      } finally {
+        reader?.releaseLock();
       }
     },
-    [nextId],
+    [announce, clearFrame, focusInput, nextId],
   );
 
   const runCommand = useCallback(
-    async (cmd: string) => {
-      window.dispatchEvent(new CustomEvent('shell-cmd-run'));
-      setHistory((h) => [...h, { id: nextId(), kind: 'prompt', text: `erik@portfolio:~$ ${cmd}` }]);
-      setInput('');
-      setBusy(true);
-
-      if (cmd === 'clear') {
-        setHistory(withIds(isMobile ? MOBILE_INITIAL : INITIAL_LINES, nextId));
-        setBusy(false);
+    (raw: string) => {
+      if (activeRequest.current) {
+        announce(shellUi.busy);
         return;
       }
-
-      const explicitQuestion = cmd.startsWith('ask ') ? cmd.slice(4).trim() : null;
-
-      if (!explicitQuestion) {
-        const local = SHELL_RESPONSES.find((r) => r.commands.includes(cmd));
-        if (local) {
-          setHistory((h) => [...h, { id: nextId(), kind: local.kind, text: local.text }]);
-          setBusy(false);
-          return;
-        }
+      const command = raw.trim().replace(/\s+/g, ' ');
+      if (!command) return;
+      commands.current = [...commands.current, command].slice(-SHELL_LIMITS.commandHistory);
+      historyIndex.current = commands.current.length;
+      draft.current = '';
+      window.dispatchEvent(new CustomEvent(SHELL_COMMAND_EVENT));
+      setHistory((lines) =>
+        bounded([
+          ...lines,
+          { id: nextId(), kind: ShellLineKind.Prompt, text: `${shellUi.prompt} ${command}` },
+        ]),
+      );
+      setInput('');
+      const key = command.toLowerCase();
+      if (key === ShellCommand.Clear) {
+        setHistory(initialLines());
+        announce(shellUi.cleared);
+        focusInput();
+        return;
       }
-
-      await streamQuestion(explicitQuestion ?? cmd);
-      setBusy(false);
-    },
-    [isMobile, nextId, streamQuestion],
-  );
-
-  const runWithEffect = useCallback(
-    (cmd: string) => {
-      if (typingRef.current || busy) return;
-      typingRef.current = true;
-      let i = 0;
-      function tick() {
-        typingTimerRef.current = null;
-        if (!mountedRef.current) {
-          typingRef.current = false;
-          return;
-        }
-        if (i <= cmd.length) {
-          setInput(cmd.slice(0, i));
-          i++;
-          typingTimerRef.current = setTimeout(tick, 30);
-        } else {
-          typingTimerRef.current = setTimeout(() => {
-            if (!mountedRef.current) {
-              typingTimerRef.current = null;
-              typingRef.current = false;
-              return;
-            }
-            typingTimerRef.current = null;
-            runCommand(cmd);
-            typingRef.current = false;
-          }, 300);
-        }
+      const explicitQuestion = key.startsWith(ShellCommand.AskPrefix)
+        ? command.slice(ShellCommand.AskPrefix.length).trim()
+        : null;
+      const local =
+        !explicitQuestion && SHELL_RESPONSES.find((entry) => entry.commands.includes(key));
+      if (local) {
+        setHistory((lines) =>
+          bounded([...lines, { id: nextId(), kind: local.kind, text: local.text }]),
+        );
+        announce(shellUi.commandComplete);
+        focusInput();
+        return;
       }
-      tick();
+      void streamQuestion(explicitQuestion ?? command, command);
     },
-    [busy, runCommand],
+    [announce, focusInput, initialLines, nextId, streamQuestion],
   );
 
   return (
-    <div className="interactive-shell bg-[var(--color-secondary-900)] text-xs font-mono leading-[1.65] -m-[14px]">
-      <div className="flex items-center gap-[10px] px-[14px] py-2 border-b border-[var(--color-primary-subtle)] text-primary-400 text-xs tracking-[0.14em]">
-        <WindowChrome size={10} />
+    <div ref={rootRef} className="interactive-shell">
+      <div className="shell-chrome">
+        <WindowChrome size={WINDOW_DOT_SIZE} />
         {isMobile ? (
-          <span className="ml-auto max-md:text-[10px]">
+          <span className="shell-chrome-tag">
             {shellChrome.mobileLabel ?? shellChrome.rightTag}
           </span>
         ) : (
           <>
             <span>{shellChrome.promptLabel}</span>
-            <span className="ml-auto">{shellChrome.rightTag}</span>
+            <span className="shell-chrome-tag">{shellChrome.rightTag}</span>
           </>
         )}
       </div>
-
       <div
-        className="px-4 py-[14px] min-h-[220px] max-h-[400px] overflow-y-auto md:text-sm max-md:min-h-[200px] max-md:max-h-[320px] max-md:text-xs"
         ref={feedRef}
+        className="shell-feed"
         role="log"
-        aria-label="shell output"
+        aria-label={shellUi.outputLabel}
         aria-live="polite"
         aria-busy={busy}
+        tabIndex={0}
       >
-        {history.map((l) =>
-          l.kind === 'loading' ? (
-            <LoadingDots key={l.id} />
+        {history.map((line) =>
+          line.kind === ShellLineKind.Loading ? (
+            <span
+              key={line.id}
+              className="shell-line shell-line-loading"
+              aria-hidden="true"
+              data-testid="shell-line-loading"
+            >
+              {shellUi.aiLabel}: {shellUi.thinking}
+            </span>
           ) : (
             <span
-              key={l.id}
-              className={`m-0 block whitespace-pre-wrap break-words ${KIND_CLASS[l.kind]}`}
-              data-kind={l.kind}
+              key={line.id}
+              className={`shell-line ${KIND_CLASS[line.kind]}`}
+              data-kind={line.kind}
             >
-              {l.text}
+              {line.kind === ShellLineKind.Reference ? (
+                <ResponseReference requestId={line.text} announce={announce} />
+              ) : (
+                <>
+                  {line.ai && <span className="shell-ai-label">{shellUi.aiLabel}: </span>}
+                  {line.text}
+                </>
+              )}
             </span>
           ),
         )}
         {streamingText !== null && (
-          <span
-            className="m-0 block whitespace-pre-wrap break-words text-tertiary-50 opacity-[0.95]"
-            data-kind="output"
-          >
+          <span className="shell-line shell-line-output" data-kind={ShellLineKind.Output}>
+            <span className="shell-ai-label">{shellUi.aiLabel}: </span>
             {streamingText}
           </span>
         )}
       </div>
-
+      {busy && (
+        <div className="shell-progress">
+          <span aria-hidden="true">
+            {shellUi.aiLabel}
+            <span className="shell-cursor" />
+          </span>
+          <button
+            className="shell-control"
+            type="button"
+            aria-label={shellUi.stopLabel}
+            onClick={() => {
+              activeRequest.current?.stop();
+              focusInput();
+            }}
+          >
+            {shellUi.stop}
+          </button>
+        </div>
+      )}
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const cmd = input.trim();
-          if (cmd && !busy) runCommand(cmd);
-        }}
-        className="flex gap-2 items-center px-4 py-2 pb-3 border-t border-[var(--color-primary-quiet)] max-md:px-3 max-md:pb-[10px]"
+        className="shell-form"
         data-testid="shell-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          runCommand(input);
+        }}
       >
-        <span className="text-primary-400 text-[14px] whitespace-nowrap">erik@portfolio:~$</span>
-        <div className="flex-1 relative min-w-0">
+        <span className="shell-prompt">{shellUi.prompt}</span>
+        <div className="shell-input-wrap">
           <input
             ref={inputRef}
+            className="shell-input"
+            name="command"
+            enterKeyHint="send"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(event) => {
+              setInput(event.target.value);
+              historyIndex.current = commands.current.length;
+              draft.current = event.target.value;
+            }}
             onFocus={() => setInputFocused(true)}
             onBlur={() => setInputFocused(false)}
-            disabled={busy}
+            onKeyDown={(event) => {
+              if (
+                event.nativeEvent.isComposing ||
+                event.altKey ||
+                event.ctrlKey ||
+                event.metaKey ||
+                event.shiftKey ||
+                (event.key !== Key.Up && event.key !== Key.Down)
+              ) {
+                return;
+              }
+              event.preventDefault();
+              if (historyIndex.current === commands.current.length) draft.current = input;
+              historyIndex.current = Math.max(
+                0,
+                Math.min(
+                  commands.current.length,
+                  historyIndex.current + (event.key === Key.Up ? -1 : 1),
+                ),
+              );
+              setInput(commands.current[historyIndex.current] ?? draft.current);
+            }}
             autoComplete="off"
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
-            className="w-full bg-transparent border-0 outline-none text-tertiary-50 font-inherit text-[14px] caret-primary-500 [caret-shape:block] focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
-            aria-label="shell command"
+            aria-label={shellUi.inputLabel}
+            aria-describedby={accuracyId}
           />
           {!input && !busy && !inputFocused && <AnimatedPlaceholder />}
         </div>
       </form>
-
-      <p
-        className="m-0 px-4 py-2 border-t border-[color-mix(in_oklab,var(--color-primary-500)_14%,transparent)] text-xs max-md:text-[10px] leading-[1.5] text-[color-mix(in_oklab,var(--color-tertiary-50)_55%,transparent)]"
-        data-testid="shell-privacy-notice"
-      >
-        Queries are stored 90 days for product improvement. To request deletion, email{' '}
-        <a
-          href="mailto:erikhenriquealvescunha@gmail.com"
-          className="inherit underline underline-offset-2 hover:text-primary-500"
-        >
-          erikhenriquealvescunha@gmail.com
-        </a>
-        . If you are technical, you can also POST your request ID (in the{' '}
-        <code className="font-inherit text-primary-500 opacity-80">X-Request-Id</code> response
-        header) directly to{' '}
-        <code className="font-inherit text-primary-500 opacity-80">/api/log/forget</code>.
+      <p id={accuracyId} className="shell-ai-notice">
+        {shellUi.accuracy}
       </p>
-
-      {!isMobile && (
-        <div
-          className="flex gap-[6px] flex-wrap items-center px-4 py-2 pb-3 border-t border-dashed border-[var(--color-primary-quiet)] max-md:hidden"
-          role="toolbar"
-          aria-label="quick commands"
-          data-testid="shell-commands"
-          onClick={(e) => {
-            const cmd = (e.target as HTMLElement).closest<HTMLElement>('[data-cmd]')?.dataset.cmd;
-            if (cmd && !busy) runWithEffect(cmd);
-          }}
-        >
-          {COMMANDS.map(({ label, cmd }) => (
-            <button
-              key={cmd}
-              type="button"
-              className="shell-cmd-hint border border-[var(--color-primary-subtle)] text-primary-500 px-2 py-1 font-mono text-xs tracking-[0.1em] rounded-[2px] min-h-[28px] inline-flex items-center cursor-pointer bg-transparent hover:bg-[var(--color-primary-quiet)] disabled:cursor-default disabled:opacity-50"
-              data-cmd={cmd}
-              disabled={busy}
-            >
-              {label}
-            </button>
-          ))}
-          <span
-            aria-hidden="true"
-            className="text-primary-400 opacity-60 text-xs tracking-[0.1em] ml-1 whitespace-nowrap"
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        <span key={announcement.id}>{announcement.text}</span>
+      </p>
+      <div className="shell-privacy-notice" data-testid="shell-privacy-notice">
+        <p>
+          {shellUi.privacy} <a href={shellUi.emailHref}>{shellUi.email}</a>.
+        </p>
+        <p>
+          {shellUi.technicalPrivacy} <code>{shellUi.requestIdHeader}</code>{' '}
+          {shellUi.technicalPrivacySuffix} <code>{shellUi.forgetEndpoint}</code>.
+        </p>
+      </div>
+      <div
+        className="shell-toolbar"
+        role="toolbar"
+        aria-label={shellUi.toolbarLabel}
+        data-testid="shell-commands"
+      >
+        {shellUi.commands.map((command, index) => (
+          <button
+            key={command}
+            ref={(node) => {
+              toolbarButtons.current[index] = node;
+            }}
+            type="button"
+            className="shell-control shell-cmd-hint"
+            data-cmd={command}
+            tabIndex={index === toolbarIndex ? 0 : -1}
+            aria-disabled={busy}
+            onFocus={() => setToolbarIndex(index)}
+            onClick={() => runCommand(command)}
+            onKeyDown={(event) => {
+              if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+              let target = index;
+              if (event.key === Key.Home) target = 0;
+              else if (event.key === Key.End) target = shellUi.commands.length - 1;
+              else if (event.key === Key.Right) target = (index + 1) % shellUi.commands.length;
+              else if (event.key === Key.Left) {
+                target = (index - 1 + shellUi.commands.length) % shellUi.commands.length;
+              } else return;
+              event.preventDefault();
+              setToolbarIndex(target);
+              toolbarButtons.current[target]?.focus();
+            }}
           >
-            anything else → Claude
-          </span>
-        </div>
-      )}
-
-      {isMobile && (
-        <div
-          className="flex gap-[6px] flex-wrap px-3 py-2 pb-[10px] border-t border-dashed border-[var(--color-primary-quiet)]"
-          role="toolbar"
-          aria-label="quick commands"
-          onClick={(e) => {
-            const cmd = (e.target as HTMLElement).closest<HTMLElement>('[data-cmd]')?.dataset.cmd;
-            if (cmd && !busy) runWithEffect(cmd);
-          }}
-        >
-          {COMMANDS.map(({ label, cmd }) => (
-            <button
-              key={cmd}
-              type="button"
-              className="border border-[var(--color-primary-subtle)] text-primary-500 px-2 py-1 max-md:px-3 font-mono text-xs tracking-[0.1em] rounded-[2px] min-h-[28px] max-md:min-h-[40px] inline-flex items-center cursor-pointer bg-transparent active:bg-[var(--color-primary-quiet)]"
-              data-cmd={cmd}
-              disabled={busy}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
+            {command}
+          </button>
+        ))}
+        <span className="shell-command-hint">{shellUi.commandHint}</span>
+      </div>
     </div>
   );
 }
