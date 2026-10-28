@@ -89,33 +89,65 @@ describe('DawMixerSection — desktop', () => {
 });
 
 describe('DawMixerSection — mobile', () => {
-  it('renders 2 channel cards', async () => {
+  it('renders all 6 channel rows with the existing interactive islands', async () => {
     const doc = await renderMobile();
-    expect(doc.querySelectorAll('[data-testid^="channel-mobile-"]').length).toBe(2);
+    expect(doc.querySelectorAll('[data-testid^="channel-"]').length).toBe(6);
+    expect(doc.querySelector('[data-testid="fader-RHYTHM GTR"]')).not.toBeNull();
+    expect(doc.querySelector('[data-testid="vu-RHYTHM GTR"]')).not.toBeNull();
+    expect(doc.querySelector('[data-testid="knob-GAIN"]')).not.toBeNull();
+    expect(doc.querySelector('[data-testid="rms-R-M-S"]')).not.toBeNull();
   });
 
   it('renders mobile session header', async () => {
     const doc = await renderMobile();
-    expect(doc.querySelector('[data-testid="session-header-mobile"]')).not.toBeNull();
+    expect(doc.querySelector('[data-testid="session-header"]')).not.toBeNull();
   });
 
-  it('MASTER channel is not rendered on mobile', async () => {
+  it('renders CH 01 through CH 05 and MASTER on mobile', async () => {
     const doc = await renderMobile();
-    expect(doc.querySelector('[data-testid="channel-mobile-MASTER"]')).toBeNull();
-  });
-
-  it('renders CH 01 and CH 02 specifically (first 2 non-MASTER channels)', async () => {
-    const doc = await renderMobile();
-    expect(doc.querySelector('[data-testid="channel-mobile-CH 01"]')).not.toBeNull();
-    expect(doc.querySelector('[data-testid="channel-mobile-CH 02"]')).not.toBeNull();
+    for (const id of ['CH 01', 'CH 02', 'CH 03', 'CH 04', 'CH 05', 'MASTER']) {
+      expect(doc.querySelector(`[data-testid="channel-${id}"]`)).not.toBeNull();
+    }
   });
 
   it('bold text from **markers** renders as <strong> in channel desc', async () => {
     const doc = await renderMobile();
-    const ch02 = doc.querySelector('[data-testid="channel-mobile-CH 02"]');
-    const strong = ch02?.querySelector('[data-testid="mx-ref"] strong');
+    const ch02 = doc.querySelector('[data-testid="channel-CH 02"]');
+    const strong = ch02?.querySelector('strong');
     expect(strong).not.toBeNull();
     expect(strong?.textContent).toContain('the voice');
+  });
+});
+
+describe.each([
+  ['desktop', renderDesktop],
+  ['mobile', renderMobile],
+] as const)('DawMixerSection accessibility on %s', (_variant, renderMixer) => {
+  it('labels the region containing all six channels', async () => {
+    const doc = await renderMixer();
+    const region = doc.querySelector('[role="region"][aria-label="Mixer channels"]');
+    expect(region).not.toBeNull();
+    expect(region?.querySelectorAll('[data-testid^="channel-"]').length).toBe(6);
+    expect(region?.hasAttribute('tabindex')).toBe(false);
+  });
+
+  it('provides a skip link to a focusable target after the mixer controls', async () => {
+    const doc = await renderMixer();
+    const link = Array.from(doc.querySelectorAll('a')).find(
+      (anchor) => anchor.textContent === 'Skip mixer',
+    );
+    expect(link).toBeDefined();
+    const target = doc.getElementById(link?.hash.slice(1) ?? '');
+    expect(target).not.toBeNull();
+    expect(target?.getAttribute('tabindex')).toBe('-1');
+    const region = doc.querySelector('[role="region"]');
+    expect(region?.contains(target ?? null)).toBe(false);
+    expect(
+      (link?.compareDocumentPosition(region as Node) ?? 0) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      (region?.compareDocumentPosition(target as Node) ?? 0) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 });
 
