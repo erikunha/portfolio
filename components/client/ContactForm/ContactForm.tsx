@@ -205,9 +205,7 @@ export function ContactForm() {
               <p>
                 {contactCopy.form.errorPrefix} {errorMsg} {contactCopy.form.retained}{' '}
                 {contactCopy.form.retryEmail}{' '}
-                <a href={`mailto:${contactCopy.section.email}`}>
-                  {contactCopy.section.email}
-                </a>
+                <a href={`mailto:${contactCopy.section.email}`}>{contactCopy.section.email}</a>
               </p>
             )}
           </div>

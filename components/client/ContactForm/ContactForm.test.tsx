@@ -566,7 +566,10 @@ describe('contact validation and retention', () => {
   it.each(['x'.repeat(10), 'x'.repeat(2000)])(
     'accepts the API message boundary (%#)',
     async (message) => {
-      vi.stubGlobal('fetch', vi.fn(async () => Response.json({ ok: true })));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => Response.json({ ok: true })),
+      );
       const { container } = render(<ContactForm />);
       fillValidForm(container);
       const input = screen.getByLabelText('$ message:') as HTMLTextAreaElement;
