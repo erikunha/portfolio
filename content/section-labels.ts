@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const SECTION_LABELS = {
+  'sec-about': 'About',
   'sec-shell': 'Interactive shell',
   'sec-ai-metrics': 'AI answer-quality evaluation',
   'sec-projects': 'Projects',
@@ -9,9 +10,7 @@ export const SECTION_LABELS = {
   'sec-man-page': 'Profile manual',
   'sec-live-perf': 'Live performance',
   'sec-sys-health': 'System health',
-  'sec-credentials': 'Credentials',
   'sec-visa': 'Work authorization',
-  'sec-community': 'Community',
   'sec-hottest-takes': 'Opinions',
   'sec-guitar': 'Guitar rig',
   'sec-daw-mixer': 'DAW mixer',

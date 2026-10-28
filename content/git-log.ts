@@ -1,9 +1,9 @@
-import { type GitCommit, GitCommitSchema } from './schemas';
+import { CareerCopySchema, type GitCommit, GitCommitSchema } from './schemas';
 
 export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
   {
     hash: 'b2e6a19f4c8d3057e1a9b6c2d8f40e73a5c1908d',
-    deco: '(HEAD -> main, tag: v9.0, origin/main)',
+    deco: '(HEAD -> main, tag: v9.0)',
     date: 'Jun 2026 - Present',
     branch: 'career/raylu',
     type: 'career',
@@ -153,7 +153,40 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
   },
 ]);
 
-export const careerCommand =
-  ' git log --graph --pretty=fuller --decorate --since="2017-10-01" ~/career';
+const GRAPH_CONTINUATION_LINES = 80;
+const SHORT_HASH_LENGTH = 7;
 
-export const careerScrollLabel = 'Career history, scrollable';
+export const careerCopy = CareerCopySchema.parse({
+  heading: 'Career',
+  headerCommand: 'GIT LOG --ONELINE --DECORATE --GRAPH',
+  mobileHeaderCommand: 'GIT LOG --ONELINE',
+  prompt: 'erik@portfolio:~$',
+  command: 'git log --oneline --decorate --graph ~/career',
+  cvLabel: 'VIEW_CV',
+  cvHref: '/erik-cunha-cv.pdf',
+  scrollLabel: 'Career history, scrollable',
+  pipe: '|',
+  graph: `*\n${'|\n'.repeat(GRAPH_CONTINUATION_LINES)}`,
+});
+
+export const careerCommand = careerCopy.command;
+export const careerScrollLabel = careerCopy.scrollLabel;
+
+const COMPANY_SEPARATOR = ' ';
+const COMPANY_JOINER = '_';
+const COMPANY_DETAIL_SEPARATOR = ' (';
+const COUNTRY_LABELS = { full: ', Brazil', short: ', BR' } as const;
+
+export const careerEntries = gitLog.map((entry) => {
+  const [name, ...details] = entry.company.split(COMPANY_DETAIL_SEPARATOR);
+  const company = [name?.replaceAll(COMPANY_SEPARATOR, COMPANY_JOINER), ...details].join(
+    COMPANY_DETAIL_SEPARATOR,
+  );
+  return {
+    ...entry,
+    shortHash: entry.hash.slice(0, SHORT_HASH_LENGTH),
+    displayCompany: company.toUpperCase(),
+    displayRole: entry.role.toUpperCase(),
+    displayLocation: `${entry.location.replace(COUNTRY_LABELS.full, COUNTRY_LABELS.short)}${entry.workMode ? ` (${entry.workMode})` : ''}`,
+  };
+});

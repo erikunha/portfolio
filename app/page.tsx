@@ -4,7 +4,6 @@ import { PageMain } from '@/components/PageMain';
 import { About } from '@/components/sections/About';
 import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { ContactSection } from '@/components/sections/ContactSection';
-import { CredentialsSection } from '@/components/sections/CredentialsSection';
 import { DawMixerSection } from '@/components/sections/DawMixerSection';
 import { Footer } from '@/components/sections/Footer';
 import { GitLogSection } from '@/components/sections/GitLogSection';
@@ -55,9 +54,6 @@ export default function Home() {
           </ErrorBoundary>
           <ErrorBoundary>
             <SysHealthSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <CredentialsSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <VisaSection defer />
