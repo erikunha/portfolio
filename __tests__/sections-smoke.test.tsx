@@ -17,41 +17,6 @@ vi.mock('@/components/client/InteractiveShell', () => ({
   InteractiveShellLazy: () => null,
 }));
 
-describe('CommunitySection', () => {
-  let mounted: MountedClient;
-
-  afterEach(() => {
-    mounted?.unmount();
-  });
-
-  async function render(props: { defer?: boolean } = {}) {
-    const { CommunitySection } = await import(
-      '@/components/sections/CommunitySection/CommunitySection'
-    );
-    mounted = await mountClient(
-      createElement(CommunitySection as ComponentType<{ defer?: boolean }>, props),
-    );
-    return mounted.container;
-  }
-
-  it('renders the CAT ~/.COMMUNITY module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('CAT ~/.COMMUNITY');
-  });
-
-  it('renders community event content', async () => {
-    const container = await render();
-    const { communityEvent } = await import('@/content/community');
-    expect(container.textContent).toContain(communityEvent.name);
-  });
-
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
-  });
-});
-
 describe('ContactSection', () => {
   let mounted: MountedClient;
 

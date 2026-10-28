@@ -3,7 +3,7 @@ import { careerCopy, careerEntries, careerScrollLabel } from '@/content/git-log'
 import { IconGitLog } from '../../Icons';
 import { CredentialsSection } from '../CredentialsSection';
 
-const CAREER_LOG_TEST_ID = 'career-desktop';
+const CAREER_LOG_TEST_ID = 'career-log';
 
 export function GitLogContent() {
   return (

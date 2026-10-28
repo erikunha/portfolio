@@ -13,7 +13,7 @@ describe('career git log', () => {
   it('renders nine jobs in one ordered log with complete resume facts', () => {
     const host = document.createElement('div');
     host.innerHTML = renderToStaticMarkup(GitLogContent());
-    expect(host.querySelectorAll('[data-testid="career-desktop"]')).toHaveLength(1);
+    expect(host.querySelectorAll('[data-testid="career-log"]')).toHaveLength(1);
     const log = host.querySelector('ol');
     expect(log).not.toBeNull();
     const jobs = Array.from(log?.children ?? []);
