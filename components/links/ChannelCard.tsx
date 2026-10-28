@@ -22,7 +22,7 @@ function compact(value: number, locale: LinksLocale): string {
 
 export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: ChannelFeed }) {
   const { channel, copy } = linksContent;
-  const { latest, stats, channelUrl } = feed;
+  const { latest, stats, channelUrl, fetchedAt } = feed;
 
   const counts = [
     stats.subscriberCount === undefined ? null : compact(stats.subscriberCount, locale),
@@ -31,7 +31,10 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
       : `${compact(stats.videoCount, locale)} ${copy.videosWord[locale]}`,
   ].filter((part): part is string => part !== null);
 
-  const publishedAgo = latest ? formatRelative(new Date(latest.publishedAt), locale) : null;
+  const publishedAgo =
+    latest && fetchedAt !== null
+      ? formatRelative(new Date(latest.publishedAt), locale, new Date(fetchedAt))
+      : null;
   const subscribeHref = `${channelUrl}?sub_confirmation=1`;
 
   return (
