@@ -19,7 +19,6 @@ export const SECTION_LABELS = {
   'sec-hottest-takes': 'Opinions',
   'sec-guitar': 'Guitar rig',
   'sec-daw-mixer': 'DAW mixer',
-  'sec-unknowns': 'Open questions',
   'sec-contact': 'Contact',
 } as const;
 

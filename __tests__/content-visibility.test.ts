@@ -43,6 +43,7 @@ describe('content-visibility deferral', () => {
       const { default: Home } = await import('@/app/page');
       const tree = Home();
       const deferredCount = countDeferredSections(tree);
+      expect(DEFERRED_SECTION_COUNT).toBe(15);
       expect(
         deferredCount,
         `app/page.tsx must pass \`defer\` to exactly ${DEFERRED_SECTION_COUNT} sections. This was a >= floor, which let a silent drop of up to 2 sections pass: they would render eagerly, forfeiting their share of the ~840ms mobile style+layout deferral, with every gate green. If you intentionally changed the deferred set, update DEFERRED_SECTION_COUNT — that edit is the decision, and it should be visible in review.`,
