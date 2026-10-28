@@ -2,9 +2,7 @@ import { AppShell } from '@/components/AppShell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PageMain } from '@/components/PageMain';
 import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
-import { CommunitySection } from '@/components/sections/CommunitySection';
 import { ContactSection } from '@/components/sections/ContactSection';
-import { CredentialsSection } from '@/components/sections/CredentialsSection';
 import { DawMixerSection } from '@/components/sections/DawMixerSection';
 import { Footer } from '@/components/sections/Footer';
 import { GitLogSection } from '@/components/sections/GitLogSection';
@@ -67,12 +65,6 @@ export default function Home() {
           </ErrorBoundary>
           <ErrorBoundary>
             <SysHealthSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <CredentialsSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <CommunitySection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <HottestTakesSection defer />

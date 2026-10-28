@@ -141,6 +141,39 @@ export const CredentialSchema = z.object({
   evidence: z.string().min(1),
 });
 
+export const CareerCopySchema = z.object({
+  heading: z.string().min(1),
+  headerCommand: z.string().min(1),
+  mobileHeaderCommand: z.string().min(1),
+  prompt: z.string().min(1),
+  command: z.string().min(1),
+  cvLabel: z.string().min(1),
+  cvHref: z.string().startsWith('/'),
+  scrollLabel: z.string().min(1),
+  graph: z.string().min(1),
+  pipe: z.string().min(1),
+});
+
+const CareerTagGroupSchema = z.object({
+  label: z.string().min(1),
+  command: z.string().min(1),
+  prefix: z.string().min(1),
+});
+
+export const CareerCredentialsSchema = z.object({
+  prompt: z.string().min(1),
+  statusMarker: z.string().min(1),
+  certifications: CareerTagGroupSchema,
+  education: CareerTagGroupSchema,
+  community: z.object({
+    label: z.string().min(1),
+    command: z.string().min(1),
+    heading: z.string().min(1),
+    bullets: z.array(z.string().min(1)).min(1),
+    status: z.string().min(1),
+  }),
+});
+
 export const CommunityEventSchema = z.object({
   name: z.string().min(1),
   year: z.number().int(),
@@ -377,10 +410,7 @@ export const LocalizedTextSchema = z.object({
 export const LinksProfileSchema = z.object({
   name: z.string().min(1),
   avatar: z.string().min(1),
-  taglines: z.object({
-    pt: z.array(z.string().min(1)).min(1),
-    en: z.array(z.string().min(1)).min(1),
-  }),
+  title: LocalizedTextSchema,
   host: LocalizedTextSchema,
   stack: z.string().min(1),
   status: LocalizedTextSchema,
@@ -447,6 +477,8 @@ export const LinksCopySchema = z.object({
   watch: LocalizedTextSchema,
   copyLink: LocalizedTextSchema,
   copyDone: z.string().min(1),
+  copyFailed: z.string().min(1),
+  opensInNewTab: LocalizedTextSchema,
   newBadge: LocalizedTextSchema,
   langSwitchLabel: LocalizedTextSchema,
   feedUnavailable: LocalizedTextSchema,
