@@ -4,6 +4,12 @@ import { formatRelative } from '@/lib/links/relative-time';
 const NOW = new Date('2026-08-30T12:00:00Z');
 
 describe('formatRelative', () => {
+  it('derives the label from the explicit reference time', () => {
+    const published = new Date('2026-08-27T12:00:00Z');
+    expect(formatRelative(published, 'en', NOW)).toBe('3 days ago');
+    expect(formatRelative(published, 'en', new Date('2026-08-31T12:00:00Z'))).toBe('4 days ago');
+  });
+
   it('renders days in Portuguese', () => {
     expect(formatRelative(new Date('2026-08-27T12:00:00Z'), 'pt', NOW)).toBe('há 3 dias');
   });
