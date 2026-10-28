@@ -17,7 +17,8 @@ export const contactCopy: ContactContent = {
     linkHref: LINKEDIN_URL,
   },
   section: {
-    title: 'Contact',
+    command: 'SUDO CONTACT --INIT',
+    mobileCommand: 'CONTACT',
     reply: 'Replies within 48h',
     linkedinPrompt: 'Prefer LinkedIn?',
     linkedinLabel: 'Message me there ↗',

@@ -1,5 +1,6 @@
 import { CopyButton } from '@/app/design-system/_components/CopyButton';
 import { contactContent } from '@/content/contact';
+import { SECTION_LABELS } from '@/content/section-labels';
 import { ContactFormLazy } from '../../client/ContactForm';
 import { ErrorBoundary } from '../../ErrorBoundary';
 import { IconContact } from '../../Icons';
@@ -11,8 +12,9 @@ export function ContactSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module
       id="sec-contact"
-      header={section.title}
-      mobileHeader={section.title}
+      header={section.command}
+      mobileHeader={section.mobileCommand}
+      srLabel={SECTION_LABELS['sec-contact']}
       icon={<IconContact />}
       defer={defer}
       variant="green"

@@ -48,10 +48,11 @@ describe('responsive section viewport variants', () => {
     expect(html).not.toContain('data-testid="guitar-mobile"');
   });
 
-  it('VisaSection emits exactly the desktop variant (no mobile markup)', () => {
+  it('VisaSection renders one responsive authorization table', () => {
     const html = renderToStaticMarkup(createElement(VisaSection));
-    expect(html).toContain('data-testid="visa-desktop"');
+    expect(html).toContain('class="visa-table"');
     expect(html).not.toContain('data-testid="visa-mobile"');
+    expect(html).not.toContain('data-testid="visa-desktop"');
   });
 
   it('ManPageSection emits exactly the desktop variant (no mobile markup)', () => {

@@ -12,7 +12,8 @@ export const ContactContentSchema = z.object({
     linkHref: z.url(),
   }),
   section: z.object({
-    title: z.string().min(1),
+    command: z.string().min(1),
+    mobileCommand: z.string().min(1),
     reply: z.string().min(1),
     linkedinPrompt: z.string().min(1),
     linkedinLabel: z.string().min(1),
