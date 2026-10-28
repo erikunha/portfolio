@@ -32,14 +32,12 @@ Every section of the page is driven by a typed module in `content/`, and those t
 
 | Terminal surface               | Real-world meaning                              | Content module        | Entity                                 |
 | ------------------------------ | ----------------------------------------------- | --------------------- | -------------------------------------- |
-| `cat README.md`                | Intro / positioning                             | `readme.ts`           | `ReadmeCopy`                           |
+| About panels                  | Positioning, current focus, stack and retry code | `about.ts`            | `AboutContent`                         |
 | `man erik(1)`                  | Capabilities + "known bugs" (honest weaknesses) | `man-page.ts`         | `ManPage`                              |
 | `git log ~/career`             | Career & life timeline                          | `git-log.ts`          | `GitCommit[]` (`type: career｜life`)   |
 | `ls -la ./projects`            | Projects                                        | `projects.ts`         | `Project[]`                            |
 | `perf_receipts`                | Quantified impact claims                        | `perf-receipts.ts`    | `PerfReceipt[]` + `heroStats: Stat[4]` |
-| `ls -l ~/responsibilities`     | Scope, as Unix permission bits                  | `responsibilities.ts` | `Responsibility[]` (`perms` regex)     |
-| `cat ~/.now`                   | Current focus                                   | `now.ts`              | `NowRow[]`                             |
-| `npm list --global`            | Tech stack                                      | `npm-stack.ts`        | `NpmTile[]`                            |
+| About responsibilities panel  | Scope, as Unix permission bits                  | `responsibilities.ts` | `Responsibility[]` (`perms` regex)     |
 | `cat ~/.credentials`           | Credentials/certs                               | `credentials.ts`      | `Credential[]`                         |
 | `cat ~/.visa`                  | Work authorization by jurisdiction              | `visa.ts`             | `VisaRow[]`                            |
 | `git tag --list 'community/*'` | Career community/speaking tags                  | `community.ts`        | `CommunityEvent`                       |

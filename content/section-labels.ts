@@ -1,14 +1,10 @@
 import { z } from 'zod';
 
 export const SECTION_LABELS = {
-  'sec-readme': 'About',
   'sec-shell': 'Interactive shell',
   'sec-ai-metrics': 'AI answer-quality evaluation',
   'sec-projects': 'Projects',
   'sec-perf-receipts': 'Performance receipts',
-  'sec-responsibilities': 'Responsibilities',
-  'sec-now': 'Now',
-  'sec-npm-stack': 'Tech stack',
   'sec-git-log': 'Career history',
   'sec-man-page': 'Profile manual',
   'sec-live-perf': 'Live performance',

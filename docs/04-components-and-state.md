@@ -8,7 +8,7 @@ Four directories, four roles. The directory tells you the layer:
 
 | Directory                     | Role                  | Ships JS?             | Example                                         |
 | ----------------------------- | --------------------- | --------------------- | ----------------------------------------------- |
-| `components/sections/**`      | The ~20 page sections | No (RSC)              | `About`, `ManPageSection`                       |
+| `components/sections/**`      | The page sections | No (RSC)              | `About`, `ManPageSection`                       |
 | `components/client/**`        | Interactive islands   | Yes                   | `InteractiveShell`, `ContactForm`, `DawMixer/*` |
 | `components/responsive/**`    | Viewport chrome       | Yes (except `Module`) | `MatrixRain`, `Dock`, `CRTOverlay`              |
 | `design-system/components/**` | Reusable primitives   | Mostly No (RSC)       | `Badge`, `Button`, `TerminalPanel`              |
@@ -17,7 +17,7 @@ Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.c
 
 > **Known convention drift (document, do not "fix" silently):** seven interactive files under `components/client/**` (e.g. `ContactForm.tsx`, `InteractiveShell.tsx`, `HeroBootAnimation.tsx`, `ToTopButton.tsx`) carry `'use client'` but are **not** named `*.client.tsx`. The naming gate's scope evidently does not cover that directory. This is real today; see doc 09.
 
-The Hero identity line and About Senior status are static server-rendered text. `ReadmeSection` re-exports `About`, which contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
+The Hero identity line and About Senior status are static server-rendered text. `About` contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
 
 ## Component hierarchy
 
@@ -27,7 +27,7 @@ flowchart TD
     bp --> shell["AppShell.client"]
     shell --> chrome["Chrome: MatrixRain · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["main#main-content"]
-    main --> eb["ErrorBoundary (x20)"]
+    main --> eb["ErrorBoundary"]
     eb --> mod["Module (RSC wrapper: section + header)"]
     mod --> sec["Section (RSC)"]
     sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · Field"]
