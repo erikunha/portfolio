@@ -4,14 +4,13 @@
     font-weight: 700;
   }
 
-  #sec-hottest-takes > header h2 > .sr-only {
-    position: static;
+  #sec-hottest-takes > header h2 > span[aria-hidden] {
     width: auto;
-    height: auto;
-    margin: 0;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
+    gap: var(--spacing-2);
+  }
+
+  .opinions-heading {
+    white-space: nowrap;
   }
 
   #sec-hottest-takes > header h2 > span:last-child,
@@ -101,7 +100,7 @@
 
   .opinions-take p {
     margin: 0;
-    max-width: 740px;
+    max-width: var(--measure-opinions-body);
     color: var(--color-tertiary-50);
     font-size: var(--text-sm);
     line-height: 1.65;
@@ -146,8 +145,8 @@
   }
 
   .opinions-unknowns li {
-    padding-left: 2ch;
-    text-indent: -2ch;
+    padding-left: var(--spacing-opinions-list-marker);
+    text-indent: calc(-1 * var(--spacing-opinions-list-marker));
   }
 
   .opinions-unknowns li > b {

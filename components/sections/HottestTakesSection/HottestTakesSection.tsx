@@ -13,7 +13,12 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
       id="sec-hottest-takes"
       header={hottestTakesConfig.header}
       srLabel={SECTION_LABELS['sec-hottest-takes']}
-      icon={<IconHottestTakes />}
+      icon={
+        <>
+          <span className="opinions-heading">{SECTION_LABELS['sec-hottest-takes']}</span>
+          <IconHottestTakes />
+        </>
+      }
       defer={defer}
     >
       <div className="opinions-preamble">

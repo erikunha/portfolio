@@ -1,3 +1,8 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { getByRole } from '@testing-library/dom';
+import { render } from '@testing-library/react';
+import { parse } from 'postcss';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { hottestTakes } from '@/content/hottest-takes';
@@ -10,6 +15,28 @@ function renderOpinions() {
 }
 
 describe('home opinions', () => {
+  it('shows a separate Opinions label without changing the heading accessible name', () => {
+    const { container } = render(<HottestTakesSection defer />);
+    const heading = getByRole(container, 'heading', {
+      level: 2,
+      name: 'OpinionsCAT ~/HOTTEST_TAKES.MDCAT ~/HOTTEST_TAKES.MD',
+    });
+    const visibleLabel = Array.from(heading.querySelectorAll('span')).find(
+      (span) => span.textContent === 'Opinions' && !span.classList.contains('sr-only'),
+    );
+    expect(visibleLabel).toBeDefined();
+    expect(visibleLabel?.closest('[aria-hidden="true"]')).not.toBeNull();
+    expect(heading.querySelector('.sr-only')?.textContent).toBe('Opinions');
+  });
+
+  it('keeps component rules from targeting the screen-reader-only utility', () => {
+    // behavioral-test-allow: CSS selectors define the screen-reader utility isolation contract.
+    const stylesheet = readFileSync(resolve('app/css/components.css'), 'utf8');
+    parse(stylesheet).walkRules((rule) => {
+      expect(rule.selector).not.toContain('.sr-only');
+    });
+  });
+
   it('shows exactly four ordered takes with readable headings and sequential numbers', () => {
     const container = renderOpinions();
     const items = container.querySelectorAll('[data-testid="hottest-takes-list"] > li');
