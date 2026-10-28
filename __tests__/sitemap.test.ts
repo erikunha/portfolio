@@ -31,6 +31,13 @@ describe('sitemap()', () => {
     expect(dsUrls.length).toBeGreaterThanOrEqual(5);
   });
 
+  it('lists the CV and summary reading views', async () => {
+    const { default: sitemap } = await import('@/app/sitemap');
+    const urls = sitemap().map((e) => e.url);
+    expect(urls).toContain('https://www.erikunha.dev/cv');
+    expect(urls).toContain('https://www.erikunha.dev/summary');
+  });
+
   it('uses CONTENT_UPDATED_AT env var for home page lastModified when set', async () => {
     vi.stubEnv('CONTENT_UPDATED_AT', '2026-03-15');
     const { default: sitemap } = await import('@/app/sitemap');

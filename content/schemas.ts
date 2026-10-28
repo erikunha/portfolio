@@ -525,3 +525,62 @@ export type LinksContent = z.infer<typeof LinksContentSchema>;
 
 export type Profile = z.infer<typeof ProfileSchema>;
 export type Education = z.infer<typeof EducationSchema>;
+
+const ReadingTextSchema = z.string().min(1);
+const ReadingLinkSchema = z.object({ label: ReadingTextSchema, href: ReadingTextSchema });
+
+export const ReadingViewsSchema = z.object({
+  shared: z.object({
+    skipLabel: ReadingTextSchema,
+    homeLabel: ReadingTextSchema,
+    navLabel: ReadingTextSchema,
+    nav: z.array(ReadingLinkSchema).min(1),
+    hire: z.object({
+      label: ReadingTextSchema,
+      ariaLabel: ReadingTextSchema,
+      href: z.url(),
+    }),
+    printLabel: ReadingTextSchema,
+    newTabRel: ReadingTextSchema,
+    newTabHint: ReadingTextSchema,
+    homeHref: z.string().startsWith('/'),
+    ogImage: z.object({ path: z.string().startsWith('/'), width: z.number(), height: z.number() }),
+  }),
+  cv: z.object({
+    path: z.string().startsWith('/'),
+    title: ReadingTextSchema,
+    description: ReadingTextSchema,
+    summaryLinkLabel: ReadingTextSchema,
+    headings: z.object({
+      summary: ReadingTextSchema,
+      experience: ReadingTextSchema,
+      skills: ReadingTextSchema,
+      certifications: ReadingTextSchema,
+      community: ReadingTextSchema,
+      education: ReadingTextSchema,
+      workAuthorization: ReadingTextSchema,
+      contact: ReadingTextSchema,
+    }),
+    credentialLabels: z.record(z.string(), ReadingTextSchema),
+    proseOverrides: z.record(z.string(), ReadingTextSchema),
+  }),
+  summary: z.object({
+    path: z.string().startsWith('/'),
+    title: ReadingTextSchema,
+    description: ReadingTextSchema,
+    cvLinkLabel: ReadingTextSchema,
+    statsLabel: ReadingTextSchema,
+    experienceLabel: ReadingTextSchema,
+    badge: ReadingTextSchema,
+    projectNames: z.array(ReadingTextSchema).min(1),
+    stack: z.array(ReadingTextSchema).min(1),
+    headings: z.object({
+      projects: ReadingTextSchema,
+      workAuthorization: ReadingTextSchema,
+      stack: ReadingTextSchema,
+      contact: ReadingTextSchema,
+    }),
+  }),
+});
+
+export type ReadingViews = z.infer<typeof ReadingViewsSchema>;

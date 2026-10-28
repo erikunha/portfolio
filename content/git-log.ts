@@ -163,7 +163,7 @@ export const careerCopy = CareerCopySchema.parse({
   prompt: 'erik@portfolio:~$',
   command: 'git log --oneline --decorate --graph ~/career',
   cvLabel: 'VIEW_CV',
-  cvHref: '/erik-cunha-cv.pdf',
+  cvHref: '/cv',
   scrollLabel: 'Career history, scrollable',
   pipe: '|',
   graph: `*\n${'|\n'.repeat(GRAPH_CONTINUATION_LINES)}`,
