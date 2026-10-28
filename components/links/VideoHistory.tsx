@@ -15,8 +15,12 @@ function meta(
   video: ChannelFeed['history'][number],
   locale: LinksLocale,
   viewsWord: string,
+  fetchedAt: ChannelFeed['fetchedAt'],
 ): string {
-  const relative = formatRelative(new Date(video.publishedAt), locale);
+  const relative =
+    fetchedAt === null
+      ? null
+      : formatRelative(new Date(video.publishedAt), locale, new Date(fetchedAt));
   const parts = [
     video.duration,
     video.viewCount === undefined
@@ -77,7 +81,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
                     {video.title}
                   </span>
                   <span className="block text-tertiary-400 text-[10px] mt-0.5">
-                    {meta(video, locale, copy.viewsWord[locale])}
+                    {meta(video, locale, copy.viewsWord[locale], feed.fetchedAt)}
                   </span>
                 </span>
                 <span aria-hidden="true" className="text-primary-subtle text-xs">
