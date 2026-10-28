@@ -30,25 +30,25 @@ There is **no authentication, no accounts, no multi-tenancy**. The "user" is ano
 
 Every section of the page is driven by a typed module in `content/`, and those types _are_ the domain entities. The terminal metaphor maps real professional data onto filesystem/Unix concepts:
 
-| Terminal surface           | Real-world meaning                              | Content module        | Entity                                 |
-| -------------------------- | ----------------------------------------------- | --------------------- | -------------------------------------- |
-| `cat README.md`            | Intro / positioning                             | `readme.ts`           | `ReadmeCopy`                           |
-| `man erik(1)`              | Capabilities + "known bugs" (honest weaknesses) | `man-page.ts`         | `ManPage`                              |
-| `git log ~/career`         | Career timeline with nested tag groups          | `git-log.ts`          | `GitCommit[]` (`type: career｜life`)   |
-| `ls -la ./projects`        | Projects                                        | `projects.ts`         | `Project[]`                            |
-| `perf_receipts`            | Quantified impact claims                        | `perf-receipts.ts`    | `PerfReceipt[]` + `heroStats: Stat[4]` |
-| `ls -l ~/responsibilities` | Scope, as Unix permission bits                  | `responsibilities.ts` | `Responsibility[]` (`perms` regex)     |
-| `cat ~/.now`               | Current focus                                   | `now.ts`              | `NowRow[]`                             |
-| `npm list --global`        | Tech stack                                      | `npm-stack.ts`        | `NpmTile[]`                            |
-| `git tag --list 'cert/*'`   | Certifications inside Career                   | `credentials.ts`      | `Credential[]`                         |
-| `git tag --list 'edu/*'`    | Education inside Career                        | `education.ts`        | `Credential[]`                       |
-| `cat ~/.visa`              | Work authorization by jurisdiction              | `visa.ts`             | `VisaRow[]`                            |
-| `git tag --list 'community/*'` | Community and speaking inside Career        | `community.ts`        | `CommunityEvent`                       |
-| `cat ~/HOTTEST_TAKES.md`   | Opinions/theses                                 | `hottest-takes.ts`    | `HottestTake[]`                        |
-| `cat ~/.guitar_rig`        | Hobby (guitar signal chain)                     | `guitar-rig.ts`       | `GuitarRig`                            |
-| `./mix --live`             | Hobby (DAW mixer, interactive)                  | `daw-mixer.ts`        | `DawMixer`                             |
-| `cat ~/.unknowns`          | Intellectual honesty (what he's still learning) | `unknowns.ts`         | `Unknowns`                             |
-| `sys_health`               | Playful self-metrics                            | `sys-health.ts`       | `SysStat[]`                            |
+| Terminal surface               | Real-world meaning                              | Content module        | Entity                                 |
+| ------------------------------ | ----------------------------------------------- | --------------------- | -------------------------------------- |
+| `cat README.md`                | Intro / positioning                             | `readme.ts`           | `ReadmeCopy`                           |
+| `man erik(1)`                  | Capabilities + "known bugs" (honest weaknesses) | `man-page.ts`         | `ManPage`                              |
+| `git log ~/career`             | Career timeline with nested tag groups          | `git-log.ts`          | `GitCommit[]` (`type: career｜life`)   |
+| `ls -la ./projects`            | Projects                                        | `projects.ts`         | `Project[]`                            |
+| `perf_receipts`                | Quantified impact claims                        | `perf-receipts.ts`    | `PerfReceipt[]` + `heroStats: Stat[4]` |
+| `ls -l ~/responsibilities`     | Scope, as Unix permission bits                  | `responsibilities.ts` | `Responsibility[]` (`perms` regex)     |
+| `cat ~/.now`                   | Current focus                                   | `now.ts`              | `NowRow[]`                             |
+| `npm list --global`            | Tech stack                                      | `npm-stack.ts`        | `NpmTile[]`                            |
+| `git tag --list 'cert/*'`      | Certifications inside Career                    | `credentials.ts`      | `Credential[]`                         |
+| `git tag --list 'edu/*'`       | Education inside Career                         | `education.ts`        | `Credential[]`                         |
+| `cat ~/.visa`                  | Work authorization by jurisdiction              | `visa.ts`             | `VisaRow[]`                            |
+| `git tag --list 'community/*'` | Community and speaking inside Career            | `community.ts`        | `CommunityEvent`                       |
+| `cat ~/HOTTEST_TAKES.md`       | Opinions/theses                                 | `hottest-takes.ts`    | `HottestTake[]`                        |
+| `cat ~/.guitar_rig`            | Hobby (guitar signal chain)                     | `guitar-rig.ts`       | `GuitarRig`                            |
+| `./mix --live`                 | Hobby (DAW mixer, interactive)                  | `daw-mixer.ts`        | `DawMixer`                             |
+| `cat ~/.unknowns`              | Intellectual honesty (what he's still learning) | `unknowns.ts`         | `Unknowns`                             |
+| `sys_health`                   | Playful self-metrics                            | `sys-health.ts`       | `SysStat[]`                            |
 
 Career (`sec-git-log`) contains the `cert/*`, `edu/*`, and `community/*` tag groups.
 `sec-credentials` and `sec-community` remain nested in-page anchors, without mobile order rules.
