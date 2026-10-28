@@ -1,4 +1,4 @@
-import { type Education, EducationSchema } from './schemas';
+import { CredentialSchema, type Education, EducationSchema } from './schemas';
 
 export const education: Education[] = EducationSchema.array().parse([
   {
@@ -35,3 +35,17 @@ export const education: Education[] = EducationSchema.array().parse([
     period: '2015-2020',
   },
 ]);
+
+const educationInstitutions: Record<Education['id'], string> = {
+  MBA_AI_ENG: 'Instituto Infnet (online)',
+  CO_OP_DIPLOMA: 'CICCC, Vancouver',
+  BS_INFO_SYSTEMS: 'UNISAL, Campinas',
+};
+
+export const educationTags = CredentialSchema.array().parse(
+  education.map((entry) => ({
+    label: entry.id,
+    badge: educationInstitutions[entry.id],
+    evidence: entry.period,
+  })),
+);
