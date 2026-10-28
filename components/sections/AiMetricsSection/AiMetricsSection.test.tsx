@@ -1,6 +1,7 @@
 import { PassThrough } from 'node:stream';
 import { renderToPipeableStream, renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { measured } from '@/content/measured';
 
 const getAskMetricsMock = vi.fn();
 const getScoresMock = vi.fn();
@@ -137,6 +138,21 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
     expect(html).toContain('<time dateTime="2026-05-20T12:00:00.000Z"');
   });
 
+  it('renders unavailable rather than pending when the metrics adapter rejects', async () => {
+    getAskMetricsMock.mockRejectedValue(new Error('adapter offline'));
+
+    const doc = new DOMParser().parseFromString(await renderData(), 'text/html');
+    expect(doc.querySelector('.measured-status')?.textContent).toBe(
+      'Eval unavailable. The aggregate could not be loaded.',
+    );
+    expect(doc.body.textContent).not.toContain(measured.ask.pending);
+    expect(doc.querySelector('time')).toBeNull();
+    expect(doc.querySelector('[aria-busy]')).toBeNull();
+    expect(Array.from(doc.querySelectorAll('.measured-value'), (tile) => tile.textContent)).toEqual(
+      ['—', '—', '—', '—'],
+    );
+  });
+
   it('renders the pending state without throwing when metrics are null', async () => {
     getAskMetricsMock.mockResolvedValue(null);
 
@@ -150,6 +166,7 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
     expect(html).toContain('95% of answers finish within this time');
     expect(html).not.toContain('>100%<');
     expect(html).not.toContain('>0%<');
-    expect(html.toUpperCase()).toContain('PENDING');
+    expect(html).toContain(measured.ask.pending);
+    expect(html).not.toContain('Eval unavailable');
   });
 });

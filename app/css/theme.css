@@ -24,6 +24,9 @@
   --spacing-16: 4rem;
   --spacing-target: 2.75rem;
   --spacing-target-compact: 1.75rem;
+  --receipt-metric-width: 10.5rem;
+  --receipt-value-width: 7rem;
+  --receipt-company-width: 9.375rem;
   --border-width: 1px;
   --radius-none: 0;
   --radius-control: 2px;

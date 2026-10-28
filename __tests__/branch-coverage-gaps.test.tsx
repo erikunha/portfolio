@@ -1,7 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { measured } from '@/content/measured';
+import { MEASURED_FORMAT, measured } from '@/content/measured';
+import { MeasuredSchema } from '@/content/schemas';
 import { type MountedClient, mountClient } from './helpers/render';
 
 const getScoresMock = vi.fn();
@@ -259,5 +261,31 @@ describe('ToTopButton — visible=true className branch', () => {
     expect(btn).not.toBeNull();
     expect(btn?.getAttribute('aria-label')).toBe('back to top');
     expect(btn?.classList.contains('to-top-show')).toBe(true);
+  });
+});
+
+describe('Measured content validation', () => {
+  it.each(['empty', 'locale'])('rejects empty format copy for %s', (field) => {
+    expect(
+      MeasuredSchema.safeParse({
+        ...measured,
+        format: { ...MEASURED_FORMAT, [field]: '' },
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('Project receipt narrow layout contract', () => {
+  it('lets both receipt columns shrink and long values wrap at 320px', () => {
+    // behavioral-test-allow: checks the shipped CSS layout contract because jsdom has no layout engine
+    const css = readFileSync('app/css/components.css', 'utf8');
+    const row = css.match(/\.project-receipts li\s*\{([^}]+)\}/)?.[1];
+    const value = css.match(/\.receipt-value\s*\{([^}]+)\}/)?.[1];
+    const metric = css.match(/\.receipt-metric\s*\{([^}]+)\}/)?.[1];
+    expect(row).toMatch(/grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+    for (const cell of [value, metric]) {
+      expect(cell).toMatch(/overflow-wrap:\s*anywhere/);
+      expect(cell).not.toMatch(/white-space:\s*nowrap/);
+    }
   });
 });

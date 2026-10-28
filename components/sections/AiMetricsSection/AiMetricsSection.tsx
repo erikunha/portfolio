@@ -22,9 +22,11 @@ const formatMetric = {
 function AiMetricsBody({
   metrics,
   loading = false,
+  unavailable = false,
 }: {
   metrics: AskMetrics | null;
   loading?: boolean;
+  unavailable?: boolean;
 }) {
   const timestamp = metricTimestamp(metrics?.lastRun, MEASURED_FORMAT.askStaleAfterMs);
   return (
@@ -64,7 +66,13 @@ function AiMetricsBody({
         ))}
       </div>
       {!metrics ? (
-        <p className="measured-status">{loading ? measured.loading : measured.ask.pending}</p>
+        <p className="measured-status">
+          {loading
+            ? measured.loading
+            : unavailable
+              ? measured.ask.unavailable
+              : measured.ask.pending}
+        </p>
       ) : null}
       {metrics && !timestamp.valid ? (
         <p className="measured-status">{measured.unknownTimestamp}</p>
@@ -74,8 +82,12 @@ function AiMetricsBody({
 }
 
 export async function AiMetricsData() {
-  const metrics = await getAskMetrics().catch(() => null);
-  return <AiMetricsBody metrics={metrics} />;
+  try {
+    const metrics = await getAskMetrics();
+    return <AiMetricsBody metrics={metrics} />;
+  } catch {
+    return <AiMetricsBody metrics={null} unavailable />;
+  }
 }
 
 export function AiMetricsSection({ defer }: { defer?: boolean } = {}) {

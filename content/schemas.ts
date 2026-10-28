@@ -54,6 +54,15 @@ export const PerfReceiptSchema = z.object({
 });
 
 export const MeasuredSchema = z.object({
+  format: z.object({
+    locale: z.string().min(1),
+    percentScale: z.number().positive(),
+    costPrecision: z.number().int().nonnegative(),
+    dateLength: z.number().int().positive(),
+    millisecondsPerSecond: z.number().positive(),
+    askStaleAfterMs: z.number().positive(),
+    empty: z.string().min(1),
+  }),
   title: z.string().min(1),
   command: z.string().min(1),
   sourceLabel: z.string().min(1),
@@ -69,6 +78,7 @@ export const MeasuredSchema = z.object({
     cacheKey: z.string().min(1),
     timestampLabel: z.string().min(1),
     pending: z.string().min(1),
+    unavailable: z.string().min(1),
     p95Prefix: z.string().min(1),
     p95Pending: z.string().min(1),
     percentUnit: z.string().min(1),

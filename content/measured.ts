@@ -1,6 +1,15 @@
 import { MeasuredSchema } from './schemas';
 
 export const measured = MeasuredSchema.parse({
+  format: {
+    locale: 'en-US',
+    percentScale: 100,
+    costPrecision: 4,
+    dateLength: 10,
+    millisecondsPerSecond: 1000,
+    askStaleAfterMs: 7 * 24 * 60 * 60 * 1000,
+    empty: '—',
+  },
   title: 'Measured',
   command: 'MEASURED.JSON',
   sourceLabel: 'source:',
@@ -19,6 +28,7 @@ export const measured = MeasuredSchema.parse({
     latencyUnit: 'ms',
     currencyUnit: '$',
     pending: 'Eval pending. No aggregate is available yet.',
+    unavailable: 'Eval unavailable. The aggregate could not be loaded.',
     p95Prefix: '95% of answers finish within',
     p95Pending: '95% of answers finish within this time',
     metrics: [
@@ -60,15 +70,7 @@ export const measured = MeasuredSchema.parse({
   },
 });
 
-export const MEASURED_FORMAT = {
-  locale: 'en-US',
-  percentScale: 100,
-  costPrecision: 4,
-  dateLength: 10,
-  millisecondsPerSecond: 1000,
-  askStaleAfterMs: 7 * 24 * 60 * 60 * 1000,
-  empty: '—',
-} as const;
+export const MEASURED_FORMAT = measured.format;
 
 export function metricTimestamp(iso: string | undefined, staleAfterMs: number) {
   const timestamp = iso ? new Date(iso).getTime() : Number.NaN;
