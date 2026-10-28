@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SECTION_LABELS } from './section-labels';
 
-const EXPECTED_SECTION_COUNT = 19;
+const EXPECTED_SECTION_COUNT = 18;
 
 describe('SECTION_LABELS', () => {
   it('every label is a non-empty plain-English string (not a shell command)', () => {

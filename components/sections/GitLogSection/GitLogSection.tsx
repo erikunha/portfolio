@@ -1,15 +1,16 @@
-import { Suspense, useId } from 'react';
+import { useId } from 'react';
 import { careerCopy, careerEntries, careerScrollLabel } from '@/content/git-log';
-import { getIsMobile } from '@/lib/ua';
 import { IconGitLog } from '../../Icons';
 import { CredentialsSection } from '../CredentialsSection';
 
-function GitLogRail({ isMobile = false }: { isMobile?: boolean }) {
+const CAREER_LOG_TEST_ID = 'career-desktop';
+
+export function GitLogContent() {
   return (
     // biome-ignore lint/a11y/useSemanticElements: this names the keyboard-readable log, not form controls
     <div
       className="career-log"
-      data-testid={isMobile ? 'career-mobile' : 'career-desktop'}
+      data-testid={CAREER_LOG_TEST_ID}
       role="group"
       aria-label={careerScrollLabel}
       // biome-ignore lint/a11y/noNoninteractiveTabindex: retain keyboard access to the career log
@@ -47,10 +48,6 @@ function GitLogRail({ isMobile = false }: { isMobile?: boolean }) {
   );
 }
 
-export async function GitLogContent() {
-  return <GitLogRail isMobile={await getIsMobile()} />;
-}
-
 export function GitLogSection({ defer }: { defer?: boolean } = {}) {
   const headingId = useId();
   return (
@@ -76,9 +73,7 @@ export function GitLogSection({ defer }: { defer?: boolean } = {}) {
         </h2>
       </header>
       <div className="module-body-content">
-        <Suspense fallback={<GitLogRail />}>
-          <GitLogContent />
-        </Suspense>
+        <GitLogContent />
         <CredentialsSection id="sec-credentials" communityId="sec-community" />
         <a className="career-cv" href={careerCopy.cvHref}>
           {careerCopy.cvLabel}

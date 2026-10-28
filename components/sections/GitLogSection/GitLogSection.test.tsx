@@ -4,13 +4,16 @@ import { gitLog } from '@/content/git-log';
 import { GitLogContent, GitLogSection } from './GitLogSection';
 
 vi.mock('next/headers', () => ({
-  headers: async () => ({ get: () => null }),
+  headers: () => {
+    throw new Error('Career must render without request headers');
+  },
 }));
 
 describe('career git log', () => {
-  it('renders nine jobs in one ordered log with complete resume facts', async () => {
+  it('renders nine jobs in one ordered log with complete resume facts', () => {
     const host = document.createElement('div');
-    host.innerHTML = renderToStaticMarkup(await GitLogContent());
+    host.innerHTML = renderToStaticMarkup(GitLogContent());
+    expect(host.querySelectorAll('[data-testid="career-desktop"]')).toHaveLength(1);
     const log = host.querySelector('ol');
     expect(log).not.toBeNull();
     const jobs = Array.from(log?.children ?? []);
@@ -39,7 +42,7 @@ describe('career git log', () => {
     expect(career?.textContent).toContain("git tag --list 'cert/*'");
     expect(career?.textContent).toContain("git tag --list 'edu/*'");
     expect(career?.textContent).toContain("git tag --list 'community/*'");
-    const action = career?.querySelector('a');
+    const action = career?.querySelector('a[href="/cv"]');
     expect(action?.textContent).toBe('VIEW_CV');
     expect(action?.getAttribute('href')).toBe('/cv');
     expect(host.querySelectorAll('#sec-credentials')).toHaveLength(1);

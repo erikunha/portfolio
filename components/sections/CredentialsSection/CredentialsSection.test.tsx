@@ -35,6 +35,26 @@ describe('career tag groups', () => {
     expect(community.getByText(`status: ${communityEvent.statusLine}`)).toBeTruthy();
   });
 
+  it('preserves the event and reference links with accessible new-tab labels', () => {
+    render(<CredentialsSection />);
+    const community = within(screen.getByRole('group', { name: 'Community' }));
+    const links = community.getAllByRole('link');
+    expect(links).toHaveLength(communityEvent.links.length);
+    expect(community.getByText(communityEvent.refsLabel)).toBeTruthy();
+    communityEvent.links.forEach((link, index) => {
+      const anchor = links[index];
+      expect(anchor?.getAttribute('href')).toBe(link.href);
+      expect(anchor?.getAttribute('target')).toBe('_blank');
+      expect(anchor?.getAttribute('rel')).toBe('noopener noreferrer');
+      expect(within(anchor as HTMLElement).getByText(communityEvent.newTabLabel)).toBeTruthy();
+      expect(
+        community.getByRole('link', {
+          name: new RegExp(`${index === 0 ? communityEvent.name : link.label}.*opens in a new tab`),
+        }),
+      ).toBe(anchor);
+    });
+  });
+
   it('can repeat the groups without duplicate heading IDs', () => {
     const { container } = render(
       <>

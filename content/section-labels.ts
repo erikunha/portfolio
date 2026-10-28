@@ -14,7 +14,6 @@ export const SECTION_LABELS = {
   'sec-live-perf': 'Live performance',
   'sec-sys-health': 'System health',
   'sec-visa': 'Work authorization',
-  'sec-community': 'Community',
   'sec-hottest-takes': 'Opinions',
   'sec-guitar': 'Guitar rig',
   'sec-daw-mixer': 'DAW mixer',
