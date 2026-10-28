@@ -161,8 +161,8 @@ describe('DawMixerSection skip link', () => {
     expect(link).toBeDefined();
     expect(link?.getAttribute('aria-label') ?? link?.textContent).toBe('Skip mixer');
     expect(link?.classList.contains('mx-skip')).toBe(true);
-    expect(link?.getAttribute('href')).toBe('#mixer-controls-end');
-    expect(doc.getElementById('mixer-controls-end')).not.toBeNull();
+    expect(link?.getAttribute('href')).toBe('#daw-mixer-end');
+    expect(doc.getElementById('daw-mixer-end')).not.toBeNull();
   });
 });
 
