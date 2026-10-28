@@ -1,16 +1,16 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
-import { CONTACT_DELIVERY_CODE, contactContent } from '@/content/contact';
-import { contactChrome } from '@/content/terminal-chrome';
-import { WindowChrome } from '@/design-system';
-import { Field } from '@/design-system/components/Field';
 import {
+  CONTACT_DELIVERY_CODE,
   CONTACT_FIELD,
   CONTACT_LIMITS,
   type ContactField,
-  ContactSchema,
-} from '@/lib/contact-validation';
+  contactCopy,
+} from '@/content/contact-copy';
+import { contactChrome } from '@/content/terminal-chrome';
+import { WindowChrome } from '@/design-system';
+import { Field } from '@/design-system/components/Field';
 
 const STATUS = {
   IDLE: 'idle',
@@ -26,6 +26,18 @@ const MESSAGE_ROWS = 5;
 const INITIAL_FAILURE_COUNT = 0;
 const INITIAL_VALUES: Record<ContactField, string> = { name: '', email: '', message: '' };
 const CONTACT_FIELDS = Object.values(CONTACT_FIELD);
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const FIELD_CHECKS: Record<ContactField, (value: string) => boolean> = {
+  [CONTACT_FIELD.NAME]: (value) => {
+    const length = value.trim().length;
+    return length >= CONTACT_LIMITS.nameMin && length <= CONTACT_LIMITS.nameMax;
+  },
+  [CONTACT_FIELD.EMAIL]: (value) => EMAIL_PATTERN.test(value.trim()),
+  [CONTACT_FIELD.MESSAGE]: (value) => {
+    const length = value.trim().length;
+    return length >= CONTACT_LIMITS.messageMin && length <= CONTACT_LIMITS.messageMax;
+  },
+};
 const focusResult = (node: HTMLDivElement | null) => node?.focus();
 
 interface ContactResponse {
@@ -68,8 +80,8 @@ export function ContactForm() {
   function change(field: ContactField, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
     if (errors[field]) {
-      const valid = ContactSchema.shape[field].safeParse(value).success;
-      setErrors((current) => ({ ...current, [field]: valid ? '' : contactContent.errors[field] }));
+      const valid = FIELD_CHECKS[field](value);
+      setErrors((current) => ({ ...current, [field]: valid ? '' : contactCopy.errors[field] }));
     }
     if (!pendingRef.current) {
       setStatus(STATUS.IDLE);
@@ -82,8 +94,8 @@ export function ContactForm() {
     if (pendingRef.current) return;
     const fieldErrors: Partial<Record<ContactField, string>> = {};
     for (const field of CONTACT_FIELDS) {
-      if (!ContactSchema.shape[field].safeParse(values[field]).success) {
-        fieldErrors[field] = contactContent.errors[field];
+      if (!FIELD_CHECKS[field](values[field])) {
+        fieldErrors[field] = contactCopy.errors[field];
       }
     }
     setErrors(fieldErrors);
@@ -111,17 +123,51 @@ export function ContactForm() {
         throw new Error(
           typeof apiError?.message === 'string'
             ? apiError.message
-            : contactContent.errors.requestFailed,
+            : contactCopy.errors.requestFailed,
         );
       }
       setStatus(STATUS.SUCCESS);
     } catch (error) {
-      setErrorMsg(error instanceof Error ? error.message : contactContent.errors.requestFailed);
+      setErrorMsg(error instanceof Error ? error.message : contactCopy.errors.requestFailed);
       setStatus(STATUS.ERROR);
       setFailureCount((count) => count + 1);
     } finally {
       pendingRef.current = false;
     }
+  }
+
+  if (status === STATUS.SUCCESS || status === STATUS.QUEUED) {
+    return (
+      <ContactShell>
+        {status === STATUS.SUCCESS && (
+          <div
+            className="contact-success"
+            role="status"
+            data-testid="contact-success"
+            tabIndex={-1}
+            ref={focusResult}
+          >
+            <p>{contactCopy.success.title}</p>
+            <p>{contactCopy.success.message}</p>
+          </div>
+        )}
+        {status === STATUS.QUEUED && (
+          <div
+            className="contact-success"
+            role="status"
+            data-testid="contact-queued"
+            tabIndex={-1}
+            ref={focusResult}
+          >
+            <p>{contactCopy.queued.title}</p>
+            <p>
+              {contactCopy.queued.message}{' '}
+              <a href={contactCopy.queued.linkHref}>{contactCopy.queued.linkLabel}</a>
+            </p>
+          </div>
+        )}
+      </ContactShell>
+    );
   }
 
   return (
@@ -137,7 +183,7 @@ export function ContactForm() {
           <div ref={summaryRef} role="alert" tabIndex={-1} className="contact-alert">
             {invalidFields.length > 0 && (
               <>
-                <p>{contactContent.form.errorSummary}</p>
+                <p>{contactCopy.form.errorSummary}</p>
                 <ul>
                   {invalidFields.map((field) => (
                     <li key={field}>
@@ -148,7 +194,7 @@ export function ContactForm() {
                           document.getElementById(fieldId(field))?.focus();
                         }}
                       >
-                        {contactContent.form.fieldLabels[field]}
+                        {contactCopy.form.fieldLabels[field]}
                       </a>
                     </li>
                   ))}
@@ -157,10 +203,10 @@ export function ContactForm() {
             )}
             {errorMsg && (
               <p>
-                {contactContent.form.errorPrefix} {errorMsg} {contactContent.form.retained}{' '}
-                {contactContent.form.retryEmail}{' '}
-                <a href={`mailto:${contactContent.section.email}`}>
-                  {contactContent.section.email}
+                {contactCopy.form.errorPrefix} {errorMsg} {contactCopy.form.retained}{' '}
+                {contactCopy.form.retryEmail}{' '}
+                <a href={`mailto:${contactCopy.section.email}`}>
+                  {contactCopy.section.email}
                 </a>
               </p>
             )}
@@ -180,7 +226,7 @@ export function ContactForm() {
         <Field
           id={fieldId(CONTACT_FIELD.NAME)}
           name={CONTACT_FIELD.NAME}
-          label={contactContent.form.nameLabel}
+          label={contactCopy.form.nameLabel}
           value={values.name}
           onChange={(event) => change(CONTACT_FIELD.NAME, event.target.value)}
           error={errors.name ?? ''}
@@ -188,24 +234,24 @@ export function ContactForm() {
           minLength={CONTACT_LIMITS.nameMin}
           maxLength={CONTACT_LIMITS.nameMax}
           autoComplete="name"
-          placeholder={contactContent.form.namePlaceholder}
+          placeholder={contactCopy.form.namePlaceholder}
         />
         <Field
           id={fieldId(CONTACT_FIELD.EMAIL)}
           name={CONTACT_FIELD.EMAIL}
-          label={contactContent.form.emailLabel}
+          label={contactCopy.form.emailLabel}
           type="email"
           value={values.email}
           onChange={(event) => change(CONTACT_FIELD.EMAIL, event.target.value)}
           error={errors.email ?? ''}
           required
           autoComplete="email"
-          placeholder={contactContent.form.emailPlaceholder}
+          placeholder={contactCopy.form.emailPlaceholder}
         />
         <Field
           id={fieldId(CONTACT_FIELD.MESSAGE)}
           name={CONTACT_FIELD.MESSAGE}
-          label={contactContent.form.messageLabel}
+          label={contactCopy.form.messageLabel}
           multiline
           value={values.message}
           onChange={(event) => change(CONTACT_FIELD.MESSAGE, event.target.value)}
@@ -215,48 +261,19 @@ export function ContactForm() {
           minLength={CONTACT_LIMITS.messageMin}
           maxLength={CONTACT_LIMITS.messageMax}
           rows={MESSAGE_ROWS}
-          placeholder={contactContent.form.messagePlaceholder}
+          placeholder={contactCopy.form.messagePlaceholder}
         />
         <p id={counterId} className="contact-count">
           {values.message.length}
-          {contactContent.form.counterSeparator}
+          {contactCopy.form.counterSeparator}
           {CONTACT_LIMITS.messageMax}
         </p>
         <div className="contact-submit-row" aria-live="polite">
           <button type="submit" aria-disabled={busy} aria-busy={busy} className="contact-send">
-            {busy ? contactContent.form.submitting : contactContent.form.submit}
+            {busy ? contactCopy.form.submitting : contactCopy.form.submit}
           </button>
-          {status !== STATUS.SUCCESS && status !== STATUS.QUEUED && (
-            <p className="contact-waiting">{contactContent.form.waiting}</p>
-          )}
+          <p className="contact-waiting">{contactCopy.form.waiting}</p>
         </div>
-        {status === STATUS.SUCCESS && (
-          <div
-            className="contact-success"
-            role="status"
-            data-testid="contact-success"
-            tabIndex={-1}
-            ref={focusResult}
-          >
-            <p>{contactContent.success.title}</p>
-            <p>{contactContent.success.message}</p>
-          </div>
-        )}
-        {status === STATUS.QUEUED && (
-          <div
-            className="contact-success"
-            role="status"
-            data-testid="contact-queued"
-            tabIndex={-1}
-            ref={focusResult}
-          >
-            <p>{contactContent.queued.title}</p>
-            <p>
-              {contactContent.queued.message}{' '}
-              <a href={contactContent.queued.linkHref}>{contactContent.queued.linkLabel}</a>
-            </p>
-          </div>
-        )}
       </form>
     </ContactShell>
   );

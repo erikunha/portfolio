@@ -1,19 +1,10 @@
+import 'server-only';
+
 import { z } from 'zod';
 
-export const CONTACT_LIMITS = {
-  nameMin: 1,
-  nameMax: 120,
-  messageMin: 10,
-  messageMax: 2_000,
-} as const;
+import { CONTACT_LIMITS } from '@/content/contact-copy';
 
-export const CONTACT_FIELD = {
-  NAME: 'name',
-  EMAIL: 'email',
-  MESSAGE: 'message',
-} as const;
-
-export type ContactField = (typeof CONTACT_FIELD)[keyof typeof CONTACT_FIELD];
+export { CONTACT_FIELD, CONTACT_LIMITS, type ContactField } from '@/content/contact-copy';
 
 export const ContactSchema = z.object({
   name: z.string().trim().min(CONTACT_LIMITS.nameMin).max(CONTACT_LIMITS.nameMax),

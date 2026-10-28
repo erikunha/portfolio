@@ -1,7 +1,20 @@
-import { CONTACT_LIMITS } from '@/lib/contact-validation';
 import type { ContactContent } from './contact';
-import { social } from './social';
-import { LINKEDIN_URL } from './social-urls';
+import { EMAIL_ADDRESS, LINKEDIN_URL } from './social-urls';
+
+export const CONTACT_LIMITS = {
+  nameMin: 1,
+  nameMax: 120,
+  messageMin: 10,
+  messageMax: 2_000,
+} as const;
+
+export const CONTACT_FIELD = {
+  NAME: 'name',
+  EMAIL: 'email',
+  MESSAGE: 'message',
+} as const;
+
+export type ContactField = (typeof CONTACT_FIELD)[keyof typeof CONTACT_FIELD];
 
 export const CONTACT_DELIVERY_CODE = { QUEUED: 'queued' } as const;
 
@@ -23,7 +36,7 @@ export const contactCopy: ContactContent = {
     linkedinPrompt: 'Prefer LinkedIn?',
     linkedinLabel: 'Message me there ↗',
     emailLabel: 'email:',
-    email: social.email,
+    email: EMAIL_ADDRESS,
     linkedinHref: LINKEDIN_URL,
     copyEmail: 'Copy email',
   },

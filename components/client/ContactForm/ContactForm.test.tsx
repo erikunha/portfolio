@@ -191,12 +191,18 @@ describe('contact form delivery states', () => {
       202,
       'contact-queued',
     ],
-  ])('moves focus to the result while retaining the form (%#)', async (body, status, testId) => {
-    const container = await submitResponse(body, status);
-    const result = container.querySelector(`[data-testid="${testId}"]`);
-    expect(result).not.toBeNull();
-    expect(document.activeElement).toBe(result);
-  });
+  ])(
+    'replaces the form with a focused result so it cannot be sent again (%#)',
+    async (body, status, testId) => {
+      const container = await submitResponse(body, status);
+      const result = container.querySelector(`[data-testid="${testId}"]`);
+      expect(result).not.toBeNull();
+      expect(document.activeElement).toBe(result);
+      expect(container.querySelector('form')).toBeNull();
+      expect(container.querySelector('button[type="submit"]')).toBeNull();
+      expect(fetch).toHaveBeenCalledOnce();
+    },
+  );
 
   it('announces queued without success and offers the canonical LinkedIn link', async () => {
     const container = await submitResponse(
@@ -214,7 +220,7 @@ describe('contact form delivery states', () => {
     expect(link?.getAttribute('href')).toBe(
       linksContent.pills.find((pill) => pill.id === 'linkedin')?.href,
     );
-    expect(container.querySelector('form')).not.toBeNull();
+    expect(container.querySelector('form')).toBeNull();
   });
 
   it.each([
@@ -465,7 +471,7 @@ describe('contact form — submitting state', () => {
     await flushMicrotasks();
 
     expect(container.querySelector('[data-testid="contact-success"]')).not.toBeNull();
-    expect(container.querySelector('form')).not.toBeNull();
+    expect(container.querySelector('form')).toBeNull();
   });
 });
 
@@ -520,7 +526,7 @@ describe('contact validation and retention', () => {
   });
 
   it.each(['A', 'A'.repeat(120)])(
-    'accepts the API name boundary and retains all values after success',
+    'accepts the API name boundary and removes the delivered form',
     async (name) => {
       vi.stubGlobal(
         'fetch',
@@ -534,14 +540,13 @@ describe('contact validation and retention', () => {
       expect(nameInput.maxLength).toBe(120);
       fireEvent.submit(nameInput.form as HTMLFormElement);
       await screen.findByTestId('contact-success');
-      expect(nameInput.value).toBe(name);
-      expect((screen.getByLabelText('$ email:') as HTMLInputElement).value).toBe('ada@example.com');
-      expect((screen.getByLabelText('$ message:') as HTMLTextAreaElement).value).toBe(
-        'A platform engineering opportunity.',
-      );
-      expect(screen.getByRole('button', { name: 'EXECUTE_SEND' }).hasAttribute('disabled')).toBe(
-        false,
-      );
+      expect(JSON.parse(vi.mocked(fetch).mock.calls[0]?.[1]?.body as string)).toMatchObject({
+        name,
+        email: 'ada@example.com',
+        message: 'A platform engineering opportunity.',
+      });
+      expect(container.querySelector('form')).toBeNull();
+      expect(screen.queryByRole('button', { name: 'EXECUTE_SEND' })).toBeNull();
     },
   );
 
@@ -557,6 +562,50 @@ describe('contact validation and retention', () => {
     }
     expect(fetch).not.toHaveBeenCalled();
   });
+
+  it.each(['x'.repeat(10), 'x'.repeat(2000)])(
+    'accepts the API message boundary (%#)',
+    async (message) => {
+      vi.stubGlobal('fetch', vi.fn(async () => Response.json({ ok: true })));
+      const { container } = render(<ContactForm />);
+      fillValidForm(container);
+      const input = screen.getByLabelText('$ message:') as HTMLTextAreaElement;
+      fireEvent.change(input, { target: { value: message } });
+      fireEvent.submit(input.form as HTMLFormElement);
+      await screen.findByTestId('contact-success');
+      expect(fetch).toHaveBeenCalledOnce();
+      expect(container.querySelector('form')).toBeNull();
+    },
+  );
+
+  it.each([' '.repeat(10), 'x'.repeat(9), 'x'.repeat(2001), '  short  '])(
+    'rejects messages outside the trimmed API limits (%#)',
+    (message) => {
+      vi.stubGlobal('fetch', vi.fn());
+      const { container } = render(<ContactForm />);
+      fillValidForm(container);
+      const input = screen.getByLabelText('$ message:') as HTMLTextAreaElement;
+      fireEvent.change(input, { target: { value: message } });
+      fireEvent.submit(input.form as HTMLFormElement);
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      expect(document.activeElement).toBe(screen.getByRole('alert'));
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['missing-at.example.com', 'name@', 'name@site', 'name @site.com'])(
+    'rejects invalid email before sending (%s)',
+    (email) => {
+      vi.stubGlobal('fetch', vi.fn());
+      const { container } = render(<ContactForm />);
+      fillValidForm(container);
+      const input = screen.getByLabelText('$ email:') as HTMLInputElement;
+      fireEvent.change(input, { target: { value: email } });
+      fireEvent.submit(input.form as HTMLFormElement);
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
 
   it('focuses a server error, preserves values, and permits a retry', async () => {
     vi.stubGlobal(
@@ -586,6 +635,10 @@ describe('contact validation and retention', () => {
       'mailto:erikhenriquealvescunha@gmail.com',
     );
     expect((screen.getByLabelText('$ name:') as HTMLInputElement).value).toBe('Ada');
+    expect((screen.getByLabelText('$ email:') as HTMLInputElement).value).toBe('ada@example.com');
+    expect((screen.getByLabelText('$ message:') as HTMLTextAreaElement).value).toBe(
+      'A platform engineering opportunity.',
+    );
     fireEvent.submit(form);
     await screen.findByTestId('contact-success');
     expect(fetch).toHaveBeenCalledTimes(2);
@@ -600,5 +653,21 @@ describe('contact validation and retention', () => {
     );
     const ids = [...container.querySelectorAll('[id]')].map((node) => node.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+describe('contact client dependency boundary', () => {
+  it('loads the client island without evaluating Zod', async () => {
+    vi.resetModules();
+    vi.doMock('zod', () => {
+      throw new Error('ContactForm must load without Zod in its runtime dependencies');
+    });
+    try {
+      const client = await import('./ContactForm');
+      expect(typeof client.ContactForm).toBe('function');
+    } finally {
+      vi.doUnmock('zod');
+      vi.resetModules();
+    }
   });
 });
