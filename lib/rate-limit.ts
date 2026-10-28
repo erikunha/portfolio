@@ -86,6 +86,48 @@ const MONTHLY_TOKEN_BUDGET = 3_000_000;
 const BUDGET_WINDOW_S = 60 * 60 * 24 * 32;
 
 const RESERVED_INPUT_TOKENS = 2200;
+const ASK_MAX_OUTPUT_TOKENS = 512;
+
+export type BudgetStore = {
+  capacity: number;
+  reserve(budgetKey: string, tokens: number): Promise<number>;
+  release(budgetKey: string, tokens: number): Promise<void>;
+};
+
+const redisBudgetStore: BudgetStore = {
+  capacity: MONTHLY_TOKEN_BUDGET,
+  async reserve(budgetKey, tokens) {
+    const pipe = getRedis().pipeline();
+    pipe.incrby(budgetKey, tokens);
+    pipe.expire(budgetKey, BUDGET_WINDOW_S, 'NX');
+    const [used] = await pipe.exec<[number, number]>();
+    return used;
+  },
+  async release(budgetKey, tokens) {
+    await getRedis().decrby(budgetKey, tokens);
+  },
+};
+
+let budgetStore: BudgetStore = redisBudgetStore;
+
+export function setBudgetStore(store: BudgetStore): void {
+  budgetStore = store;
+}
+
+export function createEvalBudgetStore(requests: number): BudgetStore {
+  const used = new Map<string, number>();
+  return {
+    capacity: requests * (RESERVED_INPUT_TOKENS + ASK_MAX_OUTPUT_TOKENS),
+    async reserve(budgetKey, tokens) {
+      const total = (used.get(budgetKey) ?? 0) + tokens;
+      used.set(budgetKey, total);
+      return total;
+    },
+    async release(budgetKey, tokens) {
+      used.set(budgetKey, (used.get(budgetKey) ?? 0) - tokens);
+    },
+  };
+}
 
 export function getBudgetKey(): string {
   const now = new Date();
@@ -100,14 +142,11 @@ export async function reserveBudget(
   const reserved = RESERVED_INPUT_TOKENS + maxOutputTokens;
   const budgetKey = getBudgetKey();
   try {
-    const pipe = getRedis().pipeline();
-    pipe.incrby(budgetKey, reserved);
-    pipe.expire(budgetKey, BUDGET_WINDOW_S, 'NX');
-    const [used] = await pipe.exec<[number, number]>();
-    const pct = used / MONTHLY_TOKEN_BUDGET;
+    const used = await budgetStore.reserve(budgetKey, reserved);
+    const pct = used / budgetStore.capacity;
     if (pct > 1) {
       try {
-        await getRedis().decrby(budgetKey, reserved);
+        await budgetStore.release(budgetKey, reserved);
       } catch (refundErr) {
         log.error('budget reservation refund-on-reject failed', { err: refundErr });
       }
@@ -135,7 +174,7 @@ export async function settleBudget(
   const refund = reserved - actual;
   if (refund <= 0) return;
   try {
-    await getRedis().decrby(budgetKey, refund);
+    await budgetStore.release(budgetKey, refund);
   } catch (err) {
     log.error('budget settlement refund failed', { err });
   }

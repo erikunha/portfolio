@@ -17,6 +17,7 @@ import {
 import { JUDGE_ERROR_REASON_PREFIX, JUDGE_NO_JSON_REASON, judge } from '@/lib/eval/judge';
 import { percentile } from '@/lib/eval/percentile';
 import { publishAggregate } from '@/lib/eval/redis-publish';
+import { createEvalBudgetStore, setBudgetStore } from '@/lib/rate-limit';
 import { parseStreamChunk } from '@/lib/stream-protocol';
 
 const JUDGE_MODEL = 'anthropic/claude-sonnet-4-6';
@@ -210,6 +211,8 @@ async function main(): Promise<void> {
     console.log('ai-eval skipped: AI_GATEWAY_API_KEY not configured');
     process.exit(0);
   }
+
+  setBudgetStore(createEvalBudgetStore(ASK_EVAL_CORPUS.length));
 
   console.log(
     `ask-eval: calibration - ${ASK_EVAL_CALIBRATION.length} gold cases → judge ${JUDGE_MODEL}\n`,

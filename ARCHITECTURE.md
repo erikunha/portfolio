@@ -369,6 +369,7 @@ Behavior:
 - 80% threshold (`pct >= 0.8`): logs `budget approaching cap` and **allows the request**. This is a warning, not a gate — the endpoint does not 503 here.
 - Hard cap (`pct > 1`): refunds the reservation and returns `allowed: false`; the route returns 503 with a fallback message
 - Redis unavailable: budget reservation fails closed (`allowed: false`, `reserved: 0`). `/api/ask` returns its existing HTTP 503 budget-rejection JSON before calling the model. Rate limiting and identical-question dedup still fail open, but a failed reservation prevents unmetered model calls. Settlement skips nonpositive reservations.
+- Budget storage sits behind `BudgetStore` (`reserve`, `release`, `capacity`) in `lib/rate-limit.ts`. The default is the Redis counter above. `setBudgetStore` swaps it, and only `scripts/ask-eval.ts` calls it, installing `createEvalBudgetStore(ASK_EVAL_CORPUS.length)`: an in-memory counter that allows one full reservation per corpus item. No environment flag, header or request parameter selects it, so the production route cannot reach it. The eval therefore needs no Redis credentials and never spends the production counter.
 - `ASK_ENABLED` remains a Redis-independent kill switch checked before rate limiting or budget reservation.
 - Prompt caching enabled via `providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }` on a system message (AI SDK v7 shape; the pre-v7 `cache_control` spelling survives only in the unused `SYSTEM` export that `__tests__/system-prompt.test.ts` reads, not in the live route path)
 
