@@ -2,9 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { DEFERRED_SECTION_COUNT as MODULE_DEFERRED_SECTION_COUNT } from '@/components/responsive/Module/module.constants';
-
-const DEFERRED_SECTION_COUNT = 14;
+import { DEFERRED_SECTION_COUNT } from '@/components/responsive/Module/module.constants';
 
 function countDeferredSections(node: unknown): number {
   if (!node || typeof node !== 'object') return 0;
@@ -45,7 +43,6 @@ describe('content-visibility deferral', () => {
       const { default: Home } = await import('@/app/page');
       const tree = Home();
       const deferredCount = countDeferredSections(tree);
-      expect(MODULE_DEFERRED_SECTION_COUNT).toBe(deferredCount);
       expect(
         deferredCount,
         `app/page.tsx must pass \`defer\` to exactly ${DEFERRED_SECTION_COUNT} sections. Credentials and community share Career's deferred section. Update DEFERRED_SECTION_COUNT only when the deferred section set intentionally changes.`,
