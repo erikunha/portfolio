@@ -609,7 +609,10 @@ describe('InteractiveShell r106 controls', () => {
           complete = () => controller.close();
         },
       });
-      vi.stubGlobal('fetch', vi.fn(async () => new Response(body)));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response(body)),
+      );
       const container = await renderShell();
       await submitQuestion(container, 'keep my focus');
       const focused =
@@ -642,7 +645,10 @@ describe('InteractiveShell r106 controls', () => {
           stream = controller;
         },
       });
-      vi.stubGlobal('fetch', vi.fn(async () => new Response(body)));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response(body)),
+      );
       const container = await renderShell();
       await submitQuestion(container, 'stream while I read');
       const feed = container.querySelector<HTMLElement>('[role="log"]') as HTMLElement;
