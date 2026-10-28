@@ -17,4 +17,7 @@ export const communityEvent: CommunityEvent = CommunityEventSchema.parse({
   refsLabel: 'refs:',
   newTabLabel: '(opens in a new tab)',
   statusLine: 'open to CFP submissions for 2027 · open to volunteer / organizer roles.',
+  command: "$ git tag --list 'community/*'",
+  tag: 'community/DEVOPSDAYS_CAMPINAS',
+  statusLabel: '> status:',
 });

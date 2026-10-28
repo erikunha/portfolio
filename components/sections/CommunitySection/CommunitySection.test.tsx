@@ -1,10 +1,6 @@
-import { createElement, type ReactNode } from 'react';
+import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
-
-vi.mock('@/components/responsive/Module', () => ({
-  Module: (props: { children?: ReactNode }) => props.children,
-}));
+import { describe, expect, it } from 'vitest';
 
 import { communityEvent } from '@/content/community';
 import { CommunitySection } from './CommunitySection';
@@ -15,7 +11,14 @@ function render() {
   return host;
 }
 
-describe('CommunitySection', () => {
+describe('Community tags within About', () => {
+  it('renders the git command without a standalone section', () => {
+    const host = render();
+    expect(host.textContent).toContain("$ git tag --list 'community/*'");
+    expect(host.textContent).toContain('open to CFP submissions for 2027');
+    expect(host.querySelector('section')).toBeNull();
+  });
+
   it('states the talk count the official program shows', () => {
     expect(render().textContent).toContain('curated 8 talks');
   });

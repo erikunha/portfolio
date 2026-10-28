@@ -13,6 +13,66 @@ export const StatSchema = z.object({
   label: z.string().min(1),
   value: z.string().min(1),
 });
+
+export const HeroContentSchema = z.object({
+  locationLabel: z.string().min(1),
+  employerLabel: z.string().min(1),
+  languageLabel: z.string().min(1),
+  statsLabel: z.string().min(1),
+  hire: z.object({ label: z.string().min(1), href: z.url(), accessibleLabel: z.string().min(1) }),
+  actions: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        href: z.union([z.url(), z.string().regex(/^\/(?!\/)\S*$/)]),
+        accessibleLabel: z.string().min(1),
+        external: z.boolean(),
+      }),
+    )
+    .min(1),
+  stats: z.array(StatSchema).length(4),
+});
+
+export const AboutContentSchema = z.object({
+  title: z.string().min(1),
+  command: z.string().min(1),
+  marker: z.string().min(1),
+  whoami: z.object({
+    title: z.string().min(1),
+    intro: z.string().min(1),
+    principlesTitle: z.string().min(1),
+    principles: z.array(z.string().min(1)).min(1),
+    statusTitle: z.string().min(1),
+    statusPrefix: z.string().min(1),
+    role: z.string().min(1),
+    statusSuffix: z.string().min(1),
+    details: z.array(z.string().min(1)).min(1),
+    gutterLines: z.number().int().positive(),
+  }),
+  now: z.object({
+    title: z.string().min(1),
+    rows: z.array(z.object({ k: z.string().min(1), v: z.string().min(1) })).min(1),
+  }),
+  responsibilities: z.object({ title: z.string().min(1), command: z.string().min(1) }),
+  stack: z.object({
+    title: z.string().min(1),
+    groups: z
+      .array(z.object({ label: z.string().min(1), items: z.array(z.string().min(1)).min(1) }))
+      .min(1),
+  }),
+  code: z.object({
+    title: z.string().min(1),
+    label: z.string().min(1),
+    repoLabel: z.string().min(1),
+    repoHref: z.url(),
+    repoAccessibleLabel: z.string().min(1),
+    tokens: z
+      .array(
+        z.object({ id: z.number().int().nonnegative(), text: z.string(), className: z.string() }),
+      )
+      .min(1),
+  }),
+});
 export const ProjectSchema = z.object({
   company: z.string().min(1),
   name: z.string().min(1),
@@ -142,6 +202,9 @@ export const CommunityEventSchema = z.object({
   refsLabel: z.string().min(1),
   newTabLabel: z.string().min(1),
   statusLine: z.string().min(1),
+  command: z.string().min(1),
+  tag: z.string().min(1),
+  statusLabel: z.string().min(1),
 });
 
 export const ManPageSchema = z.object({
