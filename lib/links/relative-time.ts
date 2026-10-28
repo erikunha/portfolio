@@ -5,11 +5,7 @@ const DAYS_PER_WEEK = 7;
 const DAYS_PER_MONTH = 30;
 const DAYS_PER_YEAR = 365;
 
-export function formatRelative(
-  date: Date,
-  locale: LinksLocale,
-  now: Date = new Date(),
-): string | null {
+export function formatRelative(date: Date, locale: LinksLocale, now: Date): string | null {
   const ms = date.getTime();
   if (!Number.isFinite(ms)) return null;
 
