@@ -202,9 +202,6 @@ export const CommunityEventSchema = z.object({
   refsLabel: z.string().min(1),
   newTabLabel: z.string().min(1),
   statusLine: z.string().min(1),
-  command: z.string().min(1),
-  tag: z.string().min(1),
-  statusLabel: z.string().min(1),
 });
 
 export const ManPageSchema = z.object({
