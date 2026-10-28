@@ -12,6 +12,7 @@ vi.mock('next/image', () => ({
 const CHANNEL_URL = 'https://www.youtube.com/@eriknagringa';
 
 const emptyFeed: ChannelFeed = {
+  fetchedAt: '2026-08-31T19:00:00Z',
   latest: null,
   history: [],
   stats: {},
@@ -19,6 +20,7 @@ const emptyFeed: ChannelFeed = {
 };
 
 const populatedFeed: ChannelFeed = {
+  fetchedAt: '2026-08-31T19:00:00Z',
   latest: {
     id: 'abc',
     title: 'Montei um time de 12 agentes',
@@ -34,6 +36,22 @@ const populatedFeed: ChannelFeed = {
 };
 
 describe('ChannelCard', () => {
+  it('renders the relative label from the feed timestamp in either locale', () => {
+    const { container, rerender } = render(
+      <ChannelCard locale={LINKS_LOCALE.en} feed={populatedFeed} />,
+    );
+    expect(container.textContent).toContain('3 days ago');
+    rerender(<ChannelCard locale={LINKS_LOCALE.pt} feed={populatedFeed} />);
+    expect(container.textContent).toContain('há 3 dias');
+    rerender(
+      <ChannelCard
+        locale={LINKS_LOCALE.en}
+        feed={{ ...populatedFeed, fetchedAt: '2026-09-01T19:00:00Z' }}
+      />,
+    );
+    expect(container.textContent).toContain('4 days ago');
+  });
+
   it('keeps the 16:9 block before the first video exists, so the card holds its shape', () => {
     const { container } = render(<ChannelCard locale={LINKS_LOCALE.pt} feed={emptyFeed} />);
     expect(container.querySelector('.links-thumb-placeholder')).not.toBeNull();

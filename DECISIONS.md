@@ -1,6 +1,9 @@
 # DECISIONS
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
+- **2026-10-28** · `/links` relative video ages use the timestamp captured with the cached channel feed. The existing explicit `cacheLife` refreshes data and reference time together, keeping both locale routes and their priority thumbnail prerendered under Cache Components. Labels describe the cached snapshot, with hourly background revalidation and one-day expiry. Request-time `connection()` would delay this content beyond the static shell. _Reversible: move only relative labels behind Suspense with `connection()` if request-time freshness becomes necessary._
+
+- **2026-10-24** · Contact submission returns 200 only when Resend accepts delivery. Provider errors and 10s timeouts return `202 queued` after durable outbox persistence, with a LinkedIn alternative. A daily 04:00 UTC cron retries at most 3 times within 7 days, preserving the 90-day KV audit record after success, expiry or exhaustion. Hobby cron frequency requires a daily schedule. Both routes share send configuration and a message-id idempotency key; logs retain only request and message ids. _Reversible: revert the delivery routes, form states and cron entry together; existing KV audit messages remain available._
 
 ## 2026-10-29 — the project no longer pins a Claude Code permission mode
 
