@@ -44,7 +44,7 @@ describe('career git log', () => {
     expect(career?.textContent).toContain("git tag --list 'community/*'");
     const action = career?.querySelector('a[href="/cv"]');
     expect(action?.textContent).toBe('VIEW_CV');
-    expect(action?.getAttribute('href')).toBe('/cv');
+    expect(action?.getAttribute('href')).toBe('/erik-cunha-cv.pdf');
     expect(host.querySelectorAll('#sec-credentials')).toHaveLength(1);
   });
 });
