@@ -1,4 +1,12 @@
-import { type VisaRow, VisaRowSchema, WORK_AUTH_STATUS } from './schemas';
+import { type VisaRow, VisaRowSchema, VisaUiSchema, WORK_AUTH_STATUS } from './schemas';
+
+export const visaUi = VisaUiSchema.parse({
+  title: 'Work authorization',
+  command: 'CAT ~/.VISA',
+  jurisdictionLabel: 'JURISDICTION',
+  statusLabel: 'STATUS',
+  evidenceLabel: 'EVIDENCE',
+});
 
 export const workAuthorization = {
   Brazil: WORK_AUTH_STATUS.citizen,

@@ -1,11 +1,24 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { NextRequest } from 'next/server';
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
 import { linksContent } from '@/content/links';
 import { ContactForm } from './ContactForm';
+
+function fillValidForm(container: HTMLElement) {
+  fireEvent.change(container.querySelector('input[name="name"]') as HTMLInputElement, {
+    target: { value: 'Ada' },
+  });
+  fireEvent.change(container.querySelector('input[name="email"]') as HTMLInputElement, {
+    target: { value: 'ada@example.com' },
+  });
+  fireEvent.change(container.querySelector('textarea') as HTMLTextAreaElement, {
+    target: { value: 'A platform engineering opportunity.' },
+  });
+}
 
 describe('ContactForm accessibility', () => {
   let mounted: MountedClient;
@@ -65,7 +78,14 @@ describe('ContactForm accessibility', () => {
 
   it('keyboard form submission triggers the request and announces errors via role="alert"', async () => {
     const fetchMock = vi.fn(
-      async () => new Response(JSON.stringify({ error: 'server boom' }), { status: 500 }),
+      async () =>
+        new Response(
+          JSON.stringify({
+            ok: false,
+            error: { code: 'storage_unavailable', message: 'server boom' },
+          }),
+          { status: 500 },
+        ),
     );
     vi.stubGlobal('fetch', fetchMock);
 
@@ -74,6 +94,7 @@ describe('ContactForm accessibility', () => {
     expect(container.querySelector('[role="alert"]')).toBeNull();
 
     const form = container.querySelector<HTMLFormElement>('form');
+    fillValidForm(container);
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
@@ -103,7 +124,13 @@ describe('contact form error region', () => {
   it('renders the error message in a role="alert" live region after a failed submit', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(JSON.stringify({ error: 'boom' }), { status: 500 })),
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({ ok: false, error: { code: 'storage_unavailable', message: 'boom' } }),
+            { status: 500 },
+          ),
+      ),
     );
 
     mounted = await mountClient(createElement(ContactForm));
@@ -113,6 +140,7 @@ describe('contact form error region', () => {
 
     const form = container.querySelector<HTMLFormElement>('form');
     expect(form).not.toBeNull();
+    fillValidForm(container);
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
@@ -138,7 +166,9 @@ describe('contact form delivery states', () => {
       vi.fn(async () => Response.json(body, { status })),
     );
     mounted = await mountClient(createElement(ContactForm));
-    const form = mounted.container.querySelector('form');
+    const container = mounted.container;
+    const form = container.querySelector('form');
+    fillValidForm(container);
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
@@ -161,7 +191,7 @@ describe('contact form delivery states', () => {
       202,
       'contact-queued',
     ],
-  ])('moves focus to the result once the form is replaced (%#)', async (body, status, testId) => {
+  ])('moves focus to the result while retaining the form (%#)', async (body, status, testId) => {
     const container = await submitResponse(body, status);
     const result = container.querySelector(`[data-testid="${testId}"]`);
     expect(result).not.toBeNull();
@@ -184,7 +214,7 @@ describe('contact form delivery states', () => {
     expect(link?.getAttribute('href')).toBe(
       linksContent.pills.find((pill) => pill.id === 'linkedin')?.href,
     );
-    expect(container.querySelector('form')).toBeNull();
+    expect(container.querySelector('form')).not.toBeNull();
   });
 
   it.each([
@@ -394,13 +424,13 @@ describe('contact form — submitting state', () => {
     vi.restoreAllMocks();
   });
 
-  it('sets aria-busy="true" and disables the submit button while the POST is pending', async () => {
+  it('keeps the busy submit focusable and guards duplicate requests', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(
         () =>
           new Promise<Response>((resolve) => {
-            resolveFetch = () => resolve(new Response('{}', { status: 200 }));
+            resolveFetch = () => resolve(Response.json({ ok: true }));
           }),
       ),
     );
@@ -411,6 +441,7 @@ describe('contact form — submitting state', () => {
     const form = container.querySelector<HTMLFormElement>('form');
     expect(form?.getAttribute('aria-busy')).toBe('false');
 
+    fillValidForm(container);
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
@@ -418,7 +449,15 @@ describe('contact form — submitting state', () => {
 
     expect(form?.getAttribute('aria-busy')).toBe('true');
     const submitBtn = container.querySelector<HTMLButtonElement>('button[type="submit"]');
-    expect(submitBtn?.hasAttribute('disabled')).toBe(true);
+    expect(submitBtn?.hasAttribute('disabled')).toBe(false);
+    expect(submitBtn?.getAttribute('aria-disabled')).toBe('true');
+    submitBtn?.focus();
+    expect(document.activeElement).toBe(submitBtn);
+    await act(async () => {
+      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    expect(fetch).toHaveBeenCalledOnce();
 
     await act(async () => {
       resolveFetch();
@@ -426,6 +465,140 @@ describe('contact form — submitting state', () => {
     await flushMicrotasks();
 
     expect(container.querySelector('[data-testid="contact-success"]')).not.toBeNull();
-    expect(container.querySelector('form')).toBeNull();
+    expect(container.querySelector('form')).not.toBeNull();
+  });
+});
+
+describe('contact validation and retention', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('focuses a linked summary, wires inline errors, and corrects them as inputs change', () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = render(<ContactForm />);
+    const form = container.querySelector('form') as HTMLFormElement;
+    fireEvent.submit(form);
+    const summary = screen.getByRole('alert');
+    expect(document.activeElement).toBe(summary);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(within(summary).getAllByRole('link')).toHaveLength(3);
+    for (const link of within(summary).getAllByRole('link')) {
+      const id = link.getAttribute('href')?.slice(1) as string;
+      const input = document.getElementById(id) as HTMLInputElement;
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      const descriptions = input.getAttribute('aria-describedby')?.split(' ') ?? [];
+      expect(
+        descriptions.some((description) =>
+          document.getElementById(description)?.textContent?.includes('error:'),
+        ),
+      ).toBe(true);
+      fireEvent.click(link);
+      expect(document.activeElement).toBe(input);
+    }
+    fillValidForm(container);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(container.querySelector('[aria-invalid="true"]')).toBeNull();
+    fireEvent.change(screen.getByLabelText('$ email:'), { target: { value: 'bad' } });
+    fireEvent.submit(form);
+    expect(document.activeElement).toBe(screen.getByRole('alert'));
+    expect(within(screen.getByRole('alert')).getAllByRole('link')).toHaveLength(1);
+  });
+
+  it('counts message characters and keeps the counter described alongside a validation error', () => {
+    render(<ContactForm />);
+    const message = screen.getByLabelText('$ message:') as HTMLTextAreaElement;
+    fireEvent.change(message, { target: { value: 'short' } });
+    fireEvent.submit(message.form as HTMLFormElement);
+    const descriptions = message.getAttribute('aria-describedby')?.split(' ') ?? [];
+    expect(descriptions.map((id) => document.getElementById(id)?.textContent)).toContain('5/2000');
+    expect(descriptions).toHaveLength(2);
+    fireEvent.change(message, { target: { value: 'An adequate message.' } });
+    const remaining = message.getAttribute('aria-describedby')?.split(' ') ?? [];
+    expect(remaining).toHaveLength(1);
+    expect(document.getElementById(remaining[0] ?? '')?.textContent).toBe('20/2000');
+    expect(message.maxLength).toBe(2000);
+  });
+
+  it.each(['A', 'A'.repeat(120)])(
+    'accepts the API name boundary and retains all values after success',
+    async (name) => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => Response.json({ ok: true })),
+      );
+      const { container } = render(<ContactForm />);
+      fillValidForm(container);
+      const nameInput = screen.getByLabelText('$ name:') as HTMLInputElement;
+      fireEvent.change(nameInput, { target: { value: name } });
+      expect(nameInput.minLength).toBe(1);
+      expect(nameInput.maxLength).toBe(120);
+      fireEvent.submit(nameInput.form as HTMLFormElement);
+      await screen.findByTestId('contact-success');
+      expect(nameInput.value).toBe(name);
+      expect((screen.getByLabelText('$ email:') as HTMLInputElement).value).toBe('ada@example.com');
+      expect((screen.getByLabelText('$ message:') as HTMLTextAreaElement).value).toBe(
+        'A platform engineering opportunity.',
+      );
+      expect(screen.getByRole('button', { name: 'EXECUTE_SEND' }).hasAttribute('disabled')).toBe(
+        false,
+      );
+    },
+  );
+
+  it('rejects whitespace-only names and values beyond API limits without sending', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    const { container } = render(<ContactForm />);
+    fillValidForm(container);
+    const name = screen.getByLabelText('$ name:') as HTMLInputElement;
+    for (const value of ['   ', 'A'.repeat(121)]) {
+      fireEvent.change(name, { target: { value } });
+      fireEvent.submit(name.form as HTMLFormElement);
+      expect(name.getAttribute('aria-invalid')).toBe('true');
+    }
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('focuses a server error, preserves values, and permits a retry', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          Response.json(
+            {
+              ok: false,
+              error: { code: 'storage_unavailable', message: 'storage unavailable, try again' },
+            },
+            { status: 502 },
+          ),
+        )
+        .mockResolvedValueOnce(Response.json({ ok: true })),
+    );
+    const { container } = render(<ContactForm />);
+    fillValidForm(container);
+    const form = container.querySelector('form') as HTMLFormElement;
+    fireEvent.submit(form);
+    const alert = await screen.findByRole('alert');
+    expect(document.activeElement).toBe(alert);
+    expect(alert.textContent).toContain('storage unavailable, try again');
+    expect(alert.textContent).not.toContain('[object Object]');
+    expect(within(alert).getByRole('link').getAttribute('href')).toBe(
+      'mailto:erikhenriquealvescunha@gmail.com',
+    );
+    expect((screen.getByLabelText('$ name:') as HTMLInputElement).value).toBe('Ada');
+    fireEvent.submit(form);
+    await screen.findByTestId('contact-success');
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('gives separate forms unique field and description targets', () => {
+    const { container } = render(
+      <>
+        <ContactForm />
+        <ContactForm />
+      </>,
+    );
+    const ids = [...container.querySelectorAll('[id]')].map((node) => node.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
