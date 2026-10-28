@@ -66,7 +66,6 @@ export const perfReceipts: PerfReceipt[] = z.array(PerfReceiptSchema).parse([
     delta: '-40%',
     company: '@ BETSSON_GROUP',
     note: '35-page architecture knowledge system + diagrams.',
-    mobileMetric: 'ONBOARDING',
   },
   {
     metric: 'LCP',

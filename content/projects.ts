@@ -47,7 +47,6 @@ export const projects: Project[] = z
       name: 'SERVICE_OPS_CONSOLE',
       company: 'Canon Medical Systems',
       kind: 'professional',
-      mobileName: 'service_ops/',
       description:
         'Hospital equipment service platform: service orders, specialist schedules, field visits, live updates. Clean Architecture.',
       stats: [

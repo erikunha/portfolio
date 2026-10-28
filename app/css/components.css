@@ -596,10 +596,6 @@
     border-top: 1px solid var(--color-primary-border);
   }
 
-  .receipt-hero-gradient {
-    background: linear-gradient(180deg, var(--color-glow-04), transparent);
-  }
-
   .cam-corners {
     position: absolute;
     inset: 8px;

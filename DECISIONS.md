@@ -1,7 +1,7 @@
 # DECISIONS
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
-- **2026-10-28** · `#sec-ai-metrics` is an in-page anchor inside the combined Measured section, not a flex child of the page column, so it carries no mobile `order` rule and is listed in `KNOWN_UNORDERED` of `scripts/check-section-order.mjs`. _Reversible: if ASK telemetry becomes its own top-level section again, give it an `order` rule and drop it from the set._
+- **2026-10-28** · `#sec-ai-metrics` and `#sec-live-perf` are nested anchors inside Measured; `#sec-perf-receipts` is nested inside Projects. These anchors are outside the page column's flex children, so mobile `order` rules have no effect. All three belong in `KNOWN_UNORDERED` of `scripts/check-section-order.mjs`. _Reversible: if an anchor becomes a top-level section, give it an `order` rule and drop it from the set._
 
 - **2026-10-28** · `/links` relative video ages use the timestamp captured with the cached channel feed. The existing explicit `cacheLife` refreshes data and reference time together, keeping both locale routes and their priority thumbnail prerendered under Cache Components. Labels describe the cached snapshot, with hourly background revalidation and one-day expiry. Request-time `connection()` would delay this content beyond the static shell. _Reversible: move only relative labels behind Suspense with `connection()` if request-time freshness becomes necessary._
 

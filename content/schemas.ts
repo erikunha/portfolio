@@ -19,7 +19,6 @@ export const ProjectSchema = z
   .object({
     company: z.string().min(1),
     name: z.string().min(1),
-    mobileName: z.string().min(1).optional(),
     description: z.string().min(1),
     stats: z.array(StatSchema).min(1),
     perm: z.string().min(1).optional(),
@@ -29,7 +28,6 @@ export const ProjectSchema = z
   .refine((project) => project.kind !== ProjectKind.enum.oss || project.url !== undefined)
   .transform((project) => ({
     ...project,
-    mobileName: project.mobileName ?? project.name,
     mobileDescription: project.description,
     mobileMeta: project.stats,
   }));
@@ -44,8 +42,6 @@ export const PerfReceiptSchema = z.object({
     ),
   company: z.string().min(1),
   note: z.string().min(1),
-  mobileMetric: z.string().min(1).optional(),
-  desktopOnly: z.boolean().optional(),
   project: z.boolean().default(false),
   displayValue: z.string().min(1).optional(),
   before: z.number().nonnegative().optional(),

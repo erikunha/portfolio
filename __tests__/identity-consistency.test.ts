@@ -9,9 +9,11 @@ import { footerContent } from '@/content/footer';
 import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
 import { nowRows } from '@/content/now';
+import { perfReceipts } from '@/content/perf-receipts';
 import { profile, profileLanguageLine, profileWorkingLanguageLine } from '@/content/profile';
 import { projects } from '@/content/projects';
 import { readmeCopy } from '@/content/readme';
+import { PerfReceiptSchema, ProjectSchema } from '@/content/schemas';
 import { personSchema } from '@/content/seo';
 import { social } from '@/content/social';
 import { visaRows } from '@/content/visa';
@@ -390,7 +392,6 @@ describe('terminal redesign canonical facts', () => {
     expect(JSON.stringify(raylu)).not.toMatch(/Next(?:\.js)? 15|React 19/i);
     const service = projects.find((project) => project.name === 'SERVICE_OPS_CONSOLE');
     expect(service?.company).toBe('Canon Medical Systems');
-    expect(service?.mobileName).toBe('service_ops/');
     for (const description of [service?.description, service?.mobileDescription]) {
       expect(description).toContain('service orders');
       expect(description).toContain('specialist schedules');
@@ -404,5 +405,27 @@ describe('terminal redesign canonical facts', () => {
     ]) {
       expect(text).not.toContain('CARE_OPS_CONSOLE');
     }
+  });
+
+  it('keeps the canonical project name when parsing retired mobile overrides', () => {
+    const service = projects.find((project) => project.name === 'SERVICE_OPS_CONSOLE');
+    expect(service).toBeDefined();
+    const parsed = ProjectSchema.parse({ ...service, mobileName: 'service_ops/' });
+    expect(parsed).toEqual(service);
+    expect(parsed.name).toBe('SERVICE_OPS_CONSOLE');
+    expect(parsed).not.toHaveProperty('mobileName');
+  });
+
+  it('preserves receipt data while discarding retired mobile presentation fields', () => {
+    const onboarding = perfReceipts.find((receipt) => receipt.metric === 'ONBOARDING_TIME');
+    expect(onboarding).toBeDefined();
+    const parsed = PerfReceiptSchema.parse({
+      ...onboarding,
+      mobileMetric: 'ONBOARDING',
+      desktopOnly: true,
+    });
+    expect(parsed).toEqual(onboarding);
+    expect(parsed).not.toHaveProperty('mobileMetric');
+    expect(parsed).not.toHaveProperty('desktopOnly');
   });
 });
