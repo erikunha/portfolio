@@ -311,11 +311,12 @@ jobs:
       # action. And it must not use its own looser pattern than the gate it
       # protects: parseClaudeVerdict in scripts/check-claude-approval.ts requires
       # the verdict word inside ** **, so an unbolded "approve" would satisfy a
-      # naive grep while the gate still read none. The regex below is that
-      # parser's regex, with one asymmetry that must stay visible: grep applies it
-      # PER LINE and JS [^*] matches a newline, so a bolded verdict wrapped across
-      # a line break reds this guard while the merge gate reads approve. The guard
-      # is therefore strictly NARROWER than the parser PATTERN-FOR-PATTERN. The
+      # naive grep while the gate still read none. The regex below mirrors that
+      # parser: it pairs ** spans from the start of the line, so prose between two
+      # bold spans never counts. One asymmetry must stay visible: grep pairs PER
+      # LINE while the parser pairs across the whole body, so a bolded verdict
+      # wrapped across a line break reds this guard while the merge gate reads
+      # approve. The guard is therefore strictly NARROWER than the parser. The
       # corpora must match too: the gate reads only the LATEST claude[bot] comment,
       # so the filter sorts and takes `last`. --slurp is load-bearing, not decoration:
       # --slurp makes gh emit ONE array of pages instead of a filtered result per
@@ -427,7 +428,7 @@ jobs:
             fresh=$(gh api --paginate --slurp "repos/$REPO/issues/$PR/comments" \
               | jq -r "[.[][] | select(.user.login == \"claude[bot]\" and .created_at >= \"$SINCE\")] | sort_by(.created_at) | last | .body // empty") || fresh=""
 
-            if printf '%s' "$fresh" | grep -qiE '\*\*[^*]*\b(approve|reject|request changes)\b[^*]*\*\*'; then
+            if printf '%s' "$fresh" | grep -qiE '^([^*]*\*\*[^*]*\*\*)*[^*]*\*\*[^*]*\b(approve|reject|request changes)\b[^*]*\*\*'; then
               echo "OK  this run posted a verdict (attempt $attempt)."
               exit 0
             fi
