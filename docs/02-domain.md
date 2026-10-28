@@ -56,7 +56,7 @@ Career (`sec-git-log`) contains the `cert/*`, `edu/*`, and `community/*` tag gro
 
 Supporting content (not sections): `social.ts` (links), `seo.ts` (JSON-LD `Person`), `dmesg.ts` + `shell-commands.ts` + `terminal-chrome.ts` (client-imported flavor data), and the AI-eval domain below.
 
-Projects uses one set of descriptions and stats across viewport sizes. Its content schema derives mobile compatibility fields from those shared values. Each card names its company; OSS cards include a public URL. The canonical receipt collection retains signed percentage deltas for consistency checks. Its six project receipts may display before/after values while keeping those deltas available to other consumers. `heroStats` supplies the four introductory metrics.
+Projects uses one set of descriptions and stats across viewport sizes. Each card names its company; OSS cards include a public URL. The canonical receipt collection retains signed percentage deltas for consistency checks. Its six project receipts may display before/after values while keeping those deltas available to other consumers. `heroStats` supplies the four introductory metrics.
 
 Measured groups ASK and PSI presentation metadata without storing live values. The ASK adapter reads the eval aggregate; the PSI adapter supplies separate desktop and mobile scores. Each group keeps its own loading, unavailable and stale states.
 

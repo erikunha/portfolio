@@ -70,7 +70,7 @@ flowchart LR
 
 **Static vs dynamic, concretely:**
 - **Static (prerendered):** the whole `AppShell` chrome, `Hero` (outside Suspense so LCP never waits), `Readme`, `Shell`, Projects with its attached receipts, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid.
-- **UA-selected variants:** `ManPage`, `GitLog`, `Visa`, `Guitar` and `DawMixer` wrap an async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`). Their fallbacks are prerendered; the selected variants stream per request.
+- **UA-selected variants:** `ManPage`, `Visa`, `Guitar` and `DawMixer` wrap an async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`). Their fallbacks are prerendered; the selected variants stream per request.
 - **Measured data:** `AiMetricsSection` renders the `sec-live-metrics` module. It composes `AiMetricsData` and `LivePerfSection`, with independent Suspense boundaries for ASK, desktop PSI and mobile PSI. Each fallback retains its metric layout and shows a loading state. Receipts remain inside Projects rather than a separate module.
 - **The dual-variant pattern** (e.g. `ManPageSection.tsx`):
 
@@ -78,7 +78,7 @@ flowchart LR
   <Module><Suspense fallback={<Desktop/>}><AsyncInner/></Suspense></Module>
   ```
 
-  `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: the desktop variant for ManPage, GitLog and Visa; `null` for Guitar and DawMixer.
+  `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: the desktop variant for ManPage and Visa; `null` for Guitar and DawMixer.
 - **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` to defer render cost.
 - **`next/dynamic` lazy JS:** `ContactFormLazy`, `InteractiveShellLazy`, `DawMixerSection`. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy` loads only the session counters and halt/reboot island from `Footer.client`; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
