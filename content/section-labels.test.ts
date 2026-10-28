@@ -35,6 +35,6 @@ describe('SECTION_LABELS', () => {
     for (const id of ids) {
       expect(SECTION_LABELS, `missing label for ${id}`).toHaveProperty(id);
     }
-    expect(ids.size).toBeGreaterThanOrEqual(20);
+    expect(ids.size).toBe(18);
   });
 });

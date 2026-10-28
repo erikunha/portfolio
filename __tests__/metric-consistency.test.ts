@@ -26,6 +26,7 @@ const flipSign = (delta: string) =>
 
 const METRIC_KEYWORDS: Record<string, RegExp> = {
   API_LATENCY: /latency/i,
+  LCP: /\bLCP\b|largest.contentful.paint/i,
   BUNDLE_CSS: /css/i,
   TTI: /\bTTI\b|time.to.interactive/i,
   BUNDLE_JS: /\bJS\b|javascript/i,
@@ -84,6 +85,7 @@ const PROJECT_STAT_METRICS: Record<string, string> = {
   TTI: 'TTI',
   'JS BUNDLE': 'BUNDLE_JS',
   'LOAD TIME': 'PAGE_LOAD',
+  'DESKTOP BUILD': 'DESKTOP_BUILD',
 };
 
 beforeAll(async () => {
@@ -150,6 +152,20 @@ describe('performance metrics agree with the authoritative receipts', () => {
       rejected,
       'PerfReceiptSchema must reject every delta that is not a bare signed percentage. flipSign() flips the sign and the sweep searches each surface for that literal string, so the delta has to be a token a surface can literally contain. An unsigned "10%" flips to "-0%"; a trailing gloss "-40% build time" flips to "+40% build time"; a LEADING gloss "build time -40%" flips to "-uild time -40%" — all strings no surface holds, so the sweep for that metric silently passes forever instead of failing. DO NOT TRIM THIS LIST without recomputing the mutant kill-matrix; almost every case is the sole or joint guard of a distinct loosening. Sole killers: "10%" (optional sign), "-25" (optional `%`), "-40 %" (space before the `%`), " -40%" (leading whitespace). Joint-and-only killers: the two TRAILING glosses "-40% build time" and "-97.5% (40s→<1s, Venturus)" are the ONLY two cases that kill a dropped `$` anchor — delete both and the schema can drop `$`, accept a trailing gloss, and that metric silently stops being swept forever. Keep at least one; "-97.5% (…)" is the live idiom in lib/hiring-profile.ts one import away. "−25%" (U+2212) matters differently: its flip is the TRUE value "-25%" that every surface contains, so it would cause a false-positive storm rather than a no-op. The ONLY strictly dominated case is the LEADING gloss "build time -40%" (" -40%" kills everything it kills); it is kept purely as documentation of a shape a human types. Fix the schema (or move the gloss to `note`), not this test.',
     ).toEqual([]);
+  });
+
+  it('keeps canonical deltas separate from the displayed before/after receipts', () => {
+    expect(receiptFor('API_LATENCY')).toBe('-97.5%');
+    expect(receiptFor('BUNDLE_CSS')).toBe('-98%');
+    expect(receiptFor('DESKTOP_BUILD')).toBe('-40%');
+    const lcp = perfReceipts.find((receipt) => receipt.metric === 'LCP');
+    expect(lcp).toMatchObject({
+      before: 2544,
+      after: 1308,
+      unit: 'ms',
+      displayValue: '2,544→1,308ms',
+    });
+    expect(lcp?.delta).toBe(`${(((1308 - 2544) / 2544) * 100).toFixed(1)}%`);
   });
 
   it('INITIAL_LOAD matches "initial page load" but never "load time"', () => {

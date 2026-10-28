@@ -9,6 +9,25 @@ async function renderSection(): Promise<Document> {
 }
 
 describe('PerfReceiptsSection — hero data-featured variant', () => {
+  it('renders the six approved non-repeated metrics with company and context', async () => {
+    const doc = await renderSection();
+    const rows = Array.from(doc.querySelectorAll('li'));
+    expect(rows).toHaveLength(6);
+    expect(rows.map((row) => row.querySelector('[data-receipt-metric]')?.textContent)).toEqual([
+      'API_LATENCY',
+      'BUNDLE_CSS',
+      'INITIAL_LOAD',
+      'CONVERSION',
+      'DESKTOP_BUILD',
+      'LCP',
+    ]);
+    expect(doc.body.textContent).toContain('40s→<1s');
+    expect(doc.body.textContent).toContain('2,544→1,308ms');
+    for (const row of rows) {
+      expect(row.querySelector('.receipt-company')?.textContent).toMatch(/@\s*\S/);
+      expect(row.querySelector('.receipt-context')?.textContent?.length).toBeGreaterThan(15);
+    }
+  });
   it('adds data-featured attribute to the hero delta value', async () => {
     const doc = await renderSection();
     const featured = doc.querySelector('[data-featured]');

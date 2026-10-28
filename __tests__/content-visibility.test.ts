@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { DEFERRED_SECTION_COUNT } from '@/components/responsive/Module/module.constants';
+
+const DEFERRED_SECTION_COUNT = 14;
 
 function countDeferredSections(node: unknown): number {
   if (!node || typeof node !== 'object') return 0;

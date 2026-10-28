@@ -11,11 +11,9 @@ import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
 import { Hero } from '@/components/sections/Hero';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
-import { LivePerfSection } from '@/components/sections/LivePerfSection';
 import { ManPageSection } from '@/components/sections/ManPageSection';
 import { NowSection } from '@/components/sections/NowSection';
 import { NpmStackSection } from '@/components/sections/NpmStackSection';
-import { PerfReceiptsSection } from '@/components/sections/PerfReceiptsSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { ReadmeSection } from '@/components/sections/ReadmeSection';
 import { ResponsibilitiesSection } from '@/components/sections/ResponsibilitiesSection';
@@ -46,9 +44,6 @@ export default function Home() {
             <ProjectsSection />
           </ErrorBoundary>
           <ErrorBoundary>
-            <PerfReceiptsSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
             <ResponsibilitiesSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
@@ -62,9 +57,6 @@ export default function Home() {
           </ErrorBoundary>
           <ErrorBoundary>
             <ManPageSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <LivePerfSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <SysHealthSection defer />
