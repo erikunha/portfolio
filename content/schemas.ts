@@ -1,5 +1,51 @@
 import { z } from 'zod';
 
+export const SECTION_DESTINATION_COUNT = 9;
+const FIRST_SECTION_ORDER = 1;
+const MIN_SECTION_TEXT_LENGTH = 1;
+
+export const SECTION_ICONS = {
+  home: 'home',
+  about: 'readme',
+  projects: 'projects',
+  career: 'git-log',
+  shell: 'shell',
+  measured: 'live-perf',
+  opinions: 'hottest-takes',
+  guitar: 'guitar',
+  contact: 'contact',
+} as const;
+
+const SectionTextSchema = z.string().trim().min(MIN_SECTION_TEXT_LENGTH);
+
+export const SectionSchema = z.object({
+  id: SectionTextSchema,
+  label: SectionTextSchema,
+  aliases: z.array(SectionTextSchema.toLowerCase()).min(MIN_SECTION_TEXT_LENGTH).readonly(),
+  order: z.number().int().min(FIRST_SECTION_ORDER).max(SECTION_DESTINATION_COUNT),
+  icon: z.enum(SECTION_ICONS),
+});
+
+export type Section = z.infer<typeof SectionSchema>;
+
+export const SectionRegistrySchema = z
+  .array(SectionSchema)
+  .length(SECTION_DESTINATION_COUNT)
+  .refine((entries) => new Set(entries.map(({ id }) => id)).size === entries.length, {
+    message: 'Section ids must be unique',
+  })
+  .refine((entries) => new Set(entries.map(({ order }) => order)).size === entries.length, {
+    message: 'Section orders must be unique',
+  })
+  .refine(
+    (entries) => {
+      const aliases = entries.flatMap(({ aliases }) => aliases);
+      return new Set(aliases).size === aliases.length;
+    },
+    { message: 'Section aliases must be unique across all destinations' },
+  )
+  .readonly();
+
 export const SocialSchema = z.object({
   github: z.string().url(),
   linkedin: z.string().url(),
