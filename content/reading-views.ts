@@ -5,6 +5,7 @@ import { gitLog } from './git-log';
 import { heroStats } from './perf-receipts';
 import { profile, profileLocation, profileSummary } from './profile';
 import { projects } from './projects';
+import { READING_PATHS } from './reading-paths';
 import { readmeCopy } from './readme';
 import {
   CvDocumentSchema,
@@ -15,7 +16,7 @@ import {
 import { social } from './social';
 import { visaRows, workAuthorizationProse } from './visa';
 
-export const READING_PATHS = { cv: '/cv', summary: '/summary' } as const;
+export { READING_PATHS };
 
 const SITE_ORIGIN_PATTERN = /^(https?:\/\/)www\./;
 const PROTOCOL_PATTERN = /^https?:\/\//;

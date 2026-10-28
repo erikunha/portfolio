@@ -200,8 +200,12 @@ describe('reading view content', () => {
     const { href: _omit, ...community } = cvDocument.community;
     const original = cvDocument.community;
     Object.assign(cvDocument, { community });
-    const host = render(CvPage);
-    Object.assign(cvDocument, { community: original });
+    let host: HTMLElement;
+    try {
+      host = render(CvPage);
+    } finally {
+      Object.assign(cvDocument, { community: original });
+    }
     const heading = Array.from(host.querySelectorAll('h3')).find(
       (node) => node.textContent === community.heading,
     );

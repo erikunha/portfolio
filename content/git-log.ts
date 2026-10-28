@@ -1,3 +1,4 @@
+import { CV_LINK_LABEL, READING_PATHS } from './reading-paths';
 import { CareerCopySchema, type GitCommit, GitCommitSchema } from './schemas';
 
 export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
@@ -162,8 +163,8 @@ export const careerCopy = CareerCopySchema.parse({
   mobileHeaderCommand: 'GIT LOG --ONELINE',
   prompt: 'erik@portfolio:~$',
   command: 'git log --oneline --decorate --graph ~/career',
-  cvLabel: 'VIEW_CV',
-  cvHref: '/cv',
+  cvLabel: CV_LINK_LABEL,
+  cvHref: READING_PATHS.cv,
   scrollLabel: 'Career history, scrollable',
   pipe: '|',
   graph: `*\n${'|\n'.repeat(GRAPH_CONTINUATION_LINES)}`,
