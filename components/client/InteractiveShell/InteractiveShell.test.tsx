@@ -300,7 +300,9 @@ function shellInput(container: HTMLElement): HTMLInputElement {
 }
 
 function buttonWithText(container: HTMLElement, text: string): HTMLButtonElement {
-  const button = Array.from(container.querySelectorAll('button')).find((b) => b.textContent === text);
+  const button = Array.from(container.querySelectorAll('button')).find(
+    (b) => b.textContent === text,
+  );
   expect(button).toBeDefined();
   return button as HTMLButtonElement;
 }
@@ -343,12 +345,15 @@ describe('InteractiveShell r106 controls', () => {
     mobileViewport.value = mobile;
     let signal: AbortSignal | undefined;
     let resolveFetch: (response: Response) => void = () => undefined;
-    vi.stubGlobal('fetch', vi.fn((_url, init: RequestInit) => {
-      signal = init.signal as AbortSignal;
-      return new Promise<Response>((resolve) => {
-        resolveFetch = resolve;
-      });
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_url, init: RequestInit) => {
+        signal = init.signal as AbortSignal;
+        return new Promise<Response>((resolve) => {
+          resolveFetch = resolve;
+        });
+      }),
+    );
     const container = await renderShell();
     shellInput(container).focus();
     await submitQuestion(container, 'question to restore');
@@ -379,10 +384,13 @@ describe('InteractiveShell r106 controls', () => {
       },
       cancel,
     });
-    vi.stubGlobal('fetch', vi.fn(async (_url, init: RequestInit) => {
-      signal = init.signal as AbortSignal;
-      return new Response(body, { headers: { 'X-Request-Id': 'real-request-42' } });
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url, init: RequestInit) => {
+        signal = init.signal as AbortSignal;
+        return new Response(body, { headers: { 'X-Request-Id': 'real-request-42' } });
+      }),
+    );
     const container = await renderShell();
     await submitQuestion(container, 'stream a response');
     await flushFrames();
@@ -396,7 +404,9 @@ describe('InteractiveShell r106 controls', () => {
     expect(cancel).toHaveBeenCalledOnce();
     expect(container.querySelector('[role="log"]')?.textContent).toContain('Partial answer');
     expect(container.querySelector('[role="status"]')?.textContent).toContain('incomplete');
-    expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain('real-request-42');
+    expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(
+      'real-request-42',
+    );
     expect(container.querySelector('[data-testid="shell-line-loading"]')).toBeNull();
   });
 
@@ -419,17 +429,25 @@ describe('InteractiveShell r106 controls', () => {
   });
 
   it('uses the real 429 error without inventing a retry duration, then runs local commands', async () => {
-    const fetchMock = vi.fn(async () => Response.json(
-      { error: 'rate limit exceeded, try again in an hour' },
-      { status: 429, headers: { 'X-Request-Id': 'limited-request' } },
-    ));
+    const fetchMock = vi.fn(async () =>
+      Response.json(
+        { error: 'rate limit exceeded, try again in an hour' },
+        { status: 429, headers: { 'X-Request-Id': 'limited-request' } },
+      ),
+    );
     vi.stubGlobal('fetch', fetchMock);
     const container = await renderShell();
     await submitQuestion(container, 'limited question');
-    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('try again in an hour');
-    expect(container.querySelector('[role="status"]')?.textContent).toContain('try again in an hour');
+    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain(
+      'try again in an hour',
+    );
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      'try again in an hour',
+    );
     expect(shellInput(container).value).toBe('limited question');
-    expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain('limited-request');
+    expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(
+      'limited-request',
+    );
     await submitQuestion(container, 'help');
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(container.querySelector('[role="log"]')?.textContent).toContain('commands:');
@@ -455,10 +473,13 @@ describe('InteractiveShell r106 controls', () => {
   it('aborts a hung request after the named timeout and allows retry', async () => {
     const { SHELL_LIMITS } = await import('@/content/shell-ui');
     let signal: AbortSignal | undefined;
-    vi.stubGlobal('fetch', vi.fn((_url, init: RequestInit) => {
-      signal = init.signal as AbortSignal;
-      return new Promise<Response>(() => undefined);
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_url, init: RequestInit) => {
+        signal = init.signal as AbortSignal;
+        return new Promise<Response>(() => undefined);
+      }),
+    );
     const container = await renderShell();
     vi.useFakeTimers();
     await submitQuestion(container, 'slow question');
@@ -470,7 +491,10 @@ describe('InteractiveShell r106 controls', () => {
     expect(container.querySelector('[role="status"]')?.textContent).toContain('timed out');
     expect(shellInput(container).value).toBe('slow question');
     expect(container.querySelector('[role="log"]')?.getAttribute('aria-busy')).toBe('false');
-    vi.stubGlobal('fetch', vi.fn(async () => streamingResponse(['retry worked'])));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => streamingResponse(['retry worked'])),
+    );
     await submitQuestion(container, 'retry');
     expect(container.querySelector('[role="log"]')?.textContent).toContain('retry worked');
   });
@@ -480,20 +504,34 @@ describe('InteractiveShell r106 controls', () => {
     ['empty body', () => new Response(null)],
     ['HTTP failure', () => new Response('not json', { status: 503 })],
   ] as const)('reports %s and never reports answer complete', async (_name, response) => {
-    vi.stubGlobal('fetch', vi.fn(async () => response()));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => response()),
+    );
     const container = await renderShell();
     await submitQuestion(container, 'a question');
     expect(container.querySelector('[data-kind="error"]')).not.toBeNull();
-    expect(container.querySelector('[role="status"]')?.textContent).not.toContain('answer complete');
+    expect(container.querySelector('[role="status"]')?.textContent).not.toContain(
+      'answer complete',
+    );
     expect(container.querySelector('[role="log"]')?.getAttribute('aria-busy')).toBe('false');
   });
 
   it('copies the actual header value and shows a failed copy with a retry', async () => {
-    const writeText = vi.fn().mockRejectedValueOnce(new Error('denied')).mockResolvedValue(undefined);
+    const writeText = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('denied'))
+      .mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { clipboard: { writeText }, onLine: true });
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('answer', {
-      headers: { 'X-Request-Id': 'server-reference-123' },
-    })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response('answer', {
+            headers: { 'X-Request-Id': 'server-reference-123' },
+          }),
+      ),
+    );
     const container = await renderShell();
     await submitQuestion(container, 'reference please');
     await act(async () => {
@@ -511,9 +549,15 @@ describe('InteractiveShell r106 controls', () => {
 
   it('shows a copy failure when the clipboard API is unavailable', async () => {
     vi.stubGlobal('navigator', { onLine: true });
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('answer', {
-      headers: { 'X-Request-Id': 'manual-copy-reference' },
-    })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response('answer', {
+            headers: { 'X-Request-Id': 'manual-copy-reference' },
+          }),
+      ),
+    );
     const container = await renderShell();
     await submitQuestion(container, 'copy without clipboard');
     await act(async () => {
@@ -521,7 +565,9 @@ describe('InteractiveShell r106 controls', () => {
     });
     expect(buttonWithText(container, 'COPY FAILED')).toBeDefined();
     expect(container.querySelector('[role="status"]')?.textContent).toContain('manually');
-    expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain('manual-copy-reference');
+    expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(
+      'manual-copy-reference',
+    );
   });
 
   it.each([false, true])('returns focus on completion, mobile=%s', async (mobile) => {
@@ -532,7 +578,10 @@ describe('InteractiveShell r106 controls', () => {
         complete = () => controller.close();
       },
     });
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(body)));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(body)),
+    );
     const container = await renderShell();
     await submitQuestion(container, 'focus on completion');
     buttonWithText(container, '[STOP]').focus();
@@ -544,7 +593,10 @@ describe('InteractiveShell r106 controls', () => {
   });
 
   it('does not fabricate a reference when the response has no header', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => streamingResponse(['answer'])));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => streamingResponse(['answer'])),
+    );
     const container = await renderShell();
     await submitQuestion(container, 'without a reference');
     expect(container.querySelector('[data-testid="shell-reference"]')).toBeNull();
@@ -569,28 +621,31 @@ describe('InteractiveShell r106 controls', () => {
     expect(input.value).toBe('unsent draft');
   });
 
-  it.each([false, true])('provides one toolbar tab stop, wraparound, Home/End and focus return, mobile=%s', async (mobile) => {
-    mobileViewport.value = mobile;
-    const container = await renderShell();
-    const toolbar = container.querySelector('[role="toolbar"]') as HTMLElement;
-    const buttons = Array.from(toolbar.querySelectorAll('button'));
-    expect(buttons.filter((button) => button.tabIndex === 0)).toHaveLength(1);
-    const first = buttons[0] as HTMLButtonElement;
-    first.focus();
-    await press(first, 'ArrowLeft');
-    expect(document.activeElement).toBe(buttons.at(-1));
-    await press(buttons.at(-1) as HTMLElement, 'ArrowRight');
-    expect(document.activeElement).toBe(buttons[0]);
-    await press(first, 'End');
-    expect(document.activeElement).toBe(buttons.at(-1));
-    await press(buttons.at(-1) as HTMLElement, 'Home');
-    expect(document.activeElement).toBe(buttons[0]);
-    await act(async () => {
-      first.click();
-    });
-    expect(document.activeElement).toBe(shellInput(container));
-    expect(container.querySelector('[role="status"]')?.textContent).toContain('Command complete');
-  });
+  it.each([false, true])(
+    'provides one toolbar tab stop, wraparound, Home/End and focus return, mobile=%s',
+    async (mobile) => {
+      mobileViewport.value = mobile;
+      const container = await renderShell();
+      const toolbar = container.querySelector('[role="toolbar"]') as HTMLElement;
+      const buttons = Array.from(toolbar.querySelectorAll('button'));
+      expect(buttons.filter((button) => button.tabIndex === 0)).toHaveLength(1);
+      const first = buttons[0] as HTMLButtonElement;
+      first.focus();
+      await press(first, 'ArrowLeft');
+      expect(document.activeElement).toBe(buttons.at(-1));
+      await press(buttons.at(-1) as HTMLElement, 'ArrowRight');
+      expect(document.activeElement).toBe(buttons[0]);
+      await press(first, 'End');
+      expect(document.activeElement).toBe(buttons.at(-1));
+      await press(buttons.at(-1) as HTMLElement, 'Home');
+      expect(document.activeElement).toBe(buttons[0]);
+      await act(async () => {
+        first.click();
+      });
+      expect(document.activeElement).toBe(shellInput(container));
+      expect(container.querySelector('[role="status"]')?.textContent).toContain('Command complete');
+    },
+  );
 
   it('caps rendered lines and command recall, and announces clear', async () => {
     const { SHELL_LIMITS } = await import('@/content/shell-ui');
@@ -612,10 +667,13 @@ describe('InteractiveShell r106 controls', () => {
   it('aborts the request and cancels its reader when unmounted', async () => {
     let signal: AbortSignal | undefined;
     const cancel = vi.fn();
-    vi.stubGlobal('fetch', vi.fn(async (_url, init: RequestInit) => {
-      signal = init.signal as AbortSignal;
-      return new Response(new ReadableStream({ cancel }));
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url, init: RequestInit) => {
+        signal = init.signal as AbortSignal;
+        return new Response(new ReadableStream({ cancel }));
+      }),
+    );
     const container = await renderShell();
     await submitQuestion(container, 'pending');
     mounted.unmount();
@@ -631,7 +689,9 @@ describe('InteractiveShell r106 controls', () => {
     expect(ShellUiSchema.safeParse({ ...shellUi, stop: '' }).success).toBe(false);
     const container = await renderShell();
     const noticeId = shellInput(container).getAttribute('aria-describedby');
-    const notice = Array.from(container.querySelectorAll('[id]')).find((node) => node.id === noticeId);
+    const notice = Array.from(container.querySelectorAll('[id]')).find(
+      (node) => node.id === noticeId,
+    );
     expect(notice?.textContent).toContain('can be wrong');
   });
 });

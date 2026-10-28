@@ -272,7 +272,9 @@ export function InteractiveShell() {
       activeRequest.current = {
         stop: () =>
           interrupt(
-            parseStreamChunk(accumulated).displayText ? shellUi.stoppedPartial : shellUi.stoppedBefore,
+            parseStreamChunk(accumulated).displayText
+              ? shellUi.stoppedPartial
+              : shellUi.stoppedBefore,
           ),
         dispose: () => {
           settled = true;
@@ -302,7 +304,9 @@ export function InteractiveShell() {
           const message = detail || `${shellUi.httpErrorPrefix} ${response.status}`;
           finish(
             '',
-            response.status === RATE_LIMIT_STATUS ? `${message}. ${shellUi.localAvailable}` : message,
+            response.status === RATE_LIMIT_STATUS
+              ? `${message}. ${shellUi.localAvailable}`
+              : message,
             true,
           );
           return;
@@ -423,6 +427,7 @@ export function InteractiveShell() {
         aria-label={shellUi.outputLabel}
         aria-live="polite"
         aria-busy={busy}
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: the vertically scrollable log must be keyboard-focusable so arrow keys can scroll it (WCAG 2.1.1, axe scrollable-region-focusable)
         tabIndex={0}
       >
         {history.map((line) =>
