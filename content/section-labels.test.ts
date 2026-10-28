@@ -27,11 +27,22 @@ describe('SECTION_LABELS', () => {
       for (const file of files) {
         // behavioral-test-allow: enumerates every Module id a section renders to prove label coverage
         const src = readFileSync(join(sectionDir, file), 'utf8');
-        for (const m of src.matchAll(/<Module\b[\s\S]*?\bid="(sec-[^"]+)"/g)) {
-          if (m[1]) ids.add(m[1]);
+        const namedIds = new Map(
+          Array.from(
+            src.matchAll(/const\s+(\w+)\s*=\s*['"](sec-[^'"]+)['"]/g),
+            (match) => [match[1], match[2]],
+          ),
+        );
+        for (const m of src.matchAll(
+          /<Module\b[\s\S]*?\bid=(?:"(sec-[^"]+)"|\{(\w+)\})/g,
+        )) {
+          const id = m[1] ?? namedIds.get(m[2]);
+          expect(id, `unresolved Module id in ${file}`).toBeDefined();
+          if (id) ids.add(id);
         }
       }
     }
+    expect(ids.has('sec-guitar'), 'guitar module must retain label coverage').toBe(true);
     for (const id of ids) {
       expect(SECTION_LABELS, `missing label for ${id}`).toHaveProperty(id);
     }
