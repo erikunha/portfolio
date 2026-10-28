@@ -214,65 +214,68 @@
   }
 
   @media (max-width: 768px) {
-    #sec-readme {
+    #sec-about {
       order: 1;
     }
-    #sec-shell {
+    #sec-readme {
       order: 2;
     }
-    #sec-ai-metrics {
+    #sec-shell {
       order: 3;
     }
-    #sec-man-page {
+    #sec-ai-metrics {
       order: 4;
     }
-    #sec-now {
+    #sec-man-page {
       order: 5;
     }
-    #sec-projects {
+    #sec-now {
       order: 6;
     }
-    #sec-git-log {
+    #sec-projects {
       order: 7;
     }
-    #sec-npm-stack {
+    #sec-git-log {
       order: 8;
     }
-    #sec-sys-health {
+    #sec-npm-stack {
       order: 9;
     }
-    #sec-live-perf {
+    #sec-sys-health {
       order: 10;
     }
-    #sec-perf-receipts {
+    #sec-live-perf {
       order: 11;
     }
-    #sec-guitar {
+    #sec-perf-receipts {
       order: 12;
     }
-    #sec-daw-mixer {
+    #sec-guitar {
       order: 13;
     }
-    #sec-visa {
+    #sec-daw-mixer {
       order: 14;
     }
-    #sec-credentials {
+    #sec-visa {
       order: 15;
     }
-    #sec-community {
+    #sec-credentials {
       order: 16;
     }
-    #sec-hottest-takes {
+    #sec-community {
       order: 17;
     }
-    #sec-responsibilities {
+    #sec-hottest-takes {
       order: 18;
     }
-    #sec-unknowns {
+    #sec-responsibilities {
       order: 19;
     }
-    #sec-contact {
+    #sec-unknowns {
       order: 20;
+    }
+    #sec-contact {
+      order: 21;
     }
 
     body {
