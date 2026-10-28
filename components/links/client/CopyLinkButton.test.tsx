@@ -82,4 +82,11 @@ describe('CopyLinkButton', () => {
     });
     expect(statusText(container)).toBe('copiar link');
   });
+  it('reports a missing clipboard API (insecure context) as a failed copy', async () => {
+    vi.stubGlobal('navigator', {});
+
+    const { container } = renderButton();
+    await click(container);
+    expect(statusText(container)).toBe('copy failed');
+  });
 });

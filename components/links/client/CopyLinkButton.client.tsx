@@ -38,8 +38,7 @@ export function CopyLinkButton({
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);
-    } catch (err) {
-      if (!(err instanceof DOMException)) throw err;
+    } catch {
       announce(COPY_OUTCOME.failed);
       return;
     }
