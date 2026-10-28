@@ -103,6 +103,27 @@ export const GuitarRigSchema = z.object({
   }),
 });
 
+const [guitarInputSchema, , guitarAmpSchema, guitarOutputSchema] =
+  GuitarRigSchema.shape.signalChain.def.items;
+const GuitarPresentationCopySchema = z.object({
+  label: z.string().trim().nonempty(),
+  text: z.string().trim().nonempty(),
+});
+
+export const GuitarPresentationSchema = z.object({
+  signalChain: z.tuple([guitarInputSchema, guitarAmpSchema, guitarOutputSchema]),
+  influences: GuitarPresentationCopySchema,
+  nowPlaying: GuitarPresentationCopySchema,
+  stats: GuitarRigSchema.shape.stats,
+  photo: z.object({
+    src: z.string().trim().nonempty(),
+    alt: z.string().trim().nonempty(),
+    width: z.number().int().positive(),
+    height: z.number().int().positive(),
+  }),
+});
+export type GuitarPresentation = z.infer<typeof GuitarPresentationSchema>;
+
 export const UnknownItemSchema = z.object({
   claim: z.string().min(1),
   context: z.string().min(1),

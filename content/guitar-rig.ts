@@ -1,4 +1,9 @@
-import { type GuitarRig, GuitarRigSchema } from './schemas';
+import {
+  type GuitarPresentation,
+  GuitarPresentationSchema,
+  type GuitarRig,
+  GuitarRigSchema,
+} from './schemas';
 
 export const guitarRig: GuitarRig = GuitarRigSchema.parse({
   signalChain: [
@@ -55,5 +60,26 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
     caption: './GIGS --LIVE · SACRED + SWORN · FEEL OVER NOISE',
     status: '▶ REC · LIVE',
     cameraLabel: 'CAM/01 · STAGE',
+  },
+});
+
+const [guitarInput, , guitarAmp, guitarOutput] = guitarRig.signalChain;
+
+export const guitarPresentation: GuitarPresentation = GuitarPresentationSchema.parse({
+  signalChain: [guitarInput, guitarAmp, guitarOutput],
+  influences: {
+    label: 'INFLUENCES',
+    text: guitarRig.influences.map(({ name }) => name).join(' · '),
+  },
+  nowPlaying: {
+    label: 'now obsessing:',
+    text: 'Coldplay\'s "Yellow": simplicity is hard.',
+  },
+  stats: guitarRig.stats,
+  photo: {
+    src: guitarRig.liveCam.photo,
+    alt: 'Erik playing guitar on stage, live show',
+    width: 450,
+    height: 450,
   },
 });

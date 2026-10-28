@@ -1,5 +1,81 @@
 import { describe, expect, it } from 'vitest';
 
+const guitarPresentationFixture = {
+  signalChain: [
+    { role: 'INPUT', name: 'GRETSCH G5655TG', subtitle: 'Bigsby · hollow body', strengthDots: 4 },
+    { role: 'AMP', name: 'MODELED CAB', subtitle: 'no tube · IR sim', strengthDots: 3 },
+    { role: 'OUT', name: 'FOH / IEM', subtitle: 'XLR stereo · in-ear', strengthDots: 5 },
+  ],
+  influences: {
+    label: 'INFLUENCES',
+    text: "John Mayer · Mateus Asato · Jimmy Page · John Frusciante · Iron Maiden's three",
+  },
+  nowPlaying: { label: 'now obsessing:', text: 'Coldplay\'s "Yellow": simplicity is hard.' },
+  stats: [
+    { label: 'STYLE', value: 'dynamics > drive', sub: 'space is the note' },
+    { label: 'TUNING', value: 'standard E', sub: 'sometimes drop D' },
+    { label: 'ALT RIG', value: 'Martin', sub: 'acoustic' },
+    { label: 'GIGS', value: 'venues', sub: 'church · wedding · open mic' },
+  ],
+  photo: {
+    src: '/images/guitar-live.jpg',
+    alt: 'Erik playing guitar on stage, live show',
+    width: 450,
+    height: 450,
+  },
+};
+
+describe('GuitarPresentationSchema', () => {
+  it('publishes the prototype presentation beside the complete FX rig', async () => {
+    const { guitarPresentation, guitarRig } = await import('./guitar-rig');
+    const { GuitarPresentationSchema } = await import('./schemas');
+    expect(GuitarPresentationSchema.parse(guitarPresentation)).toEqual(guitarPresentationFixture);
+    expect(guitarRig.signalChain.map((node) => node.role)).toEqual(['INPUT', 'FX', 'AMP', 'OUT']);
+    expect(guitarRig.signalChain[1].blocks).toHaveLength(8);
+  });
+
+  it.each([
+    ['reordered', [1, 0, 2]],
+    ['missing', [0, 2]],
+    ['extra', [0, 1, 1, 2]],
+  ])('rejects %s display nodes', async (_, indices) => {
+    const { GuitarPresentationSchema } = await import('./schemas');
+    expect(
+      GuitarPresentationSchema.safeParse({
+        ...guitarPresentationFixture,
+        signalChain: indices.map((index) => guitarPresentationFixture.signalChain[index]),
+      }).success,
+    ).toBe(false);
+  });
+
+  it.each(['width', 'height', 'src', 'alt'])('requires photo %s', async (field) => {
+    const { GuitarPresentationSchema } = await import('./schemas');
+    const photo: Record<string, unknown> = { ...guitarPresentationFixture.photo };
+    delete photo[field];
+    expect(
+      GuitarPresentationSchema.safeParse({ ...guitarPresentationFixture, photo }).success,
+    ).toBe(false);
+  });
+
+  it.each([
+    { alt: '' },
+    { alt: '   ' },
+    { src: '' },
+    { width: 0 },
+    { height: -1 },
+    { width: 1.5 },
+    { height: 1.5 },
+  ])('rejects invalid photo metadata %j', async (invalidPhoto) => {
+    const { GuitarPresentationSchema } = await import('./schemas');
+    expect(
+      GuitarPresentationSchema.safeParse({
+        ...guitarPresentationFixture,
+        photo: { ...guitarPresentationFixture.photo, ...invalidPhoto },
+      }).success,
+    ).toBe(false);
+  });
+});
+
 describe('GuitarRigSchema v2', () => {
   it('rejects old flat-fields shape', async () => {
     const { GuitarRigSchema } = await import('./schemas');
