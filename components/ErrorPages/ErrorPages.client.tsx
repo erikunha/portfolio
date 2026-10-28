@@ -50,6 +50,13 @@ function ErrorReference({
   content: ErrorsContent['serverError'];
 }) {
   const [copied, setCopied] = useState(false);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+    },
+    [],
+  );
 
   async function copy() {
     try {
@@ -58,7 +65,8 @@ function ErrorReference({
       return;
     }
     setCopied(true);
-    setTimeout(() => setCopied(false), COPIED_RESET_MS);
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    resetTimer.current = setTimeout(() => setCopied(false), COPIED_RESET_MS);
   }
 
   return (

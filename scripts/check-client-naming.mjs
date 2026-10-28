@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
 const SCAN_DIRS = ['app', 'components', 'lib'];
-const NEXT_CLIENT_CONVENTION_FILES = /^app\/(.+\/)?(global-)?error\.tsx$/;
+const NEXT_CLIENT_CONVENTION_FILES = /^app\/((.+\/)?error|global-error)\.tsx$/;
 const SKIP_NAMES = new Set(['node_modules', '.next', '.git', 'dist', 'out', '.vercel']);
 
 function walk(dir) {
