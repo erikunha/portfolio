@@ -92,8 +92,9 @@ describe('home opinions', () => {
     expect(opinion?.body).toContain('Stencil at Betsson worked because Angular, React, and Ember');
     const container = renderOpinions();
     expect(container.textContent).not.toContain(opinion?.thesis);
-    expect(container.querySelector('.opinions-more')?.getAttribute('href')).toBe(
-      '/design-system#opinion-07',
+    expect(container.querySelector('a[href="/design-system#opinion-07"]')).toBeNull();
+    expect(container.textContent).not.toContain(
+      'the design-system opinion lives in the design system docs',
     );
     expect(hottestTakes).toHaveLength(9);
   });

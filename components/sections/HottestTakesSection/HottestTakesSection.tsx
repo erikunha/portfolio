@@ -47,9 +47,6 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
         {hottestTakesConfig.footer}
       </div>
       <UnknownsSection />
-      <a className="opinions-more" href={hottestTakesConfig.docsHref}>
-        <span aria-hidden>{'>'}</span> {hottestTakesConfig.docsLabel}
-      </a>
     </Module>
   );
 }
