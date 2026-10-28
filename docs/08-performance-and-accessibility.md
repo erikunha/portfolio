@@ -37,7 +37,7 @@ Key levers (all verifiable in code):
 - **Pre-paint motion bootstrap.** An inline `<script>` in `layout.tsx` sets `body[data-motion]` from `localStorage`/OS pref before first paint, so CRT effects and the LCP element don't flash.
 - **Self-hosted fonts** via `next/font/local` (no Google CDN), with the font `--font-*-src` bound into `@theme`.
 - **INP discipline (the big one).** Per-keystroke/per-pixel/per-frame updates must not re-render React: the Hero boot loop and `RoleTyper` mutate `textContent`; the DAW islands mutate `style`/`setAttribute`/`className`; the `/api/ask` stream is rAF-coalesced into a single isolated `<span>`. Asserted by `InteractiveShell.test.tsx`.
-- **Deferred render cost.** Fourteen below-the-fold sections pass `defer` to `Module`, which applies `content-visibility`.
+- **Deferred render cost.** The below-the-fold sections counted by `DEFERRED_SECTION_COUNT` pass `defer` to `Module`, which applies `content-visibility`.
 - **Lazy JS only where interactive** (`next/dynamic`): `ContactFormLazy`, `InteractiveShellLazy`, `DawMixerSection`. `Footer` is an RSC; `FooterLazy` loads only the session counters and halt/reboot island. Its static content remains available without JavaScript. The visitor’s halt clock starts empty on the server, then fills after mount. The netstat `CopyButton` is a separate design-system island. Footer links, COPY and the reboot key provide 44px targets and visible keyboard focus.
 - **MatrixRain** caps at 22fps, pauses via `IntersectionObserver` + `visibilitychange`, and starts via `requestIdleCallback`.
 

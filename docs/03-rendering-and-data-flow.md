@@ -45,7 +45,7 @@ flowchart TD
     bp --> appshell["AppShell (client chrome)"]
     appshell --> chrome["MatrixRain · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
     appshell --> main["main#main-content"]
-    main --> secs["19 ErrorBoundary-wrapped sections:<br/>Hero + 18 Modules (RSC)"]
+    main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + Modules (RSC)"]
     main --> footer["Footer (RSC)"]
     footer --> footerIslands["FooterLazy: session counters + halt/reboot island"]
 ```
@@ -79,7 +79,7 @@ flowchart LR
   ```
 
   `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: the desktop variant for ManPage, GitLog and Visa; `null` for Guitar and DawMixer.
-- **`defer` prop:** fourteen below-the-fold sections pass `defer` to `Module`, which applies CSS `content-visibility` to defer render cost.
+- **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` to defer render cost.
 - **`next/dynamic` lazy JS:** `ContactFormLazy`, `InteractiveShellLazy`, `DawMixerSection`. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy` loads only the session counters and halt/reboot island from `Footer.client`; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
 There is **no `use cache` / `cacheLife` / `cacheTag` / `unstable_cache` / `generateStaticParams`** anywhere - the staticness comes from PPR + the absence of dynamic APIs, not explicit caching.
