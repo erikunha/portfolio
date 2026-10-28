@@ -1,11 +1,10 @@
+import { within } from '@testing-library/dom';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { guitarPresentation, guitarRig } from '@/content/guitar-rig';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { GuitarContent, GuitarSection } from './GuitarSection';
-
-vi.mock('@/lib/ua', () => ({ getIsMobile: vi.fn().mockResolvedValue(false) }));
 
 async function renderContent(): Promise<Document> {
   const html = renderToStaticMarkup(await GuitarContent());
@@ -30,12 +29,22 @@ describe('GuitarSection presentation', () => {
     expect(doc.querySelector('[data-testid="fx-list"]')).toBeNull();
     expect(doc.querySelector('[data-testid="signal-node-FX"]')).toBeNull();
     expect(doc.querySelector('[data-testid="fx-bullet"]')).toBeNull();
-    const displayedLabels = Array.from(
-      doc.querySelectorAll('div, span'),
-      (node) => node.textContent,
-    );
-    for (const block of guitarRig.signalChain[1].blocks) {
-      expect(displayedLabels).not.toContain(block.name);
+  });
+
+  it('exposes each node signal strength as a named image matching the visible bars', async () => {
+    const doc = await renderContent();
+    const expectedNames = ['4 of 8', '3 of 8', '5 of 8'];
+    expect(doc.querySelectorAll('.guitar-bars')).toHaveLength(expectedNames.length);
+    for (const [index, node] of guitarPresentation.signalChain.entries()) {
+      const displayed = doc.querySelector(`[data-testid="signal-node-${node.role}"]`);
+      expect(displayed).not.toBeNull();
+      if (!displayed) throw new Error(`Missing signal node ${node.role}`);
+      const bars = within(displayed as HTMLElement).getByRole('img', {
+        name: expectedNames[index],
+      });
+      expect(bars.classList.contains('guitar-bars')).toBe(true);
+      expect(bars.querySelectorAll('.guitar-bar')).toHaveLength(8);
+      expect(bars.querySelectorAll('[data-filled="true"]')).toHaveLength(node.strengthDots);
     }
   });
 

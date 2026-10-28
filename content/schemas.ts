@@ -58,17 +58,19 @@ export const ResponsibilitySchema = z.object({
   highlight: z.boolean().default(false),
 });
 
+export const GUITAR_SIGNAL_BAR_COUNT = 8;
+export const GUITAR_SIGNAL_LABEL_TOKENS = { strength: '{n}', total: '{total}' } as const;
+
 const _signalNodeBase = { name: z.string().min(1), subtitle: z.string().min(1) };
 const _dotsNode = (role: 'INPUT' | 'AMP' | 'OUT') =>
   z.object({
     ..._signalNodeBase,
     role: z.literal(role),
-    strengthDots: z.number().int().min(0).max(8),
+    strengthDots: z.number().int().min(0).max(GUITAR_SIGNAL_BAR_COUNT),
   });
 const _fxNode = z.object({
   ..._signalNodeBase,
   role: z.literal('FX'),
-  blocks: z.array(z.object({ name: z.string().min(1), active: z.boolean() })).min(1),
 });
 export const SignalChainNodeSchema = z.discriminatedUnion('role', [
   _dotsNode('INPUT'),
@@ -78,10 +80,7 @@ export const SignalChainNodeSchema = z.discriminatedUnion('role', [
 ]);
 
 export const InfluenceSchema = z.object({
-  rank: z.number().int().min(1).max(5),
   name: z.string().min(1),
-  strength: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
-  active: z.boolean().optional(),
 });
 
 export const StatCellSchema = z.object({
@@ -93,7 +92,6 @@ export const StatCellSchema = z.object({
 export const GuitarRigSchema = z.object({
   signalChain: z.tuple([_dotsNode('INPUT'), _fxNode, _dotsNode('AMP'), _dotsNode('OUT')]),
   influences: z.array(InfluenceSchema).length(5),
-  nowObsessing: z.string().min(1),
   stats: z.array(StatCellSchema).length(4),
   liveCam: z.object({
     photo: z.string().min(1),
@@ -111,6 +109,10 @@ const GuitarPresentationCopySchema = z.object({
 });
 
 export const GuitarPresentationSchema = z.object({
+  signalStrengthLabelTemplate: z
+    .string()
+    .includes(GUITAR_SIGNAL_LABEL_TOKENS.strength)
+    .includes(GUITAR_SIGNAL_LABEL_TOKENS.total),
   signalChain: z.tuple([guitarInputSchema, guitarAmpSchema, guitarOutputSchema]),
   influences: GuitarPresentationCopySchema,
   nowPlaying: GuitarPresentationCopySchema,

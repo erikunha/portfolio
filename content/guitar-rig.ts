@@ -17,16 +17,6 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
       role: 'FX',
       name: 'LINE 6 HX STOMP XL',
       subtitle: '8 blocks loaded',
-      blocks: [
-        { name: 'COMP', active: true },
-        { name: 'OD', active: true },
-        { name: 'FUZZ', active: false },
-        { name: 'DLY', active: true },
-        { name: 'REV', active: true },
-        { name: 'MOD', active: false },
-        { name: 'EQ', active: true },
-        { name: 'VOL', active: false },
-      ],
     },
     {
       role: 'AMP',
@@ -42,13 +32,12 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
     },
   ],
   influences: [
-    { rank: 1, name: 'John Mayer', strength: 5, active: true },
-    { rank: 2, name: 'Mateus Asato', strength: 4 },
-    { rank: 3, name: 'Jimmy Page', strength: 3 },
-    { rank: 4, name: 'John Frusciante', strength: 3 },
-    { rank: 5, name: "Iron Maiden's three", strength: 2 },
+    { name: 'John Mayer' },
+    { name: 'Mateus Asato' },
+    { name: 'Jimmy Page' },
+    { name: 'John Frusciante' },
+    { name: "Iron Maiden's three" },
   ],
-  nowObsessing: 'Coldplay\'s "Yellow" — simplicity is hard.',
   stats: [
     { label: 'STYLE', value: 'dynamics > drive', sub: 'space is the note' },
     { label: 'TUNING', value: 'standard E', sub: 'sometimes drop D' },
@@ -66,6 +55,7 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
 const [guitarInput, , guitarAmp, guitarOutput] = guitarRig.signalChain;
 
 export const guitarPresentation: GuitarPresentation = GuitarPresentationSchema.parse({
+  signalStrengthLabelTemplate: '{n} of {total}',
   signalChain: [guitarInput, guitarAmp, guitarOutput],
   influences: {
     label: 'INFLUENCES',

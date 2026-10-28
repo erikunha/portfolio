@@ -1,18 +1,19 @@
 import Image from 'next/image';
 import { Fragment } from 'react';
 import { guitarPresentation, guitarRig } from '@/content/guitar-rig';
+import { GUITAR_SIGNAL_BAR_COUNT, GUITAR_SIGNAL_LABEL_TOKENS } from '@/content/schemas';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { IconGuitar } from '../../Icons';
 import { Module } from '../../responsive/Module';
 
-const SIGNAL_BAR_COUNT = 8;
-const SIGNAL_BARS = Array.from({ length: SIGNAL_BAR_COUNT }, (_, position) => ({ position }));
+const SIGNAL_BARS = Array.from({ length: GUITAR_SIGNAL_BAR_COUNT }, (_, position) => ({ position }));
 const FIRST_NODE_INDEX = 0;
 const SECTION_ID = 'sec-guitar';
 const PHOTO_SIZES = '(max-width: 699px) 100vw, 320px';
 
 export function GuitarContent() {
-  const { signalChain, influences, nowPlaying, stats, photo } = guitarPresentation;
+  const { signalChain, signalStrengthLabelTemplate, influences, nowPlaying, stats, photo } =
+    guitarPresentation;
   const { liveCam } = guitarRig;
   return (
     <div className="guitar-presentation">
@@ -27,7 +28,13 @@ export function GuitarContent() {
                 <div className="guitar-label">{node.role}</div>
                 <h3 className="guitar-node-heading">{node.name}</h3>
                 <div className="guitar-node-subtitle">{node.subtitle}</div>
-                <div className="guitar-bars" aria-hidden="true">
+                <div
+                  className="guitar-bars"
+                  role="img"
+                  aria-label={signalStrengthLabelTemplate
+                    .replace(GUITAR_SIGNAL_LABEL_TOKENS.strength, String(node.strengthDots))
+                    .replace(GUITAR_SIGNAL_LABEL_TOKENS.total, String(GUITAR_SIGNAL_BAR_COUNT))}
+                >
                   {SIGNAL_BARS.map(({ position }) => (
                     <span
                       key={position}
