@@ -15,7 +15,6 @@ import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
 import { ManPageSection } from '@/components/sections/ManPageSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
-import { VisaSection } from '@/components/sections/VisaSection';
 import { careerScrollLabel } from '@/content/git-log';
 import { SECTION_LABELS } from '@/content/section-labels';
 
@@ -46,13 +45,6 @@ describe('responsive section viewport variants', () => {
   it('GuitarSection static render does not emit mobile markup', () => {
     const html = renderToStaticMarkup(createElement(GuitarSection));
     expect(html).not.toContain('data-testid="guitar-mobile"');
-  });
-
-  it('VisaSection renders one responsive authorization table', () => {
-    const html = renderToStaticMarkup(createElement(VisaSection));
-    expect(html).toContain('class="visa-table"');
-    expect(html).not.toContain('data-testid="visa-mobile"');
-    expect(html).not.toContain('data-testid="visa-desktop"');
   });
 
   it('ManPageSection emits exactly the desktop variant (no mobile markup)', () => {

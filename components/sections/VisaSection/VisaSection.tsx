@@ -1,9 +1,6 @@
 /* biome-ignore-all lint/a11y/noRedundantRoles: CSS card layouts need explicit table roles to preserve table navigation. */
 import { profileLanguageLine } from '@/content/profile';
-import { SECTION_LABELS } from '@/content/section-labels';
 import { visaRows, visaUi } from '@/content/visa';
-import { IconVisa } from '../../Icons';
-import { Module } from '../../responsive/Module';
 
 export function VisaContent() {
   return (
@@ -46,20 +43,5 @@ export function VisaContent() {
       </table>
       <p className="visa-languages">{profileLanguageLine}</p>
     </div>
-  );
-}
-
-export function VisaSection({ defer }: { defer?: boolean } = {}) {
-  return (
-    <Module
-      id="sec-visa"
-      header={visaUi.command}
-      mobileHeader={visaUi.command}
-      srLabel={SECTION_LABELS['sec-visa']}
-      icon={<IconVisa />}
-      defer={defer}
-    >
-      <VisaContent />
-    </Module>
   );
 }

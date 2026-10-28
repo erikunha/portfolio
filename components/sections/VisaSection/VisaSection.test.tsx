@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { visaRows } from '@/content/visa';
-import { VisaContent, VisaSection } from './VisaSection';
+import { VisaContent } from './VisaSection';
 
 vi.mock('@/lib/ua', () => ({ getIsMobile: vi.fn(async () => false) }));
 
@@ -26,10 +26,5 @@ describe('work authorization table', () => {
     });
     expect(container.querySelector('pre')).toBeNull();
     expect(container.querySelectorAll('table')).toHaveLength(1);
-  });
-
-  it('keeps the standalone legacy visa anchor with the same semantic content', () => {
-    const { container } = render(<VisaSection />);
-    expect(container.querySelector('#sec-visa table')).not.toBeNull();
   });
 });
