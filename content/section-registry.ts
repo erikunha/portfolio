@@ -4,6 +4,7 @@ export const SECTION_REGISTRY = [
   {
     id: 'bio',
     label: 'Home',
+    srLabel: 'Home',
     aliases: ['home', 'bio', 'hero', 'whoami'],
     order: 1,
     icon: SECTION_ICONS.home,
@@ -11,6 +12,7 @@ export const SECTION_REGISTRY = [
   {
     id: 'sec-readme',
     label: 'About',
+    srLabel: 'About',
     aliases: ['about', 'readme', 'sec-about', 'principles', 'stack', 'now'],
     order: 2,
     icon: SECTION_ICONS.about,
@@ -18,6 +20,7 @@ export const SECTION_REGISTRY = [
   {
     id: 'sec-projects',
     label: 'Projects',
+    srLabel: 'Projects',
     aliases: ['projects', 'work', 'portfolio', 'receipts'],
     order: 3,
     icon: SECTION_ICONS.projects,
@@ -25,6 +28,7 @@ export const SECTION_REGISTRY = [
   {
     id: 'sec-git-log',
     label: 'Career',
+    srLabel: 'Career history',
     aliases: ['career', 'experience', 'git log', 'education', 'certifications', 'community'],
     order: 4,
     icon: SECTION_ICONS.career,
@@ -32,6 +36,7 @@ export const SECTION_REGISTRY = [
   {
     id: 'sec-shell',
     label: 'Interactive shell',
+    srLabel: 'Interactive shell',
     aliases: ['interactive shell', 'shell', 'terminal', 'ask'],
     order: 5,
     icon: SECTION_ICONS.shell,
@@ -39,6 +44,7 @@ export const SECTION_REGISTRY = [
   {
     id: 'sec-live-perf',
     label: 'Measured',
+    srLabel: 'Live performance',
     aliases: ['measured', 'sec-live-metrics', 'performance', 'metrics', 'lighthouse', 'evals'],
     order: 6,
     icon: SECTION_ICONS.measured,
@@ -46,6 +52,7 @@ export const SECTION_REGISTRY = [
   {
     id: 'sec-hottest-takes',
     label: 'Opinions',
+    srLabel: 'Opinions',
     aliases: ['opinions', 'hottest takes', 'takes', 'unknowns'],
     order: 7,
     icon: SECTION_ICONS.opinions,
@@ -53,6 +60,7 @@ export const SECTION_REGISTRY = [
   {
     id: 'sec-guitar',
     label: 'Guitar and mixer',
+    srLabel: 'Guitar rig',
     aliases: ['guitar and mixer', 'guitar', 'mixer', 'daw', 'music'],
     order: 8,
     icon: SECTION_ICONS.guitar,
@@ -60,6 +68,7 @@ export const SECTION_REGISTRY = [
   {
     id: 'sec-contact',
     label: 'Contact',
+    srLabel: 'Contact',
     aliases: ['contact', 'email', 'message'],
     order: 9,
     icon: SECTION_ICONS.contact,

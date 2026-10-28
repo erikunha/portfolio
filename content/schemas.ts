@@ -16,12 +16,22 @@ export const SECTION_ICONS = {
   contact: 'contact',
 } as const;
 
-const SectionTextSchema = z.string().trim().min(MIN_SECTION_TEXT_LENGTH);
+const SectionTextSchema = z
+  .string()
+  .min(MIN_SECTION_TEXT_LENGTH)
+  .refine((text) => text === text.trim(), {
+    message: 'Section text must not have leading or trailing whitespace',
+  });
+
+const SectionAliasSchema = SectionTextSchema.refine((alias) => alias === alias.toLowerCase(), {
+  message: 'Section aliases must be lowercase',
+});
 
 export const SectionSchema = z.object({
   id: SectionTextSchema,
   label: SectionTextSchema,
-  aliases: z.array(SectionTextSchema.toLowerCase()).min(MIN_SECTION_TEXT_LENGTH).readonly(),
+  srLabel: SectionTextSchema,
+  aliases: z.array(SectionAliasSchema).min(MIN_SECTION_TEXT_LENGTH).readonly(),
   order: z.number().int().min(FIRST_SECTION_ORDER).max(SECTION_DESTINATION_COUNT),
   icon: z.enum(SECTION_ICONS),
 });
@@ -37,6 +47,10 @@ export const SectionRegistrySchema = z
   .refine((entries) => new Set(entries.map(({ order }) => order)).size === entries.length, {
     message: 'Section orders must be unique',
   })
+  .refine(
+    (entries) => entries.every(({ order }, index) => order === FIRST_SECTION_ORDER + index),
+    { message: 'Section orders must match array position and be contiguous from the first order' },
+  )
   .refine(
     (entries) => {
       const aliases = entries.flatMap(({ aliases }) => aliases);

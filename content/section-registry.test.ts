@@ -72,8 +72,8 @@ describe('section registry', () => {
   it('resolves prototype anchors as aliases without breaking existing section labels', () => {
     expect(getSectionByAlias('sec-about')?.id).toBe('sec-readme');
     expect(getSectionByAlias('sec-live-metrics')?.id).toBe('sec-live-perf');
-    for (const { id } of SECTION_REGISTRY.slice(1)) {
-      expect(SECTION_LABELS).toHaveProperty(id);
+    for (const { id, srLabel } of SECTION_REGISTRY) {
+      expect(SECTION_LABELS[id]).toBe(srLabel);
     }
     expect(SECTION_LABELS['sec-daw-mixer']).toBe('DAW mixer');
   });
@@ -101,9 +101,15 @@ describe('section registry', () => {
     const entries = SECTION_REGISTRY.map((entry) => ({ ...entry, aliases: [...entry.aliases] }));
     for (const patch of [
       { id: '' },
+      { id: ' bio ' },
       { label: '' },
+      { label: ' Home ' },
+      { srLabel: '' },
+      { srLabel: ' Home ' },
       { aliases: [] },
       { aliases: [''] },
+      { aliases: ['Home'] },
+      { aliases: [' home '] },
       { order: 0 },
       { order: 1.5 },
       { icon: 'missing' },
@@ -119,5 +125,14 @@ describe('section registry', () => {
       expect(result.success).toBe(false);
     }
     expect(SectionRegistrySchema.safeParse(entries.slice(1)).success).toBe(false);
+  });
+
+  it('rejects an unsorted registry even when orders remain unique and contiguous', () => {
+    const entries = [...SECTION_REGISTRY].reverse();
+    expect(SectionRegistrySchema.safeParse(entries).success).toBe(false);
+  });
+
+  it('validates canonical entries without changing their text or aliases', () => {
+    expect(SectionRegistrySchema.parse(SECTION_REGISTRY)).toEqual(SECTION_REGISTRY);
   });
 });
