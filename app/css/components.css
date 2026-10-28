@@ -597,7 +597,7 @@
     border-top: var(--border-width) dashed var(--color-primary-quiet);
   }
 
-  @media (max-width: 767px) {
+  @media (max-width: 768px) {
     .shell-feed {
       min-height: calc(12.5 * var(--spacing-4));
       max-height: calc(20 * var(--spacing-4));

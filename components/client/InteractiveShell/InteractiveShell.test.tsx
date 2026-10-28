@@ -534,16 +534,24 @@ describe('InteractiveShell r106 controls', () => {
     );
     const container = await renderShell();
     await submitQuestion(container, 'reference please');
+    expect(buttonWithText(container, 'COPY').getAttribute('aria-label')).toBe(
+      'COPY ref server-reference-123',
+    );
     await act(async () => {
       buttonWithText(container, 'COPY').click();
     });
+    expect(buttonWithText(container, 'COPY FAILED').getAttribute('aria-label')).toBe(
+      'COPY FAILED ref server-reference-123',
+    );
     expect(writeText).toHaveBeenCalledWith('server-reference-123');
     expect(container.querySelector('[role="status"]')?.textContent).toContain('Copy failed');
     await act(async () => {
       buttonWithText(container, 'COPY FAILED').click();
     });
     expect(writeText).toHaveBeenCalledTimes(2);
-    expect(buttonWithText(container, 'COPIED')).toBeDefined();
+    expect(buttonWithText(container, 'COPIED').getAttribute('aria-label')).toBe(
+      'COPIED ref server-reference-123',
+    );
     expect(container.querySelector('[role="status"]')?.textContent).toContain('Reference copied');
   });
 
@@ -591,6 +599,84 @@ describe('InteractiveShell r106 controls', () => {
     expect(document.activeElement).toBe(shellInput(container));
     expect(container.querySelector('[role="status"]')?.textContent).toContain('answer complete');
   });
+
+  it.each(['log', 'shortcut', 'privacy link', 'input'])(
+    'preserves focus on the %s when an answer completes',
+    async (target) => {
+      let complete: () => void = () => undefined;
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          complete = () => controller.close();
+        },
+      });
+      vi.stubGlobal('fetch', vi.fn(async () => new Response(body)));
+      const container = await renderShell();
+      await submitQuestion(container, 'keep my focus');
+      const focused =
+        target === 'log'
+          ? container.querySelector<HTMLElement>('[role="log"]')
+          : target === 'shortcut'
+            ? buttonWithText(container, 'help')
+            : target === 'privacy link'
+              ? container.querySelector<HTMLElement>('.shell-privacy-notice a')
+              : shellInput(container);
+      expect(focused).not.toBeNull();
+      await act(async () => {
+        focused?.focus();
+      });
+      expect(document.activeElement).toBe(focused);
+      await act(async () => {
+        complete();
+      });
+      expect(document.activeElement).toBe(focused);
+      expect(container.querySelector('[role="log"]')?.getAttribute('aria-busy')).toBe('false');
+    },
+  );
+
+  it.each([0, 20, 21, 200])(
+    'follows streamed output only when already within one line of the bottom, gap=%s',
+    async (gap) => {
+      let stream!: ReadableStreamDefaultController<Uint8Array>;
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          stream = controller;
+        },
+      });
+      vi.stubGlobal('fetch', vi.fn(async () => new Response(body)));
+      const container = await renderShell();
+      await submitQuestion(container, 'stream while I read');
+      const feed = container.querySelector<HTMLElement>('[role="log"]') as HTMLElement;
+      let scrollHeight = 1000;
+      Object.defineProperties(feed, {
+        scrollHeight: { configurable: true, get: () => scrollHeight },
+        clientHeight: { configurable: true, value: 200 },
+      });
+      feed.style.lineHeight = '20px';
+      await act(async () => {
+        feed.scrollTop = 800 - gap;
+        feed.dispatchEvent(new Event('scroll'));
+      });
+      scrollHeight = 1400;
+      await act(async () => {
+        stream.enqueue(new TextEncoder().encode('New streamed output'));
+      });
+      await flushFrames();
+      expect(feed.textContent).toContain('New streamed output');
+      expect(feed.scrollTop).toBe(gap <= 20 ? 1400 : 800 - gap);
+      scrollHeight = 1600;
+      await act(async () => {
+        stream.close();
+      });
+      expect(feed.scrollTop).toBe(gap <= 20 ? 1600 : 800 - gap);
+      await act(async () => {
+        feed.scrollTop = 1400;
+        feed.dispatchEvent(new Event('scroll'));
+      });
+      scrollHeight = 1800;
+      await submitQuestion(container, 'help');
+      expect(feed.scrollTop).toBe(1800);
+    },
+  );
 
   it('does not fabricate a reference when the response has no header', async () => {
     vi.stubGlobal(

@@ -139,7 +139,7 @@ function ResponseReference({
       <button
         type="button"
         className="shell-control"
-        aria-label={`${shellUi.copyLabel} ${requestId}`}
+        aria-label={`${label} ${shellUi.referencePrefix} ${requestId}`}
         aria-disabled={state === CopyState.Pending}
         onClick={copy}
       >
@@ -171,7 +171,8 @@ export function InteractiveShell() {
   const [streamingText, setStreamingText] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState({ id: 0, text: '' });
   const [toolbarIndex, setToolbarIndex] = useState(0);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const followOutputRef = useRef(true);
   const feedRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const toolbarButtons = useRef<(HTMLButtonElement | null)[]>([]);
@@ -212,7 +213,9 @@ export function InteractiveShell() {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: history and streamingText trigger scroll on the stable feed ref
   useEffect(() => {
-    if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
+    if (feedRef.current && followOutputRef.current) {
+      feedRef.current.scrollTop = feedRef.current.scrollHeight;
+    }
   }, [history, streamingText]);
 
   const streamQuestion = useCallback(
@@ -262,7 +265,7 @@ export function InteractiveShell() {
         setBusy(false);
         if (error || (message && !text)) setInput((value) => value || command);
         announce(message ?? shellUi.complete);
-        if (rootRef.current?.contains(document.activeElement)) focusInput();
+        if (stopRef.current === document.activeElement) focusInput();
       }
       function interrupt(message: string, error = false) {
         const text = parseStreamChunk(accumulated).displayText;
@@ -406,7 +409,7 @@ export function InteractiveShell() {
   );
 
   return (
-    <div ref={rootRef} className="interactive-shell">
+    <div className="interactive-shell">
       <div className="shell-chrome">
         <WindowChrome size={WINDOW_DOT_SIZE} />
         {isMobile ? (
@@ -422,6 +425,12 @@ export function InteractiveShell() {
       </div>
       <div
         ref={feedRef}
+        onScroll={(event) => {
+          const feed = event.currentTarget;
+          const lineHeight = Number.parseFloat(getComputedStyle(feed).lineHeight);
+          followOutputRef.current =
+            feed.scrollHeight - feed.scrollTop - feed.clientHeight <= lineHeight;
+        }}
         className="shell-feed"
         role="log"
         aria-label={shellUi.outputLabel}
@@ -471,13 +480,11 @@ export function InteractiveShell() {
             <span className="shell-cursor" />
           </span>
           <button
+            ref={stopRef}
             className="shell-control"
             type="button"
             aria-label={shellUi.stopLabel}
-            onClick={() => {
-              activeRequest.current?.stop();
-              focusInput();
-            }}
+            onClick={() => activeRequest.current?.stop()}
           >
             {shellUi.stop}
           </button>

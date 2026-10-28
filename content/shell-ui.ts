@@ -43,7 +43,6 @@ export const shellUi: ShellUi = {
   inputLabel: 'shell command',
   outputLabel: 'shell output',
   toolbarLabel: 'Shell shortcuts',
-  loadingLabel: shellLoadingLabel,
   prompt: 'erik@portfolio:~$',
   placeholder: 'type a command or ask anything…',
   suggestions: [

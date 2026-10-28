@@ -240,7 +240,6 @@ export const ShellUiSchema = z.object({
   inputLabel: z.string().min(1),
   outputLabel: z.string().min(1),
   toolbarLabel: z.string().min(1),
-  loadingLabel: z.string().min(1),
   prompt: z.string().min(1),
   placeholder: z.string().min(1),
   commandHint: z.string().min(1),
