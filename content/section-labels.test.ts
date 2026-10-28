@@ -6,7 +6,9 @@ import { SECTION_REGISTRY } from './section-registry';
 
 describe('SECTION_LABELS', () => {
   it('uses registry region names while preserving the existing screen reader copy', () => {
-    const regionLabels = Object.fromEntries(SECTION_REGISTRY.map(({ id }) => [id, SECTION_LABELS[id]]));
+    const regionLabels = Object.fromEntries(
+      SECTION_REGISTRY.map(({ id }) => [id, SECTION_LABELS[id]]),
+    );
     expect(regionLabels).toEqual({
       bio: 'Home',
       'sec-readme': 'About',

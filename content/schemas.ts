@@ -47,10 +47,9 @@ export const SectionRegistrySchema = z
   .refine((entries) => new Set(entries.map(({ order }) => order)).size === entries.length, {
     message: 'Section orders must be unique',
   })
-  .refine(
-    (entries) => entries.every(({ order }, index) => order === FIRST_SECTION_ORDER + index),
-    { message: 'Section orders must match array position and be contiguous from the first order' },
-  )
+  .refine((entries) => entries.every(({ order }, index) => order === FIRST_SECTION_ORDER + index), {
+    message: 'Section orders must match array position and be contiguous from the first order',
+  })
   .refine(
     (entries) => {
       const aliases = entries.flatMap(({ aliases }) => aliases);
