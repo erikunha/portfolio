@@ -2,6 +2,14 @@ import { fireEvent, render, waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
+import { ContactSection } from '@/components/sections/ContactSection';
+import { GitLogSection } from '@/components/sections/GitLogSection';
+import { GuitarSection } from '@/components/sections/GuitarSection';
+import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
+import { ProjectsSection } from '@/components/sections/ProjectsSection';
+import { ReadmeSection } from '@/components/sections/ReadmeSection';
+import { ShellSection } from '@/components/sections/ShellSection';
 import { Footer } from './index';
 
 afterEach(() => {
@@ -47,6 +55,40 @@ describe('Footer server output', () => {
         (a) => a.getAttribute('href') === link.href && a.textContent?.includes(link.label),
       );
       expect(match, `${link.label} must be available before hydration`).toBeDefined();
+    }
+  });
+
+  it('links in-page footer links to top-level sections rendered by the page', () => {
+    const host = document.createElement('div');
+    host.innerHTML = renderToStaticMarkup(
+      <>
+        <main id="main-content">
+          <ReadmeSection />
+          <ShellSection />
+          <AiMetricsSection />
+          <ProjectsSection />
+          <GitLogSection />
+          <HottestTakesSection defer />
+          <GuitarSection defer />
+          <ContactSection defer />
+        </main>
+        <Footer />
+      </>,
+    );
+    const main = host.querySelector('main');
+    const topLevelSectionIds = new Set([
+      main?.id,
+      ...[...(main?.children ?? [])].map((section) => section.id),
+    ]);
+    const inPageLinks = [...host.querySelectorAll('footer a[href^="#"]')];
+
+    expect(inPageLinks.length).toBeGreaterThan(0);
+    for (const link of inPageLinks) {
+      const targetId = link.getAttribute('href')?.slice(1);
+      expect(
+        topLevelSectionIds.has(targetId ?? ''),
+        `${link.textContent} must target a top-level section`,
+      ).toBe(true);
     }
   });
 
