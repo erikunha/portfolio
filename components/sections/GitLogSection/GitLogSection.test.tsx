@@ -42,7 +42,7 @@ describe('career git log', () => {
     expect(career?.textContent).toContain("git tag --list 'cert/*'");
     expect(career?.textContent).toContain("git tag --list 'edu/*'");
     expect(career?.textContent).toContain("git tag --list 'community/*'");
-    const action = career?.querySelector('a[href="/cv"]');
+    const action = career?.querySelector('a.career-cv');
     expect(action?.textContent).toBe('VIEW_CV');
     expect(action?.getAttribute('href')).toBe('/erik-cunha-cv.pdf');
     expect(host.querySelectorAll('#sec-credentials')).toHaveLength(1);
