@@ -13,7 +13,6 @@ export const SECTION_LABELS = {
   'sec-man-page': 'Profile manual',
   'sec-live-perf': 'Live performance',
   'sec-sys-health': 'System health',
-  'sec-credentials': 'Credentials',
   'sec-visa': 'Work authorization',
   'sec-community': 'Community',
   'sec-hottest-takes': 'Opinions',
