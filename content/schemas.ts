@@ -338,6 +338,43 @@ export const FooterContentSchema = z.object({
 });
 export type FooterContent = z.infer<typeof FooterContentSchema>;
 
+const ErrorHrefSchema = z.string().regex(/^\/(?!\/)[\w/#-]*$/);
+const ErrorLinkSchema = z.object({ label: z.string().min(1), href: ErrorHrefSchema });
+
+export const ErrorsContentSchema = z.object({
+  chrome: z.object({
+    brand: z.string().min(1),
+    brandHref: ErrorHrefSchema,
+    navLabel: z.string().min(1),
+    skipLabel: z.string().min(1),
+    nav: z.array(ErrorLinkSchema).min(1),
+  }),
+  notFound: z.object({
+    metaTitle: z.string().min(1),
+    code: z.literal('404'),
+    panelHeader: z.string().min(1),
+    prompt: z.string().min(1),
+    command: z.string().min(1),
+    output: z.string().min(1),
+    suggestionsLabel: z.string().min(1),
+    suggestionsNavLabel: z.string().min(1),
+    suggestions: z.array(ErrorLinkSchema).min(1),
+    home: ErrorLinkSchema,
+  }),
+  serverError: z.object({
+    code: z.literal('500'),
+    message: z.string().min(1),
+    retryLabel: z.string().min(1),
+    home: ErrorLinkSchema,
+    refLabel: z.string().min(1),
+    copyLabel: z.string().min(1),
+    copyAriaLabel: z.string().min(1),
+    copiedAnnouncement: z.string().min(1),
+  }),
+  noscript: z.object({ text: z.string().min(1) }),
+});
+export type ErrorsContent = z.infer<typeof ErrorsContentSchema>;
+
 export const DmesgLineSchema = z.object({
   off: z.number(),
   prefix: z.string().min(1),

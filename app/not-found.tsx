@@ -1,30 +1,46 @@
-import Link from 'next/link';
+import type { Metadata } from 'next';
+import { ErrorChrome, ErrorHeading } from '@/components/ErrorBoundary/ErrorBoundary.client';
+import { errorsContent } from '@/content/errors';
+import { Button, CmdLine, TerminalPanel } from '@/design-system';
+
+const { chrome, notFound } = errorsContent;
+
+export const metadata: Metadata = { title: notFound.metaTitle };
 
 export default function NotFound() {
   return (
-    <main className="not-found">
-      <pre style={{ lineHeight: 1.8, fontSize: 'clamp(0.8rem, 2vw, 1rem)' }}>
-        <span style={{ color: 'var(--color-primary-500)', opacity: 0.6 }}>
-          {'erik@portfolio:~$ '}
-        </span>
-        <span>{'navigate /dev/null'}</span>
-        {'\n'}
-        <span>{'bash: navigate: /dev/null: Not a directory'}</span>
-        {'\n\n'}
-        <span style={{ color: 'var(--color-primary-500)' }}>{'ERROR 404 — PAGE_NOT_FOUND'}</span>
-        {'\n\n'}
-        <Link
-          href="/"
-          style={{
-            color: 'var(--color-primary-500)',
-            textDecoration: 'none',
-            borderBottom: '1px solid var(--color-primary-500)',
-          }}
-        >
-          {'← cd ~'}
-        </Link>
-        <span style={{ opacity: 0.5 }}>{'  ·  return to portfolio'}</span>
-      </pre>
-    </main>
+    <>
+      <ErrorChrome chrome={chrome} />
+      <main className="err-main" id="main-content" tabIndex={-1}>
+        <ErrorHeading>{notFound.code}</ErrorHeading>
+        <TerminalPanel header={notFound.panelHeader}>
+          <div className="p-[14px]">
+            <CmdLine
+              user=""
+              prompt={notFound.prompt}
+              command={notFound.command}
+              output={notFound.output}
+            />
+          </div>
+        </TerminalPanel>
+        <nav aria-label={notFound.suggestionsNavLabel}>
+          <p className="err-label">{notFound.suggestionsLabel}</p>
+          <ul className="err-suggest">
+            {notFound.suggestions.map((item) => (
+              <li key={item.href}>
+                <a className="err-bar-link" href={item.href}>
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="err-actions">
+          <Button as="a" variant="primary" href={notFound.home.href}>
+            {notFound.home.label}
+          </Button>
+        </div>
+      </main>
+    </>
   );
 }
