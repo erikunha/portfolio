@@ -6,7 +6,9 @@ import { SECTION_LABELS } from '@/content/section-labels';
 import { IconGuitar } from '../../Icons';
 import { Module } from '../../responsive/Module';
 
-const SIGNAL_BARS = Array.from({ length: GUITAR_SIGNAL_BAR_COUNT }, (_, position) => ({ position }));
+const SIGNAL_BARS = Array.from({ length: GUITAR_SIGNAL_BAR_COUNT }, (_, position) => ({
+  position,
+}));
 const FIRST_NODE_INDEX = 0;
 const SECTION_ID = 'sec-guitar';
 const PHOTO_SIZES = '(max-width: 699px) 100vw, 320px';
