@@ -328,11 +328,11 @@ Content-Type: application/json
 
 → 400 application/json   { "error": "question is required" }
                          { "error": "invalid request body" }
-                         { "error": "question rejected \u2014 try rephrasing without role tokens or instruction-override patterns" }   # injection guard
-→ 429 application/json   { "error": "rate limit exceeded \u2014 try again in an hour" }             # per-IP sliding window
-                         { "error": "identical question \u2014 wait 60 seconds before asking again" }   # dedup guard
-→ 503 application/json   { "error": "temporarily unavailable \u2014 email erikhenriquealvescunha@gmail.com directly" }   # kill switch (ASK_ENABLED off)
-                         { "error": "monthly budget exhausted \u2014 email erikhenriquealvescunha@gmail.com directly" }   # token cap hit
+                         { "error": "question rejected — try rephrasing without role tokens or instruction-override patterns" }   # injection guard
+→ 429 application/json   { "error": "rate limit exceeded — try again in an hour" }             # per-IP sliding window
+                         { "error": "identical question — wait 60 seconds before asking again" }   # dedup guard
+→ 503 application/json   { "error": "temporarily unavailable — email erikhenriquealvescunha@gmail.com directly" }   # kill switch (ASK_ENABLED off)
+                         { "error": "monthly budget exhausted — email erikhenriquealvescunha@gmail.com directly" }   # token cap hit
 ```
 (Verified against `app/api/ask/route.ts` + `lib/stream-protocol.ts` on 2026-07-17.)
 

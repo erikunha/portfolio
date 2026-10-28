@@ -54,8 +54,6 @@ describe('Projects', () => {
     expect(doc.querySelectorAll('.projects-grid')).toHaveLength(1);
     for (const project of projects) {
       expect(doc.body.textContent).toContain(project.description);
-      expect(project.mobileDescription).toBe(project.description);
-      expect(project.mobileMeta).toEqual(project.stats);
     }
     expect(doc.body.textContent).toContain('SERVICE_OPS_CONSOLE');
     expect(doc.body.textContent).not.toContain('CARE_OPS');

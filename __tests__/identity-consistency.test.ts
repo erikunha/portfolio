@@ -79,7 +79,7 @@ describe('identity is consistent across every gated surface', () => {
   it('states the cross-platform code reuse the resume gives, on both surfaces', () => {
     const edtech = projects.find((project) => project.name === 'EDTECH_OMNI');
     expect(edtech).toBeDefined();
-    for (const stats of [edtech?.stats, edtech?.mobileMeta]) {
+    for (const stats of [edtech?.stats]) {
       expect(stats?.find((stat) => stat.label === 'REUSE')?.value).toContain('80%');
     }
     expect(JSON.stringify(gitLog)).toContain('80% shared code');
@@ -392,7 +392,7 @@ describe('terminal redesign canonical facts', () => {
     expect(JSON.stringify(raylu)).not.toMatch(/Next(?:\.js)? 15|React 19/i);
     const service = projects.find((project) => project.name === 'SERVICE_OPS_CONSOLE');
     expect(service?.company).toBe('Canon Medical Systems');
-    for (const description of [service?.description, service?.mobileDescription]) {
+    for (const description of [service?.description]) {
       expect(description).toContain('service orders');
       expect(description).toContain('specialist schedules');
       expect(description).toContain('field visits');

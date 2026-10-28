@@ -38,7 +38,6 @@ describe('responsive section mobile variants', () => {
     for (const [index, project] of projects.entries()) {
       expect(cards[index]?.querySelector('.project-name')?.textContent).toContain(project.name);
       expect(cards[index]?.querySelector('.project-desc')?.textContent).toBe(project.description);
-      expect(project.mobileDescription).toBe(project.description);
     }
   });
 

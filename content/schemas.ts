@@ -25,12 +25,7 @@ export const ProjectSchema = z
     kind: ProjectKind,
     url: z.string().url().optional(),
   })
-  .refine((project) => project.kind !== ProjectKind.enum.oss || project.url !== undefined)
-  .transform((project) => ({
-    ...project,
-    mobileDescription: project.description,
-    mobileMeta: project.stats,
-  }));
+  .refine((project) => project.kind !== ProjectKind.enum.oss || project.url !== undefined);
 
 export const PerfReceiptSchema = z.object({
   metric: z.string().min(1),
