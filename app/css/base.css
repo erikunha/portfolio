@@ -220,6 +220,9 @@
     #sec-shell {
       order: 2;
     }
+    #sec-live-metrics {
+      order: 3;
+    }
     #sec-ai-metrics {
       order: 3;
     }

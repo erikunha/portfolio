@@ -76,7 +76,11 @@ describe('identity is consistent across every gated surface', () => {
 
   it('states the cross-platform code reuse the resume gives, on both surfaces', () => {
     const edtech = projects.find((project) => project.name === 'EDTECH_OMNI');
-    expect(edtech?.stats.find((stat) => stat.label === 'REUSE')?.value).toContain('80%');
+    expect(edtech).toBeDefined();
+    for (const stats of [edtech?.stats, edtech?.mobileMeta]) {
+      expect(stats?.find((stat) => stat.label === 'REUSE')?.value).toContain('80%');
+    }
+    expect(JSON.stringify(gitLog)).toContain('80% shared code');
     expect(JSON.stringify(gitLog)).not.toContain('90%');
   });
 

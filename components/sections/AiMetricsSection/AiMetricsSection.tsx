@@ -34,10 +34,15 @@ function AiMetricsBody({
           {measured.ask.title}
           <span className="sr-only"> {measured.externalDisclosure}</span>
         </a>
-        {timestamp.valid ? (
+        {metrics ? (
           <>
             {' · '}
-            {measured.ask.timestampLabel} <time dateTime={metrics?.lastRun}>{timestamp.label}</time>
+            {measured.ask.timestampLabel}{' '}
+            {timestamp.valid ? (
+              <time dateTime={metrics.lastRun}>{timestamp.label}</time>
+            ) : (
+              metrics.lastRun
+            )}
           </>
         ) : null}
         {timestamp.stale ? <span className="measured-status"> · {measured.stale}</span> : null}

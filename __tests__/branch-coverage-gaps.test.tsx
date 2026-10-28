@@ -1,11 +1,13 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { measured } from '@/content/measured';
 import { type MountedClient, mountClient } from './helpers/render';
 
 const getScoresMock = vi.fn();
 vi.mock('@/lib/lighthouse-scores', () => ({
   getScores: getScoresMock,
+  LIGHTHOUSE_TTL_S: 90_000,
   LIGHTHOUSE_FALLBACK: {
     performance: 0,
     accessibility: 0,
@@ -38,10 +40,11 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
     const html = await renderPerfData();
     expect(html).toContain('98');
     expect(html).toContain('100');
-    expect(html).toContain('PageSpeed Insights');
+    expect(html).toContain(measured.psi.url);
+    expect(html).toContain('aria-valuenow="98"');
   });
 
-  it('renders lastCheck as UTC string when fetchedAt is a valid ISO date', async () => {
+  it('renders the PSI timestamp as a semantic time when fetchedAt is valid', async () => {
     getScoresMock.mockResolvedValue({
       performance: 95,
       accessibility: 100,
@@ -50,11 +53,12 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
       fetchedAt: '2026-05-25T12:00:00.000Z',
     });
     const html = await renderPerfData();
-    expect(html).toContain('LAST_CHECK');
-    expect(html).not.toContain('LAST_CHECK: —');
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    expect(doc.querySelector('time')?.getAttribute('datetime')).toBe('2026-05-25T12:00:00.000Z');
+    expect(doc.querySelector('time')?.textContent).toBe('2026-05-25');
   });
 
-  it('renders lastCheck as dash when fetchedAt is the fallback dash string', async () => {
+  it('marks PSI unavailable without zero scores or a time for fallback data', async () => {
     getScoresMock.mockResolvedValue({
       performance: 0,
       accessibility: 0,
@@ -63,7 +67,14 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
       fetchedAt: '—',
     });
     const html = await renderPerfData();
-    expect(html).toContain('LAST_CHECK: —');
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    expect(doc.body.textContent).toContain(measured.unavailable);
+    expect(doc.querySelector('time')).toBeNull();
+    expect(doc.querySelectorAll('[aria-valuenow]')).toHaveLength(0);
+    expect(doc.querySelectorAll('.measured-value')).toHaveLength(4);
+    for (const value of doc.querySelectorAll('.measured-value')) {
+      expect(value.textContent).toBe('—/100');
+    }
   });
 });
 
@@ -96,6 +107,9 @@ describe('AiMetricsSection — lastRunLabel NaN guard branch', () => {
     const element = await AiMetricsData();
     const html = renderToStaticMarkup(element);
     expect(html).toContain('not-a-date');
+    expect(html).toContain(measured.unknownTimestamp);
+    expect(html).toContain('95%');
+    expect(html).not.toContain('<time');
   });
 });
 

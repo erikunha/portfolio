@@ -88,7 +88,7 @@ export const projects: Project[] = z
       description:
         'Cross-platform EdTech app: one codebase, five OSes (Android / iOS / Win / macOS / Linux).',
       stats: [
-        { label: 'SHARED', value: '~80% CODE' },
+        { label: 'REUSE', value: '~80% CODE' },
         { label: 'DESKTOP BUILD', value: '-40%' },
         { label: 'STACK', value: 'IONIC / ANGULAR / ELECTRON' },
       ],
