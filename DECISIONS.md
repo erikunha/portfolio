@@ -3,7 +3,6 @@
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
 Community tags belong in Career (`sec-git-log`), alongside `cert/*` and `edu/*`. About contains Whoami, Now, Responsibilities, Stack and retry-code panels. `content/community.ts` supplies the community content.
-
 - **2026-10-28** · **RoleTyper is removed for r106.** The Hero identity line and About `[Senior]` status are static server-rendered text, with no rotating role or role-change live region. _Reversible: restore `components/client/RoleTyper` and its tests from git, then reconnect the consumers if animated roles are required._
 - **2026-10-24** · Contact submission returns 200 only when Resend accepts delivery. Provider errors and 10s timeouts return `202 queued` after durable outbox persistence, with a LinkedIn alternative. A daily 04:00 UTC cron retries at most 3 times within 7 days, preserving the 90-day KV audit record after success, expiry or exhaustion. Hobby cron frequency requires a daily schedule. Both routes share send configuration and a message-id idempotency key; logs retain only request and message ids. _Reversible: revert the delivery routes, form states and cron entry together; existing KV audit messages remain available._
 

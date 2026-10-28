@@ -1533,13 +1533,6 @@
     overflow-wrap: anywhere;
   }
 
-  .ab-community {
-    grid-column: 1 / -1;
-    margin-top: var(--spacing-4);
-    border-top: var(--border-width) dashed var(--color-primary-quiet);
-    padding-top: var(--spacing-3);
-  }
-
   .ab-now dl,
   .ab-stack dl {
     display: grid;

@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { aboutContent as c } from '@/content/about';
 import { responsibilities } from '@/content/responsibilities';
 import { IconReadme } from '../../Icons';
-import { CommunitySection } from '../CommunitySection';
 
 function Panel({
   title,
@@ -37,14 +36,9 @@ const lineNumbers = Array.from(
 
 export function About() {
   return (
-    <section
-      id="sec-about"
-      tabIndex={-1}
-      aria-labelledby="sec-about-header"
-      className="about-section"
-    >
+    <section id="sec-about" tabIndex={-1} aria-labelledby="about-header" className="about-section">
       <header className="about-section-header" id="sec-readme">
-        <h2 id="sec-about-header">
+        <h2 id="about-header">
           <span>{c.title}</span>
           <IconReadme />
           <span className="about-section-command" aria-hidden="true">
@@ -77,9 +71,6 @@ export function About() {
                   {c.whoami.details.map((line) => (
                     <p key={line}>{line}</p>
                   ))}
-                </div>
-                <div className="ab-community">
-                  <CommunitySection />
                 </div>
               </div>
             </Panel>
