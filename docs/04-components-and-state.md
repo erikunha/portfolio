@@ -17,7 +17,7 @@ Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.c
 
 > **Known convention drift (document, do not "fix" silently):** seven interactive files under `components/client/**` (e.g. `ContactForm.tsx`, `InteractiveShell.tsx`, `HeroBootAnimation.tsx`, `ToTopButton.tsx`) carry `'use client'` but are **not** named `*.client.tsx`. The naming gate's scope evidently does not cover that directory. This is real today; see doc 09.
 
-The Hero identity line and About Senior status are static server-rendered text. `ReadmeSection` re-exports `About`, which contains Whoami, Now, Responsibilities, Stack and retry-code panels.
+The Hero identity line and About Senior status are static server-rendered text. `ReadmeSection` re-exports `About`, which contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
 
 ## Component hierarchy
 

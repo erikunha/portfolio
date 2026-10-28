@@ -42,7 +42,7 @@ Every section of the page is driven by a typed module in `content/`, and those t
 | `npm list --global`        | Tech stack                                      | `npm-stack.ts`        | `NpmTile[]`                            |
 | `cat ~/.credentials`       | Credentials/certs                               | `credentials.ts`      | `Credential[]`                         |
 | `cat ~/.visa`              | Work authorization by jurisdiction              | `visa.ts`             | `VisaRow[]`                            |
-| `cat ~/.community`         | Community/speaking                              | `community.ts`        | `CommunityEvent`                       |
+| `git tag --list 'community/*'` | Career community/speaking tags                  | `community.ts`        | `CommunityEvent`                       |
 | `cat ~/HOTTEST_TAKES.md`   | Opinions/theses                                 | `hottest-takes.ts`    | `HottestTake[]`                        |
 | `cat ~/.guitar_rig`        | Hobby (guitar signal chain)                     | `guitar-rig.ts`       | `GuitarRig`                            |
 | `./mix --live`             | Hobby (DAW mixer, interactive)                  | `daw-mixer.ts`        | `DawMixer`                             |

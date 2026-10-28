@@ -28,7 +28,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Functional
 
-- Static composition of ~18 content sections (hero, README, projects, git log, NPM, SYS_HEALTH, PERF_RECEIPTS, visa, community, HOTTEST_TAKES, RESPONSIBILITIES, guitar_rig, unknowns, contact, MAN ERIK, INTERACTIVE_SHELL, footer)
+- Static composition of ~18 content sections (hero, README, projects, Career (git log and credential, education and community tags), NPM, SYS_HEALTH, PERF_RECEIPTS, visa, HOTTEST_TAKES, RESPONSIBILITIES, guitar_rig, unknowns, contact, MAN ERIK, INTERACTIVE_SHELL, footer)
 - Hero: Matrix dialog loop + boot sequence (typewriter)
 - Static server-rendered Hero identity line and About Senior status; IntersectionObserver gates MatrixRain; the footer is server-rendered, with client islands only for session counters and halt/reboot (no scroll-reveal typewriter exists)
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
@@ -203,7 +203,7 @@ content/responsibilities.ts           # permissions matrix
 content/guitar-rig.ts                 # gear sheet
 content/unknowns.ts                   # unknowns items
 content/visa.ts                       # jurisdiction table
-content/community.ts                  # devopsdays
+content/community.ts                  # Career community tags (devopsdays)
 content/now.ts                        # ~/.now
 content/credentials.ts                # ~/.credentials
 content/man-page.ts                   # MAN ERIK content

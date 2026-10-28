@@ -46,7 +46,7 @@ for (const viewport of viewports) {
         await expect(panel).toHaveCSS('border-top-width', '1px');
         await expect(panel.locator(':scope > header')).toHaveCSS('border-bottom-width', '1px');
       }
-      await expect(about.getByText("$ git tag --list 'community/*'")).toHaveCount(1);
+      await expect(about.getByText("$ git tag --list 'community/*'")).toHaveCount(0);
       await expect(page.locator('#sec-community')).toHaveCount(0);
       const code = about.getByRole('region', { name: 'README code' });
       await expect(code).toHaveAttribute('tabindex', '0');

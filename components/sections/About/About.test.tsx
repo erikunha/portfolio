@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { About } from './About';
 
@@ -46,22 +46,12 @@ describe('About r106 composition', () => {
     expect(code.textContent).toContain('Math.random()');
   });
 
-  it('includes community tags and evidence links within About without a sixth panel', () => {
-    const { container } = render(<About />);
-    expect(screen.getByText("$ git tag --list 'community/*'")).toBeTruthy();
-    expect(
-      screen.getByRole('link', { name: /community\/DEVOPSDAYS_CAMPINAS/ }).parentElement
-        ?.textContent,
-    ).toContain('· 2024 · ORGANIZER');
-    expect(screen.getByText(/curated 8 talks/)).toBeTruthy();
-    expect(screen.getByText(/open to CFP submissions for 2027/)).toBeTruthy();
-    const about = container.querySelector('#sec-about');
-    expect(about).not.toBeNull();
-    expect(
-      within(about as HTMLElement)
-        .getByRole('link', { name: /program/ })
-        .getAttribute('href'),
-    ).toBe('https://devopsdays.org/events/2024-campinas/program/');
-    expect(container.querySelector('#sec-community')).toBeNull();
+  it('excludes community tags and evidence links reserved for Career', () => {
+    render(<About />);
+    expect(screen.queryByText("$ git tag --list 'community/*'")).toBeNull();
+    expect(screen.queryByRole('link', { name: /community\/DEVOPSDAYS_CAMPINAS/ })).toBeNull();
+    expect(screen.queryByText(/curated 8 talks/)).toBeNull();
+    expect(screen.queryByText(/open to CFP submissions for 2027/)).toBeNull();
+    expect(screen.queryByRole('link', { name: /program/ })).toBeNull();
   });
 });
