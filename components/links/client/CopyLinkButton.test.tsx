@@ -5,7 +5,14 @@ import { CopyLinkButton } from './CopyLinkButton.client';
 const PAGE_URL = 'https://www.erikunha.dev/links';
 
 function renderButton() {
-  return render(<CopyLinkButton url={PAGE_URL} idleLabel="copiar link" doneLabel="copied ✓" />);
+  return render(
+    <CopyLinkButton
+      url={PAGE_URL}
+      idleLabel="copiar link"
+      doneLabel="copied ✓"
+      failedLabel="copy failed"
+    />,
+  );
 }
 
 async function click(container: HTMLElement) {
@@ -62,13 +69,17 @@ describe('CopyLinkButton', () => {
     expect(statusText(container)).toBe('copiar link');
   });
 
-  it('stays idle when the browser denies clipboard access', async () => {
+  it('reports a denied clipboard instead of failing silently, then recovers', async () => {
     const writeText = vi.fn().mockRejectedValue(new DOMException('denied', 'NotAllowedError'));
     vi.stubGlobal('navigator', { clipboard: { writeText } });
 
     const { container } = renderButton();
     await click(container);
+    expect(statusText(container)).toBe('copy failed');
 
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2_000);
+    });
     expect(statusText(container)).toBe('copiar link');
   });
 });
