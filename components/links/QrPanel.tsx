@@ -13,10 +13,10 @@ export function QrPanel({ locale, url }: { locale: LinksLocale; url: string }) {
   const span = matrix.size + QUIET_ZONE * 2;
 
   return (
-    <section className="links-col px-[18px] pt-[18px]" data-col="qr" aria-labelledby={HEADING_ID}>
+    <section className="links-col px-4 pt-4" data-col="qr" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID}>{copy.qrHeading[locale]}</SectionHeading>
 
-      <div className="border border-primary-border bg-[var(--color-glow-03)] p-[14px] flex gap-[14px] items-center">
+      <div className="border border-primary-border bg-[var(--color-glow-03)] p-4 flex gap-4 items-center">
         <svg
           viewBox={`0 0 ${span} ${span}`}
           width={RENDER_PX}
@@ -30,14 +30,14 @@ export function QrPanel({ locale, url }: { locale: LinksLocale; url: string }) {
           <path d={qrSvgPath(matrix, QUIET_ZONE)} fill="var(--color-secondary-950)" />
         </svg>
         <div>
-          <p className="m-0 text-primary-400 text-[11px]">
+          <p className="m-0 text-tertiary-400 text-xs">
             <span aria-hidden="true">$ </span>
             {copy.qrCommand}
           </p>
-          <p className="mt-[7px] mb-0 text-tertiary-50 text-[11.5px] leading-[1.6] text-pretty">
+          <p className="mt-2 mb-0 text-tertiary-50 text-xs leading-[1.6] text-pretty">
             {copy.qrBody[locale]}
           </p>
-          <p className="mt-2 mb-0 text-tertiary-400 text-[10.5px]">{siteLabel}</p>
+          <p className="mt-2 mb-0 text-tertiary-400 text-xs">{siteLabel}</p>
         </div>
       </div>
     </section>

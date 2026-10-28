@@ -2,23 +2,15 @@ import { type LinksContent, LinksContentSchema } from './schemas';
 import { social } from './social';
 
 export const linksContent: LinksContent = LinksContentSchema.parse({
-  shellTitle: 'erik@gringa — bash',
+  shellTitle: 'erik@gringa · bash',
   siteUrl: social.site,
   siteLabel: 'erikunha.dev',
   profile: {
     name: 'Erik Cunha',
     avatar: '/images/erik-avatar.jpg',
-    taglines: {
-      pt: [
-        'Senior Software Engineer, Frontend & Product',
-        'AI Engineering na prática',
-        'Carreira internacional para devs',
-      ],
-      en: [
-        'Senior Software Engineer, Frontend & Product',
-        'AI engineering, hands-on',
-        'Going global as a dev',
-      ],
+    title: {
+      pt: 'Engenheiro de Software Sênior, Frontend e Produto',
+      en: 'Senior Software Engineer, Frontend & Product',
     },
     host: { pt: 'Brasil · remoto (Raylu, Nova York)', en: 'Brazil · remote (Raylu, New York)' },
     stack: 'React · Next · Node · Claude/Codex',
@@ -107,7 +99,7 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     qrHeading: { pt: 'levar a página com você', en: 'take this page with you' },
     qrCommand: 'qrencode -o links.png',
     qrBody: {
-      pt: 'Aponte a câmera para abrir esta página. Também serve para colar em vídeo, slide e crachá de evento.',
+      pt: 'Aponte a câmera para abrir esta página. Também serve para colar em vídeo, slide e credencial de evento.',
       en: 'Point your camera to open this page. Also works pasted into videos, slides and event badges.',
     },
     subscribe: { pt: 'inscrever-se no canal', en: 'subscribe' },
@@ -115,6 +107,8 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     watch: { pt: 'assistir', en: 'watch' },
     copyLink: { pt: 'copiar link', en: 'copy link' },
     copyDone: 'copied ✓',
+    copyFailed: 'copy failed',
+    opensInNewTab: { pt: 'abre em nova aba', en: 'opens in a new tab' },
     newBadge: { pt: 'novo', en: 'new' },
     langSwitchLabel: { pt: 'Idioma', en: 'Language' },
     feedUnavailable: {

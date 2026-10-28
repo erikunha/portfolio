@@ -36,10 +36,19 @@ test.describe('/links link-in-bio', () => {
   test('serves a scannable QR from the server with no client-side canvas work', async ({
     page,
   }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('/links');
     const qr = page.getByRole('img', { name: /QR code/ });
     await expect(qr).toBeVisible();
     await expect(page.locator('canvas')).toHaveCount(0);
+  });
+
+  test('drops the QR panel on a phone, where the visitor is already holding the page', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/links');
+    await expect(page.getByRole('img', { name: /QR code/ })).toBeHidden();
   });
 
   test('paints the hatch through the frame when the portrait fails to load', async ({ page }) => {
@@ -113,13 +122,41 @@ test.describe('/links link-in-bio', () => {
     expect(await page.locator('a[href="#"], a[href=""]').count()).toBe(0);
   });
 
-  test('holds the tagline still when the visitor prefers reduced motion', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/links');
+  test('shows the same static title with or without reduced motion', async ({ page }) => {
+    const title = 'Engenheiro de Software Sênior, Frontend e Produto';
+    const identity = page.locator('.links-identity-box');
 
-    const tagline = page.locator('p span[aria-hidden="true"]').first();
-    const first = await tagline.textContent();
+    await page.goto('/links');
+    await expect(identity).toContainText(title);
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.reload();
+    await expect(identity).toContainText(title);
+    const first = await identity.textContent();
     await page.waitForTimeout(600);
-    expect(await tagline.textContent()).toBe(first);
+    expect(await identity.textContent()).toBe(first);
+  });
+
+  test('renders the English title on the English route', async ({ page }) => {
+    await page.goto('/links/en');
+    await expect(page.locator('.links-identity-box')).toContainText(
+      'Senior Software Engineer, Frontend & Product',
+    );
+  });
+
+  test('lays the social pills out in two columns from 360px and three from 900px', async ({
+    page,
+  }) => {
+    const columns = () =>
+      page
+        .locator('footer ul')
+        .evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/links');
+    expect(await columns()).toBe(2);
+
+    await page.setViewportSize({ width: 1000, height: 800 });
+    expect(await columns()).toBe(3);
   });
 });

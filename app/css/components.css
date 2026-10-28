@@ -1041,7 +1041,7 @@
   .links-shell {
     max-width: 420px;
     margin-inline: auto;
-    padding-block-end: 44px;
+    padding-block-end: 48px;
   }
 
   @media (min-width: 420px) {
@@ -1050,17 +1050,23 @@
     }
   }
 
+  @media (max-width: 599px) {
+    .links-col[data-col="qr"] {
+      display: none;
+    }
+  }
+
   @media (min-width: 900px) and (max-width: 1099px) {
     .links-shell {
       max-width: 560px;
-      padding-block-end: 72px;
+      padding-block-end: 64px;
     }
   }
 
   @media (min-width: 1100px) {
     .links-shell {
       max-width: 1280px;
-      margin: 26px auto 40px;
+      margin: 24px auto 48px;
       padding-block-end: 0;
       border: 1px solid var(--color-primary-border);
       background: var(--color-glow-03);
@@ -1070,31 +1076,31 @@
       display: grid;
       grid-template-columns: 1.3fr 1fr;
       grid-auto-flow: row dense;
-      column-gap: 26px;
+      column-gap: 24px;
     }
 
     .links-chrome {
-      padding: 14px 26px;
+      padding: 16px 24px;
       border-block-end: 1px solid var(--color-primary-border);
       background: var(--color-glow-05);
     }
 
     .links-identity {
       grid-column: 1 / -1;
-      padding: 14px 26px 0;
+      padding: 16px 24px 0;
     }
 
     .links-identity-box {
       display: grid;
       grid-template-columns: minmax(320px, 1.2fr) 1fr;
-      gap: 26px;
+      gap: 24px;
       align-items: center;
-      padding: 22px 26px;
+      padding: 24px;
     }
 
     .links-identity-meta {
       margin: 0;
-      padding: 0 0 0 26px;
+      padding: 0 0 0 24px;
       border-block-start: 0;
       border-inline-start: 1px dashed var(--color-primary-border);
       align-content: center;
@@ -1106,27 +1112,27 @@
 
     .links-col[data-col="channel"] {
       grid-column: 1;
-      padding-inline-start: 26px;
+      padding-inline-start: 24px;
     }
 
     .links-col[data-col="history"] {
       grid-column: 2;
-      padding-inline-end: 26px;
+      padding-inline-end: 24px;
     }
 
     .links-col[data-col="playlists"] {
       grid-column: 2;
-      padding-inline-end: 26px;
+      padding-inline-end: 24px;
     }
 
     .links-col[data-col="qr"] {
       grid-column: 1;
-      padding-inline-start: 26px;
+      padding-inline-start: 24px;
     }
 
     .links-footer {
       grid-column: 1 / -1;
-      margin: 30px 26px 26px;
+      margin: 32px 24px 24px;
     }
   }
 }

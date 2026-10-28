@@ -39,4 +39,16 @@ describe('IdentityCard', () => {
     expect(en).toContain('remote');
     expect(pt).not.toBe(en);
   });
+
+  it('states the title as plain text on first render, with no typing to wait for', () => {
+    const pt = render(<IdentityCard locale={LINKS_LOCALE.pt} />).container;
+    const en = render(<IdentityCard locale={LINKS_LOCALE.en} />).container;
+    expect(en.textContent).toContain('Senior Software Engineer, Frontend & Product');
+    expect(pt.textContent).toContain('Engenheiro de Software Sênior, Frontend e Produto');
+  });
+
+  it('keeps one fixed title instead of rotating through taglines', () => {
+    const { container } = render(<IdentityCard locale={LINKS_LOCALE.en} />);
+    expect(container.textContent).not.toMatch(/AI engineering, hands-on|Going global as a dev/);
+  });
 });

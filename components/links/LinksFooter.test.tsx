@@ -53,11 +53,22 @@ describe('LinksFooter', () => {
 
   it('renders the English labels on the English route', () => {
     const { container } = render(<LinksFooter locale={LINKS_LOCALE.en} url={`${PAGE_URL}/en`} />);
-    expect(byLabel(container, /^\s*Portfolio\s*$/)).toBeDefined();
+    expect(byLabel(container, /^\s*Portfolio\b/)).toBeDefined();
   });
 
   it('offers the copy-link control alongside the pills', () => {
     const { container } = render(<LinksFooter locale={LINKS_LOCALE.pt} url={PAGE_URL} />);
     expect(container.querySelector('button')).not.toBeNull();
+  });
+
+  it('announces that external pills open a new tab, and leaves the mailto pill alone', () => {
+    const { container } = render(<LinksFooter locale={LINKS_LOCALE.en} url={PAGE_URL} />);
+    expect(byLabel(container, /github/i)?.textContent).toMatch(/opens in a new tab/i);
+    expect(byLabel(container, /e-mail/i)?.textContent).not.toMatch(/new tab/i);
+  });
+
+  it('announces the new tab in Portuguese on the Portuguese route', () => {
+    const { container } = render(<LinksFooter locale={LINKS_LOCALE.pt} url={PAGE_URL} />);
+    expect(byLabel(container, /github/i)?.textContent).toMatch(/abre em nova aba/i);
   });
 });

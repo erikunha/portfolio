@@ -402,10 +402,7 @@ export const LocalizedTextSchema = z.object({
 export const LinksProfileSchema = z.object({
   name: z.string().min(1),
   avatar: z.string().min(1),
-  taglines: z.object({
-    pt: z.array(z.string().min(1)).min(1),
-    en: z.array(z.string().min(1)).min(1),
-  }),
+  title: LocalizedTextSchema,
   host: LocalizedTextSchema,
   stack: z.string().min(1),
   status: LocalizedTextSchema,
@@ -472,6 +469,8 @@ export const LinksCopySchema = z.object({
   watch: LocalizedTextSchema,
   copyLink: LocalizedTextSchema,
   copyDone: z.string().min(1),
+  copyFailed: z.string().min(1),
+  opensInNewTab: LocalizedTextSchema,
   newBadge: LocalizedTextSchema,
   langSwitchLabel: LocalizedTextSchema,
   feedUnavailable: LocalizedTextSchema,
