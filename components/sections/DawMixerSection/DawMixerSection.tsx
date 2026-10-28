@@ -1,13 +1,8 @@
-import { Suspense } from 'react';
 import { dawMixerUi } from '@/content/daw-mixer';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { IconMixer } from '../../Icons';
 import { Module } from '../../responsive/Module';
 import { DawMixerDesktop } from './DawMixerDesktop';
-
-export function DawMixerMobile() {
-  return <DawMixerDesktop />;
-}
 
 export function DawMixerContent() {
   return <DawMixerDesktop />;
@@ -23,9 +18,7 @@ export function DawMixerSection({ defer }: { defer?: boolean } = {}) {
       defer={defer}
       variant="green"
     >
-      <Suspense fallback={null}>
-        <DawMixerContent />
-      </Suspense>
+      <DawMixerContent />
     </Module>
   );
 }

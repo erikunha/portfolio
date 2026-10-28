@@ -156,11 +156,6 @@ export const dawMixer: DawMixer = DawMixerSchema.parse({
       buttons: ['FX', 'EQ'],
       activeButtons: [],
       footer: { lufs: '-14', pk: '-0.3' },
-      terminalLines: [
-        '> headroom -3.2 · lufs -14 · pk -0.3 · mastered for streaming.',
-        '> same philosophy as code: **fewer plugins, more space**.',
-        'five tracks doing one job each beats fifteen tracks competing.',
-      ],
     },
   ],
 });

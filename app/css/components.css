@@ -447,14 +447,6 @@
     text-shadow: 0 0 4px var(--color-primary-500);
   }
 
-  .mx-chain-mobile::after {
-    display: none;
-  }
-
-  .mx-chain-mobile {
-    padding-bottom: 0;
-  }
-
   .mx-chain-title::after {
     content: "";
     flex: 1;

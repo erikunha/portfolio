@@ -69,8 +69,8 @@ flowchart LR
 ```
 
 **Static vs dynamic, concretely:**
-- **Static (prerendered):** the whole `AppShell` chrome, `Hero` (deliberately _outside_ any `<Suspense>` so LCP never waits), `Readme`, `Shell`, and section fallbacks.
-- **Dynamic-via-`<Suspense>`:** `ManPage`, `GitLog`, `Visa`, `Projects`, `Guitar`, `LivePerf`, `DawMixer`, and `AiMetrics`. These wrap an inner async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`), which marks the subtree dynamic. Only the Suspense fallback is prerendered; the real variant streams in.
+- **Static (prerendered):** the whole `AppShell` chrome, `Hero` (deliberately _outside_ any `<Suspense>` so LCP never waits), `Readme`, `Shell`, `DawMixer`, and section fallbacks. `DawMixer` uses one synchronous RSC layout at every width, with no UA branch; its interactive islands hydrate on phones too.
+- **Dynamic-via-`<Suspense>`:** `ManPage`, `GitLog`, `Visa`, `Projects`, `Guitar`, `LivePerf`, and `AiMetrics`. These wrap an inner async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`), which marks the subtree dynamic. Only the Suspense fallback is prerendered; the real variant streams in.
 - **The dual-variant pattern** (e.g. `ManPageSection.tsx`):
 
   ```
@@ -79,7 +79,7 @@ flowchart LR
 
   `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: desktop variant for most; **`null` for Guitar** (a CLS fix, `DECISIONS.md` 2026-06-13); a reserved-height stub for `AiMetrics`.
 - **`defer` prop:** below-the-fold sections pass `defer` to `Module`, which applies CSS `content-visibility` (defers _render cost_, not JS).
-- **`next/dynamic` lazy JS:** `ContactFormLazy`, `InteractiveShellLazy`, `DawMixerSection`. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy` loads only the session counters and halt/reboot island from `Footer.client`; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
+- **`next/dynamic` lazy JS:** `ContactFormLazy`, `InteractiveShellLazy`. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy` loads only the session counters and halt/reboot island from `Footer.client`; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
 There is **no `use cache` / `cacheLife` / `cacheTag` / `unstable_cache` / `generateStaticParams`** anywhere - the staticness comes from PPR + the absence of dynamic APIs, not explicit caching.
 

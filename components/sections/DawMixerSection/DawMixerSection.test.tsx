@@ -32,97 +32,63 @@ vi.mock('@/components/client/DawMixer/RmsButtons/RmsButtons.client', () => ({
     createElement('div', { 'data-testid': `rms-${buttons.join('-')}` }),
 }));
 
-async function renderDesktop(): Promise<Document> {
-  const { DawMixerDesktop } = await import('./DawMixerDesktop');
-  const html = renderToStaticMarkup(createElement(DawMixerDesktop));
+async function renderMixer(): Promise<Document> {
+  const { DawMixerSection } = await import('./DawMixerSection');
+  const html = renderToStaticMarkup(createElement(DawMixerSection));
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
-async function renderMobile(): Promise<Document> {
-  const { DawMixerMobile } = await import('./DawMixerSection');
-  const html = renderToStaticMarkup(createElement(DawMixerMobile));
-  return new DOMParser().parseFromString(html, 'text/html');
-}
-
-describe('DawMixerSection — desktop', () => {
-  it('renders 6 channel rows', async () => {
-    const doc = await renderDesktop();
+describe('DawMixerSection', () => {
+  it('renders one mixer with all six channels and their interactive islands', async () => {
+    const doc = await renderMixer();
+    expect(doc.querySelectorAll('#sec-daw-mixer').length).toBe(1);
+    expect(doc.querySelectorAll('[data-testid="daw-mixer-desktop"]').length).toBe(1);
     expect(doc.querySelectorAll('[data-testid^="channel-"]').length).toBe(6);
+    expect(doc.querySelectorAll('[data-testid^="fader-"]').length).toBe(6);
+    expect(doc.querySelectorAll('[data-testid^="vu-"]').length).toBe(6);
+    expect(doc.querySelectorAll('[data-testid^="knob-"]').length).toBe(12);
+    expect(doc.querySelectorAll('[data-testid^="rms-"]').length).toBe(6);
   });
 
   it('renders CH 01 through CH 05 and MASTER', async () => {
-    const doc = await renderDesktop();
+    const doc = await renderMixer();
     for (const id of ['CH 01', 'CH 02', 'CH 03', 'CH 04', 'CH 05', 'MASTER']) {
       expect(doc.querySelector(`[data-testid="channel-${id}"]`)).not.toBeNull();
     }
   });
 
   it('renders the session header with session name', async () => {
-    const doc = await renderDesktop();
+    const doc = await renderMixer();
     const header = doc.querySelector('[data-testid="session-header"]');
     expect(header?.textContent).toContain('YELLOW_TAKE_03.ALS');
   });
 
   it('CH 02 has focused class (active channel indicator)', async () => {
-    const doc = await renderDesktop();
+    const doc = await renderMixer();
     const ch02 = doc.querySelector('[data-testid="channel-CH 02"]');
     expect(ch02?.hasAttribute('data-focused')).toBe(true);
   });
 
   it('MASTER channel row has data-channel="master"', async () => {
-    const doc = await renderDesktop();
+    const doc = await renderMixer();
     const masterRow = doc.querySelector('[data-testid="channel-MASTER"]');
     expect(masterRow?.getAttribute('data-channel')).toBe('master');
   });
 
   it('MASTER row shows LUFS data', async () => {
-    const doc = await renderDesktop();
+    const doc = await renderMixer();
     const master = doc.querySelector('[data-testid="channel-MASTER"]');
     expect(master?.textContent).toContain('-14');
   });
 
   it('each channel renders a VuMeter with correct initial level', async () => {
-    const doc = await renderDesktop();
+    const doc = await renderMixer();
     const vu = doc.querySelector('[data-testid="vu-RHYTHM GTR"]');
     expect(vu?.getAttribute('data-level')).toBe('71');
   });
 });
 
-describe('DawMixerSection — mobile', () => {
-  it('renders all 6 channel rows with the existing interactive islands', async () => {
-    const doc = await renderMobile();
-    expect(doc.querySelectorAll('[data-testid^="channel-"]').length).toBe(6);
-    expect(doc.querySelector('[data-testid="fader-RHYTHM GTR"]')).not.toBeNull();
-    expect(doc.querySelector('[data-testid="vu-RHYTHM GTR"]')).not.toBeNull();
-    expect(doc.querySelector('[data-testid="knob-GAIN"]')).not.toBeNull();
-    expect(doc.querySelector('[data-testid="rms-R-M-S"]')).not.toBeNull();
-  });
-
-  it('renders mobile session header', async () => {
-    const doc = await renderMobile();
-    expect(doc.querySelector('[data-testid="session-header"]')).not.toBeNull();
-  });
-
-  it('renders CH 01 through CH 05 and MASTER on mobile', async () => {
-    const doc = await renderMobile();
-    for (const id of ['CH 01', 'CH 02', 'CH 03', 'CH 04', 'CH 05', 'MASTER']) {
-      expect(doc.querySelector(`[data-testid="channel-${id}"]`)).not.toBeNull();
-    }
-  });
-
-  it('bold text from **markers** renders as <strong> in channel desc', async () => {
-    const doc = await renderMobile();
-    const ch02 = doc.querySelector('[data-testid="channel-CH 02"]');
-    const strong = ch02?.querySelector('strong');
-    expect(strong).not.toBeNull();
-    expect(strong?.textContent).toContain('the voice');
-  });
-});
-
-describe.each([
-  ['desktop', renderDesktop],
-  ['mobile', renderMobile],
-] as const)('DawMixerSection accessibility on %s', (_variant, renderMixer) => {
+describe('DawMixerSection accessibility', () => {
   it('labels the region containing all six channels', async () => {
     const doc = await renderMixer();
     const region = doc.querySelector('[role="region"][aria-label="Mixer channels"]');
@@ -153,7 +119,7 @@ describe.each([
 
 describe('DawMixerSection skip link', () => {
   it('renders the accessible skip link with its class and existing target', async () => {
-    const doc = await renderDesktop();
+    const doc = await renderMixer();
     const link = Array.from(doc.querySelectorAll('a')).find(
       (anchor) => anchor.textContent === 'Skip mixer',
     );
@@ -166,9 +132,9 @@ describe('DawMixerSection skip link', () => {
   });
 });
 
-describe('DawMixerSection — XSS safety (behavioral)', () => {
+describe('DawMixerSection XSS safety (behavioral)', () => {
   it('ParsedText renders bold markers as <strong>, not raw HTML', async () => {
-    const doc = await renderDesktop();
+    const doc = await renderMixer();
     const ch02 = doc.querySelector('[data-testid="channel-CH 02"]');
     const strong = ch02?.querySelector('strong');
     expect(strong).not.toBeNull();
@@ -177,7 +143,7 @@ describe('DawMixerSection — XSS safety (behavioral)', () => {
   });
 
   it('ParsedText renders plain text without extra wrappers', async () => {
-    const doc = await renderDesktop();
+    const doc = await renderMixer();
     const ch01 = doc.querySelector('[data-testid="channel-CH 01"]');
     expect(ch01?.querySelector('strong')).toBeNull();
     expect(ch01?.textContent).toContain('Gretsch');
