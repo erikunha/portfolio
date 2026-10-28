@@ -1,6 +1,6 @@
-import { createElement } from 'react';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
