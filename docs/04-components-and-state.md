@@ -6,12 +6,12 @@
 
 Four directories, four roles. The directory tells you the layer:
 
-| Directory                     | Role                  | Ships JS?             | Example                                         |
-| ----------------------------- | --------------------- | --------------------- | ----------------------------------------------- |
-| `components/sections/**`      | The page sections | No (RSC)              | `About`, `ManPageSection`                       |
-| `components/client/**`        | Interactive islands   | Yes                   | `InteractiveShell`, `ContactForm`, `DawMixer/*` |
-| `components/responsive/**`    | Viewport chrome       | Yes (except `Module`) | `MatrixRain`, `Dock`, `CRTOverlay`              |
-| `design-system/components/**` | Reusable primitives   | Mostly No (RSC)       | `Badge`, `Button`, `TerminalPanel`              |
+| Directory                     | Role                | Ships JS?             | Example                                         |
+| ----------------------------- | ------------------- | --------------------- | ----------------------------------------------- |
+| `components/sections/**`      | The page sections   | No (RSC)              | `About`, `ManPageSection`                       |
+| `components/client/**`        | Interactive islands | Yes                   | `InteractiveShell`, `ContactForm`, `DawMixer/*` |
+| `components/responsive/**`    | Viewport chrome     | Yes (except `Module`) | `MatrixRain`, `Dock`, `CRTOverlay`              |
+| `design-system/components/**` | Reusable primitives | Mostly No (RSC)       | `Badge`, `Button`, `TerminalPanel`              |
 
 Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.client.tsx`; a plain `*.tsx` in `sections/` is RSC. Each component is a `Foo/Foo.tsx` + `Foo/index.ts` barrel, with co-located `*.test.tsx` (Vitest) and `*.e2e.ts` (Playwright). `*Lazy` files are `next/dynamic` wrappers, except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (the footer itself is an RSC, so there is nothing to split).
 
