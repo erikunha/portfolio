@@ -311,43 +311,6 @@
     opacity: 0;
   }
 
-  @keyframes live-blink {
-    to {
-      opacity: 0;
-    }
-  }
-
-  .live-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--color-primary-500);
-    margin-right: 8px;
-    vertical-align: -1px;
-    animation: live-blink 1.6s steps(2, start) infinite;
-  }
-
-  @media (max-width: 768px) {
-    .live-dot {
-      width: 6px;
-      height: 6px;
-      margin-right: 6px;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .live-dot {
-      animation: none;
-      opacity: 0;
-    }
-  }
-
-  body[data-motion="reduce"] .live-dot {
-    animation: none;
-    opacity: 0;
-  }
-
   @keyframes guitar-scan-beam {
     from {
       transform: translateY(0);

@@ -905,12 +905,6 @@
     min-height: 300px;
   }
 
-  .strategy-block + .strategy-block {
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid var(--color-primary-border);
-  }
-
   .cam-corners {
     position: absolute;
     inset: 8px;
