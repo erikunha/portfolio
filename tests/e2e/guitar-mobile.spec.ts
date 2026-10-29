@@ -1,4 +1,4 @@
-import { expect, type Locator, test } from 'playwright/test';
+import { expect, type Locator, test } from '@playwright/test';
 
 const CHAIN = '#sec-guitar [data-testid^="signal-node-"]';
 const PAIR = '#sec-guitar .guitar-pair > *';
