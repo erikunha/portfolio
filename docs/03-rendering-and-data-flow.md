@@ -10,7 +10,7 @@ flowchart TD
     layout --> home["/ -> app/page.tsx (RSC, SSG+PPR)"]
     layout --> cv["/cv -> app/cv/page.tsx"]
     layout --> summary["/summary -> app/summary/page.tsx"]
-    layout --> links["/links · /links/en -> localized link pages"]
+    layout --> links["/links · /links/en -> localized RSC + cached YouTube feed"]
     layout --> errors["error.tsx -> route error recovery"]
     globalError["global-error.tsx -> replaces RootLayout on root failure"]
     layout --> ds["/design-system -> design-system/layout.tsx"]
@@ -33,13 +33,21 @@ flowchart TD
       api6["GET /api/erik.json"]
       api7["GET /api/lighthouse"]
       api8["POST /api/log · POST /api/log/forget"]
-      api9["POST /api/mcp (stateless Streamable HTTP; GET returns 405)"]
+      api9["POST /api/mcp (stateless handler; POST body limit 4096 bytes)"]
       api10["GET /api/contact-retry (daily cron)"]
     end
     layout -.serves.-> api
 ```
 
-User-facing pages include `/`, `/cv`, `/summary`, `/links` and `/links/en`, alongside design-system docs, metadata routes and APIs. Home sections use `ErrorBoundary`; `app/error.tsx` and `app/global-error.tsx` provide route and root recovery. There is no `loading.tsx` or `template.tsx`.
+The user-facing routes are `/`, `/summary`, `/cv`, `/links` and `/links/en`, alongside the design-system docs, metadata routes and API cluster. Home sections use the client `ErrorBoundary` component. App Router failures also have `app/error.tsx` and `app/global-error.tsx`; there is no `loading.tsx`/`template.tsx`.
+
+## Terminal sections and navigation
+
+`content/section-registry.ts` defines nine navigation destinations: Home (`bio`), About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, and Contact. It supplies aliases, icons, screen-reader labels and navigation order. `content/section-labels.ts` adds labels for supporting modules.
+
+The JSX order in `app/page.tsx` is Hero, About, Shell, Measured, Projects, GitLog, ManPage, SysHealth, HottestTakes (with Unknowns nested inside), Guitar, DawMixer and Contact (including work authorization). Footer follows `PageMain` as its sibling. CSS mobile ordering is a separate map in `app/css/base.css`.
+
+About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code are named keyboard scroll regions inside About. Projects contains its receipts. Career contains certification, education and community tag groups. Measured contains independent ASK, desktop PSI and mobile PSI reads. These nested groups do not become separate navigation destinations.
 
 ## Layout hierarchy (what wraps what)
 
@@ -49,16 +57,16 @@ flowchart TD
     body --> boot["inline script: set body[data-motion] BEFORE paint"]
     body --> children["{route children}"]
     body --> rum["Analytics + SpeedInsights (only when VERCEL=1)"]
-    children --> bp["BreakpointProvider (client, initialIsMobile=false on /; matchMedia after hydration)"]
+    children --> bp["BreakpointProvider (client, initialIsMobile=false; matchMedia after hydration)"]
     bp --> appshell["AppShell (client chrome)"]
     appshell --> chrome["MatrixRainLazy (client-only) · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
-    appshell --> main["main#main-content"]
-    main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + About + terminal modules (RSC)"]
-    appshell --> footer["ErrorBoundary-wrapped Footer (RSC)"]
-    footer --> footerIslands["FooterLazy: session counters + halt/reboot island"]
+    appshell --> main["PageMain (RSC): main#main-content"]
+    main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + About + Career + Modules (RSC)"]
+    appshell --> footer["ErrorBoundary-wrapped Footer (RSC), after PageMain"]
+    footer --> footerIslands["FooterLazy: direct client re-exports, session counters + halt/reboot"]
 ```
 
-The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion')` / OS preference and sets `body[data-motion]` **before first paint**, off the hydration path, so CRT effects and the LCP element never flash or wait on JS.
+The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion')` / OS preference and sets `body[data-motion]` **before first paint**, off the hydration path, so the initial motion preference does not wait for hydration.
 
 ## The rendering pipeline (RSC + PPR)
 
@@ -67,13 +75,13 @@ The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion
 ```mermaid
 flowchart LR
     req["Request"] --> px["proxy.ts: add CSP + Reporting-Endpoints"]
-    px --> shell["Static shell prerendered at edge:<br/>AppShell chrome + Hero (outside Suspense) + above-fold sections"]
+    px --> shell["Prerendered shell:<br/>AppShell chrome + Hero (outside Suspense) + above-fold sections"]
     shell --> stream["Server streams"]
     stream --> susp["Suspense boundaries resolve per-request"]
     susp --> dyn["UA-selected ManPage variant<br/>and independent ASK / PSI data reads"]
     dyn --> html2["Streamed HTML"]
-    html2 --> hydrate["Client hydrates ONLY AppShell chrome + named islands"]
-    hydrate --> lazy["next/dynamic + IO-gated islands load on demand"]
+    html2 --> hydrate["Browser hydrates chrome and client islands"]
+    hydrate --> lazy["Contact / Shell: next/dynamic, ssr:false<br/>Footer islands mount directly"]
 ```
 
 **Static vs dynamic, concretely:**
@@ -87,9 +95,10 @@ flowchart LR
   ```
 
   `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. ManPage uses its desktop variant as the fallback. `GuitarSection`, `DawMixerSection` and `VisaContent` use one responsive presentation without this UA boundary or variant swap.
-- **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` to defer render cost, not JS.
-- **`next/dynamic` lazy JS:** `ContactFormLazy`, `InteractiveShellLazy`, `MatrixRainLazy`. MatrixRain is a decorative fixed overlay behind `main`; it loads with `ssr: false`, and its late hydration cannot shift layout. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy` loads only the session counters and halt/reboot island from `Footer.client`; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
-  The home page uses PPR and static server components. The links feed in `lib/links/feed.ts` uses `use cache` with `cacheLife` to reuse channel data between requests.
+- **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` (defers render cost, not JS). Most use `Module`; Career applies the same attributes in its own wrapper.
+- **`next/dynamic` boundaries:** `ContactFormLazy` and `InteractiveShellLazy` use `ssr: false` with accessible loading placeholders. `MatrixRainLazy` loads from `AppShell` with `ssr: false` as a decorative fixed overlay behind `main`; late hydration cannot shift layout. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy.client.tsx` directly re-exports session counters and halt/reboot controls from `Footer.client`, without a dynamic import; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
+
+The terminal home combines prerendered output and dynamic Suspense children. Separately, `lib/links/feed.ts` uses `use cache` and `cacheLife` for the YouTube feed: stale after 900 seconds, revalidate after 3,600 seconds, expire after 86,400 seconds. `LinksPage` awaits that feed and falls back to `EMPTY_FEED` on failure.
 
 ## End-to-end data flow #1 - page render (read path)
 
@@ -104,7 +113,7 @@ The content layer is build-time: static copy is already in the prerendered outpu
 
 ## End-to-end data flow #2 - `/api/ask` (the streaming AI feature)
 
-This is the richest flow in the system. Transport is **plain `fetch` reading a raw `ReadableStream` of `text/plain`** - not SSE, and the AI SDK runs server-side only.
+Transport is **plain `fetch` reading a raw `ReadableStream` of `text/plain`** - not SSE, and the AI SDK runs server-side only.
 
 ```mermaid
 sequenceDiagram
@@ -133,12 +142,12 @@ sequenceDiagram
             R-->>U: enqueue chunk
         end
     end
-    U->>U: parseStreamChunk -> rAF-coalesced setStreamingText (renders THROUGH React)
+    U->>U: parseStreamChunk -> rAF-coalesced setStreamingText (React state owned by InteractiveShell)
     R->>KV: finally: settleBudget(refund) + Layer-2 audit + ask-log (fail-quiet)
     U->>U: finalize() -> commit answer (or error line) into history
 ```
 
-**Client-side rendering nuance (verified in code):** the streamed text lands in an _isolated_ `streamingText` state and is flushed at most once per animation frame (`requestAnimationFrame`), so a per-chunk update re-renders only one `<span>`, never the whole feed. This is the opposite of the Hero boot loop, which mutates `textContent` directly with no React state (see doc 04). Both are deliberate INP guards.
+**Client-side rendering nuance (verified in code):** the streamed text lands in an _isolated_ `streamingText` state and is flushed at most once per animation frame (`requestAnimationFrame`), so chunks within one frame share a state update. The state lives in `InteractiveShell`, whose component renders again when it changes; the text is displayed in a dedicated span. This is the opposite of the Hero boot loop, which mutates `textContent` directly with no React state (see doc 04). Both limit update work.
 
 **Server timeouts (defense in depth):** 30s whole-request `AbortSignal`, 15s mid-stream watchdog, 1s usage-resolve. The token budget is held **fail-closed** if usage can't be resolved (so a metering bug can't leak spend), while the rate limiters and dedup are **fail-open**. The one exception is the budget reservation: if Redis fails there, `/api/ask` returns 503 rather than answer without a spend cap.
 
@@ -189,5 +198,5 @@ flowchart LR
     n --> route{route type}
     route -->|page| ppr["PPR: static shell + streamed dynamic sections"]
     route -->|api| handler["defineHandler or bespoke streaming handler"]
-    handler --> failopen["rate limits fail open, budget reservation fails closed; X-Request-Id on every response"]
+    handler --> failopen["rate limits fail open; ask budget reservation fails closed<br/>defineHandler responses carry X-Request-Id"]
 ```

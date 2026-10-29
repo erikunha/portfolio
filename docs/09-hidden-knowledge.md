@@ -4,8 +4,8 @@
 
 ## Conventions you must follow (and the gate that catches you)
 
-- **Client boundaries are visible in paths.** `check:client-naming` accepts `*.client.tsx`, files under `client/`, and supported Next.js convention filenames.
-- **Content never lives in JSX.** All copy lives in `content/*.ts` modules and is validated by Zod. Client-consumed modules stay Zod-free; `content/_validate-client-content.ts` validates shell UI, command responses, terminal chrome, contact copy, social URLs, error copy and dmesg lines during `pnpm validate-content`. If you type user-facing text into a `.tsx`, you're doing it wrong.
+- **Client naming accepts a suffix or directory.** `check-client-naming.mjs` accepts `*.client.tsx`/`*.client.ts`, `/client/` directories and App Router error filenames. `components/client/**` is an explicit exception, not a gap in scanning.
+- **Section data belongs in `content/*.ts`.** Validated content modules supply profile data and most section copy. Components also contain presentation labels, and `content/contact-copy.ts` keeps the contact form copy free of Zod. Client-consumed modules stay Zod-free; `content/_validate-client-content.ts` validates their schemas during `pnpm validate-content`.
 - **No raw hex outside `app/css/theme.css`.** Use `var(--color-*)`. Enforced by `lint:css-tokens`. Complex CSS patterns become named classes in `components.css` `@layer components`; everything else is a Tailwind utility.
 - **Per-keystroke/per-pixel/per-frame updates must not re-render React.** Mutate `textContent`/`style`/`setAttribute` directly, or rAF-coalesce. This is the single most important runtime convention (it's a budget, not a preference).
 - **`CLAUDE.md` stays under 275 lines** (`check:harness-size`). New procedural rules go to a skill or a `.claude/rules/*` path-scoped file, not into `CLAUDE.md`.
@@ -17,36 +17,36 @@
 - **`proxy.ts` is Next.js middleware**, just named `proxy`. It sets CSP per-request; the _static_ security headers live in `next.config.ts`. Two places on purpose.
 - **The CSP is deliberately nonce-less** (`script-src 'self' 'unsafe-inline'`). Because `/` is static-generated, a nonce would break every inline RSC flight script (CSP-3 §6.7.2.4). This is documented at length and is not a vulnerability oversight.
 - **`/api/ask` streaming is plain `text/plain` over a raw `ReadableStream`** - not SSE, and the AI SDK is server-side only. The wire protocol uses a NUL-prefixed `\x00ERR:` sentinel (`lib/stream-protocol.ts`) to carry mid-stream errors inside the text channel.
-- **The AI persona can't drift from the page.** `lib/ask/system-prompt.ts` composes the system prompt from the _live_ `content/*` modules, and `PROMPT_VERSION` is a content hash of the prompt bytes. Change the content, the persona changes, and the cache key changes - automatically.
-- **The ask-eval corpus pulls ground truth from live content**, so if you change `visa.ts`/`projects.ts`/etc. and forget to update the corpus, the eval _fails_ - that's the intended drift signal, not a flake.
+- **The AI persona imports shared content.** `lib/ask/system-prompt.ts` composes the system prompt from the _live_ `content/*` modules, and `PROMPT_VERSION` is a content hash of the prompt bytes. Change the content, the persona changes, and the prompt fingerprint changes.
+- **The ask-eval corpus pulls ground truth from live content**, and includes expectations tied to those values. Run the eval after changing grounded claims; shared imports do not guarantee every narrative statement agrees.
 - **The guitar presentation signal chain is a three-node Zod `tuple`, not an array** (`GuitarPresentationSchema` in `content/schemas.ts`). It enforces INPUT → AMP → OUT. A length-three array alone would allow duplicate roles. The source rig's FX metadata is excluded from this presentation. The DAW mixer similarly refines `last === 'MASTER'`.
-- **Almost everything fails open.** A Redis outage doesn't 500 the site - rate-limits allow, dedup allows, logs go quiet. The token budget is the exception: it rejects `/api/ask` with 503. The _real_ backstop against runaway spend is an out-of-band Anthropic/Upstash billing alert, not the in-app limiter.
+- **Failure behavior depends on the operation.** Rate limits and dedup fail open; logging failures are quiet. Ask budget reservation fails closed with 503. Contact audit and outbox persistence fail closed with 502.
 - **The token budget fails _closed_:** a Redis error during reservation rejects the request, and if `/api/ask` can't resolve token usage it keeps the reservation (so a metering bug can't leak spend). Both are deliberate.
 - **`ASK_ENABLED` fails OFF; `LANGFUSE_ENABLED` fails OFF.** The kill switch must disable on a typo; the telemetry must stay inert unless the string is exactly `'true'`. Asymmetric by intent.
 - **`StatusBar` initializes its clock to `''` and uses `suppressHydrationWarning`.** A `new Date()` at render would be a dynamicIO prerender hazard; the empty initial avoids prerendering a timestamp.
-- **`next-env.d.ts` flips on a local prod build** (dev path ↔ prod path). A stray modified `next-env.d.ts` is a build artifact, not your change - `git checkout` it.
+- **`next-env.d.ts` flips on a local prod build** (dev path ↔ prod path). Inspect that diff before deciding whether it belongs in the change.
 - **The MCP `ask_erik` tool shares one global rate-limit bucket.** It re-invokes `/api/ask` in-process via a synthetic `Request` with no IP header, so `getClientIp` returns `'unknown'` and every MCP caller worldwide hits the same `rl:ask` bucket. Documented limitation in `lib/agent/mcp-tools.ts`.
 - **`/api/log/forget` never returns a deleted count**, and `/api/log` stores no IP. Both are anti-oracle / minimization choices, not omissions.
 
 ## Naming map (decode the filesystem)
 
-| Pattern                        | Meaning                                                                                          |
-| ------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `Foo/Foo.tsx` + `Foo/index.ts` | one component per folder, barrel-exported                                                        |
-| `*.client.tsx`                 | client island/chrome (ships JS)                                                                  |
-| `*Lazy.{tsx,client.tsx}`       | `next/dynamic` wrapper for code-splitting                                                        |
-| `*Desktop.tsx` / `*Mobile.tsx` | dual-variant inner RSC selected by `getIsMobile()`                                               |
-| `_components/` `_lib/`         | route-private (underscore = not public API)                                                      |
-| `sec-*` (id)                   | a section anchor; top-level sections need mobile order rules, declared nested anchors are exempt |
-| `*.e2e.ts` / `*.test.tsx`      | Playwright / Vitest, co-located                                                                  |
-| `lib/*.client.tsx`             | the rare client-side lib (breakpoint, error-bridge)                                              |
+| Pattern                        | Meaning                                                                               |
+| ------------------------------ | ------------------------------------------------------------------------------------- |
+| `Foo/Foo.tsx` + `Foo/index.ts` | one component per folder, barrel-exported                                             |
+| `*.client.tsx`                 | client island/chrome (ships JS)                                                       |
+| `*Lazy.{tsx,client.tsx}`       | inspect the module: Contact/Shell use dynamic imports; FooterLazy directly re-exports |
+| `*Desktop.tsx` / `*Mobile.tsx` | dual-variant inner RSC selected by `getIsMobile()`                                    |
+| `_components/` `_lib/`         | route-private (underscore = not public API)                                           |
+| `sec-*` (id)                   | section or nested anchor; nested anchors may be exempt from ordering                  |
+| `*.e2e.ts` / `*.test.tsx`      | Playwright / Vitest, co-located                                                       |
+| `lib/*.client.tsx`             | the rare client-side lib (breakpoint, error-bridge)                                   |
 
 ## Things that look wrong but are intentional
 
 - `/api/erik.json` does **not** use the `defineHandler` envelope. It's a machine-readable _document_, not an _operation_, so it returns raw JSON with long cache headers.
 - The fixed-opacity color stops (`-subtle`, `-border`, ...) are explicit hex, not `color-mix()`. That's a byte-identical / contrast-stable choice.
 - `design-system/lib/cx.ts` reimplements a 3-line classname joiner instead of importing `clsx`/`tailwind-merge` - a bundle-budget call. (`lib/cn.ts` uses `clsx` but deliberately _not_ `tailwind-merge`, for the same reason.)
-- The DS docs `theme-tokens.ts` and the `contrast-check.mjs` gate parse `theme.css` with the _same regex_ on purpose, so the docs and the gate can never disagree.
+- The DS docs `theme-tokens.ts` and the `contrast-check.mjs` gate parse `theme.css` with the _same regex_ on purpose, to read the same declarations. Parser changes still need comparison.
 
 ## "Where is X?" quick index
 

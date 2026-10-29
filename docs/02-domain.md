@@ -1,14 +1,14 @@
 # Business Domain
 
-> Reverse-engineered domain model. In a typical product the domain is customers/orders/etc.; here the domain is **a person's professional identity, expressed as a Unix/terminal filesystem**, plus one AI feature and its evaluation domain.
+> Professional identity, terminal navigation, contact delivery and grounded answers.
 
 ## What problem does this solve?
 
 It is a **hiring and reference artifact** for one user (Erik Cunha, a software engineer). Two jobs-to-be-done:
-1. **For human visitors (recruiters, hiring managers, engineers):** present credentials, projects, work-authorization, and opinions in a memorable, high-craft terminal aesthetic, with hard performance/accessibility guarantees that themselves signal engineering seniority.
+1. **For human visitors (recruiters, hiring managers, engineers):** present credentials, projects, work-authorization, and opinions in a terminal interface, with automated performance and accessibility checks.
 2. **For AI agents (and curious engineers):** answer questions about Erik via `/api/ask` (an LLM grounded in the site's own content) and expose a machine-readable hiring profile via `/api/erik.json` and a read-only MCP server (`/api/mcp`).
 
-The **secondary, explicit product** is the engineering itself: the architecture, the CI gates, the design system, and the AI-development platform are intended to be inspected as evidence of capability (see `DECISIONS.md` 2026-05-23, which rescinded "no design system / scope creep" precisely because the system _is_ the demonstration).
+The terminal page has nine navigation entries in `content/section-registry.ts`. `app/page.tsx` also renders supporting modules outside that registry. `/summary` and `/cv` reuse professional content through `content/reading-views.ts`; `/links` and `/links/en` share localized link content.
 
 ## Users and how they move through the system
 
@@ -16,6 +16,8 @@ The **secondary, explicit product** is the engineering itself: the architecture,
 flowchart LR
     rec["Recruiter / Hiring manager"] -->|reads| page["/ (the page)"]
     eng["Engineer peer"] -->|reads + inspects| page
+    rec -->|reads or prints| reading["/summary · /cv"]
+    visitor -->|opens| links["/links · /links/en"]
     eng -->|reads| ds["/design-system/*"]
     eng -->|reads| docs["GitHub: ARCHITECTURE/STANDARDS/DECISIONS"]
     agent["AI agent / LLM client"] -->|GET| erikjson["/api/erik.json"]
@@ -24,7 +26,7 @@ flowchart LR
     visitor -->|sends a message| contact["ContactForm -> /api/contact"]
 ```
 
-There is **no authentication, no accounts, no multi-tenancy**. The "user" is anonymous; the only per-user state is ephemeral rate-limit/budget buckets keyed by hashed IP.
+There is **no authentication, no accounts, no multi-tenancy**. The "user" is anonymous; rate-limit keys use the client IP, dedup uses its hash, and the monthly token budget is shared. Contact records and ask logs have retention periods; browser motion preference persists in localStorage.
 
 ## The core insight: content _is_ the domain model
 
@@ -66,7 +68,7 @@ Projects uses one set of descriptions and stats across viewport sizes. Each card
 
 Measured groups ASK and PSI presentation metadata without storing live values. The ASK adapter reads the eval aggregate; the PSI adapter supplies separate desktop and mobile scores. Each group keeps its own loading, unavailable and stale states.
 
-Contact copy lives in `content/contact.ts`, with its own Zod schema. Its LinkedIn URL comes from `content/social-urls.ts`, the zod-free constant `content/social.ts` also uses, so the client form stays free of Zod.
+ContactForm imports Zod-free `content/contact-copy.ts`; `content/contact.ts` validates that copy with Zod for server consumers. Both share the LinkedIn URL from `content/social-urls.ts`.
 
 ## Contact delivery
 
@@ -83,7 +85,8 @@ erDiagram
     PERSON ||--|| SOCIAL : has
     PERSON ||--o{ CAREER_VIEW : "viewed-as"
     CAREER_VIEW ||--o{ GIT_COMMIT : "git-log view"
-    CAREER_VIEW ||--o{ BLAME_ENTRY : "blame view"
+    CAREER_VIEW ||--o{ CREDENTIAL : "certification and education tags"
+    CAREER_VIEW ||--o{ COMMUNITY_EVENT : "community tags"
     PERSON ||--o{ PROJECT : authored
     PROJECT ||--o{ STAT : "has metrics"
     PERSON ||--o{ PERF_RECEIPT : claims
@@ -115,4 +118,4 @@ The AI feature has its own domain:
 
 ## The 60-second introduction
 
-"It's a one-page terminal-themed portfolio that's also a reference-architecture showcase. The page is server-rendered and almost JS-free; every section uses typed data validated at build. The backend delivers contact messages with automatic retries, answers questions through a grounded LLM, and serves machine-readable profiles for AI agents. The engineering is part of the product: read `ARCHITECTURE.md` and `DECISIONS.md`, then this `/docs` folder."
+"It's a terminal-themed portfolio with printable summary and CV pages, localized link pages and reference documentation. The page is server-rendered with client islands; every section uses typed data validated at build. The backend delivers contact messages with automatic retries, answers questions through a grounded LLM, and serves machine-readable profiles for AI agents. The engineering is part of the product: read `ARCHITECTURE.md` and `DECISIONS.md`, then this `/docs` folder."

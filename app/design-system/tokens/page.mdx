@@ -116,8 +116,8 @@ Use `text-secondary` for new secondary text instead of `primary-300`,
 
 <h2 id="type-scale">Type Scale</h2>
 
-Only `h1` uses `--font-display`, Inter at weight 900. Body text, controls and
-all other headings use `--font-mono`, JetBrains Mono. Both stacks reference
+The base `h1` rule uses `--font-display`, Inter at weight 900. Body text, controls
+and other base headings use `--font-mono`, JetBrains Mono. Consumers can override these rules. Both stacks reference
 the existing `next/font/local` variables.
 
 | Token | Utility | Size |
@@ -151,7 +151,8 @@ The base `h1` is 32px, rising to 48px at 1280px. `h2` is 20px, rising to
 | `--spacing-8` | `8` | 32px |
 | `--spacing-12` | `12` | 48px |
 | `--spacing-16` | `16` | 64px |
-| `--spacing-target` | `target` | 44px minimum control width and height |
+| `--spacing-target` | `target` | 44px general control target |
+| `--spacing-target-compact` | `target-compact` | 28px compact control target |
 
 Small and medium Buttons have a 44px minimum height. Small Buttons use 10px
 horizontal padding; medium and large Buttons use 14px. Large Buttons have a
@@ -169,8 +170,10 @@ Keyboard focus uses `:focus-visible`, with a 2px signal outline and 2px offset.
 
 <h2 id="motion">Motion</h2>
 
-Durations are applied with Tailwind `duration-*` utilities, easing with
-`ease-out`. All motion is suppressed under `prefers-reduced-motion: reduce`.
+Components use Tailwind duration and easing utilities, plus named CSS animations.
+Reduced-motion handling is defined in `app/css/animations.css`, `crt.css`,
+`components.css` and component logic. Check the affected animation rather than
+assuming one global rule disables all motion.
 
 Module headers reveal text in character steps as they enter the viewport. Their caret
 blinks four times and then stays solid. The MOTION toggle and OS reduced motion
@@ -181,7 +184,7 @@ disable this effect. Browsers without scroll-driven animation support show stati
 | `duration-[80ms]` | 80ms | micro transitions (hover, press) |
 | `duration-100` | 100ms | fast UI feedback |
 | `duration-200` | 200ms | standard transitions |
-| `ease-out` | Shared | the one shared easing curve |
+| `ease-out` | Shared | easing used by Button and Field |
 
 <h2 id="layers">Layers</h2>
 
