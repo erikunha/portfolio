@@ -1,5 +1,6 @@
 import { streamText } from 'ai';
 import type { NextRequest } from 'next/server';
+import { social } from '@/content/social';
 import { INJECTION_RE } from '@/lib/ask/injection';
 import { ASK_MODEL } from '@/lib/ask/model';
 import { createStreamGuard, validateAnswer } from '@/lib/ask/output-guard';
@@ -41,8 +42,7 @@ const MAX_OUTPUT_TOKENS = 512;
 
 const FINISH_REASON_LENGTH = 'length' as const;
 
-const TRUNCATION_NOTICE =
-  '\n\n[answer truncated: this response hit its length limit. Email erikhenriquealvescunha@gmail.com for the full answer.]';
+const TRUNCATION_NOTICE = `\n\n[answer truncated: this response hit its length limit. Email ${social.email} for the full answer.]`;
 
 const MID_STREAM_TIMEOUT_MS = 15_000;
 
@@ -50,11 +50,25 @@ const USAGE_RESOLVE_TIMEOUT_MS = 1_000;
 
 const USAGE_TIMED_OUT = Symbol('usage-timeout');
 
+async function withinDeadline<T>(p: Promise<T>): Promise<T | typeof USAGE_TIMED_OUT> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      p,
+      new Promise<typeof USAGE_TIMED_OUT>((resolve) => {
+        timer = setTimeout(() => resolve(USAGE_TIMED_OUT), USAGE_RESOLVE_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 export async function POST(req: NextRequest) {
   const askFlag = (env.ASK_ENABLED ?? '').trim().toLowerCase();
   if (OFF_KEYWORDS.has(askFlag)) {
     return Response.json(
-      { error: 'temporarily unavailable — email erikhenriquealvescunha@gmail.com directly' },
+      { error: `temporarily unavailable — email ${social.email} directly` },
       { status: 503 },
     );
   }
@@ -135,7 +149,7 @@ export async function POST(req: NextRequest) {
   if (!allowed) {
     earlyExitPersist('budget-exhausted');
     return Response.json(
-      { error: 'monthly budget exhausted — email erikhenriquealvescunha@gmail.com directly' },
+      { error: `monthly budget exhausted — email ${social.email} directly` },
       { status: 503 },
     );
   }
@@ -171,6 +185,7 @@ export async function POST(req: NextRequest) {
   let cacheCreationTokens = 0;
   let collectedAnswerText = '';
   let status: AskInteractionStatus = 'completed';
+  let truncated = false;
 
   const guard = createStreamGuard();
 
@@ -195,10 +210,11 @@ export async function POST(req: NextRequest) {
             if (watchdog !== undefined) clearTimeout(watchdog);
           }
           if (next.done) {
-            const finishReason: unknown = await Promise.resolve(result.finishReason).catch(
-              () => undefined,
+            const finishReason: unknown = await withinDeadline(
+              Promise.resolve(result.finishReason).catch(() => undefined),
             );
             if (finishReason === FINISH_REASON_LENGTH) {
+              truncated = true;
               controller.enqueue(enc.encode(TRUNCATION_NOTICE));
             }
             break;
@@ -238,21 +254,7 @@ export async function POST(req: NextRequest) {
   });
 
   async function settleAndPersist(): Promise<void> {
-    const deadline = async <T>(p: Promise<T>): Promise<T | typeof USAGE_TIMED_OUT> => {
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      try {
-        return await Promise.race([
-          p,
-          new Promise<typeof USAGE_TIMED_OUT>((resolve) => {
-            timer = setTimeout(() => resolve(USAGE_TIMED_OUT), USAGE_RESOLVE_TIMEOUT_MS);
-          }),
-        ]);
-      } finally {
-        if (timer !== undefined) clearTimeout(timer);
-      }
-    };
-
-    const usage = await deadline(usageOrTimeout);
+    const usage = await withinDeadline(usageOrTimeout);
     const usageResolved = usage !== USAGE_TIMED_OUT;
 
     if (usage !== USAGE_TIMED_OUT) {
@@ -278,6 +280,7 @@ export async function POST(req: NextRequest) {
       outputTokens,
       cacheHitRate: totalBilledInput > 0 ? cacheReadTokens / totalBilledInput : 0,
       usageResolved,
+      truncated,
       promptVersion: PROMPT_VERSION,
     });
     if (usageResolved) {

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockStreamText = vi.fn();
 
@@ -64,9 +64,9 @@ async function readBody(res: Response): Promise<string> {
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    out += dec.decode(value, { stream: !done });
+    out += dec.decode(value, { stream: true });
   }
-  return out;
+  return out + dec.decode();
 }
 
 function makeRequest(question: string): NextRequest {
@@ -77,7 +77,14 @@ function makeRequest(question: string): NextRequest {
   });
 }
 
-describe('/api/ask behavioral — finishReason length handling', () => {
+describe('/api/ask behavioral: finishReason length handling', () => {
+  const originalAskEnabled = process.env.ASK_ENABLED;
+
+  afterEach(() => {
+    if (originalAskEnabled === undefined) delete process.env.ASK_ENABLED;
+    else process.env.ASK_ENABLED = originalAskEnabled;
+  });
+
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
     vi.resetModules();
@@ -125,5 +132,45 @@ describe('/api/ask behavioral — finishReason length handling', () => {
 
     const body = await readBody(res);
     expect(body).toBe('plain answer');
+  });
+
+  it('closes the stream within the usage deadline when finishReason never settles', async () => {
+    const result = makeCompleteResult('hung finish reason');
+    Object.assign(result, { finishReason: new Promise(() => undefined) });
+    mockStreamText.mockReturnValueOnce(result);
+
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequest('Anything'));
+    const startedAt = Date.now();
+    const body = await readBody(res);
+
+    expect(body).toBe('hung finish reason');
+    expect(Date.now() - startedAt).toBeLessThan(3_000);
+  });
+
+  it('streams cleanly when finishReason rejects', async () => {
+    const result = makeCompleteResult('rejected finish reason');
+    Object.assign(result, { finishReason: Promise.reject(new Error('boom')) });
+    mockStreamText.mockReturnValueOnce(result);
+
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequest('Anything'));
+
+    expect(await readBody(res)).toBe('rejected finish reason');
+  });
+
+  it('records the finish reason in the completion log', async () => {
+    mockStreamText.mockReturnValueOnce(makeCappedResult('cut'));
+    const { log } = await import('@/lib/log');
+
+    const { POST } = await import('@/app/api/ask/route');
+    await readBody(await POST(makeRequest('List every receipt')));
+
+    await vi.waitFor(() => {
+      expect(log.info).toHaveBeenCalledWith(
+        'ask completed',
+        expect.objectContaining({ truncated: true }),
+      );
+    });
   });
 });

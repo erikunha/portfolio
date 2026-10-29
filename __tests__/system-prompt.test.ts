@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { gitLog } from '@/content/git-log';
 import { perfReceipts } from '@/content/perf-receipts';
+import { profile } from '@/content/profile';
 import { projects } from '@/content/projects';
 import { personSchema } from '@/content/seo';
 import { unknowns } from '@/content/unknowns';
@@ -57,6 +59,13 @@ describe('lib/ask/system-prompt', () => {
           `perf-receipts.ts delta "${r.delta}" missing from SYSTEM — drift detected`,
         ).toContain(r.delta);
       }
+    });
+
+    it('keeps the newest git-log entry on the profile current employer', () => {
+      expect(
+        gitLog[0]?.company,
+        'gitLog[0] and profile.currentEmployer drifted: the Current role section would name two employers',
+      ).toBe(profile.currentEmployer.name);
     });
 
     it('contains every project name', () => {
