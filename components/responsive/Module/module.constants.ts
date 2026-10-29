@@ -1,6 +1,6 @@
 export const MODULE_HEADER_ID_SUFFIX = 'header';
 
-export const DEFERRED_SECTION_COUNT = 9;
+export const DEFERRED_SECTION_COUNT = 8;
 
 export type ModuleVariant = 'green';
 

@@ -30,24 +30,27 @@ There is **no authentication, no accounts, no multi-tenancy**. The "user" is ano
 
 Every section of the page is driven by a typed module in `content/`, and those types _are_ the domain entities. The terminal metaphor maps real professional data onto filesystem/Unix concepts:
 
-| Terminal surface               | Real-world meaning                               | Content module        | Entity                                 |
-| ------------------------------ | ------------------------------------------------ | --------------------- | -------------------------------------- |
-| About panels                   | Positioning, Now rows, stack and retry code      | `about.ts`            | `AboutContent`                         |
-| `man erik(1)`                  | Capabilities + "known bugs" (honest weaknesses)  | `man-page.ts`         | `ManPage`                              |
-| `git log ~/career`             | Career timeline with nested tag groups           | `git-log.ts`          | `GitCommit[]` (`type: career｜life`)   |
-| `LS -LA ./PROJECTS`            | Nine projects with shared desktop/mobile content | `projects.ts`         | `Project[]`                            |
-| `PERF_RECEIPTS --HARD-NUMBERS` | Six impact receipts nested under Projects        | `perf-receipts.ts`    | `projectReceipts` from `PerfReceipt[]` |
-| `MEASURED.JSON`                | ASK evaluation and desktop/mobile PSI            | `measured.ts`         | `Measured` presentation metadata       |
-| About responsibilities panel   | Scope, as Unix permission bits                   | `responsibilities.ts` | `Responsibility[]` (`perms` regex)     |
-| `git tag --list 'cert/*'`      | Certifications inside Career                     | `credentials.ts`      | `Credential[]`                         |
-| `git tag --list 'edu/*'`       | Education inside Career                          | `education.ts`        | `Credential[]`                         |
-| `cat ~/.visa`                  | Work authorization by jurisdiction               | `visa.ts`             | `VisaRow[]`                            |
-| `git tag --list 'community/*'` | Community and speaking inside Career             | `community.ts`        | `CommunityEvent`                       |
-| `cat ~/HOTTEST_TAKES.md`       | Opinions/theses                                  | `hottest-takes.ts`    | `HottestTake[]`                        |
-| `cat ~/.guitar_rig`            | Hobby (guitar signal chain)                      | `guitar-rig.ts`       | `GuitarRig`                            |
-| `./mix --live`                 | Hobby (DAW mixer, interactive)                   | `daw-mixer.ts`        | `DawMixer`                             |
-| `cat ~/.unknowns`              | Intellectual honesty (what he's still learning)  | `unknowns.ts`         | `Unknowns`                             |
-| `sys_health`                   | Playful self-metrics                             | `sys-health.ts`       | `SysStat[]`                            |
+| Terminal surface               | Real-world meaning                                | Content module        | Entity                                 |
+| ------------------------------ | ------------------------------------------------- | --------------------- | -------------------------------------- |
+| About panels                   | Positioning, Now rows, stack and retry code       | `about.ts`            | `AboutContent`                         |
+| `man erik(1)`                  | Capabilities + "known bugs" (honest weaknesses)   | `man-page.ts`         | `ManPage`                              |
+| `git log ~/career`             | Career timeline with nested tag groups            | `git-log.ts`          | `GitCommit[]` (`type: career｜life`)   |
+| `LS -LA ./PROJECTS`            | Nine projects with shared desktop/mobile content  | `projects.ts`         | `Project[]`                            |
+| `PERF_RECEIPTS --HARD-NUMBERS` | Six impact receipts nested under Projects         | `perf-receipts.ts`    | `projectReceipts` from `PerfReceipt[]` |
+| `MEASURED.JSON`                | ASK evaluation and desktop/mobile PSI             | `measured.ts`         | `Measured` presentation metadata       |
+| About responsibilities panel   | Scope, as Unix permission bits                    | `responsibilities.ts` | `Responsibility[]` (`perms` regex)     |
+| `git tag --list 'cert/*'`      | Certifications inside Career                      | `credentials.ts`      | `Credential[]`                         |
+| `git tag --list 'edu/*'`       | Education inside Career                           | `education.ts`        | `Credential[]`                         |
+| `cat ~/.visa`                  | Work authorization by jurisdiction                | `visa.ts`             | `VisaRow[]`                            |
+| `git tag --list 'community/*'` | Community and speaking inside Career              | `community.ts`        | `CommunityEvent`                       |
+| `cat ~/HOTTEST_TAKES.md`       | Opinions/theses                                   | `hottest-takes.ts`    | `HottestTake[]`                        |
+| `cat ~/.guitar_rig`            | Hobby (guitar signal chain)                       | `guitar-rig.ts`       | `GuitarRig`                            |
+| `./mix --live`                 | Hobby (DAW mixer, interactive)                    | `daw-mixer.ts`        | `DawMixer`                             |
+| `cat ~/.unknowns`              | Learning and specialization lists inside Opinions | `unknowns.ts`         | `Unknowns`                             |
+| `sys_health`                   | Playful self-metrics                              | `sys-health.ts`       | `SysStat[]`                            |
+
+Opinions renders four ordered home takes and both Unknowns lists in one deferred module.
+The design-system take renders at `/design-system#opinion-07`; `placement` selects its surface.
 
 Career (`sec-git-log`) contains the `cert/*`, `edu/*`, and `community/*` tag groups.
 `sec-credentials` and `sec-community` remain nested in-page anchors, without mobile order rules.

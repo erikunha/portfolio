@@ -14,7 +14,6 @@ import { ManPageSection } from '@/components/sections/ManPageSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { ShellSection } from '@/components/sections/ShellSection';
 import { SysHealthSection } from '@/components/sections/SysHealthSection';
-import { UnknownsSection } from '@/components/sections/UnknownsSection';
 import { VisaSection } from '@/components/sections/VisaSection';
 import { BreakpointProvider } from '@/lib/use-breakpoint.client';
 
@@ -58,9 +57,6 @@ export default function Home() {
           </ErrorBoundary>
           <ErrorBoundary>
             <DawMixerSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <UnknownsSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <ContactSection defer />

@@ -230,7 +230,11 @@ export const MeasuredSchema = z.object({
   }),
 });
 
+export const TAKE_PLACEMENT = { home: 'home', docs: 'docs' } as const;
+
 export const HottestTakeSchema = z.object({
+  placement: z.enum(TAKE_PLACEMENT),
+  order: z.number().int().positive(),
   num: z.string().min(1),
   category: z.string().min(1),
   thesis: z.string().min(1),
@@ -316,8 +320,11 @@ export type GuitarPresentation = z.infer<typeof GuitarPresentationSchema>;
 export const UnknownItemSchema = z.object({
   claim: z.string().min(1),
   context: z.string().min(1),
+  showContext: z.boolean().default(true),
 });
 export const UnknownsSchema = z.object({
+  learningHeading: z.string().min(1),
+  notSpecializingHeading: z.string().min(1),
   learning: z.array(UnknownItemSchema).min(1),
   notSpecializing: z.array(UnknownItemSchema).min(1),
   footer: z.string().min(1),
