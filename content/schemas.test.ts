@@ -90,18 +90,11 @@ describe('GuitarRigSchema v2', () => {
       GuitarRigSchema.parse({
         signalChain: [
           { role: 'INPUT', name: 'TEST', subtitle: 'sub', strengthDots: 4 },
-          { role: 'FX', name: 'FX', subtitle: 'sub', blocks: [{ name: 'COMP', active: true }] },
+          { role: 'FX', name: 'FX', subtitle: 'sub' },
           { role: 'AMP', name: 'AMP', subtitle: 'sub', strengthDots: 3 },
           { role: 'OUT', name: 'OUT', subtitle: 'sub', strengthDots: 5 },
         ],
-        influences: [
-          { rank: 1, name: 'A', strength: 5, active: true },
-          { rank: 2, name: 'B', strength: 4 },
-          { rank: 3, name: 'C', strength: 3 },
-          { rank: 4, name: 'D', strength: 3 },
-          { rank: 5, name: 'E', strength: 2 },
-        ],
-        nowObsessing: 'some song',
+        influences: [{ name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }, { name: 'E' }],
         stats: [
           { label: 'STYLE', value: 'feel', sub: 'lots' },
           { label: 'TUNING', value: 'standard', sub: 'drop D' },
