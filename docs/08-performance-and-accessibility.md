@@ -67,7 +67,7 @@ Target: **WCAG 2.1 AA, Lighthouse a11y = 100, zero axe violations** (all hard ga
 | Semantics           | sections are `<section>` with an `<h2>`, named via `aria-labelledby` (`Module`); stat tiles are `<dl>`; the Hero headline is a real heading                                               |
 | Keyboard            | a skip-to-content link; `:focus-visible` rings in `base.css`; the DAW faders/knobs/VU meters are keyboard-operable (`aria-valuenow` updated on arrow keys)                                |
 | Live regions        | `RoleTyper` announces only the _completed_ role via an `sr-only` live region (not each keystroke); `ContactForm` errors use `role="alert"`                                                |
-| Forms               | `Field` synthesizes `aria-describedby` for errors; native validation (`required`, `type=email`, `minLength`) plus server re-validation                                                    |
+| Forms               | `Field` synthesizes `aria-describedby` for errors; contact uses custom client validation with a focused alert summary linking to invalid fields, plus server re-validation                |
 | Reduced-motion sync | `CRTOverlay` listens for OS `prefers-reduced-motion` changes and keeps `body[data-motion]` in sync                                                                                        |
 
 Per-component behavioral a11y tests live alongside components; the axe gate covers the design-system routes. The CRT effects are all `aria-hidden` + `pointer-events:none`, so the decorative layer is invisible to assistive tech.

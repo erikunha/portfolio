@@ -12,9 +12,10 @@ vi.mock('next/headers', () => ({
 }));
 
 import { GitLogSection } from '@/components/sections/GitLogSection';
+import { GuitarSection } from '@/components/sections/GuitarSection';
 import { ManPageSection } from '@/components/sections/ManPageSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
-import { VisaSection } from '@/components/sections/VisaSection';
+import { VisaContent } from '@/components/sections/VisaSection';
 import { careerScrollLabel } from '@/content/git-log';
 import { SECTION_LABELS } from '@/content/section-labels';
 
@@ -42,10 +43,16 @@ describe('responsive section viewport variants', () => {
     expect(careerScrollLabel).not.toBe(SECTION_LABELS['sec-git-log']);
   });
 
-  it('VisaSection emits exactly the desktop variant (no mobile markup)', () => {
-    const html = renderToStaticMarkup(createElement(VisaSection));
-    expect(html).toContain('data-testid="visa-desktop"');
+  it('VisaSection static render emits one table and no variant markup', () => {
+    const html = renderToStaticMarkup(createElement(VisaContent));
+    expect(html).toContain('visa-table');
+    expect(html).not.toContain('data-testid="visa-desktop"');
     expect(html).not.toContain('data-testid="visa-mobile"');
+  });
+
+  it('GuitarSection static render does not emit mobile markup', () => {
+    const html = renderToStaticMarkup(createElement(GuitarSection));
+    expect(html).not.toContain('data-testid="guitar-mobile"');
   });
 
   it('ManPageSection emits exactly the desktop variant (no mobile markup)', () => {
