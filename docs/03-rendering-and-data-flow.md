@@ -45,7 +45,7 @@ flowchart TD
     bp --> appshell["AppShell (client chrome)"]
     appshell --> chrome["MatrixRain · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
     appshell --> main["main#main-content"]
-    main --> secs["20x ErrorBoundary > Module(RSC) > Section(RSC)"]
+    main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + Modules (RSC)"]
     main --> footer["Footer (RSC)"]
     footer --> footerIslands["FooterLazy: session counters + halt/reboot island"]
 ```
@@ -62,23 +62,24 @@ flowchart LR
     px --> shell["Static shell prerendered at edge:<br/>AppShell chrome + Hero (outside Suspense) + above-fold sections"]
     shell --> stream["Server streams"]
     stream --> susp["Suspense boundaries resolve per-request"]
-    susp --> dyn["Dynamic section variants:<br/>inner async RSC calls getIsMobile() -> headers()"]
+    susp --> dyn["UA-selected section variants<br/>and independent ASK / PSI data reads"]
     dyn --> html2["Streamed HTML"]
     html2 --> hydrate["Client hydrates ONLY AppShell chrome + named islands"]
     hydrate --> lazy["next/dynamic + IO-gated islands load on demand"]
 ```
 
 **Static vs dynamic, concretely:**
-- **Static (prerendered):** the whole `AppShell` chrome, `Hero` (deliberately _outside_ any `<Suspense>` so LCP never waits), `Readme`, `Shell`, the responsive `Guitar` presentation, and section fallbacks.
-- **Dynamic-via-`<Suspense>`:** `ManPage`, `GitLog`, `Visa`, `Projects`, `LivePerf`, `DawMixer`, and `AiMetrics`. These wrap an inner async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`), which marks the subtree dynamic. Only the Suspense fallback is prerendered; the real variant streams in.
+- **Static (prerendered):** the whole `AppShell` chrome, `Hero` (outside Suspense so LCP never waits), `Readme`, `Shell`, the responsive `Guitar` presentation, Projects with its attached receipts, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid.
+- **UA-selected variants:** `ManPage`, `Visa` and `DawMixer` wrap an async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`). Their fallbacks are prerendered; the selected variants stream per request.
+- **Measured data:** `AiMetricsSection` renders the `sec-live-metrics` module. It composes `AiMetricsData` and `LivePerfSection`, with independent Suspense boundaries for ASK, desktop PSI and mobile PSI. Each fallback retains its metric layout and shows a loading state. Receipts remain inside Projects rather than a separate module.
 - **The dual-variant pattern** (e.g. `ManPageSection.tsx`):
 
   ```
   <Module><Suspense fallback={<Desktop/>}><AsyncInner/></Suspense></Module>
   ```
 
-  `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: desktop variant for most; `null` for `DawMixer`; a reserved-height stub for `AiMetrics`. `GuitarSection` uses one responsive presentation without this UA boundary or variant swap.
-- **`defer` prop:** below-the-fold sections pass `defer` to `Module`, which applies CSS `content-visibility` (defers _render cost_, not JS).
+  `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: the desktop variant for ManPage and Visa; `null` for DawMixer. `GuitarSection` uses one responsive presentation without this UA boundary or variant swap.
+- **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` to defer render cost.
 - **`next/dynamic` lazy JS:** `ContactFormLazy`, `InteractiveShellLazy`, `DawMixerSection`. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy` loads only the session counters and halt/reboot island from `Footer.client`; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
 There is **no `use cache` / `cacheLife` / `cacheTag` / `unstable_cache` / `generateStaticParams`** anywhere - the staticness comes from PPR + the absence of dynamic APIs, not explicit caching.
@@ -87,12 +88,12 @@ There is **no `use cache` / `cacheLife` / `cacheTag` / `unstable_cache` / `gener
 
 ```
 build time:  content/*.ts imported -> Zod parse (gate) -> typed data baked into RSC output
-             scripts/ask-eval.ts -> Redis ask:eval:latest -> lib/ask-metrics.ts reads at build
+eval run:    scripts/ask-eval.ts -> Redis ask:eval:latest
 request:     proxy.ts headers -> static shell streamed -> getIsMobile() resolves per request
-             -> dynamic section variants stream -> client hydrates islands
+             -> section variants and independent ASK / PSI reads stream -> client hydrates islands
 ```
 
-The content layer is **build-time**: by the time a request arrives, section data is already in the prerendered output. The only per-request server work is the `getIsMobile()` branch and any Redis read a section does (e.g. `AiMetrics`, `LivePerf`).
+The content layer is build-time: static copy is already in the prerendered output. Measured reads live data through `lib/ask-metrics.ts` and `lib/lighthouse-scores.ts`. PSI uses its Redis cache and may fetch PageSpeed Insights when the cache is missing. Projects does not read the user agent or wait on live data.
 
 ## End-to-end data flow #2 - `/api/ask` (the streaming AI feature)
 
