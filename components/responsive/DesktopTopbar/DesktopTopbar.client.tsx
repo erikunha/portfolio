@@ -1,6 +1,7 @@
 'use client';
 
 import { useLayoutEffect, useState } from 'react';
+import { CV_LINK_LABEL, READING_PATHS } from '@/content/reading-paths';
 import { WindowChrome } from '@/design-system';
 import { cn } from '@/lib/cn';
 import { applyMotion, readMotion } from '@/lib/motion';
@@ -101,10 +102,9 @@ export function DesktopTopbar() {
               'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:no-underline',
               'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
             )}
-            href="/erik-cunha-cv.pdf"
-            download
+            href={READING_PATHS.cv}
           >
-            DOWNLOAD_CV
+            {CV_LINK_LABEL}
           </a>
           <a
             className={cn(

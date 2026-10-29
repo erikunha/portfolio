@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { social } from '@/content/social';
 
 describe('sitemap()', () => {
   beforeEach(() => {
@@ -19,7 +20,7 @@ describe('sitemap()', () => {
   it('includes the home URL entry', async () => {
     const { default: sitemap } = await import('@/app/sitemap');
     const entries = sitemap();
-    const home = entries.find((e) => e.url === 'https://www.erikunha.dev');
+    const home = entries.find((e) => e.url === social.site);
     expect(home).toBeDefined();
     expect(home?.priority).toBe(1);
   });
@@ -31,11 +32,18 @@ describe('sitemap()', () => {
     expect(dsUrls.length).toBeGreaterThanOrEqual(5);
   });
 
+  it('lists the CV and summary reading views', async () => {
+    const { default: sitemap } = await import('@/app/sitemap');
+    const urls = sitemap().map((e) => e.url);
+    expect(urls).toContain(`${social.site}/cv`);
+    expect(urls).toContain(`${social.site}/summary`);
+  });
+
   it('uses CONTENT_UPDATED_AT env var for home page lastModified when set', async () => {
     vi.stubEnv('CONTENT_UPDATED_AT', '2026-03-15');
     const { default: sitemap } = await import('@/app/sitemap');
     const entries = sitemap();
-    const home = entries.find((e) => e.url === 'https://www.erikunha.dev');
+    const home = entries.find((e) => e.url === social.site);
     expect(home?.lastModified).toEqual(new Date('2026-03-15'));
   });
 
@@ -43,7 +51,7 @@ describe('sitemap()', () => {
     vi.stubEnv('CONTENT_UPDATED_AT', '');
     const { default: sitemap } = await import('@/app/sitemap');
     const entries = sitemap();
-    const home = entries.find((e) => e.url === 'https://www.erikunha.dev');
+    const home = entries.find((e) => e.url === social.site);
     expect(home?.lastModified).toEqual(new Date('2026-05-22'));
   });
 });
