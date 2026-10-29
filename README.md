@@ -62,6 +62,16 @@ The static page renders without environment variables. Runtime endpoints (`/api/
 
 ---
 
+## Testing the links feed
+
+For deterministic `/links` feed data, set
+`E2E_LINKS_FEED_FIXTURE=tests/e2e/fixtures/links-feed.json` during both
+`pnpm build` and `pnpm start`. CI uses this fixture for the latest video and
+five history rows, including cache revalidation. Thumbnails still pass through
+the real Next.js image optimizer and require access to `i.ytimg.com`.
+The fixture flag is ignored on Vercel deployments. Without it, the server loads
+the live YouTube feed.
+
 ## Reference docs
 
 | Doc                                    | What it covers                                                           |

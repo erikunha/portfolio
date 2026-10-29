@@ -8,7 +8,48 @@
     "publishedAt": "2026-08-28T19:00:00+00:00",
     "description": "Deterministic e2e fixture."
   },
-  "history": [],
+  "history": [
+    {
+      "id": "dQw4w9WgXcQ",
+      "title": "Fixture video",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "thumbnailUrl": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+      "publishedAt": "2026-08-28T19:00:00+00:00",
+      "description": "Deterministic e2e fixture."
+    },
+    {
+      "id": "jNQXAC9IVRw",
+      "title": "Fixture archive video 2",
+      "url": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+      "thumbnailUrl": "https://i.ytimg.com/vi/jNQXAC9IVRw/hqdefault.jpg",
+      "publishedAt": "2026-08-27T19:00:00+00:00",
+      "description": "Deterministic e2e fixture."
+    },
+    {
+      "id": "9bZkp7q19f0",
+      "title": "Fixture archive video 3",
+      "url": "https://www.youtube.com/watch?v=9bZkp7q19f0",
+      "thumbnailUrl": "https://i.ytimg.com/vi/9bZkp7q19f0/hqdefault.jpg",
+      "publishedAt": "2026-08-26T19:00:00+00:00",
+      "description": "Deterministic e2e fixture."
+    },
+    {
+      "id": "kJQP7kiw5Fk",
+      "title": "Fixture archive video 4",
+      "url": "https://www.youtube.com/watch?v=kJQP7kiw5Fk",
+      "thumbnailUrl": "https://i.ytimg.com/vi/kJQP7kiw5Fk/hqdefault.jpg",
+      "publishedAt": "2026-08-25T19:00:00+00:00",
+      "description": "Deterministic e2e fixture."
+    },
+    {
+      "id": "JGwWNGJdvx8",
+      "title": "Fixture archive video 5",
+      "url": "https://www.youtube.com/watch?v=JGwWNGJdvx8",
+      "thumbnailUrl": "https://i.ytimg.com/vi/JGwWNGJdvx8/hqdefault.jpg",
+      "publishedAt": "2026-08-24T19:00:00+00:00",
+      "description": "Deterministic e2e fixture."
+    }
+  ],
   "stats": { "subscriberCount": 1000, "videoCount": 10 },
   "channelUrl": "https://www.youtube.com/@eriknagringa"
 }
