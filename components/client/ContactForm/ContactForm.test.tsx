@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { NextRequest } from 'next/server';
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -632,7 +632,7 @@ describe('contact validation and retention', () => {
     const form = container.querySelector('form') as HTMLFormElement;
     fireEvent.submit(form);
     const alert = await screen.findByRole('alert');
-    expect(document.activeElement).toBe(alert);
+    await waitFor(() => expect(document.activeElement).toBe(alert));
     expect(alert.textContent).toContain('storage unavailable, try again');
     expect(alert.textContent).not.toContain('[object Object]');
     expect(within(alert).getByRole('link').getAttribute('href')).toBe(
