@@ -3,6 +3,7 @@ import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import { errorsContent } from '@/content/errors';
 import { profile, profileMetaDescription, profilePageTitle } from '@/content/profile';
 import { personSchema } from '@/content/seo';
 import { workAuthorizationSummary } from '@/content/visa';
@@ -105,6 +106,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script type="application/ld+json">{personJsonLd}</script>
       </head>
       <body suppressHydrationWarning>
+        <noscript>
+          <div className="nojs-bar">{errorsContent.noscript.text}</div>
+        </noscript>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: initScript is a hardcoded build-time constant, no user input */}
         <script dangerouslySetInnerHTML={{ __html: initScript }} />
         {children}

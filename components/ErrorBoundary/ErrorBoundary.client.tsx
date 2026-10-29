@@ -13,6 +13,22 @@ interface State {
   hasError: boolean;
 }
 
+export function reportClientError(
+  prefix: string,
+  error: Error,
+  fallbackStack?: string | null,
+): void {
+  if (typeof window === 'undefined') return;
+  void fetch('/api/log', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(
+      buildLogPayload(`${prefix} ${error.message}`, error.stack ?? fallbackStack ?? undefined),
+    ),
+    keepalive: true,
+  }).catch(() => undefined);
+}
+
 export class ErrorBoundary extends Component<Props, State> {
   override state: State = { hasError: false };
 
@@ -22,19 +38,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   override componentDidCatch(error: Error, info: { componentStack?: string | null }) {
     console.error('[ErrorBoundary] client island crashed:', error, info.componentStack);
-    if (typeof window !== 'undefined') {
-      void fetch('/api/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(
-          buildLogPayload(
-            `[ErrorBoundary] ${error.message}`,
-            error.stack ?? info.componentStack ?? undefined,
-          ),
-        ),
-        keepalive: true,
-      }).catch(() => undefined);
-    }
+    reportClientError('[ErrorBoundary]', error, info.componentStack);
   }
 
   override render() {
