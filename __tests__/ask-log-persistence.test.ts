@@ -161,7 +161,9 @@ describe('/api/ask privacy notice on the shell', () => {
   });
 
   it('renders a privacy notice mentioning 90-day retention and a deletion route', async () => {
-    const { InteractiveShell } = await import('@/components/client/InteractiveShell');
+    const { InteractiveShell } = await import(
+      '@/components/client/InteractiveShell/InteractiveShell'
+    );
 
     const { container, unmount } = await mountClient(createElement(InteractiveShell));
 
