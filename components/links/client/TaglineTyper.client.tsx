@@ -10,6 +10,7 @@ const INTER_MS = 280;
 
 export function TaglineTyper({ phrases }: { phrases: readonly string[] }) {
   const spanRef = useRef<HTMLSpanElement>(null);
+  const liveRef = useRef<HTMLSpanElement>(null);
   const first = phrases[0] ?? '';
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export function TaglineTyper({ phrases }: { phrases: readonly string[] }) {
         node.textContent = phrase.slice(0, charIdx);
         if (charIdx >= phrase.length) {
           phase = 'hold';
+          if (liveRef.current) liveRef.current.textContent = phrase;
           timerId = setTimeout(tick, HOLD_MS);
         } else {
           timerId = setTimeout(tick, TYPE_MS);
@@ -87,7 +89,9 @@ export function TaglineTyper({ phrases }: { phrases: readonly string[] }) {
       <span ref={spanRef} aria-hidden="true">
         {first}
       </span>
-      <span className="sr-only">{first}</span>
+      <span className="sr-only" ref={liveRef} role="status" aria-live="polite">
+        {first}
+      </span>
     </>
   );
 }

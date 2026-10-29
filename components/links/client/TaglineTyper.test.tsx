@@ -63,6 +63,16 @@ describe('TaglineTyper', () => {
     expect(announced?.textContent).toBe('Senior Full-Stack Engineer');
   });
 
+  it('announces each completed phrase through a polite live region', () => {
+    mockMotion(false);
+    const { container } = render(<TaglineTyper phrases={PHRASES} />);
+    const live = container.querySelector('[role="status"]');
+    expect(live?.getAttribute('aria-live')).toBe('polite');
+
+    vi.advanceTimersByTime(7_000);
+    expect(live?.textContent).toBe('AI Engineering na prática');
+  });
+
   it('stops its timers on unmount', () => {
     mockMotion(false);
     const { unmount, container } = render(<TaglineTyper phrases={PHRASES} />);
