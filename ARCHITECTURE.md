@@ -183,7 +183,7 @@ app/error.tsx                        # route error page (500), digest + retry
 app/global-error.tsx                 # root error page, renders its own html/body
 app/sitemap.ts                       # SEO sitemap (robots.txt is static, in public/)
 app/css/                             # global styles, Tailwind v4 via PostCSS
-app/design-system/                   # /design-system docs surface (MDX + token gallery)
+app/design-system/                   # MDX docs, token gallery, on-this-page navigation and content-backed DS opinion
 app/api/ask/route.ts                 # Fluid Compute: LLM streaming via AI Gateway
 app/api/contact/route.ts             # Node: durable contact submission, 200 accepted or 202 queued
 app/api/contact-retry/route.ts       # cron: retry undelivered contact messages daily

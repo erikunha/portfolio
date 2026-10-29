@@ -1,0 +1,37 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+import { WindowChrome } from '../../../../design-system/components/WindowChrome/WindowChrome';
+
+export const metadata = dsPageMetadata({
+  slug: 'primitives/window-chrome',
+  title: 'WindowChrome · Design System · erikunha.dev',
+  description: 'WindowChrome props and sizes',
+});
+
+# WINDOW-CHROME
+
+<OnThisPage items={[{id:'props',label:'Props'},{id:'sizes',label:'Sizes'},{id:'accessibility',label:'Accessibility'}]} />
+
+Source: `design-system/components/WindowChrome/WindowChrome.tsx`. React Server Component, zero client JavaScript.
+
+<h2 id="props">Props</h2>
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `size` | `number` | `10` | no |
+| `className` | `string` | none | no |
+| `style` | `CSSProperties` | none | no |
+
+<h2 id="sizes">Sizes</h2>
+
+<Preview id="window-chrome">
+  <WindowChrome />
+  <WindowChrome size={12} />
+  <WindowChrome size={9} />
+</Preview>
+
+Pass `size` in pixels for context: 9 on the mobile title bar, 10 in the shell, 12 on the desktop top bar.
+
+<h2 id="accessibility">Accessibility</h2>
+
+The red, yellow and green dots are `aria-hidden` and decorative. The component has no focus behavior.

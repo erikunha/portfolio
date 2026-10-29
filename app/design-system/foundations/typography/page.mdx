@@ -1,0 +1,51 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'foundations/typography',
+  title: 'Typography · Design System · erikunha.dev',
+  description: 'Font stacks, type scale and heading rules from the terminal theme',
+});
+
+# TYPOGRAPHY
+
+<OnThisPage items={[{id:'families',label:'Families'},{id:'scale',label:'Scale'},{id:'specimens',label:'Specimens'},{id:'headings',label:'Headings'}]} />
+
+Type tokens live in `app/css/theme.css`. Sizes use rem units, so they follow the reader's default font size.
+
+<h2 id="families">Families</h2>
+
+| Token | Family | Use |
+|---|---|---|
+| `--font-mono` | JetBrains Mono, self-hosted | Everything except `h1` |
+| `--font-display` | Inter, weight 900 | `h1` only |
+
+<h2 id="scale">Scale</h2>
+
+| Token | Utility | Size |
+|---|---|---|
+| `--text-xs` | `text-xs` | 12px below 768px; at least 13px from 768px |
+| `--text-sm` | `text-sm` | 14px |
+| `--text-base` | `text-base` | 16px |
+| `--text-lg` | `text-lg` | 18px |
+| `--text-xl` | `text-xl` | 20px |
+| `--text-2xl` | `text-2xl` | 24px |
+| `--text-3xl` | `text-3xl` | 32px |
+| `--text-5xl` | `text-5xl` | 48px |
+| `--text-7xl` | `text-7xl` | 64px |
+
+`--text-min` rises from 12px to 13px at 768px, and `--text-xs` uses it as a floor. Fixed pixel utilities do not inherit the floor, so use these tokens for small text.
+
+<h2 id="specimens">Specimens</h2>
+
+<Preview id="type-specimens">
+  <p className="ds-specimen text-xs">text-xs: the quick brown fox</p>
+  <p className="ds-specimen text-sm">text-sm: the quick brown fox</p>
+  <p className="ds-specimen text-base">text-base: the quick brown fox</p>
+  <p className="ds-specimen text-xl">text-xl: the quick brown fox</p>
+  <p className="ds-specimen text-3xl">text-3xl: the quick brown fox</p>
+</Preview>
+
+<h2 id="headings">Headings</h2>
+
+The base `h1` is 32px, rising to 48px at 1280px. `h2` is 20px, rising to 24px at 768px. `h3` is 16px. Larger steps are for display text and chosen by the consumer.

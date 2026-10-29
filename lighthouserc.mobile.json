@@ -7,7 +7,19 @@
         "http://localhost:3000/design-system/tokens",
         "http://localhost:3000/design-system/components",
         "http://localhost:3000/design-system/enforcement",
-        "http://localhost:3000/design-system/changelog"
+        "http://localhost:3000/design-system/changelog",
+        "http://localhost:3000/design-system/foundations/colors",
+        "http://localhost:3000/design-system/foundations/typography",
+        "http://localhost:3000/design-system/foundations/spacing-borders",
+        "http://localhost:3000/design-system/primitives/badge",
+        "http://localhost:3000/design-system/primitives/button",
+        "http://localhost:3000/design-system/primitives/cmd-line",
+        "http://localhost:3000/design-system/primitives/copybutton",
+        "http://localhost:3000/design-system/primitives/field",
+        "http://localhost:3000/design-system/primitives/kbd-key",
+        "http://localhost:3000/design-system/primitives/stat-tile",
+        "http://localhost:3000/design-system/primitives/terminal-panel",
+        "http://localhost:3000/design-system/primitives/window-chrome"
       ],
       "numberOfRuns": 2,
       "settings": {

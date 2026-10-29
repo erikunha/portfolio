@@ -1,0 +1,45 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'primitives/copybutton',
+  title: 'CopyButton · Design System · erikunha.dev',
+  description: 'CopyButton props, feedback states and accessibility notes',
+});
+
+# COPYBUTTON
+
+<OnThisPage items={[{id:'props',label:'Props'},{id:'example',label:'Example'},{id:'feedback',label:'Feedback states'},{id:'accessibility',label:'Accessibility'}]} />
+
+Source: `app/design-system/_components/CopyButton/CopyButton.client.tsx`. Client component: it needs `'use client'` for clipboard access and feedback state.
+
+<h2 id="props">Props</h2>
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `text` | `string` | none | yes |
+| `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | no |
+| `onClick` | `MouseEventHandler` | none | no |
+
+All other button attributes pass through. A consumer `onClick` runs first and can call `preventDefault()` to skip the copy.
+
+<h2 id="example">Example</h2>
+
+<Preview id="copybutton">
+  <CopyButton text="pnpm install @/design-system" />
+</Preview>
+
+<h2 id="feedback">Feedback states</h2>
+
+| State | Label | Announcement |
+|---|---|---|
+| idle | `COPY` | none |
+| success | `COPIED` | Copied to clipboard. |
+| failure | `COPY FAILED` | Copy failed. Select and copy the text manually. |
+| unavailable | `COPY UNAVAILABLE` | Clipboard unavailable. Select and copy the text manually. |
+
+Success returns to idle after 1.5 seconds. Repeat clicks while a copy is pending are ignored.
+
+<h2 id="accessibility">Accessibility</h2>
+
+The control keeps a 44px minimum width and height in every state. A visually hidden `role="status"` region announces each outcome politely.

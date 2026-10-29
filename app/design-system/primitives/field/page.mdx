@@ -1,0 +1,40 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+import { Field } from '../../../../design-system/components/Field';
+
+export const metadata = dsPageMetadata({
+  slug: 'primitives/field',
+  title: 'Field · Design System · erikunha.dev',
+  description: 'Field props, states and accessibility notes',
+});
+
+# FIELD
+
+<OnThisPage items={[{id:'props',label:'Props'},{id:'states',label:'States'},{id:'accessibility',label:'Accessibility'}]} />
+
+Source: `design-system/components/Field/Field.tsx`. Client component (`'use client'`) so consumers can drive controlled input state.
+
+<h2 id="props">Props</h2>
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `name` | `string` | none | yes |
+| `label` | `string` | none | yes |
+| `error` | `string` | none | no |
+| `multiline` | `boolean` | `false` | no |
+| `rows` | `number` | `4` | no, with `multiline` |
+| `id` | `string` | `field-<name>` | no |
+
+Other input or textarea attributes pass through.
+
+<h2 id="states">States</h2>
+
+<Preview id="field">
+  <Field name="email" label="$ email:" type="email" />
+  <Field name="msg" label="$ message:" multiline rows={3} />
+  <Field name="broken" label="$ broken:" error="Required field" />
+</Preview>
+
+<h2 id="accessibility">Accessibility</h2>
+
+The label is always rendered and bound to the control by `htmlFor`. With `error`, the control gets `aria-invalid="true"` and `aria-describedby` points at the error text, merged with any consumer value. Controls have a 44px minimum height.
