@@ -15,7 +15,7 @@ Four directories, four roles. The directory tells you the layer:
 
 Conventions (enforced by `check-client-naming.mjs`): client files use `*.client.tsx`, a `client/` directory, or a supported Next.js convention filename; a plain `*.tsx` in `sections/` is RSC. Each component is a `Foo/Foo.tsx` + `Foo/index.ts` barrel, with co-located `*.test.tsx` (Vitest) and `*.e2e.ts` (Playwright). `*Lazy` files are `next/dynamic` wrappers (`ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy`; `AppShell.client` consumes `MatrixRainLazy`), except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (the footer itself is an RSC, so there is nothing to split).
 
-The Hero identity line is static server-rendered text. The About "Open to [role] roles" status line mounts the `RoleTyper` client island (`components/client/RoleTyper`), which cycles Senior, Staff and Principal over the server-rendered text. `About` contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
+The Hero identity line is static server-rendered text. Desktop and mobile share `HeroIdentity`, with metrics and accessible labels passed into `HeroStats`. Boot and system-failure islands import their copy from `content/hero-client.ts`, keeping server content validation out of those client imports. The About "Open to [role] roles" status line mounts the `RoleTyper` client island (`components/client/RoleTyper`), which cycles Senior, Staff and Principal over the server-rendered text. `About` contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
 
 Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` export only the lazy wrapper. Tests import the real component directly, keeping it out of the initial client references.
 
@@ -33,6 +33,8 @@ flowchart TD
     sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · Field"]
     sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper · TaglineTyper (/links)"]
     eb --> hero["Hero (RSC with boot and system-failure islands, owns its section)"]
+    hero --> identity["HeroIdentity: shared desktop/mobile identity, actions and HeroStats props"]
+    hero --> clientcopy["Boot + system-failure islands: typed hero-client copy"]
     eb --> about["About (RSC with RoleTyper island, owns its section)"]
     about --> scroll["Responsibilities + retry code: named keyboard scroll regions"]
     shell --> fl["ErrorBoundary-wrapped Footer (RSC): cards, sitemap, shutdown log"]

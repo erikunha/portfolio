@@ -51,6 +51,6 @@ describe('HeroStats', () => {
 
   it('container carries aria-label for AT context', () => {
     const container = getDOM().querySelector('[data-testid="hero-stats"]');
-    expect(container?.getAttribute('aria-label')).toBe('Impact at scale');
+    expect(container?.getAttribute('aria-label')).toBe(heroContent.statsLabel);
   });
 });

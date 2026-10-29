@@ -78,3 +78,20 @@ describe('Hero identity and static actions', () => {
     }
   });
 });
+
+describe('Hero copy discipline', () => {
+  it('renders CTA labels and meta prefixes from content/hero', async () => {
+    const { heroContent } = await import('@/content/hero');
+    const html = renderToStaticMarkup(createElement(Hero));
+    expect(html).toContain(heroContent.hire.label);
+    for (const action of heroContent.actions) expect(html).toContain(action.label);
+    expect(html).toContain(heroContent.locationLabel);
+    expect(html).toContain(heroContent.employerLabel);
+  });
+
+  it('validates the isolated client hero copy', async () => {
+    const { HeroClientContentSchema } = await import('@/content/schemas');
+    const { heroClientContent } = await import('@/content/hero-client');
+    expect(HeroClientContentSchema.safeParse(heroClientContent).success).toBe(true);
+  });
+});

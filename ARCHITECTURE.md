@@ -210,7 +210,8 @@ components/Icons/                      # inline SVG icon set
 components/responsive/                 # viewport-variant helpers
 
 content/about.ts                      # About panels, Now rows and Senior status
-content/hero.ts                       # Hero metrics, labels and actions
+content/hero.ts                       # validated Hero metrics, labels and actions
+content/hero-client.ts                # typed boot and system-failure copy, no runtime schema import
 content/nav.ts                        # zod-free topbar in-page link
 content/readme.ts                     # README/bio content for /cv and /summary
 content/projects.ts                   # shared project cards
