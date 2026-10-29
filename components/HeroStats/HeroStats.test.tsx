@@ -33,8 +33,9 @@ describe('HeroStats', () => {
     expect(first?.textContent).toBe(expectedValue);
   });
 
-  it('container carries aria-label for AT context', () => {
+  it('container carries aria-label for AT context', async () => {
+    const { heroContent } = await import('@/content/hero');
     const container = getDOM().querySelector('[data-testid="hero-stats"]');
-    expect(container?.getAttribute('aria-label')).toBe('Impact at scale');
+    expect(container?.getAttribute('aria-label')).toBe(heroContent.statsAriaLabel);
   });
 });

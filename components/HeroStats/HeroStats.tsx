@@ -1,3 +1,4 @@
+import { heroContent } from '@/content/hero';
 import { heroStats } from '@/content/perf-receipts';
 import { StatTile } from '@/design-system';
 
@@ -5,7 +6,7 @@ export function HeroStats() {
   return (
     <section
       className="hero-stats grid grid-cols-2 md:grid-cols-4 border border-primary-subtle mt-3"
-      aria-label="Impact at scale"
+      aria-label={heroContent.statsAriaLabel}
       data-testid="hero-stats"
     >
       {heroStats.map((stat, index) => (
