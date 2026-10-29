@@ -180,15 +180,31 @@ test.describe('/links link-in-bio', () => {
         .evaluate((img) => (img as HTMLImageElement).naturalWidth);
 
     async function assertThumbnailsRendered() {
-      const { total, loaded } = await thumbnails();
-      expect(
-        total,
-        'without history entries the loaded-count assertion below is vacuous; an empty feed means the test proved nothing',
-      ).toBeGreaterThan(0);
-      expect(
-        loaded,
-        'every VideoHistory thumbnail must decode. A partial regression (one shard form 400ing in /_next/image while another still loads) fails here instead of hiding behind the one image that worked.',
-      ).toBe(total);
+      await expect
+        .poll(async () => (await thumbnails()).total, {
+          message:
+            'without history rows every decode assertion below is vacuous; zero here means the feed failed to render, not that the thumbnails loaded',
+        })
+        .toBeGreaterThan(0);
+
+      // VideoHistory images are lazy (no priority): rows below the fold never load on
+      // networkidle alone, so each one is scrolled into view to trigger its request.
+      const rows = page.locator('ol img');
+      const total = await rows.count();
+      for (let i = 0; i < total; i++) {
+        await rows.nth(i).scrollIntoViewIfNeeded();
+      }
+      await expect
+        .poll(thumbnails, {
+          message:
+            'every VideoHistory thumbnail must decode after scrolling. A partial regression (one shard host 400ing in /_next/image while another still loads) fails here instead of hiding behind the one image that worked.',
+        })
+        .toEqual({ total, loaded: total });
+
+      await expect(
+        page.locator('a[data-outbound="ultimo-video"]'),
+        'the hero anchor only renders when the feed has a latest video; without this count check a missing feed surfaces as an opaque locator timeout inside the decode poll below',
+      ).toHaveCount(1);
       await expect
         .poll(heroThumbnailWidth, {
           message:
@@ -206,5 +222,42 @@ test.describe('/links link-in-bio', () => {
       consoleErrors,
       'every entry here is a Lighthouse errors-in-console failure: an image the optimizer rejected, a hydration error, a CSP block. None of these belong on a static page.',
     ).toEqual([]);
+  });
+
+  test('keeps every visible text element at or above the 12px mobile floor on both locales', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    for (const path of ['/links', '/links/en']) {
+      await page.goto(path);
+      const offenders = await page.evaluate(() => {
+        const floor = 12;
+        const failures: string[] = [];
+        for (const el of document.body.querySelectorAll<HTMLElement>('*')) {
+          const ownText = Array.from(el.childNodes)
+            .filter((node): node is Text => node.nodeType === Node.TEXT_NODE)
+            .map((node) => node.textContent)
+            .join('')
+            .trim();
+          if (ownText === '') continue;
+          const style = getComputedStyle(el);
+          if (style.display === 'none' || style.visibility === 'hidden') continue;
+          const box = el.getBoundingClientRect();
+          if (box.width === 0 || box.height === 0) continue;
+          const size = Number.parseFloat(style.fontSize);
+          if (size < floor) {
+            failures.push(
+              `<${el.tagName.toLowerCase()} class="${el.getAttribute('class')}"> ${size}px "${ownText.slice(0, 40)}"`,
+            );
+          }
+        }
+        return failures;
+      });
+      expect(
+        offenders,
+        `${path}: sub-12px text on mobile is the Lighthouse font-size audit failing and the --text-min token floor broken. Each offender lists its class, computed size and copy so the culprit utility is identifiable without a debugger.`,
+      ).toEqual([]);
+    }
   });
 });
