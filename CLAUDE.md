@@ -4,7 +4,7 @@
 
 ## Project
 
-**erikunha.dev** — personal portfolio and reference web system. Matrix/brutalist terminal aesthetic. Single-page composition with ~18 sections.
+**erikunha.dev** — personal portfolio and reference web system. Matrix/brutalist terminal aesthetic. Homepage composition of terminal-module sections plus a footer; `/summary`, `/cv`, `/links`, `/links/en`, and `/design-system/*` are separate routes.
 
 ## Commands
 
@@ -21,9 +21,11 @@
 | `pnpm typecheck` | TypeScript strict check |
 | `pnpm lhci` | Lighthouse CI locally |
 | `pnpm validate-content` | Zod content schema validation |
-| `pnpm ci:local` | Full local CI chain (lint + type + content + client-naming + harness-size + tests) |
-| `pnpm bundle-check` | Bundle size gate |
-| `pnpm gates:runtime` | Server-dependent gates: build + server + LHCI desktop + LHCI mobile + axe-core + E2E functional |
+| `pnpm ci:local` | Local verify chain: lint, types, content, client-naming, dep-pinning, harness-size, section-order, doc-drift, detect-changes paths, CSS tokens, tests |
+| `pnpm bundle-check` | Global client-chunk sum gate |
+| `pnpm route-js-check` | Per-route first-load JS gate (164.7KB gzipped) |
+| `pnpm check:doc-drift` | Verify marked ARCHITECTURE.md paths exist |
+| `pnpm gates:runtime` | Build + server + advisory LHCI desktop/mobile + blocking axe-core and Chromium cross-cutting/observability E2E |
 | `pnpm gates:runtime --skip-build` | Same as above but reuses existing `.next/` (must exist) |
 
 **AI agent workflow** — the AI runs these consciously as part of its process; not automated:
@@ -103,15 +105,15 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 | CLS | < 0.05 | < 0.05 |
 | TBT | < 200ms | < 400ms |
 | JS gzipped per route, total first-load | < 164.7KB | < 164.7KB |
-| JS gzipped, app-owned (total minus the measured framework floor) | < 32.8KB | < 32.8KB |
+| JS gzipped, app-owned (reported headroom above the 131.9KB floor) | 32.8KB | 32.8KB |
 | Lighthouse Performance | ≥ 95 | ≥ 90 |
 | Lighthouse Accessibility | = 100 | = 100 |
 | Lighthouse Best Practices | ≥ 95 | ≥ 95 |
 | Lighthouse SEO | = 100 | = 100 |
 
-CI enforces all of the above. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
+CI enforces route totals and Lighthouse budgets; app-owned JS is reported, and INP is checked in browser tests rather than Lighthouse. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
 
-`pnpm route-js-check` (`scripts/check-route-js.mjs`) asserts the 164.7KB per-route total and REPORTS the app-owned split; `pnpm bundle-check` is a separate global chunk-sum, structurally blind to a per-route regression. The total is the **framework floor plus headroom, not an aspiration**: a bare hello-world app on Next 16.4.3 + React 19.3.1 measures 131.9KB gzipped before any app code exists. **The app-owned row is the one your decisions move, and it is 164.7 - 131.9 = 32.8KB.** There is exactly ONE gate, because app-owned is total minus a constant. A framework bump moves the floor: re-measure it and move floor and total together. See `DECISIONS.md` 2026-10-23.
+`pnpm route-js-check` (`scripts/check-route-js.mjs`) asserts the 164.7KB per-route total and REPORTS the app-owned split; `pnpm bundle-check` is a separate global chunk-sum, structurally blind to a per-route regression. The total is the **framework floor plus headroom, not an aspiration**: the checker uses a configured 131.9KB framework floor. **The app-owned row is the one your decisions move, and it is 164.7 - 131.9 = 32.8KB.** There is exactly ONE gate, because app-owned is total minus a constant. A framework bump moves the floor: re-measure it and move floor and total together. See `DECISIONS.md` 2026-10-23.
 
 ## Engineering standards
 
@@ -119,7 +121,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 
 | Chapter | Mechanical gate / enforcement |
 |---|---|
-| 1 — RSC/Architecture | `check-client-naming.mjs` — `*.client.tsx` naming + no `async function` export; streaming-through-React held by behavioral test |
+| 1 — RSC/Architecture | `check-client-naming.mjs` accepts `*.client.ts(x)`, `/client/`, and Next error files; streaming-through-React held by behavioral test |
 | 2 — API boundary | `defineHandler` enforces envelope + rate-limit→parse→validate→handle; held by behavioral tests + e2e |
 | 3 — Performance | Lighthouse CI (perf ≥95, a11y =100, BP ≥95, SEO =100); `check-bundle-size.mjs` gates gzipped chunks |
 | 4 — Testing | `no-source-grep.test.ts` bans `readFileSync` without allow tag; behavioral assertions only |

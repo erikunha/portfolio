@@ -1,12 +1,12 @@
 # Engineering Knowledge Base
 
-> Canonical engineering documentation for this repository. Reverse-engineered from the code, not summarized from the existing prose. If a statement here disagrees with the code, the code wins and this doc is a bug.
+> Engineering documentation for the routes, rendering model, integrations and development checks in this repository.
 
 ## What this is
 
 A single-page personal portfolio and **reference web system** for Erik Cunha, built as a deliberate engineering reference system. The product is not just the site you see; the **architecture, enforcement, and documentation are themselves the deliverable**. Every decision is meant to hold up as something another team could adopt verbatim.
 - **Stack:** Next.js 16 (App Router, `cacheComponents`/PPR) · React 19 · TypeScript strict · Tailwind v4 (`@theme`) · pnpm · Vercel (Fluid Compute).
-- **Shape:** one page (`/`) composed of ~20 terminal-themed sections, plus a `/design-system/*` MDX docs surface and ~10 `/api/*` handlers (including an AI "ask Erik" endpoint and a read-only MCP server).
+- **Shape:** a homepage (`/`) composed of 17 terminal-themed sections plus a footer, reading views (`/summary`, `/cv`), localized links (`/links`, `/links/en`), five design-system MDX pages and 11 `/api/*` handlers (including an AI "ask Erik" endpoint and a read-only MCP server).
 - **Aesthetic:** Matrix/brutalist terminal - pure black, lime signal-green, JetBrains Mono, CRT overlays.
 
 ## How to use these docs
@@ -31,18 +31,18 @@ Read in order for onboarding; jump by topic once productive.
 ### Canonical docs that already exist (not duplicated here)
 
 These live at the repo root and remain authoritative. This knowledge base **routes to them**, it does not copy them:
-- **`ARCHITECTURE.md`** - the original system-design deep dive (the "why" narrative, trade-offs, "what I'd revisit").
+- **`ARCHITECTURE.md`** - the system-design deep dive (the "why" narrative, trade-offs, "what I'd revisit").
 - **`STANDARDS.md`** - the engineering bar: 12 domain chapters, each naming its enforcement mechanism.
-- **`DECISIONS.md`** - the running ADR log (~70 dated decisions with reversibility notes).
+- **`DECISIONS.md`** - the running ADR log (append-only decisions with reversibility notes).
 - **`CLAUDE.md`** + **`.claude/rules/*.md`** - the AI-agent instruction surface (see doc 06).
 
 ## Executive summary
 
-- **Default-RSC, static-first.** `app/page.tsx` composes ~20 server components; almost no JS ships. Interactivity is a small set of explicitly-named **client islands** (`*.client.tsx`). Several sections are dynamically rendered per-request via PPR + `<Suspense>` only because they branch on mobile/desktop server-side.
-- **Content is typed data, validated at build.** Every section is driven by a `content/*.ts` module whose Zod schema parses at import time; `pnpm validate-content` fails the build on any violation. Copy never lives in JSX.
+- **Default-RSC, static-first.** `app/page.tsx` composes 17 section components and a footer. Client boundaries wrap server-rendered children and provide interactive islands. ManPage, Visa and DAW mixer select device variants through PPR and `<Suspense>`; Measured streams ASK and PSI data separately. Client naming accepts `*.client.ts(x)`, `/client/` paths and Next error files.
+- **Content is typed data, validated at build.** Typed `content/*.ts` modules supply section data. Zod schemas parse content at import time, and `pnpm validate-content` checks the content set in the local verify chain and CI.
 - **The API layer is a disciplined BFF.** A `defineHandler` envelope enforces a fixed `rate-limit → parse → validate → handle` order; `/api/ask` is a bespoke streaming handler with a multi-layer security/budget pipeline. State lives in Upstash Redis. Rate limiting and dedup **fail open** so a Redis outage never 500s a user; the `/api/ask` budget reservation is the exception and **fails closed** with 503.
 - **State is deliberately minimal.** Exactly one React Context (breakpoint), no global store, no URL state. Motion preference lives in the DOM (`body[data-motion]`), and islands coordinate via window `CustomEvent`s, not shared React state.
-- **The development platform is itself engineered.** Mechanical gates enforce the standards: git hooks at commit and push time, and a CI chain covering lint, types, content schemas, bundle size, performance, accessibility and security. The bespoke agent-runtime layer (hooks that `exit 2`, a transcript-verified review battery, a findings ledger) was removed on 2026-07-27; doc 06 records what that traded away.
+- **The development platform is itself engineered.** Mechanical gates enforce the standards: git hooks at commit and push time, and a CI chain covering lint, types, content schemas, bundle size, performance, accessibility and security. Doc 06 distinguishes configured agent tooling, documented workflow and enforced checks.
 
 ## Repository map (top level)
 
@@ -51,16 +51,16 @@ portfolio/
 ├── app/                  Next.js App Router: routes, layouts, API handlers, design-system MDX
 │   ├── page.tsx          the single-page composition root (RSC)
 │   ├── layout.tsx        root layout: fonts, JSON-LD, motion bootstrap, Vercel RUM
-│   ├── api/              ~10 route handlers (ask, contact, healthz, psi-refresh, mcp, ...)
+│   ├── api/              11 route handlers (ask, contact, healthz, psi-refresh, mcp, ...)
 │   ├── css/              Tailwind v4 entry + @theme tokens + base/crt/animations/components layers
 │   └── design-system/    MDX docs site for the design system
-├── components/           sections/ (20 RSC sections) · client/ (islands) · responsive/ (chrome) · AppShell · ErrorBoundary
+├── components/           sections/ (RSC sections and nested content) · client/ (islands) · responsive/ (chrome) · AppShell · ErrorBoundary
 ├── design-system/        8 reusable primitives (Badge, Button, ...) + cx util
 ├── content/              typed content modules + central Zod schema registry + eval corpus
 ├── lib/                  BFF/server core: env, defineHandler, rate-limit, ask/*, telemetry, integrations
 ├── proxy.ts              Next middleware: per-request CSP + Reporting-Endpoints
 ├── next.config.ts        cacheComponents, typedRoutes, static security headers, MDX pipeline
-├── scripts/             ~40 gate/tooling scripts (validate-content, check-*, review-*, ask-eval, ...)
+├── scripts/             gate/tooling scripts (validate-content, check-*, ask-eval, ...)
 ├── tests/               Playwright e2e, a11y (axe), visual regression
 ├── .claude/             AI-agent platform: hooks, skills, rules, agents, settings
 ├── .github/workflows/   CI (ci.yml), CodeQL, mutation, smoke, claude (AI reviewer pilot)
