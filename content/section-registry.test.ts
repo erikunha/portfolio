@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import { About } from '@/components/sections/About';
 import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { ContactSection } from '@/components/sections/ContactSection';
 import { GitLogSection } from '@/components/sections/GitLogSection';
@@ -8,7 +9,6 @@ import { GuitarSection } from '@/components/sections/GuitarSection';
 import { Hero } from '@/components/sections/Hero';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
-import { ReadmeSection } from '@/components/sections/ReadmeSection';
 import { ShellSection } from '@/components/sections/ShellSection';
 import { SectionRegistrySchema } from './schemas';
 import { SECTION_LABELS } from './section-labels';
@@ -81,7 +81,7 @@ describe('section registry', () => {
   it('targets actual section elements rendered by the home page sections', () => {
     const sections = [
       Hero,
-      ReadmeSection,
+      About,
       ProjectsSection,
       GitLogSection,
       ShellSection,

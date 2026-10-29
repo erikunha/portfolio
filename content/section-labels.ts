@@ -9,7 +9,6 @@ const registrySectionLabels = Object.fromEntries(
 
 export const SECTION_LABELS = {
   ...registrySectionLabels,
-  'sec-about': 'About',
   'sec-man-page': 'Profile manual',
   'sec-sys-health': 'System health',
   'sec-visa': 'Work authorization',

@@ -51,7 +51,7 @@ Every section of the page is driven by a typed module in `content/`, and those t
 
 Career (`sec-git-log`) contains the `cert/*`, `edu/*`, and `community/*` tag groups.
 `sec-credentials` and `sec-community` remain nested in-page anchors, without mobile order rules.
-About (`sec-about`) contains the Whoami, Now, Responsibilities, Stack and retry-code panels; `sec-readme` is its header anchor.
+About (`sec-readme`) contains the Whoami, Now, Responsibilities, Stack and retry-code panels.
 
 Supporting content (not sections): `social.ts` (links), `seo.ts` (JSON-LD `Person`), `dmesg.ts` + `shell-commands.ts` + `terminal-chrome.ts` (client-imported flavor data), and the AI-eval domain below.
 

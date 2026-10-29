@@ -214,7 +214,7 @@
   }
 
   @media (max-width: 768px) {
-    #sec-about {
+    #sec-readme {
       order: 1;
     }
     #sec-shell {

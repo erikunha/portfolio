@@ -37,8 +37,8 @@ const lineNumbers = Array.from(
 
 export function About() {
   return (
-    <section id="sec-about" tabIndex={-1} aria-labelledby="about-header" className="about-section">
-      <header className="about-section-header" id="sec-readme" tabIndex={-1}>
+    <section id="sec-readme" tabIndex={-1} aria-labelledby="about-header" className="about-section">
+      <header className="about-section-header">
         <h2 id="about-header">
           <span>{c.title}</span>
           <IconReadme />

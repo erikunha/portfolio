@@ -76,7 +76,7 @@ describe('About r106 composition', () => {
     expect(code.textContent).toContain('Math.random()');
   });
 
-  it('marks the readme header as a dock jump target so HOME can move focus to it', () => {
+  it('marks the About section as a dock jump target so HOME can move focus to it', () => {
     render(<About />);
     expect(document.getElementById('sec-readme')?.getAttribute('tabindex')).toBe('-1');
   });

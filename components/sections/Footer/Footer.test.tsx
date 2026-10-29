@@ -2,13 +2,13 @@ import { fireEvent, render, waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { About } from '@/components/sections/About';
 import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { ContactSection } from '@/components/sections/ContactSection';
 import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
-import { ReadmeSection } from '@/components/sections/ReadmeSection';
 import { ShellSection } from '@/components/sections/ShellSection';
 import { Footer } from './index';
 
@@ -63,7 +63,7 @@ describe('Footer server output', () => {
     host.innerHTML = renderToStaticMarkup(
       <>
         <main id="main-content">
-          <ReadmeSection />
+          <About />
           <ShellSection />
           <AiMetricsSection />
           <ProjectsSection />

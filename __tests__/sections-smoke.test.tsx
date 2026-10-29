@@ -30,7 +30,6 @@ describe('About', () => {
     mounted = await mountClient(createElement(About));
     const container = mounted.container;
 
-    expect(container.querySelector('#sec-about')).not.toBeNull();
     expect(container.querySelector('#sec-readme')).not.toBeNull();
     expect(
       [...container.querySelectorAll('.ab-panel > header h3')].map((title) => title.textContent),

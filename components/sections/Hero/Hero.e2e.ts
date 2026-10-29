@@ -39,7 +39,7 @@ for (const viewport of viewports) {
 
     test('keeps five bordered About panels and readable retry code', async ({ page }, testInfo) => {
       await page.goto('/');
-      const about = page.locator('#sec-about');
+      const about = page.locator('#sec-readme');
       await expect(about.locator('.ab-panel')).toHaveCount(5);
       for (const panel of await about.locator('.ab-panel').all()) {
         await expect(panel.locator(':scope > header h3')).toHaveCount(1);
