@@ -1,13 +1,13 @@
 # Knowledge Architecture
 
-> How engineering knowledge is organized, where each kind of knowledge lives, and the documentation standards. The repo treats knowledge as a layered, deliberately-curated system, not an afterthought.
+> How engineering knowledge is organized, where each kind of knowledge lives, and the documentation standards. Use the table below to locate each kind of reference.
 
 ## The knowledge hierarchy
 
 ```mermaid
 flowchart TD
     subgraph intent["Intent / why"]
-        adr["DECISIONS.md (~240 ADRs, reversibility-tracked)"]
+        adr["DECISIONS.md (decisions and reversibility)"]
         std["STANDARDS.md (12 chapters, each names its enforcement)"]
         arch["ARCHITECTURE.md (the design narrative)"]
     end
@@ -23,7 +23,7 @@ flowchart TD
         cl["CLAUDE.md + .claude/rules/* + skills"]
     end
     subgraph memory["Memory / continuity"]
-        mem["~/.claude/.../MEMORY.md + feedback_*.md (cross-session)"]
+        mem["User-global memory (runtime-dependent)"]
         rem[".remember/ (in-flight handoff)"]
     end
     intent --> plan --> maps
@@ -44,7 +44,7 @@ flowchart TD
 | The codebase map             | `/docs/01-11`                                 | reverse-engineered, diagram-first             |
 | How engineering happens      | `/docs/handbook/`                             | this set                                      |
 | Agent behavior               | `CLAUDE.md`, `.claude/rules/*`, skills        | instructions + dispatch tables                |
-| Learned preferences          | `MEMORY.md` + `feedback_*.md`                 | one fact per file, recalled by relevance      |
+| Learned preferences          | `MEMORY.md` + `feedback_*.md`                 | runtime-specific notes                        |
 | Session continuity           | `.remember/`                                  | timestamped handoff blocks                    |
 
 ## The ADR convention (load-bearing)
@@ -64,57 +64,38 @@ Rules that make the log trustworthy:
 
 ## The spec -> plan pipeline
 
-The repo uses a spec-driven (Superpowers/spec-kit-style) workflow:
+The project workflow separates requirements, planning and implementation:
 
 ```mermaid
 flowchart LR
     brainstorm["brainstorm"] --> spec["spec (approved intent + gaps)"]
-    spec --> gate{"architect-reviewer PASS?"}
+    spec --> gate{"architect-reviewer PASS?<br/>workflow convention"}
+    gate -->|revise| spec
     gate -->|yes| plan["plan (decomposed tasks)"]
     plan --> impl["implement (feature branch, TDD)"]
     impl --> pr["squash PR (#NNN)"]
     pr --> adr["ADR records the decision"]
 ```
 
-A spec is the approved "what and why" with explicit gaps to close. A plan is its 1:1 paired "how", decomposed into tasks and (for large work) sharded into sub-PR plans and workstreams. The architect gate sits between them, mechanically.
+A spec is the approved "what and why" with explicit gaps to close. A plan decomposes it into tasks and, for large work, focused sub-PRs. Architect review sits between them as a workflow convention. No project hook enforces it.
 
-### The `clarify` convention (spec template)
+### Planning artifacts
 
-Every spec carries a `## Clarifications resolved` section: the design questions the
-brainstorming interview opened and the resolution each one closed with. This names a
-shape several specs already use implicitly. It makes the spec self-contained (a reader
-sees what was decided and why, without replaying the interview) and gives the
-architect gate an explicit list to check the plan against. The section is a short
-list, one line per question, in the form `<open question> -> <resolution>`:
+Keep requirements, unresolved questions and implementation tasks together under the feature's local `specs/NNN-feature/` directory. Consult the active spec-kit templates for the artifact names and required sections. Local artifacts are not evidence that a tracked check ran.
 
-```markdown
-## Clarifications resolved
+## Memory and continuity
 
-- Should the `tasks` artifact be a separate file? -> No; plans already carry
-  stable-ID checkbox tasks, so a separate artifact would duplicate them.
-- Where does the convention live? -> The handbook, not a skill or rule (it is a
-  passive reference convention, not an action trigger).
-```
-
-There is no separate `tasks` artifact: the plans in the plans directory already ARE
-discrete, stable-ID checkbox task lists that map one-to-one to commits, so the "how"
-decomposition the convention would otherwise add already exists in every plan.
-
-## The memory system
-
-Two complementary mechanisms carry knowledge across the fresh-context boundary of each session:
-- **Auto memory** (`~/.claude/projects/<slug>/memory/`): `MEMORY.md` is an index (first 200 lines loaded each session) pointing at one-fact-per-file notes typed `user` / `feedback` / `project` / `reference` (and `dead-end`, established this year). Feedback memories carry a "Why" and a "How to apply".
-- **`.remember/`**: in-flight session handoff. `now.md` (current state), `recent.md` (rolling log + reusable "Identity Candidates" patterns), `archive.md`, per-day `today-*.md`, and auto-save logs. It is maintained by a user-global (`~/.claude`) mechanism outside this repo's tracked harness — no in-repo skill, hook, or `settings.json` entry writes it (there is no `SessionEnd` hook here since 2026-07-27), so the repository neither instruments nor gates it.
+`CLAUDE.md` references `.remember/` for session handoff. The project has no hook or script that establishes a complete auto-memory lifecycle. User-global memory location, loading limits and save behavior depend on the active runtime configuration.
 
 ## Documentation standards
 
-Inferred from how the docs are actually written and maintained:
+The documentation workflow uses these checks and conventions:
 1. **Reverse-engineer from code; route, do not duplicate.** New docs cite the code and link to canonical docs rather than copying them. Where a doc and the code disagree, the code wins and the doc is a bug.
 2. **Diagram-first.** Mermaid for any flow, hierarchy, or sequence (committable directly).
 3. **`CLAUDE.md` is capped** at 275 lines (`check:harness-size`). Procedures move to skills or path-scoped rules; the slot-routing rule (gate > skill > rule > memory > prose) decides where any new instruction goes.
-4. **`ARCHITECTURE.md` tree must match disk** (`check:doc-drift` fails the build otherwise) - docs cannot silently rot.
+4. **`ARCHITECTURE.md` tree must match disk** (`check:doc-drift` checks that tree). It does not validate all documentation claims.
 5. **Design-system changelog is generated**, not hand-written (`pnpm changelog:sync` from git history).
-6. **ADRs are mandatory for architectural change** (the PR template checklist enforces it).
+6. **ADRs are mandatory for architectural change** (the PR template asks the author to confirm it; this is not an automated ADR check).
 
 ## Undocumented tribal knowledge (now documented)
 
