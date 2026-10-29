@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
+import { TaglineTyper } from './client/TaglineTyper.client';
 
 const AVATAR_MOBILE_PX = 56;
 const AVATAR_DESKTOP_PX = 96;
@@ -46,8 +47,8 @@ export function IdentityCard({ locale }: { locale: LinksLocale }) {
             <p className="signal-glow text-primary-500 font-bold text-xl tracking-[0.02em] m-0 lg:text-3xl">
               {profile.name}
             </p>
-            <p className="m-0 text-tertiary-400 text-xs lg:text-sm">
-              {profile.title[locale]}
+            <p className="m-0 text-tertiary-400 text-xs min-h-[19px] lg:text-sm">
+              <TaglineTyper phrases={profile.taglines[locale]} />
               <span className="boot-cursor" aria-hidden="true" />
             </p>
           </div>

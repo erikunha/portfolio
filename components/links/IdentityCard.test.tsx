@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { LINKS_LOCALE } from '@/content/links.constants';
 import { IdentityCard } from './IdentityCard';
@@ -40,15 +41,28 @@ describe('IdentityCard', () => {
     expect(pt).not.toBe(en);
   });
 
-  it('states the title as plain text on first render, with no typing to wait for', () => {
-    const pt = render(<IdentityCard locale={LINKS_LOCALE.pt} />).container;
-    const en = render(<IdentityCard locale={LINKS_LOCALE.en} />).container;
-    expect(en.textContent).toContain('Senior Software Engineer, Frontend & Product');
-    expect(pt.textContent).toContain('Engenheiro de Software Sênior, Frontend e Produto');
+  it('puts the full first tagline in the server HTML, so typing is only an enhancement', () => {
+    const html = renderToString(<IdentityCard locale={LINKS_LOCALE.en} />);
+    expect(html).toContain('Senior Software Engineer, Frontend &amp; Product');
+    const pt = renderToString(<IdentityCard locale={LINKS_LOCALE.pt} />);
+    expect(pt).toContain('Senior Software Engineer, Frontend &amp; Product');
   });
 
-  it('keeps one fixed title instead of rotating through taglines', () => {
+  it('shows the first tagline at once when reduced motion is preferred', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockReturnValue({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }),
+    );
     const { container } = render(<IdentityCard locale={LINKS_LOCALE.en} />);
-    expect(container.textContent).not.toMatch(/AI engineering, hands-on|Going global as a dev/);
+    vi.advanceTimersByTime(5_000);
+    const typed = container.querySelector('p [aria-hidden="true"]:not(.boot-cursor)');
+    expect(typed?.textContent).toBe('Senior Software Engineer, Frontend & Product');
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 });

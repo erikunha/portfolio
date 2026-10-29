@@ -8,9 +8,17 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
   profile: {
     name: 'Erik Cunha',
     avatar: '/images/erik-avatar.jpg',
-    title: {
-      pt: 'Engenheiro de Software Sênior, Frontend e Produto',
-      en: 'Senior Software Engineer, Frontend & Product',
+    taglines: {
+      pt: [
+        'Senior Software Engineer, Frontend & Product',
+        'AI Engineering na prática',
+        'Carreira internacional para devs',
+      ],
+      en: [
+        'Senior Software Engineer, Frontend & Product',
+        'AI engineering, hands-on',
+        'Going global as a dev',
+      ],
     },
     host: { pt: 'Brasil · remoto (Raylu, Nova York)', en: 'Brazil · remote (Raylu, New York)' },
     stack: 'React · Next · Node · Claude/Codex',
