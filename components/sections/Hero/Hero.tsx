@@ -47,7 +47,7 @@ function HeroIdentity({ primary }: { primary: boolean }) {
       <div className="hero-availability">
         <Badge variant="dot">{heroAuthorization}</Badge>
       </div>
-      <HeroStats stats={c.stats} />
+      <HeroStats stats={c.stats} label={c.statsLabel} />
       <div className="hero-actions" data-testid="hero-ctas">
         <Button
           as="a"

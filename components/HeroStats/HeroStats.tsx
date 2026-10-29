@@ -1,9 +1,13 @@
-import { heroContent } from '@/content/hero';
-import { StatTile } from '@/design-system';
+import { StatTile, type StatTileProps } from '@/design-system';
 
-export function HeroStats({ stats }: { stats: (typeof heroContent)['stats'] }) {
+type HeroStatsProps = {
+  stats: readonly Pick<StatTileProps, 'value' | 'label'>[];
+  label: string;
+};
+
+export function HeroStats({ stats, label }: HeroStatsProps) {
   return (
-    <section className="hero-stats" aria-label={heroContent.statsLabel} data-testid="hero-stats">
+    <section className="hero-stats" aria-label={label} data-testid="hero-stats">
       {stats.map((stat) => (
         <div key={stat.label} data-testid="hero-stats-item">
           <StatTile value={stat.value} label={stat.label} />
