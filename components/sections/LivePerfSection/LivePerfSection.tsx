@@ -30,6 +30,7 @@ function PerfBody({
   return (
     <div className="measured-perf" aria-busy={loading || undefined}>
       <h4 className="measured-subheading">
+        <span className="live-dot" aria-hidden="true" />
         {measured.psi.strategies.find((entry) => entry.key === strategy)?.label}
       </h4>
       <p className="measured-status">

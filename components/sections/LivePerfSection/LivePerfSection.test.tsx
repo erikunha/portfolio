@@ -126,3 +126,18 @@ describe('LivePerfSection — strategy routing', () => {
     expect(html).toContain('88');
   });
 });
+
+describe('LivePerfSection — live indicator', () => {
+  it.each(['desktop', 'mobile'] as const)(
+    'renders an aria-hidden live dot before the %s label',
+    async (strategy) => {
+      getScoresMock.mockResolvedValue(null);
+      const doc = new DOMParser().parseFromString(await renderPerfData(strategy), 'text/html');
+      const heading = doc.querySelector('.measured-subheading');
+      const dot = heading?.firstElementChild;
+      expect(dot?.classList.contains('live-dot')).toBe(true);
+      expect(dot?.getAttribute('aria-hidden')).toBe('true');
+      expect(heading?.textContent).toBe(strategy.toUpperCase());
+    },
+  );
+});

@@ -311,6 +311,42 @@
     opacity: 0;
   }
 
+  @keyframes live-blink {
+    to {
+      opacity: 0;
+    }
+  }
+
+  .live-dot {
+    --live-dot-size: 8px;
+    display: inline-block;
+    width: var(--live-dot-size);
+    height: var(--live-dot-size);
+    margin-right: var(--spacing-2);
+    border-radius: 0;
+    background: var(--color-primary-500);
+    vertical-align: -1px;
+    animation: live-blink 1.6s steps(2, start) infinite;
+  }
+
+  @media (max-width: 768px) {
+    .live-dot {
+      --live-dot-size: 6px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body:not([data-motion="full"]) .live-dot {
+      animation: none;
+      opacity: 0;
+    }
+  }
+
+  body[data-motion="reduce"] .live-dot {
+    animation: none;
+    opacity: 0;
+  }
+
   @keyframes guitar-scan-beam {
     from {
       transform: translateY(0);
