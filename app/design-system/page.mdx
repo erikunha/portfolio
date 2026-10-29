@@ -1,4 +1,5 @@
 import { dsPageMetadata } from './_lib/page-metadata';
+import { DesignSystemOpinion } from './_components/DesignSystemOpinion';
 
 export const metadata = dsPageMetadata({
   slug: '',
@@ -37,3 +38,5 @@ The design system at `/design-system` documents theme tokens, reusable component
 **Server components by default.** Seven components have no client directive. `Field` is a client component imported from `@/design-system/components/Field`; it is not exported by the main barrel. The docs add a client `CopyButton` helper for clipboard access. Server-compatible components can still enter a client bundle when imported across a client boundary.
 
 **Measured in CI.** Contrast and component-heading checks run in `quality-fast`. The path-filtered `performance` job runs axe-core and Lighthouse with an accessibility target of 100. The target is a configured assertion, not a live score on this page.
+
+<DesignSystemOpinion />

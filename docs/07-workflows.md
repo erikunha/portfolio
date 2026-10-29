@@ -145,3 +145,5 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 | Push blocked               | inspect the main-target guard, branch name or `pnpm verify` failure in `.husky/pre-push` |
 | CLS / visual regression    | regenerate Argos baselines via the `visual-baseline-regen` skill                         |
 | Client error in prod       | it was POSTed to `/api/log` (`err:{date}:{id}`, 30-day TTL) by `error-bridge.client.ts`  |
+
+See `UI_PATHS`/`APP_PATHS` in `scripts/detect-changes-paths.mjs` for the current CI path filters.

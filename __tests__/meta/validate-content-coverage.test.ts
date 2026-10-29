@@ -19,7 +19,7 @@ describe('validate-content covers every content module', () => {
   it('includes the _-prefixed build-time aggregator', () => {
     expect(
       listContentFiles(),
-      'content/_validate-client-content.ts is the ONLY module that parses DmesgLineSchema, ErrorsContentSchema, ShellCommandsSchema, and TerminalChromeSchema — their own modules deliberately carry zero .parse() calls, because a parse at module init would ship zod to the client bundle. Excluding _-prefixed files here (as __tests__/helpers/content-surfaces.ts correctly does for its OWN purpose) drops those schemas from the build gate while the gate still prints green.',
+      'content/_validate-client-content.ts is the ONLY module that parses DmesgLineSchema, ErrorsContentSchema, ShellCommandsSchema, ShellUiSchema, and TerminalChromeSchema — their own modules deliberately carry zero .parse() calls, because a parse at module init would ship zod to the client bundle. Excluding _-prefixed files here (as __tests__/helpers/content-surfaces.ts correctly does for its OWN purpose) drops those schemas from the build gate while the gate still prints green.',
     ).toContain(join(CONTENT_DIR, '_validate-client-content.ts'));
   });
 

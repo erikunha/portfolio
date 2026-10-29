@@ -39,7 +39,7 @@ The user-facing routes are `/`, `/summary`, `/cv`, `/links` and `/links/en`, alo
 
 `content/section-registry.ts` defines nine navigation destinations: Home (`bio`), About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, and Contact. It supplies aliases, icons, screen-reader labels and navigation order. `content/section-labels.ts` adds labels for supporting modules.
 
-The JSX order in `app/page.tsx` is Hero, Readme, Shell, Measured, Projects, Responsibilities, Now, NpmStack, GitLog, ManPage, SysHealth, Visa, HottestTakes, Guitar, DawMixer, Unknowns and Contact. Footer follows `PageMain` as its sibling. CSS mobile ordering is a separate map in `app/css/base.css`.
+The JSX order in `app/page.tsx` is Hero, Readme, Shell, Measured, Projects, Responsibilities, Now, NpmStack, GitLog, ManPage, SysHealth, Visa, HottestTakes (with Unknowns nested inside), Guitar, DawMixer and Contact. Footer follows `PageMain` as its sibling. CSS mobile ordering is a separate map in `app/css/base.css`.
 
 Projects contains its receipts. Career contains certification, education and community tag groups. Measured contains independent ASK, desktop PSI and mobile PSI reads. These nested groups do not become separate navigation destinations.
 
