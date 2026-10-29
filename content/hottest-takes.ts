@@ -48,7 +48,11 @@ export const homeTakes = hottestTakes
   .filter((take) => take.placement === TAKE_PLACEMENT.home)
   .sort((left, right) => left.order - right.order);
 
-export const designSystemTake = hottestTakes.find((take) => take.placement === TAKE_PLACEMENT.docs);
+const DESIGN_SYSTEM_CATEGORY = 'DS';
+
+export const designSystemTake = hottestTakes.find(
+  (take) => take.category === DESIGN_SYSTEM_CATEGORY && take.placement === TAKE_PLACEMENT.docs,
+);
 
 export const designSystemOpinionConfig = z
   .object({ title: z.string().min(1) })
