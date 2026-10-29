@@ -8,12 +8,26 @@ import { HeroSystemFailure } from '../../client/HeroSystemFailure';
 const EXTERNAL_TARGET = '_blank';
 const EXTERNAL_REL = 'noopener noreferrer';
 
-function HeroIdentity() {
+const HEADING_LEVEL = 1;
+
+function HeroIdentity({ primary }: { primary: boolean }) {
   return (
     <>
-      <h1 className="hero-identity" data-testid="hero-name">
-        {profile.displayName}
-      </h1>
+      {primary ? (
+        <h1 className="hero-identity" data-testid="hero-name">
+          {profile.displayName}
+        </h1>
+      ) : (
+        // biome-ignore lint/a11y/useSemanticElements: a second h1 would duplicate the page title in the DOM; the desktop variant owns the only h1
+        <p
+          className="hero-identity"
+          data-testid="hero-name"
+          role="heading"
+          aria-level={HEADING_LEVEL}
+        >
+          {profile.displayName}
+        </p>
+      )}
       <p className="hero-stack">{heroTagline}</p>
       <p className="hero-context">
         <span>
@@ -76,7 +90,7 @@ export function Hero() {
           <HeroBootAnimation variant="desktop" />
         </div>
         <aside className="hero-bio">
-          <HeroIdentity />
+          <HeroIdentity primary />
         </aside>
         <HeroSystemFailure />
       </section>
@@ -88,7 +102,7 @@ export function Hero() {
       >
         <div className="hero-mobile-content">
           <HeroBootAnimation variant="mobile" />
-          <HeroIdentity />
+          <HeroIdentity primary={false} />
         </div>
       </section>
     </>

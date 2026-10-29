@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { aboutContent as c } from '@/content/about';
+import { aboutContent as c, responsibilitiesLegend } from '@/content/about';
 import { responsibilities } from '@/content/responsibilities';
 import { IconReadme } from '../../Icons';
 
@@ -96,6 +96,14 @@ export function About() {
                       <span data-file="true" data-highlight={row.highlight || undefined}>
                         {row.name}
                       </span>
+                    </span>
+                  ))}
+                </pre>
+                <pre data-no-copy="true" data-legend="true">
+                  {responsibilitiesLegend.map((row) => (
+                    <span key={row.perms}>
+                      <span className="ab-permissions">{row.perms}</span>
+                      <span>{row.meaning}</span>
                     </span>
                   ))}
                 </pre>

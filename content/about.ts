@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { profile } from './profile';
 import { AboutContentSchema } from './schemas';
 import { social } from './social';
@@ -347,3 +348,13 @@ export const aboutContent = AboutContentSchema.parse({
     ].map((token, id) => ({ ...token, id })),
   },
 });
+
+export const responsibilitiesLegend = z
+  .array(z.object({ perms: z.string().min(1), meaning: z.string().min(1) }))
+  .length(4)
+  .parse([
+    { perms: 'drwxr-xr-x', meaning: 'i own it, you can read it, you can run against it' },
+    { perms: 'drwxrwxrwx', meaning: 'explicitly shared, please write here too' },
+    { perms: 'drwxr-x---', meaning: 'owned, run only by trusted group (security, compliance)' },
+    { perms: '-rwx------', meaning: 'not delegable; this is the one i bring to the room' },
+  ]);

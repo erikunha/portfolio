@@ -16,7 +16,7 @@ describe('Hero identity and static actions', () => {
       expect(name?.textContent).toBe('Erik Cunha');
       expect(name?.hasAttribute('aria-hidden')).toBe(false);
       expect(name?.classList.contains('sr-only')).toBe(false);
-      expect(name?.tagName).toBe('H1');
+      expect(name?.getAttribute('role') ?? 'heading').toBe('heading');
       const title = hero.querySelector('.hero-stack');
       expect(title?.textContent).toBe(
         'Senior Software Engineer, Frontend & Product · React · Next.js · TypeScript · Angular · Node.js · AWS',
@@ -31,6 +31,15 @@ describe('Hero identity and static actions', () => {
     }
     expect(doc.querySelectorAll('[data-testid="hero-name"]')).toHaveLength(2);
     expect(doc.querySelector('h1.sr-only')).toBeNull();
+  });
+
+  it('keeps exactly one h1 in the DOM and a level-1 heading in each variant', () => {
+    const doc = getDOM();
+    expect(doc.querySelectorAll('h1')).toHaveLength(1);
+    for (const name of doc.querySelectorAll('[data-testid="hero-name"]')) {
+      const level = name.tagName === 'H1' ? '1' : name.getAttribute('aria-level');
+      expect(level).toBe('1');
+    }
   });
 
   it('renders hiring, GitHub, text CV and summary links without a JavaScript gate', () => {

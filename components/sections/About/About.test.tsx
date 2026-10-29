@@ -33,6 +33,25 @@ describe('About r106 composition', () => {
     expect(screen.getByText('taste-and-judgment')).toBeTruthy();
   });
 
+  it('explains the four permission bit patterns beside the listing', () => {
+    render(<About />);
+    const responsibilities = screen
+      .getByRole('heading', { name: 'LS -LA ~/RESPONSIBILITIES' })
+      .closest('.ab-panel');
+    const legend = responsibilities?.querySelector('[data-legend="true"]');
+    expect(legend).not.toBeNull();
+    expect(
+      [...(legend?.querySelectorAll('.ab-permissions') ?? [])].map((n) => n.textContent),
+    ).toEqual(['drwxr-xr-x', 'drwxrwxrwx', 'drwxr-x---', '-rwx------']);
+    expect(legend?.textContent).toContain('i own it, you can read it, you can run against it');
+    expect(legend?.textContent).toContain('explicitly shared, please write here too');
+    expect(legend?.textContent).toContain(
+      'owned, run only by trusted group (security, compliance)',
+    );
+    expect(legend?.textContent).toContain('not delegable; this is the one i bring to the room');
+    expect(responsibilities?.querySelectorAll('[data-file]')).toHaveLength(7);
+  });
+
   it('groups the stack and keeps retry code keyboard accessible on mobile', () => {
     render(<About />);
     for (const group of ['CORE', 'ANGULAR', 'LANG_DATA', 'QUALITY', 'TOOLING']) {

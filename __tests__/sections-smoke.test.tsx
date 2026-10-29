@@ -47,6 +47,26 @@ describe('About', () => {
   });
 });
 
+describe('Home page', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('renders exactly one h1 element', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: false,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+    const { default: Home } = await import('@/app/page');
+    const doc = new DOMParser().parseFromString(
+      renderToStaticMarkup(createElement(Home)),
+      'text/html',
+    );
+    expect(doc.querySelectorAll('h1')).toHaveLength(1);
+  });
+});
+
 describe('ContactSection', () => {
   let mounted: MountedClient;
 
