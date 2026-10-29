@@ -10,7 +10,7 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     avatar: '/images/erik-avatar.jpg',
     taglines: {
       pt: [
-        'Senior Software Engineer, Frontend & Product',
+        'Engenheiro de Software Sênior, Frontend e Produto',
         'AI Engineering na prática',
         'Carreira internacional para devs',
       ],

@@ -45,7 +45,7 @@ describe('IdentityCard', () => {
     const html = renderToString(<IdentityCard locale={LINKS_LOCALE.en} />);
     expect(html).toContain('Senior Software Engineer, Frontend &amp; Product');
     const pt = renderToString(<IdentityCard locale={LINKS_LOCALE.pt} />);
-    expect(pt).toContain('Senior Software Engineer, Frontend &amp; Product');
+    expect(pt).toContain('Engenheiro de Software Sênior, Frontend e Produto');
   });
 
   it('shows the first tagline at once when reduced motion is preferred', () => {

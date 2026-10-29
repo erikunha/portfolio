@@ -122,19 +122,27 @@ test.describe('/links link-in-bio', () => {
     expect(await page.locator('a[href="#"], a[href=""]').count()).toBe(0);
   });
 
-  test('shows the same static title with or without reduced motion', async ({ page }) => {
+  test('types the tagline, and holds the full first phrase under reduced motion', async ({
+    page,
+  }) => {
     const title = 'Engenheiro de Software Sênior, Frontend e Produto';
     const identity = page.locator('.links-identity-box');
 
-    await page.goto('/links');
-    await expect(identity).toContainText(title);
-
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.reload();
+    await page.goto('/links');
     await expect(identity).toContainText(title);
     const first = await identity.textContent();
     await page.waitForTimeout(600);
-    expect(await identity.textContent()).toBe(first);
+    expect(await identity.textContent(), 'reduced motion must not type').toBe(first);
+
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.reload();
+    const samples = new Set<string | null>();
+    for (let i = 0; i < 6; i++) {
+      samples.add(await identity.textContent());
+      await page.waitForTimeout(150);
+    }
+    expect(samples.size, 'the tagline must type when motion is allowed').toBeGreaterThan(1);
   });
 
   test('renders the English title on the English route', async ({ page }) => {
