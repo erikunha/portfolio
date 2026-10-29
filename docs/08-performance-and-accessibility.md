@@ -72,6 +72,8 @@ Target: WCAG 2.1 AA. Lighthouse accessibility and axe checks enforce their confi
 
 Per-component behavioral a11y tests live alongside components; the axe gate covers the design-system routes. The CRT effects are all `aria-hidden` + `pointer-events:none`, so the decorative layer is invisible to assistive tech.
 
+The Profile manual, Responsibilities and README code sample scroll containers use `tabIndex={0}` and `role="region"`. Each has its own accessible name from the `SCROLL_REGION_LABELS` map in `content/section-labels.ts` (the section name plus "(scrollable)"), kept distinct from the parent section's name so no two landmarks share a name. Keyboard users can tab into these containers and scroll with arrow keys. `base.css` applies a `:focus-visible` outline using `--color-primary-500` to elements with `tabindex="0"`. The work authorization table inside Contact is a semantic `<table>` whose cells wrap, so it has no scrolling container and needs no region. The interactive shell's scrollable log already has its own tab stop and accessible name. The footer's scrollable connection table contains keyboard-focusable links.
+
 ## Verification scope
 
 Both Lighthouse configs collect `/` and the five design-system routes. `/summary`, `/cv`, `/links` and `/links/en` are outside that collection. The INP assertion is disabled in both configs. These automated checks do not establish complete WCAG conformance or real-user INP. The route-JS checker separately evaluates every route emitted in the build manifest.
