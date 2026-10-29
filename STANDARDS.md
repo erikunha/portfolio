@@ -22,7 +22,9 @@ server, statically generated at build time, shipping zero JavaScript unless it
 genuinely needs the client. Client islands exist by exception only — the Matrix
 dialog loop, the interactive shell, the contact form, the IntersectionObserver
 typewriter, the motion indicator, the Matrix rain. Every file that carries
-`'use client'` is named `*.client.tsx` (or lives under a `/client/` directory);
+`'use client'` is named `*.client.tsx` (or lives under a `/client/` directory),
+except Next's own `error.tsx` route files and the root `app/global-error.tsx`,
+whose names the framework fixes;
 no `.client.tsx` file exports an `async function`. The root route's static shell
 is prerendered; the sections that read request headers are request-time holes
 inside it, and each one is a deliberate choice recorded in `DECISIONS.md`. The
@@ -41,8 +43,8 @@ animation frame — keeps the DOM React-owned and INP frame-bounded.
 
 **How it is held.** Mechanical gate: `scripts/check-client-naming.mjs`
 (`pnpm check:client-naming`) runs in the `build-and-gate` CI job and in the
-`pre-push` hook — it fails the build if any `'use client'` file is misnamed or
-exports `async function`. The streaming-through-React contract is held by the
+`pre-push` hook — it fails the build if any `'use client'` file outside those
+Next convention files is misnamed or exports `async function`. The streaming-through-React contract is held by the
 behavioral test `components/client/InteractiveShell/InteractiveShell.test.tsx`, which asserts
 every child of the shell feed is a React-owned node (`__reactFiber$` key
 present). The root route's rendering mode is held by the build output itself: it
