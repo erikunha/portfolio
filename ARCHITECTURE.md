@@ -713,7 +713,7 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 
 3. **PR 3 — Static sections.** RSC composition of all 18 sections at final layout. Pure HTML output. Lighthouse pass at end of PR.
 
-4. **PR 4: Client islands.** Matrix dialog loop and MOTION indicator. The identity line and About Senior status are static server-rendered text. Budget check.
+4. **PR 4: Client islands.** Matrix dialog loop, role typewriter (RoleTyper, in the About status line) and MOTION indicator. The Hero identity line is static server-rendered text. Budget check.
 
 5. **PR 5 — Contact path.** Server Action + Resend + KV log + honeypot + rate limit + a11y form. Playwright happy + spam-trap.
 
