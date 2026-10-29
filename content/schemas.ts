@@ -684,7 +684,6 @@ const DawMixerChannelSchema = z.object({
   buttons: z.array(z.string().min(1)),
   activeButtons: z.array(z.string().min(1)),
   footer: z.object({ lufs: z.string(), pk: z.string() }).optional(),
-  terminalLines: z.array(z.string().min(1)).optional(),
 });
 
 export const DawMixerSchema = z.object({

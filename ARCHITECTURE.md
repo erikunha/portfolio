@@ -31,7 +31,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 - Static composition with Hero and About followed by shell, AI evaluation, projects with attached performance receipts, Career, profile manual, system health, opinions with nested learning and specialization lists, guitar rig, DAW mixer, contact with work authorization and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels; Career owns certification, education and community tag groups.
 - Opinions renders four ordered home takes with nested learning and specialization lists. The design-system opinion renders at `/design-system#opinion-07`; `TAKE_PLACEMENT` separates home and documentation content. Seven below-fold modules use content-visibility deferral.
 - Hero: Matrix dialog loop + boot sequence (typewriter)
-- About "Open to [role] roles" line mounts the RoleTyper island over server-rendered text; the Hero title is static; MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`), then IntersectionObserver gates its animation; the footer is server-rendered, with client islands only for session counters and halt/reboot (no scroll-reveal typewriter exists)
+- About "Open to [role] roles" mounts RoleTyper over server-rendered text; the Hero title is static. Module headers use CSS scroll-driven typing, with static text for unsupported browsers and reduced motion. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`), then IntersectionObserver gates its animation. The footer is server-rendered, with client islands only for session counters and halt/reboot.
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
 - Contact form: durable submission, explicit delivered or queued feedback, daily bounded retry
 - Live Lighthouse score (PSI API, cached daily)
@@ -147,15 +147,15 @@ Naming convention: every client file ends in `.client.tsx`. The default is serve
 
 ### Partial Prerendering (PPR)
 
-Two sections (ManPage, DawMixer) select desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, their Suspense fallbacks enter the static shell and the selected variants stream per request.
+Only ManPage selects desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, its Suspense fallback enters the static shell and the selected variant streams per request. Contact renders its single CSS-responsive work-authorization table synchronously through `VisaContent`.
 
 Projects renders one static RSC tree at every viewport. Its nine cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
 
 Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. ASK evaluation data and desktop/mobile PSI scores stream through three independent Suspense boundaries. `content/measured.ts` supplies labels, sources, units and timestamp formatting. The data adapters remain `lib/ask-metrics.ts` and `lib/lighthouse-scores.ts`. The nested `sec-ai-metrics` and `sec-live-perf` anchors preserve existing links.
 
-`DawMixerSection` uses `fallback={null}` instead of its desktop component. Its desktop variant is a `next/dynamic` lazy-loaded client component, so it cannot serve as a static Suspense fallback (it is itself dynamically loaded). `fallback={null}` renders only the section shell.
-
 `GuitarSection` renders one responsive RSC presentation across viewports. CSS adjusts its layout without UA detection, a variant swap or a section Suspense fallback.
+
+`DawMixerSection` renders one synchronous RSC layout at every width, without a UA branch or Suspense boundary. Its fader, knob, R/M/S, meter and scroll islands hydrate on phones too.
 
 Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
 Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one static section.
@@ -202,7 +202,6 @@ components/client/InteractiveShell/   # streaming shell island
 components/client/ContactForm/        # contact form island
 components/client/HeroBootAnimation/  # boot typewriter island
 components/client/RoleTyper/          # About status role typewriter island
-components/client/ToTopButton/        # motion-aware scroll-to-top
 components/AppShell/                   # window chrome / module-open dispatch
 components/ErrorBoundary/              # client error boundary
 components/ErrorPages/                 # 404/500 chrome, focused heading, error reference
