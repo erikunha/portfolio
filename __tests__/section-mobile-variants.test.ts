@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -7,10 +8,10 @@ vi.mock('@/components/responsive/Module', () => ({
 }));
 
 vi.mock('next/headers', () => ({
-  headers: async () => ({
+  headers: vi.fn(async () => ({
     get: () =>
       'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-  }),
+  })),
 }));
 
 import { GitLogContent } from '@/components/sections/GitLogSection';
@@ -20,11 +21,28 @@ import { ProjectsContent } from '@/components/sections/ProjectsSection';
 import { VisaContent } from '@/components/sections/VisaSection';
 
 describe('responsive section mobile variants', () => {
-  it('GuitarContent emits the mobile variant when UA is mobile', async () => {
+  it('GuitarContent renders one responsive tree for mobile and desktop UAs', async () => {
     const el = await GuitarContent();
     const html = renderToStaticMarkup(el);
-    expect(html).toContain('data-testid="guitar-mobile"');
-    expect(html).not.toContain('data-testid="guitar-desktop"');
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    expect(doc.querySelectorAll('.guitar-presentation')).toHaveLength(1);
+    expect(
+      Array.from(doc.querySelectorAll('[data-testid^="signal-node-"]'), (node) =>
+        node.getAttribute('data-testid'),
+      ),
+    ).toEqual(['signal-node-INPUT', 'signal-node-AMP', 'signal-node-OUT']);
+    expect(doc.querySelectorAll('[data-testid^="stat-"]')).toHaveLength(4);
+    expect(doc.querySelectorAll('img')).toHaveLength(1);
+    expect(html).not.toContain('guitar-mobile');
+    expect(html).not.toContain('guitar-desktop');
+
+    await vi.mocked(headers).withImplementation(
+      async () => new Headers({ 'user-agent': 'Desktop' }),
+      async () => {
+        const desktopHtml = renderToStaticMarkup(await GuitarContent());
+        expect(html).toBe(desktopHtml);
+      },
+    );
   });
 
   it('ProjectsContent emits the mobile variant when UA is mobile', async () => {

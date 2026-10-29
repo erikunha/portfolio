@@ -1,7 +1,7 @@
 import { defineConfig, devices } from 'playwright/test';
 
 const CROSS_BROWSER_SPECS =
-  /tests\/(e2e\/(cross-cutting|observability-smoke|design-system-pages|links|contact-delivery)|visual\/visual)\.spec\.ts$/;
+  /tests\/(e2e\/(cross-cutting|observability-smoke|design-system-pages|links|contact-delivery|guitar-mobile)|visual\/visual)\.spec\.ts$/;
 
 export default defineConfig({
   testDir: './tests',

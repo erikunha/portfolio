@@ -43,7 +43,8 @@ Key levers (all verifiable in code):
 ## How CLS < 0.05 is achieved
 
 The dynamic (per-request) sections are the CLS risk, because their `<Suspense>` fallback is what's prerendered. Mitigations:
-- **Per-section fallback choice.** Most dynamic sections prerender their _desktop_ variant as the fallback; **Guitar prerenders `null`** specifically because its variant heights differed enough to shift (`DECISIONS.md` 2026-06-13).
+- **Per-section fallback choice.** Most dynamic sections prerender their _desktop_ variant as the fallback.
+- **Responsive guitar presentation.** `GuitarSection` renders one RSC tree across viewports. CSS changes its layout without a desktop/mobile swap or the associated layout shift.
 - **Reserved height.** `AiMetricsSection`'s fallback is a single-line stub with an explicit `min-height` so the streamed content doesn't push layout.
 - **Mobile section ordering** is done with CSS flex `order` (the `#sec-*` map in `base.css`), and `check:section-order` fails the build if a section lacks an order rule - a section defaulting to `order:0` would float to the top and cause a visible jump (this actually happened, 2026-05-28).
 - **Both nav variants in the DOM**, toggled by CSS at 768px, to avoid a hydration-driven reflow.

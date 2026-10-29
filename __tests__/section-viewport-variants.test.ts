@@ -12,7 +12,6 @@ vi.mock('next/headers', () => ({
 }));
 
 import { GitLogSection } from '@/components/sections/GitLogSection';
-import { GuitarSection } from '@/components/sections/GuitarSection';
 import { ManPageSection } from '@/components/sections/ManPageSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { VisaSection } from '@/components/sections/VisaSection';
@@ -41,11 +40,6 @@ describe('responsive section viewport variants', () => {
     expect(scroller?.getAttribute('tabindex')).toBe('0');
     expect(scroller?.getAttribute('aria-label')).toBe(careerScrollLabel);
     expect(careerScrollLabel).not.toBe(SECTION_LABELS['sec-git-log']);
-  });
-
-  it('GuitarSection static render does not emit mobile markup', () => {
-    const html = renderToStaticMarkup(createElement(GuitarSection));
-    expect(html).not.toContain('data-testid="guitar-mobile"');
   });
 
   it('VisaSection emits exactly the desktop variant (no mobile markup)', () => {
