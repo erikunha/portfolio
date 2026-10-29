@@ -160,7 +160,7 @@ test.describe('/links link-in-bio', () => {
     expect(await columns()).toBe(3);
   });
 
-  test('loads both locales with zero console errors — a feed thumbnail host the image allowlist rejects 400s in /_next/image and fails errors-in-console', async ({
+  test('loads both locales with every feed thumbnail rendered and zero console errors — a thumbnail host the image allowlist rejects 400s in /_next/image and fails errors-in-console', async ({
     page,
   }) => {
     const consoleErrors: string[] = [];
@@ -169,8 +169,17 @@ test.describe('/links link-in-bio', () => {
     });
     page.on('pageerror', (err) => consoleErrors.push(String(err)));
 
+    const loadedThumbnailCount = () =>
+      page
+        .locator('ol img')
+        .evaluateAll(
+          (images) => images.filter((img) => (img as HTMLImageElement).naturalWidth > 0).length,
+        );
+
     await page.goto('/links', { waitUntil: 'networkidle' });
+    await expect.poll(loadedThumbnailCount).toBeGreaterThan(0);
     await page.goto('/links/en', { waitUntil: 'networkidle' });
+    await expect.poll(loadedThumbnailCount).toBeGreaterThan(0);
 
     expect(
       consoleErrors,

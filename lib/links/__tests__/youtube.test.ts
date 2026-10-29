@@ -56,14 +56,44 @@ describe('parseFeed', () => {
     expect(parseFeed(broken).map((v) => v.id)).toEqual(['abc12345678']);
   });
 
-  it('normalizes shard thumbnail hosts to i.ytimg.com — any other host 400s in /_next/image and fails errors-in-console', () => {
-    const sharded = FEED.replaceAll(
-      'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
-      'https://i3.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
-    );
-    expect(parseFeed(sharded)[0]?.thumbnailUrl).toBe(
-      'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
-    );
+  describe('thumbnail host normalization', () => {
+    const feedWithThumbnails = (first: string, second: string) =>
+      FEED.replace('https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg', first).replace(
+        'https://i.ytimg.com/vi/abc12345678/hqdefault.jpg',
+        second,
+      );
+
+    it('rewrites every shard thumbnail to i.ytimg.com so /_next/image accepts it', () => {
+      const videos = parseFeed(
+        feedWithThumbnails(
+          'https://i3.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+          'https://i0.ytimg.com/vi/abc12345678/hqdefault.jpg',
+        ),
+      );
+      expect(videos.map((v) => v.thumbnailUrl)).toEqual([
+        'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        'https://i.ytimg.com/vi/abc12345678/hqdefault.jpg',
+      ]);
+    });
+
+    it('keeps the query string of a shard thumbnail', () => {
+      const videos = parseFeed(
+        feedWithThumbnails(
+          'https://i3.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg?sqp=abc&amp;rs=def',
+          'https://i.ytimg.com/vi/abc12345678/hqdefault.jpg',
+        ),
+      );
+      expect(videos[0]?.thumbnailUrl).toBe(
+        'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg?sqp=abc&rs=def',
+      );
+    });
+
+    it('passes a host that is not a ytimg shard through unchanged', () => {
+      const other = 'https://img.example.com/vi/dQw4w9WgXcQ/hqdefault.jpg';
+      const lookalike = 'https://i3.ytimg.com.evil.example/vi/abc12345678/hqdefault.jpg';
+      const videos = parseFeed(feedWithThumbnails(other, lookalike));
+      expect(videos.map((v) => v.thumbnailUrl)).toEqual([other, lookalike]);
+    });
   });
 });
 
