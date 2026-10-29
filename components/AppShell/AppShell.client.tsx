@@ -1,7 +1,6 @@
 'use client';
 
 import '@/lib/error-bridge.client';
-import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { ToTopButton } from '../client/ToTopButton';
@@ -9,13 +8,9 @@ import { ErrorBoundary } from '../ErrorBoundary';
 import { CRTOverlay } from '../responsive/CRTOverlay';
 import { DesktopTopbar } from '../responsive/DesktopTopbar';
 import { Dock } from '../responsive/Dock';
+import { MatrixRainLazy } from '../responsive/MatrixRain/MatrixRainLazy.client';
 import { MobileTitleBar } from '../responsive/MobileTitleBar';
 import { StatusBar } from '../responsive/StatusBar';
-
-const MatrixRain = dynamic(
-  () => import('../responsive/MatrixRain').then((m) => ({ default: m.MatrixRain })),
-  { ssr: false },
-);
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { isMobile } = useBreakpoint();
@@ -26,7 +21,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         Skip to main content
       </a>
       <ErrorBoundary>
-        <MatrixRain
+        <MatrixRainLazy
           fontSize={isMobile ? 14 : 16}
           speed={isMobile ? 0.6 : 0.7}
           style={{
