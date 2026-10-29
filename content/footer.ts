@@ -71,7 +71,7 @@ export const footerContent = FooterContentSchema.parse({
       directory: './measured/',
       links: [
         { label: 'Interactive shell', href: '#sec-shell' },
-        { label: 'Measured', href: '#sec-live-perf' },
+        { label: 'Measured', href: '#sec-live-metrics' },
       ],
     },
     {

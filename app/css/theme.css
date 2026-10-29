@@ -24,6 +24,37 @@
   --spacing-16: 4rem;
   --spacing-target: 2.75rem;
   --spacing-target-compact: 1.75rem;
+  --receipt-metric-width: 10.5rem;
+  --receipt-value-width: 7rem;
+  --receipt-company-width: 9.375rem;
+  --breakpoint-guitar: 700px;
+  --guitar-arrow-width: 1.625rem;
+  --guitar-photo-width: 20rem;
+  --guitar-node-gap: 0.375rem;
+  --guitar-bar-width: 0.5625rem;
+  --guitar-bar-height: 0.8125rem;
+  --guitar-bar-gap: 0.125rem;
+  --guitar-bar-opacity: 0.22;
+  --guitar-columns: minmax(0, 1fr) var(--guitar-arrow-width) minmax(0, 1fr)
+    var(--guitar-arrow-width) minmax(0, 1fr);
+  --guitar-stat-columns: repeat(2, minmax(0, 1fr));
+  --guitar-line-height: 1.6;
+  --guitar-heading-line-height: 1.2;
+  --guitar-label-tracking: 0.04em;
+  --guitar-camera-tracking: 0.12em;
+  --guitar-prose-width: 72ch;
+  --guitar-photo-grayscale: 1;
+  --guitar-photo-contrast: 1.18;
+  --guitar-photo-brightness: 0.95;
+  --guitar-photo-tint-opacity: 0.6;
+  --guitar-photo-ratio: 16 / 9;
+  --guitar-photo-min-height: 12.5rem;
+  --guitar-arrow-rotation: 90deg;
+  --guitar-scanline: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.3) 0 1px,
+    transparent 1px 3px
+  );
   --border-width: 1px;
   --stroke-width-icon: 1.4;
   --radius-none: 0;
