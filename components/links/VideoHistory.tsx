@@ -46,7 +46,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
       </SectionHeading>
 
       {isEmpty && (
-        <p className="m-0 border border-primary-border bg-[var(--color-glow-03)] py-[14px] px-[13px] text-tertiary-400 text-[11.5px] leading-[1.6]">
+        <p className="m-0 border border-primary-border bg-[var(--color-glow-03)] py-[14px] px-[13px] text-tertiary-400 text-xs md:text-micro-115 leading-[1.6]">
           <span aria-hidden="true" className="text-primary-400">
             ${' '}
           </span>
@@ -65,7 +65,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
                 data-outbound={`video-${index + 1}`}
                 className="grid grid-cols-[20px_64px_1fr_auto] gap-[11px] items-center py-[11px] px-[13px] no-underline transition-colors duration-150 hover:bg-[var(--color-glow-06)] focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:-outline-offset-2"
               >
-                <span className="text-primary-400 text-[11px]">
+                <span className="text-primary-400 text-xs md:text-micro-110">
                   {String(index + 1).padStart(INDEX_PAD, '0')}
                 </span>
                 <Image
@@ -80,7 +80,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
                   <span className="block text-tertiary-50 text-[12.5px] leading-[1.45] text-pretty">
                     {video.title}
                   </span>
-                  <span className="block text-tertiary-400 text-[10px] mt-0.5">
+                  <span className="block text-tertiary-400 text-xs md:text-micro-100 mt-0.5">
                     {meta(video, locale, copy.viewsWord[locale], feed.fetchedAt)}
                   </span>
                 </span>
@@ -99,7 +99,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
           target="_blank"
           rel="noopener noreferrer"
           data-outbound="todos-videos"
-          className="flex items-center justify-center gap-2 p-3 border border-t-0 border-primary-border bg-[var(--color-glow-04)] text-primary-500 font-bold text-[11.5px] tracking-[0.1em] uppercase no-underline transition-colors duration-150 hover:bg-primary-quiet focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:-outline-offset-2"
+          className="flex items-center justify-center gap-2 p-3 border border-t-0 border-primary-border bg-[var(--color-glow-04)] text-primary-500 font-bold text-xs md:text-micro-115 tracking-[0.1em] uppercase no-underline transition-colors duration-150 hover:bg-primary-quiet focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:-outline-offset-2"
         >
           {copy.seeAllVideos[locale]}
         </a>

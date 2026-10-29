@@ -4,7 +4,12 @@ import { readFile } from 'node:fs/promises';
 import { cacheLife } from 'next/cache';
 import { linksContent } from '@/content/links';
 import { env } from '@/lib/env';
-import { type EnrichedVideo, parseFeed, parseIsoDuration } from '@/lib/links/youtube';
+import {
+  canonicalThumbnailUrl,
+  type EnrichedVideo,
+  parseFeed,
+  parseIsoDuration,
+} from '@/lib/links/youtube';
 import { log } from '@/lib/log';
 
 export const HISTORY_LENGTH = 5;
@@ -123,7 +128,17 @@ export async function loadFixtureFeed(
 ): Promise<ChannelFeed | null> {
   const path = vars[FEED_FIXTURE_ENV];
   if (!path || vars.VERCEL) return null;
-  return JSON.parse(await readFile(path, 'utf8')) as ChannelFeed;
+  const fixture = JSON.parse(await readFile(path, 'utf8')) as ChannelFeed;
+  return {
+    ...fixture,
+    latest: fixture.latest
+      ? { ...fixture.latest, thumbnailUrl: canonicalThumbnailUrl(fixture.latest.thumbnailUrl) }
+      : null,
+    history: fixture.history.map((video) => ({
+      ...video,
+      thumbnailUrl: canonicalThumbnailUrl(video.thumbnailUrl),
+    })),
+  };
 }
 
 export async function getChannelFeed(): Promise<ChannelFeed> {

@@ -31,6 +31,13 @@ const NAMED_ENTITIES: Record<string, string> = {
 
 const PAD_WIDTH = 2;
 
+const YTIMG_SHARD_HOST_RE = /^https:\/\/i\d\.ytimg\.com\//;
+const YTIMG_CANONICAL_ORIGIN = 'https://i.ytimg.com/';
+
+export function canonicalThumbnailUrl(url: string): string {
+  return url.replace(YTIMG_SHARD_HOST_RE, YTIMG_CANONICAL_ORIGIN);
+}
+
 export function decodeXmlText(raw: string): string {
   return raw
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
@@ -62,8 +69,11 @@ export function parseFeed(xml: string, limit = Number.POSITIVE_INFINITY): FeedVi
     if (!id || !title || !publishedAt) continue;
 
     const url = firstGroup(entry, LINK_RE) ?? `https://www.youtube.com/watch?v=${id}`;
+    const feedThumbnail = firstGroup(entry, THUMBNAIL_RE);
     const thumbnailUrl =
-      firstGroup(entry, THUMBNAIL_RE) ?? `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+      feedThumbnail === undefined
+        ? `${YTIMG_CANONICAL_ORIGIN}vi/${id}/hqdefault.jpg`
+        : canonicalThumbnailUrl(feedThumbnail);
     const description = firstGroup(entry, DESCRIPTION_RE);
 
     const video: FeedVideo = { id, title, url, thumbnailUrl, publishedAt };
