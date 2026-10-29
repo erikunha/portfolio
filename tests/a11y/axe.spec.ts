@@ -1,18 +1,12 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { DS_ROUTES } from '@/app/design-system/_components/ds-nav';
 
-const DS_ROUTES = [
-  '/design-system',
-  '/design-system/tokens',
-  '/design-system/components',
-  '/design-system/enforcement',
-  '/design-system/changelog',
-  '/links',
-  '/links/en',
-];
+const EXTRA_ROUTES = ['/links', '/links/en'];
+const SCANNED_ROUTES = [...DS_ROUTES, ...EXTRA_ROUTES];
 
 test.describe('axe-core a11y scan', () => {
-  for (const route of DS_ROUTES) {
+  for (const route of SCANNED_ROUTES) {
     test(`${route} has no automatically detectable accessibility violations`, async ({ page }) => {
       await page.goto(route);
       const results = await new AxeBuilder({ page })
