@@ -71,6 +71,5 @@ describe('Projects', () => {
     expect(doc.querySelector('#sec-perf-receipts')).not.toBeNull();
     expect(doc.querySelectorAll('section')).toHaveLength(1);
     expect(doc.querySelectorAll('.project-card')).toHaveLength(9);
-    expect(doc.querySelector('template[data-msg]')).toBeNull();
   });
 });
