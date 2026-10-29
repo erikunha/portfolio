@@ -1,5 +1,6 @@
 import { dsPageMetadata } from './_lib/page-metadata';
 import { OnThisPage } from './_components/OnThisPage';
+import { DesignSystemOpinion } from './_components/DesignSystemOpinion';
 
 export const metadata = dsPageMetadata({
   slug: '',
@@ -42,3 +43,5 @@ A published design system for erikunha.dev: positioned at `/design-system` as pa
 **RSC by default.** 7 of 9 primitives are React Server Components: zero client JavaScript. `Field` and `CopyButton` require `'use client'` for controlled input state and clipboard access respectively.
 
 **Enforced, not documented.** The contrast gate, axe-core a11y scan, and Lighthouse (a11y = 100) run in CI. The rules don't rely on developer discipline.
+
+<DesignSystemOpinion />
