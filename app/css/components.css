@@ -2048,6 +2048,39 @@
     }
   }
 
+  @media screen and (max-width: 767px) {
+    .reading-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .reading-actions > * {
+      width: 100%;
+    }
+
+    .reading-stats {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .reading-stats > * + * {
+      border-left: 0;
+      border-top: var(--border-width) solid var(--color-primary-border);
+    }
+
+    .reading-rows li {
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .reading-row-key {
+      min-width: 0;
+    }
+
+    .reading-row-value {
+      flex: 0 0 auto;
+    }
+  }
+
   @media (min-width: 1024px) {
     .reading-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));

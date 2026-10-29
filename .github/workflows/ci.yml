@@ -293,6 +293,7 @@ jobs:
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
           DEPLOY_SALT: ci-build-salt
+          E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
 
       - name: Bundle size gate
         run: node scripts/check-bundle-size.mjs --max-client-kb=220

@@ -21,7 +21,7 @@ export function LinksFooter({ locale, url }: { locale: LinksLocale; url: string 
 
   return (
     <footer className="links-footer mx-4 mt-6 pt-4 border-t border-primary-border">
-      <ul className="list-none m-0 p-0 grid gap-2 grid-cols-1 min-[360px]:grid-cols-2 min-[900px]:grid-cols-3">
+      <ul className="list-none m-0 p-0 grid gap-2 grid-cols-1 min-[768px]:grid-cols-2 min-[900px]:grid-cols-3">
         {pills.filter(isLinked).map((pill) => (
           <li key={pill.id}>
             <a
