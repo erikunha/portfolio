@@ -1,4 +1,41 @@
+import { z } from 'zod';
 import { type DawMixer, DawMixerSchema } from './schemas';
+
+export const dawMixerUi = z
+  .object({
+    sectionHeader: z.string().min(1),
+    regionLabel: z.string().min(1),
+    skipLink: z.string().min(1),
+    skipTargetId: z.string().min(1),
+    sessionPrefix: z.string().min(1),
+    sessionSeparator: z.string().min(1),
+    tracksSuffix: z.string().min(1),
+    separator: z.string().min(1),
+    bpmUnit: z.string().min(1),
+    columns: z.array(z.string().min(1)).length(8),
+  })
+  .parse({
+    sectionHeader: './MIX --LIVE: DAW MIXER',
+    regionLabel: 'Mixer channels',
+    skipLink: 'Skip mixer',
+    skipTargetId: 'daw-mixer-end',
+    sessionPrefix: 'SESSION: ',
+    sessionSeparator: ' · ',
+    tracksSuffix: ' GTR TRACKS + MASTER · ',
+    separator: '|',
+    bpmUnit: 'BPM',
+    columns: ['ID', 'TRACK', 'I/O', 'R/M/S', 'PLUGIN CHAIN', 'METER', 'FADER', 'dB'],
+  });
+
+export const dawMixerConfig = {
+  masterChannelId: 'MASTER',
+  pluginStrengthSegments: 5,
+  meterSegments: 12,
+  boldPartRemainder: 1,
+  boldPartDivisor: 2,
+  masterChannelCount: 1,
+  skipTargetTabIndex: -1,
+} as const;
 
 export const dawMixer: DawMixer = DawMixerSchema.parse({
   sessionName: 'YELLOW_TAKE_03.ALS',
@@ -100,7 +137,7 @@ export const dawMixer: DawMixer = DawMixerSchema.parse({
       activeButtons: ['M'],
     },
     {
-      id: 'MASTER',
+      id: dawMixerConfig.masterChannelId,
       name: '2-BUSS',
       desktopName: '2-BUSS — STEREO OUT',
       desc: 'sum of **5 gtr tracks** · mastering chain · feel over noise',
@@ -119,11 +156,6 @@ export const dawMixer: DawMixer = DawMixerSchema.parse({
       buttons: ['FX', 'EQ'],
       activeButtons: [],
       footer: { lufs: '-14', pk: '-0.3' },
-      terminalLines: [
-        '> headroom -3.2 · lufs -14 · pk -0.3 · mastered for streaming.',
-        '> same philosophy as code: **fewer plugins, more space**.',
-        'five tracks doing one job each beats fifteen tracks competing.',
-      ],
     },
   ],
 });
