@@ -62,7 +62,7 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
                 <span className="flex items-center gap-[9px]">
                   <span
                     className={cn(
-                      'border text-[9.5px] tracking-[0.06em] py-0.5 px-[5px]',
+                      'border text-xs md:text-micro-95 tracking-[0.06em] py-0.5 px-[5px]',
                       ACCENT_TAG[playlist.accent],
                     )}
                   >
@@ -77,7 +77,7 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
                   →
                 </span>
               </span>
-              <span className="block mt-[6px] text-tertiary-400 text-[11px] text-pretty">
+              <span className="block mt-[6px] text-tertiary-400 text-xs md:text-micro-110 text-pretty">
                 {playlist.description[locale]}
               </span>
             </a>

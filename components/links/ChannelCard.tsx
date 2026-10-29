@@ -52,7 +52,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
             <span className="text-primary-500 text-base font-bold">{channel.name}</span>
           </span>
           {counts.length > 0 && (
-            <span className="text-tertiary-400 text-[10px] tracking-[0.04em]">
+            <span className="text-tertiary-400 text-xs md:text-micro-100 tracking-[0.04em]">
               {counts.join(' · ')}
             </span>
           )}
@@ -62,11 +62,11 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
           <div className="mt-3">
             <div
               aria-hidden="true"
-              className="links-thumb-placeholder h-[104px] lg:h-[280px] border border-primary-border grid place-items-center text-primary-400 text-[10px] tracking-[0.08em] uppercase"
+              className="links-thumb-placeholder h-[104px] lg:h-[280px] border border-primary-border grid place-items-center text-primary-400 text-xs md:text-micro-100 tracking-[0.08em] uppercase"
             >
               {copy.thumbPlaceholder[locale]}
             </div>
-            <p className="mt-[10px] mb-0 text-tertiary-400 text-[11.5px] leading-[1.6] text-pretty">
+            <p className="mt-[10px] mb-0 text-tertiary-400 text-xs md:text-micro-115 leading-[1.6] text-pretty">
               {copy.feedUnavailable[locale]}
             </p>
           </div>
@@ -93,7 +93,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
                 {copy.newBadge[locale]}
               </Badge>
               {publishedAgo !== null && (
-                <span className="text-tertiary-400 text-[10.5px]">
+                <span className="text-tertiary-400 text-xs md:text-micro-105">
                   {publishedAgo}
                   {latest.duration ? ` · ${latest.duration}` : ''}
                 </span>
@@ -103,7 +103,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
               {latest.title}
             </span>
             {latest.description && (
-              <span className="block mt-[5px] text-tertiary-400 text-[11px] text-pretty">
+              <span className="block mt-[5px] text-tertiary-400 text-xs md:text-micro-110 text-pretty">
                 {latest.description}
               </span>
             )}
