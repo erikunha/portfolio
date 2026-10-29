@@ -38,13 +38,9 @@ function headerLabels(children: ReactNode): string[] {
 
 const LABEL_CLASS = 'block text-xs tracking-wider text-primary-500 md:hidden';
 
-function withRole(node: ReactNode, tag: string, role: string, children?: ReactNode): ReactNode {
+function withRole(node: ReactNode, tag: string, role: string): ReactNode {
   if (!isTag(node, tag)) return node;
-  return cloneElement(
-    node as ReactElement<Record<string, unknown>>,
-    { role },
-    ...(children === undefined ? [] : [children]),
-  );
+  return cloneElement(node as ReactElement<Record<string, unknown>>, { role });
 }
 
 function labelRow(row: ReactNode, labels: string[]): ReactNode {
@@ -57,7 +53,11 @@ function labelRow(row: ReactNode, labels: string[]): ReactNode {
     return cloneElement(
       cell as ReactElement<Record<string, unknown>>,
       { role: 'cell' },
-      label ? <span className={LABEL_CLASS}>{label}</span> : null,
+      label ? (
+        <span className={LABEL_CLASS} aria-hidden="true">
+          {label}
+        </span>
+      ) : null,
       cell.props.children,
     );
   });
