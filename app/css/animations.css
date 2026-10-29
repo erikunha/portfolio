@@ -318,21 +318,20 @@
   }
 
   .live-dot {
+    --live-dot-size: 8px;
     display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    width: var(--live-dot-size);
+    height: var(--live-dot-size);
+    margin-right: var(--spacing-2);
+    border-radius: 0;
     background: var(--color-primary-500);
-    margin-right: 8px;
     vertical-align: -1px;
     animation: live-blink 1.6s steps(2, start) infinite;
   }
 
   @media (max-width: 768px) {
     .live-dot {
-      width: 6px;
-      height: 6px;
-      margin-right: 6px;
+      --live-dot-size: 6px;
     }
   }
 
