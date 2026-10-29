@@ -492,6 +492,23 @@ export const ReadmeCopySchema = z.object({
 });
 export type ReadmeCopy = z.infer<typeof ReadmeCopySchema>;
 
+export const HeroContentSchema = z.object({
+  locationPrefix: z.string().min(1),
+  nowPrefix: z.string().min(1),
+  hireCtaLabel: z.string().min(1),
+  githubCtaLabel: z.string().min(1),
+  statsAriaLabel: z.string().min(1),
+  systemFailurePlate: z.string().min(1),
+  bootStaticDialogLine: z.string().min(1),
+});
+export type HeroContent = z.infer<typeof HeroContentSchema>;
+
+export const HeroClientContentSchema = HeroContentSchema.pick({
+  systemFailurePlate: true,
+  bootStaticDialogLine: true,
+});
+export type HeroClientContent = z.infer<typeof HeroClientContentSchema>;
+
 const FooterHrefSchema = z.string().regex(/^(?:#[\w-]+|\/(?!\/)[\w/-]*|https:\/\/[^\s]+)$/);
 const FooterLinkSchema = z.object({ label: z.string().min(1), href: FooterHrefSchema });
 

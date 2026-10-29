@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { heroClientContent } from '@/content/hero-client';
 import {
   type BootClasses,
   type BootCtrl,
@@ -66,7 +67,7 @@ export function HeroBootAnimation({ variant }: Props) {
         for (const s of specs) el.appendChild(buildLine(s, bootCls));
         el.appendChild(buildStaticCmdLine(bootCls));
         el.appendChild(buildLine([' '], bootCls));
-        el.appendChild(buildStaticDialogLine('The Matrix has you...', bootCls));
+        el.appendChild(buildStaticDialogLine(heroClientContent.bootStaticDialogLine, bootCls));
         return;
       }
 
