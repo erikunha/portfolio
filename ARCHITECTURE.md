@@ -28,7 +28,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Functional
 
-- Static composition of ~18 content sections (hero, README, projects, Career with certification, education and community tags, NPM, SYS_HEALTH, PERF_RECEIPTS, visa, HOTTEST_TAKES, RESPONSIBILITIES, guitar_rig, unknowns, contact, MAN ERIK, INTERACTIVE_SHELL, footer)
+- Static composition of ~17 content sections (hero, README, projects, Career with certification, education and community tags, NPM, SYS_HEALTH, PERF_RECEIPTS, HOTTEST_TAKES, RESPONSIBILITIES, guitar_rig, unknowns, contact, MAN ERIK, INTERACTIVE_SHELL, footer)
 - Hero: Matrix dialog loop + boot sequence (typewriter)
 - Mount-driven role typewriter (RoleTyper); IntersectionObserver gates MatrixRain; the footer is server-rendered, with client islands only for session counters and halt/reboot (no scroll-reveal typewriter exists)
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
@@ -145,7 +145,7 @@ Naming convention: every client file ends in `.client.tsx`. The default is serve
 
 ### Partial Pre-Rendering (PPR) — dual-variant sections
 
-Five sections (ManPage, Guitar, Projects, Visa, DawMixer) ship a desktop and mobile variant driven by UA detection via `headers()`. `cacheComponents: true` is set in `next.config.ts`. Each section exports an async inner RSC (`*Content()`) that calls `getIsMobile()` — a per-request dynamic boundary. The static PPR shell prerenders the desktop fallback (or `null` — see below); the dynamic hole fills sub-millisecond per request (no network I/O — `headers()` is a synchronous read).
+Four sections (ManPage, Guitar, Projects, DawMixer) ship a desktop and mobile variant driven by UA detection via `headers()`. `cacheComponents: true` is set in `next.config.ts`. Each section exports an async inner RSC (`*Content()`) that calls `getIsMobile()` — a per-request dynamic boundary. The static PPR shell prerenders the desktop fallback (or `null` — see below); the dynamic hole fills sub-millisecond per request (no network I/O — `headers()` is a synchronous read).
 
 Two exceptions use `fallback={null}` instead of their desktop component, for different reasons:
 - `GuitarSection`: desktop and mobile variants differ enough in height that the swap produced a CLS spike. `fallback={null}` renders only the module header until the dynamic hole fills. See `DECISIONS.md` 2026-06-13 (C2 perf fix).

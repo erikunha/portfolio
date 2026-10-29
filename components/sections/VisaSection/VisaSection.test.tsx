@@ -1,11 +1,9 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { render } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { visaRows } from '@/content/visa';
 import { VisaContent } from './VisaSection';
-
-vi.mock('@/lib/ua', () => ({ getIsMobile: vi.fn(async () => false) }));
 
 describe('work authorization table', () => {
   it('uses one semantic table with column and row headers for confirmed records', async () => {

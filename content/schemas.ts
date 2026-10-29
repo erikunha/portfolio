@@ -129,9 +129,7 @@ export const VisaUiSchema = z.object({
 
 export const VisaRowSchema = z.object({
   jurisdiction: z.string().min(1),
-  jurisdictionShort: z.string().min(1),
   status: z.enum(WORK_AUTH_STATUS),
-  statusShort: z.enum(WORK_AUTH_STATUS),
   evidence: z.string().min(1),
 });
 

@@ -68,6 +68,8 @@ test.describe('contact form', () => {
     await expect(errorEl).toBeVisible({ timeout: 5_000 });
     await expect(errorEl).toContainText('storage unavailable');
 
-    await expect(page.locator('[data-testid="contact-form"] button[type="submit"]')).toBeEnabled();
+    await expect(
+      page.locator('[data-testid="contact-form"] button[type="submit"]'),
+    ).toHaveAttribute('aria-disabled', 'false');
   });
 });

@@ -233,7 +233,6 @@ describe('terminal redesign canonical facts', () => {
       ['Worldwide', 'OPEN_WITH_SPONSORSHIP'],
     ]);
     for (const row of visaRows) {
-      expect(row.statusShort).toBe(row.status);
       expect(SYSTEM_TEXT).toContain(`${row.jurisdiction}: ${row.status}`);
       expect(llmsTxt).toContain(`${row.jurisdiction}: ${row.status}`);
       expect(JSON.parse(layoutMetadataText).other['work-authorization']).toContain(
