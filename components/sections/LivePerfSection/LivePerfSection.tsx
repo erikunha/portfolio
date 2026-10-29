@@ -41,13 +41,13 @@ function PerfBody({
           {measured.psi.timestampLabel}
           <span className="sr-only"> {measured.externalDisclosure}</span>
         </a>{' '}
-        {timestamp.valid ? (
-          <time dateTime={scores?.fetchedAt}>{timestamp.label}</time>
-        ) : loading ? (
+        {loading ? (
           measured.loading
-        ) : (
+        ) : unavailable ? (
           measured.unavailable
-        )}
+        ) : timestamp.valid ? (
+          <time dateTime={scores.fetchedAt}>{timestamp.label}</time>
+        ) : null}
         {timestamp.stale ? ` · ${measured.stale}` : null}
         {!unavailable && !timestamp.valid ? ` · ${measured.unknownTimestamp}` : null}
       </p>

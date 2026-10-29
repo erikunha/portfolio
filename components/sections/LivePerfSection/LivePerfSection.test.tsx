@@ -75,6 +75,21 @@ describe('LivePerfSection — strategy routing', () => {
     expect(doc.querySelector('time')).toBeNull();
     expect(doc.querySelector('[aria-valuenow="100"]')).toBeNull();
   });
+  it('shows scores without the unavailable label when fetchedAt does not parse', async () => {
+    getScoresMock.mockResolvedValue({
+      performance: 88,
+      accessibility: 100,
+      bestPractices: 95,
+      seo: 100,
+      fetchedAt: 'not-a-date',
+    });
+    const doc = new DOMParser().parseFromString(await renderPerfData('mobile'), 'text/html');
+    const status = doc.querySelector('.measured-status')?.textContent ?? '';
+    expect(status).toContain('timestamp unavailable');
+    expect(status.replace('timestamp unavailable', '')).not.toContain('unavailable');
+    expect(doc.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('88');
+  });
+
   it('calls getScores with desktop strategy', async () => {
     getScoresMock.mockResolvedValue({
       performance: 99,

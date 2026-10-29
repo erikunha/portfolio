@@ -46,3 +46,14 @@ describe('PerfReceiptsSection — hero data-featured variant', () => {
     expect(nonFeaturedDeltas.length).toBeGreaterThan(0);
   });
 });
+
+describe('PerfReceiptsSection — Dock focus target', () => {
+  it('is programmatically focusable and named by its heading', async () => {
+    const doc = await renderSection();
+    const root = doc.getElementById('sec-perf-receipts');
+    expect(root?.getAttribute('tabindex')).toBe('-1');
+    const labelledBy = root?.getAttribute('aria-labelledby');
+    expect(labelledBy).toBeTruthy();
+    expect(doc.getElementById(labelledBy ?? '')?.textContent?.length).toBeGreaterThan(0);
+  });
+});
