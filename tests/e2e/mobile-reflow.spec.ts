@@ -70,7 +70,7 @@ test.describe('mobile reflow: side-by-side groups stack below the tablet breakpo
       const container = page.locator(group.container);
       await expect(container.first()).toBeVisible();
       const { children } = await measure(container);
-      test.skip(children.length < 2, 'single child: nothing to place side by side');
+      expect(children.length).toBeGreaterThan(1);
       const lefts = new Set(children.map((child) => Math.round(child.left)));
       expect(lefts.size).toBeGreaterThan(1);
     });
