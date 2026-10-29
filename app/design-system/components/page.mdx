@@ -2,8 +2,8 @@ import { dsPageMetadata } from '../_lib/page-metadata';
 
 export const metadata = dsPageMetadata({
   slug: 'components',
-  title: 'Components — Design System — erikunha.dev',
-  description: '9 primitive components for erikunha.dev (7 RSC, Field and CopyButton are client)',
+  title: 'Components · Design System · erikunha.dev',
+  description: '8 design-system components and a docs clipboard helper for erikunha.dev',
 });
 
 import { Field } from '../../../design-system/components/Field';
@@ -11,7 +11,7 @@ import { WindowChrome } from '../../../design-system/components/WindowChrome/Win
 
 # COMPONENTS
 
-7 of 9 primitives are React Server Components. `Field` and `CopyButton` are client components (`'use client'`) — all others ship zero client JavaScript.
+The `design-system/components` directory contains eight components. Seven have no client directive; `Field` is a client component. The docs also provide a client `CopyButton` helper from `app/design-system/_components`. Server-compatible components ship client JavaScript when imported through a client boundary.
 
 <ComponentNav />
 
@@ -30,18 +30,18 @@ import { WindowChrome } from '../../../design-system/components/WindowChrome/Win
   <Button variant="secondary" size="lg" as="a" href="#">LG</Button>
 </Preview>
 
-**Accessibility:** 44px touch target on md size. `focus-visible` outline using `--color-primary-500`. Disabled anchors use `aria-disabled="true"` (anchors can't be natively disabled).
+**Accessibility:** At least 44px wide. Small and medium sizes have a 44px minimum height; large has a 52px minimum height. `focus-visible` outline using `--color-primary-500`. Disabled anchors use `aria-disabled="true"` (anchors can't be natively disabled).
 
 ## Field
 
 | Prop | Type | Default | Required |
 |---|---|---|---|
-| `name` | `string` | — | yes |
-| `label` | `string` | — | yes |
-| `type` | `string` | `'text'` | no |
+| `name` | `string` | · | yes |
+| `label` | `string` | · | yes |
+| `type` | `InputHTMLAttributes['type']` | browser default (`text`) | no |
 | `multiline` | `boolean` | `false` | no |
-| `rows` | `number` | `3` | no |
-| `error` | `string` | — | no |
+| `rows` | `number` | `4` | no |
+| `error` | `string` | · | no |
 
 <Preview id="field">
   <Field name="email" label="$ email:" type="email" />
@@ -49,7 +49,7 @@ import { WindowChrome } from '../../../design-system/components/WindowChrome/Win
   <Field name="broken" label="$ broken:" error="Required field" />
 </Preview>
 
-**Accessibility:** Label always rendered and programmatically associated. `aria-describedby` points to error text. `aria-invalid="true"` set on error state.
+**Accessibility:** Label is always rendered and associated through the supplied `id`, or `field-${name}`. Error text is appended to any consumer `aria-describedby`. `aria-invalid="true"` is set on error. Use distinct names or explicit IDs for repeated instances.
 
 ## Badge
 
@@ -74,7 +74,7 @@ import { WindowChrome } from '../../../design-system/components/WindowChrome/Win
 |---|---|---|---|
 | `borderStyle` | `'solid' \| 'dashed'` | `'solid'` | no |
 | `as` | `'div' \| 'section' \| 'article'` | `'div'` | no |
-| `header` | `ReactNode` | — | no |
+| `header` | `ReactNode` | · | no |
 
 <Preview id="terminal-panel">
   <TerminalPanel header="[ STATUS ]">Content here.</TerminalPanel>
@@ -86,8 +86,8 @@ import { WindowChrome } from '../../../design-system/components/WindowChrome/Win
 | Prop | Type | Default | Required |
 |---|---|---|---|
 | `size` | `number` | `10` | no |
-| `className` | `string` | — | no |
-| `style` | `CSSProperties` | — | no |
+| `className` | `string` | · | no |
+| `style` | `CSSProperties` | · | no |
 
 <Preview id="window-chrome">
   <WindowChrome />
@@ -95,14 +95,14 @@ import { WindowChrome } from '../../../design-system/components/WindowChrome/Win
   <WindowChrome size={9} />
 </Preview>
 
-Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RSC. Dots are `aria-hidden="true"` — purely decorative, no focus management. The `size` prop sets dot diameter in px; pass it explicitly for context-aware sizing (9px mobile title bar, 10px shell, 12px desktop topbar).
+Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RSC. Dots are `aria-hidden="true"` · purely decorative, no focus management. The `size` prop sets dot diameter in px; pass it explicitly for context-aware sizing (9px mobile title bar, 10px shell, 12px desktop topbar).
 
 ## StatTile
 
 | Prop | Type | Default | Required |
 |---|---|---|---|
-| `value` | `string` | — | yes |
-| `label` | `string` | — | yes |
+| `value` | `string` | · | yes |
+| `label` | `string` | · | yes |
 | `variant` | `'default' \| 'compact' \| 'display'` | `'default'` | no |
 
 <Preview id="stat-tile">
@@ -111,16 +111,16 @@ Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RS
   <StatTile value="1.2s" label="LCP" variant="compact" />
 </Preview>
 
-**Accessibility:** Rendered as `<dl><dt>{label}</dt><dd>{value}</dd></dl>` — screen readers announce "label: value".
+**Accessibility:** Rendered as `<dl><dt>{label}</dt><dd>{value}</dd></dl>` · screen readers announce "label: value".
 
 ## CmdLine
 
 | Prop | Type | Default | Required |
 |---|---|---|---|
-| `command` | `string` | — | yes |
+| `command` | `string` | · | yes |
 | `user` | `string` | `'erik@portfolio'` | no |
-| `prompt` | `string` | `'$'` | no |
-| `output` | `ReactNode` | — | no |
+| `prompt` | `string` | `':~$'` | no |
+| `output` | `ReactNode` | · | no |
 
 <Preview id="cmd-line">
   <CmdLine command="cat README.md" />
@@ -146,13 +146,13 @@ Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RS
 
 | Prop | Type | Default | Required |
 |---|---|---|---|
-| `text` | `string` | — | yes |
+| `text` | `string` | · | yes |
 
 <Preview id="copybutton">
   <CopyButton text="pnpm install @/design-system" />
 </Preview>
 
-**Behavior:** Copies `text` to clipboard on click. Label changes from `COPY` to `COPIED` for 1.5s. Falls back silently if clipboard API is unavailable.
+**Behavior:** Copies `text` to the clipboard on click. Success shows `COPIED` for 1.5s. A failed request shows `COPY FAILED`; missing clipboard access shows `COPY UNAVAILABLE`. A polite live region announces the result and manual-copy guidance. Consumer button props are forwarded; a consumer click handler can cancel copying with `preventDefault()`.
 
 ---
 
@@ -160,7 +160,7 @@ Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RS
 
 ### Stat grid using StatTile
 
-Four `StatTile` components in a CSS grid. The grid layout stays in the consumer — primitives don't embed layout opinions.
+Four `StatTile` components in a CSS grid. The grid layout stays in the consumer · primitives don't embed layout opinions.
 
 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--color-primary-subtle)', marginBottom: '16px', marginLeft: '-24px', marginRight: '-24px' }}>
   <StatTile value="99" label="LH_SCORE" variant="display" />

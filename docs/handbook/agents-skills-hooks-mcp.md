@@ -1,91 +1,64 @@
-# Agents, Skills, Hooks & MCP Reference
+# Agents, Skills, Hooks and MCP Reference
 
-> The complete reference for the `.claude` platform: every project skill, command, rule, and MCP server. This repo has no agent-runtime hooks; the section below records that and why. For how these fit the SDLC, see [ai-assisted-development](./ai-assisted-development.md).
+This reference describes tracked project configuration. User-level tools and hooks require separate inspection.
 
-## Project skills (`.claude/skills/`)
+## Project skills
 
-Skills are load-on-demand procedures. They activate by their `description` frontmatter (the trigger) or by explicit invocation.
+| Skill                    | Use                                                                                          |
+| ------------------------ | -------------------------------------------------------------------------------------------- |
+| `visual-baseline-regen`  | Refresh affected Darwin and Linux screenshot baselines using its platform-specific procedure |
+| `ai-eval-update`         | Maintain the ask corpus, calibration, runner and CI eval job                                 |
+| `pr-review-orchestrator` | Review a diff across relevant domains, with local and CI profiles                            |
+| `semgrep`                | Run the pinned static-analysis wrapper when explicitly requested                             |
 
-| Skill                     | Trigger                                                                        | What it does                                                                                                                                                                                                                   |
-| ------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **visual-baseline-regen** | A change may touch a Playwright screenshot baseline (CSS/layout/typography)    | The baseline regen procedure: darwin `--update-snapshots`, the linux CI-dispatch artifact path, inspect-before-commit, batch-to-one-push. Distinguishes the CI-gated page-section spec from the darwin-only DS-component spec. |
-| **ai-eval-update**        | Editing the `/api/ask` eval corpus/calibration/runner or the ask system prompt | Drives `pnpm ask:eval` (judge self-calibration first, then corpus). Gates correctness + jailbreak-resistance; writes `ask-eval-result.json` and Upstash `ask:eval:latest`. Feature model Haiku, judge model Sonnet.            |
+Read each `.claude/skills/<name>/SKILL.md` for its trigger and procedure. `.claude/commands/commit.md` delegates scoped commit creation to `commit-commands:commit`.
 
-## Custom commands (`.claude/commands/`)
+## Project agent hooks
 
-| Command     | Invokes                  | When                                                    |
-| ----------- | ------------------------ | ------------------------------------------------------- |
-| **/commit** | `commit-commands:commit` | Conventional commit with a mandatory feature-area scope |
+`.claude/settings.json` has no `hooks` block. The repository does not register `PreToolUse`, `PostToolUse` or `SessionStart` handlers. This says nothing about user-global runtime configuration.
 
-## Hooks (`.claude/hooks/`) — none
+Architect review before planning, security review after API changes and pre-PR review are conventions in `CLAUDE.md`. There is no project hook proving those dispatches occurred.
 
-**This repo has no agent-runtime hooks.** `.claude/settings.json` carries no `hooks` block, so no `PreToolUse`, `PostToolUse` or `SessionStart` command runs.
+## Git hooks
 
-Six were removed on 2026-07-27, with the meta-gate (`check:gate-health`) and fixture suite (`test:hooks`) that verified them:
+| Hook         | Runs                                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------------------------- |
+| `pre-commit` | `pnpm check`, then `pnpm gitleaks:staged`                                                            |
+| `commit-msg` | commitlint, including mandatory scope                                                                |
+| `pre-push`   | Rejects remote `refs/heads/main`; checks branch names and runs `pnpm verify` for non-deletion pushes |
 
-| Removed hook                 | Event                    | What it did                                                                             |
-| ---------------------------- | ------------------------ | --------------------------------------------------------------------------------------- |
-| `bash-guard.sh`              | PreToolUse(Bash)         | blocked broad `git add`, npm/yarn, `gh pr merge`, force-push-to-main, unpinned `fallow` |
-| `api-security-push-guard.sh` | PreToolUse(Bash)         | blocked `git push` while an unaudited API edit was pending                              |
-| `architect-gate.sh`          | PreToolUse(Skill)        | blocked `speckit-plan` without an `architect-reviewer` PASS                             |
-| `api-edit-marker.sh`         | PostToolUse(Edit\|Write) | recorded API-surface edits into the pending marker                                      |
-| `biome-format.sh`            | PostToolUse(Edit\|Write) | formatted the edited file                                                               |
-| `session-context.sh`         | SessionStart             | printed branch/uncommitted/last-commit context                                          |
+A deletion-only push skips branch-name and verify checks after the main-ref guard. Runtime gates remain a manual pre-PR step.
 
-The properties they enforced are now either held elsewhere or held by nobody, and the distinction matters:
-- **Still held:** formatting (`pre-commit` Biome, `pnpm check` in `verify`), the main-push block and branch-name check (`.husky/pre-push`).
-- **No longer held:** blocking a broad `git add` or a force-push mid-turn, requiring a `security-auditor` dispatch after an API edit, and requiring an architect PASS before planning. All three are conventions in `CLAUDE.md` now, and `CLAUDE.md` says so in those words rather than claiming enforcement.
+## Rules and permissions
 
-## Git hooks (`.husky/`)
+`.claude/rules/api-boundary.md` supplies path-scoped API guidance for `app/api/**`, `lib/rate-limit.ts`, `lib/server/**` and `proxy.ts`.
 
-| Hook         | Runs                                              |
-| ------------ | ------------------------------------------------- |
-| `pre-commit` | Biome lint + format                               |
-| `commit-msg` | commitlint (conventional, mandatory scope)        |
-| `pre-push`   | main-push guard, branch-name guard, `pnpm verify` |
+`.claude/settings.json` lists allowed skill invocations and denied `fallow fix` command forms. It does not set `defaultMode`.
 
-## Path-scoped rules (`.claude/rules/`)
+## MCP connections
 
-| File                | Loads when editing                                             | Governs                                                                                                                                                        |
-| ------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **api-boundary.md** | `app/api/**`, `lib/rate-limit.ts`, `lib/server/**`, `proxy.ts` | API handler contract, the security-review convention, CSP placement, the `/api/ask` rules. Guidance only; the hard gates are the API behavioural tests and CI. |
+| Server     | Tracked configuration        | Role                                                     |
+| ---------- | ---------------------------- | -------------------------------------------------------- |
+| `context7` | HTTP endpoint in `.mcp.json` | Library documentation                                    |
+| `upstash`  | stdio command in `.mcp.json` | Redis access using the supplied read-only API credential |
 
-## Permissions (`.claude/settings.json`)
-
-- **Allowed skills** (no prompt): enumerated in `permissions.allow` in `.claude/settings.json` as `Skill(...)` entries. Read them there rather than from a copy here — a second list is the one that drifts, and this one had.
-- **Denied Bash**: every `fallow fix` form (belt-and-suspenders over `bash-guard.sh`).
-- **defaultMode**: not set; the user-level settings decide it.
-
-## MCP servers
-
-| Server                            | Scope               | Transport                     | Role                                                                                    |
-| --------------------------------- | ------------------- | ----------------------------- | --------------------------------------------------------------------------------------- |
-| **context7**                      | project `.mcp.json` | http (`mcp.context7.com/mcp`) | current library/framework docs (Next 16, React 19, AI SDK), read-only                   |
-| **upstash**                       | project `.mcp.json` | npx stdio                     | read-only Redis state (`${UPSTASH_READONLY_API_KEY}`): rate-limit/KV, `ask:eval:latest` |
-| GitHub / Vercel / Chrome DevTools | plugin (user scope) | varies                        | PR/CI access, deployments/logs, perf+a11y debugging                                     |
+The configuration declares connections. It does not prove startup, available tools or credential permissions. GitHub, Vercel and browser tools are not declared in this project file.
 
 ```mermaid
 flowchart LR
-    agent["Claude Code"] --> ctx7["context7 (docs)"]
-    agent --> up["upstash (read-only state)"]
-    agent --> gh["GitHub plugin MCP (PRs/CI)"]
-    agent --> vc["Vercel plugin MCP (deploys/logs)"]
-    agent --> cd["Chrome DevTools MCP (perf/a11y)"]
-    repo["/api/mcp (the repo's OWN read-only MCP server)"] --> consumers["external AI agents: get_profile, ask_erik"]
+    agent["Development agent"] --> config["Project .mcp.json"]
+    config --> ctx7["context7: documentation"]
+    config --> up["upstash: configured Redis access"]
+    repo["/api/mcp: product endpoint"] --> consumers["External MCP clients"]
 ```
 
-Note the asymmetry: the repo _consumes_ MCP servers as a dev tool, and also _exposes_ its own MCP server at `/api/mcp` as a product feature (machine-readable hiring profile + ask).
+The product endpoint `app/api/mcp/route.ts` is separate from the development connections.
 
-## The review toolchain
+## Review checks
 
-**claude-review is the AI reviewer on pull requests** (restored 2026-07-27 after being removed earlier the same day). `.github/workflows/claude-review.yml` runs `claude-code-action` on every PR open and push with `.github/claude-review-prompt.md` appended as a system prompt; that prompt requires one `create_inline_comment` per finding, anchored to a changed line, and a complete pass rather than only the most salient issue.
+| Command            | Contract                                                                               |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| `pnpm claude-gate` | Latest claude-review verdict must approve the current HEAD; missing or stale SHA fails |
+| `pnpm pr:gate`     | Review threads must be resolved and carry a reply; reports suspicious self-resolution  |
 
-**The local dispatch chain stayed removed** and is not coming back with it: `review-battery` -> `battery-synthesis` -> `review-findings.ts` -> `review-stamp.ts` -> `.review-passed`, the shared `lib/transcript.mjs` primitives it rode on, `transcript-doctor.ts` and `check-gate-health.ts`. Those constrained the agent mid-turn or gated the push; the reviewer reviews the diff on a PR.
-
-Pre-PR self-review is a discipline, not a gate. What remains mechanical on a PR:
-
-| Script                     | Purpose                                                                                                                              |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `check-claude-approval.ts` | `pnpm claude-gate`: the latest claude-review verdict must be Approve on the current head; fail-closed on a stale or SHA-less Approve |
-| `check-pr-comments.ts`     | `pnpm pr:gate`: every review thread resolved; flags `suspicious_self_resolve`                                                        |
-| `lint-css-tokens.ts`       | bans raw hex outside `theme.css` (CI gate `pnpm lint:css-tokens`)                                                                    |
+`.github/workflows/claude-review.yml` runs automatic review for non-draft PRs authored by non-Bot owners, members or collaborators. An authorized `/claude-review` comment can also trigger it. `.github/workflows/claude.yml` handles human `@claude` mentions. Pre-PR review is procedural, independent of both workflows.

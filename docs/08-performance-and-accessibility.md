@@ -1,53 +1,53 @@
 # Performance & Accessibility
 
-> Both are treated as **implicit on every change**, not separate phases, and both are hard CI gates. This doc explains the budgets and the techniques that meet them.
+> Configured performance and accessibility checks, their measurement scope, and the rendering techniques they exercise.
 
-## Performance budgets (non-negotiable, CI-enforced)
+## Performance budgets and measurement scope
 
-| Metric                                                           | Desktop   | Mobile    |
-| ---------------------------------------------------------------- | --------- | --------- |
-| LCP                                                              | < 1.8s    | < 3.5s    |
-| INP                                                              | < 200ms   | < 200ms   |
-| CLS                                                              | < 0.05    | < 0.05    |
-| TBT                                                              | < 200ms   | < 400ms   |
-| JS gzipped / route, first-load total                             | < 164.7KB | < 164.7KB |
-| JS gzipped, app-owned (total minus the measured framework floor) | < 32.8KB  | < 32.8KB  |
-| Lighthouse Perf                                                  | ≥ 95      | ≥ 90      |
-| Lighthouse A11y                                                  | = 100     | = 100     |
-| Lighthouse Best Practices                                        | ≥ 95      | ≥ 95      |
-| Lighthouse SEO                                                   | = 100     | = 100     |
+| Metric                                                   | Desktop   | Mobile    |
+| -------------------------------------------------------- | --------- | --------- |
+| LCP                                                      | < 1.8s    | < 3.5s    |
+| INP target (not asserted by LHCI)                        | < 200ms   | < 200ms   |
+| CLS                                                      | < 0.05    | < 0.05    |
+| TBT                                                      | < 200ms   | < 400ms   |
+| JS gzipped / route, first-load total                     | ≤ 164.7KB | ≤ 164.7KB |
+| JS gzipped, app-owned allowance (reported, not asserted) | ≤ 32.8KB  | ≤ 32.8KB  |
+| Lighthouse Perf                                          | ≥ 95      | ≥ 90      |
+| Lighthouse A11y                                          | = 100     | = 100     |
+| Lighthouse Best Practices                                | ≥ 95      | ≥ 95      |
+| Lighthouse SEO                                           | = 100     | = 100     |
 
-See `lighthouserc.json` + `.mobile.json`, `scripts/check-route-js.mjs`, and `scripts/check-bundle-size.mjs` for enforcement. The app-owned row reports total JS minus the measured 131.9KB framework floor. A bare hello-world Next 16.4.3 + React 19.3.1 app measures that floor before app code. The 164.7KB total preserves 32.8KB of app-owned allowance. `bundle-check` measures chunks globally and cannot detect per-route regressions.
+See `lighthouserc.json` + `.mobile.json`, `scripts/check-route-js.mjs`, and `scripts/check-bundle-size.mjs` for enforcement. The app-owned row reports total JS minus the measured 131.9KB framework floor. The script stores that floor as a constant and rejects a lightest route more than 2KB below it. Re-measure the baseline when framework changes make it stale. The 164.7KB total preserves 32.8KB of app-owned allowance. `bundle-check` measures chunks globally and cannot detect per-route regressions.
 
-## How LCP < 1.8s is achieved
+## Rendering techniques that support LCP
 
 ```mermaid
 flowchart LR
     static["Default RSC + SSG: sections ship zero JS"] --> hero
-    hero["Hero rendered OUTSIDE any Suspense<br/>-> LCP never waits on dynamic resolution"] --> boot
-    boot["body[data-motion] set by inline script BEFORE paint<br/>-> no flash, off hydration path"] --> fonts
+    hero["Hero rendered OUTSIDE any Suspense<br/>-> home heading is outside UA/data boundaries"] --> boot
+    boot["body[data-motion] set by inline script BEFORE paint<br/>-> initial preference set before hydration"] --> fonts
     fonts["JetBrains Mono + Inter self-hosted via next/font/local<br/>-> no Google CDN round-trip"] --> ppr
-    ppr["PPR: static shell streamed instantly,<br/>dynamic sections stream behind Suspense"]
+    ppr["PPR: prerendered shell,<br/>dynamic sections stream behind Suspense"]
 ```
 
 Key levers (all verifiable in code):
 - **Static-first.** `app/page.tsx` composes RSC sections; their code/data never ship. Only `AppShell` chrome + named islands hydrate.
 - **Shared Projects rendering.** Nine cards and six attached receipts render as one static RSC tree. Desktop and mobile use the same copy and stats; CSS controls the column count. Projects has no user-agent read or variant swap.
 - **Hero outside Suspense.** The LCP element is in the prerendered shell, never gated on a dynamic boundary.
-- **Pre-paint motion bootstrap.** An inline `<script>` in `layout.tsx` sets `body[data-motion]` from `localStorage`/OS pref before first paint, so CRT effects and the LCP element don't flash.
+- **Pre-paint motion bootstrap.** An inline `<script>` in `layout.tsx` sets `body[data-motion]` from `localStorage`/OS pref before first paint, so the initial motion preference does not wait for hydration.
 - **Self-hosted fonts** via `next/font/local` (no Google CDN), with the font `--font-*-src` bound into `@theme`.
-- **INP discipline (the big one).** Per-keystroke/per-pixel/per-frame updates must not re-render React: the Hero boot loop and `RoleTyper` mutate `textContent`; the DAW islands mutate `style`/`setAttribute`/`className`; the `/api/ask` stream is rAF-coalesced into a single isolated `<span>`. Asserted by `InteractiveShell.test.tsx`.
-- **Deferred render cost.** The below-the-fold sections counted by `DEFERRED_SECTION_COUNT` pass `defer` to `Module`, which applies `content-visibility`.
-- **Lazy JS (`next/dynamic`) for interactive islands, plus decorative fixed islands that cannot shift layout**: `ContactFormLazy`, `InteractiveShellLazy`, `MatrixRainLazy` (fixed, `pointer-events:none` overlay behind `main`, so its late hydration moves nothing). `Footer` is an RSC; `FooterLazy` loads only the session counters and halt/reboot island. Its static content remains available without JavaScript. The visitor’s halt clock starts empty on the server, then fills after mount. The netstat `CopyButton` is a separate design-system island. Footer links, COPY and the reboot key provide 44px targets and visible keyboard focus.
+- **Animation and streaming updates.** Per-keystroke, per-pixel and per-frame updates avoid broad re-renders: the Hero boot loop and `RoleTyper` mutate `textContent`; the DAW islands mutate `style`/`setAttribute`/`className`; the `/api/ask` stream coalesces `InteractiveShell` state updates with requestAnimationFrame and displays text in a dedicated span. This still re-renders the owning component. Asserted by `InteractiveShell.test.tsx`.
+- **Deferred render cost.** The below-the-fold sections counted by `DEFERRED_SECTION_COUNT` use `defer` to apply `content-visibility` through `Module` or Career's own section wrapper.
+- **Dynamic imports:** `ContactFormLazy` and `InteractiveShellLazy` use `ssr: false`. `MatrixRainLazy` is a fixed, `pointer-events:none` overlay behind `main`, so its late hydration moves nothing. `Footer` is an RSC; `FooterLazy.client.tsx` directly re-exports the session counters and halt/reboot controls; it does not split them with `next/dynamic`. Its static content remains available without JavaScript. The visitor’s halt clock starts empty on the server, then fills after mount. The netstat `CopyButton` is a separate client island. Footer links, COPY and the reboot key provide 44px targets and visible keyboard focus.
 - **MatrixRain** caps at 22fps, pauses via `IntersectionObserver` + `visibilitychange`, and starts via `requestIdleCallback`.
 
-## How CLS < 0.05 is achieved
+## Layout techniques that support CLS
 
 The dynamic (per-request) sections are the CLS risk, because their `<Suspense>` fallback is what's prerendered. Mitigations:
 - **Per-section fallback choice.** Most dynamic sections prerender their _desktop_ variant as the fallback.
 - **Measured fallbacks.** ASK and each PSI strategy have independent Suspense boundaries. Their loading states retain the metric tiles or score rows. One slow source does not block the other groups.
 - **Responsive guitar presentation.** `GuitarSection` renders one RSC tree across viewports. CSS changes its layout without a desktop/mobile swap or the associated layout shift.
-- **Mobile section ordering** is done with CSS flex `order` (the `#sec-*` map in `base.css`), and `check:section-order` fails the build if a section lacks an order rule - a section defaulting to `order:0` would float to the top and cause a visible jump (this actually happened, 2026-05-28).
+- **Mobile section ordering** is done with CSS flex `order` (the `#sec-*` map in `base.css`), and `check:section-order` requires discovered section ids to have order rules or explicit exemptions. Nested metric, receipt, credential and community anchors are exempt.
 - **Both nav variants in the DOM**, toggled by CSS at 768px, to avoid a hydration-driven reflow.
 
 ## Live performance, self-reported
@@ -58,22 +58,22 @@ Measured is one module at `sec-live-metrics`. `AiMetricsSection` composes ASK ev
 
 ## Accessibility architecture
 
-Target: **WCAG 2.1 AA, Lighthouse a11y = 100, zero axe violations** (all hard gates).
+Target: WCAG 2.1 AA. Lighthouse accessibility and axe checks enforce their configured audit sets, not complete conformance.
 
-| Concern             | How it's handled                                                                                                                                                                          |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Color contrast      | Two-token text discipline: `--color-signal` only for headings/large text; `--color-text-body` (~13:1) for body. `lint:contrast` parses `theme.css` and checks documented pairs against AA |
-| Motion              | `prefers-reduced-motion: reduce` **and** a user `MOTION` toggle (`body[data-motion]`) both disable all CRT/JS animation; the toggle is an `aria-pressed` button in `DesktopTopbar`        |
-| Semantics           | sections are `<section>` with an `<h2>`, named via `aria-labelledby` (`Module`); stat tiles are `<dl>`; the Hero headline is a real heading                                               |
-| Keyboard            | a skip-to-content link; `:focus-visible` rings in `base.css`; the DAW faders/knobs/VU meters are keyboard-operable (`aria-valuenow` updated on arrow keys)                                |
-| Live regions        | `RoleTyper` announces only the _completed_ role via an `sr-only` live region (not each keystroke); `ContactForm` errors use `role="alert"`                                                |
-| Forms               | `Field` synthesizes `aria-describedby` for errors; contact uses custom client validation with a focused alert summary linking to invalid fields, plus server re-validation                |
-| Reduced-motion sync | `CRTOverlay` listens for OS `prefers-reduced-motion` changes and keeps `body[data-motion]` in sync                                                                                        |
+| Concern             | How it's handled                                                                                                                                                                         |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Color contrast      | Two-token text discipline: `--color-primary-500` only for headings/large text; `--color-tertiary-50` for body. `lint:contrast` parses `theme.css` and checks documented pairs against AA |
+| Motion              | `prefers-reduced-motion: reduce` **and** a user `MOTION` toggle (`body[data-motion]`) both disable all CRT/JS animation; the toggle is an `aria-pressed` button in `DesktopTopbar`       |
+| Semantics           | sections are `<section>` with an `<h2>`, named via `aria-labelledby` (`Module`); stat tiles are `<dl>`; the Hero headline is a real heading                                              |
+| Keyboard            | a skip-to-content link; `:focus-visible` rings in `base.css`; DAW faders and knobs expose keyboard slider controls; meters report levels                                                 |
+| Live regions        | `RoleTyper` announces only the _completed_ role via an `sr-only` live region (not each keystroke); `ContactForm` errors use `role="alert"`                                               |
+| Forms               | `Field` synthesizes `aria-describedby` for errors; contact uses custom client validation with a focused alert summary linking to invalid fields, plus server re-validation               |
+| Reduced-motion sync | `CRTOverlay` listens for OS `prefers-reduced-motion` changes and keeps `body[data-motion]` in sync                                                                                       |
 
 Per-component behavioral a11y tests live alongside components; the axe gate covers the design-system routes. The CRT effects are all `aria-hidden` + `pointer-events:none`, so the decorative layer is invisible to assistive tech.
 
 The Profile manual, Responsibilities and README code sample scroll containers use `tabIndex={0}` and `role="region"`. Each has its own accessible name from the `SCROLL_REGION_LABELS` map in `content/section-labels.ts` (the section name plus "(scrollable)"), kept distinct from the parent section's name so no two landmarks share a name. Keyboard users can tab into these containers and scroll with arrow keys. `base.css` applies a `:focus-visible` outline using `--color-primary-500` to elements with `tabindex="0"`. The work authorization table inside Contact is a semantic `<table>` whose cells wrap, so it has no scrolling container and needs no region. The interactive shell's scrollable log already has its own tab stop and accessible name. The footer's scrollable connection table contains keyboard-focusable links.
 
-## The performance/accessibility invariant
+## Verification scope
 
-From `CLAUDE.md`: _"Perf, a11y (WCAG 2.1 AA), and security are implicit on every change - not separate phases."_ In practice this means a visual-affecting change must regenerate visual baselines before a PR, a new interactive element must pass the a11y tester, and a change that trips an LCP/INP/CLS gate gets a `performance-engineer` pass. The gates make these non-optional.
+Both Lighthouse configs collect `/` and the five design-system routes. `/summary`, `/cv`, `/links` and `/links/en` are outside that collection. The INP assertion is disabled in both configs. These automated checks do not establish complete WCAG conformance or real-user INP. The route-JS checker separately evaluates every route emitted in the build manifest.
