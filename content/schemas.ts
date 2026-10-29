@@ -524,3 +524,145 @@ export type LinksContent = z.infer<typeof LinksContentSchema>;
 
 export type Profile = z.infer<typeof ProfileSchema>;
 export type Education = z.infer<typeof EducationSchema>;
+
+const ReadingTextSchema = z.string().min(1);
+const ReadingLinkSchema = z.object({ label: ReadingTextSchema, href: ReadingTextSchema });
+
+export const ReadingViewsSchema = z.object({
+  shared: z.object({
+    skipLabel: ReadingTextSchema,
+    homeLabel: ReadingTextSchema,
+    navLabel: ReadingTextSchema,
+    nav: z.array(ReadingLinkSchema).min(1),
+    hire: z.object({
+      label: ReadingTextSchema,
+      ariaLabel: ReadingTextSchema,
+      href: z.url(),
+    }),
+    printLabel: ReadingTextSchema,
+    newTabRel: ReadingTextSchema,
+    newTabHint: ReadingTextSchema,
+    homeHref: z.string().startsWith('/'),
+    ogImage: z.object({ path: z.string().startsWith('/'), width: z.number(), height: z.number() }),
+  }),
+  cv: z.object({
+    path: z.string().startsWith('/'),
+    title: ReadingTextSchema,
+    description: ReadingTextSchema,
+    summaryLinkLabel: ReadingTextSchema,
+    headings: z.object({
+      summary: ReadingTextSchema,
+      experience: ReadingTextSchema,
+      skills: ReadingTextSchema,
+      certifications: ReadingTextSchema,
+      community: ReadingTextSchema,
+      education: ReadingTextSchema,
+      workAuthorization: ReadingTextSchema,
+      contact: ReadingTextSchema,
+    }),
+    credentialLabels: z.record(z.string(), ReadingTextSchema),
+    proseOverrides: z.record(z.string(), ReadingTextSchema),
+  }),
+  summary: z.object({
+    path: z.string().startsWith('/'),
+    title: ReadingTextSchema,
+    description: ReadingTextSchema,
+    cvLinkLabel: ReadingTextSchema,
+    statsLabel: ReadingTextSchema,
+    experienceLabel: ReadingTextSchema,
+    badge: ReadingTextSchema,
+    projectNames: z.array(ReadingTextSchema).min(1),
+    stack: z.array(ReadingTextSchema).min(1),
+    headings: z.object({
+      projects: ReadingTextSchema,
+      workAuthorization: ReadingTextSchema,
+      stack: ReadingTextSchema,
+      contact: ReadingTextSchema,
+    }),
+  }),
+});
+
+export type ReadingViews = z.infer<typeof ReadingViewsSchema>;
+
+const ReadingRowSchema = z.object({
+  key: ReadingTextSchema,
+  label: ReadingTextSchema,
+  value: ReadingTextSchema,
+});
+
+export const CvDocumentSchema = z.object({
+  name: ReadingTextSchema,
+  role: ReadingTextSchema,
+  location: ReadingTextSchema,
+  links: z
+    .array(z.object({ label: ReadingTextSchema, href: ReadingTextSchema, external: z.boolean() }))
+    .min(1),
+  summary: ReadingTextSchema,
+  experience: z
+    .array(
+      z.object({
+        key: ReadingTextSchema,
+        company: ReadingTextSchema,
+        meta: ReadingTextSchema,
+        bullets: z.array(ReadingTextSchema).min(1),
+      }),
+    )
+    .min(1),
+  skills: z.array(ReadingTextSchema).min(1),
+  certifications: z.array(ReadingRowSchema),
+  community: z.object({
+    heading: ReadingTextSchema,
+    href: z.url().optional(),
+    bullets: z.array(ReadingTextSchema),
+    status: ReadingTextSchema,
+  }),
+  education: z.array(ReadingRowSchema),
+  authorization: z.array(ReadingRowSchema).min(1),
+  languages: ReadingTextSchema,
+  email: ReadingTextSchema,
+});
+
+export const SummaryDocumentSchema = z.object({
+  name: ReadingTextSchema,
+  tagline: ReadingTextSchema,
+  technologyLine: ReadingTextSchema,
+  context: ReadingTextSchema,
+  stats: z.array(z.object({ value: ReadingTextSchema, label: ReadingTextSchema })).min(1),
+  projects: z
+    .array(
+      z.object({
+        name: ReadingTextSchema,
+        label: ReadingTextSchema,
+        value: ReadingTextSchema,
+        description: ReadingTextSchema,
+      }),
+    )
+    .min(1),
+  authorization: z
+    .array(
+      z
+        .object({
+          jurisdiction: ReadingTextSchema,
+          status: ReadingTextSchema,
+          evidence: ReadingTextSchema,
+        })
+        .passthrough(),
+    )
+    .min(1),
+  languages: ReadingTextSchema,
+  email: ReadingTextSchema,
+});
+
+export const CvJsonLdSchema = z.object({
+  '@context': z.literal('https://schema.org'),
+  '@type': z.literal('ProfilePage'),
+  url: z.url(),
+  name: ReadingTextSchema,
+  mainEntity: z.object({
+    '@type': z.literal('Person'),
+    name: ReadingTextSchema,
+    jobTitle: ReadingTextSchema,
+    url: z.url(),
+    sameAs: z.array(z.url()).min(1),
+  }),
+});
