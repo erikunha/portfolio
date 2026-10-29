@@ -1,6 +1,6 @@
 # erikunha.dev
 
-Single-page Next.js 16 portfolio deployed to Vercel (Fluid Compute). RSC-first composition of ~18 sections with client islands by exception, a streaming LLM endpoint, a durable contact form, and a CI pipeline that enforces performance, accessibility, and bundle size as hard contracts.
+Single-page Next.js 16 portfolio deployed to Vercel (Fluid Compute). RSC-first composition of terminal-module sections with client islands by exception, a streaming LLM endpoint, a durable contact form, and a CI pipeline that enforces performance, accessibility, and bundle size as hard contracts.
 
 **Live:** [erikunha.dev](https://www.erikunha.dev)
 

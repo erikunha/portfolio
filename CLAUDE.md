@@ -4,7 +4,7 @@
 
 ## Project
 
-**erikunha.dev** — personal portfolio and reference web system. Matrix/brutalist terminal aesthetic. Single-page composition with ~18 sections.
+**erikunha.dev** — personal portfolio and reference web system. Matrix/brutalist terminal aesthetic. Single-page composition of terminal-module sections.
 
 ## Commands
 
