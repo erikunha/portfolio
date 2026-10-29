@@ -171,3 +171,10 @@ test.describe('/links link-in-bio', () => {
     expect(await columns()).toBe(3);
   });
 });
+
+test('reduced motion shows the ticker text once, not its loop copy', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/links');
+  const copy = page.locator('.links-ticker-track > [aria-hidden="true"]');
+  await expect(copy, 'the marquee loop copy must hide when the marquee stops').toBeHidden();
+});
