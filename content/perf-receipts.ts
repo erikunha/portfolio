@@ -13,7 +13,6 @@ export const perfReceipts: PerfReceipt[] = z.array(PerfReceiptSchema).parse([
     displayValue: '40s→<1s',
     before: 40,
     after: 1,
-    unit: 's',
   },
   {
     metric: 'BUNDLE_CSS',
@@ -76,7 +75,6 @@ export const perfReceipts: PerfReceipt[] = z.array(PerfReceiptSchema).parse([
     displayValue: '2,544→1,308ms',
     before: 2544,
     after: 1308,
-    unit: 'ms',
   },
 ]);
 

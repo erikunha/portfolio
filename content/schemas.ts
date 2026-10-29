@@ -41,7 +41,6 @@ export const PerfReceiptSchema = z.object({
   displayValue: z.string().min(1).optional(),
   before: z.number().nonnegative().optional(),
   after: z.number().nonnegative().optional(),
-  unit: z.string().min(1).optional(),
 });
 
 export const MeasuredSchema = z.object({

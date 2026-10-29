@@ -162,7 +162,6 @@ describe('performance metrics agree with the authoritative receipts', () => {
     expect(lcp).toMatchObject({
       before: 2544,
       after: 1308,
-      unit: 'ms',
       displayValue: '2,544→1,308ms',
     });
     expect(lcp?.delta).toBe(`${(((1308 - 2544) / 2544) * 100).toFixed(1)}%`);
