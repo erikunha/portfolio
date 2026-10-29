@@ -53,6 +53,7 @@
     transparent 1px 3px
   );
   --border-width: 1px;
+  --stroke-width-icon: 1.4;
   --radius-none: 0;
   --radius-control: 2px;
 

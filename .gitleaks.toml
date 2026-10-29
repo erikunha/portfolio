@@ -36,3 +36,7 @@ regexes = ['''sk_test_51HxFakeFixtureTokenABCDEFGHIJ''']
 [[allowlists]]
 description = "CSS design token names (secondary-NNN), not secrets (generic-api-key false positives)"
 regexes = ['''^secondary-\d{2,3}$''']
+
+[[allowlists]]
+description = "Measured metric key names (camelCase identifiers in content/measured.ts), not secrets (generic-api-key false positives)"
+regexes = ['''^p95LatencyMs$''']
