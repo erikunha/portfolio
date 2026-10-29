@@ -15,7 +15,7 @@ flowchart TB
     end
     subgraph enf["Enforcement layer (what the agent cannot bypass)"]
         husky[".husky/* git hooks (pre-commit, pre-push)"]
-        gates["scripts/check-* (CI + verify chain)"]
+        gates["scripts/check-*.ts (CI + verify chain)"]
     end
     ctx --> enf
 ```
@@ -33,7 +33,7 @@ flowchart TB
 The load-bearing principle used to be **CLAUDE.md is advisory; anything that must hold is a hook.** The second half of that is no longer true here: **this repo has no `.claude/hooks/` and no `PreToolUse`/`PostToolUse` wiring in `settings.json`.** Six guards were removed on 2026-07-27 - `bash-guard` (broad `git add`, npm/yarn, `gh pr merge`, force-push-to-main), `api-security-push-guard`, `architect-gate`, `api-edit-marker`, `biome-format` and `session-context` - together with the meta-gate that checked they were wired.
 
 What survives is everything that does not depend on the agent runtime:
-- **`.husky/`**: `pre-commit` = Biome + staged Gitleaks scan; `commit-msg` = commitlint; `pre-push` = main-push guard, branch-name check, and the full `pnpm verify` chain.
+- **`.husky/`**: `pre-commit` = Biome + `gitleaks --staged` + commitlint; `pre-push` = main-push guard, branch-name check, and the full `pnpm verify` chain.
 - **`scripts/check-*`**: the `verify` chain and CI - client-naming, dep-pinning, harness-size, section-order, doc-drift, detect-changes-paths, css-tokens, contrast, bundle-size, route-JS.
 - **CI**: Lighthouse, axe-core, Playwright, semgrep, gitleaks, CodeQL.
 

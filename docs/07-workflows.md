@@ -27,27 +27,26 @@
 ```
 check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:dep-pinning
   -> check:harness-size -> check:section-order -> check:doc-drift
-  -> check:detect-changes-paths -> lint:css-tokens -> test (Vitest)
+  -> lint:css-tokens -> test (Vitest)
 ```
 
-`pnpm ci:local` == `pnpm verify`. `pnpm ci` == `verify + build + bundle-check + route-js-check`. Before opening a PR, also run `pnpm bundle-check`, `pnpm route-js-check`, and `pnpm gates:runtime`.
+`pnpm ci:local` == `pnpm verify`. `pnpm ci` == `verify + build + bundle-check`. Before opening a PR, also run `pnpm bundle-check`, `pnpm route-js-check`, and `pnpm gates:runtime`.
 
 ### The gate scripts (what each protects)
 
-| Script                       | Enforces                                             |
-| ---------------------------- | ---------------------------------------------------- |
-| `validate-content`           | every `content/*.ts` Zod schema parses (build gate)  |
-| `check:client-naming`        | `'use client'` files are `*.client.tsx`              |
-| `check:dep-pinning`          | no `latest`/`*`/tag deps                             |
-| `check:harness-size`         | `CLAUDE.md` ≤ 275 lines                              |
-| `check:section-order`        | every `sec-*` has a mobile flex-order rule           |
-| `check:detect-changes-paths` | CI path filters reference existing paths             |
-| `check:doc-drift`            | `ARCHITECTURE.md` directory-tree paths exist on disk |
-| `lint:css-tokens`            | no raw hex outside `app/css/theme.css`               |
-| `lint:contrast`              | documented text/surface pairs meet WCAG AA           |
-| `check:component-docs`       | each DS component is documented                      |
-| `check:pkg-age`              | supply-chain: flags <7-day-old package versions      |
-| `bundle-check`               | gzipped client chunks ≤ 220KB                        |
+| Script                 | Enforces                                             |
+| ---------------------- | ---------------------------------------------------- |
+| `validate-content`     | every `content/*.ts` Zod schema parses (build gate)  |
+| `check:client-naming`  | `'use client'` files are `*.client.tsx`              |
+| `check:dep-pinning`    | no `latest`/`*`/tag deps                             |
+| `check:harness-size`   | `CLAUDE.md` ≤ 275 lines                              |
+| `check:section-order`  | every `sec-*` has a mobile flex-order rule           |
+| `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk |
+| `lint:css-tokens`      | no raw hex outside `app/css/theme.css`               |
+| `lint:contrast`        | documented text/surface pairs meet WCAG AA           |
+| `check:component-docs` | each DS component is documented                      |
+| `check:pkg-age`        | supply-chain: flags <7-day-old package versions      |
+| `bundle-check`         | gzipped client chunks ≤ 220KB                        |
 
 ## Testing
 
@@ -63,7 +62,7 @@ flowchart LR
 
 - **Unit (Vitest):** behavioral assertions only; a `no-source-grep` test bans `readFileSync`-style source-grep tests. Run `pnpm test` / `pnpm test:coverage` / `pnpm test:watch`.
 - **a11y (axe-core):** zero-violation gate over the design-system routes, tags `wcag2a/2aa/21aa`.
-- **e2e (CI):** 5-project matrix (`chromium`, `chromium-mobile`, `webkit-desktop`, `webkit-mobile`, `chromium-components`). The DS component visual spec is darwin-only (CI ignores it on Ubuntu).
+- **e2e (Playwright):** 5-project matrix (`chromium`, `chromium-mobile`, `webkit-desktop`, `webkit-mobile`, `chromium-components`). The DS component visual spec is darwin-only (CI ignores it on Ubuntu).
 - **Visual regression:** Argos-backed snapshots of page sections; a color/layout/typography change requires regenerated baselines (see the `visual-baseline-regen` skill).
 - **AI eval (`pnpm ask:eval`):** calibration → corpus → gate for `/api/ask` (doc 02). Gated in CI when `ai`-paths change.
 
@@ -74,10 +73,10 @@ flowchart LR
 ```mermaid
 flowchart TD
     pr["PR / push main"] --> dc["detect-changes (app?, ai?, ui?)"]
-    pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, harness, doc-drift, contrast, PR-comment gate"]
-    pr --> tc["typecheck"]
-    pr --> t["test (Vitest + coverage)"]
-    pr --> dr["dependency-review (PR)"]
+    dc --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, harness, doc-drift, contrast, PR-comment gate"]
+    dc --> tc["typecheck"]
+    dc --> t["test (Vitest + coverage)"]
+    dc --> dr["dependency-review (PR)"]
     qf --> b["build (+ bundle-size gate, provenance attest on main)"]
     tc --> b
     t --> b
@@ -95,12 +94,12 @@ flowchart TD
     e2e --> gate
     vis --> gate
     ev --> gate
-    gate["ci-gate: always-on fan-in, reds on any failed/cancelled upstream; skipped passes"]
+    gate["ci-gate: always-on fan-in — reds on any failed/cancelled upstream; skipped passes"]
 ```
 
 `ci-gate` runs with `if: always()`, needs every job above (`semgrep` stays outside — report-only by design), and is the terminal required status check. `__tests__/scripts/ci-gate-job.test.ts` asserts its `needs` list equals the full job set minus the self-reporting jobs, so adding a conditional job without fanning it in fails `pnpm test`.
 
-Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (PR review, doc 06).
+Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude.yml` (the `@claude` AI-reviewer pilot, doc 06).
 
 **Lighthouse budgets (LHCI, hard gates):** desktop perf ≥95 / a11y =100 / BP ≥95 / SEO =100, LCP ≤1800ms, CLS ≤0.05, TBT ≤200ms; mobile perf ≥90, LCP ≤3500ms. Never disable a gate to merge - fix the property (doc 08).
 
@@ -124,11 +123,11 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 
 ## Debugging
 
-| Symptom                    | Where to look                                                                            |
-| -------------------------- | ---------------------------------------------------------------------------------------- |
-| `/api/healthz` 503         | `meta:psi-last-run` missing/stale (>25h) - the PSI cron failed; check `/api/psi-refresh` |
-| `/api/ask` returns 503     | `ASK_ENABLED` off, or monthly token budget exhausted (`ask:tokens:{month}`)              |
-| `/api/ask` stream cuts off | mid-stream 15s watchdog, or Layer-1 egress guard fired (`STREAM_ERR_SENTINEL`)           |
-| Push blocked by verify     | read the failing `pnpm verify` step; API security dispatch is a convention, not a hook   |
-| CLS / visual regression    | regenerate Argos baselines via the `visual-baseline-regen` skill                         |
-| Client error in prod       | it was POSTed to `/api/log` (`err:{date}:{id}`, 30-day TTL) by `error-bridge.client.ts`  |
+| Symptom                            | Where to look                                                                            |
+| ---------------------------------- | ---------------------------------------------------------------------------------------- |
+| `/api/healthz` 503                 | `meta:psi-last-run` missing/stale (>25h) - the PSI cron failed; check `/api/psi-refresh` |
+| `/api/ask` returns 503             | `ASK_ENABLED` off, or monthly token budget exhausted (`ask:tokens:{month}`)              |
+| `/api/ask` stream cuts off         | mid-stream 15s watchdog, or Layer-1 egress guard fired (`STREAM_ERR_SENTINEL`)           |
+| Push blocked, "unaudited API edit" | you edited `app/api/**`/`rate-limit.ts`/`proxy.ts`; dispatch `security-auditor`          |
+| CLS / visual regression            | regenerate Argos baselines via the `visual-baseline-regen` skill                         |
+| Client error in prod               | it was POSTed to `/api/log` (`err:{date}:{id}`, 30-day TTL) by `error-bridge.client.ts`  |

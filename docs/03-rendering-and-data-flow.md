@@ -8,9 +8,6 @@
 flowchart TD
     layout["app/layout.tsx (RootLayout, RSC)<br/>fonts · JSON-LD · motion bootstrap · Vercel RUM"]
     layout --> home["/ -> app/page.tsx (RSC, SSG+PPR)"]
-    layout --> summary["/summary -> app/summary/page.tsx"]
-    layout --> cv["/cv -> app/cv/page.tsx"]
-    layout --> links["/links and /links/en -> localized links pages"]
     layout --> ds["/design-system -> design-system/layout.tsx"]
     layout --> nf["/* (404) -> app/not-found.tsx"]
     layout --> sm["/sitemap.xml -> app/sitemap.ts"]
@@ -34,7 +31,7 @@ flowchart TD
     layout -.serves.-> api
 ```
 
-User-facing routes include `/`, `/summary`, `/cv`, `/links` and `/links/en`, alongside design-system docs, metadata routes and the API cluster. Error UI uses the client `ErrorBoundary` component (not the App Router `error.tsx` convention); there is no `loading.tsx`/`template.tsx`.
+There is **one user-facing page** (`/`). Everything else is the design-system docs, metadata routes, and the API cluster. Error UI uses the client `ErrorBoundary` component (not the App Router `error.tsx` convention); there is no `loading.tsx`/`template.tsx`.
 
 ## Layout hierarchy (what wraps what)
 
@@ -44,12 +41,12 @@ flowchart TD
     body --> boot["inline script: set body[data-motion] BEFORE paint"]
     body --> children["{route children}"]
     body --> rum["Analytics + SpeedInsights (only when VERCEL=1)"]
-    children --> bp["BreakpointProvider (client, initialIsMobile=false, then matchMedia)"]
+    children --> bp["BreakpointProvider (client, initialIsMobile from server UA)"]
     bp --> appshell["AppShell (client chrome)"]
     appshell --> chrome["MatrixRain · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
     appshell --> main["main#main-content"]
     main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + Modules (RSC)"]
-    appshell --> footer["Footer (RSC)"]
+    main --> footer["Footer (RSC)"]
     footer --> footerIslands["FooterLazy: session counters + halt/reboot island"]
 ```
 
@@ -85,7 +82,7 @@ flowchart LR
 - **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` to defer render cost.
 - **`next/dynamic` lazy JS:** `ContactFormLazy`, `InteractiveShellLazy`, `DawMixerSection`. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy` loads only the session counters and halt/reboot island from `Footer.client`; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
-The portfolio uses PPR for static content and dynamic sections. The links feed uses `use cache` and `cacheLife` in `lib/links/feed.ts`.
+There is **no `use cache` / `cacheLife` / `cacheTag` / `unstable_cache` / `generateStaticParams`** anywhere - the staticness comes from PPR + the absence of dynamic APIs, not explicit caching.
 
 ## End-to-end data flow #1 - page render (read path)
 

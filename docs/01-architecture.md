@@ -57,7 +57,7 @@ flowchart TB
 
 **Layer ownership boundaries (who may import whom):**
 - `content/*` is a **leaf**: pure data + Zod, imported by sections (RSC) and, for the three client-safe modules, by islands. It never imports `lib` or `components`.
-- `design-system/*` primitives are **leaves**: no app imports, React and shared class-name utilities. The app depends on the design system, never the reverse.
+- `design-system/*` primitives are **leaves**: no app imports, only React + `cx`. The app depends on the design system, never the reverse.
 - `lib/*` is the server/BFF core. `lib/*.client.tsx` and a few browser utilities are the exception (client-side), clearly suffixed.
 - `app/api/*` handlers depend on `lib`; `lib` never depends on `app`.
 

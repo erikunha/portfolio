@@ -12,9 +12,11 @@
 
 ## Findings (ranked by maintainer risk)
 
-### F1 - Client naming uses filenames and directory boundaries
+### F1 - `*.client.tsx` naming convention is partially unenforced (Low, real today)
 
-`scripts/check-client-naming.mjs` accepts `*.client.tsx`, `*.client.ts`, `/client/` directories and Next.js error-boundary filenames. `components/client/**` is an explicit exception to the suffix convention, not an unscanned directory.
+Eight interactive files under `components/client/**` (`ContactForm.tsx`, `InteractiveShell.tsx`, `HeroBootAnimation.tsx`, `HeroSystemFailure.tsx`, `RoleTyper.tsx`, `ToTopButton.tsx`, plus the two `*Lazy.tsx` wrappers) carry `'use client'` but are not named `*.client.tsx`, yet the RSC-drift convention claims that naming is the signal. So `check:client-naming` either doesn't scan `components/client/**` or treats the directory as an allowlist.
+- **Risk:** the "name tells you the boundary" invariant has a blind spot; a reviewer scanning by filename could miss a client component.
+- **Fix options:** (a) rename to `*.client.tsx` (and update imports/tests), or (b) document `components/client/**` as an explicit directory-based exception in `STANDARDS.md` Ch.1 and assert it in the gate. Pick one; right now it's ambiguous.
 
 ### F2 - MCP `ask_erik` shares one global rate-limit bucket (Low–Medium, documented)
 
@@ -22,7 +24,7 @@
 - **Risk:** one heavy MCP client can starve the AI tool for everyone; it's also a shared token-budget surface.
 - **Fix options:** pass a synthetic per-caller identifier (MCP session id) into the rate-limit key, or give the MCP path its own dedicated, more generous limiter.
 
-### F3 - The streaming ask route maintains a parallel gate chain (Low, intentional)
+### F3 - `/api/ask` is the one route outside `defineHandler` (Low, intentional but watch it)
 
 Streaming forced a bespoke handler, so the ask route hand-rolls the same gate chain (rate-limit, parse, validate, IP-hash). It's correct today, but it's a parallel implementation of the security ordering that `defineHandler` centralizes.
 - **Risk:** the two pipelines can drift; a fix to the envelope won't reach `/api/ask`.
@@ -31,7 +33,7 @@ Streaming forced a bespoke handler, so the ask route hand-rolls the same gate ch
 ### F4 - Dead-hook class of rot (Mitigated, keep watching)
 
 `css-token-guard.sh` once pointed at two scripts deleted in the Tailwind-v4 migration and silently no-opped for weeks. It and the `gate-health` meta-gate that caught it were both removed on 2026-07-27; the CSS property it aimed at is held by `pnpm lint:css-tokens` in `verify` and CI.
-- **Status:** `pnpm lint:css-tokens` runs directly in `verify` and CI. There is no `gate-health` command.
+- **Status:** mitigated by the meta-gate. Keep `gate-health` in `verify` and CI; don't let it be skipped.
 
 ### F5 - PSI cron is single-shot on Vercel Hobby (Low, accepted)
 
@@ -49,7 +51,7 @@ Pre-PR review is honor-system: nothing records a local finding, so nothing check
 ```mermaid
 flowchart TD
     subgraph low["Low risk / cosmetic"]
-        f1["F1 explicit client-directory convention"]
+        f1["F1 client-naming blind spot"]
         f4["F4 gate rot (mitigated)"]
         f6["F6 review honor-system residue"]
     end
@@ -59,7 +61,7 @@ flowchart TD
     end
     subgraph accepted["Accepted constraints"]
         f5["F5 Hobby single-shot cron"]
-        plan["intentional: no auth, Redis storage"]
+        plan["intentional: no auth, no DB, single page"]
     end
 ```
 

@@ -75,7 +75,9 @@ The daily retry permits at most 3 additional delivery attempts within 7 days. Su
 ```mermaid
 erDiagram
     PERSON ||--|| SOCIAL : has
-    PERSON ||--o{ CAREER_ENTRY : "career log"
+    PERSON ||--o{ CAREER_VIEW : "viewed-as"
+    CAREER_VIEW ||--o{ GIT_COMMIT : "git-log view"
+    CAREER_VIEW ||--o{ BLAME_ENTRY : "blame view"
     PERSON ||--o{ PROJECT : authored
     PROJECT ||--o{ STAT : "has metrics"
     PERSON ||--o{ PERF_RECEIPT : claims
