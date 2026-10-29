@@ -1,15 +1,11 @@
 import { getByRole } from '@testing-library/react';
 import { createElement, type ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { ManPageDesktop } from '@/components/sections/ManPageSection/ManPageDesktop';
 import { ReadmeSection } from '@/components/sections/ReadmeSection/ReadmeSection';
 import { ResponsibilitiesSection } from '@/components/sections/ResponsibilitiesSection/ResponsibilitiesSection';
-import { VisaContent } from '@/components/sections/VisaSection/VisaSection';
 import { SCROLL_REGION_LABELS, SECTION_LABELS } from '@/content/section-labels';
-import { getIsMobile } from '@/lib/ua';
-
-vi.mock('@/lib/ua', () => ({ getIsMobile: vi.fn() }));
 
 function expectKeyboardScrollRegion(element: ReactElement, name: string, parentName: string) {
   const container = document.createElement('div');
@@ -35,19 +31,6 @@ describe('Text scroll regions', () => {
       SECTION_LABELS['sec-man-page'],
     );
   });
-
-  it.each([false, true])(
-    'makes work authorization a named keyboard scroll region with mobile=%s',
-    async (isMobile) => {
-      vi.mocked(getIsMobile).mockResolvedValue(isMobile);
-
-      expectKeyboardScrollRegion(
-        await VisaContent(),
-        SCROLL_REGION_LABELS['sec-visa'],
-        SECTION_LABELS['sec-visa'],
-      );
-    },
-  );
 
   it('makes responsibilities a named keyboard scroll region', () => {
     expectKeyboardScrollRegion(

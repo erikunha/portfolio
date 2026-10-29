@@ -56,7 +56,7 @@
     font-size: var(--text-base);
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   @media (max-width: 768px) {
@@ -247,9 +247,6 @@
     }
     #sec-daw-mixer {
       order: 13;
-    }
-    #sec-visa {
-      order: 14;
     }
     #sec-hottest-takes {
       order: 17;
