@@ -29,11 +29,9 @@ describe('LabelledTable', () => {
     expect(html).toMatch(/<td role="cell"><span[^>]*md:hidden[^>]*>Type<\/span>string<\/td>/);
   });
 
-  it('hides the visible cell label from assistive tech, which reads the column header', () => {
+  it('keeps the cell label in the accessibility tree, since mobile hides the header row', () => {
     const html = renderToStaticMarkup(table(['Prop'], [['size']]));
-    expect(html).toMatch(
-      /<td role="cell"><span[^>]*aria-hidden="true"[^>]*>Prop<\/span>size<\/td>/,
-    );
+    expect(html).not.toContain('aria-hidden');
   });
 
   it('re-applies table roles that display:block strips', () => {

@@ -1,13 +1,13 @@
 'use client';
 import { usePathname } from 'next/navigation';
 
-import { DS_NAV_GROUPS } from './ds-nav';
+import { DS_NAV_GROUPS, DS_NAV_ID } from './ds-nav';
 
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Design system" className="ds-sidebar">
+    <nav id={DS_NAV_ID} aria-label="Design system" className="ds-sidebar">
       <ul>
         <li>
           <a href="/" className="ds-nav-item">

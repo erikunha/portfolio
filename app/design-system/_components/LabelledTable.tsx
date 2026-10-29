@@ -53,11 +53,7 @@ function labelRow(row: ReactNode, labels: string[]): ReactNode {
     return cloneElement(
       cell as ReactElement<Record<string, unknown>>,
       { role: 'cell' },
-      label ? (
-        <span className={LABEL_CLASS} aria-hidden="true">
-          {label}
-        </span>
-      ) : null,
+      label ? <span className={LABEL_CLASS}>{label}</span> : null,
       cell.props.children,
     );
   });
