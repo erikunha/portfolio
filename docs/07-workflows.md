@@ -61,6 +61,7 @@ flowchart LR
 ```
 
 - **Unit (Vitest):** behavioral assertions only; a `no-source-grep` test bans `readFileSync`-style source-grep tests. Run `pnpm test` / `pnpm test:coverage` / `pnpm test:watch`.
+  For effect-driven focus, await the focus assertion with `waitFor`; finding the element only establishes that it rendered.
 - **a11y (axe-core):** zero-violation gate over the design-system routes, tags `wcag2a/2aa/21aa`.
 - **e2e (Playwright):** 5-project matrix (`chromium`, `chromium-mobile`, `webkit-desktop`, `webkit-mobile`, `chromium-components`). The DS component visual spec is darwin-only (CI ignores it on Ubuntu).
 - **Visual regression:** Argos-backed snapshots of page sections; a color/layout/typography change requires regenerated baselines (see the `visual-baseline-regen` skill).

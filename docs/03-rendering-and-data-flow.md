@@ -44,7 +44,7 @@ flowchart TD
     body --> boot["inline script: set body[data-motion] BEFORE paint"]
     body --> children["{route children}"]
     body --> rum["Analytics + SpeedInsights (only when VERCEL=1)"]
-    children --> bp["BreakpointProvider (client, initialIsMobile from server UA)"]
+    children --> bp["BreakpointProvider (client, initialIsMobile=false; matchMedia after mount)"]
     bp --> appshell["AppShell (client chrome)"]
     appshell --> chrome["MatrixRainLazy (client-only) · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
     appshell --> main["main#main-content"]
@@ -65,15 +65,15 @@ flowchart LR
     px --> shell["Static shell prerendered at edge:<br/>AppShell chrome + Hero (outside Suspense) + above-fold sections"]
     shell --> stream["Server streams"]
     stream --> susp["Suspense boundaries resolve per-request"]
-    susp --> dyn["UA-selected section variants<br/>and independent ASK / PSI data reads"]
+    susp --> dyn["UA-selected ManPage variant<br/>and independent ASK / PSI data reads"]
     dyn --> html2["Streamed HTML"]
     html2 --> hydrate["Client hydrates ONLY AppShell chrome + named islands"]
     hydrate --> lazy["next/dynamic + IO-gated islands load on demand"]
 ```
 
 **Static vs dynamic, concretely:**
-- **Static (prerendered):** `AppShell` chrome except the client-only MatrixRain canvas, `Hero` (deliberately _outside_ any `<Suspense>` so LCP never waits), `Readme`, `Shell`, the responsive `Guitar` presentation, Projects with its attached receipts, `DawMixer`, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid. `DawMixer` uses one synchronous RSC layout at every width, with no UA branch; its interactive islands hydrate on phones too.
-- **UA-selected variants:** `ManPage` and `Visa` wrap an inner async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`), which marks the subtree dynamic. Only the Suspense fallback is prerendered; the selected variant streams per request.
+- **Static (prerendered):** `AppShell` chrome except the client-only MatrixRain canvas, `Hero` (outside Suspense so LCP never waits), `Readme`, `Shell`, the responsive `Guitar` presentation, Projects with its attached receipts, `DawMixer`, Contact with its work-authorization table, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid. `DawMixer` uses one synchronous RSC layout at every width; its interactive islands hydrate on phones too. The Visa table renders once and CSS adapts it.
+- **UA-selected variants:** only `ManPage` wraps an async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`). Its fallback is prerendered; the selected variant streams per request.
 - **Measured data:** `AiMetricsSection` renders the `sec-live-metrics` module. It composes `AiMetricsData` and `LivePerfSection`, with independent Suspense boundaries for ASK, desktop PSI and mobile PSI. Each fallback retains its metric layout and shows a loading state. Receipts remain inside Projects rather than a separate module.
 - **The dual-variant pattern** (e.g. `ManPageSection.tsx`):
 
@@ -81,7 +81,7 @@ flowchart LR
   <Module><Suspense fallback={<Desktop/>}><AsyncInner/></Suspense></Module>
   ```
 
-  `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: the desktop variant for ManPage and Visa. `GuitarSection` and `DawMixerSection` use one responsive presentation without this UA boundary or variant swap.
+  `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. ManPage uses its desktop variant as the fallback. `GuitarSection`, `DawMixerSection` and `VisaContent` use one responsive presentation without this UA boundary or variant swap.
 - **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` to defer render cost, not JS.
 - **`next/dynamic` lazy JS:** `ContactFormLazy`, `InteractiveShellLazy`, `MatrixRainLazy`. MatrixRain is a decorative fixed overlay behind `main`; it loads with `ssr: false`, and its late hydration cannot shift layout. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy` loads only the session counters and halt/reboot island from `Footer.client`; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
