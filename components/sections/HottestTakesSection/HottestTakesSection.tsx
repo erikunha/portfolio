@@ -6,6 +6,7 @@ import { UnknownsSection } from '../UnknownsSection';
 
 const TAKE_NUMBER_WIDTH = 2;
 const TAKE_NUMBER_PAD = '0';
+const TAKE_TAG_STACK_CLASSES = 'max-md:mb-1 max-md:block max-md:w-fit';
 
 export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
   return (
@@ -29,7 +30,7 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
             </span>
             <div className="opinions-take">
               <h3>
-                <span>{take.category}</span>
+                <span className={TAKE_TAG_STACK_CLASSES}>{take.category}</span>
                 {take.thesis}
               </h3>
               <p>{take.body}</p>
