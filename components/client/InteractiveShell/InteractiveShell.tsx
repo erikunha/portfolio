@@ -28,13 +28,14 @@ const Key = {
   Right: 'ArrowRight',
   Home: 'Home',
   End: 'End',
+  Enter: 'Enter',
 } as const;
 const CopyState = { Idle: 'idle', Pending: 'pending', Copied: 'copied', Failed: 'failed' } as const;
 const PlaceholderPhase = { Type: 'type', Hold: 'hold', Back: 'back' } as const;
 const ASK_ENDPOINT = '/api/ask';
 const SHELL_COMMAND_EVENT = 'shell-cmd-run';
 const RATE_LIMIT_STATUS = 429;
-const TIMEOUT_ERROR_NAME = 'TimeoutError';
+const COMPOSITION_KEYCODE = 229;
 const WINDOW_DOT_SIZE = 10;
 
 function bounded(lines: Line[]): Line[] {
@@ -234,6 +235,10 @@ export function InteractiveShell() {
       );
       announce(shellUi.thinking);
 
+      function armIdleTimer() {
+        clearTimeout(timer);
+        timer = setTimeout(() => interrupt(shellUi.timeout, true), SHELL_LIMITS.requestTimeoutMs);
+      }
       function releaseTransport() {
         controller.abort();
         void reader?.cancel().catch(() => undefined);
@@ -263,7 +268,7 @@ export function InteractiveShell() {
         );
         setStreamingText(null);
         setBusy(false);
-        if (error || (message && !text)) setInput((value) => value || command);
+        if (message) setInput((value) => value || command);
         announce(message ?? shellUi.complete);
         if (stopRef.current === document.activeElement) focusInput();
       }
@@ -285,7 +290,7 @@ export function InteractiveShell() {
           releaseTransport();
         },
       };
-      timer = setTimeout(() => interrupt(shellUi.timeout, true), SHELL_LIMITS.requestTimeoutMs);
+      armIdleTimer();
 
       try {
         const response = await fetch(ASK_ENDPOINT, {
@@ -323,6 +328,7 @@ export function InteractiveShell() {
         while (!settled) {
           const { done, value } = await reader.read();
           if (settled) return;
+          armIdleTimer();
           accumulated += done ? decoder.decode() : decoder.decode(value, { stream: true });
           const parsed = parseStreamChunk(accumulated);
           if (done) {
@@ -349,13 +355,11 @@ export function InteractiveShell() {
         if (settled) return;
         const message = !navigator.onLine
           ? shellUi.offline
-          : error instanceof Error && error.name === TIMEOUT_ERROR_NAME
-            ? shellUi.timeout
-            : error instanceof TypeError
-              ? shellUi.networkError
-              : error instanceof Error
-                ? error.message
-                : String(error);
+          : error instanceof TypeError
+            ? shellUi.networkError
+            : error instanceof Error
+              ? error.message
+              : String(error);
         finish(parseStreamChunk(accumulated).displayText, message, true);
       } finally {
         reader?.releaseLock();
@@ -372,6 +376,7 @@ export function InteractiveShell() {
       }
       const command = raw.trim().replace(/\s+/g, ' ');
       if (!command) return;
+      followOutputRef.current = true;
       commands.current = [...commands.current, command].slice(-SHELL_LIMITS.commandHistory);
       historyIndex.current = commands.current.length;
       draft.current = '';
@@ -514,6 +519,13 @@ export function InteractiveShell() {
             onFocus={() => setInputFocused(true)}
             onBlur={() => setInputFocused(false)}
             onKeyDown={(event) => {
+              if (
+                event.key === Key.Enter &&
+                (event.nativeEvent.isComposing || event.keyCode === COMPOSITION_KEYCODE)
+              ) {
+                event.preventDefault();
+                return;
+              }
               if (
                 event.nativeEvent.isComposing ||
                 event.altKey ||

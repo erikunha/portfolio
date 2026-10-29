@@ -499,6 +499,115 @@ describe('InteractiveShell r106 controls', () => {
     expect(container.querySelector('[role="log"]')?.textContent).toContain('retry worked');
   });
 
+  it('keeps a streaming answer alive past the total budget while chunks keep arriving', async () => {
+    const { SHELL_LIMITS } = await import('@/content/shell-ui');
+    const enc = new TextEncoder();
+    let controllerRef: ReadableStreamDefaultController<Uint8Array> | undefined;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controllerRef = controller;
+        controller.enqueue(enc.encode('chunk0 '));
+      },
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(body)),
+    );
+    const container = await renderShell();
+    vi.useFakeTimers();
+    await submitQuestion(container, 'long answer');
+    const step = Math.floor(SHELL_LIMITS.requestTimeoutMs * 0.6);
+    for (let index = 1; index <= 3; index++) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(step);
+        controllerRef?.enqueue(enc.encode(`chunk${index} `));
+        await vi.advanceTimersByTimeAsync(0);
+      });
+    }
+    expect(container.querySelector('[data-kind="error"]')).toBeNull();
+    expect(container.querySelector('[role="log"]')?.getAttribute('aria-busy')).toBe('true');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(SHELL_LIMITS.requestTimeoutMs);
+    });
+    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('timed out');
+  });
+
+  it('restores the question when a stream with partial text is stopped', async () => {
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('Partial answer'));
+      },
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(body)),
+    );
+    const container = await renderShell();
+    await submitQuestion(container, 'question to keep');
+    await flushFrames();
+    await act(async () => {
+      buttonWithText(container, '[STOP]').click();
+    });
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('incomplete');
+    expect(shellInput(container).value).toBe('question to keep');
+  });
+
+  it('re-engages scroll-follow when a command is submitted after scrolling up', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('answer')),
+    );
+    const container = await renderShell();
+    const feed = container.querySelector<HTMLElement>('[role="log"]') as HTMLElement;
+    let scrollTop = 0;
+    Object.defineProperty(feed, 'scrollHeight', { configurable: true, value: 900 });
+    Object.defineProperty(feed, 'clientHeight', { configurable: true, value: 100 });
+    Object.defineProperty(feed, 'scrollTop', {
+      configurable: true,
+      get: () => scrollTop,
+      set: (value: number) => {
+        scrollTop = value;
+      },
+    });
+    await act(async () => {
+      feed.dispatchEvent(new Event('scroll', { bubbles: true }));
+    });
+    expect(scrollTop).toBe(0);
+    await submitQuestion(container, 'new question');
+    expect(scrollTop).toBe(900);
+  });
+
+  it('does not submit when Enter confirms an IME composition', async () => {
+    const fetchMock = vi.fn(async () => new Response('answer'));
+    vi.stubGlobal('fetch', fetchMock);
+    const container = await renderShell();
+    const input = shellInput(container);
+    const submit = vi.fn((event: Event) => event.preventDefault());
+    container.querySelector('form')?.addEventListener('submit', submit);
+    const composing = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      bubbles: true,
+      cancelable: true,
+      isComposing: true,
+    });
+    const legacy = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      keyCode: 229,
+      bubbles: true,
+      cancelable: true,
+    });
+    const plain = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+    await act(async () => {
+      input.dispatchEvent(composing);
+      input.dispatchEvent(legacy);
+      input.dispatchEvent(plain);
+    });
+    expect(composing.defaultPrevented).toBe(true);
+    expect(legacy.defaultPrevented).toBe(true);
+    expect(plain.defaultPrevented).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it.each([
     ['stream failure', () => streamingResponse(['Partial\x00ERR:upstream error'])],
     ['empty body', () => new Response(null)],
@@ -779,6 +888,8 @@ describe('InteractiveShell r106 controls', () => {
     const { ShellUiSchema } = await import('@/content/schemas');
     expect(ShellUiSchema.safeParse(shellUi).success).toBe(true);
     expect(ShellUiSchema.safeParse({ ...shellUi, stop: '' }).success).toBe(false);
+    expect(Object.keys(shellUi)).not.toContain('copyLabel');
+    expect(Object.keys(ShellUiSchema.shape)).not.toContain('copyLabel');
     const container = await renderShell();
     const noticeId = shellInput(container).getAttribute('aria-describedby');
     const notice = Array.from(container.querySelectorAll('[id]')).find(

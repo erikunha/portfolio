@@ -87,7 +87,6 @@ export const shellUi: ShellUi = {
   localAvailable: 'Built-in commands still work.',
   referencePrefix: 'ref',
   copy: 'COPY',
-  copyLabel: 'Copy reference',
   copied: 'COPIED',
   copyFailed: 'COPY FAILED',
   copiedAnnouncement: 'Reference copied',

@@ -297,7 +297,6 @@ export const ShellUiSchema = z.object({
   localAvailable: z.string().min(1),
   referencePrefix: z.string().min(1),
   copy: z.string().min(1),
-  copyLabel: z.string().min(1),
   copied: z.string().min(1),
   copyFailed: z.string().min(1),
   copiedAnnouncement: z.string().min(1),
