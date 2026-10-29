@@ -69,15 +69,17 @@ test.describe('scroll typing', () => {
     await header.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
     await header.evaluate(() => new Promise(requestAnimationFrame));
 
-    const delta = await header.evaluate((el) => {
+    const { delta, left } = await header.evaluate((el) => {
       const host = el.closest('.module-scroll-type');
       if (!host) throw new Error('missing .module-scroll-type host');
-      const textRight = el.getBoundingClientRect().right;
-      const caretLeft =
-        host.getBoundingClientRect().left + parseFloat(getComputedStyle(host, '::after').left);
-      return Math.abs(caretLeft - textRight);
+      const caret = getComputedStyle(host, '::after');
+      const offsetX = new DOMMatrixReadOnly(caret.transform).m41;
+      const hostRect = host.getBoundingClientRect();
+      const caretLeft = hostRect.left + offsetX + hostRect.width;
+      return { delta: Math.abs(caretLeft - el.getBoundingClientRect().right), left: caret.left };
     });
 
+    expect(left).toBe('0px');
     expect(delta).toBeLessThan(1);
   });
 

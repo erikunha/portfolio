@@ -2085,10 +2085,10 @@
 
   @keyframes module-scroll-type-caret {
     from {
-      left: 0;
+      transform: translateX(calc(var(--module-caret-width) - 100%));
     }
     to {
-      left: 100%;
+      transform: translateX(0);
     }
   }
 
@@ -2099,6 +2099,7 @@
   }
 
   .module-scroll-type {
+    --module-caret-width: 0.6ch;
     position: relative;
   }
 
@@ -2111,10 +2112,14 @@
     position: absolute;
     left: 0;
     top: 50%;
-    transform: translateY(-50%);
-    width: 0.6ch;
+    translate: 0 -50%;
+    width: calc(100% + var(--module-caret-width));
     height: 1.05em;
-    background: var(--color-primary-500);
+    background: linear-gradient(
+      to right,
+      transparent calc(100% - var(--module-caret-width)),
+      var(--color-primary-500) 0
+    );
     opacity: 0;
   }
 
