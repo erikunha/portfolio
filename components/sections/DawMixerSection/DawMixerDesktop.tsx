@@ -74,7 +74,7 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
     <fieldset
       className={cn(
         'daw-channel-row m-0 min-w-0',
-        'border-0 border-b border-[var(--color-primary-quiet)] px-[18px] py-[14px] relative',
+        'border-0 border-b border-[var(--color-primary-quiet)] relative',
         ch.focused && [
           'channel-row-focused',
           'bg-[color-mix(in_srgb,var(--color-primary-500)_6%,transparent)]',
