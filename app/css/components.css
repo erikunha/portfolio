@@ -851,7 +851,12 @@
     padding: var(--spacing-2);
     border-bottom: var(--border-width) solid var(--color-primary-subtle);
     vertical-align: top;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+  }
+
+  .visa-table thead th,
+  .visa-table td:nth-child(2) {
+    white-space: nowrap;
   }
 
   .visa-table th {
@@ -888,8 +893,8 @@
 
     .visa-table tr {
       display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      gap: var(--spacing-1) var(--spacing-3);
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--spacing-1);
       padding: var(--spacing-2) 0;
       border-bottom: var(--border-width) solid var(--color-primary-subtle);
     }
@@ -901,14 +906,14 @@
       padding: 0;
     }
 
-    .visa-table td:last-child {
-      grid-column: 1 / -1;
+    .visa-table td:nth-child(2) {
+      white-space: normal;
     }
 
     .visa-table td::before {
       content: attr(data-label);
-      display: block;
       color: var(--color-green);
+      margin-inline-end: var(--spacing-2);
     }
   }
 
