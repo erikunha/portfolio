@@ -35,6 +35,43 @@
     overflow-wrap: anywhere;
   }
 
+  @media (max-width: 767px) {
+    .ds-prose table[data-labelled-table] thead {
+      display: none;
+    }
+
+    .ds-prose table[data-labelled-table],
+    .ds-prose table[data-labelled-table] tbody,
+    .ds-prose table[data-labelled-table] tr,
+    .ds-prose table[data-labelled-table] td {
+      display: block;
+      width: 100%;
+    }
+
+    .ds-prose table[data-labelled-table] tr {
+      margin-bottom: var(--spacing-3);
+      border: 1px solid var(--color-primary-border);
+    }
+
+    .ds-prose table[data-labelled-table] td {
+      border: 0;
+      border-bottom: 1px solid var(--color-primary-border);
+      overflow-wrap: anywhere;
+    }
+
+    .ds-prose table[data-labelled-table] td:last-child {
+      border-bottom: 0;
+    }
+
+    .ds-prose table[data-labelled-table] td[data-label]::before {
+      content: attr(data-label);
+      display: block;
+      color: var(--color-primary-500);
+      font-size: var(--text-xs);
+      letter-spacing: 0.05em;
+    }
+  }
+
   .ds-prose pre {
     background: var(--color-primary-quiet);
     border: 1px solid var(--color-primary-border);

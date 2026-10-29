@@ -172,3 +172,42 @@ test('mobile shows the page before the sidebar; desktop keeps the sidebar on the
   ]);
   expect(navLeft).toBeLessThan(mainLeft);
 });
+
+const PROPS_TABLE_PATH = '/design-system/primitives/button';
+const MOBILE_VIEWPORT = { width: 390, height: 844 };
+const DESKTOP_VIEWPORT = { width: 1280, height: 720 };
+const PROPS_COLUMNS = 4;
+
+test('props table becomes labelled rows below 768 without sideways scroll', async ({ page }) => {
+  await page.setViewportSize(MOBILE_VIEWPORT);
+  await page.goto(PROPS_TABLE_PATH);
+  const table = page.locator('main table').first();
+  await expect(table).toBeVisible();
+  const overflow = await table.evaluate((node) => {
+    const parent = node.parentElement as HTMLElement;
+    return {
+      table: node.scrollWidth - node.clientWidth,
+      parent: parent.scrollWidth - parent.clientWidth,
+    };
+  });
+  expect(overflow.table).toBeLessThanOrEqual(0);
+  expect(overflow.parent).toBeLessThanOrEqual(0);
+  await expect(table.locator('thead')).toBeHidden();
+  const firstCell = table.locator('tbody tr').first().locator('td').first();
+  await expect(firstCell).toHaveAttribute('data-label', 'Prop');
+  const label = await firstCell.evaluate((node) => getComputedStyle(node, '::before').content);
+  expect(label).toBe('"Prop"');
+});
+
+test('props table keeps its columns at 1280', async ({ page }) => {
+  await page.setViewportSize(DESKTOP_VIEWPORT);
+  await page.goto(PROPS_TABLE_PATH);
+  const table = page.locator('main table').first();
+  await expect(table.locator('thead')).toBeVisible();
+  const row = table.locator('tbody tr').first();
+  const boxes = await row
+    .locator('td')
+    .evaluateAll((cells) => cells.map((cell) => cell.getBoundingClientRect().top));
+  expect(boxes).toHaveLength(PROPS_COLUMNS);
+  expect(new Set(boxes.map(Math.round)).size).toBe(1);
+});
