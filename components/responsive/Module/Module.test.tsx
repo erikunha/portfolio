@@ -92,6 +92,49 @@ describe('Module', () => {
     expect(container.querySelector('[data-variant]')).toBeNull();
   });
 
+  it('renders the full header text with the scroll-type class hook the CSS animates', () => {
+    const container = render(
+      <Module id="sec-x" header="SUDO CONTACT --INIT" mobileHeader="CONTACT">
+        body
+      </Module>,
+    );
+
+    const typed = container.querySelectorAll('.module-scroll-type-text');
+    expect(typed).toHaveLength(2);
+    expect(typed[0]?.textContent).toBe('SUDO CONTACT --INIT');
+    expect(typed[1]?.textContent).toBe('CONTACT');
+    for (const span of typed) {
+      expect(span?.getAttribute('aria-hidden')).toBeNull();
+      expect(span?.getAttribute('hidden')).toBeNull();
+    }
+  });
+
+  it('publishes each header length as the steps() count for the typing animation', () => {
+    const container = render(
+      <Module id="sec-x" header="SUDO CONTACT --INIT" mobileHeader="CONTACT">
+        body
+      </Module>,
+    );
+
+    const hooks = container.querySelectorAll('.module-scroll-type');
+    expect(hooks[0]?.getAttribute('style')).toBe('--module-type-chars:19');
+    expect(hooks[1]?.getAttribute('style')).toBe('--module-type-chars:7');
+  });
+
+  it('falls back to the desktop header for the mobile scroll-type span', () => {
+    const container = render(
+      <Module id="sec-x" header="HEADER">
+        body
+      </Module>,
+    );
+
+    const typed = container.querySelectorAll('.module-scroll-type-text');
+    expect(typed[1]?.textContent).toBe('HEADER');
+    expect(container.querySelectorAll('.module-scroll-type')[1]?.getAttribute('style')).toBe(
+      '--module-type-chars:6',
+    );
+  });
+
   it('adds data-cv-defer attribute and module-deferred class when defer=true', () => {
     const container = render(
       <Module id="sec-x" header="H" defer>

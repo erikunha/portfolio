@@ -281,11 +281,17 @@ export const WORK_AUTH_STATUS = {
   openWithSponsorship: 'OPEN_WITH_SPONSORSHIP',
 } as const;
 
+export const VisaUiSchema = z.object({
+  title: z.string().min(1),
+  command: z.string().min(1),
+  jurisdictionLabel: z.string().min(1),
+  statusLabel: z.string().min(1),
+  evidenceLabel: z.string().min(1),
+});
+
 export const VisaRowSchema = z.object({
   jurisdiction: z.string().min(1),
-  jurisdictionShort: z.string().min(1),
   status: z.enum(WORK_AUTH_STATUS),
-  statusShort: z.enum(WORK_AUTH_STATUS),
   evidence: z.string().min(1),
 });
 
@@ -645,7 +651,6 @@ const DawMixerChannelSchema = z.object({
   buttons: z.array(z.string().min(1)),
   activeButtons: z.array(z.string().min(1)),
   footer: z.object({ lufs: z.string(), pk: z.string() }).optional(),
-  terminalLines: z.array(z.string().min(1)).optional(),
 });
 
 export const DawMixerSchema = z.object({
