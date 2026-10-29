@@ -527,7 +527,10 @@ export const LocalizedTextSchema = z.object({
 export const LinksProfileSchema = z.object({
   name: z.string().min(1),
   avatar: z.string().min(1),
-  title: LocalizedTextSchema,
+  taglines: z.object({
+    pt: z.array(z.string().min(1)).min(1),
+    en: z.array(z.string().min(1)).min(1),
+  }),
   host: LocalizedTextSchema,
   stack: z.string().min(1),
   status: LocalizedTextSchema,

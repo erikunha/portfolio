@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { readFile } from 'node:fs/promises';
 import { cacheLife } from 'next/cache';
 import { linksContent } from '@/content/links';
 import { env } from '@/lib/env';
@@ -115,9 +116,22 @@ async function fetchStats(channelId: string, apiKey: string): Promise<ChannelSta
   return stats;
 }
 
+export const FEED_FIXTURE_ENV = 'E2E_LINKS_FEED_FIXTURE';
+
+export async function loadFixtureFeed(
+  vars: Record<string, string | undefined> = process.env,
+): Promise<ChannelFeed | null> {
+  const path = vars[FEED_FIXTURE_ENV];
+  if (!path || vars.VERCEL) return null;
+  return JSON.parse(await readFile(path, 'utf8')) as ChannelFeed;
+}
+
 export async function getChannelFeed(): Promise<ChannelFeed> {
   'use cache';
   cacheLife({ stale: CACHE_STALE_S, revalidate: CACHE_REVALIDATE_S, expire: CACHE_EXPIRE_S });
+
+  const fixture = await loadFixtureFeed();
+  if (fixture) return fixture;
 
   const channelId = linksContent.channel.id;
   const apiKey = env.YOUTUBE_API_KEY;
