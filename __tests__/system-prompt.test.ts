@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { gitLog } from '@/content/git-log';
 import { perfReceipts } from '@/content/perf-receipts';
+import { profile } from '@/content/profile';
 import { projects } from '@/content/projects';
 import { personSchema } from '@/content/seo';
 import { unknowns } from '@/content/unknowns';
@@ -59,6 +61,13 @@ describe('lib/ask/system-prompt', () => {
       }
     });
 
+    it('keeps the newest git-log entry on the profile current employer', () => {
+      expect(
+        gitLog[0]?.company,
+        'gitLog[0] and profile.currentEmployer drifted: the Current role section would name two employers',
+      ).toBe(profile.currentEmployer.name);
+    });
+
     it('contains every project name', () => {
       for (const p of projects) {
         expect(
@@ -94,6 +103,41 @@ describe('lib/ask/system-prompt', () => {
           `unknowns.ts notSpecializing claim "${u.claim.slice(0, 40)}" missing from SYSTEM`,
         ).toContain(u.claim);
       }
+    });
+  });
+
+  describe('corpus-critical facts in the narrative (eval fact questions answer from here, not LIVE_DATA)', () => {
+    const narrative = SYSTEM_TEXT.slice(0, SYSTEM_TEXT.indexOf('## Performance receipts'));
+    const CURRENT_ROLE_WINDOW = /## Current role[\s\S]{0,600}/;
+
+    it('names the 12-subagent GitHub Copilot system in the AI stack line', () => {
+      expect(narrative).toContain('12-subagent');
+      expect(narrative).toMatch(/GitHub Copilot 12-subagent/);
+    });
+
+    it('frames Raylu as an AI deal-origination platform in the current-role header', () => {
+      expect(narrative).toMatch(/AI deal-origination platform/);
+      expect(
+        narrative,
+        'the deal-origination framing must sit in the Current role section, not only in the projects dump below',
+      ).toMatch(/## Current role[\s\S]{0,200}deal-origination/);
+    });
+
+    it('carries the Raylu start date and remote mode inside the Current role section', () => {
+      expect(narrative).toMatch(CURRENT_ROLE_WINDOW);
+      expect(narrative.match(CURRENT_ROLE_WINDOW)?.[0]).toContain('Jun 2026');
+      expect(narrative.match(CURRENT_ROLE_WINDOW)?.[0]).toMatch(/remote/i);
+    });
+
+    it('tells the model to decline off-topic trivia instead of answering it', () => {
+      expect(narrative).toMatch(/only answer questions about Erik/i);
+    });
+
+    it('carries the -32% page-load receipt in the Grupo SBF employment line', () => {
+      const sbfLine = narrative.split('\n').find((line) => line.startsWith('- Grupo SBF'));
+      expect(sbfLine, 'Grupo SBF employment line missing from narrative').toBeDefined();
+      expect(sbfLine).toContain('-32%');
+      expect(sbfLine).toContain('+10%');
     });
   });
 
