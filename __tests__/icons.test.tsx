@@ -34,7 +34,6 @@ describe('Icons — SVG smoke renders', () => {
     'IconCommunity',
     'IconHottestTakes',
     'IconResponsibilities',
-    'IconUnknowns',
     'IconAiMetrics',
     'IconContact',
   ] as const;
