@@ -77,3 +77,22 @@ test('Preview renders the live component and its source without interaction', as
   expect(labels).not.toContain(PREVIEW_SOURCE_ARIA_LABEL_FALLBACK);
   expect(labels.every((label) => typeof label === 'string' && label.length > 0)).toBe(true);
 });
+
+for (const viewport of [
+  { width: 390, height: 844 },
+  { width: 1280, height: 800 },
+]) {
+  test(`on-this-page items carry no list markers at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/design-system');
+    const items = page.getByRole('navigation', { name: 'On this page', exact: true }).locator('li');
+    await expect(items.first()).toBeVisible();
+    for (const style of await items.evaluateAll((nodes) =>
+      nodes.map((node) => getComputedStyle(node).listStyleType),
+    )) {
+      expect(style, 'TOC bullets collide with the next item when the list wraps to a row').toBe(
+        'none',
+      );
+    }
+  });
+}
