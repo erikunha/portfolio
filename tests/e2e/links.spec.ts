@@ -169,17 +169,38 @@ test.describe('/links link-in-bio', () => {
     });
     page.on('pageerror', (err) => consoleErrors.push(String(err)));
 
-    const loadedThumbnailCount = () =>
+    const thumbnails = () =>
+      page.locator('ol img').evaluateAll((images) => ({
+        total: images.length,
+        loaded: images.filter((img) => (img as HTMLImageElement).naturalWidth > 0).length,
+      }));
+    const heroThumbnailWidth = () =>
       page
-        .locator('ol img')
-        .evaluateAll(
-          (images) => images.filter((img) => (img as HTMLImageElement).naturalWidth > 0).length,
-        );
+        .locator('a[data-outbound="ultimo-video"] img')
+        .evaluate((img) => (img as HTMLImageElement).naturalWidth);
+
+    async function assertThumbnailsRendered() {
+      const { total, loaded } = await thumbnails();
+      expect(
+        total,
+        'without history entries the loaded-count assertion below is vacuous; an empty feed means the test proved nothing',
+      ).toBeGreaterThan(0);
+      expect(
+        loaded,
+        'every VideoHistory thumbnail must decode. A partial regression (one shard form 400ing in /_next/image while another still loads) fails here instead of hiding behind the one image that worked.',
+      ).toBe(total);
+      await expect
+        .poll(heroThumbnailWidth, {
+          message:
+            'the ChannelCard priority image is the page LCP element and sits outside the ol list; it needs its own decode assertion instead of relying on history[0] happening to share the thumbnail',
+        })
+        .toBeGreaterThan(0);
+    }
 
     await page.goto('/links', { waitUntil: 'networkidle' });
-    await expect.poll(loadedThumbnailCount).toBeGreaterThan(0);
+    await assertThumbnailsRendered();
     await page.goto('/links/en', { waitUntil: 'networkidle' });
-    await expect.poll(loadedThumbnailCount).toBeGreaterThan(0);
+    await assertThumbnailsRendered();
 
     expect(
       consoleErrors,
