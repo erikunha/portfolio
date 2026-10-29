@@ -62,7 +62,7 @@ portfolio/
 ├── next.config.ts        cacheComponents, typedRoutes, static security headers, MDX pipeline
 ├── scripts/             gate/tooling scripts (validate-content, check-*, ask-eval, ...)
 ├── tests/               Playwright e2e, a11y (axe), visual regression
-├── .claude/             AI-agent platform: hooks, skills, rules, agents, settings
+├── .claude/             AI-agent platform: skills, rules, agents, commands, settings
 ├── .github/workflows/   CI (ci.yml), CodeQL, mutation, smoke, claude (AI reviewer pilot)
 └── ARCHITECTURE.md · STANDARDS.md · DECISIONS.md · CLAUDE.md   (canonical root docs)
 ```
