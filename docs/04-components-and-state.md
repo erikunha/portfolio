@@ -29,7 +29,7 @@ flowchart TD
     eb --> mod["Module (RSC wrapper: section + header)"]
     mod --> sec["Section (RSC)"]
     sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · Field"]
-    sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper"]
+    sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper · TaglineTyper (/links)"]
     main --> hero["Hero (standalone client, NOT Module-wrapped)"]
     main --> fl["Footer (RSC): cards, sitemap, shutdown log"]
     fl --> fi["FooterLazy -> Footer.client: session counters + halt/reboot island"]
