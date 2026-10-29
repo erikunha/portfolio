@@ -4,11 +4,15 @@ import { profile, profileWorkingLanguageLine } from '@/content/profile';
 import { Badge, Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
+import { RoleTyper } from '../../client/RoleTyper';
 
 const EXTERNAL_TARGET = '_blank';
 const EXTERNAL_REL = 'noopener noreferrer';
 
 const HEADING_LEVEL = 1;
+const TITLE_WORD_SEPARATOR = ' ';
+const heroSeniority = profile.title.split(TITLE_WORD_SEPARATOR)[0] ?? '';
+const heroTaglineRemainder = heroTagline.slice(heroSeniority.length);
 
 function HeroIdentity({ primary }: { primary: boolean }) {
   return (
@@ -28,7 +32,12 @@ function HeroIdentity({ primary }: { primary: boolean }) {
           {profile.displayName}
         </p>
       )}
-      <p className="hero-stack">{heroTagline}</p>
+      <p className="hero-stack">
+        <span className="hero-role-slot">
+          <RoleTyper className="hero-role-pill" />
+        </span>
+        {heroTaglineRemainder}
+      </p>
       <p className="hero-context">
         <span>
           {c.locationLabel} <b className="hero-location">{profile.country}</b>

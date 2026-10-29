@@ -2307,6 +2307,12 @@
     font-weight: 700;
   }
 
+  .hero-role-slot {
+    display: inline-block;
+    min-width: calc(11ch + var(--spacing-1) * 3);
+  }
+
+  .hero-role-pill,
   .ab-role {
     background: var(--color-primary-500);
     color: var(--color-secondary-950);
