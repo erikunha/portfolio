@@ -59,14 +59,6 @@ export function IconGitLog() {
   );
 }
 
-export function IconNpmStack() {
-  return (
-    <svg {...baseProps}>
-      <path d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-  );
-}
-
 export function IconSysHealth() {
   return (
     <svg {...baseProps}>

@@ -23,7 +23,6 @@ describe('Icons — SVG smoke renders', () => {
     'IconNow',
     'IconProjects',
     'IconGitLog',
-    'IconNpmStack',
     'IconSysHealth',
     'IconShell',
     'IconLivePerf',
