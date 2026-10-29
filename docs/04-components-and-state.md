@@ -23,7 +23,7 @@ Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.c
 flowchart TD
     page["app/page.tsx (RSC)"] --> bp["BreakpointProvider (client)"]
     bp --> shell["AppShell.client"]
-    shell --> chrome["Chrome: MatrixRainLazy · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
+    shell --> chrome["Chrome: MatrixRainLazy (client-only) · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["main#main-content"]
     main --> eb["ErrorBoundary (x20)"]
     eb --> mod["Module (RSC wrapper: section + header)"]
