@@ -41,12 +41,12 @@ flowchart TD
     body --> boot["inline script: set body[data-motion] BEFORE paint"]
     body --> children["{route children}"]
     body --> rum["Analytics + SpeedInsights (only when VERCEL=1)"]
-    children --> bp["BreakpointProvider (client, initialIsMobile from server UA)"]
+    children --> bp["BreakpointProvider (client, initialIsMobile=false on /)"]
     bp --> appshell["AppShell (client chrome)"]
     appshell --> chrome["MatrixRain · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
     appshell --> main["main#main-content"]
-    main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + Modules (RSC)"]
-    main --> footer["Footer (RSC)"]
+    main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + About + terminal modules (RSC)"]
+    appshell --> footer["ErrorBoundary-wrapped Footer (RSC)"]
     footer --> footerIslands["FooterLazy: session counters + halt/reboot island"]
 ```
 
@@ -69,7 +69,7 @@ flowchart LR
 ```
 
 **Static vs dynamic, concretely:**
-- **Static (prerendered):** the whole `AppShell` chrome, `Hero` (outside Suspense so LCP never waits), `Readme`, `Shell`, the responsive `Guitar` presentation, Projects with its attached receipts, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid.
+- **Static (prerendered):** the whole `AppShell` chrome, `Hero` (outside Suspense so LCP never waits), `About`, `Shell`, the responsive `Guitar` presentation, Projects with its attached receipts, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid.
 - **UA-selected variants:** `ManPage`, `Visa` and `DawMixer` wrap an async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`). Their fallbacks are prerendered; the selected variants stream per request.
 - **Measured data:** `AiMetricsSection` renders the `sec-live-metrics` module. It composes `AiMetricsData` and `LivePerfSection`, with independent Suspense boundaries for ASK, desktop PSI and mobile PSI. Each fallback retains its metric layout and shows a loading state. Receipts remain inside Projects rather than a separate module.
 - **The dual-variant pattern** (e.g. `ManPageSection.tsx`):

@@ -28,7 +28,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Functional
 
-- Static composition with Hero and About followed by shell, AI evaluation, projects, performance receipts, Career, profile manual, system health, work authorization, opinions, guitar rig, DAW mixer, open questions, contact and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels; Career owns certification, education and community tag groups.
+- Static composition with Hero and About followed by shell, AI evaluation, projects with attached performance receipts, Career, profile manual, system health, work authorization, opinions, guitar rig, DAW mixer, open questions, contact and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels; Career owns certification, education and community tag groups.
 - Hero: Matrix dialog loop + boot sequence (typewriter)
 - About "Open to [role] roles" line mounts the RoleTyper island over server-rendered text; the Hero title is static; IntersectionObserver gates MatrixRain; the footer is server-rendered, with client islands only for session counters and halt/reboot (no scroll-reveal typewriter exists)
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
@@ -210,10 +210,11 @@ components/Icons/                      # inline SVG icon set
 components/responsive/                 # viewport-variant helpers
 
 content/about.ts                      # About panels, Now rows and Senior status
+content/hero.ts                       # Hero metrics, labels and actions
 content/nav.ts                        # zod-free topbar in-page link
 content/readme.ts                     # README/bio content for /cv and /summary
 content/projects.ts                   # shared project cards
-content/perf-receipts.ts              # canonical deltas, attached receipts and hero stats
+content/perf-receipts.ts              # canonical deltas, attached receipts and reading-view stats
 content/measured.ts                   # ASK and PSI presentation metadata
 content/hottest-takes.ts              # defended opinions
 content/responsibilities.ts           # permissions matrix

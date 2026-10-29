@@ -30,16 +30,16 @@
 
 ## Naming map (decode the filesystem)
 
-| Pattern                        | Meaning                                             |
-| ------------------------------ | --------------------------------------------------- |
-| `Foo/Foo.tsx` + `Foo/index.ts` | one component per folder, barrel-exported           |
-| `*.client.tsx`                 | client island/chrome (ships JS)                     |
-| `*Lazy.{tsx,client.tsx}`       | `next/dynamic` wrapper for code-splitting           |
-| `*Desktop.tsx` / `*Mobile.tsx` | dual-variant inner RSC selected by `getIsMobile()`  |
-| `_components/` `_lib/`         | route-private (underscore = not public API)         |
-| `sec-*` (id)                   | a page section; must have a mobile flex-order rule  |
-| `*.e2e.ts` / `*.test.tsx`      | Playwright / Vitest, co-located                     |
-| `lib/*.client.tsx`             | the rare client-side lib (breakpoint, error-bridge) |
+| Pattern                        | Meaning                                                                                          |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `Foo/Foo.tsx` + `Foo/index.ts` | one component per folder, barrel-exported                                                        |
+| `*.client.tsx`                 | client island/chrome (ships JS)                                                                  |
+| `*Lazy.{tsx,client.tsx}`       | `next/dynamic` wrapper for code-splitting                                                        |
+| `*Desktop.tsx` / `*Mobile.tsx` | dual-variant inner RSC selected by `getIsMobile()`                                               |
+| `_components/` `_lib/`         | route-private (underscore = not public API)                                                      |
+| `sec-*` (id)                   | a section anchor; top-level sections need mobile order rules, declared nested anchors are exempt |
+| `*.e2e.ts` / `*.test.tsx`      | Playwright / Vitest, co-located                                                                  |
+| `lib/*.client.tsx`             | the rare client-side lib (breakpoint, error-bridge)                                              |
 
 ## Things that look wrong but are intentional
 

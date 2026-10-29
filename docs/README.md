@@ -6,7 +6,7 @@
 
 A single-page personal portfolio and **reference web system** for Erik Cunha, built as a deliberate engineering reference system. The product is not just the site you see; the **architecture, enforcement, and documentation are themselves the deliverable**. Every decision is meant to hold up as something another team could adopt verbatim.
 - **Stack:** Next.js 16 (App Router, `cacheComponents`/PPR) · React 19 · TypeScript strict · Tailwind v4 (`@theme`) · pnpm · Vercel (Fluid Compute).
-- **Shape:** one page (`/`) composed of ~20 terminal-themed sections, plus a `/design-system/*` MDX docs surface and ~10 `/api/*` handlers (including an AI "ask Erik" endpoint and a read-only MCP server).
+- **Shape:** one page (`/`) composed of terminal-themed server-rendered sections, plus a `/design-system/*` MDX docs surface and ~10 `/api/*` handlers (including an AI "ask Erik" endpoint and a read-only MCP server).
 - **Aesthetic:** Matrix/brutalist terminal - pure black, lime signal-green, JetBrains Mono, CRT overlays.
 
 ## How to use these docs
@@ -38,7 +38,7 @@ These live at the repo root and remain authoritative. This knowledge base **rout
 
 ## Executive summary
 
-- **Default-RSC, static-first.** `app/page.tsx` composes ~20 server components; almost no JS ships. Interactivity is a small set of explicitly-named **client islands** (`*.client.tsx`). Several sections are dynamically rendered per-request via PPR + `<Suspense>` only because they branch on mobile/desktop server-side.
+- **Default-RSC, static-first.** `app/page.tsx` composes server-rendered sections; almost no JS ships. Interactivity is a small set of explicitly-named **client islands** (`*.client.tsx`). Several sections are dynamically rendered per-request via PPR + `<Suspense>` only because they branch on mobile/desktop server-side.
 - **Content is typed data, validated at build.** Every section is driven by a `content/*.ts` module whose Zod schema parses at import time; `pnpm validate-content` fails the build on any violation. Copy never lives in JSX.
 - **The API layer is a disciplined BFF.** A `defineHandler` envelope enforces a fixed `rate-limit → parse → validate → handle` order; `/api/ask` is a bespoke streaming handler with a multi-layer security/budget pipeline. State lives in Upstash Redis. Rate limiting and dedup **fail open** so a Redis outage never 500s a user; the `/api/ask` budget reservation is the exception and **fails closed** with 503.
 - **State is deliberately minimal.** Exactly one React Context (breakpoint), no global store, no URL state. Motion preference lives in the DOM (`body[data-motion]`), and islands coordinate via window `CustomEvent`s, not shared React state.
@@ -54,7 +54,7 @@ portfolio/
 │   ├── api/              ~10 route handlers (ask, contact, healthz, psi-refresh, mcp, ...)
 │   ├── css/              Tailwind v4 entry + @theme tokens + base/crt/animations/components layers
 │   └── design-system/    MDX docs site for the design system
-├── components/           sections/ (20 RSC sections) · client/ (islands) · responsive/ (chrome) · AppShell · ErrorBoundary
+├── components/           sections/ (RSC composition) · client/ (islands) · responsive/ (chrome) · AppShell · ErrorBoundary
 ├── design-system/        8 reusable primitives (Badge, Button, ...) + cx util
 ├── content/              typed content modules + central Zod schema registry + eval corpus
 ├── lib/                  BFF/server core: env, defineHandler, rate-limit, ask/*, telemetry, integrations

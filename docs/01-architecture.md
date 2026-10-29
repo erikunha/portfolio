@@ -20,7 +20,7 @@ flowchart TB
     end
     subgraph present["Presentation (RSC-first)"]
         page["app/page.tsx<br/>composition root"]
-        sections["components/sections/**<br/>~20 RSC sections"]
+        sections["components/sections/**<br/>RSC sections"]
         islands["components/client/** + responsive/**<br/>client islands (*.client.tsx)"]
         ds["design-system/**<br/>8 reusable primitives"]
     end
@@ -93,7 +93,7 @@ flowchart LR
 flowchart TD
     page["app/page.tsx (RSC)"] --> shell["AppShell.client"]
     page --> sectionN["sections/* (RSC)"]
-    sectionN --> module["responsive/Module (RSC wrapper)"]
+    sectionN -. terminal modules .-> module["responsive/Module (RSC wrapper)"]
     sectionN --> content["content/* (typed data)"]
     sectionN --> dsprim["design-system/* primitives"]
     sectionN -. hosts .-> island["client islands<br/>InteractiveShell · ContactForm · DawMixer*"]
@@ -138,4 +138,4 @@ Contact submission persists a 90-day KV audit record before calling the shared d
 | `lib/rate-limit.ts`                       | Redis access, the sliding-window + token-budget + dedup primitives |
 | `lib/ask/system-prompt.ts`                | How the AI persona is composed from live content (drift-proof)     |
 | `content/schemas.ts`                      | The domain schema registry                                         |
-| `components/responsive/Module/Module.tsx` | The RSC section wrapper every section uses                         |
+| `components/responsive/Module/Module.tsx` | The terminal-module wrapper; Hero and About own their sections     |

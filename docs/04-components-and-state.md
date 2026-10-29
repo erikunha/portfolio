@@ -28,19 +28,20 @@ flowchart TD
     shell --> chrome["Chrome: MatrixRain · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["main#main-content"]
     main --> eb["ErrorBoundary"]
-    eb --> mod["Module (RSC wrapper: section + header)"]
-    mod --> sec["Section (RSC)"]
+    eb --> sec["Terminal section (RSC)"]
+    sec --> mod["Module (RSC wrapper: section + header)"]
     sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · Field"]
     sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper · TaglineTyper (/links)"]
-    main --> hero["Hero (RSC with boot and system-failure islands, not Module-wrapped)"]
-    main --> fl["Footer (RSC): cards, sitemap, shutdown log"]
+    eb --> hero["Hero (RSC with boot and system-failure islands, owns its section)"]
+    eb --> about["About (RSC with RoleTyper island, owns its section)"]
+    shell --> fl["ErrorBoundary-wrapped Footer (RSC): cards, sitemap, shutdown log"]
     fl --> fi["FooterLazy -> Footer.client: session counters + halt/reboot island"]
     fl --> fc["CopyButton: netstat clipboard control"]
 ```
 
 ### The `Module` wrapper
 
-`components/responsive/Module/Module.tsx` (RSC) is the spine every section sits in. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. Props: `id`, `header`, `mobileHeader?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. See DECISIONS.md 2026-07-12 for why the disclosure was removed.
+`components/responsive/Module/Module.tsx` (RSC) wraps terminal modules. Hero and About render their own sections. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. Props: `id`, `header`, `mobileHeader?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. See DECISIONS.md 2026-07-12 for why the disclosure was removed.
 
 ### CRT overlay layering
 
@@ -57,7 +58,7 @@ Eight primitives in `design-system/components/`; **seven exported** from `design
 | `CmdLine`       | RSC        | terminal command line (`user`, `command`, `output`, `prompt`)                  |
 | `Field`         | **client** | input/textarea + label + error/ARIA (not exported)                             |
 | `KbdKey`        | RSC        | `size: sm｜md`                                                                 |
-| `StatTile`      | RSC        | `<dl>` stat tile, `variant: default｜compact`                                  |
+| `StatTile`      | RSC        | `<dl>` stat tile, `variant: default｜compact｜display`                         |
 | `TerminalPanel` | RSC        | bordered container, polymorphic `as`, optional header                          |
 | `WindowChrome`  | RSC        | macOS traffic-light dots, `size` px                                            |
 

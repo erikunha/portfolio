@@ -34,19 +34,19 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 
 ### The gate scripts (what each protects)
 
-| Script                 | Enforces                                             |
-| ---------------------- | ---------------------------------------------------- |
-| `validate-content`     | every `content/*.ts` Zod schema parses (build gate)  |
-| `check:client-naming`  | `'use client'` files are `*.client.tsx`              |
-| `check:dep-pinning`    | no `latest`/`*`/tag deps                             |
-| `check:harness-size`   | `CLAUDE.md` ≤ 275 lines                              |
-| `check:section-order`  | every `sec-*` has a mobile flex-order rule           |
-| `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk |
-| `lint:css-tokens`      | no raw hex outside `app/css/theme.css`               |
-| `lint:contrast`        | documented text/surface pairs meet WCAG AA           |
-| `check:component-docs` | each DS component is documented                      |
-| `check:pkg-age`        | supply-chain: flags <7-day-old package versions      |
-| `bundle-check`         | gzipped client chunks ≤ 220KB                        |
+| Script                 | Enforces                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| `validate-content`     | every `content/*.ts` Zod schema parses (build gate)                                   |
+| `check:client-naming`  | `'use client'` files are `*.client.tsx`                                               |
+| `check:dep-pinning`    | no `latest`/`*`/tag deps                                                              |
+| `check:harness-size`   | `CLAUDE.md` ≤ 275 lines                                                               |
+| `check:section-order`  | top-level `sec-*` anchors have mobile order rules; declared nested anchors are exempt |
+| `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk                                  |
+| `lint:css-tokens`      | no raw hex outside `app/css/theme.css`                                                |
+| `lint:contrast`        | documented text/surface pairs meet WCAG AA                                            |
+| `check:component-docs` | each DS component is documented                                                       |
+| `check:pkg-age`        | supply-chain: flags <7-day-old package versions                                       |
+| `bundle-check`         | gzipped client chunks ≤ 220KB                                                         |
 
 ## Testing
 
