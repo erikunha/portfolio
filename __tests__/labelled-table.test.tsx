@@ -52,4 +52,18 @@ describe('LabelledTable', () => {
     const html = renderToStaticMarkup(table(['Prop'], [['a', 'b']]));
     expect(html).toContain('<td role="cell">b</td>');
   });
+
+  it('wraps the table in a named, keyboard-focusable scroll region', () => {
+    const html = renderToStaticMarkup(table(['Prop', 'Type'], [['a', 'b']]));
+    expect(html).toMatch(
+      /^<section aria-label="Table with columns Prop, Type" tabindex="0"[^>]*overflow-x-auto[^>]*><table/,
+    );
+  });
+
+  it('names a headerless table with the fallback label', () => {
+    const html = renderToStaticMarkup(
+      createElement(LabelledTable, null, createElement('tbody', null)),
+    );
+    expect(html).toContain('aria-label="Table"');
+  });
 });

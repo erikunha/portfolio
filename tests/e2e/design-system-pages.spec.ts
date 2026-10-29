@@ -207,3 +207,33 @@ test('props table keeps its columns at 1280', async ({ page }) => {
   expect(boxes).toHaveLength(PROPS_COLUMNS);
   expect(new Set(boxes.map(Math.round)).size).toBe(1);
 });
+
+const TABLET_VIEWPORT = { width: 768, height: 1024 };
+const WIDE_TABLE_ROUTES = DS_NAV_GROUPS.flatMap((group) => group.links.map((link) => link.href));
+
+for (const path of WIDE_TABLE_ROUTES) {
+  test(`${path} — nothing overflows the page horizontally at 768`, async ({ page }) => {
+    await page.setViewportSize(TABLET_VIEWPORT);
+    await page.goto(path);
+    const overflow = await page.evaluate(() => {
+      const main = document.querySelector('main') as HTMLElement;
+      return {
+        body: document.body.scrollWidth - window.innerWidth,
+        main: main.scrollWidth - main.clientWidth,
+      };
+    });
+    expect(overflow.body).toBeLessThanOrEqual(0);
+    expect(overflow.main).toBeLessThanOrEqual(0);
+  });
+}
+
+test('every scrollable table region is keyboard focusable and named', async ({ page }) => {
+  await page.setViewportSize(TABLET_VIEWPORT);
+  await page.goto('/design-system/components');
+  const regions = page.getByRole('region').filter({ has: page.locator('table') });
+  expect(await regions.count()).toBeGreaterThan(0);
+  for (const region of await regions.all()) {
+    await expect(region).toHaveAttribute('tabindex', '0');
+    await expect(region).toHaveAttribute('aria-label', /\S/);
+  }
+});

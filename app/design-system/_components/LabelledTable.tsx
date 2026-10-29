@@ -6,6 +6,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { tableRegionAriaLabel } from './table-region.constants';
 
 const HEAD_TAG = 'thead';
 const BODY_TAG = 'tbody';
@@ -84,9 +85,16 @@ export function LabelledTable({ children, ...props }: ComponentPropsWithoutRef<'
     );
   });
   return (
-    // biome-ignore lint/a11y/noRedundantRoles: display:block on the mobile layout strips implicit table semantics; the role restores them
-    <table data-labelled-table="" role="table" {...props}>
-      {labelled}
-    </table>
+    <section
+      aria-label={tableRegionAriaLabel(labels)}
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: axe scrollable-region-focusable (WCAG 2.1.1) requires a keyboard-focusable overflow-x-auto region
+      tabIndex={0}
+      className="max-w-full overflow-x-auto"
+    >
+      {/* biome-ignore lint/a11y/noRedundantRoles: display:block on the mobile layout strips implicit table semantics; the role restores them */}
+      <table data-labelled-table="" role="table" {...props}>
+        {labelled}
+      </table>
+    </section>
   );
 }
