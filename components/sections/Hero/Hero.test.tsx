@@ -18,10 +18,9 @@ describe('Hero identity and static actions', () => {
       expect(name?.classList.contains('sr-only')).toBe(false);
       expect(name?.getAttribute('role') ?? 'heading').toBe('heading');
       const title = hero.querySelector('.hero-stack');
-      expect(title?.textContent).toContain(
-        'Software Engineer, Frontend & Product · React · Next.js · TypeScript · Angular · Node.js · AWS',
+      expect(title?.textContent).toBe(
+        'Senior Software Engineer, Frontend & Product · React · Next.js · TypeScript · Angular · Node.js · AWS',
       );
-      expect(title?.querySelector('.sr-only')?.textContent).toBe('Senior');
       expect(title?.closest('[aria-hidden="true"], [aria-live], [role="status"]')).toBeNull();
       expect(hero.textContent).toContain('React · Next.js · TypeScript · Angular · Node.js · AWS');
       expect(hero.textContent).toContain('Brazil');
@@ -32,19 +31,6 @@ describe('Hero identity and static actions', () => {
     }
     expect(doc.querySelectorAll('[data-testid="hero-name"]')).toHaveLength(2);
     expect(doc.querySelector('h1.sr-only')).toBeNull();
-  });
-
-  it('server-renders the role pill with the title seniority in each variant', () => {
-    const doc = getDOM();
-    const slots = doc.querySelectorAll('.hero-stack .hero-role-slot');
-    expect(slots).toHaveLength(2);
-    for (const slot of slots) {
-      expect(slot.querySelector('[aria-hidden="true"]')?.textContent).toBe('[Senior]');
-      expect(slot.querySelector('.sr-only[role="status"]')?.textContent).toBe('Senior');
-    }
-    for (const title of doc.querySelectorAll('.hero-stack')) {
-      expect(title.closest('h1')).toBeNull();
-    }
   });
 
   it('keeps exactly one h1 in the DOM and a level-1 heading in each variant', () => {

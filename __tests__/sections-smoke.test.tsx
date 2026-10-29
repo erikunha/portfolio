@@ -42,8 +42,8 @@ describe('About', () => {
       aboutContent.code.title,
     ]);
     expect(container.querySelector('#sec-now, #sec-npm-stack, #sec-responsibilities')).toBeNull();
-    expect(container.querySelector('.ab-role')?.textContent).toBe(aboutContent.whoami.role);
-    expect(container.querySelector('[role="status"], [aria-live]')).toBeNull();
+    expect(container.querySelector('.ab-role')?.getAttribute('aria-hidden')).toBe('true');
+    expect(container.querySelectorAll('[role="status"]')).toHaveLength(1);
   });
 });
 

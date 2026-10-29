@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { aboutContent } from '@/content/about';
 import { About } from './About';
 
 describe('About r106 composition', () => {
@@ -19,10 +21,9 @@ describe('About r106 composition', () => {
     expect(screen.getByRole('heading', { level: 2, name: /About/ })).toBeTruthy();
   });
 
-  it('renders fixed Senior status, approved principles and all seven responsibilities', () => {
+  it('server-renders the Senior status in the role typer, approved principles and all seven responsibilities', () => {
     render(<About />);
-    expect(screen.getByText('[Senior]')).toBeTruthy();
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByRole('status').textContent).toBe('Senior');
     expect(screen.getByText(/LCP, INP, CLS and bundle size/)).toBeTruthy();
     expect(screen.getByText(/WCAG 2.2 AA, WAI-ARIA/)).toBeTruthy();
     const responsibilities = screen
@@ -31,6 +32,16 @@ describe('About r106 composition', () => {
     expect(responsibilities?.querySelectorAll('[data-file]')).toHaveLength(7);
     expect(screen.getByText('performance-optimization')).toBeTruthy();
     expect(screen.getByText('taste-and-judgment')).toBeTruthy();
+  });
+
+  it('keeps the full Open to line in the server HTML with the pill in a width-reserving slot', () => {
+    const doc = new DOMParser().parseFromString(renderToStaticMarkup(<About />), 'text/html');
+    const line = doc.querySelector('.ab-prose p:has(.ab-role)');
+    const { role, statusPrefix, statusSuffix } = aboutContent.whoami;
+    expect(line?.textContent).toBe(`${statusPrefix}${role}${role.slice(1, -1)}${statusSuffix}`);
+    expect(line?.querySelector('.ab-role')?.getAttribute('aria-hidden')).toBe('true');
+    expect(line?.querySelector('.ab-role')?.closest('.min-w-\\[9em\\]')).not.toBeNull();
+    expect(doc.querySelectorAll('h1')).toHaveLength(0);
   });
 
   it('explains the four permission bit patterns beside the listing', () => {

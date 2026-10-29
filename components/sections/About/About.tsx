@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { aboutContent as c, responsibilitiesLegend } from '@/content/about';
 import { responsibilities } from '@/content/responsibilities';
+import { RoleTyper } from '../../client/RoleTyper';
 import { IconReadme } from '../../Icons';
 
 function Panel({
@@ -65,7 +66,9 @@ export function About() {
                   <h4>{c.whoami.statusTitle}</h4>
                   <p>
                     {c.whoami.statusPrefix}
-                    <strong className="ab-role">{c.whoami.role}</strong>
+                    <span className="inline-block min-w-[9em]">
+                      <RoleTyper className="ab-role font-bold" />
+                    </span>
                     {c.whoami.statusSuffix}
                   </p>
                   {c.whoami.details.map((line) => (
