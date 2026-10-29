@@ -42,10 +42,10 @@ export const SECTION_REGISTRY = [
     icon: SECTION_ICONS.shell,
   },
   {
-    id: 'sec-live-perf',
+    id: 'sec-live-metrics',
     label: 'Measured',
-    srLabel: 'Live performance',
-    aliases: ['measured', 'sec-live-metrics', 'performance', 'metrics', 'lighthouse', 'evals'],
+    srLabel: 'Measured',
+    aliases: ['measured', 'sec-live-perf', 'performance', 'metrics', 'lighthouse', 'evals'],
     order: 6,
     icon: SECTION_ICONS.measured,
   },

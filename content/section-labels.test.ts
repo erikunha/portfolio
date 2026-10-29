@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { SECTION_LABELS } from './section-labels';
 import { SECTION_REGISTRY } from './section-registry';
 
-const EXPECTED_SECTION_COUNT = 18;
+const EXPECTED_SECTION_COUNT = 16;
 
 describe('SECTION_LABELS', () => {
   it('uses registry region names while preserving the existing screen reader copy', () => {
@@ -17,7 +17,7 @@ describe('SECTION_LABELS', () => {
       'sec-projects': 'Projects',
       'sec-git-log': 'Career history',
       'sec-shell': 'Interactive shell',
-      'sec-live-perf': 'Live performance',
+      'sec-live-metrics': 'Measured',
       'sec-hottest-takes': 'Opinions',
       'sec-guitar': 'Guitar rig',
       'sec-contact': 'Contact',

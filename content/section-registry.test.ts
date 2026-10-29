@@ -1,12 +1,12 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { ContactSection } from '@/components/sections/ContactSection';
 import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
 import { Hero } from '@/components/sections/Hero';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
-import { LivePerfSection } from '@/components/sections/LivePerfSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { ReadmeSection } from '@/components/sections/ReadmeSection';
 import { ShellSection } from '@/components/sections/ShellSection';
@@ -23,7 +23,7 @@ vi.mock('@/lib/lighthouse-scores', () => {
     seo: 0,
     fetchedAt: '—',
   };
-  return { getScores: async () => scores, LIGHTHOUSE_FALLBACK: scores };
+  return { getScores: async () => scores, LIGHTHOUSE_FALLBACK: scores, LIGHTHOUSE_TTL_S: 90_000 };
 });
 vi.mock('@/components/client/ContactForm', () => ({ ContactFormLazy: () => null }));
 vi.mock('@/components/client/InteractiveShell', () => ({ InteractiveShellLazy: () => null }));
@@ -36,7 +36,7 @@ describe('section registry', () => {
       { id: 'sec-projects', label: 'Projects', order: 3 },
       { id: 'sec-git-log', label: 'Career', order: 4 },
       { id: 'sec-shell', label: 'Interactive shell', order: 5 },
-      { id: 'sec-live-perf', label: 'Measured', order: 6 },
+      { id: 'sec-live-metrics', label: 'Measured', order: 6 },
       { id: 'sec-hottest-takes', label: 'Opinions', order: 7 },
       { id: 'sec-guitar', label: 'Guitar and mixer', order: 8 },
       { id: 'sec-contact', label: 'Contact', order: 9 },
@@ -71,7 +71,7 @@ describe('section registry', () => {
 
   it('resolves prototype anchors as aliases without breaking existing section labels', () => {
     expect(getSectionByAlias('sec-about')?.id).toBe('sec-readme');
-    expect(getSectionByAlias('sec-live-metrics')?.id).toBe('sec-live-perf');
+    expect(getSectionByAlias('sec-live-perf')?.id).toBe('sec-live-metrics');
     for (const { id, srLabel } of SECTION_REGISTRY) {
       expect(SECTION_LABELS[id]).toBe(srLabel);
     }
@@ -85,7 +85,7 @@ describe('section registry', () => {
       ProjectsSection,
       GitLogSection,
       ShellSection,
-      LivePerfSection,
+      AiMetricsSection,
       HottestTakesSection,
       GuitarSection,
       ContactSection,

@@ -9,8 +9,6 @@ const registrySectionLabels = Object.fromEntries(
 
 export const SECTION_LABELS = {
   ...registrySectionLabels,
-  'sec-ai-metrics': 'AI answer-quality evaluation',
-  'sec-perf-receipts': 'Performance receipts',
   'sec-responsibilities': 'Responsibilities',
   'sec-now': 'Now',
   'sec-npm-stack': 'Tech stack',

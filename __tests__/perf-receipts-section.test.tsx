@@ -1,67 +1,74 @@
-import { type ComponentType, createElement } from 'react';
+import { createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { projectReceipts, receiptsHeading } from '@/content/perf-receipts';
 import { type MountedClient, mountClient } from './helpers/render';
 
-describe('PerfReceiptsSection', () => {
+describe('Projects nested performance receipts', () => {
   let mounted: MountedClient;
 
   afterEach(() => {
     mounted?.unmount();
   });
 
-  async function render(props: { defer?: boolean } = {}) {
-    const { PerfReceiptsSection } = await import(
-      '@/components/sections/PerfReceiptsSection/PerfReceiptsSection'
-    );
-    mounted = await mountClient(
-      createElement(PerfReceiptsSection as ComponentType<{ defer?: boolean }>, props),
-    );
+  async function render() {
+    const { ProjectsSection } = await import('@/components/sections/ProjectsSection');
+    mounted = await mountClient(createElement(ProjectsSection));
     return mounted.container;
   }
 
-  it('renders the section module with PERF_RECEIPTS header', async () => {
+  it('renders the receipts heading inside the single Projects module', async () => {
     const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('PERF_RECEIPTS');
+    expect(container.querySelector('#sec-projects .project-receipts h3')?.textContent).toBe(
+      receiptsHeading,
+    );
+    expect(container.querySelectorAll('section')).toHaveLength(1);
+    expect(container.querySelector('.project-receipts section')).toBeNull();
   });
 
-  it('renders at least one list item (receipt card)', async () => {
+  it('renders exactly the six selected receipts in canonical order', async () => {
     const container = await render();
-    const items = container.querySelectorAll('li');
-    expect(items.length).toBeGreaterThan(0);
+    const items = Array.from(container.querySelectorAll('.project-receipts li'));
+    expect(items).toHaveLength(6);
+    expect(items.map((item) => item.querySelector('[data-receipt-metric]')?.textContent)).toEqual(
+      projectReceipts.map((receipt) => receipt.metric),
+    );
   });
 
-  it('renders the first receipt as a hero card (contains first receipt metric)', async () => {
+  it('features only the first receipt and its canonical display value', async () => {
     const container = await render();
-    const { perfReceipts } = await import('@/content/perf-receipts');
-    const firstMetric = perfReceipts[0]?.metric ?? '';
-    expect(container.textContent).toContain(firstMetric);
+    const featured = container.querySelectorAll('[data-featured]');
+    expect(featured).toHaveLength(1);
+    expect(featured[0]?.closest('li')?.textContent).toContain(projectReceipts[0]?.metric);
+    expect(featured[0]?.textContent).toBe(
+      projectReceipts[0]?.displayValue ?? projectReceipts[0]?.delta,
+    );
   });
 
-  it('renders delta text for receipts', async () => {
+  it('renders display values or deltas from canonical content for every receipt', async () => {
     const container = await render();
-    const { perfReceipts } = await import('@/content/perf-receipts');
-    const firstDelta = perfReceipts[0]?.delta ?? '';
-    expect(container.textContent).toContain(firstDelta);
+    const values = Array.from(container.querySelectorAll('.project-receipts [data-delta]'));
+    expect(values.map((value) => value.textContent)).toEqual(
+      projectReceipts.map((receipt) => receipt.displayValue ?? receipt.delta),
+    );
   });
 
-  it('renders company text for receipts', async () => {
+  it('renders the company and context from content for every receipt', async () => {
     const container = await render();
-    const { perfReceipts } = await import('@/content/perf-receipts');
-    const firstCompany = perfReceipts[0]?.company ?? '';
-    expect(container.textContent).toContain(firstCompany);
+    const items = Array.from(container.querySelectorAll('.project-receipts li'));
+    expect(items.map((item) => item.querySelector('.receipt-company')?.textContent)).toEqual(
+      projectReceipts.map((receipt) => receipt.company),
+    );
+    expect(items.map((item) => item.querySelector('.receipt-context')?.textContent)).toEqual(
+      projectReceipts.map((receipt) => receipt.note),
+    );
   });
 
-  it('renders a receipt card that has mobileMetric with two metric spans', async () => {
+  it('keeps the receipts anchor nested below the project cards', async () => {
     const container = await render();
-    const { perfReceipts } = await import('@/content/perf-receipts');
-    const mobileReceipt = perfReceipts.find((r) => r.mobileMetric != null);
-    if (!mobileReceipt) return;
-    expect(container.textContent).toContain(mobileReceipt.mobileMetric as string);
-  });
-
-  it('renders the defer prop without error', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('li')).not.toBeNull();
+    const cards = container.querySelector('#sec-projects .projects-grid');
+    expect(cards).not.toBeNull();
+    const receipts = cards?.nextElementSibling;
+    expect(receipts?.classList.contains('project-receipts')).toBe(true);
+    expect(receipts?.querySelector('#sec-perf-receipts')?.tagName).toBe('H3');
   });
 });

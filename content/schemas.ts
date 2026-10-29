@@ -73,16 +73,19 @@ export const StatSchema = z.object({
   label: z.string().min(1),
   value: z.string().min(1),
 });
-export const ProjectSchema = z.object({
-  company: z.string().min(1),
-  name: z.string().min(1),
-  mobileName: z.string().min(1),
-  description: z.string().min(1),
-  mobileDescription: z.string().min(1),
-  stats: z.array(StatSchema).min(1),
-  mobileMeta: z.array(StatSchema).min(1),
-  perm: z.string().min(1).optional(),
-});
+export const ProjectKind = z.enum(['professional', 'oss']);
+
+export const ProjectSchema = z
+  .object({
+    company: z.string().min(1),
+    name: z.string().min(1),
+    description: z.string().min(1),
+    stats: z.array(StatSchema).min(1),
+    perm: z.string().min(1).optional(),
+    kind: ProjectKind,
+    url: z.string().url().optional(),
+  })
+  .refine((project) => project.kind !== ProjectKind.enum.oss || project.url !== undefined);
 
 export const PerfReceiptSchema = z.object({
   metric: z.string().min(1),
@@ -94,8 +97,77 @@ export const PerfReceiptSchema = z.object({
     ),
   company: z.string().min(1),
   note: z.string().min(1),
-  mobileMetric: z.string().min(1).optional(),
-  desktopOnly: z.boolean().optional(),
+  project: z.boolean().default(false),
+  displayValue: z.string().min(1).optional(),
+  before: z.number().nonnegative().optional(),
+  after: z.number().nonnegative().optional(),
+});
+
+export const MeasuredSchema = z.object({
+  format: z.object({
+    locale: z.string().min(1),
+    percentScale: z.number().positive(),
+    costPrecision: z.number().int().nonnegative(),
+    dateLength: z.number().int().positive(),
+    millisecondsPerSecond: z.number().positive(),
+    askStaleAfterMs: z.number().positive(),
+    empty: z.string().min(1),
+  }),
+  title: z.string().min(1),
+  command: z.string().min(1),
+  sourceLabel: z.string().min(1),
+  externalDisclosure: z.string().min(1),
+  unavailable: z.string().min(1),
+  loading: z.string().min(1),
+  stale: z.string().min(1),
+  unknownTimestamp: z.string().min(1),
+  ask: z.object({
+    title: z.string().min(1),
+    source: z.string().min(1),
+    url: z.string().url(),
+    cacheKey: z.string().min(1),
+    timestampLabel: z.string().min(1),
+    pending: z.string().min(1),
+    unavailable: z.string().min(1),
+    p95Prefix: z.string().min(1),
+    p95Pending: z.string().min(1),
+    percentUnit: z.string().min(1),
+    latencyUnit: z.string().min(1),
+    currencyUnit: z.string().min(1),
+    metrics: z
+      .array(
+        z.object({
+          key: z.enum(['evalPassRate', 'jailbreakResistance', 'p95LatencyMs', 'costPerAnswer']),
+          label: z.string().min(1),
+          description: z.string(),
+        }),
+      )
+      .length(4),
+  }),
+  psi: z.object({
+    title: z.string().min(1),
+    source: z.string().min(1),
+    url: z.string().url(),
+    timestampLabel: z.string().min(1),
+    strategyParameter: z.string().min(1),
+    outOf: z.string().min(1),
+    strategies: z
+      .array(
+        z.object({
+          key: z.enum(['desktop', 'mobile']),
+          label: z.string().min(1),
+        }),
+      )
+      .length(2),
+    metrics: z
+      .array(
+        z.object({
+          key: z.enum(['performance', 'accessibility', 'bestPractices', 'seo']),
+          label: z.string().min(1),
+        }),
+      )
+      .length(4),
+  }),
 });
 
 export const NpmTileSchema = z.object({

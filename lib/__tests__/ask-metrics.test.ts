@@ -40,9 +40,9 @@ describe('getAskMetrics — absent or malformed Redis payload', () => {
     await expect(getAskMetrics()).resolves.toBeNull();
   });
 
-  it('returns null when getRedis().get rejects', async () => {
+  it('propagates a Redis read failure so the section can render unavailable, not pending', async () => {
     getMock.mockRejectedValueOnce(new Error('redis down'));
-    await expect(getAskMetrics()).resolves.toBeNull();
+    await expect(getAskMetrics()).rejects.toThrow('redis down');
   });
 
   it('returns null when the payload is not an object', async () => {

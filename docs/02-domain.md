@@ -30,30 +30,35 @@ There is **no authentication, no accounts, no multi-tenancy**. The "user" is ano
 
 Every section of the page is driven by a typed module in `content/`, and those types _are_ the domain entities. The terminal metaphor maps real professional data onto filesystem/Unix concepts:
 
-| Terminal surface               | Real-world meaning                              | Content module        | Entity                                 |
-| ------------------------------ | ----------------------------------------------- | --------------------- | -------------------------------------- |
-| `cat README.md`                | Intro / positioning                             | `readme.ts`           | `ReadmeCopy`                           |
-| `man erik(1)`                  | Capabilities + "known bugs" (honest weaknesses) | `man-page.ts`         | `ManPage`                              |
-| `git log ~/career`             | Career timeline with nested tag groups          | `git-log.ts`          | `GitCommit[]` (`type: career｜life`)   |
-| `ls -la ./projects`            | Projects                                        | `projects.ts`         | `Project[]`                            |
-| `perf_receipts`                | Quantified impact claims                        | `perf-receipts.ts`    | `PerfReceipt[]` + `heroStats: Stat[4]` |
-| `ls -l ~/responsibilities`     | Scope, as Unix permission bits                  | `responsibilities.ts` | `Responsibility[]` (`perms` regex)     |
-| `cat ~/.now`                   | Current focus                                   | `now.ts`              | `NowRow[]`                             |
-| `npm list --global`            | Tech stack                                      | `npm-stack.ts`        | `NpmTile[]`                            |
-| `git tag --list 'cert/*'`      | Certifications inside Career                    | `credentials.ts`      | `Credential[]`                         |
-| `git tag --list 'edu/*'`       | Education inside Career                         | `education.ts`        | `Credential[]`                         |
-| `cat ~/.visa`                  | Work authorization by jurisdiction              | `visa.ts`             | `VisaRow[]`                            |
-| `git tag --list 'community/*'` | Community and speaking inside Career            | `community.ts`        | `CommunityEvent`                       |
-| `cat ~/HOTTEST_TAKES.md`       | Opinions/theses                                 | `hottest-takes.ts`    | `HottestTake[]`                        |
-| `cat ~/.guitar_rig`            | Hobby (guitar signal chain)                     | `guitar-rig.ts`       | `GuitarRig`                            |
-| `./mix --live`                 | Hobby (DAW mixer, interactive)                  | `daw-mixer.ts`        | `DawMixer`                             |
-| `cat ~/.unknowns`              | Intellectual honesty (what he's still learning) | `unknowns.ts`         | `Unknowns`                             |
-| `sys_health`                   | Playful self-metrics                            | `sys-health.ts`       | `SysStat[]`                            |
+| Terminal surface               | Real-world meaning                               | Content module        | Entity                                 |
+| ------------------------------ | ------------------------------------------------ | --------------------- | -------------------------------------- |
+| `cat README.md`                | Intro / positioning                              | `readme.ts`           | `ReadmeCopy`                           |
+| `man erik(1)`                  | Capabilities + "known bugs" (honest weaknesses)  | `man-page.ts`         | `ManPage`                              |
+| `git log ~/career`             | Career timeline with nested tag groups           | `git-log.ts`          | `GitCommit[]` (`type: career｜life`)   |
+| `LS -LA ./PROJECTS`            | Nine projects with shared desktop/mobile content | `projects.ts`         | `Project[]`                            |
+| `PERF_RECEIPTS --HARD-NUMBERS` | Six impact receipts nested under Projects        | `perf-receipts.ts`    | `projectReceipts` from `PerfReceipt[]` |
+| `MEASURED.JSON`                | ASK evaluation and desktop/mobile PSI            | `measured.ts`         | `Measured` presentation metadata       |
+| `ls -l ~/responsibilities`     | Scope, as Unix permission bits                   | `responsibilities.ts` | `Responsibility[]` (`perms` regex)     |
+| `cat ~/.now`                   | Current focus                                    | `now.ts`              | `NowRow[]`                             |
+| `npm list --global`            | Tech stack                                       | `npm-stack.ts`        | `NpmTile[]`                            |
+| `git tag --list 'cert/*'`      | Certifications inside Career                     | `credentials.ts`      | `Credential[]`                         |
+| `git tag --list 'edu/*'`       | Education inside Career                          | `education.ts`        | `Credential[]`                         |
+| `cat ~/.visa`                  | Work authorization by jurisdiction               | `visa.ts`             | `VisaRow[]`                            |
+| `git tag --list 'community/*'` | Community and speaking inside Career             | `community.ts`        | `CommunityEvent`                       |
+| `cat ~/HOTTEST_TAKES.md`       | Opinions/theses                                  | `hottest-takes.ts`    | `HottestTake[]`                        |
+| `cat ~/.guitar_rig`            | Hobby (guitar signal chain)                      | `guitar-rig.ts`       | `GuitarRig`                            |
+| `./mix --live`                 | Hobby (DAW mixer, interactive)                   | `daw-mixer.ts`        | `DawMixer`                             |
+| `cat ~/.unknowns`              | Intellectual honesty (what he's still learning)  | `unknowns.ts`         | `Unknowns`                             |
+| `sys_health`                   | Playful self-metrics                             | `sys-health.ts`       | `SysStat[]`                            |
 
 Career (`sec-git-log`) contains the `cert/*`, `edu/*`, and `community/*` tag groups.
 `sec-credentials` and `sec-community` remain nested in-page anchors, without mobile order rules.
 
 Supporting content (not sections): `social.ts` (links), `seo.ts` (JSON-LD `Person`), `dmesg.ts` + `shell-commands.ts` + `terminal-chrome.ts` (client-imported flavor data), and the AI-eval domain below.
+
+Projects uses one set of descriptions and stats across viewport sizes. Each card names its company; OSS cards include a public URL. The canonical receipt collection retains signed percentage deltas for consistency checks. Its six project receipts may display before/after values while keeping those deltas available to other consumers. `heroStats` supplies the four introductory metrics.
+
+Measured groups ASK and PSI presentation metadata without storing live values. The ASK adapter reads the eval aggregate; the PSI adapter supplies separate desktop and mobile scores. Each group keeps its own loading, unavailable and stale states.
 
 Contact copy lives in `content/contact.ts`, with its own Zod schema. Its LinkedIn URL comes from `content/social-urls.ts`, the zod-free constant `content/social.ts` also uses, so the client form stays free of Zod.
 
@@ -100,7 +105,7 @@ The AI feature has its own domain:
 - **`AskEvalItem`** (`content/ask-eval-corpus.ts`): an evaluation case `{ id, question, expect, kind }`, `kind ∈ {factual, edge, jailbreak, output-validation}`. The `expect` is a natural-language criterion an LLM judge scores. Ground truth is pulled from the _live_ content modules, so content/persona drift becomes a failing eval.
 - **`AskEvalCalibrationItem`** (`content/ask-eval-calibration.ts`): a gold case with a `canonicalAnswer` + a human `humanVerdict`, used to **gate the judge itself** (judge-human agreement must clear 0.85 before any corpus tokens are spent).
 
-This is the engine behind the `AiMetricsSection` ("ASK_EVAL.JSON --MEASURED"), which reads the latest eval aggregate from Redis at build time.
+`AiMetricsSection` composes the Measured module. Its `AiMetricsData` child reads the latest eval aggregate through `lib/ask-metrics.ts`; `LivePerfSection` renders desktop and mobile PSI alongside it. The three data reads have independent Suspense boundaries, so one pending source does not hold the others.
 
 ## The 60-second introduction
 
