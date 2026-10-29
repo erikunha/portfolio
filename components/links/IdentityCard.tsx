@@ -58,7 +58,7 @@ export function IdentityCard({ locale }: { locale: LinksLocale }) {
                   <span className="boot-cursor" />
                 </span>
               ))}
-              <span className="[grid-area:1/1]">
+              <span className="tagline-live [grid-area:1/1]">
                 <TaglineTyper phrases={profile.taglines[locale]} />
                 <span className="boot-cursor" aria-hidden="true" />
               </span>

@@ -60,7 +60,7 @@ describe('IdentityCard', () => {
     );
     const { container } = render(<IdentityCard locale={LINKS_LOCALE.en} />);
     vi.advanceTimersByTime(5_000);
-    const typed = container.querySelector('p [aria-hidden="true"]:not(.boot-cursor)');
+    const typed = container.querySelector('.tagline-live [aria-hidden="true"]:not(.boot-cursor)');
     expect(typed?.textContent).toBe('Senior Software Engineer, Frontend & Product');
     vi.useRealTimers();
     vi.unstubAllGlobals();
