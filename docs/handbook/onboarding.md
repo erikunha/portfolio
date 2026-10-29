@@ -4,7 +4,7 @@
 
 ## The 30-second model
 
-You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> self-review (`pr-review-orchestrator`) -> the gate chain -> squash-merge -> ADR. The gates are mechanical and will block you; that is the point, and it is how you move fast safely.
+You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> self-review (`pr-review-orchestrator`) -> the gate chain -> squash-merge -> ADR. Git hooks and CI enforce checks. Architect review and pre-PR review are conventions.
 
 ## Day 1 - understand the flow before you touch it
 
@@ -17,7 +17,7 @@ You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy p
 
 1. `pnpm install && pnpm dev`. Then `pnpm verify` once. Read what each gate checks ([engineering-standards](./engineering-standards.md)).
 2. Read [`/docs/09-hidden-knowledge`](../09-hidden-knowledge.md) (the conventions that will trip you).
-3. Your first push runs `.husky/pre-push`: it blocks a direct push to `main`, requires a `<type>/<description>` branch name, and runs the full `pnpm verify` chain. There is no review stamp and no findings ledger since 2026-07-27.
+3. Your first push runs `.husky/pre-push`: it blocks a direct push to `main`, requires a `<type>/<description>` branch name, and runs the full `pnpm verify` chain. There is no project review-stamp check.
 
 ## Day 3 - make a change through the full pipeline
 
@@ -25,14 +25,14 @@ Pick a small change (a content edit or a design-system variant per the [workflow
 
 ```mermaid
 flowchart LR
-    edit["edit"] --> tdd["add/adjust a test"] --> commit["commit (scope!)"]
+    tdd["write a failing behavior test"] --> edit["implement"] --> commit["commit (scope!)"]
     commit --> selfreview["self-review the diff"] --> push["push (passes pre-push)"]
-    push --> pr["ci:local + gates:runtime; gh pr create (fill template)"]
-    pr --> conv["resolve every thread"] --> ready["pr:gate"] --> owner["owner merges"]
-    owner --> adr["add an ADR"]
+    push --> pr["ci:local; non-docs bundle + route-JS + runtime; open PR"]
+    pr --> conv["resolve every thread"] --> ready["claude-gate + pr:gate"] --> owner["owner merges"]
+    owner --> deploy["deploy; document architectural decisions with the change"]
 ```
 
-You have now exercised every gate. After this you know the platform.
+This exercises the ordinary contribution path. Runtime checks depend on the affected surface.
 
 ## The five rules that matter most in practice
 
@@ -55,11 +55,11 @@ You have now exercised every gate. After this you know the platform.
 
 ## When you are stuck on a gate
 
-| Symptom                            | Remedy                                                          |
-| ---------------------------------- | --------------------------------------------------------------- |
-| Push blocked: "unaudited API edit" | dispatch `security-auditor` (you touched the API surface)       |
-| `writing-plans` blocked            | dispatch `architect-reviewer` first (needs `GATE_RESULT: PASS`) |
-| commit rejected                    | check the scope is present and the type is conventional         |
+| Symptom              | Remedy                                                  |
+| -------------------- | ------------------------------------------------------- |
+| Push blocked on main | push a feature branch and open a PR                     |
+| Invalid branch name  | use a permitted `<type>/<description>` prefix           |
+| commit rejected      | check the scope is present and the type is conventional |
 
 ## When you can independently contribute
 

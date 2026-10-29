@@ -6,26 +6,26 @@
 
 | Layer                       | Where                                                          | Answers                                                                                 |
 | --------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| **Architecture** (the code) | [`/docs/01`–`/docs/11`](../README.md)                          | What the system is, how it renders, how the API works                                   |
+| **Architecture** (the code) | [`/docs/01`-`/docs/11`](../README.md)                          | What the system is, how it renders, how the API works                                   |
 | **Handbook** (the process)  | this folder, `/docs/handbook/*`                                | How work flows from idea to production, how AI participates, how we review/test/release |
-| **Canonical intent** (root) | `ARCHITECTURE.md`, `STANDARDS.md`, `DECISIONS.md`, `CLAUDE.md` | The original design narrative, the engineering bar, the ADR log, the agent instructions |
+| **Canonical intent** (root) | `ARCHITECTURE.md`, `STANDARDS.md`, `DECISIONS.md`, `CLAUDE.md` | The system design, the engineering bar, the ADR log, the agent instructions             |
 
 The handbook routes to the other two rather than duplicating them.
 
 ## Handbook contents
 
-| Doc                                                        | Covers                                                                                                           |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| [development-lifecycle.md](./development-lifecycle.md)     | The SDLC end to end: idea -> spec -> plan -> implement -> review -> merge -> release, with diagrams              |
-| [ai-assisted-development.md](./ai-assisted-development.md) | How AI participates in the SDLC: context engineering, enforcement boundaries, sequence diagrams                  |
-| [agents-skills-hooks-mcp.md](./agents-skills-hooks-mcp.md) | Reference for every agent, skill, hook, rule, and MCP server, with the hook lifecycle and orchestration diagrams |
-| [workflow-playbook.md](./workflow-playbook.md)             | Step-by-step runbooks: feature, bug fix, refactor, perf, a11y, ADR, PR, review                                   |
-| [review-merge-release.md](./review-merge-release.md)       | The gate chain from commit to production, the convergence loop, release and rollback                             |
-| [knowledge-architecture.md](./knowledge-architecture.md)   | How engineering knowledge is organized (specs, plans, ADRs, memory) and the documentation standards              |
-| [engineering-standards.md](./engineering-standards.md)     | The explicit standards index and the gate that enforces each                                                     |
-| [engineering-audit.md](./engineering-audit.md)             | An evaluation of the platform's maturity, with a technical-debt register                                         |
-| [onboarding.md](./onboarding.md)                           | Process onboarding: how to do the work, not just read the code                                                   |
-| [roadmap.md](./roadmap.md)                                 | Future-state engineering platform, ranked by ROI                                                                 |
+| Doc                                                        | Covers                                                                                                                       |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| [development-lifecycle.md](./development-lifecycle.md)     | The SDLC end to end: idea -> spec -> plan -> implement -> review -> merge -> release, with diagrams                          |
+| [ai-assisted-development.md](./ai-assisted-development.md) | How AI participates in the SDLC: context engineering, enforcement boundaries, sequence diagrams                              |
+| [agents-skills-hooks-mcp.md](./agents-skills-hooks-mcp.md) | Reference for tracked project skills, hooks, rules and MCP configuration, with the hook lifecycle and orchestration diagrams |
+| [workflow-playbook.md](./workflow-playbook.md)             | Step-by-step runbooks: feature, bug fix, refactor, perf, a11y, ADR, PR, review                                               |
+| [review-merge-release.md](./review-merge-release.md)       | The gate chain from commit to production, the convergence loop, release and rollback                                         |
+| [knowledge-architecture.md](./knowledge-architecture.md)   | How engineering knowledge is organized (specs, plans, ADRs, memory) and the documentation standards                          |
+| [engineering-standards.md](./engineering-standards.md)     | The explicit standards index and the gate that enforces each                                                                 |
+| [engineering-audit.md](./engineering-audit.md)             | An evaluation of the platform's maturity, with a technical-debt register                                                     |
+| [onboarding.md](./onboarding.md)                           | Process onboarding: how to do the work, not just read the code                                                               |
+| [roadmap.md](./roadmap.md)                                 | Future-state engineering platform, ranked by ROI                                                                             |
 
 ## The platform in one picture
 
@@ -46,24 +46,21 @@ flowchart TB
     end
     subgraph knowledge["Knowledge layer"]
         specs["specs/NNN-feature/ (local-only)"]
-        adr["DECISIONS.md (~240 ADRs)"]
+        adr["DECISIONS.md (architectural decisions)"]
         mem[".remember/ + auto memory"]
     end
     dev --> claude
     claude --> context
     context --> enforce
     claude --> enforce
-    claudereview --> enforce
+    review["PR review workflows"] --> enforce
     enforce --> knowledge
     knowledge --> context
 ```
 
-## What makes this platform distinctive
+## Enforcement boundaries
 
-- **Spec-driven and gate-heavy.** Work flows spec -> architect-review gate -> plan -> implement, and passes the gate chain between "code written" and "merged" (see [review-merge-release](./review-merge-release.md)).
-- **AI is a first-class participant.** Claude Code writes, tests, and reviews. As of 2026-07-27 the bespoke enforcement layer that bounded it (agent-runtime hooks, the review battery, the transcript-verified stamp) is gone; the remaining bounds are git hooks and CI, which constrain the repository rather than the agent.
-- **Every decision is reversible and recorded.** ~240 ADRs in `DECISIONS.md`, each with a "Reversible: ..." note. Failed attempts are recorded, not deleted.
-- **The development platform itself is engineered and self-healing.** A meta-gate detects dead gates; a verification loop proves findings are resolved. See [engineering-audit](./engineering-audit.md).
+Git hooks check commits and pushes. CI checks source, build output and selected runtime behavior. Architect review, API security dispatch and pre-PR review are workflow conventions. See [engineering-audit](./engineering-audit.md) for the limits of those checks.
 
 ## How to read this if you're new
 

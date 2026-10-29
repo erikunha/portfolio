@@ -1,14 +1,14 @@
 # Architecture Overview
 
-> High-level architecture, repository structure, layers, and dependency graph. For the original design narrative and trade-off reasoning, read root `ARCHITECTURE.md`; this doc is the reverse-engineered structural map.
+> High-level architecture, repository structure, layers, and dependency graph. Read root `ARCHITECTURE.md` for the system design and trade-offs.
 
-## The one-paragraph mental model
+## Request model
 
-A request hits Vercel's edge, passes through `proxy.ts` (which stamps CSP + reporting headers), and is served by Next.js. The page `/` is **partially prerendered**: a static shell (the chrome + above-the-fold Hero) is delivered instantly, while a handful of sections that branch on viewport stream in per-request behind `<Suspense>`. Almost no application JavaScript ships - only a small set of **client islands** hydrate. All visible copy comes from **typed, build-validated `content/*.ts` modules**. A few `/api/*` handlers form a thin **BFF** over Upstash Redis, Resend, the Vercel AI Gateway, and Google PageSpeed Insights. Rate limiting and dedup fail open; the `/api/ask` budget reservation fails closed with 503; contact storage fails closed. Stored messages remain queued when delivery fails.
+A request hits Vercel's edge, passes through `proxy.ts` (which stamps CSP + reporting headers), and is served by Next.js. The page `/` is **partially prerendered**: a static shell (the chrome + above-the-fold Hero) is prerendered, while a handful of sections that select variants from the user agent stream in per-request behind `<Suspense>`. Client islands hydrate for chrome, animation and interaction. Section content comes from **typed, build-validated `content/*.ts` modules**. A few `/api/*` handlers form a thin **BFF** over Upstash Redis, Resend, the Vercel AI Gateway, and Google PageSpeed Insights. Rate limiting and dedup fail open; the `/api/ask` budget reservation fails closed with 503; contact storage fails closed. Stored messages remain queued when delivery fails.
 
-## Why this architecture exists
+## System purpose
 
-The product's thesis (root `CLAUDE.md`, `DECISIONS.md` 2026-05-23) is that **architecture is the artifact**: this is a hiring/reference system, so every layer is built to demonstrate a defensible engineering bar. That explains choices that would be over-engineering for a "normal" portfolio: a content-validation gate, a design-system with CI-enforced token boundaries, an AI endpoint held to a production eval bar, and a mechanical development platform. The guiding rules (root `CLAUDE.md`): cross-cutting concerns over local optimization; mechanism over outcome; perf/a11y/security are implicit on every change, not separate phases.
+The site presents a professional profile through the terminal home page, printable `/summary` and `/cv` views, and Portuguese and English link pages. The API supplies contact delivery, grounded answers, machine-readable hiring data and operational probes.
 
 ## Architectural layers
 
@@ -20,9 +20,9 @@ flowchart TB
     end
     subgraph present["Presentation (RSC-first)"]
         page["app/page.tsx<br/>composition root"]
-        sections["components/sections/**<br/>~20 RSC sections"]
-        islands["components/client/** + responsive/**<br/>client islands (*.client.tsx)"]
-        ds["design-system/**<br/>8 reusable primitives"]
+        sections["components/sections/**<br/>RSC sections and nested groups"]
+        islands["client islands<br/>/client/ directories and *.client.*"]
+        ds["design-system/**<br/>reusable primitives"]
     end
     subgraph content["Content / Domain"]
         cmods["content/*.ts<br/>typed modules"]
@@ -48,6 +48,10 @@ flowchart TB
     sections --> cmods --> schemas
     islands -->|fetch /api/ask, /api/contact| api
     api --> handler --> libcore
+    api -->|bespoke handlers| libcore
+    sections -->|Measured reads| libcore
+    links["/links · /links/en"] --> feed["lib/links/feed.ts: use cache"]
+    feed --> yt["YouTube RSS + optional Data API"]
     libcore --> redis
     libcore --> gw
     libcore --> resend
@@ -56,10 +60,10 @@ flowchart TB
 ```
 
 **Layer ownership boundaries (who may import whom):**
-- `content/*` is a **leaf**: pure data + Zod, imported by sections (RSC) and, for the three client-safe modules, by islands. It never imports `lib` or `components`.
-- `design-system/*` primitives are **leaves**: no app imports, only React + `cx`. The app depends on the design system, never the reverse.
+- `content/*` holds typed data, schemas and shared presentation metadata. Server sections and client islands import different modules to control browser dependencies.
+- `design-system/*` primitives use React and shared class utilities. Components import them through the public barrel or an internal module such as `Field`.
 - `lib/*` is the server/BFF core. `lib/*.client.tsx` and a few browser utilities are the exception (client-side), clearly suffixed.
-- `app/api/*` handlers depend on `lib`; `lib` never depends on `app`.
+- `app/api/*` handlers depend on `lib`. The MCP adapter in `lib/agent/mcp-tools.ts` also imports the ask route for an in-process invocation.
 
 ## Repository structure (annotated)
 
@@ -71,13 +75,13 @@ flowchart LR
     root --> dsx["design-system/"]
     root --> cont["content/"]
     root --> lib["lib/"]
-    root --> scr["scripts/ (~40 gates/tools)"]
+    root --> scr["scripts/ (gates and tools)"]
     root --> tst["tests/ (e2e · a11y · visual)"]
     root --> cl[".claude/ (AI platform)"]
     root --> gh[".github/workflows/"]
     root --> docs["root docs: ARCHITECTURE · STANDARDS · DECISIONS · CLAUDE"]
 
-    app --> a1["page.tsx · layout.tsx · not-found.tsx · sitemap.ts"]
+    app --> a1["page.tsx · layout.tsx · summary/ · cv/ · links/ · sitemap.ts"]
     app --> a2["api/** route handlers"]
     app --> a3["css/** (theme · base · crt · animations · components)"]
     app --> a4["design-system/** MDX docs"]
@@ -91,9 +95,12 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    page["app/page.tsx (RSC)"] --> shell["AppShell.client"]
-    page --> sectionN["sections/* (RSC)"]
-    sectionN --> module["responsive/Module (RSC wrapper)"]
+    page["app/page.tsx (RSC)"] --> bp["BreakpointProvider: initialIsMobile=false"]
+    bp --> shell["AppShell.client"]
+    shell --> main["PageMain (RSC)"]
+    main --> sectionN["sections/* (RSC)"]
+    shell --> footer["Footer (RSC), after PageMain"]
+    sectionN -. most wrap .-> module["responsive/Module (RSC wrapper)"]
     sectionN --> content["content/* (typed data)"]
     sectionN --> dsprim["design-system/* primitives"]
     sectionN -. hosts .-> island["client islands<br/>InteractiveShell · ContactForm · DawMixer*"]
@@ -112,30 +119,30 @@ flowchart TD
     defh --> rl
     rl --> redis[("Upstash")]
     askmod --> gw["AI Gateway"]
-    shell --> bp["lib/use-breakpoint.client"]
+    shell --> media["useBreakpoint: matchMedia subscription"]
     shell --> motion["lib/motion.ts (DOM state)"]
 ```
 
-**No circular dependencies exist** in the application graph (verified on demand with the pinned `npx fallow@2.95.0`; the wrapper skill was removed 2026-07-27). The clean direction is: `app → components → {content, design-system}` and `app/api → lib`, with `content` and `design-system` as terminal leaves.
+The main dependency direction is `app → components → {content, design-system}` and `app/api → lib`. Shared utilities and the MCP tool adapter also cross these groups; `lib/agent/mcp-tools.ts` imports the ask route for in-process calls.
 
 Contact submission persists a 90-day KV audit record before calling the shared delivery function. Only Resend acceptance returns 200. Provider failure or timeout returns `202 queued` after adding the id and retry counter to Redis. `ContactForm` distinguishes queued from delivered and reads structured error messages. A `CRON_SECRET` bearer protects the daily 04:00 UTC retry, limited to 3 retries within 7 days. Removing an outbox entry leaves the audit record intact; contact logs contain only request and message ids.
 
 ## Build system
 
-- **Bundler:** Turbopack (Next 16). MDX compiled via `@next/mdx` with `.mjs` remark/recma plugins (`remark-gfm-wrapper`, `remark-preview-source`, `rehype-pretty-code`) referenced by absolute path string-tuples (a Turbopack requirement).
-- **Rendering:** `cacheComponents: true` enables PPR / dynamicIO. `typedRoutes: true` gives compile-time route safety. `trailingSlash: false` is explicit (it fixed a Vercel-layer 308 on `/api/healthz`).
-- **Scripts (`tsx`-run):** content validation, ~15 `check-*` gate scripts, the review/verification/learning toolchain (doc 06), the AI eval harness, and the design-system changelog generator. See doc 07.
+- **Bundler:** Turbopack (Next 16). MDX compiled via `@next/mdx`, with local remark wrapper paths and the `rehype-pretty-code` package configured as string-tuples.
+- **Rendering:** `cacheComponents: true` enables PPR / dynamicIO. `typedRoutes: true` gives compile-time route safety. `trailingSlash: false` is explicit.
+- **Scripts (`tsx`-run):** content validation, static gates, PR checks, the AI eval harness, and the design-system changelog generator. See doc 07.
 - **CSS:** Tailwind v4 via the single `@tailwindcss/postcss` plugin; no Style Dictionary, no CSS modules. Tokens are `@theme` custom properties (doc 04).
 
 ## Key load-bearing files (read these first)
 
-| File                                      | Why it matters                                                     |
-| ----------------------------------------- | ------------------------------------------------------------------ |
-| `app/page.tsx`                            | The composition root; shows the RSC/PPR posture for the whole site |
-| `app/layout.tsx`                          | Fonts, JSON-LD, the pre-paint motion bootstrap, Vercel RUM gating  |
-| `next.config.ts` + `proxy.ts`             | The two-place header split (static vs per-request CSP), PPR, MDX   |
-| `lib/server/route.ts`                     | The `defineHandler` envelope - the API contract                    |
-| `lib/rate-limit.ts`                       | Redis access, the sliding-window + token-budget + dedup primitives |
-| `lib/ask/system-prompt.ts`                | How the AI persona is composed from live content (drift-proof)     |
-| `content/schemas.ts`                      | The domain schema registry                                         |
-| `components/responsive/Module/Module.tsx` | The RSC section wrapper every section uses                         |
+| File                                      | Why it matters                                                              |
+| ----------------------------------------- | --------------------------------------------------------------------------- |
+| `app/page.tsx`                            | The composition root; shows the RSC/PPR posture for the whole site          |
+| `app/layout.tsx`                          | Fonts, JSON-LD, the pre-paint motion bootstrap, Vercel RUM gating           |
+| `next.config.ts` + `proxy.ts`             | The two-place header split (static vs per-request CSP), PPR, MDX            |
+| `lib/server/route.ts`                     | The `defineHandler` envelope - the API contract                             |
+| `lib/rate-limit.ts`                       | Redis access, the sliding-window + token-budget + dedup primitives          |
+| `lib/ask/system-prompt.ts`                | How the AI persona imports shared content                                   |
+| `content/schemas.ts`                      | The domain schema registry                                                  |
+| `components/responsive/Module/Module.tsx` | RSC wrapper for terminal modules; Hero, Career and Footer render separately |

@@ -1,76 +1,54 @@
 # Architecture Findings & Technical Debt
 
-> An evaluation, not a description. Where the architecture is strong, where it has drifted, and the concrete debt a maintainer should know about. Severity is the maintainer's risk lens, not a value judgment of the author.
+> Constraints and maintenance risks visible in the implementation.
 
-## What's genuinely strong (keep these)
+## MCP callers share the ask limiter
 
-- **Default-RSC + content-as-typed-data.** The single highest-leverage decision: sections ship no JS, and copy can't drift from its schema. This is why the perf budgets are even attainable.
-- **The `defineHandler` ordering contract.** Rate-limit→parse→validate→handle as a _security property_, uniformly applied, with a fail-open posture and `X-Request-Id` on every response. Textbook BFF discipline.
-- **Eval-gated AI.** `/api/ask` is held to a calibrated LLM-judge bar with the corpus grounded in live content. Most teams don't eval their AI features at all.
-- **Mechanical enforcement over convention** was the thesis until 2026-07-27, when the agent-runtime hooks, the review battery, the findings ledger and the `gate-health` meta-gate were all removed. What remains mechanical is git hooks and CI; what those gates held is now convention, and `CLAUDE.md` says so rather than claiming enforcement.
-- **Failure-mode literacy.** Almost every integration has a documented, intentional failure mode (fail-open Redis, budget fail-closed, kill-switch fails-off). This is rare and worth preserving.
+`lib/agent/mcp-tools.ts` invokes the ask route with a synthetic request containing only `Content-Type`. It supplies no client IP. `getClientIp` therefore returns `unknown`, and MCP callers share the `rl:ask` bucket of eight requests per hour. The monthly token budget is shared as well.
 
-## Findings (ranked by maintainer risk)
+A busy MCP client can exhaust that bucket for other callers. Per-caller isolation needs a trustworthy caller identity; the stateless transport alone does not provide one.
 
-### F1 - `*.client.tsx` naming convention is partially unenforced (Low, real today)
+## The ask route has a separate request pipeline
 
-Eight interactive files under `components/client/**` (`ContactForm.tsx`, `InteractiveShell.tsx`, `HeroBootAnimation.tsx`, `HeroSystemFailure.tsx`, `RoleTyper.tsx`, `ToTopButton.tsx`, plus the two `*Lazy.tsx` wrappers) carry `'use client'` but are not named `*.client.tsx`, yet the RSC-drift convention claims that naming is the signal. So `check:client-naming` either doesn't scan `components/client/**` or treats the directory as an allowlist.
-- **Risk:** the "name tells you the boundary" invariant has a blind spot; a reviewer scanning by filename could miss a client component.
-- **Fix options:** (a) rename to `*.client.tsx` (and update imports/tests), or (b) document `components/client/**` as an explicit directory-based exception in `STANDARDS.md` Ch.1 and assert it in the gate. Pick one; right now it's ambiguous.
+`/api/ask` implements rate limiting, parsing and validation directly to return a plain-text stream. `defineHandler` centralizes these stages for contact and log operations. Several other routes also use bespoke handlers, including cron, health, profile and MCP endpoints.
 
-### F2 - MCP `ask_erik` shares one global rate-limit bucket (Low–Medium, documented)
+Changes to request validation or rate-limit behavior need comparison across the applicable handlers. A change to `defineHandler` does not reach the ask route.
 
-`lib/agent/mcp-tools.ts` re-invokes `/api/ask` with a synthetic `Request` that has no IP, so all MCP callers worldwide share the single `'unknown'` `rl:ask` bucket (8/h total).
-- **Risk:** one heavy MCP client can starve the AI tool for everyone; it's also a shared token-budget surface.
-- **Fix options:** pass a synthetic per-caller identifier (MCP session id) into the rate-limit key, or give the MCP path its own dedicated, more generous limiter.
+## PSI health depends on a daily refresh
 
-### F3 - `/api/ask` is the one route outside `defineHandler` (Low, intentional but watch it)
+`vercel.json` schedules `/api/psi-refresh` once daily. `/api/healthz` uses the `meta:psi-last-run` timestamp and reports degraded status when it is absent or older than 25 hours. The refresh handler writes that timestamp when at least one strategy succeeds. A partial score failure still returns 500; failure of both strategies leaves the timestamp unchanged.
 
-Streaming forced a bespoke handler, so the ask route hand-rolls the same gate chain (rate-limit, parse, validate, IP-hash). It's correct today, but it's a parallel implementation of the security ordering that `defineHandler` centralizes.
-- **Risk:** the two pipelines can drift; a fix to the envelope won't reach `/api/ask`.
-- **Fix option:** extract the shared gate sequence into a helper both `defineHandler` and the ask route call, so the ordering lives in one place.
+A fresh health response describes the refresh timestamp. It does not prove both PSI strategies returned usable scores. Inspect the cached score records when diagnosing a missing metric.
 
-### F4 - Dead-hook class of rot (Mitigated, keep watching)
+## Repository checks and review conventions have different coverage
 
-`css-token-guard.sh` once pointed at two scripts deleted in the Tailwind-v4 migration and silently no-opped for weeks. It and the `gate-health` meta-gate that caught it were both removed on 2026-07-27; the CSS property it aimed at is held by `pnpm lint:css-tokens` in `verify` and CI.
-- **Status:** mitigated by the meta-gate. Keep `gate-health` in `verify` and CI; don't let it be skipped.
+Git hooks and CI run deterministic checks. The project does not wire agent-runtime hooks for API review or architect approval. Local pre-PR review is a convention; the PR commands check automated approval and thread state.
 
-### F5 - PSI cron is single-shot on Vercel Hobby (Low, accepted)
+`check-client-naming.mjs` explicitly accepts files inside `/client/` directories. Unsuffixed files in `components/client/` comply with that rule and are not a naming-gate blind spot.
 
-`/api/psi-refresh` runs once daily and Vercel Cron doesn't auto-retry, so a single transient PSI timeout degrades `/api/healthz` for up to a day. The freshness key was decoupled to write on partial success (`DECISIONS.md` 2026-06-16), which softens but doesn't remove this.
-- **Risk:** healthz can show `degraded` for a day on a transient upstream blip.
-- **Fix option (if it ever matters):** a Pro-plan twice-daily schedule, or an in-handler bounded retry within the 60s budget.
+## Performance coverage differs by surface
 
-### F6 - Honor-system residue in the review loop (Low, by design)
+The per-route JS checker evaluates every route in the build's route manifest. Lighthouse configuration collects `/` and five design-system pages. It does not collect `/summary`, `/cv`, `/links` or `/links/en`. Both Lighthouse configurations disable the INP assertion.
 
-Pre-PR review is honor-system: nothing records a local finding, so nothing checks it was resolved. On the PR, `pnpm pr:gate` makes thread resolution mechanical.
-- **Status:** acknowledged in `DECISIONS.md`; the boundary is intentionally small and visible. Not debt to "fix," but to be aware of.
+The home and design-system performance gates therefore do not establish latency or visual performance on every route. Use the relevant functional tests and route-specific measurements before making those claims.
 
-## Technical-debt map
+## Maintenance map
 
 ```mermaid
 flowchart TD
-    subgraph low["Low risk / cosmetic"]
-        f1["F1 client-naming blind spot"]
-        f4["F4 gate rot (mitigated)"]
-        f6["F6 review honor-system residue"]
+    subgraph shared["Shared service constraints"]
+        mcp["MCP ask calls: one unknown-IP limiter bucket"]
+        ask["Ask streaming handler: separate gate sequence"]
+        psi["PSI health: refresh timestamp, not per-strategy success"]
     end
-    subgraph med["Worth a ticket"]
-        f2["F2 MCP shared rate-limit bucket"]
-        f3["F3 /api/ask parallel gate chain"]
+    subgraph coverage["Verification scope"]
+        naming["Client naming: suffix or /client/ directory"]
+        hooks["Project review conventions: no agent hook enforcement"]
+        perf["Lighthouse: home + DS routes; INP assertion off"]
+        js["Route JS: every manifest route, 164.7KB total"]
     end
-    subgraph accepted["Accepted constraints"]
-        f5["F5 Hobby single-shot cron"]
-        plan["intentional: no auth, no DB, single page"]
-    end
+    mcp --> ask
+    psi --> perf
 ```
 
-## Complexity / scalability honest take
-
-- **Complexity is deliberately high for the artifact's size**, and that's the stated thesis (architecture-is-the-product). Judge it as a _reference system_, not a portfolio. By that lens the complexity is justified; by a "ship a portfolio" lens it would be over-built. A new maintainer must know which lens applies (it's the former).
-- **Scalability is a non-goal in the traditional sense** - single page, single user, no DB. The scaling surface that _does_ exist (the AI endpoint's cost) is well-bounded by the token budget and rate limits. The thing that would actually break first under load is the shared MCP bucket (F2).
-- **Testability is strong** (behavioral tests, mutation testing, eval harness). The one area with thinner direct coverage is the streaming/rAF client path, which is asserted behaviorally but is inherently timing-sensitive.
-
-## Red-team gaps this knowledge base should still close (see doc 11 + the roadmap)
-
-A new engineer onboarding today would still be missing: a written **per-section feature guide** (each section's content shape + variants in one place), a **troubleshooting runbook** beyond the table in doc 07, and **decision-record cross-links** from code to the relevant `DECISIONS.md` entry. These are enumerated in the future-documentation roadmap (doc 11 appendix).
+For component boundaries, read [04-components-and-state.md](./04-components-and-state.md). For active checks and commands, read [07-workflows.md](./07-workflows.md).
