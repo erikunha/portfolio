@@ -9,7 +9,7 @@ describe('design-system layout', () => {
     const { DS_NAV_ID } = await import('@/app/design-system/_components/ds-nav');
     const html = renderToStaticMarkup(<Layout>content</Layout>);
     expect(html).toContain(`href="#${DS_NAV_ID}"`);
-    expect(html).toContain(`<nav id="${DS_NAV_ID}"`);
+    expect(html).toContain(`<nav id="${DS_NAV_ID}" tabindex="-1"`);
     expect(html.indexOf(`href="#${DS_NAV_ID}"`)).toBeLessThan(html.indexOf('<main'));
   });
 });

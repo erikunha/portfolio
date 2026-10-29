@@ -7,7 +7,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <nav id={DS_NAV_ID} aria-label="Design system" className="ds-sidebar">
+    <nav id={DS_NAV_ID} tabIndex={-1} aria-label="Design system" className="ds-sidebar">
       <ul>
         <li>
           <a href="/" className="ds-nav-item">
