@@ -1,5 +1,5 @@
 import { SECTION_LABELS } from '@/content/section-labels';
-import { InteractiveShellLazy } from '../../client/InteractiveShell';
+import { InteractiveShellLazy } from '../../client/InteractiveShell/InteractiveShellLazy';
 import { ErrorBoundary } from '../../ErrorBoundary';
 import { IconShell } from '../../Icons';
 import { Module } from '../../responsive/Module';
