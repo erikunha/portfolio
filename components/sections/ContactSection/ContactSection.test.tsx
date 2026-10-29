@@ -28,6 +28,8 @@ describe('ContactSection', () => {
     render(<ContactSection />);
     fireEvent.click(screen.getByRole('button', { name: 'Copy email' }));
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(social.email));
-    expect(screen.getByRole('button', { name: 'Copy email' }).textContent).toBe('COPIED');
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Copy email' }).textContent).toBe('COPIED'),
+    );
   });
 });

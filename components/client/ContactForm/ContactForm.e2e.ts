@@ -28,17 +28,25 @@ test.describe('contact form', () => {
     await expect(successEl).toContainText('EXECUTE_SEND :: SUCCESS');
   });
 
-  test('2 — validation: blank submit shows field-level error (browser native)', async ({
-    page,
-  }) => {
+  test('2: validation: blank submit shows an error summary with field links', async ({ page }) => {
     await setupContactPage(page, { contact: 'happy', log: 'accept' });
     await page.locator('[data-testid="contact-form"] button[type="submit"]').click();
 
     await expect(page.locator('[data-testid="contact-form"]')).toBeVisible();
-    const nameInput = page.locator('[data-testid="contact-form"] input[autocomplete="name"]');
-    await expect(nameInput).toHaveAttribute('required');
-    const isInvalid = await nameInput.evaluate((el) => !(el as HTMLInputElement).validity.valid);
-    expect(isInvalid).toBe(true);
+    const summary = page
+      .locator('[data-testid="contact-form"]')
+      .getByRole('alert', { name: 'Fields need attention:' });
+    await expect(summary).toBeVisible();
+    await expect(summary.getByRole('link')).toHaveText(['name', 'email', 'message']);
+    for (const field of ['name', 'email', 'message']) {
+      const input = page.locator(`[data-testid="contact-form"] [name="${field}"]`);
+      const fieldId = await input.getAttribute('id');
+      await expect(summary.getByRole('link', { name: field, exact: true })).toHaveAttribute(
+        'href',
+        `#${fieldId}`,
+      );
+      await expect(input).toHaveAttribute('aria-invalid', 'true');
+    }
   });
 
   test('3 — rate-limited: 429 response surfaces "try again" message to the user', async ({
