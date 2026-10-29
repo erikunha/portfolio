@@ -96,3 +96,55 @@ for (const viewport of [
     }
   });
 }
+
+const MOBILE = { width: 390, height: 844 };
+const DESKTOP = { width: 1280, height: 800 };
+
+async function leftEdges(locator: import('@playwright/test').Locator) {
+  return locator.evaluateAll((nodes) =>
+    nodes.map((node) => Math.round(node.getBoundingClientRect().left)),
+  );
+}
+
+test('mobile sidebar items stack in one column', async ({ page }) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto('/design-system/primitives/button');
+  const items = page.locator('.ds-sidebar a.ds-nav-item');
+  await expect(items.first()).toBeVisible();
+  expect(
+    new Set(await leftEdges(items)).size,
+    'sidebar items wrap into rows instead of one column',
+  ).toBe(1);
+});
+
+test('desktop sidebar is visible and vertical', async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  await page.goto('/design-system/primitives/button');
+  const items = page.locator('.ds-sidebar a.ds-nav-item');
+  await expect(items.first()).toBeVisible();
+  expect(new Set(await leftEdges(items)).size).toBe(1);
+  const tops = await items.evaluateAll((nodes) =>
+    nodes.map((node) => node.getBoundingClientRect().top),
+  );
+  expect(tops).toEqual([...tops].sort((a, b) => a - b));
+  expect(new Set(tops).size).toBe(tops.length);
+});
+
+test('mobile on-this-page items stack in one column', async ({ page }) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto('/design-system');
+  const items = page.getByRole('navigation', { name: 'On this page', exact: true }).locator('a');
+  await expect(items.first()).toBeVisible();
+  expect(new Set(await leftEdges(items)).size).toBe(1);
+});
+
+test('mobile overview stat tiles sit at most two per row', async ({ page }) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto('/design-system');
+  const tops = await page
+    .locator('.ds-stat-row > *')
+    .evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().top)));
+  expect(tops).toHaveLength(4);
+  const perRow = Math.max(...[...new Set(tops)].map((top) => tops.filter((t) => t === top).length));
+  expect(perRow).toBeLessThanOrEqual(2);
+});
