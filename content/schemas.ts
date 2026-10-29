@@ -1,5 +1,65 @@
 import { z } from 'zod';
 
+export const SECTION_DESTINATION_COUNT = 9;
+const FIRST_SECTION_ORDER = 1;
+const MIN_SECTION_TEXT_LENGTH = 1;
+const MIN_ALIAS_COUNT = 1;
+
+export const SECTION_ICONS = {
+  home: 'home',
+  about: 'readme',
+  projects: 'projects',
+  career: 'git-log',
+  shell: 'shell',
+  measured: 'live-perf',
+  opinions: 'hottest-takes',
+  guitar: 'guitar',
+  contact: 'contact',
+} as const;
+
+const SectionTextSchema = z
+  .string()
+  .min(MIN_SECTION_TEXT_LENGTH)
+  .refine((text) => text === text.trim(), {
+    message: 'Section text must not have leading or trailing whitespace',
+  });
+
+const SectionAliasSchema = SectionTextSchema.refine((alias) => alias === alias.toLowerCase(), {
+  message: 'Section aliases must be lowercase',
+});
+
+export const SectionSchema = z.object({
+  id: SectionTextSchema,
+  label: SectionTextSchema,
+  srLabel: SectionTextSchema,
+  aliases: z.array(SectionAliasSchema).min(MIN_ALIAS_COUNT).readonly(),
+  order: z.number().int().min(FIRST_SECTION_ORDER).max(SECTION_DESTINATION_COUNT),
+  icon: z.enum(SECTION_ICONS),
+});
+
+export type Section = z.infer<typeof SectionSchema>;
+
+export const SectionRegistrySchema = z
+  .array(SectionSchema)
+  .length(SECTION_DESTINATION_COUNT)
+  .refine((entries) => new Set(entries.map(({ id }) => id)).size === entries.length, {
+    message: 'Section ids must be unique',
+  })
+  .refine((entries) => new Set(entries.map(({ order }) => order)).size === entries.length, {
+    message: 'Section orders must be unique',
+  })
+  .refine((entries) => entries.every(({ order }, index) => order === FIRST_SECTION_ORDER + index), {
+    message: 'Section orders must match array position and be contiguous from the first order',
+  })
+  .refine(
+    (entries) => {
+      const aliases = entries.flatMap(({ aliases }) => aliases);
+      return new Set(aliases).size === aliases.length;
+    },
+    { message: 'Section aliases must be unique across all destinations' },
+  )
+  .readonly();
+
 export const SocialSchema = z.object({
   github: z.string().url(),
   linkedin: z.string().url(),
@@ -13,16 +73,19 @@ export const StatSchema = z.object({
   label: z.string().min(1),
   value: z.string().min(1),
 });
-export const ProjectSchema = z.object({
-  company: z.string().min(1),
-  name: z.string().min(1),
-  mobileName: z.string().min(1),
-  description: z.string().min(1),
-  mobileDescription: z.string().min(1),
-  stats: z.array(StatSchema).min(1),
-  mobileMeta: z.array(StatSchema).min(1),
-  perm: z.string().min(1).optional(),
-});
+export const ProjectKind = z.enum(['professional', 'oss']);
+
+export const ProjectSchema = z
+  .object({
+    company: z.string().min(1),
+    name: z.string().min(1),
+    description: z.string().min(1),
+    stats: z.array(StatSchema).min(1),
+    perm: z.string().min(1).optional(),
+    kind: ProjectKind,
+    url: z.string().url().optional(),
+  })
+  .refine((project) => project.kind !== ProjectKind.enum.oss || project.url !== undefined);
 
 export const PerfReceiptSchema = z.object({
   metric: z.string().min(1),
@@ -34,8 +97,77 @@ export const PerfReceiptSchema = z.object({
     ),
   company: z.string().min(1),
   note: z.string().min(1),
-  mobileMetric: z.string().min(1).optional(),
-  desktopOnly: z.boolean().optional(),
+  project: z.boolean().default(false),
+  displayValue: z.string().min(1).optional(),
+  before: z.number().nonnegative().optional(),
+  after: z.number().nonnegative().optional(),
+});
+
+export const MeasuredSchema = z.object({
+  format: z.object({
+    locale: z.string().min(1),
+    percentScale: z.number().positive(),
+    costPrecision: z.number().int().nonnegative(),
+    dateLength: z.number().int().positive(),
+    millisecondsPerSecond: z.number().positive(),
+    askStaleAfterMs: z.number().positive(),
+    empty: z.string().min(1),
+  }),
+  title: z.string().min(1),
+  command: z.string().min(1),
+  sourceLabel: z.string().min(1),
+  externalDisclosure: z.string().min(1),
+  unavailable: z.string().min(1),
+  loading: z.string().min(1),
+  stale: z.string().min(1),
+  unknownTimestamp: z.string().min(1),
+  ask: z.object({
+    title: z.string().min(1),
+    source: z.string().min(1),
+    url: z.string().url(),
+    cacheKey: z.string().min(1),
+    timestampLabel: z.string().min(1),
+    pending: z.string().min(1),
+    unavailable: z.string().min(1),
+    p95Prefix: z.string().min(1),
+    p95Pending: z.string().min(1),
+    percentUnit: z.string().min(1),
+    latencyUnit: z.string().min(1),
+    currencyUnit: z.string().min(1),
+    metrics: z
+      .array(
+        z.object({
+          key: z.enum(['evalPassRate', 'jailbreakResistance', 'p95LatencyMs', 'costPerAnswer']),
+          label: z.string().min(1),
+          description: z.string(),
+        }),
+      )
+      .length(4),
+  }),
+  psi: z.object({
+    title: z.string().min(1),
+    source: z.string().min(1),
+    url: z.string().url(),
+    timestampLabel: z.string().min(1),
+    strategyParameter: z.string().min(1),
+    outOf: z.string().min(1),
+    strategies: z
+      .array(
+        z.object({
+          key: z.enum(['desktop', 'mobile']),
+          label: z.string().min(1),
+        }),
+      )
+      .length(2),
+    metrics: z
+      .array(
+        z.object({
+          key: z.enum(['performance', 'accessibility', 'bestPractices', 'seo']),
+          label: z.string().min(1),
+        }),
+      )
+      .length(4),
+  }),
 });
 
 export const NpmTileSchema = z.object({
@@ -62,17 +194,19 @@ export const ResponsibilitySchema = z.object({
   highlight: z.boolean().default(false),
 });
 
+export const GUITAR_SIGNAL_BAR_COUNT = 8;
+export const GUITAR_SIGNAL_LABEL_TOKENS = { strength: '{n}', total: '{total}' } as const;
+
 const _signalNodeBase = { name: z.string().min(1), subtitle: z.string().min(1) };
 const _dotsNode = (role: 'INPUT' | 'AMP' | 'OUT') =>
   z.object({
     ..._signalNodeBase,
     role: z.literal(role),
-    strengthDots: z.number().int().min(0).max(8),
+    strengthDots: z.number().int().min(0).max(GUITAR_SIGNAL_BAR_COUNT),
   });
 const _fxNode = z.object({
   ..._signalNodeBase,
   role: z.literal('FX'),
-  blocks: z.array(z.object({ name: z.string().min(1), active: z.boolean() })).min(1),
 });
 export const SignalChainNodeSchema = z.discriminatedUnion('role', [
   _dotsNode('INPUT'),
@@ -82,10 +216,7 @@ export const SignalChainNodeSchema = z.discriminatedUnion('role', [
 ]);
 
 export const InfluenceSchema = z.object({
-  rank: z.number().int().min(1).max(5),
   name: z.string().min(1),
-  strength: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
-  active: z.boolean().optional(),
 });
 
 export const StatCellSchema = z.object({
@@ -97,7 +228,6 @@ export const StatCellSchema = z.object({
 export const GuitarRigSchema = z.object({
   signalChain: z.tuple([_dotsNode('INPUT'), _fxNode, _dotsNode('AMP'), _dotsNode('OUT')]),
   influences: z.array(InfluenceSchema).length(5),
-  nowObsessing: z.string().min(1),
   stats: z.array(StatCellSchema).length(4),
   liveCam: z.object({
     photo: z.string().min(1),
@@ -106,6 +236,31 @@ export const GuitarRigSchema = z.object({
     cameraLabel: z.string().min(1),
   }),
 });
+
+const [guitarInputSchema, , guitarAmpSchema, guitarOutputSchema] =
+  GuitarRigSchema.shape.signalChain.def.items;
+const GuitarPresentationCopySchema = z.object({
+  label: z.string().trim().nonempty(),
+  text: z.string().trim().nonempty(),
+});
+
+export const GuitarPresentationSchema = z.object({
+  signalStrengthLabelTemplate: z
+    .string()
+    .includes(GUITAR_SIGNAL_LABEL_TOKENS.strength)
+    .includes(GUITAR_SIGNAL_LABEL_TOKENS.total),
+  signalChain: z.tuple([guitarInputSchema, guitarAmpSchema, guitarOutputSchema]),
+  influences: GuitarPresentationCopySchema,
+  nowPlaying: GuitarPresentationCopySchema,
+  stats: GuitarRigSchema.shape.stats,
+  photo: z.object({
+    src: z.string().trim().nonempty(),
+    alt: z.string().trim().nonempty(),
+    width: z.number().int().positive(),
+    height: z.number().int().positive(),
+  }),
+});
+export type GuitarPresentation = z.infer<typeof GuitarPresentationSchema>;
 
 export const UnknownItemSchema = z.object({
   claim: z.string().min(1),
@@ -451,7 +606,10 @@ export const LocalizedTextSchema = z.object({
 export const LinksProfileSchema = z.object({
   name: z.string().min(1),
   avatar: z.string().min(1),
-  title: LocalizedTextSchema,
+  taglines: z.object({
+    pt: z.array(z.string().min(1)).min(1),
+    en: z.array(z.string().min(1)).min(1),
+  }),
   host: LocalizedTextSchema,
   stack: z.string().min(1),
   status: LocalizedTextSchema,
