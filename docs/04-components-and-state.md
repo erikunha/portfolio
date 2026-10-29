@@ -13,7 +13,9 @@ Four directories, four roles. The directory tells you the layer:
 | `components/responsive/**`    | Viewport chrome       | Yes (except `Module`) | `MatrixRain`, `Dock`, `CRTOverlay`              |
 | `design-system/components/**` | Reusable primitives   | Mostly No (RSC)       | `Badge`, `Button`, `TerminalPanel`              |
 
-Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.client.tsx`; a plain `*.tsx` in `sections/` is RSC. Each component is a `Foo/Foo.tsx` + `Foo/index.ts` barrel, with co-located `*.test.tsx` (Vitest) and `*.e2e.ts` (Playwright). `*Lazy` files are `next/dynamic` wrappers, except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (the footer itself is an RSC, so there is nothing to split).
+Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.client.tsx`; a plain `*.tsx` in `sections/` is RSC. Each component is a `Foo/Foo.tsx` + `Foo/index.ts` barrel, with co-located `*.test.tsx` (Vitest) and `*.e2e.ts` (Playwright). `*Lazy` files are `next/dynamic` wrappers (`ContactFormLazy`, `InteractiveShellLazy`, `MatrixRainLazy` in `responsive/MatrixRain/`, consumed by `AppShell.client`), except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (the footer itself is an RSC, so there is nothing to split).
+
+Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` export only the lazy wrapper. Tests import the real component directly, keeping it out of the initial client references.
 
 > **Known convention drift (document, do not "fix" silently):** eight interactive files under `components/client/**` (e.g. `ContactForm.tsx`, `InteractiveShell.tsx`, `HeroBootAnimation.tsx`, `RoleTyper.tsx`, `ToTopButton.tsx`) carry `'use client'` but are **not** named `*.client.tsx`. The naming gate's scope evidently does not cover that directory. This is real today; see doc 09.
 
@@ -23,7 +25,7 @@ Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.c
 flowchart TD
     page["app/page.tsx (RSC)"] --> bp["BreakpointProvider (client)"]
     bp --> shell["AppShell.client"]
-    shell --> chrome["Chrome: MatrixRain · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
+    shell --> chrome["Chrome: MatrixRainLazy · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["main#main-content"]
     main --> eb["ErrorBoundary (x20)"]
     eb --> mod["Module (RSC wrapper: section + CSS typing header)"]

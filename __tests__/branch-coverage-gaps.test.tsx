@@ -136,7 +136,7 @@ describe('AppShell — isMobile=true prop branches', () => {
       useBreakpoint: () => ({ isMobile: true }),
     }));
     vi.doMock('@/components/responsive/MatrixRain', () => ({
-      MatrixRain: MatrixRainStub,
+      MatrixRainLazy: MatrixRainStub,
     }));
     vi.doMock('@/components/responsive/CRTOverlay', () => ({ CRTOverlay: NullStub }));
     vi.doMock('@/components/responsive/DesktopTopbar', () => ({ DesktopTopbar: NullStub }));
