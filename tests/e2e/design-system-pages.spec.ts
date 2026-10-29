@@ -12,7 +12,7 @@ const DS_ROUTES = [
 for (const { path, heading } of DS_ROUTES) {
   test(`${path} — renders heading and sidebar nav`, async ({ page }) => {
     await page.goto(path);
-    await expect(page.getByRole('heading', { name: heading })).toBeVisible();
+    await expect(page.getByRole('heading', { name: heading, exact: true, level: 1 })).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'Design system' })).toBeVisible();
   });
 }
