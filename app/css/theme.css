@@ -5,6 +5,11 @@
 
   --text-min: 0.75rem;
   --text-xs: max(0.75rem, var(--text-min));
+  --text-micro-95: 9.5px;
+  --text-micro-100: 10px;
+  --text-micro-105: 10.5px;
+  --text-micro-110: 11px;
+  --text-micro-115: 11.5px;
   --text-sm: 0.875rem;
   --text-base: 1rem;
   --text-lg: 1.125rem;
