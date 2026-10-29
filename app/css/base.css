@@ -1,4 +1,18 @@
 @layer base {
+  :root {
+    --rail-collapsed-width: 56px;
+    --rail-expanded-width: 232px;
+    --rail-top: 45px;
+    --drawer-max-width: 320px;
+    --dock-clearance: 72px;
+    --z-rail: 100;
+    --z-dock: 120;
+    --z-scrim: 125;
+    --z-position-line: 126;
+    --z-drawer: 130;
+    --z-position-text: 131;
+  }
+
   *,
   *::before,
   *::after {
@@ -273,6 +287,12 @@
     }
     #sec-contact {
       order: 20;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    html {
+      scroll-padding-bottom: var(--dock-clearance);
     }
 
     body {
