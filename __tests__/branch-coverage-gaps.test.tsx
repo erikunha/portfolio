@@ -119,7 +119,7 @@ describe('AppShell — isMobile=true prop branches', () => {
     vi.doMock('@/lib/use-breakpoint.client', () => ({
       useBreakpoint: () => ({ isMobile: true }),
     }));
-    vi.doMock('@/components/responsive/MatrixRain/MatrixRainLazy.client', () => ({
+    vi.doMock('@/components/responsive/MatrixRain', () => ({
       MatrixRainLazy: MatrixRainStub,
     }));
     vi.doMock('@/components/responsive/CRTOverlay', () => ({ CRTOverlay: NullStub }));

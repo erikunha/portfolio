@@ -8,7 +8,7 @@ import { ErrorBoundary } from '../ErrorBoundary';
 import { CRTOverlay } from '../responsive/CRTOverlay';
 import { DesktopTopbar } from '../responsive/DesktopTopbar';
 import { Dock } from '../responsive/Dock';
-import { MatrixRainLazy } from '../responsive/MatrixRain/MatrixRainLazy.client';
+import { MatrixRainLazy } from '../responsive/MatrixRain';
 import { MobileTitleBar } from '../responsive/MobileTitleBar';
 import { StatusBar } from '../responsive/StatusBar';
 
