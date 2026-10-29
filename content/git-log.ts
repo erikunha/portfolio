@@ -67,7 +67,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     workMode: 'remote',
     domain: 'sports retail e-commerce',
     body: [
-      'Next.js storefronts for Nike Brazil and Centauro (8M+ MAU); lifted conversion ~10% through 20+ A/B experiments.',
+      'Next.js storefronts for Nike Brazil and Centauro (8M+ MAU); conversion +10% across 20+ A/B experiments, page load -32% (CWV optimization + image pipeline).',
     ],
   },
   {

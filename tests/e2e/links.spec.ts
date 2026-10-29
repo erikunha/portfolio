@@ -122,19 +122,27 @@ test.describe('/links link-in-bio', () => {
     expect(await page.locator('a[href="#"], a[href=""]').count()).toBe(0);
   });
 
-  test('shows the same static title with or without reduced motion', async ({ page }) => {
+  test('types the tagline, and holds the full first phrase under reduced motion', async ({
+    page,
+  }) => {
     const title = 'Engenheiro de Software Sênior, Frontend e Produto';
     const identity = page.locator('.links-identity-box');
 
-    await page.goto('/links');
-    await expect(identity).toContainText(title);
-
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.reload();
+    await page.goto('/links');
     await expect(identity).toContainText(title);
     const first = await identity.textContent();
     await page.waitForTimeout(600);
-    expect(await identity.textContent()).toBe(first);
+    expect(await identity.textContent(), 'reduced motion must not type').toBe(first);
+
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.reload();
+    const samples = new Set<string | null>();
+    for (let i = 0; i < 6; i++) {
+      samples.add(await identity.textContent());
+      await page.waitForTimeout(150);
+    }
+    expect(samples.size, 'the tagline must type when motion is allowed').toBeGreaterThan(1);
   });
 
   test('renders the English title on the English route', async ({ page }) => {
@@ -144,7 +152,7 @@ test.describe('/links link-in-bio', () => {
     );
   });
 
-  test('lays the social pills out in two columns from 360px and three from 900px', async ({
+  test('lays the social pills out in one column on mobile, two from 768px and three from 900px', async ({
     page,
   }) => {
     const columns = () =>
@@ -154,6 +162,9 @@ test.describe('/links link-in-bio', () => {
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/links');
+    expect(await columns()).toBe(1);
+
+    await page.setViewportSize({ width: 800, height: 800 });
     expect(await columns()).toBe(2);
 
     await page.setViewportSize({ width: 1000, height: 800 });
@@ -260,4 +271,11 @@ test.describe('/links link-in-bio', () => {
       ).toEqual([]);
     }
   });
+});
+
+test('reduced motion shows the ticker text once, not its loop copy', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/links');
+  const copy = page.locator('.links-ticker-track > [aria-hidden="true"]');
+  await expect(copy, 'the marquee loop copy must hide when the marquee stops').toBeHidden();
 });

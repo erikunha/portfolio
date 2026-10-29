@@ -110,7 +110,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
           </a>
         )}
 
-        <div className={cn('grid gap-2 mt-[13px]', latest !== null && 'grid-cols-[1fr_auto]')}>
+        <div className={cn('grid gap-2 mt-[13px]', latest !== null && 'md:grid-cols-[1fr_auto]')}>
           <SubscribeCta
             href={withUtm(subscribeHref, 'inscrever')}
             subscribedHref={withUtm(`${channelUrl}/videos`, 'inscrito-ver-videos')}

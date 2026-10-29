@@ -2,10 +2,31 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SECTION_LABELS } from './section-labels';
+import { SECTION_REGISTRY } from './section-registry';
 
-const EXPECTED_SECTION_COUNT = 18;
+const EXPECTED_SECTION_COUNT = 16;
 
 describe('SECTION_LABELS', () => {
+  it('uses registry region names while preserving the existing screen reader copy', () => {
+    const regionLabels = Object.fromEntries(
+      SECTION_REGISTRY.map(({ id }) => [id, SECTION_LABELS[id]]),
+    );
+    expect(regionLabels).toEqual({
+      bio: 'Home',
+      'sec-readme': 'About',
+      'sec-projects': 'Projects',
+      'sec-git-log': 'Career history',
+      'sec-shell': 'Interactive shell',
+      'sec-live-metrics': 'Measured',
+      'sec-hottest-takes': 'Opinions',
+      'sec-guitar': 'Guitar rig',
+      'sec-contact': 'Contact',
+    });
+    for (const { id, srLabel } of SECTION_REGISTRY) {
+      expect(SECTION_LABELS[id]).toBe(srLabel);
+    }
+  });
+
   it('every label is a non-empty plain-English string (not a shell command)', () => {
     for (const [id, label] of Object.entries(SECTION_LABELS)) {
       expect(label.length, id).toBeGreaterThan(0);
@@ -49,6 +70,10 @@ describe('SECTION_LABELS', () => {
       expect(SECTION_LABELS, `missing label for ${id}`).toHaveProperty(id);
     }
     expect(ids.size).toBe(EXPECTED_SECTION_COUNT);
-    expect([...ids].sort()).toEqual(Object.keys(SECTION_LABELS).sort());
+    expect([...ids].sort()).toEqual(
+      Object.keys(SECTION_LABELS)
+        .filter((id) => id.startsWith('sec-'))
+        .sort(),
+    );
   });
 });

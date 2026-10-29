@@ -29,6 +29,9 @@
   --spacing-16: 4rem;
   --spacing-target: 2.75rem;
   --spacing-target-compact: 1.75rem;
+  --receipt-metric-width: 10.5rem;
+  --receipt-value-width: 7rem;
+  --receipt-company-width: 9.375rem;
   --breakpoint-guitar: 700px;
   --guitar-arrow-width: 1.625rem;
   --guitar-photo-width: 20rem;
