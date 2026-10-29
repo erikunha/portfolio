@@ -627,6 +627,28 @@
     text-align: right;
   }
 
+  .mx-channel-id {
+    flex-direction: column;
+    gap: var(--spacing-1);
+  }
+
+  .mx-channel-desc {
+    white-space: nowrap;
+  }
+
+  .mx-channel-knobs,
+  .mx-channel-buttons {
+    justify-content: center;
+  }
+
+  .mx-channel-plugins > div {
+    gap: var(--spacing-1);
+  }
+
+  .mx-channel-plugins > div > div {
+    flex-direction: column;
+  }
+
   @media (width < 1100px) {
     .mx-grid {
       min-width: calc(var(--spacing-16) * 8);

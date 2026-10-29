@@ -30,12 +30,12 @@ function PluginChain({
   channelId: string;
 }) {
   return (
-    <div className="flex items-stretch gap-1">
+    <div className="flex items-stretch">
       {plugins.map((p) => (
         <div
           key={p.name}
           className={cn(
-            'flex-1 min-w-0 border flex flex-col items-center gap-1',
+            'flex-1 min-w-0 border flex items-center gap-1',
             'px-1 pt-[5px] pb-[6px] text-primary-400 relative',
             p.active
               ? [
@@ -89,7 +89,7 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
       data-testid={`channel-${ch.id}`}
       aria-label={`${ch.id} ${ch.desktopName ?? ch.name}`}
     >
-      <div className="mx-channel-id flex flex-col gap-1">
+      <div className="mx-channel-id flex">
         <span
           className={cn(
             'border px-[5px] py-[1px] text-xs font-mono text-primary-400 tracking-[0.04em] shrink-0',
@@ -124,15 +124,15 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
         >
           {ch.desktopName ?? ch.name}
         </span>
-        <span className="text-xs text-primary-400 leading-[1.3] whitespace-nowrap overflow-hidden text-ellipsis max-md:whitespace-normal max-md:overflow-visible">
+        <span className="mx-channel-desc text-xs text-primary-400 leading-[1.3] overflow-hidden text-ellipsis max-md:overflow-visible">
           <ParsedText text={ch.desc} />
         </span>
       </div>
-      <div className="mx-channel-knobs flex gap-[10px] items-center justify-center">
+      <div className="mx-channel-knobs flex gap-[10px] items-center">
         <KnobIsland initialAngle={ch.knob1.angleDeg} label={ch.knob1.label} channelName={ch.name} />
         <KnobIsland initialAngle={ch.knob2.angleDeg} label={ch.knob2.label} channelName={ch.name} />
       </div>
-      <div className="mx-channel-buttons flex justify-center">
+      <div className="mx-channel-buttons flex">
         <RmsButtons buttons={ch.buttons} initialActive={ch.activeButtons} channelName={ch.name} />
       </div>
       <div className="mx-channel-plugins min-w-0">
