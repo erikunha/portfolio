@@ -1136,11 +1136,6 @@
   }
 
   @variant max-guitar {
-    .guitar-chain,
-    .guitar-pair {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
     .guitar-chain {
       gap: 0;
     }
