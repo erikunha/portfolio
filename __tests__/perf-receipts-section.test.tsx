@@ -67,7 +67,8 @@ describe('Projects nested performance receipts', () => {
     const container = await render();
     const cards = container.querySelector('#sec-projects .projects-grid');
     expect(cards).not.toBeNull();
-    expect(cards?.nextElementSibling?.id).toBe('sec-perf-receipts');
-    expect(container.querySelector('#sec-perf-receipts')?.tagName).toBe('DIV');
+    const receipts = cards?.nextElementSibling;
+    expect(receipts?.classList.contains('project-receipts')).toBe(true);
+    expect(receipts?.querySelector('#sec-perf-receipts')?.tagName).toBe('H3');
   });
 });
