@@ -17,7 +17,6 @@ import { ReadmeSection } from '@/components/sections/ReadmeSection';
 import { ResponsibilitiesSection } from '@/components/sections/ResponsibilitiesSection';
 import { ShellSection } from '@/components/sections/ShellSection';
 import { SysHealthSection } from '@/components/sections/SysHealthSection';
-import { VisaSection } from '@/components/sections/VisaSection';
 import { BreakpointProvider } from '@/lib/use-breakpoint.client';
 
 export default function Home() {
@@ -57,9 +56,6 @@ export default function Home() {
           </ErrorBoundary>
           <ErrorBoundary>
             <SysHealthSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <VisaSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <HottestTakesSection defer />

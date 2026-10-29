@@ -66,11 +66,10 @@ describe('responsive section mobile variants', () => {
     expect(html).not.toContain('career-desktop');
   });
 
-  it('VisaContent emits the mobile variant when UA is mobile', async () => {
-    const el = await VisaContent();
-    const html = renderToStaticMarkup(el);
-    expect(html).toContain('data-testid="visa-mobile"');
-    expect(html).not.toContain('data-testid="visa-desktop"');
+  it('VisaContent renders the same table regardless of UA', async () => {
+    const html = renderToStaticMarkup(await VisaContent());
+    expect(html).toContain('class="visa-table"');
+    expect(html).not.toContain('data-testid="visa-mobile"');
   });
 
   it('ManPageContent emits the mobile variant when UA is mobile', async () => {
