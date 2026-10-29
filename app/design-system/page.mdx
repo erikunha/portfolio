@@ -1,4 +1,5 @@
 import { dsPageMetadata } from './_lib/page-metadata';
+import { OnThisPage } from './_components/OnThisPage';
 import { DesignSystemOpinion } from './_components/DesignSystemOpinion';
 
 export const metadata = dsPageMetadata({
@@ -9,29 +10,33 @@ export const metadata = dsPageMetadata({
 
 # DESIGN SYSTEM
 
+<OnThisPage items={[{id:'sections',label:'Sections'},{id:'principles',label:'Principles'}]} />
+
 <div style={{marginBottom:'12px'}}>
   <Badge variant="dot">LIVE</Badge>
 </div>
 
 The design system at `/design-system` documents theme tokens, reusable components and the checks that cover them.
 
-<div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',border:'1px solid var(--color-primary-subtle)',marginBottom:'24px',marginLeft:'-24px',marginRight:'-24px'}}>
-  <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="9" label="EXAMPLES" variant="display" /></div>
-  <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="7" label="RSC" variant="display" /></div>
-  <div style={{borderRight:'1px solid var(--color-primary-subtle)'}}><StatTile value="100" label="A11Y_TARGET" variant="display" /></div>
-  <StatTile value="2" label="CLIENT_EXAMPLES" variant="display" />
+<div className="ds-stat-row">
+  <StatTile value="9" label="PRIMITIVES" variant="display" />
+  <StatTile value="8" label="COMPONENTS" variant="display" />
+  <StatTile value="7" label="RSC" variant="display" />
+  <StatTile value="100" label="A11Y_TARGET" variant="display" />
 </div>
 
 <CmdLine command="import { Button, Badge, StatTile } from '@/design-system'" />
 
-## Sections
+<h2 id="sections">Sections</h2>
 
 - [Tokens](/design-system/tokens) · Color palette, type scale, spacing, motion, layers
 - [Components](/design-system/components) · 8 design-system components and the docs CopyButton helper
 - [Enforcement](/design-system/enforcement) · Lint rules, CI gates, contributing guide
 - [Changelog](/design-system/changelog) · Token and component change log
+- Foundations · [Colors](/design-system/foundations/colors), [Typography](/design-system/foundations/typography), [Spacing and borders](/design-system/foundations/spacing-borders)
+- Primitives · one page per component, listed in the sidebar
 
-## Principles
+<h2 id="principles">Principles</h2>
 
 **Utilities over raw values.** Components reference Tailwind utilities backed by the `@theme` palette (`text-primary-500`, `border-primary-subtle`), never raw hex. The single `@theme` block in `theme.css` is the one place a colour changes.
 

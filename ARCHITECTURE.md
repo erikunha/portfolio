@@ -199,7 +199,7 @@ app/error.tsx                        # route error page (500), digest + retry
 app/global-error.tsx                 # root error page, renders its own html/body
 app/sitemap.ts                       # SEO sitemap (robots.txt is static, in public/)
 app/css/                             # global styles, Tailwind v4 via PostCSS
-app/design-system/                   # /design-system docs surface (MDX + token gallery)
+app/design-system/                   # MDX docs, token gallery, on-this-page navigation and content-backed DS opinion
 app/api/ask/route.ts                 # Fluid Compute: LLM streaming via AI Gateway
 app/api/contact/route.ts             # Node: durable contact submission, 200 accepted or 202 queued
 app/api/contact-retry/route.ts       # cron: retry undelivered contact messages daily
@@ -605,8 +605,7 @@ The workflow runs on PRs, pushes to `main` and manual dispatch. Jobs are not a s
 - `ci-gate` waits for all listed required jobs and fails on `failure` or `cancelled`; intentional skips pass. Semgrep is separate from that aggregate: its findings are report-only, but its fixture and SARIF-production checks can fail its own job.
 - CodeQL, production smoke, mutation tests and agent evals have separate workflows.
 
-See `UI_PATHS`/`APP_PATHS` in `scripts/detect-changes-paths.mjs` for the current CI path filters.
-
+Changes under `tests/visual/` or `tests/e2e/` set both `ui` and `app`, running visual and functional e2e gates. See `UI_PATHS`/`APP_PATHS` in `scripts/detect-changes-paths.mjs`.
 
 ### Production deploy
 

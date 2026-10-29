@@ -69,6 +69,8 @@ flowchart LR
 
 ## CI/CD
 
+Changes under `tests/visual/` or `tests/e2e/` set both `ui` and `app`, so test-only PRs run visual and functional e2e gates.
+
 `.github/workflows/ci.yml` (the authoritative gate). A `detect-changes` job emits `app`, `ai` and `ui` booleans so heavy jobs skip on docs-only PRs (GitHub treats skipped required checks as satisfied). Matrix jobs skipped at job level report ONE unsuffixed check, so matrix-named required contexts (`e2e-functional (chromium)` etc.) hang forever on path-skipped PRs; required checks therefore point at always-reporting contexts and the conditional jobs are enforced through the `ci-gate` fan-in below.
 
 ```mermaid

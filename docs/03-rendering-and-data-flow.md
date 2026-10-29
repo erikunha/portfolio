@@ -14,6 +14,9 @@ flowchart TD
     layout --> nf["/* (404) -> app/not-found.tsx"]
     layout --> sm["/sitemap.xml -> app/sitemap.ts"]
     ds --> ds1["/design-system (page.mdx)"]
+    ds1 --> toc["OnThisPage: sections and principles links"]
+    ds1 --> opinion["DesignSystemOpinion: docs-placement DS take"]
+    opinion --> takes["content/hottest-takes.ts"]
     ds --> ds2["/design-system/tokens"]
     ds --> ds3["/design-system/components"]
     ds --> ds4["/design-system/enforcement"]
@@ -89,8 +92,8 @@ flowchart LR
   ```
 
   `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: the desktop variant for ManPage and Visa; `null` for DawMixer. `GuitarSection` uses one responsive presentation without this UA boundary or variant swap.
-- **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) use `defer` to apply CSS `content-visibility`. Most use `Module`; Career applies the same attributes in its own wrapper.
-- **`next/dynamic` boundaries:** `ContactFormLazy` and `InteractiveShellLazy` use `ssr: false` with accessible loading placeholders. `DawMixerSection` dynamically imports its desktop presentation from the server component. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy.client.tsx` directly re-exports session counters and halt/reboot controls from `Footer.client`, without a dynamic import; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
+- **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` (defers render cost, not JS). Most use `Module`; Career applies the same attributes in its own wrapper.
+- **`next/dynamic` boundaries:** `ContactFormLazy` and `InteractiveShellLazy` use `ssr: false` with accessible loading placeholders. `DawMixerSection` dynamically imports its desktop presentation from the server component. `MatrixRainLazy` loads from `AppShell` with `ssr: false` as a decorative fixed overlay behind `main`; late hydration cannot shift layout. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy.client.tsx` directly re-exports session counters and halt/reboot controls from `Footer.client`, without a dynamic import; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
 The terminal home combines prerendered output and dynamic Suspense children. Separately, `lib/links/feed.ts` uses `use cache` and `cacheLife` for the YouTube feed: stale after 900 seconds, revalidate after 3,600 seconds, expire after 86,400 seconds. `LinksPage` awaits that feed and falls back to `EMPTY_FEED` on failure.
 
