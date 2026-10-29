@@ -1,24 +1,24 @@
 import { z } from 'zod';
+import { SECTION_REGISTRY, type SectionRegistryEntry } from './section-registry';
+
+const registrySectionLabels = Object.fromEntries(
+  SECTION_REGISTRY.map(({ id, srLabel }) => [id, srLabel]),
+) as {
+  readonly [Entry in SectionRegistryEntry as Entry['id']]: Entry['srLabel'];
+};
 
 export const SECTION_LABELS = {
-  'sec-readme': 'About',
-  'sec-shell': 'Interactive shell',
+  ...registrySectionLabels,
   'sec-ai-metrics': 'AI answer-quality evaluation',
-  'sec-projects': 'Projects',
   'sec-perf-receipts': 'Performance receipts',
   'sec-responsibilities': 'Responsibilities',
   'sec-now': 'Now',
   'sec-npm-stack': 'Tech stack',
-  'sec-git-log': 'Career history',
   'sec-man-page': 'Profile manual',
-  'sec-live-perf': 'Live performance',
   'sec-sys-health': 'System health',
   'sec-visa': 'Work authorization',
-  'sec-hottest-takes': 'Opinions',
-  'sec-guitar': 'Guitar rig',
   'sec-daw-mixer': 'DAW mixer',
   'sec-unknowns': 'Open questions',
-  'sec-contact': 'Contact',
 } as const;
 
 z.record(z.string(), z.string().min(1)).parse(SECTION_LABELS);
