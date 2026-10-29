@@ -93,6 +93,6 @@ describe('home opinions', () => {
     expect(container.textContent).not.toContain(
       'the design-system opinion lives in the design system docs',
     );
-    expect(hottestTakes).toHaveLength(9);
+    expect(hottestTakes).toHaveLength(5);
   });
 });

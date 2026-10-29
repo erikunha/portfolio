@@ -27,45 +27,12 @@ export const hottestTakes: HottestTake[] = z.array(HottestTakeSchema).parse([
     body: 'Inverted pyramid: heavy E2E, lean units, near-zero shallow snapshots, wins when UX is the product. Unit tests catch refactors; E2E catches what the customer actually sees. On the Betsson cashier, Playwright and WireMock flows told me whether payments were at risk.',
   },
   {
-    num: '04.',
-    placement: TAKE_PLACEMENT.docs,
-    order: 4,
-    category: 'AI',
-    thesis:
-      'AI code review is already better than 80% of human reviewers for style and local correctness.',
-    body: `The remaining 20% — cross-system reasoning, "why is this here", judging trade-offs against constraints reviewers were never told about — is exactly what senior humans are for. Hiring should optimize for that, not for catching missing semicolons your CI also caught.`,
-  },
-  {
-    num: '05.',
-    placement: TAKE_PLACEMENT.docs,
-    order: 5,
-    category: 'SIGNAL',
-    thesis: 'Bundle size is a leading indicator of team health, not a tech metric.',
-    body: `A team that ignores the 1.4MB main chunk also ignores the dead route, the four versions of lodash, and the on-call rotation. The number itself doesn't cost much; what it predicts about discipline does. -33% JS at Canon Medical was the cheapest culture audit I've ever run.`,
-  },
-  {
-    num: '06.',
-    placement: TAKE_PLACEMENT.docs,
-    order: 6,
-    category: 'DX',
-    thesis: `RxJS isn't harder than promises. It's harder than the wrong abstraction you reach for instead.`,
-    body: `Most "just use async/await" code is a hand-rolled, buggy reimplementation of switchMap + retry + takeUntil. Pay the learning curve once; stop reinventing cancellation, backpressure, and race conditions per-feature for the rest of your career.`,
-  },
-  {
     num: '07.',
     placement: TAKE_PLACEMENT.docs,
     order: 7,
     category: 'DS',
     thesis: 'Framework-agnostic design systems lose unless the contract is shipping, not theory.',
     body: `Web Components only pay off when you have >1 framework consuming them in production. Otherwise you bought distribution overhead to solve a problem you don't have. Stencil at Betsson worked because Angular, React, and Ember were all actually downstream — not because someone read a blog post.`,
-  },
-  {
-    num: '08.',
-    placement: TAKE_PLACEMENT.docs,
-    order: 8,
-    category: 'PROC',
-    thesis: 'If your PRs require a meeting to merge, your architecture is unwritten.',
-    body: `Architecture lives in the code review template, the ADR folder, and the linter config — not in a Confluence page nobody opens. The 35-page architecture system at Betsson cut onboarding -40% because it replaced "ask Erik" with "ask the doc". The doc doesn't go on PTO.`,
   },
   {
     num: '09.',
@@ -80,6 +47,12 @@ export const hottestTakes: HottestTake[] = z.array(HottestTakeSchema).parse([
 export const homeTakes = hottestTakes
   .filter((take) => take.placement === TAKE_PLACEMENT.home)
   .sort((left, right) => left.order - right.order);
+
+export const designSystemTake = hottestTakes.find((take) => take.placement === TAKE_PLACEMENT.docs);
+
+export const designSystemOpinionConfig = z
+  .object({ title: z.string().min(1) })
+  .parse({ title: 'Opinion 07: design systems' });
 
 export const hottestTakesConfig = z
   .object({
