@@ -162,29 +162,6 @@
     font-weight: 700;
   }
 
-  .opinions-more {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-1);
-    min-height: var(--spacing-target);
-    width: fit-content;
-    max-width: 100%;
-    margin-top: var(--spacing-1);
-    color: var(--color-primary-500);
-    font-size: var(--text-xs);
-    text-decoration: underline;
-    text-underline-offset: var(--radius-control);
-  }
-
-  .opinions-more:hover {
-    color: var(--color-tertiary-50);
-  }
-
-  .opinions-more:focus-visible {
-    outline: var(--radius-control) solid var(--color-primary-500);
-    outline-offset: var(--radius-control);
-  }
-
   @media (max-width: 767px) {
     .opinions-preamble {
       font-size: var(--text-xs);

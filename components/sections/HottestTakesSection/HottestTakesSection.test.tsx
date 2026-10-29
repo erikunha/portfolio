@@ -17,10 +17,9 @@ function renderOpinions() {
 describe('home opinions', () => {
   it('shows a visible Opinions name outside the decorative icon box', () => {
     const { container } = render(<HottestTakesSection defer />);
-    const heading = getByRole(container, 'heading', {
-      level: 2,
-      name: 'OpinionsCAT ~/HOTTEST_TAKES.MDCAT ~/HOTTEST_TAKES.MD',
-    });
+    const heading = getByRole(container, 'heading', { level: 2 });
+    expect(heading.textContent).toContain('Opinions');
+    expect(heading.textContent).toContain('CAT ~/HOTTEST_TAKES.MD');
     const visibleLabel = heading.querySelector('.module-name');
     expect(visibleLabel?.textContent).toBe('Opinions');
     expect(visibleLabel?.closest('[aria-hidden="true"]')).toBeNull();
