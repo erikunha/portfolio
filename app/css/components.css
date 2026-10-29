@@ -880,6 +880,7 @@
 
   .shell-control[aria-disabled="true"] {
     cursor: default;
+    opacity: 0.5;
   }
 
   .shell-feed:focus-visible,
@@ -964,7 +965,7 @@
       text-shadow 150ms ease;
   }
 
-  .shell-cmd-hint:hover:not(:disabled) {
+  .shell-cmd-hint:hover:not([aria-disabled="true"]) {
     color: var(--color-primary-500);
     text-shadow: 0 0 6px var(--color-glow-50);
   }
