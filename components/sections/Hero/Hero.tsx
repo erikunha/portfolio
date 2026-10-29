@@ -1,6 +1,7 @@
 import { HeroStats } from '@/components/HeroStats';
 import {
   heroAuthorization,
+  heroContent,
   heroCurrentEmployer,
   heroPlatformChip,
   heroTagline,
@@ -33,13 +34,14 @@ export function Hero() {
           <p className="text-tertiary-50 text-sm leading-[1.55] mb-2">{heroTagline}</p>
           <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-sm tracking-[0.08em] mb-3.5">
             <span>
-              LOC:{' '}
+              {heroContent.locationPrefix}{' '}
               <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
                 {profileLocation}
               </b>
             </span>
             <span>
-              NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
+              {heroContent.nowPrefix}{' '}
+              <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
             </span>
             <span>{heroPlatformChip}</span>
             <span>{profileWorkingLanguageLine}</span>
@@ -56,7 +58,7 @@ export function Hero() {
               target="_blank"
               rel="noreferrer"
             >
-              EXEC HIRE
+              {heroContent.hireCtaLabel}
             </Button>
             <Button
               as="a"
@@ -65,7 +67,7 @@ export function Hero() {
               target="_blank"
               rel="noreferrer"
             >
-              GITHUB ↗
+              {heroContent.githubCtaLabel}
             </Button>
           </div>
         </aside>
@@ -89,13 +91,14 @@ export function Hero() {
           <p className="text-tertiary-50 text-xs leading-[1.55] mb-2">{heroTagline}</p>
           <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-xs tracking-[0.08em] mb-3.5">
             <span>
-              LOC:{' '}
+              {heroContent.locationPrefix}{' '}
               <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
                 {profileLocation}
               </b>
             </span>
             <span>
-              NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
+              {heroContent.nowPrefix}{' '}
+              <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
             </span>
             <span>{heroPlatformChip}</span>
             <span>{profileWorkingLanguageLine}</span>
@@ -112,7 +115,7 @@ export function Hero() {
               target="_blank"
               rel="noreferrer"
             >
-              EXEC HIRE
+              {heroContent.hireCtaLabel}
             </Button>
             <Button
               as="a"
@@ -121,7 +124,7 @@ export function Hero() {
               target="_blank"
               rel="noreferrer"
             >
-              GITHUB ↗
+              {heroContent.githubCtaLabel}
             </Button>
           </div>
         </div>

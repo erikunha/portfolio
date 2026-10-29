@@ -61,3 +61,21 @@ describe('Hero RSC conversion', () => {
     expect(html).toContain('https://github.com/erikunha');
   });
 });
+
+describe('Hero copy discipline', () => {
+  it('renders CTA labels and meta prefixes from content/hero', async () => {
+    const { heroContent } = await import('@/content/hero');
+    const html = renderHero();
+    expect(html).toContain(heroContent.hireCtaLabel);
+    expect(html).toContain(heroContent.githubCtaLabel);
+    expect(html).toContain(heroContent.locationPrefix);
+    expect(html).toContain(heroContent.nowPrefix);
+  });
+
+  it('keeps the client hero copy in sync with the server module', async () => {
+    const { heroContent } = await import('@/content/hero');
+    const { heroClientContent } = await import('@/content/hero-client');
+    expect(heroClientContent.systemFailurePlate).toBe(heroContent.systemFailurePlate);
+    expect(heroClientContent.bootStaticDialogLine).toBe(heroContent.bootStaticDialogLine);
+  });
+});

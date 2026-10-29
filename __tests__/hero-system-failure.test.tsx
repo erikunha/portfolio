@@ -27,8 +27,9 @@ describe('HeroSystemFailure', () => {
   }
 
   it('renders the SYSTEM FAILURE plate in the DOM on mount', async () => {
+    const { heroClientContent } = await import('@/content/hero-client');
     const container = await renderComponent();
-    expect(container.textContent).toContain('SYSTEM FAILURE');
+    expect(container.textContent).toContain(heroClientContent.systemFailurePlate);
   });
 
   it('is hidden by default (visible state is false)', async () => {

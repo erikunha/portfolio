@@ -326,3 +326,38 @@ describe('FooterContentSchema and shutdown content', () => {
     for (const value of invalid) expect(FooterContentSchema.safeParse(value).success).toBe(false);
   });
 });
+
+describe('HeroContentSchema and hero content', () => {
+  it('validates the shipped hero copy', async () => {
+    const { HeroContentSchema, HeroClientContentSchema } = await import('./schemas');
+    const { heroContent } = await import('./hero');
+    const { heroClientContent } = await import('./hero-client');
+    expect(HeroContentSchema.safeParse(heroContent).success).toBe(true);
+    expect(HeroClientContentSchema.safeParse(heroClientContent).success).toBe(true);
+  });
+
+  it.each([
+    'locationPrefix',
+    'nowPrefix',
+    'hireCtaLabel',
+    'githubCtaLabel',
+    'statsAriaLabel',
+    'systemFailurePlate',
+    'bootStaticDialogLine',
+  ])('rejects an empty hero %s', async (field) => {
+    const { HeroContentSchema } = await import('./schemas');
+    const { heroContent } = await import('./hero');
+    expect(HeroContentSchema.safeParse({ ...heroContent, [field]: '' }).success).toBe(false);
+  });
+
+  it.each(['systemFailurePlate', 'bootStaticDialogLine'])(
+    'rejects an empty hero-client %s',
+    async (field) => {
+      const { HeroClientContentSchema } = await import('./schemas');
+      const { heroClientContent } = await import('./hero-client');
+      expect(HeroClientContentSchema.safeParse({ ...heroClientContent, [field]: '' }).success).toBe(
+        false,
+      );
+    },
+  );
+});
