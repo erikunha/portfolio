@@ -65,4 +65,11 @@ describe('IdentityCard', () => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
   });
+  it('reserves the tallest tagline with hidden sizers so cycling never shifts layout', async () => {
+    const { profile } = (await import('@/content/links')).linksContent;
+    const { container } = render(<IdentityCard locale={LINKS_LOCALE.pt} />);
+    const sizers = [...container.querySelectorAll('.tagline-sizer')];
+    expect(sizers.map((el) => el.textContent)).toEqual([...profile.taglines[LINKS_LOCALE.pt]]);
+    for (const el of sizers) expect(el.getAttribute('aria-hidden')).toBe('true');
+  });
 });
