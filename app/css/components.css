@@ -2470,9 +2470,6 @@
   }
 
   @media (max-width: 768px) {
-    .about-section {
-      order: 1;
-    }
     .hero-identity {
       margin-top: calc(var(--spacing-1) * 1.5);
       padding-top: calc(var(--spacing-3) + var(--spacing-1) / 2);
