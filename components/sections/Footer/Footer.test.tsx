@@ -150,7 +150,9 @@ describe('Footer live session', () => {
           'tcp  ESTABLISHED  ~/design_system',
       ),
     );
-    expect(mounted.getByRole('button', { name: 'Copy netstat rows' }).textContent).toBe('COPIED');
+    await waitFor(() =>
+      expect(mounted.getByRole('button', { name: 'Copy netstat rows' }).textContent).toBe('COPIED'),
+    );
   });
 
   it('starts uptime at page navigation and counts commands before the footer is reached', () => {

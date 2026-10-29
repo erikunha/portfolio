@@ -108,3 +108,26 @@ test.describe('ask / interactive shell', () => {
     await expect(mailLink).toHaveText('erikhenriquealvescunha@gmail.com');
   });
 });
+
+test('quick commands read as inert while an answer is pending', async ({ page }) => {
+  await setupAskPage(page, { ask: 'happy', log: 'accept' });
+  await page.route('**/api/ask', () => new Promise<void>(() => {}));
+  await ask(page, 'Who is Erik?');
+
+  const hint = page.locator('.shell-cmd-hint').first();
+  await expect(hint).toHaveAttribute('aria-disabled', 'true');
+  await hint.hover();
+  const style = await hint.evaluate((node) => {
+    const computed = getComputedStyle(node);
+    return {
+      opacity: computed.opacity,
+      textShadow: computed.textShadow,
+      background: computed.backgroundColor,
+    };
+  });
+  expect(style.opacity, 'inert quick commands must look dimmed').toBe('0.5');
+  expect(style.textShadow, 'hover glow must not fire on an inert command').toBe('none');
+  expect(style.background, 'hover highlight must not fire on an inert command').toBe(
+    'rgba(0, 0, 0, 0)',
+  );
+});
