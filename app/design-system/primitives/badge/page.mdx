@@ -1,0 +1,36 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'primitives/badge',
+  title: 'Badge · Design System · erikunha.dev',
+  description: 'Badge props, variants and accessibility notes',
+});
+
+# BADGE
+
+<OnThisPage items={[{id:'props',label:'Props'},{id:'variants',label:'Variants'},{id:'accessibility',label:'Accessibility'}]} />
+
+Source: `design-system/components/Badge/Badge.tsx`. React Server Component, zero client JavaScript.
+
+<h2 id="props">Props</h2>
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `variant` | `'default' \| 'dot'` | `'default'` | no |
+| `size` | `'sm' \| 'md'` | `'md'` | no |
+| `children` | `ReactNode` | none | yes |
+
+<h2 id="variants">Variants</h2>
+
+<Preview id="badge">
+  <Badge variant="dot">OPEN_TO_WORK</Badge>
+  <Badge variant="default">AVAILABLE</Badge>
+  <Badge size="sm">SMALL</Badge>
+</Preview>
+
+Below 360px the badge wraps (`white-space: normal`, `flex-wrap: wrap`) instead of overflowing.
+
+<h2 id="accessibility">Accessibility</h2>
+
+The dot is `aria-hidden`; the label text carries the meaning. The pulse animation is suppressed under `prefers-reduced-motion`.
