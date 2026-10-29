@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { readmeCopy as c } from '@/content/readme';
-import { SECTION_LABELS } from '@/content/section-labels';
+import { SCROLL_REGION_LABELS, SECTION_LABELS } from '@/content/section-labels';
 import { RoleTyper } from '../../client/RoleTyper';
 import { IconReadme } from '../../Icons';
 import { Module } from '../../responsive/Module';
@@ -85,7 +85,14 @@ export function ReadmeSection() {
               {'// view full repo →'}
             </a>
           </div>
-          <pre className="m-0 font-mono text-sm leading-[1.7] text-tertiary-50 overflow-x-auto px-4 py-[14px] bg-glow-03 border border-primary-quiet whitespace-pre">
+          {/* biome-ignore lint/a11y/useSemanticElements: preserve preformatted code while naming its scroll region */}
+          <pre
+            className="m-0 font-mono text-sm leading-[1.7] text-tertiary-50 overflow-x-auto px-4 py-[14px] bg-glow-03 border border-primary-quiet whitespace-pre"
+            role="region"
+            aria-label={SCROLL_REGION_LABELS['sec-readme']}
+            // biome-ignore lint/a11y/noNoninteractiveTabindex: allow keyboard scrolling of the code sample
+            tabIndex={0}
+          >
             <span className="text-primary-400 italic">
               {'// retry an RxJS stream with exponential backoff + jitter — used in'}
             </span>
