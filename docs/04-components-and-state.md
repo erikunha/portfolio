@@ -17,17 +17,19 @@ Four directories, four roles. The directory tells you the layer:
 
 The naming gate scans `app`, `components` and `lib`; `/client/` is an explicit directory-based exception.
 
+Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` export only the lazy wrapper. Tests import the real component directly, keeping it out of the initial client references.
+
 ## Component hierarchy
 
 ```mermaid
 flowchart TD
     page["app/page.tsx (RSC)"] --> bp["BreakpointProvider (client)"]
     bp --> shell["AppShell.client"]
-    shell --> chrome["Chrome: MatrixRain · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
+    shell --> chrome["Chrome: MatrixRainLazy (client-only) · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["PageMain (RSC): main#main-content"]
     main --> eb["ErrorBoundary (one per home section)"]
     eb --> sec
-    mod["Module (RSC wrapper: section + header)"]
+    mod["Module (RSC wrapper: section + CSS typing header)"]
     sec["Section (RSC)"] --> mod
     sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · Field"]
     sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · RoleTyper"]
@@ -41,6 +43,8 @@ flowchart TD
 ### The `Module` wrapper
 
 `components/responsive/Module/Module.tsx` (RSC) wraps terminal modules. Hero, Career and Footer render separately. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. Props: `id`, `header`, `mobileHeader?`, `srLabel?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. `content/section-labels.ts` supplies readable labels. It derives registry labels and adds supporting module labels.
+
+Module headers use CSS scroll-driven typing with a stepped text reveal and caret. The caret blinks four times, then stays solid. Unsupported browsers, OS reduced motion and the MOTION toggle show static text. The text remains in the DOM and accessibility tree; no client JavaScript is added. `html` and `body` use `overflow-x: clip` so the view timeline follows page scrolling.
 
 ### CRT overlay layering
 

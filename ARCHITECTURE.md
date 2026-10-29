@@ -26,9 +26,9 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Functional
 
-- Homepage composition of terminal-module sections plus a footer. DOM order: Home (Hero), About (Readme), Interactive shell, Measured, Projects, Responsibilities, Now, Tech stack, Career history, Profile manual, System health, Work authorization, Opinions (hottest takes with nested Unknowns), Guitar rig, DAW mixer, Contact, then Footer. `app/page.tsx` defines composition; `content/section-labels.ts` supplies accessible labels.
+- Homepage composition: Hero, README, INTERACTIVE_SHELL, Measured, Projects with performance receipts, RESPONSIBILITIES, Now, NPM, Career with certification, education and community tags, MAN ERIK, SYS_HEALTH, Opinions (HOTTEST_TAKES with nested Unknowns), guitar_rig, DAW mixer, Contact with work authorization, and footer.
 - Hero: Matrix dialog loop + boot sequence (typewriter)
-- Mount-driven role typewriter (RoleTyper); IntersectionObserver gates MatrixRain; the footer is server-rendered, with client islands only for session counters and halt/reboot (no scroll-reveal typewriter exists)
+- Mount-driven role typewriter (RoleTyper); module headers use CSS scroll-driven typing, with static text for unsupported browsers and reduced motion. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`), then IntersectionObserver gates its animation; the footer is server-rendered, with client islands only for session counters and halt/reboot.
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
 - Contact form: durable submission, explicit delivered or queued feedback, daily bounded retry
 - Live Lighthouse score (PSI API, cached daily)
@@ -148,7 +148,7 @@ Static section bodies are Server Components. `BreakpointProvider` and `AppShell`
 | `/links` client components                     | Tagline cycle, navigation progress, copy and subscribe actions |
 | Design-system Sidebar and CopyButton           | Documentation navigation and clipboard feedback                |
 
-`InteractiveShellLazy` and `ContactFormLazy` use `next/dynamic` with `ssr: false` and loading status placeholders. `FooterLazy.client.tsx` is a direct re-export of footer controls, not a dynamic import. `DawMixerDesktop` is dynamically imported from the server section and embeds smaller client islands.
+`InteractiveShellLazy` and `ContactFormLazy` use `next/dynamic` with `ssr: false` and loading status placeholders. `FooterLazy.client.tsx` is a direct re-export of footer controls, not a dynamic import. `DawMixerDesktop` is statically imported by the server section and embeds smaller client islands.
 
 `pnpm route-js-check` fails a route above **164.7 KB gzipped total first-load JS**. It reports app-owned JS by subtracting the configured **131.9 KB** framework floor, leaving **32.8 KB** of headroom. App-owned JS has no separate assertion. The floor check fails when the lightest route is more than 2 KB below that baseline. `pnpm bundle-check` independently gates the global client-chunk sum at **220 KB**.
 
@@ -156,15 +156,15 @@ Client boundaries use `.client.ts`/`.client.tsx`, a `/client/` directory, or Nex
 
 ### Partial Prerendering (PPR)
 
-Three sections (ManPage, Visa, DawMixer) select desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, their Suspense fallbacks enter the static shell and the selected variants stream per request.
+Only ManPage selects desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, its Suspense fallback enters the static shell and the selected variant streams per request. Contact renders its single CSS-responsive work-authorization table synchronously through `VisaContent`.
 
 Projects renders one static RSC tree at every viewport. Its nine cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six project receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
 
 Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. ASK evaluation data and desktop/mobile PSI scores stream through three independent Suspense boundaries. `content/measured.ts` supplies labels, sources, units and timestamp formatting. The data adapters remain `lib/ask-metrics.ts` and `lib/lighthouse-scores.ts`. The nested `sec-ai-metrics` and `sec-live-perf` anchors preserve existing links.
 
-`DawMixerSection` uses `fallback={null}` instead of its desktop component. Its desktop variant is a dynamically imported Server Component with client mixer controls. `fallback={null}` leaves the section shell while device detection resolves.
-
 `GuitarSection` renders one responsive RSC presentation across viewports. CSS adjusts its layout without UA detection, a variant swap or a section Suspense fallback.
+
+`DawMixerSection` renders one synchronous RSC layout at every width, without a UA branch or Suspense boundary. Its fader, knob, R/M/S, meter and scroll islands hydrate on phones too.
 
 Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
 Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one static section.
@@ -216,7 +216,7 @@ components/client/                    # co-located islands, ONLY interactivity
 components/client/InteractiveShell/   # streaming shell island
 components/client/ContactForm/        # contact form island
 components/client/HeroBootAnimation/  # boot typewriter island
-components/client/RoleTyper/          # reveal-on-scroll typer
+components/client/RoleTyper/          # mount-driven role typer
 components/client/ToTopButton/        # motion-aware scroll-to-top
 components/AppShell/                   # window chrome / module-open dispatch
 components/ErrorBoundary/              # client error boundary
@@ -258,7 +258,7 @@ lib/env.ts                            # typed, format-validating env accessor
 lib/ask-log.ts                        # KV interaction log per /api/ask request
 lib/boot-animation.ts                 # boot sequence data
 lib/breakpoint.ts                     # viewport breakpoint constants
-lib/contact-validation.ts             # honeypot check (Zod shape lives in the route)
+lib/contact-validation.ts             # server-only ContactSchema, shared limits export, honeypot check
 lib/contact-delivery.ts               # shared Resend configuration and 10s send timeout
 lib/contact-outbox.ts                 # ordered pending ids and retry attempt counters
 lib/error-bridge.client.ts            # window error → /api/log bridge
@@ -444,7 +444,7 @@ If Resend is down, the message stays in KV and enters the pending outbox. The fo
 
 `contact:outbox` is a Redis sorted set of message ids scored by `receivedAt`. `contact:outbox:attempts` stores retry counts. The cron removes entries older than 7 days or already at 3 attempts. Each eligible message consumes one attempt before the shared send function runs. Acceptance removes pending membership and its counter; failure keeps it pending. The response is `{sent, failed, expired, exhausted}`. Removal never deletes `contact:msg:{uuid}`, which retains its 90-day audit TTL.
 
-Both routes use `lib/contact-delivery.ts` for sender, recipient, subject and the 10s timeout. A message-id idempotency key accompanies every send. Contact logs carry only `requestId` and `msgId`, never provider error details, addresses or message bodies. Form copy and its Zod schema live in `content/contact.ts`, validated by `scripts/validate-content.ts`; the LinkedIn URL comes from `content/social-urls.ts`, the zod-free constant `content/social.ts` also uses.
+Both routes use `lib/contact-delivery.ts` for sender, recipient, subject and the 10s timeout. A message-id idempotency key accompanies every send. Contact logs carry only `requestId` and `msgId`, never provider error details, addresses or message bodies. Form copy and shared limits live in the Zod-free `content/contact-copy.ts`. Client field checks use those limits; `lib/contact-validation.ts` re-exports them and supplies the server-only `ContactSchema` used by the route. `content/contact.ts` defines the copy schema, and `content/_validate-client-content.ts` validates the client copy and the email and LinkedIn constants from `content/social-urls.ts` during content validation. Delivered and queued panels replace the form and receive focus. Errors retain typed values and focus the summary. Work authorization appears only within Contact through `VisaContent`.
 
 ### Anti-spam strategy
 

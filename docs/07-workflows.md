@@ -62,6 +62,7 @@ flowchart LR
 ```
 
 - **Unit (Vitest):** behavioral assertions only; a `no-source-grep` test bans `readFileSync`-style source-grep tests. Run `pnpm test` / `pnpm test:coverage` / `pnpm test:watch`.
+  For effect-driven focus, await the focus assertion with `waitFor`; finding the element only establishes that it rendered.
 - **a11y (axe-core):** zero-violation gate over the design-system routes, tags `wcag2a/2aa/21aa`.
 - **e2e (Playwright):** CI selects a 5-project matrix (`chromium`, `chromium-mobile`, `webkit-desktop`, `webkit-mobile`, `chromium-components`). `playwright.config.ts` also defines mobile Chromium and desktop/mobile WebKit component projects. The DS component visual spec is darwin-only (CI ignores it on Ubuntu).
 - **Visual regression:** Argos-backed snapshots of page sections; a color/layout/typography change requires regenerated baselines (see the `visual-baseline-regen` skill).
@@ -69,7 +70,7 @@ flowchart LR
 
 ## CI/CD
 
-Changes under `tests/visual/` or `tests/e2e/` set both `ui` and `app`, so test-only PRs run visual and functional e2e gates.
+Changes under `tests/visual/` or `tests/e2e/` set both `app` and `ui` to true, so baseline-only and e2e-only PRs run the functional and visual jobs.
 
 `.github/workflows/ci.yml` (the authoritative gate). A `detect-changes` job emits `app`, `ai` and `ui` booleans so heavy jobs skip on docs-only PRs (GitHub treats skipped required checks as satisfied). Matrix jobs skipped at job level report ONE unsuffixed check, so matrix-named required contexts (`e2e-functional (chromium)` etc.) hang forever on path-skipped PRs; required checks therefore point at always-reporting contexts and the conditional jobs are enforced through the `ci-gate` fan-in below.
 

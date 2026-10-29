@@ -42,7 +42,7 @@ The user-facing routes are `/`, `/summary`, `/cv`, `/links` and `/links/en`, alo
 
 `content/section-registry.ts` defines nine navigation destinations: Home (`bio`), About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, and Contact. It supplies aliases, icons, screen-reader labels and navigation order. `content/section-labels.ts` adds labels for supporting modules.
 
-The JSX order in `app/page.tsx` is Hero, Readme, Shell, Measured, Projects, Responsibilities, Now, NpmStack, GitLog, ManPage, SysHealth, Visa, HottestTakes (with Unknowns nested inside), Guitar, DawMixer and Contact. Footer follows `PageMain` as its sibling. CSS mobile ordering is a separate map in `app/css/base.css`.
+The JSX order in `app/page.tsx` is Hero, Readme, Shell, Measured, Projects, Responsibilities, Now, NpmStack, GitLog, ManPage, SysHealth, HottestTakes (with Unknowns nested inside), Guitar, DawMixer and Contact (including work authorization). Footer follows `PageMain` as its sibling. CSS mobile ordering is a separate map in `app/css/base.css`.
 
 Projects contains its receipts. Career contains certification, education and community tag groups. Measured contains independent ASK, desktop PSI and mobile PSI reads. These nested groups do not become separate navigation destinations.
 
@@ -56,7 +56,7 @@ flowchart TD
     body --> rum["Analytics + SpeedInsights (only when VERCEL=1)"]
     children --> bp["BreakpointProvider (client, initialIsMobile=false; matchMedia after hydration)"]
     bp --> appshell["AppShell (client chrome)"]
-    appshell --> chrome["MatrixRain · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
+    appshell --> chrome["MatrixRainLazy (client-only) · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
     appshell --> main["PageMain (RSC): main#main-content"]
     main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + Career + Modules (RSC)"]
     appshell --> footer["Footer (RSC), after PageMain"]
@@ -75,15 +75,15 @@ flowchart LR
     px --> shell["Prerendered shell:<br/>AppShell chrome + Hero (outside Suspense) + above-fold sections"]
     shell --> stream["Server streams"]
     stream --> susp["Suspense boundaries resolve per-request"]
-    susp --> dyn["ManPage / Visa / DawMixer UA variants<br/>independent ASK / desktop PSI / mobile PSI reads"]
+    susp --> dyn["UA-selected ManPage variant<br/>and independent ASK / PSI data reads"]
     dyn --> html2["Streamed HTML"]
     html2 --> hydrate["Browser hydrates chrome and client islands"]
     hydrate --> lazy["Contact / Shell: next/dynamic, ssr:false<br/>Footer islands mount directly"]
 ```
 
 **Static vs dynamic, concretely:**
-- **Static (prerendered):** the whole `AppShell` chrome, `Hero` (outside the UA and data Suspense boundaries), `Readme`, `Shell`, the responsive `Guitar` presentation, Projects with its attached receipts, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid.
-- **UA-selected variants:** `ManPage`, `Visa` and `DawMixer` wrap an async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`). Their fallbacks are prerendered; the selected variants stream per request.
+- **Static (prerendered):** `AppShell` chrome except the client-only MatrixRain canvas, `Hero` (outside Suspense so LCP never waits), `Readme`, `Shell`, the responsive `Guitar` presentation, Projects with its attached receipts, `DawMixer`, Contact with its work-authorization table, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid. `DawMixer` uses one synchronous RSC layout at every width; its interactive islands hydrate on phones too. The Visa table renders once and CSS adapts it.
+- **UA-selected variants:** only `ManPage` wraps an async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`). Its fallback is prerendered; the selected variant streams per request.
 - **Measured data:** `AiMetricsSection` renders the `sec-live-metrics` module. It composes `AiMetricsData` and `LivePerfSection`, with independent Suspense boundaries for ASK, desktop PSI and mobile PSI. Each fallback retains its metric layout and shows a loading state. Receipts remain inside Projects rather than a separate module.
 - **The dual-variant pattern** (e.g. `ManPageSection.tsx`):
 
@@ -91,9 +91,9 @@ flowchart LR
   <Module><Suspense fallback={<Desktop/>}><AsyncInner/></Suspense></Module>
   ```
 
-  `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: the desktop variant for ManPage and Visa; `null` for DawMixer. `GuitarSection` uses one responsive presentation without this UA boundary or variant swap.
+  `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. ManPage uses its desktop variant as the fallback. `GuitarSection`, `DawMixerSection` and `VisaContent` use one responsive presentation without this UA boundary or variant swap.
 - **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` (defers render cost, not JS). Most use `Module`; Career applies the same attributes in its own wrapper.
-- **`next/dynamic` boundaries:** `ContactFormLazy` and `InteractiveShellLazy` use `ssr: false` with accessible loading placeholders. `DawMixerSection` dynamically imports its desktop presentation from the server component. `MatrixRainLazy` loads from `AppShell` with `ssr: false` as a decorative fixed overlay behind `main`; late hydration cannot shift layout. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy.client.tsx` directly re-exports session counters and halt/reboot controls from `Footer.client`, without a dynamic import; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
+- **`next/dynamic` boundaries:** `ContactFormLazy` and `InteractiveShellLazy` use `ssr: false` with accessible loading placeholders. `MatrixRainLazy` loads from `AppShell` with `ssr: false` as a decorative fixed overlay behind `main`; late hydration cannot shift layout. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy.client.tsx` directly re-exports session counters and halt/reboot controls from `Footer.client`, without a dynamic import; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
 The terminal home combines prerendered output and dynamic Suspense children. Separately, `lib/links/feed.ts` uses `use cache` and `cacheLife` for the YouTube feed: stale after 900 seconds, revalidate after 3,600 seconds, expire after 86,400 seconds. `LinksPage` awaits that feed and falls back to `EMPTY_FEED` on failure.
 
