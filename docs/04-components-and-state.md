@@ -26,7 +26,7 @@ flowchart TD
     shell --> chrome["Chrome: MatrixRain · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["main#main-content"]
     main --> eb["ErrorBoundary (x20)"]
-    eb --> mod["Module (RSC wrapper: section + header)"]
+    eb --> mod["Module (RSC wrapper: section + CSS typing header)"]
     mod --> sec["Section (RSC)"]
     sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · Field"]
     sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper · TaglineTyper (/links)"]
@@ -39,6 +39,8 @@ flowchart TD
 ### The `Module` wrapper
 
 `components/responsive/Module/Module.tsx` (RSC) is the spine every section sits in. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. Props: `id`, `header`, `mobileHeader?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. See DECISIONS.md 2026-07-12 for why the disclosure was removed.
+
+Module headers use CSS scroll-driven typing with a stepped text reveal and caret. The caret blinks four times, then stays solid. Unsupported browsers, OS reduced motion and the MOTION toggle show static text. The text remains in the DOM and accessibility tree; no client JavaScript is added. `html` and `body` use `overflow-x: clip` so the view timeline follows page scrolling.
 
 ### CRT overlay layering
 
