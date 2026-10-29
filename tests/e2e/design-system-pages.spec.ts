@@ -1,30 +1,21 @@
 import { expect, test } from '@playwright/test';
+import { DS_NAV_GROUPS } from '@/app/design-system/_components/ds-nav';
 import { PREVIEW_SOURCE_ARIA_LABEL_FALLBACK } from '@/app/design-system/_components/preview.constants';
 
-const DS_ROUTES = [
-  { path: '/design-system', heading: 'DESIGN SYSTEM' },
-  { path: '/design-system/tokens', heading: 'TOKENS' },
-  { path: '/design-system/components', heading: 'COMPONENTS' },
-  { path: '/design-system/enforcement', heading: 'ENFORCEMENT' },
-  { path: '/design-system/changelog', heading: 'CHANGELOG' },
-];
+const OVERVIEW_PATH = '/design-system';
+const OVERVIEW_HEADING = 'DESIGN SYSTEM';
+const REFERENCE_GROUP_EXCLUDED_ID = 'pages';
 
-const REFERENCE_ROUTES = [
-  { path: '/design-system/foundations/colors', heading: 'COLORS' },
-  { path: '/design-system/foundations/typography', heading: 'TYPOGRAPHY' },
-  { path: '/design-system/foundations/spacing-borders', heading: 'SPACING-BORDERS' },
-  { path: '/design-system/primitives/badge', heading: 'BADGE' },
-  { path: '/design-system/primitives/button', heading: 'BUTTON' },
-  { path: '/design-system/primitives/cmd-line', heading: 'CMD-LINE' },
-  { path: '/design-system/primitives/copybutton', heading: 'COPYBUTTON' },
-  { path: '/design-system/primitives/field', heading: 'FIELD' },
-  { path: '/design-system/primitives/kbd-key', heading: 'KBD-KEY' },
-  { path: '/design-system/primitives/stat-tile', heading: 'STAT-TILE' },
-  { path: '/design-system/primitives/terminal-panel', heading: 'TERMINAL-PANEL' },
-  { path: '/design-system/primitives/window-chrome', heading: 'WINDOW-CHROME' },
-];
+const toRoute = (link: { href: string; label: string }) => ({
+  path: link.href,
+  heading: link.href === OVERVIEW_PATH ? OVERVIEW_HEADING : link.label,
+});
 
-const ALL_ROUTES = [...DS_ROUTES, ...REFERENCE_ROUTES];
+const ALL_ROUTES = DS_NAV_GROUPS.flatMap((group) => group.links.map(toRoute));
+
+const REFERENCE_ROUTES = DS_NAV_GROUPS.filter(
+  (group) => group.id !== REFERENCE_GROUP_EXCLUDED_ID,
+).flatMap((group) => group.links.map(toRoute));
 
 for (const { path, heading } of ALL_ROUTES) {
   test(`${path} — renders heading and sidebar nav`, async ({ page }) => {
