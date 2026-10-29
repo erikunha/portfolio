@@ -40,7 +40,7 @@ import { WindowChrome } from '../../../design-system/components/WindowChrome/Win
 | `label` | `string` | — | yes |
 | `type` | `string` | `'text'` | no |
 | `multiline` | `boolean` | `false` | no |
-| `rows` | `number` | `3` | no |
+| `rows` | `number` | `4` | no |
 | `error` | `string` | — | no |
 
 <Preview id="field">
@@ -150,7 +150,7 @@ Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RS
   <CopyButton text="pnpm install @/design-system" />
 </Preview>
 
-**Behavior:** Copies `text` to clipboard on click. Label changes from `COPY` to `COPIED` for 1.5s. Falls back silently if clipboard API is unavailable.
+**Behavior:** Copies `text` to the clipboard on click. Success shows `COPIED` for 1.5s. Failure shows `COPY FAILED`; a missing clipboard API shows `COPY UNAVAILABLE`. A live status message explains each result and directs users to copy manually when needed.
 
 ---
 

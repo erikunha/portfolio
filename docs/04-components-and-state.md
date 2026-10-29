@@ -13,9 +13,9 @@ Four directories, four roles. The directory tells you the layer:
 | `components/responsive/**`    | Viewport chrome       | Yes (except `Module`) | `MatrixRain`, `Dock`, `CRTOverlay`              |
 | `design-system/components/**` | Reusable primitives   | Mostly No (RSC)       | `Badge`, `Button`, `TerminalPanel`              |
 
-Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.client.tsx`; a plain `*.tsx` in `sections/` is RSC. Each component is a `Foo/Foo.tsx` + `Foo/index.ts` barrel, with co-located `*.test.tsx` (Vitest) and `*.e2e.ts` (Playwright). `*Lazy` files are `next/dynamic` wrappers, except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (the footer itself is an RSC, so there is nothing to split).
+Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.client.tsx` or lives in a `/client/` directory; a plain `*.tsx` in `sections/` is RSC. Each component is a `Foo/Foo.tsx` + `Foo/index.ts` barrel, with co-located `*.test.tsx` (Vitest) and `*.e2e.ts` (Playwright). `*Lazy` files are `next/dynamic` wrappers, except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (the footer itself is an RSC, so there is nothing to split).
 
-> **Known convention drift (document, do not "fix" silently):** eight interactive files under `components/client/**` (e.g. `ContactForm.tsx`, `InteractiveShell.tsx`, `HeroBootAnimation.tsx`, `RoleTyper.tsx`, `ToTopButton.tsx`) carry `'use client'` but are **not** named `*.client.tsx`. The naming gate's scope evidently does not cover that directory. This is real today; see doc 09.
+The naming gate explicitly accepts `/client/` directories and Next.js error-boundary filenames. See `scripts/check-client-naming.mjs` for the scan scope and accepted paths.
 
 ## Component hierarchy
 
@@ -25,20 +25,21 @@ flowchart TD
     bp --> shell["AppShell.client"]
     shell --> chrome["Chrome: MatrixRain · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["main#main-content"]
-    main --> eb["ErrorBoundary (x20)"]
+    main --> eb["ErrorBoundary"]
+    eb --> career["GitLogSection (RSC, own section wrapper)"]
     eb --> mod["Module (RSC wrapper: section + header)"]
     mod --> sec["Section (RSC)"]
     sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · Field"]
     sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper · TaglineTyper (/links)"]
-    main --> hero["Hero (standalone client, NOT Module-wrapped)"]
-    main --> fl["Footer (RSC): cards, sitemap, shutdown log"]
+    main --> hero["Hero (RSC, outside Module)"]
+    shell --> fl["Footer (RSC): cards, sitemap, shutdown log"]
     fl --> fi["FooterLazy -> Footer.client: session counters + halt/reboot island"]
     fl --> fc["CopyButton: netstat clipboard control"]
 ```
 
 ### The `Module` wrapper
 
-`components/responsive/Module/Module.tsx` (RSC) is the spine every section sits in. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. Props: `id`, `header`, `mobileHeader?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. See DECISIONS.md 2026-07-12 for why the disclosure was removed.
+`components/responsive/Module/Module.tsx` (RSC) wraps most sections. Hero and GitLogSection render without it. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. Props: `id`, `header`, `mobileHeader?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. See DECISIONS.md 2026-07-12 for why the disclosure was removed.
 
 ### CRT overlay layering
 
@@ -46,7 +47,7 @@ flowchart TD
 
 ## The design system
 
-Eight primitives in `design-system/components/`; **seven exported** from `design-system/index.ts` (`Field` is intentionally internal - consumed only by `ContactForm`).
+Eight primitives in `design-system/components/`; **seven exported** from `design-system/index.ts` (`Field` is intentionally internal - consumed by `ContactForm` and the component docs).
 
 | Primitive       | Type       | Variant surface                                                                |
 | --------------- | ---------- | ------------------------------------------------------------------------------ |
@@ -55,7 +56,7 @@ Eight primitives in `design-system/components/`; **seven exported** from `design
 | `CmdLine`       | RSC        | terminal command line (`user`, `command`, `output`, `prompt`)                  |
 | `Field`         | **client** | input/textarea + label + error/ARIA (not exported)                             |
 | `KbdKey`        | RSC        | `size: sm｜md`                                                                 |
-| `StatTile`      | RSC        | `<dl>` stat tile, `variant: default｜compact`                                  |
+| `StatTile`      | RSC        | `<dl>` stat tile, `variant: default｜compact｜display`                         |
 | `TerminalPanel` | RSC        | bordered container, polymorphic `as`, optional header                          |
 | `WindowChrome`  | RSC        | macOS traffic-light dots, `size` px                                            |
 
@@ -108,4 +109,4 @@ Islands fall into two camps, and the split is a deliberate INP strategy:
 
 This is the single most important state convention in the repo (and is asserted by `InteractiveShell.test.tsx`): **per-keystroke / per-pixel / per-frame updates must not trigger React re-renders.** See `CLAUDE.md` "Rendering model" and doc 09.
 
-Other islands hold ordinary local state: `ContactForm` (controlled fields + a `idle→submitting→success｜error` status machine + honeypot), `ToTopButton` (`visible` on scroll>400), `StatusBar` and the `Footer.client` uptime counter (interval clocks with `visibilitychange` pause), the `Footer.client` halt clock (visitor time captured once after mount), `RmsButtons` (`Set<string>` toggle group), `CopyButton` (transient "COPIED").
+Other islands hold ordinary local state: `ContactForm` (controlled fields + an `idle→submitting→success｜queued｜error` status machine + honeypot), `ToTopButton` (`visible` on scroll>400), `StatusBar` and the `Footer.client` uptime counter (interval clocks with `visibilitychange` pause), the `Footer.client` halt clock (visitor time captured once after mount), `RmsButtons` (`Set<string>` toggle group), `CopyButton` (transient "COPIED").

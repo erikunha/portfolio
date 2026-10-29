@@ -37,7 +37,7 @@ The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic 
 | Vercel AI Gateway + Anthropic Haiku 4.5 | Streaming `/api/ask` with prompt caching and cost tracking                                                                                                |
 | Upstash Redis                           | Rate limiting, budget cap, KV interaction log                                                                                                             |
 | Tailwind v4 (via PostCSS)               | Utility-first styling; design tokens authored in `app/css/theme.css` under `@theme {}`. No CSS Modules, no Style Dictionary, no build-time token pipeline |
-| Design system (`/design-system`)        | 8 RSC primitives (Badge, Button, CmdLine, Field, KbdKey, StatTile, TerminalPanel, WindowChrome), `@theme` tokens, live docs route                         |
+| Design system (`/design-system`)        | 7 exported RSC primitives, a client Field, and a docs-local CopyButton, `@theme` tokens, live docs route                                                  |
 | Biome                                   | Lint + format in a single Rust binary                                                                                                                     |
 | Vitest + Playwright                     | Unit (80% line coverage gate) + E2E + axe-core a11y CI suite                                                                                              |
 | Lighthouse CI                           | LCP, INP, CLS gated per PR                                                                                                                                |
@@ -64,12 +64,12 @@ The static page renders without environment variables. Runtime endpoints (`/api/
 
 ## Reference docs
 
-| Doc                                    | What it covers                                                           |
-| -------------------------------------- | ------------------------------------------------------------------------ |
-| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | System design, component deep-dives, trade-offs, what to revisit         |
-| [`STANDARDS.md`](./STANDARDS.md)       | Engineering bar — 11 domain chapters, each with an enforcement mechanism |
-| [`DECISIONS.md`](./DECISIONS.md)       | Running ADR log — why decisions were made and how to reverse them        |
-| [`CLAUDE.md`](./CLAUDE.md)             | AI assistant instructions (auto-loaded by Claude Code each session)      |
+| Doc                                    | What it covers                                                          |
+| -------------------------------------- | ----------------------------------------------------------------------- |
+| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | System design, component deep-dives, trade-offs, what to revisit        |
+| [`STANDARDS.md`](./STANDARDS.md)       | Engineering bar, 12 domain chapters, each with an enforcement mechanism |
+| [`DECISIONS.md`](./DECISIONS.md)       | Running ADR log — why decisions were made and how to reverse them       |
+| [`CLAUDE.md`](./CLAUDE.md)             | AI assistant instructions (auto-loaded by Claude Code each session)     |
 
 ---
 

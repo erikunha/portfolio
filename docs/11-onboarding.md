@@ -23,7 +23,7 @@
 
 Read [09-hidden-knowledge.md](./09-hidden-knowledge.md) cover to cover. The four that matter most day-to-day:
 - **Content goes in `content/*.ts`, never in JSX.**
-- **Client files are `*.client.tsx`** (with the `components/client/**` caveat in F1).
+- **Client files are `*.client.tsx` or live in a `/client/` directory.**
 - **No raw hex outside `theme.css`** - use `var(--color-*)`.
 - **Never re-render React per keystroke/pixel/frame** - mutate the DOM or rAF-coalesce.
 
@@ -36,7 +36,7 @@ A good first PR (touches the common path, low blast radius):
 2. **Or add a design-system component variant** - follow `Foo/Foo.tsx` + `Foo/index.ts`, co-locate a test, document it (`check:component-docs`), and run `pnpm dev` to eyeball it.
 3. Commit with a conventional scope (`feat(content): ...`). Run `pnpm ci:local` and `pnpm gates:runtime`. Note that pushing runs `.husky/pre-push`: main-push guard, branch-name guard, and the full `pnpm verify` chain.
 
-> If your change touches `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts`, the push is blocked until a `security-auditor` agent runs (`.claude/rules/api-boundary.md`). That's expected.
+> If your change touches `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts`, invoke `security-auditor` as required by `CLAUDE.md` and `.claude/rules/api-boundary.md`. This is a convention, not a push gate.
 
 ## Week 1 - go deep where you'll work
 
@@ -52,7 +52,7 @@ A good first PR (touches the common path, low blast radius):
 
 1. **Static by default; dynamic by exception.** If you're adding interactivity, you're adding a client island - justify the JS.
 2. **The gate is the spec.** Don't argue with a red gate; reduce the property it measures.
-3. **Everything fails open** (except the AI budget, which fails closed). Design new server code the same way.
+3. **Failure policy belongs to each boundary.** Rate limiting and dedup fail open; the AI budget and contact storage fail closed.
 4. **The architecture is the product.** A change isn't done when it works; it's done when it would survive a careful review of _how_ it works.
 
 ## Who owns what (logical ownership)

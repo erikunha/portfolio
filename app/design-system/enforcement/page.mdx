@@ -8,7 +8,7 @@ export const metadata = dsPageMetadata({
 
 # ENFORCEMENT
 
-These rules are gates, not documentation — they run in CI and block the merge.
+CI runs the token, component-docs and accessibility gates. Component pixel baselines run locally.
 
 ## Tokens
 
@@ -38,8 +38,8 @@ and Lightning CSS handles nesting and autoprefixing natively.
 
 | Gate | Command | Checks |
 |---|---|---|
-| Component docs | `pnpm check:component-docs` | Every exported primitive has a `## Name` section in `components/page.mdx` |
-| Visual regression | `tests/e2e/design-system-components.spec.ts` | Linux Chromium pixel baselines per primitive |
+| Component docs | `pnpm check:component-docs` | Every `design-system/components/` directory has a `## Name` section in `components/page.mdx` |
+| Visual regression | `tests/e2e/design-system-components.spec.ts` | Local Chromium pixel baselines per primitive; skipped in CI |
 | A11y | `pnpm playwright test tests/a11y` | axe-core scan, zero violations |
 
 ## Cross-cutting

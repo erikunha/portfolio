@@ -612,13 +612,13 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 
 ### Per-commit hooks (Husky)
 
-- **pre-commit:** Biome check (sub-second: only gate in this hook)
+- **pre-commit:** `pnpm check` and the staged Gitleaks scan
 - **commit-msg:** Commitlint (scope required; enforces conventional commits)
 
 ### Pre-push (Husky)
 
 - Branch-name guard: blocks direct pushes to `main` (all changes must go through a PR)
-- `pnpm verify`: full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + harness-size + section-order + doc-drift + gate-health + detect-changes-paths + css-tokens + unit tests
+- `pnpm verify`: full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + harness-size + section-order + doc-drift + detect-changes-paths + css-tokens + unit tests
 
 ### CI (GitHub Actions, per PR)
 
@@ -637,7 +637,6 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 13. Security scans: Semgrep static analysis (`semgrep` job) + Gitleaks secret scan (`gitleaks` job); CodeQL runs as a separate workflow (`.github/workflows/codeql.yml`). Orchestration jobs (`detect-changes`, `ci-gate`, `quality-fast`) gate and fan out the above.
 
 See `UI_PATHS`/`APP_PATHS` in `scripts/detect-changes-paths.mjs` for the current CI path filters.
-
 
 ### Production deploy
 
