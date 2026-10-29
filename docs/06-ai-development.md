@@ -62,3 +62,5 @@ Context7 is the one repo-configured MCP; the GitHub/Vercel/Chrome ones are plugi
 - `CLAUDE.md` → "Project agent dispatch", "Skill dispatch", "Working agreement" tables.
 - `STANDARDS.md` → each chapter names its enforcement mechanism.
 - `DECISIONS.md` 2026-07-27 → the ADRs for the harness prune and for removing the AI-review gate chain.
+
+See `UI_PATHS`/`APP_PATHS` in `scripts/detect-changes-paths.mjs` for the current CI path filters.

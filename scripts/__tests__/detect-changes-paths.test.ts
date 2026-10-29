@@ -1,4 +1,10 @@
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { inheritedEnvWithIsolatedGit } from '../../__tests__/helpers/hermetic-git';
+import { computeCategories } from '../detect-changes.mjs';
 import { AI_PATHS, APP_PATHS, UI_PATHS } from '../detect-changes-paths.mjs';
 
 describe('detect-changes manifest', () => {
@@ -22,4 +28,37 @@ describe('detect-changes manifest', () => {
       xs.filter((p) => !p.startsWith(':(exclude)') && p !== 'package.json');
     for (const p of literal(UI_PATHS)) expect(APP_PATHS).toContain(p);
   });
+});
+
+describe('test-only diffs', () => {
+  it.each(['tests/visual/visual.spec.ts-snapshots/x.png', 'tests/e2e/contact.spec.ts'])(
+    'runs UI and app gates for %s alone',
+    (path) => {
+      const dir = mkdtempSync(join(tmpdir(), 'dc-test-path-'));
+      const git = (...args: string[]) =>
+        execFileSync('git', args, {
+          cwd: dir,
+          env: inheritedEnvWithIsolatedGit(),
+          encoding: 'utf8',
+        }).trim();
+      try {
+        git('init', '--quiet');
+        mkdirSync(dirname(join(dir, path)), { recursive: true });
+        writeFileSync(join(dir, path), 'fixture');
+        git('add', '--', path);
+        const changed = (paths: readonly string[]) =>
+          Boolean(git('diff', '--cached', '--name-only', '--', ...paths));
+        expect(
+          computeCategories({
+            aiChanged: changed(AI_PATHS),
+            appChanged: changed(APP_PATHS),
+            uiChanged: changed(UI_PATHS),
+            pkgRenderChanged: false,
+          }),
+        ).toEqual({ ai: false, app: true, ui: true });
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    },
+  );
 });
