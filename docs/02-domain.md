@@ -58,7 +58,7 @@ Opinions (`sec-hottest-takes`) contains the HOTTEST_TAKES list and Unknowns.
 Contact (`sec-contact`) contains the contact form, alternative contact links, and work authorization table.
 Unknowns and work authorization are not separate homepage modules.
 
-Supporting content (not sections): `social.ts` (links), `seo.ts` (JSON-LD `Person`), `dmesg.ts` + `shell-commands.ts` + `terminal-chrome.ts` (client-imported flavor data), and the AI-eval domain below.
+Supporting content (not sections): `social.ts` (links), `seo.ts` (JSON-LD `Person`), `dmesg.ts` + `shell-commands.ts` + `terminal-chrome.ts` + `hero-client.ts` (client-imported flavor data), and the AI-eval domain below.
 
 Projects uses one set of descriptions and stats across viewport sizes. Each card names its company; OSS cards include a public URL. The canonical receipt collection retains signed percentage deltas for consistency checks. Its six project receipts may display before/after values while keeping those deltas available to other consumers. `heroStats` supplies the four introductory metrics.
 
