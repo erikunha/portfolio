@@ -130,10 +130,11 @@ describe('HottestTakesSection', () => {
     expect(list).not.toBeNull();
   });
 
-  it('renders at least one take item', async () => {
+  it('renders four home take items', async () => {
     const container = await render();
-    const { hottestTakes } = await import('@/content/hottest-takes');
-    expect(container.textContent).toContain(firstOf(hottestTakes).thesis);
+    const { homeTakes } = await import('@/content/hottest-takes');
+    expect(container.querySelectorAll('[data-testid="hottest-takes-list"] > li')).toHaveLength(4);
+    expect(container.textContent).toContain(firstOf(homeTakes).thesis);
   });
 
   it('renders without error with defer prop', async () => {
@@ -305,31 +306,14 @@ describe('UnknownsSection', () => {
     mounted?.unmount();
   });
 
-  async function render(props: { defer?: boolean } = {}) {
-    const { UnknownsSection } = await import(
-      '@/components/sections/UnknownsSection/UnknownsSection'
-    );
-    mounted = await mountClient(
-      createElement(UnknownsSection as ComponentType<{ defer?: boolean }>, props),
-    );
-    return mounted.container;
-  }
-
-  it('renders the CAT ~/.UNKNOWNS module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('CAT ~/.UNKNOWNS');
-  });
-
-  it('renders learning items', async () => {
-    const container = await render();
+  it('renders learning items under nested headings without a separate module', async () => {
+    const { UnknownsSection } = await import('@/components/sections/UnknownsSection');
     const { unknowns } = await import('@/content/unknowns');
+    mounted = await mountClient(createElement(UnknownsSection));
+    const { container } = mounted;
+    expect(container.querySelector('h3')?.textContent).toContain(unknowns.learningHeading);
     expect(container.textContent).toContain(firstOf(unknowns.learning).claim);
-  });
-
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
+    expect(container.querySelector('section')).toBeNull();
   });
 });
 
