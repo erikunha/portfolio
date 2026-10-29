@@ -336,7 +336,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    body:not([data-motion="full"]) .live-dot {
+    .live-dot {
       animation: none;
       opacity: 0;
     }
