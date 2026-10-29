@@ -198,8 +198,6 @@ test.describe('/links link-in-bio', () => {
         })
         .toBeGreaterThan(0);
 
-      // VideoHistory images are lazy (no priority): rows below the fold never load on
-      // networkidle alone, so each one is scrolled into view to trigger its request.
       const rows = page.locator('ol img');
       const total = await rows.count();
       for (let i = 0; i < total; i++) {
@@ -208,7 +206,7 @@ test.describe('/links link-in-bio', () => {
       await expect
         .poll(thumbnails, {
           message:
-            'every VideoHistory thumbnail must decode after scrolling. A partial regression (one shard host 400ing in /_next/image while another still loads) fails here instead of hiding behind the one image that worked.',
+            'VideoHistory images are lazy: networkidle alone does not load rows below the fold, so each row is scrolled into view to trigger its request. Every thumbnail must decode after scrolling. A partial regression (one shard host 400ing in /_next/image while another still loads) fails here instead of hiding behind the one image that worked.',
         })
         .toEqual({ total, loaded: total });
 
