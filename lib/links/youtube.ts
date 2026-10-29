@@ -34,7 +34,7 @@ const PAD_WIDTH = 2;
 const YTIMG_SHARD_HOST_RE = /^https:\/\/i\d\.ytimg\.com\//;
 const YTIMG_CANONICAL_ORIGIN = 'https://i.ytimg.com/';
 
-function canonicalThumbnailUrl(url: string): string {
+export function canonicalThumbnailUrl(url: string): string {
   return url.replace(YTIMG_SHARD_HOST_RE, YTIMG_CANONICAL_ORIGIN);
 }
 
