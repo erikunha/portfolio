@@ -1,5 +1,5 @@
 import { responsibilities } from '@/content/responsibilities';
-import { SECTION_LABELS } from '@/content/section-labels';
+import { SCROLL_REGION_LABELS, SECTION_LABELS } from '@/content/section-labels';
 import { IconResponsibilities } from '../../Icons';
 import { Module } from '../../responsive/Module';
 
@@ -12,7 +12,14 @@ export function ResponsibilitiesSection({ defer }: { defer?: boolean } = {}) {
       icon={<IconResponsibilities />}
       defer={defer}
     >
-      <div className="overflow-x-auto">
+      {/* biome-ignore lint/a11y/useSemanticElements: name the scroll container within the parent section */}
+      <div
+        className="overflow-x-auto"
+        role="region"
+        aria-label={SCROLL_REGION_LABELS['sec-responsibilities']}
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: allow keyboard scrolling of responsibilities
+        tabIndex={0}
+      >
         <div className="text-primary-400 text-sm tracking-[0.06em] mb-[14px] max-[768px]:text-xs">
           <span className="text-primary-500 mr-1.5">$</span>
           {'ls -la ~/responsibilities  '}
