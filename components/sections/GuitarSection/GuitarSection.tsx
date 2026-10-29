@@ -20,11 +20,14 @@ export function GuitarContent() {
   return (
     <div className="guitar-presentation">
       <div className="guitar-signal-panel">
-        <div className="guitar-chain">
+        <div className="guitar-chain max-md:grid-cols-1">
           {signalChain.map((node, index) => (
             <Fragment key={node.role}>
               {index > FIRST_NODE_INDEX && (
-                <span className="signal-chain-arrow guitar-arrow" aria-hidden="true" />
+                <span
+                  className="signal-chain-arrow guitar-arrow min-guitar:max-md:rotate-90"
+                  aria-hidden="true"
+                />
               )}
               <div className="guitar-node" data-testid={`signal-node-${node.role}`}>
                 <div className="guitar-label">{node.role}</div>
@@ -50,13 +53,13 @@ export function GuitarContent() {
           ))}
         </div>
       </div>
-      <div className="guitar-pair">
+      <div className="guitar-pair max-md:grid-cols-1">
         <div className="guitar-details">
           <p className="guitar-influences">
             <strong>{influences.label}</strong> {influences.text}{' '}
             <strong>{nowPlaying.label}</strong> {nowPlaying.text}
           </p>
-          <div className="guitar-stats">
+          <div className="guitar-stats max-md:grid-cols-1">
             {stats.map((stat) => (
               <div className="guitar-stat" key={stat.label} data-testid={`stat-${stat.label}`}>
                 <div className="guitar-label">{stat.label}</div>
