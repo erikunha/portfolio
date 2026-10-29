@@ -39,6 +39,11 @@ function mintQuestionSentinel(): string {
 
 const MAX_OUTPUT_TOKENS = 512;
 
+const FINISH_REASON_LENGTH = 'length' as const;
+
+const TRUNCATION_NOTICE =
+  '\n\n[answer truncated: this response hit its length limit. Email erikhenriquealvescunha@gmail.com for the full answer.]';
+
 const MID_STREAM_TIMEOUT_MS = 15_000;
 
 const USAGE_RESOLVE_TIMEOUT_MS = 1_000;
@@ -189,7 +194,15 @@ export async function POST(req: NextRequest) {
           } finally {
             if (watchdog !== undefined) clearTimeout(watchdog);
           }
-          if (next.done) break;
+          if (next.done) {
+            const finishReason: unknown = await Promise.resolve(result.finishReason).catch(
+              () => undefined,
+            );
+            if (finishReason === FINISH_REASON_LENGTH) {
+              controller.enqueue(enc.encode(TRUNCATION_NOTICE));
+            }
+            break;
+          }
           const text = next.value;
           const verdict = guard.inspect(text);
           if (!verdict.ok) {
