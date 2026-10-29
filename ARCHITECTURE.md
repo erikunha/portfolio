@@ -136,6 +136,7 @@ Every section that doesn't depend on per-visitor state is RSC + SSG. Output is H
 | INTERACTIVE_SHELL                    | input handling, streaming LLM response               | ≤ 30KB                 |
 | Contact form                         | client-side `fetch` to `/api/contact`, optimistic UI | ≤ 6KB                  |
 | Role typewriter (RoleTyper)          | mount-driven `textContent` mutation                  | ≤ 2KB                  |
+| Tagline typewriter (TaglineTyper)    | `/links` tagline cycle, `textContent` mutation       | ≤ 2KB                  |
 | MOTION indicator                     | `matchMedia` listener                                | ≤ 1KB                  |
 | **Total client JS budget**           |                                                      | **≤ 32.8KB app-owned** |
 
@@ -145,15 +146,15 @@ Naming convention: every client file ends in `.client.tsx`. The default is serve
 
 ### Partial Prerendering (PPR)
 
-Four sections (ManPage, Guitar, Visa, DawMixer) select desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, their Suspense fallbacks enter the static shell and the selected variants stream per request.
+Three sections (ManPage, Visa, DawMixer) select desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, their Suspense fallbacks enter the static shell and the selected variants stream per request.
 
 Projects renders one static RSC tree at every viewport. Its nine cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
 
 Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. ASK evaluation data and desktop/mobile PSI scores stream through three independent Suspense boundaries. `content/measured.ts` supplies labels, sources, units and timestamp formatting. The data adapters remain `lib/ask-metrics.ts` and `lib/lighthouse-scores.ts`. The nested `sec-ai-metrics` and `sec-live-perf` anchors preserve existing links.
 
-Two exceptions use `fallback={null}` instead of their desktop component, for different reasons:
-- `GuitarSection`: desktop and mobile variants differ enough in height that the swap produced a CLS spike. `fallback={null}` renders only the module header until the dynamic hole fills. See `DECISIONS.md` 2026-06-13 (C2 perf fix).
-- `DawMixerSection`: the desktop variant is a `next/dynamic` lazy-loaded client component: it cannot serve as a static Suspense fallback (it is itself dynamically loaded). `fallback={null}` renders only the section shell.
+`DawMixerSection` uses `fallback={null}` instead of its desktop component. Its desktop variant is a `next/dynamic` lazy-loaded client component, so it cannot serve as a static Suspense fallback (it is itself dynamically loaded). `fallback={null}` renders only the section shell.
+
+`GuitarSection` renders one responsive RSC presentation across viewports. CSS adjusts its layout without UA detection, a variant swap or a section Suspense fallback.
 
 Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
 Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one static section.
