@@ -173,6 +173,8 @@ build fails until this tree is corrected. The block is bounded by the
 app/layout.tsx                       # fonts, theme tokens, JSON-LD, metadata
 app/page.tsx                         # single-page composition (RSC)
 app/not-found.tsx                    # Matrix-themed 404
+app/error.tsx                        # route error page (500), digest + retry
+app/global-error.tsx                 # root error page, renders its own html/body
 app/sitemap.ts                       # SEO sitemap (robots.txt is static, in public/)
 app/css/                             # global styles — Tailwind v4 via PostCSS
 app/design-system/                   # /design-system docs surface (MDX + token gallery)
@@ -195,6 +197,7 @@ components/client/HeroBootAnimation/  # boot typewriter island
 components/client/ToTopButton/        # motion-aware scroll-to-top
 components/AppShell/                   # window chrome / module-open dispatch
 components/ErrorBoundary/              # client error boundary
+components/ErrorPages/                 # 404/500 chrome, focused heading, error reference
 components/HeroStats/                  # hero stat tiles
 components/Icons/                      # inline SVG icon set
 components/responsive/                 # viewport-variant helpers
@@ -213,6 +216,8 @@ content/credentials.ts                # cert/* tags and Career tag-group copy
 content/education.ts                  # edu/* tags inside Career
 content/man-page.ts                   # MAN ERIK content
 content/social.ts                     # github / linkedin / email / site
+content/errors.ts                     # 404, 500 and no-JS copy
+content/errors-client.ts              # zod-free error copy for client islands
 content/schemas.ts                    # Zod validation schemas, build-time
 content/ask-eval-corpus.ts            # ask eval Q+A corpus (factual, edge, jailbreak, output-validation)
 
