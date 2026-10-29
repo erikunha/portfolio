@@ -20,7 +20,6 @@ describe('Icons — SVG smoke renders', () => {
   const iconNames = [
     'IconReadme',
     'IconManPage',
-    'IconNow',
     'IconProjects',
     'IconGitLog',
     'IconSysHealth',
@@ -29,10 +28,7 @@ describe('Icons — SVG smoke renders', () => {
     'IconPerfReceipts',
     'IconGuitar',
     'IconVisa',
-    'IconCredentials',
-    'IconCommunity',
     'IconHottestTakes',
-    'IconResponsibilities',
     'IconUnknowns',
     'IconAiMetrics',
     'IconContact',

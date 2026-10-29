@@ -33,15 +33,6 @@ export function IconManPage() {
   );
 }
 
-export function IconNow() {
-  return (
-    <svg {...baseProps}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
-    </svg>
-  );
-}
-
 export function IconProjects() {
   return (
     <svg {...baseProps}>
@@ -110,41 +101,10 @@ export function IconVisa() {
   );
 }
 
-export function IconCredentials() {
-  return (
-    <svg {...baseProps}>
-      <rect x="3" y="6" width="18" height="13" />
-      <path d="M3 10h18" />
-      <path d="M7 15h4" />
-    </svg>
-  );
-}
-
-export function IconCommunity() {
-  return (
-    <svg {...baseProps}>
-      <circle cx="9" cy="8" r="3" />
-      <path d="M3 20a6 6 0 0 1 12 0" />
-      <circle cx="17" cy="9" r="2.5" />
-      <path d="M14 20a5 5 0 0 1 7-4.6" />
-    </svg>
-  );
-}
-
 export function IconHottestTakes() {
   return (
     <svg {...baseProps}>
       <path d="M12 3c2 4-2 5 0 8 2-2 4-1 4 3a6 6 0 1 1-10-3c1 2 3 2 3-1 0-3 1-5 3-7z" />
-    </svg>
-  );
-}
-
-export function IconResponsibilities() {
-  return (
-    <svg {...baseProps}>
-      <rect x="5" y="11" width="14" height="10" />
-      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-      <path d="M9 16h6" />
     </svg>
   );
 }
