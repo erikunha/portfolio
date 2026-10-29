@@ -227,13 +227,27 @@ for (const path of WIDE_TABLE_ROUTES) {
   });
 }
 
-test('every scrollable table region is keyboard focusable and named', async ({ page }) => {
-  await page.setViewportSize(TABLET_VIEWPORT);
-  await page.goto('/design-system/components');
-  const regions = page.getByRole('region').filter({ has: page.locator('table') });
-  expect(await regions.count()).toBeGreaterThan(0);
-  for (const region of await regions.all()) {
-    await expect(region).toHaveAttribute('tabindex', '0');
-    await expect(region).toHaveAttribute('aria-label', /\S/);
+test('every labelled table region is keyboard focusable and uniquely named per page', async ({
+  page,
+}) => {
+  for (const path of WIDE_TABLE_ROUTES) {
+    await page.goto(path);
+    const regions = page.locator('section:has(table[data-labelled-table])');
+    const count = await regions.count();
+    if (count === 0) continue;
+    const described = await regions.evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        label: node.getAttribute('aria-label'),
+        tabindex: node.getAttribute('tabindex'),
+      })),
+    );
+    for (const region of described) {
+      expect(region.tabindex, `${path}: table region must be keyboard-focusable`).toBe('0');
+      expect(region.label, `${path}: table region must have a non-empty aria-label`).toMatch(/\S/);
+    }
+    expect(
+      new Set(described.map((region) => region.label)).size,
+      `${path}: table regions must have unique aria-labels`,
+    ).toBe(count);
   }
 });

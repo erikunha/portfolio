@@ -3,10 +3,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { LabelledTable } from '@/app/design-system/_components/LabelledTable';
 
-function table(headers: string[], rows: string[][]) {
+function table(headers: string[], rows: string[][], props?: { caption?: string }) {
   return createElement(
     LabelledTable,
-    null,
+    props,
     createElement(
       'thead',
       null,
@@ -65,5 +65,28 @@ describe('LabelledTable', () => {
       createElement(LabelledTable, null, createElement('tbody', null)),
     );
     expect(html).toContain('aria-label="Table"');
+  });
+
+  it('prefixes the region label with the caption when one is provided', () => {
+    const html = renderToStaticMarkup(table(['Prop', 'Type'], [['a', 'b']], { caption: 'Button' }));
+    expect(html).toContain('aria-label="Button table with columns Prop, Type"');
+  });
+
+  it('keeps a distinct label per caption so same-column tables stay distinguishable', () => {
+    const button = renderToStaticMarkup(table(['Prop'], [['a']], { caption: 'Button' }));
+    const field = renderToStaticMarkup(table(['Prop'], [['a']], { caption: 'Field' }));
+    expect(button).not.toBe(field);
+  });
+
+  it('names a captioned headerless table after the caption', () => {
+    const html = renderToStaticMarkup(
+      createElement(LabelledTable, { caption: 'Button' }, createElement('tbody', null)),
+    );
+    expect(html).toContain('aria-label="Button table"');
+  });
+
+  it('never forwards the caption onto the table element', () => {
+    const html = renderToStaticMarkup(table(['Prop'], [['a']], { caption: 'Button' }));
+    expect(html).not.toMatch(/<table[^>]*\scaption=/);
   });
 });

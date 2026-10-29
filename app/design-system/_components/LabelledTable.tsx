@@ -73,7 +73,9 @@ function headSection(section: ReactNode): ReactNode {
   return cloneElement(section, { role: 'rowgroup' } as Record<string, unknown>, rows);
 }
 
-export function LabelledTable({ children, ...props }: ComponentPropsWithoutRef<'table'>) {
+type LabelledTableProps = ComponentPropsWithoutRef<'table'> & { caption?: string };
+
+export function LabelledTable({ children, caption, ...props }: LabelledTableProps) {
   const labels = headerLabels(children);
   const labelled = Children.map(children, (section) => {
     if (isTag(section, HEAD_TAG)) return headSection(section);
@@ -86,7 +88,7 @@ export function LabelledTable({ children, ...props }: ComponentPropsWithoutRef<'
   });
   return (
     <section
-      aria-label={tableRegionAriaLabel(labels)}
+      aria-label={tableRegionAriaLabel(labels, caption)}
       // biome-ignore lint/a11y/noNoninteractiveTabindex: axe scrollable-region-focusable (WCAG 2.1.1) requires a keyboard-focusable overflow-x-auto region
       tabIndex={0}
       className="max-w-full overflow-x-auto"
