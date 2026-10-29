@@ -636,6 +636,13 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 12. Dependency review (GitHub native)
 13. Security scans: Semgrep static analysis (`semgrep` job) + Gitleaks secret scan (`gitleaks` job); CodeQL runs as a separate workflow (`.github/workflows/codeql.yml`). Orchestration jobs (`detect-changes`, `ci-gate`, `quality-fast`) gate and fan out the above.
 
+`UI_PATHS` in `scripts/detect-changes-paths.mjs` includes `app/`, `components/`,
+`design-system/`, `lib/`, `content/`, `public/`, `tests/visual/`, `tests/e2e/`,
+`next.config.ts`, `playwright.config.ts`, and `pnpm-lock.yaml`. It excludes
+`lib/eval/**` and `lib/__tests__/**`. Both test directories also match `APP_PATHS`,
+so baseline-only and functional-spec-only changes run the visual and functional gates.
+
+
 ### Production deploy
 
 Vercel auto-deploys main. No manual gate. Lighthouse CI on production deploy as a tripwire, fails the deploy if regression detected.

@@ -62,3 +62,9 @@ Context7 is the one repo-configured MCP; the GitHub/Vercel/Chrome ones are plugi
 - `CLAUDE.md` → "Project agent dispatch", "Skill dispatch", "Working agreement" tables.
 - `STANDARDS.md` → each chapter names its enforcement mechanism.
 - `DECISIONS.md` 2026-07-27 → the ADRs for the harness prune and for removing the AI-review gate chain.
+
+The CI UI path filter includes `app/`, `components/`, `design-system/`, `lib/`,
+`content/`, `public/`, `tests/visual/`, `tests/e2e/`, `next.config.ts`,
+`playwright.config.ts`, and `pnpm-lock.yaml`, excluding `lib/eval/**` and
+`lib/__tests__/**`. The two test directories also match the app filter, which gates
+`e2e-functional`. Baseline-only and spec-only changes therefore run their CI suites.
