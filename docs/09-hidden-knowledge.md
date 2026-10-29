@@ -5,7 +5,7 @@
 ## Conventions you must follow (and the gate that catches you)
 
 - **Client boundaries are visible in paths.** `check:client-naming` accepts `*.client.tsx`, files under `client/`, and supported Next.js convention filenames.
-- **Content never lives in JSX.** All copy is a `content/*.ts` module validated by Zod at import. If you type user-facing text into a `.tsx`, you're doing it wrong.
+- **Content never lives in JSX.** All copy lives in `content/*.ts` modules and is validated by Zod. Client-consumed modules stay Zod-free; `content/_validate-client-content.ts` validates shell UI, command responses, terminal chrome, contact copy, social URLs, error copy and dmesg lines during `pnpm validate-content`. If you type user-facing text into a `.tsx`, you're doing it wrong.
 - **No raw hex outside `app/css/theme.css`.** Use `var(--color-*)`. Enforced by `lint:css-tokens`. Complex CSS patterns become named classes in `components.css` `@layer components`; everything else is a Tailwind utility.
 - **Per-keystroke/per-pixel/per-frame updates must not re-render React.** Mutate `textContent`/`style`/`setAttribute` directly, or rAF-coalesce. This is the single most important runtime convention (it's a budget, not a preference).
 - **`CLAUDE.md` stays under 275 lines** (`check:harness-size`). New procedural rules go to a skill or a `.claude/rules/*` path-scoped file, not into `CLAUDE.md`.

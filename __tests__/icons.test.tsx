@@ -28,6 +28,8 @@ describe('Icons — SVG smoke renders', () => {
     'IconPerfReceipts',
     'IconGuitar',
     'IconVisa',
+    'IconCredentials',
+    'IconCommunity',
     'IconHottestTakes',
     'IconAiMetrics',
     'IconContact',

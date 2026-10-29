@@ -17,6 +17,9 @@ flowchart TD
     layout --> nf["/* (404) -> app/not-found.tsx"]
     layout --> sm["/sitemap.xml -> app/sitemap.ts"]
     ds --> ds1["/design-system (page.mdx)"]
+    ds1 --> toc["OnThisPage: sections and principles links"]
+    ds1 --> opinion["DesignSystemOpinion: docs-placement DS take"]
+    opinion --> takes["content/hottest-takes.ts"]
     ds --> ds2["/design-system/tokens"]
     ds --> ds3["/design-system/components"]
     ds --> ds4["/design-system/enforcement"]
@@ -48,7 +51,7 @@ flowchart TD
     body --> rum["Analytics + SpeedInsights (only when VERCEL=1)"]
     children --> bp["BreakpointProvider (client, initialIsMobile=false on /)"]
     bp --> appshell["AppShell (client chrome)"]
-    appshell --> chrome["MatrixRain · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
+    appshell --> chrome["MatrixRainLazy · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
     appshell --> main["main#main-content"]
     main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + About + terminal modules (RSC)"]
     appshell --> footer["ErrorBoundary-wrapped Footer (RSC)"]
@@ -74,8 +77,8 @@ flowchart LR
 ```
 
 **Static vs dynamic, concretely:**
-- **Static (prerendered):** the whole `AppShell` chrome, `Hero` (outside Suspense so LCP never waits), `About`, `Shell`, the responsive `Guitar` presentation, Projects with its attached receipts, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid.
-- **UA-selected variants:** `ManPage`, `Visa` and `DawMixer` wrap an async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`). Their fallbacks are prerendered; the selected variants stream per request.
+- **Static (prerendered):** the whole `AppShell` chrome, `Hero` (outside Suspense so LCP never waits), `About`, `Shell`, the responsive `Guitar` presentation, Projects with its attached receipts, Contact with its single work-authorization table, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid; the Visa table renders once and CSS adapts it.
+- **UA-selected variants:** `ManPage` and `DawMixer` wrap an async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`). Their fallbacks are prerendered; the selected variants stream per request.
 - **Measured data:** `AiMetricsSection` renders the `sec-live-metrics` module. It composes `AiMetricsData` and `LivePerfSection`, with independent Suspense boundaries for ASK, desktop PSI and mobile PSI. Each fallback retains its metric layout and shows a loading state. Receipts remain inside Projects rather than a separate module.
 - **The dual-variant pattern** (e.g. `ManPageSection.tsx`):
 
@@ -83,9 +86,9 @@ flowchart LR
   <Module><Suspense fallback={<Desktop/>}><AsyncInner/></Suspense></Module>
   ```
 
-  `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: the desktop variant for ManPage and Visa; `null` for DawMixer. `GuitarSection` uses one responsive presentation without this UA boundary or variant swap.
-- **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` to defer render cost.
-- **`next/dynamic` lazy JS:** `ContactFormLazy`, `InteractiveShellLazy`, `DawMixerSection`. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy` loads only the session counters and halt/reboot island from `Footer.client`; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
+  `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: the desktop variant for ManPage; `null` for DawMixer. `GuitarSection` uses one responsive presentation without this UA boundary or variant swap.
+- **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` to defer render cost without deferring JavaScript loading.
+- **`next/dynamic` lazy JS:** `ContactFormLazy`, `InteractiveShellLazy`, `DawMixerSection`, `MatrixRainLazy` (decorative fixed overlay behind `main`; late hydration cannot shift layout). `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy` loads only the session counters and halt/reboot island from `Footer.client`; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
 The home page uses PPR and static server components. The links feed in `lib/links/feed.ts` uses `use cache` with `cacheLife` to reuse channel data between requests.
 

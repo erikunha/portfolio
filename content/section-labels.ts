@@ -11,7 +11,6 @@ export const SECTION_LABELS = {
   ...registrySectionLabels,
   'sec-man-page': 'Profile manual',
   'sec-sys-health': 'System health',
-  'sec-visa': 'Work authorization',
   'sec-daw-mixer': 'DAW mixer',
 } as const;
 

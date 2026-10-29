@@ -1,1 +1,1 @@
-export { VisaContent, VisaSection } from './VisaSection';
+export { VisaContent } from './VisaSection';
