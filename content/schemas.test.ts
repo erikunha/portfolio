@@ -1,5 +1,81 @@
 import { describe, expect, it } from 'vitest';
 
+const guitarPresentationFixture = {
+  signalStrengthLabelTemplate: '{n} of {total}',
+  signalChain: [
+    { role: 'INPUT', name: 'GRETSCH G5655TG', subtitle: 'Bigsby · hollow body', strengthDots: 4 },
+    { role: 'AMP', name: 'MODELED CAB', subtitle: 'no tube · IR sim', strengthDots: 3 },
+    { role: 'OUT', name: 'FOH / IEM', subtitle: 'XLR stereo · in-ear', strengthDots: 5 },
+  ],
+  influences: {
+    label: 'INFLUENCES',
+    text: "John Mayer · Mateus Asato · Jimmy Page · John Frusciante · Iron Maiden's three",
+  },
+  nowPlaying: { label: 'now obsessing:', text: 'Coldplay\'s "Yellow": simplicity is hard.' },
+  stats: [
+    { label: 'STYLE', value: 'dynamics > drive', sub: 'space is the note' },
+    { label: 'TUNING', value: 'standard E', sub: 'sometimes drop D' },
+    { label: 'ALT RIG', value: 'Martin', sub: 'acoustic' },
+    { label: 'GIGS', value: 'venues', sub: 'church · wedding · open mic' },
+  ],
+  photo: {
+    src: '/images/guitar-live.jpg',
+    alt: 'Erik playing guitar on stage, live show',
+    width: 450,
+    height: 450,
+  },
+};
+
+describe('GuitarPresentationSchema', () => {
+  it('publishes the prototype presentation beside the rig', async () => {
+    const { guitarPresentation, guitarRig } = await import('./guitar-rig');
+    const { GuitarPresentationSchema } = await import('./schemas');
+    expect(GuitarPresentationSchema.parse(guitarPresentation)).toEqual(guitarPresentationFixture);
+    expect(guitarRig.signalChain.map((node) => node.role)).toEqual(['INPUT', 'FX', 'AMP', 'OUT']);
+  });
+
+  it.each([
+    ['reordered', [1, 0, 2]],
+    ['missing', [0, 2]],
+    ['extra', [0, 1, 1, 2]],
+  ])('rejects %s display nodes', async (_, indices) => {
+    const { GuitarPresentationSchema } = await import('./schemas');
+    expect(
+      GuitarPresentationSchema.safeParse({
+        ...guitarPresentationFixture,
+        signalChain: indices.map((index) => guitarPresentationFixture.signalChain[index]),
+      }).success,
+    ).toBe(false);
+  });
+
+  it.each(['width', 'height', 'src', 'alt'])('requires photo %s', async (field) => {
+    const { GuitarPresentationSchema } = await import('./schemas');
+    const photo: Record<string, unknown> = { ...guitarPresentationFixture.photo };
+    delete photo[field];
+    expect(
+      GuitarPresentationSchema.safeParse({ ...guitarPresentationFixture, photo }).success,
+    ).toBe(false);
+  });
+
+  it.each([
+    { alt: '' },
+    { alt: '   ' },
+    { src: '' },
+    { width: 0 },
+    { height: -1 },
+    { width: 1.5 },
+    { height: 1.5 },
+  ])('rejects invalid photo metadata %j', async (invalidPhoto) => {
+    const { GuitarPresentationSchema } = await import('./schemas');
+    expect(
+      GuitarPresentationSchema.safeParse({
+        ...guitarPresentationFixture,
+        photo: { ...guitarPresentationFixture.photo, ...invalidPhoto },
+      }).success,
+    ).toBe(false);
+  });
+});
+
 describe('GuitarRigSchema v2', () => {
   it('rejects old flat-fields shape', async () => {
     const { GuitarRigSchema } = await import('./schemas');
@@ -14,18 +90,11 @@ describe('GuitarRigSchema v2', () => {
       GuitarRigSchema.parse({
         signalChain: [
           { role: 'INPUT', name: 'TEST', subtitle: 'sub', strengthDots: 4 },
-          { role: 'FX', name: 'FX', subtitle: 'sub', blocks: [{ name: 'COMP', active: true }] },
+          { role: 'FX', name: 'FX', subtitle: 'sub' },
           { role: 'AMP', name: 'AMP', subtitle: 'sub', strengthDots: 3 },
           { role: 'OUT', name: 'OUT', subtitle: 'sub', strengthDots: 5 },
         ],
-        influences: [
-          { rank: 1, name: 'A', strength: 5, active: true },
-          { rank: 2, name: 'B', strength: 4 },
-          { rank: 3, name: 'C', strength: 3 },
-          { rank: 4, name: 'D', strength: 3 },
-          { rank: 5, name: 'E', strength: 2 },
-        ],
-        nowObsessing: 'some song',
+        influences: [{ name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }, { name: 'E' }],
         stats: [
           { label: 'STYLE', value: 'feel', sub: 'lots' },
           { label: 'TUNING', value: 'standard', sub: 'drop D' },

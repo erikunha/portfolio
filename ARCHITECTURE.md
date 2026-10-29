@@ -136,6 +136,7 @@ Every section that doesn't depend on per-visitor state is RSC + SSG. Output is H
 | INTERACTIVE_SHELL                    | input handling, streaming LLM response               | ≤ 30KB                 |
 | Contact form                         | client-side `fetch` to `/api/contact`, optimistic UI | ≤ 6KB                  |
 | Role typewriter (RoleTyper)          | mount-driven `textContent` mutation                  | ≤ 2KB                  |
+| Tagline typewriter (TaglineTyper)    | `/links` tagline cycle, `textContent` mutation       | ≤ 2KB                  |
 | MOTION indicator                     | `matchMedia` listener                                | ≤ 1KB                  |
 | **Total client JS budget**           |                                                      | **≤ 32.8KB app-owned** |
 
@@ -145,9 +146,9 @@ Naming convention: every client file ends in `.client.tsx`. The default is serve
 
 ### Partial Pre-Rendering (PPR) — dual-variant sections
 
-Four sections (ManPage, Guitar, Projects, Visa) ship a desktop and mobile variant driven by UA detection via `headers()`. `cacheComponents: true` is set in `next.config.ts`. Each section exports an async inner RSC (`*Content()`) that calls `getIsMobile()`, a per-request dynamic boundary. The static PPR shell prerenders the desktop fallback (or `null`, see below); the dynamic hole fills sub-millisecond per request (no network I/O, `headers()` is a synchronous read).
+Three sections (ManPage, Projects, Visa) ship a desktop and mobile variant driven by UA detection via `headers()`. `cacheComponents: true` is set in `next.config.ts`. Each section exports an async inner RSC (`*Content()`) that calls `getIsMobile()`, a per-request dynamic boundary. The static PPR shell prerenders the desktop fallback; the dynamic hole fills sub-millisecond per request (no network I/O, `headers()` is a synchronous read).
 
-`GuitarSection` uses `fallback={null}` because its desktop and mobile variants differ enough in height that the swap produced a CLS spike. Only the module header renders until the dynamic hole fills. See `DECISIONS.md` 2026-06-13 (C2 perf fix).
+`GuitarSection` renders one responsive RSC presentation across viewports. CSS adjusts its layout without UA detection, a variant swap or a section Suspense fallback.
 
 `DawMixerSection` renders one synchronous RSC layout at every width, without a UA branch or Suspense boundary. Its fader, knob, R/M/S, meter and scroll islands hydrate on phones too.
 
