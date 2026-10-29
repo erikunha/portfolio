@@ -135,6 +135,7 @@ Every section that doesn't depend on per-visitor state is RSC + SSG. Output is H
 | Matrix dialog loop + boot typewriter | infinite animation w/ `useRef` mutation              | ≤ 4KB                  |
 | INTERACTIVE_SHELL                    | input handling, streaming LLM response               | ≤ 30KB                 |
 | Contact form                         | client-side `fetch` to `/api/contact`, optimistic UI | ≤ 6KB                  |
+| Role typewriter (RoleTyper)          | mount-driven textContent mutation in the About line  | ≤ 2KB                  |
 | MOTION indicator                     | `matchMedia` listener                                | ≤ 1KB                  |
 | **Total client JS budget**           |                                                      | **≤ 32.8KB app-owned** |
 

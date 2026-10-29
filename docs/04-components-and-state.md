@@ -17,7 +17,7 @@ Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.c
 
 > **Known convention drift (document, do not "fix" silently):** seven interactive files under `components/client/**` (e.g. `ContactForm.tsx`, `InteractiveShell.tsx`, `HeroBootAnimation.tsx`, `ToTopButton.tsx`) carry `'use client'` but are **not** named `*.client.tsx`. The naming gate's scope evidently does not cover that directory. This is real today; see doc 09.
 
-The Hero identity line and About Senior status are static server-rendered text. `About` contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
+The Hero identity line is static server-rendered text. The About "Open to [role] roles" status line mounts the `RoleTyper` client island (`components/client/RoleTyper`), which cycles Senior, Staff and Principal over the server-rendered text. `About` contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
 
 ## Component hierarchy
 
