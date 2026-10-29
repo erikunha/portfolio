@@ -1,4 +1,5 @@
-import { CONTACT_DELIVERY_CODE, contactContent } from '@/content/contact';
+import { contactContent } from '@/content/contact';
+import { CONTACT_DELIVERY_CODE } from '@/content/contact-copy';
 import { sendContactMessage } from '@/lib/contact-delivery';
 import {
   CONTACT_MESSAGE_TTL_SECONDS,

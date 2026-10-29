@@ -26,7 +26,8 @@ const MESSAGE_ROWS = 5;
 const INITIAL_FAILURE_COUNT = 0;
 const INITIAL_VALUES: Record<ContactField, string> = { name: '', email: '', message: '' };
 const CONTACT_FIELDS = Object.values(CONTACT_FIELD);
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_PATTERN =
+  /^(?:[A-Za-z0-9_'+-]+\.)*[A-Za-z0-9_'+-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9-]*\.)+[A-Za-z]{2,}$/;
 const FIELD_CHECKS: Record<ContactField, (value: string) => boolean> = {
   [CONTACT_FIELD.NAME]: (value) => {
     const length = value.trim().length;
@@ -69,6 +70,8 @@ export function ContactForm() {
   const pendingRef = useRef(false);
   const formId = useId();
   const counterId = `${formId}-count`;
+  const summaryId = `${formId}-summary`;
+  const requestErrorId = `${formId}-request-error`;
   const fieldId = (field: ContactField) => `${formId}-${field}`;
   const invalidFields = CONTACT_FIELDS.filter((field) => errors[field]);
   const busy = status === STATUS.SUBMITTING;
@@ -81,7 +84,10 @@ export function ContactForm() {
     setValues((current) => ({ ...current, [field]: value }));
     if (errors[field]) {
       const valid = FIELD_CHECKS[field](value);
-      setErrors((current) => ({ ...current, [field]: valid ? '' : contactCopy.errors[field] }));
+      setErrors((current) => {
+        const { [field]: _cleared, ...rest } = current;
+        return valid ? rest : { ...current, [field]: contactCopy.errors[field] };
+      });
     }
     if (!pendingRef.current) {
       setStatus(STATUS.IDLE);
@@ -180,10 +186,16 @@ export function ContactForm() {
         data-testid="contact-form"
       >
         {(invalidFields.length > 0 || errorMsg) && (
-          <div ref={summaryRef} role="alert" tabIndex={-1} className="contact-alert">
+          <div
+            ref={summaryRef}
+            role="alert"
+            tabIndex={-1}
+            className="contact-alert"
+            aria-labelledby={invalidFields.length > 0 ? summaryId : requestErrorId}
+          >
             {invalidFields.length > 0 && (
               <>
-                <p>{contactCopy.form.errorSummary}</p>
+                <p id={summaryId}>{contactCopy.form.errorSummary}</p>
                 <ul>
                   {invalidFields.map((field) => (
                     <li key={field}>
@@ -202,7 +214,7 @@ export function ContactForm() {
               </>
             )}
             {errorMsg && (
-              <p>
+              <p id={requestErrorId}>
                 {contactCopy.form.errorPrefix} {errorMsg} {contactCopy.form.retained}{' '}
                 {contactCopy.form.retryEmail}{' '}
                 <a href={`mailto:${contactCopy.section.email}`}>{contactCopy.section.email}</a>
@@ -262,7 +274,7 @@ export function ContactForm() {
           placeholder={contactCopy.form.messagePlaceholder}
         />
         <p id={counterId} className="contact-count">
-          {values.message.length}
+          {values.message.trim().length}
           {contactCopy.form.counterSeparator}
           {CONTACT_LIMITS.messageMax}
         </p>

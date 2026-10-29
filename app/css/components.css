@@ -904,6 +904,12 @@
     .visa-table td:last-child {
       grid-column: 1 / -1;
     }
+
+    .visa-table td::before {
+      content: attr(data-label);
+      display: block;
+      color: var(--color-green);
+    }
   }
 
   .contact-send {

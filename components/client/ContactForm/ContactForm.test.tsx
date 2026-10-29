@@ -4,6 +4,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { NextRequest } from 'next/server';
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
 import { flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
 import { linksContent } from '@/content/links';
 import { ContactForm } from './ContactForm';
@@ -672,5 +673,84 @@ describe('contact client dependency boundary', () => {
       vi.doUnmock('zod');
       vi.resetModules();
     }
+  });
+});
+
+describe('contact cross-review fixes', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  function setField(container: HTMLElement, selector: string, value: string) {
+    fireEvent.change(container.querySelector(selector) as HTMLElement, { target: { value } });
+  }
+
+  it('counts the trimmed message length the validator and the API use', () => {
+    const { container } = render(<ContactForm />);
+    setField(container, 'textarea', `   ${'a'.repeat(4)}   `);
+    expect(container.querySelector('.contact-count')?.textContent).toBe('4/2000');
+  });
+
+  it.each([
+    'ada@example.com',
+    'a..b@example.com',
+    '.ada@example.com',
+    'ada.@example.com',
+    'ada@-example.com',
+    'ada@example.c',
+    'ada@@example.com',
+    "o'brien+tag@sub.example.org",
+    'ada@example',
+  ])('client email check agrees with the server schema for %s', (email) => {
+    const fetchMock = vi.fn(async () => Response.json({ ok: true }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = render(<ContactForm />);
+    setField(container, 'input[name="name"]', 'Ada');
+    setField(container, 'input[name="email"]', email);
+    setField(container, 'textarea', 'A platform engineering opportunity.');
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    const serverAccepts = z.string().trim().email().safeParse(email).success;
+    expect(fetchMock.mock.calls.length === 1).toBe(serverAccepts);
+  });
+
+  it('names the focused error summary through its heading', () => {
+    const { container } = render(<ContactForm />);
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    const summary = screen.getByRole('alert');
+    const labelId = summary.getAttribute('aria-labelledby') as string;
+    expect(labelId).toBeTruthy();
+    expect(document.getElementById(labelId)?.textContent).toBe('Fields need attention:');
+    expect(screen.getByRole('alert', { name: 'Fields need attention:' })).toBe(summary);
+  });
+
+  it('names the summary when only a request error shows', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ ok: false, error: { message: 'boom' } }, { status: 500 })),
+    );
+    const { container } = render(<ContactForm />);
+    fillValidForm(container);
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    });
+    await flushMicrotasks();
+    const summary = screen.getByRole('alert');
+    expect(
+      document.getElementById(summary.getAttribute('aria-labelledby') as string),
+    ).not.toBeNull();
+  });
+
+  it('sends one request when the busy submit button is clicked repeatedly', async () => {
+    const fetchMock = vi.fn(() => new Promise<Response>(vi.fn()));
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = render(<ContactForm />);
+    fillValidForm(container);
+    const button = container.querySelector('button[type="submit"]') as HTMLButtonElement;
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    await act(async () => {
+      fireEvent.click(button);
+      fireEvent.click(button);
+    });
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 });

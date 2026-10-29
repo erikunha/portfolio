@@ -1,7 +1,5 @@
 import { z } from 'zod';
-import { CONTACT_DELIVERY_CODE, contactCopy } from './contact-copy';
-
-export { CONTACT_DELIVERY_CODE };
+import { contactCopy } from './contact-copy';
 
 export const ContactContentSchema = z.object({
   success: z.object({ title: z.string().min(1), message: z.string().min(1) }),
