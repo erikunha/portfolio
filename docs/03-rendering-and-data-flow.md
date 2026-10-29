@@ -45,7 +45,7 @@ flowchart TD
     bp --> appshell["AppShell (client chrome)"]
     appshell --> chrome["MatrixRain · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
     appshell --> main["main#main-content"]
-    main --> secs["20x ErrorBoundary > Module(RSC) > Section(RSC)"]
+    main --> secs["19x ErrorBoundary > Module(RSC) > Section(RSC)"]
     main --> footer["Footer (RSC)"]
     footer --> footerIslands["FooterLazy: session counters + halt/reboot island"]
 ```
@@ -70,7 +70,7 @@ flowchart LR
 
 **Static vs dynamic, concretely:**
 - **Static (prerendered):** the whole `AppShell` chrome, `Hero` (deliberately _outside_ any `<Suspense>` so LCP never waits), `Readme`, `Shell`, and section fallbacks.
-- **Dynamic-via-`<Suspense>`:** `ManPage`, `GitLog`, `Visa`, `Projects`, `Guitar`, `LivePerf`, `DawMixer`, and `AiMetrics`. These wrap an inner async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`), which marks the subtree dynamic. Only the Suspense fallback is prerendered; the real variant streams in.
+- **Dynamic-via-`<Suspense>`:** `ManPage`, `GitLog`, `Projects`, `Guitar`, `LivePerf`, `DawMixer`, and `AiMetrics`. These wrap an inner async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`), which marks the subtree dynamic. Only the Suspense fallback is prerendered; the real variant streams in.
 - **The dual-variant pattern** (e.g. `ManPageSection.tsx`):
 
   ```
