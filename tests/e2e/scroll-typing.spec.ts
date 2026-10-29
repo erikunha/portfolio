@@ -1,0 +1,54 @@
+import { expect, test } from '@playwright/test';
+
+const BELOW_FOLD_HEADER = '#sec-contact-header .module-scroll-type-text:visible';
+
+test.describe('scroll typing', () => {
+  test('with reduced motion the header is fully visible and static', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+    await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
+
+    const header = page.locator(BELOW_FOLD_HEADER);
+    await header.scrollIntoViewIfNeeded();
+
+    const clipPath = await header.evaluate((el) => getComputedStyle(el).clipPath);
+    expect(clipPath).toBe('none');
+
+    const text = (await header.textContent()) ?? '';
+    expect(text.length).toBeGreaterThan(0);
+    const chars = await header.evaluate((el) => {
+      const hook = el.closest('.module-scroll-type');
+      return hook ? getComputedStyle(hook).getPropertyValue('--module-type-chars').trim() : '';
+    });
+    expect(chars).toBe(String(text.length));
+  });
+
+  test('types the header in as the section scrolls into view', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto('/');
+    await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
+
+    const supported = await page.evaluate(() => CSS.supports('animation-timeline: view()'));
+    test.skip(!supported, 'engine lacks animation-timeline: view()');
+
+    const header = page.locator(BELOW_FOLD_HEADER);
+    await header.waitFor({ state: 'attached' });
+
+    // Near enough that content-visibility renders the section and the view()
+    // timeline resolves, far enough that the header is still below the fold.
+    await header.evaluate((el) => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, top - window.innerHeight - 100);
+    });
+    await header.evaluate(() => new Promise(requestAnimationFrame));
+
+    const startClip = await header.evaluate((el) => getComputedStyle(el).clipPath);
+    expect(startClip).toContain('100%');
+
+    await header.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    await header.evaluate(() => new Promise(requestAnimationFrame));
+
+    const endClip = await header.evaluate((el) => getComputedStyle(el).clipPath);
+    expect(endClip).toMatch(/inset\(0(px|%) 0(px|%) 0(px|%) 0(px|%)\)/);
+  });
+});
