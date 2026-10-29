@@ -1,6 +1,7 @@
 # DECISIONS
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
+- **2026-10-28** · `sec-readme` is the About header anchor, not a flex child, so it joins `KNOWN_UNORDERED` and loses its mobile order rule; Dock and Footer still link to it. `HeroStats` takes `stats` as a required prop: the hero tiles (r106 claims) and `heroStats` in perf-receipts (CV and summary claims) are two authored sets, and a silent default let one stand in for the other. Reversible: restore the rule and the default.
 - **2026-10-28** · **Community tags belong in Career (`sec-git-log`), alongside `cert/*` and `edu/*`.** About contains Whoami, Now, Responsibilities, Stack and retry-code panels. `content/community.ts` supplies the community content. _Reversible: move the community tag block back into About and update the Career and About tests._
 - **2026-10-28** · **RoleTyper is removed for r106.** The Hero identity line and About `[Senior]` status are static server-rendered text, with no rotating role or role-change live region. _Reversible: restore `components/client/RoleTyper` and its tests from git, then reconnect the consumers if animated roles are required._
 

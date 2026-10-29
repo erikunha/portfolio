@@ -5,7 +5,12 @@ import { join, resolve } from 'node:path';
 
 const root = process.cwd();
 
-const KNOWN_UNORDERED = new Set(['sec-man-page-body', 'sec-credentials', 'sec-community']);
+const KNOWN_UNORDERED = new Set([
+  'sec-man-page-body',
+  'sec-credentials',
+  'sec-community',
+  'sec-readme',
+]);
 
 function collectTsx(dir) {
   const results = [];
