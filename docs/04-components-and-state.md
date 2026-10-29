@@ -8,7 +8,7 @@ Four directories, four roles. The directory tells you the layer:
 
 | Directory                     | Role                            | Ships JS?                                 | Example                                         |
 | ----------------------------- | ------------------------------- | ----------------------------------------- | ----------------------------------------------- |
-| `components/sections/**`      | Page sections and nested groups | RSC, with client descendants where needed | `ReadmeSection`, `ManPageSection`               |
+| `components/sections/**`      | Page sections and nested groups | RSC, with client descendants where needed | `About`, `ManPageSection`                       |
 | `components/client/**`        | Interactive islands             | Yes                                       | `InteractiveShell`, `ContactForm`, `DawMixer/*` |
 | `components/responsive/**`    | Viewport chrome                 | Yes (except `Module`)                     | `MatrixRain`, `Dock`, `CRTOverlay`              |
 | `design-system/components/**` | Reusable primitives             | Mostly No (RSC)                           | `Badge`, `Button`, `TerminalPanel`              |
@@ -16,6 +16,8 @@ Four directories, four roles. The directory tells you the layer:
 `check-client-naming.mjs` accepts `*.client.tsx`/`*.client.ts`, files inside a `/client/` directory, and App Router error convention files. Inspect the client directive and imports when tracing a boundary. Components commonly use a `Foo/` directory and `index.ts` barrel. Vitest tests use `*.test.tsx`; component Playwright specs use `*.e2e.ts`. `*Lazy` files are `next/dynamic` wrappers (`ContactFormLazy`, `InteractiveShellLazy`, `MatrixRainLazy` in `responsive/MatrixRain/`, consumed by `AppShell.client`), except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (no dynamic import is used there).
 
 The naming gate scans `app`, `components` and `lib`; `/client/` is an explicit directory-based exception.
+
+The Hero identity line is static server-rendered text. Desktop and mobile share `HeroIdentity`, with metrics and accessible labels passed into `HeroStats`. Boot and system-failure islands import their copy from `content/hero-client.ts`, keeping server content validation out of those client imports. The About "Open to [role] roles" status line mounts the `RoleTyper` client island (`components/client/RoleTyper`), which cycles Senior, Staff and Principal over the server-rendered text. `About` contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
 
 Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` export only the lazy wrapper. Tests import the real component directly, keeping it out of the initial client references.
 
@@ -27,22 +29,26 @@ flowchart TD
     bp --> shell["AppShell.client"]
     shell --> chrome["Chrome: MatrixRainLazy (client-only) · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["PageMain (RSC): main#main-content"]
-    main --> eb["ErrorBoundary (one per home section)"]
-    eb --> sec
-    mod["Module (RSC wrapper: section + CSS typing header)"]
-    sec["Section (RSC)"] --> mod
+    main --> eb["ErrorBoundary"]
+    eb --> sec["Terminal section (RSC)"]
+    sec --> mod["Module (RSC wrapper: section + CSS typing header)"]
     sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · Field"]
-    sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · RoleTyper"]
+    sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper"]
+    eb --> hero["Hero (RSC with boot and system-failure islands, owns its section)"]
+    hero --> identity["HeroIdentity: shared desktop/mobile identity, actions and HeroStats props"]
+    hero --> clientcopy["Boot + system-failure islands: typed hero-client copy"]
     eb --> career["Career (GitLogSection): own section and header"]
-    eb --> hero["Hero (RSC, outside Module): HeroBootAnimation islands"]
-    shell --> fl["Footer (RSC), after PageMain: cards, sitemap, shutdown log"]
-    fl --> fi["FooterLazy: direct re-exports from Footer.client"]
+    eb --> about["About (RSC with RoleTyper island, owns its section)"]
+    about --> scroll["Responsibilities + retry code: named keyboard scroll regions"]
+    shell --> fl["ErrorBoundary-wrapped Footer (RSC): cards, sitemap, shutdown log"]
+    fl --> fi["FooterLazy: direct re-exports from Footer.client: session counters + halt/reboot island"]
     fl --> fc["CopyButton: netstat clipboard control"]
+    links["/links and /links/en"] --> tagline["TaglineTyper: localized tagline cycle"]
 ```
 
 ### The `Module` wrapper
 
-`components/responsive/Module/Module.tsx` (RSC) wraps terminal modules. Hero, Career and Footer render separately. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. Props: `id`, `header`, `mobileHeader?`, `srLabel?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. `content/section-labels.ts` supplies readable labels. It derives registry labels and adds supporting module labels.
+`components/responsive/Module/Module.tsx` (RSC) wraps terminal modules. Hero, About, Career and Footer render separately. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. Props: `id`, `header`, `mobileHeader?`, `srLabel?`, `name?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. `content/section-labels.ts` supplies readable labels. It derives registry labels and adds supporting module labels.
 
 Module headers use CSS scroll-driven typing with a stepped text reveal and caret. The caret blinks four times, then stays solid. Unsupported browsers, OS reduced motion and the MOTION toggle show static text. The text remains in the DOM and accessibility tree; no client JavaScript is added. `html` and `body` use `overflow-x: clip` so the view timeline follows page scrolling.
 
@@ -52,7 +58,7 @@ Module headers use CSS scroll-driven typing with a stepped text reveal and caret
 
 ## The design system
 
-Eight primitives in `design-system/components/`; **seven exported** from `design-system/index.ts` (`Field` is intentionally internal - consumed only by `ContactForm`).
+Eight primitives in `design-system/components/`; **seven exported** from `design-system/index.ts` (`Field` uses a direct import in `ContactForm` and the docs). The docs also provide the client `CopyButton` under `app/design-system/_components/`.
 
 | Primitive       | Type       | Variant surface                                                                |
 | --------------- | ---------- | ------------------------------------------------------------------------------ |

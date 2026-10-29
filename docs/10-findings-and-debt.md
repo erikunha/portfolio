@@ -24,6 +24,8 @@ A fresh health response describes the refresh timestamp. It does not prove both 
 
 Git hooks and CI run deterministic checks. The project does not wire agent-runtime hooks for API review or architect approval. Local pre-PR review is a convention; the PR commands check automated approval and thread state.
 
+`lint:css-tokens` checks CSS in `verify` and CI; the obsolete CSS token hook is absent.
+
 `check-client-naming.mjs` explicitly accepts files inside `/client/` directories. Unsuffixed files in `components/client/` comply with that rule and are not a naming-gate blind spot.
 
 ## Performance coverage differs by surface

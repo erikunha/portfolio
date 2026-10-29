@@ -48,7 +48,7 @@ test.describe('Footer', () => {
     await page.locator('footer').scrollIntoViewIfNeeded();
     const navigationStart = await page.evaluate(() => performance.timeOrigin);
     await page.getByRole('link', { name: 'press R to reboot, back to top' }).click();
-    await expect(page.locator('h1')).toBeFocused();
+    await expect(page.locator('[data-testid="hero-name"]:visible')).toBeFocused();
     await expect(page.locator('[data-testid="footer-reboot-status"]')).toHaveText(/rebooted/i);
     expect(await page.evaluate(() => performance.timeOrigin)).toBe(navigationStart);
     await expect(commands).toHaveText('1');
@@ -72,7 +72,7 @@ test.describe('Footer', () => {
       await expect(status).toBeEmpty();
     }
     await page.keyboard.press('r');
-    await expect(page.locator('h1')).toBeFocused();
+    await expect(page.locator('[data-testid="hero-name"]:visible')).toBeFocused();
     await expect(status).toHaveText(/rebooted/i);
   });
 

@@ -227,17 +227,11 @@
     #sec-man-page {
       order: 4;
     }
-    #sec-now {
-      order: 5;
-    }
     #sec-projects {
       order: 6;
     }
     #sec-git-log {
       order: 7;
-    }
-    #sec-npm-stack {
-      order: 8;
     }
     #sec-sys-health {
       order: 9;
@@ -250,9 +244,6 @@
     }
     #sec-hottest-takes {
       order: 17;
-    }
-    #sec-responsibilities {
-      order: 18;
     }
     #sec-contact {
       order: 20;

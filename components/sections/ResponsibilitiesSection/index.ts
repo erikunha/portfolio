@@ -1,1 +1,0 @@
-export { ResponsibilitiesSection } from './ResponsibilitiesSection';

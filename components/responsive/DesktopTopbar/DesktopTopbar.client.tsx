@@ -1,6 +1,7 @@
 'use client';
 
 import { useLayoutEffect, useState } from 'react';
+import { TOPBAR_STACK_LINK } from '@/content/nav';
 import { CV_LINK_LABEL, READING_PATHS } from '@/content/reading-paths';
 import { WindowChrome } from '@/design-system';
 import { cn } from '@/lib/cn';
@@ -56,9 +57,9 @@ export function DesktopTopbar() {
           </a>
           <a
             className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
-            href="/#sec-npm-stack"
+            href={TOPBAR_STACK_LINK.href}
           >
-            03_DEPS
+            {TOPBAR_STACK_LINK.label}
           </a>
           <a
             className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
