@@ -148,3 +148,27 @@ test('mobile overview stat tiles sit at most two per row', async ({ page }) => {
   const perRow = Math.max(...[...new Set(tops)].map((top) => tops.filter((t) => t === top).length));
   expect(perRow).toBeLessThanOrEqual(2);
 });
+
+test('mobile shows the page before the sidebar; desktop keeps the sidebar on the left', async ({
+  page,
+}) => {
+  const nav = page.getByRole('navigation', { name: 'Design system', exact: true });
+  const main = page.locator('main.ds-main');
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/design-system/primitives/button');
+  const [mainTop, navTop] = await Promise.all([
+    main.evaluate((el) => el.getBoundingClientRect().top),
+    nav.evaluate((el) => el.getBoundingClientRect().top),
+  ]);
+  expect(mainTop, 'on mobile the content must not sit below a full screen of nav').toBeLessThan(
+    navTop,
+  );
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const [mainLeft, navLeft] = await Promise.all([
+    main.evaluate((el) => el.getBoundingClientRect().left),
+    nav.evaluate((el) => el.getBoundingClientRect().left),
+  ]);
+  expect(navLeft).toBeLessThan(mainLeft);
+});

@@ -2049,7 +2049,7 @@
       min-width: 0;
       padding: var(--spacing-3);
       border-right: 0;
-      border-bottom: var(--border-width) solid var(--color-primary-border);
+      border-top: var(--border-width) solid var(--color-primary-border);
     }
   }
 
