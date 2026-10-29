@@ -16,7 +16,6 @@ export const SECTION_LABELS = {
   'sec-sys-health': 'System health',
   'sec-visa': 'Work authorization',
   'sec-daw-mixer': 'DAW mixer',
-  'sec-unknowns': 'Open questions',
 } as const;
 
 z.record(z.string(), z.string().min(1)).parse(SECTION_LABELS);

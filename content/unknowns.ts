@@ -1,15 +1,19 @@
 import { type Unknowns, UnknownsSchema } from './schemas';
 
 export const unknowns: Unknowns = UnknownsSchema.parse({
+  learningHeading: "# things i'm actively learning",
+  notSpecializingHeading: "# things i've chosen not to specialize in (yet)",
   learning: [
     {
       claim: 'knowing when AI-assisted engineering is a force multiplier vs a debt accelerator',
       context:
         'built the 12-agent system at betsson. also watched what it produces when nobody reads the diffs.',
+      showContext: false,
     },
     {
       claim: 'writing specs that someone else can ship without me in the room',
       context: `the 35-page knowledge system was a start. specs are harder. "what i meant" is not what i wrote.`,
+      showContext: false,
     },
     {
       claim: 'deciding what NOT to ship',

@@ -6,6 +6,7 @@ export type ModuleProps = {
   header: string;
   mobileHeader?: string;
   srLabel?: string;
+  name?: string;
   icon?: ReactNode;
   defer?: boolean | undefined;
   variant?: ModuleVariant;
@@ -17,6 +18,7 @@ export function Module({
   header,
   mobileHeader,
   srLabel,
+  name,
   icon,
   defer = false,
   variant,
@@ -48,7 +50,11 @@ export function Module({
           id={moduleHeaderId(id)}
           className="flex-1 flex items-center gap-2 text-primary-500 font-mono text-xs max-md:text-[10px] md:text-[12px] font-medium tracking-[0.14em] md:tracking-[0.1em] uppercase m-0"
         >
-          {srLabel ? <span className="sr-only">{srLabel}</span> : null}
+          {name ? (
+            <span className="module-name">{name}</span>
+          ) : srLabel ? (
+            <span className="sr-only">{srLabel}</span>
+          ) : null}
           {icon ? (
             <span
               className="inline-flex w-5 h-5 items-center justify-center text-primary-500 [&_svg]:w-[18px] [&_svg]:h-[18px] [&_svg]:stroke-current [&_svg]:fill-none [&_svg]:[stroke-width:1.4]"
