@@ -30,7 +30,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 - Homepage composition: Hero, README, INTERACTIVE_SHELL, AI metrics, Projects with performance receipts, RESPONSIBILITIES, Now, NPM, Career with certification, education and community tags, MAN ERIK, SYS_HEALTH, Opinions (HOTTEST_TAKES with nested Unknowns), guitar_rig, DAW mixer, Contact with work authorization, and footer.
 - Hero: Matrix dialog loop + boot sequence (typewriter)
-- Mount-driven role typewriter (RoleTyper); MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`), then IntersectionObserver gates its animation; the footer is server-rendered, with client islands only for session counters and halt/reboot (no scroll-reveal typewriter exists)
+- Mount-driven role typewriter (RoleTyper); module headers use CSS scroll-driven typing, with static text for unsupported browsers and reduced motion. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`), then IntersectionObserver gates its animation; the footer is server-rendered, with client islands only for session counters and halt/reboot.
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
 - Contact form: durable submission, explicit delivered or queued feedback, daily bounded retry
 - Live Lighthouse score (PSI API, cached daily)
@@ -200,7 +200,7 @@ components/client/                    # co-located islands, ONLY interactivity
 components/client/InteractiveShell/   # streaming shell island
 components/client/ContactForm/        # contact form island
 components/client/HeroBootAnimation/  # boot typewriter island
-components/client/RoleTyper/          # reveal-on-scroll typer
+components/client/RoleTyper/          # mount-driven role typer
 components/client/ToTopButton/        # motion-aware scroll-to-top
 components/AppShell/                   # window chrome / module-open dispatch
 components/ErrorBoundary/              # client error boundary

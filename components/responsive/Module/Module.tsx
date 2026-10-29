@@ -1,5 +1,11 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { type ModuleVariant, moduleHeaderId } from './module.constants';
+
+const TYPE_CHARS_PROPERTY = '--module-type-chars';
+
+function scrollTypeStyle(text: string): CSSProperties {
+  return { [TYPE_CHARS_PROPERTY]: text.length } as CSSProperties;
+}
 
 export type ModuleProps = {
   id: string;
@@ -63,8 +69,15 @@ export function Module({
               {icon}
             </span>
           ) : null}
-          <span className="hidden md:inline">{header}</span>
-          <span className="md:hidden">{mobileHeader ?? header}</span>
+          <span className="module-scroll-type hidden md:inline" style={scrollTypeStyle(header)}>
+            <span className="module-scroll-type-text">{header}</span>
+          </span>
+          <span
+            className="module-scroll-type md:hidden"
+            style={scrollTypeStyle(mobileHeader ?? header)}
+          >
+            <span className="module-scroll-type-text">{mobileHeader ?? header}</span>
+          </span>
         </h2>
       </header>
       <div className="module-body-content" data-variant={variant}>
