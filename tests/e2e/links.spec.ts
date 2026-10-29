@@ -159,4 +159,22 @@ test.describe('/links link-in-bio', () => {
     await page.setViewportSize({ width: 1000, height: 800 });
     expect(await columns()).toBe(3);
   });
+
+  test('loads both locales with zero console errors — a feed thumbnail host the image allowlist rejects 400s in /_next/image and fails errors-in-console', async ({
+    page,
+  }) => {
+    const consoleErrors: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') consoleErrors.push(msg.text());
+    });
+    page.on('pageerror', (err) => consoleErrors.push(String(err)));
+
+    await page.goto('/links', { waitUntil: 'networkidle' });
+    await page.goto('/links/en', { waitUntil: 'networkidle' });
+
+    expect(
+      consoleErrors,
+      'every entry here is a Lighthouse errors-in-console failure: an image the optimizer rejected, a hydration error, a CSP block. None of these belong on a static page.',
+    ).toEqual([]);
+  });
 });

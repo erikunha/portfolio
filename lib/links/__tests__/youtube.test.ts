@@ -55,6 +55,16 @@ describe('parseFeed', () => {
     const broken = FEED.replace('<yt:videoId>dQw4w9WgXcQ</yt:videoId>', '');
     expect(parseFeed(broken).map((v) => v.id)).toEqual(['abc12345678']);
   });
+
+  it('normalizes shard thumbnail hosts to i.ytimg.com — any other host 400s in /_next/image and fails errors-in-console', () => {
+    const sharded = FEED.replaceAll(
+      'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+      'https://i3.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+    );
+    expect(parseFeed(sharded)[0]?.thumbnailUrl).toBe(
+      'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+    );
+  });
 });
 
 describe('parseIsoDuration', () => {
