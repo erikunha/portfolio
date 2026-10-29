@@ -220,7 +220,7 @@
     #sec-shell {
       order: 2;
     }
-    #sec-ai-metrics {
+    #sec-live-metrics {
       order: 3;
     }
     #sec-man-page {
@@ -240,12 +240,6 @@
     }
     #sec-sys-health {
       order: 9;
-    }
-    #sec-live-perf {
-      order: 10;
-    }
-    #sec-perf-receipts {
-      order: 11;
     }
     #sec-guitar {
       order: 12;
