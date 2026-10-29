@@ -73,6 +73,66 @@ export const StatSchema = z.object({
   label: z.string().min(1),
   value: z.string().min(1),
 });
+
+export const HeroContentSchema = z.object({
+  locationLabel: z.string().min(1),
+  employerLabel: z.string().min(1),
+  languageLabel: z.string().min(1),
+  statsLabel: z.string().min(1),
+  hire: z.object({ label: z.string().min(1), href: z.url(), accessibleLabel: z.string().min(1) }),
+  actions: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        href: z.union([z.url(), z.string().regex(/^\/(?!\/)\S*$/)]),
+        accessibleLabel: z.string().min(1),
+        external: z.boolean(),
+      }),
+    )
+    .min(1),
+  stats: z.array(StatSchema).length(4),
+});
+
+export const AboutContentSchema = z.object({
+  title: z.string().min(1),
+  command: z.string().min(1),
+  marker: z.string().min(1),
+  whoami: z.object({
+    title: z.string().min(1),
+    intro: z.string().min(1),
+    principlesTitle: z.string().min(1),
+    principles: z.array(z.string().min(1)).min(1),
+    statusTitle: z.string().min(1),
+    statusPrefix: z.string().min(1),
+    role: z.string().min(1),
+    statusSuffix: z.string().min(1),
+    details: z.array(z.string().min(1)).min(1),
+    gutterLines: z.number().int().positive(),
+  }),
+  now: z.object({
+    title: z.string().min(1),
+    rows: z.array(z.object({ k: z.string().min(1), v: z.string().min(1) })).min(1),
+  }),
+  responsibilities: z.object({ title: z.string().min(1), command: z.string().min(1) }),
+  stack: z.object({
+    title: z.string().min(1),
+    groups: z
+      .array(z.object({ label: z.string().min(1), items: z.array(z.string().min(1)).min(1) }))
+      .min(1),
+  }),
+  code: z.object({
+    title: z.string().min(1),
+    label: z.string().min(1),
+    repoLabel: z.string().min(1),
+    repoHref: z.url(),
+    repoAccessibleLabel: z.string().min(1),
+    tokens: z
+      .array(
+        z.object({ id: z.number().int().nonnegative(), text: z.string(), className: z.string() }),
+      )
+      .min(1),
+  }),
+});
 export const ProjectKind = z.enum(['professional', 'oss']);
 
 export const ProjectSchema = z
@@ -168,11 +228,6 @@ export const MeasuredSchema = z.object({
       )
       .length(4),
   }),
-});
-
-export const NpmTileSchema = z.object({
-  label: z.string().min(1),
-  path: z.string().min(1),
 });
 
 export const TAKE_PLACEMENT = { home: 'home', docs: 'docs' } as const;
@@ -355,11 +410,6 @@ export const ManPageSchema = z.object({
   knownBugs: z.array(z.string().min(1)),
 });
 
-export const NowRowSchema = z.object({
-  k: z.string().min(1),
-  v: z.string().min(1),
-});
-
 export const SysStatSchema = z.object({
   label: z.string().min(1),
   value: z.string().min(1),
@@ -498,20 +548,11 @@ export const ReadmeCopySchema = z.object({
 });
 export type ReadmeCopy = z.infer<typeof ReadmeCopySchema>;
 
-export const HeroContentSchema = z.object({
-  locationPrefix: z.string().min(1),
-  nowPrefix: z.string().min(1),
-  hireCtaLabel: z.string().min(1),
-  githubCtaLabel: z.string().min(1),
-  statsAriaLabel: z.string().min(1),
-  systemFailurePlate: z.string().min(1),
-  bootStaticDialogLine: z.string().min(1),
-});
 export type HeroContent = z.infer<typeof HeroContentSchema>;
 
-export const HeroClientContentSchema = HeroContentSchema.pick({
-  systemFailurePlate: true,
-  bootStaticDialogLine: true,
+export const HeroClientContentSchema = z.object({
+  systemFailurePlate: z.string().min(1),
+  bootStaticDialogLine: z.string().min(1),
 });
 export type HeroClientContent = z.infer<typeof HeroClientContentSchema>;
 
@@ -773,7 +814,6 @@ export const LinksContentSchema = z.object({
 export type Social = z.infer<typeof SocialSchema>;
 export type Project = z.infer<typeof ProjectSchema>;
 export type PerfReceipt = z.infer<typeof PerfReceiptSchema>;
-export type NpmTile = z.infer<typeof NpmTileSchema>;
 export type HottestTake = z.infer<typeof HottestTakeSchema>;
 export type Responsibility = z.infer<typeof ResponsibilitySchema>;
 export type GuitarRig = z.infer<typeof GuitarRigSchema>;
@@ -783,7 +823,6 @@ export type VisaRow = z.infer<typeof VisaRowSchema>;
 export type Credential = z.infer<typeof CredentialSchema>;
 export type CommunityEvent = z.infer<typeof CommunityEventSchema>;
 export type ManPage = z.infer<typeof ManPageSchema>;
-export type NowRow = z.infer<typeof NowRowSchema>;
 export type SysStat = z.infer<typeof SysStatSchema>;
 export type GitCommit = z.infer<typeof GitCommitSchema>;
 export type ShellResponse = z.infer<typeof ShellResponseSchema>;

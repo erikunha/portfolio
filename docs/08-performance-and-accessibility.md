@@ -47,7 +47,7 @@ The dynamic (per-request) sections are the CLS risk, because their `<Suspense>` 
 - **Per-section fallback choice.** Most dynamic sections prerender their _desktop_ variant as the fallback.
 - **Measured fallbacks.** ASK and each PSI strategy have independent Suspense boundaries. Their loading states retain the metric tiles or score rows. One slow source does not block the other groups.
 - **Responsive guitar presentation.** `GuitarSection` renders one RSC tree across viewports. CSS changes its layout without a desktop/mobile swap or the associated layout shift.
-- **Mobile section ordering** is done with CSS flex `order` (the `#sec-*` map in `base.css`), and `check:section-order` requires discovered section ids to have order rules or explicit exemptions. Nested metric, receipt, credential and community anchors are exempt.
+- **Mobile section ordering** uses CSS flex `order` (the `#sec-*` map in `base.css`). `check:section-order` requires order rules for top-level sections and exempts the declared nested anchors. An unordered top-level section defaults to `order:0` and can jump to the top.
 - **Both nav variants in the DOM**, toggled by CSS at 768px, to avoid a hydration-driven reflow.
 
 ## Live performance, self-reported
@@ -60,19 +60,19 @@ Measured is one module at `sec-live-metrics`. `AiMetricsSection` composes ASK ev
 
 Target: WCAG 2.1 AA. Lighthouse accessibility and axe checks enforce their configured audit sets, not complete conformance.
 
-| Concern             | How it's handled                                                                                                                                                                         |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Color contrast      | Two-token text discipline: `--color-primary-500` only for headings/large text; `--color-tertiary-50` for body. `lint:contrast` parses `theme.css` and checks documented pairs against AA |
-| Motion              | `prefers-reduced-motion: reduce` **and** a user `MOTION` toggle (`body[data-motion]`) both disable all CRT/JS animation; the toggle is an `aria-pressed` button in `DesktopTopbar`       |
-| Semantics           | sections are `<section>` with an `<h2>`, named via `aria-labelledby` (`Module`); stat tiles are `<dl>`; the Hero headline is a real heading                                              |
-| Keyboard            | a skip-to-content link; `:focus-visible` rings in `base.css`; DAW faders and knobs expose keyboard slider controls; meters report levels                                                 |
-| Live regions        | `RoleTyper` announces only the _completed_ role via an `sr-only` live region (not each keystroke); `ContactForm` errors use `role="alert"`                                               |
-| Forms               | `Field` synthesizes `aria-describedby` for errors; contact uses custom client validation with a focused alert summary linking to invalid fields, plus server re-validation               |
-| Reduced-motion sync | `CRTOverlay` listens for OS `prefers-reduced-motion` changes and keeps `body[data-motion]` in sync                                                                                       |
+| Concern             | How it's handled                                                                                                                                                                                        |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Color contrast      | Two-token text discipline: `--color-primary-500` only for headings/large text; `--color-tertiary-50` for body. `lint:contrast` parses `theme.css` and checks documented pairs against AA                |
+| Motion              | `prefers-reduced-motion: reduce` **and** a user `MOTION` toggle (`body[data-motion]`) both disable all CRT/JS animation; the toggle is an `aria-pressed` button in `DesktopTopbar`                      |
+| Semantics           | sections are `<section>` with an `<h2>`, named via `aria-labelledby` (`Module`); stat tiles are `<dl>`; the Hero headline is a real heading                                                             |
+| Keyboard            | a skip-to-content link; `:focus-visible` rings in `base.css`; DAW faders, knobs and VU meters expose keyboard slider controls; About Responsibilities and retry-code regions support keyboard scrolling |
+| Live regions        | Hero identity is static; About `RoleTyper` hides animated text and announces completed roles through a polite live region; `ContactForm` errors use `role="alert"`                                      |
+| Forms               | `Field` synthesizes `aria-describedby` for errors; contact uses custom client validation with a focused alert summary linking to invalid fields, plus server re-validation                              |
+| Reduced-motion sync | `CRTOverlay` listens for OS `prefers-reduced-motion` changes and keeps `body[data-motion]` in sync                                                                                                      |
 
 Per-component behavioral a11y tests live alongside components; the axe gate covers the design-system routes. The CRT effects are all `aria-hidden` + `pointer-events:none`, so the decorative layer is invisible to assistive tech.
 
-The Profile manual, Responsibilities and README code sample scroll containers use `tabIndex={0}` and `role="region"`. Each has its own accessible name from the `SCROLL_REGION_LABELS` map in `content/section-labels.ts` (the section name plus "(scrollable)"), kept distinct from the parent section's name so no two landmarks share a name. Keyboard users can tab into these containers and scroll with arrow keys. `base.css` applies a `:focus-visible` outline using `--color-primary-500` to elements with `tabindex="0"`. The work authorization table inside Contact is a semantic `<table>` whose cells wrap, so it has no scrolling container and needs no region. The interactive shell's scrollable log already has its own tab stop and accessible name. The footer's scrollable connection table contains keyboard-focusable links.
+The Profile manual and the About Responsibilities and README code sample scroll containers use `tabIndex={0}` and expose the `region` role (About uses named semantic `<section>` elements). Each has its own accessible name from the `SCROLL_REGION_LABELS` map in `content/section-labels.ts`, kept distinct from the parent section's name so no two landmarks share a name. Keyboard users can tab into these containers and scroll with arrow keys. `base.css` applies a `:focus-visible` outline using `--color-primary-500` to elements with `tabindex="0"`. Responsibilities and retry code belong to the About section; the label validation maps both regions to that parent. Responsibilities keeps its wrapping rows and allows horizontal scrolling if content still overflows. The work authorization table inside Contact is a semantic `<table>` whose cells wrap, so it has no scrolling container and needs no region. The interactive shell's scrollable log already has its own tab stop and accessible name. The footer's scrollable connection table contains keyboard-focusable links.
 
 ## Verification scope
 

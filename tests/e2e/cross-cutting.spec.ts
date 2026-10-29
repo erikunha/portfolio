@@ -342,5 +342,5 @@ test('footer is server-rendered and boot output is decorative under reduced moti
   await expect(footer.locator('canvas')).toHaveCount(0);
   await expect(footer.locator('.footer-dmesg')).toHaveAttribute('aria-hidden', 'true');
   await footer.getByRole('link', { name: 'press R to reboot, back to top' }).click();
-  await expect(page.locator('h1')).toBeFocused();
+  await expect(page.locator('[data-testid="hero-name"]:visible')).toBeFocused();
 });

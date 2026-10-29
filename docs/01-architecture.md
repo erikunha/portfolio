@@ -4,7 +4,7 @@
 
 ## Request model
 
-A request hits Vercel's edge, passes through `proxy.ts` (which stamps CSP + reporting headers), and is served by Next.js. The page `/` is **partially prerendered**: a static shell (the chrome + above-the-fold Hero) is prerendered, while a handful of sections that select variants from the user agent stream in per-request behind `<Suspense>`. Client islands hydrate for chrome, animation and interaction. Section content comes from **typed, build-validated `content/*.ts` modules**. A few `/api/*` handlers form a thin **BFF** over Upstash Redis, Resend, the Vercel AI Gateway, and Google PageSpeed Insights. Rate limiting and dedup fail open; the `/api/ask` budget reservation fails closed with 503; contact storage fails closed. Stored messages remain queued when delivery fails.
+A request hits Vercel's edge, passes through `proxy.ts` (which stamps CSP + reporting headers), and is served by Next.js. The page `/` is **partially prerendered**: a static shell (the chrome + above-the-fold Hero) is prerendered, while the UA-selected ManPage variant and independent ASK and PSI data reads stream behind `<Suspense>`. Client islands hydrate for chrome, animation and interaction. Section content comes from **typed, build-validated `content/*.ts` modules**. A few `/api/*` handlers form a thin **BFF** over Upstash Redis, Resend, the Vercel AI Gateway, and Google PageSpeed Insights. Rate limiting and dedup fail open; the `/api/ask` budget reservation fails closed with 503; contact storage fails closed. Stored messages remain queued when delivery fails.
 
 ## System purpose
 
@@ -136,13 +136,13 @@ Contact submission persists a 90-day KV audit record before calling the shared d
 
 ## Key load-bearing files (read these first)
 
-| File                                      | Why it matters                                                              |
-| ----------------------------------------- | --------------------------------------------------------------------------- |
-| `app/page.tsx`                            | The composition root; shows the RSC/PPR posture for the whole site          |
-| `app/layout.tsx`                          | Fonts, JSON-LD, the pre-paint motion bootstrap, Vercel RUM gating           |
-| `next.config.ts` + `proxy.ts`             | The two-place header split (static vs per-request CSP), PPR, MDX            |
-| `lib/server/route.ts`                     | The `defineHandler` envelope - the API contract                             |
-| `lib/rate-limit.ts`                       | Redis access, the sliding-window + token-budget + dedup primitives          |
-| `lib/ask/system-prompt.ts`                | How the AI persona imports shared content                                   |
-| `content/schemas.ts`                      | The domain schema registry                                                  |
-| `components/responsive/Module/Module.tsx` | RSC wrapper for terminal modules; Hero, Career and Footer render separately |
+| File                                      | Why it matters                                                                     |
+| ----------------------------------------- | ---------------------------------------------------------------------------------- |
+| `app/page.tsx`                            | The composition root; shows the RSC/PPR posture for the whole site                 |
+| `app/layout.tsx`                          | Fonts, JSON-LD, the pre-paint motion bootstrap, Vercel RUM gating                  |
+| `next.config.ts` + `proxy.ts`             | The two-place header split (static vs per-request CSP), PPR, MDX                   |
+| `lib/server/route.ts`                     | The `defineHandler` envelope - the API contract                                    |
+| `lib/rate-limit.ts`                       | Redis access, the sliding-window + token-budget + dedup primitives                 |
+| `lib/ask/system-prompt.ts`                | How the AI persona imports shared content                                          |
+| `content/schemas.ts`                      | The domain schema registry                                                         |
+| `components/responsive/Module/Module.tsx` | RSC wrapper for terminal modules; Hero, About, Career and Footer render separately |

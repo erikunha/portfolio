@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { aboutContent } from '@/content/about';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
 import { communityEvent } from '@/content/community';
 import { contactCopy } from '@/content/contact-copy';
@@ -8,7 +9,6 @@ import { education } from '@/content/education';
 import { footerContent } from '@/content/footer';
 import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
-import { nowRows } from '@/content/now';
 import { perfReceipts } from '@/content/perf-receipts';
 import { profile, profileLanguageLine, profileWorkingLanguageLine } from '@/content/profile';
 import { projects } from '@/content/projects';
@@ -68,12 +68,18 @@ describe('identity is consistent across every gated surface', () => {
       personSchema.description,
       personSchema.seeks.itemOffered.description,
       readmeCopy.desktopIntro,
-      JSON.stringify(nowRows),
     ];
     for (const text of descriptions) {
-      expect(text).not.toMatch(/CITIZEN|NEEDS_SPONSORSHIP|OPEN_WITH_SPONSORSHIP/);
       expect(text).toContain('Brazil: citizen');
     }
+    const rawStatusToken = /CITIZEN|NEEDS_SPONSORSHIP|OPEN_WITH_SPONSORSHIP/;
+    const rendered = [
+      ...descriptions,
+      aboutContent.whoami.intro,
+      aboutContent.whoami.statusSuffix,
+      JSON.stringify(aboutContent.now.rows),
+    ];
+    for (const text of rendered) expect(text).not.toMatch(rawStatusToken);
   });
 
   it('states the cross-platform code reuse the resume gives, on both surfaces', () => {
@@ -172,7 +178,6 @@ describe('identity is consistent across every gated surface', () => {
       ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
       ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
       ['content/readme.ts', JSON.stringify(readmeCopy)],
-      ['content/now.ts', JSON.stringify(nowRows)],
       ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
     ];
     const drifted = surfaces.filter(([, text]) => !text.includes(CANONICAL_TITLE)).map(([s]) => s);
@@ -256,7 +261,6 @@ describe('terminal redesign canonical facts', () => {
       read('public/.well-known/agent.json'),
       JSON.stringify(personSchema),
       JSON.stringify(readmeCopy),
-      JSON.stringify(nowRows),
       layoutMetadataText,
     ]) {
       expect(text).toContain('Brazil');

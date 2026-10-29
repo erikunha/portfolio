@@ -26,9 +26,10 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Functional
 
-- Homepage composition: Hero, README, INTERACTIVE_SHELL, Measured, Projects with performance receipts, RESPONSIBILITIES, Now, NPM, Career with certification, education and community tags, MAN ERIK, SYS_HEALTH, Opinions (HOTTEST_TAKES with nested Unknowns), guitar_rig, DAW mixer, Contact with work authorization, and footer.
+- Static composition with Hero and About followed by shell, AI evaluation, projects with attached performance receipts, Career, profile manual, system health, opinions with nested learning and specialization lists, guitar rig, DAW mixer, contact with work authorization and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code expose named keyboard scroll regions inside About; Career owns certification, education and community tag groups.
+- Opinions renders four ordered home takes with nested learning and specialization lists. The design-system opinion renders at `/design-system#opinion-07`; `TAKE_PLACEMENT` separates home and documentation content. Seven below-fold modules use content-visibility deferral.
 - Hero: Matrix dialog loop + boot sequence (typewriter)
-- Mount-driven role typewriter (RoleTyper); module headers use CSS scroll-driven typing, with static text for unsupported browsers and reduced motion. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`), then IntersectionObserver gates its animation; the footer is server-rendered, with client islands only for session counters and halt/reboot.
+- About "Open to [role] roles" mounts RoleTyper over server-rendered text; the Hero title is static. Module headers use CSS scroll-driven typing, with static text for unsupported browsers and reduced motion. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`), then IntersectionObserver gates its animation. The footer is server-rendered, with client islands only for session counters and halt/reboot.
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
 - Contact form: durable submission, explicit delivered or queued feedback, daily bounded retry
 - Live Lighthouse score (PSI API, cached daily)
@@ -171,7 +172,7 @@ Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one stati
 `sec-credentials` and `sec-community` are nested in-page anchors, excluded from mobile section ordering.
 Community event and reference links use the validated labels and URLs in `content/community.ts`.
 
-Responsibilities through Contact receive `defer` in `app/page.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. The nine entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
+Career through Contact receive `defer` in `app/page.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. The nine entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
 
 ### Trade-off
 
@@ -216,8 +217,7 @@ components/client/                    # co-located islands, ONLY interactivity
 components/client/InteractiveShell/   # streaming shell island
 components/client/ContactForm/        # contact form island
 components/client/HeroBootAnimation/  # boot typewriter island
-components/client/RoleTyper/          # mount-driven role typer
-components/client/ToTopButton/        # motion-aware scroll-to-top
+components/client/RoleTyper/          # About status role typewriter island
 components/AppShell/                   # window chrome / module-open dispatch
 components/ErrorBoundary/              # client error boundary
 components/ErrorPages/                 # 404/500 chrome, focused heading, error reference
@@ -225,22 +225,24 @@ components/HeroStats/                  # hero stat tiles
 components/Icons/                      # inline SVG icon set
 components/responsive/                 # viewport-variant helpers
 
-content/readme.ts                     # README/bio content
+content/about.ts                      # About panels, Now rows and Senior status
+content/hero.ts                       # validated Hero metrics, labels and actions
+content/hero-client.ts                # typed boot and system-failure copy, no runtime schema import
+content/nav.ts                        # zod-free topbar in-page link
+content/readme.ts                     # README/bio content for /cv and /summary
 content/projects.ts                   # shared project cards
-content/perf-receipts.ts              # canonical deltas, attached receipts and hero stats
+content/perf-receipts.ts              # canonical deltas, attached receipts and reading-view stats
 content/measured.ts                   # ASK and PSI presentation metadata
 content/section-registry.ts           # nine navigation destinations and aliases
 content/section-labels.ts             # section accessible labels
 content/reading-views.ts              # summary and CV presentation
 content/profile.ts                    # shared identity and hiring copy
-content/npm-stack.ts                  # stack tiles
 content/hottest-takes.ts              # defended opinions
 content/responsibilities.ts           # permissions matrix
 content/guitar-rig.ts                 # gear sheet
 content/unknowns.ts                   # unknowns items
 content/visa.ts                       # jurisdiction table
 content/community.ts                  # community/* tags and event references inside Career
-content/now.ts                        # ~/.now
 content/credentials.ts                # cert/* tags and Career tag-group copy
 content/education.ts                  # edu/* tags inside Career
 content/man-page.ts                   # MAN ERIK content

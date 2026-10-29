@@ -8,8 +8,11 @@
 flowchart TD
     layout["app/layout.tsx (RootLayout, RSC)<br/>fonts · JSON-LD · motion bootstrap · Vercel RUM"]
     layout --> home["/ -> app/page.tsx (RSC, SSG+PPR)"]
-    layout --> reading["/summary · /cv (RSC, print island)"]
-    layout --> links["/links · /links/en (localized RSC + cached YouTube feed)"]
+    layout --> cv["/cv -> app/cv/page.tsx"]
+    layout --> summary["/summary -> app/summary/page.tsx"]
+    layout --> links["/links · /links/en -> localized RSC + cached YouTube feed"]
+    layout --> errors["error.tsx -> route error recovery"]
+    globalError["global-error.tsx -> replaces RootLayout on root failure"]
     layout --> ds["/design-system -> design-system/layout.tsx"]
     layout --> nf["/* (404) -> app/not-found.tsx"]
     layout --> sm["/sitemap.xml -> app/sitemap.ts"]
@@ -42,9 +45,9 @@ The user-facing routes are `/`, `/summary`, `/cv`, `/links` and `/links/en`, alo
 
 `content/section-registry.ts` defines nine navigation destinations: Home (`bio`), About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, and Contact. It supplies aliases, icons, screen-reader labels and navigation order. `content/section-labels.ts` adds labels for supporting modules.
 
-The JSX order in `app/page.tsx` is Hero, Readme, Shell, Measured, Projects, Responsibilities, Now, NpmStack, GitLog, ManPage, SysHealth, HottestTakes (with Unknowns nested inside), Guitar, DawMixer and Contact (including work authorization). Footer follows `PageMain` as its sibling. CSS mobile ordering is a separate map in `app/css/base.css`.
+The JSX order in `app/page.tsx` is Hero, About, Shell, Measured, Projects, GitLog, ManPage, SysHealth, HottestTakes (with Unknowns nested inside), Guitar, DawMixer and Contact (including work authorization). Footer follows `PageMain` as its sibling. CSS mobile ordering is a separate map in `app/css/base.css`.
 
-Projects contains its receipts. Career contains certification, education and community tag groups. Measured contains independent ASK, desktop PSI and mobile PSI reads. These nested groups do not become separate navigation destinations.
+About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code are named keyboard scroll regions inside About. Projects contains its receipts. Career contains certification, education and community tag groups. Measured contains independent ASK, desktop PSI and mobile PSI reads. These nested groups do not become separate navigation destinations.
 
 ## Layout hierarchy (what wraps what)
 
@@ -58,8 +61,8 @@ flowchart TD
     bp --> appshell["AppShell (client chrome)"]
     appshell --> chrome["MatrixRainLazy (client-only) · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
     appshell --> main["PageMain (RSC): main#main-content"]
-    main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + Career + Modules (RSC)"]
-    appshell --> footer["Footer (RSC), after PageMain"]
+    main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + About + Career + Modules (RSC)"]
+    appshell --> footer["ErrorBoundary-wrapped Footer (RSC), after PageMain"]
     footer --> footerIslands["FooterLazy: direct client re-exports, session counters + halt/reboot"]
 ```
 
@@ -82,7 +85,7 @@ flowchart LR
 ```
 
 **Static vs dynamic, concretely:**
-- **Static (prerendered):** `AppShell` chrome except the client-only MatrixRain canvas, `Hero` (outside Suspense so LCP never waits), `Readme`, `Shell`, the responsive `Guitar` presentation, Projects with its attached receipts, `DawMixer`, Contact with its work-authorization table, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid. `DawMixer` uses one synchronous RSC layout at every width; its interactive islands hydrate on phones too. The Visa table renders once and CSS adapts it.
+- **Static (prerendered):** `AppShell` chrome except the client-only MatrixRain canvas, `Hero` (outside Suspense so LCP never waits), `About`, `Shell`, the responsive `Guitar` presentation, Projects with its attached receipts, `DawMixer`, Contact with its work-authorization table, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid. `DawMixer` uses one synchronous RSC layout at every width; its interactive islands hydrate on phones too. The Visa table renders once and CSS adapts it.
 - **UA-selected variants:** only `ManPage` wraps an async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`). Its fallback is prerendered; the selected variant streams per request.
 - **Measured data:** `AiMetricsSection` renders the `sec-live-metrics` module. It composes `AiMetricsData` and `LivePerfSection`, with independent Suspense boundaries for ASK, desktop PSI and mobile PSI. Each fallback retains its metric layout and shows a loading state. Receipts remain inside Projects rather than a separate module.
 - **The dual-variant pattern** (e.g. `ManPageSection.tsx`):

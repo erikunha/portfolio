@@ -16,7 +16,8 @@ const SCROLL_EVENT = 'scroll';
 const VISIBILITY_EVENT = 'visibilitychange';
 const EDITABLE_SELECTOR =
   'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]';
-const HEADING_SELECTOR = 'main h1';
+const HEADING_SELECTOR = 'main h1, main [role="heading"][aria-level="1"]';
+const HIDDEN_DISPLAY = 'none';
 const FOOTER_SELECTOR = 'footer';
 const KEYDOWN_EVENT = 'keydown';
 const SCROLL_BEHAVIOR = 'instant';
@@ -30,6 +31,13 @@ const SESSION_FIELDS = {
   commands: '[data-sess="commands"]',
   meter: 'meter',
 } as const;
+
+function isRendered(element: Element) {
+  for (let node: Element | null = element; node; node = node.parentElement) {
+    if (getComputedStyle(node).display === HIDDEN_DISPLAY) return false;
+  }
+  return true;
+}
 
 function formatUptime(seconds: number) {
   return [
@@ -147,7 +155,9 @@ export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {
   const announcementFrame = useRef<number | undefined>(undefined);
   const link = useRef<HTMLAnchorElement>(null);
   const reboot = useCallback((): boolean => {
-    const heading = document.querySelector<HTMLElement>(HEADING_SELECTOR);
+    const heading = Array.from(document.querySelectorAll<HTMLElement>(HEADING_SELECTOR)).find(
+      isRendered,
+    );
     if (!heading) return false;
     heading.tabIndex = -1;
     heading.focus({ preventScroll: true });

@@ -336,19 +336,14 @@ describe('HeroContentSchema and hero content', () => {
     expect(HeroClientContentSchema.safeParse(heroClientContent).success).toBe(true);
   });
 
-  it.each([
-    'locationPrefix',
-    'nowPrefix',
-    'hireCtaLabel',
-    'githubCtaLabel',
-    'statsAriaLabel',
-    'systemFailurePlate',
-    'bootStaticDialogLine',
-  ])('rejects an empty hero %s', async (field) => {
-    const { HeroContentSchema } = await import('./schemas');
-    const { heroContent } = await import('./hero');
-    expect(HeroContentSchema.safeParse({ ...heroContent, [field]: '' }).success).toBe(false);
-  });
+  it.each(['locationLabel', 'employerLabel', 'languageLabel', 'statsLabel'])(
+    'rejects an empty hero %s',
+    async (field) => {
+      const { HeroContentSchema } = await import('./schemas');
+      const { heroContent } = await import('./hero');
+      expect(HeroContentSchema.safeParse({ ...heroContent, [field]: '' }).success).toBe(false);
+    },
+  );
 
   it.each(['systemFailurePlate', 'bootStaticDialogLine'])(
     'rejects an empty hero-client %s',

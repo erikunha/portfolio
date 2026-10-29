@@ -79,6 +79,25 @@ describe('RoleTyper — animation loop', () => {
     expect(text).toMatch(/^\[Sta/);
   });
 
+  it('halts typing when motion is switched off and resumes when switched on', async () => {
+    const container = await render();
+    const pill = container.querySelector('[aria-hidden="true"]');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(80 * 3);
+    });
+    window.dispatchEvent(new CustomEvent('motionchange', { detail: { on: false } }));
+    const frozen = pill?.textContent;
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000);
+    });
+    expect(pill?.textContent).toBe(frozen);
+    window.dispatchEvent(new CustomEvent('motionchange', { detail: { on: true } }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(80 * 2);
+    });
+    expect(pill?.textContent).not.toBe(frozen);
+  });
+
   it('stops mutating DOM after unmount (cleanup cancels animation)', async () => {
     const container = await render();
     const pill = container.querySelector('[aria-hidden="true"]');
@@ -115,5 +134,20 @@ describe('RoleTyper — motion off (no animation)', () => {
     const container = mounted.container;
     const pill = container.querySelector('[aria-hidden="true"]');
     expect(pill?.textContent).toBe('[Senior]');
+  });
+
+  it('starts typing when motion is enabled after mounting with motion off', async () => {
+    vi.useFakeTimers();
+    vi.doMock('@/lib/motion', () => ({ readMotion: () => false }));
+    const { RoleTyper } = await import('@/components/client/RoleTyper/RoleTyper');
+    mounted = await mountClient(createElement(RoleTyper));
+    const pill = mounted.container.querySelector('[aria-hidden="true"]');
+    expect(pill?.textContent).toBe('[Senior]');
+    window.dispatchEvent(new CustomEvent('motionchange', { detail: { on: true } }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(80 * 2);
+    });
+    expect(pill?.textContent).toBe('[Sen]');
+    vi.useRealTimers();
   });
 });
