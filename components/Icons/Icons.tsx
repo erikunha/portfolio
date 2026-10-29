@@ -109,15 +109,6 @@ export function IconHottestTakes() {
   );
 }
 
-export function IconUnknowns() {
-  return (
-    <svg {...baseProps}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M9 9a3 3 0 1 1 4 2.8c-.7.3-1 .7-1 1.7M12 17h.01" />
-    </svg>
-  );
-}
-
 export function IconResponsibilities() {
   return (
     <svg {...baseProps}>
