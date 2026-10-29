@@ -271,3 +271,11 @@
     }
   }
 }
+
+@page reading {
+  margin: 14mm;
+}
+
+.reading-view {
+  page: reading;
+}

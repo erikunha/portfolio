@@ -2,7 +2,13 @@ import { z } from 'zod';
 import { ContactContentSchema } from './contact';
 import { contactCopy } from './contact-copy';
 import { dmesgLines } from './dmesg';
-import { DmesgLineSchema, ShellCommandsSchema, TerminalChromeSchema } from './schemas';
+import { errorsContent } from './errors';
+import {
+  DmesgLineSchema,
+  ErrorsContentSchema,
+  ShellCommandsSchema,
+  TerminalChromeSchema,
+} from './schemas';
 import SHELL_RESPONSES from './shell-commands';
 import { EMAIL_ADDRESS, LINKEDIN_URL } from './social-urls';
 import { contactChrome, shellChrome } from './terminal-chrome';
@@ -16,3 +22,4 @@ z.object({ email: z.email(), linkedin: z.url() }).parse({
   email: EMAIL_ADDRESS,
   linkedin: LINKEDIN_URL,
 });
+ErrorsContentSchema.parse(errorsContent);
