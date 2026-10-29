@@ -227,14 +227,34 @@ for (const path of WIDE_TABLE_ROUTES) {
   });
 }
 
+const TABLE_ROUTES = [
+  '/design-system/components',
+  '/design-system/enforcement',
+  '/design-system/foundations/spacing-borders',
+  '/design-system/foundations/typography',
+  '/design-system/primitives/badge',
+  '/design-system/primitives/button',
+  '/design-system/primitives/cmd-line',
+  '/design-system/primitives/copybutton',
+  '/design-system/primitives/field',
+  '/design-system/primitives/kbd-key',
+  '/design-system/primitives/stat-tile',
+  '/design-system/primitives/terminal-panel',
+  '/design-system/primitives/window-chrome',
+  '/design-system/tokens',
+];
+
 test('every labelled table region is keyboard focusable and uniquely named per page', async ({
   page,
 }) => {
-  for (const path of WIDE_TABLE_ROUTES) {
+  for (const path of TABLE_ROUTES) {
     await page.goto(path);
+    const tables = page.locator('table[data-labelled-table]');
+    const tableCount = await tables.count();
+    expect(tableCount, `${path}: labelled tables must be present`).toBeGreaterThan(0);
     const regions = page.locator('section:has(table[data-labelled-table])');
     const count = await regions.count();
-    if (count === 0) continue;
+    await expect(regions, `${path}: every table must have its own section`).toHaveCount(tableCount);
     const described = await regions.evaluateAll((nodes) =>
       nodes.map((node) => ({
         label: node.getAttribute('aria-label'),
