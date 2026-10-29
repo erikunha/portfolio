@@ -119,8 +119,15 @@ test('quick commands read as inert while an answer is pending', async ({ page })
   await hint.hover();
   const style = await hint.evaluate((node) => {
     const computed = getComputedStyle(node);
-    return { opacity: computed.opacity, textShadow: computed.textShadow };
+    return {
+      opacity: computed.opacity,
+      textShadow: computed.textShadow,
+      background: computed.backgroundColor,
+    };
   });
   expect(style.opacity, 'inert quick commands must look dimmed').toBe('0.5');
   expect(style.textShadow, 'hover glow must not fire on an inert command').toBe('none');
+  expect(style.background, 'hover highlight must not fire on an inert command').toBe(
+    'rgba(0, 0, 0, 0)',
+  );
 });

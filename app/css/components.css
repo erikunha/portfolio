@@ -868,12 +868,12 @@
     user-select: none;
   }
 
-  .shell-control:active {
+  .shell-control:active:not([aria-disabled="true"]) {
     background: var(--color-primary-quiet);
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .shell-control:hover {
+    .shell-control:hover:not([aria-disabled="true"]) {
       background: var(--color-primary-quiet);
     }
   }
