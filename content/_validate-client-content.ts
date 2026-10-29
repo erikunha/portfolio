@@ -1,9 +1,11 @@
 import { z } from 'zod';
 import { dmesgLines } from './dmesg';
+import { errorsContent } from './errors';
 import { NAVIGATION } from './navigation';
 import {
   createNavigationSchema,
   DmesgLineSchema,
+  ErrorsContentSchema,
   SectionRegistrySchema,
   ShellCommandsSchema,
   TerminalChromeSchema,
@@ -18,3 +20,4 @@ TerminalChromeSchema.parse(shellChrome);
 TerminalChromeSchema.parse(contactChrome);
 SectionRegistrySchema.parse(SECTION_REGISTRY);
 createNavigationSchema(SECTION_REGISTRY.map(({ id }) => id)).parse(NAVIGATION);
+ErrorsContentSchema.parse(errorsContent);

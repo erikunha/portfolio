@@ -16,9 +16,7 @@ export const SECTION_LABELS = {
   'sec-npm-stack': 'Tech stack',
   'sec-man-page': 'Profile manual',
   'sec-sys-health': 'System health',
-  'sec-credentials': 'Credentials',
   'sec-visa': 'Work authorization',
-  'sec-community': 'Community',
   'sec-daw-mixer': 'DAW mixer',
   'sec-unknowns': 'Open questions',
 } as const;

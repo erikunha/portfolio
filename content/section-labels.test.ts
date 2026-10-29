@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { SECTION_LABELS } from './section-labels';
 import { SECTION_REGISTRY } from './section-registry';
 
+const EXPECTED_SECTION_COUNT = 18;
+
 describe('SECTION_LABELS', () => {
   it('uses registry region names while preserving the existing screen reader copy', () => {
     const regionLabels = Object.fromEntries(
@@ -32,7 +34,7 @@ describe('SECTION_LABELS', () => {
     }
   });
 
-  it('every Module rendered by a section has a SECTION_LABELS entry (fail-closed)', () => {
+  it('labels cover exactly the Module and native section IDs (fail-closed)', () => {
     const dir = join(process.cwd(), 'components/sections');
     const ids = new Set<string>();
     for (const entry of readdirSync(dir)) {
@@ -46,16 +48,32 @@ describe('SECTION_LABELS', () => {
         continue;
       }
       for (const file of files) {
-        // behavioral-test-allow: enumerates every Module id a section renders to prove label coverage
+        // behavioral-test-allow: enumerates Module and native section IDs to prove label coverage
         const src = readFileSync(join(sectionDir, file), 'utf8');
-        for (const m of src.matchAll(/<Module\b[\s\S]*?\bid="(sec-[^"]+)"/g)) {
-          if (m[1]) ids.add(m[1]);
+        const namedIds = new Map(
+          Array.from(src.matchAll(/const\s+(\w+)\s*=\s*['"](sec-[^'"]+)['"]/g), (match) => [
+            match[1],
+            match[2],
+          ]),
+        );
+        for (const m of src.matchAll(
+          /<(?:Module|section)\b[\s\S]*?\bid=(?:"(sec-[^"]+)"|\{(\w+)\})/g,
+        )) {
+          const id = m[1] ?? namedIds.get(m[2]);
+          expect(id, `unresolved section id in ${file}`).toBeDefined();
+          if (id) ids.add(id);
         }
       }
     }
+    expect(ids.has('sec-guitar'), 'guitar module must retain label coverage').toBe(true);
     for (const id of ids) {
       expect(SECTION_LABELS, `missing label for ${id}`).toHaveProperty(id);
     }
-    expect(ids.size).toBeGreaterThanOrEqual(20);
+    expect(ids.size).toBe(EXPECTED_SECTION_COUNT);
+    expect([...ids].sort()).toEqual(
+      Object.keys(SECTION_LABELS)
+        .filter((id) => id.startsWith('sec-'))
+        .sort(),
+    );
   });
 });

@@ -28,7 +28,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Functional
 
-- Static composition of ~18 content sections (hero, README, projects, git log, NPM, SYS_HEALTH, PERF_RECEIPTS, visa, community, HOTTEST_TAKES, RESPONSIBILITIES, guitar_rig, unknowns, contact, MAN ERIK, INTERACTIVE_SHELL, footer)
+- Static composition of ~18 content sections (hero, README, projects, Career with certification, education and community tags, NPM, SYS_HEALTH, PERF_RECEIPTS, visa, HOTTEST_TAKES, RESPONSIBILITIES, guitar_rig, unknowns, contact, MAN ERIK, INTERACTIVE_SHELL, footer)
 - Hero: Matrix dialog loop + boot sequence (typewriter)
 - Mount-driven role typewriter (RoleTyper); IntersectionObserver gates MatrixRain; the footer is server-rendered, with client islands only for session counters and halt/reboot (no scroll-reveal typewriter exists)
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
@@ -145,11 +145,16 @@ Naming convention: every client file ends in `.client.tsx`. The default is serve
 
 ### Partial Pre-Rendering (PPR) — dual-variant sections
 
-Six sections (ManPage, Guitar, Projects, GitLog, Visa, DawMixer) ship a desktop and mobile variant driven by UA detection via `headers()`. `cacheComponents: true` is set in `next.config.ts`. Each section exports an async inner RSC (`*Content()`) that calls `getIsMobile()` — a per-request dynamic boundary. The static PPR shell prerenders the desktop fallback (or `null` — see below); the dynamic hole fills sub-millisecond per request (no network I/O — `headers()` is a synchronous read).
+Four sections (ManPage, Projects, Visa, DawMixer) ship a desktop and mobile variant driven by UA detection via `headers()`. `cacheComponents: true` is set in `next.config.ts`. Each section exports an async inner RSC (`*Content()`) that calls `getIsMobile()`, a per-request dynamic boundary. The static PPR shell prerenders the desktop fallback (or `null`, see below); the dynamic hole fills sub-millisecond per request (no network I/O, `headers()` is a synchronous read).
 
-Two exceptions use `fallback={null}` instead of their desktop component, for different reasons:
-- `GuitarSection`: desktop and mobile variants differ enough in height that the swap produced a CLS spike. `fallback={null}` renders only the module header until the dynamic hole fills. See `DECISIONS.md` 2026-06-13 (C2 perf fix).
-- `DawMixerSection`: the desktop variant is a `next/dynamic` lazy-loaded client component — it cannot serve as a static Suspense fallback (it is itself dynamically loaded). `fallback={null}` renders only the section shell.
+`DawMixerSection` uses `fallback={null}` instead of its desktop component. Its desktop variant is a `next/dynamic` lazy-loaded client component, so the fallback renders only the section shell.
+
+`GuitarSection` renders one responsive RSC presentation across viewports. CSS adjusts its layout without UA detection, a variant swap or a section Suspense fallback.
+
+Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
+Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one static section.
+`sec-credentials` and `sec-community` are nested in-page anchors, excluded from mobile section ordering.
+Community event and reference links use the validated labels and URLs in `content/community.ts`.
 
 ### Trade-off
 
@@ -169,6 +174,8 @@ build fails until this tree is corrected. The block is bounded by the
 app/layout.tsx                       # fonts, theme tokens, JSON-LD, metadata
 app/page.tsx                         # single-page composition (RSC)
 app/not-found.tsx                    # Matrix-themed 404
+app/error.tsx                        # route error page (500), digest + retry
+app/global-error.tsx                 # root error page, renders its own html/body
 app/sitemap.ts                       # SEO sitemap (robots.txt is static, in public/)
 app/css/                             # global styles — Tailwind v4 via PostCSS
 app/design-system/                   # /design-system docs surface (MDX + token gallery)
@@ -192,6 +199,7 @@ components/client/RoleTyper/          # reveal-on-scroll typer
 components/client/ToTopButton/        # motion-aware scroll-to-top
 components/AppShell/                   # window chrome / module-open dispatch
 components/ErrorBoundary/              # client error boundary
+components/ErrorPages/                 # 404/500 chrome, focused heading, error reference
 components/HeroStats/                  # hero stat tiles
 components/Icons/                      # inline SVG icon set
 components/responsive/                 # viewport-variant helpers
@@ -205,11 +213,14 @@ content/responsibilities.ts           # permissions matrix
 content/guitar-rig.ts                 # gear sheet
 content/unknowns.ts                   # unknowns items
 content/visa.ts                       # jurisdiction table
-content/community.ts                  # devopsdays
+content/community.ts                  # community/* tags and event references inside Career
 content/now.ts                        # ~/.now
-content/credentials.ts                # ~/.credentials
+content/credentials.ts                # cert/* tags and Career tag-group copy
+content/education.ts                  # edu/* tags inside Career
 content/man-page.ts                   # MAN ERIK content
 content/social.ts                     # github / linkedin / email / site
+content/errors.ts                     # 404, 500 and no-JS copy
+content/errors-client.ts              # zod-free error copy for client islands
 content/schemas.ts                    # Zod validation schemas, build-time
 content/ask-eval-corpus.ts            # ask eval Q+A corpus (factual, edge, jailbreak, output-validation)
 
@@ -363,6 +374,7 @@ Behavior:
 - 80% threshold (`pct >= 0.8`): logs `budget approaching cap` and **allows the request**. This is a warning, not a gate — the endpoint does not 503 here.
 - Hard cap (`pct > 1`): refunds the reservation and returns `allowed: false`; the route returns 503 with a fallback message
 - Redis unavailable: budget reservation fails closed (`allowed: false`, `reserved: 0`). `/api/ask` returns its existing HTTP 503 budget-rejection JSON before calling the model. Rate limiting and identical-question dedup still fail open, but a failed reservation prevents unmetered model calls. Settlement skips nonpositive reservations.
+- Budget storage sits behind `BudgetStore` (`reserve`, `release`, `capacity`) in `lib/rate-limit.ts`. The default is the Redis counter above. `setBudgetStore` swaps it, and only `scripts/ask-eval.ts` calls it, installing `createEvalBudgetStore(ASK_EVAL_CORPUS.length)`: an in-memory counter that allows one full reservation per corpus item. No environment flag, header or request parameter selects it, so the production route cannot reach it. The eval therefore needs no Redis credentials and never spends the production counter.
 - `ASK_ENABLED` remains a Redis-independent kill switch checked before rate limiting or budget reservation.
 - Prompt caching enabled via `providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }` on a system message (AI SDK v7 shape; the pre-v7 `cache_control` spelling survives only in the unused `SYSTEM` export that `__tests__/system-prompt.test.ts` reads, not in the live route path)
 

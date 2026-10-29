@@ -5,6 +5,7 @@ export { SECTION_ICONS };
 export const SECTION_DESTINATION_COUNT = 9;
 const FIRST_SECTION_ORDER = 1;
 const MIN_SECTION_TEXT_LENGTH = 1;
+const MIN_ALIAS_COUNT = 1;
 
 const SectionTextSchema = z
   .string()
@@ -21,7 +22,7 @@ export const SectionSchema = z.object({
   id: SectionTextSchema,
   label: SectionTextSchema,
   srLabel: SectionTextSchema,
-  aliases: z.array(SectionAliasSchema).min(MIN_SECTION_TEXT_LENGTH).readonly(),
+  aliases: z.array(SectionAliasSchema).min(MIN_ALIAS_COUNT).readonly(),
   order: z.number().int().min(FIRST_SECTION_ORDER).max(SECTION_DESTINATION_COUNT),
   icon: z.enum(SECTION_ICONS),
 });
@@ -51,6 +52,7 @@ export const SectionRegistrySchema = z
 
 const DOCK_KEYS = ['home', 'work', 'shell', 'hire', 'menu'] as const;
 const MENU_DOCK_KEY = 'menu';
+const MIN_NAV_ITEMS = 1;
 
 const NavTextSchema = SectionTextSchema;
 
@@ -58,7 +60,7 @@ const NavGroupSchema = z.object({
   id: NavTextSchema,
   title: NavTextSchema,
   dock: z.enum(DOCK_KEYS),
-  sectionIds: z.array(NavTextSchema).min(MIN_SECTION_TEXT_LENGTH).readonly(),
+  sectionIds: z.array(NavTextSchema).min(MIN_NAV_ITEMS).readonly(),
 });
 
 const DockControlSchema = z
@@ -101,8 +103,8 @@ export function createNavigationSchema(sectionIds: readonly string[]) {
   return z
     .object({
       copy: NavigationCopySchema,
-      groups: z.array(NavGroupSchema).min(MIN_SECTION_TEXT_LENGTH).readonly(),
-      dock: z.array(DockControlSchema).min(MIN_SECTION_TEXT_LENGTH).readonly(),
+      groups: z.array(NavGroupSchema).min(MIN_NAV_ITEMS).readonly(),
+      dock: z.array(DockControlSchema).min(MIN_NAV_ITEMS).readonly(),
       siteLinks: z.array(SiteLinkSchema).readonly(),
     })
     .superRefine(({ groups, dock }, ctx) => {
@@ -195,17 +197,19 @@ export const ResponsibilitySchema = z.object({
   highlight: z.boolean().default(false),
 });
 
+export const GUITAR_SIGNAL_BAR_COUNT = 8;
+export const GUITAR_SIGNAL_LABEL_TOKENS = { strength: '{n}', total: '{total}' } as const;
+
 const _signalNodeBase = { name: z.string().min(1), subtitle: z.string().min(1) };
 const _dotsNode = (role: 'INPUT' | 'AMP' | 'OUT') =>
   z.object({
     ..._signalNodeBase,
     role: z.literal(role),
-    strengthDots: z.number().int().min(0).max(8),
+    strengthDots: z.number().int().min(0).max(GUITAR_SIGNAL_BAR_COUNT),
   });
 const _fxNode = z.object({
   ..._signalNodeBase,
   role: z.literal('FX'),
-  blocks: z.array(z.object({ name: z.string().min(1), active: z.boolean() })).min(1),
 });
 export const SignalChainNodeSchema = z.discriminatedUnion('role', [
   _dotsNode('INPUT'),
@@ -215,10 +219,7 @@ export const SignalChainNodeSchema = z.discriminatedUnion('role', [
 ]);
 
 export const InfluenceSchema = z.object({
-  rank: z.number().int().min(1).max(5),
   name: z.string().min(1),
-  strength: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
-  active: z.boolean().optional(),
 });
 
 export const StatCellSchema = z.object({
@@ -230,7 +231,6 @@ export const StatCellSchema = z.object({
 export const GuitarRigSchema = z.object({
   signalChain: z.tuple([_dotsNode('INPUT'), _fxNode, _dotsNode('AMP'), _dotsNode('OUT')]),
   influences: z.array(InfluenceSchema).length(5),
-  nowObsessing: z.string().min(1),
   stats: z.array(StatCellSchema).length(4),
   liveCam: z.object({
     photo: z.string().min(1),
@@ -239,6 +239,31 @@ export const GuitarRigSchema = z.object({
     cameraLabel: z.string().min(1),
   }),
 });
+
+const [guitarInputSchema, , guitarAmpSchema, guitarOutputSchema] =
+  GuitarRigSchema.shape.signalChain.def.items;
+const GuitarPresentationCopySchema = z.object({
+  label: z.string().trim().nonempty(),
+  text: z.string().trim().nonempty(),
+});
+
+export const GuitarPresentationSchema = z.object({
+  signalStrengthLabelTemplate: z
+    .string()
+    .includes(GUITAR_SIGNAL_LABEL_TOKENS.strength)
+    .includes(GUITAR_SIGNAL_LABEL_TOKENS.total),
+  signalChain: z.tuple([guitarInputSchema, guitarAmpSchema, guitarOutputSchema]),
+  influences: GuitarPresentationCopySchema,
+  nowPlaying: GuitarPresentationCopySchema,
+  stats: GuitarRigSchema.shape.stats,
+  photo: z.object({
+    src: z.string().trim().nonempty(),
+    alt: z.string().trim().nonempty(),
+    width: z.number().int().positive(),
+    height: z.number().int().positive(),
+  }),
+});
+export type GuitarPresentation = z.infer<typeof GuitarPresentationSchema>;
 
 export const UnknownItemSchema = z.object({
   claim: z.string().min(1),
@@ -268,6 +293,39 @@ export const CredentialSchema = z.object({
   label: z.string().min(1),
   badge: z.string().min(1),
   evidence: z.string().min(1),
+});
+
+export const CareerCopySchema = z.object({
+  heading: z.string().min(1),
+  headerCommand: z.string().min(1),
+  mobileHeaderCommand: z.string().min(1),
+  prompt: z.string().min(1),
+  command: z.string().min(1),
+  cvLabel: z.string().min(1),
+  cvHref: z.string().startsWith('/'),
+  scrollLabel: z.string().min(1),
+  graph: z.string().min(1),
+  pipe: z.string().min(1),
+});
+
+const CareerTagGroupSchema = z.object({
+  label: z.string().min(1),
+  command: z.string().min(1),
+  prefix: z.string().min(1),
+});
+
+export const CareerCredentialsSchema = z.object({
+  prompt: z.string().min(1),
+  statusMarker: z.string().min(1),
+  certifications: CareerTagGroupSchema,
+  education: CareerTagGroupSchema,
+  community: z.object({
+    label: z.string().min(1),
+    command: z.string().min(1),
+    heading: z.string().min(1),
+    bullets: z.array(z.string().min(1)).min(1),
+    status: z.string().min(1),
+  }),
 });
 
 export const CommunityEventSchema = z.object({
@@ -442,6 +500,48 @@ export const FooterContentSchema = z.object({
 });
 export type FooterContent = z.infer<typeof FooterContentSchema>;
 
+const ErrorHrefSchema = z.string().regex(/^\/(?!\/)[\w/#-]*$/);
+const ErrorLinkSchema = z.object({ label: z.string().min(1), href: ErrorHrefSchema });
+
+export const ErrorsContentSchema = z.object({
+  chrome: z.object({
+    brand: z.string().min(1),
+    brandHref: ErrorHrefSchema,
+    navLabel: z.string().min(1),
+    skipLabel: z.string().min(1),
+    nav: z.array(ErrorLinkSchema).min(1),
+  }),
+  notFound: z.object({
+    metaTitle: z.string().min(1),
+    code: z.literal('404'),
+    panelHeader: z.string().min(1),
+    prompt: z.string().min(1),
+    command: z.string().min(1),
+    output: z.string().min(1),
+    suggestionsLabel: z.string().min(1),
+    suggestionsNavLabel: z.string().min(1),
+    suggestions: z.array(ErrorLinkSchema).min(1),
+    home: ErrorLinkSchema,
+  }),
+  serverError: z.object({
+    code: z.literal('500'),
+    message: z.string().min(1),
+    retryLabel: z.string().min(1),
+    home: ErrorLinkSchema,
+    refLabel: z.string().min(1),
+    copyLabel: z.string().min(1),
+    copyAriaLabel: z.string().min(1),
+    copiedAnnouncement: z.string().min(1),
+  }),
+  noscript: z.object({ text: z.string().min(1) }),
+});
+export type ErrorsContent = z.infer<typeof ErrorsContentSchema>;
+export const ErrorsClientContentSchema = ErrorsContentSchema.pick({
+  chrome: true,
+  serverError: true,
+});
+export type ErrorsClientContent = z.infer<typeof ErrorsClientContentSchema>;
+
 export const DmesgLineSchema = z.object({
   off: z.number(),
   prefix: z.string().min(1),
@@ -506,10 +606,7 @@ export const LocalizedTextSchema = z.object({
 export const LinksProfileSchema = z.object({
   name: z.string().min(1),
   avatar: z.string().min(1),
-  taglines: z.object({
-    pt: z.array(z.string().min(1)).min(1),
-    en: z.array(z.string().min(1)).min(1),
-  }),
+  title: LocalizedTextSchema,
   host: LocalizedTextSchema,
   stack: z.string().min(1),
   status: LocalizedTextSchema,
@@ -576,6 +673,8 @@ export const LinksCopySchema = z.object({
   watch: LocalizedTextSchema,
   copyLink: LocalizedTextSchema,
   copyDone: z.string().min(1),
+  copyFailed: z.string().min(1),
+  opensInNewTab: LocalizedTextSchema,
   newBadge: LocalizedTextSchema,
   langSwitchLabel: LocalizedTextSchema,
   feedUnavailable: LocalizedTextSchema,
@@ -629,3 +728,145 @@ export type LinksContent = z.infer<typeof LinksContentSchema>;
 
 export type Profile = z.infer<typeof ProfileSchema>;
 export type Education = z.infer<typeof EducationSchema>;
+
+const ReadingTextSchema = z.string().min(1);
+const ReadingLinkSchema = z.object({ label: ReadingTextSchema, href: ReadingTextSchema });
+
+export const ReadingViewsSchema = z.object({
+  shared: z.object({
+    skipLabel: ReadingTextSchema,
+    homeLabel: ReadingTextSchema,
+    navLabel: ReadingTextSchema,
+    nav: z.array(ReadingLinkSchema).min(1),
+    hire: z.object({
+      label: ReadingTextSchema,
+      ariaLabel: ReadingTextSchema,
+      href: z.url(),
+    }),
+    printLabel: ReadingTextSchema,
+    newTabRel: ReadingTextSchema,
+    newTabHint: ReadingTextSchema,
+    homeHref: z.string().startsWith('/'),
+    ogImage: z.object({ path: z.string().startsWith('/'), width: z.number(), height: z.number() }),
+  }),
+  cv: z.object({
+    path: z.string().startsWith('/'),
+    title: ReadingTextSchema,
+    description: ReadingTextSchema,
+    summaryLinkLabel: ReadingTextSchema,
+    headings: z.object({
+      summary: ReadingTextSchema,
+      experience: ReadingTextSchema,
+      skills: ReadingTextSchema,
+      certifications: ReadingTextSchema,
+      community: ReadingTextSchema,
+      education: ReadingTextSchema,
+      workAuthorization: ReadingTextSchema,
+      contact: ReadingTextSchema,
+    }),
+    credentialLabels: z.record(z.string(), ReadingTextSchema),
+    proseOverrides: z.record(z.string(), ReadingTextSchema),
+  }),
+  summary: z.object({
+    path: z.string().startsWith('/'),
+    title: ReadingTextSchema,
+    description: ReadingTextSchema,
+    cvLinkLabel: ReadingTextSchema,
+    statsLabel: ReadingTextSchema,
+    experienceLabel: ReadingTextSchema,
+    badge: ReadingTextSchema,
+    projectNames: z.array(ReadingTextSchema).min(1),
+    stack: z.array(ReadingTextSchema).min(1),
+    headings: z.object({
+      projects: ReadingTextSchema,
+      workAuthorization: ReadingTextSchema,
+      stack: ReadingTextSchema,
+      contact: ReadingTextSchema,
+    }),
+  }),
+});
+
+export type ReadingViews = z.infer<typeof ReadingViewsSchema>;
+
+const ReadingRowSchema = z.object({
+  key: ReadingTextSchema,
+  label: ReadingTextSchema,
+  value: ReadingTextSchema,
+});
+
+export const CvDocumentSchema = z.object({
+  name: ReadingTextSchema,
+  role: ReadingTextSchema,
+  location: ReadingTextSchema,
+  links: z
+    .array(z.object({ label: ReadingTextSchema, href: ReadingTextSchema, external: z.boolean() }))
+    .min(1),
+  summary: ReadingTextSchema,
+  experience: z
+    .array(
+      z.object({
+        key: ReadingTextSchema,
+        company: ReadingTextSchema,
+        meta: ReadingTextSchema,
+        bullets: z.array(ReadingTextSchema).min(1),
+      }),
+    )
+    .min(1),
+  skills: z.array(ReadingTextSchema).min(1),
+  certifications: z.array(ReadingRowSchema),
+  community: z.object({
+    heading: ReadingTextSchema,
+    href: z.url().optional(),
+    bullets: z.array(ReadingTextSchema),
+    status: ReadingTextSchema,
+  }),
+  education: z.array(ReadingRowSchema),
+  authorization: z.array(ReadingRowSchema).min(1),
+  languages: ReadingTextSchema,
+  email: ReadingTextSchema,
+});
+
+export const SummaryDocumentSchema = z.object({
+  name: ReadingTextSchema,
+  tagline: ReadingTextSchema,
+  technologyLine: ReadingTextSchema,
+  context: ReadingTextSchema,
+  stats: z.array(z.object({ value: ReadingTextSchema, label: ReadingTextSchema })).min(1),
+  projects: z
+    .array(
+      z.object({
+        name: ReadingTextSchema,
+        label: ReadingTextSchema,
+        value: ReadingTextSchema,
+        description: ReadingTextSchema,
+      }),
+    )
+    .min(1),
+  authorization: z
+    .array(
+      z
+        .object({
+          jurisdiction: ReadingTextSchema,
+          status: ReadingTextSchema,
+          evidence: ReadingTextSchema,
+        })
+        .passthrough(),
+    )
+    .min(1),
+  languages: ReadingTextSchema,
+  email: ReadingTextSchema,
+});
+
+export const CvJsonLdSchema = z.object({
+  '@context': z.literal('https://schema.org'),
+  '@type': z.literal('ProfilePage'),
+  url: z.url(),
+  name: ReadingTextSchema,
+  mainEntity: z.object({
+    '@type': z.literal('Person'),
+    name: ReadingTextSchema,
+    jobTitle: ReadingTextSchema,
+    url: z.url(),
+    sameAs: z.array(z.url()).min(1),
+  }),
+});
