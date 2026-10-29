@@ -8,6 +8,11 @@
 flowchart TD
     layout["app/layout.tsx (RootLayout, RSC)<br/>fonts · JSON-LD · motion bootstrap · Vercel RUM"]
     layout --> home["/ -> app/page.tsx (RSC, SSG+PPR)"]
+    layout --> cv["/cv -> app/cv/page.tsx"]
+    layout --> summary["/summary -> app/summary/page.tsx"]
+    layout --> links["/links · /links/en -> localized link pages"]
+    layout --> errors["error.tsx -> route error recovery"]
+    globalError["global-error.tsx -> replaces RootLayout on root failure"]
     layout --> ds["/design-system -> design-system/layout.tsx"]
     layout --> nf["/* (404) -> app/not-found.tsx"]
     layout --> sm["/sitemap.xml -> app/sitemap.ts"]
@@ -31,7 +36,7 @@ flowchart TD
     layout -.serves.-> api
 ```
 
-There is **one user-facing page** (`/`). Everything else is the design-system docs, metadata routes, and the API cluster. Error UI uses the client `ErrorBoundary` component (not the App Router `error.tsx` convention); there is no `loading.tsx`/`template.tsx`.
+User-facing pages include `/`, `/cv`, `/summary`, `/links` and `/links/en`, alongside design-system docs, metadata routes and APIs. Home sections use `ErrorBoundary`; `app/error.tsx` and `app/global-error.tsx` provide route and root recovery. There is no `loading.tsx` or `template.tsx`.
 
 ## Layout hierarchy (what wraps what)
 
@@ -82,7 +87,7 @@ flowchart LR
 - **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` to defer render cost.
 - **`next/dynamic` lazy JS:** `ContactFormLazy`, `InteractiveShellLazy`, `DawMixerSection`. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy` loads only the session counters and halt/reboot island from `Footer.client`; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
-There is **no `use cache` / `cacheLife` / `cacheTag` / `unstable_cache` / `generateStaticParams`** anywhere - the staticness comes from PPR + the absence of dynamic APIs, not explicit caching.
+The home page uses PPR and static server components. The links feed in `lib/links/feed.ts` uses `use cache` with `cacheLife` to reuse channel data between requests.
 
 ## End-to-end data flow #1 - page render (read path)
 

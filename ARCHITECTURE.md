@@ -619,7 +619,7 @@ securityheaders.com → A+ rating as a meta-flex (Erik claims security-first; th
 ### Pre-push (Husky)
 
 - Branch-name guard: blocks direct pushes to `main` (all changes must go through a PR)
-- `pnpm verify`: full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + harness-size + section-order + doc-drift + gate-health + detect-changes-paths + css-tokens + unit tests
+- `pnpm verify`: full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + harness-size + section-order + doc-drift + detect-changes-paths + css-tokens + unit tests
 
 ### CI (GitHub Actions, per PR)
 

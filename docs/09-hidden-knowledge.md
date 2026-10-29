@@ -4,7 +4,7 @@
 
 ## Conventions you must follow (and the gate that catches you)
 
-- **Client files are `*.client.tsx`.** A `'use client'` file elsewhere is drift (`check:client-naming`). _Exception that exists today:_ `components/client/**` interactive files are `'use client'` but not suffixed `.client.tsx` - see "Surprising behaviors."
+- **Client boundaries are visible in paths.** `check:client-naming` accepts `*.client.tsx`, files under `client/`, and supported Next.js convention filenames.
 - **Content never lives in JSX.** All copy is a `content/*.ts` module validated by Zod at import. If you type user-facing text into a `.tsx`, you're doing it wrong.
 - **No raw hex outside `app/css/theme.css`.** Use `var(--color-*)`. Enforced by `lint:css-tokens`. Complex CSS patterns become named classes in `components.css` `@layer components`; everything else is a Tailwind utility.
 - **Per-keystroke/per-pixel/per-frame updates must not re-render React.** Mutate `textContent`/`style`/`setAttribute` directly, or rAF-coalesce. This is the single most important runtime convention (it's a budget, not a preference).

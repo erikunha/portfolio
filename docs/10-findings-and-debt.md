@@ -12,13 +12,6 @@
 
 ## Findings (ranked by maintainer risk)
 
-### F1 - `*.client.tsx` naming convention is partially unenforced (Low, real today)
-
-Eight interactive files under `components/client/**` (`ContactForm.tsx`, `InteractiveShell.tsx`, `HeroBootAnimation.tsx`, `HeroSystemFailure.tsx`, `RoleTyper.tsx`, `ToTopButton.tsx`, plus the two `*Lazy.tsx` wrappers) carry `'use client'` but are not named `*.client.tsx`, yet the RSC-drift convention claims that naming is the signal. So `check:client-naming` either doesn't scan `components/client/**` or treats the directory as an allowlist.
-The Hero identity line is static text and adds no client naming debt.
-- **Risk:** the "name tells you the boundary" invariant has a blind spot; a reviewer scanning by filename could miss a client component.
-- **Fix options:** (a) rename to `*.client.tsx` (and update imports/tests), or (b) document `components/client/**` as an explicit directory-based exception in `STANDARDS.md` Ch.1 and assert it in the gate. Pick one; right now it's ambiguous.
-
 ### F2 - MCP `ask_erik` shares one global rate-limit bucket (Low–Medium, documented)
 
 `lib/agent/mcp-tools.ts` re-invokes `/api/ask` with a synthetic `Request` that has no IP, so all MCP callers worldwide share the single `'unknown'` `rl:ask` bucket (8/h total).
@@ -34,7 +27,7 @@ Streaming forced a bespoke handler, so the ask route hand-rolls the same gate ch
 ### F4 - Dead-hook class of rot (Mitigated, keep watching)
 
 `css-token-guard.sh` once pointed at two scripts deleted in the Tailwind-v4 migration and silently no-opped for weeks. It and the `gate-health` meta-gate that caught it were both removed on 2026-07-27; the CSS property it aimed at is held by `pnpm lint:css-tokens` in `verify` and CI.
-- **Status:** mitigated by the meta-gate. Keep `gate-health` in `verify` and CI; don't let it be skipped.
+- **Status:** the obsolete hook is absent. `lint:css-tokens` checks CSS in `verify` and CI.
 
 ### F5 - PSI cron is single-shot on Vercel Hobby (Low, accepted)
 
@@ -52,7 +45,6 @@ Pre-PR review is honor-system: nothing records a local finding, so nothing check
 ```mermaid
 flowchart TD
     subgraph low["Low risk / cosmetic"]
-        f1["F1 client-naming blind spot"]
         f4["F4 gate rot (mitigated)"]
         f6["F6 review honor-system residue"]
     end

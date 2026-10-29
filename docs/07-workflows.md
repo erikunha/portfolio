@@ -37,7 +37,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 | Script                 | Enforces                                                                              |
 | ---------------------- | ------------------------------------------------------------------------------------- |
 | `validate-content`     | every `content/*.ts` Zod schema parses (build gate)                                   |
-| `check:client-naming`  | `'use client'` files are `*.client.tsx`                                               |
+| `check:client-naming`  | client suffix, `client/` directory or supported Next.js convention filename           |
 | `check:dep-pinning`    | no `latest`/`*`/tag deps                                                              |
 | `check:harness-size`   | `CLAUDE.md` ≤ 275 lines                                                               |
 | `check:section-order`  | top-level `sec-*` anchors have mobile order rules; declared nested anchors are exempt |
