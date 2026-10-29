@@ -98,11 +98,6 @@ export const PerfReceiptSchema = z.object({
   desktopOnly: z.boolean().optional(),
 });
 
-export const NpmTileSchema = z.object({
-  label: z.string().min(1),
-  path: z.string().min(1),
-});
-
 export const HottestTakeSchema = z.object({
   num: z.string().min(1),
   category: z.string().min(1),
@@ -245,11 +240,6 @@ export const ManPageSchema = z.object({
   description: z.string().min(1),
   options: z.array(z.object({ flag: z.string().min(1), desc: z.string().min(1) })),
   knownBugs: z.array(z.string().min(1)),
-});
-
-export const NowRowSchema = z.object({
-  k: z.string().min(1),
-  v: z.string().min(1),
 });
 
 export const SysStatSchema = z.object({
@@ -599,7 +589,6 @@ export const LinksContentSchema = z.object({
 export type Social = z.infer<typeof SocialSchema>;
 export type Project = z.infer<typeof ProjectSchema>;
 export type PerfReceipt = z.infer<typeof PerfReceiptSchema>;
-export type NpmTile = z.infer<typeof NpmTileSchema>;
 export type HottestTake = z.infer<typeof HottestTakeSchema>;
 export type Responsibility = z.infer<typeof ResponsibilitySchema>;
 export type GuitarRig = z.infer<typeof GuitarRigSchema>;
@@ -609,7 +598,6 @@ export type VisaRow = z.infer<typeof VisaRowSchema>;
 export type Credential = z.infer<typeof CredentialSchema>;
 export type CommunityEvent = z.infer<typeof CommunityEventSchema>;
 export type ManPage = z.infer<typeof ManPageSchema>;
-export type NowRow = z.infer<typeof NowRowSchema>;
 export type SysStat = z.infer<typeof SysStatSchema>;
 export type GitCommit = z.infer<typeof GitCommitSchema>;
 export type ShellResponse = z.infer<typeof ShellResponseSchema>;

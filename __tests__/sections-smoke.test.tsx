@@ -65,6 +65,35 @@ describe('Home page', () => {
     );
     expect(doc.querySelectorAll('h1')).toHaveLength(1);
   });
+
+  it('resolves every in-page topbar link to a rendered section id', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: false,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+    const { default: Home } = await import('@/app/page');
+    const { DesktopTopbar } = await import(
+      '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
+    );
+    const page = new DOMParser().parseFromString(
+      renderToStaticMarkup(createElement(Home)),
+      'text/html',
+    );
+    const topbar = new DOMParser().parseFromString(
+      renderToStaticMarkup(createElement(DesktopTopbar)),
+      'text/html',
+    );
+    const targets = [...topbar.querySelectorAll('a[href^="/#"]')].map((link) =>
+      (link.getAttribute('href') ?? '').slice('/#'.length),
+    );
+    expect(targets.length).toBeGreaterThan(0);
+    const dangling = targets.filter((id) => page.getElementById(id) === null);
+    expect(
+      dangling,
+      'a topbar link points at an id no section renders; re-point it or restore the section',
+    ).toEqual([]);
+  });
 });
 
 describe('ContactSection', () => {

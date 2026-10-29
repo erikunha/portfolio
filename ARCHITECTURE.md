@@ -30,7 +30,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 - Static composition with Hero and About followed by shell, AI evaluation, projects, performance receipts, Career, profile manual, live performance, system health, work authorization, opinions, guitar rig, DAW mixer, open questions, contact and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels; Career owns certification, education and community tag groups.
 - Hero: Matrix dialog loop + boot sequence (typewriter)
-- Static server-rendered Hero identity line and About Senior status; IntersectionObserver gates MatrixRain; the footer is server-rendered, with client islands only for session counters and halt/reboot (no scroll-reveal typewriter exists)
+- Hero title line mounts the RoleTyper island over server-rendered text; About Senior status is static; IntersectionObserver gates MatrixRain; the footer is server-rendered, with client islands only for session counters and halt/reboot (no scroll-reveal typewriter exists)
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
 - Contact form: durable submission, explicit delivered or queued feedback, daily bounded retry
 - Live Lighthouse score (PSI API, cached daily)
@@ -194,6 +194,7 @@ components/client/                    # co-located islands — ONLY interactivit
 components/client/InteractiveShell/   # streaming shell island
 components/client/ContactForm/        # contact form island
 components/client/HeroBootAnimation/  # boot typewriter island
+components/client/RoleTyper/          # hero role typewriter island
 components/client/ToTopButton/        # motion-aware scroll-to-top
 components/AppShell/                   # window chrome / module-open dispatch
 components/ErrorBoundary/              # client error boundary
@@ -202,7 +203,8 @@ components/HeroStats/                  # hero stat tiles
 components/Icons/                      # inline SVG icon set
 components/responsive/                 # viewport-variant helpers
 
-content/about.ts                      # About panels and static Senior status
+content/about.ts                      # About panels, Now rows and static Senior status
+content/nav.ts                        # zod-free topbar in-page link
 content/projects.ts                   # project tiles
 content/perf-receipts.ts              # perf tiles
 content/hottest-takes.ts              # defended opinions
@@ -211,7 +213,6 @@ content/guitar-rig.ts                 # gear sheet
 content/unknowns.ts                   # unknowns items
 content/visa.ts                       # jurisdiction table
 content/community.ts                  # community/* tags and event references inside Career
-content/now.ts                        # Now panel rows inside About
 content/credentials.ts                # cert/* tags and Career tag-group copy
 content/education.ts                  # edu/* tags inside Career
 content/man-page.ts                   # MAN ERIK content
