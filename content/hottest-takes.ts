@@ -55,8 +55,8 @@ export const designSystemTake = hottestTakes.find(
 );
 
 export const designSystemOpinionConfig = z
-  .object({ title: z.string().min(1) })
-  .parse({ title: 'Opinion 07: design systems' });
+  .object({ topic: z.string().min(1) })
+  .parse({ topic: 'design systems' });
 
 export const hottestTakesConfig = z
   .object({
