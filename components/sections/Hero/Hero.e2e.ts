@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { heroAuthorization, heroContent } from '@/content/hero';
 import { profile } from '@/content/profile';
 
@@ -55,3 +55,42 @@ for (const viewport of viewports) {
     });
   });
 }
+
+const MOBILE_STACK = { width: 390, height: 844 };
+const DESKTOP_ROW = { width: 1280, height: 720 };
+const HERO_GROUPS = ['[data-testid="hero-stats"]', '[data-testid="hero-ctas"]'];
+
+async function childBoxes(page: Page, group: string) {
+  const children = page.locator(`.hero-frame:visible ${group} > :visible`);
+  const count = await children.count();
+  expect(count).toBeGreaterThan(1);
+  const boxes = [];
+  for (let index = 0; index < count; index++) {
+    const box = await children.nth(index).boundingBox();
+    expect(box).not.toBeNull();
+    if (box) boxes.push(box);
+  }
+  return boxes;
+}
+
+test.describe('Hero groups reflow by viewport', () => {
+  test('stack in one column below 768', async ({ page }) => {
+    await page.setViewportSize(MOBILE_STACK);
+    await page.goto('/');
+    for (const group of HERO_GROUPS) {
+      const boxes = await childBoxes(page, group);
+      const lefts = new Set(boxes.map((box) => Math.round(box.x)));
+      expect(lefts.size, `${group} children share one left edge`).toBe(1);
+    }
+  });
+
+  test('stay side by side at 1280', async ({ page }) => {
+    await page.setViewportSize(DESKTOP_ROW);
+    await page.goto('/');
+    for (const group of HERO_GROUPS) {
+      const boxes = await childBoxes(page, group);
+      const lefts = new Set(boxes.map((box) => Math.round(box.x)));
+      expect(lefts.size, `${group} children sit in more than one column`).toBeGreaterThan(1);
+    }
+  });
+});

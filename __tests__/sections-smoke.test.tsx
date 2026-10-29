@@ -45,6 +45,12 @@ describe('About', () => {
     expect(container.querySelector('.ab-role')?.getAttribute('aria-hidden')).toBe('true');
     expect(container.querySelectorAll('[role="status"]')).toHaveLength(1);
   });
+
+  it('server-renders the role pill from content, without brackets', async () => {
+    const { ROLES } = await import('@/components/client/RoleTyper/RoleTyper');
+    const { aboutContent } = await import('@/content/about');
+    expect(ROLES[0]).toBe(aboutContent.whoami.role.replace(/^\[|\]$/g, ''));
+  });
 });
 
 describe('Home page', () => {

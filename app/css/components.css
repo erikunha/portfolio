@@ -2499,6 +2499,24 @@
   }
 
   @media (max-width: 767px) {
+    .hero-stats,
+    .hero-bio .hero-stats {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .hero-stats > div:not(:last-child),
+    .hero-bio .hero-stats > div:not(:last-child) {
+      border-right: 0;
+      border-bottom: var(--border-width) solid var(--color-primary-subtle);
+    }
+    .hero-actions {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .hero-actions > a:first-child {
+      grid-column: auto;
+    }
+  }
+
+  @media (max-width: 767px) {
     .about-section {
       border: var(--border-width) solid var(--color-primary-subtle);
       margin-bottom: calc(var(--spacing-4) + var(--spacing-1) / 2);

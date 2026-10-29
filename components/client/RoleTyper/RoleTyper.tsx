@@ -18,7 +18,7 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
     if (!el) return;
     const node: HTMLSpanElement = el;
 
-    let cancelled = false;
+    let cancelled = !readMotion();
     let timerId: ReturnType<typeof setTimeout> | undefined;
     let roleIdx = 0;
     let charIdx = 0;
@@ -54,7 +54,7 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
       }
     }
 
-    if (readMotion()) tick();
+    if (!cancelled) tick();
 
     const onMotionChange = (e: Event) => {
       const detail = (e as CustomEvent).detail as unknown;
