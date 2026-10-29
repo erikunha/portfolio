@@ -69,11 +69,11 @@ flowchart LR
 
 ## CI/CD
 
-`.github/workflows/ci.yml` (the authoritative gate). A `detect-changes` job emits `app`/`ai` booleans so heavy jobs skip on docs-only PRs (GitHub treats skipped required checks as satisfied). Matrix jobs skipped at job level report ONE unsuffixed check, so matrix-named required contexts (`e2e-functional (chromium)` etc.) hang forever on path-skipped PRs; required checks therefore point at always-reporting contexts and the conditional jobs are enforced through the `ci-gate` fan-in below.
+`.github/workflows/ci.yml` (the authoritative gate). A `detect-changes` job emits `app`/`ai`/`ui` booleans so heavy jobs skip on docs-only PRs (GitHub treats skipped required checks as satisfied). Matrix jobs skipped at job level report ONE unsuffixed check, so matrix-named required contexts (`e2e-functional (chromium)` etc.) hang forever on path-skipped PRs; required checks therefore point at always-reporting contexts and the conditional jobs are enforced through the `ci-gate` fan-in below.
 
 ```mermaid
 flowchart TD
-    pr["PR / push main"] --> dc["detect-changes (app?, ai?)"]
+    pr["PR / push main"] --> dc["detect-changes (app?, ai?, ui?)"]
     dc --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, harness, doc-drift, contrast, PR-comment gate"]
     dc --> tc["typecheck"]
     dc --> t["test (Vitest + coverage)"]
@@ -83,7 +83,7 @@ flowchart TD
     t --> b
     b --> perf["performance: LHCI desktop+mobile + axe (if app)"]
     b --> e2e["e2e-functional (5-project matrix, if app)"]
-    b --> vis["e2e-visual-chromium (Argos, if app)"]
+    b --> vis["e2e-visual-chromium (Argos, if ui)"]
     b --> ev["ai-eval (if ai)"]
     dc --> gate
     qf --> gate
