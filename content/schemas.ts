@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const SECTION_DESTINATION_COUNT = 9;
 const FIRST_SECTION_ORDER = 1;
 const MIN_SECTION_TEXT_LENGTH = 1;
+const MIN_ALIAS_COUNT = 1;
 
 export const SECTION_ICONS = {
   home: 'home',
@@ -31,7 +32,7 @@ export const SectionSchema = z.object({
   id: SectionTextSchema,
   label: SectionTextSchema,
   srLabel: SectionTextSchema,
-  aliases: z.array(SectionAliasSchema).min(MIN_SECTION_TEXT_LENGTH).readonly(),
+  aliases: z.array(SectionAliasSchema).min(MIN_ALIAS_COUNT).readonly(),
   order: z.number().int().min(FIRST_SECTION_ORDER).max(SECTION_DESTINATION_COUNT),
   icon: z.enum(SECTION_ICONS),
 });
