@@ -5,6 +5,8 @@ import {
   GuitarRigSchema,
 } from './schemas';
 
+export const GUITAR_MODULE_HEADER = 'CAT ~/.GUITAR_RIG';
+
 export const guitarRig: GuitarRig = GuitarRigSchema.parse({
   signalChain: [
     {

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { Fragment } from 'react';
-import { guitarPresentation, guitarRig } from '@/content/guitar-rig';
+import { GUITAR_MODULE_HEADER, guitarPresentation, guitarRig } from '@/content/guitar-rig';
 import { GUITAR_SIGNAL_BAR_COUNT, GUITAR_SIGNAL_LABEL_TOKENS } from '@/content/schemas';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { IconGuitar } from '../../Icons';
@@ -11,7 +11,8 @@ const SIGNAL_BARS = Array.from({ length: GUITAR_SIGNAL_BAR_COUNT }, (_, position
 }));
 const FIRST_NODE_INDEX = 0;
 const SECTION_ID = 'sec-guitar';
-const PHOTO_SIZES = '(max-width: 699px) 100vw, 320px';
+const STACKED_MAX_WIDTH_PX = 767;
+const PHOTO_SIZES = `(max-width: ${STACKED_MAX_WIDTH_PX}px) 100vw, 320px`;
 
 export function GuitarContent() {
   const { signalChain, signalStrengthLabelTemplate, influences, nowPlaying, stats, photo } =
@@ -94,7 +95,8 @@ export function GuitarSection({ defer }: { defer?: boolean } = {}) {
   return (
     <Module
       id={SECTION_ID}
-      header={SECTION_LABELS[SECTION_ID]}
+      header={GUITAR_MODULE_HEADER}
+      srLabel={SECTION_LABELS[SECTION_ID]}
       icon={<IconGuitar />}
       defer={defer}
       variant="green"

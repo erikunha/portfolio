@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { guitarPresentation, guitarRig } from '@/content/guitar-rig';
+import { GUITAR_MODULE_HEADER, guitarPresentation, guitarRig } from '@/content/guitar-rig';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { GuitarContent, GuitarSection } from './GuitarSection';
 
@@ -93,5 +93,18 @@ describe('GuitarSection presentation', () => {
     expect(Array.from(doc.querySelectorAll('h3'), (node) => node.textContent)).toEqual(
       guitarPresentation.signalChain.map((node) => node.name),
     );
+  });
+
+  it('shows the terminal module header visually and the section label to screen readers', () => {
+    const html = renderToStaticMarkup(createElement(GuitarSection));
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const heading = doc.querySelector('h2');
+    expect(heading?.textContent).toContain(GUITAR_MODULE_HEADER);
+    expect(heading?.querySelector('.sr-only')?.textContent).toBe(SECTION_LABELS['sec-guitar']);
+  });
+
+  it('sizes the photo for a full-width source up to 767px', async () => {
+    const doc = await renderContent();
+    expect(doc.querySelector('img')?.getAttribute('sizes')).toBe('(max-width: 767px) 100vw, 320px');
   });
 });
