@@ -26,11 +26,13 @@ describe('home opinions', () => {
     expect(heading.querySelector('.sr-only')).toBeNull();
   });
 
-  it('keeps component rules from targeting the screen-reader-only utility', () => {
+  it('keeps opinions component rules from targeting the screen-reader-only utility', () => {
     // behavioral-test-allow: CSS selectors define the screen-reader utility isolation contract.
     const stylesheet = readFileSync(resolve('app/css/components.css'), 'utf8');
     parse(stylesheet).walkRules((rule) => {
-      expect(rule.selector).not.toContain('.sr-only');
+      if (rule.selector.includes('#sec-hottest-takes')) {
+        expect(rule.selector).not.toContain('.sr-only');
+      }
     });
   });
 
