@@ -33,9 +33,9 @@ export function ProjectsContent() {
           <p className="project-desc">{project.description}</p>
           <dl className="project-stats">
             {project.stats.map((stat) => (
-              <div key={stat.label}>
+              <div key={stat.label} className="max-md:flex-col max-md:gap-0">
                 <dt>{stat.label}:</dt>
-                <dd>{stat.value}</dd>
+                <dd className="max-md:text-left">{stat.value}</dd>
               </div>
             ))}
           </dl>
