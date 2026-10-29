@@ -23,20 +23,28 @@ function table(headers: string[], rows: string[][]) {
 }
 
 describe('LabelledTable', () => {
-  it('labels each body cell with its column header', () => {
+  it('renders each body cell label as real text inside the cell', () => {
     const html = renderToStaticMarkup(table(['Prop', 'Type'], [['size', 'string']]));
-    expect(html).toContain('<td data-label="Prop">size</td>');
-    expect(html).toContain('<td data-label="Type">string</td>');
+    expect(html).toMatch(/<td role="cell"><span[^>]*md:hidden[^>]*>Prop<\/span>size<\/td>/);
+    expect(html).toMatch(/<td role="cell"><span[^>]*md:hidden[^>]*>Type<\/span>string<\/td>/);
+  });
+
+  it('re-applies table roles that display:block strips', () => {
+    const html = renderToStaticMarkup(table(['Prop'], [['a']]));
+    expect(html).toContain('role="table"');
+    expect(html).toContain('<thead role="rowgroup">');
+    expect(html).toContain('<tbody role="rowgroup">');
+    expect(html.match(/<tr role="row">/g)).toHaveLength(2);
+    expect(html).toContain('<th role="columnheader">Prop</th>');
   });
 
   it('keeps the header row and marks the table', () => {
     const html = renderToStaticMarkup(table(['Prop'], [['a']]));
-    expect(html).toContain('<th>Prop</th>');
     expect(html).toContain('data-labelled-table');
   });
 
   it('leaves cells beyond the header count unlabelled', () => {
     const html = renderToStaticMarkup(table(['Prop'], [['a', 'b']]));
-    expect(html).toContain('<td>b</td>');
+    expect(html).toContain('<td role="cell">b</td>');
   });
 });

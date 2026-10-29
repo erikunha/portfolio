@@ -193,10 +193,15 @@ test('props table becomes labelled rows below 768 without sideways scroll', asyn
   expect(overflow.table).toBeLessThanOrEqual(0);
   expect(overflow.parent).toBeLessThanOrEqual(0);
   await expect(table.locator('thead')).toBeHidden();
-  const firstCell = table.locator('tbody tr').first().locator('td').first();
-  await expect(firstCell).toHaveAttribute('data-label', 'Prop');
-  const label = await firstCell.evaluate((node) => getComputedStyle(node, '::before').content);
-  expect(label).toBe('"Prop"');
+  const bodyCells = table.locator('tbody td');
+  const cellCount = await bodyCells.count();
+  await expect(table.getByRole('cell')).toHaveCount(cellCount);
+  const labels = ['Prop', 'Type', 'Default', 'Required'];
+  const firstRow = table.locator('tbody tr').first().getByRole('cell');
+  for (const [index, label] of labels.entries()) {
+    await expect(firstRow.nth(index)).toContainText(label);
+    await expect(firstRow.nth(index).locator('span').first()).toBeVisible();
+  }
 });
 
 test('props table keeps its columns at 1280', async ({ page }) => {

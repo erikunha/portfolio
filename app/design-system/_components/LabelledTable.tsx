@@ -36,6 +36,17 @@ function headerLabels(children: ReactNode): string[] {
     .map((cell) => textOf(cell.props.children));
 }
 
+const LABEL_CLASS = 'block text-xs tracking-wider text-primary-500 md:hidden';
+
+function withRole(node: ReactNode, tag: string, role: string, children?: ReactNode): ReactNode {
+  if (!isTag(node, tag)) return node;
+  return cloneElement(
+    node as ReactElement<Record<string, unknown>>,
+    { role },
+    ...(children === undefined ? [] : [children]),
+  );
+}
+
 function labelRow(row: ReactNode, labels: string[]): ReactNode {
   if (!isTag(row, ROW_TAG)) return row;
   let column = 0;
@@ -43,25 +54,42 @@ function labelRow(row: ReactNode, labels: string[]): ReactNode {
     if (!isTag(cell, CELL_TAG)) return cell;
     const label = labels[column];
     column += 1;
-    return label
-      ? cloneElement(cell as ReactElement<Record<string, unknown>>, { 'data-label': label })
-      : cell;
+    return cloneElement(
+      cell as ReactElement<Record<string, unknown>>,
+      { role: 'cell' },
+      label ? <span className={LABEL_CLASS}>{label}</span> : null,
+      cell.props.children,
+    );
   });
-  return cloneElement(row, undefined, cells);
+  return cloneElement(row, { role: 'row' } as Record<string, unknown>, cells);
+}
+
+function headSection(section: ReactNode): ReactNode {
+  if (!isTag(section, HEAD_TAG)) return section;
+  const rows = Children.map(section.props.children, (row) => {
+    if (!isTag(row, ROW_TAG)) return row;
+    const cells = Children.map(row.props.children, (cell) =>
+      withRole(cell, HEADER_CELL_TAG, 'columnheader'),
+    );
+    return cloneElement(row, { role: 'row' } as Record<string, unknown>, cells);
+  });
+  return cloneElement(section, { role: 'rowgroup' } as Record<string, unknown>, rows);
 }
 
 export function LabelledTable({ children, ...props }: ComponentPropsWithoutRef<'table'>) {
   const labels = headerLabels(children);
   const labelled = Children.map(children, (section) => {
+    if (isTag(section, HEAD_TAG)) return headSection(section);
     if (!isTag(section, BODY_TAG)) return section;
     return cloneElement(
       section,
-      undefined,
+      { role: 'rowgroup' } as Record<string, unknown>,
       Children.map(section.props.children, (row) => labelRow(row, labels)),
     );
   });
   return (
-    <table data-labelled-table="" {...props}>
+    // biome-ignore lint/a11y/noRedundantRoles: display:block on the mobile layout strips implicit table semantics; the role restores them
+    <table data-labelled-table="" role="table" {...props}>
       {labelled}
     </table>
   );
