@@ -55,4 +55,17 @@ test.describe('projects section at 1280px', () => {
     if (!label || !value) throw new Error('fact row has no layout box');
     expect(value.x).toBeGreaterThan(label.x + label.width - EDGE_TOLERANCE_PX);
   });
+
+  test('live-perf device panels sit side by side', async ({ page }) => {
+    await page.setViewportSize(DESKTOP);
+    await page.goto('/');
+    const panels = page.locator(PERF_PANEL);
+    await panels.first().scrollIntoViewIfNeeded();
+    expect(await panels.count()).toBeGreaterThan(1);
+    const first = await panels.nth(0).boundingBox();
+    const second = await panels.nth(1).boundingBox();
+    if (!first || !second) throw new Error('perf panel has no layout box');
+    expect(second.x).toBeGreaterThan(first.x + first.width - EDGE_TOLERANCE_PX);
+    expect(Math.abs(second.y - first.y)).toBeLessThanOrEqual(EDGE_TOLERANCE_PX);
+  });
 });

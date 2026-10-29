@@ -390,11 +390,9 @@ describe('terminal redesign canonical facts', () => {
     expect(JSON.stringify(raylu)).not.toMatch(/Next(?:\.js)? 15|React 19/i);
     const service = projects.find((project) => project.name === 'SERVICE_OPS_CONSOLE');
     expect(service?.company).toBe('Canon Medical Systems');
-    for (const description of [service?.description]) {
-      expect(description).toContain('service orders');
-      expect(description).toContain('specialist schedules');
-      expect(description).toContain('field visits');
-    }
+    expect(service?.description).toContain('service orders');
+    expect(service?.description).toContain('specialist schedules');
+    expect(service?.description).toContain('field visits');
     for (const text of [
       JSON.stringify(projects),
       SYSTEM_TEXT,
