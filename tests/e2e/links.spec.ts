@@ -144,7 +144,7 @@ test.describe('/links link-in-bio', () => {
     );
   });
 
-  test('lays the social pills out in two columns from 360px and three from 900px', async ({
+  test('lays the social pills out in one column on mobile, two from 768px and three from 900px', async ({
     page,
   }) => {
     const columns = () =>
@@ -154,6 +154,9 @@ test.describe('/links link-in-bio', () => {
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/links');
+    expect(await columns()).toBe(1);
+
+    await page.setViewportSize({ width: 800, height: 800 });
     expect(await columns()).toBe(2);
 
     await page.setViewportSize({ width: 1000, height: 800 });
