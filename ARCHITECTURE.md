@@ -28,7 +28,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Functional
 
-- Static composition with Hero and About followed by shell, AI evaluation, projects with attached performance receipts, Career, profile manual, system health, opinions with nested learning and specialization lists, guitar rig, DAW mixer, contact with work authorization and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels; Career owns certification, education and community tag groups.
+- Static composition with Hero and About followed by shell, AI evaluation, projects with attached performance receipts, Career, profile manual, system health, opinions with nested learning and specialization lists, guitar rig, DAW mixer, contact with work authorization and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code expose named keyboard scroll regions inside About; Career owns certification, education and community tag groups.
 - Opinions renders four ordered home takes with nested learning and specialization lists. The design-system opinion renders at `/design-system#opinion-07`; `TAKE_PLACEMENT` separates home and documentation content. Seven below-fold modules use content-visibility deferral.
 - Hero: Matrix dialog loop + boot sequence (typewriter)
 - About "Open to [role] roles" mounts RoleTyper over server-rendered text; the Hero title is static. Module headers use CSS scroll-driven typing, with static text for unsupported browsers and reduced motion. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`), then IntersectionObserver gates its animation. The footer is server-rendered, with client islands only for session counters and halt/reboot.

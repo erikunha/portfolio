@@ -34,6 +34,7 @@ flowchart TD
     sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper · TaglineTyper (/links)"]
     eb --> hero["Hero (RSC with boot and system-failure islands, owns its section)"]
     eb --> about["About (RSC with RoleTyper island, owns its section)"]
+    about --> scroll["Responsibilities + retry code: named keyboard scroll regions"]
     shell --> fl["ErrorBoundary-wrapped Footer (RSC): cards, sitemap, shutdown log"]
     fl --> fi["FooterLazy -> Footer.client: session counters + halt/reboot island"]
     fl --> fc["CopyButton: netstat clipboard control"]

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { aboutContent as c, responsibilitiesLegend } from '@/content/about';
 import { responsibilities } from '@/content/responsibilities';
+import { SCROLL_REGION_LABELS } from '@/content/section-labels';
 import { RoleTyper } from '../../client/RoleTyper';
 import { IconReadme } from '../../Icons';
 
@@ -88,7 +89,12 @@ export function About() {
               </dl>
             </Panel>
             <Panel title={c.responsibilities.title} className="ab-resp">
-              <div className="ab-body">
+              <section
+                className="ab-body overflow-x-auto"
+                aria-label={SCROLL_REGION_LABELS['sec-responsibilities']}
+                // biome-ignore lint/a11y/noNoninteractiveTabindex: allow keyboard scrolling of responsibilities
+                tabIndex={0}
+              >
                 <p className="ab-cmd">{c.responsibilities.command}</p>
                 <pre data-no-copy="true">
                   {responsibilities.map((row) => (
@@ -110,7 +116,7 @@ export function About() {
                     </span>
                   ))}
                 </pre>
-              </div>
+              </section>
             </Panel>
           </div>
           <div className="about-col">
@@ -145,8 +151,12 @@ export function About() {
                 </a>
               }
             >
-              {/* biome-ignore lint/a11y/noNoninteractiveTabindex: the overflowing code region needs keyboard scrolling */}
-              <section className="ab-code-scroll" aria-label={c.code.label} tabIndex={0}>
+              <section
+                className="ab-code-scroll"
+                aria-label={c.code.label}
+                // biome-ignore lint/a11y/noNoninteractiveTabindex: the overflowing code region needs keyboard scrolling
+                tabIndex={0}
+              >
                 <pre className="ab-body">
                   {c.code.tokens.map((token) => (
                     <span key={token.id} className={token.className}>
