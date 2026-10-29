@@ -62,14 +62,6 @@
     .ds-prose table[data-labelled-table] td:last-child {
       border-bottom: 0;
     }
-
-    .ds-prose table[data-labelled-table] td[data-label]::before {
-      content: attr(data-label);
-      display: block;
-      color: var(--color-primary-500);
-      font-size: var(--text-xs);
-      letter-spacing: 0.05em;
-    }
   }
 
   .ds-prose pre {
