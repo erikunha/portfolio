@@ -146,15 +146,15 @@ Naming convention: every client file ends in `.client.tsx`. The default is serve
 
 ### Partial Prerendering (PPR)
 
-Two sections (ManPage, DawMixer) select desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, their Suspense fallbacks enter the static shell and the selected variants stream per request.
+Only ManPage selects desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, its Suspense fallback enters the static shell and the selected variant streams per request. Contact renders its single CSS-responsive work-authorization table synchronously through `VisaContent`.
 
 Projects renders one static RSC tree at every viewport. Its nine cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
 
 Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. ASK evaluation data and desktop/mobile PSI scores stream through three independent Suspense boundaries. `content/measured.ts` supplies labels, sources, units and timestamp formatting. The data adapters remain `lib/ask-metrics.ts` and `lib/lighthouse-scores.ts`. The nested `sec-ai-metrics` and `sec-live-perf` anchors preserve existing links.
 
-`DawMixerSection` uses `fallback={null}` instead of its desktop component. Its desktop variant is a `next/dynamic` lazy-loaded client component, so it cannot serve as a static Suspense fallback (it is itself dynamically loaded). `fallback={null}` renders only the section shell.
-
 `GuitarSection` renders one responsive RSC presentation across viewports. CSS adjusts its layout without UA detection, a variant swap or a section Suspense fallback.
+
+`DawMixerSection` renders one synchronous RSC layout at every width, without a UA branch or Suspense boundary. Its fader, knob, R/M/S, meter and scroll islands hydrate on phones too.
 
 Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
 Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one static section.
