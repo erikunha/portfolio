@@ -38,17 +38,62 @@ test.describe('scroll typing', () => {
     // timeline resolves, far enough that the header is still below the fold.
     await header.evaluate((el) => {
       const top = el.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo(0, top - window.innerHeight - 100);
+      window.scrollTo({ top: top - window.innerHeight - 100, behavior: 'instant' });
     });
     await header.evaluate(() => new Promise(requestAnimationFrame));
 
     const startClip = await header.evaluate((el) => getComputedStyle(el).clipPath);
     expect(startClip).toContain('100%');
 
-    await header.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    await header.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
     await header.evaluate(() => new Promise(requestAnimationFrame));
 
     const endClip = await header.evaluate((el) => getComputedStyle(el).clipPath);
     expect(endClip).toMatch(/inset\(0(px|%) 0(px|%) 0(px|%) 0(px|%)\)/);
+  });
+
+  test('the caret parks at the end of the typed header', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto('/');
+    await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
+
+    const supported = await page.evaluate(() => CSS.supports('animation-timeline: view()'));
+    test.skip(!supported, 'engine lacks animation-timeline: view()');
+
+    const header = page.locator(BELOW_FOLD_HEADER);
+    await header.evaluate((el) => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: top - window.innerHeight - 100, behavior: 'instant' });
+    });
+    await header.evaluate(() => new Promise(requestAnimationFrame));
+    await header.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await header.evaluate(() => new Promise(requestAnimationFrame));
+
+    const delta = await header.evaluate((el) => {
+      const host = el.closest('.module-scroll-type');
+      if (!host) throw new Error('missing .module-scroll-type host');
+      const textRight = el.getBoundingClientRect().right;
+      const caretLeft =
+        host.getBoundingClientRect().left + parseFloat(getComputedStyle(host, '::after').left);
+      return Math.abs(caretLeft - textRight);
+    });
+
+    expect(delta).toBeLessThan(1);
+  });
+
+  test('the MOTION toggle disables the typing animation', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto('/');
+    await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
+
+    const header = page.locator(BELOW_FOLD_HEADER);
+    await header.waitFor({ state: 'attached' });
+    await page.evaluate(() => {
+      document.body.dataset.motion = 'reduce';
+    });
+    await header.scrollIntoViewIfNeeded();
+
+    const clipPath = await header.evaluate((el) => getComputedStyle(el).clipPath);
+    expect(clipPath).toBe('none');
   });
 });
