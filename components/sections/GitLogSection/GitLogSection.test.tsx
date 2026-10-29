@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { gitLog } from '@/content/git-log';
+import { READING_PATHS } from '@/content/reading-views';
 import { GitLogContent, GitLogSection } from './GitLogSection';
 
 vi.mock('next/headers', () => ({
@@ -44,7 +45,7 @@ describe('career git log', () => {
     expect(career?.textContent).toContain("git tag --list 'community/*'");
     const action = career?.querySelector('a.career-cv');
     expect(action?.textContent).toBe('VIEW_CV');
-    expect(action?.getAttribute('href')).toBe('/erik-cunha-cv.pdf');
+    expect(action?.getAttribute('href')).toBe(READING_PATHS.cv);
     expect(host.querySelectorAll('#sec-credentials')).toHaveLength(1);
   });
 });

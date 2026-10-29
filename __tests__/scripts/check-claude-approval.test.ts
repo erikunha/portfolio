@@ -58,6 +58,12 @@ describe('parseClaudeVerdict', () => {
     expect(parseClaudeVerdict(body)).toBe('request-changes');
   });
 
+  it('ignores verdict words in prose between two bold spans', () => {
+    const body =
+      '**Claude finished the task in 5m**\n\nI traced the reject-then-refund path.\n\n**Verdict: Approve.**';
+    expect(parseClaudeVerdict(body)).toBe('approve');
+  });
+
   it('returns none for an in-progress comment with no verdict yet', () => {
     expect(parseClaudeVerdict('**Claude is working…**\n- [ ] Post overview')).toBe('none');
   });

@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import { dmesgLines } from './dmesg';
+import { errorsContent } from './errors';
 import {
   DmesgLineSchema,
+  ErrorsContentSchema,
   ShellCommandsSchema,
   ShellUiSchema,
   TerminalChromeSchema,
@@ -15,3 +17,4 @@ ShellCommandsSchema.parse(SHELL_RESPONSES);
 ShellUiSchema.parse(shellUi);
 TerminalChromeSchema.parse(shellChrome);
 TerminalChromeSchema.parse(contactChrome);
+ErrorsContentSchema.parse(errorsContent);
