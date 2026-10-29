@@ -14,6 +14,21 @@ class FakeObserver {
   disconnect = vi.fn();
 }
 
+class FakeResizeObserver {
+  static instances: FakeResizeObserver[] = [];
+  observed: Element[] = [];
+  disconnected = false;
+  constructor(readonly callback: ResizeObserverCallback) {
+    FakeResizeObserver.instances.push(this);
+  }
+  observe = (element: Element) => {
+    this.observed.push(element);
+  };
+  disconnect = () => {
+    this.disconnected = true;
+  };
+}
+
 const PAGE_HEIGHT = 5000;
 const VIEWPORT_HEIGHT = 1000;
 
@@ -43,7 +58,9 @@ function mount() {
 describe('PositionMeter', () => {
   beforeEach(() => {
     notify = undefined;
+    FakeResizeObserver.instances = [];
     vi.stubGlobal('IntersectionObserver', FakeObserver);
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver);
     Object.defineProperty(document.documentElement, 'scrollHeight', {
       value: PAGE_HEIGHT,
       configurable: true,
@@ -120,6 +137,41 @@ describe('PositionMeter', () => {
     const label = screen.getByText('05/9');
     expect(label.closest('[aria-live], [role="status"], [role="alert"]')).toBeNull();
     expect(container.querySelector('[aria-live], [role="status"], [role="alert"]')).toBeNull();
+  });
+
+  it('recomputes when the document height changes without a scroll or resize', async () => {
+    mount();
+    const bar = screen.getByRole('progressbar');
+    scrollTo(1000);
+    await frame();
+    expect(bar.getAttribute('aria-valuenow')).toBe('25');
+    const watcher = FakeResizeObserver.instances[0];
+    expect(watcher?.observed).toEqual([document.body]);
+    Object.defineProperty(document.documentElement, 'scrollHeight', {
+      value: 2000,
+      configurable: true,
+    });
+    act(() => watcher?.callback([], watcher as unknown as ResizeObserver));
+    await frame();
+    expect(bar.getAttribute('aria-valuenow')).toBe('100');
+  });
+
+  it('works without ResizeObserver', () => {
+    vi.stubGlobal('ResizeObserver', undefined);
+    mount();
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('0');
+  });
+
+  it('removes what it wrote on the position targets and disconnects when unmounted', async () => {
+    const view = mount();
+    scrollTo(2000);
+    await frame();
+    const targets = [...view.container.querySelectorAll<HTMLElement>('[data-position-target]')];
+    expect(targets.every((target) => target.style.getPropertyValue('--posf') === '0.5')).toBe(true);
+    const dock = view.container.querySelector<HTMLElement>('.dock') as HTMLElement;
+    view.unmount();
+    expect(FakeResizeObserver.instances[0]?.disconnected).toBe(true);
+    expect(dock.style.getPropertyValue('--posf')).toBe('');
   });
 
   it('stops listening when unmounted', async () => {

@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 const SECTION_COUNT = 9;
+const SCRIM_CLICK_X = 350;
+const SCRIM_CLICK_Y = 400;
 
 test.describe('navigation: drawer at 390px', () => {
   test.use({ viewport: { width: 390, height: 844 } });
@@ -39,16 +41,13 @@ test.describe('navigation: drawer at 390px', () => {
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })
       .click();
-    await page.mouse.click(385, 400);
+    await page.mouse.click(SCRIM_CLICK_X, SCRIM_CLICK_Y);
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
-  test('the position progressbar is named and follows the scroll', async ({ page }) => {
+  test('the hidden position line is out of the accessibility tree', async ({ page }) => {
     await page.goto('/');
-    const bar = page.getByRole('progressbar', { name: 'Page position' });
-    await expect(bar).toHaveAttribute('aria-valuenow', '0');
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-    await expect(bar).toHaveAttribute('aria-valuenow', '100');
+    await expect(page.getByRole('progressbar', { name: 'Page position' })).toHaveCount(0);
   });
 });
 
@@ -84,6 +83,14 @@ test.describe('navigation: rail at 1280px', () => {
     await link.click();
     await expect(page.locator('#sec-projects')).toBeInViewport();
     await expect(link).toHaveAttribute('aria-current', 'location');
+  });
+
+  test('the position progressbar is named and follows the scroll', async ({ page }) => {
+    await page.goto('/');
+    const bar = page.getByRole('progressbar', { name: 'Page position' });
+    await expect(bar).toHaveAttribute('aria-valuenow', '0');
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect(bar).toHaveAttribute('aria-valuenow', '100');
   });
 
   test('the position label reads NN/9 and the main content clears the rail', async ({ page }) => {

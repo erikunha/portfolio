@@ -1497,7 +1497,8 @@
     bottom: 0;
     z-index: var(--z-dock);
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
     gap: 2px;
     padding: var(--spacing-2) var(--spacing-2)
       calc(var(--spacing-2) + env(safe-area-inset-bottom, 0px));
@@ -1569,6 +1570,7 @@
     height: 2px;
     z-index: var(--z-position-line);
     background: var(--color-primary-border);
+    pointer-events: none;
   }
 
   .pos-line > i {
@@ -1592,8 +1594,13 @@
 
   @media (max-width: 1023px) {
     .pos-line {
-      opacity: 0;
+      display: none;
     }
+  }
+
+  html[data-scroll-locked] {
+    overflow: hidden;
+    scrollbar-gutter: stable;
   }
 
   @media (min-width: 1024px) {

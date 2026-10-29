@@ -14,6 +14,7 @@ export function PositionMeter() {
   useEffect(() => {
     let frame = 0;
     let last = -1;
+    const written = new Set<HTMLElement>();
     const apply = () => {
       frame = 0;
       const scrollable = document.documentElement.scrollHeight - window.innerHeight;
@@ -26,6 +27,7 @@ export function PositionMeter() {
       barRef.current?.setAttribute('aria-valuenow', String(percent));
       for (const target of document.querySelectorAll<HTMLElement>(POSITION_TARGETS)) {
         target.style.setProperty('--posf', String(percent / PERCENT));
+        written.add(target);
       }
     };
     const schedule = () => {
@@ -34,10 +36,15 @@ export function PositionMeter() {
     apply();
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule);
+    const resizeObserver =
+      typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(schedule);
+    resizeObserver?.observe(document.body);
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener('scroll', schedule);
       window.removeEventListener('resize', schedule);
+      resizeObserver?.disconnect();
+      for (const target of written) target.style.removeProperty('--posf');
     };
   }, []);
 

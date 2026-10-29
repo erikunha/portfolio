@@ -26,14 +26,25 @@ class FakeObserver {
   takeRecords = () => [];
 }
 
-function reveal(target: Element | null) {
+function report(...entries: Array<[Element | null, boolean]>) {
   const observer = FakeObserver.instances.at(-1);
   act(() => {
     observer?.callback(
-      [{ target, isIntersecting: true }] as IntersectionObserverEntry[],
+      entries.map(([target, isIntersecting]) => ({
+        target,
+        isIntersecting,
+      })) as IntersectionObserverEntry[],
       observer as unknown as IntersectionObserver,
     );
   });
+}
+
+function reveal(target: Element | null) {
+  report([target, true]);
+}
+
+function leave(target: Element | null) {
+  report([target, false]);
 }
 
 type MediaListener = (event: { matches: boolean }) => void;
@@ -155,6 +166,23 @@ describe('SectionNavigation', () => {
     expect(navLink('Home').getAttribute('aria-current')).toBe('location');
   });
 
+  it('marks the earliest section in the document when several intersect together', () => {
+    render(<Page />);
+    report(
+      [document.getElementById('sec-projects'), true],
+      [document.getElementById('sec-contact'), true],
+    );
+    expect(navLink('Projects').getAttribute('aria-current')).toBe('location');
+    expect(navLink('Contact').hasAttribute('aria-current')).toBe(false);
+  });
+
+  it('keeps the last current section when nothing intersects', () => {
+    render(<Page />);
+    reveal(document.getElementById('sec-projects'));
+    leave(document.getElementById('sec-projects'));
+    expect(navLink('Projects').getAttribute('aria-current')).toBe('location');
+  });
+
   it('disconnects the observer on unmount', () => {
     const view = render(<Page />);
     const observer = FakeObserver.instances[0];
@@ -187,6 +215,32 @@ describe('SectionNavigation', () => {
     expect(scrollIntoView).toHaveBeenCalledTimes(2);
     window.dispatchEvent(new Event('scrollend'));
     expect(scrollIntoView).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps one pending correction: a newer jump replaces the older one', () => {
+    render(<Page />);
+    const contact = document.getElementById('sec-contact') as HTMLElement;
+    const projects = document.getElementById('sec-projects') as HTMLElement;
+    vi.spyOn(contact, 'getBoundingClientRect').mockReturnValue({ top: 2800 } as DOMRect);
+    vi.spyOn(projects, 'getBoundingClientRect').mockReturnValue({ top: 2800 } as DOMRect);
+    fireEvent.click(navLink('Contact'));
+    fireEvent.click(navLink('Projects'));
+    expect(scrollIntoView).toHaveBeenCalledTimes(2);
+    window.dispatchEvent(new Event('scrollend'));
+    expect(scrollIntoView).toHaveBeenCalledTimes(3);
+    expect(scrollIntoView.mock.contexts.at(-1)).toBe(projects);
+    window.dispatchEvent(new Event('scrollend'));
+    expect(scrollIntoView).toHaveBeenCalledTimes(3);
+  });
+
+  it('drops the pending correction when the next jump is Home', () => {
+    render(<Page />);
+    const contact = document.getElementById('sec-contact') as HTMLElement;
+    vi.spyOn(contact, 'getBoundingClientRect').mockReturnValue({ top: 2800 } as DOMRect);
+    fireEvent.click(navLink('Contact'));
+    fireEvent.click(navLink('Home'));
+    window.dispatchEvent(new Event('scrollend'));
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
   });
 
   it('leaves a settled jump alone', () => {
@@ -333,6 +387,34 @@ describe('SectionNavigation', () => {
       });
       expect(panel().classList.contains('is-open')).toBe(false);
       expect(document.querySelectorAll('[inert]')).toHaveLength(0);
+    });
+
+    it('locks page scrolling while open and releases it on every way out', () => {
+      const root = document.documentElement;
+      const view = render(<Page />);
+      expect(root.hasAttribute('data-scroll-locked')).toBe(false);
+      open();
+      expect(root.hasAttribute('data-scroll-locked')).toBe(true);
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(root.hasAttribute('data-scroll-locked')).toBe(false);
+      open();
+      fireEvent.click(navLink('Projects'));
+      expect(root.hasAttribute('data-scroll-locked')).toBe(false);
+      open();
+      expect(root.hasAttribute('data-scroll-locked')).toBe(true);
+      view.unmount();
+      expect(root.hasAttribute('data-scroll-locked')).toBe(false);
+    });
+
+    it('unlocks the page before jumping to the chosen destination', () => {
+      render(<Page />);
+      open();
+      let lockedDuringJump: boolean | undefined;
+      scrollIntoView.mockImplementation(() => {
+        lockedDuringJump = document.documentElement.hasAttribute('data-scroll-locked');
+      });
+      fireEvent.click(navLink('Projects'));
+      expect(lockedDuringJump).toBe(false);
     });
 
     it('releases the background when unmounted while open', () => {

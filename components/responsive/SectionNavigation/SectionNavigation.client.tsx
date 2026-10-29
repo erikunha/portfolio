@@ -28,6 +28,7 @@ const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const CURRENT_LINE_MARGIN = '-45% 0px -54% 0px';
 const SETTLED_TOP_LIMIT_PX = 150;
 const TRAPPED_CONTROLS = 'a[href], button:not([data-rail-only])';
+const SCROLL_LOCK_ATTRIBUTE = 'data-scroll-locked';
 
 type NavigationState = {
   currentId: string;
@@ -56,20 +57,25 @@ function jumpTarget(id: string): HTMLElement | null {
   return document.getElementById(id === HOME_SECTION_ID ? MAIN_ID : id);
 }
 
+let pendingCorrection: AbortController | null = null;
+
 export function jumpToSection(id: string): boolean {
   const target = jumpTarget(id);
   if (!target) return false;
+  pendingCorrection?.abort();
+  pendingCorrection = null;
   const behavior = scrollBehavior();
   if (id === HOME_SECTION_ID) window.scrollTo({ top: 0, behavior });
   else {
     target.scrollIntoView({ behavior, block: 'start' });
+    pendingCorrection = new AbortController();
     window.addEventListener(
       'scrollend',
       () => {
         const { top } = target.getBoundingClientRect();
         if (top < 0 || top > SETTLED_TOP_LIMIT_PX) target.scrollIntoView({ block: 'start' });
       },
-      { once: true },
+      { once: true, signal: pendingCorrection.signal },
     );
   }
   target.focus({ preventScroll: true });
@@ -114,10 +120,14 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
     if (mobileHero) sections.set(mobileHero, HOME_SECTION_ID);
     const observer = new IntersectionObserver(
       (entries) => {
+        let first: Element | undefined;
         for (const { target, isIntersecting } of entries) {
-          const id = sections.get(target);
-          if (isIntersecting && id) setCurrentId(id);
+          if (!isIntersecting) continue;
+          if (!first || first.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_PRECEDING)
+            first = target;
         }
+        const id = first && sections.get(first);
+        if (id) setCurrentId(id);
       },
       { rootMargin: CURRENT_LINE_MARGIN },
     );
@@ -188,6 +198,7 @@ export function SectionNavigation() {
   useEffect(() => {
     if (!drawerOpen || !rootRef.current) return;
     const release = isolate(rootRef.current);
+    document.documentElement.setAttribute(SCROLL_LOCK_ATTRIBUTE, '');
     closeRef.current?.focus();
     const viewport = window.matchMedia(DRAWER_QUERY);
     const onViewport = (event: { matches: boolean }) => {
@@ -197,6 +208,7 @@ export function SectionNavigation() {
     return () => {
       viewport.removeEventListener('change', onViewport);
       release();
+      document.documentElement.removeAttribute(SCROLL_LOCK_ATTRIBUTE);
       settleDrawer();
     };
   }, [drawerOpen, closeDrawer, settleDrawer]);
