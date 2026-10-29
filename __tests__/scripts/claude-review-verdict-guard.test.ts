@@ -100,6 +100,8 @@ const SINGLE_LINE_BODIES: ReadonlyArray<readonly [string, boolean]> = [
   ['Approve', false],
   ['I approve of this approach, ship it', false],
   ['**Summary** of the change', false],
+  ['**Summary** we approve of nothing here **Notes**', false],
+  ['**Done** traced the reject-then-refund path. Verdict: **Approve**', true],
   ['', false],
 ];
 

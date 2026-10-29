@@ -256,12 +256,6 @@
     #sec-visa {
       order: 14;
     }
-    #sec-credentials {
-      order: 15;
-    }
-    #sec-community {
-      order: 16;
-    }
     #sec-hottest-takes {
       order: 17;
     }
@@ -279,4 +273,12 @@
       padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     }
   }
+}
+
+@page reading {
+  margin: 14mm;
+}
+
+.reading-view {
+  page: reading;
 }
