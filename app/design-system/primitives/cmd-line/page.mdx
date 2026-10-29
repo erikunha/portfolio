@@ -1,0 +1,32 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'primitives/cmd-line',
+  title: 'CmdLine · Design System · erikunha.dev',
+  description: 'CmdLine props and examples',
+});
+
+# CMD-LINE
+
+<OnThisPage items={[{id:'props',label:'Props'},{id:'examples',label:'Examples'}]} />
+
+Source: `design-system/components/CmdLine/CmdLine.tsx`. React Server Component, zero client JavaScript.
+
+<h2 id="props">Props</h2>
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `command` | `string` | none | yes |
+| `user` | `string` | `'erik@portfolio'` | no |
+| `prompt` | `string` | `':~$'` | no |
+| `output` | `ReactNode` | none | no |
+
+<h2 id="examples">Examples</h2>
+
+<Preview id="cmd-line">
+  <CmdLine command="cat README.md" />
+  <CmdLine user="root@prod" prompt=":#" command="whoami" output={<span>root</span>} />
+</Preview>
+
+The prompt and user render in `primary-400`; the command and output render in `tertiary-50`. Segments wrap on narrow viewports.

@@ -1,0 +1,34 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'primitives/kbd-key',
+  title: 'KbdKey · Design System · erikunha.dev',
+  description: 'KbdKey props and examples',
+});
+
+# KBD-KEY
+
+<OnThisPage items={[{id:'props',label:'Props'},{id:'examples',label:'Examples'},{id:'accessibility',label:'Accessibility'}]} />
+
+Source: `design-system/components/KbdKey/KbdKey.tsx`. React Server Component, zero client JavaScript.
+
+<h2 id="props">Props</h2>
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `size` | `'sm' \| 'md'` | `'md'` | no |
+| `children` | `ReactNode` | none | yes |
+
+<h2 id="examples">Examples</h2>
+
+<Preview id="kbd-key">
+  <KbdKey>Ctrl</KbdKey>
+  <KbdKey>+</KbdKey>
+  <KbdKey>K</KbdKey>
+  <KbdKey size="sm">Enter</KbdKey>
+</Preview>
+
+<h2 id="accessibility">Accessibility</h2>
+
+Renders the semantic `<kbd>` element. Compose key chords by placing one `KbdKey` per key.
