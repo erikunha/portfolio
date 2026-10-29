@@ -29,7 +29,9 @@ describe('shell command hint', () => {
   });
 
   it('does not list "ask <question>" as a command in the rendered shell', async () => {
-    const { InteractiveShell } = await import('@/components/client/InteractiveShell');
+    const { InteractiveShell } = await import(
+      '@/components/client/InteractiveShell/InteractiveShell'
+    );
 
     mounted = await mountClient(createElement(InteractiveShell));
     const { container } = mounted;
