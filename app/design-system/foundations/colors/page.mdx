@@ -1,0 +1,47 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'foundations/colors',
+  title: 'Colors · Design System · erikunha.dev',
+  description: 'Semantic color roles, signal scale, surfaces and status colors from theme.css',
+});
+
+# COLORS
+
+<OnThisPage items={[{id:'roles',label:'Semantic roles'},{id:'signal',label:'Signal'},{id:'surfaces',label:'Surfaces and text'},{id:'status',label:'Status'},{id:'rules',label:'Rules'}]} />
+
+Color tokens live in `app/css/theme.css` inside the single `@theme` block. Swatches read their values from that file. The full ordinal scales are on the [tokens page](/design-system/tokens).
+
+<h2 id="roles">Semantic roles</h2>
+
+<ColorSwatch token="text" usage="Body text on the page and terminal surfaces" />
+<ColorSwatch token="text-secondary" usage="Labels, captions and secondary text" />
+<ColorSwatch token="green" usage="Headings, accents and interactive elements" />
+
+<h2 id="signal">Signal</h2>
+
+<ColorSwatch token="primary-500" usage="The signal: headings, accents, large text" />
+<ColorSwatch token="primary-subtle" usage="Borders and dividers (signal at 40%)" />
+<ColorSwatch token="primary-border" usage="Default border (signal at 20%)" />
+<ColorSwatch token="primary-quiet" usage="Hover and current background (signal at 10%)" />
+
+<h2 id="surfaces">Surfaces and text</h2>
+
+<ColorSwatch token="secondary-950" usage="Page background" />
+<ColorSwatch token="secondary-900" usage="Shell and terminal backgrounds" />
+<ColorSwatch token="tertiary-50" usage="Body text" />
+<ColorSwatch token="tertiary-400" usage="Existing muted text; prefer text-secondary" />
+
+<h2 id="status">Status</h2>
+
+<ColorSwatch token="senary-300" usage="Error states and validation messages" />
+<ColorSwatch token="senary-500" usage="Window-chrome close dot" />
+<ColorSwatch token="quinary-500" usage="Window-chrome minimize dot" />
+<ColorSwatch token="quaternary-400" usage="Cool syntax accents" />
+
+<h2 id="rules">Rules</h2>
+
+- Reference colors through Tailwind utilities backed by `@theme` (`text-primary-500`, `border-primary-subtle`). Never write raw hex in components.
+- Do not use the signal green for paragraph text. Body copy uses `text` (`tertiary-50`).
+- Text and surface pairs are checked by the contrast gate in CI.

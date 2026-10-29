@@ -1,0 +1,33 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'primitives/terminal-panel',
+  title: 'TerminalPanel · Design System · erikunha.dev',
+  description: 'TerminalPanel props and examples',
+});
+
+# TERMINAL-PANEL
+
+<OnThisPage items={[{id:'props',label:'Props'},{id:'examples',label:'Examples'}]} />
+
+Source: `design-system/components/TerminalPanel/TerminalPanel.tsx`. React Server Component, zero client JavaScript.
+
+<h2 id="props">Props</h2>
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `borderStyle` | `'solid' \| 'dashed'` | `'solid'` | no |
+| `as` | `'div' \| 'section' \| 'article'` | `'div'` | no |
+| `header` | `ReactNode` | none | no |
+
+Other `div` attributes pass through.
+
+<h2 id="examples">Examples</h2>
+
+<Preview id="terminal-panel">
+  <TerminalPanel header="[ STATUS ]">Content here.</TerminalPanel>
+  <TerminalPanel borderStyle="dashed">Dashed panel.</TerminalPanel>
+</Preview>
+
+The panel draws a 1px `primary-subtle` border on a transparent background. With `header`, a bottom-bordered title bar renders above the content.
