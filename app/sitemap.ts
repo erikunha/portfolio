@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { DS_ROUTES } from '@/app/design-system/_components/ds-nav';
 import { READING_PATHS } from '@/content/reading-views';
 import { social } from '@/content/social';
 
@@ -41,35 +42,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.7,
     },
-    {
-      url: `${base}/design-system`,
+    ...DS_ROUTES.map((route) => ({
+      url: `${base}${route}`,
       lastModified: dsDate,
-      changeFrequency: 'monthly',
+      changeFrequency: 'monthly' as const,
       priority: 0.5,
-    },
-    {
-      url: `${base}/design-system/tokens`,
-      lastModified: dsDate,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${base}/design-system/components`,
-      lastModified: dsDate,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${base}/design-system/enforcement`,
-      lastModified: dsDate,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${base}/design-system/changelog`,
-      lastModified: dsDate,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
+    })),
   ];
 }
