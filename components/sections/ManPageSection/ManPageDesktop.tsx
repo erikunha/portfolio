@@ -1,8 +1,17 @@
 import { manPage } from '@/content/man-page';
+import { SCROLL_REGION_LABELS } from '@/content/section-labels';
 
 export function ManPageDesktop() {
   return (
-    <div className="overflow-x-auto block" data-testid="manpage-desktop">
+    // biome-ignore lint/a11y/useSemanticElements: name the scroll container within the parent section
+    <div
+      className="overflow-x-auto block"
+      data-testid="manpage-desktop"
+      role="region"
+      aria-label={SCROLL_REGION_LABELS['sec-man-page']}
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: allow keyboard scrolling of the manual
+      tabIndex={0}
+    >
       <pre className="m-0 font-mono text-sm max-md:text-xs leading-[1.65] text-tertiary-50 whitespace-pre">
         <span className="text-primary-500 font-bold tracking-[0.04em]">
           {`${manPage.name.toUpperCase()}(1)                    User Commands                    ${manPage.name.toUpperCase()}(1)`}

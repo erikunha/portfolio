@@ -72,6 +72,8 @@ Target: **WCAG 2.1 AA, Lighthouse a11y = 100, zero axe violations** (all hard ga
 
 Per-component behavioral a11y tests live alongside components; the axe gate covers the design-system routes. The CRT effects are all `aria-hidden` + `pointer-events:none`, so the decorative layer is invisible to assistive tech.
 
+The Profile manual, Work authorization (desktop and mobile), Responsibilities and README code sample scroll containers use `tabIndex={0}` and `role="region"`. Each has its own accessible name from the `SCROLL_REGION_LABELS` map in `content/section-labels.ts` (the section name plus "(scrollable)"), kept distinct from the parent section's name so no two landmarks share a name. Keyboard users can tab into these containers and scroll with arrow keys. `base.css` applies a `:focus-visible` outline using `--color-primary-500` to elements with `tabindex="0"`. The interactive shell's scrollable log already has its own tab stop and accessible name. The footer's scrollable connection table contains keyboard-focusable links.
+
 ## The performance/accessibility invariant
 
 From `CLAUDE.md`: _"Perf, a11y (WCAG 2.1 AA), and security are implicit on every change - not separate phases."_ In practice this means a visual-affecting change must regenerate visual baselines before a PR, a new interactive element must pass the a11y tester, and a change that trips an LCP/INP/CLS gate gets a `performance-engineer` pass. The gates make these non-optional.

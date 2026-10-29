@@ -19,3 +19,25 @@ export const SECTION_LABELS = {
 } as const;
 
 z.record(z.string(), z.string().min(1)).parse(SECTION_LABELS);
+
+export const SCROLL_REGION_LABELS = {
+  'sec-man-page': 'Profile manual (scrollable)',
+  'sec-visa': 'Work authorization (scrollable)',
+  'sec-responsibilities': 'Responsibilities (scrollable)',
+  'sec-readme': 'About (scrollable)',
+} as const;
+
+z.record(z.string(), z.string().min(1)).parse(SCROLL_REGION_LABELS);
+
+for (const [sectionId, label] of Object.entries(SCROLL_REGION_LABELS)) {
+  const sectionLabel: string | undefined =
+    SECTION_LABELS[sectionId as keyof typeof SECTION_LABELS];
+  if (sectionLabel === undefined) {
+    throw new Error(`scroll region label for ${sectionId} has no matching section label`);
+  }
+  if (sectionLabel === label) {
+    throw new Error(
+      `scroll region label for ${sectionId} must differ from the parent section label`,
+    );
+  }
+}

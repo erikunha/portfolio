@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { profileLanguageLine } from '@/content/profile';
-import { SECTION_LABELS } from '@/content/section-labels';
+import { SCROLL_REGION_LABELS, SECTION_LABELS } from '@/content/section-labels';
 import { visaRows } from '@/content/visa';
 import { getIsMobile } from '@/lib/ua';
 import { IconVisa } from '../../Icons';
@@ -8,7 +8,14 @@ import { Module } from '../../responsive/Module';
 
 function VisaDesktop() {
   return (
-    <div className="overflow-x-auto">
+    // biome-ignore lint/a11y/useSemanticElements: name the scroll container within the parent section
+    <div
+      className="overflow-x-auto"
+      role="region"
+      aria-label={SCROLL_REGION_LABELS['sec-visa']}
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: allow keyboard scrolling of work authorization
+      tabIndex={0}
+    >
       <pre
         className="m-0 text-tertiary-50 font-mono text-sm max-md:text-[10px] leading-[1.85] whitespace-pre"
         data-testid="visa-desktop"
@@ -39,7 +46,14 @@ function VisaDesktop() {
 
 function VisaMobile() {
   return (
-    <div className="overflow-x-auto">
+    // biome-ignore lint/a11y/useSemanticElements: name the scroll container within the parent section
+    <div
+      className="overflow-x-auto"
+      role="region"
+      aria-label={SCROLL_REGION_LABELS['sec-visa']}
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: allow keyboard scrolling of work authorization
+      tabIndex={0}
+    >
       <div data-testid="visa-mobile">
         <div
           aria-hidden="true"
