@@ -10,9 +10,7 @@ import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
 import { Hero } from '@/components/sections/Hero';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
-import { LivePerfSection } from '@/components/sections/LivePerfSection';
 import { ManPageSection } from '@/components/sections/ManPageSection';
-import { PerfReceiptsSection } from '@/components/sections/PerfReceiptsSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { ShellSection } from '@/components/sections/ShellSection';
 import { SysHealthSection } from '@/components/sections/SysHealthSection';
@@ -41,16 +39,10 @@ export default function Home() {
             <ProjectsSection />
           </ErrorBoundary>
           <ErrorBoundary>
-            <PerfReceiptsSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
             <GitLogSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <ManPageSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <LivePerfSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <SysHealthSection defer />

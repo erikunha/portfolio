@@ -218,13 +218,13 @@
       order: 1;
     }
     #sec-shell {
+      order: 2;
+    }
+    #sec-live-metrics {
       order: 3;
     }
-    #sec-ai-metrics {
-      order: 4;
-    }
     #sec-man-page {
-      order: 5;
+      order: 4;
     }
     #sec-projects {
       order: 6;
@@ -233,31 +233,25 @@
       order: 7;
     }
     #sec-sys-health {
-      order: 8;
-    }
-    #sec-live-perf {
       order: 9;
     }
-    #sec-perf-receipts {
-      order: 10;
-    }
     #sec-guitar {
-      order: 11;
-    }
-    #sec-daw-mixer {
       order: 12;
     }
-    #sec-visa {
+    #sec-daw-mixer {
       order: 13;
     }
-    #sec-hottest-takes {
+    #sec-visa {
       order: 14;
     }
+    #sec-hottest-takes {
+      order: 17;
+    }
     #sec-unknowns {
-      order: 15;
+      order: 19;
     }
     #sec-contact {
-      order: 16;
+      order: 20;
     }
 
     body {

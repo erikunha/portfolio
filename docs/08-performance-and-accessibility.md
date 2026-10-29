@@ -32,25 +32,29 @@ flowchart LR
 
 Key levers (all verifiable in code):
 - **Static-first.** `app/page.tsx` composes RSC sections; their code/data never ship. Only `AppShell` chrome + named islands hydrate.
+- **Shared Projects rendering.** Nine cards and six attached receipts render as one static RSC tree. Desktop and mobile use the same copy and stats; CSS controls the column count. Projects has no user-agent read or variant swap.
 - **Hero outside Suspense.** The LCP element is in the prerendered shell, never gated on a dynamic boundary.
 - **Pre-paint motion bootstrap.** An inline `<script>` in `layout.tsx` sets `body[data-motion]` from `localStorage`/OS pref before first paint, so CRT effects and the LCP element don't flash.
 - **Self-hosted fonts** via `next/font/local` (no Google CDN), with the font `--font-*-src` bound into `@theme`.
-- **INP discipline (the big one).** Per-keystroke/per-pixel/per-frame updates must not re-render React: the Hero boot loop mutates `textContent`; the DAW islands mutate `style`/`setAttribute`/`className`; the `/api/ask` stream is rAF-coalesced into a single isolated `<span>`. Asserted by `InteractiveShell.test.tsx`.
-- **Deferred render cost.** Below-the-fold sections pass `defer` → `Module` applies `content-visibility`.
+- **INP discipline (the big one).** Per-keystroke/per-pixel/per-frame updates must not re-render React: the Hero boot loop and `RoleTyper` mutate `textContent`; the DAW islands mutate `style`/`setAttribute`/`className`; the `/api/ask` stream is rAF-coalesced into a single isolated `<span>`. Asserted by `InteractiveShell.test.tsx`.
+- **Deferred render cost.** The below-the-fold sections counted by `DEFERRED_SECTION_COUNT` pass `defer` to `Module`, which applies `content-visibility`.
 - **Lazy JS only where interactive** (`next/dynamic`): `ContactFormLazy`, `InteractiveShellLazy`, `DawMixerSection`. `Footer` is an RSC; `FooterLazy` loads only the session counters and halt/reboot island. Its static content remains available without JavaScript. The visitor’s halt clock starts empty on the server, then fills after mount. The netstat `CopyButton` is a separate design-system island. Footer links, COPY and the reboot key provide 44px targets and visible keyboard focus.
 - **MatrixRain** caps at 22fps, pauses via `IntersectionObserver` + `visibilitychange`, and starts via `requestIdleCallback`.
 
 ## How CLS < 0.05 is achieved
 
 The dynamic (per-request) sections are the CLS risk, because their `<Suspense>` fallback is what's prerendered. Mitigations:
-- **Per-section fallback choice.** Most dynamic sections prerender their _desktop_ variant as the fallback; **Guitar prerenders `null`** specifically because its variant heights differed enough to shift (`DECISIONS.md` 2026-06-13).
-- **Reserved height.** `AiMetricsSection`'s fallback is a single-line stub with an explicit `min-height` so the streamed content doesn't push layout.
+- **Per-section fallback choice.** Most dynamic sections prerender their _desktop_ variant as the fallback.
+- **Measured fallbacks.** ASK and each PSI strategy have independent Suspense boundaries. Their loading states retain the metric tiles or score rows. One slow source does not block the other groups.
+- **Responsive guitar presentation.** `GuitarSection` renders one RSC tree across viewports. CSS changes its layout without a desktop/mobile swap or the associated layout shift.
 - **Mobile section ordering** is done with CSS flex `order` (the `#sec-*` map in `base.css`), and `check:section-order` fails the build if a section lacks an order rule - a section defaulting to `order:0` would float to the top and cause a visible jump (this actually happened, 2026-05-28).
 - **Both nav variants in the DOM**, toggled by CSS at 768px, to avoid a hydration-driven reflow.
 
 ## Live performance, self-reported
 
-The site eats its own dog food: `LivePerfSection` and `AiMetricsSection` display **real** numbers. `lib/lighthouse-scores.ts` fetches Google PageSpeed Insights for the live URL (cached 25h in Redis), and the daily `/api/psi-refresh` cron keeps it fresh; `/api/healthz` flips to 503 if that data goes stale. The AI eval aggregate (`ask:eval:latest`) is read at build time for the "measured" metrics panel.
+Measured is one module at `sec-live-metrics`. `AiMetricsSection` composes ASK evaluation data and `LivePerfSection`'s desktop/mobile PSI groups. `content/measured.ts` supplies labels, sources, units and the p95 explanation; values come from the server adapters.
+
+`lib/lighthouse-scores.ts` fetches Google PageSpeed Insights for the live URL and caches scores for 25 hours in Redis. The daily `/api/psi-refresh` cron refreshes them; `/api/healthz` returns 503 for stale PSI data. `lib/ask-metrics.ts` reads `ask:eval:latest`. ASK data is marked stale after seven days, and PSI uses its cache TTL. Missing data displays loading, pending or unavailable states rather than zero scores. Valid timestamps use semantic `time` elements. An unparseable ASK timestamp remains visible as raw text with a timestamp-unavailable label.
 
 ## Accessibility architecture
 

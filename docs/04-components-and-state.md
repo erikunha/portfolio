@@ -31,7 +31,7 @@ flowchart TD
     eb --> mod["Module (RSC wrapper: section + header)"]
     mod --> sec["Section (RSC)"]
     sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · Field"]
-    sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot"]
+    sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper · TaglineTyper (/links)"]
     main --> hero["Hero (RSC with boot and system-failure islands, not Module-wrapped)"]
     main --> fl["Footer (RSC): cards, sitemap, shutdown log"]
     fl --> fi["FooterLazy -> Footer.client: session counters + halt/reboot island"]
@@ -90,7 +90,7 @@ flowchart TD
         motion["lib/motion.ts: body[data-motion] + localStorage('erik.motion')<br/>broadcast via 'motionchange' CustomEvent"]
         w1["writer: DesktopTopbar (MOTION toggle)"] --> motion
         w2["writer: CRTOverlay (OS reduced-motion sync)"] --> motion
-        motion --> r1["readers: MatrixRain · HeroBootAnimation · InteractiveShell"]
+        motion --> r1["readers: MatrixRain · RoleTyper · HeroBootAnimation · InteractiveShell"]
     end
     subgraph bus["3. Window CustomEvent bus (lib/events.ts)"]
         ev["motionchange · shell-cmd-run · hero:sysfail:show|hide · sysfail:start|end"]
@@ -106,7 +106,7 @@ flowchart TD
 
 Islands fall into two camps, and the split is a deliberate INP strategy:
 - **Render _through_ React (rAF-coalesced state):** `InteractiveShell` - the streamed `/api/ask` answer lands in an isolated `streamingText` state flushed once per `requestAnimationFrame`. This is the one place per-token updates go through React, and they're coalesced so only one `<span>` re-renders.
-- **Mutate the DOM directly (no per-frame React state):** the Hero boot loop (`HeroBootAnimation` → `lib/boot-animation.ts`) uses `node.textContent =` typewriter mutation with `setTimeout`, **never** per-character `useState`. The DAW faders/knobs/VU meters update `style`/`setAttribute`/`className` directly on drag. `FaderDbIsland` and `VuMeter` hold no React state at all.
+- **Mutate the DOM directly (no per-frame React state):** the Hero boot loop (`HeroBootAnimation` → `lib/boot-animation.ts`) and `RoleTyper` use `node.textContent =` typewriter mutation with `setTimeout`, **never** per-character `useState`. The DAW faders/knobs/VU meters update `style`/`setAttribute`/`className` directly on drag. `FaderDbIsland` and `VuMeter` hold no React state at all.
 
 This is the single most important state convention in the repo (and is asserted by `InteractiveShell.test.tsx`): **per-keystroke / per-pixel / per-frame updates must not trigger React re-renders.** See `CLAUDE.md` "Rendering model" and doc 09.
 
