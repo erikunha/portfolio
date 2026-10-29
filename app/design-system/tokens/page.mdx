@@ -172,6 +172,10 @@ Keyboard focus uses `:focus-visible`, with a 2px signal outline and 2px offset.
 Durations are applied with Tailwind `duration-*` utilities, easing with
 `ease-out`. All motion is suppressed under `prefers-reduced-motion: reduce`.
 
+Module headers reveal text in character steps as they enter the viewport. Their caret
+blinks four times and then stays solid. The MOTION toggle and OS reduced motion
+disable this effect. Browsers without scroll-driven animation support show static headers.
+
 | Utility | Value | Usage |
 |---|---|---|
 | `duration-[80ms]` | 80ms | micro transitions (hover, press) |

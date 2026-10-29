@@ -3845,6 +3845,78 @@
     color: var(--color-text-secondary);
     font-size: var(--text-xs);
   }
+
+  @keyframes module-scroll-type-reveal {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  @keyframes module-scroll-type-caret {
+    from {
+      transform: translateX(calc(var(--module-caret-width) - 100%));
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes module-scroll-type-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  .module-scroll-type {
+    --module-caret-width: 0.6ch;
+    position: relative;
+  }
+
+  .module-scroll-type-text {
+    display: inline-block;
+  }
+
+  .module-scroll-type::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    translate: 0 -50%;
+    width: calc(100% + var(--module-caret-width));
+    height: 1.05em;
+    background: linear-gradient(
+      to right,
+      transparent calc(100% - var(--module-caret-width)),
+      var(--color-primary-500) 0
+    );
+    opacity: 0;
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      body:not([data-motion="reduce"]) .module-scroll-type-text {
+        animation: module-scroll-type-reveal linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 80%;
+        animation-timing-function: steps(var(--module-type-chars), end);
+      }
+
+      body:not([data-motion="reduce"]) .module-scroll-type::after {
+        opacity: 1;
+        animation:
+          module-scroll-type-caret linear both,
+          module-scroll-type-blink 1.05s steps(2, start) 4;
+        animation-timeline: view(), auto;
+        animation-range:
+          entry 0% entry 80%,
+          normal;
+        animation-timing-function: steps(var(--module-type-chars), end), steps(2, start);
+      }
+    }
+  }
 }
 
 @layer utilities {
