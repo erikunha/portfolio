@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { measured } from './measured';
 import { SECTION_REGISTRY, type SectionRegistryEntry } from './section-registry';
 
 const registrySectionLabels = Object.fromEntries(
@@ -10,9 +9,6 @@ const registrySectionLabels = Object.fromEntries(
 
 export const SECTION_LABELS = {
   ...registrySectionLabels,
-  'sec-live-metrics': measured.title,
-  'sec-ai-metrics': 'AI answer-quality evaluation',
-  'sec-perf-receipts': 'Performance receipts',
   'sec-responsibilities': 'Responsibilities',
   'sec-now': 'Now',
   'sec-npm-stack': 'Tech stack',

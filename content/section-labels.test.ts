@@ -17,7 +17,7 @@ describe('SECTION_LABELS', () => {
       'sec-projects': 'Projects',
       'sec-git-log': 'Career history',
       'sec-shell': 'Interactive shell',
-      'sec-live-perf': 'Live performance',
+      'sec-live-metrics': 'Measured',
       'sec-hottest-takes': 'Opinions',
       'sec-guitar': 'Guitar rig',
       'sec-contact': 'Contact',
