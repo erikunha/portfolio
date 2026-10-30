@@ -26,8 +26,8 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Functional
 
-- Static composition with Hero and About followed by shell, AI evaluation, projects with attached performance receipts, Career, opinions with nested learning and specialization lists, guitar rig, DAW mixer, contact with work authorization and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code expose named keyboard scroll regions inside About; Career owns certification, education and community tag groups.
-- Opinions renders four ordered home takes with nested learning and specialization lists, and closes with a link to the design-system opinion. The design-system opinion renders at `/design-system#opinion-07`; `TAKE_PLACEMENT` separates home and documentation content. Five below-fold modules use content-visibility deferral.
+- Static composition with Hero and About followed by shell, AI evaluation, projects with attached performance receipts, Career, opinions with nested learning and specialization lists, guitar and mixer as one module, contact and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code expose named keyboard scroll regions inside About; Career owns certification, education and community tag groups.
+- Opinions renders four ordered home takes with nested learning and specialization lists, and closes with a link to the design-system opinion. The design-system opinion renders at `/design-system#opinion-07`; `TAKE_PLACEMENT` separates home and documentation content. Four below-fold modules use content-visibility deferral.
 - Hero: Matrix dialog loop + boot sequence (typewriter)
 - About "Open to [role] roles" mounts RoleTyper over server-rendered text; the Hero title is static. Module headers use CSS scroll-driven typing, with static text for unsupported browsers and reduced motion. Every other single-line heading and command prompt marked `data-type-reveal` (on a span around the text only, never around icons, `sr-only` or `aria-hidden` siblings, and never on an element that can wrap) types in when it enters the viewport: `TypeReveal` (mounted once in the root layout through `GlobalMotion`) runs one IntersectionObserver, sets `--type-chars` and adds `is-typed`; CSS reveals the text with a stepped `clip-path` and a blinking caret. The text stays in the HTML and keeps its box, so screen readers, search and layout see it whole. Hiding applies only after `html.type-reveal-ready`, so without JS, under reduced motion or with `data-motion="reduce"` everything shows at once. The h1 and the first hero viewport are never marked. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`) from `GlobalMotion` in the root layout, so it runs on every route, then IntersectionObserver gates its animation. The footer is server-rendered, with client islands only for session counters and halt/reboot.
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
@@ -154,7 +154,7 @@ The drawer header contains the title and close control. The toggle column occupi
 | `/links` client components                     | Tagline cycle, navigation progress, copy and subscribe actions       |
 | Design-system Sidebar and CopyButton           | Documentation navigation and clipboard feedback                      |
 
-`InteractiveShellLazy` and `ContactFormLazy` use `next/dynamic` with `ssr: false` and loading status placeholders. `FooterLazy.client.tsx` is a direct re-export of footer controls, not a dynamic import. `DawMixerDesktop` is statically imported by the server section and embeds smaller client islands.
+`InteractiveShellLazy` and `ContactFormLazy` use `next/dynamic` with `ssr: false` and loading status placeholders. `FooterLazy.client.tsx` is a direct re-export of footer controls, not a dynamic import. `DawMixerDesktop` is statically imported by `GuitarSection` and embeds smaller client islands.
 
 `pnpm route-js-check` fails a route above **164.7 KB gzipped total first-load JS**. It reports app-owned JS by subtracting the configured **131.9 KB** framework floor, leaving **32.8 KB** of headroom. App-owned JS has no separate assertion. The floor check fails when the lightest route is more than 2 KB below that baseline. `pnpm bundle-check` independently gates the global client-chunk sum at **220 KB**.
 
@@ -162,7 +162,7 @@ Client boundaries use `.client.ts`/`.client.tsx`, a `/client/` directory, or Nex
 
 ### Partial Prerendering (PPR)
 
-No home section selects a UA-specific variant: `getIsMobile()` (`lib/ua.ts`) is not called by any section on `/`. With `cacheComponents: true`, the static shell is prerendered and ASK and PSI reads stream behind Suspense. Contact renders its single CSS-responsive work-authorization table synchronously through `VisaContent`.
+No home section selects a UA-specific variant: `getIsMobile()` (`lib/ua.ts`) is not called by any section on `/`. With `cacheComponents: true`, the static shell is prerendered and ASK and PSI reads stream behind Suspense. The guitar module renders its rig and DAW mixer as one synchronous responsive layout.
 
 Projects renders one static RSC tree at every viewport. Its nine cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six project receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
 
@@ -170,14 +170,14 @@ Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. AS
 
 `GuitarSection` renders one responsive RSC presentation across viewports. CSS adjusts its layout without UA detection, a variant swap or a section Suspense fallback.
 
-`DawMixerSection` renders one synchronous RSC layout at every width, without a UA branch or Suspense boundary. Its fader, knob, R/M/S, meter and scroll islands hydrate on phones too.
+`GuitarSection` renders the guitar rig and the DAW mixer as one module at `sec-guitar`, one synchronous RSC layout at every width, without a UA branch or Suspense boundary. The mixer keeps its fader, knob, R/M/S, meter and scroll islands, which hydrate on phones too. Below 768px each channel row collapses into a compact grid (id, track, dB, knobs, R/M/S, plugin chips, meter, fader) instead of one card per channel. Between 768px and 1100px the meter takes the wide row and the fader with its dB readout take the row below it.
 
 Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
 Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one static section.
 `sec-credentials` and `sec-community` are nested in-page anchors, excluded from mobile section ordering.
 The community event link uses the validated label and URL in `content/community.ts`.
 
-Career through Contact receive `defer` in `app/page.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. The nine entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
+Career through Contact receive `defer` in `app/page.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. A deferred module keeps its 520px placeholder box while its content is laid out at full height, so the axe gate reveals the deferred modules before the scan and audits the painted page, the same state the visual baselines capture. The nine entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
 
 ### Trade-off
 
@@ -242,13 +242,12 @@ content/measured.ts                   # ASK and PSI presentation metadata
 content/section-registry.ts           # nine navigation destinations and aliases
 content/section-labels.ts             # section accessible labels
 content/reading-views.ts              # summary and CV presentation
-content/profile.ts                    # shared identity and hiring copy
+content/profile.ts                    # shared identity, hiring copy and language line formatting
 content/hottest-takes.ts              # defended opinions
 content/responsibilities.ts           # permissions matrix
 content/guitar-rig.ts                 # gear sheet
 content/unknowns.ts                   # unknowns items
-content/visa.ts                       # jurisdiction table
-content/community.ts                  # community/* tags and the event link inside Career
+content/community.ts                  # community/* tags and event references inside Career
 content/credentials.ts                # cert/* tags and Career tag-group copy
 content/education.ts                  # edu/* tags inside Career
 content/social.ts                     # github / linkedin / email / site
@@ -344,7 +343,7 @@ See `app/api/ask/route.ts` and `lib/stream-protocol.ts`.
 
 - Vercel Fluid Compute (Node runtime)
 - **Vercel AI Gateway** via `ai` SDK v7 (`streamText`), model string `anthropic/claude-haiku-4-5`: single API key (`AI_GATEWAY_API_KEY`, OIDC-signed on Vercel), unified provider routing, zero-trust model selection
-- System prompt = identity, current role, career, education and certifications from shared content, plus formatted performance receipts, projects, work authorization and unknowns. `PROMPT_VERSION` is a hash of `SYSTEM_TEXT`.
+- System prompt = identity, current role, career, education and certifications from shared content, plus formatted performance receipts, projects and unknowns. `PROMPT_VERSION` is a hash of `SYSTEM_TEXT`.
 - Streaming response back to the client via a custom `ReadableStream<Uint8Array>` over `result.textStream`, with a watchdog race and the NUL-byte error sentinel protocol from `lib/stream-protocol.ts`
 
 ### Rate limiting
@@ -451,7 +450,7 @@ If Resend is down, the message stays in KV and enters the pending outbox. The fo
 
 `contact:outbox` is a Redis sorted set of message ids scored by `receivedAt`. `contact:outbox:attempts` stores retry counts. The cron removes entries older than 7 days or already at 3 attempts. Each eligible message consumes one attempt before the shared send function runs. Acceptance removes pending membership and its counter; failure keeps it pending. The success response is `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }`, with a matching `X-Request-Id` header. Removal never deletes `contact:msg:{uuid}`, which retains its 90-day audit TTL.
 
-Both routes use `lib/contact-delivery.ts` for sender, recipient, subject and the 10s timeout. A message-id idempotency key accompanies every send. Contact logs carry only `requestId` and `msgId`, never provider error details, addresses or message bodies. Form copy and shared limits live in the Zod-free `content/contact-copy.ts`. Client field checks use those limits; `lib/contact-validation.ts` re-exports them and supplies the server-only `ContactSchema` used by the route. `content/contact.ts` defines the copy schema, and `content/_validate-client-content.ts` validates the client copy and the email and LinkedIn constants from `content/social-urls.ts` during content validation. Delivered and queued panels replace the form and receive focus. Errors retain typed values and focus the summary. Work authorization appears only within Contact through `VisaContent`.
+Both routes use `lib/contact-delivery.ts` for sender, recipient, subject and the 10s timeout. A message-id idempotency key accompanies every send. Contact logs carry only `requestId` and `msgId`, never provider error details, addresses or message bodies. Form copy and shared limits live in the Zod-free `content/contact-copy.ts`. Client field checks use those limits; `lib/contact-validation.ts` re-exports them and supplies the server-only `ContactSchema` used by the route. `content/contact.ts` defines the copy schema, and `content/_validate-client-content.ts` validates the client copy and the email and LinkedIn constants from `content/social-urls.ts` during content validation. Delivered and queued panels replace the form and receive focus. Errors retain typed values and focus the summary. Contact states its retention line under the form and offers the email with a `[COPY EMAIL]` control; the prototype's work-authorization table and the sponsorship chip are gone by owner decision.
 
 ### Anti-spam strategy
 

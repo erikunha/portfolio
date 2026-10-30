@@ -17,7 +17,6 @@ vi.mock('next/headers', () => ({
 import { GitLogContent } from '@/components/sections/GitLogSection';
 import { GuitarContent } from '@/components/sections/GuitarSection';
 import { ProjectsContent } from '@/components/sections/ProjectsSection';
-import { VisaContent } from '@/components/sections/VisaSection';
 import { projects } from '@/content/projects';
 
 describe('responsive section mobile variants', () => {
@@ -63,11 +62,5 @@ describe('responsive section mobile variants', () => {
     expect(html).toContain('data-testid="career-log"');
     expect(html).not.toContain('career-mobile');
     expect(html).not.toContain('career-desktop');
-  });
-
-  it('VisaContent renders the same table regardless of UA', async () => {
-    const html = renderToStaticMarkup(await VisaContent());
-    expect(html).toContain('class="visa-table"');
-    expect(html).not.toContain('data-testid="visa-mobile"');
   });
 });

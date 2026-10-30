@@ -170,7 +170,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 ## Content discipline
 
 - All content lives in `content/*.ts` as typed TS modules validated by Zod at build time. Build fails on schema violation.
-- HOTTEST_TAKES, `~/.guitar_rig`, `~/.now`, `~/.unknowns`, `~/.community`, `~/.visa`, `~/.credentials` — all driven from content files.
+- HOTTEST_TAKES, `~/.guitar_rig`, `~/.now`, `~/.unknowns`, `~/.community`, `~/.credentials`: all driven from content files.
 - Never inline content in JSX. If you find yourself typing user-facing copy into a `.tsx`, stop and move it to `content/`.
 
 ## Working agreement

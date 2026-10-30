@@ -181,12 +181,8 @@ export default function CvPage() {
           <Rows rows={cvDocument.education} />
         </Section>
 
-        <Section name="authorization" heading={cv.headings.workAuthorization}>
-          <Rows rows={cvDocument.authorization} />
-          <p className="reading-meta">{cvDocument.languages}</p>
-        </Section>
-
         <Section name="contact" heading={cv.headings.contact}>
+          <p className="reading-meta">{cvDocument.languages}</p>
           <p className="reading-actions-inline">
             <a
               href={shared.hire.href}

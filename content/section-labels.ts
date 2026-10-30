@@ -9,7 +9,6 @@ const registrySectionLabels = Object.fromEntries(
 
 export const SECTION_LABELS = {
   ...registrySectionLabels,
-  'sec-daw-mixer': 'DAW mixer',
 } as const;
 
 z.record(z.string(), z.string().min(1)).parse(SECTION_LABELS);

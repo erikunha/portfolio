@@ -35,8 +35,8 @@ function PluginChain({
         <div
           key={p.name}
           className={cn(
-            'flex-1 min-w-0 border flex items-center gap-1',
-            'px-1 pt-[5px] pb-[6px] text-primary-400 relative',
+            'flex-none min-w-max border flex items-center gap-1',
+            'px-2 py-[5px] text-primary-400 relative',
             p.active
               ? [
                   'plugin-card-on',
@@ -47,7 +47,7 @@ function PluginChain({
           )}
           data-testid={`plugin-${channelId}-${p.name}`}
         >
-          <span className="text-xs font-bold tracking-[0.06em] whitespace-nowrap overflow-hidden text-ellipsis max-w-full uppercase">
+          <span className="text-xs font-bold tracking-[0.06em] whitespace-nowrap uppercase">
             {p.name}
           </span>
           <span className="flex gap-px items-end" aria-hidden="true">
@@ -101,7 +101,7 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
         >
           {ch.id}
         </span>
-        <span className="block text-xs text-primary-400">{ch.name}</span>
+        <span className="text-xs text-primary-400 max-md:hidden">{ch.name}</span>
         <div
           className="h-[6px] bg-[var(--color-primary-quiet)] border border-[var(--color-primary-quiet)] relative overflow-hidden"
           aria-hidden="true"
@@ -124,7 +124,7 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
         >
           {ch.desktopName ?? ch.name}
         </span>
-        <span className="mx-channel-desc text-xs text-primary-400 leading-[1.3] overflow-hidden text-ellipsis max-md:overflow-visible">
+        <span className="mx-channel-desc text-sm text-primary-400 leading-[1.35]">
           <ParsedText text={ch.desc} />
         </span>
       </div>
