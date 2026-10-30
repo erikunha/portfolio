@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { getThemeColors } from '../../app/design-system/_lib/theme-tokens';
+import { componentsCssFiles } from '../helpers/components-css';
 
 const DOCS = [
   'CLAUDE.md',
@@ -13,7 +14,11 @@ const DOCS = [
   'app/design-system/enforcement/page.mdx',
 ];
 
-const STYLESHEETS = ['app/css/theme.css', 'app/css/base.css', 'app/css/components.css'];
+const STYLESHEETS = [
+  'app/css/theme.css',
+  'app/css/base.css',
+  ...componentsCssFiles().map((f) => `app/css/${f}`),
+];
 
 const FONT_SOURCE = 'app/layout.tsx';
 

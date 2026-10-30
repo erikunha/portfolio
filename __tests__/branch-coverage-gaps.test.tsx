@@ -1,9 +1,9 @@
-import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MEASURED_FORMAT, measured } from '@/content/measured';
 import { MeasuredSchema } from '@/content/schemas';
+import { readComponentsCss } from './helpers/components-css';
 import { type MountedClient, mountClient } from './helpers/render';
 
 const getScoresMock = vi.fn();
@@ -276,7 +276,7 @@ describe('Measured content validation', () => {
 describe('Project receipt narrow layout contract', () => {
   it('lets both receipt columns shrink and long values wrap at 320px', () => {
     // behavioral-test-allow: checks the shipped CSS layout contract because jsdom has no layout engine
-    const css = readFileSync('app/css/components.css', 'utf8');
+    const css = readComponentsCss();
     const row = css.match(/\.project-receipts li\s*\{([^}]+)\}/)?.[1];
     const value = css.match(/\.receipt-value\s*\{([^}]+)\}/)?.[1];
     const metric = css.match(/\.receipt-metric\s*\{([^}]+)\}/)?.[1];
