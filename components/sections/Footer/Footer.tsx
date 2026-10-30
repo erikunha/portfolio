@@ -24,8 +24,8 @@ export function Footer() {
         </p>
         <div className="footer-cards">
           <section className="footer-card" aria-labelledby="footer-session-title">
-            <h3 data-type-reveal className="footer-card-title" id="footer-session-title">
-              {content.sessionTitle}
+            <h3 className="footer-card-title" id="footer-session-title">
+              <span data-type-reveal>{content.sessionTitle}</span>
             </h3>
             <SessionCounters sectionIds={footerSectionIds}>
               <dl className="footer-session-grid">
@@ -64,8 +64,8 @@ export function Footer() {
           </section>
           <section className="footer-card" aria-labelledby="footer-netstat-title">
             <div className="footer-card-header">
-              <h3 data-type-reveal className="footer-card-title" id="footer-netstat-title">
-                {content.netstatTitle}
+              <h3 className="footer-card-title" id="footer-netstat-title">
+                <span data-type-reveal>{content.netstatTitle}</span>
               </h3>
               <CopyButton
                 aria-label={content.copyLabel}
@@ -115,8 +115,8 @@ export function Footer() {
           </section>
         </div>
         <section className="footer-card footer-tree" aria-labelledby="footer-tree-title">
-          <h3 data-type-reveal className="footer-card-title" id="footer-tree-title">
-            {content.treeTitle}
+          <h3 className="footer-card-title" id="footer-tree-title">
+            <span data-type-reveal>{content.treeTitle}</span>
           </h3>
           <nav className="sitemap" aria-label={content.treeLabel}>
             <ul className="sm-groups">

@@ -52,6 +52,9 @@ test.describe('type reveal', () => {
         document.documentElement.classList.contains('type-reveal-ready'),
       );
 
+      await page.addStyleTag({
+        content: '.module-deferred { content-visibility: visible !important; }',
+      });
       const marked = page.locator('[data-type-reveal]');
       expect(await marked.count()).toBeGreaterThan(0);
       const offenders = await marked.evaluateAll((els) =>
@@ -60,8 +63,12 @@ test.describe('type reveal', () => {
             const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight);
             const wraps = el.getClientRects().length > 1;
             const hasExtras = el.querySelector('svg, .sr-only, [aria-hidden="true"]') !== null;
+            const hasPseudo = ['::before', '::after'].some(
+              (pseudo) => pseudo === '::before' && getComputedStyle(el, pseudo).content !== 'none',
+            );
             return (
               hasExtras ||
+              hasPseudo ||
               wraps ||
               (lineHeight > 0 && el.getBoundingClientRect().height > lineHeight * 1.5)
             );
