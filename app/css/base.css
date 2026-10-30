@@ -270,7 +270,11 @@
     }
 
     body {
-      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(
+        var(--dock-clearance) +
+        var(--spacing-2) +
+        env(safe-area-inset-bottom, 0px)
+      );
     }
   }
 }
