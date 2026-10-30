@@ -16,8 +16,9 @@ flowchart TD
     r2 --> r4["pre-PR: gates:runtime (LHCI+axe+E2E)"]
     r4 --> o1["open PR: fill every template section"]
     o1 --> o1b["CI green on the PR head"]
-    o1b --> o2["claude-review each push; fix, reply in thread, push again until Approve"]
-    o2 --> m1["pre-merge: ci:local"]
+    o1 --> o2["claude-review each push; fix, reply in thread, push again until Approve"]
+    o1b --> m1["pre-merge: ci:local"]
+    o2 --> m1
     m1 --> m3["pre-merge: claude-gate (Approve on HEAD)"]
     m3 --> m4["pre-merge: pr:gate (threads)"]
     m4 --> merge["owner: squash-merge (#NNN)"]
