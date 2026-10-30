@@ -35,24 +35,21 @@ describe('ContactSection', () => {
     expect(contactLanguageLine).toBe('// PT (native) · EN (C1) · ES (B1) · FR (A2)');
   });
 
-  it('labels the copy control as the prototype copy email action', () => {
-    const host = document.createElement('div');
-    host.innerHTML = renderToStaticMarkup(<ContactSection />);
-    const button = host.querySelector('button.contact-copy-btn');
-    expect(button?.textContent).toBe('[COPY EMAIL]');
-    expect(button?.getAttribute('aria-label')).toBe('Copy email address');
+  it('names the copy control with its visible label so the visible label is in the accessible name', () => {
+    render(<ContactSection />);
+    const button = screen.getByRole('button', { name: '[COPY EMAIL]' });
+    expect(button.textContent).toBe('[COPY EMAIL]');
   });
 
   it('copies the canonical email and announces completion', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { clipboard: { writeText } });
     render(<ContactSection />);
-    fireEvent.click(screen.getByRole('button', { name: 'Copy email address' }));
+    fireEvent.click(screen.getByRole('button', { name: '[COPY EMAIL]' }));
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(social.email));
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Copy email address' }).textContent).toBe(
-        '[COPIED]',
-      ),
-    );
+    await waitFor(() => {
+      const copied = screen.getByRole('button', { name: '[COPIED]' });
+      expect(copied.textContent).toBe('[COPIED]');
+    });
   });
 });

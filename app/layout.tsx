@@ -30,7 +30,6 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.erikunha.dev'),
   title: profilePageTitle,
   description: profileMetaDescription,
-  other: {},
   keywords: [
     'Staff Engineer',
     'Principal Engineer',

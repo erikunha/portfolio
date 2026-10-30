@@ -10,7 +10,7 @@ import { GUITAR_SIGNAL_BAR_COUNT, GUITAR_SIGNAL_LABEL_TOKENS } from '@/content/s
 import { SECTION_LABELS } from '@/content/section-labels';
 import { IconGuitar } from '../../Icons';
 import { Module } from '../../responsive/Module';
-import { DawMixerContent } from '../DawMixerSection/DawMixerContent';
+import { DawMixerContent } from '../DawMixerSection';
 
 const SIGNAL_BARS = Array.from({ length: GUITAR_SIGNAL_BAR_COUNT }, (_, position) => ({
   position,

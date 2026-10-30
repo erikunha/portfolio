@@ -53,12 +53,7 @@ export function ContactCopyButton({ email }: { email: string }) {
 
   return (
     <>
-      <button
-        type="button"
-        className="copy-btn contact-copy-btn"
-        aria-label={contactCopy.section.copyEmailAriaLabel}
-        onClick={() => void copy()}
-      >
+      <button type="button" className="copy-btn contact-copy-btn" onClick={() => void copy()}>
         {feedback.label}
       </button>
       <span role="status" aria-live="polite" aria-atomic="true" className="sr-only">

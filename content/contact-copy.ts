@@ -40,7 +40,6 @@ export const contactCopy: ContactContent = {
     linkedinHref: LINKEDIN_URL,
     copyEmail: '[COPY EMAIL]',
     copyEmailCopied: '[COPIED]',
-    copyEmailAriaLabel: 'Copy email address',
   },
   form: {
     nameLabel: '$ name:',

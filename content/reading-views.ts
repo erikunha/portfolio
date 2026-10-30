@@ -3,7 +3,7 @@ import { credentials } from './credentials';
 import { education } from './education';
 import { gitLog } from './git-log';
 import { heroStats } from './perf-receipts';
-import { profile, profileLocation, profileSummary } from './profile';
+import { formatLanguages, profile, profileLocation, profileSummary } from './profile';
 import { projects } from './projects';
 import { READING_PATHS } from './reading-paths';
 import { readmeCopy } from './readme';
@@ -198,9 +198,7 @@ export const cvDocument = CvDocumentSchema.parse({
     label: entry.degree,
     value: [entry.institution, entry.location, entry.period].join(STACK_SEPARATOR),
   })),
-  languages: profile.languages
-    .map((language) => `${language.code.toUpperCase()} (${language.level})`)
-    .join(STACK_SEPARATOR),
+  languages: formatLanguages(profile.languages),
   email: social.email,
 });
 

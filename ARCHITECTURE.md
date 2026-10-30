@@ -242,7 +242,7 @@ content/measured.ts                   # ASK and PSI presentation metadata
 content/section-registry.ts           # nine navigation destinations and aliases
 content/section-labels.ts             # section accessible labels
 content/reading-views.ts              # summary and CV presentation
-content/profile.ts                    # shared identity and hiring copy
+content/profile.ts                    # shared identity, hiring copy and language line formatting
 content/hottest-takes.ts              # defended opinions
 content/responsibilities.ts           # permissions matrix
 content/guitar-rig.ts                 # gear sheet
