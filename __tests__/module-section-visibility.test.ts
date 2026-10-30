@@ -55,8 +55,8 @@ describe('module-body-content: section-body collapse trap (details -> section re
     const desktopBlock =
       [...componentsCss.matchAll(/@media \(min-width:\s*768px\)\s*\{([\s\S]*?)\n {2}\}/g)]
         .map((match) => match[1] ?? '')
-        .find((block) => block.includes('.module-body-content')) ?? '';
-    const desktopRuleMatch = desktopBlock.match(/\.module-body-content\s*\{[^}]*\}/);
+        .find((block) => /^\s*\.module-body-content\s*\{/m.test(block)) ?? '';
+    const desktopRuleMatch = desktopBlock.match(/^\s*\.module-body-content\s*\{[^}]*\}/m);
     const hasBorder = !!desktopRuleMatch && /border\s*:/.test(desktopRuleMatch[0]);
     expect(
       hasBorder,

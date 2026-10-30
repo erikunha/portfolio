@@ -5,6 +5,9 @@ const GUTTER_AT_1280 = 24;
 const MEASURE_PAGE = 1200;
 const PAGE_TOP_PHONE = 24;
 const PAGE_TOP_TABLET = 48;
+const SPACE_SECTION_PHONE = 32;
+const SPACE_SECTION_TABLET = 48;
+const LEADING_TOKENS = ['1.1', '1.35', '1.6'];
 
 const contentLeft = (page: Page, selector: string) =>
   page
@@ -71,6 +74,30 @@ test.describe('layout tokens', () => {
     expect(await columns()).toBe(1);
     await page.setViewportSize({ width: 1024, height: 800 });
     expect(await columns()).toBe(2);
+  });
+
+  test('module margin steps from 32px below 768 to 48px from 768', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    const marginBottom = () =>
+      page
+        .locator('section[aria-labelledby]')
+        .first()
+        .evaluate((el) => getComputedStyle(el).marginBottom);
+    expect(await marginBottom()).toBe(`${SPACE_SECTION_PHONE}px`);
+    await page.setViewportSize({ width: 768, height: 1024 });
+    expect(await marginBottom()).toBe(`${SPACE_SECTION_TABLET}px`);
+  });
+
+  test('line-height tokens resolve to the documented ratios', async ({ page }) => {
+    await page.goto('/');
+    const tokens = await page.evaluate(() => {
+      const style = getComputedStyle(document.documentElement);
+      return ['--leading-tight', '--leading-snug', '--leading-body'].map((name) =>
+        style.getPropertyValue(name).trim(),
+      );
+    });
+    expect(tokens).toEqual(LEADING_TOKENS);
   });
 
   test('module headings step from 16px below 768 to 18px from 768, bold caps', async ({ page }) => {
