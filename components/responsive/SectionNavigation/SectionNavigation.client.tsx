@@ -326,6 +326,7 @@ export function SectionNavigation() {
                         current={id === currentId}
                         onClick={(event) => {
                           setRailExpanded(false);
+                          setDismissed(true);
                           jump(event, id);
                         }}
                       />

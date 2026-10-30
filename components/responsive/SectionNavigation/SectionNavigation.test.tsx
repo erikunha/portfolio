@@ -458,5 +458,13 @@ describe('SectionNavigation', () => {
       fireEvent.click(document.getElementById('main-content') as HTMLElement);
       expect(toggle.getAttribute('aria-expanded')).toBe('false');
     });
+
+    it('dismisses the rail after following a section link, until the rail is re-entered', () => {
+      render(<Page />);
+      fireEvent.click(navLink('About'));
+      expect(panel().classList.contains('is-dismissed')).toBe(true);
+      fireEvent.mouseEnter(panel());
+      expect(panel().classList.contains('is-dismissed')).toBe(false);
+    });
   });
 });
