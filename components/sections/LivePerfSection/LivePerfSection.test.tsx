@@ -1,5 +1,8 @@
+import { parse } from 'postcss';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { readComponentsCss } from '@/__tests__/helpers/components-css';
+import { declValue, rulesInMedia, rulesWithSelector } from '@/__tests__/helpers/css-rules';
 
 const getScoresMock = vi.fn();
 vi.mock('@/lib/lighthouse-scores', () => ({
@@ -140,4 +143,29 @@ describe('LivePerfSection — live indicator', () => {
       expect(heading?.textContent).toBe(strategy.toUpperCase());
     },
   );
+});
+
+describe('LivePerfSection: score tile layout', () => {
+  it('sizes the score tracks from the panel width, so a score label can never break mid-word', () => {
+    // behavioral-test-allow: the score grid contract lives in the shipped stylesheet; jsdom has no layout engine
+    const stylesheet = parse(readComponentsCss());
+    const desktop = rulesInMedia(stylesheet, /min-width: 768px/, '.measured-perf .measured-scores');
+    expect(desktop).toHaveLength(1);
+    expect(declValue(desktop[0], 'grid-template-columns')).toBe(
+      'repeat(auto-fit, minmax(var(--measured-tile-min), 1fr))',
+    );
+    const minTrack = rulesWithSelector(stylesheet, '.measured-perf')
+      .map((rule) => declValue(rule, '--measured-tile-min'))
+      .find((value) => value !== undefined);
+    expect(minTrack).toBe('7rem');
+  });
+
+  it('never forces four score columns from a viewport breakpoint', () => {
+    // behavioral-test-allow: the score grid contract lives in the shipped stylesheet; jsdom has no layout engine
+    const stylesheet = parse(readComponentsCss());
+    const fourColumn = rulesWithSelector(stylesheet, '.measured-perf .measured-scores').filter(
+      (rule) => (declValue(rule, 'grid-template-columns') ?? '').includes('repeat(4'),
+    );
+    expect(fourColumn).toEqual([]);
+  });
 });
