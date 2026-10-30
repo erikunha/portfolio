@@ -6,6 +6,7 @@ import { readMotion } from '@/lib/motion';
 
 const SELECTOR = '[data-type-reveal]';
 const TYPED_CLASS = 'is-typed';
+const STATIC_CLASS = 'is-static';
 const READY_CLASS = 'type-reveal-ready';
 const CHARS_PROPERTY = '--type-chars';
 const MOTION_CHANGE_EVENT = 'motionchange';
@@ -17,7 +18,9 @@ const OBSERVER_OPTIONS: IntersectionObserverInit = {
 type MotionChangeDetail = { on: boolean };
 
 function revealAll(elements: HTMLElement[]) {
-  for (const el of elements) el.classList.add(TYPED_CLASS);
+  for (const el of elements) {
+    if (!el.classList.contains(TYPED_CLASS)) el.classList.add(TYPED_CLASS, STATIC_CLASS);
+  }
 }
 
 export function TypeReveal() {

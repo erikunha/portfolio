@@ -152,4 +152,25 @@ describe('TypeReveal', () => {
     const { container } = mount('');
     expect(container.innerHTML).toBe('');
   });
+  it('marks elements revealed without motion as static, so enabling motion later does not replay them', () => {
+    setMotion(false);
+    mount('<h2 data-type-reveal id="a">About</h2>');
+    const a = document.getElementById('a') as HTMLElement;
+    expect(a.classList.contains('is-typed')).toBe(true);
+    expect(a.classList.contains('is-static')).toBe(true);
+  });
+
+  it('marks only not-yet-typed elements static when motion turns off mid-page', () => {
+    setMotion(true);
+    mount('<h2 data-type-reveal id="a">About</h2><h2 data-type-reveal id="b">Work</h2>');
+    const a = document.getElementById('a') as HTMLElement;
+    const b = document.getElementById('b') as HTMLElement;
+    act(() => observers[0]?.fire(a, true));
+    act(() => {
+      window.dispatchEvent(new CustomEvent('motionchange', { detail: { on: false } }));
+    });
+    expect(a.classList.contains('is-static')).toBe(false);
+    expect(b.classList.contains('is-typed')).toBe(true);
+    expect(b.classList.contains('is-static')).toBe(true);
+  });
 });
