@@ -159,6 +159,15 @@
 }
 
 @layer base {
+  :root {
+    --type-reveal-char-duration: 28ms;
+    --type-reveal-max-duration: 1.4s;
+    --type-reveal-caret-width: 0.6ch;
+    --type-reveal-caret-height: 1.05em;
+    --type-reveal-caret-blink: 1.05s;
+    --type-reveal-caret-blinks: 3;
+  }
+
   @media (min-width: 768px) {
     :root {
       --text-min: 0.8125rem;

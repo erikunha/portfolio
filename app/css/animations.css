@@ -386,3 +386,80 @@
     display: none;
   }
 }
+
+@property --type-progress {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
+@layer components {
+  @keyframes type-reveal-progress {
+    from {
+      --type-progress: 0;
+    }
+    to {
+      --type-progress: 1;
+    }
+  }
+
+  @keyframes type-reveal-caret {
+    0%,
+    50% {
+      opacity: 1;
+    }
+    50.01%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  [data-type-reveal] {
+    position: relative;
+    inline-size: fit-content;
+    max-inline-size: 100%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal] {
+      --type-progress: 0;
+      clip-path: inset(
+        0 calc((1 - var(--type-progress)) * 100% - var(--type-reveal-caret-width)) 0 0
+      );
+    }
+
+    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal].is-typed {
+      --type-progress: 1;
+      animation: type-reveal-progress
+        min(
+          calc(var(--type-chars, 1) * var(--type-reveal-char-duration)),
+          var(--type-reveal-max-duration)
+        )
+        steps(var(--type-chars, 1), end) both;
+    }
+
+    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal]::after {
+      content: "";
+      position: absolute;
+      inset-block-start: 50%;
+      inset-inline-start: calc(var(--type-progress) * 100%);
+      translate: 0 -50%;
+      inline-size: var(--type-reveal-caret-width);
+      block-size: var(--type-reveal-caret-height);
+      background: var(--color-primary-500);
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    html.type-reveal-ready
+      body:not([data-motion="reduce"])
+      [data-type-reveal]:not(.is-typed)::after {
+      opacity: 1;
+    }
+
+    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal].is-typed::after {
+      animation: type-reveal-caret var(--type-reveal-caret-blink) step-end
+        var(--type-reveal-caret-blinks) both;
+    }
+  }
+}

@@ -22,7 +22,9 @@ function Panel({
         <span className="ab-mk" aria-hidden="true">
           {c.marker}
         </span>
-        <h3 className="ab-h">{title}</h3>
+        <h3 className="ab-h" data-type-reveal>
+          {title}
+        </h3>
         {action}
       </header>
       {children}
@@ -41,7 +43,7 @@ export function About() {
     <section id="sec-readme" tabIndex={-1} aria-labelledby="about-header" className="about-section">
       <header className="about-section-header">
         <h2 id="about-header">
-          <span>{c.title}</span>
+          <span data-type-reveal>{c.title}</span>
           <IconReadme />
           <span className="about-section-command" aria-hidden="true">
             {c.command}
