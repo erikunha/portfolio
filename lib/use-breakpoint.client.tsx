@@ -25,7 +25,7 @@ export function BreakpointProvider({
 }) {
   const mqRef = useRef<MediaQueryList | null>(null);
   if (!mqRef.current && typeof window !== 'undefined') {
-    mqRef.current = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
+    mqRef.current = window.matchMedia(`(width < ${MOBILE_BREAKPOINT_PX}px)`);
   }
 
   const subscribe = useCallback((cb: () => void) => {

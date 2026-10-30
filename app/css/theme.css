@@ -5,11 +5,6 @@
 
   --text-min: 0.75rem;
   --text-xs: max(0.75rem, var(--text-min));
-  --text-micro-95: 9.5px;
-  --text-micro-100: 10px;
-  --text-micro-105: 10.5px;
-  --text-micro-110: 11px;
-  --text-micro-115: 11.5px;
   --text-sm: 0.875rem;
   --text-base: 1rem;
   --text-lg: 1.125rem;
@@ -18,6 +13,8 @@
   --text-3xl: 2rem;
   --text-5xl: 3rem;
   --text-7xl: 4rem;
+
+  --leading-body: 1.6;
 
   --spacing-1: 0.25rem;
   --spacing-2: 0.5rem;
@@ -160,6 +157,13 @@
 
 @layer base {
   :root {
+    --space-gutter: clamp(16px, 4vw, 24px);
+    --space-page-top: var(--spacing-6);
+    --space-section: var(--spacing-8);
+    --measure-page: 1200px;
+    --measure-read: 72ch;
+    --leading-page-tight: 1.1;
+    --leading-page-snug: 1.35;
     --type-reveal-char-duration: 28ms;
     --type-reveal-max-duration: 1.4s;
     --type-reveal-caret-width: 0.6ch;
@@ -171,6 +175,8 @@
   @media (min-width: 768px) {
     :root {
       --text-min: 0.8125rem;
+      --space-page-top: var(--spacing-12);
+      --space-section: var(--spacing-12);
     }
   }
 }

@@ -16,7 +16,7 @@ export function IdentityCard({ locale }: { locale: LinksLocale }) {
     {
       label: copy.statusLabel[locale],
       value: (
-        <span className="inline-flex items-center gap-[6px]">
+        <span className="inline-flex items-center gap-2">
           <span className="badge-dot" aria-hidden="true" />
           {profile.status[locale]}
         </span>
@@ -25,7 +25,7 @@ export function IdentityCard({ locale }: { locale: LinksLocale }) {
   ];
 
   return (
-    <div className="links-identity px-4 pt-2">
+    <div className="links-identity pt-2">
       <p className="m-0 mb-2 text-tertiary-400 text-xs">
         <span className="text-tertiary-400">$</span> {copy.whoami}
       </p>

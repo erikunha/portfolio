@@ -12,12 +12,12 @@ export function ChromeBar({ locale }: { locale: LinksLocale }) {
   const { copy, shellTitle } = linksContent;
 
   return (
-    <div className="links-chrome flex gap-[6px] items-center px-4 pt-4">
+    <div className="links-chrome flex gap-2 items-center pt-4">
       <WindowChrome size={9} />
       <span className="ml-2 flex-1 text-primary-400 text-xs tracking-[0.14em] uppercase">
         {shellTitle}
       </span>
-      <nav aria-label={copy.langSwitchLabel[locale]} className="flex gap-[6px]">
+      <nav aria-label={copy.langSwitchLabel[locale]} className="flex gap-2">
         {Object.values(LINKS_LOCALE).map((candidate) => {
           const active = candidate === locale;
           return (

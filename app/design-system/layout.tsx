@@ -4,7 +4,7 @@ import { Sidebar } from './_components/Sidebar.client';
 
 export default function DesignSystemLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="ds-layout flex flex-row-reverse justify-end min-h-screen max-w-[1200px] mx-auto pt-11 max-md:flex-col max-md:pt-0">
+    <div className="ds-layout flex flex-row-reverse justify-end min-h-screen max-w-[var(--measure-page)] mx-auto max-md:flex-col">
       <a href={`#${DS_NAV_ID}`} className="skip-to-content">
         {DS_NAV_SKIP_LABEL}
       </a>
