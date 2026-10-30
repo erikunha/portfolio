@@ -51,7 +51,7 @@ function Section({
 }) {
   return (
     <section aria-labelledby={sectionId(name)} className="reading-section">
-      <h2 id={sectionId(name)} className="reading-heading">
+      <h2 id={sectionId(name)} className="reading-heading" data-type-reveal>
         {heading}
       </h2>
       {children}
@@ -137,7 +137,7 @@ export default function CvPage() {
         <Section name="experience" heading={cv.headings.experience}>
           {cvDocument.experience.map((job) => (
             <article key={job.key} className="reading-entry">
-              <h3>{job.company}</h3>
+              <h3 data-type-reveal>{job.company}</h3>
               <p className="reading-meta">{job.meta}</p>
               <ul>
                 {job.bullets.map((bullet) => (

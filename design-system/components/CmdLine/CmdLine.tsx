@@ -10,7 +10,7 @@ export function CmdLine({
 }: CmdLineProps) {
   return (
     <div className="cmd-line font-mono text-sm leading-[1.55]">
-      <div className="flex flex-wrap gap-x-1">
+      <div className="flex flex-wrap gap-x-1" data-type-reveal>
         <span className="text-primary-400">{user}</span>
         <span className="text-primary-400">{prompt}</span>
         <span className="text-tertiary-50">{command}</span>

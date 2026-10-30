@@ -4,6 +4,7 @@ import '@/lib/error-bridge.client';
 import type { ReactNode } from 'react';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { ToTopButton } from '../client/ToTopButton';
+import { TypeReveal } from '../client/TypeReveal';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { CRTOverlay } from '../responsive/CRTOverlay';
 import { DesktopTopbar } from '../responsive/DesktopTopbar';
@@ -48,6 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Dock />
       </div>
       <ToTopButton />
+      <TypeReveal />
     </>
   );
 }

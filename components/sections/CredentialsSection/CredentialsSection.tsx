@@ -25,7 +25,7 @@ export function CredentialsSection({
       {groups.map((group) => (
         // biome-ignore lint/a11y/useSemanticElements: these are career facts, not form controls
         <div key={group.prefix} role="group" aria-labelledby={`${groupId}-${group.prefix}`}>
-          <h3 id={`${groupId}-${group.prefix}`} className="career-command">
+          <h3 id={`${groupId}-${group.prefix}`} className="career-command" data-type-reveal>
             <span className="sr-only">{group.label}</span>
             <span aria-hidden="true">
               <span>{prompt}</span> {group.command}
@@ -47,7 +47,7 @@ export function CredentialsSection({
       ))}
       {/* biome-ignore lint/a11y/useSemanticElements: these are career facts, not form controls */}
       <div id={communityId} role="group" aria-labelledby={`${groupId}-community`}>
-        <h3 id={`${groupId}-community`} className="career-command">
+        <h3 id={`${groupId}-community`} className="career-command" data-type-reveal>
           <span className="sr-only">{community.label}</span>
           <span aria-hidden="true">
             <span>{prompt}</span> {community.command}

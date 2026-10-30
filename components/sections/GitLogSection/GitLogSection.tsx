@@ -59,7 +59,7 @@ export function GitLogSection({ defer }: { defer?: boolean } = {}) {
       {...(defer ? { 'data-cv-defer': 'true' } : {})}
     >
       <header className="career-header">
-        <h2 id={headingId}>
+        <h2 id={headingId} data-type-reveal>
           <span>{careerCopy.heading}</span>
           <span className="career-icon" aria-hidden="true">
             <IconGitLog />

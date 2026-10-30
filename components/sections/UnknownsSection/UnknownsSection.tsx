@@ -11,7 +11,7 @@ export function UnknownsSection() {
       <div className="opinions-unknowns">
         {groups.map((group) => (
           <div key={group.heading}>
-            <h3>{group.heading}</h3>
+            <h3 data-type-reveal>{group.heading}</h3>
             <ul>
               {group.items.map((item) => (
                 <li key={item.claim}>

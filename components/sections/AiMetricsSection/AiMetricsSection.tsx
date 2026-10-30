@@ -31,7 +31,7 @@ function AiMetricsBody({
   const timestamp = metricTimestamp(metrics?.lastRun, MEASURED_FORMAT.askStaleAfterMs);
   return (
     <div className="measured-ask" aria-busy={loading || undefined}>
-      <h3 className="measured-heading">
+      <h3 className="measured-heading" data-type-reveal>
         <a href={measured.ask.url} target="_blank" rel="noopener noreferrer">
           {measured.ask.title}
           <span className="sr-only"> {measured.externalDisclosure}</span>
