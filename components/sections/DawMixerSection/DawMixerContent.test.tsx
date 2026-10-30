@@ -101,6 +101,23 @@ describe('DawMixerContent', () => {
   });
 });
 
+describe('DawMixerContent content coverage', () => {
+  it('renders every string in dawMixerUi', async () => {
+    const { dawMixerUi } = await import('@/content/daw-mixer');
+    const doc = await renderMixer();
+    const html = doc.documentElement.outerHTML;
+    for (const [key, value] of Object.entries(dawMixerUi)) {
+      const strings = Array.isArray(value) ? value : [value];
+      for (const text of strings) {
+        expect(
+          html,
+          `dawMixerUi.${key} ("${text}") is never rendered by the mixer: a content key with no consumer is dead data`,
+        ).toContain(text);
+      }
+    }
+  });
+});
+
 describe('DawMixerContent accessibility', () => {
   it('labels the region containing all six channels', async () => {
     const doc = await renderMixer();

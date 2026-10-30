@@ -46,7 +46,7 @@
   "profiles": [
     {
       "name": "erik.json",
-      "description": "Structured HiringProfile document: employers, stack, receipts, work authorization, availability.",
+      "description": "Structured HiringProfile document: employers, stack, receipts, availability.",
       "url": "https://www.erikunha.dev/api/erik.json",
       "contentType": "application/json"
     },
