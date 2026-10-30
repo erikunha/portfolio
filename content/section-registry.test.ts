@@ -81,7 +81,6 @@ describe('section registry', () => {
     for (const { id, srLabel } of SECTION_REGISTRY) {
       expect(SECTION_LABELS[id]).toBe(srLabel);
     }
-    expect(SECTION_LABELS['sec-daw-mixer']).toBe('DAW mixer');
   });
 
   it('targets actual section elements rendered by the home page sections', () => {

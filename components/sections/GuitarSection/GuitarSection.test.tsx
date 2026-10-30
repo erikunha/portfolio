@@ -103,6 +103,34 @@ describe('GuitarSection presentation', () => {
     expect(heading?.querySelector('.sr-only')?.textContent).toBe(SECTION_LABELS['sec-guitar']);
   });
 
+  it('renders the live signal chain strip above the chain', async () => {
+    const doc = await renderContent();
+    const strip = doc.querySelector('.guitar-signal-strip');
+    expect(strip?.textContent).toContain(guitarPresentation.signalStrip.live);
+    expect(strip?.textContent).toContain(guitarPresentation.signalStrip.tail);
+  });
+
+  it('labels every chain node with its role prefix', async () => {
+    const doc = await renderContent();
+    for (const node of guitarPresentation.signalChain) {
+      const displayed = doc.querySelector(`[data-testid="signal-node-${node.role}"]`);
+      expect(displayed?.querySelector('.guitar-label')?.textContent).toBe(node.label);
+    }
+    expect(
+      Array.from(doc.querySelectorAll('.guitar-node .guitar-label'), (label) => label.textContent),
+    ).toEqual(['// INPUT', '// AMP', '// OUT']);
+  });
+
+  it('keeps the mixer inside the guitar and mixer module', () => {
+    const html = renderToStaticMarkup(createElement(GuitarSection));
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const section = doc.querySelector('section#sec-guitar');
+    expect(section).not.toBeNull();
+    expect(section?.querySelectorAll('[data-testid="daw-mixer-desktop"]')).toHaveLength(1);
+    expect(section?.querySelectorAll('[data-testid^="channel-"]')).toHaveLength(6);
+    expect(doc.querySelectorAll('section#sec-daw-mixer')).toHaveLength(0);
+  });
+
   it('sizes the photo for a full-width source up to 767px', async () => {
     const doc = await renderContent();
     expect(doc.querySelector('img')?.getAttribute('sizes')).toBe('(max-width: 767px) 100vw, 320px');

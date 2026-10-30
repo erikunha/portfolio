@@ -74,15 +74,6 @@ export function IconGuitar() {
   );
 }
 
-export function IconVisa() {
-  return (
-    <svg {...baseProps}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
-    </svg>
-  );
-}
-
 export function IconCredentials() {
   return (
     <svg {...baseProps}>
@@ -134,19 +125,6 @@ export function IconContact() {
       focusable={false}
     >
       <polygon points="6,4 20,12 6,20" />
-    </svg>
-  );
-}
-
-export function IconMixer() {
-  return (
-    <svg {...baseProps}>
-      <line x1="6" y1="5" x2="6" y2="19" />
-      <line x1="12" y1="9" x2="12" y2="19" />
-      <line x1="18" y1="3" x2="18" y2="19" />
-      <rect x="3" y="8" width="6" height="2" />
-      <rect x="9" y="13" width="6" height="2" />
-      <rect x="15" y="6" width="6" height="2" />
     </svg>
   );
 }

@@ -6,7 +6,7 @@
 
 A single-page personal portfolio and **reference web system** for Erik Cunha, built as a deliberate engineering reference system. The product is not just the site you see; the **architecture, enforcement, and documentation are themselves the deliverable**. Every decision is meant to hold up as something another team could adopt verbatim.
 - **Stack:** Next.js 16 (App Router, `cacheComponents`/PPR) · React 19 · TypeScript strict · Tailwind v4 (`@theme`) · pnpm · Vercel (Fluid Compute).
-- **Shape:** a homepage (`/`) composed of 12 terminal-themed section components plus a footer, reading views (`/summary`, `/cv`), localized links (`/links`, `/links/en`), design-system MDX pages and 11 `/api/*` handlers (including an AI "ask Erik" endpoint and a read-only MCP server).
+- **Shape:** a homepage (`/`) composed of 9 terminal-themed section components plus a footer, reading views (`/summary`, `/cv`), localized links (`/links`, `/links/en`), design-system MDX pages and 11 `/api/*` handlers (including an AI "ask Erik" endpoint and a read-only MCP server).
 - **Aesthetic:** Matrix/brutalist terminal - pure black, lime signal-green, JetBrains Mono, CRT overlays.
 
 ## How to use these docs
@@ -38,7 +38,7 @@ These live at the repo root and remain authoritative. This knowledge base **rout
 
 ## Executive summary
 
-- **Default-RSC, static-first.** `app/page.tsx` composes 10 section components and a footer. Client boundaries wrap server-rendered children and provide interactive islands. No section selects a device variant; the DAW mixer and Contact work-authorization table use synchronous responsive layouts; Measured streams ASK and PSI data separately. Client naming accepts `*.client.ts(x)`, `/client/` paths and Next error files.
+- **Default-RSC, static-first.** `app/page.tsx` composes 9 section components and a footer. Client boundaries wrap server-rendered children and provide interactive islands. No section selects a device variant; the guitar module (rig plus DAW mixer) and Contact use synchronous responsive layouts; Measured streams ASK and PSI data separately. Client naming accepts `*.client.ts(x)`, `/client/` paths and Next error files.
 - **Content is typed data, validated at build.** Typed `content/*.ts` modules supply section data. Zod schemas parse content at import time, and `pnpm validate-content` checks the content set in the local verify chain and CI.
 - **The API layer is a disciplined BFF.** A `defineHandler` envelope enforces a fixed `rate-limit → parse → validate → handle` order; `/api/ask` is a bespoke streaming handler with a multi-layer security/budget pipeline. State lives in Upstash Redis. Rate limiting and dedup **fail open** so a Redis outage never 500s a user; the `/api/ask` budget reservation is the exception and **fails closed** with 503.
 - **State is deliberately minimal.** Exactly one React Context (breakpoint), no global store, no URL state. Motion preference lives in the DOM (`body[data-motion]`), and islands coordinate via window `CustomEvent`s, not shared React state.

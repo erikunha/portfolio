@@ -85,8 +85,10 @@ export const footerContent = FooterContentSchema.parse({
     {
       directory: './pages/',
       links: [
+        { label: '30S_SUMMARY', href: '/summary' },
         { label: 'DESIGN_SYSTEM', href: '/design-system' },
         { label: 'LINK_IN_BIO', href: '/links' },
+        { label: 'VIEW_CV', href: '/cv' },
       ],
     },
   ],

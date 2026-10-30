@@ -21,7 +21,7 @@ const SHELL_RESPONSES: ShellResponse[] = [
   {
     commands: [ShellCommand.List],
     kind: ShellLineKind.Output,
-    text: 'README.md  ~/.now  ~/.guitar_rig  ~/.visa  ~/.unknowns  ~/.community  ~/.credentials  hottest_takes.md  contact',
+    text: 'README.md  ~/.now  ~/.guitar_rig  ~/.unknowns  ~/.community  ~/.credentials  hottest_takes.md  contact',
   },
   {
     commands: [ShellCommand.Skills],

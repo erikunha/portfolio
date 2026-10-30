@@ -38,7 +38,8 @@ export const contactCopy: ContactContent = {
     emailLabel: 'email:',
     email: EMAIL_ADDRESS,
     linkedinHref: LINKEDIN_URL,
-    copyEmail: 'Copy email',
+    copyEmail: '[COPY EMAIL]',
+    copyEmailCopied: '[COPIED]',
   },
   form: {
     nameLabel: '$ name:',
@@ -55,6 +56,8 @@ export const contactCopy: ContactContent = {
     retained: 'Your text is still here.',
     retryEmail: 'Retry, or email',
     counterSeparator: '/',
+    privacy:
+      'Kept 90 days so Erik can reply, then deleted. IP hashed for rate limiting. Never shared.',
     fieldLabels: { name: 'name', email: 'email', message: 'message' },
   },
   errors: {

@@ -33,7 +33,8 @@ describe('Footer server output', () => {
     expect(host.textContent).toContain('Power down.');
     expect(host.textContent).toContain('this session ends here');
     expect(host.querySelector('canvas')).toBeNull();
-    expect(host.querySelector('.footer-timestamp')?.textContent).toBe('[ 0.001]');
+    expect(host.querySelector('.footer-timestamp')?.textContent).toBe('[ 0.349]');
+    expect(host.textContent).toContain('closing 3 connections');
     for (const link of [
       { label: 'Home', href: '#main-content' },
       { label: 'About', href: '#sec-readme' },
@@ -44,8 +45,10 @@ describe('Footer server output', () => {
       { label: 'Opinions', href: '#sec-hottest-takes' },
       { label: 'Guitar and mixer', href: '#sec-guitar' },
       { label: 'Contact', href: '#sec-contact' },
+      { label: '30S_SUMMARY', href: '/summary' },
       { label: 'DESIGN_SYSTEM', href: '/design-system' },
       { label: 'LINK_IN_BIO', href: '/links' },
+      { label: 'VIEW_CV', href: '/cv' },
       { label: 'github.com/erikunha', href: 'https://github.com/erikunha' },
       { label: 'linkedin.com/in/erikunha', href: 'https://www.linkedin.com/in/erikunha/' },
       { label: 'erikunha.dev', href: 'https://www.erikunha.dev' },
@@ -116,6 +119,23 @@ describe('Footer server output', () => {
     expect(
       host.querySelector('a[aria-label="press R to reboot, back to top"]')?.getAttribute('href'),
     ).toBe('#main-content');
+  });
+
+  it('lists the four page destinations under ./pages/', () => {
+    const host = serverFooter();
+    const pages = [...host.querySelectorAll('.sm-groups > li')].find(
+      (group) => group.querySelector('.sm-title')?.textContent === './pages/',
+    );
+    const links = [...(pages?.querySelectorAll('ul > li > a') ?? [])].map((link) => [
+      link.querySelector('.tl')?.textContent,
+      link.getAttribute('href'),
+    ]);
+    expect(links).toEqual([
+      ['30S_SUMMARY', '/summary'],
+      ['DESIGN_SYSTEM', '/design-system'],
+      ['LINK_IN_BIO', '/links'],
+      ['VIEW_CV', '/cv'],
+    ]);
   });
 
   it('keeps the visible reboot text inside the accessible name (WCAG 2.5.3 label in name)', () => {

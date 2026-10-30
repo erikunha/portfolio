@@ -21,7 +21,6 @@ const GROUPS: Group[] = [
   },
   { name: 'summary actions', path: '/summary', container: '.reading-actions' },
   { name: 'summary stats', path: '/summary', container: '.reading-stats' },
-  { name: 'summary row', path: '/summary', container: '.reading-rows li' },
 ];
 
 interface Box {

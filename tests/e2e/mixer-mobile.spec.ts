@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { installMockBackend } from './_helpers/mock-backend';
 
-const MIXER_SELECTOR = '#sec-daw-mixer';
+const MIXER_SELECTOR = '#sec-guitar [data-testid="daw-mixer-desktop"]';
 const MOBILE_WIDTHS = [320, 390];
 const VIEWPORT_HEIGHT = 800;
 const SUBPIXEL_TOLERANCE = 1;
@@ -71,6 +71,44 @@ for (const width of MOBILE_WIDTHS) {
     );
   });
 }
+
+test('no two cells of a channel row overlap between 768px and 1100px', async ({ page }) => {
+  await installMockBackend(page, { log: 'accept', forget: 'happy' });
+  await page.setViewportSize({ width: 900, height: VIEWPORT_HEIGHT });
+  await page.goto('/');
+  const mixer = page.locator(MIXER_SELECTOR);
+  await mixer.scrollIntoViewIfNeeded();
+  await expect(mixer.locator('[data-testid^="channel-"]').first()).toBeVisible();
+
+  const offenders = await page.evaluate((selector) => {
+    const row = document.querySelector(`${selector} fieldset.daw-channel-row`);
+    if (!row) return ['the mixer has no channel row'];
+    const cells = Array.from(row.children).map((child, index) => ({
+      index,
+      label: child.className ? String(child.className).split(' ')[0] : child.tagName,
+      rect: child.getBoundingClientRect(),
+    }));
+    const overlaps: string[] = [];
+    for (let first = 0; first < cells.length; first += 1) {
+      const a = cells[first];
+      if (!a) continue;
+      for (let second = first + 1; second < cells.length; second += 1) {
+        const b = cells[second];
+        if (!b) continue;
+        if (a.rect.width === 0 || a.rect.height === 0) continue;
+        if (b.rect.width === 0 || b.rect.height === 0) continue;
+        const sharesX = a.rect.left < b.rect.right - 1 && b.rect.left < a.rect.right - 1;
+        const sharesY = a.rect.top < b.rect.bottom - 1 && b.rect.top < a.rect.bottom - 1;
+        if (sharesX && sharesY) {
+          overlaps.push(`cell ${a.index} (${a.label}) overlaps cell ${b.index} (${b.label})`);
+        }
+      }
+    }
+    return overlaps;
+  }, MIXER_SELECTOR);
+
+  expect(offenders, 'grid cells of a channel row must not share the same grid area').toEqual([]);
+});
 
 test('channel rows use the compact padding between 768px and 1100px', async ({ page }) => {
   await installMockBackend(page, { log: 'accept', forget: 'happy' });

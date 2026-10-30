@@ -4,6 +4,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { aboutContent } from '@/content/about';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
 import { communityEvent, communityTalksSentence } from '@/content/community';
+import { contactLanguageLine } from '@/content/contact';
 import { contactCopy } from '@/content/contact-copy';
 import { education } from '@/content/education';
 import { footerContent } from '@/content/footer';
@@ -12,11 +13,11 @@ import { heroTagline } from '@/content/hero';
 import { perfReceipts } from '@/content/perf-receipts';
 import { profile, profileLanguageLine, profileWorkingLanguageLine } from '@/content/profile';
 import { projects } from '@/content/projects';
+import { cvDocument } from '@/content/reading-views';
 import { readmeCopy } from '@/content/readme';
 import { PerfReceiptSchema, ProjectSchema } from '@/content/schemas';
 import { personSchema } from '@/content/seo';
 import { social } from '@/content/social';
-import { visaRows } from '@/content/visa';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 import { readContentSurfaces } from './helpers/content-surfaces';
@@ -63,15 +64,12 @@ describe('identity is consistent across every gated surface', () => {
     expect(profile.actions[0]?.href).toBe(social.github);
   });
 
-  it('writes work authorization as prose in search descriptions, never as raw status tokens', () => {
+  it('publishes no work-authorization status in search descriptions', () => {
     const descriptions = [
       personSchema.description,
       personSchema.seeks.itemOffered.description,
       readmeCopy.desktopIntro,
     ];
-    for (const text of descriptions) {
-      expect(text).toContain('Brazil: citizen');
-    }
     const rawStatusToken = /CITIZEN|NEEDS_SPONSORSHIP|OPEN_WITH_SPONSORSHIP/;
     const rendered = [
       ...descriptions,
@@ -80,6 +78,7 @@ describe('identity is consistent across every gated surface', () => {
       JSON.stringify(aboutContent.now.rows),
     ];
     for (const text of rendered) expect(text).not.toMatch(rawStatusToken);
+    for (const text of descriptions) expect(text).not.toMatch(/citizen|sponsorship/i);
   });
 
   it('states the cross-platform code reuse the resume gives, on both surfaces', () => {
@@ -136,6 +135,10 @@ describe('identity is consistent across every gated surface', () => {
     ]);
     expect(profileLanguageLine).toBe('PT native · EN C1 · ES B1 · FR A2');
     expect(profileWorkingLanguageLine).toBe('PT native · EN C1');
+    expect(
+      contactLanguageLine,
+      'the contact section and the CV must render the same language line, or the two surfaces drift apart',
+    ).toBe(`// ${cvDocument.languages}`);
   });
 
   it('expects the eval to answer with exactly the profile languages', () => {
@@ -234,32 +237,10 @@ describe('identity is consistent across every gated surface', () => {
 });
 
 describe('terminal redesign canonical facts', () => {
-  it('serves the same four authorization statuses without abbreviating mobile statuses', () => {
-    const expected = {
-      Brazil: 'CITIZEN',
-      EU_Malta: 'NEEDS_SPONSORSHIP',
-      Canada: 'NEEDS_SPONSORSHIP',
-      worldwide: 'OPEN_WITH_SPONSORSHIP',
-    };
-    expect(HIRING_PROFILE.work_auth).toEqual(expected);
+  it('publishes no work-authorization status in the hiring profile or the agent manifest', () => {
+    expect(HIRING_PROFILE.work_auth).toEqual({});
     const manifest = JSON.parse(read('public/.well-known/agent.json'));
-    expect(manifest.work_auth).toEqual(expected);
-    expect(visaRows.map((row) => [row.jurisdiction, row.status])).toEqual([
-      ['Brazil', 'CITIZEN'],
-      ['EU (Malta)', 'NEEDS_SPONSORSHIP'],
-      ['Canada', 'NEEDS_SPONSORSHIP'],
-      ['Worldwide', 'OPEN_WITH_SPONSORSHIP'],
-    ]);
-    for (const row of visaRows) {
-      expect(SYSTEM_TEXT).toContain(`${row.jurisdiction}: ${row.status}`);
-      expect(llmsTxt).toContain(`${row.jurisdiction}: ${row.status}`);
-      expect(JSON.parse(layoutMetadataText).other['work-authorization']).toContain(
-        `${row.jurisdiction}: ${row.status}`,
-      );
-    }
-    expect(visaRows[2]?.evidence).toBe(
-      'lived and worked in Vancouver, 2023-2025 · co-op diploma, CICCC',
-    );
+    expect(manifest.work_auth).toEqual({});
   });
 
   it('publishes the resume location and immediate availability consistently', () => {

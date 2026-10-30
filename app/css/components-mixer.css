@@ -86,7 +86,8 @@
   }
 
   .mx-channel-desc {
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .mx-channel-knobs,
@@ -95,11 +96,14 @@
   }
 
   .mx-channel-plugins > div {
+    flex-wrap: wrap;
     gap: var(--spacing-1);
   }
 
   .mx-channel-plugins > div > div {
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-1);
   }
 
   .rms-buttons {
@@ -152,15 +156,15 @@
     }
 
     .mx-channel-meter {
-      grid-area: 4 / 1;
+      grid-area: 4 / 1 / 5 / 3;
     }
 
     .mx-grid .daw-channel-row > :nth-child(7) {
-      grid-area: 4 / 2;
+      grid-area: 5 / 1 / 6 / 3;
     }
 
     .mx-grid .daw-channel-row > :nth-child(8) {
-      grid-area: 4 / 3;
+      grid-area: 5 / 3;
     }
   }
 
@@ -170,16 +174,14 @@
     }
 
     .mx-grid .daw-channel-row {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .mx-grid .daw-channel-row > *,
-    .mx-grid .daw-channel-row > :nth-child(7),
-    .mx-grid .daw-channel-row > :nth-child(8) {
-      grid-area: auto;
+      grid-template-columns: auto minmax(6rem, 1fr) auto;
+      align-items: start;
+      gap: var(--spacing-2) var(--spacing-3);
+      padding: var(--spacing-3);
     }
 
     .mx-channel-id {
+      grid-area: 1 / 1;
       flex-direction: row;
       flex-wrap: wrap;
       align-items: center;
@@ -187,16 +189,26 @@
     }
 
     .mx-channel-id > :not(:first-child) {
-      display: block;
-    }
-
-    .mx-channel-id > :nth-child(3) {
       display: none;
     }
 
-    .mx-channel-knobs,
+    .mx-channel-track {
+      grid-area: 1 / 2;
+    }
+
+    .mx-channel-track > * {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .mx-channel-knobs {
+      grid-area: 2 / 1;
+      justify-content: flex-start;
+    }
+
     .mx-channel-buttons {
-      justify-content: space-around;
+      grid-area: 2 / 2 / 3 / 4;
+      justify-content: flex-end;
     }
 
     .mx-channel-buttons .rms-buttons {
@@ -209,16 +221,21 @@
       min-height: var(--spacing-target);
     }
 
-    .mx-channel-plugins > div {
-      flex-direction: column;
-      gap: var(--spacing-2);
+    .mx-channel-plugins {
+      grid-area: 3 / 1 / 4 / 4;
     }
 
-    .mx-channel-plugins > div > div {
-      flex-direction: row;
-      justify-content: space-between;
-      min-height: var(--spacing-target);
-      padding-inline: var(--spacing-3);
+    .mx-channel-meter {
+      grid-area: 4 / 1 / 5 / 3;
+    }
+
+    .mx-grid .daw-channel-row > :nth-child(7) {
+      grid-area: 5 / 1 / 6 / 4;
+    }
+
+    .mx-grid .daw-channel-row > :nth-child(8) {
+      grid-area: 1 / 3;
+      align-self: center;
     }
   }
 

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { SECTION_LABELS } from './section-labels';
 import { SECTION_REGISTRY } from './section-registry';
 
-const EXPECTED_SECTION_COUNT = 9;
+const EXPECTED_SECTION_COUNT = 8;
 
 describe('SECTION_LABELS', () => {
   it('uses registry region names while preserving the existing screen reader copy', () => {

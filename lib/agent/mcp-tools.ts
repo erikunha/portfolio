@@ -46,7 +46,7 @@ export function registerAgentTools(server: McpServer): void {
     {
       title: 'Get hiring profile',
       description:
-        "Return Erik Cunha's structured HiringProfile: employers, primary/secondary stack, quantified receipts, work authorization, education, and availability. Read-only; same data as /api/erik.json.",
+        "Return Erik Cunha's structured HiringProfile: employers, primary/secondary stack, quantified receipts, education, and availability. Read-only; same data as /api/erik.json.",
       inputSchema: z.object({}),
     },
     async () => textResult(JSON.stringify(HIRING_PROFILE)),

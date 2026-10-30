@@ -3,7 +3,6 @@ import { type DawMixer, DawMixerSchema } from './schemas';
 
 export const dawMixerUi = z
   .object({
-    sectionHeader: z.string().min(1),
     regionLabel: z.string().min(1),
     skipLink: z.string().min(1),
     skipTargetId: z.string().min(1),
@@ -15,7 +14,6 @@ export const dawMixerUi = z
     columns: z.array(z.string().min(1)).length(8),
   })
   .parse({
-    sectionHeader: './MIX --LIVE: DAW MIXER',
     regionLabel: 'Mixer channels',
     skipLink: 'Skip mixer',
     skipTargetId: 'daw-mixer-end',

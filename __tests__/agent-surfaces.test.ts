@@ -55,6 +55,36 @@ describe('public/.well-known/agent.json', () => {
     expect(manifest.mcp?.transport).toBe('streamable-http');
     expect(manifest.mcp?.url).toBe('https://www.erikunha.dev/api/mcp');
   });
+
+  it('advertises no work-authorization data the profile no longer publishes', async () => {
+    const manifest = JSON.parse(readFileSync(AGENT_JSON_PATH, 'utf8')) as {
+      profiles?: Array<{ description?: string }>;
+      work_auth?: Record<string, unknown>;
+    };
+    expect(
+      manifest.work_auth,
+      'the profile publishes an empty work-authorization record, so no description may promise work-authorization data',
+    ).toEqual({});
+    for (const profile of manifest.profiles ?? []) {
+      expect(
+        profile.description ?? '',
+        'a manifest description must not promise a field the endpoint no longer returns',
+      ).not.toMatch(/work authorization/i);
+    }
+
+    const client = await connectTestClient();
+    try {
+      const { tools } = await client.listTools();
+      for (const tool of tools) {
+        expect(
+          tool.description ?? '',
+          `MCP tool "${tool.name}" must not promise a field the profile no longer returns`,
+        ).not.toMatch(/work authorization/i);
+      }
+    } finally {
+      await client.close();
+    }
+  });
 });
 
 describe('MCP server tool surface', () => {

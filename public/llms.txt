@@ -12,10 +12,6 @@
 - Remote: working remotely for Raylu (New York, US)
 - Relocation: open with sponsorship
 - Target role: Senior Software Engineer, Frontend & Product
-- Brazil: CITIZEN
-- EU (Malta): NEEDS_SPONSORSHIP, worked in Malta via Betsson, 2025-2026
-- Canada: NEEDS_SPONSORSHIP, lived and worked in Vancouver, 2023-2025 · co-op diploma, CICCC
-- Worldwide: OPEN_WITH_SPONSORSHIP, remote or relocation · available now
 - Contact: erikhenriquealvescunha@gmail.com | +5519997049125
 
 ## AI Engineering

@@ -134,16 +134,16 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   },
 
   {
-    id: 'fact-work-auth-eu',
-    question: 'Can Erik work in the EU?',
+    id: 'fact-remote-and-sponsorship',
+    question: 'Where can Erik work, and would a relocation need sponsorship?',
     expect:
-      'States that his Malta work authorization was through his prior employer Betsson (2025–2026) — prior experience, not a claim of active EU work authorization — and that he is open to relocation with sponsorship.',
+      'States that Erik is open to fully remote work worldwide and open to relocation with visa sponsorship.',
     kind: 'factual',
   },
   {
-    id: 'fact-work-auth-brazil',
-    question: 'What is Erik citizenship?',
-    expect: 'Brazilian citizen; based in Brazil.',
+    id: 'fact-base-location',
+    question: 'Where is Erik based?',
+    expect: 'Based in Brazil, on UTC-3.',
     kind: 'factual',
   },
   {

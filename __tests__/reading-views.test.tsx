@@ -16,7 +16,6 @@ import {
   withoutFragment,
 } from '@/content/reading-views';
 import { social } from '@/content/social';
-import { visaRows, workAuthorizationProse } from '@/content/visa';
 
 function render(page: () => React.ReactElement) {
   const host = document.createElement('div');
@@ -81,19 +80,15 @@ describe('CV reading view', () => {
     }
   });
 
-  it('shows every certification, degree and work authorization row', () => {
+  it('shows every certification and degree row', () => {
     for (const entry of credentials) expect(host.textContent).toContain(entry.evidence);
     for (const entry of education) expect(host.textContent).toContain(entry.degree);
-    for (const row of visaRows) {
-      expect(host.textContent).toContain(row.jurisdiction);
-      expect(host.textContent).toContain(row.evidence);
-    }
   });
 
-  it('keeps the summary free of the header facts and the authorization sentence', () => {
+  it('keeps the summary free of the header facts', () => {
     expect(cvDocument.summary.length).toBeGreaterThan(40);
-    expect(cvDocument.summary).not.toContain(workAuthorizationProse);
     expect(cvDocument.summary).not.toContain(profile.title);
+    expect(cvDocument.summary).not.toContain(cvDocument.location);
   });
 
   it('opens external links in a new tab with a hint for screen readers', () => {
@@ -167,8 +162,9 @@ describe('summary reading view', () => {
     }
   });
 
-  it('shows each work authorization row and the stack chips', () => {
-    expect(host.querySelectorAll('.reading-rows li')).toHaveLength(visaRows.length);
+  it('shows the stack chips and no work-authorization row', () => {
+    expect(host.querySelectorAll('.reading-rows li')).toHaveLength(0);
+    expect(host.textContent).not.toContain('Work authorization');
     expect(host.querySelectorAll('.reading-chips li')).toHaveLength(
       readingViews.summary.stack.length,
     );

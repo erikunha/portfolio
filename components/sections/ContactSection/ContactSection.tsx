@@ -1,11 +1,10 @@
-import { CopyButton } from '@/app/design-system/_components/CopyButton';
-import { contactContent } from '@/content/contact';
+import { contactContent, contactLanguageLine } from '@/content/contact';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { ContactFormLazy } from '../../client/ContactForm';
+import { ContactCopyButton } from '../../client/ContactForm/ContactCopyButton.client';
 import { ErrorBoundary } from '../../ErrorBoundary';
 import { IconContact } from '../../Icons';
 import { Module } from '../../responsive/Module';
-import { VisaContent } from '../VisaSection/VisaSection';
 
 export function ContactSection({ defer }: { defer?: boolean } = {}) {
   const { section } = contactContent;
@@ -32,12 +31,12 @@ export function ContactSection({ defer }: { defer?: boolean } = {}) {
           </div>
         </div>
         <div className="contact-side">
-          <VisaContent />
+          <p className="contact-languages">{contactLanguageLine}</p>
           <div className="contact-email">
             <p>
               {section.emailLabel} <a href={`mailto:${section.email}`}>{section.email}</a>
             </p>
-            <CopyButton text={section.email} aria-label={section.copyEmail} />
+            <ContactCopyButton email={section.email} />
           </div>
         </div>
       </div>

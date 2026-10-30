@@ -15,6 +15,24 @@
     background: var(--color-secondary-950);
   }
 
+  .guitar-signal-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-2);
+    padding-bottom: var(--spacing-2);
+    margin-bottom: var(--spacing-3);
+    border-bottom: var(--border-width) solid var(--color-primary-quiet);
+    color: var(--color-primary-400);
+    font-size: var(--text-xs);
+    letter-spacing: var(--guitar-label-tracking);
+  }
+
+  .guitar-signal-strip-live {
+    color: var(--color-primary-500);
+  }
+
   .guitar-chain {
     display: grid;
     grid-template-columns: var(--guitar-columns);
@@ -180,6 +198,10 @@
 
   .guitar-photo-scanlines {
     background: var(--guitar-scanline);
+  }
+
+  .guitar-mixer {
+    margin-top: var(--spacing-6);
   }
 
   #sec-guitar > header h2 {

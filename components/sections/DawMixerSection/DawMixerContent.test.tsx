@@ -33,15 +33,14 @@ vi.mock('@/components/client/DawMixer/RmsButtons/RmsButtons.client', () => ({
 }));
 
 async function renderMixer(): Promise<Document> {
-  const { DawMixerSection } = await import('./DawMixerSection');
-  const html = renderToStaticMarkup(createElement(DawMixerSection));
+  const { DawMixerContent } = await import('./DawMixerContent');
+  const html = renderToStaticMarkup(createElement(DawMixerContent));
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
-describe('DawMixerSection', () => {
+describe('DawMixerContent', () => {
   it('renders one mixer with all six channels and their interactive islands', async () => {
     const doc = await renderMixer();
-    expect(doc.querySelectorAll('#sec-daw-mixer').length).toBe(1);
     expect(doc.querySelectorAll('[data-testid="daw-mixer-desktop"]').length).toBe(1);
     expect(doc.querySelectorAll('[data-testid^="channel-"]').length).toBe(6);
     expect(doc.querySelectorAll('[data-testid^="fader-"]').length).toBe(6);
@@ -86,9 +85,40 @@ describe('DawMixerSection', () => {
     const vu = doc.querySelector('[data-testid="vu-RHYTHM GTR"]');
     expect(vu?.getAttribute('data-level')).toBe('71');
   });
+
+  it('renders plugin chip names in full without an ellipsis cap', async () => {
+    const doc = await renderMixer();
+    const chip = doc.querySelector('[data-testid="plugin-CH 02-OD KLON"]');
+    expect(chip?.textContent).toContain('OD KLON');
+    expect(chip?.querySelector('span')?.getAttribute('class')).not.toContain('text-ellipsis');
+  });
+
+  it('renders channel descriptions in full without a truncation cap', async () => {
+    const doc = await renderMixer();
+    const desc = doc.querySelector('[data-testid="channel-CH 01"] .mx-channel-desc');
+    expect(desc?.textContent).toContain('Gretsch · clean strums · main bed · verse + chorus');
+    expect(desc?.getAttribute('class')).not.toContain('text-ellipsis');
+  });
 });
 
-describe('DawMixerSection accessibility', () => {
+describe('DawMixerContent content coverage', () => {
+  it('renders every string in dawMixerUi', async () => {
+    const { dawMixerUi } = await import('@/content/daw-mixer');
+    const doc = await renderMixer();
+    const html = doc.documentElement.outerHTML;
+    for (const [key, value] of Object.entries(dawMixerUi)) {
+      const strings = Array.isArray(value) ? value : [value];
+      for (const text of strings) {
+        expect(
+          html,
+          `dawMixerUi.${key} ("${text}") is never rendered by the mixer: a content key with no consumer is dead data`,
+        ).toContain(text);
+      }
+    }
+  });
+});
+
+describe('DawMixerContent accessibility', () => {
   it('labels the region containing all six channels', async () => {
     const doc = await renderMixer();
     const region = doc.querySelector('[role="region"][aria-label="Mixer channels"]');
@@ -117,7 +147,7 @@ describe('DawMixerSection accessibility', () => {
   });
 });
 
-describe('DawMixerSection skip link', () => {
+describe('DawMixerContent skip link', () => {
   it('renders the accessible skip link with its class and existing target', async () => {
     const doc = await renderMixer();
     const link = Array.from(doc.querySelectorAll('a')).find(
@@ -132,7 +162,7 @@ describe('DawMixerSection skip link', () => {
   });
 });
 
-describe('DawMixerSection XSS safety (behavioral)', () => {
+describe('DawMixerContent XSS safety (behavioral)', () => {
   it('ParsedText renders bold markers as <strong>, not raw HTML', async () => {
     const doc = await renderMixer();
     const ch02 = doc.querySelector('[data-testid="channel-CH 02"]');

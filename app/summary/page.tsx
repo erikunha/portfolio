@@ -115,23 +115,6 @@ export default function SummaryPage() {
         </section>
 
         <div className="reading-grid">
-          <section aria-labelledby={sectionId('auth')} className="reading-section">
-            <h2 id={sectionId('auth')} className="reading-heading" data-type-reveal>
-              {summary.headings.workAuthorization}
-            </h2>
-            <ul className="reading-rows">
-              {summaryDocument.authorization.map((row) => (
-                <li key={row.jurisdiction}>
-                  <span className="reading-row-key">{row.jurisdiction}</span>
-                  <span className="reading-row-value">
-                    {row.status} <span className="reading-meta">{row.evidence}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <p className="reading-meta">{summaryDocument.languages}</p>
-          </section>
-
           <section aria-labelledby={sectionId('stack')} className="reading-section">
             <h2 id={sectionId('stack')} className="reading-heading" data-type-reveal>
               {summary.headings.stack}
@@ -151,6 +134,7 @@ export default function SummaryPage() {
           <p className="reading-actions-inline">
             <a href={`mailto:${summaryDocument.email}`}>{summaryDocument.email}</a>
           </p>
+          <p className="reading-meta">{summaryDocument.languages}</p>
         </section>
       </main>
     </div>
