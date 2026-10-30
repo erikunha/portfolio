@@ -9,16 +9,36 @@ const registrySectionLabels = Object.fromEntries(
 
 export const SECTION_LABELS = {
   ...registrySectionLabels,
-  'sec-ai-metrics': 'AI answer-quality evaluation',
-  'sec-perf-receipts': 'Performance receipts',
-  'sec-responsibilities': 'Responsibilities',
-  'sec-now': 'Now',
-  'sec-npm-stack': 'Tech stack',
   'sec-man-page': 'Profile manual',
   'sec-sys-health': 'System health',
-  'sec-visa': 'Work authorization',
   'sec-daw-mixer': 'DAW mixer',
-  'sec-unknowns': 'Open questions',
 } as const;
 
 z.record(z.string(), z.string().min(1)).parse(SECTION_LABELS);
+
+export const SCROLL_REGION_LABELS = {
+  'sec-man-page': 'Profile manual (scrollable)',
+  'sec-responsibilities': 'Responsibilities (scrollable)',
+  'sec-readme': 'README code',
+} as const;
+
+z.record(z.string(), z.string().min(1)).parse(SCROLL_REGION_LABELS);
+
+const SCROLL_REGION_PARENTS = {
+  'sec-man-page': 'sec-man-page',
+  'sec-responsibilities': 'sec-readme',
+  'sec-readme': 'sec-readme',
+} as const satisfies Record<keyof typeof SCROLL_REGION_LABELS, keyof typeof SECTION_LABELS>;
+
+for (const [regionId, label] of Object.entries(SCROLL_REGION_LABELS)) {
+  const sectionId = SCROLL_REGION_PARENTS[regionId as keyof typeof SCROLL_REGION_PARENTS];
+  const sectionLabel: string | undefined = SECTION_LABELS[sectionId];
+  if (sectionLabel === undefined) {
+    throw new Error(`scroll region label for ${sectionId} has no matching section label`);
+  }
+  if (sectionLabel === label) {
+    throw new Error(
+      `scroll region label for ${sectionId} must differ from the parent section label`,
+    );
+  }
+}

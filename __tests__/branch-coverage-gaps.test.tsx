@@ -1,11 +1,15 @@
+import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MEASURED_FORMAT, measured } from '@/content/measured';
+import { MeasuredSchema } from '@/content/schemas';
 import { type MountedClient, mountClient } from './helpers/render';
 
 const getScoresMock = vi.fn();
 vi.mock('@/lib/lighthouse-scores', () => ({
   getScores: getScoresMock,
+  LIGHTHOUSE_TTL_S: 90_000,
   LIGHTHOUSE_FALLBACK: {
     performance: 0,
     accessibility: 0,
@@ -38,10 +42,11 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
     const html = await renderPerfData();
     expect(html).toContain('98');
     expect(html).toContain('100');
-    expect(html).toContain('PageSpeed Insights');
+    expect(html).toContain(measured.psi.url);
+    expect(html).toContain('aria-valuenow="98"');
   });
 
-  it('renders lastCheck as UTC string when fetchedAt is a valid ISO date', async () => {
+  it('renders the PSI timestamp as a semantic time when fetchedAt is valid', async () => {
     getScoresMock.mockResolvedValue({
       performance: 95,
       accessibility: 100,
@@ -50,11 +55,12 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
       fetchedAt: '2026-05-25T12:00:00.000Z',
     });
     const html = await renderPerfData();
-    expect(html).toContain('LAST_CHECK');
-    expect(html).not.toContain('LAST_CHECK: —');
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    expect(doc.querySelector('time')?.getAttribute('datetime')).toBe('2026-05-25T12:00:00.000Z');
+    expect(doc.querySelector('time')?.textContent).toBe('2026-05-25');
   });
 
-  it('renders lastCheck as dash when fetchedAt is the fallback dash string', async () => {
+  it('marks PSI unavailable without zero scores or a time for fallback data', async () => {
     getScoresMock.mockResolvedValue({
       performance: 0,
       accessibility: 0,
@@ -63,7 +69,14 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
       fetchedAt: '—',
     });
     const html = await renderPerfData();
-    expect(html).toContain('LAST_CHECK: —');
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    expect(doc.body.textContent).toContain(measured.unavailable);
+    expect(doc.querySelector('time')).toBeNull();
+    expect(doc.querySelectorAll('[aria-valuenow]')).toHaveLength(0);
+    expect(doc.querySelectorAll('.measured-value')).toHaveLength(4);
+    for (const value of doc.querySelectorAll('.measured-value')) {
+      expect(value.textContent).toBe('—/100');
+    }
   });
 });
 
@@ -96,6 +109,9 @@ describe('AiMetricsSection — lastRunLabel NaN guard branch', () => {
     const element = await AiMetricsData();
     const html = renderToStaticMarkup(element);
     expect(html).toContain('not-a-date');
+    expect(html).toContain(measured.unknownTimestamp);
+    expect(html).toContain('95%');
+    expect(html).not.toContain('<time');
   });
 });
 
@@ -120,7 +136,7 @@ describe('AppShell — isMobile=true prop branches', () => {
       useBreakpoint: () => ({ isMobile: true }),
     }));
     vi.doMock('@/components/responsive/MatrixRain', () => ({
-      MatrixRain: MatrixRainStub,
+      MatrixRainLazy: MatrixRainStub,
     }));
     vi.doMock('@/components/responsive/CRTOverlay', () => ({ CRTOverlay: NullStub }));
     vi.doMock('@/components/responsive/DesktopTopbar', () => ({ DesktopTopbar: NullStub }));
@@ -245,5 +261,31 @@ describe('ToTopButton — visible=true className branch', () => {
     expect(btn).not.toBeNull();
     expect(btn?.getAttribute('aria-label')).toBe('back to top');
     expect(btn?.classList.contains('to-top-show')).toBe(true);
+  });
+});
+
+describe('Measured content validation', () => {
+  it.each(['empty', 'locale'])('rejects empty format copy for %s', (field) => {
+    expect(
+      MeasuredSchema.safeParse({
+        ...measured,
+        format: { ...MEASURED_FORMAT, [field]: '' },
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('Project receipt narrow layout contract', () => {
+  it('lets both receipt columns shrink and long values wrap at 320px', () => {
+    // behavioral-test-allow: checks the shipped CSS layout contract because jsdom has no layout engine
+    const css = readFileSync('app/css/components.css', 'utf8');
+    const row = css.match(/\.project-receipts li\s*\{([^}]+)\}/)?.[1];
+    const value = css.match(/\.receipt-value\s*\{([^}]+)\}/)?.[1];
+    const metric = css.match(/\.receipt-metric\s*\{([^}]+)\}/)?.[1];
+    expect(row).toMatch(/grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+    for (const cell of [value, metric]) {
+      expect(cell).toMatch(/overflow-wrap:\s*anywhere/);
+      expect(cell).not.toMatch(/white-space:\s*nowrap/);
+    }
   });
 });

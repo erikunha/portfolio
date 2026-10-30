@@ -1,4 +1,5 @@
 import { dsPageMetadata } from '../_lib/page-metadata';
+import { OnThisPage } from '../_components/OnThisPage';
 
 export const metadata = dsPageMetadata({
   slug: 'tokens',
@@ -8,11 +9,13 @@ export const metadata = dsPageMetadata({
 
 # TOKENS
 
+<OnThisPage items={[{id:'color',label:'Color'},{id:'type-scale',label:'Type Scale'},{id:'spacing',label:'Spacing'},{id:'borders',label:'Borders'},{id:'motion',label:'Motion'},{id:'layers',label:'Layers'}]} />
+
 Colour, type, spacing and border tokens live in `app/css/theme.css`.
 Tailwind's `@theme` generates utilities from these custom properties. Swatches
 read their values directly from that file.
 
-## Color
+<h2 id="color">Color</h2>
 
 Use semantic roles for text and emphasis. The ordinal families remain available
 for surfaces, syntax accents and existing consumers.
@@ -111,10 +114,10 @@ Use `text-secondary` for new secondary text instead of `primary-300`,
 <ColorSwatch token="senary-800" />
 <ColorSwatch token="senary-900" />
 
-## Type Scale
+<h2 id="type-scale">Type Scale</h2>
 
-Only `h1` uses `--font-display`, Inter at weight 900. Body text, controls and
-all other headings use `--font-mono`, JetBrains Mono. Both stacks reference
+The base `h1` rule uses `--font-display`, Inter at weight 900. Body text, controls
+and other base headings use `--font-mono`, JetBrains Mono. Consumers can override these rules. Both stacks reference
 the existing `next/font/local` variables.
 
 | Token | Utility | Size |
@@ -136,7 +139,7 @@ Sizes use rem units so they follow the reader's default font size.
 The base `h1` is 32px, rising to 48px at 1280px. `h2` is 20px, rising to
 24px at 768px. `h3` is 16px. Consumers can select larger steps for display text.
 
-## Spacing
+<h2 id="spacing">Spacing</h2>
 
 | Token | Utility step | Size |
 |---|---|---|
@@ -148,13 +151,14 @@ The base `h1` is 32px, rising to 48px at 1280px. `h2` is 20px, rising to
 | `--spacing-8` | `8` | 32px |
 | `--spacing-12` | `12` | 48px |
 | `--spacing-16` | `16` | 64px |
-| `--spacing-target` | `target` | 44px minimum control width and height |
+| `--spacing-target` | `target` | 44px general control target |
+| `--spacing-target-compact` | `target-compact` | 28px compact control target |
 
 Small and medium Buttons have a 44px minimum height. Small Buttons use 10px
 horizontal padding; medium and large Buttons use 14px. Large Buttons have a
 52px minimum height. CopyButton has a 44px minimum width and height in every state.
 
-## Borders
+<h2 id="borders">Borders</h2>
 
 | Token | Value | Usage |
 |---|---|---|
@@ -164,19 +168,25 @@ horizontal padding; medium and large Buttons use 14px. Large Buttons have a
 
 Keyboard focus uses `:focus-visible`, with a 2px signal outline and 2px offset.
 
-## Motion
+<h2 id="motion">Motion</h2>
 
-Durations are applied with Tailwind `duration-*` utilities, easing with
-`ease-out`. All motion is suppressed under `prefers-reduced-motion: reduce`.
+Components use Tailwind duration and easing utilities, plus named CSS animations.
+Reduced-motion handling is defined in `app/css/animations.css`, `crt.css`,
+`components.css` and component logic. Check the affected animation rather than
+assuming one global rule disables all motion.
+
+Module headers reveal text in character steps as they enter the viewport. Their caret
+blinks four times and then stays solid. The MOTION toggle and OS reduced motion
+disable this effect. Browsers without scroll-driven animation support show static headers.
 
 | Utility | Value | Usage |
 |---|---|---|
 | `duration-[80ms]` | 80ms | micro transitions (hover, press) |
 | `duration-100` | 100ms | fast UI feedback |
 | `duration-200` | 200ms | standard transitions |
-| `ease-out` | Shared | the one shared easing curve |
+| `ease-out` | Shared | easing used by Button and Field |
 
-## Layers
+<h2 id="layers">Layers</h2>
 
 z-index is applied with Tailwind `z-[N]` utilities, there is no CSS-var token
 layer. The cross-cutting contract:

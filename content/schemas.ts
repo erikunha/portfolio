@@ -152,16 +152,79 @@ export const StatSchema = z.object({
   label: z.string().min(1),
   value: z.string().min(1),
 });
-export const ProjectSchema = z.object({
-  company: z.string().min(1),
-  name: z.string().min(1),
-  mobileName: z.string().min(1),
-  description: z.string().min(1),
-  mobileDescription: z.string().min(1),
-  stats: z.array(StatSchema).min(1),
-  mobileMeta: z.array(StatSchema).min(1),
-  perm: z.string().min(1).optional(),
+
+export const HeroContentSchema = z.object({
+  locationLabel: z.string().min(1),
+  employerLabel: z.string().min(1),
+  languageLabel: z.string().min(1),
+  statsLabel: z.string().min(1),
+  hire: z.object({ label: z.string().min(1), href: z.url(), accessibleLabel: z.string().min(1) }),
+  actions: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        href: z.union([z.url(), z.string().regex(/^\/(?!\/)\S*$/)]),
+        accessibleLabel: z.string().min(1),
+        external: z.boolean(),
+      }),
+    )
+    .min(1),
+  stats: z.array(StatSchema).length(4),
 });
+
+export const AboutContentSchema = z.object({
+  title: z.string().min(1),
+  command: z.string().min(1),
+  marker: z.string().min(1),
+  whoami: z.object({
+    title: z.string().min(1),
+    intro: z.string().min(1),
+    principlesTitle: z.string().min(1),
+    principles: z.array(z.string().min(1)).min(1),
+    statusTitle: z.string().min(1),
+    statusPrefix: z.string().min(1),
+    role: z.string().min(1),
+    statusSuffix: z.string().min(1),
+    details: z.array(z.string().min(1)).min(1),
+    gutterLines: z.number().int().positive(),
+  }),
+  now: z.object({
+    title: z.string().min(1),
+    rows: z.array(z.object({ k: z.string().min(1), v: z.string().min(1) })).min(1),
+  }),
+  responsibilities: z.object({ title: z.string().min(1), command: z.string().min(1) }),
+  stack: z.object({
+    title: z.string().min(1),
+    groups: z
+      .array(z.object({ label: z.string().min(1), items: z.array(z.string().min(1)).min(1) }))
+      .min(1),
+  }),
+  code: z.object({
+    title: z.string().min(1),
+    label: z.string().min(1),
+    repoLabel: z.string().min(1),
+    repoHref: z.url(),
+    repoAccessibleLabel: z.string().min(1),
+    tokens: z
+      .array(
+        z.object({ id: z.number().int().nonnegative(), text: z.string(), className: z.string() }),
+      )
+      .min(1),
+  }),
+});
+export const ProjectKind = z.enum(['professional', 'oss']);
+
+export const ProjectSchema = z
+  .object({
+    company: z.string().min(1),
+    name: z.string().min(1),
+    description: z.string().min(1),
+    stats: z.array(StatSchema).min(1),
+    perm: z.string().min(1).optional(),
+    kind: ProjectKind,
+    url: z.string().url().optional(),
+  })
+  .refine((project) => project.kind !== ProjectKind.enum.oss || project.url !== undefined);
 
 export const PerfReceiptSchema = z.object({
   metric: z.string().min(1),
@@ -173,16 +236,84 @@ export const PerfReceiptSchema = z.object({
     ),
   company: z.string().min(1),
   note: z.string().min(1),
-  mobileMetric: z.string().min(1).optional(),
-  desktopOnly: z.boolean().optional(),
+  project: z.boolean().default(false),
+  displayValue: z.string().min(1).optional(),
+  before: z.number().nonnegative().optional(),
+  after: z.number().nonnegative().optional(),
 });
 
-export const NpmTileSchema = z.object({
-  label: z.string().min(1),
-  path: z.string().min(1),
+export const MeasuredSchema = z.object({
+  format: z.object({
+    locale: z.string().min(1),
+    percentScale: z.number().positive(),
+    costPrecision: z.number().int().nonnegative(),
+    dateLength: z.number().int().positive(),
+    millisecondsPerSecond: z.number().positive(),
+    askStaleAfterMs: z.number().positive(),
+    empty: z.string().min(1),
+  }),
+  title: z.string().min(1),
+  command: z.string().min(1),
+  sourceLabel: z.string().min(1),
+  externalDisclosure: z.string().min(1),
+  unavailable: z.string().min(1),
+  loading: z.string().min(1),
+  stale: z.string().min(1),
+  unknownTimestamp: z.string().min(1),
+  ask: z.object({
+    title: z.string().min(1),
+    source: z.string().min(1),
+    url: z.string().url(),
+    cacheKey: z.string().min(1),
+    timestampLabel: z.string().min(1),
+    pending: z.string().min(1),
+    unavailable: z.string().min(1),
+    p95Prefix: z.string().min(1),
+    p95Pending: z.string().min(1),
+    percentUnit: z.string().min(1),
+    latencyUnit: z.string().min(1),
+    currencyUnit: z.string().min(1),
+    metrics: z
+      .array(
+        z.object({
+          key: z.enum(['evalPassRate', 'jailbreakResistance', 'p95LatencyMs', 'costPerAnswer']),
+          label: z.string().min(1),
+          description: z.string(),
+        }),
+      )
+      .length(4),
+  }),
+  psi: z.object({
+    title: z.string().min(1),
+    source: z.string().min(1),
+    url: z.string().url(),
+    timestampLabel: z.string().min(1),
+    strategyParameter: z.string().min(1),
+    outOf: z.string().min(1),
+    strategies: z
+      .array(
+        z.object({
+          key: z.enum(['desktop', 'mobile']),
+          label: z.string().min(1),
+        }),
+      )
+      .length(2),
+    metrics: z
+      .array(
+        z.object({
+          key: z.enum(['performance', 'accessibility', 'bestPractices', 'seo']),
+          label: z.string().min(1),
+        }),
+      )
+      .length(4),
+  }),
 });
+
+export const TAKE_PLACEMENT = { home: 'home', docs: 'docs' } as const;
 
 export const HottestTakeSchema = z.object({
+  placement: z.enum(TAKE_PLACEMENT),
+  order: z.number().int().positive(),
   num: z.string().min(1),
   category: z.string().min(1),
   thesis: z.string().min(1),
@@ -268,8 +399,11 @@ export type GuitarPresentation = z.infer<typeof GuitarPresentationSchema>;
 export const UnknownItemSchema = z.object({
   claim: z.string().min(1),
   context: z.string().min(1),
+  showContext: z.boolean().default(true),
 });
 export const UnknownsSchema = z.object({
+  learningHeading: z.string().min(1),
+  notSpecializingHeading: z.string().min(1),
   learning: z.array(UnknownItemSchema).min(1),
   notSpecializing: z.array(UnknownItemSchema).min(1),
   footer: z.string().min(1),
@@ -281,11 +415,17 @@ export const WORK_AUTH_STATUS = {
   openWithSponsorship: 'OPEN_WITH_SPONSORSHIP',
 } as const;
 
+export const VisaUiSchema = z.object({
+  title: z.string().min(1),
+  command: z.string().min(1),
+  jurisdictionLabel: z.string().min(1),
+  statusLabel: z.string().min(1),
+  evidenceLabel: z.string().min(1),
+});
+
 export const VisaRowSchema = z.object({
   jurisdiction: z.string().min(1),
-  jurisdictionShort: z.string().min(1),
   status: z.enum(WORK_AUTH_STATUS),
-  statusShort: z.enum(WORK_AUTH_STATUS),
   evidence: z.string().min(1),
 });
 
@@ -347,11 +487,6 @@ export const ManPageSchema = z.object({
   description: z.string().min(1),
   options: z.array(z.object({ flag: z.string().min(1), desc: z.string().min(1) })),
   knownBugs: z.array(z.string().min(1)),
-});
-
-export const NowRowSchema = z.object({
-  k: z.string().min(1),
-  v: z.string().min(1),
 });
 
 export const SysStatSchema = z.object({
@@ -429,6 +564,53 @@ export const ShellResponseSchema = z.object({
 });
 export const ShellCommandsSchema = z.array(ShellResponseSchema).min(1);
 
+export const ShellUiSchema = z.object({
+  welcome: z.string().min(1),
+  mobileWelcome: z.string().min(1),
+  inputLabel: z.string().min(1),
+  outputLabel: z.string().min(1),
+  toolbarLabel: z.string().min(1),
+  prompt: z.string().min(1),
+  placeholder: z.string().min(1),
+  commandHint: z.string().min(1),
+  aiLabel: z.string().min(1),
+  thinking: z.string().min(1),
+  stop: z.string().min(1),
+  stopLabel: z.string().min(1),
+  stoppedBefore: z.string().min(1),
+  stoppedPartial: z.string().min(1),
+  started: z.string().min(1),
+  complete: z.string().min(1),
+  commandComplete: z.string().min(1),
+  cleared: z.string().min(1),
+  busy: z.string().min(1),
+  empty: z.string().min(1),
+  errorPrefix: z.string().min(1),
+  httpErrorPrefix: z.string().min(1),
+  bodyUnavailable: z.string().min(1),
+  offline: z.string().min(1),
+  networkError: z.string().min(1),
+  timeout: z.string().min(1),
+  localAvailable: z.string().min(1),
+  referencePrefix: z.string().min(1),
+  copy: z.string().min(1),
+  copied: z.string().min(1),
+  copyFailed: z.string().min(1),
+  copiedAnnouncement: z.string().min(1),
+  copyFailedAnnouncement: z.string().min(1),
+  accuracy: z.string().min(1),
+  privacy: z.string().min(1),
+  email: z.string().min(1).email(),
+  emailHref: z.string().min(1).url(),
+  technicalPrivacy: z.string().min(1),
+  requestIdHeader: z.string().min(1),
+  technicalPrivacySuffix: z.string().min(1),
+  forgetEndpoint: z.string().min(1),
+  suggestions: z.array(z.string().min(1)).min(1),
+  commands: z.array(z.string().min(1)).min(1),
+});
+export type ShellUi = z.infer<typeof ShellUiSchema>;
+
 export const TerminalChromeSchema = z.object({
   promptLabel: z.string().min(1),
   rightTag: z.string().min(1),
@@ -444,6 +626,14 @@ export const ReadmeCopySchema = z.object({
   desktopStatusH2: z.string().min(1),
 });
 export type ReadmeCopy = z.infer<typeof ReadmeCopySchema>;
+
+export type HeroContent = z.infer<typeof HeroContentSchema>;
+
+export const HeroClientContentSchema = z.object({
+  systemFailurePlate: z.string().min(1),
+  bootStaticDialogLine: z.string().min(1),
+});
+export type HeroClientContent = z.infer<typeof HeroClientContentSchema>;
 
 const FooterHrefSchema = z.string().regex(/^(?:#[\w-]+|\/(?!\/)[\w/-]*|https:\/\/[^\s]+)$/);
 const FooterLinkSchema = z.object({ label: z.string().min(1), href: FooterHrefSchema });
@@ -581,7 +771,6 @@ const DawMixerChannelSchema = z.object({
   buttons: z.array(z.string().min(1)),
   activeButtons: z.array(z.string().min(1)),
   footer: z.object({ lufs: z.string(), pk: z.string() }).optional(),
-  terminalLines: z.array(z.string().min(1)).optional(),
 });
 
 export const DawMixerSchema = z.object({
@@ -606,7 +795,10 @@ export const LocalizedTextSchema = z.object({
 export const LinksProfileSchema = z.object({
   name: z.string().min(1),
   avatar: z.string().min(1),
-  title: LocalizedTextSchema,
+  taglines: z.object({
+    pt: z.array(z.string().min(1)).min(1),
+    en: z.array(z.string().min(1)).min(1),
+  }),
   host: LocalizedTextSchema,
   stack: z.string().min(1),
   status: LocalizedTextSchema,
@@ -701,7 +893,6 @@ export const LinksContentSchema = z.object({
 export type Social = z.infer<typeof SocialSchema>;
 export type Project = z.infer<typeof ProjectSchema>;
 export type PerfReceipt = z.infer<typeof PerfReceiptSchema>;
-export type NpmTile = z.infer<typeof NpmTileSchema>;
 export type HottestTake = z.infer<typeof HottestTakeSchema>;
 export type Responsibility = z.infer<typeof ResponsibilitySchema>;
 export type GuitarRig = z.infer<typeof GuitarRigSchema>;
@@ -711,7 +902,6 @@ export type VisaRow = z.infer<typeof VisaRowSchema>;
 export type Credential = z.infer<typeof CredentialSchema>;
 export type CommunityEvent = z.infer<typeof CommunityEventSchema>;
 export type ManPage = z.infer<typeof ManPageSchema>;
-export type NowRow = z.infer<typeof NowRowSchema>;
 export type SysStat = z.infer<typeof SysStatSchema>;
 export type GitCommit = z.infer<typeof GitCommitSchema>;
 export type ShellResponse = z.infer<typeof ShellResponseSchema>;

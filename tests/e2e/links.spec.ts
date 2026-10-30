@@ -122,19 +122,27 @@ test.describe('/links link-in-bio', () => {
     expect(await page.locator('a[href="#"], a[href=""]').count()).toBe(0);
   });
 
-  test('shows the same static title with or without reduced motion', async ({ page }) => {
+  test('types the tagline, and holds the full first phrase under reduced motion', async ({
+    page,
+  }) => {
     const title = 'Engenheiro de Software Sênior, Frontend e Produto';
     const identity = page.locator('.links-identity-box');
 
-    await page.goto('/links');
-    await expect(identity).toContainText(title);
-
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.reload();
+    await page.goto('/links');
     await expect(identity).toContainText(title);
     const first = await identity.textContent();
     await page.waitForTimeout(600);
-    expect(await identity.textContent()).toBe(first);
+    expect(await identity.textContent(), 'reduced motion must not type').toBe(first);
+
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.reload();
+    const samples = new Set<string | null>();
+    for (let i = 0; i < 6; i++) {
+      samples.add(await identity.textContent());
+      await page.waitForTimeout(150);
+    }
+    expect(samples.size, 'the tagline must type when motion is allowed').toBeGreaterThan(1);
   });
 
   test('renders the English title on the English route', async ({ page }) => {
@@ -144,7 +152,7 @@ test.describe('/links link-in-bio', () => {
     );
   });
 
-  test('lays the social pills out in two columns from 360px and three from 900px', async ({
+  test('lays the social pills out in one column on mobile, two from 768px and three from 900px', async ({
     page,
   }) => {
     const columns = () =>
@@ -154,9 +162,118 @@ test.describe('/links link-in-bio', () => {
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/links');
+    expect(await columns()).toBe(1);
+
+    await page.setViewportSize({ width: 800, height: 800 });
     expect(await columns()).toBe(2);
 
     await page.setViewportSize({ width: 1000, height: 800 });
     expect(await columns()).toBe(3);
   });
+
+  test('loads both locales with every feed thumbnail rendered and zero console errors — a thumbnail host the image allowlist rejects 400s in /_next/image and fails errors-in-console', async ({
+    page,
+  }) => {
+    const consoleErrors: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') consoleErrors.push(msg.text());
+    });
+    page.on('pageerror', (err) => consoleErrors.push(String(err)));
+
+    const thumbnails = () =>
+      page.locator('ol img').evaluateAll((images) => ({
+        total: images.length,
+        loaded: images.filter((img) => (img as HTMLImageElement).naturalWidth > 0).length,
+      }));
+    const heroThumbnailWidth = () =>
+      page
+        .locator('a[data-outbound="ultimo-video"] img')
+        .evaluate((img) => (img as HTMLImageElement).naturalWidth);
+
+    async function assertThumbnailsRendered() {
+      await expect
+        .poll(async () => (await thumbnails()).total, {
+          message:
+            'without history rows every decode assertion below is vacuous; zero here means the feed failed to render, not that the thumbnails loaded',
+        })
+        .toBeGreaterThan(0);
+
+      const rows = page.locator('ol img');
+      const total = await rows.count();
+      for (let i = 0; i < total; i++) {
+        await rows.nth(i).scrollIntoViewIfNeeded();
+      }
+      await expect
+        .poll(thumbnails, {
+          message:
+            'VideoHistory images are lazy: networkidle alone does not load rows below the fold, so each row is scrolled into view to trigger its request. Every thumbnail must decode after scrolling. A partial regression (one shard host 400ing in /_next/image while another still loads) fails here instead of hiding behind the one image that worked.',
+        })
+        .toEqual({ total, loaded: total });
+
+      await expect(
+        page.locator('a[data-outbound="ultimo-video"]'),
+        'the hero anchor only renders when the feed has a latest video; without this count check a missing feed surfaces as an opaque locator timeout inside the decode poll below',
+      ).toHaveCount(1);
+      await expect
+        .poll(heroThumbnailWidth, {
+          message:
+            'the ChannelCard priority image is the page LCP element and sits outside the ol list; it needs its own decode assertion instead of relying on history[0] happening to share the thumbnail',
+        })
+        .toBeGreaterThan(0);
+    }
+
+    await page.goto('/links', { waitUntil: 'networkidle' });
+    await assertThumbnailsRendered();
+    await page.goto('/links/en', { waitUntil: 'networkidle' });
+    await assertThumbnailsRendered();
+
+    expect(
+      consoleErrors,
+      'every entry here is a Lighthouse errors-in-console failure: an image the optimizer rejected, a hydration error, a CSP block. None of these belong on a static page.',
+    ).toEqual([]);
+  });
+
+  test('keeps every visible text element at or above the 12px mobile floor on both locales', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    for (const path of ['/links', '/links/en']) {
+      await page.goto(path);
+      const offenders = await page.evaluate(() => {
+        const floor = 12;
+        const failures: string[] = [];
+        for (const el of document.body.querySelectorAll<HTMLElement>('*')) {
+          const ownText = Array.from(el.childNodes)
+            .filter((node): node is Text => node.nodeType === Node.TEXT_NODE)
+            .map((node) => node.textContent)
+            .join('')
+            .trim();
+          if (ownText === '') continue;
+          const style = getComputedStyle(el);
+          if (style.display === 'none' || style.visibility === 'hidden') continue;
+          const box = el.getBoundingClientRect();
+          if (box.width === 0 || box.height === 0) continue;
+          const size = Number.parseFloat(style.fontSize);
+          if (size < floor) {
+            failures.push(
+              `<${el.tagName.toLowerCase()} class="${el.getAttribute('class')}"> ${size}px "${ownText.slice(0, 40)}"`,
+            );
+          }
+        }
+        return failures;
+      });
+      expect(
+        offenders,
+        `${path}: sub-12px text on mobile is the Lighthouse font-size audit failing and the --text-min token floor broken. Each offender lists its class, computed size and copy so the culprit utility is identifiable without a debugger.`,
+      ).toEqual([]);
+    }
+  });
+});
+
+test('reduced motion shows the ticker text once, not its loop copy', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/links');
+  const copy = page.locator('.links-ticker-track > [aria-hidden="true"]');
+  await expect(copy, 'the marquee loop copy must hide when the marquee stops').toBeHidden();
 });

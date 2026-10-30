@@ -59,7 +59,7 @@ export const NAVIGATION: Navigation = {
   groups: [
     { id: 'whoami', title: 'WHOAMI', dock: 'home', sectionIds: ['bio', 'sec-readme'] },
     { id: 'work', title: 'WORK', dock: 'work', sectionIds: ['sec-projects', 'sec-git-log'] },
-    { id: 'live', title: 'MEASURED', dock: 'shell', sectionIds: ['sec-shell', 'sec-live-perf'] },
+    { id: 'live', title: 'MEASURED', dock: 'shell', sectionIds: ['sec-shell', 'sec-live-metrics'] },
     {
       id: 'off-hours',
       title: 'OFF_HOURS',

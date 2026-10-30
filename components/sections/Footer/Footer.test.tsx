@@ -2,6 +2,14 @@ import { fireEvent, render, waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { About } from '@/components/sections/About';
+import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
+import { ContactSection } from '@/components/sections/ContactSection';
+import { GitLogSection } from '@/components/sections/GitLogSection';
+import { GuitarSection } from '@/components/sections/GuitarSection';
+import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
+import { ProjectsSection } from '@/components/sections/ProjectsSection';
+import { ShellSection } from '@/components/sections/ShellSection';
 import { Footer } from './index';
 
 afterEach(() => {
@@ -32,7 +40,7 @@ describe('Footer server output', () => {
       { label: 'Projects', href: '#sec-projects' },
       { label: 'Career', href: '#sec-git-log' },
       { label: 'Interactive shell', href: '#sec-shell' },
-      { label: 'Measured', href: '#sec-live-perf' },
+      { label: 'Measured', href: '#sec-live-metrics' },
       { label: 'Opinions', href: '#sec-hottest-takes' },
       { label: 'Guitar and mixer', href: '#sec-guitar' },
       { label: 'Contact', href: '#sec-contact' },
@@ -47,6 +55,40 @@ describe('Footer server output', () => {
         (a) => a.getAttribute('href') === link.href && a.textContent?.includes(link.label),
       );
       expect(match, `${link.label} must be available before hydration`).toBeDefined();
+    }
+  });
+
+  it('links in-page footer links to top-level sections rendered by the page', () => {
+    const host = document.createElement('div');
+    host.innerHTML = renderToStaticMarkup(
+      <>
+        <main id="main-content">
+          <About />
+          <ShellSection />
+          <AiMetricsSection />
+          <ProjectsSection />
+          <GitLogSection />
+          <HottestTakesSection defer />
+          <GuitarSection defer />
+          <ContactSection defer />
+        </main>
+        <Footer />
+      </>,
+    );
+    const main = host.querySelector('main');
+    const topLevelSectionIds = new Set([
+      main?.id,
+      ...[...(main?.children ?? [])].map((section) => section.id),
+    ]);
+    const inPageLinks = [...host.querySelectorAll('footer a[href^="#"]')];
+
+    expect(inPageLinks.length).toBeGreaterThan(0);
+    for (const link of inPageLinks) {
+      const targetId = link.getAttribute('href')?.slice(1);
+      expect(
+        topLevelSectionIds.has(targetId ?? ''),
+        `${link.textContent} must target a top-level section`,
+      ).toBe(true);
     }
   });
 
@@ -108,7 +150,9 @@ describe('Footer live session', () => {
           'tcp  ESTABLISHED  ~/design_system',
       ),
     );
-    expect(mounted.getByRole('button', { name: 'Copy netstat rows' }).textContent).toBe('COPIED');
+    await waitFor(() =>
+      expect(mounted.getByRole('button', { name: 'Copy netstat rows' }).textContent).toBe('COPIED'),
+    );
   });
 
   it('starts uptime at page navigation and counts commands before the footer is reached', () => {
@@ -230,7 +274,7 @@ describe('Footer reboot controls', () => {
       'sec-projects',
       'sec-git-log',
       'sec-shell',
-      'sec-live-perf',
+      'sec-live-metrics',
       'sec-hottest-takes',
       'sec-guitar',
       'sec-contact',

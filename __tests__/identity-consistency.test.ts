@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { aboutContent } from '@/content/about';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
 import { communityEvent } from '@/content/community';
 import { contactCopy } from '@/content/contact-copy';
@@ -8,10 +9,11 @@ import { education } from '@/content/education';
 import { footerContent } from '@/content/footer';
 import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
-import { nowRows } from '@/content/now';
+import { perfReceipts } from '@/content/perf-receipts';
 import { profile, profileLanguageLine, profileWorkingLanguageLine } from '@/content/profile';
 import { projects } from '@/content/projects';
 import { readmeCopy } from '@/content/readme';
+import { PerfReceiptSchema, ProjectSchema } from '@/content/schemas';
 import { personSchema } from '@/content/seo';
 import { social } from '@/content/social';
 import { visaRows } from '@/content/visa';
@@ -66,17 +68,25 @@ describe('identity is consistent across every gated surface', () => {
       personSchema.description,
       personSchema.seeks.itemOffered.description,
       readmeCopy.desktopIntro,
-      JSON.stringify(nowRows),
     ];
     for (const text of descriptions) {
-      expect(text).not.toMatch(/CITIZEN|NEEDS_SPONSORSHIP|OPEN_WITH_SPONSORSHIP/);
       expect(text).toContain('Brazil: citizen');
     }
+    const rawStatusToken = /CITIZEN|NEEDS_SPONSORSHIP|OPEN_WITH_SPONSORSHIP/;
+    const rendered = [
+      ...descriptions,
+      aboutContent.whoami.intro,
+      aboutContent.whoami.statusSuffix,
+      JSON.stringify(aboutContent.now.rows),
+    ];
+    for (const text of rendered) expect(text).not.toMatch(rawStatusToken);
   });
 
   it('states the cross-platform code reuse the resume gives, on both surfaces', () => {
     const edtech = projects.find((project) => project.name === 'EDTECH_OMNI');
-    expect(edtech?.stats.find((stat) => stat.label === 'REUSE')?.value).toContain('80%');
+    expect(edtech).toBeDefined();
+    expect(edtech?.stats?.find((stat) => stat.label === 'REUSE')?.value).toContain('80%');
+    expect(JSON.stringify(gitLog)).toContain('80% shared code');
     expect(JSON.stringify(gitLog)).not.toContain('90%');
   });
 
@@ -168,7 +178,6 @@ describe('identity is consistent across every gated surface', () => {
       ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
       ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
       ['content/readme.ts', JSON.stringify(readmeCopy)],
-      ['content/now.ts', JSON.stringify(nowRows)],
       ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
     ];
     const drifted = surfaces.filter(([, text]) => !text.includes(CANONICAL_TITLE)).map(([s]) => s);
@@ -233,7 +242,6 @@ describe('terminal redesign canonical facts', () => {
       ['Worldwide', 'OPEN_WITH_SPONSORSHIP'],
     ]);
     for (const row of visaRows) {
-      expect(row.statusShort).toBe(row.status);
       expect(SYSTEM_TEXT).toContain(`${row.jurisdiction}: ${row.status}`);
       expect(llmsTxt).toContain(`${row.jurisdiction}: ${row.status}`);
       expect(JSON.parse(layoutMetadataText).other['work-authorization']).toContain(
@@ -253,7 +261,6 @@ describe('terminal redesign canonical facts', () => {
       read('public/.well-known/agent.json'),
       JSON.stringify(personSchema),
       JSON.stringify(readmeCopy),
-      JSON.stringify(nowRows),
       layoutMetadataText,
     ]) {
       expect(text).toContain('Brazil');
@@ -386,12 +393,9 @@ describe('terminal redesign canonical facts', () => {
     expect(JSON.stringify(raylu)).not.toMatch(/Next(?:\.js)? 15|React 19/i);
     const service = projects.find((project) => project.name === 'SERVICE_OPS_CONSOLE');
     expect(service?.company).toBe('Canon Medical Systems');
-    expect(service?.mobileName).toBe('service_ops/');
-    for (const description of [service?.description, service?.mobileDescription]) {
-      expect(description).toContain('service orders');
-      expect(description).toContain('specialist schedules');
-      expect(description).toContain('field visits');
-    }
+    expect(service?.description).toContain('service orders');
+    expect(service?.description).toContain('specialist schedules');
+    expect(service?.description).toContain('field visits');
     for (const text of [
       JSON.stringify(projects),
       SYSTEM_TEXT,
@@ -400,5 +404,27 @@ describe('terminal redesign canonical facts', () => {
     ]) {
       expect(text).not.toContain('CARE_OPS_CONSOLE');
     }
+  });
+
+  it('keeps the canonical project name when parsing retired mobile overrides', () => {
+    const service = projects.find((project) => project.name === 'SERVICE_OPS_CONSOLE');
+    expect(service).toBeDefined();
+    const parsed = ProjectSchema.parse({ ...service, mobileName: 'service_ops/' });
+    expect(parsed).toEqual(service);
+    expect(parsed.name).toBe('SERVICE_OPS_CONSOLE');
+    expect(parsed).not.toHaveProperty('mobileName');
+  });
+
+  it('preserves receipt data while discarding retired mobile presentation fields', () => {
+    const onboarding = perfReceipts.find((receipt) => receipt.metric === 'ONBOARDING_TIME');
+    expect(onboarding).toBeDefined();
+    const parsed = PerfReceiptSchema.parse({
+      ...onboarding,
+      mobileMetric: 'ONBOARDING',
+      desktopOnly: true,
+    });
+    expect(parsed).toEqual(onboarding);
+    expect(parsed).not.toHaveProperty('mobileMetric');
+    expect(parsed).not.toHaveProperty('desktopOnly');
   });
 });

@@ -278,38 +278,6 @@ test.describe('cross-cutting', () => {
     ).toBeLessThan(200);
   });
 
-  test('6 — DAW mixer mobile CSS override is compiled into the bundle', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
-
-    const ruleFound = await page.evaluate((): boolean => {
-      for (const sheet of document.styleSheets) {
-        try {
-          for (const rule of sheet.cssRules) {
-            const text = (rule.cssText ?? '')
-              .replace(/\s+/g, ' ')
-              .replace(/::/g, ':')
-              .toLowerCase();
-            if (
-              text.includes('mx-chain-mobile') &&
-              text.includes(':after') &&
-              text.includes('display: none')
-            ) {
-              return true;
-            }
-          }
-          // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
-        } catch {}
-      }
-      return false;
-    });
-
-    expect(
-      ruleFound,
-      'compiled CSS bundle must contain a .mx-chain-mobile::after { display: none } rule',
-    ).toBe(true);
-  });
-
   test('7 — mono font ships font-display:swap and preloads (first-paint render guarantee)', async ({
     page,
   }) => {
@@ -374,5 +342,5 @@ test('footer is server-rendered and boot output is decorative under reduced moti
   await expect(footer.locator('canvas')).toHaveCount(0);
   await expect(footer.locator('.footer-dmesg')).toHaveAttribute('aria-hidden', 'true');
   await footer.getByRole('link', { name: 'press R to reboot, back to top' }).click();
-  await expect(page.locator('h1')).toBeFocused();
+  await expect(page.locator('[data-testid="hero-name"]:visible')).toBeFocused();
 });

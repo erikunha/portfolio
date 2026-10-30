@@ -8,7 +8,7 @@ import { ErrorBoundary } from '../ErrorBoundary';
 import { CRTOverlay } from '../responsive/CRTOverlay';
 import { DesktopTopbar } from '../responsive/DesktopTopbar';
 import { Dock } from '../responsive/Dock';
-import { MatrixRain } from '../responsive/MatrixRain';
+import { MatrixRainLazy } from '../responsive/MatrixRain';
 import { MobileTitleBar } from '../responsive/MobileTitleBar';
 import { PositionMeter } from '../responsive/PositionMeter';
 import { SectionNavigation, SectionNavigationProvider } from '../responsive/SectionNavigation';
@@ -25,7 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <SectionNavigationProvider>
         <SectionNavigation />
         <ErrorBoundary>
-          <MatrixRain
+          <MatrixRainLazy
             fontSize={isMobile ? 14 : 16}
             speed={isMobile ? 0.6 : 0.7}
             style={{

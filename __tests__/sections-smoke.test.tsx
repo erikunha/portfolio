@@ -17,6 +17,90 @@ vi.mock('@/components/client/InteractiveShell', () => ({
   InteractiveShellLazy: () => null,
 }));
 
+describe('About', () => {
+  let mounted: MountedClient;
+
+  afterEach(() => {
+    mounted?.unmount();
+  });
+
+  it('renders the merged panels without standalone section wrappers', async () => {
+    const { About } = await import('@/components/sections/About');
+    const { aboutContent } = await import('@/content/about');
+    mounted = await mountClient(createElement(About));
+    const container = mounted.container;
+
+    expect(container.querySelector('#sec-readme')).not.toBeNull();
+    expect(
+      [...container.querySelectorAll('.ab-panel > header h3')].map((title) => title.textContent),
+    ).toEqual([
+      aboutContent.whoami.title,
+      aboutContent.now.title,
+      aboutContent.responsibilities.title,
+      aboutContent.stack.title,
+      aboutContent.code.title,
+    ]);
+    expect(container.querySelector('#sec-now, #sec-npm-stack, #sec-responsibilities')).toBeNull();
+    expect(container.querySelector('.ab-role')?.getAttribute('aria-hidden')).toBe('true');
+    expect(container.querySelectorAll('[role="status"]')).toHaveLength(1);
+  });
+
+  it('server-renders the role pill from content, without brackets', async () => {
+    const { ROLES } = await import('@/components/client/RoleTyper/RoleTyper');
+    const { aboutContent } = await import('@/content/about');
+    expect(ROLES[0]).toBe(aboutContent.whoami.role.replace(/^\[|\]$/g, ''));
+  });
+});
+
+describe('Home page', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('renders exactly one h1 element', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: false,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+    const { default: Home } = await import('@/app/page');
+    const doc = new DOMParser().parseFromString(
+      renderToStaticMarkup(createElement(Home)),
+      'text/html',
+    );
+    expect(doc.querySelectorAll('h1')).toHaveLength(1);
+  });
+
+  it('resolves every in-page topbar link to a rendered section id', async () => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: false,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+    const { default: Home } = await import('@/app/page');
+    const { DesktopTopbar } = await import(
+      '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
+    );
+    const page = new DOMParser().parseFromString(
+      renderToStaticMarkup(createElement(Home)),
+      'text/html',
+    );
+    const topbar = new DOMParser().parseFromString(
+      renderToStaticMarkup(createElement(DesktopTopbar)),
+      'text/html',
+    );
+    const targets = [...topbar.querySelectorAll('a[href^="/#"]')].map((link) =>
+      (link.getAttribute('href') ?? '').slice('/#'.length),
+    );
+    expect(targets.length).toBeGreaterThan(0);
+    const dangling = targets.filter((id) => page.getElementById(id) === null);
+    expect(
+      dangling,
+      'a topbar link points at an id no section renders; re-point it or restore the section',
+    ).toEqual([]);
+  });
+});
+
 describe('ContactSection', () => {
   let mounted: MountedClient;
 
@@ -130,106 +214,11 @@ describe('HottestTakesSection', () => {
     expect(list).not.toBeNull();
   });
 
-  it('renders at least one take item', async () => {
+  it('renders four home take items', async () => {
     const container = await render();
-    const { hottestTakes } = await import('@/content/hottest-takes');
-    expect(container.textContent).toContain(firstOf(hottestTakes).thesis);
-  });
-
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
-  });
-});
-
-describe('NpmStackSection', () => {
-  let mounted: MountedClient;
-
-  afterEach(() => {
-    mounted?.unmount();
-  });
-
-  async function render(props: { defer?: boolean } = {}) {
-    const { NpmStackSection } = await import(
-      '@/components/sections/NpmStackSection/NpmStackSection'
-    );
-    mounted = await mountClient(
-      createElement(NpmStackSection as ComponentType<{ defer?: boolean }>, props),
-    );
-    return mounted.container;
-  }
-
-  it('renders the NPM LIST --GLOBAL module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('NPM LIST --GLOBAL');
-  });
-
-  it('renders at least one npm stack item', async () => {
-    const container = await render();
-    const { npmStack } = await import('@/content/npm-stack');
-    expect(container.textContent).toContain(firstOf(npmStack).label);
-  });
-
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
-  });
-});
-
-describe('NowSection', () => {
-  let mounted: MountedClient;
-
-  afterEach(() => {
-    mounted?.unmount();
-  });
-
-  async function render() {
-    const { NowSection } = await import('@/components/sections/NowSection/NowSection');
-    mounted = await mountClient(createElement(NowSection));
-    return mounted.container;
-  }
-
-  it('renders the CAT ~/.NOW module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('CAT ~/.NOW');
-  });
-
-  it('renders at least one now row', async () => {
-    const container = await render();
-    const { nowRows } = await import('@/content/now');
-    expect(container.textContent).toContain(firstOf(nowRows).k);
-  });
-});
-
-describe('ResponsibilitiesSection', () => {
-  let mounted: MountedClient;
-
-  afterEach(() => {
-    mounted?.unmount();
-  });
-
-  async function render(props: { defer?: boolean } = {}) {
-    const { ResponsibilitiesSection } = await import(
-      '@/components/sections/ResponsibilitiesSection/ResponsibilitiesSection'
-    );
-    mounted = await mountClient(
-      createElement(ResponsibilitiesSection as ComponentType<{ defer?: boolean }>, props),
-    );
-    return mounted.container;
-  }
-
-  it('renders the LS -LA ~/RESPONSIBILITIES module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('LS -LA ~/RESPONSIBILITIES');
-  });
-
-  it('renders at least one responsibility entry', async () => {
-    const container = await render();
-    const { responsibilities } = await import('@/content/responsibilities');
-    expect(container.textContent).toContain(firstOf(responsibilities).name);
+    const { homeTakes } = await import('@/content/hottest-takes');
+    expect(container.querySelectorAll('[data-testid="hottest-takes-list"] > li')).toHaveLength(4);
+    expect(container.textContent).toContain(firstOf(homeTakes).thesis);
   });
 
   it('renders without error with defer prop', async () => {
@@ -305,31 +294,14 @@ describe('UnknownsSection', () => {
     mounted?.unmount();
   });
 
-  async function render(props: { defer?: boolean } = {}) {
-    const { UnknownsSection } = await import(
-      '@/components/sections/UnknownsSection/UnknownsSection'
-    );
-    mounted = await mountClient(
-      createElement(UnknownsSection as ComponentType<{ defer?: boolean }>, props),
-    );
-    return mounted.container;
-  }
-
-  it('renders the CAT ~/.UNKNOWNS module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('CAT ~/.UNKNOWNS');
-  });
-
-  it('renders learning items', async () => {
-    const container = await render();
+  it('renders learning items under nested headings without a separate module', async () => {
+    const { UnknownsSection } = await import('@/components/sections/UnknownsSection');
     const { unknowns } = await import('@/content/unknowns');
+    mounted = await mountClient(createElement(UnknownsSection));
+    const { container } = mounted;
+    expect(container.querySelector('h3')?.textContent).toContain(unknowns.learningHeading);
     expect(container.textContent).toContain(firstOf(unknowns.learning).claim);
-  });
-
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
+    expect(container.querySelector('section')).toBeNull();
   });
 });
 

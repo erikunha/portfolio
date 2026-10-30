@@ -70,7 +70,7 @@
     font-size: var(--text-base);
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   @media (max-width: 768px) {
@@ -101,7 +101,8 @@
 
   button:focus-visible,
   input:focus-visible,
-  textarea:focus-visible {
+  textarea:focus-visible,
+  [tabindex="0"]:focus-visible {
     outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
   }
@@ -234,14 +235,11 @@
     #sec-shell {
       order: 2;
     }
-    #sec-ai-metrics {
+    #sec-live-metrics {
       order: 3;
     }
     #sec-man-page {
       order: 4;
-    }
-    #sec-now {
-      order: 5;
     }
     #sec-projects {
       order: 6;
@@ -249,17 +247,8 @@
     #sec-git-log {
       order: 7;
     }
-    #sec-npm-stack {
-      order: 8;
-    }
     #sec-sys-health {
       order: 9;
-    }
-    #sec-live-perf {
-      order: 10;
-    }
-    #sec-perf-receipts {
-      order: 11;
     }
     #sec-guitar {
       order: 12;
@@ -267,17 +256,8 @@
     #sec-daw-mixer {
       order: 13;
     }
-    #sec-visa {
-      order: 14;
-    }
     #sec-hottest-takes {
       order: 17;
-    }
-    #sec-responsibilities {
-      order: 18;
-    }
-    #sec-unknowns {
-      order: 19;
     }
     #sec-contact {
       order: 20;

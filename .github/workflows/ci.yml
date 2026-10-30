@@ -293,6 +293,7 @@ jobs:
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
           DEPLOY_SALT: ci-build-salt
+          E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
 
       - name: Bundle size gate
         run: node scripts/check-bundle-size.mjs --max-client-kb=220
@@ -363,6 +364,7 @@ jobs:
         run: pnpm start > /tmp/server-perf.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
+          E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
 
       - name: Wait for server
         run: |
@@ -416,6 +418,7 @@ jobs:
         run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
+          E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
       - name: Wait for server
         run: |
           pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
@@ -528,6 +531,7 @@ jobs:
         run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
+          E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
       - name: Wait for server
         run: |
           pnpm exec wait-on http://localhost:3000 --timeout 30000 || {

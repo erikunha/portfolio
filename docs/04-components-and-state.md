@@ -6,16 +6,20 @@
 
 Four directories, four roles. The directory tells you the layer:
 
-| Directory                     | Role                  | Ships JS?             | Example                                         |
-| ----------------------------- | --------------------- | --------------------- | ----------------------------------------------- |
-| `components/sections/**`      | The ~20 page sections | No (RSC)              | `ReadmeSection`, `ManPageSection`               |
-| `components/client/**`        | Interactive islands   | Yes                   | `InteractiveShell`, `ContactForm`, `DawMixer/*` |
-| `components/responsive/**`    | Viewport chrome       | Yes (except `Module`) | `MatrixRain`, `Dock`, `CRTOverlay`              |
-| `design-system/components/**` | Reusable primitives   | Mostly No (RSC)       | `Badge`, `Button`, `TerminalPanel`              |
+| Directory                     | Role                            | Ships JS?                                 | Example                                         |
+| ----------------------------- | ------------------------------- | ----------------------------------------- | ----------------------------------------------- |
+| `components/sections/**`      | Page sections and nested groups | RSC, with client descendants where needed | `About`, `ManPageSection`                       |
+| `components/client/**`        | Interactive islands             | Yes                                       | `InteractiveShell`, `ContactForm`, `DawMixer/*` |
+| `components/responsive/**`    | Viewport chrome                 | Yes (except `Module`)                     | `MatrixRain`, `Dock`, `CRTOverlay`              |
+| `design-system/components/**` | Reusable primitives             | Mostly No (RSC)                           | `Badge`, `Button`, `TerminalPanel`              |
 
-Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.client.tsx`; a plain `*.tsx` in `sections/` is RSC. Each component is a `Foo/Foo.tsx` + `Foo/index.ts` barrel, with co-located `*.test.tsx` (Vitest) and `*.e2e.ts` (Playwright). `*Lazy` files are `next/dynamic` wrappers, except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (the footer itself is an RSC, so there is nothing to split).
+`check-client-naming.mjs` accepts `*.client.tsx`/`*.client.ts`, files inside a `/client/` directory, and App Router error convention files. Inspect the client directive and imports when tracing a boundary. Components commonly use a `Foo/` directory and `index.ts` barrel. Vitest tests use `*.test.tsx`; component Playwright specs use `*.e2e.ts`. `*Lazy` files are `next/dynamic` wrappers (`ContactFormLazy`, `InteractiveShellLazy`, `MatrixRainLazy` in `responsive/MatrixRain/`, consumed by `AppShell.client`), except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (no dynamic import is used there).
 
-> **Known convention drift (document, do not "fix" silently):** eight interactive files under `components/client/**` (e.g. `ContactForm.tsx`, `InteractiveShell.tsx`, `HeroBootAnimation.tsx`, `RoleTyper.tsx`, `ToTopButton.tsx`) carry `'use client'` but are **not** named `*.client.tsx`. The naming gate's scope evidently does not cover that directory. This is real today; see doc 09.
+The naming gate scans `app`, `components` and `lib`; `/client/` is an explicit directory-based exception.
+
+The Hero identity line is static server-rendered text. Desktop and mobile share `HeroIdentity`, with metrics and accessible labels passed into `HeroStats`. Boot and system-failure islands import their copy from `content/hero-client.ts`, keeping server content validation out of those client imports. The About "Open to [role] roles" status line mounts the `RoleTyper` client island (`components/client/RoleTyper`), which cycles Senior, Staff and Principal over the server-rendered text. `About` contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
+
+Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` export only the lazy wrapper. Tests import the real component directly, keeping it out of the initial client references.
 
 ## Component hierarchy
 
@@ -23,22 +27,30 @@ Conventions (enforced by `check-client-naming.mjs`): a client file is named `*.c
 flowchart TD
     page["app/page.tsx (RSC)"] --> bp["BreakpointProvider (client)"]
     bp --> shell["AppShell.client"]
-    shell --> chrome["Chrome: MatrixRain · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
-    shell --> main["main#main-content"]
-    main --> eb["ErrorBoundary (x20)"]
-    eb --> mod["Module (RSC wrapper: section + header)"]
-    mod --> sec["Section (RSC)"]
+    shell --> chrome["Chrome: MatrixRainLazy (client-only) · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
+    shell --> main["PageMain (RSC): main#main-content"]
+    main --> eb["ErrorBoundary"]
+    eb --> sec["Terminal section (RSC)"]
+    sec --> mod["Module (RSC wrapper: section + CSS typing header)"]
     sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · Field"]
     sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper"]
-    main --> hero["Hero (standalone client, NOT Module-wrapped)"]
-    main --> fl["Footer (RSC): cards, sitemap, shutdown log"]
-    fl --> fi["FooterLazy -> Footer.client: session counters + halt/reboot island"]
+    eb --> hero["Hero (RSC with boot and system-failure islands, owns its section)"]
+    hero --> identity["HeroIdentity: shared desktop/mobile identity, actions and HeroStats props"]
+    hero --> clientcopy["Boot + system-failure islands: typed hero-client copy"]
+    eb --> career["Career (GitLogSection): own section and header"]
+    eb --> about["About (RSC with RoleTyper island, owns its section)"]
+    about --> scroll["Responsibilities + retry code: named keyboard scroll regions"]
+    shell --> fl["ErrorBoundary-wrapped Footer (RSC): cards, sitemap, shutdown log"]
+    fl --> fi["FooterLazy: direct re-exports from Footer.client: session counters + halt/reboot island"]
     fl --> fc["CopyButton: netstat clipboard control"]
+    links["/links and /links/en"] --> tagline["TaglineTyper: localized tagline cycle"]
 ```
 
 ### The `Module` wrapper
 
-`components/responsive/Module/Module.tsx` (RSC) is the spine every section sits in. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. Props: `id`, `header`, `mobileHeader?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. See DECISIONS.md 2026-07-12 for why the disclosure was removed.
+`components/responsive/Module/Module.tsx` (RSC) wraps terminal modules. Hero, About, Career and Footer render separately. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. Props: `id`, `header`, `mobileHeader?`, `srLabel?`, `name?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. `content/section-labels.ts` supplies readable labels. It derives registry labels and adds supporting module labels.
+
+Module headers use CSS scroll-driven typing with a stepped text reveal and caret. The caret blinks four times, then stays solid. Unsupported browsers, OS reduced motion and the MOTION toggle show static text. The text remains in the DOM and accessibility tree; no client JavaScript is added. `html` and `body` use `overflow-x: clip` so the view timeline follows page scrolling.
 
 ### CRT overlay layering
 
@@ -46,7 +58,7 @@ flowchart TD
 
 ## The design system
 
-Eight primitives in `design-system/components/`; **seven exported** from `design-system/index.ts` (`Field` is intentionally internal - consumed only by `ContactForm`).
+Eight primitives in `design-system/components/`; **seven exported** from `design-system/index.ts` (`Field` uses a direct import in `ContactForm` and the docs). The docs also provide the client `CopyButton` under `app/design-system/_components/`.
 
 | Primitive       | Type       | Variant surface                                                                |
 | --------------- | ---------- | ------------------------------------------------------------------------------ |
@@ -55,25 +67,25 @@ Eight primitives in `design-system/components/`; **seven exported** from `design
 | `CmdLine`       | RSC        | terminal command line (`user`, `command`, `output`, `prompt`)                  |
 | `Field`         | **client** | input/textarea + label + error/ARIA (not exported)                             |
 | `KbdKey`        | RSC        | `size: sm｜md`                                                                 |
-| `StatTile`      | RSC        | `<dl>` stat tile, `variant: default｜compact`                                  |
+| `StatTile`      | RSC        | `<dl>` stat tile, `variant: default｜compact｜display`                         |
 | `TerminalPanel` | RSC        | bordered container, polymorphic `as`, optional header                          |
 | `WindowChrome`  | RSC        | macOS traffic-light dots, `size` px                                            |
 
-The only DS lib file is `design-system/lib/cx.ts` - a 3-line classname joiner (`.filter(Boolean).join(' ')`), no `clsx`/`tailwind-merge` dependency (a bundle-budget choice). The **DS docs site** (`app/design-system/**`) is MDX; `_lib/theme-tokens.ts` parses `app/css/theme.css` with the _same regex_ as `scripts/contrast-check.mjs`, so the docs and the contrast gate can never drift. The changelog page is git-generated by `scripts/sync-changelog.ts` (`pnpm changelog:sync`).
+`design-system/lib/cx.ts` joins truthy class names. Several primitives use `lib/cn.ts`, which imports `clsx`; neither helper uses `tailwind-merge`. The **DS docs site** (`app/design-system/**`) is MDX; `_lib/theme-tokens.ts` parses `app/css/theme.css` with the _same regex_ as `scripts/contrast-check.mjs`, to read the same token declarations. Changes to either parser still need checking. The changelog page is git-generated by `scripts/sync-changelog.ts` (`pnpm changelog:sync`).
 
 ## CSS / token architecture
 
 Import order (`app/globals.css`): `tailwindcss` → `theme.css` → `base.css` → `crt.css` → `animations.css` → `components.css`. Tailwind v4 via the single `@tailwindcss/postcss` plugin. No CSS modules, no Style Dictionary.
 
-| File             | `@layer`     | Holds                                                                                                                                       |
-| ---------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `theme.css`      | `@theme`     | The token system (below)                                                                                                                    |
-| `base.css`       | `base`       | resets, focus-visible rings, skip-link, `.sr-only`, the `#sec-*` mobile-order map, `.mobile-only`/`.desktop-only`                           |
-| `crt.css`        | `components` | the 6 CRT classes + keyframes + reduced-motion disables                                                                                     |
-| `animations.css` | -            | section keyframes (`boot-blink`, `dmesg-reveal`, `guitar-scan-beam`, `hero-shake-*`, ...)                                                   |
-| `components.css` | `components` | ~40 named classes Tailwind can't express (`.module-*`, `.signal-glow`, DawMixer `.mx-fader`/`.mx-dial`, `.contact-*`, `.shell-cursor`, ...) |
+| File             | `@layer`     | Holds                                                                                                                              |
+| ---------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `theme.css`      | `@theme`     | The token system (below)                                                                                                           |
+| `base.css`       | `base`       | resets, focus-visible rings, skip-link, `.sr-only`, the `#sec-*` mobile-order map, `.mobile-only`/`.desktop-only`                  |
+| `crt.css`        | `components` | the 6 CRT classes + keyframes + reduced-motion disables                                                                            |
+| `animations.css` | -            | section keyframes (`boot-blink`, `dmesg-reveal`, `guitar-scan-beam`, `hero-shake-*`, ...)                                          |
+| `components.css` | `components` | named layout and effect classes (`.module-*`, `.signal-glow`, DawMixer `.mx-fader`/`.mx-dial`, `.contact-*`, `.shell-cursor`, ...) |
 
-**Tokens (`@theme`):** not literally two tokens - six ordinal color families (primary/secondary/tertiary/quaternary/quinary/senary), each a 50–900 ramp, with the brand palette mapped onto specific stops: `--color-primary-500: #00ff41` (signal green), `--color-secondary-950: #000000` (surface black), `--color-tertiary-50: #e6ffe6` (body text, ~13:1 contrast). Fixed-opacity stops (`-subtle` 40%, `-border` 20%, `-faint` 12%, `-quiet` 10%) are kept as explicit hex (byte-identical, no `color-mix`). Stops actually in use are commented `✓ EXACT`. **No raw hex outside `theme.css`** - enforced by `lint:css-tokens` (see doc 06/07).
+**Tokens (`@theme`):** six ordinal color families (primary/secondary/tertiary/quaternary/quinary/senary), each a 50 to 900 ramp, with the brand palette mapped onto specific stops: `--color-primary-500: #00ff41` (signal green), `--color-secondary-950: #000000` (surface black), `--color-tertiary-50: #e6ffe6` (body text). Fixed-opacity stops (`-subtle` 40%, `-border` 20%, `-faint` 12%, `-quiet` 10%) are kept as explicit hex (byte-identical, no `color-mix`). **No raw hex outside `theme.css`** - enforced by `lint:css-tokens` (see doc 06/07).
 
 ## State architecture
 
@@ -81,8 +93,8 @@ This is a near-static site; the state model is intentionally tiny. Four mechanis
 
 ```mermaid
 flowchart TD
-    subgraph ctx["1. React Context (exactly one)"]
-        bp["BreakpointProvider / useBreakpoint<br/>useSyncExternalStore over matchMedia(max-width:768px)<br/>SSR-seeded by initialIsMobile"]
+    subgraph ctx["1. Breakpoint context"]
+        bp["BreakpointProvider / useBreakpoint<br/>useSyncExternalStore over matchMedia(max-width:768px)<br/>home SSR seed: initialIsMobile=false"]
     end
     subgraph dom["2. DOM-as-state (motion)"]
         motion["lib/motion.ts: body[data-motion] + localStorage('erik.motion')<br/>broadcast via 'motionchange' CustomEvent"]
@@ -103,9 +115,9 @@ flowchart TD
 ### Per-island state, and the two rendering disciplines
 
 Islands fall into two camps, and the split is a deliberate INP strategy:
-- **Render _through_ React (rAF-coalesced state):** `InteractiveShell` - the streamed `/api/ask` answer lands in an isolated `streamingText` state flushed once per `requestAnimationFrame`. This is the one place per-token updates go through React, and they're coalesced so only one `<span>` re-renders.
+- **Render _through_ React (rAF-coalesced state):** `InteractiveShell` - the streamed `/api/ask` answer lands in an isolated `streamingText` state flushed once per `requestAnimationFrame`. This is the one place per-token updates go through React, and coalescing limits component state updates to animation frames. A dedicated span displays the text, but the state belongs to `InteractiveShell`.
 - **Mutate the DOM directly (no per-frame React state):** the Hero boot loop (`HeroBootAnimation` → `lib/boot-animation.ts`) and `RoleTyper` use `node.textContent =` typewriter mutation with `setTimeout`, **never** per-character `useState`. The DAW faders/knobs/VU meters update `style`/`setAttribute`/`className` directly on drag. `FaderDbIsland` and `VuMeter` hold no React state at all.
 
-This is the single most important state convention in the repo (and is asserted by `InteractiveShell.test.tsx`): **per-keystroke / per-pixel / per-frame updates must not trigger React re-renders.** See `CLAUDE.md` "Rendering model" and doc 09.
+Keep animation and drag updates off per-character React state. Streaming text is the exception: `InteractiveShell` coalesces React state updates with requestAnimationFrame. See its behavioral tests and doc 09.
 
-Other islands hold ordinary local state: `ContactForm` (controlled fields + a `idle→submitting→success｜error` status machine + honeypot), `ToTopButton` (`visible` on scroll>400), `StatusBar` and the `Footer.client` uptime counter (interval clocks with `visibilitychange` pause), the `Footer.client` halt clock (visitor time captured once after mount), `RmsButtons` (`Set<string>` toggle group), `CopyButton` (transient "COPIED").
+Other islands hold ordinary local state: `ContactForm` (controlled fields + a `idle→submitting→success｜queued｜error` status machine + honeypot), `ToTopButton` (`visible` on scroll>400), `StatusBar` and the `Footer.client` uptime counter (interval clocks with `visibilitychange` pause), the `Footer.client` halt clock (visitor time captured once after mount), `RmsButtons` (`Set<string>` toggle group), `CopyButton` (transient "COPIED").

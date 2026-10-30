@@ -18,7 +18,7 @@ export const SECTION_NAV = [
   { id: 'sec-projects', label: 'Projects', order: 3 },
   { id: 'sec-git-log', label: 'Career', order: 4 },
   { id: 'sec-shell', label: 'Interactive shell', order: 5 },
-  { id: 'sec-live-perf', label: 'Measured', order: 6 },
+  { id: 'sec-live-metrics', label: 'Measured', order: 6 },
   { id: 'sec-hottest-takes', label: 'Opinions', order: 7 },
   { id: 'sec-guitar', label: 'Guitar and mixer', order: 8 },
   { id: 'sec-contact', label: 'Contact', order: 9 },
@@ -57,8 +57,8 @@ export const SECTION_REGISTRY = [
   },
   {
     ...SECTION_NAV[5],
-    srLabel: 'Live performance',
-    aliases: ['measured', 'sec-live-metrics', 'performance', 'metrics', 'lighthouse', 'evals'],
+    srLabel: 'Measured',
+    aliases: ['measured', 'sec-live-perf', 'performance', 'metrics', 'lighthouse', 'evals'],
     icon: SECTION_ICONS.measured,
   },
   {
