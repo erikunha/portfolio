@@ -4,6 +4,7 @@ import { NAVIGATION } from '@/content/navigation';
 import { SECTION_REGISTRY } from '@/content/section-registry';
 import {
   DRAWER_ID,
+  IndexTrigger,
   SectionNavigation,
   SectionNavigationProvider,
   useSectionNavigation,
@@ -49,6 +50,7 @@ function leave(target: Element | null) {
 }
 
 type MediaListener = (event: { matches: boolean }) => void;
+const MOTION_STORAGE_KEY = 'erik.motion';
 let reducedMotion = false;
 let drawerViewport = true;
 const mediaListeners = new Set<MediaListener>();
@@ -93,6 +95,20 @@ function Page({ withHome = true }: { withHome?: boolean }) {
   );
 }
 
+function IndexPage() {
+  return (
+    <SectionNavigationProvider>
+      <IndexTrigger />
+      <SectionNavigation />
+      <main id="main-content" tabIndex={-1}>
+        {SECTION_REGISTRY.map(({ id }) => (
+          <section key={id} id={id} tabIndex={-1} />
+        ))}
+      </main>
+    </SectionNavigationProvider>
+  );
+}
+
 function panel() {
   return document.getElementById(DRAWER_ID) as HTMLElement;
 }
@@ -119,6 +135,7 @@ describe('SectionNavigation', () => {
       scrollIntoView as unknown as typeof Element.prototype.scrollIntoView;
     window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
     delete document.body.dataset.motion;
+    localStorage.removeItem(MOTION_STORAGE_KEY);
   });
 
   afterEach(() => {
@@ -257,8 +274,8 @@ describe('SectionNavigation', () => {
     ['prefers-reduced-motion', () => (reducedMotion = true)],
     ['the motion toggle', () => (document.body.dataset.motion = 'reduce')],
   ])('does not smooth-scroll under %s', (_, enable) => {
-    enable();
     render(<Page />);
+    enable();
     fireEvent.click(navLink('Career'));
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
   });
@@ -289,6 +306,75 @@ describe('SectionNavigation', () => {
     expect(linkedin.textContent).toContain('(opens in a new tab)');
   });
 
+  it('lists the reading views and the design system in the drawer foot', () => {
+    render(<Page />);
+    const foot = document.querySelector('.menu-foot') as HTMLElement;
+    const hrefs = [...foot.querySelectorAll('a')].map((link) => link.getAttribute('href'));
+
+    expect(hrefs).toEqual([
+      '/cv',
+      '/summary',
+      '/design-system',
+      'https://www.linkedin.com/in/erikunha/',
+    ]);
+    expect(
+      [...foot.querySelectorAll('a')].map((link) => link.querySelector('.nav-label')?.textContent),
+    ).toEqual(['VIEW_CV', '30S_SUMMARY', 'DESIGN_SYSTEM', 'LinkedIn (opens in a new tab)']);
+  });
+
+  it('counts the destinations in the drawer head', () => {
+    render(<Page />);
+    const badge = document.querySelector('.menu-badge');
+
+    expect(badge?.querySelector('[aria-hidden="true"]')?.textContent).toBe(
+      String(SECTION_REGISTRY.length),
+    );
+    expect(badge?.textContent).toContain(`${SECTION_REGISTRY.length} sections`);
+  });
+
+  it('offers a search row that reports the drawer it controls', () => {
+    render(<Page />);
+    const search = document.querySelector('.menu-search') as HTMLButtonElement;
+
+    expect(search).not.toBeNull();
+    expect(search.getAttribute('aria-controls')).toBe(DRAWER_ID);
+    expect(search.getAttribute('aria-keyshortcuts')).toBe('Control+K Meta+K');
+    expect(search.getAttribute('aria-expanded')).toBe('false');
+    expect(search.textContent).toContain(NAVIGATION.copy.searchLabel);
+  });
+
+  it('toggles the drawer from the search row', () => {
+    render(<Page />);
+    const search = document.querySelector('.menu-search') as HTMLButtonElement;
+
+    fireEvent.click(search);
+    expect(panel().classList.contains('is-open')).toBe(true);
+    expect(search.getAttribute('aria-expanded')).toBe('true');
+
+    fireEvent.click(search);
+    expect(panel().classList.contains('is-open')).toBe(false);
+  });
+
+  it('opens the drawer on the search shortcut', () => {
+    render(<Page />);
+    fireEvent.keyDown(document, { key: 'k', metaKey: true });
+
+    expect(panel().classList.contains('is-open')).toBe(true);
+  });
+
+  it('shares one motion state between the drawer toggle and the topbar toggle', () => {
+    render(<Page />);
+    const toggle = document.querySelector('.menu-motion') as HTMLButtonElement;
+
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    expect(toggle.textContent).toContain(NAVIGATION.copy.motionOn);
+
+    fireEvent.click(toggle);
+
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    expect(toggle.textContent).toContain(NAVIGATION.copy.motionOff);
+  });
+
   describe('drawer', () => {
     function open() {
       const trigger = screen.getByTestId('trigger');
@@ -314,7 +400,7 @@ describe('SectionNavigation', () => {
       expect(document.getElementById('main-content')?.hasAttribute('inert')).toBe(true);
       expect(panel().closest('[inert]')).toBeNull();
       expect(document.querySelector('.menu-scrim')?.closest('[inert]')).toBeNull();
-      expect(document.activeElement).toBe(screen.getByRole('button', { name: '[ X ] CLOSE' }));
+      expect(document.activeElement?.getAttribute('aria-current')).toBeTruthy();
     });
 
     it('closes on Escape, restores the background and returns focus to the trigger', () => {
@@ -342,8 +428,8 @@ describe('SectionNavigation', () => {
       render(<Page />);
       open();
       const close = screen.getByRole('button', { name: '[ X ] CLOSE' });
-      const footLinks = panel().querySelectorAll<HTMLElement>('.menu-foot a');
-      const last = footLinks[footLinks.length - 1] as HTMLElement;
+      const controls = panel().querySelectorAll<HTMLElement>('a[href], button');
+      const last = controls[controls.length - 1] as HTMLElement;
       last.focus();
       const forward = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
       document.dispatchEvent(forward);
@@ -379,15 +465,16 @@ describe('SectionNavigation', () => {
       expect(document.activeElement).toBe(document.getElementById('sec-projects'));
     });
 
-    it('closes when the viewport grows past the drawer breakpoint', () => {
+    it('stays open when the viewport grows, because the menu is a drawer at every width', () => {
       render(<Page />);
       open();
       drawerViewport = false;
       act(() => {
         for (const listener of [...mediaListeners]) listener({ matches: false });
       });
-      expect(panel().classList.contains('is-open')).toBe(false);
-      expect(document.querySelectorAll('[inert]')).toHaveLength(0);
+      expect(panel().classList.contains('is-open'), 'drawer must not depend on a breakpoint').toBe(
+        true,
+      );
     });
 
     it('locks page scrolling while open and releases it on every way out', () => {
@@ -426,46 +513,41 @@ describe('SectionNavigation', () => {
     });
   });
 
-  describe('rail', () => {
-    it('expands and collapses from its toggle', () => {
-      render(<Page />);
-      const toggle = screen.getByRole('button', { name: 'Open section menu' });
-      expect(toggle.getAttribute('aria-expanded')).toBe('false');
-      expect(toggle.getAttribute('aria-controls')).toBe(DRAWER_ID);
-      fireEvent.click(toggle);
-      expect(toggle.getAttribute('aria-expanded')).toBe('true');
-      expect(panel().classList.contains('is-expanded')).toBe(true);
-      fireEvent.click(toggle);
-      expect(panel().classList.contains('is-expanded')).toBe(false);
+  describe('index trigger', () => {
+    function indexButton() {
+      return screen.getByRole('button', { name: new RegExp(NAVIGATION.copy.indexLabel) });
+    }
+
+    it('names the drawer it controls and reports it closed', () => {
+      render(<IndexPage />);
+      const button = indexButton();
+      expect(button.getAttribute('aria-expanded'), 'trigger must report closed state').toBe(
+        'false',
+      );
+      expect(button.getAttribute('aria-controls')).toBe(DRAWER_ID);
+      expect(button.getAttribute('aria-haspopup')).toBe('dialog');
+      expect(button.textContent).toContain(`01/${SECTION_REGISTRY.length}`);
     });
 
-    it('collapses on Escape, returns focus to the toggle and stays collapsed until re-entered', () => {
-      render(<Page />);
-      const toggle = screen.getByRole('button', { name: 'Open section menu' });
-      fireEvent.click(toggle);
-      navLink('About').focus();
+    it('opens the modal drawer, focuses the current item and returns focus on Escape', () => {
+      render(<IndexPage />);
+      const button = indexButton();
+      fireEvent.click(button);
+      expect(button.getAttribute('aria-expanded')).toBe('true');
+      expect(panel().getAttribute('aria-modal')).toBe('true');
+      expect(
+        document.activeElement?.getAttribute('aria-current'),
+        'focus lands on current item',
+      ).toBeTruthy();
       fireEvent.keyDown(document, { key: 'Escape' });
-      expect(toggle.getAttribute('aria-expanded')).toBe('false');
-      expect(document.activeElement).toBe(toggle);
-      expect(panel().classList.contains('is-dismissed')).toBe(true);
-      fireEvent.mouseEnter(panel());
-      expect(panel().classList.contains('is-dismissed')).toBe(false);
+      expect(button.getAttribute('aria-expanded')).toBe('false');
+      expect(document.activeElement, 'focus must return to the INDEX trigger').toBe(button);
     });
 
-    it('collapses when the page outside the rail is clicked', () => {
-      render(<Page />);
-      const toggle = screen.getByRole('button', { name: 'Open section menu' });
-      fireEvent.click(toggle);
-      fireEvent.click(document.getElementById('main-content') as HTMLElement);
-      expect(toggle.getAttribute('aria-expanded')).toBe('false');
-    });
-
-    it('dismisses the rail after following a section link, until the rail is re-entered', () => {
-      render(<Page />);
-      fireEvent.click(navLink('About'));
-      expect(panel().classList.contains('is-dismissed')).toBe(true);
-      fireEvent.mouseEnter(panel());
-      expect(panel().classList.contains('is-dismissed')).toBe(false);
+    it('renders no rail toggle: the drawer opens only from a trigger', () => {
+      render(<IndexPage />);
+      expect(screen.queryByRole('button', { name: 'Open section menu' })).toBeNull();
+      expect(panel().classList.contains('is-open')).toBe(false);
     });
   });
 });

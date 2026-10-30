@@ -28,7 +28,7 @@ flowchart TD
     page["app/page.tsx (RSC)"] --> bp["BreakpointProvider (client)"]
     bp --> shell["AppShell.client"]
     shell --> navigation["SectionNavigationProvider (client): current section and drawer state"]
-    navigation --> rail["SectionNavigation (client): rail hover state and drawer focus trap<br/>Header: drawer close control or collapsible rail toggle column"]
+    navigation --> rail["SectionNavigation (client): INDEX trigger and drawer focus trap<br/>Header: drawer close control"]
     navigation --> position["PositionMeter (client): scroll progress and current section"]
     navigation --> chrome["Chrome: MatrixRainLazy (client-only) · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["PageMain (RSC): main#main-content"]

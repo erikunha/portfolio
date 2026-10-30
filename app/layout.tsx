@@ -33,8 +33,6 @@ export const metadata: Metadata = {
   description: profileMetaDescription,
   other: { 'work-authorization': workAuthorizationSummary },
   keywords: [
-    'Staff Engineer',
-    'Principal Engineer',
     profile.title,
     'Applied AI',
     'LLM Engineering',

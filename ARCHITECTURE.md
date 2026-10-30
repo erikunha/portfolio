@@ -129,30 +129,30 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Default: React Server Components, statically generated at build time
 
-Static section bodies are Server Components. `BreakpointProvider` and `AppShell` are client boundaries that receive server-rendered children. `SectionNavigationProvider` wraps the shell chrome so the rail, the dock and the position meter share one current-section state. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
+Static section bodies are Server Components. `BreakpointProvider` and `AppShell` are client boundaries that receive server-rendered children. `SectionNavigationProvider` wraps the shell chrome so the INDEX trigger, the drawer, the dock and the position meter share one current-section state. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
 
-The drawer header contains the title and close control. The toggle column occupies space only in the collapsible desktop rail.
+The section menu is a modal drawer at every width, opened only by the `☰ INDEX` trigger (left of the brand) or the dock MENU. The drawer header contains the title and close control.
 
 ### Client islands
 
-| Surface                                        | Client responsibilities                                              |
-| ---------------------------------------------- | -------------------------------------------------------------------- |
-| AppShell and breakpoint provider               | Responsive chrome, error bridge and viewport state                   |
-| DesktopTopbar, StatusBar, MobileTitleBar, Dock | Navigation, motion controls and device chrome                        |
-| SectionNavigation, SectionNavigationProvider   | Rail hover state, drawer focus trap and shared current-section state |
-| PositionMeter                                  | Scroll-position tracking and page-position progress                  |
-| MatrixRain, CRTOverlay, ToTopButton            | Canvas animation, CRT effects and scroll control                     |
-| HeroBootAnimation, HeroSystemFailure           | Boot/dialog animation and failure interaction                        |
-| RoleTyper                                      | Role cycle inside About                                              |
-| GlobalMotion → TypeReveal, MatrixRainLazy      | App-wide scroll type reveal and Matrix Rain from the root layout     |
-| InteractiveShellLazy → InteractiveShell        | Client-only shell input and streamed ASK output                      |
-| ContactFormLazy → ContactForm                  | Client-only form submission and feedback                             |
-| DAW mixer islands                              | Fader, dB readout, knob, RMS buttons and VU meter behavior           |
-| Footer client exports                          | Session counters, halt clock and reboot control                      |
-| ErrorBoundary and error pages                  | Failure capture, retry and recovery controls                         |
-| PrintButton                                    | Print action in `/summary` and `/cv`                                 |
-| `/links` client components                     | Tagline cycle, navigation progress, copy and subscribe actions       |
-| Design-system Sidebar and CopyButton           | Documentation navigation and clipboard feedback                      |
+| Surface                                        | Client responsibilities                                           |
+| ---------------------------------------------- | ----------------------------------------------------------------- |
+| AppShell and breakpoint provider               | Responsive chrome, error bridge and viewport state                |
+| DesktopTopbar, StatusBar, MobileTitleBar, Dock | Navigation, motion controls and device chrome                     |
+| SectionNavigation, SectionNavigationProvider   | INDEX trigger, drawer focus trap and shared current-section state |
+| PositionMeter                                  | Scroll-position tracking and page-position progress               |
+| MatrixRain, CRTOverlay, ToTopButton            | Canvas animation, CRT effects and scroll control                  |
+| HeroBootAnimation, HeroSystemFailure           | Boot/dialog animation and failure interaction                     |
+| RoleTyper                                      | Role cycle inside About                                           |
+| GlobalMotion → TypeReveal, MatrixRainLazy      | App-wide scroll type reveal and Matrix Rain from the root layout  |
+| InteractiveShellLazy → InteractiveShell        | Client-only shell input and streamed ASK output                   |
+| ContactFormLazy → ContactForm                  | Client-only form submission and feedback                          |
+| DAW mixer islands                              | Fader, dB readout, knob, RMS buttons and VU meter behavior        |
+| Footer client exports                          | Session counters, halt clock and reboot control                   |
+| ErrorBoundary and error pages                  | Failure capture, retry and recovery controls                      |
+| PrintButton                                    | Print action in `/summary` and `/cv`                              |
+| `/links` client components                     | Tagline cycle, navigation progress, copy and subscribe actions    |
+| Design-system Sidebar and CopyButton           | Documentation navigation and clipboard feedback                   |
 
 `InteractiveShellLazy` and `ContactFormLazy` use `next/dynamic` with `ssr: false` and loading status placeholders. `FooterLazy.client.tsx` is a direct re-export of footer controls, not a dynamic import. `DawMixerDesktop` is statically imported by the server section and embeds smaller client islands.
 
