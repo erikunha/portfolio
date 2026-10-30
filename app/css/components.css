@@ -813,6 +813,10 @@
     overflow-wrap: anywhere;
   }
 
+  .career-command [data-type-reveal] {
+    white-space: nowrap;
+  }
+
   .career-command span:first-child {
     color: var(--color-primary-500);
   }

@@ -33,7 +33,7 @@ function AiMetricsBody({
     <div className="measured-ask" aria-busy={loading || undefined}>
       <h3 className="measured-heading">
         <a href={measured.ask.url} target="_blank" rel="noopener noreferrer">
-          {measured.ask.title}
+          <span data-type-reveal>{measured.ask.title}</span>
           <span className="sr-only"> {measured.externalDisclosure}</span>
         </a>
         {metrics ? (
