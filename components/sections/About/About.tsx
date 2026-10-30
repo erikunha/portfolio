@@ -42,8 +42,8 @@ export function About() {
   return (
     <section id="sec-readme" tabIndex={-1} aria-labelledby="about-header" className="about-section">
       <header className="about-section-header">
-        <h2 id="about-header" data-type-reveal>
-          <span>{c.title}</span>
+        <h2 id="about-header">
+          <span data-type-reveal>{c.title}</span>
           <IconReadme />
           <span className="about-section-command" aria-hidden="true">
             {c.command}

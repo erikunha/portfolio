@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const MARKED_HEADING = '#about-header[data-type-reveal]';
+const MARKED_HEADING = '#about-header > [data-type-reveal]';
 
 test.describe('type reveal', () => {
   test('a marked heading types in once it scrolls into view', async ({ page }) => {
@@ -39,5 +39,30 @@ test.describe('type reveal', () => {
       .evaluateAll((els) => els.map((el) => getComputedStyle(el).clipPath));
     expect(clips.length).toBeGreaterThan(0);
     expect(clips.every((clip) => clip === 'none')).toBe(true);
+  });
+
+  test('marked elements hold only typed text and stay on one line', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto('/');
+    await page.waitForFunction(() =>
+      document.documentElement.classList.contains('type-reveal-ready'),
+    );
+
+    const offenders = await page.locator('[data-type-reveal]').evaluateAll((els) =>
+      els
+        .filter((el) => {
+          const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight);
+          const wraps = el.getClientRects().length > 1;
+          const hasExtras = el.querySelector('svg, .sr-only, [aria-hidden="true"]') !== null;
+          return (
+            hasExtras ||
+            wraps ||
+            (lineHeight > 0 && el.getBoundingClientRect().height > lineHeight * 1.5)
+          );
+        })
+        .map((el) => el.outerHTML.slice(0, 120)),
+    );
+    expect(offenders).toEqual([]);
   });
 });

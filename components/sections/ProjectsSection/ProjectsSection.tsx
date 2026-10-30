@@ -20,7 +20,7 @@ export function ProjectsContent() {
               </span>
             </span>
           </div>
-          <h3 className="project-name" data-type-reveal>
+          <h3 className="project-name">
             {project.url ? (
               <a href={project.url} target="_blank" rel="noopener noreferrer">
                 {project.name}
