@@ -1,0 +1,184 @@
+name: Claude Fix
+
+on:
+  # `workflow_run`, not `pull_request_review`: this file is loaded from the
+  # DEFAULT branch on a workflow_run trigger, so a pull request cannot author
+  # the fixer, the fixer prompt, or the gates below. A `pull_request_review`
+  # trigger would load the pull request's copy of this file and hand a
+  # pull-request author the write token this workflow holds.
+  workflow_run:
+    workflows: [Claude Review]
+    types: [completed]
+
+concurrency:
+  # One fixer per pull request. `cancel-in-progress: false` because a fixer
+  # that is cancelled half-way leaves a commit pushed and threads unresolved;
+  # the next run would then start from a state nobody can reason about. GitHub
+  # keeps a single run active per group, so a second fixer can never run while
+  # the first is still going.
+  group: claude-fix-${{ github.event.workflow_run.pull_requests[0].number || github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  # The fixer pushes the fix (contents: write) and answers in review threads
+  # (pull-requests: write). `issues: read` is the reviewer's verdict comment,
+  # which lives on the Issues API and is unreadable without it. `id-token:
+  # write` is the OIDC mint the action exchanges for the Claude App token, the
+  # same auth input claude-review.yml uses; it grants no repository access on
+  # its own.
+  contents: write
+  pull-requests: write
+  issues: read
+  id-token: write
+
+jobs:
+  fix:
+    # The fork guard lives here as well as in the gate script: this job must
+    # not even start for a pull request whose head is another repository.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      # The DEFAULT branch, not the pull request head: the gate script decides
+      # whether the fixer may act, and it must not run code the pull request
+      # authored to make that decision.
+      - name: Check out the default branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 1
+
+      - name: Decide whether the fixer may act
+        id: gate
+        env:
+          ALLOW_MAIN_BASE: ${{ vars.CLAUDE_FIX_ALLOW_MAIN_BASE }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_REPOSITORY: ${{ github.event.workflow_run.head_repository.full_name }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          MAX_ROUNDS: ${{ vars.CLAUDE_FIX_MAX_ROUNDS }}
+          OWNER: ${{ github.repository_owner }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+          REPO: ${{ github.repository }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          REVIEW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          REVIEW_STARTED_AT: ${{ github.event.workflow_run.run_started_at }}
+        run: node scripts/check-claude-fix-trigger.mjs
+
+      - name: Check out the pull request head branch
+        if: steps.gate.outputs.should_fix == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.gate.outputs.head_branch }}
+          fetch-depth: 1
+
+      # Same trust model as the reviewer's prompt: the fixer prompt is
+      # materialised from the DEFAULT branch, so a pull request cannot author
+      # the instructions its own fixer runs on.
+      - name: Materialise the trusted fixer prompt from the default branch
+        if: steps.gate.outputs.should_fix == 'true'
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin "$DEFAULT_BRANCH"
+          git show "FETCH_HEAD:.github/claude-fix-prompt.md" > /tmp/claude-fix-prompt.md
+          bytes=$(wc -c < /tmp/claude-fix-prompt.md)
+          if [ "$bytes" -lt 4000 ]; then
+            echo "prompt materialised at only ${bytes} bytes, expected the full fixer prompt" >&2
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        if: steps.gate.outputs.should_fix == 'true'
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: steps.gate.outputs.should_fix == 'true'
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+
+      - name: Install
+        if: steps.gate.outputs.should_fix == 'true'
+        run: pnpm install --frozen-lockfile
+
+      # actions/checkout persists GITHUB_TOKEN as an Authorization header on
+      # the origin remote. A push carrying that token does NOT trigger another
+      # workflow run, which would end the convergence loop after one round.
+      # The action configures git with the Claude App token, whose pushes DO
+      # trigger the next review, so the checkout's credential is dropped
+      # before the action runs.
+      - name: Drop the checkout credential so the push uses the Claude App token
+        if: steps.gate.outputs.should_fix == 'true'
+        run: |
+          set -euo pipefail
+          git config --local --unset-all http.https://github.com/.extraheader || true
+
+      - uses: anthropics/claude-code-action@be7b93b1907a4abad570368f3c74b6fe3807510b # v1
+        if: steps.gate.outputs.should_fix == 'true'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Automation mode posts no tracking comment, so the fixer needs no
+          # write access to the conversation.
+          track_progress: false
+          prompt: >-
+            REPO ${{ github.repository }} | PR NUMBER ${{ steps.gate.outputs.pr_number }} |
+            HEAD BRANCH ${{ steps.gate.outputs.head_branch }} | HEAD SHA ${{ steps.gate.outputs.head_sha }} |
+            TRIGGER ${{ steps.gate.outputs.trigger }} |
+            You are the FIXER for this pull request, running in CI. Address the open
+            claude[bot] review findings on the head branch, then push, then answer every
+            thread and resolve it. The system prompt file states the procedure; follow it
+            exactly. Do not implement anything the findings do not ask for.
+          claude_args: >-
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(git:*),Bash(gh api:*),Bash(gh pr:*),Bash(pnpm:*),Bash(node:*)"
+            --append-system-prompt-file /tmp/claude-fix-prompt.md
+
+      # The action exits 0 whether or not it fixed anything, so the run says
+      # nothing about whether the loop advanced. This step measures it: either
+      # the head moved, or the findings this round started with are no longer
+      # unresolved. Neither means the fixer did nothing, and a green run must
+      # not hide that.
+      - name: Assert the fixer made progress
+        if: steps.gate.outputs.should_fix == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ steps.gate.outputs.pr_number }}
+          REPO: ${{ github.repository }}
+          TRIGGER: ${{ steps.gate.outputs.trigger }}
+          UNRESOLVED_BEFORE: ${{ steps.gate.outputs.unresolved_before }}
+        run: |
+          set -euo pipefail
+
+          head_sha=$(gh api "repos/$REPO/pulls/$PR" --jq '.head.sha')
+          if [ "$head_sha" != "${{ steps.gate.outputs.head_sha }}" ]; then
+            echo "OK  the fixer pushed a new head ($head_sha)."
+            exit 0
+          fi
+
+          unresolved_after=$(gh api graphql \
+            -f query='query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){reviewThreads(first:100){nodes{isResolved comments(first:100){nodes{author{login} createdAt}}}}}}}' \
+            -f owner="${REPO%%/*}" -f name="${REPO##*/}" -F number="$PR" \
+            | jq --arg login 'claude[bot]' --arg since "${{ github.event.workflow_run.run_started_at }}" \
+              '[.data.repository.pullRequest.reviewThreads.nodes[]
+                | select(.isResolved == false)
+                | select((.comments.nodes[0].author.login // "") == $login)
+                | select((.comments.nodes[0].createdAt // "") >= $since)] | length')
+
+          if [ "$unresolved_after" -lt "$UNRESOLVED_BEFORE" ]; then
+            echo "OK  the fixer answered and resolved findings ($UNRESOLVED_BEFORE -> $unresolved_after)."
+            exit 0
+          fi
+
+          if [ "$TRIGGER" = "verdict" ]; then
+            echo "WARN the trigger was a request-changes verdict with no thread to answer,"
+            echo "     so no commit and no resolution is expected from this round."
+            exit 0
+          fi
+
+          echo "FAIL the fixer neither pushed a commit nor resolved a finding." >&2
+          echo "  Unresolved claude[bot] findings before: $UNRESOLVED_BEFORE, after: $unresolved_after." >&2
+          echo "  A green run must not hide a round that changed nothing." >&2
+          exit 1
