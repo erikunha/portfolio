@@ -27,7 +27,7 @@ The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the
 the current filter covers `app/api/ask/`, `lib/ask/`, `lib/ask-log.ts`, `lib/ip-hash.ts`,
 `lib/stream-protocol.ts`, `lib/rate-limit.ts`, `lib/agent/`, `lib/hiring-profile.ts`,
 `content/ask-eval-corpus.ts`, `content/ask-eval-calibration.ts`, `content/perf-receipts.ts`,
-`content/projects.ts`, `content/unknowns.ts`, `content/visa.ts`, `scripts/ask-eval.ts`, and
+`content/projects.ts`, `content/unknowns.ts`, `scripts/ask-eval.ts`, and
 `__tests__/ask-*`. Treat `.github/workflows/ci.yml` `detect-changes` as the source of truth
 for the exact set. The job has a 15-minute timeout; a ~12-minute
 run is normal, so a single slow Gateway run can hit the limit and report `cancelled` —

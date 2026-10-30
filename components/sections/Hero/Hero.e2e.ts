@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
-import { heroAuthorization, heroContent } from '@/content/hero';
+import { heroContent } from '@/content/hero';
 import { profile } from '@/content/profile';
 
 const viewports = [
@@ -18,7 +18,6 @@ for (const viewport of viewports) {
         hero.getByRole('heading', { level: 1, name: profile.displayName }),
       ).toBeVisible();
       await expect(hero.getByText(profile.title, { exact: false })).toBeVisible();
-      await expect(hero.getByText(heroAuthorization)).toBeVisible();
       const hire = hero.getByRole('link', { name: heroContent.hire.accessibleLabel });
       await expect(hire).toBeVisible();
       await expect(hire).toHaveAttribute('href', heroContent.hire.href);

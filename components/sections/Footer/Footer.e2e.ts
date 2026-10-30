@@ -23,7 +23,14 @@ test.describe('Footer', () => {
     await tree.getByRole('link', { name: 'Projects', exact: true }).click();
     await expect(page).toHaveURL(/#sec-projects$/);
     await expect(page.locator('#sec-projects')).toBeInViewport();
-    await expect(tree.locator('a[href="/cv"], a[href="/summary"]')).toHaveCount(0);
+    await expect(tree.getByRole('link', { name: '30S_SUMMARY', exact: true })).toHaveAttribute(
+      'href',
+      '/summary',
+    );
+    await expect(tree.getByRole('link', { name: 'VIEW_CV', exact: true })).toHaveAttribute(
+      'href',
+      '/cv',
+    );
     await expect(tree.getByRole('link', { name: 'Contact', exact: true })).toHaveAttribute(
       'href',
       '#sec-contact',
@@ -123,8 +130,8 @@ test.describe('Footer', () => {
       await page.evaluate(() => document.fonts.ready);
       if (width === 390) {
         const footer = await page.locator('footer').boundingBox();
-        expect(footer?.height).toBeGreaterThanOrEqual(1905);
-        expect(footer?.height).toBeLessThanOrEqual(1945);
+        expect(footer?.height).toBeGreaterThanOrEqual(1993);
+        expect(footer?.height).toBeLessThanOrEqual(2033);
       }
       const cells = page.locator('.footer-netstat :is(th, td)');
       for (const cell of await cells.all()) {

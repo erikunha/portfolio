@@ -2,10 +2,32 @@ import { describe, expect, it } from 'vitest';
 
 const guitarPresentationFixture = {
   signalStrengthLabelTemplate: '{n} of {total}',
+  signalStrip: {
+    live: '● SIGNAL_CHAIN.LIVE · SIGNAL OK',
+    tail: 'TAIL -F ~/.RIG',
+  },
   signalChain: [
-    { role: 'INPUT', name: 'GRETSCH G5655TG', subtitle: 'Bigsby · hollow body', strengthDots: 4 },
-    { role: 'AMP', name: 'MODELED CAB', subtitle: 'no tube · IR sim', strengthDots: 3 },
-    { role: 'OUT', name: 'FOH / IEM', subtitle: 'XLR stereo · in-ear', strengthDots: 5 },
+    {
+      role: 'INPUT',
+      label: '// INPUT',
+      name: 'GRETSCH G5655TG',
+      subtitle: 'Bigsby · hollow body',
+      strengthDots: 4,
+    },
+    {
+      role: 'AMP',
+      label: '// AMP',
+      name: 'MODELED CAB',
+      subtitle: 'no tube · IR sim',
+      strengthDots: 3,
+    },
+    {
+      role: 'OUT',
+      label: '// OUT',
+      name: 'FOH / IEM',
+      subtitle: 'XLR stereo · in-ear',
+      strengthDots: 5,
+    },
   ],
   influences: {
     label: 'INFLUENCES',

@@ -3,7 +3,7 @@ import { credentials } from './credentials';
 import { education } from './education';
 import { gitLog } from './git-log';
 import { heroStats } from './perf-receipts';
-import { profile, profileLocation, profileSummary } from './profile';
+import { formatLanguages, profile, profileLocation, profileSummary } from './profile';
 import { projects } from './projects';
 import { READING_PATHS } from './reading-paths';
 import { readmeCopy } from './readme';
@@ -14,7 +14,6 @@ import {
   SummaryDocumentSchema,
 } from './schemas';
 import { social } from './social';
-import { visaRows, workAuthorizationProse } from './visa';
 
 export { READING_PATHS };
 
@@ -62,7 +61,6 @@ export const readingViews = ReadingViewsSchema.parse({
       certifications: 'Certifications',
       community: 'Community',
       education: 'Education',
-      workAuthorization: 'Work authorization',
       contact: 'Contact',
     },
     credentialLabels: {
@@ -96,7 +94,7 @@ export const readingViews = ReadingViewsSchema.parse({
   summary: {
     path: READING_PATHS.summary,
     title: `30s summary · ${profile.displayName}`,
-    description: `${profile.displayName}, ${profile.title}. Stats, projects, work authorization, stack and contact on one screen.`,
+    description: `${profile.displayName}, ${profile.title}. Stats, projects, stack and contact on one screen.`,
     cvLinkLabel: 'VIEW_CV',
     statsLabel: 'Key numbers',
     experienceLabel: '8+ years',
@@ -116,7 +114,6 @@ export const readingViews = ReadingViewsSchema.parse({
     ],
     headings: {
       projects: 'Projects',
-      workAuthorization: 'Work authorization',
       stack: 'Tech stack',
       contact: 'Contact',
     },
@@ -153,10 +150,7 @@ export const withoutFragment = (source: string, fragment: string): string => {
   return source.replace(fragment, '');
 };
 
-const cvSummary = withoutFragment(
-  withoutFragment(readmeCopy.desktopIntro, profileSummary),
-  `${workAuthorizationProse}.`,
-).trim();
+const cvSummary = withoutFragment(readmeCopy.desktopIntro, profileSummary).trim();
 
 export const cvDocument = CvDocumentSchema.parse({
   name: profile.displayName,
@@ -204,14 +198,7 @@ export const cvDocument = CvDocumentSchema.parse({
     label: entry.degree,
     value: [entry.institution, entry.location, entry.period].join(STACK_SEPARATOR),
   })),
-  authorization: visaRows.map((row) => ({
-    key: row.jurisdiction,
-    label: row.jurisdiction,
-    value: [row.status, row.evidence].join(STACK_SEPARATOR),
-  })),
-  languages: profile.languages
-    .map((language) => `${language.code.toUpperCase()} (${language.level})`)
-    .join(STACK_SEPARATOR),
+  languages: formatLanguages(profile.languages),
   email: social.email,
 });
 
@@ -233,7 +220,6 @@ export const summaryDocument = SummaryDocumentSchema.parse({
   ].join(STACK_SEPARATOR),
   stats: heroStats,
   projects: summaryProjects,
-  authorization: visaRows,
   languages: cvDocument.languages,
   email: social.email,
 });

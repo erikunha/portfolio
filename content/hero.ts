@@ -1,11 +1,8 @@
 import { profile } from './profile';
 import { HeroContentSchema } from './schemas';
 import { social } from './social';
-import { workAuthorization } from './visa';
 
 export const heroTagline = `${profile.title} · ${profile.technologyLine}`;
-
-export const heroAuthorization = `${workAuthorization.worldwide} · WORLDWIDE`;
 
 const EXTERNAL_PROTOCOL = 'https://';
 export const heroContent = HeroContentSchema.parse({

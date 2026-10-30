@@ -1,1 +1,1 @@
-export { DawMixerContent, DawMixerSection } from './DawMixerSection';
+export { DawMixerContent } from './DawMixerContent';

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { contactCopy } from './contact-copy';
+import { formatLanguages, profile } from './profile';
 
 export const ContactContentSchema = z.object({
   success: z.object({ title: z.string().min(1), message: z.string().min(1) }),
@@ -19,6 +20,7 @@ export const ContactContentSchema = z.object({
     email: z.email(),
     linkedinHref: z.url(),
     copyEmail: z.string().min(1),
+    copyEmailCopied: z.string().min(1),
   }),
   form: z.object({
     nameLabel: z.string().min(1),
@@ -35,6 +37,7 @@ export const ContactContentSchema = z.object({
     retained: z.string().min(1),
     retryEmail: z.string().min(1),
     counterSeparator: z.string().min(1),
+    privacy: z.string().min(1),
     fieldLabels: z.object({
       name: z.string().min(1),
       email: z.string().min(1),
@@ -55,3 +58,5 @@ export const ContactContentSchema = z.object({
 export type ContactContent = z.infer<typeof ContactContentSchema>;
 
 export const contactContent: ContactContent = ContactContentSchema.parse(contactCopy);
+
+export const contactLanguageLine = `// ${formatLanguages(profile.languages)}`;

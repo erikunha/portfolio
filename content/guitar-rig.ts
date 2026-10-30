@@ -5,7 +5,8 @@ import {
   GuitarRigSchema,
 } from './schemas';
 
-export const GUITAR_MODULE_HEADER = 'CAT ~/.GUITAR_RIG';
+export const GUITAR_MODULE_HEADER = 'CAT ~/.GUITAR_RIG + ./MIX --LIVE';
+export const GUITAR_MODULE_MOBILE_HEADER = 'GUITAR_RIG + MIX';
 
 export const guitarRig: GuitarRig = GuitarRigSchema.parse({
   signalChain: [
@@ -58,7 +59,15 @@ const [guitarInput, , guitarAmp, guitarOutput] = guitarRig.signalChain;
 
 export const guitarPresentation: GuitarPresentation = GuitarPresentationSchema.parse({
   signalStrengthLabelTemplate: '{n} of {total}',
-  signalChain: [guitarInput, guitarAmp, guitarOutput],
+  signalStrip: {
+    live: '● SIGNAL_CHAIN.LIVE · SIGNAL OK',
+    tail: 'TAIL -F ~/.RIG',
+  },
+  signalChain: [
+    { ...guitarInput, label: '// INPUT' },
+    { ...guitarAmp, label: '// AMP' },
+    { ...guitarOutput, label: '// OUT' },
+  ],
   influences: {
     label: 'INFLUENCES',
     text: guitarRig.influences.map(({ name }) => name).join(' · '),

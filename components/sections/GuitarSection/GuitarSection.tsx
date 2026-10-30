@@ -1,10 +1,16 @@
 import Image from 'next/image';
 import { Fragment } from 'react';
-import { GUITAR_MODULE_HEADER, guitarPresentation, guitarRig } from '@/content/guitar-rig';
+import {
+  GUITAR_MODULE_HEADER,
+  GUITAR_MODULE_MOBILE_HEADER,
+  guitarPresentation,
+  guitarRig,
+} from '@/content/guitar-rig';
 import { GUITAR_SIGNAL_BAR_COUNT, GUITAR_SIGNAL_LABEL_TOKENS } from '@/content/schemas';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { IconGuitar } from '../../Icons';
 import { Module } from '../../responsive/Module';
+import { DawMixerContent } from '../DawMixerSection';
 
 const SIGNAL_BARS = Array.from({ length: GUITAR_SIGNAL_BAR_COUNT }, (_, position) => ({
   position,
@@ -15,12 +21,23 @@ const STACKED_MAX_WIDTH_PX = 767;
 const PHOTO_SIZES = `(max-width: ${STACKED_MAX_WIDTH_PX}px) 100vw, 320px`;
 
 export function GuitarContent() {
-  const { signalChain, signalStrengthLabelTemplate, influences, nowPlaying, stats, photo } =
-    guitarPresentation;
+  const {
+    signalChain,
+    signalStrip,
+    signalStrengthLabelTemplate,
+    influences,
+    nowPlaying,
+    stats,
+    photo,
+  } = guitarPresentation;
   const { liveCam } = guitarRig;
   return (
     <div className="guitar-presentation">
       <div className="guitar-signal-panel">
+        <div className="guitar-signal-strip">
+          <span className="guitar-signal-strip-live">{signalStrip.live}</span>
+          <span className="guitar-signal-strip-tail">{signalStrip.tail}</span>
+        </div>
         <div className="guitar-chain max-md:grid-cols-1">
           {signalChain.map((node, index) => (
             <Fragment key={node.role}>
@@ -31,7 +48,7 @@ export function GuitarContent() {
                 />
               )}
               <div className="guitar-node" data-testid={`signal-node-${node.role}`}>
-                <div className="guitar-label">{node.role}</div>
+                <div className="guitar-label">{node.label}</div>
                 <h3 className="guitar-node-heading" data-type-reveal>
                   {node.name}
                 </h3>
@@ -89,6 +106,9 @@ export function GuitarContent() {
           <figcaption className="guitar-camera-caption">{liveCam.caption}</figcaption>
         </figure>
       </div>
+      <div className="guitar-mixer">
+        <DawMixerContent />
+      </div>
     </div>
   );
 }
@@ -98,6 +118,7 @@ export function GuitarSection({ defer }: { defer?: boolean } = {}) {
     <Module
       id={SECTION_ID}
       header={GUITAR_MODULE_HEADER}
+      mobileHeader={GUITAR_MODULE_MOBILE_HEADER}
       srLabel={SECTION_LABELS[SECTION_ID]}
       icon={<IconGuitar />}
       defer={defer}
