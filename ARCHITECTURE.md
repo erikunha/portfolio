@@ -50,7 +50,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 | Lighthouse Accessibility                         | = 100                         |
 | Lighthouse Best Practices                        | ≥ 95                          |
 | Lighthouse SEO                                   | = 100                         |
-| WCAG                                             | 2.1 AA                        |
+| WCAG                                             | 2.2 AA                        |
 | ASK monthly token cap                            | 3,000,000 tokens              |
 
 ### Constraints
