@@ -4887,6 +4887,23 @@
     }
   }
 
+  @media (max-width: 1023px) and (scripting: none) {
+    .section-menu {
+      position: static;
+      width: auto;
+      transform: none;
+      visibility: visible;
+      border-right: 0;
+      border-top: var(--border-width) solid var(--color-primary-border);
+    }
+
+    .menu-close,
+    .menu-end,
+    .menu-scrim {
+      display: none;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .section-menu,
     .menu-scrim {
