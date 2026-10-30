@@ -15,9 +15,10 @@ flowchart TD
     r1 --> r2["pre-PR: bundle-check + route-js-check (non-docs)"]
     r2 --> r4["pre-PR: gates:runtime (LHCI+axe+E2E)"]
     r4 --> o1["open PR: fill every template section"]
-    o1 --> o2["CI green on the PR head"]
+    o1 --> o2["claude-review once per head; fix and reply in threads"]
     o2 --> m1["pre-merge: ci:local"]
-    m1 --> m4["pre-merge: pr:gate (threads)"]
+    m1 --> m3["pre-merge: claude-gate (Approve on HEAD)"]
+    m3 --> m4["pre-merge: pr:gate (threads)"]
     m4 --> merge["owner: squash-merge (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["smoke.yml: healthz + headers + liveness"]
@@ -27,13 +28,13 @@ flowchart TD
 
 **claude-review (claude[bot]) is the AI reviewer.** It runs automatically on eligible PR open and push events, posts one inline comment per finding anchored to a changed line, and closes with a `Verdict:` line that `pnpm claude-gate` parses fail-closed. It gathers evidence with the CI profile of the `pr-review-orchestrator` skill (`.claude/skills/pr-review-orchestrator/references/ci.md`): one `Task` subagent per material domain, and PR metadata, the diff and CI check results snapshotted by a workflow step before the review starts. The reviewer gets no `gh` or other shell command, and `--disallowedTools` denies the edit, git and push tools the action's tag mode would otherwise add, plus reads of `.git/` and other credential locations. No PR code runs in that job, so dependencies are not installed: for a dependency change it reviews the manifest and lockfile diff and names what only installed source could settle as a limit, which the local orchestrator then answers.
 
-A model review runs only when the owner asks for one: no `/claude-review` request, `pr-review-orchestrator` run, cross-provider review or self-review otherwise. Deterministic validation (tests, typecheck, lint, build, bundle and route-JS gates, CI) is the quality bar, and the provider that made a change ships it.
+claude-review runs on every PR, once per head: it is requested only when no run for that head is queued, running or finished, and never while the PR is behind its base or CI is red. Any other model review (`pr-review-orchestrator`, a cross-provider review, a self-review) runs only when the owner asks. Deterministic validation (tests, typecheck, lint, build, bundle and route-JS gates, CI) is the quality bar, and the provider that made a change ships it.
 
 When a review did run, follow the project review procedure: rebase before _every_ push; verify the pushed SHA actually landed on the remote before citing it; reply in a thread citing the fix SHA _before_ resolving it; never resolve silently (a thread with one comment is a process gap); and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
 
-## Pre-merge gates (`pnpm ci:local` + `pnpm pr:gate`, plus `pnpm claude-gate` when a review was asked for)
+## Pre-merge gates (`pnpm ci:local` + `pnpm claude-gate` + `pnpm pr:gate`)
 
-In order: `ci:local` -> `check-claude-approval` (only when the owner asked for a review; `pnpm claude-gate`: the latest claude-review verdict must be Approve, naming a head SHA that matches the current head. an Approve with no SHA, or a stale one, fails closed) -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL, all threads `isResolved`, flags `suspicious_self_resolve`). GitHub branch-protection settings must be checked separately; repository files do not establish their live state.
+In order: `ci:local` -> `check-claude-approval` (`pnpm claude-gate`: the latest claude-review verdict must be Approve, naming a head SHA that matches the current head. an Approve with no SHA, or a stale one, fails closed) -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL, all threads `isResolved`, flags `suspicious_self_resolve`). GitHub branch-protection settings must be checked separately; repository files do not establish their live state.
 
 **AI agents must not run `gh pr merge`.** This is a project convention. The repo owner runs the final squash-merge once all gates pass. The pre-push hook rejects a remote main target. Live GitHub protection and bypass permissions require separate inspection.
 
