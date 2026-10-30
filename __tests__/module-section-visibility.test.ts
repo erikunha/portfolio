@@ -51,16 +51,16 @@ describe('module-body-content: section-body collapse trap (details -> section re
     ).toBeUndefined();
   });
 
-  it('keeps the desktop border on .module-body-content under the >= 769px media query', () => {
-    const desktopBlockMatch = componentsCss.match(
-      /@media \(min-width:\s*769px\)\s*\{([\s\S]*?)\n {2}\}/,
-    );
-    const desktopBlock = desktopBlockMatch?.[1] ?? '';
+  it('keeps the desktop border on .module-body-content under the >= 768px media query', () => {
+    const desktopBlock =
+      [...componentsCss.matchAll(/@media \(min-width:\s*768px\)\s*\{([\s\S]*?)\n {2}\}/g)]
+        .map((match) => match[1] ?? '')
+        .find((block) => block.includes('.module-body-content')) ?? '';
     const desktopRuleMatch = desktopBlock.match(/\.module-body-content\s*\{[^}]*\}/);
     const hasBorder = !!desktopRuleMatch && /border\s*:/.test(desktopRuleMatch[0]);
     expect(
       hasBorder,
-      'app/css/components.css: the `@media (min-width: 769px)` block must still declare a ' +
+      'app/css/components.css: the `@media (min-width: 768px)` block must still declare a ' +
         '`border` on .module-body-content. This declaration previously lived only inside an ' +
         '[open]-qualified rule during the <details> era, making it the value most likely to be ' +
         'dropped by a future edit that touches this block.',

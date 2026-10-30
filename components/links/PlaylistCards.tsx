@@ -38,14 +38,10 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
   if (linkable.length === 0) return null;
 
   return (
-    <section
-      className="links-col px-[18px] pt-[18px]"
-      data-col="playlists"
-      aria-labelledby={HEADING_ID}
-    >
+    <section className="links-col pt-4" data-col="playlists" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID}>{copy.playlistsHeading[locale]}</SectionHeading>
 
-      <ul className="list-none m-0 p-0 grid gap-[10px]">
+      <ul className="list-none m-0 p-0 grid gap-3">
         {linkable.map(({ playlist, href }) => (
           <li key={playlist.id}>
             <a
@@ -54,15 +50,15 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
               rel="noopener noreferrer"
               data-outbound={`playlist-${playlist.id}`}
               className={cn(
-                'block border border-primary-border p-[14px] no-underline bg-[var(--color-glow-03)] transition-[border-color,background] duration-150 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2',
+                'block border border-primary-border p-4 no-underline bg-[var(--color-glow-03)] transition-[border-color,background] duration-150 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2',
                 ACCENT_CARD[playlist.accent],
               )}
             >
-              <span className="flex items-center justify-between gap-[10px]">
-                <span className="flex items-center gap-[9px]">
+              <span className="flex items-center justify-between gap-3">
+                <span className="flex items-center gap-2">
                   <span
                     className={cn(
-                      'border text-xs md:text-micro-95 tracking-[0.06em] py-0.5 px-[5px]',
+                      'border text-xs tracking-[0.06em] py-0.5 px-1',
                       ACCENT_TAG[playlist.accent],
                     )}
                   >
@@ -77,7 +73,7 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
                   →
                 </span>
               </span>
-              <span className="block mt-[6px] text-tertiary-400 text-xs md:text-micro-110 text-pretty">
+              <span className="block mt-2 text-tertiary-400 text-xs text-pretty">
                 {playlist.description[locale]}
               </span>
             </a>

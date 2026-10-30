@@ -59,7 +59,7 @@
     overflow-x: clip;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 767.98px) {
     html {
       scroll-padding-top: 76px;
     }
@@ -196,16 +196,10 @@
     position: relative;
   }
 
-  @media (min-width: 769px) and (max-width: 900px) {
-    body {
-      font-size: 14px;
-    }
-  }
-
   .mobile-only {
     display: none;
   }
-  @media (max-width: 768px) {
+  @media (max-width: 767.98px) {
     .desktop-only {
       display: none;
     }
@@ -214,7 +208,7 @@
     }
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 767.98px) {
     #sec-readme {
       order: 1;
     }

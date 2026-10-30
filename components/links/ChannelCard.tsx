@@ -38,21 +38,17 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
   const subscribeHref = `${channelUrl}?sub_confirmation=1`;
 
   return (
-    <section
-      className="links-col px-[18px] pt-[18px]"
-      data-col="channel"
-      aria-labelledby={HEADING_ID}
-    >
+    <section className="links-col pt-4" data-col="channel" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID}>{copy.channelHeading[locale]}</SectionHeading>
 
-      <div className="links-channel-card border border-primary-subtle p-[14px]">
+      <div className="links-channel-card border border-primary-subtle p-4">
         <div className="flex items-center justify-between gap-2">
-          <span className="flex items-center gap-[9px] text-primary-500">
+          <span className="flex items-center gap-2 text-primary-500">
             <IconYouTube />
             <span className="text-primary-500 text-base font-bold">{channel.name}</span>
           </span>
           {counts.length > 0 && (
-            <span className="text-tertiary-400 text-xs md:text-micro-100 tracking-[0.04em]">
+            <span className="text-tertiary-400 text-xs tracking-[0.04em]">
               {counts.join(' · ')}
             </span>
           )}
@@ -62,11 +58,11 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
           <div className="mt-3">
             <div
               aria-hidden="true"
-              className="links-thumb-placeholder h-[104px] lg:h-[280px] border border-primary-border grid place-items-center text-primary-400 text-xs md:text-micro-100 tracking-[0.08em] uppercase"
+              className="links-thumb-placeholder h-[104px] lg:h-[280px] border border-primary-border grid place-items-center text-primary-400 text-xs tracking-[0.08em] uppercase"
             >
               {copy.thumbPlaceholder[locale]}
             </div>
-            <p className="mt-[10px] mb-0 text-tertiary-400 text-xs md:text-micro-115 leading-[1.6] text-pretty">
+            <p className="mt-3 mb-0 text-tertiary-400 text-xs leading-body text-pretty">
               {copy.feedUnavailable[locale]}
             </p>
           </div>
@@ -88,22 +84,22 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
                 className="object-cover"
               />
             </span>
-            <span className="flex items-center gap-[7px] mt-[10px]">
+            <span className="flex items-center gap-2 mt-3">
               <Badge variant="dot" size="sm">
                 {copy.newBadge[locale]}
               </Badge>
               {publishedAgo !== null && (
-                <span className="text-tertiary-400 text-xs md:text-micro-105">
+                <span className="text-tertiary-400 text-xs">
                   {publishedAgo}
                   {latest.duration ? ` · ${latest.duration}` : ''}
                 </span>
               )}
             </span>
-            <span className="block text-tertiary-50 font-bold text-[15px] mt-[7px] text-pretty">
+            <span className="block text-tertiary-50 font-bold text-[15px] mt-2 text-pretty">
               {latest.title}
             </span>
             {latest.description && (
-              <span className="block mt-[5px] text-tertiary-400 text-xs md:text-micro-110 text-pretty">
+              <span className="block mt-1 text-tertiary-400 text-xs text-pretty">
                 {latest.description}
               </span>
             )}

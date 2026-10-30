@@ -42,7 +42,7 @@ export function HeroBootAnimation({ variant }: Props) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const mql = window.matchMedia('(max-width: 768px)');
+    const mql = window.matchMedia('(max-width: 767.98px)');
     const isMobileVP = mql.matches;
     const shouldRun = variant === 'mobile' ? isMobileVP : !isMobileVP;
 
