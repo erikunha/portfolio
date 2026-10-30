@@ -30,4 +30,14 @@ test.describe('home with JavaScript off', () => {
     const rail = await page.locator('.section-menu').boundingBox();
     if (rail) expect(bar!.x).toBeGreaterThanOrEqual(rail.x + 56);
   });
+
+  test('the notice clears the pinned-open rail at wide desktop', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.goto('/');
+    const bar = await page.locator('.nojs-bar').boundingBox();
+    const rail = await page.locator('.section-menu').boundingBox();
+    expect(bar).not.toBeNull();
+    expect(rail).not.toBeNull();
+    expect(bar!.x).toBeGreaterThanOrEqual(rail!.x + rail!.width);
+  });
 });

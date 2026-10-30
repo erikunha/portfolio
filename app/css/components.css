@@ -4886,7 +4886,8 @@
   }
 
   @media (min-width: 1536px) {
-    .app-content {
+    .app-content,
+    .nojs-bar {
       margin-left: var(--rail-expanded-width);
     }
 
