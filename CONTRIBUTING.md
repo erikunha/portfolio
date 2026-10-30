@@ -47,7 +47,7 @@ Git hooks run automatically, but you can (and should) run the checks yourself:
 
 **Pre-commit** runs Biome, a staged `gitleaks` secret scan, and commitlint. **Pre-push** runs the full verify chain and enforces the branch-name format.
 
-Performance, accessibility (WCAG 2.1 AA), and security are treated as implicit on every change, not separate phases. The performance budgets and the Lighthouse thresholds in `CLAUDE.md` are CI-enforced. **Do not disable a gate to merge** — if a gate fails, fix the underlying issue, or open an issue explaining why the gate is wrong.
+Performance, accessibility (WCAG 2.2 AA), and security are treated as implicit on every change, not separate phases. The performance budgets and the Lighthouse thresholds in `CLAUDE.md` are CI-enforced. **Do not disable a gate to merge** — if a gate fails, fix the underlying issue, or open an issue explaining why the gate is wrong.
 
 ## Opening a pull request
 

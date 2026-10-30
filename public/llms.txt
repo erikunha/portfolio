@@ -74,7 +74,7 @@ Data: PostgreSQL · MongoDB · Redis · SQL · SQLite
 
 Testing: Playwright · Vitest · Jest · React Testing Library · MSW · WireMock
 
-Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
+Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 
 ## Professional Experience
 

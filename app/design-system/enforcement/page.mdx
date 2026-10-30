@@ -39,7 +39,7 @@ directories have no CSS Modules.
 |---|---|---|
 | Component docs | `pnpm check:component-docs` | Every directory under `design-system/components` has a `## Name` section in `components/page.mdx` |
 | Visual regression | `tests/e2e/design-system-components.spec.ts` | Local Darwin component snapshots; ignored in CI by `playwright.config.ts` |
-| A11y | `pnpm playwright test tests/a11y` | axe-core scan, zero violations |
+| A11y | `pnpm playwright test tests/a11y` | axe-core scan including `wcag22aa`, zero violations |
 
 ## Cross-cutting
 

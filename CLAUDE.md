@@ -43,7 +43,7 @@ This codebase is a **reference system** — every architectural decision, perf b
 - Cross-cutting concerns over local optimization
 - Mechanism-level reasoning (cause → effect) — explain the why, not just the what
 - Surface trade-offs explicitly; give one recommendation per decision
-- Perf, a11y (WCAG 2.1 AA), and security are implicit on every change — not separate phases
+- Perf, a11y (WCAG 2.2 AA), and security are implicit on every change — not separate phases
 - "It's only one consumer" is not a valid YAGNI argument — architecture scales with adoption
 - Don't frame scope apologetically; state directly why the shape fits a reference system
 

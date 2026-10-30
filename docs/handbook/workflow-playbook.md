@@ -72,7 +72,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Entry:** a new interactive/semantic element, or an axe failure.
 - **Steps:**
   1. `chrome-devtools-mcp` a11y debugging, or check the axe-core gate (`tests/a11y/axe.spec.ts`).
-  2. Fix to WCAG 2.1 AA; the axe gate must stay at zero violations and Lighthouse a11y = 100.
+  2. Fix to WCAG 2.2 AA; the axe gate must stay at zero violations and Lighthouse a11y = 100.
   3. Add a per-component behavioral a11y test.
 - **Output:** an a11y-clean PR. See [`/docs/08`](../08-performance-and-accessibility.md).
 
