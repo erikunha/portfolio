@@ -81,9 +81,16 @@ function Trigger() {
   );
 }
 
-function Page({ withHome = true }: { withHome?: boolean }) {
+function Page({
+  withHome = true,
+  withIndexTrigger = false,
+}: {
+  withHome?: boolean;
+  withIndexTrigger?: boolean;
+}) {
   return (
     <SectionNavigationProvider>
+      {withIndexTrigger ? <IndexTrigger /> : null}
       <Trigger />
       <SectionNavigation />
       <main id="main-content" tabIndex={-1}>
@@ -409,6 +416,21 @@ describe('SectionNavigation', () => {
       expect(screen.getByRole('complementary', { name: 'Section menu' })).toBe(panel());
       expect(document.querySelectorAll('[inert]')).toHaveLength(0);
       expect(document.activeElement).toBe(trigger);
+    });
+
+    it('returns focus to a rendered INDEX trigger when the trigger that opened the drawer is gone', () => {
+      render(<Page withIndexTrigger />);
+      const trigger = screen.getByTestId('trigger');
+      trigger.focus();
+      fireEvent.click(trigger);
+      trigger.style.display = 'none';
+
+      fireEvent.keyDown(document, { key: 'Escape' });
+
+      expect(
+        document.activeElement,
+        'focus must land on a rendered INDEX trigger when the element that opened the drawer is not rendered',
+      ).toBe(screen.getByRole('button', { name: new RegExp(NAVIGATION.copy.indexLabel) }));
     });
 
     it('closes from the close control and from the scrim', () => {

@@ -33,6 +33,8 @@ const TRAPPED_CONTROLS = 'a[href], button';
 const CURRENT_ITEM = '[aria-current]';
 const SCROLL_LOCK_ATTRIBUTE = 'data-scroll-locked';
 const SEARCH_KEY = 'k';
+const INDEX_TRIGGER_CLASS = 'index-trigger';
+const INDEX_TRIGGER_SELECTOR = `.${INDEX_TRIGGER_CLASS}`;
 
 type NavigationState = {
   currentId: string;
@@ -85,6 +87,17 @@ export function jumpToSection(id: string): boolean {
     );
   }
   target.focus({ preventScroll: true });
+  return true;
+}
+
+function isRendered(element: HTMLElement): boolean {
+  if (!element.isConnected) return false;
+  if (element.hasAttribute('inert')) return false;
+  if (element.hidden) return false;
+  for (let node: HTMLElement | null = element; node; node = node.parentElement) {
+    const style = window.getComputedStyle(node);
+    if (style.display === 'none' || style.visibility === 'hidden') return false;
+  }
   return true;
 }
 
@@ -166,8 +179,20 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
   const settleDrawer = useCallback(() => {
     const pending = pendingRef.current;
     pendingRef.current = null;
-    if (pending) jumpToSection(pending);
-    else if (restoreFocusRef.current) triggerRef.current?.focus();
+    if (pending) {
+      jumpToSection(pending);
+      return;
+    }
+    if (!restoreFocusRef.current) return;
+    const candidates = [
+      triggerRef.current,
+      ...document.querySelectorAll<HTMLElement>(INDEX_TRIGGER_SELECTOR),
+    ];
+    for (const candidate of candidates) {
+      if (!candidate || !isRendered(candidate)) continue;
+      candidate.focus();
+      return;
+    }
   }, []);
 
   const jump = useCallback(
@@ -375,7 +400,7 @@ export function IndexTrigger({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      className={cn('index-trigger', className)}
+      className={cn(INDEX_TRIGGER_CLASS, className)}
       aria-expanded={drawerOpen}
       aria-controls={DRAWER_ID}
       aria-haspopup="dialog"

@@ -28,7 +28,7 @@ flowchart TD
     page["app/page.tsx (RSC)"] --> bp["BreakpointProvider (client)"]
     bp --> shell["AppShell.client"]
     shell --> navigation["SectionNavigationProvider (client): current section and drawer state"]
-    navigation --> rail["SectionNavigation (client): INDEX trigger and drawer focus trap<br/>Header: drawer close control"]
+    navigation --> rail["SectionNavigation (client): INDEX trigger, drawer focus trap and focus return<br/>Header: drawer close control"]
     navigation --> position["PositionMeter (client): scroll progress and current section"]
     navigation --> chrome["Chrome: MatrixRainLazy (client-only) · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["PageMain (RSC): main#main-content"]
@@ -48,6 +48,10 @@ flowchart TD
     fl --> fc["CopyButton: netstat clipboard control"]
     links["/links and /links/en"] --> tagline["TaglineTyper: localized tagline cycle"]
 ```
+
+### The section drawer
+
+The section menu is a modal drawer at every width. It opens from the `☰ INDEX` trigger or the dock `MENU` control, keeps Tab inside the panel, and closes on Escape, the close control or the scrim. Closing it returns focus to the control that opened it. A viewport change can stop that control from being rendered (the dock is `display: none` from 1024px), and focusing an element in a `display: none` subtree is a no-op, so the drawer falls back to the first rendered `INDEX` trigger. Focus always lands on a control the visitor can see.
 
 ### The `Module` wrapper
 

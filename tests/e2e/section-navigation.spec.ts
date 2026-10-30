@@ -287,6 +287,28 @@ test.describe('section navigation: drawer across a viewport change', () => {
       'the scroll lock must survive the viewport change while the drawer is open',
     ).toHaveCSS('overflow', 'hidden');
   });
+
+  test('closing after the viewport change returns focus to a rendered INDEX trigger', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page
+      .getByRole('navigation', { name: 'primary' })
+      .getByRole('button', { name: /^MENU/ })
+      .click();
+    const drawer = page.getByRole('dialog', { name: 'Section menu' });
+    await expect(drawer).toBeVisible();
+
+    await page.setViewportSize({ width: 1280, height: 720 });
+
+    await page.keyboard.press('Escape');
+    await expect(drawer).toBeHidden();
+    await expect(
+      page.locator('.desktop-topbar .index-trigger'),
+      'focus must return to the INDEX trigger that is rendered after the viewport change: the ' +
+        'trigger that opened the drawer is inside the dock, which is hidden from 1024px',
+    ).toBeFocused();
+  });
 });
 
 test.describe('section navigation: position line at 1280px', () => {
