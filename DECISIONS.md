@@ -2,6 +2,8 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+- **2026-10-29** · **The project baseline no longer pins `defaultMode` and inherits the user's global permission mode.** The owner runs one global mode across repositories; a project pin overrode it. Keeping `acceptEdits` pinned per project was rejected. _Reversible: restore `"defaultMode": "acceptEdits"` in `.claude/settings.json`._
+
 ## 2026-08-30 — site-wide pt-BR/EN is in scope, and the shape it has to take
 
 - **2026-08-30** · **Site-wide bilingual pt-BR/EN is now in scope, as the exception `CLAUDE.md`'s "Out of scope (unless asked)" list provides for.** The list reads "unless asked" and this was asked for directly. The scope is a translation of one site into two languages, not an i18n framework: no translation library, no message catalogue, no request-time language negotiation, no request-intercepting middleware. A page's language is determined by its address alone, so two visitors opening the same address see the same language regardless of browser or history. This extends the 2026-08-30 `/links` decision below from one page to the site, and inherits every refusal that decision made. _Reversible: the second language is additive; deleting the second locale's routes and content restores a single-language site. The address scheme is the part that is not cheaply reversible once external links accrue against it, which is why the bare address is pinned in the next bullet._
