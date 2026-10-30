@@ -27,7 +27,10 @@ Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` ex
 flowchart TD
     page["app/page.tsx (RSC)"] --> bp["BreakpointProvider (client)"]
     bp --> shell["AppShell.client"]
-    shell --> chrome["Chrome: MatrixRainLazy (client-only) · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
+    shell --> navigation["SectionNavigationProvider (client): current section and drawer state"]
+    navigation --> rail["SectionNavigation (client): rail hover state and drawer focus trap"]
+    navigation --> position["PositionMeter (client): scroll progress and current section"]
+    navigation --> chrome["Chrome: MatrixRainLazy (client-only) · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["PageMain (RSC): main#main-content"]
     main --> eb["ErrorBoundary"]
     eb --> sec["Terminal section (RSC)"]
@@ -58,7 +61,7 @@ Module headers use CSS scroll-driven typing with a stepped text reveal and caret
 
 ## The design system
 
-Eight primitives in `design-system/components/`; **seven exported** from `design-system/index.ts` (`Field` uses a direct import in `ContactForm` and the docs). The docs also provide the client `CopyButton` under `app/design-system/_components/`.
+Nine primitives in `design-system/components/`; **eight exported** from `design-system/index.ts` (`Field` uses a direct import in `ContactForm` and the docs). The docs also provide the client `CopyButton` under `app/design-system/_components/`.
 
 | Primitive       | Type       | Variant surface                                                                |
 | --------------- | ---------- | ------------------------------------------------------------------------------ |
@@ -67,6 +70,7 @@ Eight primitives in `design-system/components/`; **seven exported** from `design
 | `CmdLine`       | RSC        | terminal command line (`user`, `command`, `output`, `prompt`)                  |
 | `Field`         | **client** | input/textarea + label + error/ARIA (not exported)                             |
 | `KbdKey`        | RSC        | `size: sm｜md`                                                                 |
+| `NavItem`       | RSC        | navigation link with `current` state and decorative `index`                    |
 | `StatTile`      | RSC        | `<dl>` stat tile, `variant: default｜compact｜display`                         |
 | `TerminalPanel` | RSC        | bordered container, polymorphic `as`, optional header                          |
 | `WindowChrome`  | RSC        | macOS traffic-light dots, `size` px                                            |
@@ -93,8 +97,10 @@ This is a near-static site; the state model is intentionally tiny. Four mechanis
 
 ```mermaid
 flowchart TD
-    subgraph ctx["1. Breakpoint context"]
+    subgraph ctx["1. React contexts"]
         bp["BreakpointProvider / useBreakpoint<br/>useSyncExternalStore over matchMedia(max-width:768px)<br/>home SSR seed: initialIsMobile=false"]
+        navigation["SectionNavigationProvider / useSectionNavigation<br/>current section, drawer state and navigation actions"]
+        navigation --> consumers["SectionNavigation · Dock · PositionMeter"]
     end
     subgraph dom["2. DOM-as-state (motion)"]
         motion["lib/motion.ts: body[data-motion] + localStorage('erik.motion')<br/>broadcast via 'motionchange' CustomEvent"]
@@ -110,7 +116,7 @@ flowchart TD
     end
 ```
 
-**There is no global store, no `useReducer`, and no URL/`searchParams` state.** The only router read in the entire app is `usePathname()` in the design-system `Sidebar.client.tsx`. Cross-island coordination is done with window `CustomEvent`s, not shared React state - e.g. `InteractiveShell` dispatches `shell-cmd-run` and the `Footer.client` session counter listens to increment a counter, with no shared parent state.
+**There is no global store, no `useReducer`, and no URL/`searchParams` state.** The only router read in the entire app is `usePathname()` in the design-system `Sidebar.client.tsx`. Section navigation shares React state through `SectionNavigationProvider`. Other cross-island coordination uses window `CustomEvent`s. For example, `InteractiveShell` dispatches `shell-cmd-run` and the `Footer.client` session counter listens to increment a counter, with no shared parent state.
 
 ### Per-island state, and the two rendering disciplines
 

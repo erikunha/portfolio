@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NAVIGATION } from '@/content/navigation';
 import { SECTION_REGISTRY } from '@/content/section-registry';
 import {
+  DRAWER_ID,
   SectionNavigation,
   SectionNavigationProvider,
   useSectionNavigation,
@@ -93,7 +94,7 @@ function Page({ withHome = true }: { withHome?: boolean }) {
 }
 
 function panel() {
-  return document.getElementById('section-drawer') as HTMLElement;
+  return document.getElementById(DRAWER_ID) as HTMLElement;
 }
 
 function navLink(name: string) {
@@ -430,7 +431,7 @@ describe('SectionNavigation', () => {
       render(<Page />);
       const toggle = screen.getByRole('button', { name: 'Open section menu' });
       expect(toggle.getAttribute('aria-expanded')).toBe('false');
-      expect(toggle.getAttribute('aria-controls')).toBe('section-drawer');
+      expect(toggle.getAttribute('aria-controls')).toBe(DRAWER_ID);
       fireEvent.click(toggle);
       expect(toggle.getAttribute('aria-expanded')).toBe('true');
       expect(panel().classList.contains('is-expanded')).toBe(true);

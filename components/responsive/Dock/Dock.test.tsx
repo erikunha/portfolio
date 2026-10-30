@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NAVIGATION } from '@/content/navigation';
 import { LINKEDIN_URL } from '@/content/social-urls';
-import { SectionNavigation, SectionNavigationProvider } from '../SectionNavigation';
+import { DRAWER_ID, SectionNavigation, SectionNavigationProvider } from '../SectionNavigation';
 import { Dock } from './Dock.client';
 
 let notify: IntersectionObserverCallback | undefined;
@@ -120,10 +120,20 @@ describe('Dock', () => {
     mount();
     const menu = within(dock()).getByRole('button', { name: 'MENU, section 01/9' });
     expect(menu.getAttribute('aria-haspopup')).toBe('dialog');
-    expect(menu.getAttribute('aria-controls')).toBe('section-drawer');
+    expect(menu.getAttribute('aria-controls')).not.toBeNull();
     expect(menu.getAttribute('aria-expanded')).toBe('false');
     reveal('sec-contact');
     expect(within(dock()).getByRole('button', { name: 'MENU, section 09/9' })).not.toBeNull();
+  });
+
+  it('points the Menu trigger at the drawer element it controls', () => {
+    mount();
+    const menu = within(dock()).getByRole('button', { name: /^MENU/ });
+    const controls = menu.getAttribute('aria-controls');
+    expect(controls).not.toBeNull();
+    const drawer = document.getElementById(controls as string);
+    expect(drawer).not.toBeNull();
+    expect(drawer?.getAttribute('aria-label')).toBe(NAVIGATION.copy.drawerLabel);
   });
 
   it('opens the drawer from Menu and gives focus back to it on Escape', () => {
@@ -132,7 +142,7 @@ describe('Dock', () => {
     menu.focus();
     fireEvent.click(menu);
     expect(menu.getAttribute('aria-expanded')).toBe('true');
-    expect(document.getElementById('section-drawer')?.getAttribute('role')).toBe('dialog');
+    expect(document.getElementById(DRAWER_ID)?.getAttribute('role')).toBe('dialog');
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(menu.getAttribute('aria-expanded')).toBe('false');
     expect(document.activeElement).toBe(menu);

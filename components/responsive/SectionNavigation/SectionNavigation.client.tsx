@@ -21,7 +21,7 @@ import { NavItem } from '@/design-system';
 import { cn } from '@/lib/cn';
 
 const MAIN_ID = 'main-content';
-const DRAWER_ID = 'section-drawer';
+export const DRAWER_ID = 'section-drawer';
 const MOBILE_HERO_SELECTOR = '[data-testid="hero-mobile"]';
 const DRAWER_QUERY = '(max-width: 1023px)';
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';

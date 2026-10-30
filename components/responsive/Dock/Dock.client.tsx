@@ -7,7 +7,7 @@ import {
   NAVIGATION,
   sectionHref,
 } from '@/content/navigation';
-import { useSectionNavigation } from '../SectionNavigation';
+import { DRAWER_ID, useSectionNavigation } from '../SectionNavigation';
 
 const ICON_PATHS: Record<DockKey, string> = {
   home: 'M3 11l9-8 9 8v10H3zM9 21V12h6v9',
@@ -41,7 +41,7 @@ export function Dock() {
               aria-label={`${NAVIGATION.copy.menuLabelPrefix} ${formatSectionPosition(currentId)}`}
               aria-haspopup="dialog"
               aria-expanded={drawerOpen}
-              aria-controls="section-drawer"
+              aria-controls={DRAWER_ID}
               aria-current={current}
               onClick={(event) =>
                 drawerOpen ? closeDrawer(true) : openDrawer(event.currentTarget)
