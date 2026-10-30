@@ -4,7 +4,9 @@ export type NavGroup = { id: string; title?: string; links: readonly NavLink[] }
 const ROOT = '/design-system';
 
 export const DS_NAV_ID = 'ds-nav';
-export const DS_NAV_SKIP_LABEL = 'Skip to design-system navigation';
+export const DS_SKIP_LABEL = 'Skip to main content';
+
+export const DS_HOME_LINK: NavLink = { href: '/', label: '← HOME' };
 
 export const DS_NAV_GROUPS: readonly NavGroup[] = [
   {
@@ -34,6 +36,7 @@ export const DS_NAV_GROUPS: readonly NavGroup[] = [
       { href: `${ROOT}/primitives/button`, label: 'BUTTON' },
       { href: `${ROOT}/primitives/cmd-line`, label: 'CMD-LINE' },
       { href: `${ROOT}/primitives/copybutton`, label: 'COPYBUTTON' },
+      { href: `${ROOT}/primitives/dialog`, label: 'DIALOG' },
       { href: `${ROOT}/primitives/field`, label: 'FIELD' },
       { href: `${ROOT}/primitives/kbd-key`, label: 'KBD-KEY' },
       { href: `${ROOT}/primitives/stat-tile`, label: 'STAT-TILE' },
@@ -46,3 +49,43 @@ export const DS_NAV_GROUPS: readonly NavGroup[] = [
 export const DS_ROUTES: readonly string[] = DS_NAV_GROUPS.flatMap((group) =>
   group.links.map((link) => link.href),
 );
+
+export const DS_SITE_BAR = {
+  brand: { href: '/', label: 'erik_cunha.sh' },
+  navLabel: 'Site navigation',
+  links: [
+    { href: '/#sec-about', label: 'ABOUT' },
+    { href: '/#sec-projects', label: 'WORK' },
+    { href: '/#sec-git-log', label: 'CAREER' },
+    { href: '/#sec-contact', label: 'CONTACT' },
+    { href: ROOT, label: 'DESIGN_SYSTEM' },
+  ],
+} as const;
+
+export const DS_MENU_TRIGGER_LABEL = 'MENU';
+export const DS_DRAWER_ID = 'site-drawer';
+export const DS_DRAWER_LABEL = 'Site menu';
+export const DS_DRAWER_TITLE = 'erik_cunha.sh';
+export const DS_DRAWER_CLOSE_LABEL = 'CLOSE';
+
+export type DsPagerPage = { slug: string; href: string; label: string };
+
+export const DS_PAGER: readonly DsPagerPage[] = [
+  { slug: '', href: ROOT, label: 'Overview' },
+  { slug: 'tokens', href: `${ROOT}/tokens`, label: 'Tokens' },
+  { slug: 'components', href: `${ROOT}/components`, label: 'Components' },
+  { slug: 'enforcement', href: `${ROOT}/enforcement`, label: 'Enforcement' },
+  { slug: 'changelog', href: `${ROOT}/changelog`, label: 'Changelog' },
+];
+
+export const DS_PAGER_PREV_LABEL = 'Previous: ';
+export const DS_PAGER_NEXT_LABEL = 'Next: ';
+
+export function dsPagerSlugForPathname(pathname: string | null): string | null {
+  if (pathname === null) return null;
+  if (pathname === ROOT) return '';
+  const prefix = `${ROOT}/`;
+  if (!pathname.startsWith(prefix)) return null;
+  const rest = pathname.slice(prefix.length);
+  return DS_PAGER.some((page) => page.slug === rest) ? rest : null;
+}
