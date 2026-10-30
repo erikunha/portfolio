@@ -88,5 +88,5 @@ Pre-PR self-review is a discipline, not a gate. What remains mechanical on a PR:
 | Script | Purpose |
 |---|---|
 | `check-claude-approval.ts` | `pnpm claude-gate`: the latest claude-review verdict must be Approve on the current head; fail-closed on a stale or SHA-less Approve |
-| `check-pr-comments.ts` | `pnpm pr:gate`: every review thread resolved; flags `suspicious_self_resolve` |
+| `check-pr-comments.ts` | `pnpm pr:gate`: every review thread resolved; flags `suspicious_self_resolve`; a fix-claiming reply must carry a commit link reachable from the PR head |
 | `lint-css-tokens.ts` | bans raw hex outside `theme.css` (CI gate `pnpm lint:css-tokens`) |

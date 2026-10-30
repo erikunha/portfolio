@@ -34,11 +34,13 @@ flowchart TD
 
 **The local 4-agent battery is not restored** — it, its findings ledger and `review:stamp` were removed on 2026-07-27 and stay removed. Pre-PR review is a discipline: read `git diff origin/main...HEAD` end to end, invoke `pr-review-toolkit:code-reviewer` against it, and fix every Critical/Important finding before `gh pr create`. Nothing gates that pre-PR pass, so nothing will tell you it was skipped.
 
-On the open PR, the habits that were learned from real failures still apply and are still worth keeping: rebase before *every* push; verify the pushed SHA actually landed on the remote before citing it; reply in a thread citing the fix SHA *before* resolving it; never resolve silently (a thread with one comment is a process gap); and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
+On the open PR, the habits that were learned from real failures still apply and are still worth keeping: rebase before *every* push; verify the pushed SHA actually landed on the remote before citing it; reply in a thread with a link to the fix commit *before* resolving it; never resolve silently (a thread with one comment is a process gap); and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
+
+**The reply must carry a link, not a SHA.** A fix-claiming reply cites the commit as [`<short-sha>`](https://github.com/erikunha/portfolio/pull/<n>/commits/<full-sha>), and that commit must be an ancestor of the PR head. A reply that explains why no change was made carries no link and needs none. `pnpm pr:gate` enforces both halves: `reply_missing_commit_link` when the claim has no link in that form, `reply_commit_unreachable` when the link names a commit the PR head does not contain.
 
 ## Pre-merge gates (`pnpm claude-gate` + `pnpm pr:gate` + `pnpm ci:local`)
 
-In order: `ci:local` -> `check-claude-approval` (`pnpm claude-gate`: the latest claude-review verdict must be Approve, naming a head SHA that matches the current head — an Approve with no SHA, or a stale one, fails closed) -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL, all threads `isResolved`, flags `suspicious_self_resolve`). Branch protection is enforced by GitHub itself.
+In order: `ci:local` -> `check-claude-approval` (`pnpm claude-gate`: the latest claude-review verdict must be Approve, naming a head SHA that matches the current head; an Approve with no SHA, or a stale one, fails closed) -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL, all threads `isResolved`, flags `suspicious_self_resolve`, and holds fix-claiming replies to a reachable commit link). Branch protection is enforced by GitHub itself.
 
 **AI agents must not run `gh pr merge`.** This is a convention now: the `bash-guard.sh` hook that blocked it with `exit 2` was removed on 2026-07-27. The repo owner runs the final squash-merge once all gates pass. The branch-protection invariant means all changes go through a PR; direct pushes to `main` are blocked at the pre-push hook.
 
