@@ -3,7 +3,6 @@ import { createElement, type ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { About } from '@/components/sections/About';
-import { ManPageDesktop } from '@/components/sections/ManPageSection/ManPageDesktop';
 import { SCROLL_REGION_LABELS, SECTION_LABELS } from '@/content/section-labels';
 
 function expectKeyboardScrollRegion(
@@ -27,15 +26,6 @@ function expectKeyboardScrollRegion(
 }
 
 describe('Text scroll regions', () => {
-  it('makes the desktop profile manual a named keyboard scroll region', () => {
-    expectKeyboardScrollRegion(
-      createElement(ManPageDesktop),
-      SCROLL_REGION_LABELS['sec-man-page'],
-      SECTION_LABELS['sec-man-page'],
-      '.overflow-x-auto',
-    );
-  });
-
   it('makes responsibilities a named keyboard scroll region', () => {
     expectKeyboardScrollRegion(
       createElement(About),

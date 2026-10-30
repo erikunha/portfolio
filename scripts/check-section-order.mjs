@@ -6,7 +6,6 @@ import { join, resolve } from 'node:path';
 const root = process.cwd();
 
 const KNOWN_UNORDERED = new Set([
-  'sec-man-page-body',
   'sec-ai-metrics',
   'sec-live-perf',
   'sec-perf-receipts',

@@ -162,7 +162,7 @@ Client boundaries use `.client.ts`/`.client.tsx`, a `/client/` directory, or Nex
 
 ### Partial Prerendering (PPR)
 
-Only ManPage selects desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, its Suspense fallback enters the static shell and the selected variant streams per request. Contact renders its single CSS-responsive work-authorization table synchronously through `VisaContent`.
+No home section selects a UA-specific variant: `getIsMobile()` (`lib/ua.ts`) is not called by any section on `/`. With `cacheComponents: true`, the static shell is prerendered and ASK and PSI reads stream behind Suspense. Contact renders its single CSS-responsive work-authorization table synchronously through `VisaContent`.
 
 Projects renders one static RSC tree at every viewport. Its nine cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six project receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
 
@@ -251,7 +251,6 @@ content/visa.ts                       # jurisdiction table
 content/community.ts                  # community/* tags and event references inside Career
 content/credentials.ts                # cert/* tags and Career tag-group copy
 content/education.ts                  # edu/* tags inside Career
-content/man-page.ts                   # MAN ERIK content
 content/social.ts                     # github / linkedin / email / site
 content/errors.ts                     # 404, 500 and no-JS copy
 content/errors-client.ts              # zod-free error copy for client islands

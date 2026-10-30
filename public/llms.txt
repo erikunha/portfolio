@@ -46,7 +46,7 @@ Streaming LLM · AI Evaluation · LLM Cost Optimization
 - -32% page load reduction (Nike Brazil / Centauro)
 - +10% conversion rate via 20+ A/B experiments (Nike Brazil)
 - -80% platform delivery cost: shared cross-platform codebase (MB Labs)
-- €1B+ ARR cashier platform (Betsson Group, 40M+ transactions/yr)
+- €1B+ ARR cashier platform (Betsson Group, 40M+ transactions/yr, 31.1M customers)
 - 8M+ monthly active users (Nike Brazil + Centauro)
 - 70M+ customers served (Itaú Unibanco banking platform)
 - 12-agent AI system deployed to production engineering team
@@ -103,7 +103,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 
 ## Education
 
-- MBA, AI Engineering, Instituto Infnet, Brazil (online), expected Dec 2027
+- MBA (Lato Sensu), AI Engineering, Machine Learning and Deep Learning, Instituto Infnet, Brazil (online), expected Dec 2027
 - Web Development Co-op Diploma, CICCC, Vancouver, Canada (2023-2024)
 - BS, Information Systems, UNISAL, Campinas, Brazil (2015-2020)
 
@@ -131,7 +131,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 ## Selected project context
 
 - ORIGINATION_PLATFORM_UI, Raylu: React, Next.js 14, TypeScript 5.
-- SERVICE_OPS_CONSOLE, Canon Medical Systems: hospital equipment service platform for service orders, specialist schedules and field visits.
+- SERVICE_OPS_CONSOLE, Canon Medical Systems: hospital equipment service platform for service orders, specialist scheduling and field visits.
 
 ## Links
 

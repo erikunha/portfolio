@@ -16,7 +16,6 @@ vi.mock('next/headers', () => ({
 
 import { GitLogContent } from '@/components/sections/GitLogSection';
 import { GuitarContent } from '@/components/sections/GuitarSection';
-import { ManPageContent } from '@/components/sections/ManPageSection';
 import { ProjectsContent } from '@/components/sections/ProjectsSection';
 import { VisaContent } from '@/components/sections/VisaSection';
 import { projects } from '@/content/projects';
@@ -70,11 +69,5 @@ describe('responsive section mobile variants', () => {
     const html = renderToStaticMarkup(await VisaContent());
     expect(html).toContain('class="visa-table"');
     expect(html).not.toContain('data-testid="visa-mobile"');
-  });
-
-  it('ManPageContent emits the mobile variant when UA is mobile', async () => {
-    const el = await ManPageContent();
-    const html = renderToStaticMarkup(el);
-    expect(html).toContain('data-testid="manpage-mobile"');
   });
 });

@@ -85,7 +85,7 @@ describe('identity is consistent across every gated surface', () => {
   it('states the cross-platform code reuse the resume gives, on both surfaces', () => {
     const edtech = projects.find((project) => project.name === 'EDTECH_OMNI');
     expect(edtech).toBeDefined();
-    expect(edtech?.stats?.find((stat) => stat.label === 'REUSE')?.value).toContain('80%');
+    expect(edtech?.stats?.find((stat) => stat.label === 'SHARED')?.value).toContain('80%');
     expect(JSON.stringify(gitLog)).toContain('80% shared code');
     expect(JSON.stringify(gitLog)).not.toContain('90%');
   });
@@ -388,13 +388,13 @@ describe('terminal redesign canonical facts', () => {
   it('publishes the service project and the resume-backed Raylu stack on desktop and mobile', () => {
     expect(projects.every((project) => project.company.length > 0)).toBe(true);
     const raylu = projects.find((project) => project.company === 'Raylu');
-    expect(JSON.stringify(raylu)).toContain('Next.js 14');
-    expect(JSON.stringify(raylu)).toContain('TypeScript 5');
+    expect(JSON.stringify(raylu)).toContain('NEXT 14');
+    expect(JSON.stringify(raylu)).toContain('TS 5');
     expect(JSON.stringify(raylu)).not.toMatch(/Next(?:\.js)? 15|React 19/i);
     const service = projects.find((project) => project.name === 'SERVICE_OPS_CONSOLE');
     expect(service?.company).toBe('Canon Medical Systems');
     expect(service?.description).toContain('service orders');
-    expect(service?.description).toContain('specialist schedules');
+    expect(service?.description).toContain('specialist scheduling');
     expect(service?.description).toContain('field visits');
     for (const text of [
       JSON.stringify(projects),
@@ -416,11 +416,11 @@ describe('terminal redesign canonical facts', () => {
   });
 
   it('preserves receipt data while discarding retired mobile presentation fields', () => {
-    const onboarding = perfReceipts.find((receipt) => receipt.metric === 'ONBOARDING_TIME');
+    const onboarding = perfReceipts.find((receipt) => receipt.metric === 'LCP');
     expect(onboarding).toBeDefined();
     const parsed = PerfReceiptSchema.parse({
       ...onboarding,
-      mobileMetric: 'ONBOARDING',
+      mobileMetric: 'LARGEST_PAINT',
       desktopOnly: true,
     });
     expect(parsed).toEqual(onboarding);

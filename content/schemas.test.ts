@@ -205,7 +205,7 @@ const profileFixture = {
 const educationFixtures = [
   {
     id: 'MBA_AI_ENG',
-    degree: 'MBA, AI Engineering',
+    degree: 'MBA (Lato Sensu), AI Engineering, Machine Learning and Deep Learning',
     institution: 'Instituto Infnet',
     location: 'Brazil',
     studyMode: 'online',

@@ -14,7 +14,7 @@ export function CredentialsSection({
   communityId?: string;
 } = {}) {
   const groupId = useId();
-  const [eventLink, ...refs] = communityEvent.links;
+  const [eventLink] = communityEvent.links;
   const { certifications, education, community, prompt, statusMarker } = careerCredentials;
   const groups = [
     { ...certifications, entries: credentials },
@@ -65,15 +65,6 @@ export function CredentialsSection({
               <li key={bullet}>{bullet}</li>
             ))}
           </ul>
-          <p>
-            <span>{communityEvent.refsLabel}</span>{' '}
-            {refs.map((link) => (
-              <a key={link.href} href={link.href} target={EXTERNAL_TARGET} rel={EXTERNAL_REL}>
-                {link.label}
-                <span className="sr-only"> {communityEvent.newTabLabel}</span>{' '}
-              </a>
-            ))}
-          </p>
           <p className="career-community-status">
             <span aria-hidden="true">{statusMarker}</span> {community.status}
           </p>

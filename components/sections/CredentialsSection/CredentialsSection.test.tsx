@@ -35,13 +35,15 @@ describe('career tag groups', () => {
     expect(community.getByText(`status: ${communityEvent.statusLine}`)).toBeTruthy();
   });
 
-  it('preserves the event and reference links with accessible new-tab labels', () => {
+  it('links the event heading to the event page with an accessible new-tab label', () => {
     render(<CredentialsSection />);
     const community = within(screen.getByRole('group', { name: 'Community' }));
     const links = community.getAllByRole('link');
-    expect(links).toHaveLength(communityEvent.links.length);
-    expect(community.getByText(communityEvent.refsLabel)).toBeTruthy();
-    communityEvent.links.forEach((link, index) => {
+    expect(
+      links,
+      'the program and organizers reference line is not in the approved prototype',
+    ).toHaveLength(1);
+    communityEvent.links.slice(0, 1).forEach((link, index) => {
       const anchor = links[index];
       expect(anchor?.getAttribute('href')).toBe(link.href);
       expect(anchor?.getAttribute('target')).toBe('_blank');

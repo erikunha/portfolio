@@ -34,7 +34,9 @@ const METRIC_KEYWORDS: Record<string, RegExp> = {
   INITIAL_LOAD: /initial[\s-]*(page[\s-]*)?load/i,
   CONVERSION: /conversion/i,
   DESKTOP_BUILD: /desktop[\s-]*build|build[\s-]*time/i,
-  ONBOARDING_TIME: /onboarding/i,
+  CLS: /\bCLS\b|layout.shift/i,
+  LIGHTHOUSE: /lighthouse/i,
+  RELEASE_TIME: /release/i,
 };
 
 const PROXIMITY_CHARS = 60;
@@ -76,7 +78,6 @@ const HIRING_PROFILE_RECEIPT_FIELDS: Array<[string, string]> = [
   ['page_load_reduction', 'PAGE_LOAD'],
   ['conversion_uplift', 'CONVERSION'],
   ['api_latency_reduction', 'API_LATENCY'],
-  ['onboarding_reduction', 'ONBOARDING_TIME'],
   ['perf_delta_js', 'BUNDLE_JS'],
   ['perf_delta_css', 'BUNDLE_CSS'],
 ];
