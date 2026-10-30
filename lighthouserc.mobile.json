@@ -3,6 +3,10 @@
     "collect": {
       "url": [
         "http://localhost:3000",
+        "http://localhost:3000/cv",
+        "http://localhost:3000/summary",
+        "http://localhost:3000/links",
+        "http://localhost:3000/links/en",
         "http://localhost:3000/design-system",
         "http://localhost:3000/design-system/tokens",
         "http://localhost:3000/design-system/components",
