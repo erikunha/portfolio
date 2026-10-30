@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const MARKED_HEADING = '#about-header > [data-type-reveal]';
+const MARKED = '[data-type-reveal]';
 
 test.describe('type reveal', () => {
   test('a marked heading types in once it scrolls into view', async ({ page }) => {
@@ -10,7 +10,16 @@ test.describe('type reveal', () => {
       document.documentElement.classList.contains('type-reveal-ready'),
     );
 
-    const heading = page.locator(MARKED_HEADING);
+    const belowFold = await page
+      .locator(MARKED)
+      .evaluateAll((els) =>
+        els.findIndex((el) => el.getBoundingClientRect().top > window.innerHeight * 1.5),
+      );
+    expect(
+      belowFold,
+      'the reveal can only be observed on a marked element that starts well below the fold',
+    ).toBeGreaterThanOrEqual(0);
+    const heading = page.locator(MARKED).nth(belowFold);
     await expect(heading).not.toHaveClass(/is-typed/);
     const clipBefore = await heading.evaluate((el) => getComputedStyle(el).clipPath);
     expect(clipBefore).toContain('inset');
