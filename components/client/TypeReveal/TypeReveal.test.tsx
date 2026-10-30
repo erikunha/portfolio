@@ -160,7 +160,7 @@ describe('TypeReveal', () => {
     expect(a.classList.contains('is-static')).toBe(true);
   });
 
-  it('marks only not-yet-typed elements static when motion turns off mid-page', () => {
+  it('marks typed and not-yet-typed elements static when motion turns off mid-page, so re-enabling motion replays neither', () => {
     setMotion(true);
     mount('<h2 data-type-reveal id="a">About</h2><h2 data-type-reveal id="b">Work</h2>');
     const a = document.getElementById('a') as HTMLElement;
@@ -169,7 +169,7 @@ describe('TypeReveal', () => {
     act(() => {
       window.dispatchEvent(new CustomEvent('motionchange', { detail: { on: false } }));
     });
-    expect(a.classList.contains('is-static')).toBe(false);
+    expect(a.classList.contains('is-static')).toBe(true);
     expect(b.classList.contains('is-typed')).toBe(true);
     expect(b.classList.contains('is-static')).toBe(true);
   });

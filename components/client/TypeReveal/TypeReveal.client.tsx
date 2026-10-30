@@ -19,7 +19,7 @@ type MotionChangeDetail = { on: boolean };
 
 function revealAll(elements: HTMLElement[]) {
   for (const el of elements) {
-    if (!el.classList.contains(TYPED_CLASS)) el.classList.add(TYPED_CLASS, STATIC_CLASS);
+    el.classList.add(TYPED_CLASS, STATIC_CLASS);
   }
 }
 
