@@ -47,7 +47,7 @@ The dynamic (per-request) sections are the CLS risk, because their `<Suspense>` 
 - **Per-section fallback choice.** Most dynamic sections prerender their _desktop_ variant as the fallback.
 - **Measured fallbacks.** ASK and each PSI strategy have independent Suspense boundaries. Their loading states retain the metric tiles or score rows. One slow source does not block the other groups.
 - **Responsive guitar presentation.** `GuitarSection` renders one RSC tree across viewports. CSS changes its layout without a desktop/mobile swap or the associated layout shift.
-- **Mobile section ordering** uses CSS flex `order` (the `#sec-*` map in `base.css`). `check:section-order` requires order rules for top-level sections and exempts the declared nested anchors. An unordered top-level section defaults to `order:0` and can jump to the top.
+- **Mobile section ordering** uses CSS flex `order` (the `#sec-*` map in `base.css`). `check:section-order` requires order rules for top-level sections and exempts the declared nested anchors. An unordered top-level section defaults to `order:0` and can jump to the top. The same script also fails when a `#sec-*` selector in `app/css` matches an id no source renders, so a deleted section cannot leave dead rules behind.
 - **Both nav variants in the DOM**, toggled by CSS at 768px, to avoid a hydration-driven reflow.
 
 ## Live performance, self-reported
