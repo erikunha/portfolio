@@ -62,7 +62,7 @@
     display: block;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 767.98px) {
     .hero-desktop {
       display: none;
     }
@@ -71,7 +71,7 @@
     }
   }
 
-  @media (min-width: 769px) {
+  @media (min-width: 768px) {
     .hero-mobile {
       display: none;
     }
@@ -329,7 +329,7 @@
     animation: live-blink 1.6s steps(2, start) infinite;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 767.98px) {
     .live-dot {
       --live-dot-size: 6px;
     }
