@@ -127,23 +127,19 @@ function PassThroughStub({ children }: { children: React.ReactNode }) {
   return children;
 }
 
-describe('AppShell — isMobile=true prop branches', () => {
+describe('GlobalMotion — mobile Matrix Rain settings', () => {
   let mounted: MountedClient;
 
   beforeEach(() => {
     vi.resetModules();
-    vi.doMock('@/lib/use-breakpoint.client', () => ({
-      useBreakpoint: () => ({ isMobile: true }),
-    }));
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+    );
     vi.doMock('@/components/responsive/MatrixRain', () => ({
       MatrixRainLazy: MatrixRainStub,
     }));
-    vi.doMock('@/components/responsive/CRTOverlay', () => ({ CRTOverlay: NullStub }));
-    vi.doMock('@/components/responsive/DesktopTopbar', () => ({ DesktopTopbar: NullStub }));
-    vi.doMock('@/components/responsive/StatusBar', () => ({ StatusBar: NullStub }));
-    vi.doMock('@/components/responsive/MobileTitleBar', () => ({ MobileTitleBar: NullStub }));
-    vi.doMock('@/components/responsive/Dock', () => ({ Dock: NullStub }));
-    vi.doMock('@/components/client/ToTopButton', () => ({ ToTopButton: NullStub }));
+    vi.doMock('@/components/client/TypeReveal', () => ({ TypeReveal: NullStub }));
     vi.doMock('@/components/ErrorBoundary', () => ({
       ErrorBoundary: PassThroughStub,
     }));
@@ -151,14 +147,16 @@ describe('AppShell — isMobile=true prop branches', () => {
 
   afterEach(() => {
     mounted?.unmount();
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
     vi.resetModules();
   });
 
-  it('renders AppShell with isMobile=true without throwing', async () => {
-    const { AppShell } = await import('@/components/AppShell/AppShell.client');
-    mounted = await mountClient(createElement(AppShell, null));
-    expect(mounted.container).not.toBeNull();
+  it('uses the mobile rain size and speed below 768px', async () => {
+    const { flushMicrotasks } = await import('./helpers/render');
+    const { GlobalMotion } = await import('@/components/client/GlobalMotion/GlobalMotion.client');
+    mounted = await mountClient(createElement(GlobalMotion, null));
+    await flushMicrotasks();
     const matrixEl = mounted.container.querySelector('[data-font-size]');
     expect(matrixEl?.getAttribute('data-font-size')).toBe('14');
     expect(matrixEl?.getAttribute('data-speed')).toBe('0.6');

@@ -3,6 +3,7 @@ import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import { GlobalMotion } from '@/components/client/GlobalMotion';
 import { errorsContent } from '@/content/errors';
 import { profile, profileMetaDescription, profilePageTitle } from '@/content/profile';
 import { personSchema } from '@/content/seo';
@@ -111,6 +112,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </noscript>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: initScript is a hardcoded build-time constant, no user input */}
         <script dangerouslySetInnerHTML={{ __html: initScript }} />
+        <GlobalMotion />
         {children}
         {process.env.VERCEL === '1' && (
           <>

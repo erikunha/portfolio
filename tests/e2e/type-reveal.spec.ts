@@ -41,28 +41,32 @@ test.describe('type reveal', () => {
     expect(clips.every((clip) => clip === 'none')).toBe(true);
   });
 
-  test('marked elements hold only typed text and stay on one line', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await page.goto('/');
-    await page.waitForFunction(() =>
-      document.documentElement.classList.contains('type-reveal-ready'),
-    );
+  for (const route of ['/', '/cv', '/summary', '/links', '/design-system']) {
+    test(`marked elements on ${route} hold only typed text and stay on one line`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 375, height: 812 });
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      await page.goto(route);
+      await page.waitForFunction(() =>
+        document.documentElement.classList.contains('type-reveal-ready'),
+      );
 
-    const offenders = await page.locator('[data-type-reveal]').evaluateAll((els) =>
-      els
-        .filter((el) => {
-          const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight);
-          const wraps = el.getClientRects().length > 1;
-          const hasExtras = el.querySelector('svg, .sr-only, [aria-hidden="true"]') !== null;
-          return (
-            hasExtras ||
-            wraps ||
-            (lineHeight > 0 && el.getBoundingClientRect().height > lineHeight * 1.5)
-          );
-        })
-        .map((el) => el.outerHTML.slice(0, 120)),
-    );
-    expect(offenders).toEqual([]);
-  });
+      const offenders = await page.locator('[data-type-reveal]').evaluateAll((els) =>
+        els
+          .filter((el) => {
+            const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight);
+            const wraps = el.getClientRects().length > 1;
+            const hasExtras = el.querySelector('svg, .sr-only, [aria-hidden="true"]') !== null;
+            return (
+              hasExtras ||
+              wraps ||
+              (lineHeight > 0 && el.getBoundingClientRect().height > lineHeight * 1.5)
+            );
+          })
+          .map((el) => el.outerHTML.slice(0, 120)),
+      );
+      expect(offenders).toEqual([]);
+    });
+  }
 });

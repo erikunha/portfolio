@@ -9,7 +9,7 @@ export function DesignSystemOpinion() {
 
   return (
     <section id={`opinion-${number}`} className="my-6 border border-primary-border p-4">
-      <h2 className="font-mono text-primary-500" data-type-reveal>
+      <h2 className="font-mono text-primary-500">
         {`Opinion ${number}: ${designSystemOpinionConfig.topic}`}
       </h2>
       <p className="font-mono text-tertiary-50">

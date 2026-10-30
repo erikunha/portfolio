@@ -153,7 +153,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 ## Rendering model
 
 - **Default: React Server Components, SSG at build time.** Zero JS shipped for static sections.
-- **Client islands by exception:** Matrix dialog loop, INTERACTIVE_SHELL, contact form, role typewriter (RoleTyper, mount-driven), tagline typewriter (TaglineTyper, /links), scroll type reveal (TypeReveal, one observer for every `data-type-reveal` heading and prompt), MOTION indicator.
+- **Client islands by exception:** Matrix dialog loop, INTERACTIVE_SHELL, contact form, role typewriter (RoleTyper, mount-driven), tagline typewriter (TaglineTyper, /links), scroll type reveal and app-wide Matrix Rain (GlobalMotion in the root layout: TypeReveal, one observer for every `data-type-reveal` heading and prompt, plus MatrixRainLazy), MOTION indicator.
 - Hero identity is static server-rendered text; only the About role word animates.
 - All client files named `*.client.tsx`. RSC drift must be visible in PR review.
 - **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** Per-state re-renders tank INP. The interactive shell's streaming answer, by contrast, renders *through* React (rAF-coalesced state) — see `STANDARDS.md` Chapter 1; enforced by `components/client/InteractiveShell/InteractiveShell.test.tsx`.
