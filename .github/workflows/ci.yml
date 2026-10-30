@@ -320,7 +320,7 @@ jobs:
     permissions:
       contents: read
       statuses: write
-    timeout-minutes: 20
+    timeout-minutes: 35
     concurrency:
       group: perf-${{ github.ref }}
       cancel-in-progress: true
