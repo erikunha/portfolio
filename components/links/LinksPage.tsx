@@ -21,7 +21,7 @@ export async function LinksPage({ locale }: { locale: LinksLocale }) {
   return (
     <div
       lang={LINKS_HTML_LANG[locale]}
-      className="relative min-h-screen bg-secondary-950 text-tertiary-50 font-mono text-sm leading-[1.6]"
+      className="relative min-h-screen bg-secondary-950 text-tertiary-50 font-mono text-sm leading-body"
     >
       <NavProgress />
       <div className="crt-scanlines" aria-hidden="true" />
@@ -36,19 +36,21 @@ export async function LinksPage({ locale }: { locale: LinksLocale }) {
 
       <Ticker locale={locale} />
 
-      <div className="links-shell relative z-10">
-        <ChromeBar locale={locale} />
+      <div className="page-container relative z-10">
+        <div className="links-shell">
+          <ChromeBar locale={locale} />
 
-        <main id={MAIN_ID} tabIndex={-1} className="links-main-grid">
-          <h1 className="sr-only">{copy.pageHeading[locale]}</h1>
-          <IdentityCard locale={locale} />
-          <ChannelCard locale={locale} feed={feed} />
-          <VideoHistory locale={locale} feed={feed} />
-          <PlaylistCards locale={locale} channelUrl={feed.channelUrl} />
-          <QrPanel locale={locale} url={pageUrl} />
-        </main>
+          <main id={MAIN_ID} tabIndex={-1} className="links-main-grid">
+            <h1 className="sr-only">{copy.pageHeading[locale]}</h1>
+            <IdentityCard locale={locale} />
+            <ChannelCard locale={locale} feed={feed} />
+            <VideoHistory locale={locale} feed={feed} />
+            <PlaylistCards locale={locale} channelUrl={feed.channelUrl} />
+            <QrPanel locale={locale} url={pageUrl} />
+          </main>
 
-        <LinksFooter locale={locale} url={pageUrl} />
+          <LinksFooter locale={locale} url={pageUrl} />
+        </div>
       </div>
     </div>
   );

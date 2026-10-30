@@ -25,7 +25,7 @@ export function DesktopTopbar() {
 
   return (
     <div className="desktop-topbar fixed top-0 left-0 right-0 z-[110] bg-secondary-950 border-b border-primary-subtle hidden md:block">
-      <div className="max-w-[1200px] mx-auto px-[14px] md:px-[18px] flex items-center gap-4 h-11">
+      <div className="max-w-[var(--measure-page)] mx-auto px-[var(--space-gutter)] flex items-center gap-4 h-11">
         <WindowChrome size={12} style={{ gap: '8px' }} />
         <div className="flex gap-2 ml-2">
           <div

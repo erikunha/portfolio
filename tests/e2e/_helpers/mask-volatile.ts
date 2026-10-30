@@ -7,7 +7,6 @@ export function volatileMasks(page: Page): Locator[] {
     ),
     page.locator('[data-testid="shell-line-loading"], [data-testid="shell-cursor"]'),
     page.locator('[data-testid="boot-line"], [data-testid="boot-cursor"]'),
-    page.locator('canvas[aria-hidden]'),
     page.locator('[data-volatile]'),
     page.locator('nextjs-portal'),
   ];
