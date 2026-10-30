@@ -41,20 +41,18 @@ describe('career tag groups', () => {
     const links = community.getAllByRole('link');
     expect(
       links,
-      'the program and organizers reference line is not in the approved prototype',
+      'the community group renders one link, the event page: the program and organizers reference line is not in the approved prototype',
     ).toHaveLength(1);
-    communityEvent.links.slice(0, 1).forEach((link, index) => {
-      const anchor = links[index];
-      expect(anchor?.getAttribute('href')).toBe(link.href);
-      expect(anchor?.getAttribute('target')).toBe('_blank');
-      expect(anchor?.getAttribute('rel')).toBe('noopener noreferrer');
-      expect(within(anchor as HTMLElement).getByText(communityEvent.newTabLabel)).toBeTruthy();
-      expect(
-        community.getByRole('link', {
-          name: new RegExp(`${index === 0 ? communityEvent.name : link.label}.*opens in a new tab`),
-        }),
-      ).toBe(anchor);
-    });
+    const anchor = links[0];
+    expect(anchor?.getAttribute('href')).toBe(communityEvent.link.href);
+    expect(anchor?.getAttribute('target')).toBe('_blank');
+    expect(anchor?.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(within(anchor as HTMLElement).getByText(communityEvent.newTabLabel)).toBeTruthy();
+    expect(
+      community.getByRole('link', {
+        name: new RegExp(`${communityEvent.name}.*opens in a new tab`),
+      }),
+    ).toBe(anchor);
   });
 
   it('can repeat the groups without duplicate heading IDs', () => {

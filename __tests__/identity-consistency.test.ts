@@ -3,7 +3,7 @@ import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { aboutContent } from '@/content/about';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
-import { communityEvent } from '@/content/community';
+import { communityEvent, communityTalksSentence } from '@/content/community';
 import { contactCopy } from '@/content/contact-copy';
 import { education } from '@/content/education';
 import { footerContent } from '@/content/footer';
@@ -110,11 +110,20 @@ describe('identity is consistent across every gated surface', () => {
   });
 
   it('points JSON-LD and llms.txt at the same community event and facts', () => {
-    const [eventLink] = communityEvent.links;
-    expect(personSchema.memberOf.url).toBe(eventLink?.href);
-    expect(llmsTxt).toContain(eventLink?.href);
-    expect(llmsTxt).toContain('8 talks');
-    expect(llmsTxt).not.toContain('10+ talks');
+    const talksSentence = communityTalksSentence;
+    const capitalizedTalks = `${talksSentence.charAt(0).toUpperCase()}${talksSentence.slice(1)}`;
+    expect(communityEvent.bullets).toContain(talksSentence);
+    expect(personSchema.memberOf.url).toBe(communityEvent.link.href);
+    expect(llmsTxt).toContain(communityEvent.link.href);
+    expect(
+      personSchema.memberOf.description,
+      'the JSON-LD organization description must state the same talks sentence as content/community.ts, or a crawler reads a different conference than the page shows',
+    ).toContain(talksSentence);
+    expect(
+      llmsTxt,
+      'llms.txt must state the same talks sentence as content/community.ts, or an agent reads a different conference than the page shows',
+    ).toContain(capitalizedTalks);
+    expect(llmsTxt).not.toContain('8 talks');
     for (const language of profile.languages) expect(llmsTxt).toContain(language.name);
   });
 

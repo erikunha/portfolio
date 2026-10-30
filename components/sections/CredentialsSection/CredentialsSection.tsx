@@ -14,7 +14,7 @@ export function CredentialsSection({
   communityId?: string;
 } = {}) {
   const groupId = useId();
-  const [eventLink] = communityEvent.links;
+  const { link: eventLink } = communityEvent;
   const { certifications, education, community, prompt, statusMarker } = careerCredentials;
   const groups = [
     { ...certifications, entries: credentials },
@@ -55,7 +55,7 @@ export function CredentialsSection({
         </h3>
         <div className="career-community">
           <p className="career-tag-key">
-            <a href={eventLink?.href} target={EXTERNAL_TARGET} rel={EXTERNAL_REL}>
+            <a href={eventLink.href} target={EXTERNAL_TARGET} rel={EXTERNAL_REL}>
               <span>{community.heading}</span>
               <span className="sr-only"> {communityEvent.newTabLabel}</span>
             </a>

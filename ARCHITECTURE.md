@@ -175,7 +175,7 @@ Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. AS
 Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
 Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one static section.
 `sec-credentials` and `sec-community` are nested in-page anchors, excluded from mobile section ordering.
-Community event and reference links use the validated labels and URLs in `content/community.ts`.
+The community event link uses the validated label and URL in `content/community.ts`.
 
 Career through Contact receive `defer` in `app/page.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. The nine entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
 
@@ -248,7 +248,7 @@ content/responsibilities.ts           # permissions matrix
 content/guitar-rig.ts                 # gear sheet
 content/unknowns.ts                   # unknowns items
 content/visa.ts                       # jurisdiction table
-content/community.ts                  # community/* tags and event references inside Career
+content/community.ts                  # community/* tags and the event link inside Career
 content/credentials.ts                # cert/* tags and Career tag-group copy
 content/education.ts                  # edu/* tags inside Career
 content/social.ts                     # github / linkedin / email / site

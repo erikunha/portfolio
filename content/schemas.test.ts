@@ -274,6 +274,17 @@ describe('canonical profile and education', () => {
     );
   });
 
+  it('publishes one community event link and rejects one that is not an absolute URL', async () => {
+    const { CommunityEventSchema } = await import('./schemas');
+    const { communityEvent } = await import('./community');
+    expect(CommunityEventSchema.parse(communityEvent)).toEqual(communityEvent);
+    const invalid = { ...communityEvent, link: { ...communityEvent.link, href: 'devopsdays.org' } };
+    expect(
+      CommunityEventSchema.safeParse(invalid).success,
+      'the community link must be an absolute URL: Career renders it as an href and the JSON-LD publishes it as the organization url, so a relative value would ship a broken link',
+    ).toBe(false);
+  });
+
   it('rejects malformed expected months and reversed education dates', async () => {
     const { EducationSchema } = await import('./schemas');
     for (const invalid of [
