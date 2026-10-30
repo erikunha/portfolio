@@ -401,15 +401,13 @@
     }
   }
 
-  /* The scroll lock must not reserve a scrollbar gutter the unlocked page does
-     not have: on overlay-scrollbar platforms that shifts the centred page. */
   html[data-scroll-locked] {
     overflow: hidden;
   }
 
   @media (min-width: 768px) {
     .section-menu {
-      top: var(--rail-top);
+      top: var(--topbar-height);
     }
   }
 
@@ -423,9 +421,6 @@
     }
   }
 
-  /* The topbar spells the search trigger as its shortcut only: the word does
-     not fit the column beside the brand badge and the section shortcuts. The
-     label stays in the accessibility tree either way. */
   .topbar-search .search-trigger-label {
     position: absolute;
     width: 1px;

@@ -34,6 +34,19 @@ test.describe('home with JavaScript off', () => {
     ).toBeInViewport();
   });
 
+  test('the notice sits flush with the topbar on the horizontal axis', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto('/');
+    const topbar = await page.locator('.desktop-topbar').boundingBox();
+    const bar = await page.locator('.nojs-bar').boundingBox();
+    expect(topbar).not.toBeNull();
+    expect(bar).not.toBeNull();
+    expect(
+      bar?.x,
+      'the noscript notice must share the left edge of the fixed topbar, the collapsed rail that offset it is gone',
+    ).toBe(topbar?.x);
+  });
+
   test('no section rail is pinned open at wide desktop without JS', async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 900 });
     await page.goto('/');
