@@ -10,7 +10,13 @@ import { Hero } from '@/components/sections/Hero';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { ShellSection } from '@/components/sections/ShellSection';
-import { SectionRegistrySchema } from './schemas';
+import {
+  dockKeyForSection,
+  formatSectionPosition,
+  HOME_SECTION_ID,
+  NAVIGATION,
+} from './navigation';
+import { createNavigationSchema, SectionRegistrySchema } from './schemas';
 import { SECTION_LABELS } from './section-labels';
 import { getSectionByAlias, getSectionById, SECTION_REGISTRY } from './section-registry';
 
@@ -134,5 +140,95 @@ describe('section registry', () => {
 
   it('validates canonical entries without changing their text or aliases', () => {
     expect(SectionRegistrySchema.parse(SECTION_REGISTRY)).toEqual(SECTION_REGISTRY);
+  });
+});
+
+describe('navigation content', () => {
+  const sectionIds = SECTION_REGISTRY.map(({ id }) => id);
+  const schema = createNavigationSchema(sectionIds);
+  type MutableNavigation = {
+    groups: { sectionIds: string[] }[];
+    dock: { key: string; sectionId?: string; href?: string }[];
+    siteLinks: { href: string }[];
+  };
+  const at = <T>(items: T[], index: number): T => {
+    const item = items[index];
+    if (!item) throw new Error(`missing fixture item ${index}`);
+    return item;
+  };
+  const clone = () => structuredClone(NAVIGATION) as unknown as MutableNavigation;
+
+  it('is derived from the registry and validates against it', () => {
+    expect(schema.safeParse(NAVIGATION).success).toBe(true);
+    expect(NAVIGATION.groups.flatMap(({ sectionIds: ids }) => ids)).toEqual(sectionIds);
+    expect(HOME_SECTION_ID).toBe(SECTION_REGISTRY[0].id);
+  });
+
+  it('keeps registry and navigation free of zod so client islands can import them', async () => {
+    vi.resetModules();
+    vi.doMock('zod', () => {
+      throw new Error('client-reachable content imported zod');
+    });
+    try {
+      await expect(import('./section-registry')).resolves.toBeDefined();
+      await expect(import('./navigation')).resolves.toBeDefined();
+    } finally {
+      vi.doUnmock('zod');
+      vi.resetModules();
+    }
+  });
+
+  it('maps every section to the dock control that stays current while it is on screen', () => {
+    expect(sectionIds.map(dockKeyForSection)).toEqual([
+      'home',
+      'home',
+      'work',
+      'work',
+      'shell',
+      'shell',
+      'menu',
+      'menu',
+      'menu',
+    ]);
+    expect(dockKeyForSection('unknown')).toBeUndefined();
+  });
+
+  it('formats the position as a zero padded index over the registry size', () => {
+    expect(formatSectionPosition('bio')).toBe('01/9');
+    expect(formatSectionPosition('sec-shell')).toBe('05/9');
+    expect(formatSectionPosition('sec-contact')).toBe('09/9');
+    expect(formatSectionPosition('unknown')).toBe('01/9');
+  });
+
+  it('rejects groups that drop, reorder or invent sections', () => {
+    const dropped = clone();
+    at(dropped.groups, 4).sectionIds = [];
+    const reordered = clone();
+    reordered.groups.reverse();
+    const invented = clone();
+    at(invented.groups, 0).sectionIds.push('sec-missing');
+    for (const candidate of [dropped, reordered, invented]) {
+      expect(schema.safeParse(candidate).success).toBe(false);
+    }
+  });
+
+  it('rejects dock controls that point nowhere or lose the menu', () => {
+    const unknownTarget = clone();
+    at(unknownTarget.dock, 1).sectionId = 'sec-missing';
+    const noMenu = clone();
+    noMenu.dock = noMenu.dock.filter((control) => control.key !== 'menu');
+    const bothTargets = clone();
+    at(bothTargets.dock, 0).href = 'https://example.com';
+    const danglingGroup = clone();
+    danglingGroup.dock.splice(0, 1);
+    for (const candidate of [unknownTarget, noMenu, bothTargets, danglingGroup]) {
+      expect(schema.safeParse(candidate).success).toBe(false);
+    }
+  });
+
+  it('rejects site links that are neither root-relative nor https', () => {
+    const insecure = clone();
+    at(insecure.siteLinks, 0).href = 'http://example.com';
+    expect(schema.safeParse(insecure).success).toBe(false);
   });
 });

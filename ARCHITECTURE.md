@@ -129,26 +129,30 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Default: React Server Components, statically generated at build time
 
-Static section bodies are Server Components. `BreakpointProvider` and `AppShell` are client boundaries that receive server-rendered children. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
+Static section bodies are Server Components. `BreakpointProvider` and `AppShell` are client boundaries that receive server-rendered children. `SectionNavigationProvider` wraps the shell chrome so the rail, the dock and the position meter share one current-section state. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
+
+The drawer header contains the title and close control. The toggle column occupies space only in the collapsible desktop rail.
 
 ### Client islands
 
-| Surface                                        | Client responsibilities                                        |
-| ---------------------------------------------- | -------------------------------------------------------------- |
-| AppShell and breakpoint provider               | Responsive chrome, error bridge and viewport state             |
-| DesktopTopbar, StatusBar, MobileTitleBar, Dock | Navigation, motion controls and device chrome                  |
-| MatrixRain, CRTOverlay, ToTopButton            | Canvas animation, CRT effects and scroll control               |
-| HeroBootAnimation, HeroSystemFailure           | Boot/dialog animation and failure interaction                  |
-| RoleTyper                                      | Role cycle inside About                                        |
-| TypeReveal                                     | Scroll type reveal for `data-type-reveal` headings and prompts |
-| InteractiveShellLazy → InteractiveShell        | Client-only shell input and streamed ASK output                |
-| ContactFormLazy → ContactForm                  | Client-only form submission and feedback                       |
-| DAW mixer islands                              | Fader, dB readout, knob, RMS buttons and VU meter behavior     |
-| Footer client exports                          | Session counters, halt clock and reboot control                |
-| ErrorBoundary and error pages                  | Failure capture, retry and recovery controls                   |
-| PrintButton                                    | Print action in `/summary` and `/cv`                           |
-| `/links` client components                     | Tagline cycle, navigation progress, copy and subscribe actions |
-| Design-system Sidebar and CopyButton           | Documentation navigation and clipboard feedback                |
+| Surface                                        | Client responsibilities                                              |
+| ---------------------------------------------- | -------------------------------------------------------------------- |
+| AppShell and breakpoint provider               | Responsive chrome, error bridge and viewport state                   |
+| DesktopTopbar, StatusBar, MobileTitleBar, Dock | Navigation, motion controls and device chrome                        |
+| SectionNavigation, SectionNavigationProvider   | Rail hover state, drawer focus trap and shared current-section state |
+| PositionMeter                                  | Scroll-position tracking and page-position progress                  |
+| MatrixRain, CRTOverlay, ToTopButton            | Canvas animation, CRT effects and scroll control                     |
+| HeroBootAnimation, HeroSystemFailure           | Boot/dialog animation and failure interaction                        |
+| RoleTyper                                      | Role cycle inside About                                              |
+| GlobalMotion → TypeReveal, MatrixRainLazy      | App-wide scroll type reveal and Matrix Rain from the root layout     |
+| InteractiveShellLazy → InteractiveShell        | Client-only shell input and streamed ASK output                      |
+| ContactFormLazy → ContactForm                  | Client-only form submission and feedback                             |
+| DAW mixer islands                              | Fader, dB readout, knob, RMS buttons and VU meter behavior           |
+| Footer client exports                          | Session counters, halt clock and reboot control                      |
+| ErrorBoundary and error pages                  | Failure capture, retry and recovery controls                         |
+| PrintButton                                    | Print action in `/summary` and `/cv`                                 |
+| `/links` client components                     | Tagline cycle, navigation progress, copy and subscribe actions       |
+| Design-system Sidebar and CopyButton           | Documentation navigation and clipboard feedback                      |
 
 `InteractiveShellLazy` and `ContactFormLazy` use `next/dynamic` with `ssr: false` and loading status placeholders. `FooterLazy.client.tsx` is a direct re-export of footer controls, not a dynamic import. `DawMixerDesktop` is statically imported by the server section and embeds smaller client islands.
 
@@ -446,7 +450,7 @@ If Resend is down, the message stays in KV and enters the pending outbox. The fo
 
 `GET /api/contact-retry` requires the same `CRON_SECRET` bearer as `/api/psi-refresh`; missing or wrong authorization returns 401. Vercel Cron runs it at `0 4 * * *` (04:00 UTC daily, compatible with Hobby).
 
-`contact:outbox` is a Redis sorted set of message ids scored by `receivedAt`. `contact:outbox:attempts` stores retry counts. The cron removes entries older than 7 days or already at 3 attempts. Each eligible message consumes one attempt before the shared send function runs. Acceptance removes pending membership and its counter; failure keeps it pending. The response is `{sent, failed, expired, exhausted}`. Removal never deletes `contact:msg:{uuid}`, which retains its 90-day audit TTL.
+`contact:outbox` is a Redis sorted set of message ids scored by `receivedAt`. `contact:outbox:attempts` stores retry counts. The cron removes entries older than 7 days or already at 3 attempts. Each eligible message consumes one attempt before the shared send function runs. Acceptance removes pending membership and its counter; failure keeps it pending. The success response is `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }`, with a matching `X-Request-Id` header. Removal never deletes `contact:msg:{uuid}`, which retains its 90-day audit TTL.
 
 Both routes use `lib/contact-delivery.ts` for sender, recipient, subject and the 10s timeout. A message-id idempotency key accompanies every send. Contact logs carry only `requestId` and `msgId`, never provider error details, addresses or message bodies. Form copy and shared limits live in the Zod-free `content/contact-copy.ts`. Client field checks use those limits; `lib/contact-validation.ts` re-exports them and supplies the server-only `ContactSchema` used by the route. `content/contact.ts` defines the copy schema, and `content/_validate-client-content.ts` validates the client copy and the email and LinkedIn constants from `content/social-urls.ts` during content validation. Delivered and queued panels replace the form and receive focus. Errors retain typed values and focus the summary. Work authorization appears only within Contact through `VisaContent`.
 
