@@ -28,7 +28,7 @@ export const projects: Project[] = z
       stats: [
         { label: 'SURFACES', value: 'COMPANY / PIPELINE / OUTREACH' },
         { label: 'STATE', value: 'VERSIONED + URL-BACKED' },
-        { label: 'STACK', value: 'React / Next.js 14 / TypeScript 5' },
+        { label: 'STACK', value: 'REACT / NEXT 14 / TS 5' },
       ],
     },
     {
@@ -48,7 +48,7 @@ export const projects: Project[] = z
       company: 'Canon Medical Systems',
       kind: 'professional',
       description:
-        'Hospital equipment service platform: service orders, specialist schedules, field visits, live updates. Clean Architecture.',
+        'Hospital equipment service platform: service orders, specialist scheduling, field visits, live updates. Clean Architecture.',
       stats: [
         { label: 'JS BUNDLE', value: '-33%' },
         { label: 'TTI', value: '-52%' },
@@ -87,7 +87,7 @@ export const projects: Project[] = z
       description:
         'Cross-platform EdTech app: one codebase, five OSes (Android / iOS / Win / macOS / Linux).',
       stats: [
-        { label: 'REUSE', value: '~80% CODE' },
+        { label: 'SHARED', value: '~80% CODE' },
         { label: 'DESKTOP BUILD', value: '-40%' },
         { label: 'STACK', value: 'IONIC / ANGULAR / ELECTRON' },
       ],

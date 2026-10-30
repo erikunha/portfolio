@@ -263,41 +263,6 @@ describe('ShellSection', () => {
   });
 });
 
-describe('SysHealthSection', () => {
-  let mounted: MountedClient;
-
-  afterEach(() => {
-    mounted?.unmount();
-  });
-
-  async function render(props: { defer?: boolean } = {}) {
-    const { SysHealthSection } = await import(
-      '@/components/sections/SysHealthSection/SysHealthSection'
-    );
-    mounted = await mountClient(
-      createElement(SysHealthSection as ComponentType<{ defer?: boolean }>, props),
-    );
-    return mounted.container;
-  }
-
-  it('renders the SYS_HEALTH_MONITOR module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('SYS_HEALTH_MONITOR');
-  });
-
-  it('renders at least one sys health stat', async () => {
-    const container = await render();
-    const { sysStats } = await import('@/content/sys-health');
-    expect(container.textContent).toContain(firstOf(sysStats).label);
-  });
-
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
-  });
-});
-
 describe('UnknownsSection', () => {
   let mounted: MountedClient;
 
@@ -313,35 +278,5 @@ describe('UnknownsSection', () => {
     expect(container.querySelector('h3')?.textContent).toContain(unknowns.learningHeading);
     expect(container.textContent).toContain(firstOf(unknowns.learning).claim);
     expect(container.querySelector('section')).toBeNull();
-  });
-});
-
-describe('ManPageDesktop', () => {
-  let mounted: MountedClient;
-
-  afterEach(() => {
-    mounted?.unmount();
-  });
-
-  async function render() {
-    const { ManPageDesktop } = await import('@/components/sections/ManPageSection/ManPageDesktop');
-    mounted = await mountClient(createElement(ManPageDesktop));
-    return mounted.container;
-  }
-
-  it('renders a pre element with man page content', async () => {
-    const container = await render();
-    expect(container.querySelector('pre')).not.toBeNull();
-  });
-
-  it('renders the NAME section', async () => {
-    const container = await render();
-    expect(container.textContent).toContain('NAME');
-  });
-
-  it('renders man page author name from content', async () => {
-    const container = await render();
-    const { manPage } = await import('@/content/man-page');
-    expect(container.textContent).toContain(manPage.name);
   });
 });

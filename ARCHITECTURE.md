@@ -26,8 +26,8 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Functional
 
-- Static composition with Hero and About followed by shell, AI evaluation, projects with attached performance receipts, Career, profile manual, system health, opinions with nested learning and specialization lists, guitar rig, DAW mixer, contact with work authorization and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code expose named keyboard scroll regions inside About; Career owns certification, education and community tag groups.
-- Opinions renders four ordered home takes with nested learning and specialization lists. The design-system opinion renders at `/design-system#opinion-07`; `TAKE_PLACEMENT` separates home and documentation content. Seven below-fold modules use content-visibility deferral.
+- Static composition with Hero and About followed by shell, AI evaluation, projects with attached performance receipts, Career, opinions with nested learning and specialization lists, guitar rig, DAW mixer, contact with work authorization and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code expose named keyboard scroll regions inside About; Career owns certification, education and community tag groups.
+- Opinions renders four ordered home takes with nested learning and specialization lists. The design-system opinion renders at `/design-system#opinion-07`; `TAKE_PLACEMENT` separates home and documentation content. Five below-fold modules use content-visibility deferral.
 - Hero: Matrix dialog loop + boot sequence (typewriter)
 - About "Open to [role] roles" mounts RoleTyper over server-rendered text; the Hero title is static. Module headers use CSS scroll-driven typing, with static text for unsupported browsers and reduced motion. Every other single-line heading and command prompt marked `data-type-reveal` (on a span around the text only, never around icons, `sr-only` or `aria-hidden` siblings, and never on an element that can wrap) types in when it enters the viewport: `TypeReveal` (mounted once in the root layout through `GlobalMotion`) runs one IntersectionObserver, sets `--type-chars` and adds `is-typed`; CSS reveals the text with a stepped `clip-path` and a blinking caret. The text stays in the HTML and keeps its box, so screen readers, search and layout see it whole. Hiding applies only after `html.type-reveal-ready`, so without JS, under reduced motion or with `data-motion="reduce"` everything shows at once. The h1 and the first hero viewport are never marked. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`) from `GlobalMotion` in the root layout, so it runs on every route, then IntersectionObserver gates its animation. The footer is server-rendered, with client islands only for session counters and halt/reboot.
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
@@ -162,7 +162,7 @@ Client boundaries use `.client.ts`/`.client.tsx`, a `/client/` directory, or Nex
 
 ### Partial Prerendering (PPR)
 
-Only ManPage selects desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, its Suspense fallback enters the static shell and the selected variant streams per request. Contact renders its single CSS-responsive work-authorization table synchronously through `VisaContent`.
+No home section selects a UA-specific variant: `getIsMobile()` (`lib/ua.ts`) is not called by any section on `/`. With `cacheComponents: true`, the static shell is prerendered and ASK and PSI reads stream behind Suspense. Contact renders its single CSS-responsive work-authorization table synchronously through `VisaContent`.
 
 Projects renders one static RSC tree at every viewport. Its nine cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six project receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
 
@@ -175,7 +175,7 @@ Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. AS
 Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
 Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one static section.
 `sec-credentials` and `sec-community` are nested in-page anchors, excluded from mobile section ordering.
-Community event and reference links use the validated labels and URLs in `content/community.ts`.
+The community event link uses the validated label and URL in `content/community.ts`.
 
 Career through Contact receive `defer` in `app/page.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. The nine entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
 
@@ -248,10 +248,9 @@ content/responsibilities.ts           # permissions matrix
 content/guitar-rig.ts                 # gear sheet
 content/unknowns.ts                   # unknowns items
 content/visa.ts                       # jurisdiction table
-content/community.ts                  # community/* tags and event references inside Career
+content/community.ts                  # community/* tags and the event link inside Career
 content/credentials.ts                # cert/* tags and Career tag-group copy
 content/education.ts                  # edu/* tags inside Career
-content/man-page.ts                   # MAN ERIK content
 content/social.ts                     # github / linkedin / email / site
 content/errors.ts                     # 404, 500 and no-JS copy
 content/errors-client.ts              # zod-free error copy for client islands
@@ -317,7 +316,7 @@ All content is **typed TS modules**, validated by Zod at build time. Build fails
 - Makes future CMS migration trivial (the schemas become the API contract)
 - Lets engineers reading the source see exactly what shape the site expects
 
-`content/schemas.ts` defines `PerfReceiptSchema`: `metric`, signed percentage `delta`, `company`, `note`, `project`, and optional `displayValue`, `before`, `after`. `content/perf-receipts.ts` parses ten receipts and derives six project receipts with `.filter(receipt => receipt.project)`. Projects embeds that subset through `PerfReceiptsSection`.
+`content/schemas.ts` defines `PerfReceiptSchema`: `metric`, signed percentage `delta`, `company`, `note`, `project`, and optional `displayValue`, `before`, `after`. `content/perf-receipts.ts` parses twelve receipts and derives six project receipts with `.filter(receipt => receipt.project)`. Projects embeds that subset through `PerfReceiptsSection`.
 
 A content module that a client component imports stays zod-free, because a `.parse()` at module scope would ship zod to the browser. Those modules are parsed by `content/_validate-client-content.ts`, the single build-time parse site, which `scripts/validate-content.ts` imports so a schema violation fails the build. `content/terminal-chrome.ts` follows that rule: `shellChrome`, `contactChrome` and `topbarChrome` are parsed by the aggregator, never in the module itself, so the topbar brand badge can never ship empty.
 

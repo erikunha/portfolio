@@ -14,7 +14,7 @@
 2. Read these five files in order - they are the load-bearing spine:
    - `app/page.tsx` - the terminal home composition; then inspect `/summary`, `/cv`, `/links` and `/links/en`.
    - `components/responsive/Module/Module.tsx` - the section wrapper.
-   - `content/schemas.ts` + one content module (e.g. `content/man-page.ts`) - how data is typed and validated.
+   - `content/schemas.ts` + one content module (e.g. `content/projects.ts`) - how data is typed and validated.
    - `lib/server/route.ts` - the `defineHandler` API contract.
    - `lib/ask/system-prompt.ts` - how the AI persona is built from live content.
 3. Read [01-architecture.md](./01-architecture.md) and [03-rendering-and-data-flow.md](./03-rendering-and-data-flow.md). You now understand how a request becomes pixels and how an action becomes a persisted effect.
