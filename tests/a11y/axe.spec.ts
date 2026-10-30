@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { DS_ROUTES } from '@/app/design-system/_components/ds-nav';
+import { revealDeferredContent } from '../e2e/_helpers/snapshot';
 
 const NARROW_VIEWPORT = { width: 390, height: 844 };
 const EXTRA_ROUTES = ['/links', '/links/en'];
@@ -31,6 +32,17 @@ test.describe('axe-core a11y scan', () => {
   test('homepage has no automatically detectable accessibility violations', async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('[role="log"]');
+    await revealDeferredContent(page);
+
+    const unpainted = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('section.module-deferred'))
+        .filter((el) => getComputedStyle(el).contentVisibility !== 'visible')
+        .map((el) => el.id),
+    );
+    expect(
+      unpainted,
+      'the homepage scan must audit the painted page. A content-visibility: auto module keeps its 520px placeholder box while its content is laid out at full height, so an unpainted module lays its rows over the next section and axe reads the green send button as the backdrop of the mixer badge (1.27:1), a backdrop no visitor ever sees. Reveal the deferred modules first, as the visual baselines do.',
+    ).toEqual([]);
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])

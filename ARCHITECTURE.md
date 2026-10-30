@@ -177,7 +177,7 @@ Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one stati
 `sec-credentials` and `sec-community` are nested in-page anchors, excluded from mobile section ordering.
 Community event and reference links use the validated labels and URLs in `content/community.ts`.
 
-Career through Contact receive `defer` in `app/page.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. The nine entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
+Career through Contact receive `defer` in `app/page.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. A deferred module keeps its 520px placeholder box while its content is laid out at full height, so the axe gate reveals the deferred modules before the scan and audits the painted page, the same state the visual baselines capture. The nine entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
 
 ### Trade-off
 
