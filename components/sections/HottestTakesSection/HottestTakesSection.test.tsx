@@ -1,10 +1,9 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { getByRole } from '@testing-library/dom';
 import { render } from '@testing-library/react';
 import { parse } from 'postcss';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { hottestTakes } from '@/content/hottest-takes';
 import { HottestTakesSection } from './HottestTakesSection';
 
@@ -28,7 +27,7 @@ describe('home opinions', () => {
 
   it('keeps opinions component rules from targeting the screen-reader-only utility', () => {
     // behavioral-test-allow: CSS selectors define the screen-reader utility isolation contract.
-    const stylesheet = readFileSync(resolve('app/css/components.css'), 'utf8');
+    const stylesheet = readComponentsCss();
     parse(stylesheet).walkRules((rule) => {
       if (rule.selector.includes('#sec-hottest-takes')) {
         expect(rule.selector).not.toContain('.sr-only');

@@ -1,8 +1,7 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { DEFERRED_SECTION_COUNT } from '@/components/responsive/Module/module.constants';
+import { readComponentsCss } from './helpers/components-css';
 
 function countDeferredSections(node: unknown): number {
   if (!node || typeof node !== 'object') return 0;
@@ -51,18 +50,15 @@ describe('content-visibility deferral', () => {
     PAGE_GRAPH_IMPORT_TIMEOUT_MS,
   );
 
-  it('components.css ships the .module-deferred content-visibility rule', () => {
+  it('components-*.css partials ship the .module-deferred content-visibility rule', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate content-visibility
-    const componentsCss = readFileSync(
-      path.resolve(__dirname, '../app/css/components.css'),
-      'utf-8',
-    );
+    const componentsCss = readComponentsCss();
     const deferredRules = Array.from(componentsCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)).filter((m) =>
       (m[1] ?? '').split(',').some((s) => s.trim() === '.module-deferred'),
     );
     expect(
       deferredRules.length,
-      'app/css/components.css must ship exactly ONE `.module-deferred` rule. Zero means the Module `defer` prop matches nothing. More than one means a later same-specificity rule wins the cascade and can silently revert `content-visibility` to `visible` for every below-fold section while this test still passes.',
+      'app/css/components-*.css must ship exactly ONE `.module-deferred` rule. Zero means the Module `defer` prop matches nothing. More than one means a later same-specificity rule wins the cascade and can silently revert `content-visibility` to `visible` for every below-fold section while this test still passes.',
     ).toBe(1);
     const deferredBlock = deferredRules[0]?.[2];
     expect(

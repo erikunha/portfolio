@@ -6,7 +6,7 @@
 
 - **Client naming accepts a suffix or directory.** `check-client-naming.mjs` accepts `*.client.tsx`/`*.client.ts`, `/client/` directories and App Router error filenames. `components/client/**` is an explicit exception, not a gap in scanning.
 - **Section data belongs in `content/*.ts`.** Validated content modules supply profile data and most section copy. Components also contain presentation labels, and `content/contact-copy.ts` keeps the contact form copy free of Zod. Client-consumed modules stay Zod-free; `content/_validate-client-content.ts` validates their schemas during `pnpm validate-content`.
-- **No raw hex outside `app/css/theme.css`.** Use `var(--color-*)`. Enforced by `lint:css-tokens`. Complex CSS patterns become named classes in `components.css` `@layer components`; everything else is a Tailwind utility.
+- **No raw hex outside `app/css/theme.css`.** Use `var(--color-*)`. Enforced by `lint:css-tokens`. Complex CSS patterns become named classes in an `app/css/components-*.css` partial under `@layer components`; everything else is a Tailwind utility.
 - **Per-keystroke/per-pixel/per-frame updates must not re-render React.** Mutate `textContent`/`style`/`setAttribute` directly, or rAF-coalesce. This is the single most important runtime convention (it's a budget, not a preference).
 - **`CLAUDE.md` stays under 275 lines** (`check:harness-size`). New procedural rules go to a skill or a `.claude/rules/*` path-scoped file, not into `CLAUDE.md`.
 - **pnpm only.** Deps are pinned (no `latest`).

@@ -1,21 +1,22 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { readComponentsCss } from './helpers/components-css';
 
 // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate CSS cascade/media-query resolution
-const componentsCss = readFileSync(path.resolve(__dirname, '../app/css/components.css'), 'utf-8');
+const componentsCss = readComponentsCss();
 
 describe('module-body-content: section-body collapse trap (details -> section refactor)', () => {
   it('never defaults any .module-body-content rule block to opacity: 0', () => {
     const rules = Array.from(componentsCss.matchAll(/\.module-body-content[^{]*\{[^}]*\}/g));
     expect(
       rules.length > 0,
-      'app/css/components.css: expected to find at least one .module-body-content rule block.',
+      'app/css/components-*.css: expected to find at least one .module-body-content rule block.',
     ).toBe(true);
     const opacityZeroBlock = rules.find((match) => /opacity:\s*0(?![.\d])/.test(match[0]));
     expect(
       opacityZeroBlock,
-      'app/css/components.css: no .module-body-content rule block (base, media-query, or ' +
+      'app/css/components-*.css: no .module-body-content rule block (base, media-query, or ' +
         'variant-qualified) must ever default to opacity: 0. ' +
         'Section bodies are plain <section> elements now (no [open] toggle re-reveals them) ' +
         '- a bare `opacity: 0` on ANY of these blocks makes section bodies permanently invisible, ' +
@@ -35,7 +36,7 @@ describe('module-body-content: section-body collapse trap (details -> section re
     );
     expect(
       moduleOpenSelector,
-      'app/css/components.css: found a `.module-*` selector combined with a `[open]` attribute ' +
+      'app/css/components-*.css: found a `.module-*` selector combined with a `[open]` attribute ' +
         'selector. Module sections were migrated from <details open> to <section>, which can ' +
         'never match `[open]`. A rule gated on it either does nothing (dead CSS) or, worse, was ' +
         'meant to restore visibility that a collapsed base state removed - and now silently ' +
@@ -43,7 +44,7 @@ describe('module-body-content: section-body collapse trap (details -> section re
     ).toBeUndefined();
     expect(
       moduleDetailsContentSelector,
-      'app/css/components.css: found a `.module-*` selector combined with a `::details-content` ' +
+      'app/css/components-*.css: found a `.module-*` selector combined with a `::details-content` ' +
         'pseudo-element. Module sections were migrated from <details open> to <section>, which ' +
         'can never match `::details-content`. A rule gated on it either does nothing (dead CSS) ' +
         'or, worse, was meant to restore visibility that a collapsed base state removed - and ' +
@@ -60,7 +61,7 @@ describe('module-body-content: section-body collapse trap (details -> section re
     const hasBorder = !!desktopRuleMatch && /border\s*:/.test(desktopRuleMatch[0]);
     expect(
       hasBorder,
-      'app/css/components.css: the `@media (min-width: 768px)` block must still declare a ' +
+      'app/css/components-*.css: the `@media (min-width: 768px)` block must still declare a ' +
         '`border` on .module-body-content. This declaration previously lived only inside an ' +
         '[open]-qualified rule during the <details> era, making it the value most likely to be ' +
         'dropped by a future edit that touches this block.',

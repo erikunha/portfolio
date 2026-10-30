@@ -26,7 +26,7 @@ test.describe('cross-cutting', () => {
     ).toBe(DEFERRED_SECTION_COUNT);
     expect(
       resolved.notAuto,
-      'these deferred sections did NOT compute to content-visibility: auto. A source-text test cannot catch this — the declaration can be present in components.css yet lose the cascade (a later same-specificity rule, a duplicate declaration inside the block, a higher-specificity `section.module-deferred`, an !important, a cross-file @layer, or an inline style). This asserts what the browser actually resolved.',
+      'these deferred sections did NOT compute to content-visibility: auto. A source-text test cannot catch this: the declaration can be present in a components-*.css partial yet lose the cascade (a later same-specificity rule, a duplicate declaration inside the block, a higher-specificity `section.module-deferred`, an !important, a cross-file @layer, or an inline style). This asserts what the browser actually resolved.',
     ).toEqual([]);
   });
 

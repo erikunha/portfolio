@@ -1,0 +1,37 @@
+@layer utilities {
+  #sec-projects > header h2,
+  #sec-live-metrics > header h2 {
+    flex-wrap: wrap;
+    letter-spacing: 0;
+  }
+
+  #sec-projects > header h2 > .sr-only,
+  #sec-live-metrics > header h2 > .sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    color: var(--color-primary-500);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    text-transform: none;
+  }
+
+  #sec-projects > header h2 > span:not(.sr-only),
+  #sec-live-metrics > header h2 > span:not(.sr-only) {
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    font-weight: 700;
+  }
+
+  @media (min-width: 768px) {
+    #sec-projects > header h2 > .sr-only,
+    #sec-live-metrics > header h2 > .sr-only {
+      font-size: var(--text-2xl);
+    }
+  }
+}

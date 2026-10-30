@@ -7,7 +7,7 @@ starting questions, not a checklist to recite.
 ## Stack facts to resolve from the lockfile, never from memory
 
 Next.js App Router, React, TypeScript (held at 6.x for Stryker), Tailwind v4 (`app/css/theme.css`
-tokens, `@layer components` in `app/css/components.css`), Zod (exact pin), Biome, Vitest + jsdom,
+tokens, `@layer components` in `app/css/components-*.css`), Zod (exact pin), Biome, Vitest + jsdom,
 Playwright, Lighthouse CI, Stryker, pnpm, Node from `.nvmrc`. Server: route handlers through
 `defineHandler` (`lib/server/route.ts`), Upstash Redis (`lib/rate-limit.ts`), Resend, AI SDK via
 Vercel AI Gateway (`/api/ask`), `mcp-handler` at `/api/mcp`, Vercel crons guarded by `CRON_SECRET`.
