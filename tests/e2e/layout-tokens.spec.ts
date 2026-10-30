@@ -45,6 +45,12 @@ test.describe('layout tokens', () => {
     });
   }
 
+  test('design-system sidebar clears the fixed topbar at 768', async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto('/design-system');
+    expect(await paddingTop(page, '.ds-sidebar')).toBe(PAGE_TOP_TABLET);
+  });
+
   for (const path of ['/', '/summary', '/links']) {
     test(`${path} content spans the page measure at 1280`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 });
@@ -93,7 +99,7 @@ test.describe('layout tokens', () => {
     await page.goto('/');
     const tokens = await page.evaluate(() => {
       const style = getComputedStyle(document.documentElement);
-      return ['--leading-tight', '--leading-snug', '--leading-body'].map((name) =>
+      return ['--leading-page-tight', '--leading-page-snug', '--leading-body'].map((name) =>
         style.getPropertyValue(name).trim(),
       );
     });

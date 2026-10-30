@@ -14,8 +14,6 @@
   --text-5xl: 3rem;
   --text-7xl: 4rem;
 
-  --leading-tight: 1.1;
-  --leading-snug: 1.35;
   --leading-body: 1.6;
 
   --spacing-1: 0.25rem;
@@ -164,6 +162,8 @@
     --space-section: var(--spacing-8);
     --measure-page: 1200px;
     --measure-read: 72ch;
+    --leading-page-tight: 1.1;
+    --leading-page-snug: 1.35;
   }
 
   @media (min-width: 768px) {

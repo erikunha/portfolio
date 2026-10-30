@@ -3584,6 +3584,12 @@
     width: 100%;
   }
 
+  @media (min-width: 768px) {
+    .ds-sidebar {
+      padding-block-start: var(--space-page-top);
+    }
+  }
+
   @media (min-width: 1024px) {
     .ds-sidebar {
       position: sticky;
