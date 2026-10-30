@@ -72,14 +72,28 @@ describe('daily contact delivery retry', () => {
     const { GET } = await import('@/app/api/contact-retry/route');
     const res = await GET(request());
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ sent: 0, failed: 0, expired: 0, exhausted: 0 });
+    const body = await res.json();
+    expect(body).toEqual({
+      ok: true,
+      requestId: expect.any(String),
+      data: { sent: 0, failed: 0, expired: 0, exhausted: 0 },
+    });
+    expect(body.requestId).not.toBe('');
+    expect(res.headers.get('X-Request-Id')).toBe(body.requestId);
     expect(send).not.toHaveBeenCalled();
   });
 
   it('counts a successful retry and removes only the outbox record', async () => {
     const { GET } = await import('@/app/api/contact-retry/route');
     const res = await GET(request());
-    expect(await res.json()).toEqual({ sent: 1, failed: 0, expired: 0, exhausted: 0 });
+    const body = await res.json();
+    expect(body).toEqual({
+      ok: true,
+      requestId: expect.any(String),
+      data: { sent: 1, failed: 0, expired: 0, exhausted: 0 },
+    });
+    expect(body.requestId).not.toBe('');
+    expect(res.headers.get('X-Request-Id')).toBe(body.requestId);
     expect(redis.hincrby).toHaveBeenCalledWith('contact:outbox:attempts', 'message-id', 1);
     expect(send).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -98,7 +112,7 @@ describe('daily contact delivery retry', () => {
     redis.hincrby.mockResolvedValueOnce(3);
     send.mockResolvedValueOnce({ error: { message: `${stored.email} ${stored.message}` } });
     const { GET } = await import('@/app/api/contact-retry/route');
-    expect(await (await GET(request())).json()).toEqual({
+    expect((await (await GET(request())).json()).data).toEqual({
       sent: 0,
       failed: 1,
       expired: 0,
@@ -115,7 +129,12 @@ describe('daily contact delivery retry', () => {
     const { GET } = await import('@/app/api/contact-retry/route');
     const pending = GET(request());
     await vi.advanceTimersByTimeAsync(10_000);
-    expect(await (await pending).json()).toEqual({ sent: 0, failed: 1, expired: 0, exhausted: 0 });
+    expect((await (await pending).json()).data).toEqual({
+      sent: 0,
+      failed: 1,
+      expired: 0,
+      exhausted: 0,
+    });
     expect(redis.hincrby).toHaveBeenCalledOnce();
     expect(transaction.exec).not.toHaveBeenCalled();
   });
@@ -123,7 +142,7 @@ describe('daily contact delivery retry', () => {
   it('drops messages already at three attempts without sending', async () => {
     redis.hget.mockResolvedValueOnce(3);
     const { GET } = await import('@/app/api/contact-retry/route');
-    expect(await (await GET(request())).json()).toEqual({
+    expect((await (await GET(request())).json()).data).toEqual({
       sent: 0,
       failed: 0,
       expired: 0,
@@ -138,7 +157,7 @@ describe('daily contact delivery retry', () => {
     redis.hget.mockResolvedValueOnce(2);
     redis.hincrby.mockResolvedValueOnce(4);
     const { GET } = await import('@/app/api/contact-retry/route');
-    expect(await (await GET(request())).json()).toEqual({
+    expect((await (await GET(request())).json()).data).toEqual({
       sent: 0,
       failed: 0,
       expired: 0,
@@ -150,7 +169,7 @@ describe('daily contact delivery retry', () => {
   it('expires messages older than seven days, leaving the message for audit', async () => {
     redis.get.mockResolvedValueOnce({ ...stored, receivedAt: '2026-10-17T03:59:59.999Z' });
     const { GET } = await import('@/app/api/contact-retry/route');
-    expect(await (await GET(request())).json()).toEqual({
+    expect((await (await GET(request())).json()).data).toEqual({
       sent: 0,
       failed: 0,
       expired: 1,
@@ -164,13 +183,13 @@ describe('daily contact delivery retry', () => {
   it('still retries a message exactly seven days old', async () => {
     redis.get.mockResolvedValueOnce({ ...stored, receivedAt: '2026-10-17T04:00:00.000Z' });
     const { GET } = await import('@/app/api/contact-retry/route');
-    expect(await (await GET(request())).json()).toMatchObject({ sent: 1, expired: 0 });
+    expect((await (await GET(request())).json()).data).toMatchObject({ sent: 1, expired: 0 });
   });
 
   it('removes orphaned pending ids without trying to send a missing message', async () => {
     redis.get.mockResolvedValueOnce(null);
     const { GET } = await import('@/app/api/contact-retry/route');
-    expect(await (await GET(request())).json()).toMatchObject({ expired: 1 });
+    expect((await (await GET(request())).json()).data).toMatchObject({ expired: 1 });
     expect(send).not.toHaveBeenCalled();
   });
 
@@ -178,7 +197,7 @@ describe('daily contact delivery retry', () => {
     redis.zrange.mockResolvedValueOnce(['unreadable', 'message-id']);
     redis.get.mockRejectedValueOnce(new Error(stored.email));
     const { GET } = await import('@/app/api/contact-retry/route');
-    expect(await (await GET(request())).json()).toEqual({
+    expect((await (await GET(request())).json()).data).toEqual({
       sent: 1,
       failed: 1,
       expired: 0,
