@@ -273,6 +273,9 @@ describe(
       runListFails?: boolean;
       prViewFails?: boolean;
       prDiffFails?: boolean;
+      prNamesFail?: boolean;
+      filesApiFails?: boolean;
+      filesApiOut?: string;
     }) {
       const dir = mkdtempSync(join(tmpdir(), 'review-snapshot-'));
       const bin = join(dir, 'bin');
@@ -283,10 +286,11 @@ describe(
         `#!/usr/bin/env bash
 case "$1 $2" in
   "pr view") if [[ -n "$PR_VIEW_FAIL" ]]; then echo "HTTP 429" >&2; exit 1; fi; echo '{"headRefOid":"abc123"}' ;;
-  "pr diff") if [[ -n "$PR_DIFF_FAIL" ]]; then echo "HTTP 504" >&2; exit 1; fi; if [[ "$*" == *--name-only* ]]; then echo app/page.tsx; else echo "+line"; fi ;;
+  "pr diff") if [[ -n "$PR_DIFF_FAIL" ]] || { [[ "$*" == *--name-only* ]] && [[ -n "$PR_NAMES_FAIL" ]]; }; then echo "HTTP 406" >&2; exit 1; fi; if [[ "$*" == *--name-only* ]]; then echo app/page.tsx; else echo "+line"; fi ;;
   "pr checks") printf '%s' "$CHECKS_OUT"; echo "$CHECKS_ERR" >&2; exit "$CHECKS_EXIT" ;;
   "run list") if [[ -n "$RUN_LIST_FAIL" ]]; then echo "HTTP 502" >&2; exit 1; fi; [[ "$*" == *"--commit abc123"* ]] || exit 3; echo 42 ;;
   "run view") head -c "$LOG_BYTES" /dev/zero | tr '\\0' 'x' ;;
+  *) if [[ "$*" != "api repos/o/r/pulls/1/files --paginate" ]]; then exit 3; fi; if [[ -n "$FILES_API_FAIL" ]]; then echo "HTTP 503" >&2; exit 1; fi; printf '%s' "$FILES_API_OUT" ;;
 esac
 `,
       );
@@ -309,10 +313,19 @@ esac
           RUN_LIST_FAIL: behaviour.runListFails ? '1' : '',
           PR_VIEW_FAIL: behaviour.prViewFails ? '1' : '',
           PR_DIFF_FAIL: behaviour.prDiffFails ? '1' : '',
+          PR_NAMES_FAIL: behaviour.prNamesFail ? '1' : '',
+          FILES_API_FAIL: behaviour.filesApiFails ? '1' : '',
+          FILES_API_OUT: behaviour.filesApiOut ?? '',
         },
       });
       const read = (name: string) => readArtifact(join(out, name));
-      return { status: result.status, read, files: () => readdirSync(out).sort() };
+      return {
+        status: result.status,
+        stderr: result.stderr,
+        stdout: result.stdout,
+        read,
+        files: () => readdirSync(out).sort(),
+      };
     }
 
     it('keeps failed and pending check results as evidence', () => {
@@ -338,7 +351,8 @@ esac
     });
 
     it('snapshots the diff and changed paths for the reviewer', () => {
-      const result = run({ checksExit: 0 });
+      const result = run({ checksExit: 0, filesApiFails: true });
+      expect(result.status).toBe(0);
       expect(result.read('diff.patch')).toBe('+line\n');
       expect(result.read('files.txt')).toBe('app/page.tsx\n');
     });
@@ -375,10 +389,47 @@ esac
       expect(result.read('diff.patch')).toBe('+line\n');
     });
 
-    it('stops the job when gh pr diff fails, since a review with no diff could only approve blind', () => {
-      const result = run({ checksExit: 0, prDiffFails: true });
+    it.each([{ prDiffFails: true }, { prNamesFail: true }])(
+      'recovers diff evidence from paginated files when the primary command fails: %j',
+      (failure) => {
+        const filename = 'app/$(echo injected) page.tsx';
+        const patch = '@@ -1 +1 @@\n-old\n+new';
+        const filesApiOut = `${JSON.stringify([{ filename, patch }])}\n${JSON.stringify([
+          { filename: 'public/image.png' },
+          { filename: 'app/second.tsx', patch: '+second' },
+        ])}`;
+        const result = run({ checksExit: 0, ...failure, filesApiOut });
+        expect(result.status).toBe(0);
+        expect(result.read('files.txt')).toBe(`${filename}\npublic/image.png\napp/second.tsx\n`);
+        expect(result.read('diff.patch')).toBe(
+          `diff --git a/${filename} b/${filename}\n${patch}\n` +
+            'diff --git a/public/image.png b/public/image.png\n' +
+            '# patch omitted by GitHub: public/image.png\n' +
+            'diff --git a/app/second.tsx b/app/second.tsx\n+second\n',
+        );
+        expect(result.read('checks.txt')).toBe('fail\tFAILURE\tlint\tu\n');
+        expect(result.files()).toEqual([
+          'checks.txt',
+          'diff.patch',
+          'failed-run-42.log',
+          'files.txt',
+          'pr.json',
+        ]);
+      },
+    );
+
+    it.each([
+      { filesApiFails: true, expectedError: 'HTTP 503' },
+      { filesApiOut: 'not json', expectedError: 'parse error' },
+    ])('stops the job when both diff sources fail: %j', ({ expectedError, ...failure }) => {
+      const result = run({ checksExit: 0, prDiffFails: true, ...failure });
       expect(result.status).not.toBe(0);
       expect(result.files()).not.toContain('checks.txt');
+      expect(result.stdout).toContain(
+        'there is nothing to review, so the job stops instead of approving blind.',
+      );
+      expect(result.stderr).toContain('HTTP 406');
+      expect(result.stderr).toContain(expectedError);
     });
   },
   SNAPSHOT_STEP_TIMEOUT_MS,
