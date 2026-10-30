@@ -510,7 +510,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 
 ### Client error capture
 
-- **`lib/error-bridge.client.ts`** registers `window.addEventListener('error')` + `unhandledrejection` at module scope (imported once from `AppShell.client.tsx`). Each capture POSTs to `/api/log` with `{level, message, stack, url, userAgent, ts}`. Dedup: 100ms tail-window keyed on `(message, stack)`: covers React's error replay (<50ms) without suppressing meaningful repeat-occurrence signal.
+- **`lib/error-bridge.client.ts`** registers `window.addEventListener('error')` + `unhandledrejection` as an import side effect (the module is imported by `AppShell.client.tsx` for that side effect and by `ErrorBoundary.client.tsx` for `buildLogPayload`), and both the listeners and the dedup state belong to the window, not to the module instance: the state object lives on the window under `Symbol.for('erikunha.dev/error-bridge')`, and the `listening` guard in `install()` makes a second instantiation in the same window (a dev re-import, the same module reached through two bundles) reuse that state and register nothing. Each capture POSTs to `/api/log` with `{level, message, stack, url, userAgent, ts}`. Dedup: 100ms tail-window keyed on `(message, stack)`: covers React's error replay (<50ms) without suppressing meaningful repeat-occurrence signal.
 - **`app/api/log/route.ts`** validates via zod, writes to Upstash KV `err:{yyyy-mm-dd}:{uuid}` with 30-day TTL. Rate-limited (10/IP/min) via `getErrorLogLimit()` to absorb runaway client error loops. The IP is used only for rate-limiting and discarded: `err:*` records store no `ipHash`, making them personal-data-free and outside the `/api/log/forget` erasure scope.
 
 ### `/api/ask` Q+A retention
