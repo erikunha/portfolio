@@ -50,7 +50,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 | Lighthouse Accessibility                         | = 100                         |
 | Lighthouse Best Practices                        | ≥ 95                          |
 | Lighthouse SEO                                   | = 100                         |
-| WCAG                                             | 2.1 AA                        |
+| WCAG                                             | 2.2 AA                        |
 | ASK monthly token cap                            | 3,000,000 tokens              |
 
 ### Constraints
@@ -551,7 +551,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 
 ## 11. Accessibility (non-negotiable)
 
-WCAG 2.1 AA at minimum. Specific risks for THIS aesthetic:
+WCAG 2.2 AA at minimum. Specific risks for THIS aesthetic:
 
 | Risk                                                                                     | Mitigation                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

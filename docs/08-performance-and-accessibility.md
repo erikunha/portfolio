@@ -58,7 +58,7 @@ Measured is one module at `sec-live-metrics`. `AiMetricsSection` composes ASK ev
 
 ## Accessibility architecture
 
-Target: WCAG 2.1 AA. Lighthouse accessibility and axe checks enforce their configured audit sets, not complete conformance.
+Target: WCAG 2.2 AA. Lighthouse accessibility and axe checks enforce their configured audit sets, not complete conformance.
 
 | Concern             | How it's handled                                                                                                                                                                                        |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -70,10 +70,12 @@ Target: WCAG 2.1 AA. Lighthouse accessibility and axe checks enforce their confi
 | Forms               | `Field` synthesizes `aria-describedby` for errors; contact uses custom client validation with a focused alert summary linking to invalid fields, plus server re-validation                              |
 | Reduced-motion sync | `CRTOverlay` listens for OS `prefers-reduced-motion` changes and keeps `body[data-motion]` in sync                                                                                                      |
 
-Per-component behavioral a11y tests live alongside components; the axe gate covers the design-system routes. The CRT effects are all `aria-hidden` + `pointer-events:none`, so the decorative layer is invisible to assistive tech.
+Per-component behavioral a11y tests live alongside components. The axe gate covers the home, contact errors, design-system routes and both links locales. Every scan includes `wcag22aa`; page scans also retain `wcag2a`, `wcag2aa` and `wcag21aa`, while contact errors retain `wcag2a` and `wcag2aa`. The CRT effects are all `aria-hidden` + `pointer-events:none`, so the decorative layer is invisible to assistive tech.
 
 The Profile manual and the About Responsibilities and README code sample scroll containers use `tabIndex={0}` and expose the `region` role (About uses named semantic `<section>` elements). Each has its own accessible name from the `SCROLL_REGION_LABELS` map in `content/section-labels.ts`, kept distinct from the parent section's name so no two landmarks share a name. Keyboard users can tab into these containers and scroll with arrow keys. `base.css` applies a `:focus-visible` outline using `--color-primary-500` to elements with `tabindex="0"`. Responsibilities and retry code belong to the About section; the label validation maps both regions to that parent. Responsibilities keeps its wrapping rows and allows horizontal scrolling if content still overflows. The work authorization table inside Contact is a semantic `<table>` whose cells wrap, so it has no scrolling container and needs no region. The interactive shell's scrollable log already has its own tab stop and accessible name. The footer's scrollable connection table contains keyboard-focusable links.
 
 ## Verification scope
 
-Both Lighthouse configs collect `/` and the five design-system routes. `/summary`, `/cv`, `/links` and `/links/en` are outside that collection. The INP assertion is disabled in both configs. These automated checks do not establish complete WCAG conformance or real-user INP. The route-JS checker separately evaluates every route emitted in the build manifest.
+Both Lighthouse configs collect `/`, `/cv`, `/summary`, `/links`, `/links/en` and all 17 listed design-system routes. Every URL uses its config's shared assertions. The INP assertion is disabled in both configs. These automated checks do not establish complete WCAG conformance or real-user INP. The route-JS checker separately evaluates every route emitted in the build manifest.
+
+Mobile reflow, reading views, error states and no-JavaScript recovery run in desktop and mobile Chromium and WebKit.
