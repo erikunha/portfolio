@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { installMockBackend } from './_helpers/mock-backend';
 
-const MIXER_SELECTOR = '#sec-daw-mixer';
+const MIXER_SELECTOR = '#sec-guitar [data-testid="daw-mixer-desktop"]';
 const MOBILE_WIDTHS = [320, 390];
 const VIEWPORT_HEIGHT = 800;
 const SUBPIXEL_TOLERANCE = 1;

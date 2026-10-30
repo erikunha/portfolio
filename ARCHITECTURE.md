@@ -26,7 +26,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Functional
 
-- Static composition with Hero and About followed by shell, AI evaluation, projects with attached performance receipts, Career, profile manual, system health, opinions with nested learning and specialization lists, guitar rig, DAW mixer, contact with work authorization and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code expose named keyboard scroll regions inside About; Career owns certification, education and community tag groups.
+- Static composition with Hero and About followed by shell, AI evaluation, projects with attached performance receipts, Career, profile manual, system health, opinions with nested learning and specialization lists, guitar and mixer as one module, contact and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code expose named keyboard scroll regions inside About; Career owns certification, education and community tag groups.
 - Opinions renders four ordered home takes with nested learning and specialization lists. The design-system opinion renders at `/design-system#opinion-07`; `TAKE_PLACEMENT` separates home and documentation content. Seven below-fold modules use content-visibility deferral.
 - Hero: Matrix dialog loop + boot sequence (typewriter)
 - About "Open to [role] roles" mounts RoleTyper over server-rendered text; the Hero title is static. Module headers use CSS scroll-driven typing, with static text for unsupported browsers and reduced motion. Every other single-line heading and command prompt marked `data-type-reveal` (on a span around the text only, never around icons, `sr-only` or `aria-hidden` siblings, and never on an element that can wrap) types in when it enters the viewport: `TypeReveal` (mounted once in the root layout through `GlobalMotion`) runs one IntersectionObserver, sets `--type-chars` and adds `is-typed`; CSS reveals the text with a stepped `clip-path` and a blinking caret. The text stays in the HTML and keeps its box, so screen readers, search and layout see it whole. Hiding applies only after `html.type-reveal-ready`, so without JS, under reduced motion or with `data-motion="reduce"` everything shows at once. The h1 and the first hero viewport are never marked. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`) from `GlobalMotion` in the root layout, so it runs on every route, then IntersectionObserver gates its animation. The footer is server-rendered, with client islands only for session counters and halt/reboot.
@@ -162,7 +162,7 @@ Client boundaries use `.client.ts`/`.client.tsx`, a `/client/` directory, or Nex
 
 ### Partial Prerendering (PPR)
 
-Only ManPage selects desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, its Suspense fallback enters the static shell and the selected variant streams per request. Contact renders its single CSS-responsive work-authorization table synchronously through `VisaContent`.
+Only ManPage selects desktop or mobile variants through `getIsMobile()`, which reads `headers()`. With `cacheComponents: true`, its Suspense fallback enters the static shell and the selected variant streams per request.
 
 Projects renders one static RSC tree at every viewport. Its nine cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six project receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
 
@@ -170,7 +170,7 @@ Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. AS
 
 `GuitarSection` renders one responsive RSC presentation across viewports. CSS adjusts its layout without UA detection, a variant swap or a section Suspense fallback.
 
-`DawMixerSection` renders one synchronous RSC layout at every width, without a UA branch or Suspense boundary. Its fader, knob, R/M/S, meter and scroll islands hydrate on phones too.
+`GuitarSection` renders the guitar rig and the DAW mixer as one module at `sec-guitar`, one synchronous RSC layout at every width, without a UA branch or Suspense boundary. The mixer keeps its fader, knob, R/M/S, meter and scroll islands, which hydrate on phones too. Below 768px each channel row collapses into a compact grid (id, track, dB, knobs, R/M/S, plugin chips, meter, fader) instead of one card per channel.
 
 Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
 Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one static section.
@@ -247,7 +247,6 @@ content/hottest-takes.ts              # defended opinions
 content/responsibilities.ts           # permissions matrix
 content/guitar-rig.ts                 # gear sheet
 content/unknowns.ts                   # unknowns items
-content/visa.ts                       # jurisdiction table
 content/community.ts                  # community/* tags and event references inside Career
 content/credentials.ts                # cert/* tags and Career tag-group copy
 content/education.ts                  # edu/* tags inside Career
@@ -345,7 +344,7 @@ See `app/api/ask/route.ts` and `lib/stream-protocol.ts`.
 
 - Vercel Fluid Compute (Node runtime)
 - **Vercel AI Gateway** via `ai` SDK v7 (`streamText`), model string `anthropic/claude-haiku-4-5`: single API key (`AI_GATEWAY_API_KEY`, OIDC-signed on Vercel), unified provider routing, zero-trust model selection
-- System prompt = identity, current role, career, education and certifications from shared content, plus formatted performance receipts, projects, work authorization and unknowns. `PROMPT_VERSION` is a hash of `SYSTEM_TEXT`.
+- System prompt = identity, current role, career, education and certifications from shared content, plus formatted performance receipts, projects and unknowns. `PROMPT_VERSION` is a hash of `SYSTEM_TEXT`.
 - Streaming response back to the client via a custom `ReadableStream<Uint8Array>` over `result.textStream`, with a watchdog race and the NUL-byte error sentinel protocol from `lib/stream-protocol.ts`
 
 ### Rate limiting
@@ -452,7 +451,7 @@ If Resend is down, the message stays in KV and enters the pending outbox. The fo
 
 `contact:outbox` is a Redis sorted set of message ids scored by `receivedAt`. `contact:outbox:attempts` stores retry counts. The cron removes entries older than 7 days or already at 3 attempts. Each eligible message consumes one attempt before the shared send function runs. Acceptance removes pending membership and its counter; failure keeps it pending. The success response is `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }`, with a matching `X-Request-Id` header. Removal never deletes `contact:msg:{uuid}`, which retains its 90-day audit TTL.
 
-Both routes use `lib/contact-delivery.ts` for sender, recipient, subject and the 10s timeout. A message-id idempotency key accompanies every send. Contact logs carry only `requestId` and `msgId`, never provider error details, addresses or message bodies. Form copy and shared limits live in the Zod-free `content/contact-copy.ts`. Client field checks use those limits; `lib/contact-validation.ts` re-exports them and supplies the server-only `ContactSchema` used by the route. `content/contact.ts` defines the copy schema, and `content/_validate-client-content.ts` validates the client copy and the email and LinkedIn constants from `content/social-urls.ts` during content validation. Delivered and queued panels replace the form and receive focus. Errors retain typed values and focus the summary. Work authorization appears only within Contact through `VisaContent`.
+Both routes use `lib/contact-delivery.ts` for sender, recipient, subject and the 10s timeout. A message-id idempotency key accompanies every send. Contact logs carry only `requestId` and `msgId`, never provider error details, addresses or message bodies. Form copy and shared limits live in the Zod-free `content/contact-copy.ts`. Client field checks use those limits; `lib/contact-validation.ts` re-exports them and supplies the server-only `ContactSchema` used by the route. `content/contact.ts` defines the copy schema, and `content/_validate-client-content.ts` validates the client copy and the email and LinkedIn constants from `content/social-urls.ts` during content validation. Delivered and queued panels replace the form and receive focus. Errors retain typed values and focus the summary. Contact states its retention line under the form and offers the email with a `[COPY EMAIL]` control; the prototype's work-authorization table and the sponsorship chip are gone by owner decision.
 
 ### Anti-spam strategy
 

@@ -13,7 +13,6 @@ export const AI_PATHS = [
   'content/perf-receipts.ts',
   'content/projects.ts',
   'content/unknowns.ts',
-  'content/visa.ts',
   'scripts/ask-eval.ts',
   '__tests__/ask-*',
 ];

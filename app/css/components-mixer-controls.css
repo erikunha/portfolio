@@ -121,8 +121,19 @@
   }
 
   .rms-buttons > button {
-    min-width: var(--spacing-6);
-    min-height: var(--spacing-6);
+    min-width: var(--spacing-target);
+    min-height: var(--spacing-target);
+  }
+
+  @media (min-width: 1024px) {
+    .rms-buttons {
+      gap: var(--spacing-6);
+    }
+
+    .rms-buttons > button {
+      min-width: var(--spacing-6);
+      min-height: var(--spacing-6);
+    }
   }
 
   :where(.mx-grid) .faderThumb {
@@ -158,12 +169,12 @@
   }
 
   .dbUnit {
-    font-size: 10px;
+    font-size: var(--text-xs);
     color: var(--color-primary-400);
   }
 
   .lufs {
-    font-size: 10px;
+    font-size: var(--text-xs);
     color: var(--color-primary-400);
     display: block;
     letter-spacing: 0.08em;

@@ -5,7 +5,6 @@ import { profile } from '@/content/profile';
 import { projects } from '@/content/projects';
 import { personSchema } from '@/content/seo';
 import { unknowns } from '@/content/unknowns';
-import { visaRows } from '@/content/visa';
 import { SYSTEM, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
 const CACHE_ELIGIBILITY_MIN_CHARS = 3500;
@@ -74,16 +73,6 @@ describe('lib/ask/system-prompt', () => {
           SYSTEM_TEXT,
           `projects.ts entry "${p.name}" missing from SYSTEM — drift detected`,
         ).toContain(p.name);
-      }
-    });
-
-    it('contains every visa jurisdiction and status', () => {
-      for (const v of visaRows) {
-        expect(
-          SYSTEM_TEXT,
-          `visa.ts jurisdiction "${v.jurisdiction}" missing from SYSTEM`,
-        ).toContain(v.jurisdiction);
-        expect(SYSTEM_TEXT, `visa.ts status "${v.status}" missing from SYSTEM`).toContain(v.status);
       }
     });
 

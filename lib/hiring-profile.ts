@@ -4,7 +4,6 @@ import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
 import { profile, profileLocation } from '@/content/profile';
 import { social } from '@/content/social';
-import { workAuthorization } from '@/content/visa';
 
 const EmployerSchema = z.object({
   name: z.string(),
@@ -118,7 +117,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     copilot_subagents: '12-agent system (Betsson)',
   },
 
-  work_auth: workAuthorization,
+  work_auth: {},
   education: education.map((entry) => ({
     institution: entry.institution,
     degree: entry.degree,

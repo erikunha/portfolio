@@ -71,10 +71,5 @@
   "location": "Brazil",
   "timezone": "UTC-3",
   "availability": "available now",
-  "work_auth": {
-    "Brazil": "CITIZEN",
-    "EU_Malta": "NEEDS_SPONSORSHIP",
-    "Canada": "NEEDS_SPONSORSHIP",
-    "worldwide": "OPEN_WITH_SPONSORSHIP"
-  }
+  "work_auth": {}
 }

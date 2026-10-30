@@ -383,7 +383,15 @@ export const GuitarPresentationSchema = z.object({
     .string()
     .includes(GUITAR_SIGNAL_LABEL_TOKENS.strength)
     .includes(GUITAR_SIGNAL_LABEL_TOKENS.total),
-  signalChain: z.tuple([guitarInputSchema, guitarAmpSchema, guitarOutputSchema]),
+  signalStrip: z.object({
+    live: z.string().trim().nonempty(),
+    tail: z.string().trim().nonempty(),
+  }),
+  signalChain: z.tuple([
+    guitarInputSchema.extend({ label: z.string().trim().nonempty() }),
+    guitarAmpSchema.extend({ label: z.string().trim().nonempty() }),
+    guitarOutputSchema.extend({ label: z.string().trim().nonempty() }),
+  ]),
   influences: GuitarPresentationCopySchema,
   nowPlaying: GuitarPresentationCopySchema,
   stats: GuitarRigSchema.shape.stats,
@@ -407,26 +415,6 @@ export const UnknownsSchema = z.object({
   learning: z.array(UnknownItemSchema).min(1),
   notSpecializing: z.array(UnknownItemSchema).min(1),
   footer: z.string().min(1),
-});
-
-export const WORK_AUTH_STATUS = {
-  citizen: 'CITIZEN',
-  needsSponsorship: 'NEEDS_SPONSORSHIP',
-  openWithSponsorship: 'OPEN_WITH_SPONSORSHIP',
-} as const;
-
-export const VisaUiSchema = z.object({
-  title: z.string().min(1),
-  command: z.string().min(1),
-  jurisdictionLabel: z.string().min(1),
-  statusLabel: z.string().min(1),
-  evidenceLabel: z.string().min(1),
-});
-
-export const VisaRowSchema = z.object({
-  jurisdiction: z.string().min(1),
-  status: z.enum(WORK_AUTH_STATUS),
-  evidence: z.string().min(1),
 });
 
 export const CredentialSchema = z.object({
@@ -898,7 +886,6 @@ export type Responsibility = z.infer<typeof ResponsibilitySchema>;
 export type GuitarRig = z.infer<typeof GuitarRigSchema>;
 export type UnknownItem = z.infer<typeof UnknownItemSchema>;
 export type Unknowns = z.infer<typeof UnknownsSchema>;
-export type VisaRow = z.infer<typeof VisaRowSchema>;
 export type Credential = z.infer<typeof CredentialSchema>;
 export type CommunityEvent = z.infer<typeof CommunityEventSchema>;
 export type ManPage = z.infer<typeof ManPageSchema>;
@@ -951,7 +938,6 @@ export const ReadingViewsSchema = z.object({
       certifications: ReadingTextSchema,
       community: ReadingTextSchema,
       education: ReadingTextSchema,
-      workAuthorization: ReadingTextSchema,
       contact: ReadingTextSchema,
     }),
     credentialLabels: z.record(z.string(), ReadingTextSchema),
@@ -969,7 +955,6 @@ export const ReadingViewsSchema = z.object({
     stack: z.array(ReadingTextSchema).min(1),
     headings: z.object({
       projects: ReadingTextSchema,
-      workAuthorization: ReadingTextSchema,
       stack: ReadingTextSchema,
       contact: ReadingTextSchema,
     }),
@@ -1011,7 +996,6 @@ export const CvDocumentSchema = z.object({
     status: ReadingTextSchema,
   }),
   education: z.array(ReadingRowSchema),
-  authorization: z.array(ReadingRowSchema).min(1),
   languages: ReadingTextSchema,
   email: ReadingTextSchema,
 });
@@ -1030,17 +1014,6 @@ export const SummaryDocumentSchema = z.object({
         value: ReadingTextSchema,
         description: ReadingTextSchema,
       }),
-    )
-    .min(1),
-  authorization: z
-    .array(
-      z
-        .object({
-          jurisdiction: ReadingTextSchema,
-          status: ReadingTextSchema,
-          evidence: ReadingTextSchema,
-        })
-        .passthrough(),
     )
     .min(1),
   languages: ReadingTextSchema,
