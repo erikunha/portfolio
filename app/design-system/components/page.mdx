@@ -142,6 +142,17 @@ Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RS
 
 **Accessibility:** Uses semantic `<kbd>` element.
 
+## NavItem
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `href` | `string` | — | yes |
+| `label` | `ReactNode` | — | yes |
+| `index` | `string` | — | no |
+| `current` | `boolean` | `false` | no |
+
+A navigation link. `current` sets `aria-current="location"`, `index` is decorative and hidden from assistive technology, and every other anchor attribute passes through.
+
 ## CopyButton
 
 | Prop | Type | Default | Required |
