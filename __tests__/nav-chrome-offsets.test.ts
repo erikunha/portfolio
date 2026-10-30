@@ -29,7 +29,7 @@ describe('drawer scroll lock', () => {
         body,
         'app/css/components-nav.css: the scroll lock must not set scrollbar-gutter, because a ' +
           'reserved gutter shifts the centred page while the drawer is open on platforms with ' +
-          'classic scrollbars.',
+          'overlay scrollbars.',
       ).not.toContain('scrollbar-gutter');
     }
   });

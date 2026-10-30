@@ -6,11 +6,51 @@ import { NAVIGATION } from '@/content/navigation';
 import { topbarChrome } from '@/content/terminal-chrome';
 import { type MountedClient, mountClient } from './helpers/render';
 
+const DESKTOP_WIDTHS = [768, 1024, 1280, 1440];
+const BREAKPOINT_MIN_WIDTH: Record<string, number> = {
+  sm: 640,
+  md: 768,
+  lg: 1024,
+  xl: 1280,
+  '2xl': 1536,
+};
+const DISPLAY_UTILITIES = new Set([
+  'block',
+  'contents',
+  'flow-root',
+  'flex',
+  'grid',
+  'inline',
+  'inline-block',
+  'inline-flex',
+  'inline-grid',
+  'inline-table',
+  'list-item',
+  'table',
+]);
+
 async function renderTopbar(): Promise<MountedClient> {
   const { DesktopTopbar } = await import(
     '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
   );
   return mountClient(createElement(SectionNavigationProvider, null, createElement(DesktopTopbar)));
+}
+
+function isHiddenAtWidth(className: string, width: number): boolean {
+  const classes = className.split(/\s+/).filter(Boolean);
+  let hidden = classes.includes('hidden');
+  for (const [breakpoint, minWidth] of Object.entries(BREAKPOINT_MIN_WIDTH).sort(
+    (a, b) => a[1] - b[1],
+  )) {
+    if (minWidth > width) continue;
+    for (const token of classes) {
+      if (!token.startsWith(`${breakpoint}:`)) continue;
+      const utility = token.slice(breakpoint.length + 1);
+      if (utility === 'hidden') hidden = true;
+      else if (DISPLAY_UTILITIES.has(utility)) hidden = false;
+    }
+  }
+  return hidden;
 }
 
 describe('DesktopTopbar', () => {
@@ -109,13 +149,16 @@ describe('DesktopTopbar', () => {
     for (let node = label?.parentElement ?? null; node; node = node.parentElement) {
       ancestors.push(node);
     }
-    const hiddenAtWide = ancestors.some((element) =>
-      (element.getAttribute('class') ?? '').includes('xl:hidden'),
-    );
-    expect(
-      hiddenAtWide,
-      'the brand badge must not disappear at the xl breakpoint: it belongs on the row at every desktop width',
-    ).toBe(false);
+
+    for (const width of DESKTOP_WIDTHS) {
+      const hiddenAt = ancestors.filter((element) =>
+        isHiddenAtWidth(element.getAttribute('class') ?? '', width),
+      );
+      expect(
+        hiddenAt.map((element) => element.getAttribute('class') ?? ''),
+        `the brand badge must be visible at ${width}px: an ancestor that hides it takes the badge off the row`,
+      ).toEqual([]);
+    }
   });
 
   it('spells the motion control compact and leaves the state on the button', async () => {
