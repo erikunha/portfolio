@@ -54,7 +54,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 ```mermaid
 flowchart LR
     unit["Vitest (jsdom)<br/>__tests__/** + co-located *.test.tsx<br/>behavioral, 80/70/80/80 coverage floor"] --> ci
-    a11y["axe-core<br/>tests/a11y/axe.spec.ts (5 DS routes, wcag2aa)"] --> ci
+    a11y["axe-core<br/>tests/a11y/axe.spec.ts (WCAG 2.2 AA tags)"] --> ci
     e2e["Playwright e2e<br/>tests/e2e/** (CI: 5-project matrix)"] --> ci
     visual["Visual regression<br/>tests/visual/visual.spec.ts via Argos"] --> ci
     mut["Stryker mutation (weekly, advisory)"] -. trend .-> ci
@@ -63,8 +63,9 @@ flowchart LR
 
 - **Unit (Vitest):** behavioral assertions only; a `no-source-grep` test bans `readFileSync`-style source-grep tests. Run `pnpm test` / `pnpm test:coverage` / `pnpm test:watch`.
   For effect-driven focus, await the focus assertion with `waitFor`; finding the element only establishes that it rendered.
-- **a11y (axe-core):** zero-violation gate over the design-system routes, tags `wcag2a/2aa/21aa`.
+- **a11y (axe-core):** zero-violation gate over home, contact errors, design-system routes and both links locales. Every scan includes `wcag22aa`; page scans retain `wcag2a`, `wcag2aa` and `wcag21aa`, while contact errors retain `wcag2a` and `wcag2aa`.
 - **e2e (Playwright):** CI selects a 5-project matrix (`chromium`, `chromium-mobile`, `webkit-desktop`, `webkit-mobile`, `chromium-components`). `playwright.config.ts` also defines mobile Chromium and desktop/mobile WebKit component projects. The DS component visual spec is darwin-only (CI ignores it on Ubuntu).
+  Reading views, error states, no-JavaScript recovery and mobile reflow run in all four page-browser projects.
 - **Visual regression:** Argos-backed snapshots of page sections; a color/layout/typography change requires regenerated baselines (see the `visual-baseline-regen` skill).
 - **AI eval (`pnpm ask:eval`):** calibration → corpus → gate for `/api/ask` (doc 02). Gated in CI when `ai`-paths change.
 
@@ -119,6 +120,8 @@ flowchart TD
 Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (pull-request review), `claude.yml` (`@claude` interaction), and `agent-eval.yml` (advisory prompt evaluation).
 
 **Lighthouse budgets (LHCI, hard gates):** desktop perf ≥95 / a11y =100 / BP ≥95 / SEO =100, LCP ≤1800ms, CLS ≤0.05, TBT ≤200ms; mobile perf ≥90, LCP ≤3500ms. Never disable a gate to merge - fix the property (doc 08).
+
+Both desktop and mobile collect `/`, `/cv`, `/summary`, `/links`, `/links/en` and the 17 design-system URLs listed in their configs. Run `pnpm lhci` and `pnpm lhci:mobile` against a production server.
 
 ## The PR lifecycle
 
