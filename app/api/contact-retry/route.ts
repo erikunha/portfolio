@@ -11,6 +11,7 @@ import {
 } from '@/lib/contact-outbox';
 import { env } from '@/lib/env';
 import { log } from '@/lib/log';
+import { ok } from '@/lib/server/route';
 
 const AUTHORIZATION_HEADER = 'authorization';
 const UNAUTHORIZED_STATUS = 401;
@@ -58,5 +59,5 @@ export async function GET(req: NextRequest): Promise<Response> {
     }
   }
 
-  return Response.json(counts);
+  return ok({ requestId, data: counts });
 }
