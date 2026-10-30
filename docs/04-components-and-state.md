@@ -79,7 +79,7 @@ Nine primitives in `design-system/components/`; **eight exported** from `design-
 
 ## CSS / token architecture
 
-Import order (`app/globals.css`): `tailwindcss` → `theme.css` → `base.css` → `crt.css` → `animations.css` → `components-*.css` (20 flat partials, imported in the original cascade order). Tailwind v4 via the single `@tailwindcss/postcss` plugin. No CSS modules, no Style Dictionary.
+Import order (`app/globals.css`): `tailwindcss` → `theme.css` → `base.css` → `crt.css` → `animations.css` → `components-*.css` (20 flat partials, imported in the original cascade order). That `@import` order is the cascade order, and it is the only place it is recorded: the stylesheet-reading test helper (`__tests__/helpers/components-css.ts`) derives the partial order from these `@import` lines rather than sorting filenames, so a stylesheet assertion sees the same cascade the browser resolves. Tailwind v4 via the single `@tailwindcss/postcss` plugin. No CSS modules, no Style Dictionary.
 
 | File               | `@layer`     | Holds                                                                                                                              |
 | ------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
