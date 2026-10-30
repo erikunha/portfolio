@@ -105,7 +105,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 
 - MBA (Lato Sensu), AI Engineering, Machine Learning and Deep Learning, Instituto Infnet, Brazil (online), expected Dec 2027
 - Web Development Co-op Diploma, CICCC, Vancouver, Canada (2023-2024)
-- BS, Information Systems, UNISAL, Campinas, Brazil (2015-2020)
+- B.S. Information Systems, UNISAL, Campinas, Brazil (2015-2020)
 
 ## Certifications
 

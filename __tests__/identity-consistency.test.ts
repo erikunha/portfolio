@@ -148,6 +148,19 @@ describe('identity is consistent across every gated surface', () => {
     for (const name of others) expect(item?.expect).not.toContain(name);
   });
 
+  it('publishes every resume degree in llms.txt with the wording content/education.ts uses', () => {
+    for (const entry of education) {
+      expect(
+        llmsTxt,
+        `public/llms.txt must state the degree as content/education.ts spells it ("${entry.degree}"), or an agent reads a different degree than the site renders.`,
+      ).toContain(entry.degree);
+      expect(
+        llmsTxt,
+        `public/llms.txt must name the institution of "${entry.degree}" ("${entry.institution}"), or an agent reads a different school than the site renders.`,
+      ).toContain(entry.institution);
+    }
+  });
+
   it('lists every education institution in the Person JSON-LD alumniOf', () => {
     const names = personSchema.alumniOf.map((entry) => entry.name);
     for (const entry of education) {
