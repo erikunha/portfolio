@@ -62,10 +62,6 @@
     }
   }
 
-  #sec-man-page-body {
-    min-height: 300px;
-  }
-
   .cam-corners {
     position: absolute;
     inset: 8px;

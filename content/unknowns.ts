@@ -12,7 +12,7 @@ export const unknowns: Unknowns = UnknownsSchema.parse({
     },
     {
       claim: 'writing specs that someone else can ship without me in the room',
-      context: `the 35-page knowledge system was a start. specs are harder. "what i meant" is not what i wrote.`,
+      context: 'specs are harder than code. "what i meant" is not what i wrote.',
       showContext: false,
     },
     {
