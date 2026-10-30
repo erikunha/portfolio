@@ -2,6 +2,8 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-10-29 — the project no longer pins a Claude Code permission mode
+
 - **2026-10-29** · **The project baseline no longer pins `defaultMode` and inherits the user's global permission mode.** The owner runs one global mode across repositories; a project pin overrode it. Keeping `acceptEdits` pinned per project was rejected. _Reversible: restore `"defaultMode": "acceptEdits"` in `.claude/settings.json`._
 
 ## 2026-08-30 — site-wide pt-BR/EN is in scope, and the shape it has to take
