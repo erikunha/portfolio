@@ -87,7 +87,7 @@ test.describe('layout tokens', () => {
     await page.goto('/');
     const marginBottom = () =>
       page
-        .locator('section[aria-labelledby]')
+        .locator('section:has(> header .module-name)')
         .first()
         .evaluate((el) => getComputedStyle(el).marginBottom);
     expect(await marginBottom()).toBe(`${SPACE_SECTION_PHONE}px`);
