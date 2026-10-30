@@ -1,6 +1,31 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildLogPayload, type LogPayload, MAX_DEDUP_SIZE } from '@/lib/error-bridge.client';
 
+type RecordedPost = { message: string };
+
+function createFetchRecorder() {
+  const posts: RecordedPost[] = [];
+  const spy = vi.fn(async (_url: string, opts: RequestInit) => {
+    posts.push(JSON.parse(opts.body as string) as RecordedPost);
+    return new Response(null, { status: 204 });
+  });
+  return { posts, spy };
+}
+
+async function waitForPost(posts: RecordedPost[], message: string): Promise<void> {
+  await vi.waitFor(() => {
+    expect(posts.some((post) => post.message === message)).toBe(true);
+  });
+}
+
+function fireErrorWithInstance(message: string, err: Error): void {
+  const event = Object.assign(new Event('error'), {
+    message,
+    error: err,
+  }) as ErrorEvent;
+  window.dispatchEvent(event);
+}
+
 describe('buildLogPayload', () => {
   it('returns level="error", message, and an ISO ts string', () => {
     const payload: LogPayload = buildLogPayload('boom', undefined);
@@ -36,16 +61,11 @@ describe('MAX_DEDUP_SIZE', () => {
 });
 
 describe('dedup — window error event behavior', () => {
-  let fetchSpy: ReturnType<typeof vi.fn>;
-  let fetchCalls: Array<{ message: string }> = [];
+  let recorder: ReturnType<typeof createFetchRecorder>;
 
   beforeEach(() => {
-    fetchCalls = [];
-    fetchSpy = vi.fn(async (_url: string, opts: RequestInit) => {
-      fetchCalls.push(JSON.parse(opts.body as string) as { message: string });
-      return new Response('', { status: 204 });
-    });
-    vi.stubGlobal('fetch', fetchSpy);
+    recorder = createFetchRecorder();
+    vi.stubGlobal('fetch', recorder.spy);
   });
 
   afterEach(() => {
@@ -53,27 +73,19 @@ describe('dedup — window error event behavior', () => {
     vi.useRealTimers();
   });
 
-  const fireErrorWithInstance = (message: string, err: Error) => {
-    const event = Object.assign(new Event('error'), {
-      message,
-      error: err,
-    }) as ErrorEvent;
-    window.dispatchEvent(event);
-  };
-
   it('posts the first error event', async () => {
     const err = new Error('bridge-unique-1');
     fireErrorWithInstance('bridge-unique-1', err);
-    await new Promise<void>((r) => setTimeout(r, 10));
-    expect(fetchCalls.filter((p) => p.message === 'bridge-unique-1')).toHaveLength(1);
+    await waitForPost(recorder.posts, 'bridge-unique-1');
+    expect(recorder.posts.filter((post) => post.message === 'bridge-unique-1')).toHaveLength(1);
   });
 
   it('deduplicates the same error fired twice within 100ms', async () => {
     const err = new Error('bridge-dup-1');
     fireErrorWithInstance('bridge-dup-1', err);
     fireErrorWithInstance('bridge-dup-1', err);
-    await new Promise<void>((r) => setTimeout(r, 20));
-    expect(fetchCalls.filter((p) => p.message === 'bridge-dup-1')).toHaveLength(1);
+    await waitForPost(recorder.posts, 'bridge-dup-1');
+    expect(recorder.posts.filter((post) => post.message === 'bridge-dup-1')).toHaveLength(1);
   });
 
   it('allows the same error to be re-emitted after the 100ms dedup window elapses', async () => {
@@ -83,22 +95,16 @@ describe('dedup — window error event behavior', () => {
     vi.advanceTimersByTime(150);
     fireErrorWithInstance('bridge-refire-1', err);
     await vi.runAllTimersAsync();
-    expect(fetchCalls.filter((p) => p.message === 'bridge-refire-1')).toHaveLength(2);
+    expect(recorder.posts.filter((post) => post.message === 'bridge-refire-1')).toHaveLength(2);
   });
 });
 
 describe('dedup — FIFO eviction at MAX_DEDUP_SIZE', () => {
-  let fetchCalls: Array<{ message: string }> = [];
+  let recorder: ReturnType<typeof createFetchRecorder>;
 
   beforeEach(() => {
-    fetchCalls = [];
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (_url: string, opts: RequestInit) => {
-        fetchCalls.push(JSON.parse(opts.body as string) as { message: string });
-        return new Response('', { status: 204 });
-      }),
-    );
+    recorder = createFetchRecorder();
+    vi.stubGlobal('fetch', recorder.spy);
   });
 
   afterEach(() => {
@@ -110,14 +116,6 @@ describe('dedup — FIFO eviction at MAX_DEDUP_SIZE', () => {
     vi.useFakeTimers();
 
     const prefix = 'fifo-evict-';
-
-    const fireErrorWithInstance = (message: string, err: Error) => {
-      const event = Object.assign(new Event('error'), {
-        message,
-        error: err,
-      }) as ErrorEvent;
-      window.dispatchEvent(event);
-    };
 
     let firstError: Error | null = null;
 
@@ -136,7 +134,44 @@ describe('dedup — FIFO eviction at MAX_DEDUP_SIZE', () => {
 
     await vi.runAllTimersAsync();
 
-    expect(fetchCalls.filter((p) => p.message === evictedMsg)).toHaveLength(2);
-    expect(fetchCalls.filter((p) => p.message === `${prefix}trigger`)).toHaveLength(1);
+    expect(recorder.posts.filter((post) => post.message === evictedMsg)).toHaveLength(2);
+    expect(recorder.posts.filter((post) => post.message === `${prefix}trigger`)).toHaveLength(1);
+  });
+});
+
+describe('dedup: repeated module instantiation in the same window', () => {
+  let recorder: ReturnType<typeof createFetchRecorder>;
+
+  beforeEach(() => {
+    recorder = createFetchRecorder();
+    vi.stubGlobal('fetch', recorder.spy);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it('posts the error once when the bridge module is instantiated a second time', async () => {
+    vi.resetModules();
+    await import('@/lib/error-bridge.client');
+
+    const err = new Error('bridge-reimport-1');
+    fireErrorWithInstance('bridge-reimport-1', err);
+    await waitForPost(recorder.posts, 'bridge-reimport-1');
+    expect(recorder.posts.filter((post) => post.message === 'bridge-reimport-1')).toHaveLength(1);
+  });
+
+  it('keeps deduplicating a replayed error after the bridge module is instantiated again', async () => {
+    vi.resetModules();
+    await import('@/lib/error-bridge.client');
+
+    const err = new Error('bridge-reimport-dup-1');
+    fireErrorWithInstance('bridge-reimport-dup-1', err);
+    fireErrorWithInstance('bridge-reimport-dup-1', err);
+    await waitForPost(recorder.posts, 'bridge-reimport-dup-1');
+    expect(recorder.posts.filter((post) => post.message === 'bridge-reimport-dup-1')).toHaveLength(
+      1,
+    );
   });
 });

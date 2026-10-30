@@ -2,7 +2,15 @@
 
 const DEDUP_TAIL_MS = 100;
 export const MAX_DEDUP_SIZE = 100;
-const recentEmissions = new Map<string, number>();
+
+const BRIDGE_STATE_KEY = Symbol.for('erikunha.dev/error-bridge');
+
+type BridgeState = {
+  recentEmissions: Map<string, number>;
+  listening: boolean;
+};
+
+type BridgeWindow = Window & { [key: symbol]: BridgeState | undefined };
 
 type Payload = {
   level: 'error' | 'warn';
@@ -30,17 +38,26 @@ function buildKey(message: string, stack: string | undefined): string {
   return `${message}|${stack ?? ''}`;
 }
 
-function shouldEmit(key: string): boolean {
+function getBridgeState(win: Window): BridgeState {
+  const target = win as BridgeWindow;
+  const existing = target[BRIDGE_STATE_KEY];
+  if (existing) return existing;
+  const created: BridgeState = { recentEmissions: new Map<string, number>(), listening: false };
+  target[BRIDGE_STATE_KEY] = created;
+  return created;
+}
+
+function shouldEmit(state: BridgeState, key: string): boolean {
   const now = Date.now();
-  const last = recentEmissions.get(key);
+  const last = state.recentEmissions.get(key);
   if (last !== undefined && now - last < DEDUP_TAIL_MS) return false;
-  if (recentEmissions.size >= MAX_DEDUP_SIZE) {
-    const oldest = recentEmissions.keys().next().value;
-    if (oldest !== undefined) recentEmissions.delete(oldest);
+  if (state.recentEmissions.size >= MAX_DEDUP_SIZE) {
+    const oldest = state.recentEmissions.keys().next().value;
+    if (oldest !== undefined) state.recentEmissions.delete(oldest);
   }
-  recentEmissions.set(key, now);
-  for (const [k, ts] of recentEmissions) {
-    if (now - ts > DEDUP_TAIL_MS) recentEmissions.delete(k);
+  state.recentEmissions.set(key, now);
+  for (const [k, ts] of state.recentEmissions) {
+    if (now - ts > DEDUP_TAIL_MS) state.recentEmissions.delete(k);
   }
   return true;
 }
@@ -54,14 +71,14 @@ function send(payload: Payload): void {
   }).catch(() => undefined);
 }
 
-function handleError(event: ErrorEvent): void {
+function handleError(state: BridgeState, event: ErrorEvent): void {
   const message = event.message ?? 'unknown error';
   const stack = event.error instanceof Error ? event.error.stack : undefined;
-  if (!shouldEmit(buildKey(message, stack))) return;
+  if (!shouldEmit(state, buildKey(message, stack))) return;
   send(buildLogPayload(message, stack));
 }
 
-function handleRejection(event: PromiseRejectionEvent): void {
+function handleRejection(state: BridgeState, event: PromiseRejectionEvent): void {
   const reason = event.reason;
   const message =
     reason instanceof Error
@@ -70,11 +87,22 @@ function handleRejection(event: PromiseRejectionEvent): void {
         ? reason
         : 'unhandled promise rejection';
   const stack = reason instanceof Error ? reason.stack : undefined;
-  if (!shouldEmit(buildKey(message, stack))) return;
+  if (!shouldEmit(state, buildKey(message, stack))) return;
   send(buildLogPayload(message, stack));
 }
 
+function install(win: Window): void {
+  const state = getBridgeState(win);
+  if (state.listening) return;
+  state.listening = true;
+  win.addEventListener('error', (event) => {
+    handleError(state, event);
+  });
+  win.addEventListener('unhandledrejection', (event) => {
+    handleRejection(state, event);
+  });
+}
+
 if (typeof window !== 'undefined') {
-  window.addEventListener('error', handleError);
-  window.addEventListener('unhandledrejection', handleRejection);
+  install(window);
 }
