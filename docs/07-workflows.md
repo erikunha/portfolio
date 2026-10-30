@@ -128,7 +128,8 @@ Both desktop and mobile collect `/`, `/cv`, `/summary`, `/links`, `/links/en` an
 ```
 commit (scope blocks) -> (self-review the diff before opening the PR)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
-  -> resolve every review thread (rebase before each push) -> pnpm pr:gate
+  -> resolve every review thread (rebase before each push) -> pnpm claude-gate
+  -> pnpm pr:gate
   -> repo owner runs gh pr merge (project policy; no agent hook enforces it)
 ```
 
