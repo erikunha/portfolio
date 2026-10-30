@@ -231,9 +231,12 @@ truth and keeps components purely presentational.
 
 **How it is held.** Mechanical gate: `pnpm validate-content`
 (`scripts/validate-content.ts`) runs every content module through its Zod schema
-and exits non-zero on any violation. It runs inside `pnpm verify`, in the
-`pre-push` hook, and as the `Validate content` step in the `build-and-gate` CI
-job. The "no copy in `.tsx`" rule is held by PR review against this chapter.
+and exits non-zero on any violation. A module a client component imports stays
+Zod-free, so its schema is parsed in `content/_validate-client-content.ts`, the
+single build-time parse site for client-consumed content. It runs inside
+`pnpm verify`, in the `pre-push` hook, and as the `Validate content` step in the
+`build-and-gate` CI job. The "no copy in `.tsx`" rule is held by PR review
+against this chapter.
 
 ---
 

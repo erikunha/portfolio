@@ -2,8 +2,10 @@ import { expect, test } from '@playwright/test';
 import { topbarChrome } from '@/content/terminal-chrome';
 
 const SCROLL_PROBE_PX = 400;
-const TOPBAR_WIDTHS = [1024, 1280, 1440];
+const TOPBAR_WIDTHS = [768, 1024, 1280, 1440];
 const SECTION_SHORTCUT_WIDTH = 1280;
+const SEARCH_TRIGGER_WIDTH = 1024;
+const MOTION_TIER_WIDTH = 1280;
 const FOOT_GAP_LIMIT_PX = 32;
 
 for (const width of [390, 768, 1024, 1280, 1536]) {
@@ -113,12 +115,60 @@ for (const width of TOPBAR_WIDTHS) {
       }
 
       const search = nav.locator('.topbar-search');
-      await expect(search).toBeVisible();
-      await search.click();
-      await expect(page.getByRole('dialog', { name: 'Section menu' })).toBeVisible();
+      if (width >= SEARCH_TRIGGER_WIDTH) {
+        await expect(search, 'the search trigger joins the row from 1024px').toBeVisible();
+        await search.click();
+        await expect(page.getByRole('dialog', { name: 'Section menu' })).toBeVisible();
+      } else {
+        await expect(
+          search,
+          'below 1024px the row has no room for the search trigger, so it stays off the row',
+        ).toBeHidden();
+      }
     });
   });
 }
+
+test.describe('section navigation: motion control tiers', () => {
+  for (const width of [768, 1024, 1280, 1440]) {
+    test.describe(`at ${width}px`, () => {
+      test.use({ viewport: { width, height: 720 } });
+
+      test('the topbar spells MOTION at the xl tier and the drawer carries it at every width', async ({
+        page,
+      }) => {
+        await page.goto('/');
+        const topbar = page.locator('.desktop-topbar');
+        const toggle = topbar.locator('button[aria-pressed]');
+
+        if (width >= MOTION_TIER_WIDTH) {
+          await expect(
+            toggle,
+            'the topbar carries the compact MOTION control at the xl tier',
+          ).toBeVisible();
+          await expect(
+            toggle,
+            'the topbar spells the control MOTION, not MOTION: ON',
+          ).toContainText('MOTION');
+          await expect(toggle).not.toContainText('MOTION: ON');
+        } else {
+          await expect(
+            toggle,
+            'below the xl tier the topbar drops the motion control, so the drawer must carry it',
+          ).toBeHidden();
+        }
+
+        await page.getByRole('button', { name: /INDEX/ }).locator('visible=true').click();
+        const drawer = page.getByRole('dialog', { name: 'Section menu' });
+        await expect(
+          drawer.locator('.menu-motion'),
+          'the drawer carries the motion control at every width, so motion stays reachable below the xl tier',
+        ).toBeVisible();
+        await expect(drawer.locator('.menu-motion')).toContainText('MOTION: ON');
+      });
+    });
+  }
+});
 
 test.describe('section navigation: drawer rows', () => {
   test.use({ viewport: { width: 390, height: 844 } });

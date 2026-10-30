@@ -104,7 +104,7 @@ flowchart TD
     end
     subgraph dom["2. DOM-as-state (motion)"]
         motion["lib/motion.ts: body[data-motion] + localStorage('erik.motion')<br/>broadcast via 'motionchange' CustomEvent"]
-        w1["writer: DesktopTopbar (MOTION toggle)"] --> motion
+        w1["writers: DesktopTopbar (MOTION toggle, xl tier)<br/>SectionNavigation drawer (MOTION: ON row, every width)"] --> motion
         w2["writer: CRTOverlay (OS reduced-motion sync)"] --> motion
         motion --> r1["readers: MatrixRain · RoleTyper · HeroBootAnimation · InteractiveShell"]
     end

@@ -255,6 +255,8 @@ content/man-page.ts                   # MAN ERIK content
 content/social.ts                     # github / linkedin / email / site
 content/errors.ts                     # 404, 500 and no-JS copy
 content/errors-client.ts              # zod-free error copy for client islands
+content/terminal-chrome.ts           # zod-free topbar, shell and contact chrome copy
+content/_validate-client-content.ts  # build-time parse site for every client-read schema
 content/schemas.ts                    # Zod validation schemas, build-time
 content/ask-eval-corpus.ts            # ask eval Q+A corpus (factual, edge, jailbreak, output-validation)
 
@@ -316,6 +318,8 @@ All content is **typed TS modules**, validated by Zod at build time. Build fails
 - Lets engineers reading the source see exactly what shape the site expects
 
 `content/schemas.ts` defines `PerfReceiptSchema`: `metric`, signed percentage `delta`, `company`, `note`, `project`, and optional `displayValue`, `before`, `after`. `content/perf-receipts.ts` parses ten receipts and derives six project receipts with `.filter(receipt => receipt.project)`. Projects embeds that subset through `PerfReceiptsSection`.
+
+A content module that a client component imports stays zod-free, because a `.parse()` at module scope would ship zod to the browser. Those modules are parsed by `content/_validate-client-content.ts`, the single build-time parse site, which `scripts/validate-content.ts` imports so a schema violation fails the build. `content/terminal-chrome.ts` follows that rule: `shellChrome`, `contactChrome` and `topbarChrome` are parsed by the aggregator, never in the module itself, so the topbar brand badge can never ship empty.
 
 ---
 
