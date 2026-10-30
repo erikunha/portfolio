@@ -6,6 +6,8 @@ export type { CmdLineProps } from './components/CmdLine/CmdLine';
 export { CmdLine } from './components/CmdLine/CmdLine';
 export type { KbdKeyProps } from './components/KbdKey/KbdKey';
 export { KbdKey } from './components/KbdKey/KbdKey';
+export type { NavItemProps } from './components/NavItem/NavItem';
+export { NavItem } from './components/NavItem/NavItem';
 export type { StatTileProps } from './components/StatTile/StatTile';
 export { StatTile } from './components/StatTile/StatTile';
 export type { TerminalPanelProps } from './components/TerminalPanel/TerminalPanel';
