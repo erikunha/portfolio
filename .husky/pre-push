@@ -1,3 +1,6 @@
+echo "[pre-push] Running pre-PR quality gate (pnpm check:pre-pr)..."
+pnpm check:pre-pr || exit 1
+
 ZERO="0000000000000000000000000000000000000000"
 saw_refspec=0
 all_deletions=1

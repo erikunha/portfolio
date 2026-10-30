@@ -42,6 +42,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 | `check:harness-size` | `CLAUDE.md` ≤ 275 lines |
 | `check:section-order` | every `sec-*` has a mobile flex-order rule |
 | `check:doc-drift` | `ARCHITECTURE.md` directory-tree paths exist on disk |
+| `check:pre-pr` | pre-PR gate: a cited commit SHA is an ancestor of HEAD, no net-new em/en dash, a doc path exists (hard); doc drift and duplicated literals (warn) |
 | `lint:css-tokens` | no raw hex outside `app/css/theme.css` |
 | `lint:contrast` | documented text/surface pairs meet WCAG AA |
 | `check:component-docs` | each DS component is documented |
@@ -73,7 +74,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     pr["PR / push main"] --> dc["detect-changes (app?, ai?)"]
-    dc --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, harness, doc-drift, contrast, PR-comment gate"]
+    dc --> qf["quality-fast: pre-PR gate, Biome, branch/commit lint, content, naming, pinning, harness, doc-drift, contrast, PR-comment gate"]
     dc --> tc["typecheck"]
     dc --> t["test (Vitest + coverage)"]
     dc --> dr["dependency-review (PR)"]
@@ -107,7 +108,7 @@ Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, week
 
 ```
 commit (scope blocks) -> (self-review the diff before opening the PR)
-  -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
+  -> pnpm check:pre-pr -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
   -> resolve every review thread (rebase before each push) -> pnpm pr:gate
   -> repo owner runs gh pr merge (AI agents are blocked from merging)
 ```

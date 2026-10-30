@@ -9,7 +9,8 @@ flowchart TD
     write["code written"] --> c1["pre-commit: Biome"]
     c1 --> c2["commit-msg: commitlint (scope mandatory)"]
     c2 --> battery["self-review the diff (pr-review-toolkit:code-reviewer)"]
-    battery --> p1["pre-push: no direct main"]
+    battery --> p0["pre-push: check:pre-pr"]
+    p0 --> p1["pre-push: no direct main"]
     p1 --> p2["pre-push: branch name <type>/<desc>"]
     p2 --> p3["pre-push: review stamp == HEAD"]
     p3 --> p4["pre-push: no unaudited API edit"]
@@ -27,6 +28,22 @@ flowchart TD
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["smoke.yml: healthz + headers + liveness"]
 ```
+
+## Before you open a PR
+
+The pre-PR pass is the author's job, and its purpose is to leave the branch already at review standard so claude-review confirms the change instead of discovering it. Over 86 PRs the review bot raised 445 findings; the ones below are the classes that recur, with the check the author runs and the gate that holds it. A row with no gate is not an oversight: no mechanical gate in this repo can hold it, so the author holds it.
+
+| What the author checks | How | Held by |
+|---|---|---|
+| Docs and the ARCHITECTURE manifest are updated for every changed path and every file whose role changed | Walk the diff file by file; for each path, find the doc that names it and confirm that doc is updated in the same branch | `pnpm check:pre-pr` (doc path that does not exist: hard; doc drift: warn) plus `pnpm check:doc-drift` for the ARCHITECTURE tree |
+| Literals are extracted rather than repeated | Any string or number that lands in two changed files gets one shared home | `pnpm check:pre-pr` (duplicated literal: warn) |
+| Guards fail closed | For every guard you touched, invert the condition and confirm the gate goes red, not green | none: no gate can prove that a guard fails closed |
+| The PR body and the commit messages match the diff | Re-read the body and each message against the diff; every claim names a file the diff really touches | `pnpm check:pre-pr` holds the commit-SHA half (a cited SHA must be an ancestor of HEAD: hard); the rest is review |
+| No dead code is left behind | Every symbol you added is reachable, and every symbol you stopped using is deleted | none: TypeScript and Biome catch unused locals, not unreachable exports |
+| Accessibility: names, focus and targets | Every interactive element has an accessible name, a visible focus ring, and a target big enough to hit | axe-core and Lighthouse a11y = 100 hold the rendered result; the naming, focus and target judgement is review |
+| Tests assert behaviour and fail without the fix | For each test you added, revert the fix and watch the test go red | `no-source-grep.test.ts` holds the assertion style; whether the test fails without the fix is review |
+
+The mechanical half runs on its own: `pnpm check:pre-pr` runs in the pre-push hook and in the `quality-fast` CI job, so a stale SHA, a net-new em dash, or a doc path that does not exist is caught before the PR exists. The base ref is `PR_BASE`, default `origin/main`; CI passes the PR base SHA. The gate skips when HEAD equals the base and the tree is clean, so `main` itself is unaffected.
 
 ## Code review
 

@@ -242,6 +242,8 @@ tests/visual/                         # visual-regression snapshots
 tests/mocks/                          # shared test mocks
 
 scripts/ask-eval.ts                   # ask eval harness — correctness, jailbreak, cost
+scripts/check-doc-drift.mjs           # CI gate: the directory tree below matches disk
+scripts/check-pre-pr.mjs              # pre-PR gate: stale SHA, dashes, missing doc paths
 
 ARCHITECTURE.md                       # this doc
 DECISIONS.md                          # ADR-lite, running log

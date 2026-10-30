@@ -37,6 +37,7 @@
     "check:harness-size": "node scripts/check-harness-size.mjs",
     "check:section-order": "node scripts/check-section-order.mjs",
     "check:doc-drift": "node scripts/check-doc-drift.mjs",
+    "check:pre-pr": "node scripts/check-pre-pr.mjs",
     "check:detect-changes-paths": "node scripts/check-detect-changes-paths.mjs",
     "lint:contrast": "node scripts/contrast-check.mjs",
     "lint:css-tokens": "tsx scripts/lint-css-tokens.ts",
