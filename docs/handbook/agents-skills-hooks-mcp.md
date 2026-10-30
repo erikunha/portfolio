@@ -55,7 +55,7 @@ The properties they enforced are now either held elsewhere or held by nobody, an
 
 - **Allowed skills** (no prompt): enumerated in `permissions.allow` in `.claude/settings.json` as `Skill(...)` entries. Read them there rather than from a copy here — a second list is the one that drifts, and this one had.
 - **Denied Bash**: every `fallow fix` form (belt-and-suspenders over `bash-guard.sh`).
-- **defaultMode**: `acceptEdits`.
+- **defaultMode**: the project settings set no `defaultMode`, so Claude Code inherits the user's global permission mode.
 
 ## MCP servers
 
