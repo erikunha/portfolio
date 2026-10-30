@@ -16,7 +16,6 @@ vi.mock('next/headers', () => ({
 
 import { GitLogContent } from '@/components/sections/GitLogSection';
 import { GuitarContent } from '@/components/sections/GuitarSection';
-import { ManPageContent } from '@/components/sections/ManPageSection';
 import { ProjectsContent } from '@/components/sections/ProjectsSection';
 import { projects } from '@/content/projects';
 
@@ -63,11 +62,5 @@ describe('responsive section mobile variants', () => {
     expect(html).toContain('data-testid="career-log"');
     expect(html).not.toContain('career-mobile');
     expect(html).not.toContain('career-desktop');
-  });
-
-  it('ManPageContent emits the mobile variant when UA is mobile', async () => {
-    const el = await ManPageContent();
-    const html = renderToStaticMarkup(el);
-    expect(html).toContain('data-testid="manpage-mobile"');
   });
 });

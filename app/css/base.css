@@ -232,17 +232,11 @@
     #sec-live-metrics {
       order: 3;
     }
-    #sec-man-page {
-      order: 4;
-    }
     #sec-projects {
       order: 6;
     }
     #sec-git-log {
       order: 7;
-    }
-    #sec-sys-health {
-      order: 9;
     }
     #sec-guitar {
       order: 12;

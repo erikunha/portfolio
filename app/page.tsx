@@ -9,10 +9,8 @@ import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
 import { Hero } from '@/components/sections/Hero';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
-import { ManPageSection } from '@/components/sections/ManPageSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { ShellSection } from '@/components/sections/ShellSection';
-import { SysHealthSection } from '@/components/sections/SysHealthSection';
 import { BreakpointProvider } from '@/lib/use-breakpoint.client';
 
 export default function Home() {
@@ -37,12 +35,6 @@ export default function Home() {
           </ErrorBoundary>
           <ErrorBoundary>
             <GitLogSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <ManPageSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <SysHealthSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <HottestTakesSection defer />

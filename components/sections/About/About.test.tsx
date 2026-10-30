@@ -85,7 +85,7 @@ describe('About r106 composition', () => {
     render(<About />);
     expect(screen.queryByText("$ git tag --list 'community/*'")).toBeNull();
     expect(screen.queryByRole('link', { name: /community\/DEVOPSDAYS_CAMPINAS/ })).toBeNull();
-    expect(screen.queryByText(/curated 8 talks/)).toBeNull();
+    expect(screen.queryByText(/curated \d+(\+)? talks/)).toBeNull();
     expect(screen.queryByText(/open to CFP submissions for 2027/)).toBeNull();
     expect(screen.queryByRole('link', { name: /program/ })).toBeNull();
   });

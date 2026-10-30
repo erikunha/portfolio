@@ -47,7 +47,7 @@ The dynamic (per-request) sections are the CLS risk, because their `<Suspense>` 
 - **Per-section fallback choice.** Most dynamic sections prerender their _desktop_ variant as the fallback.
 - **Measured fallbacks.** ASK and each PSI strategy have independent Suspense boundaries. Their loading states retain the metric tiles or score rows. One slow source does not block the other groups.
 - **Responsive guitar presentation.** `GuitarSection` renders one RSC tree across viewports. CSS changes its layout without a desktop/mobile swap or the associated layout shift.
-- **Mobile section ordering** uses CSS flex `order` (the `#sec-*` map in `base.css`). `check:section-order` requires order rules for top-level sections and exempts the declared nested anchors. An unordered top-level section defaults to `order:0` and can jump to the top.
+- **Mobile section ordering** uses CSS flex `order` (the `#sec-*` map in `base.css`). `check:section-order` requires order rules for top-level sections and exempts the declared nested anchors. An unordered top-level section defaults to `order:0` and can jump to the top. The same script also fails when a `#sec-*` selector in `app/css` matches an id no source renders, so a deleted section cannot leave dead rules behind.
 - **Both nav variants in the DOM**, toggled by CSS at 768px, to avoid a hydration-driven reflow.
 
 ## Live performance, self-reported
@@ -72,7 +72,11 @@ Target: WCAG 2.2 AA. Lighthouse accessibility and axe checks enforce their confi
 
 Per-component behavioral a11y tests live alongside components. The axe gate covers the home, contact errors, design-system routes and both links locales. Every scan includes `wcag22aa`; page scans also retain `wcag2a`, `wcag2aa` and `wcag21aa`, while contact errors retain `wcag2a` and `wcag2aa`. The CRT effects are all `aria-hidden` + `pointer-events:none`, so the decorative layer is invisible to assistive tech.
 
-The Profile manual and the About Responsibilities and README code sample scroll containers use `tabIndex={0}` and expose the `region` role (About uses named semantic `<section>` elements). Each has its own accessible name from the `SCROLL_REGION_LABELS` map in `content/section-labels.ts`, kept distinct from the parent section's name so no two landmarks share a name. Keyboard users can tab into these containers and scroll with arrow keys. `base.css` applies a `:focus-visible` outline using `--color-primary-500` to elements with `tabindex="0"`. Responsibilities and retry code belong to the About section; the label validation maps both regions to that parent. Responsibilities keeps its wrapping rows and allows horizontal scrolling if content still overflows. The interactive shell's scrollable log already has its own tab stop and accessible name. The footer's scrollable connection table contains keyboard-focusable links.
+The section scroll containers listed below use `tabIndex={0}` and expose the `region` role (About uses named semantic `<section>` elements). Each has its own accessible name from the `SCROLL_REGION_LABELS` map in `content/section-labels.ts`, kept distinct from the parent section's name so no two landmarks share a name. Keyboard users can tab into these containers and scroll with arrow keys. `base.css` applies a `:focus-visible` outline using `--color-primary-500` to elements with `tabindex="0"`. The live scroll regions, with the accessible name each one exposes:
+- `sec-responsibilities`: Responsibilities (scrollable)
+- `sec-readme`: README code
+
+Responsibilities and retry code belong to the About section; the label validation maps both regions to that parent. Responsibilities keeps its wrapping rows and allows horizontal scrolling if content still overflows. The interactive shell's scrollable log already has its own tab stop and accessible name. The footer's scrollable connection table contains keyboard-focusable links. The list above is checked against `SCROLL_REGION_LABELS` by `__tests__/scroll-regions.test.tsx`, so a region the code drops cannot stay in this doc and a new one cannot go undocumented.
 
 ## Verification scope
 

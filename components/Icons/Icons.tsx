@@ -23,16 +23,6 @@ export function IconReadme() {
   );
 }
 
-export function IconManPage() {
-  return (
-    <svg {...baseProps}>
-      <path d="M6 3h9l4 4v14H6z" />
-      <path d="M14 3v5h5" />
-      <path d="M9 12h7M9 15h7M9 18h5" />
-    </svg>
-  );
-}
-
 export function IconProjects() {
   return (
     <svg {...baseProps}>
@@ -46,14 +36,6 @@ export function IconGitLog() {
     <svg {...baseProps}>
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5l3 2" />
-    </svg>
-  );
-}
-
-export function IconSysHealth() {
-  return (
-    <svg {...baseProps}>
-      <path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z" />
     </svg>
   );
 }

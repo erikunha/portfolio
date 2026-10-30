@@ -35,7 +35,6 @@ Every section of the page is driven by a typed module in `content/`, and those t
 | Terminal surface               | Real-world meaning                                       | Content module        | Entity                                 |
 | ------------------------------ | -------------------------------------------------------- | --------------------- | -------------------------------------- |
 | About panels                   | Positioning, Now rows, stack and retry code              | `about.ts`            | `AboutContent`                         |
-| `man erik(1)`                  | Capabilities + "known bugs" (honest weaknesses)          | `man-page.ts`         | `ManPage`                              |
 | `git log ~/career`             | Career timeline with nested tag groups                   | `git-log.ts`          | `GitCommit[]` (`type: career｜life`)   |
 | `LS -LA ./PROJECTS`            | Nine projects with shared desktop/mobile content         | `projects.ts`         | `Project[]`                            |
 | `PERF_RECEIPTS --HARD-NUMBERS` | Six impact receipts nested under Projects                | `perf-receipts.ts`    | `projectReceipts` from `PerfReceipt[]` |
@@ -48,7 +47,6 @@ Every section of the page is driven by a typed module in `content/`, and those t
 | `cat ~/.guitar_rig`            | Hobby (guitar signal chain)                              | `guitar-rig.ts`       | `GuitarRig`                            |
 | `./mix --live`                 | Hobby (DAW mixer, interactive, inside the guitar module) | `daw-mixer.ts`        | `DawMixer`                             |
 | `cat ~/.unknowns`              | Learning and specialization lists inside Opinions        | `unknowns.ts`         | `Unknowns`                             |
-| `sys_health`                   | Playful self-metrics                                     | `sys-health.ts`       | `SysStat[]`                            |
 
 Opinions renders four ordered home takes and both Unknowns lists in one deferred module.
 The design-system take renders at `/design-system#opinion-07`; `placement` selects its surface.
