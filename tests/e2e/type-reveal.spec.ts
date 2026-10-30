@@ -72,9 +72,7 @@ test.describe('type reveal', () => {
             const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight);
             const wraps = el.getClientRects().length > 1;
             const hasExtras = el.querySelector('svg, .sr-only, [aria-hidden="true"]') !== null;
-            const hasPseudo = ['::before', '::after'].some(
-              (pseudo) => pseudo === '::before' && getComputedStyle(el, pseudo).content !== 'none',
-            );
+            const hasPseudo = getComputedStyle(el, '::before').content !== 'none';
             return (
               hasExtras ||
               hasPseudo ||

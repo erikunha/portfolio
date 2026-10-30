@@ -461,5 +461,15 @@
       animation: type-reveal-caret var(--type-reveal-caret-blink) step-end
         var(--type-reveal-caret-blinks) both;
     }
+
+    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal].is-static {
+      clip-path: none;
+      animation: none;
+    }
+
+    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal].is-static::after {
+      animation: none;
+      opacity: 0;
+    }
   }
 }

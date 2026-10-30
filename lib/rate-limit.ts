@@ -1,6 +1,7 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { log } from '@/lib/log';
+import { ASK_MAX_OUTPUT_TOKENS } from './ask/limits';
 
 let _redis: Redis | undefined;
 let _askLimit: Ratelimit | undefined;
@@ -86,7 +87,6 @@ const MONTHLY_TOKEN_BUDGET = 3_000_000;
 const BUDGET_WINDOW_S = 60 * 60 * 24 * 32;
 
 const RESERVED_INPUT_TOKENS = 2200;
-const ASK_MAX_OUTPUT_TOKENS = 512;
 
 export type BudgetStore = {
   capacity: number;

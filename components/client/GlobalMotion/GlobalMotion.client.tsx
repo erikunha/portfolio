@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { ErrorBoundary } from '../../ErrorBoundary';
 import { MatrixRainLazy } from '../../responsive/MatrixRain';
 import { TypeReveal } from '../TypeReveal';
@@ -10,16 +10,17 @@ const RAIN_MOBILE = { fontSize: 14, speed: 0.6, opacity: 0.22 } as const;
 const RAIN_DESKTOP = { fontSize: 16, speed: 0.7, opacity: 0.28 } as const;
 const RAIN_LAYER = 0;
 
-export function GlobalMotion() {
-  const [isMobile, setIsMobile] = useState(false);
+function subscribeMobile(onChange: () => void) {
+  const query = window.matchMedia(MOBILE_QUERY);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+}
 
-  useEffect(() => {
-    const query = window.matchMedia(MOBILE_QUERY);
-    const sync = () => setIsMobile(query.matches);
-    sync();
-    query.addEventListener('change', sync);
-    return () => query.removeEventListener('change', sync);
-  }, []);
+const readMobile = () => window.matchMedia(MOBILE_QUERY).matches;
+const readMobileOnServer = () => false;
+
+export function GlobalMotion() {
+  const isMobile = useSyncExternalStore(subscribeMobile, readMobile, readMobileOnServer);
 
   const rain = isMobile ? RAIN_MOBILE : RAIN_DESKTOP;
 
