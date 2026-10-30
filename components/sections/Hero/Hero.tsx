@@ -1,7 +1,7 @@
 import { HeroStats } from '@/components/HeroStats';
-import { heroContent as c, heroAuthorization, heroTagline } from '@/content/hero';
+import { heroContent as c, heroTagline } from '@/content/hero';
 import { profile, profileWorkingLanguageLine } from '@/content/profile';
-import { Badge, Button } from '@/design-system';
+import { Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
 
@@ -44,9 +44,6 @@ function HeroIdentity({ primary }: { primary: boolean }) {
           {c.languageLabel} {profileWorkingLanguageLine}
         </span>
       </p>
-      <div className="hero-availability">
-        <Badge variant="dot">{heroAuthorization}</Badge>
-      </div>
       <HeroStats stats={c.stats} label={c.statsLabel} />
       <div className="hero-actions" data-testid="hero-ctas">
         <Button

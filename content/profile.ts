@@ -46,8 +46,16 @@ export const profile: Profile = ProfileSchema.parse({
 
 export const profileLocation = `${profile.country} · ${profile.timezone} · ${profile.availability}`;
 const WORKING_LANGUAGE_LEVELS: readonly string[] = ['native', 'C2', 'C1'];
+const LANGUAGE_SEPARATOR = ' · ';
 const languageLine = (languages: typeof profile.languages) =>
-  languages.map((language) => `${language.code.toUpperCase()} ${language.level}`).join(' · ');
+  languages
+    .map((language) => `${language.code.toUpperCase()} ${language.level}`)
+    .join(LANGUAGE_SEPARATOR);
+
+export const formatLanguages = (languages: typeof profile.languages) =>
+  languages
+    .map((language) => `${language.code.toUpperCase()} (${language.level})`)
+    .join(LANGUAGE_SEPARATOR);
 
 export const profileLanguageLine = languageLine(profile.languages);
 export const profileWorkingLanguageLine = languageLine(

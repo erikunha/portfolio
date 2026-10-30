@@ -284,6 +284,7 @@ export function ContactForm() {
           </button>
           <p className="contact-waiting">{contactCopy.form.waiting}</p>
         </div>
+        <p className="contact-privacy">{contactCopy.form.privacy}</p>
       </form>
     </ContactShell>
   );

@@ -77,6 +77,14 @@ describe('ContactForm accessibility', () => {
     expect(submitRow?.getAttribute('aria-live')).toBe('polite');
   });
 
+  it('states how long a message is kept before it is deleted', async () => {
+    const container = await renderForm();
+    const privacy = container.querySelector('.contact-privacy');
+    expect(privacy?.textContent).toBe(
+      'Kept 90 days so Erik can reply, then deleted. IP hashed for rate limiting. Never shared.',
+    );
+  });
+
   it('keyboard form submission triggers the request and announces errors via role="alert"', async () => {
     const fetchMock = vi.fn(
       async () =>

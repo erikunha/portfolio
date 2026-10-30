@@ -7,7 +7,6 @@ import { GlobalMotion } from '@/components/client/GlobalMotion';
 import { errorsContent } from '@/content/errors';
 import { profile, profileMetaDescription, profilePageTitle } from '@/content/profile';
 import { personSchema } from '@/content/seo';
-import { workAuthorizationSummary } from '@/content/visa';
 
 const mono = localFont({
   src: [
@@ -31,7 +30,6 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.erikunha.dev'),
   title: profilePageTitle,
   description: profileMetaDescription,
-  other: { 'work-authorization': workAuthorizationSummary },
   keywords: [
     profile.title,
     'Applied AI',
