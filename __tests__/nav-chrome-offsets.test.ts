@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { readComponentsCss } from './helpers/components-css';
+import { readBaseCss, readComponentsCss } from './helpers/components-css';
 
 // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate CSS cascade/media-query resolution
 const componentsCss = readComponentsCss();
+// behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate CSS cascade/media-query resolution
+const baseCss = readBaseCss();
 
 function ruleBodies(selectorPattern: RegExp): string[] {
   return Array.from(componentsCss.matchAll(/([^{}]+)\{([^{}]*)\}/g))
@@ -16,8 +18,28 @@ function ruleSelectors(selectorPattern: RegExp): string[] {
     .map((match) => match[1]?.trim() ?? '');
 }
 
+function baseRuleBody(selector: string): string | undefined {
+  const match = baseCss.match(new RegExp(`(?:^|\\})\\s*${selector}\\s*\\{([^{}]*)\\}`));
+  return match?.[1];
+}
+
 describe('drawer scroll lock', () => {
-  it('does not reserve a scrollbar gutter the unlocked page does not have', () => {
+  it('reserves the scrollbar gutter on the page root in every scroll state', () => {
+    const body = baseRuleBody('html');
+    expect(
+      body,
+      'app/css/base.css: expected an html rule that reserves the scrollbar gutter.',
+    ).toBeDefined();
+    expect(
+      body ?? '',
+      'app/css/base.css: the html rule must set scrollbar-gutter: stable, because the drawer ' +
+        'scroll lock replaces the page scrollbar with overflow: hidden. Without a gutter reserved ' +
+        'in the unlocked state too, locking the page removes the scrollbar on platforms with ' +
+        'classic scrollbars and the centred column jumps sideways.',
+    ).toContain('scrollbar-gutter: stable');
+  });
+
+  it('locks the overflow without touching the gutter the page root already reserves', () => {
     const bodies = ruleBodies(/html\[data-scroll-locked\]/);
     expect(
       bodies.length,
@@ -27,9 +49,10 @@ describe('drawer scroll lock', () => {
       expect(body).toContain('overflow: hidden');
       expect(
         body,
-        'app/css/components-nav.css: the scroll lock must not set scrollbar-gutter, because a ' +
-          'reserved gutter shifts the centred page while the drawer is open on platforms with ' +
-          'overlay scrollbars.',
+        'app/css/components-nav.css: the scroll lock must not set scrollbar-gutter, because the ' +
+          'page root already reserves the gutter in both scroll states. A gutter scoped to the ' +
+          'lock reserves it only while the drawer is open and shifts the centred column on ' +
+          'platforms with overlay scrollbars.',
       ).not.toContain('scrollbar-gutter');
     }
   });

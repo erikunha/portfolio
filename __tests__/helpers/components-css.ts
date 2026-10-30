@@ -5,6 +5,7 @@ const CSS_DIR = path.resolve(__dirname, '../../app/css');
 const GLOBALS_CSS = path.resolve(__dirname, '../../app/globals.css');
 const PARTIAL = /^components-.+\.css$/;
 const PARTIAL_IMPORT = /@import\s+"\.\/css\/(components-[^"]+\.css)";/g;
+const BASE_CSS = 'base.css';
 
 export function componentsCssFiles(): string[] {
   // behavioral-test-allow: reads the shipped stylesheet entrypoint; jsdom cannot evaluate CSS cascade order
@@ -27,4 +28,17 @@ export function readComponentsCss(): string {
   return componentsCssFiles()
     .map((f) => readFileSync(path.join(CSS_DIR, f), 'utf-8'))
     .join('\n');
+}
+
+export function readBaseCss(): string {
+  // behavioral-test-allow: reads the shipped stylesheet entrypoint; jsdom cannot evaluate CSS cascade order
+  const globals = readFileSync(GLOBALS_CSS, 'utf-8');
+  if (!globals.includes(`./css/${BASE_CSS}`)) {
+    throw new Error(
+      `app/globals.css does not import app/css/${BASE_CSS}. An unimported partial is never shipped, ` +
+        'so a stylesheet assertion that reads it would pass against CSS the browser never loads.',
+    );
+  }
+  // behavioral-test-allow: reads the shipped stylesheet partial; jsdom cannot evaluate CSS cascade/media-query resolution
+  return readFileSync(path.join(CSS_DIR, BASE_CSS), 'utf-8');
 }

@@ -131,7 +131,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 Static section bodies are Server Components. `BreakpointProvider` and `AppShell` are client boundaries that receive server-rendered children. `SectionNavigationProvider` wraps the shell chrome so the INDEX trigger, the drawer, the dock and the position meter share one current-section state. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
 
-The section menu is a modal drawer at every width, opened only by the `☰ INDEX` trigger (left of the brand) or the dock MENU. The drawer header contains the title and close control. Closing the drawer returns focus to the control that opened it, or to the first rendered `INDEX` trigger when a viewport change left that control unrendered.
+The section menu is a modal drawer at every width, opened by the `☰ INDEX` trigger (left of the brand), the dock MENU or the `Ctrl` / `Cmd` + `K` shortcut. The drawer header contains the title and close control. Closing the drawer returns focus to the control that opened it, or to the first rendered `INDEX` trigger when there is no such control or a viewport change left it unrendered.
 
 ### Client islands
 

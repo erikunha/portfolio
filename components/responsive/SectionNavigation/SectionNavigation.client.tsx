@@ -39,7 +39,7 @@ const INDEX_TRIGGER_SELECTOR = `.${INDEX_TRIGGER_CLASS}`;
 type NavigationState = {
   currentId: string;
   drawerOpen: boolean;
-  openDrawer: (trigger: HTMLElement) => void;
+  openDrawer: (trigger: HTMLElement | null) => void;
   closeDrawer: (restoreFocus: boolean) => void;
   settleDrawer: () => void;
   jump: (event: MouseEvent<HTMLElement>, id: string) => void;
@@ -163,7 +163,7 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
     return () => observer.disconnect();
   }, []);
 
-  const openDrawer = useCallback((trigger: HTMLElement) => {
+  const openDrawer = useCallback((trigger: HTMLElement | null) => {
     triggerRef.current = trigger;
     restoreFocusRef.current = true;
     drawerOpenRef.current = true;
@@ -226,7 +226,8 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
       if (drawerOpenRef.current) return;
       event.preventDefault();
       const active = document.activeElement;
-      openDrawer(active instanceof HTMLElement ? active : document.body);
+      const opener = active instanceof HTMLElement && active !== document.body ? active : null;
+      openDrawer(opener);
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);

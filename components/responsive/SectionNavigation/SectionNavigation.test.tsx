@@ -396,7 +396,7 @@ describe('SectionNavigation', () => {
       expect(panel().classList.contains('is-open')).toBe(false);
     });
 
-    it('opens as a modal dialog, isolates the background and focuses the close control', () => {
+    it('opens as a modal dialog, isolates the background and focuses the current destination', () => {
       render(<Page />);
       open();
       expect(panel().getAttribute('role')).toBe('dialog');
@@ -406,7 +406,10 @@ describe('SectionNavigation', () => {
       expect(document.getElementById('main-content')?.hasAttribute('inert')).toBe(true);
       expect(panel().closest('[inert]')).toBeNull();
       expect(document.querySelector('.menu-scrim')?.closest('[inert]')).toBeNull();
-      expect(document.activeElement?.getAttribute('aria-current')).toBeTruthy();
+      expect(
+        document.activeElement,
+        'focus lands on the destination marked current, so the drawer announces where it opened',
+      ).toBe(navLink('Home'));
     });
 
     it('closes on Escape, restores the background and returns focus to the trigger', () => {
@@ -430,6 +433,20 @@ describe('SectionNavigation', () => {
       expect(
         document.activeElement,
         'focus must land on a rendered INDEX trigger when the element that opened the drawer is not rendered',
+      ).toBe(screen.getByRole('button', { name: new RegExp(NAVIGATION.copy.indexLabel) }));
+    });
+
+    it('returns focus to the INDEX trigger when the drawer was opened from the keyboard shortcut', () => {
+      render(<Page withIndexTrigger />);
+      fireEvent.keyDown(document, { key: 'k', metaKey: true });
+      expect(panel().classList.contains('is-open')).toBe(true);
+
+      fireEvent.keyDown(document, { key: 'Escape' });
+
+      expect(
+        document.activeElement,
+        'focus must land on a control the visitor can see, not on the document body, because the ' +
+          'shortcut has no element of its own to return focus to',
       ).toBe(screen.getByRole('button', { name: new RegExp(NAVIGATION.copy.indexLabel) }));
     });
 

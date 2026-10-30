@@ -51,6 +51,13 @@ tsconfig.tsbuildinfo
 # leftover inbox from the learning loop deleted 2026-07-27 — no writer remains
 .review-learnings.md
 
+# review daemon scratch: the contract copy, the commit message, the new file
+# list and the gate's own report. They carry thread ids and machine paths,
+# so a broad add must never be able to sweep them into a commit.
+.autofix-*
+.self-review.md
+.self-review-answers.md
+
 
 # git worktrees (isolated workspaces for parallel branch work)
 .worktrees/
