@@ -898,3 +898,79 @@ describe('InteractiveShell r106 controls', () => {
     expect(notice?.textContent).toContain('can be wrong');
   });
 });
+
+describe('shell input hint states', () => {
+  let mounted: MountedClient;
+
+  beforeEach(() => {
+    vi.resetModules();
+    mobileViewport.value = false;
+  });
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  async function renderShell(): Promise<HTMLElement> {
+    const { InteractiveShell } = await import('./InteractiveShell');
+    mounted = await mountClient(createElement(InteractiveShell));
+    return mounted.container;
+  }
+
+  it('keeps a visible hint while the empty input holds focus', async () => {
+    const { shellUi } = await import('@/content/shell-ui');
+    const container = await renderShell();
+    const input = shellInput(container);
+
+    const idleHint = container.querySelector('[data-testid="shell-placeholder"]');
+    expect(idleHint, 'the idle shell must offer a suggestion').not.toBeNull();
+    expect(
+      idleHint?.querySelector('[data-testid="shell-cursor"]'),
+      'the idle hint runs the typing animation',
+    ).not.toBeNull();
+
+    await act(async () => {
+      input.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    });
+
+    const focusedHint = container.querySelector('[data-testid="shell-placeholder"]');
+    expect(focusedHint, 'a focused empty input must keep a visible hint').not.toBeNull();
+    expect(focusedHint?.textContent).toBe(shellUi.placeholder);
+    expect(
+      focusedHint?.querySelector('[data-testid="shell-cursor"]'),
+      'the typing animation must not run while the input holds focus',
+    ).toBeNull();
+  });
+
+  it('keeps a visible hint while an answer streams', async () => {
+    const { shellUi } = await import('@/content/shell-ui');
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        await gate;
+        return new Response('answer', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+      }),
+    );
+
+    const container = await renderShell();
+    await submitQuestion(container, 'a question');
+    await flushMicrotasks();
+
+    const hint = container.querySelector('[data-testid="shell-placeholder"]');
+    expect(hint, 'the empty input must keep a visible hint while an answer streams').not.toBeNull();
+    expect(hint?.textContent).toBe(shellUi.placeholder);
+    expect(
+      hint?.querySelector('[data-testid="shell-cursor"]'),
+      'the typing animation must not run while an answer streams',
+    ).toBeNull();
+
+    release();
+    await flushMicrotasks();
+  });
+});

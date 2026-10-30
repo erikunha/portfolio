@@ -205,7 +205,7 @@ const profileFixture = {
 const educationFixtures = [
   {
     id: 'MBA_AI_ENG',
-    degree: 'MBA, AI Engineering',
+    degree: 'MBA (Lato Sensu), AI Engineering, Machine Learning and Deep Learning',
     institution: 'Instituto Infnet',
     location: 'Brazil',
     studyMode: 'online',
@@ -272,6 +272,17 @@ describe('canonical profile and education', () => {
     expect(communityEvent.statusLine).toBe(
       'open to CFP submissions for 2027 · open to volunteer / organizer roles.',
     );
+  });
+
+  it('publishes one community event link and rejects one that is not an absolute URL', async () => {
+    const { CommunityEventSchema } = await import('./schemas');
+    const { communityEvent } = await import('./community');
+    expect(CommunityEventSchema.parse(communityEvent)).toEqual(communityEvent);
+    const invalid = { ...communityEvent, link: { ...communityEvent.link, href: 'devopsdays.org' } };
+    expect(
+      CommunityEventSchema.safeParse(invalid).success,
+      'the community link must be an absolute URL: Career renders it as an href and the JSON-LD publishes it as the organization url, so a relative value would ship a broken link',
+    ).toBe(false);
   });
 
   it('rejects malformed expected months and reversed education dates', async () => {

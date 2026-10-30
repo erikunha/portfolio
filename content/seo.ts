@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { communityEvent } from './community';
+import { communityEvent, communityTalksSentence } from './community';
 import { profile, profileSummary } from './profile';
 import { social } from './social';
 import { workAuthorizationProse } from './visa';
@@ -147,9 +147,8 @@ export const personSchema = {
   memberOf: {
     '@type': 'Organization',
     name: 'DevOpsDays Campinas',
-    url: communityEvent.links[0]?.href,
-    description:
-      'Conference organizer, 2024: speaker sourcing and program curation, 8 talks across DevOps, platform engineering, MLOps, and FinOps',
+    url: communityEvent.link.href,
+    description: `Conference organizer, ${communityEvent.year}: ${communityTalksSentence}`,
   },
   seeks: {
     '@type': 'Demand',

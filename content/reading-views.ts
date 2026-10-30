@@ -195,7 +195,7 @@ export const cvDocument = CvDocumentSchema.parse({
     heading: [spaced(communityEvent.name), communityEvent.year, communityEvent.role].join(
       STACK_SEPARATOR,
     ),
-    href: communityEvent.links[0]?.href,
+    href: communityEvent.link.href,
     bullets: communityEvent.bullets.map(toSentence),
     status: toSentence(communityEvent.statusLine),
   },

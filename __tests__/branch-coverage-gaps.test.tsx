@@ -163,29 +163,30 @@ describe('GlobalMotion — mobile Matrix Rain settings', () => {
   });
 });
 
-describe('ManPageContent — isMobile=true branch (renders ManPageMobile)', () => {
-  afterEach(() => {
-    vi.resetModules();
-  });
+describe('FooterLazy — IntersectionObserver undefined guard (branch lines 44-47)', () => {
+  let mounted: MountedClient;
 
-  it('renders ManPageMobile when getIsMobile returns true', async () => {
+  beforeEach(() => {
     vi.resetModules();
-    vi.doMock('@/lib/ua', () => ({
-      getIsMobile: vi.fn().mockResolvedValue(true),
+    vi.stubGlobal('IntersectionObserver', undefined);
+    vi.doMock('next/dynamic', () => ({
+      default: () => () => null,
     }));
-    const { ManPageContent } = await import('@/components/sections/ManPageSection/ManPageSection');
-    const element = await ManPageContent();
-    const html = renderToStaticMarkup(element);
-    expect(html).toContain('manpage-mobile');
   });
-});
 
-describe('ManPageSection — Suspense fallback branch', () => {
-  it('renders the desktop fallback synchronously via Suspense', async () => {
-    const { createElement: ce } = await import('react');
-    const { ManPageSection } = await import('@/components/sections/ManPageSection/ManPageSection');
-    const html = renderToStaticMarkup(ce(ManPageSection));
-    expect(html).toContain('NAME');
+  afterEach(() => {
+    mounted?.unmount();
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  it('mounts FooterLazy immediately when IntersectionObserver is undefined', async () => {
+    const { flushMicrotasks } = await import('./helpers/render');
+    const { FooterLazy } = await import('@/components/sections/Footer');
+    mounted = await mountClient(createElement(FooterLazy));
+    await flushMicrotasks();
+    const sentinel = mounted.container.querySelector('[data-testid="footer-lazy-sentinel"]');
+    expect(sentinel).toBeNull();
   });
 });
 

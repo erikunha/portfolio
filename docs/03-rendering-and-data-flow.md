@@ -45,7 +45,7 @@ The user-facing routes are `/`, `/summary`, `/cv`, `/links` and `/links/en`, alo
 
 `content/section-registry.ts` defines nine navigation destinations: Home (`bio`), About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, and Contact. It supplies aliases, icons, screen-reader labels and navigation order. `content/section-labels.ts` adds labels for supporting modules.
 
-The JSX order in `app/page.tsx` is Hero, About, Shell, Measured, Projects, GitLog, ManPage, SysHealth, HottestTakes (with Unknowns nested inside), Guitar, DawMixer and Contact (including work authorization). Footer follows `PageMain` as its sibling. CSS mobile ordering is a separate map in `app/css/base.css`.
+The JSX order in `app/page.tsx` is Hero, About, Shell, Measured, Projects, GitLog, HottestTakes (with Unknowns nested inside), Guitar, DawMixer and Contact (including work authorization). Footer follows `PageMain` as its sibling. CSS mobile ordering is a separate map in `app/css/base.css`.
 
 About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code are named keyboard scroll regions inside About. Projects contains its receipts. Career contains certification, education and community tag groups. Measured contains independent ASK, desktop PSI and mobile PSI reads. These nested groups do not become separate navigation destinations.
 
@@ -78,7 +78,7 @@ flowchart LR
     px --> shell["Prerendered shell:<br/>AppShell chrome + Hero (outside Suspense) + above-fold sections"]
     shell --> stream["Server streams"]
     stream --> susp["Suspense boundaries resolve per-request"]
-    susp --> dyn["UA-selected ManPage variant<br/>and independent ASK / PSI data reads"]
+    susp --> dyn["Independent ASK / PSI data reads"]
     dyn --> html2["Streamed HTML"]
     html2 --> hydrate["Browser hydrates chrome and client islands"]
     hydrate --> lazy["Contact / Shell: next/dynamic, ssr:false<br/>Footer islands mount directly"]
@@ -86,15 +86,15 @@ flowchart LR
 
 **Static vs dynamic, concretely:**
 - **Static (prerendered):** `AppShell` chrome except the client-only MatrixRain canvas, `Hero` (outside Suspense so LCP never waits), `About`, `Shell`, the responsive `Guitar` presentation, Projects with its attached receipts, `DawMixer`, Contact with its work-authorization table, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid. `DawMixer` uses one synchronous RSC layout at every width; its interactive islands hydrate on phones too. The Visa table renders once and CSS adapts it.
-- **UA-selected variants:** only `ManPage` wraps an async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`). Its fallback is prerendered; the selected variant streams per request.
+- **UA-selected variants:** none on `/`. `getIsMobile()` (`lib/ua.ts`, which reads `headers()`) is available for a future dual-variant section.
 - **Measured data:** `AiMetricsSection` renders the `sec-live-metrics` module. It composes `AiMetricsData` and `LivePerfSection`, with independent Suspense boundaries for ASK, desktop PSI and mobile PSI. Each fallback retains its metric layout and shows a loading state. Receipts remain inside Projects rather than a separate module.
-- **The dual-variant pattern** (e.g. `ManPageSection.tsx`):
+- **The dual-variant pattern** (available, unused on `/`):
 
   ```
   <Module><Suspense fallback={<Desktop/>}><AsyncInner/></Suspense></Module>
   ```
 
-  `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. ManPage uses its desktop variant as the fallback. `GuitarSection`, `DawMixerSection` and `VisaContent` use one responsive presentation without this UA boundary or variant swap.
+  `AsyncInner` awaits `getIsMobile()` and renders a desktop or mobile variant, with the desktop variant as the fallback. `GuitarSection`, `DawMixerSection` and `VisaContent` use one responsive presentation without this UA boundary or variant swap.
 - **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` (defers render cost, not JS). Most use `Module`; Career applies the same attributes in its own wrapper.
 - **`next/dynamic` boundaries:** `ContactFormLazy` and `InteractiveShellLazy` use `ssr: false` with accessible loading placeholders. `MatrixRainLazy` loads from `AppShell` with `ssr: false` as a decorative fixed overlay behind `main`; late hydration cannot shift layout. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy.client.tsx` directly re-exports session counters and halt/reboot controls from `Footer.client`, without a dynamic import; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 

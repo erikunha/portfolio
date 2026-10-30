@@ -8,7 +8,7 @@ Four directories, four roles. The directory tells you the layer:
 
 | Directory                     | Role                            | Ships JS?                                 | Example                                         |
 | ----------------------------- | ------------------------------- | ----------------------------------------- | ----------------------------------------------- |
-| `components/sections/**`      | Page sections and nested groups | RSC, with client descendants where needed | `About`, `ManPageSection`                       |
+| `components/sections/**`      | Page sections and nested groups | RSC, with client descendants where needed | `About`, `ProjectsSection`                      |
 | `components/client/**`        | Interactive islands             | Yes                                       | `InteractiveShell`, `ContactForm`, `DawMixer/*` |
 | `components/responsive/**`    | Viewport chrome                 | Yes (except `Module`)                     | `MatrixRain`, `Dock`, `CRTOverlay`              |
 | `design-system/components/**` | Reusable primitives             | Mostly No (RSC)                           | `Badge`, `Button`, `TerminalPanel`              |

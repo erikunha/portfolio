@@ -93,6 +93,14 @@ function AnimatedPlaceholder() {
   );
 }
 
+function StaticPlaceholder() {
+  return (
+    <span className="shell-placeholder" aria-hidden="true" data-testid="shell-placeholder">
+      {shellUi.placeholder}
+    </span>
+  );
+}
+
 function ResponseReference({
   requestId,
   announce,
@@ -554,7 +562,7 @@ export function InteractiveShell() {
             aria-label={shellUi.inputLabel}
             aria-describedby={accuracyId}
           />
-          {!input && !busy && !inputFocused && <AnimatedPlaceholder />}
+          {!input && (inputFocused || busy ? <StaticPlaceholder /> : <AnimatedPlaceholder />)}
         </div>
       </form>
       <p id={accuracyId} className="shell-ai-notice">

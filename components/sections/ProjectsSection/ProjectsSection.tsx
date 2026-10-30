@@ -1,8 +1,17 @@
 import { projectPresentation, projects } from '@/content/projects';
+import type { Project } from '@/content/schemas';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { IconProjects } from '../../Icons';
 import { Module } from '../../responsive/Module';
 import { PerfReceiptsSection } from '../PerfReceiptsSection';
+
+const COMPANY_LABEL_PREFIX = '@ ';
+const COMPANY_WORD_SEPARATOR = '_';
+
+function companyLabel({ kind, company }: Pick<Project, 'kind' | 'company'>) {
+  if (kind === 'oss') return '';
+  return `${COMPANY_LABEL_PREFIX}${company.toUpperCase().replaceAll(' ', COMPANY_WORD_SEPARATOR)}`;
+}
 
 export function ProjectsContent() {
   return (
@@ -14,7 +23,7 @@ export function ProjectsContent() {
               <path d="M0 2 L0 18 L24 18 L24 5 L12 5 L9 2 Z" />
             </svg>
             <span className="project-attribution">
-              <span className="project-co">@ {project.company}</span>
+              <span className="project-co">{companyLabel(project)}</span>
               <span className="project-perm">
                 {project.perm ?? projectPresentation.permissions}
               </span>

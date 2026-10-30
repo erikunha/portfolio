@@ -473,26 +473,9 @@ export const CommunityEventSchema = z.object({
   year: z.number().int(),
   role: z.string().min(1),
   bullets: z.array(z.string().min(1)).min(1),
-  links: z.array(z.object({ label: z.string().min(1), href: z.url() })).min(1),
-  refsLabel: z.string().min(1),
+  link: z.object({ label: z.string().min(1), href: z.url() }),
   newTabLabel: z.string().min(1),
   statusLine: z.string().min(1),
-});
-
-export const ManPageSchema = z.object({
-  name: z.string().min(1),
-  tagline: z.string().min(1),
-  version: z.string().min(1),
-  date: z.string().min(1),
-  description: z.string().min(1),
-  options: z.array(z.object({ flag: z.string().min(1), desc: z.string().min(1) })),
-  knownBugs: z.array(z.string().min(1)),
-});
-
-export const SysStatSchema = z.object({
-  label: z.string().min(1),
-  value: z.string().min(1),
-  pct: z.string().regex(/^\d{1,3}%$/),
 });
 
 const MonthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
@@ -901,8 +884,6 @@ export type Unknowns = z.infer<typeof UnknownsSchema>;
 export type VisaRow = z.infer<typeof VisaRowSchema>;
 export type Credential = z.infer<typeof CredentialSchema>;
 export type CommunityEvent = z.infer<typeof CommunityEventSchema>;
-export type ManPage = z.infer<typeof ManPageSchema>;
-export type SysStat = z.infer<typeof SysStatSchema>;
 export type GitCommit = z.infer<typeof GitCommitSchema>;
 export type ShellResponse = z.infer<typeof ShellResponseSchema>;
 export type DawMixer = z.infer<typeof DawMixerSchema>;
