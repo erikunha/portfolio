@@ -260,6 +260,35 @@ test.describe('section navigation: drawer at 390px', () => {
   });
 });
 
+test.describe('section navigation: drawer across a viewport change', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('the open drawer survives the change to a desktop width', async ({ page }) => {
+    await page.goto('/');
+    await page
+      .getByRole('navigation', { name: 'primary' })
+      .getByRole('button', { name: /^MENU/ })
+      .click();
+    const drawer = page.getByRole('dialog', { name: 'Section menu' });
+    await expect(drawer).toBeVisible();
+
+    await page.setViewportSize({ width: 1280, height: 720 });
+
+    await expect(
+      drawer,
+      'the drawer must stay open across a viewport change: the menu is a drawer at every width',
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: /INDEX/ }).locator('visible=true'),
+      'the trigger still reports the open drawer after the viewport change',
+    ).toHaveAttribute('aria-expanded', 'true');
+    await expect(
+      page.locator('html'),
+      'the scroll lock must survive the viewport change while the drawer is open',
+    ).toHaveCSS('overflow', 'hidden');
+  });
+});
+
 test.describe('section navigation: position line at 1280px', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 

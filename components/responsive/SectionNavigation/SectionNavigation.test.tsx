@@ -49,21 +49,22 @@ function leave(target: Element | null) {
   report([target, false]);
 }
 
-type MediaListener = (event: { matches: boolean }) => void;
 const MOTION_STORAGE_KEY = 'erik.motion';
 let reducedMotion = false;
-let drawerViewport = true;
-const mediaListeners = new Set<MediaListener>();
 
 function stubMatchMedia() {
   window.matchMedia = vi.fn((query: string) => ({
     get matches() {
       if (query.includes('prefers-reduced-motion')) return reducedMotion;
-      return drawerViewport;
+      return false;
     },
     media: query,
-    addEventListener: (_: string, listener: MediaListener) => mediaListeners.add(listener),
-    removeEventListener: (_: string, listener: MediaListener) => mediaListeners.delete(listener),
+    addEventListener: () => {
+      throw new Error(
+        'stubMatchMedia does not model media query listeners: model the query in the stub before the component listens to it',
+      );
+    },
+    removeEventListener: () => undefined,
   })) as unknown as typeof window.matchMedia;
 }
 
@@ -125,9 +126,7 @@ describe('SectionNavigation', () => {
 
   beforeEach(() => {
     FakeObserver.instances = [];
-    mediaListeners.clear();
     reducedMotion = false;
-    drawerViewport = true;
     vi.stubGlobal('IntersectionObserver', FakeObserver);
     stubMatchMedia();
     scrollIntoView = vi.fn();
@@ -463,18 +462,6 @@ describe('SectionNavigation', () => {
       expect(document.querySelectorAll('[inert]')).toHaveLength(0);
       expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
       expect(document.activeElement).toBe(document.getElementById('sec-projects'));
-    });
-
-    it('stays open when the viewport grows, because the menu is a drawer at every width', () => {
-      render(<Page />);
-      open();
-      drawerViewport = false;
-      act(() => {
-        for (const listener of [...mediaListeners]) listener({ matches: false });
-      });
-      expect(panel().classList.contains('is-open'), 'drawer must not depend on a breakpoint').toBe(
-        true,
-      );
     });
 
     it('locks page scrolling while open and releases it on every way out', () => {
