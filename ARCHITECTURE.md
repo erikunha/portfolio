@@ -131,6 +131,8 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 Static section bodies are Server Components. `BreakpointProvider` and `AppShell` are client boundaries that receive server-rendered children. `SectionNavigationProvider` wraps the shell chrome so the rail, the dock and the position meter share one current-section state. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
 
+The drawer header contains the title and close control. The toggle column occupies space only in the collapsible desktop rail.
+
 ### Client islands
 
 | Surface                                        | Client responsibilities                                              |

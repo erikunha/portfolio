@@ -4595,7 +4595,7 @@
   }
 
   .menu-end {
-    display: flex;
+    display: none;
     justify-content: center;
     width: var(--rail-collapsed-width);
   }
@@ -4828,6 +4828,10 @@
       display: none;
     }
 
+    .menu-end {
+      display: flex;
+    }
+
     .rail-toggle {
       display: inline-flex;
       align-items: center;
@@ -4877,6 +4881,7 @@
       transform: none;
     }
 
+    .menu-end,
     .rail-toggle {
       display: none;
     }

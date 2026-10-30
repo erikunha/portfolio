@@ -2,6 +2,42 @@ import { expect, test } from '@playwright/test';
 
 const SCROLL_PROBE_PX = 400;
 
+for (const width of [390, 768, 1023, 1024, 1535, 1536]) {
+  test.describe(`section navigation: header at ${width}px`, () => {
+    test.use({ viewport: { width, height: 844 } });
+
+    test('reserves the toggle column only when the rail can collapse', async ({ page }) => {
+      await page.goto('/');
+      if (width < 1024) {
+        await page
+          .getByRole('navigation', { name: 'primary' })
+          .getByRole('button', { name: /^MENU/ })
+          .click();
+      } else {
+        await page.getByRole('complementary', { name: 'Section menu' }).hover();
+      }
+
+      const header = page.locator('.menu-head');
+      await expect(header).toBeVisible();
+      const toggleColumn = header.locator('.menu-end');
+      const toggle = header.locator('.rail-toggle');
+      const close = header.getByRole('button', { name: /CLOSE/ });
+
+      if (width >= 1024 && width < 1536) {
+        await expect(toggleColumn).toBeVisible();
+        await expect(toggle).toBeVisible();
+        await expect(close).toBeHidden();
+      } else {
+        await expect
+          .poll(() => toggleColumn.evaluate((element) => element.getBoundingClientRect().width))
+          .toBe(0);
+        await expect(toggle).toBeHidden();
+        if (width < 1024) await expect(close).toBeVisible();
+      }
+    });
+  });
+}
+
 test.describe('section navigation: drawer at 390px', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
