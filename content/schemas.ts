@@ -931,7 +931,6 @@ export const ReadingViewsSchema = z.object({
     cvLinkLabel: ReadingTextSchema,
     statsLabel: ReadingTextSchema,
     experienceLabel: ReadingTextSchema,
-    badge: ReadingTextSchema,
     projectNames: z.array(ReadingTextSchema).min(1),
     stack: z.array(ReadingTextSchema).min(1),
     headings: z.object({

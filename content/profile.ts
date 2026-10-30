@@ -45,6 +45,7 @@ export const profile: Profile = ProfileSchema.parse({
 });
 
 export const profileLocation = `${profile.country} · ${profile.timezone} · ${profile.availability}`;
+export const profileCityLine = `${profile.city}, ${profile.country}`;
 const WORKING_LANGUAGE_LEVELS: readonly string[] = ['native', 'C2', 'C1'];
 const LANGUAGE_SEPARATOR = ' · ';
 const languageLine = (languages: typeof profile.languages) =>

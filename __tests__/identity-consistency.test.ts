@@ -243,6 +243,63 @@ describe('terminal redesign canonical facts', () => {
     expect(manifest.work_auth).toEqual({});
   });
 
+  it('targets Senior only, never Staff or Principal', () => {
+    const surfaces: Array<[string, string]> = [
+      ...contentSurfaces,
+      ['lib/hiring-profile.ts', JSON.stringify(HIRING_PROFILE)],
+      ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
+      ['public/llms.txt', llmsTxt],
+      ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
+      ['app/layout.tsx (metadata)', layoutMetadataText],
+    ];
+    const stale = surfaces
+      .filter(([, text]) => /\bStaff\b|\bPrincipal\b/.test(text))
+      .map(([surface]) => surface);
+
+    expect(
+      stale,
+      'the owner decision targets Senior only. A surface still naming Staff or Principal advertises a level the resume never claims.',
+    ).toEqual([]);
+    expect(HIRING_PROFILE.seniority).toEqual(['senior']);
+    expect(HIRING_PROFILE.open_to).not.toContain('staff');
+    expect(HIRING_PROFILE.open_to).not.toContain('principal');
+  });
+
+  it('describes Raylu with the resume wording, never a deal-origination platform', () => {
+    const surfaces: Array<[string, string]> = [
+      ...contentSurfaces,
+      ['lib/hiring-profile.ts', JSON.stringify(HIRING_PROFILE)],
+      ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
+      ['public/llms.txt', llmsTxt],
+      ['content/ask-eval-corpus.ts', JSON.stringify(ASK_EVAL_CORPUS)],
+    ];
+    const stale = surfaces
+      .filter(([, text]) => /deal[- ]origination/i.test(text))
+      .map(([surface]) => surface);
+
+    expect(
+      stale,
+      'the resume describes Raylu as a private-markets fintech whose funds hold $500B+ in assets. The deal-origination framing is not in the resume.',
+    ).toEqual([]);
+    expect(SYSTEM_TEXT).toContain('$500B+');
+  });
+
+  it('states the resume numbers on llms.txt, not the ones the resume replaced', () => {
+    for (const stale of ['€1B+ ARR', '70M+', '8 talks', 'WCAG 2.1', 'KPMG', '2,200+ clients']) {
+      expect(llmsTxt, `public/llms.txt still publishes "${stale}"`).not.toContain(stale);
+    }
+    for (const current of [
+      '€1.197B',
+      '24.2M digital clients',
+      '10+ talks',
+      'WCAG 2.2 AA',
+      'Canon Medical Systems Brazil',
+      'Zup Innovation',
+    ]) {
+      expect(llmsTxt, `public/llms.txt must publish "${current}"`).toContain(current);
+    }
+  });
+
   it('publishes the resume location and immediate availability consistently', () => {
     for (const text of [
       JSON.stringify(HIRING_PROFILE),
@@ -304,7 +361,7 @@ describe('terminal redesign canonical facts', () => {
         'hybrid',
       ],
       [
-        'Canon Medical Systems',
+        'Canon Medical Systems Brazil',
         'Senior Software Engineer, Frontend (independent consultant)',
         '2023-03',
         '2025-03',
@@ -328,7 +385,7 @@ describe('terminal redesign canonical facts', () => {
         null,
       ],
       [
-        'ZUP Innovation (Itaú Unibanco)',
+        'Zup Innovation (Itaú Unibanco)',
         'Software Engineer, Frontend',
         '2020-04',
         '2021-01',

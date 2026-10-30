@@ -49,6 +49,15 @@ describe('content/ask-eval-corpus', () => {
     }
   });
 
+  it('grades no criterion against a Staff or Principal target, or a deal-origination framing', () => {
+    for (const item of ASK_EVAL_CORPUS) {
+      expect(
+        item.expect,
+        `item "${item.id}" grades a level or a company framing the owner decision removed`,
+      ).not.toMatch(/\bStaff\b|\bPrincipal\b|deal[- ]origination/i);
+    }
+  });
+
   it('grounds the base-location criterion in the published system prompt', () => {
     const item = ASK_EVAL_CORPUS.find((i) => i.id === 'fact-base-location');
     expect(item?.expect).toContain(profile.country);
