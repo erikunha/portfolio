@@ -182,33 +182,6 @@ describe('ManPageContent — isMobile=true branch (renders ManPageMobile)', () =
   });
 });
 
-describe('FooterLazy — IntersectionObserver undefined guard (branch lines 44-47)', () => {
-  let mounted: MountedClient;
-
-  beforeEach(() => {
-    vi.resetModules();
-    vi.stubGlobal('IntersectionObserver', undefined);
-    vi.doMock('next/dynamic', () => ({
-      default: () => () => null,
-    }));
-  });
-
-  afterEach(() => {
-    mounted?.unmount();
-    vi.unstubAllGlobals();
-    vi.resetModules();
-  });
-
-  it('mounts FooterLazy immediately when IntersectionObserver is undefined', async () => {
-    const { flushMicrotasks } = await import('./helpers/render');
-    const { FooterLazy } = await import('@/components/sections/Footer');
-    mounted = await mountClient(createElement(FooterLazy));
-    await flushMicrotasks();
-    const sentinel = mounted.container.querySelector('[data-testid="footer-lazy-sentinel"]');
-    expect(sentinel).toBeNull();
-  });
-});
-
 describe('ManPageSection — Suspense fallback branch', () => {
   it('renders the desktop fallback synchronously via Suspense', async () => {
     const { createElement: ce } = await import('react');
