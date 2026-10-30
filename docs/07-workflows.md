@@ -125,7 +125,8 @@ Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, week
 ```
 commit (scope blocks) -> (self-review the diff before opening the PR)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
-  -> resolve every review thread (rebase before each push) -> pnpm pr:gate
+  -> resolve every review thread (rebase before each push) -> pnpm claude-gate
+  -> pnpm pr:gate
   -> repo owner runs gh pr merge (project policy; no agent hook enforces it)
 ```
 
