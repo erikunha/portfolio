@@ -61,11 +61,14 @@ test.describe('layout tokens', () => {
         .evaluate((el) => el.getBoundingClientRect().width);
       expect(width).toBe(MEASURE_PAGE);
       const left = await contentLeft(page, path === '/links' ? '.page-container' : 'main');
-      const rail = await page.evaluate(() => {
+      const { rail, usable } = await page.evaluate(() => {
         const shell = document.querySelector('.app-content');
-        return shell ? Number.parseFloat(getComputedStyle(shell).marginLeft) : 0;
+        return {
+          rail: shell ? Number.parseFloat(getComputedStyle(shell).marginLeft) : 0,
+          usable: document.documentElement.clientWidth,
+        };
       });
-      expect(left).toBeCloseTo(rail + (1280 - rail - MEASURE_PAGE) / 2 + GUTTER_AT_1280, 0);
+      expect(left).toBeCloseTo(rail + (usable - rail - MEASURE_PAGE) / 2 + GUTTER_AT_1280, 0);
     });
   }
 
