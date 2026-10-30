@@ -40,7 +40,12 @@ test.describe('/links link-in-bio', () => {
     await page.goto('/links');
     const qr = page.getByRole('img', { name: /QR code/ });
     await expect(qr).toBeVisible();
-    await expect(page.locator('canvas')).toHaveCount(0);
+    expect(await qr.evaluate((el) => el.tagName.toLowerCase())).not.toBe('canvas');
+    await expect(qr.locator('canvas')).toHaveCount(0);
+    await expect(
+      page.locator('canvas:not([aria-hidden="true"])'),
+      'only the decorative, aria-hidden Matrix Rain may draw on a canvas; the QR must arrive server-rendered',
+    ).toHaveCount(0);
   });
 
   test('drops the QR panel on a phone, where the visitor is already holding the page', async ({

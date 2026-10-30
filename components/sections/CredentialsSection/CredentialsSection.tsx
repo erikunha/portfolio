@@ -27,7 +27,7 @@ export function CredentialsSection({
         <div key={group.prefix} role="group" aria-labelledby={`${groupId}-${group.prefix}`}>
           <h3 id={`${groupId}-${group.prefix}`} className="career-command">
             <span className="sr-only">{group.label}</span>
-            <span aria-hidden="true">
+            <span aria-hidden="true" data-type-reveal>
               <span>{prompt}</span> {group.command}
             </span>
           </h3>
@@ -49,7 +49,7 @@ export function CredentialsSection({
       <div id={communityId} role="group" aria-labelledby={`${groupId}-community`}>
         <h3 id={`${groupId}-community`} className="career-command">
           <span className="sr-only">{community.label}</span>
-          <span aria-hidden="true">
+          <span aria-hidden="true" data-type-reveal>
             <span>{prompt}</span> {community.command}
           </span>
         </h3>

@@ -14,7 +14,9 @@ export function Footer() {
     <footer className="site-footer" id="shutdown">
       <div className="footer-inner">
         <div className="footer-shutdown-header">
-          <h2 className="footer-shutdown-title">{content.shutdownTitle}</h2>
+          <h2 className="footer-shutdown-title" data-type-reveal>
+            {content.shutdownTitle}
+          </h2>
           <HaltClock label={content.haltedAt} />
         </div>
         <p className="footer-command">
@@ -23,7 +25,7 @@ export function Footer() {
         <div className="footer-cards">
           <section className="footer-card" aria-labelledby="footer-session-title">
             <h3 className="footer-card-title" id="footer-session-title">
-              {content.sessionTitle}
+              <span data-type-reveal>{content.sessionTitle}</span>
             </h3>
             <SessionCounters sectionIds={footerSectionIds}>
               <dl className="footer-session-grid">
@@ -63,7 +65,7 @@ export function Footer() {
           <section className="footer-card" aria-labelledby="footer-netstat-title">
             <div className="footer-card-header">
               <h3 className="footer-card-title" id="footer-netstat-title">
-                {content.netstatTitle}
+                <span data-type-reveal>{content.netstatTitle}</span>
               </h3>
               <CopyButton
                 aria-label={content.copyLabel}
@@ -114,7 +116,7 @@ export function Footer() {
         </div>
         <section className="footer-card footer-tree" aria-labelledby="footer-tree-title">
           <h3 className="footer-card-title" id="footer-tree-title">
-            {content.treeTitle}
+            <span data-type-reveal>{content.treeTitle}</span>
           </h3>
           <nav className="sitemap" aria-label={content.treeLabel}>
             <ul className="sm-groups">

@@ -80,7 +80,9 @@ function PerfBody({
 export function LivePerfSection() {
   return (
     <div id="sec-live-perf" className="measured-lighthouse grid-cols-1 md:grid-cols-2">
-      <h3 className="measured-heading">{measured.psi.title}</h3>
+      <h3 className="measured-heading" data-type-reveal>
+        {measured.psi.title}
+      </h3>
       {measured.psi.strategies.map((strategy) => (
         <Suspense
           key={strategy.key}

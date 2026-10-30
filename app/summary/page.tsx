@@ -96,7 +96,7 @@ export default function SummaryPage() {
         </div>
 
         <section aria-labelledby={sectionId('projects')} className="reading-section">
-          <h2 id={sectionId('projects')} className="reading-heading">
+          <h2 id={sectionId('projects')} className="reading-heading" data-type-reveal>
             {summary.headings.projects}
           </h2>
           <ul className="reading-projects">
@@ -116,7 +116,7 @@ export default function SummaryPage() {
 
         <div className="reading-grid">
           <section aria-labelledby={sectionId('auth')} className="reading-section">
-            <h2 id={sectionId('auth')} className="reading-heading">
+            <h2 id={sectionId('auth')} className="reading-heading" data-type-reveal>
               {summary.headings.workAuthorization}
             </h2>
             <ul className="reading-rows">
@@ -133,7 +133,7 @@ export default function SummaryPage() {
           </section>
 
           <section aria-labelledby={sectionId('stack')} className="reading-section">
-            <h2 id={sectionId('stack')} className="reading-heading">
+            <h2 id={sectionId('stack')} className="reading-heading" data-type-reveal>
               {summary.headings.stack}
             </h2>
             <ul className="reading-chips">
@@ -145,7 +145,7 @@ export default function SummaryPage() {
         </div>
 
         <section aria-labelledby={sectionId('contact')} className="reading-section">
-          <h2 id={sectionId('contact')} className="reading-heading">
+          <h2 id={sectionId('contact')} className="reading-heading" data-type-reveal>
             {summary.headings.contact}
           </h2>
           <p className="reading-actions-inline">

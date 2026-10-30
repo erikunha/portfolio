@@ -32,7 +32,9 @@ export function GuitarContent() {
               )}
               <div className="guitar-node" data-testid={`signal-node-${node.role}`}>
                 <div className="guitar-label">{node.role}</div>
-                <h3 className="guitar-node-heading">{node.name}</h3>
+                <h3 className="guitar-node-heading" data-type-reveal>
+                  {node.name}
+                </h3>
                 <div className="guitar-node-subtitle">{node.subtitle}</div>
                 <div
                   className="guitar-bars"
