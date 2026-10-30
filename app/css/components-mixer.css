@@ -160,11 +160,11 @@
     }
 
     .mx-grid .daw-channel-row > :nth-child(7) {
-      grid-area: 4 / 2;
+      grid-area: 5 / 1 / 6 / 3;
     }
 
     .mx-grid .daw-channel-row > :nth-child(8) {
-      grid-area: 4 / 3;
+      grid-area: 5 / 3;
     }
   }
 

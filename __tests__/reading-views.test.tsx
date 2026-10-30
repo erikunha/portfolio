@@ -85,10 +85,10 @@ describe('CV reading view', () => {
     for (const entry of education) expect(host.textContent).toContain(entry.degree);
   });
 
-  it('keeps the summary free of the header facts and the authorization sentence', () => {
+  it('keeps the summary free of the header facts', () => {
     expect(cvDocument.summary.length).toBeGreaterThan(40);
-
     expect(cvDocument.summary).not.toContain(profile.title);
+    expect(cvDocument.summary).not.toContain(cvDocument.location);
   });
 
   it('opens external links in a new tab with a hint for screen readers', () => {

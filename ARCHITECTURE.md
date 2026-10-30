@@ -170,7 +170,7 @@ Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. AS
 
 `GuitarSection` renders one responsive RSC presentation across viewports. CSS adjusts its layout without UA detection, a variant swap or a section Suspense fallback.
 
-`GuitarSection` renders the guitar rig and the DAW mixer as one module at `sec-guitar`, one synchronous RSC layout at every width, without a UA branch or Suspense boundary. The mixer keeps its fader, knob, R/M/S, meter and scroll islands, which hydrate on phones too. Below 768px each channel row collapses into a compact grid (id, track, dB, knobs, R/M/S, plugin chips, meter, fader) instead of one card per channel.
+`GuitarSection` renders the guitar rig and the DAW mixer as one module at `sec-guitar`, one synchronous RSC layout at every width, without a UA branch or Suspense boundary. The mixer keeps its fader, knob, R/M/S, meter and scroll islands, which hydrate on phones too. Below 768px each channel row collapses into a compact grid (id, track, dB, knobs, R/M/S, plugin chips, meter, fader) instead of one card per channel. Between 768px and 1100px the meter takes the wide row and the fader with its dB readout take the row below it.
 
 Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
 Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one static section.
