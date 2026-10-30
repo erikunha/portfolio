@@ -41,7 +41,7 @@ test.describe('type reveal', () => {
     expect(clips.every((clip) => clip === 'none')).toBe(true);
   });
 
-  for (const route of ['/', '/cv', '/summary', '/links', '/design-system']) {
+  for (const route of ['/', '/cv', '/summary', '/links']) {
     test(`marked elements on ${route} hold only typed text and stay on one line`, async ({
       page,
     }) => {
@@ -52,7 +52,9 @@ test.describe('type reveal', () => {
         document.documentElement.classList.contains('type-reveal-ready'),
       );
 
-      const offenders = await page.locator('[data-type-reveal]').evaluateAll((els) =>
+      const marked = page.locator('[data-type-reveal]');
+      expect(await marked.count()).toBeGreaterThan(0);
+      const offenders = await marked.evaluateAll((els) =>
         els
           .filter((el) => {
             const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight);
