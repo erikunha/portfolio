@@ -76,7 +76,7 @@ Every substantive change runs the same disciplined loop, enforced by mandated sk
 
 **claude-review (claude[bot]) runs automatically** on every PR open and push, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line that `pnpm claude-gate` reads fail-closed.
 
-**The local battery is not restored.** The 4-agent battery, `battery-synthesis`, the findings ledger and the transcript-verified stamp were removed on 2026-07-27 and stay removed. Pre-PR review is discipline: read the diff, run `pr-review-toolkit:code-reviewer` over it. `pnpm pr:gate` checks thread resolution.
+**The local battery is not restored.** The 4-agent battery, `battery-synthesis`, the findings ledger and the transcript-verified stamp were removed on 2026-07-27 and stay removed. Pre-PR review is discipline: read the diff, run `pr-review-toolkit:code-reviewer` over it. `pnpm pr:gate` checks thread resolution and holds a fix-claiming reply to a commit link reachable from the PR head.
 
 ## 4. Enforcement — git and CI only
 

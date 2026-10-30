@@ -150,5 +150,5 @@ for (const c of filteredIssues) {
 }
 
 console.log(
-  '> Workflow: resolve each `[ ]` either by (a) fixing the code at Principal/Staff level and replying with the fix SHA, or (b) escalating to the repo owner with a "Why not" rationale. Unresolved threads block merge.',
+  '> Workflow: resolve each `[ ]` either by (a) fixing the code at Principal/Staff level and replying with a link to the fix commit ([`<short-sha>`](https://github.com/erikunha/portfolio/pull/<n>/commits/<full-sha>), reachable from the PR head) or (b) escalating to the repo owner with a "Why not" rationale. Unresolved threads block merge.',
 );

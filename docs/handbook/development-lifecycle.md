@@ -56,10 +56,10 @@ Before opening the PR, read the diff and run `pr-review-toolkit:code-reviewer` o
 Run `pnpm ci:local`, then `pnpm bundle-check` and `pnpm route-js-check`, then `pnpm gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
 
 ### 9. Review convergence loop
-On the open PR, claude-review posts inline findings on open and on every push. Drive it to green: rebase before every push, verify the pushed SHA landed, poll the run to completion rather than trusting a green job, and reply citing the fix SHA before resolving a thread.
+On the open PR, claude-review posts inline findings on open and on every push. Drive it to green: rebase before every push, verify the pushed SHA landed, poll the run to completion rather than trusting a green job, and reply with a link to the fix commit ([`<short-sha>`](https://github.com/erikunha/portfolio/pull/<n>/commits/<full-sha>), reachable from the PR head) before resolving a thread.
 
 ### 10. Pre-merge gates -> merge
-`pnpm claude-gate` (`scripts/check-claude-approval.ts`) requires the latest claude-review verdict to be Approve on the current head, fail-closed on a stale or SHA-less Approve. `pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires every review thread to be resolved and flags `suspicious_self_resolve`. Run `pnpm ci:local` alongside both.
+`pnpm claude-gate` (`scripts/check-claude-approval.ts`) requires the latest claude-review verdict to be Approve on the current head, fail-closed on a stale or SHA-less Approve. `pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires every review thread to be resolved, flags `suspicious_self_resolve`, and holds a fix-claiming reply to a commit link reachable from the PR head (`reply_missing_commit_link`, `reply_commit_unreachable`). Run `pnpm ci:local` alongside both.
 
 ### 11. Deploy -> smoke -> record
 Vercel deploys on merge to `main`. The `smoke.yml` workflow verifies the production deployment (healthz, 7 security headers, apex->www redirect, `/api/ask` + `/api/contact` liveness) and emails on a 503. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note), and session state is handed off via `.remember/`.
