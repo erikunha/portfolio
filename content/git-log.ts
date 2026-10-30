@@ -33,7 +33,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     workMode: 'hybrid',
     domain: 'online gaming and payments',
     body: [
-      'wanted regulated multi-market scale; got 40M+ tx/yr across 15+ jurisdictions on a PCI-DSS payment platform.',
+      'wanted regulated multi-market scale; got 40M+ tx/yr across 15+ jurisdictions and 31.1M customers on a PCI-DSS payment platform.',
     ],
   },
   {
@@ -50,7 +50,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     workMode: 'remote',
     domain: 'healthcare technology',
     body: [
-      'rebuilt a hospital equipment service platform: service orders, specialist schedules, field visits; Angular 17 to 19.',
+      'rebuilt a hospital equipment service platform: service orders, specialist scheduling, field visits; Angular 17 to 19.',
     ],
   },
   {
@@ -67,7 +67,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     workMode: 'remote',
     domain: 'sports retail e-commerce',
     body: [
-      'Next.js storefronts for Nike Brazil and Centauro (8M+ MAU); conversion +10% across 20+ A/B experiments, page load -32% (CWV optimization + image pipeline).',
+      'Next.js storefronts for Nike Brazil and Centauro (8M+ MAU); lifted conversion ~10% through 20+ A/B experiments and cut page load -32%; R$7.9B gross revenue, R$2.5B digital.',
     ],
   },
   {

@@ -137,7 +137,7 @@ describe('lib/ask/system-prompt', () => {
       const sbfLine = narrative.split('\n').find((line) => line.startsWith('- Grupo SBF'));
       expect(sbfLine, 'Grupo SBF employment line missing from narrative').toBeDefined();
       expect(sbfLine).toContain('-32%');
-      expect(sbfLine).toContain('+10%');
+      expect(sbfLine).toContain('10%');
     });
   });
 

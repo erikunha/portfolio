@@ -49,6 +49,8 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 | `bundle-check`         | global gzipped client chunks ≤ 220KB                                                             |
 | `route-js-check`       | every manifest route ≤ 164.7KB total first-load JS; app-owned split reported                     |
 
+`check:section-order` runs both directions: every rendered section needs a mobile order rule or a listed nested-anchor exemption, and every `#sec-*` selector in `app/css` must match an id some source renders, so a deleted section cannot leave dead rules behind.
+
 ## Testing
 
 ```mermaid

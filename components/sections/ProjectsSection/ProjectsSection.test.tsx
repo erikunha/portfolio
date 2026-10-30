@@ -30,7 +30,12 @@ describe('Projects', () => {
     const cards = Array.from(doc.querySelectorAll('.project-card'));
     expect(cards).toHaveLength(9);
     for (const card of cards) {
-      expect(card.querySelector('.project-co')?.textContent).toMatch(/@\s*\S/);
+      const co = card.querySelector('.project-co')?.textContent ?? '';
+      const isOss = card.querySelector('a') !== null;
+      expect(
+        co,
+        'professional cards read "@ COMPANY_NAME" with underscores as in r106; open-source cards leave the label blank',
+      ).toMatch(isOss ? /^$/ : /^@ [A-Z0-9]+(?:_[A-Z0-9]+)*$/);
       expect(card.querySelector('h3')).not.toBeNull();
     }
     const links = Array.from(doc.querySelectorAll('.project-card a'));
