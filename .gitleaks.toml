@@ -38,5 +38,5 @@ description = "CSS design token names (secondary-NNN), not secrets (generic-api-
 regexes = ['''^secondary-\d{2,3}$''']
 
 [[allowlists]]
-description = "Measured metric key names (camelCase identifiers in content/measured.ts), not secrets (generic-api-key false positives)"
+description = "The p95LatencyMs metric key (lib/ask-metrics.ts), an identifier and not a secret (generic-api-key false positive)"
 regexes = ['''^p95LatencyMs$''']
