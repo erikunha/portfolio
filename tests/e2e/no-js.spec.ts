@@ -12,8 +12,8 @@ test.describe('home with JavaScript off', () => {
 
   test('the site navigation still moves to its section', async ({ page }) => {
     await page.goto('/');
-    // One visible surface per breakpoint: topbar 04_CONTACT on desktop, dock HIRE on mobile.
-    await page.locator('a[href="/#sec-contact"]:visible').first().click();
+    // The noscript bar link is the one contact route at every breakpoint; the dock HIRE leaves the site.
+    await page.locator('.nojs-bar a[href="/#sec-contact"]').click();
     await expect(page).toHaveURL(/#sec-contact$/);
     await expect(page.locator('#sec-contact')).toBeAttached();
   });

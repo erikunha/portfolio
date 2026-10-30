@@ -21,5 +21,6 @@ export const errorsContent: ErrorsContent = {
   },
   noscript: {
     text: 'This site works best with JavaScript. Content below is complete; the shell and the contact form need it.',
+    contact: { label: 'Contact', href: '/#sec-contact' },
   },
 };

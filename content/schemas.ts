@@ -723,7 +723,7 @@ export const ErrorsContentSchema = z.object({
     copyAriaLabel: z.string().min(1),
     copiedAnnouncement: z.string().min(1),
   }),
-  noscript: z.object({ text: z.string().min(1) }),
+  noscript: z.object({ text: z.string().min(1), contact: ErrorLinkSchema }),
 });
 export type ErrorsContent = z.infer<typeof ErrorsContentSchema>;
 export const ErrorsClientContentSchema = ErrorsContentSchema.pick({

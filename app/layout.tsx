@@ -107,7 +107,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body suppressHydrationWarning>
         <noscript>
-          <div className="nojs-bar">{errorsContent.noscript.text}</div>
+          <div className="nojs-bar">
+            {errorsContent.noscript.text}{' '}
+            <a href={errorsContent.noscript.contact.href}>{errorsContent.noscript.contact.label}</a>
+          </div>
         </noscript>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: initScript is a hardcoded build-time constant, no user input */}
         <script dangerouslySetInnerHTML={{ __html: initScript }} />
