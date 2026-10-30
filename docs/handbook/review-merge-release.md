@@ -16,8 +16,9 @@ flowchart TD
     r2 --> r4["pre-PR: gates:runtime (LHCI+axe+E2E)"]
     r4 --> o1["open PR: fill every template section"]
     o1 --> o1b["CI green on the PR head"]
-    o1b --> o2["claude-review once per head; fix and reply in threads"]
-    o2 --> m1["pre-merge: ci:local"]
+    o1 --> o2["await automatic claude-review each push; fix, reply in thread, push again until Approve"]
+    o1b --> m1["pre-merge: ci:local"]
+    o2 --> m1
     m1 --> m3["pre-merge: claude-gate (Approve on HEAD)"]
     m3 --> m4["pre-merge: pr:gate (threads)"]
     m4 --> merge["owner: squash-merge (#NNN)"]
@@ -29,9 +30,9 @@ flowchart TD
 
 **claude-review (claude[bot]) is the AI reviewer.** It runs automatically on eligible PR open and push events, posts one inline comment per finding anchored to a changed line, and closes with a `Verdict:` line that `pnpm claude-gate` parses fail-closed. It gathers evidence with the CI profile of the `pr-review-orchestrator` skill (`.claude/skills/pr-review-orchestrator/references/ci.md`): one `Task` subagent per material domain, and PR metadata, the diff and CI check results snapshotted by a workflow step before the review starts. The reviewer gets no `gh` or other shell command, and `--disallowedTools` denies the edit, git and push tools the action's tag mode would otherwise add, plus reads of `.git/` and other credential locations. No PR code runs in that job, so dependencies are not installed: for a dependency change it reviews the manifest and lockfile diff and names what only installed source could settle as a limit, which the local orchestrator then answers.
 
-claude-review runs on every PR, once per head: it is requested only when no run for that head is queued, running or finished, and never while the PR is behind its base or CI is red. Any other model review (`pr-review-orchestrator`, a cross-provider review, a self-review) runs only when the owner asks. Deterministic validation (tests, typecheck, lint, build, bundle and route-JS gates, CI) is the quality bar, and the provider that made a change ships it.
+The review loop runs on every PR until claude-review approves: rebase, push, wait for the automatic review for the new head, fix each finding, reply in its thread with what was done and the fix SHA, resolve, and push again. Each push starts the next round. Eligible pushes trigger reviews for PRs into main and integration branches alike. Do not also comment `/claude-review`: it shares the per-PR concurrency group and cancels the automatic run. If an automatic attempt finishes without a verdict, inspect the failure before requesting a manual retry, and only request it when no run for that head is queued or running. Any other model review (`pr-review-orchestrator`, a cross-provider review, a self-review) runs only when the owner asks. Deterministic validation (tests, typecheck, lint, build, bundle and route-JS gates, CI) is the quality bar, and the provider that made a change ships it.
 
-When a review did run, follow the project review procedure: rebase before _every_ push; verify the pushed SHA actually landed on the remote before citing it; reply in a thread citing the fix SHA _before_ resolving it; never resolve silently (a thread with one comment is a process gap); and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
+Each round follows the project review procedure: rebase before _every_ push; verify the pushed SHA actually landed on the remote before citing it; reply in a thread citing the fix SHA _before_ resolving it; never resolve silently (a thread with one comment is a process gap); and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
 
 ## Pre-merge gates (`pnpm ci:local` + `pnpm claude-gate` + `pnpm pr:gate`)
 

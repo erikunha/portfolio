@@ -251,7 +251,7 @@ job. The "no copy in `.tsx`" rule is held by PR review against this chapter.
 
 ## 8. Accessibility
 
-**Rule.** WCAG 2.1 AA across the whole site. Lighthouse Accessibility scores
+**Rule.** WCAG 2.2 AA across the whole site. Lighthouse Accessibility scores
 exactly 100. Every interactive client component has a behavioral accessibility
 test asserting tab order, focus visibility, keyboard activation, and screen-
 reader announcement. Streaming UI emits discrete DOM nodes per chunk that React

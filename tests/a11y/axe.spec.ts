@@ -11,7 +11,7 @@ test.describe('axe-core a11y scan', () => {
     test(`${route} has no automatically detectable accessibility violations`, async ({ page }) => {
       await page.goto(route);
       const results = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
         .analyze();
       expect(results.violations).toEqual([]);
     });
@@ -22,7 +22,7 @@ test.describe('axe-core a11y scan', () => {
       await page.setViewportSize(NARROW_VIEWPORT);
       await page.goto(route);
       const results = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
         .analyze();
       expect(results.violations).toEqual([]);
     });
@@ -33,7 +33,7 @@ test.describe('axe-core a11y scan', () => {
     await page.waitForSelector('[role="log"]');
 
     const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
       .exclude(
         '[data-testid="crt-vignette"], [data-testid="crt-overlay"], [data-testid="crt-mask"], [data-testid="crt-noise"], [data-testid="crt-flicker"], [data-testid="crt-scan-beam"]',
       )
@@ -50,7 +50,7 @@ test.describe('axe-core a11y scan', () => {
 
     const results = await new AxeBuilder({ page })
       .include('[data-testid="contact-form"]')
-      .withTags(['wcag2a', 'wcag2aa'])
+      .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
       .analyze();
 
     expect(results.violations).toEqual([]);
