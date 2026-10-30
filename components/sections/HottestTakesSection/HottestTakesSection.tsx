@@ -45,7 +45,9 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
       <UnknownsSection />
       <a className="opinions-more" href={docsLink.href}>
         <span aria-hidden>{docsLink.marker}</span>
-        {docsLink.label} {docsLink.arrow}
+        <span>
+          {docsLink.label} <span aria-hidden>{docsLink.arrow}</span>
+        </span>
       </a>
     </Module>
   );

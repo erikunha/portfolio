@@ -99,6 +99,14 @@ describe('home opinions', () => {
     );
   });
 
+  it('announces the closing link without the decorative arrow, and keeps the arrow on screen', () => {
+    const { container } = render(<HottestTakesSection defer />);
+    const link = getByRole(container, 'link', {
+      name: 'the design-system opinion lives in the design system docs',
+    });
+    expect(link.textContent).toContain('→');
+  });
+
   it('keeps the section command label inline with the name, the tag neutral and the parenthetical in body colour', () => {
     // behavioral-test-allow: the opinions layout contract lives in the shipped stylesheet; jsdom has no layout engine
     const stylesheet = parse(readComponentsCss());

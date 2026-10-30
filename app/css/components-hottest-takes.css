@@ -167,7 +167,7 @@
     text-underline-offset: var(--spacing-1);
   }
 
-  .opinions-more > span {
+  .opinions-more > span:first-child {
     margin-right: calc(var(--spacing-1) * 1.5);
   }
 
