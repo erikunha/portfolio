@@ -2,6 +2,7 @@ import { streamText } from 'ai';
 import type { NextRequest } from 'next/server';
 import { social } from '@/content/social';
 import { INJECTION_RE } from '@/lib/ask/injection';
+import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
 import { createStreamGuard, validateAnswer } from '@/lib/ask/output-guard';
 import { PROMPT_VERSION, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
@@ -38,7 +39,7 @@ function mintQuestionSentinel(): string {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-const MAX_OUTPUT_TOKENS = 512;
+const MAX_OUTPUT_TOKENS = ASK_MAX_OUTPUT_TOKENS;
 
 const FINISH_REASON_LENGTH = 'length' as const;
 
