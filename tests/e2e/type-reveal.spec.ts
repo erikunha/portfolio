@@ -51,13 +51,8 @@ test.describe('type reveal', () => {
   });
 
   const NARROW_WIDTHS = [320, 375];
-  const HOME_ROUTE = '/';
-  const HOME_MIN_WIDTH = 375;
-  const routeWidths = [HOME_ROUTE, '/cv', '/summary', '/links'].flatMap((route) =>
-    NARROW_WIDTHS.filter((width) => route !== HOME_ROUTE || width >= HOME_MIN_WIDTH).map(
-      (width) => ({ route, width }),
-    ),
-  );
+  const ROUTES = ['/', '/cv', '/summary', '/links'];
+  const routeWidths = ROUTES.flatMap((route) => NARROW_WIDTHS.map((width) => ({ route, width })));
   for (const { route, width } of routeWidths) {
     test(`marked elements on ${route} at ${width}px hold only typed text and stay on one line`, async ({
       page,

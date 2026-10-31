@@ -321,6 +321,15 @@
     .ab-h {
       letter-spacing: 0.04em;
     }
+    .ab-resp .ab-h {
+      --ab-resp-title-gutter: 6.4375rem;
+      --ab-resp-title-em-budget: 17;
+      font-size: clamp(
+        var(--text-xs),
+        calc((100vw - var(--ab-resp-title-gutter)) / var(--ab-resp-title-em-budget)),
+        var(--text-base)
+      );
+    }
     .ab-body {
       padding: calc(var(--spacing-2) + var(--spacing-1) / 2) var(--spacing-3);
     }
