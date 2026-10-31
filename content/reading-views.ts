@@ -2,11 +2,10 @@ import { communityEvent } from './community';
 import { credentials } from './credentials';
 import { education } from './education';
 import { gitLog } from './git-log';
-import { heroStats } from './perf-receipts';
-import { formatLanguages, profile, profileLocation, profileSummary } from './profile';
+import { heroContent } from './hero';
+import { formatLanguages, profile, profileCityLine, profileLocation } from './profile';
 import { projects } from './projects';
 import { READING_PATHS } from './reading-paths';
-import { readmeCopy } from './readme';
 import {
   CvDocumentSchema,
   CvJsonLdSchema,
@@ -22,7 +21,6 @@ const PROTOCOL_PATTERN = /^https?:\/\//;
 const TRAILING_PERIOD_PATTERN = /\.$/;
 const TERMINAL_PUNCTUATION_PATTERN = /[.!?]$/;
 const FRAGMENT_SEPARATOR_PATTERN = /;\s+/;
-const BULLET_PREFIX_PATTERN = /^-\s*/;
 const STACK_SEPARATOR = ' · ';
 const WORD_SEPARATOR = '_';
 
@@ -98,7 +96,6 @@ export const readingViews = ReadingViewsSchema.parse({
     cvLinkLabel: 'VIEW_CV',
     statsLabel: 'Key numbers',
     experienceLabel: '8+ years',
-    badge: 'OPEN_TO_RELOCATION · WORLDWIDE',
     projectNames: ['PAYMENT_ORCHESTRA', 'SERVICE_OPS_CONSOLE', 'AI_AGENT_MESH'],
     stack: [
       'REACT',
@@ -141,28 +138,27 @@ const labelOf = (key: string): string => {
   return label;
 };
 
-export const withoutFragment = (source: string, fragment: string): string => {
-  if (!source.includes(fragment)) {
-    throw new Error(
-      `reading views: expected fragment missing from the README intro: "${fragment}"`,
-    );
-  }
-  return source.replace(fragment, '');
-};
+const RESUME_SUMMARY =
+  'I build frontend and product platforms: design systems, micro-frontend topologies, versioned state contracts, rendering and state architecture, and the backend-for-frontend (BFF) layers underneath them. I name the boundary, write the contract, and design the error path before the happy path, on web platforms, design systems and AI product surfaces where divergence is a regulated, financial, or clinical consequence.';
 
-const cvSummary = withoutFragment(readmeCopy.desktopIntro, profileSummary).trim();
+const CV_SKILLS = [
+  'Frontend & Product Architecture: React, Next.js, TypeScript, JavaScript (ES6+), TanStack Table and Query, Plate, Tailwind CSS, Radix UI, styled-components, design systems and Storybook, micro-frontend topologies, Web Components (StencilJS), SSR, SSG, ISR, rendering and state architecture, async state machines with RxJS, NgRx and Redux Toolkit, URL-synchronized and versioned view state, grid virtualization, Core Web Vitals (LCP, INP, CLS), time to interactive (TTI), Web Content Accessibility Guidelines (WCAG) 2.2 AA, WAI-ARIA, i18n, technical SEO',
+  'Testing, Quality & Release Engineering: Playwright, Jest, Vitest, React Testing Library, Storybook interaction testing, Chromatic visual regression, MSW, WireMock, mutation testing (Stryker), Nx monorepos, Husky, ESLint, continuous integration and delivery (CI/CD) on GitHub Actions, AWS CodePipeline and CodeBuild, Jenkins, Docker, NGINX, AWS (S3, CloudFront, EC2, RDS), Vercel, Sentry',
+  'BFF, APIs & Data: Node.js, Fastify, Express, Python, REST APIs, backend-for-frontend layers, JSON:API, webhooks, WebSocket streaming (STOMP/SockJS), PostgreSQL, TypeORM, Drizzle ORM, MongoDB, MS SQL Server, SQLite, Redis, query optimization, ETL pipelines',
+  'AI-Native Product & Agent Engineering: Vercel AI SDK and AI Gateway, streaming responses, Anthropic API, OpenAI, Google Generative AI and Vertex AI, Model Context Protocol (MCP) servers, structured output validation with Zod, eval harnesses with an LLM judge calibrated against human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code and Codex skills, lifecycle hooks, spec-driven development, model routing with cost ceilings, quality gates that fail closed',
+];
 
 export const cvDocument = CvDocumentSchema.parse({
   name: profile.displayName,
   role: profile.title,
-  location: profileLocation,
+  location: profileCityLine,
   links: [
     { label: social.email, href: `mailto:${social.email}`, external: false },
     { label: siteLabel, href: siteHref, external: true },
     { label: 'LinkedIn', href: social.linkedin, external: true },
     { label: 'GitHub', href: social.github, external: true },
   ],
-  summary: cvSummary,
+  summary: RESUME_SUMMARY,
   experience: gitLog.map((entry) => ({
     key: entry.hash,
     company: entry.company,
@@ -176,10 +172,7 @@ export const cvDocument = CvDocumentSchema.parse({
       .filter((fragment) => fragment.trim().length > 0)
       .map(toSentence),
   })),
-  skills: readmeCopy.desktopCoreStack
-    .flatMap((line) => line.replace(BULLET_PREFIX_PATTERN, '').split(STACK_SEPARATOR))
-    .map((item) => item.trim())
-    .filter(Boolean),
+  skills: CV_SKILLS,
   certifications: credentials.map((entry) => ({
     key: entry.label,
     label: labelOf(entry.label),
@@ -218,7 +211,7 @@ export const summaryDocument = SummaryDocumentSchema.parse({
     profile.currentEmployer.name,
     readingViews.summary.experienceLabel,
   ].join(STACK_SEPARATOR),
-  stats: heroStats,
+  stats: heroContent.stats,
   projects: summaryProjects,
   languages: cvDocument.languages,
   email: social.email,

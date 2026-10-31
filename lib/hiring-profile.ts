@@ -68,7 +68,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   github: social.github,
   linkedin: social.linkedin,
 
-  seniority: ['senior', 'staff', 'principal'],
+  seniority: ['senior'],
   yoe: 8,
 
   stack_primary: ['React', 'Next.js', 'TypeScript', 'Angular', 'RxJS', 'NgRx'],
@@ -82,7 +82,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     'GitHub Actions',
   ],
   domains: [
-    'AI deal origination / private markets',
+    'private markets fintech',
     'fintech',
     'PCI-DSS',
     'healthcare',
@@ -102,7 +102,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
 
   receipts: {
     tx_volume_per_year: '40M+',
-    revenue_platform: '€1B+ ARR',
+    revenue_platform: '€1.197B group revenue (Betsson)',
     mau_peak: '8M+ (Grupo SBF)',
     a11y_score: '~100/100',
     perf_delta_js: '-33%',
@@ -112,7 +112,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     conversion_uplift: '+10% (20+ A/B experiments)',
     api_latency_reduction: '-97.5% (40s→<1s, Venturus)',
     labs_delivered: '2.1M+ cumulative (VMware Pathfinder)',
-    banking_customers: '70M+ (Itaú via Zup)',
+    banking_customers: '24.2M digital clients (Itaú via Zup)',
     copilot_subagents: '12-agent system (Betsson)',
   },
 
@@ -127,9 +127,9 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   certifications: credentials.map((entry) => `${entry.label} · ${entry.badge} · ${entry.evidence}`),
   availability: profile.availability,
   notice_period_days: 0,
-  open_to: ['full_time', 'contract', 'ic', 'tech_lead', 'staff', 'principal'],
+  open_to: ['full_time', 'contract', 'ic', 'tech_lead'],
   location: profileLocation,
 
   languages: profile.languages,
-  last_updated: '2026-07-11',
+  last_updated: '2026-10-30',
 });

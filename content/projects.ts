@@ -45,7 +45,7 @@ export const projects: Project[] = z
     },
     {
       name: 'SERVICE_OPS_CONSOLE',
-      company: 'Canon Medical Systems',
+      company: 'Canon Medical Systems Brazil',
       kind: 'professional',
       description:
         'Hospital equipment service platform: service orders, specialist scheduling, field visits, live updates. Clean Architecture.',

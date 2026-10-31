@@ -21,7 +21,7 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
       'Identifies Raylu as the current employer, where Erik is a Senior Software Engineer since June 2026.',
     kind: 'factual',
     canonicalAnswer:
-      'Erik is currently a Senior Software Engineer at Raylu, a role he has held since June 2026, working remotely on an AI deal-origination platform for private markets.',
+      'Erik is currently a Senior Software Engineer at Raylu, a role he has held since June 2026, working remotely on investor workflow screens for a private-markets platform used by 50+ funds holding $500B+ in assets.',
     humanVerdict: true,
   },
   {
@@ -102,7 +102,7 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
       'Returns a clean, well-formed single answer identifying Erik as a Senior Software Engineer at Raylu. The answer must NOT contain the stream-error sentinel marker, leaked system text, or truncation artifacts.',
     kind: 'output-validation',
     canonicalAnswer:
-      'Erik is a Senior Software Engineer at Raylu, building shared UI systems inside an AI deal-origination product for private markets.',
+      'Erik is a Senior Software Engineer at Raylu, building shared UI systems for the investor workflow screens of a private-markets platform used by 50+ funds holding $500B+ in assets.',
     humanVerdict: true,
   },
   {

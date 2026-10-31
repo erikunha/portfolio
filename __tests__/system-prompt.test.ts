@@ -104,12 +104,13 @@ describe('lib/ask/system-prompt', () => {
       expect(narrative).toMatch(/GitHub Copilot 12-subagent/);
     });
 
-    it('frames Raylu as an AI deal-origination platform in the current-role header', () => {
-      expect(narrative).toMatch(/AI deal-origination platform/);
+    it('frames Raylu with the resume wording in the current-role header', () => {
+      expect(narrative).toMatch(/## Current role[\s\S]{0,200}\$500B\+/);
+      expect(narrative).not.toMatch(/deal[- ]origination/i);
       expect(
         narrative,
-        'the deal-origination framing must sit in the Current role section, not only in the projects dump below',
-      ).toMatch(/## Current role[\s\S]{0,200}deal-origination/);
+        'the fund-assets framing must sit in the Current role section, not only in the projects dump below',
+      ).toMatch(/## Current role[\s\S]{0,200}\$500B\+/);
     });
 
     it('carries the Raylu start date and remote mode inside the Current role section', () => {
