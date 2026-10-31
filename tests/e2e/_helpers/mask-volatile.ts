@@ -22,7 +22,7 @@ export async function stripVolatileChrome(page: Page): Promise<void> {
       (el as HTMLElement).style.display = 'none';
     }
     for (const el of document.querySelectorAll(
-      '.dock, .to-top-btn, .status-bar, .desktop-topbar, .pos-line',
+      '.dock, .to-top-btn, .status-bar, .desktop-topbar, .mobile-title-bar, .pos-line',
     )) {
       (el as HTMLElement).style.visibility = 'hidden';
     }
