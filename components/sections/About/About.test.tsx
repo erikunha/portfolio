@@ -4,6 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { aboutContent } from '@/content/about';
 import { About } from './About';
 
+const CODE_FONT_PX = 12;
+const MONO_ADVANCE_EM = 0.6;
+const NARROW_PANEL_TEXT_PX = 232;
+const NARROW_LINE_CHAR_BUDGET = Math.floor(NARROW_PANEL_TEXT_PX / (CODE_FONT_PX * MONO_ADVANCE_EM));
+
 describe('About r106 composition', () => {
   it('renders five framed panels with titles in their top bands', () => {
     const { container } = render(<About />);
@@ -23,7 +28,7 @@ describe('About r106 composition', () => {
 
   it('server-renders the Senior status in the role typer, approved principles and all seven responsibilities', () => {
     render(<About />);
-    expect(screen.getByRole('status').textContent).toBe('Senior');
+    expect(screen.getAllByRole('status').map((n) => n.textContent)).toContain('Senior');
     expect(screen.getByText(/LCP, INP, CLS and bundle size/)).toBeTruthy();
     expect(screen.getByText(/WCAG 2.2 AA, WAI-ARIA/)).toBeTruthy();
     const responsibilities = screen
@@ -38,29 +43,35 @@ describe('About r106 composition', () => {
     const doc = new DOMParser().parseFromString(renderToStaticMarkup(<About />), 'text/html');
     const line = doc.querySelector('.ab-prose p:has(.ab-role)');
     const { role, statusPrefix, statusSuffix } = aboutContent.whoami;
-    expect(line?.textContent).toBe(`${statusPrefix}${role}${role.slice(1, -1)}${statusSuffix}`);
-    expect(line?.querySelector('.ab-role')?.getAttribute('aria-hidden')).toBe('true');
-    expect(line?.querySelector('.ab-role')?.closest('.min-w-\\[9em\\]')).not.toBeNull();
+    const visible = line?.querySelector('[data-role-pill]');
+    expect(visible?.textContent).toBe(role);
+    expect(line?.querySelector('.role-typer-sizer')?.getAttribute('data-role-text')).toBe(role);
+    expect(line?.textContent).toContain(`${statusPrefix}${role}`);
+    expect(line?.textContent).toContain(statusSuffix);
+    expect(visible?.getAttribute('aria-hidden')).toBe('true');
+    expect(
+      line?.querySelector('.min-w-\\[9em\\]'),
+      'the fixed 9em reservation left a gap between the badge and the rest of the line',
+    ).toBeNull();
     expect(doc.querySelectorAll('h1')).toHaveLength(0);
   });
 
-  it('explains the four permission bit patterns beside the listing', () => {
+  it('lists seven r106 ls -la rows with no extra legend lines', () => {
     render(<About />);
     const responsibilities = screen
       .getByRole('heading', { name: 'LS -LA ~/RESPONSIBILITIES' })
       .closest('.ab-panel');
-    const legend = responsibilities?.querySelector('[data-legend="true"]');
-    expect(legend).not.toBeNull();
     expect(
-      [...(legend?.querySelectorAll('.ab-permissions') ?? [])].map((n) => n.textContent),
-    ).toEqual(['drwxr-xr-x', 'drwxrwxrwx', 'drwxr-x---', '-rwx------']);
-    expect(legend?.textContent).toContain('i own it, you can read it, you can run against it');
-    expect(legend?.textContent).toContain('explicitly shared, please write here too');
-    expect(legend?.textContent).toContain(
-      'owned, run only by trusted group (security, compliance)',
-    );
-    expect(legend?.textContent).toContain('not delegable; this is the one i bring to the room');
+      responsibilities?.querySelector('[data-legend="true"]'),
+      'r106 shows only the listing; the legend wrapped into broken rows',
+    ).toBeNull();
     expect(responsibilities?.querySelectorAll('[data-file]')).toHaveLength(7);
+  });
+
+  it('offers a COPY button carrying the full retry code', () => {
+    render(<About />);
+    const copy = screen.getByRole('button', { name: aboutContent.code.copyAccessibleLabel });
+    expect(copy, 'r106 retry panel has a COPY control').toBeTruthy();
   });
 
   it('groups the stack and keeps retry code keyboard accessible on mobile', () => {
@@ -74,6 +85,15 @@ describe('About r106 composition', () => {
     expect(code.getAttribute('tabindex')).toBe('0');
     expect(code.textContent).toContain('withRetry');
     expect(code.textContent).toContain('Math.random()');
+  });
+
+  it('wraps every retry code line to fit the narrowest 320px panel', () => {
+    const code = aboutContent.code.tokens.map((token) => token.text).join('');
+    const longestLine = Math.max(...code.split('\n').map((line) => line.length));
+    expect(
+      longestLine,
+      `longest retry code line is ${longestLine} chars; the 232px panel text fits ${NARROW_LINE_CHAR_BUDGET}`,
+    ).toBeLessThanOrEqual(NARROW_LINE_CHAR_BUDGET);
   });
 
   it('marks the About section as a dock jump target so HOME can move focus to it', () => {

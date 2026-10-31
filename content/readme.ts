@@ -10,7 +10,7 @@ export const readmeCopy: ReadmeCopy = ReadmeCopySchema.parse({
   ],
   desktopPrinciples: [
     '- Performance-first: LCP, TBT, bundle reduction in production budgets.',
-    '- A11y & compliance: WCAG 2.1 AA, ARIA, PCI-DSS-grade safeguards.',
+    '- A11y & compliance: WCAG 2.2 AA, ARIA, PCI-DSS-grade safeguards.',
   ],
   desktopStatusH2: '## Current Status',
 });

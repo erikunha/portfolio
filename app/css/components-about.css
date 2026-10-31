@@ -1,6 +1,6 @@
 @layer components {
   .about-section {
-    margin-bottom: calc(var(--spacing-8) + var(--spacing-2));
+    margin-bottom: var(--space-section);
     min-width: 0;
   }
 
@@ -14,7 +14,7 @@
     gap: var(--spacing-2);
     margin: 0;
     color: var(--color-primary-500);
-    font-size: var(--text-sm);
+    font-size: var(--text-section-title);
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -63,7 +63,7 @@
   .ab-h {
     margin: 0;
     color: var(--color-primary-500);
-    font-size: var(--text-xs);
+    font-size: var(--text-base);
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -217,12 +217,12 @@
 
   .ab-code-scroll {
     max-width: 100%;
-    overflow-x: auto;
   }
 
   .ab-code pre {
-    width: max-content;
-    min-width: 100%;
+    min-width: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
     font-size: var(--text-xs);
     line-height: 1.4;
     padding: var(--spacing-2) var(--spacing-3);
@@ -249,12 +249,6 @@
   }
 
   @media (min-width: 1024px) {
-    .hero-actions {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .hero-actions > a:nth-child(3) {
-      display: none;
-    }
     .hero-terminal .hero-boot-desktop {
       top: var(--spacing-8);
       bottom: var(--spacing-8);
@@ -298,27 +292,8 @@
   }
 
   @media (max-width: 767px) {
-    .hero-stats,
-    .hero-bio .hero-stats {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .hero-stats > div:not(:last-child),
-    .hero-bio .hero-stats > div:not(:last-child) {
-      border-right: 0;
-      border-bottom: var(--border-width) solid var(--color-primary-subtle);
-    }
-    .hero-actions {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .hero-actions > a:first-child {
-      grid-column: auto;
-    }
-  }
-
-  @media (max-width: 767px) {
     .about-section {
       border: var(--border-width) solid var(--color-primary-subtle);
-      margin-bottom: calc(var(--spacing-4) + var(--spacing-1) / 2);
     }
     .about-section-header {
       padding: var(--spacing-3) calc(var(--spacing-3) + var(--spacing-1) / 2);
@@ -336,9 +311,11 @@
       min-height: 0;
       padding: calc(var(--spacing-1) * 1.5) var(--spacing-3);
     }
+    .ab-h {
+      letter-spacing: 0.04em;
+    }
     .ab-body {
       padding: calc(var(--spacing-2) + var(--spacing-1) / 2) var(--spacing-3);
-      font-size: var(--text-xs);
     }
     .ab-text {
       grid-template-columns: var(--spacing-target-compact) minmax(0, 1fr);
@@ -355,7 +332,6 @@
       line-height: var(--spacing-4);
     }
     .ab-resp pre {
-      font-size: var(--text-xs);
       line-height: 1.85;
     }
     .ab-resp [data-file] {

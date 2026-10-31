@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { profile } from './profile';
 import { AboutContentSchema } from './schemas';
 import { social } from './social';
@@ -60,9 +59,10 @@ export const aboutContent = AboutContentSchema.parse({
     repoLabel: '// view full repo →',
     repoHref: social.github,
     repoAccessibleLabel: 'View full repo, opens in a new tab',
+    copyAccessibleLabel: 'Copy retry code',
     tokens: [
       {
-        text: '// retry an RxJS stream with exponential backoff + jitter, used in',
+        text: '// retry an RxJS stream with',
         className: 'text-primary-400 italic',
       },
       {
@@ -70,7 +70,31 @@ export const aboutContent = AboutContentSchema.parse({
         className: '',
       },
       {
-        text: "// the cashier's deposit polling loop. signals abort on permanent 4xx.",
+        text: '// exponential backoff + jitter,',
+        className: 'text-primary-400 italic',
+      },
+      {
+        text: '\n',
+        className: '',
+      },
+      {
+        text: "// used in the cashier's deposit",
+        className: 'text-primary-400 italic',
+      },
+      {
+        text: '\n',
+        className: '',
+      },
+      {
+        text: '// polling loop; signals abort',
+        className: 'text-primary-400 italic',
+      },
+      {
+        text: '\n',
+        className: '',
+      },
+      {
+        text: '// on permanent 4xx.',
         className: 'text-primary-400 italic',
       },
       {
@@ -126,7 +150,15 @@ export const aboutContent = AboutContentSchema.parse({
         className: 'text-quinary-300',
       },
       {
-        text: ', isFatal }: ',
+        text: ',',
+        className: 'text-tertiary-50',
+      },
+      {
+        text: '\n    ',
+        className: '',
+      },
+      {
+        text: 'isFatal }: ',
         className: 'text-tertiary-50',
       },
       {
@@ -154,8 +186,20 @@ export const aboutContent = AboutContentSchema.parse({
         className: 'text-tertiary-50',
       },
       {
+        text: '\n  ',
+        className: '',
+      },
+      {
         text: 'T',
         className: 'text-quinary-300',
+      },
+      {
+        text: ',',
+        className: 'text-tertiary-50',
+      },
+      {
+        text: '\n',
+        className: '',
       },
       {
         text: '> {',
@@ -226,8 +270,12 @@ export const aboutContent = AboutContentSchema.parse({
         className: 'text-quaternary-400',
       },
       {
-        text: '?.(err)) ',
+        text: '?.(err))',
         className: 'text-tertiary-50',
+      },
+      {
+        text: '\n        ',
+        className: '',
       },
       {
         text: 'throw',
@@ -262,24 +310,32 @@ export const aboutContent = AboutContentSchema.parse({
         className: '',
       },
       {
-        text: '* ',
+        text: '*',
         className: 'text-tertiary-50',
+      },
+      {
+        text: '\n        ',
+        className: '',
       },
       {
         text: '2',
         className: 'text-quinary-300',
       },
       {
-        text: '**',
+        text: ' ** ',
         className: 'text-tertiary-50',
       },
       {
-        text: 'attempt ',
+        text: 'attempt',
         className: '',
       },
       {
-        text: '+ ',
+        text: ' +',
         className: 'text-tertiary-50',
+      },
+      {
+        text: '\n        ',
+        className: '',
       },
       {
         text: 'Math.random',
@@ -348,13 +404,3 @@ export const aboutContent = AboutContentSchema.parse({
     ].map((token, id) => ({ ...token, id })),
   },
 });
-
-export const responsibilitiesLegend = z
-  .array(z.object({ perms: z.string().min(1), meaning: z.string().min(1) }))
-  .length(4)
-  .parse([
-    { perms: 'drwxr-xr-x', meaning: 'i own it, you can read it, you can run against it' },
-    { perms: 'drwxrwxrwx', meaning: 'explicitly shared, please write here too' },
-    { perms: 'drwxr-x---', meaning: 'owned, run only by trusted group (security, compliance)' },
-    { perms: '-rwx------', meaning: 'not delegable; this is the one i bring to the room' },
-  ]);

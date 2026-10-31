@@ -70,6 +70,24 @@
     padding: 0.75rem 1rem;
   }
 
+  .role-typer {
+    display: inline-grid;
+    vertical-align: baseline;
+  }
+
+  .role-typer > * {
+    grid-area: 1 / 1;
+    justify-self: start;
+  }
+
+  .role-typer-sizer {
+    visibility: hidden;
+  }
+
+  .role-typer-sizer::before {
+    content: attr(data-role-text);
+  }
+
   .signal-glow {
     text-shadow:
       0 0 8px var(--color-glow-45),
