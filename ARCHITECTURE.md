@@ -235,7 +235,6 @@ content/about.ts                      # About panels, Now rows and Senior status
 content/hero.ts                       # validated Hero metrics, labels and actions
 content/hero-client.ts                # typed boot and system-failure copy, no runtime schema import
 content/nav.ts                        # zod-free nav vocabulary: labels, topbar links, reading link and motion label
-content/readme.ts                     # README/bio content for /cv and /summary
 content/projects.ts                   # shared project cards
 content/perf-receipts.ts              # canonical deltas, attached receipts and reading-view stats
 content/measured.ts                   # ASK and PSI presentation metadata
