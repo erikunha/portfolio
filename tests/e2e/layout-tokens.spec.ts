@@ -61,11 +61,32 @@ test.describe('layout tokens', () => {
         .evaluate((el) => el.getBoundingClientRect().width);
       expect(width).toBe(MEASURE_PAGE);
       const left = await contentLeft(page, path === '/links' ? '.page-container' : 'main');
-      const rail = await page.evaluate(() => {
-        const shell = document.querySelector('.app-content');
-        return shell ? Number.parseFloat(getComputedStyle(shell).marginLeft) : 0;
-      });
-      expect(left).toBeCloseTo(rail + (1280 - rail - MEASURE_PAGE) / 2 + GUTTER_AT_1280, 0);
+      const parentBox = await page
+        .locator(path === '/links' ? '.page-container' : 'main')
+        .first()
+        .evaluate((el) => {
+          const parent = el.parentElement;
+          if (!parent) throw new Error('page measure element has no parent');
+          const box = parent.getBoundingClientRect();
+          const style = getComputedStyle(parent);
+          const padLeft = Number.parseFloat(style.paddingLeft);
+          const padRight = Number.parseFloat(style.paddingRight);
+          const root = document.documentElement.getBoundingClientRect();
+          return {
+            left: box.left + padLeft,
+            width: box.width - padLeft - padRight,
+            parentLeft: box.left,
+            parentWidth: box.width,
+            rootLeft: root.left,
+            rootWidth: root.width,
+          };
+        });
+      expect(parentBox.parentLeft).toBe(parentBox.rootLeft);
+      expect(parentBox.parentWidth).toBe(parentBox.rootWidth);
+      expect(left).toBeCloseTo(
+        parentBox.left + (parentBox.width - MEASURE_PAGE) / 2 + GUTTER_AT_1280,
+        0,
+      );
     });
   }
 
