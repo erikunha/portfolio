@@ -5,7 +5,7 @@ import SummaryPage, { metadata as summaryMetadata } from '@/app/summary/page';
 import { credentials } from '@/content/credentials';
 import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
-import { heroStats } from '@/content/perf-receipts';
+import { heroContent } from '@/content/hero';
 import { profile } from '@/content/profile';
 import {
   cvDocument,
@@ -13,7 +13,6 @@ import {
   readingViews,
   summaryDocument,
   toSentence,
-  withoutFragment,
 } from '@/content/reading-views';
 import { social } from '@/content/social';
 
@@ -34,16 +33,6 @@ describe('toSentence', () => {
 
   it('rewrites a known resume fragment into a full sentence', () => {
     expect(toSentence('Angular 17 to 19')).toBe('Upgraded the platform from Angular 17 to 19.');
-  });
-});
-
-describe('withoutFragment', () => {
-  it('removes the fragment from the source', () => {
-    expect(withoutFragment('keep this drop', ' drop')).toBe('keep this');
-  });
-
-  it('throws when the fragment has drifted out of the source', () => {
-    expect(() => withoutFragment('keep this', 'gone')).toThrow(/expected fragment missing/);
   });
 });
 
@@ -89,6 +78,40 @@ describe('CV reading view', () => {
     expect(cvDocument.summary.length).toBeGreaterThan(40);
     expect(cvDocument.summary).not.toContain(profile.title);
     expect(cvDocument.summary).not.toContain(cvDocument.location);
+  });
+
+  it('states the resume SUMMARY as the CV summary', () => {
+    expect(cvDocument.summary).toContain('micro-frontend topologies');
+    expect(cvDocument.summary).toContain('backend-for-frontend (BFF)');
+    expect(cvDocument.summary).not.toContain('8+ years building frontend systems');
+  });
+
+  it('states the resume location in the header and publishes no phone number', () => {
+    const header = host.querySelector('.reading-meta');
+    expect(header?.textContent).toBe('Paulínia, Brazil');
+    expect(host.textContent).not.toMatch(/\+\d[\d\s()-]{6,}\d/);
+  });
+
+  it('lists the resume core expertise as the CV skills', () => {
+    const skills = cvDocument.skills.join(' · ');
+    expect(skills).toContain('Frontend & Product Architecture');
+    expect(skills).toContain('Testing, Quality & Release Engineering');
+    expect(skills).toContain('BFF, APIs & Data');
+    expect(skills).toContain('AI-Native Product & Agent Engineering');
+    expect(skills).toContain('TanStack Table and Query');
+    expect(skills).toContain('Fastify');
+    expect(skills).not.toContain('User Journeys');
+  });
+
+  it('states every education degree and institution in full', () => {
+    expect(host.textContent).toContain('B.S. Information Systems');
+    expect(host.textContent).toContain('Centro Universitário Salesiano de São Paulo (UNISAL)');
+    expect(host.textContent).toContain(
+      'Cornerstone International Community College of Canada (CICCC)',
+    );
+    expect(host.textContent).toContain(
+      'MBA (Lato Sensu), AI Engineering, Machine Learning and Deep Learning',
+    );
   });
 
   it('opens external links in a new tab with a hint for screen readers', () => {
@@ -146,11 +169,17 @@ describe('summary reading view', () => {
     const tiles = host.querySelectorAll(
       `[aria-label="${readingViews.summary.statsLabel}"] .stat-tile`,
     );
-    expect(tiles).toHaveLength(heroStats.length);
-    heroStats.forEach((stat, index) => {
+    expect(tiles).toHaveLength(heroContent.stats.length);
+    heroContent.stats.forEach((stat, index) => {
       expect(tiles[index]?.textContent).toContain(stat.value);
       expect(tiles[index]?.textContent).toContain(stat.label);
     });
+    expect(host.textContent).not.toContain('€1B+ ARR');
+  });
+
+  it('publishes no relocation or work-authorization chip', () => {
+    expect(host.textContent).not.toContain('OPEN_TO_RELOCATION');
+    expect(host.textContent).not.toContain('OPEN_WITH_SPONSORSHIP');
   });
 
   it('shows the chosen projects with a headline stat each', () => {

@@ -591,15 +591,6 @@ export const TerminalChromeSchema = z.object({
 });
 export type TerminalChrome = z.infer<typeof TerminalChromeSchema>;
 
-export const ReadmeCopySchema = z.object({
-  desktopH1: z.string().min(1),
-  desktopIntro: z.string().min(1),
-  desktopCoreStack: z.array(z.string().min(1)).min(1),
-  desktopPrinciples: z.array(z.string().min(1)).min(1),
-  desktopStatusH2: z.string().min(1),
-});
-export type ReadmeCopy = z.infer<typeof ReadmeCopySchema>;
-
 export type HeroContent = z.infer<typeof HeroContentSchema>;
 
 export const HeroClientContentSchema = z.object({
@@ -936,7 +927,6 @@ export const ReadingViewsSchema = z.object({
     cvLinkLabel: ReadingTextSchema,
     statsLabel: ReadingTextSchema,
     experienceLabel: ReadingTextSchema,
-    badge: ReadingTextSchema,
     projectNames: z.array(ReadingTextSchema).min(1),
     stack: z.array(ReadingTextSchema).min(1),
     headings: z.object({
