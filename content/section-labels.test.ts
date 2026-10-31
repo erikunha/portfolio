@@ -1,6 +1,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { contactContent } from './contact';
+import { projectPresentation } from './projects';
 import { SECTION_LABELS } from './section-labels';
 import { SECTION_REGISTRY } from './section-registry';
 
@@ -31,6 +33,22 @@ describe('SECTION_LABELS', () => {
     for (const [id, label] of Object.entries(SECTION_LABELS)) {
       expect(label.length, id).toBeGreaterThan(0);
       expect(label, id).not.toMatch(/[/~]|--|\.\w/);
+    }
+  });
+
+  it('no phone header repeats the visible section name next to it', () => {
+    const phoneHeaders = {
+      'sec-contact': contactContent.section.mobileCommand,
+      'sec-projects': projectPresentation.mobileCommand,
+    };
+    for (const [id, header] of Object.entries(phoneHeaders) as [
+      keyof typeof SECTION_LABELS,
+      string,
+    ][]) {
+      expect(
+        header.toUpperCase(),
+        `${id} shows "${SECTION_LABELS[id]}" and then "${header}" on phones; make the header a command, not the name`,
+      ).not.toBe(SECTION_LABELS[id].toUpperCase());
     }
   });
 

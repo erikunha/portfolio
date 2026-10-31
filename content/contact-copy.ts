@@ -31,7 +31,7 @@ export const contactCopy: ContactContent = {
   },
   section: {
     command: 'SUDO CONTACT --INIT',
-    mobileCommand: 'CONTACT',
+    mobileCommand: 'SUDO CONTACT',
     reply: 'Replies within 48h',
     linkedinPrompt: 'Prefer LinkedIn?',
     linkedinLabel: 'Message me there ↗',
