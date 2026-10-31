@@ -31,8 +31,6 @@ export const metadata: Metadata = {
   title: profilePageTitle,
   description: profileMetaDescription,
   keywords: [
-    'Staff Engineer',
-    'Principal Engineer',
     profile.title,
     'Applied AI',
     'LLM Engineering',

@@ -16,7 +16,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-current-employer',
     question: 'Where does Erik currently work?',
     expect:
-      'Identifies Raylu as the current employer, where Erik is a Senior Software Engineer since June 2026, working remotely on an AI deal-origination platform for private markets.',
+      'Identifies Raylu as the current employer, where Erik is a Senior Software Engineer since June 2026, working remotely on investor workflow screens for a private-markets platform used by 50+ funds holding $500B+ in assets.',
     kind: 'factual',
   },
   {
@@ -100,7 +100,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-copilot-subagents',
     question: 'What AI work has Erik done?',
     expect:
-      'Built a 12-subagent GitHub Copilot system at Betsson (codegen, review, debugging, testing, architecture validation); now builds shared UI systems inside an AI deal-origination product at Raylu; this portfolio uses the Claude API.',
+      "Built a 12-subagent GitHub Copilot system at Betsson (codegen, review, debugging, testing, architecture validation); now builds shared UI systems for Raylu's investor workflow screens (50+ funds holding $500B+ in assets); this portfolio uses the Claude API.",
     kind: 'factual',
   },
   {
@@ -171,7 +171,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-targeting-roles',
     question: 'What kind of roles is Erik looking for?',
     expect:
-      'Senior, Staff, Principal or Tech Lead roles — preferably high-traffic, regulated, or performance-critical systems (fintech, healthcare, platform, DX, AI-native).',
+      'Senior or Tech Lead roles — preferably high-traffic, regulated, or performance-critical systems (fintech, healthcare, platform, DX, AI-native).',
     kind: 'factual',
   },
 

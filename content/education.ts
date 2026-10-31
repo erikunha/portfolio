@@ -15,7 +15,7 @@ export const education: Education[] = EducationSchema.array().parse([
   {
     id: 'CO_OP_DIPLOMA',
     degree: 'Web Development Co-op Diploma',
-    institution: 'CICCC',
+    institution: 'Cornerstone International Community College of Canada (CICCC)',
     location: 'Vancouver, Canada',
     studyMode: null,
     startYear: 2023,
@@ -26,7 +26,7 @@ export const education: Education[] = EducationSchema.array().parse([
   {
     id: 'BS_INFO_SYSTEMS',
     degree: 'B.S. Information Systems',
-    institution: 'UNISAL',
+    institution: 'Centro Universitário Salesiano de São Paulo (UNISAL)',
     location: 'Campinas, Brazil',
     studyMode: null,
     startYear: 2015,

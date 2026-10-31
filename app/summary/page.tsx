@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { PrintButton } from '@/components/client/PrintButton';
 import { READING_PATHS, readingViews, summaryDocument } from '@/content/reading-views';
 import { social } from '@/content/social';
-import { Badge, Button, StatTile, TerminalPanel } from '@/design-system';
+import { Button, StatTile, TerminalPanel } from '@/design-system';
 
 const { shared, summary } = readingViews;
 const MAIN_ID = 'main-content';
@@ -67,9 +67,6 @@ export default function SummaryPage() {
           <p className="reading-role">{summaryDocument.tagline}</p>
           <p className="reading-meta">{summaryDocument.technologyLine}</p>
           <p className="reading-meta">{summaryDocument.context}</p>
-          <p className="mt-2 print:hidden">
-            <Badge>{summary.badge}</Badge>
-          </p>
         </section>
 
         <section className="reading-stats mt-6" aria-label={summary.statsLabel}>
