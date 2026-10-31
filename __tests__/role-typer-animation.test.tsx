@@ -60,23 +60,26 @@ describe('RoleTyper — animation loop', () => {
     expect(liveRegion?.textContent).toBe('Senior');
   });
 
-  it('enters back phase after hold and reduces text', async () => {
+  it('holds the typed role instead of erasing it', async () => {
     const container = await render();
     const pill = container.querySelector('[aria-hidden="true"]');
     await act(async () => {
       await vi.advanceTimersByTimeAsync(80 * 6 + 2000 + 40 + 40);
     });
-    expect(pill?.textContent?.length).toBeLessThan('[Senior]'.length);
+    expect(pill?.textContent, 'the badge holds the typed role instead of erasing itself').toBe(
+      '[Senior]',
+    );
   });
 
-  it('cycles to the next role after backspacing to empty', async () => {
+  it('never types a second role', async () => {
     const container = await render();
     const pill = container.querySelector('[aria-hidden="true"]');
     await act(async () => {
       await vi.advanceTimersByTimeAsync(480 + 2000 + 240 + 300 + 80 * 5 + 200);
     });
-    const text = pill?.textContent ?? '';
-    expect(text).toMatch(/^\[Sta/);
+    expect(pill?.textContent, 'the role vocabulary is one word, so no other role is typed').toBe(
+      '[Senior]',
+    );
   });
 
   it('halts typing when motion is switched off and resumes when switched on', async () => {
