@@ -54,7 +54,6 @@ const timingMobile = {
   holdMs: 1800,
   backMs: 35,
   interMs: 300,
-  startMs: 200,
 };
 
 function DesktopBoot() {

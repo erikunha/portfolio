@@ -4,6 +4,8 @@ const WIDTHS = [320, 390, 768, 1280];
 const TEXT_BASE_PX = 16;
 const TEXT_LG_PX = 18;
 const TEXT_BODY_PX = 14;
+const TEXT_XS_PX = 12;
+const CODE_TITLE_FULL_SIZE_MIN_WIDTH = 390;
 const TABLET_MIN_WIDTH = 768;
 const SPACE_SECTION_PHONE = 32;
 const SPACE_SECTION_TABLET = 48;
@@ -29,6 +31,22 @@ test.describe('type scale', () => {
           await px(page, selector, 'font-size'),
           `${selector} must not drop below the 14px body copy it heads`,
         ).toBe(TEXT_BASE_PX);
+      }
+    });
+
+    test(`the code panel title scales with the viewport and never drops below the label size at ${width}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      const size = await px(page, '.ab-code .ab-h', 'font-size');
+      expect(size, '.ab-code .ab-h stays at or above --text-xs').toBeGreaterThanOrEqual(TEXT_XS_PX);
+      if (width >= CODE_TITLE_FULL_SIZE_MIN_WIDTH) {
+        expect(size, '.ab-code .ab-h reaches the full base size').toBe(TEXT_BASE_PX);
+      } else {
+        expect(size, '.ab-code .ab-h shrinks only where it would not fit').toBeLessThan(
+          TEXT_BASE_PX,
+        );
       }
     });
 

@@ -153,7 +153,7 @@ export function About() {
               <section
                 className="ab-code-scroll"
                 aria-label={c.code.label}
-                // biome-ignore lint/a11y/noNoninteractiveTabindex: the overflowing code region needs keyboard scrolling
+                // biome-ignore lint/a11y/noNoninteractiveTabindex: the labelled code region is a deliberate tab stop so keyboard users can focus and select the sample
                 tabIndex={0}
               >
                 <pre className="ab-body">
