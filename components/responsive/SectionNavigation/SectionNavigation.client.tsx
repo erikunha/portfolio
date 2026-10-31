@@ -353,21 +353,13 @@ export function SectionNavigation() {
           })}
         </nav>
         <ul className="menu-foot">
-          {NAVIGATION.siteLinks.map(({ label, index, href, external }) => (
+          {NAVIGATION.siteLinks.map(({ label, index, href, external, accessibleName }) => (
             <li key={href}>
               <NavItem
                 href={href}
-                label={
-                  external ? (
-                    <>
-                      {label}
-                      <span className="sr-only">{copy.newTabSuffix}</span>
-                    </>
-                  ) : (
-                    label
-                  )
-                }
+                label={label}
                 index={index}
+                aria-label={accessibleName}
                 {...(external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
               />
             </li>

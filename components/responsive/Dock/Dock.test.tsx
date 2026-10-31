@@ -91,7 +91,7 @@ describe('Dock', () => {
   it('sends Hire to LinkedIn in a new tab with an explicit name', () => {
     mount();
     const hire = within(dock()).getByRole('link', {
-      name: 'Hire me on LinkedIn, opens in a new tab',
+      name: 'Hire me on LinkedIn (opens in a new tab)',
     });
     expect(hire.getAttribute('href')).toBe(LINKEDIN_URL);
     expect(hire.getAttribute('target')).toBe('_blank');

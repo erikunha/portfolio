@@ -1,7 +1,12 @@
 import { act, createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SectionNavigationProvider } from '@/components/responsive/SectionNavigation';
-import { NAV_VOCABULARY, TOPBAR_MOTION_LABEL, TOPBAR_NAV } from '@/content/nav';
+import {
+  HIRE_ACCESSIBLE_NAME,
+  NAV_VOCABULARY,
+  TOPBAR_MOTION_LABEL,
+  TOPBAR_NAV,
+} from '@/content/nav';
 import { NAVIGATION } from '@/content/navigation';
 import { topbarChrome } from '@/content/terminal-chrome';
 import { type MountedClient, mountClient } from './helpers/render';
@@ -64,7 +69,7 @@ describe('DesktopTopbar', () => {
     mounted = await renderTopbar();
     const nav = mounted.container.querySelector('nav[aria-label="Site navigation"]');
     const labels = [...(nav?.querySelectorAll('a') ?? [])].map((link) =>
-      (link.textContent ?? '').replace(NAVIGATION.copy.newTabSuffix, ''),
+      (link.textContent ?? '').trim(),
     );
 
     expect(labels).toEqual([
@@ -131,10 +136,8 @@ describe('DesktopTopbar', () => {
     expect(hire?.getAttribute('href')).toBe('https://www.linkedin.com/in/erikunha/');
     expect(hire?.getAttribute('target')).toBe('_blank');
     expect(hire?.getAttribute('rel')).toContain('noopener');
-    expect(hire?.textContent).toContain(NAVIGATION.copy.newTabSuffix);
-    expect(hire?.hasAttribute('aria-label'), 'the visible label stays in the accessible name').toBe(
-      false,
-    );
+    expect(hire?.textContent?.trim()).toBe(NAV_VOCABULARY.hire);
+    expect(hire?.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME);
   });
 
   it('keeps the brand badge on the row at every desktop width', async () => {

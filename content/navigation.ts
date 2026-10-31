@@ -1,4 +1,4 @@
-import { NAV_VOCABULARY } from './nav';
+import { HIRE_ACCESSIBLE_NAME, HIRE_SHORT_LABEL, NAV_VOCABULARY } from './nav';
 import { CV_LINK_LABEL, READING_PATHS } from './reading-paths';
 import { SECTION_NAV, type SectionId } from './section-registry';
 import { LINKEDIN_URL } from './social-urls';
@@ -25,6 +25,7 @@ export type SiteLink = {
   index: string;
   href: string;
   external: boolean;
+  accessibleName?: string;
 };
 
 export type NavigationCopy = {
@@ -37,7 +38,6 @@ export type NavigationCopy = {
   dockLabel: string;
   positionLabel: string;
   menuLabelPrefix: string;
-  newTabSuffix: string;
   searchLabel: string;
   searchShortcutApple: string;
   searchShortcutOther: string;
@@ -64,7 +64,6 @@ export const NAVIGATION: Navigation = {
     dockLabel: 'primary',
     positionLabel: 'Page position',
     menuLabelPrefix: 'MENU, section',
-    newTabSuffix: ' (opens in a new tab)',
     searchLabel: 'SEARCH',
     searchShortcutApple: '⌘K',
     searchShortcutOther: 'Ctrl K',
@@ -90,9 +89,9 @@ export const NAVIGATION: Navigation = {
     { key: 'shell', label: 'SHELL', sectionId: 'sec-shell' },
     {
       key: 'hire',
-      label: 'HIRE ↗',
+      label: HIRE_SHORT_LABEL,
       href: LINKEDIN_URL,
-      accessibleName: 'Hire me on LinkedIn, opens in a new tab',
+      accessibleName: HIRE_ACCESSIBLE_NAME,
     },
     { key: 'menu', label: 'MENU' },
   ],
@@ -100,7 +99,13 @@ export const NAVIGATION: Navigation = {
     { label: CV_LINK_LABEL, index: 'CV', href: READING_PATHS.cv, external: false },
     { label: NAV_VOCABULARY.summary, index: '30', href: READING_PATHS.summary, external: false },
     { label: NAV_VOCABULARY.designSystem, index: 'DS', href: '/design-system', external: false },
-    { label: NAV_VOCABULARY.linkedin, index: '↗', href: LINKEDIN_URL, external: true },
+    {
+      label: NAV_VOCABULARY.linkedin,
+      index: '↗',
+      href: LINKEDIN_URL,
+      external: true,
+      accessibleName: HIRE_ACCESSIBLE_NAME,
+    },
   ],
 };
 
