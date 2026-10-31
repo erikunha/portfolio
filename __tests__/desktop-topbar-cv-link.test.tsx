@@ -1,5 +1,6 @@
 import { createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { SectionNavigationProvider } from '@/components/responsive/SectionNavigation';
 import { type MountedClient, mountClient } from './helpers/render';
 
 describe('DesktopTopbar CV link', () => {
@@ -13,7 +14,9 @@ describe('DesktopTopbar CV link', () => {
     const { DesktopTopbar } = await import(
       '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
     );
-    mounted = await mountClient(createElement(DesktopTopbar));
+    mounted = await mountClient(
+      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar)),
+    );
     const links = Array.from(mounted.container.querySelectorAll('a'));
     const cv = links.find((link) => link.textContent === 'VIEW_CV');
 

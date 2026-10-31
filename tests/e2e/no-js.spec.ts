@@ -26,18 +26,33 @@ test.describe('home with JavaScript off', () => {
     expect(topbar).not.toBeNull();
     expect(bar).not.toBeNull();
     expect(bar!.y).toBeGreaterThanOrEqual(topbar!.y + topbar!.height);
-    await expect(page.locator('.desktop-topbar').getByText('ERIK_CUNHA.SH')).toBeInViewport();
-    const rail = await page.locator('.section-menu').boundingBox();
-    if (rail) expect(bar!.x).toBeGreaterThanOrEqual(rail.x + 56);
+    await expect(
+      page.locator('.desktop-topbar').getByText('ERIK_CUNHA.SH', { exact: true }),
+    ).toBeInViewport();
+    await expect(
+      page.locator('.desktop-topbar').getByRole('link', { name: 'VIEW_CV' }),
+    ).toBeInViewport();
   });
 
-  test('the notice clears the pinned-open rail at wide desktop', async ({ page }) => {
+  test('the notice sits flush with the topbar on the horizontal axis', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto('/');
+    const topbar = await page.locator('.desktop-topbar').boundingBox();
+    const bar = await page.locator('.nojs-bar').boundingBox();
+    expect(topbar).not.toBeNull();
+    expect(bar).not.toBeNull();
+    expect(
+      bar?.x,
+      'the noscript notice must share the left edge of the fixed topbar, the collapsed rail that offset it is gone',
+    ).toBe(topbar?.x);
+  });
+
+  test('no section rail is pinned open at wide desktop without JS', async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 900 });
     await page.goto('/');
-    const bar = await page.locator('.nojs-bar').boundingBox();
-    const rail = await page.locator('.section-menu').boundingBox();
-    expect(bar).not.toBeNull();
-    expect(rail).not.toBeNull();
-    expect(bar!.x).toBeGreaterThanOrEqual(rail!.x + rail!.width);
+    await expect(
+      page.locator('.section-menu'),
+      'the menu opens only from the INDEX button',
+    ).toBeHidden();
   });
 });
