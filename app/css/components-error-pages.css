@@ -126,6 +126,12 @@
     list-style: none;
   }
 
+  .err-suggest .err-bar-link {
+    color: var(--color-primary-500);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
   .err-actions {
     display: flex;
     flex-wrap: wrap;

@@ -85,3 +85,22 @@ test('dock items keep one height at 320 so no label wraps', async ({ page }) => 
   expect(heights.length).toBeGreaterThan(1);
   expect(new Set(heights).size, `dock item heights ${heights.join(',')}`).toBe(1);
 });
+
+test('the contact submit button spans its row below 768 and keeps its size at 1280', async ({
+  page,
+}) => {
+  const rowGap = async () =>
+    page.locator('.contact-send').evaluate((button) => {
+      const row = button.closest('.contact-submit-row')?.getBoundingClientRect();
+      return row ? Math.round(row.width - button.getBoundingClientRect().width) : Number.NaN;
+    });
+  await page.setViewportSize(MOBILE);
+  await page.goto('/');
+  expect(await rowGap(), 'free space beside the button on a phone').toBeLessThanOrEqual(
+    EDGE_TOLERANCE_PX,
+  );
+  await page.setViewportSize(DESKTOP);
+  expect(await rowGap(), 'the desktop button keeps its natural width').toBeGreaterThan(
+    EDGE_TOLERANCE_PX,
+  );
+});
