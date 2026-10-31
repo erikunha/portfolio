@@ -44,6 +44,13 @@ In order: `ci:local` -> `check-claude-approval` (`pnpm claude-gate`: the latest 
 
 Large programs use an **integration branch + sub-PRs**: `feat/<feature>` off main, then `feat/<feature>-<part>` sub-PRs into it. Each sub-PR targets the integration branch and covers one reviewable unit.
 
+A sub-PR is one milestone and opens complete. Before the first push it carries the code, its unit and
+e2e tests, the responsive checks at 320, 390, 768, 1024 and 1280, regenerated darwin and linux visual
+baselines, updated docs and diagrams, and any CI change the diff needs. Predict each CI job from the
+diff (path filters, LHCI target size and contrast, bundle and route JS budgets, visual projects) and
+run the affected ones locally first. The loop per milestone: finish, push once, request review, fix
+every finding with a thread reply, land into the integration branch, start the next milestone.
+
 ## Release
 
 - **Trigger:** squash-merge to `main` deploys via Vercel.
