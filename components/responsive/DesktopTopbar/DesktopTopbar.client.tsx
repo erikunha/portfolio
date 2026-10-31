@@ -67,9 +67,10 @@ export function DesktopTopbar() {
           </button>
           <a
             className={cn(
-              'border border-primary-500 text-primary-500 px-3 py-1.5 tracking-wider text-[length:var(--text-min)] inline-flex items-center min-h-11 whitespace-nowrap',
+              'border border-primary-500 text-primary-500 px-3 py-1.5 tracking-wider text-[length:var(--text-min)] items-center min-h-11 whitespace-nowrap',
               'transition-[box-shadow,background] duration-200 ease-out',
               'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:no-underline',
+              'hidden lg:inline-flex',
               'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
             )}
             href={TOPBAR_READING_LINK.href}
@@ -81,7 +82,8 @@ export function DesktopTopbar() {
               'bg-primary-500 text-black font-bold tracking-wider px-3 py-1.5 text-[length:var(--text-min)] border border-primary-500',
               'transition-[box-shadow] duration-200 ease-out',
               'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:no-underline',
-              'inline-flex items-center min-h-11 whitespace-nowrap',
+              'items-center min-h-11 whitespace-nowrap',
+              'hidden lg:inline-flex',
               'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
             )}
             href={TOPBAR_HIRE_LINK.href}

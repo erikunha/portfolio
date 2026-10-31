@@ -5,6 +5,7 @@ const SCROLL_PROBE_PX = 400;
 const TOPBAR_WIDTHS = [768, 1024, 1280, 1440];
 const SECTION_SHORTCUT_WIDTH = 1280;
 const SEARCH_TRIGGER_WIDTH = 1024;
+const ACTION_TIER_WIDTH = 1024;
 const MOTION_TIER_WIDTH = 1280;
 const FOOT_GAP_LIMIT_PX = 32;
 
@@ -106,8 +107,21 @@ for (const width of TOPBAR_WIDTHS) {
     }) => {
       await page.goto('/');
       const nav = page.getByRole('navigation', { name: 'Site navigation' });
-      await expect(nav.getByRole('link', { name: 'VIEW_CV' })).toBeVisible();
-      await expect(nav.getByRole('link', { name: 'HIRE_ON_LINKEDIN' })).toBeVisible();
+      const cv = nav.getByRole('link', { name: 'VIEW_CV' });
+      const hire = nav.getByRole('link', { name: 'HIRE_ON_LINKEDIN' });
+      if (width >= ACTION_TIER_WIDTH) {
+        await expect(cv, 'from 1024px the topbar keeps its own VIEW_CV action').toBeVisible();
+        await expect(hire, 'from 1024px the topbar keeps its own hire action').toBeVisible();
+      } else {
+        await expect(
+          cv,
+          'below 1024px the dock and the hero already carry the hire path, so the topbar hides it',
+        ).toBeHidden();
+        await expect(
+          hire,
+          'below 1024px the dock and the hero already carry the hire path, so the topbar hides it',
+        ).toBeHidden();
+      }
       if (width >= SECTION_SHORTCUT_WIDTH) {
         for (const label of ['ABOUT', 'WORK', 'CAREER', 'CONTACT', 'DESIGN_SYSTEM']) {
           await expect(nav.getByRole('link', { name: label })).toBeVisible();
@@ -128,6 +142,50 @@ for (const width of TOPBAR_WIDTHS) {
     });
   });
 }
+
+test.describe('desktop topbar: one hire action per viewport', () => {
+  for (const width of [768, 1023, 1024, 1280]) {
+    test.describe(`at ${width}px`, () => {
+      test.use({ viewport: { width, height: 720 } });
+
+      test('VIEW_CV and the hire link follow the dock breakpoint', async ({ page }) => {
+        await page.goto('/');
+        const bar = page.locator('.desktop-topbar');
+        const nav = bar.getByRole('navigation', { name: 'Site navigation' });
+        const cv = nav.getByRole('link', { name: 'VIEW_CV' });
+        const hire = nav.getByRole('link', { name: 'HIRE_ON_LINKEDIN' });
+
+        await expect(
+          page.getByRole('button', { name: /INDEX/ }),
+          'the INDEX trigger stays on the row at every topbar width',
+        ).toBeVisible();
+        await expect(
+          bar.getByText(topbarChrome.brandLabel, { exact: true }),
+          'the brand badge stays on the row at every topbar width',
+        ).toBeVisible();
+
+        if (width >= ACTION_TIER_WIDTH) {
+          await expect(
+            cv,
+            'from 1024px the topbar keeps its own VIEW_CV and hire actions',
+          ).toBeVisible();
+          await expect(hire).toBeVisible();
+        } else {
+          await expect(
+            cv,
+            'below 1024px the dock HIRE and the hero action carry the hire path, so a hidden ' +
+              'topbar control must not stay focusable or in the accessibility tree',
+          ).toBeHidden();
+          await expect(
+            hire,
+            'below 1024px the dock HIRE and the hero action carry the hire path, so a hidden ' +
+              'topbar control must not stay focusable or in the accessibility tree',
+          ).toBeHidden();
+        }
+      });
+    });
+  }
+});
 
 test.describe('section navigation: motion control tiers', () => {
   for (const width of [768, 1024, 1280, 1440]) {

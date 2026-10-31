@@ -161,6 +161,31 @@ describe('DesktopTopbar', () => {
     }
   });
 
+  it('hides VIEW_CV and the hire link below the lg tier', async () => {
+    mounted = await renderTopbar();
+    const nav = mounted.container.querySelector('nav[aria-label="Site navigation"]');
+    const links = [...(nav?.querySelectorAll('a') ?? [])];
+    const cv = links.find((link) => link.getAttribute('href') === '/cv');
+    const hire = links.find((link) =>
+      link.getAttribute('href')?.startsWith('https://www.linkedin.com'),
+    );
+
+    expect(cv, 'VIEW_CV must stay on the topbar, hidden or visible').not.toBeNull();
+    expect(hire, 'the hire link must stay on the topbar, hidden or visible').not.toBeNull();
+
+    for (const width of DESKTOP_WIDTHS) {
+      const expectedHidden = width < 1024;
+      expect(
+        isHiddenAtWidth(cv?.getAttribute('class') ?? '', width),
+        `VIEW_CV must be ${expectedHidden ? 'hidden' : 'visible'} at ${width}px`,
+      ).toBe(expectedHidden);
+      expect(
+        isHiddenAtWidth(hire?.getAttribute('class') ?? '', width),
+        `the hire link must be ${expectedHidden ? 'hidden' : 'visible'} at ${width}px`,
+      ).toBe(expectedHidden);
+    }
+  });
+
   it('spells the motion control compact and leaves the state on the button', async () => {
     mounted = await renderTopbar();
     const button = mounted.container.querySelector('button[aria-pressed]') as HTMLButtonElement;
