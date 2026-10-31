@@ -6,9 +6,9 @@ import { UnknownsSection } from '../UnknownsSection';
 
 const TAKE_NUMBER_WIDTH = 2;
 const TAKE_NUMBER_PAD = '0';
-const TAKE_TAG_STACK_CLASSES = 'max-md:mb-1 max-md:block max-md:w-fit';
 
 export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
+  const { docsLink } = hottestTakesConfig;
   return (
     <Module
       id="sec-hottest-takes"
@@ -30,7 +30,7 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
             </span>
             <div className="opinions-take">
               <h3>
-                <span className={TAKE_TAG_STACK_CLASSES}>{take.category}</span>
+                <span>{take.category}</span>
                 {take.thesis}
               </h3>
               <p>{take.body}</p>
@@ -43,6 +43,12 @@ export function HottestTakesSection({ defer }: { defer?: boolean } = {}) {
         {hottestTakesConfig.footer}
       </div>
       <UnknownsSection />
+      <a className="opinions-more" href={docsLink.href}>
+        <span aria-hidden>{docsLink.marker}</span>
+        <span>
+          {docsLink.label} <span aria-hidden>{docsLink.arrow}</span>
+        </span>
+      </a>
     </Module>
   );
 }
