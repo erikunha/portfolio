@@ -61,14 +61,22 @@ test.describe('layout tokens', () => {
         .evaluate((el) => el.getBoundingClientRect().width);
       expect(width).toBe(MEASURE_PAGE);
       const left = await contentLeft(page, path === '/links' ? '.page-container' : 'main');
-      const { rail, usable } = await page.evaluate(() => {
-        const shell = document.querySelector('.app-content');
-        return {
-          rail: shell ? Number.parseFloat(getComputedStyle(shell).marginLeft) : 0,
-          usable: document.documentElement.clientWidth,
-        };
-      });
-      expect(left).toBeCloseTo(rail + (usable - rail - MEASURE_PAGE) / 2 + GUTTER_AT_1280, 0);
+      const parentBox = await page
+        .locator(path === '/links' ? '.page-container' : 'main')
+        .first()
+        .evaluate((el) => {
+          const parent = el.parentElement;
+          if (!parent) throw new Error('page measure element has no parent');
+          const box = parent.getBoundingClientRect();
+          const style = getComputedStyle(parent);
+          const padLeft = Number.parseFloat(style.paddingLeft);
+          const padRight = Number.parseFloat(style.paddingRight);
+          return { left: box.left + padLeft, width: box.width - padLeft - padRight };
+        });
+      expect(left).toBeCloseTo(
+        parentBox.left + (parentBox.width - MEASURE_PAGE) / 2 + GUTTER_AT_1280,
+        0,
+      );
     });
   }
 
