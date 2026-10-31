@@ -209,7 +209,14 @@
   }
 
   .ab-code .ab-h {
+    --ab-title-gutter: 6.5rem;
+    --ab-title-em-budget: 17.5;
     color: var(--color-text-secondary);
+    font-size: clamp(
+      var(--text-xs),
+      calc((100vw - var(--ab-title-gutter)) / var(--ab-title-em-budget)),
+      var(--text-base)
+    );
     letter-spacing: 0.02em;
     text-transform: none;
     font-weight: 400;
