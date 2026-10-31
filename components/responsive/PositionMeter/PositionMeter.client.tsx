@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { formatSectionPosition, NAVIGATION } from '@/content/navigation';
-import { useSectionNavigation } from '../SectionNavigation';
+import { NAVIGATION } from '@/content/navigation';
 
 const POSITION_TARGETS = '[data-position-target]';
 const PERCENT = 100;
 
 export function PositionMeter() {
-  const { currentId } = useSectionNavigation();
   const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -62,7 +60,6 @@ export function PositionMeter() {
       >
         <i />
       </div>
-      <p className="pos-text">{formatSectionPosition(currentId)}</p>
     </div>
   );
 }

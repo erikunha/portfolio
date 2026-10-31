@@ -1,4 +1,4 @@
-import type { TerminalChrome } from './schemas';
+import type { TerminalChrome, TopbarChrome } from './schemas';
 
 export const shellChrome: TerminalChrome = {
   promptLabel: 'erik@portfolio · /bin/sh',
@@ -9,4 +9,10 @@ export const shellChrome: TerminalChrome = {
 export const contactChrome: TerminalChrome = {
   promptLabel: 'erik@portfolio · contact',
   rightTag: 'SECURE_CHANNEL',
+};
+
+export const topbarChrome: TopbarChrome = {
+  brandMark: '■',
+  brandLabel: 'ERIK_CUNHA.SH',
+  brandClose: '×',
 };

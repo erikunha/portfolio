@@ -1,3 +1,5 @@
+import { NAV_VOCABULARY } from './nav';
+import { CV_LINK_LABEL, READING_PATHS } from './reading-paths';
 import { SECTION_NAV, type SectionId } from './section-registry';
 import { LINKEDIN_URL } from './social-urls';
 
@@ -29,12 +31,19 @@ export type NavigationCopy = {
   drawerLabel: string;
   navLabel: string;
   title: string;
-  openRail: string;
+  indexGlyph: string;
+  indexLabel: string;
   closeDrawer: string;
   dockLabel: string;
   positionLabel: string;
   menuLabelPrefix: string;
   newTabSuffix: string;
+  searchLabel: string;
+  searchShortcutApple: string;
+  searchShortcutOther: string;
+  motionOn: string;
+  motionOff: string;
+  sectionCountLabel: string;
 };
 
 export type Navigation = {
@@ -49,12 +58,19 @@ export const NAVIGATION: Navigation = {
     drawerLabel: 'Section menu',
     navLabel: 'Page sections',
     title: '~/index',
-    openRail: 'Open section menu',
+    indexGlyph: '☰',
+    indexLabel: 'INDEX',
     closeDrawer: '[ X ] CLOSE',
     dockLabel: 'primary',
     positionLabel: 'Page position',
     menuLabelPrefix: 'MENU, section',
     newTabSuffix: ' (opens in a new tab)',
+    searchLabel: 'SEARCH',
+    searchShortcutApple: '⌘K',
+    searchShortcutOther: 'Ctrl K',
+    motionOn: 'MOTION: ON',
+    motionOff: 'MOTION: OFF',
+    sectionCountLabel: 'sections',
   },
   groups: [
     { id: 'whoami', title: 'WHOAMI', dock: 'home', sectionIds: ['bio', 'sec-readme'] },
@@ -70,7 +86,7 @@ export const NAVIGATION: Navigation = {
   ],
   dock: [
     { key: 'home', label: 'HOME', sectionId: 'bio' },
-    { key: 'work', label: 'WORK', sectionId: 'sec-projects' },
+    { key: 'work', label: NAV_VOCABULARY.work, sectionId: 'sec-projects' },
     { key: 'shell', label: 'SHELL', sectionId: 'sec-shell' },
     {
       key: 'hire',
@@ -81,8 +97,10 @@ export const NAVIGATION: Navigation = {
     { key: 'menu', label: 'MENU' },
   ],
   siteLinks: [
-    { label: 'DESIGN_SYSTEM', index: 'DS', href: '/design-system', external: false },
-    { label: 'LinkedIn', index: '↗', href: LINKEDIN_URL, external: true },
+    { label: CV_LINK_LABEL, index: 'CV', href: READING_PATHS.cv, external: false },
+    { label: NAV_VOCABULARY.summary, index: '30', href: READING_PATHS.summary, external: false },
+    { label: NAV_VOCABULARY.designSystem, index: 'DS', href: '/design-system', external: false },
+    { label: NAV_VOCABULARY.linkedin, index: '↗', href: LINKEDIN_URL, external: true },
   ],
 };
 

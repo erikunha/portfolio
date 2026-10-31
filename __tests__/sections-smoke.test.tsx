@@ -1,6 +1,7 @@
 import { type ComponentType, createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SectionNavigationProvider } from '@/components/responsive/SectionNavigation';
 import { type MountedClient, mountClient } from './helpers/render';
 
 function firstOf<T>(arr: readonly T[]): T {
@@ -16,6 +17,10 @@ vi.mock('@/components/client/ContactForm', () => ({
 vi.mock('@/components/client/InteractiveShell', () => ({
   InteractiveShellLazy: () => null,
 }));
+
+// The first test to import `@/app/page` pays the whole home-page module
+// transform; the default 5s budget loses the race on a loaded machine.
+const HOME_PAGE_IMPORT_TIMEOUT_MS = 20_000;
 
 describe('About', () => {
   let mounted: MountedClient;
@@ -57,19 +62,23 @@ describe('Home page', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders exactly one h1 element', async () => {
-    vi.stubGlobal('matchMedia', () => ({
-      matches: false,
-      addEventListener: () => undefined,
-      removeEventListener: () => undefined,
-    }));
-    const { default: Home } = await import('@/app/page');
-    const doc = new DOMParser().parseFromString(
-      renderToStaticMarkup(createElement(Home)),
-      'text/html',
-    );
-    expect(doc.querySelectorAll('h1')).toHaveLength(1);
-  });
+  it(
+    'renders exactly one h1 element',
+    async () => {
+      vi.stubGlobal('matchMedia', () => ({
+        matches: false,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      }));
+      const { default: Home } = await import('@/app/page');
+      const doc = new DOMParser().parseFromString(
+        renderToStaticMarkup(createElement(Home)),
+        'text/html',
+      );
+      expect(doc.querySelectorAll('h1')).toHaveLength(1);
+    },
+    HOME_PAGE_IMPORT_TIMEOUT_MS,
+  );
 
   it('resolves every in-page topbar link to a rendered section id', async () => {
     vi.stubGlobal('matchMedia', () => ({
@@ -86,7 +95,9 @@ describe('Home page', () => {
       'text/html',
     );
     const topbar = new DOMParser().parseFromString(
-      renderToStaticMarkup(createElement(DesktopTopbar)),
+      renderToStaticMarkup(
+        createElement(SectionNavigationProvider, null, createElement(DesktopTopbar)),
+      ),
       'text/html',
     );
     const targets = [...topbar.querySelectorAll('a[href^="/#"]')].map((link) =>

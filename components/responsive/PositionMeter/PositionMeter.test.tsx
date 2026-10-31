@@ -4,12 +4,7 @@ import { SECTION_REGISTRY } from '@/content/section-registry';
 import { SectionNavigationProvider } from '../SectionNavigation';
 import { PositionMeter } from './PositionMeter.client';
 
-let notify: IntersectionObserverCallback | undefined;
-
 class FakeObserver {
-  constructor(callback: IntersectionObserverCallback) {
-    notify = callback;
-  }
   observe = vi.fn();
   disconnect = vi.fn();
 }
@@ -57,7 +52,6 @@ function mount() {
 
 describe('PositionMeter', () => {
   beforeEach(() => {
-    notify = undefined;
     FakeResizeObserver.instances = [];
     vi.stubGlobal('IntersectionObserver', FakeObserver);
     vi.stubGlobal('ResizeObserver', FakeResizeObserver);
@@ -124,18 +118,9 @@ describe('PositionMeter', () => {
     expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('75');
   });
 
-  it('labels the current section as NN/9 outside any live region', () => {
+  it('renders only the progress line: the NN/9 label lives on the INDEX trigger', () => {
     const { container } = mount();
-    expect(screen.getByText('01/9')).not.toBeNull();
-    const target = document.getElementById('sec-shell');
-    act(() => {
-      notify?.(
-        [{ target, isIntersecting: true }] as unknown as IntersectionObserverEntry[],
-        {} as IntersectionObserver,
-      );
-    });
-    const label = screen.getByText('05/9');
-    expect(label.closest('[aria-live], [role="status"], [role="alert"]')).toBeNull();
+    expect(screen.queryByText('01/9'), 'the rail position strip was removed').toBeNull();
     expect(container.querySelector('[aria-live], [role="status"], [role="alert"]')).toBeNull();
   });
 

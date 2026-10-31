@@ -20,11 +20,14 @@ describe('DesktopTopbar — toggleMotion', () => {
       applyMotion: vi.fn(),
     }));
 
+    const { SectionNavigationProvider } = await import('@/components/responsive/SectionNavigation');
     const { DesktopTopbar } = await import(
       '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
     );
 
-    mounted = await mountClient(createElement(DesktopTopbar));
+    mounted = await mountClient(
+      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar)),
+    );
     const container = mounted.container;
 
     const btn = container.querySelector('button[data-motion]');
@@ -44,11 +47,14 @@ describe('DesktopTopbar — toggleMotion', () => {
       applyMotion: vi.fn(),
     }));
 
+    const { SectionNavigationProvider } = await import('@/components/responsive/SectionNavigation');
     const { DesktopTopbar } = await import(
       '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
     );
 
-    mounted = await mountClient(createElement(DesktopTopbar));
+    mounted = await mountClient(
+      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar)),
+    );
     const container = mounted.container;
 
     const btn = container.querySelector('button[data-motion]');
@@ -68,11 +74,14 @@ describe('DesktopTopbar — toggleMotion', () => {
       applyMotion: applyMotionMock,
     }));
 
+    const { SectionNavigationProvider } = await import('@/components/responsive/SectionNavigation');
     const { DesktopTopbar } = await import(
       '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
     );
 
-    mounted = await mountClient(createElement(DesktopTopbar));
+    mounted = await mountClient(
+      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar)),
+    );
     const container = mounted.container;
 
     const btn = container.querySelector('button[data-motion]');

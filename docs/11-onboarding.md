@@ -10,7 +10,7 @@
 
 ## Day 1 - run it and read the spine
 
-1. `pnpm install && pnpm dev`. Open `/`. Toggle the `MOTION` switch (top bar). Open `/design-system`. Hit `/api/healthz` and `/api/erik.json`.
+1. `pnpm install && pnpm dev`. Open `/`. Toggle the `MOTION` switch (the top bar at 1280px and up, or the `MOTION: ON` row in the section drawer at any width). Open `/design-system`. Hit `/api/healthz` and `/api/erik.json`.
 2. Read these five files in order - they are the load-bearing spine:
    - `app/page.tsx` - the terminal home composition; then inspect `/summary`, `/cv`, `/links` and `/links/en`.
    - `components/responsive/Module/Module.tsx` - the section wrapper.

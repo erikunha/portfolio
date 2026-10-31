@@ -11,7 +11,7 @@ test.describe('navigation: drawer at 390px', () => {
     page,
   }) => {
     await page.goto('/');
-    await expect(page.getByRole('complementary', { name: 'Section menu' })).toBeHidden();
+    await expect(page.locator('#section-drawer')).toBeHidden();
     await page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })
@@ -21,7 +21,10 @@ test.describe('navigation: drawer at 390px', () => {
     await expect(
       drawer.getByRole('navigation', { name: 'Page sections' }).getByRole('link'),
     ).toHaveCount(SECTION_COUNT);
-    await expect(drawer.getByRole('button', { name: '[ X ] CLOSE' })).toBeFocused();
+    await expect(
+      drawer.getByRole('link', { name: 'Home' }),
+      'the drawer opens focused on the current section, not on the close button',
+    ).toBeFocused();
   });
 
   test('choosing a destination closes the drawer and lands on the section', async ({ page }) => {
@@ -51,39 +54,8 @@ test.describe('navigation: drawer at 390px', () => {
   });
 });
 
-test.describe('navigation: rail at 1280px', () => {
+test.describe('navigation: INDEX trigger at 1280px', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
-
-  test('the collapsed rail is 56px wide and the dock is hidden', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByRole('navigation', { name: 'primary' })).toBeHidden();
-    const rail = page.getByRole('complementary', { name: 'Section menu' });
-    await expect(rail).toBeVisible();
-    const box = await rail.boundingBox();
-    const visibleWidth = (box?.x ?? 0) + (box?.width ?? 0);
-    expect(visibleWidth).toBe(56);
-  });
-
-  test('the toggle expands the rail and Escape collapses it', async ({ page }) => {
-    await page.goto('/');
-    const toggle = page.getByRole('button', { name: 'Open section menu' });
-    await toggle.click();
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    await page.keyboard.press('Escape');
-    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    await expect(toggle).toBeFocused();
-  });
-
-  test('a rail link scrolls to its section and marks it current', async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('button', { name: 'Open section menu' }).click();
-    const link = page
-      .getByRole('navigation', { name: 'Page sections' })
-      .getByRole('link', { name: 'Projects' });
-    await link.click();
-    await expect(page.locator('#sec-projects')).toBeInViewport();
-    await expect(link).toHaveAttribute('aria-current', 'location');
-  });
 
   test('the position progressbar is named and follows the scroll', async ({ page }) => {
     await page.goto('/');
@@ -93,25 +65,36 @@ test.describe('navigation: rail at 1280px', () => {
     await expect(bar).toHaveAttribute('aria-valuenow', '100');
   });
 
-  test('the position label reads NN/9 and the main content clears the rail', async ({ page }) => {
+  test('the INDEX trigger carries the NN/9 position and no rail reserves width', async ({
+    page,
+  }) => {
     await page.goto('/');
-    await expect(page.getByText('01/9')).toBeVisible();
+    await expect(page.locator('.desktop-topbar .index-trigger')).toContainText('01/9');
     const mainLeft = await page
       .locator('#main-content')
       .evaluate((el) => el.getBoundingClientRect().left);
-    expect(mainLeft).toBeGreaterThanOrEqual(56);
+    const topbarLeft = await page
+      .locator('.desktop-topbar > div')
+      .evaluate((el) => el.getBoundingClientRect().left);
+    expect(
+      mainLeft,
+      'the section rail is gone: the main content must not be offset by its width',
+    ).toBe(topbarLeft);
   });
 });
 
-test.describe('navigation: expanded rail at 1600px', () => {
+test.describe('navigation: wide desktop at 1600px', () => {
   test.use({ viewport: { width: 1600, height: 900 } });
 
-  test('the rail is 232px wide without a toggle', async ({ page }) => {
+  test('the drawer stays closed and the main content is not offset by a rail', async ({ page }) => {
     await page.goto('/');
-    const rail = page.getByRole('complementary', { name: 'Section menu' });
-    const box = await rail.boundingBox();
-    expect(box?.width).toBe(232);
-    expect(box?.x).toBe(0);
-    await expect(page.getByRole('button', { name: 'Open section menu' })).toBeHidden();
+    await expect(page.locator('#section-drawer')).toBeHidden();
+    const mainLeft = await page
+      .locator('#main-content')
+      .evaluate((el) => el.getBoundingClientRect().left);
+    const topbarLeft = await page
+      .locator('.desktop-topbar > div')
+      .evaluate((el) => el.getBoundingClientRect().left);
+    expect(mainLeft).toBe(topbarLeft);
   });
 });
