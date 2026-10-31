@@ -28,7 +28,7 @@
 
   .hero-identity {
     margin: 0 0 var(--spacing-1);
-    color: var(--color-text);
+    color: var(--color-primary-500);
     font-family: var(--font-display);
     font-size: var(--text-5xl);
     font-weight: 900;
@@ -111,5 +111,15 @@
   .hero-mobile-content {
     position: relative;
     padding: var(--spacing-4) var(--spacing-4) calc(var(--spacing-4) + var(--spacing-1) / 2);
+  }
+
+  .hero-boot-mobile {
+    height: auto;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-actions {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 }

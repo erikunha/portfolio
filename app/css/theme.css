@@ -6,6 +6,7 @@
   --text-min: 0.75rem;
   --text-xs: max(0.75rem, var(--text-min));
   --text-sm: 0.875rem;
+  --text-body: var(--text-sm);
   --text-base: 1rem;
   --text-lg: 1.125rem;
   --text-xl: 1.25rem;
@@ -160,6 +161,7 @@
     --space-gutter: clamp(16px, 4vw, 24px);
     --space-page-top: var(--spacing-6);
     --space-section: var(--spacing-8);
+    --text-section-title: var(--text-base);
     --measure-page: 1200px;
     --measure-read: 72ch;
     --leading-page-tight: 1.1;
@@ -177,6 +179,7 @@
       --text-min: 0.8125rem;
       --space-page-top: var(--spacing-12);
       --space-section: var(--spacing-12);
+      --text-section-title: var(--text-lg);
     }
   }
 }

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { aboutContent as c, responsibilitiesLegend } from '@/content/about';
+import { CopyButton } from '@/app/design-system/_components/CopyButton';
+import { aboutContent as c } from '@/content/about';
 import { responsibilities } from '@/content/responsibilities';
 import { SCROLL_REGION_LABELS } from '@/content/section-labels';
 import { RoleTyper } from '../../client/RoleTyper';
@@ -69,9 +70,7 @@ export function About() {
                   <h4>{c.whoami.statusTitle}</h4>
                   <p>
                     {c.whoami.statusPrefix}
-                    <span className="inline-block min-w-[9em]">
-                      <RoleTyper className="ab-role font-bold" />
-                    </span>
+                    <RoleTyper className="ab-role font-bold" />
                     {c.whoami.statusSuffix}
                   </p>
                   {c.whoami.details.map((line) => (
@@ -110,14 +109,6 @@ export function About() {
                     </span>
                   ))}
                 </pre>
-                <pre data-no-copy="true" data-legend="true">
-                  {responsibilitiesLegend.map((row) => (
-                    <span key={row.perms}>
-                      <span className="ab-permissions">{row.perms}</span>
-                      <span>{row.meaning}</span>
-                    </span>
-                  ))}
-                </pre>
               </section>
             </Panel>
           </div>
@@ -142,21 +133,27 @@ export function About() {
               title={c.code.title}
               className="ab-code"
               action={
-                <a
-                  className="repo-link"
-                  href={c.code.repoHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={c.code.repoAccessibleLabel}
-                >
-                  {c.code.repoLabel}
-                </a>
+                <>
+                  <CopyButton
+                    text={c.code.tokens.map((token) => token.text).join('')}
+                    aria-label={c.code.copyAccessibleLabel}
+                  />
+                  <a
+                    className="repo-link"
+                    href={c.code.repoHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={c.code.repoAccessibleLabel}
+                  >
+                    {c.code.repoLabel}
+                  </a>
+                </>
               }
             >
               <section
                 className="ab-code-scroll"
                 aria-label={c.code.label}
-                // biome-ignore lint/a11y/noNoninteractiveTabindex: the overflowing code region needs keyboard scrolling
+                // biome-ignore lint/a11y/noNoninteractiveTabindex: the labelled code region is a deliberate tab stop so keyboard users can focus and select the sample
                 tabIndex={0}
               >
                 <pre className="ab-body">

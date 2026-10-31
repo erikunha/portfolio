@@ -10,15 +10,21 @@ const bootDesktopClass = 'hero-boot-desktop';
 const bootCmdClass = 'hero-boot-cmd';
 
 describe('mobile boot container: line-count → height invariant', () => {
-  it('MOBILE_LINE_SPECS + cmd + blank + dialog = 8 lines; fits height: 165px', async () => {
-    const { MOBILE_LINE_SPECS } = await import('@/lib/boot-animation');
-    const extraLines = 3;
-    const totalLines = MOBILE_LINE_SPECS.length + extraLines;
-    const containerHeightPx = 165;
-    const fontSizePx = 12;
-    const lineHeight = 1.65;
-    expect(totalLines).toBe(8);
-    expect(Math.ceil(totalLines * fontSizePx * lineHeight)).toBeLessThanOrEqual(containerHeightPx);
+  it('renders exactly three boot lines and no blank filler line', async () => {
+    const { renderToStaticMarkup } = await import('react-dom/server');
+    const { HeroBootAnimation } = await import('./HeroBootAnimation');
+    const html = renderToStaticMarkup(<HeroBootAnimation variant="mobile" />);
+    const host = document.createElement('div');
+    host.innerHTML = html;
+    const lines = [...host.querySelectorAll('[data-testid="boot-line"]')];
+    expect(
+      lines,
+      'the mobile boot log is the sequence, the command and the matrix output',
+    ).toHaveLength(3);
+    expect(
+      lines.some((line) => (line.textContent ?? '').trim() === ''),
+      'a blank filler line is the dead space the r106 mobile hero does not have',
+    ).toBe(false);
   });
 });
 
@@ -124,6 +130,41 @@ describe('decorative boot output', () => {
       expect(host.firstElementChild?.getAttribute('aria-hidden')).toBe('true');
     },
   );
+
+  it('types the mobile command and the matrix output into the rendered lines', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    );
+    const { HeroBootAnimation } = await import('./HeroBootAnimation');
+    const mounted = await mountClient(<HeroBootAnimation variant="mobile" />);
+    const host = mounted.container.querySelector('.hero-boot-mobile');
+    expect(host).not.toBeNull();
+    expect(host?.querySelectorAll('[data-testid="boot-line"]')).toHaveLength(3);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8000);
+    });
+
+    const cmd = host?.querySelector('.hero-boot-cmd');
+    const out = host?.querySelector('.hero-boot-matrix-out');
+    expect(cmd?.textContent, 'the mobile boot types the full command').toBe(
+      'run bio.exe --verbose',
+    );
+    expect(
+      (out?.textContent ?? '').length,
+      'the mobile boot types the matrix output',
+    ).toBeGreaterThan(0);
+
+    mounted.unmount();
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
 
   it('keeps reduced-motion output static without starting animation timers', async () => {
     const { readMotion } = await import('@/lib/motion');

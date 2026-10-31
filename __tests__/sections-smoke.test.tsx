@@ -46,8 +46,11 @@ describe('About', () => {
       aboutContent.code.title,
     ]);
     expect(container.querySelector('#sec-now, #sec-npm-stack, #sec-responsibilities')).toBeNull();
-    expect(container.querySelector('.ab-role')?.getAttribute('aria-hidden')).toBe('true');
-    expect(container.querySelectorAll('[role="status"]')).toHaveLength(1);
+    expect(container.querySelector('[data-role-pill]')?.getAttribute('aria-hidden')).toBe('true');
+    expect(
+      container.querySelectorAll('.role-typer ~ [role="status"]'),
+      'the role line owns one live region, apart from the copy feedback region',
+    ).toHaveLength(1);
   });
 
   it('server-renders the role pill from content, without brackets', async () => {

@@ -65,6 +65,7 @@ function HeroIdentity({ primary }: { primary: boolean }) {
             target={action.external ? EXTERNAL_TARGET : undefined}
             rel={action.external ? EXTERNAL_REL : undefined}
             aria-label={action.accessibleLabel}
+            className={action.hiddenOnWide ? 'lg:hidden' : undefined}
           >
             {action.label}
           </Button>

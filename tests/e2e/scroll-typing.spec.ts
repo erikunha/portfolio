@@ -1,6 +1,30 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Locator, test } from '@playwright/test';
 
 const BELOW_FOLD_HEADER = '#sec-contact-header .module-scroll-type-text:visible';
+const BELOW_FOLD_GAP_PX = 100;
+const BELOW_FOLD_TOLERANCE_PX = 60;
+const PLACE_ATTEMPTS = 8;
+
+const STABLE_READINGS = 2;
+
+async function placeJustBelowFold(header: Locator): Promise<void> {
+  let stable = 0;
+  for (let attempt = 0; attempt < PLACE_ATTEMPTS && stable < STABLE_READINGS; attempt++) {
+    const gap = await header.evaluate((el, target) => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: top - window.innerHeight - target, behavior: 'instant' });
+      return new Promise<number>((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => resolve(el.getBoundingClientRect().top - window.innerHeight)),
+        ),
+      );
+    }, BELOW_FOLD_GAP_PX);
+    stable = Math.abs(gap - BELOW_FOLD_GAP_PX) <= BELOW_FOLD_TOLERANCE_PX ? stable + 1 : 0;
+  }
+  expect(stable, 'the header settles just below the fold once the modules above render').toBe(
+    STABLE_READINGS,
+  );
+}
 
 test.describe('scroll typing', () => {
   test('with reduced motion the header is fully visible and static', async ({ page }) => {
@@ -36,11 +60,7 @@ test.describe('scroll typing', () => {
 
     // Near enough that content-visibility renders the section and the view()
     // timeline resolves, far enough that the header is still below the fold.
-    await header.evaluate((el) => {
-      const top = el.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({ top: top - window.innerHeight - 100, behavior: 'instant' });
-    });
-    await header.evaluate(() => new Promise(requestAnimationFrame));
+    await placeJustBelowFold(header);
 
     const startClip = await header.evaluate((el) => getComputedStyle(el).clipPath);
     expect(startClip).toContain('100%');
@@ -61,11 +81,7 @@ test.describe('scroll typing', () => {
     test.skip(!supported, 'engine lacks animation-timeline: view()');
 
     const header = page.locator(BELOW_FOLD_HEADER);
-    await header.evaluate((el) => {
-      const top = el.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({ top: top - window.innerHeight - 100, behavior: 'instant' });
-    });
-    await header.evaluate(() => new Promise(requestAnimationFrame));
+    await placeJustBelowFold(header);
     await header.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
     await header.evaluate(() => new Promise(requestAnimationFrame));
 

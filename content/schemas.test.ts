@@ -378,14 +378,17 @@ describe('HeroContentSchema and hero content', () => {
     },
   );
 
-  it.each(['systemFailurePlate', 'bootStaticDialogLine'])(
-    'rejects an empty hero-client %s',
-    async (field) => {
-      const { HeroClientContentSchema } = await import('./schemas');
-      const { heroClientContent } = await import('./hero-client');
-      expect(HeroClientContentSchema.safeParse({ ...heroClientContent, [field]: '' }).success).toBe(
-        false,
-      );
-    },
-  );
+  it.each([
+    'systemFailurePlate',
+    'bootStaticDialogLine',
+    'bootSequenceLine',
+    'bootPrompt',
+    'bootCommand',
+  ])('rejects an empty hero-client %s', async (field) => {
+    const { HeroClientContentSchema } = await import('./schemas');
+    const { heroClientContent } = await import('./hero-client');
+    expect(HeroClientContentSchema.safeParse({ ...heroClientContent, [field]: '' }).success).toBe(
+      false,
+    );
+  });
 });

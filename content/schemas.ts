@@ -173,6 +173,7 @@ export const HeroContentSchema = z.object({
         href: z.union([z.url(), z.string().regex(/^\/(?!\/)\S*$/)]),
         accessibleLabel: z.string().min(1),
         external: z.boolean(),
+        hiddenOnWide: z.boolean().optional(),
       }),
     )
     .min(1),
@@ -212,6 +213,7 @@ export const AboutContentSchema = z.object({
     repoLabel: z.string().min(1),
     repoHref: z.url(),
     repoAccessibleLabel: z.string().min(1),
+    copyAccessibleLabel: z.string().min(1),
     tokens: z
       .array(
         z.object({ id: z.number().int().nonnegative(), text: z.string(), className: z.string() }),
@@ -608,6 +610,9 @@ export type HeroContent = z.infer<typeof HeroContentSchema>;
 export const HeroClientContentSchema = z.object({
   systemFailurePlate: z.string().min(1),
   bootStaticDialogLine: z.string().min(1),
+  bootSequenceLine: z.string().min(1),
+  bootPrompt: z.string().min(1),
+  bootCommand: z.string().min(1),
 });
 export type HeroClientContent = z.infer<typeof HeroClientContentSchema>;
 

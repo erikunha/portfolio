@@ -77,6 +77,42 @@ describe('Hero identity and static actions', () => {
       ]);
     }
   });
+
+  it('serves the mobile boot log as three lines and no blank filler', () => {
+    const mobile = getDOM().querySelector('[data-testid="hero-mobile"]');
+    const lines = mobile?.querySelectorAll('[data-testid="boot-line"]');
+    expect(
+      lines,
+      'r106 mobile boot shows the sequence, the command and the matrix output',
+    ).toHaveLength(3);
+    expect([...(lines ?? [])].map((line) => line.textContent?.trim())).toEqual([
+      '[SYSTEM BOOT SEQUENCE INITIATED]',
+      'erik@portfolio:~$',
+      '>',
+    ]);
+  });
+
+  it('hides only the CV action on the wide layout', () => {
+    const doc = getDOM();
+    for (const actions of doc.querySelectorAll('[data-testid="hero-ctas"]')) {
+      const links = [...actions.querySelectorAll('a')];
+      const hidden = links
+        .filter((link) => link.classList.contains('lg:hidden'))
+        .map((link) => link.textContent?.trim());
+      expect(hidden, 'the wide hero shows GITHUB and 30S_SUMMARY next to the hire CTA').toEqual([
+        'VIEW_CV',
+      ]);
+    }
+  });
+});
+
+describe('Hero owner decisions', () => {
+  it('shows no relocation or sponsorship chip', () => {
+    const html = renderToStaticMarkup(createElement(Hero));
+    expect(html, 'owner decision 2026-10-30: no visa or relocation chip in the hero').not.toMatch(
+      /SPONSORSHIP|RELOCATION|hero-availability/,
+    );
+  });
 });
 
 describe('Hero copy discipline', () => {

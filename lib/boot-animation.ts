@@ -27,14 +27,6 @@ export const DESKTOP_LINE_SPECS: LinePart[][] = [
   [' '],
 ];
 
-export const MOBILE_LINE_SPECS: LinePart[][] = [
-  ['[BOOT SEQUENCE INITIATED]'],
-  [' '],
-  ['kernel modules... ', { cls: 'bootOk', text: 'OK' }],
-  ['security... ', { cls: 'bootEnc', text: '[ENCRYPTED]' }],
-  [{ cls: 'bootWelcome', text: 'DEV_OS v2.0.4 [user: erik]' }],
-];
-
 export const DESKTOP_DIALOG = [
   'Wake up, Neo...',
   'Wake up...',

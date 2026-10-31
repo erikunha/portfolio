@@ -7,6 +7,8 @@ const viewports = [
   { width: 375, height: 812 },
 ];
 
+const WIDE_BREAKPOINT = 1024;
+
 for (const viewport of viewports) {
   test.describe(`r106 Hero and About at ${viewport.width}x${viewport.height}`, () => {
     test.use({ viewport });
@@ -22,11 +24,10 @@ for (const viewport of viewports) {
       await expect(hire).toBeVisible();
       await expect(hire).toHaveAttribute('href', heroContent.hire.href);
       for (const action of heroContent.actions) {
+        if (action.hiddenOnWide && viewport.width >= WIDE_BREAKPOINT) continue;
         const link = hero.getByRole('link', { name: action.accessibleLabel, exact: true });
         await expect(link).toHaveAttribute('href', action.href);
-        if (viewport.width < 1024 || action.href !== '/cv') {
-          await expect(link).toBeInViewport();
-        }
+        await expect(link).toBeInViewport();
       }
       if (viewport.width < 390) {
         await expect(hero.locator('.hero-boot-mobile')).toBeHidden();
@@ -73,14 +74,33 @@ async function childBoxes(page: Page, group: string) {
 }
 
 test.describe('Hero groups reflow by viewport', () => {
-  test('stack in one column below 768', async ({ page }) => {
+  test('keep the impact stats two by two below 768', async ({ page }) => {
     await page.setViewportSize(MOBILE_STACK);
     await page.goto('/');
-    for (const group of HERO_GROUPS) {
-      const boxes = await childBoxes(page, group);
-      const lefts = new Set(boxes.map((box) => Math.round(box.x)));
-      expect(lefts.size, `${group} children share one left edge`).toBe(1);
-    }
+    const boxes = await childBoxes(page, '[data-testid="hero-stats"]');
+    expect(boxes).toHaveLength(4);
+    expect(
+      new Set(boxes.map((box) => Math.round(box.x))).size,
+      'the stats sit in two columns',
+    ).toBe(2);
+    expect(new Set(boxes.map((box) => Math.round(box.y))).size, 'the stats sit in two rows').toBe(
+      2,
+    );
+  });
+
+  test('keep the secondary CTAs in one row of three below 768', async ({ page }) => {
+    await page.setViewportSize(MOBILE_STACK);
+    await page.goto('/');
+    const boxes = await childBoxes(page, '[data-testid="hero-ctas"]');
+    expect(boxes).toHaveLength(4);
+    const [hire, ...secondary] = boxes;
+    expect(hire?.width, 'the hire CTA spans the full width').toBeGreaterThan(
+      secondary[0]?.width ?? 0,
+    );
+    expect(
+      new Set(secondary.map((box) => Math.round(box.y))).size,
+      'the three secondary CTAs share one row',
+    ).toBe(1);
   });
 
   test('stay side by side at 1280', async ({ page }) => {
@@ -91,5 +111,18 @@ test.describe('Hero groups reflow by viewport', () => {
       const lefts = new Set(boxes.map((box) => Math.round(box.x)));
       expect(lefts.size, `${group} children sit in more than one column`).toBeGreaterThan(1);
     }
+  });
+
+  test('hide the CV action at 1280 and keep it at 390', async ({ page }) => {
+    await page.setViewportSize(DESKTOP_ROW);
+    await page.goto('/');
+    await expect(
+      page.locator('.hero-frame:visible [data-testid="hero-ctas"] a:has-text("VIEW_CV")'),
+    ).toBeHidden();
+
+    await page.setViewportSize(MOBILE_STACK);
+    await expect(
+      page.locator('.hero-frame:visible [data-testid="hero-ctas"] a:has-text("VIEW_CV")'),
+    ).toBeVisible();
   });
 });

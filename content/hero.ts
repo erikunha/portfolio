@@ -17,7 +17,7 @@ export const heroContent = HeroContentSchema.parse({
   },
   actions: [
     ...profile.actions,
-    { label: 'VIEW_CV', href: '/cv' },
+    { label: 'VIEW_CV', href: '/cv', hiddenOnWide: true },
     { label: '30S_SUMMARY', href: '/summary' },
   ].map((action) => ({
     ...action,
