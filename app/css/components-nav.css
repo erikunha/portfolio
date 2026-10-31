@@ -239,7 +239,6 @@
     color: var(--color-primary-400);
     font-size: var(--text-xs);
     letter-spacing: 0.1em;
-    white-space: nowrap;
     text-transform: uppercase;
     background: transparent;
     border: 0;
