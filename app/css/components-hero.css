@@ -54,6 +54,15 @@
     letter-spacing: 0.08em;
   }
 
+  .hero-context-fact--location {
+    display: flex;
+    column-gap: var(--spacing-3);
+  }
+
+  .hero-context-separator {
+    display: none;
+  }
+
   .hero-context b {
     color: var(--color-primary-500);
   }
@@ -115,6 +124,29 @@
 
   .hero-boot-mobile {
     height: auto;
+  }
+
+  @media (max-width: 767.98px) {
+    .hero-context {
+      flex-direction: column;
+    }
+
+    .hero-context-fact--location {
+      display: block;
+      text-wrap: balance;
+    }
+
+    .hero-context-fact--location .hero-context-item {
+      white-space: nowrap;
+    }
+
+    .hero-context-separator {
+      display: inline;
+    }
+
+    .hero-context-fact--domain {
+      text-wrap: balance;
+    }
   }
 
   @media (min-width: 1024px) {

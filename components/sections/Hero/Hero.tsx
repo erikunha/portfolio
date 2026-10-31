@@ -30,17 +30,24 @@ function HeroIdentity({ primary }: { primary: boolean }) {
       )}
       <p className="hero-stack">{heroTagline}</p>
       <p className="hero-context">
-        <span>
-          {c.locationLabel} <b className="hero-location">{profile.country}</b>
+        <span className="hero-context-fact hero-context-fact--location">
+          <span className="hero-context-item">
+            {c.locationLabel} <b className="hero-location">{profile.country}</b>
+          </span>
+          <span className="hero-context-separator" aria-hidden="true">
+            {' · '}
+          </span>
+          <span className="hero-context-item">
+            {profile.timezone} · {profile.availability}
+          </span>
         </span>
-        <span>
-          {profile.timezone} · {profile.availability}
-        </span>
-        <span>
+        <span className="hero-context-fact hero-context-fact--employer">
           {c.employerLabel} <b>{profile.currentEmployer.name}</b>
         </span>
-        <span>{profile.currentEmployer.context}</span>
-        <span>
+        <span className="hero-context-fact hero-context-fact--domain">
+          {profile.currentEmployer.context}
+        </span>
+        <span className="hero-context-fact hero-context-fact--language">
           {c.languageLabel} {profileWorkingLanguageLine}
         </span>
       </p>
