@@ -123,9 +123,57 @@
   }
 
   .module-deferred {
+    --module-estimate: 520px;
     content-visibility: auto;
+    contain-intrinsic-size: auto var(--module-estimate);
+  }
 
-    contain-intrinsic-size: auto 520px;
+  #sec-git-log {
+    --module-estimate: 3300px;
+  }
+
+  #sec-hottest-takes {
+    --module-estimate: 3080px;
+  }
+
+  #sec-guitar {
+    --module-estimate: 3880px;
+  }
+
+  #sec-contact {
+    --module-estimate: 990px;
+  }
+
+  @media (min-width: 768px) {
+    #sec-git-log {
+      --module-estimate: 1730px;
+    }
+
+    #sec-hottest-takes {
+      --module-estimate: 1600px;
+    }
+
+    #sec-guitar {
+      --module-estimate: 2300px;
+    }
+
+    #sec-contact {
+      --module-estimate: 840px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    #sec-hottest-takes {
+      --module-estimate: 1250px;
+    }
+
+    #sec-guitar {
+      --module-estimate: 2230px;
+    }
+
+    #sec-contact {
+      --module-estimate: 710px;
+    }
   }
 
   .module-body-content {
