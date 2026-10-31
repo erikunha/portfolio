@@ -14,7 +14,6 @@ import { perfReceipts } from '@/content/perf-receipts';
 import { profile, profileLanguageLine, profileWorkingLanguageLine } from '@/content/profile';
 import { projects } from '@/content/projects';
 import { cvDocument } from '@/content/reading-views';
-import { readmeCopy } from '@/content/readme';
 import { PerfReceiptSchema, ProjectSchema } from '@/content/schemas';
 import { personSchema } from '@/content/seo';
 import { social } from '@/content/social';
@@ -65,11 +64,7 @@ describe('identity is consistent across every gated surface', () => {
   });
 
   it('publishes no work-authorization status in search descriptions', () => {
-    const descriptions = [
-      personSchema.description,
-      personSchema.seeks.itemOffered.description,
-      readmeCopy.desktopIntro,
-    ];
+    const descriptions = [personSchema.description, personSchema.seeks.itemOffered.description];
     const rawStatusToken = /CITIZEN|NEEDS_SPONSORSHIP|OPEN_WITH_SPONSORSHIP/;
     const rendered = [
       ...descriptions,
@@ -189,7 +184,6 @@ describe('identity is consistent across every gated surface', () => {
       ['lib/hiring-profile.ts', JSON.stringify(HIRING_PROFILE)],
       ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
       ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
-      ['content/readme.ts', JSON.stringify(readmeCopy)],
       ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
     ];
     const drifted = surfaces.filter(([, text]) => !text.includes(CANONICAL_TITLE)).map(([s]) => s);
@@ -307,7 +301,6 @@ describe('terminal redesign canonical facts', () => {
       llmsTxt,
       read('public/.well-known/agent.json'),
       JSON.stringify(personSchema),
-      JSON.stringify(readmeCopy),
       layoutMetadataText,
     ]) {
       expect(text).toContain('Brazil');
@@ -439,7 +432,7 @@ describe('terminal redesign canonical facts', () => {
     expect(JSON.stringify(raylu)).toContain('TS 5');
     expect(JSON.stringify(raylu)).not.toMatch(/Next(?:\.js)? 15|React 19/i);
     const service = projects.find((project) => project.name === 'SERVICE_OPS_CONSOLE');
-    expect(service?.company).toBe('Canon Medical Systems');
+    expect(service?.company).toBe('Canon Medical Systems Brazil');
     expect(service?.description).toContain('service orders');
     expect(service?.description).toContain('specialist scheduling');
     expect(service?.description).toContain('field visits');
