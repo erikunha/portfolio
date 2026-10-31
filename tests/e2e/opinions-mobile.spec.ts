@@ -31,13 +31,13 @@ async function takeGeometry(page: import('@playwright/test').Page) {
 }
 
 test.describe('hottest takes reflow', () => {
-  test('below 768 the category tag sits above the take text on one left edge', async ({ page }) => {
+  test('below 768 the category tag sits beside the take text', async ({ page }) => {
     await page.setViewportSize(MOBILE);
     const takes = await takeGeometry(page);
     expect(takes.length).toBeGreaterThan(0);
     for (const take of takes) {
-      expect(Math.abs(take.tagLeft - take.textLeft)).toBeLessThanOrEqual(ROW_TOLERANCE_PX);
-      expect(take.tagBottom).toBeLessThanOrEqual(take.textTop + ROW_TOLERANCE_PX);
+      expect(take.textLeft).toBeGreaterThanOrEqual(take.tagRight - ROW_TOLERANCE_PX);
+      expect(take.textTop).toBeLessThan(take.tagBottom);
     }
   });
 

@@ -51,6 +51,9 @@ tsconfig.tsbuildinfo
 # leftover inbox from the learning loop deleted 2026-07-27 — no writer remains
 .review-learnings.md
 
+# worker scratch files from the autofix loop: local contracts and lesson inboxes
+.autofix-*
+
 
 # git worktrees (isolated workspaces for parallel branch work)
 .worktrees/

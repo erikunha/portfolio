@@ -64,10 +64,22 @@ export const hottestTakesConfig = z
     command: z.string().min(1),
     preamble: z.string().min(1),
     footer: z.string().min(1),
+    docsLink: z.object({
+      marker: z.string().min(1),
+      label: z.string().min(1),
+      href: z.string().startsWith('/'),
+      arrow: z.string().min(1),
+    }),
   })
   .parse({
     header: 'CAT ~/HOTTEST_TAKES.MD',
     command: 'cat ~/hottest_takes.md',
     preamble: "// opinions i'll defend in a whiteboard interview",
     footer: 'willing to be wrong on any of these. willing to argue first.',
+    docsLink: {
+      marker: '>',
+      label: 'the design-system opinion lives in the design system docs',
+      href: '/design-system#opinion-07',
+      arrow: '→',
+    },
   });

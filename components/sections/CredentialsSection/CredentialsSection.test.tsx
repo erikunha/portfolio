@@ -1,6 +1,8 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { communityEvent } from '@/content/community';
+import { credentials } from '@/content/credentials';
+import { education, educationTags } from '@/content/education';
 import { CredentialsSection } from './CredentialsSection';
 
 describe('career tag groups', () => {
@@ -69,5 +71,23 @@ describe('career tag groups', () => {
       const label = group.getAttribute('aria-labelledby');
       expect(headings.some((heading) => heading.id === label)).toBe(true);
     }
+  });
+
+  it('names the resume degrees and keeps the home badges short', () => {
+    expect(education.map((entry) => entry.degree)).toEqual([
+      'MBA (Lato Sensu), AI Engineering, Machine Learning and Deep Learning',
+      'Web Development Co-op Diploma',
+      'B.S. Information Systems',
+    ]);
+    expect(educationTags.map((entry) => entry.badge)).toEqual([
+      'Instituto Infnet (online)',
+      'CICCC, Vancouver',
+      'UNISAL, Campinas',
+    ]);
+    expect(credentials.map((entry) => entry.label)).toEqual([
+      'ANGULAR_DEV',
+      'ENGLISH',
+      'INTL_DEGREE',
+    ]);
   });
 });

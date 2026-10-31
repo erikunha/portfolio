@@ -25,7 +25,7 @@ export const education: Education[] = EducationSchema.array().parse([
   },
   {
     id: 'BS_INFO_SYSTEMS',
-    degree: 'BS, Information Systems',
+    degree: 'B.S. Information Systems',
     institution: 'UNISAL',
     location: 'Campinas, Brazil',
     studyMode: null,

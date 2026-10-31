@@ -41,8 +41,8 @@ Regenerate against a production server locally, then update snapshots:
     DEPLOY_SALT=test pnpm start &
     # wait for server at localhost:3000, then run ONLY the spec being regenerated:
 
-    # for visual.spec.ts baselines:
-    pnpm test:e2e --project=<visual-project> tests/visual/visual.spec.ts --update-snapshots
+    # for visual.spec.ts baselines, run ALL FOUR darwin projects:
+    pnpm test:e2e --project=chromium --project=chromium-mobile --project=webkit-desktop --project=webkit-mobile tests/visual/visual.spec.ts --update-snapshots
 
     # for design-system-components.spec.ts baselines:
     pnpm test:e2e --project=<visual-project> tests/e2e/design-system-components.spec.ts --update-snapshots
@@ -53,6 +53,14 @@ the production build. Scope the command to the specific spec to avoid regenerati
 unrelated baselines.
 
 This writes the `*-darwin.png` baselines.
+
+**All four darwin projects, not the pair you tested.** `visual.spec.ts` runs on the
+`chromium`, `chromium-mobile`, `webkit-desktop` and `webkit-mobile` projects locally
+(`playwright.config.ts` gives the two webkit projects the same `CROSS_BROWSER_SPECS`
+match), so a section has four darwin baselines. CI compares only the linux pair, so a
+webkit darwin baseline that was left at its pre-change pixels fails the next local
+`pnpm test:e2e` and nothing warns about it before the push. Regenerate the webkit
+pair in the same darwin pass.
 
 ## Step 2 — linux baseline for `visual.spec.ts` only (CI dispatch, artifacts UPLOADED not committed)
 
