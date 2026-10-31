@@ -1,6 +1,6 @@
 # Rendering & Data Flow
 
-> Routing tree, the RSC/PPR rendering pipeline, and end-to-end data flows with sequence diagrams. This is the doc that explains *how a request becomes pixels* and *how a user action becomes a persisted effect*.
+> Routing tree, the RSC/PPR rendering pipeline, and end-to-end data flows with sequence diagrams. This is the doc that explains _how a request becomes pixels_ and _how a user action becomes a persisted effect_.
 
 ## Routing tree
 
@@ -8,10 +8,18 @@
 flowchart TD
     layout["app/layout.tsx (RootLayout, RSC)<br/>fonts · JSON-LD · motion bootstrap · Vercel RUM"]
     layout --> home["/ -> app/page.tsx (RSC, SSG+PPR)"]
+    layout --> cv["/cv -> app/cv/page.tsx"]
+    layout --> summary["/summary -> app/summary/page.tsx"]
+    layout --> links["/links · /links/en -> localized RSC + cached YouTube feed"]
+    layout --> errors["error.tsx -> route error recovery"]
+    globalError["global-error.tsx -> replaces RootLayout on root failure"]
     layout --> ds["/design-system -> design-system/layout.tsx"]
     layout --> nf["/* (404) -> app/not-found.tsx"]
     layout --> sm["/sitemap.xml -> app/sitemap.ts"]
     ds --> ds1["/design-system (page.mdx)"]
+    ds1 --> toc["OnThisPage: sections and principles links"]
+    ds1 --> opinion["DesignSystemOpinion: docs-placement DS take"]
+    opinion --> takes["content/hottest-takes.ts"]
     ds --> ds2["/design-system/tokens"]
     ds --> ds3["/design-system/components"]
     ds --> ds4["/design-system/enforcement"]
@@ -25,12 +33,21 @@ flowchart TD
       api6["GET /api/erik.json"]
       api7["GET /api/lighthouse"]
       api8["POST /api/log · POST /api/log/forget"]
-      api9["GET+POST /api/[transport] -> /api/mcp, /api/sse"]
+      api9["POST /api/mcp (stateless handler; POST body limit 4096 bytes)"]
+      api10["GET /api/contact-retry (daily cron)"]
     end
     layout -.serves.-> api
 ```
 
-There is **one user-facing page** (`/`). Everything else is the design-system docs, metadata routes, and the API cluster. Error UI uses the client `ErrorBoundary` component (not the App Router `error.tsx` convention); there is no `loading.tsx`/`template.tsx`.
+The user-facing routes are `/`, `/summary`, `/cv`, `/links` and `/links/en`, alongside the design-system docs, metadata routes and API cluster. Home sections use the client `ErrorBoundary` component. App Router failures also have `app/error.tsx` and `app/global-error.tsx`; there is no `loading.tsx`/`template.tsx`.
+
+## Terminal sections and navigation
+
+`content/section-registry.ts` defines nine navigation destinations: Home (`bio`), About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, and Contact. It supplies aliases, icons, screen-reader labels and navigation order. `content/section-labels.ts` adds labels for supporting modules.
+
+The JSX order in `app/page.tsx` is Hero, About, Shell, Measured, Projects, GitLog, HottestTakes (with Unknowns nested inside), Guitar (guitar rig and DAW mixer in one module) and Contact. Footer follows `PageMain` as its sibling. CSS mobile ordering is a separate map in `app/css/base.css`.
+
+About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code are named keyboard scroll regions inside About. Projects contains its receipts. Career contains certification, education and community tag groups. Measured contains independent ASK, desktop PSI and mobile PSI reads. These nested groups do not become separate navigation destinations.
 
 ## Layout hierarchy (what wraps what)
 
@@ -40,15 +57,16 @@ flowchart TD
     body --> boot["inline script: set body[data-motion] BEFORE paint"]
     body --> children["{route children}"]
     body --> rum["Analytics + SpeedInsights (only when VERCEL=1)"]
-    children --> bp["BreakpointProvider (client, initialIsMobile from server UA)"]
+    children --> bp["BreakpointProvider (client, initialIsMobile=false; matchMedia after hydration)"]
     bp --> appshell["AppShell (client chrome)"]
-    appshell --> chrome["MatrixRain · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
-    appshell --> main["main#main-content"]
-    main --> secs["20x ErrorBoundary > Module(RSC) > Section(RSC)"]
-    main --> footer["FooterLazy (IntersectionObserver-gated)"]
+    appshell --> chrome["MatrixRainLazy (client-only) · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
+    appshell --> main["PageMain (RSC): main#main-content"]
+    main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + About + Career + Modules (RSC)"]
+    appshell --> footer["ErrorBoundary-wrapped Footer (RSC), after PageMain"]
+    footer --> footerIslands["FooterLazy: direct client re-exports, session counters + halt/reboot"]
 ```
 
-The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion')` / OS preference and sets `body[data-motion]` **before first paint**, off the hydration path, so CRT effects and the LCP element never flash or wait on JS.
+The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion')` / OS preference and sets `body[data-motion]` **before first paint**, off the hydration path, so the initial motion preference does not wait for hydration.
 
 ## The rendering pipeline (RSC + PPR)
 
@@ -57,43 +75,45 @@ The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion
 ```mermaid
 flowchart LR
     req["Request"] --> px["proxy.ts: add CSP + Reporting-Endpoints"]
-    px --> shell["Static shell prerendered at edge:<br/>AppShell chrome + Hero (outside Suspense) + above-fold sections"]
+    px --> shell["Prerendered shell:<br/>AppShell chrome + Hero (outside Suspense) + above-fold sections"]
     shell --> stream["Server streams"]
     stream --> susp["Suspense boundaries resolve per-request"]
-    susp --> dyn["Dynamic section variants:<br/>inner async RSC calls getIsMobile() -> headers()"]
+    susp --> dyn["Independent ASK / PSI data reads"]
     dyn --> html2["Streamed HTML"]
-    html2 --> hydrate["Client hydrates ONLY AppShell chrome + named islands"]
-    hydrate --> lazy["next/dynamic + IO-gated islands load on demand"]
+    html2 --> hydrate["Browser hydrates chrome and client islands"]
+    hydrate --> lazy["Contact / Shell: next/dynamic, ssr:false<br/>Footer islands mount directly"]
 ```
 
 **Static vs dynamic, concretely:**
+- **Static (prerendered):** `AppShell` chrome except the client-only MatrixRain canvas, `Hero` (outside Suspense so LCP never waits), `About`, `Shell`, the responsive `Guitar` presentation with the DAW mixer nested in the same module, Projects with its attached receipts, Contact, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid. The mixer uses one synchronous RSC layout at every width; its interactive islands hydrate on phones too. Contact renders its language line, email and `[COPY EMAIL]` control on the server; the work-authorization table is gone.
+- **UA-selected variants:** none on `/`. `getIsMobile()` (`lib/ua.ts`, which reads `headers()`) is available for a future dual-variant section.
+- **Measured data:** `AiMetricsSection` renders the `sec-live-metrics` module. It composes `AiMetricsData` and `LivePerfSection`, with independent Suspense boundaries for ASK, desktop PSI and mobile PSI. Each fallback retains its metric layout and shows a loading state. Receipts remain inside Projects rather than a separate module.
+- **The dual-variant pattern** (available, unused on `/`):
 
-- **Static (prerendered):** the whole `AppShell` chrome, `Hero` (deliberately *outside* any `<Suspense>` so LCP never waits), `Readme`, `Shell`, and section fallbacks.
-- **Dynamic-via-`<Suspense>`:** `ManPage`, `GitLog`, `Visa`, `Projects`, `Guitar`, `LivePerf`, `DawMixer`, and `AiMetrics`. These wrap an inner async RSC that calls `getIsMobile()` (`lib/ua.ts`, which reads `headers()`), which marks the subtree dynamic. Only the Suspense fallback is prerendered; the real variant streams in.
-- **The dual-variant pattern** (e.g. `ManPageSection.tsx`):
   ```
   <Module><Suspense fallback={<Desktop/>}><AsyncInner/></Suspense></Module>
   ```
-  `AsyncInner` awaits `getIsMobile()` and renders `<ManPageDesktop/>` or `<ManPageMobile/>`. Fallback choice is per-section: desktop variant for most; **`null` for Guitar** (a CLS fix, `DECISIONS.md` 2026-06-13); a reserved-height stub for `AiMetrics`.
-- **`defer` prop:** below-the-fold sections pass `defer` to `Module`, which applies CSS `content-visibility` (defers *render cost*, not JS).
-- **`next/dynamic` lazy JS (4 sites):** `ContactFormLazy`, `InteractiveShellLazy`, `FooterLazy` (IO-gated), `DawMixerSection`.
 
-There is **no `use cache` / `cacheLife` / `cacheTag` / `unstable_cache` / `generateStaticParams`** anywhere - the staticness comes from PPR + the absence of dynamic APIs, not explicit caching.
+  `AsyncInner` awaits `getIsMobile()` and renders a desktop or mobile variant, with the desktop variant as the fallback. `GuitarSection` (guitar rig plus the nested mixer) uses one responsive presentation without this UA boundary or variant swap.
+- **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` (defers render cost, not JS). Most use `Module`; Career applies the same attributes in its own wrapper. A deferred module keeps its 520px placeholder box while its content is laid out at full height, so the axe gate reveals the deferred modules before the scan: the audit then sees the painted page, the state the visual baselines capture.
+- **`next/dynamic` boundaries:** `ContactFormLazy` and `InteractiveShellLazy` use `ssr: false` with accessible loading placeholders. `MatrixRainLazy` loads from `AppShell` with `ssr: false` as a decorative fixed overlay behind `main`; late hydration cannot shift layout. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. `FooterLazy.client.tsx` directly re-exports session counters and halt/reboot controls from `Footer.client`, without a dynamic import; the netstat card uses the design-system `CopyButton` island. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
+
+The terminal home combines prerendered output and dynamic Suspense children. Separately, `lib/links/feed.ts` uses `use cache` and `cacheLife` for the YouTube feed: stale after 900 seconds, revalidate after 3,600 seconds, expire after 86,400 seconds. `LinksPage` awaits that feed and falls back to `EMPTY_FEED` on failure.
 
 ## End-to-end data flow #1 - page render (read path)
 
 ```
 build time:  content/*.ts imported -> Zod parse (gate) -> typed data baked into RSC output
-             scripts/ask-eval.ts -> Redis ask:eval:latest -> lib/ask-metrics.ts reads at build
+eval run:    scripts/ask-eval.ts -> Redis ask:eval:latest
 request:     proxy.ts headers -> static shell streamed -> getIsMobile() resolves per request
-             -> dynamic section variants stream -> client hydrates islands
+             -> section variants and independent ASK / PSI reads stream -> client hydrates islands
 ```
 
-The content layer is **build-time**: by the time a request arrives, section data is already in the prerendered output. The only per-request server work is the `getIsMobile()` branch and any Redis read a section does (e.g. `AiMetrics`, `LivePerf`).
+The content layer is build-time: static copy is already in the prerendered output. Measured reads live data through `lib/ask-metrics.ts` and `lib/lighthouse-scores.ts`. PSI uses its Redis cache and may fetch PageSpeed Insights when the cache is missing. Projects does not read the user agent or wait on live data.
 
 ## End-to-end data flow #2 - `/api/ask` (the streaming AI feature)
 
-This is the richest flow in the system. Transport is **plain `fetch` reading a raw `ReadableStream` of `text/plain`** - not SSE, and the AI SDK runs server-side only.
+Transport is **plain `fetch` reading a raw `ReadableStream` of `text/plain`** - not SSE, and the AI SDK runs server-side only.
 
 ```mermaid
 sequenceDiagram
@@ -122,14 +142,14 @@ sequenceDiagram
             R-->>U: enqueue chunk
         end
     end
-    U->>U: parseStreamChunk -> rAF-coalesced setStreamingText (renders THROUGH React)
+    U->>U: parseStreamChunk -> rAF-coalesced setStreamingText (React state owned by InteractiveShell)
     R->>KV: finally: settleBudget(refund) + Layer-2 audit + ask-log (fail-quiet)
     U->>U: finalize() -> commit answer (or error line) into history
 ```
 
-**Client-side rendering nuance (verified in code):** the streamed text lands in an *isolated* `streamingText` state and is flushed at most once per animation frame (`requestAnimationFrame`), so a per-chunk update re-renders only one `<span>`, never the whole feed. This is the opposite of the Hero boot loop, which mutates `textContent` directly with no React state (see doc 04). Both are deliberate INP guards.
+**Client-side rendering nuance (verified in code):** the streamed text lands in an _isolated_ `streamingText` state and is flushed at most once per animation frame (`requestAnimationFrame`), so chunks within one frame share a state update. The state lives in `InteractiveShell`, whose component renders again when it changes; the text is displayed in a dedicated span. This is the opposite of the Hero boot loop, which mutates `textContent` directly with no React state (see doc 04). Both limit update work.
 
-**Server timeouts (defense in depth):** 30s whole-request `AbortSignal`, 15s mid-stream watchdog, 1s usage-resolve. The token budget is held **fail-closed** if usage can't be resolved (so a metering bug can't leak spend), while Redis itself is **fail-open** (an outage never blocks an answer).
+**Server timeouts (defense in depth):** 30s whole-request `AbortSignal`, 15s mid-stream watchdog, 1s usage-resolve. The token budget is held **fail-closed** if usage can't be resolved (so a metering bug can't leak spend), while the rate limiters and dedup are **fail-open**. The one exception is the budget reservation: if Redis fails there, `/api/ask` returns 503 rather than answer without a spend cap.
 
 ## End-to-end data flow #3 - `/api/contact` (the write path via `defineHandler`)
 
@@ -150,13 +170,24 @@ sequenceDiagram
     alt KV fails
         H-->>F: 502 storage_unavailable
     else KV ok
-        H->>RS: send email (10s race)
-        Note over H,RS: Resend failure is logged but still returns 200<br/>(KV is the durable record)
-        H-->>F: 200 { ok: true, requestId }
+        H->>RS: sendContactMessage (10s race)
+        alt Resend accepts
+            H-->>F: 200 { ok: true, requestId }
+        else Resend error, timeout or missing key
+            H->>KV: enqueue id by receivedAt, attempts = 0
+            alt outbox saved
+                H-->>F: 202 { ok: false, requestId, error: { code: queued, message } }
+                F->>F: show saved, not delivered yet + LinkedIn link
+            else outbox write fails
+                H-->>F: 502 storage_unavailable
+            end
+        end
     end
 ```
 
-The **ordering is a security property**: rate-limit and validate *before* the work, hash the IP and touch storage *only* for requests that pass. Every response carries `X-Request-Id`. See doc 05 for the full `defineHandler` contract and the other routes.
+The **ordering is a security property**: rate-limit and validate _before_ the work, hash the IP and touch storage _only_ for requests that pass. Every response carries `X-Request-Id`. See doc 05 for the full `defineHandler` contract and the other routes.
+
+At 04:00 UTC daily (`0 4 * * *`), `/api/contact-retry` checks the `CRON_SECRET` bearer before reading pending ids in received-time order. Messages older than 7 days, or already at 3 retry attempts, leave the outbox. Each eligible message consumes an attempt before calling the same delivery function. Successful sends leave the outbox; failures remain pending. Audit messages retain their 90-day KV TTL. The success response is `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }`, with a matching `X-Request-Id` header. Contact logs carry only `requestId` and `msgId`.
 
 ## Request lifecycle summary (every request)
 
@@ -167,5 +198,5 @@ flowchart LR
     n --> route{route type}
     route -->|page| ppr["PPR: static shell + streamed dynamic sections"]
     route -->|api| handler["defineHandler or bespoke streaming handler"]
-    handler --> failopen["fail-open Redis posture; X-Request-Id on every response"]
+    handler --> failopen["rate limits fail open; ask budget reservation fails closed<br/>defineHandler responses carry X-Request-Id"]
 ```

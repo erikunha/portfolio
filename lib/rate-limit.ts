@@ -1,6 +1,7 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { log } from '@/lib/log';
+import { ASK_MAX_OUTPUT_TOKENS } from './ask/limits';
 
 let _redis: Redis | undefined;
 let _askLimit: Ratelimit | undefined;
@@ -87,6 +88,47 @@ const BUDGET_WINDOW_S = 60 * 60 * 24 * 32;
 
 const RESERVED_INPUT_TOKENS = 2200;
 
+export type BudgetStore = {
+  capacity: number;
+  reserve(budgetKey: string, tokens: number): Promise<number>;
+  release(budgetKey: string, tokens: number): Promise<void>;
+};
+
+const redisBudgetStore: BudgetStore = {
+  capacity: MONTHLY_TOKEN_BUDGET,
+  async reserve(budgetKey, tokens) {
+    const pipe = getRedis().pipeline();
+    pipe.incrby(budgetKey, tokens);
+    pipe.expire(budgetKey, BUDGET_WINDOW_S, 'NX');
+    const [used] = await pipe.exec<[number, number]>();
+    return used;
+  },
+  async release(budgetKey, tokens) {
+    await getRedis().decrby(budgetKey, tokens);
+  },
+};
+
+let budgetStore: BudgetStore = redisBudgetStore;
+
+export function setBudgetStore(store: BudgetStore): void {
+  budgetStore = store;
+}
+
+export function createEvalBudgetStore(requests: number): BudgetStore {
+  const used = new Map<string, number>();
+  return {
+    capacity: requests * (RESERVED_INPUT_TOKENS + ASK_MAX_OUTPUT_TOKENS),
+    async reserve(budgetKey, tokens) {
+      const total = (used.get(budgetKey) ?? 0) + tokens;
+      used.set(budgetKey, total);
+      return total;
+    },
+    async release(budgetKey, tokens) {
+      used.set(budgetKey, (used.get(budgetKey) ?? 0) - tokens);
+    },
+  };
+}
+
 export function getBudgetKey(): string {
   const now = new Date();
   const yyyy = now.getUTCFullYear();
@@ -100,14 +142,11 @@ export async function reserveBudget(
   const reserved = RESERVED_INPUT_TOKENS + maxOutputTokens;
   const budgetKey = getBudgetKey();
   try {
-    const pipe = getRedis().pipeline();
-    pipe.incrby(budgetKey, reserved);
-    pipe.expire(budgetKey, BUDGET_WINDOW_S, 'NX');
-    const [used] = await pipe.exec<[number, number]>();
-    const pct = used / MONTHLY_TOKEN_BUDGET;
+    const used = await budgetStore.reserve(budgetKey, reserved);
+    const pct = used / budgetStore.capacity;
     if (pct > 1) {
       try {
-        await getRedis().decrby(budgetKey, reserved);
+        await budgetStore.release(budgetKey, reserved);
       } catch (refundErr) {
         log.error('budget reservation refund-on-reject failed', { err: refundErr });
       }
@@ -116,8 +155,8 @@ export async function reserveBudget(
     if (pct >= 0.8) log.warn('budget approaching cap', { pct });
     return { allowed: true, reserved, pct, budgetKey };
   } catch (err) {
-    log.error('budget reservation failed, proceeding without cap', { err });
-    return { allowed: true, reserved: 0, pct: 0, budgetKey };
+    log.error('budget reservation failed, rejecting request', { err });
+    return { allowed: false, reserved: 0, pct: 0, budgetKey };
   }
 }
 
@@ -128,17 +167,14 @@ export async function settleBudget(
   budgetKey: string,
 ): Promise<void> {
   if (reserved <= 0) {
-    log.warn(
-      'budget settlement skipped — reserved=0 (Redis fail-open bypassed cap for this request)',
-      { budgetKey },
-    );
+    log.warn('budget settlement skipped: no positive reservation', { budgetKey });
     return;
   }
   const actual = actualInputTokens + actualOutputTokens;
   const refund = reserved - actual;
   if (refund <= 0) return;
   try {
-    await getRedis().decrby(budgetKey, refund);
+    await budgetStore.release(budgetKey, refund);
   } catch (err) {
     log.error('budget settlement refund failed', { err });
   }

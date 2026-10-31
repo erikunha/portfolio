@@ -2,7 +2,7 @@ import { type LinksContent, LinksContentSchema } from './schemas';
 import { social } from './social';
 
 export const linksContent: LinksContent = LinksContentSchema.parse({
-  shellTitle: 'erik@gringa — bash',
+  shellTitle: 'erik@gringa · bash',
   siteUrl: social.site,
   siteLabel: 'erikunha.dev',
   profile: {
@@ -10,13 +10,17 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     avatar: '/images/erik-avatar.jpg',
     taglines: {
       pt: [
-        'Senior Full-Stack Engineer',
+        'Engenheiro de Software Sênior, Frontend e Produto',
         'AI Engineering na prática',
         'Carreira internacional para devs',
       ],
-      en: ['Senior Full-Stack Engineer', 'AI engineering, hands-on', 'Going global as a dev'],
+      en: [
+        'Senior Software Engineer, Frontend & Product',
+        'AI engineering, hands-on',
+        'Going global as a dev',
+      ],
     },
-    host: { pt: 'Nova York, US · remoto', en: 'New York, US · remote' },
+    host: { pt: 'Brasil · remoto (Raylu, Nova York)', en: 'Brazil · remote (Raylu, New York)' },
     stack: 'React · Next · Node · Claude/Codex',
     status: { pt: 'primeiros vídeos chegando', en: 'first videos landing soon' },
   },
@@ -103,7 +107,7 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     qrHeading: { pt: 'levar a página com você', en: 'take this page with you' },
     qrCommand: 'qrencode -o links.png',
     qrBody: {
-      pt: 'Aponte a câmera para abrir esta página. Também serve para colar em vídeo, slide e crachá de evento.',
+      pt: 'Aponte a câmera para abrir esta página. Também serve para colar em vídeo, slide e credencial de evento.',
       en: 'Point your camera to open this page. Also works pasted into videos, slides and event badges.',
     },
     subscribe: { pt: 'inscrever-se no canal', en: 'subscribe' },
@@ -111,6 +115,8 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     watch: { pt: 'assistir', en: 'watch' },
     copyLink: { pt: 'copiar link', en: 'copy link' },
     copyDone: 'copied ✓',
+    copyFailed: 'copy failed',
+    opensInNewTab: { pt: 'abre em nova aba', en: 'opens in a new tab' },
     newBadge: { pt: 'novo', en: 'new' },
     langSwitchLabel: { pt: 'Idioma', en: 'Language' },
     feedUnavailable: {
@@ -129,8 +135,8 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
       en: 'Erik Cunha — AI engineering and going global as a dev',
     },
     description: {
-      pt: 'Senior Full-Stack Engineer em Nova York (remoto). Um vídeo novo toda semana no canal Erik na Gringa.',
-      en: 'Senior Full-Stack Engineer in New York (remote). A new video every week on the Erik na Gringa channel.',
+      pt: 'Senior Software Engineer, Frontend & Product, no Brasil e remoto. Um vídeo novo toda semana no canal Erik na Gringa.',
+      en: 'Senior Software Engineer, Frontend & Product, Brazil-based and remote. A new video every week on the Erik na Gringa channel.',
     },
   },
 });

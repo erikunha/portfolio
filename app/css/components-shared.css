@@ -1,0 +1,201 @@
+@layer components {
+  .copy-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--spacing-target);
+    min-height: var(--spacing-target);
+    padding: 0 var(--spacing-3);
+    border: var(--border-width) solid var(--color-primary-border);
+    border-radius: var(--radius-none);
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  .copy-btn:hover {
+    color: var(--color-green);
+  }
+
+  .copy-btn:focus-visible {
+    outline: 2px solid var(--color-green);
+    outline-offset: 2px;
+  }
+
+  .ds-prose :not(pre):not(td):not(th) > code {
+    background: var(--color-primary-quiet);
+    border: 1px solid var(--color-primary-border);
+    padding: 0.1em 0.35em;
+    color: var(--color-primary-500);
+
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 767px) {
+    .ds-prose table[data-labelled-table] thead {
+      display: none;
+    }
+
+    .ds-prose table[data-labelled-table],
+    .ds-prose table[data-labelled-table] tbody,
+    .ds-prose table[data-labelled-table] tr,
+    .ds-prose table[data-labelled-table] td {
+      display: block;
+      width: 100%;
+    }
+
+    .ds-prose table[data-labelled-table] tr {
+      margin-bottom: var(--spacing-3);
+      border: 1px solid var(--color-primary-border);
+    }
+
+    .ds-prose table[data-labelled-table] td {
+      border: 0;
+      border-bottom: 1px solid var(--color-primary-border);
+      overflow-wrap: anywhere;
+    }
+
+    .ds-prose table[data-labelled-table] td:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  .ds-prose pre {
+    background: var(--color-primary-quiet);
+    border: 1px solid var(--color-primary-border);
+    padding: 0.75rem 1rem;
+  }
+
+  .role-typer {
+    display: inline-grid;
+    vertical-align: baseline;
+  }
+
+  .role-typer > * {
+    grid-area: 1 / 1;
+    justify-self: start;
+  }
+
+  .role-typer-sizer {
+    visibility: hidden;
+  }
+
+  .role-typer-sizer::before {
+    content: attr(data-role-text);
+  }
+
+  .signal-glow {
+    text-shadow:
+      0 0 8px var(--color-glow-45),
+      0 0 4px var(--color-secondary-950);
+  }
+
+  .signal-glow-strong {
+    text-shadow:
+      0 0 6px var(--color-glow-60),
+      0 0 4px var(--color-secondary-950);
+  }
+
+  .sysfail-plate {
+    background: var(--color-primary-500);
+    color: var(--color-secondary-950);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: 0.08em;
+    padding: 6px 18px 8px;
+    line-height: 1;
+    text-transform: uppercase;
+    box-shadow:
+      0 0 24px var(--color-glow-55),
+      0 0 60px var(--color-glow-25);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 1024px) {
+    .sysfail-plate {
+      padding: 5px 14px 6px;
+    }
+  }
+
+  .module-deferred {
+    --module-estimate: 520px;
+    content-visibility: auto;
+    contain-intrinsic-size: auto var(--module-estimate);
+  }
+
+  #sec-git-log {
+    --module-estimate: 3300px;
+  }
+
+  #sec-hottest-takes {
+    --module-estimate: 3080px;
+  }
+
+  #sec-guitar {
+    --module-estimate: 3880px;
+  }
+
+  #sec-contact {
+    --module-estimate: 990px;
+  }
+
+  @media (min-width: 768px) {
+    #sec-git-log {
+      --module-estimate: 1730px;
+    }
+
+    #sec-hottest-takes {
+      --module-estimate: 1600px;
+    }
+
+    #sec-guitar {
+      --module-estimate: 2300px;
+    }
+
+    #sec-contact {
+      --module-estimate: 840px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    #sec-hottest-takes {
+      --module-estimate: 1250px;
+    }
+
+    #sec-guitar {
+      --module-estimate: 2230px;
+    }
+
+    #sec-contact {
+      --module-estimate: 710px;
+    }
+  }
+
+  .module-body-content {
+    padding: 14px;
+    color: var(--color-tertiary-50);
+    background: transparent;
+  }
+
+  @media (min-width: 768px) {
+    .module-body-content {
+      padding: 18px;
+      border: 1px solid var(--color-primary-subtle);
+    }
+  }
+
+  .module-body-content[data-variant="green"] {
+    background: var(--color-glow-05);
+  }
+
+  #sec-projects > .module-body-content,
+  #sec-live-metrics > .module-body-content {
+    padding: var(--spacing-4);
+    background: var(--color-glow-05);
+  }
+}

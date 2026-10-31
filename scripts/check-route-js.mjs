@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 
-const MAX_ROUTE_TOTAL_KB = 175;
+const MAX_ROUTE_TOTAL_KB = 164.7;
 
-const FRAMEWORK_FLOOR_KB = 142.2;
+const FRAMEWORK_FLOOR_KB = 131.9;
 const FRAMEWORK_FLOOR_TOLERANCE_KB = 2;
 
 const MANIFEST = '.next/diagnostics/route-bundle-stats.json';

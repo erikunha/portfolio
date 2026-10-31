@@ -1,45 +1,46 @@
-import { NOW_CURRENTLY } from './now-currently';
+import { NOW_CURRENTLY, WHOIS_TITLE } from './now-currently';
 import type { ShellResponse } from './schemas';
+import { ShellCommand, ShellLineKind } from './shell-ui';
 
 const SHELL_RESPONSES: ShellResponse[] = [
   {
-    commands: ['help'],
-    kind: 'output',
+    commands: [ShellCommand.Help],
+    kind: ShellLineKind.Output,
     text: 'commands: help · whois · whois --recursive · ls · cat skills.md · cat ~/.now · contact · face · hire · clear\nanything else → sent to Claude',
   },
   {
-    commands: ['whois', 'whoami'],
-    kind: 'output',
-    text: 'erik — full-stack engineer (frontend-heavy)',
+    commands: [ShellCommand.WhoIs, ShellCommand.WhoAmI],
+    kind: ShellLineKind.Output,
+    text: `erik — ${WHOIS_TITLE}`,
   },
   {
-    commands: ['whois --recursive', 'whoami --recursive'],
-    kind: 'output',
+    commands: [ShellCommand.WhoIsRecursive, ShellCommand.WhoAmIRecursive],
+    kind: ShellLineKind.Output,
     text: 'erik → engineer → builder → student → curious → 9yo with a guitar',
   },
   {
-    commands: ['ls'],
-    kind: 'output',
-    text: 'README.md  ~/.now  ~/.guitar_rig  ~/.visa  ~/.unknowns  ~/.community  ~/.credentials  hottest_takes.md  contact',
+    commands: [ShellCommand.List],
+    kind: ShellLineKind.Output,
+    text: 'README.md  ~/.now  ~/.guitar_rig  ~/.unknowns  ~/.community  ~/.credentials  hottest_takes.md  contact',
   },
   {
-    commands: ['cat skills.md'],
-    kind: 'output',
+    commands: [ShellCommand.Skills],
+    kind: ShellLineKind.Output,
     text: 'angular, react, next.js, typescript, node, rxjs, ngrx, web components, spec-driven ai tooling',
   },
   {
-    commands: ['cat ~/.now'],
-    kind: 'output',
+    commands: [ShellCommand.Now],
+    kind: ShellLineKind.Output,
     text: NOW_CURRENTLY,
   },
   {
-    commands: ['contact', 'hire'],
-    kind: 'output',
+    commands: [ShellCommand.Contact, ShellCommand.Hire],
+    kind: ShellLineKind.Output,
     text: 'mailto: erikhenriquealvescunha@gmail.com',
   },
   {
-    commands: ['face'],
-    kind: 'output',
+    commands: [ShellCommand.Face],
+    kind: ShellLineKind.Output,
     text: '(•_•) ( •_•)>⌐■-■ (⌐■_■)',
   },
 ];

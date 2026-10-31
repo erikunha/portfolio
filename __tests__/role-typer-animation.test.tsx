@@ -60,23 +60,45 @@ describe('RoleTyper — animation loop', () => {
     expect(liveRegion?.textContent).toBe('Senior');
   });
 
-  it('enters back phase after hold and reduces text', async () => {
+  it('holds the typed role instead of erasing it', async () => {
     const container = await render();
     const pill = container.querySelector('[aria-hidden="true"]');
     await act(async () => {
       await vi.advanceTimersByTimeAsync(80 * 6 + 2000 + 40 + 40);
     });
-    expect(pill?.textContent?.length).toBeLessThan('[Senior]'.length);
+    expect(pill?.textContent, 'the badge holds the typed role instead of erasing itself').toBe(
+      '[Senior]',
+    );
   });
 
-  it('cycles to the next role after backspacing to empty', async () => {
+  it('never types a second role', async () => {
     const container = await render();
     const pill = container.querySelector('[aria-hidden="true"]');
     await act(async () => {
       await vi.advanceTimersByTimeAsync(480 + 2000 + 240 + 300 + 80 * 5 + 200);
     });
-    const text = pill?.textContent ?? '';
-    expect(text).toMatch(/^\[Sta/);
+    expect(pill?.textContent, 'the role vocabulary is one word, so no other role is typed').toBe(
+      '[Senior]',
+    );
+  });
+
+  it('halts typing when motion is switched off and resumes when switched on', async () => {
+    const container = await render();
+    const pill = container.querySelector('[aria-hidden="true"]');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(80 * 3);
+    });
+    window.dispatchEvent(new CustomEvent('motionchange', { detail: { on: false } }));
+    const frozen = pill?.textContent;
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000);
+    });
+    expect(pill?.textContent).toBe(frozen);
+    window.dispatchEvent(new CustomEvent('motionchange', { detail: { on: true } }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(80 * 2);
+    });
+    expect(pill?.textContent).not.toBe(frozen);
   });
 
   it('stops mutating DOM after unmount (cleanup cancels animation)', async () => {
@@ -115,5 +137,20 @@ describe('RoleTyper — motion off (no animation)', () => {
     const container = mounted.container;
     const pill = container.querySelector('[aria-hidden="true"]');
     expect(pill?.textContent).toBe('[Senior]');
+  });
+
+  it('starts typing when motion is enabled after mounting with motion off', async () => {
+    vi.useFakeTimers();
+    vi.doMock('@/lib/motion', () => ({ readMotion: () => false }));
+    const { RoleTyper } = await import('@/components/client/RoleTyper/RoleTyper');
+    mounted = await mountClient(createElement(RoleTyper));
+    const pill = mounted.container.querySelector('[aria-hidden="true"]');
+    expect(pill?.textContent).toBe('[Senior]');
+    window.dispatchEvent(new CustomEvent('motionchange', { detail: { on: true } }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(80 * 2);
+    });
+    expect(pill?.textContent).toBe('[Sen]');
+    vi.useRealTimers();
   });
 });

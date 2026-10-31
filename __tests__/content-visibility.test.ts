@@ -1,8 +1,7 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { DEFERRED_SECTION_COUNT } from '@/components/responsive/Module/module.constants';
+import { readComponentsCss } from './helpers/components-css';
 
 function countDeferredSections(node: unknown): number {
   if (!node || typeof node !== 'object') return 0;
@@ -15,6 +14,8 @@ function countDeferredSections(node: unknown): number {
   if (el.props && 'children' in el.props) count += countDeferredSections(el.props.children);
   return count;
 }
+
+const PAGE_GRAPH_IMPORT_TIMEOUT_MS = 30_000;
 
 describe('content-visibility deferral', () => {
   it('Module renders data-cv-defer attribute only when defer is set', async () => {
@@ -35,28 +36,29 @@ describe('content-visibility deferral', () => {
     expect(renderToStaticMarkup(eagerEl)).not.toContain('data-cv-defer');
   });
 
-  it('app/page.tsx defers exactly the below-fold section set', async () => {
-    const { default: Home } = await import('@/app/page');
-    const tree = Home();
-    const deferredCount = countDeferredSections(tree);
-    expect(
-      deferredCount,
-      `app/page.tsx must pass \`defer\` to exactly ${DEFERRED_SECTION_COUNT} sections. This was a >= floor, which let a silent drop of up to 2 sections pass: they would render eagerly, forfeiting their share of the ~840ms mobile style+layout deferral, with every gate green. If you intentionally changed the deferred set, update DEFERRED_SECTION_COUNT — that edit is the decision, and it should be visible in review.`,
-    ).toBe(DEFERRED_SECTION_COUNT);
-  });
+  it(
+    'app/page.tsx defers exactly the below-fold section set',
+    async () => {
+      const { default: Home } = await import('@/app/page');
+      const tree = Home();
+      const deferredCount = countDeferredSections(tree);
+      expect(
+        deferredCount,
+        `app/page.tsx must pass \`defer\` to exactly ${DEFERRED_SECTION_COUNT} sections. Credentials and community share Career's deferred section. Update DEFERRED_SECTION_COUNT only when the deferred section set intentionally changes.`,
+      ).toBe(DEFERRED_SECTION_COUNT);
+    },
+    PAGE_GRAPH_IMPORT_TIMEOUT_MS,
+  );
 
-  it('components.css ships the .module-deferred content-visibility rule', () => {
+  it('components-*.css partials ship the .module-deferred content-visibility rule', () => {
     // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate content-visibility
-    const componentsCss = readFileSync(
-      path.resolve(__dirname, '../app/css/components.css'),
-      'utf-8',
-    );
+    const componentsCss = readComponentsCss();
     const deferredRules = Array.from(componentsCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)).filter((m) =>
       (m[1] ?? '').split(',').some((s) => s.trim() === '.module-deferred'),
     );
     expect(
       deferredRules.length,
-      'app/css/components.css must ship exactly ONE `.module-deferred` rule. Zero means the Module `defer` prop matches nothing. More than one means a later same-specificity rule wins the cascade and can silently revert `content-visibility` to `visible` for every below-fold section while this test still passes.',
+      'app/css/components-*.css must ship exactly ONE `.module-deferred` rule. Zero means the Module `defer` prop matches nothing. More than one means a later same-specificity rule wins the cascade and can silently revert `content-visibility` to `visible` for every below-fold section while this test still passes.',
     ).toBe(1);
     const deferredBlock = deferredRules[0]?.[2];
     expect(

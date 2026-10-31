@@ -1,4 +1,70 @@
 @theme {
+  --color-text: #e6ffe6;
+  --color-text-secondary: #a1b3a1;
+  --color-green: #00ff41;
+
+  --text-min: 0.75rem;
+  --text-xs: max(0.75rem, var(--text-min));
+  --text-sm: 0.875rem;
+  --text-body: var(--text-sm);
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-5xl: 3rem;
+  --text-7xl: 4rem;
+
+  --leading-body: 1.6;
+
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-target: 2.75rem;
+  --spacing-target-compact: 1.75rem;
+  --spacing-opinions-list-marker: 2ch;
+  --measure-opinions-body: 740px;
+  --receipt-metric-width: 10.5rem;
+  --receipt-value-width: 9rem;
+  --receipt-company-width: 9.375rem;
+  --breakpoint-guitar: 700px;
+  --guitar-arrow-width: 1.625rem;
+  --guitar-photo-width: 20rem;
+  --guitar-node-gap: 0.375rem;
+  --guitar-bar-width: 0.5625rem;
+  --guitar-bar-height: 0.8125rem;
+  --guitar-bar-gap: 0.125rem;
+  --guitar-bar-opacity: 0.22;
+  --guitar-columns: minmax(0, 1fr) var(--guitar-arrow-width) minmax(0, 1fr)
+    var(--guitar-arrow-width) minmax(0, 1fr);
+  --guitar-stat-columns: repeat(2, minmax(0, 1fr));
+  --guitar-line-height: 1.6;
+  --guitar-heading-line-height: 1.2;
+  --guitar-label-tracking: 0.04em;
+  --guitar-camera-tracking: 0.12em;
+  --guitar-prose-width: 72ch;
+  --guitar-photo-grayscale: 1;
+  --guitar-photo-contrast: 1.18;
+  --guitar-photo-brightness: 0.95;
+  --guitar-photo-tint-opacity: 0.6;
+  --guitar-photo-ratio: 16 / 9;
+  --guitar-photo-min-height: 12.5rem;
+  --guitar-arrow-rotation: 90deg;
+  --guitar-scanline: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.3) 0 1px,
+    transparent 1px 3px
+  );
+  --border-width: 1px;
+  --stroke-width-icon: 1.4;
+  --radius-none: 0;
+  --radius-control: 2px;
+
   --color-primary-50: #eafff0;
   --color-primary-100: #c4ffd8;
   --color-primary-200: #8ff2b2;
@@ -88,4 +154,32 @@
 
   --font-mono: var(--font-mono-src), monospace;
   --font-display: var(--font-display-src), sans-serif;
+}
+
+@layer base {
+  :root {
+    --space-gutter: clamp(16px, 4vw, 24px);
+    --space-page-top: var(--spacing-6);
+    --space-section: var(--spacing-8);
+    --text-section-title: var(--text-base);
+    --measure-page: 1200px;
+    --measure-read: 72ch;
+    --leading-page-tight: 1.1;
+    --leading-page-snug: 1.35;
+    --type-reveal-char-duration: 28ms;
+    --type-reveal-max-duration: 1.4s;
+    --type-reveal-caret-width: 0.6ch;
+    --type-reveal-caret-height: 1.05em;
+    --type-reveal-caret-blink: 1.05s;
+    --type-reveal-caret-blinks: 3;
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --text-min: 0.8125rem;
+      --space-page-top: var(--spacing-12);
+      --space-section: var(--spacing-12);
+      --text-section-title: var(--text-lg);
+    }
+  }
 }

@@ -58,6 +58,12 @@ describe('parseClaudeVerdict', () => {
     expect(parseClaudeVerdict(body)).toBe('request-changes');
   });
 
+  it('ignores verdict words in prose between two bold spans', () => {
+    const body =
+      '**Claude finished the task in 5m**\n\nI traced the reject-then-refund path.\n\n**Verdict: Approve.**';
+    expect(parseClaudeVerdict(body)).toBe('approve');
+  });
+
   it('returns none for an in-progress comment with no verdict yet', () => {
     expect(parseClaudeVerdict('**Claude is working…**\n- [ ] Post overview')).toBe('none');
   });
@@ -86,6 +92,16 @@ describe('extractReviewedSha', () => {
   it('extracts from the "committed HEAD (`sha`):" form (separator between head and the backtick)', () => {
     const sha = '3665027e14b928faa3dad325b202efc24077fc5b';
     expect(extractReviewedSha(`...confirmed fixed in the committed HEAD (\`${sha}\`):`)).toBe(sha);
+  });
+
+  it('takes the closing head SHA when a follow-up round cites the previous head first', () => {
+    const body = [
+      '- [x] Diff since last reviewed head (`4f363b3`, Approve) to scope what is new',
+      'The merge brought no net change.',
+      'Reviewed at head commit `41b5c3057bc0c2343981ccf52fda262ffb405976`.',
+      '**Verdict: Approve.**',
+    ].join('\n');
+    expect(extractReviewedSha(body)).toBe('41b5c3057bc0c2343981ccf52fda262ffb405976');
   });
 
   it('returns null when no head SHA is present', () => {

@@ -1,35 +1,75 @@
-import { credentials } from '@/content/credentials';
-import { SECTION_LABELS } from '@/content/section-labels';
-import { IconCredentials } from '../../Icons';
-import { Module } from '../../responsive/Module';
+import { useId } from 'react';
+import { communityEvent } from '@/content/community';
+import { careerCredentials, credentials } from '@/content/credentials';
+import { educationTags } from '@/content/education';
 
-export function CredentialsSection({ defer }: { defer?: boolean } = {}) {
+const EXTERNAL_REL = 'noopener noreferrer';
+const EXTERNAL_TARGET = '_blank';
+
+export function CredentialsSection({
+  id,
+  communityId,
+}: {
+  id?: string;
+  communityId?: string;
+} = {}) {
+  const groupId = useId();
+  const { link: eventLink } = communityEvent;
+  const { certifications, education, community, prompt, statusMarker } = careerCredentials;
+  const groups = [
+    { ...certifications, entries: credentials },
+    { ...education, entries: educationTags },
+  ];
   return (
-    <Module
-      id="sec-credentials"
-      header="CAT ~/.CREDENTIALS"
-      srLabel={SECTION_LABELS['sec-credentials']}
-      icon={<IconCredentials />}
-      defer={defer}
-    >
-      <div className="overflow-x-auto">
-        <div className="flex flex-col gap-1 mt-[0.5em] font-mono text-sm max-md:text-xs max-[768px]:gap-3">
-          {credentials.map((cred) => (
-            <div
-              key={cred.label}
-              className="flex items-baseline max-[768px]:flex-col max-[768px]:gap-0.5"
-            >
-              <span className="w-[14ch] shrink-0 text-tertiary-50 font-bold tracking-[0.04em] max-[768px]:w-auto">
-                {cred.label}
-              </span>
-              <span className="w-[25ch] shrink-0 text-primary-500 font-bold max-[768px]:w-auto">
-                {cred.badge}
-              </span>
-              <span className="flex-1 text-secondary-200 max-md:text-[11px]">{cred.evidence}</span>
-            </div>
-          ))}
+    <div id={id} className="career-tags">
+      {groups.map((group) => (
+        // biome-ignore lint/a11y/useSemanticElements: these are career facts, not form controls
+        <div key={group.prefix} role="group" aria-labelledby={`${groupId}-${group.prefix}`}>
+          <h3 id={`${groupId}-${group.prefix}`} className="career-command">
+            <span className="sr-only">{group.label}</span>
+            <span aria-hidden="true" data-type-reveal>
+              <span>{prompt}</span> {group.command}
+            </span>
+          </h3>
+          <ul className="career-tag-list">
+            {group.entries.map((entry) => (
+              <li key={entry.label}>
+                <span className="career-tag-key">
+                  {group.prefix}
+                  {entry.label}
+                </span>
+                <span>{entry.badge}</span>
+                <span>{entry.evidence}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      {/* biome-ignore lint/a11y/useSemanticElements: these are career facts, not form controls */}
+      <div id={communityId} role="group" aria-labelledby={`${groupId}-community`}>
+        <h3 id={`${groupId}-community`} className="career-command">
+          <span className="sr-only">{community.label}</span>
+          <span aria-hidden="true" data-type-reveal>
+            <span>{prompt}</span> {community.command}
+          </span>
+        </h3>
+        <div className="career-community">
+          <p className="career-tag-key">
+            <a href={eventLink.href} target={EXTERNAL_TARGET} rel={EXTERNAL_REL}>
+              <span>{community.heading}</span>
+              <span className="sr-only"> {communityEvent.newTabLabel}</span>
+            </a>
+          </p>
+          <ul>
+            {community.bullets.map((bullet) => (
+              <li key={bullet}>{bullet}</li>
+            ))}
+          </ul>
+          <p className="career-community-status">
+            <span aria-hidden="true">{statusMarker}</span> {community.status}
+          </p>
         </div>
       </div>
-    </Module>
+    </div>
   );
 }

@@ -1,123 +1,106 @@
 import { HeroStats } from '@/components/HeroStats';
-import { heroCurrentEmployer, heroPlatformChip, heroTagline } from '@/content/hero';
-import { Badge, Button } from '@/design-system';
+import { heroContent as c, heroTagline } from '@/content/hero';
+import { profile, profileWorkingLanguageLine } from '@/content/profile';
+import { Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
+
+const EXTERNAL_TARGET = '_blank';
+const EXTERNAL_REL = 'noopener noreferrer';
+
+const HEADING_LEVEL = 1;
+
+function HeroIdentity({ primary }: { primary: boolean }) {
+  return (
+    <>
+      {primary ? (
+        <h1 className="hero-identity" data-testid="hero-name">
+          {profile.displayName}
+        </h1>
+      ) : (
+        // biome-ignore lint/a11y/useSemanticElements: a second h1 would duplicate the page title in the DOM; the desktop variant owns the only h1
+        <p
+          className="hero-identity"
+          data-testid="hero-name"
+          role="heading"
+          aria-level={HEADING_LEVEL}
+        >
+          {profile.displayName}
+        </p>
+      )}
+      <p className="hero-stack">{heroTagline}</p>
+      <p className="hero-context">
+        <span>
+          {c.locationLabel} <b className="hero-location">{profile.country}</b>
+        </span>
+        <span>
+          {profile.timezone} · {profile.availability}
+        </span>
+        <span>
+          {c.employerLabel} <b>{profile.currentEmployer.name}</b>
+        </span>
+        <span>{profile.currentEmployer.context}</span>
+        <span>
+          {c.languageLabel} {profileWorkingLanguageLine}
+        </span>
+      </p>
+      <HeroStats stats={c.stats} label={c.statsLabel} />
+      <div className="hero-actions" data-testid="hero-ctas">
+        <Button
+          as="a"
+          variant="primary"
+          href={c.hire.href}
+          target={EXTERNAL_TARGET}
+          rel={EXTERNAL_REL}
+          aria-label={c.hire.accessibleLabel}
+        >
+          {c.hire.label}
+        </Button>
+        {c.actions.map((action) => (
+          <Button
+            key={action.href}
+            as="a"
+            variant="secondary"
+            href={action.href}
+            target={action.external ? EXTERNAL_TARGET : undefined}
+            rel={action.external ? EXTERNAL_REL : undefined}
+            aria-label={action.accessibleLabel}
+            className={action.hiddenOnWide ? 'lg:hidden' : undefined}
+          >
+            {action.label}
+          </Button>
+        ))}
+      </div>
+    </>
+  );
+}
 
 export function Hero() {
   return (
     <>
-      <h1 className="sr-only">Erik Cunha</h1>
       <section
         id="bio"
-        className="hero-desktop relative border border-primary-subtle min-h-[640px] overflow-hidden mb-10 md:mb-[40px] bg-transparent transition-transform duration-100 ease-out motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none"
+        tabIndex={-1}
+        className="hero-desktop hero-frame"
         data-testid="hero-desktop"
       >
-        <div className="flex-1 relative overflow-hidden">
+        <div className="hero-terminal">
           <HeroBootAnimation variant="desktop" />
         </div>
-        <aside className="hero-bio flex-1 border-l border-dashed border-primary-subtle flex flex-col justify-end px-6 py-8 gap-[10px]">
-          <p
-            className="font-mono font-bold text-[32px] md:text-[48px] text-primary-500 m-0 mb-1 leading-[1.2]"
-            data-testid="hero-name"
-            aria-hidden="true"
-          >
-            Erik Cunha
-          </p>
-          <p className="text-tertiary-50 text-sm leading-[1.55] mb-2">{heroTagline}</p>
-          <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-sm tracking-[0.08em] mb-3.5">
-            <span>
-              LOC:{' '}
-              <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
-                Brazil
-              </b>
-            </span>
-            <span>
-              NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
-            </span>
-            <span>{heroPlatformChip}</span>
-            <span>EN/PT/FR/ES</span>
-          </p>
-          <div className="self-start">
-            <Badge variant="dot">OPEN_TO_RELOCATION · WORLDWIDE</Badge>
-          </div>
-          <HeroStats />
-          <div className="grid grid-cols-2 gap-3 mt-3 [text-shadow:none]" data-testid="hero-ctas">
-            <Button
-              as="a"
-              variant="primary"
-              href="https://www.linkedin.com/in/erikunha/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              EXEC HIRE
-            </Button>
-            <Button
-              as="a"
-              variant="secondary"
-              href="https://github.com/erikunha"
-              target="_blank"
-              rel="noreferrer"
-            >
-              GITHUB ↗
-            </Button>
-          </div>
+        <aside className="hero-bio">
+          <HeroIdentity primary />
         </aside>
         <HeroSystemFailure />
       </section>
-
       <section
-        className="hero-mobile relative border border-primary-subtle overflow-hidden mb-10 bg-transparent mt-2"
+        id="bio-mobile"
+        tabIndex={-1}
+        className="hero-mobile hero-frame"
         data-testid="hero-mobile"
       >
-        <div className="relative z-[1] p-4 pb-[18px]">
+        <div className="hero-mobile-content">
           <HeroBootAnimation variant="mobile" />
-
-          <p
-            className="font-mono font-bold text-[24px] text-primary-500 border-t border-dashed border-primary-quiet pt-3.5 mt-1.5 mb-0.5 leading-[1.55]"
-            data-testid="hero-name"
-            aria-hidden="true"
-          >
-            Erik Cunha
-          </p>
-          <p className="text-tertiary-50 text-xs leading-[1.55] mb-2">{heroTagline}</p>
-          <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-xs tracking-[0.08em] mb-3.5">
-            <span>
-              LOC:{' '}
-              <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
-                Brazil
-              </b>
-            </span>
-            <span>
-              NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
-            </span>
-            <span>{heroPlatformChip}</span>
-            <span>EN/PT/FR/ES</span>
-          </p>
-          <div className="self-start mb-3.5">
-            <Badge variant="dot">OPEN_TO_RELOCATION · WORLDWIDE</Badge>
-          </div>
-          <HeroStats />
-          <div className="grid grid-cols-2 gap-3 mt-3 [text-shadow:none]" data-testid="hero-ctas">
-            <Button
-              as="a"
-              variant="primary"
-              href="https://www.linkedin.com/in/erikunha/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              EXEC HIRE
-            </Button>
-            <Button
-              as="a"
-              variant="secondary"
-              href="https://github.com/erikunha"
-              target="_blank"
-              rel="noreferrer"
-            >
-              GITHUB ↗
-            </Button>
-          </div>
+          <HeroIdentity primary={false} />
         </div>
       </section>
     </>

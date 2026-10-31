@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -25,7 +25,9 @@
       "!app/globals.css",
       "!next-env.d.ts",
       "!.specify",
-      "!.claude/skills/speckit-*"
+      "!.claude/skills/speckit-*",
+      "!pnpm-lock.yaml",
+      "!CLAUDE.md"
     ]
   },
   "formatter": {

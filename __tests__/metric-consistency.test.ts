@@ -26,6 +26,7 @@ const flipSign = (delta: string) =>
 
 const METRIC_KEYWORDS: Record<string, RegExp> = {
   API_LATENCY: /latency/i,
+  LCP: /\bLCP\b|largest.contentful.paint/i,
   BUNDLE_CSS: /css/i,
   TTI: /\bTTI\b|time.to.interactive/i,
   BUNDLE_JS: /\bJS\b|javascript/i,
@@ -33,7 +34,9 @@ const METRIC_KEYWORDS: Record<string, RegExp> = {
   INITIAL_LOAD: /initial[\s-]*(page[\s-]*)?load/i,
   CONVERSION: /conversion/i,
   DESKTOP_BUILD: /desktop[\s-]*build|build[\s-]*time/i,
-  ONBOARDING_TIME: /onboarding/i,
+  CLS: /\bCLS\b|layout.shift/i,
+  LIGHTHOUSE: /lighthouse/i,
+  RELEASE_TIME: /release/i,
 };
 
 const PROXIMITY_CHARS = 60;
@@ -75,15 +78,25 @@ const HIRING_PROFILE_RECEIPT_FIELDS: Array<[string, string]> = [
   ['page_load_reduction', 'PAGE_LOAD'],
   ['conversion_uplift', 'CONVERSION'],
   ['api_latency_reduction', 'API_LATENCY'],
-  ['onboarding_reduction', 'ONBOARDING_TIME'],
   ['perf_delta_js', 'BUNDLE_JS'],
   ['perf_delta_css', 'BUNDLE_CSS'],
 ];
+
+const HIRING_PROFILE_BUSINESS_RECEIPTS = new Set([
+  'tx_volume_per_year',
+  'revenue_platform',
+  'mau_peak',
+  'a11y_score',
+  'labs_delivered',
+  'banking_customers',
+  'copilot_subagents',
+]);
 
 const PROJECT_STAT_METRICS: Record<string, string> = {
   TTI: 'TTI',
   'JS BUNDLE': 'BUNDLE_JS',
   'LOAD TIME': 'PAGE_LOAD',
+  'DESKTOP BUILD': 'DESKTOP_BUILD',
 };
 
 beforeAll(async () => {
@@ -152,6 +165,19 @@ describe('performance metrics agree with the authoritative receipts', () => {
     ).toEqual([]);
   });
 
+  it('keeps canonical deltas separate from the displayed before/after receipts', () => {
+    expect(receiptFor('API_LATENCY')).toBe('-97.5%');
+    expect(receiptFor('BUNDLE_CSS')).toBe('-98%');
+    expect(receiptFor('DESKTOP_BUILD')).toBe('-40%');
+    const lcp = perfReceipts.find((receipt) => receipt.metric === 'LCP');
+    expect(lcp).toMatchObject({
+      before: 2544,
+      after: 1308,
+      displayValue: '2,544→1,308ms',
+    });
+    expect(lcp?.delta).toBe(`${(((1308 - 2544) / 2544) * 100).toFixed(1)}%`);
+  });
+
   it('INITIAL_LOAD matches "initial page load" but never "load time"', () => {
     expect(
       METRIC_KEYWORDS.INITIAL_LOAD?.test('initial page load'),
@@ -208,6 +234,18 @@ IF THIS FIRED ON A TRUE SENTENCE: it fires when the flipped number sits within $
     expect(
       drifted,
       'the machine-readable hiring profile must quote the same numbers as the receipts. It is the endpoint llms.txt advertises to crawlers, so a wrong number here is consumed by machines and never eyeballed. This reads the PARSED object, not the source literal: HiringProfileSchema strips unknown keys, so `undefined` means the field is not being SERVED AT ALL — a different bug from serving it wrong, and one that renaming a field out of `receipts` causes silently.\n\nMatched as a PREFIX, deliberately: three served values carry a legitimate trailing gloss ("-97.5% (40s→<1s, Venturus)"). Do NOT "tighten" startsWith to === — it reds three true fields, and the tempting next step is deleting the glosses from /api/erik.json, which is real information a recruiter reads. The receipt is the prefix; the gloss is allowed to follow it.',
+    ).toEqual([]);
+  });
+
+  it('every served hiring-profile receipt is either a live metric or a declared business fact', () => {
+    const mapped = new Set(HIRING_PROFILE_RECEIPT_FIELDS.map(([field]) => field));
+    const unaccounted = Object.keys(HIRING_PROFILE.receipts).filter(
+      (field) => !mapped.has(field) && !HIRING_PROFILE_BUSINESS_RECEIPTS.has(field),
+    );
+
+    expect(
+      unaccounted,
+      'a key in HIRING_PROFILE.receipts is neither mapped to a perf receipt nor declared as a business fact. The sweep above is receipt to surface: it walks HIRING_PROFILE_RECEIPT_FIELDS, so a receipt DELETED from content/perf-receipts.ts leaves its served field behind with nothing checking it, and /api/erik.json keeps serving a retired metric to crawlers and agents. That is exactly what happened to the ONBOARDING_TIME receipt: the receipt and its mapping were both deleted, and the served onboarding_reduction field survived. Declare the field in HIRING_PROFILE_BUSINESS_RECEIPTS when it is a business fact that has no perf receipt, or map it to a live metric, or delete it. Do not delete the assertion.',
     ).toEqual([]);
   });
 

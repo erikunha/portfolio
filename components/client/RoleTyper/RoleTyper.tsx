@@ -1,60 +1,45 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { cn } from '@/lib/cn';
 import { readMotion } from '@/lib/motion';
 
-export const ROLES = ['Senior', 'Staff', 'Principal'];
+export const ROLES = ['Senior'];
 const TYPE_MS = 80;
-const HOLD_MS = 2000;
-const BACK_MS = 40;
-const INTER_MS = 300;
 
 export function RoleTyper({ className }: { className?: string | undefined }) {
-  const spanRef = useRef<HTMLSpanElement>(null);
+  const pillRef = useRef<HTMLSpanElement>(null);
   const liveRef = useRef<HTMLSpanElement>(null);
+  const role = ROLES[0] ?? '';
 
   useEffect(() => {
-    const el = spanRef.current;
-    if (!el) return;
-    const node: HTMLSpanElement = el;
+    const pill = pillRef.current;
+    if (!pill) return;
+    const node: HTMLSpanElement = pill;
 
-    let cancelled = false;
+    let cancelled = !readMotion();
     let timerId: ReturnType<typeof setTimeout> | undefined;
-    let roleIdx = 0;
     let charIdx = 0;
-    let phase: 'type' | 'hold' | 'back' = 'type';
 
-    function tick() {
+    function type() {
       if (cancelled) return;
-      const role = ROLES[roleIdx % ROLES.length] ?? '';
-      if (phase === 'type') {
-        charIdx++;
-        node.textContent = `[${role.slice(0, charIdx)}]`;
-        if (charIdx >= role.length) {
-          phase = 'hold';
-          if (liveRef.current) liveRef.current.textContent = role;
-          timerId = setTimeout(tick, HOLD_MS);
-        } else {
-          timerId = setTimeout(tick, TYPE_MS);
-        }
-      } else if (phase === 'hold') {
-        phase = 'back';
-        timerId = setTimeout(tick, BACK_MS);
-      } else {
-        charIdx--;
-        node.textContent = charIdx > 0 ? `[${role.slice(0, charIdx)}]` : '[]';
-        if (charIdx <= 0) {
-          roleIdx++;
-          charIdx = 0;
-          phase = 'type';
-          timerId = setTimeout(tick, INTER_MS);
-        } else {
-          timerId = setTimeout(tick, BACK_MS);
-        }
+      charIdx++;
+      node.textContent = `[${role.slice(0, charIdx)}]`;
+      if (charIdx >= role.length) {
+        if (liveRef.current) liveRef.current.textContent = role;
+        return;
       }
+      timerId = setTimeout(type, TYPE_MS);
     }
 
-    if (readMotion()) tick();
+    function start() {
+      cancelled = false;
+      charIdx = 0;
+      node.textContent = '[]';
+      type();
+    }
+
+    if (!cancelled) start();
 
     const onMotionChange = (e: Event) => {
       const detail = (e as CustomEvent).detail as unknown;
@@ -64,12 +49,7 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
         cancelled = true;
         clearTimeout(timerId);
       } else if (cancelled) {
-        cancelled = false;
-        clearTimeout(timerId);
-        roleIdx = 0;
-        charIdx = 0;
-        phase = 'type';
-        tick();
+        start();
       }
     };
     window.addEventListener('motionchange', onMotionChange);
@@ -79,15 +59,21 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
       clearTimeout(timerId);
       window.removeEventListener('motionchange', onMotionChange);
     };
-  }, []);
+  }, [role]);
 
   return (
     <>
-      <span className={className} ref={spanRef} aria-hidden="true">
-        [Senior]
+      <span className="role-typer" aria-hidden="true">
+        <span className={cn(className, 'role-typer-sizer')} data-role-text={`[${role}]`} />
+        <span
+          className={className}
+          data-role-pill="true"
+          ref={pillRef}
+          aria-hidden="true"
+        >{`[${role}]`}</span>
       </span>
       <span className="sr-only" ref={liveRef} role="status" aria-live="polite">
-        Senior
+        {role}
       </span>
     </>
   );

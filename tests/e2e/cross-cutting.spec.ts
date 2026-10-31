@@ -26,7 +26,7 @@ test.describe('cross-cutting', () => {
     ).toBe(DEFERRED_SECTION_COUNT);
     expect(
       resolved.notAuto,
-      'these deferred sections did NOT compute to content-visibility: auto. A source-text test cannot catch this — the declaration can be present in components.css yet lose the cascade (a later same-specificity rule, a duplicate declaration inside the block, a higher-specificity `section.module-deferred`, an !important, a cross-file @layer, or an inline style). This asserts what the browser actually resolved.',
+      'these deferred sections did NOT compute to content-visibility: auto. A source-text test cannot catch this: the declaration can be present in a components-*.css partial yet lose the cascade (a later same-specificity rule, a duplicate declaration inside the block, a higher-specificity `section.module-deferred`, an !important, a cross-file @layer, or an inline style). This asserts what the browser actually resolved.',
     ).toEqual([]);
   });
 
@@ -278,38 +278,6 @@ test.describe('cross-cutting', () => {
     ).toBeLessThan(200);
   });
 
-  test('6 — DAW mixer mobile CSS override is compiled into the bundle', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
-
-    const ruleFound = await page.evaluate((): boolean => {
-      for (const sheet of document.styleSheets) {
-        try {
-          for (const rule of sheet.cssRules) {
-            const text = (rule.cssText ?? '')
-              .replace(/\s+/g, ' ')
-              .replace(/::/g, ':')
-              .toLowerCase();
-            if (
-              text.includes('mx-chain-mobile') &&
-              text.includes(':after') &&
-              text.includes('display: none')
-            ) {
-              return true;
-            }
-          }
-          // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
-        } catch {}
-      }
-      return false;
-    });
-
-    expect(
-      ruleFound,
-      'compiled CSS bundle must contain a .mx-chain-mobile::after { display: none } rule',
-    ).toBe(true);
-  });
-
   test('7 — mono font ships font-display:swap and preloads (first-paint render guarantee)', async ({
     page,
   }) => {
@@ -358,4 +326,21 @@ test.describe('cross-cutting', () => {
       `body must resolve to the next/font "mono" face first, got ${resolved.bodyFontFamily}`,
     ).toMatch(/^["']?mono["']?\s*(,|$)/);
   });
+});
+
+test('footer is server-rendered and boot output is decorative under reduced motion', async ({
+  page,
+}) => {
+  await installMockBackend(page, { log: 'accept', forget: 'happy' });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await expect(page.locator('.hero-boot-desktop')).toHaveAttribute('aria-hidden', 'true');
+  await expect(page.locator('.hero-boot-mobile')).toHaveAttribute('aria-hidden', 'true');
+  const footer = page.locator('footer');
+  await footer.scrollIntoViewIfNeeded();
+  await expect(footer.getByRole('navigation', { name: 'Site map' })).toBeVisible();
+  await expect(footer.locator('canvas')).toHaveCount(0);
+  await expect(footer.locator('.footer-dmesg')).toHaveAttribute('aria-hidden', 'true');
+  await footer.getByRole('link', { name: 'press R to reboot, back to top' }).click();
+  await expect(page.locator('[data-testid="hero-name"]:visible')).toBeFocused();
 });

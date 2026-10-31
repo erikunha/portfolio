@@ -1,114 +1,134 @@
 import { z } from 'zod';
 import { type Project, ProjectSchema } from './schemas';
 
-export const projects: Project[] = z.array(ProjectSchema).parse([
-  {
-    name: 'ORIGINATION_PLATFORM_UI',
-    mobileName: 'origination_ui/',
-    description:
-      'Shared UI systems and state architecture for Raylu’s AI deal-origination product — built from zero, co-developed with a second engineer, behind the market maps, target lists, and diligence surfaces private-markets funds work in.',
-    mobileDescription:
-      'Shared UI systems and state architecture at Raylu.ai — built from zero, co-developed with a second engineer. Market maps, target lists, diligence surfaces. Versioned ViewState, URL-backed state. React 19, Next 15, TypeScript.',
-    stats: [
-      { label: 'SURFACES', value: 'MAPS / LISTS / DILIGENCE' },
-      { label: 'STATE', value: 'VERSIONED + URL-BACKED' },
-      { label: 'STACK', value: 'REACT 19 / NEXT 15 / TS' },
-    ],
-    mobileMeta: [
-      { label: 'stack', value: 'react 19 · next 15 · ts' },
-      { label: 'scale', value: '45+ funds · $500B+ AUM' },
-      { label: 'status', value: 'production' },
-    ],
-  },
-  {
-    name: 'PAYMENT_ORCHESTRA',
-    mobileName: 'payment_orchestra/',
-    description:
-      'PCI-DSS cashier platform — multi-brand deposit/withdraw orchestration across 15+ regulated markets.',
-    mobileDescription:
-      'PCI-DSS cashier that handled 40M+ transactions/yr at Betsson. Multi-currency settlement, regulator-grade audit trail, micro-frontends across Angular / React / Ember via Stencil.',
-    stats: [
-      { label: 'VOLUME', value: '40M+ TX / YR' },
-      { label: 'REVENUE', value: '€1B+ / YR' },
-      { label: 'STACK', value: 'ANGULAR / REACT / STENCIL / NGRX' },
-    ],
-    mobileMeta: [
-      { label: 'stack', value: 'stencil · angular · rxjs' },
-      { label: 'scale', value: '€1B+ ARR' },
-      { label: 'status', value: 'production' },
-    ],
-  },
-  {
-    name: 'CARE_OPS_CONSOLE',
-    mobileName: 'care_ops/',
-    description:
-      'Mission-critical hospital operations dashboards — real-time, multi-site, Clean Architecture.',
-    mobileDescription:
-      'Angular + Nx + Clean Architecture frontend for Canon Medical workflow ops. -33% JS, -52% TTI, ~100% WCAG 2.1 AA. Lazy-loaded modules, OnPush everywhere, concurrent async pipelines.',
-    stats: [
-      { label: 'JS BUNDLE', value: '-33%' },
-      { label: 'TTI', value: '-52%' },
-      { label: 'STACK', value: 'ANGULAR / NX / RXJS' },
-    ],
-    mobileMeta: [
-      { label: 'stack', value: 'angular · nx · clean arch' },
-      { label: 'scale', value: 'hospital ops' },
-      { label: 'status', value: 'production' },
-    ],
-  },
-  {
-    name: 'COMMERCE_EDGE',
-    mobileName: 'commerce_edge/',
-    description:
-      'Nike Brazil & Centauro storefronts — SSR/SSG, micro-frontends, experiment-driven UX.',
-    mobileDescription:
-      'Nike Brazil & Centauro storefronts for Grupo SBF. 8M+ MAU. -32% page load, +10% conversion across 20+ A/B experiments. WebAR try-on, CWV-first image pipeline.',
-    stats: [
-      { label: 'REACH', value: '8M+ MAU' },
-      { label: 'LOAD TIME', value: '-32%' },
-      { label: 'STACK', value: 'NEXT.JS / REACT / TS' },
-    ],
-    mobileMeta: [
-      { label: 'stack', value: 'next · react · webar' },
-      { label: 'scale', value: '8M+ MAU' },
-      { label: 'status', value: 'shipped' },
-    ],
-  },
-  {
-    name: 'AI_AGENT_MESH',
-    mobileName: 'ai_agent_mesh/',
-    description:
-      'GitHub Copilot 12-subagent system — codegen, review, debugging, arch validation. Path-scoped instructions + prompt workflows, shipped team-wide at Betsson.',
-    mobileDescription:
-      "Copilot 12-subagent system at Betsson — code review, doc-gen, spec-to-PR. -40% onboarding via 35-page arch knowledge system. Built the agents and shipped them team-wide. Also uses Claude API for personal tooling (this portfolio's shell).",
-    stats: [
-      { label: 'SUBAGENTS', value: '12 + ORCHESTRATOR' },
-      { label: 'SCOPE', value: 'TEAM-WIDE' },
-      { label: 'STACK', value: 'COPILOT · PATH-SCOPED' },
-    ],
-    mobileMeta: [
-      { label: 'stack', value: 'copilot · subagents · claude' },
-      { label: 'scale', value: '12 agents · 4 teams' },
-      { label: 'status', value: 'internal' },
-    ],
-    perm: '-rwx------',
-  },
-  {
-    name: 'EDTECH_OMNI',
-    mobileName: 'edtech_omni/',
-    description:
-      'Cross-platform EdTech app — one codebase, five OSes (Android / iOS / Win / macOS / Linux).',
-    mobileDescription:
-      'Cross-platform EdTech. One codebase, five OSes. Ionic + Angular + Electron.',
-    stats: [
-      { label: 'REUSE', value: '~90% LOGIC' },
-      { label: 'COST', value: '-80% VS NATIVE' },
-      { label: 'STACK', value: 'IONIC / ANGULAR / ELECTRON' },
-    ],
-    mobileMeta: [
-      { label: 'stack', value: 'ionic · angular · electron' },
-      { label: 'scale', value: '5 OSes · production' },
-      { label: 'status', value: 'shipped' },
-    ],
-  },
-]);
+export const projectPresentation = z
+  .object({
+    command: z.string().min(1),
+    mobileCommand: z.string().min(1),
+    permissions: z.string().min(1),
+    externalDisclosure: z.string().min(1),
+  })
+  .parse({
+    command: 'LS -LA ./PROJECTS',
+    mobileCommand: 'LS -LA ~/PROJECTS',
+    permissions: 'drwxr-xr-x',
+    externalDisclosure: '(opens in a new tab)',
+  });
+
+export const projects: Project[] = z
+  .array(ProjectSchema)
+  .length(9)
+  .parse([
+    {
+      name: 'ORIGINATION_PLATFORM_UI',
+      company: 'Raylu',
+      kind: 'professional',
+      description:
+        "Investor workflow screens on Raylu's private-markets platform: company, pipeline, comparison, outreach. Shared table engine and URL-backed view state for funds holding $500B+ in assets.",
+      stats: [
+        { label: 'SURFACES', value: 'COMPANY / PIPELINE / OUTREACH' },
+        { label: 'STATE', value: 'VERSIONED + URL-BACKED' },
+        { label: 'STACK', value: 'REACT / NEXT 14 / TS 5' },
+      ],
+    },
+    {
+      name: 'PAYMENT_ORCHESTRA',
+      company: 'Betsson Group',
+      kind: 'professional',
+      description:
+        'PCI-DSS cashier platform: multi-brand deposit/withdraw orchestration across 15+ regulated jurisdictions.',
+      stats: [
+        { label: 'VOLUME', value: '40M+ TX / YR' },
+        { label: 'REVENUE', value: '€1.197B (GROUP)' },
+        { label: 'STACK', value: 'ANGULAR / STENCIL / NGRX / NX' },
+      ],
+    },
+    {
+      name: 'SERVICE_OPS_CONSOLE',
+      company: 'Canon Medical Systems Brazil',
+      kind: 'professional',
+      description:
+        'Hospital equipment service platform: service orders, specialist scheduling, field visits, live updates. Clean Architecture.',
+      stats: [
+        { label: 'JS BUNDLE', value: '-33%' },
+        { label: 'TTI', value: '-52%' },
+        { label: 'STACK', value: 'ANGULAR / NX / RXJS' },
+      ],
+    },
+    {
+      name: 'COMMERCE_EDGE',
+      company: 'Grupo SBF',
+      kind: 'professional',
+      description:
+        'Nike Brazil & Centauro storefronts: SSR/SSG/ISR, BFF gateway, shared Nx monorepo, 20+ A/B experiments.',
+      stats: [
+        { label: 'REACH', value: '8M+ MAU' },
+        { label: 'LOAD TIME', value: '-32%' },
+        { label: 'STACK', value: 'NEXT.JS / REACT / TS' },
+      ],
+    },
+    {
+      name: 'AI_AGENT_MESH',
+      company: 'Betsson Group',
+      kind: 'professional',
+      perm: '-rwx------',
+      description:
+        'GitHub Copilot 12-agent engineering system: generation, review, debugging, testing, architecture validation. Every automated action reviewable. Adopted team-wide at Betsson.',
+      stats: [
+        { label: 'AGENTS', value: '12' },
+        { label: 'SCOPE', value: 'TEAM-WIDE' },
+        { label: 'STACK', value: 'GITHUB COPILOT' },
+      ],
+    },
+    {
+      name: 'EDTECH_OMNI',
+      company: 'MB Labs',
+      kind: 'professional',
+      description:
+        'Cross-platform EdTech app: one codebase, five OSes (Android / iOS / Win / macOS / Linux).',
+      stats: [
+        { label: 'SHARED', value: '~80% CODE' },
+        { label: 'DESKTOP BUILD', value: '-40%' },
+        { label: 'STACK', value: 'IONIC / ANGULAR / ELECTRON' },
+      ],
+    },
+    {
+      name: 'REACT_GOOGLE_MAPS_API',
+      company: 'React Google Maps API',
+      kind: 'oss',
+      url: 'https://github.com/JustFly1984/react-google-maps-api/pull/3266',
+      description:
+        'Fixed an infinite React re-render loop in the Directions API example. The loop cost the docs site 61K+ unwanted Google Maps API calls. Stable-callback fix, merged by the maintainer.',
+      stats: [
+        { label: 'LIBRARY', value: '~1.8M WEEKLY NPM DOWNLOADS' },
+        { label: 'ROOT CAUSE', value: 'NEW CALLBACK IDENTITY EVERY RENDER' },
+        { label: 'STATUS', value: 'MERGED' },
+      ],
+    },
+    {
+      name: 'ERIKUNHA.DEV',
+      company: 'Erikunha',
+      kind: 'oss',
+      url: 'https://github.com/erikunha/portfolio',
+      description:
+        'This portfolio. Next.js 16 App Router, React 19, RSC-first, a streaming Anthropic endpoint on the Vercel AI SDK, and a CI eval harness that decides if it ships.',
+      stats: [
+        { label: 'LCP BUDGET', value: '< 1.8s' },
+        { label: 'INP BUDGET', value: '< 200ms' },
+        { label: 'DECISION LOG', value: '130+ RECORDS' },
+      ],
+    },
+    {
+      name: 'LAIBEMAGE',
+      company: 'Erikunha',
+      kind: 'oss',
+      url: 'https://github.com/erikunha/LAIbemage',
+      description:
+        'Open-source TypeScript CLI (MIT) classifying images across seven LLM vision providers: self-elicited confidence, local-to-cloud escalation below 0.70, two-provider consensus, active-learning queue.',
+      stats: [
+        { label: 'PROVIDERS', value: '7' },
+        { label: 'CI', value: '8 WORKFLOWS' },
+        { label: 'GATE', value: '5% REGRESSION' },
+      ],
+    },
+  ]);

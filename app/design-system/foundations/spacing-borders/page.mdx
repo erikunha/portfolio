@@ -1,0 +1,72 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'foundations/spacing-borders',
+  title: 'Spacing and borders · Design System · erikunha.dev',
+  description: 'Spacing scale, border width, radius and focus ring tokens',
+});
+
+# SPACING-BORDERS
+
+<OnThisPage items={[{id:'spacing',label:'Spacing'},{id:'target',label:'Touch target'},{id:'borders',label:'Borders'},{id:'focus',label:'Focus'}]} />
+
+Spacing and border tokens live in `app/css/theme.css`.
+
+<h2 id="spacing">Spacing</h2>
+
+| Token | Utility step | Size |
+|---|---|---|
+| `--spacing-1` | `1` | 4px |
+| `--spacing-2` | `2` | 8px |
+| `--spacing-3` | `3` | 12px |
+| `--spacing-4` | `4` | 16px |
+| `--spacing-6` | `6` | 24px |
+| `--spacing-8` | `8` | 32px |
+| `--spacing-12` | `12` | 48px |
+| `--spacing-16` | `16` | 64px |
+
+<Preview id="spacing-scale">
+  <div style={{display:'grid',gap:'8px',width:'100%'}}>
+    <span className="ds-space-bar" style={{width:'var(--spacing-1)'}} />
+    <span className="ds-space-bar" style={{width:'var(--spacing-2)'}} />
+    <span className="ds-space-bar" style={{width:'var(--spacing-3)'}} />
+    <span className="ds-space-bar" style={{width:'var(--spacing-4)'}} />
+    <span className="ds-space-bar" style={{width:'var(--spacing-6)'}} />
+    <span className="ds-space-bar" style={{width:'var(--spacing-8)'}} />
+    <span className="ds-space-bar" style={{width:'var(--spacing-12)'}} />
+    <span className="ds-space-bar" style={{width:'var(--spacing-16)'}} />
+  </div>
+</Preview>
+
+<h2 id="target">Touch target</h2>
+
+`--spacing-target` is 44px, the minimum width and height of every control. `--spacing-target-compact` is 28px for dense, non-primary controls.
+
+<h2 id="layout">Layout tokens</h2>
+
+Responsive tokens live in the `:root` block of `app/css/theme.css`; every page container reads them.
+
+| Token | Below 768px | From 768px |
+|---|---|---|
+| `--space-gutter` | `clamp(16px, 4vw, 24px)` | `clamp(16px, 4vw, 24px)` |
+| `--space-page-top` | 24px | 48px |
+| `--space-section` | 32px | 48px |
+| `--measure-page` | 1200px (home, summary, links) | 1200px |
+| `--measure-read` | 72ch (cv, 404, design-system body) | 72ch |
+
+Line heights: `--leading-page-tight` 1.1, `--leading-page-snug` 1.35, `--leading-body` 1.6. The page-scoped names keep Tailwind's built-in `leading-tight` and `leading-snug` scale intact.
+
+<h2 id="borders">Borders</h2>
+
+| Token | Value | Use |
+|---|---|---|
+| `--border-width` | 1px | Borders and dividers |
+| `--radius-none` | 0 | Sharp controls |
+| `--radius-control` | 2px | Maximum control radius |
+
+No component uses a radius above 2px. The traffic-light dots in `WindowChrome` are the one round shape.
+
+<h2 id="focus">Focus</h2>
+
+Keyboard focus uses `:focus-visible` with a 2px signal outline and a 2px offset. Never remove the outline without a replacement of equal contrast.

@@ -9,10 +9,14 @@ export const CLAUDE_LOGIN = 'claude[bot]';
 
 export type ClaudeVerdict = 'approve' | 'request-changes' | 'reject' | 'none';
 
+const BOLD_SPAN = /\*\*([^*]+)\*\*/g;
+
 export function parseClaudeVerdict(body: string): ClaudeVerdict {
-  if (/\*\*[^*]*\breject\b[^*]*\*\*/i.test(body)) return 'reject';
-  if (/\*\*[^*]*\brequest changes\b[^*]*\*\*/i.test(body)) return 'request-changes';
-  if (/\*\*[^*]*\bapprove\b[^*]*\*\*/i.test(body)) return 'approve';
+  const spans = [...body.matchAll(BOLD_SPAN)].map((match) => match[1] ?? '');
+  const has = (word: RegExp) => spans.some((span) => word.test(span));
+  if (has(/\breject\b/i)) return 'reject';
+  if (has(/\brequest changes\b/i)) return 'request-changes';
+  if (has(/\bapprove\b/i)) return 'approve';
   return 'none';
 }
 
@@ -20,11 +24,11 @@ export const HEAD_SHA_GAP_MAX = 24;
 
 const REVIEWED_SHA = new RegExp(
   `\\bhead\\b[^\`\\n]{0,${HEAD_SHA_GAP_MAX}}\`([0-9a-f]{7,40})\``,
-  'i',
+  'gi',
 );
 
 export function extractReviewedSha(body: string): string | null {
-  const sha = body.match(REVIEWED_SHA)?.[1];
+  const sha = [...body.matchAll(REVIEWED_SHA)].at(-1)?.[1];
   return sha ? sha.toLowerCase() : null;
 }
 

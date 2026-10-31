@@ -6,7 +6,7 @@ paths-ignore:
   - .next
   - node_modules
   - tests
-  - '**/*.test.ts'
-  - '**/*.spec.ts'
-  - '**/*.test.tsx'
-  - '**/*.spec.tsx'
+  - "**/*.test.ts"
+  - "**/*.spec.ts"
+  - "**/*.test.tsx"
+  - "**/*.spec.tsx"

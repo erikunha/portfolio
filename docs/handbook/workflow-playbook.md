@@ -4,7 +4,7 @@
 
 ## How to read a runbook
 
-Every runbook lists: **entry point** (what starts it), **steps**, **AI participation**, and **output**. The same spine recurs: brainstorm -> spec/plan (for non-trivial work) -> implement (TDD) -> review battery -> gates -> PR -> merge.
+Every runbook lists: **entry point** (what starts it), **steps**, **AI participation**, and **output**. The same spine recurs: brainstorm -> spec/plan (for non-trivial work) -> implement (TDD) -> review (`pr-review-orchestrator`) -> gates -> PR -> merge.
 
 ---
 
@@ -14,11 +14,11 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Steps:**
   1. `/speckit.specify` to lock intent and approach.
   2. Write a spec in `specs/NNN-feature/` (local-only, gitignored; Context, Gaps to Close, Changes). Get it to `Status: Approved`.
-  3. Dispatch `architect-reviewer`; it must return `GATE_RESULT: PASS` (convention; the gating hook was removed 2026-07-27).
+  3. Dispatch `architect-reviewer`; it must return `GATE_RESULT: PASS` (workflow convention).
   4. `speckit-plan` + `thinking-risk-premortem` to decompose into tasks (shard into sub-PRs if large).
   5. Branch `feat/<description>`. Implement test-first.
-  6. Self-review the diff (`pr-review-toolkit:code-reviewer`), fix what it finds, push.
-  7. `pnpm ci:local` + `gates:runtime`, open the PR, drive threads to resolved, `pnpm pr:gate`, owner merges.
+  6. Self-review the diff (`pr-review-orchestrator` skill), fix what it finds, push.
+  7. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`, open the PR, drive threads to resolved, `pnpm pr:gate`, owner merges.
   8. Add an ADR to `DECISIONS.md` with a reversibility note.
 - **AI:** brainstorming, architect review, planning, TDD implementation, pre-PR self-review.
 - **Output:** a squash-merged PR `(#NNN)` + an ADR.
@@ -31,8 +31,8 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   2. State the root cause in one sentence (the four-conditions rule: root cause, pattern scan, no deferred debt, measured property verified).
   3. Write a failing test that reproduces it (TDD).
   4. Make the smallest change that passes. Pattern-scan the codebase for the same class of bug.
-  5. Battery -> stamp -> push -> PR. Cite the before/after measurement in the commit body.
-- **AI:** systematic-debugging, TDD, the battery.
+  5. Review the diff with the `pr-review-orchestrator` skill -> push -> PR. Cite the before/after measurement in the commit body.
+- **AI:** systematic-debugging, TDD, the `pr-review-orchestrator` review.
 - **Output:** a `fix(scope): ...` PR with a root-cause note.
 
 ## Architecture change
@@ -40,7 +40,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Entry:** a structural decision (a new abstraction, a dependency, a layer).
 - **Steps:**
   1. `thinking-opportunity-cost` / `thinking-reversibility` / `thinking-second-order` as the decision warrants.
-  2. Write a spec; dispatch `architect-reviewer` (mandatory gate).
+  2. Write a spec; dispatch `architect-reviewer` (required workflow convention).
   3. Plan, implement, review.
   4. **Record the ADR** in `DECISIONS.md` (date, mechanism, reversibility) - architecture changes always get an ADR.
 - **AI:** the thinking skills, architect-reviewer.
@@ -53,7 +53,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   1. Confirm behavior is covered by tests first (refactor preserves behavior).
   2. `refactoring-specialist` agent if the change is large.
   3. Smallest reasonable change; never rewrite an implementation without explicit permission.
-  4. Battery (the `pr-review-toolkit` reviewer checks for behavior drift) -> stamp -> push.
+  4. Review (the `pr-review-orchestrator` skill checks for behavior drift) -> push.
 - **Output:** a `refactor(scope): ...` PR (no behavior change).
 
 ## Performance optimization
@@ -64,7 +64,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   2. Identify the bottleneck; form one hypothesis.
   3. Apply the smallest change; re-measure (cite before/after).
   4. `performance-engineer` reviews when a perf gate actually regressed; visual baselines regenerated if rendering changed.
-- **AI:** chrome-devtools MCP, performance-engineer (conditional, not a standing battery role).
+- **AI:** chrome-devtools MCP, performance-engineer (conditional, not a standing review role).
 - **Output:** a `perf(scope): ...` PR with before/after numbers. See [`/docs/08`](../08-performance-and-accessibility.md).
 
 ## Accessibility audit
@@ -72,7 +72,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Entry:** a new interactive/semantic element, or an axe failure.
 - **Steps:**
   1. `chrome-devtools-mcp` a11y debugging, or check the axe-core gate (`tests/a11y/axe.spec.ts`).
-  2. Fix to WCAG 2.1 AA; the axe gate must stay at zero violations and Lighthouse a11y = 100.
+  2. Fix to WCAG 2.2 AA; the axe gate must stay at zero violations and Lighthouse a11y = 100.
   3. Add a per-component behavioral a11y test.
 - **Output:** an a11y-clean PR. See [`/docs/08`](../08-performance-and-accessibility.md).
 
@@ -84,15 +84,15 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   2. Use the Playwright MCP to inspect desktop (1280x720) and mobile (375x812) before touching tests.
   3. If baselines are affected, follow `visual-baseline-regen` (darwin regen + linux artifact path, inspect-before-commit, batch-to-one-push).
   4. No raw hex outside `theme.css` (held by `pnpm lint:css-tokens` in `verify` and CI).
-- **Output:** a PR with regenerated Argos baselines if needed.
+- **Output:** a PR with regenerated Playwright baselines if needed.
 
 ## Touching the `/api/ask` feature
 
 - **Entry:** a change to the ask route, prompt, guards, or eval.
 - **Steps:**
-  1. Editing `app/api/**`/`rate-limit.ts`/`proxy.ts` means dispatching `security-auditor` before the next push. Convention only: the marker hook and the push guard that enforced it were removed 2026-07-27.
+  1. Editing `app/api/**`/`rate-limit.ts`/`proxy.ts` means dispatching `security-auditor` as part of the change. This is a convention, not a project-hook check.
   2. If the prompt/corpus changed, run `pnpm ask:eval` (the `ai-eval-update` skill) - calibration then corpus must clear their thresholds.
-  3. `vercel:vercel-functions` skill loads automatically (path-scoped rule).
+  3. Read `.claude/rules/api-boundary.md` for the matching API/server paths. It is guidance; follow the skill dispatch in `CLAUDE.md`.
 - **Output:** a PR with a security-auditor pass and a green eval.
 
 ## Documentation
@@ -101,8 +101,8 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Steps:**
   1. Reverse-engineer from code; do not duplicate existing canonical docs - route to them.
   2. Keep `CLAUDE.md` under 275 lines; new procedures go to a skill or a path-scoped rule, not into `CLAUDE.md`.
-  3. Doc-only commits get a scoped battery (agents skip the test suite).
-- **Output:** docs under `/docs`, with provenance noted.
+  3. Docs-only changes run `pnpm ci:local`; the project workflow skips bundle, route-JS and runtime gates. MDX in `app/` still belongs to the CI app filter.
+- **Output:** docs under `/docs`, with claims checked against current source.
 
 ## Writing an ADR
 
@@ -115,7 +115,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 
 - **Entry:** a ready branch.
 - **Steps:**
-  1. `pnpm ci:local` + `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
-  2. claude-review runs automatically on open and on every push and posts inline findings. Rebase before every push, verify the pushed SHA, reply citing the fix SHA before resolving a thread. Do not comment `/claude-review` after a push — it cancels the run the push already started.
+  1. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
+  2. claude-review runs automatically for eligible open and push events and posts inline findings. Rebase before every push, verify the pushed SHA, reply citing the fix SHA before resolving a thread. Do not comment `/claude-review` after a push. It cancels the run the push already started.
   3. `pnpm claude-gate` and `pnpm pr:gate` both pass; the owner squash-merges.
 - **Output:** a merged PR. See [review-merge-release](./review-merge-release.md).

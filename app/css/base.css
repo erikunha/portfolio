@@ -1,4 +1,14 @@
 @layer base {
+  :root {
+    --topbar-height: 45px;
+    --drawer-max-width: 320px;
+    --dock-clearance: 72px;
+    --z-dock: 120;
+    --z-scrim: 125;
+    --z-position-line: 126;
+    --z-drawer: 130;
+  }
+
   *,
   *::before,
   *::after {
@@ -7,6 +17,7 @@
 
   html {
     scroll-padding-top: 52px;
+    scrollbar-gutter: stable;
 
     -webkit-text-size-adjust: 100%;
     tab-size: 4;
@@ -51,15 +62,15 @@
     margin: 0;
     padding: 0;
     background: var(--color-secondary-950);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-family: var(--font-mono);
-    font-size: 16px;
+    font-size: var(--text-base);
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 767.98px) {
     html {
       scroll-padding-top: 76px;
     }
@@ -87,7 +98,8 @@
 
   button:focus-visible,
   input:focus-visible,
-  textarea:focus-visible {
+  textarea:focus-visible,
+  [tabindex="0"]:focus-visible {
     outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
   }
@@ -144,14 +156,29 @@
   }
 
   h1 {
-    font-size: 48px;
+    font-size: var(--text-3xl);
     font-family: var(--font-display);
     font-weight: 900;
+    line-height: 1.05;
   }
 
-  @media (max-width: 768px) {
+  h2 {
+    font-size: var(--text-xl);
+  }
+
+  h3 {
+    font-size: var(--text-base);
+  }
+
+  @media (min-width: 768px) {
+    h2 {
+      font-size: var(--text-2xl);
+    }
+  }
+
+  @media (min-width: 1280px) {
     h1 {
-      font-size: 32px;
+      font-size: var(--text-5xl);
     }
   }
 
@@ -180,16 +207,10 @@
     position: relative;
   }
 
-  @media (min-width: 769px) and (max-width: 900px) {
-    body {
-      font-size: 14px;
-    }
-  }
-
   .mobile-only {
     display: none;
   }
-  @media (max-width: 768px) {
+  @media (max-width: 767.98px) {
     .desktop-only {
       display: none;
     }
@@ -198,21 +219,15 @@
     }
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 767.98px) {
     #sec-readme {
       order: 1;
     }
     #sec-shell {
       order: 2;
     }
-    #sec-ai-metrics {
+    #sec-live-metrics {
       order: 3;
-    }
-    #sec-man-page {
-      order: 4;
-    }
-    #sec-now {
-      order: 5;
     }
     #sec-projects {
       order: 6;
@@ -220,48 +235,36 @@
     #sec-git-log {
       order: 7;
     }
-    #sec-npm-stack {
-      order: 8;
-    }
-    #sec-sys-health {
-      order: 9;
-    }
-    #sec-live-perf {
-      order: 10;
-    }
-    #sec-perf-receipts {
-      order: 11;
-    }
     #sec-guitar {
       order: 12;
-    }
-    #sec-daw-mixer {
-      order: 13;
-    }
-    #sec-visa {
-      order: 14;
-    }
-    #sec-credentials {
-      order: 15;
-    }
-    #sec-community {
-      order: 16;
     }
     #sec-hottest-takes {
       order: 17;
     }
-    #sec-responsibilities {
-      order: 18;
-    }
-    #sec-unknowns {
-      order: 19;
-    }
     #sec-contact {
       order: 20;
     }
+  }
+
+  @media (max-width: 1023px) {
+    html {
+      scroll-padding-bottom: var(--dock-clearance);
+    }
 
     body {
-      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(
+        var(--dock-clearance) +
+        var(--spacing-2) +
+        env(safe-area-inset-bottom, 0px)
+      );
     }
   }
+}
+
+@page reading {
+  margin: 14mm;
+}
+
+.reading-view {
+  page: reading;
 }

@@ -1,0 +1,240 @@
+@layer components {
+  .guitar-presentation {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: var(--guitar-line-height);
+    color: var(--color-tertiary-50);
+  }
+
+  .guitar-signal-panel {
+    padding: var(--spacing-3);
+    border: var(--border-width) solid var(--color-primary-border);
+    background: var(--color-secondary-950);
+  }
+
+  .guitar-signal-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-2);
+    padding-bottom: var(--spacing-2);
+    margin-bottom: var(--spacing-3);
+    border-bottom: var(--border-width) solid var(--color-primary-quiet);
+    color: var(--color-primary-400);
+    font-size: var(--text-xs);
+    letter-spacing: var(--guitar-label-tracking);
+  }
+
+  .guitar-signal-strip-live {
+    color: var(--color-primary-500);
+  }
+
+  .guitar-chain {
+    display: grid;
+    grid-template-columns: var(--guitar-columns);
+    gap: var(--guitar-node-gap);
+  }
+
+  .guitar-node {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+    min-width: 0;
+    padding: var(--spacing-3);
+    border: var(--border-width) solid var(--color-primary-500);
+    background: var(--color-glow-04);
+    overflow-wrap: anywhere;
+  }
+
+  .guitar-label {
+    color: var(--color-primary-400);
+    font-size: var(--text-xs);
+    letter-spacing: var(--guitar-label-tracking);
+  }
+
+  .guitar-node-heading {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: bold;
+    line-height: var(--guitar-heading-line-height);
+    color: var(--color-primary-500);
+  }
+
+  .guitar-node-subtitle {
+    font-size: var(--text-xs);
+  }
+
+  .guitar-bars {
+    display: flex;
+    gap: var(--guitar-bar-gap);
+    margin-top: auto;
+  }
+
+  .guitar-bar {
+    width: var(--guitar-bar-width);
+    height: var(--guitar-bar-height);
+    background: var(--color-primary-500);
+    opacity: var(--guitar-bar-opacity);
+  }
+
+  .guitar-bar[data-filled="true"] {
+    opacity: 1;
+  }
+
+  .guitar-arrow {
+    align-self: center;
+    justify-self: center;
+    color: var(--color-primary-500);
+    font-size: var(--text-xs);
+  }
+
+  .guitar-pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--guitar-photo-width);
+    gap: var(--spacing-4);
+  }
+
+  .guitar-details {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: var(--spacing-3);
+  }
+
+  .guitar-influences {
+    margin: 0;
+    max-width: var(--guitar-prose-width);
+    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
+  }
+
+  .guitar-influences strong,
+  .guitar-stat-value {
+    color: var(--color-primary-500);
+    font-weight: bold;
+  }
+
+  .guitar-stats {
+    display: grid;
+    grid-template-columns: var(--guitar-stat-columns);
+    gap: var(--border-width);
+    border: var(--border-width) solid var(--color-primary-quiet);
+    background: var(--color-primary-quiet);
+  }
+
+  .guitar-stat {
+    min-width: 0;
+    padding: var(--spacing-3);
+    background: var(--color-secondary-950);
+    overflow-wrap: anywhere;
+  }
+
+  .guitar-photo {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+    border: var(--border-width) solid var(--color-primary-500);
+    overflow: hidden;
+  }
+
+  .guitar-camera-labels,
+  .guitar-camera-caption {
+    padding: var(--spacing-1) var(--spacing-2);
+    color: var(--color-primary-400);
+    font-size: var(--text-xs);
+    letter-spacing: var(--guitar-camera-tracking);
+    overflow-wrap: anywhere;
+  }
+
+  .guitar-camera-labels {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-2);
+    border-bottom: var(--border-width) solid var(--color-primary-quiet);
+  }
+
+  .guitar-camera-caption {
+    border-top: var(--border-width) solid var(--color-primary-quiet);
+  }
+
+  .guitar-photo-frame {
+    position: relative;
+    container-type: size;
+    aspect-ratio: var(--guitar-photo-ratio);
+    min-height: var(--guitar-photo-min-height);
+    flex: 1;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .guitar-photo-image {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(var(--guitar-photo-grayscale)) contrast(var(--guitar-photo-contrast))
+      brightness(var(--guitar-photo-brightness));
+  }
+
+  .guitar-photo-tint,
+  .guitar-photo-scanlines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .guitar-photo-tint {
+    background: var(--color-primary-500);
+    mix-blend-mode: multiply;
+    opacity: var(--guitar-photo-tint-opacity);
+  }
+
+  .guitar-photo-scanlines {
+    background: var(--guitar-scanline);
+  }
+
+  .guitar-mixer {
+    margin-top: var(--spacing-6);
+  }
+
+  #sec-guitar > header h2 {
+    font-size: var(--text-sm);
+    font-weight: bold;
+  }
+
+  @variant max-guitar {
+    .guitar-chain {
+      gap: 0;
+    }
+
+    .guitar-arrow {
+      transform: rotate(var(--guitar-arrow-rotation));
+      line-height: var(--spacing-3);
+    }
+
+    .guitar-node {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--guitar-bar-gap) var(--spacing-2);
+      align-items: baseline;
+      padding: var(--spacing-1) var(--spacing-2);
+    }
+
+    .guitar-node-subtitle,
+    .guitar-bars {
+      grid-column: 1 / -1;
+    }
+
+    .guitar-photo-frame {
+      min-height: 0;
+      flex: none;
+    }
+  }
+}

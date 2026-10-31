@@ -1,5 +1,8 @@
 import { defineConfig, devices } from 'playwright/test';
 
+const CROSS_BROWSER_SPECS =
+  /tests\/(e2e\/(cross-cutting|observability-smoke|design-system-pages|links|contact-delivery|guitar-mobile|mixer-mobile|reading-views|error-states|no-js|mobile-reflow|hero-layout|type-scale|shell-input-states)|visual\/visual)\.spec\.ts$/;
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
@@ -26,20 +29,17 @@ export default defineConfig({
     {
       name: 'chromium-mobile',
       use: { ...devices['iPhone SE'], defaultBrowserType: 'chromium' },
-      testMatch:
-        /tests\/(e2e\/(cross-cutting|observability-smoke|design-system-pages|links)|visual\/visual)\.spec\.ts$/,
+      testMatch: CROSS_BROWSER_SPECS,
     },
     {
       name: 'webkit-desktop',
       use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 720 } },
-      testMatch:
-        /tests\/(e2e\/(cross-cutting|observability-smoke|design-system-pages|links)|visual\/visual)\.spec\.ts$/,
+      testMatch: CROSS_BROWSER_SPECS,
     },
     {
       name: 'webkit-mobile',
       use: { ...devices['iPhone 14'] },
-      testMatch:
-        /tests\/(e2e\/(cross-cutting|observability-smoke|design-system-pages|links)|visual\/visual)\.spec\.ts$/,
+      testMatch: CROSS_BROWSER_SPECS,
     },
 
     {

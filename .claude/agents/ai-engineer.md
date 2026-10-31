@@ -1,4 +1,5 @@
 ---
+
 name: ai-engineer
 description: "Use this agent when architecting, implementing, or optimizing end-to-end AI systems—from model selection and training pipelines to production deployment and monitoring."
 tools: Read, Write, Edit, Bash, Glob, Grep
@@ -286,13 +287,14 @@ Integration with other agents:
 
 Always prioritize accuracy, efficiency, and ethical considerations while building AI systems that deliver real value and maintain trust through transparency and reliability.
 ## Portfolio project context
+
 - AI endpoint: `app/api/ask/route.ts`
 - SDK: the `ai` package (AI SDK v7, `streamText`) through the Vercel AI Gateway — NOT `@anthropic-ai/sdk` directly. That package is still a dependency for other callers, but `/api/ask` does not use it. Needs `AI_GATEWAY_API_KEY` (OIDC token on Vercel).
 - Model: `ASK_MODEL` in `lib/ask/model.ts` (`anthropic/claude-haiku-4-5` — a Gateway model string, not a pinned dated ID) — do not change the model constant without explicit human authorization
 - Prompt caching enabled via `providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }` on a system message (`allowSystemInMessages: true`) — do not remove this. The pre-v7 `cache_control: { type: 'ephemeral' }` spelling no longer exists; cache-token breakdown reads from `usage.inputTokenDetails`.
-- Monthly token hard cap: `MONTHLY_TOKEN_BUDGET` in `lib/rate-limit.ts` (3,000,000 tokens/month as of 2026-07-16) — Redis key `ask:tokens:YYYY-MM`; warn at 80% (`pct >= 0.8`), block at 100% (`pct > 1`); fail-open if Redis is unavailable. CRITICAL — never disable or weaken. **Grep the constant; do not trust this number.**
+- Monthly token hard cap: `MONTHLY_TOKEN_BUDGET` in `lib/rate-limit.ts` (3,000,000 tokens/month as of 2026-07-16) — Redis key `ask:tokens:YYYY-MM`; warn at 80% (`pct >= 0.8`), block at 100% (`pct > 1`); fail-closed if Redis is unavailable (the request is rejected with 503). CRITICAL — never disable or weaken. **Grep the constant; do not trust this number.**
 - Rate limit: `slidingWindow(8, '1 h')` via `@upstash/ratelimit` in `lib/rate-limit.ts`
 - Streaming response: custom protocol in `lib/stream-protocol.ts`
-- Fail-open on Redis unavailability — never block the user for infrastructure reasons
+- Rate limiting and dedup fail open on Redis unavailability; the token budget is the one control that fails closed
 - IP used as-is in Upstash rate-limit key (ephemeral sliding window, never durably stored by this route)
 - RISK: critical — token budget cap (`MONTHLY_TOKEN_BUDGET`), rate-limit params, prompt caching; silent disabling costs money

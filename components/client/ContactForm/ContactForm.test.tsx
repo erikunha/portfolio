@@ -1,10 +1,25 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { NextRequest } from 'next/server';
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
 import { flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
+import { linksContent } from '@/content/links';
 import { ContactForm } from './ContactForm';
+
+function fillValidForm(container: HTMLElement) {
+  fireEvent.change(container.querySelector('input[name="name"]') as HTMLInputElement, {
+    target: { value: 'Ada' },
+  });
+  fireEvent.change(container.querySelector('input[name="email"]') as HTMLInputElement, {
+    target: { value: 'ada@example.com' },
+  });
+  fireEvent.change(container.querySelector('textarea') as HTMLTextAreaElement, {
+    target: { value: 'A platform engineering opportunity.' },
+  });
+}
 
 describe('ContactForm accessibility', () => {
   let mounted: MountedClient;
@@ -62,9 +77,24 @@ describe('ContactForm accessibility', () => {
     expect(submitRow?.getAttribute('aria-live')).toBe('polite');
   });
 
+  it('states how long a message is kept before it is deleted', async () => {
+    const container = await renderForm();
+    const privacy = container.querySelector('.contact-privacy');
+    expect(privacy?.textContent).toBe(
+      'Kept 90 days so Erik can reply, then deleted. IP hashed for rate limiting. Never shared.',
+    );
+  });
+
   it('keyboard form submission triggers the request and announces errors via role="alert"', async () => {
     const fetchMock = vi.fn(
-      async () => new Response(JSON.stringify({ error: 'server boom' }), { status: 500 }),
+      async () =>
+        new Response(
+          JSON.stringify({
+            ok: false,
+            error: { code: 'storage_unavailable', message: 'server boom' },
+          }),
+          { status: 500 },
+        ),
     );
     vi.stubGlobal('fetch', fetchMock);
 
@@ -73,6 +103,7 @@ describe('ContactForm accessibility', () => {
     expect(container.querySelector('[role="alert"]')).toBeNull();
 
     const form = container.querySelector<HTMLFormElement>('form');
+    fillValidForm(container);
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
@@ -102,7 +133,13 @@ describe('contact form error region', () => {
   it('renders the error message in a role="alert" live region after a failed submit', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(JSON.stringify({ error: 'boom' }), { status: 500 })),
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({ ok: false, error: { code: 'storage_unavailable', message: 'boom' } }),
+            { status: 500 },
+          ),
+      ),
     );
 
     mounted = await mountClient(createElement(ContactForm));
@@ -112,6 +149,7 @@ describe('contact form error region', () => {
 
     const form = container.querySelector<HTMLFormElement>('form');
     expect(form).not.toBeNull();
+    fillValidForm(container);
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
@@ -121,6 +159,96 @@ describe('contact form error region', () => {
     expect(alert).not.toBeNull();
     expect(alert?.textContent).toContain('boom');
   });
+});
+
+describe('contact form delivery states', () => {
+  let mounted: MountedClient;
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.unstubAllGlobals();
+  });
+
+  async function submitResponse(body: unknown, status: number) {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json(body, { status })),
+    );
+    mounted = await mountClient(createElement(ContactForm));
+    const container = mounted.container;
+    const form = container.querySelector('form');
+    fillValidForm(container);
+    await act(async () => {
+      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    await flushMicrotasks();
+    return mounted.container;
+  }
+
+  it('keeps the delivered success copy and test id', async () => {
+    const container = await submitResponse({ ok: true, requestId: 'request-id' }, 200);
+    const success = container.querySelector('[data-testid="contact-success"]');
+    expect(success?.getAttribute('role')).toBe('status');
+    expect(success?.textContent).toContain('EXECUTE_SEND :: SUCCESS');
+    expect(success?.textContent).toContain('handshake initiated · expect reply within 48h');
+  });
+
+  it.each([
+    [{ ok: true, requestId: 'request-id' }, 200, 'contact-success'],
+    [
+      { ok: false, requestId: 'request-id', error: { code: 'queued', message: 'Saved for retry' } },
+      202,
+      'contact-queued',
+    ],
+  ])(
+    'replaces the form with a focused result so it cannot be sent again (%#)',
+    async (body, status, testId) => {
+      const container = await submitResponse(body, status);
+      const result = container.querySelector(`[data-testid="${testId}"]`);
+      expect(result).not.toBeNull();
+      expect(document.activeElement).toBe(result);
+      expect(container.querySelector('form')).toBeNull();
+      expect(container.querySelector('button[type="submit"]')).toBeNull();
+      expect(fetch).toHaveBeenCalledOnce();
+    },
+  );
+
+  it('announces queued without success and offers the canonical LinkedIn link', async () => {
+    const container = await submitResponse(
+      { ok: false, requestId: 'request-id', error: { code: 'queued', message: 'Saved for retry' } },
+      202,
+    );
+    expect(container.querySelector('[data-testid="contact-success"]')).toBeNull();
+    const queued = container.querySelector('[data-testid="contact-queued"]');
+    expect(queued?.getAttribute('role')).toBe('status');
+    expect(queued?.textContent).toContain('saved, not delivered yet');
+    expect(queued?.textContent).toContain('delivery is retried automatically');
+    expect(queued?.textContent).toContain('for a faster reply use LinkedIn');
+    const link = queued?.querySelector('a');
+    expect(link?.textContent).toBe('LinkedIn');
+    expect(link?.getAttribute('href')).toBe(
+      linksContent.pills.find((pill) => pill.id === 'linkedin')?.href,
+    );
+    expect(container.querySelector('form')).toBeNull();
+  });
+
+  it.each([
+    [400, 'validation_failed', 'request validation failed'],
+    [429, 'rate_limited', 'too many requests, try again in 10 minutes'],
+    [502, 'storage_unavailable', 'storage unavailable, try again'],
+  ])(
+    'displays the server message from an object error envelope (%s)',
+    async (status, code, message) => {
+      const container = await submitResponse(
+        { ok: false, requestId: 'request-id', error: { code, message } },
+        status,
+      );
+      const alert = container.querySelector('[role="alert"]');
+      expect(alert?.textContent).toContain(message);
+      expect(alert?.textContent).not.toContain('[object Object]');
+      expect(container.querySelector('form')).not.toBeNull();
+    },
+  );
 });
 
 describe('focus rings', () => {
@@ -311,13 +439,13 @@ describe('contact form — submitting state', () => {
     vi.restoreAllMocks();
   });
 
-  it('sets aria-busy="true" and disables the submit button while the POST is pending', async () => {
+  it('keeps the busy submit focusable and guards duplicate requests', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(
         () =>
           new Promise<Response>((resolve) => {
-            resolveFetch = () => resolve(new Response('{}', { status: 200 }));
+            resolveFetch = () => resolve(Response.json({ ok: true }));
           }),
       ),
     );
@@ -328,6 +456,7 @@ describe('contact form — submitting state', () => {
     const form = container.querySelector<HTMLFormElement>('form');
     expect(form?.getAttribute('aria-busy')).toBe('false');
 
+    fillValidForm(container);
     await act(async () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
@@ -335,7 +464,15 @@ describe('contact form — submitting state', () => {
 
     expect(form?.getAttribute('aria-busy')).toBe('true');
     const submitBtn = container.querySelector<HTMLButtonElement>('button[type="submit"]');
-    expect(submitBtn?.hasAttribute('disabled')).toBe(true);
+    expect(submitBtn?.hasAttribute('disabled')).toBe(false);
+    expect(submitBtn?.getAttribute('aria-disabled')).toBe('true');
+    submitBtn?.focus();
+    expect(document.activeElement).toBe(submitBtn);
+    await act(async () => {
+      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    expect(fetch).toHaveBeenCalledOnce();
 
     await act(async () => {
       resolveFetch();
@@ -344,5 +481,284 @@ describe('contact form — submitting state', () => {
 
     expect(container.querySelector('[data-testid="contact-success"]')).not.toBeNull();
     expect(container.querySelector('form')).toBeNull();
+  });
+});
+
+describe('contact validation and retention', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('focuses a linked summary, wires inline errors, and corrects them as inputs change', () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = render(<ContactForm />);
+    const form = container.querySelector('form') as HTMLFormElement;
+    fireEvent.submit(form);
+    const summary = screen.getByRole('alert');
+    expect(document.activeElement).toBe(summary);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(within(summary).getAllByRole('link')).toHaveLength(3);
+    for (const link of within(summary).getAllByRole('link')) {
+      const id = link.getAttribute('href')?.slice(1) as string;
+      const input = document.getElementById(id) as HTMLInputElement;
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      const descriptions = input.getAttribute('aria-describedby')?.split(' ') ?? [];
+      expect(
+        descriptions.some((description) =>
+          document.getElementById(description)?.textContent?.includes('error:'),
+        ),
+      ).toBe(true);
+      fireEvent.click(link);
+      expect(document.activeElement).toBe(input);
+    }
+    fillValidForm(container);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(container.querySelector('[aria-invalid="true"]')).toBeNull();
+    fireEvent.change(screen.getByLabelText('$ email:'), { target: { value: 'bad' } });
+    fireEvent.submit(form);
+    expect(document.activeElement).toBe(screen.getByRole('alert'));
+    expect(within(screen.getByRole('alert')).getAllByRole('link')).toHaveLength(1);
+  });
+
+  it('counts message characters and keeps the counter described alongside a validation error', () => {
+    render(<ContactForm />);
+    const message = screen.getByLabelText('$ message:') as HTMLTextAreaElement;
+    fireEvent.change(message, { target: { value: 'short' } });
+    fireEvent.submit(message.form as HTMLFormElement);
+    const descriptions = message.getAttribute('aria-describedby')?.split(' ') ?? [];
+    expect(descriptions.map((id) => document.getElementById(id)?.textContent)).toContain('5/2000');
+    expect(descriptions).toHaveLength(2);
+    fireEvent.change(message, { target: { value: 'An adequate message.' } });
+    const remaining = message.getAttribute('aria-describedby')?.split(' ') ?? [];
+    expect(remaining).toHaveLength(1);
+    expect(document.getElementById(remaining[0] ?? '')?.textContent).toBe('20/2000');
+    expect(message.maxLength).toBe(2000);
+  });
+
+  it.each(['A', 'A'.repeat(120)])(
+    'accepts the API name boundary and removes the delivered form',
+    async (name) => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => Response.json({ ok: true })),
+      );
+      const { container } = render(<ContactForm />);
+      fillValidForm(container);
+      const nameInput = screen.getByLabelText('$ name:') as HTMLInputElement;
+      fireEvent.change(nameInput, { target: { value: name } });
+      expect(nameInput.minLength).toBe(1);
+      expect(nameInput.maxLength).toBe(120);
+      fireEvent.submit(nameInput.form as HTMLFormElement);
+      await screen.findByTestId('contact-success');
+      expect(JSON.parse(vi.mocked(fetch).mock.calls[0]?.[1]?.body as string)).toMatchObject({
+        name,
+        email: 'ada@example.com',
+        message: 'A platform engineering opportunity.',
+      });
+      expect(container.querySelector('form')).toBeNull();
+      expect(screen.queryByRole('button', { name: 'EXECUTE_SEND' })).toBeNull();
+    },
+  );
+
+  it('rejects whitespace-only names and values beyond API limits without sending', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    const { container } = render(<ContactForm />);
+    fillValidForm(container);
+    const name = screen.getByLabelText('$ name:') as HTMLInputElement;
+    for (const value of ['   ', 'A'.repeat(121)]) {
+      fireEvent.change(name, { target: { value } });
+      fireEvent.submit(name.form as HTMLFormElement);
+      expect(name.getAttribute('aria-invalid')).toBe('true');
+    }
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it.each(['x'.repeat(10), 'x'.repeat(2000)])(
+    'accepts the API message boundary (%#)',
+    async (message) => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => Response.json({ ok: true })),
+      );
+      const { container } = render(<ContactForm />);
+      fillValidForm(container);
+      const input = screen.getByLabelText('$ message:') as HTMLTextAreaElement;
+      fireEvent.change(input, { target: { value: message } });
+      fireEvent.submit(input.form as HTMLFormElement);
+      await screen.findByTestId('contact-success');
+      expect(fetch).toHaveBeenCalledOnce();
+      expect(container.querySelector('form')).toBeNull();
+    },
+  );
+
+  it.each([' '.repeat(10), 'x'.repeat(9), 'x'.repeat(2001), '  short  '])(
+    'rejects messages outside the trimmed API limits (%#)',
+    (message) => {
+      vi.stubGlobal('fetch', vi.fn());
+      const { container } = render(<ContactForm />);
+      fillValidForm(container);
+      const input = screen.getByLabelText('$ message:') as HTMLTextAreaElement;
+      fireEvent.change(input, { target: { value: message } });
+      fireEvent.submit(input.form as HTMLFormElement);
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      expect(document.activeElement).toBe(screen.getByRole('alert'));
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['missing-at.example.com', 'name@', 'name@site', 'name @site.com'])(
+    'rejects invalid email before sending (%s)',
+    (email) => {
+      vi.stubGlobal('fetch', vi.fn());
+      const { container } = render(<ContactForm />);
+      fillValidForm(container);
+      const input = screen.getByLabelText('$ email:') as HTMLInputElement;
+      fireEvent.change(input, { target: { value: email } });
+      fireEvent.submit(input.form as HTMLFormElement);
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
+
+  it('focuses a server error, preserves values, and permits a retry', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          Response.json(
+            {
+              ok: false,
+              error: { code: 'storage_unavailable', message: 'storage unavailable, try again' },
+            },
+            { status: 502 },
+          ),
+        )
+        .mockResolvedValueOnce(Response.json({ ok: true })),
+    );
+    const { container } = render(<ContactForm />);
+    fillValidForm(container);
+    const form = container.querySelector('form') as HTMLFormElement;
+    fireEvent.submit(form);
+    const alert = await screen.findByRole('alert');
+    await waitFor(() => expect(document.activeElement).toBe(alert));
+    expect(alert.textContent).toContain('storage unavailable, try again');
+    expect(alert.textContent).not.toContain('[object Object]');
+    expect(within(alert).getByRole('link').getAttribute('href')).toBe(
+      'mailto:erikhenriquealvescunha@gmail.com',
+    );
+    expect((screen.getByLabelText('$ name:') as HTMLInputElement).value).toBe('Ada');
+    expect((screen.getByLabelText('$ email:') as HTMLInputElement).value).toBe('ada@example.com');
+    expect((screen.getByLabelText('$ message:') as HTMLTextAreaElement).value).toBe(
+      'A platform engineering opportunity.',
+    );
+    fireEvent.submit(form);
+    await screen.findByTestId('contact-success');
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('gives separate forms unique field and description targets', () => {
+    const { container } = render(
+      <>
+        <ContactForm />
+        <ContactForm />
+      </>,
+    );
+    const ids = [...container.querySelectorAll('[id]')].map((node) => node.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+describe('contact client dependency boundary', () => {
+  it('loads the client island without evaluating Zod', async () => {
+    vi.resetModules();
+    vi.doMock('zod', () => {
+      throw new Error('ContactForm must load without Zod in its runtime dependencies');
+    });
+    try {
+      const client = await import('./ContactForm');
+      expect(typeof client.ContactForm).toBe('function');
+    } finally {
+      vi.doUnmock('zod');
+      vi.resetModules();
+    }
+  });
+});
+
+describe('contact cross-review fixes', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  function setField(container: HTMLElement, selector: string, value: string) {
+    fireEvent.change(container.querySelector(selector) as HTMLElement, { target: { value } });
+  }
+
+  it('counts the trimmed message length the validator and the API use', () => {
+    const { container } = render(<ContactForm />);
+    setField(container, 'textarea', `   ${'a'.repeat(4)}   `);
+    expect(container.querySelector('.contact-count')?.textContent).toBe('4/2000');
+  });
+
+  it.each([
+    'ada@example.com',
+    'a..b@example.com',
+    '.ada@example.com',
+    'ada.@example.com',
+    'ada@-example.com',
+    'ada@example.c',
+    'ada@@example.com',
+    "o'brien+tag@sub.example.org",
+    'ada@example',
+  ])('client email check agrees with the server schema for %s', (email) => {
+    const fetchMock = vi.fn(async () => Response.json({ ok: true }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = render(<ContactForm />);
+    setField(container, 'input[name="name"]', 'Ada');
+    setField(container, 'input[name="email"]', email);
+    setField(container, 'textarea', 'A platform engineering opportunity.');
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    const serverAccepts = z.string().trim().email().safeParse(email).success;
+    expect(fetchMock.mock.calls.length === 1).toBe(serverAccepts);
+  });
+
+  it('names the focused error summary through its heading', () => {
+    const { container } = render(<ContactForm />);
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    const summary = screen.getByRole('alert');
+    const labelId = summary.getAttribute('aria-labelledby') as string;
+    expect(labelId).toBeTruthy();
+    expect(document.getElementById(labelId)?.textContent).toBe('Fields need attention:');
+    expect(screen.getByRole('alert', { name: 'Fields need attention:' })).toBe(summary);
+  });
+
+  it('names the summary when only a request error shows', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ ok: false, error: { message: 'boom' } }, { status: 500 })),
+    );
+    const { container } = render(<ContactForm />);
+    fillValidForm(container);
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    });
+    await flushMicrotasks();
+    const summary = screen.getByRole('alert');
+    expect(
+      document.getElementById(summary.getAttribute('aria-labelledby') as string),
+    ).not.toBeNull();
+  });
+
+  it('sends one request when the busy submit button is clicked repeatedly', async () => {
+    const fetchMock = vi.fn(() => new Promise<Response>(vi.fn()));
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = render(<ContactForm />);
+    fillValidForm(container);
+    const button = container.querySelector('button[type="submit"]') as HTMLButtonElement;
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    await act(async () => {
+      fireEvent.click(button);
+      fireEvent.click(button);
+    });
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 });

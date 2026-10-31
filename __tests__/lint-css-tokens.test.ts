@@ -35,7 +35,7 @@ describe('findRawHex', () => {
 
 describe('assertScannable', () => {
   it('is ok when the css dir exists and has scannable files', () => {
-    expect(assertScannable(true, ['base.css', 'components.css'])).toEqual({ ok: true });
+    expect(assertScannable(true, ['base.css', 'components-hero.css'])).toEqual({ ok: true });
   });
 
   it('fails when the css dir does not exist (gate would pass vacuously)', () => {

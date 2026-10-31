@@ -1,4 +1,5 @@
 ---
+
 name: visual-baseline-regen
 description: Use when a push or PR may touch a Playwright screenshot baseline — any CSS, layout, typography, spacing, or rendering change. Page sections (hero, contact, shell, hottest-takes) are captured in `tests/visual/visual.spec.ts` and are CI-gated per-platform (darwin + linux). Design-system component baselines live in `tests/e2e/design-system-components.spec.ts` and are darwin-only (the spec is ignored in CI on Ubuntu). Covers assessing baseline impact before a push, the darwin regen path (`--update-snapshots` against a prod server), the linux regen path for `visual.spec.ts` baselines only (the `update_visual_baselines` CI dispatch + artifact download + per-project PNG copy), committing both platforms in one commit, the batch-to-one-push cost rule, and the inspect-before-commit rule.
 ---
@@ -6,7 +7,6 @@ description: Use when a push or PR may touch a Playwright screenshot baseline �
 # Visual baseline regeneration
 
 Two specs capture screenshot baselines with different CI treatment:
-
 - **`tests/visual/visual.spec.ts`** (page sections: hero, contact, shell, hottest-takes) —
   CI-gated, per-platform (darwin + linux). A stale baseline fails the E2E visual project
   in CI. Requires full darwin + linux regen (Steps 1-3 below).
@@ -20,7 +20,6 @@ CLAUDE.md); this skill is the full procedure once the answer is YES.
 ## Step 0 — assess impact BEFORE every push (always)
 
 Before any push, decide whether the change touches a baseline. **State the assessment explicitly.**
-
 - **NO** baseline affected (e.g. a string moved to content with identical rendering):
   say so and push once. Done.
 - **YES — `visual.spec.ts` baseline affected:** regenerate and commit baselines for BOTH
@@ -42,8 +41,8 @@ Regenerate against a production server locally, then update snapshots:
     DEPLOY_SALT=test pnpm start &
     # wait for server at localhost:3000, then run ONLY the spec being regenerated:
 
-    # for visual.spec.ts baselines:
-    pnpm test:e2e --project=<visual-project> tests/visual/visual.spec.ts --update-snapshots
+    # for visual.spec.ts baselines, run ALL FOUR darwin projects:
+    pnpm test:e2e --project=chromium --project=chromium-mobile --project=webkit-desktop --project=webkit-mobile tests/visual/visual.spec.ts --update-snapshots
 
     # for design-system-components.spec.ts baselines:
     pnpm test:e2e --project=<visual-project> tests/e2e/design-system-components.spec.ts --update-snapshots
@@ -54,6 +53,14 @@ the production build. Scope the command to the specific spec to avoid regenerati
 unrelated baselines.
 
 This writes the `*-darwin.png` baselines.
+
+**All four darwin projects, not the pair you tested.** `visual.spec.ts` runs on the
+`chromium`, `chromium-mobile`, `webkit-desktop` and `webkit-mobile` projects locally
+(`playwright.config.ts` gives the two webkit projects the same `CROSS_BROWSER_SPECS`
+match), so a section has four darwin baselines. CI compares only the linux pair, so a
+webkit darwin baseline that was left at its pre-change pixels fails the next local
+`pnpm test:e2e` and nothing warns about it before the push. Regenerate the webkit
+pair in the same darwin pass.
 
 ## Step 2 — linux baseline for `visual.spec.ts` only (CI dispatch, artifacts UPLOADED not committed)
 

@@ -10,7 +10,13 @@ const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'claude-review.yml'
 
 const GUARD_STEP = 'Assert this run posted a verdict the merge gate can read';
 
-type Step = { name?: string; run?: string; if?: unknown; 'continue-on-error'?: unknown };
+type Step = {
+  name?: string;
+  run?: string;
+  if?: unknown;
+  env?: Record<string, string>;
+  'continue-on-error'?: unknown;
+};
 
 function guardStep(): Step {
   const doc = parse(readFileSync(WORKFLOW, 'utf8')) as {
@@ -38,8 +44,9 @@ function block(open: RegExp, what: string): string {
 
 // Matches the fetch PIPED INTO jq, not gh's --jq. gh refuses `--slurp` with
 // `--jq` and prints usage, so the old shape could never have run; this regex
-// failing is the signal that someone reintroduced it.
-const FETCH = /(\w+)=\$\(gh api[\s\S]*?\|\s*jq -r "((?:[^"\\]|\\.)*)"\s*\)/;
+// failing is the signal that someone reintroduced it. Stop at a closing
+// substitution so an earlier API capture cannot borrow the verdict pipe.
+const FETCH = /(\w+)=\$\(gh api[^)]*?\|\s*jq -r "((?:[^"\\]|\\.)*)"\s*\)/;
 const GREP = /\n\s*if printf '%s' "\$(\w+)"\s*\|\s*grep -qiE '([^']+)'; then/;
 
 describe('the guard fetches, filters and tests the same thing the merge gate reads', () => {
@@ -100,6 +107,8 @@ const SINGLE_LINE_BODIES: ReadonlyArray<readonly [string, boolean]> = [
   ['Approve', false],
   ['I approve of this approach, ship it', false],
   ['**Summary** of the change', false],
+  ['**Summary** we approve of nothing here **Notes**', false],
+  ['**Done** traced the reject-then-refund path. Verdict: **Approve**', true],
   ['', false],
 ];
 
@@ -146,6 +155,10 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     since?: string;
     event?: string;
     changed?: string;
+    headBlob?: string;
+    defaultBlob?: string;
+    lookupFails?: 'default' | 'head-blob' | 'default-blob';
+    headSha?: string;
     diffFails?: boolean;
   };
 
@@ -154,6 +167,10 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     since = '2026-01-01T00:00:00Z',
     event = 'pull_request',
     changed = 'README.md',
+    headBlob = 'workflow-blob',
+    defaultBlob = 'workflow-blob',
+    lookupFails,
+    headSha = 'pr-head-sha',
     diffFails = false,
   }: Run) {
     const bin = mkdtempSync(join(tmpdir(), 'guard-gh-'));
@@ -176,7 +193,21 @@ describe('the guard reds the job, and skips only what it provably cannot review'
         '      exit 1',
         '      ;;',
         '  esac',
-        '  printf \'%s\' "$GUARD_STUB_PAGES"',
+        '  if [ "$2" = "--paginate" ]; then',
+        '    printf \'%s\' "$GUARD_STUB_PAGES"',
+        '    exit 0',
+        '  fi',
+        '  case "$2" in',
+        '    repos/o/r) lookup=default; value=trunk ;;',
+        '    repos/o/r/contents/.github/workflows/claude-review.yml?ref=pr-head-sha) lookup=head-blob; value="$GUARD_STUB_HEAD_BLOB" ;;',
+        '    repos/o/r/contents/.github/workflows/claude-review.yml?ref=trunk) lookup=default-blob; value="$GUARD_STUB_DEFAULT_BLOB" ;;',
+        '    *) echo "unexpected gh api call: $*" >&2; exit 1 ;;',
+        '  esac',
+        '  if [ "$lookup" = "$GUARD_STUB_LOOKUP_FAILS" ]; then',
+        '    echo "gh: API rate limit exceeded" >&2',
+        '    exit 1',
+        '  fi',
+        '  printf \'%s\' "$value"',
         'else',
         '  # The diff read can FAIL. Its failure path is what stops a transient gh',
         '  # error reading as "this PR does not edit the workflow", which would make',
@@ -202,6 +233,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
           REPO: 'o/r',
           SINCE: since,
           GITHUB_EVENT_NAME: event,
+          HEAD_SHA: headSha,
           // gh --paginate --slurp emits an array of pages; the guard pipes that
           // into jq, so the stub must speak the same shape the real API does
           // rather than a bare markdown body.
@@ -209,6 +241,9 @@ describe('the guard reds the job, and skips only what it provably cannot review'
             [{ user: { login: 'claude[bot]' }, created_at: '2030-01-01T00:00:00Z', body }],
           ]),
           GUARD_STUB_CHANGED: changed,
+          GUARD_STUB_HEAD_BLOB: headBlob,
+          GUARD_STUB_DEFAULT_BLOB: defaultBlob,
+          GUARD_STUB_LOOKUP_FAILS: lookupFails ?? '',
           ...(diffFails ? { GUARD_STUB_DIFF_FAILS: '1' } : {}),
           VERDICT_RETRY_SLEEP: '0',
         },
@@ -227,31 +262,14 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ['a verdict in the fetched body', { body: 'head `abc1234`. **Approve**' }, 0],
     ['no review-start timestamp', { body: '**Approve**', since: '' }, 1],
     ['a body with no verdict reds', { body: 'nothing' }, 1],
-    // The skip FIRING is an EXECUTED row, not a string match. Dropping
-    // `--name-only` from the `gh pr diff` capture leaves every text assertion
-    // green while `-x` stops matching any line, the skip never fires, and every
-    // PR editing this workflow reds with a failure no fix can clear.
     [
-      'a pull_request run whose diff touches this workflow is skipped, not red',
-      { body: 'nothing', event: 'pull_request', changed: '.github/workflows/claude-review.yml' },
+      'an inherited workflow difference skips even when the PR diff lists only README.md',
+      { body: 'nothing', headBlob: 'inherited-workflow-blob' },
       0,
     ],
-    // A pull_request run whose diff does NOT touch the workflow must be asserted
-    // like any other. Without this the skip's two conjuncts are only ever seen
-    // both-true or both-false, so collapsing them to the event alone — skipping
-    // every pull_request run — passes.
     [
-      'a pull_request run touching other files is asserted, never skipped',
-      { body: 'nothing', event: 'pull_request', changed: 'README.md' },
-      1,
-    ],
-    // A failed diff read must not be SWALLOWED: defaulted to empty it silently
-    // decides "does not edit the workflow" and asserts a verdict that cannot
-    // exist. Exit code alone does not separate guarded from unguarded — both red
-    // under `set -e` — so the diagnostic is asserted separately below.
-    [
-      'a failed diff read reds rather than deciding the skip silently',
-      { body: 'head `abc1234`. **Approve**', event: 'pull_request', diffFails: true },
+      'equal workflow blobs still require a verdict even when the PR diff lists the workflow',
+      { body: 'nothing', changed: '.github/workflows/claude-review.yml' },
       1,
     ],
     [
@@ -261,7 +279,28 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ],
     [
       'a comment-event run must still be asserted, never skipped',
-      { body: 'nothing', event: 'issue_comment', changed: '.github/workflows/claude-review.yml' },
+      {
+        body: 'nothing',
+        event: 'issue_comment',
+        changed: '.github/workflows/claude-review.yml',
+        headBlob: 'different',
+      },
+      1,
+    ],
+    [
+      'a comment-event run bypasses comparison lookups and still accepts a verdict',
+      {
+        body: '**Approve**',
+        event: 'issue_comment',
+        headBlob: 'different',
+        lookupFails: 'default',
+        diffFails: true,
+      },
+      0,
+    ],
+    [
+      'a missing run head SHA fails closed even with a verdict',
+      { body: '**Approve**', headSha: '' },
       1,
     ],
   ];
@@ -303,79 +342,72 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ).toContain('exit 1');
   });
 
-  it('a failed diff read explains itself rather than aborting opaquely', () => {
-    // The exit CODE is identical guarded or unguarded — `set -e` reds either way
-    // — so a status assertion passes on both the ideal and the broken state,
-    // which is the trap this repo's own gate-robustness prompt names. The
-    // diagnostic is the only thing that separates them, and it is the difference
-    // between a maintainer knowing why the merge gate is blocked and not.
-    const { status, stderr } = runGuard({
-      body: 'head `abc1234`. **Approve**',
-      event: 'pull_request',
-      diffFails: true,
-    });
-    expect(status).not.toBe(0);
-    expect(
-      stderr,
-      'A failed `gh pr diff` aborts with no explanation. Guard the assignment and say what is unknown: whether this PR edits claude-review.yml decides if a missing verdict is expected or a real failure.',
-    ).toMatch(/could not read the changed files/);
+  it.each(['default', 'head-blob', 'default-blob'] as const)(
+    'fails closed with an explicit unknown-comparison diagnostic when %s lookup fails',
+    (lookupFails) => {
+      const { status, stderr } = runGuard({ body: '**Approve**', lookupFails });
+      expect({ status, explained: /workflow comparison is unknown/.test(stderr) }).toEqual({
+        status: 1,
+        explained: true,
+      });
+    },
+  );
+
+  const comparisonBlock = (): string => {
+    const script = guardScript();
+    return script.slice(
+      script.indexOf('if [ "$GITHUB_EVENT_NAME"'),
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: match literal Bash parameter expansion.
+      script.indexOf('if [ -z "${SINCE:-}"'),
+    );
+  };
+
+  it('uses the event head that loaded this run and gates comparison lookups on pull_request', () => {
+    expect({
+      head: guardStep().env?.HEAD_SHA,
+      gated:
+        /if \[ "\$GITHUB_EVENT_NAME" = "pull_request" \]; then[\s\S]*default_branch=\$\(gh api/.test(
+          comparisonBlock(),
+        ),
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: match the literal GitHub Actions expression.
+    }).toEqual({ head: '${{ github.event.pull_request.head.sha }}', gated: true });
   });
 
-  it('skips on BOTH the event and the diff predicate, never on the echo alone', () => {
-    // The carve-out is back with the `pull_request` trigger: GitHub loads the
-    // workflow from the PR head, the action refuses on any PR editing this file,
-    // and no verdict can exist to assert — a red nothing could clear. It was
-    // correctly deleted while the trigger was `pull_request_target`, where the
-    // action never refuses.
-    //
-    // Asserting the string "claude-review.yml" alone is not enough: it is
-    // satisfied by the echo INSIDE the block, so deleting the whole
-    // `gh pr diff … | grep -qx …` conjunct ran green while the guard skipped
-    // every pull_request run unconditionally.
-    const skip = block(
-      /if \[ "\$GITHUB_EVENT_NAME" = "pull_request" \]/,
-      'a workflow-editing skip',
-    );
-    expect(
-      skip,
-      'The skip must test the DIFF, not just the event. Without the diff conjunct the guard skips every pull_request run, which is a permanent silent green.',
-    ).toContain("grep -qx '.github/workflows/claude-review.yml'");
-    expect(skip).toContain('exit 0');
-
-    // The file list must be CAPTURED, never piped straight into the condition.
-    // `grep -q` exits on its first match while `gh` is still writing, `gh` dies
-    // of SIGPIPE (141), and `pipefail` makes the pipeline status 141 — so the
-    // `if` is false and the skip is bypassed on exactly the PRs it exists for.
-    // Nondeterministic: it depends on write buffering.
-    // Continuations joined FIRST, exactly as the --slurp assertion above does.
-    // Without the join, reformatting `gh pr diff "$PR" --name-only \` with the
-    // `| grep` on the next line makes this regex stop at the newline and report
-    // "not piped" while the pipe — and the SIGPIPE race — is still there. That
-    // bypass has already been used once in this file.
-    const joined = guardScript().replace(/\\\n\s*/g, ' ');
-    expect(
-      /gh pr diff[^\n]*\|\s*grep/.test(joined),
-      'The skip pipes `gh pr diff` straight into grep. Under `set -o pipefail` that races SIGPIPE and intermittently fails to skip, reding a workflow-editing PR with a failure no fix can clear. Capture the list first, then grep the variable.',
-    ).toBe(false);
-    expect(
-      skip,
-      'The skip no longer greps a captured file list, so nothing binds it to the diff.',
-    ).toMatch(/grep -qx '\.github\/workflows\/claude-review\.yml' <<</);
+  // Positive patterns bind captures to API sources. The executed cases cannot
+  // establish which GitHub endpoint supplies a stubbed value.
+  it.each([
+    [
+      'repository default branch capture',
+      /default_branch=\$\(gh api "repos\/\$REPO" --jq '\.default_branch'\)/,
+    ],
+    [
+      'workflow blob at PR head',
+      /head_blob=\$\(gh api "repos\/\$REPO\/contents\/\.github\/workflows\/claude-review\.yml\?ref=\$HEAD_SHA" --jq '\.sha'\)/,
+    ],
+    [
+      'workflow blob at repository default branch',
+      /default_blob=\$\(gh api "repos\/\$REPO\/contents\/\.github\/workflows\/claude-review\.yml\?ref=\$default_branch" --jq '\.sha'\)/,
+    ],
+    [
+      'skip only for differing blobs',
+      /if \[ "\$head_blob" != "\$default_blob" \]; then[\s\S]*SKIP/,
+    ],
+    [
+      'explicit comparison lookup failure',
+      /if ![\s\S]*default_branch=[\s\S]*then[\s\S]*workflow comparison is unknown[\s\S]*exit 1/,
+    ],
+  ] as const)('pins the comparison contract: %s', (_label, pattern) => {
+    expect(comparisonBlock()).toMatch(pattern);
   });
 
-  it('never skips a comment-triggered run, which can always post a verdict', () => {
-    // The issue_comment path runs the DEFAULT-branch copy, so the action does not
-    // refuse there even when the PR edits this workflow — which is precisely why
-    // a comment is the documented escape hatch for those PRs. Skipping it would
-    // remove the only path that still works on them.
-    const skip = block(
-      /if \[ "\$GITHUB_EVENT_NAME" = "pull_request" \]/,
-      'a workflow-editing skip',
-    );
-    expect(
-      /issue_comment/.test(skip),
-      'The skip predicate now mentions issue_comment. That path can always post a verdict; skipping it strands workflow-editing PRs with no way to be reviewed at all.',
-    ).toBe(false);
+  it('has exactly one successful exit in the blob-comparison skip block', () => {
+    const skip = comparisonBlock();
+    // Counting alone accepts the file-list predicate too, so require the blob
+    // predicate in the same assertion.
+    expect({
+      comparesBlobs: /if \[ "\$head_blob" != "\$default_blob" \]/.test(skip),
+      successfulExits: skip.match(/\bexit 0\b/g)?.length,
+    }).toEqual({ comparesBlobs: true, successfulExits: 1 });
   });
 });
 

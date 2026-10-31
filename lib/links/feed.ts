@@ -1,9 +1,15 @@
 import 'server-only';
 
+import { readFile } from 'node:fs/promises';
 import { cacheLife } from 'next/cache';
 import { linksContent } from '@/content/links';
 import { env } from '@/lib/env';
-import { type EnrichedVideo, parseFeed, parseIsoDuration } from '@/lib/links/youtube';
+import {
+  canonicalThumbnailUrl,
+  type EnrichedVideo,
+  parseFeed,
+  parseIsoDuration,
+} from '@/lib/links/youtube';
 import { log } from '@/lib/log';
 
 export const HISTORY_LENGTH = 5;
@@ -25,6 +31,7 @@ export type ChannelStats = {
 };
 
 export type ChannelFeed = {
+  fetchedAt: string | null;
   latest: EnrichedVideo | null;
   history: EnrichedVideo[];
   stats: ChannelStats;
@@ -34,6 +41,7 @@ export type ChannelFeed = {
 export const CHANNEL_URL = `https://www.youtube.com/${linksContent.channel.handle}`;
 
 export const EMPTY_FEED: ChannelFeed = {
+  fetchedAt: null,
   latest: null,
   history: [],
   stats: {},
@@ -113,9 +121,32 @@ async function fetchStats(channelId: string, apiKey: string): Promise<ChannelSta
   return stats;
 }
 
+export const FEED_FIXTURE_ENV = 'E2E_LINKS_FEED_FIXTURE';
+
+export async function loadFixtureFeed(
+  vars: Record<string, string | undefined> = process.env,
+): Promise<ChannelFeed | null> {
+  const path = vars[FEED_FIXTURE_ENV];
+  if (!path || vars.VERCEL) return null;
+  const fixture = JSON.parse(await readFile(path, 'utf8')) as ChannelFeed;
+  return {
+    ...fixture,
+    latest: fixture.latest
+      ? { ...fixture.latest, thumbnailUrl: canonicalThumbnailUrl(fixture.latest.thumbnailUrl) }
+      : null,
+    history: fixture.history.map((video) => ({
+      ...video,
+      thumbnailUrl: canonicalThumbnailUrl(video.thumbnailUrl),
+    })),
+  };
+}
+
 export async function getChannelFeed(): Promise<ChannelFeed> {
   'use cache';
   cacheLife({ stale: CACHE_STALE_S, revalidate: CACHE_REVALIDATE_S, expire: CACHE_EXPIRE_S });
+
+  const fixture = await loadFixtureFeed();
+  if (fixture) return fixture;
 
   const channelId = linksContent.channel.id;
   const apiKey = env.YOUTUBE_API_KEY;
@@ -127,11 +158,12 @@ export async function getChannelFeed(): Promise<ChannelFeed> {
   const videos: EnrichedVideo[] = xml === null ? [] : parseFeed(xml, FEED_LIMIT);
   const stats = apiKey ? await fetchStats(channelId, apiKey) : {};
 
-  if (videos.length === 0) return { ...EMPTY_FEED, stats };
+  if (videos.length === 0) return { ...EMPTY_FEED, stats, fetchedAt: new Date().toISOString() };
 
   const resolved = apiKey ? await enrich(videos, apiKey) : videos;
 
   return {
+    fetchedAt: new Date().toISOString(),
     latest: resolved[0] ?? null,
     history: resolved.slice(0, HISTORY_LENGTH),
     stats,

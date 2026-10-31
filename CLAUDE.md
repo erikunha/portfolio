@@ -4,7 +4,7 @@
 
 ## Project
 
-**erikunha.dev** — personal portfolio and reference web system. Matrix/brutalist terminal aesthetic. Single-page composition with ~18 sections.
+**erikunha.dev** — personal portfolio and reference web system. Matrix/brutalist terminal aesthetic. Homepage composition of terminal-module sections plus a footer; `/summary`, `/cv`, `/links`, `/links/en`, and `/design-system/*` are separate routes.
 
 ## Commands
 
@@ -21,9 +21,11 @@
 | `pnpm typecheck` | TypeScript strict check |
 | `pnpm lhci` | Lighthouse CI locally |
 | `pnpm validate-content` | Zod content schema validation |
-| `pnpm ci:local` | Full local CI chain (lint + type + content + client-naming + harness-size + tests) |
-| `pnpm bundle-check` | Bundle size gate |
-| `pnpm gates:runtime` | Server-dependent gates: build + server + LHCI desktop + LHCI mobile + axe-core + E2E functional |
+| `pnpm ci:local` | Local verify chain: lint, types, content, client-naming, dep-pinning, harness-size, section-order, doc-drift, detect-changes paths, CSS tokens, tests |
+| `pnpm bundle-check` | Global client-chunk sum gate |
+| `pnpm route-js-check` | Per-route first-load JS gate (164.7KB gzipped) |
+| `pnpm check:doc-drift` | Verify marked ARCHITECTURE.md paths exist |
+| `pnpm gates:runtime` | Build + server + advisory LHCI desktop/mobile + blocking axe-core and Chromium cross-cutting/observability E2E |
 | `pnpm gates:runtime --skip-build` | Same as above but reuses existing `.next/` (must exist) |
 
 **AI agent workflow** — the AI runs these consciously as part of its process; not automated:
@@ -41,7 +43,7 @@ This codebase is a **reference system** — every architectural decision, perf b
 - Cross-cutting concerns over local optimization
 - Mechanism-level reasoning (cause → effect) — explain the why, not just the what
 - Surface trade-offs explicitly; give one recommendation per decision
-- Perf, a11y (WCAG 2.1 AA), and security are implicit on every change — not separate phases
+- Perf, a11y (WCAG 2.2 AA), and security are implicit on every change — not separate phases
 - "It's only one consumer" is not a valid YAGNI argument — architecture scales with adoption
 - Don't frame scope apologetically; state directly why the shape fits a reference system
 
@@ -75,6 +77,7 @@ Invoke the named skill inline (not as a subagent) before the described action. P
 | Before implementing any component (in `components/` or `design-system/`) | Run DS component pre-mortem: (1) which attrs does the consumer control? (`id`, `className`, `aria-*`) — passthrough, never override; (2) any `outline: none` on `:focus` must be `:focus-visible`; (3) `querySelector` returns `null` not `undefined` — use `.not.toBeNull()`; (4) can this component be rendered twice? hardcoded `id` breaks the second instance |
 | After creating a new component or adding significant client-side state/effects | `react-best-practices` |
 | After editing `next.config.ts`, `.env.example`, or Vercel config | `vercel:nextjs` |
+| Reviewing any PR: your own before `gh pr create`, a sub-PR before merge, anyone else's | `pr-review-orchestrator` (project skill; claude-review in CI runs its CI profile) |
 | Before any UI code review (the Playwright MCP visual check) | `web-design-guidelines` — NOT mechanically enforced: the hook that gated the Playwright `browser_*` namespace on it was removed 2026-07-27 |
 | After `speckit-plan` produces output for tasks with >5 steps | `thinking-risk-premortem` — run on the plan tasks themselves, not the feature |
 
@@ -101,16 +104,16 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 | INP | < 200ms | < 200ms |
 | CLS | < 0.05 | < 0.05 |
 | TBT | < 200ms | < 400ms |
-| JS gzipped per route, total first-load | < 175KB | < 175KB |
-| JS gzipped, app-owned (total minus the measured framework floor) | < 32.8KB | < 32.8KB |
+| JS gzipped per route, total first-load | < 164.7KB | < 164.7KB |
+| JS gzipped, app-owned (reported headroom above the 131.9KB floor) | 32.8KB | 32.8KB |
 | Lighthouse Performance | ≥ 95 | ≥ 90 |
 | Lighthouse Accessibility | = 100 | = 100 |
 | Lighthouse Best Practices | ≥ 95 | ≥ 95 |
 | Lighthouse SEO | = 100 | = 100 |
 
-CI enforces all of the above. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
+CI enforces route totals and Lighthouse budgets; app-owned JS is reported, and INP is checked in browser tests rather than Lighthouse. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
 
-`pnpm route-js-check` (`scripts/check-route-js.mjs`) asserts the 175KB per-route total and REPORTS the app-owned split; `pnpm bundle-check` is a separate global chunk-sum, structurally blind to a per-route regression. The 175KB is the **framework floor plus headroom, not an aspiration**: a bare hello-world Next 16 + React 19 app on this toolchain measures 142.2KB gzipped before any app code exists, and `/_not-found` — a route with zero app code — measures 148.9KB here. Any per-route total under ~149KB is unreachable by any amount of engineering. **The app-owned row is the one your decisions move, and it is 175 − 142.2 = 32.8KB.** There is exactly ONE gate, because app-owned is total minus a constant: a separate app-owned threshold would be a second threshold on the same axis and could never fire on its own. See `DECISIONS.md` 2026-07-14.
+`pnpm route-js-check` (`scripts/check-route-js.mjs`) asserts the 164.7KB per-route total and REPORTS the app-owned split; `pnpm bundle-check` is a separate global chunk-sum, structurally blind to a per-route regression. The total is the **framework floor plus headroom, not an aspiration**: the checker uses a configured 131.9KB framework floor. **The app-owned row is the one your decisions move, and it is 164.7 - 131.9 = 32.8KB.** There is exactly ONE gate, because app-owned is total minus a constant. A framework bump moves the floor: re-measure it and move floor and total together. See `DECISIONS.md` 2026-10-23.
 
 ## Engineering standards
 
@@ -118,13 +121,13 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 
 | Chapter | Mechanical gate / enforcement |
 |---|---|
-| 1 — RSC/Architecture | `check-client-naming.mjs` — `*.client.tsx` naming + no `async function` export; streaming-through-React held by behavioral test |
+| 1 — RSC/Architecture | `check-client-naming.mjs` accepts `*.client.ts(x)`, `/client/`, and Next error files; streaming-through-React held by behavioral test |
 | 2 — API boundary | `defineHandler` enforces envelope + rate-limit→parse→validate→handle; held by behavioral tests + e2e |
 | 3 — Performance | Lighthouse CI (perf ≥95, a11y =100, BP ≥95, SEO =100); `check-bundle-size.mjs` gates gzipped chunks |
 | 4 — Testing | `no-source-grep.test.ts` bans `readFileSync` without allow tag; behavioral assertions only |
 | 5 — Dependencies | `check-dep-pinning.mjs` rejects `latest`/`*`; `--frozen-lockfile` in CI |
 | 6 — Content | `validate-content.ts` Zod schemas at build time; no copy inlined in `.tsx` |
-| 7 — CSS/tokens | `lint:contrast`; `@theme` tokens in `app/css/theme.css`, no raw hex; complex patterns as named classes in `@layer components` (`app/css/components.css`), no CSS modules |
+| 7 — CSS/tokens | `lint:contrast`; `@theme` tokens in `app/css/theme.css`, no raw hex; complex patterns as named classes in `@layer components` (`app/css/components-*.css` partials), no CSS modules |
 | 8 — A11y | axe-core gate + Lighthouse =100; per-component behavioral a11y tests |
 | 9 — Security | Behavioral tests for CSP + kill switches (not source-grep); `security-auditor` on any `app/api/` change |
 | 10 — Docs | PR review: doc claims must match live code; ADRs cite SHA + reversibility note |
@@ -145,12 +148,13 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **Never `--latest` `typescript`** — held at 6.x because Stryker needs the TS JS API that TS7 removed (`--latest` rewrites an exact pin too, so pinning won't save you). Held by `__tests__/stryker-typescript-api.test.ts`. See DECISIONS.md 2026-07-12.
 - Caret semver in `package.json`; lockfile (`pnpm-lock.yaml`) is the source of truth.
 - CI runs `pnpm install --frozen-lockfile`.
-- Node 22+, pnpm 10+.
+- Node 22.22.2+ (`.nvmrc` pins 22.23.4), pnpm 10+.
 
 ## Rendering model
 
 - **Default: React Server Components, SSG at build time.** Zero JS shipped for static sections.
-- **Client islands by exception:** Matrix dialog loop, INTERACTIVE_SHELL, contact form, role typewriter (RoleTyper, mount-driven), MOTION indicator.
+- **Client islands by exception:** Matrix dialog loop, INTERACTIVE_SHELL, contact form, role typewriter (RoleTyper, mount-driven), tagline typewriter (TaglineTyper, /links), scroll type reveal and app-wide Matrix Rain (GlobalMotion in the root layout: TypeReveal, one observer for every `data-type-reveal` heading and prompt, plus MatrixRainLazy), MOTION indicator.
+- Hero identity is static server-rendered text; only the About role word animates.
 - All client files named `*.client.tsx`. RSC drift must be visible in PR review.
 - **The Matrix dialog loop MUST use `useRef.textContent` mutation, NOT per-keystroke `useState`.** Per-state re-renders tank INP. The interactive shell's streaming answer, by contrast, renders *through* React (rAF-coalesced state) — see `STANDARDS.md` Chapter 1; enforced by `components/client/InteractiveShell/InteractiveShell.test.tsx`.
 
@@ -166,7 +170,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 ## Content discipline
 
 - All content lives in `content/*.ts` as typed TS modules validated by Zod at build time. Build fails on schema violation.
-- HOTTEST_TAKES, `~/.guitar_rig`, `~/.now`, `~/.unknowns`, `~/.community`, `~/.visa`, `~/.credentials` — all driven from content files.
+- HOTTEST_TAKES, `~/.guitar_rig`, `~/.now`, `~/.unknowns`, `~/.community`, `~/.credentials`: all driven from content files.
 - Never inline content in JSX. If you find yourself typing user-facing copy into a `.tsx`, stop and move it to `content/`.
 
 ## Working agreement
@@ -188,15 +192,15 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **Process feedback mid-workflow is a hard stop.** Pause immediately, incorporate into CLAUDE.md and/or memory, confirm with the user, then resume.
 - **Commit in scope blocks; merge by milestone.** Work accumulates in commits grouped by concern — one logical unit per commit (a component, a fix, a config change). Open a PR when a block is a natural milestone, judged by whether the change tells one reviewable story, not by a line count.
 - **Large multi-part feature? Integration branch + sub-PRs.** When a feature is too big for one reasonable PR (the failure mode that bloated PR #81), branch an integration branch off main (`feat/<feature>`), then open small sub-PRs from `feat/<feature>-<part>` branches **into the integration branch** — each a reviewable milestone. When the feature is complete, open the `feat/<feature>` → main PR; it will be large by design, so note in the body that it was reviewed incrementally via the sub-PRs. For a standalone change, skip the integration branch and open a normal small PR straight to main per the milestone rule above.
-- **Review your own diff before opening the PR.** Read `git diff origin/main...HEAD` end to end and invoke `pr-review-toolkit:code-reviewer` against it (`review-pr` is a slash command, not an agent). Fix every Critical/Important finding before `gh pr create`. There is no mechanical gate on this: the review battery, its findings ledger, the dispatch stamp and the pre-push stamp check were removed 2026-07-27 and stay removed. claude-review reviews the PR once opened; this pre-PR pass is discipline, not enforcement.
+- **Review convergence loop: run it on EVERY PR until claude-review approves (owner rule, restored 2026-10-29).** claude-review (claude[bot]) reviews every push and posts one inline thread per finding. Each round: rebase onto the PR base BEFORE the push, push, verify the pushed SHA equals the PR head, wait for the automatic review for that head, poll the run to completion (a job reporting `success` may have posted nothing: check for a `claude[bot]` comment, never the job conclusion), fix every finding, then **reply in each thread saying what was done and citing the fix SHA before resolving it**, and push again, which starts the next round. Eligible pushes trigger the review for PRs into main and integration branches alike. Do not also comment `/claude-review`: it shares the per-PR concurrency group and cancels the automatic run. If the automatic attempt finishes without a verdict, inspect the failure and request a manual retry only when no run for that head is queued or running. Done when CI is green, `pnpm claude-gate` passes (non-stale Approve on HEAD), and `pnpm pr:gate` passes (it fails `silent_resolve` on any thread resolved without a reply). No other model review (`pr-review-orchestrator`, cross-provider, self-review) unless the owner asks; the provider that made a change ships it. Full rationale: `docs/handbook/review-merge-release.md`.
 - **Runtime gates before opening a PR — manual, not enforced by pre-push.**
   Run `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`
   for non-docs changes. CI remains the authoritative gate. The pre-push hook no longer runs
   `gates:runtime` automatically — the 12-20 min cost per push was imposing 10+ hrs/week of
   foreground blocking time on a solo developer who watches CI regardless.
-- **Review convergence loop — run it on EVERY PR until claude-review approves.** claude-review (claude[bot]) runs automatically on open and on every push and posts one inline thread per finding. Each round: rebase (`git fetch && git rebase origin/main`) BEFORE the push, push, verify the pushed SHA equals the PR head, poll the run to completion (a job reporting `success` may have posted nothing — check for a `claude[bot]` comment, never the job conclusion), fix, then **reply in the thread citing the fix SHA before resolving it**. Do NOT comment `/claude-review` after a push: the push already triggered a run and the comment lands in the same per-PR concurrency group and cancels it; re-request only when no run will otherwise fire (a completed run that posted no verdict, or a PR editing `claude-review.yml`, where the action loads the workflow from the PR head and refuses). Done when CI is green, `pnpm claude-gate` passes (non-stale Approve on HEAD), and `pnpm pr:gate` passes — it fails `silent_resolve` on any thread resolved without a reply. Full rationale: `docs/handbook/review-merge-release.md`.
+- **Merge readiness.** A sub-PR merges when CI is green, it contains its base, `pnpm claude-gate` passes (claude-review Approve naming the current head), and `pnpm pr:gate` passes (every thread resolved with a reply; it fails `silent_resolve` otherwise). Rebase or merge the base before the push and verify the pushed SHA equals the PR head. Full rationale: `docs/handbook/review-merge-release.md`.
 - **Every PR comment goes in a review THREAD — never a timeline comment (owner rule, 2026-07-12).** `gh pr comment <N>` posts an unanchored `#issuecomment-…`: attached to no code, not resolvable, absent from `reviewThreads`, therefore invisible to `pnpm pr:gate`, which reads `reviewThreads`. Reply in the existing thread (`.../pulls/<N>/comments/<id>/replies`); if a finding has no thread — e.g. one your own review battery raised — **create** one on the file+line (`.../pulls/<N>/comments` with `commit_id`+`path`+`line`), do not fall back to a timeline comment. A self-raised finding that never became a thread is an unrecorded finding. The sole exception is the `/claude-review` re-request, which is a command, not a comment.
-- **Auto-review before opening any PR.** Run `pnpm ci:local`, then `pnpm bundle-check` and `pnpm route-js-check`, then `pnpm gates:runtime` (skip the last three for docs-only PRs). Then invoke `pr-review-toolkit:code-reviewer` against the diff (`review-pr` is a slash command, not an agent). Address all Critical and Important findings before `gh pr create`. Opening with known issues requires written justification in the PR body.
+- **Gates before opening any PR.** Run `pnpm ci:local`, then `pnpm bundle-check` and `pnpm route-js-check`, then `pnpm gates:runtime` (skip the last three for docs-only PRs). Opening with a known failing gate requires written justification in the PR body.
 - **No PR until baselines + tests + perf have actually run — never defer gates pending a design/"shade" decision.** Lock the decision, run every gate, then open; if it is not locked, hold the PR — do not open a half-gated one. A visual-affecting change (color, layout, typography, spacing) requires regenerated visual-regression baselines as a mandatory pre-PR step.
 - **Decide visual-baseline impact BEFORE every push** — state YES/NO whether the change touches `tests/visual/visual.spec.ts` (CI-gated page sections; darwin + linux regen required) or `tests/e2e/design-system-components.spec.ts` (darwin-only; CI ignores on Ubuntu) baselines. If NO, push once. If YES, invoke `.claude/skills/visual-baseline-regen` for the full procedure (darwin regen, linux artifact dispatch, inspect-before-commit, batch-to-one-push rule).
 - **Fill the PR template when creating PRs — hard gate.** Before writing a PR body: `cat .github/pull_request_template.md`, then fill EVERY section (Summary, Type of change, Test plan, Visual changes, Checklist). Never write a custom body from scratch — always start from the template structure. Re-read the created body against the template before requesting review: an empty section is a section you skipped.
@@ -206,7 +210,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **When dispatching ANY subagent — implementer or review-only — always include in the prompt:** "Use `git add -u` or `git add <specific files>` — never `git add .`, `-A`, or `--all`. **Write no git state except staging and committing inside the tree you were dispatched into — that exception is the only one.** No moving any HEAD or index (`checkout`, `switch`, `reset`, `restore`, `bisect`), no ref writes (`update-ref`, `branch -f`, `rebase`, `cherry-pick`, `am`), no `stash` (the stack is repo-wide), no `git config` writes. Read another revision with `git show <sha>:<path>` or your own `git worktree add`." Phrase it as that one exception, never as a verb list — a list will miss `update-ref` and `git config`, which need no verb any list names. **Review-only agents need this most:** "don't touch files" does not forbid moving HEAD. Dispatch reviewers with `isolation: "worktree"` where you can; it isolates HEAD and index but not refs, stash, or config.
 - **File-move AND extraction tasks must include a full consumer-scan step — code AND config.** This fires for any `git mv` and for any *extraction* (relocating code or a symbol into a new module/path, even with no `git mv` — e.g. hoisting `judge()` out of `scripts/ask-eval.ts` into `lib/eval/`). Before writing plan tasks, grep for every reference to the old path or symbol across two surfaces: (1) **code callers** — `grep -r 'OldPath' --include='*.ts' --include='*.tsx'`; (2) **the gate/CI/config surface that hard-codes paths** — `.github/workflows/**` (detect-changes path-filters especially), `.husky/**`, `scripts/**`, and any allowlist/pathspec/glob. Include a path-update task for every match including test files. A CI path-filter or gate left pointing at the old location **fails open silently**: the gate evaluates to "unchanged", skips, and a regression ships unguarded — this is the exact class that leaked the `lib/eval/` ai-filter gap (a judge change set `ai=false` and skipped the calibration gate). Stale path comments (`// components/OldPath.tsx`) in moved files are a separate required fix step.
 - **Verification before any completion claim.** Before reporting done, fixing, or passing: run `pnpm typecheck && pnpm test --run && pnpm build`, read the output, cite the result. "Should pass" is not evidence. If you catch yourself reasoning about whether it passes instead of running it, that is the tell: run it.
-- **Re-run review after fixing findings.** After fixing any Critical or Important finding from a review agent, re-dispatch that same agent against the affected files before declaring the fix done. One-line fixes can skip this; any logic change cannot.
+- **Re-validate after fixing findings.** After fixing any finding, re-run the deterministic checks that cover the affected files before declaring the fix done.
 - **Quality gates measure real properties — fix the property, not the gate.** When a gate fails (Lighthouse audit, Biome lint, bundle-size, a11y, security), the only acceptable response is to reduce the measured property or correct a genuinely misconfigured assertion. Unacceptable: set the audit to `"off"`, lower the threshold, add the rule to an ignore list, or wrap code to hide it from the checker. If a gate cannot be fixed in the current scope, escalate with root cause + options + minimum required change — do not merge with known suppression. Acceptable gate-config changes: fixing an assertion that fires on the ideal state (e.g., `maxNumericValue` on an audit that returns `null` when there are zero violations — the assertion was never testing what it claimed).
 - **Every fix must satisfy four conditions before it is done.** (1) **Root cause stated** — before writing code, identify the causal chain in one sentence: what property fails, what code produces it, and why. If you cannot state it, the investigation is incomplete. (2) **Pattern scan complete** — search for the same pattern across the codebase; fix all instances or document why each remaining case is acceptable. (3) **No deferred debt** — the fix must not defer the problem or create a workaround that breaks under normal evolution. If an inherent limitation exists (build-tool behavior, browser quirk, external dep), document it in DECISIONS.md (no code comments — bare code policy). (4) **Measured property verified** — after fixing, confirm the actual metric changed (not just that CI is green). Cite the before/after measurement in the commit message body.
 
@@ -222,7 +226,7 @@ Verify: `curl https://erikunha.dev/api/healthz | jq .sha`
 
 ## PR merge gate
 
-When about to merge a PR: rebase first (non-dependabot, unless the already-reviewed exception applies), THEN check readiness on the post-rebase HEAD: `pnpm ci:local`, and `pnpm pr:gate <pr>` for thread resolution (GraphQL `isResolved` on every thread, and it flags `suspicious_self_resolve`). AI agents must never call `gh pr merge`; the repo owner runs the final merge. Note that nothing blocks it mechanically now — the bash-guard that returned exit 2 was removed 2026-07-27.
+When about to merge a PR: rebase first (non-dependabot, unless the already-reviewed exception applies), THEN check readiness on the post-rebase HEAD: `pnpm ci:local`, `pnpm claude-gate` (claude-review Approve naming the current head), and `pnpm pr:gate <pr>` for thread resolution (GraphQL `isResolved` on every thread, and it flags `suspicious_self_resolve`). AI agents must never call `gh pr merge`; the repo owner runs the final merge. Note that nothing blocks it mechanically now — the bash-guard that returned exit 2 was removed 2026-07-27.
 
 ## Things that have been considered and rejected
 

@@ -3,6 +3,9 @@ import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import { GlobalMotion } from '@/components/client/GlobalMotion';
+import { errorsContent } from '@/content/errors';
+import { profile, profileMetaDescription, profilePageTitle } from '@/content/profile';
 import { personSchema } from '@/content/seo';
 
 const mono = localFont({
@@ -25,13 +28,10 @@ const display = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.erikunha.dev'),
-  title: 'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
-  description:
-    'Senior Full-Stack Engineer — React, Next.js, Angular, TypeScript, Node.js. Frontend architecture, platform & applied-AI engineering for high-traffic apps.',
+  title: profilePageTitle,
+  description: profileMetaDescription,
   keywords: [
-    'Staff Engineer',
-    'Principal Engineer',
-    'Full-Stack Engineer',
+    profile.title,
     'Applied AI',
     'LLM Engineering',
     'RAG',
@@ -46,8 +46,8 @@ export const metadata: Metadata = {
     'E-commerce',
     'B2B SaaS',
   ],
-  authors: [{ name: 'Erik Henrique Alves Cunha', url: 'https://www.erikunha.dev' }],
-  creator: 'Erik Henrique Alves Cunha',
+  authors: [{ name: profile.fullName, url: 'https://www.erikunha.dev' }],
+  creator: profile.fullName,
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
@@ -64,24 +64,22 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://www.erikunha.dev',
-    title: 'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
-    description:
-      'Senior Full-Stack Engineer · Frontend Architecture · Platform & AI Applied Engineering · React · Next.js · Angular · TypeScript · Node.js · AWS',
+    title: profilePageTitle,
+    description: profileMetaDescription,
     siteName: 'erikunha.dev',
     images: [
       {
         url: '/og.png',
         width: 1200,
         height: 630,
-        alt: 'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
+        alt: profilePageTitle,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Erik Cunha — Senior Full-Stack Engineer · Frontend Architecture & AI',
-    description:
-      'Frontend Architecture · Platform & AI Applied Engineering · UI/UX · Accessibility · React · Next.js · Angular · TypeScript · Node.js · AWS',
+    title: profilePageTitle,
+    description: profileMetaDescription,
     images: ['/og.png'],
   },
   robots: {
@@ -105,8 +103,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script type="application/ld+json">{personJsonLd}</script>
       </head>
       <body suppressHydrationWarning>
+        <noscript>
+          <div className="nojs-bar">
+            {errorsContent.noscript.text}{' '}
+            <a href={errorsContent.noscript.contact.href}>{errorsContent.noscript.contact.label}</a>
+          </div>
+        </noscript>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: initScript is a hardcoded build-time constant, no user input */}
         <script dangerouslySetInnerHTML={{ __html: initScript }} />
+        <GlobalMotion />
         {children}
         {process.env.VERCEL === '1' && (
           <>

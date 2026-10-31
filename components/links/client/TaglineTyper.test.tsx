@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TaglineTyper } from './TaglineTyper.client';
 
@@ -27,9 +28,14 @@ describe('TaglineTyper', () => {
   });
 
   it('renders the first phrase before any timer runs, so the line is never blank on paint', () => {
-    mockMotion(false);
-    const { container } = render(<TaglineTyper phrases={PHRASES} />);
-    expect(container.textContent).toContain('Senior Full-Stack Engineer');
+    const container = document.createElement('div');
+    container.innerHTML = renderToStaticMarkup(<TaglineTyper phrases={PHRASES} />);
+    const visible = container.querySelector('span[aria-hidden="true"]:not(.sr-only)');
+
+    expect(
+      visible?.textContent,
+      'the visible span must contain the first phrase before effects run',
+    ).toBe(PHRASES[0]);
   });
 
   it('types by mutating textContent rather than re-rendering per character', () => {
@@ -61,6 +67,16 @@ describe('TaglineTyper', () => {
 
     vi.advanceTimersByTime(2_000);
     expect(announced?.textContent).toBe('Senior Full-Stack Engineer');
+  });
+
+  it('announces each completed phrase through a polite live region', () => {
+    mockMotion(false);
+    const { container } = render(<TaglineTyper phrases={PHRASES} />);
+    const live = container.querySelector('[role="status"]');
+    expect(live?.getAttribute('aria-live')).toBe('polite');
+
+    vi.advanceTimersByTime(7_000);
+    expect(live?.textContent).toBe('AI Engineering na prática');
   });
 
   it('stops its timers on unmount', () => {

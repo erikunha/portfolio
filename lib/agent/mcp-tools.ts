@@ -1,8 +1,11 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { POST as askPost } from '@/app/api/ask/route';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 import { parseStreamChunk } from '@/lib/stream-protocol';
+
+const MIN_QUESTION_LENGTH = 1;
+const MAX_QUESTION_LENGTH = 500;
 
 function textResult(text: string) {
   return { content: [{ type: 'text' as const, text }] };
@@ -43,8 +46,8 @@ export function registerAgentTools(server: McpServer): void {
     {
       title: 'Get hiring profile',
       description:
-        "Return Erik Cunha's structured HiringProfile: employers, primary/secondary stack, quantified receipts, work authorization, education, and availability. Read-only; same data as /api/erik.json.",
-      inputSchema: {},
+        "Return Erik Cunha's structured HiringProfile: employers, primary/secondary stack, quantified receipts, education, and availability. Read-only; same data as /api/erik.json.",
+      inputSchema: z.object({}),
     },
     async () => textResult(JSON.stringify(HIRING_PROFILE)),
   );
@@ -55,9 +58,13 @@ export function registerAgentTools(server: McpServer): void {
       title: 'Ask Erik',
       description:
         "Ask a natural-language question about Erik Cunha's experience, stack, projects, or availability. Answered by Claude Haiku 4.5 grounded only in the site's CV context. Rate limit: MCP calls carry no client IP, so all callers worldwide share ONE global bucket of ~8 requests/hour total (not per-caller); a shared monthly token budget is the hard cost cap.",
-      inputSchema: {
-        question: z.string().min(1).max(500).describe('A natural-language question about Erik.'),
-      },
+      inputSchema: z.object({
+        question: z
+          .string()
+          .min(MIN_QUESTION_LENGTH)
+          .max(MAX_QUESTION_LENGTH)
+          .describe('A natural-language question about Erik.'),
+      }),
     },
     async ({ question }) => textResult(await runAsk(question)),
   );

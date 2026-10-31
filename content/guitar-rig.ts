@@ -1,4 +1,12 @@
-import { type GuitarRig, GuitarRigSchema } from './schemas';
+import {
+  type GuitarPresentation,
+  GuitarPresentationSchema,
+  type GuitarRig,
+  GuitarRigSchema,
+} from './schemas';
+
+export const GUITAR_MODULE_HEADER = 'CAT ~/.GUITAR_RIG + ./MIX --LIVE';
+export const GUITAR_MODULE_MOBILE_HEADER = 'GUITAR_RIG + MIX';
 
 export const guitarRig: GuitarRig = GuitarRigSchema.parse({
   signalChain: [
@@ -12,16 +20,6 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
       role: 'FX',
       name: 'LINE 6 HX STOMP XL',
       subtitle: '8 blocks loaded',
-      blocks: [
-        { name: 'COMP', active: true },
-        { name: 'OD', active: true },
-        { name: 'FUZZ', active: false },
-        { name: 'DLY', active: true },
-        { name: 'REV', active: true },
-        { name: 'MOD', active: false },
-        { name: 'EQ', active: true },
-        { name: 'VOL', active: false },
-      ],
     },
     {
       role: 'AMP',
@@ -37,13 +35,12 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
     },
   ],
   influences: [
-    { rank: 1, name: 'John Mayer', strength: 5, active: true },
-    { rank: 2, name: 'Mateus Asato', strength: 4 },
-    { rank: 3, name: 'Jimmy Page', strength: 3 },
-    { rank: 4, name: 'John Frusciante', strength: 3 },
-    { rank: 5, name: "Iron Maiden's three", strength: 2 },
+    { name: 'John Mayer' },
+    { name: 'Mateus Asato' },
+    { name: 'Jimmy Page' },
+    { name: 'John Frusciante' },
+    { name: "Iron Maiden's three" },
   ],
-  nowObsessing: 'Coldplay\'s "Yellow" — simplicity is hard.',
   stats: [
     { label: 'STYLE', value: 'dynamics > drive', sub: 'space is the note' },
     { label: 'TUNING', value: 'standard E', sub: 'sometimes drop D' },
@@ -55,5 +52,35 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
     caption: './GIGS --LIVE · SACRED + SWORN · FEEL OVER NOISE',
     status: '▶ REC · LIVE',
     cameraLabel: 'CAM/01 · STAGE',
+  },
+});
+
+const [guitarInput, , guitarAmp, guitarOutput] = guitarRig.signalChain;
+
+export const guitarPresentation: GuitarPresentation = GuitarPresentationSchema.parse({
+  signalStrengthLabelTemplate: '{n} of {total}',
+  signalStrip: {
+    live: '● SIGNAL_CHAIN.LIVE · SIGNAL OK',
+    tail: 'TAIL -F ~/.RIG',
+  },
+  signalChain: [
+    { ...guitarInput, label: '// INPUT' },
+    { ...guitarAmp, label: '// AMP' },
+    { ...guitarOutput, label: '// OUT' },
+  ],
+  influences: {
+    label: 'INFLUENCES',
+    text: guitarRig.influences.map(({ name }) => name).join(' · '),
+  },
+  nowPlaying: {
+    label: 'now obsessing:',
+    text: 'Coldplay\'s "Yellow": simplicity is hard.',
+  },
+  stats: guitarRig.stats,
+  photo: {
+    src: guitarRig.liveCam.photo,
+    alt: 'Erik playing guitar on stage, live show',
+    width: 450,
+    height: 450,
   },
 });
