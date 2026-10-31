@@ -75,6 +75,28 @@ On eligible open PRs, claude-review posts inline findings on open and push event
 
 Vercel deploys on merge to `main`. The `smoke.yml` workflow verifies the production deployment (healthz, 7 security headers, apex->www redirect, `/api/ask` + `/api/contact` liveness) and emails on a 503. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note), and session state is handed off via `.remember/`.
 
+## The responsive critique pass
+
+A UI change is read at every width before its PR opens. Each section gets a critique pass, the findings are fixed, and the fixes land in one PR.
+
+**Widths.** 320, 375, 390, 412, 768, 1024 and 1280. The narrow widths catch a label or a target that no longer fits, 768 catches the layout that only breaks in the middle, and 1280 is the desktop reference.
+
+**Lenses.** Read every section through five lenses:
+
+| Lens                     | The question it asks                                             |
+| ------------------------ | ---------------------------------------------------------------- |
+| Information architecture | Is the content in an order a reader can follow?                  |
+| Responsive layout        | Does the layout hold at each width above?                        |
+| Accessibility            | Can every control be reached, named and operated?                |
+| Heuristics               | Does the surface show what happened and what to do next?         |
+| Copy                     | Does the wording say what the reader needs, in the fewest words? |
+
+**One PR per pass.** A pass collects its findings and fixes them in one branch and one pull request, so a reviewer reads one change.
+
+**Screenshots.** Capture each section at 2x at 1280, 768 and 390, with the fixed chrome hidden, so the capture shows the section and not the chrome over it. `stripVolatileChrome` in `tests/e2e/_helpers/mask-volatile.ts` is the list of chrome hidden before a capture; add any new fixed or sticky bar to it.
+
+A finding that changes behavior is a decision, so it lands in `DECISIONS.md` as a dated bullet. A finding that touches a CI-gated baseline follows `.claude/skills/visual-baseline-regen`.
+
 ## The gate chain between "written" and "merged"
 
 ```mermaid

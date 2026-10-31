@@ -239,7 +239,7 @@ content/projects.ts                   # shared project cards
 content/perf-receipts.ts              # canonical deltas, attached receipts and reading-view stats
 content/measured.ts                   # ASK and PSI presentation metadata
 content/section-registry.ts           # nine navigation destinations and aliases
-content/section-labels.ts             # section accessible labels
+content/section-labels.ts             # section labels: the visible module name and the heading label
 content/reading-views.ts              # summary and CV presentation
 content/profile.ts                    # shared identity, hiring copy and language line formatting
 content/hottest-takes.ts              # defended opinions

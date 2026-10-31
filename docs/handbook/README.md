@@ -14,18 +14,18 @@ The handbook routes to the other two rather than duplicating them.
 
 ## Handbook contents
 
-| Doc                                                        | Covers                                                                                                                       |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| [development-lifecycle.md](./development-lifecycle.md)     | The SDLC end to end: idea -> spec -> plan -> implement -> review -> merge -> release, with diagrams                          |
-| [ai-assisted-development.md](./ai-assisted-development.md) | How AI participates in the SDLC: context engineering, enforcement boundaries, sequence diagrams                              |
-| [agents-skills-hooks-mcp.md](./agents-skills-hooks-mcp.md) | Reference for tracked project skills, hooks, rules and MCP configuration, with the hook lifecycle and orchestration diagrams |
-| [workflow-playbook.md](./workflow-playbook.md)             | Step-by-step runbooks: feature, bug fix, refactor, perf, a11y, ADR, PR, review                                               |
-| [review-merge-release.md](./review-merge-release.md)       | The gate chain from commit to production, the convergence loop, release and rollback                                         |
-| [knowledge-architecture.md](./knowledge-architecture.md)   | How engineering knowledge is organized (specs, plans, ADRs, memory) and the documentation standards                          |
-| [engineering-standards.md](./engineering-standards.md)     | The explicit standards index and the gate that enforces each                                                                 |
-| [engineering-audit.md](./engineering-audit.md)             | An evaluation of the platform's maturity, with a technical-debt register                                                     |
-| [onboarding.md](./onboarding.md)                           | Process onboarding: how to do the work, not just read the code                                                               |
-| [roadmap.md](./roadmap.md)                                 | Future-state engineering platform, ranked by ROI                                                                             |
+| Doc                                                        | Covers                                                                                                                                 |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| [development-lifecycle.md](./development-lifecycle.md)     | The SDLC end to end: idea -> spec -> plan -> implement -> review -> merge -> release, with diagrams, plus the responsive critique pass |
+| [ai-assisted-development.md](./ai-assisted-development.md) | How AI participates in the SDLC: context engineering, enforcement boundaries, sequence diagrams                                        |
+| [agents-skills-hooks-mcp.md](./agents-skills-hooks-mcp.md) | Reference for tracked project skills, hooks, rules and MCP configuration, with the hook lifecycle and orchestration diagrams           |
+| [workflow-playbook.md](./workflow-playbook.md)             | Step-by-step runbooks: feature, bug fix, refactor, perf, a11y, ADR, PR, review                                                         |
+| [review-merge-release.md](./review-merge-release.md)       | The gate chain from commit to production, the convergence loop, release and rollback                                                   |
+| [knowledge-architecture.md](./knowledge-architecture.md)   | How engineering knowledge is organized (specs, plans, ADRs, memory) and the documentation standards                                    |
+| [engineering-standards.md](./engineering-standards.md)     | The explicit standards index and the gate that enforces each                                                                           |
+| [engineering-audit.md](./engineering-audit.md)             | An evaluation of the platform's maturity, with a technical-debt register                                                               |
+| [onboarding.md](./onboarding.md)                           | Process onboarding: how to do the work, not just read the code                                                                         |
+| [roadmap.md](./roadmap.md)                                 | Future-state engineering platform, ranked by ROI                                                                                       |
 
 ## The platform in one picture
 
