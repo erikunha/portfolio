@@ -48,7 +48,9 @@ A sub-PR is one milestone and opens complete. Before the first push it carries t
 e2e tests, the responsive checks at 320, 390, 768, 1024 and 1280, regenerated darwin and linux visual
 baselines, updated docs and diagrams, and any CI change the diff needs. Predict each CI job from the
 diff (path filters, LHCI target size and contrast, bundle and route JS budgets, visual projects) and
-run the affected ones locally first. The loop per milestone: finish, push once, request review, fix
+run the affected ones locally first. macOS green does not mean Linux green: run the affected specs in
+the Playwright Linux image (`mcr.microsoft.com/playwright:v<installed version>-noble`) against the local
+build before the push. The loop per milestone: finish, push once, request review, fix
 every finding with a thread reply, land into the integration branch, start the next milestone.
 
 ## Release
