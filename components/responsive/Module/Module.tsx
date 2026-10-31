@@ -54,7 +54,7 @@ export function Module({
       >
         <h2
           id={moduleHeaderId(id)}
-          className="flex-1 flex items-center gap-2 text-primary-500 font-mono text-base md:text-lg font-bold tracking-[0.14em] md:tracking-[0.1em] uppercase m-0"
+          className="flex-1 flex items-center gap-2 text-primary-500 font-mono text-base md:text-lg font-bold tracking-[0.06em] md:tracking-[0.1em] uppercase m-0"
         >
           {name ? (
             <span className="module-name">{name}</span>
