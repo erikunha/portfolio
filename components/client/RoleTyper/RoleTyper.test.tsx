@@ -14,7 +14,7 @@ function getDOM() {
 }
 
 function getPill() {
-  return getDOM().querySelector('span[aria-hidden="true"]');
+  return getDOM().querySelector('[data-role-pill]');
 }
 
 function getLiveRegion() {

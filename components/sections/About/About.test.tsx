@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { aboutContent } from '@/content/about';
 import { About } from './About';
 
@@ -8,6 +8,10 @@ const CODE_FONT_PX = 12;
 const MONO_ADVANCE_EM = 0.6;
 const NARROW_PANEL_TEXT_PX = 232;
 const NARROW_LINE_CHAR_BUDGET = Math.floor(NARROW_PANEL_TEXT_PX / (CODE_FONT_PX * MONO_ADVANCE_EM));
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('About r106 composition', () => {
   it('renders five framed panels with titles in their top bands', () => {
@@ -68,10 +72,18 @@ describe('About r106 composition', () => {
     expect(responsibilities?.querySelectorAll('[data-file]')).toHaveLength(7);
   });
 
-  it('offers a COPY button carrying the full retry code', () => {
+  it('offers a COPY button carrying the full retry code', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
     render(<About />);
     const copy = screen.getByRole('button', { name: aboutContent.code.copyAccessibleLabel });
     expect(copy, 'r106 retry panel has a COPY control').toBeTruthy();
+    fireEvent.click(copy);
+    await waitFor(() =>
+      expect(writeText).toHaveBeenCalledWith(
+        aboutContent.code.tokens.map((token) => token.text).join(''),
+      ),
+    );
   });
 
   it('groups the stack and keeps retry code keyboard accessible on mobile', () => {
