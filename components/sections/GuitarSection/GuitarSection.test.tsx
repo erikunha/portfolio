@@ -95,12 +95,12 @@ describe('GuitarSection presentation', () => {
     );
   });
 
-  it('shows the terminal module header visually and the section label to screen readers', () => {
+  it('shows the section name and the terminal command in the header', () => {
     const html = renderToStaticMarkup(createElement(GuitarSection));
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const heading = doc.querySelector('h2');
     expect(heading?.textContent).toContain(GUITAR_MODULE_HEADER);
-    expect(heading?.querySelector('.sr-only')?.textContent).toBe(SECTION_LABELS['sec-guitar']);
+    expect(heading?.querySelector('.module-name')?.textContent).toBe(SECTION_LABELS['sec-guitar']);
   });
 
   it('renders the live signal chain strip above the chain', async () => {
