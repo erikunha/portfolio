@@ -1,6 +1,6 @@
 @layer components {
   .career-section {
-    margin-bottom: calc(var(--spacing-4) + var(--border-width) * 2);
+    margin-bottom: var(--space-section);
     border: var(--border-width) solid var(--color-primary-subtle);
     background: var(--color-secondary-950);
     font-family: var(--font-mono);
@@ -19,9 +19,10 @@
     gap: var(--spacing-2);
     margin: 0;
     color: var(--color-primary-500);
-    font-size: var(--text-sm);
+    font-size: var(--text-section-title);
     font-weight: 700;
     letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
 
   .career-icon {
@@ -55,14 +56,14 @@
 
   .career-log {
     --career-line-height: calc(var(--spacing-4) + var(--spacing-1));
-    font-size: var(--text-min);
+    font-size: var(--text-body);
     line-height: var(--career-line-height);
   }
 
   .career-command {
     margin: 0 0 var(--spacing-6);
     color: var(--color-primary-400);
-    font-size: var(--text-min);
+    font-size: var(--text-body);
     font-weight: 400;
     line-height: 1.6;
     overflow-wrap: anywhere;
@@ -253,7 +254,6 @@
 
   @media (min-width: 768px) {
     .career-section {
-      margin-bottom: calc(var(--spacing-8) + var(--spacing-2));
       border: 0;
       background: transparent;
     }
