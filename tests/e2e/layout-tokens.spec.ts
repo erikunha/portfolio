@@ -71,8 +71,18 @@ test.describe('layout tokens', () => {
           const style = getComputedStyle(parent);
           const padLeft = Number.parseFloat(style.paddingLeft);
           const padRight = Number.parseFloat(style.paddingRight);
-          return { left: box.left + padLeft, width: box.width - padLeft - padRight };
+          const root = document.documentElement.getBoundingClientRect();
+          return {
+            left: box.left + padLeft,
+            width: box.width - padLeft - padRight,
+            parentLeft: box.left,
+            parentWidth: box.width,
+            rootLeft: root.left,
+            rootWidth: root.width,
+          };
         });
+      expect(parentBox.parentLeft).toBe(parentBox.rootLeft);
+      expect(parentBox.parentWidth).toBe(parentBox.rootWidth);
       expect(left).toBeCloseTo(
         parentBox.left + (parentBox.width - MEASURE_PAGE) / 2 + GUTTER_AT_1280,
         0,
