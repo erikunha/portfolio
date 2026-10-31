@@ -16,16 +16,17 @@
 
 ## AI Engineering
 
-Shipping production LLM, RAG, and multi-agent systems since 2024:
+Shipping production LLM and multi-agent systems:
 
 - Streaming LLM endpoint: Vercel AI Gateway + Anthropic Claude Haiku 4.5,
   ephemeral prompt caching, cost tracking, token budget management
 - Multi-agent orchestration: 12-agent GitHub Copilot system deployed to
   engineering team at Betsson Group: automating code generation, review,
-  debugging, testing, and architectural validation across a €1B+ ARR platform
+  debugging, testing, and architectural validation across a platform with
+  €1.197B group revenue and 31.1M customers
 - Prompt engineering at production scale: structured output, tool use,
   function calling, context window management
-- RAG pipeline design, GenAI feature integration, AI evaluation loops
+- GenAI feature integration, AI evaluation loops
 - AI cost optimization: prompt caching strategies, model selection for
   latency/cost trade-offs
 
@@ -36,15 +37,15 @@ Streaming LLM · AI Evaluation · LLM Cost Optimization
 ## Impact at Scale
 
 - -97.5% API latency: reporting endpoints from ~40s → <1s (query + indexing)
-- -98% CSS bundle reduction (Canon Medical Systems)
-- -52% Time to Interactive improvement (Canon Medical Systems)
-- -33% JavaScript bundle reduction (Canon Medical Systems)
+- -98% CSS bundle reduction (Canon Medical Systems Brazil)
+- -52% Time to Interactive improvement (Canon Medical Systems Brazil)
+- -33% JavaScript bundle reduction (Canon Medical Systems Brazil)
 - -32% page load reduction (Nike Brazil / Centauro)
 - +10% conversion rate via 20+ A/B experiments (Nike Brazil)
-- -80% platform delivery cost: shared cross-platform codebase (MB Labs)
-- €1B+ ARR cashier platform (Betsson Group, 40M+ transactions/yr, 31.1M customers)
+- ~80% shared code, ~40% faster desktop build (MB Labs)
+- €1.197B group revenue cashier platform (Betsson Group, 31.1M customers, 40M+ transactions/yr)
 - 8M+ monthly active users (Nike Brazil + Centauro)
-- 70M+ customers served (Itaú Unibanco banking platform)
+- 24.2M digital clients, 1.2M businesses (Itaú Unibanco business insurance)
 - 12-agent AI system deployed to production engineering team
 
 ## Technical Skills
@@ -60,7 +61,7 @@ Web Components · Vue.js · Ionic · SSR/SSG · Micro-Frontend Architecture
 Backend & APIs: Node.js · Express.js · REST APIs · WebSocket (STOMP/SockJS) ·
 Python · Backend for Frontend (BFF)
 
-Architecture: Clean Architecture (DDD 4-layer) · Nx Monorepo ·
+Architecture: Clean Architecture · Nx Monorepo ·
 Component-Driven Architecture · Reactive Architecture
 
 Cloud & DevOps: AWS (S3 · CloudFront · EC2 · CodePipeline · CodeBuild) ·
@@ -78,30 +79,30 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 |---|---|---|---|
 | Jun 2026 - Present | Raylu | Senior Software Engineer, Frontend & Product (contract via Torc) | New York, US (remote) |
 | Mar 2025 - May 2026 | Betsson Group | Senior Software Engineer, Frontend | Malta (hybrid) |
-| Mar 2023 - Mar 2025 | Canon Medical Systems | Senior Software Engineer, Frontend (independent consultant) | Canada (remote) |
+| Mar 2023 - Mar 2025 | Canon Medical Systems Brazil | Senior Software Engineer, Frontend (independent consultant) | Canada (remote) |
 | Dec 2021 - Mar 2023 | Grupo SBF (Nike / Centauro) | Software Engineer, Frontend | São Paulo, Brazil (remote) |
 | Jan 2021 - Dec 2021 | Encora (formerly Daitan) | Software Engineer, Frontend · assigned to VMware | Campinas, Brazil |
-| Apr 2020 - Jan 2021 | ZUP Innovation (Itaú Unibanco) | Software Engineer, Frontend | Campinas, Brazil |
+| Apr 2020 - Jan 2021 | Zup Innovation (Itaú Unibanco) | Software Engineer, Frontend | Campinas, Brazil |
 | Feb 2019 - Apr 2020 | Venturus | Full-Stack Software Engineer → Software Engineer, Frontend | Campinas, Brazil |
 | Jul 2018 - Feb 2019 | MB Labs | Full-Stack Software Engineer → Software Engineer, Cross-Platform | Campinas, Brazil |
 | Oct 2017 - May 2018 | Monde Sistemas | Software Engineer Intern, Frontend | Americana, Brazil |
 
 ## Industries
 
-- iGaming / Regulated Markets: PCI-DSS, 15+ jurisdictions, €1B+ ARR
+- iGaming / Regulated Markets: PCI-DSS, 15+ jurisdictions, €1.197B group revenue
 - E-commerce: 8M+ MAU, multi-brand, LATAM
-- Banking / Fintech: 70M+ customers, digital banking
-- Healthcare: enterprise hospital operations, WCAG 2.1 AA
+- Banking / Fintech: 24.2M digital clients, business insurance
+- Healthcare: enterprise hospital operations, WCAG 2.2 AA
 - EdTech: 5-OS offline-first educational platform
-- HR-tech / Corporate Training: enterprise chatbot (Cia Hering, KPMG)
-- SaaS / CRM: travel agency management, 2,200+ clients
+- HR-tech / Corporate Training: enterprise chatbot (Cia Hering, 800+ stores)
+- SaaS / CRM: travel agency management, 1,600+ Brazilian travel agencies
 - Infrastructure / Logistics: highway ops dashboards, real-time telemetry
 
 ## Education
 
 - MBA (Lato Sensu), AI Engineering, Machine Learning and Deep Learning, Instituto Infnet, Brazil (online), expected Dec 2027
-- Web Development Co-op Diploma, CICCC, Vancouver, Canada (2023-2024)
-- BS, Information Systems, UNISAL, Campinas, Brazil (2015-2020)
+- Web Development Co-op Diploma, Cornerstone International Community College of Canada (CICCC), Vancouver, Canada (2023-2024)
+- B.S. Information Systems, Centro Universitário Salesiano de São Paulo (UNISAL), Campinas, Brazil (2015-2020)
 
 ## Certifications
 
@@ -127,7 +128,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 ## Selected project context
 
 - ORIGINATION_PLATFORM_UI, Raylu: React, Next.js 14, TypeScript 5.
-- SERVICE_OPS_CONSOLE, Canon Medical Systems: hospital equipment service platform for service orders, specialist scheduling and field visits.
+- SERVICE_OPS_CONSOLE, Canon Medical Systems Brazil: hospital equipment service platform for service orders, specialist schedules and field visits.
 
 ## Links
 

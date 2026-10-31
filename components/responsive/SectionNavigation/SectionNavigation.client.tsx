@@ -7,11 +7,13 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react';
 import {
   formatSectionNumber,
+  formatSectionPosition,
   HOME_SECTION_ID,
   NAVIGATION,
   sectionHref,
@@ -19,24 +21,30 @@ import {
 import { SECTION_NAV } from '@/content/section-registry';
 import { NavItem } from '@/design-system';
 import { cn } from '@/lib/cn';
+import { applyMotion, readMotion } from '@/lib/motion';
 
 const MAIN_ID = 'main-content';
 export const DRAWER_ID = 'section-drawer';
 const MOBILE_HERO_SELECTOR = '[data-testid="hero-mobile"]';
-const DRAWER_QUERY = '(max-width: 1023px)';
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const CURRENT_LINE_MARGIN = '-45% 0px -54% 0px';
 const SETTLED_TOP_LIMIT_PX = 150;
-const TRAPPED_CONTROLS = 'a[href], button:not([data-rail-only])';
+const TRAPPED_CONTROLS = 'a[href], button';
+const CURRENT_ITEM = '[aria-current]';
 const SCROLL_LOCK_ATTRIBUTE = 'data-scroll-locked';
+const SEARCH_KEY = 'k';
+const INDEX_TRIGGER_CLASS = 'index-trigger';
+const INDEX_TRIGGER_SELECTOR = `.${INDEX_TRIGGER_CLASS}`;
 
 type NavigationState = {
   currentId: string;
   drawerOpen: boolean;
-  openDrawer: (trigger: HTMLElement) => void;
+  openDrawer: (trigger: HTMLElement | null) => void;
   closeDrawer: (restoreFocus: boolean) => void;
   settleDrawer: () => void;
   jump: (event: MouseEvent<HTMLElement>, id: string) => void;
+  motionOn: boolean;
+  toggleMotion: () => void;
 };
 
 const NavigationContext = createContext<NavigationState | null>(null);
@@ -82,6 +90,17 @@ export function jumpToSection(id: string): boolean {
   return true;
 }
 
+function isRendered(element: HTMLElement): boolean {
+  if (!element.isConnected) return false;
+  if (element.hasAttribute('inert')) return false;
+  if (element.hidden) return false;
+  for (let node: HTMLElement | null = element; node; node = node.parentElement) {
+    const style = window.getComputedStyle(node);
+    if (style.display === 'none' || style.visibility === 'hidden') return false;
+  }
+  return true;
+}
+
 function isolate(root: HTMLElement): () => void {
   const isolated: Element[] = [];
   for (
@@ -104,10 +123,19 @@ function isolate(root: HTMLElement): () => void {
 export function SectionNavigationProvider({ children }: { children: ReactNode }) {
   const [currentId, setCurrentId] = useState<string>(HOME_SECTION_ID);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [motionOn, setMotionOn] = useState(true);
   const drawerOpenRef = useRef(false);
+  const motionOnRef = useRef(true);
   const triggerRef = useRef<HTMLElement | null>(null);
   const restoreFocusRef = useRef(true);
   const pendingRef = useRef<string | null>(null);
+
+  useLayoutEffect(() => {
+    const on = readMotion();
+    motionOnRef.current = on;
+    setMotionOn(on);
+    applyMotion(on);
+  }, []);
 
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') return;
@@ -135,7 +163,7 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
     return () => observer.disconnect();
   }, []);
 
-  const openDrawer = useCallback((trigger: HTMLElement) => {
+  const openDrawer = useCallback((trigger: HTMLElement | null) => {
     triggerRef.current = trigger;
     restoreFocusRef.current = true;
     drawerOpenRef.current = true;
@@ -151,8 +179,20 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
   const settleDrawer = useCallback(() => {
     const pending = pendingRef.current;
     pendingRef.current = null;
-    if (pending) jumpToSection(pending);
-    else if (restoreFocusRef.current) triggerRef.current?.focus();
+    if (pending) {
+      jumpToSection(pending);
+      return;
+    }
+    if (!restoreFocusRef.current) return;
+    const candidates = [
+      triggerRef.current,
+      ...document.querySelectorAll<HTMLElement>(INDEX_TRIGGER_SELECTOR),
+    ];
+    for (const candidate of candidates) {
+      if (!candidate || !isRendered(candidate)) continue;
+      candidate.focus();
+      return;
+    }
   }, []);
 
   const jump = useCallback(
@@ -171,9 +211,40 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
     [closeDrawer],
   );
 
+  const toggleMotion = useCallback(() => {
+    const next = !motionOnRef.current;
+    motionOnRef.current = next;
+    setMotionOn(next);
+    applyMotion(next);
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.altKey || event.shiftKey) return;
+      if (!event.metaKey && !event.ctrlKey) return;
+      if (event.key.toLowerCase() !== SEARCH_KEY) return;
+      if (drawerOpenRef.current) return;
+      event.preventDefault();
+      const active = document.activeElement;
+      const opener = active instanceof HTMLElement && active !== document.body ? active : null;
+      openDrawer(opener);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [openDrawer]);
+
   return (
     <NavigationContext.Provider
-      value={{ currentId, drawerOpen, openDrawer, closeDrawer, settleDrawer, jump }}
+      value={{
+        currentId,
+        drawerOpen,
+        openDrawer,
+        closeDrawer,
+        settleDrawer,
+        jump,
+        motionOn,
+        toggleMotion,
+      }}
     >
       {children}
     </NavigationContext.Provider>
@@ -186,47 +257,34 @@ const GROUP_SECTIONS = NAVIGATION.groups.map((group) => ({
 }));
 
 export function SectionNavigation() {
-  const { currentId, drawerOpen, closeDrawer, settleDrawer, jump } = useSectionNavigation();
+  const { currentId, drawerOpen, closeDrawer, settleDrawer, jump, motionOn, toggleMotion } =
+    useSectionNavigation();
   const { copy } = NAVIGATION;
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const toggleRef = useRef<HTMLButtonElement>(null);
-  const [railExpanded, setRailExpanded] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     if (!drawerOpen || !rootRef.current) return;
     const release = isolate(rootRef.current);
     document.documentElement.setAttribute(SCROLL_LOCK_ATTRIBUTE, '');
-    closeRef.current?.focus();
-    const viewport = window.matchMedia(DRAWER_QUERY);
-    const onViewport = (event: { matches: boolean }) => {
-      if (!event.matches) closeDrawer(false);
-    };
-    viewport.addEventListener('change', onViewport);
+    const current = panelRef.current?.querySelector<HTMLElement>(CURRENT_ITEM);
+    (current ?? closeRef.current)?.focus();
     return () => {
-      viewport.removeEventListener('change', onViewport);
       release();
       document.documentElement.removeAttribute(SCROLL_LOCK_ATTRIBUTE);
       settleDrawer();
     };
-  }, [drawerOpen, closeDrawer, settleDrawer]);
+  }, [drawerOpen, settleDrawer]);
 
   useEffect(() => {
+    if (!drawerOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
       const panel = panelRef.current;
       if (!panel) return;
       if (event.key === 'Escape') {
-        if (drawerOpen) {
-          closeDrawer(true);
-        } else if (railExpanded || panel.contains(document.activeElement)) {
-          const focusInside = panel.contains(document.activeElement);
-          setRailExpanded(false);
-          setDismissed(true);
-          if (focusInside) toggleRef.current?.focus();
-        }
-      } else if (event.key === 'Tab' && drawerOpen) {
+        closeDrawer(true);
+      } else if (event.key === 'Tab') {
         const controls = panel.querySelectorAll<HTMLElement>(TRAPPED_CONTROLS);
         const first = controls[0];
         const last = controls[controls.length - 1];
@@ -242,61 +300,22 @@ export function SectionNavigation() {
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [drawerOpen, railExpanded, closeDrawer]);
-
-  useEffect(() => {
-    const panel = panelRef.current;
-    if (!panel) return;
-    const reopen = () => setDismissed(false);
-    const onFocusIn = (event: FocusEvent) => {
-      if ((event.target as HTMLElement).closest('a.nav-item')) reopen();
-    };
-    panel.addEventListener('mouseenter', reopen);
-    panel.addEventListener('focusin', onFocusIn);
-    return () => {
-      panel.removeEventListener('mouseenter', reopen);
-      panel.removeEventListener('focusin', onFocusIn);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!railExpanded) return;
-    const onClick = (event: Event) => {
-      if (!panelRef.current?.contains(event.target as Node)) setRailExpanded(false);
-    };
-    document.addEventListener('click', onClick);
-    return () => document.removeEventListener('click', onClick);
-  }, [railExpanded]);
+  }, [drawerOpen, closeDrawer]);
 
   return (
     <div ref={rootRef} className="section-nav-root">
       <aside
         ref={panelRef}
         id={DRAWER_ID}
-        className={cn(
-          'section-menu',
-          drawerOpen && 'is-open',
-          railExpanded && 'is-expanded',
-          dismissed && 'is-dismissed',
-        )}
+        className={cn('section-menu', drawerOpen && 'is-open')}
         aria-label={copy.drawerLabel}
         {...(drawerOpen ? { role: 'dialog', 'aria-modal': true } : {})}
       >
         <div className="menu-head">
           <span className="menu-title">{copy.title}</span>
-          <span className="menu-end">
-            <button
-              ref={toggleRef}
-              type="button"
-              className="rail-toggle"
-              data-rail-only=""
-              aria-label={copy.openRail}
-              aria-expanded={railExpanded}
-              aria-controls={DRAWER_ID}
-              onClick={() => setRailExpanded((expanded) => !expanded)}
-            >
-              ☰
-            </button>
+          <span className="menu-badge" data-section-count={SECTION_NAV.length}>
+            <span className="sr-only">{`${SECTION_NAV.length} ${copy.sectionCountLabel}`}</span>
+            <span aria-hidden="true">{SECTION_NAV.length}</span>
           </span>
           <button
             ref={closeRef}
@@ -307,12 +326,12 @@ export function SectionNavigation() {
             {copy.closeDrawer}
           </button>
         </div>
+        <SearchTrigger className="menu-search" />
         <nav id="section-nav" aria-label={copy.navLabel}>
           {GROUP_SECTIONS.map(({ group, sections }) => {
             const titleId = `menu-group-${group.id}`;
             return (
               <div key={group.id} className="menu-group">
-                <hr className="rail-sep" />
                 <span className="menu-group-title" id={titleId}>
                   {group.title}
                 </span>
@@ -324,11 +343,7 @@ export function SectionNavigation() {
                         label={label}
                         index={formatSectionNumber(order)}
                         current={id === currentId}
-                        onClick={(event) => {
-                          setRailExpanded(false);
-                          setDismissed(true);
-                          jump(event, id);
-                        }}
+                        onClick={(event) => jump(event, id)}
                       />
                     </li>
                   ))}
@@ -357,6 +372,18 @@ export function SectionNavigation() {
               />
             </li>
           ))}
+          <li>
+            <button
+              type="button"
+              className="menu-motion"
+              data-motion-toggle=""
+              aria-pressed={motionOn}
+              onClick={toggleMotion}
+            >
+              <span className="menu-motion-dot" aria-hidden="true" />
+              <span>{motionOn ? copy.motionOn : copy.motionOff}</span>
+            </button>
+          </li>
         </ul>
       </aside>
       <div
@@ -366,4 +393,60 @@ export function SectionNavigation() {
       />
     </div>
   );
+}
+
+export function IndexTrigger({ className }: { className?: string }) {
+  const { currentId, drawerOpen, openDrawer } = useSectionNavigation();
+  const { copy } = NAVIGATION;
+  return (
+    <button
+      type="button"
+      className={cn(INDEX_TRIGGER_CLASS, className)}
+      aria-expanded={drawerOpen}
+      aria-controls={DRAWER_ID}
+      aria-haspopup="dialog"
+      onClick={(event) => openDrawer(event.currentTarget)}
+    >
+      <span aria-hidden="true">{copy.indexGlyph}</span>
+      <span>{copy.indexLabel}</span>
+      <span className="index-trigger-pos">{formatSectionPosition(currentId)}</span>
+    </button>
+  );
+}
+
+export function SearchTrigger({ className }: { className?: string }) {
+  const { drawerOpen, openDrawer, closeDrawer } = useSectionNavigation();
+  const { copy } = NAVIGATION;
+  const [shortcut, setShortcut] = useState<string | null>(null);
+
+  useEffect(() => {
+    setShortcut(isAppleKeyboard() ? copy.searchShortcutApple : copy.searchShortcutOther);
+  }, []);
+
+  return (
+    <button
+      type="button"
+      className={cn('search-trigger', className)}
+      aria-expanded={drawerOpen}
+      aria-controls={DRAWER_ID}
+      aria-haspopup="dialog"
+      aria-keyshortcuts="Control+K Meta+K"
+      onClick={(event) => {
+        if (drawerOpen) closeDrawer(true);
+        else openDrawer(event.currentTarget);
+      }}
+    >
+      <span className="search-trigger-label">{copy.searchLabel}</span>
+      <span className="search-trigger-shortcut">{shortcut}</span>
+    </button>
+  );
+}
+
+type PlatformNavigator = Navigator & { userAgentData?: { platform?: string } };
+
+function isAppleKeyboard(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const platform =
+    (navigator as PlatformNavigator).userAgentData?.platform ?? navigator.platform ?? '';
+  return /mac/i.test(platform);
 }

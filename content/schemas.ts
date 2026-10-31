@@ -91,12 +91,19 @@ const NavigationCopySchema = z.object({
   drawerLabel: NavTextSchema,
   navLabel: NavTextSchema,
   title: NavTextSchema,
-  openRail: NavTextSchema,
+  indexGlyph: NavTextSchema,
+  indexLabel: NavTextSchema,
   closeDrawer: NavTextSchema,
   dockLabel: NavTextSchema,
   positionLabel: NavTextSchema,
   menuLabelPrefix: NavTextSchema,
   newTabSuffix: z.string().min(MIN_SECTION_TEXT_LENGTH),
+  searchLabel: NavTextSchema,
+  searchShortcutApple: NavTextSchema,
+  searchShortcutOther: NavTextSchema,
+  motionOn: NavTextSchema,
+  motionOff: NavTextSchema,
+  sectionCountLabel: NavTextSchema,
 });
 
 export function createNavigationSchema(sectionIds: readonly string[]) {
@@ -589,14 +596,12 @@ export const TerminalChromeSchema = z.object({
 });
 export type TerminalChrome = z.infer<typeof TerminalChromeSchema>;
 
-export const ReadmeCopySchema = z.object({
-  desktopH1: z.string().min(1),
-  desktopIntro: z.string().min(1),
-  desktopCoreStack: z.array(z.string().min(1)).min(1),
-  desktopPrinciples: z.array(z.string().min(1)).min(1),
-  desktopStatusH2: z.string().min(1),
+export const TopbarChromeSchema = z.object({
+  brandMark: z.string().min(1),
+  brandLabel: z.string().min(1),
+  brandClose: z.string().min(1),
 });
-export type ReadmeCopy = z.infer<typeof ReadmeCopySchema>;
+export type TopbarChrome = z.infer<typeof TopbarChromeSchema>;
 
 export type HeroContent = z.infer<typeof HeroContentSchema>;
 
@@ -931,7 +936,6 @@ export const ReadingViewsSchema = z.object({
     cvLinkLabel: ReadingTextSchema,
     statsLabel: ReadingTextSchema,
     experienceLabel: ReadingTextSchema,
-    badge: ReadingTextSchema,
     projectNames: z.array(ReadingTextSchema).min(1),
     stack: z.array(ReadingTextSchema).min(1),
     headings: z.object({

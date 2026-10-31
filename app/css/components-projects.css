@@ -276,6 +276,10 @@
     margin: 0 0 var(--spacing-2);
   }
 
+  .measured-perf {
+    --measured-tile-min: 7rem;
+  }
+
   .measured-perf .measured-scores {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -352,6 +356,7 @@
     .receipt-value {
       text-align: left;
       font-size: var(--text-sm);
+      white-space: nowrap;
     }
 
     .receipt-value[data-featured] {
@@ -379,7 +384,7 @@
     }
 
     .measured-perf .measured-scores {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(var(--measured-tile-min), 1fr));
     }
   }
 
@@ -401,10 +406,6 @@
 
     .project-stats {
       margin-top: auto;
-    }
-
-    .measured-perf .measured-scores {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 }

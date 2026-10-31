@@ -27,7 +27,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 ### Functional
 
 - Static composition with Hero and About followed by shell, AI evaluation, projects with attached performance receipts, Career, opinions with nested learning and specialization lists, guitar and mixer as one module, contact and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code expose named keyboard scroll regions inside About; Career owns certification, education and community tag groups.
-- Opinions renders four ordered home takes with nested learning and specialization lists. The design-system opinion renders at `/design-system#opinion-07`; `TAKE_PLACEMENT` separates home and documentation content. Four below-fold modules use content-visibility deferral.
+- Opinions renders four ordered home takes with nested learning and specialization lists, and closes with a link to the design-system opinion. The design-system opinion renders at `/design-system#opinion-07`; `TAKE_PLACEMENT` separates home and documentation content. Four below-fold modules use content-visibility deferral.
 - Hero: Matrix dialog loop + boot sequence (typewriter)
 - About "Open to [role] roles" mounts RoleTyper over server-rendered text; the Hero title is static. Module headers use CSS scroll-driven typing, with static text for unsupported browsers and reduced motion. Every other single-line heading and command prompt marked `data-type-reveal` (on a span around the text only, never around icons, `sr-only` or `aria-hidden` siblings, and never on an element that can wrap) types in when it enters the viewport: `TypeReveal` (mounted once in the root layout through `GlobalMotion`) runs one IntersectionObserver, sets `--type-chars` and adds `is-typed`; CSS reveals the text with a stepped `clip-path` and a blinking caret. The text stays in the HTML and keeps its box, so screen readers, search and layout see it whole. Hiding applies only after `html.type-reveal-ready`, so without JS, under reduced motion or with `data-motion="reduce"` everything shows at once. The h1 and the first hero viewport are never marked. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`) from `GlobalMotion` in the root layout, so it runs on every route, then IntersectionObserver gates its animation. The footer is server-rendered, with client islands only for session counters and halt/reboot.
 - INTERACTIVE_SHELL with `ask` LLM command + `whoami`, `face`, `hire`, etc.
@@ -129,30 +129,30 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Default: React Server Components, statically generated at build time
 
-Static section bodies are Server Components. `BreakpointProvider` and `AppShell` are client boundaries that receive server-rendered children. `SectionNavigationProvider` wraps the shell chrome so the rail, the dock and the position meter share one current-section state. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
+Static section bodies are Server Components. `BreakpointProvider` and `AppShell` are client boundaries that receive server-rendered children. `SectionNavigationProvider` wraps the shell chrome so the INDEX trigger, the drawer, the dock and the position meter share one current-section state. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
 
-The drawer header contains the title and close control. The toggle column occupies space only in the collapsible desktop rail.
+The section menu is a modal drawer at every width, opened by the `☰ INDEX` trigger (left of the brand), the dock MENU or the `Ctrl` / `Cmd` + `K` shortcut. The drawer header contains the title and close control. Closing the drawer returns focus to the control that opened it, or to the first rendered `INDEX` trigger when there is no such control or a viewport change left it unrendered.
 
 ### Client islands
 
-| Surface                                        | Client responsibilities                                              |
-| ---------------------------------------------- | -------------------------------------------------------------------- |
-| AppShell and breakpoint provider               | Responsive chrome, error bridge and viewport state                   |
-| DesktopTopbar, StatusBar, MobileTitleBar, Dock | Navigation, motion controls and device chrome                        |
-| SectionNavigation, SectionNavigationProvider   | Rail hover state, drawer focus trap and shared current-section state |
-| PositionMeter                                  | Scroll-position tracking and page-position progress                  |
-| MatrixRain, CRTOverlay, ToTopButton            | Canvas animation, CRT effects and scroll control                     |
-| HeroBootAnimation, HeroSystemFailure           | Boot/dialog animation and failure interaction                        |
-| RoleTyper                                      | Role cycle inside About                                              |
-| GlobalMotion → TypeReveal, MatrixRainLazy      | App-wide scroll type reveal and Matrix Rain from the root layout     |
-| InteractiveShellLazy → InteractiveShell        | Client-only shell input and streamed ASK output                      |
-| ContactFormLazy → ContactForm                  | Client-only form submission and feedback                             |
-| DAW mixer islands                              | Fader, dB readout, knob, RMS buttons and VU meter behavior           |
-| Footer client exports                          | Session counters, halt clock and reboot control                      |
-| ErrorBoundary and error pages                  | Failure capture, retry and recovery controls                         |
-| PrintButton                                    | Print action in `/summary` and `/cv`                                 |
-| `/links` client components                     | Tagline cycle, navigation progress, copy and subscribe actions       |
-| Design-system Sidebar and CopyButton           | Documentation navigation and clipboard feedback                      |
+| Surface                                        | Client responsibilities                                                         |
+| ---------------------------------------------- | ------------------------------------------------------------------------------- |
+| AppShell and breakpoint provider               | Responsive chrome, error bridge and viewport state                              |
+| DesktopTopbar, StatusBar, MobileTitleBar, Dock | Navigation, motion controls and device chrome                                   |
+| SectionNavigation, SectionNavigationProvider   | INDEX trigger, drawer focus trap, focus return and shared current-section state |
+| PositionMeter                                  | Scroll-position tracking and page-position progress                             |
+| MatrixRain, CRTOverlay, ToTopButton            | Canvas animation, CRT effects and scroll control                                |
+| HeroBootAnimation, HeroSystemFailure           | Boot/dialog animation and failure interaction                                   |
+| RoleTyper                                      | Role cycle inside About                                                         |
+| GlobalMotion → TypeReveal, MatrixRainLazy      | App-wide scroll type reveal and Matrix Rain from the root layout                |
+| InteractiveShellLazy → InteractiveShell        | Client-only shell input and streamed ASK output                                 |
+| ContactFormLazy → ContactForm                  | Client-only form submission and feedback                                        |
+| DAW mixer islands                              | Fader, dB readout, knob, RMS buttons and VU meter behavior                      |
+| Footer client exports                          | Session counters, halt clock and reboot control                                 |
+| ErrorBoundary and error pages                  | Failure capture, retry and recovery controls                                    |
+| PrintButton                                    | Print action in `/summary` and `/cv`                                            |
+| `/links` client components                     | Tagline cycle, navigation progress, copy and subscribe actions                  |
+| Design-system Sidebar and CopyButton           | Documentation navigation and clipboard feedback                                 |
 
 `InteractiveShellLazy` and `ContactFormLazy` use `next/dynamic` with `ssr: false` and loading status placeholders. `FooterLazy.client.tsx` is a direct re-export of footer controls, not a dynamic import. `DawMixerDesktop` is statically imported by `GuitarSection` and embeds smaller client islands.
 
@@ -234,8 +234,7 @@ components/responsive/                 # viewport-variant helpers
 content/about.ts                      # About panels, Now rows and Senior status
 content/hero.ts                       # validated Hero metrics, labels and actions
 content/hero-client.ts                # typed boot and system-failure copy, no runtime schema import
-content/nav.ts                        # zod-free topbar in-page link
-content/readme.ts                     # README/bio content for /cv and /summary
+content/nav.ts                        # zod-free nav vocabulary: labels, topbar links, reading link and motion label
 content/projects.ts                   # shared project cards
 content/perf-receipts.ts              # canonical deltas, attached receipts and reading-view stats
 content/measured.ts                   # ASK and PSI presentation metadata
@@ -253,6 +252,8 @@ content/education.ts                  # edu/* tags inside Career
 content/social.ts                     # github / linkedin / email / site
 content/errors.ts                     # 404, 500 and no-JS copy
 content/errors-client.ts              # zod-free error copy for client islands
+content/terminal-chrome.ts           # zod-free topbar, shell and contact chrome copy
+content/_validate-client-content.ts  # build-time parse site for every client-read schema
 content/schemas.ts                    # Zod validation schemas, build-time
 content/ask-eval-corpus.ts            # ask eval Q+A corpus (factual, edge, jailbreak, output-validation)
 
@@ -314,6 +315,8 @@ All content is **typed TS modules**, validated by Zod at build time. Build fails
 - Lets engineers reading the source see exactly what shape the site expects
 
 `content/schemas.ts` defines `PerfReceiptSchema`: `metric`, signed percentage `delta`, `company`, `note`, `project`, and optional `displayValue`, `before`, `after`. `content/perf-receipts.ts` parses twelve receipts and derives six project receipts with `.filter(receipt => receipt.project)`. Projects embeds that subset through `PerfReceiptsSection`.
+
+A content module that a client component imports stays zod-free, because a `.parse()` at module scope would ship zod to the browser. Those modules are parsed by `content/_validate-client-content.ts`, the single build-time parse site, which `scripts/validate-content.ts` imports so a schema violation fails the build. `content/terminal-chrome.ts` follows that rule: `shellChrome`, `contactChrome` and `topbarChrome` are parsed by the aggregator, never in the module itself, so the topbar brand badge can never ship empty.
 
 ---
 

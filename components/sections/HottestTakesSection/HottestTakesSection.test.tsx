@@ -4,6 +4,7 @@ import { parse } from 'postcss';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
+import { declValue, rulesWithSelector } from '@/__tests__/helpers/css-rules';
 import { hottestTakes } from '@/content/hottest-takes';
 import { HottestTakesSection } from './HottestTakesSection';
 
@@ -79,7 +80,7 @@ describe('home opinions', () => {
     expect(groups?.[1]?.querySelectorAll('.opinions-context')).toHaveLength(3);
   });
 
-  it('retains the canonical DS opinion for documentation and excludes it from home', () => {
+  it('retains the canonical DS opinion for documentation and closes the home list with a link to it', () => {
     const opinion = hottestTakes.find((take) => take.category === 'DS');
     expect(opinion).toMatchObject({
       num: '07.',
@@ -90,10 +91,34 @@ describe('home opinions', () => {
     expect(opinion?.body).toContain('Stencil at Betsson worked because Angular, React, and Ember');
     const container = renderOpinions();
     expect(container.textContent).not.toContain(opinion?.thesis);
-    expect(container.querySelector('a[href="/design-system#opinion-07"]')).toBeNull();
-    expect(container.textContent).not.toContain(
+    expect(hottestTakes).toHaveLength(5);
+    const link = container.querySelector('a.opinions-more');
+    expect(link?.getAttribute('href')).toBe('/design-system#opinion-07');
+    expect(link?.textContent).toContain(
       'the design-system opinion lives in the design system docs',
     );
-    expect(hottestTakes).toHaveLength(5);
+  });
+
+  it('announces the closing link without the decorative arrow, and keeps the arrow on screen', () => {
+    const { container } = render(<HottestTakesSection defer />);
+    const link = getByRole(container, 'link', {
+      name: 'the design-system opinion lives in the design system docs',
+    });
+    expect(link.textContent).toContain('→');
+  });
+
+  it('keeps the section command label inline with the name, the tag neutral and the parenthetical in body colour', () => {
+    // behavioral-test-allow: the opinions layout contract lives in the shipped stylesheet; jsdom has no layout engine
+    const stylesheet = parse(readComponentsCss());
+    const headerCommand = rulesWithSelector(
+      stylesheet,
+      '#sec-hottest-takes > header h2 > span:last-child',
+    );
+    expect(headerCommand).toHaveLength(1);
+    expect(declValue(headerCommand[0], 'margin-left')).toBeUndefined();
+    const tag = rulesWithSelector(stylesheet, '.opinions-take h3 > span');
+    expect(declValue(tag[0], 'color')).toBe('var(--color-text-secondary)');
+    const context = rulesWithSelector(stylesheet, '.opinions-context');
+    expect(declValue(context[0], 'color')).toBe('var(--color-tertiary-50)');
   });
 });

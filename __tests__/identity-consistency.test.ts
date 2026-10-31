@@ -14,7 +14,6 @@ import { perfReceipts } from '@/content/perf-receipts';
 import { profile, profileLanguageLine, profileWorkingLanguageLine } from '@/content/profile';
 import { projects } from '@/content/projects';
 import { cvDocument } from '@/content/reading-views';
-import { readmeCopy } from '@/content/readme';
 import { PerfReceiptSchema, ProjectSchema } from '@/content/schemas';
 import { personSchema } from '@/content/seo';
 import { social } from '@/content/social';
@@ -65,11 +64,7 @@ describe('identity is consistent across every gated surface', () => {
   });
 
   it('publishes no work-authorization status in search descriptions', () => {
-    const descriptions = [
-      personSchema.description,
-      personSchema.seeks.itemOffered.description,
-      readmeCopy.desktopIntro,
-    ];
+    const descriptions = [personSchema.description, personSchema.seeks.itemOffered.description];
     const rawStatusToken = /CITIZEN|NEEDS_SPONSORSHIP|OPEN_WITH_SPONSORSHIP/;
     const rendered = [
       ...descriptions,
@@ -151,6 +146,19 @@ describe('identity is consistent across every gated surface', () => {
     for (const name of others) expect(item?.expect).not.toContain(name);
   });
 
+  it('publishes every resume degree in llms.txt with the wording content/education.ts uses', () => {
+    for (const entry of education) {
+      expect(
+        llmsTxt,
+        `public/llms.txt must state the degree as content/education.ts spells it ("${entry.degree}"), or an agent reads a different degree than the site renders.`,
+      ).toContain(entry.degree);
+      expect(
+        llmsTxt,
+        `public/llms.txt must name the institution of "${entry.degree}" ("${entry.institution}"), or an agent reads a different school than the site renders.`,
+      ).toContain(entry.institution);
+    }
+  });
+
   it('lists every education institution in the Person JSON-LD alumniOf', () => {
     const names = personSchema.alumniOf.map((entry) => entry.name);
     for (const entry of education) {
@@ -189,7 +197,6 @@ describe('identity is consistent across every gated surface', () => {
       ['lib/hiring-profile.ts', JSON.stringify(HIRING_PROFILE)],
       ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
       ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
-      ['content/readme.ts', JSON.stringify(readmeCopy)],
       ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
     ];
     const drifted = surfaces.filter(([, text]) => !text.includes(CANONICAL_TITLE)).map(([s]) => s);
@@ -243,6 +250,63 @@ describe('terminal redesign canonical facts', () => {
     expect(manifest.work_auth).toEqual({});
   });
 
+  it('targets Senior only, never Staff or Principal', () => {
+    const surfaces: Array<[string, string]> = [
+      ...contentSurfaces,
+      ['lib/hiring-profile.ts', JSON.stringify(HIRING_PROFILE)],
+      ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
+      ['public/llms.txt', llmsTxt],
+      ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
+      ['app/layout.tsx (metadata)', layoutMetadataText],
+    ];
+    const stale = surfaces
+      .filter(([, text]) => /\bStaff\b|\bPrincipal\b/.test(text))
+      .map(([surface]) => surface);
+
+    expect(
+      stale,
+      'the owner decision targets Senior only. A surface still naming Staff or Principal advertises a level the resume never claims.',
+    ).toEqual([]);
+    expect(HIRING_PROFILE.seniority).toEqual(['senior']);
+    expect(HIRING_PROFILE.open_to).not.toContain('staff');
+    expect(HIRING_PROFILE.open_to).not.toContain('principal');
+  });
+
+  it('describes Raylu with the resume wording, never a deal-origination platform', () => {
+    const surfaces: Array<[string, string]> = [
+      ...contentSurfaces,
+      ['lib/hiring-profile.ts', JSON.stringify(HIRING_PROFILE)],
+      ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
+      ['public/llms.txt', llmsTxt],
+      ['content/ask-eval-corpus.ts', JSON.stringify(ASK_EVAL_CORPUS)],
+    ];
+    const stale = surfaces
+      .filter(([, text]) => /deal[- ]origination/i.test(text))
+      .map(([surface]) => surface);
+
+    expect(
+      stale,
+      'the resume describes Raylu as a private-markets fintech whose funds hold $500B+ in assets. The deal-origination framing is not in the resume.',
+    ).toEqual([]);
+    expect(SYSTEM_TEXT).toContain('$500B+');
+  });
+
+  it('states the resume numbers on llms.txt, not the ones the resume replaced', () => {
+    for (const stale of ['€1B+ ARR', '70M+', '8 talks', 'WCAG 2.1', 'KPMG', '2,200+ clients']) {
+      expect(llmsTxt, `public/llms.txt still publishes "${stale}"`).not.toContain(stale);
+    }
+    for (const current of [
+      '€1.197B',
+      '24.2M digital clients',
+      '10+ talks',
+      'WCAG 2.2 AA',
+      'Canon Medical Systems Brazil',
+      'Zup Innovation',
+    ]) {
+      expect(llmsTxt, `public/llms.txt must publish "${current}"`).toContain(current);
+    }
+  });
+
   it('publishes the resume location and immediate availability consistently', () => {
     for (const text of [
       JSON.stringify(HIRING_PROFILE),
@@ -250,7 +314,6 @@ describe('terminal redesign canonical facts', () => {
       llmsTxt,
       read('public/.well-known/agent.json'),
       JSON.stringify(personSchema),
-      JSON.stringify(readmeCopy),
       layoutMetadataText,
     ]) {
       expect(text).toContain('Brazil');
@@ -304,7 +367,7 @@ describe('terminal redesign canonical facts', () => {
         'hybrid',
       ],
       [
-        'Canon Medical Systems',
+        'Canon Medical Systems Brazil',
         'Senior Software Engineer, Frontend (independent consultant)',
         '2023-03',
         '2025-03',
@@ -328,7 +391,7 @@ describe('terminal redesign canonical facts', () => {
         null,
       ],
       [
-        'ZUP Innovation (Itaú Unibanco)',
+        'Zup Innovation (Itaú Unibanco)',
         'Software Engineer, Frontend',
         '2020-04',
         '2021-01',
@@ -382,7 +445,7 @@ describe('terminal redesign canonical facts', () => {
     expect(JSON.stringify(raylu)).toContain('TS 5');
     expect(JSON.stringify(raylu)).not.toMatch(/Next(?:\.js)? 15|React 19/i);
     const service = projects.find((project) => project.name === 'SERVICE_OPS_CONSOLE');
-    expect(service?.company).toBe('Canon Medical Systems');
+    expect(service?.company).toBe('Canon Medical Systems Brazil');
     expect(service?.description).toContain('service orders');
     expect(service?.description).toContain('specialist scheduling');
     expect(service?.description).toContain('field visits');

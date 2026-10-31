@@ -17,13 +17,7 @@
 
   @media (min-width: 768px) {
     .nojs-bar {
-      margin-top: var(--rail-top);
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .nojs-bar {
-      margin-left: var(--rail-collapsed-width);
+      margin-top: var(--topbar-height);
     }
   }
 
