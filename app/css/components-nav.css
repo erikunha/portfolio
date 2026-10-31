@@ -367,6 +367,14 @@
     font-weight: 700;
   }
 
+  @media (max-width: 359.98px) {
+    .dock > a,
+    .dock > button {
+      letter-spacing: 0.04em;
+      padding-inline: 2px;
+    }
+  }
+
   .dock svg {
     width: 18px;
     height: 18px;

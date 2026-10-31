@@ -10,7 +10,7 @@ export function ShellSection() {
       id="sec-shell"
       header="./EXEC INTERACTIVE_SHELL"
       mobileHeader="/BIN/SH · INTERACTIVE"
-      srLabel={SECTION_LABELS['sec-shell']}
+      name={SECTION_LABELS['sec-shell']}
       icon={<IconShell />}
     >
       <ErrorBoundary>

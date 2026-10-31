@@ -24,4 +24,13 @@ test.describe('404 route', () => {
     await page.goto(MISSING_ROUTE);
     await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
   });
+  test('suggested pages read as links, not plain text', async ({ page }) => {
+    await page.goto(MISSING_ROUTE);
+    const links = page.getByRole('navigation', { name: 'Suggested pages' }).getByRole('link');
+    expect(await links.count()).toBeGreaterThan(0);
+    for (const link of await links.all()) {
+      const decoration = await link.evaluate((el) => getComputedStyle(el).textDecorationLine);
+      expect(decoration, 'suggested link is underlined').toContain('underline');
+    }
+  });
 });

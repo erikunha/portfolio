@@ -303,11 +303,6 @@
   }
 
   @media (min-width: 768px) {
-    #sec-projects > header h2 > .sr-only,
-    #sec-live-metrics > header h2 > .sr-only {
-      font-size: var(--text-2xl);
-    }
-
     #sec-projects > .module-body-content,
     #sec-live-metrics > .module-body-content {
       padding: var(--spacing-4);
