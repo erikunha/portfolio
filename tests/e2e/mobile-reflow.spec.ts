@@ -75,3 +75,13 @@ test.describe('mobile reflow: side-by-side groups stack below the tablet breakpo
     });
   }
 });
+
+test('dock items keep one height at 320 so no label wraps', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto('/');
+  const heights = await page
+    .locator('.dock > a, .dock > button')
+    .evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().height)));
+  expect(heights.length).toBeGreaterThan(1);
+  expect(new Set(heights).size, `dock item heights ${heights.join(',')}`).toBe(1);
+});
