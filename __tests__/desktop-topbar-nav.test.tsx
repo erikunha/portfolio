@@ -1,7 +1,13 @@
 import { act, createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SectionNavigationProvider } from '@/components/responsive/SectionNavigation';
-import { NAV_VOCABULARY, TOPBAR_MOTION_LABEL, TOPBAR_NAV } from '@/content/nav';
+import {
+  HIRE_ACCESSIBLE_NAME,
+  HIRE_SHORT_LABEL,
+  NAV_VOCABULARY,
+  TOPBAR_MOTION_LABEL,
+  TOPBAR_NAV,
+} from '@/content/nav';
 import { NAVIGATION } from '@/content/navigation';
 import { topbarChrome } from '@/content/terminal-chrome';
 import { type MountedClient, mountClient } from './helpers/render';
@@ -64,7 +70,7 @@ describe('DesktopTopbar', () => {
     mounted = await renderTopbar();
     const nav = mounted.container.querySelector('nav[aria-label="Site navigation"]');
     const labels = [...(nav?.querySelectorAll('a') ?? [])].map((link) =>
-      (link.textContent ?? '').replace(NAVIGATION.copy.newTabSuffix, ''),
+      (link.textContent ?? '').trim(),
     );
 
     expect(labels).toEqual([
@@ -74,7 +80,7 @@ describe('DesktopTopbar', () => {
       NAV_VOCABULARY.contact,
       NAV_VOCABULARY.designSystem,
       'VIEW_CV',
-      NAV_VOCABULARY.hire,
+      HIRE_SHORT_LABEL,
     ]);
   });
 
@@ -125,16 +131,14 @@ describe('DesktopTopbar', () => {
   it('keeps the hire CTA on LinkedIn and names the new tab for assistive tech', async () => {
     mounted = await renderTopbar();
     const hire = [...mounted.container.querySelectorAll('a')].find((link) =>
-      link.textContent?.startsWith(NAV_VOCABULARY.hire),
+      link.textContent?.startsWith(HIRE_SHORT_LABEL),
     );
 
     expect(hire?.getAttribute('href')).toBe('https://www.linkedin.com/in/erikunha/');
     expect(hire?.getAttribute('target')).toBe('_blank');
     expect(hire?.getAttribute('rel')).toContain('noopener');
-    expect(hire?.textContent).toContain(NAVIGATION.copy.newTabSuffix);
-    expect(hire?.hasAttribute('aria-label'), 'the visible label stays in the accessible name').toBe(
-      false,
-    );
+    expect(hire?.textContent?.trim()).toBe(HIRE_SHORT_LABEL);
+    expect(hire?.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME);
   });
 
   it('keeps the brand badge on the row at every desktop width', async () => {

@@ -85,6 +85,7 @@ const SiteLinkSchema = z.object({
   index: NavTextSchema,
   href: z.string().regex(/^(\/|https:\/\/)\S+$/),
   external: z.boolean(),
+  accessibleName: NavTextSchema.optional(),
 });
 
 const NavigationCopySchema = z.object({
@@ -97,7 +98,6 @@ const NavigationCopySchema = z.object({
   dockLabel: NavTextSchema,
   positionLabel: NavTextSchema,
   menuLabelPrefix: NavTextSchema,
-  newTabSuffix: z.string().min(MIN_SECTION_TEXT_LENGTH),
   searchLabel: NavTextSchema,
   searchShortcutApple: NavTextSchema,
   searchShortcutOther: NavTextSchema,

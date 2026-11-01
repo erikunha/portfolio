@@ -1,3 +1,4 @@
+import { HIRE_ACCESSIBLE_NAME, NAV_VOCABULARY } from './nav';
 import { profile } from './profile';
 import { HeroContentSchema } from './schemas';
 import { social } from './social';
@@ -11,9 +12,9 @@ export const heroContent = HeroContentSchema.parse({
   languageLabel: 'LANG:',
   statsLabel: 'Impact at scale',
   hire: {
-    label: 'HIRE_ON_LINKEDIN ↗',
+    label: NAV_VOCABULARY.hire,
     href: social.linkedin,
-    accessibleLabel: 'Hire on LinkedIn, opens in a new tab',
+    accessibleLabel: HIRE_ACCESSIBLE_NAME,
   },
   actions: [
     ...profile.actions,

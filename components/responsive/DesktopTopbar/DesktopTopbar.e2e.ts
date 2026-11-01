@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { HIRE_ACCESSIBLE_NAME, HIRE_SHORT_LABEL } from '@/content/nav';
 
 test.use({ viewport: { width: 1280, height: 720 } });
 
@@ -13,17 +14,13 @@ test.describe('DesktopTopbar — navigation', () => {
     await page.goto('/');
     const nav = page.getByRole('navigation', { name: 'Site navigation' });
 
-    for (const label of [
-      'ABOUT',
-      'WORK',
-      'CAREER',
-      'CONTACT',
-      'DESIGN_SYSTEM',
-      'VIEW_CV',
-      'HIRE_ON_LINKEDIN',
-    ]) {
+    for (const label of ['ABOUT', 'WORK', 'CAREER', 'CONTACT', 'DESIGN_SYSTEM', 'VIEW_CV']) {
       await expect(nav.getByRole('link', { name: label })).toBeVisible();
     }
+
+    const hire = nav.getByRole('link', { name: HIRE_ACCESSIBLE_NAME });
+    await expect(hire).toBeVisible();
+    await expect(hire).toHaveText(HIRE_SHORT_LABEL);
   });
 
   test('design system link navigates to /design-system', async ({ page }) => {
@@ -65,7 +62,7 @@ test.describe('DesktopTopbar — navigation', () => {
     await page.goto('/');
     const hire = page
       .getByRole('navigation', { name: 'Site navigation' })
-      .getByRole('link', { name: 'HIRE_ON_LINKEDIN' });
+      .getByRole('link', { name: HIRE_ACCESSIBLE_NAME });
 
     await expect(hire).toHaveAttribute('href', /linkedin\.com\/in\/erikunha/);
     await expect(hire).toHaveAttribute('target', '_blank');

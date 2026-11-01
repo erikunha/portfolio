@@ -97,3 +97,43 @@ export function parseIsoDuration(iso: string): string | null {
   if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
   return `${m}:${pad(s)}`;
 }
+
+export type PlaylistItemsPayload = {
+  items?: Array<{
+    snippet?: {
+      title?: string;
+      publishedAt?: string;
+      description?: string;
+      resourceId?: { videoId?: string };
+    };
+    status?: { privacyStatus?: string };
+  }>;
+};
+
+const PUBLIC_PRIVACY_STATUS = 'public';
+
+export function parsePlaylistItems(
+  payload: PlaylistItemsPayload,
+  limit = Number.POSITIVE_INFINITY,
+): FeedVideo[] {
+  const videos: FeedVideo[] = [];
+  for (const item of payload.items ?? []) {
+    if (videos.length >= limit) break;
+    if (item.status?.privacyStatus !== PUBLIC_PRIVACY_STATUS) continue;
+    const id = item.snippet?.resourceId?.videoId;
+    const title = item.snippet?.title;
+    const publishedAt = item.snippet?.publishedAt;
+    if (!id || !title || !publishedAt) continue;
+
+    const video: FeedVideo = {
+      id,
+      title,
+      url: `https://www.youtube.com/watch?v=${id}`,
+      thumbnailUrl: `${YTIMG_CANONICAL_ORIGIN}vi/${id}/hqdefault.jpg`,
+      publishedAt,
+    };
+    if (item.snippet?.description) video.description = item.snippet.description;
+    videos.push(video);
+  }
+  return videos;
+}

@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { HIRE_ACCESSIBLE_NAME } from '@/content/nav';
 import { NAVIGATION } from '@/content/navigation';
 import { SECTION_REGISTRY } from '@/content/section-registry';
 import {
@@ -306,10 +307,10 @@ describe('SectionNavigation', () => {
     const foot = document.querySelector('.menu-foot') as HTMLElement;
     const ds = within(foot).getByRole('link', { name: 'DESIGN_SYSTEM' });
     expect(ds.getAttribute('href')).toBe('/design-system');
-    const linkedin = within(foot).getByRole('link', { name: /LinkedIn/ });
+    const linkedin = within(foot).getByRole('link', { name: HIRE_ACCESSIBLE_NAME });
     expect(linkedin.getAttribute('target')).toBe('_blank');
     expect(linkedin.getAttribute('rel')).toContain('noopener');
-    expect(linkedin.textContent).toContain('(opens in a new tab)');
+    expect(linkedin.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME);
   });
 
   it('lists the reading views and the design system in the drawer foot', () => {
@@ -325,7 +326,7 @@ describe('SectionNavigation', () => {
     ]);
     expect(
       [...foot.querySelectorAll('a')].map((link) => link.querySelector('.nav-label')?.textContent),
-    ).toEqual(['VIEW_CV', '30S_SUMMARY', 'DESIGN_SYSTEM', 'LinkedIn (opens in a new tab)']);
+    ).toEqual(['VIEW_CV', '30S_SUMMARY', 'DESIGN_SYSTEM', 'LinkedIn']);
   });
 
   it('counts the destinations in the drawer head', () => {
