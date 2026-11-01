@@ -6,7 +6,7 @@ check that proves it was followed. A new rule is appended when a finding or a re
 a mistake that can repeat. Rules are never renumbered; a retired rule keeps its number and says
 why it was retired.
 
-The review prompt that applies these rules to a diff is `docs/handbook/review-standard.md`.
+The prompt for a manual or agent review that applies these rules to a diff is `docs/handbook/review-standard.md` (the claude-review bot uses `.github/claude-review-prompt.md`).
 
 ## Rules
 

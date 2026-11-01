@@ -21,7 +21,7 @@ A change is done when `pnpm ci:local` passes and the e2e specs for every touched
 ## Rules
 
 - Follow every numbered rule in `docs/handbook/lessons.md`.
-- Review diffs with `docs/handbook/review-standard.md` as the prompt.
+- Review diffs with `docs/handbook/review-standard.md` as the prompt (the claude-review bot uses `.github/claude-review-prompt.md`).
 - Content lives in `content/*.ts`, tokens in `app/css/theme.css`, client islands are
   `*.client.tsx`. No magic values, no prose comments in source, no em or en dash.
 - Stage specific files (`git add <file>`), never `git add .`.

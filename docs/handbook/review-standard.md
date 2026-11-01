@@ -12,7 +12,7 @@ File types, most frequent first: workflow or script; markdown doc; test; tsx com
 
 ## Markdown doc and DECISIONS
 
-These two file types carry 124 findings. Docs drift because the code moved and the doc did not.
+Docs drift because the code moved and the doc did not.
 
 **Rule 1. Never write an exact count, an exact list, or a literal transcription into a doc.**
 Counts age on every PR. A number nobody recomputes is a lie by next month.
@@ -54,7 +54,7 @@ Examples:
 
 ## Workflow or script
 
-108 findings, and the largest single cluster of security findings. Scripts and CI are where a small mistake becomes an invisible hole.
+The largest single cluster of security findings. Scripts and CI are where a small mistake becomes an invisible hole.
 
 **Rule 6. A guard that cannot prove the thing it guards must fail closed.**
 Never let a missing input, a null value, an unreadable file or a parse error turn into a skip. Fail the check instead.
@@ -105,7 +105,7 @@ Examples:
 
 ## Test
 
-92 findings. Almost all of them are tests that pass for the wrong reason.
+Almost all findings here are tests that pass for the wrong reason.
 
 **Rule 12. A test must fail when the behaviour it claims to cover is broken.**
 Before writing: state the sentence the test proves. Then break the code and confirm the test fails. If it still passes, the test is worthless.
@@ -141,7 +141,7 @@ Examples:
 
 ## TSX component
 
-66 findings, weighted toward accessibility and duplicated constants.
+Findings here weigh toward accessibility and duplicated constants.
 
 **Rule 16. Every interactive element needs a name that a screen reader can read.**
 An icon only button needs an `aria-label`. A disabled control needs the native `disabled` attribute, not only `aria-disabled`.
@@ -183,7 +183,7 @@ Examples:
 
 ## Content ts
 
-55 findings, mostly facts that must agree across files.
+Mostly facts that must agree across files.
 
 **Rule 21. A fact lives in exactly one content module.**
 The employer, the role, the company, the education and the links are written once and read from everywhere.
@@ -212,8 +212,6 @@ Examples:
 
 ## CSS
 
-30 findings.
-
 **Rule 24. Every token comes from the theme, and every class has a consumer.**
 Before writing: use the existing token names, and check that a new class name is actually used by a component.
 Check: `pnpm lint:contrast` and a grep for each new class selector.
@@ -239,7 +237,7 @@ Examples:
 
 ## Other file
 
-61 findings: server routes, settings, hooks config and agent files.
+Server routes, settings, hooks config and agent files.
 
 **Rule 27. A new API route uses the standard handler and the standard envelope.**
 Before writing: a route that returns a bare `Response.json` is wrong even when the payload is right.
