@@ -398,6 +398,9 @@ describe('claimsFix', () => {
     'Resolved in abc1234',
     'Updated in abc1234',
     'Not a duplicate, but fixed now.',
+    'No need to worry since this is already fixed.',
+    'Nothing else changed because the guard is now patched in abc1234.',
+    'Not related when you look closely; it is resolved.',
     'No regression here; if anything, the guard is now fixed.',
   ])('counts %j as a fix claim', (body) => {
     expect(
