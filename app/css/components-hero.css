@@ -149,6 +149,30 @@
     }
   }
 
+  @media (min-width: 768px) and (max-width: 1023.98px) {
+    .hero-desktop {
+      flex-direction: column;
+    }
+
+    .hero-terminal {
+      flex: 0 0 auto;
+      width: 100%;
+    }
+
+    .hero-terminal .hero-boot-desktop {
+      --hero-boot-lines: 11;
+      position: static;
+      min-height: calc(var(--hero-boot-lines) * 1lh + var(--spacing-4) * 2);
+      padding: var(--spacing-4) var(--spacing-6);
+    }
+
+    .hero-bio {
+      flex: 0 0 auto;
+      border-right: 0;
+      border-bottom: var(--border-width) dashed var(--color-primary-subtle);
+    }
+  }
+
   @media (min-width: 1024px) {
     .hero-actions {
       grid-template-columns: repeat(2, minmax(0, 1fr));
