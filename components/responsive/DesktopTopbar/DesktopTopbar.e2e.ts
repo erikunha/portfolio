@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { HIRE_ACCESSIBLE_NAME } from '@/content/nav';
+import { HIRE_ACCESSIBLE_NAME, HIRE_SHORT_LABEL } from '@/content/nav';
 
 test.use({ viewport: { width: 1280, height: 720 } });
 
@@ -20,7 +20,7 @@ test.describe('DesktopTopbar — navigation', () => {
 
     const hire = nav.getByRole('link', { name: HIRE_ACCESSIBLE_NAME });
     await expect(hire).toBeVisible();
-    await expect(hire).toHaveText('HIRE_ON_LINKEDIN ↗');
+    await expect(hire).toHaveText(HIRE_SHORT_LABEL);
   });
 
   test('design system link navigates to /design-system', async ({ page }) => {
