@@ -21,6 +21,7 @@ import {
 import { SECTION_NAV } from '@/content/section-registry';
 import { NavItem } from '@/design-system';
 import { cn } from '@/lib/cn';
+import { isolate } from '@/lib/dom/isolate';
 import { applyMotion, readMotion } from '@/lib/motion';
 
 const MAIN_ID = 'main-content';
@@ -99,25 +100,6 @@ function isRendered(element: HTMLElement): boolean {
     if (style.display === 'none' || style.visibility === 'hidden') return false;
   }
   return true;
-}
-
-function isolate(root: HTMLElement): () => void {
-  const isolated: Element[] = [];
-  for (
-    let node: HTMLElement | null = root;
-    node && node !== document.body;
-    node = node.parentElement
-  ) {
-    for (const sibling of node.parentElement?.children ?? []) {
-      if (sibling !== node && !sibling.hasAttribute('inert')) {
-        sibling.setAttribute('inert', '');
-        isolated.push(sibling);
-      }
-    }
-  }
-  return () => {
-    for (const element of isolated) element.removeAttribute('inert');
-  };
 }
 
 export function SectionNavigationProvider({ children }: { children: ReactNode }) {
