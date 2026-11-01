@@ -699,10 +699,11 @@ jobs:
       - name: Self-test - gitleaks fires on the fixture
         run: node scripts/check-gitleaks-fixture.mjs
 
-      - name: Scan the repository and its history
+      - name: Scan the history reachable from the checked-out commit
         run: |
           set +e
           gitleaks git . --no-banner --redact --config .gitleaks.toml \
+            --log-opts="--full-history HEAD" \
             --report-format sarif --report-path gitleaks.sarif
           status=$?
           set -e
