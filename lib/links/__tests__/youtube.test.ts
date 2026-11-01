@@ -115,3 +115,49 @@ describe('parseIsoDuration', () => {
     expect(parseIsoDuration('14:32')).toBeNull();
   });
 });
+
+describe('parsePlaylistItems', () => {
+  const item = (id: string, privacyStatus = 'public') => ({
+    snippet: {
+      title: `Video ${id}`,
+      publishedAt: '2026-10-01T12:00:00Z',
+      description: `About ${id}`,
+      resourceId: { videoId: id },
+    },
+    status: { privacyStatus },
+  });
+
+  it('maps upload playlist items to feed videos with canonical urls and thumbnails', async () => {
+    const { parsePlaylistItems } = await import('@/lib/links/youtube');
+    expect(parsePlaylistItems({ items: [item('abc')] })).toEqual([
+      {
+        id: 'abc',
+        title: 'Video abc',
+        url: 'https://www.youtube.com/watch?v=abc',
+        thumbnailUrl: 'https://i.ytimg.com/vi/abc/hqdefault.jpg',
+        publishedAt: '2026-10-01T12:00:00Z',
+        description: 'About abc',
+      },
+    ]);
+  });
+
+  it('skips private, unlisted and malformed items and honours the limit', async () => {
+    const { parsePlaylistItems } = await import('@/lib/links/youtube');
+    const payload = {
+      items: [
+        item('a'),
+        item('p', 'private'),
+        item('u', 'unlisted'),
+        { snippet: {} },
+        item('b'),
+        item('c'),
+      ],
+    };
+    expect(parsePlaylistItems(payload, 2).map((v) => v.id)).toEqual(['a', 'b']);
+  });
+
+  it('returns an empty list for a payload with no items', async () => {
+    const { parsePlaylistItems } = await import('@/lib/links/youtube');
+    expect(parsePlaylistItems({})).toEqual([]);
+  });
+});
