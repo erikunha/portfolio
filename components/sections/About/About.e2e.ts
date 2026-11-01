@@ -18,9 +18,13 @@ test.describe('About', () => {
       'the decorative code excerpt carries no copy control',
     ).toHaveCount(0);
 
-    const link = panel.getByRole('link', { name: aboutContent.code.repoAccessibleLabel });
+    const link = panel.getByRole('link', {
+      name: `${aboutContent.code.repoLabel} ${aboutContent.code.repoNewTabNote}`,
+      exact: true,
+    });
     await expect(link).toBeVisible();
-    await expect(link).toHaveText(aboutContent.code.repoLabel);
+    await expect(link).toContainText(aboutContent.code.repoLabel);
+    await expect(link, 'the name comes from the content').not.toHaveAttribute('aria-label');
 
     const header = await panel.locator('.ab-ph').evaluate((element) => {
       const children = [...element.children];
@@ -43,7 +47,8 @@ test.describe('About', () => {
     await page.setViewportSize(DESKTOP);
     await page.goto('/');
     const link = page.locator('.ab-code').getByRole('link', {
-      name: aboutContent.code.repoAccessibleLabel,
+      name: `${aboutContent.code.repoLabel} ${aboutContent.code.repoNewTabNote}`,
+      exact: true,
     });
     await expect(link).toHaveAttribute('href', aboutContent.code.repoHref);
     await expect(link).toHaveAttribute('target', '_blank');

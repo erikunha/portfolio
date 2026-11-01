@@ -214,8 +214,9 @@ export const AboutContentSchema = z.object({
     title: z.string().min(1),
     label: z.string().min(1),
     repoLabel: z.string().min(1),
+    repoGlyph: z.string().min(1),
     repoHref: z.url(),
-    repoAccessibleLabel: z.string().min(1),
+    repoNewTabNote: z.string().min(1),
     tokens: z
       .array(
         z.object({ id: z.number().int().nonnegative(), text: z.string(), className: z.string() }),

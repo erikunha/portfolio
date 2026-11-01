@@ -137,9 +137,9 @@ export function About() {
                   href={c.code.repoHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={c.code.repoAccessibleLabel}
                 >
-                  {c.code.repoLabel}
+                  {c.code.repoLabel} <span aria-hidden="true">{c.code.repoGlyph}</span>
+                  <span className="sr-only"> {c.code.repoNewTabNote}</span>
                 </a>
               }
             >

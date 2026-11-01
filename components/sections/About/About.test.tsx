@@ -77,8 +77,13 @@ describe('About r106 composition', () => {
     const panel = screen
       .getByRole('heading', { name: '$ cat src/lib/with-retry.ts' })
       .closest('.ab-panel');
-    const link = screen.getByRole('link', { name: aboutContent.code.repoAccessibleLabel });
-    expect(link.textContent).toBe(aboutContent.code.repoLabel);
+    const link = screen.getByRole('link', {
+      name: `${aboutContent.code.repoLabel} ${aboutContent.code.repoNewTabNote}`,
+    });
+    expect(
+      link.getAttribute('aria-label'),
+      'WCAG 2.5.3: the name comes from the visible text',
+    ).toBeNull();
     expect(
       panel?.querySelector('.ab-ph')?.contains(link),
       'the repo link belongs in the panel header, right of the title',
