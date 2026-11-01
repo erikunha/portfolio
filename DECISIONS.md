@@ -2,13 +2,6 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
-## 2026-10-29 — the project no longer pins a Claude Code permission mode
-
-- **2026-10-29** · **The project baseline no longer pins `defaultMode` and inherits the user's global permission mode.** The owner runs one global mode across repositories; a project pin overrode it. Keeping `acceptEdits` pinned per project was rejected. _Reversible: restore `"defaultMode": "acceptEdits"` in `.claude/settings.json`._
-
-## 2026-10-28 — relative video ages use the cached feed timestamp
-
-- **2026-10-28** · `/links` relative video ages use the timestamp captured with the cached channel feed. The existing explicit `cacheLife` refreshes data and reference time together, keeping both locale routes and their priority thumbnail prerendered under Cache Components. Labels describe the cached snapshot, with hourly background revalidation and one-day expiry. Request-time `connection()` would delay this content beyond the static shell. _Reversible: move only relative labels behind Suspense with `connection()` if request-time freshness becomes necessary._
 ## 2026-11-01 — the /links relative label is anchored to the feed's fetchedAt
 
 - **2026-11-01** · **`formatRelative` requires `now`, and the feed stamps `fetchedAt` inside the cached function after its network reads.** Main broke with no new commit: the YouTube channel published its first video, so `getChannelFeed` stopped returning the empty feed and `ChannelCard` began calling `formatRelative`, whose `now = new Date()` default Next 16 prerender rejects (`next-prerender-current-time`) because it runs before any uncached read. The label is now deterministic per cache entry. _Reversible: restore the `now` default and drop `fetchedAt`._
@@ -16,6 +9,14 @@ ADR-lite running log. One bullet per decision · date · reversibility note.
 ## 2026-11-01 — the secret scan reads only history reachable from the checked-out commit
 
 - **2026-11-01** · **`gitleaks git` runs with `--log-opts="--full-history HEAD"`.** `actions/checkout` with `fetch-depth: 0` fetches every remote branch and `gitleaks git` defaults to all refs, so a PR into main scanned `feat/terminal-redesign` commits whose `p95LatencyMs` metric keys match generic-api-key. Scoping to HEAD scans exactly what the PR would merge; each branch is still scanned on its own PR run. No allowlist entry was added. _Reversible: drop `--log-opts`._
+
+## 2026-10-29 — the project no longer pins a Claude Code permission mode
+
+- **2026-10-29** · **The project baseline no longer pins `defaultMode` and inherits the user's global permission mode.** The owner runs one global mode across repositories; a project pin overrode it. Keeping `acceptEdits` pinned per project was rejected. _Reversible: restore `"defaultMode": "acceptEdits"` in `.claude/settings.json`._
+
+## 2026-10-28 — relative video ages use the cached feed timestamp
+
+- **2026-10-28** · `/links` relative video ages use the timestamp captured with the cached channel feed. The existing explicit `cacheLife` refreshes data and reference time together, keeping both locale routes and their priority thumbnail prerendered under Cache Components. Labels describe the cached snapshot, with hourly background revalidation and one-day expiry. Request-time `connection()` would delay this content beyond the static shell. _Reversible: move only relative labels behind Suspense with `connection()` if request-time freshness becomes necessary._
 
 ## 2026-08-30 — site-wide pt-BR/EN is in scope, and the shape it has to take
 
