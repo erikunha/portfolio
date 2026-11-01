@@ -3,6 +3,8 @@ import { defineConfig, devices } from 'playwright/test';
 const CROSS_BROWSER_SPECS =
   /tests\/(e2e\/(cross-cutting|observability-smoke|design-system-pages|links|contact-delivery|guitar-mobile|mixer-mobile|reading-views|error-states|no-js|mobile-reflow|hero-layout|type-scale|shell-input-states)|visual\/visual)\.spec\.ts$/;
 
+const DEFAULT_BASE_URL = 'http://localhost:3000';
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
@@ -14,7 +16,7 @@ export default defineConfig({
     ...(process.env.ARGOS_TOKEN ? [['@argos-ci/playwright/reporter'] as [string]] : []),
   ],
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: process.env.E2E_BASE_URL ?? DEFAULT_BASE_URL,
     trace: 'on-first-retry',
   },
   expect: {
