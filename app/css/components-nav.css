@@ -210,7 +210,7 @@
   }
 
   .search-trigger-shortcut[data-keyboard="other"] > [data-platform="other"] {
-    visibility: visible;
+    visibility: inherit;
   }
 
   .topbar-search {
