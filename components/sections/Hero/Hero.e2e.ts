@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, type Locator, type Page, test } from '@playwright/test';
 import { heroContent } from '@/content/hero';
 import { profile } from '@/content/profile';
 
@@ -125,4 +125,104 @@ test.describe('Hero groups reflow by viewport', () => {
       page.locator('.hero-frame:visible [data-testid="hero-ctas"] a:has-text("VIEW_CV")'),
     ).toBeVisible();
   });
+});
+
+const METADATA_MOBILE_WIDTHS = [320, 390];
+const METADATA_WIDE_WIDTHS = [768, 1280];
+const METADATA_VIEWPORT_HEIGHT = 900;
+
+const WIDE_METADATA_ROWS: Record<number, string[]> = {
+  768: ['location + availability', 'employer', 'domain', 'language'],
+  1280: ['location + availability + employer', 'domain + language'],
+};
+
+const metadataContext = (page: Page) => page.locator('.hero-frame:visible .hero-context');
+
+const metadataFact = (page: Page, text: string) =>
+  metadataContext(page).locator('span').filter({ hasText: text }).first();
+
+const metadataItem = (page: Page, text: string) =>
+  metadataContext(page).locator('span').filter({ hasText: text }).last();
+
+async function topOf(locator: Locator): Promise<number> {
+  return locator.evaluate((node) => Math.round(node.getBoundingClientRect().top));
+}
+
+async function renderedLines(locator: Locator): Promise<string[]> {
+  return locator.evaluate((node) => {
+    const lines = new Map<number, string>();
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    for (let current = walker.nextNode(); current; current = walker.nextNode()) {
+      const text = current.textContent ?? '';
+      for (let index = 0; index < text.length; index += 1) {
+        const range = document.createRange();
+        range.setStart(current, index);
+        range.setEnd(current, index + 1);
+        const rect = range.getClientRects()[0];
+        if (!rect) continue;
+        const top = Math.round(rect.top);
+        lines.set(top, `${lines.get(top) ?? ''}${text[index]}`);
+      }
+    }
+    return [...lines.entries()]
+      .sort(([first], [second]) => first - second)
+      .map(([, text]) => text.replace(/\s+/g, ' ').trim())
+      .filter((text) => text.length > 0);
+  });
+}
+
+test.describe('Hero metadata facts', () => {
+  for (const width of METADATA_MOBILE_WIDTHS) {
+    test(`give every fact its own line at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: METADATA_VIEWPORT_HEIGHT });
+      await page.goto('/');
+
+      const availabilityTop = await topOf(metadataItem(page, profile.availability));
+      const employerTop = await topOf(metadataFact(page, heroContent.employerLabel));
+      expect(
+        employerTop,
+        'the NOW fact starts on its own line, below the availability fact',
+      ).toBeGreaterThan(availabilityTop);
+
+      const facts: [string, string][] = [
+        ['location', heroContent.locationLabel],
+        ['employer', heroContent.employerLabel],
+        ['domain', profile.currentEmployer.context],
+        ['language', heroContent.languageLabel],
+      ];
+      for (const [name, text] of facts) {
+        const lines = await renderedLines(metadataFact(page, text));
+        expect(lines.length, `the ${name} fact renders at least one line`).toBeGreaterThan(0);
+        const lastLine = lines[lines.length - 1] ?? '';
+        expect(
+          lastLine.split(' ').filter(Boolean).length,
+          `the last line of the ${name} fact holds more than one word: "${lastLine}"`,
+        ).toBeGreaterThan(1);
+      }
+    });
+  }
+
+  for (const width of METADATA_WIDE_WIDTHS) {
+    test(`keep the wide fact rows at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: METADATA_VIEWPORT_HEIGHT });
+      await page.goto('/');
+
+      const rows = new Map<number, string[]>();
+      const facts: [string, Locator][] = [
+        ['location', metadataFact(page, heroContent.locationLabel)],
+        ['availability', metadataItem(page, profile.availability)],
+        ['employer', metadataFact(page, heroContent.employerLabel)],
+        ['domain', metadataFact(page, profile.currentEmployer.context)],
+        ['language', metadataFact(page, heroContent.languageLabel)],
+      ];
+      for (const [name, locator] of facts) {
+        const top = await topOf(locator);
+        rows.set(top, [...(rows.get(top) ?? []), name]);
+      }
+      const shape = [...rows.entries()]
+        .sort(([first], [second]) => first - second)
+        .map(([, names]) => names.join(' + '));
+      expect(shape, 'the wide hero keeps the fact rows it had').toEqual(WIDE_METADATA_ROWS[width]);
+    });
+  }
 });

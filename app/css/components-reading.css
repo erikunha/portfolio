@@ -139,6 +139,16 @@
     font-weight: 700;
   }
 
+  .reading-entry h3[data-type-reveal] {
+    --reading-entry-title-scale: 4.6vw;
+    --reading-entry-title-size: clamp(
+      var(--text-xs),
+      var(--reading-entry-title-scale),
+      var(--text-base)
+    );
+    font-size: var(--reading-entry-title-size);
+  }
+
   .reading-entry ul {
     margin: var(--spacing-2) 0 0;
     padding-left: var(--spacing-4);

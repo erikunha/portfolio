@@ -134,7 +134,7 @@ test.describe('layout tokens', () => {
   test('module headings step from 16px below 768 to 18px from 768, bold caps', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
-    const heading = page.locator('section > header h2:has(.module-name)').first();
+    const heading = page.locator('.module-heading').first();
     const read = () =>
       heading.evaluate((el) => {
         const s = getComputedStyle(el);
