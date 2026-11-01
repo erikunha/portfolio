@@ -41,11 +41,13 @@ export type EvalResult =
 export type GhExec = (args: string[]) => Promise<string>;
 
 const CLAUDE_BOT_LOGINS = new Set(['claude[bot]', 'claude']);
-const FIX_CLAIM_PATTERN =
-  /\b(?:fixed|fixes|addressed|implemented|patched|done|changed|resolved|updated)\s+(?:(?:in|by|with|via)\b|\[?\x60?[0-9a-f]{7,40}\b)/i;
+const FIX_CLAIM_WORD_PATTERN =
+  /\b(?:fixed|fixes|addressed|implemented|patched|done|changed|resolved|updated)\b/gi;
+const ATTRIBUTIVE_PREFIX_PATTERN = /\b(?:as|the|a|an|this|that|these|those)\s+$/i;
 const NEGATION_PATTERN =
   /(n't|\b(?:no|not|never|none|nothing|neither|nor|without|unable|unnecessary|unneeded)\b)/i;
-const CLAUSE_SPLIT_PATTERN = /[.!?;\n]+|,\s+/;
+const DEFERRAL_PATTERN = /\b(?:will|once|until|if|would|yet)\b/i;
+const CLAUSE_SPLIT_PATTERN = /[.!?;:\n]+/;
 const FULL_SHA_LENGTH = 40;
 const MIN_SHORT_SHA_LENGTH = 7;
 const COMMIT_LINK_PATTERN = new RegExp(
@@ -278,13 +280,14 @@ export function claimsFix(body: string): boolean {
     .split(CLAUSE_SPLIT_PATTERN)
     .map((clause) => clause.trim())
     .filter((clause) => clause.length > 0)
-    .some((clause) => {
-      const claim = FIX_CLAIM_PATTERN.exec(clause);
-      if (!claim) return false;
-      const negation = NEGATION_PATTERN.exec(clause);
-      const negatedBeforeClaim = negation !== null && negation.index < claim.index;
-      return !negatedBeforeClaim;
-    });
+    .some((clause) =>
+      Array.from(clause.matchAll(FIX_CLAIM_WORD_PATTERN)).some((claim) => {
+        const before = clause.slice(0, claim.index);
+        if (ATTRIBUTIVE_PREFIX_PATTERN.test(before)) return false;
+        if (NEGATION_PATTERN.test(before)) return false;
+        return !DEFERRAL_PATTERN.test(before);
+      }),
+    );
 }
 
 async function isAncestorOfHead(opts: {

@@ -373,6 +373,9 @@ describe('claimsFix', () => {
     'Not a bug; the current behavior is correct as implemented.',
     'Not fixed yet, will follow up.',
     'The addressed case is covered by the existing test.',
+    'Not done investigating this one yet, will update once resolved.',
+    'Will update once resolved.',
+    "won't fix: by design",
   ])('does not count %j as a fix claim', (body) => {
     expect(
       claimsFix(body),
@@ -387,9 +390,17 @@ describe('claimsFix', () => {
     'Addressed in abc1234',
     'Implemented with the new guard.',
     'Fixed abc1234',
+    'Fixed.',
+    'Done.',
+    'Verified and fixed.',
+    'This has been fixed.',
+    'Done in abc1234',
+    'Resolved in abc1234',
+    'Updated in abc1234',
   ])('counts %j as a fix claim', (body) => {
-    expect(claimsFix(body), 'A fix claim with a qualifier must still demand a commit link.').toBe(
-      true,
-    );
+    expect(
+      claimsFix(body),
+      'A clause that asserts the action (bare or qualified) is a fix claim and must demand a commit link; only attributive use (after as or a determiner), negation or a future marker before the word exempts it.',
+    ).toBe(true);
   });
 });
