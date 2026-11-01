@@ -42,7 +42,7 @@ export type GhExec = (args: string[]) => Promise<string>;
 
 const CLAUDE_BOT_LOGINS = new Set(['claude[bot]', 'claude']);
 const FIX_CLAIM_PATTERN =
-  /\b(?:fixed|fixes|addressed|implemented|patched|(?:done|changed|resolved|updated)\s+(?:in|by|with|via))\b/i;
+  /\b(?:fixed|fixes|addressed|implemented|patched|done|changed|resolved|updated)\s+(?:(?:in|by|with|via)\b|\[?\x60?[0-9a-f]{7,40}\b)/i;
 const NEGATION_PATTERN =
   /(n't|\b(?:no|not|never|none|nothing|neither|nor|without|unable|unnecessary|unneeded)\b)/i;
 const CLAUSE_SPLIT_PATTERN = /[.!?;\n]+|,\s+/;

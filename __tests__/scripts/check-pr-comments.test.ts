@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { evaluatePullRequest, type Thread } from '@/scripts/check-pr-comments';
+import { claimsFix, evaluatePullRequest, type Thread } from '@/scripts/check-pr-comments';
 
 const BOT_LOGIN = 'claude[bot]';
 const PR_NUMBER = 42;
@@ -365,5 +365,31 @@ describe('evaluatePullRequest', () => {
         'The owner rule scopes the requirement to claude-review threads. A human reviewer sets their own expectations, and holding their replies to a form the repo does not prescribe would be a gate inventing a rule.',
       ).toBe(true);
     });
+  });
+});
+
+describe('claimsFix', () => {
+  it.each([
+    'Not a bug; the current behavior is correct as implemented.',
+    'Not fixed yet, will follow up.',
+    'The addressed case is covered by the existing test.',
+  ])('does not count %j as a fix claim', (body) => {
+    expect(
+      claimsFix(body),
+      'A bare descriptive use of fixed/addressed/implemented claims no fix, so demanding a commit link for it blocks a legitimate reply.',
+    ).toBe(false);
+  });
+
+  it.each([
+    'This is addressed by the guard below, not a bug.',
+    'Fixed in abc1234',
+    'Patched in abc1234',
+    'Addressed in abc1234',
+    'Implemented with the new guard.',
+    'Fixed abc1234',
+  ])('counts %j as a fix claim', (body) => {
+    expect(claimsFix(body), 'A fix claim with a qualifier must still demand a commit link.').toBe(
+      true,
+    );
   });
 });
