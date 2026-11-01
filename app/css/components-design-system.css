@@ -246,6 +246,10 @@
     margin-bottom: var(--spacing-2);
   }
 
+  .ds-nav-home .ds-nav-item::before {
+    content: "\2190\00a0" / "";
+  }
+
   .ds-nav-item {
     display: flex;
     align-items: center;
@@ -354,9 +358,18 @@
     }
   }
 
-  @media (max-width: 1023px) {
+  @media (min-width: 768px) {
     .ds-sidebar {
-      display: none;
+      padding-block-start: var(--space-page-top);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .ds-sidebar {
+      min-width: 0;
+      padding: var(--spacing-3);
+      border-right: 0;
+      border-top: var(--border-width) solid var(--color-primary-border);
     }
 
     .site-bar-in {
@@ -374,7 +387,7 @@
     }
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: 768px) {
     .site-bar-menu,
     .site-scrim,
     .site-drawer {

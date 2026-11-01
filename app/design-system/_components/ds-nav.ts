@@ -5,8 +5,9 @@ const ROOT = '/design-system';
 
 export const DS_NAV_ID = 'ds-nav';
 export const DS_SKIP_LABEL = 'Skip to main content';
+export const DS_SKIP_NAV_LABEL = 'Skip to design system navigation';
 
-export const DS_HOME_LINK: NavLink = { href: '/', label: '← HOME' };
+export const DS_HOME_LINK: NavLink = { href: '/', label: 'HOME' };
 
 export const DS_NAV_GROUPS: readonly NavGroup[] = [
   {
@@ -36,7 +37,6 @@ export const DS_NAV_GROUPS: readonly NavGroup[] = [
       { href: `${ROOT}/primitives/button`, label: 'BUTTON' },
       { href: `${ROOT}/primitives/cmd-line`, label: 'CMD-LINE' },
       { href: `${ROOT}/primitives/copybutton`, label: 'COPYBUTTON' },
-      { href: `${ROOT}/primitives/dialog`, label: 'DIALOG' },
       { href: `${ROOT}/primitives/field`, label: 'FIELD' },
       { href: `${ROOT}/primitives/kbd-key`, label: 'KBD-KEY' },
       { href: `${ROOT}/primitives/stat-tile`, label: 'STAT-TILE' },

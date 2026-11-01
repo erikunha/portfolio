@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { DS_SKIP_LABEL } from './_components/ds-nav';
+import { DS_NAV_ID, DS_SKIP_LABEL, DS_SKIP_NAV_LABEL } from './_components/ds-nav';
 import { PagerNav, Sidebar, SiteBar } from './_components/Sidebar.client';
 
 export default function DesignSystemLayout({ children }: { children: ReactNode }) {
@@ -7,6 +7,9 @@ export default function DesignSystemLayout({ children }: { children: ReactNode }
     <>
       <a href="#main-content" className="skip-to-content">
         {DS_SKIP_LABEL}
+      </a>
+      <a href={`#${DS_NAV_ID}`} className="skip-to-content">
+        {DS_SKIP_NAV_LABEL}
       </a>
       <SiteBar />
       <div className="ds-layout flex flex-row-reverse justify-end min-h-screen max-w-[var(--measure-page)] mx-auto max-md:flex-col">

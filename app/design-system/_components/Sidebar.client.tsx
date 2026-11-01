@@ -16,11 +16,14 @@ import {
 import { Pager } from './Pager';
 
 function isCurrentPage(pathname: string, href: string): boolean {
-  if (href === '/design-system') {
-    return pathname === '/design-system' || pathname.startsWith('/design-system/');
-  }
   return pathname === href;
 }
+
+function isCurrentSection(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled])';
 
 type DsNavLinksProps = {
   currentPath: string;
@@ -73,6 +76,7 @@ export function SiteBar() {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
 
   const close = useCallback((refocusTrigger: boolean) => {
     setOpen(false);
@@ -83,7 +87,26 @@ export function SiteBar() {
     if (!open) return;
     closeRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close(true);
+      if (event.key === 'Escape') {
+        close(true);
+        return;
+      }
+      if (event.key !== 'Tab' || drawerRef.current === null) return;
+      const focusables = Array.from(
+        drawerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      );
+      const first = focusables.at(0);
+      const last = focusables.at(-1);
+      if (first === undefined || last === undefined) return;
+      const active = document.activeElement;
+      const inside = active instanceof Node && drawerRef.current.contains(active);
+      if (event.shiftKey && (active === first || !inside)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !inside)) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener('keydown', onKeyDown);
     document.body.style.overflow = 'hidden';
@@ -115,7 +138,7 @@ export function SiteBar() {
               <a
                 key={href}
                 href={href}
-                aria-current={isCurrentPage(pathname, href) ? 'page' : undefined}
+                aria-current={isCurrentSection(pathname, href) ? 'page' : undefined}
               >
                 {label}
               </a>
@@ -129,10 +152,12 @@ export function SiteBar() {
         aria-hidden="true"
       />
       <aside
+        ref={drawerRef}
         id={DS_DRAWER_ID}
         className={open ? 'site-drawer is-open' : 'site-drawer'}
         aria-label={DS_DRAWER_LABEL}
         aria-hidden={!open}
+        inert={!open}
       >
         <div className="site-drawer-head">
           <p className="site-drawer-title">{DS_DRAWER_TITLE}</p>
@@ -150,7 +175,7 @@ export function SiteBar() {
             <a
               key={href}
               href={href}
-              aria-current={isCurrentPage(pathname, href) ? 'page' : undefined}
+              aria-current={isCurrentSection(pathname, href) ? 'page' : undefined}
               onClick={() => close(true)}
             >
               {label}
