@@ -107,6 +107,24 @@ describe('SiteBar mobile drawer', () => {
     expect(drawer().getAttribute('aria-hidden')).toBe('false');
   });
 
+  it('isolates the open drawer as a modal and releases the page on close', async () => {
+    const page = document.createElement('main');
+    document.body.appendChild(page);
+    const container = await renderSiteBar();
+    const trigger = menuTrigger(container);
+    fireEvent.click(trigger);
+    expect(drawer().getAttribute('role')).toBe('dialog');
+    expect(drawer().getAttribute('aria-modal')).toBe('true');
+    expect(page.hasAttribute('inert')).toBe(true);
+    expect(container.querySelector('.site-bar')?.hasAttribute('inert')).toBe(true);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(drawer().hasAttribute('role')).toBe(false);
+    expect(page.hasAttribute('inert')).toBe(false);
+    expect(container.querySelector('.site-bar')?.hasAttribute('inert')).toBe(false);
+    expect(document.activeElement).toBe(trigger);
+    page.remove();
+  });
+
   it('moves focus into the drawer when it opens', async () => {
     const container = await renderSiteBar();
     fireEvent.click(menuTrigger(container));

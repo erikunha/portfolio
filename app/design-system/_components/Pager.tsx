@@ -1,4 +1,4 @@
-import { DS_PAGER, DS_PAGER_NEXT_LABEL, DS_PAGER_PREV_LABEL } from './ds-nav';
+import { DS_PAGER, DS_PAGER_NAV_LABEL, DS_PAGER_NEXT_LABEL, DS_PAGER_PREV_LABEL } from './ds-nav';
 
 export function Pager({ slug }: { slug: string }) {
   const index = DS_PAGER.findIndex((page) => page.slug === slug);
@@ -8,7 +8,7 @@ export function Pager({ slug }: { slug: string }) {
   const next = index < DS_PAGER.length - 1 ? DS_PAGER[index + 1] : null;
 
   return (
-    <nav className="pager" aria-label="Pagination">
+    <nav className="pager" aria-label={DS_PAGER_NAV_LABEL}>
       {prev ? (
         <a className="nav-item pager-prev" href={prev.href}>
           <span className="nav-label">{`${DS_PAGER_PREV_LABEL}${prev.label}`}</span>

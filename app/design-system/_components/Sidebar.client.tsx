@@ -1,8 +1,10 @@
 'use client';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { isolate } from '@/lib/dom/isolate';
 import {
   DS_DRAWER_CLOSE_LABEL,
+  DS_DRAWER_DS_NAV_LABEL,
   DS_DRAWER_ID,
   DS_DRAWER_LABEL,
   DS_DRAWER_TITLE,
@@ -10,6 +12,7 @@ import {
   DS_MENU_TRIGGER_LABEL,
   DS_NAV_GROUPS,
   DS_NAV_ID,
+  DS_PAGES_LIST_LABEL,
   DS_SITE_BAR,
   dsPagerSlugForPathname,
 } from './ds-nav';
@@ -49,7 +52,7 @@ function DsNavLinks({ currentPath, groupIdPrefix, onNavigate }: DsNavLinksProps)
             </p>
           )}
           <ul
-            aria-label={title ? undefined : 'Design system pages'}
+            aria-label={title ? undefined : DS_PAGES_LIST_LABEL}
             aria-labelledby={title ? `${groupIdPrefix}${id}` : undefined}
           >
             {links.map(({ href, label }) => (
@@ -77,14 +80,16 @@ export function SiteBar() {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
+  const refocusTriggerRef = useRef(false);
 
   const close = useCallback((refocusTrigger: boolean) => {
+    refocusTriggerRef.current = refocusTrigger;
     setOpen(false);
-    if (refocusTrigger) triggerRef.current?.focus();
   }, []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || drawerRef.current === null) return;
+    const release = isolate(drawerRef.current);
     closeRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -113,6 +118,9 @@ export function SiteBar() {
     return () => {
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = '';
+      release();
+      if (refocusTriggerRef.current) triggerRef.current?.focus();
+      refocusTriggerRef.current = false;
     };
   }, [open, close]);
 
@@ -156,6 +164,7 @@ export function SiteBar() {
         id={DS_DRAWER_ID}
         className={open ? 'site-drawer is-open' : 'site-drawer'}
         aria-label={DS_DRAWER_LABEL}
+        {...(open ? { role: 'dialog', 'aria-modal': true } : {})}
         aria-hidden={!open}
         inert={!open}
       >
@@ -182,7 +191,7 @@ export function SiteBar() {
             </a>
           ))}
         </nav>
-        <nav className="site-drawer-ds" aria-label="Design system">
+        <nav className="site-drawer-ds" aria-label={DS_DRAWER_DS_NAV_LABEL}>
           <DsNavLinks
             currentPath={pathname}
             groupIdPrefix="drawer-nav-g-"

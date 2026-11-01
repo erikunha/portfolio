@@ -68,6 +68,10 @@ export const DS_DRAWER_LABEL = 'Site menu';
 export const DS_DRAWER_TITLE = 'erik_cunha.sh';
 export const DS_DRAWER_CLOSE_LABEL = 'CLOSE';
 
+export const DS_DRAWER_DS_NAV_LABEL = 'Design system';
+
+export const DS_PAGES_LIST_LABEL = 'Design system pages';
+
 export type DsPagerPage = { slug: string; href: string; label: string };
 
 export const DS_PAGER: readonly DsPagerPage[] = [
@@ -80,6 +84,8 @@ export const DS_PAGER: readonly DsPagerPage[] = [
 
 export const DS_PAGER_PREV_LABEL = 'Previous: ';
 export const DS_PAGER_NEXT_LABEL = 'Next: ';
+
+export const DS_PAGER_NAV_LABEL = 'Pagination';
 
 export function dsPagerSlugForPathname(pathname: string | null): string | null {
   if (pathname === null) return null;
