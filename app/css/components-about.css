@@ -243,6 +243,11 @@
     font-size: var(--text-xs);
   }
 
+  .ab-ph .repo-link {
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
   @media (min-width: 1024px) {
     .about-grid {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

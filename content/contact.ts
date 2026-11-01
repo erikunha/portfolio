@@ -13,14 +13,25 @@ export const ContactContentSchema = z.object({
   section: z.object({
     command: z.string().min(1),
     mobileCommand: z.string().min(1),
-    reply: z.string().min(1),
-    linkedinPrompt: z.string().min(1),
-    linkedinLabel: z.string().min(1),
-    emailLabel: z.string().min(1),
     email: z.email(),
     linkedinHref: z.url(),
     copyEmail: z.string().min(1),
     copyEmailCopied: z.string().min(1),
+  }),
+  channels: z.object({
+    title: z.string().min(1),
+    marker: z.string().min(1),
+    emailLabel: z.string().min(1),
+    linkedinLabel: z.string().min(1),
+    linkedinCta: z.string().min(1),
+    linkedinGlyph: z.string().min(1),
+    linkedinNewTabNote: z.string().min(1),
+    githubLabel: z.string().min(1),
+    githubAccessibleLabel: z.string().min(1),
+    replyLabel: z.string().min(1),
+    replyValue: z.string().min(1),
+    languagesLabel: z.string().min(1),
+    timezoneLabel: z.string().min(1),
   }),
   form: z.object({
     nameLabel: z.string().min(1),
@@ -33,7 +44,11 @@ export const ContactContentSchema = z.object({
     submitting: z.string().min(1),
     waiting: z.string().min(1),
     errorPrefix: z.string().min(1),
-    errorSummary: z.string().min(1),
+    errorSummary: z.object({
+      one: z.string().min(1),
+      many: z.string().min(1),
+      separator: z.string().min(1),
+    }),
     retained: z.string().min(1),
     retryEmail: z.string().min(1),
     counterSeparator: z.string().min(1),
@@ -59,4 +74,4 @@ export type ContactContent = z.infer<typeof ContactContentSchema>;
 
 export const contactContent: ContactContent = ContactContentSchema.parse(contactCopy);
 
-export const contactLanguageLine = `// ${formatLanguages(profile.languages)}`;
+export const contactLanguages = formatLanguages(profile.languages);

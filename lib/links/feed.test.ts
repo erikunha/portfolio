@@ -76,6 +76,7 @@ describe('getChannelFeed upstream fallback', () => {
 
   async function load(apiKey: string | undefined) {
     vi.resetModules();
+    vi.stubEnv('E2E_LINKS_FEED_FIXTURE', '');
     vi.doMock('@/lib/env', () => ({ env: { YOUTUBE_API_KEY: apiKey } }));
     const requested: string[] = [];
     vi.stubGlobal(
@@ -98,6 +99,7 @@ describe('getChannelFeed upstream fallback', () => {
     const playlistCall = requested.find((url) => url.includes('/playlistItems'));
     expect(playlistCall).toContain('playlistId=UUZ1P4Pqpo-j_uAHaIc_pGrA');
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 
   it('returns the empty feed without a key when the RSS feed fails', async () => {
@@ -105,5 +107,6 @@ describe('getChannelFeed upstream fallback', () => {
     expect(feed.latest).toBeNull();
     expect(requested.some((url) => url.includes('googleapis'))).toBe(false);
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 });

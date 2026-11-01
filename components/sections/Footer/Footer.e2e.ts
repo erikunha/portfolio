@@ -83,36 +83,37 @@ test.describe('Footer', () => {
     await expect(status).toHaveText(/rebooted/i);
   });
 
-  test('COPY copies netstat rows and the R key has a 44px computed target', async ({
+  test('every netstat endpoint is a link to its destination and the R key has a 44px target', async ({
     page,
-    context,
-    browserName,
   }) => {
-    test.skip(browserName !== 'chromium', 'Clipboard permissions require Chromium.');
-    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await loadFooter(page);
     const netstat = page.locator('.footer-netstat');
     const rows = await netstat.locator('tbody tr').allTextContents();
-    const expected = await netstat
-      .locator('tbody tr')
-      .evaluateAll((elements) =>
-        elements
-          .map((row) => [...row.querySelectorAll('td')].map((cell) => cell.textContent).join('  '))
-          .join('\n'),
-      );
     expect(rows).toHaveLength(4);
-    const copy = page.getByRole('button', { name: 'Copy netstat rows' });
-    await copy.click();
-    await expect(copy).toHaveText('COPIED');
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
-    for (const target of [copy, page.locator('.footer-reboot kbd')]) {
-      const size = await target.evaluate((element) => {
-        const style = getComputedStyle(element);
-        return { width: Number.parseFloat(style.width), height: Number.parseFloat(style.height) };
-      });
-      expect(size.width).toBeGreaterThanOrEqual(44);
-      expect(size.height).toBeGreaterThanOrEqual(44);
+    const endpoints = netstat.locator('tbody tr td:last-child a');
+    await expect(endpoints).toHaveCount(4);
+    const hrefs = await endpoints.evaluateAll((links) =>
+      links.map((link) => link.getAttribute('href')),
+    );
+    expect(hrefs).toEqual([
+      'https://github.com/erikunha',
+      'https://www.linkedin.com/in/erikunha/',
+      'https://www.erikunha.dev',
+      '/design-system',
+    ]);
+    for (const glyph of await endpoints.locator('.footer-link-glyph').all()) {
+      await expect(glyph).toHaveText('↗');
     }
+    await expect(
+      page.getByRole('button', { name: 'Copy netstat rows' }),
+      'the netstat table links out, it does not copy',
+    ).toHaveCount(0);
+    const size = await page.locator('.footer-reboot kbd').evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { width: Number.parseFloat(style.width), height: Number.parseFloat(style.height) };
+    });
+    expect(size.width).toBeGreaterThanOrEqual(44);
+    expect(size.height).toBeGreaterThanOrEqual(44);
   });
 
   test('mobile footer keeps its measured height with a one-column site map and netstat on one line', async ({
@@ -130,22 +131,41 @@ test.describe('Footer', () => {
       await page.evaluate(() => document.fonts.ready);
       if (width === 390) {
         const footer = await page.locator('footer').boundingBox();
-        expect(footer?.height).toBeGreaterThanOrEqual(1993);
-        expect(footer?.height).toBeLessThanOrEqual(2033);
+        expect(footer?.height).toBeGreaterThanOrEqual(1940);
+        expect(footer?.height).toBeLessThanOrEqual(2000);
       }
       const cells = page.locator('.footer-netstat :is(th, td)');
       for (const cell of await cells.all()) {
         const metrics = await cell.evaluate((element) => {
           const range = document.createRange();
-          range.selectNodeContents(element.firstElementChild ?? element);
+          let lines = 0;
+          let labelTop = 0;
+          const walk = (node: Node) => {
+            for (const child of node.childNodes) {
+              if (child.nodeType === Node.ELEMENT_NODE) {
+                if ((child as Element).getAttribute('aria-hidden') === 'true') continue;
+                walk(child);
+              } else if (child.nodeType === Node.TEXT_NODE && child.textContent?.trim()) {
+                range.selectNodeContents(child);
+                const rects = [...range.getClientRects()].filter((rect) => rect.width > 0);
+                lines += rects.length;
+                if (lines === 1) labelTop = rects[0]?.top ?? 0;
+              }
+            }
+          };
+          walk(element);
+          const glyph = element.querySelector('.footer-link-glyph');
+          const glyphTop = glyph ? glyph.getBoundingClientRect().top : labelTop;
           return {
-            lines: range.getClientRects().length,
+            lines,
             width: element.clientWidth,
             contentWidth: element.scrollWidth,
+            glyphOffset: Math.abs(glyphTop - labelTop),
           };
         });
         expect(metrics.lines).toBe(1);
         expect(metrics.contentWidth).toBeLessThanOrEqual(metrics.width);
+        expect(metrics.glyphOffset).toBeLessThan(2);
       }
       await context.close();
     }

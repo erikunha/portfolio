@@ -191,7 +191,26 @@
   }
 
   .search-trigger-shortcut {
+    display: inline-grid;
+    justify-items: center;
     color: var(--color-primary-500);
+  }
+
+  .search-trigger-shortcut > span {
+    grid-area: 1 / 1;
+    white-space: nowrap;
+  }
+
+  .search-trigger-shortcut > [data-platform="other"] {
+    visibility: hidden;
+  }
+
+  .search-trigger-shortcut[data-keyboard="other"] > [data-platform="apple"] {
+    visibility: hidden;
+  }
+
+  .search-trigger-shortcut[data-keyboard="other"] > [data-platform="other"] {
+    visibility: inherit;
   }
 
   .topbar-search {

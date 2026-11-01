@@ -60,4 +60,28 @@ test.describe('reading views', () => {
     await page.waitForURL(`**${READING_PATHS.cv}`);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(profile.displayName);
   });
+
+  for (const path of [READING_PATHS.cv, READING_PATHS.summary]) {
+    test(`${path} paints the matrix rain behind the reading content`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page.locator('canvas'), 'the reading views carry the global rain').toHaveCount(
+        1,
+      );
+      const probe = await page.evaluate(() => {
+        const canvas = document.querySelector('canvas');
+        if (canvas) canvas.style.pointerEvents = 'auto';
+        const heading = document.querySelector('h1');
+        if (!heading) return null;
+        const box = heading.getBoundingClientRect();
+        const top = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+        return { insideHeading: heading.contains(top), tag: top?.tagName ?? '' };
+      });
+      expect(probe, 'the reading view owns a heading').not.toBeNull();
+      expect(
+        probe?.insideHeading,
+        'the rain paints over the heading, the reading view must stack above it',
+      ).toBe(true);
+      expect(probe?.tag).not.toBe('CANVAS');
+    });
+  }
 });

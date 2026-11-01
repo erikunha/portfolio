@@ -43,6 +43,7 @@ export type NavigationCopy = {
   searchShortcutOther: string;
   motionOn: string;
   motionOff: string;
+  motionReduced: string;
   sectionCountLabel: string;
 };
 
@@ -69,6 +70,7 @@ export const NAVIGATION: Navigation = {
     searchShortcutOther: 'Ctrl K',
     motionOn: 'MOTION: ON',
     motionOff: 'MOTION: OFF',
+    motionReduced: 'MOTION: REDUCED',
     sectionCountLabel: 'sections',
   },
   groups: [

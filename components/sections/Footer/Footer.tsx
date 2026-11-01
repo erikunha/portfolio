@@ -1,4 +1,3 @@
-import { CopyButton } from '@/app/design-system/_components/CopyButton';
 import { dmesgLines, dmesgStatus } from '@/content/dmesg';
 import { footerContent as content, footerSectionIds } from '@/content/footer';
 import { HaltClock, RebootControl, FooterLazy as SessionCounters } from './FooterLazy.client';
@@ -67,12 +66,6 @@ export function Footer() {
               <h3 className="footer-card-title" id="footer-netstat-title">
                 <span data-type-reveal>{content.netstatTitle}</span>
               </h3>
-              <CopyButton
-                aria-label={content.copyLabel}
-                text={content.connections
-                  .map(({ protocol, state, label }) => `${protocol}  ${state}  ${label}`)
-                  .join('\n')}
-              />
             </div>
             <div className="footer-netstat-scroll">
               <table className="footer-netstat" aria-labelledby="footer-netstat-title">
@@ -105,6 +98,11 @@ export function Footer() {
                             : {})}
                         >
                           {connection.label}
+                          {connection.external ? (
+                            <span className="footer-link-glyph" aria-hidden="true">
+                              {content.externalGlyph}
+                            </span>
+                          ) : null}
                         </a>
                       </td>
                     </tr>
