@@ -48,6 +48,7 @@ const NEGATION_PATTERN =
   /(n't|\b(?:no|not|never|none|nothing|neither|nor|without|unable|unnecessary|unneeded)\b)/i;
 const DEFERRAL_PATTERN = /\b(?:will|once|until|if|would|yet)\b/i;
 const CLAUSE_SPLIT_PATTERN = /[.!?;:\n]+/;
+const PHRASE_SPLIT_PATTERN = /,|\b(?:but|and|so|although|though|while|whereas)\b/i;
 const FULL_SHA_LENGTH = 40;
 const MIN_SHORT_SHA_LENGTH = 7;
 const COMMIT_LINK_PATTERN = new RegExp(
@@ -282,7 +283,7 @@ export function claimsFix(body: string): boolean {
     .filter((clause) => clause.length > 0)
     .some((clause) =>
       Array.from(clause.matchAll(FIX_CLAIM_WORD_PATTERN)).some((claim) => {
-        const before = clause.slice(0, claim.index);
+        const before = clause.slice(0, claim.index).split(PHRASE_SPLIT_PATTERN).pop() ?? '';
         if (ATTRIBUTIVE_PREFIX_PATTERN.test(before)) return false;
         if (NEGATION_PATTERN.test(before)) return false;
         return !DEFERRAL_PATTERN.test(before);

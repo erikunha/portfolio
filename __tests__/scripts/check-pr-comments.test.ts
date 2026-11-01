@@ -397,6 +397,8 @@ describe('claimsFix', () => {
     'Done in abc1234',
     'Resolved in abc1234',
     'Updated in abc1234',
+    'Not a duplicate, but fixed now.',
+    'No regression here; if anything, the guard is now fixed.',
   ])('counts %j as a fix claim', (body) => {
     expect(
       claimsFix(body),
