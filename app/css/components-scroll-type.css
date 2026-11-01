@@ -26,7 +26,6 @@
   .module-scroll-type {
     --module-caret-width: 0.6ch;
     position: relative;
-    padding-right: var(--module-caret-width);
   }
 
   .module-scroll-type-text {

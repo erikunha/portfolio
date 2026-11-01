@@ -211,14 +211,10 @@
   .ab-code .ab-h {
     --ab-title-gutter: 6.5rem;
     --ab-title-em-budget: 17.5;
-    --ab-title-link-reserve: 5rem;
     color: var(--color-text-secondary);
     font-size: clamp(
       var(--text-xs),
-      calc(
-        (100vw - var(--ab-title-gutter) - var(--ab-title-link-reserve)) /
-        var(--ab-title-em-budget)
-      ),
+      calc((100vw - var(--ab-title-gutter)) / var(--ab-title-em-budget)),
       var(--text-base)
     );
     letter-spacing: 0.02em;

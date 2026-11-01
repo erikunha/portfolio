@@ -152,7 +152,7 @@
   }
 
   #sec-contact {
-    --module-estimate: 1020px;
+    --module-estimate: 1120px;
   }
 
   @media (min-width: 768px) {
@@ -169,7 +169,7 @@
     }
 
     #sec-contact {
-      --module-estimate: 840px;
+      --module-estimate: 910px;
     }
   }
 
