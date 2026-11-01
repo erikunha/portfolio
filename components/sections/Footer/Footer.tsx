@@ -98,9 +98,11 @@ export function Footer() {
                             : {})}
                         >
                           {connection.label}
-                          <span className="footer-link-glyph" aria-hidden="true">
-                            {content.externalGlyph}
-                          </span>
+                          {connection.external ? (
+                            <span className="footer-link-glyph" aria-hidden="true">
+                              {content.externalGlyph}
+                            </span>
+                          ) : null}
                         </a>
                       </td>
                     </tr>

@@ -166,9 +166,10 @@ describe('Footer live session', () => {
       'https://www.erikunha.dev',
       '/design-system',
     ]);
-    for (const link of endpoints) {
-      expect(link.querySelector('.footer-link-glyph')?.textContent).toBe('↗');
-    }
+    expect(
+      endpoints.map((link) => link.querySelector('.footer-link-glyph')?.textContent ?? null),
+      'only external endpoints carry the opens-externally glyph',
+    ).toEqual(['↗', '↗', '↗', null]);
     expect(
       mounted.queryByRole('button', { name: 'Copy netstat rows' }),
       'the netstat table links out, it does not copy',
