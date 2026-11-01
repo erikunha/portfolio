@@ -117,6 +117,7 @@ describe('SiteBar mobile drawer', () => {
     expect(drawer().getAttribute('aria-modal')).toBe('true');
     expect(page.hasAttribute('inert')).toBe(true);
     expect(container.querySelector('.site-bar')?.hasAttribute('inert')).toBe(true);
+    expect(container.querySelector('.site-scrim')?.hasAttribute('inert')).toBe(false);
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(drawer().hasAttribute('role')).toBe(false);
     expect(page.hasAttribute('inert')).toBe(false);
