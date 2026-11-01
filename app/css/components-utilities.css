@@ -1,9 +1,9 @@
 @layer utilities {
-  section > header h2 {
+  .module-heading {
     flex-wrap: wrap;
   }
 
-  section > header h2 > .module-name ~ .module-scroll-type {
+  .module-heading > .module-name ~ .module-scroll-type {
     color: var(--color-text-secondary);
     font-size: var(--text-sm);
     font-weight: 700;

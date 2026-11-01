@@ -10,6 +10,7 @@ const MODULE_IDS = [
 ] as const;
 const VIEWPORTS = [320, 390, 768, 1280];
 const ICON_GAP_TOLERANCE_PX = 12;
+const SAME_LINE_TOLERANCE_PX = 4;
 
 for (const width of VIEWPORTS) {
   test.describe(`module headers at ${width}`, () => {
@@ -30,6 +31,17 @@ for (const width of VIEWPORTS) {
         });
         expect(gap, 'space between the title and its icon').toBeLessThanOrEqual(
           ICON_GAP_TOLERANCE_PX,
+        );
+        expect(gap, 'the icon wrapped away from the title').toBeGreaterThanOrEqual(0);
+        const lineOffset = await heading.evaluate((h2) => {
+          const label = h2.querySelector('.module-name')?.getBoundingClientRect();
+          const icon = h2.children[1]?.getBoundingClientRect();
+          return label && icon
+            ? Math.abs(icon.top + icon.height / 2 - (label.top + label.height / 2))
+            : Number.NaN;
+        });
+        expect(lineOffset, 'the icon sits on a different line from the title').toBeLessThanOrEqual(
+          SAME_LINE_TOLERANCE_PX,
         );
         const overflow = await heading.evaluate((h2) => h2.scrollWidth - h2.clientWidth);
         expect(overflow, 'header text spills past its box').toBeLessThanOrEqual(0);
