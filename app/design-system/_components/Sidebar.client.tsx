@@ -80,6 +80,7 @@ export function SiteBar() {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const refocusTriggerRef = useRef(false);
 
   const close = useCallback((refocusTrigger: boolean) => {
@@ -88,8 +89,8 @@ export function SiteBar() {
   }, []);
 
   useEffect(() => {
-    if (!open || drawerRef.current === null) return;
-    const release = isolate(drawerRef.current);
+    if (!open || overlayRef.current === null) return;
+    const release = isolate(overlayRef.current);
     closeRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -154,51 +155,53 @@ export function SiteBar() {
           </nav>
         </div>
       </header>
-      <div
-        className={open ? 'site-scrim is-open' : 'site-scrim'}
-        onClick={() => close(true)}
-        aria-hidden="true"
-      />
-      <aside
-        ref={drawerRef}
-        id={DS_DRAWER_ID}
-        className={open ? 'site-drawer is-open' : 'site-drawer'}
-        aria-label={DS_DRAWER_LABEL}
-        {...(open ? { role: 'dialog', 'aria-modal': true } : {})}
-        aria-hidden={!open}
-        inert={!open}
-      >
-        <div className="site-drawer-head">
-          <p className="site-drawer-title">{DS_DRAWER_TITLE}</p>
-          <button
-            ref={closeRef}
-            type="button"
-            className="site-drawer-close"
-            onClick={() => close(true)}
-          >
-            {DS_DRAWER_CLOSE_LABEL}
-          </button>
-        </div>
-        <nav className="site-drawer-nav" aria-label={DS_SITE_BAR.navLabel}>
-          {DS_SITE_BAR.links.map(({ href, label }) => (
-            <a
-              key={href}
-              href={href}
-              aria-current={isCurrentSection(pathname, href) ? 'page' : undefined}
+      <div ref={overlayRef} className="contents">
+        <div
+          className={open ? 'site-scrim is-open' : 'site-scrim'}
+          onClick={() => close(true)}
+          aria-hidden="true"
+        />
+        <aside
+          ref={drawerRef}
+          id={DS_DRAWER_ID}
+          className={open ? 'site-drawer is-open' : 'site-drawer'}
+          aria-label={DS_DRAWER_LABEL}
+          {...(open ? { role: 'dialog', 'aria-modal': true } : {})}
+          aria-hidden={!open}
+          inert={!open}
+        >
+          <div className="site-drawer-head">
+            <p className="site-drawer-title">{DS_DRAWER_TITLE}</p>
+            <button
+              ref={closeRef}
+              type="button"
+              className="site-drawer-close"
               onClick={() => close(true)}
             >
-              {label}
-            </a>
-          ))}
-        </nav>
-        <nav className="site-drawer-ds" aria-label={DS_DRAWER_DS_NAV_LABEL}>
-          <DsNavLinks
-            currentPath={pathname}
-            groupIdPrefix="drawer-nav-g-"
-            onNavigate={() => close(true)}
-          />
-        </nav>
-      </aside>
+              {DS_DRAWER_CLOSE_LABEL}
+            </button>
+          </div>
+          <nav className="site-drawer-nav" aria-label={DS_SITE_BAR.navLabel}>
+            {DS_SITE_BAR.links.map(({ href, label }) => (
+              <a
+                key={href}
+                href={href}
+                aria-current={isCurrentSection(pathname, href) ? 'page' : undefined}
+                onClick={() => close(true)}
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
+          <nav className="site-drawer-ds" aria-label={DS_DRAWER_DS_NAV_LABEL}>
+            <DsNavLinks
+              currentPath={pathname}
+              groupIdPrefix="drawer-nav-g-"
+              onNavigate={() => close(true)}
+            />
+          </nav>
+        </aside>
+      </div>
     </>
   );
 }

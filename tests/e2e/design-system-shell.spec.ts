@@ -44,6 +44,19 @@ test.describe('design-system mobile menu', () => {
     expect(await drawer.evaluate((node) => node.contains(document.activeElement))).toBe(true);
   });
 
+  test('a real click on the scrim outside the menu closes it', async ({ page }) => {
+    await page.goto('/design-system');
+    const { trigger, drawer } = await openMenu(page);
+    const box = await drawer.boundingBox();
+    const viewport = page.viewportSize();
+    if (!box || !viewport) throw new Error('drawer and viewport must have geometry');
+    const outsideX =
+      box.x > 0 ? box.x / 2 : box.x + box.width + (viewport.width - box.x - box.width) / 2;
+    await page.mouse.click(outsideX, viewport.height / 2);
+    await expect(drawer).not.toHaveClass(/is-open/);
+    await expect(trigger).toBeFocused();
+  });
+
   test('activating a menu link navigates and closes the menu', async ({ page }) => {
     await page.goto('/design-system');
     const { drawer } = await openMenu(page);
