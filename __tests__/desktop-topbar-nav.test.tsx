@@ -120,12 +120,19 @@ describe('DesktopTopbar', () => {
   it('offers the search shortcut the platform uses', async () => {
     mounted = await renderTopbar();
     const shortcut = mounted.container.querySelector('.search-trigger-shortcut');
+    const expected = /mac/i.test(navigator.platform) ? 'apple' : 'other';
 
-    expect(shortcut?.textContent).toBe(
-      /mac/i.test(navigator.platform)
+    expect(shortcut?.getAttribute('data-keyboard')).toBe(expected);
+    expect(shortcut?.querySelector(`[data-platform="${expected}"]`)?.textContent).toBe(
+      expected === 'apple'
         ? NAVIGATION.copy.searchShortcutApple
         : NAVIGATION.copy.searchShortcutOther,
     );
+    expect(
+      shortcut?.textContent,
+      'the server HTML carries both labels, so the slot reserves its width before hydration',
+    ).toContain(NAVIGATION.copy.searchShortcutApple);
+    expect(shortcut?.textContent).toContain(NAVIGATION.copy.searchShortcutOther);
   });
 
   it('keeps the hire CTA on LinkedIn and names the new tab for assistive tech', async () => {

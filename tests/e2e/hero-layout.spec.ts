@@ -3,6 +3,56 @@ import { expect, test } from '@playwright/test';
 const MOBILE = { width: 390, height: 844 };
 const MOBILE_HERO_MAX_PX = 600;
 
+test.describe('hero desktop layout', () => {
+  for (const width of [768, 1280]) {
+    test(`the hero clears the topbar and keeps the section rhythm at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      const hero = page.locator('[data-testid="hero-desktop"]');
+      await expect(hero).toBeVisible();
+
+      const geometry = await page.evaluate(() => {
+        const bar = document.querySelector('.desktop-topbar')?.getBoundingClientRect();
+        const heroBox = document
+          .querySelector('[data-testid="hero-desktop"]')
+          ?.getBoundingClientRect();
+        const aboutSection = document.querySelector('#sec-readme');
+        const about = aboutSection?.getBoundingClientRect();
+        const next = aboutSection?.nextElementSibling?.getBoundingClientRect();
+        const probe = document.createElement('div');
+        probe.style.position = 'absolute';
+        probe.style.visibility = 'hidden';
+        probe.style.paddingTop = 'var(--spacing-6)';
+        document.body.appendChild(probe);
+        const spacingSix = Number.parseFloat(getComputedStyle(probe).paddingTop);
+        probe.remove();
+        return {
+          barBottom: bar?.bottom ?? 0,
+          heroTop: heroBox?.top ?? 0,
+          heroBottom: heroBox?.bottom ?? 0,
+          aboutTop: about?.top ?? 0,
+          aboutBottom: about?.bottom ?? 0,
+          nextTop: next?.top ?? 0,
+          spacingSix,
+        };
+      });
+
+      expect(
+        geometry.heroTop - geometry.barBottom,
+        'the hero must clear the fixed topbar by the section spacing',
+      ).toBeGreaterThanOrEqual(geometry.spacingSix);
+      const heroGap = geometry.aboutTop - geometry.heroBottom;
+      const sectionGap = geometry.nextTop - geometry.aboutBottom;
+      expect(
+        Math.abs(heroGap - sectionGap),
+        'the hero-to-section gap must match the gap between the other sections',
+      ).toBeLessThanOrEqual(1);
+    });
+  }
+});
+
 test.describe('hero mobile layout', () => {
   test('the mobile hero fits the 600px budget at 390', async ({ page }) => {
     await page.setViewportSize(MOBILE);

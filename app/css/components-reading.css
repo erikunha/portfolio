@@ -1,7 +1,8 @@
 @layer components {
   .reading-view {
+    position: relative;
+    z-index: var(--z-content);
     min-height: 100vh;
-    background: var(--color-secondary-950);
     color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-sm);

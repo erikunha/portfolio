@@ -9,6 +9,7 @@ vi.mock('@/lib/use-breakpoint.client', () => ({
 
 vi.mock('@/lib/motion', () => ({
   readMotion: () => false,
+  readSystemReducedMotion: () => false,
   applyMotion: () => undefined,
 }));
 

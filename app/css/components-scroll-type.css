@@ -26,6 +26,7 @@
   .module-scroll-type {
     --module-caret-width: 0.6ch;
     position: relative;
+    padding-right: var(--module-caret-width);
   }
 
   .module-scroll-type-text {
@@ -38,7 +39,7 @@
     left: 0;
     top: 50%;
     translate: 0 -50%;
-    width: calc(100% + var(--module-caret-width));
+    width: 100%;
     height: 1.05em;
     background: linear-gradient(
       to right,

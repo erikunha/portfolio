@@ -4,7 +4,7 @@
     border: var(--border-width) solid var(--color-primary-subtle);
     background: var(--color-secondary-950);
     overflow: hidden;
-    margin-bottom: calc(var(--spacing-8) + var(--spacing-2));
+    margin-bottom: var(--space-section);
   }
 
   .hero-terminal {

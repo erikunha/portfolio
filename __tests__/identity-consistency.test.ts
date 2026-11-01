@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { aboutContent } from '@/content/about';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
 import { communityEvent, communityTalksSentence } from '@/content/community';
-import { contactLanguageLine } from '@/content/contact';
+import { contactLanguages } from '@/content/contact';
 import { contactCopy } from '@/content/contact-copy';
 import { education } from '@/content/education';
 import { footerContent } from '@/content/footer';
@@ -131,9 +131,9 @@ describe('identity is consistent across every gated surface', () => {
     expect(profileLanguageLine).toBe('PT native · EN C1 · ES B1 · FR A2');
     expect(profileWorkingLanguageLine).toBe('PT native · EN C1');
     expect(
-      contactLanguageLine,
+      contactLanguages,
       'the contact section and the CV must render the same language line, or the two surfaces drift apart',
-    ).toBe(`// ${cvDocument.languages}`);
+    ).toBe(cvDocument.languages);
   });
 
   it('expects the eval to answer with exactly the profile languages', () => {

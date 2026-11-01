@@ -32,6 +32,20 @@ const PAGES = [
   { path: '/this-route-does-not-exist', container: 'main.err-main' },
 ];
 
+const tokenPx = (page: Page, expression: string) =>
+  page.evaluate((value) => {
+    const probe = document.createElement('div');
+    probe.style.position = 'absolute';
+    probe.style.visibility = 'hidden';
+    probe.style.paddingTop = value;
+    document.body.appendChild(probe);
+    const resolved = Number.parseFloat(getComputedStyle(probe).paddingTop);
+    probe.remove();
+    return resolved;
+  }, expression);
+
+const HOME_TOP_EXPRESSION = 'calc(var(--topbar-height) + var(--spacing-6))';
+
 test.describe('layout tokens', () => {
   for (const { path, container } of PAGES) {
     test(`${path} uses the shared gutter and page-top at 390 and 768`, async ({ page }) => {
@@ -41,9 +55,16 @@ test.describe('layout tokens', () => {
       expect(await paddingTop(page, container)).toBe(PAGE_TOP_PHONE);
 
       await page.setViewportSize({ width: 768, height: 1024 });
-      expect(await paddingTop(page, container)).toBe(PAGE_TOP_TABLET);
+      const expected = path === '/' ? await tokenPx(page, HOME_TOP_EXPRESSION) : PAGE_TOP_TABLET;
+      expect(await paddingTop(page, container)).toBe(expected);
     });
   }
+
+  test('the home page clears the fixed topbar by the spacing token', async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto('/');
+    expect(await paddingTop(page, '#main-content')).toBe(await tokenPx(page, HOME_TOP_EXPRESSION));
+  });
 
   test('design-system sidebar clears the fixed topbar at 768', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
@@ -118,6 +139,21 @@ test.describe('layout tokens', () => {
     expect(await marginBottom()).toBe(`${SPACE_SECTION_PHONE}px`);
     await page.setViewportSize({ width: 768, height: 1024 });
     expect(await marginBottom()).toBe(`${SPACE_SECTION_TABLET}px`);
+  });
+
+  test('the root declares a dark colour scheme and a themed thin scrollbar', async ({ page }) => {
+    await page.goto('/');
+    const root = await page.evaluate(() => {
+      const style = getComputedStyle(document.documentElement);
+      return {
+        colorScheme: style.colorScheme,
+        scrollbarColor: style.scrollbarColor,
+        scrollbarWidth: style.scrollbarWidth,
+      };
+    });
+    expect(root.colorScheme, 'the page renders its own dark form controls').toBe('dark');
+    expect(root.scrollbarWidth, 'the scrollbar stays thin').toBe('thin');
+    expect(root.scrollbarColor, 'the scrollbar carries the theme colours').not.toBe('auto');
   });
 
   test('line-height tokens resolve to the documented ratios', async ({ page }) => {

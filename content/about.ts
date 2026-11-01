@@ -56,10 +56,9 @@ export const aboutContent = AboutContentSchema.parse({
   code: {
     title: '$ cat src/lib/with-retry.ts',
     label: 'README code',
-    repoLabel: '// view full repo →',
+    repoLabel: 'github ↗',
     repoHref: social.github,
-    repoAccessibleLabel: 'View full repo, opens in a new tab',
-    copyAccessibleLabel: 'Copy retry code',
+    repoAccessibleLabel: 'View full repo on GitHub, opens in a new tab',
     tokens: [
       {
         text: '// retry an RxJS stream with',

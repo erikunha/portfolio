@@ -11,6 +11,11 @@ export function readMotion(): boolean {
   return true;
 }
 
+export function readSystemReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 export function applyMotion(on: boolean): void {
   document.body.dataset.motion = on ? 'full' : 'reduce';
   try {

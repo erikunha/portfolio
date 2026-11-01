@@ -1,12 +1,17 @@
 @layer base {
   :root {
     --topbar-height: 45px;
+    --mobile-bars-height: 94px;
     --drawer-max-width: 320px;
     --dock-clearance: 72px;
     --z-dock: 120;
     --z-scrim: 125;
     --z-position-line: 126;
     --z-drawer: 130;
+    --z-content: 10;
+    color-scheme: dark;
+    scrollbar-color: var(--color-primary-700) var(--color-secondary-950);
+    scrollbar-width: thin;
   }
 
   *,
@@ -16,7 +21,7 @@
   }
 
   html {
-    scroll-padding-top: 52px;
+    scroll-padding-top: calc(var(--topbar-height) + var(--spacing-3));
     scrollbar-gutter: stable;
 
     -webkit-text-size-adjust: 100%;
@@ -72,7 +77,7 @@
 
   @media (max-width: 767.98px) {
     html {
-      scroll-padding-top: 76px;
+      scroll-padding-top: calc(var(--mobile-bars-height) + var(--spacing-3));
     }
   }
 

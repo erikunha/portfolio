@@ -32,14 +32,25 @@ export const contactCopy: ContactContent = {
   section: {
     command: 'SUDO CONTACT --INIT',
     mobileCommand: 'SUDO CONTACT',
-    reply: 'Replies within 48h',
-    linkedinPrompt: 'Prefer LinkedIn?',
-    linkedinLabel: 'Message me there ↗',
-    emailLabel: 'email:',
+    emailLabel: 'email',
     email: EMAIL_ADDRESS,
     linkedinHref: LINKEDIN_URL,
     copyEmail: '[COPY EMAIL]',
     copyEmailCopied: '[COPIED]',
+  },
+  channels: {
+    title: 'LS -L ~/CHANNELS',
+    marker: '▌',
+    emailLabel: 'email',
+    linkedinLabel: 'linkedin',
+    linkedinCta: 'MESSAGE_ON_LINKEDIN ↗',
+    linkedinAccessibleLabel: 'Message me on LinkedIn, opens in a new tab',
+    githubLabel: 'github',
+    githubAccessibleLabel: 'GitHub profile, opens in a new tab',
+    replyLabel: 'reply',
+    replyValue: 'within 48h',
+    languagesLabel: 'lang',
+    timezoneLabel: 'tz',
   },
   form: {
     nameLabel: '$ name:',
@@ -52,7 +63,11 @@ export const contactCopy: ContactContent = {
     submitting: 'TRANSMITTING...',
     waiting: 'waiting for manual override... _',
     errorPrefix: 'error:',
-    errorSummary: 'Fields need attention:',
+    errorSummary: {
+      one: '1 field needs attention:',
+      many: '{count} fields need attention:',
+      separator: ' · ',
+    },
     retained: 'Your text is still here.',
     retryEmail: 'Retry, or email',
     counterSeparator: '/',
@@ -70,3 +85,8 @@ export const contactCopy: ContactContent = {
     requestFailed: 'message could not be sent, try again',
   },
 };
+
+export function contactErrorSummary(count: number): string {
+  const { one, many } = contactCopy.form.errorSummary;
+  return count === 1 ? one : many.replace('{count}', String(count));
+}

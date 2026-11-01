@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { aboutContent } from '@/content/about';
@@ -72,18 +72,21 @@ describe('About r106 composition', () => {
     expect(responsibilities?.querySelectorAll('[data-file]')).toHaveLength(7);
   });
 
-  it('offers a COPY button carrying the full retry code', async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal('navigator', { clipboard: { writeText } });
+  it('offers the full repo link in the code panel header and no copy control', () => {
     render(<About />);
-    const copy = screen.getByRole('button', { name: aboutContent.code.copyAccessibleLabel });
-    expect(copy, 'r106 retry panel has a COPY control').toBeTruthy();
-    fireEvent.click(copy);
-    await waitFor(() =>
-      expect(writeText).toHaveBeenCalledWith(
-        aboutContent.code.tokens.map((token) => token.text).join(''),
-      ),
-    );
+    const panel = screen
+      .getByRole('heading', { name: '$ cat src/lib/with-retry.ts' })
+      .closest('.ab-panel');
+    const link = screen.getByRole('link', { name: aboutContent.code.repoAccessibleLabel });
+    expect(link.textContent).toBe(aboutContent.code.repoLabel);
+    expect(
+      panel?.querySelector('.ab-ph')?.contains(link),
+      'the repo link belongs in the panel header, right of the title',
+    ).toBe(true);
+    expect(
+      screen.queryByRole('button', { name: /copy/i }),
+      'the decorative code excerpt carries no copy control',
+    ).toBeNull();
   });
 
   it('groups the stack and keeps retry code keyboard accessible on mobile', () => {

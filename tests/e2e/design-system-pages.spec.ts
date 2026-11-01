@@ -271,3 +271,23 @@ test('every labelled table region is keyboard focusable and uniquely named per p
     ).toBe(count);
   }
 });
+
+test('the design system paints the matrix rain behind its content', async ({ page }) => {
+  await page.goto(OVERVIEW_PATH);
+  await expect(page.locator('canvas'), 'the design system carries the global rain').toHaveCount(1);
+  const probe = await page.evaluate(() => {
+    const canvas = document.querySelector('canvas');
+    if (canvas) canvas.style.pointerEvents = 'auto';
+    const heading = document.querySelector('h1');
+    if (!heading) return null;
+    const box = heading.getBoundingClientRect();
+    const top = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    return { insideHeading: heading.contains(top), tag: top?.tagName ?? '' };
+  });
+  expect(probe, 'the design system owns a heading').not.toBeNull();
+  expect(
+    probe?.insideHeading,
+    'the rain paints over the heading, the design system root must stack above it',
+  ).toBe(true);
+  expect(probe?.tag).not.toBe('CANVAS');
+});

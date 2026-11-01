@@ -148,9 +148,12 @@ export function createNavigationSchema(sectionIds: readonly string[]) {
 
 export const SocialSchema = z.object({
   github: z.string().url(),
+  githubLabel: z.string().min(1),
   linkedin: z.string().url(),
+  linkedinLabel: z.string().min(1),
   email: z.string().email(),
   site: z.string().url(),
+  siteLabel: z.string().min(1),
   handle: z.string().min(1),
   whatsapp: z.string().url(),
 });
@@ -213,7 +216,6 @@ export const AboutContentSchema = z.object({
     repoLabel: z.string().min(1),
     repoHref: z.url(),
     repoAccessibleLabel: z.string().min(1),
-    copyAccessibleLabel: z.string().min(1),
     tokens: z
       .array(
         z.object({ id: z.number().int().nonnegative(), text: z.string(), className: z.string() }),
@@ -633,7 +635,7 @@ export const FooterContentSchema = z.object({
   }),
   user: z.string().min(1),
   netstatTitle: z.string().min(1),
-  copyLabel: z.string().min(1),
+  externalGlyph: z.string().min(1),
   connectionLabels: z.object({
     protocol: z.string().min(1),
     state: z.string().min(1),

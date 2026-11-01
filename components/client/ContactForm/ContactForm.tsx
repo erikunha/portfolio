@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { Fragment, useEffect, useId, useRef, useState } from 'react';
 import {
   CONTACT_DELIVERY_CODE,
   CONTACT_FIELD,
   CONTACT_LIMITS,
   type ContactField,
   contactCopy,
+  contactErrorSummary,
 } from '@/content/contact-copy';
 import { contactChrome } from '@/content/terminal-chrome';
 import { WindowChrome } from '@/design-system';
@@ -194,24 +195,24 @@ export function ContactForm() {
             aria-labelledby={invalidFields.length > 0 ? summaryId : requestErrorId}
           >
             {invalidFields.length > 0 && (
-              <>
-                <p id={summaryId}>{contactCopy.form.errorSummary}</p>
-                <ul>
-                  {invalidFields.map((field) => (
-                    <li key={field}>
-                      <a
-                        href={`#${fieldId(field)}`}
-                        onClick={(event) => {
-                          event.preventDefault();
-                          document.getElementById(fieldId(field))?.focus();
-                        }}
-                      >
-                        {contactCopy.form.fieldLabels[field]}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </>
+              <p className="contact-alert-line">
+                <span id={summaryId}>{contactErrorSummary(invalidFields.length)}</span>
+                {invalidFields.map((field, index) => (
+                  <Fragment key={field}>
+                    {index === 0 ? ' ' : contactCopy.form.errorSummary.separator}
+                    <a
+                      className="contact-summary-link"
+                      href={`#${fieldId(field)}`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        document.getElementById(fieldId(field))?.focus();
+                      }}
+                    >
+                      {contactCopy.form.fieldLabels[field]}
+                    </a>
+                  </Fragment>
+                ))}
+              </p>
             )}
             {errorMsg && (
               <p id={requestErrorId}>

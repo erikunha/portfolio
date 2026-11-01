@@ -45,7 +45,7 @@ flowchart TD
     about --> scroll["Responsibilities + retry code: named keyboard scroll regions"]
     shell --> fl["ErrorBoundary-wrapped Footer (RSC): cards, sitemap, shutdown log"]
     fl --> fi["FooterLazy: direct re-exports from Footer.client: session counters + halt/reboot island"]
-    fl --> fc["CopyButton: netstat clipboard control"]
+    fl --> fc["Netstat endpoint cells: outbound links with a glyph"]
     links["/links and /links/en"] --> tagline["TaglineTyper: localized tagline cycle"]
 ```
 
@@ -108,7 +108,7 @@ flowchart TD
     end
     subgraph dom["2. DOM-as-state (motion)"]
         motion["lib/motion.ts: body[data-motion] + localStorage('erik.motion')<br/>broadcast via 'motionchange' CustomEvent"]
-        w1["writers: DesktopTopbar (MOTION toggle, xl tier)<br/>SectionNavigation drawer (MOTION: ON row, every width)"] --> motion
+        w1["writers: DesktopTopbar (MOTION toggle, xl tier)<br/>SectionNavigation drawer (MOTION: ON / OFF / REDUCED row, every width)"] --> motion
         w2["writer: CRTOverlay (OS reduced-motion sync)"] --> motion
         motion --> r1["readers: MatrixRain · RoleTyper · HeroBootAnimation · InteractiveShell"]
     end
