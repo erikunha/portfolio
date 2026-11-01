@@ -13,7 +13,6 @@ export const ContactContentSchema = z.object({
   section: z.object({
     command: z.string().min(1),
     mobileCommand: z.string().min(1),
-    emailLabel: z.string().min(1),
     email: z.email(),
     linkedinHref: z.url(),
     copyEmail: z.string().min(1),

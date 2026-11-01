@@ -32,7 +32,6 @@ export const contactCopy: ContactContent = {
   section: {
     command: 'SUDO CONTACT --INIT',
     mobileCommand: 'SUDO CONTACT',
-    emailLabel: 'email',
     email: EMAIL_ADDRESS,
     linkedinHref: LINKEDIN_URL,
     copyEmail: '[COPY EMAIL]',
