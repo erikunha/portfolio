@@ -96,7 +96,7 @@ export function AiMetricsSection({ defer }: { defer?: boolean } = {}) {
       id="sec-live-metrics"
       header={measured.command}
       variant="green"
-      srLabel={SECTION_LABELS['sec-live-metrics']}
+      name={SECTION_LABELS['sec-live-metrics']}
       icon={<IconAiMetrics />}
       defer={defer}
     >

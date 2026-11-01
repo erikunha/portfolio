@@ -116,6 +116,30 @@ describe('Hero owner decisions', () => {
 });
 
 describe('Hero copy discipline', () => {
+  it('groups the metadata into four facts with a decorative separator', () => {
+    const doc = getDOM();
+    const contexts = doc.querySelectorAll('.hero-context');
+    expect(contexts).toHaveLength(2);
+    for (const context of contexts) {
+      const facts = [...context.querySelectorAll(':scope > .hero-context-fact')];
+      expect(
+        facts.map((fact) => fact.getAttribute('class')),
+        'the metadata block groups its copy into the location, employer, domain and language facts',
+      ).toEqual([
+        'hero-context-fact hero-context-fact--location',
+        'hero-context-fact hero-context-fact--employer',
+        'hero-context-fact hero-context-fact--domain',
+        'hero-context-fact hero-context-fact--language',
+      ]);
+      const location = facts[0];
+      expect(location?.querySelectorAll(':scope > .hero-context-item')).toHaveLength(2);
+      const separator = location?.querySelector(':scope > .hero-context-separator');
+      expect(separator?.getAttribute('aria-hidden')).toBe('true');
+      expect(separator?.textContent).toBe(' · ');
+      expect(context.textContent).toContain('LOC: Brazil · UTC-3 · available now');
+    }
+  });
+
   it('renders CTA labels and meta prefixes from content/hero', async () => {
     const { heroContent } = await import('@/content/hero');
     const html = renderToStaticMarkup(createElement(Hero));

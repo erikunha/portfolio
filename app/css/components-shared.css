@@ -129,19 +129,19 @@
   }
 
   #sec-git-log {
-    --module-estimate: 3300px;
+    --module-estimate: 3340px;
   }
 
   #sec-hottest-takes {
-    --module-estimate: 3080px;
+    --module-estimate: 3180px;
   }
 
   #sec-guitar {
-    --module-estimate: 3880px;
+    --module-estimate: 4000px;
   }
 
   #sec-contact {
-    --module-estimate: 990px;
+    --module-estimate: 1020px;
   }
 
   @media (min-width: 768px) {

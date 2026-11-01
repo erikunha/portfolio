@@ -61,7 +61,7 @@ export function ProjectsSection({ defer }: { defer?: boolean } = {}) {
       header={projectPresentation.command}
       variant="green"
       mobileHeader={projectPresentation.mobileCommand}
-      srLabel={SECTION_LABELS['sec-projects']}
+      name={SECTION_LABELS['sec-projects']}
       icon={<IconProjects />}
       defer={defer}
     >

@@ -50,11 +50,14 @@ test.describe('type reveal', () => {
     expect(clips.every((clip) => clip === 'none')).toBe(true);
   });
 
-  for (const route of ['/', '/cv', '/summary', '/links']) {
-    test(`marked elements on ${route} hold only typed text and stay on one line`, async ({
+  const NARROW_WIDTHS = [320, 375];
+  const ROUTES = ['/', '/cv', '/summary', '/links'];
+  const routeWidths = ROUTES.flatMap((route) => NARROW_WIDTHS.map((width) => ({ route, width })));
+  for (const { route, width } of routeWidths) {
+    test(`marked elements on ${route} at ${width}px hold only typed text and stay on one line`, async ({
       page,
     }) => {
-      await page.setViewportSize({ width: 375, height: 812 });
+      await page.setViewportSize({ width, height: 812 });
       await page.emulateMedia({ reducedMotion: 'no-preference' });
       await page.goto(route);
       await page.waitForFunction(() =>
