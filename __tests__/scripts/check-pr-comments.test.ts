@@ -276,6 +276,61 @@ describe('evaluatePullRequest', () => {
       if (!result.ok) expect(result.code).toBe('reply_missing_commit_link');
     });
 
+    it('does not read a future or conditional clause as a fix claim', async () => {
+      const ghExec = mockGh([
+        botThread('Not done investigating this one yet, will update once resolved.'),
+      ]);
+      const result = await evaluatePullRequest({
+        prNumber: PR_NUMBER,
+        owner: 'erikunha',
+        repo: 'portfolio',
+        ghExec,
+      });
+      expect(
+        result.ok,
+        'A bare "done", "updated" or "resolved" is not a claim that a fix landed. "will update once resolved" is a promise, and treating it as a claim would demand a commit link from a reply that has nothing to link yet.',
+      ).toBe(true);
+    });
+
+    it.each(['Fixed in', 'Done in', 'Resolved in', 'Updated in', 'Addressed in'])(
+      'FAILS a bare SHA after "%s"',
+      async (lead) => {
+        const ghExec = mockGh([botThread(`${lead} ${FIX_SHA.slice(0, 7)}.`)]);
+        const result = await evaluatePullRequest({
+          prNumber: PR_NUMBER,
+          owner: 'erikunha',
+          repo: 'portfolio',
+          ghExec,
+        });
+        expect(result.ok, `"${lead} <sha>" is a fix claim and needs a commit link.`).toBe(false);
+        if (!result.ok) expect(result.code).toBe('reply_missing_commit_link');
+      },
+    );
+
+    it('reports every offending thread when missing-link and unreachable replies are mixed', async () => {
+      const missing = { ...botThread(`Fixed in ${FIX_SHA.slice(0, 7)}.`), id: 'T_missing' };
+      const unreachable = {
+        ...botThread(`Fixed in ${commitLink(UNREACHABLE_SHA)}`),
+        id: 'T_unreachable',
+      };
+      const ghExec = mockGh([missing, unreachable], { reachable: [FIX_SHA] });
+      const result = await evaluatePullRequest({
+        prNumber: PR_NUMBER,
+        owner: 'erikunha',
+        repo: 'portfolio',
+        ghExec,
+      });
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(
+          result.offendingThreads,
+          'Reporting only the missing-link subset hides the unreachable thread until the first is fixed, costing a full extra round per class of failure.',
+        ).toEqual(['T_missing', 'T_unreachable']);
+        expect(result.message).toContain('reachable commit link');
+        expect(result.message).toContain(UNREACHABLE_SHA);
+      }
+    });
+
     it('FAILS a link that names another pull request', async () => {
       const ghExec = mockGh([botThread(`Fixed in ${commitLink(FIX_SHA, PR_NUMBER + 1)}`)], {
         reachable: [FIX_SHA],
