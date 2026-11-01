@@ -1,43 +1,12 @@
 # Review Standard
 
-Every rule below was extracted from real review findings on this repository. Apply the rule before you write the code, run the check before you push. A reviewer of any diff in this repository uses this file as its prompt: read the diff, check it against every rule whose file type it touches and against `docs/handbook/lessons.md`, and report each finding with file, line, rule number, severity (blocker, major, minor, nit) and the fix.
+Every rule below was extracted from real review findings on this repository. Apply the rule before you write the code, run the check before you push. An agent or person reviewing a diff by hand uses this file as the prompt (the automated claude-review bot runs `.github/claude-review-prompt.md` instead): read the diff, check it against every rule whose file type it touches and against `docs/handbook/lessons.md`, and report each finding with file, line, rule number, severity (blocker, major, minor, nit) and the fix.
 
-## Findings by class
+## Where findings cluster
 
-| Class                              | Findings |
-| ---------------------------------- | -------- |
-| stale docs or manifest             | 144      |
-| fail-open guard or swallowed error | 55       |
-| weak or source-grepping test       | 54       |
-| duplicated literal or magic value  | 44       |
-| claim not matching the diff        | 42       |
-| security                           | 36       |
-| CSS token or layout                | 35       |
-| dead code                          | 33       |
-| content fact or copy               | 25       |
-| accessibility                      | 23       |
-| commit or PR hygiene               | 19       |
-| type or contract drift             | 10       |
-| other                              | 10       |
-| performance or bundle              | 6        |
-| **total**                          | **536**  |
+Classes, most frequent first: stale docs or manifest; fail-open guard or swallowed error; weak or source-grepping test; duplicated literal or magic value; claim not matching the diff; security; CSS token or layout; dead code; content fact or copy; accessibility; commit or PR hygiene; type or contract drift; performance or bundle.
 
-Severity split: 25 critical, 378 important, 132 minor, 1 informational.
-
-## Findings by file type
-
-| File type                                     | Findings |
-| --------------------------------------------- | -------- |
-| workflow or script                            | 108      |
-| markdown doc                                  | 94       |
-| test                                          | 92       |
-| tsx component                                 | 66       |
-| other file (server code, config, agent files) | 61       |
-| content ts                                    | 55       |
-| DECISIONS                                     | 30       |
-| css                                           | 30       |
-
-PRs with the most findings: 214 (40), 263 (23), 267 (22), 270 (19), 282 (18), 265 (16), 307 (14), 261 (13), 185 (12), 193 (12).
+File types, most frequent first: workflow or script; markdown doc; test; tsx component; server code, config and agent files; content ts; DECISIONS and css.
 
 ---
 
@@ -279,12 +248,7 @@ Examples:
 - PR267 `app/api/contact-retry/route.ts`: the route returned a bare `Response.json(counts)` instead of `defineHandler` and `ok()`; the fix used the envelope.
 - PR262 `lib/server/body-limit.ts`: the new file was missing `import 'server-only'`, so client code could pull it in; the fix added it.
 
-**Rule 28. A schema is the contract, and the code and the schema must agree.**
-Before writing: when a value can only take one shape, say so in the schema, not in a comment.
-Check: `pnpm typecheck` plus the schema test that covers the boundary.
-Examples:
-- PR191 `__tests__/metric-consistency.test.ts`: the sign helper assumed a signed delta while the schema allowed any string; the fix made the schema require the sign.
-- PR262 `docs/05-api-and-integrations.md`: the new error code was added to the union and to the prose, but two other documents still listed the old set; the fix updated all of them.
+**Rule 28. Retired: merged into Rule 33, which covers the same schema contract and adds the fixture.**
 
 ---
 
@@ -325,6 +289,7 @@ Before writing: when a value can only take one shape, say so in the schema, not 
 Check: `pnpm typecheck` plus the schema test that covers the boundary.
 Examples:
 - PR191 `__tests__/metric-consistency.test.ts`: the sign helper assumed a signed delta while the schema allowed any string; the fix made the schema require the sign.
+- PR262 `docs/05-api-and-integrations.md`: the new error code was added to the union and to the prose, but two other documents still listed the old set; the fix updated all of them.
 - PR262 `lib/server/body-limit.ts`: the catch branch reported a JSON error for a transport failure that happened before parsing; the fix gave the branch its own code.
 
 ---

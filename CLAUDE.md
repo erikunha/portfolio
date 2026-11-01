@@ -239,7 +239,7 @@ Before proposing any of these, check `DECISIONS.md` to see the reasoning that ex
 - `ARCHITECTURE.md` — system design, deep dive, trade-offs
 - `DECISIONS.md` — running ADR log
 - `docs/handbook/lessons.md`: numbered rules from past review findings and CI reds; follow all of them
-- `docs/handbook/review-standard.md`: the review prompt applied to every diff
+- `docs/handbook/review-standard.md`: the prompt for a manual or agent review of a diff (the bot uses `.github/claude-review-prompt.md`)
 - `AGENTS.md`: short validation and rule pointer for agents that do not load this file
 - `.claude/rules/*.md` — path-scoped rules that load only when editing matching files (keeps this file small); `api-boundary.md` covers `app/api/**` + server surface
 

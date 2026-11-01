@@ -72,6 +72,10 @@ The review prompt that applies these rules to a diff is `docs/handbook/review-st
     existing lines. A rewrap turns every existing dash and SHA into a net-new line and fails the
     quality gate. Check: `git diff --stat DECISIONS.md` shows only insertions.
 
+25. A doc that says a tool or bot uses a file names the file that wires it in, and a doc that
+    forbids exact counts holds none itself. Check: grep the named consumer (for the review bot,
+    `.github/claude-review-prompt.md`) for the path, and grep the doc for literal tallies.
+
 ## Pre-push judgement list
 
 Ranked by how often review caught each class on this repository.
