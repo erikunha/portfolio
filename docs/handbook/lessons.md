@@ -68,6 +68,9 @@ The review prompt that applies these rules to a diff is `docs/handbook/review-st
 23. After a squash merge of a sub-PR that a later branch was based on, sync that branch in two
     merges: first the sub-PR's final head SHA, then the base. Add/add conflicts where the base file
     equals that head resolve to ours.
+24. `DECISIONS.md` is append-only for a change: add new bullets, never reflow, rewrap or reformat
+    existing lines. A rewrap turns every existing dash and SHA into a net-new line and fails the
+    quality gate. Check: `git diff --stat DECISIONS.md` shows only insertions.
 
 ## Pre-push judgement list
 
