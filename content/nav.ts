@@ -19,7 +19,7 @@ export const NAV_VOCABULARY = {
 
 export const HIRE_SHORT_LABEL = 'HIRE ↗';
 
-export const HIRE_ACCESSIBLE_NAME = 'Hire me on LinkedIn (opens in a new tab)';
+export const HIRE_ACCESSIBLE_NAME = 'Hire on LinkedIn (opens in a new tab)';
 
 export const TOPBAR_NAV: readonly TopbarNavLink[] = [
   { label: NAV_VOCABULARY.about, href: '/#sec-readme' },
@@ -34,7 +34,7 @@ export const TOPBAR_READING_LINK = { label: CV_LINK_LABEL, href: READING_PATHS.c
 export const TOPBAR_MOTION_LABEL = 'MOTION';
 
 export const TOPBAR_HIRE_LINK = {
-  label: NAV_VOCABULARY.hire,
+  label: HIRE_SHORT_LABEL,
   href: LINKEDIN_URL,
   accessibleName: HIRE_ACCESSIBLE_NAME,
 } as const;

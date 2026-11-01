@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { SectionNavigationProvider } from '@/components/responsive/SectionNavigation';
 import {
   HIRE_ACCESSIBLE_NAME,
+  HIRE_SHORT_LABEL,
   NAV_VOCABULARY,
   TOPBAR_MOTION_LABEL,
   TOPBAR_NAV,
@@ -79,7 +80,7 @@ describe('DesktopTopbar', () => {
       NAV_VOCABULARY.contact,
       NAV_VOCABULARY.designSystem,
       'VIEW_CV',
-      NAV_VOCABULARY.hire,
+      HIRE_SHORT_LABEL,
     ]);
   });
 
@@ -130,13 +131,13 @@ describe('DesktopTopbar', () => {
   it('keeps the hire CTA on LinkedIn and names the new tab for assistive tech', async () => {
     mounted = await renderTopbar();
     const hire = [...mounted.container.querySelectorAll('a')].find((link) =>
-      link.textContent?.startsWith(NAV_VOCABULARY.hire),
+      link.textContent?.startsWith(HIRE_SHORT_LABEL),
     );
 
     expect(hire?.getAttribute('href')).toBe('https://www.linkedin.com/in/erikunha/');
     expect(hire?.getAttribute('target')).toBe('_blank');
     expect(hire?.getAttribute('rel')).toContain('noopener');
-    expect(hire?.textContent?.trim()).toBe(NAV_VOCABULARY.hire);
+    expect(hire?.textContent?.trim()).toBe(HIRE_SHORT_LABEL);
     expect(hire?.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME);
   });
 
