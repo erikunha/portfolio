@@ -5,7 +5,6 @@ import { contactCopy } from '@/content/contact-copy';
 import { social } from '@/content/social';
 
 const ARROW_GLYPH = '↗';
-const LINKEDIN_NAME = 'Message on LinkedIn (opens in a new tab)';
 const GITHUB_NAME = 'github.com/erikunha (opens in a new tab)';
 
 function spokenWords(text: string): string {
@@ -30,15 +29,28 @@ function renderChannels(): HTMLElement {
 }
 
 describe('the contact channel actions name what they show', () => {
-  it('gives the LinkedIn CTA an accessible name that contains its visible words', () => {
+  it('gives the LinkedIn CTA an accessible name that contains its visible text literally', () => {
     const card = renderChannels();
     const links = [...card.querySelectorAll<HTMLAnchorElement>(`a[href="${social.linkedin}"]`)];
 
     expect(links.length, 'the channels card carries one LinkedIn action').toBeGreaterThan(0);
     for (const link of links) {
-      expect(link.textContent?.trim()).toBe(contactCopy.channels.linkedinCta);
-      expect(link.getAttribute('aria-label')).toBe(LINKEDIN_NAME);
-      expectLabelInName(link);
+      const visible = [...link.childNodes]
+        .filter((node) => !(node instanceof HTMLElement && node.matches('[aria-hidden], .sr-only')))
+        .map((node) => node.textContent)
+        .join('')
+        .trim();
+      const name = [...link.childNodes]
+        .filter((node) => !(node instanceof HTMLElement && node.matches('[aria-hidden]')))
+        .map((node) => node.textContent)
+        .join('')
+        .replace(/\s+/g, ' ')
+        .trim();
+      expect(link.getAttribute('aria-label'), 'the name comes from the content').toBeNull();
+      expect(visible).toBe(contactCopy.channels.linkedinCta);
+      expect(name, 'WCAG 2.5.3: the name starts with the literal visible text').toBe(
+        `${contactCopy.channels.linkedinCta} ${contactCopy.channels.linkedinNewTabNote}`,
+      );
     }
   });
 

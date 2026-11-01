@@ -52,9 +52,9 @@ export function ContactSection({ defer }: { defer?: boolean } = {}) {
                   href={section.linkedinHref}
                   target="_blank"
                   rel="noreferrer noopener"
-                  aria-label={channels.linkedinAccessibleLabel}
                 >
-                  {channels.linkedinCta}
+                  {channels.linkedinCta} <span aria-hidden="true">{channels.linkedinGlyph}</span>
+                  <span className="sr-only"> {channels.linkedinNewTabNote}</span>
                 </a>
               </dd>
             </div>

@@ -195,7 +195,7 @@ export function ContactForm() {
             aria-labelledby={invalidFields.length > 0 ? summaryId : requestErrorId}
           >
             {invalidFields.length > 0 && (
-              <p className="contact-alert-line">
+              <p>
                 <span id={summaryId}>{contactErrorSummary(invalidFields.length)}</span>
                 {invalidFields.map((field, index) => (
                   <Fragment key={field}>
