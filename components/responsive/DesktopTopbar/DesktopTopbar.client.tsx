@@ -6,7 +6,6 @@ import {
   TOPBAR_NAV,
   TOPBAR_READING_LINK,
 } from '@/content/nav';
-import { NAVIGATION } from '@/content/navigation';
 import { topbarChrome } from '@/content/terminal-chrome';
 import { WindowChrome } from '@/design-system';
 import { cn } from '@/lib/cn';
@@ -14,7 +13,6 @@ import { IndexTrigger, SearchTrigger, useSectionNavigation } from '../SectionNav
 
 export function DesktopTopbar() {
   const { motionOn, toggleMotion } = useSectionNavigation();
-  const { copy } = NAVIGATION;
 
   return (
     <div className="desktop-topbar fixed top-0 left-0 right-0 z-[110] bg-secondary-950 border-b border-primary-subtle hidden md:block">
@@ -89,9 +87,9 @@ export function DesktopTopbar() {
             href={TOPBAR_HIRE_LINK.href}
             target="_blank"
             rel="noreferrer noopener"
+            aria-label={TOPBAR_HIRE_LINK.accessibleName}
           >
             {TOPBAR_HIRE_LINK.label}
-            <span className="sr-only">{copy.newTabSuffix}</span>
           </a>
         </nav>
       </div>

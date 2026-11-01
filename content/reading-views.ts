@@ -3,6 +3,7 @@ import { credentials } from './credentials';
 import { education } from './education';
 import { gitLog } from './git-log';
 import { heroContent } from './hero';
+import { HIRE_ACCESSIBLE_NAME, NAV_VOCABULARY } from './nav';
 import { formatLanguages, profile, profileCityLine, profileLocation } from './profile';
 import { projects } from './projects';
 import { READING_PATHS } from './reading-paths';
@@ -37,8 +38,8 @@ export const readingViews = ReadingViewsSchema.parse({
       { label: 'DESIGN_SYSTEM', href: '/design-system' },
     ],
     hire: {
-      label: 'HIRE_ON_LINKEDIN ↗',
-      ariaLabel: 'Hire on LinkedIn, opens in a new tab',
+      label: NAV_VOCABULARY.hire,
+      ariaLabel: HIRE_ACCESSIBLE_NAME,
       href: social.linkedin,
     },
     printLabel: 'PRINT / SAVE PDF',
