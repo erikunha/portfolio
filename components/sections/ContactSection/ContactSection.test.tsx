@@ -1,55 +1,42 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { contactLanguageLine } from '@/content/contact';
+import { describe, expect, it } from 'vitest';
+import { contactLanguages } from '@/content/contact';
+import { contactCopy } from '@/content/contact-copy';
+import { profile } from '@/content/profile';
 import { social } from '@/content/social';
 import { ContactSection } from './ContactSection';
 
-vi.mock('../../client/ContactForm', () => ({ ContactFormLazy: () => null }));
-
-afterEach(() => vi.unstubAllGlobals());
-
 describe('ContactSection', () => {
-  it('renders direct contact and a reply expectation before hydration', () => {
+  it('renders the channels card with every row a reader needs', () => {
     const host = document.createElement('div');
     host.innerHTML = renderToStaticMarkup(<ContactSection />);
-    expect(host.querySelector(`a[href="mailto:${social.email}"]`)?.textContent).toBe(social.email);
-    expect(host.querySelector(`a[href="${social.linkedin}"]`)?.textContent).toContain(
-      'Message me there',
+    const card = host.querySelector('.contact-channels');
+    expect(card, 'the contact section carries a channels card').not.toBeNull();
+    expect(card?.querySelector('a[href^="mailto:"]')?.textContent).toBe(social.email);
+    expect(card?.querySelector('a[href$="/in/erikunha/"]')?.textContent).toContain(
+      contactCopy.channels.linkedinCta,
     );
-    expect(host.textContent).toContain('Replies within 48h');
+    expect(card?.querySelector('a[href="https://github.com/erikunha"]')?.textContent).toContain(
+      social.githubLabel,
+    );
+    expect(card?.textContent).toContain(contactCopy.channels.replyValue);
+    expect(card?.textContent).toContain(contactLanguages);
+    expect(card?.textContent).toContain(profile.timezone);
   });
 
-  it('renders no work authorization rows', () => {
+  it('gives the linkedin row a real outbound link', () => {
     const host = document.createElement('div');
     host.innerHTML = renderToStaticMarkup(<ContactSection />);
-    expect(host.querySelector('table')).toBeNull();
-    expect(host.textContent).not.toContain('Work authorization');
-    expect(host.textContent).not.toContain('SPONSORSHIP');
+    const cta = host.querySelector('.contact-channel-cta');
+    expect(cta?.getAttribute('href')).toBe(social.linkedin);
+    expect(cta?.getAttribute('target')).toBe('_blank');
+    expect(cta?.getAttribute('rel')).toContain('noopener');
   });
 
-  it('renders the language line in the prototype format', () => {
-    const host = document.createElement('div');
-    host.innerHTML = renderToStaticMarkup(<ContactSection />);
-    expect(host.querySelector('.contact-languages')?.textContent).toBe(contactLanguageLine);
-    expect(contactLanguageLine).toBe('// PT (native) · EN (C1) · ES (B1) · FR (A2)');
-  });
-
-  it('names the copy control with its visible label so the visible label is in the accessible name', () => {
+  it('keeps a copy control next to the address', () => {
     render(<ContactSection />);
-    const button = screen.getByRole('button', { name: '[COPY EMAIL]' });
-    expect(button.textContent).toBe('[COPY EMAIL]');
-  });
-
-  it('copies the canonical email and announces completion', async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal('navigator', { clipboard: { writeText } });
-    render(<ContactSection />);
-    fireEvent.click(screen.getByRole('button', { name: '[COPY EMAIL]' }));
-    await waitFor(() => expect(writeText).toHaveBeenCalledWith(social.email));
-    await waitFor(() => {
-      const copied = screen.getByRole('button', { name: '[COPIED]' });
-      expect(copied.textContent).toBe('[COPIED]');
-    });
+    const copy = screen.getByRole('button', { name: contactCopy.section.copyEmail });
+    expect(copy).toBeTruthy();
   });
 });

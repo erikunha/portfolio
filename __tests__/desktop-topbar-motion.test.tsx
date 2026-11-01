@@ -17,6 +17,7 @@ describe('DesktopTopbar — toggleMotion', () => {
   it('clicking the MOTION button toggles data-motion from on to off', async () => {
     vi.doMock('@/lib/motion', () => ({
       readMotion: () => true,
+      readSystemReducedMotion: () => false,
       applyMotion: vi.fn(),
     }));
 
@@ -44,6 +45,7 @@ describe('DesktopTopbar — toggleMotion', () => {
   it('clicking the MOTION button toggles data-motion from off to on', async () => {
     vi.doMock('@/lib/motion', () => ({
       readMotion: () => false,
+      readSystemReducedMotion: () => false,
       applyMotion: vi.fn(),
     }));
 
@@ -71,6 +73,7 @@ describe('DesktopTopbar — toggleMotion', () => {
     const applyMotionMock = vi.fn();
     vi.doMock('@/lib/motion', () => ({
       readMotion: () => true,
+      readSystemReducedMotion: () => false,
       applyMotion: applyMotionMock,
     }));
 

@@ -1,4 +1,9 @@
 @layer components {
+  .ds-layout {
+    position: relative;
+    z-index: var(--z-content);
+  }
+
   .ds-main {
     flex: 1;
     min-width: 0;

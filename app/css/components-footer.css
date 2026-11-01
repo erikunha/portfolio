@@ -3,8 +3,6 @@
     --footer-max-width: 75rem;
     --footer-card-ratio: 1.15fr;
     --footer-tree-indent: 4ch;
-    --footer-protocol-width: 6ch;
-    --footer-state-width: 12ch;
     --footer-line-height: 1.5;
     --footer-session-leading: 1.95;
     --footer-dmesg-leading: calc(var(--spacing-4) + var(--spacing-1));
@@ -28,7 +26,7 @@
   .footer-inner {
     max-width: var(--footer-max-width);
     margin-inline: auto;
-    padding-inline: var(--spacing-6);
+    padding-inline: var(--space-gutter);
   }
 
   .footer-shutdown-title,
@@ -140,15 +138,30 @@
 
   .footer-netstat-scroll {
     overflow-x: auto;
-    container: netstat / inline-size;
   }
 
-  @container netstat (max-width: 17.5rem) {
-    .footer-netstat :is(th, td):last-child,
-    .footer-netstat .footer-link {
-      white-space: normal;
-      overflow-wrap: anywhere;
-    }
+  .footer-netstat {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  .footer-netstat th {
+    font-weight: 400;
+    line-height: var(--spacing-6);
+  }
+
+  .footer-netstat :is(th, td) {
+    padding: 0 var(--spacing-1) 0 0;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  .footer-netstat :is(th, td):last-child {
+    padding-right: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .footer-session-grid dd:has(> meter) {
@@ -180,33 +193,6 @@
     background: var(--color-green);
   }
 
-  .footer-netstat {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-    text-align: left;
-  }
-
-  .footer-netstat th {
-    font-weight: 400;
-    line-height: var(--spacing-6);
-  }
-
-  .footer-netstat :is(th, td) {
-    padding: 0 var(--spacing-1) 0 0;
-    vertical-align: middle;
-    white-space: nowrap;
-    overflow-wrap: normal;
-  }
-
-  .footer-netstat :is(th, td):first-child {
-    width: var(--footer-protocol-width);
-  }
-
-  .footer-netstat :is(th, td):nth-child(2) {
-    width: var(--footer-state-width);
-  }
-
   .footer-established {
     color: var(--color-green);
     font-weight: 700;
@@ -230,11 +216,16 @@
   }
 
   .footer-link {
-    white-space: nowrap;
-    overflow-wrap: normal;
+    white-space: normal;
+    gap: var(--spacing-1);
     text-decoration: underline;
     text-decoration-color: var(--color-primary-subtle);
     text-underline-offset: var(--border-width);
+  }
+
+  .footer-link-glyph {
+    flex: none;
+    color: var(--color-primary-500);
   }
 
   .footer-link:hover,

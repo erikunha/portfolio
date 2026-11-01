@@ -1,5 +1,6 @@
 import { FooterContentSchema } from './schemas';
 import { social } from './social';
+import { EXTERNAL_LINK_GLYPH } from './terminal-chrome';
 
 const HOME_HREF = '#main-content';
 const HOME_SECTION_ID = 'bio';
@@ -18,28 +19,28 @@ export const footerContent = FooterContentSchema.parse({
   },
   user: 'erik@portfolio',
   netstatTitle: 'NETSTAT -AN',
-  copyLabel: 'Copy netstat rows',
+  externalGlyph: EXTERNAL_LINK_GLYPH,
   connectionLabels: { protocol: 'Proto', state: 'State', endpoint: 'Endpoint' },
   connections: [
     {
       protocol: 'tcp',
       state: 'ESTABLISHED',
       href: social.github,
-      label: 'github.com/erikunha',
+      label: social.githubLabel,
       external: true,
     },
     {
       protocol: 'tcp',
       state: 'LISTEN',
       href: social.linkedin,
-      label: 'linkedin.com/in/erikunha',
+      label: social.linkedinLabel,
       external: true,
     },
     {
       protocol: 'tcp',
       state: 'ESTABLISHED',
       href: social.site,
-      label: 'erikunha.dev',
+      label: social.siteLabel,
       external: true,
     },
     {

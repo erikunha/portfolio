@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { CopyButton } from '@/app/design-system/_components/CopyButton';
 import { aboutContent as c } from '@/content/about';
 import { responsibilities } from '@/content/responsibilities';
 import { SCROLL_REGION_LABELS } from '@/content/section-labels';
@@ -133,21 +132,15 @@ export function About() {
               title={c.code.title}
               className="ab-code"
               action={
-                <>
-                  <CopyButton
-                    text={c.code.tokens.map((token) => token.text).join('')}
-                    aria-label={c.code.copyAccessibleLabel}
-                  />
-                  <a
-                    className="repo-link"
-                    href={c.code.repoHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={c.code.repoAccessibleLabel}
-                  >
-                    {c.code.repoLabel}
-                  </a>
-                </>
+                <a
+                  className="repo-link"
+                  href={c.code.repoHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {c.code.repoLabel} <span aria-hidden="true">{c.code.repoGlyph}</span>
+                  <span className="sr-only"> {c.code.repoNewTabNote}</span>
+                </a>
               }
             >
               <section

@@ -1,4 +1,15 @@
 @layer components {
+  .page-main {
+    position: relative;
+    z-index: var(--z-content);
+  }
+
+  @media (min-width: 768px) {
+    .page-container.page-main {
+      padding-block-start: calc(var(--topbar-height) + var(--spacing-6));
+    }
+  }
+
   .copy-btn {
     display: inline-flex;
     align-items: center;
@@ -141,7 +152,7 @@
   }
 
   #sec-contact {
-    --module-estimate: 1020px;
+    --module-estimate: 1120px;
   }
 
   @media (min-width: 768px) {
@@ -158,7 +169,7 @@
     }
 
     #sec-contact {
-      --module-estimate: 840px;
+      --module-estimate: 910px;
     }
   }
 

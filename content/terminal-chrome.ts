@@ -16,3 +16,5 @@ export const topbarChrome: TopbarChrome = {
   brandLabel: 'ERIK_CUNHA.SH',
   brandClose: '×',
 };
+
+export const EXTERNAL_LINK_GLYPH = '↗';

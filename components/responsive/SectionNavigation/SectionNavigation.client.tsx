@@ -22,7 +22,7 @@ import { SECTION_NAV } from '@/content/section-registry';
 import { NavItem } from '@/design-system';
 import { cn } from '@/lib/cn';
 import { isolate } from '@/lib/dom/isolate';
-import { applyMotion, readMotion } from '@/lib/motion';
+import { applyMotion, readMotion, readSystemReducedMotion } from '@/lib/motion';
 
 const MAIN_ID = 'main-content';
 export const DRAWER_ID = 'section-drawer';
@@ -36,6 +36,12 @@ const SCROLL_LOCK_ATTRIBUTE = 'data-scroll-locked';
 const SEARCH_KEY = 'k';
 const INDEX_TRIGGER_CLASS = 'index-trigger';
 const INDEX_TRIGGER_SELECTOR = `.${INDEX_TRIGGER_CLASS}`;
+const KEYBOARD_PLATFORM = {
+  APPLE: 'apple',
+  OTHER: 'other',
+} as const;
+
+type KeyboardPlatform = (typeof KEYBOARD_PLATFORM)[keyof typeof KEYBOARD_PLATFORM];
 
 type NavigationState = {
   currentId: string;
@@ -45,6 +51,7 @@ type NavigationState = {
   settleDrawer: () => void;
   jump: (event: MouseEvent<HTMLElement>, id: string) => void;
   motionOn: boolean;
+  motionLabel: string;
   toggleMotion: () => void;
 };
 
@@ -106,6 +113,7 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
   const [currentId, setCurrentId] = useState<string>(HOME_SECTION_ID);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [motionOn, setMotionOn] = useState(true);
+  const [systemReduced, setSystemReduced] = useState(false);
   const drawerOpenRef = useRef(false);
   const motionOnRef = useRef(true);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -116,6 +124,7 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
     const on = readMotion();
     motionOnRef.current = on;
     setMotionOn(on);
+    setSystemReduced(readSystemReducedMotion());
     applyMotion(on);
   }, []);
 
@@ -225,6 +234,11 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
         settleDrawer,
         jump,
         motionOn,
+        motionLabel: motionOn
+          ? NAVIGATION.copy.motionOn
+          : systemReduced
+            ? NAVIGATION.copy.motionReduced
+            : NAVIGATION.copy.motionOff,
         toggleMotion,
       }}
     >
@@ -239,8 +253,16 @@ const GROUP_SECTIONS = NAVIGATION.groups.map((group) => ({
 }));
 
 export function SectionNavigation() {
-  const { currentId, drawerOpen, closeDrawer, settleDrawer, jump, motionOn, toggleMotion } =
-    useSectionNavigation();
+  const {
+    currentId,
+    drawerOpen,
+    closeDrawer,
+    settleDrawer,
+    jump,
+    motionOn,
+    motionLabel,
+    toggleMotion,
+  } = useSectionNavigation();
   const { copy } = NAVIGATION;
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -355,7 +377,7 @@ export function SectionNavigation() {
               onClick={toggleMotion}
             >
               <span className="menu-motion-dot" aria-hidden="true" />
-              <span>{motionOn ? copy.motionOn : copy.motionOff}</span>
+              <span>{motionLabel}</span>
             </button>
           </li>
         </ul>
@@ -391,10 +413,10 @@ export function IndexTrigger({ className }: { className?: string }) {
 export function SearchTrigger({ className }: { className?: string }) {
   const { drawerOpen, openDrawer, closeDrawer } = useSectionNavigation();
   const { copy } = NAVIGATION;
-  const [shortcut, setShortcut] = useState<string | null>(null);
+  const [keyboard, setKeyboard] = useState<KeyboardPlatform>(KEYBOARD_PLATFORM.APPLE);
 
   useEffect(() => {
-    setShortcut(isAppleKeyboard() ? copy.searchShortcutApple : copy.searchShortcutOther);
+    if (!isAppleKeyboard()) setKeyboard(KEYBOARD_PLATFORM.OTHER);
   }, []);
 
   return (
@@ -411,7 +433,10 @@ export function SearchTrigger({ className }: { className?: string }) {
       }}
     >
       <span className="search-trigger-label">{copy.searchLabel}</span>
-      <span className="search-trigger-shortcut">{shortcut}</span>
+      <span className="search-trigger-shortcut" data-keyboard={keyboard}>
+        <span data-platform={KEYBOARD_PLATFORM.APPLE}>{copy.searchShortcutApple}</span>
+        <span data-platform={KEYBOARD_PLATFORM.OTHER}>{copy.searchShortcutOther}</span>
+      </span>
     </button>
   );
 }

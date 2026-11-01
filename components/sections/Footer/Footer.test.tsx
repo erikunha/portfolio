@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import { act } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -157,22 +157,23 @@ describe('Footer live session', () => {
     expect(mounted.container.querySelector('[data-sess="halt"]')?.textContent).toBe('14:05:09');
   });
 
-  it('copies the visible netstat rows as plain text using the design-system control', async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal('navigator', { clipboard: { writeText } });
+  it('offers every netstat endpoint as a link and no copy control', () => {
     const mounted = render(<Footer />);
-    fireEvent.click(mounted.getByRole('button', { name: 'Copy netstat rows' }));
-    await waitFor(() =>
-      expect(writeText).toHaveBeenCalledWith(
-        'tcp  ESTABLISHED  github.com/erikunha\n' +
-          'tcp  LISTEN  linkedin.com/in/erikunha\n' +
-          'tcp  ESTABLISHED  erikunha.dev\n' +
-          'tcp  ESTABLISHED  ~/design_system',
-      ),
-    );
-    await waitFor(() =>
-      expect(mounted.getByRole('button', { name: 'Copy netstat rows' }).textContent).toBe('COPIED'),
-    );
+    const endpoints = [...mounted.container.querySelectorAll('.footer-netstat tbody a')];
+    expect(endpoints.map((link) => link.getAttribute('href'))).toEqual([
+      'https://github.com/erikunha',
+      'https://www.linkedin.com/in/erikunha/',
+      'https://www.erikunha.dev',
+      '/design-system',
+    ]);
+    expect(
+      endpoints.map((link) => link.querySelector('.footer-link-glyph')?.textContent ?? null),
+      'only external endpoints carry the opens-externally glyph',
+    ).toEqual(['↗', '↗', '↗', null]);
+    expect(
+      mounted.queryByRole('button', { name: 'Copy netstat rows' }),
+      'the netstat table links out, it does not copy',
+    ).toBeNull();
   });
 
   it('starts uptime at page navigation and counts commands before the footer is reached', () => {

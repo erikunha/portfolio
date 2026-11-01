@@ -725,8 +725,25 @@ describe('contact cross-review fixes', () => {
     const summary = screen.getByRole('alert');
     const labelId = summary.getAttribute('aria-labelledby') as string;
     expect(labelId).toBeTruthy();
-    expect(document.getElementById(labelId)?.textContent).toBe('Fields need attention:');
-    expect(screen.getByRole('alert', { name: 'Fields need attention:' })).toBe(summary);
+    expect(document.getElementById(labelId)?.textContent).toBe('3 fields need attention:');
+    expect(screen.getByRole('alert', { name: '3 fields need attention:' })).toBe(summary);
+  });
+
+  it('summarises the invalid fields on one line with a link per field', () => {
+    const { container } = render(<ContactForm />);
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    const summary = screen.getByRole('alert');
+    expect(
+      summary.querySelectorAll('p').length,
+      'the summary reads as one line, not a list of rows',
+    ).toBe(1);
+    expect(summary.querySelector('ul')).toBeNull();
+    expect(Array.from(summary.querySelectorAll('a')).map((link) => link.textContent)).toEqual([
+      'name',
+      'email',
+      'message',
+    ]);
+    expect(summary.textContent).toContain('3 fields need attention:');
   });
 
   it('names the summary when only a request error shows', async () => {

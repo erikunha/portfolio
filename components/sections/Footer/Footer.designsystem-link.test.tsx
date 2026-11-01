@@ -12,4 +12,18 @@ describe('Footer destinations', () => {
     expect(host.querySelector('a[href="https://erikunha.dev"]')).toBeNull();
     expect(host.querySelector('a[href="https://www.erikunha.dev"]')).not.toBeNull();
   });
+
+  it('marks only external netstat endpoints with the opens-externally glyph', () => {
+    const host = document.createElement('div');
+    host.innerHTML = renderToStaticMarkup(<Footer />);
+    const links = [...host.querySelectorAll('a.footer-link')];
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      const external = link.getAttribute('target') === '_blank';
+      expect(
+        link.querySelector('.footer-link-glyph') !== null,
+        `glyph must match external flag for ${link.getAttribute('href')}`,
+      ).toBe(external);
+    }
+  });
 });
