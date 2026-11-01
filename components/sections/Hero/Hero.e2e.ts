@@ -127,12 +127,49 @@ test.describe('Hero groups reflow by viewport', () => {
   });
 });
 
+const TABLET_BOOT_WIDTHS = [768, 1023];
+const TABLET_BOOT_VIEWPORT_HEIGHT = 900;
+
+test.describe('Hero boot log between 768 and 1023px', () => {
+  for (const width of TABLET_BOOT_WIDTHS) {
+    test(`keeps every boot line on one line at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: TABLET_BOOT_VIEWPORT_HEIGHT });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.goto('/');
+
+      const lines = page.locator('.hero-desktop .hero-boot-line');
+      await expect(lines.first()).toBeVisible();
+      const count = await lines.count();
+      expect(count, 'the desktop boot log renders its lines').toBeGreaterThan(0);
+
+      for (let index = 0; index < count; index += 1) {
+        const line = lines.nth(index);
+        const measured = await line.evaluate((node) => ({
+          height: node.getBoundingClientRect().height,
+          lineHeight: parseFloat(getComputedStyle(node).lineHeight),
+          text: (node.textContent ?? '').trim(),
+        }));
+        expect(
+          measured.height,
+          `boot line ${index} wraps onto a second line: "${measured.text}"`,
+        ).toBeLessThanOrEqual(measured.lineHeight + 1);
+        if (measured.text.length > 0) {
+          expect(
+            Math.abs(measured.height - measured.lineHeight),
+            `boot line ${index} is not exactly one line tall: "${measured.text}"`,
+          ).toBeLessThanOrEqual(1);
+        }
+      }
+    });
+  }
+});
+
 const METADATA_MOBILE_WIDTHS = [320, 390];
 const METADATA_WIDE_WIDTHS = [768, 1280];
 const METADATA_VIEWPORT_HEIGHT = 900;
 
 const WIDE_METADATA_ROWS: Record<number, string[]> = {
-  768: ['location + availability', 'employer', 'domain', 'language'],
+  768: ['location + availability + employer', 'domain + language'],
   1280: ['location + availability + employer', 'domain + language'],
 };
 
