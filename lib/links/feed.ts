@@ -7,8 +7,10 @@ import { env } from '@/lib/env';
 import {
   canonicalThumbnailUrl,
   type EnrichedVideo,
+  type PlaylistItemsPayload,
   parseFeed,
   parseIsoDuration,
+  parsePlaylistItems,
 } from '@/lib/links/youtube';
 import { log } from '@/lib/log';
 
@@ -24,6 +26,9 @@ const CACHE_EXPIRE_S = 86_400;
 const RSS_ENDPOINT = 'https://www.youtube.com/feeds/videos.xml';
 const VIDEOS_ENDPOINT = 'https://www.googleapis.com/youtube/v3/videos';
 const CHANNELS_ENDPOINT = 'https://www.googleapis.com/youtube/v3/channels';
+const PLAYLIST_ITEMS_ENDPOINT = 'https://www.googleapis.com/youtube/v3/playlistItems';
+const CHANNEL_ID_PREFIX = 'UC';
+const UPLOADS_PLAYLIST_PREFIX = 'UU';
 
 export type ChannelStats = {
   subscriberCount?: number;
@@ -121,6 +126,20 @@ async function fetchStats(channelId: string, apiKey: string): Promise<ChannelSta
   return stats;
 }
 
+function uploadsPlaylistId(channelId: string): string {
+  return channelId.startsWith(CHANNEL_ID_PREFIX)
+    ? `${UPLOADS_PLAYLIST_PREFIX}${channelId.slice(CHANNEL_ID_PREFIX.length)}`
+    : channelId;
+}
+
+async function fetchUploads(channelId: string, apiKey: string): Promise<EnrichedVideo[]> {
+  const url = `${PLAYLIST_ITEMS_ENDPOINT}?part=snippet,status&maxResults=${FEED_LIMIT}&playlistId=${encodeURIComponent(uploadsPlaylistId(channelId))}&key=${encodeURIComponent(apiKey)}`;
+  const payload = await fetchJson<PlaylistItemsPayload>(url, API_TIMEOUT_MS);
+  if (!payload) return [];
+  log.info('links feed read the uploads playlist after the RSS feed returned nothing');
+  return parsePlaylistItems(payload, FEED_LIMIT);
+}
+
 export const FEED_FIXTURE_ENV = 'E2E_LINKS_FEED_FIXTURE';
 
 export async function loadFixtureFeed(
@@ -155,7 +174,9 @@ export async function getChannelFeed(): Promise<ChannelFeed> {
     `${RSS_ENDPOINT}?channel_id=${encodeURIComponent(channelId)}`,
     FEED_TIMEOUT_MS,
   );
-  const videos: EnrichedVideo[] = xml === null ? [] : parseFeed(xml, FEED_LIMIT);
+  const rssVideos: EnrichedVideo[] = xml === null ? [] : parseFeed(xml, FEED_LIMIT);
+  const videos =
+    rssVideos.length === 0 && apiKey ? await fetchUploads(channelId, apiKey) : rssVideos;
   const stats = apiKey ? await fetchStats(channelId, apiKey) : {};
 
   if (videos.length === 0) return { ...EMPTY_FEED, stats, fetchedAt: new Date().toISOString() };

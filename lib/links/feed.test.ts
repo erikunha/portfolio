@@ -61,3 +61,49 @@ describe('loadFixtureFeed', () => {
     expect(await loadFixtureFeed({ [FEED_FIXTURE_ENV]: FIXTURE, VERCEL: '1' })).toBeNull();
   });
 });
+
+describe('getChannelFeed upstream fallback', () => {
+  const PLAYLIST = {
+    items: [1, 2, 3].map((n) => ({
+      snippet: {
+        title: `Upload ${n}`,
+        publishedAt: `2026-10-0${n}T00:00:00Z`,
+        resourceId: { videoId: `v${n}` },
+      },
+      status: { privacyStatus: 'public' },
+    })),
+  };
+
+  async function load(apiKey: string | undefined) {
+    vi.resetModules();
+    vi.doMock('@/lib/env', () => ({ env: { YOUTUBE_API_KEY: apiKey } }));
+    const requested: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string) => {
+        requested.push(input);
+        if (input.includes('/feeds/videos.xml')) return new Response('', { status: 404 });
+        if (input.includes('/playlistItems')) return Response.json(PLAYLIST);
+        return Response.json({ items: [] });
+      }),
+    );
+    const { getChannelFeed } = await import('@/lib/links/feed');
+    return { feed: await getChannelFeed(), requested };
+  }
+
+  it('reads the uploads playlist through the Data API when the RSS feed fails', async () => {
+    const { feed, requested } = await load('test-key');
+    expect(feed.latest?.id).toBe('v1');
+    expect(feed.history.map((v) => v.id)).toEqual(['v1', 'v2', 'v3']);
+    const playlistCall = requested.find((url) => url.includes('/playlistItems'));
+    expect(playlistCall).toContain('playlistId=UUZ1P4Pqpo-j_uAHaIc_pGrA');
+    vi.unstubAllGlobals();
+  });
+
+  it('returns the empty feed without a key when the RSS feed fails', async () => {
+    const { feed, requested } = await load(undefined);
+    expect(feed.latest).toBeNull();
+    expect(requested.some((url) => url.includes('googleapis'))).toBe(false);
+    vi.unstubAllGlobals();
+  });
+});
