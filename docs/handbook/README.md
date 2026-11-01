@@ -21,6 +21,8 @@ The handbook routes to the other two rather than duplicating them.
 | [agents-skills-hooks-mcp.md](./agents-skills-hooks-mcp.md) | Reference for tracked project skills, hooks, rules and MCP configuration, with the hook lifecycle and orchestration diagrams           |
 | [workflow-playbook.md](./workflow-playbook.md)             | Step-by-step runbooks: feature, bug fix, refactor, perf, a11y, ADR, PR, review                                                         |
 | [review-merge-release.md](./review-merge-release.md)       | The gate chain from commit to production, the convergence loop, release and rollback                                                   |
+| [lessons.md](./lessons.md)                                 | Numbered rules learned from review findings and CI reds, each with the check that proves it                                            |
+| [review-standard.md](./review-standard.md)                 | The review prompt: rules by file type, extracted from past findings, and the pre-push list                                             |
 | [knowledge-architecture.md](./knowledge-architecture.md)   | How engineering knowledge is organized (specs, plans, ADRs, memory) and the documentation standards                                    |
 | [engineering-standards.md](./engineering-standards.md)     | The explicit standards index and the gate that enforces each                                                                           |
 | [engineering-audit.md](./engineering-audit.md)             | An evaluation of the platform's maturity, with a technical-debt register                                                               |

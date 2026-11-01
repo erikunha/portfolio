@@ -1,0 +1,89 @@
+# Lessons
+
+Numbered rules learned from review findings and CI reds on this repository. Every contributor,
+human or agent, reads this file before a change and follows every rule. Each rule names the
+check that proves it was followed. A new rule is appended when a finding or a red build reveals
+a mistake that can repeat. Rules are never renumbered; a retired rule keeps its number and says
+why it was retired.
+
+The review prompt that applies these rules to a diff is `docs/handbook/review-standard.md`.
+
+## Rules
+
+1. Fix every finding in the PR that received it. Never reply "fixed in #NNN" or cite a commit
+   that is not reachable from this PR's head. Check: `git merge-base --is-ancestor <sha> HEAD`.
+2. A commit body cites only SHAs reachable from the branch it lands on. Describe off-branch facts
+   in words. Check: the same `merge-base --is-ancestor` test for every SHA in the body.
+3. Predict CI before pushing. For every route or component the diff touches, run the matching
+   `tests/e2e` specs against a production build (`pnpm build`, then `pnpm start` on a free port).
+   Scope page-wide assertions (`locator('canvas')`, counts over `document`) to the element they
+   guard, because a new global layer breaks them. Check: the specs pass on the production build.
+4. A layout, spacing, type or color change regenerates the darwin baselines of
+   `tests/visual/visual.spec.ts` and `tests/e2e/design-system-components.spec.ts` in the same
+   change, and every regenerated PNG is read before it is committed. Linux baselines come from the
+   CI dispatch (`update_visual_baselines`). Check: `git status tests/visual` lists the PNGs.
+5. A small visual fix can stay under the screenshot tolerance. `--update-snapshots` (the changed
+   mode) keeps a baseline whose diff is under `maxDiffPixels`, so a removed label survives the
+   regen. Force it only for the subject you changed: `--update-snapshots=all -g <subject>`, never
+   for the whole suite. Check: open the regenerated PNG and confirm the fix is in it.
+6. `DECISIONS.md`: every entry sits under a dated heading, newest first, cites the SHA that lands
+   it and names how to undo it. Check: read the entry as a stranger who must revert it.
+7. Format before finishing: `pnpm check:fix`, then `pnpm check` reports no errors. Never call a
+   lint error pre-existing without showing it on the base branch.
+8. Tokens added to `app/css/theme.css` by two branches conflict; keep both sides.
+9. A test that guards a property names that property in its failure message.
+10. Every path, file or symbol named in a description, comment or commit body exists on the
+    branch it lands on. Check: `git ls-tree -r HEAD --name-only | grep <path>`.
+11. A sub-PR merged at an older head drops its later commits. Before replying "fixed" on the
+    integration PR, prove the fix is on its head: `git merge-base --is-ancestor <fix> origin/<head>`
+    or `git show origin/<head>:<path>` shows the fixed line.
+12. Every reply in a review thread that claims a fix links the fix commit on the PR:
+    `[<short-sha>](https://github.com/<owner>/<repo>/pull/<n>/commits/<full-sha>)`.
+13. When a file's role changes, update its line in the `ARCHITECTURE.md` file manifest and every
+    doc that describes it in the same change. Check: grep the docs for the file path.
+14. No em or en dash in anything a person reads, including prompts, YAML comments, test names
+    and docs. Use a comma, colon, period or parentheses.
+15. Any error you meet, in the code or in the tooling, is yours to investigate: reproduce it,
+    find the cause, fix the cause, add the test and report the cause in one line. Pre-existing
+    does not mean ignore; outside your scope means you say so with the evidence.
+16. Every review finding is addressed, minor and nit included: fixed at the root or answered in
+    the thread with why it is wrong. Only blocker and major findings block a push.
+17. Never stop a server by its port (`lsof -ti :PORT | xargs kill`). Two runs on one port kill
+    each other's server mid-suite. Stop the process group you started.
+18. A gate chained with `&&` is never piped (`gate | tail -1 && merge`): the pipeline's exit
+    status is the last command's, so a failed gate passes. Use `set -o pipefail` and read each
+    gate's own exit code.
+19. `isolate(root)` (`lib/dom/isolate.ts`) inerts every sibling of root up the tree. Pass the
+    wrapper that holds both the panel and its scrim, never the panel alone, or the scrim goes inert
+    and click-outside-to-close dies. jsdom does not hit-test `inert`: prove it with a real
+    Playwright mouse click.
+20. A change to shared layout (hero, about, contact, footer, nav) runs the full functional e2e
+    suite and LHCI locally before the push, not a hand-picked spec list.
+21. A child that sets `visibility: visible` overrides an ancestor's `visibility: hidden`. A
+    descendant that must follow its container uses `visibility: inherit`. Check: computed
+    visibility of the child under a hidden ancestor is `hidden`.
+22. A screenshot helper hides only `position: fixed` chrome. Hiding `sticky` too removes
+    in-flow content such as the desktop contact card. Check: the captured section matches its
+    visual baseline.
+23. After a squash merge of a sub-PR that a later branch was based on, sync that branch in two
+    merges: first the sub-PR's final head SHA, then the base. Add/add conflicts where the base file
+    equals that head resolve to ours.
+
+## Pre-push judgement list
+
+Ranked by how often review caught each class on this repository.
+1. Stale sibling docs: which `ARCHITECTURE.md`, `CLAUDE.md`, `STANDARDS.md`, `docs/*`, mermaid
+   diagrams, agent or skill mirrors, counts or "N-point" phrases describe what changed?
+2. Duplicated literal: does the value already have one source (`content/social.ts`, a token, a
+   shared constant)? Import it.
+3. Fail-open guard: on a transient failure, empty input or odd spelling, does each script, hook
+   or workflow step fail closed?
+4. Claim vs diff: does every sentence in the PR body, commit message and ADR match the final
+   diff, including what the last commit removed?
+5. Dead code: what imports each new export, CSS class or schema field today?
+6. Accessibility: accessible name, focus-visible, keyboard path, native `disabled`, no display
+   change that strips table roles.
+7. Weak test: would it still pass with the feature broken? Does it assert its title's claim?
+8. Rename leftovers: do comments, labels or error strings still name the old thing?
+9. Identity or copy change: checked `content/*`, `lib/ask/system-prompt.ts`,
+   `content/ask-eval-corpus.ts`, `public/llms.txt`, the CV PDF and JSON-LD?
