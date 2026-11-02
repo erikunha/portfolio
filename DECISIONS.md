@@ -2,6 +2,14 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-11-01 — the /links relative label is anchored to the feed's fetchedAt
+
+- **2026-11-01** · **`formatRelative` requires `now`, and the feed stamps `fetchedAt` inside the cached function after its network reads.** Main broke with no new commit: the YouTube channel published its first video, so `getChannelFeed` stopped returning the empty feed and `ChannelCard` began calling `formatRelative`, whose `now = new Date()` default Next 16 prerender rejects (`next-prerender-current-time`) because it runs before any uncached read. The label is now deterministic per cache entry. _Reversible: restore the `now` default and drop `fetchedAt`._
+
+## 2026-11-01 — the secret scan reads only history reachable from the checked-out commit
+
+- **2026-11-01** · **`gitleaks git` runs with `--log-opts="--full-history HEAD"`.** `actions/checkout` with `fetch-depth: 0` fetches every remote branch and `gitleaks git` defaults to all refs, so a PR into main scanned `feat/terminal-redesign` commits whose `p95LatencyMs` metric keys match generic-api-key. Scoping to HEAD scans exactly what the PR would merge; each branch is still scanned on its own PR run. No allowlist entry was added. _Reversible: drop `--log-opts`._
+
 ## 2026-08-30 — site-wide pt-BR/EN is in scope, and the shape it has to take
 
 - **2026-08-30** · **Site-wide bilingual pt-BR/EN is now in scope, as the exception `CLAUDE.md`'s "Out of scope (unless asked)" list provides for.** The list reads "unless asked" and this was asked for directly. The scope is a translation of one site into two languages, not an i18n framework: no translation library, no message catalogue, no request-time language negotiation, no request-intercepting middleware. A page's language is determined by its address alone, so two visitors opening the same address see the same language regardless of browser or history. This extends the 2026-08-30 `/links` decision below from one page to the site, and inherits every refusal that decision made. _Reversible: the second language is additive; deleting the second locale's routes and content restores a single-language site. The address scheme is the part that is not cheaply reversible once external links accrue against it, which is why the bare address is pinned in the next bullet._
