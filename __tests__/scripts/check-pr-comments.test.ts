@@ -377,6 +377,8 @@ describe('claimsFix', () => {
     'Will update once resolved.',
     "won't fix: by design",
     "I really don't think this issue is actually fixed.",
+    'This will pass when fixed.',
+    'It would be fine after this is resolved.',
     'This was never really something we considered changed.',
   ])('does not count %j as a fix claim', (body) => {
     expect(

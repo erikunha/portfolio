@@ -46,7 +46,8 @@ const FIX_CLAIM_WORD_PATTERN =
 const ATTRIBUTIVE_PREFIX_PATTERN = /\b(?:as|the|a|an|this|that|these|those)\s+$/i;
 const NEGATION_PATTERN =
   /(n't|\b(?:no|not|never|none|nothing|neither|nor|without|unable|unnecessary|unneeded)\b)/i;
-const DEFERRAL_PATTERN = /\b(?:will|once|until|if|would|yet)\b/i;
+const FUTURE_MODAL_PATTERN = /\b(?:will|would|shall)\b/i;
+const CONDITION_PATTERN = /\b(?:once|until|if|yet)\b/i;
 const CLAUSE_SPLIT_PATTERN = /[.!?;:\n]+/;
 const PHRASE_SPLIT_PATTERN =
   /,|\b(?:but|and|so|although|though|while|whereas|since|because|when|after|now that|given that)\b/i;
@@ -284,10 +285,12 @@ export function claimsFix(body: string): boolean {
     .filter((clause) => clause.length > 0)
     .some((clause) =>
       Array.from(clause.matchAll(FIX_CLAIM_WORD_PATTERN)).some((claim) => {
-        const before = clause.slice(0, claim.index).split(PHRASE_SPLIT_PATTERN).pop() ?? '';
-        if (ATTRIBUTIVE_PREFIX_PATTERN.test(before)) return false;
-        if (NEGATION_PATTERN.test(before)) return false;
-        return !DEFERRAL_PATTERN.test(before);
+        const sentenceBefore = clause.slice(0, claim.index);
+        const phraseBefore = sentenceBefore.split(PHRASE_SPLIT_PATTERN).pop() ?? '';
+        if (ATTRIBUTIVE_PREFIX_PATTERN.test(phraseBefore)) return false;
+        if (NEGATION_PATTERN.test(phraseBefore)) return false;
+        if (CONDITION_PATTERN.test(phraseBefore)) return false;
+        return !FUTURE_MODAL_PATTERN.test(sentenceBefore);
       }),
     );
 }
