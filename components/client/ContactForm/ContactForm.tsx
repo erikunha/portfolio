@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useId, useRef, useState } from 'react';
+import { Fragment, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import {
   CONTACT_DELIVERY_CODE,
   CONTACT_FIELD,
@@ -12,6 +12,7 @@ import {
 import { contactChrome } from '@/content/terminal-chrome';
 import { WindowChrome } from '@/design-system';
 import { Field } from '@/design-system/components/Field';
+import { messageStore } from './messageStore';
 
 const STATUS = {
   IDLE: 'idle',
@@ -25,7 +26,8 @@ const CONTACT_ENDPOINT = '/api/contact';
 const QUEUED_STATUS = 202;
 const MESSAGE_ROWS = 5;
 const INITIAL_FAILURE_COUNT = 0;
-const INITIAL_VALUES: Record<ContactField, string> = { name: '', email: '', message: '' };
+type TypedField = Exclude<ContactField, typeof CONTACT_FIELD.MESSAGE>;
+const INITIAL_TYPED: Record<TypedField, string> = { name: '', email: '' };
 const CONTACT_FIELDS = Object.values(CONTACT_FIELD);
 const EMAIL_PATTERN =
   /^(?:[A-Za-z0-9_'+-]+\.)*[A-Za-z0-9_'+-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9-]*\.)+[A-Za-z]{2,}$/;
@@ -61,7 +63,13 @@ function ContactShell({ children }: { children: React.ReactNode }) {
 }
 
 export function ContactForm() {
-  const [values, setValues] = useState(INITIAL_VALUES);
+  const [typed, setTyped] = useState(INITIAL_TYPED);
+  const message = useSyncExternalStore(
+    messageStore.subscribe,
+    messageStore.getSnapshot,
+    messageStore.getServerSnapshot,
+  );
+  const values: Record<ContactField, string> = { ...typed, message };
   const [honeypot, setHoneypot] = useState('');
   const [status, setStatus] = useState<Status>(STATUS.IDLE);
   const [errors, setErrors] = useState<Partial<Record<ContactField, string>>>({});
@@ -81,8 +89,17 @@ export function ContactForm() {
     if (failureCount > INITIAL_FAILURE_COUNT) summaryRef.current?.focus();
   }, [failureCount]);
 
+  useEffect(() => {
+    setErrors((current) => {
+      if (!current.message || !FIELD_CHECKS.message(message)) return current;
+      const { message: _cleared, ...rest } = current;
+      return rest;
+    });
+  }, [message]);
+
   function change(field: ContactField, value: string) {
-    setValues((current) => ({ ...current, [field]: value }));
+    if (field === CONTACT_FIELD.MESSAGE) messageStore.set(value);
+    else setTyped((current) => ({ ...current, [field]: value }));
     if (errors[field]) {
       const valid = FIELD_CHECKS[field](value);
       setErrors((current) => {

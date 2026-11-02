@@ -89,6 +89,7 @@ export const contactCopy: ContactContent = {
     },
     propose: {
       label: 'PROPOSE_IN_MESSAGE ↙',
+      added: 'added to your message',
       line: `Proposed call: {you} your time ({zone}), {erik} Erik time (${ERIK_PLACE})`,
     },
     overlap: {

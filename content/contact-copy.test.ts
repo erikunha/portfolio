@@ -77,6 +77,10 @@ describe('timezone panel copy', () => {
     expect(line).toBe('9 hours overlap · 09:00 to 18:00 your time');
   });
 
+  it('confirms a proposed slot was added to the message', () => {
+    expect(timezone.propose.added).toBe('added to your message');
+  });
+
   it('has a 00/06/12/18/24 axis', () => {
     expect(timezone.axis).toEqual(['00', '06', '12', '18', '24']);
   });

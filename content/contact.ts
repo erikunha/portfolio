@@ -28,7 +28,7 @@ const TimezonePanelSchema = z.object({
   rows: z.object({ erik: CopySchema, you: CopySchema, both: CopySchema }),
   axis: z.array(CopySchema).length(AXIS_LABEL_COUNT),
   slot: z.object({ title: CopySchema, you: CopySchema, erik: CopySchema, none: CopySchema }),
-  propose: z.object({ label: CopySchema, line: CopySchema }),
+  propose: z.object({ label: CopySchema, line: CopySchema, added: CopySchema }),
   overlap: z.object({
     summary: CopySchema,
     range: CopySchema,

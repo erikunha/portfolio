@@ -8,6 +8,11 @@ import { z } from 'zod';
 import { flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
 import { linksContent } from '@/content/links';
 import { ContactForm } from './ContactForm';
+import { messageStore } from './messageStore';
+
+afterEach(() => {
+  messageStore.reset();
+});
 
 function fillValidForm(container: HTMLElement) {
   fireEvent.change(container.querySelector('input[name="name"]') as HTMLInputElement, {
@@ -777,5 +782,72 @@ describe('contact cross-review fixes', () => {
       fireEvent.click(button);
     });
     expect(fetchMock).toHaveBeenCalledOnce();
+  });
+});
+
+describe('contact form message store', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('shows a line appended from outside the form in the message field', () => {
+    render(<ContactForm />);
+    const message = screen.getByLabelText('$ message:') as HTMLTextAreaElement;
+    fireEvent.change(message, { target: { value: 'Hello Erik' } });
+
+    act(() => {
+      messageStore.append('Proposed call: 13:30');
+    });
+
+    expect(message.value).toBe('Hello Erik\nProposed call: 13:30');
+    expect(screen.getByText(/^\d+\/2000$/).textContent).toBe(`${message.value.trim().length}/2000`);
+  });
+
+  it('keeps a line appended before the form mounted', () => {
+    messageStore.append('Proposed call: 13:30');
+
+    render(<ContactForm />);
+
+    expect((screen.getByLabelText('$ message:') as HTMLTextAreaElement).value).toBe(
+      'Proposed call: 13:30',
+    );
+  });
+
+  it('writes typing back to the store so an append never drops typed text', () => {
+    render(<ContactForm />);
+    fireEvent.change(screen.getByLabelText('$ message:'), { target: { value: 'typed text' } });
+
+    expect(messageStore.getSnapshot()).toBe('typed text');
+  });
+
+  it('sends the appended line with the submitted message', async () => {
+    const fetchMock = vi.fn(async () => Response.json({ ok: true }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = render(<ContactForm />);
+    fillValidForm(container);
+    act(() => {
+      messageStore.append('Proposed call: 13:30');
+    });
+
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    });
+    await flushMicrotasks();
+
+    const body = JSON.parse(
+      (fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string,
+    ) as { message: string };
+    expect(body.message).toBe('A platform engineering opportunity.\nProposed call: 13:30');
+  });
+
+  it('clears the message error when an appended line makes the message valid', () => {
+    const { container } = render(<ContactForm />);
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    const message = screen.getByLabelText('$ message:');
+    expect(message.getAttribute('aria-invalid')).toBe('true');
+
+    act(() => {
+      messageStore.append('Proposed call: 13:30 your time (UTC), 10:30 Erik time');
+    });
+
+    expect(message.getAttribute('aria-invalid')).toBeNull();
   });
 });
