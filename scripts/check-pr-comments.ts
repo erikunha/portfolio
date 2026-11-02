@@ -47,9 +47,9 @@ const ATTRIBUTIVE_PREFIX_PATTERN = /\b(?:as|the|a|an|this|that|these|those)\s+$/
 const NEGATION_PATTERN =
   /(n't|\b(?:no|not|never|none|nothing|neither|nor|without|unable|unnecessary|unneeded)\b)/i;
 const FUTURE_MODAL_PATTERN = /\b(?:will|would|shall)\b/i;
-const CONDITION_PATTERN = /\b(?:once|until|if|yet)\b/i;
+const CONDITION_PATTERN = /\b(?:once|until|if)\b/i;
 const CLAUSE_SPLIT_PATTERN = /[.!?;:\n]+/;
-const COORDINATE_SPLIT_PATTERN = /,|\b(?:but|and|so|although|though|while|whereas)\b/i;
+const COORDINATE_SPLIT_PATTERN = /,|\b(?:but|and|so|yet|although|though|while|whereas)\b/i;
 const SUBORDINATE_SPLIT_PATTERN = /\b(?:since|because|when|after|now that|given that)\b/i;
 const FULL_SHA_LENGTH = 40;
 const MIN_SHORT_SHA_LENGTH = 7;

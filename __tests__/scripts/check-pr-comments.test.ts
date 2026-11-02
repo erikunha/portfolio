@@ -402,6 +402,7 @@ describe('claimsFix', () => {
     'Resolved in abc1234',
     'Updated in abc1234',
     'Not a duplicate, but fixed now.',
+    'This bug seems minor, yet it is now fixed.',
     'No need to worry since this is already fixed.',
     'Nothing else changed because the guard is now patched in abc1234.',
     'Not related when you look closely; it is resolved.',
