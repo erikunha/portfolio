@@ -71,9 +71,7 @@ describe('MobileTitleBar', () => {
     expect(trigger?.textContent, 'the trigger label comes from content').toContain(
       NAVIGATION.copy.indexLabel,
     );
-    expect(brand?.textContent, 'the brand label comes from content').toBe(
-      topbarChrome.brandLabel,
-    );
+    expect(brand?.textContent, 'the brand label comes from content').toBe(topbarChrome.brandLabel);
     expect(brand?.getAttribute('aria-hidden'), 'the brand stays decoration').toBe('true');
   });
 
