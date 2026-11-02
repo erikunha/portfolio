@@ -130,3 +130,79 @@ test('channel rows use the compact padding between 768px and 1100px', async ({ p
     `${SPACING_3_PX} ${SPACING_3_PX} ${SPACING_3_PX} ${SPACING_3_PX}`,
   );
 });
+
+const NARROW_WIDTHS = [320, 340, 360, 390];
+const CELL_PARTS = [
+  '.knob-container',
+  '.rms-buttons > button',
+  '.mx-channel-id > span',
+  '.mx-channel-track > *',
+  '.mx-channel-plugins .flex-none',
+  '.mx-channel-meter',
+  '.mx-fader',
+].join(', ');
+const OVERLAP_TOLERANCE_PX = 2;
+
+for (const width of NARROW_WIDTHS) {
+  test(`no knob, button or label of a channel row overlaps another at ${width}px`, async ({
+    page,
+  }) => {
+    await installMockBackend(page, { log: 'accept', forget: 'happy' });
+    await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
+    await page.goto('/');
+    const mixer = page.locator(MIXER_SELECTOR);
+    await mixer.scrollIntoViewIfNeeded();
+    await expect(mixer.locator('[data-testid^="channel-"]').first()).toBeVisible();
+
+    const overlaps = await page.evaluate(
+      ({ selector, parts, tolerance }) => {
+        const found: string[] = [];
+        for (const row of document.querySelectorAll(`${selector} fieldset.daw-channel-row`)) {
+          const parts_ = Array.from(row.querySelectorAll(parts)).filter((part) => {
+            const box = part.getBoundingClientRect();
+            return box.width > 0 && box.height > 0;
+          });
+          for (const [index, first] of parts_.entries()) {
+            for (const second of parts_.slice(index + 1)) {
+              if (first.contains(second) || second.contains(first)) continue;
+              const a = first.getBoundingClientRect();
+              const b = second.getBoundingClientRect();
+              const overlapX = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+              const overlapY = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+              if (overlapX > tolerance && overlapY > tolerance) {
+                const name = (el: Element) => el.getAttribute('aria-label') ?? String(el.className);
+                found.push(`${row.getAttribute('data-testid')}: ${name(first)} x ${name(second)}`);
+              }
+            }
+          }
+        }
+        return found;
+      },
+      { selector: MIXER_SELECTOR, parts: CELL_PARTS, tolerance: OVERLAP_TOLERANCE_PX },
+    );
+
+    expect(overlaps, 'channel row controls must not share pixels').toEqual([]);
+  });
+}
+
+test('rms buttons keep a 44px touch target on coarse pointers at desktop width', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: VIEWPORT_HEIGHT },
+    hasTouch: true,
+    isMobile: false,
+  });
+  const page = await context.newPage();
+  await installMockBackend(page, { log: 'accept', forget: 'happy' });
+  await page.goto('/');
+  const mixer = page.locator(MIXER_SELECTOR);
+  await mixer.scrollIntoViewIfNeeded();
+  const button = mixer.locator('.rms-buttons > button').first();
+  const coarse = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+  test.skip(!coarse, 'this browser context does not report a coarse pointer');
+  const box = await button.boundingBox();
+  expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+  expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
+  await context.close();
+});

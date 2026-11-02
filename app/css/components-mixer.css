@@ -239,6 +239,36 @@
     }
   }
 
+  @media (pointer: coarse) {
+    .rms-buttons > button {
+      min-width: var(--spacing-target);
+      min-height: var(--spacing-target);
+    }
+  }
+
+  @media (width < 25rem) {
+    .mx-channel-knobs {
+      grid-area: 2 / 1 / 3 / 4;
+    }
+
+    .mx-channel-buttons {
+      grid-area: 3 / 1 / 4 / 4;
+      justify-content: flex-start;
+    }
+
+    .mx-channel-plugins {
+      grid-area: 4 / 1 / 5 / 4;
+    }
+
+    .mx-channel-meter {
+      grid-area: 5 / 1 / 6 / 3;
+    }
+
+    .mx-grid .daw-channel-row > :nth-child(7) {
+      grid-area: 6 / 1 / 7 / 4;
+    }
+  }
+
   .transport-play {
     width: 0;
     height: 0;
