@@ -406,10 +406,11 @@ describe('claimsFix', () => {
     'Nothing else changed because the guard is now patched in abc1234.',
     'Not related when you look closely; it is resolved.',
     'No regression here; if anything, the guard is now fixed.',
+    'It will take time, but the bug is now fixed.',
   ])('counts %j as a fix claim', (body) => {
     expect(
       claimsFix(body),
-      'A clause that asserts the action (bare or qualified) is a fix claim and must demand a commit link; only attributive use (after as or a determiner), negation or a future marker before the word exempts it.',
+      'A clause that asserts the action (bare or qualified) is a fix claim and must demand a commit link; only attributive use (after as or a determiner), a negation or condition marker in the same phrase, or a future modal in the same coordinate clause exempts it.',
     ).toBe(true);
   });
 });

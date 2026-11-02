@@ -49,8 +49,8 @@ const NEGATION_PATTERN =
 const FUTURE_MODAL_PATTERN = /\b(?:will|would|shall)\b/i;
 const CONDITION_PATTERN = /\b(?:once|until|if|yet)\b/i;
 const CLAUSE_SPLIT_PATTERN = /[.!?;:\n]+/;
-const PHRASE_SPLIT_PATTERN =
-  /,|\b(?:but|and|so|although|though|while|whereas|since|because|when|after|now that|given that)\b/i;
+const COORDINATE_SPLIT_PATTERN = /,|\b(?:but|and|so|although|though|while|whereas)\b/i;
+const SUBORDINATE_SPLIT_PATTERN = /\b(?:since|because|when|after|now that|given that)\b/i;
 const FULL_SHA_LENGTH = 40;
 const MIN_SHORT_SHA_LENGTH = 7;
 const COMMIT_LINK_PATTERN = new RegExp(
@@ -278,6 +278,16 @@ function isWellFormedLink(
   return link.sha.startsWith(link.label.toLowerCase());
 }
 
+function scopeAfterLastBoundary(text: string, ...patterns: RegExp[]): string {
+  let scope = text;
+  for (const pattern of patterns) {
+    const parts = text.split(pattern);
+    const last = parts[parts.length - 1];
+    if (last !== undefined && last.length < scope.length) scope = last;
+  }
+  return scope;
+}
+
 export function claimsFix(body: string): boolean {
   return body
     .split(CLAUSE_SPLIT_PATTERN)
@@ -286,11 +296,16 @@ export function claimsFix(body: string): boolean {
     .some((clause) =>
       Array.from(clause.matchAll(FIX_CLAIM_WORD_PATTERN)).some((claim) => {
         const sentenceBefore = clause.slice(0, claim.index);
-        const phraseBefore = sentenceBefore.split(PHRASE_SPLIT_PATTERN).pop() ?? '';
+        const phraseBefore = scopeAfterLastBoundary(
+          sentenceBefore,
+          COORDINATE_SPLIT_PATTERN,
+          SUBORDINATE_SPLIT_PATTERN,
+        );
         if (ATTRIBUTIVE_PREFIX_PATTERN.test(phraseBefore)) return false;
         if (NEGATION_PATTERN.test(phraseBefore)) return false;
         if (CONDITION_PATTERN.test(phraseBefore)) return false;
-        return !FUTURE_MODAL_PATTERN.test(sentenceBefore);
+        const coordinateBefore = scopeAfterLastBoundary(sentenceBefore, COORDINATE_SPLIT_PATTERN);
+        return !FUTURE_MODAL_PATTERN.test(coordinateBefore);
       }),
     );
 }
