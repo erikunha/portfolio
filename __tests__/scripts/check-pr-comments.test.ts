@@ -378,6 +378,8 @@ describe('claimsFix', () => {
     "won't fix: by design",
     "I really don't think this issue is actually fixed.",
     'This will pass when fixed.',
+    'This is yet to be fixed.',
+    'The flaky test has yet to be resolved.',
     'It would be fine after this is resolved.',
     'This was never really something we considered changed.',
   ])('does not count %j as a fix claim', (body) => {
