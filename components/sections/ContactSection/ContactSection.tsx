@@ -42,7 +42,7 @@ export function ContactSection({ defer }: { defer?: boolean } = {}) {
             <ContactTimezoneLazy>
               <ContactTimezoneStatic />
             </ContactTimezoneLazy>
-            <footer className="ctz-footer">
+            <div className="ctz-footer">
               <dl className="ctz-facts">
                 <div className="ctz-fact">
                   <dt>{facts.availabilityLabel}</dt>
@@ -114,7 +114,7 @@ export function ContactSection({ defer }: { defer?: boolean } = {}) {
                   </dd>
                 </div>
               </dl>
-            </footer>
+            </div>
           </div>
         </aside>
       </div>

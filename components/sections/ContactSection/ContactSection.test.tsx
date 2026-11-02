@@ -102,6 +102,13 @@ describe('ContactSection timezone panel first paint', () => {
     );
   });
 
+  it('adds no footer element: the site footer stays the only one on the page', () => {
+    expect(
+      serverPanel().querySelectorAll('footer'),
+      'a second <footer> makes page.locator("footer") ambiguous in the footer specs',
+    ).toHaveLength(0);
+  });
+
   it('gives every id once', () => {
     const ids = [...serverPanel().querySelectorAll('[id]')].map((node) => node.id);
 
