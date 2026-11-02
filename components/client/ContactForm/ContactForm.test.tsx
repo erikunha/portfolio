@@ -850,4 +850,32 @@ describe('contact form message store', () => {
 
     expect(message.getAttribute('aria-invalid')).toBeNull();
   });
+
+  it('tells the store which field holds the message while the field is on screen', () => {
+    const { unmount } = render(<ContactForm />);
+    const message = screen.getByLabelText('$ message:');
+
+    expect(messageStore.getFieldId()).toBe(message.id);
+
+    unmount();
+    expect(messageStore.getFieldId()).toBeNull();
+  });
+
+  it('lets go of the field once the form is replaced by the delivered panel', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ ok: true })),
+    );
+    const { container } = render(<ContactForm />);
+    expect(messageStore.getFieldId()).not.toBeNull();
+    fillValidForm(container);
+
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    });
+    await flushMicrotasks();
+
+    expect(screen.queryByTestId('contact-success')).not.toBeNull();
+    expect(messageStore.getFieldId(), 'no field left to focus once the form is gone').toBeNull();
+  });
 });

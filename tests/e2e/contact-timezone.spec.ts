@@ -10,6 +10,9 @@ const VIEWPORTS = [
 const PROPOSE_LABEL = 'PROPOSE_IN_MESSAGE ↙';
 const SEARCH_LABEL = 'Search your city or timezone';
 const MESSAGE_LABEL = '$ message:';
+const FOCUS_LINK_LABEL = 'edit message ↑';
+const PHONE = { width: 390, height: 844 };
+const DESKTOP = { width: 1280, height: 720 };
 const CLOCK_PATTERN = /^\d{2}:\d{2}:\d{2}$/;
 const TICK_TIMEOUT_MS = 5_000;
 const ERROR_STATUS_FLOOR = 400;
@@ -42,7 +45,7 @@ async function openPanel(page: Page) {
     (margin) =>
       window.scrollTo(
         0,
-        (document.querySelector('#sec-contact') as HTMLElement).getBoundingClientRect().top +
+        (document.querySelector('.contact-timezone') as HTMLElement).getBoundingClientRect().top +
           window.scrollY -
           margin,
       ),
@@ -167,6 +170,39 @@ test.describe('contact timezone panel, visitor in Berlin', () => {
 
     expect(findings.consoleErrors).toEqual([]);
     expect(findings.failedRequests).toEqual([]);
+  });
+
+  test('on a phone the added confirmation links back to the message field', async ({ page }) => {
+    await page.setViewportSize(PHONE);
+    const findings = watch(page);
+    const panel = await openPanel(page);
+    const message = page.getByLabel(MESSAGE_LABEL);
+
+    await panel.getByRole('button', { name: PROPOSE_LABEL }).click();
+
+    await expect(panel.getByTestId('ctz-proposed')).toBeVisible();
+    const link = panel.getByRole('link', { name: FOCUS_LINK_LABEL });
+    await expect(link).toBeVisible();
+    await expect(message).not.toBeFocused();
+    await link.click();
+    await expect(message).toBeFocused();
+    await expect(message).toHaveValue(/Proposed call: /);
+    expect(page.url(), 'the link does not leave a hash behind').not.toContain('#');
+
+    expect(findings.consoleErrors).toEqual([]);
+    expect(findings.failedRequests).toEqual([]);
+  });
+
+  test('at 1280 the form sits beside the panel, so the confirmation shows no link', async ({
+    page,
+  }) => {
+    await page.setViewportSize(DESKTOP);
+    const panel = await openPanel(page);
+
+    await panel.getByRole('button', { name: PROPOSE_LABEL }).click();
+
+    await expect(panel.getByTestId('ctz-proposed')).toBeVisible();
+    await expect(panel.getByRole('link', { name: FOCUS_LINK_LABEL })).toBeHidden();
   });
 
   for (const viewport of VIEWPORTS) {

@@ -426,6 +426,81 @@ describe('ContactTimezone best slot and propose', () => {
   });
 });
 
+describe('ContactTimezone link back to the message field', () => {
+  const FIELD_ID = 'contact-message-field';
+
+  function renderWithField() {
+    const unbind = messageStore.bindField(FIELD_ID);
+    const view = renderAt(ONLINE_INSTANT);
+    const field = document.createElement('textarea');
+    field.id = FIELD_ID;
+    document.body.append(field);
+    return {
+      field,
+      cleanup: () => {
+        unbind();
+        field.remove();
+        view.unmount();
+      },
+    };
+  }
+
+  const focusLink = () => screen.queryByRole('link', { name: copy.propose.focusLink });
+
+  it('shows no link until a slot was added to the message', () => {
+    const { cleanup } = renderWithField();
+
+    expect(focusLink()).toBeNull();
+
+    cleanup();
+  });
+
+  it('offers a link to the message field once the slot was added', () => {
+    const { cleanup } = renderWithField();
+
+    fireEvent.click(screen.getByRole('button', { name: copy.propose.label }));
+
+    expect(testId('ctz-proposed').textContent).toBe(copy.propose.added);
+    expect(focusLink()?.getAttribute('href')).toBe(`#${FIELD_ID}`);
+
+    cleanup();
+  });
+
+  it('moves keyboard focus to the message field when the link is used', () => {
+    const { field, cleanup } = renderWithField();
+    fireEvent.click(screen.getByRole('button', { name: copy.propose.label }));
+
+    const link = focusLink() as HTMLElement;
+    const proceeded = fireEvent.click(link);
+
+    expect(proceeded, 'the click is handled, so the page does not jump to a hash').toBe(false);
+    expect(document.activeElement).toBe(field);
+
+    cleanup();
+  });
+
+  it('keeps the link out of the live region so the announcement stays the confirmation', () => {
+    const { cleanup } = renderWithField();
+    fireEvent.click(screen.getByRole('button', { name: copy.propose.label }));
+
+    const region = testId('ctz-proposed').closest('[role="status"]') as HTMLElement;
+
+    expect(region.textContent).toBe(copy.propose.added);
+    expect(region.contains(focusLink())).toBe(false);
+
+    cleanup();
+  });
+
+  it('offers no link when no form field is mounted to receive focus', () => {
+    renderAt(ONLINE_INSTANT);
+
+    fireEvent.click(screen.getByRole('button', { name: copy.propose.label }));
+
+    expect(testId('ctz-proposed').textContent).toBe(copy.propose.added);
+    expect(focusLink()).toBeNull();
+  });
+});
+
 describe('ContactTimezone reduced motion', () => {
   const stylesheet = parse(readComponentsCss());
   const ANIMATED = ['.ctz-pulse', '.ctz-route'];

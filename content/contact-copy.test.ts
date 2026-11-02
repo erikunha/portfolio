@@ -81,6 +81,20 @@ describe('timezone panel copy', () => {
     expect(timezone.propose.added).toBe('added to your message');
   });
 
+  it('names the link back to the message field', () => {
+    expect(timezone.propose.focusLink).toContain('message');
+  });
+
+  it('gives the panel its own heading, apart from the channels heading', () => {
+    expect(timezone.title.length).toBeGreaterThan(0);
+    expect(timezone.title).not.toBe(contactCopy.channels.title);
+    expect(timezone.marker.length).toBeGreaterThan(0);
+  });
+
+  it('drops the timezone fact the clocks already state', () => {
+    expect(Object.keys(contactCopy.channels)).not.toContain('timezoneLabel');
+  });
+
   it('has a 00/06/12/18/24 axis', () => {
     expect(timezone.axis).toEqual(['00', '06', '12', '18', '24']);
   });

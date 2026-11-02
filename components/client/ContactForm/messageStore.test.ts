@@ -69,4 +69,34 @@ describe('messageStore', () => {
 
     expect(messageStore.getServerSnapshot()).toBe('');
   });
+
+  it('remembers which field holds the message and forgets it once that field unmounts', () => {
+    expect(messageStore.getFieldId()).toBeNull();
+
+    const unbind = messageStore.bindField('contact-message');
+    expect(messageStore.getFieldId()).toBe('contact-message');
+
+    unbind();
+    expect(messageStore.getFieldId()).toBeNull();
+  });
+
+  it('keeps a newer field bound when an older one unmounts late', () => {
+    const unbindOld = messageStore.bindField('old');
+    const unbindNew = messageStore.bindField('new');
+
+    unbindOld();
+    expect(messageStore.getFieldId()).toBe('new');
+
+    unbindNew();
+    expect(messageStore.getFieldId()).toBeNull();
+  });
+
+  it('keeps the bound field across a message reset', () => {
+    const unbind = messageStore.bindField('contact-message');
+
+    messageStore.reset();
+
+    expect(messageStore.getFieldId()).toBe('contact-message');
+    unbind();
+  });
 });
