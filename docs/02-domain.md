@@ -56,7 +56,7 @@ Career (`sec-git-log`) contains the `cert/*`, `edu/*`, and `community/*` tag gro
 About (`sec-readme`) contains the Whoami, Now, Responsibilities, Stack and retry-code panels.
 
 Opinions (`sec-hottest-takes`) contains the HOTTEST_TAKES list and Unknowns.
-Contact (`sec-contact`) contains the contact form and a channels card. The card holds the timezone overlap panel (Erik's hours against the visitor's, with a best slot the visitor can propose in the message), the facts footer, the alternative contact links and the copy-email control.
+Contact (`sec-contact`) has two columns. The left column holds the contact form, a channels block (the email with its copy control, LinkedIn and GitHub) and six facts. The right column is the timezone overlap panel: Erik's hours against the visitor's, with a best slot the visitor can propose in the message. Below 1024px the columns stack in that order, panel last.
 Unknowns are not a separate homepage module.
 
 Supporting content (not sections): `social.ts` (links), `seo.ts` (JSON-LD `Person`), `dmesg.ts` + `shell-commands.ts` + `terminal-chrome.ts` + `hero-client.ts` (client-imported flavor data), and the AI-eval domain below. Client-imported modules stay zod-free, so `content/_validate-client-content.ts` parses their schemas at build time: it is the only parse site for `terminal-chrome.ts`, whose `shellChrome`, `contactChrome` and `topbarChrome` reach the shell, the contact form and the topbar brand badge.

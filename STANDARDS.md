@@ -274,7 +274,7 @@ violation; Lighthouse CI gates the Accessibility category at 100 (Chapter 3).
 Per-component behavioral a11y tests, for example
 `components/client/ContactForm/ContactForm.test.tsx` (tab order, `role`/`aria-live` error
 region, keyboard-activatable submit), `components/client/ContactTimezone/ContactTimezone.test.tsx`
-(combobox roles, keyboard path and `aria-activedescendant`, minutes-only live region, named map) and `components/client/InteractiveShell/InteractiveShell.test.tsx`, which run
+(combobox roles, keyboard path and `aria-activedescendant`, minutes-only live region, named map, the link back to the message field) and `components/client/InteractiveShell/InteractiveShell.test.tsx`, which run
 inside `pnpm test`. `prefers-reduced-motion` coverage is exercised by the
 `cross-cutting.spec.ts` e2e spec in the required `e2e-functional` job.
 
