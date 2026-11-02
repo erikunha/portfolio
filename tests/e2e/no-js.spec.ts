@@ -23,9 +23,10 @@ test.describe('home with JavaScript off', () => {
     await page.goto('/');
     const topbar = await page.locator('.desktop-topbar').boundingBox();
     const bar = await page.locator('.nojs-bar').boundingBox();
-    expect(topbar).not.toBeNull();
-    expect(bar).not.toBeNull();
-    expect(bar!.y).toBeGreaterThanOrEqual(topbar!.y + topbar!.height);
+    if (topbar === null || bar === null) {
+      throw new Error('nojs-bar or desktop-topbar did not render a box');
+    }
+    expect(bar.y).toBeGreaterThanOrEqual(topbar.y + topbar.height);
     await expect(
       page.locator('.desktop-topbar').getByText('ERIK_CUNHA.SH', { exact: true }),
     ).toBeInViewport();
