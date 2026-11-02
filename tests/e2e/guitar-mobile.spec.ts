@@ -1,10 +1,8 @@
 import { expect, type Locator, test } from '@playwright/test';
 
-const CHAIN = '#sec-guitar [data-testid^="signal-node-"]';
 const PAIR = '#sec-guitar .guitar-pair > *';
 const STATS = '#sec-guitar .guitar-stats > *';
 const STACKED_GROUPS = [
-  { name: 'signal chain nodes', children: CHAIN },
   { name: 'details and photo', children: PAIR },
   { name: 'stat facts', children: STATS },
 ];
@@ -44,12 +42,6 @@ for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
 
 test.describe('#sec-guitar at 1280px', () => {
   test.use({ viewport: DESKTOP });
-
-  test('signal chain nodes stay on one row', async ({ page }) => {
-    await page.goto('/');
-    const found = await edges(page.locator(CHAIN));
-    expect(new Set(found.map((box) => box.top)).size).toBe(1);
-  });
 
   test('details and photo stay side by side', async ({ page }) => {
     await page.goto('/');

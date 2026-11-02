@@ -1,34 +1,40 @@
 import { describe, expect, it } from 'vitest';
 
+const guitarEqSpectrumFixture = {
+  label: 'LEAD · Gretsch G5655TG → HX Stomp XL → IR cab → FOH',
+  ariaLabel: {
+    prefix: 'Live spectrum of the lead guitar under its EQ curve',
+    highpass: 'high-pass at {freq}',
+    lowpass: 'low-pass at {freq}',
+    boost: '{gain} dB boost at {freq}',
+    cut: '{gain} dB cut at {freq}',
+  },
+  bpm: 87,
+  barCount: 72,
+  freqRange: { minHz: 80, maxHz: 16000 },
+  bands: [
+    { kind: 'highpass', freqHz: 140 },
+    { kind: 'peak', freqHz: 400, gainDb: -3, q: 0.8 },
+    { kind: 'peak', freqHz: 2800, gainDb: 5, q: 0.8 },
+    { kind: 'lowpass', freqHz: 9000 },
+  ],
+  axis: [
+    { freqHz: 80, label: '80' },
+    { freqHz: 200, label: '200' },
+    { freqHz: 500, label: '500' },
+    { freqHz: 1000, label: '1k' },
+    { freqHz: 3000, label: '3k' },
+    { freqHz: 8000, label: '8k' },
+    { freqHz: 16000, label: '16k' },
+  ],
+};
+
 const guitarPresentationFixture = {
-  signalStrengthLabelTemplate: '{n} of {total}',
   signalStrip: {
     live: '● SIGNAL_CHAIN.LIVE · SIGNAL OK',
     tail: 'TAIL -F ~/.RIG',
   },
-  signalChain: [
-    {
-      role: 'INPUT',
-      label: '// INPUT',
-      name: 'GRETSCH G5655TG',
-      subtitle: 'Bigsby · hollow body',
-      strengthDots: 4,
-    },
-    {
-      role: 'AMP',
-      label: '// AMP',
-      name: 'MODELED CAB',
-      subtitle: 'no tube · IR sim',
-      strengthDots: 3,
-    },
-    {
-      role: 'OUT',
-      label: '// OUT',
-      name: 'FOH / IEM',
-      subtitle: 'XLR stereo · in-ear',
-      strengthDots: 5,
-    },
-  ],
+  eqSpectrum: guitarEqSpectrumFixture,
   influences: {
     label: 'INFLUENCES',
     text: "John Mayer · Mateus Asato · Jimmy Page · John Frusciante · Iron Maiden's three",
@@ -53,21 +59,35 @@ describe('GuitarPresentationSchema', () => {
     const { guitarPresentation, guitarRig } = await import('./guitar-rig');
     const { GuitarPresentationSchema } = await import('./schemas');
     expect(GuitarPresentationSchema.parse(guitarPresentation)).toEqual(guitarPresentationFixture);
-    expect(guitarRig.signalChain.map((node) => node.role)).toEqual(['INPUT', 'FX', 'AMP', 'OUT']);
+    expect(guitarRig.eqSpectrum).toEqual(guitarEqSpectrumFixture);
   });
 
   it.each([
-    ['reordered', [1, 0, 2]],
-    ['missing', [0, 2]],
-    ['extra', [0, 1, 1, 2]],
-  ])('rejects %s display nodes', async (_, indices) => {
-    const { GuitarPresentationSchema } = await import('./schemas');
-    expect(
-      GuitarPresentationSchema.safeParse({
-        ...guitarPresentationFixture,
-        signalChain: indices.map((index) => guitarPresentationFixture.signalChain[index]),
-      }).success,
-    ).toBe(false);
+    ['no bands', { bands: [] }],
+    ['a zero bar count', { barCount: 0 }],
+    ['a non-positive BPM', { bpm: 0 }],
+    ['an inverted range', { freqRange: { minHz: 16000, maxHz: 80 } }],
+    ['a band outside the range', { bands: [{ kind: 'lowpass', freqHz: 40000 }] }],
+    ['an axis tick outside the range', { axis: [{ freqHz: 20, label: '20' }] }],
+    ['an empty label', { label: '  ' }],
+    [
+      'a template without its frequency token',
+      { ariaLabel: { ...guitarEqSpectrumFixture.ariaLabel, highpass: 'high-pass' } },
+    ],
+  ])('rejects an EQ spectrum with %s', async (_, override) => {
+    const { EqSpectrumSchema } = await import('./schemas');
+    expect(EqSpectrumSchema.safeParse({ ...guitarEqSpectrumFixture, ...override }).success).toBe(
+      false,
+    );
+  });
+
+  it('defaults a peak band quality factor', async () => {
+    const { EqSpectrumSchema } = await import('./schemas');
+    const parsed = EqSpectrumSchema.parse({
+      ...guitarEqSpectrumFixture,
+      bands: [{ kind: 'peak', freqHz: 400, gainDb: -3 }],
+    });
+    expect(parsed.bands[0]).toMatchObject({ kind: 'peak', q: 0.8 });
   });
 
   it.each(['width', 'height', 'src', 'alt'])('requires photo %s', async (field) => {
@@ -106,16 +126,11 @@ describe('GuitarRigSchema v2', () => {
     ).toThrow();
   });
 
-  it('accepts new signalChain + influences + stats shape', async () => {
+  it('accepts the eqSpectrum + influences + stats shape', async () => {
     const { GuitarRigSchema } = await import('./schemas');
     expect(() =>
       GuitarRigSchema.parse({
-        signalChain: [
-          { role: 'INPUT', name: 'TEST', subtitle: 'sub', strengthDots: 4 },
-          { role: 'FX', name: 'FX', subtitle: 'sub' },
-          { role: 'AMP', name: 'AMP', subtitle: 'sub', strengthDots: 3 },
-          { role: 'OUT', name: 'OUT', subtitle: 'sub', strengthDots: 5 },
-        ],
+        eqSpectrum: guitarEqSpectrumFixture,
         influences: [{ name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }, { name: 'E' }],
         stats: [
           { label: 'STYLE', value: 'feel', sub: 'lots' },

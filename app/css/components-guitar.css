@@ -33,63 +33,103 @@
     color: var(--color-primary-500);
   }
 
-  .guitar-chain {
-    display: grid;
-    grid-template-columns: var(--guitar-columns);
-    gap: var(--guitar-node-gap);
-  }
-
-  .guitar-node {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-1);
-    min-width: 0;
-    padding: var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-500);
-    background: var(--color-glow-04);
-    overflow-wrap: anywhere;
-  }
-
   .guitar-label {
     color: var(--color-primary-400);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-label-tracking);
   }
 
-  .guitar-node-heading {
+  .eq-strip {
+    position: relative;
+    border: var(--border-width) solid var(--color-primary-border);
+    background: var(--color-secondary-950);
+  }
+
+  .eq-label {
+    position: absolute;
+    top: var(--spacing-2);
+    left: var(--spacing-3);
+    z-index: 3;
+    max-width: 55%;
     margin: 0;
-    font-size: var(--text-sm);
-    font-weight: bold;
-    line-height: var(--guitar-heading-line-height);
     color: var(--color-primary-500);
-  }
-
-  .guitar-node-subtitle {
     font-size: var(--text-xs);
+    letter-spacing: var(--guitar-label-tracking);
+    text-wrap: balance;
   }
 
-  .guitar-bars {
+  .eq-plot {
+    position: relative;
+    height: var(--eq-plot-height);
+  }
+
+  .eq-grid,
+  .eq-curve {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .eq-grid path {
+    fill: none;
+    stroke: var(--color-primary-quiet);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+
+  .eq-curve {
+    z-index: 2;
+    filter: drop-shadow(0 0 var(--eq-curve-glow) var(--color-tertiary-50));
+  }
+
+  .eq-curve path {
+    fill: none;
+    stroke: var(--color-tertiary-50);
+    stroke-width: var(--eq-curve-stroke);
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .eq-bars {
+    position: absolute;
+    inset: 0 var(--eq-inset);
+    z-index: 1;
     display: flex;
-    gap: var(--guitar-bar-gap);
-    margin-top: auto;
+    align-items: flex-end;
+    gap: var(--eq-bar-gap);
   }
 
-  .guitar-bar {
-    width: var(--guitar-bar-width);
-    height: var(--guitar-bar-height);
-    background: var(--color-primary-500);
-    opacity: var(--guitar-bar-opacity);
+  .eq-bar {
+    flex: 1 1 0;
+    min-width: 0;
+    height: var(--eq-bar-height);
+    background: linear-gradient(
+      to bottom,
+      var(--color-eq-bar-top),
+      var(--color-primary-500) var(--eq-bar-mid-stop),
+      var(--color-eq-bar-bottom)
+    );
+    transform-origin: 50% 100%;
+    animation: eq-bounce calc(var(--eq-beat) * var(--eq-bar-cycle)) ease-in-out
+      calc(var(--eq-bar-delay) * -1) infinite;
   }
 
-  .guitar-bar[data-filled="true"] {
-    opacity: 1;
+  .eq-axis {
+    position: relative;
+    height: var(--eq-axis-height);
+    border-top: var(--border-width) solid var(--color-primary-quiet);
   }
 
-  .guitar-arrow {
-    align-self: center;
-    justify-self: center;
-    color: var(--color-primary-500);
+  .eq-axis-tick {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    color: var(--color-primary-400);
     font-size: var(--text-xs);
+    line-height: var(--eq-axis-height);
   }
 
   .guitar-pair {
@@ -210,26 +250,23 @@
   }
 
   @variant max-guitar {
-    .guitar-chain {
-      gap: 0;
+    .eq-label {
+      position: static;
+      max-width: none;
+      padding: var(--spacing-2) var(--spacing-3);
+      border-bottom: var(--border-width) solid var(--color-primary-quiet);
     }
 
-    .guitar-arrow {
-      transform: rotate(var(--guitar-arrow-rotation));
-      line-height: var(--spacing-3);
+    .eq-plot {
+      height: var(--eq-plot-height-compact);
     }
 
-    .guitar-node {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      gap: var(--guitar-bar-gap) var(--spacing-2);
-      align-items: baseline;
-      padding: var(--spacing-1) var(--spacing-2);
+    .eq-bars {
+      gap: var(--eq-bar-gap-compact);
     }
 
-    .guitar-node-subtitle,
-    .guitar-bars {
-      grid-column: 1 / -1;
+    .eq-bar:nth-child(even) {
+      display: none;
     }
 
     .guitar-photo-frame {

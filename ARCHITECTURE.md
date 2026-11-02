@@ -170,6 +170,8 @@ Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. AS
 
 `GuitarSection` renders one responsive RSC presentation across viewports. CSS adjusts its layout without UA detection, a variant swap or a section Suspense fallback.
 
+The signal panel of `GuitarSection` is one EQ spectrum strip (`EqSpectrumStrip.tsx`). It is a static RSC with no client JavaScript: `lib/eq-spectrum.ts` turns the bands, range and BPM in `content/guitar-rig.ts` into bar heights, an SVG curve path, grid lines and axis positions. The 72 bars are DOM elements that bounce through a CSS `scaleY` keyframe timed to the BPM (`--eq-beat`), the curve is an SVG path with a non-scaling stroke, and the plot is a single `role="img"` whose accessible name lists every band. The animation stops under `prefers-reduced-motion` and the MOTION switch, leaving one static frame. Below 700px every second bar is hidden and the gear label moves above the plot.
+
 `GuitarSection` renders the guitar rig and the DAW mixer as one module at `sec-guitar`, one synchronous RSC layout at every width, without a UA branch or Suspense boundary. The mixer keeps its fader, knob, R/M/S, meter and scroll islands, which hydrate on phones too. Below 768px each channel row collapses into a compact grid (id, track, dB, knobs, R/M/S, plugin chips, meter, fader) instead of one card per channel. Between 768px and 1100px the meter takes the wide row and the fader with its dB readout take the row below it.
 
 Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.

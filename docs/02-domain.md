@@ -44,7 +44,7 @@ Every section of the page is driven by a typed module in `content/`, and those t
 | `git tag --list 'edu/*'`       | Education inside Career                                  | `education.ts`        | `Credential[]`                         |
 | `git tag --list 'community/*'` | Community and speaking inside Career                     | `community.ts`        | `CommunityEvent`                       |
 | `cat ~/HOTTEST_TAKES.md`       | Opinions/theses                                          | `hottest-takes.ts`    | `HottestTake[]`                        |
-| `cat ~/.guitar_rig`            | Hobby (guitar signal chain)                              | `guitar-rig.ts`       | `GuitarRig`                            |
+| `cat ~/.guitar_rig`            | Hobby (guitar EQ strip)                                  | `guitar-rig.ts`       | `GuitarRig`                            |
 | `./mix --live`                 | Hobby (DAW mixer, interactive, inside the guitar module) | `daw-mixer.ts`        | `DawMixer`                             |
 | `cat ~/.unknowns`              | Learning and specialization lists inside Opinions        | `unknowns.ts`         | `Unknowns`                             |
 
@@ -92,7 +92,7 @@ erDiagram
     PERSON ||--o{ CREDENTIAL : holds
     PERSON ||--|| GUITAR_RIG : plays
     GUITAR_RIG ||--|| GUITAR_PRESENTATION : "projects content"
-    GUITAR_PRESENTATION ||--|| SIGNAL_CHAIN : "INPUT->AMP->OUT (3-node tuple)"
+    GUITAR_PRESENTATION ||--|| EQ_SPECTRUM : "one strip: bands, axis, groove"
     PERSON ||--|| DAW_MIXER : mixes
     DAW_MIXER ||--o{ CHANNEL : "6, last=MASTER"
     PERSON ||--|| UNKNOWNS : "is-learning"
@@ -100,7 +100,7 @@ erDiagram
 ```
 
 **Two notable invariants the schema enforces** (because they are silent-corruption risks):
-- The guitar **presentation signal chain is a three-node Zod `tuple`** (`GuitarPresentationSchema` in `content/schemas.ts`). It fixes the rendered order to INPUT → AMP → OUT and rejects reordered, duplicate or missing roles. The source rig retains FX metadata outside the presentation tuple.
+- The guitar **EQ spectrum is one Zod object** (`EqSpectrumSchema` in `content/schemas.ts`). It rejects a band or axis tick outside the frequency range, an inverted range, a non-positive BPM and an accessible-name template that lost its `{freq}` or `{gain}` token. The curve and bars are derived from the bands by `lib/eq-spectrum.ts`, so the values live in one place.
 - The DAW mixer is `.length(6)` with `.refine(last.id === 'MASTER')` - the master channel must be last.
 
 ## The AI sub-domain (`/api/ask` and its evaluation)
