@@ -42,11 +42,11 @@ export type GhExec = (args: string[]) => Promise<string>;
 
 const CLAUDE_BOT_LOGINS = new Set(['claude[bot]', 'claude']);
 const FIX_CLAIM_WORD_PATTERN =
-  /\b(?:fixed|fixes|addressed|implemented|patched|done|changed|resolved|updated)\b/gi;
+  /\b(?:fix|fixed|fixes|corrected|addressed|implemented|patched|done|changed|resolved|updated)\b/gi;
 const ATTRIBUTIVE_PREFIX_PATTERN = /\b(?:as|the|a|an|this|that|these|those)\s+$/i;
 const NEGATION_PATTERN =
   /(n't|\b(?:no|not|never|none|nothing|neither|nor|without|unable|unnecessary|unneeded)\b)/i;
-const FUTURE_MODAL_PATTERN = /\b(?:will|would|shall)\b/i;
+const FUTURE_MODAL_PATTERN = /\b(?:will|would|shall)\b|'ll\b|\bto\s+$/i;
 const CONDITION_PATTERN = /\b(?:once|until|if|yet\s+to)\b/i;
 const CLAUSE_SPLIT_PATTERN = /[.!?;:\n]+/;
 const COORDINATE_SPLIT_PATTERN = /,|\b(?:but|and|or|so|although|though|while|whereas)\b/i;
