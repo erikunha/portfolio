@@ -20,8 +20,8 @@ this document does not tell them.
 **Rule.** React Server Components are the default. Every section renders on the
 server, statically generated at build time, shipping zero JavaScript unless it
 genuinely needs the client. Client islands exist by exception only — the Matrix
-dialog loop, the interactive shell, the contact form, the IntersectionObserver
-typewriter, the motion indicator, the Matrix rain. Every file that carries
+dialog loop, the interactive shell, the contact form, the contact timezone panel,
+the IntersectionObserver typewriter, the motion indicator, the Matrix rain. Every file that carries
 `'use client'` is named `*.client.tsx` (or lives under a `/client/` directory),
 except Next's own `error.tsx` route files and the root `app/global-error.tsx`,
 whose names the framework fixes;
@@ -271,9 +271,10 @@ unpredictably; discrete React-owned nodes announce cleanly.
 **How it is held.** Mechanical gates: the axe-core scan (`tests/a11y/axe.spec.ts`,
 the `axe-core a11y scan` step in `build-and-gate`) fails the build on any axe
 violation; Lighthouse CI gates the Accessibility category at 100 (Chapter 3).
-Per-component behavioral a11y tests — for example
+Per-component behavioral a11y tests, for example
 `components/client/ContactForm/ContactForm.test.tsx` (tab order, `role`/`aria-live` error
-region, keyboard-activatable submit) and `components/client/InteractiveShell/InteractiveShell.test.tsx` — run
+region, keyboard-activatable submit), `components/client/ContactTimezone/ContactTimezone.test.tsx`
+(combobox roles, keyboard path and `aria-activedescendant`, minutes-only live region, named map) and `components/client/InteractiveShell/InteractiveShell.test.tsx`, which run
 inside `pnpm test`. `prefers-reduced-motion` coverage is exercised by the
 `cross-cutting.spec.ts` e2e spec in the required `e2e-functional` job.
 

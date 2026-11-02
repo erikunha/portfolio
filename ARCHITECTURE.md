@@ -147,6 +147,7 @@ The section menu is a modal drawer at every width, opened by the `☰ INDEX` tri
 | GlobalMotion → TypeReveal, MatrixRainLazy      | App-wide scroll type reveal and Matrix Rain from the root layout                |
 | InteractiveShellLazy → InteractiveShell        | Client-only shell input and streamed ASK output                                 |
 | ContactFormLazy → ContactForm                  | Client-only form submission and feedback                                        |
+| ContactTimezoneLazy → ContactTimezone          | Timezone overlap panel: clocks, map, zone search and the propose action         |
 | DAW mixer islands                              | Fader, dB readout, knob, RMS buttons and VU meter behavior                      |
 | Footer client exports                          | Session counters, halt clock and reboot control                                 |
 | ErrorBoundary and error pages                  | Failure capture, retry and recovery controls                                    |
@@ -154,7 +155,7 @@ The section menu is a modal drawer at every width, opened by the `☰ INDEX` tri
 | `/links` client components                     | Tagline cycle, navigation progress, copy and subscribe actions                  |
 | Design-system Sidebar and CopyButton           | Documentation navigation and clipboard feedback                                 |
 
-`InteractiveShellLazy` and `ContactFormLazy` use `next/dynamic` with `ssr: false` and loading status placeholders. `FooterLazy.client.tsx` is a direct re-export of footer controls, not a dynamic import. `DawMixerDesktop` is statically imported by `GuitarSection` and embeds smaller client islands.
+`InteractiveShellLazy` and `ContactFormLazy` use `next/dynamic` with `ssr: false` and loading status placeholders. `ContactTimezoneLazy` uses `React.lazy` and mounts `ContactTimezone` once its host is within 400px of the viewport, so the island's chunk, the land grid and the timezone logic stay out of first load; the server-rendered `ContactTimezoneStatic` is the Suspense and error fallback. `FooterLazy.client.tsx` is a direct re-export of footer controls, not a dynamic import. `DawMixerDesktop` is statically imported by `GuitarSection` and embeds smaller client islands.
 
 `pnpm route-js-check` fails a route above **164.7 KB gzipped total first-load JS**. It reports app-owned JS by subtracting the configured **131.9 KB** framework floor, leaving **32.8 KB** of headroom. App-owned JS has no separate assertion. The floor check fails when the lightest route is more than 2 KB below that baseline. `pnpm bundle-check` independently gates the global client-chunk sum at **220 KB**.
 
@@ -220,7 +221,8 @@ app/api/mcp/route.ts                 # MCP Streamable HTTP; POST bounded to 4096
 components/sections/                  # RSC sections: Hero, HottestTakes, GuitarSection, …
 components/client/                    # co-located islands, ONLY interactivity
 components/client/InteractiveShell/   # streaming shell island
-components/client/ContactForm/        # contact form island
+components/client/ContactForm/        # contact form island and the messageStore it shares with the timezone panel
+components/client/ContactTimezone/    # timezone overlap panel island: clocks, map, zone combobox
 components/client/HeroBootAnimation/  # boot typewriter island
 components/client/RoleTyper/          # About status role typewriter island
 components/client/TypeReveal/         # Scroll type reveal observer island
@@ -253,6 +255,7 @@ content/social.ts                     # github / linkedin / email / site
 content/errors.ts                     # 404, 500 and no-JS copy
 content/errors-client.ts              # zod-free error copy for client islands
 content/terminal-chrome.ts           # zod-free topbar, shell and contact chrome copy
+content/world-map.ts                  # zod-free land grid, Erik pin and curated zone coordinates for the contact map
 content/_validate-client-content.ts  # build-time parse site for every client-read schema
 content/schemas.ts                    # Zod validation schemas, build-time
 content/ask-eval-corpus.ts            # ask eval Q+A corpus (factual, edge, jailbreak, output-validation)
@@ -268,6 +271,7 @@ lib/breakpoint.ts                     # viewport breakpoint constants
 lib/contact-validation.ts             # server-only ContactSchema, shared limits export, honeypot check
 lib/contact-delivery.ts               # shared Resend configuration and 10s send timeout
 lib/contact-outbox.ts                 # ordered pending ids and retry attempt counters
+lib/timezone/                         # Intl-only zone, clock and overlap math, land-grid path builder
 lib/error-bridge.client.ts            # window error → /api/log bridge
 lib/events.ts                         # typed WindowEventMap: sysfail:start|end, shell-cmd-run, hero:sysfail:show|hide
 lib/hiring-profile.ts                 # HiringProfile reader for /api/erik.json
@@ -453,7 +457,7 @@ If Resend is down, the message stays in KV and enters the pending outbox. The fo
 
 `contact:outbox` is a Redis sorted set of message ids scored by `receivedAt`. `contact:outbox:attempts` stores retry counts. The cron removes entries older than 7 days or already at 3 attempts. Each eligible message consumes one attempt before the shared send function runs. Acceptance removes pending membership and its counter; failure keeps it pending. The success response is `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }`, with a matching `X-Request-Id` header. Removal never deletes `contact:msg:{uuid}`, which retains its 90-day audit TTL.
 
-Both routes use `lib/contact-delivery.ts` for sender, recipient, subject and the 10s timeout. A message-id idempotency key accompanies every send. Contact logs carry only `requestId` and `msgId`, never provider error details, addresses or message bodies. Form copy and shared limits live in the Zod-free `content/contact-copy.ts`. Client field checks use those limits; `lib/contact-validation.ts` re-exports them and supplies the server-only `ContactSchema` used by the route. `content/contact.ts` defines the copy schema, and `content/_validate-client-content.ts` validates the client copy and the email and LinkedIn constants from `content/social-urls.ts` during content validation. Delivered and queued panels replace the form and receive focus. Errors retain typed values and focus the summary. Contact states its retention line under the form and carries a channels card in the right column, with the email and a compact `[COPY EMAIL]` control, the LinkedIn call to action, GitHub, the reply window, the languages and the timezone; the prototype's work-authorization table and the sponsorship chip are gone by owner decision.
+Both routes use `lib/contact-delivery.ts` for sender, recipient, subject and the 10s timeout. A message-id idempotency key accompanies every send. Contact logs carry only `requestId` and `msgId`, never provider error details, addresses or message bodies. Form copy and shared limits live in the Zod-free `content/contact-copy.ts`. Client field checks use those limits; `lib/contact-validation.ts` re-exports them and supplies the server-only `ContactSchema` used by the route. `content/contact.ts` defines the copy schema, and `content/_validate-client-content.ts` validates the client copy and the email and LinkedIn constants from `content/social-urls.ts` during content validation. Delivered and queued panels replace the form and receive focus. Errors retain typed values and focus the summary. Contact states its retention line under the form. The right column is the `LS -L ~/CHANNELS` card, which holds the timezone overlap panel above a facts footer. The footer lists availability, mode, relocation with visa sponsorship, engagement type, the reply window, the languages and the timezone, then the email with a compact `[COPY EMAIL]` control, the LinkedIn call to action and GitHub. The card is not sticky: it is taller than the viewport, so it scrolls with the page, and it stacks under the form below 1024px. The panel renders on the server as a dim land map with Erik's pin and no clock. The lazy island then adds two ticking clocks, the lit map, the visitor pin and route, a combobox over `Intl.supportedValuesOf('timeZone')`, three 24-cell hour rows, the best slot and `PROPOSE_IN_MESSAGE`. The clocks tick once per second only while the panel is on screen and the tab is visible, and the map recomputes once per minute. `lib/timezone/` computes the overlap of Erik's 09:00 to 18:00 in São Paulo with the visitor's 09:00 to 18:00 from `Intl` alone, with no dependency. `components/client/ContactForm/messageStore.ts` holds the form message as an external store read through `useSyncExternalStore`; the propose action appends one line to it without prop drilling and without a render per keystroke. `tests/e2e/contact-timezone.spec.ts` emulates `Europe/Berlin` and `America/Sao_Paulo` and holds the behaviour. The prototype's work-authorization table and the sponsorship chip are gone by owner decision.
 
 ### Anti-spam strategy
 
