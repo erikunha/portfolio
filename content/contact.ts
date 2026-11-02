@@ -2,6 +2,54 @@ import { z } from 'zod';
 import { contactCopy } from './contact-copy';
 import { formatLanguages, profile } from './profile';
 
+const CopySchema = z.string().min(1);
+const AXIS_LABEL_COUNT = 5;
+
+const TimezonePanelSchema = z.object({
+  status: z.object({ online: CopySchema, offHours: CopySchema }),
+  clocks: z.object({ erik: CopySchema, you: CopySchema, link: CopySchema }),
+  map: z.object({
+    erikPlace: CopySchema,
+    erikLabel: CopySchema,
+    youLabel: CopySchema,
+    ariaLabel: CopySchema,
+  }),
+  location: z.object({
+    youAre: CopySchema,
+    detectedAuto: CopySchema,
+    detectedManual: CopySchema,
+  }),
+  search: z.object({
+    label: CopySchema,
+    placeholder: CopySchema,
+    listLabel: CopySchema,
+    count: CopySchema,
+  }),
+  rows: z.object({ erik: CopySchema, you: CopySchema, both: CopySchema }),
+  axis: z.array(CopySchema).length(AXIS_LABEL_COUNT),
+  slot: z.object({ title: CopySchema, you: CopySchema, erik: CopySchema, none: CopySchema }),
+  propose: z.object({ label: CopySchema, line: CopySchema }),
+  overlap: z.object({
+    summary: CopySchema,
+    range: CopySchema,
+    none: CopySchema,
+    separator: CopySchema,
+  }),
+  hours: z.object({ one: CopySchema, other: CopySchema }),
+  facts: z.object({
+    availabilityLabel: CopySchema,
+    modeLabel: CopySchema,
+    modeValue: CopySchema,
+    relocationLabel: CopySchema,
+    relocationValue: CopySchema,
+    engagementLabel: CopySchema,
+    engagementValue: CopySchema,
+    replyLabel: CopySchema,
+    replyValue: CopySchema,
+  }),
+  announce: CopySchema,
+});
+
 export const ContactContentSchema = z.object({
   success: z.object({ title: z.string().min(1), message: z.string().min(1) }),
   queued: z.object({
@@ -33,6 +81,7 @@ export const ContactContentSchema = z.object({
     languagesLabel: z.string().min(1),
     timezoneLabel: z.string().min(1),
   }),
+  timezone: TimezonePanelSchema,
   form: z.object({
     nameLabel: z.string().min(1),
     emailLabel: z.string().min(1),
