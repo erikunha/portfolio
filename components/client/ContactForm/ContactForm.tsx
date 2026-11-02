@@ -85,6 +85,13 @@ export function ContactForm() {
   const invalidFields = CONTACT_FIELDS.filter((field) => errors[field]);
   const busy = status === STATUS.SUBMITTING;
 
+  const messageFieldId = fieldId(CONTACT_FIELD.MESSAGE);
+  const fieldShown = status !== STATUS.SUCCESS && status !== STATUS.QUEUED;
+  useEffect(
+    () => (fieldShown ? messageStore.bindField(messageFieldId) : undefined),
+    [fieldShown, messageFieldId],
+  );
+
   useEffect(() => {
     if (failureCount > INITIAL_FAILURE_COUNT) summaryRef.current?.focus();
   }, [failureCount]);
@@ -277,7 +284,7 @@ export function ContactForm() {
           placeholder={contactCopy.form.emailPlaceholder}
         />
         <Field
-          id={fieldId(CONTACT_FIELD.MESSAGE)}
+          id={messageFieldId}
           name={CONTACT_FIELD.MESSAGE}
           label={contactCopy.form.messageLabel}
           multiline

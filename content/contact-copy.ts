@@ -53,9 +53,10 @@ export const contactCopy: ContactContent = {
     replyLabel: 'reply',
     replyValue: REPLY_WINDOW,
     languagesLabel: 'lang',
-    timezoneLabel: 'tz',
   },
   timezone: {
+    title: 'DATE --TZ ~/OVERLAP',
+    marker: '▌',
     status: {
       online: 'ONLINE NOW · likely to reply today',
       offHours: 'OFF HOURS · back in ~{hours}h, message anyway',
@@ -90,6 +91,7 @@ export const contactCopy: ContactContent = {
     propose: {
       label: 'PROPOSE_IN_MESSAGE ↙',
       added: 'added to your message',
+      focusLink: 'edit message ↑',
       line: `Proposed call: {you} your time ({zone}), {erik} Erik time (${ERIK_PLACE})`,
     },
     overlap: {

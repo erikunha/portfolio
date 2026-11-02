@@ -3,6 +3,7 @@ const LINE_BREAK = '\n';
 type Listener = () => void;
 
 let message = '';
+let fieldId: string | null = null;
 const listeners = new Set<Listener>();
 
 function write(next: string): void {
@@ -20,6 +21,13 @@ export const messageStore = {
   },
   getSnapshot: (): string => message,
   getServerSnapshot: (): string => '',
+  getFieldId: (): string | null => fieldId,
+  bindField(id: string): () => void {
+    fieldId = id;
+    return () => {
+      if (fieldId === id) fieldId = null;
+    };
+  },
   set: write,
   append(line: string): boolean {
     if (message.includes(line)) return false;

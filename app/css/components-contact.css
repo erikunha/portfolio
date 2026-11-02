@@ -18,6 +18,9 @@
   }
 
   .contact-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-6);
     min-width: 0;
   }
 
@@ -206,13 +209,16 @@
     }
   }
 
+  @media (max-width: 767.98px) {
+    .contact-channels-body a,
+    .contact-copy-btn {
+      min-height: var(--spacing-target);
+    }
+  }
+
   @media (min-width: 1024px) {
     .contact-layout {
-      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    }
-
-    .contact-channels {
-      align-self: start;
+      grid-template-columns: minmax(0, 13fr) minmax(0, 12fr);
     }
   }
 
@@ -269,7 +275,25 @@
   }
 
   .ctz-static {
-    --ctz-min-height: 43rem;
+    --ctz-min-height: 46rem;
+  }
+
+  @media (min-width: 412px) {
+    .ctz-static {
+      --ctz-min-height: 45rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .ctz-static {
+      --ctz-min-height: 47rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .ctz-static {
+      --ctz-min-height: 41.5rem;
+    }
   }
 
   .ctz-status {
@@ -644,18 +668,18 @@
     display: grid;
     gap: var(--spacing-1);
     margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
   }
 
   .ctz-fact {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 6ch minmax(0, 1fr);
     align-items: baseline;
     gap: var(--spacing-1) var(--spacing-2);
   }
 
   .ctz-fact dt {
-    flex: none;
-    min-width: 3.5rem;
     color: var(--color-text-secondary);
   }
 
@@ -668,10 +692,7 @@
 
   .ctz-footer {
     display: grid;
-    gap: var(--spacing-3);
-    margin-top: var(--spacing-3);
-    padding-top: var(--spacing-3);
-    border-top: var(--border-width) dashed var(--color-primary-subtle);
+    gap: var(--spacing-4);
   }
 
   @keyframes ctz-pulse {
@@ -711,6 +732,32 @@
   @media (min-width: 480px) {
     .ctz-clock-time {
       font-size: var(--text-2xl);
+    }
+  }
+
+  .ctz-proposed-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-1) var(--spacing-3);
+  }
+
+  .ctz-proposed-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--spacing-target);
+    color: var(--color-primary-500);
+  }
+
+  @media (min-width: 900px) {
+    .ctz-clocks {
+      flex-wrap: nowrap;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .ctz-proposed-link {
+      display: none;
     }
   }
 

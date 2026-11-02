@@ -83,6 +83,9 @@ export function ContactTimezone() {
       })
     : null;
 
+  const added = slotLine !== null && proposedLine === slotLine;
+  const messageFieldId = messageStore.getFieldId();
+
   function propose() {
     if (!slotLine) return;
     messageStore.append(slotLine);
@@ -180,11 +183,23 @@ export function ContactTimezone() {
           ) : (
             <p className="ctz-slot-none">{copy.slot.none}</p>
           )}
-          <p className="ctz-proposed" role="status">
-            {slotLine !== null && proposedLine === slotLine ? (
-              <span data-testid="ctz-proposed">{copy.propose.added}</span>
+          <div className="ctz-proposed-row">
+            <p className="ctz-proposed" role="status">
+              {added ? <span data-testid="ctz-proposed">{copy.propose.added}</span> : null}
+            </p>
+            {added && messageFieldId ? (
+              <a
+                className="ctz-proposed-link"
+                href={`#${messageFieldId}`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  document.getElementById(messageFieldId)?.focus();
+                }}
+              >
+                {copy.propose.focusLink}
+              </a>
             ) : null}
-          </p>
+          </div>
         </div>
         {slotLine ? (
           <button type="button" className="ctz-propose" onClick={propose}>

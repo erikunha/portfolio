@@ -6,6 +6,8 @@ const CopySchema = z.string().min(1);
 const AXIS_LABEL_COUNT = 5;
 
 const TimezonePanelSchema = z.object({
+  title: CopySchema,
+  marker: CopySchema,
   status: z.object({ online: CopySchema, offHours: CopySchema }),
   clocks: z.object({ erik: CopySchema, you: CopySchema, link: CopySchema }),
   map: z.object({
@@ -28,7 +30,12 @@ const TimezonePanelSchema = z.object({
   rows: z.object({ erik: CopySchema, you: CopySchema, both: CopySchema }),
   axis: z.array(CopySchema).length(AXIS_LABEL_COUNT),
   slot: z.object({ title: CopySchema, you: CopySchema, erik: CopySchema, none: CopySchema }),
-  propose: z.object({ label: CopySchema, line: CopySchema, added: CopySchema }),
+  propose: z.object({
+    label: CopySchema,
+    line: CopySchema,
+    added: CopySchema,
+    focusLink: CopySchema,
+  }),
   overlap: z.object({
     summary: CopySchema,
     range: CopySchema,
@@ -79,7 +86,6 @@ export const ContactContentSchema = z.object({
     replyLabel: z.string().min(1),
     replyValue: z.string().min(1),
     languagesLabel: z.string().min(1),
-    timezoneLabel: z.string().min(1),
   }),
   timezone: TimezonePanelSchema,
   form: z.object({
