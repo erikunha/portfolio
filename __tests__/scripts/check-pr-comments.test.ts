@@ -379,6 +379,8 @@ describe('claimsFix', () => {
     "I really don't think this issue is actually fixed.",
     'This will pass when fixed.',
     'This is yet to be fixed.',
+    'This is not yet fixed.',
+    "We haven't yet fixed this.",
     'It was neither tested nor fixed.',
     'The flaky test has yet to be resolved.',
     'It would be fine after this is resolved.',

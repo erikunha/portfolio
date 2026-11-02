@@ -49,8 +49,7 @@ const NEGATION_PATTERN =
 const FUTURE_MODAL_PATTERN = /\b(?:will|would|shall)\b/i;
 const CONDITION_PATTERN = /\b(?:once|until|if|yet\s+to)\b/i;
 const CLAUSE_SPLIT_PATTERN = /[.!?;:\n]+/;
-const COORDINATE_SPLIT_PATTERN =
-  /,|\b(?:but|and|or|so|although|though|while|whereas)\b|\byet\b(?!\s+to\b)/i;
+const COORDINATE_SPLIT_PATTERN = /,|\b(?:but|and|or|so|although|though|while|whereas)\b/i;
 const SUBORDINATE_SPLIT_PATTERN = /\b(?:since|because|when|after|now that|given that)\b/i;
 const FULL_SHA_LENGTH = 40;
 const MIN_SHORT_SHA_LENGTH = 7;
