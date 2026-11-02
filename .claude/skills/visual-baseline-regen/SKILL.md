@@ -1,7 +1,7 @@
 ---
 
 name: visual-baseline-regen
-description: Use when a push or PR may touch a Playwright screenshot baseline — any CSS, layout, typography, spacing, or rendering change. Page sections (hero, contact, shell, hottest-takes) are captured in `tests/visual/visual.spec.ts` and are CI-gated per-platform (darwin + linux). Design-system component baselines live in `tests/e2e/design-system-components.spec.ts` and are darwin-only (the spec is ignored in CI on Ubuntu). Covers assessing baseline impact before a push, the darwin regen path (`--update-snapshots` against a prod server), the linux regen path for `visual.spec.ts` baselines only (the `update_visual_baselines` CI dispatch + artifact download + per-project PNG copy), committing both platforms in one commit, the batch-to-one-push cost rule, and the inspect-before-commit rule.
+description: Use when a push or PR may touch a Playwright screenshot baseline: any CSS, layout, typography, spacing, or rendering change. Page sections (hero, contact, shell, hottest-takes) are captured in `tests/visual/visual.spec.ts` and are CI-gated per-platform (darwin + linux). Design-system component baselines live in `tests/e2e/design-system-components.spec.ts` and are darwin-only (the spec is ignored in CI on Ubuntu). Covers assessing baseline impact before a push, the darwin regen path (`pnpm visual:regen` against a prod server, a forced rewrite scoped by `GREP`), the linux regen path for `visual.spec.ts` baselines only (the `update_visual_baselines` CI dispatch + artifact download + per-project PNG copy), committing both platforms in one commit, the batch-to-one-push cost rule, and the inspect-before-commit rule.
 ---
 
 # Visual baseline regeneration
@@ -41,11 +41,24 @@ Regenerate against a production server locally, then update snapshots:
     DEPLOY_SALT=test pnpm start &
     # wait for server at localhost:3000, then run ONLY the spec being regenerated:
 
-    # for visual.spec.ts baselines, run ALL FOUR darwin projects:
-    pnpm test:e2e --project=chromium --project=chromium-mobile --project=webkit-desktop --project=webkit-mobile tests/visual/visual.spec.ts --update-snapshots
+    # for visual.spec.ts baselines, run ALL FOUR darwin projects through the regen tool:
+    E2E_BASE_URL=http://localhost:3000 pnpm visual:regen
+
+    # to force a rewrite of a subject the changed mode kept, scope it with GREP:
+    E2E_BASE_URL=http://localhost:3000 UPDATE_MODE=all GREP="hero above-the-fold" pnpm visual:regen
 
     # for design-system-components.spec.ts baselines:
     pnpm test:e2e --project=<visual-project> tests/e2e/design-system-components.spec.ts --update-snapshots
+
+`pnpm visual:regen` runs `playwright test` on `tests/visual/visual.spec.ts` for the
+`chromium`, `chromium-mobile`, `webkit-desktop` and `webkit-mobile` projects against
+`E2E_BASE_URL`, with `--update-snapshots=<mode>`. The mode defaults to `changed`.
+`UPDATE_MODE=all` is accepted only together with `GREP=<subject>`, which Playwright
+receives as `-g`: the changed mode keeps a baseline whose diff is under `maxDiffPixels`,
+so a forced rewrite must be scoped to the subject that changed, never to the whole suite.
+The tool fails closed when `E2E_BASE_URL` is missing, prints the changed PNGs from
+`git status --porcelain tests/visual` when it finishes, and exits with the Playwright exit
+code.
 
 `DEPLOY_SALT=test` prevents prod-mode salt resolution from hitting Upstash Redis
 (see `lib/ip-hash.ts`). Use `pnpm start`, not `pnpm dev` — baselines must match
@@ -67,7 +80,8 @@ pair in the same darwin pass.
 **Skip this step for `design-system-components.spec.ts` baselines — CI ignores that spec on Ubuntu.**
 
 The linux runner's pixels differ from darwin; you cannot fake them locally. Dispatch the
-CI regen workflow, wait, then pull the artifacts:
+CI regen workflow, wait, then pull the artifacts. That dispatch regenerates the whole spec
+for the linux platform, so the local `GREP` scope does not apply to it:
 
     gh workflow run "CI" -f update_visual_baselines=true --ref <branch>
     # wait for the run to finish, then download:
@@ -103,5 +117,8 @@ run is green. Do not push the code first and let CI fail.
   hottest-takes); requires darwin + linux regen when changed.
 - `tests/e2e/design-system-components.spec.ts` — design-system component baselines;
   darwin-only (spec is ignored on Ubuntu in CI); requires only darwin regen when changed.
+- `pnpm visual:regen` (`scripts/regen-baselines.mjs`): the local regen tool for
+  `tests/visual/visual.spec.ts`, four darwin projects against `E2E_BASE_URL`, with a
+  `GREP`-scoped forced rewrite.
 - The runtime/perf (LHCI) gate and the pre-PR review rule stay inline in
   CLAUDE.md; this skill is only the baseline-regen mechanics.

@@ -17,6 +17,7 @@
 | `pnpm start`                    | serve the production build                           |
 | `pnpm check` / `pnpm check:fix` | Biome lint + format                                  |
 | `pnpm typecheck`                | `tsgo --noEmit` (strict, TypeScript native compiler) |
+| `pnpm visual:regen`             | Regenerate visual baselines (changed mode)           |
 
 > **Gotcha:** `pnpm build` rewrites `next-env.d.ts`'s route-types import to the prod path; `pnpm dev` rewrites it back. Inspect any `next-env.d.ts` diff after switching build modes before deciding whether to keep it.
 
@@ -68,7 +69,7 @@ flowchart LR
 - **a11y (axe-core):** zero-violation gate over home, contact errors, design-system routes and both links locales. Every scan includes `wcag22aa`; page scans retain `wcag2a`, `wcag2aa` and `wcag21aa`, while contact errors retain `wcag2a` and `wcag2aa`.
 - **e2e (Playwright):** CI selects a 5-project matrix (`chromium`, `chromium-mobile`, `webkit-desktop`, `webkit-mobile`, `chromium-components`). `playwright.config.ts` also defines mobile Chromium and desktop/mobile WebKit component projects. The DS component visual spec is darwin-only (CI ignores it on Ubuntu).
   Reading views, error states, no-JavaScript recovery and mobile reflow run in all four page-browser projects.
-- **Visual regression:** Argos-backed snapshots of page sections; a color/layout/typography change requires regenerated baselines (see the `visual-baseline-regen` skill).
+- **Visual regression:** Argos-backed snapshots of page sections; a color/layout/typography change requires regenerated baselines. `pnpm visual:regen` is the canonical local entry point, and a forced rewrite is scoped with `GREP=<subject>` (see the `visual-baseline-regen` skill).
 - **AI eval (`pnpm ask:eval`):** calibration → corpus → gate for `/api/ask` (doc 02). Gated in CI when `ai`-paths change.
 
 ## CI/CD

@@ -22,6 +22,7 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "visual:regen": "node scripts/regen-baselines.mjs",
     "lhci": "lhci autorun",
     "lhci:mobile": "lhci autorun --config=lighthouserc.mobile.json",
     "validate-content": "tsx scripts/validate-content.ts",
