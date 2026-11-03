@@ -37,9 +37,10 @@ export type GateResult = { ok: boolean; reason: string };
 export const VISUAL_BASELINE_SNAPSHOT_DIR = '-snapshots';
 
 export function isVisualBaselineFile(path: string): boolean {
+  const normalized = path.toLowerCase();
   return (
-    path.endsWith('.png') &&
-    path.split('/').some((segment) => segment.endsWith(VISUAL_BASELINE_SNAPSHOT_DIR))
+    normalized.endsWith('.png') &&
+    normalized.split('/').some((segment) => segment.endsWith(VISUAL_BASELINE_SNAPSHOT_DIR))
   );
 }
 
@@ -115,7 +116,12 @@ async function run() {
       'gh',
       ['api', `repos/${repo}/compare/${reviewedSha}...${headSha}`],
       { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 },
-    );
+    ).catch(() => {
+      fail(
+        prNumber,
+        `could not compare ${reviewedSha.slice(0, 12)}...${headSha.slice(0, 12)} — treating the Approve as STALE`,
+      );
+    });
     const compare = JSON.parse(compareOut) as {
       merge_base_commit: { sha: string };
       files: { filename: string }[];

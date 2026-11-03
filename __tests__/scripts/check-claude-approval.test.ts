@@ -34,6 +34,27 @@ describe('evaluateGate (fail-closed merge decision)', () => {
     expect(r.reason).toMatch(/carried: baseline-only commits/);
   });
 
+  it('carries an Approve across an uppercase baseline extension', () => {
+    const r = evaluateGate('approve', '0563abe', HEAD, [
+      'tests/visual/visual.spec.ts-snapshots/home-linux.PNG',
+    ]);
+    expect(r.ok).toBe(true);
+  });
+
+  it('FAILS a stale Approve when a snapshot dir holds a non-PNG file', () => {
+    const r = evaluateGate('approve', '0563abe', HEAD, [
+      'tests/visual/visual.spec.ts-snapshots/home-linux.txt',
+    ]);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/STALE/);
+  });
+
+  it('FAILS a stale Approve when a PNG sits outside a snapshot dir', () => {
+    const r = evaluateGate('approve', '0563abe', HEAD, ['public/images/og.png']);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/STALE/);
+  });
+
   it('FAILS a stale Approve when any non-baseline file changed since the reviewed SHA', () => {
     const r = evaluateGate('approve', '0563abe', HEAD, [
       'tests/visual/visual.spec.ts-snapshots/home-linux.png',
@@ -53,6 +74,11 @@ describe('evaluateGate (fail-closed merge decision)', () => {
     expect(evaluateGate('reject', HEAD, HEAD, []).ok).toBe(false);
     expect(evaluateGate('request-changes', HEAD, HEAD, []).ok).toBe(false);
     expect(evaluateGate('none', null, HEAD, []).ok).toBe(false);
+  });
+
+  it('FAILS a non-approve verdict even when the reviewed SHA is stale', () => {
+    expect(evaluateGate('reject', 'deadbee', HEAD, []).ok).toBe(false);
+    expect(evaluateGate('request-changes', 'deadbee', HEAD, []).ok).toBe(false);
   });
 });
 
