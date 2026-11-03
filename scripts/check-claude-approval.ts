@@ -34,10 +34,21 @@ export function extractReviewedSha(body: string): string | null {
 
 export type GateResult = { ok: boolean; reason: string };
 
+export const VISUAL_BASELINE_SNAPSHOT_DIR = '-snapshots';
+
+export function isVisualBaselineFile(path: string): boolean {
+  const normalized = path.toLowerCase();
+  return (
+    normalized.endsWith('.png') &&
+    normalized.split('/').some((segment) => segment.endsWith(VISUAL_BASELINE_SNAPSHOT_DIR))
+  );
+}
+
 export function evaluateGate(
   verdict: ClaudeVerdict,
   reviewedSha: string | null,
   headSha: string,
+  changedFiles: string[],
 ): GateResult {
   if (verdict === 'none') return { ok: false, reason: 'no verdict yet (review in progress?)' };
   if (verdict === 'reject' || verdict === 'request-changes') {
@@ -51,6 +62,12 @@ export function evaluateGate(
     };
   }
   if (!headSha.startsWith(reviewedSha)) {
+    if (changedFiles.length > 0 && changedFiles.every(isVisualBaselineFile)) {
+      return {
+        ok: true,
+        reason: `approve on ${reviewedSha.slice(0, 12)} carried: baseline-only commits`,
+      };
+    }
     return {
       ok: false,
       reason: `approved ${reviewedSha} but HEAD is ${headSha.slice(0, 12)} — STALE; re-run /claude-review`,
@@ -92,11 +109,29 @@ async function run() {
     fail(prNumber, 'No claude-review found. Comment `/claude-review` on the PR and wait for it.');
   }
 
-  const result = evaluateGate(
-    parseClaudeVerdict(latest.body),
-    extractReviewedSha(latest.body),
-    headSha,
-  );
+  const reviewedSha = extractReviewedSha(latest.body);
+  let changedFiles: string[] = [];
+  if (reviewedSha && !headSha.startsWith(reviewedSha)) {
+    const { stdout: compareOut } = await execFileP(
+      'gh',
+      ['api', `repos/${repo}/compare/${reviewedSha}...${headSha}`],
+      { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 },
+    ).catch(() => {
+      fail(
+        prNumber,
+        `could not compare ${reviewedSha.slice(0, 12)}...${headSha.slice(0, 12)} — treating the Approve as STALE`,
+      );
+    });
+    const compare = JSON.parse(compareOut) as {
+      merge_base_commit: { sha: string };
+      files: { filename: string }[];
+    };
+    changedFiles = compare.merge_base_commit.sha.startsWith(reviewedSha)
+      ? compare.files.map((file) => file.filename)
+      : [];
+  }
+
+  const result = evaluateGate(parseClaudeVerdict(latest.body), reviewedSha, headSha, changedFiles);
   if (!result.ok) {
     fail(prNumber, `${result.reason}.`);
   }
