@@ -208,7 +208,7 @@ test.describe('Footer', () => {
         const box = await link.boundingBox();
         expect(box?.height).toBeGreaterThanOrEqual(24);
         const fits = await link.evaluate((element) => element.scrollWidth <= element.clientWidth);
-        expect(fits, `${await link.innerText()} must wrap only between words at ${width}`).toBe(
+        expect(fits, `${await link.textContent()} must wrap only between words at ${width}`).toBe(
           true,
         );
       }
