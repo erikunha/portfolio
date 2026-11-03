@@ -31,15 +31,6 @@
     padding: var(--spacing-2) var(--space-gutter);
   }
 
-  .reading-brand {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--spacing-target);
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-decoration: none;
-  }
-
   .reading-nav {
     display: flex;
     flex-wrap: wrap;

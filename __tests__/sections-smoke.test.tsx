@@ -99,7 +99,11 @@ describe('Home page', () => {
     );
     const topbar = new DOMParser().parseFromString(
       renderToStaticMarkup(
-        createElement(SectionNavigationProvider, null, createElement(DesktopTopbar)),
+        createElement(
+          SectionNavigationProvider,
+          null,
+          createElement(DesktopTopbar, { brand: null }),
+        ),
       ),
       'text/html',
     );

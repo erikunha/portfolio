@@ -28,7 +28,7 @@ test.describe('home with JavaScript off', () => {
     }
     expect(bar.y).toBeGreaterThanOrEqual(topbar.y + topbar.height);
     await expect(
-      page.locator('.desktop-topbar').getByText('ERIK_CUNHA.SH', { exact: true }),
+      page.locator('.desktop-topbar').getByRole('link', { name: 'erikunha.dev, home' }),
     ).toBeInViewport();
     await expect(
       page.locator('.desktop-topbar').getByRole('link', { name: 'VIEW_CV' }),

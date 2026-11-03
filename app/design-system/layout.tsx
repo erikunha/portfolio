@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { BrandLink } from '@/components/BrandLink';
+import { BrandIcon } from '@/design-system/components/BrandIcon';
 import { DS_NAV_ID, DS_SKIP_LABEL, DS_SKIP_NAV_LABEL } from './_components/ds-nav';
 import { PagerNav, Sidebar, SiteBar } from './_components/Sidebar.client';
 
@@ -11,7 +13,7 @@ export default function DesignSystemLayout({ children }: { children: ReactNode }
       <a href={`#${DS_NAV_ID}`} className="skip-to-content">
         {DS_SKIP_NAV_LABEL}
       </a>
-      <SiteBar />
+      <SiteBar brand={<BrandLink />} drawerBrand={<BrandIcon />} />
       <div className="ds-layout flex flex-row-reverse justify-end min-h-screen max-w-[var(--measure-page)] mx-auto max-md:flex-col">
         <main
           id="main-content"

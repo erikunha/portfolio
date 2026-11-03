@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { BrandLink } from '@/components/BrandLink';
 import { CompanyLink } from '@/components/CompanyLink';
 import { PrintButton } from '@/components/client/PrintButton';
 import { cvDocument, cvJsonLd, READING_PATHS, readingViews } from '@/content/reading-views';
@@ -83,9 +84,7 @@ export default function CvPage() {
       </a>
       <header className="reading-bar">
         <div className="reading-bar-in">
-          <a className="reading-brand" href={shared.homeHref}>
-            {shared.homeLabel}
-          </a>
+          <BrandLink />
           <nav aria-label={shared.navLabel} className="reading-nav">
             {shared.nav.map((item) => (
               <a key={item.href} href={item.href}>

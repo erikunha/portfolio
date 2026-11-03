@@ -48,6 +48,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: profile.fullName, url: 'https://www.erikunha.dev' }],
   creator: profile.fullName,
+  manifest: '/site.webmanifest',
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
