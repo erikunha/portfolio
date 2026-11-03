@@ -69,6 +69,26 @@ describe('CV reading view', () => {
     }
   });
 
+  it('links every employer heading to its company site', () => {
+    const headings = host.querySelectorAll('section[aria-labelledby="cv-experience"] article h3');
+    expect(headings).toHaveLength(gitLog.length);
+    gitLog.forEach((job, index) => {
+      const link = headings[index]?.querySelector('a');
+      expect(link?.getAttribute('href'), job.company).toBe(job.companyUrl);
+      expect(link?.getAttribute('target')).toBe('_blank');
+      expect(link?.getAttribute('rel')).toBe(readingViews.shared.newTabRel);
+      expect(link?.textContent).toBe(job.company);
+      const heading = headings[index];
+      expect(
+        heading?.querySelector('.sr-only, svg, [aria-hidden="true"]'),
+        'a type-reveal heading holds only typed text: extra nodes inflate --type-chars past the visible name',
+      ).toBeNull();
+      const description = host.querySelector(`#${link?.getAttribute('aria-describedby')}`);
+      expect(description?.textContent).toBe(readingViews.shared.newTabHint);
+      expect(description?.closest('[data-type-reveal]')).toBeNull();
+    });
+  });
+
   it('shows every certification and degree row', () => {
     for (const entry of credentials) expect(host.textContent).toContain(entry.evidence);
     for (const entry of education) expect(host.textContent).toContain(entry.degree);
@@ -122,7 +142,9 @@ describe('CV reading view', () => {
     expect(external.length).toBeGreaterThan(0);
     for (const link of external) {
       const named = link.getAttribute('aria-label') ?? link.textContent;
-      expect(named).toMatch(/new tab/);
+      const describedBy = link.getAttribute('aria-describedby');
+      const description = describedBy ? host.querySelector(`#${describedBy}`)?.textContent : '';
+      expect(`${named} ${description}`).toMatch(/new tab/);
     }
   });
 
@@ -175,6 +197,16 @@ describe('summary reading view', () => {
       expect(tiles[index]?.textContent).toContain(stat.label);
     });
     expect(host.textContent).not.toContain('€1B+ ARR');
+  });
+
+  it('links the current employer in the context line to its company site', () => {
+    const links = host.querySelectorAll('.reading-meta a');
+    expect(links).toHaveLength(1);
+    expect(links[0]?.getAttribute('href')).toBe(profile.currentEmployer.url);
+    expect(links[0]?.getAttribute('target')).toBe('_blank');
+    expect(links[0]?.getAttribute('rel')).toBe(readingViews.shared.newTabRel);
+    expect(links[0]?.textContent).toContain(profile.currentEmployer.name);
+    expect(links[0]?.textContent).toContain(readingViews.shared.newTabHint);
   });
 
   it('publishes no relocation or work-authorization chip', () => {

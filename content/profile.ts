@@ -12,6 +12,7 @@ export const profile: Profile = ProfileSchema.parse({
   availability: 'available now',
   currentEmployer: {
     name: 'Raylu',
+    url: 'https://raylu.ai',
     context: 'private-markets fintech · B2B SaaS',
   },
   languages: [

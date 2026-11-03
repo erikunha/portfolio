@@ -1,6 +1,8 @@
 import Image from 'next/image';
+import { CompanyMention } from '@/components/CompanyLink';
 import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
+import { profile as siteProfile } from '@/content/profile';
 import { TaglineTyper } from './client/TaglineTyper.client';
 
 const AVATAR_MOBILE_PX = 56;
@@ -11,7 +13,16 @@ export function IdentityCard({ locale }: { locale: LinksLocale }) {
   const { profile, copy } = linksContent;
 
   const rows: { label: string; value: React.ReactNode }[] = [
-    { label: copy.hostLabel[locale], value: profile.host[locale] },
+    {
+      label: copy.hostLabel[locale],
+      value: (
+        <CompanyMention
+          text={profile.host[locale]}
+          company={siteProfile.currentEmployer.name}
+          href={siteProfile.currentEmployer.url}
+        />
+      ),
+    },
     { label: copy.stackLabel[locale], value: profile.stack },
     {
       label: copy.statusLabel[locale],

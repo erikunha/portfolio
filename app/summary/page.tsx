@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { CompanyMention } from '@/components/CompanyLink';
 import { PrintButton } from '@/components/client/PrintButton';
 import { READING_PATHS, readingViews, summaryDocument } from '@/content/reading-views';
 import { social } from '@/content/social';
@@ -66,7 +67,13 @@ export default function SummaryPage() {
           </h1>
           <p className="reading-role">{summaryDocument.tagline}</p>
           <p className="reading-meta">{summaryDocument.technologyLine}</p>
-          <p className="reading-meta">{summaryDocument.context}</p>
+          <p className="reading-meta">
+            <CompanyMention
+              text={summaryDocument.context}
+              company={summaryDocument.employer.name}
+              href={summaryDocument.employer.url}
+            />
+          </p>
         </section>
 
         <section className="reading-stats mt-6" aria-label={summary.statsLabel}>

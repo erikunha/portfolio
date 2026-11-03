@@ -7,6 +7,8 @@ const FIRST_SECTION_ORDER = 1;
 const MIN_SECTION_TEXT_LENGTH = 1;
 const MIN_ALIAS_COUNT = 1;
 
+export const CompanyUrlSchema = z.url({ protocol: /^https$/ });
+
 const SectionTextSchema = z
   .string()
   .min(MIN_SECTION_TEXT_LENGTH)
@@ -199,7 +201,15 @@ export const AboutContentSchema = z.object({
   }),
   now: z.object({
     title: z.string().min(1),
-    rows: z.array(z.object({ k: z.string().min(1), v: z.string().min(1) })).min(1),
+    rows: z
+      .array(
+        z.object({
+          k: z.string().min(1),
+          v: z.string().min(1),
+          company: z.object({ name: z.string().min(1), url: CompanyUrlSchema }).optional(),
+        }),
+      )
+      .min(1),
   }),
   responsibilities: z.object({ title: z.string().min(1), command: z.string().min(1) }),
   stack: z.object({
@@ -516,7 +526,11 @@ export const ProfileSchema = z.object({
   city: z.string().min(1),
   timezone: z.string().min(1),
   availability: z.string().min(1),
-  currentEmployer: z.object({ name: z.string().min(1), context: z.string().min(1) }),
+  currentEmployer: z.object({
+    name: z.string().min(1),
+    url: CompanyUrlSchema,
+    context: z.string().min(1),
+  }),
   languages: z
     .array(z.object({ code: z.string().min(1), name: z.string().min(1), level: z.string().min(1) }))
     .min(1),
@@ -546,6 +560,8 @@ export const EducationSchema = z
     message: 'Education must end on or after its start year',
   });
 
+export const CompanyLinkCopySchema = z.object({ disclosure: z.string().min(1) });
+
 export const GitCommitSchema = z
   .object({
     startMonth: MonthSchema,
@@ -559,6 +575,7 @@ export const GitCommitSchema = z
     branch: z.string().min(1),
     type: z.enum(['career', 'life']),
     company: z.string().min(1),
+    companyUrl: CompanyUrlSchema,
     role: z.string().min(1),
     body: z.array(z.string().min(1)),
     isRoot: z.boolean().optional(),
@@ -1002,6 +1019,7 @@ export const CvDocumentSchema = z.object({
       z.object({
         key: ReadingTextSchema,
         company: ReadingTextSchema,
+        companyUrl: CompanyUrlSchema,
         meta: ReadingTextSchema,
         bullets: z.array(ReadingTextSchema).min(1),
       }),
@@ -1025,6 +1043,7 @@ export const SummaryDocumentSchema = z.object({
   tagline: ReadingTextSchema,
   technologyLine: ReadingTextSchema,
   context: ReadingTextSchema,
+  employer: z.object({ name: ReadingTextSchema, url: CompanyUrlSchema }),
   stats: z.array(z.object({ value: ReadingTextSchema, label: ReadingTextSchema })).min(1),
   projects: z
     .array(
@@ -1051,6 +1070,11 @@ export const CvJsonLdSchema = z.object({
     jobTitle: ReadingTextSchema,
     url: z.url(),
     sameAs: z.array(z.url()).min(1),
+    worksFor: z.object({
+      '@type': z.literal('Organization'),
+      name: ReadingTextSchema,
+      url: CompanyUrlSchema,
+    }),
   }),
 });
 

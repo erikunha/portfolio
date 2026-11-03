@@ -45,7 +45,7 @@ ${currentRoleLine}
 - Standardized team practices: RFC-driven implementation, ADRs, contribution guidelines, PR conventions
 
 ## Employment history (newest first)
-${gitLog.map((entry) => `- ${entry.company}: ${entry.role}. ${entry.date}. ${entry.location}${entry.workMode ? ` (${entry.workMode})` : ''}. ${entry.body.join(' ')}`).join('\n')}
+${gitLog.map((entry) => `- ${entry.company} (${entry.companyUrl}): ${entry.role}. ${entry.date}. ${entry.location}${entry.workMode ? ` (${entry.workMode})` : ''}. ${entry.body.join(' ')}`).join('\n')}
 
 ## Education
 ${education.map((entry) => `- ${entry.degree}, ${entry.institution}, ${entry.location}${entry.studyMode ? ` (${entry.studyMode})` : ''}, ${entry.period}`).join('\n')}

@@ -7,6 +7,7 @@ import { social } from '@/content/social';
 
 const EmployerSchema = z.object({
   name: z.string(),
+  url: z.url(),
   role: z.string(),
   domain: z.string(),
   current: z.boolean().optional(),
@@ -94,6 +95,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
 
   employers: gitLog.map((entry) => ({
     name: entry.company,
+    url: entry.companyUrl,
     role: entry.role,
     domain: entry.domain,
     current: entry.endMonth === null,

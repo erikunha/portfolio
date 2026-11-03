@@ -163,6 +163,7 @@ export const cvDocument = CvDocumentSchema.parse({
   experience: gitLog.map((entry) => ({
     key: entry.hash,
     company: entry.company,
+    companyUrl: entry.companyUrl,
     meta: [
       entry.role,
       `${entry.location}${entry.workMode ? ` (${entry.workMode})` : ''}`,
@@ -212,6 +213,7 @@ export const summaryDocument = SummaryDocumentSchema.parse({
     profile.currentEmployer.name,
     readingViews.summary.experienceLabel,
   ].join(STACK_SEPARATOR),
+  employer: { name: profile.currentEmployer.name, url: profile.currentEmployer.url },
   stats: heroContent.stats,
   projects: summaryProjects,
   languages: cvDocument.languages,
@@ -231,5 +233,10 @@ export const cvJsonLd = CvJsonLdSchema.parse({
     jobTitle: profile.title,
     url: social.site,
     sameAs: [social.linkedin, social.github],
+    worksFor: {
+      '@type': 'Organization',
+      name: profile.currentEmployer.name,
+      url: profile.currentEmployer.url,
+    },
   },
 });
