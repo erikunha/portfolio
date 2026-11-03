@@ -28,7 +28,7 @@ export const personSchema = {
   worksFor: {
     '@type': 'Organization',
     name: profile.currentEmployer.name,
-    url: 'https://raylu.ai',
+    url: profile.currentEmployer.url,
   },
   description: `${profileSummary} 8+ years across regulated industries. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI.`,
   knowsAbout: [

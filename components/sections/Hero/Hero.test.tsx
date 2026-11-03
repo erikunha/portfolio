@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { profile } from '@/content/profile';
 import { Hero } from './Hero';
 
 const getDOM = () =>
@@ -31,6 +32,22 @@ describe('Hero identity and static actions', () => {
     }
     expect(doc.querySelectorAll('[data-testid="hero-name"]')).toHaveLength(2);
     expect(doc.querySelector('h1.sr-only')).toBeNull();
+  });
+
+  it('links the current employer to its company site in each variant', () => {
+    const doc = getDOM();
+    const variants = doc.querySelectorAll(
+      '[data-testid="hero-desktop"], [data-testid="hero-mobile"]',
+    );
+    expect(variants).toHaveLength(2);
+    for (const hero of variants) {
+      const link = hero.querySelector('.hero-context-fact--employer a');
+      expect(link?.getAttribute('href')).toBe(profile.currentEmployer.url);
+      expect(link?.getAttribute('target')).toBe('_blank');
+      expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
+      expect(link?.textContent).toContain(profile.currentEmployer.name);
+      expect(link?.textContent).toContain('(opens in a new tab)');
+    }
   });
 
   it('keeps exactly one h1 in the DOM and a level-1 heading in each variant', () => {

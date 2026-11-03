@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { careerCopy, careerEntries, careerScrollLabel } from '@/content/git-log';
+import { CompanyLink } from '../../CompanyLink';
 import { IconGitLog } from '../../Icons';
 import { CredentialsSection } from '../CredentialsSection';
 
@@ -32,7 +33,10 @@ export function GitLogContent() {
               <span className="career-decoration" aria-hidden="true">
                 {entry.deco}
               </span>{' '}
-              <strong className="career-company">{entry.displayCompany}</strong>{' '}
+              <strong className="career-company">
+                <CompanyLink href={entry.companyUrl}>{entry.displayBrand}</CompanyLink>
+                {entry.displayDetail}
+              </strong>{' '}
               <strong>{entry.displayRole}</strong>{' '}
               <span className="career-location">{entry.displayLocation}</span>{' '}
               <span className="career-period">{entry.date}</span>

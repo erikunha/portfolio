@@ -10,6 +10,28 @@
     }
   }
 
+  .company-link {
+    position: relative;
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: var(--border-width);
+    text-underline-offset: var(--spacing-1);
+  }
+
+  .company-link::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, var(--spacing-target-compact));
+    height: var(--spacing-target-compact);
+    transform: translate(-50%, -50%);
+  }
+
+  .company-link:hover {
+    text-decoration-thickness: calc(var(--border-width) * 2);
+  }
+
   .copy-btn {
     display: inline-flex;
     align-items: center;

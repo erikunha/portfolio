@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import { companyLinkCopy } from '@/content/company-link';
 import { gitLog } from '@/content/git-log';
 import { READING_PATHS } from '@/content/reading-views';
 import { GitLogContent, GitLogSection } from './GitLogSection';
@@ -47,5 +48,31 @@ describe('career git log', () => {
     expect(action?.textContent).toBe('VIEW_CV');
     expect(action?.getAttribute('href')).toBe(READING_PATHS.cv);
     expect(host.querySelectorAll('#sec-credentials')).toHaveLength(1);
+  });
+
+  it('links every company to its own site with an accessible name that holds the company', () => {
+    const host = document.createElement('div');
+    host.innerHTML = renderToStaticMarkup(GitLogContent());
+    const rows = Array.from(host.querySelectorAll('ol > li'));
+    expect(rows).toHaveLength(gitLog.length);
+    gitLog.forEach((job, index) => {
+      const links = rows[index]?.querySelectorAll('a') ?? [];
+      expect(links, `${job.company} must have exactly one company link`).toHaveLength(1);
+      const link = links[0];
+      expect(link?.getAttribute('href')).toBe(job.companyUrl);
+      expect(link?.getAttribute('target')).toBe('_blank');
+      expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
+      expect(link?.closest('.career-head')).not.toBeNull();
+      expect(link?.textContent?.toUpperCase()).toContain(
+        job.company.split(' (')[0]?.replaceAll(' ', '_').toUpperCase(),
+      );
+      expect(link?.textContent).toContain(companyLinkCopy.disclosure);
+      const detail = job.company.includes(' (') ? job.company.slice(job.company.indexOf(' (')) : '';
+      expect(
+        rows[index]?.querySelector('.career-company')?.textContent?.toUpperCase(),
+        'the parenthetical stays visible next to the linked brand',
+      ).toContain(detail.toUpperCase());
+      expect(link?.closest('[aria-hidden="true"]')).toBeNull();
+    });
   });
 });

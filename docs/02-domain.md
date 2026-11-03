@@ -35,7 +35,7 @@ Every section of the page is driven by a typed module in `content/`, and those t
 | Terminal surface               | Real-world meaning                                       | Content module        | Entity                                 |
 | ------------------------------ | -------------------------------------------------------- | --------------------- | -------------------------------------- |
 | About panels                   | Positioning, Now rows, stack and retry code              | `about.ts`            | `AboutContent`                         |
-| `git log ~/career`             | Career timeline with nested tag groups                   | `git-log.ts`          | `GitCommit[]` (`type: career｜life`)   |
+| `git log ~/career`             | Career timeline with nested tag groups                   | `git-log.ts`          | `GitCommit[]` (`companyUrl`, `type`)   |
 | `LS -LA ./PROJECTS`            | Nine projects with shared desktop/mobile content         | `projects.ts`         | `Project[]`                            |
 | `PERF_RECEIPTS --HARD-NUMBERS` | Six impact receipts nested under Projects                | `perf-receipts.ts`    | `projectReceipts` from `PerfReceipt[]` |
 | `MEASURED.JSON`                | ASK evaluation and desktop/mobile PSI                    | `measured.ts`         | `Measured` presentation metadata       |
@@ -52,6 +52,7 @@ Opinions renders four ordered home takes and both Unknowns lists in one deferred
 The design-system take renders at `/design-system#opinion-07`; `placement` selects its surface.
 
 Career (`sec-git-log`) contains the `cert/*`, `edu/*`, and `community/*` tag groups.
+Every `GitCommit` carries a required `companyUrl` (https, validated by `CompanyUrlSchema`). The company name renders as a link, through `components/CompanyLink`, in the career log, the project company labels, the Hero employer line, the About Now row, `/cv`, `/summary` and the `/links` identity card. The same URL reaches the Person and ProfilePage JSON-LD (`worksFor.url`), `/api/erik.json` (`employers[].url`), `public/llms.txt` and the ask system prompt.
 `sec-credentials` and `sec-community` remain nested in-page anchors, without mobile order rules.
 About (`sec-readme`) contains the Whoami, Now, Responsibilities, Stack and retry-code panels.
 
