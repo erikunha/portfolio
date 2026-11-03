@@ -25,11 +25,7 @@ describe('responsive section mobile variants', () => {
     const html = renderToStaticMarkup(el);
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(doc.querySelectorAll('.guitar-presentation')).toHaveLength(1);
-    expect(
-      Array.from(doc.querySelectorAll('[data-testid^="signal-node-"]'), (node) =>
-        node.getAttribute('data-testid'),
-      ),
-    ).toEqual(['signal-node-INPUT', 'signal-node-AMP', 'signal-node-OUT']);
+    expect(doc.querySelectorAll('[data-testid="eq-spectrum"]')).toHaveLength(1);
     expect(doc.querySelectorAll('[data-testid^="stat-"]')).toHaveLength(4);
     expect(doc.querySelectorAll('img')).toHaveLength(1);
     expect(html).not.toContain('guitar-mobile');
