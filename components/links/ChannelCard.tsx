@@ -58,7 +58,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
           <div className="mt-3">
             <div
               aria-hidden="true"
-              className="links-thumb-placeholder h-[104px] lg:h-[280px] border border-primary-border grid place-items-center text-primary-400 text-xs tracking-[0.08em] uppercase"
+              className="links-thumb-placeholder w-full border border-primary-border grid place-items-center text-primary-400 text-xs tracking-[0.08em] uppercase"
             >
               {copy.thumbPlaceholder[locale]}
             </div>
@@ -74,7 +74,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
             data-outbound="ultimo-video"
             className="block no-underline mt-3 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 hover:opacity-92"
           >
-            <span className="links-thumb h-[104px] lg:h-[280px] border border-primary-border">
+            <span className="links-thumb w-full">
               <Image
                 src={latest.thumbnailUrl}
                 alt=""

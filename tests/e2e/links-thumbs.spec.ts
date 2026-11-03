@@ -3,6 +3,8 @@ import { expect, type Page, test } from '@playwright/test';
 const SIGNAL_GREEN = 'rgb(0, 255, 65)';
 const FIRST_THUMB = '.links-thumb';
 const WIDTHS = [320, 390, 768, 1280];
+const VIDEO_RATIO = 16 / 9;
+const RATIO_TOLERANCE = 0.02;
 
 const tint = (page: Page) =>
   page
@@ -81,6 +83,30 @@ test.describe('/links thumbnail theme overlay', () => {
       );
       expect(overflow).toBeLessThanOrEqual(0);
       await expect(page.locator(FIRST_THUMB).first()).toBeVisible();
+    });
+  }
+
+  for (const width of WIDTHS) {
+    test(`every cover frame is 16:9 and the image fills it at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto('/links');
+      const frames = await page.locator(FIRST_THUMB).evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const frame = node.getBoundingClientRect();
+          const image = node.querySelector('img')?.getBoundingClientRect();
+          return {
+            ratio: frame.width / frame.height,
+            widthGap: image ? Math.abs(image.width - frame.width) : Number.POSITIVE_INFINITY,
+            heightGap: image ? Math.abs(image.height - frame.height) : Number.POSITIVE_INFINITY,
+          };
+        }),
+      );
+      expect(frames.length).toBeGreaterThan(0);
+      for (const frame of frames) {
+        expect(Math.abs(frame.ratio - VIDEO_RATIO)).toBeLessThan(RATIO_TOLERANCE * VIDEO_RATIO);
+        expect(frame.widthGap).toBeLessThan(1);
+        expect(frame.heightGap).toBeLessThan(1);
+      }
     });
   }
 });

@@ -64,7 +64,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
                 <span className="text-primary-400 text-xs">
                   {String(index + 1).padStart(INDEX_PAD, '0')}
                 </span>
-                <span className="links-thumb h-9 w-16 border border-primary-border">
+                <span className="links-thumb w-16">
                   <Image
                     src={video.thumbnailUrl}
                     alt=""

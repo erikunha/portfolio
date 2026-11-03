@@ -75,6 +75,7 @@
   }
 
   .links-thumb-placeholder {
+    aspect-ratio: 16 / 9;
     background-image: repeating-linear-gradient(
       135deg,
       var(--color-primary-quiet) 0 5px,
@@ -85,9 +86,12 @@
   .links-thumb {
     position: relative;
     display: block;
+    aspect-ratio: 16 / 9;
     overflow: hidden;
     isolation: isolate;
     background: var(--color-secondary-950);
+    outline: 1px solid var(--color-primary-border);
+    outline-offset: -1px;
   }
 
   .links-thumb img {
