@@ -33,6 +33,7 @@ export const aboutContent = AboutContentSchema.parse({
       {
         k: 'Currently',
         v: `building the investor workflow frontend at ${profile.currentEmployer.name} · private-markets fintech`,
+        company: { name: profile.currentEmployer.name, url: profile.currentEmployer.url },
       },
       { k: 'Reading', v: 'AI Engineering · Chip Huyen, applied LLM eval in prod' },
       { k: 'Building', v: 'this portfolio. you are looking at it.' },

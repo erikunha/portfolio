@@ -214,7 +214,11 @@ const profileFixture = {
   city: 'Paulínia',
   timezone: 'UTC-3',
   availability: 'available now',
-  currentEmployer: { name: 'Raylu', context: 'private-markets fintech · B2B SaaS' },
+  currentEmployer: {
+    name: 'Raylu',
+    url: 'https://raylu.ai',
+    context: 'private-markets fintech · B2B SaaS',
+  },
   languages: [
     { code: 'pt', name: 'Portuguese', level: 'native' },
     { code: 'en', name: 'English', level: 'C1' },
@@ -326,6 +330,35 @@ describe('canonical profile and education', () => {
       { ...gitLog[0], location: '' },
     ])
       expect(GitCommitSchema.safeParse(invalid).success).toBe(false);
+  });
+
+  it('requires every career entry to link to its company over https', async () => {
+    const { GitCommitSchema } = await import('./schemas');
+    const { gitLog } = await import('./git-log');
+    const { companyUrl: _omitted, ...withoutUrl } = gitLog[0] ?? ({} as Record<string, unknown>);
+    for (const invalid of [
+      withoutUrl,
+      { ...gitLog[0], companyUrl: '' },
+      { ...gitLog[0], companyUrl: 'raylu.ai' },
+      { ...gitLog[0], companyUrl: 'http://raylu.ai' },
+      { ...gitLog[0], companyUrl: 'javascript:alert(1)' },
+      { ...gitLog[0], companyUrl: 'mailto:hello@raylu.ai' },
+    ]) {
+      expect(
+        GitCommitSchema.safeParse(invalid).success,
+        'a career entry without an https company URL renders an unlinked employer, or a link a visitor cannot trust',
+      ).toBe(false);
+    }
+    for (const entry of gitLog) {
+      expect(GitCommitSchema.safeParse(entry).success).toBe(true);
+      expect(new URL(entry.companyUrl).protocol).toBe('https:');
+    }
+  });
+
+  it('gives each employer its own company URL', async () => {
+    const { gitLog } = await import('./git-log');
+    const origins = gitLog.map((entry) => new URL(entry.companyUrl).origin);
+    expect(new Set(origins).size).toBe(origins.length);
   });
 });
 

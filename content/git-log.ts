@@ -9,6 +9,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/raylu',
     type: 'career',
     company: 'Raylu',
+    companyUrl: 'https://raylu.ai',
     role: 'Senior Software Engineer, Frontend & Product (contract via Torc)',
     startMonth: '2026-06',
     endMonth: null,
@@ -26,6 +27,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/betsson',
     type: 'career',
     company: 'Betsson Group',
+    companyUrl: 'https://betssongroup.com',
     role: 'Senior Software Engineer, Frontend',
     startMonth: '2025-03',
     endMonth: '2026-05',
@@ -43,6 +45,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/canon-medical',
     type: 'career',
     company: 'Canon Medical Systems Brazil',
+    companyUrl: 'https://br.medical.canon',
     role: 'Senior Software Engineer, Frontend (independent consultant)',
     startMonth: '2023-03',
     endMonth: '2025-03',
@@ -60,6 +63,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/grupo-sbf',
     type: 'career',
     company: 'Grupo SBF (Nike / Centauro)',
+    companyUrl: 'https://www.gruposbf.com.br',
     role: 'Software Engineer, Frontend',
     startMonth: '2021-12',
     endMonth: '2023-03',
@@ -77,6 +81,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/encora',
     type: 'career',
     company: 'Encora (formerly Daitan)',
+    companyUrl: 'https://www.linkedin.com/company/encorainc/',
     role: 'Software Engineer, Frontend · assigned to VMware',
     startMonth: '2021-01',
     endMonth: '2021-12',
@@ -92,6 +97,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/zup-itau',
     type: 'career',
     company: 'Zup Innovation (Itaú Unibanco)',
+    companyUrl: 'https://zup.com.br',
     role: 'Software Engineer, Frontend',
     startMonth: '2020-04',
     endMonth: '2021-01',
@@ -109,6 +115,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/venturus',
     type: 'career',
     company: 'Venturus',
+    companyUrl: 'https://www.venturus.org.br',
     role: 'Full-Stack Software Engineer → Software Engineer, Frontend',
     startMonth: '2019-02',
     endMonth: '2020-04',
@@ -126,6 +133,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/mb-labs',
     type: 'career',
     company: 'MB Labs',
+    companyUrl: 'https://mblabs.com.br',
     role: 'Full-Stack Software Engineer → Software Engineer, Cross-Platform',
     startMonth: '2018-07',
     endMonth: '2019-02',
@@ -143,6 +151,7 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     branch: 'career/monde-sistemas',
     type: 'career',
     company: 'Monde Sistemas',
+    companyUrl: 'https://monde.com.br',
     role: 'Software Engineer Intern, Frontend',
     startMonth: '2017-10',
     endMonth: '2018-05',
@@ -153,6 +162,15 @@ export const gitLog: GitCommit[] = GitCommitSchema.array().parse([
     isRoot: true,
   },
 ]);
+
+const COMPANY_DETAIL_SEPARATOR = ' (';
+const companyBrand = (company: string) => company.split(COMPANY_DETAIL_SEPARATOR)[0] ?? company;
+
+export const companyUrlFor = (brand: string): string => {
+  const entry = gitLog.find((job) => companyBrand(job.company) === brand);
+  if (!entry) throw new Error(`git-log: no career entry for company "${brand}"`);
+  return entry.companyUrl;
+};
 
 const GRAPH_CONTINUATION_LINES = 80;
 const SHORT_HASH_LENGTH = 7;
@@ -175,18 +193,16 @@ export const careerScrollLabel = careerCopy.scrollLabel;
 
 const COMPANY_SEPARATOR = ' ';
 const COMPANY_JOINER = '_';
-const COMPANY_DETAIL_SEPARATOR = ' (';
 const COUNTRY_LABELS = { full: ', Brazil', short: ', BR' } as const;
 
 export const careerEntries = gitLog.map((entry) => {
-  const [name, ...details] = entry.company.split(COMPANY_DETAIL_SEPARATOR);
-  const company = [name?.replaceAll(COMPANY_SEPARATOR, COMPANY_JOINER), ...details].join(
-    COMPANY_DETAIL_SEPARATOR,
-  );
+  const [name = '', ...details] = entry.company.split(COMPANY_DETAIL_SEPARATOR);
+  const detail = details.map((part) => `${COMPANY_DETAIL_SEPARATOR}${part}`).join('');
   return {
     ...entry,
     shortHash: entry.hash.slice(0, SHORT_HASH_LENGTH),
-    displayCompany: company.toUpperCase(),
+    displayBrand: name.replaceAll(COMPANY_SEPARATOR, COMPANY_JOINER).toUpperCase(),
+    displayDetail: detail.toUpperCase(),
     displayRole: entry.role.toUpperCase(),
     displayLocation: `${entry.location.replace(COUNTRY_LABELS.full, COUNTRY_LABELS.short)}${entry.workMode ? ` (${entry.workMode})` : ''}`,
   };

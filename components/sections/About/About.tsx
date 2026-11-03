@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { aboutContent as c } from '@/content/about';
 import { responsibilities } from '@/content/responsibilities';
 import { SCROLL_REGION_LABELS } from '@/content/section-labels';
+import { CompanyMention } from '../../CompanyLink';
 import { RoleTyper } from '../../client/RoleTyper';
 import { IconReadme } from '../../Icons';
 
@@ -83,7 +84,17 @@ export function About() {
                 {c.now.rows.map((row) => (
                   <div key={row.k}>
                     <dt>{row.k}</dt>
-                    <dd>{row.v}</dd>
+                    <dd>
+                      {row.company ? (
+                        <CompanyMention
+                          text={row.v}
+                          company={row.company.name}
+                          href={row.company.url}
+                        />
+                      ) : (
+                        row.v
+                      )}
+                    </dd>
                   </div>
                 ))}
               </dl>

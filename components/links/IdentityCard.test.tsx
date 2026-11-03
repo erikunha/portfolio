@@ -2,6 +2,7 @@ import { render } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { LINKS_LOCALE } from '@/content/links.constants';
+import { profile } from '@/content/profile';
 import { IdentityCard } from './IdentityCard';
 
 vi.mock('next/image', () => ({
@@ -31,6 +32,18 @@ describe('IdentityCard', () => {
     expect(container.textContent).toContain('Erik Cunha');
     expect(container.querySelectorAll('dt')).toHaveLength(3);
     expect(container.querySelectorAll('dd')).toHaveLength(3);
+  });
+
+  it('links the current employer in the host row for both locales', () => {
+    for (const locale of [LINKS_LOCALE.pt, LINKS_LOCALE.en]) {
+      const { container } = render(<IdentityCard locale={locale} />);
+      const links = container.querySelectorAll('.links-identity-meta a');
+      expect(links).toHaveLength(1);
+      expect(links[0]?.getAttribute('href')).toBe(profile.currentEmployer.url);
+      expect(links[0]?.getAttribute('target')).toBe('_blank');
+      expect(links[0]?.getAttribute('rel')).toBe('noopener noreferrer');
+      expect(links[0]?.textContent).toContain(profile.currentEmployer.name);
+    }
   });
 
   it('localises the rows that carry both languages', () => {
