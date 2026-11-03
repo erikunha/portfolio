@@ -57,7 +57,7 @@ Every `GitCommit` carries a required `companyUrl` (https, validated by `CompanyU
 About (`sec-readme`) contains the Whoami, Now, Responsibilities, Stack and retry-code panels.
 
 Opinions (`sec-hottest-takes`) contains the HOTTEST_TAKES list and Unknowns.
-Contact (`sec-contact`) contains the contact form, alternative contact links and the copy-email control.
+Contact (`sec-contact`) has two columns. The left column holds the contact form, a channels block (the email with its copy control, LinkedIn and GitHub) and six facts. The right column is the timezone overlap panel: Erik's hours against the visitor's, with a best slot the visitor can propose in the message. From 1024px the columns split at the golden ratio, form column first. Below 1024px they stack in that order, panel last.
 Unknowns are not a separate homepage module.
 
 Supporting content (not sections): `social.ts` (links), `seo.ts` (JSON-LD `Person`), `dmesg.ts` + `shell-commands.ts` + `terminal-chrome.ts` + `hero-client.ts` (client-imported flavor data), and the AI-eval domain below. Client-imported modules stay zod-free, so `content/_validate-client-content.ts` parses their schemas at build time: it is the only parse site for `terminal-chrome.ts`, whose `shellChrome`, `contactChrome` and `topbarChrome` reach the shell, the contact form and the topbar brand badge.
@@ -66,7 +66,7 @@ Projects uses one set of descriptions and stats across viewport sizes. Each card
 
 Measured groups ASK and PSI presentation metadata without storing live values. The ASK adapter reads the eval aggregate; the PSI adapter supplies separate desktop and mobile scores. Each group keeps its own loading, unavailable and stale states.
 
-ContactForm imports Zod-free `content/contact-copy.ts`; `content/contact.ts` validates that copy with Zod for server consumers. Both share the LinkedIn URL from `content/social-urls.ts`.
+ContactForm imports Zod-free `content/contact-copy.ts`; `content/contact.ts` validates that copy with Zod for server consumers. Both share the LinkedIn URL from `content/social-urls.ts`. The timezone panel reads its copy from the same module and its land grid, Erik's pin and curated zone coordinates from the Zod-free `content/world-map.ts`; `content/_validate-client-content.ts` parses both at build time.
 
 ## Contact delivery
 

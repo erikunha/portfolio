@@ -23,9 +23,10 @@ test.describe('home with JavaScript off', () => {
     await page.goto('/');
     const topbar = await page.locator('.desktop-topbar').boundingBox();
     const bar = await page.locator('.nojs-bar').boundingBox();
-    expect(topbar).not.toBeNull();
-    expect(bar).not.toBeNull();
-    expect(bar!.y).toBeGreaterThanOrEqual(topbar!.y + topbar!.height);
+    if (topbar === null || bar === null) {
+      throw new Error('nojs-bar or desktop-topbar did not render a box');
+    }
+    expect(bar.y).toBeGreaterThanOrEqual(topbar.y + topbar.height);
     await expect(
       page.locator('.desktop-topbar').getByText('ERIK_CUNHA.SH', { exact: true }),
     ).toBeInViewport();
@@ -54,6 +55,37 @@ test.describe('home with JavaScript off', () => {
       page.locator('.section-menu'),
       'the menu opens only from the menu button',
     ).toBeHidden();
+  });
+
+  test('the contact section keeps its channels, facts and static map in order', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    const section = page.locator('#sec-contact');
+
+    await expect(section.locator('.contact-channels a[href^="mailto:"]')).toBeAttached();
+    await expect(section.locator('.contact-fact')).toHaveCount(6);
+    await expect(section.getByTestId('contact-timezone-static')).toBeAttached();
+    await expect(section.getByTestId('ctz-clock-erik')).toHaveCount(0);
+    const inOrder = await section.evaluate((element) => {
+      const follows = (first: string, second: string) =>
+        Boolean(
+          (element.querySelector(first) as Element).compareDocumentPosition(
+            element.querySelector(second) as Element,
+          ) & Node.DOCUMENT_POSITION_FOLLOWING,
+        );
+      return (
+        follows('.contact-main > :first-child', '.contact-channels') &&
+        follows('.contact-channels', '.contact-facts') &&
+        follows('.contact-facts', '.contact-timezone')
+      );
+    });
+    expect(inOrder, 'form, channels, facts, panel').toBe(true);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow, 'the page does not scroll sideways').toBeLessThanOrEqual(0);
   });
 
   test('the server-rendered menu trigger is the icon alone, named Open menu', async ({ page }) => {

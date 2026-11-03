@@ -5,6 +5,10 @@ import { revealDeferredContent, snapshotLocator } from '../e2e/_helpers/snapshot
 
 test.describe.configure({ timeout: 60_000 });
 
+const CONTACT_VISITOR_ZONE = 'Europe/Berlin';
+const CONTACT_FIXED_NOW = new Date('2026-11-02T15:00:00Z');
+const CONTACT_SCROLL_MARGIN_PX = 100;
+
 test.describe('visual regression', () => {
   test('1 — hero above-the-fold matches baseline', async ({ mockedPage }, testInfo) => {
     test.skip(
@@ -28,18 +32,36 @@ test.describe('visual regression', () => {
     await snapshotLocator(mockedPage, heroSection, 'hero-above-fold.png');
   });
 
-  test('2 — contact section matches baseline', async ({ mockedPage }) => {
-    const contactSection = mockedPage.locator('#sec-contact');
-    await contactSection.scrollIntoViewIfNeeded();
-    await mockedPage.waitForSelector('[data-testid="contact-form"]', { state: 'visible' });
-    await mockedPage.evaluate(() => document.fonts.ready);
-    await stripVolatileChrome(mockedPage);
-    if (process.env.ARGOS_TOKEN) {
-      await revealDeferredContent(mockedPage);
-      await argosScreenshot(mockedPage, 'contact-section', { element: contactSection });
-    }
-    await snapshotLocator(mockedPage, contactSection, 'contact-section.png', {
-      maxDiffPixels: 3000,
+  test.describe('contact section', () => {
+    test.use({ timezoneId: CONTACT_VISITOR_ZONE, locale: 'en-US' });
+
+    test('2 — contact section matches baseline', async ({ mockedPage }) => {
+      await mockedPage.clock.setFixedTime(CONTACT_FIXED_NOW);
+      const contactSection = mockedPage.locator('#sec-contact');
+      const scrollToContact = (selector: string) =>
+        mockedPage.evaluate(
+          ({ target, margin }) =>
+            window.scrollTo(
+              0,
+              (document.querySelector(target) as HTMLElement).getBoundingClientRect().top +
+                window.scrollY -
+                margin,
+            ),
+          { target: selector, margin: CONTACT_SCROLL_MARGIN_PX },
+        );
+      await scrollToContact('.contact-timezone');
+      await mockedPage.waitForSelector('[data-testid="contact-timezone"]', { state: 'visible' });
+      await scrollToContact('#sec-contact');
+      await mockedPage.waitForSelector('[data-testid="contact-form"]', { state: 'visible' });
+      await mockedPage.evaluate(() => document.fonts.ready);
+      await stripVolatileChrome(mockedPage);
+      if (process.env.ARGOS_TOKEN) {
+        await revealDeferredContent(mockedPage);
+        await argosScreenshot(mockedPage, 'contact-section', { element: contactSection });
+      }
+      await snapshotLocator(mockedPage, contactSection, 'contact-section.png', {
+        maxDiffPixels: 3000,
+      });
     });
   });
 

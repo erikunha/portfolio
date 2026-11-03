@@ -18,6 +18,9 @@ export type ContactField = (typeof CONTACT_FIELD)[keyof typeof CONTACT_FIELD];
 
 export const CONTACT_DELIVERY_CODE = { QUEUED: 'queued' } as const;
 
+const REPLY_WINDOW = 'within 48h';
+const ERIK_PLACE = 'São Paulo';
+
 export const contactCopy: ContactContent = {
   success: {
     title: 'EXECUTE_SEND :: SUCCESS',
@@ -47,10 +50,67 @@ export const contactCopy: ContactContent = {
     linkedinNewTabNote: '(opens in a new tab)',
     githubLabel: 'github',
     githubAccessibleLabel: 'github.com/erikunha (opens in a new tab)',
-    replyLabel: 'reply',
-    replyValue: 'within 48h',
     languagesLabel: 'lang',
-    timezoneLabel: 'tz',
+  },
+  timezone: {
+    title: 'DATE --TZ ~/OVERLAP',
+    marker: '▌',
+    status: {
+      online: 'ONLINE NOW · likely to reply today',
+      offHours: 'OFF HOURS · back in ~{hours}h, message anyway',
+    },
+    clocks: { erik: 'erik', you: 'you', link: '⇄' },
+    map: {
+      erikPlace: ERIK_PLACE,
+      erikLabel: 'erik · {code}',
+      youLabel: 'you · {code}',
+      ariaLabel:
+        'World map. Erik in {erikPlace}, you in {place}, {overlap} of shared working time.',
+    },
+    location: {
+      youAre: 'You are in',
+      detectedAuto: 'auto-detected · {zone}',
+      detectedManual: 'set by you · {zone}',
+    },
+    search: {
+      label: 'Search your city or timezone',
+      placeholder: 'not right? search city or timezone…',
+      listLabel: 'Timezones',
+      count: '{matches} of {total} timezones · from your browser, no download',
+    },
+    rows: { erik: 'erik', you: 'you', both: 'both' },
+    axis: ['00', '06', '12', '18', '24'],
+    slot: {
+      title: 'best slot for a call',
+      you: 'you',
+      erik: 'erik',
+      none: 'no live window, async only',
+    },
+    propose: {
+      label: 'PROPOSE_IN_MESSAGE ↙',
+      added: 'added to your message',
+      focusLink: 'edit message ↑',
+      line: `Proposed call: {you} your time ({zone}), {erik} Erik time (${ERIK_PLACE})`,
+    },
+    overlap: {
+      summary: '{hours} overlap',
+      range: '{range} your time',
+      none: `async works, reply ${REPLY_WINDOW}`,
+      separator: ' · ',
+    },
+    hours: { one: '{count} hour', other: '{count} hours' },
+    facts: {
+      availabilityLabel: 'start',
+      modeLabel: 'mode',
+      modeValue: 'remote-first · EU/US/CA',
+      relocationLabel: 'visa',
+      relocationValue: 'open to relocation with visa sponsorship',
+      engagementLabel: 'type',
+      engagementValue: 'full-time or contract',
+      replyLabel: 'reply',
+      replyValue: REPLY_WINDOW,
+    },
+    announce: 'Erik local time {erik}. Your local time {you}.',
   },
   form: {
     nameLabel: '$ name:',
@@ -89,4 +149,25 @@ export const contactCopy: ContactContent = {
 export function contactErrorSummary(count: number): string {
   const { one, many } = contactCopy.form.errorSummary;
   return count === 1 ? one : many.replace('{count}', String(count));
+}
+
+const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
+const HOURS_DECIMALS = 2;
+const SINGULAR_HOURS = 1;
+
+export function fillCopy(
+  template: string,
+  values: Readonly<Record<string, string | number>>,
+): string {
+  return template.replace(PLACEHOLDER_PATTERN, (token, key: string) => {
+    const value = values[key];
+    return value === undefined ? token : String(value);
+  });
+}
+
+export function contactHoursPhrase(hours: number): string {
+  const { one, other } = contactCopy.timezone.hours;
+  return fillCopy(hours === SINGULAR_HOURS ? one : other, {
+    count: Number(hours.toFixed(HOURS_DECIMALS)),
+  });
 }

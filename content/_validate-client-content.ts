@@ -13,12 +13,14 @@ import {
   ShellUiSchema,
   TerminalChromeSchema,
   TopbarChromeSchema,
+  WorldMapSchema,
 } from './schemas';
 import { SECTION_REGISTRY } from './section-registry';
 import SHELL_RESPONSES from './shell-commands';
 import { shellUi } from './shell-ui';
 import { EMAIL_ADDRESS, LINKEDIN_URL } from './social-urls';
 import { contactChrome, shellChrome, topbarChrome } from './terminal-chrome';
+import { worldMap } from './world-map';
 
 z.array(DmesgLineSchema).parse(dmesgLines);
 ShellCommandsSchema.parse(SHELL_RESPONSES);
@@ -34,3 +36,4 @@ z.object({ email: z.email(), linkedin: z.url() }).parse({
   linkedin: LINKEDIN_URL,
 });
 ErrorsContentSchema.parse(errorsContent);
+WorldMapSchema.parse(worldMap);

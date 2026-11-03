@@ -6,12 +6,12 @@
 
 Four directories, four roles. The directory tells you the layer:
 
-| Directory                     | Role                            | Ships JS?                                 | Example                                         |
-| ----------------------------- | ------------------------------- | ----------------------------------------- | ----------------------------------------------- |
-| `components/sections/**`      | Page sections and nested groups | RSC, with client descendants where needed | `About`, `ProjectsSection`                      |
-| `components/client/**`        | Interactive islands             | Yes                                       | `InteractiveShell`, `ContactForm`, `DawMixer/*` |
-| `components/responsive/**`    | Viewport chrome                 | Yes (except `Module`)                     | `MatrixRain`, `Dock`, `CRTOverlay`              |
-| `design-system/components/**` | Reusable primitives             | Mostly No (RSC)                           | `Badge`, `Button`, `TerminalPanel`              |
+| Directory                     | Role                            | Ships JS?                                 | Example                                                            |
+| ----------------------------- | ------------------------------- | ----------------------------------------- | ------------------------------------------------------------------ |
+| `components/sections/**`      | Page sections and nested groups | RSC, with client descendants where needed | `About`, `ProjectsSection`                                         |
+| `components/client/**`        | Interactive islands             | Yes                                       | `InteractiveShell`, `ContactForm`, `ContactTimezone`, `DawMixer/*` |
+| `components/responsive/**`    | Viewport chrome                 | Yes (except `Module`)                     | `MatrixRain`, `Dock`, `CRTOverlay`                                 |
+| `design-system/components/**` | Reusable primitives             | Mostly No (RSC)                           | `Badge`, `Button`, `TerminalPanel`                                 |
 
 `check-client-naming.mjs` accepts `*.client.tsx`/`*.client.ts`, files inside a `/client/` directory, and App Router error convention files. Inspect the client directive and imports when tracing a boundary. Components commonly use a `Foo/` directory and `index.ts` barrel. Vitest tests use `*.test.tsx`; component Playwright specs use `*.e2e.ts`. `*Lazy` files are `next/dynamic` wrappers (`ContactFormLazy`, `InteractiveShellLazy`, `MatrixRainLazy` in `responsive/MatrixRain/`, consumed by `AppShell.client`), except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (no dynamic import is used there).
 
@@ -21,7 +21,7 @@ The naming gate scans `app`, `components` and `lib`; `/client/` is an explicit d
 
 The Hero identity line is static server-rendered text. Desktop and mobile share `HeroIdentity`, with metrics and accessible labels passed into `HeroStats`. Boot and system-failure islands import their copy from `content/hero-client.ts`, keeping server content validation out of those client imports. The About "Open to [role] roles" status line mounts the `RoleTyper` client island (`components/client/RoleTyper`), which cycles Senior, Staff and Principal over the server-rendered text. `About` contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
 
-Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` export only the lazy wrapper. Tests import the real component directly, keeping it out of the initial client references.
+Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` export only the lazy wrapper. `ContactTimezoneLazy` differs: it uses `React.lazy` with an intersection trigger instead of `next/dynamic`, and its barrel also exports the server-rendered `ContactTimezoneStatic` that the lazy wrapper takes as its fallback. Tests import the real component directly, keeping it out of the initial client references.
 
 ## Component hierarchy
 
@@ -38,7 +38,7 @@ flowchart TD
     eb --> sec["Terminal section (RSC)"]
     sec --> mod["Module (RSC wrapper: section + CSS typing header)"]
     sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · Field"]
-    sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper"]
+    sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · ContactTimezone · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper"]
     eb --> hero["Hero (RSC with boot and system-failure islands, owns its section)"]
     hero --> identity["HeroIdentity: shared desktop/mobile identity, actions and HeroStats props"]
     hero --> clientcopy["Boot + system-failure islands: typed hero-client copy"]
@@ -132,4 +132,4 @@ Islands fall into two camps, and the split is a deliberate INP strategy:
 
 Keep animation and drag updates off per-character React state. Streaming text is the exception: `InteractiveShell` coalesces React state updates with requestAnimationFrame. See its behavioral tests and doc 09.
 
-Other islands hold ordinary local state: `ContactForm` (controlled fields + a `idle→submitting→success｜queued｜error` status machine + honeypot), `ToTopButton` (`visible` on scroll>400), `StatusBar` and the `Footer.client` uptime counter (interval clocks with `visibilitychange` pause), the `Footer.client` halt clock (visitor time captured once after mount), `RmsButtons` (`Set<string>` toggle group), `CopyButton` (transient "COPIED").
+Other islands hold ordinary local state: `ContactForm` (a `idle→submitting→success｜queued｜error` status machine + honeypot; the message field is not local: it lives in `messageStore`, a module-level string store read with `useSyncExternalStore`, so `ContactTimezone` can append a proposed slot without prop drilling and typing re-renders only the form; the form resets the store after a delivered or queued send), `ContactTimezone` (the chosen zone, the proposed line, a boolean `useSyncExternalStore` read of whether that line is still in the message so the confirmation ends on a send or a deletion, and a `useNow` clock that ticks only while the panel is on screen and the tab is visible; the map, overlap and pin layout are memoised on the current minute), `ToTopButton` (`visible` on scroll>400), `StatusBar` and the `Footer.client` uptime counter (interval clocks with `visibilitychange` pause), the `Footer.client` halt clock (visitor time captured once after mount), `RmsButtons` (`Set<string>` toggle group), `CopyButton` (transient "COPIED").

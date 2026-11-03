@@ -24,7 +24,7 @@ function renderChannels(): HTMLElement {
   const host = document.createElement('div');
   host.innerHTML = renderToStaticMarkup(<ContactSection />);
   const card = host.querySelector('.contact-channels');
-  expect(card, 'the contact section carries a channels card').not.toBeNull();
+  expect(card, 'the contact section carries a channels block').not.toBeNull();
   return card as HTMLElement;
 }
 
@@ -33,7 +33,7 @@ describe('the contact channel actions name what they show', () => {
     const card = renderChannels();
     const links = [...card.querySelectorAll<HTMLAnchorElement>(`a[href="${social.linkedin}"]`)];
 
-    expect(links.length, 'the channels card carries one LinkedIn action').toBeGreaterThan(0);
+    expect(links.length, 'the channels block carries one LinkedIn action').toBeGreaterThan(0);
     for (const link of links) {
       const visible = [...link.childNodes]
         .filter((node) => !(node instanceof HTMLElement && node.matches('[aria-hidden], .sr-only')))
@@ -58,7 +58,7 @@ describe('the contact channel actions name what they show', () => {
     const card = renderChannels();
     const links = [...card.querySelectorAll<HTMLAnchorElement>(`a[href="${social.github}"]`)];
 
-    expect(links.length, 'the channels card carries one GitHub action').toBeGreaterThan(0);
+    expect(links.length, 'the channels block carries one GitHub action').toBeGreaterThan(0);
     for (const link of links) {
       expect(link.textContent?.trim()).toBe(`${social.githubLabel}${ARROW_GLYPH}`);
       expect(link.getAttribute('aria-label')).toBe(GITHUB_NAME);
