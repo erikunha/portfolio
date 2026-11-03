@@ -32,12 +32,10 @@ export type NavigationCopy = {
   drawerLabel: string;
   navLabel: string;
   title: string;
-  indexGlyph: string;
-  indexLabel: string;
+  openMenu: string;
   closeDrawer: string;
   dockLabel: string;
   positionLabel: string;
-  menuLabelPrefix: string;
   searchLabel: string;
   searchShortcutApple: string;
   searchShortcutOther: string;
@@ -59,12 +57,10 @@ export const NAVIGATION: Navigation = {
     drawerLabel: 'Section menu',
     navLabel: 'Page sections',
     title: '~/index',
-    indexGlyph: '☰',
-    indexLabel: 'INDEX',
+    openMenu: 'Open menu',
     closeDrawer: '[ X ] CLOSE',
     dockLabel: 'primary',
     positionLabel: 'Page position',
-    menuLabelPrefix: 'MENU, section',
     searchLabel: 'SEARCH',
     searchShortcutApple: '⌘K',
     searchShortcutOther: 'Ctrl K',
@@ -121,14 +117,6 @@ export function sectionHref(id: string): string {
 
 export function formatSectionNumber(order: number): string {
   return String(order).padStart(POSITION_DIGITS, '0');
-}
-
-export function formatSectionPosition(id: string): string {
-  const index = Math.max(
-    0,
-    SECTION_NAV.findIndex((section) => section.id === id),
-  );
-  return `${formatSectionNumber(index + 1)}/${SECTION_NAV.length}`;
 }
 
 export function dockKeyForSection(id: string): DockKey | undefined {

@@ -11,10 +11,10 @@ const MOTION_TIER_WIDTH = 1280;
 const FOOT_GAP_LIMIT_PX = 32;
 
 for (const width of [390, 768, 1024, 1280, 1536]) {
-  test.describe(`section navigation: INDEX trigger at ${width}px`, () => {
+  test.describe(`section navigation: menu trigger at ${width}px`, () => {
     test.use({ viewport: { width, height: 844 } });
 
-    test('the menu stays closed until the INDEX button opens it, and never shifts content', async ({
+    test('the menu stays closed until the menu button opens it, and never shifts content', async ({
       page,
     }) => {
       await page.goto('/');
@@ -22,7 +22,9 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
       const leftBefore = await main.evaluate((element) => element.getBoundingClientRect().left);
       const menu = page.locator('#section-drawer');
       await expect(menu, 'the section menu must be closed at every width').toBeHidden();
-      const trigger = page.getByRole('button', { name: /INDEX/ }).locator('visible=true');
+      const trigger = page
+        .getByRole('button', { name: 'Open menu', exact: true })
+        .locator('visible=true');
       await expect(trigger).toHaveAttribute('aria-expanded', 'false');
       await trigger.click();
       await expect(menu).toBeVisible();
@@ -31,7 +33,23 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
       expect(leftOpen, 'the drawer overlays: content must not reflow').toBe(leftBefore);
       await page.keyboard.press('Escape');
       await expect(menu).toBeHidden();
-      await expect(trigger, 'focus returns to the INDEX trigger').toBeFocused();
+      await expect(trigger, 'focus returns to the menu trigger').toBeFocused();
+    });
+
+    test('the trigger is the menu icon alone, and a 44px target', async ({ page }) => {
+      await page.goto('/');
+      const trigger = page
+        .getByRole('button', { name: 'Open menu', exact: true })
+        .locator('visible=true');
+      await expect(trigger).toHaveAttribute('aria-controls', 'section-drawer');
+      await expect(trigger, 'no INDEX label and no NN/9 counter on the trigger').toHaveText('');
+      const box = await trigger.boundingBox();
+      expect(box?.width ?? 0, 'target width').toBeGreaterThanOrEqual(44);
+      expect(box?.height ?? 0, 'target height').toBeGreaterThanOrEqual(44);
+      expect(
+        box?.x ?? Number.POSITIVE_INFINITY,
+        'the trigger stays in the left half, beside the brand',
+      ).toBeLessThan(width / 2);
     });
   });
 }
@@ -67,7 +85,7 @@ for (const width of TOPBAR_WIDTHS) {
       expect(clipped, 'no topbar control may reach past the bar').toEqual([]);
     });
 
-    test('the brand badge stays on the row, beside the INDEX trigger, unclipped', async ({
+    test('the brand badge stays on the row, beside the menu trigger, unclipped', async ({
       page,
     }) => {
       await page.goto('/');
@@ -83,7 +101,7 @@ for (const width of TOPBAR_WIDTHS) {
         const badge = [...element.querySelectorAll('span')].find(
           (node) => node.textContent === label,
         );
-        const index = element.querySelector('.index-trigger');
+        const index = element.querySelector('.menu-trigger');
         const badgeBox = badge?.getBoundingClientRect();
         const indexBox = index?.getBoundingClientRect();
         return {
@@ -99,7 +117,7 @@ for (const width of TOPBAR_WIDTHS) {
       );
       expect(
         fit.indexRight,
-        'the INDEX trigger must sit on the left of the brand badge',
+        'the menu trigger must sit on the left of the brand badge',
       ).toBeLessThanOrEqual(fit.badgeLeft + 1);
     });
 
@@ -157,8 +175,8 @@ test.describe('desktop topbar: one hire action per viewport', () => {
         const hire = nav.getByRole('link', { name: HIRE_ACCESSIBLE_NAME });
 
         await expect(
-          page.getByRole('button', { name: /INDEX/ }),
-          'the INDEX trigger stays on the row at every topbar width',
+          page.getByRole('button', { name: 'Open menu', exact: true }),
+          'the menu trigger stays on the row at every topbar width',
         ).toBeVisible();
         await expect(
           bar.getByText(topbarChrome.brandLabel, { exact: true }),
@@ -217,7 +235,10 @@ test.describe('section navigation: motion control tiers', () => {
           ).toBeHidden();
         }
 
-        await page.getByRole('button', { name: /INDEX/ }).locator('visible=true').click();
+        await page
+          .getByRole('button', { name: 'Open menu', exact: true })
+          .locator('visible=true')
+          .click();
         const drawer = page.getByRole('dialog', { name: 'Section menu' });
         await expect(
           drawer.locator('.menu-motion'),
@@ -338,7 +359,7 @@ test.describe('section navigation: drawer across a viewport change', () => {
       'the drawer must stay open across a viewport change: the menu is a drawer at every width',
     ).toBeVisible();
     await expect(
-      page.getByRole('button', { name: /INDEX/ }).locator('visible=true'),
+      page.getByRole('button', { name: 'Open menu', exact: true }).locator('visible=true'),
       'the trigger still reports the open drawer after the viewport change',
     ).toHaveAttribute('aria-expanded', 'true');
     await expect(
@@ -347,7 +368,7 @@ test.describe('section navigation: drawer across a viewport change', () => {
     ).toHaveCSS('overflow', 'hidden');
   });
 
-  test('closing after the viewport change returns focus to a rendered INDEX trigger', async ({
+  test('closing after the viewport change returns focus to a rendered menu trigger', async ({
     page,
   }) => {
     await page.goto('/');
@@ -363,8 +384,8 @@ test.describe('section navigation: drawer across a viewport change', () => {
     await page.keyboard.press('Escape');
     await expect(drawer).toBeHidden();
     await expect(
-      page.locator('.desktop-topbar .index-trigger'),
-      'focus must return to the INDEX trigger that is rendered after the viewport change: the ' +
+      page.locator('.desktop-topbar .menu-trigger'),
+      'focus must return to the menu trigger that is rendered after the viewport change: the ' +
         'trigger that opened the drawer is inside the dock, which is hidden from 1024px',
     ).toBeFocused();
   });
@@ -377,5 +398,59 @@ test.describe('section navigation: position line at 1280px', () => {
     await page.goto('/');
     const bar = page.getByRole('progressbar', { name: 'Page position' });
     await expect(bar).toHaveCSS('pointer-events', 'none');
+  });
+});
+
+const SIDE_LINE_MAX_THICKNESS_PX = 4;
+const RIGHT_EDGE_RATIO = 0.95;
+
+for (const { width, height } of [
+  { width: 390, height: 844 },
+  { width: 768, height: 1024 },
+]) {
+  test.describe(`section navigation: side position line at ${width}px`, () => {
+    test.use({ viewport: { width, height } });
+
+    test('the position line runs down the right edge and follows the scroll', async ({ page }) => {
+      await page.goto('/');
+      const bar = page.getByRole('progressbar', { name: 'Page position' });
+      await expect(bar, 'the line is present below 1024px, not hidden').toBeVisible();
+      const box = await bar.boundingBox();
+      expect(box?.width ?? Number.POSITIVE_INFINITY, 'a thin vertical line').toBeLessThanOrEqual(
+        SIDE_LINE_MAX_THICKNESS_PX,
+      );
+      expect(box?.height ?? 0, 'it spans the viewport height').toBeGreaterThanOrEqual(height - 1);
+      expect(
+        (box?.x ?? 0) + (box?.width ?? 0),
+        'it sits on the right edge, left of any classic scrollbar',
+      ).toBeGreaterThanOrEqual(width * RIGHT_EDGE_RATIO);
+      await expect(bar).toHaveAttribute('aria-valuenow', '0');
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await expect(bar).toHaveAttribute('aria-valuenow', '100');
+      await expect(bar).toHaveCSS('pointer-events', 'none');
+    });
+
+    test('the position line does not print', async ({ page }) => {
+      await page.goto('/');
+      await page.emulateMedia({ media: 'print' });
+      await expect(page.getByRole('progressbar', { name: 'Page position' })).toBeHidden();
+    });
+
+    test('the trigger carries no position counter', async ({ page }) => {
+      await page.goto('/');
+      await expect(page.locator('.menu-trigger').locator('visible=true')).toHaveText('');
+    });
+  });
+}
+
+test.describe('section navigation: top position line at 1280px', () => {
+  test.use({ viewport: { width: 1280, height: 720 } });
+
+  test('the desktop line stays a thin horizontal line across the top', async ({ page }) => {
+    await page.goto('/');
+    const box = await page.getByRole('progressbar', { name: 'Page position' }).boundingBox();
+    expect(box?.height ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(SIDE_LINE_MAX_THICKNESS_PX);
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(1280 * 0.9);
+    expect(box?.y ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(1);
   });
 });
