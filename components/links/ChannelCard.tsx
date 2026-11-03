@@ -99,7 +99,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
               {latest.title}
             </span>
             {latest.description && (
-              <span className="block mt-1 text-tertiary-400 text-xs text-pretty line-clamp-4">
+              <span className="mt-1 text-tertiary-400 text-xs text-pretty line-clamp-4">
                 {latest.description}
               </span>
             )}

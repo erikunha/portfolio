@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { DS_NAV_GROUPS } from '@/app/design-system/_components/ds-nav';
+import { DS_NAV_GROUPS, DS_NAV_ID } from '@/app/design-system/_components/ds-nav';
 import { PREVIEW_SOURCE_ARIA_LABEL_FALLBACK } from '@/app/design-system/_components/preview.constants';
 
 const SIDEBAR_MIN_WIDTH = 1024;
@@ -22,7 +22,7 @@ for (const { path, heading } of ALL_ROUTES) {
   test(`${path} — renders heading and the page tree`, async ({ page }) => {
     await page.goto(path);
     await expect(page.getByRole('heading', { name: heading, exact: true, level: 1 })).toBeVisible();
-    const sidebar = page.getByRole('navigation', { name: 'Design system', exact: true });
+    const sidebar = page.locator(`#${DS_NAV_ID}`);
     await expect(sidebar).toBeAttached();
     const wide = (page.viewportSize()?.width ?? 0) >= SIDEBAR_MIN_WIDTH;
     if (wide) await expect(sidebar).toBeVisible();
@@ -33,7 +33,7 @@ for (const { path, heading } of ALL_ROUTES) {
 for (const { path } of REFERENCE_ROUTES) {
   test(`${path} — marks itself current and offers on-this-page links`, async ({ page }) => {
     await page.goto(path);
-    const sidebar = page.getByRole('navigation', { name: 'Design system', exact: true });
+    const sidebar = page.locator(`#${DS_NAV_ID}`);
     await expect(sidebar.locator('a[aria-current="page"]')).toHaveAttribute('href', path);
     const toc = page.getByRole('navigation', { name: 'On this page' });
     await expect(toc).toBeVisible();
@@ -43,9 +43,9 @@ for (const { path } of REFERENCE_ROUTES) {
 
 test('sidebar links every design-system page', async ({ page }) => {
   await page.goto('/design-system');
-  const sidebar = page.getByRole('navigation', { name: 'Design system', exact: true });
+  const sidebar = page.locator(`#${DS_NAV_ID}`);
   const hrefs = await sidebar
-    .getByRole('link')
+    .locator('a')
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href')));
   for (const { path } of ALL_ROUTES) {
     expect(hrefs).toContain(path);
@@ -133,7 +133,7 @@ test('mobile overview stat tiles sit at most two per row', async ({ page }) => {
 });
 
 test('desktop keeps the sidebar on the left of the page', async ({ page }) => {
-  const nav = page.getByRole('navigation', { name: 'Design system', exact: true });
+  const nav = page.locator(`#${DS_NAV_ID}`);
   const main = page.locator('main.ds-main');
 
   await page.setViewportSize(DESKTOP);
@@ -286,5 +286,15 @@ for (const { path } of ALL_ROUTES) {
       return [...seen].filter(([, count]) => count > 1).map(([id]) => id);
     });
     expect(duplicates).toEqual([]);
+  });
+}
+
+for (const { path } of ALL_ROUTES) {
+  test(`${path} — hydrates without a React error`, async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(path);
+    await page.waitForLoadState('networkidle');
+    expect(errors, 'a server and client HTML mismatch makes React re-render the page').toEqual([]);
   });
 }

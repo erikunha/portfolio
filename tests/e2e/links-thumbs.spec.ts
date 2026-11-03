@@ -50,11 +50,16 @@ test.describe('/links thumbnail theme overlay', () => {
     await page.goto('/links');
     await page.locator(`a:has(${FIRST_THUMB})`).first().hover();
     await expect.poll(async () => (await tint(page)).opacity, { timeout: 2000 }).toBeLessThan(0.5);
-    const filter = await page
-      .locator(`${FIRST_THUMB} img`)
-      .first()
-      .evaluate((node) => getComputedStyle(node).filter);
-    expect(filter).toBe('none');
+    await expect
+      .poll(
+        () =>
+          page
+            .locator(`${FIRST_THUMB} img`)
+            .first()
+            .evaluate((node) => getComputedStyle(node).filter),
+        { timeout: 2000 },
+      )
+      .toBe('none');
   });
 
   test('reduced motion removes the reveal transition', async ({ page }) => {

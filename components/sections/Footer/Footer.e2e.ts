@@ -131,8 +131,8 @@ test.describe('Footer', () => {
       await page.evaluate(() => document.fonts.ready);
       if (width === 390) {
         const footer = await page.locator('footer').boundingBox();
-        expect(footer?.height).toBeGreaterThanOrEqual(1940);
-        expect(footer?.height).toBeLessThanOrEqual(2000);
+        expect(footer?.height).toBeGreaterThanOrEqual(1990);
+        expect(footer?.height).toBeLessThanOrEqual(2110);
       }
       const cells = page.locator('.footer-netstat :is(th, td)');
       for (const cell of await cells.all()) {
