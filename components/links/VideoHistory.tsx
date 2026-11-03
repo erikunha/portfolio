@@ -64,14 +64,16 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
                 <span className="text-primary-400 text-xs">
                   {String(index + 1).padStart(INDEX_PAD, '0')}
                 </span>
-                <Image
-                  src={video.thumbnailUrl}
-                  alt=""
-                  width={THUMB_WIDTH}
-                  height={THUMB_HEIGHT}
-                  sizes="64px"
-                  className="border border-primary-border object-cover h-9 w-16"
-                />
+                <span className="links-thumb h-9 w-16 border border-primary-border">
+                  <Image
+                    src={video.thumbnailUrl}
+                    alt=""
+                    width={THUMB_WIDTH}
+                    height={THUMB_HEIGHT}
+                    sizes="64px"
+                    className="object-cover h-full w-full"
+                  />
+                </span>
                 <span>
                   <span className="block text-tertiary-50 text-[12.5px] leading-[1.45] text-pretty">
                     {video.title}

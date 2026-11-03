@@ -73,6 +73,11 @@
     rgba(0, 0, 0, 0.3) 0 1px,
     transparent 1px 3px
   );
+  --links-thumb-contrast: 1.15;
+  --links-thumb-brightness: 0.95;
+  --links-thumb-tint: 0.9;
+  --links-thumb-tint-reveal: 0.3;
+  --links-thumb-reveal-duration: 200ms;
   --border-width: 1px;
   --stroke-width-icon: 1.4;
   --radius-none: 0;

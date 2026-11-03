@@ -74,7 +74,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
             data-outbound="ultimo-video"
             className="block no-underline mt-3 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 hover:opacity-92"
           >
-            <span className="relative block h-[104px] lg:h-[280px] border border-primary-border overflow-hidden">
+            <span className="links-thumb h-[104px] lg:h-[280px] border border-primary-border">
               <Image
                 src={latest.thumbnailUrl}
                 alt=""
@@ -99,7 +99,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
               {latest.title}
             </span>
             {latest.description && (
-              <span className="block mt-1 text-tertiary-400 text-xs text-pretty">
+              <span className="block mt-1 text-tertiary-400 text-xs text-pretty line-clamp-4">
                 {latest.description}
               </span>
             )}

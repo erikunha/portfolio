@@ -82,6 +82,51 @@
     );
   }
 
+  .links-thumb {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--color-secondary-950);
+  }
+
+  .links-thumb img {
+    filter: grayscale(1) contrast(var(--links-thumb-contrast))
+      brightness(var(--links-thumb-brightness));
+    transition: filter var(--links-thumb-reveal-duration) ease-out;
+  }
+
+  .links-thumb::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--color-primary-500);
+    mix-blend-mode: multiply;
+    opacity: var(--links-thumb-tint);
+    pointer-events: none;
+    transition: opacity var(--links-thumb-reveal-duration) ease-out;
+  }
+
+  a:is(:hover, :focus-visible) .links-thumb img {
+    filter: none;
+  }
+
+  a:is(:hover, :focus-visible) .links-thumb::after {
+    opacity: var(--links-thumb-tint-reveal);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .links-thumb img,
+    .links-thumb::after {
+      transition: none;
+    }
+  }
+
+  body[data-motion="reduce"] .links-thumb img,
+  body[data-motion="reduce"] .links-thumb::after {
+    transition: none;
+  }
+
   .links-channel-card {
     background-image: linear-gradient(180deg, var(--color-primary-faint), var(--color-glow-03));
   }
