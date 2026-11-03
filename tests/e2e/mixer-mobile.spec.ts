@@ -131,7 +131,8 @@ test('channel rows use the compact padding between 768px and 1100px', async ({ p
   );
 });
 
-const NARROW_WIDTHS = [320, 340, 360, 390];
+const PAIRED_WIDTHS = [1024, 1100, 1280, 1450];
+const OVERLAP_WIDTHS = [320, 340, 360, 390, 768, 900, ...PAIRED_WIDTHS];
 const CELL_PARTS = [
   '.knob-container',
   '.rms-buttons > button',
@@ -143,8 +144,8 @@ const CELL_PARTS = [
 ].join(', ');
 const OVERLAP_TOLERANCE_PX = 2;
 
-for (const width of NARROW_WIDTHS) {
-  test(`no knob, button or label of a channel row overlaps another at ${width}px`, async ({
+for (const width of OVERLAP_WIDTHS) {
+  test(`no knob, button or label of a channel row overlaps another at ${width}px, beside the photo from 1024px`, async ({
     page,
   }) => {
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
