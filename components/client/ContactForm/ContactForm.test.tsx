@@ -878,4 +878,30 @@ describe('contact form message store', () => {
     expect(screen.queryByTestId('contact-success')).not.toBeNull();
     expect(messageStore.getFieldId(), 'no field left to focus once the form is gone').toBeNull();
   });
+
+  it.each([
+    ['delivered', Response.json({ ok: true })],
+    ['queued', Response.json({ error: { code: 'queued' } }, { status: 202 })],
+  ])(
+    'clears the shared message after a %s send so a fresh form starts empty',
+    async (_state, reply) => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => reply),
+      );
+      const first = render(<ContactForm />);
+      fillValidForm(first.container);
+      expect(messageStore.getSnapshot()).not.toBe('');
+
+      await act(async () => {
+        fireEvent.submit(first.container.querySelector('form') as HTMLFormElement);
+      });
+      await flushMicrotasks();
+
+      expect(messageStore.getSnapshot(), 'the sent text must not outlive the send').toBe('');
+      first.unmount();
+      render(<ContactForm />);
+      expect((screen.getByLabelText('$ message:') as HTMLTextAreaElement).value).toBe('');
+    },
+  );
 });

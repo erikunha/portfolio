@@ -147,6 +147,7 @@ export function ContactForm() {
       const data = (await res.json().catch(() => null)) as ContactResponse | null;
       const apiError = data?.error;
       if (res.status === QUEUED_STATUS && apiError?.code === CONTACT_DELIVERY_CODE.QUEUED) {
+        messageStore.reset();
         setStatus(STATUS.QUEUED);
         return;
       }
@@ -157,6 +158,7 @@ export function ContactForm() {
             : contactCopy.errors.requestFailed,
         );
       }
+      messageStore.reset();
       setStatus(STATUS.SUCCESS);
     } catch (error) {
       setErrorMsg(error instanceof Error ? error.message : contactCopy.errors.requestFailed);
