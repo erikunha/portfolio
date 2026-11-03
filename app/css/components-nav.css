@@ -156,7 +156,6 @@
 
   .menu-title {
     flex: 1;
-    min-width: 0;
     color: var(--color-primary-500);
     font-weight: 700;
     font-size: var(--text-xs);
@@ -269,8 +268,6 @@
 
   .menu-close {
     order: 2;
-    flex: none;
-    white-space: nowrap;
     min-height: var(--spacing-target);
     padding: 0 var(--spacing-3);
     font-size: var(--text-xs);
@@ -418,7 +415,7 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 2px;
+    height: var(--position-line-thickness);
     z-index: var(--z-position-line);
     background: var(--color-primary-border);
     pointer-events: none;
@@ -435,7 +432,16 @@
 
   @media (max-width: 1023px) {
     .pos-line {
-      display: none;
+      top: 0;
+      bottom: 0;
+      left: auto;
+      width: var(--position-line-thickness);
+      height: auto;
+    }
+
+    .pos-line > i {
+      transform-origin: 50% 0;
+      transform: scaleY(var(--posf, 0));
     }
   }
 

@@ -15,7 +15,6 @@ import {
   formatSectionPosition,
   HOME_SECTION_ID,
   NAVIGATION,
-  spokenSectionPosition,
 } from './navigation';
 import { createNavigationSchema, SectionRegistrySchema } from './schemas';
 import { SECTION_LABELS } from './section-labels';
@@ -198,13 +197,6 @@ describe('navigation content', () => {
     expect(formatSectionPosition('sec-shell')).toBe('05/9');
     expect(formatSectionPosition('sec-contact')).toBe('09/9');
     expect(formatSectionPosition('unknown')).toBe('01/9');
-  });
-
-  it('speaks the position as a section number over the registry size', () => {
-    expect(spokenSectionPosition('bio')).toBe('section 1 of 9');
-    expect(spokenSectionPosition('sec-shell')).toBe('section 5 of 9');
-    expect(spokenSectionPosition('sec-contact')).toBe('section 9 of 9');
-    expect(spokenSectionPosition('unknown')).toBe('section 1 of 9');
   });
 
   it('names the menu trigger by its action and keeps the removed label out of the copy', () => {

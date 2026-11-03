@@ -13,11 +13,9 @@ import {
 } from 'react';
 import {
   formatSectionNumber,
-  formatSectionPosition,
   HOME_SECTION_ID,
   NAVIGATION,
   sectionHref,
-  spokenSectionPosition,
 } from '@/content/navigation';
 import { SECTION_NAV } from '@/content/section-registry';
 import { NavItem } from '@/design-system';
@@ -321,8 +319,8 @@ export function SectionNavigation() {
         <div className="menu-head">
           <span className="menu-title">{copy.title}</span>
           <span className="menu-badge" data-section-count={SECTION_NAV.length}>
-            <span className="sr-only">{spokenSectionPosition(currentId)}</span>
-            <span aria-hidden="true">{formatSectionPosition(currentId)}</span>
+            <span className="sr-only">{`${SECTION_NAV.length} ${copy.sectionCountLabel}`}</span>
+            <span aria-hidden="true">{SECTION_NAV.length}</span>
           </span>
           <button
             ref={closeRef}

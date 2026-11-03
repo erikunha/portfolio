@@ -329,25 +329,14 @@ describe('SectionNavigation', () => {
     ).toEqual(['VIEW_CV', '30S_SUMMARY', 'DESIGN_SYSTEM', 'LinkedIn']);
   });
 
-  it('reports the current position over the total in the drawer head', () => {
+  it('counts the destinations in the drawer head', () => {
     render(<Page />);
     const badge = document.querySelector('.menu-badge');
 
     expect(badge?.querySelector('[aria-hidden="true"]')?.textContent).toBe(
-      `01/${SECTION_REGISTRY.length}`,
+      String(SECTION_REGISTRY.length),
     );
-    expect(badge?.textContent).toContain(`section 1 of ${SECTION_REGISTRY.length}`);
-  });
-
-  it('moves the drawer head position with the section the observer reports', () => {
-    render(<Page />);
-    reveal(document.getElementById('sec-shell'));
-    const badge = document.querySelector('.menu-badge');
-
-    expect(badge?.querySelector('[aria-hidden="true"]')?.textContent).toBe(
-      `05/${SECTION_REGISTRY.length}`,
-    );
-    expect(badge?.textContent).toContain(`section 5 of ${SECTION_REGISTRY.length}`);
+    expect(badge?.textContent).toContain(`${SECTION_REGISTRY.length} sections`);
   });
 
   it('offers a search row that reports the drawer it controls', () => {

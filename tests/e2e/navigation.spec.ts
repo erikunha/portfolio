@@ -48,9 +48,9 @@ test.describe('navigation: drawer at 390px', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
-  test('the hidden position line is out of the accessibility tree', async ({ page }) => {
+  test('the side position line is the one named progress control', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('progressbar', { name: 'Page position' })).toHaveCount(0);
+    await expect(page.getByRole('progressbar', { name: 'Page position' })).toHaveCount(1);
   });
 });
 

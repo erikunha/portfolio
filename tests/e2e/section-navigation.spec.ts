@@ -36,9 +36,7 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
       await expect(trigger, 'focus returns to the menu trigger').toBeFocused();
     });
 
-    test('the trigger is the menu icon alone, a 44px target, and the position lives in the drawer', async ({
-      page,
-    }) => {
+    test('the trigger is the menu icon alone, and a 44px target', async ({ page }) => {
       await page.goto('/');
       const trigger = page
         .getByRole('button', { name: 'Open menu', exact: true })
@@ -52,9 +50,6 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
         box?.x ?? Number.POSITIVE_INFINITY,
         'the trigger stays in the left half, beside the brand',
       ).toBeLessThan(width / 2);
-
-      await trigger.click();
-      await expect(page.locator('#section-drawer .menu-badge')).toContainText('01/9');
     });
   });
 }
@@ -258,7 +253,7 @@ test.describe('section navigation: motion control tiers', () => {
 test.describe('section navigation: drawer rows', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('the drawer lists the search row, the position, the reading views and the motion toggle', async ({
+  test('the drawer lists the search row, the count, the reading views and the motion toggle', async ({
     page,
   }) => {
     await page.goto('/');
@@ -268,8 +263,8 @@ test.describe('section navigation: drawer rows', () => {
       .click();
     const drawer = page.getByRole('dialog', { name: 'Section menu' });
 
-    await expect(drawer.locator('.menu-badge span[aria-hidden="true"]')).toHaveText('01/9');
-    await expect(drawer.locator('.menu-badge')).toContainText('section 1 of 9');
+    await expect(drawer.locator('.menu-badge span[aria-hidden="true"]')).toHaveText('9');
+    await expect(drawer.locator('.menu-badge')).toContainText('9 sections');
     await expect(drawer.locator('.menu-search')).toBeVisible();
     await expect(drawer.getByRole('link', { name: 'VIEW_CV' })).toHaveAttribute('href', '/cv');
     await expect(drawer.getByRole('link', { name: '30S_SUMMARY' })).toHaveAttribute(
@@ -406,24 +401,50 @@ test.describe('section navigation: position line at 1280px', () => {
   });
 });
 
-test.describe('section navigation: drawer head at 320px', () => {
-  test.use({ viewport: { width: 320, height: 640 } });
+const SIDE_LINE_MAX_THICKNESS_PX = 4;
+const RIGHT_EDGE_RATIO = 0.95;
 
-  test('the position badge and the close control share one row without wrapping', async ({
-    page,
-  }) => {
+for (const { width, height } of [
+  { width: 390, height: 844 },
+  { width: 768, height: 1024 },
+]) {
+  test.describe(`section navigation: side position line at ${width}px`, () => {
+    test.use({ viewport: { width, height } });
+
+    test('the position line runs down the right edge and follows the scroll', async ({ page }) => {
+      await page.goto('/');
+      const bar = page.getByRole('progressbar', { name: 'Page position' });
+      await expect(bar, 'the line is present below 1024px, not hidden').toBeVisible();
+      const box = await bar.boundingBox();
+      expect(box?.width ?? Number.POSITIVE_INFINITY, 'a thin vertical line').toBeLessThanOrEqual(
+        SIDE_LINE_MAX_THICKNESS_PX,
+      );
+      expect(box?.height ?? 0, 'it spans the viewport height').toBeGreaterThanOrEqual(height - 1);
+      expect(
+        (box?.x ?? 0) + (box?.width ?? 0),
+        'it sits on the right edge, left of any classic scrollbar',
+      ).toBeGreaterThanOrEqual(width * RIGHT_EDGE_RATIO);
+      await expect(bar).toHaveAttribute('aria-valuenow', '0');
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await expect(bar).toHaveAttribute('aria-valuenow', '100');
+      await expect(bar).toHaveCSS('pointer-events', 'none');
+    });
+
+    test('the trigger carries no position counter', async ({ page }) => {
+      await page.goto('/');
+      await expect(page.locator('.index-trigger').locator('visible=true')).toHaveText('');
+    });
+  });
+}
+
+test.describe('section navigation: top position line at 1280px', () => {
+  test.use({ viewport: { width: 1280, height: 720 } });
+
+  test('the desktop line stays a thin horizontal line across the top', async ({ page }) => {
     await page.goto('/');
-    await page
-      .getByRole('button', { name: 'Open menu', exact: true })
-      .locator('visible=true')
-      .click();
-    const head = page.locator('#section-drawer .menu-head');
-    const close = head.getByRole('button', { name: /CLOSE/ });
-    const box = await close.boundingBox();
-    expect(
-      box?.height ?? Number.POSITIVE_INFINITY,
-      'the NN/9 badge widens the head: the close label must stay on one line',
-    ).toBeLessThanOrEqual(44);
-    await expect(head.locator('.menu-badge')).toContainText('01/9');
+    const box = await page.getByRole('progressbar', { name: 'Page position' }).boundingBox();
+    expect(box?.height ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(SIDE_LINE_MAX_THICKNESS_PX);
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(1280 * 0.9);
+    expect(box?.y ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(1);
   });
 });
