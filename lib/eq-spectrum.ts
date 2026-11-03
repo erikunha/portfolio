@@ -50,6 +50,7 @@ export interface EqSpectrumGeometry {
   curvePath: string;
   gridPath: string;
   axis: EqAxisTick[];
+  axisTracks: string;
   insetPct: number;
   beatSeconds: number;
   ariaLabel: string;
@@ -130,6 +131,13 @@ export function buildEqSpectrum(spectrum: EqSpectrum): EqSpectrumGeometry {
     (offset) => `M0 ${CURVE_CENTER_Y + offset * GRID_ROW_STEP} H${EQ_VIEWBOX_WIDTH}`,
   );
 
+  const axisLefts = axis.map((tick) => leftPctAt(unitAt(tick.freqHz)));
+  const trackWidths = [
+    axisLefts[0] ?? 0,
+    ...axisLefts.slice(1).map((left, index) => left - (axisLefts[index] ?? 0)),
+    PERCENT - (axisLefts.at(-1) ?? PERCENT),
+  ];
+
   const description = bands.map((band) => describeBand(band, ariaLabel)).join(', ');
 
   return {
@@ -141,6 +149,7 @@ export function buildEqSpectrum(spectrum: EqSpectrum): EqSpectrumGeometry {
       label: tick.label,
       leftPct: Number(leftPctAt(unitAt(tick.freqHz)).toFixed(NUMBER_DECIMALS)),
     })),
+    axisTracks: trackWidths.map((width) => `${width.toFixed(NUMBER_DECIMALS)}fr`).join(' '),
     insetPct: INSET_FRACTION * PERCENT,
     beatSeconds: SECONDS_PER_MINUTE / bpm,
     ariaLabel: `${ariaLabel.prefix}: ${description}.`,

@@ -120,3 +120,29 @@ test('names the plot with the EQ bands for assistive technology', async ({ page 
   await expect(plot).toHaveCount(1);
   await expect(plot).toHaveAttribute('aria-label', /140 Hz.*2\.8 kHz.*9 kHz/);
 });
+
+test('lays the strip out with grid and flex, never absolute positioning', async ({ page }) => {
+  await openStrip(page, 1280, 720);
+  const positioned = await page
+    .locator(STRIP)
+    .evaluate((strip) =>
+      [strip, ...strip.querySelectorAll('*')]
+        .filter((node) => !['static', 'relative'].includes(getComputedStyle(node).position))
+        .map((node) => String(node.className)),
+    );
+  expect(positioned).toEqual([]);
+});
+
+test('puts each axis label on its frequency', async ({ page }) => {
+  await openStrip(page, 1280, 720);
+  const offsets = await page.locator(`${STRIP} .eq-axis-tick`).evaluateAll((ticks) => {
+    const axis = ticks[0]?.parentElement?.getBoundingClientRect();
+    return ticks.map((tick) => {
+      const box = tick.getBoundingClientRect();
+      return (box.left + box.width / 2 - (axis?.left ?? 0)) / (axis?.width ?? 1);
+    });
+  });
+  expect(offsets).toEqual([...offsets].sort((a, b) => a - b));
+  expect(offsets[0]).toBeCloseTo(0.05, 1);
+  expect(offsets.at(-1)).toBeCloseTo(0.95, 1);
+});

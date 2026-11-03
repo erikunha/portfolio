@@ -2,7 +2,7 @@
   .guitar-presentation {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-4);
+    gap: var(--phi-space-3);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     line-height: var(--guitar-line-height);
@@ -10,7 +10,7 @@
   }
 
   .guitar-signal-panel {
-    padding: var(--spacing-3);
+    padding: var(--phi-space-2);
     border: var(--border-width) solid var(--color-primary-border);
     background: var(--color-secondary-950);
   }
@@ -21,8 +21,8 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-2);
-    padding-bottom: var(--spacing-2);
-    margin-bottom: var(--spacing-3);
+    padding-bottom: var(--phi-space-1);
+    margin-bottom: var(--phi-space-2);
     border-bottom: var(--border-width) solid var(--color-primary-quiet);
     color: var(--color-primary-400);
     font-size: var(--text-xs);
@@ -40,18 +40,20 @@
   }
 
   .eq-strip {
-    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     border: var(--border-width) solid var(--color-primary-border);
     background: var(--color-secondary-950);
   }
 
   .eq-label {
-    position: absolute;
-    top: var(--spacing-2);
-    left: var(--spacing-3);
+    grid-area: 1 / 1;
+    align-self: start;
+    justify-self: start;
     z-index: 3;
-    max-width: 55%;
+    max-width: calc(100% * var(--phi-inv));
     margin: 0;
+    padding: var(--phi-space-1) var(--phi-space-2);
     color: var(--color-primary-500);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-label-tracking);
@@ -59,14 +61,20 @@
   }
 
   .eq-plot {
-    position: relative;
+    grid-area: 1 / 1;
+    display: grid;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
     height: var(--eq-plot-height);
+  }
+
+  .eq-plot > * {
+    grid-area: 1 / 1;
+    min-width: 0;
+    min-height: 0;
   }
 
   .eq-grid,
   .eq-curve {
-    position: absolute;
-    inset: 0;
     display: block;
     width: 100%;
     height: 100%;
@@ -94,12 +102,11 @@
   }
 
   .eq-bars {
-    position: absolute;
-    inset: 0 var(--eq-inset);
     z-index: 1;
     display: flex;
     align-items: flex-end;
     gap: var(--eq-bar-gap);
+    margin-inline: var(--eq-inset);
   }
 
   .eq-bar {
@@ -118,15 +125,15 @@
   }
 
   .eq-axis {
-    position: relative;
+    grid-area: 2 / 1;
+    display: grid;
     height: var(--eq-axis-height);
     border-top: var(--border-width) solid var(--color-primary-quiet);
   }
 
   .eq-axis-tick {
-    position: absolute;
-    top: 0;
-    transform: translateX(-50%);
+    justify-self: end;
+    translate: 50% 0;
     color: var(--color-primary-400);
     font-size: var(--text-xs);
     line-height: var(--eq-axis-height);
@@ -134,33 +141,13 @@
 
   .guitar-pair {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) var(--guitar-photo-width);
-    gap: var(--spacing-4);
+    grid-template-columns: var(--guitar-pair-columns);
+    gap: var(--phi-space-3);
   }
 
-  .guitar-details {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    gap: var(--spacing-3);
-  }
-
-  .guitar-influences {
-    margin: 0;
-    max-width: var(--guitar-prose-width);
-    font-size: var(--text-xs);
-    overflow-wrap: anywhere;
-  }
-
-  .guitar-influences strong,
-  .guitar-stat-value {
-    color: var(--color-primary-500);
-    font-weight: bold;
-  }
-
-  .guitar-stats {
+  .guitar-facts {
     display: grid;
-    grid-template-columns: var(--guitar-stat-columns);
+    grid-template-columns: var(--guitar-facts-columns);
     gap: var(--border-width);
     border: var(--border-width) solid var(--color-primary-quiet);
     background: var(--color-primary-quiet);
@@ -168,7 +155,7 @@
 
   .guitar-stat {
     min-width: 0;
-    padding: var(--spacing-3);
+    padding: var(--phi-space-2);
     background: var(--color-secondary-950);
     overflow-wrap: anywhere;
   }
@@ -176,6 +163,9 @@
   .guitar-photo {
     display: flex;
     flex-direction: column;
+    align-self: start;
+    position: sticky;
+    top: var(--guitar-photo-sticky-top);
     min-width: 0;
     margin: 0;
     border: var(--border-width) solid var(--color-primary-500);
@@ -205,7 +195,7 @@
   .guitar-photo-frame {
     position: relative;
     container-type: size;
-    aspect-ratio: var(--guitar-photo-ratio);
+    aspect-ratio: var(--guitar-photo-ratio-side);
     min-height: var(--guitar-photo-min-height);
     flex: 1;
     isolation: isolate;
@@ -241,7 +231,7 @@
   }
 
   .guitar-mixer {
-    margin-top: var(--spacing-6);
+    min-width: 0;
   }
 
   #sec-guitar > header h2 {
@@ -250,15 +240,61 @@
   }
 
   @variant max-guitar {
-    .eq-label {
+    .guitar-photo-frame {
+      min-height: 0;
+      flex: none;
+    }
+  }
+
+  @media (width < 1024px) {
+    .guitar-pair {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .guitar-photo {
       position: static;
+    }
+
+    .guitar-photo-frame {
+      aspect-ratio: var(--guitar-photo-ratio);
+    }
+
+    .guitar-facts {
+      grid-template-columns: var(--guitar-facts-columns-tablet);
+    }
+
+    .guitar-influences {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (width < 768px) {
+    .guitar-facts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .guitar-signal-strip {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .eq-label {
+      grid-row: 1;
+      justify-self: stretch;
       max-width: none;
-      padding: var(--spacing-2) var(--spacing-3);
+      padding: var(--phi-space-2);
       border-bottom: var(--border-width) solid var(--color-primary-quiet);
+      text-align: center;
     }
 
     .eq-plot {
+      grid-row: 2;
       height: var(--eq-plot-height-compact);
+    }
+
+    .eq-axis {
+      grid-row: 3;
     }
 
     .eq-bars {
@@ -269,9 +305,15 @@
       display: none;
     }
 
-    .guitar-photo-frame {
-      min-height: 0;
-      flex: none;
+    .guitar-stat,
+    .guitar-camera-caption {
+      text-align: center;
+    }
+
+    .guitar-camera-labels {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
     }
   }
 }

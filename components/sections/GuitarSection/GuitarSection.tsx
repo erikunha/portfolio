@@ -12,8 +12,9 @@ import { DawMixerContent } from '../DawMixerSection';
 import { EqSpectrumStrip } from './EqSpectrumStrip';
 
 const SECTION_ID = 'sec-guitar';
-const STACKED_MAX_WIDTH_PX = 767;
-const PHOTO_SIZES = `(max-width: ${STACKED_MAX_WIDTH_PX}px) 100vw, 320px`;
+const STACKED_MAX_WIDTH_PX = 1023;
+const PHOTO_VIEWPORT_SHARE_VW = 38;
+const PHOTO_SIZES = `(max-width: ${STACKED_MAX_WIDTH_PX}px) 100vw, ${PHOTO_VIEWPORT_SHARE_VW}vw`;
 
 export function GuitarContent() {
   const { signalStrip, eqSpectrum, influences, nowPlaying, stats, photo } = guitarPresentation;
@@ -27,21 +28,9 @@ export function GuitarContent() {
         </div>
         <EqSpectrumStrip spectrum={eqSpectrum} />
       </div>
-      <div className="guitar-pair max-md:grid-cols-1">
-        <div className="guitar-details">
-          <p className="guitar-influences">
-            <strong>{influences.label}</strong> {influences.text}{' '}
-            <strong>{nowPlaying.label}</strong> {nowPlaying.text}
-          </p>
-          <div className="guitar-stats max-md:grid-cols-1">
-            {stats.map((stat) => (
-              <div className="guitar-stat" key={stat.label} data-testid={`stat-${stat.label}`}>
-                <div className="guitar-label">{stat.label}</div>
-                <div className="guitar-stat-value">{stat.value}</div>
-                <div>{stat.sub}</div>
-              </div>
-            ))}
-          </div>
+      <div className="guitar-pair">
+        <div className="guitar-mixer">
+          <DawMixerContent />
         </div>
         <figure className="guitar-photo">
           <div className="guitar-camera-labels">
@@ -60,8 +49,21 @@ export function GuitarContent() {
           <figcaption className="guitar-camera-caption">{liveCam.caption}</figcaption>
         </figure>
       </div>
-      <div className="guitar-mixer">
-        <DawMixerContent />
+      <div className="guitar-facts">
+        {stats.map((stat) => (
+          <div className="guitar-stat" key={stat.label} data-testid={`stat-${stat.label}`}>
+            <div className="guitar-label">{stat.label}</div>
+            <div className="guitar-stat-value">{stat.value}</div>
+            <div>{stat.sub}</div>
+          </div>
+        ))}
+        <div className="guitar-stat guitar-influences" data-testid="influences">
+          <div className="guitar-label">{influences.label}</div>
+          <div>{influences.text}</div>
+          <div>
+            <strong>{nowPlaying.label}</strong> {nowPlaying.text}
+          </div>
+        </div>
       </div>
     </div>
   );

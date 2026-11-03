@@ -393,6 +393,9 @@ export const EqSpectrumSchema = z
       if (!inRange(tick.freqHz)) {
         ctx.addIssue({ code: 'custom', path: ['axis', index], message: 'tick outside range' });
       }
+      if (index > 0 && tick.freqHz <= (axis[index - 1]?.freqHz ?? 0)) {
+        ctx.addIssue({ code: 'custom', path: ['axis', index], message: 'ticks must ascend' });
+      }
     }
   });
 export type EqSpectrum = z.infer<typeof EqSpectrumSchema>;

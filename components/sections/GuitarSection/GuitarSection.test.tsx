@@ -67,13 +67,13 @@ describe('GuitarSection presentation', () => {
     expect(doc.querySelector('[data-testid="eq-spectrum"] [id]')).toBeNull();
   });
 
-  it('reads influences, Now Playing, stats and photo after the EQ strip', async () => {
+  it('reads the strip, then the mixer beside the photo, then the facts row', async () => {
     const doc = await renderContent();
-    const prose = doc.querySelector('.guitar-influences');
-    expect(prose?.textContent).toContain(guitarPresentation.influences.label);
-    expect(prose?.textContent).toContain(guitarPresentation.influences.text);
-    expect(prose?.textContent).toContain(guitarPresentation.nowPlaying.label);
-    expect(prose?.textContent).toContain(guitarPresentation.nowPlaying.text);
+    const influences = doc.querySelector('[data-testid="influences"]');
+    expect(influences?.textContent).toContain(guitarPresentation.influences.label);
+    expect(influences?.textContent).toContain(guitarPresentation.influences.text);
+    expect(influences?.textContent).toContain(guitarPresentation.nowPlaying.label);
+    expect(influences?.textContent).toContain(guitarPresentation.nowPlaying.text);
     const stats = Array.from(doc.querySelectorAll('[data-testid^="stat-"]'));
     expect(stats).toHaveLength(guitarPresentation.stats.length);
     for (const [index, stat] of guitarPresentation.stats.entries()) {
@@ -83,15 +83,27 @@ describe('GuitarSection presentation', () => {
     }
     const ordered = Array.from(
       doc.querySelectorAll(
-        '[data-testid="eq-spectrum"], .guitar-influences, [data-testid^="stat-"], img',
+        '[data-testid="eq-spectrum"], [data-testid="daw-mixer-desktop"], img, [data-testid^="stat-"], [data-testid="influences"]',
       ),
     );
     expect(ordered).toEqual([
       doc.querySelector('[data-testid="eq-spectrum"]'),
-      prose,
-      ...stats,
+      doc.querySelector('[data-testid="daw-mixer-desktop"]'),
       doc.querySelector('img'),
+      ...stats,
+      influences,
     ]);
+  });
+
+  it('puts the mixer and the photo in one pair and the facts after it', async () => {
+    const doc = await renderContent();
+    const pair = doc.querySelector('.guitar-pair');
+    expect(Array.from(pair?.children ?? [], (child) => child.className)).toEqual([
+      'guitar-mixer',
+      'guitar-photo',
+    ]);
+    expect(pair?.querySelector('[data-testid="daw-mixer-desktop"]')).not.toBeNull();
+    expect(pair?.nextElementSibling?.className).toBe('guitar-facts');
   });
 
   it('delivers the photo through Next Image with meaningful alt and reserved dimensions', async () => {
@@ -142,8 +154,8 @@ describe('GuitarSection presentation', () => {
     expect(doc.querySelectorAll('section#sec-daw-mixer')).toHaveLength(0);
   });
 
-  it('sizes the photo for a full-width source up to 767px', async () => {
+  it('sizes the photo for full width up to 1023px and the 1:1.618 share above it', async () => {
     const doc = await renderContent();
-    expect(doc.querySelector('img')?.getAttribute('sizes')).toBe('(max-width: 767px) 100vw, 320px');
+    expect(doc.querySelector('img')?.getAttribute('sizes')).toBe('(max-width: 1023px) 100vw, 38vw');
   });
 });

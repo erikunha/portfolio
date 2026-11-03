@@ -69,6 +69,15 @@ describe('GuitarPresentationSchema', () => {
     ['an inverted range', { freqRange: { minHz: 16000, maxHz: 80 } }],
     ['a band outside the range', { bands: [{ kind: 'lowpass', freqHz: 40000 }] }],
     ['an axis tick outside the range', { axis: [{ freqHz: 20, label: '20' }] }],
+    [
+      'a descending axis',
+      {
+        axis: [
+          { freqHz: 200, label: '200' },
+          { freqHz: 80, label: '80' },
+        ],
+      },
+    ],
     ['an empty label', { label: '  ' }],
     [
       'a template without its frequency token',

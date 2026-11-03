@@ -13,7 +13,7 @@ function barStyle(heightPct: number, delaySeconds: number, cycleBeats: number): 
 }
 
 export function EqSpectrumStrip({ spectrum }: { spectrum: EqSpectrum }) {
-  const { bars, curvePath, gridPath, axis, insetPct, beatSeconds, ariaLabel } =
+  const { bars, curvePath, gridPath, axis, axisTracks, insetPct, beatSeconds, ariaLabel } =
     buildEqSpectrum(spectrum);
   return (
     <div
@@ -53,9 +53,9 @@ export function EqSpectrumStrip({ spectrum }: { spectrum: EqSpectrum }) {
           <path d={curvePath} />
         </svg>
       </div>
-      <div className="eq-axis" aria-hidden="true">
+      <div className="eq-axis" aria-hidden="true" style={{ gridTemplateColumns: axisTracks }}>
         {axis.map((tick) => (
-          <span key={tick.key} className="eq-axis-tick" style={{ left: `${tick.leftPct}%` }}>
+          <span key={tick.key} className="eq-axis-tick" style={{ gridColumn: tick.key + 1 }}>
             {tick.label}
           </span>
         ))}

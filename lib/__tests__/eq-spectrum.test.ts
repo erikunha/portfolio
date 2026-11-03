@@ -70,6 +70,18 @@ describe('buildEqSpectrum', () => {
     );
   });
 
+  it('sizes one axis track per tick plus the closing track so ticks sit on their frequency', () => {
+    const widths = spectrum.axisTracks.split(' ').map((track) => Number.parseFloat(track));
+    expect(spectrum.axisTracks.split(' ').every((track) => track.endsWith('fr'))).toBe(true);
+    expect(widths).toHaveLength(spectrum.axis.length + 1);
+    expect(widths.reduce((sum, width) => sum + width, 0)).toBeCloseTo(100, 0);
+    let boundary = 0;
+    for (const [index, tick] of spectrum.axis.entries()) {
+      boundary += widths[index] ?? 0;
+      expect(boundary).toBeCloseTo(tick.leftPct, 0);
+    }
+  });
+
   it('describes every band in the accessible name', () => {
     expect(spectrum.ariaLabel).toContain(guitarRig.eqSpectrum.ariaLabel.prefix);
     expect(spectrum.ariaLabel).toContain('140 Hz');
