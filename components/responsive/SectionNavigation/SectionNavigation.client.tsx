@@ -13,7 +13,6 @@ import {
 } from 'react';
 import {
   formatSectionNumber,
-  formatSectionPosition,
   HOME_SECTION_ID,
   NAVIGATION,
   sectionHref,
@@ -34,8 +33,10 @@ const TRAPPED_CONTROLS = 'a[href], button';
 const CURRENT_ITEM = '[aria-current]';
 const SCROLL_LOCK_ATTRIBUTE = 'data-scroll-locked';
 const SEARCH_KEY = 'k';
-const INDEX_TRIGGER_CLASS = 'index-trigger';
-const INDEX_TRIGGER_SELECTOR = `.${INDEX_TRIGGER_CLASS}`;
+const MENU_TRIGGER_CLASS = 'menu-trigger';
+const MENU_TRIGGER_SELECTOR = `.${MENU_TRIGGER_CLASS}`;
+export const MENU_ICON_PATH = 'M4 7h16M4 12h16M4 17h16';
+const ICON_VIEWBOX = '0 0 24 24';
 const KEYBOARD_PLATFORM = {
   APPLE: 'apple',
   OTHER: 'other',
@@ -177,7 +178,7 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
     if (!restoreFocusRef.current) return;
     const candidates = [
       triggerRef.current,
-      ...document.querySelectorAll<HTMLElement>(INDEX_TRIGGER_SELECTOR),
+      ...document.querySelectorAll<HTMLElement>(MENU_TRIGGER_SELECTOR),
     ];
     for (const candidate of candidates) {
       if (!candidate || !isRendered(candidate)) continue;
@@ -391,21 +392,22 @@ export function SectionNavigation() {
   );
 }
 
-export function IndexTrigger({ className }: { className?: string }) {
-  const { currentId, drawerOpen, openDrawer } = useSectionNavigation();
+export function MenuTrigger({ className }: { className?: string }) {
+  const { drawerOpen, openDrawer } = useSectionNavigation();
   const { copy } = NAVIGATION;
   return (
     <button
       type="button"
-      className={cn(INDEX_TRIGGER_CLASS, className)}
+      className={cn(MENU_TRIGGER_CLASS, className)}
+      aria-label={copy.openMenu}
       aria-expanded={drawerOpen}
       aria-controls={DRAWER_ID}
       aria-haspopup="dialog"
       onClick={(event) => openDrawer(event.currentTarget)}
     >
-      <span aria-hidden="true">{copy.indexGlyph}</span>
-      <span>{copy.indexLabel}</span>
-      <span className="index-trigger-pos">{formatSectionPosition(currentId)}</span>
+      <svg viewBox={ICON_VIEWBOX} aria-hidden="true" focusable="false">
+        <path d={MENU_ICON_PATH} />
+      </svg>
     </button>
   );
 }

@@ -55,36 +55,44 @@
     min-width: 0;
   }
 
-  .index-trigger {
+  .menu-trigger {
     display: inline-flex;
+    flex: none;
     align-items: center;
-    gap: var(--spacing-2);
-    min-height: var(--spacing-target);
-    padding: 0 var(--spacing-3);
-    font-size: var(--text-min);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    white-space: nowrap;
+    justify-content: center;
+    box-sizing: border-box;
+    width: var(--spacing-target);
+    height: var(--spacing-target);
+    padding: 0;
     color: var(--color-primary-500);
     background: transparent;
     border: var(--border-width) solid var(--color-primary-subtle);
     border-radius: var(--radius-none);
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .index-trigger:hover {
+  .menu-trigger svg {
+    width: var(--icon-menu);
+    height: var(--icon-menu);
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.6;
+  }
+
+  .menu-trigger:hover,
+  .menu-trigger[aria-expanded="true"] {
     background: var(--color-glow-06);
     border-color: var(--color-primary-500);
   }
 
-  .index-trigger:focus-visible {
-    outline: var(--border-width) solid var(--color-primary-500);
-    outline-offset: 2px;
+  .menu-trigger:active {
+    background: var(--color-primary-quiet);
   }
 
-  .index-trigger-pos {
-    color: var(--color-tertiary-50);
-    font-variant-numeric: tabular-nums;
+  .menu-trigger:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
   }
 
   .section-menu {
@@ -407,7 +415,7 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 2px;
+    height: var(--position-line-thickness);
     z-index: var(--z-position-line);
     background: var(--color-primary-border);
     pointer-events: none;
@@ -422,9 +430,24 @@
     transform: scaleX(var(--posf, 0));
   }
 
-  @media (max-width: 1023px) {
+  @media print {
     .pos-line {
       display: none;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .pos-line {
+      top: 0;
+      bottom: 0;
+      left: auto;
+      width: var(--position-line-thickness);
+      height: auto;
+    }
+
+    .pos-line > i {
+      transform-origin: 50% 0;
+      transform: scaleY(var(--posf, 0));
     }
   }
 
