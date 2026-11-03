@@ -78,6 +78,7 @@ describe('DesktopTopbar', () => {
       NAV_VOCABULARY.work,
       NAV_VOCABULARY.career,
       NAV_VOCABULARY.contact,
+      NAV_VOCABULARY.links,
       NAV_VOCABULARY.designSystem,
       'VIEW_CV',
       HIRE_SHORT_LABEL,
@@ -94,6 +95,7 @@ describe('DesktopTopbar', () => {
       '/#sec-projects',
       '/#sec-git-log',
       '/#sec-contact',
+      '/links',
       '/design-system',
       '/cv',
       'https://www.linkedin.com/in/erikunha/',
@@ -223,6 +225,7 @@ describe('DesktopTopbar', () => {
       NAV_VOCABULARY.work,
       NAV_VOCABULARY.career,
       NAV_VOCABULARY.contact,
+      NAV_VOCABULARY.links,
       NAV_VOCABULARY.designSystem,
     ]);
     expect(links.slice(0, TOPBAR_NAV.length).map((link) => link.textContent)).toEqual(

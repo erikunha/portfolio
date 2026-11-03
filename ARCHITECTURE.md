@@ -135,30 +135,36 @@ The section menu is a modal drawer at every width, opened by the menu icon trigg
 
 ### Client islands
 
-| Surface                                        | Client responsibilities                                                                              |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| AppShell and breakpoint provider               | Responsive chrome, error bridge and viewport state                                                   |
-| DesktopTopbar, StatusBar, MobileTitleBar, Dock | Navigation, motion controls and device chrome                                                        |
-| SectionNavigation, SectionNavigationProvider   | menu trigger, drawer focus trap, focus return and shared current-section state                       |
-| PositionMeter                                  | Scroll-position tracking and page-position progress: a top line from 1024px, a right-edge line below |
-| MatrixRain, CRTOverlay, ToTopButton            | Canvas animation, CRT effects and scroll control                                                     |
-| HeroBootAnimation, HeroSystemFailure           | Boot/dialog animation and failure interaction                                                        |
-| RoleTyper                                      | Role cycle inside About                                                                              |
-| GlobalMotion → TypeReveal, MatrixRainLazy      | App-wide scroll type reveal and Matrix Rain from the root layout                                     |
-| InteractiveShellLazy → InteractiveShell        | Client-only shell input and streamed ASK output                                                      |
-| ContactFormLazy → ContactForm                  | Client-only form submission and feedback                                                             |
-| DAW mixer islands                              | Fader, dB readout, knob, RMS buttons and VU meter behavior                                           |
-| Footer client exports                          | Session counters, halt clock and reboot control                                                      |
-| ErrorBoundary and error pages                  | Failure capture, retry and recovery controls                                                         |
-| PrintButton                                    | Print action in `/summary` and `/cv`                                                                 |
-| `/links` client components                     | Tagline cycle, navigation progress, copy and subscribe actions                                       |
-| Design-system Sidebar and CopyButton           | Documentation navigation and clipboard feedback                                                      |
+| Surface                                           | Client responsibilities                                                                               |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| AppShell and breakpoint provider                  | Responsive chrome, error bridge and viewport state                                                    |
+| DesktopTopbar, StatusBar, MobileTitleBar, Dock    | Navigation, motion controls and device chrome                                                         |
+| SectionNavigation, SectionNavigationProvider      | menu trigger, drawer focus trap, focus return and shared current-section state                        |
+| PositionMeter                                     | Scroll-position tracking and page-position progress: a top line from 1024px, a right-edge line below  |
+| MatrixRain, CRTOverlay, ToTopButton               | Canvas animation, CRT effects and scroll control                                                      |
+| HeroBootAnimation, HeroSystemFailure              | Boot/dialog animation and failure interaction                                                         |
+| RoleTyper                                         | Role cycle inside About                                                                               |
+| GlobalMotion → TypeReveal, MatrixRainLazy         | App-wide scroll type reveal and Matrix Rain from the root layout                                      |
+| InteractiveShellLazy → InteractiveShell           | Client-only shell input and streamed ASK output                                                       |
+| ContactFormLazy → ContactForm                     | Client-only form submission and feedback                                                              |
+| DAW mixer islands                                 | Fader, dB readout, knob, RMS buttons and VU meter behavior                                            |
+| Footer client exports                             | Session counters, halt clock and reboot control                                                       |
+| ErrorBoundary and error pages                     | Failure capture, retry and recovery controls                                                          |
+| PrintButton                                       | Print action in `/summary` and `/cv`                                                                  |
+| `/links` client components                        | Tagline cycle, navigation progress, copy and subscribe actions                                        |
+| Design-system Sidebar, DsDrawerNav and CopyButton | Documentation page tree (side rail from 1024px, inside the site menu below it) and clipboard feedback |
 
 `InteractiveShellLazy` and `ContactFormLazy` use `next/dynamic` with `ssr: false` and loading status placeholders. `FooterLazy.client.tsx` is a direct re-export of footer controls, not a dynamic import. `DawMixerDesktop` is statically imported by `GuitarSection` and embeds smaller client islands.
 
 `pnpm route-js-check` fails a route above **164.7 KB gzipped total first-load JS**. It reports app-owned JS by subtracting the configured **131.9 KB** framework floor, leaving **32.8 KB** of headroom. App-owned JS has no separate assertion. The floor check fails when the lightest route is more than 2 KB below that baseline. `pnpm bundle-check` independently gates the global client-chunk sum at **220 KB**.
 
 Client boundaries use `.client.ts`/`.client.tsx`, a `/client/` directory, or Next's `error.tsx` and `global-error.tsx` conventions. `scripts/check-client-naming.mjs` checks these exceptions.
+
+### One shell on every page
+
+`/`, `/links`, `/links/en` and `/design-system/*` render inside `AppShell`: the same topbar (desktop) or status bar and title bar (phone), the same dock, the same single site menu, the same position line and CRT overlay. The brand chip is the way home (it scrolls to the top when already on `/`). `AppShell` takes a `drawerExtra` slot: the design system puts its page tree there (`DsDrawerNav`), so there is one menu, not a second drawer. From 1024px the design system also shows its page tree as a side rail (`.ds-sidebar`); below 1024px the rail is hidden and a `<noscript>` copy keeps the page tree reachable without JavaScript. The dock marks no item as current off the home page, because no home section is in view. `/cv` and `/summary` stay on their own print-first reading layout.
+
+Pages inside the shell use `.page-container.page-main`, so the topbar clearance, gutter and page top come from the same tokens as the home page. Rhythm inside the design-system prose, `/links` and the guitar module steps through `--phi-space-1` to `--phi-space-4`, and two-column splits use `--phi-pair-columns` (1.618 : 1) from 1024px; below that every level is one column.
 
 ### Partial Prerendering (PPR)
 
@@ -172,7 +178,7 @@ Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. AS
 
 The signal panel of `GuitarSection` is one EQ spectrum strip (`EqSpectrumStrip.tsx`). It is a static RSC with no client JavaScript: `lib/eq-spectrum.ts` turns the bands, range and BPM in `content/guitar-rig.ts` into bar heights, an SVG curve path, grid lines and axis positions. The 72 bars are DOM elements that bounce through a CSS `scaleY` keyframe timed to the BPM (`--eq-beat`), the curve is an SVG path with a non-scaling stroke, and the plot is a single `role="img"` whose accessible name lists every band. The animation stops under `prefers-reduced-motion` and the MOTION switch, leaving one static frame. The strip is laid out with grid only: the label, plot and axis share one grid, the grid lines, bars and curve stack in one cell, and axis labels sit on tracks sized from their log-frequency positions. Below 768px every second bar is hidden, the gear label moves above the plot, and the signal strip, stats and camera labels stack in centered columns.
 
-`GuitarSection` renders the guitar rig and the DAW mixer as one module at `sec-guitar`, one synchronous RSC layout at every width, without a UA branch or Suspense boundary. The order is the status strip, the EQ strip, the mixer beside the live photo, then one facts row (STYLE, TUNING, ALT RIG, GIGS and INFLUENCES with the current obsession). From 1024px the mixer and the photo split 1.618 : 1 (`--guitar-pair-columns`) and the photo is a square that stays in view while the mixer scrolls; the facts are five cells in a row. Below 1024px the pair stacks and the facts take two columns, and below 768px every level is one centered column. Module spacing follows the `--phi-space-*` tokens. The mixer keeps its fader, knob, R/M/S, meter and scroll islands, which hydrate on phones too. Its layout follows its own width, not the viewport: `.mx-mixer` is a size container, the eight-column table needs 66rem of it, and anything narrower (the mixer beside the photo, or a tablet) uses the three-column compact row, with the meter on the wide row and the fader and dB readout below it. Below 768px of viewport each channel row becomes one column (id, track, dB, knobs, R/M/S, plugin chips, meter, fader), one level per grid row, instead of one card per channel. Coarse pointers get 44px R/M/S buttons at every width.
+`GuitarSection` renders the guitar rig and the DAW mixer as one module at `sec-guitar`, one synchronous RSC layout at every width, without a UA branch or Suspense boundary. The order is the status strip, the EQ strip, the mixer beside the live photo, then one facts row (STYLE, TUNING, ALT RIG, GIGS and INFLUENCES with the current obsession). From 1024px the mixer and the photo split 1.618 : 1 (`--phi-pair-columns`) and the photo is a square that stays in view while the mixer scrolls; the facts are five cells in a row. Below 1024px the pair stacks and the facts take two columns, and below 768px every level is one centered column. Module spacing follows the `--phi-space-*` tokens. The mixer keeps its fader, knob, R/M/S, meter and scroll islands, which hydrate on phones too. Its layout follows its own width, not the viewport: `.mx-mixer` is a size container, the eight-column table needs 66rem of it, and anything narrower (the mixer beside the photo, or a tablet) uses the three-column compact row, with the meter on the wide row and the fader and dB readout below it. Below 768px of viewport each channel row becomes one column (id, track, dB, knobs, R/M/S, plugin chips, meter, fader), one level per grid row, instead of one card per channel. Coarse pointers get 44px R/M/S buttons at every width.
 
 Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
 Each career entry links its company (`companyUrl`) through `components/CompanyLink`; `__tests__/company-links.test.ts` holds the same URL across the JSON-LD, hiring profile, `llms.txt` and ask prompt.
@@ -208,7 +214,7 @@ app/error.tsx                        # route error page (500), digest + retry
 app/global-error.tsx                 # root error page, renders its own html/body
 app/sitemap.ts                       # SEO sitemap (robots.txt is static, in public/)
 app/css/                             # global styles, Tailwind v4 via PostCSS
-app/design-system/                   # MDX docs, token gallery, on-this-page navigation and content-backed DS opinion
+app/design-system/                   # MDX docs inside the shared shell: token gallery, on-this-page navigation, page tree in the site menu and content-backed DS opinion
 app/api/ask/route.ts                 # Fluid Compute: LLM streaming via AI Gateway
 app/api/contact/route.ts             # Node: durable contact submission, 200 accepted or 202 queued
 app/api/contact-retry/route.ts       # cron: retry undelivered contact messages daily

@@ -50,25 +50,8 @@ export const DS_ROUTES: readonly string[] = DS_NAV_GROUPS.flatMap((group) =>
   group.links.map((link) => link.href),
 );
 
-export const DS_SITE_BAR = {
-  brand: { href: '/', label: 'erik_cunha.sh' },
-  navLabel: 'Site navigation',
-  links: [
-    { href: '/#sec-about', label: 'ABOUT' },
-    { href: '/#sec-projects', label: 'WORK' },
-    { href: '/#sec-git-log', label: 'CAREER' },
-    { href: '/#sec-contact', label: 'CONTACT' },
-    { href: ROOT, label: 'DESIGN_SYSTEM' },
-  ],
-} as const;
-
-export const DS_MENU_TRIGGER_LABEL = 'MENU';
-export const DS_DRAWER_ID = 'site-drawer';
-export const DS_DRAWER_LABEL = 'Site menu';
-export const DS_DRAWER_TITLE = 'erik_cunha.sh';
-export const DS_DRAWER_CLOSE_LABEL = 'CLOSE';
-
-export const DS_DRAWER_DS_NAV_LABEL = 'Design system';
+export const DS_DRAWER_NAV_LABEL = 'Design system menu';
+export const DS_NOSCRIPT_NAV_LABEL = 'Design system pages without scripting';
 
 export const DS_PAGES_LIST_LABEL = 'Design system pages';
 

@@ -1,28 +1,22 @@
 import type { ReactNode } from 'react';
-import { DS_NAV_ID, DS_SKIP_LABEL, DS_SKIP_NAV_LABEL } from './_components/ds-nav';
-import { PagerNav, Sidebar, SiteBar } from './_components/Sidebar.client';
+import { AppShell } from '@/components/AppShell';
+import { DS_NAV_ID, DS_SKIP_NAV_LABEL } from './_components/ds-nav';
+import { DsDrawerNav, DsNavNoScript, PagerNav, Sidebar } from './_components/Sidebar.client';
 
 export default function DesignSystemLayout({ children }: { children: ReactNode }) {
   return (
-    <>
-      <a href="#main-content" className="skip-to-content">
-        {DS_SKIP_LABEL}
-      </a>
-      <a href={`#${DS_NAV_ID}`} className="skip-to-content">
+    <AppShell drawerExtra={<DsDrawerNav />}>
+      <a href={`#${DS_NAV_ID}`} className="skip-to-content ds-skip-nav">
         {DS_SKIP_NAV_LABEL}
       </a>
-      <SiteBar />
-      <div className="ds-layout flex flex-row-reverse justify-end min-h-screen max-w-[var(--measure-page)] mx-auto max-md:flex-col">
-        <main
-          id="main-content"
-          tabIndex={-1}
-          className="ds-main ds-prose text-sm max-md:text-xs [&_a:not([class])]:underline [&_p]:mb-4 [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-2xl max-md:[&_h2]:text-xl [&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:text-lg max-md:[&_h3]:text-base [&_h3]:text-primary-400 [&_pre]:overflow-x-auto [&_pre]:mb-4 [&_ul:not(nav_ul)]:list-disc [&_ul:not(nav_ul)]:pl-6 [&_ul:not(nav_ul)]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_li]:mb-1 [&_li]:leading-relaxed [&_table]:w-full [&_table]:border-collapse [&_table]:mb-6 [&_table]:text-xs [&_th]:text-left [&_th]:py-2 [&_th]:px-3 [&_th]:border [&_th]:border-primary-border [&_th]:align-top [&_th]:leading-snug [&_th]:text-primary-500 [&_th]:text-xs [&_th]:tracking-[0.05em] [&_th]:bg-primary-quiet [&_th]:whitespace-nowrap [&_td]:text-left [&_td]:py-2 [&_td]:px-3 [&_td]:border [&_td]:border-primary-border [&_td]:align-top [&_td]:leading-snug [&_td_code]:text-xs [&_td_code]:text-primary-500"
-        >
+      <div className="page-container page-main ds-layout">
+        <main id="main-content" tabIndex={-1} className="ds-main ds-prose">
           {children}
           <PagerNav />
         </main>
         <Sidebar />
+        <DsNavNoScript />
       </div>
-    </>
+    </AppShell>
   );
 }

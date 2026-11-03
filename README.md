@@ -25,7 +25,7 @@ This is Erik Cunha's hiring artifact for Staff/Principal frontend and applied-AI
 
 The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic Haiku 4.5, prompt-cached, rate-limited, budget-capped) with a correctness eval suite and a visible metrics panel, making AI quality observable to hiring reviewers. Agent-readiness surfaces include `/.well-known/agent.json` and a minimal MCP server.
 
-The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/links/en`, and five `/design-system` documentation pages.
+The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/links/en`, and the `/design-system` documentation pages. The home page, `/links` and `/design-system` share one shell: the same topbar, site menu, dock and position line.
 
 ---
 

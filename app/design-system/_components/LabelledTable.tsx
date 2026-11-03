@@ -37,7 +37,8 @@ function headerLabels(children: ReactNode): string[] {
     .map((cell) => textOf(cell.props.children));
 }
 
-const LABEL_CLASS = 'block text-xs tracking-wider text-primary-500 md:hidden';
+const LABEL_CLASS = 'ds-cell-label';
+const VALUE_CLASS = 'ds-cell-value';
 
 function withRole(node: ReactNode, tag: string, role: string): ReactNode {
   if (!isTag(node, tag)) return node;
@@ -55,7 +56,7 @@ function labelRow(row: ReactNode, labels: string[]): ReactNode {
       cell as ReactElement<Record<string, unknown>>,
       { role: 'cell' },
       label ? <span className={LABEL_CLASS}>{label}</span> : null,
-      cell.props.children,
+      <span className={VALUE_CLASS}>{cell.props.children}</span>,
     );
   });
   return cloneElement(row, { role: 'row' } as Record<string, unknown>, cells);

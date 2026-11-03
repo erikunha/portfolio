@@ -38,7 +38,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
   const subscribeHref = `${channelUrl}?sub_confirmation=1`;
 
   return (
-    <section className="links-col pt-4" data-col="channel" aria-labelledby={HEADING_ID}>
+    <section className="links-col" data-col="channel" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID}>{copy.channelHeading[locale]}</SectionHeading>
 
       <div className="links-channel-card border border-primary-subtle p-4">

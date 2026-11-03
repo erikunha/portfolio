@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { DS_NAV_GROUPS } from '@/app/design-system/_components/ds-nav';
 import { PREVIEW_SOURCE_ARIA_LABEL_FALLBACK } from '@/app/design-system/_components/preview.constants';
 
+const SIDEBAR_MIN_WIDTH = 1024;
 const OVERVIEW_PATH = '/design-system';
 const OVERVIEW_HEADING = 'DESIGN SYSTEM';
 const REFERENCE_GROUP_EXCLUDED_ID = 'pages';
@@ -18,12 +19,14 @@ const REFERENCE_ROUTES = DS_NAV_GROUPS.filter(
 ).flatMap((group) => group.links.map(toRoute));
 
 for (const { path, heading } of ALL_ROUTES) {
-  test(`${path} — renders heading and sidebar nav`, async ({ page }) => {
+  test(`${path} — renders heading and the page tree`, async ({ page }) => {
     await page.goto(path);
     await expect(page.getByRole('heading', { name: heading, exact: true, level: 1 })).toBeVisible();
-    await expect(
-      page.getByRole('navigation', { name: 'Design system', exact: true }),
-    ).toBeVisible();
+    const sidebar = page.getByRole('navigation', { name: 'Design system', exact: true });
+    await expect(sidebar).toBeAttached();
+    const wide = (page.viewportSize()?.width ?? 0) >= SIDEBAR_MIN_WIDTH;
+    if (wide) await expect(sidebar).toBeVisible();
+    else await expect(sidebar).toBeHidden();
   });
 }
 
@@ -97,17 +100,6 @@ async function leftEdges(locator: import('@playwright/test').Locator) {
   );
 }
 
-test('mobile sidebar items stack in one column', async ({ page }) => {
-  await page.setViewportSize(MOBILE);
-  await page.goto('/design-system/primitives/button');
-  const items = page.locator('.ds-sidebar a.ds-nav-item');
-  await expect(items.first()).toBeVisible();
-  expect(
-    new Set(await leftEdges(items)).size,
-    'sidebar items wrap into rows instead of one column',
-  ).toBe(1);
-});
-
 test('desktop sidebar is visible and vertical', async ({ page }) => {
   await page.setViewportSize(DESKTOP);
   await page.goto('/design-system/primitives/button');
@@ -140,23 +132,12 @@ test('mobile overview stat tiles sit at most two per row', async ({ page }) => {
   expect(perRow).toBeLessThanOrEqual(2);
 });
 
-test('mobile shows the page before the sidebar; desktop keeps the sidebar on the left', async ({
-  page,
-}) => {
+test('desktop keeps the sidebar on the left of the page', async ({ page }) => {
   const nav = page.getByRole('navigation', { name: 'Design system', exact: true });
   const main = page.locator('main.ds-main');
 
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize(DESKTOP);
   await page.goto('/design-system/primitives/button');
-  const [mainTop, navTop] = await Promise.all([
-    main.evaluate((el) => el.getBoundingClientRect().top),
-    nav.evaluate((el) => el.getBoundingClientRect().top),
-  ]);
-  expect(mainTop, 'on mobile the content must not sit below a full screen of nav').toBeLessThan(
-    navTop,
-  );
-
-  await page.setViewportSize({ width: 1280, height: 800 });
   const [mainLeft, navLeft] = await Promise.all([
     main.evaluate((el) => el.getBoundingClientRect().left),
     nav.evaluate((el) => el.getBoundingClientRect().left),

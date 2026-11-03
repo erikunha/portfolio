@@ -13,6 +13,7 @@ export const NAV_VOCABULARY = {
   contact: 'CONTACT',
   designSystem: 'DESIGN_SYSTEM',
   summary: '30S_SUMMARY',
+  links: 'LINKS',
   hire: 'HIRE_ON_LINKEDIN ↗',
   linkedin: 'LinkedIn',
 } as const;
@@ -26,6 +27,7 @@ export const TOPBAR_NAV: readonly TopbarNavLink[] = [
   { label: NAV_VOCABULARY.work, href: '/#sec-projects' },
   { label: NAV_VOCABULARY.career, href: '/#sec-git-log' },
   { label: NAV_VOCABULARY.contact, href: '/#sec-contact' },
+  { label: NAV_VOCABULARY.links, href: '/links' },
   { label: NAV_VOCABULARY.designSystem, href: '/design-system' },
 ];
 

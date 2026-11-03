@@ -36,7 +36,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
   const isEmpty = feed.history.length === 0;
 
   return (
-    <section className="links-col pt-4" data-col="history" aria-labelledby={HEADING_ID}>
+    <section className="links-col" data-col="history" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID} trailing={`$ ${copy.historyCommand}`}>
         {copy.latestHeading[locale]}
       </SectionHeading>

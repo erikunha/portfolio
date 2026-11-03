@@ -122,7 +122,7 @@ flowchart TD
     end
 ```
 
-**There is no global store, no `useReducer`, and no URL/`searchParams` state.** The only router read in the entire app is `usePathname()` in the design-system `Sidebar.client.tsx`. Section navigation shares React state through `SectionNavigationProvider`. Other cross-island coordination uses window `CustomEvent`s. For example, `InteractiveShell` dispatches `shell-cmd-run` and the `Footer.client` session counter listens to increment a counter, with no shared parent state.
+**There is no global store, no `useReducer`, and no URL/`searchParams` state.** The only router reads in the app are `usePathname()` in the design-system `Sidebar.client.tsx` and in `DesktopTopbar`, which marks the current page in the site navigation. Section navigation shares React state through `SectionNavigationProvider`. Other cross-island coordination uses window `CustomEvent`s. For example, `InteractiveShell` dispatches `shell-cmd-run` and the `Footer.client` session counter listens to increment a counter, with no shared parent state.
 
 ### Per-island state, and the two rendering disciplines
 

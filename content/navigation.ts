@@ -96,6 +96,7 @@ export const NAVIGATION: Navigation = {
   siteLinks: [
     { label: CV_LINK_LABEL, index: 'CV', href: READING_PATHS.cv, external: false },
     { label: NAV_VOCABULARY.summary, index: '30', href: READING_PATHS.summary, external: false },
+    { label: NAV_VOCABULARY.links, index: 'LK', href: '/links', external: false },
     { label: NAV_VOCABULARY.designSystem, index: 'DS', href: '/design-system', external: false },
     {
       label: NAV_VOCABULARY.linkedin,

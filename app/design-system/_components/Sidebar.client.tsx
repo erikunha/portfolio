@@ -1,19 +1,12 @@
 'use client';
 import { usePathname } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { isolate } from '@/lib/dom/isolate';
 import {
-  DS_DRAWER_CLOSE_LABEL,
-  DS_DRAWER_DS_NAV_LABEL,
-  DS_DRAWER_ID,
-  DS_DRAWER_LABEL,
-  DS_DRAWER_TITLE,
+  DS_DRAWER_NAV_LABEL,
   DS_HOME_LINK,
-  DS_MENU_TRIGGER_LABEL,
   DS_NAV_GROUPS,
   DS_NAV_ID,
+  DS_NOSCRIPT_NAV_LABEL,
   DS_PAGES_LIST_LABEL,
-  DS_SITE_BAR,
   dsPagerSlugForPathname,
 } from './ds-nav';
 import { Pager } from './Pager';
@@ -22,28 +15,24 @@ function isCurrentPage(pathname: string, href: string): boolean {
   return pathname === href;
 }
 
-function isCurrentSection(pathname: string, href: string): boolean {
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled])';
-
 type DsNavLinksProps = {
   currentPath: string;
   groupIdPrefix: string;
-  onNavigate?: () => void;
+  withHome?: boolean;
 };
 
-function DsNavLinks({ currentPath, groupIdPrefix, onNavigate }: DsNavLinksProps) {
+function DsNavLinks({ currentPath, groupIdPrefix, withHome = true }: DsNavLinksProps) {
   return (
     <>
-      <ul className="ds-nav-home">
-        <li>
-          <a href={DS_HOME_LINK.href} className="ds-nav-item" onClick={onNavigate}>
-            {DS_HOME_LINK.label}
-          </a>
-        </li>
-      </ul>
+      {withHome ? (
+        <ul className="ds-nav-home">
+          <li>
+            <a href={DS_HOME_LINK.href} className="ds-nav-item">
+              {DS_HOME_LINK.label}
+            </a>
+          </li>
+        </ul>
+      ) : null}
       {DS_NAV_GROUPS.map(({ id, title, links }) => (
         <div key={id} className="contents">
           {title && (
@@ -61,7 +50,6 @@ function DsNavLinks({ currentPath, groupIdPrefix, onNavigate }: DsNavLinksProps)
                   href={href}
                   className="ds-nav-item"
                   aria-current={isCurrentPage(currentPath, href) ? 'page' : undefined}
-                  onClick={onNavigate}
                 >
                   {label}
                 </a>
@@ -74,138 +62,6 @@ function DsNavLinks({ currentPath, groupIdPrefix, onNavigate }: DsNavLinksProps)
   );
 }
 
-export function SiteBar() {
-  const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const drawerRef = useRef<HTMLElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const refocusTriggerRef = useRef(false);
-
-  const close = useCallback((refocusTrigger: boolean) => {
-    refocusTriggerRef.current = refocusTrigger;
-    setOpen(false);
-  }, []);
-
-  useEffect(() => {
-    if (!open || overlayRef.current === null) return;
-    const release = isolate(overlayRef.current);
-    closeRef.current?.focus();
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        close(true);
-        return;
-      }
-      if (event.key !== 'Tab' || drawerRef.current === null) return;
-      const focusables = Array.from(
-        drawerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-      );
-      const first = focusables.at(0);
-      const last = focusables.at(-1);
-      if (first === undefined || last === undefined) return;
-      const active = document.activeElement;
-      const inside = active instanceof Node && drawerRef.current.contains(active);
-      if (event.shiftKey && (active === first || !inside)) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && (active === last || !inside)) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = '';
-      release();
-      if (refocusTriggerRef.current) triggerRef.current?.focus();
-      refocusTriggerRef.current = false;
-    };
-  }, [open, close]);
-
-  return (
-    <>
-      <header className="site-bar">
-        <div className="site-bar-in">
-          <a className="site-bar-brand" href={DS_SITE_BAR.brand.href}>
-            {DS_SITE_BAR.brand.label}
-          </a>
-          <button
-            ref={triggerRef}
-            type="button"
-            className="site-bar-menu"
-            aria-expanded={open}
-            aria-controls={DS_DRAWER_ID}
-            onClick={() => (open ? close(false) : setOpen(true))}
-          >
-            {DS_MENU_TRIGGER_LABEL}
-          </button>
-          <nav className="site-bar-nav" aria-label={DS_SITE_BAR.navLabel}>
-            {DS_SITE_BAR.links.map(({ href, label }) => (
-              <a
-                key={href}
-                href={href}
-                aria-current={isCurrentSection(pathname, href) ? 'page' : undefined}
-              >
-                {label}
-              </a>
-            ))}
-          </nav>
-        </div>
-      </header>
-      <div ref={overlayRef} className="contents">
-        <div
-          className={open ? 'site-scrim is-open' : 'site-scrim'}
-          onClick={() => close(true)}
-          aria-hidden="true"
-        />
-        <aside
-          ref={drawerRef}
-          id={DS_DRAWER_ID}
-          className={open ? 'site-drawer is-open' : 'site-drawer'}
-          aria-label={DS_DRAWER_LABEL}
-          {...(open ? { role: 'dialog', 'aria-modal': true } : {})}
-          aria-hidden={!open}
-          inert={!open}
-        >
-          <div className="site-drawer-head">
-            <p className="site-drawer-title">{DS_DRAWER_TITLE}</p>
-            <button
-              ref={closeRef}
-              type="button"
-              className="site-drawer-close"
-              onClick={() => close(true)}
-            >
-              {DS_DRAWER_CLOSE_LABEL}
-            </button>
-          </div>
-          <nav className="site-drawer-nav" aria-label={DS_SITE_BAR.navLabel}>
-            {DS_SITE_BAR.links.map(({ href, label }) => (
-              <a
-                key={href}
-                href={href}
-                aria-current={isCurrentSection(pathname, href) ? 'page' : undefined}
-                onClick={() => close(true)}
-              >
-                {label}
-              </a>
-            ))}
-          </nav>
-          <nav className="site-drawer-ds" aria-label={DS_DRAWER_DS_NAV_LABEL}>
-            <DsNavLinks
-              currentPath={pathname}
-              groupIdPrefix="drawer-nav-g-"
-              onNavigate={() => close(true)}
-            />
-          </nav>
-        </aside>
-      </div>
-    </>
-  );
-}
-
 export function Sidebar() {
   const pathname = usePathname();
 
@@ -213,6 +69,28 @@ export function Sidebar() {
     <nav id={DS_NAV_ID} tabIndex={-1} aria-label="Design system" className="ds-sidebar">
       <DsNavLinks currentPath={pathname} groupIdPrefix="nav-g-" />
     </nav>
+  );
+}
+
+export function DsDrawerNav() {
+  const pathname = usePathname();
+
+  return (
+    <nav aria-label={DS_DRAWER_NAV_LABEL} className="ds-drawer-nav">
+      <DsNavLinks currentPath={pathname} groupIdPrefix="drawer-nav-g-" withHome={false} />
+    </nav>
+  );
+}
+
+export function DsNavNoScript() {
+  const pathname = usePathname();
+
+  return (
+    <noscript>
+      <nav aria-label={DS_NOSCRIPT_NAV_LABEL} className="ds-sidebar ds-sidebar-nojs">
+        <DsNavLinks currentPath={pathname} groupIdPrefix="nojs-nav-g-" />
+      </nav>
+    </noscript>
   );
 }
 

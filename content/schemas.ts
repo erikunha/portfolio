@@ -898,7 +898,6 @@ export const LinksCopySchema = z.object({
   newBadge: LocalizedTextSchema,
   langSwitchLabel: LocalizedTextSchema,
   feedUnavailable: LocalizedTextSchema,
-  skipToContent: LocalizedTextSchema,
   pageHeading: LocalizedTextSchema,
 });
 

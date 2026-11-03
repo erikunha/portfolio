@@ -6,7 +6,7 @@ import { applyMotion, readMotion } from '@/lib/motion';
 export function CRTOverlay() {
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handler = () => applyMotion(readMotion());
+    const handler = () => applyMotion(readMotion(), false);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);

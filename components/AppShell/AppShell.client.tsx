@@ -12,14 +12,20 @@ import { PositionMeter } from '../responsive/PositionMeter';
 import { SectionNavigation, SectionNavigationProvider } from '../responsive/SectionNavigation';
 import { StatusBar } from '../responsive/StatusBar';
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  children,
+  drawerExtra,
+}: {
+  children: ReactNode;
+  drawerExtra?: ReactNode;
+}) {
   return (
     <>
       <a href="#main-content" className="skip-to-content">
         Skip to main content
       </a>
       <SectionNavigationProvider>
-        <SectionNavigation />
+        <SectionNavigation extra={drawerExtra} />
         <ErrorBoundary>
           <CRTOverlay />
         </ErrorBoundary>
