@@ -298,3 +298,23 @@ for (const { path } of ALL_ROUTES) {
     expect(errors, 'a server and client HTML mismatch makes React re-render the page').toEqual([]);
   });
 }
+
+test('the stat grid breakpoint the docs state is the one the layout uses', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/design-system/components');
+  const claim = await page
+    .getByText(/four columns from \d+px/)
+    .first()
+    .textContent();
+  const stated = Number(/four columns from (\d+)px/.exec(claim ?? '')?.[1]);
+  expect(Number.isFinite(stated), 'the docs state a breakpoint').toBe(true);
+  const columns = () =>
+    page
+      .locator('.ds-stat-row')
+      .first()
+      .evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(' ').length);
+  await page.setViewportSize({ width: stated, height: 800 });
+  expect(await columns(), `four columns at ${stated}px`).toBe(4);
+  await page.setViewportSize({ width: stated - 1, height: 800 });
+  expect(await columns(), `two columns at ${stated - 1}px`).toBe(2);
+});

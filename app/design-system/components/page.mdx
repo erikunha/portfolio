@@ -6,6 +6,7 @@ export const metadata = dsPageMetadata({
   description: '8 design-system components and a docs clipboard helper for erikunha.dev',
 });
 
+import Image from 'next/image';
 import { CompanyLink } from '../../../components/CompanyLink';
 import { MenuTrigger } from '../../../components/responsive/SectionNavigation';
 import { EqSpectrumStrip } from '../../../components/sections/GuitarSection/EqSpectrumStrip';
@@ -214,7 +215,7 @@ The `links-thumb` class frames a video cover. The frame is always 16:9 and the i
 
 <Preview id="cover-frame">
   <span className="links-thumb" style={{ width: '16rem' }}>
-    <img src="/images/guitar-live.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+    <Image src="/images/guitar-live.jpg" alt="" fill sizes="256px" className="object-cover" />
   </span>
 </Preview>
 
@@ -238,7 +239,7 @@ An external link to a company named in the text. It always opens in a new tab wi
 
 ### Stat grid using StatTile
 
-Four `StatTile` components in the `ds-stat-row` grid: four columns from 768px, two below, one below 360px. The grid layout stays in the consumer · primitives don't embed layout opinions.
+Four `StatTile` components in the `ds-stat-row` grid: four columns from 1024px, two below, one below 360px. The grid layout stays in the consumer · primitives don't embed layout opinions.
 
 <div className="ds-stat-row">
   <StatTile value="99" label="LH_SCORE" variant="display" />
