@@ -32,16 +32,20 @@ describe('SiteBar topbar', () => {
   });
 
   async function renderSiteBar(): Promise<HTMLElement> {
-    mounted = await mountClient(createElement(SiteBar));
+    mounted = await mountClient(
+      createElement(SiteBar, {
+        brand: createElement('a', { className: 'brand-link', href: '/' }),
+        drawerBrand: null,
+      }),
+    );
     return mounted.container;
   }
 
-  it('renders the brand link pointing at the home route', async () => {
+  it('renders the brand slot first and the menu trigger last, matching focus order', async () => {
     const container = await renderSiteBar();
-    const brand = container.querySelector('.site-bar-brand') as HTMLAnchorElement;
-    expect(brand).not.toBeNull();
-    expect(brand.getAttribute('href')).toBe('/');
-    expect(brand.textContent).toBe('erik_cunha.sh');
+    const focusable = [...container.querySelectorAll<HTMLElement>('header a[href], header button')];
+    expect(focusable[0]?.classList.contains('brand-link')).toBe(true);
+    expect(focusable.at(-1)).toBe(menuTrigger(container));
   });
 
   it('renders the site navigation and marks DESIGN_SYSTEM as current', async () => {
@@ -86,7 +90,12 @@ describe('SiteBar mobile drawer', () => {
   });
 
   async function renderSiteBar(): Promise<HTMLElement> {
-    mounted = await mountClient(createElement(SiteBar));
+    mounted = await mountClient(
+      createElement(SiteBar, {
+        brand: createElement('a', { className: 'brand-link', href: '/' }),
+        drawerBrand: null,
+      }),
+    );
     return mounted.container;
   }
 

@@ -12,7 +12,7 @@ import { PositionMeter } from '../responsive/PositionMeter';
 import { SectionNavigation, SectionNavigationProvider } from '../responsive/SectionNavigation';
 import { StatusBar } from '../responsive/StatusBar';
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ brand, children }: { brand: ReactNode; children: ReactNode }) {
   return (
     <>
       <a href="#main-content" className="skip-to-content">
@@ -24,11 +24,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           <CRTOverlay />
         </ErrorBoundary>
         <div className="desktop-only">
-          <DesktopTopbar />
+          <DesktopTopbar brand={brand} />
         </div>
         <div className="mobile-only">
           <StatusBar />
-          <MobileTitleBar />
+          <MobileTitleBar brand={brand} />
         </div>
         <div className="app-content">{children}</div>
         <Dock />

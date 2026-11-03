@@ -16,6 +16,7 @@
         "http://localhost:3000/design-system/foundations/typography",
         "http://localhost:3000/design-system/foundations/spacing-borders",
         "http://localhost:3000/design-system/primitives/badge",
+        "http://localhost:3000/design-system/primitives/brand-icon",
         "http://localhost:3000/design-system/primitives/button",
         "http://localhost:3000/design-system/primitives/cmd-line",
         "http://localhost:3000/design-system/primitives/copybutton",

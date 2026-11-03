@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { brand as brandContent } from '@/content/brand';
 import { HIRE_ACCESSIBLE_NAME } from '@/content/nav';
-import { topbarChrome } from '@/content/terminal-chrome';
 
 const SCROLL_PROBE_PX = 400;
 const TOPBAR_WIDTHS = [768, 1024, 1280, 1440];
@@ -36,6 +36,31 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
       await expect(trigger, 'focus returns to the menu trigger').toBeFocused();
     });
 
+    test('keyboard focus reaches the brand first and the menu trigger last, then opens and restores', async ({
+      page,
+    }) => {
+      await page.goto('/');
+      const header = page.locator('.desktop-topbar, .mobile-title-bar').locator('visible=true');
+      const order = await header.evaluate((element) => {
+        const tabbables = [...element.querySelectorAll<HTMLElement>('a[href], button')].filter(
+          (node) => node.getClientRects().length > 0,
+        );
+        return {
+          first: tabbables[0]?.classList.contains('brand-link') ?? false,
+          last: tabbables.at(-1)?.classList.contains('menu-trigger') ?? false,
+        };
+      });
+      expect(order.first, 'the brand link is the first tab stop in the header').toBe(true);
+      expect(order.last, 'the menu trigger is the last tab stop in the header').toBe(true);
+
+      const trigger = header.locator('.menu-trigger');
+      await trigger.focus();
+      await page.keyboard.press('Enter');
+      await expect(page.locator('#section-drawer')).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(trigger, 'focus returns to the menu trigger').toBeFocused();
+    });
+
     test('the trigger is the menu icon alone, and a 44px target', async ({ page }) => {
       await page.goto('/');
       const trigger = page
@@ -47,9 +72,13 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
       expect(box?.width ?? 0, 'target width').toBeGreaterThanOrEqual(44);
       expect(box?.height ?? 0, 'target height').toBeGreaterThanOrEqual(44);
       expect(
-        box?.x ?? Number.POSITIVE_INFINITY,
-        'the trigger stays in the left half, beside the brand',
-      ).toBeLessThan(width / 2);
+        box?.x ?? Number.NEGATIVE_INFINITY,
+        'the trigger sits in the right half, as the last item in the header',
+      ).toBeGreaterThan(width / 2);
+      expect(
+        (box?.x ?? 0) + (box?.width ?? 0),
+        'the trigger stays inside the viewport',
+      ).toBeLessThanOrEqual(width);
     });
   });
 }
@@ -85,40 +114,46 @@ for (const width of TOPBAR_WIDTHS) {
       expect(clipped, 'no topbar control may reach past the bar').toEqual([]);
     });
 
-    test('the brand badge stays on the row, beside the menu trigger, unclipped', async ({
+    test('the brand icon sits at the far left and the menu trigger at the far right, unclipped', async ({
       page,
     }) => {
       await page.goto('/');
       const bar = page.locator('.desktop-topbar');
-      const brand = bar.getByText(topbarChrome.brandLabel, { exact: true });
+      const brand = bar.getByRole('link', { name: brandContent.accessibleName });
 
       await expect(
         brand,
-        'the brand badge belongs on the desktop topbar at every desktop width',
+        'the brand icon link belongs on the topbar at every desktop width',
       ).toBeVisible();
+      await expect(bar.locator('.window-chrome'), 'the header draws no window dots').toHaveCount(0);
 
-      const fit = await bar.evaluate((element, label) => {
-        const badge = [...element.querySelectorAll('span')].find(
-          (node) => node.textContent === label,
-        );
-        const index = element.querySelector('.menu-trigger');
-        const badgeBox = badge?.getBoundingClientRect();
-        const indexBox = index?.getBoundingClientRect();
+      const fit = await bar.evaluate((element) => {
+        const boxOf = (selector: string) =>
+          element.querySelector(selector)?.getBoundingClientRect();
+        const brandBox = boxOf('.brand-link');
+        const triggerBox = boxOf('.menu-trigger');
+        const nav = boxOf('nav');
         return {
-          badgeLeft: badgeBox?.x ?? Number.NaN,
-          badgeRight: badgeBox?.right ?? Number.NaN,
-          indexRight: indexBox?.right ?? Number.NaN,
+          brandLeft: brandBox?.x ?? Number.NaN,
+          brandHeight: brandBox?.height ?? Number.NaN,
+          triggerLeft: triggerBox?.x ?? Number.NaN,
+          triggerRight: triggerBox?.right ?? Number.NaN,
+          triggerHeight: triggerBox?.height ?? Number.NaN,
+          navRight: nav?.right ?? Number.NaN,
           barRight: element.getBoundingClientRect().right,
         };
-      }, topbarChrome.brandLabel);
+      });
 
-      expect(fit.badgeRight, 'the brand badge must not reach past the bar').toBeLessThanOrEqual(
+      expect(fit.triggerRight, 'the menu trigger must not reach past the bar').toBeLessThanOrEqual(
         fit.barRight + 1,
       );
       expect(
-        fit.indexRight,
-        'the menu trigger must sit on the left of the brand badge',
-      ).toBeLessThanOrEqual(fit.badgeLeft + 1);
+        fit.triggerLeft,
+        'the menu trigger must sit to the right of the navigation and the HIRE button',
+      ).toBeGreaterThanOrEqual(fit.navRight - 1);
+      expect(fit.brandLeft, 'the brand icon is left of everything').toBeLessThan(fit.triggerLeft);
+      expect(fit.brandHeight, 'brand hit target is at least 44px').toBeGreaterThanOrEqual(44);
+      expect(fit.triggerHeight, 'menu hit target is at least 44px').toBeGreaterThanOrEqual(44);
     });
 
     test('the topbar shows one vocabulary and the search trigger opens the drawer', async ({
@@ -179,8 +214,8 @@ test.describe('desktop topbar: one hire action per viewport', () => {
           'the menu trigger stays on the row at every topbar width',
         ).toBeVisible();
         await expect(
-          bar.getByText(topbarChrome.brandLabel, { exact: true }),
-          'the brand badge stays on the row at every topbar width',
+          bar.getByRole('link', { name: brandContent.accessibleName }),
+          'the brand icon stays on the row at every topbar width',
         ).toBeVisible();
 
         if (width >= ACTION_TIER_WIDTH) {

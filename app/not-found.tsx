@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { BrandLink } from '@/components/BrandLink';
 import { ErrorChrome, ErrorHeading } from '@/components/ErrorPages/ErrorPages.client';
 import { errorsContent } from '@/content/errors';
 import { Button, CmdLine, TerminalPanel } from '@/design-system';
@@ -10,7 +11,7 @@ export const metadata: Metadata = { title: notFound.metaTitle };
 export default function NotFound() {
   return (
     <>
-      <ErrorChrome chrome={chrome} />
+      <ErrorChrome chrome={chrome} brand={<BrandLink />} />
       <main className="err-main" id="main-content" tabIndex={-1}>
         <ErrorHeading>{notFound.code}</ErrorHeading>
         <TerminalPanel header={notFound.panelHeader}>

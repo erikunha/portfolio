@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { BrandLink } from '@/components/BrandLink';
 import { CompanyMention } from '@/components/CompanyLink';
 import { PrintButton } from '@/components/client/PrintButton';
 import { READING_PATHS, readingViews, summaryDocument } from '@/content/reading-views';
@@ -48,9 +49,7 @@ export default function SummaryPage() {
       </a>
       <header className="reading-bar">
         <div className="reading-bar-in">
-          <a className="reading-brand" href={shared.homeHref}>
-            {shared.homeLabel}
-          </a>
+          <BrandLink />
           <nav aria-label={shared.navLabel} className="reading-nav">
             {shared.nav.map((item) => (
               <a key={item.href} href={item.href}>

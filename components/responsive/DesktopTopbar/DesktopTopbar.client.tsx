@@ -1,34 +1,22 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import {
   TOPBAR_HIRE_LINK,
   TOPBAR_MOTION_LABEL,
   TOPBAR_NAV,
   TOPBAR_READING_LINK,
 } from '@/content/nav';
-import { topbarChrome } from '@/content/terminal-chrome';
-import { WindowChrome } from '@/design-system';
 import { cn } from '@/lib/cn';
 import { MenuTrigger, SearchTrigger, useSectionNavigation } from '../SectionNavigation';
 
-export function DesktopTopbar() {
+export function DesktopTopbar({ brand }: { brand: ReactNode }) {
   const { motionOn, toggleMotion } = useSectionNavigation();
 
   return (
     <div className="desktop-topbar fixed top-0 left-0 right-0 z-[110] bg-secondary-950 border-b border-primary-subtle hidden md:block">
       <div className="max-w-[var(--measure-page)] mx-auto px-[var(--space-gutter)] flex items-center gap-3 min-h-11">
-        <WindowChrome size={12} style={{ gap: '8px' }} />
-        <MenuTrigger />
-        <div
-          className={cn(
-            'inline-flex items-center gap-1.5 h-[26px] px-2 text-[length:var(--text-min)] tracking-wider text-tertiary-50 border border-transparent',
-            'text-primary-500 border-primary-subtle bg-glow-04',
-          )}
-        >
-          <span>{topbarChrome.brandMark}</span>
-          <span>{topbarChrome.brandLabel}</span>
-          <span className="text-tertiary-50 ml-1 opacity-80">{topbarChrome.brandClose}</span>
-        </div>
+        {brand}
         <nav className="ml-auto flex gap-2 items-center flex-nowrap" aria-label="Site navigation">
           {TOPBAR_NAV.map(({ label, href }) => (
             <a
@@ -92,6 +80,7 @@ export function DesktopTopbar() {
             {TOPBAR_HIRE_LINK.label}
           </a>
         </nav>
+        <MenuTrigger />
       </div>
     </div>
   );
