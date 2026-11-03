@@ -153,6 +153,16 @@
     background: var(--color-primary-quiet);
   }
 
+  .guitar-stat-value,
+  .guitar-influences strong {
+    color: var(--color-primary-500);
+    font-weight: bold;
+  }
+
+  .guitar-stat-value {
+    font-size: var(--phi-text-1);
+  }
+
   .guitar-stat {
     min-width: 0;
     padding: var(--phi-space-2);

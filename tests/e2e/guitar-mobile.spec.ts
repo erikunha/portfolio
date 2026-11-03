@@ -128,3 +128,43 @@ test.describe('#sec-guitar golden-ratio split at 1280px', () => {
     expect(Math.abs(mixer / photo - PHI)).toBeLessThan(PHI_TOLERANCE);
   });
 });
+
+test.describe('#sec-guitar facts keep their emphasis', () => {
+  test.use({ viewport: DESKTOP });
+
+  test('values and the obsession label are bold signal green at the phi text step', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.locator(STATS).first().scrollIntoViewIfNeeded();
+    const styles = await page.evaluate(() => {
+      const signal = document.createElement('span');
+      signal.style.color = 'var(--color-primary-500)';
+      document.body.append(signal);
+      const expected = getComputedStyle(signal).color;
+      signal.remove();
+      const read = (selector: string) => {
+        const node = document.querySelector(`#sec-guitar ${selector}`);
+        const style = node ? getComputedStyle(node) : null;
+        return style
+          ? {
+              color: style.color,
+              weight: Number(style.fontWeight),
+              size: Number.parseFloat(style.fontSize),
+            }
+          : null;
+      };
+      return {
+        expected,
+        value: read('.guitar-stat-value'),
+        obsession: read('.guitar-influences strong'),
+        body: read('.guitar-label'),
+      };
+    });
+    expect(styles.value?.color).toBe(styles.expected);
+    expect(styles.value?.weight).toBeGreaterThanOrEqual(700);
+    expect(styles.value?.size).toBeGreaterThan(styles.body?.size ?? Number.POSITIVE_INFINITY);
+    expect(styles.obsession?.color).toBe(styles.expected);
+    expect(styles.obsession?.weight).toBeGreaterThanOrEqual(700);
+  });
+});

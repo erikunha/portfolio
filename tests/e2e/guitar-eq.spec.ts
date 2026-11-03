@@ -12,6 +12,15 @@ const VIEWPORTS = [
 ];
 const SUBPIXEL_TOLERANCE = 1;
 const NO_ANIMATION = 'none';
+const OLD_CARD_TEXT = [
+  'MODELED CAB',
+  'FOH / IEM',
+  'LINE 6 HX STOMP XL',
+  '// INPUT',
+  '// FX',
+  '// AMP',
+  '// OUT',
+];
 
 async function openStrip(page: Page, width: number, height: number) {
   await page.setViewportSize({ width, height });
@@ -65,6 +74,15 @@ for (const { width, height, visibleBars } of VIEWPORTS) {
         return broken;
       });
       expect(brokenWords).toEqual([]);
+    });
+
+    test('shows none of the old signal chain cards', async ({ page }) => {
+      await openStrip(page, width, height);
+      const section = page.locator('#sec-guitar');
+      for (const old of OLD_CARD_TEXT) {
+        await expect(section.getByText(old, { exact: false })).toHaveCount(0);
+      }
+      await expect(section.locator('[data-testid^="signal-node-"], .guitar-chain')).toHaveCount(0);
     });
 
     test('shows the bars the viewport has room for', async ({ page }) => {
@@ -145,4 +163,17 @@ test('puts each axis label on its frequency', async ({ page }) => {
   expect(offsets).toEqual([...offsets].sort((a, b) => a - b));
   expect(offsets[0]).toBeCloseTo(0.05, 1);
   expect(offsets.at(-1)).toBeCloseTo(0.95, 1);
+});
+
+test.describe('EQ strip without JavaScript', () => {
+  test.use({ javaScriptEnabled: false, viewport: { width: 1280, height: 720 } });
+
+  test('renders the strip from the server HTML with no old cards', async ({ page }) => {
+    await page.goto('/');
+    const strip = page.locator(STRIP);
+    await expect(strip).toHaveCount(1);
+    await expect(strip.locator('.eq-bar')).toHaveCount(72);
+    await expect(page.locator(LABEL)).toHaveText(/LEAD · Gretsch G5655TG/);
+    await expect(page.locator('#sec-guitar').getByText('MODELED CAB')).toHaveCount(0);
+  });
 });
