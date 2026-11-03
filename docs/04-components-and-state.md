@@ -30,8 +30,8 @@ flowchart TD
     page["app/page.tsx (RSC)"] --> bp["BreakpointProvider (client)"]
     bp --> shell["AppShell.client"]
     shell --> navigation["SectionNavigationProvider (client): current section and drawer state"]
-    navigation --> rail["SectionNavigation (client): INDEX trigger, drawer focus trap and focus return<br/>Header: drawer close control"]
-    navigation --> position["PositionMeter (client): scroll progress and current section"]
+    navigation --> rail["SectionNavigation (client): menu trigger, drawer focus trap and focus return<br/>Header: section count and drawer close control"]
+    navigation --> position["PositionMeter (client): scroll progress line, top from 1024px and right edge below"]
     navigation --> chrome["Chrome: MatrixRainLazy (client-only) · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["PageMain (RSC): main#main-content"]
     main --> eb["ErrorBoundary"]
@@ -53,7 +53,7 @@ flowchart TD
 
 ### The section drawer
 
-The section menu is a modal drawer at every width. It opens from the `☰ INDEX` trigger, the dock `MENU` control or the `Ctrl` / `Cmd` + `K` shortcut, keeps Tab inside the panel, and closes on Escape, the close control or the scrim. Closing it returns focus to the control that opened it. A viewport change can stop that control from being rendered (the dock is `display: none` from 1024px), and focusing an element in a `display: none` subtree is a no-op; the keyboard shortcut opens the drawer with no control of its own, because nothing was focused when it fired. In both cases the drawer falls back to the first rendered `INDEX` trigger. Focus always lands on a control the visitor can see.
+The section menu is a modal drawer at every width. It opens from the icon-only menu trigger (`Open menu`), the dock `MENU` control or the `Ctrl` / `Cmd` + `K` shortcut, keeps Tab inside the panel, and closes on Escape, the close control or the scrim. Closing it returns focus to the control that opened it. A viewport change can stop that control from being rendered (the dock is `display: none` from 1024px), and focusing an element in a `display: none` subtree is a no-op; the keyboard shortcut opens the drawer with no control of its own, because nothing was focused when it fired. In both cases the drawer falls back to the first rendered menu trigger. Focus always lands on a control the visitor can see.
 
 ### The `Module` wrapper
 
