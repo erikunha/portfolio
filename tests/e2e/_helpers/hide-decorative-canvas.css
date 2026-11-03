@@ -1,3 +1,4 @@
 canvas[aria-hidden] {
+  /* biome-ignore lint/complexity/noImportantStyles: test-only sheet injected over app styles; it must win every cascade to hide decorative canvases from screenshots */
   display: none !important;
 }

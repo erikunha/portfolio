@@ -190,7 +190,37 @@
   }
 
   #sec-contact {
-    --module-estimate: 1120px;
+    --module-estimate: 2322px;
+  }
+
+  @media (min-width: 340px) {
+    #sec-contact {
+      --module-estimate: 2239px;
+    }
+  }
+
+  @media (min-width: 360px) {
+    #sec-contact {
+      --module-estimate: 2246px;
+    }
+  }
+
+  @media (min-width: 412px) {
+    #sec-contact {
+      --module-estimate: 2213px;
+    }
+  }
+
+  @media (min-width: 480px) {
+    #sec-contact {
+      --module-estimate: 2169px;
+    }
+  }
+
+  @media (min-width: 600px) {
+    #sec-contact {
+      --module-estimate: 2136px;
+    }
   }
 
   @media (min-width: 768px) {
@@ -207,7 +237,7 @@
     }
 
     #sec-contact {
-      --module-estimate: 910px;
+      --module-estimate: 1840px;
     }
   }
 
@@ -221,7 +251,7 @@
     }
 
     #sec-contact {
-      --module-estimate: 710px;
+      --module-estimate: 977px;
     }
   }
 
