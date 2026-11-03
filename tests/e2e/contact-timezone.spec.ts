@@ -95,8 +95,8 @@ test.describe('contact timezone panel, visitor in Berlin', () => {
     await expect(panel.getByTestId('ctz-clock-erik')).toHaveText('12:00:00');
     await expect(panel.getByTestId('ctz-clock-you')).toHaveText('16:00:00');
     await expect(panel.getByTestId('ctz-status')).toHaveAttribute('data-online', 'true');
-    await expect(panel.getByTestId('ctz-overlap')).toContainText('5 hours overlap');
-    await expect(panel.getByTestId('ctz-overlap')).toContainText('13:00 to 18:00 your time');
+    await expect(panel.getByTestId('ctz-overlap')).toContainText('4 hours overlap');
+    await expect(panel.getByTestId('ctz-overlap')).toContainText('14:00 to 18:00 your time');
     await expect(page.locator('.contact-reach .contact-fact').first()).toBeVisible();
 
     expect(findings.consoleErrors, 'the panel logs no console error').toEqual([]);
