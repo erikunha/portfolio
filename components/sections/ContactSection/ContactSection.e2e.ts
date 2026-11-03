@@ -1,59 +1,227 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 
 const PHONE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 900 };
+const SCROLL_MARGIN_PX = 100;
+const COMPACT_TARGET_PX = 28;
+const TOUCH_TARGET_PX = 44;
+const FACT_COUNT = 6;
+const SAME_LINE_PX = 4;
+const GOLDEN_RATIO = 1.618;
+const GOLDEN_PRECISION = 1;
+const MAX_HEIGHT_RATIO = 1.3;
+
+async function scrollToSelector(page: Page, selector: string): Promise<void> {
+  await page.evaluate(
+    ({ target, margin }) =>
+      window.scrollTo(
+        0,
+        (document.querySelector(target) as HTMLElement).getBoundingClientRect().top +
+          window.scrollY -
+          margin,
+      ),
+    { target: selector, margin: SCROLL_MARGIN_PX },
+  );
+}
 
 test.describe('ContactSection', () => {
-  test('the channels card fills the right column and sticks under the topbar at 1280', async ({
+  test('the form column leads and the panel column follows at 1280', async ({ page }) => {
+    await page.setViewportSize(DESKTOP);
+    await page.goto('/');
+    await expect(page.locator('.contact-timezone')).toBeVisible();
+
+    const layout = await page.locator('.contact-layout').evaluate((element) => {
+      const main = element.querySelector('.contact-main') as Element;
+      const panel = element.querySelector('.contact-timezone') as Element;
+      const mainBox = main.getBoundingClientRect();
+      const panelBox = panel.getBoundingClientRect();
+      return {
+        columns: getComputedStyle(element).gridTemplateColumns.split(' '),
+        mainWidth: mainBox.width,
+        panelWidth: panelBox.width,
+        mainRight: mainBox.right,
+        panelLeft: panelBox.left,
+        mainHeight: mainBox.height,
+        panelHeight: panelBox.height,
+        position: getComputedStyle(panel).position,
+      };
+    });
+
+    expect(layout.columns, 'two columns').toHaveLength(2);
+    expect(layout.panelLeft, 'the panel sits right of the form column').toBeGreaterThan(
+      layout.mainRight,
+    );
+    expect(
+      layout.mainWidth / layout.panelWidth,
+      'the form column is the golden ratio of the panel column',
+    ).toBeCloseTo(GOLDEN_RATIO, GOLDEN_PRECISION);
+    expect(layout.position, 'the panel scrolls with the page').toBe('static');
+    expect(
+      Math.max(layout.mainHeight, layout.panelHeight) /
+        Math.min(layout.mainHeight, layout.panelHeight),
+      'neither column leaves the other half empty',
+    ).toBeLessThan(MAX_HEIGHT_RATIO);
+  });
+
+  test('the channels block follows the form in the left column with six facts under it', async ({
     page,
   }) => {
     await page.setViewportSize(DESKTOP);
     await page.goto('/');
-    const card = page.locator('.contact-channels');
-    await expect(card).toBeVisible();
-
-    const layout = await page.locator('.contact-layout').evaluate((element) => {
-      const columns = getComputedStyle(element).gridTemplateColumns.split(' ');
-      const form = element.querySelector('.contact-main')?.getBoundingClientRect();
-      const cardBox = element.querySelector('.contact-channels')?.getBoundingClientRect();
-      const style = element.querySelector('.contact-channels')
-        ? getComputedStyle(element.querySelector('.contact-channels') as Element)
-        : null;
-      return {
-        columns,
-        formRight: form?.right ?? 0,
-        cardLeft: cardBox?.left ?? 0,
-        position: style?.position ?? '',
-        top: style?.top ?? '',
-      };
-    });
-
-    expect(layout.columns, 'the form and the card split the row 7fr to 5fr').toHaveLength(2);
-    expect(layout.cardLeft, 'the card sits in its own column, right of the form').toBeGreaterThan(
-      layout.formRight,
+    const main = page.locator('.contact-main');
+    await scrollToSelector(page, '.contact-channels');
+    const channels = main.locator('.contact-channels');
+    await expect(channels.getByRole('heading', { name: contactCopy.channels.title })).toBeVisible();
+    await expect(channels.locator('a[href^="mailto:"]')).toBeVisible();
+    await expect(
+      channels.getByRole('button', { name: contactCopy.section.copyEmail }),
+    ).toBeVisible();
+    await expect(channels.getByRole('link', { name: /MESSAGE_ON_LINKEDIN/ })).toHaveAttribute(
+      'href',
+      contactCopy.section.linkedinHref,
     );
-    expect(layout.position, 'the card sticks while the form scrolls').toBe('sticky');
-    expect(Number.parseFloat(layout.top)).toBeGreaterThan(0);
+    await expect(
+      channels.getByRole('link', { name: contactCopy.channels.githubAccessibleLabel }),
+    ).toBeVisible();
+    await expect(main.locator('.contact-reach .contact-fact')).toHaveCount(FACT_COUNT);
+    await expect(main.locator('.contact-fact dt', { hasText: /^tz$/ })).toHaveCount(0);
+    await expect(main.locator('footer')).toHaveCount(0);
   });
 
-  test('the channels card stacks under the form at 390', async ({ page }) => {
+  test('the timezone panel holds the clocks and no channel at 1280', async ({ page }) => {
+    await page.setViewportSize(DESKTOP);
+    await page.goto('/');
+    const panel = page.locator('.contact-timezone');
+    await scrollToSelector(page, '.contact-timezone');
+    await expect(panel.getByRole('heading', { name: contactCopy.timezone.title })).toBeVisible();
+    await expect(panel.getByTestId('contact-timezone')).toBeVisible();
+    await expect(panel.locator('a[href^="mailto:"]')).toHaveCount(0);
+    await expect(panel.locator('.contact-fact')).toHaveCount(0);
+  });
+
+  test('the blocks stack form, channels, facts, panel at 390', async ({ page }) => {
     await page.setViewportSize(PHONE);
     await page.goto('/');
-    const card = page.locator('.contact-channels');
-    await expect(card).toBeVisible();
-    const boxes = await page.locator('.contact-main').evaluate((element) => {
-      const card = document.querySelector('.contact-channels')?.getBoundingClientRect();
+    await expect(page.locator('.contact-timezone')).toBeVisible();
+    const tops = await page.locator('.contact-layout').evaluate((element) => {
+      const top = (selector: string) =>
+        (element.querySelector(selector) as Element).getBoundingClientRect().top;
       return {
-        formBottom: element.getBoundingClientRect().bottom,
-        cardTop: card?.top ?? 0,
-        columns: getComputedStyle(element.parentElement as Element).gridTemplateColumns.split(' ')
-          .length,
+        columns: getComputedStyle(element).gridTemplateColumns.split(' ').length,
+        form: top('.contact-main > :first-child'),
+        channels: top('.contact-channels'),
+        facts: top('.contact-facts'),
+        panel: top('.contact-timezone'),
       };
     });
-    expect(boxes.columns, 'one column on a phone').toBe(1);
-    expect(boxes.cardTop, 'the card sits below the form').toBeGreaterThanOrEqual(boxes.formBottom);
+
+    expect(tops.columns, 'one column on a phone').toBe(1);
+    expect(tops.channels, 'channels come after the form').toBeGreaterThan(tops.form);
+    expect(tops.facts, 'facts come after the channels').toBeGreaterThan(tops.channels);
+    expect(tops.panel, 'the panel comes after the facts').toBeGreaterThan(tops.facts);
   });
+
+  test('every horizontal row stacks into a column on a phone', async ({ page }) => {
+    await page.setViewportSize(PHONE);
+    await page.goto('/');
+    await scrollToSelector(page, '.contact-timezone');
+    await expect(page.getByTestId('ctz-clock-you')).toBeVisible();
+    const stacked = await page.locator('.contact-layout').evaluate((layout) => {
+      const rect = (element: Element | null) => (element as Element).getBoundingClientRect();
+      const below = (rows: Element[], first: string, second: string) =>
+        rows.map(
+          (row) => rect(row.querySelector(second)).top >= rect(row.querySelector(first)).bottom - 1,
+        );
+      return {
+        channelRows: below([...layout.querySelectorAll('.contact-channel-row')], 'dt', 'dd'),
+        factRows: below([...layout.querySelectorAll('.contact-fact')], 'dt', 'dd'),
+        clocks:
+          rect(layout.querySelector('[data-testid="ctz-clock-you"]')).top >=
+          rect(layout.querySelector('[data-testid="ctz-clock-erik"]')).bottom - 1,
+        slotButton:
+          rect(layout.querySelector('.ctz-propose')).top >=
+          rect(layout.querySelector('.ctz-slot-body')).bottom - 1,
+      };
+    });
+
+    expect(stacked.channelRows.length).toBeGreaterThan(0);
+    expect(stacked.channelRows.every(Boolean), 'each channel label sits above its value').toBe(
+      true,
+    );
+    expect(stacked.factRows.every(Boolean), 'each fact label sits above its value').toBe(true);
+    expect(stacked.clocks, 'the two clocks stack').toBe(true);
+    expect(stacked.slotButton, 'the propose button sits under the slot').toBe(true);
+  });
+
+  test('the channel links and the copy button are touch targets on a phone', async ({ page }) => {
+    await page.setViewportSize(PHONE);
+    await page.goto('/');
+    await scrollToSelector(page, '.contact-channels');
+    const channels = page.locator('.contact-channels');
+    const targets = [
+      channels.locator('a[href^="mailto:"]'),
+      channels.getByRole('button', { name: contactCopy.section.copyEmail }),
+      channels.getByRole('link', { name: /MESSAGE_ON_LINKEDIN/ }),
+      channels.getByRole('link', { name: contactCopy.channels.githubAccessibleLabel }),
+    ];
+
+    for (const target of targets) {
+      await expect(target).toBeVisible();
+      const box = await target.boundingBox();
+      expect(box?.height ?? 0, 'at least 44px tall').toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+    }
+  });
+
+  for (const width of [1024, 1100, 1280]) {
+    test(`each fact keeps its label on the value's line at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      await scrollToSelector(page, '.contact-facts');
+      const rows = await page.locator('.contact-fact').evaluateAll((facts) =>
+        facts.map((fact) => {
+          const label = fact.querySelector('dt')?.getBoundingClientRect();
+          const value = fact.querySelector('dd')?.getBoundingClientRect();
+          return {
+            label: fact.querySelector('dt')?.textContent,
+            lineOffset: Math.abs((label?.top ?? 0) - (value?.top ?? 0)),
+            labelRight: label?.right ?? 0,
+            valueLeft: value?.left ?? 0,
+          };
+        }),
+      );
+
+      expect(rows).toHaveLength(FACT_COUNT);
+      for (const row of rows) {
+        expect(
+          row.lineOffset,
+          `${row.label} sits on the first line of its value`,
+        ).toBeLessThanOrEqual(SAME_LINE_PX);
+        expect(row.valueLeft, `${row.label} value starts right of its label`).toBeGreaterThan(
+          row.labelRight,
+        );
+      }
+    });
+  }
+
+  for (const width of [900, 1024, 1100]) {
+    test(`the two clocks stay side by side at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      await scrollToSelector(page, '.contact-timezone');
+      const erik = page.getByTestId('ctz-clock-erik');
+      const you = page.getByTestId('ctz-clock-you');
+      await expect(erik).toBeVisible();
+      await expect(you).toBeVisible();
+      const [erikBox, youBox] = await Promise.all([erik.boundingBox(), you.boundingBox()]);
+
+      expect(
+        Math.abs((erikBox?.y ?? 0) - (youBox?.y ?? 0)),
+        'both clocks share a row',
+      ).toBeLessThanOrEqual(SAME_LINE_PX);
+      expect((youBox?.x ?? 0) > (erikBox?.x ?? 0) + (erikBox?.width ?? 0)).toBe(true);
+    });
+  }
 
   test('the error summary reads as one line and draws no focus ring', async ({ page }) => {
     await page.setViewportSize(DESKTOP);
@@ -92,9 +260,10 @@ test.describe('ContactSection', () => {
       return {
         linkRight: link?.right ?? 0,
         buttonLeft: button?.left ?? 0,
-        buttonTop: button?.top ?? 0,
-        linkTop: link?.top ?? 0,
+        linkCenter: (link?.top ?? 0) + (link?.height ?? 0) / 2,
+        buttonCenter: (button?.top ?? 0) + (button?.height ?? 0) / 2,
         buttonHeight: button?.height ?? 0,
+        touch: matchMedia('(pointer: coarse)').matches,
       };
     });
     expect(
@@ -102,9 +271,12 @@ test.describe('ContactSection', () => {
       'the copy control sits beside the address, not under it',
     ).toBeGreaterThanOrEqual(boxes.linkRight);
     expect(
-      Math.abs(boxes.buttonTop - boxes.linkTop),
+      Math.abs(boxes.buttonCenter - boxes.linkCenter),
       'the copy control shares the address line',
     ).toBeLessThanOrEqual(2);
-    expect(boxes.buttonHeight, 'the copy control is compact').toBeLessThanOrEqual(28);
+    expect(
+      boxes.buttonHeight,
+      'the copy control is compact with a fine pointer and a touch target with a coarse one',
+    ).toBeLessThanOrEqual(boxes.touch ? TOUCH_TARGET_PX : COMPACT_TARGET_PX);
   });
 });

@@ -41,4 +41,17 @@ describe('build-time content gate', () => {
       'the build gate must parse topbarChrome: content/terminal-chrome.ts is imported by client components, so it carries no runtime parse of its own and an unparsed schema fails open',
     ).rejects.toThrow();
   });
+  it('rejects a world map whose land grid has the wrong row count', async () => {
+    vi.doUnmock('./terminal-chrome');
+    const actual = await vi.importActual<typeof import('./world-map')>('./world-map');
+    vi.doMock('./world-map', () => ({
+      ...actual,
+      worldMap: { ...actual.worldMap, land: actual.worldMap.land.slice(1) },
+    }));
+
+    await expect(
+      import('./_validate-client-content'),
+      'the build gate must parse worldMap: content/world-map.ts is imported by the client island, so it carries no runtime parse of its own and an unparsed schema fails open',
+    ).rejects.toThrow();
+  });
 });

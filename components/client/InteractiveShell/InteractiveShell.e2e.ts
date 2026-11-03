@@ -111,7 +111,8 @@ test.describe('ask / interactive shell', () => {
 
 test('quick commands read as inert while an answer is pending', async ({ page }) => {
   await setupAskPage(page, { ask: 'happy', log: 'accept' });
-  await page.route('**/api/ask', () => new Promise<void>(() => {}));
+  const neverSettles = () => new Promise<void>(() => undefined);
+  await page.route('**/api/ask', neverSettles);
   await ask(page, 'Who is Erik?');
 
   const hint = page.locator('.shell-cmd-hint').first();

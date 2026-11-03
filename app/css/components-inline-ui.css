@@ -94,6 +94,7 @@
     border-bottom: 0;
   }
 
+  /* biome-ignore lint/style/noDescendingSpecificity: unrelated element; the earlier reduced-motion .sp-bar > i rule targets a different component and never matches .cam-corners */
   .cam-corners > i {
     position: absolute;
     inset: 0;
