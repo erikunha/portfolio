@@ -19,6 +19,8 @@ The naming gate scans `app`, `components` and `lib`; `/client/` is an explicit d
 
 `components/CompanyLink` renders every employer link: `target="_blank"`, `rel="noopener noreferrer"`, a new-tab disclosure from `content/company-link.ts` (an `sr-only` suffix, or `aria-describedby` to one shared note where the link sits inside a `data-type-reveal` heading, whose clip is sized from its text), a persistent underline and a 28px (`--spacing-target-compact`) hit area drawn by the `.company-link::before` pseudo-element. The hit area stays that small because the links sit inside dense inline text, where a 44px zone would cover the neighbouring lines and take their taps. `CompanyMention` links the company name inside an existing sentence and throws when the sentence stops naming it.
 
+`links-thumb` frames every `/links` video cover at 16:9 with the image filling the frame (no crop). The cover is grayscale under a multiplied signal-green layer from the `--links-thumb-*` tokens; hover or focus on the parent link restores the cover colour, and reduced motion removes the transition. Documented with a live example in the design system components page.
+
 The Hero identity line is static server-rendered text. Desktop and mobile share `HeroIdentity`, with metrics and accessible labels passed into `HeroStats`. Boot and system-failure islands import their copy from `content/hero-client.ts`, keeping server content validation out of those client imports. The About "Open to [role] roles" status line mounts the `RoleTyper` client island (`components/client/RoleTyper`), which cycles Senior, Staff and Principal over the server-rendered text. `About` contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
 
 Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` export only the lazy wrapper. `ContactTimezoneLazy` differs: it uses `React.lazy` with an intersection trigger instead of `next/dynamic`, and its barrel also exports the server-rendered `ContactTimezoneStatic` that the lazy wrapper takes as its fallback. Tests import the real component directly, keeping it out of the initial client references.
@@ -123,7 +125,7 @@ flowchart TD
     end
 ```
 
-**There is no global store, no `useReducer`, and no URL/`searchParams` state.** The only router read in the entire app is `usePathname()` in the design-system `Sidebar.client.tsx`. Section navigation shares React state through `SectionNavigationProvider`. Other cross-island coordination uses window `CustomEvent`s. For example, `InteractiveShell` dispatches `shell-cmd-run` and the `Footer.client` session counter listens to increment a counter, with no shared parent state.
+**There is no global store, no `useReducer`, and no URL/`searchParams` state.** The only router reads in the app are `usePathname()` in the design-system `Sidebar.client.tsx` and in `DesktopTopbar`, which marks the current page in the site navigation. Section navigation shares React state through `SectionNavigationProvider`. Other cross-island coordination uses window `CustomEvent`s. For example, `InteractiveShell` dispatches `shell-cmd-run` and the `Footer.client` session counter listens to increment a counter, with no shared parent state.
 
 ### Per-island state, and the two rendering disciplines
 

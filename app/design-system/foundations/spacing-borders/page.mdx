@@ -9,7 +9,7 @@ export const metadata = dsPageMetadata({
 
 # SPACING-BORDERS
 
-<OnThisPage items={[{id:'spacing',label:'Spacing'},{id:'target',label:'Touch target'},{id:'borders',label:'Borders'},{id:'focus',label:'Focus'}]} />
+<OnThisPage items={[{id:'spacing',label:'Spacing'},{id:'phi',label:'Golden ratio'},{id:'target',label:'Touch target'},{id:'borders',label:'Borders'},{id:'focus',label:'Focus'}]} />
 
 Spacing and border tokens live in `app/css/theme.css`.
 
@@ -38,6 +38,38 @@ Spacing and border tokens live in `app/css/theme.css`.
     <span className="ds-space-bar" style={{width:'var(--spacing-16)'}} />
   </div>
 </Preview>
+
+<h2 id="phi">Golden-ratio spacing</h2>
+
+Page rhythm steps through one set of tokens, each the previous times `--phi` (1.618). Gaps, padding, heading margins and the two-column splits on the guitar module, `/links` and the design system all read them.
+
+| Token | Value | Size |
+|---|---|---|
+| `--phi-space-1` | 0.5rem | 8px |
+| `--phi-space-2` | `--phi-space-1` × `--phi` | 13px |
+| `--phi-space-3` | `--phi-space-2` × `--phi` | 21px |
+| `--phi-space-4` | `--phi-space-3` × `--phi` | 34px |
+| `--phi-text-1` | `--text-xs` × `--phi-root` (1.272) | about 15px |
+| `--phi-inv` | 1 ÷ `--phi` | 0.618 |
+| `--phi-pair-columns` | `minmax(0, 1.618fr) minmax(0, 1fr)` | 1.618 : 1 |
+
+<Preview id="phi-space">
+  <div style={{display:'grid',gap:'8px',width:'100%'}}>
+    <span className="ds-space-bar" style={{width:'var(--phi-space-1)'}} />
+    <span className="ds-space-bar" style={{width:'var(--phi-space-2)'}} />
+    <span className="ds-space-bar" style={{width:'var(--phi-space-3)'}} />
+    <span className="ds-space-bar" style={{width:'var(--phi-space-4)'}} />
+  </div>
+</Preview>
+
+<Preview id="phi-pair">
+  <div style={{display:'grid',gridTemplateColumns:'var(--phi-pair-columns)',gap:'var(--phi-space-2)',width:'100%'}}>
+    <span className="ds-space-bar" style={{height:'var(--phi-space-3)'}} />
+    <span className="ds-space-bar" style={{height:'var(--phi-space-3)',opacity:0.5}} />
+  </div>
+</Preview>
+
+Whole-page type does not use phi: a 1.618 step from a 12px base jumps to 19px and then 31px, too coarse for dense monospace text. Only `--phi-text-1` takes the half step, for stat values. Pairs split 1.618 : 1 from 1024px and stack below it; on a phone every level is one centered column.
 
 <h2 id="target">Touch target</h2>
 

@@ -13,7 +13,7 @@ export function QrPanel({ locale, url }: { locale: LinksLocale; url: string }) {
   const span = matrix.size + QUIET_ZONE * 2;
 
   return (
-    <section className="links-col pt-4" data-col="qr" aria-labelledby={HEADING_ID}>
+    <section className="links-col" data-col="qr" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID}>{copy.qrHeading[locale]}</SectionHeading>
 
       <div className="border border-primary-border bg-[var(--color-glow-03)] p-4 flex gap-4 items-center">

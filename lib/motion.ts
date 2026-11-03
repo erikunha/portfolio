@@ -16,12 +16,14 @@ export function readSystemReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-export function applyMotion(on: boolean): void {
+export function applyMotion(on: boolean, persist = true): void {
   document.body.dataset.motion = on ? 'full' : 'reduce';
-  try {
-    localStorage.setItem('erik.motion', on ? 'on' : 'off');
-  } catch (err) {
-    console.warn('[motion] Failed to persist motion preference:', err);
+  if (persist) {
+    try {
+      localStorage.setItem('erik.motion', on ? 'on' : 'off');
+    } catch (err) {
+      console.warn('[motion] Failed to persist motion preference:', err);
+    }
   }
   window.dispatchEvent(new CustomEvent('motionchange', { detail: { on } }));
 }

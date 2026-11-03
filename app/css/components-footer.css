@@ -140,6 +140,7 @@
   }
 
   .footer-netstat-scroll {
+    container: netstat / inline-size;
     overflow-x: auto;
   }
 
@@ -155,16 +156,49 @@
   }
 
   .footer-netstat :is(th, td) {
-    padding: 0 var(--spacing-1) 0 0;
+    padding: 0 var(--spacing-3) 0 0;
     vertical-align: middle;
     white-space: nowrap;
-    overflow-wrap: normal;
   }
 
   .footer-netstat :is(th, td):last-child {
     padding-right: 0;
-    white-space: normal;
-    overflow-wrap: anywhere;
+  }
+
+  @container netstat (max-width: 23rem) {
+    .footer-netstat,
+    .footer-netstat :is(thead, tbody) {
+      display: block;
+    }
+
+    .footer-netstat thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+
+    .footer-netstat tbody tr {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: var(--spacing-3);
+      align-items: center;
+      padding-block: var(--spacing-1);
+      border-bottom: var(--border-width) solid var(--color-primary-quiet);
+    }
+
+    .footer-netstat tbody tr:last-child {
+      border-bottom: 0;
+    }
+
+    .footer-netstat tbody td {
+      padding: 0;
+    }
+
+    .footer-netstat tbody td:last-child {
+      grid-column: 1 / -1;
+    }
   }
 
   .footer-session-grid dd:has(> meter) {
@@ -219,7 +253,7 @@
   }
 
   .footer-link {
-    white-space: normal;
+    white-space: nowrap;
     gap: var(--spacing-1);
     text-decoration: underline;
     text-decoration-color: var(--color-primary-subtle);
@@ -243,6 +277,12 @@
   .footer-reboot:focus-visible {
     outline: var(--border-width) solid var(--color-green);
     outline-offset: var(--spacing-1);
+  }
+
+  @media (pointer: fine) {
+    .footer-link {
+      min-height: var(--spacing-target-compact);
+    }
   }
 
   .footer-tree {

@@ -1,5 +1,5 @@
 import { act, createElement } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SectionNavigationProvider } from '@/components/responsive/SectionNavigation';
 import {
   HIRE_ACCESSIBLE_NAME,
@@ -10,6 +10,12 @@ import {
 } from '@/content/nav';
 import { NAVIGATION } from '@/content/navigation';
 import { type MountedClient, mountClient } from './helpers/render';
+
+let mockPathname: string | null = null;
+
+vi.mock('next/navigation', () => ({
+  usePathname: () => mockPathname,
+}));
 
 const DESKTOP_WIDTHS = [768, 1024, 1280, 1440];
 const BREAKPOINT_MIN_WIDTH: Record<string, number> = {
@@ -71,6 +77,7 @@ describe('DesktopTopbar', () => {
 
   afterEach(() => {
     mounted?.unmount();
+    mockPathname = null;
   });
 
   it('names every destination in the shared vocabulary, once', async () => {
@@ -85,6 +92,7 @@ describe('DesktopTopbar', () => {
       NAV_VOCABULARY.work,
       NAV_VOCABULARY.career,
       NAV_VOCABULARY.contact,
+      NAV_VOCABULARY.links,
       NAV_VOCABULARY.designSystem,
       'VIEW_CV',
       HIRE_SHORT_LABEL,
@@ -101,6 +109,7 @@ describe('DesktopTopbar', () => {
       '/#sec-projects',
       '/#sec-git-log',
       '/#sec-contact',
+      '/links',
       '/design-system',
       '/cv',
       'https://www.linkedin.com/in/erikunha/',
@@ -250,10 +259,38 @@ describe('DesktopTopbar', () => {
       NAV_VOCABULARY.work,
       NAV_VOCABULARY.career,
       NAV_VOCABULARY.contact,
+      NAV_VOCABULARY.links,
       NAV_VOCABULARY.designSystem,
     ]);
     expect(links.slice(0, TOPBAR_NAV.length).map((link) => link.textContent)).toEqual(
       TOPBAR_NAV.map(({ label }) => label),
     );
   });
+
+  const currentLabels = () =>
+    [
+      ...mounted.container.querySelectorAll(
+        'nav[aria-label="Site navigation"] a[aria-current="page"]',
+      ),
+    ].map((link) => (link.textContent ?? '').trim());
+
+  it.each([
+    ['/design-system', NAV_VOCABULARY.designSystem],
+    ['/design-system/tokens', NAV_VOCABULARY.designSystem],
+    ['/links', NAV_VOCABULARY.links],
+    ['/links/en', NAV_VOCABULARY.links],
+  ])('marks only the page link current on %s', async (path, label) => {
+    mockPathname = path;
+    mounted = await renderTopbar();
+    expect(currentLabels()).toEqual([label]);
+  });
+
+  it.each(['/', '/design-systems', '/linksfoo', null])(
+    'marks no page link current on %s',
+    async (path) => {
+      mockPathname = path;
+      mounted = await renderTopbar();
+      expect(currentLabels()).toEqual([]);
+    },
+  );
 });

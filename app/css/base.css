@@ -1,7 +1,6 @@
 @layer base {
   :root {
     --topbar-height: 45px;
-    --phi: 1.618;
     --position-line-thickness: 2px;
     --icon-menu: calc(var(--spacing-target) / var(--phi) / var(--phi));
     --mobile-bars-height: 94px;

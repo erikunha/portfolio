@@ -36,7 +36,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
   const isEmpty = feed.history.length === 0;
 
   return (
-    <section className="links-col pt-4" data-col="history" aria-labelledby={HEADING_ID}>
+    <section className="links-col" data-col="history" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID} trailing={`$ ${copy.historyCommand}`}>
         {copy.latestHeading[locale]}
       </SectionHeading>
@@ -64,14 +64,16 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
                 <span className="text-primary-400 text-xs">
                   {String(index + 1).padStart(INDEX_PAD, '0')}
                 </span>
-                <Image
-                  src={video.thumbnailUrl}
-                  alt=""
-                  width={THUMB_WIDTH}
-                  height={THUMB_HEIGHT}
-                  sizes="64px"
-                  className="border border-primary-border object-cover h-9 w-16"
-                />
+                <span className="links-thumb w-16">
+                  <Image
+                    src={video.thumbnailUrl}
+                    alt=""
+                    width={THUMB_WIDTH}
+                    height={THUMB_HEIGHT}
+                    sizes="64px"
+                    className="object-cover h-full w-full"
+                  />
+                </span>
                 <span>
                   <span className="block text-tertiary-50 text-[12.5px] leading-[1.45] text-pretty">
                     {video.title}

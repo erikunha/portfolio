@@ -33,6 +33,7 @@ const TRAPPED_CONTROLS = 'a[href], button';
 const CURRENT_ITEM = '[aria-current]';
 const SCROLL_LOCK_ATTRIBUTE = 'data-scroll-locked';
 const SEARCH_KEY = 'k';
+const NO_CURRENT_SECTION = '';
 const MENU_TRIGGER_CLASS = 'menu-trigger';
 const MENU_TRIGGER_SELECTOR = `.${MENU_TRIGGER_CLASS}`;
 export const MENU_ICON_PATH = 'M4 7h16M4 12h16M4 17h16';
@@ -126,7 +127,7 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
     motionOnRef.current = on;
     setMotionOn(on);
     setSystemReduced(readSystemReducedMotion());
-    applyMotion(on);
+    applyMotion(on, false);
   }, []);
 
   useEffect(() => {
@@ -138,6 +139,10 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
     }
     const mobileHero = document.querySelector(MOBILE_HERO_SELECTOR);
     if (mobileHero) sections.set(mobileHero, HOME_SECTION_ID);
+    if (sections.size === 0) {
+      setCurrentId(NO_CURRENT_SECTION);
+      return;
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         let first: Element | undefined;
@@ -253,7 +258,7 @@ const GROUP_SECTIONS = NAVIGATION.groups.map((group) => ({
   sections: SECTION_NAV.filter(({ id }) => group.sectionIds.some((member) => member === id)),
 }));
 
-export function SectionNavigation() {
+export function SectionNavigation({ extra }: { extra?: ReactNode }) {
   const {
     currentId,
     drawerOpen,
@@ -357,6 +362,7 @@ export function SectionNavigation() {
             );
           })}
         </nav>
+        {extra ? <div className="menu-extra">{extra}</div> : null}
         <ul className="menu-foot">
           {NAVIGATION.siteLinks.map(({ label, index, href, external, accessibleName }) => (
             <li key={href}>

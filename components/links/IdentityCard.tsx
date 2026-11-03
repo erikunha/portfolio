@@ -36,7 +36,7 @@ export function IdentityCard({ locale }: { locale: LinksLocale }) {
   ];
 
   return (
-    <div className="links-identity pt-2">
+    <div className="links-identity">
       <p className="m-0 mb-2 text-tertiary-400 text-xs">
         <span className="text-tertiary-400">$</span> {copy.whoami}
       </p>

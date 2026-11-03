@@ -38,7 +38,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
   const subscribeHref = `${channelUrl}?sub_confirmation=1`;
 
   return (
-    <section className="links-col pt-4" data-col="channel" aria-labelledby={HEADING_ID}>
+    <section className="links-col" data-col="channel" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID}>{copy.channelHeading[locale]}</SectionHeading>
 
       <div className="links-channel-card border border-primary-subtle p-4">
@@ -58,7 +58,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
           <div className="mt-3">
             <div
               aria-hidden="true"
-              className="links-thumb-placeholder h-[104px] lg:h-[280px] border border-primary-border grid place-items-center text-primary-400 text-xs tracking-[0.08em] uppercase"
+              className="links-thumb-placeholder w-full border border-primary-border grid place-items-center text-primary-400 text-xs tracking-[0.08em] uppercase"
             >
               {copy.thumbPlaceholder[locale]}
             </div>
@@ -74,7 +74,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
             data-outbound="ultimo-video"
             className="block no-underline mt-3 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 hover:opacity-92"
           >
-            <span className="relative block h-[104px] lg:h-[280px] border border-primary-border overflow-hidden">
+            <span className="links-thumb w-full">
               <Image
                 src={latest.thumbnailUrl}
                 alt=""
@@ -99,7 +99,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
               {latest.title}
             </span>
             {latest.description && (
-              <span className="block mt-1 text-tertiary-400 text-xs text-pretty">
+              <span className="mt-1 text-tertiary-400 text-xs text-pretty line-clamp-4">
                 {latest.description}
               </span>
             )}

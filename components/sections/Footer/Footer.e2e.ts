@@ -131,8 +131,8 @@ test.describe('Footer', () => {
       await page.evaluate(() => document.fonts.ready);
       if (width === 390) {
         const footer = await page.locator('footer').boundingBox();
-        expect(footer?.height).toBeGreaterThanOrEqual(2050);
-        expect(footer?.height).toBeLessThanOrEqual(2150);
+        expect(footer?.height).toBeGreaterThanOrEqual(2130);
+        expect(footer?.height).toBeLessThanOrEqual(2230);
       }
       const cells = page.locator('.footer-netstat :is(th, td)');
       for (const cell of await cells.all()) {
@@ -249,7 +249,7 @@ test.describe('Footer', () => {
         };
       });
       expect(Number.parseFloat(gaps.row)).toBeGreaterThanOrEqual(Number.parseFloat(gaps.column));
-      expect(gaps.title).toBe(gaps.column);
+      expect(Number.parseFloat(gaps.title)).toBeCloseTo(Number.parseFloat(gaps.column), 1);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         width,
       );

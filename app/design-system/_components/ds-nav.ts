@@ -4,7 +4,6 @@ export type NavGroup = { id: string; title?: string; links: readonly NavLink[] }
 const ROOT = '/design-system';
 
 export const DS_NAV_ID = 'ds-nav';
-export const DS_SKIP_LABEL = 'Skip to main content';
 export const DS_SKIP_NAV_LABEL = 'Skip to design system navigation';
 
 export const DS_HOME_LINK: NavLink = { href: '/', label: 'HOME' };
@@ -51,23 +50,8 @@ export const DS_ROUTES: readonly string[] = DS_NAV_GROUPS.flatMap((group) =>
   group.links.map((link) => link.href),
 );
 
-export const DS_SITE_BAR = {
-  navLabel: 'Site navigation',
-  links: [
-    { href: '/#sec-about', label: 'ABOUT' },
-    { href: '/#sec-projects', label: 'WORK' },
-    { href: '/#sec-git-log', label: 'CAREER' },
-    { href: '/#sec-contact', label: 'CONTACT' },
-    { href: ROOT, label: 'DESIGN_SYSTEM' },
-  ],
-} as const;
-
-export const DS_MENU_TRIGGER_LABEL = 'MENU';
-export const DS_DRAWER_ID = 'site-drawer';
-export const DS_DRAWER_LABEL = 'Site menu';
-export const DS_DRAWER_CLOSE_LABEL = 'CLOSE';
-
-export const DS_DRAWER_DS_NAV_LABEL = 'Design system';
+export const DS_DRAWER_NAV_LABEL = 'Design system menu';
+export const DS_NOSCRIPT_NAV_LABEL = 'Design system pages without scripting';
 
 export const DS_PAGES_LIST_LABEL = 'Design system pages';
 
