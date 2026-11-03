@@ -23,8 +23,8 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: max(100%, var(--spacing-target));
-    height: var(--spacing-target);
+    width: max(100%, var(--spacing-target-compact));
+    height: var(--spacing-target-compact);
     transform: translate(-50%, -50%);
   }
 

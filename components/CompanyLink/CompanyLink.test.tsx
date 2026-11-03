@@ -21,7 +21,7 @@ describe('CompanyLink', () => {
     expect(link?.querySelector('.sr-only')?.textContent).toBe(` ${companyLinkCopy.disclosure}`);
   });
 
-  it('carries the shared class that supplies underline, focus ring and the 44px hit area', () => {
+  it('carries the shared class that supplies underline, focus ring and the hit area', () => {
     const { container } = render(
       <CompanyLink href={HREF} className="extra">
         Raylu

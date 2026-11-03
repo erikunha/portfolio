@@ -355,6 +355,75 @@ describe('canonical profile and education', () => {
     }
   });
 
+  it('rejects a non-https company URL at every schema that carries one', async () => {
+    const schemas = await import('./schemas');
+    const { profile } = await import('./profile');
+    const { aboutContent } = await import('./about');
+    const { cvDocument, summaryDocument, cvJsonLd } = await import('./reading-views');
+    type Check = { safeParse: (value: unknown) => { success: boolean } };
+    const unsafe = ['javascript:alert(1)', 'http://raylu.ai', 'raylu.ai', ''];
+    const cases: [string, Check, unknown, (url: string) => unknown][] = [
+      [
+        'ProfileSchema.currentEmployer.url',
+        schemas.ProfileSchema,
+        profile,
+        (url) => ({ ...profile, currentEmployer: { ...profile.currentEmployer, url } }),
+      ],
+      [
+        'CvDocumentSchema.experience[].companyUrl',
+        schemas.CvDocumentSchema,
+        cvDocument,
+        (url) => ({
+          ...cvDocument,
+          experience: [{ ...cvDocument.experience[0], companyUrl: url }],
+        }),
+      ],
+      [
+        'SummaryDocumentSchema.employer.url',
+        schemas.SummaryDocumentSchema,
+        summaryDocument,
+        (url) => ({ ...summaryDocument, employer: { ...summaryDocument.employer, url } }),
+      ],
+      [
+        'AboutContentSchema.now.rows[].company.url',
+        schemas.AboutContentSchema,
+        aboutContent,
+        (url) => ({
+          ...aboutContent,
+          now: {
+            ...aboutContent.now,
+            rows: aboutContent.now.rows.map((row) =>
+              row.company ? { ...row, company: { ...row.company, url } } : row,
+            ),
+          },
+        }),
+      ],
+      [
+        'CvJsonLdSchema.mainEntity.worksFor.url',
+        schemas.CvJsonLdSchema,
+        cvJsonLd,
+        (url) => ({
+          ...cvJsonLd,
+          mainEntity: {
+            ...cvJsonLd.mainEntity,
+            worksFor: { ...cvJsonLd.mainEntity.worksFor, url },
+          },
+        }),
+      ],
+    ];
+    for (const [name, schema, shipped, mutate] of cases) {
+      expect(schema.safeParse(shipped).success, `${name}: shipped content must validate`).toBe(
+        true,
+      );
+      for (const url of unsafe) {
+        expect(
+          schema.safeParse(mutate(url)).success,
+          `${name} must reject "${url}": it renders as a link href`,
+        ).toBe(false);
+      }
+    }
+  });
+
   it('gives each employer its own company URL', async () => {
     const { gitLog } = await import('./git-log');
     const origins = gitLog.map((entry) => new URL(entry.companyUrl).origin);

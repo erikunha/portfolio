@@ -3,30 +3,34 @@ import { gitLog } from '../../content/git-log';
 import { profile } from '../../content/profile';
 import { READING_PATHS } from '../../content/reading-views';
 
-const TOUCH_TARGET_PX = 44;
+const TOUCH_TARGET_PX = 28;
+const NEIGHBOUR_CLEARANCE_PX = 14;
 const VIEWPORTS = [
   { name: 'mobile', width: 375, height: 812 },
   { name: 'tablet', width: 768, height: 1024 },
   { name: 'desktop', width: 1280, height: 720 },
 ];
 
-async function hitAreaCoversTouchTarget(page: Page, selector: string, index: number) {
+async function probeHitArea(page: Page, selector: string, index: number) {
   return page.evaluate(
-    ({ selector: sel, index: i, target }) => {
+    ({ selector: sel, index: i, target, clearance }) => {
       const link = document.querySelectorAll<HTMLAnchorElement>(sel)[i];
-      if (!link) return { found: false, top: false, bottom: false };
+      if (!link)
+        return { found: false, top: false, bottom: false, stealsAbove: false, stealsBelow: false };
       link.scrollIntoView({ block: 'center' });
       const rect = link.getBoundingClientRect();
       const x = rect.left + rect.width / 2;
-      const probe = (y: number) => document.elementFromPoint(x, y)?.closest('a') === link;
+      const hits = (y: number) => document.elementFromPoint(x, y)?.closest('a') === link;
       const centreY = rect.top + rect.height / 2;
       return {
         found: true,
-        top: probe(centreY - target / 2 + 1),
-        bottom: probe(centreY + target / 2 - 1),
+        top: hits(centreY - target / 2 + 1),
+        bottom: hits(centreY + target / 2 - 1),
+        stealsAbove: hits(rect.top - clearance),
+        stealsBelow: hits(rect.bottom + clearance),
       };
     },
-    { selector, index, target: TOUCH_TARGET_PX },
+    { selector, index, target: TOUCH_TARGET_PX, clearance: NEIGHBOUR_CLEARANCE_PX },
   );
 }
 
@@ -43,15 +47,16 @@ test.describe('career company links', () => {
         await expect(link).toHaveAttribute('href', job.companyUrl);
         await expect(link).toHaveAttribute('target', '_blank');
         await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-        const hit = await hitAreaCoversTouchTarget(
-          page,
-          '[data-testid="career-log"] a.company-link',
-          index,
-        );
-        expect(hit, `${job.company} must expose a ${TOUCH_TARGET_PX}px tap target`).toEqual({
+        const hit = await probeHitArea(page, '[data-testid="career-log"] a.company-link', index);
+        expect(
+          hit,
+          `${job.company} must expose a ${TOUCH_TARGET_PX}px tap target without covering the lines around it`,
+        ).toEqual({
           found: true,
           top: true,
           bottom: true,
+          stealsAbove: false,
+          stealsBelow: false,
         });
       }
     });
