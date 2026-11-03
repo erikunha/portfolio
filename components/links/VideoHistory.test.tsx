@@ -31,10 +31,12 @@ function feedWith(count: number): ChannelFeed {
 const empty = feedWith(0);
 
 describe('VideoHistory', () => {
-  it('derives each relative label from the feed timestamp', () => {
+  it('renders relative labels from the feed timestamp in either locale', () => {
     const feed = feedWith(1);
     const { container, rerender } = render(<VideoHistory locale={LINKS_LOCALE.en} feed={feed} />);
     expect(container.textContent).toContain('3 days ago');
+    rerender(<VideoHistory locale={LINKS_LOCALE.pt} feed={feed} />);
+    expect(container.textContent).toContain('há 3 dias');
     rerender(
       <VideoHistory
         locale={LINKS_LOCALE.en}
