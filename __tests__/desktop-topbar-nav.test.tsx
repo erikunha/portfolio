@@ -1,5 +1,5 @@
 import { act, createElement } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SectionNavigationProvider } from '@/components/responsive/SectionNavigation';
 import {
   HIRE_ACCESSIBLE_NAME,
@@ -11,6 +11,12 @@ import {
 import { NAVIGATION } from '@/content/navigation';
 import { topbarChrome } from '@/content/terminal-chrome';
 import { type MountedClient, mountClient } from './helpers/render';
+
+let mockPathname: string | null = null;
+
+vi.mock('next/navigation', () => ({
+  usePathname: () => mockPathname,
+}));
 
 const DESKTOP_WIDTHS = [768, 1024, 1280, 1440];
 const BREAKPOINT_MIN_WIDTH: Record<string, number> = {
@@ -64,6 +70,7 @@ describe('DesktopTopbar', () => {
 
   afterEach(() => {
     mounted?.unmount();
+    mockPathname = null;
   });
 
   it('names every destination in the shared vocabulary, once', async () => {
@@ -232,4 +239,31 @@ describe('DesktopTopbar', () => {
       TOPBAR_NAV.map(({ label }) => label),
     );
   });
+
+  const currentLabels = () =>
+    [
+      ...mounted.container.querySelectorAll(
+        'nav[aria-label="Site navigation"] a[aria-current="page"]',
+      ),
+    ].map((link) => (link.textContent ?? '').trim());
+
+  it.each([
+    ['/design-system', NAV_VOCABULARY.designSystem],
+    ['/design-system/tokens', NAV_VOCABULARY.designSystem],
+    ['/links', NAV_VOCABULARY.links],
+    ['/links/en', NAV_VOCABULARY.links],
+  ])('marks only the page link current on %s', async (path, label) => {
+    mockPathname = path;
+    mounted = await renderTopbar();
+    expect(currentLabels()).toEqual([label]);
+  });
+
+  it.each(['/', '/design-systems', '/linksfoo', null])(
+    'marks no page link current on %s',
+    async (path) => {
+      mockPathname = path;
+      mounted = await renderTopbar();
+      expect(currentLabels()).toEqual([]);
+    },
+  );
 });

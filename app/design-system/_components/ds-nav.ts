@@ -4,7 +4,6 @@ export type NavGroup = { id: string; title?: string; links: readonly NavLink[] }
 const ROOT = '/design-system';
 
 export const DS_NAV_ID = 'ds-nav';
-export const DS_SKIP_LABEL = 'Skip to main content';
 export const DS_SKIP_NAV_LABEL = 'Skip to design system navigation';
 
 export const DS_HOME_LINK: NavLink = { href: '/', label: 'HOME' };
