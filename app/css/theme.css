@@ -161,6 +161,11 @@
     --space-gutter: clamp(16px, 4vw, 24px);
     --space-page-top: var(--spacing-6);
     --space-section: var(--spacing-8);
+    --phi: 1.618;
+    --space-phi-1: var(--spacing-2);
+    --space-phi-2: calc(var(--space-phi-1) * var(--phi));
+    --space-phi-3: calc(var(--space-phi-2) * var(--phi));
+    --space-phi-4: calc(var(--space-phi-3) * var(--phi));
     --text-section-title: var(--text-base);
     --measure-page: 1200px;
     --measure-read: 72ch;

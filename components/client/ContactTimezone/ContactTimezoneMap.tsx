@@ -66,49 +66,51 @@ export function ContactTimezoneMap({
 }) {
   return (
     <div className="ctz-map">
-      <svg
-        className="ctz-map-svg"
-        viewBox={VIEW_BOX}
-        role={live ? 'img' : undefined}
-        aria-label={live?.ariaLabel}
-        aria-hidden={live ? undefined : true}
-        focusable="false"
-      >
-        <path
-          className="ctz-land-dim"
-          data-testid="ctz-land-dim"
-          d={paths.dim}
-          strokeWidth={DOT_PX}
-          strokeDasharray={DOT_DASH}
-        />
-        <path
-          className="ctz-land-lit"
-          data-testid="ctz-land-lit"
-          d={paths.lit}
-          strokeWidth={DOT_PX}
-          strokeDasharray={DOT_DASH}
-        />
-        {live?.layout.route ? (
-          <path className="ctz-route" data-testid="ctz-route" d={live.layout.route} />
-        ) : null}
-      </svg>
-      <div className="ctz-overlay" aria-hidden="true">
-        <span
-          className="ctz-pin"
-          data-tone="erik"
-          data-testid="ctz-pin-erik"
-          style={pinStyle(live ? live.layout.erik : erikPin)}
-        />
-        {live ? (
+      <div className="ctz-map-frame">
+        <svg
+          className="ctz-map-svg"
+          viewBox={VIEW_BOX}
+          role={live ? 'img' : undefined}
+          aria-label={live?.ariaLabel}
+          aria-hidden={live ? undefined : true}
+          focusable="false"
+        >
+          <path
+            className="ctz-land-dim"
+            data-testid="ctz-land-dim"
+            d={paths.dim}
+            strokeWidth={DOT_PX}
+            strokeDasharray={DOT_DASH}
+          />
+          <path
+            className="ctz-land-lit"
+            data-testid="ctz-land-lit"
+            d={paths.lit}
+            strokeWidth={DOT_PX}
+            strokeDasharray={DOT_DASH}
+          />
+          {live?.layout.route ? (
+            <path className="ctz-route" data-testid="ctz-route" d={live.layout.route} />
+          ) : null}
+        </svg>
+        <div className="ctz-overlay" aria-hidden="true">
           <span
             className="ctz-pin"
-            data-tone="you"
-            data-testid="ctz-pin-you"
-            style={pinStyle(live.layout.visitor)}
-          >
-            <span className="ctz-pulse" />
-          </span>
-        ) : null}
+            data-tone="erik"
+            data-testid="ctz-pin-erik"
+            style={pinStyle(live ? live.layout.erik : erikPin)}
+          />
+          {live ? (
+            <span
+              className="ctz-pin"
+              data-tone="you"
+              data-testid="ctz-pin-you"
+              style={pinStyle(live.layout.visitor)}
+            >
+              <span className="ctz-pulse" />
+            </span>
+          ) : null}
+        </div>
       </div>
       {live ? (
         <div className="ctz-labels" aria-hidden="true">

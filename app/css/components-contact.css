@@ -13,14 +13,14 @@
 
   .contact-layout {
     display: grid;
-    gap: var(--spacing-6);
+    gap: var(--space-phi-3);
     align-items: start;
   }
 
   .contact-main {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-6);
+    gap: var(--space-phi-3);
     min-width: 0;
   }
 
@@ -214,11 +214,24 @@
     .contact-copy-btn {
       min-height: var(--spacing-target);
     }
+
+    .contact-channel-row,
+    .contact-channels-body dd {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .contact-channel-cta,
+    .contact-channel-link,
+    .contact-channels-body dd > a {
+      justify-content: center;
+      text-align: center;
+    }
   }
 
   @media (min-width: 1024px) {
     .contact-layout {
-      grid-template-columns: minmax(0, 13fr) minmax(0, 12fr);
+      grid-template-columns: minmax(0, 1.618fr) minmax(0, 1fr);
     }
   }
 
@@ -263,7 +276,7 @@
   .ctz {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-3);
+    gap: var(--space-phi-2);
     min-width: 0;
     min-height: var(--ctz-min-height, 0);
     font-family: var(--font-mono);
@@ -275,24 +288,24 @@
   }
 
   .ctz-static {
-    --ctz-min-height: 46rem;
+    --ctz-min-height: 51rem;
   }
 
   @media (min-width: 412px) {
     .ctz-static {
-      --ctz-min-height: 45rem;
+      --ctz-min-height: 50rem;
     }
   }
 
   @media (min-width: 768px) {
     .ctz-static {
-      --ctz-min-height: 47rem;
+      --ctz-min-height: 49rem;
     }
   }
 
   @media (min-width: 1024px) {
     .ctz-static {
-      --ctz-min-height: 41.5rem;
+      --ctz-min-height: 50rem;
     }
   }
 
@@ -354,6 +367,10 @@
   .ctz-map {
     position: relative;
     container-type: inline-size;
+  }
+
+  .ctz-map-frame {
+    position: relative;
   }
 
   .ctz-map-svg {
@@ -692,7 +709,7 @@
 
   .ctz-footer {
     display: grid;
-    gap: var(--spacing-4);
+    gap: var(--space-phi-2);
   }
 
   @keyframes ctz-pulse {
@@ -717,6 +734,7 @@
     .ctz-labels {
       position: static;
       display: flex;
+      flex-direction: column;
       gap: var(--spacing-2);
       margin-top: var(--spacing-2);
     }
@@ -749,6 +767,14 @@
     color: var(--color-primary-500);
   }
 
+  @media (max-width: 899.98px) {
+    .ctz-clocks {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+  }
+
   @media (min-width: 900px) {
     .ctz-clocks {
       flex-wrap: nowrap;
@@ -762,6 +788,20 @@
   }
 
   @media (max-width: 767.98px) {
+    .ctz-fact {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ctz-slot {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .ctz-proposed-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
     .ctz-propose {
       flex: 1 1 100%;
     }
