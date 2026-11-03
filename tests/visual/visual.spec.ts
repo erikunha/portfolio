@@ -38,18 +38,21 @@ test.describe('visual regression', () => {
     test('2 — contact section matches baseline', async ({ mockedPage }) => {
       await mockedPage.clock.setFixedTime(CONTACT_FIXED_NOW);
       const contactSection = mockedPage.locator('#sec-contact');
-      await mockedPage.evaluate(
-        (margin) =>
-          window.scrollTo(
-            0,
-            (document.querySelector('#sec-contact') as HTMLElement).getBoundingClientRect().top +
-              window.scrollY -
-              margin,
-          ),
-        CONTACT_SCROLL_MARGIN_PX,
-      );
-      await mockedPage.waitForSelector('[data-testid="contact-form"]', { state: 'visible' });
+      const scrollToContact = (selector: string) =>
+        mockedPage.evaluate(
+          ({ target, margin }) =>
+            window.scrollTo(
+              0,
+              (document.querySelector(target) as HTMLElement).getBoundingClientRect().top +
+                window.scrollY -
+                margin,
+            ),
+          { target: selector, margin: CONTACT_SCROLL_MARGIN_PX },
+        );
+      await scrollToContact('.contact-timezone');
       await mockedPage.waitForSelector('[data-testid="contact-timezone"]', { state: 'visible' });
+      await scrollToContact('#sec-contact');
+      await mockedPage.waitForSelector('[data-testid="contact-form"]', { state: 'visible' });
       await mockedPage.evaluate(() => document.fonts.ready);
       await stripVolatileChrome(mockedPage);
       if (process.env.ARGOS_TOKEN) {
