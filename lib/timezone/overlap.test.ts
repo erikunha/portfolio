@@ -193,6 +193,11 @@ describe('projectToMap', () => {
     expect(y).toBeCloseTo(152.25, 5);
   });
 
+  it('clamps coordinates outside the grid into the map', () => {
+    expect(projectToMap(95, -190)).toEqual({ x: 0, y: 0 });
+    expect(projectToMap(-95, 190)).toEqual({ x: MAP_WIDTH, y: MAP_HEIGHT });
+  });
+
   it('keeps every curated zone inside the map', () => {
     for (const [zone, { lat, lon }] of Object.entries(KNOWN_ZONES)) {
       const { x, y } = projectToMap(lat, lon);

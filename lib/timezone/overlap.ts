@@ -36,7 +36,7 @@ export const MAP_LABEL_HEIGHT = 34;
 const LABEL_RIGHT_MARGIN = 6;
 const LABEL_BOTTOM_MARGIN = 4;
 const LABEL_MAX_X = MAP_WIDTH - MAP_LABEL_WIDTH - LABEL_RIGHT_MARGIN;
-const LABEL_MAX_ERIK_Y = MAP_HEIGHT - MAP_LABEL_HEIGHT - LABEL_BOTTOM_MARGIN;
+const LABEL_MAX_Y = MAP_HEIGHT - MAP_LABEL_HEIGHT - LABEL_BOTTOM_MARGIN;
 const LABEL_MIN_X = 4;
 const LABEL_MIN_Y = 2;
 const ERIK_LABEL_OFFSET = { x: 10, y: 8 } as const;
@@ -67,6 +67,7 @@ export type PinLayout = {
 };
 
 const mod = (value: number, modulus: number) => ((value % modulus) + modulus) % modulus;
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 const isErikWorking = (minuteOfDay: number) =>
   minuteOfDay >= ERIK_WORK_START_MINUTE && minuteOfDay < ERIK_WORK_END_MINUTE;
 const isVisitorWorking = (minuteOfDay: number) =>
@@ -139,8 +140,8 @@ export function erikAvailability(at: Date): ErikAvailability {
 export function projectToMap(lat: number, lon: number): MapPoint {
   const { topLatitude, bottomLatitude } = WORLD_MAP_GRID;
   return {
-    x: ((lon + FULL_CIRCLE_DEGREES / 2) / FULL_CIRCLE_DEGREES) * MAP_WIDTH,
-    y: ((topLatitude - lat) / (topLatitude - bottomLatitude)) * MAP_HEIGHT,
+    x: clamp(((lon + FULL_CIRCLE_DEGREES / 2) / FULL_CIRCLE_DEGREES) * MAP_WIDTH, 0, MAP_WIDTH),
+    y: clamp(((topLatitude - lat) / (topLatitude - bottomLatitude)) * MAP_HEIGHT, 0, MAP_HEIGHT),
   };
 }
 
@@ -168,16 +169,16 @@ export function layoutPins(visitor: { lat: number; lon: number }): PinLayout {
     route,
     erikLabel: {
       x: Math.min(erik.x + ERIK_LABEL_OFFSET.x, LABEL_MAX_X),
-      y: Math.min(erik.y + ERIK_LABEL_OFFSET.y, LABEL_MAX_ERIK_Y),
+      y: Math.min(erik.y + ERIK_LABEL_OFFSET.y, LABEL_MAX_Y),
     },
     visitorLabel: near
       ? {
           x: Math.max(LABEL_MIN_X, erik.x + NEAR_VISITOR_LABEL_OFFSET.x),
-          y: Math.max(LABEL_MIN_Y, erik.y + NEAR_VISITOR_LABEL_OFFSET.y),
+          y: clamp(erik.y + NEAR_VISITOR_LABEL_OFFSET.y, LABEL_MIN_Y, LABEL_MAX_Y),
         }
       : {
           x: Math.max(LABEL_MIN_X, Math.min(pin.x + VISITOR_LABEL_OFFSET.x, LABEL_MAX_X)),
-          y: Math.max(LABEL_MIN_Y, pin.y + VISITOR_LABEL_OFFSET.y),
+          y: clamp(pin.y + VISITOR_LABEL_OFFSET.y, LABEL_MIN_Y, LABEL_MAX_Y),
         },
   };
 }

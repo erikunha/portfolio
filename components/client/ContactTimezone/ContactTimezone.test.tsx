@@ -3,7 +3,7 @@ import { parse } from 'postcss';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { declValue, rulesInMedia, rulesWithSelector } from '@/__tests__/helpers/css-rules';
-import { contactCopy, fillCopy } from '@/content/contact-copy';
+import { contactCopy, contactHoursPhrase, fillCopy } from '@/content/contact-copy';
 import { messageStore } from '../ContactForm/messageStore';
 import { ContactTimezone } from './ContactTimezone.client';
 
@@ -15,6 +15,7 @@ vi.mock('@/lib/timezone/zones', async (importOriginal) => ({
 }));
 
 const { timezone: copy } = contactCopy;
+const MAP_NAME_PATTERN = new RegExp(copy.map.ariaLabel.slice(0, copy.map.ariaLabel.indexOf('.')));
 const ONLINE_INSTANT = new Date('2026-01-15T15:00:00Z');
 const OFF_HOURS_INSTANT = new Date('2026-01-15T22:00:00Z');
 const SECOND = 1000;
@@ -26,6 +27,16 @@ const testId = (id: string) => screen.getByTestId(id);
 function setVisibility(state: DocumentVisibilityState) {
   Object.defineProperty(document, 'visibilityState', { configurable: true, value: state });
   document.dispatchEvent(new Event('visibilitychange'));
+}
+
+const visibilityDescriptor = Object.getOwnPropertyDescriptor(document, 'visibilityState');
+
+function restoreVisibility() {
+  if (visibilityDescriptor) {
+    Object.defineProperty(document, 'visibilityState', visibilityDescriptor);
+  } else {
+    Reflect.deleteProperty(document, 'visibilityState');
+  }
 }
 
 function renderAt(instant: Date, zone = 'Europe/Berlin') {
@@ -42,6 +53,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   messageStore.reset();
+  restoreVisibility();
 });
 
 describe('ContactTimezone status and clocks', () => {
@@ -131,7 +143,9 @@ describe('ContactTimezone location and overlap', () => {
   it('states the overlap in hours and the range in the visitor time', () => {
     renderAt(ONLINE_INSTANT);
 
-    expect(testId('ctz-overlap').textContent).toBe('4 hours overlap · 14:00 to 18:00 your time');
+    expect(testId('ctz-overlap').textContent).toBe(
+      `${fillCopy(copy.overlap.summary, { hours: contactHoursPhrase(4) })}${copy.overlap.separator}${fillCopy(copy.overlap.range, { range: '14:00 to 18:00' })}`,
+    );
   });
 
   it('offers the async line when nothing overlaps', () => {
@@ -185,7 +199,7 @@ describe('ContactTimezone map', () => {
   it('is an image named with both places and the overlap', () => {
     renderAt(ONLINE_INSTANT);
 
-    const map = screen.getByRole('img', { name: /World map/ });
+    const map = screen.getByRole('img', { name: MAP_NAME_PATTERN });
     expect(map.tagName.toLowerCase()).toBe('svg');
     expect(map.getAttribute('aria-label')).toBe(
       fillCopy(copy.map.ariaLabel, {
