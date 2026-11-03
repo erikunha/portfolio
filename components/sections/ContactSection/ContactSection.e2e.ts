@@ -8,7 +8,8 @@ const COMPACT_TARGET_PX = 28;
 const TOUCH_TARGET_PX = 44;
 const FACT_COUNT = 6;
 const SAME_LINE_PX = 4;
-const MAX_COLUMN_RATIO = 1.25;
+const GOLDEN_RATIO = 1.618;
+const GOLDEN_PRECISION = 1;
 const MAX_HEIGHT_RATIO = 1.3;
 
 async function scrollToSelector(page: Page, selector: string): Promise<void> {
@@ -51,8 +52,10 @@ test.describe('ContactSection', () => {
     expect(layout.panelLeft, 'the panel sits right of the form column').toBeGreaterThan(
       layout.mainRight,
     );
-    expect(layout.mainWidth, 'the form column is the wider one').toBeGreaterThan(layout.panelWidth);
-    expect(layout.mainWidth / layout.panelWidth, 'about 815 to 750').toBeLessThan(MAX_COLUMN_RATIO);
+    expect(
+      layout.mainWidth / layout.panelWidth,
+      'the form column is the golden ratio of the panel column',
+    ).toBeCloseTo(GOLDEN_RATIO, GOLDEN_PRECISION);
     expect(layout.position, 'the panel scrolls with the page').toBe('static');
     expect(
       Math.max(layout.mainHeight, layout.panelHeight) /
@@ -117,6 +120,38 @@ test.describe('ContactSection', () => {
     expect(tops.channels, 'channels come after the form').toBeGreaterThan(tops.form);
     expect(tops.facts, 'facts come after the channels').toBeGreaterThan(tops.channels);
     expect(tops.panel, 'the panel comes after the facts').toBeGreaterThan(tops.facts);
+  });
+
+  test('every horizontal row stacks into a column on a phone', async ({ page }) => {
+    await page.setViewportSize(PHONE);
+    await page.goto('/');
+    await scrollToSelector(page, '.contact-timezone');
+    await expect(page.getByTestId('ctz-clock-you')).toBeVisible();
+    const stacked = await page.locator('.contact-layout').evaluate((layout) => {
+      const rect = (element: Element | null) => (element as Element).getBoundingClientRect();
+      const below = (rows: Element[], first: string, second: string) =>
+        rows.map(
+          (row) => rect(row.querySelector(second)).top >= rect(row.querySelector(first)).bottom - 1,
+        );
+      return {
+        channelRows: below([...layout.querySelectorAll('.contact-channel-row')], 'dt', 'dd'),
+        factRows: below([...layout.querySelectorAll('.ctz-fact')], 'dt', 'dd'),
+        clocks:
+          rect(layout.querySelector('[data-testid="ctz-clock-you"]')).top >=
+          rect(layout.querySelector('[data-testid="ctz-clock-erik"]')).bottom - 1,
+        slotButton:
+          rect(layout.querySelector('.ctz-propose')).top >=
+          rect(layout.querySelector('.ctz-slot-body')).bottom - 1,
+      };
+    });
+
+    expect(stacked.channelRows.length).toBeGreaterThan(0);
+    expect(stacked.channelRows.every(Boolean), 'each channel label sits above its value').toBe(
+      true,
+    );
+    expect(stacked.factRows.every(Boolean), 'each fact label sits above its value').toBe(true);
+    expect(stacked.clocks, 'the two clocks stack').toBe(true);
+    expect(stacked.slotButton, 'the propose button sits under the slot').toBe(true);
   });
 
   test('the channel links and the copy button are touch targets on a phone', async ({ page }) => {

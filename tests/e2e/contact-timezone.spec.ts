@@ -205,6 +205,25 @@ test.describe('contact timezone panel, visitor in Berlin', () => {
     await expect(panel.getByRole('link', { name: FOCUS_LINK_LABEL })).toBeHidden();
   });
 
+  for (const viewport of [PHONE, DESKTOP]) {
+    test(`both pins stay on the map at ${viewport.width}`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      const panel = await openPanel(page);
+      const svg = await panel.getByRole('img', { name: /World map/ }).boundingBox();
+      for (const pin of ['ctz-pin-erik', 'ctz-pin-you']) {
+        const box = await panel.getByTestId(pin).boundingBox();
+        expect(box, pin).not.toBeNull();
+        expect(
+          (box?.y ?? 0) + (box?.height ?? 0),
+          `${pin} is above the map's bottom edge`,
+        ).toBeLessThanOrEqual((svg?.y ?? 0) + (svg?.height ?? 0) + 1);
+        expect(box?.y ?? 0, `${pin} is below the map's top edge`).toBeGreaterThanOrEqual(
+          (svg?.y ?? 0) - 1,
+        );
+      }
+    });
+  }
+
   for (const viewport of VIEWPORTS) {
     test(`no horizontal overflow at ${viewport.name}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });

@@ -501,6 +501,22 @@ describe('ContactTimezone link back to the message field', () => {
   });
 });
 
+describe('ContactTimezone pins and the map box', () => {
+  it('positions the pins against the land map alone, so stacked labels never shift them', () => {
+    renderAt(ONLINE_INSTANT);
+
+    const frame = testId('ctz-pin-erik').closest('.ctz-map-frame') as HTMLElement;
+
+    expect(frame, 'the pins live in a frame that wraps only the drawing').not.toBeNull();
+    expect(frame.querySelector('svg')).not.toBeNull();
+    expect(frame.querySelector('[data-testid="ctz-pin-you"]')).not.toBeNull();
+    expect(
+      frame.querySelector('.ctz-labels'),
+      'the labels sit outside the frame: below 24rem they flow under the map and would stretch it',
+    ).toBeNull();
+  });
+});
+
 describe('ContactTimezone reduced motion', () => {
   const stylesheet = parse(readComponentsCss());
   const ANIMATED = ['.ctz-pulse', '.ctz-route'];
