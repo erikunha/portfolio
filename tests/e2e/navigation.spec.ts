@@ -67,7 +67,7 @@ test.describe('navigation: menu trigger at 1280px', () => {
 
   test('the menu trigger is the icon alone and no rail reserves width', async ({ page }) => {
     await page.goto('/');
-    const trigger = page.locator('.desktop-topbar .index-trigger');
+    const trigger = page.locator('.desktop-topbar .menu-trigger');
     await expect(trigger).toHaveText('');
     await expect(trigger).toHaveAccessibleName('Open menu');
     const mainLeft = await page

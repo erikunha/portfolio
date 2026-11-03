@@ -116,14 +116,14 @@ describe('Dock', () => {
     ).toBe(false);
   });
 
-  it('announces the position in the Menu name and as a dialog trigger', () => {
+  it('names the Menu control by its visible label, with no position, and as a dialog trigger', () => {
     mount();
-    const menu = within(dock()).getByRole('button', { name: 'MENU, section 01/9' });
+    const menu = within(dock()).getByRole('button', { name: 'MENU' });
     expect(menu.getAttribute('aria-haspopup')).toBe('dialog');
     expect(menu.getAttribute('aria-controls')).not.toBeNull();
     expect(menu.getAttribute('aria-expanded')).toBe('false');
     reveal('sec-contact');
-    expect(within(dock()).getByRole('button', { name: 'MENU, section 09/9' })).not.toBeNull();
+    expect(within(dock()).getByRole('button', { name: 'MENU' })).toBe(menu);
   });
 
   it('points the Menu trigger at the drawer element it controls', () => {

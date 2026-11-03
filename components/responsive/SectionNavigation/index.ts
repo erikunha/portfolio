@@ -1,8 +1,8 @@
 export {
   DRAWER_ID,
-  IndexTrigger,
   jumpToSection,
   MENU_ICON_PATH,
+  MenuTrigger,
   SearchTrigger,
   SectionNavigation,
   SectionNavigationProvider,

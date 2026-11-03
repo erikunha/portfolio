@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  type DockKey,
-  dockKeyForSection,
-  formatSectionPosition,
-  NAVIGATION,
-  sectionHref,
-} from '@/content/navigation';
+import { type DockKey, dockKeyForSection, NAVIGATION, sectionHref } from '@/content/navigation';
 import { DRAWER_ID, MENU_ICON_PATH, useSectionNavigation } from '../SectionNavigation';
 
 const ICON_PATHS: Record<DockKey, string> = {
@@ -38,7 +32,6 @@ export function Dock() {
             <button
               key={key}
               type="button"
-              aria-label={`${NAVIGATION.copy.menuLabelPrefix} ${formatSectionPosition(currentId)}`}
               aria-haspopup="dialog"
               aria-expanded={drawerOpen}
               aria-controls={DRAWER_ID}

@@ -5,7 +5,7 @@ import { NAVIGATION } from '@/content/navigation';
 import { SECTION_REGISTRY } from '@/content/section-registry';
 import {
   DRAWER_ID,
-  IndexTrigger,
+  MenuTrigger,
   SectionNavigation,
   SectionNavigationProvider,
   useSectionNavigation,
@@ -84,14 +84,14 @@ function Trigger() {
 
 function Page({
   withHome = true,
-  withIndexTrigger = false,
+  withMenuTrigger = false,
 }: {
   withHome?: boolean;
-  withIndexTrigger?: boolean;
+  withMenuTrigger?: boolean;
 }) {
   return (
     <SectionNavigationProvider>
-      {withIndexTrigger ? <IndexTrigger /> : null}
+      {withMenuTrigger ? <MenuTrigger /> : null}
       <Trigger />
       <SectionNavigation />
       <main id="main-content" tabIndex={-1}>
@@ -104,10 +104,10 @@ function Page({
   );
 }
 
-function IndexPage() {
+function MenuPage() {
   return (
     <SectionNavigationProvider>
-      <IndexTrigger />
+      <MenuTrigger />
       <SectionNavigation />
       <main id="main-content" tabIndex={-1}>
         {SECTION_REGISTRY.map(({ id }) => (
@@ -423,7 +423,7 @@ describe('SectionNavigation', () => {
     });
 
     it('returns focus to a rendered menu trigger when the trigger that opened the drawer is gone', () => {
-      render(<Page withIndexTrigger />);
+      render(<Page withMenuTrigger />);
       const trigger = screen.getByTestId('trigger');
       trigger.focus();
       fireEvent.click(trigger);
@@ -438,7 +438,7 @@ describe('SectionNavigation', () => {
     });
 
     it('returns focus to the menu trigger when the drawer was opened from the keyboard shortcut', () => {
-      render(<Page withIndexTrigger />);
+      render(<Page withMenuTrigger />);
       fireEvent.keyDown(document, { key: 'k', metaKey: true });
       expect(panel().classList.contains('is-open')).toBe(true);
 
@@ -541,13 +541,13 @@ describe('SectionNavigation', () => {
   });
 
   describe('menu trigger', () => {
-    function indexButton() {
+    function menuButton() {
       return screen.getByRole('button', { name: NAVIGATION.copy.openMenu });
     }
 
     it('names the drawer it controls and reports it closed', () => {
-      render(<IndexPage />);
-      const button = indexButton();
+      render(<MenuPage />);
+      const button = menuButton();
       expect(button.getAttribute('aria-expanded'), 'trigger must report closed state').toBe(
         'false',
       );
@@ -556,16 +556,16 @@ describe('SectionNavigation', () => {
     });
 
     it('is the menu icon alone: no INDEX label and no position counter', () => {
-      render(<IndexPage />);
-      const button = indexButton();
+      render(<MenuPage />);
+      const button = menuButton();
       expect(button.textContent, 'the trigger carries no visible text').toBe('');
-      expect(button.querySelector('.index-trigger-pos')).toBeNull();
+      expect(button.querySelector('.menu-trigger-pos')).toBeNull();
       expect(button.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
     });
 
     it('keeps one accessible name while the drawer is open and closed', () => {
-      render(<IndexPage />);
-      const button = indexButton();
+      render(<MenuPage />);
+      const button = menuButton();
       expect(button.getAttribute('aria-label')).toBe(NAVIGATION.copy.openMenu);
       fireEvent.click(button);
       expect(button.getAttribute('aria-label')).toBe(NAVIGATION.copy.openMenu);
@@ -573,8 +573,8 @@ describe('SectionNavigation', () => {
     });
 
     it('opens the modal drawer, focuses the current item and returns focus on Escape', () => {
-      render(<IndexPage />);
-      const button = indexButton();
+      render(<MenuPage />);
+      const button = menuButton();
       fireEvent.click(button);
       expect(button.getAttribute('aria-expanded')).toBe('true');
       expect(panel().getAttribute('aria-modal')).toBe('true');
@@ -588,7 +588,7 @@ describe('SectionNavigation', () => {
     });
 
     it('renders no rail toggle: the drawer opens only from a trigger', () => {
-      render(<IndexPage />);
+      render(<MenuPage />);
       expect(screen.queryByRole('button', { name: 'Open section menu' })).toBeNull();
       expect(panel().classList.contains('is-open')).toBe(false);
     });

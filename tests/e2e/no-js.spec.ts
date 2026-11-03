@@ -55,4 +55,13 @@ test.describe('home with JavaScript off', () => {
       'the menu opens only from the menu button',
     ).toBeHidden();
   });
+
+  test('the server-rendered menu trigger is the icon alone, named Open menu', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto('/');
+    const trigger = page.locator('.desktop-topbar .menu-trigger');
+    await expect(trigger).toHaveAccessibleName('Open menu');
+    await expect(trigger).toHaveText('');
+    await expect(page.locator('.desktop-topbar')).not.toContainText('INDEX');
+  });
 });

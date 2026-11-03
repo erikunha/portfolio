@@ -10,12 +10,7 @@ import { Hero } from '@/components/sections/Hero';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { ShellSection } from '@/components/sections/ShellSection';
-import {
-  dockKeyForSection,
-  formatSectionPosition,
-  HOME_SECTION_ID,
-  NAVIGATION,
-} from './navigation';
+import { dockKeyForSection, HOME_SECTION_ID, NAVIGATION } from './navigation';
 import { createNavigationSchema, SectionRegistrySchema } from './schemas';
 import { SECTION_LABELS } from './section-labels';
 import { getSectionByAlias, getSectionById, SECTION_REGISTRY } from './section-registry';
@@ -190,13 +185,6 @@ describe('navigation content', () => {
       'menu',
     ]);
     expect(dockKeyForSection('unknown')).toBeUndefined();
-  });
-
-  it('formats the position as a zero padded index over the registry size', () => {
-    expect(formatSectionPosition('bio')).toBe('01/9');
-    expect(formatSectionPosition('sec-shell')).toBe('05/9');
-    expect(formatSectionPosition('sec-contact')).toBe('09/9');
-    expect(formatSectionPosition('unknown')).toBe('01/9');
   });
 
   it('names the menu trigger by its action and keeps the removed label out of the copy', () => {

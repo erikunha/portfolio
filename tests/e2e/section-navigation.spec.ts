@@ -101,7 +101,7 @@ for (const width of TOPBAR_WIDTHS) {
         const badge = [...element.querySelectorAll('span')].find(
           (node) => node.textContent === label,
         );
-        const index = element.querySelector('.index-trigger');
+        const index = element.querySelector('.menu-trigger');
         const badgeBox = badge?.getBoundingClientRect();
         const indexBox = index?.getBoundingClientRect();
         return {
@@ -384,7 +384,7 @@ test.describe('section navigation: drawer across a viewport change', () => {
     await page.keyboard.press('Escape');
     await expect(drawer).toBeHidden();
     await expect(
-      page.locator('.desktop-topbar .index-trigger'),
+      page.locator('.desktop-topbar .menu-trigger'),
       'focus must return to the menu trigger that is rendered after the viewport change: the ' +
         'trigger that opened the drawer is inside the dock, which is hidden from 1024px',
     ).toBeFocused();
@@ -430,9 +430,15 @@ for (const { width, height } of [
       await expect(bar).toHaveCSS('pointer-events', 'none');
     });
 
+    test('the position line does not print', async ({ page }) => {
+      await page.goto('/');
+      await page.emulateMedia({ media: 'print' });
+      await expect(page.getByRole('progressbar', { name: 'Page position' })).toBeHidden();
+    });
+
     test('the trigger carries no position counter', async ({ page }) => {
       await page.goto('/');
-      await expect(page.locator('.index-trigger').locator('visible=true')).toHaveText('');
+      await expect(page.locator('.menu-trigger').locator('visible=true')).toHaveText('');
     });
   });
 }

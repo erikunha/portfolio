@@ -96,7 +96,6 @@ const NavigationCopySchema = z.object({
   closeDrawer: NavTextSchema,
   dockLabel: NavTextSchema,
   positionLabel: NavTextSchema,
-  menuLabelPrefix: NavTextSchema,
   searchLabel: NavTextSchema,
   searchShortcutApple: NavTextSchema,
   searchShortcutOther: NavTextSchema,
