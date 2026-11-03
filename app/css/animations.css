@@ -385,6 +385,32 @@
     animation: none;
     display: none;
   }
+
+  @keyframes eq-bounce {
+    0%,
+    100% {
+      transform: scaleY(var(--eq-level-floor));
+    }
+    25% {
+      transform: scaleY(var(--eq-level-peak));
+    }
+    50% {
+      transform: scaleY(var(--eq-level-mid));
+    }
+    75% {
+      transform: scaleY(var(--eq-level-high));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce), print {
+    .eq-bar {
+      animation: none;
+    }
+  }
+
+  body[data-motion="reduce"] .eq-bar {
+    animation: none;
+  }
 }
 
 @property --type-progress {

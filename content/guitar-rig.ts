@@ -9,31 +9,34 @@ export const GUITAR_MODULE_HEADER = 'CAT ~/.GUITAR_RIG + ./MIX --LIVE';
 export const GUITAR_MODULE_MOBILE_HEADER = 'GUITAR_RIG + MIX';
 
 export const guitarRig: GuitarRig = GuitarRigSchema.parse({
-  signalChain: [
-    {
-      role: 'INPUT',
-      name: 'GRETSCH G5655TG',
-      subtitle: 'Bigsby · hollow body',
-      strengthDots: 4,
+  eqSpectrum: {
+    label: 'LEAD · Gretsch G5655TG → HX Stomp XL → IR cab → FOH',
+    ariaLabel: {
+      prefix: 'Live spectrum of the lead guitar under its EQ curve',
+      highpass: 'high-pass at {freq}',
+      lowpass: 'low-pass at {freq}',
+      boost: '{gain} dB boost at {freq}',
+      cut: '{gain} dB cut at {freq}',
     },
-    {
-      role: 'FX',
-      name: 'LINE 6 HX STOMP XL',
-      subtitle: '8 blocks loaded',
-    },
-    {
-      role: 'AMP',
-      name: 'MODELED CAB',
-      subtitle: 'no tube · IR sim',
-      strengthDots: 3,
-    },
-    {
-      role: 'OUT',
-      name: 'FOH / IEM',
-      subtitle: 'XLR stereo · in-ear',
-      strengthDots: 5,
-    },
-  ],
+    bpm: 87,
+    barCount: 72,
+    freqRange: { minHz: 80, maxHz: 16000 },
+    bands: [
+      { kind: 'highpass', freqHz: 140 },
+      { kind: 'peak', freqHz: 400, gainDb: -3 },
+      { kind: 'peak', freqHz: 2800, gainDb: 5 },
+      { kind: 'lowpass', freqHz: 9000 },
+    ],
+    axis: [
+      { freqHz: 80, label: '80' },
+      { freqHz: 200, label: '200' },
+      { freqHz: 500, label: '500' },
+      { freqHz: 1000, label: '1k' },
+      { freqHz: 3000, label: '3k' },
+      { freqHz: 8000, label: '8k' },
+      { freqHz: 16000, label: '16k' },
+    ],
+  },
   influences: [
     { name: 'John Mayer' },
     { name: 'Mateus Asato' },
@@ -55,19 +58,12 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
   },
 });
 
-const [guitarInput, , guitarAmp, guitarOutput] = guitarRig.signalChain;
-
 export const guitarPresentation: GuitarPresentation = GuitarPresentationSchema.parse({
-  signalStrengthLabelTemplate: '{n} of {total}',
   signalStrip: {
     live: '● SIGNAL_CHAIN.LIVE · SIGNAL OK',
     tail: 'TAIL -F ~/.RIG',
   },
-  signalChain: [
-    { ...guitarInput, label: '// INPUT' },
-    { ...guitarAmp, label: '// AMP' },
-    { ...guitarOutput, label: '// OUT' },
-  ],
+  eqSpectrum: guitarRig.eqSpectrum,
   influences: {
     label: 'INFLUENCES',
     text: guitarRig.influences.map(({ name }) => name).join(' · '),

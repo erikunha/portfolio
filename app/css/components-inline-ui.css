@@ -114,8 +114,4 @@
     border-top: 0;
     top: auto;
   }
-
-  .signal-chain-arrow::before {
-    content: "\2500\2500\25b6";
-  }
 }
