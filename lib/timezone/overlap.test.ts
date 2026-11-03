@@ -39,6 +39,19 @@ describe('computeOverlap', () => {
     expect(cells.both).toHaveLength(HOURS);
   });
 
+  it('never lands on the midpoint: a visitor two hours behind gets the first shared half hour', () => {
+    const overlap = computeOverlap('America/Bogota', JANUARY);
+
+    expect(overlap.bestSlot?.you, 'the midpoint 12:30 you read as a bug').not.toBe('12:30');
+    expect(overlap.bestSlot).toEqual({ you: '09:00', erik: '11:00' });
+  });
+
+  it('opens the best slot at the top of Erik window when the visitor shares his zone', () => {
+    const overlap = computeOverlap(ERIK_TIME_ZONE, JANUARY);
+
+    expect(overlap.bestSlot).toEqual({ you: '10:00', erik: '10:00' });
+  });
+
   it('marks the visitor working hours in the you row', () => {
     expect(litHours(computeOverlap('Europe/Berlin', JANUARY).cells.you)).toEqual(hoursRange(9, 17));
   });
