@@ -12,7 +12,7 @@ const CLOCKS_ONE_ROW = /min-width: 900px/;
 const GOLDEN_RATIO = 1.618;
 const GOLDEN_TOLERANCE = 0.001;
 const FLEX_COLUMN = 'column';
-const PHI_SPACING = /^var\(--space-phi-\d\)$/;
+const PHI_SPACING = /^var\(--phi-space-\d\)$/;
 
 function containerRules(root: Root, params: RegExp, selector: string) {
   const found: Array<ReturnType<typeof rulesWithSelector>[number]> = [];

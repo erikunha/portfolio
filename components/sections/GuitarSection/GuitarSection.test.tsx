@@ -11,49 +11,69 @@ async function renderContent(): Promise<Document> {
 }
 
 describe('GuitarSection presentation', () => {
-  it('renders exactly INPUT, AMP and OUT in signal order without the FX tuple', async () => {
+  it('replaces the signal chain cards with one EQ spectrum strip', async () => {
     const doc = await renderContent();
-    const nodes = Array.from(doc.querySelectorAll('[data-testid^="signal-node-"]'));
-    expect(nodes.map((node) => node.getAttribute('data-testid'))).toEqual([
-      'signal-node-INPUT',
-      'signal-node-AMP',
-      'signal-node-OUT',
-    ]);
-    for (const node of guitarPresentation.signalChain) {
-      const displayed = doc.querySelector(`[data-testid="signal-node-${node.role}"]`);
-      expect(displayed?.textContent).toContain(node.name);
-      expect(displayed?.textContent).toContain(node.subtitle);
-    }
-    expect(doc.body.textContent).not.toContain(guitarRig.signalChain[1].name);
-    expect(doc.querySelector('[data-testid="fx-list"]')).toBeNull();
-    expect(doc.querySelector('[data-testid="signal-node-FX"]')).toBeNull();
-    expect(doc.querySelector('[data-testid="fx-bullet"]')).toBeNull();
+    expect(doc.querySelectorAll('[data-testid="eq-spectrum"]')).toHaveLength(1);
+    expect(doc.querySelector('[data-testid^="signal-node-"]')).toBeNull();
+    expect(doc.querySelector('.guitar-chain')).toBeNull();
+    expect(doc.body.textContent).not.toContain('MODELED CAB');
   });
 
-  it('exposes each node signal strength as a named image matching the visible bars', async () => {
+  it('shows the gear chain label as visible text', async () => {
     const doc = await renderContent();
-    const expectedNames = ['4 of 8', '3 of 8', '5 of 8'];
-    expect(doc.querySelectorAll('.guitar-bars')).toHaveLength(expectedNames.length);
-    for (const [index, node] of guitarPresentation.signalChain.entries()) {
-      const displayed = doc.querySelector(`[data-testid="signal-node-${node.role}"]`);
-      expect(displayed).not.toBeNull();
-      if (!displayed) throw new Error(`Missing signal node ${node.role}`);
-      const bars = displayed.querySelector('.guitar-bars[role="img"]');
-      if (!bars) throw new Error(`Missing named bars for ${node.role}`);
-      expect(bars.getAttribute('aria-label')).toBe(expectedNames[index]);
-      expect(bars.getAttribute('aria-hidden')).toBeNull();
-      expect(bars.querySelectorAll('.guitar-bar')).toHaveLength(8);
-      expect(bars.querySelectorAll('[data-filled="true"]')).toHaveLength(node.strengthDots);
-    }
+    const label = doc.querySelector('[data-testid="eq-spectrum"] .eq-label');
+    expect(label?.textContent).toBe(guitarRig.eqSpectrum.label);
   });
 
-  it('reads influences, Now Playing, stats and photo after the signal flow', async () => {
+  it('names the plot as one image with the EQ bands in its accessible name', async () => {
     const doc = await renderContent();
-    const prose = doc.querySelector('p');
-    expect(prose?.textContent).toContain(guitarPresentation.influences.label);
-    expect(prose?.textContent).toContain(guitarPresentation.influences.text);
-    expect(prose?.textContent).toContain(guitarPresentation.nowPlaying.label);
-    expect(prose?.textContent).toContain(guitarPresentation.nowPlaying.text);
+    const plot = doc.querySelector('[data-testid="eq-spectrum"] [role="img"]');
+    expect(plot).not.toBeNull();
+    const name = plot?.getAttribute('aria-label') ?? '';
+    expect(name).toContain(guitarRig.eqSpectrum.ariaLabel.prefix);
+    expect(name).toContain('140 Hz');
+    expect(name).toContain('2.8 kHz');
+    expect(plot?.getAttribute('aria-hidden')).toBeNull();
+  });
+
+  it('draws every bar, the grid, the curve and the axis without scripts', async () => {
+    const doc = await renderContent();
+    const strip = doc.querySelector('[data-testid="eq-spectrum"]');
+    expect(strip?.querySelectorAll('.eq-bar')).toHaveLength(guitarRig.eqSpectrum.barCount);
+    expect(strip?.querySelector('.eq-bars')?.getAttribute('aria-hidden')).toBe('true');
+    expect(strip?.querySelector('.eq-curve path')?.getAttribute('d')).toMatch(/^M/);
+    expect(strip?.querySelector('.eq-grid path')?.getAttribute('d')).toMatch(/^M/);
+    expect(
+      Array.from(strip?.querySelectorAll('.eq-axis-tick') ?? [], (tick) => tick.textContent),
+    ).toEqual(guitarRig.eqSpectrum.axis.map((tick) => tick.label));
+    expect(strip?.querySelector('.eq-axis')?.getAttribute('aria-hidden')).toBe('true');
+    expect(strip?.querySelector('script')).toBeNull();
+  });
+
+  it('gives each bar its own height and groove timing through custom properties', async () => {
+    const doc = await renderContent();
+    const bars = Array.from(doc.querySelectorAll<HTMLElement>('.eq-bar'));
+    for (const bar of bars) {
+      expect(bar.style.getPropertyValue('--eq-bar-height')).toMatch(/^[\d.]+%$/);
+      expect(bar.style.getPropertyValue('--eq-bar-delay')).toMatch(/^[\d.]+s$/);
+      expect(Number(bar.style.getPropertyValue('--eq-bar-cycle'))).toBeGreaterThanOrEqual(1);
+    }
+    const heights = new Set(bars.map((bar) => bar.style.getPropertyValue('--eq-bar-height')));
+    expect(heights.size).toBeGreaterThan(10);
+  });
+
+  it('keeps ids out of the markup so the strip can render twice', async () => {
+    const doc = await renderContent();
+    expect(doc.querySelector('[data-testid="eq-spectrum"] [id]')).toBeNull();
+  });
+
+  it('reads the strip, then the mixer beside the photo, then the facts row', async () => {
+    const doc = await renderContent();
+    const influences = doc.querySelector('[data-testid="influences"]');
+    expect(influences?.textContent).toContain(guitarPresentation.influences.label);
+    expect(influences?.textContent).toContain(guitarPresentation.influences.text);
+    expect(influences?.textContent).toContain(guitarPresentation.nowPlaying.label);
+    expect(influences?.textContent).toContain(guitarPresentation.nowPlaying.text);
     const stats = Array.from(doc.querySelectorAll('[data-testid^="stat-"]'));
     expect(stats).toHaveLength(guitarPresentation.stats.length);
     for (const [index, stat] of guitarPresentation.stats.entries()) {
@@ -62,14 +82,28 @@ describe('GuitarSection presentation', () => {
       expect(stats[index]?.textContent).toContain(stat.sub);
     }
     const ordered = Array.from(
-      doc.querySelectorAll('[data-testid^="signal-node-"], p, [data-testid^="stat-"], img'),
+      doc.querySelectorAll(
+        '[data-testid="eq-spectrum"], [data-testid="daw-mixer-desktop"], img, [data-testid^="stat-"], [data-testid="influences"]',
+      ),
     );
     expect(ordered).toEqual([
-      ...doc.querySelectorAll('[data-testid^="signal-node-"]'),
-      prose,
-      ...stats,
+      doc.querySelector('[data-testid="eq-spectrum"]'),
+      doc.querySelector('[data-testid="daw-mixer-desktop"]'),
       doc.querySelector('img'),
+      ...stats,
+      influences,
     ]);
+  });
+
+  it('puts the mixer and the photo in one pair and the facts after it', async () => {
+    const doc = await renderContent();
+    const pair = doc.querySelector('.guitar-pair');
+    expect(Array.from(pair?.children ?? [], (child) => child.className)).toEqual([
+      'guitar-mixer',
+      'guitar-photo',
+    ]);
+    expect(pair?.querySelector('[data-testid="daw-mixer-desktop"]')).not.toBeNull();
+    expect(pair?.nextElementSibling?.className).toBe('guitar-facts');
   });
 
   it('delivers the photo through Next Image with meaningful alt and reserved dimensions', async () => {
@@ -84,15 +118,13 @@ describe('GuitarSection presentation', () => {
     expect(doc.body.textContent).toContain(guitarRig.liveCam.caption);
   });
 
-  it('exposes a readable section heading and descriptive node headings', async () => {
+  it('exposes a readable section heading and no per-node headings', () => {
     const html = renderToStaticMarkup(createElement(GuitarSection));
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const section = doc.querySelector('section');
     const heading = doc.getElementById(section?.getAttribute('aria-labelledby') ?? '');
     expect(heading?.textContent).toContain(SECTION_LABELS['sec-guitar']);
-    expect(Array.from(doc.querySelectorAll('h3'), (node) => node.textContent)).toEqual(
-      guitarPresentation.signalChain.map((node) => node.name),
-    );
+    expect(doc.querySelector('#sec-guitar .guitar-presentation h3')).toBeNull();
   });
 
   it('shows the section name and the terminal command in the header', () => {
@@ -103,22 +135,13 @@ describe('GuitarSection presentation', () => {
     expect(heading?.querySelector('.module-name')?.textContent).toBe(SECTION_LABELS['sec-guitar']);
   });
 
-  it('renders the live signal chain strip above the chain', async () => {
+  it('renders the live signal chain strip above the EQ strip', async () => {
     const doc = await renderContent();
     const strip = doc.querySelector('.guitar-signal-strip');
     expect(strip?.textContent).toContain(guitarPresentation.signalStrip.live);
     expect(strip?.textContent).toContain(guitarPresentation.signalStrip.tail);
-  });
-
-  it('labels every chain node with its role prefix', async () => {
-    const doc = await renderContent();
-    for (const node of guitarPresentation.signalChain) {
-      const displayed = doc.querySelector(`[data-testid="signal-node-${node.role}"]`);
-      expect(displayed?.querySelector('.guitar-label')?.textContent).toBe(node.label);
-    }
-    expect(
-      Array.from(doc.querySelectorAll('.guitar-node .guitar-label'), (label) => label.textContent),
-    ).toEqual(['// INPUT', '// AMP', '// OUT']);
+    const eq = doc.querySelector('[data-testid="eq-spectrum"]');
+    expect(strip?.compareDocumentPosition(eq as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   it('keeps the mixer inside the guitar and mixer module', () => {
@@ -131,8 +154,8 @@ describe('GuitarSection presentation', () => {
     expect(doc.querySelectorAll('section#sec-daw-mixer')).toHaveLength(0);
   });
 
-  it('sizes the photo for a full-width source up to 767px', async () => {
+  it('sizes the photo for full width up to 1023px and the 1:1.618 share above it', async () => {
     const doc = await renderContent();
-    expect(doc.querySelector('img')?.getAttribute('sizes')).toBe('(max-width: 767px) 100vw, 320px');
+    expect(doc.querySelector('img')?.getAttribute('sizes')).toBe('(max-width: 1023px) 100vw, 38vw');
   });
 });

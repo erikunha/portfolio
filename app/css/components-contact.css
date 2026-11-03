@@ -13,14 +13,14 @@
 
   .contact-layout {
     display: grid;
-    gap: var(--space-phi-3);
+    gap: var(--phi-space-3);
     align-items: start;
   }
 
   .contact-main {
     display: flex;
     flex-direction: column;
-    gap: var(--space-phi-3);
+    gap: var(--phi-space-3);
     min-width: 0;
   }
 
@@ -276,7 +276,7 @@
   .ctz {
     display: flex;
     flex-direction: column;
-    gap: var(--space-phi-2);
+    gap: var(--phi-space-2);
     min-width: 0;
     min-height: var(--ctz-min-height, 0);
     font-family: var(--font-mono);
@@ -709,7 +709,7 @@
 
   .contact-reach {
     display: grid;
-    gap: var(--space-phi-2);
+    gap: var(--phi-space-2);
   }
 
   @keyframes ctz-pulse {

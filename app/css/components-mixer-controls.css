@@ -136,6 +136,17 @@
     }
   }
 
+  @media (pointer: coarse) {
+    .rms-buttons {
+      gap: var(--spacing-2);
+    }
+
+    .rms-buttons > button {
+      min-width: var(--spacing-target);
+      min-height: var(--spacing-target);
+    }
+  }
+
   :where(.mx-grid) .faderThumb {
     top: 50%;
     transform: translateY(-50%);

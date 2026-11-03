@@ -1,35 +1,23 @@
 import Image from 'next/image';
-import { Fragment } from 'react';
 import {
   GUITAR_MODULE_HEADER,
   GUITAR_MODULE_MOBILE_HEADER,
   guitarPresentation,
   guitarRig,
 } from '@/content/guitar-rig';
-import { GUITAR_SIGNAL_BAR_COUNT, GUITAR_SIGNAL_LABEL_TOKENS } from '@/content/schemas';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { IconGuitar } from '../../Icons';
 import { Module } from '../../responsive/Module';
 import { DawMixerContent } from '../DawMixerSection';
+import { EqSpectrumStrip } from './EqSpectrumStrip';
 
-const SIGNAL_BARS = Array.from({ length: GUITAR_SIGNAL_BAR_COUNT }, (_, position) => ({
-  position,
-}));
-const FIRST_NODE_INDEX = 0;
 const SECTION_ID = 'sec-guitar';
-const STACKED_MAX_WIDTH_PX = 767;
-const PHOTO_SIZES = `(max-width: ${STACKED_MAX_WIDTH_PX}px) 100vw, 320px`;
+const STACKED_MAX_WIDTH_PX = 1023;
+const PHOTO_VIEWPORT_SHARE_VW = 38;
+const PHOTO_SIZES = `(max-width: ${STACKED_MAX_WIDTH_PX}px) 100vw, ${PHOTO_VIEWPORT_SHARE_VW}vw`;
 
 export function GuitarContent() {
-  const {
-    signalChain,
-    signalStrip,
-    signalStrengthLabelTemplate,
-    influences,
-    nowPlaying,
-    stats,
-    photo,
-  } = guitarPresentation;
+  const { signalStrip, eqSpectrum, influences, nowPlaying, stats, photo } = guitarPresentation;
   const { liveCam } = guitarRig;
   return (
     <div className="guitar-presentation">
@@ -38,56 +26,11 @@ export function GuitarContent() {
           <span className="guitar-signal-strip-live">{signalStrip.live}</span>
           <span className="guitar-signal-strip-tail">{signalStrip.tail}</span>
         </div>
-        <div className="guitar-chain max-md:grid-cols-1">
-          {signalChain.map((node, index) => (
-            <Fragment key={node.role}>
-              {index > FIRST_NODE_INDEX && (
-                <span
-                  className="signal-chain-arrow guitar-arrow min-guitar:max-md:rotate-90"
-                  aria-hidden="true"
-                />
-              )}
-              <div className="guitar-node" data-testid={`signal-node-${node.role}`}>
-                <div className="guitar-label">{node.label}</div>
-                <h3 className="guitar-node-heading" data-type-reveal>
-                  {node.name}
-                </h3>
-                <div className="guitar-node-subtitle">{node.subtitle}</div>
-                <div
-                  className="guitar-bars"
-                  role="img"
-                  aria-label={signalStrengthLabelTemplate
-                    .replace(GUITAR_SIGNAL_LABEL_TOKENS.strength, String(node.strengthDots))
-                    .replace(GUITAR_SIGNAL_LABEL_TOKENS.total, String(GUITAR_SIGNAL_BAR_COUNT))}
-                >
-                  {SIGNAL_BARS.map(({ position }) => (
-                    <span
-                      key={position}
-                      className="guitar-bar"
-                      data-filled={position < node.strengthDots}
-                    />
-                  ))}
-                </div>
-              </div>
-            </Fragment>
-          ))}
-        </div>
+        <EqSpectrumStrip spectrum={eqSpectrum} />
       </div>
-      <div className="guitar-pair max-md:grid-cols-1">
-        <div className="guitar-details">
-          <p className="guitar-influences">
-            <strong>{influences.label}</strong> {influences.text}{' '}
-            <strong>{nowPlaying.label}</strong> {nowPlaying.text}
-          </p>
-          <div className="guitar-stats max-md:grid-cols-1">
-            {stats.map((stat) => (
-              <div className="guitar-stat" key={stat.label} data-testid={`stat-${stat.label}`}>
-                <div className="guitar-label">{stat.label}</div>
-                <div className="guitar-stat-value">{stat.value}</div>
-                <div>{stat.sub}</div>
-              </div>
-            ))}
-          </div>
+      <div className="guitar-pair">
+        <div className="guitar-mixer">
+          <DawMixerContent />
         </div>
         <figure className="guitar-photo">
           <div className="guitar-camera-labels">
@@ -106,8 +49,21 @@ export function GuitarContent() {
           <figcaption className="guitar-camera-caption">{liveCam.caption}</figcaption>
         </figure>
       </div>
-      <div className="guitar-mixer">
-        <DawMixerContent />
+      <div className="guitar-facts">
+        {stats.map((stat) => (
+          <div className="guitar-stat" key={stat.label} data-testid={`stat-${stat.label}`}>
+            <div className="guitar-label">{stat.label}</div>
+            <div className="guitar-stat-value">{stat.value}</div>
+            <div>{stat.sub}</div>
+          </div>
+        ))}
+        <div className="guitar-stat guitar-influences" data-testid="influences">
+          <div className="guitar-label">{influences.label}</div>
+          <div>{influences.text}</div>
+          <div>
+            <strong>{nowPlaying.label}</strong> {nowPlaying.text}
+          </div>
+        </div>
       </div>
     </div>
   );
