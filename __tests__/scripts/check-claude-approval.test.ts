@@ -9,26 +9,50 @@ const HEAD = 'bb390ab172aee6735d4c5200a92be6513dbb8767';
 
 describe('evaluateGate (fail-closed merge decision)', () => {
   it('passes only an Approve whose reviewed SHA is a prefix of HEAD', () => {
-    expect(evaluateGate('approve', HEAD, HEAD).ok).toBe(true);
-    expect(evaluateGate('approve', HEAD.slice(0, 7), HEAD).ok).toBe(true);
+    expect(evaluateGate('approve', HEAD, HEAD, []).ok).toBe(true);
+    expect(evaluateGate('approve', HEAD.slice(0, 7), HEAD, []).ok).toBe(true);
   });
 
   it('FAILS an Approve that states no head SHA (cannot confirm it is on HEAD)', () => {
-    const r = evaluateGate('approve', null, HEAD);
+    const r = evaluateGate('approve', null, HEAD, []);
     expect(r.ok).toBe(false);
     expect(r.reason).toMatch(/no head SHA/i);
   });
 
   it('FAILS a stale Approve (reviewed SHA not a prefix of HEAD)', () => {
-    const r = evaluateGate('approve', 'deadbee', HEAD);
+    const r = evaluateGate('approve', 'deadbee', HEAD, ['src/app/page.tsx']);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/STALE/);
+  });
+
+  it('carries an Approve when the commits since the reviewed SHA only touch visual baseline PNGs', () => {
+    const r = evaluateGate('approve', '0563abe', HEAD, [
+      'tests/visual/visual.spec.ts-snapshots/home-linux.png',
+      'tests/e2e/design-system-components.spec.ts-snapshots/ds-chromium.png',
+    ]);
+    expect(r.ok).toBe(true);
+    expect(r.reason).toMatch(/carried: baseline-only commits/);
+  });
+
+  it('FAILS a stale Approve when any non-baseline file changed since the reviewed SHA', () => {
+    const r = evaluateGate('approve', '0563abe', HEAD, [
+      'tests/visual/visual.spec.ts-snapshots/home-linux.png',
+      'src/app/page.tsx',
+    ]);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/STALE/);
+  });
+
+  it('FAILS a stale Approve when the diff since the reviewed SHA is empty (unknown ancestry)', () => {
+    const r = evaluateGate('approve', '0563abe', HEAD, []);
     expect(r.ok).toBe(false);
     expect(r.reason).toMatch(/STALE/);
   });
 
   it('FAILS reject, request-changes, and no-verdict', () => {
-    expect(evaluateGate('reject', HEAD, HEAD).ok).toBe(false);
-    expect(evaluateGate('request-changes', HEAD, HEAD).ok).toBe(false);
-    expect(evaluateGate('none', null, HEAD).ok).toBe(false);
+    expect(evaluateGate('reject', HEAD, HEAD, []).ok).toBe(false);
+    expect(evaluateGate('request-changes', HEAD, HEAD, []).ok).toBe(false);
+    expect(evaluateGate('none', null, HEAD, []).ok).toBe(false);
   });
 });
 
