@@ -83,6 +83,28 @@ export function parseFeed(xml: string, limit = Number.POSITIVE_INFINITY): FeedVi
   return videos;
 }
 
+const SHORTS_PATH = '/shorts/';
+const SHORT_MAX_SECONDS = 60;
+const SECONDS_PER_MINUTE = 60;
+
+export function durationSeconds(formatted: string): number | null {
+  const parts = formatted.split(':').map(Number);
+  if (parts.length < 2 || parts.length > 3 || parts.some((part) => !Number.isFinite(part))) {
+    return null;
+  }
+  return parts.reduce((total, part) => total * SECONDS_PER_MINUTE + part, 0);
+}
+
+export function isShortUrl(video: FeedVideo): boolean {
+  return video.url.includes(SHORTS_PATH);
+}
+
+export function isShort(video: EnrichedVideo): boolean {
+  if (isShortUrl(video)) return true;
+  const seconds = video.duration === undefined ? null : durationSeconds(video.duration);
+  return seconds !== null && seconds <= SHORT_MAX_SECONDS;
+}
+
 export function parseIsoDuration(iso: string): string | null {
   const match = ISO_DURATION_RE.exec(iso);
   if (!match) return null;

@@ -29,6 +29,7 @@ const PAGES = [
   { path: '/summary', container: 'main.reading-doc' },
   { path: '/cv', container: 'main.reading-doc' },
   { path: '/links', container: '.page-container' },
+  { path: '/design-system', container: '.page-container' },
   { path: '/this-route-does-not-exist', container: 'main.err-main' },
 ];
 
@@ -44,6 +45,7 @@ const tokenPx = (page: Page, expression: string) =>
     return resolved;
   }, expression);
 
+const CLEARS_TOPBAR_PATHS = ['/', '/links', '/design-system'];
 const HOME_TOP_EXPRESSION = 'calc(var(--topbar-height) + var(--spacing-6))';
 
 test.describe('layout tokens', () => {
@@ -55,7 +57,9 @@ test.describe('layout tokens', () => {
       expect(await paddingTop(page, container)).toBe(PAGE_TOP_PHONE);
 
       await page.setViewportSize({ width: 768, height: 1024 });
-      const expected = path === '/' ? await tokenPx(page, HOME_TOP_EXPRESSION) : PAGE_TOP_TABLET;
+      const expected = CLEARS_TOPBAR_PATHS.includes(path)
+        ? await tokenPx(page, HOME_TOP_EXPRESSION)
+        : PAGE_TOP_TABLET;
       expect(await paddingTop(page, container)).toBe(expected);
     });
   }
@@ -66,10 +70,12 @@ test.describe('layout tokens', () => {
     expect(await paddingTop(page, '#main-content')).toBe(await tokenPx(page, HOME_TOP_EXPRESSION));
   });
 
-  test('design-system sidebar clears the fixed topbar at 768', async ({ page }) => {
+  test('design-system layout clears the fixed topbar by the spacing token at 768', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.goto('/design-system');
-    expect(await paddingTop(page, '.ds-sidebar')).toBe(PAGE_TOP_TABLET);
+    expect(await paddingTop(page, '.ds-layout')).toBe(await tokenPx(page, HOME_TOP_EXPRESSION));
   });
 
   for (const path of ['/', '/summary', '/links']) {

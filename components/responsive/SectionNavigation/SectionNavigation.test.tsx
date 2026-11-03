@@ -321,12 +321,13 @@ describe('SectionNavigation', () => {
     expect(hrefs).toEqual([
       '/cv',
       '/summary',
+      '/links',
       '/design-system',
       'https://www.linkedin.com/in/erikunha/',
     ]);
     expect(
       [...foot.querySelectorAll('a')].map((link) => link.querySelector('.nav-label')?.textContent),
-    ).toEqual(['VIEW_CV', '30S_SUMMARY', 'DESIGN_SYSTEM', 'LinkedIn']);
+    ).toEqual(['VIEW_CV', '30S_SUMMARY', 'LINKS', 'DESIGN_SYSTEM', 'LinkedIn']);
   });
 
   it('counts the destinations in the drawer head', () => {

@@ -1,4 +1,3 @@
-import { BrandLink } from '@/components/BrandLink';
 import { linksContent } from '@/content/links';
 import { LINKS_LOCALE, LINKS_PATH, type LinksLocale } from '@/content/links.constants';
 import { Button } from '@/design-system';
@@ -12,11 +11,8 @@ export function ChromeBar({ locale }: { locale: LinksLocale }) {
   const { copy, shellTitle } = linksContent;
 
   return (
-    <div className="links-chrome flex gap-2 items-center pt-4">
-      <BrandLink />
-      <span className="ml-2 flex-1 text-primary-400 text-xs tracking-[0.14em] uppercase">
-        {shellTitle}
-      </span>
+    <div className="links-chrome">
+      <span className="links-chrome-title">{shellTitle}</span>
       <nav aria-label={copy.langSwitchLabel[locale]} className="flex gap-2">
         {Object.values(LINKS_LOCALE).map((candidate) => {
           const active = candidate === locale;

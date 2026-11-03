@@ -38,7 +38,7 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
   if (linkable.length === 0) return null;
 
   return (
-    <section className="links-col pt-4" data-col="playlists" aria-labelledby={HEADING_ID}>
+    <section className="links-col" data-col="playlists" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID}>{copy.playlistsHeading[locale]}</SectionHeading>
 
       <ul className="list-none m-0 p-0 grid gap-3">

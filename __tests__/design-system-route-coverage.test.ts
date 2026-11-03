@@ -31,8 +31,8 @@ describe('design-system routes reach every route list', () => {
   it('derives the e2e spec routes from the sidebar groups', () => {
     // behavioral-test-allow: the Playwright spec cannot be imported under vitest; its route source is the assertion
     const spec = readFileSync('tests/e2e/design-system-pages.spec.ts', 'utf8');
-    expect(spec).toContain(
-      "import { DS_NAV_GROUPS } from '@/app/design-system/_components/ds-nav'",
+    expect(spec).toMatch(
+      /import \{[^}]*\bDS_NAV_GROUPS\b[^}]*\} from '@\/app\/design-system\/_components\/ds-nav'/,
     );
     expect(spec).not.toMatch(/const (DS|REFERENCE)_ROUTES\s*=\s*\[/);
   });

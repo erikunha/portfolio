@@ -123,7 +123,6 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
       pt: 'Sem vídeos por aqui ainda. Inscreva-se para não perder o primeiro.',
       en: "No videos here yet. Subscribe so you don't miss the first one.",
     },
-    skipToContent: { pt: 'Ir para o conteúdo', en: 'Skip to content' },
     pageHeading: {
       pt: 'Erik Cunha — links, canal e contato',
       en: 'Erik Cunha — links, channel and contact',

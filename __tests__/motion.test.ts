@@ -61,4 +61,13 @@ describe('applyMotion', () => {
     expect(document.body.dataset.motion).toBe('reduce');
     expect(localStorage.getItem('erik.motion')).toBe('off');
   });
+
+  it('applies a system-derived default without storing it as the visitor choice', () => {
+    applyMotion(false, false);
+    expect(document.body.dataset.motion).toBe('reduce');
+    expect(
+      localStorage.getItem('erik.motion'),
+      'a stored default would outlive the OS setting that produced it',
+    ).toBeNull();
+  });
 });

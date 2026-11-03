@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { DS_NAV_GROUPS } from '@/app/design-system/_components/ds-nav';
+import { DS_NAV_GROUPS, DS_NAV_ID } from '@/app/design-system/_components/ds-nav';
 import { PREVIEW_SOURCE_ARIA_LABEL_FALLBACK } from '@/app/design-system/_components/preview.constants';
 
+const SIDEBAR_MIN_WIDTH = 1024;
 const OVERVIEW_PATH = '/design-system';
 const OVERVIEW_HEADING = 'DESIGN SYSTEM';
 const REFERENCE_GROUP_EXCLUDED_ID = 'pages';
@@ -18,19 +19,21 @@ const REFERENCE_ROUTES = DS_NAV_GROUPS.filter(
 ).flatMap((group) => group.links.map(toRoute));
 
 for (const { path, heading } of ALL_ROUTES) {
-  test(`${path} — renders heading and sidebar nav`, async ({ page }) => {
+  test(`${path} — renders heading and the page tree`, async ({ page }) => {
     await page.goto(path);
     await expect(page.getByRole('heading', { name: heading, exact: true, level: 1 })).toBeVisible();
-    await expect(
-      page.getByRole('navigation', { name: 'Design system', exact: true }),
-    ).toBeVisible();
+    const sidebar = page.locator(`#${DS_NAV_ID}`);
+    await expect(sidebar).toBeAttached();
+    const wide = (page.viewportSize()?.width ?? 0) >= SIDEBAR_MIN_WIDTH;
+    if (wide) await expect(sidebar).toBeVisible();
+    else await expect(sidebar).toBeHidden();
   });
 }
 
 for (const { path } of REFERENCE_ROUTES) {
   test(`${path} — marks itself current and offers on-this-page links`, async ({ page }) => {
     await page.goto(path);
-    const sidebar = page.getByRole('navigation', { name: 'Design system', exact: true });
+    const sidebar = page.locator(`#${DS_NAV_ID}`);
     await expect(sidebar.locator('a[aria-current="page"]')).toHaveAttribute('href', path);
     const toc = page.getByRole('navigation', { name: 'On this page' });
     await expect(toc).toBeVisible();
@@ -40,9 +43,9 @@ for (const { path } of REFERENCE_ROUTES) {
 
 test('sidebar links every design-system page', async ({ page }) => {
   await page.goto('/design-system');
-  const sidebar = page.getByRole('navigation', { name: 'Design system', exact: true });
+  const sidebar = page.locator(`#${DS_NAV_ID}`);
   const hrefs = await sidebar
-    .getByRole('link')
+    .locator('a')
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href')));
   for (const { path } of ALL_ROUTES) {
     expect(hrefs).toContain(path);
@@ -97,17 +100,6 @@ async function leftEdges(locator: import('@playwright/test').Locator) {
   );
 }
 
-test('mobile sidebar items stack in one column', async ({ page }) => {
-  await page.setViewportSize(MOBILE);
-  await page.goto('/design-system/primitives/button');
-  const items = page.locator('.ds-sidebar a.ds-nav-item');
-  await expect(items.first()).toBeVisible();
-  expect(
-    new Set(await leftEdges(items)).size,
-    'sidebar items wrap into rows instead of one column',
-  ).toBe(1);
-});
-
 test('desktop sidebar is visible and vertical', async ({ page }) => {
   await page.setViewportSize(DESKTOP);
   await page.goto('/design-system/primitives/button');
@@ -140,23 +132,12 @@ test('mobile overview stat tiles sit at most two per row', async ({ page }) => {
   expect(perRow).toBeLessThanOrEqual(2);
 });
 
-test('mobile shows the page before the sidebar; desktop keeps the sidebar on the left', async ({
-  page,
-}) => {
-  const nav = page.getByRole('navigation', { name: 'Design system', exact: true });
+test('desktop keeps the sidebar on the left of the page', async ({ page }) => {
+  const nav = page.locator(`#${DS_NAV_ID}`);
   const main = page.locator('main.ds-main');
 
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize(DESKTOP);
   await page.goto('/design-system/primitives/button');
-  const [mainTop, navTop] = await Promise.all([
-    main.evaluate((el) => el.getBoundingClientRect().top),
-    nav.evaluate((el) => el.getBoundingClientRect().top),
-  ]);
-  expect(mainTop, 'on mobile the content must not sit below a full screen of nav').toBeLessThan(
-    navTop,
-  );
-
-  await page.setViewportSize({ width: 1280, height: 800 });
   const [mainLeft, navLeft] = await Promise.all([
     main.evaluate((el) => el.getBoundingClientRect().left),
     nav.evaluate((el) => el.getBoundingClientRect().left),
@@ -291,4 +272,50 @@ test('the design system paints the matrix rain behind its content', async ({ pag
     'the rain paints over the heading, the design system root must stack above it',
   ).toBe(true);
   expect(probe?.tag).not.toBe('CANVAS');
+});
+
+for (const { path } of ALL_ROUTES) {
+  test(`${path} — every id is unique, so each in-page jump link has one target`, async ({
+    page,
+  }) => {
+    await page.goto(path);
+    const duplicates = await page.evaluate(() => {
+      const seen = new Map<string, number>();
+      for (const node of document.querySelectorAll('[id]')) {
+        seen.set(node.id, (seen.get(node.id) ?? 0) + 1);
+      }
+      return [...seen].filter(([, count]) => count > 1).map(([id]) => id);
+    });
+    expect(duplicates).toEqual([]);
+  });
+}
+
+for (const { path } of ALL_ROUTES) {
+  test(`${path} — hydrates without a React error`, async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(path);
+    await page.waitForLoadState('networkidle');
+    expect(errors, 'a server and client HTML mismatch makes React re-render the page').toEqual([]);
+  });
+}
+
+test('the stat grid breakpoint the docs state is the one the layout uses', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/design-system/components');
+  const claim = await page
+    .getByText(/four columns from \d+px/)
+    .first()
+    .textContent();
+  const stated = Number(/four columns from (\d+)px/.exec(claim ?? '')?.[1]);
+  expect(Number.isFinite(stated), 'the docs state a breakpoint').toBe(true);
+  const columns = () =>
+    page
+      .locator('.ds-stat-row')
+      .first()
+      .evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(' ').length);
+  await page.setViewportSize({ width: stated, height: 800 });
+  expect(await columns(), `four columns at ${stated}px`).toBe(4);
+  await page.setViewportSize({ width: stated - 1, height: 800 });
+  expect(await columns(), `two columns at ${stated - 1}px`).toBe(2);
 });

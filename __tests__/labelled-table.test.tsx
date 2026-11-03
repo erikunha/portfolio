@@ -25,8 +25,12 @@ function table(headers: string[], rows: string[][], props?: { caption?: string }
 describe('LabelledTable', () => {
   it('renders each body cell label as real text inside the cell', () => {
     const html = renderToStaticMarkup(table(['Prop', 'Type'], [['size', 'string']]));
-    expect(html).toMatch(/<td role="cell"><span[^>]*md:hidden[^>]*>Prop<\/span>size<\/td>/);
-    expect(html).toMatch(/<td role="cell"><span[^>]*md:hidden[^>]*>Type<\/span>string<\/td>/);
+    expect(html).toMatch(
+      /<td role="cell"><span class="ds-cell-label">Prop<\/span><span class="ds-cell-value">size<\/span><\/td>/,
+    );
+    expect(html).toMatch(
+      /<td role="cell"><span class="ds-cell-label">Type<\/span><span class="ds-cell-value">string<\/span><\/td>/,
+    );
   });
 
   it('keeps the cell label in the accessibility tree, since mobile hides the header row', () => {
@@ -50,7 +54,7 @@ describe('LabelledTable', () => {
 
   it('leaves cells beyond the header count unlabelled', () => {
     const html = renderToStaticMarkup(table(['Prop'], [['a', 'b']]));
-    expect(html).toContain('<td role="cell">b</td>');
+    expect(html).toContain('<td role="cell"><span class="ds-cell-value">b</span></td>');
   });
 
   it('wraps the table in a named, keyboard-focusable scroll region', () => {

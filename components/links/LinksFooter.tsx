@@ -20,7 +20,7 @@ export function LinksFooter({ locale, url }: { locale: LinksLocale; url: string 
   const { pills, copy, siteUrl, siteLabel } = linksContent;
 
   return (
-    <footer className="links-footer mt-6 pt-4 border-t border-primary-border">
+    <footer className="links-footer pt-4 border-t border-primary-border">
       <ul className="list-none m-0 p-0 grid gap-2 grid-cols-1 min-[768px]:grid-cols-2 min-[900px]:grid-cols-3">
         {pills.filter(isLinked).map((pill) => (
           <li key={pill.id}>

@@ -1,5 +1,6 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import {
   TOPBAR_HIRE_LINK,
@@ -10,8 +11,16 @@ import {
 import { cn } from '@/lib/cn';
 import { MenuTrigger, SearchTrigger, useSectionNavigation } from '../SectionNavigation';
 
+const SECTION_PATH_SEPARATOR = '/';
+
+function isCurrentPath(pathname: string | null, href: string): boolean {
+  if (pathname === null || href.includes('#')) return false;
+  return pathname === href || pathname.startsWith(`${href}${SECTION_PATH_SEPARATOR}`);
+}
+
 export function DesktopTopbar({ brand }: { brand: ReactNode }) {
   const { motionOn, toggleMotion } = useSectionNavigation();
+  const pathname = usePathname();
 
   return (
     <div className="desktop-topbar fixed top-0 left-0 right-0 z-[110] bg-secondary-950 border-b border-primary-subtle hidden md:block">
@@ -21,8 +30,9 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
           {TOPBAR_NAV.map(({ label, href }) => (
             <a
               key={href}
-              className="text-primary-500 text-[length:var(--text-min)] tracking-wider whitespace-nowrap py-3 leading-5 hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
+              className="text-primary-500 text-[length:var(--text-min)] tracking-wider whitespace-nowrap py-3 leading-5 hover:text-shadow-[0_0_8px_var(--color-primary-500)] aria-[current=page]:underline aria-[current=page]:underline-offset-8 hidden xl:inline"
               href={href}
+              aria-current={isCurrentPath(pathname, href) ? 'page' : undefined}
             >
               {label}
             </a>

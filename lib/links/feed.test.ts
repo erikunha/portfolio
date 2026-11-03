@@ -110,3 +110,106 @@ describe('getChannelFeed upstream fallback', () => {
     vi.unstubAllEnvs();
   });
 });
+
+describe('getChannelFeed excludes Shorts in the data layer', () => {
+  const entry = (id: string, path: 'watch?v=' | 'shorts/', n: number) => `
+    <entry>
+      <yt:videoId>${id}</yt:videoId>
+      <title>Title ${id}</title>
+      <link rel="alternate" href="https://www.youtube.com/${path}${id}"/>
+      <published>2026-10-0${n}T00:00:00+00:00</published>
+    </entry>`;
+  const rss = (entries: string[]) => `<feed xmlns:yt="y">${entries.join('')}</feed>`;
+
+  async function loadWith(options: {
+    rssBody: string;
+    apiKey?: string;
+    playlistIds?: string[];
+    durations?: Record<string, string>;
+  }) {
+    vi.resetModules();
+    vi.stubEnv('E2E_LINKS_FEED_FIXTURE', '');
+    vi.doMock('@/lib/env', () => ({ env: { YOUTUBE_API_KEY: options.apiKey } }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string) => {
+        if (input.includes('/feeds/videos.xml')) {
+          return options.rssBody
+            ? new Response(options.rssBody)
+            : new Response('', { status: 404 });
+        }
+        if (input.includes('/playlistItems')) {
+          return Response.json({
+            items: (options.playlistIds ?? []).map((id, index) => ({
+              snippet: {
+                title: `Upload ${id}`,
+                publishedAt: `2026-10-0${index + 1}T00:00:00Z`,
+                resourceId: { videoId: id },
+              },
+              status: { privacyStatus: 'public' },
+            })),
+          });
+        }
+        if (input.includes('/videos?')) {
+          return Response.json({
+            items: Object.entries(options.durations ?? {}).map(([id, duration]) => ({
+              id,
+              contentDetails: { duration },
+            })),
+          });
+        }
+        return Response.json({ items: [] });
+      }),
+    );
+    const { getChannelFeed } = await import('@/lib/links/feed');
+    const feed = await getChannelFeed();
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+    return feed;
+  }
+
+  it('drops a Short from the RSS feed and keeps the regular video', async () => {
+    const feed = await loadWith({
+      rssBody: rss([entry('short1', 'shorts/', 2), entry('video1', 'watch?v=', 1)]),
+    });
+    expect(feed.latest?.id).toBe('video1');
+    expect(feed.history.map((video) => video.id)).toEqual(['video1']);
+  });
+
+  it('still fills the history with regular videos when Shorts lead the feed', async () => {
+    const feed = await loadWith({
+      rssBody: rss([
+        entry('s1', 'shorts/', 9),
+        entry('s2', 'shorts/', 8),
+        ...[1, 2, 3, 4, 5, 6].map((n) => entry(`v${n}`, 'watch?v=', n)),
+      ]),
+    });
+    expect(feed.history.map((video) => video.id)).toEqual(['v1', 'v2', 'v3', 'v4', 'v5']);
+  });
+
+  it('drops a 60 second upload read through the Data API fallback', async () => {
+    const feed = await loadWith({
+      rssBody: '',
+      apiKey: 'test-key',
+      playlistIds: ['clip', 'full'],
+      durations: { clip: 'PT59S', full: 'PT12M3S' },
+    });
+    expect(feed.history.map((video) => video.id)).toEqual(['full']);
+  });
+
+  it('keeps a video just over a minute', async () => {
+    const feed = await loadWith({
+      rssBody: '',
+      apiKey: 'test-key',
+      playlistIds: ['edge'],
+      durations: { edge: 'PT1M1S' },
+    });
+    expect(feed.history.map((video) => video.id)).toEqual(['edge']);
+  });
+
+  it('returns the empty feed when every upload is a Short', async () => {
+    const feed = await loadWith({ rssBody: rss([entry('only', 'shorts/', 1)]) });
+    expect(feed.latest).toBeNull();
+    expect(feed.history).toEqual([]);
+  });
+});

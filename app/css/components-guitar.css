@@ -141,7 +141,7 @@
 
   .guitar-pair {
     display: grid;
-    grid-template-columns: var(--guitar-pair-columns);
+    grid-template-columns: var(--phi-pair-columns);
     gap: var(--phi-space-3);
   }
 

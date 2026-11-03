@@ -7,6 +7,8 @@ import { env } from '@/lib/env';
 import {
   canonicalThumbnailUrl,
   type EnrichedVideo,
+  isShort,
+  isShortUrl,
   type PlaylistItemsPayload,
   parseFeed,
   parseIsoDuration,
@@ -16,6 +18,7 @@ import { log } from '@/lib/log';
 
 export const HISTORY_LENGTH = 5;
 export const FEED_LIMIT = HISTORY_LENGTH + 1;
+const FEED_CANDIDATES = 15;
 
 const FEED_TIMEOUT_MS = 6_000;
 const API_TIMEOUT_MS = 6_000;
@@ -133,11 +136,11 @@ function uploadsPlaylistId(channelId: string): string {
 }
 
 async function fetchUploads(channelId: string, apiKey: string): Promise<EnrichedVideo[]> {
-  const url = `${PLAYLIST_ITEMS_ENDPOINT}?part=snippet,status&maxResults=${FEED_LIMIT}&playlistId=${encodeURIComponent(uploadsPlaylistId(channelId))}&key=${encodeURIComponent(apiKey)}`;
+  const url = `${PLAYLIST_ITEMS_ENDPOINT}?part=snippet,status&maxResults=${FEED_CANDIDATES}&playlistId=${encodeURIComponent(uploadsPlaylistId(channelId))}&key=${encodeURIComponent(apiKey)}`;
   const payload = await fetchJson<PlaylistItemsPayload>(url, API_TIMEOUT_MS);
   if (!payload) return [];
   log.info('links feed read the uploads playlist after the RSS feed returned nothing');
-  return parsePlaylistItems(payload, FEED_LIMIT);
+  return parsePlaylistItems(payload, FEED_CANDIDATES);
 }
 
 export const FEED_FIXTURE_ENV = 'E2E_LINKS_FEED_FIXTURE';
@@ -174,14 +177,18 @@ export async function getChannelFeed(): Promise<ChannelFeed> {
     `${RSS_ENDPOINT}?channel_id=${encodeURIComponent(channelId)}`,
     FEED_TIMEOUT_MS,
   );
-  const rssVideos: EnrichedVideo[] = xml === null ? [] : parseFeed(xml, FEED_LIMIT);
-  const videos =
+  const rssVideos: EnrichedVideo[] = xml === null ? [] : parseFeed(xml, FEED_CANDIDATES);
+  const uploads =
     rssVideos.length === 0 && apiKey ? await fetchUploads(channelId, apiKey) : rssVideos;
+  const videos = uploads.filter((video) => !isShortUrl(video));
   const stats = apiKey ? await fetchStats(channelId, apiKey) : {};
 
   if (videos.length === 0) return { ...EMPTY_FEED, stats, fetchedAt: new Date().toISOString() };
 
-  const resolved = apiKey ? await enrich(videos, apiKey) : videos;
+  const enriched = apiKey ? await enrich(videos, apiKey) : videos;
+  const resolved = enriched.filter((video) => !isShort(video)).slice(0, FEED_LIMIT);
+
+  if (resolved.length === 0) return { ...EMPTY_FEED, stats, fetchedAt: new Date().toISOString() };
 
   return {
     fetchedAt: new Date().toISOString(),

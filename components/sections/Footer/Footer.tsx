@@ -6,6 +6,13 @@ const INITIAL_UPTIME = '00:00:00';
 const INITIAL_COUNT = '0';
 const INITIAL_DEPTH = '0%';
 const DMESG_PRECISION = 3;
+const TABLE_ROLES = {
+  table: { role: 'table' },
+  rowgroup: { role: 'rowgroup' },
+  row: { role: 'row' },
+  columnheader: { role: 'columnheader' },
+  cell: { role: 'cell' },
+} as const;
 const CONNECTION_STATE = { listening: 'LISTEN' } as const;
 
 export function Footer() {
@@ -68,19 +75,30 @@ export function Footer() {
               </h3>
             </div>
             <div className="footer-netstat-scroll">
-              <table className="footer-netstat" aria-labelledby="footer-netstat-title">
-                <thead>
-                  <tr>
-                    <th scope="col">{content.connectionLabels.protocol}</th>
-                    <th scope="col">{content.connectionLabels.state}</th>
-                    <th scope="col">{content.connectionLabels.endpoint}</th>
+              <table
+                className="footer-netstat"
+                {...TABLE_ROLES.table}
+                aria-labelledby="footer-netstat-title"
+              >
+                <thead {...TABLE_ROLES.rowgroup}>
+                  <tr {...TABLE_ROLES.row}>
+                    <th scope="col" {...TABLE_ROLES.columnheader}>
+                      {content.connectionLabels.protocol}
+                    </th>
+                    <th scope="col" {...TABLE_ROLES.columnheader}>
+                      {content.connectionLabels.state}
+                    </th>
+                    <th scope="col" {...TABLE_ROLES.columnheader}>
+                      {content.connectionLabels.endpoint}
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody {...TABLE_ROLES.rowgroup}>
                   {content.connections.map((connection) => (
-                    <tr key={connection.href}>
-                      <td>{connection.protocol}</td>
+                    <tr key={connection.href} {...TABLE_ROLES.row}>
+                      <td {...TABLE_ROLES.cell}>{connection.protocol}</td>
                       <td
+                        {...TABLE_ROLES.cell}
                         className={
                           connection.state === CONNECTION_STATE.listening
                             ? 'footer-listening'
@@ -89,7 +107,7 @@ export function Footer() {
                       >
                         {connection.state}
                       </td>
-                      <td>
+                      <td {...TABLE_ROLES.cell}>
                         <a
                           className="footer-link"
                           href={connection.href}
