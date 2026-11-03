@@ -7,19 +7,21 @@ const BASE_CLASS = 'company-link';
 type CompanyLinkProps = {
   href: string;
   className?: string;
+  describedBy?: string;
   children: React.ReactNode;
 };
 
-export function CompanyLink({ href, className, children }: CompanyLinkProps) {
+export function CompanyLink({ href, className, describedBy, children }: CompanyLinkProps) {
   return (
     <a
       className={className ? `${BASE_CLASS} ${className}` : BASE_CLASS}
       href={href}
       target={EXTERNAL_TARGET}
       rel={EXTERNAL_REL}
+      aria-describedby={describedBy}
     >
       {children}
-      <span className="sr-only"> {companyLinkCopy.disclosure}</span>
+      {describedBy ? null : <span className="sr-only"> {companyLinkCopy.disclosure}</span>}
     </a>
   );
 }

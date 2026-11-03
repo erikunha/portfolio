@@ -33,6 +33,25 @@ describe('CompanyLink', () => {
   });
 });
 
+describe('CompanyLink inside a type-reveal heading', () => {
+  it('points at a description elsewhere instead of carrying its own sr-only text', () => {
+    const { container } = render(
+      <CompanyLink href={HREF} describedBy="note">
+        Raylu
+      </CompanyLink>,
+    );
+    const link = container.querySelector('a');
+    expect(link?.getAttribute('aria-describedby')).toBe('note');
+    expect(link?.textContent).toBe('Raylu');
+    expect(link?.querySelector('.sr-only')).toBeNull();
+  });
+
+  it('adds no aria-describedby when the disclosure is inline', () => {
+    const { container } = render(<CompanyLink href={HREF}>Raylu</CompanyLink>);
+    expect(container.querySelector('a')?.hasAttribute('aria-describedby')).toBe(false);
+  });
+});
+
 describe('CompanyMention', () => {
   it('links only the company name inside a sentence and keeps the rest as text', () => {
     const { container } = render(

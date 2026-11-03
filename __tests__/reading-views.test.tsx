@@ -77,8 +77,15 @@ describe('CV reading view', () => {
       expect(link?.getAttribute('href'), job.company).toBe(job.companyUrl);
       expect(link?.getAttribute('target')).toBe('_blank');
       expect(link?.getAttribute('rel')).toBe(readingViews.shared.newTabRel);
-      expect(link?.textContent).toContain(job.company);
-      expect(link?.textContent).toContain(readingViews.shared.newTabHint);
+      expect(link?.textContent).toBe(job.company);
+      const heading = headings[index];
+      expect(
+        heading?.querySelector('.sr-only, svg, [aria-hidden="true"]'),
+        'a type-reveal heading holds only typed text: extra nodes inflate --type-chars past the visible name',
+      ).toBeNull();
+      const description = host.querySelector(`#${link?.getAttribute('aria-describedby')}`);
+      expect(description?.textContent).toBe(readingViews.shared.newTabHint);
+      expect(description?.closest('[data-type-reveal]')).toBeNull();
     });
   });
 
@@ -135,7 +142,9 @@ describe('CV reading view', () => {
     expect(external.length).toBeGreaterThan(0);
     for (const link of external) {
       const named = link.getAttribute('aria-label') ?? link.textContent;
-      expect(named).toMatch(/new tab/);
+      const describedBy = link.getAttribute('aria-describedby');
+      const description = describedBy ? host.querySelector(`#${describedBy}`)?.textContent : '';
+      expect(`${named} ${description}`).toMatch(/new tab/);
     }
   });
 

@@ -40,6 +40,7 @@ export const metadata: Metadata = {
 };
 
 const sectionId = (key: string) => `cv-${key}`;
+const NEW_TAB_NOTE_ID = 'cv-new-tab-note';
 
 function Section({
   name,
@@ -136,10 +137,15 @@ export default function CvPage() {
         </Section>
 
         <Section name="experience" heading={cv.headings.experience}>
+          <span id={NEW_TAB_NOTE_ID} className="sr-only">
+            {shared.newTabHint}
+          </span>
           {cvDocument.experience.map((job) => (
             <article key={job.key} className="reading-entry">
               <h3 data-type-reveal>
-                <CompanyLink href={job.companyUrl}>{job.company}</CompanyLink>
+                <CompanyLink href={job.companyUrl} describedBy={NEW_TAB_NOTE_ID}>
+                  {job.company}
+                </CompanyLink>
               </h3>
               <p className="reading-meta">{job.meta}</p>
               <ul>
