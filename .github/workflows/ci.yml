@@ -92,6 +92,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pnpm tsx scripts/check-pr-comments.ts ${{ github.event.pull_request.number }}
 
+      - name: Merge target gate (agent merges refuse a main base)
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm tsx scripts/check-merge-target.ts ${{ github.event.pull_request.number }}
+
   typecheck:
     runs-on: ubuntu-latest
     timeout-minutes: 5

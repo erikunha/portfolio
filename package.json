@@ -46,6 +46,7 @@
     "pr:comments": "node scripts/inspect-pr-comments.mjs",
     "pr:gate": "tsx scripts/check-pr-comments.ts",
     "claude-gate": "tsx scripts/check-claude-approval.ts",
+    "merge-target-gate": "tsx scripts/check-merge-target.ts",
     "test:mutation": "stryker run",
     "verify": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm check:client-naming && pnpm check:dep-pinning && pnpm check:harness-size && pnpm check:section-order && pnpm check:doc-drift && pnpm check:detect-changes-paths && pnpm lint:css-tokens && pnpm test",
     "ci": "pnpm verify && pnpm build && pnpm bundle-check && pnpm route-js-check",
