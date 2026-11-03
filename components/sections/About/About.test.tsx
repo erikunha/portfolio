@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { aboutContent } from '@/content/about';
+import { profile } from '@/content/profile';
 import { About } from './About';
 
 const CODE_FONT_PX = 12;
@@ -58,6 +59,20 @@ describe('About r106 composition', () => {
       'the fixed 9em reservation left a gap between the badge and the rest of the line',
     ).toBeNull();
     expect(doc.querySelectorAll('h1')).toHaveLength(0);
+  });
+
+  it('links the current employer in the Currently row', () => {
+    const { container } = render(<About />);
+    const row = [...container.querySelectorAll('.ab-now dl > div')].find(
+      (node) => node.querySelector('dt')?.textContent === 'Currently',
+    );
+    const links = row?.querySelectorAll('a') ?? [];
+    expect(links).toHaveLength(1);
+    expect(links[0]?.getAttribute('href')).toBe(profile.currentEmployer.url);
+    expect(links[0]?.getAttribute('target')).toBe('_blank');
+    expect(links[0]?.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(links[0]?.textContent).toContain(profile.currentEmployer.name);
+    expect(container.querySelectorAll('.ab-now a')).toHaveLength(1);
   });
 
   it('lists seven r106 ls -la rows with no extra legend lines', () => {

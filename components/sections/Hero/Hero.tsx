@@ -1,3 +1,4 @@
+import { CompanyLink } from '@/components/CompanyLink';
 import { HeroStats } from '@/components/HeroStats';
 import { heroContent as c, heroTagline } from '@/content/hero';
 import { profile, profileWorkingLanguageLine } from '@/content/profile';
@@ -42,7 +43,12 @@ function HeroIdentity({ primary }: { primary: boolean }) {
           </span>
         </span>
         <span className="hero-context-fact hero-context-fact--employer">
-          {c.employerLabel} <b>{profile.currentEmployer.name}</b>
+          {c.employerLabel}{' '}
+          <b>
+            <CompanyLink href={profile.currentEmployer.url}>
+              {profile.currentEmployer.name}
+            </CompanyLink>
+          </b>
         </span>
         <span className="hero-context-fact hero-context-fact--domain">
           {profile.currentEmployer.context}
