@@ -22,13 +22,13 @@ const hoursRange = (from: number, to: number) =>
   Array.from({ length: to - from + 1 }, (_, i) => from + i);
 
 describe('computeOverlap', () => {
-  it('overlaps nine full hours with the same zone as Erik', () => {
+  it('overlaps eight full hours with the same zone as Erik', () => {
     const overlap = computeOverlap(ERIK_TIME_ZONE, JANUARY);
 
-    expect(overlap.hours).toBe(9);
-    expect(overlap.range).toBe('09:00 to 18:00');
-    expect(litHours(overlap.cells.both)).toEqual(hoursRange(9, 17));
-    expect(overlap.bestSlot).toEqual({ you: '13:30', erik: '13:30' });
+    expect(overlap.hours).toBe(8);
+    expect(overlap.range).toBe('10:00 to 18:00');
+    expect(litHours(overlap.cells.both)).toEqual(hoursRange(10, 17));
+    expect(overlap.bestSlot).toEqual({ you: '10:00', erik: '10:00' });
   });
 
   it('returns 24 hourly cells per row', () => {
@@ -59,20 +59,20 @@ describe('computeOverlap', () => {
   it('computes Berlin in winter and the best slot in both zones', () => {
     const overlap = computeOverlap('Europe/Berlin', JANUARY);
 
-    expect(overlap.hours).toBe(5);
-    expect(overlap.range).toBe('13:00 to 18:00');
-    expect(litHours(overlap.cells.erik)).toEqual(hoursRange(13, 21));
-    expect(litHours(overlap.cells.both)).toEqual(hoursRange(13, 17));
-    expect(overlap.bestSlot).toEqual({ you: '15:30', erik: '11:30' });
+    expect(overlap.hours).toBe(4);
+    expect(overlap.range).toBe('14:00 to 18:00');
+    expect(litHours(overlap.cells.erik)).toEqual(hoursRange(14, 21));
+    expect(litHours(overlap.cells.both)).toEqual(hoursRange(14, 17));
+    expect(overlap.bestSlot).toEqual({ you: '14:00', erik: '10:00' });
   });
 
   it('loses an hour of overlap on the Berlin DST instant', () => {
     const before = computeOverlap('Europe/Berlin', new Date('2026-03-29T00:59:59Z'));
     const after = computeOverlap('Europe/Berlin', new Date('2026-03-29T01:00:00Z'));
 
-    expect(before.hours).toBe(5);
-    expect(after.hours).toBe(4);
-    expect(after.range).toBe('14:00 to 18:00');
+    expect(before.hours).toBe(4);
+    expect(after.hours).toBe(3);
+    expect(after.range).toBe('15:00 to 18:00');
   });
 
   it('gains an hour of overlap on the New York DST instant', () => {
@@ -100,25 +100,26 @@ describe('computeOverlap', () => {
   it('overlaps ahead of Erik: Dubai', () => {
     const overlap = computeOverlap('Asia/Dubai', JANUARY);
 
-    expect(overlap.hours).toBe(2);
-    expect(overlap.range).toBe('16:00 to 18:00');
+    expect(overlap.hours).toBe(1);
+    expect(overlap.range).toBe('17:00 to 18:00');
   });
 
-  it('keeps half-hour precision for Asia/Kolkata', () => {
-    const overlap = computeOverlap('Asia/Kolkata', JANUARY);
+  it('keeps half-hour precision for Asia/Tehran', () => {
+    const overlap = computeOverlap('Asia/Tehran', JANUARY);
 
-    expect(overlap.hours).toBe(0.5);
-    expect(overlap.range).toBe('17:30 to 18:00');
-    expect(overlap.bestSlot).toEqual({ you: '17:45', erik: '09:15' });
-    expect(litHours(overlap.cells.both)).toEqual([17]);
-    expect(litHours(overlap.cells.erik)).toEqual([0, 1, ...hoursRange(17, 23)]);
+    expect(overlap.hours).toBe(1.5);
+    expect(overlap.range).toBe('16:30 to 18:00');
+    expect(overlap.bestSlot).toEqual({ you: '16:30', erik: '10:00' });
+    expect(litHours(overlap.cells.both)).toEqual(hoursRange(16, 17));
+    expect(litHours(overlap.cells.erik)).toEqual([...hoursRange(16, 23)]);
   });
 
-  it('keeps quarter-hour precision for Asia/Kathmandu', () => {
+  it('reports no overlap for Asia/Kathmandu, where Erik starts after the visitor day ends', () => {
     const overlap = computeOverlap('Asia/Kathmandu', JANUARY);
 
-    expect(overlap.hours).toBe(0.25);
-    expect(overlap.range).toBe('17:45 to 18:00');
+    expect(overlap.hours).toBe(0);
+    expect(overlap.range).toBeNull();
+    expect(overlap.bestSlot).toBeNull();
   });
 
   it('reports no overlap for Asia/Tokyo, where the gap is negative', () => {
@@ -136,7 +137,7 @@ describe('computeOverlap', () => {
 
     expect(overlap.hours).toBe(1);
     expect(overlap.range).toBe('09:00 to 10:00');
-    expect(overlap.bestSlot).toEqual({ you: '09:30', erik: '17:30' });
+    expect(overlap.bestSlot).toEqual({ you: '09:00', erik: '17:00' });
   });
 
   it('drops to zero overlap when Auckland leaves daylight saving', () => {
@@ -152,12 +153,12 @@ describe('computeOverlap', () => {
 
 describe('erikAvailability', () => {
   it.each([
-    ['2026-01-15T11:59:00Z', false, 1],
-    ['2026-01-15T12:00:00Z', true, 0],
+    ['2026-01-15T11:59:00Z', false, 2],
+    ['2026-01-15T12:00:00Z', false, 1],
     ['2026-01-15T20:59:00Z', true, 0],
-    ['2026-01-15T21:00:00Z', false, 15],
-    ['2026-01-15T03:00:00Z', false, 9],
-    ['2026-01-15T10:30:00Z', false, 2],
+    ['2026-01-15T21:00:00Z', false, 16],
+    ['2026-01-15T03:00:00Z', false, 10],
+    ['2026-01-15T10:30:00Z', false, 3],
   ])('at %s online is %s and back in %i hours', (iso, online, hoursUntilBack) => {
     expect(erikAvailability(new Date(iso))).toEqual({ online, hoursUntilBack });
   });

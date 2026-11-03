@@ -56,7 +56,7 @@ describe('ContactTimezone status and clocks', () => {
     renderAt(OFF_HOURS_INSTANT);
 
     expect(testId('ctz-status').textContent).toContain(
-      fillCopy(copy.status.offHours, { hours: 14 }),
+      fillCopy(copy.status.offHours, { hours: 15 }),
     );
     expect(testId('ctz-status').getAttribute('data-online')).toBe('false');
   });
@@ -131,7 +131,7 @@ describe('ContactTimezone location and overlap', () => {
   it('states the overlap in hours and the range in the visitor time', () => {
     renderAt(ONLINE_INSTANT);
 
-    expect(testId('ctz-overlap').textContent).toBe('5 hours overlap · 13:00 to 18:00 your time');
+    expect(testId('ctz-overlap').textContent).toBe('4 hours overlap · 14:00 to 18:00 your time');
   });
 
   it('offers the async line when nothing overlaps', () => {
@@ -161,7 +161,7 @@ describe('ContactTimezone location and overlap', () => {
     const both = within(testId('ctz-row-both')).getAllByTestId('ctz-cell');
     expect(
       both.flatMap((cell, hour) => (cell.getAttribute('data-on') === 'true' ? [hour] : [])),
-    ).toEqual([13, 14, 15, 16, 17]);
+    ).toEqual([14, 15, 16, 17]);
   });
 
   it('labels the 00/06/12/18/24 axis', () => {
@@ -191,7 +191,7 @@ describe('ContactTimezone map', () => {
       fillCopy(copy.map.ariaLabel, {
         erikPlace: copy.map.erikPlace,
         place: 'Germany',
-        overlap: '5 hours',
+        overlap: '4 hours',
       }),
     );
   });
@@ -374,16 +374,16 @@ describe('ContactTimezone combobox', () => {
 
 describe('ContactTimezone best slot and propose', () => {
   const expectedLine = fillCopy(copy.propose.line, {
-    you: '15:30',
+    you: '14:00',
     zone: 'Europe/Berlin',
-    erik: '11:30',
+    erik: '10:00',
   });
 
-  it('shows the midpoint of the overlap in both zones', () => {
+  it('shows the earliest shared half hour in both zones', () => {
     renderAt(ONLINE_INSTANT);
 
-    expect(testId('ctz-slot-you').textContent).toBe('15:30');
-    expect(testId('ctz-slot-erik').textContent).toBe('11:30');
+    expect(testId('ctz-slot-you').textContent).toBe('14:00');
+    expect(testId('ctz-slot-erik').textContent).toBe('10:00');
   });
 
   it('appends the slot line to the contact message through the shared store', () => {
