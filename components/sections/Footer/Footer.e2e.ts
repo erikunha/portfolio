@@ -197,8 +197,18 @@ test.describe('Footer', () => {
           probe.remove();
           return size;
         };
-        return { body: read('--text-body'), base: read('--text-base') };
+        return {
+          body: read('--text-body'),
+          base: read('--text-base'),
+          title: read('--text-section-title'),
+        };
       });
+      for (const id of ['session', 'netstat', 'tree']) {
+        await expect(page.locator(`#footer-${id}-title`)).toHaveCSS(
+          'font-size',
+          `${scale.title}px`,
+        );
+      }
       const heading = tree.locator('.sm-title').first();
       await expect(heading).toHaveCSS('font-size', `${scale.base}px`);
       await expect(heading).toHaveCSS('font-weight', '700');
@@ -239,7 +249,7 @@ test.describe('Footer', () => {
         };
       });
       expect(Number.parseFloat(gaps.row)).toBeGreaterThanOrEqual(Number.parseFloat(gaps.column));
-      expect(Number.parseFloat(gaps.title)).toBeGreaterThan(Number.parseFloat(gaps.column) / 2);
+      expect(gaps.title).toBe(gaps.column);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         width,
       );
