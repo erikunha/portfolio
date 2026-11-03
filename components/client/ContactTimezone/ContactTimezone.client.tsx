@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { contactCopy, contactHoursPhrase, fillCopy } from '@/content/contact-copy';
 import { ERIK_PIN, WORLD_MAP_GRID, WORLD_MAP_LAND } from '@/content/world-map';
 import { buildLandPaths } from '@/lib/timezone/land-paths';
@@ -83,7 +83,12 @@ export function ContactTimezone() {
       })
     : null;
 
-  const added = slotLine !== null && proposedLine === slotLine;
+  const lineInMessage = useSyncExternalStore(
+    messageStore.subscribe,
+    () => proposedLine !== null && messageStore.getSnapshot().includes(proposedLine),
+    () => false,
+  );
+  const added = slotLine !== null && proposedLine === slotLine && lineInMessage;
   const messageFieldId = messageStore.getFieldId();
 
   function propose() {

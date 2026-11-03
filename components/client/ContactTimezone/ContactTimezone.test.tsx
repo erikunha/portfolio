@@ -479,6 +479,61 @@ describe('ContactTimezone link back to the message field', () => {
     cleanup();
   });
 
+  it('drops the confirmation and the link when the form clears the message after a send', () => {
+    const { cleanup } = renderWithField();
+    fireEvent.click(screen.getByRole('button', { name: copy.propose.label }));
+    expect(screen.queryByTestId('ctz-proposed')).not.toBeNull();
+
+    act(() => {
+      messageStore.reset();
+    });
+
+    expect(screen.queryByTestId('ctz-proposed'), 'no stale confirmation').toBeNull();
+    expect(focusLink(), 'no link to a field that is gone').toBeNull();
+
+    cleanup();
+  });
+
+  it('drops the confirmation when the visitor deletes the proposed line', () => {
+    const { cleanup } = renderWithField();
+    fireEvent.click(screen.getByRole('button', { name: copy.propose.label }));
+
+    act(() => {
+      messageStore.set('hello');
+    });
+
+    expect(screen.queryByTestId('ctz-proposed')).toBeNull();
+
+    cleanup();
+  });
+
+  it('keeps the confirmation while the visitor types around the proposed line', () => {
+    const { cleanup } = renderWithField();
+    fireEvent.click(screen.getByRole('button', { name: copy.propose.label }));
+
+    act(() => {
+      messageStore.set(`Hi Erik\n${messageStore.getSnapshot()}\nThanks`);
+    });
+
+    expect(screen.queryByTestId('ctz-proposed')).not.toBeNull();
+
+    cleanup();
+  });
+
+  it('confirms again when the same slot is proposed after the message was cleared', () => {
+    const { cleanup } = renderWithField();
+    fireEvent.click(screen.getByRole('button', { name: copy.propose.label }));
+    act(() => {
+      messageStore.reset();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: copy.propose.label }));
+
+    expect(screen.queryByTestId('ctz-proposed')).not.toBeNull();
+
+    cleanup();
+  });
+
   it('keeps the link out of the live region so the announcement stays the confirmation', () => {
     const { cleanup } = renderWithField();
     fireEvent.click(screen.getByRole('button', { name: copy.propose.label }));
