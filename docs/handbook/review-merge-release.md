@@ -21,7 +21,8 @@ flowchart TD
     o2 --> m1
     m1 --> m3["pre-merge: claude-gate (Approve on HEAD)"]
     m3 --> m4["pre-merge: pr:gate (threads)"]
-    m4 --> merge["owner: squash-merge (#NNN)"]
+    m4 --> m5["pre-merge: merge-target gate (refuses a main base)"]
+    m5 --> merge["squash-merge (#NNN): agent when the base is not main, owner when the base is main"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["smoke.yml: healthz + headers + liveness"]
 ```
@@ -36,11 +37,11 @@ Each round follows the project review procedure: rebase before _every_ push; ver
 
 After each round, every finding fixed and every CI red becomes a candidate rule: if the mistake can repeat, append a numbered rule with the check that proves it to [`lessons.md`](./lessons.md) in the same PR. The next change reads that file before it starts.
 
-## Pre-merge gates (`pnpm ci:local` + `pnpm claude-gate` + `pnpm pr:gate`)
+## Pre-merge gates (`pnpm ci:local` + `pnpm claude-gate` + `pnpm pr:gate` + `pnpm merge-target-gate`)
 
-In order: `ci:local` -> `check-claude-approval` (`pnpm claude-gate`: the latest claude-review verdict must be Approve, naming a head SHA that matches the current head. an Approve with no SHA, or a stale one, fails closed) -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL, all threads `isResolved`, flags `suspicious_self_resolve`). GitHub branch-protection settings must be checked separately; repository files do not establish their live state.
+In order: `ci:local` -> `check-claude-approval` (`pnpm claude-gate`: the latest claude-review verdict must be Approve, naming a head SHA that matches the current head. an Approve with no SHA, or a stale one, fails closed) -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL, all threads `isResolved`, flags `suspicious_self_resolve`) -> `check-merge-target` (`pnpm merge-target-gate`, also run in CI on every PR: reads the PR base ref with `gh pr view` and fails when it is `main`, so an agent merge into `main` is refused before it happens). GitHub branch-protection settings must be checked separately; repository files do not establish their live state.
 
-**AI agents must not run `gh pr merge`.** This is a project convention. The repo owner runs the final squash-merge once all gates pass. The pre-push hook rejects a remote main target. Live GitHub protection and bypass permissions require separate inspection.
+**AI agents may run `gh pr merge --squash` only on a PR whose base is not `main` (owner rule, 2026-11-03).** With CI green, `pnpm claude-gate` approving the head and `pnpm pr:gate` passing, the agent squash-merges sub-PRs into integration branches such as `feat/terminal-redesign`; when the base is `main`, the repo owner runs the merge. `pnpm merge-target-gate` blocks a `main` base mechanically, locally and in CI. The pre-push hook rejects a remote main target. Live GitHub protection and bypass permissions require separate inspection.
 
 ## PR sizing (avoid the bloated-PR failure mode)
 

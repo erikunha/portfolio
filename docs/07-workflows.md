@@ -132,7 +132,8 @@ commit (scope blocks) -> (self-review the diff before opening the PR)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
   -> resolve every review thread (rebase before each push) -> pnpm claude-gate
   -> pnpm pr:gate
-  -> repo owner runs gh pr merge (project policy; no agent hook enforces it)
+  -> pnpm merge-target-gate (refuses a main base)
+  -> gh pr merge --squash: agent when the base is not main, owner when the base is main
 ```
 
 Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to group independently reviewable changes. See `CLAUDE.md` "Working agreement".

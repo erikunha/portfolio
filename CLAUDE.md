@@ -226,7 +226,7 @@ Verify: `curl https://erikunha.dev/api/healthz | jq .sha`
 
 ## PR merge gate
 
-When about to merge a PR: rebase first (non-dependabot, unless the already-reviewed exception applies), THEN check readiness on the post-rebase HEAD: `pnpm ci:local`, `pnpm claude-gate` (claude-review Approve naming the current head), and `pnpm pr:gate <pr>` for thread resolution (GraphQL `isResolved` on every thread, and it flags `suspicious_self_resolve`). AI agents must never call `gh pr merge`; the repo owner runs the final merge. Note that nothing blocks it mechanically now — the bash-guard that returned exit 2 was removed 2026-07-27.
+When about to merge a PR: rebase first (non-dependabot, unless the already-reviewed exception applies), THEN check readiness on the post-rebase HEAD: `pnpm ci:local`, `pnpm claude-gate` (claude-review Approve naming the current head), and `pnpm pr:gate <pr>` for thread resolution (GraphQL `isResolved` on every thread, and it flags `suspicious_self_resolve`). AI agents may run `gh pr merge --squash` only on a PR whose base is not `main` (owner rule, 2026-11-03): sub-PRs into integration branches such as `feat/terminal-redesign` merge once the gates above pass. A PR whose base is `main` is owner-only; `pnpm merge-target-gate <pr>` blocks a `main` base mechanically, locally and in CI, superseding the bash-guard that returned exit 2 and was removed 2026-07-27.
 
 ## Things that have been considered and rejected
 
