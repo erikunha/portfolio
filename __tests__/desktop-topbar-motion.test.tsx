@@ -27,7 +27,7 @@ describe('DesktopTopbar — toggleMotion', () => {
     );
 
     mounted = await mountClient(
-      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar)),
+      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar, { brand: null })),
     );
     const container = mounted.container;
 
@@ -55,7 +55,7 @@ describe('DesktopTopbar — toggleMotion', () => {
     );
 
     mounted = await mountClient(
-      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar)),
+      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar, { brand: null })),
     );
     const container = mounted.container;
 
@@ -83,7 +83,7 @@ describe('DesktopTopbar — toggleMotion', () => {
     );
 
     mounted = await mountClient(
-      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar)),
+      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar, { brand: null })),
     );
     const container = mounted.container;
 

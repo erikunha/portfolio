@@ -131,8 +131,8 @@ test.describe('Footer', () => {
       await page.evaluate(() => document.fonts.ready);
       if (width === 390) {
         const footer = await page.locator('footer').boundingBox();
-        expect(footer?.height).toBeGreaterThanOrEqual(1990);
-        expect(footer?.height).toBeLessThanOrEqual(2110);
+        expect(footer?.height).toBeGreaterThanOrEqual(2130);
+        expect(footer?.height).toBeLessThanOrEqual(2230);
       }
       const cells = page.locator('.footer-netstat :is(th, td)');
       for (const cell of await cells.all()) {
@@ -180,39 +180,94 @@ test.describe('Footer', () => {
     }
   });
 
-  test('tree links are compact under a mouse in six desktop, three tablet and one mobile column', async ({
+  test('site map follows the type scale and the phi grid: three columns at desktop and tablet, one centered below', async ({
     page,
   }) => {
-    const expectedColumns: Record<number, number> = { 1280: 6, 768: 3, 390: 1, 320: 1 };
+    const expectedColumns: Record<number, number> = { 1280: 3, 768: 3, 390: 1, 320: 1 };
     for (const width of [1280, 768, 390, 320]) {
       await page.setViewportSize({ width, height: 812 });
       await loadFooter(page);
       const tree = page.getByRole('navigation', { name: 'Site map' });
+      const scale = await page.evaluate(() => {
+        const probe = document.createElement('span');
+        const read = (token: string) => {
+          probe.style.fontSize = `var(${token})`;
+          document.body.append(probe);
+          const size = Number.parseFloat(getComputedStyle(probe).fontSize);
+          probe.remove();
+          return size;
+        };
+        return {
+          body: read('--text-body'),
+          base: read('--text-base'),
+          title: read('--text-section-title'),
+        };
+      });
+      for (const id of ['session', 'netstat', 'tree']) {
+        await expect(page.locator(`#footer-${id}-title`)).toHaveCSS(
+          'font-size',
+          `${scale.title}px`,
+        );
+      }
+      const heading = tree.locator('.sm-title').first();
+      await expect(heading).toHaveCSS('font-size', `${scale.base}px`);
+      await expect(heading).toHaveCSS('font-weight', '700');
       for (const link of await tree.getByRole('link').all()) {
-        await expect(link).toHaveCSS('color', 'rgb(30, 155, 50)');
-        const sizes = await link.evaluate((element) => ({
-          link: Number.parseFloat(getComputedStyle(element).fontSize),
-          title: Number.parseFloat(
-            getComputedStyle(element.closest('nav')?.querySelector('.sm-title') ?? element)
-              .fontSize,
-          ),
-        }));
-        expect(sizes.link).toBe(sizes.title);
-        expect(sizes.link).toBeLessThan(14);
+        await expect(link).toHaveCSS('font-size', `${scale.body}px`);
+        await expect(link).toHaveCSS('color', 'rgb(230, 255, 230)');
         const box = await link.boundingBox();
         expect(box?.height).toBeGreaterThanOrEqual(24);
-        expect(box?.height).toBeLessThanOrEqual(32);
-        expect(box?.width).toBeGreaterThanOrEqual(44);
+        const fits = await link.evaluate((element) => element.scrollWidth <= element.clientWidth);
+        expect(fits, `${await link.textContent()} must wrap only between words at ${width}`).toBe(
+          true,
+        );
       }
       const columns = await tree
         .locator('.sm-groups')
         .evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length);
       expect(columns).toBe(expectedColumns[width]);
+      const edges = await page.evaluate(() => {
+        const left = (selector: string) =>
+          document.querySelector(selector)?.getBoundingClientRect().left ?? Number.NaN;
+        return {
+          tree: left('#footer-tree-title'),
+          netstat: left('#footer-netstat-title'),
+          session: left('#footer-session-title'),
+        };
+      });
+      expect(edges.tree).toBeCloseTo(edges.session, 0);
+      if (width < 900) expect(edges.tree).toBeCloseTo(edges.netstat, 0);
+      const gaps = await tree.evaluate((element) => {
+        const style = getComputedStyle(element.querySelector('.sm-groups') as Element);
+        const title = getComputedStyle(
+          element.closest('.footer-tree')?.querySelector('.footer-card-title') as Element,
+        );
+        return {
+          column: style.columnGap,
+          row: style.rowGap,
+          title: title.marginBottom,
+        };
+      });
+      expect(Number.parseFloat(gaps.row)).toBeGreaterThanOrEqual(Number.parseFloat(gaps.column));
+      expect(Number.parseFloat(gaps.title)).toBeCloseTo(Number.parseFloat(gaps.column), 1);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         width,
       );
     }
   });
+
+  test('the single mobile column is centered in its card', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 812 });
+    await loadFooter(page);
+    const offsets = await page.evaluate(() => {
+      const card = document.querySelector('.footer-tree')?.getBoundingClientRect();
+      const list = document.querySelector('.sm-groups > li')?.getBoundingClientRect();
+      if (!card || !list) throw new Error('site map missing');
+      return { left: list.left - card.left, right: card.right - list.right };
+    });
+    expect(Math.abs(offsets.left - offsets.right)).toBeLessThan(2);
+  });
+
   test('tree links keep 44px touch targets under a coarse pointer', async ({ browser }) => {
     const context = await browser.newContext({
       viewport: { width: 390, height: 844 },

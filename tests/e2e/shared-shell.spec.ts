@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { brand } from '@/content/brand';
 
 const SHELL_PATHS = ['/', '/design-system', '/design-system/tokens', '/links', '/links/en'];
 const OVERFLOW_PATHS = [
@@ -13,7 +14,6 @@ const DESKTOP = { width: 1280, height: 800 };
 const PHONE = { width: 390, height: 844 };
 const WIDTHS = [320, 390, 768, 1024, 1280, 1536];
 const PHONE_MAX_WIDTH = 767;
-const BRAND = 'ERIK_CUNHA.SH';
 const MENU_NAME = 'Open menu';
 const DRAWER = '#section-drawer';
 const DS_DRAWER_NAV = 'Design system menu';
@@ -31,8 +31,15 @@ test.describe('one shell on every page', () => {
       await page.goto(path);
       const topbar = page.locator('.desktop-topbar');
       await expect(topbar).toBeVisible();
-      await expect(topbar.getByText(BRAND, { exact: true })).toBeVisible();
-      await expect(topbar.getByRole('button', { name: MENU_NAME })).toBeVisible();
+      const homeLink = topbar.getByRole('link', { name: brand.accessibleName });
+      await expect(homeLink).toBeVisible();
+      await expect(topbar.locator('.window-chrome, [class*="window-chrome"]')).toHaveCount(0);
+      const menu = topbar.getByRole('button', { name: MENU_NAME });
+      await expect(menu).toBeVisible();
+      const [iconBox, menuBox] = await Promise.all([homeLink.boundingBox(), menu.boundingBox()]);
+      expect(menuBox?.x ?? 0, 'the menu trigger sits right of the brand icon').toBeGreaterThan(
+        iconBox?.x ?? Number.POSITIVE_INFINITY,
+      );
       await expect(topbar.getByRole('link', { name: /hire/i })).toBeVisible();
       await expect(page.locator('.site-bar')).toHaveCount(0);
     });
@@ -42,6 +49,7 @@ test.describe('one shell on every page', () => {
       await page.goto(path);
       const bar = page.locator('.mobile-title-bar');
       await expect(bar).toBeVisible();
+      await expect(bar.getByRole('link', { name: brand.accessibleName })).toBeVisible();
       await expect(bar.getByRole('button', { name: MENU_NAME })).toBeVisible();
       await expect(page.getByRole('navigation', { name: 'primary' })).toBeVisible();
       await expect(page.locator('main#main-content')).toHaveCount(1);

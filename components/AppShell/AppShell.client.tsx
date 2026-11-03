@@ -13,9 +13,11 @@ import { SectionNavigation, SectionNavigationProvider } from '../responsive/Sect
 import { StatusBar } from '../responsive/StatusBar';
 
 export function AppShell({
+  brand,
   children,
   drawerExtra,
 }: {
+  brand: ReactNode;
   children: ReactNode;
   drawerExtra?: ReactNode;
 }) {
@@ -30,11 +32,11 @@ export function AppShell({
           <CRTOverlay />
         </ErrorBoundary>
         <div className="desktop-only">
-          <DesktopTopbar />
+          <DesktopTopbar brand={brand} />
         </div>
         <div className="mobile-only">
           <StatusBar />
-          <MobileTitleBar />
+          <MobileTitleBar brand={brand} />
         </div>
         <div className="app-content">{children}</div>
         <Dock />

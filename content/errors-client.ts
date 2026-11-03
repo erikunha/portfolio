@@ -2,8 +2,6 @@ import type { ErrorsClientContent } from './schemas';
 
 export const errorsClientContent: ErrorsClientContent = {
   chrome: {
-    brand: 'erik_cunha.sh',
-    brandHref: '/',
     navLabel: 'Site navigation',
     skipLabel: 'Skip to main content',
     nav: [

@@ -1,5 +1,4 @@
 export {
-  BrandLink,
   DRAWER_ID,
   jumpToSection,
   MENU_ICON_PATH,

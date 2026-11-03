@@ -169,7 +169,6 @@
     outline-offset: 2px;
   }
 
-  /* biome-ignore lint/style/noDescendingSpecificity: the earlier .site-drawer rule is a scoped override that must keep winning; this base rule is the default outside the drawer */
   .ds-nav-group-title,
   .toc-title {
     margin: var(--spacing-3) 10px var(--spacing-1);

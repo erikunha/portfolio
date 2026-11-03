@@ -1,4 +1,32 @@
 @layer components {
+  .brand-link {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: var(--spacing-target);
+    min-height: var(--spacing-target);
+    color: var(--color-primary-500);
+    text-decoration: none;
+  }
+
+  .brand-link:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  .brand-icon {
+    display: block;
+    filter: drop-shadow(0 0 2px var(--color-glow-30));
+  }
+
+  @media print {
+    .brand-icon {
+      filter: none;
+    }
+  }
+
   .page-main {
     position: relative;
     z-index: var(--z-content);

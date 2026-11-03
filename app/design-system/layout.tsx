@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react';
 import { AppShell } from '@/components/AppShell';
+import { BrandLink } from '@/components/BrandLink';
 import { DS_NAV_ID, DS_SKIP_NAV_LABEL } from './_components/ds-nav';
 import { DsDrawerNav, DsNavNoScript, PagerNav, Sidebar } from './_components/Sidebar.client';
 
 export default function DesignSystemLayout({ children }: { children: ReactNode }) {
   return (
-    <AppShell drawerExtra={<DsDrawerNav />}>
+    <AppShell brand={<BrandLink />} drawerExtra={<DsDrawerNav />}>
       <a href={`#${DS_NAV_ID}`} className="skip-to-content ds-skip-nav">
         {DS_SKIP_NAV_LABEL}
       </a>

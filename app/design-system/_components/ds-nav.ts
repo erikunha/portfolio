@@ -33,6 +33,7 @@ export const DS_NAV_GROUPS: readonly NavGroup[] = [
     title: 'PRIMITIVES',
     links: [
       { href: `${ROOT}/primitives/badge`, label: 'BADGE' },
+      { href: `${ROOT}/primitives/brand-icon`, label: 'BRAND-ICON' },
       { href: `${ROOT}/primitives/button`, label: 'BUTTON' },
       { href: `${ROOT}/primitives/cmd-line`, label: 'CMD-LINE' },
       { href: `${ROOT}/primitives/copybutton`, label: 'COPYBUTTON' },

@@ -28,7 +28,11 @@ describe('skip-to-content link', () => {
   async function renderAppShell(): Promise<HTMLElement> {
     const { AppShell } = await import('@/components/AppShell');
     mounted = await mountClient(
-      createElement(AppShell, null, createElement('main', { id: 'main-content' }, 'content')),
+      createElement(AppShell, {
+        brand: null,
+        // biome-ignore lint/correctness/noChildrenProp: AppShell requires brand, and createElement types a required prop together with children only when children sit in the props object
+        children: createElement('main', { id: 'main-content' }, 'content'),
+      }),
     );
     return mounted.container;
   }
@@ -53,7 +57,11 @@ describe('skip-to-content link', () => {
     const { AppShell } = await import('@/components/AppShell');
     const { PageMain } = await import('@/components/PageMain');
     mounted = await mountClient(
-      createElement(AppShell, null, createElement(PageMain, null, 'content')),
+      createElement(AppShell, {
+        brand: null,
+        // biome-ignore lint/correctness/noChildrenProp: AppShell requires brand, and createElement types a required prop together with children only when children sit in the props object
+        children: createElement(PageMain, null, 'content'),
+      }),
     );
     const container = mounted.container;
 

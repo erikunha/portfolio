@@ -15,7 +15,7 @@ describe('DesktopTopbar CV link', () => {
       '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
     );
     mounted = await mountClient(
-      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar)),
+      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar, { brand: null })),
     );
     const links = Array.from(mounted.container.querySelectorAll('a'));
     const cv = links.find((link) => link.textContent === 'VIEW_CV');

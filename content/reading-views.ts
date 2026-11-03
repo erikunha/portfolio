@@ -28,7 +28,6 @@ const WORD_SEPARATOR = '_';
 export const readingViews = ReadingViewsSchema.parse({
   shared: {
     skipLabel: 'Skip to main content',
-    homeLabel: 'erik_cunha.sh',
     navLabel: 'Site navigation',
     nav: [
       { label: 'ABOUT', href: '/#sec-readme' },
@@ -45,7 +44,6 @@ export const readingViews = ReadingViewsSchema.parse({
     printLabel: 'PRINT / SAVE PDF',
     newTabRel: 'noopener noreferrer',
     newTabHint: '(opens in a new tab)',
-    homeHref: '/',
     ogImage: { path: '/og.png', width: 1200, height: 630 },
   },
   cv: {

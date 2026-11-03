@@ -645,12 +645,11 @@ export const TerminalChromeSchema = z.object({
 });
 export type TerminalChrome = z.infer<typeof TerminalChromeSchema>;
 
-export const TopbarChromeSchema = z.object({
-  brandMark: z.string().min(1),
-  brandLabel: z.string().min(1),
-  brandClose: z.string().min(1),
+export const BrandSchema = z.object({
+  homeHref: z.string().startsWith('/'),
+  accessibleName: z.string().min(1),
 });
-export type TopbarChrome = z.infer<typeof TopbarChromeSchema>;
+export type Brand = z.infer<typeof BrandSchema>;
 
 export type HeroContent = z.infer<typeof HeroContentSchema>;
 
@@ -723,8 +722,6 @@ const ErrorLinkSchema = z.object({ label: z.string().min(1), href: ErrorHrefSche
 
 export const ErrorsContentSchema = z.object({
   chrome: z.object({
-    brand: z.string().min(1),
-    brandHref: ErrorHrefSchema,
     navLabel: z.string().min(1),
     skipLabel: z.string().min(1),
     nav: z.array(ErrorLinkSchema).min(1),
@@ -949,7 +946,6 @@ const ReadingLinkSchema = z.object({ label: ReadingTextSchema, href: ReadingText
 export const ReadingViewsSchema = z.object({
   shared: z.object({
     skipLabel: ReadingTextSchema,
-    homeLabel: ReadingTextSchema,
     navLabel: ReadingTextSchema,
     nav: z.array(ReadingLinkSchema).min(1),
     hire: z.object({
@@ -960,7 +956,6 @@ export const ReadingViewsSchema = z.object({
     printLabel: ReadingTextSchema,
     newTabRel: ReadingTextSchema,
     newTabHint: ReadingTextSchema,
-    homeHref: z.string().startsWith('/'),
     ogImage: z.object({ path: z.string().startsWith('/'), width: z.number(), height: z.number() }),
   }),
   cv: z.object({

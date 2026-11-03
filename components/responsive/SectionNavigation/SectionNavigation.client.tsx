@@ -418,32 +418,6 @@ export function MenuTrigger({ className }: { className?: string }) {
   );
 }
 
-const HOME_PATH = '/';
-
-export function BrandLink({
-  className,
-  children,
-  ...rest
-}: {
-  className?: string;
-  children: ReactNode;
-  'aria-label'?: string;
-}) {
-  const { jump } = useSectionNavigation();
-  return (
-    <a
-      href={HOME_PATH}
-      className={className}
-      onClick={(event) => {
-        if (window.location.pathname === HOME_PATH) jump(event, HOME_SECTION_ID);
-      }}
-      {...rest}
-    >
-      {children}
-    </a>
-  );
-}
-
 export function SearchTrigger({ className }: { className?: string }) {
   const { drawerOpen, openDrawer, closeDrawer } = useSectionNavigation();
   const { copy } = NAVIGATION;

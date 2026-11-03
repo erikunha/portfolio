@@ -2,6 +2,7 @@ const COMPONENTS = [
   { id: 'button', label: 'Button' },
   { id: 'field', label: 'Field' },
   { id: 'badge', label: 'Badge' },
+  { id: 'brand-icon', label: 'BrandIcon' },
   { id: 'terminal-panel', label: 'TerminalPanel' },
   { id: 'stat-tile', label: 'StatTile' },
   { id: 'cmd-line', label: 'CmdLine' },

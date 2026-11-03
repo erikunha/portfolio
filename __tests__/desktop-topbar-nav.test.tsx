@@ -9,7 +9,6 @@ import {
   TOPBAR_NAV,
 } from '@/content/nav';
 import { NAVIGATION } from '@/content/navigation';
-import { topbarChrome } from '@/content/terminal-chrome';
 import { type MountedClient, mountClient } from './helpers/render';
 
 let mockPathname: string | null = null;
@@ -45,7 +44,15 @@ async function renderTopbar(): Promise<MountedClient> {
   const { DesktopTopbar } = await import(
     '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
   );
-  return mountClient(createElement(SectionNavigationProvider, null, createElement(DesktopTopbar)));
+  return mountClient(
+    createElement(
+      SectionNavigationProvider,
+      null,
+      createElement(DesktopTopbar, {
+        brand: createElement('a', { href: '/', 'data-test-brand': '1' }, 'brand'),
+      }),
+    ),
+  );
 }
 
 function isHiddenAtWidth(className: string, width: number): boolean {
@@ -157,16 +164,36 @@ describe('DesktopTopbar', () => {
     expect(hire?.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME);
   });
 
-  it('keeps the brand badge on the row at every desktop width', async () => {
+  it('puts the brand first and the menu trigger last, in DOM order and so in focus order', async () => {
     mounted = await renderTopbar();
-    const label = [...mounted.container.querySelectorAll('span')].find(
-      (span) => span.textContent === topbarChrome.brandLabel,
+    const focusable = [...mounted.container.querySelectorAll<HTMLElement>('a[href], button')];
+    const brandLink = focusable.find((element) => element.getAttribute('data-test-brand') === '1');
+    const trigger = mounted.container.querySelector<HTMLElement>('.menu-trigger');
+    const hire = focusable.find((element) =>
+      element.getAttribute('href')?.startsWith('https://www.linkedin.com'),
     );
 
-    expect(label, 'the brand badge must be part of the topbar').not.toBeNull();
+    expect(brandLink, 'the brand slot must render at the left of the topbar').toBeDefined();
+    expect(trigger, 'the menu trigger must be part of the topbar').not.toBeNull();
+    expect(focusable[0], 'the brand is the first focus stop').toBe(brandLink);
+    expect(focusable.at(-1), 'the menu trigger is the last focus stop').toBe(trigger);
+    expect(
+      hire && trigger && hire.compareDocumentPosition(trigger) & Node.DOCUMENT_POSITION_FOLLOWING,
+      'the menu trigger must follow the HIRE link',
+    ).toBeTruthy();
+  });
 
+  it('draws no window dots in the topbar', async () => {
+    mounted = await renderTopbar();
+
+    expect(mounted.container.querySelector('.window-chrome, [data-dot]')).toBeNull();
+  });
+
+  it('keeps the menu trigger on the row at every desktop width', async () => {
+    mounted = await renderTopbar();
+    const trigger = mounted.container.querySelector('.menu-trigger');
     const ancestors = [];
-    for (let node = label?.parentElement ?? null; node; node = node.parentElement) {
+    for (let node = trigger?.parentElement ?? null; node; node = node.parentElement) {
       ancestors.push(node);
     }
 
@@ -176,7 +203,7 @@ describe('DesktopTopbar', () => {
       );
       expect(
         hiddenAt.map((element) => element.getAttribute('class') ?? ''),
-        `the brand badge must be visible at ${width}px: an ancestor that hides it takes the badge off the row`,
+        `the menu trigger must be visible at ${width}px`,
       ).toEqual([]);
     }
   });

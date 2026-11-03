@@ -3,7 +3,7 @@ import { dsPageMetadata } from '../_lib/page-metadata';
 export const metadata = dsPageMetadata({
   slug: 'components',
   title: 'Components · Design System · erikunha.dev',
-  description: '8 design-system components and a docs clipboard helper for erikunha.dev',
+  description: '10 design-system components and a docs clipboard helper for erikunha.dev',
 });
 
 import Image from 'next/image';
@@ -12,11 +12,12 @@ import { MenuTrigger } from '../../../components/responsive/SectionNavigation';
 import { EqSpectrumStrip } from '../../../components/sections/GuitarSection/EqSpectrumStrip';
 import { guitarPresentation } from '../../../content/guitar-rig';
 import { Field } from '../../../design-system/components/Field';
+import { BrandIcon } from '../../../design-system/components/BrandIcon/BrandIcon';
 import { WindowChrome } from '../../../design-system/components/WindowChrome/WindowChrome';
 
 # COMPONENTS
 
-The `design-system/components` directory contains eight components. Seven have no client directive; `Field` is a client component. The docs also provide a client `CopyButton` helper from `app/design-system/_components`. Server-compatible components ship client JavaScript when imported through a client boundary.
+The `design-system/components` directory contains ten components. Nine have no client directive; `Field` is a client component. The docs also provide a client `CopyButton` helper from `app/design-system/_components`. Server-compatible components ship client JavaScript when imported through a client boundary.
 
 <ComponentNav />
 
@@ -86,6 +87,21 @@ The `design-system/components` directory contains eight components. Seven have n
   <TerminalPanel borderStyle="dashed">Dashed panel.</TerminalPanel>
 </Preview>
 
+## BrandIcon
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `size` | `number` | `60` | no |
+| `className` | `string` | · | no |
+
+<Preview id="brand-icon">
+  <BrandIcon />
+  <BrandIcon size={90} />
+  <BrandIcon size={40} />
+</Preview>
+
+The brand mark as one inline SVG path. `size` is the width in px; the height follows the cropped viewBox. It fills with `currentColor`, so the surrounding text colour (`--color-primary-500` in the header) paints it, and a static `drop-shadow` gives the phosphor glow of the CRT headings. It is `aria-hidden`: the link that wraps it carries the name. The `BrandLink` component in `components/BrandLink` pairs the two, with a 44px minimum target and the accessible name `erikunha.dev, home` from `content/brand.ts`.
+
 ## WindowChrome
 
 | Prop | Type | Default | Required |
@@ -100,7 +116,7 @@ The `design-system/components` directory contains eight components. Seven have n
   <WindowChrome size={9} />
 </Preview>
 
-Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RSC. Dots are `aria-hidden="true"` · purely decorative, no focus management. The `size` prop sets dot diameter in px; pass it explicitly for context-aware sizing (9px mobile title bar, 10px shell, 12px desktop topbar).
+Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RSC. Dots are `aria-hidden="true"` · purely decorative, no focus management. The `size` prop sets dot diameter in px; pass it explicitly for context-aware sizing (10px in the shell and contact panels).
 
 ## StatTile
 
@@ -178,7 +194,7 @@ These pieces live in `components/`, not in `design-system/components`. They are 
 
 ### MenuTrigger
 
-The one control that opens the site menu. It is an icon-only 44px square button (the icon box is `--spacing-target` divided by `--phi` twice) named `Open menu`, with `aria-expanded`, `aria-controls` and `aria-haspopup="dialog"`. It sits left of the brand at every width, so the menu is in the same place on the home page, `/links` and the design system.
+The one control that opens the site menu. It is an icon-only 44px square button (the icon box is `--spacing-target` divided by `--phi` twice) named `Open menu`, with `aria-expanded`, `aria-controls` and `aria-haspopup="dialog"`. It is the last item at the right end of the header at every width, so the menu is in the same place on the home page, `/links` and the design system.
 
 <Preview id="menu-trigger">
   <MenuTrigger />
