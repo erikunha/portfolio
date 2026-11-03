@@ -10,6 +10,7 @@ const COMPONENTS = [
   { id: 'menu-trigger', label: 'MenuTrigger' },
   { id: 'position-line', label: 'Position line' },
   { id: 'eq-spectrum-strip', label: 'EqSpectrumStrip' },
+  { id: 'cover-frame', label: 'Cover frame' },
   { id: 'company-link', label: 'CompanyLink' },
 ];
 

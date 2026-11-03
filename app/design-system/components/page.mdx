@@ -208,6 +208,20 @@ A live spectrum under an EQ curve: log-frequency bars, one curve and an axis. La
 
 **Motion:** Bars move on the beat. Under `prefers-reduced-motion: reduce`, or with the motion switch off, they hold a static level so the shape still reads. Bar height is the only data encoding; position on the axis carries frequency.
 
+### Cover frame
+
+The `links-thumb` class frames a video cover. The frame is always 16:9 and the image fills it exactly, so nothing is cropped: YouTube serves 4:3 covers with the picture centred between black bars, and a 16:9 frame trims only the bars. Colour comes from tokens in `theme.css`: the image is grayscale, then a signal-green layer multiplies over it (`--links-thumb-tint`). On hover or keyboard focus of the parent link, the layer relaxes to `--links-thumb-tint-reveal` and the image regains its colour.
+
+<Preview id="cover-frame">
+  <span className="links-thumb" style={{ width: '16rem' }}>
+    <img src="/images/guitar-live.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+  </span>
+</Preview>
+
+**Motion:** The reveal fades over `--links-thumb-reveal-duration`. Under `prefers-reduced-motion: reduce`, or with the motion switch off, it switches without a transition.
+
+**Accessibility:** The cover is decorative (`alt=""`); the link around it carries the video title. No text sits on a cover.
+
 ### CompanyLink
 
 An external link to a company named in the text. It always opens in a new tab with `rel="noopener noreferrer"` and announces `(opens in a new tab)` to screen readers. When a page already announces the behaviour once, pass `describedBy` to point at that note instead.

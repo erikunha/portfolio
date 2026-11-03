@@ -73,7 +73,7 @@ five history rows, including cache revalidation. The fixture includes shard-host
 thumbnails for the latest video and history. The loader applies the same URL
 normalizer as the live RSS parser before returning the fixture. Thumbnails still
 pass through the real Next.js image optimizer and require access to `i.ytimg.com`.
-The fixture flag is ignored on Vercel deployments. Without it, the server loads
+The fixture is returned as written, without the Shorts filter. The fixture flag is ignored on Vercel deployments. Without it, the server loads
 the live YouTube feed.
 
 ## Reference docs
