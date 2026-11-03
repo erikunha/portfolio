@@ -82,7 +82,7 @@ describe('the LinkedIn hire action reads the same on every surface', () => {
       '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
     );
     mounted = await mountClient(
-      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar)),
+      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar, { brand: null })),
     );
     const links = hireLinks(mounted.container, 'nav');
 

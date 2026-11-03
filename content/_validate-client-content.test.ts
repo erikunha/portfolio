@@ -1,21 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const TOPBAR_CHROME = { brandMark: '■', brandLabel: 'ERIK_CUNHA.SH', brandClose: '×' };
+describe('BrandSchema', () => {
+  it('accepts the shipped brand', async () => {
+    const { brand } = await import('./brand');
+    const { BrandSchema } = await import('./schemas');
 
-describe('TopbarChromeSchema', () => {
-  it('accepts the shipped topbar chrome', async () => {
-    const { topbarChrome } = await import('./terminal-chrome');
-    const { TopbarChromeSchema } = await import('./schemas');
-
-    expect(TopbarChromeSchema.parse(topbarChrome)).toEqual(TOPBAR_CHROME);
+    expect(BrandSchema.parse(brand)).toEqual({
+      homeHref: '/',
+      accessibleName: 'erikunha.dev, home',
+    });
   });
 
-  it.each(['brandMark', 'brandLabel', 'brandClose'])('rejects an empty %s', async (field) => {
-    const { TopbarChromeSchema } = await import('./schemas');
+  it.each(['homeHref', 'accessibleName'])('rejects an empty %s', async (field) => {
+    const { BrandSchema } = await import('./schemas');
+    const valid = { homeHref: '/', accessibleName: 'erikunha.dev, home' };
 
     expect(
-      TopbarChromeSchema.safeParse({ ...TOPBAR_CHROME, [field]: '' }).success,
-      `topbarChrome.${field} must be a non-empty string: the brand badge is rendered from it at every desktop width, so an empty value silently drops a visible control`,
+      BrandSchema.safeParse({ ...valid, [field]: '' }).success,
+      `brand.${field} must be non-empty: the brand link is an icon with no visible text, so an empty accessible name leaves the home link unnamed`,
     ).toBe(false);
   });
 });
@@ -25,20 +27,12 @@ describe('build-time content gate', () => {
     vi.resetModules();
   });
 
-  it('rejects a topbar chrome with an empty brand label', async () => {
-    vi.doMock('./terminal-chrome', () => ({
-      shellChrome: {
-        promptLabel: 'erik@portfolio · /bin/sh',
-        rightTag: 'SESSION_ID: 0xDEADBEEF',
-        mobileLabel: 'ZSH',
-      },
-      contactChrome: { promptLabel: 'erik@portfolio · contact', rightTag: 'SECURE_CHANNEL' },
-      topbarChrome: { ...TOPBAR_CHROME, brandLabel: '' },
-    }));
+  it('rejects a brand with an empty accessible name', async () => {
+    vi.doMock('./brand', () => ({ brand: { homeHref: '/', accessibleName: '' } }));
 
     await expect(
       import('./_validate-client-content'),
-      'the build gate must parse topbarChrome: content/terminal-chrome.ts is imported by client components, so it carries no runtime parse of its own and an unparsed schema fails open',
+      'the build gate must parse brand: it is read by client components, so content/brand.ts carries no runtime parse of its own and an unparsed schema fails open',
     ).rejects.toThrow();
   });
   it('rejects a world map whose land grid has the wrong row count', async () => {

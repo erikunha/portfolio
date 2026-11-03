@@ -1,4 +1,5 @@
 import { AppShell } from '@/components/AppShell';
+import { BrandLink } from '@/components/BrandLink';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PageMain } from '@/components/PageMain';
 import { About } from '@/components/sections/About';
@@ -16,7 +17,7 @@ import { BreakpointProvider } from '@/lib/use-breakpoint.client';
 export default function Home() {
   return (
     <BreakpointProvider initialIsMobile={false}>
-      <AppShell>
+      <AppShell brand={<BrandLink />}>
         <PageMain>
           <ErrorBoundary>
             <Hero />

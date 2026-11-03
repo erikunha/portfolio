@@ -34,6 +34,7 @@ export const DS_NAV_GROUPS: readonly NavGroup[] = [
     title: 'PRIMITIVES',
     links: [
       { href: `${ROOT}/primitives/badge`, label: 'BADGE' },
+      { href: `${ROOT}/primitives/brand-icon`, label: 'BRAND-ICON' },
       { href: `${ROOT}/primitives/button`, label: 'BUTTON' },
       { href: `${ROOT}/primitives/cmd-line`, label: 'CMD-LINE' },
       { href: `${ROOT}/primitives/copybutton`, label: 'COPYBUTTON' },
@@ -51,7 +52,6 @@ export const DS_ROUTES: readonly string[] = DS_NAV_GROUPS.flatMap((group) =>
 );
 
 export const DS_SITE_BAR = {
-  brand: { href: '/', label: 'erik_cunha.sh' },
   navLabel: 'Site navigation',
   links: [
     { href: '/#sec-about', label: 'ABOUT' },
@@ -65,7 +65,6 @@ export const DS_SITE_BAR = {
 export const DS_MENU_TRIGGER_LABEL = 'MENU';
 export const DS_DRAWER_ID = 'site-drawer';
 export const DS_DRAWER_LABEL = 'Site menu';
-export const DS_DRAWER_TITLE = 'erik_cunha.sh';
 export const DS_DRAWER_CLOSE_LABEL = 'CLOSE';
 
 export const DS_DRAWER_DS_NAV_LABEL = 'Design system';

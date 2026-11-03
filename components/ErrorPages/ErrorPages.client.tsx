@@ -1,23 +1,39 @@
 'use client';
 
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-
 import { reportClientError } from '@/components/ErrorBoundary/ErrorBoundary.client';
+import { brand } from '@/content/brand';
 import { errorsClientContent as errorsContent } from '@/content/errors-client';
 import type { ErrorsContent } from '@/content/schemas';
 
 const COPIED_RESET_MS = 2000;
 
-export function ErrorChrome({ chrome }: { chrome: ErrorsContent['chrome'] }) {
+const BRAND_IMAGE_SRC = '/icon.svg';
+const BRAND_IMAGE_SIZE_PX = 28;
+
+function ClientBrandLink() {
+  return (
+    <a className="brand-link" href={brand.homeHref} aria-label={brand.accessibleName}>
+      {/* biome-ignore lint/performance/noImgElement: a client boundary cannot import the inline SVG without shipping its path to every route; the static icon file carries the same mark */}
+      <img src={BRAND_IMAGE_SRC} width={BRAND_IMAGE_SIZE_PX} height={BRAND_IMAGE_SIZE_PX} alt="" />
+    </a>
+  );
+}
+
+export function ErrorChrome({
+  chrome,
+  brand,
+}: {
+  chrome: ErrorsContent['chrome'];
+  brand: ReactNode;
+}) {
   return (
     <>
       <a href="#main-content" className="skip-to-content">
         {chrome.skipLabel}
       </a>
       <header className="err-bar">
-        <a className="err-bar-brand" href={chrome.brandHref}>
-          {chrome.brand}
-        </a>
+        {brand}
         <nav aria-label={chrome.navLabel}>
           {chrome.nav.map((item) => (
             <a key={item.href} className="err-bar-link" href={item.href}>
@@ -118,7 +134,7 @@ export function RouteErrorPage({ error, reset }: RouteErrorProps) {
 
   return (
     <>
-      <ErrorChrome chrome={errorsContent.chrome} />
+      <ErrorChrome chrome={errorsContent.chrome} brand={<ClientBrandLink />} />
       <ServerErrorMain error={error} reset={reset} content={errorsContent.serverError} />
     </>
   );

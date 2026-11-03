@@ -34,18 +34,6 @@
     padding: 0 var(--space-gutter);
   }
 
-  .site-bar-brand {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--spacing-target);
-    color: var(--color-primary-500);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-decoration: none;
-  }
-
   .site-bar a:hover {
     color: var(--color-text);
     text-decoration: none;
@@ -390,6 +378,7 @@
 
     .site-bar-menu {
       display: inline-flex;
+      margin-left: auto;
     }
   }
 

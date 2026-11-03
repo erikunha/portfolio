@@ -1,5 +1,6 @@
 'use client';
 import { usePathname } from 'next/navigation';
+import type { ReactNode } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { isolate } from '@/lib/dom/isolate';
 import {
@@ -7,7 +8,6 @@ import {
   DS_DRAWER_DS_NAV_LABEL,
   DS_DRAWER_ID,
   DS_DRAWER_LABEL,
-  DS_DRAWER_TITLE,
   DS_HOME_LINK,
   DS_MENU_TRIGGER_LABEL,
   DS_NAV_GROUPS,
@@ -74,7 +74,7 @@ function DsNavLinks({ currentPath, groupIdPrefix, onNavigate }: DsNavLinksProps)
   );
 }
 
-export function SiteBar() {
+export function SiteBar({ brand, drawerBrand }: { brand: ReactNode; drawerBrand: ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -129,19 +129,7 @@ export function SiteBar() {
     <>
       <header className="site-bar">
         <div className="site-bar-in">
-          <a className="site-bar-brand" href={DS_SITE_BAR.brand.href}>
-            {DS_SITE_BAR.brand.label}
-          </a>
-          <button
-            ref={triggerRef}
-            type="button"
-            className="site-bar-menu"
-            aria-expanded={open}
-            aria-controls={DS_DRAWER_ID}
-            onClick={() => (open ? close(false) : setOpen(true))}
-          >
-            {DS_MENU_TRIGGER_LABEL}
-          </button>
+          {brand}
           <nav className="site-bar-nav" aria-label={DS_SITE_BAR.navLabel}>
             {DS_SITE_BAR.links.map(({ href, label }) => (
               <a
@@ -153,6 +141,16 @@ export function SiteBar() {
               </a>
             ))}
           </nav>
+          <button
+            ref={triggerRef}
+            type="button"
+            className="site-bar-menu"
+            aria-expanded={open}
+            aria-controls={DS_DRAWER_ID}
+            onClick={() => (open ? close(false) : setOpen(true))}
+          >
+            {DS_MENU_TRIGGER_LABEL}
+          </button>
         </div>
       </header>
       <div ref={overlayRef} className="contents">
@@ -171,7 +169,7 @@ export function SiteBar() {
           inert={!open}
         >
           <div className="site-drawer-head">
-            <p className="site-drawer-title">{DS_DRAWER_TITLE}</p>
+            <p className="site-drawer-title">{drawerBrand}</p>
             <button
               ref={closeRef}
               type="button"

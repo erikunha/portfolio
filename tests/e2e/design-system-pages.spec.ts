@@ -233,6 +233,7 @@ const TABLE_ROUTES = [
   '/design-system/foundations/spacing-borders',
   '/design-system/foundations/typography',
   '/design-system/primitives/badge',
+  '/design-system/primitives/brand-icon',
   '/design-system/primitives/button',
   '/design-system/primitives/cmd-line',
   '/design-system/primitives/copybutton',

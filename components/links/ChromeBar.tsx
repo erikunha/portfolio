@@ -1,7 +1,7 @@
+import { BrandLink } from '@/components/BrandLink';
 import { linksContent } from '@/content/links';
 import { LINKS_LOCALE, LINKS_PATH, type LinksLocale } from '@/content/links.constants';
 import { Button } from '@/design-system';
-import { WindowChrome } from '@/design-system/components/WindowChrome';
 
 const SWITCH_LABEL: Record<LinksLocale, string> = {
   [LINKS_LOCALE.pt]: 'Português',
@@ -13,7 +13,7 @@ export function ChromeBar({ locale }: { locale: LinksLocale }) {
 
   return (
     <div className="links-chrome flex gap-2 items-center pt-4">
-      <WindowChrome size={9} />
+      <BrandLink />
       <span className="ml-2 flex-1 text-primary-400 text-xs tracking-[0.14em] uppercase">
         {shellTitle}
       </span>
