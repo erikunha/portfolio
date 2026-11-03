@@ -118,7 +118,7 @@ describe('PositionMeter', () => {
     expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('75');
   });
 
-  it('renders only the progress line: the NN/9 label lives on the INDEX trigger', () => {
+  it('renders only the progress line and no NN/9 readout', () => {
     const { container } = mount();
     expect(screen.queryByText('01/9'), 'the rail position strip was removed').toBeNull();
     expect(container.querySelector('[aria-live], [role="status"], [role="alert"]')).toBeNull();

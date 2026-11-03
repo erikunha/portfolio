@@ -27,7 +27,9 @@ async function settleScroll(page: import('@playwright/test').Page) {
 }
 
 async function openDrawer(page: import('@playwright/test').Page) {
-  const trigger = page.getByRole('button', { name: /INDEX/ }).locator('visible=true');
+  const trigger = page
+    .getByRole('button', { name: 'Open menu', exact: true })
+    .locator('visible=true');
   await trigger.click();
   await expect(page.locator('#section-drawer')).toBeVisible();
 }
