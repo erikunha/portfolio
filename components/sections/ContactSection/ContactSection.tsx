@@ -36,7 +36,7 @@ export function ContactSection({ defer }: { defer?: boolean } = {}) {
           <ErrorBoundary>
             <ContactFormLazy />
           </ErrorBoundary>
-          <div className="ctz-footer">
+          <div className="contact-reach">
             <section className="contact-channels ab-panel" aria-labelledby="contact-channels-title">
               <header className="ab-ph">
                 <span className="ab-mk" aria-hidden="true">
@@ -90,9 +90,9 @@ export function ContactSection({ defer }: { defer?: boolean } = {}) {
                 </dl>
               </div>
             </section>
-            <dl className="ctz-facts">
+            <dl className="contact-facts">
               {factRows.map(([label, value]) => (
-                <div className="ctz-fact" key={label}>
+                <div className="contact-fact" key={label}>
                   <dt>{label}</dt>
                   <dd>{value}</dd>
                 </div>

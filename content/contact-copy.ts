@@ -50,8 +50,6 @@ export const contactCopy: ContactContent = {
     linkedinNewTabNote: '(opens in a new tab)',
     githubLabel: 'github',
     githubAccessibleLabel: 'github.com/erikunha (opens in a new tab)',
-    replyLabel: 'reply',
-    replyValue: REPLY_WINDOW,
     languagesLabel: 'lang',
   },
   timezone: {

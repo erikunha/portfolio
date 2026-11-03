@@ -83,8 +83,6 @@ export const ContactContentSchema = z.object({
     linkedinNewTabNote: z.string().min(1),
     githubLabel: z.string().min(1),
     githubAccessibleLabel: z.string().min(1),
-    replyLabel: z.string().min(1),
-    replyValue: z.string().min(1),
     languagesLabel: z.string().min(1),
   }),
   timezone: TimezonePanelSchema,

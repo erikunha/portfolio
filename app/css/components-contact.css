@@ -681,7 +681,7 @@
     color: var(--color-primary-500);
   }
 
-  .ctz-facts {
+  .contact-facts {
     display: grid;
     gap: var(--spacing-1);
     margin: 0;
@@ -689,25 +689,25 @@
     font-size: var(--text-sm);
   }
 
-  .ctz-fact {
+  .contact-fact {
     display: grid;
     grid-template-columns: 6ch minmax(0, 1fr);
     align-items: baseline;
     gap: var(--spacing-1) var(--spacing-2);
   }
 
-  .ctz-fact dt {
+  .contact-fact dt {
     color: var(--color-text-secondary);
   }
 
-  .ctz-fact dd {
+  .contact-fact dd {
     min-width: 0;
     margin: 0;
     color: var(--color-text);
     overflow-wrap: anywhere;
   }
 
-  .ctz-footer {
+  .contact-reach {
     display: grid;
     gap: var(--space-phi-2);
   }
@@ -788,7 +788,7 @@
   }
 
   @media (max-width: 767.98px) {
-    .ctz-fact {
+    .contact-fact {
       grid-template-columns: minmax(0, 1fr);
     }
 
