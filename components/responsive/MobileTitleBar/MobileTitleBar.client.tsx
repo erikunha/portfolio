@@ -2,16 +2,18 @@
 
 import { topbarChrome } from '@/content/terminal-chrome';
 import { WindowChrome } from '@/design-system';
-import { IndexTrigger } from '../SectionNavigation';
+import { MenuTrigger } from '../SectionNavigation';
 
 export function MobileTitleBar() {
   return (
-    <div className="mobile-title-bar sticky top-7 z-[109] flex items-center gap-2.5 px-[14px] py-2.5 bg-secondary-950 border-b border-primary-subtle text-xs uppercase tracking-[0.14em]">
-      <IndexTrigger className="normal-case" />
-      <div className="flex-1 text-center text-primary-500 font-bold" aria-hidden="true">
+    <div className="mobile-title-bar sticky top-7 z-[109] grid grid-cols-[var(--spacing-target)_minmax(0,1fr)_var(--spacing-target)] items-center gap-2.5 px-[14px] py-2.5 bg-secondary-950 border-b border-primary-subtle text-xs uppercase tracking-[0.14em]">
+      <MenuTrigger />
+      <div className="text-center text-primary-500 font-bold" aria-hidden="true">
         {topbarChrome.brandLabel}
       </div>
-      <WindowChrome size={9} />
+      <div className="justify-self-end">
+        <WindowChrome size={9} />
+      </div>
     </div>
   );
 }
