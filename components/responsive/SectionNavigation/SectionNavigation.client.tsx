@@ -17,6 +17,7 @@ import {
   HOME_SECTION_ID,
   NAVIGATION,
   sectionHref,
+  spokenSectionPosition,
 } from '@/content/navigation';
 import { SECTION_NAV } from '@/content/section-registry';
 import { NavItem } from '@/design-system';
@@ -36,6 +37,8 @@ const SCROLL_LOCK_ATTRIBUTE = 'data-scroll-locked';
 const SEARCH_KEY = 'k';
 const INDEX_TRIGGER_CLASS = 'index-trigger';
 const INDEX_TRIGGER_SELECTOR = `.${INDEX_TRIGGER_CLASS}`;
+export const MENU_ICON_PATH = 'M4 7h16M4 12h16M4 17h16';
+const ICON_VIEWBOX = '0 0 24 24';
 const KEYBOARD_PLATFORM = {
   APPLE: 'apple',
   OTHER: 'other',
@@ -318,8 +321,8 @@ export function SectionNavigation() {
         <div className="menu-head">
           <span className="menu-title">{copy.title}</span>
           <span className="menu-badge" data-section-count={SECTION_NAV.length}>
-            <span className="sr-only">{`${SECTION_NAV.length} ${copy.sectionCountLabel}`}</span>
-            <span aria-hidden="true">{SECTION_NAV.length}</span>
+            <span className="sr-only">{spokenSectionPosition(currentId)}</span>
+            <span aria-hidden="true">{formatSectionPosition(currentId)}</span>
           </span>
           <button
             ref={closeRef}
@@ -392,20 +395,21 @@ export function SectionNavigation() {
 }
 
 export function IndexTrigger({ className }: { className?: string }) {
-  const { currentId, drawerOpen, openDrawer } = useSectionNavigation();
+  const { drawerOpen, openDrawer } = useSectionNavigation();
   const { copy } = NAVIGATION;
   return (
     <button
       type="button"
       className={cn(INDEX_TRIGGER_CLASS, className)}
+      aria-label={copy.openMenu}
       aria-expanded={drawerOpen}
       aria-controls={DRAWER_ID}
       aria-haspopup="dialog"
       onClick={(event) => openDrawer(event.currentTarget)}
     >
-      <span aria-hidden="true">{copy.indexGlyph}</span>
-      <span>{copy.indexLabel}</span>
-      <span className="index-trigger-pos">{formatSectionPosition(currentId)}</span>
+      <svg viewBox={ICON_VIEWBOX} aria-hidden="true" focusable="false">
+        <path d={MENU_ICON_PATH} />
+      </svg>
     </button>
   );
 }

@@ -7,14 +7,14 @@ import {
   NAVIGATION,
   sectionHref,
 } from '@/content/navigation';
-import { DRAWER_ID, useSectionNavigation } from '../SectionNavigation';
+import { DRAWER_ID, MENU_ICON_PATH, useSectionNavigation } from '../SectionNavigation';
 
 const ICON_PATHS: Record<DockKey, string> = {
   home: 'M3 11l9-8 9 8v10H3zM9 21V12h6v9',
   work: 'M3 7l3-3h5l2 3h8v13H3z',
   shell: 'M4 4h16v16H4zM7 9l3 3-3 3M12 16h5',
   hire: 'M7 17L17 7M9 7h8v8',
-  menu: 'M4 7h16M4 12h16M4 17h16',
+  menu: MENU_ICON_PATH,
 };
 
 function DockIcon({ control }: { control: DockKey }) {

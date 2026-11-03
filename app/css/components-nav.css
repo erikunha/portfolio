@@ -57,34 +57,42 @@
 
   .index-trigger {
     display: inline-flex;
+    flex: none;
     align-items: center;
-    gap: var(--spacing-2);
-    min-height: var(--spacing-target);
-    padding: 0 var(--spacing-3);
-    font-size: var(--text-min);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    white-space: nowrap;
+    justify-content: center;
+    box-sizing: border-box;
+    width: var(--spacing-target);
+    height: var(--spacing-target);
+    padding: 0;
     color: var(--color-primary-500);
     background: transparent;
     border: var(--border-width) solid var(--color-primary-subtle);
     border-radius: var(--radius-none);
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .index-trigger:hover {
+  .index-trigger svg {
+    width: var(--icon-menu);
+    height: var(--icon-menu);
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.6;
+  }
+
+  .index-trigger:hover,
+  .index-trigger[aria-expanded="true"] {
     background: var(--color-glow-06);
     border-color: var(--color-primary-500);
   }
 
-  .index-trigger:focus-visible {
-    outline: var(--border-width) solid var(--color-primary-500);
-    outline-offset: 2px;
+  .index-trigger:active {
+    background: var(--color-primary-quiet);
   }
 
-  .index-trigger-pos {
-    color: var(--color-tertiary-50);
-    font-variant-numeric: tabular-nums;
+  .index-trigger:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
   }
 
   .section-menu {
@@ -148,6 +156,7 @@
 
   .menu-title {
     flex: 1;
+    min-width: 0;
     color: var(--color-primary-500);
     font-weight: 700;
     font-size: var(--text-xs);
@@ -260,6 +269,8 @@
 
   .menu-close {
     order: 2;
+    flex: none;
+    white-space: nowrap;
     min-height: var(--spacing-target);
     padding: 0 var(--spacing-3);
     font-size: var(--text-xs);

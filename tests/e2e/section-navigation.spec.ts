@@ -11,10 +11,10 @@ const MOTION_TIER_WIDTH = 1280;
 const FOOT_GAP_LIMIT_PX = 32;
 
 for (const width of [390, 768, 1024, 1280, 1536]) {
-  test.describe(`section navigation: INDEX trigger at ${width}px`, () => {
+  test.describe(`section navigation: menu trigger at ${width}px`, () => {
     test.use({ viewport: { width, height: 844 } });
 
-    test('the menu stays closed until the INDEX button opens it, and never shifts content', async ({
+    test('the menu stays closed until the menu button opens it, and never shifts content', async ({
       page,
     }) => {
       await page.goto('/');
@@ -22,7 +22,9 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
       const leftBefore = await main.evaluate((element) => element.getBoundingClientRect().left);
       const menu = page.locator('#section-drawer');
       await expect(menu, 'the section menu must be closed at every width').toBeHidden();
-      const trigger = page.getByRole('button', { name: /INDEX/ }).locator('visible=true');
+      const trigger = page
+        .getByRole('button', { name: 'Open menu', exact: true })
+        .locator('visible=true');
       await expect(trigger).toHaveAttribute('aria-expanded', 'false');
       await trigger.click();
       await expect(menu).toBeVisible();
@@ -31,7 +33,28 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
       expect(leftOpen, 'the drawer overlays: content must not reflow').toBe(leftBefore);
       await page.keyboard.press('Escape');
       await expect(menu).toBeHidden();
-      await expect(trigger, 'focus returns to the INDEX trigger').toBeFocused();
+      await expect(trigger, 'focus returns to the menu trigger').toBeFocused();
+    });
+
+    test('the trigger is the menu icon alone, a 44px target, and the position lives in the drawer', async ({
+      page,
+    }) => {
+      await page.goto('/');
+      const trigger = page
+        .getByRole('button', { name: 'Open menu', exact: true })
+        .locator('visible=true');
+      await expect(trigger).toHaveAttribute('aria-controls', 'section-drawer');
+      await expect(trigger, 'no INDEX label and no NN/9 counter on the trigger').toHaveText('');
+      const box = await trigger.boundingBox();
+      expect(box?.width ?? 0, 'target width').toBeGreaterThanOrEqual(44);
+      expect(box?.height ?? 0, 'target height').toBeGreaterThanOrEqual(44);
+      expect(
+        box?.x ?? Number.POSITIVE_INFINITY,
+        'the trigger stays in the left half, beside the brand',
+      ).toBeLessThan(width / 2);
+
+      await trigger.click();
+      await expect(page.locator('#section-drawer .menu-badge')).toContainText('01/9');
     });
   });
 }
@@ -67,7 +90,7 @@ for (const width of TOPBAR_WIDTHS) {
       expect(clipped, 'no topbar control may reach past the bar').toEqual([]);
     });
 
-    test('the brand badge stays on the row, beside the INDEX trigger, unclipped', async ({
+    test('the brand badge stays on the row, beside the menu trigger, unclipped', async ({
       page,
     }) => {
       await page.goto('/');
@@ -99,7 +122,7 @@ for (const width of TOPBAR_WIDTHS) {
       );
       expect(
         fit.indexRight,
-        'the INDEX trigger must sit on the left of the brand badge',
+        'the menu trigger must sit on the left of the brand badge',
       ).toBeLessThanOrEqual(fit.badgeLeft + 1);
     });
 
@@ -157,8 +180,8 @@ test.describe('desktop topbar: one hire action per viewport', () => {
         const hire = nav.getByRole('link', { name: HIRE_ACCESSIBLE_NAME });
 
         await expect(
-          page.getByRole('button', { name: /INDEX/ }),
-          'the INDEX trigger stays on the row at every topbar width',
+          page.getByRole('button', { name: 'Open menu', exact: true }),
+          'the menu trigger stays on the row at every topbar width',
         ).toBeVisible();
         await expect(
           bar.getByText(topbarChrome.brandLabel, { exact: true }),
@@ -217,7 +240,10 @@ test.describe('section navigation: motion control tiers', () => {
           ).toBeHidden();
         }
 
-        await page.getByRole('button', { name: /INDEX/ }).locator('visible=true').click();
+        await page
+          .getByRole('button', { name: 'Open menu', exact: true })
+          .locator('visible=true')
+          .click();
         const drawer = page.getByRole('dialog', { name: 'Section menu' });
         await expect(
           drawer.locator('.menu-motion'),
@@ -232,7 +258,7 @@ test.describe('section navigation: motion control tiers', () => {
 test.describe('section navigation: drawer rows', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('the drawer lists the search row, the count, the reading views and the motion toggle', async ({
+  test('the drawer lists the search row, the position, the reading views and the motion toggle', async ({
     page,
   }) => {
     await page.goto('/');
@@ -242,8 +268,8 @@ test.describe('section navigation: drawer rows', () => {
       .click();
     const drawer = page.getByRole('dialog', { name: 'Section menu' });
 
-    await expect(drawer.locator('.menu-badge span[aria-hidden="true"]')).toHaveText('9');
-    await expect(drawer.locator('.menu-badge')).toContainText('9 sections');
+    await expect(drawer.locator('.menu-badge span[aria-hidden="true"]')).toHaveText('01/9');
+    await expect(drawer.locator('.menu-badge')).toContainText('section 1 of 9');
     await expect(drawer.locator('.menu-search')).toBeVisible();
     await expect(drawer.getByRole('link', { name: 'VIEW_CV' })).toHaveAttribute('href', '/cv');
     await expect(drawer.getByRole('link', { name: '30S_SUMMARY' })).toHaveAttribute(
@@ -338,7 +364,7 @@ test.describe('section navigation: drawer across a viewport change', () => {
       'the drawer must stay open across a viewport change: the menu is a drawer at every width',
     ).toBeVisible();
     await expect(
-      page.getByRole('button', { name: /INDEX/ }).locator('visible=true'),
+      page.getByRole('button', { name: 'Open menu', exact: true }).locator('visible=true'),
       'the trigger still reports the open drawer after the viewport change',
     ).toHaveAttribute('aria-expanded', 'true');
     await expect(
@@ -347,7 +373,7 @@ test.describe('section navigation: drawer across a viewport change', () => {
     ).toHaveCSS('overflow', 'hidden');
   });
 
-  test('closing after the viewport change returns focus to a rendered INDEX trigger', async ({
+  test('closing after the viewport change returns focus to a rendered menu trigger', async ({
     page,
   }) => {
     await page.goto('/');
@@ -364,7 +390,7 @@ test.describe('section navigation: drawer across a viewport change', () => {
     await expect(drawer).toBeHidden();
     await expect(
       page.locator('.desktop-topbar .index-trigger'),
-      'focus must return to the INDEX trigger that is rendered after the viewport change: the ' +
+      'focus must return to the menu trigger that is rendered after the viewport change: the ' +
         'trigger that opened the drawer is inside the dock, which is hidden from 1024px',
     ).toBeFocused();
   });
@@ -377,5 +403,27 @@ test.describe('section navigation: position line at 1280px', () => {
     await page.goto('/');
     const bar = page.getByRole('progressbar', { name: 'Page position' });
     await expect(bar).toHaveCSS('pointer-events', 'none');
+  });
+});
+
+test.describe('section navigation: drawer head at 320px', () => {
+  test.use({ viewport: { width: 320, height: 640 } });
+
+  test('the position badge and the close control share one row without wrapping', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page
+      .getByRole('button', { name: 'Open menu', exact: true })
+      .locator('visible=true')
+      .click();
+    const head = page.locator('#section-drawer .menu-head');
+    const close = head.getByRole('button', { name: /CLOSE/ });
+    const box = await close.boundingBox();
+    expect(
+      box?.height ?? Number.POSITIVE_INFINITY,
+      'the NN/9 badge widens the head: the close label must stay on one line',
+    ).toBeLessThanOrEqual(44);
+    await expect(head.locator('.menu-badge')).toContainText('01/9');
   });
 });

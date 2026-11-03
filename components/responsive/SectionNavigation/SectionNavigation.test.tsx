@@ -329,14 +329,25 @@ describe('SectionNavigation', () => {
     ).toEqual(['VIEW_CV', '30S_SUMMARY', 'DESIGN_SYSTEM', 'LinkedIn']);
   });
 
-  it('counts the destinations in the drawer head', () => {
+  it('reports the current position over the total in the drawer head', () => {
     render(<Page />);
     const badge = document.querySelector('.menu-badge');
 
     expect(badge?.querySelector('[aria-hidden="true"]')?.textContent).toBe(
-      String(SECTION_REGISTRY.length),
+      `01/${SECTION_REGISTRY.length}`,
     );
-    expect(badge?.textContent).toContain(`${SECTION_REGISTRY.length} sections`);
+    expect(badge?.textContent).toContain(`section 1 of ${SECTION_REGISTRY.length}`);
+  });
+
+  it('moves the drawer head position with the section the observer reports', () => {
+    render(<Page />);
+    reveal(document.getElementById('sec-shell'));
+    const badge = document.querySelector('.menu-badge');
+
+    expect(badge?.querySelector('[aria-hidden="true"]')?.textContent).toBe(
+      `05/${SECTION_REGISTRY.length}`,
+    );
+    expect(badge?.textContent).toContain(`section 5 of ${SECTION_REGISTRY.length}`);
   });
 
   it('offers a search row that reports the drawer it controls', () => {
@@ -422,7 +433,7 @@ describe('SectionNavigation', () => {
       expect(document.activeElement).toBe(trigger);
     });
 
-    it('returns focus to a rendered INDEX trigger when the trigger that opened the drawer is gone', () => {
+    it('returns focus to a rendered menu trigger when the trigger that opened the drawer is gone', () => {
       render(<Page withIndexTrigger />);
       const trigger = screen.getByTestId('trigger');
       trigger.focus();
@@ -433,11 +444,11 @@ describe('SectionNavigation', () => {
 
       expect(
         document.activeElement,
-        'focus must land on a rendered INDEX trigger when the element that opened the drawer is not rendered',
-      ).toBe(screen.getByRole('button', { name: new RegExp(NAVIGATION.copy.indexLabel) }));
+        'focus must land on a rendered menu trigger when the element that opened the drawer is not rendered',
+      ).toBe(screen.getByRole('button', { name: NAVIGATION.copy.openMenu }));
     });
 
-    it('returns focus to the INDEX trigger when the drawer was opened from the keyboard shortcut', () => {
+    it('returns focus to the menu trigger when the drawer was opened from the keyboard shortcut', () => {
       render(<Page withIndexTrigger />);
       fireEvent.keyDown(document, { key: 'k', metaKey: true });
       expect(panel().classList.contains('is-open')).toBe(true);
@@ -448,7 +459,7 @@ describe('SectionNavigation', () => {
         document.activeElement,
         'focus must land on a control the visitor can see, not on the document body, because the ' +
           'shortcut has no element of its own to return focus to',
-      ).toBe(screen.getByRole('button', { name: new RegExp(NAVIGATION.copy.indexLabel) }));
+      ).toBe(screen.getByRole('button', { name: NAVIGATION.copy.openMenu }));
     });
 
     it('closes from the close control and from the scrim', () => {
@@ -540,9 +551,9 @@ describe('SectionNavigation', () => {
     });
   });
 
-  describe('index trigger', () => {
+  describe('menu trigger', () => {
     function indexButton() {
-      return screen.getByRole('button', { name: new RegExp(NAVIGATION.copy.indexLabel) });
+      return screen.getByRole('button', { name: NAVIGATION.copy.openMenu });
     }
 
     it('names the drawer it controls and reports it closed', () => {
@@ -553,7 +564,23 @@ describe('SectionNavigation', () => {
       );
       expect(button.getAttribute('aria-controls')).toBe(DRAWER_ID);
       expect(button.getAttribute('aria-haspopup')).toBe('dialog');
-      expect(button.textContent).toContain(`01/${SECTION_REGISTRY.length}`);
+    });
+
+    it('is the menu icon alone: no INDEX label and no position counter', () => {
+      render(<IndexPage />);
+      const button = indexButton();
+      expect(button.textContent, 'the trigger carries no visible text').toBe('');
+      expect(button.querySelector('.index-trigger-pos')).toBeNull();
+      expect(button.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    });
+
+    it('keeps one accessible name while the drawer is open and closed', () => {
+      render(<IndexPage />);
+      const button = indexButton();
+      expect(button.getAttribute('aria-label')).toBe(NAVIGATION.copy.openMenu);
+      fireEvent.click(button);
+      expect(button.getAttribute('aria-label')).toBe(NAVIGATION.copy.openMenu);
+      expect(button.getAttribute('aria-expanded')).toBe('true');
     });
 
     it('opens the modal drawer, focuses the current item and returns focus on Escape', () => {
@@ -568,7 +595,7 @@ describe('SectionNavigation', () => {
       ).toBeTruthy();
       fireEvent.keyDown(document, { key: 'Escape' });
       expect(button.getAttribute('aria-expanded')).toBe('false');
-      expect(document.activeElement, 'focus must return to the INDEX trigger').toBe(button);
+      expect(document.activeElement, 'focus must return to the menu trigger').toBe(button);
     });
 
     it('renders no rail toggle: the drawer opens only from a trigger', () => {

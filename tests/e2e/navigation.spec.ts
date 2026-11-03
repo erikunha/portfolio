@@ -54,7 +54,7 @@ test.describe('navigation: drawer at 390px', () => {
   });
 });
 
-test.describe('navigation: INDEX trigger at 1280px', () => {
+test.describe('navigation: menu trigger at 1280px', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
   test('the position progressbar is named and follows the scroll', async ({ page }) => {
@@ -65,11 +65,11 @@ test.describe('navigation: INDEX trigger at 1280px', () => {
     await expect(bar).toHaveAttribute('aria-valuenow', '100');
   });
 
-  test('the INDEX trigger carries the NN/9 position and no rail reserves width', async ({
-    page,
-  }) => {
+  test('the menu trigger is the icon alone and no rail reserves width', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('.desktop-topbar .index-trigger')).toContainText('01/9');
+    const trigger = page.locator('.desktop-topbar .index-trigger');
+    await expect(trigger).toHaveText('');
+    await expect(trigger).toHaveAccessibleName('Open menu');
     const mainLeft = await page
       .locator('#main-content')
       .evaluate((el) => el.getBoundingClientRect().left);

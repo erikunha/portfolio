@@ -52,7 +52,7 @@ test.describe('home with JavaScript off', () => {
     await page.goto('/');
     await expect(
       page.locator('.section-menu'),
-      'the menu opens only from the INDEX button',
+      'the menu opens only from the menu button',
     ).toBeHidden();
   });
 });

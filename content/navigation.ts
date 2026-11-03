@@ -32,8 +32,7 @@ export type NavigationCopy = {
   drawerLabel: string;
   navLabel: string;
   title: string;
-  indexGlyph: string;
-  indexLabel: string;
+  openMenu: string;
   closeDrawer: string;
   dockLabel: string;
   positionLabel: string;
@@ -44,7 +43,8 @@ export type NavigationCopy = {
   motionOn: string;
   motionOff: string;
   motionReduced: string;
-  sectionCountLabel: string;
+  sectionWord: string;
+  sectionOfWord: string;
 };
 
 export type Navigation = {
@@ -59,8 +59,7 @@ export const NAVIGATION: Navigation = {
     drawerLabel: 'Section menu',
     navLabel: 'Page sections',
     title: '~/index',
-    indexGlyph: '☰',
-    indexLabel: 'INDEX',
+    openMenu: 'Open menu',
     closeDrawer: '[ X ] CLOSE',
     dockLabel: 'primary',
     positionLabel: 'Page position',
@@ -71,7 +70,8 @@ export const NAVIGATION: Navigation = {
     motionOn: 'MOTION: ON',
     motionOff: 'MOTION: OFF',
     motionReduced: 'MOTION: REDUCED',
-    sectionCountLabel: 'sections',
+    sectionWord: 'section',
+    sectionOfWord: 'of',
   },
   groups: [
     { id: 'whoami', title: 'WHOAMI', dock: 'home', sectionIds: ['bio', 'sec-readme'] },
@@ -129,6 +129,15 @@ export function formatSectionPosition(id: string): string {
     SECTION_NAV.findIndex((section) => section.id === id),
   );
   return `${formatSectionNumber(index + 1)}/${SECTION_NAV.length}`;
+}
+
+export function spokenSectionPosition(id: string): string {
+  const { sectionWord, sectionOfWord } = NAVIGATION.copy;
+  const index = Math.max(
+    0,
+    SECTION_NAV.findIndex((section) => section.id === id),
+  );
+  return `${sectionWord} ${index + 1} ${sectionOfWord} ${SECTION_NAV.length}`;
 }
 
 export function dockKeyForSection(id: string): DockKey | undefined {
