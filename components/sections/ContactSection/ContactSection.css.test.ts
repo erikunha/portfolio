@@ -41,7 +41,7 @@ describe('contact layout stylesheet', () => {
   });
 
   it('spaces the contact blocks on the phi scale, never with a raw length', () => {
-    for (const selector of ['.contact-layout', '.contact-main', '.ctz-footer']) {
+    for (const selector of ['.contact-layout', '.contact-main', '.contact-reach']) {
       const [rule] = rulesWithSelector(stylesheet, selector);
       expect(declValue(rule, 'gap'), `${selector} gap`).toMatch(PHI_SPACING);
     }
@@ -63,7 +63,7 @@ describe('contact layout stylesheet', () => {
     }
     const [confirmation] = rulesInMedia(stylesheet, PHONE, '.ctz-proposed-row');
     expect(declValue(confirmation, 'flex-direction')).toBe(FLEX_COLUMN);
-    const [facts] = rulesInMedia(stylesheet, PHONE, '.ctz-fact');
+    const [facts] = rulesInMedia(stylesheet, PHONE, '.contact-fact');
     expect(declValue(facts, 'grid-template-columns')).toBe('minmax(0, 1fr)');
   });
 
@@ -73,7 +73,7 @@ describe('contact layout stylesheet', () => {
       '.contact-channels-body dd',
       '.ctz-slot',
       '.ctz-proposed-row',
-      '.ctz-fact',
+      '.contact-fact',
     ]) {
       const base = rulesWithSelector(stylesheet, selector).find(
         (candidate) => candidate.parent?.type === 'atrule' && candidate.parent.name === 'layer',
@@ -96,7 +96,7 @@ describe('contact layout stylesheet', () => {
   });
 
   it('lays each fact out as a label column and a value column so labels never wrap away', () => {
-    const rule = rulesWithSelector(stylesheet, '.ctz-fact').find(
+    const rule = rulesWithSelector(stylesheet, '.contact-fact').find(
       (candidate) => candidate.parent?.type === 'atrule' && candidate.parent.name === 'layer',
     );
 

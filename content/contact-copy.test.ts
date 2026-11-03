@@ -58,7 +58,8 @@ describe('timezone panel copy', () => {
   });
 
   it('keeps the reply window in one place', () => {
-    expect(timezone.facts.replyValue).toBe(contactCopy.channels.replyValue);
+    expect(Object.keys(contactCopy.channels)).not.toContain('replyValue');
+    expect(timezone.overlap.none).toContain(timezone.facts.replyValue);
   });
 
   it('reads ONLINE NOW and OFF HOURS as the spec words them', () => {

@@ -84,8 +84,8 @@ test.describe('ContactSection', () => {
     await expect(
       channels.getByRole('link', { name: contactCopy.channels.githubAccessibleLabel }),
     ).toBeVisible();
-    await expect(main.locator('.ctz-footer .ctz-fact')).toHaveCount(FACT_COUNT);
-    await expect(main.locator('.ctz-fact dt', { hasText: /^tz$/ })).toHaveCount(0);
+    await expect(main.locator('.contact-reach .contact-fact')).toHaveCount(FACT_COUNT);
+    await expect(main.locator('.contact-fact dt', { hasText: /^tz$/ })).toHaveCount(0);
     await expect(main.locator('footer')).toHaveCount(0);
   });
 
@@ -97,7 +97,7 @@ test.describe('ContactSection', () => {
     await expect(panel.getByRole('heading', { name: contactCopy.timezone.title })).toBeVisible();
     await expect(panel.getByTestId('contact-timezone')).toBeVisible();
     await expect(panel.locator('a[href^="mailto:"]')).toHaveCount(0);
-    await expect(panel.locator('.ctz-fact')).toHaveCount(0);
+    await expect(panel.locator('.contact-fact')).toHaveCount(0);
   });
 
   test('the blocks stack form, channels, facts, panel at 390', async ({ page }) => {
@@ -111,7 +111,7 @@ test.describe('ContactSection', () => {
         columns: getComputedStyle(element).gridTemplateColumns.split(' ').length,
         form: top('.contact-main > :first-child'),
         channels: top('.contact-channels'),
-        facts: top('.ctz-facts'),
+        facts: top('.contact-facts'),
         panel: top('.contact-timezone'),
       };
     });
@@ -135,7 +135,7 @@ test.describe('ContactSection', () => {
         );
       return {
         channelRows: below([...layout.querySelectorAll('.contact-channel-row')], 'dt', 'dd'),
-        factRows: below([...layout.querySelectorAll('.ctz-fact')], 'dt', 'dd'),
+        factRows: below([...layout.querySelectorAll('.contact-fact')], 'dt', 'dd'),
         clocks:
           rect(layout.querySelector('[data-testid="ctz-clock-you"]')).top >=
           rect(layout.querySelector('[data-testid="ctz-clock-erik"]')).bottom - 1,
@@ -177,8 +177,8 @@ test.describe('ContactSection', () => {
     test(`each fact keeps its label on the value's line at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/');
-      await scrollToSelector(page, '.ctz-facts');
-      const rows = await page.locator('.ctz-fact').evaluateAll((facts) =>
+      await scrollToSelector(page, '.contact-facts');
+      const rows = await page.locator('.contact-fact').evaluateAll((facts) =>
         facts.map((fact) => {
           const label = fact.querySelector('dt')?.getBoundingClientRect();
           const value = fact.querySelector('dd')?.getBoundingClientRect();

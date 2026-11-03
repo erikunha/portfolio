@@ -50,7 +50,7 @@ describe('ContactSection timezone panel first paint', () => {
   }
 
   const factValue = (host: HTMLElement, label: string) =>
-    [...host.querySelectorAll('.ctz-fact')]
+    [...host.querySelectorAll('.contact-fact')]
       .find((row) => row.querySelector('dt')?.textContent === label)
       ?.querySelector('dd')?.textContent;
 
@@ -100,7 +100,7 @@ describe('ContactSection timezone panel first paint', () => {
   });
 
   it('lists six facts and drops the timezone fact the clocks already state', () => {
-    const labels = [...serverPanel().querySelectorAll('.contact-main .ctz-fact dt')].map(
+    const labels = [...serverPanel().querySelectorAll('.contact-main .contact-fact dt')].map(
       (label) => label.textContent,
     );
 
@@ -121,14 +121,14 @@ describe('ContactSection timezone panel first paint', () => {
     expect(panel?.querySelector('a[href^="mailto:"]')).toBeNull();
     expect(panel?.querySelector('a[href$="/in/erikunha/"]')).toBeNull();
     expect(panel?.querySelector('a[href="https://github.com/erikunha"]')).toBeNull();
-    expect(panel?.querySelector('.ctz-fact')).toBeNull();
+    expect(panel?.querySelector('.contact-fact')).toBeNull();
   });
 
   it('orders the source form, channels, facts, panel so the stack reads as it looks', () => {
     const host = serverPanel();
     const form = host.querySelector('.contact-main > :first-child') as Element;
     const channels = host.querySelector('.contact-channels') as Element;
-    const factList = host.querySelector('.ctz-facts') as Element;
+    const factList = host.querySelector('.contact-facts') as Element;
     const panel = host.querySelector('.contact-timezone') as Element;
     const FOLLOWING = Node.DOCUMENT_POSITION_FOLLOWING;
 

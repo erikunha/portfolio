@@ -97,7 +97,7 @@ test.describe('contact timezone panel, visitor in Berlin', () => {
     await expect(panel.getByTestId('ctz-status')).toHaveAttribute('data-online', 'true');
     await expect(panel.getByTestId('ctz-overlap')).toContainText('5 hours overlap');
     await expect(panel.getByTestId('ctz-overlap')).toContainText('13:00 to 18:00 your time');
-    await expect(page.locator('.ctz-footer .ctz-fact').first()).toBeVisible();
+    await expect(page.locator('.contact-reach .contact-fact').first()).toBeVisible();
 
     expect(findings.consoleErrors, 'the panel logs no console error').toEqual([]);
     expect(findings.failedRequests, 'the panel causes no failed request').toEqual([]);
@@ -300,6 +300,28 @@ test.describe('contact timezone panel, visitor in São Paulo', () => {
     await expect(panel.getByTestId('ctz-place')).toHaveText('Germany');
     await expect(panel.getByTestId('ctz-label-you')).toContainText('BER');
     await expect(panel.getByTestId('ctz-route')).toHaveCount(1);
+  });
+});
+
+test.describe('contact section in print', () => {
+  test('prints as one column that stays inside the page', async ({ page }) => {
+    await page.setViewportSize({ width: 794, height: 1123 });
+    await page.emulateMedia({ media: 'print' });
+    await page.goto('/');
+    await page.locator('.contact-timezone').scrollIntoViewIfNeeded();
+    const box = await page.locator('.contact-layout').evaluate((layout) => {
+      const main = (layout.querySelector('.contact-main') as Element).getBoundingClientRect();
+      const panel = (layout.querySelector('.contact-timezone') as Element).getBoundingClientRect();
+      return {
+        columns: getComputedStyle(layout).gridTemplateColumns.split(' ').length,
+        panelBelowMain: panel.top >= main.bottom - 1,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    });
+
+    expect(box.columns, 'one column at page width').toBe(1);
+    expect(box.panelBelowMain, 'the panel follows the form column').toBe(true);
+    expect(box.overflow).toBeLessThanOrEqual(0);
   });
 });
 
