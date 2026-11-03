@@ -272,3 +272,19 @@ test('the design system paints the matrix rain behind its content', async ({ pag
   ).toBe(true);
   expect(probe?.tag).not.toBe('CANVAS');
 });
+
+for (const { path } of ALL_ROUTES) {
+  test(`${path} — every id is unique, so each in-page jump link has one target`, async ({
+    page,
+  }) => {
+    await page.goto(path);
+    const duplicates = await page.evaluate(() => {
+      const seen = new Map<string, number>();
+      for (const node of document.querySelectorAll('[id]')) {
+        seen.set(node.id, (seen.get(node.id) ?? 0) + 1);
+      }
+      return [...seen].filter(([, count]) => count > 1).map(([id]) => id);
+    });
+    expect(duplicates).toEqual([]);
+  });
+}

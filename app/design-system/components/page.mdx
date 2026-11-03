@@ -6,6 +6,10 @@ export const metadata = dsPageMetadata({
   description: '8 design-system components and a docs clipboard helper for erikunha.dev',
 });
 
+import { CompanyLink } from '../../../components/CompanyLink';
+import { MenuTrigger } from '../../../components/responsive/SectionNavigation';
+import { EqSpectrumStrip } from '../../../components/sections/GuitarSection/EqSpectrumStrip';
+import { guitarPresentation } from '../../../content/guitar-rig';
 import { Field } from '../../../design-system/components/Field';
 import { WindowChrome } from '../../../design-system/components/WindowChrome/WindowChrome';
 
@@ -167,13 +171,64 @@ A navigation link. `current` sets `aria-current="location"`, `index` is decorati
 
 ---
 
+## Shell and module patterns
+
+These pieces live in `components/`, not in `design-system/components`. They are documented here because pages outside the home page reuse them.
+
+### MenuTrigger
+
+The one control that opens the site menu. It is an icon-only 44px square button (the icon box is `--spacing-target` divided by `--phi` twice) named `Open menu`, with `aria-expanded`, `aria-controls` and `aria-haspopup="dialog"`. It sits left of the brand at every width, so the menu is in the same place on the home page, `/links` and the design system.
+
+<Preview id="menu-trigger">
+  <MenuTrigger />
+</Preview>
+
+**Accessibility:** The name comes from `aria-label`, because the icon carries no text. Focus returns to the trigger when the menu closes.
+
+<h3 id="position-line">Position line</h3>
+
+Scroll progress is one `role="progressbar"` element named `Page position`, restyled by width and fed by `--posf` (0 to 1).
+
+| Viewport | Shape | Placement |
+|---|---|---|
+| From 1024px | 2px horizontal line | Across the top |
+| Below 1024px | 2px vertical line | Right edge |
+
+The line does not print and carries no number: no readout of the position appears in any control name.
+
+### EqSpectrumStrip
+
+A live spectrum under an EQ curve: log-frequency bars, one curve and an axis. Layers stack in one grid cell and the axis labels sit on grid tracks sized from the frequency positions, so nothing is absolutely positioned. The text alternative states the curve in words.
+
+<Preview id="eq-spectrum-strip">
+  <div style={{ width: '100%' }}>
+    <EqSpectrumStrip spectrum={guitarPresentation.eqSpectrum} />
+  </div>
+</Preview>
+
+**Motion:** Bars move on the beat. Under `prefers-reduced-motion: reduce`, or with the motion switch off, they hold a static level so the shape still reads. Bar height is the only data encoding; position on the axis carries frequency.
+
+### CompanyLink
+
+An external link to a company named in the text. It always opens in a new tab with `rel="noopener noreferrer"` and announces `(opens in a new tab)` to screen readers. When a page already announces the behaviour once, pass `describedBy` to point at that note instead.
+
+<Preview id="company-link">
+  <p style={{ margin: 0 }}>
+    Currently at <CompanyLink href="https://www.erikunha.dev">erikunha.dev</CompanyLink>.
+  </p>
+</Preview>
+
+**Accessibility:** The hit area grows to `--spacing-target-compact` without changing the line height.
+
+---
+
 ## Composition Patterns
 
 ### Stat grid using StatTile
 
-Four `StatTile` components in a CSS grid. The grid layout stays in the consumer · primitives don't embed layout opinions.
+Four `StatTile` components in the `ds-stat-row` grid: four columns from 768px, two below, one below 360px. The grid layout stays in the consumer · primitives don't embed layout opinions.
 
-<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--color-primary-subtle)', marginBottom: '16px', marginLeft: '-24px', marginRight: '-24px' }}>
+<div className="ds-stat-row">
   <StatTile value="99" label="LH_SCORE" variant="display" />
   <StatTile value="5+" label="YRS_EXP" variant="display" />
   <StatTile value="1.2s" label="LCP" variant="display" />

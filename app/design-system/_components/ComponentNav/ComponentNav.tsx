@@ -7,6 +7,10 @@ const COMPONENTS = [
   { id: 'cmd-line', label: 'CmdLine' },
   { id: 'kbd-key', label: 'KbdKey' },
   { id: 'copybutton', label: 'CopyButton' },
+  { id: 'menu-trigger', label: 'MenuTrigger' },
+  { id: 'position-line', label: 'Position line' },
+  { id: 'eq-spectrum-strip', label: 'EqSpectrumStrip' },
+  { id: 'company-link', label: 'CompanyLink' },
 ];
 
 export function ComponentNav() {
