@@ -4,7 +4,7 @@
 
 ## How to read a runbook
 
-Every runbook lists: **entry point** (what starts it), **steps**, **AI participation**, and **output**. The same spine recurs: brainstorm -> spec/plan (for non-trivial work) -> implement (TDD) -> review (`pr-review-orchestrator`) -> gates -> PR -> merge.
+Every runbook lists: **entry point** (what starts it), **steps**, **AI participation**, and **output**. The same spine recurs: brainstorm -> spec/plan (for non-trivial work) -> implement (TDD) -> review (human diff read; `pr-review-orchestrator` only when the owner asks) -> gates -> PR -> merge.
 
 ---
 
@@ -17,10 +17,10 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   3. Dispatch `architect-reviewer`; it must return `GATE_RESULT: PASS` (workflow convention).
   4. `speckit-plan` + `thinking-risk-premortem` to decompose into tasks (shard into sub-PRs if large).
   5. Branch `feat/<description>`. Implement test-first.
-  6. Self-review the diff (`pr-review-orchestrator` skill), fix what it finds, push.
-  7. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`, open the PR, drive threads to resolved, `pnpm pr:gate`, owner merges.
-  8. Add an ADR to `DECISIONS.md` with a reversibility note.
-- **AI:** brainstorming, architect review, planning, TDD implementation, pre-PR self-review.
+  6. Self-review the diff (a human read; the `pr-review-orchestrator` skill only when the owner asks), fix what it finds, push.
+  7. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`, open the PR, drive threads to resolved, `pnpm pr:gate`.
+  8. Record the ADR in `DECISIONS.md` in the same commit as the decision (a dated bullet with a reversibility note); the owner merges.
+- **AI:** brainstorming, architect review, planning, TDD implementation; the diff read before the PR is the owner's.
 - **Output:** a squash-merged PR `(#NNN)` + an ADR.
 
 ## Fixing a bug
@@ -31,8 +31,8 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   2. State the root cause in one sentence (the four-conditions rule: root cause, pattern scan, no deferred debt, measured property verified).
   3. Write a failing test that reproduces it (TDD).
   4. Make the smallest change that passes. Pattern-scan the codebase for the same class of bug.
-  5. Review the diff with the `pr-review-orchestrator` skill -> push -> PR. Cite the before/after measurement in the commit body.
-- **AI:** systematic-debugging, TDD, the `pr-review-orchestrator` review.
+  5. Review the diff (human read; the `pr-review-orchestrator` skill only when the owner asks) -> push -> PR. Cite the before/after measurement in the commit body.
+- **AI:** systematic-debugging, TDD.
 - **Output:** a `fix(scope): ...` PR with a root-cause note.
 
 ## Architecture change
@@ -53,7 +53,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   1. Confirm behavior is covered by tests first (refactor preserves behavior).
   2. `refactoring-specialist` agent if the change is large.
   3. Smallest reasonable change; never rewrite an implementation without explicit permission.
-  4. Review (the `pr-review-orchestrator` skill checks for behavior drift) -> push.
+  4. Review the diff for behavior drift (human read; the `pr-review-orchestrator` skill only when the owner asks) -> push.
 - **Output:** a `refactor(scope): ...` PR (no behavior change).
 
 ## Performance optimization
@@ -83,7 +83,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   1. Decide baseline impact (YES/NO) before pushing.
   2. Use the Playwright MCP to inspect desktop (1280x720) and mobile (375x812) before touching tests.
   3. If baselines are affected, follow `visual-baseline-regen` (darwin regen + linux artifact path, inspect-before-commit, batch-to-one-push).
-  4. No raw hex outside `theme.css` (held by `pnpm lint:css-tokens` in `verify` and CI).
+  4. No raw hex in the `app/css` stylesheets outside `theme.css` (held by `pnpm lint:css-tokens` in `verify` and CI; the style rule is repo-wide, the gate scans only the immediate `app/css` files).
 - **Output:** a PR with regenerated Playwright baselines if needed.
 
 ## Touching the `/api/ask` feature

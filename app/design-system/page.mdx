@@ -19,8 +19,8 @@ export const metadata = dsPageMetadata({
 The design system at `/design-system` documents theme tokens, reusable components and the checks that cover them.
 
 <div className="ds-stat-row">
-  <StatTile value="9" label="PRIMITIVES" variant="display" />
-  <StatTile value="7" label="RSC" variant="display" />
+  <StatTile value="10" label="PRIMITIVES" variant="display" />
+  <StatTile value="9" label="RSC" variant="display" />
   <StatTile value="100" label="A11Y" variant="display" />
   <StatTile value="AA" label="WCAG_2.2" variant="display" />
 </div>
@@ -34,13 +34,13 @@ The design system at `/design-system` documents theme tokens, reusable component
 - [Enforcement](/design-system/enforcement) · Lint rules, CI gates, contributing guide
 - [Changelog](/design-system/changelog) · Token and component change log
 - Foundations · [Colors](/design-system/foundations/colors), [Typography](/design-system/foundations/typography), [Spacing and borders](/design-system/foundations/spacing-borders)
-- Primitives · one page per component, listed in the page menu
+- Primitives · one page per component where a dedicated page exists, listed in the page menu; `NavItem` currently documents in the [Components](/design-system/components) gallery without its own page
 
 <h2 id="principles">Principles</h2>
 
 **Utilities over raw values.** Components reference Tailwind utilities backed by the `@theme` palette (`text-primary-500`, `border-primary-subtle`), never raw hex. The single `@theme` block in `theme.css` is the one place a colour changes.
 
-**Server components by default.** Seven components have no client directive. `Field` is a client component imported from `@/design-system/components/Field`; it is not exported by the main barrel. The docs add a client `CopyButton` helper for clipboard access. Server-compatible components can still enter a client bundle when imported across a client boundary.
+**Server components by default.** Nine components have no client directive. `Field` is a client component imported from `@/design-system/components/Field`; it is not exported by the main barrel. The docs add a client `CopyButton` helper for clipboard access. Server-compatible components can still enter a client bundle when imported across a client boundary.
 
 **Measured in CI.** Contrast and component-heading checks run in `quality-fast`. The path-filtered `performance` job runs axe-core and Lighthouse with an accessibility target of 100. The target is a configured assertion, not a live score on this page.
 

@@ -38,7 +38,7 @@ After each round, every finding fixed and every CI red becomes a candidate rule:
 
 ## Pre-merge gates (`pnpm ci:local` + `pnpm claude-gate` + `pnpm pr:gate`)
 
-In order: `ci:local` -> `check-claude-approval` (`pnpm claude-gate`: the latest claude-review verdict must be Approve, naming a head SHA that matches the current head. an Approve with no SHA, or a stale one, fails closed. when the head moved only through commits that touch visual baseline snapshots, `*-snapshots/*.png`, the Approve carries and the gate reports the carried SHA; any other file in the diff since the reviewed SHA, or a reviewed SHA that is not an ancestor of the head, fails closed as STALE) -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL, all threads `isResolved`, flags `suspicious_self_resolve`). GitHub branch-protection settings must be checked separately; repository files do not establish their live state.
+In order: `ci:local` -> `check-claude-approval` (`pnpm claude-gate`: the latest claude-review verdict must be Approve, naming a head SHA that matches the current head. an Approve with no SHA, or a stale one, fails closed. when the head moved only through commits that touch visual baseline snapshots, `*-snapshots/*.png`, the Approve carries and the gate reports the carried SHA; any other file in the diff since the reviewed SHA, or a reviewed SHA that is not an ancestor of the head, fails closed as STALE) -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL `reviewThreads(first:100)` without pagination, every returned thread `isResolved`, flags `suspicious_self_resolve`). GitHub branch-protection settings must be checked separately; repository files do not establish their live state.
 
 **AI agents must not run `gh pr merge`.** This is a project convention. The repo owner runs the final squash-merge once all gates pass. The pre-push hook rejects a remote main target. Live GitHub protection and bypass permissions require separate inspection.
 
@@ -58,7 +58,7 @@ every finding with a thread reply, land into the integration branch, start the n
 ## Release
 
 - **Trigger:** squash-merge to `main` deploys via Vercel.
-- **Verification:** `smoke.yml` (on `deployment_status == success && Production`) asserts the artifact and canonical `/api/healthz`, the 7 security headers, the apex->www 308 redirect, and `/api/ask` + `/api/contact` liveness; a 503 sends a Resend alert.
+- **Verification:** `smoke.yml` (on `deployment_status == success && Production`) checks the canonical `/api/healthz` (the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret), the 7 security headers, apex->www promotion followed to its final 200 (the workflow asserts neither an intermediate 308 nor the final www host), and `/api/ask` + `/api/contact` liveness; a canonical healthz 503 attempts a Resend alert when that secret is configured, and delivery errors are warnings.
 - **Cron:** `vercel.json` runs `/api/psi-refresh` daily (`0 3 * * *`) and `/api/contact-retry` daily (`0 4 * * *`).
 
 ## Rollback

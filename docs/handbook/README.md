@@ -18,7 +18,7 @@ The handbook routes to the other two rather than duplicating them.
 | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [development-lifecycle.md](./development-lifecycle.md)     | The SDLC end to end: idea -> spec -> plan -> implement -> review -> merge -> release, with diagrams, plus the responsive critique pass                      |
 | [ai-assisted-development.md](./ai-assisted-development.md) | How AI participates in the SDLC: context engineering, enforcement boundaries, sequence diagrams                                                             |
-| [agents-skills-hooks-mcp.md](./agents-skills-hooks-mcp.md) | Reference for tracked project skills, hooks, rules and MCP configuration, with the hook lifecycle and orchestration diagrams                                |
+| [agents-skills-hooks-mcp.md](./agents-skills-hooks-mcp.md) | Reference for tracked project skills, hooks, rules and MCP configuration, with the development/product MCP relationship diagram                             |
 | [workflow-playbook.md](./workflow-playbook.md)             | Step-by-step runbooks: feature, bug fix, refactor, perf, a11y, ADR, PR, review                                                                              |
 | [review-merge-release.md](./review-merge-release.md)       | The gate chain from commit to production, the convergence loop, release and rollback                                                                        |
 | [lessons.md](./lessons.md)                                 | Numbered rules learned from review findings and CI reds, each with the check that proves it                                                                 |
@@ -49,7 +49,7 @@ flowchart TB
     subgraph knowledge["Knowledge layer"]
         specs["specs/NNN-feature/ (local-only)"]
         adr["DECISIONS.md (architectural decisions)"]
-        mem[".remember/ + auto memory"]
+        mem["auto memory (user-global, runtime-dependent)"]
     end
     dev --> claude
     claude --> context

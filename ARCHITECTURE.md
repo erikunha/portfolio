@@ -1,4 +1,4 @@
-# Portfolio Architecture: Staff/Principal Pass
+# Portfolio Architecture: Senior Frontend & Product Pass
 
 > Target stack: Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind CSS v4 via PostCSS · Vercel (Fluid Compute) · Biome · pnpm · Playwright E2E (contact, ask, a11y, visual)
 >
@@ -8,7 +8,7 @@
 
 ## 0. The meta-frame
 
-This portfolio is itself a hiring artifact for Staff/Principal frontend + applied-AI roles. The architecture has to **demonstrate the engineering it claims**. A site that says "performance-first" but ships a 400KB JS bundle is self-disqualifying. The architecture below treats the page as a small production service with the same rigor I'd apply to a payment platform, minus the multi-region overkill.
+This portfolio is itself a hiring artifact for Senior Software Engineer, Frontend & Product roles (open to Senior and Tech Lead). The architecture has to **demonstrate the engineering it claims**. A site that says "performance-first" but ships a 400KB JS bundle is self-disqualifying. The architecture below treats the page as a small production service with the same rigor I'd apply to a payment platform, minus the multi-region overkill.
 
 The Principal-level moves here are mostly **what we don't build**:
 - No CMS (single-author, content fits in typed TS files)
@@ -30,7 +30,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 - Opinions renders four ordered home takes with nested learning and specialization lists, and closes with a link to the design-system opinion. The design-system opinion renders at `/design-system#opinion-07`; `TAKE_PLACEMENT` separates home and documentation content. Five below-fold modules use content-visibility deferral.
 - Hero: Matrix dialog loop + boot sequence (typewriter)
 - About "Open to [role] roles" mounts RoleTyper over server-rendered text; the Hero title is static. Module headers use CSS scroll-driven typing, with static text for unsupported browsers and reduced motion. Every other single-line heading and command prompt marked `data-type-reveal` (on a span around the text only, never around icons, `sr-only` or `aria-hidden` siblings, and never on an element that can wrap) types in when it enters the viewport: `TypeReveal` (mounted once in the root layout through `GlobalMotion`) runs one IntersectionObserver, sets `--type-chars` and adds `is-typed`; CSS reveals the text with a stepped `clip-path` and a blinking caret. The text stays in the HTML and keeps its box, so screen readers, search and layout see it whole. Hiding applies only after `html.type-reveal-ready`, so without JS, under reduced motion or with `data-motion="reduce"` everything shows at once. The h1 and the first hero viewport are never marked. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`) from `GlobalMotion` in the root layout, so it runs on every route, then IntersectionObserver gates its animation. The footer is server-rendered, with client islands only for session counters and halt/reboot.
-- INTERACTIVE_SHELL with `ask` LLM command + `whois`, `cat skills.md`, `cat ~/.now`, `contact`, `clear`; the toolbar chips fill the prompt instead of submitting.
+- INTERACTIVE_SHELL with `ask` LLM command + `help`, `whois`, `whois --recursive`, `cat skills.md`, `cat ~/.now`, `contact`, `clear`; anything else routes to Claude
 - Contact form: durable submission, explicit delivered or queued feedback, daily bounded retry
 - Live Lighthouse score (PSI API, cached daily)
 - `MOTION` indicator tied to `prefers-reduced-motion`
@@ -131,7 +131,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 Static section bodies are Server Components. `BreakpointProvider` and `AppShell` are client boundaries that receive server-rendered children. `SectionNavigationProvider` wraps the shell chrome so the menu trigger, the drawer, the dock and the position meter share one current-section state. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
 
-The section menu is a modal drawer at every width, opened by the menu icon trigger named `Open menu` (the first item at the left end of the header), the dock MENU or the `Ctrl` / `Cmd` + `K` shortcut. The drawer header contains the title and the close control. Closing the drawer returns focus to the control that opened it, or to the first rendered menu trigger when there is no such control or a viewport change left it unrendered.
+The section menu is a modal drawer at every width, opened by the menu icon trigger named `Open menu` (the first item at the left end of the desktop topbar and the mobile title bar), the dock MENU or the `Ctrl` / `Cmd` + `K` shortcut. The drawer header contains the title and the close control. Closing the drawer returns focus to the control that opened it, or to the first rendered menu trigger when there is no such control or a viewport change left it unrendered.
 
 ### Client islands
 
@@ -143,7 +143,7 @@ The section menu is a modal drawer at every width, opened by the menu icon trigg
 | PositionMeter                                     | Scroll-position tracking and page-position progress: a top line from 1024px, a right-edge line below  |
 | MatrixRain, CRTOverlay, ToTopButton               | Canvas animation, CRT effects and scroll control                                                      |
 | HeroBootAnimation, HeroSystemFailure              | Boot/dialog animation and failure interaction                                                         |
-| RoleTyper                                         | Role cycle inside About                                                                               |
+| RoleTyper                                         | Role typewriter inside About                                                                          |
 | GlobalMotion → TypeReveal, MatrixRainLazy         | App-wide scroll type reveal and Matrix Rain from the root layout                                      |
 | InteractiveShellLazy → InteractiveShell           | Client-only shell input and streamed ASK output                                                       |
 | ContactFormLazy → ContactForm                     | Client-only form submission and feedback                                                              |
@@ -167,7 +167,7 @@ Client boundaries use `.client.ts`/`.client.tsx`, a `/client/` directory, or Nex
 
 Pages inside the shell use `.page-container.page-main`, so the topbar clearance, gutter and page top come from the same tokens as the home page. Rhythm inside the design-system prose, `/links` and the guitar module steps through `--phi-space-1` to `--phi-space-4`, and two-column splits use `--phi-pair-columns` (1.618 : 1) from 1024px; below that every level is one column.
 
-`/links` video covers sit in a 16:9 `links-thumb` frame with the image filling it, so no edge is cropped, and render as one monochrome signal-green set from the `--links-thumb-*` tokens; the feed loader drops Shorts before anything renders and, when `YOUTUBE_API_KEY` is set, pages the channel uploads playlist until the five-row history fills (RSS alone when the key is absent) (`lib/links/feed.ts`).
+`/links` video covers sit in a 16:9 `links-thumb` frame with the image filling it, so no edge is cropped, and render as one monochrome signal-green set from the `--links-thumb-*` tokens; the feed loader drops Shorts before anything renders and, when `YOUTUBE_API_KEY` is set, pages the channel uploads playlist through up to four pages until the five-row history fills, falling back to the 15-candidate RSS feed when the key is absent or the playlist returns nothing (`lib/links/feed.ts`).
 
 ### Partial Prerendering (PPR)
 
@@ -181,9 +181,9 @@ Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. AS
 
 The signal panel of `GuitarSection` is one EQ spectrum strip (`EqSpectrumStrip.tsx`). It is a static RSC with no client JavaScript: `lib/eq-spectrum.ts` turns the bands, range and BPM in `content/guitar-rig.ts` into bar heights, an SVG curve path, grid lines and axis positions. The 72 bars are DOM elements that bounce through a CSS `scaleY` keyframe timed to the BPM (`--eq-beat`), the curve is an SVG path with a non-scaling stroke, and the plot is a single `role="img"` whose accessible name lists every band. The animation stops under `prefers-reduced-motion` and the MOTION switch, leaving one static frame. The strip is laid out with grid only: the label, plot and axis share one grid, the grid lines, bars and curve stack in one cell, and axis labels sit on tracks sized from their log-frequency positions. Below 768px every second bar is hidden, the gear label moves above the plot, and the signal strip, stats and camera labels stack in centered columns.
 
-`GuitarSection` renders the guitar rig as one module at `sec-guitar`, one synchronous RSC layout at every width, without a UA branch or Suspense boundary. The order is the status strip, the EQ strip with the live photo at its right in a `1.618 : 1` pair from 1024px (full width below it), then one facts row (STYLE, TUNING, ALT RIG, GIGS and INFLUENCES with the current obsession). The facts are five cells in a row from 1024px, two columns below it, and one centered column below 768px. Module spacing follows the `--phi-space-*` tokens.
+`GuitarSection` renders the guitar rig as one module at `sec-guitar`, one synchronous RSC layout at every width, without a UA branch or Suspense boundary. The order is a full-width signal strip (`SIGNAL_CHAIN.LIVE · SIGNAL OK` with a `TAIL -F ~/.RIG` tail), then the chain label and the EQ spectrum strip with the live photo beside it in a `1.618 : 1` pair from 1024px (everything full width below it), then one facts row (STYLE, TUNING, ALT RIG, GIGS and INFLUENCES with the current obsession). The live photo is one camera-HUD frame: the REC badge sits top-right, an EQ curve badge (`HP140 · -3dB@400 · +5dB@2.8k · LP9k`) sits top-left, and one bottom telemetry bar pairs the session line on the left with the camera label on the right. The facts are five cells in a row from 1024px, two columns below it, and one centered column below 768px. Module spacing follows the `--phi-space-*` tokens.
 
-`DawMixerSection` renders the DAW mixer as its own module at `sec-daw-mixer`, directly below the guitar module. `DawMixerContent` selects the variant by user agent behind a Suspense boundary: desktop UAs get the six-channel table (ID, TRACK, I/O, R/M/S, PLUGIN CHAIN, METER, FADER, dB) with the session header and interactive fader, knob, R/M/S and VU meter islands; mobile UAs get a static two-card mix of the first two channels with the session header, meters, faders, plugin chains and the master LUFS readout. The desktop table is one eight-column `daw-channel-row` grid that is width-capped by its module, and the mobile cards stack one level per row.
+`DawMixerSection` renders the DAW mixer as its own module at `sec-daw-mixer`, directly below the guitar module. `DawMixerContent` selects the variant by user agent behind a Suspense boundary: desktop UAs get the six-channel table (ID, TRACK, I/O, R/M/S, PLUGIN CHAIN, METER, FADER, dB) with the session header and interactive fader, knob, R/M/S and VU meter islands; mobile UAs get a static two-card mix of the first two channels with the session header, meters, faders and plugin chains. The master LUFS footer exists only on the MASTER channel, which the mobile mix filters out. The desktop table is one eight-column `daw-channel-row` grid that is width-capped by its module, and the mobile cards stack one level per row.
 
 Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
 Each career entry links its company (`companyUrl`) through `components/CompanyLink`; `__tests__/company-links.test.ts` holds the same URL across the JSON-LD, hiring profile, `llms.txt` and ask prompt.
@@ -191,7 +191,7 @@ Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one stati
 `sec-credentials` and `sec-community` are nested in-page anchors, excluded from mobile section ordering.
 The community event link uses the validated label and URL in `content/community.ts`.
 
-Git log through Contact receive `defer` in `app/page.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. A deferred module keeps its 520px placeholder box while its content is laid out at full height, so the axe gate reveals the deferred modules before the scan and audits the painted page, the same state the visual baselines capture. The ten entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar rig, DAW mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
+Git log through Contact receive `defer` in `app/page.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. A deferred module reserves an estimated placeholder height while its content is laid out at full height: 520px is only the default, and per-section and per-breakpoint overrides set Career to 3340px, Opinions to 3180px, Guitar to 1400px, the DAW mixer to 880px and Contact to 2322px, with `contain-intrinsic-size: auto var(--module-estimate)` remembering the rendered height once painted, so the axe gate reveals the deferred modules before the scan and audits the painted page, the same state the visual baselines capture. The ten entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar rig, DAW mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
 
 ### Trade-off
 
@@ -254,7 +254,7 @@ content/nav.ts                        # zod-free nav vocabulary: labels, topbar 
 content/projects.ts                   # shared project cards
 content/perf-receipts.ts              # canonical deltas, attached receipts and reading-view stats
 content/measured.ts                   # ASK and PSI presentation metadata
-content/section-registry.ts           # nine navigation destinations and aliases
+content/section-registry.ts           # ten navigation destinations and aliases
 content/section-labels.ts             # section labels: the visible module name and the heading label
 content/reading-views.ts              # summary and CV presentation
 content/profile.ts                    # shared identity, hiring copy and language line formatting
@@ -307,7 +307,7 @@ app/css/components-hero.css           # one of 20 @layer components partials (co
 app/globals.css                       # entry: @import "tailwindcss" + theme/base/components; the @import order is the cascade order
 
 public/fonts/                         # JetBrains Mono self-hosted
-public/images/                        # OG + static images
+public/images/                        # static images (avatar, guitar live photo)
 public/robots.txt                     # static robots
 public/llms.txt                       # AI-agent manifest
 
@@ -548,7 +548,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 - No Datadog / NewRelic / LaunchDarkly (overkill at this scale).
 - No Sentry: custom `/api/log` endpoint chosen instead for zero new SaaS vendor (see `DECISIONS.md` 2026-05-18).
 - Outside the Edge runtime, `instrumentation.ts` loads the Langfuse helper. When `LANGFUSE_ENABLED` is `true`, it registers an exporter through `@vercel/otel`. ASK telemetry disables recording input and output text.
-- No alerting beyond Vercel's defaults + the `/api/ask` 80%/100% budget warnings (single-author site, no oncall rotation).
+- Alerting is minimal by design (single-author site, no oncall rotation): the `/api/ask` 80%/100% budget warnings, plus Resend email alerts from `/api/psi-refresh` after consecutive failed refreshes and from the production smoke workflow when the canonical `/api/healthz` returns 503. Both email alerts need their credentials configured.
 - No client-side dashboards/UI; Upstash console + Vercel CLI are the inspection surfaces.
 
 ---
@@ -567,7 +567,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 
 - `/llms.txt` manifest: emerging standard for AI-readable site maps
 - `/api/erik.json`: machine-readable profile (HiringProfile custom type, no schema.org @context: `Engineer` is not a valid schema.org type). Cached 24h at edge. Returns a structured hiring profile document.
-- This is the Staff/Principal-2026 move: build for human readers AND for AI agents doing first-pass recruiter triage. Yes, AI agents are already doing this. Yes, most portfolios aren't ready.
+- This is the 2026 move for a Senior hire: build for human readers AND for AI agents doing first-pass recruiter triage. Yes, AI agents are already doing this. Yes, most portfolios aren't ready.
 
 ---
 
@@ -575,14 +575,14 @@ Observability spans real-user telemetry, structured logs and client error captur
 
 WCAG 2.2 AA at minimum. Specific risks for THIS aesthetic:
 
-| Risk                                                                                     | Mitigation                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Lime green as paragraph text tires the eye                                               | `#00FF41` on black measures 15.38:1 (`pnpm lint:contrast`), so contrast is not the reason. It is reserved for accents, headings and large text by the aesthetic rule; body text uses `--color-text` / `--color-tertiary-50` (#E6FFE6, 19.81:1).                                                                                                                                                                                             |
-| Muted parentheticals in Unknowns (nested inside the Opinions module) and `~/.guitar_rig` | Muted text must be a resolved color that reaches 4.5:1 on its own (`lint:contrast` checks `primary-400` and `--color-text-secondary`); an `opacity-*` utility on top lowers it and is not covered by the gate. Unknowns uses solid `--color-primary-400` (no opacity) within Opinions. The guitar section still uses `text-primary-400` with opacity. Size is no way out: WCAG large text starts at 24px regular or 18.66px bold, not 14px. |
-| Matrix dialog loop is exhausting                                                         | `prefers-reduced-motion: reduce` disables loop, renders static `> The Matrix has you...`. Plus: MOTION badge in top bar becomes click-toggle for users on the borderline.                                                                                                                                                                                                                                                                   |
-| Form labels invisible (terminal-styled prompts)                                          | Real `<label for="...">` paired with each input. Terminal prompt is decoration.                                                                                                                                                                                                                                                                                                                                                             |
-| Heading hierarchy                                                                        | Section headers are `<h2>`, not styled `<div>`s. Critical for screen-reader navigation.                                                                                                                                                                                                                                                                                                                                                     |
-| No skip-to-content link (WCAG 2.4.1 Level A)                                             | Skip-to-content link added to AppShell as first focusable element, targets `#main-content` on the `<main>` element.                                                                                                                                                                                                                                                                                                                         |
+| Risk                                                                                     | Mitigation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lime green as paragraph text tires the eye                                               | `#00FF41` on black measures 15.38:1 (`pnpm lint:contrast`), so contrast is not the reason. It is reserved for accents, headings and large text by the aesthetic rule; body text uses `--color-text` / `--color-tertiary-50` (#E6FFE6, 19.81:1).                                                                                                                                                                                                                                                                                    |
+| Muted parentheticals in Unknowns (nested inside the Opinions module) and `~/.guitar_rig` | Muted text must be a resolved color that reaches 4.5:1 on its own (`lint:contrast` checks `primary-400` and `--color-text-secondary`); an `opacity-*` utility on top lowers it and is not covered by the gate. Unknowns uses solid `--color-primary-400` (no opacity) within Opinions, and the guitar section resolves its text colors in `app/css/components-guitar.css`; its one remaining opacity is the decorative photo tint, not text. Size is no way out: WCAG large text starts at 24px regular or 18.66px bold, not 14px. |
+| Matrix dialog loop is exhausting                                                         | `prefers-reduced-motion: reduce` disables loop, renders static `> The Matrix has you...`. Plus: MOTION badge in top bar becomes click-toggle for users on the borderline.                                                                                                                                                                                                                                                                                                                                                          |
+| Form labels invisible (terminal-styled prompts)                                          | Real `<label for="...">` paired with each input. Terminal prompt is decoration.                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Heading hierarchy                                                                        | Section headers are `<h2>`, not styled `<div>`s. Critical for screen-reader navigation.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| No skip-to-content link (WCAG 2.4.1 Level A)                                             | Skip-to-content link added to AppShell as first focusable element, targets `#main-content` on the `<main>` element.                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 Run axe-core in CI; fail builds on any new violation. Manual screen-reader pass on the contact form path before launch.
 
@@ -734,7 +734,7 @@ If a hiring manager reads this doc alongside the deployed site, they should walk
 - Erik builds for AI-agent recruiters as well as human ones
 - Erik writes architecture docs that someone else could ship from
 
-That's the Staff/Principal hire. The portfolio is the proof.
+That's the Senior hire. The portfolio is the proof.
 
 ---
 

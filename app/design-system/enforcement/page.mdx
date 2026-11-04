@@ -57,7 +57,7 @@ directories have no CSS Modules.
 ## Adding a New Component
 
 1. Create `design-system/components/NewComponent/` with `.tsx`, `.test.tsx`, and `index.ts` · styled with Tailwind utilities, no `.module.css`.
-2. Export it from `design-system/index.ts`.
+2. Export it from `design-system/index.ts`, unless it is a boundary exception: `Field` is deliberately client-only and `BrandIcon` is imported by path, and neither ships through the barrel.
 3. Add a `## NewComponent` heading in `app/design-system/components/page.mdx` · `check:component-docs` fails if it is missing.
 4. Add a local Darwin visual baseline in `tests/e2e/design-system-components.spec.ts`. CI ignores this spec; page-section snapshots and co-located component behavior tests have separate coverage.
 

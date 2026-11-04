@@ -200,15 +200,19 @@ disable this effect. Browsers without scroll-driven animation support show stati
 
 <h2 id="layers">Layers</h2>
 
-z-index is applied with Tailwind `z-[N]` utilities, there is no CSS-var token
-layer. The cross-cutting contract:
+z-index comes from two sources: the `--z-*` custom properties in
+`app/css/base.css` and, for the top chrome, Tailwind `z-[N]` utilities. The
+cross-cutting contract:
 
 | Layer | z-index | Usage |
 |---|---|---|
-| content | `z-[1]` | page content above the CRT overlay |
+| content | `--z-content` (10) | `.page-main`, page content above the CRT overlay |
 | header chrome | `z-[110]` | DesktopTopbar / StatusBar (MobileTitleBar `z-[109]`) |
-| mobile dock | `z-[120]` | bottom navigation dock |
+| dock | `--z-dock` (120) | bottom navigation dock |
+| scrim | `--z-scrim` (125) | the drawer scrim behind the open menu |
+| position line | `--z-position-line` (126) | the side scroll-progress line below 1024px |
+| drawer | `--z-drawer` (130) | the section menu drawer |
 | skip link | `9999` | skip-to-content link, always on top |
 
-Component-local stacking (CRT effect layers 1 to 5) is intentionally not part of the
-contract.
+Component-local stacking (CRT effect layers 1 to 5, the Matrix rain at z-0)
+is intentionally not part of the contract.

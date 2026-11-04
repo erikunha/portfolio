@@ -21,7 +21,7 @@ Next.js 16 portfolio deployed to Vercel (Fluid Compute). RSC-first homepage comp
 
 ---
 
-This is Erik Cunha's hiring artifact for Staff/Principal frontend and applied-AI roles. The codebase demonstrates the engineering it claims, a site that says "performance-first" but ships a 400 KB JS bundle is self-disqualifying. `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
+This is Erik Cunha's hiring artifact for Senior Software Engineer, Frontend & Product roles (open to Senior and Tech Lead). The codebase demonstrates the engineering it claims, a site that says "performance-first" but ships a 400 KB JS bundle is self-disqualifying. `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
 
 The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic Haiku 4.5, prompt-cached, rate-limited, budget-capped) with a correctness eval suite and a visible metrics panel, making AI quality observable to hiring reviewers. Agent-readiness surfaces include `/.well-known/agent.json` and a minimal MCP server.
 
@@ -39,7 +39,7 @@ The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/
 | Vercel AI Gateway + Anthropic Haiku 4.5 | Streaming `/api/ask` with prompt caching and cost tracking                                                                                                |
 | Upstash Redis                           | Rate limiting, budget cap, KV interaction log                                                                                                             |
 | Tailwind v4 (via PostCSS)               | Utility-first styling; design tokens authored in `app/css/theme.css` under `@theme {}`. No CSS Modules, no Style Dictionary, no build-time token pipeline |
-| Design system (`/design-system`)        | 8 components (7 server-compatible; Field is client), docs CopyButton helper, `@theme` tokens and live docs                                                |
+| Design system (`/design-system`)        | 10 components (9 server-compatible; Field is client), docs CopyButton helper, `@theme` tokens and live docs                                               |
 | Biome                                   | Lint + format in a single Rust binary                                                                                                                     |
 | Vitest + Playwright                     | Unit (80% line coverage gate) + E2E + axe-core a11y CI suite                                                                                              |
 | Lighthouse CI                           | LCP, TBT, CLS and category scores gated for app changes; INP checked in browser tests                                                                     |
