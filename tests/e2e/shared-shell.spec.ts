@@ -37,9 +37,10 @@ test.describe('one shell on every page', () => {
       const menu = topbar.getByRole('button', { name: MENU_NAME });
       await expect(menu).toBeVisible();
       const [iconBox, menuBox] = await Promise.all([homeLink.boundingBox(), menu.boundingBox()]);
-      expect(menuBox?.x ?? 0, 'the menu trigger sits right of the brand icon').toBeGreaterThan(
-        iconBox?.x ?? Number.POSITIVE_INFINITY,
-      );
+      expect(
+        menuBox?.x ?? Number.POSITIVE_INFINITY,
+        'the menu trigger sits left of the brand icon',
+      ).toBeLessThan(iconBox?.x ?? 0);
       await expect(topbar.getByRole('link', { name: /hire/i })).toBeVisible();
       await expect(page.locator('.site-bar')).toHaveCount(0);
     });
