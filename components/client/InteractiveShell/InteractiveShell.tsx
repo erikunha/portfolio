@@ -598,7 +598,14 @@ export function InteractiveShell() {
             tabIndex={index === toolbarIndex ? 0 : -1}
             aria-disabled={busy}
             onFocus={() => setToolbarIndex(index)}
-            onClick={() => runCommand(command)}
+            onClick={() => {
+              if (command === ShellCommand.Clear || busy) {
+                runCommand(command);
+                return;
+              }
+              setInput(command);
+              focusInput();
+            }}
             onKeyDown={(event) => {
               if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
               let target = index;

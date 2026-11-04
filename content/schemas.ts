@@ -103,7 +103,6 @@ const NavigationCopySchema = z.object({
   searchShortcutOther: NavTextSchema,
   motionOn: NavTextSchema,
   motionOff: NavTextSchema,
-  sectionCountLabel: NavTextSchema,
 });
 
 export function createNavigationSchema(sectionIds: readonly string[]) {
