@@ -76,6 +76,7 @@
   --links-thumb-tint-reveal: 0.3;
   --links-thumb-reveal-duration: 200ms;
   --border-width: 1px;
+  --shadow-glow: 0 0 12px var(--color-primary-500);
   --stroke-width-icon: 1.4;
   --radius-none: 0;
   --radius-control: 2px;

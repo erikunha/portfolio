@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 
 const WIDTHS = [320, 390, 768, 1280];
+const SIGNAL_RGB = 'rgb(0, 255, 65)';
 const TEXT_BASE_PX = 16;
 const TEXT_LG_PX = 18;
 const TEXT_BODY_PX = 14;
@@ -102,6 +103,41 @@ test.describe('type scale', () => {
           TEXT_BODY_PX,
         );
       }
+    });
+
+    test(`hero context meta steps down to the xs token below 390 at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      expect(
+        await px(page, '.hero-context', 'font-size'),
+        '.hero-context stays on the type scale at every width',
+      ).toBe(width < 390 ? TEXT_XS_PX : TEXT_BODY_PX);
+    });
+
+    test(`career descriptions render in the signal green at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      const color = await page
+        .locator('.career-body')
+        .first()
+        .evaluate((el) => getComputedStyle(el).color);
+      expect(color, 'the career description carries --color-primary-500').toBe(SIGNAL_RGB);
+    });
+
+    test(`community block fills the section width at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      const widths = await page.evaluate(() => {
+        const group = document.querySelector('#sec-community');
+        const block = group?.querySelector('.career-community');
+        return {
+          group: group?.getBoundingClientRect().width ?? 0,
+          block: block?.getBoundingClientRect().width ?? 0,
+        };
+      });
+      expect(widths.block, 'the community block uses the horizontal space').toBeGreaterThanOrEqual(
+        widths.group - 1,
+      );
     });
 
     test(`README code panel never scrolls sideways at ${width}`, async ({ page }) => {
