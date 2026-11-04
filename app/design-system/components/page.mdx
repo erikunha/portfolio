@@ -227,7 +227,7 @@ A live spectrum under an EQ curve: log-frequency bars, one curve and an axis. La
 
 ### Cover frame
 
-The `links-thumb` class frames a video cover. The frame is always 16:9 and the image fills it exactly, so nothing is cropped: YouTube serves 4:3 covers with the picture centred between black bars, and a 16:9 frame trims only the bars. Colour comes from tokens in `theme.css`: the image is grayscale, then a signal-green layer multiplies over it (`--links-thumb-tint`). On hover or keyboard focus of the parent link, the layer relaxes to `--links-thumb-tint-reveal` and the image regains its colour.
+The `links-thumb` class frames a video cover. The frame is always 16:9 and the `object-cover` image fills it. YouTube serves 4:3 covers with the picture centred between black bars, so a 16:9 frame trims only the bars and nothing of the picture; a cover that is not letterboxed, like the square preview below, is cropped to the frame instead. Colour comes from tokens in `theme.css`: the image is grayscale, then a signal-green layer multiplies over it (`--links-thumb-tint`). On hover or keyboard focus of the parent link, the layer relaxes to `--links-thumb-tint-reveal` and the image regains its colour.
 
 <Preview id="cover-frame">
   <span className="links-thumb" style={{ width: '16rem' }}>

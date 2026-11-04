@@ -24,7 +24,6 @@ flowchart TD
     end
     subgraph memory["Memory / continuity"]
         mem["User-global memory (runtime-dependent)"]
-        rem[".remember/ (in-flight handoff)"]
     end
     intent --> plan --> maps
     intent --> agent
@@ -34,18 +33,18 @@ flowchart TD
 
 ## Where each kind of knowledge lives
 
-| Knowledge                    | Lives in                                      | Format                                        |
-| ---------------------------- | --------------------------------------------- | --------------------------------------------- |
-| Why a decision was made      | `DECISIONS.md`                                | dated ADR bullet + reversibility note         |
-| The engineering bar          | `STANDARDS.md`                                | 12 chapters, each naming its enforcement gate |
-| The system's design          | `ARCHITECTURE.md`                             | narrative + trade-offs                        |
-| What to build (approved)     | `specs/NNN-feature/` (local-only, gitignored) | Context / Gaps / Changes / Status             |
-| How to build it (decomposed) | `specs/NNN-feature/` (local-only, gitignored) | step-by-step tasks, sharded for sub-PRs       |
-| The codebase map             | `/docs/01-11`                                 | reverse-engineered, diagram-first             |
-| How engineering happens      | `/docs/handbook/`                             | this set                                      |
-| Agent behavior               | `CLAUDE.md`, `.claude/rules/*`, skills        | instructions + dispatch tables                |
-| Learned preferences          | `MEMORY.md` + `feedback_*.md`                 | runtime-specific notes                        |
-| Session continuity           | `.remember/`                                  | timestamped handoff blocks                    |
+| Knowledge                    | Lives in                                                                          | Format                                        |
+| ---------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------- |
+| Why a decision was made      | `DECISIONS.md`                                                                    | dated ADR bullet + reversibility note         |
+| The engineering bar          | `STANDARDS.md`                                                                    | 12 chapters, each naming its enforcement gate |
+| The system's design          | `ARCHITECTURE.md`                                                                 | narrative + trade-offs                        |
+| What to build (approved)     | `specs/NNN-feature/` (local-only, gitignored)                                     | Context / Gaps / Changes / Status             |
+| How to build it (decomposed) | `specs/NNN-feature/` (local-only, gitignored)                                     | step-by-step tasks, sharded for sub-PRs       |
+| The codebase map             | `/docs/01-11`                                                                     | reverse-engineered, diagram-first             |
+| How engineering happens      | `/docs/handbook/`                                                                 | this set                                      |
+| Agent behavior               | `CLAUDE.md`, `.claude/rules/*`, skills                                            | instructions + dispatch tables                |
+| Learned preferences          | `MEMORY.md` + `feedback_*.md`                                                     | runtime-specific notes                        |
+| Session continuity           | no project-established handoff location (user-global memory is runtime-dependent) | runtime-specific notes                        |
 
 ## The ADR convention (load-bearing)
 
@@ -74,7 +73,7 @@ flowchart LR
     gate -->|yes| plan["plan (decomposed tasks)"]
     plan --> impl["implement (feature branch, TDD)"]
     impl --> pr["squash PR (#NNN)"]
-    pr --> adr["ADR records the decision"]
+    impl --> adr["ADR lands in the decision's commit (same-change rule)"]
 ```
 
 A spec is the approved "what and why" with explicit gaps to close. A plan decomposes it into tasks and, for large work, focused sub-PRs. Architect review sits between them as a workflow convention. No project hook enforces it.
@@ -85,7 +84,7 @@ Keep requirements, unresolved questions and implementation tasks together under 
 
 ## Memory and continuity
 
-`CLAUDE.md` references `.remember/` for session handoff. The project has no hook or script that establishes a complete auto-memory lifecycle. User-global memory location, loading limits and save behavior depend on the active runtime configuration.
+No project file establishes a session-handoff location: `CLAUDE.md` never references one, and the project has no hook or script that establishes a complete auto-memory lifecycle. User-global memory location, loading limits and save behavior depend on the active runtime configuration.
 
 ## Documentation standards
 

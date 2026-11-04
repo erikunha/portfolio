@@ -4,7 +4,7 @@
 
 ## The 30-second model
 
-You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> self-review (`pr-review-orchestrator`) -> the gate chain -> squash-merge -> ADR. Git hooks and CI enforce checks. Architect review and pre-PR review are conventions.
+You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> self-review (human diff read; extra model review only on owner request) -> the gate chain -> squash-merge -> ADR. Git hooks and CI enforce checks. Architect review and pre-PR review are conventions.
 
 ## Day 1 - understand the flow before you touch it
 
@@ -38,7 +38,7 @@ This exercises the ordinary contribution path. Runtime checks depend on the affe
 
 1. **Scope every commit.** `type(scope): subject`, scope mandatory, scope is the feature area. commitlint will reject you otherwise.
 2. **Branch as `<type>/<description>`.** The pre-push hook enforces it; never commit on `main`.
-3. **Review your diff before opening the PR** with the `pr-review-orchestrator` skill. No stamp or ledger gates the push; claude-review reviews the PR once it is open.
+3. **Review your diff before opening the PR.** It is a human diff read; the `pr-review-orchestrator` skill runs only when the owner asks. No stamp or ledger gates the push; claude-review reviews the PR once it is open.
 4. **A red gate is fixed by fixing the property**, never by disabling the gate.
 5. **Record architectural decisions** in `DECISIONS.md` with a reversibility note.
 
@@ -51,7 +51,7 @@ This exercises the ordinary contribution path. Runtime checks depend on the affe
 | How do I do X workflow?          | [workflow-playbook.md](./workflow-playbook.md)                                            |
 | What does this gate want?        | run it and read its output                                                                |
 | What is the agent allowed to do? | `CLAUDE.md` + `.claude/rules/*` + [agents-skills-hooks-mcp](./agents-skills-hooks-mcp.md) |
-| What was just being worked on?   | `.remember/now.md`                                                                        |
+| What was just being worked on?   | recent commits and open PRs (no project handoff ledger)                                   |
 
 ## When you are stuck on a gate
 

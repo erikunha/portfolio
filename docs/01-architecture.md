@@ -46,7 +46,10 @@ flowchart TB
     cfg --> page
     page --> sections --> ds
     page --> islands
-    sections --> cmods --> gate --> schemas
+    sections --> cmods
+    cmods --> schemas
+    gate -->|imports + parses| cmods
+    gate --> schemas
     islands -->|fetch /api/ask, /api/contact| api
     api --> handler --> libcore
     api -->|bespoke handlers| libcore
@@ -106,7 +109,8 @@ flowchart TD
     sectionN --> dsprim["design-system/* primitives"]
     sectionN -. hosts .-> island["client islands<br/>InteractiveShell · ContactForm · DawMixer*"]
     content --> schemas["Zod schemas: content/schemas.ts + contact.ts"]
-    schemas --> gate["build-time parse site: content/_validate-client-content.ts"]
+    gate["build-time parse site: content/_validate-client-content.ts"] -->|imports + parses| content
+    gate --> schemas
     island -->|HTTP| apiask["app/api/ask"]
     island -->|HTTP| apicontact["app/api/contact"]
     apicontact --> defh["lib/server/route.ts defineHandler"]

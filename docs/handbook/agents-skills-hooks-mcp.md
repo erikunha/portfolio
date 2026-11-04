@@ -56,9 +56,9 @@ The product endpoint `app/api/mcp/route.ts` is separate from the development con
 
 ## Review checks
 
-| Command            | Contract                                                                               |
-| ------------------ | -------------------------------------------------------------------------------------- |
-| `pnpm claude-gate` | Latest claude-review verdict must approve the current HEAD; missing or stale SHA fails |
-| `pnpm pr:gate`     | Review threads must be resolved and carry a reply; reports suspicious self-resolution  |
+| Command            | Contract                                                                                                                                                                                                  |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm claude-gate` | Latest claude-review verdict must approve the current HEAD; an Approve on an ancestor SHA carries across a nonempty diff containing only visual baseline PNGs, and missing SHAs or other stale diffs fail |
+| `pnpm pr:gate`     | Review threads must be resolved and carry a reply; reports suspicious self-resolution                                                                                                                     |
 
 `.github/workflows/claude-review.yml` runs automatic review for non-draft PRs authored by non-Bot owners, members or collaborators. An authorized `/claude-review` comment can also trigger it. `.github/workflows/claude.yml` handles human `@claude` mentions. Pre-PR review is procedural, independent of both workflows.

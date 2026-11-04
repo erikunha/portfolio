@@ -21,7 +21,7 @@ flowchart TB
     ctx -. guides work .-> checks
     commit --> msg
     msg --> push --> ci
-    ci --> review["claude-review.yml: PR review"]
+    review["claude-review.yml: PR review<br/>independent pull_request + issue_comment triggers,<br/>not gated on the CI workflow"]
 ```
 
 ## Context

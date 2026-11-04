@@ -13,7 +13,7 @@ Four directories, four roles. The directory tells you the layer:
 | `components/responsive/**`    | Viewport chrome                 | Yes (except `Module`)                     | `MatrixRain`, `Dock`, `CRTOverlay`                                 |
 | `design-system/components/**` | Reusable primitives             | Mostly No (RSC)                           | `Badge`, `Button`, `TerminalPanel`                                 |
 
-`check-client-naming.mjs` accepts `*.client.tsx`/`*.client.ts`, files inside a `/client/` directory, and App Router error convention files. Inspect the client directive and imports when tracing a boundary. Components commonly use a `Foo/` directory and `index.ts` barrel. Vitest tests use `*.test.tsx`; component Playwright specs use `*.e2e.ts`. `*Lazy` files are `next/dynamic` wrappers (`ContactFormLazy`, `InteractiveShellLazy`, `MatrixRainLazy` in `responsive/MatrixRain/`, consumed by `AppShell.client`), except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (no dynamic import is used there).
+`check-client-naming.mjs` accepts `*.client.tsx`/`*.client.ts`, files inside a `/client/` directory, and App Router error convention files. Inspect the client directive and imports when tracing a boundary. Components commonly use a `Foo/` directory and `index.ts` barrel. Vitest tests use `*.test.tsx`; component Playwright specs use `*.e2e.ts`. `*Lazy` files are `next/dynamic` wrappers (`ContactFormLazy`, `InteractiveShellLazy`, `MatrixRainLazy` in `responsive/MatrixRain/`, consumed by `GlobalMotion` from the root layout), except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (no dynamic import is used there).
 
 The naming gate scans `app`, `components` and `lib`; `/client/` is an explicit directory-based exception.
 
@@ -21,7 +21,7 @@ The naming gate scans `app`, `components` and `lib`; `/client/` is an explicit d
 
 `links-thumb` frames every `/links` video cover at 16:9 with the image filling the frame (no crop). The cover is grayscale under a multiplied signal-green layer from the `--links-thumb-*` tokens; hover or focus on the parent link restores the cover colour, and reduced motion removes the transition. Documented with a live example in the design system components page.
 
-The Hero identity line is static server-rendered text. Desktop and mobile share `HeroIdentity`, with metrics and accessible labels passed into `HeroStats`. Boot and system-failure islands import their copy from `content/hero-client.ts`, keeping server content validation out of those client imports. The About "Open to [role] roles" status line mounts the `RoleTyper` client island (`components/client/RoleTyper`), which cycles Senior, Staff and Principal over the server-rendered text. `About` contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
+The Hero identity line is static server-rendered text. Desktop and mobile share `HeroIdentity`, with metrics and accessible labels passed into `HeroStats`. Boot and system-failure islands import their copy from `content/hero-client.ts`, keeping server content validation out of those client imports. The About "Open to [role] roles" status line mounts the `RoleTyper` client island (`components/client/RoleTyper`), which types the single role `Senior` over the server-rendered text. `About` contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
 
 Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` export only the lazy wrapper. `ContactTimezoneLazy` differs: it uses `React.lazy` with an intersection trigger instead of `next/dynamic`, and its barrel also exports the server-rendered `ContactTimezoneStatic` that the lazy wrapper takes as its fallback. Tests import the real component directly, keeping it out of the initial client references.
 
@@ -32,9 +32,10 @@ flowchart TD
     page["app/page.tsx (RSC)"] --> bp["BreakpointProvider (client)"]
     bp --> shell["AppShell.client"]
     shell --> navigation["SectionNavigationProvider (client): current section and drawer state"]
-    navigation --> rail["SectionNavigation (client): menu trigger, drawer focus trap and focus return<br/>Header: drawer title and close control"]
+    navigation --> rail["SectionNavigation (client): menu trigger, drawer focus trap and focus return<br/>Header: title and drawer close control"]
     navigation --> position["PositionMeter (client): scroll progress line, top from 1024px and right edge below"]
-    navigation --> chrome["Chrome: MatrixRainLazy (client-only) · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
+    navigation --> chrome["Chrome: CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
+    page --> gm["GlobalMotion (mounted by the root layout): MatrixRainLazy (client-only) + TypeReveal"]
     shell --> main["PageMain (RSC): main#main-content"]
     main --> eb["ErrorBoundary"]
     eb --> sec["Terminal section (RSC)"]
@@ -59,7 +60,7 @@ The section menu is a modal drawer at every width. It opens from the icon-only m
 
 ### The `Module` wrapper
 
-`components/responsive/Module/Module.tsx` (RSC) wraps terminal modules. Hero, About, Career and Footer render separately. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. The `<h2>` reads the section name, the icon and the typed command, and every module passes `name`, so the visible name is the label from `content/section-labels.ts`. Props: `id`, `header`, `mobileHeader?`, `srLabel?`, `name?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. `content/section-labels.ts` supplies readable labels. It derives the registry labels and adds the scroll region labels.
+`components/responsive/Module/Module.tsx` (RSC) wraps terminal modules. Hero, About, Career and Footer render separately. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. The `<h2>` reads the section name, the icon and the typed command; every module passes `name` except the DAW mixer, which passes `srLabel` only and renders that label as screen-reader-only text. Props: `id`, `header`, `mobileHeader?`, `srLabel?`, `name?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. `content/section-labels.ts` supplies readable labels. It derives the registry labels and adds the scroll region labels.
 
 Module headers use CSS scroll-driven typing with a stepped text reveal and caret. The caret blinks four times, then stays solid. Unsupported browsers, OS reduced motion and the MOTION toggle show static text. The text remains in the DOM and accessibility tree; no client JavaScript is added. `html` and `body` use `overflow-x: clip` so the view timeline follows page scrolling.
 
@@ -107,7 +108,7 @@ This is a near-static site; the state model is intentionally tiny. Four mechanis
 ```mermaid
 flowchart TD
     subgraph ctx["1. React contexts"]
-        bp["BreakpointProvider / useBreakpoint<br/>useSyncExternalStore over matchMedia(max-width:768px)<br/>home SSR seed: initialIsMobile=false"]
+        bp["BreakpointProvider / useBreakpoint<br/>useSyncExternalStore over matchMedia('(width < 768px)')<br/>home SSR seed: initialIsMobile=false"]
         navigation["SectionNavigationProvider / useSectionNavigation<br/>current section, drawer state and navigation actions"]
         navigation --> consumers["SectionNavigation · Dock · PositionMeter"]
     end
@@ -121,11 +122,11 @@ flowchart TD
         ev["motionchange · shell-cmd-run · hero:sysfail:show|hide · sysfail:start|end"]
     end
     subgraph local["4. Per-island local state"]
-        li["each island owns useState/useRef; no sharing"]
+        li["each island owns useState/useRef<br/>one exception: ContactForm + ContactTimezone<br/>share the module-level messageStore"]
     end
 ```
 
-**There is no global store, no `useReducer`, and no URL/`searchParams` state.** The only router reads in the app are `usePathname()` in the design-system `Sidebar.client.tsx` and in `DesktopTopbar`, which marks the current page in the site navigation. Section navigation shares React state through `SectionNavigationProvider`. Other cross-island coordination uses window `CustomEvent`s. For example, `InteractiveShell` dispatches `shell-cmd-run` and the `Footer.client` session counter listens to increment a counter, with no shared parent state.
+**There is no state-management library, no `useReducer`, and no URL/`searchParams` state.** The router reads in the app are `usePathname()` in the design-system `Sidebar.client.tsx`, in `DesktopTopbar` (which marks the current page in the site navigation) and in the global `TypeReveal` (mounted on every route by `GlobalMotion`). Section navigation shares React state through `SectionNavigationProvider`. Other cross-island coordination uses window `CustomEvent`s. For example, `InteractiveShell` dispatches `shell-cmd-run` and the `Footer.client` session counter listens to increment a counter, with no shared parent state.
 
 ### Per-island state, and the two rendering disciplines
 
