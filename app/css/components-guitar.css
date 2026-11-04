@@ -48,17 +48,14 @@
     background: var(--color-secondary-950);
   }
 
-  .eq-label {
-    grid-area: 1 / 1;
-    align-self: start;
-    justify-self: start;
-    z-index: 3;
-    max-width: calc(100% * var(--phi-inv));
+  .guitar-chain-label {
+    grid-column: 1 / -1;
     margin: 0;
     padding: var(--phi-space-1) var(--phi-space-2);
     color: var(--color-primary-500);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-label-tracking);
+    border-bottom: var(--border-width) solid var(--color-primary-quiet);
     text-wrap: balance;
   }
 
@@ -284,12 +281,8 @@
       text-align: center;
     }
 
-    .eq-label {
-      grid-row: 1;
-      justify-self: stretch;
-      max-width: none;
+    .guitar-chain-label {
       padding: var(--phi-space-2);
-      border-bottom: var(--border-width) solid var(--color-primary-quiet);
       text-align: center;
     }
 

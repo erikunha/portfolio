@@ -19,10 +19,11 @@ describe('GuitarSection presentation', () => {
     expect(doc.body.textContent).not.toContain('MODELED CAB');
   });
 
-  it('shows the gear chain label as visible text', async () => {
+  it('shows the gear chain label as visible text full width above the EQ strip', async () => {
     const doc = await renderContent();
-    const label = doc.querySelector('[data-testid="eq-spectrum"] .eq-label');
+    const label = doc.querySelector('.guitar-chain-label');
     expect(label?.textContent).toBe(guitarRig.eqSpectrum.label);
+    expect(doc.querySelector('[data-testid="eq-spectrum"] .eq-label')).toBeNull();
   });
 
   it('names the plot as one image with the EQ bands in its accessible name', async () => {

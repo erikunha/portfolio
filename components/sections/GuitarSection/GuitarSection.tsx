@@ -22,6 +22,7 @@ export function GuitarContent() {
         <span className="guitar-signal-strip-live">{signalStrip.live}</span>
         <span className="guitar-signal-strip-tail">{signalStrip.tail}</span>
       </div>
+      <p className="guitar-chain-label">{eqSpectrum.label}</p>
       <div className="guitar-signal-panel">
         <EqSpectrumStrip spectrum={eqSpectrum} />
       </div>
