@@ -100,7 +100,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-copilot-subagents',
     question: 'What AI work has Erik done?',
     expect:
-      "Built a 12-subagent GitHub Copilot system at Betsson (codegen, review, debugging, testing, architecture validation); now builds shared UI systems for Raylu's investor workflow screens (50+ funds holding $500B+ in assets); this portfolio uses the Claude API.",
+      "Ran a GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation); now builds shared UI systems for Raylu's investor workflow screens (50+ funds holding $500B+ in assets); this portfolio uses the Claude API.",
     kind: 'factual',
   },
   {

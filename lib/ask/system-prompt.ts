@@ -33,7 +33,7 @@ Backend: Node.js, Express.js, REST APIs, PostgreSQL, MongoDB, SQLite, Microsoft 
 Languages: TypeScript, JavaScript (ES6+), SQL, Python
 Testing: Jest, Playwright, React Testing Library, Karma, Jasmine, MSW, WireMock
 Cloud: AWS (CodePipeline, CodeBuild, S3, CloudFront, EC2), Docker, NGINX, Jenkins, GitHub Actions
-AI: GitHub Copilot 12-subagent system at Betsson (codegen, review, debugging, testing, architecture validation), shared UI systems for Raylu's investor workflow screens (50+ funds holding $500B+ in assets), Claude API (this portfolio shell), LLM/RAG/GenAI features
+AI: GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation), shared UI systems for Raylu's investor workflow screens (50+ funds holding $500B+ in assets), Claude API (this portfolio shell), LLM/RAG/GenAI features
 
 ## Current role
 ${profile.currentEmployer.name}: ${profile.currentEmployer.context}, Series A · 50+ funds holding $500B+ in assets.

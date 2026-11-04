@@ -7,7 +7,7 @@ export const unknowns: Unknowns = UnknownsSchema.parse({
     {
       claim: 'knowing when AI-assisted engineering is a force multiplier vs a debt accelerator',
       context:
-        'built the 12-agent system at betsson. also watched what it produces when nobody reads the diffs.',
+        'built an ai-assisted engineering system at betsson. also watched what it produces when nobody reads the diffs.',
       showContext: false,
     },
     {
