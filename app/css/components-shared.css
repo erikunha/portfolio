@@ -214,7 +214,11 @@
   }
 
   #sec-guitar {
-    --module-estimate: 4650px;
+    --module-estimate: 1400px;
+  }
+
+  #sec-daw-mixer {
+    --module-estimate: 880px;
   }
 
   #sec-contact {
@@ -261,7 +265,11 @@
     }
 
     #sec-guitar {
-      --module-estimate: 2950px;
+      --module-estimate: 1250px;
+    }
+
+    #sec-daw-mixer {
+      --module-estimate: 880px;
     }
 
     #sec-contact {
@@ -275,7 +283,11 @@
     }
 
     #sec-guitar {
-      --module-estimate: 2370px;
+      --module-estimate: 1200px;
+    }
+
+    #sec-daw-mixer {
+      --module-estimate: 880px;
     }
 
     #sec-contact {

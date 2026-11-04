@@ -298,8 +298,8 @@ test.describe('section navigation: drawer rows', () => {
       .click();
     const drawer = page.getByRole('dialog', { name: 'Section menu' });
 
-    await expect(drawer.locator('.menu-badge span[aria-hidden="true"]')).toHaveText('9');
-    await expect(drawer.locator('.menu-badge')).toContainText('9 sections');
+    await expect(drawer.locator('.menu-badge span[aria-hidden="true"]')).toHaveText('10');
+    await expect(drawer.locator('.menu-badge')).toContainText('10 sections');
     await expect(drawer.locator('.menu-search')).toBeVisible();
     await expect(drawer.getByRole('link', { name: 'VIEW_CV' })).toHaveAttribute('href', '/cv');
     await expect(drawer.getByRole('link', { name: '30S_SUMMARY' })).toHaveAttribute(
