@@ -1,7 +1,8 @@
 @layer components {
   .guitar-presentation {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: var(--phi-pair-columns);
+    align-items: start;
     gap: var(--phi-space-3);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
@@ -139,14 +140,18 @@
     line-height: var(--eq-axis-height);
   }
 
-  .guitar-pair {
-    display: grid;
-    grid-template-columns: var(--phi-pair-columns);
-    gap: var(--phi-space-3);
+  .guitar-photo {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+    border: var(--border-width) solid var(--color-primary-500);
+    overflow: hidden;
   }
 
   .guitar-facts {
     display: grid;
+    grid-column: 1 / -1;
     grid-template-columns: var(--guitar-facts-columns);
     gap: var(--border-width);
     border: var(--border-width) solid var(--color-primary-quiet);
@@ -168,18 +173,6 @@
     padding: var(--phi-space-2);
     background: var(--color-secondary-950);
     overflow-wrap: anywhere;
-  }
-
-  .guitar-photo {
-    display: flex;
-    flex-direction: column;
-    align-self: start;
-    position: sticky;
-    top: var(--guitar-photo-sticky-top);
-    min-width: 0;
-    margin: 0;
-    border: var(--border-width) solid var(--color-primary-500);
-    overflow: hidden;
   }
 
   .guitar-camera-labels,
@@ -205,9 +198,8 @@
   .guitar-photo-frame {
     position: relative;
     container-type: size;
-    aspect-ratio: var(--guitar-photo-ratio-side);
-    min-height: var(--guitar-photo-min-height);
-    flex: 1;
+    aspect-ratio: var(--guitar-photo-ratio);
+    flex: none;
     isolation: isolate;
     overflow: hidden;
   }
@@ -240,33 +232,14 @@
     background: var(--guitar-scanline);
   }
 
-  .guitar-mixer {
-    min-width: 0;
-  }
-
   #sec-guitar > header h2 {
     font-size: var(--text-sm);
     font-weight: bold;
   }
 
-  @variant max-guitar {
-    .guitar-photo-frame {
-      min-height: 0;
-      flex: none;
-    }
-  }
-
   @media (width < 1024px) {
-    .guitar-pair {
+    .guitar-presentation {
       grid-template-columns: minmax(0, 1fr);
-    }
-
-    .guitar-photo {
-      position: static;
-    }
-
-    .guitar-photo-frame {
-      aspect-ratio: var(--guitar-photo-ratio);
     }
 
     .guitar-facts {

@@ -1,9 +1,8 @@
 import { FaderDbIsland } from '@/components/client/DawMixer/FaderIsland/FaderDbIsland.client';
 import { KnobIsland } from '@/components/client/DawMixer/KnobIsland/KnobIsland.client';
-import { MixerScroll } from '@/components/client/DawMixer/MixerScroll.client';
 import { RmsButtons } from '@/components/client/DawMixer/RmsButtons/RmsButtons.client';
 import { VuMeter } from '@/components/client/DawMixer/VuMeter/VuMeter.client';
-import { dawMixer, dawMixerConfig, dawMixerUi } from '@/content/daw-mixer';
+import { dawMixer } from '@/content/daw-mixer';
 import type { DawMixer, DawMixerChannel } from '@/content/schemas';
 import { cn } from '@/lib/cn';
 
@@ -11,13 +10,10 @@ function ParsedText({ text }: { text: string }) {
   const parts = text.split(/\*\*(.+?)\*\*/g);
   return (
     <>
-      {parts.map((part, i) => {
-        if (i % dawMixerConfig.boldPartDivisor !== dawMixerConfig.boldPartRemainder) return part;
-        return (
-          // biome-ignore lint/suspicious/noArrayIndexKey: split parts have no stable id
-          <strong key={i}>{part}</strong>
-        );
-      })}
+      {parts.map((part, i) =>
+        // biome-ignore lint/suspicious/noArrayIndexKey: split parts have no stable id
+        i % 2 === 1 ? <strong key={i}>{part}</strong> : part,
+      )}
     </>
   );
 }
@@ -30,13 +26,13 @@ function PluginChain({
   channelId: string;
 }) {
   return (
-    <div className="flex items-stretch">
+    <div className="flex items-stretch gap-1">
       {plugins.map((p) => (
         <div
           key={p.name}
           className={cn(
-            'flex-none min-w-max border flex items-center gap-1',
-            'px-2 py-[5px] text-primary-400 relative',
+            'flex-1 min-w-0 border flex flex-col items-center gap-1',
+            'px-1 pt-[5px] pb-[6px] text-primary-400 relative',
             p.active
               ? [
                   'plugin-card-on',
@@ -47,11 +43,11 @@ function PluginChain({
           )}
           data-testid={`plugin-${channelId}-${p.name}`}
         >
-          <span className="text-xs font-bold tracking-[0.06em] whitespace-nowrap uppercase">
+          <span className="text-xs font-bold tracking-[0.06em] whitespace-nowrap overflow-hidden text-ellipsis max-w-full uppercase">
             {p.name}
           </span>
           <span className="flex gap-px items-end" aria-hidden="true">
-            {Array.from({ length: dawMixerConfig.pluginStrengthSegments }, (_, i) => {
+            {Array.from({ length: 5 }, (_, i) => {
               const cls = cn(
                 'block w-[3px] h-1 bg-primary-500',
                 i >= p.strength && 'opacity-[0.22]',
@@ -69,12 +65,12 @@ function PluginChain({
 }
 
 function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
-  const isMaster = ch.id === dawMixerConfig.masterChannelId;
+  const isMaster = ch.id === 'MASTER';
   return (
-    <fieldset
+    <div
       className={cn(
-        'daw-channel-row m-0 min-w-0',
-        'border-0 border-b border-[var(--color-primary-quiet)] relative',
+        'daw-channel-row',
+        'border-b border-[var(--color-primary-quiet)] px-[18px] py-[14px] relative',
         ch.focused && [
           'channel-row-focused',
           'bg-[color-mix(in_srgb,var(--color-primary-500)_6%,transparent)]',
@@ -87,9 +83,8 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
       data-focused={ch.focused || undefined}
       data-channel={isMaster ? 'master' : undefined}
       data-testid={`channel-${ch.id}`}
-      aria-label={`${ch.id} ${ch.desktopName ?? ch.name}`}
     >
-      <div className="mx-channel-id flex">
+      <div className="flex flex-col gap-1">
         <span
           className={cn(
             'border px-[5px] py-[1px] text-xs font-mono text-primary-400 tracking-[0.04em] shrink-0',
@@ -101,7 +96,7 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
         >
           {ch.id}
         </span>
-        <span className="text-xs text-primary-400 max-md:hidden">{ch.name}</span>
+        <span className="block text-xs text-primary-400">{ch.name}</span>
         <div
           className="h-[6px] bg-[var(--color-primary-quiet)] border border-[var(--color-primary-quiet)] relative overflow-hidden"
           aria-hidden="true"
@@ -115,7 +110,7 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
           />
         </div>
       </div>
-      <div className="mx-channel-track flex flex-col gap-1 min-w-0">
+      <div className="flex flex-col gap-1 min-w-0">
         <span
           className={cn(
             'font-bold text-base text-tertiary-50 tracking-[0.04em] leading-none',
@@ -124,30 +119,30 @@ function ChannelDesktop({ ch }: { ch: DawMixerChannel }) {
         >
           {ch.desktopName ?? ch.name}
         </span>
-        <span className="mx-channel-desc text-sm text-primary-400 leading-[1.35]">
+        <span className="text-xs text-primary-400 leading-[1.3] whitespace-nowrap overflow-hidden text-ellipsis">
           <ParsedText text={ch.desc} />
         </span>
       </div>
-      <div className="mx-channel-knobs flex gap-[10px] items-center">
+      <div className="flex gap-[10px] items-center justify-center">
         <KnobIsland initialAngle={ch.knob1.angleDeg} label={ch.knob1.label} channelName={ch.name} />
         <KnobIsland initialAngle={ch.knob2.angleDeg} label={ch.knob2.label} channelName={ch.name} />
       </div>
-      <div className="mx-channel-buttons flex">
+      <div className="flex justify-center">
         <RmsButtons buttons={ch.buttons} initialActive={ch.activeButtons} channelName={ch.name} />
       </div>
-      <div className="mx-channel-plugins min-w-0">
+      <div className="min-w-0">
         <PluginChain plugins={ch.plugins} channelId={ch.id} />
       </div>
-      <div className="mx-channel-meter p-0">
+      <div className="p-0">
         <VuMeter
-          segments={dawMixerConfig.meterSegments}
+          segments={12}
           initialLevel={ch.meterPct}
           clipping={ch.meterClipping ?? false}
           channelName={ch.name}
         />
       </div>
       <FaderDbIsland initialPct={ch.faderPct} channelName={ch.name} footer={ch.footer} />
-    </fieldset>
+    </div>
   );
 }
 
@@ -155,31 +150,30 @@ function SessionHeaderDesktop({ mixer }: { mixer: DawMixer }) {
   return (
     <div
       className={cn(
-        'mx-session-header',
+        'grid gap-[18px] items-center px-[18px] py-3',
         'border-b border-[var(--color-primary-border)]',
         'bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]',
         'text-xs text-primary-400 tracking-[0.14em]',
       )}
+      style={{ gridTemplateColumns: '1fr auto' }}
       data-testid="session-header"
     >
       <span>
-        {dawMixerUi.sessionPrefix}
+        {'SESSION: '}
         <strong className="text-primary-500">{mixer.sessionName}</strong>
-        {dawMixerUi.sessionSeparator}
-        {mixer.channels.length - dawMixerConfig.masterChannelCount}
-        {dawMixerUi.tracksSuffix}
+        {' · '}
+        {mixer.channels.length - 1}
+        {' GTR TRACKS + MASTER · '}
         <span className="text-primary-500">{mixer.status}</span>
       </span>
-      <span className="mx-session-transport tabular-nums">
+      <span className="inline-flex items-center gap-[14px] tabular-nums">
         <span className="transport-play" aria-hidden="true" />
         <span className="text-primary-500 font-bold text-sm tracking-[0.06em]">
           {mixer.transportTime}
         </span>
-        <span aria-hidden="true">{dawMixerUi.separator}</span>
-        <span>
-          {mixer.bpm} {dawMixerUi.bpmUnit}
-        </span>
-        <span aria-hidden="true">{dawMixerUi.separator}</span>
+        <span className="text-[var(--color-primary-quiet)]">|</span>
+        <span>{mixer.bpm} BPM</span>
+        <span className="text-[var(--color-primary-quiet)]">|</span>
         <span>{mixer.timeSignature}</span>
       </span>
     </div>
@@ -190,43 +184,36 @@ function TableHeader() {
   return (
     <div
       className={cn(
-        'daw-channel-row mx-table-header',
+        'daw-channel-row',
         'text-xs max-md:text-[10px] text-primary-400 tracking-[0.18em] uppercase',
         'border-b border-[var(--color-primary-quiet)] px-[18px] py-[7px]',
         'bg-black/50',
       )}
       aria-hidden="true"
     >
-      {dawMixerUi.columns.map((column) => (
-        <div key={column}>{column}</div>
-      ))}
+      <div>ID</div>
+      <div>TRACK</div>
+      <div>I/O</div>
+      <div>R/M/S</div>
+      <div>PLUGIN CHAIN</div>
+      <div>METER</div>
+      <div>FADER</div>
+      <div className="text-right">dB</div>
     </div>
   );
 }
 
-export function DawMixerDesktop({
-  skipTargetId = dawMixerUi.skipTargetId,
-}: {
-  skipTargetId?: string;
-} = {}) {
+export function DawMixerDesktop() {
   return (
     <div
-      className="mx-mixer font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-black/50"
+      className="font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-black/50 overflow-hidden min-h-[520px]"
       data-testid="daw-mixer-desktop"
     >
       <SessionHeaderDesktop mixer={dawMixer} />
-      <a className="mx-skip" href={`#${skipTargetId}`}>
-        {dawMixerUi.skipLink}
-      </a>
-      <MixerScroll aria-label={dawMixerUi.regionLabel}>
-        <div className="mx-grid">
-          <TableHeader />
-          {dawMixer.channels.map((ch) => (
-            <ChannelDesktop key={ch.id} ch={ch} />
-          ))}
-        </div>
-      </MixerScroll>
-      <div id={skipTargetId} tabIndex={dawMixerConfig.skipTargetTabIndex} />
+      <TableHeader />
+      {dawMixer.channels.map((ch) => (
+        <ChannelDesktop key={ch.id} ch={ch} />
+      ))}
     </div>
   );
 }

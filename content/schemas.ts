@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { SECTION_ICONS } from './section-registry';
 
 export { SECTION_ICONS };
-export const SECTION_DESTINATION_COUNT = 9;
+export const SECTION_DESTINATION_COUNT = 10;
 const FIRST_SECTION_ORDER = 1;
 const MIN_SECTION_TEXT_LENGTH = 1;
 const MIN_ALIAS_COUNT = 1;
@@ -796,6 +796,7 @@ const DawMixerChannelSchema = z.object({
   buttons: z.array(z.string().min(1)),
   activeButtons: z.array(z.string().min(1)),
   footer: z.object({ lufs: z.string(), pk: z.string() }).optional(),
+  terminalLines: z.array(z.string().min(1)).optional(),
 });
 
 export const DawMixerSchema = z.object({

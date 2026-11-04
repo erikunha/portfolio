@@ -77,7 +77,7 @@ export const NAVIGATION: Navigation = {
       id: 'off-hours',
       title: 'OFF_HOURS',
       dock: 'menu',
-      sectionIds: ['sec-hottest-takes', 'sec-guitar'],
+      sectionIds: ['sec-hottest-takes', 'sec-guitar', 'sec-daw-mixer'],
     },
     { id: 'contact', title: 'CONTACT', dock: 'menu', sectionIds: ['sec-contact'] },
   ],
