@@ -35,6 +35,7 @@ export function GuitarContent() {
           <div className="cam-corners" aria-hidden="true">
             <i />
           </div>
+          <div className="guitar-photo-hud-topleft">{liveCam.hudTopLeft}</div>
           <div className="guitar-photo-rec">{liveCam.status}</div>
           <div className="guitar-photo-telemetry">
             <span className="guitar-photo-telemetry-line">{liveCam.telemetry}</span>

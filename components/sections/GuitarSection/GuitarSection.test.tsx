@@ -118,14 +118,17 @@ describe('GuitarSection presentation', () => {
     expect(doc.body.textContent).toContain(guitarRig.liveCam.caption);
   });
 
-  it('pins the telemetry line at the photo bottom bar left and CAM at its right, REC at the top right', async () => {
+  it('pins the camera HUD corners: EQ curve top left, REC top right, session bottom left, CAM bottom right', async () => {
     const doc = await renderContent();
+    expect(doc.querySelector('.guitar-photo-hud-topleft')?.textContent).toBe(
+      guitarRig.liveCam.hudTopLeft,
+    );
+    expect(doc.querySelector('.guitar-photo-rec')?.textContent).toBe(guitarRig.liveCam.status);
     const bar = doc.querySelector('.guitar-photo-telemetry');
     expect(bar?.textContent).toContain(guitarRig.liveCam.telemetry);
     expect(bar?.querySelector('.guitar-photo-telemetry-camera')?.textContent).toBe(
       guitarRig.liveCam.cameraLabel,
     );
-    expect(doc.querySelector('.guitar-photo-rec')?.textContent).toBe(guitarRig.liveCam.status);
     expect(doc.querySelector('.guitar-camera-labels')).toBeNull();
   });
 
