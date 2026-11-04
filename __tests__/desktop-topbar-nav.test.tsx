@@ -164,7 +164,7 @@ describe('DesktopTopbar', () => {
     expect(hire?.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME);
   });
 
-  it('puts the brand first and the menu trigger last, in DOM order and so in focus order', async () => {
+  it('puts the menu trigger first and the brand last, in DOM order and so in focus order', async () => {
     mounted = await renderTopbar();
     const focusable = [...mounted.container.querySelectorAll<HTMLElement>('a[href], button')];
     const brandLink = focusable.find((element) => element.getAttribute('data-test-brand') === '1');
@@ -173,13 +173,13 @@ describe('DesktopTopbar', () => {
       element.getAttribute('href')?.startsWith('https://www.linkedin.com'),
     );
 
-    expect(brandLink, 'the brand slot must render at the left of the topbar').toBeDefined();
+    expect(brandLink, 'the brand slot must render at the right of the topbar').toBeDefined();
     expect(trigger, 'the menu trigger must be part of the topbar').not.toBeNull();
-    expect(focusable[0], 'the brand is the first focus stop').toBe(brandLink);
-    expect(focusable.at(-1), 'the menu trigger is the last focus stop').toBe(trigger);
+    expect(focusable[0], 'the menu trigger is the first focus stop').toBe(trigger);
+    expect(focusable.at(-1), 'the brand is the last focus stop').toBe(brandLink);
     expect(
-      hire && trigger && hire.compareDocumentPosition(trigger) & Node.DOCUMENT_POSITION_FOLLOWING,
-      'the menu trigger must follow the HIRE link',
+      hire && trigger && trigger.compareDocumentPosition(hire) & Node.DOCUMENT_POSITION_FOLLOWING,
+      'the HIRE link must follow the menu trigger',
     ).toBeTruthy();
   });
 

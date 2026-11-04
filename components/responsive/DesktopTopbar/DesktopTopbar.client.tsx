@@ -25,8 +25,8 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
   return (
     <div className="desktop-topbar fixed top-0 left-0 right-0 z-[110] bg-secondary-950 border-b border-primary-subtle hidden md:block">
       <div className="max-w-[var(--measure-page)] mx-auto px-[var(--space-gutter)] flex items-center gap-3 min-h-11">
-        {brand}
-        <nav className="ml-auto flex gap-2 items-center flex-nowrap" aria-label="Site navigation">
+        <MenuTrigger />
+        <nav className="flex gap-2 items-center flex-nowrap" aria-label="Site navigation">
           {TOPBAR_NAV.map(({ label, href }) => (
             <a
               key={href}
@@ -90,7 +90,7 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
             {TOPBAR_HIRE_LINK.label}
           </a>
         </nav>
-        <MenuTrigger />
+        <div className="ml-auto flex items-center">{brand}</div>
       </div>
     </div>
   );

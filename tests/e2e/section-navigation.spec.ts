@@ -36,7 +36,7 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
       await expect(trigger, 'focus returns to the menu trigger').toBeFocused();
     });
 
-    test('keyboard focus reaches the brand first and the menu trigger last, then opens and restores', async ({
+    test('keyboard focus reaches the menu trigger first and the brand last, then opens and restores', async ({
       page,
     }) => {
       await page.goto('/');
@@ -46,12 +46,12 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
           (node) => node.getClientRects().length > 0,
         );
         return {
-          first: tabbables[0]?.classList.contains('brand-link') ?? false,
-          last: tabbables.at(-1)?.classList.contains('menu-trigger') ?? false,
+          first: tabbables[0]?.classList.contains('menu-trigger') ?? false,
+          last: tabbables.at(-1)?.classList.contains('brand-link') ?? false,
         };
       });
-      expect(order.first, 'the brand link is the first tab stop in the header').toBe(true);
-      expect(order.last, 'the menu trigger is the last tab stop in the header').toBe(true);
+      expect(order.first, 'the menu trigger is the first tab stop in the header').toBe(true);
+      expect(order.last, 'the brand link is the last tab stop in the header').toBe(true);
 
       const trigger = header.locator('.menu-trigger');
       await trigger.focus();
@@ -72,9 +72,9 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
       expect(box?.width ?? 0, 'target width').toBeGreaterThanOrEqual(44);
       expect(box?.height ?? 0, 'target height').toBeGreaterThanOrEqual(44);
       expect(
-        box?.x ?? Number.NEGATIVE_INFINITY,
-        'the trigger sits in the right half, as the last item in the header',
-      ).toBeGreaterThan(width / 2);
+        box?.x ?? Number.POSITIVE_INFINITY,
+        'the trigger sits in the left half, as the first item in the header',
+      ).toBeLessThan(width / 2);
       expect(
         (box?.x ?? 0) + (box?.width ?? 0),
         'the trigger stays inside the viewport',
@@ -114,7 +114,7 @@ for (const width of TOPBAR_WIDTHS) {
       expect(clipped, 'no topbar control may reach past the bar').toEqual([]);
     });
 
-    test('the brand icon sits at the far left and the menu trigger at the far right, unclipped', async ({
+    test('the menu trigger sits at the far left and the brand icon at the far right, unclipped', async ({
       page,
     }) => {
       await page.goto('/');
@@ -135,23 +135,33 @@ for (const width of TOPBAR_WIDTHS) {
         const nav = boxOf('nav');
         return {
           brandLeft: brandBox?.x ?? Number.NaN,
+          brandRight: brandBox?.right ?? Number.NaN,
           brandHeight: brandBox?.height ?? Number.NaN,
           triggerLeft: triggerBox?.x ?? Number.NaN,
           triggerRight: triggerBox?.right ?? Number.NaN,
           triggerHeight: triggerBox?.height ?? Number.NaN,
+          navLeft: nav?.x ?? Number.NaN,
           navRight: nav?.right ?? Number.NaN,
           barRight: element.getBoundingClientRect().right,
         };
       });
 
-      expect(fit.triggerRight, 'the menu trigger must not reach past the bar').toBeLessThanOrEqual(
-        fit.barRight + 1,
-      );
       expect(
         fit.triggerLeft,
-        'the menu trigger must sit to the right of the navigation and the HIRE button',
+        'the menu trigger must not start before the bar',
+      ).toBeGreaterThanOrEqual(-1);
+      expect(
+        fit.navLeft,
+        'the navigation must sit to the right of the menu trigger',
+      ).toBeGreaterThanOrEqual(fit.triggerRight - 1);
+      expect(
+        fit.brandRight,
+        'the brand icon is right of the navigation, at the right end of the row',
       ).toBeGreaterThanOrEqual(fit.navRight - 1);
-      expect(fit.brandLeft, 'the brand icon is left of everything').toBeLessThan(fit.triggerLeft);
+      expect(fit.brandRight, 'the brand icon must not reach past the bar').toBeLessThanOrEqual(
+        fit.barRight + 1,
+      );
+      expect(fit.triggerLeft, 'the menu trigger is left of the brand').toBeLessThan(fit.brandLeft);
       expect(fit.brandHeight, 'brand hit target is at least 44px').toBeGreaterThanOrEqual(44);
       expect(fit.triggerHeight, 'menu hit target is at least 44px').toBeGreaterThanOrEqual(44);
     });
@@ -288,7 +298,7 @@ test.describe('section navigation: motion control tiers', () => {
 test.describe('section navigation: drawer rows', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('the drawer lists the search row, the count, the reading views and the motion toggle', async ({
+  test('the drawer lists the search row, the reading views and the motion toggle', async ({
     page,
   }) => {
     await page.goto('/');
@@ -298,8 +308,8 @@ test.describe('section navigation: drawer rows', () => {
       .click();
     const drawer = page.getByRole('dialog', { name: 'Section menu' });
 
-    await expect(drawer.locator('.menu-badge span[aria-hidden="true"]')).toHaveText('10');
-    await expect(drawer.locator('.menu-badge')).toContainText('10 sections');
+    await expect(drawer.locator('.menu-badge')).toHaveCount(0);
+    await expect(drawer.locator('[data-section-count]')).toHaveCount(0);
     await expect(drawer.locator('.menu-search')).toBeVisible();
     await expect(drawer.getByRole('link', { name: 'VIEW_CV' })).toHaveAttribute('href', '/cv');
     await expect(drawer.getByRole('link', { name: '30S_SUMMARY' })).toHaveAttribute(
