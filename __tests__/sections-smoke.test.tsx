@@ -2,6 +2,7 @@ import { type ComponentType, createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SectionNavigationProvider } from '@/components/responsive/SectionNavigation';
+import { siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { type MountedClient, mountClient } from './helpers/render';
 
@@ -102,7 +103,7 @@ describe('Home page', () => {
       renderToStaticMarkup(
         createElement(
           SectionNavigationProvider,
-          null,
+          { chrome: siteNavChrome(SITE_LOCALE.en), locale: SITE_LOCALE.en },
           createElement(DesktopTopbar, { brand: null }),
         ),
       ),
@@ -161,7 +162,7 @@ describe('CredentialsSection', () => {
     const { CredentialsSection } = await import(
       '@/components/sections/CredentialsSection/CredentialsSection'
     );
-    mounted = await mountClient(createElement(CredentialsSection));
+    mounted = await mountClient(createElement(CredentialsSection, { locale: SITE_LOCALE.en }));
     return mounted.container;
   }
 
@@ -261,7 +262,7 @@ describe('ShellSection', () => {
 
   async function render() {
     const { ShellSection } = await import('@/components/sections/ShellSection/ShellSection');
-    mounted = await mountClient(createElement(ShellSection));
+    mounted = await mountClient(createElement(ShellSection, { locale: SITE_LOCALE.en }));
     return mounted.container;
   }
 

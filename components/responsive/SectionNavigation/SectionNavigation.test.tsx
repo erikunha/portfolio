@@ -160,7 +160,7 @@ describe('SectionNavigation', () => {
       SECTION_REGISTRY.map(({ id }) => `/#${id}`),
     );
     expect(links.map((link) => link.querySelector('.nav-label')?.textContent)).toEqual(
-      SECTION_REGISTRY.map(({ label }) => label),
+      SECTION_REGISTRY.map(({ label }) => label[LOCALE]),
     );
   });
 

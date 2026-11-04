@@ -71,7 +71,7 @@ describe('the LinkedIn hire action reads the same on every surface', () => {
   });
 
   it('gives the hero action the primary label and the shared accessible name', () => {
-    const doc = parse(renderToStaticMarkup(createElement(Hero)));
+    const doc = parse(renderToStaticMarkup(createElement(Hero, { locale: LOCALE })));
     const links = hireLinks(doc, '[data-testid="hero-ctas"]');
 
     expect(links.length, 'the hero renders a hire action in every layout variant').toBeGreaterThan(
@@ -85,7 +85,11 @@ describe('the LinkedIn hire action reads the same on every surface', () => {
       '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
     );
     mounted = await mountClient(
-      createElement(SectionNavigationProvider, null, createElement(DesktopTopbar, { brand: null })),
+      createElement(
+        SectionNavigationProvider,
+        { chrome: siteNavChrome(LOCALE), locale: LOCALE },
+        createElement(DesktopTopbar, { brand: null }),
+      ),
     );
     const links = hireLinks(mounted.container, 'nav');
 

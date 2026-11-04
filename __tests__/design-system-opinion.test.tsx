@@ -29,7 +29,10 @@ describe('design-system opinion', () => {
       const actual = await importOriginal<typeof import('@/content/hottest-takes')>();
       return {
         ...actual,
-        designSystemTake: actual.designSystemTake && { ...actual.designSystemTake, num: '12.' },
+        designSystemTake: (locale: import('@/content/site-locale').SiteLocale) => {
+          const take = actual.designSystemTake(locale);
+          return take && { ...take, num: '12.' };
+        },
       };
     });
     const { DesignSystemOpinion: Renumbered } = await import(

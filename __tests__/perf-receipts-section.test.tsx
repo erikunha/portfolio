@@ -13,7 +13,7 @@ describe('Projects nested performance receipts', () => {
 
   async function render() {
     const { ProjectsSection } = await import('@/components/sections/ProjectsSection');
-    mounted = await mountClient(createElement(ProjectsSection));
+    mounted = await mountClient(createElement(ProjectsSection, { locale: SITE_LOCALE.en }));
     return mounted.container;
   }
 

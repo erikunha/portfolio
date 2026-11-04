@@ -47,7 +47,7 @@ function expectKeyboardScrollRegion(
 describe('Text scroll regions', () => {
   it('makes responsibilities a named keyboard scroll region', () => {
     expectKeyboardScrollRegion(
-      createElement(About),
+      createElement(About, { locale: SITE_LOCALE.en }),
       SCROLL_REGION_LABELS[SITE_LOCALE.en]['sec-responsibilities'],
       SECTION_LABELS[SITE_LOCALE.en]['sec-readme'],
       '.ab-resp .overflow-x-auto',
@@ -56,7 +56,7 @@ describe('Text scroll regions', () => {
 
   it('makes the README code sample a named keyboard scroll region', () => {
     expectKeyboardScrollRegion(
-      createElement(About),
+      createElement(About, { locale: SITE_LOCALE.en }),
       SCROLL_REGION_LABELS[SITE_LOCALE.en]['sec-readme'],
       SECTION_LABELS[SITE_LOCALE.en]['sec-readme'],
       '.ab-code-scroll',
@@ -76,7 +76,7 @@ describe('the scroll regions the accessibility doc names', () => {
     expect(
       documented,
       `the scroll regions documented in ${SCROLL_REGION_DOC} are not the ones content/section-labels.ts defines. A region the code dropped must leave the doc, and a new region must enter it, or the doc describes landmarks a screen reader cannot find.`,
-    ).toEqual({ ...SCROLL_REGION_LABELS });
+    ).toEqual({ ...SCROLL_REGION_LABELS[SITE_LOCALE.en] });
   });
 
   it('names no retired scroll region', () => {

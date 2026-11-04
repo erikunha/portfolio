@@ -1,6 +1,9 @@
 import { NextRequest } from 'next/server';
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { shellUi } from '@/content/shell-ui';
+import { SITE_LOCALE } from '@/content/site-locale';
+import { shellChrome } from '@/content/terminal-chrome';
 import { mountClient } from './helpers/render';
 
 describe('lib/ask-log — persistAskInteraction', () => {
@@ -165,7 +168,13 @@ describe('/api/ask privacy notice on the shell', () => {
       '@/components/client/InteractiveShell/InteractiveShell'
     );
 
-    const { container, unmount } = await mountClient(createElement(InteractiveShell));
+    const { container, unmount } = await mountClient(
+      createElement(InteractiveShell, {
+        locale: SITE_LOCALE.en,
+        ui: shellUi[SITE_LOCALE.en],
+        chrome: shellChrome[SITE_LOCALE.en],
+      }),
+    );
 
     const notice = container.querySelector('[data-testid="shell-privacy-notice"]');
     expect(notice).not.toBeNull();

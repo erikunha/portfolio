@@ -1,6 +1,8 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import { dawMixer } from '@/content/daw-mixer';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 vi.mock('@/components/client/DawMixer/VuMeter/VuMeter.client', () => ({
   VuMeter: ({ channelName, initialLevel }: { channelName: string; initialLevel: number }) =>
@@ -34,13 +36,17 @@ vi.mock('@/components/client/DawMixer/RmsButtons/RmsButtons.client', () => ({
 
 async function renderDesktop(): Promise<Document> {
   const { DawMixerDesktop } = await import('./DawMixerDesktop');
-  const html = renderToStaticMarkup(createElement(DawMixerDesktop));
+  const html = renderToStaticMarkup(
+    createElement(DawMixerDesktop, { mixer: dawMixer[SITE_LOCALE.en] }),
+  );
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
 async function renderMobile(): Promise<Document> {
   const { DawMixerMobile } = await import('./DawMixerSection');
-  const html = renderToStaticMarkup(createElement(DawMixerMobile));
+  const html = renderToStaticMarkup(
+    createElement(DawMixerMobile, { mixer: dawMixer[SITE_LOCALE.en] }),
+  );
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
@@ -142,7 +148,7 @@ vi.mock('@/lib/ua', () => ({ getIsMobile: async () => false }));
 describe('DawMixerSection module wrapper', () => {
   it('renders as its own section anchored at sec-daw-mixer', async () => {
     const { DawMixerSection } = await import('./DawMixerSection');
-    const html = renderToStaticMarkup(createElement(DawMixerSection));
+    const html = renderToStaticMarkup(createElement(DawMixerSection, { locale: SITE_LOCALE.en }));
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const section = doc.querySelector('section#sec-daw-mixer');
     expect(

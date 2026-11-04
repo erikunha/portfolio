@@ -319,7 +319,7 @@ describe('canonical profile and education', () => {
     const { EducationSchema } = await import('./schemas');
     const { education } = await import('./education');
     expect(EducationSchema.array().parse(educationFixtures)).toEqual(educationFixtures);
-    expect(education).toEqual(educationFixtures);
+    expect(education[SITE_LOCALE.en]).toEqual(educationFixtures);
     const { credentials } = await import('./credentials');
     expect(credentials).toEqual([
       { label: 'ANGULAR_DEV', badge: 'CERTIFIED', evidence: 'certificates.dev · 2024' },

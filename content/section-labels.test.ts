@@ -27,7 +27,8 @@ describe('SECTION_LABELS', () => {
       'sec-contact': 'Contact',
     });
     for (const { id, srLabel } of SECTION_REGISTRY) {
-      expect(SECTION_LABELS[SITE_LOCALE.en][id]).toBe(srLabel);
+      expect(SECTION_LABELS[SITE_LOCALE.en][id]).toBe(srLabel.en);
+      expect(SECTION_LABELS[SITE_LOCALE.pt][id]).toBe(srLabel.pt);
     }
   });
 
@@ -87,11 +88,11 @@ describe('SECTION_LABELS', () => {
     }
     expect(ids.has('sec-guitar'), 'guitar module must retain label coverage').toBe(true);
     for (const id of ids) {
-      expect(SECTION_LABELS, `missing label for ${id}`).toHaveProperty(id);
+      expect(SECTION_LABELS[SITE_LOCALE.en], `missing label for ${id}`).toHaveProperty(id);
     }
     expect(ids.size).toBe(EXPECTED_SECTION_COUNT);
     expect([...ids].sort()).toEqual(
-      Object.keys(SECTION_LABELS)
+      Object.keys(SECTION_LABELS[SITE_LOCALE.en])
         .filter((id) => id.startsWith('sec-'))
         .sort(),
     );

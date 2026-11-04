@@ -264,12 +264,12 @@ describe('reading view content', () => {
   it('renders the community heading as plain text when it has no link', () => {
     const { href: _omit, ...community } = cvDocumentEn.community;
     const original = cvDocumentEn.community;
-    Object.assign(cvDocument, { community });
+    Object.assign(cvDocumentEn, { community });
     let host: HTMLElement;
     try {
       host = render(CvPage);
     } finally {
-      Object.assign(cvDocument, { community: original });
+      Object.assign(cvDocumentEn, { community: original });
     }
     const heading = Array.from(host.querySelectorAll('h3')).find(
       (node) => node.textContent === community.heading,

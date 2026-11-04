@@ -74,8 +74,8 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
     expect(doc.body.textContent).toContain(measured[SITE_LOCALE.en].unavailable);
     expect(doc.querySelector('time')).toBeNull();
     expect(doc.querySelectorAll('[aria-valuenow]')).toHaveLength(0);
-    expect(doc.querySelectorAll('.measured[SITE_LOCALE.en]-value')).toHaveLength(4);
-    for (const value of doc.querySelectorAll('.measured[SITE_LOCALE.en]-value')) {
+    expect(doc.querySelectorAll('.measured-value')).toHaveLength(4);
+    for (const value of doc.querySelectorAll('.measured-value')) {
       expect(value.textContent).toBe('—/100');
     }
   });

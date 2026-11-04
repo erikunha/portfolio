@@ -45,7 +45,7 @@ describe('responsive section mobile variants', () => {
     const el = await ProjectsContent({ locale: SITE_LOCALE.en });
     const html = renderToStaticMarkup(el);
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    expect(doc.querySelectorAll('.projects[SITE_LOCALE.en]-grid')).toHaveLength(1);
+    expect(doc.querySelectorAll('.projects-grid')).toHaveLength(1);
     const cards = Array.from(doc.querySelectorAll('.project-card'));
     expect(cards).toHaveLength(9);
     for (const [index, project] of projects[SITE_LOCALE.en].entries()) {

@@ -934,9 +934,13 @@ describe('InteractiveShell r106 controls', () => {
   it('describes the input with the accuracy notice and validates all shell UI copy with Zod', async () => {
     const { shellUi } = await import('@/content/shell-ui');
     const { ShellUiSchema } = await import('@/content/schemas');
-    expect(ShellUiSchema.safeParse(shellUi).success).toBe(true);
-    expect(ShellUiSchema.safeParse({ ...shellUi, stop: '' }).success).toBe(false);
-    expect(Object.keys(shellUi)).not.toContain('copyLabel');
+    // both locale copies validate, and both carry the same key set
+    for (const locale of ['en', 'pt'] as const) {
+      expect(ShellUiSchema.safeParse(shellUi[locale]).success).toBe(true);
+      expect(ShellUiSchema.safeParse({ ...shellUi[locale], stop: '' }).success).toBe(false);
+    }
+    expect(Object.keys(shellUi.en)).toEqual(Object.keys(shellUi.pt));
+    expect(Object.keys(shellUi[SITE_LOCALE.en])).not.toContain('copyLabel');
     expect(Object.keys(ShellUiSchema.shape)).not.toContain('copyLabel');
     const container = await renderShell();
     const noticeId = shellInput(container).getAttribute('aria-describedby');

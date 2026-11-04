@@ -33,7 +33,9 @@ vi.mock('@/components/client/InteractiveShell', () => ({ InteractiveShellLazy: (
 
 describe('section registry', () => {
   it('contains the ten destinations in rail and position-meter order', () => {
-    expect(SECTION_REGISTRY.map(({ id, label, order }) => ({ id, label, order }))).toEqual([
+    expect(
+      SECTION_REGISTRY.map(({ id, label, order }) => ({ id, label: label.en, order })),
+    ).toEqual([
       { id: 'bio', label: 'Home', order: 1 },
       { id: 'sec-readme', label: 'About', order: 2 },
       { id: 'sec-projects', label: 'Projects', order: 3 },
@@ -44,6 +46,21 @@ describe('section registry', () => {
       { id: 'sec-guitar', label: 'Guitar rig', order: 8 },
       { id: 'sec-daw-mixer', label: 'DAW mixer', order: 9 },
       { id: 'sec-contact', label: 'Contact', order: 10 },
+    ]);
+    // pt-BR labels exist for every destination and keep the same ids and order.
+    expect(
+      SECTION_REGISTRY.map(({ id, label, order }) => ({ id, label: label.pt, order })),
+    ).toEqual([
+      { id: 'bio', label: 'Início', order: 1 },
+      { id: 'sec-readme', label: 'Sobre', order: 2 },
+      { id: 'sec-projects', label: 'Projetos', order: 3 },
+      { id: 'sec-git-log', label: 'Carreira', order: 4 },
+      { id: 'sec-shell', label: 'Shell interativo', order: 5 },
+      { id: 'sec-live-metrics', label: 'Medições', order: 6 },
+      { id: 'sec-hottest-takes', label: 'Opiniões', order: 7 },
+      { id: 'sec-guitar', label: 'Rig de guitarra', order: 8 },
+      { id: 'sec-daw-mixer', label: 'Mixer DAW', order: 9 },
+      { id: 'sec-contact', label: 'Contato', order: 10 },
     ]);
     expect(SectionRegistrySchema.safeParse(SECTION_REGISTRY).success).toBe(true);
   });
@@ -96,7 +113,9 @@ describe('section registry', () => {
       DawMixerSection,
       ContactSection,
     ];
-    const html = sections.map((Section) => renderToStaticMarkup(createElement(Section))).join('');
+    const html = sections
+      .map((Section) => renderToStaticMarkup(createElement(Section, { locale: SITE_LOCALE.en })))
+      .join('');
     const document = new DOMParser().parseFromString(html, 'text/html');
     for (const { id } of SECTION_REGISTRY) {
       expect(document.querySelectorAll(`section[id="${id}"]`), id).toHaveLength(1);
@@ -156,10 +175,12 @@ describe('navigation content', () => {
     if (!item) throw new Error(`missing fixture item ${index}`);
     return item;
   };
-  const clone = () => structuredClone(NAVIGATION) as unknown as MutableNavigation;
+  const clone = () => structuredClone(NAVIGATION[SITE_LOCALE.en]) as unknown as MutableNavigation;
 
   it('is derived from the registry and validates against it', () => {
-    expect(schema.safeParse(NAVIGATION).success).toBe(true);
+    for (const locale of Object.values(SITE_LOCALE)) {
+      expect(schema.safeParse(NAVIGATION[locale]).success).toBe(true);
+    }
     expect(NAVIGATION[SITE_LOCALE.en].groups.flatMap(({ sectionIds: ids }) => ids)).toEqual(
       sectionIds,
     );
