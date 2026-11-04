@@ -90,13 +90,10 @@
   }
 
   .hero-stats .stat-tile-value {
-    color: var(--color-text);
-    font-size: var(--text-sm);
     white-space: nowrap;
   }
 
   .hero-stats .stat-tile-label {
-    font-size: var(--text-xs);
     white-space: nowrap;
   }
 

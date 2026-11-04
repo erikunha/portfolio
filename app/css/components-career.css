@@ -136,7 +136,7 @@
 
   .career-body {
     max-width: 72ch;
-    color: var(--color-tertiary-50);
+    color: var(--color-primary-500);
   }
 
   .career-hash,
@@ -204,10 +204,6 @@
   .career-tag-list .career-tag-key {
     flex: 0 0 calc(100% + 2ch);
     margin-left: -2ch;
-  }
-
-  .career-community {
-    max-width: 72ch;
   }
 
   .career-community > p:first-child {
