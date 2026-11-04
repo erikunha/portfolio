@@ -427,6 +427,7 @@ export const GuitarRigSchema = z.object({
     status: z.string().min(1),
     cameraLabel: z.string().min(1),
     telemetry: z.string().min(1),
+    hudTopLeft: z.string().min(1),
   }),
 });
 

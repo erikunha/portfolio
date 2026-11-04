@@ -153,6 +153,7 @@ describe('GuitarRigSchema v2', () => {
           status: '▶ REC',
           cameraLabel: 'CAM/01',
           telemetry: 'TAKE_03 · 87 BPM',
+          hudTopLeft: 'HP140 · -3dB@400',
         },
       }),
     ).not.toThrow();
