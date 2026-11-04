@@ -81,7 +81,7 @@ test.describe('#sec-guitar at 1000px', () => {
 });
 
 const SIGNAL_STRIP_PARTS = '#sec-guitar .guitar-signal-strip > *';
-const CAMERA_LABELS = '#sec-guitar .guitar-camera-labels > *';
+const TELEMETRY_BAR = '#sec-guitar .guitar-photo-telemetry > *';
 
 for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
   test.describe(`#sec-guitar rows become columns at ${viewport.width}px`, () => {
@@ -89,7 +89,7 @@ for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
 
     for (const [name, selector] of [
       ['signal strip parts', SIGNAL_STRIP_PARTS],
-      ['camera labels', CAMERA_LABELS],
+      ['photo bottom bar', TELEMETRY_BAR],
     ] as const) {
       test(`${name} stack top to bottom`, async ({ page }) => {
         await page.goto('/');
