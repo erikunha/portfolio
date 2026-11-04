@@ -40,7 +40,7 @@ export const hottestTakes: HottestTake[] = z.array(HottestTakeSchema).parse([
     order: 4,
     category: 'AI',
     thesis: 'Spec-first is the only disciplined way to ship with LLMs and agents.',
-    body: 'Vibe-coding generates output nobody can review. Spec-driven development inverts it: write the contract, expected behavior, and failure modes first, then the agent implements against a legible target. The spec is the review artifact, not the generated code. That is how I built the 12-agent Copilot system at Betsson: every automated action reviewable. Without the spec, you have a black box you cannot audit, cannot roll back, and cannot hand off.',
+    body: 'Vibe-coding generates output nobody can review. Spec-driven development inverts it: write the contract, expected behavior, and failure modes first, then the agent implements against a legible target. The spec is the review artifact, not the generated code. That is how I ran an AI-assisted engineering system at Betsson: every automated action reviewable. Without the spec, you have a black box you cannot audit, cannot roll back, and cannot hand off.',
   },
 ]);
 

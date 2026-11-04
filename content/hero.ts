@@ -31,6 +31,6 @@ export const heroContent = HeroContentSchema.parse({
     { value: '$500B+', label: 'fund assets' },
     { value: '8M+', label: 'e-com MAU' },
     { value: '40s→<1s', label: 'reporting API' },
-    { value: '12-agent', label: 'platform AI' },
+    { value: 'CLS → 0', label: 'layout shift' },
   ],
 });

@@ -32,6 +32,13 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     kind: 'factual',
   },
   {
+    id: 'fact-ai-direction',
+    question: 'Where is Erik taking his career?',
+    expect:
+      'Toward AI-native product engineering: agentic systems (LangGraph) and LLM observability (LangSmith, Langfuse), backed by an MBA in AI Engineering (Infnet, expected Dec 2027).',
+    kind: 'factual',
+  },
+  {
     id: 'fact-betsson-domain',
     question: 'What kind of system did Erik work on at Betsson?',
     expect:
@@ -100,7 +107,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-copilot-subagents',
     question: 'What AI work has Erik done?',
     expect:
-      "Built a 12-subagent GitHub Copilot system at Betsson (codegen, review, debugging, testing, architecture validation); now builds shared UI systems for Raylu's investor workflow screens (50+ funds holding $500B+ in assets); this portfolio uses the Claude API.",
+      "Ran a GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation); now builds shared UI systems for Raylu's investor workflow screens (50+ funds holding $500B+ in assets); this portfolio uses the Claude API.",
     kind: 'factual',
   },
   {
