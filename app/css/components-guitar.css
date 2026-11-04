@@ -202,6 +202,7 @@
     inset-block-start: 0;
     inset-inline-start: 0;
     z-index: 1;
+    max-inline-size: 50%;
     padding: var(--spacing-1) var(--spacing-2);
     color: var(--color-primary-400);
     font-size: var(--text-xs);
@@ -210,11 +211,17 @@
     overflow-wrap: anywhere;
   }
 
+  .guitar-photo-telemetry-line,
+  .guitar-photo-telemetry-camera {
+    max-inline-size: 50%;
+  }
+
   .guitar-photo-rec {
     position: absolute;
     inset-block-start: 0;
     inset-inline-end: 0;
     z-index: 1;
+    max-inline-size: 50%;
     padding: var(--spacing-1) var(--spacing-2);
     color: var(--color-primary-400);
     font-size: var(--text-xs);
