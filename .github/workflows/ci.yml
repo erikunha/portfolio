@@ -1,5 +1,8 @@
 name: CI
 
+# Pinned to ubuntu-24.04: the ubuntu-latest rollout to 26.04 renders visual
+# baselines off by ~1px and breaks cache digests. See DECISIONS.md 2026-11-04.
+
 on:
   pull_request:
   push:
@@ -19,7 +22,7 @@ concurrency:
 
 jobs:
   quality-fast:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: read
@@ -93,7 +96,7 @@ jobs:
         run: pnpm tsx scripts/check-pr-comments.ts ${{ github.event.pull_request.number }}
 
   typecheck:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -125,7 +128,7 @@ jobs:
         run: pnpm typecheck
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: write
@@ -239,7 +242,7 @@ jobs:
             }
 
   dependency-review:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
@@ -253,7 +256,7 @@ jobs:
           deny-licenses: GPL-3.0, AGPL-3.0, GPL-2.0
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       id-token: write
@@ -316,7 +319,7 @@ jobs:
           subject-path: .next/
 
   performance:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       statuses: write
@@ -384,7 +387,7 @@ jobs:
         run: pnpm playwright test tests/a11y
 
   e2e-functional:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
     needs: [build, detect-changes]
@@ -439,7 +442,7 @@ jobs:
           path: test-results/
 
   detect-changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 2
     outputs:
       ai: ${{ steps.check.outputs.ai }}
@@ -458,7 +461,7 @@ jobs:
         run: node scripts/detect-changes.mjs
 
   ai-eval:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     if: |
       always()
@@ -497,7 +500,7 @@ jobs:
           path: ask-eval-result.json
 
   e2e-visual-chromium:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     if: github.event_name != 'pull_request' || needs.detect-changes.outputs.ui == 'true'
     needs: [build, detect-changes]
@@ -568,7 +571,7 @@ jobs:
           path: test-results/
 
   ci-gate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     if: always()
     needs:
@@ -606,7 +609,7 @@ jobs:
 
   semgrep:
     name: Semgrep (static analysis)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       security-events: write # required to upload SARIF to the code-scanning tab
       contents: read
@@ -652,7 +655,7 @@ jobs:
 
   gitleaks:
     name: Gitleaks (secret scan)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     timeout-minutes: 10
