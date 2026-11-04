@@ -5,6 +5,7 @@ import { PageMain } from '@/components/PageMain';
 import { About } from '@/components/sections/About';
 import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { ContactSection } from '@/components/sections/ContactSection';
+import { DawMixerSection } from '@/components/sections/DawMixerSection';
 import { Footer } from '@/components/sections/Footer';
 import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
@@ -42,6 +43,9 @@ export default function Home() {
           </ErrorBoundary>
           <ErrorBoundary>
             <GuitarSection defer />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <DawMixerSection defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <ContactSection defer />
