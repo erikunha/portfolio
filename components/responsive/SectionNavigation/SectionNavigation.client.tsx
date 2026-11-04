@@ -323,10 +323,6 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
       >
         <div className="menu-head">
           <span className="menu-title">{copy.title}</span>
-          <span className="menu-badge" data-section-count={SECTION_NAV.length}>
-            <span className="sr-only">{`${SECTION_NAV.length} ${copy.sectionCountLabel}`}</span>
-            <span aria-hidden="true">{SECTION_NAV.length}</span>
-          </span>
           <button
             ref={closeRef}
             type="button"

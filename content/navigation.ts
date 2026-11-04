@@ -42,7 +42,6 @@ export type NavigationCopy = {
   motionOn: string;
   motionOff: string;
   motionReduced: string;
-  sectionCountLabel: string;
 };
 
 export type Navigation = {
@@ -67,7 +66,6 @@ export const NAVIGATION: Navigation = {
     motionOn: 'MOTION: ON',
     motionOff: 'MOTION: OFF',
     motionReduced: 'MOTION: REDUCED',
-    sectionCountLabel: 'sections',
   },
   groups: [
     { id: 'whoami', title: 'WHOAMI', dock: 'home', sectionIds: ['bio', 'sec-readme'] },
