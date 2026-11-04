@@ -4,6 +4,7 @@ import { PrintButton } from '@/components/client/PrintButton';
 import { readingViews, summaryDocument } from '@/content/reading-views';
 import type { SiteLocale } from '@/content/site-locale';
 import { Button, StatTile, TerminalPanel } from '@/design-system';
+import { ReadingLanguageSwitch } from './LanguageSwitch';
 
 const MAIN_ID = 'main-content';
 
@@ -28,6 +29,11 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
               </a>
             ))}
           </nav>
+          <ReadingLanguageSwitch
+            locale={locale}
+            label={locale === 'pt' ? 'Idioma' : 'Language'}
+            path="/summary"
+          />
         </div>
       </header>
       <main id={MAIN_ID} tabIndex={-1} className="reading-doc reading-doc--wide">

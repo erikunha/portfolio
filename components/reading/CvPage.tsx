@@ -4,6 +4,7 @@ import { PrintButton } from '@/components/client/PrintButton';
 import { cvDocument, cvJsonLd, readingViews } from '@/content/reading-views';
 import type { SiteLocale } from '@/content/site-locale';
 import { Button } from '@/design-system';
+import { ReadingLanguageSwitch } from './LanguageSwitch';
 
 const MAIN_ID = 'main-content';
 const JSON_LD_TYPE = 'application/ld+json';
@@ -63,6 +64,11 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
               </a>
             ))}
           </nav>
+          <ReadingLanguageSwitch
+            locale={locale}
+            label={locale === 'pt' ? 'Idioma' : 'Language'}
+            path="/cv"
+          />
         </div>
       </header>
       <main id={MAIN_ID} tabIndex={-1} className="reading-doc">
