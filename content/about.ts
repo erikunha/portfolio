@@ -103,6 +103,50 @@ export const aboutContent = AboutContentSchema.parse({
         className: '',
       },
       {
+        text: 'type',
+        className: 'text-primary-500 font-bold',
+      },
+      {
+        text: ' ',
+        className: '',
+      },
+      {
+        text: 'Op',
+        className: 'text-quinary-300',
+      },
+      {
+        text: '<',
+        className: 'text-tertiary-50',
+      },
+      {
+        text: 'T',
+        className: 'text-quinary-300',
+      },
+      {
+        text: '>',
+        className: 'text-tertiary-50',
+      },
+      {
+        text: ' =',
+        className: 'text-tertiary-50',
+      },
+      {
+        text: '\n  ',
+        className: '',
+      },
+      {
+        text: 'MonoTypeOperatorFunction',
+        className: 'text-quinary-300',
+      },
+      {
+        text: '<T>;',
+        className: 'text-tertiary-50',
+      },
+      {
+        text: '\n\n',
+        className: '',
+      },
+      {
         text: 'export function',
         className: 'text-primary-500 font-bold',
       },
@@ -123,19 +167,11 @@ export const aboutContent = AboutContentSchema.parse({
         className: 'text-quinary-300',
       },
       {
-        text: '>',
+        text: '>({',
         className: 'text-tertiary-50',
       },
       {
-        text: '(',
-        className: 'text-tertiary-50',
-      },
-      {
-        text: '\n  ',
-        className: '',
-      },
-      {
-        text: '{ max = ',
+        text: '\n  max = ',
         className: 'text-tertiary-50',
       },
       {
@@ -143,7 +179,7 @@ export const aboutContent = AboutContentSchema.parse({
         className: 'text-quinary-300',
       },
       {
-        text: ', base = ',
+        text: ',\n  base = ',
         className: 'text-tertiary-50',
       },
       {
@@ -151,15 +187,11 @@ export const aboutContent = AboutContentSchema.parse({
         className: 'text-quinary-300',
       },
       {
-        text: ',',
+        text: ',\n  isFatal,\n',
         className: 'text-tertiary-50',
       },
       {
-        text: '\n    ',
-        className: '',
-      },
-      {
-        text: 'isFatal }: ',
+        text: '}: ',
         className: 'text-tertiary-50',
       },
       {
@@ -167,43 +199,15 @@ export const aboutContent = AboutContentSchema.parse({
         className: 'text-quinary-300',
       },
       {
-        text: ',',
-        className: 'text-tertiary-50',
-      },
-      {
-        text: '\n',
-        className: '',
-      },
-      {
         text: '): ',
         className: 'text-tertiary-50',
       },
       {
-        text: 'MonoTypeOperatorFunction',
+        text: 'Op',
         className: 'text-quinary-300',
       },
       {
-        text: '<',
-        className: 'text-tertiary-50',
-      },
-      {
-        text: '\n  ',
-        className: '',
-      },
-      {
-        text: 'T',
-        className: 'text-quinary-300',
-      },
-      {
-        text: ',',
-        className: 'text-tertiary-50',
-      },
-      {
-        text: '\n',
-        className: '',
-      },
-      {
-        text: '> {',
+        text: '<T> {',
         className: 'text-tertiary-50',
       },
       {
@@ -299,7 +303,7 @@ export const aboutContent = AboutContentSchema.parse({
         className: 'text-primary-500 font-bold',
       },
       {
-        text: ' wait ',
+        text: ' backoff ',
         className: '',
       },
       {
@@ -307,16 +311,16 @@ export const aboutContent = AboutContentSchema.parse({
         className: 'text-tertiary-50',
       },
       {
-        text: ' base ',
-        className: '',
-      },
-      {
-        text: '*',
-        className: 'text-tertiary-50',
-      },
-      {
         text: '\n        ',
         className: '',
+      },
+      {
+        text: 'base ',
+        className: '',
+      },
+      {
+        text: '* ',
+        className: 'text-tertiary-50',
       },
       {
         text: '2',
@@ -331,7 +335,23 @@ export const aboutContent = AboutContentSchema.parse({
         className: '',
       },
       {
-        text: ' +',
+        text: ';',
+        className: 'text-tertiary-50',
+      },
+      {
+        text: '\n      ',
+        className: '',
+      },
+      {
+        text: 'const',
+        className: 'text-primary-500 font-bold',
+      },
+      {
+        text: ' jitter ',
+        className: '',
+      },
+      {
+        text: '=',
         className: 'text-tertiary-50',
       },
       {
@@ -371,7 +391,35 @@ export const aboutContent = AboutContentSchema.parse({
         className: 'text-quaternary-400',
       },
       {
-        text: '(wait);',
+        text: '(',
+        className: 'text-tertiary-50',
+      },
+      {
+        text: '\n        ',
+        className: '',
+      },
+      {
+        text: 'backoff',
+        className: '',
+      },
+      {
+        text: ' + ',
+        className: 'text-tertiary-50',
+      },
+      {
+        text: 'jitter',
+        className: '',
+      },
+      {
+        text: ',',
+        className: 'text-tertiary-50',
+      },
+      {
+        text: '\n      ',
+        className: '',
+      },
+      {
+        text: ');',
         className: 'text-tertiary-50',
       },
       {
