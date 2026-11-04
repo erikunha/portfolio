@@ -84,13 +84,13 @@ describe('Hero identity and static actions', () => {
         '$500B+',
         '8M+',
         '40s→<1s',
-        '12-agent',
+        'CLS → 0',
       ]);
       expect([...group.querySelectorAll('dt')].map((label) => label.textContent)).toEqual([
         'fund assets',
         'e-com MAU',
         'reporting API',
-        'platform AI',
+        'layout shift',
       ]);
     }
   });

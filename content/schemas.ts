@@ -555,6 +555,7 @@ export const EducationSchema = z
     endYear: z.number().int(),
     expectedCompletion: MonthSchema.nullable(),
     period: z.string().min(1),
+    focus: z.string().min(1).optional(),
   })
   .refine((entry) => entry.startYear === null || entry.startYear <= entry.endYear, {
     message: 'Education must end on or after its start year',

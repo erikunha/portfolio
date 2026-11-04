@@ -99,9 +99,9 @@ describe('lib/ask/system-prompt', () => {
     const narrative = SYSTEM_TEXT.slice(0, SYSTEM_TEXT.indexOf('## Performance receipts'));
     const CURRENT_ROLE_WINDOW = /## Current role[\s\S]{0,600}/;
 
-    it('names the 12-subagent GitHub Copilot system in the AI stack line', () => {
-      expect(narrative).toContain('12-subagent');
-      expect(narrative).toMatch(/GitHub Copilot 12-subagent/);
+    it('names the GitHub Copilot engineering system at Betsson in the AI stack line', () => {
+      expect(narrative).toContain('GitHub Copilot engineering system at Betsson');
+      expect(narrative).not.toContain('12-subagent');
     });
 
     it('frames Raylu with the resume wording in the current-role header', () => {

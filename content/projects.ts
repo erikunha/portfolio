@@ -73,9 +73,9 @@ export const projects: Project[] = z
       kind: 'professional',
       perm: '-rwx------',
       description:
-        'GitHub Copilot 12-agent engineering system: generation, review, debugging, testing, architecture validation. Every automated action reviewable. Adopted team-wide at Betsson.',
+        'GitHub Copilot engineering system across generation, review, debugging, testing and architecture validation. Every automated action reviewable. Adopted team-wide at Betsson.',
       stats: [
-        { label: 'AGENTS', value: '12' },
+        { label: 'REVIEW', value: 'EVERY ACTION' },
         { label: 'SCOPE', value: 'TEAM-WIDE' },
         { label: 'STACK', value: 'GITHUB COPILOT' },
       ],
