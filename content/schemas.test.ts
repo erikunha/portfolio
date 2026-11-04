@@ -263,6 +263,8 @@ const educationFixtures = [
     endYear: 2027,
     expectedCompletion: '2027-12',
     period: 'expected Dec 2027',
+    focus:
+      'Coursework: ML, deep learning, LLMs, RAG, multi-agent systems. Now studying agent orchestration (LangGraph) and LLM observability (LangSmith, Langfuse).',
   },
   {
     id: 'CO_OP_DIPLOMA',

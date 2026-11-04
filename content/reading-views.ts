@@ -189,7 +189,9 @@ export const cvDocument = CvDocumentSchema.parse({
   education: education.map((entry) => ({
     key: entry.id,
     label: entry.degree,
-    value: [entry.institution, entry.location, entry.period].join(STACK_SEPARATOR),
+    value: [entry.institution, entry.location, entry.period, entry.focus]
+      .filter((part): part is string => Boolean(part))
+      .join(STACK_SEPARATOR),
   })),
   languages: formatLanguages(profile.languages),
   email: social.email,
