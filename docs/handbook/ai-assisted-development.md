@@ -19,7 +19,7 @@ sequenceDiagram
     C->>C: writing-plans + thinking-risk-premortem (failure modes -> tasks)
     C->>C: TDD implement (tests first)
     C->>G: commit runs Biome, staged gitleaks and commitlint
-    C->>C: self-review the diff (pr-review-orchestrator skill)
+    C->>C: self-review the diff (human review; extra model review only on owner request)
     C->>A: scoped review investigation
     A-->>C: findings
     C->>G: git push (pre-push: main guard, branch name, pnpm verify)
@@ -57,27 +57,27 @@ flowchart TD
 
 - **`CLAUDE.md`** is an index plus dispatch tables (which skill/agent fires on which trigger), not a procedure manual.
 - **`.claude/rules/api-boundary.md`** loads only when the agent reads `app/api/**`, `lib/rate-limit.ts`, `lib/server/**`, or `proxy.ts` (path-scoped via `paths:` frontmatter). This keeps API-specific guidance out of always-loaded context.
-- User-global memory behavior depends on the active runtime. `.remember/` is the session-handoff location referenced by `CLAUDE.md`.
+- User-global memory behavior depends on the active runtime. No project file establishes a `.remember/` handoff location; `CLAUDE.md` never references one, and its reference list names the current sources.
 
 ## 2. The agent's working loop
 
 The project instructions define this loop. The table distinguishes conventions from mechanical checks:
 
-| Step               | Mechanism                                        | Enforced by                                                     |
-| ------------------ | ------------------------------------------------ | --------------------------------------------------------------- |
-| Explore + plan     | brainstorming, writing-plans                     | architect-reviewer PASS (convention)                            |
-| Anticipate failure | thinking-risk-premortem, pre-mortem              | convention + plan tasks                                         |
-| Implement          | test-first project rule                          | convention                                                      |
-| Self-verify        | project verification rule                        | convention + `pnpm verify`                                      |
-| Review             | pre-PR self-review, then claude-review on the PR | `pnpm claude-gate` (fail-closed on a stale or SHA-less Approve) |
-| Resolve            | reply in each review thread, then resolve it     | `pnpm pr:gate` (fails `silent_resolve`)                         |
-| Record             | DECISIONS.md ADR                                 | PR template checklist (author confirmation)                     |
+| Step               | Mechanism                                                   | Enforced by                                                                                                  |
+| ------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Explore + plan     | brainstorming, writing-plans                                | architect-reviewer PASS (convention)                                                                         |
+| Anticipate failure | thinking-risk-premortem, pre-mortem                         | convention + plan tasks                                                                                      |
+| Implement          | test-first project rule                                     | convention                                                                                                   |
+| Self-verify        | project verification rule                                   | convention + `pnpm verify`                                                                                   |
+| Review             | human self-review of the diff, then claude-review on the PR | `pnpm claude-gate` (carries an Approve across baseline-only commits; fails other stale or SHA-less Approves) |
+| Resolve            | reply in each review thread, then resolve it                | `pnpm pr:gate` (fails `silent_resolve`)                                                                      |
+| Record             | DECISIONS.md ADR                                            | PR template checklist (author confirmation)                                                                  |
 
 ## 3. Review. claude-review on the PR, self-review before it
 
 **claude-review (claude[bot]) runs automatically** on eligible PR open and push events, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line that `pnpm claude-gate` reads fail-closed.
 
-Pre-PR review is a convention: read the diff and run the project review procedure. `pnpm pr:gate` checks thread resolution on the PR.
+Pre-PR review is a convention: read the diff and run the project review procedure. It is a human diff read; the `pr-review-orchestrator` skill runs only when the owner asks. `pnpm pr:gate` checks thread resolution on the PR.
 
 ## 4. Enforcement boundaries
 
@@ -93,12 +93,12 @@ CI runs separate quality, typecheck, unit-test and build jobs. Runtime and AI jo
 
 The repo encodes distinct prompt patterns for distinct SDLC stages:
 
-| Stage               | Prompt shape                                      | Where it lives                                     |
-| ------------------- | ------------------------------------------------- | -------------------------------------------------- |
-| Specification       | brainstorm -> spec with Context/Gaps/Changes      | `/speckit.specify`, the spec template              |
-| Architecture review | four-gate spec-gate -> `GATE_RESULT: PASS/FAIL`   | `architect-reviewer` agent                         |
-| Implementation      | TDD: failing test first, smallest change          | `test-first discipline (CLAUDE.md skill dispatch)` |
-| Review              | `pr-review-orchestrator` skill, scoped by change  | `CLAUDE.md` working agreement                      |
-| Documentation       | reverse-engineer from code, route don't duplicate | source comparisons and canonical documentation     |
+| Stage               | Prompt shape                                                       | Where it lives                                     |
+| ------------------- | ------------------------------------------------------------------ | -------------------------------------------------- |
+| Specification       | brainstorm -> spec with Context/Gaps/Changes                       | `/speckit.specify`, the spec template              |
+| Architecture review | four-gate spec-gate -> `GATE_RESULT: PASS \| BLOCK`                | `architect-reviewer` agent                         |
+| Implementation      | TDD: failing test first, smallest change                           | `test-first discipline (CLAUDE.md skill dispatch)` |
+| Review              | human diff read; `pr-review-orchestrator` only when the owner asks | `CLAUDE.md` working agreement                      |
+| Documentation       | reverse-engineer from code, route don't duplicate                  | source comparisons and canonical documentation     |
 
 Choose verification from the affected behavior and the project gate requirements. A docs-only change still runs `pnpm ci:local` under `CLAUDE.md`.

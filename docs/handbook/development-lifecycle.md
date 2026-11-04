@@ -24,7 +24,7 @@ flowchart TD
     readymerge --> merge["owner squash-merges (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["post-deploy smoke test"]
-    smoke --> adr["deployment verified; session handoff"]
+    smoke --> adr["deployment verified; ADR recorded"]
     adr --> idea
 ```
 
@@ -57,7 +57,7 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 
 ### 7. Pre-PR self-review, and the pre-push gate chain
 
-Before opening the PR, read the diff and run the `pr-review-orchestrator` skill over it; there is no project review-stamp gate. For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. Deletion-only pushes skip branch naming and verify after the main-target guard.
+Before opening the PR, read the diff; the `pr-review-orchestrator` skill runs only when the owner asks, and there is no project review-stamp gate. For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. Deletion-only pushes skip branch naming and verify after the main-target guard.
 
 ### 8. Pre-PR -> open PR
 
@@ -69,11 +69,11 @@ On eligible open PRs, claude-review posts inline findings on open and push event
 
 ### 10. Pre-merge gates -> merge
 
-`pnpm claude-gate` (`scripts/check-claude-approval.ts`) requires the latest claude-review verdict to be Approve on the current head, fail-closed on a stale or SHA-less Approve. `pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires every review thread to be resolved and flags `suspicious_self_resolve`. Run `pnpm ci:local` alongside both.
+`pnpm claude-gate` (`scripts/check-claude-approval.ts`) requires the latest claude-review verdict to be Approve on the current head; an Approve on an ancestor SHA carries across a nonempty diff containing only visual baseline PNGs, and other stale or SHA-less Approves fail closed. `pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved and flags `suspicious_self_resolve`. Run `pnpm ci:local` alongside both.
 
 ### 11. Deploy -> smoke -> record
 
-Vercel deploys on merge to `main`. The `smoke.yml` workflow verifies the production deployment (healthz, 7 security headers, apex->www redirect, `/api/ask` + `/api/contact` liveness) and emails on a 503. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note), and session state is handed off via `.remember/`.
+Vercel deploys on merge to `main`. The `smoke.yml` workflow verifies the production deployment (healthz, 7 security headers, apex->www promotion followed to its final 200, `/api/ask` + `/api/contact` liveness): the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret, and a canonical healthz 503 attempts a Resend alert only when that secret is configured, with delivery errors logged as warnings. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note); no project file establishes a session-handoff location.
 
 ## The responsive critique pass
 
@@ -108,7 +108,7 @@ flowchart LR
         g3["no direct main"] --> g4["branch name"] --> g7["pnpm verify"]
     end
     subgraph prepr["pre-PR (manual)"]
-        g8["ci:local"] --> g9["bundle-check + route-js-check (non-docs)"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["pr-review-orchestrator"]
+        g8["ci:local"] --> g9["bundle-check + route-js-check (non-docs)"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["human diff read (extra model review on owner request)"]
     end
     subgraph open["post-open"]
         g13["Review convergence"]
