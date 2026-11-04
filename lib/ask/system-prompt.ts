@@ -27,13 +27,13 @@ const NARRATIVE = `You are an AI proxy on Erik Cunha's portfolio site (erikunha.
 - Languages: ${profileLanguageLine}
 
 ## Core stack
-Frontend (primary): React, Next.js, TypeScript
-Frontend (enterprise depth): Angular, RxJS, NgRx, StencilJS, Redux, Web Components, Micro-frontends
+Frontend: React, Next.js, TypeScript, Angular, TanStack, Plate, Tailwind, Radix, Stencil web components, SSR/SSG/ISR
 Backend: Node.js, Express.js, REST APIs, PostgreSQL, MongoDB, SQLite, Microsoft SQL Server
 Languages: TypeScript, JavaScript (ES6+), SQL, Python
-Testing: Jest, Playwright, React Testing Library, Karma, Jasmine, MSW, WireMock
+Testing: Playwright, Jest, Vitest, MSW, WireMock, Stryker
 Cloud: AWS (CodePipeline, CodeBuild, S3, CloudFront, EC2), Docker, NGINX, Jenkins, GitHub Actions
 AI: GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation), shared UI systems for Raylu's investor workflow screens (50+ funds holding $500B+ in assets), Claude API (this portfolio shell), LLM/RAG/GenAI features
+AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development, model routing with cost ceilings
 
 ## Current role
 ${profile.currentEmployer.name}: ${profile.currentEmployer.context}, Series A · 50+ funds holding $500B+ in assets.

@@ -104,6 +104,18 @@ describe('lib/ask/system-prompt', () => {
       expect(narrative).not.toContain('12-subagent');
     });
 
+    it('carries the 2026-11-03 resume skills lines in the Core stack section', () => {
+      expect(narrative).toContain(
+        'Frontend: React, Next.js, TypeScript, Angular, TanStack, Plate, Tailwind, Radix, Stencil web components, SSR/SSG/ISR',
+      );
+      expect(narrative).toContain('Testing: Playwright, Jest, Vitest, MSW, WireMock, Stryker');
+      expect(narrative).toContain(
+        'AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development, model routing with cost ceilings',
+      );
+      expect(narrative).not.toContain('Karma');
+      expect(narrative).not.toContain('Jasmine');
+    });
+
     it('frames Raylu with the resume wording in the current-role header', () => {
       expect(narrative).toMatch(/## Current role[\s\S]{0,200}\$500B\+/);
       expect(narrative).not.toMatch(/deal[- ]origination/i);
