@@ -42,6 +42,8 @@
   --phi-space-4: calc(var(--phi-space-3) * var(--phi));
   --phi-text-1: calc(var(--text-xs) * var(--phi-root));
   --phi-pair-columns: minmax(0, 1.618fr) minmax(0, 1fr);
+  --phi-pair-columns-minor-first: minmax(0, 1fr) minmax(0, 1.618fr);
+  --phi-pair-flex-minor: 0 0 calc((1 - var(--phi-inv)) * 100%);
   --eq-plot-height: 8.25rem;
   --eq-plot-height-compact: 7rem;
   --eq-axis-height: 1.5rem;

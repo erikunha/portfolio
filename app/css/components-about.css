@@ -256,7 +256,7 @@
 
   @media (min-width: 1024px) and (max-width: 1279px) {
     .about-grid {
-      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+      grid-template-columns: var(--phi-pair-columns);
     }
   }
 
