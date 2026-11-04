@@ -56,6 +56,7 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
     status: '▶ REC · LIVE',
     cameraLabel: 'CAM/01 · STAGE',
     telemetry: 'YELLOW_TAKE_03 · 87 BPM · STD E',
+    hudTopLeft: 'HP140 · -3dB@400 · +5dB@2.8k · LP9k',
   },
 });
 

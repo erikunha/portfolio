@@ -197,6 +197,19 @@
     overflow-wrap: anywhere;
   }
 
+  .guitar-photo-hud-topleft {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    z-index: 1;
+    padding: var(--spacing-1) var(--spacing-2);
+    color: var(--color-primary-400);
+    font-size: var(--text-xs);
+    letter-spacing: var(--guitar-camera-tracking);
+    background: color-mix(in srgb, var(--color-bg) 78%, transparent);
+    overflow-wrap: anywhere;
+  }
+
   .guitar-photo-rec {
     position: absolute;
     inset-block-start: 0;
