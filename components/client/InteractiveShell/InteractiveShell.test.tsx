@@ -410,7 +410,7 @@ describe('InteractiveShell r106 controls', () => {
     expect(container.querySelector('[data-testid="shell-line-loading"]')).toBeNull();
   });
 
-  it('keeps drafts usable while guarding duplicate submits and shortcut activation', async () => {
+  it('keeps drafts usable while guarding duplicate submits and inert chip activation', async () => {
     const fetchMock = vi.fn(() => new Promise<Response>(() => undefined));
     vi.stubGlobal('fetch', fetchMock);
     const container = await renderShell();
@@ -421,6 +421,9 @@ describe('InteractiveShell r106 controls', () => {
       buttonWithText(container, 'whois').click();
     });
     expect(fetchMock).toHaveBeenCalledOnce();
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      'An answer is in progress',
+    );
     expect(shellInput(container).value).toBe('draft follow-up');
     await act(async () => {
       buttonWithText(container, '[STOP]').click();
@@ -844,7 +847,13 @@ describe('InteractiveShell r106 controls', () => {
         first.click();
       });
       expect(document.activeElement).toBe(shellInput(container));
-      expect(container.querySelector('[role="status"]')?.textContent).toContain('Command complete');
+      expect(shellInput(container).value).toBe('help');
+      expect(container.querySelector('[role="status"]')?.textContent).not.toContain(
+        'Command complete',
+      );
+      expect(container.querySelector('[role="log"]')?.textContent).not.toContain(
+        'erik@portfolio:~$ help',
+      );
     },
   );
 
